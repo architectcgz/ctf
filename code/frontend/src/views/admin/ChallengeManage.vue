@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import type { ComponentPublicInstance } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   Book,
@@ -116,6 +117,7 @@ const {
   formatDateTime,
   inspectImportTask,
   toggleActionMenu,
+  closeActionMenu,
   openChallengeDetail,
   openChallengeTopology,
   openChallengeWriteup,
@@ -133,6 +135,9 @@ const filterToggleRef = ref<HTMLButtonElement | null>(null)
 const filterPanelRef = ref<HTMLDivElement | null>(null)
 const sortButtonRef = ref<HTMLButtonElement | null>(null)
 const sortMenuRef = ref<HTMLDivElement | null>(null)
+const actionMenuPanelRef = ref<HTMLDivElement | null>(null)
+const actionMenuStyle = ref<Record<string, string>>({})
+const actionMenuButtonRefs = new Map<string, HTMLButtonElement>()
 
 const sortConfig = ref({ key: 'updateTime', order: 'desc', label: '最近更新' })
 const sortOptions = [
@@ -183,10 +188,70 @@ const challengeTableColumns = [
     cellClass: 'challenge-table__actions-cell',
   },
 ]
+const activeActionRow = computed(() =>
+  list.value.find((item) => item.id === openActionMenuId.value) ?? null
+)
 
 function setSort(opt: (typeof sortOptions)[number]) {
   sortConfig.value = opt
   isSortOpen.value = false
+}
+
+function setActionMenuButtonRef(
+  challengeId: string,
+  element: Element | ComponentPublicInstance | null
+): void {
+  if (element instanceof HTMLButtonElement) {
+    actionMenuButtonRefs.set(challengeId, element)
+    return
+  }
+
+  actionMenuButtonRefs.delete(challengeId)
+}
+
+function updateActionMenuPosition(): void {
+  if (!openActionMenuId.value) {
+    return
+  }
+
+  const trigger = actionMenuButtonRefs.get(openActionMenuId.value)
+  if (!trigger) {
+    return
+  }
+
+  const rect = trigger.getBoundingClientRect()
+  const viewportPadding = 12
+  const gap = 8
+  const panelWidth = actionMenuPanelRef.value?.offsetWidth ?? 176
+  const panelHeight = actionMenuPanelRef.value?.offsetHeight ?? 220
+  const maxLeft = Math.max(viewportPadding, window.innerWidth - panelWidth - viewportPadding)
+  const left = Math.min(Math.max(viewportPadding, rect.right - panelWidth), maxLeft)
+  const spaceBelow = window.innerHeight - rect.bottom - viewportPadding
+  const spaceAbove = rect.top - viewportPadding
+  const shouldOpenUpward = spaceBelow < panelHeight + gap && spaceAbove > spaceBelow
+  const maxTop = Math.max(viewportPadding, window.innerHeight - panelHeight - viewportPadding)
+  const top = shouldOpenUpward
+    ? Math.max(viewportPadding, rect.top - panelHeight - gap)
+    : Math.min(rect.bottom + gap, maxTop)
+
+  actionMenuStyle.value = {
+    top: `${top}px`,
+    left: `${left}px`,
+    width: `${panelWidth}px`,
+  }
+}
+
+async function handleActionMenuToggle(challengeId: string): Promise<void> {
+  const shouldOpen = openActionMenuId.value !== challengeId
+  toggleActionMenu(challengeId)
+
+  if (!shouldOpen) {
+    actionMenuStyle.value = {}
+    return
+  }
+
+  await nextTick()
+  updateActionMenuPosition()
 }
 
 let removeWindowListeners: (() => void) | null = null
@@ -218,6 +283,35 @@ onMounted(() => {
   removeWindowListeners = () => {
     window.removeEventListener('click', handleClickOutside)
   }
+})
+
+watch(openActionMenuId, async (challengeId, _previousId, onCleanup) => {
+  if (!challengeId) {
+    actionMenuStyle.value = {}
+    return
+  }
+
+  await nextTick()
+  updateActionMenuPosition()
+
+  const handleViewportChange = () => {
+    updateActionMenuPosition()
+  }
+  const handleEscape = (event: KeyboardEvent) => {
+    if (event.key === 'Escape') {
+      closeActionMenu()
+    }
+  }
+
+  window.addEventListener('resize', handleViewportChange)
+  window.addEventListener('scroll', handleViewportChange, true)
+  window.addEventListener('keydown', handleEscape)
+
+  onCleanup(() => {
+    window.removeEventListener('resize', handleViewportChange)
+    window.removeEventListener('scroll', handleViewportChange, true)
+    window.removeEventListener('keydown', handleEscape)
+  })
 })
 
 onUnmounted(() => {
@@ -560,65 +654,77 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
 
                   <div class="relative inline-block text-left">
                     <button
+                      :ref="(element) => setActionMenuButtonRef(getChallengeRow(row).id, element)"
                       type="button"
                       class="challenge-row-menu-button"
+                      :aria-expanded="
+                        openActionMenuId === getChallengeRow(row).id ? 'true' : 'false'
+                      "
+                      aria-haspopup="menu"
                       :class="{
                         'challenge-row-menu-button--active':
                           openActionMenuId === getChallengeRow(row).id,
                       }"
-                      @click.stop="toggleActionMenu(getChallengeRow(row).id)"
+                      @click.stop="void handleActionMenuToggle(getChallengeRow(row).id)"
                     >
                       <MoreHorizontal class="h-3.5 w-3.5" />
                     </button>
-
-                    <div
-                      v-if="openActionMenuId === getChallengeRow(row).id"
-                      class="challenge-row-menu shadow-2xl"
-                      :class="
-                        index >= list.length - 2 && list.length > 2
-                          ? 'challenge-row-menu--up'
-                          : 'challenge-row-menu--down'
-                      "
-                    >
-                      <div class="challenge-row-menu__title">Management</div>
-                      <button
-                        type="button"
-                        class="challenge-row-menu__item"
-                        @click="openChallengeTopology(getChallengeRow(row).id)"
-                      >
-                        <FileSearch class="h-3 w-3" />
-                        编排拓扑
-                      </button>
-                      <button
-                        type="button"
-                        class="challenge-row-menu__item"
-                        @click="openChallengeWriteup(getChallengeRow(row).id)"
-                      >
-                        <Book class="h-3 w-3" />
-                        题解与提示
-                      </button>
-                      <button
-                        v-if="getChallengeRow(row).status !== 'published'"
-                        type="button"
-                        class="challenge-row-menu__item challenge-row-menu__item--success"
-                        @click="submitPublishCheck(getChallengeRow(row))"
-                      >
-                        <CheckCircle class="h-3 w-3" />
-                        提交发布检查
-                      </button>
-                      <button
-                        type="button"
-                        class="challenge-row-menu__item challenge-row-menu__item--danger"
-                        @click="removeChallenge(getChallengeRow(row).id)"
-                      >
-                        <Trash2 class="h-3 w-3" />
-                        永久删除
-                      </button>
-                    </div>
                   </div>
                 </div>
               </template>
             </WorkspaceDataTable>
+
+            <Teleport to="body">
+              <div
+                v-if="activeActionRow"
+                class="challenge-row-menu-layer"
+                @click="closeActionMenu"
+              >
+                <div
+                  ref="actionMenuPanelRef"
+                  class="challenge-row-menu shadow-2xl"
+                  :style="actionMenuStyle"
+                  role="menu"
+                  aria-label="题目更多操作"
+                  @click.stop
+                >
+                  <div class="challenge-row-menu__title">Management</div>
+                  <button
+                    type="button"
+                    class="challenge-row-menu__item"
+                    @click="openChallengeTopology(activeActionRow.id)"
+                  >
+                    <FileSearch class="h-3 w-3" />
+                    编排拓扑
+                  </button>
+                  <button
+                    type="button"
+                    class="challenge-row-menu__item"
+                    @click="openChallengeWriteup(activeActionRow.id)"
+                  >
+                    <Book class="h-3 w-3" />
+                    题解与提示
+                  </button>
+                  <button
+                    v-if="activeActionRow.status !== 'published'"
+                    type="button"
+                    class="challenge-row-menu__item challenge-row-menu__item--success"
+                    @click="submitPublishCheck(activeActionRow)"
+                  >
+                    <CheckCircle class="h-3 w-3" />
+                    提交发布检查
+                  </button>
+                  <button
+                    type="button"
+                    class="challenge-row-menu__item challenge-row-menu__item--danger"
+                    @click="removeChallenge(activeActionRow.id)"
+                  >
+                    <Trash2 class="h-3 w-3" />
+                    永久删除
+                  </button>
+                </div>
+              </div>
+            </Teleport>
 
             <div v-if="total > 0" class="workspace-directory-pagination challenge-manage-pagination">
               <AdminPaginationControls
@@ -1265,21 +1371,18 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
   box-shadow: 0 4px 10px rgba(15, 23, 42, 0.2);
 }
 
+.challenge-row-menu-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+}
+
 .challenge-row-menu {
-  position: absolute;
-  right: 0;
-  z-index: 50;
+  position: fixed;
+  z-index: 130;
   width: 11rem;
   border-radius: 12px;
   overflow: hidden;
-}
-
-.challenge-row-menu--down {
-  top: calc(100% + 0.4rem);
-}
-
-.challenge-row-menu--up {
-  bottom: calc(100% + 0.4rem);
 }
 
 .challenge-row-menu__item {
