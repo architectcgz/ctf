@@ -80,7 +80,9 @@ function openClassReportDialog(): void {
     :weak-dimensions="weakDimensions"
     @retry="initialize"
     @open-class-management="router.push({ name: 'ClassManagement' })"
-    @open-class-students="router.push({ name: 'TeacherClassStudents', params: { className: selectedClassName } })"
+    @open-class-students="
+      router.push({ name: 'TeacherClassStudents', params: { className: selectedClassName } })
+    "
     @open-report-export="openClassReportDialog"
     @open-review-archive="openReviewArchivePage"
     @export-review-archive="handleExportReviewArchive"

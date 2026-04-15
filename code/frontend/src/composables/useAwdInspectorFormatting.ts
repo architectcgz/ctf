@@ -72,8 +72,7 @@ export function useAwdInspectorFormatting({
   function getServiceStatusClass(status: AWDTeamServiceData['service_status']): string {
     const classes: Record<AWDTeamServiceData['service_status'], string> = {
       up: 'bg-[var(--color-success)]/10 text-[var(--color-success)] border border-[var(--color-success)]/20',
-      down:
-        'bg-[var(--color-warning)]/10 text-[var(--color-warning)] border border-[var(--color-warning)]/20',
+      down: 'bg-[var(--color-warning)]/10 text-[var(--color-warning)] border border-[var(--color-warning)]/20',
       compromised:
         'bg-[var(--color-danger)]/10 text-[var(--color-danger)] border border-[var(--color-danger)]/20',
     }

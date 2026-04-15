@@ -195,11 +195,10 @@ interface RawTeacherAWDReviewTrafficItem extends Omit<
   challenge_id: string | number
 }
 
-interface RawTeacherAWDReviewSelectedRound
-  extends Omit<
-    TeacherAWDReviewSelectedRoundData,
-    'round' | 'teams' | 'services' | 'attacks' | 'traffic'
-  > {
+interface RawTeacherAWDReviewSelectedRound extends Omit<
+  TeacherAWDReviewSelectedRoundData,
+  'round' | 'teams' | 'services' | 'attacks' | 'traffic'
+> {
   round: RawTeacherAWDReviewRoundItem
   teams: RawTeacherAWDReviewTeamItem[]
   services: RawTeacherAWDReviewServiceItem[]
@@ -207,8 +206,10 @@ interface RawTeacherAWDReviewSelectedRound
   traffic: RawTeacherAWDReviewTrafficItem[]
 }
 
-interface RawTeacherAWDReviewArchiveResponse
-  extends Omit<TeacherAWDReviewArchiveData, 'contest' | 'rounds' | 'selected_round' | 'scope'> {
+interface RawTeacherAWDReviewArchiveResponse extends Omit<
+  TeacherAWDReviewArchiveData,
+  'contest' | 'rounds' | 'selected_round' | 'scope'
+> {
   scope: {
     snapshot_type: string
     requested_by: number
@@ -457,7 +458,9 @@ export async function recommendTeacherCommunityWriteup(id: string): Promise<Subm
   return normalizeSubmissionWriteupData(payload)
 }
 
-export async function unrecommendTeacherCommunityWriteup(id: string): Promise<SubmissionWriteupData> {
+export async function unrecommendTeacherCommunityWriteup(
+  id: string
+): Promise<SubmissionWriteupData> {
   const payload = await request<
     SubmissionWriteupData & {
       id: string | number

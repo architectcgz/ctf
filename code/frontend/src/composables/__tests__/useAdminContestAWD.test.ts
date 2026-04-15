@@ -178,7 +178,9 @@ describe('useAdminContestAWD', () => {
 
   it('在创建轮次被 readiness 门禁拦截后会拉取摘要并允许 override 重试', async () => {
     adminApiMocks.createContestAWDRound
-      .mockRejectedValueOnce(new ApiError('开赛就绪门禁阻止了创建轮次', { code: 14025, status: 409 }))
+      .mockRejectedValueOnce(
+        new ApiError('开赛就绪门禁阻止了创建轮次', { code: 14025, status: 409 })
+      )
       .mockResolvedValueOnce(buildRound())
 
     let composable!: ReturnType<typeof useAdminContestAWD>

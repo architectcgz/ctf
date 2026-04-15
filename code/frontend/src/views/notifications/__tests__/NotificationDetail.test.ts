@@ -116,7 +116,9 @@ describe('NotificationDetail', () => {
   })
 
   it('uses a full-width detail surface instead of a centered outer card shell', () => {
-    expect(notificationDetailSource).toMatch(/\.notification-detail-shell\s*\{[\s\S]*width:\s*100%;/s)
+    expect(notificationDetailSource).toMatch(
+      /\.notification-detail-shell\s*\{[\s\S]*width:\s*100%;/s
+    )
     expect(notificationDetailSource).not.toContain('width: min(72rem, 100%)')
     expect(notificationDetailSource).toMatch(
       /\.notification-detail-page\s*\{[\s\S]*background:\s*transparent;[\s\S]*\}/s

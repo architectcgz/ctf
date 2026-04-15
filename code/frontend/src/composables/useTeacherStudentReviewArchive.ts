@@ -29,9 +29,13 @@ export function useTeacherStudentReviewArchive(studentId: Readonly<Ref<string>>)
     }
   }
 
-  watch(studentId, () => {
-    void load()
-  }, { immediate: true })
+  watch(
+    studentId,
+    () => {
+      void load()
+    },
+    { immediate: true }
+  )
 
   return {
     archive,

@@ -7,12 +7,15 @@ import AppLoading from '@/components/common/AppLoading.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
 import { useChallengeWriteupEditorPage } from '@/composables/useChallengeWriteupEditorPage'
 
-const props = withDefaults(defineProps<{
-  challengeId: string
-  embedded?: boolean
-}>(), {
-  embedded: false,
-})
+const props = withDefaults(
+  defineProps<{
+    challengeId: string
+    embedded?: boolean
+  }>(),
+  {
+    embedded: false,
+  }
+)
 
 const emit = defineEmits<{
   back: []
@@ -52,7 +55,9 @@ const {
         <span class="class-chip">题解管理</span>
       </div>
       <div class="writeup-top-actions">
-        <button class="admin-btn admin-btn-ghost" type="button" @click="emit('back')">返回题目</button>
+        <button class="admin-btn admin-btn-ghost" type="button" @click="emit('back')">
+          返回题目
+        </button>
         <button class="admin-btn admin-btn-ghost" type="button" @click="void loadPage()">
           <RefreshCw class="h-4 w-4" />
           刷新
@@ -98,7 +103,10 @@ const {
               <h2 class="writeup-section-title">编辑器</h2>
             </div>
             <div class="writeup-badges">
-              <span class="writeup-badge" :class="hasWriteup ? 'writeup-badge--ok' : 'writeup-badge--warn'">
+              <span
+                class="writeup-badge"
+                :class="hasWriteup ? 'writeup-badge--ok' : 'writeup-badge--warn'"
+              >
                 {{ hasWriteup ? '已存在题解' : '尚未创建' }}
               </span>
               <span v-if="writeup?.is_recommended" class="writeup-badge writeup-badge--accent">
@@ -115,7 +123,7 @@ const {
                 type="text"
                 class="writeup-field-input"
                 placeholder="例如：官方解题思路 / 赛后复盘"
-              >
+              />
             </label>
 
             <label class="writeup-field writeup-field--visibility">
@@ -156,7 +164,13 @@ const {
               type="button"
               @click="void handleToggleRecommendation()"
             >
-              {{ togglingRecommendation ? '处理中...' : writeup?.is_recommended ? '取消推荐' : '设为推荐' }}
+              {{
+                togglingRecommendation
+                  ? '处理中...'
+                  : writeup?.is_recommended
+                    ? '取消推荐'
+                    : '设为推荐'
+              }}
             </button>
             <button
               v-if="hasWriteup"

@@ -80,23 +80,32 @@ interface RawContestAWDWorkspaceTeamData extends Omit<ContestAWDWorkspaceTeamDat
   team_id: string | number
 }
 
-interface RawContestAWDWorkspaceServiceData extends Omit<ContestAWDWorkspaceServiceData, 'challenge_id'> {
+interface RawContestAWDWorkspaceServiceData extends Omit<
+  ContestAWDWorkspaceServiceData,
+  'challenge_id'
+> {
   challenge_id: string | number
 }
 
-interface RawContestAWDWorkspaceTargetServiceData
-  extends Omit<ContestAWDWorkspaceTargetServiceData, 'challenge_id'> {
+interface RawContestAWDWorkspaceTargetServiceData extends Omit<
+  ContestAWDWorkspaceTargetServiceData,
+  'challenge_id'
+> {
   challenge_id: string | number
 }
 
-interface RawContestAWDWorkspaceTargetTeamData
-  extends Omit<ContestAWDWorkspaceTargetTeamData, 'team_id' | 'services'> {
+interface RawContestAWDWorkspaceTargetTeamData extends Omit<
+  ContestAWDWorkspaceTargetTeamData,
+  'team_id' | 'services'
+> {
   team_id: string | number
   services: RawContestAWDWorkspaceTargetServiceData[]
 }
 
-interface RawContestAWDWorkspaceRecentEventData
-  extends Omit<ContestAWDWorkspaceRecentEventData, 'id' | 'challenge_id' | 'peer_team_id'> {
+interface RawContestAWDWorkspaceRecentEventData extends Omit<
+  ContestAWDWorkspaceRecentEventData,
+  'id' | 'challenge_id' | 'peer_team_id'
+> {
   id: string | number
   challenge_id: string | number
   peer_team_id: string | number
@@ -321,7 +330,9 @@ export async function getContestAWDWorkspace(contestId: string): Promise<Contest
   return {
     contest_id: String(response.contest_id),
     current_round: response.current_round ? normalizeAWDRound(response.current_round) : undefined,
-    my_team: response.my_team ? normalizeContestAWDWorkspaceTeam(response.my_team) : response.my_team,
+    my_team: response.my_team
+      ? normalizeContestAWDWorkspaceTeam(response.my_team)
+      : response.my_team,
     services: response.services.map(normalizeContestAWDWorkspaceService),
     targets: response.targets.map(normalizeContestAWDWorkspaceTargetTeam),
     recent_events: response.recent_events.map(normalizeContestAWDWorkspaceEvent),

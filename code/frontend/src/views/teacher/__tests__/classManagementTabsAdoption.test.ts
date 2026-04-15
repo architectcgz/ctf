@@ -8,8 +8,12 @@ describe('class management tabs adoption', () => {
       "import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'"
     )
     expect(classManagementPageSource).toContain('useUrlSyncedTabs<WorkspaceTab>(')
-    expect(classManagementPageSource).not.toContain('function resolveTabFromLocation(): WorkspaceTab {')
-    expect(classManagementPageSource).not.toContain('function syncPanelToLocation(tab: WorkspaceTab): void {')
+    expect(classManagementPageSource).not.toContain(
+      'function resolveTabFromLocation(): WorkspaceTab {'
+    )
+    expect(classManagementPageSource).not.toContain(
+      'function syncPanelToLocation(tab: WorkspaceTab): void {'
+    )
     expect(classManagementPageSource).not.toContain(
       'const tabButtonRefs: Partial<Record<WorkspaceTab, HTMLButtonElement | null>> = {}'
     )

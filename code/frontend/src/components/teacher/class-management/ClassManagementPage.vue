@@ -61,7 +61,11 @@ const currentPageStudentCount = computed(() =>
           </div>
 
           <div class="teacher-actions">
-            <button type="button" class="teacher-btn teacher-btn--primary" @click="emit('openDashboard')">
+            <button
+              type="button"
+              class="teacher-btn teacher-btn--primary"
+              @click="emit('openDashboard')"
+            >
               教学概览
             </button>
             <button
@@ -87,13 +91,20 @@ const currentPageStudentCount = computed(() =>
             </div>
             <div class="progress-card metric-panel-card">
               <div class="progress-card-label metric-panel-label">当前页学生数</div>
-              <div class="progress-card-value metric-panel-value">{{ currentPageStudentCount }}</div>
-              <div class="progress-card-hint metric-panel-helper">当前分页已加载班级的学生数汇总</div>
+              <div class="progress-card-value metric-panel-value">
+                {{ currentPageStudentCount }}
+              </div>
+              <div class="progress-card-hint metric-panel-helper">
+                当前分页已加载班级的学生数汇总
+              </div>
             </div>
           </div>
         </section>
 
-        <section class="workspace-directory-section teacher-directory-section" aria-label="班级目录">
+        <section
+          class="workspace-directory-section teacher-directory-section"
+          aria-label="班级目录"
+        >
           <header class="list-heading">
             <div>
               <div class="journal-note-label">Class Directory</div>
@@ -146,9 +157,7 @@ const currentPageStudentCount = computed(() =>
               <span class="teacher-directory-head-cell teacher-directory-head-cell-class-name">
                 班级名称
               </span>
-              <span
-                class="teacher-directory-head-cell teacher-directory-head-cell-student-count"
-              >
+              <span class="teacher-directory-head-cell teacher-directory-head-cell-student-count">
                 学生数
               </span>
               <span>状态</span>
@@ -231,7 +240,11 @@ const currentPageStudentCount = computed(() =>
 <style scoped>
 .teacher-management-shell {
   --teacher-management-accent: color-mix(in srgb, var(--color-primary) 86%, var(--journal-ink));
-  --teacher-management-accent-strong: color-mix(in srgb, var(--color-primary) 74%, var(--journal-ink));
+  --teacher-management-accent-strong: color-mix(
+    in srgb,
+    var(--color-primary) 74%,
+    var(--journal-ink)
+  );
   --teacher-directory-columns: var(--teacher-class-directory-columns);
   --teacher-class-directory-columns: minmax(7rem, 0.7fr) minmax(11rem, 1.15fr) minmax(7rem, 0.7fr)
     minmax(7rem, 0.7fr) minmax(7rem, 0.75fr);

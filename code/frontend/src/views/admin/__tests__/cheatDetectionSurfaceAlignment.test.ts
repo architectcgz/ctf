@@ -37,7 +37,9 @@ describe('cheat detection surface alignment', () => {
   })
 
   it('uses shared admin shell accent and empty-state border tokens', () => {
-    expect(cheatDetectionSource).toContain('--journal-shell-dark-accent: var(--color-primary-hover);')
+    expect(cheatDetectionSource).toContain(
+      '--journal-shell-dark-accent: var(--color-primary-hover);'
+    )
     expect(cheatDetectionSource).toMatch(
       /\.admin-empty\s*\{[\s\S]*border:\s*1px dashed color-mix\(in srgb,\s*var\(--journal-border\) 72%, transparent\);/s
     )
@@ -123,12 +125,8 @@ describe('cheat detection surface alignment', () => {
   })
 
   it('uses workspace directory sections and flat rows instead of stacked cards for integrity review flows', () => {
-    expect(cheatDetectionSource).toContain(
-      '<h2 class="list-heading__title">风险焦点</h2>'
-    )
-    expect(cheatDetectionSource).toContain(
-      '<h2 class="list-heading__title">复核动作</h2>'
-    )
+    expect(cheatDetectionSource).toContain('<h2 class="list-heading__title">风险焦点</h2>')
+    expect(cheatDetectionSource).toContain('<h2 class="list-heading__title">复核动作</h2>')
     expect(cheatDetectionSource).toContain(
       'class="workspace-directory-section cheat-directory-section"'
     )

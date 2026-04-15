@@ -101,9 +101,9 @@ describe('AWDChallengeConfigDialog', () => {
     })
 
     expect((wrapper.get('#awd-http-put-path').element as HTMLInputElement).value).toBe('/api/flag')
-    expect((wrapper.get('#awd-http-put-body-template').element as HTMLTextAreaElement).value).toContain(
-      '{{FLAG}}'
-    )
+    expect(
+      (wrapper.get('#awd-http-put-body-template').element as HTMLTextAreaElement).value
+    ).toContain('{{FLAG}}')
     expect((wrapper.get('#awd-http-get-path').element as HTMLInputElement).value).toBe('/api/flag')
     expect(
       (wrapper.get('#awd-http-get-expected-substring').element as HTMLInputElement).value

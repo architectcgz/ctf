@@ -61,7 +61,9 @@ export function useAdminChallenges() {
   }
 
   function syncPolling() {
-    const hasActiveJob = Object.values(latestPublishRequests.value).some((request) => request?.active)
+    const hasActiveJob = Object.values(latestPublishRequests.value).some(
+      (request) => request?.active
+    )
     if (!hasActiveJob) {
       stopPolling()
       return
@@ -92,10 +94,9 @@ export function useAdminChallenges() {
 
     const previousRequests = latestPublishRequests.value
     const latestEntries = await Promise.all(
-      pagination.list.value.map(async (item) => [
-        item.id,
-        await getLatestChallengePublishRequest(item.id),
-      ] as const)
+      pagination.list.value.map(
+        async (item) => [item.id, await getLatestChallengePublishRequest(item.id)] as const
+      )
     )
 
     const nextRequests = Object.fromEntries(latestEntries)

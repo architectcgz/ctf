@@ -1,4 +1,9 @@
-import type { MyProgressData, RecommendationItem, SkillDimensionScore, TimelineEvent } from '@/api/contracts'
+import type {
+  MyProgressData,
+  RecommendationItem,
+  SkillDimensionScore,
+  TimelineEvent,
+} from '@/api/contracts'
 
 import type { DashboardHighlightItem } from './types'
 

@@ -95,11 +95,7 @@ function submitJumpPage(): void {
         下一页
       </button>
 
-      <form
-        v-if="showJump"
-        class="page-pagination-controls__jump"
-        @submit.prevent="submitJumpPage"
-      >
+      <form v-if="showJump" class="page-pagination-controls__jump" @submit.prevent="submitJumpPage">
         <label class="page-pagination-controls__jump-label">
           <span>跳至</span>
           <input
@@ -131,7 +127,10 @@ function submitJumpPage(): void {
   --page-pagination-ink: var(--journal-muted, var(--color-text-secondary));
   --page-pagination-border: var(
     --pagination-control-border,
-    var(--admin-control-border, color-mix(in srgb, var(--journal-border, var(--color-border-default)) 80%, transparent))
+    var(
+      --admin-control-border,
+      color-mix(in srgb, var(--journal-border, var(--color-border-default)) 80%, transparent)
+    )
   );
   --page-pagination-surface: color-mix(
     in srgb,
@@ -209,7 +208,11 @@ function submitJumpPage(): void {
 }
 
 .page-pagination-controls__button:hover:not(:disabled) {
-  border-color: color-mix(in srgb, var(--journal-accent, var(--color-primary)) 42%, var(--page-pagination-border));
+  border-color: color-mix(
+    in srgb,
+    var(--journal-accent, var(--color-primary)) 42%,
+    var(--page-pagination-border)
+  );
   color: var(--journal-accent, var(--color-primary));
   transform: translateY(-1px);
 }
@@ -217,8 +220,13 @@ function submitJumpPage(): void {
 .page-pagination-controls__button:focus-visible,
 .page-pagination-controls__input:focus-visible {
   outline: none;
-  border-color: color-mix(in srgb, var(--journal-accent, var(--color-primary)) 54%, var(--page-pagination-border));
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--journal-accent, var(--color-primary)) 14%, transparent);
+  border-color: color-mix(
+    in srgb,
+    var(--journal-accent, var(--color-primary)) 54%,
+    var(--page-pagination-border)
+  );
+  box-shadow: 0 0 0 3px
+    color-mix(in srgb, var(--journal-accent, var(--color-primary)) 14%, transparent);
 }
 
 .page-pagination-controls__button:disabled,

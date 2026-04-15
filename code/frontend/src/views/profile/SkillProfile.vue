@@ -53,12 +53,11 @@ const contentTabs: Array<{
 ]
 
 const contentTabOrder = contentTabs.map((tab) => tab.key) as SkillProfileTabKey[]
-const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSyncedTabs<SkillProfileTabKey>(
-  {
+const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } =
+  useUrlSyncedTabs<SkillProfileTabKey>({
     orderedTabs: contentTabOrder,
     defaultTab: 'analysis',
-  }
-)
+  })
 </script>
 
 <template>
@@ -323,9 +322,17 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
   --journal-divider: color-mix(in srgb, var(--color-border-default) 64%, transparent);
   --journal-track: color-mix(in srgb, var(--color-bg-surface) 84%, var(--color-bg-base));
   --journal-shell-accent: var(--color-primary);
-  --journal-shell-accent-strong: color-mix(in srgb, var(--color-primary-hover) 82%, var(--journal-ink));
+  --journal-shell-accent-strong: color-mix(
+    in srgb,
+    var(--color-primary-hover) 82%,
+    var(--journal-ink)
+  );
   --journal-shell-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
-  --journal-shell-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
+  --journal-shell-surface-subtle: color-mix(
+    in srgb,
+    var(--color-bg-surface) 74%,
+    var(--color-bg-base)
+  );
   --journal-shell-hero-radial-strength: 12%;
   --journal-shell-hero-radial-size: 20rem;
   --journal-shell-hero-end: color-mix(
@@ -336,7 +343,11 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
   --journal-shell-dark-ink: var(--color-text-primary);
   --journal-shell-dark-muted: var(--color-text-secondary);
   --journal-shell-dark-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
-  --journal-shell-dark-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
+  --journal-shell-dark-surface: color-mix(
+    in srgb,
+    var(--color-bg-surface) 88%,
+    var(--color-bg-base)
+  );
   --journal-shell-dark-surface-subtle: color-mix(
     in srgb,
     var(--color-bg-surface) 74%,
@@ -368,7 +379,11 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
   --journal-user-button-hover-background: transparent;
   --journal-user-button-hover-color: var(--journal-accent-strong);
   --journal-user-button-primary-border: color-mix(in srgb, var(--journal-accent) 50%, transparent);
-  --journal-user-button-primary-background: color-mix(in srgb, var(--journal-accent) 8%, transparent);
+  --journal-user-button-primary-background: color-mix(
+    in srgb,
+    var(--journal-accent) 8%,
+    transparent
+  );
   --journal-user-button-primary-color: var(--journal-accent-strong);
   --journal-user-button-primary-hover-background: color-mix(
     in srgb,

@@ -89,12 +89,16 @@ describe('admin management surface alignment', () => {
     expect(contestOrchestrationSource).toMatch(
       /\.contest-empty-state\s*\{[\s\S]*border-top-color:\s*color-mix\(in srgb,\s*var\(--journal-border\) 68%, transparent\);[\s\S]*border-bottom-color:\s*color-mix\(in srgb,\s*var\(--journal-border\) 68%, transparent\);/s
     )
-    expect(contestOrchestrationSource).toContain('<div class="workspace-overline">Contest Workspace</div>')
+    expect(contestOrchestrationSource).toContain(
+      '<div class="workspace-overline">Contest Workspace</div>'
+    )
     expect(contestOrchestrationSource).toContain('<h1 class="workspace-page-title">赛事管理台</h1>')
     expect(contestOrchestrationSource).toContain(
       '<h2 class="list-heading__title">当前赛事窗口</h2>'
     )
-    expect(contestOrchestrationSource).toContain('<div class="workspace-overline">Contest Directory</div>')
+    expect(contestOrchestrationSource).toContain(
+      '<div class="workspace-overline">Contest Directory</div>'
+    )
     expect(contestOrchestrationSource).toContain('<h2 class="list-heading__title">赛事目录</h2>')
     expect(contestOrchestrationSource).toContain('workspace-directory-empty contest-empty-state')
     expect(contestOrchestrationSource).not.toContain('当前筛选结果')
@@ -103,7 +107,9 @@ describe('admin management surface alignment', () => {
     )
     expect(contestOrchestrationSource).not.toContain('class="contest-list-filters"')
     expect(contestOrchestrationSource).toContain('class="contest-filter-grid"')
-    expect(contestOrchestrationSource).toContain('class="contest-filter-field contest-filter-field--action"')
+    expect(contestOrchestrationSource).toContain(
+      'class="contest-filter-field contest-filter-field--action"'
+    )
     expect(contestOrchestrationSource).not.toContain('class="contest-filter-actions"')
     expect(contestOrchestrationSource).toMatch(
       /\.contest-overview-summary\.metric-panel-default-surface\.metric-panel-workspace-surface\s*\{[\s\S]*--metric-panel-border:\s*color-mix\(in srgb,\s*var\(--workspace-brand\)\s*16%,\s*var\(--workspace-line-soft\)\);[\s\S]*--metric-panel-background:\s*radial-gradient\([\s\S]*linear-gradient\(/s
@@ -201,12 +207,16 @@ describe('admin management surface alignment', () => {
   })
 
   it('challenge detail hint section should use list-heading for the hint directory header', () => {
-    expect(challengeDetailSource).toContain('<div class="workspace-overline">Challenge Profile</div>')
+    expect(challengeDetailSource).toContain(
+      '<div class="workspace-overline">Challenge Profile</div>'
+    )
     expect(challengeDetailSource).toContain(
       'class="challenge-overview-summary progress-strip metric-panel-grid metric-panel-default-surface"'
     )
     expect(challengeDetailSource).toContain('<h2 class="list-heading__title">基础信息</h2>')
-    expect(challengeDetailSource).not.toContain('<div class="journal-note-label">Question Ops</div>')
+    expect(challengeDetailSource).not.toContain(
+      '<div class="journal-note-label">Question Ops</div>'
+    )
     expect(challengeDetailSource).toContain('<div class="journal-note-label">Hints</div>')
     expect(challengeDetailSource).toContain('<h2 class="list-heading__title">提示管理</h2>')
     expect(challengeDetailSource).not.toContain('workspace-tab-heading__title">提示管理</h2>')
@@ -362,7 +372,9 @@ describe('admin management surface alignment', () => {
     )
     expect(imageManageSource).toContain('class="image-status-strip"')
     expect(imageManageSource).toContain('class="image-status-strip__note">{{ refreshHint }}</div>')
-    expect(imageManageSource).not.toContain('class="image-summary-card progress-card metric-panel-card"')
+    expect(imageManageSource).not.toContain(
+      'class="image-summary-card progress-card metric-panel-card"'
+    )
 
     expect(userGovernanceSource).toContain(
       'class="admin-summary-grid user-overview-grid progress-strip metric-panel-grid metric-panel-default-surface'

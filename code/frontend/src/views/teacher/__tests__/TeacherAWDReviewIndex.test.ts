@@ -94,7 +94,9 @@ describe('TeacherAWDReviewIndex', () => {
   })
 
   it('筛选区应保持平铺，不应继续在页面局部做成独立卡片壳', () => {
-    expect(teacherAwdReviewIndexSource).toContain('class="workspace-directory-section teacher-directory-section"')
+    expect(teacherAwdReviewIndexSource).toContain(
+      'class="workspace-directory-section teacher-directory-section"'
+    )
     expect(teacherAwdReviewIndexSource).toContain('class="list-heading"')
     expect(teacherAwdReviewIndexSource).not.toContain('teacher-controls-title')
     expect(teacherAwdReviewIndexSource).not.toContain('teacher-controls-copy')
@@ -122,6 +124,8 @@ describe('TeacherAWDReviewIndex', () => {
     expect(teacherAwdReviewIndexSource).not.toContain('@submit.prevent="loadContests"')
     expect(teacherAwdReviewIndexSource).not.toContain('应用筛选')
     expect(teacherAwdReviewIndexSource).not.toContain('赛事筛选')
-    expect(teacherAwdReviewIndexSource).not.toContain('支持按状态或关键字快速定位要进入的 AWD 赛事。')
+    expect(teacherAwdReviewIndexSource).not.toContain(
+      '支持按状态或关键字快速定位要进入的 AWD 赛事。'
+    )
   })
 })

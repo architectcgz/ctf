@@ -147,7 +147,9 @@ export function useContestAWDWorkspace(options: UseContestAWDWorkspaceOptions) {
       })
       submitResult.value = result
       await refreshAll()
-      toast.success(result.is_success ? `攻击成功，+${result.score_gained} 分` : '攻击未命中有效 flag')
+      toast.success(
+        result.is_success ? `攻击成功，+${result.score_gained} 分` : '攻击未命中有效 flag'
+      )
       return result
     } catch (err) {
       console.error(err)

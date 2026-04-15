@@ -110,7 +110,10 @@ export function useAwdInspectorDerivedData({
       if (serviceTeamFilter.value && item.team_id !== serviceTeamFilter.value) {
         return false
       }
-      if (serviceStatusFilter.value !== 'all' && item.service_status !== serviceStatusFilter.value) {
+      if (
+        serviceStatusFilter.value !== 'all' &&
+        item.service_status !== serviceStatusFilter.value
+      ) {
         return false
       }
       if (
@@ -276,8 +279,7 @@ export function useAwdInspectorDerivedData({
   }
 
   function applyServiceAlertFilter(alertKey: string): void {
-    serviceAlertReasonFilter.value =
-      serviceAlertReasonFilter.value === alertKey ? '' : alertKey
+    serviceAlertReasonFilter.value = serviceAlertReasonFilter.value === alertKey ? '' : alertKey
   }
 
   return {

@@ -14,23 +14,26 @@ interface Indicator {
   max?: number
 }
 
-const props = withDefaults(defineProps<{
-  indicators: Indicator[]
-  values: number[]
-  name?: string
-  heightClass?: string
-  labelFontSize?: number
-  axisNameGap?: number
-  radius?: string | number
-  centerY?: string
-}>(), {
-  name: '能力画像',
-  heightClass: 'h-80',
-  labelFontSize: 14,
-  axisNameGap: 18,
-  radius: '68%',
-  centerY: '50%',
-})
+const props = withDefaults(
+  defineProps<{
+    indicators: Indicator[]
+    values: number[]
+    name?: string
+    heightClass?: string
+    labelFontSize?: number
+    axisNameGap?: number
+    radius?: string | number
+    centerY?: string
+  }>(),
+  {
+    name: '能力画像',
+    heightClass: 'h-80',
+    labelFontSize: 14,
+    axisNameGap: 18,
+    radius: '68%',
+    centerY: '50%',
+  }
+)
 
 function cssVar(name: string): string {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim()
@@ -39,7 +42,8 @@ function cssVar(name: string): string {
 const option = computed<EChartsOption>(() => {
   const primary = cssVar('--color-primary')
   const primaryHover = cssVar('--color-primary-hover')
-  const axisLabelColor = cssVar('--color-text-primary') || cssVar('--color-text-secondary') || primary
+  const axisLabelColor =
+    cssVar('--color-text-primary') || cssVar('--color-text-secondary') || primary
   return {
     tooltip: { trigger: 'item' },
     radar: {

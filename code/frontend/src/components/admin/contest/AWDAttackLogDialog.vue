@@ -1,7 +1,11 @@
 <script setup lang="ts">
 import { computed, reactive, watch } from 'vue'
 
-import type { AdminContestChallengeData, AdminContestTeamData, AWDAttackLogData } from '@/api/contracts'
+import type {
+  AdminContestChallengeData,
+  AdminContestTeamData,
+  AWDAttackLogData,
+} from '@/api/contracts'
 
 const props = defineProps<{
   open: boolean
@@ -40,12 +44,16 @@ const fieldErrors = reactive({
 })
 
 const challengeOptions = computed(() =>
-  [...props.challengeLinks].sort((a, b) => a.order - b.order || Number(a.challenge_id) - Number(b.challenge_id))
+  [...props.challengeLinks].sort(
+    (a, b) => a.order - b.order || Number(a.challenge_id) - Number(b.challenge_id)
+  )
 )
 const hasTargets = computed(() => props.teams.length >= 2 && challengeOptions.value.length > 0)
 
 function getChallengeLabel(challenge: AdminContestChallengeData): string {
-  const prefix = challenge.title?.trim() ? challenge.title.trim() : `Challenge #${challenge.challenge_id}`
+  const prefix = challenge.title?.trim()
+    ? challenge.title.trim()
+    : `Challenge #${challenge.challenge_id}`
   return `${prefix} · ${challenge.is_visible ? '可见' : '隐藏'}`
 }
 
@@ -96,11 +104,7 @@ function handleSubmit() {
     fieldErrors.victim_team_id = '攻击队伍和受害队伍不能相同'
   }
 
-  if (
-    fieldErrors.attacker_team_id ||
-    fieldErrors.victim_team_id ||
-    fieldErrors.challenge_id
-  ) {
+  if (fieldErrors.attacker_team_id || fieldErrors.victim_team_id || fieldErrors.challenge_id) {
     return
   }
 
@@ -126,7 +130,9 @@ function handleSubmit() {
     <form class="space-y-5" @submit.prevent="handleSubmit">
       <div class="grid gap-4 sm:grid-cols-2">
         <div class="space-y-2">
-          <label class="text-sm font-medium text-[var(--color-text-primary)]" for="awd-attack-team">攻击队伍</label>
+          <label class="text-sm font-medium text-[var(--color-text-primary)]" for="awd-attack-team"
+            >攻击队伍</label
+          >
           <select
             id="awd-attack-team"
             v-model="form.attacker_team_id"
@@ -137,11 +143,15 @@ function handleSubmit() {
               {{ team.name }}
             </option>
           </select>
-          <p v-if="fieldErrors.attacker_team_id" class="text-xs text-[var(--color-danger)]">{{ fieldErrors.attacker_team_id }}</p>
+          <p v-if="fieldErrors.attacker_team_id" class="text-xs text-[var(--color-danger)]">
+            {{ fieldErrors.attacker_team_id }}
+          </p>
         </div>
 
         <div class="space-y-2">
-          <label class="text-sm font-medium text-[var(--color-text-primary)]" for="awd-victim-team">受害队伍</label>
+          <label class="text-sm font-medium text-[var(--color-text-primary)]" for="awd-victim-team"
+            >受害队伍</label
+          >
           <select
             id="awd-victim-team"
             v-model="form.victim_team_id"
@@ -152,28 +162,42 @@ function handleSubmit() {
               {{ team.name }}
             </option>
           </select>
-          <p v-if="fieldErrors.victim_team_id" class="text-xs text-[var(--color-danger)]">{{ fieldErrors.victim_team_id }}</p>
+          <p v-if="fieldErrors.victim_team_id" class="text-xs text-[var(--color-danger)]">
+            {{ fieldErrors.victim_team_id }}
+          </p>
         </div>
       </div>
 
       <div class="grid gap-4 sm:grid-cols-2">
         <div class="space-y-2">
-          <label class="text-sm font-medium text-[var(--color-text-primary)]" for="awd-attack-challenge">题目</label>
+          <label
+            class="text-sm font-medium text-[var(--color-text-primary)]"
+            for="awd-attack-challenge"
+            >题目</label
+          >
           <select
             id="awd-attack-challenge"
             v-model="form.challenge_id"
             class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
           >
             <option value="" disabled>请选择题目</option>
-            <option v-for="challenge in challengeOptions" :key="challenge.id" :value="challenge.challenge_id">
+            <option
+              v-for="challenge in challengeOptions"
+              :key="challenge.id"
+              :value="challenge.challenge_id"
+            >
               {{ getChallengeLabel(challenge) }}
             </option>
           </select>
-          <p v-if="fieldErrors.challenge_id" class="text-xs text-[var(--color-danger)]">{{ fieldErrors.challenge_id }}</p>
+          <p v-if="fieldErrors.challenge_id" class="text-xs text-[var(--color-danger)]">
+            {{ fieldErrors.challenge_id }}
+          </p>
         </div>
 
         <div class="space-y-2">
-          <label class="text-sm font-medium text-[var(--color-text-primary)]" for="awd-attack-type">攻击类型</label>
+          <label class="text-sm font-medium text-[var(--color-text-primary)]" for="awd-attack-type"
+            >攻击类型</label
+          >
           <select
             id="awd-attack-type"
             v-model="form.attack_type"
@@ -186,18 +210,22 @@ function handleSubmit() {
       </div>
 
       <div class="space-y-2">
-        <label class="text-sm font-medium text-[var(--color-text-primary)]" for="awd-attack-flag">提交 Flag</label>
+        <label class="text-sm font-medium text-[var(--color-text-primary)]" for="awd-attack-flag"
+          >提交 Flag</label
+        >
         <input
           id="awd-attack-flag"
           v-model="form.submitted_flag"
           type="text"
           class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
           placeholder="可选，补录 flag_capture 时填写"
-        >
+        />
       </div>
 
-      <label class="flex items-center gap-3 rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)]">
-        <input v-model="form.is_success" type="checkbox" class="h-4 w-4 rounded border-border">
+      <label
+        class="flex items-center gap-3 rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)]"
+      >
+        <input v-model="form.is_success" type="checkbox" class="h-4 w-4 rounded border-border" />
         <span>本次攻击判定成功</span>
       </label>
       <p class="text-xs text-[var(--color-text-muted)]">

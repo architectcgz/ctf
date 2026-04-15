@@ -3,70 +3,37 @@
     <template #header>
       <div class="flex items-center justify-between">
         <span class="font-semibold">我的实例</span>
-        <ElButton
-          size="small"
-          @click="emit('refresh')"
-        >
-          刷新
-        </ElButton>
+        <ElButton size="small" @click="emit('refresh')"> 刷新 </ElButton>
       </div>
     </template>
 
-    <div
-      v-if="loading"
-      class="py-8 text-center text-[var(--color-text-muted)]"
-    >
-      加载中...
-    </div>
+    <div v-if="loading" class="py-8 text-center text-[var(--color-text-muted)]">加载中...</div>
 
-    <div
-      v-else-if="instances.length === 0"
-      class="text-center text-[var(--color-text-muted)] py-8"
-    >
+    <div v-else-if="instances.length === 0" class="text-center text-[var(--color-text-muted)] py-8">
       暂无运行中的实例
     </div>
 
-    <div
-      v-else
-      class="space-y-4"
-    >
-      <ElCard
-        v-for="instance in instances"
-        :key="instance.id"
-        shadow="never"
-        class="border"
-      >
+    <div v-else class="space-y-4">
+      <ElCard v-for="instance in instances" :key="instance.id" shadow="never" class="border">
         <div class="space-y-3">
           <div class="flex items-start justify-between">
             <div>
               <h3 class="font-semibold text-lg">
                 {{ instance.challenge_title }}
               </h3>
-              <ElTag
-                :type="getStatusColor(instance.status)"
-                size="small"
-                class="mt-1"
-              >
+              <ElTag :type="getStatusColor(instance.status)" size="small" class="mt-1">
                 {{ getStatusLabel(instance.status) }}
               </ElTag>
             </div>
             <div class="text-right">
-              <div
-                :class="getTimeColor(instance.expires_at)"
-                class="text-lg font-semibold"
-              >
+              <div :class="getTimeColor(instance.expires_at)" class="text-lg font-semibold">
                 {{ formatCountdown(instance.expires_at) }}
               </div>
-              <div class="text-xs text-[var(--color-text-muted)]">
-                剩余时间
-              </div>
+              <div class="text-xs text-[var(--color-text-muted)]">剩余时间</div>
             </div>
           </div>
 
-          <div
-            v-if="instance.access_url"
-            class="space-y-2"
-          >
+          <div v-if="instance.access_url" class="space-y-2">
             <div class="text-sm">
               <span class="text-[var(--color-text-secondary)]">访问地址：</span>
               <button

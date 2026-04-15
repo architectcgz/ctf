@@ -186,7 +186,9 @@ describe('TeacherStudentManagement', () => {
   })
 
   it('学生管理概况卡片应复用 admin dashboard 的共享数值卡片结构', () => {
-    expect(studentManagementSource).toContain('class="teacher-summary metric-panel-default-surface"')
+    expect(studentManagementSource).toContain(
+      'class="teacher-summary metric-panel-default-surface"'
+    )
     expect(studentManagementSource).toContain(
       'class="teacher-summary-grid progress-strip metric-panel-grid"'
     )

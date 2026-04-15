@@ -49,9 +49,9 @@ describe('ChallengePackageImportReview', () => {
     const sections = wrapper.findAll('article.import-review__section')
     expect(sections[0]?.text()).toContain('Runtime')
     expect(sections[0]?.text()).toContain('Topology')
-    expect(sections[0]?.find('.import-review__overview > .import-review__runtime > dl').exists()).toBe(
-      true
-    )
+    expect(
+      sections[0]?.find('.import-review__overview > .import-review__runtime > dl').exists()
+    ).toBe(true)
     expect(sections[0]?.find('.import-review__definition--runtime').exists()).toBe(false)
     expect(sections[1]?.text()).toContain('提示')
     expect(sections[1]?.find('dl').exists()).toBe(true)

@@ -9,7 +9,7 @@ export function getStatusLabel(status: ContestStatus): string {
     frozen: '已冻结',
     ended: '已结束',
     cancelled: '已取消',
-    archived: '已归档'
+    archived: '已归档',
   }
   return labels[status] || status
 }
@@ -19,7 +19,7 @@ export function getModeLabel(mode: ContestMode): string {
     jeopardy: 'Jeopardy',
     awd: 'AWD',
     awd_plus: 'AWD+',
-    king_of_hill: 'King of the Hill'
+    king_of_hill: 'King of the Hill',
   }
   return labels[mode] || mode
 }

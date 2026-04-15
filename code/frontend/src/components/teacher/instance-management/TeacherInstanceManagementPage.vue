@@ -119,18 +119,14 @@ function statusMeta(status: string): { label: string; chipClass: string } {
               <div class="progress-card-value metric-panel-value">
                 {{ totalCount }}
               </div>
-              <div class="progress-card-hint metric-panel-helper">
-                符合当前筛选条件的实例数量
-              </div>
+              <div class="progress-card-hint metric-panel-helper">符合当前筛选条件的实例数量</div>
             </article>
             <article class="progress-card metric-panel-card">
               <div class="progress-card-label metric-panel-label">运行中</div>
               <div class="progress-card-value metric-panel-value">
                 {{ runningCount }}
               </div>
-              <div class="progress-card-hint metric-panel-helper">
-                仍在占用环境资源的实例数量
-              </div>
+              <div class="progress-card-hint metric-panel-helper">仍在占用环境资源的实例数量</div>
             </article>
             <article class="progress-card metric-panel-card">
               <div class="progress-card-label metric-panel-label">即将到期</div>
@@ -144,7 +140,10 @@ function statusMeta(status: string): { label: string; chipClass: string } {
           </div>
         </section>
 
-        <section class="workspace-directory-section teacher-directory-section" aria-label="实例目录">
+        <section
+          class="workspace-directory-section teacher-directory-section"
+          aria-label="实例目录"
+        >
           <header class="list-heading">
             <div>
               <div class="journal-note-label">Instance Directory</div>
@@ -280,10 +279,7 @@ function statusMeta(status: string): { label: string; chipClass: string } {
                 {{ formatRemainingTime(item.remaining_time) }}
               </div>
 
-              <div
-                class="teacher-directory-row-url"
-                :title="item.access_url || '暂未分配访问地址'"
-              >
+              <div class="teacher-directory-row-url" :title="item.access_url || '暂未分配访问地址'">
                 {{ item.access_url || '暂未分配访问地址' }}
               </div>
 
@@ -334,8 +330,8 @@ function statusMeta(status: string): { label: string; chipClass: string } {
     var(--journal-ink)
   );
   --teacher-management-hero-border: var(--teacher-card-border);
-  --teacher-directory-columns: minmax(0, 1.1fr) minmax(0, 0.92fr) 6rem 7rem
-    minmax(132px, 0.7fr) minmax(132px, 0.7fr) 5rem 7rem minmax(180px, 1fr) 8rem;
+  --teacher-directory-columns: minmax(0, 1.1fr) minmax(0, 0.92fr) 6rem 7rem minmax(132px, 0.7fr)
+    minmax(132px, 0.7fr) 5rem 7rem minmax(180px, 1fr) 8rem;
 }
 
 .teacher-page {

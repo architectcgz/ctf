@@ -53,7 +53,9 @@ const weakDimensionStats = computed(() => {
     >
       <section
         class="teacher-subsection"
-        :class="splitCards ? ['showcase-panel-card', 'showcase-panel-card--minimal-wire'] : undefined"
+        :class="
+          splitCards ? ['showcase-panel-card', 'showcase-panel-card--minimal-wire'] : undefined
+        "
       >
         <header class="teacher-subsection__header">
           <div class="journal-eyebrow">Students</div>
@@ -102,7 +104,9 @@ const weakDimensionStats = computed(() => {
 
       <section
         class="teacher-subsection"
-        :class="splitCards ? ['showcase-panel-card', 'showcase-panel-card--minimal-wire'] : undefined"
+        :class="
+          splitCards ? ['showcase-panel-card', 'showcase-panel-card--minimal-wire'] : undefined
+        "
       >
         <header class="teacher-subsection__header">
           <div class="journal-eyebrow">Weak Dimensions</div>
@@ -276,7 +280,9 @@ const weakDimensionStats = computed(() => {
 }
 
 @media (min-width: 1280px) {
-  .teacher-insight-layout:not(.teacher-insight-layout--stacked):not(.teacher-insight-layout--split-cards) {
+  .teacher-insight-layout:not(.teacher-insight-layout--stacked):not(
+      .teacher-insight-layout--split-cards
+    ) {
     grid-template-columns: 1.05fr 0.95fr;
     gap: var(--space-4);
   }

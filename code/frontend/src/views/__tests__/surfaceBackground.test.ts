@@ -19,7 +19,9 @@ const surfaceShellBackgroundSource = readFileSync(
 describe('member-facing page surfaces', () => {
   it('should centralize tokenized hero background formula in shared surface stylesheet', () => {
     expect(surfaceShellBackgroundSource).toContain('.journal-shell.journal-shell-user.journal-hero')
-    expect(surfaceShellBackgroundSource).toContain('.journal-soft-surface .journal-shell.journal-hero')
+    expect(surfaceShellBackgroundSource).toContain(
+      '.journal-soft-surface .journal-shell.journal-hero'
+    )
     expect(surfaceShellBackgroundSource).toContain(
       "[data-theme='dark'] .journal-shell.journal-shell-user.journal-hero"
     )

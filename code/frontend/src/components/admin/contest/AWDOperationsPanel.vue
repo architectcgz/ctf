@@ -1,7 +1,11 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 
-import type { AdminContestChallengeData, AWDTrafficStatusGroup, ContestDetailData } from '@/api/contracts'
+import type {
+  AdminContestChallengeData,
+  AWDTrafficStatusGroup,
+  ContestDetailData,
+} from '@/api/contracts'
 import AWDAttackLogDialog from './AWDAttackLogDialog.vue'
 import AWDChallengeConfigDialog from './AWDChallengeConfigDialog.vue'
 import AWDChallengeConfigPanel from './AWDChallengeConfigPanel.vue'
@@ -118,12 +122,14 @@ const {
 } = useAdminContestAWD(selectedContest)
 
 const nextRoundNumber = computed(() =>
-  rounds.value.length === 0
-    ? 1
-    : Math.max(...rounds.value.map((item) => item.round_number)) + 1
+  rounds.value.length === 0 ? 1 : Math.max(...rounds.value.map((item) => item.round_number)) + 1
 )
-const canRecordServiceChecks = computed(() => teams.value.length > 0 && challengeLinks.value.length > 0)
-const canRecordAttackLogs = computed(() => teams.value.length >= 2 && challengeLinks.value.length > 0)
+const canRecordServiceChecks = computed(
+  () => teams.value.length > 0 && challengeLinks.value.length > 0
+)
+const canRecordAttackLogs = computed(
+  () => teams.value.length >= 2 && challengeLinks.value.length > 0
+)
 const serviceCheckHint = computed(() => {
   if (teams.value.length === 0 && challengeLinks.value.length === 0) {
     return '当前赛事还没有队伍和题目，无法录入服务检查。'

@@ -194,12 +194,7 @@ async function handleDelete() {
 }
 
 async function changeSubmissionPage(page: number) {
-  if (
-    page < 1 ||
-    page === submissionPage.value ||
-    submissionLoading.value ||
-    !props.challengeId
-  ) {
+  if (page < 1 || page === submissionPage.value || submissionLoading.value || !props.challengeId) {
     return
   }
 
@@ -214,11 +209,15 @@ function formatDate(value: string): string {
   return date.toLocaleString('zh-CN')
 }
 
-function submissionStatusLabel(status: TeacherSubmissionWriteupItemData['submission_status']): string {
+function submissionStatusLabel(
+  status: TeacherSubmissionWriteupItemData['submission_status']
+): string {
   return status === 'draft' ? '草稿' : '已发布'
 }
 
-function visibilityStatusLabel(status: TeacherSubmissionWriteupItemData['visibility_status']): string {
+function visibilityStatusLabel(
+  status: TeacherSubmissionWriteupItemData['visibility_status']
+): string {
   return status === 'hidden' ? '已隐藏' : '已公开'
 }
 
@@ -269,7 +268,9 @@ onMounted(() => {
     </div>
 
     <div class="writeup-manage-stats-shell">
-      <div class="admin-summary-grid writeup-summary-grid progress-strip metric-panel-grid metric-panel-default-surface">
+      <div
+        class="admin-summary-grid writeup-summary-grid progress-strip metric-panel-grid metric-panel-default-surface"
+      >
         <article class="journal-note progress-card metric-panel-card">
           <div class="journal-note-label progress-card-label metric-panel-label">官方题解</div>
           <div class="journal-note-value progress-card-value metric-panel-value">
@@ -302,20 +303,32 @@ onMounted(() => {
             <div class="journal-note-label">Writeup Directory</div>
             <h2 class="list-heading__title">题解目录</h2>
           </div>
-          <div class="writeup-manage-section__meta">共 {{ officialWriteupCount + submissionTotal }} 篇题解</div>
+          <div class="writeup-manage-section__meta">
+            共 {{ officialWriteupCount + submissionTotal }} 篇题解
+          </div>
         </header>
 
-        <AppLoading v-if="submissionLoading" class="writeup-manage-loading">正在加载题解投稿...</AppLoading>
+        <AppLoading v-if="submissionLoading" class="writeup-manage-loading"
+          >正在加载题解投稿...</AppLoading
+        >
 
         <template v-else>
           <AppEmpty
             v-if="!hasAnyWriteups"
             icon="FileText"
             title="当前还没有题解"
-            :description="challengeTitle ? `《${challengeTitle}》暂时还没有官方题解或学员题解。` : '当前题目暂时还没有官方题解或学员题解。'"
+            :description="
+              challengeTitle
+                ? `《${challengeTitle}》暂时还没有官方题解或学员题解。`
+                : '当前题目暂时还没有官方题解或学员题解。'
+            "
           >
             <template #actions>
-              <button class="admin-btn admin-btn-primary" type="button" @click="openWriteup('edit')">
+              <button
+                class="admin-btn admin-btn-primary"
+                type="button"
+                @click="openWriteup('edit')"
+              >
                 编写题解
               </button>
             </template>
@@ -333,34 +346,43 @@ onMounted(() => {
                 <span class="writeup-directory-head__actions">操作</span>
               </div>
 
-              <article
-                v-for="row in directoryRows"
-                :key="row.key"
-                class="writeup-row"
-              >
+              <article v-for="row in directoryRows" :key="row.key" class="writeup-row">
                 <div class="writeup-row__title">
                   <div class="writeup-row__name">{{ row.title }}</div>
                   <div v-if="row.preview" class="writeup-row__preview">{{ row.preview }}</div>
                 </div>
                 <div class="writeup-row__source">
-                  <span class="writeup-row__source-pill" :class="`writeup-row__source-pill--${row.source}`">
+                  <span
+                    class="writeup-row__source-pill"
+                    :class="`writeup-row__source-pill--${row.source}`"
+                  >
                     {{ row.source === 'official' ? '官方' : '学员' }}
                   </span>
                 </div>
                 <div class="writeup-row__author">
                   <div class="writeup-row__author-name">{{ row.authorPrimary }}</div>
-                  <div v-if="row.authorSecondary" class="writeup-row__author-meta">{{ row.authorSecondary }}</div>
-                  <div v-if="row.authorTertiary" class="writeup-row__author-meta">{{ row.authorTertiary }}</div>
+                  <div v-if="row.authorSecondary" class="writeup-row__author-meta">
+                    {{ row.authorSecondary }}
+                  </div>
+                  <div v-if="row.authorTertiary" class="writeup-row__author-meta">
+                    {{ row.authorTertiary }}
+                  </div>
                 </div>
                 <div class="writeup-row__student-no">{{ row.studentNo }}</div>
                 <div class="writeup-row__status">
                   <div>{{ row.statusPrimary }}</div>
-                  <div v-if="row.statusSecondary" class="writeup-row__status-subtle">{{ row.statusSecondary }}</div>
+                  <div v-if="row.statusSecondary" class="writeup-row__status-subtle">
+                    {{ row.statusSecondary }}
+                  </div>
                 </div>
                 <div class="writeup-row__updated">{{ row.updatedAt }}</div>
                 <div class="writeup-row__actions" role="group" aria-label="题解目录操作">
                   <template v-if="row.source === 'official'">
-                    <button class="admin-btn admin-btn-outline admin-btn-compact" type="button" @click="openWriteup('view')">
+                    <button
+                      class="admin-btn admin-btn-outline admin-btn-compact"
+                      type="button"
+                      @click="openWriteup('view')"
+                    >
                       查看
                     </button>
                     <div

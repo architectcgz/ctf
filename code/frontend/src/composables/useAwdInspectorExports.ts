@@ -231,7 +231,8 @@ export function useAwdInspectorExports({
         attack: {
           team_id: attackTeamFilter.value || null,
           team_name:
-            attackTeamOptions.value.find((team) => team.id === attackTeamFilter.value)?.name || null,
+            attackTeamOptions.value.find((team) => team.id === attackTeamFilter.value)?.name ||
+            null,
           result: attackResultFilter.value,
           source: attackSourceFilter.value,
           source_label:

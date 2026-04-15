@@ -15,8 +15,21 @@ const router = useRouter()
 const searchQuery = ref('')
 const categoryFilter = ref<ChallengeCategory | ''>('')
 const difficultyFilter = ref<ChallengeDifficulty | ''>('')
-const validCategories = ['web', 'pwn', 'reverse', 'crypto', 'misc', 'forensics'] satisfies ChallengeCategory[]
-const validDifficulties = ['beginner', 'easy', 'medium', 'hard', 'insane'] satisfies ChallengeDifficulty[]
+const validCategories = [
+  'web',
+  'pwn',
+  'reverse',
+  'crypto',
+  'misc',
+  'forensics',
+] satisfies ChallengeCategory[]
+const validDifficulties = [
+  'beginner',
+  'easy',
+  'medium',
+  'hard',
+  'insane',
+] satisfies ChallengeDifficulty[]
 
 function getQueryValue(value: unknown): string {
   if (typeof value === 'string') return value
@@ -26,7 +39,9 @@ function getQueryValue(value: unknown): string {
 
 function parseCategoryFilter(value: unknown): ChallengeCategory | '' {
   const queryValue = getQueryValue(value)
-  return validCategories.includes(queryValue as ChallengeCategory) ? (queryValue as ChallengeCategory) : ''
+  return validCategories.includes(queryValue as ChallengeCategory)
+    ? (queryValue as ChallengeCategory)
+    : ''
 }
 
 function parseDifficultyFilter(value: unknown): ChallengeDifficulty | '' {
@@ -233,7 +248,11 @@ watch(
           <span>当前题库概况</span>
         </div>
         <div class="challenge-summary-grid metric-panel-grid">
-          <div v-for="stat in summaryStats" :key="stat.key" class="challenge-summary-item metric-panel-card">
+          <div
+            v-for="stat in summaryStats"
+            :key="stat.key"
+            class="challenge-summary-item metric-panel-card"
+          >
             <div class="challenge-summary-label metric-panel-label">{{ stat.label }}</div>
             <div class="challenge-summary-value metric-panel-value">{{ stat.value }}</div>
             <div class="challenge-summary-helper metric-panel-helper">{{ stat.helper }}</div>
@@ -241,7 +260,10 @@ watch(
         </div>
       </section>
 
-      <section class="workspace-directory-section challenge-directory-section" aria-label="题目目录">
+      <section
+        class="workspace-directory-section challenge-directory-section"
+        aria-label="题目目录"
+      >
         <header class="list-heading">
           <div>
             <div class="journal-note-label">Challenge Directory</div>
@@ -358,7 +380,12 @@ watch(
           :description="emptyDescription"
         >
           <template #action>
-            <button v-if="hasActiveFilters" type="button" class="challenge-btn" @click="resetFilters">
+            <button
+              v-if="hasActiveFilters"
+              type="button"
+              class="challenge-btn"
+              @click="resetFilters"
+            >
               清空筛选
             </button>
           </template>
@@ -366,7 +393,6 @@ watch(
 
         <template v-else>
           <section class="challenge-directory">
-
             <div class="challenge-directory-head">
               <span>题目</span>
               <span>积分</span>
@@ -379,77 +405,81 @@ watch(
               <span>操作</span>
             </div>
 
-          <button
-            v-for="challenge in list"
-            :key="challenge.id"
-            type="button"
-            class="challenge-row"
-            :style="{ '--challenge-row-accent': getCategoryColor(challenge.category) }"
-            :aria-label="`${challenge.title}，${getCategoryLabel(challenge.category)}，${getDifficultyLabel(challenge.difficulty)}，${challenge.is_solved ? '已解出' : '待攻克'}`"
-            @click="goToDetail(challenge.id)"
-          >
-            <div class="challenge-row-main">
-              <div class="challenge-row-title-group">
-                <h2 class="challenge-row-title" :title="challenge.title">{{ challenge.title }}</h2>
+            <button
+              v-for="challenge in list"
+              :key="challenge.id"
+              type="button"
+              class="challenge-row"
+              :style="{ '--challenge-row-accent': getCategoryColor(challenge.category) }"
+              :aria-label="`${challenge.title}，${getCategoryLabel(challenge.category)}，${getDifficultyLabel(challenge.difficulty)}，${challenge.is_solved ? '已解出' : '待攻克'}`"
+              @click="goToDetail(challenge.id)"
+            >
+              <div class="challenge-row-main">
+                <div class="challenge-row-title-group">
+                  <h2 class="challenge-row-title" :title="challenge.title">
+                    {{ challenge.title }}
+                  </h2>
+                </div>
               </div>
-            </div>
 
-            <div class="challenge-row-points">{{ challenge.points }} pts</div>
+              <div class="challenge-row-points">{{ challenge.points }} pts</div>
 
-            <div class="challenge-row-category">
-              <span
-                class="challenge-chip"
-                :style="{
-                  '--challenge-chip-bg': `${getCategoryColor(challenge.category)}18`,
-                  '--challenge-chip-color': getCategoryColor(challenge.category),
-                }"
-              >
-                {{ getCategoryLabel(challenge.category) }}
-              </span>
-            </div>
+              <div class="challenge-row-category">
+                <span
+                  class="challenge-chip"
+                  :style="{
+                    '--challenge-chip-bg': `${getCategoryColor(challenge.category)}18`,
+                    '--challenge-chip-color': getCategoryColor(challenge.category),
+                  }"
+                >
+                  {{ getCategoryLabel(challenge.category) }}
+                </span>
+              </div>
 
-            <div class="challenge-row-difficulty">
-              <span
-                class="challenge-chip"
-                :style="{
-                  '--challenge-chip-bg': `${getDifficultyColor(challenge.difficulty)}18`,
-                  '--challenge-chip-color': getDifficultyColor(challenge.difficulty),
-                }"
-              >
-                {{ getDifficultyLabel(challenge.difficulty) }}
-              </span>
-            </div>
+              <div class="challenge-row-difficulty">
+                <span
+                  class="challenge-chip"
+                  :style="{
+                    '--challenge-chip-bg': `${getDifficultyColor(challenge.difficulty)}18`,
+                    '--challenge-chip-color': getDifficultyColor(challenge.difficulty),
+                  }"
+                >
+                  {{ getDifficultyLabel(challenge.difficulty) }}
+                </span>
+              </div>
 
-            <div class="challenge-row-tags">
-              <span
-                v-for="tag in challenge.tags.slice(0, 2)"
-                :key="tag"
-                class="challenge-chip challenge-chip-muted"
-              >
-                {{ tag }}
-              </span>
-            </div>
+              <div class="challenge-row-tags">
+                <span
+                  v-for="tag in challenge.tags.slice(0, 2)"
+                  :key="tag"
+                  class="challenge-chip challenge-chip-muted"
+                >
+                  {{ tag }}
+                </span>
+              </div>
 
-            <div class="challenge-row-status">
-              <span
-                class="challenge-state-chip"
-                :class="
-                  challenge.is_solved ? 'challenge-state-chip-solved' : 'challenge-state-chip-ready'
-                "
-              >
-                {{ challenge.is_solved ? '已解出' : '待攻克' }}
-              </span>
-            </div>
+              <div class="challenge-row-status">
+                <span
+                  class="challenge-state-chip"
+                  :class="
+                    challenge.is_solved
+                      ? 'challenge-state-chip-solved'
+                      : 'challenge-state-chip-ready'
+                  "
+                >
+                  {{ challenge.is_solved ? '已解出' : '待攻克' }}
+                </span>
+              </div>
 
-            <div class="challenge-row-solved">{{ challenge.solved_count }} 人解出</div>
+              <div class="challenge-row-solved">{{ challenge.solved_count }} 人解出</div>
 
-            <div class="challenge-row-attempts">尝试 {{ challenge.total_attempts }} 次</div>
+              <div class="challenge-row-attempts">尝试 {{ challenge.total_attempts }} 次</div>
 
-            <div class="challenge-row-cta">
-              <span>{{ challenge.is_solved ? '继续查看' : '开始做题' }}</span>
-              <ArrowRight class="h-4 w-4" />
-            </div>
-          </button>
+              <div class="challenge-row-cta">
+                <span>{{ challenge.is_solved ? '继续查看' : '开始做题' }}</span>
+                <ArrowRight class="h-4 w-4" />
+              </div>
+            </button>
 
             <div v-if="total > 0" class="challenge-pagination workspace-directory-pagination">
               <PagePaginationControls
@@ -469,7 +499,11 @@ watch(
 
 <style scoped>
 .journal-shell {
-  --journal-shell-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 78%, var(--color-bg-base));
+  --journal-shell-surface-subtle: color-mix(
+    in srgb,
+    var(--color-bg-surface) 78%,
+    var(--color-bg-base)
+  );
   --journal-shell-accent: color-mix(in srgb, var(--color-primary) 86%, var(--journal-ink));
   --journal-shell-accent-strong: color-mix(in srgb, var(--color-primary) 74%, var(--journal-ink));
   --challenge-tone-web: color-mix(in srgb, var(--color-cat-web) 82%, var(--journal-ink));
@@ -477,7 +511,11 @@ watch(
   --challenge-tone-reverse: color-mix(in srgb, var(--color-cat-reverse) 74%, var(--journal-ink));
   --challenge-tone-crypto: color-mix(in srgb, var(--color-cat-crypto) 76%, var(--journal-ink));
   --challenge-tone-misc: color-mix(in srgb, var(--color-cat-misc) 78%, var(--journal-ink));
-  --challenge-tone-forensics: color-mix(in srgb, var(--color-cat-forensics) 78%, var(--journal-ink));
+  --challenge-tone-forensics: color-mix(
+    in srgb,
+    var(--color-cat-forensics) 78%,
+    var(--journal-ink)
+  );
   --challenge-diff-beginner: color-mix(in srgb, var(--color-diff-beginner) 76%, var(--journal-ink));
   --challenge-diff-easy: color-mix(in srgb, var(--color-diff-easy) 78%, var(--journal-ink));
   --challenge-diff-medium: color-mix(in srgb, var(--color-diff-medium) 80%, var(--journal-ink));
@@ -655,8 +693,8 @@ watch(
 
 .challenge-directory {
   --challenge-directory-columns: minmax(0, 1.25fr) minmax(88px, 0.32fr) minmax(96px, 0.38fr)
-    minmax(96px, 0.38fr) minmax(160px, 0.82fr) 120px minmax(104px, 0.42fr)
-    minmax(116px, 0.48fr) 120px;
+    minmax(96px, 0.38fr) minmax(160px, 0.82fr) 120px minmax(104px, 0.42fr) minmax(116px, 0.48fr)
+    120px;
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;

@@ -13,8 +13,12 @@ describe('teacher workspace subpanel adoption', () => {
 
     const teacherWorkspaceSubpanelSource = readFileSync(teacherWorkspaceSubpanelPath, 'utf-8')
     expect(teacherWorkspaceSubpanelSource).toContain('.workspace-subpanel :deep(.teacher-panel) {')
-    expect(teacherWorkspaceSubpanelSource).toContain('.workspace-subpanel--flat :deep(.teacher-panel) {')
-    expect(teacherWorkspaceSubpanelSource).toContain('.workspace-subpanel :deep(.journal-eyebrow) {')
+    expect(teacherWorkspaceSubpanelSource).toContain(
+      '.workspace-subpanel--flat :deep(.teacher-panel) {'
+    )
+    expect(teacherWorkspaceSubpanelSource).toContain(
+      '.workspace-subpanel :deep(.journal-eyebrow) {'
+    )
 
     for (const source of [classStudentsSource, teacherDashboardSource]) {
       expect(source).toContain("@import '../teacher-workspace-subpanel.css';")

@@ -1,7 +1,11 @@
 <script setup lang="ts">
 import { computed, reactive, watch } from 'vue'
 
-import type { AdminChallengeListItem, AdminContestChallengeData, ContestDetailData } from '@/api/contracts'
+import type {
+  AdminChallengeListItem,
+  AdminContestChallengeData,
+  ContestDetailData,
+} from '@/api/contracts'
 
 type DialogMode = 'create' | 'edit'
 
@@ -41,9 +45,7 @@ const fieldErrors = reactive({
   order: '',
 })
 
-const dialogTitle = computed(() =>
-  props.mode === 'create' ? '关联赛事题目' : '编辑赛事题目'
-)
+const dialogTitle = computed(() => (props.mode === 'create' ? '关联赛事题目' : '编辑赛事题目'))
 
 const selectableChallenges = computed(() =>
   props.challengeOptions.filter(

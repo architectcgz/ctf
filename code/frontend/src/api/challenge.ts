@@ -51,13 +51,19 @@ interface RawChallengeSubmissionRecordData extends Omit<ChallengeSubmissionRecor
   id: string | number
 }
 
-interface RawRecommendedChallengeSolutionData extends Omit<RecommendedChallengeSolutionData, 'id' | 'source_id' | 'challenge_id'> {
+interface RawRecommendedChallengeSolutionData extends Omit<
+  RecommendedChallengeSolutionData,
+  'id' | 'source_id' | 'challenge_id'
+> {
   id: string | number
   source_id: string | number
   challenge_id: string | number
 }
 
-interface RawCommunityChallengeSolutionData extends Omit<CommunityChallengeSolutionData, 'id' | 'challenge_id' | 'user_id'> {
+interface RawCommunityChallengeSolutionData extends Omit<
+  CommunityChallengeSolutionData,
+  'id' | 'challenge_id' | 'user_id'
+> {
   id: string | number
   challenge_id: string | number
   user_id: string | number
@@ -110,7 +116,9 @@ function normalizeChallengeSubmissionRecord(
   }
 }
 
-function normalizeRecommendedSolution(item: RawRecommendedChallengeSolutionData): RecommendedChallengeSolutionData {
+function normalizeRecommendedSolution(
+  item: RawRecommendedChallengeSolutionData
+): RecommendedChallengeSolutionData {
   return {
     ...item,
     id: String(item.id),
@@ -119,7 +127,9 @@ function normalizeRecommendedSolution(item: RawRecommendedChallengeSolutionData)
   }
 }
 
-function normalizeCommunitySolution(item: RawCommunityChallengeSolutionData): CommunityChallengeSolutionData {
+function normalizeCommunitySolution(
+  item: RawCommunityChallengeSolutionData
+): CommunityChallengeSolutionData {
   return {
     ...item,
     id: String(item.id),
@@ -129,7 +139,11 @@ function normalizeCommunitySolution(item: RawCommunityChallengeSolutionData): Co
 }
 
 export async function getChallenges(params?: Record<string, unknown>): Promise<GetChallengesData> {
-  const payload = await request<PageResult<RawChallengeListItem>>({ method: 'GET', url: '/challenges', params })
+  const payload = await request<PageResult<RawChallengeListItem>>({
+    method: 'GET',
+    url: '/challenges',
+    params,
+  })
   return {
     ...payload,
     list: payload.list.map(normalizeChallengeListItem),
@@ -137,7 +151,10 @@ export async function getChallenges(params?: Record<string, unknown>): Promise<G
 }
 
 export async function getChallengeDetail(id: string): Promise<ChallengeDetailData> {
-  const payload = await request<RawChallengeDetailData>({ method: 'GET', url: `/challenges/${encodeURIComponent(id)}` })
+  const payload = await request<RawChallengeDetailData>({
+    method: 'GET',
+    url: `/challenges/${encodeURIComponent(id)}`,
+  })
   return normalizeChallengeDetail(payload)
 }
 
@@ -161,7 +178,9 @@ export async function getChallengeWriteup(id: string): Promise<ChallengeWriteupD
   }
 }
 
-export async function getMyChallengeWriteupSubmission(id: string): Promise<SubmissionWriteupData | null> {
+export async function getMyChallengeWriteupSubmission(
+  id: string
+): Promise<SubmissionWriteupData | null> {
   try {
     const payload = await request<RawSubmissionWriteupData | null>({
       method: 'GET',
@@ -184,7 +203,9 @@ export async function getMyChallengeWriteupSubmission(id: string): Promise<Submi
   }
 }
 
-export async function getMyChallengeSubmissionRecords(id: string): Promise<ChallengeSubmissionRecordData[]> {
+export async function getMyChallengeSubmissionRecords(
+  id: string
+): Promise<ChallengeSubmissionRecordData[]> {
   const payload = await request<RawChallengeSubmissionRecordData[]>({
     method: 'GET',
     url: `/challenges/${encodeURIComponent(id)}/submissions/mine`,
@@ -208,7 +229,9 @@ export async function upsertChallengeWriteupSubmission(
   return normalizeSubmissionWriteup(response)
 }
 
-export async function getRecommendedChallengeSolutions(id: string): Promise<RecommendedChallengeSolutionData[]> {
+export async function getRecommendedChallengeSolutions(
+  id: string
+): Promise<RecommendedChallengeSolutionData[]> {
   const payload = await request<PageResult<RawRecommendedChallengeSolutionData>>({
     method: 'GET',
     url: `/challenges/${encodeURIComponent(id)}/solutions/recommended`,
@@ -232,11 +255,17 @@ export async function getCommunityChallengeSolutions(
 }
 
 export async function submitFlag(id: string, flag: string): Promise<SubmitFlagData> {
-  return request<SubmitFlagData>({ method: 'POST', url: `/challenges/${encodeURIComponent(id)}/submit`, data: { flag } })
+  return request<SubmitFlagData>({
+    method: 'POST',
+    url: `/challenges/${encodeURIComponent(id)}/submit`,
+    data: { flag },
+  })
 }
 
 export async function createInstance(id: string): Promise<InstanceData> {
-  const payload = await request<InstanceData & { id: string | number; challenge_id: string | number }>({
+  const payload = await request<
+    InstanceData & { id: string | number; challenge_id: string | number }
+  >({
     method: 'POST',
     url: `/challenges/${encodeURIComponent(id)}/instances`,
     suppressErrorToast: true,

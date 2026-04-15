@@ -29,7 +29,9 @@ const pendingReportId = ref<string | null>(null)
 
 const solvedRate = computed(() => {
   if (!archive.value?.summary.total_challenges) return 0
-  return Math.round((archive.value.summary.total_solved / archive.value.summary.total_challenges) * 100)
+  return Math.round(
+    (archive.value.summary.total_solved / archive.value.summary.total_challenges) * 100
+  )
 })
 
 const formattedLastActivity = computed(() => {
@@ -38,7 +40,9 @@ const formattedLastActivity = computed(() => {
 })
 
 const rankedSkillDimensions = computed(() =>
-  [...(archive.value?.skill_profile.dimensions ?? [])].sort((left, right) => right.value - left.value)
+  [...(archive.value?.skill_profile.dimensions ?? [])].sort(
+    (left, right) => right.value - left.value
+  )
 )
 
 function openStudentAnalysis(): void {
@@ -132,12 +136,7 @@ async function handleExportArchive(): Promise<void> {
       </div>
     </div>
 
-    <AppEmpty
-      v-else-if="error"
-      title="复盘归档加载失败"
-      :description="error"
-      icon="AlertTriangle"
-    >
+    <AppEmpty v-else-if="error" title="复盘归档加载失败" :description="error" icon="AlertTriangle">
       <template #action>
         <ElButton type="primary" @click="reload">重新加载</ElButton>
       </template>
@@ -159,16 +158,22 @@ async function handleExportArchive(): Promise<void> {
             <article class="summary-card summary-card--primary metric-panel-card">
               <div class="summary-card__label metric-panel-label">完成率</div>
               <div class="summary-card__value metric-panel-value">{{ solvedRate }}%</div>
-              <div class="summary-card__hint metric-panel-helper">已完成 {{ archive.summary.total_solved }} / {{ archive.summary.total_challenges }}</div>
+              <div class="summary-card__hint metric-panel-helper">
+                已完成 {{ archive.summary.total_solved }} / {{ archive.summary.total_challenges }}
+              </div>
             </article>
             <article class="summary-card summary-card--warning metric-panel-card">
               <div class="summary-card__label metric-panel-label">有效提交</div>
-              <div class="summary-card__value metric-panel-value">{{ archive.summary.correct_submission_count }}</div>
+              <div class="summary-card__value metric-panel-value">
+                {{ archive.summary.correct_submission_count }}
+              </div>
               <div class="summary-card__hint metric-panel-helper">归档内命中 Flag 的提交次数</div>
             </article>
             <article class="summary-card summary-card--neutral metric-panel-card">
               <div class="summary-card__label metric-panel-label">最近活跃</div>
-              <div class="summary-card__value summary-card__value--time metric-panel-value">{{ formattedLastActivity }}</div>
+              <div class="summary-card__value summary-card__value--time metric-panel-value">
+                {{ formattedLastActivity }}
+              </div>
               <div class="summary-card__hint metric-panel-helper">归档内最后一条训练活动</div>
             </article>
           </div>
@@ -176,11 +181,7 @@ async function handleExportArchive(): Promise<void> {
 
         <SectionCard title="能力画像" subtitle="优先识别当前最强与最弱的训练维度。">
           <div class="skill-bars">
-            <article
-              v-for="item in rankedSkillDimensions"
-              :key="item.key"
-              class="skill-bars__item"
-            >
+            <article v-for="item in rankedSkillDimensions" :key="item.key" class="skill-bars__item">
               <div class="skill-bars__head">
                 <strong>{{ item.name }}</strong>
                 <span>{{ item.value }}%</span>
@@ -236,7 +237,11 @@ async function handleExportArchive(): Promise<void> {
 .review-archive-loading__hero,
 .review-archive-loading__block {
   border-radius: 26px;
-  background: linear-gradient(90deg, color-mix(in srgb, var(--journal-border) 80%, transparent), color-mix(in srgb, var(--journal-surface-subtle) 96%, var(--color-bg-base)));
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--journal-border) 80%, transparent),
+    color-mix(in srgb, var(--journal-surface-subtle) 96%, var(--color-bg-base))
+  );
   animation: review-archive-pulse 1.35s ease-in-out infinite;
 }
 
@@ -335,7 +340,11 @@ async function handleExportArchive(): Promise<void> {
   height: 12px;
   overflow: hidden;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--journal-border, var(--color-border-default)) 34%, transparent);
+  background: color-mix(
+    in srgb,
+    var(--journal-border, var(--color-border-default)) 34%,
+    transparent
+  );
 }
 
 .skill-bars__fill {
@@ -350,7 +359,8 @@ async function handleExportArchive(): Promise<void> {
 }
 
 @keyframes review-archive-pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 0.58;
   }
   50% {

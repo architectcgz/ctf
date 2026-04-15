@@ -253,16 +253,32 @@ async function submitPasswordChange(): Promise<void> {
 .journal-shell {
   --journal-shell-font: var(--font-family-sans);
   --journal-shell-accent: var(--color-primary);
-  --journal-shell-accent-strong: color-mix(in srgb, var(--color-primary-hover) 82%, var(--journal-ink));
+  --journal-shell-accent-strong: color-mix(
+    in srgb,
+    var(--color-primary-hover) 82%,
+    var(--journal-ink)
+  );
   --journal-shell-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
-  --journal-shell-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
+  --journal-shell-surface-subtle: color-mix(
+    in srgb,
+    var(--color-bg-surface) 74%,
+    var(--color-bg-base)
+  );
   --journal-shell-hero-radial-strength: 8%;
   --journal-shell-hero-radial-size: 18rem;
-  --journal-shell-hero-end: color-mix(in srgb, var(--journal-surface-subtle) 94%, var(--color-bg-base));
+  --journal-shell-hero-end: color-mix(
+    in srgb,
+    var(--journal-surface-subtle) 94%,
+    var(--color-bg-base)
+  );
   --journal-shell-hero-shadow: 0 18px 40px var(--color-shadow-soft);
   --journal-shell-dark-hero-radial-strength: 18%;
   --journal-shell-dark-hero-radial-size: 20rem;
-  --journal-shell-dark-hero-top: color-mix(in srgb, var(--journal-surface) 97%, var(--color-bg-base));
+  --journal-shell-dark-hero-top: color-mix(
+    in srgb,
+    var(--journal-surface) 97%,
+    var(--color-bg-base)
+  );
   --journal-shell-dark-hero-end: color-mix(
     in srgb,
     var(--journal-surface-subtle) 95%,
@@ -288,7 +304,11 @@ async function submitPasswordChange(): Promise<void> {
     var(--journal-accent) 12%,
     var(--journal-surface)
   );
-  --journal-user-button-primary-color: color-mix(in srgb, var(--journal-accent) 88%, var(--journal-ink));
+  --journal-user-button-primary-color: color-mix(
+    in srgb,
+    var(--journal-accent) 88%,
+    var(--journal-ink)
+  );
   --journal-user-tech-font: var(--font-family-mono);
 }
 

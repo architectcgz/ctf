@@ -33,7 +33,9 @@ interface UseAwdCheckResultPresentationOptions {
   formatDateTime: (value?: string) => string
 }
 
-export function useAwdCheckResultPresentation({ formatDateTime }: UseAwdCheckResultPresentationOptions) {
+export function useAwdCheckResultPresentation({
+  formatDateTime,
+}: UseAwdCheckResultPresentationOptions) {
   const checkerActionOptions: Array<{
     key: AWDCheckerActionView['key']
     label: AWDCheckerActionView['label']
@@ -179,7 +181,9 @@ export function useAwdCheckResultPresentation({ formatDateTime }: UseAwdCheckRes
       }))
   }
 
-  function getTargetActions(target: Record<string, unknown> | AWDProbeTargetView): AWDCheckerActionView[] {
+  function getTargetActions(
+    target: Record<string, unknown> | AWDProbeTargetView
+  ): AWDCheckerActionView[] {
     if (Array.isArray((target as AWDProbeTargetView).actions)) {
       return (target as AWDProbeTargetView).actions
     }

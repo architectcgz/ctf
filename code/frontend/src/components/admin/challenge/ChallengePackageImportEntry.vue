@@ -51,7 +51,9 @@ function handleFileChange(event: Event) {
       >
         <span class="import-entry__drop-kicker">{{ uploading ? '解析中' : 'ZIP Package' }}</span>
         <strong class="import-entry__drop-title">
-          {{ uploading ? '正在解析 challenge.yml 与题目内容' : '点击选择或重新上传题目包（支持多选）' }}
+          {{
+            uploading ? '正在解析 challenge.yml 与题目内容' : '点击选择或重新上传题目包（支持多选）'
+          }}
         </strong>
         <span class="import-entry__drop-copy">
           支持一次选择多个 Zip；每个包都需要单目录 Zip 或根目录直接包含 `challenge.yml`
@@ -66,7 +68,7 @@ function handleFileChange(event: Event) {
         multiple
         accept=".zip,application/zip"
         @change="handleFileChange"
-      >
+      />
     </div>
   </section>
 </template>
@@ -130,7 +132,10 @@ function handleFileChange(event: Event) {
       color-mix(in srgb, var(--journal-accent) 12%, transparent),
       transparent 45%
     );
-  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease;
   cursor: pointer;
 }
 

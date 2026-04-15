@@ -20,4 +20,3 @@ function width(i: number): string {
   return '80%'
 }
 </script>
-

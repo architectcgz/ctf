@@ -1,6 +1,12 @@
 import { useRouter } from 'vue-router'
 
-import { login as loginApi, logout as logoutApi, register as registerApi, type LoginRequest, type RegisterRequest } from '@/api/auth'
+import {
+  login as loginApi,
+  logout as logoutApi,
+  register as registerApi,
+  type LoginRequest,
+  type RegisterRequest,
+} from '@/api/auth'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/composables/useToast'
 import { getRoleDashboardPath } from '@/utils/roleRoutes'
