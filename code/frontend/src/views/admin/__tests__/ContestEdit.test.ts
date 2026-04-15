@@ -3,6 +3,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import ContestEdit from '../ContestEdit.vue'
 import { ApiError } from '@/api/request'
+import type { ContestDetailData } from '@/api/contracts'
 
 const pushMock = vi.fn()
 const routeState = vi.hoisted(() => ({
@@ -49,6 +50,32 @@ vi.mock('@/api/admin', async () => {
 vi.mock('@/composables/useDestructiveConfirm', () => ({
   confirmDestructiveAction: destructiveConfirmMock,
 }))
+
+function buildContestDetail(overrides: Partial<ContestDetailData> = {}): ContestDetailData {
+  return {
+    id: 'contest-1',
+    title: '2026 春季校园 CTF',
+    description: '校内赛',
+    mode: 'jeopardy',
+    status: 'registering',
+    starts_at: '2026-03-15T09:00:00.000Z',
+    ends_at: '2026-03-15T13:00:00.000Z',
+    ...overrides,
+  }
+}
+
+function mountContestEdit() {
+  return mount(ContestEdit, {
+    global: {
+      stubs: {
+        ElDialog: {
+          props: ['modelValue', 'title'],
+          template: '<div><div v-if="title">{{ title }}</div><slot /><slot name="footer" /></div>',
+        },
+      },
+    },
+  })
+}
 
 describe('ContestEdit', () => {
   beforeEach(() => {
@@ -192,6 +219,58 @@ describe('ContestEdit', () => {
     contestApiMocks.updateAdminContestChallenge.mockResolvedValue(undefined)
     contestApiMocks.deleteAdminContestChallenge.mockResolvedValue(undefined)
     destructiveConfirmMock.mockResolvedValue(true)
+  })
+
+  it('应该在普通赛下只展示基础信息与题目池阶段', async () => {
+    contestApiMocks.getContest.mockResolvedValue(buildContestDetail())
+
+    const wrapper = mountContestEdit()
+
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('基础信息')
+    expect(wrapper.text()).toContain('题目池')
+    expect(wrapper.text()).not.toContain('AWD 配置')
+    expect(wrapper.text()).not.toContain('赛前检查')
+    expect(wrapper.text()).not.toContain('轮次运行')
+  })
+
+  it('应该在 AWD 赛事下展示基础信息、题目池、AWD 配置、赛前检查与轮次运行', async () => {
+    contestApiMocks.getContest.mockResolvedValue(
+      buildContestDetail({
+        title: '2026 AWD 联赛',
+        description: '攻防赛',
+        mode: 'awd',
+        status: 'registering',
+      })
+    )
+
+    const wrapper = mountContestEdit()
+
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('基础信息')
+    expect(wrapper.text()).toContain('题目池')
+    expect(wrapper.text()).toContain('AWD 配置')
+    expect(wrapper.text()).toContain('赛前检查')
+    expect(wrapper.text()).toContain('轮次运行')
+  })
+
+  it('应该在 AWD 赛事已开赛时默认聚焦轮次运行阶段', async () => {
+    contestApiMocks.getContest.mockResolvedValue(
+      buildContestDetail({
+        title: '2026 AWD 联赛',
+        description: '攻防赛',
+        mode: 'awd',
+        status: 'running',
+      })
+    )
+
+    const wrapper = mountContestEdit()
+
+    await flushPromises()
+
+    expect(wrapper.get('[role="tab"][aria-selected="true"]').text()).toContain('轮次运行')
   })
 
   it('应该加载竞赛详情并在保存成功后返回赛事目录', async () => {
