@@ -23,6 +23,12 @@ const contestApiMocks = vi.hoisted(() => ({
 }))
 
 const destructiveConfirmMock = vi.hoisted(() => vi.fn())
+const toastMocks = vi.hoisted(() => ({
+  success: vi.fn(),
+  error: vi.fn(),
+  warning: vi.fn(),
+  info: vi.fn(),
+}))
 
 vi.mock('vue-router', async () => {
   const actual = await vi.importActual<typeof import('vue-router')>('vue-router')
@@ -52,6 +58,10 @@ vi.mock('@/composables/useDestructiveConfirm', () => ({
   confirmDestructiveAction: destructiveConfirmMock,
 }))
 
+vi.mock('@/composables/useToast', () => ({
+  useToast: () => toastMocks,
+}))
+
 function buildContestDetail(overrides: Partial<ContestDetailData> = {}): ContestDetailData {
   return {
     id: 'contest-1',
@@ -78,6 +88,16 @@ function mountContestEdit() {
   })
 }
 
+function createDeferred<T>() {
+  let resolve!: (value: T) => void
+  let reject!: (reason?: unknown) => void
+  const promise = new Promise<T>((res, rej) => {
+    resolve = res
+    reject = rej
+  })
+  return { promise, resolve, reject }
+}
+
 function getWorkbenchStageRail(wrapper: VueWrapper<any>) {
   return wrapper.get('[role="tablist"][aria-label="竞赛工作台阶段切换"]')
 }
@@ -95,6 +115,10 @@ describe('ContestEdit', () => {
     contestApiMocks.updateAdminContestChallenge.mockReset()
     contestApiMocks.deleteAdminContestChallenge.mockReset()
     destructiveConfirmMock.mockReset()
+    toastMocks.success.mockReset()
+    toastMocks.error.mockReset()
+    toastMocks.warning.mockReset()
+    toastMocks.info.mockReset()
     routeState.params = { id: 'contest-1' }
 
     contestApiMocks.getContest.mockResolvedValue({
@@ -230,7 +254,17 @@ describe('ContestEdit', () => {
   it('应该在普通赛下只展示基础信息与题目池阶段', async () => {
     contestApiMocks.getContest.mockResolvedValue(buildContestDetail())
 
-    const wrapper = mountContestEdit()
+    const wrapper = mount(ContestEdit, {
+      global: {
+        stubs: {
+          ElDialog: {
+            props: ['modelValue', 'title'],
+            template:
+              '<div><div v-if="modelValue"><div>{{ title }}</div><slot /><slot name="footer" /></div></div>',
+          },
+        },
+      },
+    })
 
     await flushPromises()
 
@@ -253,7 +287,17 @@ describe('ContestEdit', () => {
       })
     )
 
-    const wrapper = mountContestEdit()
+    const wrapper = mount(ContestEdit, {
+      global: {
+        stubs: {
+          ElDialog: {
+            props: ['modelValue', 'title'],
+            template:
+              '<div><div v-if="modelValue"><div>{{ title }}</div><slot /><slot name="footer" /></div></div>',
+          },
+        },
+      },
+    })
 
     await flushPromises()
 
@@ -448,6 +492,58 @@ describe('ContestEdit', () => {
     expect(pushMock).toHaveBeenCalledWith({ name: 'ContestManage', query: { panel: 'list' } })
   })
 
+  it('应该在 14025 后续读取 readiness 失败时给出清晰错误并保持界面可继续操作', async () => {
+    contestApiMocks.getContest.mockResolvedValue(
+      buildContestDetail({
+        title: '2026 AWD 联赛',
+        description: '攻防赛',
+        mode: 'awd',
+        status: 'registering',
+      })
+    )
+    contestApiMocks.updateContest.mockRejectedValueOnce(
+      new ApiError('AWD 开赛就绪检查未通过', { status: 409, code: 14025 })
+    )
+    contestApiMocks.getContestAWDReadiness
+      .mockResolvedValueOnce({
+        contest_id: 'contest-1',
+        ready: false,
+        total_challenges: 1,
+        passed_challenges: 0,
+        pending_challenges: 0,
+        failed_challenges: 1,
+        stale_challenges: 0,
+        missing_checker_challenges: 0,
+        blocking_count: 1,
+        global_blocking_reasons: [],
+        blocking_actions: ['start_contest'],
+        items: [
+          {
+            challenge_id: '101',
+            title: 'Challenge 101',
+            checker_type: 'http_standard',
+            validation_state: 'failed',
+            last_preview_at: '2026-04-12T08:00:00.000Z',
+            last_access_url: 'http://checker.internal/flag',
+            blocking_reason: 'last_preview_failed',
+          },
+        ],
+      })
+      .mockRejectedValueOnce(new Error('readiness fetch failed'))
+
+    const wrapper = mountContestEdit()
+
+    await flushPromises()
+    await wrapper.get('#contest-status').setValue('running')
+    await wrapper.get('.contest-form-button--primary').trigger('click')
+    await flushPromises()
+
+    expect(toastMocks.error).toHaveBeenCalledWith('readiness fetch failed')
+    expect(contestApiMocks.updateContest).toHaveBeenCalledTimes(1)
+    expect(pushMock).not.toHaveBeenCalled()
+    expect(wrapper.text()).toContain('编辑竞赛')
+  })
+
   it('应该在赛前检查强制开赛时带上基础表单最新草稿值', async () => {
     contestApiMocks.getContest.mockResolvedValue(
       buildContestDetail({
@@ -579,6 +675,75 @@ describe('ContestEdit', () => {
       status: 'published',
     })
     expect(wrapper.text()).toContain('Final Challenge')
+  })
+
+  it('应该在 AWD 配置题库加载失败时给出错误提示而不是留下未处理异常', async () => {
+    contestApiMocks.getContest.mockResolvedValue(
+      buildContestDetail({
+        title: '2026 AWD 联赛',
+        description: '攻防赛',
+        mode: 'awd',
+        status: 'registering',
+      })
+    )
+    contestApiMocks.getChallenges.mockRejectedValueOnce(new Error('catalog failed'))
+
+    const wrapper = mountContestEdit()
+
+    await flushPromises()
+    await wrapper.get('#contest-workbench-stage-tab-awd-config').trigger('click')
+    await flushPromises()
+    await wrapper.get('#awd-challenge-config-create').trigger('click')
+    await flushPromises()
+
+    expect(toastMocks.error).toHaveBeenCalledWith('catalog failed')
+    expect(wrapper.text()).toContain('新增 AWD 题目')
+  })
+
+  it('应该在 AWD 辅助数据仍在加载时显示阶段级加载提示而不是空态', async () => {
+    const challengeLinksDeferred = createDeferred<any[]>()
+
+    contestApiMocks.getContest.mockResolvedValue(
+      buildContestDetail({
+        title: '2026 AWD 联赛',
+        description: '攻防赛',
+        mode: 'awd',
+        status: 'registering',
+      })
+    )
+    contestApiMocks.listAdminContestChallenges.mockReturnValueOnce(challengeLinksDeferred.promise)
+
+    const wrapper = mountContestEdit()
+
+    await flushPromises()
+    await wrapper.get('#contest-workbench-stage-tab-awd-config').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('正在同步 AWD 配置...')
+    expect(wrapper.text()).not.toContain('当前赛事还没有关联题目')
+
+    challengeLinksDeferred.resolve([
+      {
+        id: 'link-1',
+        contest_id: 'contest-1',
+        challenge_id: '101',
+        title: 'Web 入门',
+        category: 'web',
+        difficulty: 'easy',
+        points: 120,
+        order: 1,
+        is_visible: true,
+        awd_checker_type: undefined,
+        awd_checker_config: {},
+        awd_sla_score: 0,
+        awd_defense_score: 0,
+        awd_checker_validation_state: 'pending',
+        awd_checker_last_preview_at: undefined,
+        awd_checker_last_preview_result: undefined,
+        created_at: '2026-03-10T00:00:00.000Z',
+      },
+    ])
+    await flushPromises()
   })
 
   it('应该允许管理员在竞赛编辑页编排题目', async () => {
