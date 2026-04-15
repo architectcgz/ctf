@@ -417,6 +417,7 @@ describe('ContestDetail', () => {
     await flushPromises()
     expect(document.body.textContent).toContain('创建新队伍')
     expect(document.body.textContent).toContain('队伍名称')
+    expect(document.body.querySelector('.c-focused-input-shell--plain')).not.toBeNull()
 
     const closeButtons = Array.from(document.body.querySelectorAll('button'))
     const cancelCreateButton = closeButtons.find((button) => button.textContent?.trim() === '取消')

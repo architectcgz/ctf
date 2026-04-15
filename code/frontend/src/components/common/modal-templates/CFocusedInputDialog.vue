@@ -11,6 +11,7 @@ const props = withDefaults(
     description?: string
     width?: string
     ariaLabel?: string
+    overlayClass?: string | string[]
     closeOnBackdrop?: boolean
     closeOnEscape?: boolean
   }>(),
@@ -19,6 +20,7 @@ const props = withDefaults(
     description: '为你的战队起一个响亮的代号。创建完成后，你可以生成邀请链接让其他队友加入。',
     width: '27.5rem',
     ariaLabel: '专注型输入弹窗',
+    overlayClass: '',
     closeOnBackdrop: true,
     closeOnEscape: true,
   }
@@ -32,6 +34,18 @@ const emit = defineEmits<{
 const panelStyle = computed<Record<string, string>>(() => ({
   '--c-focused-input-width': props.width,
 }))
+
+const resolvedOverlayClass = computed<string[]>(() => {
+  if (Array.isArray(props.overlayClass)) {
+    return ['c-focused-input-shell', ...props.overlayClass]
+  }
+
+  if (props.overlayClass) {
+    return ['c-focused-input-shell', props.overlayClass]
+  }
+
+  return ['c-focused-input-shell']
+})
 
 function forwardOpen(value: boolean): void {
   emit('update:open', value)
@@ -48,7 +62,7 @@ function closeDialog(): void {
     :open="open"
     :panel-style="panelStyle"
     panel-class="c-focused-input-panel"
-    overlay-class="c-focused-input-shell"
+    :overlay-class="resolvedOverlayClass"
     :aria-label="ariaLabel || props.title"
     :close-on-backdrop="closeOnBackdrop"
     :close-on-escape="closeOnEscape"
@@ -95,6 +109,12 @@ function closeDialog(): void {
   background: rgba(15, 23, 42, 0.3);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
+}
+
+.c-focused-input-shell--plain {
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 .c-focused-input-panel {
