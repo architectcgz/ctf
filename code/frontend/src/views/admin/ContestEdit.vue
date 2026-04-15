@@ -70,6 +70,8 @@ const savingChallengeConfig = ref(false)
 const contest = ref<ContestDetailData | null>(null)
 const editingBaseStatus = ref<AdminContestStatus | null>(null)
 const formDraft = ref<ContestFormDraft | null>(null)
+const awdConfigLoadError = ref('')
+const awdPreflightLoadError = ref('')
 const awdChallengeLinks = ref<AdminContestChallengeData[]>([])
 const awdReadiness = ref<AWDReadinessData | null>(null)
 const awdChallengeCatalog = ref<AdminChallengeListItem[]>([])
@@ -168,6 +170,8 @@ function syncWorkbenchStageSelection(): void {
 }
 
 function resetAwdWorkbenchState() {
+  awdConfigLoadError.value = ''
+  awdPreflightLoadError.value = ''
   awdChallengeLinks.value = []
   awdReadiness.value = null
   awdChallengeCatalog.value = []
@@ -186,15 +190,30 @@ async function refreshAwdWorkbenchData(nextContestId = contestId.value): Promise
 
   loadingAwdStageData.value = true
   try {
-    const [nextChallengeLinks, nextReadiness] = await Promise.all([
+    awdConfigLoadError.value = ''
+    awdPreflightLoadError.value = ''
+
+    const [challengeLinksResult, readinessResult] = await Promise.allSettled([
       listAdminContestChallenges(nextContestId),
       getContestAWDReadiness(nextContestId),
     ])
-    awdChallengeLinks.value = nextChallengeLinks
-    awdReadiness.value = nextReadiness
+
+    if (challengeLinksResult.status === 'fulfilled') {
+      awdChallengeLinks.value = challengeLinksResult.value
+    } else {
+      awdChallengeLinks.value = []
+      awdConfigLoadError.value = humanizeRequestError(challengeLinksResult.reason, 'AWD 配置数据加载失败')
+    }
+
+    if (readinessResult.status === 'fulfilled') {
+      awdReadiness.value = readinessResult.value
+    } else {
+      awdReadiness.value = null
+      awdPreflightLoadError.value = humanizeRequestError(readinessResult.reason, '赛前检查数据加载失败')
+    }
 
     if (activeAwdChallengeId.value) {
-      const hasActiveChallenge = nextChallengeLinks.some(
+      const hasActiveChallenge = awdChallengeLinks.value.some(
         (item) => item.challenge_id === activeAwdChallengeId.value
       )
       if (!hasActiveChallenge) {
@@ -217,8 +236,23 @@ async function loadAwdChallengeCatalog(): Promise<void> {
 
   loadingChallengeCatalog.value = true
   try {
-    const result = await getChallenges({ page: 1, page_size: 200 })
-    awdChallengeCatalog.value = result.list
+    const pageSize = 200
+    const catalog: AdminChallengeListItem[] = []
+    let page = 1
+    let total = 0
+
+    do {
+      const result = await getChallenges({
+        page,
+        page_size: pageSize,
+        status: 'published',
+      })
+      catalog.push(...result.list)
+      total = result.total
+      page += 1
+    } while (catalog.length < total)
+
+    awdChallengeCatalog.value = catalog
   } finally {
     loadingChallengeCatalog.value = false
   }
@@ -226,6 +260,12 @@ async function loadAwdChallengeCatalog(): Promise<void> {
 
 function selectStage(stage: ContestWorkbenchStageKey) {
   selectTab(stage)
+}
+
+function handleDraftChange(nextDraft: ContestFormDraft) {
+  formDraft.value = {
+    ...nextDraft,
+  }
 }
 
 function setActiveAwdChallenge(challengeId: string | null, source: 'pool' | 'preflight' | null) {
@@ -354,17 +394,19 @@ async function loadContestDetail(): Promise<void> {
     contest.value = detail
     editingBaseStatus.value = normalizeEditableStatus(detail.status)
     formDraft.value = createDraftFromContest(detail)
-    if (detail.mode === 'awd') {
-      await refreshAwdWorkbenchData(detail.id)
-    } else {
-      resetAwdWorkbenchState()
-    }
     syncWorkbenchStageSelection()
   } catch (error) {
     loadError.value = humanizeRequestError(error, '竞赛详情加载失败')
   } finally {
     loading.value = false
   }
+
+  if (contest.value?.mode === 'awd') {
+    await refreshAwdWorkbenchData(contest.value.id)
+    return
+  }
+
+  resetAwdWorkbenchState()
 }
 
 function goBackToContestList() {
@@ -546,6 +588,7 @@ onMounted(() => {
               :field-locks="fieldLocks"
               :show-cancel="false"
               :note="'保存后将返回赛事目录列表；AWD 赛事切换到进行中时仍会执行就绪检查。'"
+              @update:draft="handleDraftChange"
               @save="handleSave"
             />
           </section>
@@ -578,7 +621,20 @@ onMounted(() => {
           :aria-hidden="activeStage === 'awd-config' ? 'false' : 'true'"
         >
           <section class="contest-edit-section contest-edit-section--flat">
+            <AppEmpty
+              v-if="awdConfigLoadError"
+              title="AWD 配置数据暂时不可用"
+              :description="awdConfigLoadError"
+              icon="AlertTriangle"
+            >
+              <template #action>
+                <button type="button" class="admin-btn admin-btn-ghost" @click="refreshAwdWorkbenchData(contest.id)">
+                  重试加载
+                </button>
+              </template>
+            </AppEmpty>
             <AWDChallengeConfigPanel
+              v-else
               :challenge-links="awdChallengeLinks"
               :active-challenge-id="activeAwdChallengeId"
               :focus-source="awdConfigFocusSource"
@@ -602,7 +658,20 @@ onMounted(() => {
           :aria-hidden="activeStage === 'preflight' ? 'false' : 'true'"
         >
           <section class="contest-edit-section contest-edit-section--flat">
+            <AppEmpty
+              v-if="awdPreflightLoadError"
+              title="赛前检查暂时不可用"
+              :description="awdPreflightLoadError"
+              icon="AlertTriangle"
+            >
+              <template #action>
+                <button type="button" class="admin-btn admin-btn-ghost" @click="refreshAwdWorkbenchData(contest.id)">
+                  重试加载
+                </button>
+              </template>
+            </AppEmpty>
             <ContestAwdPreflightPanel
+              v-else
               :readiness="awdReadiness"
               :loading="loadingAwdStageData"
               @navigate:challenge="handleNavigateAwdChallengeFromPreflight"
