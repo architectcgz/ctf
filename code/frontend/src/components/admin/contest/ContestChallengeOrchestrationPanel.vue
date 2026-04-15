@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, toRef } from 'vue'
 import { Plus, RefreshCw } from 'lucide-vue-next'
 
 import {
@@ -13,6 +13,8 @@ import type { AdminChallengeListItem, AdminContestChallengeData, ContestDetailDa
 import { ApiError } from '@/api/request'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
+import { useAwdCheckResultPresentation } from '@/composables/useAwdCheckResultPresentation'
+import { useContestChallengePool } from '@/composables/useContestChallengePool'
 import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
 import { useToast } from '@/composables/useToast'
 
@@ -35,43 +37,70 @@ const dialogMode = ref<'create' | 'edit'>('create')
 const editingChallenge = ref<AdminContestChallengeData | null>(null)
 const removingChallengeId = ref<string | null>(null)
 
-const sortedChallengeLinks = computed(() =>
-  [...challengeLinks.value].sort(
-    (left, right) => left.order - right.order || left.challenge_id.localeCompare(right.challenge_id)
-  )
-)
-
-const summaryItems = computed(() => [
-  {
-    key: 'total',
-    label: '已关联题目',
-    value: String(challengeLinks.value.length),
-    hint: '当前竞赛中已经挂载的题目数量',
-  },
-  {
-    key: 'visible',
-    label: '对选手可见',
-    value: String(challengeLinks.value.filter((item) => item.is_visible).length),
-    hint: '进入竞赛详情后默认可见的题目数量',
-  },
-  {
-    key: 'hidden',
-    label: '暂时隐藏',
-    value: String(challengeLinks.value.filter((item) => !item.is_visible).length),
-    hint: '已关联但不会直接展示给选手的题目数量',
-  },
-])
+const {
+  visibleItems,
+  summaryItems,
+  filterItems,
+  activeFilter,
+  isAwdContest,
+  setFilter,
+} = useContestChallengePool(challengeLinks, toRef(props, 'contestMode'))
 
 const panelCopy = computed(() =>
-  props.contestMode === 'awd'
-    ? '先在这里关联赛事题目、整理顺序和基础分值；AWD 的 Checker、SLA 与防守分继续在 AWD 运维面板维护。'
-    : '在这里关联竞赛题目，安排展示顺序、基础分值和可见状态。'
+  isAwdContest.value
+    ? '先在这里维护统一题目池，完成题目关联、顺序、分值和可见性；AWD 深度配置在下一阶段完成。'
+    : '在这里维护统一题目池，安排题目顺序、基础分值和可见状态。'
+)
+const emptyState = computed(() =>
+  isAwdContest.value && activeFilter.value !== 'all'
+    ? {
+        title: '当前筛选条件下没有匹配题目',
+        description: '可以切换筛选查看其它题目，或继续补齐 AWD 配置后再返回这里检查。',
+      }
+    : {
+        title: '当前竞赛还没有关联题目',
+        description: '先从题库里关联题目，再安排顺序、分值和可见状态。',
+      }
 )
 
 const existingChallengeIds = computed(() => challengeLinks.value.map((item) => item.challenge_id))
+const listTitle = computed(() => (isAwdContest.value ? '统一题目池' : '已关联题目'))
+
+function formatDateTime(value?: string): string {
+  if (!value) {
+    return '未记录'
+  }
+  return new Date(value).toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
+const { getCheckerTypeLabel, getValidationStateLabel } = useAwdCheckResultPresentation({
+  formatDateTime,
+})
 
 function getChallengeTitle(item: AdminContestChallengeData): string {
   return item.title?.trim() || `Challenge #${item.challenge_id}`
+}
+
+function getCheckerLabel(item: AdminContestChallengeData): string {
+  return getCheckerTypeLabel(item.awd_checker_type) || '未配置 AWD'
+}
+
+function getValidationSummary(item: AdminContestChallengeData): string {
+  return getValidationStateLabel(item.awd_checker_validation_state) || '未验证'
+}
+
+function getAwdScoreSummary(item: AdminContestChallengeData): string {
+  return `SLA ${item.awd_sla_score ?? 0} / 防守 ${item.awd_defense_score ?? 0}`
+}
+
+function getPreviewSummary(item: AdminContestChallengeData): string {
+  return formatDateTime(item.awd_checker_last_preview_at)
 }
 
 function humanizeRequestError(error: unknown, fallback: string): string {
@@ -203,8 +232,8 @@ onMounted(() => {
   <section class="contest-challenge-panel">
     <header class="contest-challenge-panel__header">
       <div class="workspace-tab-heading__main">
-        <div class="workspace-overline">Contest Challenges</div>
-        <h1 class="workspace-page-title">题目编排</h1>
+        <div class="workspace-overline">Challenge Pool</div>
+        <h1 class="workspace-page-title">题目池</h1>
         <p class="workspace-page-copy">
           {{ panelCopy }}
         </p>
@@ -234,10 +263,26 @@ onMounted(() => {
       <header class="list-heading">
         <div>
           <div class="journal-note-label">Challenge Directory</div>
-          <h2 class="list-heading__title">已关联题目</h2>
+          <h2 class="list-heading__title">{{ listTitle }}</h2>
         </div>
         <div class="contest-section-meta">共 {{ challengeLinks.length }} 道题目</div>
       </header>
+
+      <div v-if="isAwdContest && filterItems.length > 0" class="contest-challenge-filters">
+        <button
+          v-for="filter in filterItems"
+          :id="`contest-challenge-filter-${filter.key}`"
+          :key="filter.key"
+          type="button"
+          class="contest-challenge-filter"
+          :class="{ 'contest-challenge-filter--active': activeFilter === filter.key }"
+          @click="setFilter(filter.key)"
+        >
+          <span class="contest-challenge-filter__label">{{ filter.label }}</span>
+          <span class="contest-challenge-filter__count">{{ filter.count }}</span>
+          <span class="contest-challenge-filter__hint">{{ filter.hint }}</span>
+        </button>
+      </div>
 
       <div
         v-if="loading"
@@ -247,25 +292,36 @@ onMounted(() => {
       </div>
 
       <AppEmpty
-        v-else-if="sortedChallengeLinks.length === 0"
-        title="当前竞赛还没有关联题目"
-        description="先从题库里关联题目，再安排顺序、分值和可见状态。"
+        v-else-if="visibleItems.length === 0"
+        :title="emptyState.title"
+        :description="emptyState.description"
         icon="FileChartColumnIncreasing"
       />
 
       <template v-else>
-        <div class="contest-challenge-directory__head" aria-hidden="true">
+        <div
+          class="contest-challenge-directory__head"
+          :class="{ 'contest-challenge-directory__head--awd': isAwdContest }"
+          aria-hidden="true"
+        >
           <span>题目</span>
           <span>可见性</span>
           <span>分值</span>
           <span>顺序</span>
+          <template v-if="isAwdContest">
+            <span>Checker</span>
+            <span>验证状态</span>
+            <span>SLA / 防守分</span>
+            <span>最近试跑</span>
+          </template>
           <span class="contest-challenge-directory__actions-label">操作</span>
         </div>
 
         <article
-          v-for="challenge in sortedChallengeLinks"
+          v-for="challenge in visibleItems"
           :key="challenge.id"
           class="contest-challenge-row"
+          :class="{ 'contest-challenge-row--awd': isAwdContest }"
         >
           <div class="contest-challenge-row__identity">
             <h3 class="contest-challenge-row__title">{{ getChallengeTitle(challenge) }}</h3>
@@ -278,6 +334,20 @@ onMounted(() => {
           </div>
           <div class="contest-challenge-row__score">{{ challenge.points }} 分</div>
           <div class="contest-challenge-row__order">第 {{ challenge.order }} 位</div>
+          <template v-if="isAwdContest">
+            <div class="contest-challenge-row__awd-cell">
+              {{ getCheckerLabel(challenge) }}
+            </div>
+            <div class="contest-challenge-row__awd-cell">
+              {{ getValidationSummary(challenge) }}
+            </div>
+            <div class="contest-challenge-row__awd-cell">
+              {{ getAwdScoreSummary(challenge) }}
+            </div>
+            <div class="contest-challenge-row__awd-cell">
+              {{ getPreviewSummary(challenge) }}
+            </div>
+          </template>
           <div
             class="contest-challenge-row__actions"
             role="group"
@@ -372,7 +442,7 @@ onMounted(() => {
 }
 
 .contest-challenge-panel__summary {
-  --admin-summary-grid-columns: repeat(3, minmax(0, 1fr));
+  --admin-summary-grid-columns: repeat(auto-fit, minmax(11rem, 1fr));
 }
 
 .contest-challenge-directory {
@@ -407,11 +477,67 @@ onMounted(() => {
   color: var(--journal-muted);
 }
 
+.contest-challenge-filters {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr));
+}
+
+.contest-challenge-filter {
+  display: grid;
+  gap: var(--space-1);
+  justify-items: start;
+  border: 1px solid color-mix(in srgb, var(--journal-border) 76%, transparent);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
+  padding: var(--space-3);
+  text-align: left;
+  transition: all 150ms ease;
+}
+
+.contest-challenge-filter:hover {
+  border-color: color-mix(in srgb, var(--journal-accent) 28%, transparent);
+}
+
+.contest-challenge-filter--active {
+  border-color: color-mix(in srgb, var(--journal-accent) 42%, transparent);
+  background: color-mix(in srgb, var(--journal-accent) 10%, var(--journal-surface));
+}
+
+.contest-challenge-filter__label,
+.contest-challenge-filter__count {
+  font-weight: 700;
+  color: var(--journal-ink);
+}
+
+.contest-challenge-filter__count {
+  font-size: var(--font-size-1-20);
+}
+
+.contest-challenge-filter__hint {
+  font-size: var(--font-size-0-82);
+  color: var(--journal-muted);
+}
+
 .contest-challenge-directory__head,
 .contest-challenge-row {
   display: grid;
   gap: var(--space-3);
   grid-template-columns: minmax(16rem, 1.7fr) minmax(6rem, 0.7fr) minmax(5rem, 0.55fr) minmax(5rem, 0.55fr) auto;
+}
+
+.contest-challenge-directory__head--awd,
+.contest-challenge-row--awd {
+  grid-template-columns:
+    minmax(14rem, 1.5fr)
+    minmax(5rem, 0.55fr)
+    minmax(4.5rem, 0.45fr)
+    minmax(4.5rem, 0.45fr)
+    minmax(8rem, 0.9fr)
+    minmax(7rem, 0.75fr)
+    minmax(8.5rem, 0.95fr)
+    minmax(8.5rem, 0.95fr)
+    auto;
 }
 
 .contest-challenge-directory__head {
@@ -446,7 +572,8 @@ onMounted(() => {
 
 .contest-challenge-row__visibility,
 .contest-challenge-row__score,
-.contest-challenge-row__order {
+.contest-challenge-row__order,
+.contest-challenge-row__awd-cell {
   font-size: var(--font-size-0-875);
   color: var(--journal-ink);
 }

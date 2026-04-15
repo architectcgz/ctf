@@ -414,7 +414,7 @@ describe('ContestEdit', () => {
     await flushPromises()
 
     expect(contestApiMocks.listAdminContestChallenges).toHaveBeenCalledWith('contest-1')
-    expect(wrapper.text()).toContain('题目编排')
+    expect(wrapper.text()).toContain('题目池')
     expect(wrapper.text()).toContain('Web 入门')
 
     await wrapper.get('#contest-challenge-add').trigger('click')
@@ -459,5 +459,49 @@ describe('ContestEdit', () => {
 
     expect(destructiveConfirmMock).toHaveBeenCalled()
     expect(contestApiMocks.deleteAdminContestChallenge).toHaveBeenCalledWith('contest-1', '101')
+  })
+
+  it('应该在 AWD 赛事的题目池阶段展示摘要列与筛选入口', async () => {
+    contestApiMocks.getContest.mockResolvedValue(
+      buildContestDetail({
+        title: '2026 AWD 联赛',
+        description: '攻防赛',
+        mode: 'awd',
+        status: 'registering',
+      })
+    )
+    contestApiMocks.listAdminContestChallenges.mockResolvedValue([
+      {
+        id: 'link-1',
+        contest_id: 'contest-1',
+        challenge_id: '101',
+        title: 'Web 入门',
+        category: 'web',
+        difficulty: 'easy',
+        points: 120,
+        order: 1,
+        is_visible: true,
+        awd_checker_type: 'http_standard',
+        awd_checker_config: {},
+        awd_sla_score: 18,
+        awd_defense_score: 28,
+        awd_checker_validation_state: 'stale',
+        awd_checker_last_preview_at: '2026-04-12T08:00:00.000Z',
+        awd_checker_last_preview_result: undefined,
+        created_at: '2026-03-10T00:00:00.000Z',
+      },
+    ])
+
+    const wrapper = mountContestEdit()
+
+    await flushPromises()
+    await wrapper.get('#contest-workbench-stage-tab-pool').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('未配置 AWD')
+    expect(wrapper.text()).toContain('预检失败')
+    expect(wrapper.text()).toContain('Checker')
+    expect(wrapper.text()).toContain('SLA 18 / 防守 28')
+    expect(wrapper.text()).toContain('待重新验证')
   })
 })
