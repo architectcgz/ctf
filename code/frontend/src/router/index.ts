@@ -503,6 +503,50 @@ const routes: RouteRecordRaw[] = [
         }),
       },
       {
+        path: 'admin/contest-ops/environment',
+        name: 'AdminContestOpsEnvironment',
+        component: () => import('@/views/admin/ContestOperationsHub.vue'),
+        meta: {
+          requiresAuth: true,
+          roles: ['admin'],
+          title: '环境管理',
+          contentLayout: 'bleed',
+        },
+      },
+      {
+        path: 'admin/contest-ops/traffic',
+        name: 'AdminContestOpsTraffic',
+        component: () => import('@/views/admin/ContestOperationsHub.vue'),
+        meta: {
+          requiresAuth: true,
+          roles: ['admin'],
+          title: '流量监控',
+          contentLayout: 'bleed',
+        },
+      },
+      {
+        path: 'admin/contest-ops/projector',
+        name: 'AdminContestOpsProjector',
+        component: () => import('@/views/admin/ContestOperationsHub.vue'),
+        meta: {
+          requiresAuth: true,
+          roles: ['admin'],
+          title: '大屏投射',
+          contentLayout: 'bleed',
+        },
+      },
+      {
+        path: 'admin/contest-ops/scoreboard',
+        name: 'AdminContestOpsScoreboard',
+        component: () => import('@/views/admin/ContestOperationsHub.vue'),
+        meta: {
+          requiresAuth: true,
+          roles: ['admin'],
+          title: '排行榜',
+          contentLayout: 'bleed',
+        },
+      },
+      {
         path: 'admin/users',
         name: 'UserManage',
         component: () => import('@/views/admin/UserManage.vue'),

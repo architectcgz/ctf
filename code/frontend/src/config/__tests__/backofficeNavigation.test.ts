@@ -30,6 +30,7 @@ describe('backofficeNavigation', () => {
       'overview',
       'operations',
       'resources',
+      'contestOps',
       'governance',
     ])
   })
@@ -39,5 +40,19 @@ describe('backofficeNavigation', () => {
 
     expect(items.map((item) => item.label)).toEqual(['题目管理', '环境模板', '镜像管理'])
     expect(items.find((item) => item.active)?.routeName).toBe('ChallengeManage')
+  })
+
+  it('maps admin event operations routes back to 赛事运维 and marks the matched secondary item active', () => {
+    expect(getBackofficeModuleByPath('/admin/contest-ops/environment')?.key).toBe('contestOps')
+
+    const items = getVisibleBackofficeSecondaryItems('/admin/contest-ops/traffic', 'admin')
+
+    expect(items.map((item) => item.label)).toEqual([
+      '环境管理',
+      '流量监控',
+      '大屏投射',
+      '排行榜',
+    ])
+    expect(items.find((item) => item.active)?.routeName).toBe('AdminContestOpsTraffic')
   })
 })
