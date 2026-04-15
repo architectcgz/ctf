@@ -690,7 +690,7 @@ function handleSubmit() {
               :id="`awd-http-preset-${preset.id}`"
               :key="preset.id"
               type="button"
-              class="checker-preset-button"
+              class="ui-btn ui-btn--secondary checker-preset-button"
               @click="applyHTTPPreset(preset.id)"
             >
               <span class="checker-preset-button__label">{{ preset.label }}</span>
@@ -704,58 +704,58 @@ function handleSubmit() {
               <p class="checker-action-section__hint">写入当前轮 flag。</p>
             </header>
             <div class="checker-action-grid">
-              <div class="space-y-2">
-                <label
-                  class="text-sm font-medium text-[var(--color-text-primary)]"
-                  for="awd-http-put-method"
-                  >Method</label
-                >
-                <select
-                  id="awd-http-put-method"
-                  v-model="httpStandardDraft.put_flag.method"
-                  class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
-                >
-                  <option v-for="method in AWD_HTTP_METHOD_OPTIONS" :key="method" :value="method">
-                    {{ method }}
-                  </option>
-                </select>
+              <div class="ui-field awd-http-action-field">
+                <label class="ui-field__label" for="awd-http-put-method">Method</label>
+                <span class="ui-control-wrap awd-http-action-control">
+                  <select
+                    id="awd-http-put-method"
+                    v-model="httpStandardDraft.put_flag.method"
+                    class="ui-control"
+                  >
+                    <option v-for="method in AWD_HTTP_METHOD_OPTIONS" :key="method" :value="method">
+                      {{ method }}
+                    </option>
+                  </select>
+                </span>
               </div>
 
-              <div class="space-y-2">
-                <label
-                  class="text-sm font-medium text-[var(--color-text-primary)]"
-                  for="awd-http-put-path"
-                  >Path</label
+              <div class="ui-field awd-http-action-field">
+                <label class="ui-field__label" for="awd-http-put-path">Path</label>
+                <span
+                  class="ui-control-wrap awd-http-action-control"
+                  :class="{ 'is-error': !!fieldErrors.http_put_path }"
                 >
-                <input
-                  id="awd-http-put-path"
-                  v-model="httpStandardDraft.put_flag.path"
-                  type="text"
-                  placeholder="/api/flag"
-                  class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
-                />
-                <p v-if="fieldErrors.http_put_path" class="text-xs text-[var(--color-danger)]">
+                  <input
+                    id="awd-http-put-path"
+                    v-model="httpStandardDraft.put_flag.path"
+                    type="text"
+                    placeholder="/api/flag"
+                    class="ui-control"
+                  />
+                </span>
+                <p v-if="fieldErrors.http_put_path" class="ui-field__error awd-http-action-error">
                   {{ fieldErrors.http_put_path }}
                 </p>
               </div>
 
-              <div class="space-y-2">
-                <label
-                  class="text-sm font-medium text-[var(--color-text-primary)]"
-                  for="awd-http-put-expected-status"
-                  >状态码</label
+              <div class="ui-field awd-http-action-field">
+                <label class="ui-field__label" for="awd-http-put-expected-status">状态码</label>
+                <span
+                  class="ui-control-wrap awd-http-action-control"
+                  :class="{ 'is-error': !!fieldErrors.http_put_expected_status }"
                 >
-                <input
-                  id="awd-http-put-expected-status"
-                  v-model.number="httpStandardDraft.put_flag.expected_status"
-                  type="number"
-                  min="1"
-                  step="1"
-                  class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
-                />
+                  <input
+                    id="awd-http-put-expected-status"
+                    v-model.number="httpStandardDraft.put_flag.expected_status"
+                    type="number"
+                    min="1"
+                    step="1"
+                    class="ui-control"
+                  />
+                </span>
                 <p
                   v-if="fieldErrors.http_put_expected_status"
-                  class="text-xs text-[var(--color-danger)]"
+                  class="ui-field__error awd-http-action-error"
                 >
                   {{ fieldErrors.http_put_expected_status }}
                 </p>
@@ -763,36 +763,37 @@ function handleSubmit() {
             </div>
 
             <div class="checker-action-extra-grid">
-              <div class="space-y-2">
-                <label
-                  class="text-sm font-medium text-[var(--color-text-primary)]"
-                  for="awd-http-put-body-template"
-                  >Body Template</label
-                >
-                <textarea
-                  id="awd-http-put-body-template"
-                  v-model="httpStandardDraft.put_flag.body_template"
-                  rows="4"
-                  class="w-full rounded-xl border border-border bg-surface px-4 py-3 font-mono text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
-                />
+              <div class="ui-field awd-http-action-field">
+                <label class="ui-field__label" for="awd-http-put-body-template">
+                  Body Template
+                </label>
+                <span class="ui-control-wrap awd-http-action-control">
+                  <textarea
+                    id="awd-http-put-body-template"
+                    v-model="httpStandardDraft.put_flag.body_template"
+                    rows="4"
+                    class="ui-control awd-config-control--mono"
+                  />
+                </span>
               </div>
 
-              <div class="space-y-2">
-                <label
-                  class="text-sm font-medium text-[var(--color-text-primary)]"
-                  for="awd-http-put-headers"
-                  >Headers JSON</label
+              <div class="ui-field awd-http-action-field">
+                <label class="ui-field__label" for="awd-http-put-headers">Headers JSON</label>
+                <span
+                  class="ui-control-wrap awd-http-action-control"
+                  :class="{ 'is-error': !!fieldErrors.http_put_headers_text }"
                 >
-                <textarea
-                  id="awd-http-put-headers"
-                  v-model="httpStandardDraft.put_flag.headers_text"
-                  rows="4"
-                  class="w-full rounded-xl border border-border bg-surface px-4 py-3 font-mono text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
-                  placeholder='{"Content-Type":"application/json"}'
-                />
+                  <textarea
+                    id="awd-http-put-headers"
+                    v-model="httpStandardDraft.put_flag.headers_text"
+                    rows="4"
+                    class="ui-control awd-config-control--mono"
+                    placeholder='{"Content-Type":"application/json"}'
+                  />
+                </span>
                 <p
                   v-if="fieldErrors.http_put_headers_text"
-                  class="text-xs text-[var(--color-danger)]"
+                  class="ui-field__error awd-http-action-error"
                 >
                   {{ fieldErrors.http_put_headers_text }}
                 </p>
@@ -806,58 +807,58 @@ function handleSubmit() {
               <p class="checker-action-section__hint">回读并校验当前轮 flag。</p>
             </header>
             <div class="checker-action-grid">
-              <div class="space-y-2">
-                <label
-                  class="text-sm font-medium text-[var(--color-text-primary)]"
-                  for="awd-http-get-method"
-                  >Method</label
-                >
-                <select
-                  id="awd-http-get-method"
-                  v-model="httpStandardDraft.get_flag.method"
-                  class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
-                >
-                  <option v-for="method in AWD_HTTP_METHOD_OPTIONS" :key="method" :value="method">
-                    {{ method }}
-                  </option>
-                </select>
+              <div class="ui-field awd-http-action-field">
+                <label class="ui-field__label" for="awd-http-get-method">Method</label>
+                <span class="ui-control-wrap awd-http-action-control">
+                  <select
+                    id="awd-http-get-method"
+                    v-model="httpStandardDraft.get_flag.method"
+                    class="ui-control"
+                  >
+                    <option v-for="method in AWD_HTTP_METHOD_OPTIONS" :key="method" :value="method">
+                      {{ method }}
+                    </option>
+                  </select>
+                </span>
               </div>
 
-              <div class="space-y-2">
-                <label
-                  class="text-sm font-medium text-[var(--color-text-primary)]"
-                  for="awd-http-get-path"
-                  >Path</label
+              <div class="ui-field awd-http-action-field">
+                <label class="ui-field__label" for="awd-http-get-path">Path</label>
+                <span
+                  class="ui-control-wrap awd-http-action-control"
+                  :class="{ 'is-error': !!fieldErrors.http_get_path }"
                 >
-                <input
-                  id="awd-http-get-path"
-                  v-model="httpStandardDraft.get_flag.path"
-                  type="text"
-                  placeholder="/api/flag"
-                  class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
-                />
-                <p v-if="fieldErrors.http_get_path" class="text-xs text-[var(--color-danger)]">
+                  <input
+                    id="awd-http-get-path"
+                    v-model="httpStandardDraft.get_flag.path"
+                    type="text"
+                    placeholder="/api/flag"
+                    class="ui-control"
+                  />
+                </span>
+                <p v-if="fieldErrors.http_get_path" class="ui-field__error awd-http-action-error">
                   {{ fieldErrors.http_get_path }}
                 </p>
               </div>
 
-              <div class="space-y-2">
-                <label
-                  class="text-sm font-medium text-[var(--color-text-primary)]"
-                  for="awd-http-get-expected-status"
-                  >状态码</label
+              <div class="ui-field awd-http-action-field">
+                <label class="ui-field__label" for="awd-http-get-expected-status">状态码</label>
+                <span
+                  class="ui-control-wrap awd-http-action-control"
+                  :class="{ 'is-error': !!fieldErrors.http_get_expected_status }"
                 >
-                <input
-                  id="awd-http-get-expected-status"
-                  v-model.number="httpStandardDraft.get_flag.expected_status"
-                  type="number"
-                  min="1"
-                  step="1"
-                  class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
-                />
+                  <input
+                    id="awd-http-get-expected-status"
+                    v-model.number="httpStandardDraft.get_flag.expected_status"
+                    type="number"
+                    min="1"
+                    step="1"
+                    class="ui-control"
+                  />
+                </span>
                 <p
                   v-if="fieldErrors.http_get_expected_status"
-                  class="text-xs text-[var(--color-danger)]"
+                  class="ui-field__error awd-http-action-error"
                 >
                   {{ fieldErrors.http_get_expected_status }}
                 </p>
@@ -865,37 +866,38 @@ function handleSubmit() {
             </div>
 
             <div class="checker-action-extra-grid">
-              <div class="space-y-2">
-                <label
-                  class="text-sm font-medium text-[var(--color-text-primary)]"
-                  for="awd-http-get-expected-substring"
-                  >预期片段</label
-                >
-                <input
-                  id="awd-http-get-expected-substring"
-                  v-model="httpStandardDraft.get_flag.expected_substring"
-                  type="text"
-                  class="w-full rounded-xl border border-border bg-surface px-4 py-3 font-mono text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
-                  placeholder="{{FLAG}}"
-                />
+              <div class="ui-field awd-http-action-field">
+                <label class="ui-field__label" for="awd-http-get-expected-substring">
+                  预期片段
+                </label>
+                <span class="ui-control-wrap awd-http-action-control">
+                  <input
+                    id="awd-http-get-expected-substring"
+                    v-model="httpStandardDraft.get_flag.expected_substring"
+                    type="text"
+                    class="ui-control awd-config-control--mono"
+                    placeholder="{{FLAG}}"
+                  />
+                </span>
               </div>
 
-              <div class="space-y-2">
-                <label
-                  class="text-sm font-medium text-[var(--color-text-primary)]"
-                  for="awd-http-get-headers"
-                  >Headers JSON</label
+              <div class="ui-field awd-http-action-field">
+                <label class="ui-field__label" for="awd-http-get-headers">Headers JSON</label>
+                <span
+                  class="ui-control-wrap awd-http-action-control"
+                  :class="{ 'is-error': !!fieldErrors.http_get_headers_text }"
                 >
-                <textarea
-                  id="awd-http-get-headers"
-                  v-model="httpStandardDraft.get_flag.headers_text"
-                  rows="4"
-                  class="w-full rounded-xl border border-border bg-surface px-4 py-3 font-mono text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
-                  placeholder='{"Accept":"application/json"}'
-                />
+                  <textarea
+                    id="awd-http-get-headers"
+                    v-model="httpStandardDraft.get_flag.headers_text"
+                    rows="4"
+                    class="ui-control awd-config-control--mono"
+                    placeholder='{"Accept":"application/json"}'
+                  />
+                </span>
                 <p
                   v-if="fieldErrors.http_get_headers_text"
-                  class="text-xs text-[var(--color-danger)]"
+                  class="ui-field__error awd-http-action-error"
                 >
                   {{ fieldErrors.http_get_headers_text }}
                 </p>
@@ -909,77 +911,77 @@ function handleSubmit() {
               <p class="checker-action-section__hint">可选动作，路径留空时视为未启用。</p>
             </header>
             <div class="checker-action-grid">
-              <div class="space-y-2">
-                <label
-                  class="text-sm font-medium text-[var(--color-text-primary)]"
-                  for="awd-http-havoc-method"
-                  >Method</label
-                >
-                <select
-                  id="awd-http-havoc-method"
-                  v-model="httpStandardDraft.havoc.method"
-                  class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
-                >
-                  <option v-for="method in AWD_HTTP_METHOD_OPTIONS" :key="method" :value="method">
-                    {{ method }}
-                  </option>
-                </select>
+              <div class="ui-field awd-http-action-field">
+                <label class="ui-field__label" for="awd-http-havoc-method">Method</label>
+                <span class="ui-control-wrap awd-http-action-control">
+                  <select
+                    id="awd-http-havoc-method"
+                    v-model="httpStandardDraft.havoc.method"
+                    class="ui-control"
+                  >
+                    <option v-for="method in AWD_HTTP_METHOD_OPTIONS" :key="method" :value="method">
+                      {{ method }}
+                    </option>
+                  </select>
+                </span>
               </div>
 
-              <div class="space-y-2">
-                <label
-                  class="text-sm font-medium text-[var(--color-text-primary)]"
-                  for="awd-http-havoc-path"
-                  >Path</label
-                >
-                <input
-                  id="awd-http-havoc-path"
-                  v-model="httpStandardDraft.havoc.path"
-                  type="text"
-                  placeholder="/healthz"
-                  class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
-                />
+              <div class="ui-field awd-http-action-field">
+                <label class="ui-field__label" for="awd-http-havoc-path">Path</label>
+                <span class="ui-control-wrap awd-http-action-control">
+                  <input
+                    id="awd-http-havoc-path"
+                    v-model="httpStandardDraft.havoc.path"
+                    type="text"
+                    placeholder="/healthz"
+                    class="ui-control"
+                  />
+                </span>
               </div>
 
-              <div class="space-y-2">
-                <label
-                  class="text-sm font-medium text-[var(--color-text-primary)]"
-                  for="awd-http-havoc-expected-status"
-                  >状态码</label
+              <div class="ui-field awd-http-action-field">
+                <label class="ui-field__label" for="awd-http-havoc-expected-status">
+                  状态码
+                </label>
+                <span
+                  class="ui-control-wrap awd-http-action-control"
+                  :class="{ 'is-error': !!fieldErrors.http_havoc_expected_status }"
                 >
-                <input
-                  id="awd-http-havoc-expected-status"
-                  v-model.number="httpStandardDraft.havoc.expected_status"
-                  type="number"
-                  min="1"
-                  step="1"
-                  class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
-                />
+                  <input
+                    id="awd-http-havoc-expected-status"
+                    v-model.number="httpStandardDraft.havoc.expected_status"
+                    type="number"
+                    min="1"
+                    step="1"
+                    class="ui-control"
+                  />
+                </span>
                 <p
                   v-if="fieldErrors.http_havoc_expected_status"
-                  class="text-xs text-[var(--color-danger)]"
+                  class="ui-field__error awd-http-action-error"
                 >
                   {{ fieldErrors.http_havoc_expected_status }}
                 </p>
               </div>
             </div>
 
-            <div class="space-y-2">
-              <label
-                class="text-sm font-medium text-[var(--color-text-primary)]"
-                for="awd-http-havoc-headers"
-                >Headers JSON</label
+            <div class="ui-field awd-http-action-field">
+              <label class="ui-field__label" for="awd-http-havoc-headers">Headers JSON</label>
+              <span
+                class="ui-control-wrap awd-http-action-control"
+                :class="{ 'is-error': !!fieldErrors.http_havoc_headers_text }"
               >
-              <textarea
-                id="awd-http-havoc-headers"
-                v-model="httpStandardDraft.havoc.headers_text"
-                rows="4"
-                class="w-full rounded-xl border border-border bg-surface px-4 py-3 font-mono text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
-                placeholder='{"X-Checker":"havoc"}'
-              />
+                <textarea
+                  id="awd-http-havoc-headers"
+                  v-model="httpStandardDraft.havoc.headers_text"
+                  rows="4"
+                  class="ui-control awd-config-control--mono"
+                  placeholder='{"X-Checker":"havoc"}'
+                />
+              </span>
               <p
                 v-if="fieldErrors.http_havoc_headers_text"
-                class="text-xs text-[var(--color-danger)]"
+                class="ui-field__error awd-http-action-error"
               >
                 {{ fieldErrors.http_havoc_headers_text }}
               </p>
@@ -1269,8 +1271,11 @@ function handleSubmit() {
 
 .checker-preset-button {
   display: grid;
+  align-items: start;
+  justify-content: start;
   gap: 0.35rem;
   justify-items: start;
+  min-height: auto;
   padding: 0.9rem 1rem;
   border: 1px solid color-mix(in srgb, var(--journal-border) 76%, transparent);
   border-radius: 1rem;
@@ -1323,6 +1328,24 @@ function handleSubmit() {
   display: grid;
   gap: 1rem;
   grid-template-columns: 0.7fr minmax(0, 1.5fr) 0.7fr;
+}
+
+.awd-http-action-field {
+  --ui-field-gap: var(--space-2);
+  min-width: 0;
+}
+
+.awd-http-action-field .ui-field__label {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.awd-http-action-control {
+  width: 100%;
+}
+
+.awd-http-action-error {
+  font-size: var(--font-size-12);
 }
 
 .checker-action-extra-grid {
