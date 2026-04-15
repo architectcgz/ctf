@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, reactive, watch } from 'vue'
 
+import AdminSurfaceModal from '@/components/common/modal-templates/AdminSurfaceModal.vue'
 import type {
   AdminChallengeListItem,
   AdminContestChallengeData,
@@ -114,11 +115,18 @@ function submit() {
 </script>
 
 <template>
-  <ElDialog
-    :model-value="open"
+  <AdminSurfaceModal
+    :open="open"
     :title="dialogTitle"
-    width="640px"
-    @update:modelValue="emit('update:open', $event)"
+    :subtitle="
+      isAwdContest
+        ? '先处理题目关联、顺序、分值和可见性，AWD 深度配置继续留在专用工作台。'
+        : '维护赛事题目的关联关系、顺序、分值和可见性。'
+    "
+    eyebrow="Contest Orchestration"
+    width="40rem"
+    @close="closeDialog"
+    @update:open="emit('update:open', $event)"
   >
     <form class="contest-challenge-dialog" @submit.prevent="submit">
       <p v-if="isAwdContest" class="contest-challenge-dialog__hint">
@@ -221,7 +229,7 @@ function submit() {
         </button>
       </div>
     </template>
-  </ElDialog>
+  </AdminSurfaceModal>
 </template>
 
 <style scoped>
