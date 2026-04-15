@@ -448,6 +448,139 @@ describe('ContestEdit', () => {
     expect(pushMock).toHaveBeenCalledWith({ name: 'ContestManage', query: { panel: 'list' } })
   })
 
+  it('应该在赛前检查强制开赛时带上基础表单最新草稿值', async () => {
+    contestApiMocks.getContest.mockResolvedValue(
+      buildContestDetail({
+        title: '2026 AWD 联赛',
+        description: '攻防赛',
+        mode: 'awd',
+        status: 'registering',
+      })
+    )
+
+    const wrapper = mountContestEdit()
+
+    await flushPromises()
+    await wrapper.get('#contest-title').setValue('2026 AWD 联赛（演练版）')
+    await wrapper.get('#contest-workbench-stage-tab-preflight').trigger('click')
+    await flushPromises()
+
+    await wrapper.get('#contest-awd-preflight-force-start').trigger('click')
+    await flushPromises()
+    await wrapper.get('#awd-readiness-override-reason').setValue('teacher drill')
+    await wrapper.get('#awd-readiness-override-submit').trigger('click')
+    await flushPromises()
+
+    expect(contestApiMocks.updateContest).toHaveBeenCalledWith(
+      'contest-1',
+      expect.objectContaining({
+        title: '2026 AWD 联赛（演练版）',
+        status: 'running',
+        force_override: true,
+        override_reason: 'teacher drill',
+      }),
+      { suppressErrorToast: true }
+    )
+  })
+
+  it('应该在 AWD 辅助请求失败时仍保留工作台而不是进入全局加载错误态', async () => {
+    contestApiMocks.getContest.mockResolvedValue(
+      buildContestDetail({
+        title: '2026 AWD 联赛',
+        description: '攻防赛',
+        mode: 'awd',
+        status: 'registering',
+      })
+    )
+    contestApiMocks.getContestAWDReadiness.mockRejectedValue(new Error('readiness failed'))
+
+    const wrapper = mountContestEdit()
+
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('竞赛编辑')
+    expect(wrapper.text()).toContain('基础信息')
+    expect(wrapper.text()).not.toContain('竞赛详情加载失败')
+  })
+
+  it('应该为 AWD 配置题库按 published 状态分页拉取完整目录', async () => {
+    contestApiMocks.getContest.mockResolvedValue(
+      buildContestDetail({
+        title: '2026 AWD 联赛',
+        description: '攻防赛',
+        mode: 'awd',
+        status: 'registering',
+      })
+    )
+    contestApiMocks.getChallenges
+      .mockResolvedValueOnce({
+        list: Array.from({ length: 200 }, (_, index) => ({
+          id: String(index + 200),
+          title: `Challenge ${index + 200}`,
+          description: 'page1',
+          category: 'web',
+          difficulty: 'easy',
+          points: 100,
+          instance_sharing: 'per_user',
+          created_by: '9',
+          image_id: undefined,
+          attachment_url: undefined,
+          hints: undefined,
+          status: 'published',
+          created_at: '2026-03-01T00:00:00.000Z',
+          updated_at: '2026-03-01T00:00:00.000Z',
+          flag_config: undefined,
+        })),
+        total: 201,
+        page: 1,
+        page_size: 200,
+      })
+      .mockResolvedValueOnce({
+        list: [
+          {
+            id: '999',
+            title: 'Final Challenge',
+            description: 'page2',
+            category: 'crypto',
+            difficulty: 'medium',
+            points: 150,
+            instance_sharing: 'per_user',
+            created_by: '9',
+            image_id: undefined,
+            attachment_url: undefined,
+            hints: undefined,
+            status: 'published',
+            created_at: '2026-03-02T00:00:00.000Z',
+            updated_at: '2026-03-02T00:00:00.000Z',
+            flag_config: undefined,
+          },
+        ],
+        total: 201,
+        page: 2,
+        page_size: 200,
+      })
+
+    const wrapper = mountContestEdit()
+
+    await flushPromises()
+    await wrapper.get('#contest-workbench-stage-tab-awd-config').trigger('click')
+    await flushPromises()
+    await wrapper.get('#awd-challenge-config-create').trigger('click')
+    await flushPromises()
+
+    expect(contestApiMocks.getChallenges).toHaveBeenNthCalledWith(1, {
+      page: 1,
+      page_size: 200,
+      status: 'published',
+    })
+    expect(contestApiMocks.getChallenges).toHaveBeenNthCalledWith(2, {
+      page: 2,
+      page_size: 200,
+      status: 'published',
+    })
+    expect(wrapper.text()).toContain('Final Challenge')
+  })
+
   it('应该允许管理员在竞赛编辑页编排题目', async () => {
     const wrapper = mount(ContestEdit, {
       global: {

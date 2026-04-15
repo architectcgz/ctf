@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, reactive, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 
 import type { ContestFieldLocks, ContestFormDraft } from '@/composables/useAdminContests'
 import { getStatusLabel } from '@/utils/contest'
@@ -24,6 +24,7 @@ const props = withDefaults(
 const emit = defineEmits<{
   cancel: []
   save: [value: ContestFormDraft]
+  'update:draft': [value: ContestFormDraft]
 }>()
 
 const localDraft = reactive<ContestFormDraft>({
@@ -36,6 +37,7 @@ const localDraft = reactive<ContestFormDraft>({
 })
 
 const fieldErrors = reactive<Partial<Record<keyof ContestFormDraft, string>>>({})
+const syncingFromProps = ref(false)
 
 const submitLabel = computed(() => {
   if (props.saving) {
@@ -47,10 +49,30 @@ const submitLabel = computed(() => {
 watch(
   () => props.draft,
   (draft) => {
+    syncingFromProps.value = true
     Object.assign(localDraft, draft)
     clearErrors()
+    syncingFromProps.value = false
   },
   { immediate: true, deep: true }
+)
+
+watch(
+  localDraft,
+  (draft) => {
+    if (syncingFromProps.value) {
+      return
+    }
+    emit('update:draft', {
+      title: draft.title,
+      description: draft.description,
+      mode: draft.mode,
+      starts_at: draft.starts_at,
+      ends_at: draft.ends_at,
+      status: draft.status,
+    })
+  },
+  { deep: true }
 )
 
 function clearErrors() {
