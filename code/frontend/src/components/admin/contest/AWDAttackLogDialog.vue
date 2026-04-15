@@ -132,118 +132,98 @@ function handleSubmit() {
   >
     <form class="space-y-5" @submit.prevent="handleSubmit">
       <div class="grid gap-4 sm:grid-cols-2">
-        <div class="space-y-2">
-          <label class="text-sm font-medium text-[var(--color-text-primary)]" for="awd-attack-team"
-            >攻击队伍</label
-          >
-          <select
-            id="awd-attack-team"
-            v-model="form.attacker_team_id"
-            class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
-          >
-            <option value="" disabled>请选择攻击队伍</option>
-            <option v-for="team in teams" :key="team.id" :value="team.id">
-              {{ team.name }}
-            </option>
-          </select>
-          <p v-if="fieldErrors.attacker_team_id" class="text-xs text-[var(--color-danger)]">
+        <div class="ui-field awd-attack-field">
+          <label class="ui-field__label" for="awd-attack-team">攻击队伍</label>
+          <span class="ui-control-wrap" :class="{ 'is-error': !!fieldErrors.attacker_team_id }">
+            <select id="awd-attack-team" v-model="form.attacker_team_id" class="ui-control">
+              <option value="" disabled>请选择攻击队伍</option>
+              <option v-for="team in teams" :key="team.id" :value="team.id">
+                {{ team.name }}
+              </option>
+            </select>
+          </span>
+          <p v-if="fieldErrors.attacker_team_id" class="ui-field__error">
             {{ fieldErrors.attacker_team_id }}
           </p>
         </div>
 
-        <div class="space-y-2">
-          <label class="text-sm font-medium text-[var(--color-text-primary)]" for="awd-victim-team"
-            >受害队伍</label
-          >
-          <select
-            id="awd-victim-team"
-            v-model="form.victim_team_id"
-            class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
-          >
-            <option value="" disabled>请选择受害队伍</option>
-            <option v-for="team in teams" :key="team.id" :value="team.id">
-              {{ team.name }}
-            </option>
-          </select>
-          <p v-if="fieldErrors.victim_team_id" class="text-xs text-[var(--color-danger)]">
+        <div class="ui-field awd-attack-field">
+          <label class="ui-field__label" for="awd-victim-team">受害队伍</label>
+          <span class="ui-control-wrap" :class="{ 'is-error': !!fieldErrors.victim_team_id }">
+            <select id="awd-victim-team" v-model="form.victim_team_id" class="ui-control">
+              <option value="" disabled>请选择受害队伍</option>
+              <option v-for="team in teams" :key="team.id" :value="team.id">
+                {{ team.name }}
+              </option>
+            </select>
+          </span>
+          <p v-if="fieldErrors.victim_team_id" class="ui-field__error">
             {{ fieldErrors.victim_team_id }}
           </p>
         </div>
       </div>
 
       <div class="grid gap-4 sm:grid-cols-2">
-        <div class="space-y-2">
-          <label
-            class="text-sm font-medium text-[var(--color-text-primary)]"
-            for="awd-attack-challenge"
-            >题目</label
-          >
-          <select
-            id="awd-attack-challenge"
-            v-model="form.challenge_id"
-            class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
-          >
-            <option value="" disabled>请选择题目</option>
-            <option
-              v-for="challenge in challengeOptions"
-              :key="challenge.id"
-              :value="challenge.challenge_id"
-            >
-              {{ getChallengeLabel(challenge) }}
-            </option>
-          </select>
-          <p v-if="fieldErrors.challenge_id" class="text-xs text-[var(--color-danger)]">
+        <div class="ui-field awd-attack-field">
+          <label class="ui-field__label" for="awd-attack-challenge">题目</label>
+          <span class="ui-control-wrap" :class="{ 'is-error': !!fieldErrors.challenge_id }">
+            <select id="awd-attack-challenge" v-model="form.challenge_id" class="ui-control">
+              <option value="" disabled>请选择题目</option>
+              <option
+                v-for="challenge in challengeOptions"
+                :key="challenge.id"
+                :value="challenge.challenge_id"
+              >
+                {{ getChallengeLabel(challenge) }}
+              </option>
+            </select>
+          </span>
+          <p v-if="fieldErrors.challenge_id" class="ui-field__error">
             {{ fieldErrors.challenge_id }}
           </p>
         </div>
 
-        <div class="space-y-2">
-          <label class="text-sm font-medium text-[var(--color-text-primary)]" for="awd-attack-type"
-            >攻击类型</label
-          >
-          <select
-            id="awd-attack-type"
-            v-model="form.attack_type"
-            class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
-          >
-            <option value="flag_capture">Flag 获取</option>
-            <option value="service_exploit">服务利用</option>
-          </select>
+        <div class="ui-field awd-attack-field">
+          <label class="ui-field__label" for="awd-attack-type">攻击类型</label>
+          <span class="ui-control-wrap">
+            <select id="awd-attack-type" v-model="form.attack_type" class="ui-control">
+              <option value="flag_capture">Flag 获取</option>
+              <option value="service_exploit">服务利用</option>
+            </select>
+          </span>
         </div>
       </div>
 
-      <div class="space-y-2">
-        <label class="text-sm font-medium text-[var(--color-text-primary)]" for="awd-attack-flag"
-          >提交 Flag</label
-        >
-        <input
-          id="awd-attack-flag"
-          v-model="form.submitted_flag"
-          type="text"
-          class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
-          placeholder="可选，补录 flag_capture 时填写"
-        />
+      <div class="ui-field awd-attack-field">
+        <label class="ui-field__label" for="awd-attack-flag">提交 Flag</label>
+        <span class="ui-control-wrap">
+          <input
+            id="awd-attack-flag"
+            v-model="form.submitted_flag"
+            type="text"
+            class="ui-control"
+            placeholder="可选，补录 flag_capture 时填写"
+          />
+        </span>
       </div>
 
-      <label
-        class="flex items-center gap-3 rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)]"
-      >
-        <input v-model="form.is_success" type="checkbox" class="h-4 w-4 rounded border-border" />
-        <span>本次攻击判定成功</span>
+      <label class="ui-control-wrap awd-attack-check">
+        <input v-model="form.is_success" type="checkbox" class="awd-attack-check__box" />
+        <span class="awd-attack-check__label">本次攻击判定成功</span>
       </label>
-      <p class="text-xs text-[var(--color-text-muted)]">
+      <p class="ui-field__hint">
         人工补录仅进入当前轮复盘记录，不写入正式排行榜与实时竞赛得分。
       </p>
-      <p v-if="!hasTargets" class="text-xs text-[var(--color-warning)]">
+      <p v-if="!hasTargets" class="ui-field__hint awd-attack-field__warning">
         至少需要 2 支队伍且已关联题目后，才能补录攻击日志。
       </p>
     </form>
 
     <template #footer>
-      <div class="flex items-center justify-end gap-2">
+      <div class="awd-attack-dialog__footer">
         <button
           type="button"
-          class="rounded-xl border border-border px-4 py-2 text-sm text-[var(--color-text-primary)] transition hover:border-primary"
+          class="ui-btn ui-btn--secondary"
           @click="closeDialog"
         >
           取消
@@ -251,7 +231,7 @@ function handleSubmit() {
         <button
           id="awd-attack-log-submit"
           type="button"
-          class="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+          class="ui-btn ui-btn--primary"
           :disabled="saving || !hasTargets"
           @click="handleSubmit"
         >
@@ -261,3 +241,43 @@ function handleSubmit() {
     </template>
   </AdminSurfaceModal>
 </template>
+
+<style scoped>
+.awd-attack-field {
+  --ui-field-gap: var(--space-2);
+}
+
+.awd-attack-field__warning {
+  color: var(--color-warning);
+}
+
+.awd-attack-check {
+  gap: var(--space-3);
+  padding-inline: 1rem;
+  color: var(--color-text-primary);
+}
+
+.awd-attack-check__box {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
+.awd-attack-check__label {
+  font-size: var(--font-size-13);
+  font-weight: 600;
+}
+
+.awd-attack-dialog__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+@media (max-width: 767px) {
+  .awd-attack-dialog__footer {
+    flex-direction: column-reverse;
+  }
+}
+</style>
