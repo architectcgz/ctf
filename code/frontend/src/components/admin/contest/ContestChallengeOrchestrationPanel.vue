@@ -25,6 +25,7 @@ const props = defineProps<{
   contestMode: ContestDetailData['mode']
   challengeLinks?: AdminContestChallengeData[]
   loadingExternal?: boolean
+  loadErrorExternal?: string
 }>()
 
 const emit = defineEmits<{
@@ -38,6 +39,7 @@ const loading = ref(true)
 const saving = ref(false)
 const loadingChallengeCatalog = ref(false)
 const localChallengeLinks = ref<AdminContestChallengeData[]>([])
+const localLoadError = ref('')
 const challengeCatalog = ref<AdminChallengeListItem[]>([])
 const dialogOpen = ref(false)
 const dialogMode = ref<'create' | 'edit'>('create')
@@ -46,6 +48,9 @@ const removingChallengeId = ref<string | null>(null)
 const usingExternalChallengeLinks = computed(() => props.challengeLinks !== undefined)
 const currentChallengeLinks = computed(() => props.challengeLinks ?? localChallengeLinks.value)
 const panelLoading = computed(() => (usingExternalChallengeLinks.value ? Boolean(props.loadingExternal) : loading.value))
+const panelLoadError = computed(() =>
+  usingExternalChallengeLinks.value ? props.loadErrorExternal?.trim() ?? '' : localLoadError.value
+)
 
 const {
   visibleItems,
@@ -132,8 +137,10 @@ async function refresh() {
   loading.value = true
   try {
     localChallengeLinks.value = await listAdminContestChallenges(props.contestId)
+    localLoadError.value = ''
   } catch (error) {
-    toast.error(humanizeRequestError(error, '赛事题目加载失败'))
+    localLoadError.value = humanizeRequestError(error, '赛事题目加载失败')
+    toast.error(localLoadError.value)
   } finally {
     loading.value = false
   }
@@ -276,138 +283,157 @@ onMounted(() => {
       </div>
     </header>
 
-    <div class="metric-panel-grid metric-panel-default-surface contest-challenge-panel__summary">
-      <article v-for="item in summaryItems" :key="item.key" class="journal-note metric-panel-card">
-        <div class="journal-note-label metric-panel-label">{{ item.label }}</div>
-        <div class="journal-note-value metric-panel-value">{{ item.value }}</div>
-        <div class="journal-note-helper metric-panel-helper">{{ item.hint }}</div>
-      </article>
-    </div>
-
-    <section class="workspace-directory-section contest-challenge-directory">
-      <header class="list-heading">
-        <div>
-          <div class="journal-note-label">Challenge Directory</div>
-          <h2 class="list-heading__title">{{ listTitle }}</h2>
-        </div>
-        <div class="contest-section-meta">共 {{ currentChallengeLinks.length }} 道题目</div>
-      </header>
-
-      <div v-if="isAwdContest && filterItems.length > 0" class="contest-challenge-filters">
-        <button
-          v-for="filter in filterItems"
-          :id="`contest-challenge-filter-${filter.key}`"
-          :key="filter.key"
-          type="button"
-          class="contest-challenge-filter"
-          :class="{ 'contest-challenge-filter--active': activeFilter === filter.key }"
-          @click="setFilter(filter.key)"
-        >
-          <span class="contest-challenge-filter__label">{{ filter.label }}</span>
-          <span class="contest-challenge-filter__count">{{ filter.count }}</span>
-          <span class="contest-challenge-filter__hint">{{ filter.hint }}</span>
+    <AppEmpty
+      v-if="panelLoadError && currentChallengeLinks.length === 0"
+      title="赛事题目暂时不可用"
+      :description="panelLoadError"
+      icon="AlertTriangle"
+    >
+      <template #action>
+        <button type="button" class="admin-btn admin-btn-ghost" @click="refresh">
+          重试加载
         </button>
+      </template>
+    </AppEmpty>
+
+    <template v-else>
+      <p v-if="panelLoadError" class="contest-challenge-panel__warning" role="status">
+        题目池刷新失败，当前显示上次成功同步的数据。{{ panelLoadError }}
+      </p>
+
+      <div class="metric-panel-grid metric-panel-default-surface contest-challenge-panel__summary">
+        <article v-for="item in summaryItems" :key="item.key" class="journal-note metric-panel-card">
+          <div class="journal-note-label metric-panel-label">{{ item.label }}</div>
+          <div class="journal-note-value metric-panel-value">{{ item.value }}</div>
+          <div class="journal-note-helper metric-panel-helper">{{ item.hint }}</div>
+        </article>
       </div>
 
-      <div
-        v-if="panelLoading"
-        class="contest-challenge-directory__loading"
-      >
-        <AppLoading>正在同步赛事题目...</AppLoading>
-      </div>
+      <section class="workspace-directory-section contest-challenge-directory">
+        <header class="list-heading">
+          <div>
+            <div class="journal-note-label">Challenge Directory</div>
+            <h2 class="list-heading__title">{{ listTitle }}</h2>
+          </div>
+          <div class="contest-section-meta">共 {{ currentChallengeLinks.length }} 道题目</div>
+        </header>
 
-      <AppEmpty
-        v-else-if="visibleItems.length === 0"
-        :title="emptyState.title"
-        :description="emptyState.description"
-        icon="FileChartColumnIncreasing"
-      />
-
-      <template v-else>
-        <div
-          class="contest-challenge-directory__head"
-          :class="{ 'contest-challenge-directory__head--awd': isAwdContest }"
-          aria-hidden="true"
-        >
-          <span>题目</span>
-          <span>可见性</span>
-          <span>分值</span>
-          <span>顺序</span>
-          <template v-if="isAwdContest">
-            <span>Checker</span>
-            <span>验证状态</span>
-            <span>SLA / 防守分</span>
-            <span>最近试跑</span>
-          </template>
-          <span class="contest-challenge-directory__actions-label">操作</span>
+        <div v-if="isAwdContest && filterItems.length > 0" class="contest-challenge-filters">
+          <button
+            v-for="filter in filterItems"
+            :id="`contest-challenge-filter-${filter.key}`"
+            :key="filter.key"
+            type="button"
+            class="contest-challenge-filter"
+            :class="{ 'contest-challenge-filter--active': activeFilter === filter.key }"
+            @click="setFilter(filter.key)"
+          >
+            <span class="contest-challenge-filter__label">{{ filter.label }}</span>
+            <span class="contest-challenge-filter__count">{{ filter.count }}</span>
+            <span class="contest-challenge-filter__hint">{{ filter.hint }}</span>
+          </button>
         </div>
 
-        <article
-          v-for="challenge in visibleItems"
-          :key="challenge.id"
-          class="contest-challenge-row"
-          :class="{ 'contest-challenge-row--awd': isAwdContest }"
+        <div
+          v-if="panelLoading"
+          class="contest-challenge-directory__loading"
         >
-          <div class="contest-challenge-row__identity">
-            <h3 class="contest-challenge-row__title">{{ getChallengeTitle(challenge) }}</h3>
-            <p class="contest-challenge-row__meta">
-              {{ challenge.category || '未分类' }} · {{ challenge.difficulty || '未标记难度' }}
-            </p>
-          </div>
-          <div class="contest-challenge-row__visibility">
-            {{ challenge.is_visible ? '可见' : '隐藏' }}
-          </div>
-          <div class="contest-challenge-row__score">{{ challenge.points }} 分</div>
-          <div class="contest-challenge-row__order">第 {{ challenge.order }} 位</div>
-          <template v-if="isAwdContest">
-            <div class="contest-challenge-row__awd-cell">
-              {{ getCheckerLabel(challenge) }}
-            </div>
-            <div class="contest-challenge-row__awd-cell">
-              {{ getValidationSummary(challenge) }}
-            </div>
-            <div class="contest-challenge-row__awd-cell">
-              {{ getAwdScoreSummary(challenge) }}
-            </div>
-            <div class="contest-challenge-row__awd-cell">
-              {{ getPreviewSummary(challenge) }}
-            </div>
-          </template>
+          <AppLoading>正在同步赛事题目...</AppLoading>
+        </div>
+
+        <AppEmpty
+          v-else-if="visibleItems.length === 0"
+          :title="emptyState.title"
+          :description="emptyState.description"
+          icon="FileChartColumnIncreasing"
+        />
+
+        <template v-else>
           <div
-            class="contest-challenge-row__actions"
-            role="group"
-            :aria-label="`题目 ${getChallengeTitle(challenge)} 操作`"
+            class="contest-challenge-directory__head"
+            :class="{ 'contest-challenge-directory__head--awd': isAwdContest }"
+            aria-hidden="true"
           >
-            <button
-              v-if="isAwdContest"
-              :id="`contest-challenge-open-awd-config-${challenge.id}`"
-              type="button"
-              class="contest-challenge-row__button contest-challenge-row__button--ghost"
-              @click="emit('open:awd-config', challenge)"
-            >
-              补 AWD 配置
-            </button>
-            <button
-              :id="`contest-challenge-edit-${challenge.id}`"
-              type="button"
-              class="contest-challenge-row__button contest-challenge-row__button--primary"
-              @click="openEditDialog(challenge)"
-            >
-              编辑
-            </button>
-            <button
-              :id="`contest-challenge-remove-${challenge.id}`"
-              type="button"
-              class="contest-challenge-row__button contest-challenge-row__button--danger"
-              :disabled="removingChallengeId === challenge.id"
-              @click="handleRemove(challenge)"
-            >
-              {{ removingChallengeId === challenge.id ? '移除中...' : '移除' }}
-            </button>
+            <span>题目</span>
+            <span>可见性</span>
+            <span>分值</span>
+            <span>顺序</span>
+            <template v-if="isAwdContest">
+              <span>Checker</span>
+              <span>验证状态</span>
+              <span>SLA / 防守分</span>
+              <span>最近试跑</span>
+            </template>
+            <span class="contest-challenge-directory__actions-label">操作</span>
           </div>
-        </article>
-      </template>
-    </section>
+
+          <article
+            v-for="challenge in visibleItems"
+            :key="challenge.id"
+            class="contest-challenge-row"
+            :class="{ 'contest-challenge-row--awd': isAwdContest }"
+          >
+            <div class="contest-challenge-row__identity">
+              <h3 class="contest-challenge-row__title">{{ getChallengeTitle(challenge) }}</h3>
+              <p class="contest-challenge-row__meta">
+                {{ challenge.category || '未分类' }} · {{ challenge.difficulty || '未标记难度' }}
+              </p>
+            </div>
+            <div class="contest-challenge-row__visibility">
+              {{ challenge.is_visible ? '可见' : '隐藏' }}
+            </div>
+            <div class="contest-challenge-row__score">{{ challenge.points }} 分</div>
+            <div class="contest-challenge-row__order">第 {{ challenge.order }} 位</div>
+            <template v-if="isAwdContest">
+              <div class="contest-challenge-row__awd-cell">
+                {{ getCheckerLabel(challenge) }}
+              </div>
+              <div class="contest-challenge-row__awd-cell">
+                {{ getValidationSummary(challenge) }}
+              </div>
+              <div class="contest-challenge-row__awd-cell">
+                {{ getAwdScoreSummary(challenge) }}
+              </div>
+              <div class="contest-challenge-row__awd-cell">
+                {{ getPreviewSummary(challenge) }}
+              </div>
+            </template>
+            <div
+              class="contest-challenge-row__actions"
+              role="group"
+              :aria-label="`题目 ${getChallengeTitle(challenge)} 操作`"
+            >
+              <button
+                v-if="isAwdContest"
+                :id="`contest-challenge-open-awd-config-${challenge.id}`"
+                type="button"
+                class="contest-challenge-row__button contest-challenge-row__button--ghost"
+                @click="emit('open:awd-config', challenge)"
+              >
+                补 AWD 配置
+              </button>
+              <button
+                :id="`contest-challenge-edit-${challenge.id}`"
+                type="button"
+                class="contest-challenge-row__button contest-challenge-row__button--primary"
+                @click="openEditDialog(challenge)"
+              >
+                编辑
+              </button>
+              <button
+                :id="`contest-challenge-remove-${challenge.id}`"
+                type="button"
+                class="contest-challenge-row__button contest-challenge-row__button--danger"
+                :disabled="removingChallengeId === challenge.id"
+                @click="handleRemove(challenge)"
+              >
+                {{ removingChallengeId === challenge.id ? '移除中...' : '移除' }}
+              </button>
+            </div>
+          </article>
+        </template>
+      </section>
+    </template>
 
     <ContestChallengeEditorDialog
       :open="dialogOpen"
@@ -477,6 +503,16 @@ onMounted(() => {
 
 .contest-challenge-panel__summary {
   --admin-summary-grid-columns: repeat(auto-fit, minmax(11rem, 1fr));
+}
+
+.contest-challenge-panel__warning {
+  margin: 0;
+  border: 1px solid color-mix(in srgb, var(--journal-danger, #d9594c) 32%, transparent);
+  border-radius: 1rem;
+  padding: var(--space-3) var(--space-4);
+  background: color-mix(in srgb, var(--journal-danger, #d9594c) 12%, transparent);
+  color: var(--journal-ink);
+  font-size: var(--font-size-0-875);
 }
 
 .contest-challenge-directory {

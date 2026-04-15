@@ -74,6 +74,7 @@ const formDraft = ref<ContestFormDraft | null>(null)
 const awdConfigLoadError = ref('')
 const awdPreflightLoadError = ref('')
 const awdChallengeLinks = ref<AdminContestChallengeData[]>([])
+const awdChallengeLinksLoaded = ref(false)
 const awdReadiness = ref<AWDReadinessData | null>(null)
 const awdChallengeCatalog = ref<AdminChallengeListItem[]>([])
 const awdChallengeConfigDialogOpen = ref(false)
@@ -87,7 +88,7 @@ const fieldLocks = computed(() => createFieldLocks(editingBaseStatus.value))
 const statusOptions = computed(() => createContestStatusOptions(editingBaseStatus.value))
 const pageTitle = computed(() => (contest.value ? `编辑《${contest.value.title}》` : '编辑竞赛'))
 const awdWorkbenchChallengeCount = computed(() =>
-  contest.value?.mode === 'awd' ? awdChallengeLinks.value.length : null
+  contest.value?.mode === 'awd' && awdChallengeLinksLoaded.value ? awdChallengeLinks.value.length : null
 )
 const workbench = useContestWorkbench(contest, awdWorkbenchChallengeCount)
 const { activeTab: activeStage, selectTab } = useUrlSyncedTabs<ContestWorkbenchStageKey>({
@@ -177,6 +178,7 @@ function resetAwdWorkbenchState() {
   awdConfigLoadError.value = ''
   awdPreflightLoadError.value = ''
   awdChallengeLinks.value = []
+  awdChallengeLinksLoaded.value = false
   awdReadiness.value = null
   awdChallengeCatalog.value = []
   awdChallengeConfigDialogOpen.value = false
@@ -204,8 +206,8 @@ async function refreshAwdWorkbenchData(nextContestId = contestId.value): Promise
 
     if (challengeLinksResult.status === 'fulfilled') {
       awdChallengeLinks.value = challengeLinksResult.value
+      awdChallengeLinksLoaded.value = true
     } else {
-      awdChallengeLinks.value = []
       awdConfigLoadError.value = humanizeRequestError(challengeLinksResult.reason, 'AWD 配置数据加载失败')
     }
 
@@ -216,7 +218,7 @@ async function refreshAwdWorkbenchData(nextContestId = contestId.value): Promise
       awdPreflightLoadError.value = humanizeRequestError(readinessResult.reason, '赛前检查数据加载失败')
     }
 
-    if (activeAwdChallengeId.value) {
+    if (challengeLinksResult.status === 'fulfilled' && activeAwdChallengeId.value) {
       const hasActiveChallenge = awdChallengeLinks.value.some(
         (item) => item.challenge_id === activeAwdChallengeId.value
       )
@@ -629,6 +631,7 @@ onMounted(() => {
               :contest-mode="contest.mode"
               :challenge-links="contest.mode === 'awd' ? awdChallengeLinks : undefined"
               :loading-external="contest.mode === 'awd' ? loadingAwdStageData : undefined"
+              :load-error-external="contest.mode === 'awd' ? awdConfigLoadError : undefined"
               @open:awd-config="handleOpenAwdConfigFromPool"
               @updated="refreshAwdWorkbenchData(contest.id)"
             />
@@ -652,7 +655,7 @@ onMounted(() => {
               <AppLoading>正在同步 AWD 配置...</AppLoading>
             </div>
             <AppEmpty
-              v-else-if="awdConfigLoadError"
+              v-else-if="awdConfigLoadError && !awdChallengeLinksLoaded"
               title="AWD 配置数据暂时不可用"
               :description="awdConfigLoadError"
               icon="AlertTriangle"
@@ -663,18 +666,22 @@ onMounted(() => {
                 </button>
               </template>
             </AppEmpty>
-            <AWDChallengeConfigPanel
-              v-else
-              :challenge-links="awdChallengeLinks"
-              :active-challenge-id="activeAwdChallengeId"
-              :focus-source="awdConfigFocusSource"
-              :can-navigate-previous="canNavigatePreviousAwdChallenge"
-              :can-navigate-next="canNavigateNextAwdChallenge"
-              @create="openAwdChallengeCreateDialog"
-              @edit="openAwdChallengeEditDialog"
-              @previous="focusAwdChallengeByOffset(-1)"
-              @next="focusAwdChallengeByOffset(1)"
-            />
+            <template v-else>
+              <p v-if="awdConfigLoadError && awdChallengeLinksLoaded" class="contest-edit-inline-warning" role="status">
+                AWD 题目刷新失败，当前显示上次成功同步的数据。{{ awdConfigLoadError }}
+              </p>
+              <AWDChallengeConfigPanel
+                :challenge-links="awdChallengeLinks"
+                :active-challenge-id="activeAwdChallengeId"
+                :focus-source="awdConfigFocusSource"
+                :can-navigate-previous="canNavigatePreviousAwdChallenge"
+                :can-navigate-next="canNavigateNextAwdChallenge"
+                @create="openAwdChallengeCreateDialog"
+                @edit="openAwdChallengeEditDialog"
+                @previous="focusAwdChallengeByOffset(-1)"
+                @next="focusAwdChallengeByOffset(1)"
+              />
+            </template>
           </section>
         </section>
 
@@ -779,6 +786,16 @@ onMounted(() => {
 
 .contest-edit-section--flat {
   padding: 0;
+}
+
+.contest-edit-inline-warning {
+  margin: 0 0 var(--space-4);
+  border: 1px solid color-mix(in srgb, var(--journal-danger, #d9594c) 32%, transparent);
+  border-radius: 1rem;
+  padding: var(--space-3) var(--space-4);
+  background: color-mix(in srgb, var(--journal-danger, #d9594c) 12%, transparent);
+  color: var(--journal-ink);
+  font-size: var(--font-size-0-875);
 }
 
 .contest-edit-header {
