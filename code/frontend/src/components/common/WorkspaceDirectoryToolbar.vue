@@ -1,0 +1,445 @@
+<script setup lang="ts">
+import type { Component } from 'vue'
+import { ChevronDown, Filter, Search } from 'lucide-vue-next'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
+
+export interface WorkspaceDirectorySortOption {
+  key: string
+  label: string
+  icon?: Component
+}
+
+const props = withDefaults(
+  defineProps<{
+    modelValue: string
+    total: number
+    selectedSortLabel: string
+    sortOptions: WorkspaceDirectorySortOption[]
+    searchPlaceholder?: string
+    filterButtonLabel?: string
+    sortCaption?: string
+    totalSuffix?: string
+    filterPanelKicker?: string
+    filterPanelTitle?: string
+    filterPanelWidth?: string
+    resetLabel?: string
+    resetDisabled?: boolean
+  }>(),
+  {
+    searchPlaceholder: '输入关键词检索...',
+    filterButtonLabel: '筛选',
+    sortCaption: '排序:',
+    totalSuffix: '项',
+    filterPanelKicker: 'Filter Stack',
+    filterPanelTitle: '高级筛选',
+    filterPanelWidth: '24rem',
+    resetLabel: '清空筛选',
+    resetDisabled: false,
+  }
+)
+
+const emit = defineEmits<{
+  'update:modelValue': [value: string]
+  selectSort: [option: WorkspaceDirectorySortOption]
+  resetFilters: []
+}>()
+
+const isFilterOpen = ref(false)
+const isSortOpen = ref(false)
+const filterToggleRef = ref<HTMLButtonElement | null>(null)
+const filterPanelRef = ref<HTMLDivElement | null>(null)
+const sortButtonRef = ref<HTMLButtonElement | null>(null)
+const sortMenuRef = ref<HTMLDivElement | null>(null)
+
+const hasSortOptions = computed(() => props.sortOptions.length > 0)
+
+function closeFilter(): void {
+  isFilterOpen.value = false
+}
+
+function closeSort(): void {
+  isSortOpen.value = false
+}
+
+function handleSearchInput(event: Event): void {
+  const target = event.target
+  emit('update:modelValue', target instanceof HTMLInputElement ? target.value : '')
+}
+
+function toggleFilter(): void {
+  isFilterOpen.value = !isFilterOpen.value
+  if (isFilterOpen.value) {
+    isSortOpen.value = false
+  }
+}
+
+function toggleSort(): void {
+  if (!hasSortOptions.value) {
+    return
+  }
+  isSortOpen.value = !isSortOpen.value
+  if (isSortOpen.value) {
+    isFilterOpen.value = false
+  }
+}
+
+function handleSelectSort(option: WorkspaceDirectorySortOption): void {
+  emit('selectSort', option)
+  closeSort()
+}
+
+let removeWindowListeners: (() => void) | null = null
+
+onMounted(() => {
+  const handleClickOutside = (event: MouseEvent) => {
+    const target = event.target
+    if (!(target instanceof Node)) {
+      closeFilter()
+      closeSort()
+      return
+    }
+
+    const clickedInsideFilter =
+      filterToggleRef.value?.contains(target) || filterPanelRef.value?.contains(target)
+    const clickedInsideSort =
+      sortButtonRef.value?.contains(target) || sortMenuRef.value?.contains(target)
+
+    if (!clickedInsideFilter) {
+      closeFilter()
+    }
+
+    if (!clickedInsideSort) {
+      closeSort()
+    }
+  }
+
+  const handleEscape = (event: KeyboardEvent) => {
+    if (event.key === 'Escape') {
+      closeFilter()
+      closeSort()
+    }
+  }
+
+  window.addEventListener('click', handleClickOutside)
+  window.addEventListener('keydown', handleEscape)
+  removeWindowListeners = () => {
+    window.removeEventListener('click', handleClickOutside)
+    window.removeEventListener('keydown', handleEscape)
+  }
+})
+
+onUnmounted(() => {
+  removeWindowListeners?.()
+})
+</script>
+
+<template>
+  <div class="workspace-directory-toolbar">
+    <div class="workspace-directory-toolbar__main">
+      <label class="workspace-directory-toolbar__search">
+        <Search class="workspace-directory-toolbar__search-icon h-3.5 w-3.5" />
+        <input
+          :value="modelValue"
+          type="text"
+          class="workspace-directory-toolbar__search-input"
+          :placeholder="searchPlaceholder"
+          @input="handleSearchInput"
+        />
+      </label>
+
+      <button
+        ref="filterToggleRef"
+        type="button"
+        class="workspace-directory-toolbar__filter-toggle"
+        :class="{ 'workspace-directory-toolbar__filter-toggle--active': isFilterOpen }"
+        @click.stop="toggleFilter"
+      >
+        <Filter class="h-3.5 w-3.5" />
+        {{ filterButtonLabel }}
+      </button>
+    </div>
+
+    <div class="workspace-directory-toolbar__meta">
+      <div class="workspace-directory-toolbar__sort" v-if="hasSortOptions">
+        <span class="workspace-directory-toolbar__sort-caption">{{ sortCaption }}</span>
+        <button
+          ref="sortButtonRef"
+          type="button"
+          class="workspace-directory-toolbar__sort-button"
+          @click.stop="toggleSort"
+        >
+          <span class="workspace-directory-toolbar__sort-label">{{ selectedSortLabel }}</span>
+          <ChevronDown
+            class="h-3.5 w-3.5 transition-transform"
+            :class="{ 'rotate-180': isSortOpen }"
+          />
+        </button>
+
+        <div
+          v-if="isSortOpen"
+          ref="sortMenuRef"
+          class="workspace-directory-toolbar__sort-menu"
+        >
+          <div class="workspace-directory-toolbar__menu-title">Sort Strategy</div>
+          <div class="workspace-directory-toolbar__menu-list">
+            <button
+              v-for="option in sortOptions"
+              :key="option.key"
+              type="button"
+              class="workspace-directory-toolbar__menu-item"
+              :class="{
+                'workspace-directory-toolbar__menu-item--active':
+                  option.label === selectedSortLabel,
+              }"
+              @click="handleSelectSort(option)"
+            >
+              <span class="workspace-directory-toolbar__menu-item-content">
+                <component :is="option.icon" v-if="option.icon" class="h-3.5 w-3.5" />
+                {{ option.label }}
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="workspace-directory-toolbar__count-pill">
+        共 <span class="workspace-directory-toolbar__count-value">{{ total }}</span> {{ totalSuffix }}
+      </div>
+    </div>
+
+    <div
+      v-if="isFilterOpen"
+      ref="filterPanelRef"
+      class="workspace-directory-toolbar__filter-panel"
+      :style="{ width: filterPanelWidth }"
+    >
+      <div class="workspace-directory-toolbar__filter-panel-header">
+        <div>
+          <div class="workspace-overline">{{ filterPanelKicker }}</div>
+          <h3 class="workspace-directory-toolbar__filter-panel-title">{{ filterPanelTitle }}</h3>
+        </div>
+        <button
+          type="button"
+          class="workspace-directory-toolbar__filter-reset"
+          :disabled="resetDisabled"
+          @click="emit('resetFilters')"
+        >
+          {{ resetLabel }}
+        </button>
+      </div>
+
+      <slot name="filter-panel" :close="closeFilter" />
+    </div>
+  </div>
+</template>
+
+<style scoped>
+.workspace-directory-toolbar {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.workspace-directory-toolbar__main,
+.workspace-directory-toolbar__meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.workspace-directory-toolbar__search {
+  position: relative;
+}
+
+.workspace-directory-toolbar__search-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+}
+
+.workspace-directory-toolbar__search-input {
+  width: 20rem;
+  min-height: 2.5rem;
+  padding: 0 1rem 0 2.25rem;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: white;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.workspace-directory-toolbar__search-input:focus {
+  background: white;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+
+.workspace-directory-toolbar__filter-toggle,
+.workspace-directory-toolbar__sort-button,
+.workspace-directory-toolbar__count-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.5rem;
+  padding: 0 1rem;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: white;
+  font-size: 12px;
+  font-weight: 700;
+  color: #475569;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.workspace-directory-toolbar__filter-toggle--active {
+  background: #0f172a;
+  color: white;
+}
+
+.workspace-directory-toolbar__sort-button:hover,
+.workspace-directory-toolbar__filter-toggle:hover {
+  color: #2563eb;
+}
+
+.workspace-directory-toolbar__sort {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.workspace-directory-toolbar__sort-caption {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.workspace-directory-toolbar__sort-label {
+  font-weight: 900;
+  letter-spacing: 0.03em;
+}
+
+.workspace-directory-toolbar__count-value {
+  font-family: var(--font-family-mono, ui-monospace, SFMono-Regular, monospace);
+  font-weight: 900;
+  color: #0f172a;
+}
+
+.workspace-directory-toolbar__filter-panel,
+.workspace-directory-toolbar__sort-menu {
+  border: 1px solid #e2e8f0;
+  background: white;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+}
+
+.workspace-directory-toolbar__filter-panel {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 0;
+  z-index: 40;
+  border-radius: 16px;
+  padding: 1.25rem;
+}
+
+.workspace-directory-toolbar__filter-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.workspace-directory-toolbar__filter-panel-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.workspace-directory-toolbar__filter-reset {
+  font-size: 11px;
+  font-weight: 700;
+  color: #94a3b8;
+}
+
+.workspace-directory-toolbar__sort-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.5rem);
+  z-index: 40;
+  width: 12rem;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.workspace-directory-toolbar__menu-title {
+  padding: 0.75rem 1rem 0.5rem;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #94a3b8;
+  background: #f8fafc;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.workspace-directory-toolbar__menu-item {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  padding: 0.65rem 1rem;
+  font-size: 12px;
+  font-weight: 600;
+  color: #475569;
+  transition: all 0.2s ease;
+}
+
+.workspace-directory-toolbar__menu-item:hover,
+.workspace-directory-toolbar__menu-item--active {
+  background: #f8fafc;
+  color: #2563eb;
+}
+
+.workspace-directory-toolbar__menu-item-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+@media (max-width: 767px) {
+  .workspace-directory-toolbar {
+    align-items: stretch;
+  }
+
+  .workspace-directory-toolbar__main,
+  .workspace-directory-toolbar__meta {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .workspace-directory-toolbar__search {
+    flex: 1 1 100%;
+  }
+
+  .workspace-directory-toolbar__search-input {
+    width: 100%;
+  }
+
+  .workspace-directory-toolbar__count-pill {
+    margin-left: auto;
+  }
+
+  .workspace-directory-toolbar__filter-panel {
+    width: min(100%, 24rem) !important;
+  }
+}
+</style>

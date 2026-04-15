@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import type { ComponentPublicInstance } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
@@ -7,9 +7,6 @@ import {
   CheckCircle,
   Zap,
   Edit3,
-  Search,
-  Filter,
-  ChevronDown,
   Eye,
   MoreHorizontal,
   Trash2,
@@ -21,15 +18,21 @@ import {
   Calendar,
 } from 'lucide-vue-next'
 
-import AdminPaginationControls from '@/components/admin/AdminPaginationControls.vue'
 import ChallengePackageImportEntry from '@/components/admin/challenge/ChallengePackageImportEntry.vue'
 import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
+import WorkspaceDirectoryPagination from '@/components/common/WorkspaceDirectoryPagination.vue'
+import WorkspaceDirectoryToolbar, {
+  type WorkspaceDirectorySortOption,
+} from '@/components/common/WorkspaceDirectoryToolbar.vue'
 import { useAdminChallenges, type AdminChallengeListRow } from '@/composables/useAdminChallenges'
 import { useChallengeManagePresentation } from '@/composables/useChallengeManagePresentation'
 import { useChallengePackageImport } from '@/composables/useChallengePackageImport'
 import { useRouteQueryTabs } from '@/composables/useRouteQueryTabs'
 
 type ChallengePanelKey = 'manage' | 'import' | 'queue'
+type ChallengeSortOption = WorkspaceDirectorySortOption & {
+  order: 'asc' | 'desc'
+}
 
 const panelTabs: Array<{ key: ChallengePanelKey; label: string; panelId: string; tabId: string }> =
   [
@@ -129,18 +132,12 @@ const {
   remove,
 })
 
-const isFilterOpen = ref(false)
-const isSortOpen = ref(false)
-const filterToggleRef = ref<HTMLButtonElement | null>(null)
-const filterPanelRef = ref<HTMLDivElement | null>(null)
-const sortButtonRef = ref<HTMLButtonElement | null>(null)
-const sortMenuRef = ref<HTMLDivElement | null>(null)
 const actionMenuPanelRef = ref<HTMLDivElement | null>(null)
 const actionMenuStyle = ref<Record<string, string>>({})
 const actionMenuButtonRefs = new Map<string, HTMLButtonElement>()
 
 const sortConfig = ref({ key: 'updateTime', order: 'desc', label: '最近更新' })
-const sortOptions = [
+const sortOptions: ChallengeSortOption[] = [
   { key: 'updateTime', order: 'desc', label: '最近更新', icon: Calendar },
   { key: 'points', order: 'desc', label: '分值由高到低', icon: ArrowDownWideNarrow },
   { key: 'points', order: 'asc', label: '分值由低到高', icon: ArrowUpNarrowWide },
@@ -192,9 +189,16 @@ const activeActionRow = computed(() =>
   list.value.find((item) => item.id === openActionMenuId.value) ?? null
 )
 
-function setSort(opt: (typeof sortOptions)[number]) {
-  sortConfig.value = opt
-  isSortOpen.value = false
+function setSort(option: WorkspaceDirectorySortOption) {
+  const matchedOption =
+    sortOptions.find((item) => item.key === option.key && item.label === option.label) ??
+    sortOptions[0]
+
+  if (!matchedOption) {
+    return
+  }
+
+  sortConfig.value = matchedOption
 }
 
 function setActionMenuButtonRef(
@@ -254,35 +258,8 @@ async function handleActionMenuToggle(challengeId: string): Promise<void> {
   updateActionMenuPosition()
 }
 
-let removeWindowListeners: (() => void) | null = null
-
 onMounted(() => {
   void refreshQueue()
-  const handleClickOutside = (event: MouseEvent) => {
-    const target = event.target
-    if (!(target instanceof Node)) {
-      isSortOpen.value = false
-      isFilterOpen.value = false
-      return
-    }
-
-    const clickedInsideFilter =
-      filterToggleRef.value?.contains(target) || filterPanelRef.value?.contains(target)
-    const clickedInsideSort =
-      sortButtonRef.value?.contains(target) || sortMenuRef.value?.contains(target)
-
-    if (!clickedInsideFilter) {
-      isFilterOpen.value = false
-    }
-
-    if (!clickedInsideSort) {
-      isSortOpen.value = false
-    }
-  }
-  window.addEventListener('click', handleClickOutside)
-  removeWindowListeners = () => {
-    window.removeEventListener('click', handleClickOutside)
-  }
 })
 
 watch(openActionMenuId, async (challengeId, _previousId, onCleanup) => {
@@ -312,10 +289,6 @@ watch(openActionMenuId, async (challengeId, _previousId, onCleanup) => {
     window.removeEventListener('scroll', handleViewportChange, true)
     window.removeEventListener('keydown', handleEscape)
   })
-})
-
-onUnmounted(() => {
-  removeWindowListeners?.()
 })
 
 async function handleSelectPackage(files: File[]) {
@@ -459,90 +432,17 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
           </div>
 
           <section class="workspace-directory-section challenge-manage-directory">
-            <div class="challenge-filter-bar">
-              <div class="challenge-filter-main">
-                <label class="challenge-search-wrap">
-                  <Search class="challenge-search-icon h-3.5 w-3.5" />
-                  <input
-                    v-model="keyword"
-                    type="text"
-                    class="challenge-search-input"
-                    placeholder="检索题目名称..."
-                  />
-                </label>
-
-                <button
-                  ref="filterToggleRef"
-                  type="button"
-                  class="challenge-filter-toggle"
-                  :class="{ 'challenge-filter-toggle--active': isFilterOpen }"
-                  @click.stop="
-                    ;isFilterOpen = !isFilterOpen
-                    ;isSortOpen = false
-                  "
-                >
-                  <Filter class="h-3.5 w-3.5" />
-                  筛选
-                </button>
-              </div>
-
-              <div class="challenge-filter-meta">
-                <div class="challenge-sort-wrap">
-                  <span class="mr-2 text-[10px] font-bold text-slate-400 uppercase tracking-tight">排序:</span>
-                  <button
-                    ref="sortButtonRef"
-                    type="button"
-                    class="challenge-sort-button"
-                    @click.stop="
-                      ;isSortOpen = !isSortOpen
-                      ;isFilterOpen = false
-                    "
-                  >
-                    <span class="font-black tracking-wider">{{ sortConfig.label }}</span>
-                    <ChevronDown class="h-3.5 w-3.5 transition-transform" :class="{ 'rotate-180': isSortOpen }" />
-                  </button>
-
-                  <div v-if="isSortOpen" ref="sortMenuRef" class="challenge-filter-menu">
-                    <div class="challenge-filter-menu__title">Sort Strategy</div>
-                    <div class="challenge-filter-menu__list">
-                      <button
-                        v-for="opt in sortOptions"
-                        :key="opt.label"
-                        type="button"
-                        class="challenge-filter-menu__item"
-                        :class="{ 'challenge-filter-menu__item--active': sortConfig.label === opt.label }"
-                        @click="setSort(opt)"
-                      >
-                        <div class="flex items-center gap-2">
-                          <component :is="opt.icon" class="h-3.5 w-3.5" />
-                          {{ opt.label }}
-                        </div>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="challenge-count-pill">
-                  共 <span class="font-mono font-black text-slate-900">{{ total }}</span> 项
-                </div>
-              </div>
-
-              <div v-if="isFilterOpen" ref="filterPanelRef" class="challenge-filter-panel">
-                <div class="challenge-filter-panel__header">
-                  <div>
-                    <div class="workspace-overline">Filter Stack</div>
-                    <h3 class="challenge-filter-panel__title">高级筛选</h3>
-                  </div>
-                  <button
-                    type="button"
-                    class="challenge-filter-reset"
-                    :disabled="!hasActiveFilters"
-                    @click="clearFilters"
-                  >
-                    清空筛选
-                  </button>
-                </div>
-
+            <WorkspaceDirectoryToolbar
+              v-model="keyword"
+              :total="total"
+              :selected-sort-label="sortConfig.label"
+              :sort-options="sortOptions"
+              search-placeholder="检索题目名称..."
+              :reset-disabled="!hasActiveFilters"
+              @select-sort="setSort"
+              @reset-filters="clearFilters"
+            >
+              <template #filter-panel>
                 <div class="challenge-filter-grid">
                   <label class="challenge-filter-field">
                     <span class="challenge-filter-label">题目分类</span>
@@ -579,8 +479,8 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
                     </select>
                   </label>
                 </div>
-              </div>
-            </div>
+              </template>
+            </WorkspaceDirectoryToolbar>
 
             <div v-if="loading" class="challenge-directory-state">正在同步题目目录...</div>
             <div v-else-if="list.length === 0" class="challenge-directory-state">
@@ -726,15 +626,14 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
               </div>
             </Teleport>
 
-            <div v-if="total > 0" class="workspace-directory-pagination challenge-manage-pagination">
-              <AdminPaginationControls
-                :page="page"
-                :total-pages="Math.max(1, Math.ceil(total / pageSize))"
-                :total="total"
-                :total-label="`共 ${total} 条`"
-                @change-page="changePage"
-              />
-            </div>
+            <WorkspaceDirectoryPagination
+              class="challenge-manage-pagination"
+              :page="page"
+              :total-pages="Math.max(1, Math.ceil(total / pageSize))"
+              :total="total"
+              :total-label="`共 ${total} 条`"
+              @change-page="changePage"
+            />
           </section>
         </section>
 
@@ -1055,111 +954,10 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
   color: #94a3b8;
 }
 
-.challenge-filter-bar {
-  position: relative;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  margin-bottom: 1.5rem;
-}
-
-.challenge-filter-main,
-.challenge-filter-meta {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.challenge-search-wrap {
-  position: relative;
-}
-
-.challenge-search-icon {
-  position: absolute;
-  left: 0.75rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #94a3b8;
-}
-
-.challenge-search-input {
-  width: 20rem;
-  min-height: 2.5rem;
-  padding: 0 1rem 0 2.25rem;
-  font-size: 12px;
-  font-weight: 500;
-  border: 1px solid transparent;
-  border-radius: 12px;
-  background: white;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  outline: none;
-  transition: all 0.2s ease;
-}
-
-.challenge-search-input:focus {
-  background: white;
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
-}
-
-.challenge-filter-toggle,
-.challenge-sort-button,
-.challenge-count-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  min-height: 2.5rem;
-  padding: 0 1rem;
-  border: 1px solid transparent;
-  border-radius: 12px;
-  background: white;
-  font-size: 12px;
-  font-weight: 700;
-  color: #475569;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  transition: all 0.2s ease;
-}
-
-.challenge-filter-toggle--active {
-  background: #0f172a;
-  color: white;
-}
-
-.challenge-sort-button:hover,
-.challenge-filter-toggle:hover {
-  color: #2563eb;
-}
-
-.challenge-filter-panel,
-.challenge-filter-menu,
 .challenge-row-menu {
   border: 1px solid #e2e8f0;
   background: white;
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
-}
-
-.challenge-filter-panel {
-  position: absolute;
-  top: calc(100% + 0.5rem);
-  left: 0;
-  z-index: 40;
-  width: 24rem;
-  border-radius: 16px;
-  padding: 1.25rem;
-}
-
-.challenge-filter-panel__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1rem;
-}
-
-.challenge-filter-panel__title {
-  font-size: 14px;
-  font-weight: 800;
-  color: #0f172a;
 }
 
 .challenge-filter-grid {
@@ -1191,23 +989,6 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
   background: #f8fafc;
 }
 
-.challenge-filter-reset {
-  font-size: 11px;
-  font-weight: 700;
-  color: #94a3b8;
-}
-
-.challenge-filter-menu {
-  position: absolute;
-  right: 0;
-  top: calc(100% + 0.5rem);
-  z-index: 40;
-  width: 12rem;
-  border-radius: 12px;
-  overflow: hidden;
-}
-
-.challenge-filter-menu__title,
 .challenge-row-menu__title {
   padding: 0.75rem 1rem 0.5rem;
   font-size: 9px;
@@ -1217,23 +998,6 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
   color: #94a3b8;
   background: #f8fafc;
   border-bottom: 1px solid #f1f5f9;
-}
-
-.challenge-filter-menu__item {
-  display: flex;
-  width: 100%;
-  align-items: center;
-  padding: 0.65rem 1rem;
-  font-size: 12px;
-  font-weight: 600;
-  color: #475569;
-  transition: all 0.2s ease;
-}
-
-.challenge-filter-menu__item:hover,
-.challenge-filter-menu__item--active {
-  background: #f8fafc;
-  color: #2563eb;
 }
 
 .challenge-table-row {

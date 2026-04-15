@@ -143,6 +143,18 @@ describe('ChallengeManage', () => {
     expect(wrapper.text()).not.toContain('challenge-legacy-id')
   })
 
+  it('筛选排序工具栏和分页应接入共享组件，而不是继续内联实现', () => {
+    expect(challengeManageSource).toContain(
+      "from '@/components/common/WorkspaceDirectoryToolbar.vue'"
+    )
+    expect(challengeManageSource).toContain(
+      "from '@/components/common/WorkspaceDirectoryPagination.vue'"
+    )
+    expect(challengeManageSource).toContain('<WorkspaceDirectoryToolbar')
+    expect(challengeManageSource).toContain('<WorkspaceDirectoryPagination')
+    expect(challengeManageSource).not.toContain('<div class="challenge-filter-bar">')
+  })
+
   it('更多操作菜单应浮到表格滚动层之上，而不是渲染在列表容器内部', async () => {
     const wrapper = mount(ChallengeManage, {
       attachTo: document.body,
@@ -209,13 +221,13 @@ describe('ChallengeManage', () => {
     })
     await flushPromises()
 
-    await wrapper.get('.challenge-filter-toggle').trigger('click')
-    expect(wrapper.find('.challenge-filter-panel').exists()).toBe(true)
+    await wrapper.get('.workspace-directory-toolbar__filter-toggle').trigger('click')
+    expect(wrapper.find('.workspace-directory-toolbar__filter-panel').exists()).toBe(true)
 
     await wrapper.get('.challenge-filter-select').trigger('click')
     await flushPromises()
 
-    expect(wrapper.find('.challenge-filter-panel').exists()).toBe(true)
+    expect(wrapper.find('.workspace-directory-toolbar__filter-panel').exists()).toBe(true)
     wrapper.unmount()
   })
 })
