@@ -159,3 +159,45 @@
     color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base))
   );
 }
+
+.journal-shell.journal-shell-user {
+  --ui-btn-radius: 0.25rem;
+  --ui-btn-font-size: var(--font-size-13);
+  --ui-btn-primary-background: #2a7a58;
+  --ui-btn-primary-hover-background: #206346;
+  --ui-btn-secondary-background: #ffffff;
+  --ui-btn-secondary-color: #475569;
+  --ui-btn-secondary-border: #e2e8f0;
+  --ui-btn-secondary-hover-background: #f8fafc;
+  --ui-btn-secondary-hover-border: #d9e2ec;
+  --ui-btn-ghost-color: #64748b;
+  --ui-btn-ghost-hover-background: #f8fafc;
+  --ui-btn-ghost-hover-color: #0f172a;
+  --ui-btn-danger-background: #ffffff;
+  --ui-btn-danger-border: rgba(220, 38, 38, 0.18);
+  --ui-btn-danger-color: #dc2626;
+  --ui-btn-danger-hover-background: #fef2f2;
+  --ui-btn-danger-hover-border: rgba(220, 38, 38, 0.24);
+  --ui-field-label-weight: 600;
+  --ui-field-label-color: #1e293b;
+  --ui-field-hint-color: #94a3b8;
+  --ui-control-radius: 0.25rem;
+  --ui-control-background: #f8fafc;
+  --ui-control-border: #e2e8f0;
+  --ui-control-color: #0f172a;
+  --ui-control-placeholder: #94a3b8;
+  --ui-control-focus-border: #2a7a58;
+  --ui-control-focus-background: #ffffff;
+  --ui-control-focus-shadow: none;
+  --ui-control-adornment: #94a3b8;
+  --ui-badge-radius: var(--ui-badge-radius-pill);
+  --ui-dialog-overlay: rgba(15, 23, 42, 0.3);
+  --ui-dialog-surface: #ffffff;
+  --ui-dialog-border: rgba(148, 163, 184, 0.14);
+  --ui-dialog-shadow: 0 24px 70px rgba(15, 23, 42, 0.2);
+  --ui-dialog-radius: 0.5rem;
+  --ui-dialog-radius-wide: 0.75rem;
+  --ui-workbench-nav-active-bg: rgba(42, 122, 88, 0.08);
+  --ui-workbench-nav-active-color: #2a7a58;
+  --ui-card-action-hover: #f8fafc;
+}
