@@ -9,6 +9,14 @@ export type ContestWorkbenchStageKey =
   | 'preflight'
   | 'operations'
 
+export const CONTEST_WORKBENCH_STAGE_ORDER: ContestWorkbenchStageKey[] = [
+  'basics',
+  'pool',
+  'awd-config',
+  'preflight',
+  'operations',
+]
+
 export interface ContestWorkbenchStage {
   key: ContestWorkbenchStageKey
   label: string

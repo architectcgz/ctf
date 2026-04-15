@@ -21,7 +21,11 @@ import {
   type AdminContestStatus,
   type ContestFormDraft,
 } from '@/composables/useAdminContests'
-import { useContestWorkbench, type ContestWorkbenchStageKey } from '@/composables/useContestWorkbench'
+import {
+  CONTEST_WORKBENCH_STAGE_ORDER,
+  useContestWorkbench,
+  type ContestWorkbenchStageKey,
+} from '@/composables/useContestWorkbench'
 import { ApiError } from '@/api/request'
 import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'
 import { useToast } from '@/composables/useToast'
@@ -53,15 +57,8 @@ const fieldLocks = computed(() => createFieldLocks(editingBaseStatus.value))
 const statusOptions = computed(() => createContestStatusOptions(editingBaseStatus.value))
 const pageTitle = computed(() => (contest.value ? `编辑《${contest.value.title}》` : '编辑竞赛'))
 const workbench = useContestWorkbench(contest)
-const contestWorkbenchStageOrder: ContestWorkbenchStageKey[] = [
-  'basics',
-  'pool',
-  'awd-config',
-  'preflight',
-  'operations',
-]
 const { activeTab: activeStage, selectTab } = useUrlSyncedTabs<ContestWorkbenchStageKey>({
-  orderedTabs: contestWorkbenchStageOrder,
+  orderedTabs: CONTEST_WORKBENCH_STAGE_ORDER,
   defaultTab: 'basics',
 })
 
