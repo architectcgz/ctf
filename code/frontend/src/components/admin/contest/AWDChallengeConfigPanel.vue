@@ -230,7 +230,7 @@ function isActiveChallenge(item: AdminContestChallengeData): boolean {
           <button
             id="awd-challenge-config-create"
             type="button"
-            class="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white transition hover:opacity-90"
+            class="ui-btn ui-btn--primary"
             @click="emit('create')"
           >
             新增题目
@@ -248,11 +248,11 @@ function isActiveChallenge(item: AdminContestChallengeData): boolean {
           <p class="config-focus-card__title">{{ activeChallengeHeading }}</p>
           <p class="config-focus-card__copy">{{ activeChallengeContext }}</p>
         </div>
-        <div class="config-focus-card__actions">
+        <div class="ui-row-actions config-focus-card__actions">
           <button
             id="awd-challenge-config-prev"
             type="button"
-            class="rounded-xl border border-border px-3 py-2 text-sm font-medium text-[var(--color-text-primary)] transition hover:border-primary disabled:cursor-not-allowed disabled:opacity-50"
+            class="ui-btn ui-btn--secondary"
             :disabled="!canNavigatePrevious"
             @click="emit('previous')"
           >
@@ -261,7 +261,7 @@ function isActiveChallenge(item: AdminContestChallengeData): boolean {
           <button
             id="awd-challenge-config-next"
             type="button"
-            class="rounded-xl border border-border px-3 py-2 text-sm font-medium text-[var(--color-text-primary)] transition hover:border-primary disabled:cursor-not-allowed disabled:opacity-50"
+            class="ui-btn ui-btn--secondary"
             :disabled="!canNavigateNext"
             @click="emit('next')"
           >
@@ -322,14 +322,14 @@ function isActiveChallenge(item: AdminContestChallengeData): boolean {
             <p class="config-row__summary-sub">{{ getValidationHint(item) }}</p>
           </div>
           <div
-            class="config-row__actions"
+            class="ui-row-actions config-row__actions"
             role="group"
             :aria-label="`题目 ${getChallengeTitle(item)} 操作`"
           >
             <button
               :id="`awd-challenge-config-edit-${item.id}`"
               type="button"
-              class="rounded-xl border border-border px-3 py-2 text-sm font-medium text-[var(--color-text-primary)] transition hover:border-primary"
+              class="ui-btn ui-btn--secondary"
               @click="emit('edit', item)"
             >
               编辑配置
@@ -396,8 +396,6 @@ function isActiveChallenge(item: AdminContestChallengeData): boolean {
 }
 
 .config-focus-card__actions {
-  display: flex;
-  flex-wrap: wrap;
   gap: 0.75rem;
 }
 
@@ -540,7 +538,6 @@ function isActiveChallenge(item: AdminContestChallengeData): boolean {
 }
 
 .config-row__actions {
-  display: flex;
   justify-content: flex-end;
 }
 

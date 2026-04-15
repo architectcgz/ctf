@@ -362,20 +362,22 @@ watch(
 
 <template>
   <div class="space-y-6">
-    <label v-if="shouldShowContestSelector" class="space-y-2">
-      <span class="text-sm text-[var(--color-text-secondary)]">选择 AWD 赛事</span>
-      <select
-        id="awd-contest-selector"
-        :value="selectedContestId || ''"
-        class="w-full rounded-xl border border-border bg-surface px-3 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
-        :disabled="contests.length === 0"
-        @change="updateSelectedContestId(($event.target as HTMLSelectElement).value)"
-      >
-        <option v-if="contests.length === 0" value="" disabled>暂无 AWD 赛事</option>
-        <option v-for="contest in contests" :key="contest.id" :value="contest.id">
-          {{ contest.title }}
-        </option>
-      </select>
+    <label v-if="shouldShowContestSelector" class="ui-field awd-ops-selector-field">
+      <span class="ui-field__label">选择 AWD 赛事</span>
+      <span class="ui-control-wrap">
+        <select
+          id="awd-contest-selector"
+          :value="selectedContestId || ''"
+          class="ui-control"
+          :disabled="contests.length === 0"
+          @change="updateSelectedContestId(($event.target as HTMLSelectElement).value)"
+        >
+          <option v-if="contests.length === 0" value="" disabled>暂无 AWD 赛事</option>
+          <option v-for="contest in contests" :key="contest.id" :value="contest.id">
+            {{ contest.title }}
+          </option>
+        </select>
+      </span>
     </label>
 
     <AppEmpty
@@ -485,7 +487,7 @@ watch(
               <button
                 id="awd-runtime-shell-create-round"
                 type="button"
-                class="inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] transition disabled:cursor-not-allowed disabled:opacity-60"
+                class="ui-btn ui-btn--secondary"
                 disabled
               >
                 创建轮次
@@ -493,7 +495,7 @@ watch(
               <button
                 id="awd-runtime-shell-record-service"
                 type="button"
-                class="inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] transition disabled:cursor-not-allowed disabled:opacity-60"
+                class="ui-btn ui-btn--secondary"
                 disabled
               >
                 录入服务检查
@@ -501,7 +503,7 @@ watch(
               <button
                 id="awd-runtime-shell-record-attack"
                 type="button"
-                class="inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] transition disabled:cursor-not-allowed disabled:opacity-60"
+                class="ui-btn ui-btn--secondary"
                 disabled
               >
                 补录攻击日志
@@ -509,7 +511,7 @@ watch(
               <button
                 id="awd-runtime-shell-run-check"
                 type="button"
-                class="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white transition disabled:cursor-not-allowed disabled:opacity-60"
+                class="ui-btn ui-btn--primary"
                 disabled
               >
                 立即巡检当前轮
@@ -588,6 +590,10 @@ watch(
 </template>
 
 <style scoped>
+.awd-ops-selector-field {
+  --ui-field-gap: var(--space-2);
+}
+
 .awd-ops-tabs {
   margin-top: 0.5rem;
   border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 84%, transparent);

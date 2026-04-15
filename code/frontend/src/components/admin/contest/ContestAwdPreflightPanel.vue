@@ -51,7 +51,7 @@ function handleNavigateChallenge(challengeId: string) {
         <button
           id="contest-awd-preflight-force-start"
           type="button"
-          class="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white transition hover:opacity-90"
+          class="ui-btn ui-btn--primary"
           @click="emit('open:override')"
         >
           强制开赛
