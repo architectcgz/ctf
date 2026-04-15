@@ -326,6 +326,45 @@ describe('AWDOperationsPanel', () => {
     expect(wrapper.text()).toContain('当前赛事还没有关联题目')
   })
 
+  it('未开赛时运行段应显示尚未进入运行阶段', () => {
+    const wrapper = mount(AWDOperationsPanel, {
+      props: {
+        contests: [
+          {
+            id: 'awd-1',
+            title: '2026 AWD 联赛',
+            description: '攻防赛',
+            mode: 'awd',
+            status: 'registering',
+            starts_at: '2026-03-18T09:00:00.000Z',
+            ends_at: '2026-03-18T18:00:00.000Z',
+          },
+        ],
+        selectedContestId: 'awd-1',
+      },
+      global: {
+        stubs: {
+          ElDialog: {
+            props: ['modelValue', 'title'],
+            template:
+              '<div><div v-if="modelValue"><div>{{ title }}</div><slot /><slot name="footer" /></div></div>',
+          },
+          AWDRoundInspector: true,
+          AWDRoundCreateDialog: true,
+          AWDServiceCheckDialog: true,
+          AWDAttackLogDialog: true,
+          AWDChallengeConfigDialog: true,
+        },
+      },
+    })
+
+    expect(wrapper.text()).toContain('轮次态势')
+    expect(wrapper.text()).toContain('尚未进入运行阶段')
+    expect(wrapper.text()).toContain('需先通过赛前检查并开赛')
+    expect(wrapper.get('#awd-runtime-shell-create-round').attributes('disabled')).toBeDefined()
+    expect(wrapper.get('#awd-runtime-shell-run-check').attributes('disabled')).toBeDefined()
+  })
+
   it('应该在创建轮次被 gate 拦截时打开强制继续弹层', async () => {
     const awdState = getAwdState()
     awdState.readiness.value = buildReadinessState()

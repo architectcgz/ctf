@@ -149,7 +149,7 @@ function openEditContest(contest: ContestDetailData) {
             <div class="workspace-overline">Contest Workspace</div>
             <h1 class="workspace-page-title">赛事管理台</h1>
             <p class="workspace-page-copy">
-              在同一套工作区里查看赛事窗口、切换目录筛选，并按需进入 AWD 运维视图。
+              在同一套工作区里查看赛事窗口、切换目录筛选，并按需进入竞赛工作台的运行段。
             </p>
           </div>
 
@@ -203,7 +203,7 @@ function openEditContest(contest: ContestDetailData) {
               {{ awdCount }}
             </div>
             <div class="journal-note-helper progress-card-hint metric-panel-helper">
-              当前页可直接切换到攻防运维视图
+              当前页可直接进入竞赛工作台的运行段
             </div>
           </div>
         </div>
@@ -233,13 +233,13 @@ function openEditContest(contest: ContestDetailData) {
 
             <article class="contest-overview-row">
               <div class="contest-overview-row__body">
-                <h3 class="contest-overview-row__title">AWD 运维入口</h3>
+                <h3 class="contest-overview-row__title">竞赛工作台入口</h3>
                 <p class="contest-overview-row__copy">
-                  AWD 赛事会在这里汇总，便于直接进入攻防轮次、服务巡检和流量排查流程。
+                  AWD 赛事会在这里汇总，便于进入对应竞赛的工作台运行段，继续处理攻防轮次、服务巡检和流量排查。
                 </p>
               </div>
               <button type="button" class="contest-inline-link" @click="selectPanel('operations')">
-                进入 AWD 运维
+                进入竞赛工作台
               </button>
             </article>
           </div>
@@ -380,7 +380,7 @@ function openEditContest(contest: ContestDetailData) {
             :saving="createSaving"
             :field-locks="createFieldLocks"
             :show-cancel="false"
-            :note="'创建后可继续在赛事目录中编辑详情、挂载题目或进入 AWD 运维面板。'"
+            :note="'创建后可继续在赛事目录中编辑详情、挂载题目或进入竞赛工作台。'"
             @save="emit('saveCreateContest', $event)"
           />
         </section>

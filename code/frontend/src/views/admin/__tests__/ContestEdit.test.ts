@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 
 import ContestEdit from '../ContestEdit.vue'
+import AWDReadinessOverrideDialog from '@/components/admin/contest/AWDReadinessOverrideDialog.vue'
 import { ApiError } from '@/api/request'
 import type { ContestDetailData } from '@/api/contracts'
 import type { VueWrapper } from '@vue/test-utils'
@@ -28,6 +29,9 @@ const toastMocks = vi.hoisted(() => ({
   error: vi.fn(),
   warning: vi.fn(),
   info: vi.fn(),
+}))
+const awdMockModule = vi.hoisted(() => ({
+  state: null as any,
 }))
 
 vi.mock('vue-router', async () => {
@@ -61,6 +65,123 @@ vi.mock('@/composables/useDestructiveConfirm', () => ({
 vi.mock('@/composables/useToast', () => ({
   useToast: () => toastMocks,
 }))
+
+vi.mock('@/composables/useAdminContestAWD', async () => {
+  const { ref } = await vi.importActual<typeof import('vue')>('vue')
+  awdMockModule.state = {
+    rounds: ref([
+      {
+        id: 'round-1',
+        contest_id: 'contest-1',
+        round_number: 1,
+        status: 'running',
+        attack_score: 50,
+        defense_score: 50,
+        created_at: '2026-03-15T09:00:00.000Z',
+        updated_at: '2026-03-15T09:05:00.000Z',
+      },
+    ]),
+    selectedRoundId: ref('round-1'),
+    readiness: ref(null),
+    loadingReadiness: ref(false),
+    overrideDialogState: ref({
+      open: false,
+      action: null,
+      title: '',
+      reason: '',
+      readiness: null,
+      confirmLoading: false,
+    }),
+    services: ref([]),
+    attacks: ref([]),
+    summary: ref(null),
+    trafficSummary: ref(null),
+    trafficEvents: ref([]),
+    trafficEventsTotal: ref(0),
+    trafficFilters: ref({
+      attacker_team_id: '',
+      victim_team_id: '',
+      challenge_id: '',
+      status_group: 'all',
+      path_keyword: '',
+      page: 1,
+      page_size: 20,
+    }),
+    scoreboardRows: ref([]),
+    scoreboardFrozen: ref(false),
+    teams: ref([
+      {
+        id: 'team-1',
+        contest_id: 'contest-1',
+        name: '蓝队一',
+        captain_id: '1001',
+        invite_code: 'ABC123',
+        max_members: 4,
+        member_count: 3,
+        created_at: '2026-03-15T08:00:00.000Z',
+      },
+      {
+        id: 'team-2',
+        contest_id: 'contest-1',
+        name: '红队一',
+        captain_id: '1002',
+        invite_code: 'DEF456',
+        max_members: 4,
+        member_count: 3,
+        created_at: '2026-03-15T08:01:00.000Z',
+      },
+    ]),
+    challengeLinks: ref([
+      {
+        id: 'link-1',
+        contest_id: 'contest-1',
+        challenge_id: '101',
+        title: 'Web 入门',
+        category: 'web',
+        difficulty: 'easy',
+        points: 120,
+        order: 1,
+        is_visible: true,
+        awd_checker_type: undefined,
+        awd_checker_config: {},
+        awd_sla_score: 0,
+        awd_defense_score: 0,
+        awd_checker_validation_state: 'pending',
+        awd_checker_last_preview_at: undefined,
+        awd_checker_last_preview_result: undefined,
+        created_at: '2026-03-10T00:00:00.000Z',
+      },
+    ]),
+    challengeCatalog: ref([]),
+    loadingRounds: ref(false),
+    loadingRoundDetail: ref(false),
+    loadingTrafficSummary: ref(false),
+    loadingTrafficEvents: ref(false),
+    loadingChallengeCatalog: ref(false),
+    checking: ref(false),
+    creatingRound: ref(false),
+    savingServiceCheck: ref(false),
+    savingAttackLog: ref(false),
+    savingChallengeConfig: ref(false),
+    shouldAutoRefresh: ref(false),
+    refresh: vi.fn(),
+    applyTrafficFilters: vi.fn(),
+    setTrafficPage: vi.fn(),
+    resetTrafficFilters: vi.fn(),
+    runSelectedRoundCheck: vi.fn(),
+    createRound: vi.fn(),
+    confirmOverrideAction: vi.fn(),
+    closeOverrideDialog: vi.fn(),
+    createServiceCheck: vi.fn(),
+    createAttackLog: vi.fn(),
+    loadChallengeCatalog: vi.fn(),
+    createChallengeLink: vi.fn(),
+    updateChallengeLink: vi.fn(),
+  }
+  return {
+    useAdminContestAWD: () => awdMockModule.state,
+  }
+})
 
 function buildContestDetail(overrides: Partial<ContestDetailData> = {}): ContestDetailData {
   return {
@@ -119,6 +240,114 @@ describe('ContestEdit', () => {
     toastMocks.error.mockReset()
     toastMocks.warning.mockReset()
     toastMocks.info.mockReset()
+    awdMockModule.state.rounds.value = [
+      {
+        id: 'round-1',
+        contest_id: 'contest-1',
+        round_number: 1,
+        status: 'running',
+        attack_score: 50,
+        defense_score: 50,
+        created_at: '2026-03-15T09:00:00.000Z',
+        updated_at: '2026-03-15T09:05:00.000Z',
+      },
+    ]
+    awdMockModule.state.selectedRoundId.value = 'round-1'
+    awdMockModule.state.readiness.value = null
+    awdMockModule.state.loadingReadiness.value = false
+    awdMockModule.state.overrideDialogState.value = {
+      open: false,
+      action: null,
+      title: '',
+      reason: '',
+      readiness: null,
+      confirmLoading: false,
+    }
+    awdMockModule.state.services.value = []
+    awdMockModule.state.attacks.value = []
+    awdMockModule.state.summary.value = null
+    awdMockModule.state.trafficSummary.value = null
+    awdMockModule.state.trafficEvents.value = []
+    awdMockModule.state.trafficEventsTotal.value = 0
+    awdMockModule.state.trafficFilters.value = {
+      attacker_team_id: '',
+      victim_team_id: '',
+      challenge_id: '',
+      status_group: 'all',
+      path_keyword: '',
+      page: 1,
+      page_size: 20,
+    }
+    awdMockModule.state.scoreboardRows.value = []
+    awdMockModule.state.scoreboardFrozen.value = false
+    awdMockModule.state.teams.value = [
+      {
+        id: 'team-1',
+        contest_id: 'contest-1',
+        name: '蓝队一',
+        captain_id: '1001',
+        invite_code: 'ABC123',
+        max_members: 4,
+        member_count: 3,
+        created_at: '2026-03-15T08:00:00.000Z',
+      },
+      {
+        id: 'team-2',
+        contest_id: 'contest-1',
+        name: '红队一',
+        captain_id: '1002',
+        invite_code: 'DEF456',
+        max_members: 4,
+        member_count: 3,
+        created_at: '2026-03-15T08:01:00.000Z',
+      },
+    ]
+    awdMockModule.state.challengeLinks.value = [
+      {
+        id: 'link-1',
+        contest_id: 'contest-1',
+        challenge_id: '101',
+        title: 'Web 入门',
+        category: 'web',
+        difficulty: 'easy',
+        points: 120,
+        order: 1,
+        is_visible: true,
+        awd_checker_type: undefined,
+        awd_checker_config: {},
+        awd_sla_score: 0,
+        awd_defense_score: 0,
+        awd_checker_validation_state: 'pending',
+        awd_checker_last_preview_at: undefined,
+        awd_checker_last_preview_result: undefined,
+        created_at: '2026-03-10T00:00:00.000Z',
+      },
+    ]
+    awdMockModule.state.challengeCatalog.value = []
+    awdMockModule.state.loadingRounds.value = false
+    awdMockModule.state.loadingRoundDetail.value = false
+    awdMockModule.state.loadingTrafficSummary.value = false
+    awdMockModule.state.loadingTrafficEvents.value = false
+    awdMockModule.state.loadingChallengeCatalog.value = false
+    awdMockModule.state.checking.value = false
+    awdMockModule.state.creatingRound.value = false
+    awdMockModule.state.savingServiceCheck.value = false
+    awdMockModule.state.savingAttackLog.value = false
+    awdMockModule.state.savingChallengeConfig.value = false
+    awdMockModule.state.shouldAutoRefresh.value = false
+    awdMockModule.state.refresh.mockReset()
+    awdMockModule.state.applyTrafficFilters.mockReset()
+    awdMockModule.state.setTrafficPage.mockReset()
+    awdMockModule.state.resetTrafficFilters.mockReset()
+    awdMockModule.state.runSelectedRoundCheck.mockReset()
+    awdMockModule.state.createRound.mockReset()
+    awdMockModule.state.confirmOverrideAction.mockReset()
+    awdMockModule.state.closeOverrideDialog.mockReset()
+    awdMockModule.state.createServiceCheck.mockReset()
+    awdMockModule.state.createAttackLog.mockReset()
+    awdMockModule.state.loadChallengeCatalog.mockReset()
+    awdMockModule.state.createChallengeLink.mockReset()
+    awdMockModule.state.updateChallengeLink.mockReset()
     routeState.params = { id: 'contest-1' }
 
     contestApiMocks.getContest.mockResolvedValue({
@@ -379,6 +608,27 @@ describe('ContestEdit', () => {
     const stageRail = getWorkbenchStageRail(wrapper)
 
     expect(stageRail.get('[role="tab"][aria-selected="true"]').text()).toContain('轮次运行')
+    expect(wrapper.text()).toContain('轮次态势')
+  })
+
+  it('未开赛时工作台运行段应承接降级壳', async () => {
+    contestApiMocks.getContest.mockResolvedValue(
+      buildContestDetail({
+        title: '2026 AWD 联赛',
+        description: '攻防赛',
+        mode: 'awd',
+        status: 'registering',
+      })
+    )
+
+    const wrapper = mountContestEdit()
+
+    await flushPromises()
+    await wrapper.get('#contest-workbench-stage-tab-operations').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('尚未进入运行阶段')
+    expect(wrapper.text()).toContain('需先通过赛前检查并开赛')
   })
 
   it('应该在 URL 已指定有效阶段时保留该阶段', async () => {
@@ -563,8 +813,7 @@ describe('ContestEdit', () => {
 
     await wrapper.get('#contest-awd-preflight-force-start').trigger('click')
     await flushPromises()
-    await wrapper.get('#awd-readiness-override-reason').setValue('teacher drill')
-    await wrapper.get('#awd-readiness-override-submit').trigger('click')
+    wrapper.findComponent(AWDReadinessOverrideDialog).vm.$emit('confirm', 'teacher drill')
     await flushPromises()
 
     expect(contestApiMocks.updateContest).toHaveBeenCalledWith(

@@ -485,6 +485,8 @@ describe('ContestManage', () => {
     })
 
     await flushPromises()
+
+    expect(wrapper.text()).toContain('进入竞赛工作台')
     await wrapper.get('#contest-tab-list').trigger('click')
     await wrapper.find('.contest-action--primary').trigger('click')
 
@@ -1501,7 +1503,7 @@ describe('ContestManage', () => {
           title: '2026 校赛 AWD 进阶场',
           description: '支持手工建轮',
           mode: 'awd',
-          status: 'registering',
+          status: 'running',
           starts_at: '2026-03-20T09:00:00.000Z',
           ends_at: '2026-03-20T13:00:00.000Z',
         },
