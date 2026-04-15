@@ -1,4 +1,4 @@
-import { computed, ref, type Ref } from 'vue'
+import { computed, ref, watch, type Ref } from 'vue'
 
 import type { AdminContestChallengeData, ContestMode } from '@/api/contracts'
 
@@ -111,6 +111,10 @@ export function useContestChallengePool(
   })
 
   const visibleItems = computed(() => {
+    if (!isAwdContest.value) {
+      return sortedItems.value
+    }
+
     switch (activeFilter.value) {
       case 'unconfigured':
         return sortedItems.value.filter((item) => !hasAwdConfiguration(item))
@@ -129,6 +133,12 @@ export function useContestChallengePool(
     }
     activeFilter.value = value
   }
+
+  watch(isAwdContest, (value) => {
+    if (!value) {
+      activeFilter.value = 'all'
+    }
+  })
 
   return {
     sortedItems,

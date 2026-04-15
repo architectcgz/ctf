@@ -4,10 +4,16 @@ import { computed } from 'vue'
 import type { AWDReadinessData, AWDReadinessItemData } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 
-const props = defineProps<{
-  readiness: AWDReadinessData | null
-  loading: boolean
-}>()
+const props = withDefaults(
+  defineProps<{
+    readiness: AWDReadinessData | null
+    loading: boolean
+    actionLabel?: string
+  }>(),
+  {
+    actionLabel: '编辑配置',
+  }
+)
 
 const emit = defineEmits<{
   editConfig: [challengeId: string]
@@ -55,6 +61,30 @@ const hasGlobalBlockingReasons = computed(() => (props.readiness?.global_blockin
 const blockingActionLabels = computed(() =>
   (props.readiness?.blocking_actions || []).map((action) => getBlockingActionLabel(action))
 )
+const readinessDecision = computed(() => {
+  const readiness = props.readiness
+  if (readiness?.ready) {
+    return {
+      key: 'ready',
+      title: '可开赛',
+      description: '当前 checker 校验状态已经满足开赛关键动作要求，可以继续进入运行阶段。',
+    }
+  }
+
+  if (hasGlobalBlockingReasons.value) {
+    return {
+      key: 'blocked',
+      title: '不可开赛',
+      description: '当前仍有系统级阻塞，需先补齐基础条件后才能继续。',
+    }
+  }
+
+  return {
+    key: 'override',
+    title: '可强制开赛',
+    description: '题目侧仍有阻塞项，如需演练或临时放行，可以在确认风险后强制继续。',
+  }
+})
 const blockingEmptyDescription = computed(() =>
   hasGlobalBlockingReasons.value
     ? '当前没有题目级阻塞项，系统级阻塞仍会拦截开赛关键动作。'
@@ -154,6 +184,24 @@ function formatDateTime(value?: string): string {
 
     <template v-else>
       <section
+        v-if="readiness"
+        class="workspace-directory-section readiness-decision"
+        :class="`readiness-decision--${readinessDecision.key}`"
+      >
+        <div>
+          <div class="journal-note-label">Start Decision</div>
+          <h3 class="list-heading__title">{{ readinessDecision.title }}</h3>
+          <p class="readiness-decision__copy">{{ readinessDecision.description }}</p>
+        </div>
+        <div class="readiness-decision__meta">
+          <span class="readiness-count">阻塞 {{ readiness.blocking_count }} 项</span>
+          <span v-if="blockingActionLabels.length > 0" class="readiness-decision__actions">
+            影响 {{ blockingActionLabels.join(' / ') }}
+          </span>
+        </div>
+      </section>
+
+      <section
         v-if="hasGlobalBlockingReasons"
         class="workspace-directory-section readiness-alert"
       >
@@ -229,7 +277,7 @@ function formatDateTime(value?: string): string {
                 class="rounded-xl border border-border px-3 py-2 text-sm font-medium text-[var(--color-text-primary)] transition hover:border-primary"
                 @click="emit('editConfig', item.challenge_id)"
               >
-                编辑配置
+                {{ props.actionLabel }}
               </button>
             </div>
           </article>
@@ -265,13 +313,56 @@ function formatDateTime(value?: string): string {
 }
 
 .readiness-section,
-.readiness-alert {
+.readiness-alert,
+.readiness-decision {
   padding: 1.5rem;
 }
 
 .readiness-loading {
   color: var(--journal-muted);
   font-size: 0.95rem;
+}
+
+.readiness-decision {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  border: 1px solid color-mix(in srgb, var(--journal-border) 76%, transparent);
+}
+
+.readiness-decision--ready {
+  border-color: color-mix(in srgb, var(--color-success) 24%, transparent);
+  background: color-mix(in srgb, var(--color-success) 8%, var(--journal-surface));
+}
+
+.readiness-decision--override {
+  border-color: color-mix(in srgb, var(--color-warning) 28%, transparent);
+  background: color-mix(in srgb, var(--color-warning) 8%, var(--journal-surface));
+}
+
+.readiness-decision--blocked {
+  border-color: color-mix(in srgb, var(--color-danger) 24%, transparent);
+  background: color-mix(in srgb, var(--color-danger) 8%, var(--journal-surface));
+}
+
+.readiness-decision__copy {
+  margin: 0.5rem 0 0;
+  max-width: 46rem;
+  color: var(--journal-ink);
+  line-height: 1.7;
+}
+
+.readiness-decision__meta {
+  display: grid;
+  gap: 0.5rem;
+  justify-items: end;
+}
+
+.readiness-decision__actions {
+  color: var(--journal-muted);
+  font-size: 0.85rem;
 }
 
 .readiness-alert-list {
@@ -425,6 +516,10 @@ function formatDateTime(value?: string): string {
 
   .readiness-row__actions {
     justify-content: flex-start;
+  }
+
+  .readiness-decision__meta {
+    justify-items: start;
   }
 
   .readiness-list-head,

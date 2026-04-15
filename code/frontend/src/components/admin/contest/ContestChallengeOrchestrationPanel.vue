@@ -25,6 +25,10 @@ const props = defineProps<{
   contestMode: ContestDetailData['mode']
 }>()
 
+const emit = defineEmits<{
+  'open:awd-config': [challenge: AdminContestChallengeData]
+}>()
+
 const toast = useToast()
 const CHALLENGE_CATALOG_PAGE_SIZE = 100
 const loading = ref(true)
@@ -354,6 +358,15 @@ onMounted(() => {
             :aria-label="`题目 ${getChallengeTitle(challenge)} 操作`"
           >
             <button
+              v-if="isAwdContest"
+              :id="`contest-challenge-open-awd-config-${challenge.id}`"
+              type="button"
+              class="contest-challenge-row__button contest-challenge-row__button--ghost"
+              @click="emit('open:awd-config', challenge)"
+            >
+              补 AWD 配置
+            </button>
+            <button
               :id="`contest-challenge-edit-${challenge.id}`"
               type="button"
               class="contest-challenge-row__button contest-challenge-row__button--primary"
@@ -600,6 +613,12 @@ onMounted(() => {
   border: 1px solid color-mix(in srgb, var(--journal-accent) 24%, transparent);
   background: color-mix(in srgb, var(--journal-accent) 10%, var(--journal-surface));
   color: var(--journal-accent);
+}
+
+.contest-challenge-row__button--ghost {
+  border: 1px solid color-mix(in srgb, var(--journal-border) 76%, transparent);
+  background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
+  color: var(--journal-ink);
 }
 
 .contest-challenge-row__button--danger {
