@@ -631,6 +631,48 @@ describe('ContestEdit', () => {
     expect(wrapper.text()).toContain('需先通过赛前检查并开赛')
   })
 
+  it('应该在 AWD 赛事已结束时进入运行段而不是显示赛前降级壳', async () => {
+    contestApiMocks.getContest.mockResolvedValue(
+      buildContestDetail({
+        title: '2026 AWD 联赛',
+        description: '攻防赛',
+        mode: 'awd',
+        status: 'ended',
+      })
+    )
+
+    const wrapper = mountContestEdit()
+
+    await flushPromises()
+
+    const stageRail = getWorkbenchStageRail(wrapper)
+
+    expect(stageRail.get('[role="tab"][aria-selected="true"]').text()).toContain('轮次运行')
+    expect(wrapper.text()).toContain('轮次态势')
+    expect(wrapper.text()).not.toContain('尚未进入运行阶段')
+  })
+
+  it('应该在管理页工作台交接时强制落到轮次态势而不是恢复旧子页签', async () => {
+    window.sessionStorage.setItem('ctf_admin_awd_ops_panel:contest-1', 'challenges')
+    window.history.replaceState({}, '', '/admin/contests/contest-1/edit?panel=operations&opsPanel=inspector')
+    contestApiMocks.getContest.mockResolvedValue(
+      buildContestDetail({
+        title: '2026 AWD 联赛',
+        description: '攻防赛',
+        mode: 'awd',
+        status: 'running',
+      })
+    )
+
+    const wrapper = mountContestEdit()
+
+    await flushPromises()
+
+    expect(wrapper.get('#awd-ops-tab-inspector').attributes('aria-selected')).toBe('true')
+    expect(wrapper.get('#awd-ops-tab-challenges').attributes('aria-selected')).toBe('false')
+    expect(wrapper.text()).toContain('轮次态势')
+  })
+
   it('应该在 URL 已指定有效阶段时保留该阶段', async () => {
     window.history.replaceState({}, '', '/admin/contests/contest-1/edit?panel=operations')
     contestApiMocks.getContest.mockResolvedValue(

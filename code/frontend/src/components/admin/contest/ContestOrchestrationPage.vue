@@ -115,7 +115,7 @@ function openContestWorkbench() {
   void router.push({
     name: 'ContestEdit',
     params: { id: preferredWorkbenchContest.value.id },
-    query: { panel: 'operations' },
+    query: { panel: 'operations', opsPanel: 'inspector' },
   })
 }
 </script>

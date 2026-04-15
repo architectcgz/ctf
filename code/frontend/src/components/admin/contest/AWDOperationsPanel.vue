@@ -30,7 +30,10 @@ const selectedContest = computed(
 )
 const shouldShowContestSelector = computed(() => !props.hideContestSelector)
 const runtimeStageReady = computed(
-  () => selectedContest.value?.status === 'running' || selectedContest.value?.status === 'frozen'
+  () =>
+    selectedContest.value?.status === 'running' ||
+    selectedContest.value?.status === 'frozen' ||
+    selectedContest.value?.status === 'ended'
 )
 const roundDialogOpen = ref(false)
 const serviceCheckDialogOpen = ref(false)
@@ -67,6 +70,17 @@ function loadStoredOperationsPanel(contestId: string): AWDOperationsPanelKey {
   }
   const value = window.sessionStorage.getItem(getOperationsPanelStorageKey(contestId))
   return value === 'challenges' ? 'challenges' : 'inspector'
+}
+
+function readRequestedOperationsPanel(): AWDOperationsPanelKey | null {
+  if (typeof window === 'undefined') {
+    return null
+  }
+  const value = new URLSearchParams(window.location.search).get('opsPanel')
+  if (value === 'inspector' || value === 'challenges') {
+    return value
+  }
+  return null
 }
 
 function persistOperationsPanel(contestId: string, value: AWDOperationsPanelKey): void {
@@ -316,7 +330,11 @@ function handleOverrideDialogOpenChange(value: boolean) {
 watch(
   () => selectedContest.value?.id || null,
   (contestId) => {
-    activePanel.value = contestId ? loadStoredOperationsPanel(contestId) : 'inspector'
+    if (!contestId) {
+      activePanel.value = 'inspector'
+      return
+    }
+    activePanel.value = readRequestedOperationsPanel() ?? loadStoredOperationsPanel(contestId)
   },
   { immediate: true }
 )
