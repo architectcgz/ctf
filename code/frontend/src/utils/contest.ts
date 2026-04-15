@@ -1,5 +1,9 @@
 import type { ContestStatus, ContestMode } from '@/api/contracts'
 
+export function isStudentVisibleContestStatus(status: ContestStatus): boolean {
+  return status !== 'draft'
+}
+
 export function getStatusLabel(status: ContestStatus): string {
   const labels: Record<ContestStatus, string> = {
     draft: '草稿',

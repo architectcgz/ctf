@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { flushPromises, mount } from '@vue/test-utils'
 import ContestList from '../ContestList.vue'
 import contestListSource from '../ContestList.vue?raw'
 
@@ -59,5 +59,39 @@ describe('ContestList', () => {
     expect(contestListSource).toContain('class="contest-summary-label metric-panel-label"')
     expect(contestListSource).toContain('class="contest-summary-value metric-panel-value"')
     expect(contestListSource).toContain('class="contest-summary-helper metric-panel-helper"')
+  })
+
+  it('不应该向学生暴露草稿竞赛，也不应把草稿错误渲染为已结束', async () => {
+    const { getContests } = await import('@/api/contest')
+    vi.mocked(getContests).mockResolvedValueOnce({
+      list: [
+        {
+          id: '1',
+          title: '2026 春季校园 CTF 挑战赛',
+          status: 'running',
+          mode: 'jeopardy',
+          starts_at: '2024-03-15T09:00:00Z',
+          ends_at: '2024-03-15T21:00:00Z',
+        },
+        {
+          id: '2',
+          title: '草稿中的隐藏比赛',
+          status: 'draft',
+          mode: 'jeopardy',
+          starts_at: '2024-03-16T09:00:00Z',
+          ends_at: '2024-03-16T21:00:00Z',
+        },
+      ],
+      total: 2,
+      page: 1,
+      page_size: 20,
+    })
+
+    const wrapper = mount(ContestList)
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('2026 春季校园 CTF 挑战赛')
+    expect(wrapper.text()).not.toContain('草稿中的隐藏比赛')
+    expect(wrapper.text()).not.toContain('草稿')
   })
 })

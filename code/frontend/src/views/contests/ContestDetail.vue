@@ -9,7 +9,12 @@ import ContestAnnouncementRealtimeBridge from '@/components/contests/ContestAnno
 import { useContestDetailPage } from '@/composables/useContestDetailPage'
 import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'
 import { useAuthStore } from '@/stores/auth'
-import { getContestAccentColor, getModeLabel, getStatusLabel } from '@/utils/contest'
+import {
+  getContestAccentColor,
+  getModeLabel,
+  getStatusLabel,
+  isStudentVisibleContestStatus,
+} from '@/utils/contest'
 import { formatTime } from '@/utils/format'
 
 type ContestWorkspaceTab = 'overview' | 'announcements' | 'challenges' | 'team'
@@ -97,6 +102,9 @@ const contestAccentStyle = computed<Record<string, string> | undefined>(() => {
     '--contest-accent': getContestAccentColor(contest.value.status),
   }
 })
+const contestAccessible = computed(() =>
+  contest.value ? isStudentVisibleContestStatus(contest.value.status) : false
+)
 
 function challengeClass(challengeId: string, solved: boolean): string[] {
   const active = selectedChallenge.value?.id === challengeId
@@ -118,7 +126,7 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
         <div class="contest-loading__text">正在同步竞赛详情...</div>
       </div>
 
-      <template v-else-if="contest">
+      <template v-else-if="contest && contestAccessible">
         <ContestAnnouncementRealtimeBridge
           :contest-id="contest.id"
           @updated="refreshAnnouncements"
@@ -530,6 +538,21 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
           </section>
         </section>
       </template>
+
+      <div v-else-if="contest" class="contest-not-found">
+        <AppEmpty
+          icon="Flag"
+          title="当前竞赛暂未开放"
+          description="该竞赛还处于筹备阶段，暂不对学生开放查看或报名。"
+        >
+          <template #action>
+            <RouterLink class="contest-btn contest-btn--primary" to="/contests">
+              <Trophy class="h-4 w-4" />
+              返回竞赛中心
+            </RouterLink>
+          </template>
+        </AppEmpty>
+      </div>
 
       <div v-else class="contest-not-found">
         <AppEmpty
