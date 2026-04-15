@@ -120,7 +120,7 @@ function submit() {
   >
     <form class="contest-challenge-dialog" @submit.prevent="submit">
       <p v-if="isAwdContest" class="contest-challenge-dialog__hint">
-        AWD 的 Checker、SLA 和防守分仍在赛事管理页的 AWD 运维面板维护。
+        当前弹层只处理题目关联、顺序、分值和可见性；AWD 深度配置在下一阶段完成。
       </p>
 
       <label class="contest-challenge-dialog__field" for="contest-challenge-select">
