@@ -1125,8 +1125,8 @@ function handleSubmit() {
         </p>
 
         <section v-if="previewResult" class="checker-preview-result">
-          <header class="checker-preview-result__head">
-            <div class="journal-note-label">试跑结果</div>
+          <header class="list-heading checker-preview-result__head">
+            <h4 class="list-heading__title checker-preview-result__title">试跑结果</h4>
             <div
               id="awd-challenge-preview-status"
               :class="getPreviewStatusClass(previewResult.service_status)"
@@ -1484,11 +1484,13 @@ function handleSubmit() {
 }
 
 .checker-preview-result__head {
-  display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
+}
+
+.checker-preview-result__title {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--color-text-primary);
 }
 
 .checker-preview-result__summary {
