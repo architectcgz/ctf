@@ -80,12 +80,10 @@ describe('admin management surface alignment', () => {
       /--workspace-line-soft:\s*color-mix\(in srgb,\s*var\(--color-text-primary\) 10%, transparent\);/
     )
     expect(contestOrchestrationSource).toContain('workspace-directory-empty contest-empty-state')
-    expect(contestOrchestrationSource).toMatch(
-      /\.admin-btn-ghost\s*\{[\s\S]*border:\s*1px solid var\(--admin-control-border\);/s
-    )
-    expect(contestOrchestrationSource).toMatch(
-      /\.admin-input\s*\{[\s\S]*border:\s*1px solid var\(--admin-control-border\);/s
-    )
+    expect(contestOrchestrationSource).toContain('class="ui-btn ui-btn--ghost"')
+    expect(contestOrchestrationSource).toContain('class="ui-field contest-filter-field"')
+    expect(contestOrchestrationSource).toContain('class="ui-control-wrap"')
+    expect(contestOrchestrationSource).toContain('class="ui-control"')
     expect(contestOrchestrationSource).toMatch(
       /\.contest-empty-state\s*\{[\s\S]*border-top-color:\s*color-mix\(in srgb,\s*var\(--journal-border\) 68%, transparent\);[\s\S]*border-bottom-color:\s*color-mix\(in srgb,\s*var\(--journal-border\) 68%, transparent\);/s
     )
@@ -108,7 +106,7 @@ describe('admin management surface alignment', () => {
     expect(contestOrchestrationSource).not.toContain('class="contest-list-filters"')
     expect(contestOrchestrationSource).toContain('class="contest-filter-grid"')
     expect(contestOrchestrationSource).toContain(
-      'class="contest-filter-field contest-filter-field--action"'
+      'class="ui-field contest-filter-field contest-filter-field--action"'
     )
     expect(contestOrchestrationSource).not.toContain('class="contest-filter-actions"')
     expect(contestOrchestrationSource).toMatch(

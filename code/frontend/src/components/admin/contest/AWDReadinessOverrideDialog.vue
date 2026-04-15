@@ -211,17 +211,19 @@ function handleSubmit() {
           </div>
         </header>
 
-        <label class="readiness-override-form" for="awd-readiness-override-reason">
-          <span class="readiness-override-form__label"
-            >原因会附带到审计日志，用于说明本次为什么仍要继续。</span
-          >
-          <textarea
-            id="awd-readiness-override-reason"
-            v-model="reason"
-            rows="4"
-            class="readiness-override-textarea"
-            placeholder="例如：赛前演练，允许临时绕过当前 checker 阻塞。"
-          />
+        <label class="ui-field readiness-override-form" for="awd-readiness-override-reason">
+          <span class="ui-field__label readiness-override-form__label">
+            原因会附带到审计日志，用于说明本次为什么仍要继续。
+          </span>
+          <span class="ui-control-wrap" :class="{ 'is-error': !!fieldError }">
+            <textarea
+              id="awd-readiness-override-reason"
+              v-model="reason"
+              rows="4"
+              class="ui-control readiness-override-textarea"
+              placeholder="例如：赛前演练，允许临时绕过当前 checker 阻塞。"
+            />
+          </span>
           <span v-if="fieldError" class="readiness-override-error">{{ fieldError }}</span>
         </label>
       </section>
@@ -232,7 +234,7 @@ function handleSubmit() {
         <button
           id="awd-readiness-override-cancel"
           type="button"
-          class="rounded-xl border border-border px-4 py-2 text-sm text-[var(--color-text-primary)] transition hover:border-primary"
+          class="ui-btn ui-btn--secondary readiness-override-footer__button"
           @click="closeDialog"
         >
           取消
@@ -240,7 +242,7 @@ function handleSubmit() {
         <button
           id="awd-readiness-override-submit"
           type="button"
-          class="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+          class="ui-btn ui-btn--primary readiness-override-footer__button"
           :disabled="confirmLoading"
           @click="handleSubmit"
         >
@@ -330,40 +332,35 @@ function handleSubmit() {
 }
 
 .readiness-override-form {
-  display: grid;
-  gap: 0.75rem;
+  --ui-field-gap: var(--space-2);
 }
 
 .readiness-override-form__label {
   color: var(--journal-muted);
   line-height: 1.6;
+  font-weight: 600;
 }
 
 .readiness-override-textarea {
-  width: 100%;
-  border-radius: 16px;
-  border: 1px solid color-mix(in srgb, var(--journal-border) 84%, transparent);
-  background: color-mix(in srgb, var(--journal-surface) 94%, #fff 6%);
-  padding: 0.95rem 1rem;
-  color: var(--journal-ink);
-  outline: none;
-  resize: vertical;
+  --ui-control-padding-y: 0.95rem;
   min-height: 132px;
-}
-
-.readiness-override-textarea:focus {
-  border-color: color-mix(in srgb, var(--journal-accent) 48%, transparent);
+  resize: vertical;
 }
 
 .readiness-override-error {
   color: var(--color-danger);
-  font-size: 0.85rem;
+  font-size: var(--ui-field-error-size);
+  font-weight: 700;
 }
 
 .readiness-override-footer {
   display: flex;
   justify-content: flex-end;
   gap: 0.75rem;
+}
+
+.readiness-override-footer__button {
+  min-width: 6rem;
 }
 
 @media (max-width: 900px) {
