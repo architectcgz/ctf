@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 
 import AdminContestFormPanel from '@/components/admin/contest/AdminContestFormPanel.vue'
+import AdminSurfaceModal from '@/components/common/modal-templates/AdminSurfaceModal.vue'
 import type { ContestFieldLocks, ContestFormDraft } from '@/composables/useAdminContests'
 
 const props = defineProps<{
@@ -31,21 +32,16 @@ function closeDialog() {
 </script>
 
 <template>
-  <ElDialog
+  <AdminSurfaceModal
+    :open="open"
     class="contest-form-dialog"
-    :model-value="open"
-    width="720px"
+    :title="dialogTitle"
+    :subtitle="dialogCopy"
+    eyebrow="Contest Workspace"
+    width="45rem"
     @close="closeDialog"
-    @update:model-value="emit('update:open', $event)"
+    @update:open="emit('update:open', $event)"
   >
-    <template #header>
-      <div class="contest-form-dialog__header">
-        <div class="journal-note-label">Contest Workspace</div>
-        <h2 class="contest-form-dialog__title">{{ dialogTitle }}</h2>
-        <p class="contest-form-dialog__copy">{{ dialogCopy }}</p>
-      </div>
-    </template>
-
     <AdminContestFormPanel
       :mode="mode"
       :draft="draft"
@@ -55,32 +51,16 @@ function closeDialog() {
       @cancel="closeDialog"
       @save="emit('save', $event)"
     />
-  </ElDialog>
+  </AdminSurfaceModal>
 </template>
 
 <style scoped>
-.contest-form-dialog__header {
-  display: grid;
-  gap: var(--space-2);
-}
-
-.contest-form-dialog__title {
-  margin: 0;
-  font-size: clamp(1.5rem, 2vw, 1.9rem);
-  font-weight: 700;
-  color: var(--journal-ink, var(--color-text-primary));
-}
-
-.contest-form-dialog__copy {
-  margin: 0;
-  line-height: 1.7;
-  color: var(--journal-muted, var(--color-text-secondary));
-}
-
-:deep(.contest-form-dialog .el-dialog) {
-  border: 1px solid
-    color-mix(in srgb, var(--journal-border, var(--color-border-default)) 82%, transparent);
-  border-radius: 24px;
+:deep(.contest-form-dialog .modal-template-panel--classic) {
+  border-color: color-mix(
+    in srgb,
+    var(--journal-border, var(--color-border-default)) 82%,
+    transparent
+  );
   background:
     radial-gradient(
       circle at top right,
@@ -95,39 +75,22 @@ function closeDialog() {
   box-shadow: 0 24px 60px var(--color-shadow-soft);
 }
 
-:deep(.contest-form-dialog .el-dialog__header) {
-  margin-right: 0;
-  padding: 1.5rem 1.5rem 0;
+:deep(.contest-form-dialog .modal-template-classic__header) {
+  border-bottom-color: color-mix(
+    in srgb,
+    var(--journal-border, var(--color-border-default)) 70%,
+    transparent
+  );
+  background: transparent;
 }
 
-:deep(.contest-form-dialog .el-dialog__body) {
+:deep(.contest-form-dialog .modal-template-classic__body) {
   padding: 1rem 1.5rem 0;
 }
 
-:deep(.contest-form-dialog .el-dialog__footer) {
-  padding: 1rem 1.5rem 1.5rem;
-  border-top: 1px solid
-    color-mix(in srgb, var(--journal-border, var(--color-border-default)) 70%, transparent);
-}
-
-:deep(.contest-form-dialog .el-dialog__headerbtn) {
-  top: 1.15rem;
-  right: 1.15rem;
-}
-
-:deep(.contest-form-dialog .el-dialog__close) {
-  color: var(--journal-muted, var(--color-text-secondary));
-}
-
 @media (max-width: 767px) {
-  :deep(.contest-form-dialog .el-dialog) {
-    width: min(720px, calc(100vw - 1.5rem)) !important;
-    margin-top: 4vh !important;
-  }
-
-  :deep(.contest-form-dialog .el-dialog__header),
-  :deep(.contest-form-dialog .el-dialog__body),
-  :deep(.contest-form-dialog .el-dialog__footer) {
+  :deep(.contest-form-dialog .modal-template-classic__header),
+  :deep(.contest-form-dialog .modal-template-classic__body) {
     padding-left: 1rem;
     padding-right: 1rem;
   }

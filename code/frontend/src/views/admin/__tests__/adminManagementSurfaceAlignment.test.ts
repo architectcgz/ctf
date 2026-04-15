@@ -129,7 +129,8 @@ describe('admin management surface alignment', () => {
 
   it('contest form dialog should adopt the admin workspace dialog shell and section headings', () => {
     expect(adminContestFormDialogSource).toContain('class="contest-form-dialog"')
-    expect(adminContestFormDialogSource).toContain(':deep(.contest-form-dialog .el-dialog)')
+    expect(adminContestFormDialogSource).toContain("from '@/components/common/modal-templates/AdminSurfaceModal.vue'")
+    expect(adminContestFormDialogSource).toContain(':deep(.contest-form-dialog .modal-template-panel--classic)')
     expect(adminContestFormDialogSource).toContain('Contest Workspace')
     expect(adminContestFormPanelSource).toContain('<h3 class="list-heading__title">基础信息</h3>')
     expect(adminContestFormPanelSource).toContain('<h3 class="list-heading__title">赛制与时间</h3>')

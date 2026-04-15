@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, reactive, watch } from 'vue'
 
+import AdminSurfaceModal from '@/components/common/modal-templates/AdminSurfaceModal.vue'
 import type { AWDRoundData } from '@/api/contracts'
 
 const props = defineProps<{
@@ -92,12 +93,14 @@ function handleSubmit() {
 </script>
 
 <template>
-  <ElDialog
-    :model-value="open"
+  <AdminSurfaceModal
+    :open="open"
     :title="dialogTitle"
-    width="520px"
+    subtitle="设置轮次编号、初始状态和攻防分，提交后会进入赛事运维节奏。"
+    eyebrow="AWD Operations"
+    width="32.5rem"
     @close="closeDialog"
-    @update:model-value="emit('update:open', $event)"
+    @update:open="emit('update:open', $event)"
   >
     <form class="space-y-5" @submit.prevent="handleSubmit">
       <div class="space-y-2">
@@ -192,5 +195,5 @@ function handleSubmit() {
         </button>
       </div>
     </template>
-  </ElDialog>
+  </AdminSurfaceModal>
 </template>
