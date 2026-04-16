@@ -104,6 +104,8 @@ describe('ImageManage', () => {
     expect(imageManageSource).toContain(
       '<div class="image-status-strip__note">{{ refreshHint }}</div>'
     )
+    expect(imageManageSource).toContain('<div class="workspace-overline">Image Registry</div>')
+    expect(imageManageSource).not.toContain('<div class="journal-eyebrow">Image Registry</div>')
     expect(imageManageSource).not.toContain('镜像总量')
     expect(imageManageSource).not.toContain('当前查询结果的镜像总数')
     expect(imageManageSource).not.toContain('这一页已加载的镜像数量')

@@ -84,7 +84,7 @@ const statementGuide = `statement.md 写法建议
     </header>
 
     <div class="hero-copy">
-      <div class="journal-eyebrow">Uploader Guide</div>
+      <div class="workspace-overline">Uploader Guide</div>
       <h1 class="hero-title">题目包示例</h1>
       <p class="hero-summary">
         上传 zip 之前，先核对目录结构、`challenge.yml` 字段和题面文件路径。教师自己写的 Web

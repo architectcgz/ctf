@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { vi } from 'vitest'
+import challengePackageFormatSource from '../ChallengePackageFormat.vue?raw'
 
 import ChallengePackageFormat from '../ChallengePackageFormat.vue'
 
@@ -25,5 +26,14 @@ describe('ChallengePackageFormat', () => {
     expect(wrapper.text()).toContain('不要写 ## 题目描述')
     expect(wrapper.text()).toContain('api_version: v1')
     expect(wrapper.text()).toContain('flag:')
+  })
+
+  it('应使用共享 workspace overline 作为上传示例页的 hero 标记', () => {
+    expect(challengePackageFormatSource).toContain(
+      '<div class="workspace-overline">Uploader Guide</div>'
+    )
+    expect(challengePackageFormatSource).not.toContain(
+      '<div class="journal-eyebrow">Uploader Guide</div>'
+    )
   })
 })
