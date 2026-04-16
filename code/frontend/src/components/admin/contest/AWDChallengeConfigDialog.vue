@@ -1020,7 +1020,7 @@ function handleSubmit() {
         </header>
 
         <article class="journal-note checker-validation-card">
-          <div class="list-heading checker-validation-card__top">
+          <header class="list-heading checker-validation-card__top">
             <span :class="getValidationStateClass(props.draft?.awd_checker_validation_state)">
               {{ savedValidationStateLabel || '未验证' }}
             </span>
@@ -1030,7 +1030,7 @@ function handleSubmit() {
             >
               {{ formatPreviewDateTime(props.draft?.awd_checker_last_preview_at) }}
             </span>
-          </div>
+          </header>
           <p v-if="savedPreviewSummaryText" class="checker-validation-card__summary">
             {{ savedPreviewSummaryText }}
           </p>
@@ -1088,7 +1088,7 @@ function handleSubmit() {
           </div>
         </div>
 
-        <div class="list-heading checker-preview-toolbar">
+        <header class="list-heading checker-preview-toolbar">
           <p class="checker-preview-toolbar__hint">
             如果当前 checker 使用 ROUND / TEAM_ID 模板变量，试跑会固定使用 `0` 作为占位值。
           </p>
@@ -1101,7 +1101,7 @@ function handleSubmit() {
           >
             {{ previewing ? '试跑中...' : '试跑 Checker' }}
           </button>
-        </div>
+        </header>
 
         <p
           v-if="previewError"
