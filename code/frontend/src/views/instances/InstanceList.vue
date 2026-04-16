@@ -28,13 +28,13 @@ const {
 
 <template>
   <section
-    class="journal-shell journal-shell-user journal-eyebrow-text journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
+    class="journal-shell journal-shell-user journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
   >
     <div class="instance-page">
       <header class="instance-topbar">
         <div class="instance-heading">
-          <div class="journal-eyebrow">Instances</div>
-          <h1 class="instance-title">我的实例</h1>
+          <div class="workspace-overline">Instances</div>
+          <h1 class="instance-title workspace-page-title">我的实例</h1>
           <p class="instance-subtitle">
             管理运行中与等待创建中的靶机实例，查看状态并执行延时或销毁。
           </p>

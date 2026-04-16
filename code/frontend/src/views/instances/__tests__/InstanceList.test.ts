@@ -117,6 +117,10 @@ describe('InstanceList', () => {
   })
 
   it('实例页概况卡片应使用统一 metric-panel 样式类', () => {
+    expect(instanceListSource).toContain('<div class="workspace-overline">Instances</div>')
+    expect(instanceListSource).toContain('<h1 class="instance-title workspace-page-title">我的实例</h1>')
+    expect(instanceListSource).not.toContain('<div class="journal-eyebrow">Instances</div>')
+    expect(instanceListSource).not.toContain('journal-eyebrow-text')
     expect(instanceListSource).toContain('class="instance-summary-grid metric-panel-grid"')
     expect(instanceListSource).toContain('class="instance-summary-item metric-panel-card"')
     expect(instanceListSource).toContain('class="instance-summary-label metric-panel-label"')
