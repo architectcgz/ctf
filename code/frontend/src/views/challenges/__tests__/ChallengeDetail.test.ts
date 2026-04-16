@@ -193,6 +193,11 @@ describe('ChallengeDetail', () => {
     )
   })
 
+  it('题目详情 hero 应使用共享 workspace overline 语义', () => {
+    expect(challengeDetailSource).toContain('<div class="workspace-overline">Question</div>')
+    expect(challengeDetailSource).not.toContain('<div class="overline">Question</div>')
+  })
+
   it('未解题时应显示题解锁定态', async () => {
     await router.push('/challenges/1')
     await router.isReady()

@@ -41,7 +41,7 @@
           >
             <div class="question-hero">
               <div class="question-hero-main">
-                <div class="overline">Question</div>
+                <div class="workspace-overline">Question</div>
                 <h1 class="question-title workspace-page-title">
                   {{ challenge.title }}
                 </h1>
