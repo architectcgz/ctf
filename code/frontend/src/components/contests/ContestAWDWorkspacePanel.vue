@@ -259,7 +259,7 @@ async function handleSubmit(challengeId: string, teamId: string): Promise<void> 
         <section class="contest-section contest-section--flat">
           <div class="contest-section__head workspace-tab-heading">
             <div class="workspace-tab-heading__main">
-              <div class="contest-overline">Defense</div>
+              <div class="workspace-overline">Defense</div>
               <h2 class="contest-section__title workspace-tab-heading__title">防守告警</h2>
             </div>
             <div class="contest-section__hint">
@@ -300,7 +300,7 @@ async function handleSubmit(challengeId: string, teamId: string): Promise<void> 
         <section class="contest-section contest-section--flat">
           <div class="contest-section__head workspace-tab-heading">
             <div class="workspace-tab-heading__main">
-              <div class="contest-overline">My Services</div>
+              <div class="workspace-overline">My Services</div>
               <h2 class="contest-section__title workspace-tab-heading__title">我的服务</h2>
             </div>
             <div class="contest-section__hint">{{ challenges.length }} 题</div>
@@ -371,7 +371,7 @@ async function handleSubmit(challengeId: string, teamId: string): Promise<void> 
         <section class="contest-section contest-section--flat">
           <div class="contest-section__head workspace-tab-heading">
             <div class="workspace-tab-heading__main">
-              <div class="contest-overline">Targets</div>
+              <div class="workspace-overline">Targets</div>
               <h2 class="contest-section__title workspace-tab-heading__title">目标目录</h2>
             </div>
             <div class="contest-section__hint">
@@ -488,7 +488,7 @@ async function handleSubmit(challengeId: string, teamId: string): Promise<void> 
         <section class="contest-section contest-section--flat">
           <div class="contest-section__head workspace-tab-heading">
             <div class="workspace-tab-heading__main">
-              <div class="contest-overline">Status</div>
+              <div class="workspace-overline">Status</div>
               <h2 class="contest-section__title workspace-tab-heading__title">战场状态</h2>
             </div>
             <button
@@ -530,7 +530,7 @@ async function handleSubmit(challengeId: string, teamId: string): Promise<void> 
         <section class="contest-section contest-section--flat">
           <div class="contest-section__head workspace-tab-heading">
             <div class="workspace-tab-heading__main">
-              <div class="contest-overline">Scoreboard</div>
+              <div class="workspace-overline">Scoreboard</div>
               <h2 class="contest-section__title workspace-tab-heading__title">实时榜单</h2>
             </div>
           </div>
@@ -551,7 +551,7 @@ async function handleSubmit(challengeId: string, teamId: string): Promise<void> 
         <section class="contest-section contest-section--flat">
           <div class="contest-section__head workspace-tab-heading">
             <div class="workspace-tab-heading__main">
-              <div class="contest-overline">Feedback</div>
+              <div class="workspace-overline">Feedback</div>
               <h2 class="contest-section__title workspace-tab-heading__title">最近反馈</h2>
             </div>
           </div>
@@ -589,14 +589,6 @@ async function handleSubmit(challengeId: string, teamId: string): Promise<void> 
 .awd-workspace-shell {
   display: grid;
   gap: 1rem;
-}
-
-.contest-overline {
-  font-size: var(--font-size-0-72);
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: color-mix(in srgb, var(--color-primary) 82%, var(--journal-ink));
 }
 
 .contest-section {
