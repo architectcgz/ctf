@@ -237,7 +237,7 @@ onUnmounted(() => {
         <section class="profile-section">
           <div class="profile-section-head">
             <div>
-              <div class="journal-eyebrow journal-eyebrow-soft">Account</div>
+              <div class="profile-section-kicker">Account</div>
               <h2 class="profile-section-title">
                 <UserCircle2 class="h-5 w-5 text-[var(--journal-accent)]" />
                 账号信息
@@ -263,7 +263,7 @@ onUnmounted(() => {
         <section v-if="canManagePersonalReport" class="profile-section profile-section--report">
           <div class="profile-section-head">
             <div>
-              <div class="journal-eyebrow journal-eyebrow-soft">Report</div>
+              <div class="profile-section-kicker">Report</div>
               <h2 class="profile-section-title">个人报告</h2>
             </div>
             <span class="journal-chip" :class="reportTaskMeta.chipClass">
@@ -474,6 +474,14 @@ onUnmounted(() => {
   align-items: flex-start;
   justify-content: space-between;
   gap: 0.8rem;
+}
+
+.profile-section-kicker {
+  font-size: var(--font-size-0-72);
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--journal-muted);
 }
 
 .profile-section-title {

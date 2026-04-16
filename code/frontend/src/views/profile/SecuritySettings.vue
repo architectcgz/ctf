@@ -152,7 +152,7 @@ async function submitPasswordChange(): Promise<void> {
         <form class="security-section" @submit.prevent="submitPasswordChange">
           <div class="security-section-head">
             <div>
-              <div class="journal-eyebrow journal-eyebrow-soft">Password</div>
+              <div class="security-section-kicker">Password</div>
               <h2 class="security-section-title">密码修改</h2>
             </div>
           </div>
@@ -222,7 +222,7 @@ async function submitPasswordChange(): Promise<void> {
         <aside class="security-section security-section--aside">
           <div class="security-section-head">
             <div>
-              <div class="journal-eyebrow journal-eyebrow-soft">Tips</div>
+              <div class="security-section-kicker">Tips</div>
               <h2 class="security-section-title">安全提示</h2>
             </div>
           </div>
@@ -342,6 +342,14 @@ async function submitPasswordChange(): Promise<void> {
 
 .security-section-head {
   margin-bottom: 1rem;
+}
+
+.security-section-kicker {
+  font-size: var(--font-size-0-72);
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--journal-muted);
 }
 
 .security-section-title {

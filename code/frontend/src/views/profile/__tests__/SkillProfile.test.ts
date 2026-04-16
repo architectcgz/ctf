@@ -171,4 +171,17 @@ describe('SkillProfile', () => {
     expect(skillProfileSource).not.toContain('<div class="journal-eyebrow">Skill Profile</div>')
     expect(skillProfileSource).not.toContain('journal-eyebrow-text')
   })
+
+  it('应该把能力画像内容区的 soft eyebrow 收敛为局部 section kicker', () => {
+    expect(skillProfileSource).toContain('<div class="skill-section-kicker">Teacher View</div>')
+    expect(skillProfileSource).toContain('<div class="skill-section-kicker">Radar Analysis</div>')
+    expect(skillProfileSource).toContain('<div class="skill-section-kicker">Weak Points</div>')
+    expect(skillProfileSource).toContain('<div class="skill-section-kicker">Recommendations</div>')
+    expect(skillProfileSource).not.toContain('<div class="journal-eyebrow journal-eyebrow-soft">Teacher View</div>')
+    expect(skillProfileSource).not.toContain('<div class="journal-eyebrow journal-eyebrow-soft">Radar Analysis</div>')
+    expect(skillProfileSource).not.toContain('<div class="journal-eyebrow journal-eyebrow-soft">Weak Points</div>')
+    expect(skillProfileSource).not.toContain(
+      '<div class="journal-eyebrow journal-eyebrow-soft">Recommendations</div>'
+    )
+  })
 })
