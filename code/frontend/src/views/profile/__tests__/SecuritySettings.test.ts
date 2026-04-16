@@ -68,4 +68,15 @@ describe('SecuritySettings', () => {
     )
     expect(securitySettingsSource).not.toContain('journal-eyebrow-text')
   })
+
+  it('应该把安全设置内容区的 soft eyebrow 收敛为局部 section kicker', () => {
+    expect(securitySettingsSource).toContain('<div class="security-section-kicker">Password</div>')
+    expect(securitySettingsSource).toContain('<div class="security-section-kicker">Tips</div>')
+    expect(securitySettingsSource).not.toContain(
+      '<div class="journal-eyebrow journal-eyebrow-soft">Password</div>'
+    )
+    expect(securitySettingsSource).not.toContain(
+      '<div class="journal-eyebrow journal-eyebrow-soft">Tips</div>'
+    )
+  })
 })

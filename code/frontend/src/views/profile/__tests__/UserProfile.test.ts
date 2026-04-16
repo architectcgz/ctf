@@ -173,4 +173,11 @@ describe('UserProfile', () => {
     )
     expect(userProfileSource).not.toContain('journal-eyebrow-text')
   })
+
+  it('应该把个人资料内容区的 soft eyebrow 收敛为局部 section kicker', () => {
+    expect(userProfileSource).toContain('<div class="profile-section-kicker">Account</div>')
+    expect(userProfileSource).toContain('<div class="profile-section-kicker">Report</div>')
+    expect(userProfileSource).not.toContain('<div class="journal-eyebrow journal-eyebrow-soft">Account</div>')
+    expect(userProfileSource).not.toContain('<div class="journal-eyebrow journal-eyebrow-soft">Report</div>')
+  })
 })

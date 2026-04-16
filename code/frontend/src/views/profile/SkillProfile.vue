@@ -118,7 +118,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } =
       </div>
 
       <div v-if="isTeacher" class="skill-teacher-panel">
-        <div class="journal-eyebrow journal-eyebrow-soft">Teacher View</div>
+        <div class="skill-section-kicker">Teacher View</div>
         <h3 class="workspace-tab-heading__title">查看学员能力画像</h3>
         <label for="skill-student-select" class="skill-field-label mt-3 block">选择学员</label>
         <select
@@ -163,7 +163,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } =
                 </div>
               </div>
 
-              <div class="journal-eyebrow journal-eyebrow-soft">Radar Analysis</div>
+              <div class="skill-section-kicker">Radar Analysis</div>
               <h3 class="workspace-tab-heading__title">能力维度分析</h3>
 
               <div class="skill-dimension-wrap mt-5">
@@ -226,7 +226,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } =
           v-show="activeTab === 'weakness'"
         >
           <div class="skill-weak-wrap">
-            <div class="journal-eyebrow journal-eyebrow-soft">Weak Points</div>
+            <div class="skill-section-kicker">Weak Points</div>
             <div
               class="mt-3 flex items-center gap-3 text-base font-semibold text-[var(--journal-ink)]"
             >
@@ -258,7 +258,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } =
           :aria-hidden="activeTab === 'recommendations' ? 'false' : 'true'"
           v-show="activeTab === 'recommendations'"
         >
-          <div class="journal-eyebrow journal-eyebrow-soft">Recommendations</div>
+          <div class="skill-section-kicker">Recommendations</div>
           <h3 class="workspace-tab-heading__title">推荐靶场</h3>
           <p class="mt-2 text-sm leading-6 text-[var(--journal-muted)]">
             优先从当前最匹配的题目开始。
@@ -416,6 +416,14 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } =
   font-size: var(--font-size-0-72);
   font-weight: 700;
   letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--journal-muted);
+}
+
+.skill-section-kicker {
+  font-size: var(--font-size-0-72);
+  font-weight: 700;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--journal-muted);
 }
