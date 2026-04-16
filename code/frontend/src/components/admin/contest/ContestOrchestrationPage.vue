@@ -122,7 +122,7 @@ function openContestWorkbench() {
 
 <template>
   <section
-    class="journal-shell journal-shell-admin journal-notes-card journal-hero journal-eyebrow-text workspace-shell flex min-h-full flex-1 flex-col"
+    class="journal-shell journal-shell-admin journal-notes-card journal-hero workspace-shell flex min-h-full flex-1 flex-col"
   >
     <nav class="top-tabs" role="tablist" aria-label="赛事管理视图切换">
       <button
