@@ -242,7 +242,7 @@ function resolveDashboardPanelBindings(panelKey: DashboardPanelKey): Record<stri
 
 <template>
   <section
-    class="workspace-shell journal-shell journal-shell-user journal-eyebrow-text journal-hero flex min-h-full flex-1 flex-col"
+    class="workspace-shell journal-shell journal-shell-user journal-hero flex min-h-full flex-1 flex-col"
   >
     <nav class="top-tabs" role="tablist" aria-label="学生仪表盘视图切换">
       <button

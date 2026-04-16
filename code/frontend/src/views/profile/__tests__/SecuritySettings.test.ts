@@ -3,6 +3,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import { flushPromises, mount } from '@vue/test-utils'
 
 import SecuritySettings from '../SecuritySettings.vue'
+import securitySettingsSource from '../SecuritySettings.vue?raw'
 
 const authApiMocks = vi.hoisted(() => ({
   changePassword: vi.fn(),
@@ -59,5 +60,12 @@ describe('SecuritySettings', () => {
     expect(wrapper.text()).not.toContain('绿色')
     expect(wrapper.text()).not.toContain('青色')
     expect(wrapper.text()).not.toContain('蓝色')
+  })
+
+  it('应该移除安全设置页级 shell 上遗留的 journal-eyebrow-text 修饰类', () => {
+    expect(securitySettingsSource).toContain(
+      'class="journal-shell journal-shell-user journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"'
+    )
+    expect(securitySettingsSource).not.toContain('journal-eyebrow-text')
   })
 })

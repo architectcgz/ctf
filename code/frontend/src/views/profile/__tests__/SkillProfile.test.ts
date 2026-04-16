@@ -142,7 +142,7 @@ describe('SkillProfile', () => {
   it('应该将标签栏放在内容区前部，保持与学生仪表盘一致的层级位置', () => {
     expect(skillProfileSource).toContain('class="top-tabs"')
     expect(skillProfileSource.indexOf('class="top-tabs"')).toBeGreaterThan(
-      skillProfileSource.indexOf('<div class="journal-eyebrow">Skill Profile</div>')
+      skillProfileSource.indexOf('<div class="workspace-overline">Skill Profile</div>')
     )
     expect(skillProfileSource.indexOf('class="top-tabs"')).toBeLessThan(
       skillProfileSource.indexOf('<h1 class="journal-page-title workspace-page-title')
@@ -164,5 +164,11 @@ describe('SkillProfile', () => {
     expect(skillProfileSource).not.toMatch(
       /\.skill-section \+ \.skill-section\s*\{[\s\S]*border-top:\s*1px solid var\(--journal-divider\);/s
     )
+  })
+
+  it('应该把能力画像页级眉标切到共享 workspace header 语义', () => {
+    expect(skillProfileSource).toContain('<div class="workspace-overline">Skill Profile</div>')
+    expect(skillProfileSource).not.toContain('<div class="journal-eyebrow">Skill Profile</div>')
+    expect(skillProfileSource).not.toContain('journal-eyebrow-text')
   })
 })
