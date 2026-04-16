@@ -144,15 +144,15 @@ function handleSubmit() {
         填写本次放行原因。当前操作只会跳过这一次门禁，不会改写题目的 checker 校验状态。
       </p>
 
-      <div class="metric-panel-grid metric-panel-default-surface readiness-override-summary">
+      <div class="progress-strip metric-panel-grid metric-panel-default-surface readiness-override-summary">
         <article
           v-for="item in summaryItems"
           :key="item.key"
-          class="journal-note metric-panel-card"
+          class="journal-note progress-card metric-panel-card"
         >
-          <div class="journal-note-label metric-panel-label">{{ item.label }}</div>
-          <div class="journal-note-value metric-panel-value">{{ item.value }}</div>
-          <div class="journal-note-helper metric-panel-helper">{{ item.hint }}</div>
+          <div class="journal-note-label progress-card-label metric-panel-label">{{ item.label }}</div>
+          <div class="journal-note-value progress-card-value metric-panel-value">{{ item.value }}</div>
+          <div class="journal-note-helper progress-card-hint metric-panel-helper">{{ item.hint }}</div>
         </article>
       </div>
 
