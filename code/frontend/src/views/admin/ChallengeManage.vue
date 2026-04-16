@@ -19,8 +19,8 @@ import {
 } from 'lucide-vue-next'
 
 import ChallengePackageImportEntry from '@/components/admin/challenge/ChallengePackageImportEntry.vue'
+import AdminPaginationControls from '@/components/admin/AdminPaginationControls.vue'
 import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
-import WorkspaceDirectoryPagination from '@/components/common/WorkspaceDirectoryPagination.vue'
 import WorkspaceDirectoryToolbar, {
   type WorkspaceDirectorySortOption,
 } from '@/components/common/WorkspaceDirectoryToolbar.vue'
@@ -383,56 +383,71 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
             </div>
           </div>
 
-          <div class="challenge-metric-grid">
-            <article class="challenge-metric-card">
+          <div class="manage-summary-grid progress-strip metric-panel-grid metric-panel-default-surface">
+            <article class="journal-note progress-card metric-panel-card">
               <div class="challenge-metric-head">
-                <span class="challenge-metric-label">题目总量</span>
+                <span class="journal-note-label progress-card-label metric-panel-label">题目总量</span>
                 <Book class="h-4 w-4" />
               </div>
               <div class="challenge-metric-value-wrap">
-                <div class="challenge-metric-value">{{ total.toString().padStart(2, '0') }}</div>
-                <div class="challenge-metric-trend">题目资源总计</div>
+                <div class="journal-note-value progress-card-value metric-panel-value">
+                  {{ total.toString().padStart(2, '0') }}
+                </div>
+                <div class="journal-note-helper progress-card-hint metric-panel-helper">
+                  题目资源总计
+                </div>
               </div>
             </article>
 
-            <article class="challenge-metric-card">
+            <article class="journal-note progress-card metric-panel-card">
               <div class="challenge-metric-head">
-                <span class="challenge-metric-label">已发布</span>
+                <span class="journal-note-label progress-card-label metric-panel-label">已发布</span>
                 <CheckCircle class="h-4 w-4" />
               </div>
               <div class="challenge-metric-value-wrap">
-                <div class="challenge-metric-value text-emerald-600">
+                <div class="journal-note-value progress-card-value metric-panel-value">
                   {{ publishedCount.toString().padStart(2, '0') }}
                 </div>
-                <div class="challenge-metric-trend">线上公开题目</div>
+                <div class="journal-note-helper progress-card-hint metric-panel-helper">
+                  线上公开题目
+                </div>
               </div>
             </article>
 
-            <article class="challenge-metric-card">
+            <article class="journal-note progress-card metric-panel-card">
               <div class="challenge-metric-head">
-                <span class="challenge-metric-label">待确认任务</span>
+                <span class="journal-note-label progress-card-label metric-panel-label">待确认任务</span>
                 <Zap class="h-4 w-4" />
               </div>
               <div class="challenge-metric-value-wrap">
-                <div class="challenge-metric-value text-purple-600">{{ queueCount.toString().padStart(2, '0') }}</div>
-                <div class="challenge-metric-trend">待导入任务队列</div>
+                <div class="journal-note-value progress-card-value metric-panel-value">
+                  {{ queueCount.toString().padStart(2, '0') }}
+                </div>
+                <div class="journal-note-helper progress-card-hint metric-panel-helper">
+                  待导入任务队列
+                </div>
               </div>
             </article>
 
-            <article class="challenge-metric-card">
+            <article class="journal-note progress-card metric-panel-card">
               <div class="challenge-metric-head">
-                <span class="challenge-metric-label">草稿存量</span>
+                <span class="journal-note-label progress-card-label metric-panel-label">草稿存量</span>
                 <Edit3 class="h-4 w-4" />
               </div>
               <div class="challenge-metric-value-wrap">
-                <div class="challenge-metric-value text-orange-500">{{ draftCount.toString().padStart(2, '0') }}</div>
-                <div class="challenge-metric-trend">导入后仍待发布</div>
+                <div class="journal-note-value progress-card-value metric-panel-value">
+                  {{ draftCount.toString().padStart(2, '0') }}
+                </div>
+                <div class="journal-note-helper progress-card-hint metric-panel-helper">
+                  导入后仍待发布
+                </div>
               </div>
             </article>
           </div>
 
-          <section class="workspace-directory-section challenge-manage-directory">
-            <WorkspaceDirectoryToolbar
+          <section class="workspace-directory-section">
+            <div class="challenge-manage-directory">
+              <WorkspaceDirectoryToolbar
               v-model="keyword"
               :total="total"
               :selected-sort-label="sortConfig.label"
@@ -480,20 +495,20 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
                   </label>
                 </div>
               </template>
-            </WorkspaceDirectoryToolbar>
+              </WorkspaceDirectoryToolbar>
 
-            <div v-if="loading" class="challenge-directory-state">正在同步题目目录...</div>
-            <div v-else-if="list.length === 0" class="challenge-directory-state">
-              {{ manageEmptyMessage }}
-            </div>
-            <WorkspaceDataTable
-              v-else
-              class="challenge-table-shell workspace-directory-list"
-              :columns="challengeTableColumns"
-              :rows="list"
-              row-key="id"
-              row-class="challenge-table-row group"
-            >
+              <div v-if="loading" class="challenge-directory-state">正在同步题目目录...</div>
+              <div v-else-if="list.length === 0" class="challenge-directory-state">
+                {{ manageEmptyMessage }}
+              </div>
+              <WorkspaceDataTable
+                v-else
+                class="challenge-list workspace-directory-list"
+                :columns="challengeTableColumns"
+                :rows="list"
+                row-key="id"
+                row-class="challenge-table-row group"
+              >
               <template #cell-title="{ row }">
                 <div
                   class="challenge-table-title"
@@ -572,68 +587,70 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
                   </div>
                 </div>
               </template>
-            </WorkspaceDataTable>
+              </WorkspaceDataTable>
 
-            <Teleport to="body">
-              <div
-                v-if="activeActionRow"
-                class="challenge-row-menu-layer"
-                @click="closeActionMenu"
-              >
+              <Teleport to="body">
                 <div
-                  ref="actionMenuPanelRef"
-                  class="challenge-row-menu shadow-2xl"
-                  :style="actionMenuStyle"
-                  role="menu"
-                  aria-label="题目更多操作"
-                  @click.stop
+                  v-if="activeActionRow"
+                  class="challenge-row-menu-layer"
+                  @click="closeActionMenu"
                 >
-                  <div class="challenge-row-menu__title">Management</div>
-                  <button
-                    type="button"
-                    class="challenge-row-menu__item"
-                    @click="openChallengeTopology(activeActionRow.id)"
+                  <div
+                    ref="actionMenuPanelRef"
+                    class="challenge-row-menu shadow-2xl"
+                    :style="actionMenuStyle"
+                    role="menu"
+                    aria-label="题目更多操作"
+                    @click.stop
                   >
-                    <FileSearch class="h-3 w-3" />
-                    编排拓扑
-                  </button>
-                  <button
-                    type="button"
-                    class="challenge-row-menu__item"
-                    @click="openChallengeWriteup(activeActionRow.id)"
-                  >
-                    <Book class="h-3 w-3" />
-                    题解与提示
-                  </button>
-                  <button
-                    v-if="activeActionRow.status !== 'published'"
-                    type="button"
-                    class="challenge-row-menu__item challenge-row-menu__item--success"
-                    @click="submitPublishCheck(activeActionRow)"
-                  >
-                    <CheckCircle class="h-3 w-3" />
-                    提交发布检查
-                  </button>
-                  <button
-                    type="button"
-                    class="challenge-row-menu__item challenge-row-menu__item--danger"
-                    @click="removeChallenge(activeActionRow.id)"
-                  >
-                    <Trash2 class="h-3 w-3" />
-                    永久删除
-                  </button>
+                    <div class="challenge-row-menu__title">Management</div>
+                    <button
+                      type="button"
+                      class="challenge-row-menu__item"
+                      @click="openChallengeTopology(activeActionRow.id)"
+                    >
+                      <FileSearch class="h-3 w-3" />
+                      编排拓扑
+                    </button>
+                    <button
+                      type="button"
+                      class="challenge-row-menu__item"
+                      @click="openChallengeWriteup(activeActionRow.id)"
+                    >
+                      <Book class="h-3 w-3" />
+                      题解与提示
+                    </button>
+                    <button
+                      v-if="activeActionRow.status !== 'published'"
+                      type="button"
+                      class="challenge-row-menu__item challenge-row-menu__item--success"
+                      @click="submitPublishCheck(activeActionRow)"
+                    >
+                      <CheckCircle class="h-3 w-3" />
+                      提交发布检查
+                    </button>
+                    <button
+                      type="button"
+                      class="challenge-row-menu__item challenge-row-menu__item--danger"
+                      @click="removeChallenge(activeActionRow.id)"
+                    >
+                      <Trash2 class="h-3 w-3" />
+                      永久删除
+                    </button>
+                  </div>
                 </div>
-              </div>
-            </Teleport>
+              </Teleport>
 
-            <WorkspaceDirectoryPagination
-              class="challenge-manage-pagination"
-              :page="page"
-              :total-pages="Math.max(1, Math.ceil(total / pageSize))"
-              :total="total"
-              :total-label="`共 ${total} 条`"
-              @change-page="changePage"
-            />
+              <div class="admin-pagination workspace-directory-pagination">
+                <AdminPaginationControls
+                  :page="page"
+                  :total-pages="Math.max(1, Math.ceil(total / pageSize))"
+                  :total="total"
+                  :total-label="`共 ${total} 条`"
+                  @change-page="changePage"
+                />
+              </div>
+            </div>
           </section>
         </section>
 
@@ -894,27 +911,25 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
   border-color: #1d4ed8;
 }
 
-.challenge-metric-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 1rem;
+.challenge-manage-shell .manage-summary-grid {
+  --admin-summary-grid-columns: repeat(4, minmax(0, 1fr));
   margin-top: 1.25rem;
   margin-bottom: 2.5rem;
 }
 
-.challenge-metric-card {
+.challenge-manage-directory {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.metric-panel-card.progress-card {
   position: relative;
   overflow: hidden;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  background: white;
-  padding: 1rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   transition: all 0.2s ease;
 }
 
-.challenge-metric-card:hover {
-  border-color: #2563eb;
+.metric-panel-card.progress-card:hover {
+  border-color: color-mix(in srgb, var(--journal-accent) 32%, var(--metric-panel-border));
   transform: translateY(-1px);
 }
 
@@ -922,36 +937,27 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  color: #94a3b8;
   margin-bottom: 1rem;
-}
-
-.challenge-metric-label {
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  color: var(--journal-muted);
 }
 
 .challenge-metric-value-wrap {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
+  gap: 0.75rem;
 }
 
-.challenge-metric-value {
-  font-family: inherit;
-  font-size: 1.85rem;
-  font-weight: 900;
-  line-height: 1;
-  letter-spacing: -0.05em;
-  color: #0f172a;
+.manage-summary-grid > :nth-child(2) .metric-panel-value {
+  color: var(--color-success);
 }
 
-.challenge-metric-trend {
-  font-size: 10px;
-  font-weight: 700;
-  color: #94a3b8;
+.manage-summary-grid > :nth-child(3) .metric-panel-value {
+  color: color-mix(in srgb, #7c3aed 78%, var(--journal-ink));
+}
+
+.manage-summary-grid > :nth-child(4) .metric-panel-value {
+  color: color-mix(in srgb, #f97316 82%, var(--journal-ink));
 }
 
 .challenge-row-menu {
@@ -1175,10 +1181,6 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
   color: #dc2626;
 }
 
-.challenge-manage-pagination {
-  margin-top: 1.5rem;
-}
-
 @keyframes challengeStatusPulse {
   0%,
   100% {
@@ -1191,14 +1193,14 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
 }
 
 @media (max-width: 1023px) {
-  .challenge-metric-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .challenge-manage-shell .manage-summary-grid {
+    --admin-summary-grid-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 767px) {
-  .challenge-metric-grid {
-    grid-template-columns: 1fr;
+  .challenge-manage-shell .manage-summary-grid {
+    --admin-summary-grid-columns: 1fr;
   }
   .challenge-search-input {
     width: 100%;

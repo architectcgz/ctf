@@ -85,8 +85,7 @@ select {
   border: 0;
 }
 
-.workspace-directory-section
-  > :where(.workspace-directory-loading, .workspace-directory-empty, .workspace-directory-list) {
+.workspace-directory-section > :where(.workspace-directory-loading, .workspace-directory-empty, .workspace-directory-list) {
   margin-top: var(--workspace-directory-gap-top);
 }
 
