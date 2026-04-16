@@ -1020,7 +1020,7 @@ function handleSubmit() {
         </header>
 
         <article class="journal-note checker-validation-card">
-          <div class="checker-validation-card__top">
+          <div class="list-heading checker-validation-card__top">
             <span :class="getValidationStateClass(props.draft?.awd_checker_validation_state)">
               {{ savedValidationStateLabel || '未验证' }}
             </span>
@@ -1172,14 +1172,16 @@ function handleSubmit() {
               :key="target.access_url || index"
               class="journal-note checker-preview-target-card"
             >
-              <div class="checker-preview-target-card__top">
-                <strong class="checker-preview-target-card__url">
+              <header class="list-heading checker-preview-target-card__top">
+                <strong
+                  class="list-heading__title checker-preview-target-card__title checker-preview-target-card__url"
+                >
                   {{ target.access_url || '未返回访问地址' }}
                 </strong>
                 <span class="checker-preview-target-card__state">
                   {{ getProbeStatusText(target.healthy, target.error_code, target.error) }}
                 </span>
-              </div>
+              </header>
               <p v-if="formatLatency(target.latency_ms)" class="checker-preview-target-card__hint">
                 延迟 {{ formatLatency(target.latency_ms) }}
               </p>
@@ -1438,11 +1440,7 @@ function handleSubmit() {
 }
 
 .checker-validation-card__top {
-  display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
 }
 
 .checker-validation-card__time,
@@ -1551,6 +1549,10 @@ function handleSubmit() {
   margin: 0;
   font-size: 0.9rem;
   color: var(--color-text-primary);
+}
+
+.checker-preview-target-card__title {
+  margin: 0;
 }
 
 .checker-preview-action-card__state,
