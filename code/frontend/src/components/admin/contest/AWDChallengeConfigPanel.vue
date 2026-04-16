@@ -199,7 +199,7 @@ function isActiveChallenge(item: AdminContestChallengeData): boolean {
   <section class="space-y-6">
     <header class="panel-head panel-head--config">
       <div class="panel-copy workspace-tab-heading__main">
-        <div class="journal-eyebrow">AWD Service Config</div>
+        <div class="workspace-overline">AWD Service Config</div>
         <h2 class="workspace-tab-heading__title">题目配置</h2>
         <p class="admin-page-copy">
           在这里管理赛事题目的 Checker 类型、动作配置和每轮 SLA / 防守分。
