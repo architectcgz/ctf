@@ -4,7 +4,7 @@
   >
     <header class="image-header">
       <div class="image-header__intro">
-        <div class="journal-eyebrow">Image Registry</div>
+        <div class="workspace-overline">Image Registry</div>
         <h1 class="image-title">镜像管理</h1>
         <p class="image-copy">集中查看镜像构建状态、描述与创建时间。</p>
       </div>
