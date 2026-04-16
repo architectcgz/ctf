@@ -342,7 +342,7 @@ async function handleSubmit(challengeId: string, teamId: string): Promise<void> 
               <div class="awd-service-row__actions" role="group" aria-label="服务操作">
                 <a
                   v-if="servicesByChallenge.get(challenge.challenge_id)?.access_url"
-                  class="contest-btn contest-btn--ghost"
+                  class="ui-btn ui-btn--ghost"
                   :href="servicesByChallenge.get(challenge.challenge_id)?.access_url"
                   target="_blank"
                   rel="noreferrer"
@@ -351,7 +351,7 @@ async function handleSubmit(challengeId: string, teamId: string): Promise<void> 
                 </a>
                 <button
                   type="button"
-                  class="contest-btn contest-btn--primary"
+                  class="ui-btn ui-btn--primary"
                   :disabled="startingChallengeId === challenge.challenge_id"
                   @click="startService(challenge.challenge_id)"
                 >
@@ -381,34 +381,34 @@ async function handleSubmit(challengeId: string, teamId: string): Promise<void> 
 
           <div class="awd-target-toolbar">
             <div class="awd-target-toolbar__field">
-              <label class="flag-submit__label" for="awd-target-challenge">攻击题目</label>
-              <select
-                id="awd-target-challenge"
-                v-model="activeChallengeId"
-                class="awd-target-select"
-              >
-                <option v-if="challenges.length === 0" value="" disabled>
-                  当前没有可选攻击题目
-                </option>
-                <option
-                  v-for="challenge in challenges"
-                  :key="challenge.challenge_id"
-                  :value="challenge.challenge_id"
-                >
-                  {{ challenge.title }}
-                </option>
-              </select>
+              <label class="ui-field__label" for="awd-target-challenge">攻击题目</label>
+              <div class="ui-control-wrap awd-target-control">
+                <select id="awd-target-challenge" v-model="activeChallengeId" class="ui-control">
+                  <option v-if="challenges.length === 0" value="" disabled>
+                    当前没有可选攻击题目
+                  </option>
+                  <option
+                    v-for="challenge in challenges"
+                    :key="challenge.challenge_id"
+                    :value="challenge.challenge_id"
+                  >
+                    {{ challenge.title }}
+                  </option>
+                </select>
+              </div>
             </div>
 
             <div class="awd-target-toolbar__field awd-target-toolbar__field--wide">
-              <label class="flag-submit__label" for="awd-target-search">筛选队伍</label>
-              <input
-                id="awd-target-search"
-                v-model="targetKeyword"
-                type="text"
-                class="flag-submit__input awd-target-search"
-                placeholder="输入队伍名"
-              />
+              <label class="ui-field__label" for="awd-target-search">筛选队伍</label>
+              <div class="ui-control-wrap awd-target-control awd-target-search">
+                <input
+                  id="awd-target-search"
+                  v-model="targetKeyword"
+                  type="text"
+                  class="ui-control"
+                  placeholder="输入队伍名"
+                />
+              </div>
             </div>
 
             <label class="awd-target-toggle" for="awd-target-reachable-only">
@@ -439,21 +439,23 @@ async function handleSubmit(challengeId: string, teamId: string): Promise<void> 
               </div>
 
               <div class="awd-target-row__form">
-                <input
-                  :value="
-                    flagInputs[buildAttackKey(activeChallenge.challenge_id, target.team_id)] || ''
-                  "
-                  type="text"
-                  class="flag-submit__input"
-                  placeholder="flag{...}"
-                  @input="
-                    flagInputs[buildAttackKey(activeChallenge.challenge_id, target.team_id)] =
-                      String(($event.target as HTMLInputElement).value)
-                  "
-                />
+                <div class="ui-control-wrap flag-submit__control">
+                  <input
+                    :value="
+                      flagInputs[buildAttackKey(activeChallenge.challenge_id, target.team_id)] || ''
+                    "
+                    type="text"
+                    class="ui-control"
+                    placeholder="flag{...}"
+                    @input="
+                      flagInputs[buildAttackKey(activeChallenge.challenge_id, target.team_id)] =
+                        String(($event.target as HTMLInputElement).value)
+                    "
+                  />
+                </div>
                 <button
                   type="button"
-                  class="contest-btn contest-btn--primary"
+                  class="ui-btn ui-btn--primary"
                   :disabled="
                     !target.active_service?.access_url ||
                     submittingKey === buildAttackKey(activeChallenge.challenge_id, target.team_id)
@@ -493,7 +495,7 @@ async function handleSubmit(challengeId: string, teamId: string): Promise<void> 
             </div>
             <button
               type="button"
-              class="contest-btn contest-btn--ghost contest-btn--compact"
+              class="ui-btn ui-btn--ghost ui-btn--sm"
               :disabled="loading"
               @click="refreshAll"
             >
@@ -674,53 +676,9 @@ async function handleSubmit(challengeId: string, teamId: string): Promise<void> 
   background: color-mix(in srgb, var(--journal-surface) 86%, transparent);
 }
 
-.contest-btn {
-  min-height: 2.5rem;
-  border-radius: 12px;
-  border: 1px solid color-mix(in srgb, var(--journal-border) 86%, transparent);
-  padding: 0.55rem 0.95rem;
-  font-size: var(--font-size-0-84);
-  font-weight: 700;
-  transition:
-    border-color 0.18s ease,
-    transform 0.18s ease,
-    background 0.18s ease;
-}
-
-.contest-btn:disabled {
-  opacity: 0.62;
-  cursor: not-allowed;
-}
-
-.contest-btn--primary {
-  background: color-mix(in srgb, var(--color-primary) 14%, transparent);
-  color: color-mix(in srgb, var(--color-primary) 88%, var(--journal-ink));
-}
-
-.contest-btn--ghost {
-  background: transparent;
-  color: var(--journal-ink);
-}
-
-.contest-btn--compact {
-  min-height: 2.2rem;
-  padding: 0.45rem 0.8rem;
-}
-
-.flag-submit__label {
-  color: var(--journal-muted);
-  font-size: var(--font-size-0-78);
-  font-weight: 700;
-}
-
-.flag-submit__input {
-  min-width: 12rem;
-  min-height: 2.8rem;
-  border-radius: 14px;
-  border: 1px solid color-mix(in srgb, var(--journal-border) 84%, transparent);
-  background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
-  color: var(--journal-ink);
-  padding: 0 0.9rem;
+.flag-submit__control {
+  flex: 1 1 12rem;
+  min-width: 0;
 }
 
 .awd-workspace-summary {
@@ -847,13 +805,8 @@ async function handleSubmit(challengeId: string, teamId: string): Promise<void> 
   font-weight: 700;
 }
 
-.awd-target-select {
-  min-height: 2.8rem;
-  border-radius: 14px;
-  border: 1px solid color-mix(in srgb, var(--journal-border) 84%, transparent);
-  background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
-  color: var(--journal-ink);
-  padding: 0 0.9rem;
+.awd-target-control {
+  width: 100%;
 }
 
 .awd-target-row__url {

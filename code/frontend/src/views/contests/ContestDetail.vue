@@ -429,20 +429,24 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
                       <h4 class="challenge-focus__form-title">提交 Flag</h4>
                     </div>
 
-                    <label class="flag-submit__label" for="contest-flag-input">Flag</label>
+                    <label class="ui-field__label flag-submit__label" for="contest-flag-input">
+                      Flag
+                    </label>
                     <div class="flag-submit">
-                      <input
-                        id="contest-flag-input"
-                        v-model="flagInput"
-                        type="text"
-                        placeholder="flag{...}"
-                        class="flag-submit__input"
-                        @keyup.enter="submitFlagAction"
-                      />
+                      <div class="ui-control-wrap flag-submit__control">
+                        <input
+                          id="contest-flag-input"
+                          v-model="flagInput"
+                          type="text"
+                          placeholder="flag{...}"
+                          class="ui-control"
+                          @keyup.enter="submitFlagAction"
+                        />
+                      </div>
                       <button
                         type="button"
                         :disabled="submitting"
-                        class="contest-btn contest-btn--primary"
+                        class="ui-btn ui-btn--primary"
                         @click="submitFlagAction"
                       >
                         {{ submitting ? '提交中...' : '提交' }}
@@ -492,12 +496,12 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
               <div class="team-actions">
                 <button
                   type="button"
-                  class="contest-btn contest-btn--primary"
+                  class="ui-btn ui-btn--primary"
                   @click="openCreateTeam"
                 >
                   创建队伍
                 </button>
-                <button type="button" class="contest-btn contest-btn--ghost" @click="openJoinTeam">
+                <button type="button" class="ui-btn ui-btn--ghost" @click="openJoinTeam">
                   加入队伍
                 </button>
               </div>
@@ -547,7 +551,7 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
           description="该竞赛还处于筹备阶段，暂不对学生开放查看或报名。"
         >
           <template #action>
-            <RouterLink class="contest-btn contest-btn--primary" to="/contests">
+            <RouterLink class="ui-btn ui-btn--primary" to="/contests">
               <Trophy class="h-4 w-4" />
               返回竞赛中心
             </RouterLink>
@@ -562,7 +566,7 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
           description="请返回竞赛中心重新选择竞赛，或稍后再试。"
         >
           <template #action>
-            <RouterLink class="contest-btn contest-btn--primary" to="/contests">
+            <RouterLink class="ui-btn ui-btn--primary" to="/contests">
               <Trophy class="h-4 w-4" />
               返回竞赛中心
             </RouterLink>
@@ -1045,14 +1049,6 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
   color: var(--journal-ink);
 }
 
-.flag-submit__label {
-  display: inline-flex;
-  margin-top: 1rem;
-  font-size: var(--font-size-0-84);
-  font-weight: 600;
-  color: var(--journal-ink);
-}
-
 .flag-submit {
   margin-top: 0.55rem;
   display: flex;
@@ -1060,24 +1056,14 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
   gap: 0.6rem;
 }
 
-.flag-submit__input {
-  flex: 1 1 18rem;
-  min-width: 0;
-  min-height: 2.85rem;
-  border-radius: 16px;
-  border: 1px solid color-mix(in srgb, var(--journal-border) 82%, transparent);
-  background: color-mix(in srgb, var(--journal-surface) 95%, var(--color-bg-base));
-  padding: 0.7rem 0.95rem;
-  color: var(--journal-ink);
-  outline: none;
-  transition:
-    border-color 150ms ease,
-    box-shadow 150ms ease;
+.flag-submit__label {
+  display: inline-flex;
+  margin-top: 1rem;
 }
 
-.flag-submit__input:focus {
-  border-color: color-mix(in srgb, var(--contest-accent) 46%, transparent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--contest-accent) 10%, transparent);
+.flag-submit__control {
+  flex: 1 1 18rem;
+  min-width: 0;
 }
 
 .contest-alert {
@@ -1200,40 +1186,6 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
 .team-member__kick:focus-visible {
   text-decoration: underline;
   outline: none;
-}
-
-.contest-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-  min-height: 2.7rem;
-  border-radius: 999px;
-  border: 1px solid transparent;
-  padding: 0.65rem 1rem;
-  font-size: var(--font-size-0-88);
-  font-weight: 600;
-  transition:
-    border-color 150ms ease,
-    background 150ms ease,
-    color 150ms ease;
-}
-
-.contest-btn:disabled {
-  opacity: 0.58;
-  cursor: not-allowed;
-}
-
-.contest-btn--primary {
-  border-color: color-mix(in srgb, var(--contest-accent) 24%, transparent);
-  background: color-mix(in srgb, var(--contest-accent) 12%, var(--journal-surface));
-  color: color-mix(in srgb, var(--contest-accent) 88%, var(--journal-ink));
-}
-
-.contest-btn--ghost {
-  border-color: color-mix(in srgb, var(--journal-border) 84%, transparent);
-  background: color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base));
-  color: var(--journal-ink);
 }
 
 .contest-not-found {
