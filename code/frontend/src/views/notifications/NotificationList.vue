@@ -102,13 +102,13 @@ async function handlePublishSuccess(): Promise<void> {
 
 <template>
   <section
-    class="journal-shell journal-shell-user journal-eyebrow-text journal-hero flex min-h-full flex-1 flex-col space-y-6 rounded-[30px] border px-6 py-6 md:px-8"
+    class="journal-shell journal-shell-user journal-hero flex min-h-full flex-1 flex-col space-y-6 rounded-[30px] border px-6 py-6 md:px-8"
   >
     <div class="notification-page">
       <header class="notification-topbar">
         <div class="notification-heading">
-          <div class="journal-eyebrow">Notifications</div>
-          <h1 class="notification-title">通知中心</h1>
+          <div class="workspace-overline">Notifications</div>
+          <h1 class="notification-title workspace-page-title">通知中心</h1>
           <p class="notification-subtitle">系统、竞赛和训练相关通知会在这里按时间顺序汇总。</p>
         </div>
 

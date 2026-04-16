@@ -167,6 +167,12 @@ describe('NotificationList', () => {
   })
 
   it('通知页概况卡片应使用统一 metric-panel 样式类', () => {
+    expect(notificationListSource).toContain('<div class="workspace-overline">Notifications</div>')
+    expect(notificationListSource).toContain(
+      '<h1 class="notification-title workspace-page-title">通知中心</h1>'
+    )
+    expect(notificationListSource).not.toContain('<div class="journal-eyebrow">Notifications</div>')
+    expect(notificationListSource).not.toContain('journal-eyebrow-text')
     expect(notificationListSource).toContain('class="notification-summary-grid metric-panel-grid"')
     expect(notificationListSource).toContain('class="notification-summary-item metric-panel-card"')
     expect(notificationListSource).toContain(
