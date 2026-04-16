@@ -447,7 +447,7 @@
           <div class="tool-pane-inner">
             <section class="tool-group">
               <div>
-                <div class="overline">Primary Action</div>
+                <div class="workspace-overline">Primary Action</div>
                 <h2 class="tool-title">{{ submitPanelTitle }}</h2>
                 <p class="tool-copy">{{ submitPanelCopy }}</p>
               </div>
@@ -875,20 +875,6 @@ watch(
   flex: 1 1 auto;
   flex-direction: column;
   min-height: 0;
-}
-
-.overline {
-  display: inline-block;
-  border: 0 !important;
-  box-shadow: none !important;
-  font-size: var(--font-size-11);
-  font-weight: 600;
-  letter-spacing: 0.18em;
-  line-height: 1;
-  text-decoration: none !important;
-  text-decoration-line: none !important;
-  text-transform: uppercase;
-  color: color-mix(in srgb, var(--brand) 68%, var(--text-faint));
 }
 
 .top-note,

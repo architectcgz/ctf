@@ -403,7 +403,7 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
                 <template v-if="selectedChallenge">
                   <div class="challenge-focus__head">
                     <div>
-                      <div class="contest-overline">Selected</div>
+                      <div class="workspace-overline">Selected</div>
                       <h3 class="challenge-focus__title">{{ selectedChallenge.title }}</h3>
                     </div>
                     <div class="challenge-focus__meta">{{ selectedChallengeMeta }}</div>
@@ -425,7 +425,7 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
 
                   <div class="challenge-focus__form">
                     <div>
-                      <div class="contest-overline">Primary Action</div>
+                      <div class="workspace-overline">Primary Action</div>
                       <h4 class="challenge-focus__form-title">提交 Flag</h4>
                     </div>
 
@@ -506,7 +506,7 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
             <div v-else class="team-board">
               <div class="team-summary">
                 <div>
-                  <div class="contest-overline">Current Team</div>
+                  <div class="workspace-overline">Current Team</div>
                   <h3 class="team-summary__name">{{ team.name }}</h3>
                 </div>
                 <span v-if="team.invite_code" class="team-summary__invite"
@@ -721,14 +721,6 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
 
 .workspace-panel {
   padding-top: 1.35rem;
-}
-
-.contest-overline {
-  font-size: var(--font-size-0-72);
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: color-mix(in srgb, var(--contest-accent) 88%, var(--journal-ink));
 }
 
 .contest-hero {

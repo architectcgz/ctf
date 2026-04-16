@@ -648,4 +648,14 @@ describe('ContestDetail', () => {
     expect(contestDetailSource).not.toContain('<div class="contest-overline">Announcements</div>')
     expect(contestDetailSource).not.toContain('<div class="contest-overline">Team</div>')
   })
+
+  it('竞赛详情剩余局部 kicker 也应统一到 workspace overline 语义', () => {
+    expect(contestDetailSource).toContain('<div class="workspace-overline">Selected</div>')
+    expect(contestDetailSource).toContain('<div class="workspace-overline">Primary Action</div>')
+    expect(contestDetailSource).toContain('<div class="workspace-overline">Current Team</div>')
+    expect(contestDetailSource).not.toContain('<div class="contest-overline">Selected</div>')
+    expect(contestDetailSource).not.toContain('<div class="contest-overline">Primary Action</div>')
+    expect(contestDetailSource).not.toContain('<div class="contest-overline">Current Team</div>')
+    expect(contestDetailSource).not.toMatch(/^\.contest-overline\s*\{/m)
+  })
 })

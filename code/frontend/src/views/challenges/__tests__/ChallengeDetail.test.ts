@@ -211,6 +211,12 @@ describe('ChallengeDetail', () => {
     expect(challengeDetailSource).not.toContain('<div class="overline">My Writeup</div>')
   })
 
+  it('题目详情剩余局部 kicker 也应统一到 workspace overline 语义', () => {
+    expect(challengeDetailSource).toContain('<div class="workspace-overline">Primary Action</div>')
+    expect(challengeDetailSource).not.toContain('<div class="overline">Primary Action</div>')
+    expect(challengeDetailSource).not.toMatch(/^\.overline\s*\{/m)
+  })
+
   it('未解题时应显示题解锁定态', async () => {
     await router.push('/challenges/1')
     await router.isReady()
