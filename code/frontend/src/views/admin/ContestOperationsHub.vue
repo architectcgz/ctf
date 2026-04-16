@@ -242,7 +242,7 @@ onMounted(() => {
 
 <template>
   <section
-    class="journal-shell journal-shell-admin journal-notes-card journal-hero journal-eyebrow-text workspace-shell flex min-h-full flex-1 flex-col"
+    class="journal-shell journal-shell-admin journal-notes-card journal-hero workspace-shell flex min-h-full flex-1 flex-col"
   >
     <header class="list-heading contest-ops-hero workspace-directory-section">
       <div class="contest-ops-hero__main">
