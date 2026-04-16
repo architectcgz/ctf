@@ -405,6 +405,13 @@ describe('ScoreboardView', () => {
     )
   })
 
+  it('排行榜页级 shell 不应继续携带 journal-eyebrow-text 修饰类', () => {
+    expect(scoreboardSource).toContain(
+      'class="journal-shell journal-shell-user journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"'
+    )
+    expect(scoreboardSource).not.toContain('journal-eyebrow-text')
+  })
+
   it('提供竞赛排行榜与积分排行榜两个页签，并展示积分榜字段', async () => {
     getPracticeRankingMock.mockResolvedValue([
       {
