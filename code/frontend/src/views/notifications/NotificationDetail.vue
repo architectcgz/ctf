@@ -122,7 +122,7 @@ watch(
           <template #action>
             <button
               type="button"
-              class="notification-detail-action notification-detail-action--primary"
+              class="ui-btn ui-btn--primary"
               @click="goBackToNotifications"
             >
               返回通知列表
@@ -209,12 +209,12 @@ watch(
         <footer class="notification-detail-footer">
           <button
             type="button"
-            class="notification-detail-action notification-detail-action--primary"
+            class="ui-btn ui-btn--primary"
             @click="goBackToNotifications"
           >
             返回通知列表
           </button>
-          <button type="button" class="notification-detail-action" disabled>
+          <button type="button" class="ui-btn ui-btn--secondary" disabled>
             <Inbox class="h-4 w-4" />
             暂无关联对象
           </button>
@@ -419,31 +419,6 @@ watch(
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
-}
-
-.notification-detail-action {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--journal-border) 80%, transparent);
-  background: color-mix(in srgb, var(--journal-surface) 95%, var(--color-bg-base));
-  padding: 0.72rem 1rem;
-  font-size: var(--font-size-0-88);
-  font-weight: 600;
-  color: var(--journal-ink);
-}
-
-.notification-detail-action:disabled {
-  cursor: not-allowed;
-  opacity: 0.55;
-}
-
-.notification-detail-action--primary {
-  border-color: color-mix(in srgb, var(--journal-accent) 32%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 12%, var(--journal-surface));
-  color: color-mix(in srgb, var(--journal-accent) 86%, var(--journal-ink));
-  cursor: pointer;
 }
 
 @keyframes notification-detail-spin {

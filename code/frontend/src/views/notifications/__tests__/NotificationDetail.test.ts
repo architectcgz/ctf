@@ -139,4 +139,12 @@ describe('NotificationDetail', () => {
     expect(notificationDetailSource).not.toContain('<div class="notification-overline">Message</div>')
     expect(notificationDetailSource).not.toMatch(/^\.notification-overline\s*\{/m)
   })
+
+  it('通知详情页操作按钮应接入共享 ui-btn 原语', () => {
+    expect(notificationDetailSource).toContain('class="ui-btn ui-btn--primary"')
+    expect(notificationDetailSource).toContain('class="ui-btn ui-btn--secondary"')
+    expect(notificationDetailSource).not.toContain('notification-detail-action')
+    expect(notificationDetailSource).not.toMatch(/^\.notification-detail-action\s*\{/m)
+    expect(notificationDetailSource).not.toMatch(/^\.notification-detail-action--primary\s*\{/m)
+  })
 })
