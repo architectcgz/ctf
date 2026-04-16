@@ -164,7 +164,7 @@ function formatDateTime(value?: string): string {
   <section class="space-y-6">
     <header class="panel-head panel-head--readiness">
       <div class="panel-copy workspace-tab-heading__main">
-        <div class="journal-eyebrow">AWD Readiness</div>
+        <div class="workspace-overline">AWD Readiness</div>
         <h2 class="workspace-tab-heading__title">开赛就绪摘要</h2>
         <p class="admin-page-copy">
           这里汇总当前赛事的 checker 校验状态，并标记会阻塞创建轮次、当前轮巡检和启动赛事的风险项。
