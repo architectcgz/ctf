@@ -162,7 +162,7 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
         >
           <header class="contest-hero">
             <div class="contest-hero__main">
-              <div class="contest-overline">Contest</div>
+              <div class="workspace-overline">Contest</div>
               <h1 class="contest-hero__title workspace-page-title">{{ contest.title }}</h1>
               <p class="contest-hero__desc workspace-page-copy">
                 {{ contest.description || '当前竞赛暂未提供描述。' }}

@@ -3,6 +3,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { createRouter, createMemoryHistory } from 'vue-router'
 import { createPinia } from 'pinia'
 import ContestDetail from '../ContestDetail.vue'
+import contestDetailSource from '../ContestDetail.vue?raw'
 
 const contestApiMocks = vi.hoisted(() => ({
   getContestDetail: vi.fn(),
@@ -625,5 +626,10 @@ describe('ContestDetail', () => {
 
     expect(contestApiMocks.getContestAWDWorkspace).toHaveBeenCalledTimes(2)
     expect(contestApiMocks.getScoreboard).toHaveBeenCalledTimes(2)
+  })
+
+  it('竞赛详情 hero 应使用共享 workspace overline 语义', () => {
+    expect(contestDetailSource).toContain('<div class="workspace-overline">Contest</div>')
+    expect(contestDetailSource).not.toContain('<div class="contest-overline">Contest</div>')
   })
 })
