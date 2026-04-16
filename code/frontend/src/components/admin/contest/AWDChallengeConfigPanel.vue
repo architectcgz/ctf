@@ -242,12 +242,14 @@ function isActiveChallenge(item: AdminContestChallengeData): boolean {
         v-if="activeChallenge"
         class="workspace-directory-section config-focus-card"
       >
-        <div>
-          <div class="journal-note-label">Current Focus</div>
-          <h3 class="list-heading__title">当前聚焦题目</h3>
-          <p class="config-focus-card__title">{{ activeChallengeHeading }}</p>
-          <p class="config-focus-card__copy">{{ activeChallengeContext }}</p>
-        </div>
+        <header class="list-heading config-focus-card__head">
+          <div>
+            <div class="journal-note-label">Current Focus</div>
+            <h3 class="list-heading__title">当前聚焦题目</h3>
+            <p class="config-focus-card__title">{{ activeChallengeHeading }}</p>
+            <p class="config-focus-card__copy">{{ activeChallengeContext }}</p>
+          </div>
+        </header>
         <div class="ui-row-actions config-focus-card__actions">
           <button
             id="awd-challenge-config-prev"
@@ -376,6 +378,11 @@ function isActiveChallenge(item: AdminContestChallengeData): boolean {
   padding: 1.25rem 1.35rem;
   border: 1px solid color-mix(in srgb, var(--journal-accent) 24%, transparent);
   background: color-mix(in srgb, var(--journal-accent) 8%, var(--journal-surface));
+}
+
+.config-focus-card__head {
+  flex: 1 1 22rem;
+  min-width: min(100%, 22rem);
 }
 
 .config-focus-card__title,
