@@ -272,7 +272,7 @@ onMounted(() => {
     </header>
 
     <div
-      class="metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface contest-ops-summary"
+      class="progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface contest-ops-summary"
     >
       <article class="journal-note progress-card metric-panel-card">
         <div class="journal-note-label progress-card-label metric-panel-label">AWD 赛事</div>

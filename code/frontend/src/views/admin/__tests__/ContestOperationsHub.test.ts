@@ -97,6 +97,9 @@ describe('ContestOperationsHub', () => {
       '<header class="contest-ops-hero workspace-directory-section">'
     )
     expect(contestOperationsHubSource).toContain(
+      'class="progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface contest-ops-summary"'
+    )
+    expect(contestOperationsHubSource).toContain(
       'class="journal-note progress-card metric-panel-card"'
     )
     expect(contestOperationsHubSource).toContain(
