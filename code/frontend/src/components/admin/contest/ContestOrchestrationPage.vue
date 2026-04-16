@@ -373,7 +373,7 @@ function openContestWorkbench() {
         :aria-hidden="activePanel === 'create' ? 'false' : 'true'"
       >
         <section class="workspace-directory-section contest-create-panel">
-          <header class="contest-overview-head">
+          <header class="list-heading contest-create-head">
             <div class="workspace-tab-heading__main">
               <div class="workspace-overline">Contest Setup</div>
               <h2 class="workspace-page-title">创建竞赛</h2>
@@ -550,6 +550,10 @@ function openContestWorkbench() {
 
 .contest-list-head {
   align-items: flex-end;
+}
+
+.contest-create-head {
+  align-items: flex-start;
 }
 
 .contest-filter-strip {
