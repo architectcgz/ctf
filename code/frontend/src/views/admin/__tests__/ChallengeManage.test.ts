@@ -113,6 +113,11 @@ describe('ChallengeManage', () => {
   it('应使用统一的管理端 workspace 壳层，而不是页面内重复一套路由级顶栏', () => {
     expect(challengeManageSource).toContain('class="workspace-shell challenge-manage-shell"')
     expect(challengeManageSource).not.toContain('<header class="workspace-topbar">')
+    expect(challengeManageSource).toContain('<div class="workspace-overline">Challenge Workspace</div>')
+    expect(challengeManageSource).toContain(
+      '<p class="workspace-page-copy">集中查看题目目录、发布状态与资源包导入流程。</p>'
+    )
+    expect(challengeManageSource).not.toContain('Inventory / Challenge Management')
     expect(challengeManageSource).toContain('Plus,')
     expect(challengeManageSource).toContain(
       'class="workspace-directory-section challenge-manage-directory"'

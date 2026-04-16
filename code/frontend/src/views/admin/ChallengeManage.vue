@@ -357,12 +357,11 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
           :aria-hidden="activePanel === 'manage' ? 'false' : 'true'"
         >
           <div class="workspace-tab-heading challenge-manage-actions">
-          <div class="workspace-tab-heading__main">
-            <h1 class="workspace-page-title">题目资源管理中心</h1>
-            <p class="workspace-page-copy uppercase tracking-wider font-bold text-[10px] text-slate-400 mt-1">
-              Inventory / Challenge Management
-            </p>
-          </div>
+            <div class="workspace-tab-heading__main">
+              <div class="workspace-overline">Challenge Workspace</div>
+              <h1 class="workspace-page-title">题目资源管理中心</h1>
+              <p class="workspace-page-copy">集中查看题目目录、发布状态与资源包导入流程。</p>
+            </div>
             <div class="challenge-manage-hero-actions">
               <button
                 type="button"
