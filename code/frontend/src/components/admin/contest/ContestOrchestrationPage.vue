@@ -153,7 +153,7 @@ function openContestWorkbench() {
         aria-labelledby="contest-tab-overview"
         :aria-hidden="activePanel === 'overview' ? 'false' : 'true'"
       >
-        <header class="contest-overview-head">
+        <header class="list-heading contest-overview-head">
           <div class="workspace-tab-heading__main">
             <div class="workspace-overline">Contest Workspace</div>
             <h1 class="workspace-page-title">赛事管理台</h1>
