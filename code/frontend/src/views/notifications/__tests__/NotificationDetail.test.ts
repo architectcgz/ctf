@@ -127,4 +127,16 @@ describe('NotificationDetail', () => {
       /\.notification-detail-page\s*\{[\s\S]*box-shadow:\s*0 20px 40px var\(--color-shadow-soft\);[\s\S]*\}/s
     )
   })
+
+  it('通知详情页 overline 应接入 workspace-overline 共享语义', () => {
+    expect(notificationDetailSource).toContain('<div class="workspace-overline">Notification</div>')
+    expect(notificationDetailSource).toContain('<div class="workspace-overline">Meta</div>')
+    expect(notificationDetailSource).toContain('<div class="workspace-overline">ID</div>')
+    expect(notificationDetailSource).toContain('<div class="workspace-overline">Message</div>')
+    expect(notificationDetailSource).not.toContain('<div class="notification-overline">Notification</div>')
+    expect(notificationDetailSource).not.toContain('<div class="notification-overline">Meta</div>')
+    expect(notificationDetailSource).not.toContain('<div class="notification-overline">ID</div>')
+    expect(notificationDetailSource).not.toContain('<div class="notification-overline">Message</div>')
+    expect(notificationDetailSource).not.toMatch(/^\.notification-overline\s*\{/m)
+  })
 })

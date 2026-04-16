@@ -139,7 +139,7 @@ watch(
               返回通知列表
             </button>
 
-            <div class="notification-overline">Notification</div>
+            <div class="workspace-overline">Notification</div>
             <h1 class="notification-detail-title workspace-page-title">
               {{ notification.title }}
             </h1>
@@ -170,7 +170,7 @@ watch(
 
           <aside class="notification-detail-side">
             <div class="notification-detail-side-card">
-              <div class="notification-overline">Meta</div>
+              <div class="workspace-overline">Meta</div>
               <div class="notification-detail-side-item">
                 <CalendarClock class="h-3.5 w-3.5" />
                 <span>{{ formatDate(notification.created_at) }}</span>
@@ -182,7 +182,7 @@ watch(
             </div>
 
             <div class="notification-detail-side-card">
-              <div class="notification-overline">ID</div>
+              <div class="workspace-overline">ID</div>
               <div class="notification-detail-side-value notification-detail-side-value--mono">
                 {{ notification.id }}
               </div>
@@ -195,7 +195,7 @@ watch(
         <section class="notification-detail-content">
           <div class="notification-detail-content-head">
             <div>
-              <div class="notification-overline">Message</div>
+              <div class="workspace-overline">Message</div>
               <h2 class="notification-section-title">通知正文</h2>
             </div>
           </div>
@@ -305,14 +305,6 @@ watch(
 
 .notification-detail-back:hover {
   color: var(--journal-ink);
-}
-
-.notification-overline {
-  font-size: var(--font-size-0-72);
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--journal-accent);
 }
 
 .notification-detail-title {
