@@ -79,4 +79,12 @@ describe('SecuritySettings', () => {
       '<div class="journal-eyebrow journal-eyebrow-soft">Tips</div>'
     )
   })
+
+  it('应使用共享 ui-control 原语承载密码输入框', () => {
+    expect(securitySettingsSource).toContain('class="ui-control-wrap"')
+    expect(securitySettingsSource).toContain('class="ui-control"')
+    expect(securitySettingsSource).not.toMatch(/^\.journal-input\s*\{/m)
+    expect(securitySettingsSource).not.toMatch(/^\.journal-input:focus\s*\{/m)
+    expect(securitySettingsSource).not.toMatch(/^\.journal-input--error\s*\{/m)
+  })
 })

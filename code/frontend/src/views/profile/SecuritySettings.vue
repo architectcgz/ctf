@@ -158,45 +158,51 @@ async function submitPasswordChange(): Promise<void> {
           </div>
 
           <div class="space-y-1.5">
-            <label class="journal-label">当前密码</label>
-            <input
-              v-model="passwordForm.oldPassword"
-              type="password"
-              autocomplete="current-password"
-              class="journal-input"
-              :class="{ 'journal-input--error': passwordFieldErrors.oldPassword }"
-              placeholder="输入当前密码"
-            />
+            <label class="ui-field__label">当前密码</label>
+            <div class="ui-control-wrap" :class="{ 'is-error': passwordFieldErrors.oldPassword }">
+              <input
+                v-model="passwordForm.oldPassword"
+                type="password"
+                autocomplete="current-password"
+                class="ui-control"
+                placeholder="输入当前密码"
+              />
+            </div>
             <p v-if="passwordFieldErrors.oldPassword" class="journal-field-error">
               {{ passwordFieldErrors.oldPassword }}
             </p>
           </div>
 
           <div class="space-y-1.5">
-            <label class="journal-label">新密码</label>
-            <input
-              v-model="passwordForm.newPassword"
-              type="password"
-              autocomplete="new-password"
-              class="journal-input"
-              :class="{ 'journal-input--error': passwordFieldErrors.newPassword }"
-              placeholder="至少 8 位"
-            />
+            <label class="ui-field__label">新密码</label>
+            <div class="ui-control-wrap" :class="{ 'is-error': passwordFieldErrors.newPassword }">
+              <input
+                v-model="passwordForm.newPassword"
+                type="password"
+                autocomplete="new-password"
+                class="ui-control"
+                placeholder="至少 8 位"
+              />
+            </div>
             <p v-if="passwordFieldErrors.newPassword" class="journal-field-error">
               {{ passwordFieldErrors.newPassword }}
             </p>
           </div>
 
           <div class="space-y-1.5">
-            <label class="journal-label">确认新密码</label>
-            <input
-              v-model="passwordForm.confirmPassword"
-              type="password"
-              autocomplete="new-password"
-              class="journal-input"
-              :class="{ 'journal-input--error': passwordFieldErrors.confirmPassword }"
-              placeholder="再次输入新密码"
-            />
+            <label class="ui-field__label">确认新密码</label>
+            <div
+              class="ui-control-wrap"
+              :class="{ 'is-error': passwordFieldErrors.confirmPassword }"
+            >
+              <input
+                v-model="passwordForm.confirmPassword"
+                type="password"
+                autocomplete="new-password"
+                class="ui-control"
+                placeholder="再次输入新密码"
+              />
+            </div>
             <p v-if="passwordFieldErrors.confirmPassword" class="journal-field-error">
               {{ passwordFieldErrors.confirmPassword }}
             </p>
@@ -357,36 +363,6 @@ async function submitPasswordChange(): Promise<void> {
   font-size: var(--font-size-1-15);
   font-weight: 700;
   color: var(--journal-ink);
-}
-
-.journal-label {
-  display: block;
-  font-size: var(--font-size-0-8125);
-  font-weight: 500;
-  color: var(--journal-ink);
-}
-
-.journal-input {
-  width: 100%;
-  border-radius: 1rem;
-  border: 1px solid var(--journal-border);
-  background: var(--journal-surface);
-  padding: 0.7rem 0.95rem;
-  font-size: var(--font-size-0-875);
-  color: var(--journal-ink);
-  outline: none;
-  transition:
-    border-color 0.2s,
-    box-shadow 0.2s;
-}
-
-.journal-input:focus {
-  border-color: color-mix(in srgb, var(--journal-accent) 50%, transparent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--journal-accent) 12%, transparent);
-}
-
-.journal-input--error {
-  border-color: color-mix(in srgb, var(--color-danger) 50%, transparent);
 }
 
 .journal-field-error {
