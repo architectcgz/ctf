@@ -78,7 +78,7 @@
             <section class="section">
               <div class="section-head workspace-tab-heading">
                 <div class="workspace-tab-heading__main">
-                  <div class="overline">Statement</div>
+                  <div class="workspace-overline">Statement</div>
                   <h2 class="section-title workspace-tab-heading__title">题目描述</h2>
                 </div>
                 <button
@@ -100,7 +100,7 @@
             <section v-if="challenge.hints.length > 0" class="section">
               <div class="section-head workspace-tab-heading">
                 <div class="workspace-tab-heading__main">
-                  <div class="overline">Hints</div>
+                  <div class="workspace-overline">Hints</div>
                   <h2 class="section-title workspace-tab-heading__title">提示</h2>
                 </div>
                 <div class="section-hint">共 {{ challenge.hints.length }} 条</div>
@@ -143,7 +143,7 @@
             <section class="section section--flat">
               <div class="section-head workspace-tab-heading">
                 <div class="workspace-tab-heading__main">
-                  <div class="overline">Solutions</div>
+                  <div class="workspace-overline">Solutions</div>
                   <h2 class="section-title workspace-tab-heading__title">题解区</h2>
                 </div>
                 <div class="section-hint">
@@ -285,7 +285,7 @@
             <section class="section section--flat">
               <div class="section-head workspace-tab-heading">
                 <div class="workspace-tab-heading__main">
-                  <div class="overline">Submissions</div>
+                  <div class="workspace-overline">Submissions</div>
                   <h2 class="section-title workspace-tab-heading__title">提交记录</h2>
                 </div>
                 <div class="section-hint">最近提交</div>
@@ -341,7 +341,7 @@
             <section class="section section--flat">
               <div class="section-head workspace-tab-heading">
                 <div class="workspace-tab-heading__main">
-                  <div class="overline">My Writeup</div>
+                  <div class="workspace-overline">My Writeup</div>
                   <h2 class="section-title workspace-tab-heading__title">编写题解</h2>
                 </div>
                 <div class="section-hint">

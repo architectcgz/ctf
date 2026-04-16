@@ -224,7 +224,7 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
             <section class="contest-section contest-section--flat">
               <div class="contest-section__head workspace-tab-heading">
                 <div class="workspace-tab-heading__main">
-                  <div class="contest-overline">Rules</div>
+                  <div class="workspace-overline">Rules</div>
                   <h2 class="contest-section__title workspace-tab-heading__title">竞赛规则</h2>
                 </div>
               </div>
@@ -234,7 +234,7 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
             <section class="contest-section contest-section--flat">
               <div class="contest-section__head workspace-tab-heading">
                 <div class="workspace-tab-heading__main">
-                  <div class="contest-overline">Schedule</div>
+                  <div class="workspace-overline">Schedule</div>
                   <h2 class="contest-section__title workspace-tab-heading__title">赛程信息</h2>
                 </div>
               </div>
@@ -264,7 +264,7 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
           <section class="contest-section contest-section--flat">
             <div class="contest-section__head workspace-tab-heading">
               <div class="workspace-tab-heading__main">
-                <div class="contest-overline">Announcements</div>
+                <div class="workspace-overline">Announcements</div>
                 <h2 class="contest-section__title workspace-tab-heading__title">公告预览</h2>
               </div>
               <div class="contest-section__hint">{{ announcements.length }} 条</div>
@@ -308,7 +308,7 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
           <section class="contest-section">
             <div class="contest-section__head workspace-tab-heading">
               <div class="workspace-tab-heading__main">
-                <div class="contest-overline">Announcements</div>
+                <div class="workspace-overline">Announcements</div>
                 <h2 class="contest-section__title workspace-tab-heading__title">公告</h2>
               </div>
               <div class="contest-section__hint">{{ announcements.length }} 条</div>
@@ -352,7 +352,7 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
           <section class="contest-section">
             <div class="contest-section__head workspace-tab-heading">
               <div class="workspace-tab-heading__main">
-                <div class="contest-overline">
+                <div class="workspace-overline">
                   {{ contest.mode === 'awd' ? 'Battle' : 'Challenges' }}
                 </div>
                 <h2 class="contest-section__title workspace-tab-heading__title">
@@ -481,7 +481,7 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
           <section class="contest-section">
             <div class="contest-section__head workspace-tab-heading">
               <div class="workspace-tab-heading__main">
-                <div class="contest-overline">Team</div>
+                <div class="workspace-overline">Team</div>
                 <h2 class="contest-section__title workspace-tab-heading__title">队伍</h2>
               </div>
               <div class="contest-section__hint">{{ memberCount }} 人</div>
