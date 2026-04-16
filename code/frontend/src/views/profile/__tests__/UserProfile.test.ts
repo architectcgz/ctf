@@ -3,6 +3,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import { flushPromises, mount } from '@vue/test-utils'
 
 import UserProfile from '../UserProfile.vue'
+import userProfileSource from '../UserProfile.vue?raw'
 import { useAuthStore } from '@/stores/auth'
 
 const authApiMocks = vi.hoisted(() => ({
@@ -164,5 +165,12 @@ describe('UserProfile', () => {
     expect(wrapper.find('.profile-summary-grid').exists()).toBe(true)
     expect(wrapper.find('.profile-layout').classes()).toContain('profile-layout--single')
     expect(assessmentApiMocks.exportPersonalReport).not.toHaveBeenCalled()
+  })
+
+  it('应该移除个人资料页级 shell 上遗留的 journal-eyebrow-text 修饰类', () => {
+    expect(userProfileSource).toContain(
+      'class="journal-shell journal-shell-user journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"'
+    )
+    expect(userProfileSource).not.toContain('journal-eyebrow-text')
   })
 })

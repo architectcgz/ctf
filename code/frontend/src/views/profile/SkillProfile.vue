@@ -62,7 +62,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } =
 
 <template>
   <section
-    class="journal-shell journal-shell-user journal-eyebrow-text journal-hero flex min-h-full flex-1 flex-col space-y-6 rounded-[30px] border px-6 py-6 md:px-8"
+    class="journal-shell journal-shell-user journal-hero flex min-h-full flex-1 flex-col space-y-6 rounded-[30px] border px-6 py-6 md:px-8"
   >
     <div v-if="loading" class="space-y-6">
       <div class="space-y-6">
@@ -94,7 +94,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } =
 
     <div v-else class="flex flex-1 flex-col">
       <div>
-        <div class="journal-eyebrow">Skill Profile</div>
+        <div class="workspace-overline">Skill Profile</div>
 
         <nav class="top-tabs" role="tablist" aria-label="能力画像内容切换">
           <button

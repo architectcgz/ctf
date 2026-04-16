@@ -3,6 +3,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import { flushPromises, mount } from '@vue/test-utils'
 
 import DashboardView from '../DashboardView.vue'
+import dashboardViewSource from '../DashboardView.vue?raw'
 import { useAuthStore } from '@/stores/auth'
 
 const pushMock = vi.fn()
@@ -592,5 +593,12 @@ describe('DashboardView', () => {
     await flushPromises()
 
     expect(replaceMock).toHaveBeenCalledWith({ name: 'TeacherDashboard' })
+  })
+
+  it('应该移除仪表盘页级 shell 上遗留的 journal-eyebrow-text 修饰类', () => {
+    expect(dashboardViewSource).toContain(
+      'class="workspace-shell journal-shell journal-shell-user journal-hero flex min-h-full flex-1 flex-col"'
+    )
+    expect(dashboardViewSource).not.toContain('journal-eyebrow-text')
   })
 })

@@ -101,7 +101,7 @@ async function submitPasswordChange(): Promise<void> {
 
 <template>
   <section
-    class="journal-shell journal-shell-user journal-eyebrow-text journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
+    class="journal-shell journal-shell-user journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
   >
     <div class="security-page flex flex-1 flex-col">
       <PageHeader
