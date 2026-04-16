@@ -132,7 +132,7 @@ function handleImportChange(event: Event): void {
   <section
     class="journal-shell journal-shell-admin journal-notes-card journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
   >
-    <div class="journal-eyebrow">User Governance</div>
+    <div class="workspace-overline">User Governance</div>
 
     <nav class="top-tabs" role="tablist" aria-label="用户治理标签页">
       <button

@@ -322,6 +322,8 @@ describe('UserManage', () => {
     expect(userGovernanceSource).toContain('user-overview-summary')
     expect(userGovernanceSource).toContain('user-directory-filters')
     expect(userGovernanceSource).toContain('user-import-start')
+    expect(userGovernanceSource).toContain('<div class="workspace-overline">User Governance</div>')
+    expect(userGovernanceSource).not.toContain('<div class="journal-eyebrow">User Governance</div>')
     expect(userGovernanceSource).toMatch(/role="tablist"/s)
     expect(userGovernanceSource.indexOf('User Governance')).toBeLessThan(
       userGovernanceSource.indexOf('role="tablist"')
