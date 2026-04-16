@@ -315,6 +315,11 @@ describe('UserManage', () => {
       userDirectoryPanelStart,
       userDirectoryPanelStart + 320
     )
+    const overviewPanelStart = userGovernanceSource.indexOf('id="user-overview-summary"')
+    const overviewPanelSnippet = userGovernanceSource.slice(
+      overviewPanelStart,
+      overviewPanelStart + 420
+    )
 
     expect(userGovernanceSource).toContain('user-tab-overview')
     expect(userGovernanceSource).toContain('user-tab-directory')
@@ -335,6 +340,9 @@ describe('UserManage', () => {
     expect(userGovernanceSource).not.toContain('user-panel-directory')
     expect(userGovernanceSource).not.toContain('user-panel-import')
     expect(userGovernanceSource).not.toContain('<main class="content-pane">')
+    expect(overviewPanelStart).toBeGreaterThan(-1)
+    expect(overviewPanelSnippet).toContain('<div class="workspace-overline">User Governance</div>')
+    expect(overviewPanelSnippet).not.toContain('<div class="journal-note-label">User Governance</div>')
     expect(userDirectoryPanelStart).toBeGreaterThan(-1)
     expect(userDirectoryPanelSnippet).toContain('<div class="list-heading user-directory-head">')
     expect(userGovernanceSource).toContain('<h2 class="list-heading__title">用户目录</h2>')
