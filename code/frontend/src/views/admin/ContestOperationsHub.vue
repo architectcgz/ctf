@@ -244,7 +244,7 @@ onMounted(() => {
   <section
     class="journal-shell journal-shell-admin journal-notes-card journal-hero journal-eyebrow-text workspace-shell flex min-h-full flex-1 flex-col"
   >
-    <header class="contest-ops-hero workspace-directory-section">
+    <header class="list-heading contest-ops-hero workspace-directory-section">
       <div class="contest-ops-hero__main">
         <div class="workspace-overline">{{ currentDefinition.overline }}</div>
         <h1 class="workspace-page-title">{{ currentDefinition.title }}</h1>
@@ -274,27 +274,37 @@ onMounted(() => {
     <div
       class="metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface contest-ops-summary"
     >
-      <article class="journal-note metric-panel-card">
-        <div class="journal-note-label metric-panel-label">AWD 赛事</div>
-        <div class="journal-note-value metric-panel-value">{{ awdContests.length }}</div>
-        <div class="journal-note-helper metric-panel-helper">当前可纳入赛事运维的 AWD 赛事总数</div>
+      <article class="journal-note progress-card metric-panel-card">
+        <div class="journal-note-label progress-card-label metric-panel-label">AWD 赛事</div>
+        <div class="journal-note-value progress-card-value metric-panel-value">{{ awdContests.length }}</div>
+        <div class="journal-note-helper progress-card-hint metric-panel-helper">当前可纳入赛事运维的 AWD 赛事总数</div>
       </article>
-      <article class="journal-note metric-panel-card">
-        <div class="journal-note-label metric-panel-label">推荐赛事</div>
-        <div class="journal-note-value metric-panel-value">
+      <article class="journal-note progress-card metric-panel-card">
+        <div class="journal-note-label progress-card-label metric-panel-label">推荐赛事</div>
+        <div class="journal-note-value progress-card-value metric-panel-value">
           {{ preferredContest ? preferredContest.title : '暂无' }}
         </div>
-        <div class="journal-note-helper metric-panel-helper">优先选择进行中，其次报名中 AWD 赛事</div>
+        <div class="journal-note-helper progress-card-hint metric-panel-helper">
+          优先选择进行中，其次报名中 AWD 赛事
+        </div>
       </article>
-      <article class="journal-note metric-panel-card">
-        <div class="journal-note-label metric-panel-label">{{ currentDefinition.metricLabel }}</div>
-        <div class="journal-note-value metric-panel-value">{{ currentMetricValue }}</div>
-        <div class="journal-note-helper metric-panel-helper">{{ currentDefinition.metricHint }}</div>
+      <article class="journal-note progress-card metric-panel-card">
+        <div class="journal-note-label progress-card-label metric-panel-label">
+          {{ currentDefinition.metricLabel }}
+        </div>
+        <div class="journal-note-value progress-card-value metric-panel-value">
+          {{ currentMetricValue }}
+        </div>
+        <div class="journal-note-helper progress-card-hint metric-panel-helper">
+          {{ currentDefinition.metricHint }}
+        </div>
       </article>
-      <article class="journal-note metric-panel-card">
-        <div class="journal-note-label metric-panel-label">进行中</div>
-        <div class="journal-note-value metric-panel-value">{{ runningCount }}</div>
-        <div class="journal-note-helper metric-panel-helper">可直接承接流量与榜单运维的赛事数量</div>
+      <article class="journal-note progress-card metric-panel-card">
+        <div class="journal-note-label progress-card-label metric-panel-label">进行中</div>
+        <div class="journal-note-value progress-card-value metric-panel-value">{{ runningCount }}</div>
+        <div class="journal-note-helper progress-card-hint metric-panel-helper">
+          可直接承接流量与榜单运维的赛事数量
+        </div>
       </article>
     </div>
 

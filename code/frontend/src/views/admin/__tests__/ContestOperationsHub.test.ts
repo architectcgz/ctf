@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 
 import ContestOperationsHub from '../ContestOperationsHub.vue'
+import contestOperationsHubSource from '../ContestOperationsHub.vue?raw'
 
 const pushMock = vi.fn()
 const routeState = vi.hoisted(() => ({
@@ -86,5 +87,26 @@ describe('ContestOperationsHub', () => {
       params: { id: 'awd-running' },
       query: { panel: 'operations', opsPanel: 'inspector' },
     })
+  })
+
+  it('uses shared list heading and metric panel primitives for the operations workspace header', () => {
+    expect(contestOperationsHubSource).toContain(
+      '<header class="list-heading contest-ops-hero workspace-directory-section">'
+    )
+    expect(contestOperationsHubSource).not.toContain(
+      '<header class="contest-ops-hero workspace-directory-section">'
+    )
+    expect(contestOperationsHubSource).toContain(
+      'class="journal-note progress-card metric-panel-card"'
+    )
+    expect(contestOperationsHubSource).toContain(
+      'class="journal-note-label progress-card-label metric-panel-label"'
+    )
+    expect(contestOperationsHubSource).toContain(
+      'class="journal-note-value progress-card-value metric-panel-value"'
+    )
+    expect(contestOperationsHubSource).toContain(
+      'class="journal-note-helper progress-card-hint metric-panel-helper"'
+    )
   })
 })
