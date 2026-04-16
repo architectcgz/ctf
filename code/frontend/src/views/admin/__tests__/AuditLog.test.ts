@@ -119,6 +119,8 @@ describe('AuditLog', () => {
   })
 
   it('应使用统一进度卡片样式展示审计摘要', () => {
+    expect(auditLogSource).toContain('<div class="workspace-overline">Audit Log</div>')
+    expect(auditLogSource).not.toContain('<div class="journal-eyebrow">Audit Log</div>')
     expect(auditLogSource).toContain(
       'class="admin-summary-grid progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
     )

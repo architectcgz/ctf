@@ -167,7 +167,7 @@ watch(
   >
     <header class="admin-overview">
       <div class="admin-overview__intro">
-        <div class="journal-eyebrow">Audit Log</div>
+        <div class="workspace-overline">Audit Log</div>
         <h1 class="admin-page-title">审计日志</h1>
       </div>
 
