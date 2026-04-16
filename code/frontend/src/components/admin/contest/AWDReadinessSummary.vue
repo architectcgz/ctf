@@ -194,11 +194,13 @@ function formatDateTime(value?: string): string {
         class="workspace-directory-section readiness-decision"
         :class="`readiness-decision--${readinessDecision.key}`"
       >
-        <div>
-          <div class="journal-note-label">Start Decision</div>
-          <h3 class="list-heading__title">{{ readinessDecision.title }}</h3>
-          <p class="readiness-decision__copy">{{ readinessDecision.description }}</p>
-        </div>
+        <header class="list-heading readiness-decision__head">
+          <div>
+            <div class="journal-note-label">Start Decision</div>
+            <h3 class="list-heading__title">{{ readinessDecision.title }}</h3>
+            <p class="readiness-decision__copy">{{ readinessDecision.description }}</p>
+          </div>
+        </header>
         <div class="readiness-decision__meta">
           <span class="readiness-count">阻塞 {{ readiness.blocking_count }} 项</span>
           <span v-if="blockingActionLabels.length > 0" class="readiness-decision__actions">
@@ -344,6 +346,11 @@ function formatDateTime(value?: string): string {
   justify-content: space-between;
   gap: 1rem;
   border: 1px solid color-mix(in srgb, var(--journal-border) 76%, transparent);
+}
+
+.readiness-decision__head {
+  flex: 1 1 22rem;
+  min-width: min(100%, 22rem);
 }
 
 .readiness-decision--ready {
