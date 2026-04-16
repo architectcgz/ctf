@@ -312,11 +312,23 @@ onMounted(() => {
         题目池刷新失败，当前显示上次成功同步的数据。{{ panelLoadError }}
       </p>
 
-      <div class="metric-panel-grid metric-panel-default-surface contest-challenge-panel__summary">
-        <article v-for="item in summaryItems" :key="item.key" class="journal-note metric-panel-card">
-          <div class="journal-note-label metric-panel-label">{{ item.label }}</div>
-          <div class="journal-note-value metric-panel-value">{{ item.value }}</div>
-          <div class="journal-note-helper metric-panel-helper">{{ item.hint }}</div>
+      <div
+        class="progress-strip metric-panel-grid metric-panel-default-surface contest-challenge-panel__summary"
+      >
+        <article
+          v-for="item in summaryItems"
+          :key="item.key"
+          class="journal-note progress-card metric-panel-card"
+        >
+          <div class="journal-note-label progress-card-label metric-panel-label">
+            {{ item.label }}
+          </div>
+          <div class="journal-note-value progress-card-value metric-panel-value">
+            {{ item.value }}
+          </div>
+          <div class="journal-note-helper progress-card-hint metric-panel-helper">
+            {{ item.hint }}
+          </div>
         </article>
       </div>
 
