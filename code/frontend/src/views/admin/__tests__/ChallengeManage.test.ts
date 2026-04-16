@@ -147,11 +147,10 @@ describe('ChallengeManage', () => {
     expect(challengeManageSource).toContain(
       "from '@/components/common/WorkspaceDirectoryToolbar.vue'"
     )
-    expect(challengeManageSource).toContain(
-      "from '@/components/common/WorkspaceDirectoryPagination.vue'"
-    )
+    expect(challengeManageSource).toContain("from '@/components/admin/AdminPaginationControls.vue'")
     expect(challengeManageSource).toContain('<WorkspaceDirectoryToolbar')
-    expect(challengeManageSource).toContain('<WorkspaceDirectoryPagination')
+    expect(challengeManageSource).toContain('<AdminPaginationControls')
+    expect(challengeManageSource).not.toContain('<WorkspaceDirectoryPagination')
     expect(challengeManageSource).not.toContain('<div class="challenge-filter-bar">')
   })
 
