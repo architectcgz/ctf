@@ -1088,7 +1088,7 @@ function handleSubmit() {
           </div>
         </div>
 
-        <div class="checker-preview-toolbar">
+        <div class="list-heading checker-preview-toolbar">
           <p class="checker-preview-toolbar__hint">
             如果当前 checker 使用 ROUND / TEAM_ID 模板变量，试跑会固定使用 `0` 作为占位值。
           </p>
@@ -1152,12 +1152,14 @@ function handleSubmit() {
               :key="action.key"
               class="journal-note checker-preview-action-card"
             >
-              <div class="checker-preview-action-card__top">
-                <div class="journal-note-label">{{ action.label }}</div>
+              <header class="list-heading checker-preview-action-card__top">
+                <h5 class="list-heading__title checker-preview-action-card__title">
+                  {{ action.label }}
+                </h5>
                 <span class="checker-preview-action-card__state">
                   {{ getPreviewActionStateText(action) }}
                 </span>
-              </div>
+              </header>
               <strong class="checker-preview-action-card__path">
                 {{ action.method || 'GET' }} {{ action.path || '/' }}
               </strong>
@@ -1542,11 +1544,13 @@ function handleSubmit() {
 
 .checker-preview-action-card__top,
 .checker-preview-target-card__top {
-  display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.65rem;
+}
+
+.checker-preview-action-card__title {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--color-text-primary);
 }
 
 .checker-preview-action-card__state,
