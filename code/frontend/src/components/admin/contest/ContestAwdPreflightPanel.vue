@@ -41,13 +41,15 @@ function handleNavigateChallenge(challengeId: string) {
         v-if="canForceStart"
         class="workspace-directory-section contest-awd-preflight-panel__override"
       >
-        <div>
-          <div class="journal-note-label">Override Entry</div>
-          <h3 class="list-heading__title">强制开赛</h3>
-          <p class="contest-awd-preflight-panel__override-copy">
-            如果这是演练或临时放行场景，可以直接打开强制开赛弹层，保留原因说明。
-          </p>
-        </div>
+        <header class="list-heading contest-awd-preflight-panel__override-head">
+          <div>
+            <div class="journal-note-label">Override Entry</div>
+            <h3 class="list-heading__title">强制开赛</h3>
+            <p class="contest-awd-preflight-panel__override-copy">
+              如果这是演练或临时放行场景，可以直接打开强制开赛弹层，保留原因说明。
+            </p>
+          </div>
+        </header>
         <button
           id="contest-awd-preflight-force-start"
           type="button"
@@ -86,6 +88,19 @@ function handleNavigateChallenge(challengeId: string) {
   justify-content: space-between;
   gap: 1rem;
   padding: 1.25rem 1.35rem;
+}
+
+.list-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.contest-awd-preflight-panel__override-head {
+  flex: 1 1 22rem;
+  min-width: min(100%, 22rem);
 }
 
 .contest-awd-preflight-panel__override-copy {
