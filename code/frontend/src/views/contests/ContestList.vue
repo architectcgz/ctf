@@ -122,13 +122,13 @@ function contestAccentStyle(status: ContestStatus): Record<string, string> {
 
 <template>
   <section
-    class="journal-shell journal-shell-user journal-eyebrow-text journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
+    class="journal-shell journal-shell-user journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
   >
     <div class="contest-page">
       <header class="contest-topbar">
         <div class="contest-heading">
-          <div class="journal-eyebrow">Contests</div>
-          <h1 class="contest-title">竞赛中心</h1>
+          <div class="workspace-overline">Contests</div>
+          <h1 class="contest-title workspace-page-title">竞赛中心</h1>
           <p class="contest-subtitle">查看当前可参加和已结束的竞赛，直接进入竞赛工作区。</p>
         </div>
       </header>

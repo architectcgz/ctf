@@ -54,6 +54,10 @@ describe('ContestList', () => {
   })
 
   it('竞赛页概况卡片应使用统一 metric-panel 样式类', () => {
+    expect(contestListSource).toContain('<div class="workspace-overline">Contests</div>')
+    expect(contestListSource).toContain('<h1 class="contest-title workspace-page-title">竞赛中心</h1>')
+    expect(contestListSource).not.toContain('<div class="journal-eyebrow">Contests</div>')
+    expect(contestListSource).not.toContain('journal-eyebrow-text')
     expect(contestListSource).toContain('class="contest-summary-grid metric-panel-grid"')
     expect(contestListSource).toContain('class="contest-summary-item metric-panel-card"')
     expect(contestListSource).toContain('class="contest-summary-label metric-panel-label"')

@@ -222,12 +222,12 @@ watch(
 
 <template>
   <section
-    class="journal-shell journal-shell-user journal-eyebrow-text journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
+    class="journal-shell journal-shell-user journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
   >
     <div class="challenge-page">
       <header class="challenge-topbar">
         <div class="challenge-heading">
-          <div class="journal-eyebrow">Challenges</div>
+          <div class="workspace-overline">Challenges</div>
           <h1 class="workspace-page-title challenge-title">靶场训练</h1>
         </div>
 

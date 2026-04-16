@@ -92,9 +92,12 @@ describe('ChallengeList', () => {
   })
 
   it('页头标题与说明应接入共享工作区排版类', () => {
+    expect(challengeListSource).toContain('<div class="workspace-overline">Challenges</div>')
     expect(challengeListSource).toContain(
       '<h1 class="workspace-page-title challenge-title">靶场训练</h1>'
     )
+    expect(challengeListSource).not.toContain('<div class="journal-eyebrow">Challenges</div>')
+    expect(challengeListSource).not.toContain('journal-eyebrow-text')
     expect(challengeListSource).not.toContain('按关键词、分类与难度筛选题目，直接进入训练。')
   })
 
