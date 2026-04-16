@@ -198,6 +198,19 @@ describe('ChallengeDetail', () => {
     expect(challengeDetailSource).not.toContain('<div class="overline">Question</div>')
   })
 
+  it('题目详情 section heading 应切到共享 workspace overline 语义', () => {
+    expect(challengeDetailSource).toContain('<div class="workspace-overline">Statement</div>')
+    expect(challengeDetailSource).toContain('<div class="workspace-overline">Hints</div>')
+    expect(challengeDetailSource).toContain('<div class="workspace-overline">Solutions</div>')
+    expect(challengeDetailSource).toContain('<div class="workspace-overline">Submissions</div>')
+    expect(challengeDetailSource).toContain('<div class="workspace-overline">My Writeup</div>')
+    expect(challengeDetailSource).not.toContain('<div class="overline">Statement</div>')
+    expect(challengeDetailSource).not.toContain('<div class="overline">Hints</div>')
+    expect(challengeDetailSource).not.toContain('<div class="overline">Solutions</div>')
+    expect(challengeDetailSource).not.toContain('<div class="overline">Submissions</div>')
+    expect(challengeDetailSource).not.toContain('<div class="overline">My Writeup</div>')
+  })
+
   it('未解题时应显示题解锁定态', async () => {
     await router.push('/challenges/1')
     await router.isReady()

@@ -632,4 +632,20 @@ describe('ContestDetail', () => {
     expect(contestDetailSource).toContain('<div class="workspace-overline">Contest</div>')
     expect(contestDetailSource).not.toContain('<div class="contest-overline">Contest</div>')
   })
+
+  it('竞赛详情 section heading 应切到共享 workspace overline 语义', () => {
+    expect(contestDetailSource).toContain('<div class="workspace-overline">Rules</div>')
+    expect(contestDetailSource).toContain('<div class="workspace-overline">Schedule</div>')
+    expect(contestDetailSource).toContain('<div class="workspace-overline">Announcements</div>')
+    expect(contestDetailSource).toContain(
+      `<div class="workspace-overline">
+                  {{ contest.mode === 'awd' ? 'Battle' : 'Challenges' }}
+                </div>`
+    )
+    expect(contestDetailSource).toContain('<div class="workspace-overline">Team</div>')
+    expect(contestDetailSource).not.toContain('<div class="contest-overline">Rules</div>')
+    expect(contestDetailSource).not.toContain('<div class="contest-overline">Schedule</div>')
+    expect(contestDetailSource).not.toContain('<div class="contest-overline">Announcements</div>')
+    expect(contestDetailSource).not.toContain('<div class="contest-overline">Team</div>')
+  })
 })
