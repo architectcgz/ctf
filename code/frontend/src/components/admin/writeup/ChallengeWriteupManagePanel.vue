@@ -255,7 +255,7 @@ onMounted(() => {
     <div class="writeup-manage-header">
       <div class="list-heading writeup-manage-heading">
         <div>
-          <div class="journal-note-label">Writeup Directory</div>
+          <div class="workspace-overline">Writeup Directory</div>
           <h1 class="workspace-page-title">题解管理</h1>
         </div>
 
@@ -478,6 +478,14 @@ onMounted(() => {
   font-size: var(--font-size-1-20);
   font-weight: 700;
   color: var(--journal-ink);
+}
+
+.workspace-overline {
+  font-size: var(--font-size-0-70);
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--journal-accent);
 }
 
 .writeup-manage-heading {

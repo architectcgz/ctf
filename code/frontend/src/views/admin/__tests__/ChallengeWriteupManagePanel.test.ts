@@ -52,8 +52,21 @@ describe('ChallengeWriteupManagePanel', () => {
   })
 
   it('应使用统一目录头样式展示题解页头与题解目录', () => {
+    const manageHeadingStart = challengeWriteupManagePanelSource.indexOf(
+      'class="list-heading writeup-manage-heading"'
+    )
+    const manageHeadingSnippet = challengeWriteupManagePanelSource.slice(
+      manageHeadingStart,
+      manageHeadingStart + 220
+    )
+
     expect(challengeWriteupManagePanelSource).toContain(
       'class="list-heading writeup-manage-heading"'
+    )
+    expect(manageHeadingStart).toBeGreaterThan(-1)
+    expect(manageHeadingSnippet).toContain('<div class="workspace-overline">Writeup Directory</div>')
+    expect(manageHeadingSnippet).not.toContain(
+      '<div class="journal-note-label">Writeup Directory</div>'
     )
     expect(challengeWriteupManagePanelSource).toContain(
       '<h1 class="workspace-page-title">题解管理</h1>'

@@ -78,7 +78,7 @@ const {
     />
     <div v-else class="list-heading writeup-tab-heading">
       <div>
-        <div class="journal-note-label">Admin Writeup</div>
+        <div class="workspace-overline">Admin Writeup</div>
         <h1 class="workspace-page-title">题解管理</h1>
       </div>
       <p class="workspace-page-copy">
