@@ -70,6 +70,12 @@ vi.mock('@/composables/useDestructiveConfirm', () => ({
 describe('ChallengeWriteupEditorPage', () => {
   it('嵌入态题解编辑页应使用统一头部样式而不是旧 workspace-tab-heading', () => {
     expect(challengeWriteupEditorSource).toContain('class="list-heading writeup-tab-heading"')
+    expect(challengeWriteupEditorSource).toContain(
+      '<div class="workspace-overline">Admin Writeup</div>'
+    )
+    expect(challengeWriteupEditorSource).not.toContain(
+      '<div class="journal-note-label">Admin Writeup</div>'
+    )
     expect(challengeWriteupEditorSource).toContain('<h1 class="workspace-page-title">题解管理</h1>')
     expect(challengeWriteupEditorSource).not.toContain(
       'class="workspace-tab-heading writeup-tab-heading"'
