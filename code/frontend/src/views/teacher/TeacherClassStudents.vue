@@ -13,9 +13,12 @@ import ClassStudentsPage from '@/components/teacher/class-management/ClassStuden
 import TeacherClassReportExportDialog from '@/components/teacher/reports/TeacherClassReportExportDialog.vue'
 import { useStudentFilters } from '@/composables/useStudentFilters'
 import { useStudentListQuery } from '@/composables/useStudentListQuery'
+import { useAuthStore } from '@/stores/auth'
+import { resolveClassManagementRouteName } from '@/utils/classManagementRouting'
 
 const route = useRoute()
 const router = useRouter()
+const authStore = useAuthStore()
 
 const classes = ref<TeacherClassItem[]>([])
 const review = ref<TeacherClassReviewData | null>(null)
@@ -173,7 +176,9 @@ onMounted(() => {
     :loading-students="loadingStudents"
     :error="error"
     @retry="initialize"
-    @open-class-management="router.push({ name: 'ClassManagement' })"
+    @open-class-management="
+      router.push({ name: resolveClassManagementRouteName(authStore.user?.role) })
+    "
     @open-dashboard="router.push({ name: 'TeacherDashboard' })"
     @open-report-export="openClassReportDialog"
     @select-class="selectClass"

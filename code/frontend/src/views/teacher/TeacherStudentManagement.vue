@@ -9,6 +9,7 @@ import TeacherClassReportExportDialog from '@/components/teacher/reports/Teacher
 import { useStudentFilters } from '@/composables/useStudentFilters'
 import { useStudentListQuery } from '@/composables/useStudentListQuery'
 import { useAuthStore } from '@/stores/auth'
+import { resolveClassManagementRouteName } from '@/utils/classManagementRouting'
 import { DEFAULT_PAGE_SIZE } from '@/utils/constants'
 
 const ALL_CLASSES_KEY = '__all_classes__'
@@ -184,7 +185,9 @@ onMounted(() => {
     :loading-students="loadingStudents"
     :error="error"
     @retry="initialize"
-    @open-class-management="router.push({ name: 'ClassManagement' })"
+    @open-class-management="
+      router.push({ name: resolveClassManagementRouteName(authStore.user?.role) })
+    "
     @open-report-export="openClassReportDialog"
     @update-search-query="updateSearchQuery"
     @update-student-no-query="updateStudentNoQuery"

@@ -262,6 +262,35 @@ describe('TeacherDashboard', () => {
     expect(summary.findAll('.progress-card-hint.metric-panel-helper')).toHaveLength(3)
   })
 
+  it('管理员从教师概览进入班级管理时应回到后台班级页', async () => {
+    const authStore = useAuthStore()
+    authStore.setAuth(
+      {
+        id: 'admin-1',
+        username: 'admin',
+        role: 'admin',
+        class_name: 'Class A',
+      },
+      'token'
+    )
+
+    const wrapper = mount(TeacherDashboard, {
+      global: {
+        stubs: {
+          LineChart: true,
+          SkillRadar: true,
+        },
+      },
+    })
+
+    await flushPromises()
+    await flushPromises()
+
+    wrapper.findComponent({ name: 'TeacherDashboardPage' }).vm.$emit('openClassManagement')
+
+    expect(pushMock).toHaveBeenCalledWith({ name: 'AdminClassManagement' })
+  })
+
   it('切换工作台 tab 时应同步 panel 查询参数且次级标题使用公共样式类', async () => {
     const wrapper = mount(TeacherDashboard, {
       global: {
