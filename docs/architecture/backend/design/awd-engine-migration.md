@@ -2,6 +2,24 @@
 
 > 状态：已采用
 
+## 0. 当前一期落地边界（2026-04-17）
+
+当前仓库已经先落地了 AWD 显式服务模型的前两层，但还没有切换运行态读路径：
+
+- 已落地：独立 `awd_service_templates` 题库
+- 已落地：服务模板后台 CRUD 与基础管理页
+- 已落地：`contest_awd_services` 赛事服务关联存储
+- 已落地：管理员赛事题目列表返回 `awd_service_id / awd_template_id / awd_service_display_name`
+- 未切换：轮次调度 / checker / workspace / flag 注入 / readiness 底层事实源
+
+也就是说，当前已经形成：
+
+1. 模板层：`awd_service_templates`
+2. 赛事服务层：`contest_awd_services`
+3. 兼容运行层：`contest_challenges.awd_*`
+
+其中第 3 层仍然是现阶段运行态的兼容事实源，第 1、2 层为后续 runtime cutover 提供承接点。
+
 ## 1. 背景
 
 当前平台已经有一套可运行的 AWD 基础能力：
@@ -121,7 +139,9 @@
 采用方案 B，在现有平台中加入标准化的 AWD 领域闭环：
 
 - `AWD Contest`：现有 `contests(mode=awd)`，负责比赛窗口、轮次和权重
-- `AWD Service`：现有 `contest_challenges` 在 AWD 赛事里的 service 化配置
+- `AWD Service Template`：`awd_service_templates`，负责独立 AWD 服务模板题库
+- `Contest AWD Service`：`contest_awd_services`，负责模板到赛事题目的显式服务映射
+- `Legacy Contest Challenge Config`：`contest_challenges.awd_*`，当前仍承担兼容运行态配置
 - `AWD Team Target`：现有 `team + challenge + instance` 关系，表示每队每服务的目标实例
 - `AWD Checker`：每轮对目标实例执行 `putflag / getflag / havoc`
 - `AWD Tick Result`：写入 `awd_team_services`，记录本轮服务结果和明细
@@ -146,15 +166,42 @@
 
 ## 6. 数据模型
 
-### 6.1 `contest_challenges` 作为 AWD Service 配置载体
+### 6.1 `awd_service_templates` 作为模板层
 
-本轮不新增平行的 `awd_services` 表，而是在 `contest_challenges` 上扩 AWD 专属字段。
+当前已新增独立 `awd_service_templates`，用于沉淀与复用 AWD 服务模板。
+
+模板层职责：
+
+- 管理独立 AWD 题库，不与普通 Jeopardy 题目语义混用
+- 保存服务类型、部署模式、checker 草稿、访问配置、运行配置和 readiness 草稿状态
+- 为后续赛事服务映射与多场复用提供来源
+
+### 6.2 `contest_awd_services` 作为赛事服务层
+
+当前已新增 `contest_awd_services`，负责把某场 AWD 赛事中的题目映射成显式服务。
+
+核心字段：
+
+- `contest_id`
+- `challenge_id`
+- `template_id`
+- `display_name`
+- `order`
+- `is_visible`
+- `score_config`
+- `runtime_config`
+
+这一层当前已经接入管理员赛事题目增删改链路，但还没有切到运行时读取。
+
+### 6.3 `contest_challenges` 作为兼容运行层
+
+当前运行态仍然依赖 `contest_challenges.awd_*` 作为兼容配置载体。
 
 原因：
 
-- 当前 AWD 全链路已经以 `contest + challenge` 为主关联键
-- `awd_round_flag_support.go`、`awd_check_run.go`、`awd_attack_submit_support.go` 都直接依赖赛事题目关系
-- 继续沿用 `contest_challenges` 可以避免把同一 service 关系拆成两份事实源
+- `awd_round_flag_support.go`、`awd_check_run.go`、`awd_attack_submit_support.go` 仍直接依赖赛事题目关系
+- 先落显式服务模型，再切运行态，可以避免在同一阶段同时改动存储层和裁判链路
+- 这样可以把迁移拆成“先加法落库，再逐步切流”的更安全路径
 
 新增字段建议：
 
