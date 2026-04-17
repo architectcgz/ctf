@@ -1232,6 +1232,29 @@ export interface EnvironmentTemplateData {
   updated_at: ISODateTime
 }
 
+export type AWDServiceType = 'web_http' | 'binary_tcp' | 'multi_container'
+export type AWDDeploymentMode = 'single_container' | 'topology'
+export type AWDServiceTemplateStatus = 'draft' | 'published' | 'archived'
+export type AWDReadinessStatus = 'pending' | 'passed' | 'failed'
+
+export interface AdminAwdServiceTemplateData {
+  id: ID
+  name: string
+  slug: string
+  category: string
+  difficulty: ChallengeDifficulty
+  description: string
+  service_type: AWDServiceType
+  deployment_mode: AWDDeploymentMode
+  version: string
+  status: AWDServiceTemplateStatus
+  readiness_status: AWDReadinessStatus
+  created_by?: ID
+  last_verified_at?: ISODateTime
+  created_at: ISODateTime
+  updated_at: ISODateTime
+}
+
 export interface AdminChallengeListItem {
   id: ID
   title: string

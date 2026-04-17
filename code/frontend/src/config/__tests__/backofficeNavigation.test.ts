@@ -73,7 +73,12 @@ describe('backofficeNavigation', () => {
   it('resolves secondary items from detail routes and preserves the owning entry active state', () => {
     const items = getVisibleBackofficeSecondaryItems('/platform/challenges/11/writeup', 'admin')
 
-    expect(items.map((item) => item.label)).toEqual(['题目管理', '环境模板', '镜像管理'])
+    expect(items.map((item) => item.label)).toEqual([
+      '题目管理',
+      '环境模板',
+      'AWD服务模板',
+      '镜像管理',
+    ])
     expect(items.find((item) => item.active)?.routeName).toBe('ChallengeManage')
   })
 

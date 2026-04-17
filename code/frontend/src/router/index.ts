@@ -570,6 +570,22 @@ const routes: RouteRecordRaw[] = [
         redirect: redirectWithQuery('/platform/environment-templates'),
       },
       {
+        path: 'platform/awd-service-templates',
+        name: 'AdminAWDServiceTemplateLibrary',
+        component: () => import('@/views/admin/AWDServiceTemplateLibrary.vue'),
+        meta: {
+          requiresAuth: true,
+          roles: ['teacher', 'admin'],
+          title: 'AWD 服务模板',
+          icon: 'Shield',
+          contentLayout: 'bleed',
+        },
+      },
+      {
+        path: 'admin/awd-service-templates',
+        redirect: redirectWithQuery('/platform/awd-service-templates'),
+      },
+      {
         path: 'platform/challenges/:id/writeup',
         name: 'AdminChallengeWriteup',
         component: () => import('@/views/admin/ChallengeWriteup.vue'),

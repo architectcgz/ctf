@@ -2,6 +2,7 @@ import { ApiError, request } from './request'
 
 import type {
   AWDAttackLogData,
+  AWDDeploymentMode,
   AWDCheckerPreviewData,
   AWDCheckerType,
   AWDCheckerRunData,
@@ -10,10 +11,13 @@ import type {
   AWDReadinessData,
   AWDReadinessGlobalReason,
   AWDReadinessItemData,
+  AWDReadinessStatus,
   AWDRoundData,
   AWDRoundMetricsData,
   AWDRoundSummaryData,
   AWDRoundSummaryItemData,
+  AWDServiceTemplateStatus,
+  AWDServiceType,
   AWDTrafficEventData,
   AWDTrafficEventPageData,
   AWDTrafficStatusGroup,
@@ -23,6 +27,7 @@ import type {
   AWDTrafficTopTeamData,
   AWDTrafficTrendBucketData,
   AWDTeamServiceData,
+  AdminAwdServiceTemplateData,
   AdminContestChallengeData,
   AdminContestTeamData,
   AdminChallengeHint,
@@ -555,6 +560,31 @@ interface RawEnvironmentTemplateData {
   updated_at: string
 }
 
+interface RawAdminAwdServiceTemplateData {
+  id: string | number
+  name: string
+  slug: string
+  category: string
+  difficulty: AdminAwdServiceTemplateData['difficulty']
+  description: string
+  service_type: AWDServiceType
+  deployment_mode: AWDDeploymentMode
+  version: string
+  status: AWDServiceTemplateStatus
+  readiness_status: AWDReadinessStatus
+  created_by?: string | number | null
+  last_verified_at?: string | null
+  created_at: string
+  updated_at: string
+}
+
+interface RawAdminAwdServiceTemplatePageData {
+  items: RawAdminAwdServiceTemplateData[]
+  total: number
+  page: number
+  size: number
+}
+
 interface RawChallengeFlagConfig {
   flag_type: 'static' | 'dynamic' | 'regex' | 'manual_review'
   flag_regex?: string
@@ -701,6 +731,35 @@ export interface AdminAWDTrafficEventsParams {
   path_keyword?: string
   page?: number
   page_size?: number
+}
+
+export interface AdminAwdServiceTemplateListParams {
+  page?: number
+  page_size?: number
+  keyword?: string
+  service_type?: AWDServiceType
+  status?: AWDServiceTemplateStatus
+}
+
+export interface AdminAwdServiceTemplateCreatePayload {
+  name: string
+  slug: string
+  category: string
+  difficulty: AdminAwdServiceTemplateData['difficulty']
+  description?: string
+  service_type: AWDServiceType
+  deployment_mode: AWDDeploymentMode
+}
+
+export interface AdminAwdServiceTemplateUpdatePayload {
+  name?: string
+  slug?: string
+  category?: string
+  difficulty?: AdminAwdServiceTemplateData['difficulty']
+  description?: string
+  service_type?: AWDServiceType
+  deployment_mode?: AWDDeploymentMode
+  status?: AWDServiceTemplateStatus
 }
 
 function normalizeContestStatus(status: RawContestItem['status']): AdminContestStatus {
@@ -1251,6 +1310,28 @@ function normalizeEnvironmentTemplate(item: RawEnvironmentTemplateData): Environ
   }
 }
 
+function normalizeAdminAwdServiceTemplate(
+  item: RawAdminAwdServiceTemplateData
+): AdminAwdServiceTemplateData {
+  return {
+    id: String(item.id),
+    name: item.name,
+    slug: item.slug,
+    category: item.category,
+    difficulty: item.difficulty,
+    description: item.description,
+    service_type: item.service_type,
+    deployment_mode: item.deployment_mode,
+    version: item.version,
+    status: item.status,
+    readiness_status: item.readiness_status,
+    created_by: item.created_by == null ? undefined : String(item.created_by),
+    last_verified_at: item.last_verified_at || undefined,
+    created_at: item.created_at,
+    updated_at: item.updated_at,
+  }
+}
+
 function normalizeImage(item: RawImageItem): AdminImageListItem {
   return {
     id: String(item.id),
@@ -1744,6 +1825,62 @@ export async function deleteEnvironmentTemplate(id: string) {
   return request<void>({
     method: 'DELETE',
     url: `/authoring/environment-templates/${encodeURIComponent(id)}`,
+    suppressErrorToast: true,
+  })
+}
+
+export async function listAdminAwdServiceTemplates(
+  params?: AdminAwdServiceTemplateListParams
+): Promise<PageResult<AdminAwdServiceTemplateData>> {
+  const response = await request<RawAdminAwdServiceTemplatePageData>({
+    method: 'GET',
+    url: '/authoring/awd-service-templates',
+    params,
+  })
+
+  return {
+    list: response.items.map(normalizeAdminAwdServiceTemplate),
+    total: response.total,
+    page: response.page,
+    page_size: response.size,
+  }
+}
+
+export async function getAdminAwdServiceTemplate(id: string): Promise<AdminAwdServiceTemplateData> {
+  const response = await request<RawAdminAwdServiceTemplateData>({
+    method: 'GET',
+    url: `/authoring/awd-service-templates/${encodeURIComponent(id)}`,
+  })
+  return normalizeAdminAwdServiceTemplate(response)
+}
+
+export async function createAdminAwdServiceTemplate(
+  data: AdminAwdServiceTemplateCreatePayload
+): Promise<AdminAwdServiceTemplateData> {
+  const response = await request<RawAdminAwdServiceTemplateData>({
+    method: 'POST',
+    url: '/authoring/awd-service-templates',
+    data,
+  })
+  return normalizeAdminAwdServiceTemplate(response)
+}
+
+export async function updateAdminAwdServiceTemplate(
+  id: string,
+  data: AdminAwdServiceTemplateUpdatePayload
+): Promise<AdminAwdServiceTemplateData> {
+  const response = await request<RawAdminAwdServiceTemplateData>({
+    method: 'PUT',
+    url: `/authoring/awd-service-templates/${encodeURIComponent(id)}`,
+    data,
+  })
+  return normalizeAdminAwdServiceTemplate(response)
+}
+
+export async function deleteAdminAwdServiceTemplate(id: string) {
+  return request<void>({
+    method: 'DELETE',
+    url: `/authoring/awd-service-templates/${encodeURIComponent(id)}`,
     suppressErrorToast: true,
   })
 }
