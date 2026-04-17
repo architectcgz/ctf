@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
-import { defineComponent, ref } from 'vue'
 
 import LoginView from '@/views/auth/LoginView.vue'
+import loginViewSource from '@/views/auth/LoginView.vue?raw'
 
 const authMocks = vi.hoisted(() => ({
   login: vi.fn(),
@@ -28,37 +28,7 @@ describe('LoginView', () => {
   })
 
   function mountLoginView() {
-    const ElInputStub = defineComponent({
-      props: ['modelValue', 'type', 'autocomplete', 'showPassword', 'size'],
-      emits: ['update:modelValue', 'keyup.enter'],
-      setup(props, { emit, expose }) {
-        const inputRef = ref<HTMLInputElement | null>(null)
-        expose({ input: inputRef })
-        return {
-          inputRef,
-          emitInput: (event: Event) =>
-            emit('update:modelValue', (event.target as HTMLInputElement).value),
-          emitEnter: () => emit('keyup.enter'),
-        }
-      },
-      template:
-        '<input ref="inputRef" :value="modelValue" :type="type || \'text\'" :data-autocomplete="autocomplete" @input="emitInput" @keyup.enter="emitEnter" />',
-    })
-
-    return mount(LoginView, {
-      global: {
-        stubs: {
-          ElForm: { template: '<form @submit.prevent="$emit(\'submit\')"><slot /></form>' },
-          ElFormItem: { template: '<label><slot /></label>' },
-          ElInput: ElInputStub,
-          ElButton: {
-            props: ['loading', 'size', 'type', 'disabled', 'nativeType'],
-            template:
-              '<button :type="nativeType || \'button\'" @click="$emit(\'click\')"><slot /></button>',
-          },
-        },
-      },
-    })
+    return mount(LoginView)
   }
 
   it('不应渲染 CAS 登录入口', async () => {
@@ -80,8 +50,8 @@ describe('LoginView', () => {
     const wrapper = mountLoginView()
     await flushPromises()
 
-    const usernameInput = wrapper.find('input[data-autocomplete="username"]')
-    const passwordInput = wrapper.find('input[data-autocomplete="current-password"]')
+    const usernameInput = wrapper.find('input[autocomplete="username"]')
+    const passwordInput = wrapper.find('input[autocomplete="current-password"]')
 
     expect(usernameInput.exists()).toBe(true)
     expect(passwordInput.exists()).toBe(true)
@@ -104,14 +74,26 @@ describe('LoginView', () => {
     expect(wrapper.get('button').attributes('type')).toBe('submit')
   })
 
+  it('登录表单应切到共享控件原语而不是继续使用 Element Plus 表单', () => {
+    expect(loginViewSource).toContain('class="ui-control-wrap"')
+    expect(loginViewSource).toContain('class="ui-control"')
+    expect(loginViewSource).toContain(
+      'class="ui-btn ui-btn--primary ui-btn--block auth-login-form__submit"'
+    )
+    expect(loginViewSource).not.toContain('<ElForm')
+    expect(loginViewSource).not.toContain('<ElFormItem')
+    expect(loginViewSource).not.toContain('<ElInput')
+    expect(loginViewSource).not.toContain('<ElButton')
+  })
+
   it('密码由浏览器自动填充时，用户名输入框按回车也应触发登录', async () => {
     authMocks.login.mockResolvedValue(undefined)
 
     const wrapper = mountLoginView()
     await flushPromises()
 
-    const usernameInput = wrapper.find('input[data-autocomplete="username"]')
-    const passwordInput = wrapper.find('input[data-autocomplete="current-password"]')
+    const usernameInput = wrapper.find('input[autocomplete="username"]')
+    const passwordInput = wrapper.find('input[autocomplete="current-password"]')
 
     expect(usernameInput.exists()).toBe(true)
     expect(passwordInput.exists()).toBe(true)
@@ -133,8 +115,8 @@ describe('LoginView', () => {
     const wrapper = mountLoginView()
     await flushPromises()
 
-    const usernameInput = wrapper.find('input[data-autocomplete="username"]')
-    const passwordInput = wrapper.find('input[data-autocomplete="current-password"]')
+    const usernameInput = wrapper.find('input[autocomplete="username"]')
+    const passwordInput = wrapper.find('input[autocomplete="current-password"]')
 
     await usernameInput.setValue('alice')
     await passwordInput.setValue('saved-password')
