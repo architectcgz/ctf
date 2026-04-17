@@ -3,6 +3,7 @@ import { computed, watch } from 'vue'
 import { FileDown, RefreshCcw } from 'lucide-vue-next'
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
+import AdminSurfaceModal from '@/components/common/modal-templates/AdminSurfaceModal.vue'
 import TeacherClassInsightsPanel from '@/components/teacher/TeacherClassInsightsPanel.vue'
 import TeacherClassReviewPanel from '@/components/teacher/TeacherClassReviewPanel.vue'
 import TeacherClassTrendPanel from '@/components/teacher/TeacherClassTrendPanel.vue'
@@ -69,36 +70,39 @@ watch(
     void loadPreview()
   }
 )
+
+function closeDialog(): void {
+  dialogVisible.value = false
+}
 </script>
 
 <template>
-  <ElDialog
-    v-model="dialogVisible"
-    width="min(1220px, calc(100vw - 32px))"
-    top="4vh"
-    destroy-on-close
-    class="class-report-dialog teacher-surface-dialog"
+  <AdminSurfaceModal
+    :open="dialogVisible"
+    title="班级报告导出"
+    subtitle="在当前教师上下文内查看班级训练预览，并创建可下载的报告任务。"
+    eyebrow="Class Report"
+    width="74rem"
+    @close="closeDialog"
+    @update:open="dialogVisible = $event"
   >
-    <template #header>
-      <div class="class-report-dialog__header teacher-surface">
-        <div class="class-report-dialog__header-main">
-          <div class="journal-eyebrow">Class Report</div>
-          <h3 class="class-report-dialog__title">班级报告导出</h3>
-          <p class="class-report-dialog__copy">
-            在当前教师上下文内查看班级训练预览，并创建可下载的报告任务。
-          </p>
-        </div>
-
-        <div class="class-report-dialog__header-meta">
-          <span class="teacher-surface-chip">
-            当前班级：{{ previewClassName || normalizedClassNameText }}
-          </span>
-        </div>
-      </div>
-    </template>
-
-    <div class="class-report-dialog__shell teacher-surface">
+    <div class="class-report-dialog__shell">
       <main class="class-report-dialog__main">
+        <section class="class-report-section class-report-section--context">
+          <div class="class-report-section__head">
+            <div>
+              <div class="journal-eyebrow">Current Context</div>
+              <h4 class="class-report-section__title">当前教师上下文</h4>
+              <p class="class-report-section__copy">
+                导出任务会优先使用当前教师绑定班级，也可以临时切换到其他班级。
+              </p>
+            </div>
+            <span class="teacher-surface-chip">
+              当前班级：{{ previewClassName || normalizedClassNameText }}
+            </span>
+          </div>
+        </section>
+
         <section class="class-report-section class-report-section--controls">
           <div class="class-report-section__head">
             <div>
@@ -111,18 +115,20 @@ watch(
           </div>
 
           <div class="class-report-form-grid">
-            <label class="class-report-field">
-              <span class="class-report-field__label">班级名称</span>
-              <input
-                v-model="form.className"
-                type="text"
-                :placeholder="classNamePlaceholder"
-                class="class-report-field__control"
-              />
+            <label class="ui-field class-report-field">
+              <span class="ui-field__label">班级名称</span>
+              <span class="ui-control-wrap">
+                <input
+                  v-model="form.className"
+                  type="text"
+                  :placeholder="classNamePlaceholder"
+                  class="ui-control class-report-field__control"
+                />
+              </span>
             </label>
 
             <fieldset class="class-report-format-group">
-              <legend class="class-report-field__label">导出格式</legend>
+              <legend class="ui-field__label class-report-format-group__label">导出格式</legend>
               <div class="class-report-format-grid">
                 <label
                   class="class-report-format-option"
@@ -154,7 +160,7 @@ watch(
           <div class="class-report-section__actions" role="group" aria-label="班级报告操作">
             <button
               type="button"
-              class="teacher-btn teacher-btn--ghost"
+              class="ui-btn ui-btn--secondary"
               :disabled="previewLoading"
               @click="loadPreview"
             >
@@ -163,7 +169,7 @@ watch(
             </button>
             <button
               type="button"
-              class="teacher-btn teacher-btn--primary"
+              class="ui-btn ui-btn--primary"
               :disabled="submitting"
               @click="handleExport"
             >
@@ -327,7 +333,7 @@ watch(
 
             <button
               type="button"
-              class="teacher-btn teacher-btn--primary class-report-task-download"
+              class="ui-btn ui-btn--primary class-report-task-download"
               :disabled="downloading || latestExport.result.status !== 'ready'"
               @click="handleDownload"
             >
@@ -360,33 +366,24 @@ watch(
         </section>
       </aside>
     </div>
-  </ElDialog>
+
+    <template #footer>
+      <div class="class-report-dialog__footer">
+        <button type="button" class="ui-btn ui-btn--secondary" @click="closeDialog">取消</button>
+        <button
+          type="button"
+          class="ui-btn ui-btn--primary"
+          :disabled="submitting"
+          @click="handleExport"
+        >
+          {{ submitting ? '提交中...' : '创建导出任务' }}
+        </button>
+      </div>
+    </template>
+  </AdminSurfaceModal>
 </template>
 
 <style scoped>
-.class-report-dialog__header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-4);
-}
-
-.class-report-dialog__title {
-  margin: var(--space-3) 0 0;
-  font-size: clamp(1.5rem, 2vw, 1.9rem);
-  line-height: 1.1;
-  letter-spacing: -0.03em;
-  color: var(--journal-ink);
-}
-
-.class-report-dialog__copy {
-  margin-top: var(--space-2);
-  max-width: 42rem;
-  font-size: var(--font-size-0-88);
-  line-height: 1.7;
-  color: var(--journal-muted);
-}
-
 .class-report-dialog__shell {
   display: grid;
   grid-template-columns: minmax(0, 1.7fr) minmax(18rem, 0.95fr);
@@ -434,38 +431,11 @@ watch(
 }
 
 .class-report-field {
-  display: grid;
-  gap: var(--space-2);
-}
-
-.class-report-field__label {
-  font-size: var(--font-size-0-78);
-  font-weight: 600;
-  color: var(--journal-muted);
+  --ui-field-gap: var(--space-2);
 }
 
 .class-report-field__control {
   width: 100%;
-  border: 1px solid color-mix(in srgb, var(--journal-border) 82%, transparent);
-  border-radius: 14px;
-  background: color-mix(in srgb, var(--journal-surface) 86%, var(--color-bg-base));
-  padding: 0.9rem 1rem;
-  font-size: var(--font-size-0-88);
-  color: var(--journal-ink);
-  outline: none;
-  transition:
-    border-color 160ms ease,
-    box-shadow 160ms ease,
-    background 160ms ease;
-}
-
-.class-report-field__control:focus {
-  border-color: color-mix(in srgb, var(--journal-accent) 50%, transparent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--journal-accent) 12%, transparent);
-}
-
-.class-report-field__control::placeholder {
-  color: color-mix(in srgb, var(--journal-muted) 76%, transparent);
 }
 
 .class-report-format-group {
@@ -475,11 +445,15 @@ watch(
   padding: 0;
 }
 
+.class-report-format-group__label {
+  display: block;
+  margin-bottom: var(--space-2);
+}
+
 .class-report-format-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-3);
-  margin-top: var(--space-2);
 }
 
 .class-report-format-option {
@@ -667,6 +641,7 @@ watch(
 
 .class-report-task-download {
   width: 100%;
+  justify-content: center;
 }
 
 .class-report-guide-list {
@@ -681,6 +656,13 @@ watch(
   line-height: 1.7;
 }
 
+.class-report-dialog__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
 @keyframes class-report-pulse {
   0%,
   100% {
@@ -692,26 +674,6 @@ watch(
   }
 }
 
-:deep(.class-report-dialog .el-dialog) {
-  border: 1px solid color-mix(in srgb, var(--journal-border) 78%, transparent);
-  border-radius: 24px;
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--journal-surface) 98%, var(--color-bg-base)),
-    color-mix(in srgb, var(--journal-surface-subtle) 96%, var(--color-bg-base))
-  );
-  box-shadow: 0 24px 60px var(--color-shadow-soft);
-}
-
-:deep(.class-report-dialog .el-dialog__header) {
-  margin-right: 0;
-  padding: var(--space-5) var(--space-5) 0;
-}
-
-:deep(.class-report-dialog .el-dialog__body) {
-  padding: var(--space-4) var(--space-5) var(--space-5);
-}
-
 @media (max-width: 1180px) {
   .class-report-dialog__shell {
     grid-template-columns: minmax(0, 1fr);
@@ -719,18 +681,27 @@ watch(
 }
 
 @media (max-width: 720px) {
-  .class-report-dialog__header {
-    flex-direction: column;
-  }
-
   .class-report-format-grid,
   .class-report-preview-summary__grid,
   .class-report-kpi-grid {
     grid-template-columns: minmax(0, 1fr);
   }
 
+  .class-report-section__head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
   .class-report-task-banner {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .class-report-dialog__footer {
+    flex-direction: column-reverse;
+  }
+
+  .class-report-dialog__footer > .ui-btn {
+    width: 100%;
   }
 }
 </style>

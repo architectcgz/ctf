@@ -3,6 +3,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import { flushPromises, mount } from '@vue/test-utils'
 
 import TeacherClassReportExportDialog from '../TeacherClassReportExportDialog.vue'
+import teacherClassReportExportDialogSource from '../TeacherClassReportExportDialog.vue?raw'
 import { useAuthStore } from '@/stores/auth'
 
 const {
@@ -40,8 +41,8 @@ describe('TeacherClassReportExportDialog', () => {
   let pinia: ReturnType<typeof createPinia>
 
   const dialogStub = {
-    props: ['modelValue'],
-    template: '<div v-if="modelValue"><slot name="header" /><slot /><slot name="footer" /></div>',
+    props: ['open'],
+    template: '<div v-if="open"><slot /><slot name="footer" /></div>',
   }
 
   beforeEach(() => {
@@ -128,7 +129,7 @@ describe('TeacherClassReportExportDialog', () => {
       global: {
         plugins: [pinia],
         stubs: {
-          ElDialog: dialogStub,
+          AdminSurfaceModal: dialogStub,
           LineChart: true,
         },
       },
@@ -141,6 +142,19 @@ describe('TeacherClassReportExportDialog', () => {
     expect(getClassSummaryMock).toHaveBeenCalledWith('Class A')
     expect(getClassTrendMock).toHaveBeenCalledWith('Class A')
     expect(wrapper.text()).toContain('当前班级报告预览')
+  })
+
+  it('教师班级报告导出弹窗应接入后台共享弹窗与表单原语', () => {
+    expect(teacherClassReportExportDialogSource).toContain(
+      "from '@/components/common/modal-templates/AdminSurfaceModal.vue'"
+    )
+    expect(teacherClassReportExportDialogSource).toContain('<AdminSurfaceModal')
+    expect(teacherClassReportExportDialogSource).not.toContain('<ElDialog')
+    expect(teacherClassReportExportDialogSource).toContain('class="ui-field')
+    expect(teacherClassReportExportDialogSource).toContain('class="ui-control-wrap')
+    expect(teacherClassReportExportDialogSource).toContain('class="ui-control')
+    expect(teacherClassReportExportDialogSource).toContain('class="ui-btn ui-btn--secondary')
+    expect(teacherClassReportExportDialogSource).toContain('class="ui-btn ui-btn--primary')
   })
 
   it('点击创建导出任务会调用 exportClassReport', async () => {
@@ -162,7 +176,7 @@ describe('TeacherClassReportExportDialog', () => {
       global: {
         plugins: [pinia],
         stubs: {
-          ElDialog: dialogStub,
+          AdminSurfaceModal: dialogStub,
           LineChart: true,
         },
       },
@@ -201,7 +215,7 @@ describe('TeacherClassReportExportDialog', () => {
       global: {
         plugins: [pinia],
         stubs: {
-          ElDialog: dialogStub,
+          AdminSurfaceModal: dialogStub,
           LineChart: true,
         },
       },
