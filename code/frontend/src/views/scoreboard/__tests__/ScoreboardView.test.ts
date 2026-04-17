@@ -412,6 +412,11 @@ describe('ScoreboardView', () => {
     expect(scoreboardSource).not.toContain('journal-eyebrow-text')
   })
 
+  it('排行榜空态操作按钮应接入共享 ui-btn 原语', () => {
+    expect(scoreboardSource).toContain('class="ui-btn ui-btn--secondary"')
+    expect(scoreboardSource).not.toContain('class="scoreboard-btn"')
+  })
+
   it('提供竞赛排行榜与积分排行榜两个页签，并展示积分榜字段', async () => {
     getPracticeRankingMock.mockResolvedValue([
       {
