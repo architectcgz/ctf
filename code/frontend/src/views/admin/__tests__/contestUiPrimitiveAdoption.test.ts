@@ -12,10 +12,9 @@ describe('contest ui primitive adoption', () => {
 
     expect(contestOrchestrationSource).toContain('class="ui-btn ui-btn--ghost"')
     expect(contestOrchestrationSource).toContain('class="ui-btn ui-btn--primary"')
-    expect(contestOrchestrationSource).toContain('class="ui-btn ui-btn--link contest-inline-link"')
     expect(contestOrchestrationSource).toContain('class="ui-field contest-filter-field"')
     expect(contestOrchestrationSource).toContain('class="ui-control-wrap"')
-    expect(contestOrchestrationSource).toContain('class="ui-control"')
+    expect(contestOrchestrationSource).toContain('class="ui-control contest-filter-control"')
   })
 
   it('contest form should consume shared field and button primitives', () => {
@@ -31,6 +30,7 @@ describe('contest ui primitive adoption', () => {
     expect(adminContestTableSource).toContain('class="ui-row-actions contest-row__actions"')
     expect(adminContestTableSource).toContain('class="ui-btn ui-btn--sm ui-btn--primary')
     expect(adminContestTableSource).toContain('class="ui-btn ui-btn--sm ui-btn--secondary')
+    expect(adminContestTableSource).toContain('contest-action--workbench')
     expect(adminContestTableSource).not.toContain('class="contest-action contest-action--primary"')
     expect(adminContestTableSource).not.toContain('class="contest-action contest-action--ghost"')
   })
