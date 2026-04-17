@@ -1411,7 +1411,7 @@ const {
                 <button
                   v-if="!isTemplateLibraryMode"
                   type="button"
-                  class="inline-flex items-center gap-2 self-end rounded-xl border border-danger/30 bg-danger/10 px-4 py-3 text-sm font-medium text-danger transition hover:bg-danger/15"
+                  class="ui-btn ui-btn--danger self-end"
                   :disabled="saving || !topology"
                   @click="void handleDeleteTopology()"
                 >

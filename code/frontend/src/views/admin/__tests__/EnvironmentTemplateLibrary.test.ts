@@ -147,4 +147,13 @@ describe('EnvironmentTemplateLibrary', () => {
       "isTemplateLibraryMode\n                            ? 'template-action-btn template-action-btn--primary'\n                            : 'inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white transition hover:opacity-90'"
     )
   })
+
+  it('挑战工作区删除拓扑按钮应复用危险按钮原语', () => {
+    expect(challengeTopologyStudioPageSource).toMatch(
+      /class="ui-btn ui-btn--danger self-end"\s+:disabled="saving \|\| !topology"\s+@click="void handleDeleteTopology\(\)"/
+    )
+    expect(challengeTopologyStudioPageSource).not.toContain(
+      'class="inline-flex items-center gap-2 self-end rounded-xl border border-danger/30 bg-danger/10 px-4 py-3 text-sm font-medium text-danger transition hover:bg-danger/15"'
+    )
+  })
 })
