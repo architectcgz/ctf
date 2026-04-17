@@ -89,12 +89,9 @@ export function useNotificationDropdown(realtimeStatus: () => WebSocketStatus) {
   const open = ref(false)
   const trigger = useTemplateRef<HTMLButtonElement>('trigger')
   const panel = useTemplateRef<HTMLDivElement>('panel')
-  const panelStyle = ref<Record<string, string>>({})
-  const repositionPanel = () => updatePanelPosition()
 
   const unreadCount = computed(() => store.unreadCount)
   const items = computed(() => store.notifications)
-  const previewItems = computed(() => items.value.slice(0, 6))
   const statusMeta = computed<StatusMeta>(() => {
     if (realtimeStatus() === 'open') {
       return { label: '实时在线', accentColor: 'var(--color-success)' }
@@ -115,27 +112,6 @@ export function useNotificationDropdown(realtimeStatus: () => WebSocketStatus) {
 
   function typeMeta(type: string): NotificationTypeMeta {
     return typeMap[type] || fallbackTypeMeta
-  }
-
-  function updatePanelPosition() {
-    if (!trigger.value) {
-      return
-    }
-
-    const rect = trigger.value.getBoundingClientRect()
-    const viewportPadding = 12
-    const panelWidth = Math.min(440, window.innerWidth - viewportPadding * 2)
-    const left = Math.min(
-      Math.max(viewportPadding, rect.right - panelWidth),
-      window.innerWidth - panelWidth - viewportPadding
-    )
-    const top = rect.bottom + 10
-
-    panelStyle.value = {
-      top: `${top}px`,
-      left: `${left}px`,
-      width: `${panelWidth}px`,
-    }
   }
 
   function close() {
@@ -170,36 +146,33 @@ export function useNotificationDropdown(realtimeStatus: () => WebSocketStatus) {
       }
     })
 
+    if (failedCount === 0) {
+      store.markAllRead()
+    }
+
     if (failedCount > 0) {
       toast.warning(`部分通知标记失败（${failedCount} 条）`)
     }
   }
 
+  function handleDocumentKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Escape') {
+      close()
+    }
+  }
+
   watch(open, (isOpen) => {
-    if (!isOpen) {
+    document.body.style.overflow = isOpen ? 'hidden' : ''
+    if (isOpen) {
+      document.addEventListener('keydown', handleDocumentKeydown)
       return
     }
-
-    updatePanelPosition()
-    window.addEventListener('resize', repositionPanel)
-    window.addEventListener('scroll', repositionPanel, true)
-
-    const cleanup = () => {
-      window.removeEventListener('resize', repositionPanel)
-      window.removeEventListener('scroll', repositionPanel, true)
-    }
-
-    const stop = watch(open, (next) => {
-      if (!next) {
-        cleanup()
-        stop()
-      }
-    })
+    document.removeEventListener('keydown', handleDocumentKeydown)
   })
 
   onBeforeUnmount(() => {
-    window.removeEventListener('resize', repositionPanel)
-    window.removeEventListener('scroll', repositionPanel, true)
+    document.body.style.overflow = ''
+    document.removeEventListener('keydown', handleDocumentKeydown)
   })
 
   return {
@@ -208,10 +181,8 @@ export function useNotificationDropdown(realtimeStatus: () => WebSocketStatus) {
     open,
     trigger,
     panel,
-    panelStyle,
     unreadCount,
     items,
-    previewItems,
     statusMeta,
     statusPillStyle,
     typeMeta,
