@@ -10,13 +10,13 @@
       />
 
       <aside
-        class="fixed inset-y-0 left-0 z-50 flex w-64 shrink-0 flex-col border-r border-slate-200 bg-white transition-all duration-300 md:hidden"
+        class="fixed inset-y-0 left-0 z-50 flex w-[260px] shrink-0 flex-col border-r border-slate-200 bg-white transition-all duration-300 md:hidden"
         :class="mobileOpen ? 'translate-x-0' : '-translate-x-full'"
       >
         <div class="relative flex h-16 items-center border-b border-slate-100 px-5 overflow-hidden whitespace-nowrap">
           <div class="flex items-center gap-3">
             <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-900 shadow-sm">
-              <Database class="h-4 w-4 text-white" />
+              <Box class="h-4 w-4 text-white" />
             </div>
             <span class="font-black text-lg tracking-tight uppercase text-slate-900">
               Challenge<span class="text-blue-600">Ops</span>
@@ -34,7 +34,7 @@
 
         <div class="px-6 py-5 overflow-hidden whitespace-nowrap transition-all duration-200">
           <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">
-            Main Navigation
+            Workspace
           </span>
         </div>
 
@@ -49,7 +49,7 @@
               <div class="flex items-center gap-3">
                 <div
                   class="shrink-0"
-                  :class="isItemActive(item) ? 'text-blue-500' : 'text-slate-400'"
+                  :class="backofficeItemIconClass(item)"
                 >
                   <component :is="item.icon" class="h-[18px] w-[18px]" />
                 </div>
@@ -71,17 +71,21 @@
 
             <div
               v-if="item.children?.length && isBackofficeItemExpanded(item)"
-              class="mt-1.5 flex flex-col gap-1 pl-11 pr-2 animate-in slide-in-from-top-2 duration-200"
+              class="mt-1 mb-2 ml-[22px] pl-3 border-l-2 border-slate-100 flex flex-col gap-1 animate-in slide-in-from-top-2 duration-200"
             >
               <button
                 v-for="child in item.children"
                 :key="child.name"
                 type="button"
-                class="text-left py-2 px-3 rounded-lg text-[13px] transition-all font-medium"
+                class="text-left py-2 px-3 rounded-lg text-[13px] transition-all relative group"
                 :class="backofficeChildButtonClass(child)"
                 @click="navigate(child)"
               >
-                {{ child.title }}
+                <div
+                  v-if="isItemActive(child)"
+                  class="absolute -left-[14px] top-1/2 -translate-y-1/2 w-[3px] h-4 bg-blue-600 rounded-full"
+                />
+                <span class="relative z-10">{{ child.title }}</span>
               </button>
             </div>
           </div>
@@ -89,12 +93,12 @@
       </aside>
 
       <aside
-        class="relative z-30 hidden h-screen shrink-0 flex-col border-r border-slate-200 bg-white transition-all duration-300 md:flex"
-        :class="collapsed ? 'w-20' : 'w-64'"
+        class="relative z-[60] hidden h-screen shrink-0 flex-col border-r border-slate-200 bg-white transition-all duration-300 md:flex"
+        :class="collapsed ? 'w-20' : 'w-[260px]'"
       >
         <button
           type="button"
-          class="absolute -right-3.5 top-6 bg-white border border-slate-200 rounded-full p-1.5 text-slate-400 hover:text-blue-600 hover:border-blue-300 hover:shadow-md shadow-sm z-50 transition-all cursor-pointer"
+          class="absolute -right-3.5 top-5 bg-white border border-slate-200 rounded-full p-1.5 text-slate-400 hover:text-blue-600 hover:border-blue-300 hover:shadow-md shadow-sm z-10 transition-all cursor-pointer"
           :aria-label="collapsed ? '展开导航' : '折叠导航'"
           @click="emit('toggleCollapse')"
         >
@@ -107,7 +111,7 @@
         >
           <div class="flex items-center gap-3">
             <div class="w-8 h-8 shrink-0 bg-slate-900 rounded-lg flex items-center justify-center shadow-sm">
-              <Database class="h-4 w-4 text-white" />
+              <Box class="h-4 w-4 text-white" />
             </div>
             <span
               class="font-black text-lg tracking-tight uppercase text-slate-900 transition-opacity duration-200"
@@ -123,7 +127,7 @@
           :class="collapsed ? 'opacity-0 h-0 p-0' : 'opacity-100 h-14'"
         >
           <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-            Main Navigation
+            Workspace
           </span>
         </div>
 
@@ -142,7 +146,7 @@
               <div class="flex items-center gap-3">
                 <div
                   class="shrink-0"
-                  :class="isItemActive(item) ? 'text-blue-500' : 'text-slate-400'"
+                  :class="backofficeItemIconClass(item)"
                 >
                   <component :is="item.icon" class="h-[18px] w-[18px]" />
                 </div>
@@ -167,17 +171,21 @@
 
             <div
               v-if="item.children?.length && isBackofficeItemExpanded(item) && !collapsed"
-              class="mt-1.5 flex flex-col gap-1 pl-11 pr-2 animate-in slide-in-from-top-2 duration-200"
+              class="mt-1 mb-2 ml-[22px] pl-3 border-l-2 border-slate-100 flex flex-col gap-1 animate-in slide-in-from-top-2 duration-200"
             >
               <button
                 v-for="child in item.children"
                 :key="child.name"
                 type="button"
-                class="text-left py-2 px-3 rounded-lg text-[13px] transition-all font-medium"
+                class="text-left py-2 px-3 rounded-lg text-[13px] transition-all relative group"
                 :class="backofficeChildButtonClass(child)"
                 @click="navigate(child)"
               >
-                {{ child.title }}
+                <div
+                  v-if="isItemActive(child)"
+                  class="absolute -left-[14px] top-1/2 -translate-y-1/2 w-[3px] h-4 bg-blue-600 rounded-full"
+                />
+                <span class="relative z-10">{{ child.title }}</span>
               </button>
             </div>
           </div>
@@ -430,12 +438,12 @@ import {
 import {
   BarChart3,
   Bell,
+  Box,
   ChevronLeft,
   ChevronDown,
   ChevronRight,
   Circle,
   ClipboardList,
-  Database,
   FileDown,
   GraduationCap,
   LayoutDashboard,
@@ -650,16 +658,44 @@ function itemClass(item: NavItem): string {
   return isItemActive(item) ? 'sidebar-item-active' : 'sidebar-item-idle'
 }
 
+function hasBackofficeChildren(item: NavItem): boolean {
+  return (item.children?.length ?? 0) > 0
+}
+
+function isBackofficeParentOfActive(item: NavItem): boolean {
+  return hasBackofficeChildren(item) && item.children!.some((child) => isItemActive(child))
+}
+
+function isBackofficeStandaloneActive(item: NavItem): boolean {
+  return !hasBackofficeChildren(item) && isItemActive(item)
+}
+
+function isBackofficeParentHighlighted(item: NavItem): boolean {
+  return hasBackofficeChildren(item) && (isBackofficeParentOfActive(item) || isBackofficeItemExpanded(item))
+}
+
 function backofficeItemButtonClass(item: NavItem): string {
-  return isItemActive(item)
-    ? 'bg-blue-50 text-blue-600 font-bold shadow-sm border border-blue-100/50'
-    : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50 font-medium border border-transparent'
+  if (isBackofficeStandaloneActive(item)) {
+    return 'bg-blue-50 text-blue-600 font-bold shadow-sm'
+  }
+
+  if (isBackofficeParentHighlighted(item)) {
+    return 'text-slate-900 font-bold'
+  }
+
+  return 'text-slate-500 hover:text-slate-900 hover:bg-slate-50 font-medium'
+}
+
+function backofficeItemIconClass(item: NavItem): string {
+  return isBackofficeStandaloneActive(item) || isBackofficeParentHighlighted(item)
+    ? 'text-blue-600'
+    : 'text-slate-400'
 }
 
 function backofficeChildButtonClass(item: NavItem): string {
   return isItemActive(item)
-    ? 'text-blue-700 bg-white shadow-sm border border-slate-100'
-    : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
+    ? 'text-blue-700 font-bold bg-blue-50/70'
+    : 'text-slate-500 font-medium hover:text-slate-900 hover:bg-slate-50'
 }
 
 function childItemClass(item: NavItem): string {
@@ -677,7 +713,7 @@ function isMenuExpanded(name: string): boolean {
 }
 
 function isBackofficeItemExpanded(item: NavItem): boolean {
-  return isItemActive(item) || isMenuExpanded(item.name)
+  return expandedMenus.value[item.name] ?? (isBackofficeParentOfActive(item) || isMenuExpanded(item.name))
 }
 
 function toggleMenu(name: string): void {
