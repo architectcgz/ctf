@@ -85,11 +85,23 @@ describe('NotificationDropdown', () => {
   it('uses the notification spec drawer shell instead of the old floating panel', () => {
     expect(notificationDropdownSource).toContain('<Transition appear name="notification-shell">')
     expect(notificationDropdownSource).toContain('Notification Hub')
-    expect(notificationDropdownSource).toContain('fixed top-0 right-0 h-screen w-full sm:w-[420px]')
+    expect(notificationDropdownSource).toContain('class="notification-drawer')
+    expect(notificationDropdownSource).toContain('fixed top-0 right-0')
+    expect(notificationDropdownSource).toContain('h-screen')
+    expect(notificationDropdownSource).toContain('sm:w-[420px]')
     expect(notificationDropdownSource).toContain('全部标为已读')
     expect(notificationDropdownSource).toContain('End of Notifications')
     expect(notificationDropdownSource).toContain('.notification-shell-enter-active')
     expect(notificationDropdownSource).not.toContain('notification-panel overflow-hidden border-l-2')
+  })
+
+  it('tokenizes drawer and timeline surfaces so dark theme does not leak white panels', () => {
+    expect(notificationDropdownSource).toContain('--notification-surface')
+    expect(notificationDropdownSource).toContain('--notification-line')
+    expect(notificationDropdownSource).toContain('class="notification-drawer')
+    expect(notificationDropdownSource).toContain('class="notification-panel-head')
+    expect(notificationDropdownSource).toContain('class="notification-panel-body')
+    expect(notificationDropdownSource).toContain(":global([data-theme='dark']) .notification-drawer")
   })
 
   it('navigates to notification detail when clicking a timeline item', async () => {

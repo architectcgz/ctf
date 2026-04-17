@@ -5,6 +5,7 @@
     >
       <div class="topnav-main flex min-w-0 items-center gap-3 md:gap-4">
         <button
+          v-if="!isBackofficeRoute || isMobile"
           type="button"
           class="topnav-icon-button"
           :aria-label="sidebarCollapsed ? '展开导航' : '折叠导航'"
@@ -230,6 +231,17 @@ onUnmounted(() => {
 
 <style scoped>
 .topnav-shell {
+  --topnav-surface: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
+  --topnav-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 84%, var(--color-bg-base));
+  --topnav-surface-elevated: color-mix(in srgb, var(--color-bg-elevated) 86%, var(--color-bg-surface));
+  --topnav-line: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  --topnav-line-strong: color-mix(in srgb, var(--color-border-default) 88%, transparent);
+  --topnav-text: color-mix(in srgb, var(--color-text-primary) 94%, transparent);
+  --topnav-muted: color-mix(in srgb, var(--color-text-secondary) 92%, transparent);
+  --topnav-faint: color-mix(in srgb, var(--color-text-muted) 92%, transparent);
+  --topnav-soft-accent: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  --topnav-danger-line: color-mix(in srgb, var(--color-danger) 30%, var(--topnav-line));
+  --topnav-danger-soft: color-mix(in srgb, var(--color-danger) 12%, var(--topnav-surface));
   border-bottom: 1px solid color-mix(in srgb, var(--color-border-default) 76%, transparent);
   background:
     linear-gradient(
@@ -246,8 +258,18 @@ onUnmounted(() => {
 }
 
 .topnav-shell--admin {
-  border-bottom-color: #e2e8f0;
-  background: white;
+  border-bottom-color: var(--topnav-line-strong);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--topnav-surface) 98%, transparent),
+      color-mix(in srgb, var(--topnav-surface-subtle) 96%, transparent)
+    ),
+    radial-gradient(
+      circle at top left,
+      color-mix(in srgb, var(--color-primary) 8%, transparent),
+      transparent 20rem
+    );
   backdrop-filter: none;
 }
 
@@ -266,15 +288,15 @@ onUnmounted(() => {
   align-items: center;
   gap: 0.25rem;
   padding: 0.2rem;
-  border: 1px solid #f1f5f9;
+  border: 1px solid var(--topnav-line);
   border-radius: 12px;
-  background: #f8fafc;
+  background: var(--topnav-surface-subtle);
 }
 
 .topnav-tool-cluster--admin {
-  border-color: #f1f5f9;
+  border-color: var(--topnav-line);
   border-radius: 999px;
-  background: white;
+  background: var(--topnav-surface);
 }
 
 .topnav-brand-picker {
@@ -291,10 +313,10 @@ onUnmounted(() => {
   align-items: center;
   gap: 0.45rem;
   padding: 0.55rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--topnav-line-strong);
   border-radius: 999px;
-  background: white;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+  background: var(--topnav-surface-elevated);
+  box-shadow: 0 10px 25px color-mix(in srgb, var(--color-shadow-soft) 68%, transparent);
 }
 
 .topnav-brand-dot {
@@ -332,25 +354,25 @@ onUnmounted(() => {
 
 .topnav-brand-dot--active {
   box-shadow:
-    0 0 0 2px white,
-    0 0 0 4px rgba(37, 99, 235, 0.2);
+    0 0 0 2px var(--topnav-surface-elevated),
+    0 0 0 4px color-mix(in srgb, var(--color-primary) 22%, transparent);
 }
 
 .topnav-actions :deep(.notification-trigger) {
   height: 2.25rem;
   width: 2.25rem;
   border-radius: 10px;
-  border: 1px solid #f1f5f9;
-  background: white;
-  color: #64748b;
+  border: 1px solid var(--topnav-line);
+  background: var(--topnav-surface);
+  color: var(--topnav-muted);
   box-shadow: none;
   transition: all 0.2s ease;
 }
 
 .topnav-actions :deep(.notification-trigger:hover) {
-  border-color: #e2e8f0;
-  background: #f8fafc;
-  color: #0f172a;
+  border-color: var(--topnav-line-strong);
+  background: var(--topnav-surface-subtle);
+  color: var(--topnav-text);
 }
 
 .topnav-icon-button {
@@ -360,16 +382,16 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   border-radius: 10px;
-  border: 1px solid #f1f5f9;
-  background: white;
-  color: #64748b;
+  border: 1px solid var(--topnav-line);
+  background: var(--topnav-surface);
+  color: var(--topnav-muted);
   transition: all 0.2s ease;
 }
 
 .topnav-icon-button:hover {
-  color: #0f172a;
-  border-color: #e2e8f0;
-  background: #f8fafc;
+  color: var(--topnav-text);
+  border-color: var(--topnav-line-strong);
+  background: var(--topnav-surface-subtle);
 }
 
 .topnav-icon-button--quiet {
@@ -378,19 +400,19 @@ onUnmounted(() => {
 }
 
 .text-slate-500 {
-  color: #64748b;
+  color: var(--topnav-muted);
 }
 
 .text-slate-400 {
-  color: #94a3b8;
+  color: var(--topnav-faint);
 }
 
 .text-slate-300 {
-  color: #cbd5e1;
+  color: color-mix(in srgb, var(--topnav-line-strong) 92%, transparent);
 }
 
 .text-slate-900 {
-  color: #0f172a;
+  color: var(--topnav-text);
 }
 
 .font-bold {
@@ -410,17 +432,17 @@ onUnmounted(() => {
 }
 
 .topnav-user-card {
-  border: 1px solid #f1f5f9;
+  border: 1px solid var(--topnav-line);
   border-radius: 12px;
-  background: white;
+  background: var(--topnav-surface);
   min-height: 2.5rem;
   padding: 0 0.75rem;
 }
 
 .topnav-user-card--admin {
   border-radius: 999px;
-  background: white;
-  border-color: #f1f5f9;
+  background: var(--topnav-surface);
+  border-color: var(--topnav-line);
 }
 
 .topnav-user-mark {
@@ -430,11 +452,11 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   border-radius: 8px;
-  border: 1px solid #e2e8f0;
-  background: #f8fafc;
+  border: 1px solid var(--topnav-line-strong);
+  background: var(--topnav-surface-subtle);
   font-size: 0.7rem;
   font-weight: 800;
-  color: #475569;
+  color: var(--topnav-muted);
 }
 
 .topnav-shell--admin .topnav-user-mark {
@@ -444,14 +466,14 @@ onUnmounted(() => {
 .topnav-shell--admin .topnav-icon-button,
 .topnav-shell--admin .topnav-actions :deep(.notification-trigger) {
   border-radius: 999px;
-  border-color: #f1f5f9;
-  background: white;
+  border-color: var(--topnav-line);
+  background: var(--topnav-surface);
 }
 
 .topnav-shell--admin .topnav-icon-button:hover,
 .topnav-shell--admin .topnav-actions :deep(.notification-trigger:hover) {
-  border-color: #e2e8f0;
-  background: #f8fafc;
+  border-color: var(--topnav-line-strong);
+  background: var(--topnav-surface-subtle);
 }
 
 .topnav-user-identity {
@@ -463,21 +485,29 @@ onUnmounted(() => {
   font-weight: 800;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: #94a3b8;
+  color: var(--topnav-faint);
 }
 
 .topnav-logout {
-  border-color: #fee2e2;
-  color: #ef4444;
+  border-color: var(--topnav-danger-line);
+  color: color-mix(in srgb, var(--color-danger) 90%, var(--topnav-text));
 }
 
 .topnav-logout:hover {
-  border-color: #fecaca;
-  background: #fef2f2;
-  color: #dc2626;
+  border-color: color-mix(in srgb, var(--color-danger) 42%, var(--topnav-line));
+  background: var(--topnav-danger-soft);
+  color: color-mix(in srgb, var(--color-danger) 96%, var(--topnav-text));
 }
 
 :global([data-theme='light']) .topnav-shell {
+  --topnav-surface: color-mix(in srgb, white 96%, var(--color-bg-surface));
+  --topnav-surface-subtle: color-mix(in srgb, #f8fafc 92%, var(--color-bg-surface));
+  --topnav-surface-elevated: white;
+  --topnav-line: color-mix(in srgb, #e2e8f0 90%, transparent);
+  --topnav-line-strong: color-mix(in srgb, #d9e1ec 94%, transparent);
+  --topnav-text: #0f172a;
+  --topnav-muted: #64748b;
+  --topnav-faint: #94a3b8;
   background:
     linear-gradient(
       180deg,
@@ -493,6 +523,25 @@ onUnmounted(() => {
       color-mix(in srgb, var(--color-primary-hover) 6%, transparent),
       transparent 18rem
     );
+}
+
+:global([data-theme='dark']) .topnav-shell--admin {
+  --topnav-surface: color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-bg-base));
+  --topnav-surface-subtle: color-mix(in srgb, var(--color-bg-elevated) 84%, var(--color-bg-surface));
+  --topnav-surface-elevated: color-mix(in srgb, var(--color-bg-elevated) 92%, var(--color-bg-surface));
+  --topnav-line: color-mix(in srgb, var(--color-border-default) 84%, transparent);
+  --topnav-line-strong: color-mix(in srgb, var(--color-border-default) 92%, transparent);
+  --topnav-text: color-mix(in srgb, var(--color-text-primary) 94%, transparent);
+  --topnav-muted: color-mix(in srgb, var(--color-text-secondary) 90%, transparent);
+  --topnav-faint: color-mix(in srgb, var(--color-text-muted) 90%, transparent);
+}
+
+:global([data-theme='dark']) .topnav-tool-cluster--admin,
+:global([data-theme='dark']) .topnav-user-card--admin,
+:global([data-theme='dark']) .topnav-brand-picker-panel {
+  box-shadow:
+    0 18px 38px color-mix(in srgb, var(--color-shadow-strong) 34%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--color-border-subtle) 56%, transparent);
 }
 
 .topnav-icon-button:focus-visible {

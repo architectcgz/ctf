@@ -84,6 +84,44 @@ async function mountTopNav() {
   return { wrapper }
 }
 
+async function mountBackofficeTopNav(path = '/admin/dashboard') {
+  setActivePinia(createPinia())
+  localStorage.clear()
+  document.documentElement.removeAttribute('data-brand')
+  document.documentElement.removeAttribute('data-theme')
+  authMocks.logout.mockReset()
+
+  const authStore = useAuthStore()
+  authStore.setAuth(
+    {
+      id: 'admin-1',
+      username: 'admin',
+      name: 'Admin',
+      role: 'admin',
+    },
+    'token'
+  )
+
+  const router = createTestRouter()
+  await router.push(path)
+  await router.isReady()
+
+  const wrapper = mount(TopNav, {
+    attachTo: document.body,
+    props: {
+      sidebarCollapsed: false,
+      notificationStatus: 'open',
+    },
+    global: {
+      plugins: [router],
+    },
+  })
+
+  await flushPromises()
+
+  return { wrapper }
+}
+
 describe('TopNav', () => {
   beforeEach(() => {
     document.body.innerHTML = ''
@@ -151,7 +189,7 @@ describe('TopNav', () => {
 
   it('通知按钮应当显式保留和相邻工具按钮一致的外边框', () => {
     expect(topNavSource).toMatch(
-      /\.topnav-actions\s*:deep\(\.notification-trigger\)\s*\{[\s\S]*border:\s*1px solid #f1f5f9;/s
+      /\.topnav-actions\s*:deep\(\.notification-trigger\)\s*\{[\s\S]*border:\s*1px solid var\(--topnav-line\);/s
     )
   })
 
@@ -163,6 +201,13 @@ describe('TopNav', () => {
     expect(topNavSource).toContain('Workspace')
   })
 
+  it('tokenizes backoffice shell surfaces so dark theme does not fall back to white chrome', () => {
+    expect(topNavSource).toContain('--topnav-surface')
+    expect(topNavSource).toContain('--topnav-line')
+    expect(topNavSource).toContain(":global([data-theme='dark']) .topnav-shell--admin")
+    expect(topNavSource).toContain(":global([data-theme='dark']) .topnav-tool-cluster--admin")
+  })
+
   it('renders backoffice breadcrumbs from sidebar module and submenu instead of the removed horizontal subnav', () => {
     expect(topNavSource).toContain('getBackofficeModuleByPath')
     expect(topNavSource).toContain('getVisibleBackofficeSecondaryItems')
@@ -170,5 +215,28 @@ describe('TopNav', () => {
     expect(topNavSource).toContain('backofficeBreadcrumb.moduleLabel')
     expect(topNavSource).toContain('backofficeBreadcrumb.secondaryLabel')
     expect(topNavSource).not.toContain('Backoffice Workspace / {{ pageTitle }}')
+  })
+
+  it('removes the duplicate desktop backoffice sidebar toggle from the global topnav', async () => {
+    expect(topNavSource).toContain('v-if="!isBackofficeRoute || isMobile"')
+
+    const originalWidth = window.innerWidth
+    Object.defineProperty(window, 'innerWidth', {
+      configurable: true,
+      writable: true,
+      value: 1280,
+    })
+
+    const { wrapper } = await mountBackofficeTopNav()
+    const toggleButton = wrapper.find('button[aria-label="折叠导航"]')
+
+    expect(toggleButton.exists()).toBe(false)
+
+    wrapper.unmount()
+    Object.defineProperty(window, 'innerWidth', {
+      configurable: true,
+      writable: true,
+      value: originalWidth,
+    })
   })
 })
