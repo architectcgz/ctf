@@ -210,6 +210,38 @@ describe('TeacherStudentManagement', () => {
     )
   })
 
+  it('管理员从学生管理返回班级管理时应回到后台班级页', async () => {
+    const authStore = useAuthStore()
+    authStore.setAuth(
+      {
+        id: 'admin-1',
+        username: 'admin',
+        role: 'admin',
+        class_name: 'Class A',
+      },
+      'token'
+    )
+
+    const wrapper = mount(TeacherStudentManagement, {
+      global: {
+        components: {
+          ElTable,
+          ElTableColumn,
+          ElButton,
+        },
+        stubs: {
+          TeacherClassReportExportDialog: reportDialogStub,
+        },
+      },
+    })
+
+    await flushPromises()
+
+    wrapper.findComponent({ name: 'StudentManagementPage' }).vm.$emit('openClassManagement')
+
+    expect(pushMock).toHaveBeenCalledWith({ name: 'AdminClassManagement' })
+  })
+
   it('应该忽略过期搜索请求的返回结果', async () => {
     const slowRequest = deferred<
       Array<{

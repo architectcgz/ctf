@@ -4,6 +4,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import TeacherStudentAnalysis from '../TeacherStudentAnalysis.vue'
 import studentAnalysisPageSource from '@/components/teacher/class-management/StudentAnalysisPage.vue?raw'
+import { useAuthStore } from '@/stores/auth'
 
 const pushMock = vi.fn()
 const routeMock = {
@@ -290,6 +291,17 @@ describe('TeacherStudentAnalysis', () => {
       report_id: 'report-1',
       status: 'processing',
     })
+
+    const authStore = useAuthStore()
+    authStore.setAuth(
+      {
+        id: 'teacher-1',
+        username: 'teacher',
+        role: 'teacher',
+        class_name: 'Class A',
+      },
+      'token'
+    )
   })
 
   it('应该展示当前学员分析内容', async () => {
@@ -458,5 +470,33 @@ describe('TeacherStudentAnalysis', () => {
     expect(dialog.attributes('data-open')).toBe('true')
     expect(dialog.attributes('data-default-class-name')).toBe('Class A')
     expect(pushMock).not.toHaveBeenCalledWith({ name: 'TeacherAWDReviewIndex' })
+  })
+
+  it('管理员从学员分析返回班级管理时应回到后台班级页', async () => {
+    const authStore = useAuthStore()
+    authStore.setAuth(
+      {
+        id: 'admin-1',
+        username: 'admin',
+        role: 'admin',
+        class_name: 'Class A',
+      },
+      'token'
+    )
+
+    const wrapper = mount(TeacherStudentAnalysis, {
+      global: {
+        stubs: {
+          SkillRadar: true,
+          TeacherClassReportExportDialog: reportDialogStub,
+        },
+      },
+    })
+
+    await flushPromises()
+
+    wrapper.findComponent({ name: 'StudentAnalysisPage' }).vm.$emit('openClassManagement')
+
+    expect(pushMock).toHaveBeenCalledWith({ name: 'AdminClassManagement' })
   })
 })

@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { flushPromises, mount } from '@vue/test-utils'
 import { ElButton, ElTable, ElTableColumn } from 'element-plus'
+import { useAuthStore } from '@/stores/auth'
 
 import TeacherClassStudents from '../TeacherClassStudents.vue'
 import classStudentsPageSource from '@/components/teacher/class-management/ClassStudentsPage.vue?raw'
@@ -141,6 +142,17 @@ describe('TeacherClassStudents', () => {
         { date: '2026-03-06', active_student_count: 1, event_count: 3, solve_count: 1 },
       ],
     })
+
+    const authStore = useAuthStore()
+    authStore.setAuth(
+      {
+        id: 'teacher-1',
+        username: 'teacher',
+        role: 'teacher',
+        class_name: 'Class A',
+      },
+      'token'
+    )
   })
 
   it('应该展示班级学生列表并支持进入学员分析页', async () => {
@@ -254,6 +266,40 @@ describe('TeacherClassStudents', () => {
     expect(teacherApiMocks.getClassReview).toHaveBeenCalledWith('100% 班级')
     expect(teacherApiMocks.getClassSummary).toHaveBeenCalledWith('100% 班级')
     expect(teacherApiMocks.getClassTrend).toHaveBeenCalledWith('100% 班级')
+  })
+
+  it('管理员从班级详情返回班级管理时应回到后台班级页', async () => {
+    const authStore = useAuthStore()
+    authStore.setAuth(
+      {
+        id: 'admin-1',
+        username: 'admin',
+        role: 'admin',
+        class_name: 'Class A',
+      },
+      'token'
+    )
+
+    const wrapper = mount(TeacherClassStudents, {
+      global: {
+        components: {
+          ElTable,
+          ElTableColumn,
+          ElButton,
+        },
+        stubs: {
+          LineChart: true,
+          TeacherClassReportExportDialog: reportDialogStub,
+        },
+      },
+    })
+
+    await flushPromises()
+    await flushPromises()
+
+    wrapper.findComponent({ name: 'ClassStudentsPage' }).vm.$emit('openClassManagement')
+
+    expect(pushMock).toHaveBeenCalledWith({ name: 'AdminClassManagement' })
   })
 
   it('选择班级下拉框后应跳转到对应班级页面并保持 panel 查询参数', async () => {

@@ -18,6 +18,7 @@ import type {
 } from '@/api/contracts'
 import TeacherDashboardPage from '@/components/teacher/dashboard/TeacherDashboardPage.vue'
 import { useAuthStore } from '@/stores/auth'
+import { resolveClassManagementRouteName } from '@/utils/classManagementRouting'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -88,6 +89,6 @@ onMounted(() => {
     :trend="trend"
     :error="error"
     @retry="initialize"
-    @open-class-management="router.push({ name: 'ClassManagement' })"
+    @open-class-management="router.push({ name: resolveClassManagementRouteName(authStore.user?.role) })"
   />
 </template>
