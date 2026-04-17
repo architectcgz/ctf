@@ -84,7 +84,7 @@
                 <button
                   v-if="challenge.attachment_url"
                   type="button"
-                  class="challenge-btn"
+                  class="ui-btn ui-btn--secondary"
                   @click="downloadAttachment"
                 >
                   下载附件
@@ -121,7 +121,7 @@
                   </div>
                   <button
                     type="button"
-                    class="challenge-btn hint-toggle"
+                    class="ui-btn ui-btn--sm ui-btn--ghost hint-toggle"
                     :aria-expanded="isHintExpanded(hint.level)"
                     :aria-controls="`challenge-hint-panel-${hint.id}`"
                     @click="toggleHint(hint.level)"
@@ -386,25 +386,29 @@
               <form class="writeup-form" @submit.prevent>
                 <div class="field">
                   <label for="challenge-writeup-title">标题</label>
-                  <input
-                    id="challenge-writeup-title"
-                    v-model="writeupTitle"
-                    type="text"
-                    maxlength="256"
-                    placeholder="例如：从回显异常到拿到 flag 的完整链路"
-                    class="challenge-input"
-                  />
+                  <div class="ui-control-wrap">
+                    <input
+                      id="challenge-writeup-title"
+                      v-model="writeupTitle"
+                      type="text"
+                      maxlength="256"
+                      placeholder="例如：从回显异常到拿到 flag 的完整链路"
+                      class="ui-control challenge-input"
+                    />
+                  </div>
                 </div>
 
                 <div class="field">
                   <label for="challenge-writeup-content">正文</label>
-                  <textarea
-                    id="challenge-writeup-content"
-                    v-model="writeupContent"
-                    rows="10"
-                    placeholder="建议按『题目理解 → 利用过程 → 核心 payload / 证据 → 踩坑点』组织。"
-                    class="challenge-input writeup-textarea"
-                  />
+                  <div class="ui-control-wrap writeup-textarea-wrap">
+                    <textarea
+                      id="challenge-writeup-content"
+                      v-model="writeupContent"
+                      rows="10"
+                      placeholder="建议按『题目理解 → 利用过程 → 核心 payload / 证据 → 踩坑点』组织。"
+                      class="ui-control challenge-input writeup-textarea"
+                    />
+                  </div>
                 </div>
 
                 <div class="writeup-foot">
@@ -421,7 +425,7 @@
                     <button
                       type="button"
                       :disabled="submissionLoading || submissionSaving !== null"
-                      class="challenge-btn disabled:cursor-not-allowed disabled:opacity-50"
+                      class="ui-btn ui-btn--secondary disabled:cursor-not-allowed disabled:opacity-50"
                       @click="saveWriteup('draft')"
                     >
                       {{ submissionSaving === 'draft' ? '保存中...' : '保存草稿' }}
@@ -431,7 +435,7 @@
                       :disabled="
                         submissionLoading || submissionSaving !== null || !challenge?.is_solved
                       "
-                      class="challenge-btn challenge-btn-primary disabled:cursor-not-allowed disabled:opacity-50"
+                      class="ui-btn ui-btn--primary disabled:cursor-not-allowed disabled:opacity-50"
                       @click="saveWriteup('published')"
                     >
                       {{ submissionSaving === 'published' ? '发布中...' : '发布题解' }}
@@ -462,20 +466,25 @@
                   {{ submitFieldLabel }}
                 </label>
                 <div class="flag-row">
-                  <input
-                    id="challenge-flag-input"
-                    v-model="flagInput"
-                    type="text"
-                    aria-label="Flag"
-                    :placeholder="submitPlaceholder"
-                    class="challenge-input flag-input disabled:cursor-not-allowed disabled:opacity-50"
-                    :class="submitInputClass"
-                    @keyup.enter="submitFlagHandler"
-                  />
+                  <div
+                    class="ui-control-wrap flag-input-wrap"
+                    :class="[submitInputClass, { 'is-disabled': submitting }]"
+                  >
+                    <input
+                      id="challenge-flag-input"
+                      v-model="flagInput"
+                      type="text"
+                      aria-label="Flag"
+                      :placeholder="submitPlaceholder"
+                      class="ui-control challenge-input flag-input disabled:cursor-not-allowed disabled:opacity-50"
+                      :disabled="submitting"
+                      @keyup.enter="submitFlagHandler"
+                    />
+                  </div>
                   <button
                     type="button"
                     :disabled="submitting"
-                    class="challenge-btn challenge-btn-primary disabled:cursor-not-allowed disabled:opacity-50"
+                    class="ui-btn ui-btn--primary disabled:cursor-not-allowed disabled:opacity-50"
                     @click="submitFlagHandler"
                   >
                     {{ submitting ? '提交中...' : '提交' }}
@@ -1284,40 +1293,29 @@ watch(
   color: var(--text-faint);
 }
 
-.challenge-input,
-.field input,
-.field textarea,
-.flag-input {
-  width: 100%;
-  border: 1px solid var(--line-strong);
-  border-radius: 14px;
+.field .ui-control-wrap,
+.flag-input-wrap {
+  border-color: var(--line-strong);
   background: var(--bg-panel);
-  color: var(--text-main);
 }
 
-.field input,
-.flag-input {
-  min-height: 50px;
-  padding: 0 var(--space-3-5);
+.field .ui-control-wrap:not(.writeup-textarea-wrap),
+.flag-input-wrap {
+  --ui-control-height: 3.125rem;
 }
 
-.field textarea {
-  min-height: 260px;
-  padding: var(--space-3-5);
-  resize: vertical;
-}
-
-.field input,
-.field textarea {
+.field .ui-control-wrap > input,
+.writeup-textarea-wrap > textarea {
   font: 500 14px/1.6 var(--font-sans);
 }
 
-.flag-input {
-  font: 500 15px/1 var(--font-mono);
+.writeup-textarea-wrap > textarea {
+  min-height: 260px;
+  resize: vertical;
 }
 
-.challenge-input::placeholder {
-  color: var(--journal-faint);
+.flag-input-wrap > input {
+  font: 500 15px/1 var(--font-mono);
 }
 
 .writeup-foot {
@@ -1364,13 +1362,8 @@ watch(
   color: var(--text-subtle);
 }
 
-.challenge-btn {
-  min-height: 48px;
-  border-radius: 14px;
-}
-
 .hint-toggle {
-  min-height: 40px;
+  --ui-btn-height: 2.5rem;
 }
 
 .status-inline {
@@ -1437,8 +1430,7 @@ watch(
   color: var(--text-subtle);
 }
 
-.solution-list-item:focus-visible,
-.challenge-input:focus-visible {
+.solution-list-item:focus-visible {
   outline: 2px solid color-mix(in srgb, var(--brand) 44%, var(--color-bg-base));
   outline-offset: 3px;
 }
@@ -1540,10 +1532,4 @@ watch(
   --workspace-shell-top-strength: 97%;
 }
 
-:global([data-theme='dark']) .challenge-input,
-:global([data-theme='dark']) .field input,
-:global([data-theme='dark']) .field textarea,
-:global([data-theme='dark']) .flag-input {
-  background: color-mix(in srgb, var(--bg-panel) 96%, var(--color-bg-base));
-}
 </style>

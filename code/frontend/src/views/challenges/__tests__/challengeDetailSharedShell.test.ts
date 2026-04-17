@@ -41,10 +41,15 @@ describe('challenge detail shared shell alignment', () => {
     expect(challengeDetailSource).toContain(':class="{ active: activeWorkspaceTab === tab.id }"')
     expect(challengeDetailSource).toContain('class="solution-tabbar top-tabs challenge-subtabs"')
     expect(challengeDetailSource).toContain('class="solution-tab top-tab challenge-subtab"')
-    expect(challengeDetailSource).toContain('class="challenge-btn"')
+    expect(challengeDetailSource).toContain('class="ui-btn ui-btn--secondary"')
+    expect(challengeDetailSource).toContain('class="ui-btn ui-btn--sm ui-btn--ghost hint-toggle"')
     expect(challengeDetailSource).toContain(
-      'class="challenge-btn challenge-btn-primary disabled:cursor-not-allowed disabled:opacity-50"'
+      'class="ui-btn ui-btn--primary disabled:cursor-not-allowed disabled:opacity-50"'
     )
+    expect(challengeDetailSource).toContain('class="ui-control-wrap"')
+    expect(challengeDetailSource).toContain('class="ui-control challenge-input"')
+    expect(challengeDetailSource).toContain('class="ui-control-wrap writeup-textarea-wrap"')
+    expect(challengeDetailSource).toContain('class="ui-control-wrap flag-input-wrap"')
     expect(challengeDetailSource).not.toContain('workspace-tab--active')
     expect(challengeDetailSource).not.toMatch(/^\.sub-tabs\s*,/m)
     expect(challengeDetailSource).not.toMatch(/^\.sub-tab\s*,/m)
@@ -70,7 +75,7 @@ describe('challenge detail shared shell alignment', () => {
     )
     expect(challengeDetailSource).toContain('--brand-ink: var(--journal-accent-strong);')
     expect(challengeDetailSource).toContain(
-      'class="challenge-btn challenge-btn-primary disabled:cursor-not-allowed disabled:opacity-50"'
+      'class="ui-btn ui-btn--primary disabled:cursor-not-allowed disabled:opacity-50"'
     )
   })
 
@@ -82,7 +87,7 @@ describe('challenge detail shared shell alignment', () => {
       /\.challenge-prose :deep\(pre\)\s*\{[\s\S]*background:\s*color-mix\(in srgb,\s*var\(--bg-panel\)\s*72%,\s*var\(--color-bg-base\)\);/s
     )
     expect(challengeDetailSource).toMatch(
-      /\.challenge-input,[\s\S]*\.flag-input\s*\{[\s\S]*background:\s*var\(--bg-panel\);/s
+      /\.field \.ui-control-wrap,\s*\.flag-input-wrap\s*\{[\s\S]*background:\s*var\(--bg-panel\);/s
     )
     expect(challengeDetailSource).not.toContain('color-mix(in srgb, var(--bg-panel) 95%, white)')
     expect(challengeDetailSource).not.toContain('color-mix(in srgb, var(--bg-shell) 92%, white)')
