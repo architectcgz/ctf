@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import type { ComponentPublicInstance } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRouter } from 'vue-router'
 import {
   Book,
   CheckCircle,
@@ -27,36 +27,10 @@ import WorkspaceDirectoryToolbar, {
 import { useAdminChallenges, type AdminChallengeListRow } from '@/composables/useAdminChallenges'
 import { useChallengeManagePresentation } from '@/composables/useChallengeManagePresentation'
 import { useChallengePackageImport } from '@/composables/useChallengePackageImport'
-import { useRouteQueryTabs } from '@/composables/useRouteQueryTabs'
 
-type ChallengePanelKey = 'manage' | 'import' | 'queue'
 type ChallengeSortOption = WorkspaceDirectorySortOption & {
   order: 'asc' | 'desc'
 }
-
-const panelTabs: Array<{ key: ChallengePanelKey; label: string; panelId: string; tabId: string }> =
-  [
-    {
-      key: 'manage',
-      label: '题目管理',
-      panelId: 'challenge-panel-manage',
-      tabId: 'challenge-tab-manage',
-    },
-    {
-      key: 'import',
-      label: '导入题目包',
-      panelId: 'challenge-panel-import',
-      tabId: 'challenge-tab-import',
-    },
-    {
-      key: 'queue',
-      label: '待确认导入',
-      panelId: 'challenge-panel-queue',
-      tabId: 'challenge-tab-queue',
-    },
-  ]
-
-const route = useRoute()
 const router = useRouter()
 
 const {
@@ -98,20 +72,6 @@ const manageEmptyMessage = computed(() =>
   hasActiveFilters.value ? '当前筛选条件下没有匹配题目。' : '当前还没有题目，请先导入题目包。'
 )
 
-const panelTabOrder = panelTabs.map((tab) => tab.key) as ChallengePanelKey[]
-const {
-  activeTab: activePanel,
-  setTabButtonRef,
-  selectTab: switchPanel,
-  handleTabKeydown,
-} = useRouteQueryTabs<ChallengePanelKey>({
-  route,
-  router,
-  orderedTabs: panelTabOrder,
-  defaultTab: 'manage',
-  routeName: 'ChallengeManage',
-})
-
 const queueCount = computed(() => queue.value.length)
 const {
   openActionMenuId,
@@ -135,6 +95,8 @@ const {
 const actionMenuPanelRef = ref<HTMLDivElement | null>(null)
 const actionMenuStyle = ref<Record<string, string>>({})
 const actionMenuButtonRefs = new Map<string, HTMLButtonElement>()
+const importWorkspaceRef = ref<HTMLElement | null>(null)
+const queueWorkspaceRef = ref<HTMLElement | null>(null)
 
 const sortConfig = ref({ key: 'updateTime', order: 'desc', label: '最近更新' })
 const sortOptions: ChallengeSortOption[] = [
@@ -330,8 +292,9 @@ async function openPackageFormatGuide(): Promise<void> {
   await router.push({ name: 'AdminChallengePackageFormat' })
 }
 
-function handleTabChange(key: ChallengePanelKey) {
-  switchPanel(key)
+function scrollToWorkspace(section: 'import' | 'queue'): void {
+  const target = section === 'import' ? importWorkspaceRef.value : queueWorkspaceRef.value
+  target?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
 function resolveChallengeCategoryLabel(value: unknown): string {
@@ -349,37 +312,9 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
 
 <template>
   <div class="workspace-shell challenge-manage-shell journal-shell journal-shell-admin journal-notes-card">
-    <nav class="top-tabs" role="tablist" aria-label="题目管理工作区切换">
-      <button
-        v-for="(tab, index) in panelTabs"
-        :id="tab.tabId"
-        :key="tab.tabId"
-        :ref="(element) => setTabButtonRef(tab.key, element as HTMLButtonElement | null)"
-        type="button"
-        role="tab"
-        class="top-tab"
-        :class="{ active: activePanel === tab.key }"
-        :aria-selected="activePanel === tab.key ? 'true' : 'false'"
-        :aria-controls="tab.panelId"
-        :tabindex="activePanel === tab.key ? 0 : -1"
-        @click="handleTabChange(tab.key)"
-        @keydown="handleTabKeydown($event, index)"
-      >
-        {{ tab.label }}
-      </button>
-    </nav>
-
     <div class="workspace-grid">
       <main class="content-pane challenge-manage-content">
-        <section
-          id="challenge-panel-manage"
-          v-show="activePanel === 'manage'"
-          class="tab-panel challenge-manage-panel"
-          :class="{ active: activePanel === 'manage' }"
-          role="tabpanel"
-          aria-labelledby="challenge-tab-manage"
-          :aria-hidden="activePanel === 'manage' ? 'false' : 'true'"
-        >
+        <section class="challenge-manage-panel">
           <div class="workspace-tab-heading challenge-manage-actions">
             <div class="workspace-tab-heading__main">
               <div class="workspace-overline">Challenge Workspace</div>
@@ -392,16 +327,24 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
                 class="challenge-manage-action"
                 @click="openPackageFormatGuide"
               >
-                <FileSearch class="h-3.5 w-3.5 mr-1.5" />
+                <FileSearch class="mr-1.5 h-3.5 w-3.5" />
                 题目包规范
               </button>
               <button
                 type="button"
                 class="challenge-manage-action challenge-manage-action--primary"
-                @click="handleTabChange('import')"
+                @click="scrollToWorkspace('import')"
               >
-                <Plus class="h-4 w-4 mr-1.5" />
+                <Plus class="mr-1.5 h-4 w-4" />
                 导入资源包
+              </button>
+              <button
+                type="button"
+                class="challenge-manage-action"
+                @click="scrollToWorkspace('queue')"
+              >
+                <Zap class="mr-1.5 h-3.5 w-3.5" />
+                待确认导入
               </button>
             </div>
           </div>
@@ -539,10 +482,7 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
               row-class="challenge-table-row group"
             >
               <template #cell-title="{ row }">
-                <div
-                  class="challenge-table-title"
-                  :title="getChallengeRow(row).title"
-                >
+                <div class="challenge-table-title" :title="getChallengeRow(row).title">
                   {{ getChallengeRow(row).title }}
                 </div>
               </template>
@@ -585,7 +525,7 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
                 </div>
               </template>
 
-              <template #cell-actions="{ row, index }">
+              <template #cell-actions="{ row }">
                 <div class="challenge-table-actions">
                   <button
                     type="button"
@@ -616,59 +556,59 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
                   </div>
                 </div>
               </template>
-              </WorkspaceDataTable>
+            </WorkspaceDataTable>
 
-              <Teleport to="body">
+            <Teleport to="body">
+              <div
+                v-if="activeActionRow"
+                class="challenge-row-menu-layer"
+                @click="closeActionMenu"
+              >
                 <div
-                  v-if="activeActionRow"
-                  class="challenge-row-menu-layer"
-                  @click="closeActionMenu"
+                  ref="actionMenuPanelRef"
+                  class="challenge-row-menu shadow-2xl"
+                  :style="actionMenuStyle"
+                  role="menu"
+                  aria-label="题目更多操作"
+                  @click.stop
                 >
-                  <div
-                    ref="actionMenuPanelRef"
-                    class="challenge-row-menu shadow-2xl"
-                    :style="actionMenuStyle"
-                    role="menu"
-                    aria-label="题目更多操作"
-                    @click.stop
+                  <div class="challenge-row-menu__title">Management</div>
+                  <button
+                    type="button"
+                    class="challenge-row-menu__item"
+                    @click="openChallengeTopology(activeActionRow.id)"
                   >
-                    <div class="challenge-row-menu__title">Management</div>
-                    <button
-                      type="button"
-                      class="challenge-row-menu__item"
-                      @click="openChallengeTopology(activeActionRow.id)"
-                    >
-                      <FileSearch class="h-3 w-3" />
-                      编排拓扑
-                    </button>
-                    <button
-                      type="button"
-                      class="challenge-row-menu__item"
-                      @click="openChallengeWriteup(activeActionRow.id)"
-                    >
-                      <Book class="h-3 w-3" />
-                      题解与提示
-                    </button>
-                    <button
-                      v-if="activeActionRow.status !== 'published'"
-                      type="button"
-                      class="challenge-row-menu__item challenge-row-menu__item--success"
-                      @click="submitPublishCheck(activeActionRow)"
-                    >
-                      <CheckCircle class="h-3 w-3" />
-                      提交发布检查
-                    </button>
-                    <button
-                      type="button"
-                      class="challenge-row-menu__item challenge-row-menu__item--danger"
-                      @click="removeChallenge(activeActionRow.id)"
-                    >
-                      <Trash2 class="h-3 w-3" />
-                      永久删除
-                    </button>
-                  </div>
+                    <FileSearch class="h-3 w-3" />
+                    编排拓扑
+                  </button>
+                  <button
+                    type="button"
+                    class="challenge-row-menu__item"
+                    @click="openChallengeWriteup(activeActionRow.id)"
+                  >
+                    <Book class="h-3 w-3" />
+                    题解与提示
+                  </button>
+                  <button
+                    v-if="activeActionRow.status !== 'published'"
+                    type="button"
+                    class="challenge-row-menu__item challenge-row-menu__item--success"
+                    @click="submitPublishCheck(activeActionRow)"
+                  >
+                    <CheckCircle class="h-3 w-3" />
+                    提交发布检查
+                  </button>
+                  <button
+                    type="button"
+                    class="challenge-row-menu__item challenge-row-menu__item--danger"
+                    @click="removeChallenge(activeActionRow.id)"
+                  >
+                    <Trash2 class="h-3 w-3" />
+                    永久删除
+                  </button>
                 </div>
-              </Teleport>
+              </div>
+            </Teleport>
 
             <WorkspaceDirectoryPagination
               :page="page"
@@ -678,39 +618,21 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
               @change-page="changePage"
             />
           </section>
-        </section>
 
-        <section
-          id="challenge-panel-import"
-          v-show="activePanel === 'import'"
-          class="tab-panel challenge-manage-panel"
-          :class="{ active: activePanel === 'import' }"
-          role="tabpanel"
-          aria-labelledby="challenge-tab-import"
-          :aria-hidden="activePanel === 'import' ? 'false' : 'true'"
-        >
-          <div class="workspace-tab-heading__main">
-            <div class="workspace-overline">Challenge Package</div>
-            <h1 class="workspace-page-title">导入题目包</h1>
-            <p class="workspace-page-copy">
-              上传压缩包后先进入预览，再确认是否写入题库。页面内只保留导入主流程，格式规则单独维护。
-            </p>
-          </div>
-
-          <div class="challenge-panel-stack">
-            <section class="challenge-plain-section">
-              <div class="list-heading">
-                <div>
-                  <div class="workspace-overline">Package Guide</div>
-                  <h2 class="list-heading__title">题目包示例</h2>
-                </div>
+          <section
+            id="challenge-import-workspace"
+            ref="importWorkspaceRef"
+            class="workspace-directory-section challenge-manage-directory challenge-workspace-section"
+          >
+            <header class="list-heading challenge-section-heading">
+              <div>
+                <div class="workspace-overline">Challenge Package</div>
+                <h2 class="list-heading__title">导入题目包</h2>
+                <p class="challenge-section-copy">
+                  上传压缩包后先进入预览，再确认是否写入题库。格式规则单独维护，页面只保留导入主流程。
+                </p>
               </div>
-
-              <p class="workspace-page-copy">
-                导入页只保留上传和预览流程，目录结构与 `challenge.yml` 示例统一放到独立说明页，避免同一份规则重复维护。
-              </p>
-
-              <div class="challenge-manage-hero-actions mt-4">
+              <div class="challenge-manage-hero-actions">
                 <a
                   class="challenge-manage-action"
                   href="/downloads/challenge-package-sample-v1.zip"
@@ -726,7 +648,7 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
                   查看题目包示例
                 </button>
               </div>
-            </section>
+            </header>
 
             <ChallengePackageImportEntry
               :hide-header="true"
@@ -750,30 +672,30 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
                 <article
                   v-for="result in uploadResults"
                   :key="result.id"
-                  class="rounded-2xl border px-4 py-4"
+                  class="challenge-upload-result"
                   :class="
                     result.status === 'success'
-                      ? 'border-emerald-200 bg-emerald-50/70'
-                      : 'border-red-200 bg-red-50/70'
+                      ? 'challenge-upload-result--success'
+                      : 'challenge-upload-result--error'
                   "
                 >
-                  <div class="mb-2 flex items-center gap-2">
+                  <div class="challenge-upload-result__head">
                     <span
-                      class="rounded-full px-2 py-0.5 text-xs font-bold"
+                      class="challenge-upload-result__status"
                       :class="
                         result.status === 'success'
-                          ? 'bg-emerald-100 text-emerald-700'
-                          : 'bg-red-100 text-red-700'
+                          ? 'challenge-upload-result__status--success'
+                          : 'challenge-upload-result__status--error'
                       "
                     >
                       {{ result.status === 'success' ? '成功' : '失败' }}
                     </span>
-                    <strong class="truncate text-sm text-slate-900" :title="result.fileName">
+                    <strong class="challenge-upload-result__title" :title="result.fileName">
                       {{ result.fileName }}
                     </strong>
                   </div>
-                  <p class="mb-2 text-xs text-slate-600">{{ result.message }}</p>
-                  <div class="flex flex-wrap gap-4 text-[10px] font-medium text-slate-400">
+                  <p class="challenge-upload-result__copy">{{ result.message }}</p>
+                  <div class="challenge-upload-result__meta">
                     <span>{{ formatDateTime(result.createdAt) }}</span>
                     <span v-if="result.code !== undefined">错误码 {{ result.code }}</span>
                     <span v-if="result.requestId">请求ID {{ result.requestId }}</span>
@@ -781,31 +703,20 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
                 </article>
               </div>
             </section>
-          </div>
-        </section>
+          </section>
 
-        <section
-          id="challenge-panel-queue"
-          v-show="activePanel === 'queue'"
-          class="tab-panel challenge-manage-panel"
-          :class="{ active: activePanel === 'queue' }"
-          role="tabpanel"
-          aria-labelledby="challenge-tab-queue"
-          :aria-hidden="activePanel === 'queue' ? 'false' : 'true'"
-        >
-          <div class="workspace-tab-heading__main">
-            <div class="workspace-overline">Import Review</div>
-            <h1 class="workspace-page-title">待确认导入</h1>
-            <p class="workspace-page-copy">
-              这里列出已生成预览、但还没正式导入题库的题目包。确认无误后，可继续查看预览并完成导入。
-            </p>
-          </div>
-
-          <section class="workspace-directory-section challenge-manage-directory">
-            <div class="list-heading challenge-directory-head">
+          <section
+            id="challenge-queue-workspace"
+            ref="queueWorkspaceRef"
+            class="workspace-directory-section challenge-manage-directory challenge-workspace-section"
+          >
+            <div class="list-heading challenge-directory-head challenge-section-heading">
               <div>
-                <div class="workspace-overline">Import Queue</div>
-                <h2 class="list-heading__title">待确认目录</h2>
+                <div class="workspace-overline">Import Review</div>
+                <h2 class="list-heading__title">待确认导入</h2>
+                <p class="challenge-section-copy">
+                  这里列出已生成预览、但还没正式导入题库的题目包。确认无误后，可继续查看预览并完成导入。
+                </p>
               </div>
               <div class="challenge-directory-meta">共 {{ queueCount }} 个待处理任务</div>
             </div>
@@ -824,10 +735,10 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
                 <div class="flex min-w-0 items-start gap-4">
                   <div class="challenge-queue-id">IMP-{{ item.id.slice(0, 6).toUpperCase() }}</div>
                   <div class="min-w-0 flex-1">
-                    <h2 class="truncate text-base font-bold text-slate-900" :title="item.title">
+                    <h2 class="challenge-queue-title" :title="item.title">
                       {{ item.title }}
                     </h2>
-                    <p class="mt-1 truncate text-sm text-slate-500" :title="item.file_name">
+                    <p class="challenge-queue-file" :title="item.file_name">
                       {{ item.file_name }}
                     </p>
                     <div class="mt-3 flex flex-wrap gap-2">
@@ -837,13 +748,13 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
                       <span class="challenge-table-pill challenge-table-pill--neutral">
                         {{ getDifficultyLabel(item.difficulty) }}
                       </span>
-                      <span class="text-[11px] font-mono text-slate-500">{{ item.points }} pts</span>
+                      <span class="challenge-queue-points">{{ item.points }} pts</span>
                     </div>
                   </div>
                 </div>
 
                 <div class="flex flex-col items-start gap-2 md:items-end">
-                  <div class="text-[10px] font-medium text-slate-400">
+                  <div class="challenge-queue-time">
                     {{ formatDateTime(item.created_at) }}
                   </div>
                   <button
@@ -873,31 +784,74 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
   --workspace-shadow-shell: 0 1px 3px rgba(0, 0, 0, 0.05);
   --workspace-side-padding: 2rem;
   --workspace-content-padding: 2rem;
-  --workspace-tabs-offset-top: 1rem;
-  --page-top-tabs-gap: 0.9rem;
-  --page-top-tab-active-border: color-mix(in srgb, var(--workspace-brand) 36%, transparent);
-  --page-top-tab-active-text: var(--journal-ink);
-  --page-top-tab-hover-text: var(--journal-ink);
-  background: #f8fafc;
+  --challenge-page-bg: color-mix(in srgb, var(--journal-surface-subtle) 90%, var(--color-bg-base));
+  --challenge-page-surface: color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-surface));
+  --challenge-page-surface-subtle: color-mix(
+    in srgb,
+    var(--color-bg-elevated) 82%,
+    var(--color-bg-surface)
+  );
+  --challenge-page-surface-elevated: color-mix(
+    in srgb,
+    var(--color-bg-elevated) 90%,
+    var(--color-bg-surface)
+  );
+  --challenge-page-line: color-mix(in srgb, var(--journal-border) 84%, transparent);
+  --challenge-page-line-strong: color-mix(in srgb, var(--journal-border) 92%, transparent);
+  --challenge-page-text: color-mix(in srgb, var(--journal-ink) 94%, transparent);
+  --challenge-page-muted: color-mix(in srgb, var(--journal-muted) 92%, transparent);
+  --challenge-page-faint: color-mix(in srgb, var(--color-text-muted) 90%, transparent);
+  --challenge-page-accent: color-mix(in srgb, var(--workspace-brand) 88%, var(--challenge-page-text));
+  --challenge-page-accent-soft: color-mix(
+    in srgb,
+    var(--workspace-brand) 10%,
+    var(--challenge-page-surface)
+  );
+  --challenge-page-success-soft: color-mix(in srgb, var(--color-success) 12%, var(--challenge-page-surface));
+  --challenge-page-danger-soft: color-mix(in srgb, var(--color-danger) 10%, var(--challenge-page-surface));
+  border: none;
+  background: var(--challenge-page-bg);
 }
 
-.challenge-manage-top-note {
-  font-size: 12px;
+.challenge-row-menu-button,
+.challenge-row-menu {
+  --challenge-action-surface: color-mix(in srgb, var(--color-bg-surface) 94%, var(--color-bg-base));
+  --challenge-action-surface-subtle: color-mix(
+    in srgb,
+    var(--color-bg-elevated) 82%,
+    var(--color-bg-surface)
+  );
+  --challenge-action-surface-elevated: color-mix(
+    in srgb,
+    var(--color-bg-elevated) 90%,
+    var(--color-bg-surface)
+  );
+  --challenge-action-line: color-mix(in srgb, var(--color-border-default) 86%, transparent);
+  --challenge-action-line-strong: color-mix(in srgb, var(--color-border-default) 94%, transparent);
+  --challenge-action-text: color-mix(in srgb, var(--color-text-primary) 94%, transparent);
+  --challenge-action-muted: color-mix(in srgb, var(--color-text-secondary) 90%, transparent);
+  --challenge-action-accent: color-mix(in srgb, var(--workspace-brand) 88%, var(--challenge-action-text));
+  --challenge-action-accent-soft: color-mix(
+    in srgb,
+    var(--workspace-brand) 10%,
+    var(--challenge-action-surface)
+  );
 }
 
 .challenge-manage-content {
   display: grid;
-  gap: 1.5rem;
-  background: #f8fafc;
+  gap: 2rem;
+  background: transparent;
 }
 
 .challenge-manage-panel {
+  display: grid;
+  gap: 2rem;
   min-width: 0;
 }
 
 .challenge-manage-actions {
   align-items: flex-end;
-  margin-bottom: 1.5rem;
 }
 
 .challenge-manage-hero-actions {
@@ -906,39 +860,67 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
   gap: 0.5rem;
 }
 
+.challenge-workspace-section {
+  scroll-margin-top: 6rem;
+}
+
+.challenge-section-heading {
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.challenge-section-copy {
+  margin: 0.5rem 0 0;
+  max-width: 44rem;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: var(--challenge-page-muted);
+}
+
+.challenge-panel-stack {
+  display: grid;
+  gap: 1rem;
+}
+
 .challenge-manage-action {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-height: 2.5rem;
   padding: 0 1.25rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--challenge-page-line);
   border-radius: 12px;
-  background: white;
+  background: var(--challenge-page-surface);
   font-size: 12px;
   font-weight: 700;
-  color: #475569;
-  transition: all 0.2s ease;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  color: var(--challenge-page-muted);
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--color-shadow-soft) 42%, transparent);
 }
 
 .challenge-manage-action:hover {
-  border-color: #cbd5e1;
-  color: #0f172a;
+  border-color: var(--challenge-page-line-strong);
+  background: var(--challenge-page-surface-elevated);
+  color: var(--challenge-page-text);
   transform: translateY(-1px);
 }
 
 .challenge-manage-action--primary {
-  border-color: #2563eb;
-  background: #2563eb;
+  border-color: color-mix(in srgb, var(--workspace-brand) 42%, transparent);
+  background: color-mix(in srgb, var(--workspace-brand) 88%, var(--challenge-page-text));
   color: white;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--workspace-brand) 18%, transparent);
 }
 
 .challenge-manage-action--primary:hover {
   color: white;
-  background: #1d4ed8;
-  border-color: #1d4ed8;
+  background: color-mix(in srgb, var(--workspace-brand-ink) 92%, var(--challenge-page-text));
+  border-color: color-mix(in srgb, var(--workspace-brand-ink) 62%, transparent);
 }
 
 .challenge-manage-shell .manage-summary-grid {
@@ -990,12 +972,6 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
   color: color-mix(in srgb, #f97316 82%, var(--journal-ink));
 }
 
-.challenge-row-menu {
-  border: 1px solid #e2e8f0;
-  background: white;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
-}
-
 .challenge-filter-grid {
   display: grid;
   gap: 1rem;
@@ -1011,7 +987,7 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
   font-weight: 800;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: #94a3b8;
+  color: var(--challenge-page-faint);
 }
 
 .challenge-filter-select {
@@ -1020,9 +996,10 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
   padding: 0 0.75rem;
   font-size: 12px;
   font-weight: 500;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--challenge-page-line);
   border-radius: 8px;
-  background: #f8fafc;
+  background: var(--challenge-page-surface-subtle);
+  color: var(--challenge-page-text);
 }
 
 .challenge-row-menu__title {
@@ -1031,9 +1008,9 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
   font-weight: 800;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: #94a3b8;
-  background: #f8fafc;
-  border-bottom: 1px solid #f1f5f9;
+  color: var(--challenge-action-muted);
+  background: color-mix(in srgb, var(--workspace-brand) 5%, var(--challenge-action-surface-subtle));
+  border-bottom: 1px solid color-mix(in srgb, var(--challenge-action-line) 78%, transparent);
 }
 
 .challenge-table-row {
@@ -1054,9 +1031,15 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
 }
 
 .challenge-table-pill--category {
-  background: #eff6ff;
-  color: #2563eb;
-  border: 1px solid rgba(37, 99, 235, 0.1);
+  background: color-mix(in srgb, var(--workspace-brand) 10%, var(--challenge-page-surface));
+  color: var(--challenge-page-accent);
+  border: 1px solid color-mix(in srgb, var(--workspace-brand) 18%, transparent);
+}
+
+.challenge-table-pill--neutral {
+  background: color-mix(in srgb, var(--challenge-page-line) 18%, var(--challenge-page-surface));
+  color: var(--challenge-page-muted);
+  border: 1px solid color-mix(in srgb, var(--challenge-page-line-strong) 78%, transparent);
 }
 
 .challenge-table__title-cell {
@@ -1075,19 +1058,19 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
   white-space: nowrap;
   font-size: 15px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--challenge-page-text);
   transition: color 0.2s ease;
 }
 
 .group:hover .challenge-table-title {
-  color: #2563eb;
+  color: var(--challenge-page-accent);
 }
 
 .challenge-table-difficulty {
   font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
-  color: #64748b;
+  color: var(--challenge-page-muted);
 }
 
 .challenge-table-points {
@@ -1095,7 +1078,7 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
   font-size: 15px;
   font-weight: 900;
   letter-spacing: -0.03em;
-  color: #0f172a;
+  color: var(--challenge-page-text);
 }
 
 .challenge-table-status {
@@ -1116,14 +1099,14 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
 }
 
 .challenge-table-status__dot--idle {
-  background: #cbd5e1;
+  background: color-mix(in srgb, var(--challenge-page-line-strong) 88%, transparent);
 }
 
 .challenge-table-status__label {
   font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
-  color: #334155;
+  color: color-mix(in srgb, var(--challenge-page-text) 84%, var(--challenge-page-muted));
 }
 
 .challenge-table-actions {
@@ -1140,17 +1123,24 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
   gap: 0.35rem;
   height: 1.85rem;
   padding: 0 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--workspace-brand) 24%, var(--challenge-page-line));
   border-radius: 8px;
   font-size: 12px;
   font-weight: 800;
-  color: #2563eb;
-  transition: all 0.2s ease;
+  background: color-mix(in srgb, var(--workspace-brand) 7%, var(--challenge-page-surface));
+  color: var(--challenge-page-accent);
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .challenge-row-action:hover {
-  background: #2563eb;
+  border-color: color-mix(in srgb, var(--workspace-brand) 42%, transparent);
+  background: color-mix(in srgb, var(--workspace-brand) 88%, var(--challenge-page-text));
   color: white;
-  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--workspace-brand) 18%, transparent);
 }
 
 .challenge-row-menu-button {
@@ -1159,16 +1149,23 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
   justify-content: center;
   width: 1.85rem;
   height: 1.85rem;
+  border: 1px solid var(--challenge-action-line);
   border-radius: 8px;
-  color: #94a3b8;
-  transition: all 0.2s ease;
+  background: var(--challenge-action-surface);
+  color: var(--challenge-action-muted);
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .challenge-row-menu-button:hover,
 .challenge-row-menu-button--active {
-  background: #0f172a;
-  color: white;
-  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.2);
+  border-color: color-mix(in srgb, var(--workspace-brand) 26%, var(--challenge-action-line-strong));
+  background: var(--challenge-action-accent-soft);
+  color: var(--challenge-action-accent);
+  box-shadow: 0 12px 26px color-mix(in srgb, var(--workspace-brand) 12%, transparent);
 }
 
 .challenge-row-menu-layer {
@@ -1183,6 +1180,15 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
   width: 11rem;
   border-radius: 12px;
   overflow: hidden;
+  border: 1px solid var(--challenge-action-line);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--challenge-action-surface) 98%, transparent),
+    color-mix(in srgb, var(--challenge-action-surface-subtle) 96%, transparent)
+  );
+  box-shadow:
+    0 24px 60px color-mix(in srgb, var(--color-shadow-strong) 20%, transparent),
+    0 10px 24px color-mix(in srgb, var(--color-shadow-soft) 18%, transparent);
 }
 
 .challenge-row-menu__item {
@@ -1193,22 +1199,196 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
   padding: 0.65rem 1rem;
   font-size: 12px;
   font-weight: 600;
-  color: #475569;
-  transition: all 0.2s ease;
+  color: var(--challenge-action-text);
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
 }
 
 .challenge-row-menu__item:hover {
-  background: #f8fafc;
-  color: #2563eb;
+  background: color-mix(in srgb, var(--workspace-brand) 7%, var(--challenge-action-surface-subtle));
+  color: var(--challenge-action-accent);
+}
+
+.challenge-row-menu__item--success {
+  color: color-mix(in srgb, var(--color-success) 84%, var(--challenge-action-text));
+}
+
+.challenge-row-menu__item--success:hover {
+  background: color-mix(in srgb, var(--color-success) 10%, var(--challenge-action-surface-subtle));
+  color: color-mix(in srgb, var(--color-success) 92%, var(--challenge-action-text));
 }
 
 .challenge-row-menu__item--danger {
-  color: color-mix(in srgb, var(--color-danger) 88%, var(--journal-ink));
+  color: color-mix(in srgb, var(--color-danger) 88%, var(--challenge-action-text));
 }
 
 .challenge-row-menu__item--danger:hover {
-  background: color-mix(in srgb, var(--color-danger) 10%, transparent);
-  color: color-mix(in srgb, var(--color-danger) 96%, var(--journal-ink));
+  background: color-mix(in srgb, var(--color-danger) 10%, var(--challenge-action-surface-subtle));
+  color: color-mix(in srgb, var(--color-danger) 96%, var(--challenge-action-text));
+}
+
+.challenge-directory-state,
+.challenge-directory-meta,
+.challenge-queue-file,
+.challenge-queue-time,
+.challenge-upload-result__copy,
+.challenge-upload-result__meta {
+  color: var(--challenge-page-muted);
+}
+
+.challenge-queue-title,
+.challenge-upload-result__title {
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--challenge-page-text);
+}
+
+.challenge-queue-file {
+  margin: 0.25rem 0 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.875rem;
+}
+
+.challenge-queue-id {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 5.5rem;
+  height: 2rem;
+  padding: 0 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--workspace-brand) 18%, var(--challenge-page-line));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--workspace-brand) 9%, var(--challenge-page-surface));
+  font-family: var(--font-family-mono, ui-monospace, SFMono-Regular, monospace);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--challenge-page-accent);
+}
+
+.challenge-queue-points {
+  font-family: var(--font-family-mono, ui-monospace, SFMono-Regular, monospace);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--challenge-page-muted);
+}
+
+.challenge-upload-result {
+  display: grid;
+  gap: 0.5rem;
+  padding: 1rem;
+  border: 1px solid var(--challenge-page-line);
+  border-radius: 1rem;
+  background: var(--challenge-page-surface);
+}
+
+.challenge-upload-result--success {
+  border-color: color-mix(in srgb, var(--color-success) 24%, var(--challenge-page-line));
+  background: color-mix(in srgb, var(--color-success) 9%, var(--challenge-page-surface));
+}
+
+.challenge-upload-result--error {
+  border-color: color-mix(in srgb, var(--color-danger) 24%, var(--challenge-page-line));
+  background: color-mix(in srgb, var(--color-danger) 8%, var(--challenge-page-surface));
+}
+
+.challenge-upload-result__head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.challenge-upload-result__status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 0.125rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.challenge-upload-result__status--success {
+  background: color-mix(in srgb, var(--color-success) 16%, transparent);
+  color: color-mix(in srgb, var(--color-success) 92%, var(--challenge-page-text));
+}
+
+.challenge-upload-result__status--error {
+  background: color-mix(in srgb, var(--color-danger) 14%, transparent);
+  color: color-mix(in srgb, var(--color-danger) 92%, var(--challenge-page-text));
+}
+
+.challenge-upload-result__copy {
+  margin: 0;
+  font-size: 0.8rem;
+}
+
+.challenge-upload-result__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  font-size: 0.65rem;
+  font-weight: 600;
+}
+
+:global([data-theme='light']) .challenge-manage-shell {
+  --challenge-page-bg: #f8fafc;
+  --challenge-page-surface: white;
+  --challenge-page-surface-subtle: #f8fafc;
+  --challenge-page-surface-elevated: white;
+  --challenge-page-line: color-mix(in srgb, #e2e8f0 90%, transparent);
+  --challenge-page-line-strong: color-mix(in srgb, #d4dde8 94%, transparent);
+  --challenge-page-text: #0f172a;
+  --challenge-page-muted: #64748b;
+  --challenge-page-faint: #94a3b8;
+}
+
+:global([data-theme='dark']) .challenge-manage-shell {
+  --challenge-page-bg: color-mix(in srgb, var(--color-bg-base) 92%, var(--color-bg-surface));
+  --challenge-page-surface: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
+  --challenge-page-surface-subtle: color-mix(in srgb, var(--color-bg-elevated) 84%, var(--color-bg-surface));
+  --challenge-page-surface-elevated: color-mix(in srgb, var(--color-bg-elevated) 92%, var(--color-bg-surface));
+  --challenge-page-line: color-mix(in srgb, var(--color-border-default) 88%, transparent);
+  --challenge-page-line-strong: color-mix(in srgb, var(--color-border-default) 94%, transparent);
+  --challenge-page-text: color-mix(in srgb, var(--color-text-primary) 94%, transparent);
+  --challenge-page-muted: color-mix(in srgb, var(--color-text-secondary) 90%, transparent);
+  --challenge-page-faint: color-mix(in srgb, var(--color-text-muted) 90%, transparent);
+}
+
+:global([data-theme='dark']) .challenge-row-menu,
+:global([data-theme='dark']) .challenge-row-menu-button {
+  --challenge-action-surface: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
+  --challenge-action-surface-subtle: color-mix(
+    in srgb,
+    var(--color-bg-elevated) 84%,
+    var(--color-bg-surface)
+  );
+  --challenge-action-surface-elevated: color-mix(
+    in srgb,
+    var(--color-bg-elevated) 92%,
+    var(--color-bg-surface)
+  );
+  --challenge-action-line: color-mix(in srgb, var(--color-border-default) 88%, transparent);
+  --challenge-action-line-strong: color-mix(in srgb, var(--color-border-default) 94%, transparent);
+  --challenge-action-text: color-mix(in srgb, var(--color-text-primary) 94%, transparent);
+  --challenge-action-muted: color-mix(in srgb, var(--color-text-secondary) 90%, transparent);
+}
+
+:global([data-theme='dark']) .challenge-row-menu {
+  box-shadow:
+    0 22px 56px color-mix(in srgb, var(--color-shadow-strong) 28%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--color-border-subtle) 46%, transparent);
+}
+
+:global([data-theme='dark']) .challenge-row-menu-button {
+  background: var(--challenge-action-surface-elevated);
 }
 
 @keyframes challengeStatusPulse {

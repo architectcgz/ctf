@@ -19,6 +19,7 @@ const props = withDefaults(
     filterButtonLabel?: string
     sortCaption?: string
     totalSuffix?: string
+    showSearch?: boolean
     filterPanelKicker?: string
     filterPanelTitle?: string
     filterPanelWidth?: string
@@ -30,6 +31,7 @@ const props = withDefaults(
     filterButtonLabel: '筛选',
     sortCaption: '排序:',
     totalSuffix: '项',
+    showSearch: true,
     filterPanelKicker: 'Filter Stack',
     filterPanelTitle: '高级筛选',
     filterPanelWidth: '24rem',
@@ -136,7 +138,7 @@ onUnmounted(() => {
 <template>
   <div class="workspace-directory-toolbar">
     <div class="workspace-directory-toolbar__main">
-      <label class="workspace-directory-toolbar__search">
+      <label v-if="showSearch" class="workspace-directory-toolbar__search">
         <Search class="workspace-directory-toolbar__search-icon h-3.5 w-3.5" />
         <input
           :value="modelValue"
@@ -235,6 +237,33 @@ onUnmounted(() => {
 
 <style scoped>
 .workspace-directory-toolbar {
+  --workspace-toolbar-surface: color-mix(in srgb, var(--color-bg-surface) 94%, var(--color-bg-base));
+  --workspace-toolbar-surface-subtle: color-mix(
+    in srgb,
+    var(--color-bg-elevated) 82%,
+    var(--color-bg-surface)
+  );
+  --workspace-toolbar-surface-elevated: color-mix(
+    in srgb,
+    var(--color-bg-elevated) 90%,
+    var(--color-bg-surface)
+  );
+  --workspace-toolbar-control-border: color-mix(in srgb, var(--color-border-default) 84%, transparent);
+  --workspace-toolbar-control-border-strong: color-mix(
+    in srgb,
+    var(--color-border-default) 94%,
+    transparent
+  );
+  --workspace-toolbar-control-background: var(--workspace-toolbar-surface);
+  --workspace-toolbar-control-text: color-mix(in srgb, var(--color-text-primary) 94%, transparent);
+  --workspace-toolbar-control-muted: color-mix(in srgb, var(--color-text-secondary) 90%, transparent);
+  --workspace-toolbar-control-shadow: 0 1px 2px color-mix(in srgb, var(--color-shadow-soft) 36%, transparent);
+  --workspace-toolbar-menu-surface: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--workspace-toolbar-surface) 98%, transparent),
+    color-mix(in srgb, var(--workspace-toolbar-surface-subtle) 96%, transparent)
+  );
+  --workspace-toolbar-menu-border: color-mix(in srgb, var(--color-border-default) 88%, transparent);
   position: relative;
   display: flex;
   flex-wrap: wrap;
@@ -260,7 +289,7 @@ onUnmounted(() => {
   left: 0.75rem;
   top: 50%;
   transform: translateY(-50%);
-  color: #94a3b8;
+  color: color-mix(in srgb, var(--workspace-toolbar-control-muted) 82%, transparent);
 }
 
 .workspace-directory-toolbar__search-input {
@@ -269,17 +298,23 @@ onUnmounted(() => {
   padding: 0 1rem 0 2.25rem;
   font-size: 12px;
   font-weight: 500;
-  border: 1px solid transparent;
+  border: 1px solid var(--workspace-toolbar-control-border);
   border-radius: 12px;
-  background: white;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  background: var(--workspace-toolbar-control-background);
+  color: var(--workspace-toolbar-control-text);
+  box-shadow: var(--workspace-toolbar-control-shadow);
   outline: none;
   transition: all 0.2s ease;
 }
 
+.workspace-directory-toolbar__search-input:hover {
+  border-color: var(--workspace-toolbar-control-border-strong);
+}
+
 .workspace-directory-toolbar__search-input:focus {
-  background: white;
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+  border-color: color-mix(in srgb, var(--color-primary) 52%, var(--workspace-toolbar-control-border));
+  background: var(--workspace-toolbar-control-background);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 12%, transparent);
 }
 
 .workspace-directory-toolbar__filter-toggle,
@@ -290,32 +325,37 @@ onUnmounted(() => {
   gap: 0.5rem;
   min-height: 2.5rem;
   padding: 0 1rem;
-  border: 1px solid transparent;
+  border: 1px solid var(--workspace-toolbar-control-border);
   border-radius: 12px;
-  background: white;
+  background: var(--workspace-toolbar-control-background);
   font-size: 12px;
   font-weight: 700;
-  color: #475569;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  color: var(--workspace-toolbar-control-text);
+  box-shadow: var(--workspace-toolbar-control-shadow);
   transition: all 0.2s ease;
 }
 
 .workspace-directory-toolbar__filter-toggle--active {
   border-color: color-mix(in srgb, var(--color-primary) 24%, transparent);
-  background: color-mix(in srgb, var(--color-primary) 10%, white);
+  background: color-mix(in srgb, var(--color-primary) 10%, var(--workspace-toolbar-surface));
   color: var(--color-primary);
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-primary) 12%, transparent);
 }
 
 .workspace-directory-toolbar__filter-toggle--active:hover {
   border-color: color-mix(in srgb, var(--color-primary) 32%, transparent);
-  background: color-mix(in srgb, var(--color-primary) 12%, white);
+  background: color-mix(in srgb, var(--color-primary) 12%, var(--workspace-toolbar-surface));
   color: var(--color-primary);
 }
 
 .workspace-directory-toolbar__sort-button:hover,
 .workspace-directory-toolbar__filter-toggle:hover {
-  color: #2563eb;
+  border-color: var(--workspace-toolbar-control-border-strong);
+  color: color-mix(in srgb, var(--color-primary) 88%, var(--workspace-toolbar-control-text));
+}
+
+.workspace-directory-toolbar__count-pill:hover {
+  border-color: var(--workspace-toolbar-control-border-strong);
 }
 
 .workspace-directory-toolbar__sort {
@@ -330,7 +370,7 @@ onUnmounted(() => {
   font-weight: 700;
   letter-spacing: 0.03em;
   text-transform: uppercase;
-  color: #94a3b8;
+  color: var(--workspace-toolbar-control-muted);
 }
 
 .workspace-directory-toolbar__sort-label {
@@ -341,14 +381,16 @@ onUnmounted(() => {
 .workspace-directory-toolbar__count-value {
   font-family: var(--font-family-mono, ui-monospace, SFMono-Regular, monospace);
   font-weight: 900;
-  color: #0f172a;
+  color: var(--workspace-toolbar-control-text);
 }
 
 .workspace-directory-toolbar__filter-panel,
 .workspace-directory-toolbar__sort-menu {
-  border: 1px solid #e2e8f0;
-  background: white;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--workspace-toolbar-menu-border);
+  background: var(--workspace-toolbar-menu-surface);
+  box-shadow:
+    0 24px 60px color-mix(in srgb, var(--color-shadow-strong) 18%, transparent),
+    0 10px 24px color-mix(in srgb, var(--color-shadow-soft) 16%, transparent);
 }
 
 .workspace-directory-toolbar__filter-panel {
@@ -370,13 +412,13 @@ onUnmounted(() => {
 .workspace-directory-toolbar__filter-panel-title {
   font-size: 14px;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--workspace-toolbar-control-text);
 }
 
 .workspace-directory-toolbar__filter-reset {
   font-size: 11px;
   font-weight: 700;
-  color: #94a3b8;
+  color: color-mix(in srgb, var(--workspace-toolbar-control-muted) 82%, transparent);
 }
 
 .workspace-directory-toolbar__sort-menu {
@@ -395,9 +437,9 @@ onUnmounted(() => {
   font-weight: 800;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: #94a3b8;
-  background: #f8fafc;
-  border-bottom: 1px solid #f1f5f9;
+  color: color-mix(in srgb, var(--workspace-toolbar-control-muted) 82%, transparent);
+  background: color-mix(in srgb, var(--color-primary) 5%, var(--workspace-toolbar-surface-subtle));
+  border-bottom: 1px solid color-mix(in srgb, var(--workspace-toolbar-menu-border) 78%, transparent);
 }
 
 .workspace-directory-toolbar__menu-item {
@@ -407,20 +449,56 @@ onUnmounted(() => {
   padding: 0.65rem 1rem;
   font-size: 12px;
   font-weight: 600;
-  color: #475569;
-  transition: all 0.2s ease;
+  color: color-mix(in srgb, var(--workspace-toolbar-control-text) 84%, var(--workspace-toolbar-control-muted));
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
 }
 
 .workspace-directory-toolbar__menu-item:hover,
 .workspace-directory-toolbar__menu-item--active {
-  background: #f8fafc;
-  color: #2563eb;
+  background: color-mix(in srgb, var(--color-primary) 7%, var(--workspace-toolbar-surface-subtle));
+  color: color-mix(in srgb, var(--color-primary) 88%, var(--workspace-toolbar-control-text));
 }
 
 .workspace-directory-toolbar__menu-item-content {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
+}
+
+:global([data-theme='light']) .workspace-directory-toolbar {
+  --workspace-toolbar-surface: white;
+  --workspace-toolbar-surface-subtle: #f8fafc;
+  --workspace-toolbar-surface-elevated: white;
+  --workspace-toolbar-control-border: color-mix(in srgb, #d7e0ea 92%, transparent);
+  --workspace-toolbar-control-border-strong: color-mix(in srgb, #b4c0cf 96%, transparent);
+  --workspace-toolbar-control-text: #334155;
+  --workspace-toolbar-control-muted: #64748b;
+  --workspace-toolbar-menu-border: color-mix(in srgb, #dde5ee 92%, transparent);
+}
+
+:global([data-theme='dark']) .workspace-directory-toolbar {
+  --workspace-toolbar-surface: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
+  --workspace-toolbar-surface-subtle: color-mix(
+    in srgb,
+    var(--color-bg-elevated) 84%,
+    var(--color-bg-surface)
+  );
+  --workspace-toolbar-surface-elevated: color-mix(
+    in srgb,
+    var(--color-bg-elevated) 92%,
+    var(--color-bg-surface)
+  );
+  --workspace-toolbar-control-border: color-mix(in srgb, var(--color-border-default) 88%, transparent);
+  --workspace-toolbar-control-border-strong: color-mix(
+    in srgb,
+    var(--color-border-default) 94%,
+    transparent
+  );
+  --workspace-toolbar-control-text: color-mix(in srgb, var(--color-text-primary) 94%, transparent);
+  --workspace-toolbar-control-muted: color-mix(in srgb, var(--color-text-secondary) 90%, transparent);
+  --workspace-toolbar-menu-border: color-mix(in srgb, var(--color-border-default) 92%, transparent);
 }
 
 @media (max-width: 767px) {
