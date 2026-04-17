@@ -16,6 +16,7 @@ import (
 
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
+	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	rediskeys "ctf-platform/internal/pkg/redis"
 )
 
@@ -497,6 +498,107 @@ func TestAWDRoundUpdaterSyncsHTTPStandardChecksAsUp(t *testing.T) {
 	getFlag, ok := result["get_flag"].(map[string]any)
 	if !ok || getFlag["healthy"] != true {
 		t.Fatalf("unexpected get_flag result: %#v", result["get_flag"])
+	}
+}
+
+func TestAWDRoundUpdaterPrefersContestAWDServiceDefinitionsForRuntimeChecks(t *testing.T) {
+	db := newAWDTestDB(t)
+	now := time.Date(2026, 3, 10, 12, 11, 0, 0, time.UTC)
+
+	createAWDContestFixture(t, db, 144, now)
+	createAWDRoundFixture(t, db, 14401, 144, 1, 50, 40, now)
+	createAWDChallengeFixture(t, db, 144001, now)
+	createAWDContestChallengeFixture(t, db, 144, 144001, now)
+	createAWDTeamFixture(t, db, 144011, 144, "ServiceFirst", now)
+	createAWDTeamMemberFixture(t, db, 144, 144011, 6441, now)
+
+	if err := db.Model(&model.Challenge{}).Where("id = ?", 144001).Update("flag_prefix", "awd").Error; err != nil {
+		t.Fatalf("set flag prefix: %v", err)
+	}
+	if err := db.Model(&model.ContestChallenge{}).
+		Where("contest_id = ? AND challenge_id = ?", 144, 144001).
+		Updates(map[string]any{
+			"awd_checker_type":   model.AWDCheckerTypeLegacyProbe,
+			"awd_checker_config": `{}`,
+			"awd_sla_score":      3,
+			"awd_defense_score":  9,
+		}).Error; err != nil {
+		t.Fatalf("update legacy awd contest challenge config: %v", err)
+	}
+	if err := contestinfra.NewAWDRepository(db).CreateContestAWDService(context.Background(), &model.ContestAWDService{
+		ContestID:   144,
+		ChallengeID: 144001,
+		DisplayName: "Service First",
+		Order:       0,
+		IsVisible:   true,
+		ScoreConfig: `{"points":100,"awd_sla_score":18,"awd_defense_score":28}`,
+		RuntimeConfig: `{
+			"challenge_id":144001,
+			"checker_type":"http_standard",
+			"checker_config":{
+				"put_flag":{"method":"PUT","path":"/api/service-flag","body_template":"{{FLAG}}","expected_status":200},
+				"get_flag":{"method":"GET","path":"/api/service-flag","expected_status":200,"expected_substring":"{{FLAG}}"}
+			}
+		}`,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}); err != nil {
+		t.Fatalf("create contest awd service: %v", err)
+	}
+
+	storedFlag := ""
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case r.Method == http.MethodPut && r.URL.Path == "/api/service-flag":
+			body, err := io.ReadAll(r.Body)
+			if err != nil {
+				t.Fatalf("read put body: %v", err)
+			}
+			storedFlag = string(body)
+			w.WriteHeader(http.StatusOK)
+		case r.Method == http.MethodGet && r.URL.Path == "/api/service-flag":
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte(storedFlag))
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	t.Cleanup(server.Close)
+
+	if err := db.Create(&model.Instance{
+		ID:          9441,
+		UserID:      6441,
+		ChallengeID: 144001,
+		ContainerID: "ctr-service-first",
+		Status:      model.InstanceStatusRunning,
+		AccessURL:   server.URL,
+		ExpiresAt:   now.Add(time.Hour),
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	}).Error; err != nil {
+		t.Fatalf("create awd instance: %v", err)
+	}
+
+	updater := newAWDRoundUpdaterForTest(db, nil, config.ContestAWDConfig{
+		SchedulerInterval:  time.Second,
+		SchedulerBatchSize: 10,
+		RoundInterval:      5 * time.Minute,
+		RoundLockTTL:       time.Minute,
+		CheckerTimeout:     time.Second,
+		CheckerHealthPath:  "/health",
+	}, "service-first-secret", nil, zap.NewNop())
+	updater.SetHTTPClient(server.Client())
+
+	if err := updater.SyncRoundServiceChecks(context.Background(), &model.Contest{ID: 144}, 1); err != nil {
+		t.Fatalf("syncRoundServiceChecks() error = %v", err)
+	}
+
+	var record model.AWDTeamService
+	if err := db.Where("round_id = ? AND team_id = ? AND challenge_id = ?", 14401, 144011, 144001).First(&record).Error; err != nil {
+		t.Fatalf("load service check: %v", err)
+	}
+	if record.ServiceStatus != model.AWDServiceStatusUp || record.SLAScore != 18 || record.DefenseScore != 28 || record.CheckerType != model.AWDCheckerTypeHTTPStandard {
+		t.Fatalf("expected runtime check to prefer contest_awd_services, got %+v", record)
 	}
 }
 

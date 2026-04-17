@@ -210,6 +210,61 @@ func TestAWDQueryServiceGetReadinessItemJSONIncludesRequiredNullableKeys(t *test
 	}
 }
 
+func TestAWDQueryServiceGetReadinessPrefersContestAWDServiceRuntimeConfig(t *testing.T) {
+	service, db := newAWDQueryServiceForTest(t)
+	now := time.Now()
+
+	createAWDReadinessContestFixture(t, db, 705, now)
+	createAWDReadinessChallengeFixture(t, db, 7051, "legacy-missing-checker", now)
+	createAWDReadinessRelationFixture(t, db, &model.ContestChallenge{
+		ContestID:                 705,
+		ChallengeID:               7051,
+		Points:                    100,
+		IsVisible:                 true,
+		AWDCheckerType:            "",
+		AWDCheckerConfig:          `{}`,
+		AWDCheckerValidationState: model.AWDCheckerValidationStatePassed,
+		CreatedAt:                 now,
+		UpdatedAt:                 now,
+	})
+	if err := contestinfra.NewAWDRepository(db).CreateContestAWDService(context.Background(), &model.ContestAWDService{
+		ContestID:   705,
+		ChallengeID: 7051,
+		DisplayName: "Bank Portal",
+		Order:       0,
+		IsVisible:   true,
+		ScoreConfig: `{"points":100,"awd_sla_score":18,"awd_defense_score":28}`,
+		RuntimeConfig: `{
+			"challenge_id":7051,
+			"checker_type":"http_standard",
+			"checker_config":{
+				"get_flag":{"path":"/service-health","expected_status":200}
+			}
+		}`,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}); err != nil {
+		t.Fatalf("create contest awd service: %v", err)
+	}
+
+	resp, err := service.GetReadiness(context.Background(), 705)
+	if err != nil {
+		t.Fatalf("GetReadiness() error = %v", err)
+	}
+	if !resp.Ready || resp.BlockingCount != 0 || resp.PassedChallenges != 1 {
+		t.Fatalf("expected readiness to use contest_awd_services runtime config, got %+v", resp)
+	}
+	if len(resp.Items) != 1 {
+		t.Fatalf("unexpected readiness items: %+v", resp.Items)
+	}
+	if resp.Items[0].CheckerType != model.AWDCheckerTypeHTTPStandard {
+		t.Fatalf("unexpected checker_type: %+v", resp.Items[0])
+	}
+	if resp.Items[0].Title != "Bank Portal" {
+		t.Fatalf("expected display_name preferred in readiness title, got %+v", resp.Items[0])
+	}
+}
+
 func TestAWDServiceGetUserWorkspaceBuildsOwnServicesTargetsAndRecentEvents(t *testing.T) {
 	service, db := newAWDQueryServiceForTest(t)
 	now := time.Date(2026, 4, 12, 15, 0, 0, 0, time.UTC)
