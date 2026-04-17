@@ -1701,7 +1701,7 @@ const {
                         <button
                           v-if="selectedTemplate"
                           type="button"
-                          class="rounded-xl border border-border px-3 py-2 text-xs font-medium text-text-primary transition hover:border-primary"
+                          class="ui-btn ui-btn--sm ui-btn--secondary"
                           @click="loadTemplateIntoDraft(selectedTemplate)"
                         >
                           重新载入当前模板
@@ -1709,7 +1709,7 @@ const {
                         <button
                           v-if="selectedTemplate"
                           type="button"
-                          class="rounded-xl border border-border px-3 py-2 text-xs font-medium text-text-primary transition hover:border-primary"
+                          class="ui-btn ui-btn--sm ui-btn--secondary"
                           @click="clearTemplateSelection"
                         >
                           清空模板选择
@@ -1732,7 +1732,7 @@ const {
                       />
                       <button
                         type="button"
-                        class="rounded-xl border border-border px-4 py-3 text-sm font-medium text-text-primary transition hover:border-primary"
+                        class="ui-btn ui-btn--secondary"
                         @click="void loadTemplates()"
                       >
                         搜索
@@ -1794,7 +1794,7 @@ const {
                             :class="
                               isTemplateLibraryMode
                                 ? 'template-action-btn'
-                                : 'rounded-xl border border-border px-3 py-2 text-xs font-medium text-text-primary transition hover:border-primary'
+                                : 'ui-btn ui-btn--sm ui-btn--secondary'
                             "
                             @click="loadTemplateIntoDraft(template)"
                           >
@@ -1806,7 +1806,7 @@ const {
                             :class="
                               isTemplateLibraryMode
                                 ? 'template-action-btn'
-                                : 'rounded-xl border border-border px-3 py-2 text-xs font-medium text-text-primary transition hover:border-primary'
+                                : 'ui-btn ui-btn--sm ui-btn--secondary'
                             "
                             @click="resetTemplateForm(template)"
                           >
@@ -1818,7 +1818,7 @@ const {
                             :class="
                               isTemplateLibraryMode
                                 ? 'template-action-btn template-action-btn--primary'
-                                : 'rounded-xl bg-primary px-3 py-2 text-xs font-medium text-white transition hover:opacity-90'
+                                : 'ui-btn ui-btn--sm ui-btn--primary'
                             "
                             :disabled="templateBusy"
                             @click="void handleApplyTemplate(template)"
@@ -1830,7 +1830,7 @@ const {
                             :class="
                               isTemplateLibraryMode
                                 ? 'template-action-btn template-action-btn--danger'
-                                : 'rounded-xl border border-danger/30 bg-danger/10 px-3 py-2 text-xs font-medium text-danger transition hover:bg-danger/15'
+                                : 'ui-btn ui-btn--sm ui-btn--danger'
                             "
                             :disabled="templateBusy"
                             @click="void handleDeleteTemplate(template.id)"
