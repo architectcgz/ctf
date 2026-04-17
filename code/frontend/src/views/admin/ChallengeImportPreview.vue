@@ -24,7 +24,7 @@ const importId = computed(() => {
 const { preview, uploading, committing, hasPreview, loadPreview, resetPreview, commitPreview } =
   useChallengePackageImport({
     onCommitted: async () => {
-      await router.push({ name: 'ChallengeManage', query: { panel: 'manage' } })
+      await router.push({ name: 'ChallengeManage' })
     },
   })
 
@@ -38,11 +38,11 @@ async function syncPreviewByRoute(): Promise<void> {
 }
 
 async function backToImportPanel(): Promise<void> {
-  await router.push({ name: 'ChallengeManage', query: { panel: 'import' } })
+  await router.push({ name: 'AdminChallengeImportManage' })
 }
 
 async function backToQueuePanel(): Promise<void> {
-  await router.push({ name: 'ChallengeManage', query: { panel: 'queue' } })
+  await router.push({ name: 'AdminChallengeImportManage', hash: '#challenge-queue-workspace' })
 }
 
 async function handleCommitPreview(): Promise<void> {

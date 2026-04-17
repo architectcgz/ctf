@@ -66,6 +66,7 @@ describe('shared route canonical paths', () => {
     expect(findChild('platform/challenges/package-format')?.name).toBe(
       'AdminChallengePackageFormat'
     )
+    expect(findChild('platform/challenges/imports')?.name).toBe('AdminChallengeImportManage')
     expect(findChild('platform/challenges/imports/:importId')?.name).toBe(
       'AdminChallengeImportPreview'
     )
@@ -94,6 +95,7 @@ describe('shared route canonical paths', () => {
     expect(findChild('admin/instances')?.redirect).toBeTruthy()
     expect(findChild('admin/challenges')?.redirect).toBeTruthy()
     expect(findChild('admin/challenges/package-format')?.redirect).toBeTruthy()
+    expect(findChild('admin/challenges/imports')?.redirect).toBeTruthy()
     expect(findChild('admin/challenges/imports/:importId')?.redirect).toBeTruthy()
     expect(findChild('admin/challenges/:id')?.redirect).toBeTruthy()
     expect(findChild('admin/challenges/:id/topology')?.redirect).toBeTruthy()

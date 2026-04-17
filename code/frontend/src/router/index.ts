@@ -441,6 +441,17 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
+        path: 'platform/challenges/imports',
+        name: 'AdminChallengeImportManage',
+        component: () => import('@/views/admin/ChallengeImportManage.vue'),
+        meta: {
+          requiresAuth: true,
+          roles: ['teacher', 'admin'],
+          title: '导入资源包',
+          contentLayout: 'bleed',
+        },
+      },
+      {
         path: 'platform/challenges/imports/:importId',
         name: 'AdminChallengeImportPreview',
         component: () => import('@/views/admin/ChallengeImportPreview.vue'),
@@ -506,6 +517,10 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'admin/challenges/package-format',
         redirect: redirectWithQuery('/platform/challenges/package-format'),
+      },
+      {
+        path: 'admin/challenges/imports',
+        redirect: redirectWithQuery('/platform/challenges/imports'),
       },
       {
         path: 'admin/challenges/imports/:importId',

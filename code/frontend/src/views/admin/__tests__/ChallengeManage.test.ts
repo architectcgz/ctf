@@ -3,7 +3,6 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import ChallengeManage from '../ChallengeManage.vue'
 import challengeManageSource from '../ChallengeManage.vue?raw'
-import { ApiError } from '@/api/request'
 
 const pushMock = vi.fn()
 const replaceMock = vi.fn()
@@ -117,7 +116,7 @@ describe('ChallengeManage', () => {
     expect(challengeManageSource).not.toContain('<header class="workspace-topbar">')
     expect(challengeManageSource).toContain('<div class="workspace-overline">Challenge Workspace</div>')
     expect(challengeManageSource).toContain(
-      '<p class="workspace-page-copy">集中查看题目目录、发布状态与资源包导入流程。</p>'
+      '<p class="workspace-page-copy">集中查看题目目录、发布状态与题库变更。</p>'
     )
     expect(challengeManageSource).not.toContain('Inventory / Challenge Management')
     expect(challengeManageSource).toContain('Plus,')
@@ -137,9 +136,10 @@ describe('ChallengeManage', () => {
     await flushPromises()
 
     expect(wrapper.text()).toContain('题目资源管理中心')
-    expect(wrapper.text()).toContain('导入题目包')
-    expect(wrapper.text()).toContain('待确认导入')
+    expect(wrapper.text()).toContain('导入资源包')
     expect(wrapper.text()).toContain('Test Challenge')
+    expect(wrapper.text()).not.toContain('导入题目包')
+    expect(wrapper.text()).not.toContain('待确认导入')
   })
 
   it('页面壳层与题目更多菜单应声明暗色主题 token，避免夜间模式继续露出浅色背景', () => {
@@ -205,46 +205,6 @@ describe('ChallengeManage', () => {
     ).toBe(false)
 
     wrapper.unmount()
-  })
-
-  it('支持多选上传并在上传区域下方显示结果', async () => {
-    adminApiMocks.previewChallengeImport
-      .mockResolvedValueOnce({
-        id: 'import-ok',
-        file_name: 'ok.zip',
-        slug: 'ok-challenge',
-        title: 'OK Challenge',
-        category: 'web',
-        difficulty: 'easy',
-        points: 100,
-        attachments: [],
-        hints: [],
-        flag: { type: 'static', prefix: 'flag' },
-        runtime: { type: 'container', image_ref: 'ctf/ok:latest' },
-        extensions: { topology: { source: '', enabled: false } },
-        warnings: [],
-        created_at: '2026-04-06T09:10:00.000Z',
-      })
-      .mockRejectedValueOnce(
-        new ApiError('格式错误', {
-          code: 10001,
-          requestId: 'req_123',
-        })
-      )
-
-    const wrapper = mount(ChallengeManage)
-    await flushPromises()
-
-    const fileInput = wrapper.get('input[type="file"]')
-    Object.defineProperty(fileInput.element, 'files', {
-      value: [new File([''], 'ok.zip'), new File([''], 'bad.zip')]
-    })
-    await fileInput.trigger('change')
-    await flushPromises()
-
-    expect(wrapper.text()).toContain('ok.zip')
-    expect(wrapper.text()).toContain('bad.zip')
-    expect(wrapper.text()).toContain('错误码 10001')
   })
 
   it('点击筛选面板内的下拉框时不应立即关闭筛选面板', async () => {

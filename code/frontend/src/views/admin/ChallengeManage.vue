@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import type { ComponentPublicInstance } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   Book,
   CheckCircle,
-  Zap,
   Edit3,
   Eye,
   MoreHorizontal,
@@ -18,7 +17,6 @@ import {
   Calendar,
 } from 'lucide-vue-next'
 
-import ChallengePackageImportEntry from '@/components/admin/challenge/ChallengePackageImportEntry.vue'
 import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
 import WorkspaceDirectoryPagination from '@/components/common/WorkspaceDirectoryPagination.vue'
 import WorkspaceDirectoryToolbar, {
@@ -26,7 +24,6 @@ import WorkspaceDirectoryToolbar, {
 } from '@/components/common/WorkspaceDirectoryToolbar.vue'
 import { useAdminChallenges, type AdminChallengeListRow } from '@/composables/useAdminChallenges'
 import { useChallengeManagePresentation } from '@/composables/useChallengeManagePresentation'
-import { useChallengePackageImport } from '@/composables/useChallengePackageImport'
 
 type ChallengeSortOption = WorkspaceDirectorySortOption & {
   order: 'asc' | 'desc'
@@ -49,36 +46,26 @@ const {
   remove,
 } = useAdminChallenges()
 
-const {
-  uploading,
-  queueLoading,
-  selectedFileName,
-  queue,
-  uploadResults,
-  refreshQueue,
-  selectPackages,
-} = useChallengePackageImport()
-
 const publishedCount = computed(
   () => list.value.filter((item) => item.status === 'published').length
 )
 const draftCount = computed(() => list.value.filter((item) => item.status === 'draft').length)
+const archivedCount = computed(() => list.value.filter((item) => item.status === 'archived').length)
 const hasActiveFilters = computed(() =>
   Boolean(
     keyword.value.trim() || categoryFilter.value || difficultyFilter.value || statusFilter.value
   )
 )
 const manageEmptyMessage = computed(() =>
-  hasActiveFilters.value ? '当前筛选条件下没有匹配题目。' : '当前还没有题目，请先导入题目包。'
+  hasActiveFilters.value
+    ? '当前筛选条件下没有匹配题目。'
+    : '当前还没有题目，请先前往导入页上传题目包。'
 )
 
-const queueCount = computed(() => queue.value.length)
 const {
   openActionMenuId,
   getCategoryLabel,
   getDifficultyLabel,
-  formatDateTime,
-  inspectImportTask,
   toggleActionMenu,
   closeActionMenu,
   openChallengeDetail,
@@ -95,8 +82,6 @@ const {
 const actionMenuPanelRef = ref<HTMLDivElement | null>(null)
 const actionMenuStyle = ref<Record<string, string>>({})
 const actionMenuButtonRefs = new Map<string, HTMLButtonElement>()
-const importWorkspaceRef = ref<HTMLElement | null>(null)
-const queueWorkspaceRef = ref<HTMLElement | null>(null)
 
 const sortConfig = ref({ key: 'updateTime', order: 'desc', label: '最近更新' })
 const sortOptions: ChallengeSortOption[] = [
@@ -244,10 +229,6 @@ async function handleActionMenuToggle(challengeId: string): Promise<void> {
   updateActionMenuPosition()
 }
 
-onMounted(() => {
-  void refreshQueue()
-})
-
 watch(openActionMenuId, async (challengeId, _previousId, onCleanup) => {
   if (!challengeId) {
     actionMenuStyle.value = {}
@@ -277,24 +258,8 @@ watch(openActionMenuId, async (challengeId, _previousId, onCleanup) => {
   })
 })
 
-async function handleSelectPackage(files: File[]) {
-  const selectedPreview = await selectPackages(files, { parallel: files.length > 1 })
-  if (!selectedPreview?.id) {
-    return
-  }
-  await router.push({
-    name: 'AdminChallengeImportPreview',
-    params: { importId: selectedPreview.id },
-  })
-}
-
-async function openPackageFormatGuide(): Promise<void> {
-  await router.push({ name: 'AdminChallengePackageFormat' })
-}
-
-function scrollToWorkspace(section: 'import' | 'queue'): void {
-  const target = section === 'import' ? importWorkspaceRef.value : queueWorkspaceRef.value
-  target?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+async function openImportWorkspace(): Promise<void> {
+  await router.push({ name: 'AdminChallengeImportManage' })
 }
 
 function resolveChallengeCategoryLabel(value: unknown): string {
@@ -319,32 +284,16 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
             <div class="workspace-tab-heading__main">
               <div class="workspace-overline">Challenge Workspace</div>
               <h1 class="workspace-page-title">题目资源管理中心</h1>
-              <p class="workspace-page-copy">集中查看题目目录、发布状态与资源包导入流程。</p>
+              <p class="workspace-page-copy">集中查看题目目录、发布状态与题库变更。</p>
             </div>
             <div class="challenge-manage-hero-actions">
               <button
                 type="button"
-                class="challenge-manage-action"
-                @click="openPackageFormatGuide"
-              >
-                <FileSearch class="mr-1.5 h-3.5 w-3.5" />
-                题目包规范
-              </button>
-              <button
-                type="button"
                 class="challenge-manage-action challenge-manage-action--primary"
-                @click="scrollToWorkspace('import')"
+                @click="openImportWorkspace"
               >
                 <Plus class="mr-1.5 h-4 w-4" />
                 导入资源包
-              </button>
-              <button
-                type="button"
-                class="challenge-manage-action"
-                @click="scrollToWorkspace('queue')"
-              >
-                <Zap class="mr-1.5 h-3.5 w-3.5" />
-                待确认导入
               </button>
             </div>
           </div>
@@ -382,21 +331,6 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
 
             <article class="journal-note progress-card metric-panel-card">
               <div class="challenge-metric-head">
-                <span class="journal-note-label progress-card-label metric-panel-label">待确认任务</span>
-                <Zap class="h-4 w-4" />
-              </div>
-              <div class="challenge-metric-value-wrap">
-                <div class="journal-note-value progress-card-value metric-panel-value">
-                  {{ queueCount.toString().padStart(2, '0') }}
-                </div>
-                <div class="journal-note-helper progress-card-hint metric-panel-helper">
-                  待导入任务队列
-                </div>
-              </div>
-            </article>
-
-            <article class="journal-note progress-card metric-panel-card">
-              <div class="challenge-metric-head">
                 <span class="journal-note-label progress-card-label metric-panel-label">草稿存量</span>
                 <Edit3 class="h-4 w-4" />
               </div>
@@ -406,6 +340,21 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
                 </div>
                 <div class="journal-note-helper progress-card-hint metric-panel-helper">
                   导入后仍待发布
+                </div>
+              </div>
+            </article>
+
+            <article class="journal-note progress-card metric-panel-card">
+              <div class="challenge-metric-head">
+                <span class="journal-note-label progress-card-label metric-panel-label">已归档</span>
+                <Calendar class="h-4 w-4" />
+              </div>
+              <div class="challenge-metric-value-wrap">
+                <div class="journal-note-value progress-card-value metric-panel-value">
+                  {{ archivedCount.toString().padStart(2, '0') }}
+                </div>
+                <div class="journal-note-helper progress-card-hint metric-panel-helper">
+                  只读保留题目
                 </div>
               </div>
             </article>
@@ -618,156 +567,6 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
               @change-page="changePage"
             />
           </section>
-
-          <section
-            id="challenge-import-workspace"
-            ref="importWorkspaceRef"
-            class="workspace-directory-section challenge-manage-directory challenge-workspace-section"
-          >
-            <header class="list-heading challenge-section-heading">
-              <div>
-                <div class="workspace-overline">Challenge Package</div>
-                <h2 class="list-heading__title">导入题目包</h2>
-                <p class="challenge-section-copy">
-                  上传压缩包后先进入预览，再确认是否写入题库。格式规则单独维护，页面只保留导入主流程。
-                </p>
-              </div>
-              <div class="challenge-manage-hero-actions">
-                <a
-                  class="challenge-manage-action"
-                  href="/downloads/challenge-package-sample-v1.zip"
-                  download="challenge-package-sample-v1.zip"
-                >
-                  下载示例题目包
-                </a>
-                <button
-                  type="button"
-                  class="challenge-manage-action"
-                  @click="openPackageFormatGuide"
-                >
-                  查看题目包示例
-                </button>
-              </div>
-            </header>
-
-            <ChallengePackageImportEntry
-              :hide-header="true"
-              :uploading="uploading"
-              :selected-file-name="selectedFileName"
-              @select="handleSelectPackage"
-            />
-
-            <section
-              v-if="uploadResults.length > 0"
-              class="workspace-directory-section challenge-plain-section"
-            >
-              <div class="list-heading">
-                <div>
-                  <div class="workspace-overline">Upload Receipt</div>
-                  <h2 class="list-heading__title">最近上传结果</h2>
-                </div>
-              </div>
-
-              <div class="challenge-panel-stack">
-                <article
-                  v-for="result in uploadResults"
-                  :key="result.id"
-                  class="challenge-upload-result"
-                  :class="
-                    result.status === 'success'
-                      ? 'challenge-upload-result--success'
-                      : 'challenge-upload-result--error'
-                  "
-                >
-                  <div class="challenge-upload-result__head">
-                    <span
-                      class="challenge-upload-result__status"
-                      :class="
-                        result.status === 'success'
-                          ? 'challenge-upload-result__status--success'
-                          : 'challenge-upload-result__status--error'
-                      "
-                    >
-                      {{ result.status === 'success' ? '成功' : '失败' }}
-                    </span>
-                    <strong class="challenge-upload-result__title" :title="result.fileName">
-                      {{ result.fileName }}
-                    </strong>
-                  </div>
-                  <p class="challenge-upload-result__copy">{{ result.message }}</p>
-                  <div class="challenge-upload-result__meta">
-                    <span>{{ formatDateTime(result.createdAt) }}</span>
-                    <span v-if="result.code !== undefined">错误码 {{ result.code }}</span>
-                    <span v-if="result.requestId">请求ID {{ result.requestId }}</span>
-                  </div>
-                </article>
-              </div>
-            </section>
-          </section>
-
-          <section
-            id="challenge-queue-workspace"
-            ref="queueWorkspaceRef"
-            class="workspace-directory-section challenge-manage-directory challenge-workspace-section"
-          >
-            <div class="list-heading challenge-directory-head challenge-section-heading">
-              <div>
-                <div class="workspace-overline">Import Review</div>
-                <h2 class="list-heading__title">待确认导入</h2>
-                <p class="challenge-section-copy">
-                  这里列出已生成预览、但还没正式导入题库的题目包。确认无误后，可继续查看预览并完成导入。
-                </p>
-              </div>
-              <div class="challenge-directory-meta">共 {{ queueCount }} 个待处理任务</div>
-            </div>
-
-            <div v-if="queueLoading" class="challenge-directory-state">正在同步导入队列...</div>
-            <div v-else-if="queue.length === 0" class="challenge-directory-state">
-              当前没有待确认的导入任务。
-            </div>
-
-            <div v-else class="challenge-panel-stack">
-              <article
-                v-for="item in queue"
-                :key="item.id"
-                class="challenge-plain-section challenge-queue-item"
-              >
-                <div class="flex min-w-0 items-start gap-4">
-                  <div class="challenge-queue-id">IMP-{{ item.id.slice(0, 6).toUpperCase() }}</div>
-                  <div class="min-w-0 flex-1">
-                    <h2 class="challenge-queue-title" :title="item.title">
-                      {{ item.title }}
-                    </h2>
-                    <p class="challenge-queue-file" :title="item.file_name">
-                      {{ item.file_name }}
-                    </p>
-                    <div class="mt-3 flex flex-wrap gap-2">
-                      <span class="challenge-table-pill challenge-table-pill--category">
-                        {{ getCategoryLabel(item.category) }}
-                      </span>
-                      <span class="challenge-table-pill challenge-table-pill--neutral">
-                        {{ getDifficultyLabel(item.difficulty) }}
-                      </span>
-                      <span class="challenge-queue-points">{{ item.points }} pts</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="flex flex-col items-start gap-2 md:items-end">
-                  <div class="challenge-queue-time">
-                    {{ formatDateTime(item.created_at) }}
-                  </div>
-                  <button
-                    type="button"
-                    class="challenge-manage-action challenge-manage-action--primary"
-                    @click="inspectImportTask(item)"
-                  >
-                    继续查看预览
-                  </button>
-                </div>
-              </article>
-            </div>
-          </section>
         </section>
       </main>
     </div>
@@ -807,8 +606,6 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
     var(--workspace-brand) 10%,
     var(--challenge-page-surface)
   );
-  --challenge-page-success-soft: color-mix(in srgb, var(--color-success) 12%, var(--challenge-page-surface));
-  --challenge-page-danger-soft: color-mix(in srgb, var(--color-danger) 10%, var(--challenge-page-surface));
   border: none;
   background: var(--challenge-page-bg);
 }
@@ -858,28 +655,6 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-}
-
-.challenge-workspace-section {
-  scroll-margin-top: 6rem;
-}
-
-.challenge-section-heading {
-  align-items: flex-start;
-  gap: 1rem;
-}
-
-.challenge-section-copy {
-  margin: 0.5rem 0 0;
-  max-width: 44rem;
-  font-size: 0.92rem;
-  line-height: 1.6;
-  color: var(--challenge-page-muted);
-}
-
-.challenge-panel-stack {
-  display: grid;
-  gap: 1rem;
 }
 
 .challenge-manage-action {
@@ -1034,12 +809,6 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
   background: color-mix(in srgb, var(--workspace-brand) 10%, var(--challenge-page-surface));
   color: var(--challenge-page-accent);
   border: 1px solid color-mix(in srgb, var(--workspace-brand) 18%, transparent);
-}
-
-.challenge-table-pill--neutral {
-  background: color-mix(in srgb, var(--challenge-page-line) 18%, var(--challenge-page-surface));
-  color: var(--challenge-page-muted);
-  border: 1px solid color-mix(in srgb, var(--challenge-page-line-strong) 78%, transparent);
 }
 
 .challenge-table__title-cell {
@@ -1228,114 +997,8 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
   color: color-mix(in srgb, var(--color-danger) 96%, var(--challenge-action-text));
 }
 
-.challenge-directory-state,
-.challenge-directory-meta,
-.challenge-queue-file,
-.challenge-queue-time,
-.challenge-upload-result__copy,
-.challenge-upload-result__meta {
+.challenge-directory-state {
   color: var(--challenge-page-muted);
-}
-
-.challenge-queue-title,
-.challenge-upload-result__title {
-  margin: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--challenge-page-text);
-}
-
-.challenge-queue-file {
-  margin: 0.25rem 0 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 0.875rem;
-}
-
-.challenge-queue-id {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 5.5rem;
-  height: 2rem;
-  padding: 0 0.75rem;
-  border: 1px solid color-mix(in srgb, var(--workspace-brand) 18%, var(--challenge-page-line));
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--workspace-brand) 9%, var(--challenge-page-surface));
-  font-family: var(--font-family-mono, ui-monospace, SFMono-Regular, monospace);
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  color: var(--challenge-page-accent);
-}
-
-.challenge-queue-points {
-  font-family: var(--font-family-mono, ui-monospace, SFMono-Regular, monospace);
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: var(--challenge-page-muted);
-}
-
-.challenge-upload-result {
-  display: grid;
-  gap: 0.5rem;
-  padding: 1rem;
-  border: 1px solid var(--challenge-page-line);
-  border-radius: 1rem;
-  background: var(--challenge-page-surface);
-}
-
-.challenge-upload-result--success {
-  border-color: color-mix(in srgb, var(--color-success) 24%, var(--challenge-page-line));
-  background: color-mix(in srgb, var(--color-success) 9%, var(--challenge-page-surface));
-}
-
-.challenge-upload-result--error {
-  border-color: color-mix(in srgb, var(--color-danger) 24%, var(--challenge-page-line));
-  background: color-mix(in srgb, var(--color-danger) 8%, var(--challenge-page-surface));
-}
-
-.challenge-upload-result__head {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.challenge-upload-result__status {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 999px;
-  padding: 0.125rem 0.5rem;
-  font-size: 0.75rem;
-  font-weight: 700;
-}
-
-.challenge-upload-result__status--success {
-  background: color-mix(in srgb, var(--color-success) 16%, transparent);
-  color: color-mix(in srgb, var(--color-success) 92%, var(--challenge-page-text));
-}
-
-.challenge-upload-result__status--error {
-  background: color-mix(in srgb, var(--color-danger) 14%, transparent);
-  color: color-mix(in srgb, var(--color-danger) 92%, var(--challenge-page-text));
-}
-
-.challenge-upload-result__copy {
-  margin: 0;
-  font-size: 0.8rem;
-}
-
-.challenge-upload-result__meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  font-size: 0.65rem;
-  font-weight: 600;
 }
 
 :global([data-theme='light']) .challenge-manage-shell {

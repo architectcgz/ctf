@@ -85,9 +85,6 @@ describe('ChallengeImportPreview', () => {
     await flushPromises()
 
     expect(adminApiMocks.commitChallengeImport).toHaveBeenCalledWith('import-1')
-    expect(pushMock).toHaveBeenCalledWith({
-      name: 'ChallengeManage',
-      query: { panel: 'manage' },
-    })
+    expect(pushMock).toHaveBeenCalledWith({ name: 'ChallengeManage' })
   })
 })
