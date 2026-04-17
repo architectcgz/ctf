@@ -156,4 +156,28 @@ describe('EnvironmentTemplateLibrary', () => {
       'class="inline-flex items-center gap-2 self-end rounded-xl border border-danger/30 bg-danger/10 px-4 py-3 text-sm font-medium text-danger transition hover:bg-danger/15"'
     )
   })
+
+  it('模板目录操作应复用共享小尺寸按钮原语', () => {
+    expect(challengeTopologyStudioPageSource).toContain(
+      'class="ui-btn ui-btn--sm ui-btn--secondary"'
+    )
+    expect(challengeTopologyStudioPageSource).toContain(
+      "isTemplateLibraryMode\n                                ? 'template-action-btn'\n                                : 'ui-btn ui-btn--sm ui-btn--secondary'"
+    )
+    expect(challengeTopologyStudioPageSource).toContain(
+      "isTemplateLibraryMode\n                                ? 'template-action-btn template-action-btn--primary'\n                                : 'ui-btn ui-btn--sm ui-btn--primary'"
+    )
+    expect(challengeTopologyStudioPageSource).toContain(
+      "isTemplateLibraryMode\n                                ? 'template-action-btn template-action-btn--danger'\n                                : 'ui-btn ui-btn--sm ui-btn--danger'"
+    )
+    expect(challengeTopologyStudioPageSource).not.toContain(
+      "rounded-xl border border-border px-3 py-2 text-xs font-medium text-text-primary transition hover:border-primary"
+    )
+    expect(challengeTopologyStudioPageSource).not.toContain(
+      "rounded-xl bg-primary px-3 py-2 text-xs font-medium text-white transition hover:opacity-90"
+    )
+    expect(challengeTopologyStudioPageSource).not.toContain(
+      "rounded-xl border border-danger/30 bg-danger/10 px-3 py-2 text-xs font-medium text-danger transition hover:bg-danger/15"
+    )
+  })
 })
