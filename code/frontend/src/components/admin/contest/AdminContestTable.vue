@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { Swords } from 'lucide-vue-next'
 
 import type { ContestDetailData, ContestStatus } from '@/api/contracts'
 import AdminPaginationControls from '@/components/admin/AdminPaginationControls.vue'
@@ -15,6 +16,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   edit: [contest: ContestDetailData]
   export: [contest: ContestDetailData]
+  workbench: [contest: ContestDetailData]
   changePage: [page: number]
 }>()
 
@@ -38,6 +40,10 @@ function getStatusPillClass(status: ContestStatus): string {
   if (status === 'ended' || status === 'archived') return 'contest-status-pill--ended'
   if (status === 'cancelled') return 'contest-status-pill--cancelled'
   return 'contest-status-pill--neutral'
+}
+
+function canEnterWorkbench(contest: ContestDetailData): boolean {
+  return contest.mode === 'awd' && (contest.status === 'running' || contest.status === 'frozen')
 }
 </script>
 
@@ -79,15 +85,25 @@ function getStatusPillClass(status: ContestStatus): string {
 
         <div class="ui-row-actions contest-row__actions" role="group" aria-label="竞赛操作">
           <button
+            v-if="canEnterWorkbench(contest)"
+            :id="`contest-open-workbench-${contest.id}`"
             type="button"
-            class="ui-btn ui-btn--sm ui-btn--primary contest-action contest-action--primary"
+            class="ui-btn ui-btn--sm ui-btn--primary contest-action contest-action--workbench"
+            @click="emit('workbench', contest)"
+          >
+            <Swords class="h-3.5 w-3.5" />
+            进入 AWD 赛区
+          </button>
+          <button
+            type="button"
+            class="ui-btn ui-btn--sm ui-btn--secondary contest-action"
             @click="emit('edit', contest)"
           >
             编辑
           </button>
           <button
             type="button"
-            class="ui-btn ui-btn--sm ui-btn--secondary contest-action contest-action--ghost"
+            class="ui-btn ui-btn--sm ui-btn--secondary contest-action"
             @click="emit('export', contest)"
           >
             导出结果
@@ -247,10 +263,18 @@ function getStatusPillClass(status: ContestStatus): string {
 
 .contest-row__actions {
   justify-content: flex-end;
+  flex-wrap: wrap;
 }
 
 .contest-action {
   min-width: 5.25rem;
+}
+
+.contest-action--workbench {
+  --ui-btn-primary-bg: color-mix(in srgb, var(--color-success) 78%, var(--journal-ink));
+  --ui-btn-primary-border: color-mix(in srgb, var(--color-success) 56%, transparent);
+  --ui-btn-primary-color: white;
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--color-success) 18%, transparent);
 }
 
 @media (max-width: 1023px) {

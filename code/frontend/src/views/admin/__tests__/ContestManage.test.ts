@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 
 import ContestManage from '../ContestManage.vue'
+import contestOrchestrationSource from '@/components/admin/contest/ContestOrchestrationPage.vue?raw'
 import { ApiError } from '@/api/request'
 
 const pushMock = vi.fn()
@@ -125,6 +126,14 @@ describe('ContestManage', () => {
             template:
               '<div><button v-if="open" id="submit-awd-contest" type="button" @click="$emit(\'save\', { ...draft, mode: \'awd\', status: \'running\' })">保存 AWD</button></div>',
           },
+          AWDReadinessOverrideDialog: {
+            props: ['open', 'title'],
+            data() {
+              return { reason: '' }
+            },
+            template:
+              '<div v-if="open"><div>{{ title }}</div><textarea id="awd-readiness-override-reason" v-model="reason" /><button id="awd-readiness-override-submit" type="button" @click="$emit(\'confirm\', reason)">强制继续</button></div>',
+          },
           ElDialog: {
             props: ['modelValue', 'title'],
             template:
@@ -201,6 +210,14 @@ describe('ContestManage', () => {
             props: ['open', 'draft'],
             template:
               '<div><button v-if="open" id="submit-awd-contest" type="button" @click="$emit(\'save\', { ...draft, mode: \'awd\', status: \'running\' })">保存 AWD</button></div>',
+          },
+          AWDReadinessOverrideDialog: {
+            props: ['open', 'title'],
+            data() {
+              return { reason: '' }
+            },
+            template:
+              '<div v-if="open"><div>{{ title }}</div><textarea id="awd-readiness-override-reason" v-model="reason" /><button id="awd-readiness-override-submit" type="button" @click="$emit(\'confirm\', reason)">强制继续</button></div>',
           },
           ElDialog: {
             props: ['modelValue', 'title'],
@@ -379,6 +396,61 @@ describe('ContestManage', () => {
     })
   })
 
+  it('赛事目录筛选应切到共享目录工具栏', () => {
+    expect(contestOrchestrationSource).toContain(
+      "from '@/components/common/WorkspaceDirectoryToolbar.vue'"
+    )
+    expect(contestOrchestrationSource).toContain('<WorkspaceDirectoryToolbar')
+    expect(contestOrchestrationSource).toContain('filter-panel-title="赛事筛选"')
+    expect(contestOrchestrationSource).toContain('total-suffix="场赛事"')
+    expect(contestOrchestrationSource).not.toContain('<nav class="top-tabs"')
+    expect(contestOrchestrationSource).not.toContain('class="contest-filter-grid"')
+    expect(contestOrchestrationSource).not.toContain('class="contest-filter-strip"')
+  })
+
+  it('应该在赛事目录通过共享筛选面板切换状态筛选', async () => {
+    contestMocks.getContests.mockResolvedValue({
+      list: [
+        {
+          id: '1',
+          title: '2026 春季校园 CTF',
+          description: '校内赛',
+          mode: 'jeopardy',
+          status: 'registering',
+          starts_at: '2026-03-15T09:00:00.000Z',
+          ends_at: '2026-03-15T13:00:00.000Z',
+        },
+      ],
+      total: 1,
+      page: 1,
+      page_size: 20,
+    })
+
+    const wrapper = mount(ContestManage, {
+      global: {
+        stubs: {
+          ElDialog: {
+            template: '<div><slot /><slot name="footer" /></div>',
+          },
+        },
+      },
+    })
+
+    await flushPromises()
+    contestMocks.getContests.mockClear()
+
+    await wrapper.get('.workspace-directory-toolbar__filter-toggle').trigger('click')
+    await flushPromises()
+    await wrapper.get('.contest-filter-control').setValue('running')
+    await flushPromises()
+
+    expect(contestMocks.getContests).toHaveBeenCalledWith({
+      page: 1,
+      page_size: 20,
+      status: 'running',
+    })
+  })
+
   it('应该在赛事目录点击编辑后跳转到独立编辑页', async () => {
     contestMocks.getContests.mockResolvedValue({
       list: [
@@ -408,8 +480,13 @@ describe('ContestManage', () => {
     })
 
     await flushPromises()
-    await wrapper.get('#contest-tab-list').trigger('click')
-    await wrapper.find('.contest-action--primary').trigger('click')
+    const editButton = wrapper
+      .findAll('button')
+      .find((node) => node.text().trim() === '编辑')
+
+    expect(editButton).toBeTruthy()
+
+    await editButton!.trigger('click')
 
     expect(pushMock).toHaveBeenCalledWith({ name: 'ContestEdit', params: { id: 'contest-1' } })
   })
@@ -454,11 +531,10 @@ describe('ContestManage', () => {
 
     await flushPromises()
 
-    expect(wrapper.find('#contest-tab-operations').exists()).toBe(false)
     expect(wrapper.find('#contest-panel-operations').exists()).toBe(false)
-    expect(wrapper.text()).toContain('进入竞赛工作台')
+    expect(wrapper.text()).toContain('进入 AWD 赛区')
 
-    await wrapper.get('#contest-open-workbench').trigger('click')
+    await wrapper.get('#contest-open-workbench-awd-running').trigger('click')
 
     expect(pushMock).toHaveBeenCalledWith({
       name: 'ContestEdit',
@@ -467,7 +543,7 @@ describe('ContestManage', () => {
     })
   })
 
-  it('应该在创建竞赛成功后切回赛事目录', async () => {
+  it('应该在创建竞赛成功后切回赛事工作台', async () => {
     contestMocks.getContests.mockResolvedValue({
       list: [
         {
@@ -505,7 +581,7 @@ describe('ContestManage', () => {
     })
 
     await flushPromises()
-    await wrapper.get('#contest-tab-create').trigger('click')
+    await wrapper.get('#contest-open-create').trigger('click')
     await wrapper.get('#contest-title').setValue('2026 新生赛')
     await wrapper.get('#contest-description').setValue('迎新赛')
     await wrapper.get('#contest-starts-at').setValue('2026-03-20T09:00')
@@ -520,8 +596,8 @@ describe('ContestManage', () => {
       starts_at: new Date('2026-03-20T09:00').toISOString(),
       ends_at: new Date('2026-03-20T12:00').toISOString(),
     })
-    expect(wrapper.get('#contest-tab-list').attributes('aria-selected')).toBe('true')
-    expect(wrapper.get('#contest-panel-list').attributes('aria-hidden')).toBe('false')
+    expect(wrapper.get('#contest-panel-overview').attributes('aria-hidden')).toBe('false')
+    expect(wrapper.text()).toContain('全部赛事')
   })
 
   it('应该在空列表时展示显式空态', async () => {

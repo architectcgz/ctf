@@ -86,9 +86,12 @@ describe('admin management surface alignment', () => {
     )
     expect(contestOrchestrationSource).toContain('workspace-directory-empty contest-empty-state')
     expect(contestOrchestrationSource).toContain('class="ui-btn ui-btn--ghost"')
+    expect(contestOrchestrationSource).toContain(
+      "from '@/components/common/WorkspaceDirectoryToolbar.vue'"
+    )
+    expect(contestOrchestrationSource).toContain('<WorkspaceDirectoryToolbar')
     expect(contestOrchestrationSource).toContain('class="ui-field contest-filter-field"')
-    expect(contestOrchestrationSource).toContain('class="ui-control-wrap"')
-    expect(contestOrchestrationSource).toContain('class="ui-control"')
+    expect(contestOrchestrationSource).toContain('class="ui-control contest-filter-control"')
     expect(contestOrchestrationSource).toMatch(
       /\.contest-empty-state\s*\{[\s\S]*border-top-color:\s*color-mix\(in srgb,\s*var\(--journal-border\) 68%, transparent\);[\s\S]*border-bottom-color:\s*color-mix\(in srgb,\s*var\(--journal-border\) 68%, transparent\);/s
     )
@@ -97,22 +100,18 @@ describe('admin management surface alignment', () => {
     )
     expect(contestOrchestrationSource).toContain('<h1 class="workspace-page-title">赛事管理台</h1>')
     expect(contestOrchestrationSource).toContain(
-      '<h2 class="list-heading__title">当前赛事窗口</h2>'
+      '<h2 class="list-heading__title">全部赛事</h2>'
     )
-    expect(contestOrchestrationSource).toContain(
-      '<div class="workspace-overline">Contest Directory</div>'
-    )
-    expect(contestOrchestrationSource).toContain('<h2 class="list-heading__title">赛事目录</h2>')
     expect(contestOrchestrationSource).toContain('workspace-directory-empty contest-empty-state')
     expect(contestOrchestrationSource).not.toContain('当前筛选结果')
     expect(contestOrchestrationSource).not.toContain(
       'workspace-tab-heading__title">当前筛选结果</h3>'
     )
+    expect(contestOrchestrationSource).not.toContain('<nav class="top-tabs"')
     expect(contestOrchestrationSource).not.toContain('class="contest-list-filters"')
-    expect(contestOrchestrationSource).toContain('class="contest-filter-grid"')
-    expect(contestOrchestrationSource).toContain(
-      'class="ui-field contest-filter-field contest-filter-field--action"'
-    )
+    expect(contestOrchestrationSource).toContain('class="contest-filter-stack"')
+    expect(contestOrchestrationSource).not.toContain('class="contest-filter-grid"')
+    expect(contestOrchestrationSource).not.toContain('contest-filter-field--action')
     expect(contestOrchestrationSource).not.toContain('class="contest-filter-actions"')
     expect(contestOrchestrationSource).toMatch(
       /\.contest-overview-summary\.metric-panel-default-surface\.metric-panel-workspace-surface\s*\{[\s\S]*--metric-panel-border:\s*color-mix\(in srgb,\s*var\(--workspace-brand\)\s*16%,\s*var\(--workspace-line-soft\)\);[\s\S]*--metric-panel-background:\s*radial-gradient\([\s\S]*linear-gradient\(/s
@@ -235,11 +234,12 @@ describe('admin management surface alignment', () => {
     expect(cheatDetectionSource).not.toContain('workspace-tab-heading__title">快速排查入口</h2>')
   })
 
-  it('contest orchestration should place the tab rail at the top of the workspace before the page title', () => {
-    expect(contestOrchestrationSource).toContain('class="top-tabs"')
-    expect(contestOrchestrationSource).toContain('class="content-pane"')
-    expect(contestOrchestrationSource.indexOf('class="top-tabs"')).toBeLessThan(
-      contestOrchestrationSource.indexOf('赛事管理台')
+  it('contest orchestration should merge metrics and directory into one workspace instead of keeping a top tab rail', () => {
+    expect(contestOrchestrationSource).not.toContain('class="top-tabs"')
+    expect(contestOrchestrationSource).toContain('id="contest-panel-overview"')
+    expect(contestOrchestrationSource).not.toContain('id="contest-panel-list"')
+    expect(contestOrchestrationSource).toContain(
+      'class="workspace-directory-section contest-directory-section"'
     )
   })
 
@@ -251,8 +251,10 @@ describe('admin management surface alignment', () => {
     )
     expect(styleSource).toContain('.workspace-directory-section > .workspace-directory-pagination')
 
-    expect(userGovernanceSource).toContain('class="workspace-directory-section"')
-    expect(userGovernanceSource).toContain('class="user-table-shell workspace-directory-list"')
+    expect(userGovernanceSource).toContain('workspace-directory-section')
+    expect(userGovernanceSource).toContain(
+      'class="user-table-shell workspace-directory-list user-list"'
+    )
     expect(userGovernanceSource).toContain(
       'class="admin-pagination workspace-directory-pagination"'
     )

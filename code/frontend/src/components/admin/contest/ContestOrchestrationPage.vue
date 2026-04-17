@@ -8,9 +8,11 @@ import type { ContestDetailData, ContestStatus } from '@/api/contracts'
 import AdminContestTable from '@/components/admin/contest/AdminContestTable.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
+import WorkspaceDirectoryToolbar from '@/components/common/WorkspaceDirectoryToolbar.vue'
 import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'
 import type { ContestFieldLocks, ContestFormDraft } from '@/composables/useAdminContests'
 
+type RequestedContestPanelKey = 'overview' | 'list' | 'create'
 type StatusFilter =
   | 'all'
   | Extract<ContestStatus, 'draft' | 'registering' | 'running' | 'frozen' | 'ended'>
@@ -26,7 +28,7 @@ const props = defineProps<{
   createDraft: ContestFormDraft
   createSaving: boolean
   createFieldLocks: ContestFieldLocks
-  requestedPanel: ContestPanelKey | null
+  requestedPanel: RequestedContestPanelKey | null
   requestedPanelVersion: number
 }>()
 
@@ -40,38 +42,14 @@ const emit = defineEmits<{
   changePage: [page: number]
 }>()
 
-const panelTabs = [
-  {
-    key: 'overview',
-    label: '总览',
-    tabId: 'contest-tab-overview',
-    panelId: 'contest-panel-overview',
-  },
-  {
-    key: 'list',
-    label: '赛事目录',
-    tabId: 'contest-tab-list',
-    panelId: 'contest-panel-list',
-  },
-  {
-    key: 'create',
-    label: '创建竞赛',
-    tabId: 'contest-tab-create',
-    panelId: 'contest-panel-create',
-  },
-] as const
-
 const router = useRouter()
 
-type ContestPanelKey = (typeof panelTabs)[number]['key']
-const contestPanelOrder = panelTabs.map((tab) => tab.key) as ContestPanelKey[]
+type ContestPanelKey = 'overview' | 'create'
 const {
   activeTab: activePanel,
-  setTabButtonRef,
   selectTab: selectPanel,
-  handleTabKeydown,
 } = useUrlSyncedTabs<ContestPanelKey>({
-  orderedTabs: contestPanelOrder,
+  orderedTabs: ['overview', 'create'],
   defaultTab: 'overview',
 })
 
@@ -82,18 +60,12 @@ const runningCount = computed(() => props.list.filter((item) => item.status === 
 const awdCount = computed(() => props.awdContests.length)
 const listCount = computed(() => props.list.length)
 const hasStatusFilter = computed(() => props.statusFilter !== 'all')
-const preferredWorkbenchContest = computed(
-  () =>
-    props.awdContests.find((item) => item.status === 'running' || item.status === 'frozen') ||
-    props.awdContests[0] ||
-    null
-)
 
 watch(
   () => props.requestedPanelVersion,
   () => {
     if (props.requestedPanel) {
-      selectPanel(props.requestedPanel)
+      selectPanel(props.requestedPanel === 'create' ? 'create' : 'overview')
     }
   }
 )
@@ -107,14 +79,10 @@ function openEditContest(contest: ContestDetailData) {
   void router.push({ name: 'ContestEdit', params: { id: contest.id } })
 }
 
-function openContestWorkbench() {
-  if (!preferredWorkbenchContest.value) {
-    return
-  }
-
+function openContestWorkbench(contest: ContestDetailData) {
   void router.push({
     name: 'ContestEdit',
-    params: { id: preferredWorkbenchContest.value.id },
+    params: { id: contest.id },
     query: { panel: 'operations', opsPanel: 'inspector' },
   })
 }
@@ -124,33 +92,11 @@ function openContestWorkbench() {
   <section
     class="journal-shell journal-shell-admin journal-notes-card journal-hero workspace-shell flex min-h-full flex-1 flex-col"
   >
-    <nav class="top-tabs" role="tablist" aria-label="赛事管理视图切换">
-      <button
-        v-for="(tab, index) in panelTabs"
-        :id="tab.tabId"
-        :key="tab.key"
-        :ref="(element) => setTabButtonRef(tab.key, element as HTMLButtonElement | null)"
-        type="button"
-        role="tab"
-        class="top-tab"
-        :class="{ active: activePanel === tab.key }"
-        :aria-selected="activePanel === tab.key ? 'true' : 'false'"
-        :aria-controls="tab.panelId"
-        :tabindex="activePanel === tab.key ? 0 : -1"
-        @click="tab.key === 'create' ? openCreatePanel() : selectPanel(tab.key)"
-        @keydown="handleTabKeydown($event, index)"
-      >
-        {{ tab.label }}
-      </button>
-    </nav>
-
     <main class="content-pane">
       <section
         id="contest-panel-overview"
-        class="tab-panel contest-panel"
-        :class="{ active: activePanel === 'overview' }"
-        role="tabpanel"
-        aria-labelledby="contest-tab-overview"
+        v-show="activePanel === 'overview'"
+        class="contest-panel contest-panel--workspace"
         :aria-hidden="activePanel === 'overview' ? 'false' : 'true'"
       >
         <header class="list-heading contest-overview-head">
@@ -158,7 +104,7 @@ function openContestWorkbench() {
             <div class="workspace-overline">Contest Workspace</div>
             <h1 class="workspace-page-title">赛事管理台</h1>
             <p class="workspace-page-copy">
-              在同一套工作区里查看赛事窗口、切换目录筛选，并按需进入竞赛工作台的运行段。
+              上面直接查看关键赛事指标，下面围绕具体赛事对象完成筛选、编辑、导出和进入攻防运维。
             </p>
           </div>
 
@@ -167,7 +113,12 @@ function openContestWorkbench() {
               <RefreshCw class="h-4 w-4" />
               刷新列表
             </button>
-            <button type="button" class="ui-btn ui-btn--primary" @click="openCreatePanel">
+            <button
+              id="contest-open-create"
+              type="button"
+              class="ui-btn ui-btn--primary"
+              @click="openCreatePanel"
+            >
               <Plus class="h-4 w-4" />
               创建竞赛
             </button>
@@ -208,127 +159,58 @@ function openContestWorkbench() {
               {{ awdCount }}
             </div>
             <div class="journal-note-helper progress-card-hint metric-panel-helper">
-              当前页可直接进入竞赛工作台的运行段
+              当前页已接入攻防运维链路的 AWD 赛事
             </div>
           </div>
         </div>
 
-        <section class="workspace-directory-section contest-overview-section">
+        <section class="workspace-directory-section contest-directory-section">
           <header class="list-heading">
             <div>
-              <div class="journal-note-label">Contest Status</div>
-              <h2 class="list-heading__title">当前赛事窗口</h2>
+              <div class="journal-note-label">Contest Directory</div>
+              <h2 class="list-heading__title">全部赛事</h2>
             </div>
             <div class="contest-section-meta">当前页 {{ listCount }} 场赛事</div>
           </header>
-
-          <div class="contest-overview-rows">
-            <article class="contest-overview-row">
-              <div class="contest-overview-row__body">
-                <h3 class="contest-overview-row__title">报名与开赛窗口</h3>
-                <p class="contest-overview-row__copy">
-                  当前页有 {{ registeringCount }} 场赛事开放报名，{{ runningCount }}
-                  场赛事正在进行。
-                </p>
+          <WorkspaceDirectoryToolbar
+            model-value=""
+            selected-sort-label=""
+            :sort-options="[]"
+            :total="total"
+            :show-search="false"
+            filter-panel-title="赛事筛选"
+            total-suffix="场赛事"
+            reset-label="清空筛选"
+            :reset-disabled="!hasStatusFilter"
+            @reset-filters="emit('updateStatusFilter', 'all')"
+          >
+            <template #filter-panel>
+              <div class="contest-filter-stack">
+                <label class="ui-field contest-filter-field">
+                  <span class="ui-field__label contest-filter-label">状态筛选</span>
+                  <span class="ui-control-wrap">
+                    <select
+                      :value="statusFilter"
+                      class="ui-control contest-filter-control"
+                      @change="
+                        emit(
+                          'updateStatusFilter',
+                          ($event.target as HTMLSelectElement).value as StatusFilter
+                        )
+                      "
+                    >
+                      <option value="all">全部状态</option>
+                      <option value="draft">草稿</option>
+                      <option value="registering">报名中</option>
+                      <option value="running">进行中</option>
+                      <option value="frozen">已冻结</option>
+                      <option value="ended">已结束</option>
+                    </select>
+                  </span>
+                </label>
               </div>
-              <button
-                type="button"
-                class="ui-btn ui-btn--link contest-inline-link"
-                @click="selectPanel('list')"
-              >
-                查看赛事目录
-              </button>
-            </article>
-
-            <article class="contest-overview-row">
-              <div class="contest-overview-row__body">
-                <h3 class="contest-overview-row__title">竞赛工作台入口</h3>
-                <p class="contest-overview-row__copy">
-                  AWD 赛事会在这里汇总，便于进入对应竞赛的工作台运行段，继续处理攻防轮次、服务巡检和流量排查。
-                </p>
-              </div>
-              <button
-                id="contest-open-workbench"
-                type="button"
-                class="ui-btn ui-btn--link contest-inline-link"
-                :disabled="!preferredWorkbenchContest"
-                @click="openContestWorkbench"
-              >
-                进入竞赛工作台
-              </button>
-            </article>
-          </div>
-        </section>
-      </section>
-
-      <section
-        id="contest-panel-list"
-        class="tab-panel contest-panel"
-        :class="{ active: activePanel === 'list' }"
-        role="tabpanel"
-        aria-labelledby="contest-tab-list"
-        :aria-hidden="activePanel === 'list' ? 'false' : 'true'"
-      >
-        <header class="list-heading contest-list-head">
-          <div>
-            <div class="workspace-overline">Contest Directory</div>
-            <h2 class="list-heading__title">赛事目录</h2>
-          </div>
-
-          <div class="ui-toolbar-actions contest-list-actions">
-            <div class="contest-section-meta">共 {{ total }} 场赛事</div>
-            <button type="button" class="ui-btn ui-btn--ghost" @click="emit('refresh')">
-              <RefreshCw class="h-4 w-4" />
-              刷新列表
-            </button>
-            <button type="button" class="ui-btn ui-btn--primary" @click="openCreatePanel">
-              <Plus class="h-4 w-4" />
-              创建竞赛
-            </button>
-          </div>
-        </header>
-
-        <section class="workspace-directory-section contest-list-panel">
-          <section class="contest-filter-strip" aria-label="赛事筛选">
-            <div class="contest-filter-grid">
-              <label class="ui-field contest-filter-field">
-                <span class="ui-field__label contest-filter-label">状态筛选</span>
-                <span class="ui-control-wrap">
-                  <select
-                    :value="statusFilter"
-                    class="ui-control"
-                    @change="
-                      emit(
-                        'updateStatusFilter',
-                        ($event.target as HTMLSelectElement).value as StatusFilter
-                      )
-                    "
-                  >
-                    <option value="all">全部状态</option>
-                    <option value="draft">草稿</option>
-                    <option value="registering">报名中</option>
-                    <option value="running">进行中</option>
-                    <option value="frozen">已冻结</option>
-                    <option value="ended">已结束</option>
-                  </select>
-                </span>
-              </label>
-
-              <div class="ui-field contest-filter-field contest-filter-field--action">
-                <span class="contest-filter-label contest-filter-label--ghost" aria-hidden="true">
-                  操作
-                </span>
-                <button
-                  type="button"
-                  class="ui-btn ui-btn--ghost contest-filter-clear"
-                  :disabled="!hasStatusFilter"
-                  @click="emit('updateStatusFilter', 'all')"
-                >
-                  清空筛选
-                </button>
-              </div>
-            </div>
-          </section>
+            </template>
+          </WorkspaceDirectoryToolbar>
 
           <div
             v-if="loading && list.length === 0"
@@ -359,6 +241,7 @@ function openContestWorkbench() {
             :total="total"
             @edit="openEditContest"
             @export="emit('exportContest', $event)"
+            @workbench="openContestWorkbench"
             @change-page="emit('changePage', $event)"
           />
         </section>
@@ -366,10 +249,8 @@ function openContestWorkbench() {
 
       <section
         id="contest-panel-create"
-        class="tab-panel contest-panel"
-        :class="{ active: activePanel === 'create' }"
-        role="tabpanel"
-        aria-labelledby="contest-tab-create"
+        v-show="activePanel === 'create'"
+        class="contest-panel contest-panel--create"
         :aria-hidden="activePanel === 'create' ? 'false' : 'true'"
       >
         <section class="workspace-directory-section contest-create-panel">
@@ -378,8 +259,14 @@ function openContestWorkbench() {
               <div class="workspace-overline">Contest Setup</div>
               <h2 class="workspace-page-title">创建竞赛</h2>
               <p class="workspace-page-copy">
-                在当前工作区里补齐竞赛基础信息和时间窗口，保存后直接回到赛事目录继续编排。
+                在当前工作区里补齐竞赛基础信息和时间窗口，保存后直接回到赛事工作台继续编排。
               </p>
+            </div>
+
+            <div class="ui-toolbar-actions contest-panel-actions">
+              <button type="button" class="ui-btn ui-btn--ghost" @click="selectPanel('overview')">
+                返回工作台
+              </button>
             </div>
           </header>
 
@@ -388,13 +275,13 @@ function openContestWorkbench() {
             :draft="createDraft"
             :saving="createSaving"
             :field-locks="createFieldLocks"
-            :show-cancel="false"
-            :note="'创建后可继续在赛事目录中编辑详情、挂载题目或进入竞赛工作台。'"
+            :show-cancel="true"
+            :note="'创建后可继续在赛事工作台中筛选目录、编辑详情或进入具体 AWD 赛区。'"
+            @cancel="selectPanel('overview')"
             @save="emit('saveCreateContest', $event)"
           />
         </section>
       </section>
-
     </main>
   </section>
 </template>
@@ -428,14 +315,6 @@ function openContestWorkbench() {
 }
 
 .contest-panel {
-  gap: var(--space-5);
-}
-
-.workspace-shell .tab-panel.contest-panel {
-  display: none;
-}
-
-.workspace-shell .tab-panel.contest-panel.active {
   display: grid;
   gap: var(--space-5);
 }
@@ -445,8 +324,7 @@ function openContestWorkbench() {
   gap: var(--space-4);
 }
 
-.contest-panel-actions,
-.contest-list-actions {
+.contest-panel-actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -462,9 +340,10 @@ function openContestWorkbench() {
 }
 
 .list-heading__title {
-  margin: var(--space-1) 0 0;
-  font-size: var(--font-size-1-20);
+  margin: 0.35rem 0 0;
+  font-size: clamp(1.2rem, 1rem + 0.5vw, 1.45rem);
   font-weight: 700;
+  line-height: 1.15;
   color: var(--journal-ink);
 }
 
@@ -493,105 +372,53 @@ function openContestWorkbench() {
   --metric-panel-shadow: var(--workspace-shadow-panel);
 }
 
-.contest-overview-section,
-.contest-list-panel,
+.contest-directory-section,
 .contest-create-panel {
   display: grid;
   gap: var(--space-5);
   padding: var(--space-5) var(--space-5-5);
 }
 
-.contest-overview-rows {
-  display: grid;
-  gap: var(--space-3);
-}
-
-.contest-overview-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  border-top: 1px solid color-mix(in srgb, var(--journal-border) 68%, transparent);
-  padding-top: var(--space-4);
-}
-
-.contest-overview-row:first-child {
-  border-top: none;
-  padding-top: 0;
-}
-
-.contest-overview-row__body {
-  display: grid;
-  gap: var(--space-1-5);
-  max-width: 42rem;
-}
-
-.contest-overview-row__title {
-  margin: 0;
-  font-size: var(--font-size-0-98);
-  font-weight: 600;
-  color: var(--journal-ink);
-}
-
-.contest-overview-row__copy {
-  margin: 0;
-  line-height: 1.7;
-  color: var(--journal-muted);
-}
-
-.contest-inline-link {
-  justify-self: start;
-  font-size: var(--font-size-0-84);
-  font-weight: 700;
-  --ui-btn-link-color: color-mix(in srgb, var(--journal-accent) 76%, var(--journal-ink));
-  --ui-btn-link-hover-color: var(--journal-accent);
-}
-
-.contest-list-head {
-  align-items: flex-end;
-}
-
 .contest-create-head {
   align-items: flex-start;
 }
 
-.contest-filter-strip {
+.contest-filter-stack {
   display: grid;
   gap: var(--space-3);
-}
-
-.contest-filter-grid {
-  display: grid;
-  gap: var(--space-3);
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  align-items: end;
 }
 
 .contest-filter-field {
-  min-width: 0;
-}
-
-.contest-filter-field--action {
-  justify-self: end;
-  min-width: 0;
+  display: grid;
+  gap: var(--space-2);
 }
 
 .contest-filter-label {
-  font-size: var(--font-size-0-82);
+  font-size: var(--font-size-0-72);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   color: var(--journal-muted);
 }
 
-.contest-filter-label--ghost {
-  opacity: 0;
-}
-
-.contest-filter-field :deep(.ui-control-wrap) {
+.contest-filter-control {
   width: 100%;
+  min-height: 2.75rem;
+  border-radius: 0.95rem;
+  border: 1px solid var(--admin-control-border);
+  background: color-mix(in srgb, var(--journal-surface) 92%, var(--color-bg-base));
+  padding: 0 var(--space-4);
+  font-size: var(--font-size-0-875);
+  color: var(--journal-ink);
+  outline: none;
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease;
 }
 
-.contest-filter-clear {
-  min-width: 7rem;
+.contest-filter-control:focus {
+  border-color: color-mix(in srgb, var(--journal-accent) 44%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--journal-accent) 12%, transparent);
 }
 
 .contest-empty-state {
@@ -613,32 +440,13 @@ function openContestWorkbench() {
     padding: var(--space-5) var(--space-4) var(--space-6);
   }
 
-  .contest-overview-section,
-  .contest-list-panel,
+  .contest-directory-section,
   .contest-create-panel {
     padding: var(--space-4-5) var(--space-4);
   }
 
-  .contest-overview-row,
-  .contest-panel-actions,
-  .contest-list-actions,
-  .contest-filter-grid {
+  .contest-panel-actions {
     align-items: stretch;
-  }
-
-  .contest-filter-field,
-  .contest-filter-field--action,
-  .contest-inline-link {
-    width: 100%;
-    max-width: none;
-  }
-
-  .contest-filter-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .contest-filter-field--action {
-    justify-self: stretch;
   }
 }
 
