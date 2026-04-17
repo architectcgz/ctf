@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest'
 import EnvironmentTemplateLibrary from '../EnvironmentTemplateLibrary.vue'
 import ChallengeTopologyStudioPage from '@/components/admin/topology/ChallengeTopologyStudioPage.vue'
 import challengeTopologyStudioPageSource from '@/components/admin/topology/ChallengeTopologyStudioPage.vue?raw'
+import topologyNodeEditorSource from '@/components/admin/topology/TopologyNodeEditor.vue?raw'
 
 vi.mock('@/api/admin', () => ({
   getChallengeDetail: vi.fn(),
@@ -98,5 +99,14 @@ describe('EnvironmentTemplateLibrary', () => {
     expect(challengeTopologyStudioPageSource).toContain('当前模板草稿中的节点数量')
     expect(challengeTopologyStudioPageSource).toContain('当前模板草稿中的连线数量')
     expect(challengeTopologyStudioPageSource).toContain('当前模板草稿中的策略数量')
+  })
+
+  it('节点编辑器应改用后台共享字段与按钮原语', () => {
+    expect(topologyNodeEditorSource).toContain('class="ui-field')
+    expect(topologyNodeEditorSource).toContain('class="ui-control-wrap')
+    expect(topologyNodeEditorSource).toContain('class="ui-control')
+    expect(topologyNodeEditorSource).toContain('class="ui-btn ui-btn--secondary')
+    expect(topologyNodeEditorSource).toContain('class="ui-btn ui-btn--danger')
+    expect(topologyNodeEditorSource).not.toContain('rounded-xl border border-border bg-elevated')
   })
 })
