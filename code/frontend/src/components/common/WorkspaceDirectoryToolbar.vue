@@ -301,8 +301,16 @@ onUnmounted(() => {
 }
 
 .workspace-directory-toolbar__filter-toggle--active {
-  background: #0f172a;
-  color: white;
+  border-color: color-mix(in srgb, var(--color-primary) 24%, transparent);
+  background: color-mix(in srgb, var(--color-primary) 10%, white);
+  color: var(--color-primary);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-primary) 12%, transparent);
+}
+
+.workspace-directory-toolbar__filter-toggle--active:hover {
+  border-color: color-mix(in srgb, var(--color-primary) 32%, transparent);
+  background: color-mix(in srgb, var(--color-primary) 12%, white);
+  color: var(--color-primary);
 }
 
 .workspace-directory-toolbar__sort-button:hover,
