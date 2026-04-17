@@ -49,6 +49,7 @@ describe('shared route canonical paths', () => {
   })
 
   it('uses platform paths as the canonical location for shared governance pages', () => {
+    expect(findChild('platform/classes')?.name).toBe('AdminClassManagement')
     expect(findChild('platform/challenges')?.name).toBe('ChallengeManage')
     expect(findChild('platform/challenges/filter-patterns/mock')).toBeUndefined()
     expect(findChild('platform/challenges/package-format')?.name).toBe(
@@ -70,6 +71,7 @@ describe('shared route canonical paths', () => {
     )
     expect(findChild('platform/images')?.name).toBe('ImageManage')
 
+    expect(findChild('admin/classes')?.redirect).toBeTruthy()
     expect(findChild('admin/challenges')?.redirect).toBeTruthy()
     expect(findChild('admin/challenges/package-format')?.redirect).toBeTruthy()
     expect(findChild('admin/challenges/imports/:importId')?.redirect).toBeTruthy()

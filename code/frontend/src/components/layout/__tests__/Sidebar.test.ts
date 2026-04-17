@@ -149,6 +149,7 @@ describe('Sidebar desktop layout', () => {
       history: createMemoryHistory(),
       routes: [
         { path: '/admin/dashboard', component: { template: '<div>admin</div>' } },
+        { path: '/platform/classes', component: { template: '<div>platform classes</div>' } },
         { path: '/academy/classes', component: { template: '<div>academy classes</div>' } },
         { path: '/platform/challenges', component: { template: '<div>challenges</div>' } },
         { path: '/admin/contests', component: { template: '<div>contests</div>' } },
@@ -186,7 +187,7 @@ describe('Sidebar desktop layout', () => {
     await operationsButton!.trigger('click')
     await flushPromises()
 
-    expect(router.currentRoute.value.fullPath).toBe('/academy/classes')
+    expect(router.currentRoute.value.fullPath).toBe('/platform/classes')
 
     wrapper.unmount()
   })

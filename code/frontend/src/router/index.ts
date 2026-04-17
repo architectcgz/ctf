@@ -326,6 +326,18 @@ const routes: RouteRecordRaw[] = [
         redirect: redirectWithQuery('/admin/dashboard'),
       },
       {
+        path: 'platform/classes',
+        name: 'AdminClassManagement',
+        component: () => import('@/views/admin/ClassManage.vue'),
+        meta: {
+          requiresAuth: true,
+          roles: ['admin'],
+          title: '班级管理',
+          icon: 'Users',
+          contentLayout: 'bleed',
+        },
+      },
+      {
         path: 'platform/challenges',
         name: 'ChallengeManage',
         component: () => import('@/views/admin/ChallengeManage.vue'),
@@ -358,6 +370,10 @@ const routes: RouteRecordRaw[] = [
           title: '导入预览',
           contentLayout: 'bleed',
         },
+      },
+      {
+        path: 'admin/classes',
+        redirect: redirectWithQuery('/platform/classes'),
       },
       {
         path: 'admin/challenges',

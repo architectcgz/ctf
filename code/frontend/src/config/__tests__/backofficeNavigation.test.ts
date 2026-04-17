@@ -20,6 +20,20 @@ describe('backofficeNavigation', () => {
     ).toBe('operations')
   })
 
+  it('maps admin class management back to 教学运营 and exposes the platform class entry', () => {
+    expect(getBackofficeModuleByPath('/platform/classes')?.key).toBe('operations')
+
+    const items = getVisibleBackofficeSecondaryItems('/platform/classes', 'admin')
+
+    expect(items.map((item) => item.label)).toEqual([
+      '班级管理',
+      '学生管理',
+      'AWD复盘',
+      '实例管理',
+    ])
+    expect(items.find((item) => item.active)?.path).toBe('/platform/classes')
+  })
+
   it('filters visible modules by role', () => {
     expect(getVisibleBackofficeModules('teacher').map((item) => item.key)).toEqual([
       'overview',
