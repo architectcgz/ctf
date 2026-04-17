@@ -65,6 +65,11 @@ describe('ContestList', () => {
     expect(contestListSource).toContain('class="contest-summary-helper metric-panel-helper"')
   })
 
+  it('竞赛列表错误态操作按钮应接入共享 ui-btn 原语', () => {
+    expect(contestListSource).toContain('class="ui-btn ui-btn--secondary"')
+    expect(contestListSource).not.toContain('class="contest-btn"')
+  })
+
   it('不应该向学生暴露草稿竞赛，也不应把草稿错误渲染为已结束', async () => {
     const { getContests } = await import('@/api/contest')
     vi.mocked(getContests).mockResolvedValueOnce({

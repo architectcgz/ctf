@@ -163,7 +163,7 @@ function contestAccentStyle(status: ContestStatus): Record<string, string> {
         :description="loadErrorMessage"
       >
         <template #action>
-          <button type="button" class="contest-btn" @click="refresh">重试</button>
+          <button type="button" class="ui-btn ui-btn--secondary" @click="refresh">重试</button>
         </template>
       </AppEmpty>
 
