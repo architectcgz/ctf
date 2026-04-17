@@ -1881,6 +1881,64 @@ func TestFullRouter_ContestChallengeAndScoreboardStateMatrix(t *testing.T) {
 	assertFullRouterStatus(t, resp, http.StatusBadRequest)
 }
 
+func TestFullRouter_AWDServiceTemplateAuthoringStateMatrix(t *testing.T) {
+	env := newFullRouterTestEnv(t)
+
+	adminHeaders := bearerHeaders(loginForToken(t, env.router, env.admin.Username, env.adminPwd))
+	teacherHeaders := bearerHeaders(loginForToken(t, env.router, env.teacher.Username, env.teacherPwd))
+	studentHeaders := bearerHeaders(loginForToken(t, env.router, env.student.Username, env.studentPwd))
+
+	resp := performFullRouterRequest(t, env.router, http.MethodPost, "/api/v1/authoring/awd-service-templates", map[string]any{
+		"name":            "Bank Portal AWD",
+		"slug":            "bank-portal-awd",
+		"category":        "web",
+		"difficulty":      model.ChallengeDifficultyHard,
+		"description":     "multi-step banking target",
+		"service_type":    "web_http",
+		"deployment_mode": "single_container",
+	}, adminHeaders)
+	assertFullRouterStatus(t, resp, http.StatusOK)
+
+	var createdTemplate dto.AWDServiceTemplateResp
+	decodeFullRouterData(t, resp, &createdTemplate)
+	if createdTemplate.ID == 0 || createdTemplate.Slug != "bank-portal-awd" {
+		t.Fatalf("unexpected created awd service template: %+v", createdTemplate)
+	}
+
+	resp = performFullRouterRequest(t, env.router, http.MethodGet, "/api/v1/authoring/awd-service-templates?page=1&page_size=10", nil, teacherHeaders)
+	assertFullRouterStatus(t, resp, http.StatusOK)
+
+	var page dto.AWDServiceTemplatePageResp
+	decodeFullRouterData(t, resp, &page)
+	if page.Total < 1 || len(page.Items) == 0 {
+		t.Fatalf("expected awd service template page items, got %+v", page)
+	}
+
+	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/authoring/awd-service-templates/%d", createdTemplate.ID), nil, adminHeaders)
+	assertFullRouterStatus(t, resp, http.StatusOK)
+
+	resp = performFullRouterRequest(t, env.router, http.MethodPut, fmt.Sprintf("/api/v1/authoring/awd-service-templates/%d", createdTemplate.ID), map[string]any{
+		"name":   "Bank Portal AWD v2",
+		"status": "published",
+	}, teacherHeaders)
+	assertFullRouterStatus(t, resp, http.StatusOK)
+
+	var updatedTemplate dto.AWDServiceTemplateResp
+	decodeFullRouterData(t, resp, &updatedTemplate)
+	if updatedTemplate.Name != "Bank Portal AWD v2" || updatedTemplate.Status != "published" {
+		t.Fatalf("unexpected updated awd service template: %+v", updatedTemplate)
+	}
+
+	resp = performFullRouterRequest(t, env.router, http.MethodGet, "/api/v1/authoring/awd-service-templates", nil, studentHeaders)
+	assertFullRouterStatus(t, resp, http.StatusForbidden)
+
+	resp = performFullRouterRequest(t, env.router, http.MethodDelete, fmt.Sprintf("/api/v1/authoring/awd-service-templates/%d", createdTemplate.ID), nil, adminHeaders)
+	assertFullRouterStatus(t, resp, http.StatusOK)
+
+	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/authoring/awd-service-templates/%d", createdTemplate.ID), nil, adminHeaders)
+	assertFullRouterStatus(t, resp, http.StatusNotFound)
+}
+
 func TestFullRouter_AdminOpsAndNotificationStateMatrix(t *testing.T) {
 	env := newFullRouterTestEnv(t)
 

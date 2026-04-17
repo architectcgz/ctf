@@ -264,6 +264,32 @@ func registerTeacherAuthoringRoutes(adminAuthoring *gin.RouterGroup, deps adminR
 		deps.challenge.TopologyHandler.DeleteTemplate,
 	)
 
+	adminAuthoring.GET("/awd-service-templates", deps.challenge.AWDServiceTemplateHandler.ListTemplates)
+	adminAuthoring.POST("/awd-service-templates",
+		audit(middleware.AuditOptions{
+			Action:       model.AuditActionCreate,
+			ResourceType: "awd_service_template",
+		}),
+		deps.challenge.AWDServiceTemplateHandler.CreateTemplate,
+	)
+	adminAuthoring.GET("/awd-service-templates/:id", deps.challenge.AWDServiceTemplateHandler.GetTemplate)
+	adminAuthoring.PUT("/awd-service-templates/:id",
+		audit(middleware.AuditOptions{
+			Action:          model.AuditActionUpdate,
+			ResourceType:    "awd_service_template",
+			ResourceIDParam: "id",
+		}),
+		deps.challenge.AWDServiceTemplateHandler.UpdateTemplate,
+	)
+	adminAuthoring.DELETE("/awd-service-templates/:id",
+		audit(middleware.AuditOptions{
+			Action:          model.AuditActionDelete,
+			ResourceType:    "awd_service_template",
+			ResourceIDParam: "id",
+		}),
+		deps.challenge.AWDServiceTemplateHandler.DeleteTemplate,
+	)
+
 	adminAuthoring.PUT("/challenges/:id/flag",
 		ownerGuard,
 		audit(middleware.AuditOptions{

@@ -98,6 +98,20 @@ func (r *Repository) CreateAWDServiceTemplate(template *model.AWDServiceTemplate
 	return r.db.Create(template).Error
 }
 
+func (r *Repository) FindAWDServiceTemplateByID(id int64) (*model.AWDServiceTemplate, error) {
+	var template model.AWDServiceTemplate
+	err := r.db.Where("id = ?", id).First(&template).Error
+	return &template, err
+}
+
+func (r *Repository) UpdateAWDServiceTemplate(template *model.AWDServiceTemplate) error {
+	return r.db.Save(template).Error
+}
+
+func (r *Repository) DeleteAWDServiceTemplate(id int64) error {
+	return r.db.Delete(&model.AWDServiceTemplate{}, id).Error
+}
+
 func (r *Repository) ListAWDServiceTemplates(ctx context.Context, query *dto.AWDServiceTemplateQuery) ([]*model.AWDServiceTemplate, int64, error) {
 	var templates []*model.AWDServiceTemplate
 	var total int64
