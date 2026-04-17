@@ -164,3 +164,42 @@ func TestRepositorySchemaOmitsHintUnlockArtifacts(t *testing.T) {
 		t.Fatal("expected challenge_hints.cost_points column to be removed")
 	}
 }
+
+func TestRepositoryCreateAndListAWDServiceTemplates(t *testing.T) {
+	db := testsupport.SetupTestDB(t)
+	repo := NewRepository(db)
+
+	template := &model.AWDServiceTemplate{
+		Name:           "Bank Portal AWD",
+		Slug:           "bank-portal-awd",
+		Category:       "web",
+		Difficulty:     "hard",
+		ServiceType:    model.AWDServiceTypeWebHTTP,
+		DeploymentMode: model.AWDDeploymentModeSingleContainer,
+		Status:         model.AWDServiceTemplateStatusDraft,
+	}
+
+	if err := repo.CreateAWDServiceTemplate(template); err != nil {
+		t.Fatalf("CreateAWDServiceTemplate() error = %v", err)
+	}
+	if template.ID == 0 {
+		t.Fatal("template ID should be set")
+	}
+
+	items, total, err := repo.ListAWDServiceTemplates(context.Background(), &dto.AWDServiceTemplateQuery{
+		Page: 1,
+		Size: 10,
+	})
+	if err != nil {
+		t.Fatalf("ListAWDServiceTemplates() error = %v", err)
+	}
+	if total != 1 {
+		t.Fatalf("unexpected total: %d", total)
+	}
+	if len(items) != 1 {
+		t.Fatalf("unexpected item count: %d", len(items))
+	}
+	if items[0].Slug != "bank-portal-awd" {
+		t.Fatalf("unexpected template slug: %s", items[0].Slug)
+	}
+}
