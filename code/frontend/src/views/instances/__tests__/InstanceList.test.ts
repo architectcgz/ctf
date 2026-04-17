@@ -139,4 +139,13 @@ describe('InstanceList', () => {
     expect(instanceListSource).toContain('已经提交创建请求、正在排队或启动中的实例数量')
     expect(instanceListSource).toContain('当前账号最多可同时保留的实例数量')
   })
+
+  it('实例列表页操作按钮应接入共享 ui-btn 原语', () => {
+    expect(instanceListSource).toContain('class="ui-btn ui-btn--link instance-link-btn"')
+    expect(instanceListSource).toContain('class="ui-btn ui-btn--sm ui-btn--primary"')
+    expect(instanceListSource).toContain('class="ui-btn ui-btn--sm ui-btn--danger"')
+    expect(instanceListSource).toContain('class="ui-btn ui-btn--secondary"')
+    expect(instanceListSource).not.toMatch(/^\.instance-link-btn\s*\{/m)
+    expect(instanceListSource).not.toMatch(/^\.instance-btn-danger\s*\{/m)
+  })
 })
