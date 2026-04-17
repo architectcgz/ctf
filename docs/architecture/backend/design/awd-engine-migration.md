@@ -2,15 +2,17 @@
 
 > 状态：已采用
 
-## 0. 当前一期落地边界（2026-04-17）
+## 0. 当前阶段落地边界（2026-04-17）
 
-当前仓库已经先落地了 AWD 显式服务模型的前两层，但还没有切换运行态读路径：
+当前仓库已经落地了 AWD 显式服务模型的前两层，并开始把运行态读路径逐步切到赛事服务层：
 
 - 已落地：独立 `awd_service_templates` 题库
 - 已落地：服务模板后台 CRUD 与基础管理页
 - 已落地：`contest_awd_services` 赛事服务关联存储
 - 已落地：管理员赛事题目列表返回 `awd_service_id / awd_template_id / awd_service_display_name`
-- 未切换：轮次调度 / checker / workspace / flag 注入 / readiness 底层事实源
+- 已切换：`ListServiceDefinitionsByContest` 优先读取 `contest_awd_services.runtime_config + score_config`
+- 已切换：`ListReadinessChallengesByContest` 优先读取 `contest_awd_services.runtime_config`，验证状态仍兼容复用 `contest_challenges`
+- 未切换：workspace 编排、flag 注入目标标识、攻击提交流程仍以 `challenge_id + contest_challenges` 兼容键运转
 
 也就是说，当前已经形成：
 
@@ -18,7 +20,7 @@
 2. 赛事服务层：`contest_awd_services`
 3. 兼容运行层：`contest_challenges.awd_*`
 
-其中第 3 层仍然是现阶段运行态的兼容事实源，第 1、2 层为后续 runtime cutover 提供承接点。
+其中第 1、2 层已经开始进入运行态读路径，但第 3 层仍承担兼容字段、验证状态和挑战关系承接职责，后续 runtime cutover 继续沿着“先 service 定义，再 target 身份”的顺序推进。
 
 ## 1. 背景
 
