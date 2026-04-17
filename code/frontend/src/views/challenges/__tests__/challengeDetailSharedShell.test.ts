@@ -58,11 +58,15 @@ describe('challenge detail shared shell alignment', () => {
     expect(challengeDetailSource).not.toMatch(/\.subtle-action\s*\{/s)
 
     expect(challengeInstanceCardSource).toContain(
-      'class="instance-btn instance-btn-primary disabled:cursor-not-allowed disabled:opacity-50"'
+      'class="ui-btn ui-btn--primary disabled:cursor-not-allowed disabled:opacity-50"'
     )
     expect(challengeInstanceCardSource).toContain(
-      'class="instance-btn disabled:cursor-not-allowed disabled:opacity-50"'
+      'class="ui-btn ui-btn--secondary disabled:cursor-not-allowed disabled:opacity-50"'
     )
+    expect(challengeInstanceCardSource).toContain(
+      'class="ui-btn ui-btn--danger disabled:cursor-not-allowed disabled:opacity-50"'
+    )
+    expect(challengeInstanceCardSource).not.toContain('class="instance-btn')
     expect(challengeInstanceCardSource).not.toMatch(/\.primary-action\s*,/s)
     expect(challengeInstanceCardSource).not.toMatch(/\.subtle-action\s*\{/s)
   })

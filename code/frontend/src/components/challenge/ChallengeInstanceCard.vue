@@ -243,7 +243,7 @@ const startButtonLabel = computed(() => {
         <button
           v-if="isRestartable"
           type="button"
-          class="instance-btn instance-btn-primary disabled:cursor-not-allowed disabled:opacity-50"
+          class="ui-btn ui-btn--primary disabled:cursor-not-allowed disabled:opacity-50"
           :disabled="creating"
           @click="emit('start')"
         >
@@ -252,7 +252,7 @@ const startButtonLabel = computed(() => {
         <template v-else>
           <button
             type="button"
-            class="instance-btn disabled:cursor-not-allowed disabled:opacity-50"
+            class="ui-btn ui-btn--secondary disabled:cursor-not-allowed disabled:opacity-50"
             :disabled="!canOpen || opening"
             @click="emit('open')"
           >
@@ -261,7 +261,7 @@ const startButtonLabel = computed(() => {
           <button
             v-if="!isSharedInstance"
             type="button"
-            class="instance-btn disabled:cursor-not-allowed disabled:opacity-50"
+            class="ui-btn ui-btn--secondary disabled:cursor-not-allowed disabled:opacity-50"
             :disabled="!canExtend || extending"
             @click="emit('extend')"
           >
@@ -270,7 +270,7 @@ const startButtonLabel = computed(() => {
           <button
             v-if="!isSharedInstance"
             type="button"
-            class="instance-btn instance-action-danger disabled:cursor-not-allowed disabled:opacity-50"
+            class="ui-btn ui-btn--danger disabled:cursor-not-allowed disabled:opacity-50"
             :disabled="destroying"
             @click="emit('destroy')"
           >
@@ -302,7 +302,7 @@ const startButtonLabel = computed(() => {
       </div>
       <button
         type="button"
-        class="instance-btn instance-btn-primary disabled:cursor-not-allowed disabled:opacity-50"
+        class="ui-btn ui-btn--primary disabled:cursor-not-allowed disabled:opacity-50"
         :disabled="creating"
         @click="emit('start')"
       >
@@ -467,15 +467,11 @@ const startButtonLabel = computed(() => {
   grid-template-columns: minmax(0, 1fr);
 }
 
-.tool-actions .instance-btn,
-.instance-shell > .instance-btn {
+.tool-actions .ui-btn,
+.instance-shell > .ui-btn {
   width: 100%;
   min-height: 48px;
   border-radius: 14px;
-}
-
-.instance-action-danger {
-  color: var(--danger);
 }
 
 @media (max-width: 1024px) {
