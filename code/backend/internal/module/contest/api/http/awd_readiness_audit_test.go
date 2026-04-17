@@ -219,6 +219,10 @@ func (stubAWDQueryService) ListAttackLogs(ctx context.Context, contestID, roundI
 	return nil, nil
 }
 
+func (stubAWDQueryService) GetUserWorkspace(ctx context.Context, userID, contestID int64) (*dto.ContestAWDWorkspaceResp, error) {
+	return nil, nil
+}
+
 func (stubAWDQueryService) GetRoundSummary(ctx context.Context, contestID, roundID int64) (*dto.AWDRoundSummaryResp, error) {
 	return nil, nil
 }
