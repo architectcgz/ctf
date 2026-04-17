@@ -22,20 +22,20 @@ func ContestRespFromModel(contest *model.Contest) *dto.ContestResp {
 
 func ContestChallengeRespFromModel(cc *model.ContestChallenge, challenge *model.Challenge) *dto.ContestChallengeResp {
 	resp := &dto.ContestChallengeResp{
-		ID:               cc.ID,
-		ContestID:        cc.ContestID,
-		ChallengeID:      cc.ChallengeID,
-		Points:           cc.Points,
-		Order:            cc.Order,
-		IsVisible:        cc.IsVisible,
-		AWDCheckerType:   NormalizeAWDCheckerType(string(cc.AWDCheckerType)),
-		AWDCheckerConfig: ParseAWDCheckerConfig(cc.AWDCheckerConfig),
-		AWDSLAScore:      cc.AWDSLAScore,
-		AWDDefenseScore:  cc.AWDDefenseScore,
-		AWDCheckerValidationState: NormalizeAWDCheckerValidationState(string(cc.AWDCheckerValidationState)),
-		AWDCheckerLastPreviewAt:   cc.AWDCheckerLastPreviewAt,
+		ID:                          cc.ID,
+		ContestID:                   cc.ContestID,
+		ChallengeID:                 cc.ChallengeID,
+		Points:                      cc.Points,
+		Order:                       cc.Order,
+		IsVisible:                   cc.IsVisible,
+		AWDCheckerType:              NormalizeAWDCheckerType(string(cc.AWDCheckerType)),
+		AWDCheckerConfig:            ParseAWDCheckerConfig(cc.AWDCheckerConfig),
+		AWDSLAScore:                 cc.AWDSLAScore,
+		AWDDefenseScore:             cc.AWDDefenseScore,
+		AWDCheckerValidationState:   NormalizeAWDCheckerValidationState(string(cc.AWDCheckerValidationState)),
+		AWDCheckerLastPreviewAt:     cc.AWDCheckerLastPreviewAt,
 		AWDCheckerLastPreviewResult: ParseAWDCheckerPreviewResult(cc.AWDCheckerLastPreviewResult),
-		CreatedAt:        cc.CreatedAt,
+		CreatedAt:                   cc.CreatedAt,
 	}
 	if challenge != nil {
 		resp.Title = challenge.Title
@@ -43,6 +43,25 @@ func ContestChallengeRespFromModel(cc *model.ContestChallenge, challenge *model.
 		resp.Difficulty = challenge.Difficulty
 	}
 	return resp
+}
+
+func ContestAWDServiceRespFromModel(item *model.ContestAWDService) *dto.ContestAWDServiceResp {
+	if item == nil {
+		return nil
+	}
+	return &dto.ContestAWDServiceResp{
+		ID:            item.ID,
+		ContestID:     item.ContestID,
+		ChallengeID:   item.ChallengeID,
+		TemplateID:    item.TemplateID,
+		DisplayName:   item.DisplayName,
+		Order:         item.Order,
+		IsVisible:     item.IsVisible,
+		ScoreConfig:   ParseAWDCheckerConfig(item.ScoreConfig),
+		RuntimeConfig: ParseAWDCheckerConfig(item.RuntimeConfig),
+		CreatedAt:     item.CreatedAt,
+		UpdatedAt:     item.UpdatedAt,
+	}
 }
 
 func TeamRespFromModel(team *model.Team, memberCount int) *dto.TeamResp {

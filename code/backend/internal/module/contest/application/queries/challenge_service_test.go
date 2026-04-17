@@ -12,22 +12,25 @@ import (
 	contesttestsupport "ctf-platform/internal/module/contest/testsupport"
 )
 
-func newContestChallengeQueryService(t *testing.T) (*ChallengeService, *challengeinfra.Repository, *contestinfra.Repository, *contestinfra.ChallengeRepository) {
+func newContestChallengeQueryService(t *testing.T) (*ChallengeService, *challengeinfra.Repository, *contestinfra.Repository, *contestinfra.ChallengeRepository, *contestinfra.AWDRepository) {
 	t.Helper()
 
 	db := contesttestsupport.SetupContestTestDB(t)
+	awdRepo := contestinfra.NewAWDRepository(db)
 	return NewChallengeService(
 			contestinfra.NewChallengeRepository(db),
 			challengeinfra.NewRepository(db),
 			contestinfra.NewRepository(db),
+			awdRepo,
 		),
 		challengeinfra.NewRepository(db),
 		contestinfra.NewRepository(db),
-		contestinfra.NewChallengeRepository(db)
+		contestinfra.NewChallengeRepository(db),
+		awdRepo
 }
 
 func TestChallengeServiceListAdminChallengesIncludesAWDServiceFields(t *testing.T) {
-	service, challengeRepo, contestRepo, challengeRelationRepo := newContestChallengeQueryService(t)
+	service, challengeRepo, contestRepo, challengeRelationRepo, awdRepo := newContestChallengeQueryService(t)
 
 	now := time.Now()
 	if err := contestRepo.Create(context.Background(), &model.Contest{
@@ -69,6 +72,21 @@ func TestChallengeServiceListAdminChallengesIncludesAWDServiceFields(t *testing.
 	}); err != nil {
 		t.Fatalf("add challenge: %v", err)
 	}
+	templateID := int64(3001)
+	if err := awdRepo.CreateContestAWDService(context.Background(), &model.ContestAWDService{
+		ContestID:     601,
+		ChallengeID:   9101,
+		TemplateID:    &templateID,
+		DisplayName:   "Bank Portal",
+		Order:         0,
+		IsVisible:     true,
+		ScoreConfig:   `{"points":100,"awd_sla_score":12,"awd_defense_score":22}`,
+		RuntimeConfig: `{"challenge_id":9101}`,
+		CreatedAt:     now,
+		UpdatedAt:     now,
+	}); err != nil {
+		t.Fatalf("create contest awd service: %v", err)
+	}
 
 	resp, err := service.ListAdminChallenges(context.Background(), 601)
 	if err != nil {
@@ -83,10 +101,16 @@ func TestChallengeServiceListAdminChallengesIncludesAWDServiceFields(t *testing.
 	if path := resp[0].AWDCheckerConfig["get_flag"].(map[string]any)["path"]; path != "/internal/flag" {
 		t.Fatalf("unexpected checker config: %+v", resp[0].AWDCheckerConfig)
 	}
+	if resp[0].AWDServiceID == nil || resp[0].AWDTemplateID == nil {
+		t.Fatalf("expected awd service metadata, got %+v", resp[0])
+	}
+	if resp[0].AWDServiceDisplayName != "Bank Portal" {
+		t.Fatalf("unexpected awd service display name: %s", resp[0].AWDServiceDisplayName)
+	}
 }
 
 func TestChallengeServiceListAdminChallengesIncludesCheckerValidationState(t *testing.T) {
-	service, challengeRepo, contestRepo, challengeRelationRepo := newContestChallengeQueryService(t)
+	service, challengeRepo, contestRepo, challengeRelationRepo, _ := newContestChallengeQueryService(t)
 
 	now := time.Now()
 	if err := contestRepo.Create(context.Background(), &model.Contest{

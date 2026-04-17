@@ -85,6 +85,12 @@ const summaryItems = computed(() => [
     value: String(sortedChallengeLinks.value.filter((item) => !item.is_visible).length),
     hint: '当前不会直接对选手展示的赛事题目数',
   },
+  {
+    key: 'service-linked',
+    label: '已建服务关联',
+    value: String(sortedChallengeLinks.value.filter((item) => Boolean(item.awd_service_id)).length),
+    hint: '已落入赛事级服务关联表的题目数',
+  },
 ])
 
 function formatValidationDateTime(value?: string): string {
@@ -142,6 +148,17 @@ function readActionSummary(value: unknown, label: string): string {
 
 function getChallengeTitle(item: AdminContestChallengeData): string {
   return item.title?.trim() || `Challenge #${item.challenge_id}`
+}
+
+function getServiceAssociationSummary(item: AdminContestChallengeData): string {
+  if (!item.awd_service_id) {
+    return '赛事服务关联待补齐'
+  }
+  const entries = [
+    item.awd_service_display_name?.trim() || '已建立赛事服务关联',
+    item.awd_template_id ? `模板 #${item.awd_template_id}` : '',
+  ].filter(Boolean)
+  return entries.join(' · ')
 }
 
 function buildPresentationResult(item: AdminContestChallengeData): Record<string, unknown> {
@@ -301,6 +318,7 @@ function isActiveChallenge(item: AdminContestChallengeData): boolean {
               {{ item.category || '未分类' }} · {{ item.difficulty || '未标记难度' }} · 顺序
               {{ item.order }}
             </p>
+            <p class="config-row__service-meta">{{ getServiceAssociationSummary(item) }}</p>
           </div>
           <div class="config-row__visibility">
             {{ item.is_visible ? '可见' : '隐藏' }}
@@ -465,10 +483,15 @@ function isActiveChallenge(item: AdminContestChallengeData): boolean {
 }
 
 .config-row__meta,
-.config-row__scores-sub {
+.config-row__scores-sub,
+.config-row__service-meta {
   margin: 0.35rem 0 0;
   color: var(--color-text-muted);
   font-size: 0.8rem;
+}
+
+.config-row__service-meta {
+  color: var(--journal-accent-soft, var(--color-text-secondary));
 }
 
 .config-row__visibility,

@@ -613,6 +613,7 @@ export function useAdminContestAWD(selectedContest: Readonly<Ref<ContestDetailDa
 
   async function createChallengeLink(payload: {
     challenge_id: number
+    template_id?: number
     points: number
     order?: number
     is_visible?: boolean
@@ -640,6 +641,7 @@ export function useAdminContestAWD(selectedContest: Readonly<Ref<ContestDetailDa
   async function updateChallengeLink(
     challengeId: string,
     payload: {
+      template_id?: number
       points?: number
       order?: number
       is_visible?: boolean

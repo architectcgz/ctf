@@ -22,6 +22,8 @@ func SetupContestTestDB(t *testing.T) *gorm.DB {
 	if err := db.AutoMigrate(
 		&model.Contest{},
 		&model.Challenge{},
+		&model.AWDServiceTemplate{},
+		&model.ContestAWDService{},
 		&model.User{},
 		&model.Team{},
 		&model.TeamMember{},

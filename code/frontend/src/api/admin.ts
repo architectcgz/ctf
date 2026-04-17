@@ -104,6 +104,7 @@ export interface AdminUserUpdatePayload {
 
 export interface AdminContestChallengeCreatePayload {
   challenge_id: number
+  template_id?: number
   points: number
   order?: number
   is_visible?: boolean
@@ -115,6 +116,7 @@ export interface AdminContestChallengeCreatePayload {
 }
 
 export interface AdminContestChallengeUpdatePayload {
+  template_id?: number
   points?: number
   order?: number
   is_visible?: boolean
@@ -379,6 +381,9 @@ interface RawAdminContestChallengeItem {
   id: string | number
   contest_id: string | number
   challenge_id: string | number
+  awd_service_id?: string | number | null
+  awd_template_id?: string | number | null
+  awd_service_display_name?: string | null
   title?: string
   category?: AdminContestChallengeData['category']
   difficulty?: AdminContestChallengeData['difficulty']
@@ -1105,6 +1110,11 @@ function normalizeAdminContestChallenge(
     id: String(item.id),
     contest_id: String(item.contest_id),
     challenge_id: String(item.challenge_id),
+    awd_service_id:
+      item.awd_service_id == null ? undefined : String(item.awd_service_id),
+    awd_template_id:
+      item.awd_template_id == null ? undefined : String(item.awd_template_id),
+    awd_service_display_name: item.awd_service_display_name || undefined,
     title: item.title,
     category: item.category,
     difficulty: item.difficulty,
