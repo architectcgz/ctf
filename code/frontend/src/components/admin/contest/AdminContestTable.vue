@@ -228,7 +228,7 @@ watch(openActionMenuId, async (contestId, _previousId, onCleanup) => {
           aria-label="更多竞赛操作"
           @click.stop
         >
-          <div class="contest-row-menu__title">Contest Actions</div>
+          <div class="contest-row-menu__title">Management</div>
           <button
             :id="`contest-row-menu-edit-${activeActionContest.id}`"
             type="button"
@@ -266,6 +266,31 @@ watch(openActionMenuId, async (contestId, _previousId, onCleanup) => {
 </template>
 
 <style scoped>
+.contest-row-menu-button,
+.contest-row-menu {
+  --contest-action-surface: color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-surface));
+  --contest-action-surface-subtle: color-mix(
+    in srgb,
+    var(--journal-surface-alt) 90%,
+    var(--journal-surface)
+  );
+  --contest-action-surface-elevated: color-mix(
+    in srgb,
+    var(--color-bg-elevated) 88%,
+    var(--journal-surface)
+  );
+  --contest-action-line: color-mix(in srgb, var(--journal-border) 84%, transparent);
+  --contest-action-line-strong: color-mix(in srgb, var(--journal-border) 92%, transparent);
+  --contest-action-text: color-mix(in srgb, var(--journal-ink) 92%, transparent);
+  --contest-action-muted: color-mix(in srgb, var(--journal-muted) 92%, transparent);
+  --contest-action-accent: color-mix(in srgb, var(--workspace-brand) 88%, var(--contest-action-text));
+  --contest-action-accent-soft: color-mix(
+    in srgb,
+    var(--workspace-brand) 10%,
+    var(--contest-action-surface)
+  );
+}
+
 .contest-directory {
   --contest-directory-columns: minmax(17rem, 1.46fr) minmax(6rem, 0.54fr) minmax(7rem, 0.68fr)
     minmax(9.5rem, 0.78fr) minmax(9.5rem, 0.78fr) minmax(11rem, 11rem);
@@ -423,10 +448,10 @@ watch(openActionMenuId, async (contestId, _previousId, onCleanup) => {
   justify-content: center;
   width: 1.95rem;
   height: 1.95rem;
-  border: 1px solid color-mix(in srgb, var(--journal-border) 84%, transparent);
+  border: 1px solid var(--contest-action-line);
   border-radius: 0.75rem;
-  background: color-mix(in srgb, var(--journal-surface) 94%, white);
-  color: var(--journal-muted);
+  background: var(--contest-action-surface);
+  color: var(--contest-action-muted);
   transition:
     background-color 160ms ease,
     border-color 160ms ease,
@@ -436,9 +461,9 @@ watch(openActionMenuId, async (contestId, _previousId, onCleanup) => {
 
 .contest-row-menu-button:hover,
 .contest-row-menu-button--active {
-  border-color: color-mix(in srgb, var(--workspace-brand) 26%, var(--journal-border));
-  background: color-mix(in srgb, var(--workspace-brand) 8%, white);
-  color: color-mix(in srgb, var(--workspace-brand) 86%, var(--journal-ink));
+  border-color: color-mix(in srgb, var(--workspace-brand) 26%, var(--contest-action-line-strong));
+  background: var(--contest-action-accent-soft);
+  color: var(--contest-action-accent);
   box-shadow: 0 12px 26px color-mix(in srgb, var(--workspace-brand) 10%, transparent);
 }
 
@@ -453,23 +478,27 @@ watch(openActionMenuId, async (contestId, _previousId, onCleanup) => {
   z-index: 130;
   width: 11rem;
   overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--journal-border) 86%, transparent);
+  border: 1px solid var(--contest-action-line);
   border-radius: 1rem;
-  background: color-mix(in srgb, white 96%, var(--journal-surface));
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--contest-action-surface) 98%, transparent),
+    color-mix(in srgb, var(--contest-action-surface-subtle) 96%, transparent)
+  );
   box-shadow:
-    0 24px 60px rgba(15, 23, 42, 0.16),
-    0 10px 24px rgba(15, 23, 42, 0.1);
+    0 24px 60px color-mix(in srgb, var(--color-shadow-strong) 18%, transparent),
+    0 10px 24px color-mix(in srgb, var(--color-shadow-soft) 16%, transparent);
 }
 
 .contest-row-menu__title {
   padding: 0.78rem 1rem 0.55rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 68%, transparent);
-  background: color-mix(in srgb, var(--workspace-brand) 4%, white);
+  border-bottom: 1px solid color-mix(in srgb, var(--contest-action-line) 78%, transparent);
+  background: color-mix(in srgb, var(--workspace-brand) 5%, var(--contest-action-surface-subtle));
   font-size: 0.62rem;
   font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--journal-muted);
+  color: var(--contest-action-muted);
 }
 
 .contest-row-menu__item {
@@ -480,15 +509,55 @@ watch(openActionMenuId, async (contestId, _previousId, onCleanup) => {
   padding: 0.72rem 1rem;
   font-size: var(--font-size-0-82);
   font-weight: 600;
-  color: color-mix(in srgb, var(--journal-ink) 84%, var(--journal-muted));
+  color: var(--contest-action-text);
   transition:
     background-color 160ms ease,
     color 160ms ease;
 }
 
 .contest-row-menu__item:hover {
-  background: color-mix(in srgb, var(--workspace-brand) 6%, white);
-  color: color-mix(in srgb, var(--workspace-brand) 90%, var(--journal-ink));
+  background: color-mix(in srgb, var(--workspace-brand) 7%, var(--contest-action-surface-subtle));
+  color: var(--contest-action-accent);
+}
+
+:global([data-theme='light']) .contest-row-menu-button,
+:global([data-theme='light']) .contest-row-menu {
+  --contest-action-surface: color-mix(in srgb, white 96%, var(--journal-surface));
+  --contest-action-surface-subtle: #f8fafc;
+  --contest-action-surface-elevated: white;
+  --contest-action-line: color-mix(in srgb, #dde5ee 90%, transparent);
+  --contest-action-line-strong: color-mix(in srgb, #d4dde8 94%, transparent);
+  --contest-action-text: #0f172a;
+  --contest-action-muted: #64748b;
+}
+
+:global([data-theme='dark']) .contest-row-menu-button,
+:global([data-theme='dark']) .contest-row-menu {
+  --contest-action-surface: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
+  --contest-action-surface-subtle: color-mix(
+    in srgb,
+    var(--color-bg-elevated) 84%,
+    var(--color-bg-surface)
+  );
+  --contest-action-surface-elevated: color-mix(
+    in srgb,
+    var(--color-bg-elevated) 92%,
+    var(--color-bg-surface)
+  );
+  --contest-action-line: color-mix(in srgb, var(--color-border-default) 88%, transparent);
+  --contest-action-line-strong: color-mix(in srgb, var(--color-border-default) 94%, transparent);
+  --contest-action-text: color-mix(in srgb, var(--color-text-primary) 94%, transparent);
+  --contest-action-muted: color-mix(in srgb, var(--color-text-secondary) 90%, transparent);
+}
+
+:global([data-theme='dark']) .contest-row-menu {
+  box-shadow:
+    0 22px 56px color-mix(in srgb, var(--color-shadow-strong) 26%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--color-border-subtle) 46%, transparent);
+}
+
+:global([data-theme='dark']) .contest-row-menu-button {
+  background: var(--contest-action-surface-elevated);
 }
 
 @media (max-width: 1023px) {
