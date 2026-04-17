@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 
 import AdminContestTable from '../contest/AdminContestTable.vue'
+import adminContestTableSource from '../contest/AdminContestTable.vue?raw'
 import type { ContestDetailData } from '@/api/contracts'
 
 function buildContest(overrides: Partial<ContestDetailData> = {}): ContestDetailData {
@@ -20,6 +21,18 @@ function buildContest(overrides: Partial<ContestDetailData> = {}): ContestDetail
 describe('AdminContestTable', () => {
   afterEach(() => {
     document.body.innerHTML = ''
+  })
+
+  it('应对齐题目目录的更多菜单信息结构，而不是继续保留孤立的赛事专用标题', () => {
+    expect(adminContestTableSource).toContain('class="contest-row-menu__title">Management</div>')
+    expect(adminContestTableSource).not.toContain('Contest Actions')
+  })
+
+  it('更多按钮与菜单面板应声明暗色主题 token，避免夜间模式继续露出浅色浮层', () => {
+    expect(adminContestTableSource).toContain('--contest-action-surface')
+    expect(adminContestTableSource).toContain('--contest-action-line')
+    expect(adminContestTableSource).toContain(":global([data-theme='dark']) .contest-row-menu")
+    expect(adminContestTableSource).toContain(":global([data-theme='dark']) .contest-row-menu-button")
   })
 
   it('应将编辑和导出结果收纳进更多菜单，并通过浮层渲染', async () => {
