@@ -2,6 +2,7 @@ import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
 
 import WorkspaceDataTable from '../WorkspaceDataTable.vue'
+import workspaceDataTableSource from '../WorkspaceDataTable.vue?raw'
 
 describe('WorkspaceDataTable', () => {
   it('应该按列配置渲染表头、行数据与自定义单元格插槽', () => {
@@ -30,5 +31,12 @@ describe('WorkspaceDataTable', () => {
     expect(wrapper.text()).toContain('SQL Diary')
     expect(wrapper.find('.category-slot').exists()).toBe(true)
     expect(wrapper.find('.action-slot').exists()).toBe(true)
+  })
+
+  it('夜间模式下表头与行分隔线应使用柔和 token，而不是继续写死浅色边框', () => {
+    expect(workspaceDataTableSource).toContain('--workspace-table-line')
+    expect(workspaceDataTableSource).toContain(":global([data-theme='dark']) .workspace-data-table-shell")
+    expect(workspaceDataTableSource).not.toContain('border-bottom: 1px solid #f1f5f9;')
+    expect(workspaceDataTableSource).not.toContain('border-bottom: 1px solid #e2e8f0;')
   })
 })

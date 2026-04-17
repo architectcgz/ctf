@@ -57,4 +57,11 @@ describe('WorkspaceDirectoryToolbar', () => {
     )
     expect(workspaceDirectoryToolbarSource).toContain('var(--color-primary)')
   })
+
+  it('筛选与排序浮层应声明暗色主题 token，不能继续固定白底浅灰边框', () => {
+    expect(workspaceDirectoryToolbarSource).toContain('--workspace-toolbar-surface')
+    expect(workspaceDirectoryToolbarSource).toContain('--workspace-toolbar-menu-surface')
+    expect(workspaceDirectoryToolbarSource).toContain(":global([data-theme='dark']) .workspace-directory-toolbar")
+    expect(workspaceDirectoryToolbarSource).not.toContain('.workspace-directory-toolbar__filter-panel,\n.workspace-directory-toolbar__sort-menu {\n  border: 1px solid var(--workspace-toolbar-menu-border);\n  background: white;')
+  })
 })

@@ -129,11 +129,29 @@ describe('ChallengeManage', () => {
     )
   })
 
-  it('应该默认显示题目管理 tab', async () => {
+  it('应移除顶部 tab，并直接展示统一题目工作台', async () => {
+    expect(challengeManageSource).not.toContain('class="top-tabs"')
+    expect(challengeManageSource).not.toContain("from '@/composables/useRouteQueryTabs'")
+
     const wrapper = mount(ChallengeManage)
     await flushPromises()
-    expect(wrapper.text()).toContain('题目管理')
+
+    expect(wrapper.text()).toContain('题目资源管理中心')
+    expect(wrapper.text()).toContain('导入题目包')
+    expect(wrapper.text()).toContain('待确认导入')
     expect(wrapper.text()).toContain('Test Challenge')
+  })
+
+  it('页面壳层与题目更多菜单应声明暗色主题 token，避免夜间模式继续露出浅色背景', () => {
+    expect(challengeManageSource).toContain('--challenge-page-bg')
+    expect(challengeManageSource).toContain('--challenge-action-surface')
+    expect(challengeManageSource).toContain(":global([data-theme='dark']) .challenge-manage-shell")
+    expect(challengeManageSource).toContain(":global([data-theme='dark']) .challenge-row-menu")
+  })
+
+  it('最外层 workspace shell 不应保留额外边框', () => {
+    expect(challengeManageSource).toContain('.challenge-manage-shell {')
+    expect(challengeManageSource).toContain('border: none;')
   })
 
   it('题目管理列表应改用共享列表组件，并且不再显示题目 ID 列', async () => {
@@ -215,8 +233,6 @@ describe('ChallengeManage', () => {
       )
 
     const wrapper = mount(ChallengeManage)
-    await flushPromises()
-    await wrapper.get('#challenge-tab-import').trigger('click')
     await flushPromises()
 
     const fileInput = wrapper.get('input[type="file"]')

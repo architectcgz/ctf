@@ -99,6 +99,12 @@ function getCellValue(row: unknown, key: string): unknown {
 
 <style scoped>
 .workspace-data-table-shell {
+  --workspace-table-line: color-mix(in srgb, var(--color-border-default) 70%, transparent);
+  --workspace-table-line-strong: color-mix(in srgb, var(--color-border-default) 84%, transparent);
+  --workspace-table-text: color-mix(in srgb, var(--color-text-primary) 94%, transparent);
+  --workspace-table-muted: color-mix(in srgb, var(--color-text-secondary) 88%, transparent);
+  --workspace-table-faint: color-mix(in srgb, var(--color-text-muted) 84%, transparent);
+  --workspace-table-row-hover: color-mix(in srgb, var(--color-border-default) 14%, transparent);
   width: 100%;
   overflow-x: auto;
   border: none;
@@ -117,12 +123,12 @@ function getCellValue(row: unknown, key: string): unknown {
 
 .workspace-data-table__head-cell {
   padding: 0.75rem 0.5rem;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--workspace-table-line-strong);
   font-size: 0.6875rem;
   font-weight: 800;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: #94a3b8;
+  color: var(--workspace-table-faint);
 }
 
 .workspace-data-table__body-cell {
@@ -130,13 +136,13 @@ function getCellValue(row: unknown, key: string): unknown {
 }
 
 .workspace-data-table__row {
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--workspace-table-line);
   background: transparent;
   transition: background-color 0.2s ease;
 }
 
 .workspace-data-table__row:hover {
-  background: rgba(226, 232, 240, 0.4);
+  background: var(--workspace-table-row-hover);
 }
 
 .workspace-data-table__cell--left {
@@ -149,5 +155,23 @@ function getCellValue(row: unknown, key: string): unknown {
 
 .workspace-data-table__cell--right {
   text-align: right;
+}
+
+:global([data-theme='light']) .workspace-data-table-shell {
+  --workspace-table-line: color-mix(in srgb, #e8eef5 86%, transparent);
+  --workspace-table-line-strong: color-mix(in srgb, #dbe4ee 92%, transparent);
+  --workspace-table-text: #0f172a;
+  --workspace-table-muted: #475569;
+  --workspace-table-faint: #94a3b8;
+  --workspace-table-row-hover: color-mix(in srgb, #e2e8f0 42%, transparent);
+}
+
+:global([data-theme='dark']) .workspace-data-table-shell {
+  --workspace-table-line: color-mix(in srgb, var(--color-border-default) 42%, transparent);
+  --workspace-table-line-strong: color-mix(in srgb, var(--color-border-default) 56%, transparent);
+  --workspace-table-text: color-mix(in srgb, var(--color-text-primary) 92%, transparent);
+  --workspace-table-muted: color-mix(in srgb, var(--color-text-secondary) 86%, transparent);
+  --workspace-table-faint: color-mix(in srgb, var(--color-text-muted) 80%, transparent);
+  --workspace-table-row-hover: color-mix(in srgb, var(--color-border-default) 10%, transparent);
 }
 </style>
