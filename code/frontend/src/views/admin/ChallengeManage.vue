@@ -19,8 +19,8 @@ import {
 } from 'lucide-vue-next'
 
 import ChallengePackageImportEntry from '@/components/admin/challenge/ChallengePackageImportEntry.vue'
-import AdminPaginationControls from '@/components/admin/AdminPaginationControls.vue'
 import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
+import WorkspaceDirectoryPagination from '@/components/common/WorkspaceDirectoryPagination.vue'
 import WorkspaceDirectoryToolbar, {
   type WorkspaceDirectorySortOption,
 } from '@/components/common/WorkspaceDirectoryToolbar.vue'
@@ -143,6 +143,30 @@ const sortOptions: ChallengeSortOption[] = [
   { key: 'points', order: 'asc', label: '分值由低到高', icon: ArrowUpNarrowWide },
   { key: 'title', order: 'asc', label: '标题 A-Z', icon: SortAsc },
 ]
+const sortedChallenges = computed(() => {
+  const nextRows = [...list.value]
+
+  nextRows.sort((left, right) => {
+    switch (sortConfig.value.key) {
+      case 'points': {
+        const delta = left.points - right.points
+        return sortConfig.value.order === 'asc' ? delta : -delta
+      }
+      case 'title': {
+        const delta = left.title.localeCompare(right.title, 'zh-CN')
+        return sortConfig.value.order === 'asc' ? delta : -delta
+      }
+      case 'updateTime':
+      default: {
+        const leftTime = new Date(left.updated_at || left.created_at).getTime()
+        const rightTime = new Date(right.updated_at || right.created_at).getTime()
+        return sortConfig.value.order === 'asc' ? leftTime - rightTime : rightTime - leftTime
+      }
+    }
+  })
+
+  return nextRows
+})
 const challengeTableColumns = [
   {
     key: 'title',
@@ -324,7 +348,7 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
 </script>
 
 <template>
-  <div class="workspace-shell challenge-manage-shell">
+  <div class="workspace-shell challenge-manage-shell journal-shell journal-shell-admin journal-notes-card">
     <nav class="top-tabs" role="tablist" aria-label="题目管理工作区切换">
       <button
         v-for="(tab, index) in panelTabs"
@@ -369,7 +393,7 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
                 @click="openPackageFormatGuide"
               >
                 <FileSearch class="h-3.5 w-3.5 mr-1.5" />
-                审计日志
+                题目包规范
               </button>
               <button
                 type="button"
@@ -444,9 +468,15 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
             </article>
           </div>
 
-          <section class="workspace-directory-section">
-            <div class="challenge-manage-directory">
-              <WorkspaceDirectoryToolbar
+          <section class="workspace-directory-section challenge-manage-directory">
+            <header class="list-heading">
+              <div>
+                <div class="workspace-overline">Challenge Directory</div>
+                <h2 class="list-heading__title">题目目录</h2>
+              </div>
+            </header>
+
+            <WorkspaceDirectoryToolbar
               v-model="keyword"
               :total="total"
               :selected-sort-label="sortConfig.label"
@@ -494,20 +524,20 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
                   </label>
                 </div>
               </template>
-              </WorkspaceDirectoryToolbar>
+            </WorkspaceDirectoryToolbar>
 
-              <div v-if="loading" class="challenge-directory-state">正在同步题目目录...</div>
-              <div v-else-if="list.length === 0" class="challenge-directory-state">
-                {{ manageEmptyMessage }}
-              </div>
-              <WorkspaceDataTable
-                v-else
-                class="challenge-list workspace-directory-list"
-                :columns="challengeTableColumns"
-                :rows="list"
-                row-key="id"
-                row-class="challenge-table-row group"
-              >
+            <div v-if="loading" class="challenge-directory-state">正在同步题目目录...</div>
+            <div v-else-if="list.length === 0" class="challenge-directory-state">
+              {{ manageEmptyMessage }}
+            </div>
+            <WorkspaceDataTable
+              v-else
+              class="challenge-list workspace-directory-list"
+              :columns="challengeTableColumns"
+              :rows="sortedChallenges"
+              row-key="id"
+              row-class="challenge-table-row group"
+            >
               <template #cell-title="{ row }">
                 <div
                   class="challenge-table-title"
@@ -640,16 +670,13 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
                 </div>
               </Teleport>
 
-              <div class="admin-pagination workspace-directory-pagination">
-                <AdminPaginationControls
-                  :page="page"
-                  :total-pages="Math.max(1, Math.ceil(total / pageSize))"
-                  :total="total"
-                  :total-label="`共 ${total} 条`"
-                  @change-page="changePage"
-                />
-              </div>
-            </div>
+            <WorkspaceDirectoryPagination
+              :page="page"
+              :total-pages="Math.max(1, Math.ceil(total / pageSize))"
+              :total="total"
+              :total-label="`共 ${total} 道题目`"
+              @change-page="changePage"
+            />
           </section>
         </section>
 
@@ -847,6 +874,10 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
   --workspace-side-padding: 2rem;
   --workspace-content-padding: 2rem;
   --workspace-tabs-offset-top: 1rem;
+  --page-top-tabs-gap: 0.9rem;
+  --page-top-tab-active-border: color-mix(in srgb, var(--workspace-brand) 36%, transparent);
+  --page-top-tab-active-text: var(--journal-ink);
+  --page-top-tab-hover-text: var(--journal-ink);
   background: #f8fafc;
 }
 
@@ -1172,12 +1203,12 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
 }
 
 .challenge-row-menu__item--danger {
-  color: #ef4444;
+  color: color-mix(in srgb, var(--color-danger) 88%, var(--journal-ink));
 }
 
 .challenge-row-menu__item--danger:hover {
-  background: #fef2f2;
-  color: #dc2626;
+  background: color-mix(in srgb, var(--color-danger) 10%, transparent);
+  color: color-mix(in srgb, var(--color-danger) 96%, var(--journal-ink));
 }
 
 @keyframes challengeStatusPulse {
