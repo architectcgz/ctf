@@ -6,6 +6,7 @@ import (
 	redislib "github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 
+	"ctf-platform/internal/model"
 	contestports "ctf-platform/internal/module/contest/ports"
 )
 
@@ -32,6 +33,44 @@ func (r *AWDRepository) WithinTransaction(ctx context.Context, fn func(txRepo co
 	return r.dbWithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		return fn(r.WithDB(tx))
 	})
+}
+
+func (r *AWDRepository) CreateContestAWDService(ctx context.Context, service *model.ContestAWDService) error {
+	return r.dbWithContext(ctx).Create(service).Error
+}
+
+func (r *AWDRepository) UpdateContestAWDService(ctx context.Context, contestID, challengeID int64, updates map[string]any) error {
+	if len(updates) == 0 {
+		return nil
+	}
+	return r.dbWithContext(ctx).Model(&model.ContestAWDService{}).
+		Where("contest_id = ? AND challenge_id = ?", contestID, challengeID).
+		Updates(updates).Error
+}
+
+func (r *AWDRepository) FindContestAWDServiceByContestAndChallenge(ctx context.Context, contestID, challengeID int64) (*model.ContestAWDService, error) {
+	var item model.ContestAWDService
+	if err := r.dbWithContext(ctx).
+		Where("contest_id = ? AND challenge_id = ?", contestID, challengeID).
+		First(&item).Error; err != nil {
+		return nil, err
+	}
+	return &item, nil
+}
+
+func (r *AWDRepository) ListContestAWDServicesByContest(ctx context.Context, contestID int64) ([]model.ContestAWDService, error) {
+	var items []model.ContestAWDService
+	err := r.dbWithContext(ctx).
+		Where("contest_id = ?", contestID).
+		Order("\"order\" ASC, id ASC").
+		Find(&items).Error
+	return items, err
+}
+
+func (r *AWDRepository) DeleteContestAWDServiceByContestAndChallenge(ctx context.Context, contestID, challengeID int64) error {
+	return r.dbWithContext(ctx).
+		Where("contest_id = ? AND challenge_id = ?", contestID, challengeID).
+		Delete(&model.ContestAWDService{}).Error
 }
 
 func (r *AWDRepository) RecalculateContestTeamScores(ctx context.Context, contestID int64) error {

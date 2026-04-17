@@ -85,5 +85,9 @@ func (s *ChallengeService) AddChallengeToContest(ctx context.Context, contestID 
 	if err := s.repo.AddChallenge(ctx, cc); err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
+	if err := s.syncContestAWDServiceForChallenge(ctx, contest, challenge, cc, req.TemplateID); err != nil {
+		_ = s.repo.RemoveChallenge(ctx, contestID, req.ChallengeID)
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
 	return contestdomain.ContestChallengeRespFromModel(cc, challenge), nil
 }

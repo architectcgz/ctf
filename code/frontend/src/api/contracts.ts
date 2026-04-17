@@ -648,6 +648,9 @@ export interface AdminContestChallengeData {
   id: ID
   contest_id: ID
   challenge_id: ID
+  awd_service_id?: ID
+  awd_template_id?: ID
+  awd_service_display_name?: string
   title?: string
   category?: ChallengeCategory
   difficulty?: ChallengeDifficulty
