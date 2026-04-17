@@ -217,7 +217,9 @@ function getCardDescription(
             :description="selectionHint"
           >
             <template #action>
-              <button type="button" class="scoreboard-btn" @click="refresh">重新加载</button>
+              <button type="button" class="ui-btn ui-btn--secondary" @click="refresh">
+                重新加载
+              </button>
             </template>
           </AppEmpty>
 
@@ -347,7 +349,11 @@ function getCardDescription(
             :description="rankingHint"
           >
             <template #action>
-              <button type="button" class="scoreboard-btn" @click="refreshPracticeRanking">
+              <button
+                type="button"
+                class="ui-btn ui-btn--secondary"
+                @click="refreshPracticeRanking"
+              >
                 重新加载
               </button>
             </template>
