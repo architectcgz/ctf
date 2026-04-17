@@ -87,6 +87,9 @@ describe('AuditLog', () => {
 
     await flushPromises()
 
+    await wrapper.get('.workspace-directory-toolbar__filter-toggle').trigger('click')
+    await flushPromises()
+
     const resourceInput = wrapper.find('input[placeholder="资源类型，如 challenge"]')
     await resourceInput.setValue('instance')
     vi.advanceTimersByTime(250)
@@ -112,10 +115,22 @@ describe('AuditLog', () => {
     expect(auditLogSource).toContain('placeholder="资源类型，如 challenge"')
     expect(auditLogSource).toContain('placeholder="执行人 ID"')
     expect(auditLogSource).toContain('重置筛选')
-    expect(auditLogSource).toContain(':disabled="!hasActiveFilters"')
+    expect(auditLogSource).toContain(':reset-disabled="!hasActiveFilters"')
     expect(auditLogSource).not.toContain('audit-filter-label--ghost')
     expect(auditLogSource).not.toContain('audit-filter-actions')
     expect(auditLogSource).not.toContain('audit-filter-action-row')
+  })
+
+  it('应接入共享目录工具栏与列表表格，而不是继续使用原生 table', () => {
+    expect(auditLogSource).toContain("from '@/components/common/WorkspaceDirectoryToolbar.vue'")
+    expect(auditLogSource).toContain("from '@/components/common/WorkspaceDataTable.vue'")
+    expect(auditLogSource).toContain('<WorkspaceDirectoryToolbar')
+    expect(auditLogSource).toContain('<WorkspaceDataTable')
+    expect(auditLogSource).not.toContain('<section class="audit-filter-strip"')
+    expect(auditLogSource).not.toContain('<table class="min-w-full text-sm">')
+    expect(auditLogSource).toContain('search-placeholder="检索动作、资源类型、执行人..."')
+    expect(auditLogSource).toContain('total-suffix="条日志"')
+    expect(auditLogSource).toContain('class="audit-list workspace-directory-list"')
   })
 
   it('应使用统一进度卡片样式展示审计摘要', () => {

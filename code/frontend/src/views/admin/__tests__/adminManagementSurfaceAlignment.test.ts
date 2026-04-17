@@ -35,8 +35,13 @@ describe('admin management surface alignment', () => {
       /--audit-row-divider:\s*color-mix\(in srgb,\s*var\(--journal-border\) 62%, transparent\);/
     )
     expect(auditLogSource).toMatch(/class="audit-empty-state[^"]*"/)
-    expect(auditLogSource).toContain('border-[var(--audit-table-border)]')
-    expect(auditLogSource).toContain('divide-y divide-[var(--audit-row-divider)]')
+    expect(auditLogSource).toContain('class="audit-list workspace-directory-list"')
+    expect(auditLogSource).toMatch(
+      /\.audit-list\s*\{[\s\S]*border:\s*1px solid var\(--audit-table-border\);/s
+    )
+    expect(auditLogSource).toMatch(
+      /\.audit-list :deep\(\.workspace-data-table__row\)\s*\{[\s\S]*border-bottom-color:\s*var\(--audit-row-divider\);/s
+    )
   })
 
   it('user governance should soften control and table shell borders', () => {
@@ -257,7 +262,7 @@ describe('admin management surface alignment', () => {
     expect(imageManageSource).toContain('class="admin-pagination workspace-directory-pagination"')
 
     expect(auditLogSource).toContain('class="admin-board workspace-directory-section"')
-    expect(auditLogSource).toContain('class="audit-table-shell workspace-directory-list')
+    expect(auditLogSource).toContain('class="audit-list workspace-directory-list"')
     expect(auditLogSource).toContain('class="admin-pagination workspace-directory-pagination"')
 
     expect(challengeManageSource).toContain(
