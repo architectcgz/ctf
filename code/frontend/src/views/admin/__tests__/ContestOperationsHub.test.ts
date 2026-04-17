@@ -52,7 +52,7 @@ describe('ContestOperationsHub', () => {
     })
   })
 
-  it('renders environment management copy and routes to awd config for the preferred contest', async () => {
+  it('renders environment management as an awd contest directory and routes from row actions', async () => {
     routeState.path = '/admin/contest-ops/environment'
     routeState.name = 'AdminContestOpsEnvironment'
 
@@ -60,9 +60,10 @@ describe('ContestOperationsHub', () => {
     await flushPromises()
 
     expect(wrapper.text()).toContain('环境管理')
+    expect(wrapper.text()).toContain('全部 AWD 赛事')
     expect(wrapper.text()).toContain('2026 AWD 联赛')
 
-    await wrapper.get('#contest-ops-primary-action').trigger('click')
+    await wrapper.get('#contest-ops-row-primary-awd-running').trigger('click')
 
     expect(pushMock).toHaveBeenCalledWith({
       name: 'ContestEdit',
@@ -71,7 +72,7 @@ describe('ContestOperationsHub', () => {
     })
   })
 
-  it('renders traffic monitoring copy and routes to the operations inspector', async () => {
+  it('renders traffic monitoring as an awd contest directory and routes from row actions', async () => {
     routeState.path = '/admin/contest-ops/traffic'
     routeState.name = 'AdminContestOpsTraffic'
 
@@ -79,8 +80,9 @@ describe('ContestOperationsHub', () => {
     await flushPromises()
 
     expect(wrapper.text()).toContain('流量监控')
+    expect(wrapper.text()).toContain('全部 AWD 赛事')
 
-    await wrapper.get('#contest-ops-primary-action').trigger('click')
+    await wrapper.get('#contest-ops-row-primary-awd-running').trigger('click')
 
     expect(pushMock).toHaveBeenCalledWith({
       name: 'ContestEdit',
@@ -89,27 +91,24 @@ describe('ContestOperationsHub', () => {
     })
   })
 
-  it('uses shared list heading and metric panel primitives for the operations workspace header', () => {
+  it('uses a shared workbench header, metric strip, and flat awd directory instead of entry cards', () => {
     expect(contestOperationsHubSource).toContain(
-      '<header class="list-heading contest-ops-hero workspace-directory-section">'
-    )
-    expect(contestOperationsHubSource).not.toContain(
-      '<header class="contest-ops-hero workspace-directory-section">'
+      '<header class="list-heading contest-ops-workbench-head">'
     )
     expect(contestOperationsHubSource).toContain(
       'class="progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface contest-ops-summary"'
     )
     expect(contestOperationsHubSource).toContain(
-      'class="journal-note progress-card metric-panel-card"'
+      'class="workspace-directory-section contest-ops-directory-section"'
     )
     expect(contestOperationsHubSource).toContain(
-      'class="journal-note-label progress-card-label metric-panel-label"'
+      'class="contest-ops-directory workspace-directory-list"'
     )
     expect(contestOperationsHubSource).toContain(
-      'class="journal-note-value progress-card-value metric-panel-value"'
+      'class="ui-row-actions contest-ops-row__actions"'
     )
-    expect(contestOperationsHubSource).toContain(
-      'class="journal-note-helper progress-card-hint metric-panel-helper"'
-    )
+    expect(contestOperationsHubSource).not.toContain('class="contest-ops-grid"')
+    expect(contestOperationsHubSource).not.toContain('class="contest-ops-card"')
+    expect(contestOperationsHubSource).not.toContain('继续处理当前赛事')
   })
 })
