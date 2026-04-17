@@ -142,25 +142,8 @@ const {
       :description="pageHeader.description"
     >
       <button
-        v-if="!isTemplateLibraryMode"
         type="button"
-        :class="
-          isTemplateLibraryMode
-            ? 'topology-toolbar-btn topology-toolbar-btn--ghost'
-            : 'inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-medium text-text-primary transition hover:border-primary'
-        "
-        @click="emit('back')"
-      >
-        返回题目详情
-      </button>
-      <button
-        v-else
-        type="button"
-        :class="
-          isTemplateLibraryMode
-            ? 'topology-toolbar-btn topology-toolbar-btn--ghost'
-            : 'inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-medium text-text-primary transition hover:border-primary'
-        "
+        class="topology-toolbar-btn topology-toolbar-btn--ghost"
         @click="handleResetTemplateEditor"
       >
         <Plus class="h-4 w-4" />
@@ -168,29 +151,11 @@ const {
       </button>
       <button
         type="button"
-        :class="
-          isTemplateLibraryMode
-            ? 'topology-toolbar-btn topology-toolbar-btn--ghost'
-            : 'inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-medium text-text-primary transition hover:border-primary'
-        "
+        class="topology-toolbar-btn topology-toolbar-btn--ghost"
         @click="void reloadAll()"
       >
         <RefreshCw class="h-4 w-4" />
         刷新
-      </button>
-      <button
-        v-if="!isTemplateLibraryMode"
-        type="button"
-        :class="
-          isTemplateLibraryMode
-            ? 'topology-toolbar-btn topology-toolbar-btn--primary'
-            : 'inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white transition hover:opacity-90'
-        "
-        :disabled="saving"
-        @click="void handleSaveTopology()"
-      >
-        <Save class="h-4 w-4" />
-        {{ saving ? '保存中...' : '保存拓扑' }}
       </button>
     </PageHeader>
 
