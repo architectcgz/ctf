@@ -72,6 +72,7 @@ var fullRouterTestSchemaModels = []any{
 	&model.UserRole{},
 	&model.Image{},
 	&model.Challenge{},
+	&model.AWDServiceTemplate{},
 	&model.ChallengePublishCheckJob{},
 	&model.Tag{},
 	&model.ChallengeTag{},
