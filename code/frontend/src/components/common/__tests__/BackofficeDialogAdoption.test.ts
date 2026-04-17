@@ -38,4 +38,14 @@ describe('backoffice dialog adoption', () => {
       expect(source).toContain('<AdminSurfaceDrawer')
     })
   })
+
+  it('admin user form dialog should adopt shared form and action primitives', () => {
+    expect(adminUserFormDialogSource).toContain('<AdminSurfaceModal')
+    expect(adminUserFormDialogSource).toContain('class="ui-field')
+    expect(adminUserFormDialogSource).toContain('class="ui-control-wrap')
+    expect(adminUserFormDialogSource).toContain('class="ui-control')
+    expect(adminUserFormDialogSource).toContain('class="ui-btn ui-btn--secondary')
+    expect(adminUserFormDialogSource).toContain('class="ui-btn ui-btn--primary')
+    expect(adminUserFormDialogSource).not.toContain('rounded-xl border border-border bg-surface')
+  })
 })
