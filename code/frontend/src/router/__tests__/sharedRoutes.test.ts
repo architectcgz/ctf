@@ -80,6 +80,9 @@ describe('shared route canonical paths', () => {
     expect(findChild('platform/environment-templates')?.name).toBe(
       'AdminEnvironmentTemplateLibrary'
     )
+    expect(findChild('platform/awd-service-templates')?.name).toBe(
+      'AdminAWDServiceTemplateLibrary'
+    )
     expect(findChild('platform/images')?.name).toBe('ImageManage')
 
     expect(findChild('admin/classes')?.redirect).toBeTruthy()
@@ -100,6 +103,7 @@ describe('shared route canonical paths', () => {
     expect(findChild('admin/challenges/:id/writeup')?.redirect).toBeTruthy()
     expect(findChild('admin/challenges/:id/writeup/view')?.redirect).toBeTruthy()
     expect(findChild('admin/environment-templates')?.redirect).toBeTruthy()
+    expect(findChild('admin/awd-service-templates')?.redirect).toBeTruthy()
     expect(findChild('admin/images')?.redirect).toBeTruthy()
   })
 

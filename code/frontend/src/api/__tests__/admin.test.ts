@@ -16,6 +16,7 @@ vi.mock('@/api/request', () => ({
 }))
 
 import {
+  createAdminAwdServiceTemplate,
   createAdminContestChallenge,
   createEnvironmentTemplate,
   createChallenge,
@@ -23,6 +24,7 @@ import {
   createContest,
   createContestAWDRound,
   configureChallengeFlag,
+  deleteAdminAwdServiceTemplate,
   deleteAdminContestChallenge,
   deleteChallengeTopology,
   deleteEnvironmentTemplate,
@@ -42,6 +44,7 @@ import {
   getEnvironmentTemplates,
   getImages,
   getUsers,
+  listAdminAwdServiceTemplates,
   listChallengeImports,
   listAdminContestChallenges,
   listContestAWDRoundAttacks,
@@ -54,6 +57,7 @@ import {
   saveChallengeWriteup,
   unrecommendChallengeWriteup,
   updateAdminContestChallenge,
+  updateAdminAwdServiceTemplate,
   updateContest,
 } from '@/api/admin'
 import * as adminApi from '@/api/admin'
@@ -1982,6 +1986,158 @@ describe('admin contest api contract', () => {
         links: [],
         policies: [],
       },
+    })
+  })
+
+  it('应该把 AWD 服务模板分页结果归一化', async () => {
+    requestMock.mockResolvedValueOnce({
+      items: [
+        {
+          id: 5,
+          name: 'Bank Portal AWD',
+          slug: 'bank-portal-awd',
+          category: 'web',
+          difficulty: 'hard',
+          description: 'multi-step banking target',
+          service_type: 'web_http',
+          deployment_mode: 'single_container',
+          version: 'v1',
+          status: 'draft',
+          readiness_status: 'pending',
+          created_by: 9,
+          last_verified_at: null,
+          created_at: '2026-04-17T08:00:00.000Z',
+          updated_at: '2026-04-17T09:00:00.000Z',
+        },
+      ],
+      total: 1,
+      page: 2,
+      size: 10,
+    })
+
+    const page = await listAdminAwdServiceTemplates({
+      page: 2,
+      page_size: 10,
+      keyword: 'bank',
+      service_type: 'web_http',
+      status: 'draft',
+    })
+
+    expect(requestMock).toHaveBeenCalledWith({
+      method: 'GET',
+      url: '/authoring/awd-service-templates',
+      params: {
+        page: 2,
+        page_size: 10,
+        keyword: 'bank',
+        service_type: 'web_http',
+        status: 'draft',
+      },
+    })
+    expect(page).toEqual({
+      list: [
+        {
+          id: '5',
+          name: 'Bank Portal AWD',
+          slug: 'bank-portal-awd',
+          category: 'web',
+          difficulty: 'hard',
+          description: 'multi-step banking target',
+          service_type: 'web_http',
+          deployment_mode: 'single_container',
+          version: 'v1',
+          status: 'draft',
+          readiness_status: 'pending',
+          created_by: '9',
+          last_verified_at: undefined,
+          created_at: '2026-04-17T08:00:00.000Z',
+          updated_at: '2026-04-17T09:00:00.000Z',
+        },
+      ],
+      total: 1,
+      page: 2,
+      page_size: 10,
+    })
+  })
+
+  it('应该把 AWD 服务模板创建更新删除请求转换成后台接口格式', async () => {
+    requestMock.mockResolvedValueOnce({
+      id: 5,
+      name: 'Bank Portal AWD',
+      slug: 'bank-portal-awd',
+      category: 'web',
+      difficulty: 'hard',
+      description: 'desc',
+      service_type: 'web_http',
+      deployment_mode: 'single_container',
+      version: 'v1',
+      status: 'draft',
+      readiness_status: 'pending',
+      created_at: '2026-04-17T08:00:00.000Z',
+      updated_at: '2026-04-17T09:00:00.000Z',
+    })
+
+    await createAdminAwdServiceTemplate({
+      name: 'Bank Portal AWD',
+      slug: 'bank-portal-awd',
+      category: 'web',
+      difficulty: 'hard',
+      description: 'desc',
+      service_type: 'web_http',
+      deployment_mode: 'single_container',
+    })
+
+    expect(requestMock).toHaveBeenNthCalledWith(1, {
+      method: 'POST',
+      url: '/authoring/awd-service-templates',
+      data: {
+        name: 'Bank Portal AWD',
+        slug: 'bank-portal-awd',
+        category: 'web',
+        difficulty: 'hard',
+        description: 'desc',
+        service_type: 'web_http',
+        deployment_mode: 'single_container',
+      },
+    })
+
+    requestMock.mockResolvedValueOnce({
+      id: 5,
+      name: 'Bank Portal AWD v2',
+      slug: 'bank-portal-awd',
+      category: 'web',
+      difficulty: 'hard',
+      description: 'desc',
+      service_type: 'web_http',
+      deployment_mode: 'single_container',
+      version: 'v1',
+      status: 'published',
+      readiness_status: 'passed',
+      created_at: '2026-04-17T08:00:00.000Z',
+      updated_at: '2026-04-17T10:00:00.000Z',
+    })
+
+    await updateAdminAwdServiceTemplate('5', {
+      name: 'Bank Portal AWD v2',
+      status: 'published',
+    })
+
+    expect(requestMock).toHaveBeenNthCalledWith(2, {
+      method: 'PUT',
+      url: '/authoring/awd-service-templates/5',
+      data: {
+        name: 'Bank Portal AWD v2',
+        status: 'published',
+      },
+    })
+
+    requestMock.mockResolvedValueOnce(undefined)
+    await deleteAdminAwdServiceTemplate('5')
+
+    expect(requestMock).toHaveBeenNthCalledWith(3, {
+      method: 'DELETE',
+      url: '/authoring/awd-service-templates/5',
+      suppressErrorToast: true,
     })
   })
 })
