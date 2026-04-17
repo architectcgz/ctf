@@ -94,7 +94,7 @@ describe('UserManage', () => {
     })
   })
 
-  it('应该将用户治理拆成总览、用户列表、导入用户三个标签页', async () => {
+  it('应该将用户总览与目录合并为一个工作台，并保留导入用户独立面板', async () => {
     adminApiMocks.getUsers.mockResolvedValue({
       list: [
         {
@@ -124,18 +124,17 @@ describe('UserManage', () => {
 
     await flushPromises()
 
-    expect(wrapper.find('#user-tab-overview').attributes('aria-selected')).toBe('true')
-    expect(wrapper.find('#user-overview-summary').attributes('aria-hidden')).toBe('false')
-    expect(wrapper.find('#user-directory-filters').attributes('aria-hidden')).toBe('true')
-    expect(wrapper.find('#user-import-start').attributes('aria-hidden')).toBe('true')
-    expect(wrapper.text()).toContain('总览')
-    expect(wrapper.text()).toContain('用户列表')
+    expect(wrapper.find('[role="tablist"]').exists()).toBe(false)
+    expect(wrapper.find('#user-panel-overview').attributes('aria-hidden')).toBe('false')
+    expect(wrapper.find('#user-panel-import').attributes('aria-hidden')).toBe('true')
+    expect(wrapper.text()).toContain('用户治理台')
+    expect(wrapper.text()).toContain('全部用户')
+    expect(wrapper.text()).toContain('创建用户')
     expect(wrapper.text()).toContain('导入用户')
-    expect(wrapper.find('#user-overview-summary').text()).toContain('当前用户概况')
-    expect(wrapper.find('#user-overview-summary').text()).toContain('用户总量')
-    expect(wrapper.text()).toContain('导入回执')
+    expect(wrapper.find('#user-panel-overview').text()).toContain('用户总量')
+    expect(wrapper.find('#user-panel-overview').text()).toContain('导入回执')
 
-    await wrapper.get('#user-tab-import').trigger('click')
+    await wrapper.get('#user-open-import').trigger('click')
     await flushPromises()
 
     expect(replaceMock).toHaveBeenLastCalledWith({
@@ -144,7 +143,7 @@ describe('UserManage', () => {
     })
   })
 
-  it('应支持通过 query 直接打开用户列表标签页', async () => {
+  it('应将旧的 directory query 兼容到默认工作台视图', async () => {
     routeState.query = { panel: 'directory' }
     adminApiMocks.getUsers.mockResolvedValue({
       list: [
@@ -177,16 +176,13 @@ describe('UserManage', () => {
 
     await flushPromises()
 
-    expect(wrapper.find('#user-tab-directory').attributes('aria-selected')).toBe('true')
-    expect(wrapper.find('#user-overview-summary').attributes('aria-hidden')).toBe('true')
-    expect(wrapper.find('#user-directory-filters').attributes('aria-hidden')).toBe('false')
-    expect(wrapper.find('.user-table-shell').exists()).toBe(true)
-    expect(wrapper.text()).not.toContain('用户治理台')
-    expect(wrapper.find('#user-directory-filters').text()).not.toContain('学生学号')
-    expect(wrapper.find('#user-directory-filters').text()).not.toContain('教师工号')
-    expect(wrapper.find('#user-directory-filters').text()).toContain('用户目录')
-    expect(wrapper.find('#user-directory-filters').text()).not.toContain('筛选条件')
-    expect(wrapper.text()).toContain('用户列表')
+    expect(wrapper.find('#user-panel-overview').attributes('aria-hidden')).toBe('false')
+    expect(wrapper.find('#user-panel-import').attributes('aria-hidden')).toBe('true')
+    expect(wrapper.find('.user-list').exists()).toBe(true)
+    expect(wrapper.text()).toContain('用户治理台')
+    expect(wrapper.find('#user-panel-overview').text()).not.toContain('学生学号')
+    expect(wrapper.find('#user-panel-overview').text()).not.toContain('教师工号')
+    expect(wrapper.find('#user-panel-overview').text()).toContain('全部用户')
   })
 
   it('应该使用统一容器渲染用户分段列表', async () => {
@@ -232,11 +228,18 @@ describe('UserManage', () => {
 
     await flushPromises()
 
-    expect(wrapper.find('.user-table-shell').exists()).toBe(true)
-    expect(wrapper.find('.user-table').exists()).toBe(true)
-    expect(wrapper.findAll('.user-table tbody tr')).toHaveLength(2)
+    expect(userGovernanceSource).toContain(
+      "from '@/components/common/WorkspaceDirectoryToolbar.vue'"
+    )
+    expect(userGovernanceSource).toContain("from '@/components/common/WorkspaceDataTable.vue'")
+    expect(userGovernanceSource).toContain('<WorkspaceDirectoryToolbar')
+    expect(userGovernanceSource).toContain('<WorkspaceDataTable')
+    expect(userGovernanceSource).not.toContain('<table class="user-table min-w-full text-sm">')
+    expect(wrapper.find('.user-list').exists()).toBe(true)
+    expect(wrapper.find('.workspace-directory-toolbar').exists()).toBe(true)
+    expect(wrapper.findAll('.workspace-data-table__body tr')).toHaveLength(2)
     expect(wrapper.find('.user-table-accent').exists()).toBe(false)
-    const headers = wrapper.findAll('.user-table thead th').map((item) => item.text())
+    const headers = wrapper.findAll('.workspace-data-table__head-cell').map((item) => item.text())
     expect(headers).toEqual([
       '用户',
       '姓名',
@@ -249,10 +252,7 @@ describe('UserManage', () => {
       '操作',
     ])
     expect(wrapper.find('.admin-pagination').exists()).toBe(true)
-    const sectionTitles = wrapper.findAll('section h2').map((item) => item.text())
-    expect(sectionTitles.indexOf('用户列表')).toBeLessThan(sectionTitles.indexOf('导入回执'))
-
-    const rows = wrapper.findAll('.user-table tbody tr')
+    const rows = wrapper.findAll('.workspace-data-table__body tr')
     expect(rows[0]?.text()).toContain('alice')
     expect(rows[0]?.text()).toContain('alice@example.com')
     expect(rows[0]?.text()).toContain('T001')
@@ -264,7 +264,7 @@ describe('UserManage', () => {
     expect(rows[1]?.text()).not.toContain('学号：')
     expect(rows[1]?.text()).not.toContain('工号：')
     expect(wrapper.findAll('.user-action-btn')).toHaveLength(4)
-    expect(wrapper.find('.user-table .admin-inline-chip').exists()).toBe(false)
+    expect(wrapper.find('.user-list .admin-inline-chip').exists()).toBe(false)
   })
 
   it('文本筛选应在节流后再请求用户列表', async () => {
@@ -288,7 +288,7 @@ describe('UserManage', () => {
     await flushPromises()
     adminApiMocks.getUsers.mockClear()
 
-    const inputs = wrapper.findAll('input.admin-input')
+    const inputs = wrapper.findAll('.workspace-directory-toolbar__search-input')
     expect(inputs).toHaveLength(1)
     await inputs[0].setValue('alice')
 
@@ -309,65 +309,63 @@ describe('UserManage', () => {
     })
   })
 
-  it('用户治理页应使用顶层 tabs 分隔列表和导入区域', () => {
-    const userDirectoryPanelStart = userGovernanceSource.indexOf('id="user-directory-filters"')
-    const userDirectoryPanelSnippet = userGovernanceSource.slice(
-      userDirectoryPanelStart,
-      userDirectoryPanelStart + 320
+  it('用户目录筛选与列表应切到共享目录原语', () => {
+    expect(userGovernanceSource).toContain('workspace-directory-section')
+    expect(userGovernanceSource).toContain(
+      'class="user-table-shell workspace-directory-list user-list"'
     )
-    const overviewPanelStart = userGovernanceSource.indexOf('id="user-overview-summary"')
+    expect(userGovernanceSource).toContain(
+      'search-placeholder="用户名 / 邮箱 / 班级 / 学号 / 工号"'
+    )
+    expect(userGovernanceSource).toContain('filter-panel-title="用户筛选"')
+    expect(userGovernanceSource).toContain('total-suffix="个用户"')
+    expect(userGovernanceSource).not.toContain('class="mt-5 grid gap-4"')
+    expect(userGovernanceSource).not.toContain('<table class="user-table min-w-full text-sm">')
+  })
+
+  it('用户治理页应改成 SaaS 全景工作台，并仅保留导入独立面板', () => {
+    const overviewPanelStart = userGovernanceSource.indexOf('id="user-panel-overview"')
     const overviewPanelSnippet = userGovernanceSource.slice(
       overviewPanelStart,
-      overviewPanelStart + 420
+      overviewPanelStart + 640
     )
+    const importPanelStart = userGovernanceSource.indexOf('id="user-panel-import"')
+    const importPanelSnippet = userGovernanceSource.slice(importPanelStart, importPanelStart + 420)
 
-    expect(userGovernanceSource).toContain('user-tab-overview')
-    expect(userGovernanceSource).toContain('user-tab-directory')
-    expect(userGovernanceSource).toContain('user-tab-import')
-    expect(userGovernanceSource).toContain('user-overview-summary')
-    expect(userGovernanceSource).toContain('user-directory-filters')
-    expect(userGovernanceSource).toContain('user-import-start')
-    expect(userGovernanceSource).toContain('<div class="workspace-overline">User Governance</div>')
-    expect(userGovernanceSource).not.toContain('<div class="journal-eyebrow">User Governance</div>')
-    expect(userGovernanceSource).toMatch(/role="tablist"/s)
-    expect(userGovernanceSource.indexOf('User Governance')).toBeLessThan(
-      userGovernanceSource.indexOf('role="tablist"')
-    )
-    expect(userGovernanceSource.indexOf('role="tablist"')).toBeLessThan(
-      userGovernanceSource.indexOf('用户治理台')
-    )
-    expect(userGovernanceSource).not.toContain('user-overview-entry')
-    expect(userGovernanceSource).not.toContain('user-panel-directory')
-    expect(userGovernanceSource).not.toContain('user-panel-import')
-    expect(userGovernanceSource).not.toContain('<main class="content-pane">')
+    expect(userGovernanceSource).toContain('id="user-panel-overview"')
+    expect(userGovernanceSource).toContain('id="user-panel-import"')
+    expect(userGovernanceSource).not.toContain('user-tab-overview')
+    expect(userGovernanceSource).not.toContain('user-tab-directory')
+    expect(userGovernanceSource).not.toContain('user-tab-import')
+    expect(userGovernanceSource).not.toMatch(/role="tablist"/s)
+    expect(userGovernanceSource).toContain('<main class="content-pane">')
     expect(overviewPanelStart).toBeGreaterThan(-1)
-    expect(overviewPanelSnippet).toContain('<div class="workspace-overline">User Governance</div>')
-    expect(overviewPanelSnippet).not.toContain('<div class="journal-note-label">User Governance</div>')
-    expect(userDirectoryPanelStart).toBeGreaterThan(-1)
-    expect(userDirectoryPanelSnippet).toContain('<div class="list-heading user-directory-head">')
-    expect(userGovernanceSource).toContain('<h2 class="list-heading__title">用户目录</h2>')
-    expect(userGovernanceSource).not.toContain('workspace-tab-heading__title">用户列表</h2>')
-    expect(userDirectoryPanelSnippet).not.toContain('admin-section-head-intro')
-    expect(userGovernanceSource).not.toMatch(/筛选与导入[\s\S]*用户列表[\s\S]*导入回执/s)
+    expect(overviewPanelSnippet).toContain('<div class="workspace-overline">User Workspace</div>')
+    expect(overviewPanelSnippet).toContain('<h1 class="workspace-page-title">用户治理台</h1>')
+    expect(userGovernanceSource).toContain('<h2 class="list-heading__title">全部用户</h2>')
+    expect(userGovernanceSource).toContain('<WorkspaceDirectoryToolbar')
+    expect(overviewPanelSnippet).not.toContain('<nav class="top-tabs"')
+    expect(importPanelStart).toBeGreaterThan(-1)
+    expect(userGovernanceSource).toContain('<div class="workspace-overline">User Import</div>')
+    expect(userGovernanceSource).toContain('<h2 class="workspace-page-title">导入用户</h2>')
   })
 
-  it('用户导入流分段页应使用统一目录头样式', () => {
-    expect(userGovernanceSource).toContain('class="list-heading admin-section-head-intro"')
-    expect(userGovernanceSource).toContain('class="list-heading user-import-receipt-head"')
-    expect(userGovernanceSource).toContain('<h2 class="list-heading__title">导入用户</h2>')
+  it('用户导入流应保留独立导入面板和回执区', () => {
+    expect(userGovernanceSource).toContain('class="workspace-directory-section user-import-panel"')
+    expect(userGovernanceSource).toContain('class="list-heading user-import-head"')
+    expect(userGovernanceSource).toContain('<h2 class="workspace-page-title">导入用户</h2>')
     expect(userGovernanceSource).toContain('<h2 class="list-heading__title">导入回执</h2>')
-    expect(userGovernanceSource).not.toContain('workspace-tab-heading__title">导入用户</h2>')
-    expect(userGovernanceSource).not.toContain('workspace-tab-heading__title">导入回执</h2>')
+    expect(userGovernanceSource).toContain('id="user-return-overview"')
   })
 
-  it('用户总览头部不应再渲染快捷操作按钮组', () => {
-    expect(userGovernanceSource).not.toContain('class="mt-6 flex flex-wrap gap-3"')
-    expect(userGovernanceSource).not.toMatch(
-      /刷新列表[\s\S]*用户列表[\s\S]*导入用户[\s\S]*创建用户/s
-    )
+  it('用户工作台头部应暴露全局操作按钮，而不是顶层 tabs', () => {
+    expect(userGovernanceSource).toContain('id="user-open-import"')
+    expect(userGovernanceSource).toContain('id="user-open-create"')
+    expect(userGovernanceSource).toContain('刷新列表')
+    expect(userGovernanceSource).not.toContain('<nav class="top-tabs"')
   })
 
-  it('用户总览摘要应内嵌在 overview 区并呈现四个指标卡片', async () => {
+  it('用户工作台摘要应内嵌在 overview 区并呈现四个指标卡片', async () => {
     adminApiMocks.getUsers.mockResolvedValue({
       list: [
         {
@@ -406,21 +404,15 @@ describe('UserManage', () => {
 
     await flushPromises()
 
-    const summary = wrapper.get('#user-overview-summary')
+    const summary = wrapper.get('#user-panel-overview')
     const summaryCards = summary.findAll('.user-overview-stat')
 
-    expect(userGovernanceSource).not.toContain(
-      '<article class="journal-brief user-overview-summary'
-    )
     expect(summaryCards).toHaveLength(4)
     expect(summary.find('.user-overview-grid').exists()).toBe(true)
     expect(summary.findAll('.user-overview-stat.progress-card.metric-panel-card')).toHaveLength(4)
     expect(summary.findAll('.progress-card-label.metric-panel-label')).toHaveLength(4)
     expect(summary.findAll('.progress-card-value.metric-panel-value')).toHaveLength(4)
     expect(summary.findAll('.progress-card-hint.metric-panel-helper')).toHaveLength(4)
-    expect(userGovernanceSource).not.toContain(
-      '<div v-if="activePanel === \'overview\'" class="journal-divider mt-6" />'
-    )
     expect(summaryCards.map((item) => item.find('.journal-note-label').text())).toEqual([
       '用户总量',
       '活跃账号',
