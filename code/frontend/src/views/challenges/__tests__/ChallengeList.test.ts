@@ -137,6 +137,19 @@ describe('ChallengeList', () => {
     expect(challengeListSource).toContain('class="challenge-summary-helper metric-panel-helper"')
   })
 
+  it('题目列表页操作与筛选控件应接入共享 ui 原语', () => {
+    expect(challengeListSource).toContain('class="ui-btn ui-btn--primary"')
+    expect(challengeListSource).toContain('class="ui-btn ui-btn--ghost"')
+    expect(challengeListSource).toContain('class="ui-btn ui-btn--secondary"')
+    expect(challengeListSource).toMatch(/class="ui-control-wrap(?:\s+[^\"]+)?"/)
+    expect(challengeListSource).toContain('class="ui-control"')
+    expect(challengeListSource).toContain('class="ui-control-prefix"')
+    expect(challengeListSource).not.toMatch(/^\.challenge-input,\s*$/m)
+    expect(challengeListSource).not.toMatch(/^\.challenge-select\s*\{/m)
+    expect(challengeListSource).not.toMatch(/^\.challenge-input:focus,\s*$/m)
+    expect(challengeListSource).not.toMatch(/^\.challenge-btn-ghost\s*\{/m)
+  })
+
   it('搜索时应通过 keyword 参数请求真实筛选', async () => {
     mockedGetChallenges.mockResolvedValue({
       list: [],

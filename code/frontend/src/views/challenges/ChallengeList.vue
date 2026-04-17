@@ -232,11 +232,11 @@ watch(
         </div>
 
         <div class="challenge-actions">
-          <button type="button" class="challenge-btn challenge-btn-primary" @click="goToDashboard">
+          <button type="button" class="ui-btn ui-btn--primary" @click="goToDashboard">
             <LayoutDashboard class="h-4 w-4" />
             返回仪表盘
           </button>
-          <button type="button" class="challenge-btn challenge-btn-ghost" @click="openSkillProfile">
+          <button type="button" class="ui-btn ui-btn--ghost" @click="openSkillProfile">
             能力画像
           </button>
         </div>
@@ -279,37 +279,41 @@ watch(
           <div class="challenge-directory-filter-grid">
             <label class="challenge-directory-filter-field" for="challenge-category-filter">
               <span class="challenge-directory-filter-label">分类</span>
-              <select
-                id="challenge-category-filter"
-                v-model="categoryFilter"
-                class="challenge-select"
-                @change="onFilterChange"
-              >
-                <option value="">全部分类</option>
-                <option value="web">Web</option>
-                <option value="pwn">Pwn</option>
-                <option value="reverse">逆向</option>
-                <option value="crypto">密码</option>
-                <option value="misc">杂项</option>
-                <option value="forensics">取证</option>
-              </select>
+              <div class="ui-control-wrap">
+                <select
+                  id="challenge-category-filter"
+                  v-model="categoryFilter"
+                  class="ui-control"
+                  @change="onFilterChange"
+                >
+                  <option value="">全部分类</option>
+                  <option value="web">Web</option>
+                  <option value="pwn">Pwn</option>
+                  <option value="reverse">逆向</option>
+                  <option value="crypto">密码</option>
+                  <option value="misc">杂项</option>
+                  <option value="forensics">取证</option>
+                </select>
+              </div>
             </label>
 
             <label class="challenge-directory-filter-field" for="challenge-difficulty-filter">
               <span class="challenge-directory-filter-label">难度</span>
-              <select
-                id="challenge-difficulty-filter"
-                v-model="difficultyFilter"
-                class="challenge-select"
-                @change="onFilterChange"
-              >
-                <option value="">全部难度</option>
-                <option value="beginner">入门</option>
-                <option value="easy">简单</option>
-                <option value="medium">中等</option>
-                <option value="hard">困难</option>
-                <option value="insane">地狱</option>
-              </select>
+              <div class="ui-control-wrap">
+                <select
+                  id="challenge-difficulty-filter"
+                  v-model="difficultyFilter"
+                  class="ui-control"
+                  @change="onFilterChange"
+                >
+                  <option value="">全部难度</option>
+                  <option value="beginner">入门</option>
+                  <option value="easy">简单</option>
+                  <option value="medium">中等</option>
+                  <option value="hard">困难</option>
+                  <option value="insane">地狱</option>
+                </select>
+              </div>
             </label>
 
             <div class="challenge-directory-filter-search">
@@ -320,14 +324,16 @@ watch(
                 >
                   搜索
                 </span>
-                <span class="challenge-directory-filter-search__control">
-                  <Search class="challenge-search-icon h-4 w-4" />
+                <span class="ui-control-wrap challenge-directory-filter-search__control">
+                  <span class="ui-control-prefix">
+                    <Search class="h-4 w-4" />
+                  </span>
                   <input
                     id="challenge-search-input"
                     v-model="searchQuery"
                     type="text"
                     placeholder="搜索题目标题或描述..."
-                    class="challenge-input"
+                    class="ui-control"
                     aria-describedby="challenge-directory-meta"
                     @input="onSearch"
                   />
@@ -345,7 +351,7 @@ watch(
               <div class="challenge-directory-filter-action-row">
                 <button
                   type="button"
-                  class="challenge-btn challenge-btn-ghost challenge-filter-clear"
+                  class="ui-btn ui-btn--ghost challenge-filter-clear"
                   :disabled="!hasActiveFilters"
                   @click="resetFilters"
                 >
@@ -368,7 +374,9 @@ watch(
           :description="errorMessage"
         >
           <template #action>
-            <button type="button" class="challenge-btn" @click="refresh">重新加载</button>
+            <button type="button" class="ui-btn ui-btn--secondary" @click="refresh">
+              重新加载
+            </button>
           </template>
         </AppEmpty>
 
@@ -383,7 +391,7 @@ watch(
             <button
               v-if="hasActiveFilters"
               type="button"
-              class="challenge-btn"
+              class="ui-btn ui-btn--secondary"
               @click="resetFilters"
             >
               清空筛选
@@ -604,10 +612,6 @@ watch(
   pointer-events: none;
 }
 
-.challenge-directory-filter-search__control {
-  position: relative;
-}
-
 .challenge-directory-filter-actions {
   justify-items: end;
 }
@@ -616,55 +620,6 @@ watch(
   display: flex;
   justify-content: flex-end;
   gap: var(--space-2-5);
-}
-
-.challenge-search-icon {
-  position: absolute;
-  top: 50%;
-  left: var(--space-3-5);
-  transform: translateY(-50%);
-  color: var(--journal-muted);
-  pointer-events: none;
-}
-
-.challenge-input,
-.challenge-select {
-  width: 100%;
-  min-height: 44px;
-  border: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--journal-surface) 88%, transparent);
-  font-size: var(--font-size-14);
-  color: var(--journal-ink);
-  outline: none;
-  transition:
-    border-color 160ms ease,
-    background 160ms ease,
-    box-shadow 160ms ease;
-}
-
-.challenge-input {
-  padding: 0 var(--space-3-5) 0 calc(var(--space-10) + var(--space-0-5));
-}
-
-.challenge-select {
-  padding: 0 var(--space-3-5);
-  cursor: pointer;
-}
-
-.challenge-input::placeholder {
-  color: var(--journal-muted);
-}
-
-.challenge-input:focus,
-.challenge-select:focus {
-  border-color: color-mix(in srgb, var(--journal-accent) 54%, transparent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--journal-accent) 12%, transparent);
-}
-
-.challenge-filter-clear:disabled {
-  cursor: not-allowed;
-  opacity: 0.48;
 }
 
 .challenge-loading {
@@ -858,10 +813,6 @@ watch(
   margin-top: var(--space-6);
   padding-top: var(--space-6);
   border-top: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-}
-
-.challenge-btn-ghost {
-  background: color-mix(in srgb, var(--journal-surface) 84%, transparent);
 }
 
 @keyframes challengeSpin {
