@@ -119,7 +119,7 @@ const {
               <div class="instance-row-inline-actions">
                 <button
                   type="button"
-                  class="instance-link-btn"
+                  class="ui-btn ui-btn--link instance-link-btn"
                   @click="
                     copyAddress(
                       instance.access_url ||
@@ -134,7 +134,7 @@ const {
                 <button
                   v-if="instance.access_url"
                   type="button"
-                  class="instance-link-btn"
+                  class="ui-btn ui-btn--link instance-link-btn"
                   @click="openTarget(instance.id)"
                 >
                   打开目标
@@ -178,14 +178,14 @@ const {
             <button
               v-if="instance.status === 'running' && instance.share_scope !== 'shared'"
               :disabled="instance.remaining_extends <= 0"
-              class="instance-btn instance-btn-primary"
+              class="ui-btn ui-btn--sm ui-btn--primary"
               @click="extendTime(instance.id)"
             >
               延时 +{{ EXTEND_DURATION_SECONDS / 60 }}min
             </button>
             <button
               v-if="instance.share_scope !== 'shared'"
-              class="instance-btn instance-btn-danger"
+              class="ui-btn ui-btn--sm ui-btn--danger"
               @click="destroyInstance(instance.id)"
             >
               销毁
@@ -207,8 +207,8 @@ const {
           实例 "{{ warningInstance?.challenge_title }}" 剩余时间不足 5 分钟，是否延长？
         </p>
         <div class="mt-6 flex justify-end gap-3">
-          <button class="instance-btn" @click="closeWarning">取消</button>
-          <button class="instance-btn instance-btn-primary" @click="extendFromWarning">
+          <button class="ui-btn ui-btn--secondary" @click="closeWarning">取消</button>
+          <button class="ui-btn ui-btn--primary" @click="extendFromWarning">
             延长 {{ EXTEND_DURATION_SECONDS / 60 }} 分钟
           </button>
         </div>
@@ -369,16 +369,6 @@ const {
   margin-top: 8px;
 }
 
-.instance-link-btn {
-  padding: 0;
-  border: 0;
-  background: transparent;
-  font-size: var(--font-size-13);
-  font-weight: 600;
-  color: var(--journal-accent);
-  cursor: pointer;
-}
-
 .instance-row-note {
   font-size: var(--font-size-13);
   line-height: 1.6;
@@ -402,10 +392,6 @@ const {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-}
-
-.instance-btn-danger {
-  color: var(--color-danger);
 }
 
 .warning-dialog {
