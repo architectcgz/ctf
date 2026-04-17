@@ -4,38 +4,39 @@
     panel-title="创建账号"
     panel-description="填写基础信息后进入平台。"
   >
-    <ElForm
-      class="auth-register-form"
-      :model="form"
-      label-position="top"
-      @submit.prevent="onSubmit"
-    >
-      <ElFormItem label="用户名">
-        <ElInput v-model="form.username" autocomplete="username" size="large" />
-      </ElFormItem>
-      <ElFormItem label="密码">
-        <ElInput
-          v-model="form.password"
-          type="password"
-          autocomplete="new-password"
-          show-password
-          size="large"
-        />
-      </ElFormItem>
-      <ElFormItem label="班级（可选）">
-        <ElInput v-model="form.class_name" size="large" />
-      </ElFormItem>
+    <form class="auth-register-form" @submit.prevent="onSubmit">
+      <label class="auth-register-form__field">
+        <span class="ui-field__label">用户名</span>
+        <div class="ui-control-wrap">
+          <input v-model="form.username" autocomplete="username" class="ui-control" />
+        </div>
+      </label>
+      <label class="auth-register-form__field">
+        <span class="ui-field__label">密码</span>
+        <div class="ui-control-wrap">
+          <input
+            v-model="form.password"
+            type="password"
+            autocomplete="new-password"
+            class="ui-control"
+          />
+        </div>
+      </label>
+      <label class="auth-register-form__field">
+        <span class="ui-field__label">班级（可选）</span>
+        <div class="ui-control-wrap">
+          <input v-model="form.class_name" class="ui-control" />
+        </div>
+      </label>
 
-      <ElButton
-        class="auth-register-form__submit"
-        type="primary"
-        native-type="submit"
-        size="large"
-        :loading="loading"
+      <button
+        class="ui-btn ui-btn--primary ui-btn--block auth-register-form__submit"
+        type="submit"
+        :disabled="loading"
       >
-        注册
-      </ElButton>
-    </ElForm>
+        {{ loading ? '注册中…' : '注册' }}
+      </button>
+    </form>
 
     <template #footer>
       <div class="auth-register-form__footer">
@@ -74,8 +75,17 @@ async function onSubmit() {
 </script>
 
 <style scoped>
+.auth-register-form {
+  display: grid;
+  gap: 1rem;
+}
+
+.auth-register-form__field {
+  display: grid;
+  gap: 0.45rem;
+}
+
 .auth-register-form__submit {
-  width: 100%;
   margin-top: 0.5rem;
 }
 
