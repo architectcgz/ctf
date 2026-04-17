@@ -94,6 +94,50 @@ func (r *Repository) Delete(id int64) error {
 	return r.db.Delete(&model.Challenge{}, id).Error
 }
 
+func (r *Repository) CreateAWDServiceTemplate(template *model.AWDServiceTemplate) error {
+	return r.db.Create(template).Error
+}
+
+func (r *Repository) ListAWDServiceTemplates(ctx context.Context, query *dto.AWDServiceTemplateQuery) ([]*model.AWDServiceTemplate, int64, error) {
+	var templates []*model.AWDServiceTemplate
+	var total int64
+
+	db := r.dbWithContext(ctx).Model(&model.AWDServiceTemplate{})
+	if query != nil {
+		if keyword := strings.TrimSpace(query.Keyword); keyword != "" {
+			pattern := "%" + keyword + "%"
+			db = db.Where("name LIKE ? OR slug LIKE ?", pattern, pattern)
+		}
+		if serviceType := strings.TrimSpace(query.ServiceType); serviceType != "" {
+			db = db.Where("service_type = ?", serviceType)
+		}
+		if status := strings.TrimSpace(query.Status); status != "" {
+			db = db.Where("status = ?", status)
+		}
+	}
+
+	if err := db.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	page := 1
+	size := 20
+	if query != nil {
+		if query.Page > 0 {
+			page = query.Page
+		}
+		if query.Size > 0 {
+			size = query.Size
+		}
+	}
+
+	err := db.Offset((page - 1) * size).
+		Limit(size).
+		Order("created_at DESC, id DESC").
+		Find(&templates).Error
+	return templates, total, err
+}
+
 func (r *Repository) List(query *dto.ChallengeQuery) ([]*model.Challenge, int64, error) {
 	var challenges []*model.Challenge
 	var total int64
