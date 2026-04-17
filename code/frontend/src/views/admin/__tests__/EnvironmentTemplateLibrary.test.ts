@@ -109,4 +109,15 @@ describe('EnvironmentTemplateLibrary', () => {
     expect(topologyNodeEditorSource).toContain('class="ui-btn ui-btn--danger')
     expect(topologyNodeEditorSource).not.toContain('rounded-xl border border-border bg-elevated')
   })
+
+  it('模板库页头操作不应保留挑战模式按钮样式分支', () => {
+    expect(challengeTopologyStudioPageSource).toContain('class="topology-toolbar-btn topology-toolbar-btn--ghost"')
+    expect(challengeTopologyStudioPageSource).toContain('class="topology-toolbar-btn topology-toolbar-btn--primary"')
+    expect(challengeTopologyStudioPageSource).not.toContain(
+      "isTemplateLibraryMode\n            ? 'topology-toolbar-btn topology-toolbar-btn--ghost'\n            : 'inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-medium text-text-primary transition hover:border-primary'"
+    )
+    expect(challengeTopologyStudioPageSource).not.toContain(
+      "isTemplateLibraryMode\n            ? 'topology-toolbar-btn topology-toolbar-btn--primary'\n            : 'inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white transition hover:opacity-90'"
+    )
+  })
 })
