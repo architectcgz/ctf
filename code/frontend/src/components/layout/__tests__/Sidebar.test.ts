@@ -14,7 +14,7 @@ describe('Sidebar desktop layout', () => {
 
   it('stretches the desktop nav to align its bottom edge with the content area', () => {
     expect(sidebarSource).toMatch(
-      /<aside[\s\S]*class="[^"]*relative[^"]*z-\[60\][^"]*hidden[^"]*h-screen[^"]*shrink-0[^"]*flex-col[^"]*border-r[^"]*border-slate-200[^"]*bg-white[^"]*md:flex"/s
+      /<aside[\s\S]*class="[^"]*backoffice-sidebar[^"]*backoffice-sidebar--desktop[^"]*relative[^"]*z-\[60\][^"]*hidden[^"]*h-screen[^"]*shrink-0[^"]*flex-col[^"]*md:flex"/s
     )
     expect(sidebarSource).toContain(":class=\"collapsed ? 'w-20' : 'w-[260px]'\"")
     expect(sidebarSource).toMatch(
@@ -23,20 +23,12 @@ describe('Sidebar desktop layout', () => {
   })
 
   it('matches the admin example sidebar shell structure instead of a custom console variant', () => {
-    expect(sidebarSource).toContain(
-      "absolute -right-3.5 top-5 bg-white border border-slate-200 rounded-full p-1.5 text-slate-400 hover:text-blue-600 hover:border-blue-300 hover:shadow-md shadow-sm z-10 transition-all cursor-pointer"
-    )
-    expect(sidebarSource).toContain(
-      'class="h-16 flex items-center px-5 border-b border-slate-100 overflow-hidden whitespace-nowrap"'
-    )
+    expect(sidebarSource).toContain('backoffice-sidebar__collapse')
+    expect(sidebarSource).toContain('backoffice-sidebar__header')
     expect(sidebarSource).toContain('Workspace')
-    expect(sidebarSource).toContain(
-      'class="mt-1 mb-2 ml-[22px] pl-3 border-l-2 border-slate-100 flex flex-col gap-1 animate-in slide-in-from-top-2 duration-200"'
-    )
-    expect(sidebarSource).toContain(
-      "class=\"text-left py-2 px-3 rounded-lg text-[13px] transition-all relative group\""
-    )
-    expect(sidebarSource).toContain("class=\"absolute -left-[14px] top-1/2 -translate-y-1/2 w-[3px] h-4 bg-blue-600 rounded-full\"")
+    expect(sidebarSource).toContain('backoffice-sidebar__children')
+    expect(sidebarSource).toContain('backoffice-sidebar__child')
+    expect(sidebarSource).toContain('backoffice-sidebar__child-indicator')
   })
 
   it('uses the same ChallengeOps shell identity across academy and platform backoffice routes', () => {
@@ -47,6 +39,13 @@ describe('Sidebar desktop layout', () => {
     expect(sidebarSource).toContain('sidebar-shell--admin')
     expect(sidebarSource).toContain('ChallengeOps')
     expect(sidebarSource).not.toContain('Academic Ops')
+  })
+
+  it('tokenizes backoffice sidebar surfaces for dark theme instead of keeping white utility backgrounds', () => {
+    expect(sidebarSource).toContain('backoffice-sidebar')
+    expect(sidebarSource).toContain('--backoffice-shell-surface')
+    expect(sidebarSource).toContain(":global([data-theme='dark']) .backoffice-sidebar")
+    expect(sidebarSource).toContain('backoffice-sidebar__collapse')
   })
 
   it('uses unified backoffice modules instead of raw main/teacher/admin route buckets', () => {
@@ -288,9 +287,15 @@ describe('Sidebar desktop layout', () => {
     expect(classButtons.length).toBeGreaterThan(0)
     expect(studentButtons.length).toBeGreaterThan(0)
     expect(reviewButtons.length).toBeGreaterThan(0)
-    expect(classButtons.every((node) => node.classes().includes('text-blue-700'))).toBe(true)
-    expect(studentButtons.every((node) => !node.classes().includes('text-blue-700'))).toBe(true)
-    expect(reviewButtons.every((node) => !node.classes().includes('text-blue-700'))).toBe(true)
+    expect(
+      classButtons.every((node) => node.classes().includes('backoffice-sidebar__child--active'))
+    ).toBe(true)
+    expect(
+      studentButtons.every((node) => !node.classes().includes('backoffice-sidebar__child--active'))
+    ).toBe(true)
+    expect(
+      reviewButtons.every((node) => !node.classes().includes('backoffice-sidebar__child--active'))
+    ).toBe(true)
 
     wrapper.unmount()
   })

@@ -10,21 +10,21 @@
       />
 
       <aside
-        class="fixed inset-y-0 left-0 z-50 flex w-[260px] shrink-0 flex-col border-r border-slate-200 bg-white transition-all duration-300 md:hidden"
+        class="backoffice-sidebar backoffice-sidebar--mobile fixed inset-y-0 left-0 z-50 flex w-[260px] shrink-0 flex-col transition-all duration-300 md:hidden"
         :class="mobileOpen ? 'translate-x-0' : '-translate-x-full'"
       >
-        <div class="relative flex h-16 items-center border-b border-slate-100 px-5 overflow-hidden whitespace-nowrap">
+        <div class="backoffice-sidebar__header relative flex h-16 items-center px-5 overflow-hidden whitespace-nowrap">
           <div class="flex items-center gap-3">
-            <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-900 shadow-sm">
-              <Box class="h-4 w-4 text-white" />
+            <div class="backoffice-sidebar__logo-mark flex h-8 w-8 shrink-0 items-center justify-center rounded-lg shadow-sm">
+              <Box class="h-4 w-4" />
             </div>
-            <span class="font-black text-lg tracking-tight uppercase text-slate-900">
-              Challenge<span class="text-blue-600">Ops</span>
+            <span class="backoffice-sidebar__brand font-black text-lg tracking-tight uppercase">
+              Challenge<span class="backoffice-sidebar__brand-accent">Ops</span>
             </span>
           </div>
           <button
             type="button"
-            class="ml-auto inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white p-1.5 text-slate-400 shadow-sm transition-all hover:border-blue-300 hover:text-blue-600 hover:shadow-md"
+            class="backoffice-sidebar__close ml-auto inline-flex h-9 w-9 items-center justify-center rounded-full p-1.5 shadow-sm transition-all"
             aria-label="关闭导航"
             @click="emit('closeMobile')"
           >
@@ -32,23 +32,23 @@
           </button>
         </div>
 
-        <div class="px-6 py-5 overflow-hidden whitespace-nowrap transition-all duration-200">
-          <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">
+        <div class="backoffice-sidebar__workspace px-6 py-5 overflow-hidden whitespace-nowrap transition-all duration-200">
+          <span class="backoffice-sidebar__workspace-label text-[10px] font-black uppercase tracking-widest">
             Workspace
           </span>
         </div>
 
-        <nav class="flex-1 space-y-1.5 overflow-x-hidden px-4">
+        <nav class="backoffice-sidebar__nav flex-1 space-y-1.5 overflow-x-hidden px-4">
           <div v-for="item in backofficeItems" :key="item.name" class="w-full">
             <button
               type="button"
-              class="w-full flex items-center justify-between py-2.5 rounded-xl text-sm transition-all overflow-hidden px-3"
+              class="backoffice-sidebar__item w-full flex items-center justify-between py-2.5 rounded-xl text-sm transition-all overflow-hidden px-3"
               :class="backofficeItemButtonClass(item)"
               @click="navigate(item)"
             >
               <div class="flex items-center gap-3">
                 <div
-                  class="shrink-0"
+                  class="backoffice-sidebar__item-icon shrink-0"
                   :class="backofficeItemIconClass(item)"
                 >
                   <component :is="item.icon" class="h-[18px] w-[18px]" />
@@ -59,31 +59,27 @@
               </div>
               <ChevronDown
                 v-if="item.children?.length"
-                class="h-3.5 w-3.5 transition-transform duration-200"
-                :class="
-                  isBackofficeItemExpanded(item)
-                    ? 'rotate-180 text-blue-400'
-                    : 'text-slate-300'
-                "
+                class="backoffice-sidebar__chevron h-3.5 w-3.5 transition-transform duration-200"
+                :class="{ 'backoffice-sidebar__chevron--open': isBackofficeItemExpanded(item) }"
                 @click.stop="toggleMenu(item.name)"
               />
             </button>
 
             <div
               v-if="item.children?.length && isBackofficeItemExpanded(item)"
-              class="mt-1 mb-2 ml-[22px] pl-3 border-l-2 border-slate-100 flex flex-col gap-1 animate-in slide-in-from-top-2 duration-200"
+              class="backoffice-sidebar__children mt-1 mb-2 ml-[22px] pl-3 flex flex-col gap-1 animate-in slide-in-from-top-2 duration-200"
             >
               <button
                 v-for="child in item.children"
                 :key="child.name"
                 type="button"
-                class="text-left py-2 px-3 rounded-lg text-[13px] transition-all relative group"
+                class="backoffice-sidebar__child text-left py-2 px-3 rounded-lg text-[13px] transition-all relative group"
                 :class="backofficeChildButtonClass(child)"
                 @click="navigate(child)"
               >
                 <div
                   v-if="isItemActive(child)"
-                  class="absolute -left-[14px] top-1/2 -translate-y-1/2 w-[3px] h-4 bg-blue-600 rounded-full"
+                  class="backoffice-sidebar__child-indicator absolute -left-[14px] top-1/2 -translate-y-1/2 w-[3px] h-4 rounded-full"
                 />
                 <span class="relative z-10">{{ child.title }}</span>
               </button>
@@ -93,12 +89,12 @@
       </aside>
 
       <aside
-        class="relative z-[60] hidden h-screen shrink-0 flex-col border-r border-slate-200 bg-white transition-all duration-300 md:flex"
+        class="backoffice-sidebar backoffice-sidebar--desktop relative z-[60] hidden h-screen shrink-0 flex-col transition-all duration-300 md:flex"
         :class="collapsed ? 'w-20' : 'w-[260px]'"
       >
         <button
           type="button"
-          class="absolute -right-3.5 top-5 bg-white border border-slate-200 rounded-full p-1.5 text-slate-400 hover:text-blue-600 hover:border-blue-300 hover:shadow-md shadow-sm z-10 transition-all cursor-pointer"
+          class="backoffice-sidebar__collapse absolute -right-3.5 top-5 rounded-full p-1.5 shadow-sm z-10 transition-all cursor-pointer"
           :aria-label="collapsed ? '展开导航' : '折叠导航'"
           @click="emit('toggleCollapse')"
         >
@@ -107,45 +103,45 @@
         </button>
 
         <div
-          class="h-16 flex items-center px-5 border-b border-slate-100 overflow-hidden whitespace-nowrap"
+          class="backoffice-sidebar__header h-16 flex items-center px-5 overflow-hidden whitespace-nowrap"
         >
           <div class="flex items-center gap-3">
-            <div class="w-8 h-8 shrink-0 bg-slate-900 rounded-lg flex items-center justify-center shadow-sm">
-              <Box class="h-4 w-4 text-white" />
+            <div class="backoffice-sidebar__logo-mark w-8 h-8 shrink-0 rounded-lg flex items-center justify-center shadow-sm">
+              <Box class="h-4 w-4" />
             </div>
             <span
-              class="font-black text-lg tracking-tight uppercase text-slate-900 transition-opacity duration-200"
+              class="backoffice-sidebar__brand font-black text-lg tracking-tight uppercase transition-opacity duration-200"
               :class="collapsed ? 'opacity-0' : 'opacity-100'"
             >
-              Challenge<span class="text-blue-600">Ops</span>
+              Challenge<span class="backoffice-sidebar__brand-accent">Ops</span>
             </span>
           </div>
         </div>
 
         <div
-          class="px-6 py-5 overflow-hidden whitespace-nowrap transition-all duration-200"
+          class="backoffice-sidebar__workspace px-6 py-5 overflow-hidden whitespace-nowrap transition-all duration-200"
           :class="collapsed ? 'opacity-0 h-0 p-0' : 'opacity-100 h-14'"
         >
-          <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+          <span class="backoffice-sidebar__workspace-label text-[10px] font-black uppercase tracking-widest">
             Workspace
           </span>
         </div>
 
         <nav
-          class="flex-1 space-y-1.5 overflow-x-hidden"
+          class="backoffice-sidebar__nav flex-1 space-y-1.5 overflow-x-hidden"
           :class="collapsed ? 'px-3 pt-4' : 'px-4'"
         >
           <div v-for="item in backofficeItems" :key="item.name" class="w-full">
             <button
               type="button"
-              class="w-full flex items-center justify-between py-2.5 rounded-xl text-sm transition-all overflow-hidden"
+              class="backoffice-sidebar__item w-full flex items-center justify-between py-2.5 rounded-xl text-sm transition-all overflow-hidden"
               :class="[backofficeItemButtonClass(item), collapsed ? 'px-0 justify-center' : 'px-3']"
               :title="collapsed ? item.title : ''"
               @click="navigate(item)"
             >
               <div class="flex items-center gap-3">
                 <div
-                  class="shrink-0"
+                  class="backoffice-sidebar__item-icon shrink-0"
                   :class="backofficeItemIconClass(item)"
                 >
                   <component :is="item.icon" class="h-[18px] w-[18px]" />
@@ -159,31 +155,27 @@
               </div>
               <ChevronDown
                 v-if="item.children?.length && !collapsed"
-                class="h-3.5 w-3.5 transition-transform duration-200"
-                :class="
-                  isBackofficeItemExpanded(item)
-                    ? 'rotate-180 text-blue-400'
-                    : 'text-slate-300'
-                "
+                class="backoffice-sidebar__chevron h-3.5 w-3.5 transition-transform duration-200"
+                :class="{ 'backoffice-sidebar__chevron--open': isBackofficeItemExpanded(item) }"
                 @click.stop="toggleMenu(item.name)"
               />
             </button>
 
             <div
               v-if="item.children?.length && isBackofficeItemExpanded(item) && !collapsed"
-              class="mt-1 mb-2 ml-[22px] pl-3 border-l-2 border-slate-100 flex flex-col gap-1 animate-in slide-in-from-top-2 duration-200"
+              class="backoffice-sidebar__children mt-1 mb-2 ml-[22px] pl-3 flex flex-col gap-1 animate-in slide-in-from-top-2 duration-200"
             >
               <button
                 v-for="child in item.children"
                 :key="child.name"
                 type="button"
-                class="text-left py-2 px-3 rounded-lg text-[13px] transition-all relative group"
+                class="backoffice-sidebar__child text-left py-2 px-3 rounded-lg text-[13px] transition-all relative group"
                 :class="backofficeChildButtonClass(child)"
                 @click="navigate(child)"
               >
                 <div
                   v-if="isItemActive(child)"
-                  class="absolute -left-[14px] top-1/2 -translate-y-1/2 w-[3px] h-4 bg-blue-600 rounded-full"
+                  class="backoffice-sidebar__child-indicator absolute -left-[14px] top-1/2 -translate-y-1/2 w-[3px] h-4 rounded-full"
                 />
                 <span class="relative z-10">{{ child.title }}</span>
               </button>
@@ -676,26 +668,26 @@ function isBackofficeParentHighlighted(item: NavItem): boolean {
 
 function backofficeItemButtonClass(item: NavItem): string {
   if (isBackofficeStandaloneActive(item)) {
-    return 'bg-blue-50 text-blue-600 font-bold shadow-sm'
+    return 'backoffice-sidebar__item--active'
   }
 
   if (isBackofficeParentHighlighted(item)) {
-    return 'text-slate-900 font-bold'
+    return 'backoffice-sidebar__item--expanded'
   }
 
-  return 'text-slate-500 hover:text-slate-900 hover:bg-slate-50 font-medium'
+  return 'backoffice-sidebar__item--idle'
 }
 
 function backofficeItemIconClass(item: NavItem): string {
   return isBackofficeStandaloneActive(item) || isBackofficeParentHighlighted(item)
-    ? 'text-blue-600'
-    : 'text-slate-400'
+    ? 'backoffice-sidebar__item-icon--active'
+    : 'backoffice-sidebar__item-icon--idle'
 }
 
 function backofficeChildButtonClass(item: NavItem): string {
   return isItemActive(item)
-    ? 'text-blue-700 font-bold bg-blue-50/70'
-    : 'text-slate-500 font-medium hover:text-slate-900 hover:bg-slate-50'
+    ? 'backoffice-sidebar__child--active'
+    : 'backoffice-sidebar__child--idle'
 }
 
 function childItemClass(item: NavItem): string {
@@ -758,6 +750,145 @@ async function navigate(item: NavItem): Promise<void> {
 .sidebar-shell--admin {
   border-right-color: #e2e8f0;
   background: white;
+}
+
+.backoffice-sidebar {
+  --backoffice-shell-surface: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
+  --backoffice-shell-surface-subtle: color-mix(in srgb, var(--color-bg-elevated) 82%, var(--color-bg-surface));
+  --backoffice-shell-surface-strong: color-mix(in srgb, var(--color-bg-elevated) 92%, var(--color-bg-surface));
+  --backoffice-shell-line: color-mix(in srgb, var(--color-border-default) 84%, transparent);
+  --backoffice-shell-line-strong: color-mix(in srgb, var(--color-border-default) 92%, transparent);
+  --backoffice-shell-text: color-mix(in srgb, var(--color-text-primary) 94%, transparent);
+  --backoffice-shell-muted: color-mix(in srgb, var(--color-text-secondary) 90%, transparent);
+  --backoffice-shell-faint: color-mix(in srgb, var(--color-text-muted) 90%, transparent);
+  border-right: 1px solid var(--backoffice-shell-line-strong);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--backoffice-shell-surface) 98%, transparent),
+      color-mix(in srgb, var(--backoffice-shell-surface-subtle) 94%, transparent)
+    ),
+    radial-gradient(
+      circle at top left,
+      color-mix(in srgb, var(--color-primary) 8%, transparent),
+      transparent 18rem
+    );
+}
+
+.backoffice-sidebar__header {
+  border-bottom: 1px solid var(--backoffice-shell-line);
+}
+
+.backoffice-sidebar__logo-mark {
+  border: 1px solid color-mix(in srgb, var(--color-primary) 28%, transparent);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-primary) 22%, var(--backoffice-shell-surface-strong)),
+    color-mix(in srgb, var(--color-primary) 10%, var(--backoffice-shell-surface))
+  );
+  color: color-mix(in srgb, var(--color-text-primary) 96%, white);
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--color-primary) 12%, transparent);
+}
+
+.backoffice-sidebar__brand {
+  color: var(--backoffice-shell-text);
+}
+
+.backoffice-sidebar__brand-accent {
+  color: color-mix(in srgb, var(--color-primary) 92%, var(--backoffice-shell-text));
+}
+
+.backoffice-sidebar__close,
+.backoffice-sidebar__collapse {
+  border: 1px solid var(--backoffice-shell-line);
+  background: var(--backoffice-shell-surface);
+  color: var(--backoffice-shell-faint);
+}
+
+.backoffice-sidebar__close:hover,
+.backoffice-sidebar__collapse:hover {
+  border-color: color-mix(in srgb, var(--color-primary) 30%, var(--backoffice-shell-line));
+  background: color-mix(in srgb, var(--color-primary) 7%, var(--backoffice-shell-surface-subtle));
+  color: color-mix(in srgb, var(--color-primary) 92%, var(--backoffice-shell-text));
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--color-primary) 10%, transparent);
+}
+
+.backoffice-sidebar__workspace-label {
+  color: var(--backoffice-shell-faint);
+}
+
+.backoffice-sidebar__item {
+  color: var(--backoffice-shell-muted);
+}
+
+.backoffice-sidebar__item--idle {
+  color: var(--backoffice-shell-muted);
+  font-weight: 500;
+}
+
+.backoffice-sidebar__item--idle:hover {
+  background: color-mix(in srgb, var(--backoffice-shell-line) 28%, var(--backoffice-shell-surface-subtle));
+  color: var(--backoffice-shell-text);
+}
+
+.backoffice-sidebar__item--expanded {
+  color: var(--backoffice-shell-text);
+  background: color-mix(in srgb, var(--color-primary) 8%, var(--backoffice-shell-surface));
+  font-weight: 700;
+}
+
+.backoffice-sidebar__item--active {
+  border-color: color-mix(in srgb, var(--color-primary) 24%, var(--backoffice-shell-line));
+  background: color-mix(in srgb, var(--color-primary) 12%, var(--backoffice-shell-surface));
+  color: color-mix(in srgb, var(--color-primary) 94%, var(--backoffice-shell-text));
+  font-weight: 700;
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--color-primary) 10%, transparent);
+}
+
+.backoffice-sidebar__item-icon--idle {
+  color: var(--backoffice-shell-faint);
+}
+
+.backoffice-sidebar__item-icon--active {
+  color: color-mix(in srgb, var(--color-primary) 90%, var(--backoffice-shell-text));
+}
+
+.backoffice-sidebar__chevron {
+  color: color-mix(in srgb, var(--backoffice-shell-faint) 94%, transparent);
+}
+
+.backoffice-sidebar__chevron--open {
+  color: color-mix(in srgb, var(--color-primary) 78%, var(--backoffice-shell-text));
+  transform: rotate(180deg);
+}
+
+.backoffice-sidebar__children {
+  border-left: 2px solid color-mix(in srgb, var(--backoffice-shell-line) 82%, transparent);
+}
+
+.backoffice-sidebar__child {
+  color: var(--backoffice-shell-muted);
+}
+
+.backoffice-sidebar__child--idle {
+  color: var(--backoffice-shell-muted);
+  font-weight: 500;
+}
+
+.backoffice-sidebar__child--idle:hover {
+  background: color-mix(in srgb, var(--backoffice-shell-line) 24%, var(--backoffice-shell-surface-subtle));
+  color: var(--backoffice-shell-text);
+}
+
+.backoffice-sidebar__child--active {
+  border-color: color-mix(in srgb, var(--color-primary) 22%, var(--backoffice-shell-line));
+  background: color-mix(in srgb, var(--color-primary) 10%, var(--backoffice-shell-surface));
+  color: color-mix(in srgb, var(--color-primary) 96%, var(--backoffice-shell-text));
+  font-weight: 700;
+}
+
+.backoffice-sidebar__child-indicator {
+  background: color-mix(in srgb, var(--color-primary) 90%, var(--backoffice-shell-text));
 }
 
 .sidebar-shell-desktop {
@@ -1056,5 +1187,30 @@ async function navigate(item: NavItem): Promise<void> {
 
 :global([data-theme='light']) .sidebar-shell-mobile {
   box-shadow: 0 18px 48px color-mix(in srgb, var(--color-shadow-soft) 84%, transparent);
+}
+
+:global([data-theme='light']) .backoffice-sidebar {
+  --backoffice-shell-surface: white;
+  --backoffice-shell-surface-subtle: #f8fafc;
+  --backoffice-shell-surface-strong: white;
+  --backoffice-shell-line: color-mix(in srgb, #e2e8f0 92%, transparent);
+  --backoffice-shell-line-strong: color-mix(in srgb, #d9e1ec 94%, transparent);
+  --backoffice-shell-text: #0f172a;
+  --backoffice-shell-muted: #64748b;
+  --backoffice-shell-faint: #94a3b8;
+}
+
+:global([data-theme='dark']) .backoffice-sidebar {
+  --backoffice-shell-surface: color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-bg-base));
+  --backoffice-shell-surface-subtle: color-mix(in srgb, var(--color-bg-elevated) 84%, var(--color-bg-surface));
+  --backoffice-shell-surface-strong: color-mix(in srgb, var(--color-bg-elevated) 92%, var(--color-bg-surface));
+  --backoffice-shell-line: color-mix(in srgb, var(--color-border-default) 88%, transparent);
+  --backoffice-shell-line-strong: color-mix(in srgb, var(--color-border-default) 94%, transparent);
+  --backoffice-shell-text: color-mix(in srgb, var(--color-text-primary) 94%, transparent);
+  --backoffice-shell-muted: color-mix(in srgb, var(--color-text-secondary) 90%, transparent);
+  --backoffice-shell-faint: color-mix(in srgb, var(--color-text-muted) 90%, transparent);
+  box-shadow:
+    0 22px 56px color-mix(in srgb, var(--color-shadow-strong) 28%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--color-border-subtle) 48%, transparent);
 }
 </style>
