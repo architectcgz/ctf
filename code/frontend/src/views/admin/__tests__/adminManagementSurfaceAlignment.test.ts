@@ -260,11 +260,11 @@ describe('admin management surface alignment', () => {
     expect(auditLogSource).toContain('class="audit-table-shell workspace-directory-list')
     expect(auditLogSource).toContain('class="admin-pagination workspace-directory-pagination"')
 
-    expect(challengeManageSource).toContain('class="workspace-directory-section"')
-    expect(challengeManageSource).toContain('class="challenge-list workspace-directory-list"')
     expect(challengeManageSource).toContain(
-      'class="admin-pagination workspace-directory-pagination"'
+      'class="workspace-directory-section challenge-manage-directory"'
     )
+    expect(challengeManageSource).toContain('class="challenge-list workspace-directory-list"')
+    expect(challengeManageSource).toContain('<WorkspaceDirectoryPagination')
 
     expect(adminContestTableSource).toContain('class="contest-directory workspace-directory-list"')
     expect(adminContestTableSource).toContain(
@@ -276,7 +276,7 @@ describe('admin management surface alignment', () => {
     expect(userGovernanceSource).toContain('AdminPaginationControls')
     expect(imageManageSource).toContain('AdminPaginationControls')
     expect(auditLogSource).toContain('AdminPaginationControls')
-    expect(challengeManageSource).toContain('AdminPaginationControls')
+    expect(challengeManageSource).toContain('WorkspaceDirectoryPagination')
     expect(adminContestTableSource).toContain('AdminPaginationControls')
     expect(awdRoundInspectorSource).toContain('AdminPaginationControls')
   })

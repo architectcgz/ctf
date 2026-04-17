@@ -111,7 +111,9 @@ describe('ChallengeManage', () => {
   })
 
   it('应使用统一的管理端 workspace 壳层，而不是页面内重复一套路由级顶栏', () => {
-    expect(challengeManageSource).toContain('class="workspace-shell challenge-manage-shell"')
+    expect(challengeManageSource).toContain(
+      'class="workspace-shell challenge-manage-shell journal-shell journal-shell-admin journal-notes-card"'
+    )
     expect(challengeManageSource).not.toContain('<header class="workspace-topbar">')
     expect(challengeManageSource).toContain('<div class="workspace-overline">Challenge Workspace</div>')
     expect(challengeManageSource).toContain(
@@ -152,11 +154,21 @@ describe('ChallengeManage', () => {
     expect(challengeManageSource).toContain(
       "from '@/components/common/WorkspaceDirectoryToolbar.vue'"
     )
-    expect(challengeManageSource).toContain("from '@/components/admin/AdminPaginationControls.vue'")
+    expect(challengeManageSource).toContain(
+      "from '@/components/common/WorkspaceDirectoryPagination.vue'"
+    )
     expect(challengeManageSource).toContain('<WorkspaceDirectoryToolbar')
-    expect(challengeManageSource).toContain('<AdminPaginationControls')
-    expect(challengeManageSource).not.toContain('<WorkspaceDirectoryPagination')
+    expect(challengeManageSource).toContain('<WorkspaceDirectoryPagination')
+    expect(challengeManageSource).not.toContain('<AdminPaginationControls')
     expect(challengeManageSource).not.toContain('<div class="challenge-filter-bar">')
+  })
+
+  it('题目管理目录区应直接使用目录 section，而不是额外包一层自定义容器', () => {
+    expect(challengeManageSource).toContain(
+      '<section class="workspace-directory-section challenge-manage-directory">'
+    )
+    expect(challengeManageSource).toContain('<h2 class="list-heading__title">题目目录</h2>')
+    expect(challengeManageSource).not.toContain('<div class="challenge-manage-directory">')
   })
 
   it('更多操作菜单应浮到表格滚动层之上，而不是渲染在列表容器内部', async () => {
@@ -232,6 +244,55 @@ describe('ChallengeManage', () => {
     await flushPromises()
 
     expect(wrapper.find('.workspace-directory-toolbar__filter-panel').exists()).toBe(true)
+    wrapper.unmount()
+  })
+
+  it('切换排序策略后应重排当前页题目顺序', async () => {
+    adminApiMocks.getChallenges.mockResolvedValue({
+      list: [
+        {
+          id: 'challenge-z',
+          title: 'Zulu Challenge',
+          category: 'web',
+          difficulty: 'easy',
+          status: 'draft',
+          points: 100,
+          created_at: '2026-04-01T08:00:00.000Z',
+          updated_at: '2026-04-01T08:00:00.000Z',
+        },
+        {
+          id: 'challenge-a',
+          title: 'Alpha Challenge',
+          category: 'pwn',
+          difficulty: 'medium',
+          status: 'published',
+          points: 500,
+          created_at: '2026-04-01T08:00:00.000Z',
+          updated_at: '2026-04-01T08:00:00.000Z',
+        },
+      ],
+      total: 2,
+      page: 1,
+      page_size: 20,
+    })
+    adminApiMocks.getLatestChallengePublishRequest.mockResolvedValue(null)
+
+    const wrapper = mount(ChallengeManage, {
+      attachTo: document.body,
+    })
+    await flushPromises()
+
+    await wrapper.get('.workspace-directory-toolbar__sort-button').trigger('click')
+    await flushPromises()
+    await wrapper
+      .findAll('.workspace-directory-toolbar__menu-item')
+      .find((item) => item.text().includes('标题 A-Z'))
+      ?.trigger('click')
+    await flushPromises()
+
+    const titles = wrapper.findAll('.challenge-table-title').map((item) => item.text())
+    expect(titles).toEqual(['Alpha Challenge', 'Zulu Challenge'])
+
     wrapper.unmount()
   })
 })
