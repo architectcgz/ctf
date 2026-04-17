@@ -1,18 +1,19 @@
 <script setup lang="ts">
 import { computed, useTemplateRef } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { FileUp, RefreshCw, UserPlus, UsersRound, UserRoundCheck } from 'lucide-vue-next'
+import { FileUp, RefreshCw, UserPlus, UserRoundCheck } from 'lucide-vue-next'
 
 import type { AdminUserImportData, AdminUserListItem, UserStatus } from '@/api/contracts'
 import AdminPaginationControls from '@/components/admin/AdminPaginationControls.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
-import { useRouteQueryTabs } from '@/composables/useRouteQueryTabs'
+import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
+import WorkspaceDirectoryToolbar from '@/components/common/WorkspaceDirectoryToolbar.vue'
 import type { UserRole } from '@/utils/constants'
 
 type UserFilterRole = UserRole | 'all'
 type UserFilterStatus = UserStatus | 'all'
-type UserPanelKey = 'overview' | 'directory' | 'import'
+type UserPanelKey = 'overview' | 'import'
 
 const props = defineProps<{
   list: AdminUserListItem[]
@@ -46,33 +47,13 @@ const route = useRoute()
 const router = useRouter()
 const importInput = useTemplateRef<HTMLInputElement>('importInput')
 
-const panelTabs: Array<{ key: UserPanelKey; label: string; panelId: string; tabId: string }> = [
-  {
-    key: 'overview',
-    label: '总览',
-    panelId: 'user-overview-summary',
-    tabId: 'user-tab-overview',
-  },
-  {
-    key: 'directory',
-    label: '用户列表',
-    panelId: 'user-directory-filters',
-    tabId: 'user-tab-directory',
-  },
-  { key: 'import', label: '导入用户', panelId: 'user-import-start', tabId: 'user-tab-import' },
-]
-const panelTabOrder = panelTabs.map((tab) => tab.key) as UserPanelKey[]
-const {
-  activeTab: activePanel,
-  setTabButtonRef,
-  selectTab: switchPanel,
-  handleTabKeydown,
-} = useRouteQueryTabs<UserPanelKey>({
-  route,
-  router,
-  orderedTabs: panelTabOrder,
-  defaultTab: 'overview',
-  routeName: 'UserManage',
+const activePanel = computed<UserPanelKey>(() => {
+  const rawPanel = route.query.panel
+  const panel = Array.isArray(rawPanel) ? rawPanel[0] : rawPanel
+  if (panel === 'import') {
+    return 'import'
+  }
+  return 'overview'
 })
 
 const totalPages = computed(() => Math.max(1, Math.ceil(props.total / props.pageSize)))
@@ -80,10 +61,77 @@ const activeCount = computed(() => props.list.filter((item) => item.status === '
 const teacherCount = computed(
   () => props.list.filter((item) => item.roles.includes('teacher')).length
 )
+const listCount = computed(() => props.list.length)
+const hasActiveFilters = computed(() =>
+  Boolean(
+    props.keyword.trim() ||
+    props.studentNo.trim() ||
+    props.teacherNo.trim() ||
+    props.roleFilter !== 'all' ||
+    props.statusFilter !== 'all'
+  )
+)
 const importSummary = computed(() => {
   if (!props.importResult) return '暂无导入记录'
   return `创建 ${props.importResult.created} / 更新 ${props.importResult.updated}`
 })
+const userTableColumns = [
+  {
+    key: 'username',
+    label: '用户',
+    widthClass: 'w-[12%] min-w-[8rem]',
+    cellClass: 'user-table__username-cell',
+  },
+  {
+    key: 'name',
+    label: '姓名',
+    widthClass: 'w-[13%] min-w-[8rem]',
+    cellClass: 'user-table__name-cell',
+  },
+  {
+    key: 'email',
+    label: '邮箱',
+    widthClass: 'w-[16%] min-w-[10rem]',
+    cellClass: 'user-table__email-cell',
+  },
+  {
+    key: 'roles',
+    label: '角色',
+    widthClass: 'w-[15%] min-w-[9rem]',
+    cellClass: 'user-table__roles-cell',
+  },
+  {
+    key: 'status',
+    label: '状态',
+    widthClass: 'w-[10%] min-w-[7rem]',
+    cellClass: 'user-table__status-cell',
+  },
+  {
+    key: 'class_name',
+    label: '班级',
+    widthClass: 'w-[10%] min-w-[7rem]',
+    cellClass: 'user-table__class-cell',
+  },
+  {
+    key: 'identity',
+    label: '学号 / 工号',
+    widthClass: 'w-[12%] min-w-[8rem]',
+    cellClass: 'user-table__identity-cell',
+  },
+  {
+    key: 'created_at',
+    label: '创建时间',
+    widthClass: 'w-[12%] min-w-[9rem]',
+    cellClass: 'user-table__time-cell',
+  },
+  {
+    key: 'actions',
+    label: '操作',
+    align: 'right' as const,
+    widthClass: 'w-[10rem]',
+    cellClass: 'user-table__actions-cell',
+  },
+]
 const userStatusAccentMap: Record<UserStatus, string> = {
   active: 'var(--color-primary)',
   locked: 'var(--color-warning)',
@@ -114,6 +162,31 @@ function getUserIdentity(user: AdminUserListItem): string {
   return '未设置'
 }
 
+function formatCreatedAt(value: string): string {
+  return new Date(value).toLocaleString('zh-CN')
+}
+
+function resetDirectoryFilters(): void {
+  emit('updateKeyword', '')
+  emit('updateStudentNo', '')
+  emit('updateTeacherNo', '')
+  emit('updateRoleFilter', 'all')
+  emit('updateStatusFilter', 'all')
+}
+
+async function switchPanel(panel: UserPanelKey): Promise<void> {
+  if (activePanel.value === panel) return
+
+  const nextQuery = { ...route.query }
+  if (panel === 'overview') {
+    delete nextQuery.panel
+  } else {
+    nextQuery.panel = panel
+  }
+
+  await router.replace({ name: 'UserManage', query: nextQuery })
+}
+
 function triggerImport(): void {
   importInput.value?.click()
 }
@@ -130,368 +203,349 @@ function handleImportChange(event: Event): void {
 
 <template>
   <section
-    class="journal-shell journal-shell-admin journal-notes-card journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
+    class="journal-shell journal-shell-admin journal-notes-card journal-hero workspace-shell flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
   >
-    <div class="workspace-overline">User Governance</div>
-
-    <nav class="top-tabs" role="tablist" aria-label="用户治理标签页">
-      <button
-        v-for="(tab, index) in panelTabs"
-        :id="tab.tabId"
-        :key="tab.tabId"
-        :ref="(element) => setTabButtonRef(tab.key, element as HTMLButtonElement | null)"
-        type="button"
-        role="tab"
-        class="top-tab"
-        :class="{ active: activePanel === tab.key }"
-        :aria-selected="activePanel === tab.key ? 'true' : 'false'"
-        :aria-controls="tab.panelId"
-        :tabindex="activePanel === tab.key ? 0 : -1"
-        @click="switchPanel(tab.key)"
-        @keydown="handleTabKeydown($event, index)"
+    <main class="content-pane">
+      <section
+        id="user-panel-overview"
+        v-show="activePanel === 'overview'"
+        class="user-panel user-panel--workspace"
+        :aria-hidden="activePanel === 'overview' ? 'false' : 'true'"
       >
-        {{ tab.label }}
-      </button>
-    </nav>
-
-    <section
-      id="user-overview-summary"
-      class="tab-panel"
-      role="tabpanel"
-      aria-labelledby="user-tab-overview"
-      :aria-hidden="activePanel === 'overview' ? 'false' : 'true'"
-    >
-      <template v-if="activePanel === 'overview'">
-        <div class="workspace-tab-heading__main">
-          <div class="workspace-overline">User Governance</div>
-          <h1 class="workspace-page-title">用户治理台</h1>
-        </div>
-        <p class="workspace-page-copy">在这里筛选账号、批量导入并处理用户状态。</p>
-
-        <div class="user-overview-summary">
-          <div class="flex items-center gap-3 text-sm font-medium text-[var(--journal-ink)]">
-            <UsersRound class="h-5 w-5 text-[var(--journal-accent)]" />
-            当前用户概况
+        <header class="list-heading user-overview-head">
+          <div class="workspace-tab-heading__main">
+            <div class="workspace-overline">User Workspace</div>
+            <h1 class="workspace-page-title">用户治理台</h1>
+            <p class="workspace-page-copy">
+              上面直接查看用户规模和导入回执，下面围绕具体账号完成搜索、筛选、编辑与治理操作。
+            </p>
           </div>
-          <div
-            class="admin-summary-grid user-overview-grid progress-strip metric-panel-grid metric-panel-default-surface mt-5"
-          >
-            <div class="journal-note user-overview-stat progress-card metric-panel-card">
-              <div class="journal-note-label progress-card-label metric-panel-label">用户总量</div>
-              <div class="journal-note-value progress-card-value metric-panel-value">
-                {{ total }}
-              </div>
-              <div class="journal-note-helper progress-card-hint metric-panel-helper">
-                当前筛选条件下的用户总数
-              </div>
+
+          <div class="user-panel-actions">
+            <button type="button" class="admin-btn admin-btn-ghost" @click="emit('refresh')">
+              <RefreshCw class="h-4 w-4" />
+              刷新列表
+            </button>
+            <button
+              id="user-open-import"
+              type="button"
+              class="admin-btn admin-btn-ghost"
+              @click="switchPanel('import')"
+            >
+              <FileUp class="h-4 w-4" />
+              导入用户
+            </button>
+            <button
+              id="user-open-create"
+              type="button"
+              class="admin-btn admin-btn-primary"
+              @click="emit('openCreateDialog')"
+            >
+              <UserPlus class="h-4 w-4" />
+              创建用户
+            </button>
+          </div>
+        </header>
+
+        <div
+          class="admin-summary-grid user-overview-grid progress-strip metric-panel-grid metric-panel-default-surface"
+        >
+          <div class="journal-note user-overview-stat progress-card metric-panel-card">
+            <div class="journal-note-label progress-card-label metric-panel-label">用户总量</div>
+            <div class="journal-note-value progress-card-value metric-panel-value">{{ total }}</div>
+            <div class="journal-note-helper progress-card-hint metric-panel-helper">
+              当前筛选条件下的用户总数
             </div>
-            <div class="journal-note user-overview-stat progress-card metric-panel-card">
-              <div class="journal-note-label progress-card-label metric-panel-label">活跃账号</div>
-              <div class="journal-note-value progress-card-value metric-panel-value">
-                {{ activeCount }}
-              </div>
-              <div class="journal-note-helper progress-card-hint metric-panel-helper">
-                当前页处于 active 的账号
-              </div>
+          </div>
+          <div class="journal-note user-overview-stat progress-card metric-panel-card">
+            <div class="journal-note-label progress-card-label metric-panel-label">活跃账号</div>
+            <div class="journal-note-value progress-card-value metric-panel-value">
+              {{ activeCount }}
             </div>
-            <div class="journal-note user-overview-stat progress-card metric-panel-card">
-              <div class="journal-note-label progress-card-label metric-panel-label">教师角色</div>
-              <div class="journal-note-value progress-card-value metric-panel-value">
-                {{ teacherCount }}
-              </div>
-              <div class="journal-note-helper progress-card-hint metric-panel-helper">
-                当前页教师账号数量
-              </div>
+            <div class="journal-note-helper progress-card-hint metric-panel-helper">
+              当前页处于 active 的账号
             </div>
-            <div class="journal-note user-overview-stat progress-card metric-panel-card">
-              <div class="journal-note-label progress-card-label metric-panel-label">导入回执</div>
-              <div class="journal-note-value progress-card-value metric-panel-value">
-                {{ importSummary }}
-              </div>
-              <div class="journal-note-helper progress-card-hint metric-panel-helper">
-                最近一次导入结果
-              </div>
+          </div>
+          <div class="journal-note user-overview-stat progress-card metric-panel-card">
+            <div class="journal-note-label progress-card-label metric-panel-label">教师角色</div>
+            <div class="journal-note-value progress-card-value metric-panel-value">
+              {{ teacherCount }}
+            </div>
+            <div class="journal-note-helper progress-card-hint metric-panel-helper">
+              当前页教师账号数量
+            </div>
+          </div>
+          <div class="journal-note user-overview-stat progress-card metric-panel-card">
+            <div class="journal-note-label progress-card-label metric-panel-label">导入回执</div>
+            <div class="journal-note-value progress-card-value metric-panel-value">
+              {{ importSummary }}
+            </div>
+            <div class="journal-note-helper progress-card-hint metric-panel-helper">
+              最近一次导入结果
             </div>
           </div>
         </div>
-      </template>
-    </section>
 
-    <section
-      id="user-directory-filters"
-      class="tab-panel space-y-4"
-      role="tabpanel"
-      aria-labelledby="user-tab-directory"
-      :aria-hidden="activePanel === 'directory' ? 'false' : 'true'"
-      v-show="activePanel === 'directory'"
-    >
-      <div class="list-heading user-directory-head">
-        <div>
-          <div class="journal-note-label">User Directory</div>
-          <h2 class="list-heading__title">用户目录</h2>
-        </div>
+        <section class="workspace-directory-section user-directory-section">
+          <header class="list-heading user-directory-head">
+            <div>
+              <div class="journal-note-label">User Directory</div>
+              <h2 class="list-heading__title">全部用户</h2>
+            </div>
+            <div class="user-directory-meta">当前页 {{ listCount }} 个用户</div>
+          </header>
 
-        <div class="user-directory-actions">
-          <div class="user-directory-meta">共 {{ total }} 个用户</div>
-          <button type="button" class="admin-btn admin-btn-ghost" @click="emit('refresh')">
-            <RefreshCw class="h-4 w-4" />
-            刷新列表
-          </button>
-          <button
-            type="button"
-            class="admin-btn admin-btn-primary"
-            @click="emit('openCreateDialog')"
-          >
-            <UserPlus class="h-4 w-4" />
-            创建用户
-          </button>
-        </div>
-      </div>
-
-      <div class="mt-5 grid gap-4">
-        <label class="space-y-2">
-          <span class="text-sm text-[var(--journal-muted)]">关键词</span>
-          <input
-            :value="keyword"
-            type="text"
-            class="admin-input"
-            placeholder="用户名 / 邮箱 / 班级 / 学号 / 工号"
-            @input="emit('updateKeyword', ($event.target as HTMLInputElement).value)"
-          />
-        </label>
-
-        <div class="grid gap-4 md:grid-cols-2">
-          <label class="space-y-2">
-            <span class="text-sm text-[var(--journal-muted)]">角色</span>
-            <select
-              :value="roleFilter"
-              class="admin-input"
-              @change="
-                emit(
-                  'updateRoleFilter',
-                  ($event.target as HTMLSelectElement).value as UserFilterRole
-                )
-              "
-            >
-              <option value="all">全部角色</option>
-              <option value="student">student</option>
-              <option value="teacher">teacher</option>
-              <option value="admin">admin</option>
-            </select>
-          </label>
-
-          <label class="space-y-2">
-            <span class="text-sm text-[var(--journal-muted)]">状态</span>
-            <select
-              :value="statusFilter"
-              class="admin-input"
-              @change="
-                emit(
-                  'updateStatusFilter',
-                  ($event.target as HTMLSelectElement).value as UserFilterStatus
-                )
-              "
-            >
-              <option value="all">全部状态</option>
-              <option value="active">active</option>
-              <option value="inactive">inactive</option>
-              <option value="locked">locked</option>
-              <option value="banned">banned</option>
-            </select>
-          </label>
-        </div>
-      </div>
-    </section>
-
-    <div v-show="activePanel === 'directory'" class="journal-divider mt-6" aria-hidden="true" />
-
-    <section v-show="activePanel === 'directory'" class="workspace-directory-section">
-      <div
-        v-if="loading && list.length === 0"
-        class="workspace-directory-loading flex justify-center py-10"
-      >
-        <AppLoading>正在同步用户列表...</AppLoading>
-      </div>
-
-      <AppEmpty
-        v-else-if="list.length === 0"
-        class="workspace-directory-empty"
-        title="暂无用户"
-        description="当前筛选条件下没有匹配用户。"
-        icon="UsersRound"
-      >
-        <template #action>
-          <button
-            type="button"
-            class="admin-btn admin-btn-primary"
-            @click="emit('openCreateDialog')"
-          >
-            创建第一个用户
-          </button>
-        </template>
-      </AppEmpty>
-
-      <template v-else>
-        <div class="user-table-shell workspace-directory-list">
-          <table class="user-table min-w-full text-sm">
-            <thead class="user-table-head">
-              <tr>
-                <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">
-                  用户
-                </th>
-                <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">
-                  姓名
-                </th>
-                <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">
-                  邮箱
-                </th>
-                <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">
-                  角色
-                </th>
-                <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">
-                  状态
-                </th>
-                <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">
-                  班级
-                </th>
-                <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">
-                  学号 / 工号
-                </th>
-                <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">
-                  创建时间
-                </th>
-                <th class="px-4 py-3 text-right font-medium text-[var(--color-text-secondary)]">
-                  操作
-                </th>
-              </tr>
-            </thead>
-            <tbody class="user-table-body">
-              <tr v-for="user in list" :key="user.id" class="user-table-row">
-                <td class="px-4 py-3 align-top">
-                  <div class="min-w-0">
-                    <span class="text-sm text-[var(--journal-muted)]">@{{ user.username }}</span>
-                  </div>
-                </td>
-                <td class="px-4 py-3 align-top text-[var(--journal-ink)]">
-                  {{ user.name || user.username }}
-                </td>
-                <td class="px-4 py-3 align-top text-[var(--journal-muted)]">
-                  {{ user.email || '未填写邮箱' }}
-                </td>
-                <td class="px-4 py-3 align-top">
-                  <div class="flex flex-wrap gap-2">
-                    <span
-                      v-for="role in user.roles"
-                      :key="`${user.id}-${role}`"
-                      class="admin-role-chip"
-                    >
-                      <UserRoundCheck class="h-3.5 w-3.5" />
-                      {{ role }}
-                    </span>
-                  </div>
-                </td>
-                <td class="px-4 py-3 align-top">
-                  <span class="admin-status-chip" :style="getUserStatusStyle(user.status)">
-                    {{ user.status }}
-                  </span>
-                </td>
-                <td class="px-4 py-3 align-top text-[var(--journal-muted)]">
-                  {{ user.class_name || '未分配班级' }}
-                </td>
-                <td class="px-4 py-3 align-top text-[var(--journal-muted)]">
-                  <div class="text-sm">
-                    {{ getUserIdentity(user) }}
-                  </div>
-                </td>
-                <td class="px-4 py-3 align-top text-[var(--journal-muted)]">
-                  {{ new Date(user.created_at).toLocaleString('zh-CN') }}
-                </td>
-                <td class="px-4 py-3 align-top">
-                  <div class="flex justify-end gap-2">
-                    <button
-                      type="button"
-                      class="admin-btn admin-btn-ghost admin-btn-compact user-action-btn"
-                      @click="emit('openEditDialog', user)"
-                    >
-                      编辑
-                    </button>
-                    <button
-                      type="button"
-                      class="admin-btn admin-btn-danger admin-btn-compact user-action-btn"
-                      @click="emit('deleteUser', user.id)"
-                    >
-                      删除
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div class="admin-pagination workspace-directory-pagination">
-          <AdminPaginationControls
-            :page="page"
-            :total-pages="totalPages"
+          <WorkspaceDirectoryToolbar
+            :model-value="keyword"
             :total="total"
-            :total-label="`共 ${total} 个用户`"
-            @change-page="emit('changePage', $event)"
-          />
-        </div>
-      </template>
-    </section>
+            selected-sort-label=""
+            :sort-options="[]"
+            search-placeholder="用户名 / 邮箱 / 班级 / 学号 / 工号"
+            filter-panel-title="用户筛选"
+            total-suffix="个用户"
+            reset-label="重置筛选"
+            :reset-disabled="!hasActiveFilters"
+            @update:model-value="emit('updateKeyword', $event)"
+            @reset-filters="resetDirectoryFilters"
+          >
+            <template #filter-panel>
+              <div class="user-filter-grid">
+                <label class="user-filter-field">
+                  <span class="user-filter-label">角色</span>
+                  <select
+                    :value="roleFilter"
+                    class="admin-input user-filter-control"
+                    @change="
+                      emit(
+                        'updateRoleFilter',
+                        ($event.target as HTMLSelectElement).value as UserFilterRole
+                      )
+                    "
+                  >
+                    <option value="all">全部角色</option>
+                    <option value="student">student</option>
+                    <option value="teacher">teacher</option>
+                    <option value="admin">admin</option>
+                  </select>
+                </label>
 
-    <section
-      id="user-import-start"
-      class="tab-panel space-y-4"
-      role="tabpanel"
-      aria-labelledby="user-tab-import"
-      :aria-hidden="activePanel === 'import' ? 'false' : 'true'"
-      v-show="activePanel === 'import'"
-    >
-      <div class="list-heading admin-section-head-intro">
-        <div>
-          <div class="journal-note-label">User Import</div>
-          <h2 class="list-heading__title">导入用户</h2>
-        </div>
+                <label class="user-filter-field">
+                  <span class="user-filter-label">状态</span>
+                  <select
+                    :value="statusFilter"
+                    class="admin-input user-filter-control"
+                    @change="
+                      emit(
+                        'updateStatusFilter',
+                        ($event.target as HTMLSelectElement).value as UserFilterStatus
+                      )
+                    "
+                  >
+                    <option value="all">全部状态</option>
+                    <option value="active">active</option>
+                    <option value="inactive">inactive</option>
+                    <option value="locked">locked</option>
+                    <option value="banned">banned</option>
+                  </select>
+                </label>
+              </div>
+            </template>
+          </WorkspaceDirectoryToolbar>
 
-        <button type="button" class="admin-btn admin-btn-primary" @click="triggerImport">
-          <FileUp class="h-4 w-4" />
-          批量导入
-        </button>
-      </div>
+          <div
+            v-if="loading && list.length === 0"
+            class="workspace-directory-loading flex justify-center py-10"
+          >
+            <AppLoading>正在同步用户列表...</AppLoading>
+          </div>
 
-      <div class="journal-note">
-        <div class="journal-note-label">CSV 格式</div>
-        <div class="journal-note-helper">
-          列顺序：`username,password,email,class_name,role,status,student_no,teacher_no,name`
-        </div>
-      </div>
-    </section>
+          <AppEmpty
+            v-else-if="list.length === 0"
+            class="workspace-directory-empty"
+            title="暂无用户"
+            description="当前筛选条件下没有匹配用户。"
+            icon="UsersRound"
+          >
+            <template #action>
+              <button
+                type="button"
+                class="admin-btn admin-btn-primary"
+                @click="emit('openCreateDialog')"
+              >
+                创建第一个用户
+              </button>
+            </template>
+          </AppEmpty>
 
-    <div v-show="activePanel === 'import'" class="journal-divider mt-6" aria-hidden="true" />
+          <WorkspaceDataTable
+            v-else
+            class="user-table-shell workspace-directory-list user-list"
+            :columns="userTableColumns"
+            :rows="list"
+            row-key="id"
+            row-class="user-table-row"
+          >
+            <template #cell-username="{ row }">
+              <div class="user-row__username">
+                <span class="user-row__username-handle"
+                  >@{{ (row as AdminUserListItem).username }}</span
+                >
+              </div>
+            </template>
 
-    <section v-show="activePanel === 'import'" class="space-y-4">
-      <div class="list-heading user-import-receipt-head">
-        <div>
-          <div class="journal-note-label">Import Receipt</div>
-          <h2 class="list-heading__title">导入回执</h2>
-        </div>
-      </div>
+            <template #cell-name="{ row }">
+              <span class="user-row__name">
+                {{ (row as AdminUserListItem).name || (row as AdminUserListItem).username }}
+              </span>
+            </template>
 
-      <div v-if="importResult" class="admin-receipt">
-        <p>
-          创建 {{ importResult.created }}，更新 {{ importResult.updated }}，失败
-          {{ importResult.failed }}
-        </p>
-        <ul v-if="importResult.errors?.length" class="mt-3 space-y-2 text-[var(--color-danger)]">
-          <li v-for="item in importResult.errors.slice(0, 5)" :key="`${item.row}-${item.message}`">
-            第 {{ item.row }} 行：{{ item.message }}
-          </li>
-        </ul>
-      </div>
-      <div v-else class="admin-empty">还没有导入记录。</div>
-    </section>
+            <template #cell-email="{ row }">
+              <span class="user-row__email">
+                {{ (row as AdminUserListItem).email || '未填写邮箱' }}
+              </span>
+            </template>
+
+            <template #cell-roles="{ row }">
+              <div class="user-row__roles">
+                <span
+                  v-for="role in (row as AdminUserListItem).roles"
+                  :key="`${(row as AdminUserListItem).id}-${role}`"
+                  class="admin-role-chip"
+                >
+                  <UserRoundCheck class="h-3.5 w-3.5" />
+                  {{ role }}
+                </span>
+              </div>
+            </template>
+
+            <template #cell-status="{ row }">
+              <span
+                class="admin-status-chip"
+                :style="getUserStatusStyle((row as AdminUserListItem).status)"
+              >
+                {{ (row as AdminUserListItem).status }}
+              </span>
+            </template>
+
+            <template #cell-class_name="{ row }">
+              <span class="user-row__class">
+                {{ (row as AdminUserListItem).class_name || '未分配班级' }}
+              </span>
+            </template>
+
+            <template #cell-identity="{ row }">
+              <span class="user-row__identity">
+                {{ getUserIdentity(row as AdminUserListItem) }}
+              </span>
+            </template>
+
+            <template #cell-created_at="{ row }">
+              <span class="user-row__time">
+                {{ formatCreatedAt((row as AdminUserListItem).created_at) }}
+              </span>
+            </template>
+
+            <template #cell-actions="{ row }">
+              <div class="user-row__actions">
+                <button
+                  type="button"
+                  class="admin-btn admin-btn-ghost admin-btn-compact user-action-btn"
+                  @click="emit('openEditDialog', row as AdminUserListItem)"
+                >
+                  编辑
+                </button>
+                <button
+                  type="button"
+                  class="admin-btn admin-btn-danger admin-btn-compact user-action-btn"
+                  @click="emit('deleteUser', (row as AdminUserListItem).id)"
+                >
+                  删除
+                </button>
+              </div>
+            </template>
+          </WorkspaceDataTable>
+
+          <div v-if="list.length > 0" class="admin-pagination workspace-directory-pagination">
+            <AdminPaginationControls
+              :page="page"
+              :total-pages="totalPages"
+              :total="total"
+              :total-label="`共 ${total} 个用户`"
+              @change-page="emit('changePage', $event)"
+            />
+          </div>
+        </section>
+      </section>
+
+      <section
+        id="user-panel-import"
+        v-show="activePanel === 'import'"
+        class="user-panel user-panel--import"
+        :aria-hidden="activePanel === 'import' ? 'false' : 'true'"
+      >
+        <section class="workspace-directory-section user-import-panel">
+          <header class="list-heading user-import-head">
+            <div class="workspace-tab-heading__main">
+              <div class="workspace-overline">User Import</div>
+              <h2 class="workspace-page-title">导入用户</h2>
+              <p class="workspace-page-copy">
+                统一导入账号、角色与班级归属，导入完成后可回到工作台继续筛选和治理具体用户。
+              </p>
+            </div>
+
+            <div class="user-panel-actions">
+              <button
+                id="user-return-overview"
+                type="button"
+                class="admin-btn admin-btn-ghost"
+                @click="switchPanel('overview')"
+              >
+                返回工作台
+              </button>
+              <button type="button" class="admin-btn admin-btn-primary" @click="triggerImport">
+                <FileUp class="h-4 w-4" />
+                批量导入
+              </button>
+            </div>
+          </header>
+
+          <div class="journal-note user-import-format">
+            <div class="journal-note-label">CSV 格式</div>
+            <div class="journal-note-helper">
+              列顺序：`username,password,email,class_name,role,status,student_no,teacher_no,name`
+            </div>
+          </div>
+
+          <section class="workspace-directory-section user-import-receipt-section">
+            <header class="list-heading user-import-receipt-head">
+              <div>
+                <div class="journal-note-label">Import Receipt</div>
+                <h2 class="list-heading__title">导入回执</h2>
+              </div>
+            </header>
+
+            <div v-if="importResult" class="admin-receipt">
+              <p>
+                创建 {{ importResult.created }}，更新 {{ importResult.updated }}，失败
+                {{ importResult.failed }}
+              </p>
+              <ul
+                v-if="importResult.errors?.length"
+                class="mt-3 space-y-2 text-[var(--color-danger)]"
+              >
+                <li
+                  v-for="item in importResult.errors.slice(0, 5)"
+                  :key="`${item.row}-${item.message}`"
+                >
+                  第 {{ item.row }} 行：{{ item.message }}
+                </li>
+              </ul>
+            </div>
+            <div v-else class="admin-empty">还没有导入记录。</div>
+          </section>
+        </section>
+      </section>
+    </main>
 
     <input
       ref="importInput"
@@ -508,26 +562,28 @@ function handleImportChange(event: Event): void {
   --admin-control-border: color-mix(in srgb, var(--journal-border) 76%, transparent);
   --user-table-border: color-mix(in srgb, var(--journal-border) 72%, transparent);
   --user-row-divider: color-mix(in srgb, var(--journal-border) 58%, transparent);
-  --page-top-tabs-gap: var(--space-7);
-  --page-top-tabs-margin: 0 calc(var(--space-6) * -1) var(--space-6);
-  --page-top-tabs-padding: 0 var(--space-6);
-  --page-top-tabs-border: color-mix(in srgb, var(--journal-ink) 10%, transparent);
-  --page-top-tab-min-height: 52px;
-  --page-top-tab-padding: var(--space-2-5) 0 var(--space-3-5);
-  --page-top-tab-font-size: var(--font-size-15);
-  --page-top-tab-active-color: color-mix(in srgb, var(--journal-accent) 74%, var(--journal-ink));
-  --page-top-tab-active-border: color-mix(in srgb, var(--journal-accent) 86%, var(--journal-ink));
   --journal-note-label-weight: 600;
   --journal-note-label-spacing: 0.15em;
   --journal-note-label-color: var(--journal-muted);
-  --journal-divider-border: 1px dashed color-mix(in srgb, var(--journal-border) 70%, transparent);
   --journal-shell-dark-accent: var(--color-primary-hover);
 }
 
-.user-overview-summary {
-  margin-top: var(--space-6);
+.user-panel {
   display: grid;
+  gap: var(--space-5);
+}
+
+.user-overview-head,
+.user-import-head {
   gap: var(--space-4);
+}
+
+.user-panel-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3);
 }
 
 .user-overview-grid {
@@ -551,58 +607,29 @@ function handleImportChange(event: Event): void {
 }
 
 .list-heading__title {
-  margin: var(--space-1) 0 0;
-  font-size: var(--font-size-1-20);
+  margin: 0.35rem 0 0;
+  font-size: clamp(1.2rem, 1rem + 0.5vw, 1.45rem);
   font-weight: 700;
+  line-height: 1.15;
   color: var(--journal-ink);
 }
 
 .user-directory-head {
   gap: var(--space-4);
+  margin-bottom: clamp(1.1rem, 0.95rem + 0.4vw, 1.35rem);
 }
 
-.user-directory-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: flex-end;
-  gap: var(--space-3);
+.user-directory-section,
+.user-import-panel,
+.user-import-receipt-section {
+  display: grid;
+  gap: var(--space-5);
+  padding: var(--space-5) var(--space-5-5);
 }
 
 .user-directory-meta {
   font-size: var(--font-size-0-82);
   color: var(--journal-muted);
-}
-
-.admin-section-head-intro {
-  position: relative;
-  padding: var(--space-4) var(--space-4-5) var(--space-4) var(--space-5-5);
-  border: 1px dashed color-mix(in srgb, var(--journal-border) 82%, transparent);
-  border-radius: 18px;
-  background: linear-gradient(
-    90deg,
-    color-mix(in srgb, var(--journal-accent) 10%, transparent),
-    transparent 72%
-  );
-}
-
-.admin-section-head-intro::before {
-  content: '';
-  position: absolute;
-  left: 0.82rem;
-  top: 0.95rem;
-  bottom: 0.95rem;
-  width: 3px;
-  border-radius: 999px;
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--journal-accent) 88%, var(--journal-ink)),
-    color-mix(in srgb, var(--journal-accent) 20%, transparent)
-  );
-}
-
-.admin-section-head-intro .journal-note-label {
-  color: var(--journal-accent);
 }
 
 .admin-btn {
@@ -673,6 +700,35 @@ function handleImportChange(event: Event): void {
   border-color: color-mix(in srgb, var(--journal-accent) 42%, transparent);
 }
 
+.user-filter-grid {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.user-filter-field {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.user-filter-label {
+  font-size: var(--font-size-0-72);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--journal-muted);
+}
+
+.user-filter-control {
+  background: color-mix(in srgb, var(--journal-surface) 92%, var(--color-bg-base));
+}
+
+.user-import-format {
+  border: 1px dashed color-mix(in srgb, var(--journal-border) 72%, transparent);
+  border-radius: 1.1rem;
+  background: color-mix(in srgb, var(--journal-surface) 96%, transparent);
+  padding: var(--space-4);
+}
+
 .admin-receipt {
   border-radius: 16px;
   border: 1px solid var(--journal-border);
@@ -691,22 +747,22 @@ function handleImportChange(event: Event): void {
 }
 
 .user-table-shell {
-  overflow: hidden;
   border: 1px solid var(--user-table-border);
-  border-radius: 18px;
-  background: var(--journal-surface);
+  border-radius: 1.35rem;
+  background: color-mix(in srgb, var(--journal-surface) 98%, var(--color-bg-base));
+  padding: 0.25rem 0.9rem 0.4rem;
 }
 
-.user-table {
-  border-collapse: collapse;
+.user-table-shell :deep(.workspace-data-table__head-cell) {
+  border-bottom-color: var(--user-table-border);
 }
 
-.user-table-head {
-  background: var(--journal-surface-subtle);
+.user-table-shell :deep(.workspace-data-table__row) {
+  border-bottom-color: var(--user-row-divider);
 }
 
-.user-table-body {
-  background: var(--journal-surface);
+.user-table-shell :deep(.workspace-data-table__body tr:last-child) {
+  border-bottom-color: transparent;
 }
 
 .user-table-row {
@@ -714,9 +770,68 @@ function handleImportChange(event: Event): void {
   transition: background 180ms ease;
 }
 
+.user-table-shell :deep(.workspace-data-table__body-cell) {
+  vertical-align: top;
+}
+
 .user-table-row:hover,
 .user-table-row:focus-within {
   background: color-mix(in srgb, var(--journal-surface-subtle) 88%, var(--journal-surface));
+}
+
+.user-row__username,
+.user-row__roles,
+.user-row__actions {
+  display: flex;
+}
+
+.user-row__username {
+  min-width: 0;
+}
+
+.user-row__username-handle,
+.user-row__email,
+.user-row__class,
+.user-row__identity,
+.user-row__time {
+  color: var(--journal-muted);
+}
+
+.user-row__username-handle,
+.user-row__identity,
+.user-row__time {
+  font-family: var(--font-family-mono);
+}
+
+.user-row__name {
+  color: var(--journal-ink);
+  font-weight: 600;
+}
+
+.user-row__email,
+.user-row__class,
+.user-row__identity,
+.user-row__time {
+  display: block;
+  line-height: 1.6;
+}
+
+.user-row__email,
+.user-row__class {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-row__roles {
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.user-row__actions {
+  justify-content: flex-end;
+  gap: var(--space-2);
 }
 
 .admin-status-chip,
@@ -749,30 +864,10 @@ function handleImportChange(event: Event): void {
   color: var(--journal-accent);
 }
 
-:global([data-theme='dark']) .admin-section-head-intro {
-  border-color: color-mix(in srgb, var(--journal-accent) 22%, var(--journal-border));
-  background: linear-gradient(
-    90deg,
-    color-mix(in srgb, var(--journal-accent) 14%, transparent),
-    transparent 72%
-  );
-}
-
 @media (max-width: 767px) {
   .journal-hero {
     padding-left: 1rem;
     padding-right: 1rem;
-  }
-
-  .top-tabs {
-    gap: var(--space-4-5);
-    margin-left: calc(var(--space-4) * -1);
-    margin-right: calc(var(--space-4) * -1);
-    padding: 0 var(--space-4);
-  }
-
-  .user-table-shell {
-    overflow-x: auto;
   }
 
   .user-overview-grid {
@@ -784,8 +879,14 @@ function handleImportChange(event: Event): void {
     flex-direction: column;
   }
 
-  .user-directory-actions {
+  .user-panel-actions {
     justify-content: flex-start;
+  }
+
+  .user-directory-section,
+  .user-import-panel,
+  .user-import-receipt-section {
+    padding: var(--space-4-5) var(--space-4);
   }
 }
 

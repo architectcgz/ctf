@@ -66,12 +66,12 @@ describe('admin management surface alignment', () => {
     expect(userGovernanceSource).toMatch(
       /\.user-table-row\s*\{[\s\S]*border-top:\s*1px solid var\(--user-row-divider\);/s
     )
-    expect(userGovernanceSource).toContain('<h2 class="list-heading__title">用户目录</h2>')
-    expect(userGovernanceSource).not.toContain('workspace-tab-heading__title">用户列表</h2>')
-    expect(userGovernanceSource).toContain('<h2 class="list-heading__title">导入用户</h2>')
+    expect(userGovernanceSource).toContain('<h2 class="list-heading__title">全部用户</h2>')
+    expect(userGovernanceSource).toContain('<h2 class="workspace-page-title">导入用户</h2>')
     expect(userGovernanceSource).toContain('<h2 class="list-heading__title">导入回执</h2>')
-    expect(userGovernanceSource).not.toContain('workspace-tab-heading__title">导入用户</h2>')
-    expect(userGovernanceSource).not.toContain('workspace-tab-heading__title">导入回执</h2>')
+    expect(userGovernanceSource).not.toContain('<nav class="top-tabs"')
+    expect(userGovernanceSource).toContain('id="user-panel-overview"')
+    expect(userGovernanceSource).toContain('id="user-panel-import"')
   })
 
   it('contest orchestration should soften control and empty-state borders', () => {
@@ -99,9 +99,7 @@ describe('admin management surface alignment', () => {
       '<div class="workspace-overline">Contest Workspace</div>'
     )
     expect(contestOrchestrationSource).toContain('<h1 class="workspace-page-title">赛事管理台</h1>')
-    expect(contestOrchestrationSource).toContain(
-      '<h2 class="list-heading__title">全部赛事</h2>'
-    )
+    expect(contestOrchestrationSource).toContain('<h2 class="list-heading__title">全部赛事</h2>')
     expect(contestOrchestrationSource).toContain('workspace-directory-empty contest-empty-state')
     expect(contestOrchestrationSource).not.toContain('当前筛选结果')
     expect(contestOrchestrationSource).not.toContain(
@@ -131,8 +129,12 @@ describe('admin management surface alignment', () => {
 
   it('contest form dialog should adopt the admin workspace dialog shell and section headings', () => {
     expect(adminContestFormDialogSource).toContain('class="contest-form-dialog"')
-    expect(adminContestFormDialogSource).toContain("from '@/components/common/modal-templates/AdminSurfaceModal.vue'")
-    expect(adminContestFormDialogSource).toContain(':deep(.contest-form-dialog .modal-template-panel--classic)')
+    expect(adminContestFormDialogSource).toContain(
+      "from '@/components/common/modal-templates/AdminSurfaceModal.vue'"
+    )
+    expect(adminContestFormDialogSource).toContain(
+      ':deep(.contest-form-dialog .modal-template-panel--classic)'
+    )
     expect(adminContestFormDialogSource).toContain('Contest Workspace')
     expect(adminContestFormPanelSource).toContain('<h3 class="list-heading__title">基础信息</h3>')
     expect(adminContestFormPanelSource).toContain('<h3 class="list-heading__title">赛制与时间</h3>')
