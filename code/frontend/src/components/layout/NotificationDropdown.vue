@@ -4,161 +4,192 @@
       ref="trigger"
       type="button"
       class="notification-trigger relative inline-flex h-10 w-10 items-center justify-center"
+      :class="{ 'notification-trigger--open': open }"
       aria-label="打开通知中心"
       @click="toggleOpen"
     >
       <Bell class="h-4 w-4" />
       <span
         v-if="unreadCount > 0"
-        class="absolute -right-1 -top-1 inline-flex min-w-4 items-center justify-center rounded-full bg-danger px-1 text-[10px] leading-4 text-white"
+        class="notification-trigger-badge absolute -right-1 -top-1 inline-flex min-w-4 items-center justify-center rounded-full px-1 text-[10px] leading-4 text-white"
       >
         {{ unreadCount > 99 ? '99+' : unreadCount }}
       </span>
     </button>
 
     <Teleport to="body">
-      <div v-if="open" class="fixed inset-0 z-[120]" @click="close">
-        <div ref="panel" class="fixed z-[130]" :style="panelStyle" @click.stop>
-          <AppCard
-            variant="panel"
-            accent="primary"
-            class="notification-panel overflow-hidden border-l-2 border-primary/30"
-            :style="notificationPanelStyle"
+      <Transition appear name="notification-shell">
+        <div v-if="open" class="fixed inset-0 z-[120]">
+          <div
+            class="notification-backdrop fixed inset-0 bg-slate-900/20 backdrop-blur-sm"
+            @click="close"
+          />
+
+          <div
+            ref="panel"
+            class="notification-drawer fixed top-0 right-0 h-screen w-full sm:w-[420px] bg-white shadow-2xl z-[130] flex flex-col border-l border-slate-200"
+            @click.stop
           >
-            <div class="flex items-start justify-between gap-4">
-              <div class="min-w-0 flex-1">
-                <div class="notification-kicker text-text-muted">Notification Hub</div>
-                <div class="mt-1 text-base font-semibold text-text-primary">通知中心</div>
-                <div class="mt-1 text-xs leading-5 text-text-secondary">
-                  按时间流查看最近 {{ previewItems.length }} 条消息，{{ unreadCount }} 条未读
+            <div class="px-6 py-6 border-b border-slate-100 flex flex-col gap-4 bg-white z-10 relative">
+              <div class="flex justify-between items-start">
+                <div>
+                  <p
+                    class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5"
+                  >
+                    <Bell class="h-3 w-3" /> Notification Hub
+                  </p>
+                  <h2 class="text-2xl font-black text-slate-900 tracking-tight">通知中心</h2>
+                </div>
+                <div class="flex items-center gap-3">
+                  <div
+                    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-[11px] font-bold"
+                    :style="statusPillStyle"
+                  >
+                    <span
+                      class="inline-flex h-1.5 w-1.5 rounded-full animate-pulse"
+                      :style="{ backgroundColor: statusMeta.accentColor }"
+                    />
+                    {{ statusMeta.label }}
+                  </div>
+                  <button
+                    type="button"
+                    class="notification-mini-button w-8 h-8 flex items-center justify-center rounded-lg bg-slate-50 text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-colors border border-slate-200/60"
+                    aria-label="关闭通知中心"
+                    @click="close"
+                  >
+                    <X class="h-4 w-4" />
+                  </button>
                 </div>
               </div>
 
-              <div class="flex shrink-0 items-center gap-2">
-                <span
-                  class="inline-flex min-h-8 items-center gap-2 rounded-full border px-3 py-1 text-[11px] font-semibold tracking-[0.14em]"
-                  :style="statusPillStyle"
-                >
-                  <span
-                    class="inline-flex h-2 w-2 rounded-full"
-                    :style="{ backgroundColor: statusMeta.accentColor }"
-                  />
-                  {{ statusMeta.label }}
+              <div class="flex items-center justify-between mt-2">
+                <span class="text-[12px] font-medium text-slate-500">
+                  最近 <span class="font-bold text-slate-900">{{ items.length }}</span> 条消息，<span
+                    class="font-bold text-blue-600"
+                  >
+                    {{ unreadCount }}
+                  </span>
+                  条未读
                 </span>
-                <button
-                  type="button"
-                  class="notification-mini-button inline-flex h-8 w-8 items-center justify-center"
-                  aria-label="关闭通知中心"
-                  @click="close"
-                >
-                  <X class="h-4 w-4" />
-                </button>
+                <div class="flex items-center gap-3">
+                  <button
+                    type="button"
+                    class="text-[12px] font-bold text-slate-500 hover:text-blue-600 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+                    :disabled="unreadCount === 0"
+                    @click="markAllRead"
+                  >
+                    全部标为已读
+                  </button>
+                  <div class="w-[1px] h-3.5 bg-slate-200" />
+                  <button
+                    type="button"
+                    class="text-[12px] font-bold text-blue-600 hover:text-blue-700 transition-colors flex items-center gap-0.5"
+                    @click="goToNotifications"
+                  >
+                    查看全部 <ChevronRight class="h-3.5 w-3.5" />
+                  </button>
+                </div>
               </div>
             </div>
 
-            <div class="mt-4 flex flex-wrap items-center gap-2 border-t border-border-subtle pt-4">
-              <button
-                type="button"
-                class="notification-action-button px-3 py-2 text-xs font-medium disabled:cursor-not-allowed disabled:opacity-50"
-                :disabled="unreadCount === 0"
-                @click="markAllRead"
-              >
-                全部标记已读
-              </button>
-              <button
-                type="button"
-                class="notification-action-button px-3 py-2 text-xs font-medium"
-                @click="goToNotifications"
-              >
-                查看全部通知
-              </button>
-            </div>
-
-            <div class="mt-4 max-h-[min(520px,calc(100vh-7rem))] overflow-auto pr-1">
-              <AppEmpty
-                v-if="items.length === 0"
-                title="暂无通知"
-                description="新的系统、训练或竞赛消息会在这里实时出现。"
-                icon="Bell"
+            <div class="flex-1 overflow-y-auto relative bg-white">
+              <div
+                v-if="items.length > 0"
+                class="absolute top-0 bottom-0 left-[35px] w-[1px] bg-slate-200/80 z-0"
               />
 
-              <div v-else class="notification-timeline">
-                <button
-                  v-for="item in previewItems"
+              <div
+                v-if="items.length === 0"
+                class="flex h-full items-center justify-center px-6 py-10"
+              >
+                <AppEmpty
+                  title="暂无通知"
+                  description="新的系统、训练或竞赛消息会在这里实时出现。"
+                  icon="Bell"
+                />
+              </div>
+
+              <div v-else class="py-2">
+                <div
+                  v-for="item in items"
                   :key="item.id"
-                  type="button"
-                  class="notification-timeline-item w-full text-left"
-                  :class="{ 'notification-timeline-item--unread': item.unread }"
-                  @click="goToNotificationDetail(item.id)"
+                  class="relative pl-14 pr-6 py-6 transition-colors group border-b border-slate-100/60 last:border-b-0"
+                  :class="item.unread ? 'bg-blue-50/30' : 'hover:bg-slate-50/50'"
                 >
-                  <div class="notification-timeline-rail">
-                    <span
-                      class="notification-timeline-node"
-                      :class="{ 'notification-timeline-node--unread': item.unread }"
-                      :style="{
-                        backgroundColor: item.unread
-                          ? typeMeta(item.type).accentColor
-                          : 'var(--color-border-default)',
-                      }"
-                    />
+                  <div
+                    class="absolute left-[31.5px] top-8 w-[8px] h-[8px] rounded-full ring-[4px] z-10 transition-colors"
+                    :class="
+                      item.unread
+                        ? 'bg-blue-600 ring-blue-100'
+                        : 'bg-slate-300 ring-white group-hover:bg-slate-50 group-hover:ring-slate-100'
+                    "
+                  />
+
+                  <div class="flex justify-between items-center mb-3 gap-3">
+                    <div class="flex items-center gap-2 min-w-0">
+                      <span
+                        class="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-slate-100 border border-slate-200 text-slate-600"
+                        :style="typeMeta(item.type).badgeStyle"
+                      >
+                        {{ typeMeta(item.type).label }}
+                      </span>
+                      <span
+                        v-if="item.unread"
+                        class="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-blue-100 border border-blue-200 text-blue-700"
+                      >
+                        未读
+                      </span>
+                    </div>
+                    <span class="text-[11px] font-mono font-bold text-slate-400 shrink-0">
+                      {{ formatDate(item.created_at) }}
+                    </span>
                   </div>
 
-                  <div class="notification-timeline-body">
-                    <div class="notification-timeline-header">
-                      <div class="flex min-w-0 items-center gap-2">
-                        <span
-                          class="inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold"
-                          :style="typeMeta(item.type).badgeStyle"
-                        >
-                          {{ typeMeta(item.type).label }}
-                        </span>
-                        <span
-                          v-if="item.unread"
-                          class="inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-primary"
-                          :style="{
-                            backgroundColor:
-                              'color-mix(in srgb, var(--color-primary) 12%, transparent)',
-                          }"
-                        >
-                          未读
-                        </span>
-                      </div>
-                      <div class="notification-timeline-time">
-                        {{ formatDate(item.created_at) }}
-                      </div>
-                    </div>
+                  <h3
+                    class="text-[14px] font-black tracking-tight mb-1.5"
+                    :class="item.unread ? 'text-slate-900' : 'text-slate-700'"
+                  >
+                    {{ item.title }}
+                  </h3>
+                  <p
+                    v-if="item.content"
+                    class="notification-entry-copy text-[13px] font-medium text-slate-500 leading-relaxed mb-4"
+                  >
+                    {{ item.content }}
+                  </p>
 
-                    <div class="notification-timeline-title">
-                      {{ item.title }}
-                    </div>
-                    <div v-if="item.content" class="notification-timeline-content">
-                      {{ item.content }}
-                    </div>
+                  <button
+                    type="button"
+                    class="inline-flex items-center gap-1.5 text-[11px] font-black transition-colors"
+                    :style="{ color: typeMeta(item.type).accentColor }"
+                    @click="goToNotificationDetail(item.id)"
+                  >
+                    <component :is="typeMeta(item.type).icon" class="h-3 w-3" />
+                    {{ item.unread ? '打开详情并自动已读' : '查看详情' }}
+                  </button>
+                </div>
 
-                    <div class="notification-timeline-footer">
-                      <component
-                        :is="typeMeta(item.type).icon"
-                        class="h-3.5 w-3.5"
-                        :style="{ color: typeMeta(item.type).accentColor }"
-                      />
-                      <span>{{ item.unread ? '打开详情并自动已读' : '查看详情' }}</span>
-                    </div>
-                  </div>
-                </button>
+                <div class="py-8 text-center flex items-center justify-center gap-3 opacity-60">
+                  <div class="w-12 h-[1px] bg-slate-200" />
+                  <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                    End of Notifications
+                  </span>
+                  <div class="w-12 h-[1px] bg-slate-200" />
+                </div>
               </div>
             </div>
-          </AppCard>
+          </div>
         </div>
-      </div>
+      </Transition>
     </Teleport>
   </div>
 </template>
 
 <script setup lang="ts">
-import { Bell, X } from 'lucide-vue-next'
-import { useNotificationDropdown } from '@/composables/useNotificationDropdown'
-import AppCard from '@/components/common/AppCard.vue'
+import { Bell, ChevronRight, X } from 'lucide-vue-next'
+
 import AppEmpty from '@/components/common/AppEmpty.vue'
+import { useNotificationDropdown } from '@/composables/useNotificationDropdown'
 import type { WebSocketStatus } from '@/composables/useWebSocket'
 import { formatDate } from '@/utils/format'
 
@@ -166,18 +197,12 @@ const props = defineProps<{
   realtimeStatus: WebSocketStatus
 }>()
 
-const notificationPanelStyle = {
-  background: 'linear-gradient(180deg, var(--color-bg-surface), var(--color-bg-base))',
-}
-
 const {
   open,
   trigger,
   panel,
-  panelStyle,
   unreadCount,
   items,
-  previewItems,
   statusMeta,
   statusPillStyle,
   typeMeta,
@@ -190,152 +215,89 @@ const {
 </script>
 
 <style scoped>
-.notification-trigger,
-.notification-mini-button,
-.notification-action-button {
-  border-radius: 14px;
-  border: 1px solid color-mix(in srgb, var(--color-border-default) 78%, transparent);
-  background: color-mix(in srgb, var(--color-bg-surface) 72%, var(--color-bg-base));
-  color: var(--color-text-secondary);
-  transition: all 0.2s ease;
-  box-shadow: 0 8px 18px color-mix(in srgb, var(--color-shadow-soft) 36%, transparent);
-}
-
-.notification-trigger:hover,
-.notification-mini-button:hover,
-.notification-action-button:hover {
-  color: var(--color-text-primary);
-  border-color: color-mix(in srgb, var(--color-primary) 34%, var(--color-border-default));
-  box-shadow: 0 0 18px color-mix(in srgb, var(--color-primary) 14%, transparent);
-}
-
-.notification-panel {
-  box-shadow: 0 18px 42px color-mix(in srgb, var(--color-shadow-soft) 84%, transparent);
-}
-
-.notification-timeline {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
-.notification-timeline-item {
-  position: relative;
-  display: grid;
-  grid-template-columns: 1.5rem minmax(0, 1fr);
-  gap: 0.85rem;
-  border: 1px solid transparent;
-  border-radius: 16px;
-  background: color-mix(in srgb, var(--color-bg-surface) 70%, var(--color-bg-base));
-  padding: 0.9rem 0.95rem;
+.notification-trigger {
   transition:
-    border-color 0.2s ease,
     background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease,
     transform 0.2s ease;
 }
 
-.notification-timeline-item:hover {
-  border-color: color-mix(in srgb, var(--color-primary) 26%, var(--color-border-default));
-  background: color-mix(in srgb, var(--color-primary) 4%, var(--color-bg-surface));
-  transform: translateY(-1px);
+.notification-trigger--open {
+  border-color: #dbeafe;
+  background: #eff6ff;
+  color: #2563eb;
 }
 
-.notification-timeline-item--unread {
-  border-color: color-mix(in srgb, var(--color-primary) 18%, var(--color-border-default));
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--color-primary) 8%, var(--color-bg-surface)),
-    color-mix(in srgb, var(--color-bg-surface) 84%, var(--color-bg-base))
-  );
+.notification-trigger-badge {
+  background: #ef4444;
+  box-shadow: 0 0 0 2px white;
 }
 
-.notification-timeline-rail {
-  position: relative;
-  display: flex;
-  justify-content: center;
+.notification-mini-button:focus-visible,
+.notification-trigger:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--color-primary) 44%, white);
+  outline-offset: 2px;
 }
 
-.notification-timeline-rail::before {
-  content: '';
-  position: absolute;
-  top: 0.4rem;
-  bottom: -1.15rem;
-  left: 50%;
-  width: 1px;
-  transform: translateX(-50%);
-  background: color-mix(in srgb, var(--color-border-subtle) 86%, transparent);
-}
-
-.notification-timeline-item:last-child .notification-timeline-rail::before {
-  display: none;
-}
-
-.notification-timeline-node {
-  position: relative;
-  z-index: 1;
-  margin-top: 0.25rem;
-  display: inline-flex;
-  height: 0.7rem;
-  width: 0.7rem;
-  border-radius: 999px;
-  box-shadow: 0 0 0 6px color-mix(in srgb, var(--color-bg-surface) 90%, transparent);
-}
-
-.notification-timeline-node--unread {
-  box-shadow: 0 0 0 6px color-mix(in srgb, var(--color-primary) 12%, var(--color-bg-surface));
-}
-
-.notification-timeline-body {
-  min-width: 0;
-}
-
-.notification-timeline-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-}
-
-.notification-timeline-time {
-  flex-shrink: 0;
-  font-size: var(--font-size-0-72);
-  color: var(--color-text-muted);
-}
-
-.notification-timeline-title {
-  margin-top: 0.5rem;
-  font-size: var(--font-size-0-92);
-  font-weight: 700;
-  line-height: 1.5;
-  color: var(--color-text-primary);
-}
-
-.notification-timeline-content {
-  margin-top: 0.35rem;
+.notification-entry-copy {
   display: -webkit-box;
   overflow: hidden;
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-0-83);
-  line-height: 1.65;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
 }
 
-.notification-timeline-footer {
-  margin-top: 0.6rem;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: var(--font-size-0-76);
-  color: var(--color-text-muted);
+.notification-shell-enter-active,
+.notification-shell-leave-active {
+  transition: opacity 0.28s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.notification-kicker {
-  font-family: var(--font-family-mono);
-  font-size: var(--font-size-11);
-  font-weight: 600;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
+.notification-shell-enter-active .notification-backdrop,
+.notification-shell-leave-active .notification-backdrop,
+.notification-shell-enter-active .notification-drawer,
+.notification-shell-leave-active .notification-drawer {
+  transition:
+    opacity 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.36s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.notification-shell-enter-from,
+.notification-shell-leave-to {
+  opacity: 0;
+}
+
+.notification-shell-enter-from .notification-backdrop,
+.notification-shell-leave-to .notification-backdrop {
+  opacity: 0;
+}
+
+.notification-shell-enter-from .notification-drawer,
+.notification-shell-leave-to .notification-drawer {
+  opacity: 0;
+  transform: translate3d(28px, 0, 0);
+}
+
+.notification-shell-enter-to .notification-drawer,
+.notification-shell-leave-from .notification-drawer {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .notification-trigger,
+  .notification-shell-enter-active,
+  .notification-shell-leave-active,
+  .notification-shell-enter-active .notification-backdrop,
+  .notification-shell-leave-active .notification-backdrop,
+  .notification-shell-enter-active .notification-drawer,
+  .notification-shell-leave-active .notification-drawer {
+    transition-duration: 0.01ms !important;
+  }
+
+  .notification-shell-enter-from .notification-drawer,
+  .notification-shell-leave-to .notification-drawer {
+    transform: none;
+  }
 }
 </style>

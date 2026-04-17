@@ -4,6 +4,7 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 import { createPinia, setActivePinia } from 'pinia'
 
 import NotificationDropdown from '../NotificationDropdown.vue'
+import notificationDropdownSource from '../NotificationDropdown.vue?raw'
 import { useNotificationStore } from '@/stores/notification'
 
 const notificationApiMocks = vi.hoisted(() => ({
@@ -81,11 +82,21 @@ describe('NotificationDropdown', () => {
     ])
   })
 
+  it('uses the notification spec drawer shell instead of the old floating panel', () => {
+    expect(notificationDropdownSource).toContain('<Transition appear name="notification-shell">')
+    expect(notificationDropdownSource).toContain('Notification Hub')
+    expect(notificationDropdownSource).toContain('fixed top-0 right-0 h-screen w-full sm:w-[420px]')
+    expect(notificationDropdownSource).toContain('全部标为已读')
+    expect(notificationDropdownSource).toContain('End of Notifications')
+    expect(notificationDropdownSource).toContain('.notification-shell-enter-active')
+    expect(notificationDropdownSource).not.toContain('notification-panel overflow-hidden border-l-2')
+  })
+
   it('navigates to notification detail when clicking a timeline item', async () => {
     const { wrapper, router } = await openDropdown()
 
     const timelineItem = Array.from(document.body.querySelectorAll('button')).find((node) =>
-      node.textContent?.includes('系统升级公告')
+      node.textContent?.includes('打开详情并自动已读')
     )
 
     expect(timelineItem).toBeTruthy()
@@ -104,10 +115,10 @@ describe('NotificationDropdown', () => {
     const store = useNotificationStore()
 
     const markAllButton = Array.from(document.body.querySelectorAll('button')).find((node) =>
-      node.textContent?.includes('全部标记已读')
+      node.textContent?.includes('全部标为已读')
     )
     const viewAllButton = Array.from(document.body.querySelectorAll('button')).find((node) =>
-      node.textContent?.includes('查看全部通知')
+      node.textContent?.includes('查看全部')
     )
 
     expect(markAllButton).toBeTruthy()
