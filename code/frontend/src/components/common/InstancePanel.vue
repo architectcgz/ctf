@@ -1,44 +1,44 @@
 <template>
-  <ElCard>
-    <template #header>
-      <div class="flex items-center justify-between">
-        <span class="font-semibold">我的实例</span>
-        <ElButton size="small" @click="emit('refresh')"> 刷新 </ElButton>
-      </div>
-    </template>
+  <section class="instance-panel">
+    <header class="instance-panel__header">
+      <span class="instance-panel__title">我的实例</span>
+      <button type="button" class="ui-btn ui-btn--secondary ui-btn--sm" @click="emit('refresh')">
+        刷新
+      </button>
+    </header>
 
-    <div v-if="loading" class="py-8 text-center text-[var(--color-text-muted)]">加载中...</div>
+    <div v-if="loading" class="instance-panel__empty">加载中...</div>
 
-    <div v-else-if="instances.length === 0" class="text-center text-[var(--color-text-muted)] py-8">
+    <div v-else-if="instances.length === 0" class="instance-panel__empty">
       暂无运行中的实例
     </div>
 
-    <div v-else class="space-y-4">
-      <ElCard v-for="instance in instances" :key="instance.id" shadow="never" class="border">
-        <div class="space-y-3">
-          <div class="flex items-start justify-between">
+    <div v-else class="instance-panel__list">
+      <article v-for="instance in instances" :key="instance.id" class="instance-card">
+        <div class="instance-card__body">
+          <div class="instance-card__head">
             <div>
-              <h3 class="font-semibold text-lg">
+              <h3 class="instance-card__title">
                 {{ instance.challenge_title }}
               </h3>
-              <ElTag :type="getStatusColor(instance.status)" size="small" class="mt-1">
+              <span class="instance-chip" :class="getStatusChipClass(instance.status)">
                 {{ getStatusLabel(instance.status) }}
-              </ElTag>
+              </span>
             </div>
-            <div class="text-right">
-              <div :class="getTimeColor(instance.expires_at)" class="text-lg font-semibold">
+            <div class="instance-card__countdown">
+              <div :class="getTimeColor(instance.expires_at)" class="instance-card__countdown-value">
                 {{ formatCountdown(instance.expires_at) }}
               </div>
-              <div class="text-xs text-[var(--color-text-muted)]">剩余时间</div>
+              <div class="instance-card__countdown-label">剩余时间</div>
             </div>
           </div>
 
-          <div v-if="instance.access_url" class="space-y-2">
-            <div class="text-sm">
-              <span class="text-[var(--color-text-secondary)]">访问地址：</span>
+          <div v-if="instance.access_url" class="instance-card__access">
+            <div class="instance-card__access-row">
+              <span class="instance-card__access-label">访问地址：</span>
               <button
                 type="button"
-                class="text-primary hover:underline"
+                class="instance-card__access-link"
                 @click="emit('openTarget', instance.id)"
               >
                 {{ instance.access_url }}
@@ -46,36 +46,34 @@
             </div>
           </div>
 
-          <div class="flex gap-2">
-            <ElButton
+          <div class="instance-card__actions">
+            <button
               v-if="instance.share_scope !== 'shared' && instance.remaining_extends > 0"
-              size="small"
-              type="primary"
-              plain
-              class="!border-[var(--color-primary)] !bg-[var(--color-primary-soft)] !text-[var(--color-primary-hover)] hover:!bg-[var(--color-primary-soft)]"
+              type="button"
+              class="ui-btn ui-btn--primary ui-btn--sm"
               @click="emit('extend', instance.id)"
             >
               延时 (剩余 {{ instance.remaining_extends }} 次)
-            </ElButton>
-            <ElButton
+            </button>
+            <button
               v-if="instance.share_scope !== 'shared'"
-              size="small"
-              type="danger"
+              type="button"
+              class="ui-btn ui-btn--danger ui-btn--sm"
               @click="emit('destroy', instance.id)"
             >
               销毁
-            </ElButton>
+            </button>
             <div
               v-if="instance.share_scope === 'shared'"
-              class="text-xs text-[var(--color-text-muted)]"
+              class="instance-card__managed-note"
             >
               系统托管
             </div>
           </div>
         </div>
-      </ElCard>
+      </article>
     </div>
-  </ElCard>
+  </section>
 </template>
 
 <script setup lang="ts">
@@ -156,16 +154,16 @@ function getStatusLabel(status: InstanceStatus): string {
   return labels[status]
 }
 
-function getStatusColor(status: InstanceStatus): string {
+function getStatusChipClass(status: InstanceStatus): string {
   const colors: Record<InstanceStatus, string> = {
-    pending: 'info',
-    creating: 'warning',
-    running: 'success',
-    expired: 'info',
-    destroying: 'warning',
-    destroyed: 'info',
-    failed: 'danger',
-    crashed: 'danger',
+    pending: 'instance-chip--muted',
+    creating: 'instance-chip--warning',
+    running: 'instance-chip--success',
+    expired: 'instance-chip--muted',
+    destroying: 'instance-chip--warning',
+    destroyed: 'instance-chip--muted',
+    failed: 'instance-chip--danger',
+    crashed: 'instance-chip--danger',
   }
   return colors[status]
 }
@@ -196,3 +194,144 @@ watch(
   { deep: true }
 )
 </script>
+
+<style scoped>
+.instance-panel {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px solid color-mix(in srgb, var(--color-border-default) 78%, transparent);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
+}
+
+.instance-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.instance-panel__title {
+  font-size: var(--font-size-1-00);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.instance-panel__empty {
+  padding: 2rem 0;
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+.instance-panel__list {
+  display: grid;
+  gap: 1rem;
+}
+
+.instance-card {
+  border: 1px solid color-mix(in srgb, var(--color-border-default) 78%, transparent);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--color-bg-elevated) 84%, var(--color-bg-surface));
+}
+
+.instance-card__body {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem;
+}
+
+.instance-card__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.instance-card__title {
+  font-size: var(--font-size-1-05);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.instance-chip {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 0.45rem;
+  min-height: 1.6rem;
+  padding: 0 0.55rem;
+  border-radius: 999px;
+  font-size: var(--font-size-0-75);
+  font-weight: 700;
+}
+
+.instance-chip--muted {
+  background: color-mix(in srgb, var(--color-text-muted) 12%, transparent);
+  color: var(--color-text-muted);
+}
+
+.instance-chip--warning {
+  background: color-mix(in srgb, var(--color-warning) 12%, transparent);
+  color: var(--color-warning);
+}
+
+.instance-chip--success {
+  background: color-mix(in srgb, var(--color-success) 12%, transparent);
+  color: var(--color-success);
+}
+
+.instance-chip--danger {
+  background: color-mix(in srgb, var(--color-danger) 12%, transparent);
+  color: var(--color-danger);
+}
+
+.instance-card__countdown {
+  text-align: right;
+}
+
+.instance-card__countdown-value {
+  font-size: var(--font-size-1-05);
+  font-weight: 700;
+}
+
+.instance-card__countdown-label,
+.instance-card__managed-note {
+  font-size: var(--font-size-0-75);
+  color: var(--color-text-muted);
+}
+
+.instance-card__access {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.instance-card__access-row {
+  font-size: var(--font-size-0-88);
+}
+
+.instance-card__access-label {
+  color: var(--color-text-secondary);
+}
+
+.instance-card__access-link {
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-underline-offset: 0.14em;
+}
+
+.instance-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+@media (max-width: 640px) {
+  .instance-card__head {
+    flex-direction: column;
+  }
+
+  .instance-card__countdown {
+    text-align: left;
+  }
+}
+</style>

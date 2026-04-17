@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
 import InstancePanel from '../InstancePanel.vue'
+import instancePanelSource from '../InstancePanel.vue?raw'
 
 describe('InstancePanel', () => {
   it('应该渲染实例列表', async () => {
@@ -27,5 +28,14 @@ describe('InstancePanel', () => {
 
     expect(wrapper.exists()).toBe(true)
     expect(wrapper.text()).toContain('Test Challenge')
+  })
+
+  it('实例面板应接入共享表面与按钮原语，而不是继续依赖 Element Plus 卡片和按钮', () => {
+    expect(instancePanelSource).toContain('class="instance-panel"')
+    expect(instancePanelSource).toContain('class="ui-btn ui-btn--secondary ui-btn--sm"')
+    expect(instancePanelSource).toContain('class="ui-btn ui-btn--primary ui-btn--sm"')
+    expect(instancePanelSource).not.toContain('<ElCard')
+    expect(instancePanelSource).not.toContain('<ElButton')
+    expect(instancePanelSource).not.toContain('<ElTag')
   })
 })
