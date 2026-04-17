@@ -1,193 +1,31 @@
-<template>
-  <section
-    class="journal-shell journal-shell-admin journal-notes-rail journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
-  >
-    <header class="image-header">
-      <div class="image-header__intro">
-        <div class="workspace-overline">Image Registry</div>
-        <h1 class="image-title">镜像管理</h1>
-        <p class="image-copy">集中查看镜像构建状态、描述与创建时间。</p>
-      </div>
-
-      <div class="image-header__side">
-        <div class="image-header__actions" role="group" aria-label="镜像列表操作">
-          <button
-            :disabled="loading"
-            class="admin-btn admin-btn-ghost"
-            data-testid="image-refresh-button"
-            @click="handleManualRefresh"
-          >
-            立即刷新
-          </button>
-          <button class="admin-btn admin-btn-primary" @click="dialogVisible = true">
-            创建镜像
-          </button>
-        </div>
-        <div class="image-status-strip" aria-label="镜像状态摘要">
-          <div class="image-status-strip__row">
-            <div
-              v-for="item in statusSummary"
-              :key="item.key"
-              :class="['image-status-pill', `image-status-pill--${item.tone}`]"
-              data-testid="image-status-pill"
-            >
-              <span>{{ item.label }}</span>
-              <strong>{{ item.value }}</strong>
-            </div>
-          </div>
-          <div class="image-status-strip__note">{{ refreshHint }}</div>
-        </div>
-      </div>
-    </header>
-
-    <section class="image-board workspace-directory-section">
-      <div class="image-board__head">
-        <div>
-          <div class="journal-note-label">Images</div>
-          <h2 class="image-section-title">镜像列表</h2>
-        </div>
-        <div class="image-board__hint">按创建时间倒序</div>
-      </div>
-
-      <div
-        v-if="loading"
-        class="workspace-directory-loading flex items-center justify-center py-12"
-      >
-        <div
-          class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--journal-border)] border-t-[var(--journal-accent)]"
-        ></div>
-      </div>
-
-      <template v-else>
-        <div v-if="list.length === 0" class="admin-empty workspace-directory-empty">
-          当前还没有镜像。
-        </div>
-
-        <div v-else class="image-list workspace-directory-list">
-          <div class="image-directory-head" aria-hidden="true">
-            <span>镜像名称</span>
-            <span>标签</span>
-            <span>描述</span>
-            <span>状态</span>
-            <span>创建时间</span>
-            <span class="image-directory-head__actions">操作</span>
-          </div>
-
-          <article v-for="row in list" :key="row.id" class="image-row">
-            <div class="image-row__name" :title="row.name">{{ row.name }}</div>
-
-            <div class="image-row__tag" :title="row.tag">{{ row.tag }}</div>
-
-            <p class="image-row__description" :title="row.description || '未填写镜像说明'">
-              {{ row.description || '未填写镜像说明' }}
-            </p>
-
-            <div class="image-row__status">
-              <span class="admin-status-chip" :style="getStatusStyle(row.status)">
-                {{ getStatusLabel(row.status) }}
-              </span>
-            </div>
-
-            <div class="image-row__time">{{ new Date(row.created_at).toLocaleString() }}</div>
-
-            <div class="image-row__actions">
-              <button
-                class="admin-btn admin-btn-danger admin-btn-compact"
-                @click="handleDelete(row.id)"
-              >
-                删除
-              </button>
-            </div>
-          </article>
-        </div>
-
-        <div v-if="total > 0" class="admin-pagination workspace-directory-pagination">
-          <AdminPaginationControls
-            :page="page"
-            :total-pages="Math.max(1, Math.ceil(total / pageSize))"
-            :total="total"
-            :total-label="`共 ${total} 条`"
-            @change-page="void changePage($event)"
-          />
-        </div>
-      </template>
-    </section>
-
-    <AdminSurfaceModal
-      :open="dialogVisible"
-      title="创建镜像"
-      subtitle="填写镜像名称、标签和说明，提交后会进入镜像目录并参与构建状态跟踪。"
-      eyebrow="Image Registry"
-      width="31.25rem"
-      @close="dialogVisible = false"
-      @update:open="dialogVisible = $event"
-    >
-      <form class="image-create-form" @submit.prevent="handleCreate">
-        <label class="ui-field image-create-field">
-          <span class="ui-field__label">
-            镜像名称
-            <span class="ui-field__required" aria-hidden="true">*</span>
-          </span>
-          <span class="ui-control-wrap">
-            <input v-model="form.name" type="text" class="ui-control" placeholder="例如：ubuntu" />
-          </span>
-        </label>
-
-        <label class="ui-field image-create-field">
-          <span class="ui-field__label">
-            标签
-            <span class="ui-field__required" aria-hidden="true">*</span>
-          </span>
-          <span class="ui-control-wrap">
-            <input v-model="form.tag" type="text" class="ui-control" placeholder="例如：22.04" />
-          </span>
-        </label>
-
-        <label class="ui-field image-create-field">
-          <span class="ui-field__label">描述</span>
-          <span class="ui-control-wrap image-create-field__textarea">
-            <textarea
-              v-model="form.description"
-              class="ui-control"
-              rows="3"
-              placeholder="镜像说明（可选）"
-            />
-          </span>
-        </label>
-      </form>
-      <template #footer>
-        <div class="image-create-dialog__footer">
-          <button type="button" class="ui-btn ui-btn--secondary" @click="dialogVisible = false">
-            取消
-          </button>
-          <button
-            type="button"
-            :disabled="creating"
-            class="ui-btn ui-btn--primary"
-            @click="handleCreate"
-          >
-            {{ creating ? '创建中...' : '创建' }}
-          </button>
-        </div>
-      </template>
-    </AdminSurfaceModal>
-  </section>
-</template>
-
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
-import { getImages, createImage, deleteImage } from '@/api/admin'
+import { ArrowDownWideNarrow, Calendar, SortAsc } from 'lucide-vue-next'
+
+import { createImage, deleteImage, getImages, type AdminImagePayload } from '@/api/admin'
+import type { AdminImageListItem, ImageStatus } from '@/api/contracts'
 import AdminPaginationControls from '@/components/admin/AdminPaginationControls.vue'
+import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
+import WorkspaceDirectoryToolbar, {
+  type WorkspaceDirectorySortOption,
+} from '@/components/common/WorkspaceDirectoryToolbar.vue'
 import AdminSurfaceModal from '@/components/common/modal-templates/AdminSurfaceModal.vue'
 import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
 import { usePagination } from '@/composables/usePagination'
 import { useToast } from '@/composables/useToast'
-import type { ImageStatus } from '@/api/contracts'
+
+type ImageSortKey = 'created_at' | 'name' | 'tag'
+type ImageSortOption = WorkspaceDirectorySortOption & {
+  key: ImageSortKey
+  order: 'asc' | 'desc'
+}
 
 const toast = useToast()
 const dialogVisible = ref(false)
 const creating = ref(false)
-const form = reactive({
+const keyword = ref('')
+const statusFilter = ref<ImageStatus | ''>('')
+const form = reactive<AdminImagePayload>({
   name: '',
   tag: '',
   description: '',
@@ -195,11 +33,94 @@ const form = reactive({
 
 const { list, total, page, pageSize, loading, changePage, refresh } = usePagination(getImages)
 
+const sortOptions: ImageSortOption[] = [
+  { key: 'created_at', order: 'desc', label: '最近创建', icon: Calendar },
+  { key: 'name', order: 'asc', label: '镜像名称 A-Z', icon: SortAsc },
+  { key: 'tag', order: 'asc', label: '标签顺序', icon: ArrowDownWideNarrow },
+]
+const sortConfig = ref<ImageSortOption>(sortOptions[0]!)
+const imageTableColumns = [
+  {
+    key: 'name',
+    label: '镜像名称',
+    widthClass: 'w-[18%] min-w-[10rem]',
+    cellClass: 'image-table__name-cell',
+  },
+  {
+    key: 'tag',
+    label: '标签',
+    widthClass: 'w-[14%] min-w-[7rem]',
+    cellClass: 'image-table__tag-cell',
+  },
+  {
+    key: 'description',
+    label: '描述',
+    widthClass: 'w-[28%] min-w-[14rem]',
+    cellClass: 'image-table__description-cell',
+  },
+  {
+    key: 'status',
+    label: '状态',
+    align: 'center' as const,
+    widthClass: 'w-[12%] min-w-[7rem]',
+    cellClass: 'image-table__status-cell',
+  },
+  {
+    key: 'created_at',
+    label: '创建时间',
+    widthClass: 'w-[18%] min-w-[10rem]',
+    cellClass: 'image-table__time-cell',
+  },
+  {
+    key: 'actions',
+    label: '操作',
+    align: 'right' as const,
+    widthClass: 'w-[10rem]',
+    cellClass: 'image-table__actions-cell',
+  },
+]
+
 let pollTimer: number | null = null
 
 const hasActiveImages = computed(() =>
   list.value.some((row) => row.status === 'pending' || row.status === 'building')
 )
+const hasActiveFilters = computed(() => Boolean(keyword.value.trim() || statusFilter.value))
+const filteredRows = computed<AdminImageListItem[]>(() => {
+  const normalizedKeyword = keyword.value.trim().toLowerCase()
+  const nextRows = list.value.filter((row) => {
+    const matchesKeyword =
+      !normalizedKeyword ||
+      row.name.toLowerCase().includes(normalizedKeyword) ||
+      row.tag.toLowerCase().includes(normalizedKeyword) ||
+      (row.description || '').toLowerCase().includes(normalizedKeyword)
+    const matchesStatus = !statusFilter.value || row.status === statusFilter.value
+
+    return matchesKeyword && matchesStatus
+  })
+
+  const sortedRows = [...nextRows]
+  sortedRows.sort((left, right) => {
+    switch (sortConfig.value.key) {
+      case 'name': {
+        const delta = left.name.localeCompare(right.name, 'zh-CN')
+        return sortConfig.value.order === 'asc' ? delta : -delta
+      }
+      case 'tag': {
+        const delta = left.tag.localeCompare(right.tag, 'zh-CN', { numeric: true })
+        return sortConfig.value.order === 'asc' ? delta : -delta
+      }
+      case 'created_at':
+      default: {
+        const delta = new Date(left.created_at).getTime() - new Date(right.created_at).getTime()
+        return sortConfig.value.order === 'asc' ? delta : -delta
+      }
+    }
+  })
+
+  return sortedRows
+})
+const filteredTotal = computed(() => filteredRows.value.length)
 
 const refreshHint = computed(() =>
   hasActiveImages.value ? '构建中镜像会每 10 秒自动刷新' : '当前无进行中镜像，可手动刷新'
@@ -284,14 +205,15 @@ async function handleCreate() {
     toast.error('请填写完整信息')
     return
   }
+
   creating.value = true
   try {
     await createImage(form)
     toast.success('镜像创建成功')
     dialogVisible.value = false
     Object.assign(form, { name: '', tag: '', description: '' })
-    refresh()
-  } catch (error) {
+    await refresh()
+  } catch {
     toast.error('创建失败')
   } finally {
     creating.value = false
@@ -309,7 +231,7 @@ async function handleDelete(id: string) {
   try {
     await deleteImage(id)
     toast.success('删除成功')
-    refresh()
+    await refresh()
   } catch (error) {
     const message = error instanceof Error && error.message.trim() ? error.message : '删除失败'
     toast.error(message)
@@ -332,6 +254,35 @@ function getStatusStyle(status: ImageStatus): Record<string, string> {
   }
 }
 
+function setSort(option: WorkspaceDirectorySortOption): void {
+  const matchedOption =
+    sortOptions.find((item) => item.key === option.key && item.label === option.label) ??
+    sortOptions[0]
+
+  if (!matchedOption) {
+    return
+  }
+
+  sortConfig.value = matchedOption
+}
+
+function resetFilters(): void {
+  keyword.value = ''
+  statusFilter.value = ''
+}
+
+function formatDateTime(value: string): string {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return '--'
+  return new Intl.DateTimeFormat('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date)
+}
+
 watch(
   hasActiveImages,
   (active) => {
@@ -352,6 +303,232 @@ onUnmounted(() => {
   stopPolling()
 })
 </script>
+
+<template>
+  <section
+    class="journal-shell journal-shell-admin journal-notes-rail journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
+  >
+    <header class="image-header">
+      <div class="image-header__intro">
+        <div class="workspace-overline">Image Registry</div>
+        <h1 class="image-title">镜像管理</h1>
+        <p class="image-copy">集中查看镜像构建状态、描述与创建时间。</p>
+      </div>
+
+      <div class="image-header__side">
+        <div class="image-header__actions" role="group" aria-label="镜像列表操作">
+          <button
+            :disabled="loading"
+            class="admin-btn admin-btn-ghost"
+            data-testid="image-refresh-button"
+            @click="handleManualRefresh"
+          >
+            立即刷新
+          </button>
+          <button class="admin-btn admin-btn-primary" @click="dialogVisible = true">
+            创建镜像
+          </button>
+        </div>
+        <div class="image-status-strip" aria-label="镜像状态摘要">
+          <div class="image-status-strip__row">
+            <div
+              v-for="item in statusSummary"
+              :key="item.key"
+              :class="['image-status-pill', `image-status-pill--${item.tone}`]"
+              data-testid="image-status-pill"
+            >
+              <span>{{ item.label }}</span>
+              <strong>{{ item.value }}</strong>
+            </div>
+          </div>
+          <div class="image-status-strip__note">{{ refreshHint }}</div>
+        </div>
+      </div>
+    </header>
+
+    <section class="image-board workspace-directory-section">
+      <header class="list-heading image-board__head">
+        <div>
+          <div class="workspace-overline">Images</div>
+          <h2 class="list-heading__title image-section-title">镜像列表</h2>
+        </div>
+      </header>
+
+      <WorkspaceDirectoryToolbar
+        v-model="keyword"
+        :total="filteredTotal"
+        :selected-sort-label="sortConfig.label"
+        :sort-options="sortOptions"
+        search-placeholder="检索镜像名称、标签或说明..."
+        total-suffix="个镜像"
+        :reset-disabled="!hasActiveFilters"
+        @select-sort="setSort"
+        @reset-filters="resetFilters"
+      >
+        <template #filter-panel>
+          <div class="image-filter-grid">
+            <label class="image-filter-field">
+              <span class="image-filter-label">构建状态</span>
+              <select v-model="statusFilter" class="image-filter-select">
+                <option value="">全部状态</option>
+                <option value="available">可用</option>
+                <option value="building">构建中</option>
+                <option value="pending">等待中</option>
+                <option value="failed">失败</option>
+              </select>
+            </label>
+          </div>
+        </template>
+      </WorkspaceDirectoryToolbar>
+
+      <div
+        v-if="loading"
+        class="workspace-directory-loading flex items-center justify-center py-12"
+      >
+        <div
+          class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--journal-border)] border-t-[var(--journal-accent)]"
+        ></div>
+      </div>
+
+      <template v-else>
+        <div v-if="list.length === 0" class="admin-empty workspace-directory-empty">
+          当前还没有镜像。
+        </div>
+
+        <div v-else-if="filteredRows.length === 0" class="admin-empty workspace-directory-empty">
+          当前筛选条件下没有匹配镜像。
+        </div>
+
+        <WorkspaceDataTable
+          v-else
+          class="image-list workspace-directory-list"
+          :columns="imageTableColumns"
+          :rows="filteredRows"
+          row-key="id"
+          row-class="image-row"
+        >
+          <template #cell-name="{ row }">
+            <span class="image-row__name" :title="(row as AdminImageListItem).name">
+              {{ (row as AdminImageListItem).name }}
+            </span>
+          </template>
+
+          <template #cell-tag="{ row }">
+            <span class="image-row__tag" :title="(row as AdminImageListItem).tag">
+              {{ (row as AdminImageListItem).tag }}
+            </span>
+          </template>
+
+          <template #cell-description="{ row }">
+            <p
+              class="image-row__description"
+              :title="(row as AdminImageListItem).description || '未填写镜像说明'"
+            >
+              {{ (row as AdminImageListItem).description || '未填写镜像说明' }}
+            </p>
+          </template>
+
+          <template #cell-status="{ row }">
+            <div class="image-row__status">
+              <span
+                class="admin-status-chip"
+                :style="getStatusStyle((row as AdminImageListItem).status)"
+              >
+                {{ getStatusLabel((row as AdminImageListItem).status) }}
+              </span>
+            </div>
+          </template>
+
+          <template #cell-created_at="{ row }">
+            <span class="image-row__time">
+              {{ formatDateTime((row as AdminImageListItem).created_at) }}
+            </span>
+          </template>
+
+          <template #cell-actions="{ row }">
+            <div class="image-row__actions">
+              <button
+                class="admin-btn admin-btn-danger admin-btn-compact"
+                @click="handleDelete((row as AdminImageListItem).id)"
+              >
+                删除
+              </button>
+            </div>
+          </template>
+        </WorkspaceDataTable>
+
+        <div v-if="total > 0" class="admin-pagination workspace-directory-pagination">
+          <AdminPaginationControls
+            :page="page"
+            :total-pages="Math.max(1, Math.ceil(total / pageSize))"
+            :total="total"
+            :total-label="`共 ${total} 条`"
+            @change-page="void changePage($event)"
+          />
+        </div>
+      </template>
+    </section>
+
+    <AdminSurfaceModal
+      :open="dialogVisible"
+      title="创建镜像"
+      subtitle="填写镜像名称、标签和说明，提交后会进入镜像目录并参与构建状态跟踪。"
+      eyebrow="Image Registry"
+      width="31.25rem"
+      @close="dialogVisible = false"
+      @update:open="dialogVisible = $event"
+    >
+      <form class="image-create-form" @submit.prevent="handleCreate">
+        <label class="ui-field image-create-field">
+          <span class="ui-field__label">
+            镜像名称
+            <span class="ui-field__required" aria-hidden="true">*</span>
+          </span>
+          <span class="ui-control-wrap">
+            <input v-model="form.name" type="text" class="ui-control" placeholder="例如：ubuntu" />
+          </span>
+        </label>
+
+        <label class="ui-field image-create-field">
+          <span class="ui-field__label">
+            标签
+            <span class="ui-field__required" aria-hidden="true">*</span>
+          </span>
+          <span class="ui-control-wrap">
+            <input v-model="form.tag" type="text" class="ui-control" placeholder="例如：22.04" />
+          </span>
+        </label>
+
+        <label class="ui-field image-create-field">
+          <span class="ui-field__label">描述</span>
+          <span class="ui-control-wrap image-create-field__textarea">
+            <textarea
+              v-model="form.description"
+              class="ui-control"
+              rows="3"
+              placeholder="镜像说明（可选）"
+            />
+          </span>
+        </label>
+      </form>
+      <template #footer>
+        <div class="image-create-dialog__footer">
+          <button type="button" class="ui-btn ui-btn--secondary" @click="dialogVisible = false">
+            取消
+          </button>
+          <button
+            type="button"
+            :disabled="creating"
+            class="ui-btn ui-btn--primary"
+            @click="handleCreate"
+          >
+            {{ creating ? '创建中...' : '创建' }}
+          </button>
+        </div>
+      </template>
+    </AdminSurfaceModal>
+  </section>
+</template>
 
 <style scoped>
 .journal-shell {
@@ -557,7 +734,7 @@ onUnmounted(() => {
   padding-top: var(--space-1);
 }
 
-.image-board__head {
+.list-heading {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
@@ -565,63 +742,85 @@ onUnmounted(() => {
   gap: var(--space-3);
 }
 
-.image-section-title {
-  margin-top: var(--space-1-5);
-  font-size: var(--font-size-1-15);
+.list-heading__title {
+  margin: 0.35rem 0 0;
+  font-size: clamp(1.2rem, 1rem + 0.5vw, 1.45rem);
   font-weight: 700;
+  line-height: 1.15;
   color: var(--journal-ink);
 }
 
-.image-board__hint,
+.image-board__head {
+  margin-bottom: clamp(1.1rem, 0.95rem + 0.4vw, 1.35rem);
+}
+
+.image-section-title,
+.image-row__time {
+  color: var(--journal-ink);
+}
+
 .image-row__time {
   font-size: var(--font-size-0-82);
   line-height: 1.6;
   color: var(--journal-muted);
 }
 
-.image-list {
-  --image-list-columns: minmax(10rem, 1fr) minmax(8rem, 0.78fr) minmax(0, 1.5fr)
-    minmax(7rem, 0.78fr) minmax(10rem, 0.92fr) auto;
+.image-filter-grid {
   display: grid;
-  gap: 0;
+  gap: var(--space-4);
 }
 
-.image-directory-head {
+.image-filter-field {
   display: grid;
-  grid-template-columns: var(--image-list-columns);
-  gap: var(--space-4);
-  padding: var(--space-4) 0 var(--space-3);
-  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+  gap: var(--space-2);
+}
+
+.image-filter-label {
   font-size: var(--font-size-0-72);
-  font-weight: 700;
-  letter-spacing: 0.16em;
+  font-weight: 800;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--journal-muted);
 }
 
-.image-directory-head__actions {
-  text-align: right;
+.image-filter-select {
+  width: 100%;
+  min-height: 2.5rem;
+  padding: 0 var(--space-3);
+  border: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, var(--journal-surface) 92%, var(--color-bg-base));
+  font-size: var(--font-size-0-875);
+  color: var(--journal-ink);
 }
 
-.image-row {
-  display: grid;
-  gap: var(--space-4);
-  grid-template-columns: var(--image-list-columns);
-  align-items: start;
-  padding: var(--space-4) 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+.image-list {
+  border: 1px solid color-mix(in srgb, var(--journal-border) 82%, transparent);
+  border-radius: 1.35rem;
+  background: color-mix(in srgb, var(--journal-surface) 98%, var(--color-bg-base));
+  padding: 0.25rem 0.9rem 0.4rem;
 }
 
-.image-row__name,
-.image-row__tag,
-.image-row__description,
-.image-row__status,
-.image-row__actions {
-  min-width: 0;
+.image-list :deep(.workspace-data-table__head-cell) {
+  border-bottom-color: color-mix(in srgb, var(--journal-border) 82%, transparent);
+}
+
+.image-list :deep(.workspace-data-table__row) {
+  border-bottom-color: color-mix(in srgb, var(--journal-border) 82%, transparent);
+}
+
+.image-list :deep(.workspace-data-table__body tr:last-child) {
+  border-bottom-color: transparent;
+}
+
+.image-list :deep(.workspace-data-table__body-cell) {
+  vertical-align: top;
 }
 
 .image-row__name,
 .image-row__tag {
+  display: block;
+  min-width: 0;
   font-family: var(--font-family-mono);
 }
 
@@ -635,7 +834,6 @@ onUnmounted(() => {
 }
 
 .image-row__tag {
-  padding-top: var(--space-0-5);
   color: var(--journal-muted);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -644,6 +842,8 @@ onUnmounted(() => {
 
 .image-row__description {
   display: -webkit-box;
+  margin: 0;
+  min-width: 0;
   font-size: var(--font-size-0-88);
   line-height: 1.65;
   color: var(--journal-muted);
@@ -654,14 +854,11 @@ onUnmounted(() => {
 
 .image-row__status {
   display: flex;
-  align-items: flex-start;
+  justify-content: center;
 }
 
 .image-row__time {
-  padding-top: var(--space-0-5);
-  font-size: var(--font-size-0-82);
-  line-height: 1.6;
-  color: var(--journal-muted);
+  display: block;
 }
 
 .image-row__actions {
@@ -669,22 +866,9 @@ onUnmounted(() => {
   justify-content: flex-end;
 }
 
-:global([data-theme='dark']) .admin-btn-danger {
-  background: color-mix(in srgb, var(--color-danger) 12%, var(--journal-surface));
-}
-
 @media (max-width: 1040px) {
-  .image-directory-head {
-    display: none;
-  }
-
-  .image-row {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .image-row__actions {
-    align-items: flex-start;
-    justify-content: flex-start;
+  .image-list {
+    min-width: 56rem;
   }
 }
 

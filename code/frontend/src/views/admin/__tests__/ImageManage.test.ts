@@ -137,7 +137,7 @@ describe('ImageManage', () => {
 
     await flushPromises()
 
-    const headers = wrapper.findAll('.image-directory-head span').map((item) => item.text())
+    const headers = wrapper.findAll('.workspace-data-table__head-cell').map((item) => item.text())
 
     expect(headers).toEqual(['镜像名称', '标签', '描述', '状态', '创建时间', '操作'])
 
@@ -147,11 +147,81 @@ describe('ImageManage', () => {
     expect(row.find('.image-row__description').attributes('title')).toBe('基础运行环境')
   })
 
-  it('应该为镜像列表长文本保留省略样式和完整悬浮提示', () => {
-    expect(imageManageSource).toMatch(/class="image-row__name"[\s\S]*:title="row\.name"/s)
-    expect(imageManageSource).toMatch(/class="image-row__tag"[\s\S]*:title="row\.tag"/s)
+  it('应接入共享目录工具栏和表格，并支持关键词筛选与排序', async () => {
+    getImagesMock.mockResolvedValue({
+      list: [
+        {
+          id: '1',
+          name: 'zeta',
+          tag: '22.04',
+          description: 'Zeta image',
+          status: 'available',
+          created_at: '2024-01-02T00:00:00Z',
+        },
+        {
+          id: '2',
+          name: 'alpha',
+          tag: '24.04',
+          description: 'Alpha image',
+          status: 'building',
+          created_at: '2024-01-01T00:00:00Z',
+        },
+      ],
+      total: 2,
+      page: 1,
+      page_size: 20,
+    })
+
+    expect(imageManageSource).toContain("from '@/components/common/WorkspaceDirectoryToolbar.vue'")
+    expect(imageManageSource).toContain("from '@/components/common/WorkspaceDataTable.vue'")
+    expect(imageManageSource).toContain('<WorkspaceDirectoryToolbar')
+    expect(imageManageSource).toContain('<WorkspaceDataTable')
+
+    const wrapper = mountPage()
+    await flushPromises()
+
+    const searchInput = wrapper.get('input[placeholder="检索镜像名称、标签或说明..."]')
+    await searchInput.setValue('alp')
+    await flushPromises()
+
+    let titles = wrapper.findAll('.image-row__name').map((item) => item.text())
+    expect(titles).toEqual(['alpha'])
+
+    await searchInput.setValue('')
+    await flushPromises()
+    await wrapper.get('.workspace-directory-toolbar__sort-button').trigger('click')
+    await flushPromises()
+    await wrapper
+      .findAll('.workspace-directory-toolbar__menu-item')
+      .find((item) => item.text().includes('镜像名称 A-Z'))
+      ?.trigger('click')
+    await flushPromises()
+
+    titles = wrapper.findAll('.image-row__name').map((item) => item.text())
+    expect(titles).toEqual(['alpha', 'zeta'])
+  })
+
+  it('镜像目录头部应只保留左侧标题组并恢复目录标题样式', () => {
+    expect(imageManageSource).toContain('<header class="list-heading image-board__head">')
+    expect(imageManageSource).toContain('<h2 class="list-heading__title image-section-title">镜像列表</h2>')
+    expect(imageManageSource).not.toContain('image-board__hint')
     expect(imageManageSource).toMatch(
-      /class="image-row__description"[\s\S]*:title="row\.description \|\| '未填写镜像说明'"/s
+      /\.image-board__head\s*\{[\s\S]*margin-bottom:\s*clamp\(1\.1rem,\s*0\.95rem\s*\+\s*0\.4vw,\s*1\.35rem\);/s
+    )
+    expect(imageManageSource).toMatch(
+      /\.list-heading__title\s*\{[\s\S]*font-size:\s*clamp\(1\.2rem,\s*1rem\s*\+\s*0\.5vw,\s*1\.45rem\);/s
+    )
+  })
+
+  it('应该为镜像列表长文本保留省略样式和完整悬浮提示', () => {
+    expect(imageManageSource).toMatch(
+      /class="image-row__name"[\s\S]*:title="\(row as AdminImageListItem\)\.name"/s
+    )
+    expect(imageManageSource).toMatch(
+      /class="image-row__tag"[\s\S]*:title="\(row as AdminImageListItem\)\.tag"/s
+    )
+    expect(imageManageSource).toMatch(
+      /class="image-row__description"[\s\S]*:title="\(row as AdminImageListItem\)\.description \|\| '未填写镜像说明'"/s
     )
     expect(imageManageSource).toMatch(
       /\.image-row__name\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s
