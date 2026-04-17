@@ -120,4 +120,19 @@ describe('EnvironmentTemplateLibrary', () => {
       "isTemplateLibraryMode\n            ? 'topology-toolbar-btn topology-toolbar-btn--primary'\n            : 'inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white transition hover:opacity-90'"
     )
   })
+
+  it('工作台分区底部新增按钮应复用统一工具栏按钮原语', () => {
+    expect(challengeTopologyStudioPageSource).toMatch(
+      /class="topology-toolbar-btn topology-toolbar-btn--ghost"\s+@click="addNode"[\s\S]*添加节点/
+    )
+    expect(challengeTopologyStudioPageSource).toMatch(
+      /class="topology-toolbar-btn topology-toolbar-btn--ghost"\s+@click="addNetwork"[\s\S]*添加网络/
+    )
+    expect(challengeTopologyStudioPageSource).toMatch(
+      /class="topology-toolbar-btn topology-toolbar-btn--ghost"\s+@click="addLink"[\s\S]*添加连线/
+    )
+    expect(challengeTopologyStudioPageSource).toMatch(
+      /class="topology-toolbar-btn topology-toolbar-btn--ghost"\s+@click="addPolicy"[\s\S]*添加策略/
+    )
+  })
 })

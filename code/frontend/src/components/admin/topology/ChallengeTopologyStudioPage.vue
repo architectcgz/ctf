@@ -629,7 +629,7 @@ const {
                 <template #footer>
                   <button
                     type="button"
-                    class="inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-medium text-text-primary transition hover:border-primary"
+                    class="topology-toolbar-btn topology-toolbar-btn--ghost"
                     @click="addNode"
                   >
                     <Plus class="h-4 w-4" />
@@ -1473,7 +1473,7 @@ const {
               <template #footer>
                 <button
                   type="button"
-                  class="inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-medium text-text-primary transition hover:border-primary"
+                  class="topology-toolbar-btn topology-toolbar-btn--ghost"
                   @click="addNetwork"
                 >
                   <Plus class="h-4 w-4" />
@@ -1558,7 +1558,7 @@ const {
               <template #footer>
                 <button
                   type="button"
-                  class="inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-medium text-text-primary transition hover:border-primary"
+                  class="topology-toolbar-btn topology-toolbar-btn--ghost"
                   @click="addLink"
                 >
                   <Link2 class="h-4 w-4" />
@@ -1623,7 +1623,7 @@ const {
               <template #footer>
                 <button
                   type="button"
-                  class="inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-medium text-text-primary transition hover:border-primary"
+                  class="topology-toolbar-btn topology-toolbar-btn--ghost"
                   @click="addPolicy"
                 >
                   <ShieldBan class="h-4 w-4" />
