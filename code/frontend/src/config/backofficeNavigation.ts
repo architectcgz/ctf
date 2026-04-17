@@ -65,8 +65,15 @@ const backofficeModules: BackofficeModule[] = [
         routeName: 'ClassManagement',
         label: '班级管理',
         path: '/academy/classes',
-        roles: ['teacher', 'admin'],
+        roles: ['teacher'],
         isMatch: (path) => matchExact(path, ['/academy/classes', '/teacher/classes']),
+      },
+      {
+        routeName: 'AdminClassManagement',
+        label: '班级管理',
+        path: '/platform/classes',
+        roles: ['admin'],
+        isMatch: (path) => matchExact(path, ['/platform/classes', '/admin/classes']),
       },
       {
         routeName: 'TeacherStudentManagement',
