@@ -245,6 +245,8 @@ const currentPageStudentCount = computed(() =>
     var(--color-primary) 74%,
     var(--journal-ink)
   );
+  --page-top-tabs-gap: var(--space-7);
+  --page-top-tab-active-border: color-mix(in srgb, var(--journal-accent) 86%, var(--journal-ink));
   --teacher-directory-columns: var(--teacher-class-directory-columns);
   --teacher-class-directory-columns: minmax(7rem, 0.7fr) minmax(11rem, 1.15fr) minmax(7rem, 0.7fr)
     minmax(7rem, 0.7fr) minmax(7rem, 0.75fr);
