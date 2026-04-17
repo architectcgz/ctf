@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ArrowDownWideNarrow, Calendar, UserRound } from 'lucide-vue-next'
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -6,6 +7,16 @@ import { getAuditLogs } from '@/api/admin'
 import type { AuditLogItem } from '@/api/contracts'
 import AdminPaginationControls from '@/components/admin/AdminPaginationControls.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
+import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
+import WorkspaceDirectoryToolbar, {
+  type WorkspaceDirectorySortOption,
+} from '@/components/common/WorkspaceDirectoryToolbar.vue'
+
+type AuditSortKey = 'created_at' | 'action' | 'actor'
+type AuditSortOption = WorkspaceDirectorySortOption & {
+  key: AuditSortKey
+  order: 'asc' | 'desc'
+}
 
 const route = useRoute()
 const router = useRouter()
@@ -22,14 +33,96 @@ const page = ref(1)
 const pageSize = ref(20)
 const loading = ref(false)
 const error = ref<string | null>(null)
+const keyword = ref('')
 let textFilterTimer: ReturnType<typeof setTimeout> | null = null
 let suppressAutoApply = false
 const autoApplyReady = ref(false)
 
+const sortOptions: AuditSortOption[] = [
+  { key: 'created_at', order: 'desc', label: '最近操作', icon: Calendar },
+  { key: 'action', order: 'asc', label: '动作顺序', icon: ArrowDownWideNarrow },
+  { key: 'actor', order: 'asc', label: '执行人顺序', icon: UserRound },
+]
+const sortConfig = ref<AuditSortOption>(sortOptions[0]!)
+const auditTableColumns = [
+  {
+    key: 'created_at',
+    label: '时间',
+    widthClass: 'w-[18%] min-w-[11rem]',
+    cellClass: 'audit-table__time-cell',
+  },
+  {
+    key: 'action',
+    label: '动作',
+    widthClass: 'w-[12%] min-w-[7rem]',
+    cellClass: 'audit-table__action-cell',
+  },
+  {
+    key: 'resource',
+    label: '资源',
+    widthClass: 'w-[18%] min-w-[10rem]',
+    cellClass: 'audit-table__resource-cell',
+  },
+  {
+    key: 'actor',
+    label: '执行人',
+    widthClass: 'w-[18%] min-w-[10rem]',
+    cellClass: 'audit-table__actor-cell',
+  },
+  {
+    key: 'detail',
+    label: '明细',
+    widthClass: 'w-[34%] min-w-[16rem]',
+    cellClass: 'audit-table__detail-cell',
+  },
+]
+
 const totalPages = computed(() => Math.max(1, Math.ceil(total.value / pageSize.value)))
 const hasActiveFilters = computed(() =>
-  Boolean(filters.action || filters.resource_type || filters.actor_user_id)
+  Boolean(keyword.value.trim() || filters.action || filters.resource_type || filters.actor_user_id)
 )
+const filteredRows = computed<AuditLogItem[]>(() => {
+  const normalizedKeyword = keyword.value.trim().toLowerCase()
+  const nextRows = list.value.filter((item) => {
+    if (!normalizedKeyword) {
+      return true
+    }
+
+    const resourceLabel = `${item.resource_type}${item.resource_id ? `#${item.resource_id}` : ''}`
+    const actorLabel = `${item.actor_username || ''} ${item.actor_user_id || ''}`
+    const detailLabel = detailPreview(item.detail)
+
+    return [
+      item.action,
+      resourceLabel,
+      actorLabel,
+      detailLabel,
+      formatDate(item.created_at),
+    ].some((value) => value.toLowerCase().includes(normalizedKeyword))
+  })
+
+  const sortedRows = [...nextRows]
+  sortedRows.sort((left, right) => {
+    switch (sortConfig.value.key) {
+      case 'action': {
+        const delta = left.action.localeCompare(right.action, 'zh-CN')
+        return sortConfig.value.order === 'asc' ? delta : -delta
+      }
+      case 'actor': {
+        const delta = (left.actor_username || '').localeCompare(right.actor_username || '', 'zh-CN')
+        return sortConfig.value.order === 'asc' ? delta : -delta
+      }
+      case 'created_at':
+      default: {
+        const delta = new Date(left.created_at).getTime() - new Date(right.created_at).getTime()
+        return sortConfig.value.order === 'asc' ? delta : -delta
+      }
+    }
+  })
+
+  return sortedRows
+})
+const filteredTotal = computed(() => filteredRows.value.length)
 
 function formatDate(value: string): string {
   return new Date(value).toLocaleString('zh-CN')
@@ -120,9 +213,22 @@ async function changePage(next: number): Promise<void> {
   await loadLogs()
 }
 
+function setSort(option: WorkspaceDirectorySortOption): void {
+  const matchedOption =
+    sortOptions.find((item) => item.key === option.key && item.label === option.label) ??
+    sortOptions[0]
+
+  if (!matchedOption) {
+    return
+  }
+
+  sortConfig.value = matchedOption
+}
+
 async function resetFilters(): Promise<void> {
   clearTextFilterTimer()
   suppressAutoApply = true
+  keyword.value = ''
   filters.action = ''
   filters.resource_type = ''
   filters.actor_user_id = ''
@@ -203,63 +309,65 @@ watch(
     </header>
 
     <section class="admin-board workspace-directory-section">
-      <header class="list-heading">
+      <header class="list-heading audit-board__head">
         <div>
-          <div class="journal-note-label">Audit Trail</div>
+          <div class="workspace-overline">Audit Trail</div>
           <h2 class="list-heading__title">操作流水</h2>
         </div>
         <div class="admin-caption">第 {{ page }} / {{ totalPages }} 页</div>
       </header>
 
-      <section class="audit-filter-strip" aria-label="日志筛选">
-        <div class="audit-filter-grid">
-          <label class="audit-filter-field">
-            <span class="audit-filter-label">动作</span>
-            <select v-model="filters.action" class="admin-input">
-              <option value="">全部动作</option>
-              <option value="login">登录</option>
-              <option value="logout">登出</option>
-              <option value="create">创建</option>
-              <option value="update">更新</option>
-              <option value="delete">删除</option>
-              <option value="submit">提交</option>
-              <option value="admin_op">管理员操作</option>
-            </select>
-          </label>
+      <WorkspaceDirectoryToolbar
+        v-model="keyword"
+        :total="filteredTotal"
+        :selected-sort-label="sortConfig.label"
+        :sort-options="sortOptions"
+        search-placeholder="检索动作、资源类型、执行人..."
+        total-suffix="条日志"
+        reset-label="重置筛选"
+        :reset-disabled="!hasActiveFilters"
+        @select-sort="setSort"
+        @reset-filters="void resetFilters()"
+      >
+        <template #filter-panel>
+          <div class="audit-filter-grid">
+            <label class="audit-filter-field">
+              <span class="audit-filter-label">动作</span>
+              <select v-model="filters.action" class="audit-filter-select">
+                <option value="">全部动作</option>
+                <option value="login">登录</option>
+                <option value="logout">登出</option>
+                <option value="create">创建</option>
+                <option value="update">更新</option>
+                <option value="delete">删除</option>
+                <option value="submit">提交</option>
+                <option value="admin_op">管理员操作</option>
+              </select>
+            </label>
 
-          <label class="audit-filter-field">
-            <span class="audit-filter-label">资源类型</span>
-            <input
-              v-model="filters.resource_type"
-              type="text"
-              placeholder="资源类型，如 challenge"
-              class="admin-input"
-            />
-          </label>
+            <label class="audit-filter-field">
+              <span class="audit-filter-label">资源类型</span>
+              <input
+                v-model="filters.resource_type"
+                type="text"
+                placeholder="资源类型，如 challenge"
+                class="audit-filter-input"
+              />
+            </label>
 
-          <label class="audit-filter-field">
-            <span class="audit-filter-label">执行人</span>
-            <input
-              v-model="filters.actor_user_id"
-              type="number"
-              min="1"
-              placeholder="执行人 ID"
-              class="admin-input"
-            />
-          </label>
-
-          <div class="audit-filter-field audit-filter-field--action">
-            <button
-              type="button"
-              class="admin-btn admin-btn-ghost audit-filter-reset"
-              :disabled="!hasActiveFilters"
-              @click="resetFilters"
-            >
-              重置筛选
-            </button>
+            <label class="audit-filter-field">
+              <span class="audit-filter-label">执行人</span>
+              <input
+                v-model="filters.actor_user_id"
+                type="number"
+                min="1"
+                placeholder="执行人 ID"
+                class="audit-filter-input"
+              />
+            </label>
           </div>
-        </div>
-      </section>
+        </template>
+      </WorkspaceDirectoryToolbar>
 
       <div v-if="error" class="admin-error">
         {{ error }}
@@ -274,7 +382,7 @@ watch(
         />
       </div>
 
-      <div v-else-if="list.length === 0" class="audit-empty-state workspace-directory-empty">
+      <div v-else-if="filteredRows.length === 0" class="audit-empty-state workspace-directory-empty">
         <AppEmpty
           icon="Inbox"
           title="当前筛选条件下没有日志记录"
@@ -282,54 +390,48 @@ watch(
         />
       </div>
 
-      <div
+      <WorkspaceDataTable
         v-else
-        class="audit-table-shell workspace-directory-list overflow-hidden rounded-[20px] border border-[var(--audit-table-border)]"
+        class="audit-list workspace-directory-list"
+        :columns="auditTableColumns"
+        :rows="filteredRows"
+        row-key="id"
+        row-class="audit-row"
       >
-        <table class="min-w-full text-sm">
-          <thead class="bg-[var(--journal-surface-subtle)]">
-            <tr>
-              <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">
-                时间
-              </th>
-              <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">
-                动作
-              </th>
-              <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">
-                资源
-              </th>
-              <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">
-                执行人
-              </th>
-              <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">
-                明细
-              </th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-[var(--audit-row-divider)] bg-[var(--journal-surface)]">
-            <tr v-for="item in list" :key="item.id">
-              <td class="px-4 py-3 text-[var(--color-text-secondary)]">
-                {{ formatDate(item.created_at) }}
-              </td>
-              <td class="px-4 py-3">
-                <span class="audit-chip">{{ item.action }}</span>
-              </td>
-              <td class="px-4 py-3 text-[var(--color-text-primary)]">
-                {{ item.resource_type }}<span v-if="item.resource_id">#{{ item.resource_id }}</span>
-              </td>
-              <td class="px-4 py-3 text-[var(--color-text-primary)]">
-                {{ item.actor_username }}
-                <span v-if="item.actor_user_id" class="text-[var(--color-text-secondary)]">
-                  ({{ item.actor_user_id }})
-                </span>
-              </td>
-              <td class="px-4 py-3 text-[var(--color-text-secondary)]">
-                {{ detailPreview(item.detail) }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+        <template #cell-created_at="{ row }">
+          <span class="audit-row__time">
+            {{ formatDate((row as AuditLogItem).created_at) }}
+          </span>
+        </template>
+
+        <template #cell-action="{ row }">
+          <span class="audit-chip">{{ (row as AuditLogItem).action }}</span>
+        </template>
+
+        <template #cell-resource="{ row }">
+          <div class="audit-row__resource">
+            <span class="audit-row__resource-type">{{ (row as AuditLogItem).resource_type }}</span>
+            <span v-if="(row as AuditLogItem).resource_id" class="audit-row__resource-id">
+              #{{ (row as AuditLogItem).resource_id }}
+            </span>
+          </div>
+        </template>
+
+        <template #cell-actor="{ row }">
+          <div class="audit-row__actor">
+            <span class="audit-row__actor-name">{{ (row as AuditLogItem).actor_username }}</span>
+            <span v-if="(row as AuditLogItem).actor_user_id" class="audit-row__actor-id">
+              ID {{ (row as AuditLogItem).actor_user_id }}
+            </span>
+          </div>
+        </template>
+
+        <template #cell-detail="{ row }">
+          <p class="audit-row__detail" :title="detailPreview((row as AuditLogItem).detail)">
+            {{ detailPreview((row as AuditLogItem).detail) }}
+          </p>
+        </template>
+      </WorkspaceDataTable>
 
       <div v-if="!loading && total > 0" class="admin-pagination workspace-directory-pagination">
         <AdminPaginationControls
@@ -372,7 +474,7 @@ watch(
 }
 
 .admin-board {
-  padding: 0;
+  padding-top: var(--space-1);
 }
 
 .list-heading {
@@ -384,10 +486,15 @@ watch(
 }
 
 .list-heading__title {
-  margin: var(--space-1) 0 0;
-  font-size: var(--font-size-1-20);
+  margin: 0.35rem 0 0;
+  font-size: clamp(1.2rem, 1rem + 0.5vw, 1.45rem);
   font-weight: 700;
+  line-height: 1.15;
   color: var(--journal-ink);
+}
+
+.audit-board__head {
+  margin-bottom: clamp(1.1rem, 0.95rem + 0.4vw, 1.35rem);
 }
 
 .admin-caption {
@@ -396,16 +503,9 @@ watch(
   color: var(--journal-muted);
 }
 
-.audit-filter-strip {
-  display: grid;
-  gap: var(--space-4);
-  padding: var(--space-5) 0;
-}
-
 .audit-filter-grid {
   display: grid;
   gap: var(--space-4);
-  grid-template-columns: repeat(3, minmax(14rem, 16rem)) auto;
 }
 
 .audit-filter-field {
@@ -413,24 +513,22 @@ watch(
   gap: var(--space-2);
 }
 
-.audit-filter-field--action {
-  align-content: end;
-  justify-items: end;
-}
-
 .audit-filter-label {
-  font-size: var(--font-size-0-78);
-  font-weight: 700;
+  font-size: var(--font-size-0-72);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   color: var(--journal-muted);
 }
 
-.admin-input {
+.audit-filter-select,
+.audit-filter-input {
   width: 100%;
   min-height: 2.75rem;
-  border-radius: 1rem;
+  border-radius: 0.95rem;
   border: 1px solid var(--admin-control-border);
-  background: color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base));
-  padding: var(--space-3) var(--space-4);
+  background: color-mix(in srgb, var(--journal-surface) 92%, var(--color-bg-base));
+  padding: 0 var(--space-4);
   font-size: var(--font-size-0-875);
   color: var(--journal-ink);
   outline: none;
@@ -440,45 +538,17 @@ watch(
     box-shadow 150ms ease;
 }
 
-.admin-input:focus {
+.audit-filter-input {
+  padding-block: var(--space-3);
+}
+
+.audit-filter-select:focus,
+.audit-filter-input:focus {
   border-color: color-mix(in srgb, var(--journal-accent) 44%, transparent);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--journal-accent) 12%, transparent);
 }
 
-.admin-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid transparent;
-  min-height: 2.75rem;
-  border-radius: 999px;
-  padding: var(--space-2-5) var(--space-4);
-  font-size: var(--font-size-0-875);
-  font-weight: 600;
-  transition:
-    border-color 150ms ease,
-    background 150ms ease,
-    color 150ms ease;
-}
-
-.admin-btn-compact {
-  min-height: 2.3rem;
-  padding: var(--space-2) var(--space-3);
-}
-
-.admin-btn-ghost {
-  border: 1px solid var(--admin-control-border);
-  background: color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base));
-  color: var(--journal-ink);
-}
-
-.audit-filter-reset:disabled {
-  cursor: not-allowed;
-  opacity: 0.48;
-}
-
 .admin-error {
-  margin-top: var(--space-4);
   border: 1px solid color-mix(in srgb, var(--color-danger) 20%, var(--journal-border));
   border-radius: 18px;
   background: color-mix(in srgb, var(--color-danger) 8%, transparent);
@@ -488,15 +558,33 @@ watch(
 }
 
 .audit-empty-state {
-  margin-top: var(--space-4);
   border: 1px solid var(--audit-table-border);
   border-radius: 20px;
   background: color-mix(in srgb, var(--journal-surface-subtle) 92%, var(--color-bg-base));
   padding: var(--space-1-5);
 }
 
-.audit-table-shell {
-  background: color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base));
+.audit-list {
+  border: 1px solid var(--audit-table-border);
+  border-radius: 1.35rem;
+  background: color-mix(in srgb, var(--journal-surface) 98%, var(--color-bg-base));
+  padding: 0.25rem 0.9rem 0.4rem;
+}
+
+.audit-list :deep(.workspace-data-table__head-cell) {
+  border-bottom-color: var(--audit-table-border);
+}
+
+.audit-list :deep(.workspace-data-table__row) {
+  border-bottom-color: var(--audit-row-divider);
+}
+
+.audit-list :deep(.workspace-data-table__body tr:last-child) {
+  border-bottom-color: transparent;
+}
+
+.audit-list :deep(.workspace-data-table__body-cell) {
+  vertical-align: top;
 }
 
 .audit-chip {
@@ -511,9 +599,48 @@ watch(
   color: color-mix(in srgb, var(--journal-accent) 84%, var(--journal-ink));
 }
 
+.audit-row__time {
+  display: block;
+  font-size: var(--font-size-0-82);
+  line-height: 1.6;
+  color: var(--journal-muted);
+}
+
+.audit-row__resource,
+.audit-row__actor {
+  display: grid;
+  gap: 0.18rem;
+  min-width: 0;
+}
+
+.audit-row__resource-type,
+.audit-row__actor-name {
+  font-size: var(--font-size-1-00);
+  font-weight: 700;
+  color: var(--journal-ink);
+}
+
+.audit-row__resource-id,
+.audit-row__actor-id {
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-0-78);
+  color: var(--journal-muted);
+}
+
+.audit-row__detail {
+  display: -webkit-box;
+  margin: 0;
+  min-width: 0;
+  font-size: var(--font-size-0-88);
+  line-height: 1.65;
+  color: var(--journal-muted);
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 @media (max-width: 1080px) {
-  .admin-summary-grid,
-  .audit-filter-grid {
+  .admin-summary-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -528,12 +655,8 @@ watch(
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .audit-filter-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .audit-filter-field--action {
-    justify-items: stretch;
+  .audit-list {
+    min-width: 56rem;
   }
 
   .journal-shell {
