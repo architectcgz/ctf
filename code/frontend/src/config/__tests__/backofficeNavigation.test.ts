@@ -34,6 +34,27 @@ describe('backofficeNavigation', () => {
     expect(items.find((item) => item.active)?.path).toBe('/platform/classes')
   })
 
+  it('keeps admin teaching detail routes inside the platform teaching workspace', () => {
+    expect(getBackofficeModuleByPath('/platform/classes/class-a/students/student-1')?.key).toBe(
+      'operations'
+    )
+    expect(getBackofficeModuleByPath('/platform/awd-reviews/contest-1')?.key).toBe('operations')
+    expect(getBackofficeModuleByPath('/platform/instances')?.key).toBe('operations')
+
+    const items = getVisibleBackofficeSecondaryItems(
+      '/platform/classes/class-a/students/student-1/review-archive',
+      'admin'
+    )
+
+    expect(items.map((item) => item.path)).toEqual([
+      '/platform/classes',
+      '/platform/students',
+      '/platform/awd-reviews',
+      '/platform/instances',
+    ])
+    expect(items.find((item) => item.active)?.routeName).toBe('AdminStudentManagement')
+  })
+
   it('filters visible modules by role', () => {
     expect(getVisibleBackofficeModules('teacher').map((item) => item.key)).toEqual([
       'overview',

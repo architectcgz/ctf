@@ -79,7 +79,7 @@ const backofficeModules: BackofficeModule[] = [
         routeName: 'TeacherStudentManagement',
         label: '学生管理',
         path: '/academy/students',
-        roles: ['teacher', 'admin'],
+        roles: ['teacher'],
         isMatch: (path) =>
           matchAny(path, [
             '/academy/students',
@@ -89,18 +89,45 @@ const backofficeModules: BackofficeModule[] = [
           ]),
       },
       {
+        routeName: 'AdminStudentManagement',
+        label: '学生管理',
+        path: '/platform/students',
+        roles: ['admin'],
+        isMatch: (path) =>
+          matchAny(path, [
+            '/platform/students',
+            '/admin/students',
+            '/platform/classes',
+            '/admin/classes',
+          ]),
+      },
+      {
         routeName: 'TeacherAWDReviewIndex',
         label: 'AWD复盘',
         path: '/academy/awd-reviews',
-        roles: ['teacher', 'admin'],
+        roles: ['teacher'],
         isMatch: (path) => matchAny(path, ['/academy/awd-reviews', '/teacher/awd-reviews']),
+      },
+      {
+        routeName: 'AdminAWDReviewIndex',
+        label: 'AWD复盘',
+        path: '/platform/awd-reviews',
+        roles: ['admin'],
+        isMatch: (path) => matchAny(path, ['/platform/awd-reviews', '/admin/awd-reviews']),
       },
       {
         routeName: 'TeacherInstanceManagement',
         label: '实例管理',
         path: '/academy/instances',
-        roles: ['teacher', 'admin'],
+        roles: ['teacher'],
         isMatch: (path) => matchAny(path, ['/academy/instances', '/teacher/instances']),
+      },
+      {
+        routeName: 'AdminInstanceManagement',
+        label: '实例管理',
+        path: '/platform/instances',
+        roles: ['admin'],
+        isMatch: (path) => matchAny(path, ['/platform/instances', '/admin/instances']),
       },
     ],
   },

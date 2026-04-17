@@ -1,0 +1,726 @@
+<script setup lang="ts">
+import { computed, onMounted, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
+import { GraduationCap, UsersRound, SearchCode, Calendar, SortAsc } from 'lucide-vue-next'
+
+import { getClasses, getClassStudents } from '@/api/teacher'
+import type { TeacherClassItem, TeacherStudentItem } from '@/api/contracts'
+import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
+import WorkspaceDirectoryPagination from '@/components/common/WorkspaceDirectoryPagination.vue'
+import WorkspaceDirectoryToolbar, {
+  type WorkspaceDirectorySortOption,
+} from '@/components/common/WorkspaceDirectoryToolbar.vue'
+import AppEmpty from '@/components/common/AppEmpty.vue'
+import { DEFAULT_PAGE_SIZE } from '@/utils/constants'
+import { useStudentFilters } from '@/composables/useStudentFilters'
+import { useStudentListQuery } from '@/composables/useStudentListQuery'
+
+type StudentSortKey = 'name' | 'student_no' | 'total_score' | 'solved_count' | 'class_name'
+type StudentSortOption = WorkspaceDirectorySortOption & {
+  key: StudentSortKey
+  order: 'asc' | 'desc'
+}
+
+interface AdminStudentRow extends TeacherStudentItem {
+  displayName: string
+  classLabel: string
+  studentCode: string
+  score: number
+  solved: number
+}
+
+const ALL_CLASSES_KEY = '__all_classes__'
+
+const router = useRouter()
+
+const classes = ref<TeacherClassItem[]>([])
+const loadingClasses = ref(false)
+const page = ref(1)
+const pageSize = ref(DEFAULT_PAGE_SIZE)
+const pageError = ref<string | null>(null)
+
+const filters = useStudentFilters()
+const { selectedClassName, searchQuery, studentNoQuery } = filters
+
+const studentListQuery = useStudentListQuery({
+  debounceMs: 250,
+  errorMessage: '加载学生目录失败，请稍后重试',
+  getParams: () => filters.studentQueryParams.value,
+  request: loadStudentsByClassFilter,
+})
+
+const { students, loading } = studentListQuery
+
+const sortOptions: StudentSortOption[] = [
+  { key: 'name', order: 'asc', label: '学生姓名 A-Z', icon: SortAsc },
+  { key: 'total_score', order: 'desc', label: '得分由高到低', icon: GraduationCap },
+  { key: 'solved_count', order: 'desc', label: '做题数由高到低', icon: SearchCode },
+  { key: 'student_no', order: 'asc', label: '学号顺序', icon: Calendar },
+]
+const sortConfig = ref<StudentSortOption>(sortOptions[0]!)
+
+const error = computed(() => pageError.value ?? studentListQuery.error.value)
+const hasActiveFilters = computed(
+  () =>
+    Boolean(
+      searchQuery.value.trim() || studentNoQuery.value.trim() || selectedClassName.value.trim()
+    )
+)
+
+const totalStudents = computed(() =>
+  classes.value.reduce((sum, item) => sum + (item.student_count || 0), 0)
+)
+const activeClassCount = computed(() => classes.value.filter((item) => (item.student_count || 0) > 0).length)
+const filteredTotal = computed(() => students.value.length)
+const totalPages = computed(() => Math.max(1, Math.ceil(filteredTotal.value / Math.max(pageSize.value, 1))))
+
+const studentRows = computed<AdminStudentRow[]>(() =>
+  students.value.map((student, index) => {
+    const offset = (page.value - 1) * pageSize.value + index + 1
+    return {
+      ...student,
+      displayName: student.name || student.username || '未设置姓名',
+      classLabel: student.class_name || selectedClassName.value || '未分配班级',
+      studentCode: student.student_no || `ST-${String(offset).padStart(3, '0')}`,
+      score: student.total_score || 0,
+      solved: student.solved_count || 0,
+    }
+  })
+)
+
+const filteredRows = computed<AdminStudentRow[]>(() => {
+  const nextRows = [...studentRows.value]
+  nextRows.sort((left, right) => {
+    switch (sortConfig.value.key) {
+      case 'total_score':
+        return sortConfig.value.order === 'asc' ? left.score - right.score : right.score - left.score
+      case 'solved_count':
+        return sortConfig.value.order === 'asc' ? left.solved - right.solved : right.solved - left.solved
+      case 'student_no':
+        return left.studentCode.localeCompare(right.studentCode, 'zh-CN', { numeric: true })
+      case 'class_name':
+        return left.classLabel.localeCompare(right.classLabel, 'zh-CN')
+      case 'name':
+      default:
+        return left.displayName.localeCompare(right.displayName, 'zh-CN')
+    }
+  })
+  return nextRows
+})
+
+const paginatedRows = computed(() => {
+  const start = (page.value - 1) * pageSize.value
+  return filteredRows.value.slice(start, start + pageSize.value)
+})
+
+const studentTableColumns = [
+  {
+    key: 'studentCode',
+    label: '学号',
+    widthClass: 'w-[14%] min-w-[8rem]',
+    cellClass: 'admin-student-manage-table__mono',
+  },
+  {
+    key: 'displayName',
+    label: '学生名称',
+    widthClass: 'w-[24%] min-w-[12rem]',
+    cellClass: 'admin-student-manage-table__name',
+  },
+  {
+    key: 'username',
+    label: '用户名',
+    widthClass: 'w-[18%] min-w-[10rem]',
+    cellClass: 'admin-student-manage-table__alias',
+  },
+  {
+    key: 'classLabel',
+    label: '班级',
+    widthClass: 'w-[16%] min-w-[9rem]',
+    cellClass: 'admin-student-manage-table__class',
+  },
+  {
+    key: 'solved',
+    label: '做题数',
+    align: 'center' as const,
+    widthClass: 'w-[10%] min-w-[6rem]',
+    cellClass: 'admin-student-manage-table__count',
+  },
+  {
+    key: 'score',
+    label: '得分',
+    align: 'center' as const,
+    widthClass: 'w-[10%] min-w-[6rem]',
+    cellClass: 'admin-student-manage-table__count',
+  },
+  {
+    key: 'actions',
+    label: '操作',
+    align: 'right' as const,
+    widthClass: 'w-[12rem]',
+    cellClass: 'admin-student-manage-table__actions',
+  },
+]
+
+function resolveClassFilterKey(className: string): string {
+  return className || ALL_CLASSES_KEY
+}
+
+async function loadStudentsByClassFilter(
+  classFilterKey: string,
+  params?: { keyword?: string; student_no?: string }
+): Promise<TeacherStudentItem[]> {
+  if (classFilterKey !== ALL_CLASSES_KEY) {
+    return getClassStudents(classFilterKey, params)
+  }
+
+  if (classes.value.length === 0) {
+    return []
+  }
+
+  const studentGroups = await Promise.all(
+    classes.value.map(async (item) => {
+      const classStudents = await getClassStudents(item.name, params)
+      return classStudents.map((student) => ({
+        ...student,
+        class_name: item.name,
+      }))
+    })
+  )
+
+  return studentGroups.flat()
+}
+
+async function loadClasses(): Promise<void> {
+  loadingClasses.value = true
+  try {
+    classes.value = await getClasses()
+  } finally {
+    loadingClasses.value = false
+  }
+}
+
+async function selectClass(className: string): Promise<void> {
+  studentListQuery.cancelScheduledLoad()
+  filters.updateSelectedClassName(className)
+  await studentListQuery.loadStudents(resolveClassFilterKey(className))
+}
+
+async function initialize(): Promise<void> {
+  pageError.value = null
+
+  try {
+    await loadClasses()
+    await selectClass('')
+  } catch (err) {
+    console.error('初始化后台学生目录失败:', err)
+    pageError.value = '加载学生目录失败，请稍后重试'
+  }
+}
+
+function openStudent(row: AdminStudentRow): void {
+  void router.push({
+    name: 'AdminStudentAnalysis',
+    params: {
+      className: row.class_name || selectedClassName.value || '',
+      studentId: row.id,
+    },
+  })
+}
+
+function updateSearchQuery(value: string): void {
+  filters.updateSearchQuery(value)
+}
+
+function updateStudentNoQuery(value: string): void {
+  filters.updateStudentNoQuery(value)
+}
+
+function handlePageChange(nextPage: number): void {
+  const normalizedPage = Math.max(1, Math.floor(nextPage))
+  if (normalizedPage === page.value || normalizedPage > totalPages.value) {
+    return
+  }
+  page.value = normalizedPage
+}
+
+function setSort(option: WorkspaceDirectorySortOption): void {
+  const matchedOption =
+    sortOptions.find((item) => item.key === option.key && item.label === option.label) ??
+    sortOptions[0]
+
+  if (!matchedOption) {
+    return
+  }
+
+  sortConfig.value = matchedOption
+}
+
+function resetFilters(): void {
+  filters.updateSelectedClassName('')
+  filters.resetTextFilters()
+}
+
+watch([searchQuery, studentNoQuery], () => {
+  page.value = 1
+  studentListQuery.scheduleLoadStudents(resolveClassFilterKey(selectedClassName.value))
+})
+
+watch(selectedClassName, () => {
+  page.value = 1
+})
+
+watch(filteredTotal, () => {
+  if (page.value > totalPages.value) {
+    page.value = totalPages.value
+  }
+})
+
+onMounted(() => {
+  void initialize()
+})
+</script>
+
+<template>
+  <section class="workspace-shell admin-student-manage-shell">
+    <div class="admin-student-manage-shell__content">
+      <header class="admin-student-manage-shell__hero">
+        <div class="admin-student-manage-shell__hero-main">
+          <div class="workspace-overline">Student Workspace</div>
+          <h1 class="workspace-page-title">学生管理</h1>
+          <p class="workspace-page-copy">在后台视角查看学生目录、班级归属与学习表现，并快速进入学员分析。</p>
+        </div>
+
+        <div class="admin-student-manage-shell__hero-side">
+          <button type="button" class="admin-student-manage-shell__hero-action" @click="initialize()">
+            刷新目录
+          </button>
+        </div>
+      </header>
+
+      <div
+        class="admin-student-manage-shell__summary progress-strip metric-panel-grid metric-panel-default-surface"
+      >
+        <article class="journal-note progress-card metric-panel-card">
+          <div class="admin-student-manage-shell__metric-head">
+            <span class="journal-note-label progress-card-label metric-panel-label">学生总量</span>
+            <GraduationCap class="h-4 w-4" />
+          </div>
+          <div class="journal-note-value progress-card-value metric-panel-value">
+            {{ totalStudents }}
+          </div>
+          <div class="journal-note-helper progress-card-hint metric-panel-helper">平台已纳入学生</div>
+        </article>
+
+        <article class="journal-note progress-card metric-panel-card">
+          <div class="admin-student-manage-shell__metric-head">
+            <span class="journal-note-label progress-card-label metric-panel-label">可查看班级</span>
+            <UsersRound class="h-4 w-4" />
+          </div>
+          <div class="journal-note-value progress-card-value metric-panel-value">
+            {{ activeClassCount }}
+          </div>
+          <div class="journal-note-helper progress-card-hint metric-panel-helper">已有学生数据的班级数</div>
+        </article>
+
+        <article class="journal-note progress-card metric-panel-card">
+          <div class="admin-student-manage-shell__metric-head">
+            <span class="journal-note-label progress-card-label metric-panel-label">当前结果</span>
+            <SearchCode class="h-4 w-4" />
+          </div>
+          <div class="journal-note-value progress-card-value metric-panel-value">
+            {{ filteredTotal }}
+          </div>
+          <div class="journal-note-helper progress-card-hint metric-panel-helper">当前筛选条件下的学生数量</div>
+        </article>
+      </div>
+
+      <section class="workspace-directory-section admin-student-manage-directory">
+        <header class="list-heading">
+          <div>
+            <div class="workspace-overline">Student Directory</div>
+            <h2 class="list-heading__title">学生目录</h2>
+          </div>
+        </header>
+
+        <WorkspaceDirectoryToolbar
+          v-model="searchQuery"
+          :total="filteredTotal"
+          :selected-sort-label="sortConfig.label"
+          :sort-options="sortOptions"
+          search-placeholder="检索姓名、用户名或学号..."
+          :reset-disabled="!hasActiveFilters"
+          total-suffix="名学生"
+          @select-sort="setSort"
+          @reset-filters="resetFilters"
+        >
+          <template #filter-panel>
+            <div class="admin-student-manage-filter-grid">
+              <label class="admin-student-manage-filter-field">
+                <span class="admin-student-manage-filter-field__label">班级范围</span>
+                <select
+                  :value="selectedClassName"
+                  class="admin-student-manage-filter-field__control"
+                  :disabled="loadingClasses"
+                  @change="selectClass(($event.target as HTMLSelectElement).value)"
+                >
+                  <option value="">全部班级</option>
+                  <option v-for="item in classes" :key="item.name" :value="item.name">
+                    {{ item.name }} · {{ item.student_count || 0 }}
+                  </option>
+                </select>
+              </label>
+
+              <label class="admin-student-manage-filter-field">
+                <span class="admin-student-manage-filter-field__label">按学号查询</span>
+                <input
+                  :value="studentNoQuery"
+                  type="text"
+                  class="admin-student-manage-filter-field__control"
+                  placeholder="输入学号精确查询"
+                  @input="updateStudentNoQuery(($event.target as HTMLInputElement).value)"
+                />
+              </label>
+            </div>
+          </template>
+        </WorkspaceDirectoryToolbar>
+
+        <div
+          v-if="loading"
+          class="workspace-directory-loading admin-student-manage-directory__loading"
+        >
+          正在同步学生目录...
+        </div>
+
+        <AppEmpty
+          v-else-if="students.length === 0"
+          class="workspace-directory-empty admin-student-manage-directory__empty"
+          icon="Users"
+          title="暂无学生"
+          description="当前平台还没有可查看的学生数据。"
+        />
+
+        <AppEmpty
+          v-else-if="filteredRows.length === 0"
+          class="workspace-directory-empty admin-student-manage-directory__empty"
+          icon="Search"
+          title="没有匹配学生"
+          description="调整关键词、班级或学号后再试。"
+        />
+
+        <WorkspaceDataTable
+          v-else
+          class="workspace-directory-list admin-student-manage-table"
+          :columns="studentTableColumns"
+          :rows="paginatedRows"
+          row-key="id"
+          row-class="admin-student-manage-table__row"
+        >
+          <template #cell-studentCode="{ row }">
+            <span class="admin-student-manage-table__code">
+              {{ (row as AdminStudentRow).studentCode }}
+            </span>
+          </template>
+
+          <template #cell-displayName="{ row }">
+            <div class="admin-student-manage-table__name-wrap">
+              <span
+                class="admin-student-manage-table__name-text"
+                :title="(row as AdminStudentRow).displayName"
+              >
+                {{ (row as AdminStudentRow).displayName }}
+              </span>
+            </div>
+          </template>
+
+          <template #cell-username="{ row }">
+            <span class="admin-student-manage-table__alias-text" :title="(row as AdminStudentRow).username">
+              {{ (row as AdminStudentRow).username }}
+            </span>
+          </template>
+
+          <template #cell-classLabel="{ row }">
+            <span class="admin-student-manage-table__class-pill">
+              {{ (row as AdminStudentRow).classLabel }}
+            </span>
+          </template>
+
+          <template #cell-solved="{ row }">
+            <span class="admin-student-manage-table__count-text">
+              {{ (row as AdminStudentRow).solved }}
+            </span>
+          </template>
+
+          <template #cell-score="{ row }">
+            <span class="admin-student-manage-table__count-text">
+              {{ (row as AdminStudentRow).score }}
+            </span>
+          </template>
+
+          <template #cell-actions="{ row }">
+            <button
+              type="button"
+              class="admin-student-manage-table__action"
+              @click="openStudent(row as AdminStudentRow)"
+            >
+              查看学员
+            </button>
+          </template>
+        </WorkspaceDataTable>
+
+        <WorkspaceDirectoryPagination
+          v-if="filteredTotal > 0 && filteredRows.length > 0"
+          :page="page"
+          :total-pages="totalPages"
+          :total="filteredTotal"
+          :total-label="`共 ${filteredTotal} 名学生`"
+          @change-page="handlePageChange"
+        />
+      </section>
+
+      <div v-if="error" class="admin-student-manage-shell__error">
+        {{ error }}
+        <button type="button" class="admin-student-manage-shell__error-action" @click="initialize()">
+          重试
+        </button>
+      </div>
+    </div>
+  </section>
+</template>
+
+<style scoped>
+.admin-student-manage-shell {
+  --workspace-line-soft: color-mix(in srgb, var(--color-text-primary) 10%, transparent);
+  --workspace-shell-bg: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
+  --workspace-brand: color-mix(in srgb, var(--color-primary) 82%, var(--journal-ink));
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-bg-surface) 97%, var(--color-bg-base)),
+      color-mix(in srgb, var(--color-bg-surface) 99%, var(--color-bg-base))
+    ),
+    radial-gradient(
+      circle at top left,
+      color-mix(in srgb, var(--color-primary) 10%, transparent),
+      transparent 20rem
+    );
+}
+
+.admin-student-manage-shell__content {
+  display: flex;
+  min-height: 100%;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1.6rem 1.6rem 1.2rem;
+}
+
+.admin-student-manage-shell__hero {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.admin-student-manage-shell__hero-main {
+  max-width: 46rem;
+}
+
+.admin-student-manage-shell__hero-side {
+  display: flex;
+  align-items: center;
+}
+
+.admin-student-manage-shell__hero-action,
+.admin-student-manage-table__action,
+.admin-student-manage-shell__error-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.4rem;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 18%, var(--journal-border));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-primary) 8%, var(--journal-surface));
+  padding: 0 0.95rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.admin-student-manage-shell__hero-action:hover,
+.admin-student-manage-table__action:hover,
+.admin-student-manage-shell__error-action:hover {
+  border-color: color-mix(in srgb, var(--color-primary) 32%, var(--journal-border));
+  background: color-mix(in srgb, var(--color-primary) 12%, var(--journal-surface));
+}
+
+.admin-student-manage-shell__summary {
+  --metric-panel-border: color-mix(in srgb, var(--workspace-brand) 16%, var(--workspace-line-soft));
+  --metric-panel-background:
+    radial-gradient(circle at top left, color-mix(in srgb, var(--workspace-brand) 10%, transparent), transparent 15rem),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--journal-surface) 98%, var(--color-bg-base)),
+      color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base))
+    );
+}
+
+.admin-student-manage-shell__metric-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  color: var(--journal-ink);
+}
+
+.list-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.9rem;
+}
+
+.list-heading__title {
+  margin: 0.35rem 0 0;
+  font-size: clamp(1.2rem, 1rem + 0.5vw, 1.45rem);
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--journal-ink);
+}
+
+.admin-student-manage-directory > .list-heading {
+  margin-bottom: clamp(1.1rem, 0.95rem + 0.4vw, 1.35rem);
+}
+
+.admin-student-manage-filter-grid {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.admin-student-manage-filter-field {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.admin-student-manage-filter-field__label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--journal-muted);
+}
+
+.admin-student-manage-filter-field__control {
+  min-height: 2.75rem;
+  border: 1px solid color-mix(in srgb, var(--journal-border) 76%, transparent);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--journal-surface) 92%, transparent);
+  padding: 0 0.9rem;
+  color: var(--journal-ink);
+}
+
+.admin-student-manage-directory__loading,
+.admin-student-manage-directory__empty {
+  border: 1px solid color-mix(in srgb, var(--journal-border) 72%, transparent);
+  border-radius: 1.25rem;
+  background: color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base));
+}
+
+.admin-student-manage-directory__loading {
+  padding: 1.4rem 1.2rem;
+  font-size: 0.95rem;
+  color: var(--journal-muted);
+}
+
+.admin-student-manage-table {
+  border: 1px solid var(--workspace-line-soft);
+  border-radius: 1.35rem;
+  background: color-mix(in srgb, var(--journal-surface) 98%, var(--color-bg-base));
+  padding: 0.25rem 0.9rem 0.4rem;
+}
+
+.admin-student-manage-table :deep(.workspace-data-table__head-cell) {
+  border-bottom-color: var(--workspace-line-soft);
+}
+
+.admin-student-manage-table :deep(.workspace-data-table__row) {
+  border-bottom-color: var(--workspace-line-soft);
+}
+
+.admin-student-manage-table :deep(.workspace-data-table__body tr:last-child) {
+  border-bottom-color: transparent;
+}
+
+.admin-student-manage-table :deep(.workspace-data-table__row:hover) {
+  background: color-mix(in srgb, var(--color-primary) 5%, transparent);
+}
+
+.admin-student-manage-table__code,
+.admin-student-manage-table__count-text {
+  font-family: var(--font-family-mono);
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--journal-ink);
+}
+
+.admin-student-manage-table__code {
+  letter-spacing: 0.04em;
+  color: var(--journal-muted);
+}
+
+.admin-student-manage-table__name-wrap {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+}
+
+.admin-student-manage-table__name-text,
+.admin-student-manage-table__alias-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-student-manage-table__name-text {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--journal-ink);
+}
+
+.admin-student-manage-table__alias-text {
+  font-size: 0.94rem;
+  font-weight: 600;
+  color: var(--journal-muted);
+}
+
+.admin-student-manage-table__class-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2rem;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 14%, var(--journal-border));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-primary) 7%, var(--journal-surface));
+  padding: 0 0.8rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.admin-student-manage-shell__error {
+  padding: 1rem 1.1rem;
+  border: 1px solid color-mix(in srgb, var(--color-danger) 18%, var(--journal-border));
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--color-danger) 8%, var(--journal-surface));
+  color: color-mix(in srgb, var(--color-danger) 76%, var(--journal-ink));
+}
+
+@media (max-width: 900px) {
+  .admin-student-manage-shell__content {
+    padding-inline: 1rem;
+  }
+}
+</style>
