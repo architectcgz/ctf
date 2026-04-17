@@ -116,15 +116,15 @@ async function handlePublishSuccess(): Promise<void> {
           <button
             v-if="canPublishNotification"
             type="button"
-            class="notification-btn notification-btn-primary"
+            class="ui-btn ui-btn--primary"
             @click="openPublishDrawer"
           >
             发布通知
           </button>
-          <button type="button" class="notification-btn" @click="markCurrentPageRead">
+          <button type="button" class="ui-btn ui-btn--secondary" @click="markCurrentPageRead">
             本页已读
           </button>
-          <button type="button" class="notification-btn" @click="refresh">
+          <button type="button" class="ui-btn ui-btn--secondary" @click="refresh">
             <RefreshCw class="h-4 w-4" />
             刷新
           </button>
@@ -161,7 +161,9 @@ async function handlePublishSuccess(): Promise<void> {
         :description="loadErrorMessage"
       >
         <template #action>
-          <button type="button" class="notification-btn" @click="refresh">重新加载</button>
+          <button type="button" class="ui-btn ui-btn--secondary" @click="refresh">
+            重新加载
+          </button>
         </template>
       </AppEmpty>
 
