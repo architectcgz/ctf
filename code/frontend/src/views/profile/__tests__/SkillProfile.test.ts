@@ -184,4 +184,12 @@ describe('SkillProfile', () => {
       '<div class="journal-eyebrow journal-eyebrow-soft">Recommendations</div>'
     )
   })
+
+  it('教师视角学员选择框应接入共享 ui-control 原语', () => {
+    expect(skillProfileSource).toMatch(/class="ui-control-wrap(?:\s+[^\"]+)?"/)
+    expect(skillProfileSource).toContain('class="ui-control"')
+    expect(skillProfileSource).not.toMatch(/^\.skill-student-select\s*\{/m)
+    expect(skillProfileSource).not.toMatch(/^\.skill-student-select:focus\s*\{/m)
+    expect(skillProfileSource).not.toMatch(/^\.skill-student-select:focus-visible\s*\{/m)
+  })
 })

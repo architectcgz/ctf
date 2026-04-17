@@ -121,16 +121,14 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } =
         <div class="skill-section-kicker">Teacher View</div>
         <h3 class="workspace-tab-heading__title">查看学员能力画像</h3>
         <label for="skill-student-select" class="skill-field-label mt-3 block">选择学员</label>
-        <select
-          id="skill-student-select"
-          v-model="selectedStudentId"
-          class="skill-student-select mt-2 w-full max-w-sm"
-        >
-          <option value="">我的能力画像</option>
-          <option v-for="student in students" :key="student.id" :value="student.id">
-            {{ student.name || student.username }} ({{ student.username }})
-          </option>
-        </select>
+        <div class="ui-control-wrap mt-2 w-full max-w-sm">
+          <select id="skill-student-select" v-model="selectedStudentId" class="ui-control">
+            <option value="">我的能力画像</option>
+            <option v-for="student in students" :key="student.id" :value="student.id">
+              {{ student.name || student.username }} ({{ student.username }})
+            </option>
+          </select>
+        </div>
       </div>
 
       <div class="skill-board px-1 md:px-2">
@@ -428,30 +426,6 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } =
   color: var(--journal-muted);
 }
 
-.skill-student-select {
-  border-radius: 14px;
-  border: 1px solid var(--journal-control-border);
-  background: color-mix(
-    in srgb,
-    var(--journal-surface, var(--color-bg-surface)) 92%,
-    var(--color-bg-base)
-  );
-  padding: 0.7rem 0.95rem;
-  font-size: var(--font-size-0-875);
-  color: var(--journal-ink);
-  outline: none;
-  transition: border-color 0.2s;
-}
-
-.skill-student-select:focus {
-  border-color: color-mix(in srgb, var(--journal-accent) 52%, var(--journal-control-border));
-}
-
-.skill-student-select:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--journal-accent) 58%, white);
-  outline-offset: 2px;
-}
-
 .skill-overview-head {
   display: flex;
   flex-direction: column;
@@ -621,8 +595,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } =
 
 :global([data-theme='dark']) .skill-teacher-panel,
 :global([data-theme='dark']) .skill-recommend-list,
-:global([data-theme='dark']) .skill-weak-list,
-:global([data-theme='dark']) .skill-student-select {
+:global([data-theme='dark']) .skill-weak-list {
   background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
 }
 
