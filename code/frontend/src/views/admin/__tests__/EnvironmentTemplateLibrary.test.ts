@@ -138,4 +138,13 @@ describe('EnvironmentTemplateLibrary', () => {
       /class="inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-medium text-text-primary transition hover:border-primary"\s+@click="add(Node|Network|Link|Policy)"/
     )
   })
+
+  it('模板写回区不应继续保留手写按钮样式分支', () => {
+    expect(challengeTopologyStudioPageSource).not.toContain(
+      "isTemplateLibraryMode\n                            ? 'template-action-btn'\n                            : 'inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-medium text-text-primary transition hover:border-primary'"
+    )
+    expect(challengeTopologyStudioPageSource).not.toContain(
+      "isTemplateLibraryMode\n                            ? 'template-action-btn template-action-btn--primary'\n                            : 'inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white transition hover:opacity-90'"
+    )
+  })
 })

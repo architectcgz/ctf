@@ -1879,7 +1879,7 @@ const {
                         :class="
                           isTemplateLibraryMode
                             ? 'template-action-btn'
-                            : 'inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-medium text-text-primary transition hover:border-primary'
+                            : 'topology-toolbar-btn topology-toolbar-btn--ghost'
                         "
                         @click="handleResetTemplateEditor"
                       >
@@ -1890,7 +1890,7 @@ const {
                         :class="
                           isTemplateLibraryMode
                             ? 'template-action-btn template-action-btn--primary'
-                            : 'inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white transition hover:opacity-90'
+                            : 'topology-toolbar-btn topology-toolbar-btn--primary'
                         "
                         :disabled="templateBusy"
                         @click="void handleCreateTemplate()"
@@ -1903,7 +1903,7 @@ const {
                         :class="
                           isTemplateLibraryMode
                             ? 'template-action-btn'
-                            : 'inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-medium text-text-primary transition hover:border-primary'
+                            : 'topology-toolbar-btn topology-toolbar-btn--ghost'
                         "
                         :disabled="templateBusy || !selectedTemplateId"
                         @click="void handleUpdateTemplate()"
