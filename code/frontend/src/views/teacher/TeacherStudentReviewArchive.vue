@@ -138,7 +138,7 @@ async function handleExportArchive(): Promise<void> {
 
     <AppEmpty v-else-if="error" title="复盘归档加载失败" :description="error" icon="AlertTriangle">
       <template #action>
-        <ElButton type="primary" @click="reload">重新加载</ElButton>
+        <button type="button" class="ui-btn ui-btn--primary" @click="reload">重新加载</button>
       </template>
     </AppEmpty>
 

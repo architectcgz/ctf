@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 
 import TeacherStudentReviewArchive from '../TeacherStudentReviewArchive.vue'
+import reviewArchiveSource from '../TeacherStudentReviewArchive.vue?raw'
+import reviewArchiveHeroSource from '@/components/teacher/review-archive/ReviewArchiveHero.vue?raw'
 
 const pushMock = vi.fn()
 const routeMock = {
@@ -193,5 +195,13 @@ describe('TeacherStudentReviewArchive', () => {
     expect(wrapper.text()).toContain('Blue Team')
     expect(wrapper.text()).toContain('从回显到 flag')
     expect(wrapper.text()).toContain('misc-essay')
+  })
+
+  it('复盘归档操作按钮应接入共享 ui-btn 原语', () => {
+    expect(reviewArchiveSource).toContain('class="ui-btn ui-btn--primary"')
+    expect(reviewArchiveSource).not.toContain('<ElButton')
+    expect(reviewArchiveHeroSource).toContain('class="ui-btn ui-btn--secondary"')
+    expect(reviewArchiveHeroSource).toContain('class="ui-btn ui-btn--primary"')
+    expect(reviewArchiveHeroSource).not.toContain('<ElButton')
   })
 })

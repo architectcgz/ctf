@@ -33,11 +33,20 @@ const statItems = [
           </p>
         </div>
         <div class="archive-hero__actions">
-          <ElButton plain @click="emit('back')">返回学生列表</ElButton>
-          <ElButton plain @click="emit('openAnalysis')">返回学员分析</ElButton>
-          <ElButton type="primary" :loading="exporting" @click="emit('exportArchive')">
-            导出复盘归档
-          </ElButton>
+          <button type="button" class="ui-btn ui-btn--secondary" @click="emit('back')">
+            返回学生列表
+          </button>
+          <button type="button" class="ui-btn ui-btn--secondary" @click="emit('openAnalysis')">
+            返回学员分析
+          </button>
+          <button
+            type="button"
+            class="ui-btn ui-btn--primary"
+            :disabled="exporting"
+            @click="emit('exportArchive')"
+          >
+            {{ exporting ? '导出中...' : '导出复盘归档' }}
+          </button>
         </div>
       </div>
 
