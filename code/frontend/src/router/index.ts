@@ -338,6 +338,86 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
+        path: 'platform/students',
+        name: 'AdminStudentManagement',
+        component: () => import('@/views/admin/StudentManage.vue'),
+        meta: {
+          requiresAuth: true,
+          roles: ['admin'],
+          title: '学生管理',
+          icon: 'GraduationCap',
+          contentLayout: 'bleed',
+        },
+      },
+      {
+        path: 'platform/classes/:className',
+        name: 'AdminClassStudents',
+        component: () => import('@/views/teacher/TeacherClassStudents.vue'),
+        meta: {
+          requiresAuth: true,
+          roles: ['admin'],
+          title: '班级学生',
+          contentLayout: 'bleed',
+        },
+      },
+      {
+        path: 'platform/classes/:className/students/:studentId',
+        name: 'AdminStudentAnalysis',
+        component: () => import('@/views/teacher/TeacherStudentAnalysis.vue'),
+        meta: {
+          requiresAuth: true,
+          roles: ['admin'],
+          title: '学员分析',
+          contentLayout: 'bleed',
+        },
+      },
+      {
+        path: 'platform/classes/:className/students/:studentId/review-archive',
+        name: 'AdminStudentReviewArchive',
+        component: () => import('@/views/teacher/TeacherStudentReviewArchive.vue'),
+        meta: {
+          requiresAuth: true,
+          roles: ['admin'],
+          title: '学生复盘归档',
+          contentLayout: 'bleed',
+        },
+      },
+      {
+        path: 'platform/awd-reviews',
+        name: 'AdminAWDReviewIndex',
+        component: () => import('@/views/teacher/TeacherAWDReviewIndex.vue'),
+        meta: {
+          requiresAuth: true,
+          roles: ['admin'],
+          title: 'AWD复盘',
+          icon: 'ScanEye',
+          contentLayout: 'bleed',
+        },
+      },
+      {
+        path: 'platform/awd-reviews/:contestId',
+        name: 'AdminAWDReviewDetail',
+        component: () => import('@/views/teacher/TeacherAWDReviewDetail.vue'),
+        meta: {
+          requiresAuth: true,
+          roles: ['admin'],
+          title: 'AWD复盘详情',
+          contentLayout: 'bleed',
+        },
+      },
+      {
+        path: 'platform/instances',
+        name: 'AdminInstanceManagement',
+        component: () => import('@/views/admin/InstanceManage.vue'),
+        meta: {
+          requiresAuth: true,
+          roles: ['admin'],
+          title: '实例管理',
+          icon: 'Server',
+          contentLayout: 'bleed',
+        },
+      },
+      {
         path: 'platform/challenges',
         name: 'ChallengeManage',
         component: () => import('@/views/admin/ChallengeManage.vue'),
@@ -374,6 +454,50 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'admin/classes',
         redirect: redirectWithQuery('/platform/classes'),
+      },
+      {
+        path: 'admin/students',
+        redirect: redirectWithQuery('/platform/students'),
+      },
+      {
+        path: 'admin/classes/:className',
+        redirect: (to) => ({
+          path: `/platform/classes/${encodeURIComponent(String(to.params.className || ''))}`,
+          query: to.query,
+          hash: to.hash,
+        }),
+      },
+      {
+        path: 'admin/classes/:className/students/:studentId',
+        redirect: (to) => ({
+          path: `/platform/classes/${encodeURIComponent(String(to.params.className || ''))}/students/${encodeURIComponent(String(to.params.studentId || ''))}`,
+          query: to.query,
+          hash: to.hash,
+        }),
+      },
+      {
+        path: 'admin/classes/:className/students/:studentId/review-archive',
+        redirect: (to) => ({
+          path: `/platform/classes/${encodeURIComponent(String(to.params.className || ''))}/students/${encodeURIComponent(String(to.params.studentId || ''))}/review-archive`,
+          query: to.query,
+          hash: to.hash,
+        }),
+      },
+      {
+        path: 'admin/awd-reviews',
+        redirect: redirectWithQuery('/platform/awd-reviews'),
+      },
+      {
+        path: 'admin/awd-reviews/:contestId',
+        redirect: (to) => ({
+          path: `/platform/awd-reviews/${encodeURIComponent(String(to.params.contestId || ''))}`,
+          query: to.query,
+          hash: to.hash,
+        }),
+      },
+      {
+        path: 'admin/instances',
+        redirect: redirectWithQuery('/platform/instances'),
       },
       {
         path: 'admin/challenges',

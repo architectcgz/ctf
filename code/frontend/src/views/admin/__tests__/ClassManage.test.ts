@@ -78,7 +78,7 @@ describe('AdminClassManagement', () => {
       ?.trigger('click')
 
     expect(pushMock).toHaveBeenCalledWith({
-      name: 'TeacherClassStudents',
+      name: 'AdminClassStudents',
       params: { className: 'Class B' },
     })
   })

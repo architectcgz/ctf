@@ -20,6 +20,7 @@ import WorkspaceDirectoryToolbar, {
 } from '@/components/common/WorkspaceDirectoryToolbar.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import { DEFAULT_PAGE_SIZE } from '@/utils/constants'
+import { resolveClassStudentsRouteName } from '@/utils/teachingWorkspaceRouting'
 
 type ClassRosterFilter = 'all' | 'active' | 'empty'
 type ClassSortOption = WorkspaceDirectorySortOption & {
@@ -179,7 +180,7 @@ function resetFilters(): void {
 
 function openClass(className: string): void {
   void router.push({
-    name: 'TeacherClassStudents',
+    name: resolveClassStudentsRouteName('admin'),
     params: { className },
   })
 }
@@ -254,9 +255,6 @@ onMounted(() => {
           <div>
             <div class="workspace-overline">Class Directory</div>
             <h2 class="list-heading__title">班级目录</h2>
-          </div>
-          <div class="admin-class-manage-directory__meta">
-            当前页 {{ filteredRows.length }} / {{ classRows.length }} 个班级，共 {{ total }} 个班级
           </div>
         </header>
 
@@ -376,7 +374,7 @@ onMounted(() => {
 
 <style scoped>
 .admin-class-manage-shell {
-  --workspace-line-soft: color-mix(in srgb, var(--journal-border) 74%, transparent);
+  --workspace-line-soft: color-mix(in srgb, var(--color-text-primary) 10%, transparent);
   --workspace-shell-bg: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
   --workspace-brand: color-mix(in srgb, var(--color-primary) 82%, var(--journal-ink));
   background:
@@ -460,9 +458,24 @@ onMounted(() => {
   color: var(--journal-ink);
 }
 
-.admin-class-manage-directory__meta {
-  font-size: 0.875rem;
-  color: var(--journal-muted);
+.list-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.9rem;
+}
+
+.list-heading__title {
+  margin: 0.35rem 0 0;
+  font-size: clamp(1.2rem, 1rem + 0.5vw, 1.45rem);
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--journal-ink);
+}
+
+.admin-class-manage-directory > .list-heading {
+  margin-bottom: clamp(1.1rem, 0.95rem + 0.4vw, 1.35rem);
 }
 
 .admin-class-manage-filter-grid {
@@ -504,18 +517,22 @@ onMounted(() => {
 }
 
 .admin-class-manage-table {
-  border: 1px solid color-mix(in srgb, var(--journal-border) 72%, transparent);
+  border: 1px solid var(--workspace-line-soft);
   border-radius: 1.35rem;
   background: color-mix(in srgb, var(--journal-surface) 98%, var(--color-bg-base));
   padding: 0.25rem 0.9rem 0.4rem;
 }
 
 .admin-class-manage-table :deep(.workspace-data-table__head-cell) {
-  border-bottom-color: color-mix(in srgb, var(--journal-border) 72%, transparent);
+  border-bottom-color: var(--workspace-line-soft);
 }
 
 .admin-class-manage-table :deep(.workspace-data-table__row) {
-  border-bottom-color: color-mix(in srgb, var(--journal-border) 58%, transparent);
+  border-bottom-color: var(--workspace-line-soft);
+}
+
+.admin-class-manage-table :deep(.workspace-data-table__body tr:last-child) {
+  border-bottom-color: transparent;
 }
 
 .admin-class-manage-table :deep(.workspace-data-table__row:hover) {

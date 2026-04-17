@@ -49,6 +49,17 @@ describe('shared route canonical paths', () => {
   })
 
   it('uses platform paths as the canonical location for shared governance pages', () => {
+    expect(findChild('platform/students')?.name).toBe('AdminStudentManagement')
+    expect(findChild('platform/classes/:className')?.name).toBe('AdminClassStudents')
+    expect(findChild('platform/classes/:className/students/:studentId')?.name).toBe(
+      'AdminStudentAnalysis'
+    )
+    expect(
+      findChild('platform/classes/:className/students/:studentId/review-archive')?.name
+    ).toBe('AdminStudentReviewArchive')
+    expect(findChild('platform/awd-reviews')?.name).toBe('AdminAWDReviewIndex')
+    expect(findChild('platform/awd-reviews/:contestId')?.name).toBe('AdminAWDReviewDetail')
+    expect(findChild('platform/instances')?.name).toBe('AdminInstanceManagement')
     expect(findChild('platform/classes')?.name).toBe('AdminClassManagement')
     expect(findChild('platform/challenges')?.name).toBe('ChallengeManage')
     expect(findChild('platform/challenges/filter-patterns/mock')).toBeUndefined()
@@ -72,6 +83,15 @@ describe('shared route canonical paths', () => {
     expect(findChild('platform/images')?.name).toBe('ImageManage')
 
     expect(findChild('admin/classes')?.redirect).toBeTruthy()
+    expect(findChild('admin/students')?.redirect).toBeTruthy()
+    expect(findChild('admin/classes/:className')?.redirect).toBeTruthy()
+    expect(findChild('admin/classes/:className/students/:studentId')?.redirect).toBeTruthy()
+    expect(
+      findChild('admin/classes/:className/students/:studentId/review-archive')?.redirect
+    ).toBeTruthy()
+    expect(findChild('admin/awd-reviews')?.redirect).toBeTruthy()
+    expect(findChild('admin/awd-reviews/:contestId')?.redirect).toBeTruthy()
+    expect(findChild('admin/instances')?.redirect).toBeTruthy()
     expect(findChild('admin/challenges')?.redirect).toBeTruthy()
     expect(findChild('admin/challenges/package-format')?.redirect).toBeTruthy()
     expect(findChild('admin/challenges/imports/:importId')?.redirect).toBeTruthy()
