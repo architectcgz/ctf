@@ -8,6 +8,7 @@ import auditLogSource from '@/views/admin/AuditLog.vue?raw'
 import cheatDetectionSource from '@/views/admin/CheatDetection.vue?raw'
 import challengeDetailSource from '@/views/admin/ChallengeDetail.vue?raw'
 import challengeManageSource from '@/views/admin/ChallengeManage.vue?raw'
+import challengeImportManageSource from '@/views/admin/ChallengeImportManage.vue?raw'
 import challengePackageFormatSource from '@/views/admin/ChallengePackageFormat.vue?raw'
 import imageManageSource from '@/views/admin/ImageManage.vue?raw'
 
@@ -37,6 +38,7 @@ describe('admin journal shell shared styles', () => {
       userGovernanceSource,
       auditLogSource,
       challengeManageSource,
+      challengeImportManageSource,
       imageManageSource,
       cheatDetectionSource,
       challengeDetailSource,
@@ -52,6 +54,7 @@ describe('admin journal shell shared styles', () => {
       userGovernanceSource,
       auditLogSource,
       challengeManageSource,
+      challengeImportManageSource,
       imageManageSource,
       cheatDetectionSource,
       challengeDetailSource,

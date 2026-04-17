@@ -77,7 +77,7 @@ const statementGuide = `statement.md 写法建议
       <button
         class="nav-back"
         type="button"
-        @click="router.push({ name: 'ChallengeManage', query: { panel: 'import' } })"
+        @click="router.push({ name: 'AdminChallengeImportManage' })"
       >
         返回导入题目包
       </button>
