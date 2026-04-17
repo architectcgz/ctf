@@ -134,5 +134,8 @@ describe('EnvironmentTemplateLibrary', () => {
     expect(challengeTopologyStudioPageSource).toMatch(
       /class="topology-toolbar-btn topology-toolbar-btn--ghost"\s+@click="addPolicy"[\s\S]*添加策略/
     )
+    expect(challengeTopologyStudioPageSource).not.toMatch(
+      /class="inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-medium text-text-primary transition hover:border-primary"\s+@click="add(Node|Network|Link|Policy)"/
+    )
   })
 })
