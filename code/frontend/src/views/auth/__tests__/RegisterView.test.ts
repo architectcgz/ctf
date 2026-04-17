@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 
 import RegisterView from '@/views/auth/RegisterView.vue'
+import registerViewSource from '@/views/auth/RegisterView.vue?raw'
 
 const authMocks = vi.hoisted(() => ({
   register: vi.fn(),
@@ -21,25 +22,7 @@ describe('RegisterView', () => {
   })
 
   function mountRegisterView() {
-    return mount(RegisterView, {
-      global: {
-        stubs: {
-          ElForm: { template: '<form @submit.prevent="$emit(\'submit\', $event)"><slot /></form>' },
-          ElFormItem: { template: '<label><slot /></label>' },
-          ElInput: {
-            props: ['modelValue', 'type', 'autocomplete', 'showPassword', 'size'],
-            emits: ['update:modelValue'],
-            template:
-              '<input :value="modelValue" :type="type || \'text\'" :data-autocomplete="autocomplete" @input="$emit(\'update:modelValue\', $event.target.value)" />',
-          },
-          ElButton: {
-            props: ['loading', 'size', 'type', 'disabled', 'nativeType'],
-            template:
-              '<button :type="nativeType || \'button\'" @click="$emit(\'click\')"><slot /></button>',
-          },
-        },
-      },
-    })
+    return mount(RegisterView)
   }
 
   it('应该渲染统一认证壳层和注册表单', async () => {
@@ -63,8 +46,8 @@ describe('RegisterView', () => {
     const wrapper = mountRegisterView()
     await flushPromises()
 
-    const usernameInput = wrapper.find('input[data-autocomplete="username"]')
-    const passwordInput = wrapper.find('input[data-autocomplete="new-password"]')
+    const usernameInput = wrapper.find('input[autocomplete="username"]')
+    const passwordInput = wrapper.find('input[autocomplete="new-password"]')
     const classNameInput = wrapper.findAll('input').at(2)
 
     expect(usernameInput.exists()).toBe(true)
@@ -89,5 +72,17 @@ describe('RegisterView', () => {
     await flushPromises()
 
     expect(wrapper.get('button').attributes('type')).toBe('submit')
+  })
+
+  it('注册表单应切到共享控件原语而不是继续使用 Element Plus 表单', () => {
+    expect(registerViewSource).toContain('class="ui-control-wrap"')
+    expect(registerViewSource).toContain('class="ui-control"')
+    expect(registerViewSource).toContain(
+      'class="ui-btn ui-btn--primary ui-btn--block auth-register-form__submit"'
+    )
+    expect(registerViewSource).not.toContain('<ElForm')
+    expect(registerViewSource).not.toContain('<ElFormItem')
+    expect(registerViewSource).not.toContain('<ElInput')
+    expect(registerViewSource).not.toContain('<ElButton')
   })
 })
