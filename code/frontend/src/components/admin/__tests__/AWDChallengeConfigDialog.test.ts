@@ -46,10 +46,10 @@ function mountDialog(props?: Record<string, unknown>) {
     },
     global: {
       stubs: {
-        ElDialog: {
-          props: ['modelValue', 'title'],
+        AdminSurfaceModal: {
+          props: ['open', 'title'],
           template:
-            '<div><div v-if="modelValue">{{ title }}</div><slot /><slot name="footer" /></div>',
+            '<div v-if="open"><div>{{ title }}</div><slot /><slot name="footer" /></div>',
         },
       },
     },
