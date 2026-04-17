@@ -185,4 +185,10 @@ describe('NotificationList', () => {
       'class="notification-summary-helper metric-panel-helper"'
     )
   })
+
+  it('通知页操作按钮应接入共享 ui-btn 原语', () => {
+    expect(notificationListSource).toContain('class="ui-btn ui-btn--primary"')
+    expect(notificationListSource).toContain('class="ui-btn ui-btn--secondary"')
+    expect(notificationListSource).not.toContain('class="notification-btn')
+  })
 })
