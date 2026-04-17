@@ -111,6 +111,19 @@ describe('ImageManage', () => {
     expect(imageManageSource).not.toContain('这一页已加载的镜像数量')
   })
 
+  it('创建镜像弹窗应改用后台表单原语而不是 Element Plus 表单', () => {
+    expect(imageManageSource).toContain("from '@/components/common/modal-templates/AdminSurfaceModal.vue'")
+    expect(imageManageSource).toContain('<AdminSurfaceModal')
+    expect(imageManageSource).not.toContain('<ElForm')
+    expect(imageManageSource).not.toContain('<ElFormItem')
+    expect(imageManageSource).not.toContain('<ElInput')
+    expect(imageManageSource).toContain('class="ui-field')
+    expect(imageManageSource).toContain('class="ui-control-wrap')
+    expect(imageManageSource).toContain('class="ui-control')
+    expect(imageManageSource).toContain('class="ui-btn ui-btn--secondary')
+    expect(imageManageSource).toContain('class="ui-btn ui-btn--primary')
+  })
+
   it('不应在头部摘要和镜像列表之间重复渲染分割线', () => {
     expect(imageManageSource).toMatch(
       /\.image-header\s*\{[\s\S]*border-bottom:\s*1px solid color-mix\(in srgb, var\(--journal-border\) 88%, transparent\);/s

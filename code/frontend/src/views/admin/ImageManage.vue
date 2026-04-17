@@ -122,33 +122,53 @@
       @close="dialogVisible = false"
       @update:open="dialogVisible = $event"
     >
-      <ElForm :model="form" label-width="100px">
-        <ElFormItem label="镜像名称" required>
-          <ElInput v-model="form.name" placeholder="例如：ubuntu" />
-        </ElFormItem>
-        <ElFormItem label="标签" required>
-          <ElInput v-model="form.tag" placeholder="例如：22.04" />
-        </ElFormItem>
-        <ElFormItem label="描述">
-          <ElInput
-            v-model="form.description"
-            type="textarea"
-            :rows="3"
-            placeholder="镜像说明（可选）"
-          />
-        </ElFormItem>
-      </ElForm>
+      <form class="image-create-form" @submit.prevent="handleCreate">
+        <label class="ui-field image-create-field">
+          <span class="ui-field__label">
+            镜像名称
+            <span class="ui-field__required" aria-hidden="true">*</span>
+          </span>
+          <span class="ui-control-wrap">
+            <input v-model="form.name" type="text" class="ui-control" placeholder="例如：ubuntu" />
+          </span>
+        </label>
+
+        <label class="ui-field image-create-field">
+          <span class="ui-field__label">
+            标签
+            <span class="ui-field__required" aria-hidden="true">*</span>
+          </span>
+          <span class="ui-control-wrap">
+            <input v-model="form.tag" type="text" class="ui-control" placeholder="例如：22.04" />
+          </span>
+        </label>
+
+        <label class="ui-field image-create-field">
+          <span class="ui-field__label">描述</span>
+          <span class="ui-control-wrap image-create-field__textarea">
+            <textarea
+              v-model="form.description"
+              class="ui-control"
+              rows="3"
+              placeholder="镜像说明（可选）"
+            />
+          </span>
+        </label>
+      </form>
       <template #footer>
-        <button class="admin-btn admin-btn-ghost admin-btn-compact" @click="dialogVisible = false">
-          取消
-        </button>
-        <button
-          :disabled="creating"
-          class="admin-btn admin-btn-primary admin-btn-compact ml-2 disabled:cursor-not-allowed disabled:opacity-50"
-          @click="handleCreate"
-        >
-          {{ creating ? '创建中...' : '创建' }}
-        </button>
+        <div class="image-create-dialog__footer">
+          <button type="button" class="ui-btn ui-btn--secondary" @click="dialogVisible = false">
+            取消
+          </button>
+          <button
+            type="button"
+            :disabled="creating"
+            class="ui-btn ui-btn--primary"
+            @click="handleCreate"
+          >
+            {{ creating ? '创建中...' : '创建' }}
+          </button>
+        </div>
       </template>
     </AdminSurfaceModal>
   </section>
@@ -421,53 +441,29 @@ onUnmounted(() => {
   color: var(--journal-muted);
 }
 
-:deep(.el-dialog) {
-  border: 1px solid var(--journal-border);
-  border-radius: 20px;
-  background:
-    radial-gradient(
-      circle at top right,
-      color-mix(in srgb, var(--journal-accent) 8%, transparent),
-      transparent 18rem
-    ),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)),
-      var(--journal-surface)
-    );
-  box-shadow: 0 24px 60px var(--color-shadow-soft);
+.image-create-form {
+  display: grid;
+  gap: var(--space-4);
 }
 
-:deep(.el-dialog__title) {
-  color: var(--journal-ink);
+.image-create-field {
+  --ui-field-gap: var(--space-2);
 }
 
-:deep(.el-form-item__label) {
-  color: var(--journal-muted);
+.image-create-field__textarea {
+  align-items: stretch;
 }
 
-:deep(.el-input__wrapper),
-:deep(.el-textarea__inner) {
-  border: 1px solid var(--journal-border);
-  background: var(--journal-surface);
-  color: var(--journal-ink);
-  box-shadow: none;
+.image-create-field__textarea .ui-control {
+  min-height: 6.25rem;
+  resize: vertical;
 }
 
-:deep(.el-input__wrapper.is-focus),
-:deep(.el-textarea__inner:focus) {
-  border-color: color-mix(in srgb, var(--journal-accent) 48%, transparent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--journal-accent) 14%, transparent);
-}
-
-:deep(.el-input__inner),
-:deep(.el-textarea__inner) {
-  color: var(--journal-ink);
-}
-
-:deep(.el-input__inner::placeholder),
-:deep(.el-textarea__inner::placeholder) {
-  color: var(--journal-muted);
+.image-create-dialog__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
 }
 
 .image-header {
@@ -673,12 +669,6 @@ onUnmounted(() => {
   justify-content: flex-end;
 }
 
-:global([data-theme='dark']) .admin-btn-ghost,
-:global([data-theme='dark']) :deep(.el-input__wrapper),
-:global([data-theme='dark']) :deep(.el-textarea__inner) {
-  background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
-}
-
 :global([data-theme='dark']) .admin-btn-danger {
   background: color-mix(in srgb, var(--color-danger) 12%, var(--journal-surface));
 }
@@ -704,6 +694,14 @@ onUnmounted(() => {
   }
 
   .image-status-strip__note {
+    width: 100%;
+  }
+
+  .image-create-dialog__footer {
+    flex-direction: column-reverse;
+  }
+
+  .image-create-dialog__footer > .ui-btn {
     width: 100%;
   }
 }
