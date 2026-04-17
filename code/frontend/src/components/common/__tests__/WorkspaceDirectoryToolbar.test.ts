@@ -2,6 +2,7 @@ import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
 
 import WorkspaceDirectoryToolbar from '../WorkspaceDirectoryToolbar.vue'
+import workspaceDirectoryToolbarSource from '../WorkspaceDirectoryToolbar.vue?raw'
 
 describe('WorkspaceDirectoryToolbar', () => {
   it('应支持搜索输入、排序选择与筛选面板展示', async () => {
@@ -47,5 +48,13 @@ describe('WorkspaceDirectoryToolbar', () => {
     expect(wrapper.emitted('resetFilters')).toHaveLength(1)
 
     wrapper.unmount()
+  })
+
+  it('筛选按钮激活态不应退化成黑底白字', () => {
+    expect(workspaceDirectoryToolbarSource).not.toContain('.workspace-directory-toolbar__filter-toggle--active {\n  background: #0f172a;\n  color: white;\n}')
+    expect(workspaceDirectoryToolbarSource).toContain(
+      '.workspace-directory-toolbar__filter-toggle--active {'
+    )
+    expect(workspaceDirectoryToolbarSource).toContain('var(--color-primary)')
   })
 })
