@@ -566,7 +566,7 @@ function isManualReviewVisible(): boolean {
                     <div class="flex flex-wrap gap-3">
                       <button
                         type="button"
-                        class="challenge-btn-outline insight-outline-action"
+                        class="ui-btn ui-btn--secondary insight-outline-action disabled:cursor-not-allowed disabled:opacity-50"
                         :disabled="
                           manualReviewSaving || activeManualReview.review_status !== 'pending'
                         "
@@ -576,7 +576,7 @@ function isManualReviewVisible(): boolean {
                       </button>
                       <button
                         type="button"
-                        class="challenge-btn-primary rounded-xl px-5 py-3 text-sm font-medium text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+                        class="ui-btn ui-btn--primary disabled:cursor-not-allowed disabled:opacity-50"
                         :disabled="
                           manualReviewSaving || activeManualReview.review_status !== 'pending'
                         "
@@ -817,24 +817,6 @@ function isManualReviewVisible(): boolean {
 
 .insight-manual-input:focus-visible {
   border-color: color-mix(in srgb, var(--journal-accent) 34%, transparent);
-}
-
-.insight-outline-action {
-  border: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-  background: color-mix(in srgb, var(--journal-surface) 90%, transparent);
-  color: var(--journal-ink);
-}
-
-.insight-outline-action:hover,
-.insight-outline-action:focus-visible {
-  border-color: color-mix(in srgb, var(--journal-accent) 30%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 8%, var(--journal-surface));
-  color: var(--journal-accent-strong);
-}
-
-.insight-outline-action:disabled {
-  cursor: not-allowed;
-  opacity: 0.56;
 }
 
 .writeup-chip {

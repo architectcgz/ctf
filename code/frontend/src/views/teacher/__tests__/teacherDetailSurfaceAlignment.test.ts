@@ -127,6 +127,14 @@ describe('teacher detail surface alignment', () => {
     expect(studentInsightPanelSource).toContain(
       'class="insight-kpi-card progress-card metric-panel-card"'
     )
+    expect(studentInsightPanelSource).toContain(
+      'class="ui-btn ui-btn--secondary insight-outline-action disabled:cursor-not-allowed disabled:opacity-50"'
+    )
+    expect(studentInsightPanelSource).toContain(
+      'class="ui-btn ui-btn--primary disabled:cursor-not-allowed disabled:opacity-50"'
+    )
+    expect(studentInsightPanelSource).not.toContain('challenge-btn-outline')
+    expect(studentInsightPanelSource).not.toContain('challenge-btn-primary')
     expect(studentInsightPanelSource).not.toContain('--metric-panel-background')
     expect(studentInsightPanelSource).not.toContain('insight-kpi-card--primary')
 
