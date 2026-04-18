@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { ArrowRight, FolderKanban, RefreshCcw, Shield, Waypoints } from 'lucide-vue-next'
+import { computed } from 'vue'
+import { ArrowRight, FolderKanban, RefreshCcw, Waypoints } from 'lucide-vue-next'
+import { useRoute } from 'vue-router'
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import { useTeacherAwdReviewIndex } from '@/composables/useTeacherAwdReviewIndex'
@@ -7,6 +9,10 @@ import { formatDate } from '@/utils/format'
 
 const { router, loading, error, contests, filters, hasContests, loadContests, openContest } =
   useTeacherAwdReviewIndex()
+const route = useRoute()
+const isAdminRoute = computed(() => route.name === 'AdminAWDReviewIndex')
+const overviewRouteName = computed(() => (isAdminRoute.value ? 'AdminDashboard' : 'TeacherDashboard'))
+const overviewLabel = computed(() => (isAdminRoute.value ? '平台概览' : '教学概览'))
 
 const statusOptions = [
   { value: '', label: '全部状态' },
@@ -37,12 +43,12 @@ function contestStatusLabel(status: string): string {
       class="teacher-hero teacher-surface-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
     >
       <div class="teacher-page">
-        <header class="teacher-topbar">
-          <div class="teacher-heading">
-            <div class="teacher-surface-eyebrow journal-eyebrow">AWD Review Workspace</div>
-            <h1 class="teacher-title">AWD复盘</h1>
-            <p class="teacher-copy">
-              统一查看 AWD 赛事目录，进入整场或单轮复盘，并从同一入口触发复盘归档与教师报告导出。
+        <header class="teacher-topbar workspace-tab-heading awd-review-index-header">
+          <div class="teacher-heading workspace-tab-heading__main">
+            <div class="workspace-overline">AWD Review</div>
+            <h1 class="teacher-title workspace-page-title">AWD复盘</h1>
+            <p class="teacher-copy workspace-page-copy">
+              集中查看赛事轮次、状态与导出就绪度，从统一入口进入整场或单轮复盘。
             </p>
           </div>
 
@@ -50,9 +56,9 @@ function contestStatusLabel(status: string): string {
             <button
               type="button"
               class="teacher-btn teacher-btn--ghost"
-              @click="router.push({ name: 'TeacherDashboard' })"
+              @click="router.push({ name: overviewRouteName })"
             >
-              教学概览
+              {{ overviewLabel }}
             </button>
             <button type="button" class="teacher-btn teacher-btn--primary" @click="loadContests">
               <RefreshCcw class="h-4 w-4" />
