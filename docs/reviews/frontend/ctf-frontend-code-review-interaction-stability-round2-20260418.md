@@ -25,6 +25,7 @@
   - `L1` 共享布局层与通用弹层已继续收敛一批裸魔法值，`Sidebar`、`TopNav`、`AppToast`、`CLightActionPopover`、`CFocusedInputDialog`、`CImmersiveConfirmDialog`、`MinimalFloatingModal`、`SlideOverDrawer`、`ClassicCenteredModal`、`CContextTooltip`、`ModalTemplateShell` 不再保留 `w-[260px]`、`max-w-[1600px]`、`rounded-[22px]`、局部绿色按钮色或大段亮色硬编码。
   - `L1` 个人中心页已继续清理 `UserProfile`、`SkillProfile` 的骨架圆角、图表高度和内文字色魔法值，改为语义类承接，不再把 `rounded-[24px]`、`h-[30rem]`、`text-[11px]` 和模板内 `text-[var(...)]` 直接写在结构节点上。
   - `L1` 学生端 journal soft 工作区已补共享空态面板类，`StudentCategoryProgressPage`、`StudentDifficultyPage`、`StudentRecommendationPage`、`StudentTimelinePage` 不再重复内联 `rounded-[22px]`、`border-[var(--journal-shell-border)]` 这类空态块样式；教师 `TeacherAWDReviewIndex`、`TeacherAWDReviewDetail` 的加载骨架也已切到语义类承接。
+  - `L1` 个人安全页与学生总览页已继续收敛残留魔法值，`SecuritySettings` 的提示区文本已切到语义类，`StudentOverviewStyleEditorial` 的雷达图区高度和紧凑空态块已切到语义类与共享空态变体，不再直接写 `h-[18rem]`、`rounded-[18px]` 等片段。
   - 教师班级工作区已补 `TeacherClassWorkspaceSection` 桥接视图，旧明细路由会回落到统一 `TeacherClassStudents` 工作区，并通过 `panel` 查询参数恢复目标标签页。
 - 未完成：
   - `M4` 教师分析面板和 AWD 轮次面板的 props 透传与职责过载。
@@ -89,7 +90,7 @@
 - [L1] Tailwind 任意值与魔法数仍是系统性问题，但需区分 token bridge 与裸像素
   - 状态：未完成
   - 说明：
-    - 已完成 `NotificationDropdown`、`PageHeader`、`AppCard`、`Sidebar`、`TopNav`、`AppToast`、`CLightActionPopover`、`CFocusedInputDialog`、`CImmersiveConfirmDialog`、`MinimalFloatingModal`、`SlideOverDrawer`、`ClassicCenteredModal`、`CContextTooltip`、`ModalTemplateShell`、`UserProfile`、`SkillProfile`、`StudentCategoryProgressPage`、`StudentDifficultyPage`、`StudentRecommendationPage`、`StudentTimelinePage`、`TeacherAWDReviewIndex`、`TeacherAWDReviewDetail` 这批共享组件/壳层/通用弹层/个人中心页面/学生工作区/教师 AWD 页面 的低信息度裸字号、裸尺寸、亮色硬编码和 `1px` 任意值清理，相关回归测试已补齐。
+    - 已完成 `NotificationDropdown`、`PageHeader`、`AppCard`、`Sidebar`、`TopNav`、`AppToast`、`CLightActionPopover`、`CFocusedInputDialog`、`CImmersiveConfirmDialog`、`MinimalFloatingModal`、`SlideOverDrawer`、`ClassicCenteredModal`、`CContextTooltip`、`ModalTemplateShell`、`UserProfile`、`SkillProfile`、`SecuritySettings`、`StudentCategoryProgressPage`、`StudentDifficultyPage`、`StudentRecommendationPage`、`StudentTimelinePage`、`StudentOverviewStyleEditorial`、`TeacherAWDReviewIndex`、`TeacherAWDReviewDetail` 这批共享组件/壳层/通用弹层/个人中心页面/学生工作区/教师 AWD 页面 的低信息度裸字号、裸尺寸、亮色硬编码和 `1px` 任意值清理，相关回归测试已补齐。
     - 剩余项主要集中在表格列宽声明、实验/参考页面，以及少量需要转成 CSS token 或共享类的布局尺寸，仍需分批替换，避免把 token bridge 与真正的裸像素混改。
 
 - [L2] 按钮原语已经存在，但页面级按钮体系仍然碎片化
@@ -105,6 +106,7 @@
 - `c1f95ea3 fix(frontend): 收口通知发布搜索竞态`
 - `50ab319a fix(frontend): 收敛后台页面按钮原语`
 - `526ed7cb fix(frontend): 收敛个人中心页面魔法值`
+- `106e7f39 fix(frontend): 收敛学生空态与教师骨架样式`
 
 ## 下一批建议
 

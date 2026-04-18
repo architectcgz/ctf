@@ -72,4 +72,13 @@ describe('student journal soft shared styles', () => {
       )
     }
   })
+
+  it('student overview 页面应把雷达图高度和紧凑空态收敛为语义类', () => {
+    expect(studentOverviewEditorialSource).toContain('student-overview-radar-height')
+    expect(studentOverviewEditorialSource).toContain('journal-soft-empty-state--compact')
+    expect(studentOverviewEditorialSource).not.toContain('h-[18rem]')
+    expect(studentOverviewEditorialSource).not.toContain('md:h-[21rem]')
+    expect(studentOverviewEditorialSource).not.toContain('xl:h-[23rem]')
+    expect(studentOverviewEditorialSource).not.toContain('rounded-[18px]')
+  })
 })

@@ -165,6 +165,11 @@
   color: var(--journal-muted);
 }
 
+.journal-soft-surface .journal-soft-empty-state--compact {
+  border-radius: 18px;
+  padding-block: var(--space-10);
+}
+
 [data-theme='dark'] .journal-soft-surface .journal-shell {
   --journal-ink: color-mix(in srgb, var(--color-text-primary) 88%, var(--color-text-secondary));
   --journal-muted: var(--color-text-secondary);
