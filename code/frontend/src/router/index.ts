@@ -575,12 +575,16 @@ const routes: RouteRecordRaw[] = [
       },
       {
         path: 'platform/contest-ops/environment',
+        redirect: { name: 'AdminContestOpsEnvironment' },
+      },
+      {
+        path: 'platform/contest-ops/contests',
         name: 'AdminContestOpsEnvironment',
         component: () => import('@/views/admin/ContestOperationsHub.vue'),
         meta: {
           requiresAuth: true,
           roles: ['admin'],
-          title: '环境管理',
+          title: '竞赛管理',
           contentLayout: 'bleed',
         },
       },

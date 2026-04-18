@@ -35,7 +35,7 @@ describe('Sidebar desktop layout', () => {
     expect(sidebarSource).toContain('const isBackofficeRoute = computed(')
     expect(sidebarSource).toContain("route.path.startsWith('/academy/')")
     expect(sidebarSource).toContain("route.path.startsWith('/platform/')")
-    expect(sidebarSource).toContain("route.path.startsWith('/admin/')")
+    expect(sidebarSource).not.toContain("route.path.startsWith('/admin/')")
     expect(sidebarSource).toContain('sidebar-shell--admin')
     expect(sidebarSource).toContain('ChallengeOps')
     expect(sidebarSource).not.toContain('Academic Ops')
@@ -62,11 +62,11 @@ describe('Sidebar desktop layout', () => {
     const router = createRouter({
       history: createMemoryHistory(),
       routes: [
-        { path: '/admin/dashboard', component: { template: '<div>admin</div>' } },
+        { path: '/platform/overview', component: { template: '<div>admin</div>' } },
         { path: '/academy/classes', component: { template: '<div>classes</div>' } },
         { path: '/platform/challenges', component: { template: '<div>challenges</div>' } },
-        { path: '/admin/contest-ops/environment', component: { template: '<div>event ops</div>' } },
-        { path: '/admin/contests', component: { template: '<div>contests</div>' } },
+        { path: '/platform/contest-ops/contests', component: { template: '<div>event ops</div>' } },
+        { path: '/platform/contests', component: { template: '<div>contests</div>' } },
       ],
     })
 
@@ -81,7 +81,7 @@ describe('Sidebar desktop layout', () => {
       'token'
     )
 
-    await router.push('/admin/dashboard')
+    await router.push('/platform/overview')
     await router.isReady()
 
     const wrapper = mount(Sidebar, {
@@ -107,11 +107,11 @@ describe('Sidebar desktop layout', () => {
     const router = createRouter({
       history: createMemoryHistory(),
       routes: [
-        { path: '/admin/dashboard', component: { template: '<div>admin</div>' } },
-        { path: '/admin/contest-ops/environment', component: { template: '<div>environment</div>' } },
-        { path: '/admin/contest-ops/traffic', component: { template: '<div>traffic</div>' } },
-        { path: '/admin/contest-ops/projector', component: { template: '<div>projector</div>' } },
-        { path: '/admin/contest-ops/scoreboard', component: { template: '<div>scoreboard</div>' } },
+        { path: '/platform/overview', component: { template: '<div>admin</div>' } },
+        { path: '/platform/contest-ops/contests', component: { template: '<div>contest management</div>' } },
+        { path: '/platform/contest-ops/traffic', component: { template: '<div>traffic</div>' } },
+        { path: '/platform/contest-ops/projector', component: { template: '<div>projector</div>' } },
+        { path: '/platform/contest-ops/scoreboard', component: { template: '<div>scoreboard</div>' } },
       ],
     })
 
@@ -126,7 +126,7 @@ describe('Sidebar desktop layout', () => {
       'token'
     )
 
-    await router.push('/admin/contest-ops/environment')
+    await router.push('/platform/contest-ops/contests')
     await router.isReady()
 
     const wrapper = mount(Sidebar, {
@@ -140,7 +140,7 @@ describe('Sidebar desktop layout', () => {
     })
 
     expect(wrapper.text()).toContain('赛事运维')
-    expect(wrapper.text()).toContain('环境管理')
+    expect(wrapper.text()).toContain('竞赛管理')
     expect(wrapper.text()).toContain('流量监控')
     expect(wrapper.text()).toContain('大屏投射')
     expect(wrapper.text()).toContain('排行榜')
@@ -152,11 +152,11 @@ describe('Sidebar desktop layout', () => {
     const router = createRouter({
       history: createMemoryHistory(),
       routes: [
-        { path: '/admin/dashboard', component: { template: '<div>admin</div>' } },
+        { path: '/platform/overview', component: { template: '<div>admin</div>' } },
         { path: '/platform/classes', component: { template: '<div>platform classes</div>' } },
         { path: '/academy/classes', component: { template: '<div>academy classes</div>' } },
         { path: '/platform/challenges', component: { template: '<div>challenges</div>' } },
-        { path: '/admin/contests', component: { template: '<div>contests</div>' } },
+        { path: '/platform/contests', component: { template: '<div>contests</div>' } },
       ],
     })
 
@@ -171,7 +171,7 @@ describe('Sidebar desktop layout', () => {
       'token'
     )
 
-    await router.push('/admin/dashboard')
+    await router.push('/platform/overview')
     await router.isReady()
 
     const wrapper = mount(Sidebar, {
