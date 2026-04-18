@@ -17,6 +17,7 @@ type StudentItem struct {
 	Username         string  `gorm:"column:username"`
 	StudentNo        *string `gorm:"column:student_no"`
 	Name             *string `gorm:"column:name"`
+	ClassName        *string `gorm:"column:class_name"`
 	SolvedCount      int     `gorm:"column:solved_count"`
 	TotalScore       int     `gorm:"column:total_score"`
 	RecentEventCount int     `gorm:"column:recent_event_count"`
@@ -74,6 +75,7 @@ type Repository interface {
 	CountStudentsByClass(ctx context.Context, className string) (int64, error)
 	CountClasses(ctx context.Context) (int64, error)
 	ListClasses(ctx context.Context, offset, limit int) ([]ClassItem, error)
+	ListStudents(ctx context.Context, className, keyword, studentNo, sortKey, sortOrder string, since time.Time, offset, limit int) ([]StudentItem, int64, error)
 	ListStudentsByClass(ctx context.Context, className, keyword, studentNo string, since time.Time) ([]StudentItem, error)
 	CountPublishedChallenges(ctx context.Context) (int64, error)
 	CountSolvedChallenges(ctx context.Context, userID int64) (int64, error)

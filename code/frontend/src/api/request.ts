@@ -179,6 +179,10 @@ instance.interceptors.response.use(
     NProgress.done()
     const authStore = useAuthStore()
 
+    if (axios.isCancel(error) || error.code === AxiosError.ERR_CANCELED) {
+      return Promise.reject(error)
+    }
+
     const status = error.response?.status
     const code = error.response?.data?.code
 

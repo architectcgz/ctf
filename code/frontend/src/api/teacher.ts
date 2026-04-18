@@ -272,6 +272,56 @@ export async function getClassStudents(
   }))
 }
 
+export interface TeacherStudentDirectoryParams {
+  class_name?: string
+  keyword?: string
+  student_no?: string
+  sort_key?: 'name' | 'student_no' | 'total_score' | 'solved_count'
+  sort_order?: 'asc' | 'desc'
+  page?: number
+  page_size?: number
+  signal?: AbortSignal
+}
+
+export async function getStudentsDirectory(
+  params?: TeacherStudentDirectoryParams
+): Promise<PageResult<TeacherStudentItem>> {
+  const payload = await request<
+    PageResult<{
+      id: string | number
+      username: string
+      student_no?: string
+      name?: string
+      class_name?: string
+      solved_count?: number
+      total_score?: number
+      recent_event_count?: number
+      weak_dimension?: string
+    }>
+  >({
+    method: 'GET',
+    url: '/teacher/students',
+    params: {
+      class_name: params?.class_name,
+      keyword: params?.keyword,
+      student_no: params?.student_no,
+      sort_key: params?.sort_key,
+      sort_order: params?.sort_order,
+      page: params?.page,
+      page_size: params?.page_size,
+    },
+    signal: params?.signal,
+  })
+
+  return {
+    ...payload,
+    list: payload.list.map((item) => ({
+      ...item,
+      id: String(item.id),
+    })),
+  }
+}
+
 export async function getClassSummary(name: string): Promise<TeacherClassSummaryData> {
   return request<TeacherClassSummaryData>({
     method: 'GET',
@@ -581,6 +631,8 @@ export async function getTeacherInstances(params?: {
   class_name?: string
   keyword?: string
   student_no?: string
+}, options?: {
+  signal?: AbortSignal
 }): Promise<TeacherInstanceItem[]> {
   const payload = await request<
     Array<{
@@ -608,6 +660,7 @@ export async function getTeacherInstances(params?: {
       keyword: params?.keyword,
       student_no: params?.student_no,
     },
+    signal: options?.signal,
   })
 
   return payload.map((item) => ({

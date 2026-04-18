@@ -31,6 +31,7 @@ const notificationId = computed(() => String(route.params.id ?? ''))
 const notification = computed(
   () => notificationStore.notifications.find((item) => item.id === notificationId.value) ?? null
 )
+const hasRelatedLink = computed(() => Boolean(notification.value?.link))
 
 function notificationAccent(type: string): NotificationAccent {
   if (type === 'contest') return 'warning'
@@ -83,6 +84,20 @@ async function syncReadState(id: string) {
 
 function goBackToNotifications() {
   void router.push('/notifications')
+}
+
+function openRelatedLink() {
+  const link = notification.value?.link
+  if (!link) {
+    return
+  }
+
+  if (/^https?:\/\//.test(link)) {
+    window.open(link, '_blank', 'noopener,noreferrer')
+    return
+  }
+
+  void router.push(link)
 }
 
 watch(
@@ -215,10 +230,18 @@ watch(
             >
               返回通知列表
             </button>
-            <button type="button" class="ui-btn ui-btn--secondary" disabled>
+            <button
+              v-if="hasRelatedLink"
+              type="button"
+              class="ui-btn ui-btn--secondary"
+              @click="openRelatedLink"
+            >
               <Inbox class="h-4 w-4" />
-              暂无关联对象
+              查看关联对象
             </button>
+            <div v-else class="notification-detail-related-empty">
+              当前通知没有可直接跳转的关联对象。
+            </div>
           </footer>
         </article>
       </main>
@@ -257,6 +280,11 @@ watch(
 .notification-detail-loading,
 .notification-detail-empty {
   min-height: 14rem;
+}
+
+.notification-detail-related-empty {
+  color: var(--color-text-secondary);
+  font-size: 0.95rem;
 }
 
 .notification-detail-loading {

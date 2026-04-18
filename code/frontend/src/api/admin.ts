@@ -1323,7 +1323,10 @@ export async function publishAdminNotification(
   }
 }
 
-export async function getUsers(params?: UserListParams): Promise<PageResult<AdminUserListItem>> {
+export async function getUsers(
+  params?: UserListParams,
+  options?: { signal?: AbortSignal }
+): Promise<PageResult<AdminUserListItem>> {
   const response = await request<PageResult<RawAdminUser>>({
     method: 'GET',
     url: '/admin/users',
@@ -1337,6 +1340,7 @@ export async function getUsers(params?: UserListParams): Promise<PageResult<Admi
       status: params?.status,
       class_name: params?.class_name,
     },
+    signal: options?.signal,
   })
 
   return {
@@ -1385,11 +1389,15 @@ export async function importUsers(file: File) {
   })
 }
 
-export async function getChallenges(params?: Record<string, unknown>) {
+export async function getChallenges(
+  params?: Record<string, unknown>,
+  options?: { signal?: AbortSignal }
+) {
   const response = await request<PageResult<RawAdminChallengeItem>>({
     method: 'GET',
     url: '/authoring/challenges',
     params,
+    signal: options?.signal,
   })
   return {
     ...response,
@@ -1781,8 +1789,16 @@ export async function deleteImage(id: string) {
   })
 }
 
-export async function getAuditLogs(params?: Record<string, unknown>) {
-  return request<PageResult<AuditLogItem>>({ method: 'GET', url: '/admin/audit-logs', params })
+export async function getAuditLogs(
+  params?: Record<string, unknown>,
+  options?: { signal?: AbortSignal }
+) {
+  return request<PageResult<AuditLogItem>>({
+    method: 'GET',
+    url: '/admin/audit-logs',
+    params,
+    signal: options?.signal,
+  })
 }
 
 export async function getCheatDetection(): Promise<AdminCheatDetectionData> {

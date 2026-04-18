@@ -118,6 +118,87 @@ func (s *QueryService) normalizeClassPagination(query *dto.TeacherClassQuery) (i
 	return page, size
 }
 
+func (s *QueryService) ListStudents(
+	ctx context.Context,
+	requesterID int64,
+	requesterRole string,
+	query *dto.TeacherStudentDirectoryQuery,
+) ([]dto.TeacherStudentItem, int64, int, int, error) {
+	page, size := s.normalizeStudentPagination(query)
+
+	var requester *model.User
+	if requesterRole != model.RoleAdmin {
+		var err error
+		requester, err = s.repo.FindUserByID(ctx, requesterID)
+		if err != nil {
+			return nil, 0, 0, 0, errcode.ErrInternal.WithCause(err)
+		}
+		if requester == nil {
+			return nil, 0, 0, 0, errcode.ErrUnauthorized
+		}
+	}
+
+	className := ""
+	keyword := ""
+	studentNo := ""
+	sortKey := "solved_count"
+	sortOrder := "desc"
+	if query != nil {
+		className = strings.TrimSpace(query.ClassName)
+		keyword = strings.TrimSpace(query.Keyword)
+		studentNo = strings.TrimSpace(query.StudentNo)
+		if strings.TrimSpace(query.SortKey) != "" {
+			sortKey = strings.TrimSpace(query.SortKey)
+		}
+		if strings.TrimSpace(query.SortOrder) != "" {
+			sortOrder = strings.TrimSpace(query.SortOrder)
+		}
+	}
+
+	if requesterRole != model.RoleAdmin {
+		requesterClassName := strings.TrimSpace(requester.ClassName)
+		if requesterClassName == "" {
+			return []dto.TeacherStudentItem{}, 0, page, size, nil
+		}
+		if className == "" {
+			className = requesterClassName
+		} else if className != requesterClassName {
+			return nil, 0, 0, 0, errcode.ErrForbidden
+		}
+	}
+
+	since := time.Now().AddDate(0, 0, -6)
+	startOfDay := time.Date(since.Year(), since.Month(), since.Day(), 0, 0, 0, 0, since.Location())
+	items, total, err := s.repo.ListStudents(ctx, className, keyword, studentNo, sortKey, sortOrder, startOfDay, (page-1)*size, size)
+	if err != nil {
+		return nil, 0, 0, 0, errcode.ErrInternal.WithCause(err)
+	}
+	return toStudentItems(items), total, page, size, nil
+}
+
+func (s *QueryService) normalizeStudentPagination(query *dto.TeacherStudentDirectoryQuery) (int, int) {
+	page := 1
+	size := s.pagination.DefaultPageSize
+
+	if query != nil {
+		if query.Page > 0 {
+			page = query.Page
+		}
+		if query.Size > 0 {
+			size = query.Size
+		}
+	}
+
+	if size < 1 {
+		size = 20
+	}
+	if s.pagination.MaxPageSize > 0 && size > s.pagination.MaxPageSize {
+		size = s.pagination.MaxPageSize
+	}
+
+	return page, size
+}
+
 func (s *QueryService) ListClassStudents(ctx context.Context, requesterID int64, requesterRole, className string, query *dto.TeacherStudentQuery) ([]dto.TeacherStudentItem, error) {
 	normalized := strings.TrimSpace(className)
 	if normalized == "" {
@@ -459,6 +540,7 @@ func toStudentItems(items []readmodelports.StudentItem) []dto.TeacherStudentItem
 			Username:         item.Username,
 			StudentNo:        item.StudentNo,
 			Name:             item.Name,
+			ClassName:        item.ClassName,
 			SolvedCount:      item.SolvedCount,
 			TotalScore:       item.TotalScore,
 			RecentEventCount: item.RecentEventCount,

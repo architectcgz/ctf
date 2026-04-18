@@ -33,7 +33,7 @@ export function useAdminChallenges() {
   const difficultyFilter = ref<ChallengeDifficulty | ''>('')
   const statusFilter = ref<ChallengeManageStatusFilter | ''>('')
   const autoFilterReady = ref(false)
-  const pagination = usePagination(({ page, page_size }) =>
+  const pagination = usePagination(({ page, page_size, signal }) =>
     getChallenges({
       page,
       page_size,
@@ -41,10 +41,13 @@ export function useAdminChallenges() {
       category: categoryFilter.value || undefined,
       difficulty: difficultyFilter.value || undefined,
       status: statusFilter.value || undefined,
+    }, {
+      signal,
     })
   )
   const latestPublishRequests = ref<Record<string, AdminChallengePublishRequestData | null>>({})
   let pollTimer: number | null = null
+  let latestPublishRequestsToken = 0
 
   const list = computed<AdminChallengeListRow[]>(() =>
     pagination.list.value.map((item) => ({
@@ -87,17 +90,24 @@ export function useAdminChallenges() {
 
   async function loadLatestPublishRequests(): Promise<boolean> {
     if (pagination.list.value.length === 0) {
+      latestPublishRequestsToken += 1
       latestPublishRequests.value = {}
       stopPolling()
       return false
     }
 
+    const requestToken = ++latestPublishRequestsToken
     const previousRequests = latestPublishRequests.value
+    const listSnapshot = [...pagination.list.value]
     const latestEntries = await Promise.all(
-      pagination.list.value.map(
+      listSnapshot.map(
         async (item) => [item.id, await getLatestChallengePublishRequest(item.id)] as const
       )
     )
+
+    if (requestToken !== latestPublishRequestsToken) {
+      return false
+    }
 
     const nextRequests = Object.fromEntries(latestEntries)
     const finishedActiveRequest = didAnyActiveRequestFinish(previousRequests, nextRequests)
@@ -206,6 +216,7 @@ export function useAdminChallenges() {
   return {
     ...pagination,
     list,
+    error: pagination.error,
     keyword,
     categoryFilter,
     difficultyFilter,

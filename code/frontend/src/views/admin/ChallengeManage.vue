@@ -17,6 +17,7 @@ import {
   Calendar,
 } from 'lucide-vue-next'
 
+import AppEmpty from '@/components/common/AppEmpty.vue'
 import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
 import WorkspaceDirectoryPagination from '@/components/common/WorkspaceDirectoryPagination.vue'
 import WorkspaceDirectoryToolbar, {
@@ -36,12 +37,14 @@ const {
   page,
   pageSize,
   loading,
+  error,
   keyword,
   categoryFilter,
   difficultyFilter,
   statusFilter,
   clearFilters,
   changePage,
+  refresh,
   publish,
   remove,
 } = useAdminChallenges()
@@ -60,6 +63,12 @@ const manageEmptyMessage = computed(() =>
   hasActiveFilters.value
     ? '当前筛选条件下没有匹配题目。'
     : '当前还没有题目，请先前往导入页上传题目包。'
+)
+const hasLoadError = computed(() => Boolean(error.value) && list.value.length === 0)
+const loadErrorMessage = computed(() =>
+  error.value instanceof Error && error.value.message.trim().length > 0
+    ? error.value.message
+    : '题目目录暂时无法加载，请稍后重试。'
 )
 
 const {
@@ -421,6 +430,18 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
             </WorkspaceDirectoryToolbar>
 
             <div v-if="loading" class="challenge-directory-state">正在同步题目目录...</div>
+            <AppEmpty
+              v-else-if="hasLoadError"
+              icon="AlertTriangle"
+              title="题目目录加载失败"
+              :description="loadErrorMessage"
+            >
+              <template #action>
+                <button type="button" class="ui-btn ui-btn--secondary" @click="void refresh()">
+                  重新加载
+                </button>
+              </template>
+            </AppEmpty>
             <div v-else-if="list.length === 0" class="challenge-directory-state">
               {{ manageEmptyMessage }}
             </div>

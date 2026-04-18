@@ -313,7 +313,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import type { AdminChallengeFlagPayload } from '@/api/admin'
@@ -354,6 +354,7 @@ const flagType = ref<FlagType>('static')
 const flagValue = ref('')
 const flagRegex = ref('')
 const flagPrefix = ref('')
+let redirectTimer: ReturnType<typeof setTimeout> | null = null
 
 const challengeId = computed(() => String(route.params.id || ''))
 const panelTabOrder = panelTabs.map((tab) => tab.key) as ChallengePanelKey[]
@@ -389,6 +390,14 @@ function openTopology(): void {
 
 function openChallengeList(): void {
   void router.push('/platform/challenges')
+}
+
+function clearRedirectTimer(): void {
+  if (redirectTimer === null) {
+    return
+  }
+  clearTimeout(redirectTimer)
+  redirectTimer = null
 }
 
 async function downloadAttachment(): Promise<void> {
@@ -533,7 +542,9 @@ async function loadChallenge(id: string): Promise<void> {
   } catch {
     challenge.value = null
     toast.error('加载失败')
-    setTimeout(() => {
+    clearRedirectTimer()
+    redirectTimer = setTimeout(() => {
+      redirectTimer = null
       void router.push('/platform/challenges')
     }, 1500)
   } finally {
@@ -601,6 +612,10 @@ watch(
   },
   { immediate: true }
 )
+
+onUnmounted(() => {
+  clearRedirectTimer()
+})
 </script>
 
 <style scoped>
