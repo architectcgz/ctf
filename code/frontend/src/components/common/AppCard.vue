@@ -129,14 +129,13 @@ const headerClass = computed(() => {
 })
 
 const titleClass = computed(() => {
-  if (props.variant === 'hero') return 'text-xl font-semibold tracking-tight text-text-primary'
-  if (props.variant === 'metric')
-    return 'text-[24px] font-semibold tracking-tight text-text-primary'
-  if (props.variant === 'action') return 'text-[15px] font-semibold text-text-primary'
-  return 'text-base font-semibold text-text-primary'
+  if (props.variant === 'hero') return 'app-card__title app-card__title--hero'
+  if (props.variant === 'metric') return 'app-card__title app-card__title--metric'
+  if (props.variant === 'action') return 'app-card__title app-card__title--action'
+  return 'app-card__title app-card__title--panel'
 })
 
-const subtitleClass = computed(() => 'mt-1 text-[13px] leading-6 text-text-secondary')
+const subtitleClass = computed(() => 'app-card__subtitle mt-1')
 
 const bodyClass = computed(() => (props.variant === 'metric' ? 'space-y-1.5' : 'space-y-2'))
 
@@ -157,7 +156,7 @@ const accentChipStyle = computed<Record<string, string>>(() => ({
         <div class="min-w-0">
           <div
             v-if="eyebrow"
-            class="text-[10px] font-semibold uppercase tracking-[0.15em]"
+            class="app-card__eyebrow"
             :style="eyebrowStyle"
           >
             {{ eyebrow }}
@@ -174,7 +173,7 @@ const accentChipStyle = computed<Record<string, string>>(() => ({
           <slot name="header">
             <div
               v-if="props.variant === 'metric'"
-              class="h-8 w-[3px] rounded-full"
+              class="app-card__metric-accent"
               :style="accentChipStyle"
             />
           </slot>
@@ -191,3 +190,44 @@ const accentChipStyle = computed<Record<string, string>>(() => ({
     </div>
   </component>
 </template>
+
+<style scoped>
+.app-card__eyebrow {
+  font-size: var(--font-size-12);
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.app-card__title {
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+
+.app-card__title--hero,
+.app-card__title--metric {
+  font-size: 1.5rem;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+}
+
+.app-card__title--action {
+  font-size: 0.9375rem;
+}
+
+.app-card__title--panel {
+  font-size: 1rem;
+}
+
+.app-card__subtitle {
+  font-size: 0.8125rem;
+  line-height: 1.5rem;
+  color: var(--color-text-secondary);
+}
+
+.app-card__metric-accent {
+  height: 2rem;
+  width: 3px;
+  border-radius: 999px;
+}
+</style>
