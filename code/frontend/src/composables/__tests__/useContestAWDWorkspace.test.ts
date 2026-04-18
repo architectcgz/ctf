@@ -127,9 +127,7 @@ describe('useContestAWDWorkspace', () => {
       created_at: '2026-04-12T08:03:00Z',
     })
 
-    let submitAttack:
-      | ((challengeId: string, victimTeamId: number, flag: string) => Promise<unknown>)
-      | null = null
+    let submitAttack!: (serviceId: string, victimTeamId: number, flag: string) => Promise<unknown>
 
     mount(
       defineComponent({
@@ -137,8 +135,10 @@ describe('useContestAWDWorkspace', () => {
           const workspace = useContestAWDWorkspace({
             contestId: computed(() => '1'),
             contestStatus: computed(() => 'running'),
-            formatAttackResultToast: (result) =>
-              result.service_id === '7009' ? `Bank Portal 攻击成功，+${result.score_gained} 分` : '',
+            formatAttackResultToast: (result: any) =>
+              result.service_id === '7009'
+                ? `Bank Portal 攻击成功，+${result.score_gained} 分`
+                : '',
           } as any)
           submitAttack = workspace.submitAttack
           return () => null
@@ -147,7 +147,7 @@ describe('useContestAWDWorkspace', () => {
     )
 
     await flushPromises()
-    await submitAttack?.('101', 14, 'flag{demo}')
+    await submitAttack('7009', 14, 'flag{demo}')
     await flushPromises()
 
     expect(toastMocks.success).toHaveBeenCalledWith('Bank Portal 攻击成功，+60 分')

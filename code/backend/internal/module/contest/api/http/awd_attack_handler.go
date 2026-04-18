@@ -28,7 +28,7 @@ func (h *AWDHandler) CreateAttackLog(c *gin.Context) {
 func (h *AWDHandler) SubmitAttack(c *gin.Context) {
 	userID := authctx.MustCurrentUser(c).UserID
 	contestID := c.GetInt64("id")
-	challengeID := c.GetInt64("cid")
+	serviceID := c.GetInt64("sid")
 
 	var req dto.SubmitAWDAttackReq
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -36,7 +36,7 @@ func (h *AWDHandler) SubmitAttack(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.commands.SubmitAttack(c.Request.Context(), userID, contestID, challengeID, &req)
+	resp, err := h.commands.SubmitAttack(c.Request.Context(), userID, contestID, serviceID, &req)
 	if err != nil {
 		response.FromError(c, err)
 		return

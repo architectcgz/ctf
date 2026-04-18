@@ -58,6 +58,16 @@ func (r *AWDRepository) FindContestAWDServiceByContestAndChallenge(ctx context.C
 	return &item, nil
 }
 
+func (r *AWDRepository) FindContestAWDServiceByContestAndID(ctx context.Context, contestID, serviceID int64) (*model.ContestAWDService, error) {
+	var item model.ContestAWDService
+	if err := r.dbWithContext(ctx).
+		Where("contest_id = ? AND id = ?", contestID, serviceID).
+		First(&item).Error; err != nil {
+		return nil, err
+	}
+	return &item, nil
+}
+
 func (r *AWDRepository) ListContestAWDServicesByContest(ctx context.Context, contestID int64) ([]model.ContestAWDService, error) {
 	var items []model.ContestAWDService
 	err := r.dbWithContext(ctx).

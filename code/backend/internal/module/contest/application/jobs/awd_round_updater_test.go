@@ -88,20 +88,16 @@ func TestAWDRoundUpdaterCreatesAndAdvancesRounds(t *testing.T) {
 		t.Fatalf("load round flags: %v", err)
 	}
 	serviceID := defaultAWDContestServiceID(101, 1001)
-	legacyField := rediskeys.AWDRoundFlagField(10011, 1001)
 	serviceField := rediskeys.AWDRoundFlagServiceField(10011, serviceID)
-	if !strings.HasPrefix(flags[legacyField], "awd{") {
-		t.Fatalf("unexpected legacy round flag field: %+v", flags)
-	}
 	if !strings.HasPrefix(flags[serviceField], "awd{") {
 		t.Fatalf("unexpected service round flag field: %+v", flags)
 	}
-	if flags[legacyField] != flags[serviceField] {
-		t.Fatalf("unexpected round flags: %+v", flags)
+	if _, ok := flags["10011:1001"]; ok {
+		t.Fatalf("expected legacy round flag field removed, got %+v", flags)
 	}
 }
 
-func TestAWDRoundUpdaterCreatesAndAdvancesRoundsWritesServiceAndLegacyFlagFields(t *testing.T) {
+func TestAWDRoundUpdaterCreatesAndAdvancesRoundsWritesOnlyServiceFlagFields(t *testing.T) {
 	db := newAWDTestDB(t)
 
 	mini, err := miniredis.Run()
@@ -165,18 +161,92 @@ func TestAWDRoundUpdaterCreatesAndAdvancesRoundsWritesServiceAndLegacyFlagFields
 	if err != nil {
 		t.Fatalf("load round flags: %v", err)
 	}
-	legacyField := rediskeys.AWDRoundFlagField(153011, 153001)
 	serviceField := rediskeys.AWDRoundFlagServiceField(153011, serviceID)
-	legacyFlag := flags[legacyField]
-	serviceFlag := flags[serviceField]
-	if !strings.HasPrefix(legacyFlag, "awd{") {
-		t.Fatalf("expected legacy round flag field, got %+v", flags)
-	}
-	if !strings.HasPrefix(serviceFlag, "awd{") {
+	if !strings.HasPrefix(flags[serviceField], "awd{") {
 		t.Fatalf("expected service round flag field, got %+v", flags)
 	}
-	if legacyFlag != serviceFlag {
-		t.Fatalf("expected service and legacy fields to share same flag, got %+v", flags)
+	if _, ok := flags["153011:153001"]; ok {
+		t.Fatalf("expected legacy round flag field removed, got %+v", flags)
+	}
+}
+
+func TestAWDRoundUpdaterIgnoresLegacyContestChallengeBridgeWithoutServiceDefinition(t *testing.T) {
+	db := newAWDTestDB(t)
+
+	mini, err := miniredis.Run()
+	if err != nil {
+		t.Fatalf("start miniredis: %v", err)
+	}
+	t.Cleanup(mini.Close)
+
+	redisClient := redis.NewClient(&redis.Options{Addr: mini.Addr()})
+	t.Cleanup(func() {
+		_ = redisClient.Close()
+	})
+
+	now := time.Date(2026, 3, 10, 12, 11, 0, 0, time.UTC)
+	createAWDContestFixture(t, db, 154, now)
+	createAWDRoundFixture(t, db, 15401, 154, 1, 50, 40, now)
+	createAWDChallengeFixture(t, db, 154001, now)
+	createAWDTeamFixture(t, db, 154011, 154, "LegacyOnly", now)
+	createAWDTeamMemberFixture(t, db, 154, 154011, 154101, now)
+	if err := db.Create(&model.ContestChallenge{
+		ContestID:                 154,
+		ChallengeID:               154001,
+		Points:                    100,
+		IsVisible:                 true,
+		AWDCheckerType:            model.AWDCheckerTypeHTTPStandard,
+		AWDCheckerConfig:          `{"get_flag":{"path":"/health"}}`,
+		AWDCheckerValidationState: model.AWDCheckerValidationStatePassed,
+		CreatedAt:                 now,
+		UpdatedAt:                 now,
+	}).Error; err != nil {
+		t.Fatalf("create legacy-only contest challenge: %v", err)
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/health" {
+			http.NotFound(w, r)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+	}))
+	t.Cleanup(server.Close)
+
+	if err := db.Create(&model.Instance{
+		ID:          154901,
+		UserID:      154101,
+		ChallengeID: 154001,
+		ContainerID: "ctr-legacy-only",
+		Status:      model.InstanceStatusRunning,
+		AccessURL:   server.URL,
+		ExpiresAt:   now.Add(time.Hour),
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	}).Error; err != nil {
+		t.Fatalf("create awd instance: %v", err)
+	}
+
+	updater := newAWDRoundUpdaterForTest(db, redisClient, config.ContestAWDConfig{
+		SchedulerInterval:  time.Second,
+		SchedulerBatchSize: 10,
+		RoundInterval:      5 * time.Minute,
+		RoundLockTTL:       time.Minute,
+		CheckerTimeout:     time.Second,
+		CheckerHealthPath:  "/health",
+	}, "test-flag-secret", nil, zap.NewNop())
+	updater.SetHTTPClient(server.Client())
+
+	if err := updater.RunRoundServiceChecks(context.Background(), &model.Contest{ID: 154}, &model.AWDRound{ID: 15401, ContestID: 154, RoundNumber: 1}, awdCheckSourceManualCurrent); err != nil {
+		t.Fatalf("RunRoundServiceChecks() error = %v", err)
+	}
+
+	var count int64
+	if err := db.Model(&model.AWDTeamService{}).Where("round_id = ?", 15401).Count(&count).Error; err != nil {
+		t.Fatalf("count service checks: %v", err)
+	}
+	if count != 0 {
+		t.Fatalf("expected no service checks without contest_awd_services definition, got %d", count)
 	}
 }
 
@@ -428,6 +498,7 @@ func TestAWDRoundUpdaterUsesContestServiceCheckerConfig(t *testing.T) {
 		}).Error; err != nil {
 		t.Fatalf("update awd contest challenge config: %v", err)
 	}
+	syncAWDContestServiceFixture(t, db, 104, 104001, "awd-service", model.AWDCheckerTypeHTTPStandard, `{"get_flag":{"path":"/internal/flag"}}`, 100, 18, 28, now)
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
@@ -514,6 +585,10 @@ func TestAWDRoundUpdaterSyncsHTTPStandardChecksAsUp(t *testing.T) {
 		}).Error; err != nil {
 		t.Fatalf("update http_standard checker config: %v", err)
 	}
+	syncAWDContestServiceFixture(t, db, 141, 141001, "awd-service", model.AWDCheckerTypeHTTPStandard, `{
+				"put_flag":{"method":"PUT","path":"/api/flag","body_template":"{{FLAG}}","expected_status":200},
+				"get_flag":{"method":"GET","path":"/api/flag","expected_status":200,"expected_substring":"{{FLAG}}"}
+			}`, 100, 18, 28, now)
 
 	storedFlag := ""
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -718,6 +793,10 @@ func TestAWDRoundUpdaterMarksHTTPStandardChecksCompromisedOnFlagMismatch(t *test
 		}).Error; err != nil {
 		t.Fatalf("update http_standard checker config: %v", err)
 	}
+	syncAWDContestServiceFixture(t, db, 142, 142001, "awd-service", model.AWDCheckerTypeHTTPStandard, `{
+				"put_flag":{"method":"PUT","path":"/api/flag","body_template":"{{FLAG}}","expected_status":200},
+				"get_flag":{"method":"GET","path":"/api/flag","expected_status":200,"expected_substring":"{{FLAG}}"}
+			}`, 100, 18, 28, now)
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch {
@@ -809,6 +888,11 @@ func TestAWDRoundUpdaterMarksHTTPStandardChecksDownWhenHavocFails(t *testing.T) 
 		}).Error; err != nil {
 		t.Fatalf("update http_standard checker config: %v", err)
 	}
+	syncAWDContestServiceFixture(t, db, 143, 143001, "awd-service", model.AWDCheckerTypeHTTPStandard, `{
+				"put_flag":{"method":"PUT","path":"/api/flag","body_template":"{{FLAG}}","expected_status":200},
+				"get_flag":{"method":"GET","path":"/api/flag","expected_status":200,"expected_substring":"{{FLAG}}"},
+				"havoc":{"method":"GET","path":"/api/ping","expected_status":200}
+			}`, 100, 18, 28, now)
 
 	storedFlag := ""
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -983,7 +1067,8 @@ func TestAWDRoundUpdaterHistoricalRoundChecksDoNotOverwriteLiveStatusCache(t *te
 		t.Fatalf("create awd instance: %v", err)
 	}
 
-	field := rediskeys.AWDRoundFlagField(108011, 108001)
+	serviceID := defaultAWDContestServiceID(108, 108001)
+	field := rediskeys.AWDRoundFlagServiceField(108011, serviceID)
 	if err := redisClient.Set(context.Background(), rediskeys.AWDCurrentRoundKey(108), "2", 0).Err(); err != nil {
 		t.Fatalf("seed current round: %v", err)
 	}
@@ -1005,7 +1090,7 @@ func TestAWDRoundUpdaterHistoricalRoundChecksDoNotOverwriteLiveStatusCache(t *te
 		t.Fatalf("RunRoundServiceChecks() error = %v", err)
 	}
 
-	assertAWDServiceStatusCache(t, redisClient, 108, 108011, 108001, model.AWDServiceStatusCompromised)
+	assertAWDServiceStatusCache(t, redisClient, 108, 108011, serviceID, model.AWDServiceStatusCompromised)
 
 	var record model.AWDTeamService
 	if err := db.Where("round_id = ? AND team_id = ? AND challenge_id = ?", 10801, 108011, 108001).First(&record).Error; err != nil {
@@ -1068,7 +1153,8 @@ func TestAWDRoundUpdaterCurrentRoundChecksRefreshLiveStatusCache(t *testing.T) {
 		t.Fatalf("create awd instance: %v", err)
 	}
 
-	field := rediskeys.AWDRoundFlagField(109011, 109001)
+	serviceID := defaultAWDContestServiceID(109, 109001)
+	field := rediskeys.AWDRoundFlagServiceField(109011, serviceID)
 	if err := redisClient.Set(context.Background(), rediskeys.AWDCurrentRoundKey(109), "2", 0).Err(); err != nil {
 		t.Fatalf("seed current round: %v", err)
 	}
@@ -1090,7 +1176,7 @@ func TestAWDRoundUpdaterCurrentRoundChecksRefreshLiveStatusCache(t *testing.T) {
 		t.Fatalf("RunRoundServiceChecks() error = %v", err)
 	}
 
-	assertAWDServiceStatusCache(t, redisClient, 109, 109011, 109001, model.AWDServiceStatusUp)
+	assertAWDServiceStatusCache(t, redisClient, 109, 109011, serviceID, model.AWDServiceStatusUp)
 }
 
 func TestAWDRoundUpdaterHistoricalRoundChecksIgnoreStaleCurrentRoundPointer(t *testing.T) {
@@ -1139,7 +1225,8 @@ func TestAWDRoundUpdaterHistoricalRoundChecksIgnoreStaleCurrentRoundPointer(t *t
 		t.Fatalf("create awd instance: %v", err)
 	}
 
-	field := rediskeys.AWDRoundFlagField(110011, 110001)
+	serviceID := defaultAWDContestServiceID(110, 110001)
+	field := rediskeys.AWDRoundFlagServiceField(110011, serviceID)
 	if err := redisClient.Set(context.Background(), rediskeys.AWDCurrentRoundKey(110), "1", 0).Err(); err != nil {
 		t.Fatalf("seed stale current round: %v", err)
 	}
@@ -1161,7 +1248,7 @@ func TestAWDRoundUpdaterHistoricalRoundChecksIgnoreStaleCurrentRoundPointer(t *t
 		t.Fatalf("RunRoundServiceChecks() error = %v", err)
 	}
 
-	assertAWDServiceStatusCache(t, redisClient, 110, 110011, 110001, model.AWDServiceStatusCompromised)
+	assertAWDServiceStatusCache(t, redisClient, 110, 110011, serviceID, model.AWDServiceStatusCompromised)
 }
 
 func TestAWDRoundUpdaterSyncsServiceChecksWithPartialAvailability(t *testing.T) {

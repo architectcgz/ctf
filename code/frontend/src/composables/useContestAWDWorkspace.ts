@@ -125,7 +125,7 @@ export function useContestAWDWorkspace(options: UseContestAWDWorkspaceOptions) {
   }
 
   async function submitAttack(
-    challengeId: string,
+    serviceId: string,
     victimTeamId: number,
     flag: string
   ): Promise<AWDAttackLogData | null> {
@@ -138,11 +138,11 @@ export function useContestAWDWorkspace(options: UseContestAWDWorkspaceOptions) {
       return null
     }
 
-    submittingKey.value = `${challengeId}:${victimTeamId}`
+    submittingKey.value = `${serviceId}:${victimTeamId}`
     submitResult.value = null
 
     try {
-      const result = await submitContestAWDAttack(contestId, challengeId, {
+      const result = await submitContestAWDAttack(contestId, serviceId, {
         victim_team_id: victimTeamId,
         flag: normalizedFlag,
       })

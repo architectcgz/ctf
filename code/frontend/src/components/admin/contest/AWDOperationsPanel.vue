@@ -258,7 +258,7 @@ async function handleCreateRound(payload: {
 
 async function handleCreateServiceCheck(payload: {
   team_id: number
-  challenge_id: number
+  service_id: number
   service_status: 'up' | 'down' | 'compromised'
   check_result?: Record<string, unknown>
 }) {
@@ -269,7 +269,7 @@ async function handleCreateServiceCheck(payload: {
 async function handleCreateAttackLog(payload: {
   attacker_team_id: number
   victim_team_id: number
-  challenge_id: number
+  service_id: number
   attack_type: 'flag_capture' | 'service_exploit'
   submitted_flag?: string
   is_success: boolean
@@ -605,8 +605,16 @@ watch(
 
 .awd-runtime-shell {
   background:
-    linear-gradient(145deg, color-mix(in srgb, var(--color-surface-panel) 94%, white 6%), var(--color-surface-panel)),
-    radial-gradient(circle at top right, color-mix(in srgb, var(--color-primary) 18%, transparent), transparent 52%);
+    linear-gradient(
+      145deg,
+      color-mix(in srgb, var(--color-surface-panel) 94%, white 6%),
+      var(--color-surface-panel)
+    ),
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--color-primary) 18%, transparent),
+      transparent 52%
+    );
 }
 
 .awd-runtime-shell-chip {

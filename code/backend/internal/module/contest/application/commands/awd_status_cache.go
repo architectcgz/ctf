@@ -11,7 +11,7 @@ import (
 func syncAWDServiceStatusField(
 	ctx context.Context,
 	redis *redislib.Client,
-	contestID, roundID, currentRoundID, teamID, challengeID int64,
+	contestID, roundID, currentRoundID, teamID, serviceID int64,
 	serviceStatus string,
 ) error {
 	if redis == nil || contestID <= 0 || roundID <= 0 || currentRoundID <= 0 || roundID != currentRoundID {
@@ -20,7 +20,7 @@ func syncAWDServiceStatusField(
 	return redis.HSet(
 		ctx,
 		rediskeys.AWDServiceStatusKey(contestID),
-		rediskeys.AWDRoundFlagField(teamID, challengeID),
+		rediskeys.AWDRoundFlagServiceField(teamID, serviceID),
 		serviceStatus,
 	).Err()
 }

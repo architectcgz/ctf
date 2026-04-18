@@ -38,10 +38,7 @@ func (s *AWDService) createAttackLog(
 	if teams[req.AttackerTeamID] == nil || teams[req.VictimTeamID] == nil {
 		return nil, errcode.ErrNotFound
 	}
-	if err := s.ensureContestChallenge(ctx, contestID, req.ChallengeID); err != nil {
-		return nil, err
-	}
-	runtimeService, err := s.resolveContestRuntimeService(ctx, contestID, req.ChallengeID)
+	runtimeService, err := s.resolveContestRuntimeService(ctx, contestID, req.ServiceID)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +59,7 @@ func (s *AWDService) createAttackLog(
 		AttackerTeamID:    req.AttackerTeamID,
 		VictimTeamID:      req.VictimTeamID,
 		ServiceID:         runtimeService.ID,
-		ChallengeID:       req.ChallengeID,
+		ChallengeID:       runtimeService.ChallengeID,
 		AttackType:        req.AttackType,
 		Source:            contestdomain.NormalizeAWDAttackSource(source),
 		SubmittedFlag:     req.SubmittedFlag,
@@ -81,7 +78,7 @@ func (s *AWDService) createAttackLog(
 		return nil, err
 	}
 	if submittedByUserID != nil && logRecord.IsSuccess && logRecord.ScoreGained > 0 {
-		challengeItem, err := s.loadChallenge(ctx, req.ChallengeID)
+		challengeItem, err := s.loadChallenge(ctx, runtimeService.ChallengeID)
 		if err != nil {
 			return nil, err
 		}
@@ -90,7 +87,7 @@ func (s *AWDService) createAttackLog(
 			Payload: contestcontracts.AWDAttackAcceptedEvent{
 				UserID:      *submittedByUserID,
 				ContestID:   contestID,
-				ChallengeID: req.ChallengeID,
+				ChallengeID: runtimeService.ChallengeID,
 				Dimension:   challengeItem.Category,
 				OccurredAt:  logRecord.CreatedAt,
 			},

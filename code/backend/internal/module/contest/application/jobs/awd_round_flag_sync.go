@@ -36,10 +36,7 @@ func (u *AWDRoundUpdater) syncRoundFlags(ctx context.Context, contest *model.Con
 
 	fields := make(map[string]any, len(assignments))
 	for _, item := range assignments {
-		fields[rediskeys.AWDRoundFlagField(item.TeamID, item.ChallengeID)] = item.Flag
-		if item.ServiceID > 0 {
-			fields[rediskeys.AWDRoundFlagServiceField(item.TeamID, item.ServiceID)] = item.Flag
-		}
+		fields[rediskeys.AWDRoundFlagServiceField(item.TeamID, item.ServiceID)] = item.Flag
 	}
 
 	pipe := u.redis.TxPipeline()

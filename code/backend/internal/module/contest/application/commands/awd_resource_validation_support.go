@@ -44,8 +44,8 @@ func (s *AWDService) loadChallenge(ctx context.Context, challengeID int64) (*mod
 	return challenge, nil
 }
 
-func (s *AWDService) resolveContestRuntimeService(ctx context.Context, contestID, challengeID int64) (*model.ContestAWDService, error) {
-	service, err := s.repo.FindContestAWDServiceByContestAndChallenge(ctx, contestID, challengeID)
+func (s *AWDService) resolveContestRuntimeService(ctx context.Context, contestID, serviceID int64) (*model.ContestAWDService, error) {
+	service, err := s.repo.FindContestAWDServiceByContestAndID(ctx, contestID, serviceID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrNotFound

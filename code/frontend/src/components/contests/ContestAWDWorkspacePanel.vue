@@ -86,7 +86,9 @@ const lastSyncedLabel = computed(() =>
 const targetFilterKeyword = computed(() => targetKeyword.value.trim().toLowerCase())
 
 const activeChallenge = computed(
-  () => props.challenges.find((item) => getChallengeRuntimeKey(item) === activeChallengeKey.value) || null
+  () =>
+    props.challenges.find((item) => getChallengeRuntimeKey(item) === activeChallengeKey.value) ||
+    null
 )
 const activeChallengeRuntimeKey = computed(() => getChallengeRuntimeKey(activeChallenge.value))
 
@@ -96,8 +98,8 @@ const activeTargets = computed(() => {
   }
   return workspace.value.targets.map((target) => ({
     ...target,
-    active_service: target.services.find(
-      (service) => isTargetServiceForChallenge(service, activeChallenge.value as ContestChallengeItem)
+    active_service: target.services.find((service) =>
+      isTargetServiceForChallenge(service, activeChallenge.value as ContestChallengeItem)
     ),
   }))
 })
@@ -251,7 +253,9 @@ function formatAttackResultToast(result: {
   return `${challengeTitle} 攻击未命中有效 flag`
 }
 
-function getWorkspaceService(challenge: ContestChallengeItem): ContestAWDWorkspaceServiceData | undefined {
+function getWorkspaceService(
+  challenge: ContestChallengeItem
+): ContestAWDWorkspaceServiceData | undefined {
   if (challenge.awd_service_id) {
     return (
       servicesByServiceId.value.get(challenge.awd_service_id) ||
@@ -278,8 +282,8 @@ function buildAttackStateKey(serviceKey: string, teamId: string): string {
   return `${serviceKey}:${teamId}`
 }
 
-function buildAttackSubmissionKey(challengeId: string, teamId: string): string {
-  return `${challengeId}:${teamId}`
+function buildAttackSubmissionKey(serviceKey: string, teamId: string): string {
+  return `${serviceKey}:${teamId}`
 }
 
 function getDefenseAlertClass(tone: 'danger' | 'warning'): string {
@@ -288,10 +292,10 @@ function getDefenseAlertClass(tone: 'danger' | 'warning'): string {
     : 'awd-defense-row awd-defense-row--warning'
 }
 
-async function handleSubmit(challengeId: string, serviceKey: string, teamId: string): Promise<void> {
+async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
   const stateKey = buildAttackStateKey(serviceKey, teamId)
   const flag = flagInputs.value[stateKey] || ''
-  const result = await submitAttack(challengeId, Number(teamId), flag)
+  const result = await submitAttack(serviceKey, Number(teamId), flag)
   if (result) {
     flagInputs.value[stateKey] = ''
   }
@@ -417,9 +421,7 @@ async function handleSubmit(challengeId: string, serviceKey: string, teamId: str
                   <span
                     :class="getServiceStatusClass(getWorkspaceService(challenge)?.service_status)"
                   >
-                    {{
-                      getServiceStatusLabel(getWorkspaceService(challenge)?.service_status)
-                    }}
+                    {{ getServiceStatusLabel(getWorkspaceService(challenge)?.service_status) }}
                   </span>
                 </div>
                 <div class="awd-service-row__meta">
@@ -525,25 +527,25 @@ async function handleSubmit(challengeId: string, serviceKey: string, teamId: str
 
           <div v-else class="awd-target-list">
             <article v-for="target in filteredTargets" :key="target.team_id" class="awd-target-row">
-                <div class="awd-target-row__main">
-                  <div class="awd-target-row__head">
-                    <div class="contest-chip contest-chip--neutral">{{ target.team_name }}</div>
-                    <div
-                      v-if="target.active_service?.service_id"
-                      class="awd-runtime-ref-chip"
-                    >
-                      {{ formatServiceRef(target.active_service.service_id) }}
-                    </div>
-                    <div class="awd-target-row__url">
-                      {{ target.active_service?.access_url || '当前没有可用目标地址' }}
-                    </div>
+              <div class="awd-target-row__main">
+                <div class="awd-target-row__head">
+                  <div class="contest-chip contest-chip--neutral">{{ target.team_name }}</div>
+                  <div v-if="target.active_service?.service_id" class="awd-runtime-ref-chip">
+                    {{ formatServiceRef(target.active_service.service_id) }}
+                  </div>
+                  <div class="awd-target-row__url">
+                    {{ target.active_service?.access_url || '当前没有可用目标地址' }}
+                  </div>
                 </div>
               </div>
 
               <div class="awd-target-row__form">
                 <div class="ui-control-wrap flag-submit__control">
                   <input
-                    :value="flagInputs[buildAttackStateKey(activeChallengeRuntimeKey, target.team_id)] || ''"
+                    :value="
+                      flagInputs[buildAttackStateKey(activeChallengeRuntimeKey, target.team_id)] ||
+                      ''
+                    "
                     type="text"
                     class="ui-control"
                     placeholder="flag{...}"
@@ -559,19 +561,13 @@ async function handleSubmit(challengeId: string, serviceKey: string, teamId: str
                   :disabled="
                     !target.active_service?.access_url ||
                     submittingKey ===
-                      buildAttackSubmissionKey(activeChallenge.challenge_id, target.team_id)
+                      buildAttackSubmissionKey(activeChallengeRuntimeKey, target.team_id)
                   "
-                  @click="
-                    handleSubmit(
-                      activeChallenge.challenge_id,
-                      activeChallengeRuntimeKey,
-                      target.team_id
-                    )
-                  "
+                  @click="handleSubmit(activeChallengeRuntimeKey, target.team_id)"
                 >
                   {{
                     submittingKey ===
-                    buildAttackSubmissionKey(activeChallenge.challenge_id, target.team_id)
+                    buildAttackSubmissionKey(activeChallengeRuntimeKey, target.team_id)
                       ? '提交中...'
                       : '提交 stolen flag'
                   }}
