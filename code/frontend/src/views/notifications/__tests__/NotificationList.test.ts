@@ -166,24 +166,22 @@ describe('NotificationList', () => {
     )
   })
 
-  it('通知页概况卡片应使用统一 metric-panel 样式类', () => {
+  it('通知页头部应将消息数与未读数收进同一行，并把操作按钮放到下一行', () => {
     expect(notificationListSource).toContain('<div class="workspace-overline">Notifications</div>')
     expect(notificationListSource).toContain(
       '<h1 class="notification-title workspace-page-title">通知中心</h1>'
     )
     expect(notificationListSource).not.toContain('<div class="journal-eyebrow">Notifications</div>')
     expect(notificationListSource).not.toContain('journal-eyebrow-text')
-    expect(notificationListSource).toContain('class="notification-summary-grid metric-panel-grid"')
-    expect(notificationListSource).toContain('class="notification-summary-item metric-panel-card"')
-    expect(notificationListSource).toContain(
-      'class="notification-summary-label metric-panel-label"'
-    )
-    expect(notificationListSource).toContain(
-      'class="notification-summary-value metric-panel-value"'
-    )
-    expect(notificationListSource).toContain(
-      'class="notification-summary-helper metric-panel-helper"'
-    )
+    expect(notificationListSource).toContain('class="notification-topbar-meta"')
+    expect(notificationListSource).toContain('class="notification-head-stats"')
+    expect(notificationListSource).toContain('class="notification-head-stat"')
+    expect(notificationListSource).toContain('消息数')
+    expect(notificationListSource).toContain('未读数')
+    expect(notificationListSource).not.toContain('当前消息概况')
+    expect(notificationListSource).not.toContain('本页消息')
+    expect(notificationListSource).not.toContain('已读消息')
+    expect(notificationListSource).not.toContain('总消息数')
   })
 
   it('通知页操作按钮应接入共享 ui-btn 原语', () => {
