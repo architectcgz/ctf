@@ -890,6 +890,7 @@ export interface TeacherAWDReviewServiceItemData {
   round_id: ID
   team_id: ID
   team_name: string
+  service_id?: ID
   challenge_id: ID
   challenge_title: string
   service_status: string
@@ -907,6 +908,7 @@ export interface TeacherAWDReviewAttackItemData {
   attacker_team_name: string
   victim_team_id: ID
   victim_team_name: string
+  service_id?: ID
   challenge_id: ID
   challenge_title: string
   attack_type: string
