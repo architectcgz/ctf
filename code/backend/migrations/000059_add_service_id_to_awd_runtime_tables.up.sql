@@ -9,9 +9,9 @@ SET service_id = cas.id
 FROM awd_rounds ar
 JOIN contest_awd_services cas
   ON cas.contest_id = ar.contest_id
- AND cas.challenge_id = ats.challenge_id
  AND cas.deleted_at IS NULL
 WHERE ats.round_id = ar.id
+  AND cas.challenge_id = ats.challenge_id
   AND ats.service_id IS NULL;
 
 UPDATE awd_attack_logs aal
@@ -19,9 +19,9 @@ SET service_id = cas.id
 FROM awd_rounds ar
 JOIN contest_awd_services cas
   ON cas.contest_id = ar.contest_id
- AND cas.challenge_id = aal.challenge_id
  AND cas.deleted_at IS NULL
 WHERE aal.round_id = ar.id
+  AND cas.challenge_id = aal.challenge_id
   AND aal.service_id IS NULL;
 
 DELETE FROM awd_team_services
