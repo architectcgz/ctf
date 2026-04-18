@@ -3,8 +3,11 @@ import { describe, expect, it } from 'vitest'
 import appCardSource from '@/components/common/AppCard.vue?raw'
 import appLayoutSource from '@/components/layout/AppLayout.vue?raw'
 import pageHeaderSource from '@/components/common/PageHeader.vue?raw'
+import modalTemplateShellSource from '@/components/common/modal-templates/ModalTemplateShell.vue?raw'
+import classicCenteredModalSource from '@/components/common/modal-templates/ClassicCenteredModal.vue?raw'
 import minimalFloatingModalSource from '@/components/common/modal-templates/MinimalFloatingModal.vue?raw'
 import slideOverDrawerSource from '@/components/common/modal-templates/SlideOverDrawer.vue?raw'
+import cContextTooltipSource from '@/components/common/modal-templates/CContextTooltip.vue?raw'
 import skillRadarSource from '@/components/common/SkillRadar.vue?raw'
 import radarChartSource from '@/components/charts/RadarChart.vue?raw'
 import errorStatusShellSource from '@/components/errors/ErrorStatusShell.vue?raw'
@@ -72,6 +75,28 @@ describe('shared theme token adoption', () => {
       '#0b4f60',
       '#f8feff',
       '#f1f5f9',
+    ])
+    expectNoHardcodedThemeTokens(modalTemplateShellSource, 'ModalTemplateShell', [
+      'rgba(15, 23, 42, 0.4)',
+    ])
+    expectNoHardcodedThemeTokens(classicCenteredModalSource, 'ClassicCenteredModal', [
+      '#ffffff',
+      '#2563eb',
+      'rgba(226, 232, 240, 0.9)',
+      'rgba(241, 245, 249, 1)',
+      'rgba(248, 250, 252, 0.68)',
+      'rgba(219, 234, 254, 1)',
+      'rgba(148, 163, 184, 1)',
+      'rgba(51, 65, 85, 1)',
+      'rgba(15, 23, 42, 1)',
+    ])
+    expectNoHardcodedThemeTokens(cContextTooltipSource, 'CContextTooltip', [
+      'bg-slate-900',
+      'text-slate-900',
+      'text-slate-300',
+      'text-white',
+      'border-slate-400',
+      'border-t-slate-900',
     ])
     expectNoHardcodedThemeTokens(cLightActionPopoverSource, 'CLightActionPopover', [
       '#2a7a58',
