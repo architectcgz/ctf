@@ -2,6 +2,7 @@ import { reactive, ref } from 'vue'
 
 import { getUsers, publishAdminNotification } from '@/api/admin'
 import { getClasses } from '@/api/teacher'
+import { useAbortController } from '@/composables/useAbortController'
 import type {
   AdminNotificationPublishPayload,
   AdminNotificationPublishResult,
@@ -43,6 +44,7 @@ function uniqueValues(values: string[]): string[] {
 
 export function useAdminNotificationPublisher() {
   const toast = useToast()
+  const { createController, abort } = useAbortController()
 
   const form = reactive<NotificationPublishFormDraft>(createDefaultForm())
   const audienceTarget = ref<NotificationAudienceTarget>('all')
@@ -61,6 +63,24 @@ export function useAdminNotificationPublisher() {
 
   const errors = reactive<NotificationPublishErrors>({})
 
+  function isCanceledError(error: unknown): boolean {
+    return (
+      !!error &&
+      typeof error === 'object' &&
+      ('code' in error ? (error as { code?: unknown }).code === 'ERR_CANCELED' : false)
+    )
+  }
+
+  function clearUserSearchState(options?: { preserveKeyword?: boolean }) {
+    latestUserSearchRequestID += 1
+    abort()
+    if (!options?.preserveKeyword) {
+      userKeyword.value = ''
+    }
+    userOptions.value = []
+    loadingUsers.value = false
+  }
+
   function clearErrors() {
     errors.title = undefined
     errors.content = undefined
@@ -77,6 +97,9 @@ export function useAdminNotificationPublisher() {
     audienceTarget.value = next
     resetSelections()
     errors.audience = undefined
+    if (next !== 'user') {
+      clearUserSearchState()
+    }
   }
 
   function buildPayload(): AdminNotificationPublishPayload {
@@ -174,22 +197,27 @@ export function useAdminNotificationPublisher() {
     const normalizedKeyword = keyword.trim()
     userKeyword.value = keyword
     if (!normalizedKeyword) {
-      latestUserSearchRequestID += 1
-      userOptions.value = []
-      loadingUsers.value = false
+      clearUserSearchState({ preserveKeyword: true })
       return
     }
 
     const requestID = ++latestUserSearchRequestID
+    const controller = createController()
     loadingUsers.value = true
     try {
       const response = await getUsers({
         page: 1,
         page_size: 20,
         keyword: normalizedKeyword,
+      }, {
+        signal: controller.signal,
       })
       if (requestID !== latestUserSearchRequestID) return
       userOptions.value = response.list
+    } catch (error) {
+      if (requestID !== latestUserSearchRequestID) return
+      if (isCanceledError(error)) return
+      throw error
     } finally {
       if (requestID !== latestUserSearchRequestID) return
       loadingUsers.value = false
@@ -204,8 +232,7 @@ export function useAdminNotificationPublisher() {
     form.link = initial.link
     audienceTarget.value = 'all'
     classOptions.value = []
-    userOptions.value = []
-    userKeyword.value = ''
+    clearUserSearchState()
     clearErrors()
     resetSelections()
   }
