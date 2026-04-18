@@ -18,6 +18,8 @@ import notificationDropdownSource from '@/components/layout/NotificationDropdown
 import sidebarSource from '@/components/layout/Sidebar.vue?raw'
 import topNavSource from '@/components/layout/TopNav.vue?raw'
 import cLightActionPopoverSource from '@/components/common/modal-templates/CLightActionPopover.vue?raw'
+import cFocusedInputDialogSource from '@/components/common/modal-templates/CFocusedInputDialog.vue?raw'
+import cImmersiveConfirmDialogSource from '@/components/common/modal-templates/CImmersiveConfirmDialog.vue?raw'
 import challengePackageImportEntrySource from '@/components/admin/challenge/ChallengePackageImportEntry.vue?raw'
 import adminDashboardSource from '@/components/admin/dashboard/AdminDashboardPage.vue?raw'
 import writeupManageSource from '@/components/admin/writeup/ChallengeWriteupManagePanel.vue?raw'
@@ -77,6 +79,27 @@ describe('shared theme token adoption', () => {
       'text-slate-900',
       'border-slate-200',
       'shadow-[0_12px_40px_rgba(0,0,0,0.12)]',
+    ])
+    expectNoHardcodedThemeTokens(cFocusedInputDialogSource, 'CFocusedInputDialog', [
+      '#ffffff',
+      '#f8fafc',
+      '#2a7a58',
+      '#206346',
+      '#94a3b8',
+      '#475569',
+      'rgba(42, 122, 88, 0.1)',
+      'rgba(42, 122, 88, 0.2)',
+    ])
+    expectNoHardcodedThemeTokens(cImmersiveConfirmDialogSource, 'CImmersiveConfirmDialog', [
+      '#ffffff',
+      '#fef2f2',
+      '#ef4444',
+      '#dc2626',
+      '#b91c1c',
+      '#0f172a',
+      '#475569',
+      '#e2e8f0',
+      '#f8fafc',
     ])
   })
 
