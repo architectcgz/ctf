@@ -81,4 +81,40 @@ describe('student journal soft shared styles', () => {
     expect(studentOverviewEditorialSource).not.toContain('xl:h-[23rem]')
     expect(studentOverviewEditorialSource).not.toContain('rounded-[18px]')
   })
+
+  it('student journal 页面应复用共享标题、正文与强调图标语义类，而不是继续写主题 utility', () => {
+    expect(journalSoftSurfacesSource).toContain('.journal-soft-surface .journal-soft-page-title')
+    expect(journalSoftSurfacesSource).toContain('.journal-soft-surface .journal-soft-section-title')
+    expect(journalSoftSurfacesSource).toContain('.journal-soft-surface .journal-soft-body-title')
+    expect(journalSoftSurfacesSource).toContain('.journal-soft-surface .journal-soft-body-copy')
+    expect(journalSoftSurfacesSource).toContain('.journal-soft-surface .journal-soft-meta')
+    expect(journalSoftSurfacesSource).toContain('.journal-soft-surface .journal-soft-accent-icon')
+    expect(journalSoftSurfacesSource).toContain('.journal-soft-surface .journal-soft-accent-pill')
+
+    for (const source of [
+      studentCategoryProgressSource,
+      studentDifficultySource,
+      studentOverviewEditorialSource,
+      studentRecommendationSource,
+      studentTimelineSource,
+    ]) {
+      expect(source).not.toContain('text-[var(--journal-ink)]')
+    }
+
+    for (const source of [
+      studentCategoryProgressSource,
+      studentOverviewEditorialSource,
+      studentRecommendationSource,
+      studentTimelineSource,
+    ]) {
+      expect(source).not.toContain('text-[var(--journal-muted)]')
+    }
+
+    for (const source of [studentOverviewEditorialSource, studentRecommendationSource]) {
+      expect(source).not.toContain('text-[var(--journal-accent-strong)]')
+    }
+
+    expect(studentRecommendationSource).not.toContain('border-[var(--journal-accent)]/20')
+    expect(studentRecommendationSource).not.toContain('bg-[var(--journal-accent)]/8')
+  })
 })

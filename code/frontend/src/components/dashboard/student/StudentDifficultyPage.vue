@@ -124,7 +124,7 @@ function openPrimaryDifficulty(): void {
     <div :class="embedded ? undefined : 'content-pane'">
       <div class="difficulty-header">
       <div class="workspace-overline">Intensity Workspace</div>
-      <h1 class="journal-page-title workspace-page-title text-[var(--journal-ink)]">
+      <h1 class="journal-page-title workspace-page-title journal-soft-page-title">
         {{ headlineTitle }}
       </h1>
       <p class="workspace-page-copy max-w-2xl">
