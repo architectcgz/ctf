@@ -48,6 +48,27 @@
     --journal-shell-dark-surface-subtle,
     color-mix(in srgb, var(--color-bg-surface) 76%, var(--color-bg-base))
   );
+  --ui-btn-secondary-background: color-mix(
+    in srgb,
+    var(--journal-surface) 92%,
+    var(--color-bg-base)
+  );
+  --ui-btn-secondary-color: color-mix(
+    in srgb,
+    var(--journal-ink) 84%,
+    var(--journal-muted)
+  );
+  --ui-btn-secondary-border: color-mix(in srgb, var(--journal-border) 78%, transparent);
+  --ui-btn-secondary-hover-background: color-mix(
+    in srgb,
+    var(--journal-surface-subtle) 94%,
+    var(--color-bg-base)
+  );
+  --ui-btn-secondary-hover-border: color-mix(in srgb, var(--journal-border) 92%, transparent);
+  --ui-btn-secondary-hover-color: var(--journal-ink);
+  --ui-btn-ghost-color: color-mix(in srgb, var(--journal-muted) 92%, var(--journal-ink));
+  --ui-btn-ghost-hover-background: color-mix(in srgb, var(--journal-border) 18%, transparent);
+  --ui-btn-ghost-hover-color: var(--journal-ink);
 }
 
 .journal-shell.journal-shell-admin,
