@@ -54,7 +54,7 @@ onMounted(() => {
 
 <template>
   <section
-    class="workspace-shell journal-shell journal-shell-admin journal-notes-card journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border"
+    class="workspace-shell journal-shell journal-shell-admin journal-notes-card journal-hero flex min-h-full flex-1 flex-col"
   >
     <main class="content-pane">
       <div v-if="loading" class="flex justify-center py-10">

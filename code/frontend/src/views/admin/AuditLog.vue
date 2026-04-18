@@ -269,9 +269,10 @@ watch(
 
 <template>
   <section
-    class="journal-shell journal-shell-admin journal-notes-card journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
+    class="workspace-shell journal-shell journal-shell-admin journal-notes-card journal-hero flex min-h-full flex-1 flex-col"
   >
-    <header class="admin-overview">
+    <main class="content-pane">
+      <header class="admin-overview">
       <div class="admin-overview__intro">
         <div class="workspace-overline">Audit Log</div>
         <h1 class="admin-page-title">审计日志</h1>
@@ -306,31 +307,31 @@ watch(
           </div>
         </article>
       </div>
-    </header>
+      </header>
 
-    <section class="admin-board workspace-directory-section">
-      <header class="list-heading audit-board__head">
+      <section class="admin-board workspace-directory-section">
+        <header class="list-heading audit-board__head">
         <div>
           <div class="workspace-overline">Audit Trail</div>
           <h2 class="list-heading__title">操作流水</h2>
         </div>
         <div class="admin-caption">第 {{ page }} / {{ totalPages }} 页</div>
-      </header>
+        </header>
 
-      <WorkspaceDirectoryToolbar
-        v-model="keyword"
-        :total="filteredTotal"
-        :selected-sort-label="sortConfig.label"
-        :sort-options="sortOptions"
-        search-placeholder="检索动作、资源类型、执行人..."
-        total-suffix="条日志"
-        reset-label="重置筛选"
-        :reset-disabled="!hasActiveFilters"
-        @select-sort="setSort"
-        @reset-filters="void resetFilters()"
-      >
-        <template #filter-panel>
-          <div class="audit-filter-grid">
+        <WorkspaceDirectoryToolbar
+          v-model="keyword"
+          :total="filteredTotal"
+          :selected-sort-label="sortConfig.label"
+          :sort-options="sortOptions"
+          search-placeholder="检索动作、资源类型、执行人..."
+          total-suffix="条日志"
+          reset-label="重置筛选"
+          :reset-disabled="!hasActiveFilters"
+          @select-sort="setSort"
+          @reset-filters="void resetFilters()"
+        >
+          <template #filter-panel>
+            <div class="audit-filter-grid">
             <label class="audit-filter-field">
               <span class="audit-filter-label">动作</span>
               <select v-model="filters.action" class="audit-filter-select">
@@ -365,44 +366,47 @@ watch(
                 class="audit-filter-input"
               />
             </label>
-          </div>
-        </template>
-      </WorkspaceDirectoryToolbar>
+            </div>
+          </template>
+        </WorkspaceDirectoryToolbar>
 
-      <div v-if="error" class="admin-error">
-        {{ error }}
-        <button type="button" class="ml-3 font-medium underline" @click="loadLogs">重试</button>
-      </div>
+        <div v-if="error" class="admin-error">
+          {{ error }}
+          <button type="button" class="ml-3 font-medium underline" @click="loadLogs">重试</button>
+        </div>
 
-      <div v-else-if="loading" class="space-y-3 workspace-directory-loading">
+        <div v-else-if="loading" class="space-y-3 workspace-directory-loading">
+          <div
+            v-for="index in 6"
+            :key="index"
+            class="h-14 animate-pulse rounded-2xl bg-[color-mix(in_srgb,var(--journal-surface)_90%,var(--color-bg-base))]"
+          />
+        </div>
+
         <div
-          v-for="index in 6"
-          :key="index"
-          class="h-14 animate-pulse rounded-2xl bg-[color-mix(in_srgb,var(--journal-surface)_90%,var(--color-bg-base))]"
-        />
-      </div>
+          v-else-if="filteredRows.length === 0"
+          class="audit-empty-state workspace-directory-empty"
+        >
+          <AppEmpty
+            icon="Inbox"
+            title="当前筛选条件下没有日志记录"
+            description="可以放宽动作、资源类型或执行人条件，再重新检索。"
+          />
+        </div>
 
-      <div v-else-if="filteredRows.length === 0" class="audit-empty-state workspace-directory-empty">
-        <AppEmpty
-          icon="Inbox"
-          title="当前筛选条件下没有日志记录"
-          description="可以放宽动作、资源类型或执行人条件，再重新检索。"
-        />
-      </div>
-
-      <WorkspaceDataTable
-        v-else
-        class="audit-list workspace-directory-list"
-        :columns="auditTableColumns"
-        :rows="filteredRows"
-        row-key="id"
-        row-class="audit-row"
-      >
-        <template #cell-created_at="{ row }">
-          <span class="audit-row__time">
-            {{ formatDate((row as AuditLogItem).created_at) }}
-          </span>
-        </template>
+        <WorkspaceDataTable
+          v-else
+          class="audit-list workspace-directory-list"
+          :columns="auditTableColumns"
+          :rows="filteredRows"
+          row-key="id"
+          row-class="audit-row"
+        >
+          <template #cell-created_at="{ row }">
+            <span class="audit-row__time">
+              {{ formatDate((row as AuditLogItem).created_at) }}
+            </span>
+          </template>
 
         <template #cell-action="{ row }">
           <span class="audit-chip">{{ (row as AuditLogItem).action }}</span>
@@ -431,18 +435,19 @@ watch(
             {{ detailPreview((row as AuditLogItem).detail) }}
           </p>
         </template>
-      </WorkspaceDataTable>
+        </WorkspaceDataTable>
 
-      <div v-if="!loading && total > 0" class="admin-pagination workspace-directory-pagination">
-        <AdminPaginationControls
-          :page="page"
-          :total-pages="totalPages"
-          :total="total"
-          :total-label="`共 ${total} 条记录`"
-          @change-page="void changePage($event)"
-        />
-      </div>
-    </section>
+        <div v-if="!loading && total > 0" class="admin-pagination workspace-directory-pagination">
+          <AdminPaginationControls
+            :page="page"
+            :total-pages="totalPages"
+            :total="total"
+            :total-label="`共 ${total} 条记录`"
+            @change-page="void changePage($event)"
+          />
+        </div>
+      </section>
+    </main>
   </section>
 </template>
 

@@ -22,6 +22,11 @@ const emit = defineEmits<{
 }>()
 
 const isEmbedded = computed(() => props.embedded)
+const pageShellClass = computed(() =>
+  isEmbedded.value
+    ? 'writeup-embedded-shell'
+    : 'workspace-shell journal-shell journal-shell-admin journal-notes-card journal-hero flex min-h-full flex-1 flex-col'
+)
 const {
   loading,
   saving,
@@ -43,11 +48,7 @@ const {
 <template>
   <component
     :is="isEmbedded ? 'div' : 'section'"
-    :class="
-      isEmbedded
-        ? 'writeup-embedded-shell'
-        : 'workspace-shell journal-shell journal-shell-admin journal-notes-card journal-hero flex min-h-full flex-1 flex-col rounded-[24px] border px-6 py-6 md:px-8'
-    "
+    :class="pageShellClass"
   >
     <header v-if="!isEmbedded" class="workspace-topbar">
       <div class="topbar-leading">

@@ -60,7 +60,7 @@ watch(importId, () => {
 
 <template>
   <section
-    class="journal-shell journal-shell-admin journal-notes-card journal-hero flex min-h-full flex-1 flex-col rounded-[24px] border px-6 py-6 md:px-8"
+    class="workspace-shell journal-shell journal-shell-admin journal-notes-card journal-hero flex min-h-full flex-1 flex-col"
   >
     <header class="workspace-topbar">
       <div class="topbar-leading">
@@ -72,45 +72,47 @@ watch(importId, () => {
       </button>
     </header>
 
-    <PageHeader
-      class="import-preview-page-header"
-      eyebrow="Import Preview"
-      title="导入预览"
-      description="请仔细检查题目，确认题头、运行信息和提示内容后再正式导入题库。"
-    />
-
-    <div v-if="uploading" class="import-preview-loading flex items-center justify-center py-12">
-      <div
-        class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--journal-border)] border-t-[var(--journal-accent)]"
+    <main class="content-pane">
+      <PageHeader
+        class="import-preview-page-header"
+        eyebrow="Import Preview"
+        title="导入预览"
+        description="请仔细检查题目，确认题头、运行信息和提示内容后再正式导入题库。"
       />
-    </div>
 
-    <AppEmpty
-      v-else-if="!hasPreview || !preview"
-      class="import-preview-empty"
-      icon="Flag"
-      title="未找到导入预览"
-      description="该导入任务可能已失效或已被清理，请返回导入页重新上传题目包。"
-    >
-      <template #action>
-        <div class="import-preview-empty__actions">
-          <button class="nav-back" type="button" @click="void backToImportPanel()">
-            返回导入页
-          </button>
-          <button class="nav-back" type="button" @click="void backToQueuePanel()">
-            查看待确认导入
-          </button>
-        </div>
-      </template>
-    </AppEmpty>
+      <div v-if="uploading" class="import-preview-loading flex items-center justify-center py-12">
+        <div
+          class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--journal-border)] border-t-[var(--journal-accent)]"
+        />
+      </div>
 
-    <ChallengePackageImportReview
-      v-else
-      :preview="preview"
-      :committing="committing"
-      @confirm="void handleCommitPreview()"
-      @reset="void backToImportPanel()"
-    />
+      <AppEmpty
+        v-else-if="!hasPreview || !preview"
+        class="import-preview-empty"
+        icon="Flag"
+        title="未找到导入预览"
+        description="该导入任务可能已失效或已被清理，请返回导入页重新上传题目包。"
+      >
+        <template #action>
+          <div class="import-preview-empty__actions">
+            <button class="nav-back" type="button" @click="void backToImportPanel()">
+              返回导入页
+            </button>
+            <button class="nav-back" type="button" @click="void backToQueuePanel()">
+              查看待确认导入
+            </button>
+          </div>
+        </template>
+      </AppEmpty>
+
+      <ChallengePackageImportReview
+        v-else
+        :preview="preview"
+        :committing="committing"
+        @confirm="void handleCommitPreview()"
+        @reset="void backToImportPanel()"
+      />
+    </main>
   </section>
 </template>
 

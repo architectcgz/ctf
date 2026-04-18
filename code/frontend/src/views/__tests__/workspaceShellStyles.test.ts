@@ -25,6 +25,7 @@ function expectNoLocalProperty(source: string, selector: string, propertyPattern
 describe('workspace shell shared styles', () => {
   it('应该在共享样式文件中声明 workspace shell 骨架样式', () => {
     expect(workspaceShellStylesSource).toContain('.workspace-shell')
+    expect(workspaceShellStylesSource).toMatch(/--workspace-shell-radius:\s*0;/)
     expect(workspaceShellStylesSource).toContain('.workspace-shell > .workspace-topbar')
     expect(workspaceShellStylesSource).toContain('.workspace-shell > .top-tabs')
     expect(workspaceShellStylesSource).toContain('.workspace-shell > .workspace-grid')
@@ -47,8 +48,10 @@ describe('workspace shell shared styles', () => {
         '.workspace-shell',
         'box-shadow:\\s*var\\(--workspace-shadow-shell\\)'
       )
+      expectNoLocalProperty(source, '.workspace-shell', '--workspace-shell-radius:\\s*0')
       expectNoLocalProperty(source, '.top-tabs', 'gap:\\s*28px')
       expectNoLocalProperty(source, '.content-pane', 'padding:\\s*28px')
+      expectNoLocalProperty(source, '.content-pane', 'border-radius:\\s*0')
     }
   })
 

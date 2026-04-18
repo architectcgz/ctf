@@ -11,7 +11,7 @@
     --workspace-shell-bg,
     var(--workspace-shell, color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base)))
   );
-  --workspace-shell-radius: var(--workspace-radius-xl, 28px);
+  --workspace-shell-radius: 0;
   --workspace-shell-shadow: var(
     --workspace-shadow-shell,
     0 24px 84px color-mix(in srgb, var(--color-shadow-soft) 58%, transparent)

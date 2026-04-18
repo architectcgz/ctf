@@ -123,17 +123,16 @@ const {
   challengeId: props.challengeId,
   mode: props.mode,
 })
+
+const rootClasses = computed(() => [
+  'topology-page',
+  isTemplateLibraryMode.value ? 'topology-page--template-library' : 'topology-page--challenge',
+  'workspace-shell journal-shell journal-shell-admin journal-notes-card journal-hero flex min-h-full flex-1 flex-col',
+])
 </script>
 
 <template>
-  <div
-    :class="[
-      'topology-page',
-      isTemplateLibraryMode
-        ? 'topology-page--template-library'
-        : 'topology-page--challenge workspace-shell journal-shell journal-shell-admin journal-notes-card journal-hero teacher-management-shell teacher-surface teacher-surface-workspace-bg',
-    ]"
-  >
+  <div :class="rootClasses">
     <PageHeader
       v-if="isTemplateLibraryMode"
       class="topology-page-header"
@@ -198,7 +197,7 @@ const {
 
     <section
       v-else-if="loading && isTemplateLibraryMode"
-      class="template-library-main rounded-[30px] border px-6 py-6 md:px-8"
+      class="content-pane template-library-main"
     >
       <div class="flex justify-center py-12">
         <AppLoading>{{ loadingText }}</AppLoading>
@@ -208,7 +207,7 @@ const {
     <template v-else>
       <section
         v-if="isTemplateLibraryMode"
-        class="template-library-main rounded-[30px] border px-6 py-6 md:px-8"
+        class="content-pane template-library-main"
       >
         <section class="topology-hero-grid grid gap-4 xl:grid-cols-[1.04fr_0.96fr]">
           <div class="topology-hero-lead topology-hero-lead--library">
@@ -1976,8 +1975,6 @@ const {
   display: flex;
   flex-direction: column;
   min-height: max(100%, calc(100vh - 5rem));
-  border: 1px solid var(--journal-border);
-  border-radius: 30px;
   padding: var(--space-6) var(--space-7);
   background:
     radial-gradient(
@@ -1990,7 +1987,20 @@ const {
       color-mix(in srgb, var(--journal-surface) 98%, var(--color-bg-base)),
       color-mix(in srgb, var(--journal-surface-subtle) 96%, var(--color-bg-base))
     );
-  box-shadow: 0 24px 56px var(--color-shadow-soft);
+}
+
+.topology-page--template-library {
+  --journal-ink: var(--color-text-primary);
+  --journal-muted: var(--color-text-secondary);
+  --journal-accent: var(--color-primary);
+  --journal-border: color-mix(in srgb, var(--color-border-default) 84%, transparent);
+  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
+  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 78%, var(--color-bg-base));
+  display: grid;
+  gap: var(--space-5);
+  min-height: max(100%, calc(100vh - 5rem));
+  padding: var(--space-6) var(--space-7);
+  background: color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base));
 }
 
 .topology-page--challenge .workspace-topbar {
@@ -2290,20 +2300,10 @@ const {
   padding-block: var(--space-10);
 }
 
-.topology-page--template-library {
-  --journal-ink: var(--color-text-primary);
-  --journal-muted: var(--color-text-secondary);
-  --journal-accent: var(--color-primary);
-  --journal-border: color-mix(in srgb, var(--color-border-default) 84%, transparent);
-  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
-  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 78%, var(--color-bg-base));
-  display: grid;
-  gap: var(--space-5);
-}
-
 .topology-page--template-library .template-library-main,
 .topology-page--template-library :deep(.page-header) {
   border-color: var(--journal-border);
+  border-radius: 0;
   background:
     radial-gradient(
       circle at top right,
@@ -2854,7 +2854,6 @@ const {
 @media (max-width: 767px) {
   .topology-page--challenge {
     padding: var(--space-5);
-    border-radius: 24px;
   }
 
   .topology-page--challenge .workspace-topbar {

@@ -203,7 +203,7 @@ function handleImportChange(event: Event): void {
 
 <template>
   <section
-    class="journal-shell journal-shell-admin journal-notes-card journal-hero workspace-shell flex min-h-full flex-1 flex-col rounded-[30px] border"
+    class="journal-shell journal-shell-admin journal-notes-card journal-hero workspace-shell flex min-h-full flex-1 flex-col"
   >
     <main class="content-pane">
       <section

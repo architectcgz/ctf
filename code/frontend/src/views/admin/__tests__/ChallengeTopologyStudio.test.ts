@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 
 import ChallengeTopologyStudioPage from '@/components/admin/topology/ChallengeTopologyStudioPage.vue'
+import challengeTopologyStudioPageSource from '@/components/admin/topology/ChallengeTopologyStudioPage.vue?raw'
 import { ApiError } from '@/api/request'
 
 const adminApiMocks = vi.hoisted(() => ({
@@ -142,6 +143,17 @@ describe('ChallengeTopologyStudioPage', () => {
     expect(wrapper.find('.workspace-topbar').exists()).toBe(true)
     expect(wrapper.find('.content-pane').exists()).toBe(true)
     expect(wrapper.find('.context-rail').exists()).toBe(true)
+    expect(wrapper.classes()).toContain('journal-shell-admin')
+    expect(wrapper.classes()).toContain('journal-hero')
+    expect(wrapper.classes()).not.toContain('teacher-management-shell')
+    expect(wrapper.classes()).not.toContain('teacher-surface')
+    expect(wrapper.classes()).not.toContain('teacher-surface-workspace-bg')
+  })
+
+  it('管理员挑战拓扑工作台不应继续复用教师端根壳 token', () => {
+    expect(challengeTopologyStudioPageSource).not.toContain('teacher-management-shell')
+    expect(challengeTopologyStudioPageSource).not.toContain('teacher-surface')
+    expect(challengeTopologyStudioPageSource).not.toContain('teacher-surface-workspace-bg')
   })
 
   it('删除拓扑失败时应优先展示接口返回消息', async () => {

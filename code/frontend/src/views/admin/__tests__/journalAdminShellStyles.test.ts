@@ -27,6 +27,9 @@ describe('admin journal shell shared styles', () => {
     expect(journalAdminShellSource).toContain('.journal-shell.journal-shell-admin')
     expect(journalAdminShellSource).toContain('.journal-shell.journal-shell-admin.journal-hero')
     expect(journalAdminShellSource).toContain('.journal-shell.journal-shell-admin .journal-panel')
+    expect(journalAdminShellSource).toMatch(
+      /\.journal-shell\.journal-shell-admin\.journal-hero\s*\{[\s\S]*border-radius:\s*0\s*!important;/s
+    )
     expect(journalAdminShellSource).toContain(
       "[data-theme='dark'] .journal-shell.journal-shell-admin"
     )

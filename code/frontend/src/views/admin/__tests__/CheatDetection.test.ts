@@ -31,7 +31,7 @@ describe('CheatDetection', () => {
     adminApiMocks.getCheatDetection.mockReset()
   })
 
-  it('应该默认显示总览 tab，并支持切换到快速入口后跳转到审计日志', async () => {
+  it('应该默认渲染单页风险工作台，并支持从审计联动区跳转到日志', async () => {
     adminApiMocks.getCheatDetection.mockResolvedValue({
       generated_at: '2026-03-07T06:00:00.000Z',
       summary: {
@@ -61,14 +61,10 @@ describe('CheatDetection', () => {
     await flushPromises()
 
     expect(wrapper.text()).toContain('作弊检测')
-    expect(wrapper.find('#cheat-tab-overview').attributes('aria-selected')).toBe('true')
-    expect(wrapper.find('#cheat-panel-overview').attributes('aria-hidden')).toBe('false')
-    expect(wrapper.find('#cheat-panel-suspects').attributes('aria-hidden')).toBe('true')
-    expect(wrapper.find('#cheat-panel-shared-ip').attributes('aria-hidden')).toBe('true')
-    expect(wrapper.find('#cheat-panel-actions').attributes('aria-hidden')).toBe('true')
-
-    await wrapper.get('#cheat-tab-actions').trigger('click')
-    await flushPromises()
+    expect(wrapper.find('[role="tablist"]').exists()).toBe(false)
+    expect(wrapper.text()).toContain('高频提交账号')
+    expect(wrapper.text()).toContain('共享 IP 线索')
+    expect(wrapper.text()).toContain('审计联动')
 
     const quickAction = wrapper
       .findAll('button')
@@ -83,7 +79,7 @@ describe('CheatDetection', () => {
     })
   })
 
-  it('应该根据 query 预选 tab，并在切换时同步 panel 参数', async () => {
+  it('应兼容旧 panel query，并继续渲染同一风险工作台', async () => {
     routeState.query = { panel: 'shared-ip' }
 
     adminApiMocks.getCheatDetection.mockResolvedValue({
@@ -114,15 +110,10 @@ describe('CheatDetection', () => {
     const wrapper = mount(CheatDetection)
     await flushPromises()
 
-    expect(wrapper.find('#cheat-tab-shared-ip').attributes('aria-selected')).toBe('true')
-    expect(wrapper.find('#cheat-panel-shared-ip').attributes('aria-hidden')).toBe('false')
-
-    await wrapper.get('#cheat-tab-overview').trigger('click')
-    await flushPromises()
-
-    expect(replaceMock).toHaveBeenLastCalledWith({
-      name: 'CheatDetection',
-      query: {},
-    })
+    expect(wrapper.find('[role="tablist"]').exists()).toBe(false)
+    expect(wrapper.text()).toContain('高频提交账号')
+    expect(wrapper.text()).toContain('共享 IP 线索')
+    expect(wrapper.text()).toContain('审计联动')
+    expect(replaceMock).not.toHaveBeenCalled()
   })
 })
