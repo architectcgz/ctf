@@ -229,6 +229,18 @@ function getChallengeTitleForEvent(event: { service_id?: string; challenge_id: s
   return challengeByChallengeId.value.get(event.challenge_id)?.title || event.challenge_id
 }
 
+function getSubmitResultMessage(): string {
+  if (!submitResult.value) {
+    return ''
+  }
+
+  const challengeTitle = getChallengeTitleForEvent(submitResult.value)
+  if (submitResult.value.is_success) {
+    return `${challengeTitle} 攻击成功，+${submitResult.value.score_gained} 分`
+  }
+  return `${challengeTitle} 攻击未命中有效 flag`
+}
+
 function getWorkspaceService(challenge: ContestChallengeItem): ContestAWDWorkspaceServiceData | undefined {
   if (challenge.awd_service_id) {
     return (
@@ -563,11 +575,7 @@ async function handleSubmit(challengeId: string, serviceKey: string, teamId: str
             class="contest-alert"
             :class="submitResult.is_success ? 'contest-alert--success' : 'contest-alert--danger'"
           >
-            {{
-              submitResult.is_success
-                ? `攻击成功，+${submitResult.score_gained} 分`
-                : '攻击未命中有效 flag'
-            }}
+            {{ getSubmitResultMessage() }}
           </div>
         </section>
       </div>
