@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { watch } from 'vue'
-import { useDebounceFn } from '@vueuse/core'
+import { onUnmounted, watch } from 'vue'
 
 import type { AdminNotificationPublishResult } from '@/api/contracts'
 import AdminSurfaceDrawer from '@/components/common/modal-templates/AdminSurfaceDrawer.vue'
@@ -15,20 +14,33 @@ const emit = defineEmits<{
 }>()
 
 const publisher = useAdminNotificationPublisher()
-type DebouncedUserSearch = ReturnType<typeof useDebounceFn> & {
-  cancel?: () => void
+let userSearchTimer: number | null = null
+
+function clearUserSearchTimer(): void {
+  if (userSearchTimer !== null) {
+    window.clearTimeout(userSearchTimer)
+    userSearchTimer = null
+  }
 }
-const scheduleUserSearch = useDebounceFn(() => {
-  if (publisher.audienceTarget.value !== 'user') return
-  void publisher.searchUsers(publisher.userKeyword.value)
-}, 250) as DebouncedUserSearch
+
+function scheduleUserSearch(): void {
+  clearUserSearchTimer()
+  userSearchTimer = window.setTimeout(() => {
+    userSearchTimer = null
+    if (publisher.audienceTarget.value !== 'user') return
+    void publisher.searchUsers(publisher.userKeyword.value)
+  }, 250)
+}
 
 watch(
   () => props.open,
   (open) => {
+    clearUserSearchTimer()
     if (open) {
       publisher.reset()
+      return
     }
+    publisher.reset()
   }
 )
 
@@ -94,9 +106,13 @@ function toggleUser(id: string, checked: boolean): void {
 }
 
 async function handleUserSearch(): Promise<void> {
-  scheduleUserSearch.cancel?.()
+  clearUserSearchTimer()
   await publisher.searchUsers(publisher.userKeyword.value)
 }
+
+onUnmounted(() => {
+  clearUserSearchTimer()
+})
 </script>
 
 <template>

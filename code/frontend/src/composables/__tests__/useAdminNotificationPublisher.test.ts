@@ -1,4 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { createApp, type App } from 'vue'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { useAdminNotificationPublisher } from '@/composables/useAdminNotificationPublisher'
 
@@ -25,6 +26,20 @@ vi.mock('@/composables/useToast', () => ({
   useToast: () => toastMocks,
 }))
 
+function withSetup<T>(composable: () => T): [T, App] {
+  let result!: T
+
+  const app = createApp({
+    setup() {
+      result = composable()
+      return () => null
+    },
+  })
+
+  app.mount(document.createElement('div'))
+  return [result, app]
+}
+
 function deferred<T>() {
   let resolve!: (value: T | PromiseLike<T>) => void
   const promise = new Promise<T>((nextResolve) => {
@@ -34,6 +49,13 @@ function deferred<T>() {
 }
 
 describe('useAdminNotificationPublisher', () => {
+  let app: App | null = null
+
+  afterEach(() => {
+    app?.unmount()
+    app = null
+  })
+
   beforeEach(() => {
     adminApiMocks.publishAdminNotification.mockReset()
     adminApiMocks.getUsers.mockReset()
@@ -100,11 +122,16 @@ describe('useAdminNotificationPublisher', () => {
     await publisher.searchUsers('alice')
     await publisher.loadClasses()
 
-    expect(adminApiMocks.getUsers).toHaveBeenCalledWith({
-      page: 1,
-      page_size: 20,
-      keyword: 'alice',
-    })
+    expect(adminApiMocks.getUsers).toHaveBeenCalledWith(
+      {
+        page: 1,
+        page_size: 20,
+        keyword: 'alice',
+      },
+      {
+        signal: expect.any(AbortSignal),
+      }
+    )
     expect(teacherApiMocks.getClasses).toHaveBeenCalledTimes(1)
   })
 
@@ -196,5 +223,129 @@ describe('useAdminNotificationPublisher', () => {
     await publisher.searchUsers('   ')
     expect(adminApiMocks.getUsers).not.toHaveBeenCalled()
     expect(publisher.userOptions.value).toEqual([])
+  })
+
+  it('新的用户搜索应中止上一次进行中的请求', async () => {
+    const firstRequestCanceled = deferred<void>()
+
+    adminApiMocks.getUsers
+      .mockReset()
+      .mockImplementationOnce(
+        (_params: unknown, options?: { signal?: AbortSignal }) =>
+          new Promise((_resolve, reject) => {
+            options?.signal?.addEventListener(
+              'abort',
+              () => {
+                firstRequestCanceled.resolve()
+                reject(Object.assign(new Error('canceled'), { code: 'ERR_CANCELED' }))
+              },
+              { once: true }
+            )
+          })
+      )
+      .mockResolvedValueOnce({
+        list: [
+          {
+            id: 'u-2',
+            username: 'alice',
+            name: 'Alice',
+            status: 'active',
+            roles: ['student'],
+            created_at: '2026-03-31T08:00:00Z',
+          },
+        ],
+        total: 1,
+        page: 1,
+        page_size: 20,
+      })
+
+    const publisher = useAdminNotificationPublisher()
+    const firstSearch = publisher.searchUsers('bob')
+
+    await Promise.resolve()
+    const firstSignal = adminApiMocks.getUsers.mock.calls[0]?.[1]?.signal as AbortSignal | undefined
+
+    await publisher.searchUsers('alice')
+    await firstRequestCanceled.promise
+
+    expect(firstSignal?.aborted).toBe(true)
+    await expect(firstSearch).resolves.toBeUndefined()
+    expect(publisher.userOptions.value).toEqual([expect.objectContaining({ username: 'alice' })])
+  })
+
+  it('清空搜索词时应中止进行中的请求并清空结果', async () => {
+    const requestCanceled = deferred<void>()
+
+    adminApiMocks.getUsers.mockReset().mockImplementationOnce(
+      (_params: unknown, options?: { signal?: AbortSignal }) =>
+        new Promise((_resolve, reject) => {
+          options?.signal?.addEventListener(
+            'abort',
+            () => {
+              requestCanceled.resolve()
+              reject(Object.assign(new Error('canceled'), { code: 'ERR_CANCELED' }))
+            },
+            { once: true }
+          )
+        })
+    )
+
+    const publisher = useAdminNotificationPublisher()
+    publisher.userOptions.value = [
+      {
+        id: 'u-stale',
+        username: 'stale',
+        name: 'Stale',
+        status: 'active',
+        roles: ['student'],
+        created_at: '2026-03-31T08:00:00Z',
+      },
+    ]
+
+    const searchTask = publisher.searchUsers('stale')
+
+    await Promise.resolve()
+    const firstSignal = adminApiMocks.getUsers.mock.calls[0]?.[1]?.signal as AbortSignal | undefined
+
+    await publisher.searchUsers('   ')
+    await requestCanceled.promise
+
+    expect(firstSignal?.aborted).toBe(true)
+    await expect(searchTask).resolves.toBeUndefined()
+    expect(publisher.userOptions.value).toEqual([])
+    expect(publisher.loadingUsers.value).toBe(false)
+  })
+
+  it('组件卸载时应中止进行中的用户搜索请求', async () => {
+    const requestCanceled = deferred<void>()
+
+    adminApiMocks.getUsers.mockReset().mockImplementationOnce(
+      (_params: unknown, options?: { signal?: AbortSignal }) =>
+        new Promise((_resolve, reject) => {
+          options?.signal?.addEventListener(
+            'abort',
+            () => {
+              requestCanceled.resolve()
+              reject(Object.assign(new Error('canceled'), { code: 'ERR_CANCELED' }))
+            },
+            { once: true }
+          )
+        })
+    )
+
+    const [publisher, testApp] = withSetup(() => useAdminNotificationPublisher())
+    app = testApp
+
+    const searchTask = publisher.searchUsers('alice')
+    await Promise.resolve()
+
+    const signal = adminApiMocks.getUsers.mock.calls[0]?.[1]?.signal as AbortSignal | undefined
+    app.unmount()
+    app = null
+
+    await requestCanceled.promise
+
+    expect(signal?.aborted).toBe(true)
+    await expect(searchTask).resolves.toBeUndefined()
   })
 })
