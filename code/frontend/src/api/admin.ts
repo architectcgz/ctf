@@ -182,6 +182,7 @@ interface RawAWDTeamServiceItem {
   round_id: string | number
   team_id: string | number
   team_name: string
+  service_id?: string | number
   challenge_id: string | number
   service_status: AWDTeamServiceData['service_status']
   checker_type?: string | null
@@ -200,6 +201,7 @@ interface RawAWDAttackLogItem {
   attacker_team: string
   victim_team_id: string | number
   victim_team: string
+  service_id?: string | number
   challenge_id: string | number
   attack_type: AWDAttackLogData['attack_type']
   source?: AWDAttackLogData['source']
@@ -846,6 +848,7 @@ function normalizeAWDTeamService(item: RawAWDTeamServiceItem): AWDTeamServiceDat
     round_id: String(item.round_id),
     team_id: String(item.team_id),
     team_name: item.team_name,
+    service_id: item.service_id == null ? undefined : String(item.service_id),
     challenge_id: String(item.challenge_id),
     service_status: item.service_status,
     checker_type: normalizeAWDCheckerType(item.checker_type),
@@ -866,6 +869,7 @@ function normalizeAWDAttackLog(item: RawAWDAttackLogItem): AWDAttackLogData {
     attacker_team: item.attacker_team,
     victim_team_id: String(item.victim_team_id),
     victim_team: item.victim_team,
+    service_id: item.service_id == null ? undefined : String(item.service_id),
     challenge_id: String(item.challenge_id),
     attack_type: item.attack_type,
     source: item.source || 'legacy',
@@ -1110,10 +1114,8 @@ function normalizeAdminContestChallenge(
     id: String(item.id),
     contest_id: String(item.contest_id),
     challenge_id: String(item.challenge_id),
-    awd_service_id:
-      item.awd_service_id == null ? undefined : String(item.awd_service_id),
-    awd_template_id:
-      item.awd_template_id == null ? undefined : String(item.awd_template_id),
+    awd_service_id: item.awd_service_id == null ? undefined : String(item.awd_service_id),
+    awd_template_id: item.awd_template_id == null ? undefined : String(item.awd_template_id),
     awd_service_display_name: item.awd_service_display_name || undefined,
     title: item.title,
     category: item.category,

@@ -398,6 +398,7 @@ export interface AWDTeamServiceData {
   round_id: ID
   team_id: ID
   team_name: string
+  service_id?: ID
   challenge_id: ID
   service_status: AWDServiceStatus
   checker_type?: AWDCheckerType
@@ -416,6 +417,7 @@ export interface AWDAttackLogData {
   attacker_team: string
   victim_team_id: ID
   victim_team: string
+  service_id?: ID
   challenge_id: ID
   attack_type: AWDAttackType
   source: AWDAttackSource
@@ -433,6 +435,7 @@ export interface ContestAWDWorkspaceTeamData {
 }
 
 export interface ContestAWDWorkspaceServiceData {
+  service_id?: ID
   challenge_id: ID
   access_url?: string
   service_status?: AWDServiceStatus
@@ -445,6 +448,7 @@ export interface ContestAWDWorkspaceServiceData {
 }
 
 export interface ContestAWDWorkspaceTargetServiceData {
+  service_id?: ID
   challenge_id: ID
   access_url?: string
 }
@@ -458,6 +462,7 @@ export interface ContestAWDWorkspaceTargetTeamData {
 export interface ContestAWDWorkspaceRecentEventData {
   id: ID
   direction: ContestAWDWorkspaceEventDirection
+  service_id?: ID
   challenge_id: ID
   peer_team_id: ID
   peer_team_name: string
