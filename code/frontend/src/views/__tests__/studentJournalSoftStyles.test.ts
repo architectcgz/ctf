@@ -56,4 +56,20 @@ describe('student journal soft shared styles', () => {
       expect(source).not.toMatch(/^:global\(\[data-theme='dark'\]\) \.journal-hero\s*\{/m)
     }
   })
+
+  it('student journal 页面应复用共享空态面板样式，而不是重复写裸圆角和主题色类', () => {
+    expect(journalSoftSurfacesSource).toContain('.journal-soft-surface .journal-soft-empty-state')
+
+    for (const source of [
+      studentCategoryProgressSource,
+      studentDifficultySource,
+      studentRecommendationSource,
+      studentTimelineSource,
+    ]) {
+      expect(source).toContain('journal-soft-empty-state')
+      expect(source).not.toContain(
+        'rounded-[22px] border border-dashed border-[var(--journal-shell-border)]'
+      )
+    }
+  })
 })
