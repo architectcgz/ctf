@@ -103,7 +103,7 @@ function openPrimaryCategory(): void {
     <div :class="embedded ? undefined : 'content-pane'">
       <div class="category-header">
       <div class="workspace-overline">Action Ranking</div>
-      <h1 class="journal-page-title workspace-page-title text-[var(--journal-ink)]">
+      <h1 class="journal-page-title workspace-page-title journal-soft-page-title">
         {{ headlineTitle }}
       </h1>
       <p class="workspace-page-copy max-w-2xl">
@@ -178,7 +178,7 @@ function openPrimaryCategory(): void {
                     >{{ item.solved }}/{{ item.total }}</span
                   >
                 </div>
-                <p class="mt-2 text-sm leading-6 text-[var(--journal-muted)]">
+                <p class="journal-soft-body-copy mt-2 text-sm leading-6">
                   {{ categoryActionCopy(item, index) }}
                 </p>
               </div>

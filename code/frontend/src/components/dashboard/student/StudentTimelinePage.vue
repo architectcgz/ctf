@@ -111,7 +111,7 @@ function changeTimelinePage(page: number): void {
   >
     <div class="timeline-header">
       <div>
-        <h1 class="journal-page-title workspace-page-title text-[var(--journal-ink)]">
+        <h1 class="journal-page-title workspace-page-title journal-soft-page-title">
           训练记录总览
         </h1>
         <p class="workspace-page-copy max-w-2xl">按时间回看最近训练动作，看看节奏有没有断。</p>
@@ -144,8 +144,8 @@ function changeTimelinePage(page: number): void {
       <div class="journal-divider timeline-board-divider" aria-hidden="true" />
       <section class="timeline-section">
         <div class="workspace-overline">Timeline Log</div>
-        <h3 class="text-xl font-semibold text-[var(--journal-ink)]">训练记录</h3>
-        <p class="mt-2 text-sm leading-6 text-[var(--journal-muted)]">
+        <h3 class="journal-soft-section-title text-xl font-semibold">训练记录</h3>
+        <p class="journal-soft-body-copy mt-2 text-sm leading-6">
           按日期回看最近的提交、解题和实例操作。
         </p>
 
@@ -168,10 +168,10 @@ function changeTimelinePage(page: number): void {
                       :class="`status-dot-${event.type === 'solve' ? 'solved' : event.type.includes('instance') ? 'ready' : 'idle'}`"
                     />
                     <div>
-                      <div class="text-sm font-semibold text-[var(--journal-ink)]">
+                      <div class="journal-soft-body-title text-sm font-semibold">
                         {{ event.title }}
                       </div>
-                      <div class="mt-1 text-sm leading-6 text-[var(--journal-muted)]">
+                      <div class="journal-soft-body-copy mt-1 text-sm leading-6">
                         {{ timelineSummary(event) }}
                       </div>
                     </div>
@@ -183,7 +183,7 @@ function changeTimelinePage(page: number): void {
                     >
                       {{ timelineTypeLabel(event) }}
                     </span>
-                    <span class="tech-font text-xs text-[var(--journal-muted)]">{{
+                    <span class="journal-soft-meta tech-font text-xs">{{
                       formatTime(event.created_at)
                     }}</span>
                   </div>

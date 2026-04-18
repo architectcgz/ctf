@@ -117,7 +117,7 @@ const operationsSummary = computed(() => [
     <div :class="embedded ? undefined : 'content-pane'">
       <div>
         <div class="workspace-overline">Training Journal</div>
-        <h1 class="journal-page-title workspace-page-title max-w-3xl text-[var(--journal-ink)]">
+        <h1 class="journal-page-title workspace-page-title journal-soft-page-title max-w-3xl">
           {{ displayName }} 的训练总览
         </h1>
         <p class="workspace-page-copy max-w-2xl">先看进度、短板和最近状态，再决定下一步训练。</p>
@@ -136,9 +136,9 @@ const operationsSummary = computed(() => [
         <article class="journal-panel journal-radar-card px-6 py-6">
           <div class="journal-panel-head">
             <div>
-              <h3 class="text-xl font-semibold text-[var(--journal-ink)]">能力雷达</h3>
+              <h3 class="journal-soft-section-title text-xl font-semibold">能力雷达</h3>
             </div>
-            <MapPinned class="h-5 w-5 text-[var(--journal-accent-strong)]" />
+            <MapPinned class="journal-soft-accent-icon h-5 w-5" />
           </div>
           <div v-if="hasRadarData" class="journal-radar-body mt-4">
             <div class="journal-radar-chart">
@@ -179,9 +179,9 @@ const operationsSummary = computed(() => [
         <article class="journal-panel journal-rank-card px-6 py-6">
           <div class="journal-panel-head">
             <div>
-              <h3 class="text-xl font-semibold text-[var(--journal-ink)]">竞技表现</h3>
+              <h3 class="journal-soft-section-title text-xl font-semibold">竞技表现</h3>
             </div>
-            <Trophy class="h-5 w-5 text-[var(--journal-accent-strong)]" />
+            <Trophy class="journal-soft-accent-icon h-5 w-5" />
           </div>
           <div v-if="hasStoryMetrics" :class="storyMetricGridClass">
             <article
@@ -219,9 +219,9 @@ const operationsSummary = computed(() => [
         <article class="journal-panel journal-ops-card px-6 py-6">
           <div class="journal-panel-head">
             <div>
-              <h3 class="text-xl font-semibold text-[var(--journal-ink)]">公告与状态</h3>
+              <h3 class="journal-soft-section-title text-xl font-semibold">公告与状态</h3>
             </div>
-            <BellRing class="h-5 w-5 text-[var(--journal-accent-strong)]" />
+            <BellRing class="journal-soft-accent-icon h-5 w-5" />
           </div>
           <div class="mt-5 space-y-3">
             <article
@@ -231,19 +231,19 @@ const operationsSummary = computed(() => [
             >
               <div class="flex items-center justify-between gap-3">
                 <div class="flex items-center gap-3">
-                  <component :is="item.icon" class="h-4 w-4 text-[var(--journal-accent-strong)]" />
-                  <div class="text-sm font-medium text-[var(--journal-ink)]">
+                  <component :is="item.icon" class="journal-soft-accent-icon h-4 w-4" />
+                  <div class="journal-soft-body-title text-sm font-medium">
                     {{ item.label }}
                   </div>
                 </div>
                 <div class="flex items-center gap-2">
                   <span class="status-dot" :class="`status-dot-${item.status}`" />
-                  <span class="tech-font text-sm font-medium text-[var(--journal-ink)]">{{
+                  <span class="journal-soft-body-title tech-font text-sm font-medium">{{
                     item.value
                   }}</span>
                 </div>
               </div>
-              <div class="mt-2 text-sm leading-6 text-[var(--journal-muted)]">
+              <div class="journal-soft-body-copy mt-2 text-sm leading-6">
                 {{ item.description }}
               </div>
             </article>

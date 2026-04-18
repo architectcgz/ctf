@@ -27,6 +27,7 @@
   - `L1` 学生端 journal soft 工作区已补共享空态面板类，`StudentCategoryProgressPage`、`StudentDifficultyPage`、`StudentRecommendationPage`、`StudentTimelinePage` 不再重复内联 `rounded-[22px]`、`border-[var(--journal-shell-border)]` 这类空态块样式；教师 `TeacherAWDReviewIndex`、`TeacherAWDReviewDetail` 的加载骨架也已切到语义类承接。
   - `L1` 个人安全页与学生总览页已继续收敛残留魔法值，`SecuritySettings` 的提示区文本已切到语义类，`StudentOverviewStyleEditorial` 的雷达图区高度和紧凑空态块已切到语义类与共享空态变体，不再直接写 `h-[18rem]`、`rounded-[18px]` 等片段。
   - `L1` `SkillProfile` 已继续收敛错误态、弱项提示和推荐区的模板内主题色类，错误图标、标题、说明文案和推荐箭头均已切到语义类承接，不再直接写 `text-[var(--color-danger)]`、`text-[var(--journal-accent-strong)]` 等类片段。
+  - `L1` 学生端 `journal-soft` 页面已继续抽出共享文本与强调原语，`StudentCategoryProgressPage`、`StudentDifficultyPage`、`StudentRecommendationPage`、`StudentTimelinePage`、`StudentOverviewStyleEditorial` 的页标题、区块标题、正文、时间元信息与强调图标已切到共享 `journal-soft-*` 语义类，不再在模板里重复写 `text-[var(--journal-ink)]`、`text-[var(--journal-muted)]`、`text-[var(--journal-accent-strong)]`。
   - 教师班级工作区已补 `TeacherClassWorkspaceSection` 桥接视图，旧明细路由会回落到统一 `TeacherClassStudents` 工作区，并通过 `panel` 查询参数恢复目标标签页。
 - 未完成：
   - `M4` 教师分析面板和 AWD 轮次面板的 props 透传与职责过载。
@@ -109,6 +110,7 @@
 - `526ed7cb fix(frontend): 收敛个人中心页面魔法值`
 - `106e7f39 fix(frontend): 收敛学生空态与教师骨架样式`
 - `497cabc6 fix(frontend): 收敛安全页与学生总览魔法值`
+- `300f0fbe fix(frontend): 收敛能力画像页主题类`
 
 ## 下一批建议
 
