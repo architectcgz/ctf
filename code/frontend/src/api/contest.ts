@@ -60,6 +60,15 @@ interface RawTeamCreateResp {
   created_at: string
 }
 
+interface RawContestChallengeItem extends Omit<
+  ContestChallengeItem,
+  'id' | 'challenge_id' | 'awd_service_id'
+> {
+  id: string | number
+  challenge_id: string | number
+  awd_service_id?: string | number | null
+}
+
 interface RawAWDRoundData extends Omit<AWDRoundData, 'id' | 'contest_id'> {
   id: string | number
   contest_id: string | number
@@ -146,6 +155,15 @@ function normalizeContest(item: RawContestItem): ContestDetailData {
     starts_at: item.start_time,
     ends_at: item.end_time,
     scoreboard_frozen: Boolean(item.freeze_time),
+  }
+}
+
+function normalizeContestChallenge(item: RawContestChallengeItem): ContestChallengeItem {
+  return {
+    ...item,
+    id: String(item.id),
+    challenge_id: String(item.challenge_id),
+    awd_service_id: item.awd_service_id == null ? undefined : String(item.awd_service_id),
   }
 }
 
@@ -263,10 +281,11 @@ export async function registerContest(id: string) {
 }
 
 export async function getContestChallenges(id: string): Promise<ContestChallengeItem[]> {
-  return request<ContestChallengeItem[]>({
+  const response = await request<RawContestChallengeItem[]>({
     method: 'GET',
     url: `/contests/${encodeURIComponent(id)}/challenges`,
   })
+  return response.map(normalizeContestChallenge)
 }
 
 export async function submitContestFlag(
