@@ -129,7 +129,13 @@ describe('modal templates', () => {
 
     expect(popoverSource).toContain('发现题目问题？')
     expect(popoverSource).toContain('发送反馈')
-    expect(popoverSource).toContain('shadow-[0_12px_40px_rgba(0,0,0,0.12)]')
+    expect(popoverSource).toContain('.c-light-action-popover__panel')
+    expect(popoverSource).not.toContain('text-[13px]')
+    expect(popoverSource).not.toContain('text-[14px]')
+    expect(popoverSource).not.toContain('text-[12px]')
+    expect(popoverSource).not.toContain('shadow-[0_12px_40px_rgba(0,0,0,0.12)]')
+    expect(popoverSource).not.toContain('bg-[#2a7a58]')
+    expect(popoverSource).not.toContain('focus:border-[#2a7a58]')
 
     expect(confirmSource).toContain('确认重建靶机环境？')
     expect(confirmSource).toContain('backdrop-blur-sm')
