@@ -13,7 +13,9 @@
 - 已切换：`ListServiceDefinitionsByContest` 优先读取 `contest_awd_services.runtime_config + score_config`
 - 已切换：`ListReadinessChallengesByContest` 优先读取 `contest_awd_services.runtime_config`，验证状态仍兼容复用 `contest_challenges`
 - 已切换：round flag 存储、checker 取 flag、攻击提交支持 `service_id` 优先、`challenge_id` 回退
-- 未切换：workspace 编排、`awd_team_services`、`awd_attack_logs` 仍以 `challenge_id` 作为持久化与聚合兼容键
+- 已切换：`awd_team_services`、`awd_attack_logs` 以 `contest_awd_services.id` 作为运行态主身份
+- 已降级：`challenge_id` 在运行态持久化中只承担题目元数据与展示字段
+- 未切换：workspace 编排与部分学生端聚合仍主要按 `challenge_id` 展示，后续继续补齐到 `service_id`
 
 也就是说，当前已经形成：
 
@@ -21,7 +23,7 @@
 2. 赛事服务层：`contest_awd_services`
 3. 兼容运行层：`contest_challenges.awd_*`
 
-其中第 1、2 层已经开始进入运行态读路径，且 runtime flag 解析已经具备 `service_id` 桥接能力，但第 3 层仍承担兼容字段、挑战关系和聚合键承接职责，后续 runtime cutover 继续沿着“先 service 定义，再 target 身份，再切持久化聚合键”的顺序推进。
+其中第 1、2 层已经进入运行态主链路，runtime 写入、攻击去重和受害服务影响也已经切到 `service_id`。当前第 3 层仍承担赛事题目关系、部分展示字段与兼容读取职责，后续收口重点变成把 workspace 与学生端聚合逐步从 `challenge_id` 视角切到 `service_id` 视角。
 
 ## 1. 背景
 
@@ -235,6 +237,7 @@
 
 - `round_id`
 - `team_id`
+- `service_id`
 - `challenge_id`
 - `service_status`
 - `check_result`
@@ -250,6 +253,12 @@
   - 本轮实际执行的 checker 类型
 - `checker_version`
   - 可选，便于后续兼容 checker 迭代
+
+当前实现约定：
+
+- `service_id` 是运行态唯一身份，用于 upsert、攻击去重和受害服务影响写回
+- `challenge_id` 保留在记录中，主要用于题目展示、旧接口字段和兼容聚合
+- `uk_awd_team_services` 已切到 `(round_id, team_id, service_id)`
 
 `check_result` 继续保留为 JSON，但其结构升级为标准 checker 执行结果。第一版统一包含：
 
@@ -416,7 +425,7 @@
 2. 物化轮次记录
 3. 生成当前轮 flag 并注入目标实例
 4. 加载参赛队伍、AWD service 配置、目标实例
-5. 对每个 `team + challenge` 执行 checker
+5. 对每个 `team + service` 执行 checker
 6. 写入 `awd_team_services`
 7. 重算队伍官方总分
 8. 刷新 scoreboard cache
@@ -469,6 +478,7 @@
 
 - 给 `contest_challenges` 增加 AWD checker 配置字段
 - 给 `awd_team_services` 增加 `sla_score`、`checker_type`
+- 给 `awd_team_services`、`awd_attack_logs` 增加 `service_id`，并把唯一键与攻击去重条件切到 `service_id`
 
 第二步：
 
@@ -477,10 +487,11 @@
 
 ### 12.2 运行兼容
 
-为了避免一次切换导致现有赛事无法运行：
+当前阶段没有旧赛事数据包袱，因此运行态主链路直接切到 `service_id`，不再长期保留 `challenge_id` 持久化桥接。兼容范围只保留：
 
 - 若某 AWD 题目未配置 `awd_checker_type`，仍允许回退到当前简化探活逻辑
-- 但新建或更新 AWD service 时，管理端应优先要求配置 checker
+- 学生端与部分查询接口暂时继续回传 `challenge_id` 作为展示字段
+- 但新建或更新 AWD service 时，管理端应优先要求配置 checker，并以 `contest_awd_services.id` 作为运行态服务标识
 
 这意味着迁移期会同时存在两类 service：
 

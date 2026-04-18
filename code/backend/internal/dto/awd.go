@@ -40,6 +40,7 @@ type AWDTeamServiceResp struct {
 	RoundID        int64                `json:"round_id"`
 	TeamID         int64                `json:"team_id"`
 	TeamName       string               `json:"team_name"`
+	ServiceID      int64                `json:"service_id"`
 	ChallengeID    int64                `json:"challenge_id"`
 	ServiceStatus  string               `json:"service_status"`
 	CheckResult    map[string]any       `json:"check_result"`
@@ -72,6 +73,7 @@ type AWDAttackLogResp struct {
 	AttackerTeam   string    `json:"attacker_team"`
 	VictimTeamID   int64     `json:"victim_team_id"`
 	VictimTeam     string    `json:"victim_team"`
+	ServiceID      int64     `json:"service_id"`
 	ChallengeID    int64     `json:"challenge_id"`
 	AttackType     string    `json:"attack_type"`
 	Source         string    `json:"source"`

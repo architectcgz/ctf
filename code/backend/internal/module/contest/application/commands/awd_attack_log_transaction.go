@@ -16,7 +16,7 @@ func (s *AWDService) persistAttackLogAndScores(ctx context.Context, contestID, r
 			return err
 		}
 		if req.IsSuccess {
-			if err := txRepo.ApplyAttackImpactToVictimService(ctx, roundID, req.VictimTeamID, req.ChallengeID, logRecord.ScoreGained, now); err != nil {
+			if err := txRepo.ApplyAttackImpactToVictimService(ctx, roundID, req.VictimTeamID, logRecord.ServiceID, req.ChallengeID, logRecord.ScoreGained, now); err != nil {
 				return err
 			}
 		}
