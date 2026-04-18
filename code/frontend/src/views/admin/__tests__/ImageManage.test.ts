@@ -176,6 +176,12 @@ describe('ImageManage', () => {
     expect(imageManageSource).toContain("from '@/components/common/WorkspaceDataTable.vue'")
     expect(imageManageSource).toContain('<WorkspaceDirectoryToolbar')
     expect(imageManageSource).toContain('<WorkspaceDataTable')
+    expect(imageManageSource).toMatch(
+      /\.image-board\s*\{[\s\S]*display:\s*grid;[\s\S]*gap:\s*var\(--space-4\);/s
+    )
+    expect(imageManageSource).toMatch(
+      /\.image-board :deep\(\.workspace-directory-toolbar\)\s*\{[\s\S]*margin-bottom:\s*0;/s
+    )
 
     const wrapper = mountPage()
     await flushPromises()
@@ -206,7 +212,7 @@ describe('ImageManage', () => {
     expect(imageManageSource).toContain('<h2 class="list-heading__title image-section-title">镜像列表</h2>')
     expect(imageManageSource).not.toContain('image-board__hint')
     expect(imageManageSource).toMatch(
-      /\.image-board__head\s*\{[\s\S]*margin-bottom:\s*clamp\(1\.1rem,\s*0\.95rem\s*\+\s*0\.4vw,\s*1\.35rem\);/s
+      /\.image-board__head\s*\{[\s\S]*margin-bottom:\s*0;/s
     )
     expect(imageManageSource).toMatch(
       /\.list-heading__title\s*\{[\s\S]*font-size:\s*clamp\(1\.2rem,\s*1rem\s*\+\s*0\.5vw,\s*1\.45rem\);/s

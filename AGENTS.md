@@ -89,6 +89,15 @@
   - 只在能明显降低页面认知负担、测试复杂度和回归风险时才提取
 - 高复杂度页面应按职责优先拆分，避免在同一文件持续累积路由状态、数据编排和交互流程；优先抽离为 composable 或子组件后再扩展功能。
 
+### Admin Directory Spacing Rules
+- 对管理员端页面，凡是“目录标题 + `WorkspaceDirectoryToolbar` + 列表/表格/空状态/分页”这一类连续结构，垂直节奏默认由页面自己的目录 section 统一控制，不要让 section `gap` 与 toolbar 自带的 `margin-bottom` 叠加。
+- 默认做法：
+  - 目录 section 使用 `display: grid; gap: var(--space-4);`
+  - 目录标题头部自身 `margin-bottom: 0;`
+  - 页面内对 `WorkspaceDirectoryToolbar` 做局部收口：`:deep(.workspace-directory-toolbar) { margin-bottom: 0; }`
+- 当确实需要更松的目录节奏时，优先调整 section 的 `gap`，不要重新放大 toolbar 的 `margin-bottom`。
+- 新增或重构管理员端列表页时，需优先检查 `users / challenges / contests / classes / students / instances / audit-log / images` 这类目录页的现有节奏，保持一致后再提交。
+
 ### Frontend Workflow Preference
 - 本节为 `ctf` 仓库内的覆盖规则；命中本节条件时，优先于上层“实现类改动默认使用 `git worktree add`”的通用约定。
 - 当用户要求“更新前端 UI / 页面样式 / 视觉优化”时，默认直接在 `main` 分支修改，不创建新分支、不创建新 worktree。

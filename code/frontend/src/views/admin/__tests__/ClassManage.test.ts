@@ -47,6 +47,12 @@ describe('AdminClassManagement', () => {
     expect(adminClassManageSource).toContain('<WorkspaceDirectoryToolbar')
     expect(adminClassManageSource).toContain('<WorkspaceDataTable')
     expect(adminClassManageSource).toContain('<WorkspaceDirectoryPagination')
+    expect(adminClassManageSource).toMatch(
+      /\.admin-class-manage-directory\s*\{[\s\S]*display:\s*grid;[\s\S]*gap:\s*var\(--space-4\);/s
+    )
+    expect(adminClassManageSource).toMatch(
+      /\.admin-class-manage-directory :deep\(\.workspace-directory-toolbar\)\s*\{[\s\S]*margin-bottom:\s*0;/s
+    )
     expect(adminClassManageSource).not.toContain('teacher-management-shell')
     expect(adminClassManageSource).not.toContain('teacher-directory-row')
 

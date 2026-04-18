@@ -617,8 +617,17 @@ onMounted(() => {
   color: var(--journal-ink);
 }
 
+.admin-instance-manage-directory {
+  display: grid;
+  gap: var(--space-4);
+}
+
 .admin-instance-manage-directory > .list-heading {
-  margin-bottom: clamp(1.1rem, 0.95rem + 0.4vw, 1.35rem);
+  margin-bottom: 0;
+}
+
+.admin-instance-manage-directory :deep(.workspace-directory-toolbar) {
+  margin-bottom: 0;
 }
 
 .admin-instance-manage-filter-grid {

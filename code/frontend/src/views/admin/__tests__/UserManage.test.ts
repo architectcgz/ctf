@@ -348,6 +348,9 @@ describe('UserManage', () => {
     expect(importPanelStart).toBeGreaterThan(-1)
     expect(userGovernanceSource).toContain('<div class="workspace-overline">User Import</div>')
     expect(userGovernanceSource).toContain('<h2 class="workspace-page-title">导入用户</h2>')
+    expect(userGovernanceSource).toMatch(
+      /\.user-directory-section :deep\(\.workspace-directory-toolbar\)\s*\{[\s\S]*margin-bottom:\s*0;/s
+    )
   })
 
   it('用户导入流应保留独立导入面板和回执区', () => {

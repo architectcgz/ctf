@@ -375,8 +375,12 @@ function openContestWorkbench(contest: ContestDetailData) {
 .contest-directory-section,
 .contest-create-panel {
   display: grid;
-  gap: var(--space-5);
+  gap: var(--space-4);
   padding: var(--space-5) var(--space-5-5);
+}
+
+.contest-directory-section :deep(.workspace-directory-toolbar) {
+  margin-bottom: 0;
 }
 
 .contest-create-head {

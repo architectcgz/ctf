@@ -102,6 +102,12 @@ describe('AdminStudentManagement', () => {
     expect(adminStudentManageSource).toContain('<WorkspaceDirectoryToolbar')
     expect(adminStudentManageSource).toContain('<WorkspaceDataTable')
     expect(adminStudentManageSource).toContain('<WorkspaceDirectoryPagination')
+    expect(adminStudentManageSource).toMatch(
+      /\.admin-student-manage-directory\s*\{[\s\S]*display:\s*grid;[\s\S]*gap:\s*var\(--space-4\);/s
+    )
+    expect(adminStudentManageSource).toMatch(
+      /\.admin-student-manage-directory :deep\(\.workspace-directory-toolbar\)\s*\{[\s\S]*margin-bottom:\s*0;/s
+    )
     expect(adminStudentManageSource).not.toContain('teacher-management-shell')
     expect(adminStudentManageSource).not.toContain('teacher-directory-row')
 
