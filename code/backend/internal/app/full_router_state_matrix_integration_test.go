@@ -1876,9 +1876,68 @@ func TestFullRouter_ContestChallengeAndScoreboardStateMatrix(t *testing.T) {
 		t.Fatalf("unexpected unfrozen scoreboard: %+v", unfrozenScoreboard)
 	}
 
-	notFrozenContest := createFullRouterContest(t, env, "Not Frozen Contest", model.ContestStatusRunning)
-	resp = performFullRouterRequest(t, env.router, http.MethodPost, fmt.Sprintf("/api/v1/admin/contests/%d/unfreeze", notFrozenContest.ID), nil, adminHeaders)
-	assertFullRouterStatus(t, resp, http.StatusBadRequest)
+notFrozenContest := createFullRouterContest(t, env, "Not Frozen Contest", model.ContestStatusRunning)
+resp = performFullRouterRequest(t, env.router, http.MethodPost, fmt.Sprintf("/api/v1/admin/contests/%d/unfreeze", notFrozenContest.ID), nil, adminHeaders)
+assertFullRouterStatus(t, resp, http.StatusBadRequest)
+}
+
+func TestFullRouter_VisibleContestChallengesIncludeAWDServiceID(t *testing.T) {
+	env := newFullRouterTestEnv(t)
+
+	adminHeaders := bearerHeaders(loginForToken(t, env.router, env.admin.Username, env.adminPwd))
+	studentHeaders := bearerHeaders(loginForToken(t, env.router, env.student.Username, env.studentPwd))
+
+	challenge := createRecommendationChallenge(t, env, "Visible AWD Challenge", model.DimensionWeb)
+	contest := createFullRouterContest(t, env, "Visible AWD Contest", model.ContestStatusRunning)
+
+	now := time.Now()
+	contestChallenge := &model.ContestChallenge{
+		ContestID:   contest.ID,
+		ChallengeID: challenge.ID,
+		Points:      260,
+		Order:       2,
+		IsVisible:   true,
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	}
+	if err := env.db.Create(contestChallenge).Error; err != nil {
+		t.Fatalf("create contest challenge: %v", err)
+	}
+
+	awdService := &model.ContestAWDService{
+		ContestID:     contest.ID,
+		ChallengeID:   challenge.ID,
+		DisplayName:   "Visible Bank Portal",
+		Order:         0,
+		IsVisible:     true,
+		ScoreConfig:   `{"points":260}`,
+		RuntimeConfig: fmt.Sprintf(`{"challenge_id":%d}`, challenge.ID),
+		CreatedAt:     now,
+		UpdatedAt:     now,
+	}
+	if err := env.db.Create(awdService).Error; err != nil {
+		t.Fatalf("create contest awd service: %v", err)
+	}
+
+	createContestRegistration(t, env, contest.ID, env.student.ID, model.ContestRegistrationStatusApproved, nil)
+
+	resp := performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/admin/contests/%d/challenges", contest.ID), nil, adminHeaders)
+	assertFullRouterStatus(t, resp, http.StatusOK)
+
+	var adminChallenges []dto.ContestChallengeResp
+	decodeFullRouterData(t, resp, &adminChallenges)
+	if len(adminChallenges) != 1 || adminChallenges[0].AWDServiceID == nil || *adminChallenges[0].AWDServiceID != awdService.ID {
+		t.Fatalf("unexpected admin awd service metadata: %+v", adminChallenges)
+	}
+
+	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/contests/%d/challenges", contest.ID), nil, studentHeaders)
+	assertFullRouterStatus(t, resp, http.StatusOK)
+
+	var visibleChallenges []dto.ContestChallengeInfo
+	decodeFullRouterData(t, resp, &visibleChallenges)
+	if len(visibleChallenges) != 1 || visibleChallenges[0].AWDServiceID == nil || *visibleChallenges[0].AWDServiceID != awdService.ID {
+		t.Fatalf("unexpected visible awd service metadata: %+v", visibleChallenges)
+	}
 }
 
 func TestFullRouter_AWDServiceTemplateAuthoringStateMatrix(t *testing.T) {
