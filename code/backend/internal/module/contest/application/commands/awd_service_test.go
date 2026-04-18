@@ -1081,6 +1081,72 @@ func TestAWDServiceSubmitAttackUsesCurrentRoundFlagAndDeduplicatesByTeam(t *test
 	}
 }
 
+func TestAWDServiceSubmitAttackAcceptsServiceScopedRoundFlagField(t *testing.T) {
+	db := newAWDTestDB(t)
+
+	mini, err := miniredis.Run()
+	if err != nil {
+		t.Fatalf("start miniredis: %v", err)
+	}
+	t.Cleanup(mini.Close)
+
+	redisClient := redis.NewClient(&redis.Options{Addr: mini.Addr()})
+	t.Cleanup(func() {
+		_ = redisClient.Close()
+	})
+
+	service := newAWDServiceForTest(db, redisClient, "awd-secret", config.ContestAWDConfig{})
+	now := time.Now()
+
+	createAWDContestFixture(t, db, 24, now)
+	createAWDRoundFixture(t, db, 241, 24, 1, 80, 20, now)
+	createAWDChallengeFixture(t, db, 2401, now)
+	createAWDContestChallengeFixture(t, db, 24, 2401, now)
+	createAWDTeamFixture(t, db, 2411, 24, "Red", now)
+	createAWDTeamFixture(t, db, 2412, 24, "Blue", now)
+	createContestRegistrationForExistingTeam(t, db, 24, 2411, 24001, now)
+
+	if err := db.Model(&model.Challenge{}).Where("id = ?", 2401).Update("flag_prefix", "awd").Error; err != nil {
+		t.Fatalf("set flag prefix: %v", err)
+	}
+	serviceRecord := &model.ContestAWDService{
+		ID:            2409001,
+		ContestID:     24,
+		ChallengeID:   2401,
+		DisplayName:   "Bank Portal",
+		Order:         0,
+		IsVisible:     true,
+		ScoreConfig:   `{"points":100,"awd_sla_score":18,"awd_defense_score":28}`,
+		RuntimeConfig: `{"challenge_id":2401,"checker_type":"legacy_probe","checker_config":{}}`,
+		CreatedAt:     now,
+		UpdatedAt:     now,
+	}
+	if err := contestinfra.NewAWDRepository(db).CreateContestAWDService(context.Background(), serviceRecord); err != nil {
+		t.Fatalf("create contest awd service: %v", err)
+	}
+
+	if err := redisClient.Set(context.Background(), rediskeys.AWDCurrentRoundKey(24), "1", 0).Err(); err != nil {
+		t.Fatalf("set current round: %v", err)
+	}
+	flag := contestdomain.BuildAWDRoundFlag(24, 1, 2412, 2401, "awd-secret", "awd")
+	if err := redisClient.HSet(context.Background(), rediskeys.AWDRoundFlagsKey(24, 241), map[string]any{
+		rediskeys.AWDRoundFlagServiceField(2412, 2409001): flag,
+	}).Err(); err != nil {
+		t.Fatalf("set service scoped round flag: %v", err)
+	}
+
+	resp, err := service.SubmitAttack(context.Background(), 24001, 24, 2401, &dto.SubmitAWDAttackReq{
+		VictimTeamID: 2412,
+		Flag:         flag,
+	})
+	if err != nil {
+		t.Fatalf("SubmitAttack() service scoped flag error = %v", err)
+	}
+	if resp.Source != model.AWDAttackSourceSubmission || !resp.IsSuccess || resp.ScoreGained != 80 {
+		t.Fatalf("unexpected service scoped submit resp: %+v", resp)
+	}
+}
+
 func TestAWDServiceSubmitAttackPublishesAttackAcceptedEvent(t *testing.T) {
 	db := newAWDTestDB(t)
 

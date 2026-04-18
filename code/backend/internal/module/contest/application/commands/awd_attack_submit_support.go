@@ -14,6 +14,7 @@ type submitAttackContext struct {
 	attackerTeamID int64
 	round          *model.AWDRound
 	challenge      *model.Challenge
+	serviceID      int64
 	acceptedFlags  []string
 }
 
@@ -45,8 +46,13 @@ func (s *AWDService) prepareSubmitAttackContext(ctx context.Context, userID, con
 	if err := s.ensureContestChallenge(ctx, contestID, challengeID); err != nil {
 		return nil, err
 	}
+	var serviceID int64
+	service, err := s.repo.FindContestAWDServiceByContestAndChallenge(ctx, contestID, challengeID)
+	if err == nil && service != nil {
+		serviceID = service.ID
+	}
 
-	acceptedFlags, err := s.resolveAcceptedRoundFlags(ctx, contestID, round, req.VictimTeamID, challengeItem, now)
+	acceptedFlags, err := s.resolveAcceptedRoundFlags(ctx, contestID, round, req.VictimTeamID, challengeItem, serviceID, now)
 	if err != nil {
 		return nil, err
 	}
@@ -54,6 +60,7 @@ func (s *AWDService) prepareSubmitAttackContext(ctx context.Context, userID, con
 		attackerTeamID: attackerTeamID,
 		round:          round,
 		challenge:      challengeItem,
+		serviceID:      serviceID,
 		acceptedFlags:  acceptedFlags,
 	}, nil
 }
