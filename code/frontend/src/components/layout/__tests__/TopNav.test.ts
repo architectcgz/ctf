@@ -38,8 +38,8 @@ function createTestRouter() {
         meta: { title: '教学概览' },
       },
       {
-        path: '/admin/dashboard',
-        component: { template: '<div>admin</div>' },
+        path: '/platform/overview',
+        component: { template: '<div>platform</div>' },
         meta: { title: '系统概览' },
       },
     ],
@@ -84,7 +84,7 @@ async function mountTopNav() {
   return { wrapper }
 }
 
-async function mountBackofficeTopNav(path = '/admin/dashboard') {
+async function mountBackofficeTopNav(path = '/platform/overview') {
   setActivePinia(createPinia())
   localStorage.clear()
   document.documentElement.removeAttribute('data-brand')
@@ -191,6 +191,11 @@ describe('TopNav', () => {
     expect(topNavSource).toMatch(
       /\.topnav-actions\s*:deep\(\.notification-trigger\)\s*\{[\s\S]*border:\s*1px solid var\(--topnav-line\);/s
     )
+  })
+
+  it('uses shared shell classes instead of page-level arbitrary widths and type sizes', () => {
+    expect(topNavSource).not.toContain('max-w-[1600px]')
+    expect(topNavSource).not.toContain('md:text-[15px]')
   })
 
   it('supports a dedicated admin workspace treatment on platform routes', () => {

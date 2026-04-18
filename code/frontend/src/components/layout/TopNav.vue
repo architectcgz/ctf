@@ -1,7 +1,7 @@
 <template>
   <header class="topnav-shell sticky top-0 z-50" :class="{ 'topnav-shell--admin': isBackofficeRoute }">
     <div
-      class="topnav-inner mx-auto flex min-h-16 w-full max-w-[1600px] items-center justify-between gap-4 px-4 py-3 md:px-6 xl:px-8"
+      class="topnav-inner topnav-inner-shell mx-auto flex min-h-16 w-full items-center justify-between gap-4 px-4 py-3 md:px-6 xl:px-8"
     >
       <div class="topnav-main flex min-w-0 items-center gap-3 md:gap-4">
         <button
@@ -33,9 +33,7 @@
           v-else
           class="topnav-title-block min-w-0"
         >
-          <div
-            class="topnav-page-title truncate text-sm font-semibold text-text-primary md:text-[15px]"
-          >
+          <div class="topnav-page-title truncate font-semibold text-text-primary">
             {{ pageTitle }}
           </div>
         </div>
@@ -277,6 +275,10 @@ onUnmounted(() => {
   position: relative;
 }
 
+.topnav-inner-shell {
+  max-width: 100rem;
+}
+
 .topnav-main,
 .topnav-actions {
   min-height: 2.75rem;
@@ -428,6 +430,8 @@ onUnmounted(() => {
 }
 
 .topnav-page-title {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
   letter-spacing: -0.01em;
 }
 
@@ -567,6 +571,13 @@ onUnmounted(() => {
   .topnav-user-card {
     padding-left: 0.45rem;
     padding-right: 0.45rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .topnav-page-title {
+    font-size: 0.9375rem;
+    line-height: 1.375rem;
   }
 }
 </style>
