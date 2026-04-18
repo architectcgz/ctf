@@ -299,9 +299,10 @@ onUnmounted(() => {
 
 <template>
   <section
-    class="journal-shell journal-shell-admin journal-notes-rail journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
+    class="workspace-shell journal-shell journal-shell-admin journal-notes-rail journal-hero flex min-h-full flex-1 flex-col"
   >
-    <header class="image-header">
+    <main class="content-pane">
+      <header class="image-header">
       <div class="image-header__intro">
         <div class="workspace-overline">Image Registry</div>
         <h1 class="image-title">镜像管理</h1>
@@ -337,29 +338,29 @@ onUnmounted(() => {
           <div class="image-status-strip__note">{{ refreshHint }}</div>
         </div>
       </div>
-    </header>
+      </header>
 
-    <section class="image-board workspace-directory-section">
-      <header class="list-heading image-board__head">
+      <section class="image-board workspace-directory-section">
+        <header class="list-heading image-board__head">
         <div>
           <div class="workspace-overline">Images</div>
           <h2 class="list-heading__title image-section-title">镜像列表</h2>
         </div>
-      </header>
+        </header>
 
-      <WorkspaceDirectoryToolbar
-        v-model="keyword"
-        :total="filteredTotal"
-        :selected-sort-label="sortConfig.label"
-        :sort-options="sortOptions"
-        search-placeholder="检索镜像名称、标签或说明..."
-        total-suffix="个镜像"
-        :reset-disabled="!hasActiveFilters"
-        @select-sort="setSort"
-        @reset-filters="resetFilters"
-      >
-        <template #filter-panel>
-          <div class="image-filter-grid">
+        <WorkspaceDirectoryToolbar
+          v-model="keyword"
+          :total="filteredTotal"
+          :selected-sort-label="sortConfig.label"
+          :sort-options="sortOptions"
+          search-placeholder="检索镜像名称、标签或说明..."
+          total-suffix="个镜像"
+          :reset-disabled="!hasActiveFilters"
+          @select-sort="setSort"
+          @reset-filters="resetFilters"
+        >
+          <template #filter-panel>
+            <div class="image-filter-grid">
             <label class="image-filter-field">
               <span class="image-filter-label">构建状态</span>
               <select v-model="statusFilter" class="image-filter-select">
@@ -370,23 +371,23 @@ onUnmounted(() => {
                 <option value="failed">失败</option>
               </select>
             </label>
-          </div>
-        </template>
-      </WorkspaceDirectoryToolbar>
+            </div>
+          </template>
+        </WorkspaceDirectoryToolbar>
 
-      <div
-        v-if="loading"
-        class="workspace-directory-loading flex items-center justify-center py-12"
-      >
         <div
-          class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--journal-border)] border-t-[var(--journal-accent)]"
-        ></div>
-      </div>
-
-      <template v-else>
-        <div v-if="list.length === 0" class="admin-empty workspace-directory-empty">
-          当前还没有镜像。
+          v-if="loading"
+          class="workspace-directory-loading flex items-center justify-center py-12"
+        >
+          <div
+            class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--journal-border)] border-t-[var(--journal-accent)]"
+          ></div>
         </div>
+
+        <template v-else>
+          <div v-if="list.length === 0" class="admin-empty workspace-directory-empty">
+            当前还没有镜像。
+          </div>
 
         <div v-else-if="filteredRows.length === 0" class="admin-empty workspace-directory-empty">
           当前筛选条件下没有匹配镜像。
@@ -450,17 +451,18 @@ onUnmounted(() => {
           </template>
         </WorkspaceDataTable>
 
-        <div v-if="total > 0" class="admin-pagination workspace-directory-pagination">
-          <AdminPaginationControls
-            :page="page"
-            :total-pages="Math.max(1, Math.ceil(total / pageSize))"
-            :total="total"
-            :total-label="`共 ${total} 条`"
-            @change-page="void changePage($event)"
-          />
-        </div>
-      </template>
-    </section>
+          <div v-if="total > 0" class="admin-pagination workspace-directory-pagination">
+            <AdminPaginationControls
+              :page="page"
+              :total-pages="Math.max(1, Math.ceil(total / pageSize))"
+              :total="total"
+              :total-label="`共 ${total} 条`"
+              @change-page="void changePage($event)"
+            />
+          </div>
+        </template>
+      </section>
+    </main>
 
     <AdminSurfaceModal
       :open="dialogVisible"

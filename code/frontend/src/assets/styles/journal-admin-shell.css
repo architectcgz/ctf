@@ -17,7 +17,12 @@
   font-family: var(--journal-shell-font, var(--font-family-sans));
 }
 
-.journal-shell.journal-shell-admin.journal-hero,
+.journal-shell.journal-shell-admin.journal-hero {
+  border-color: var(--journal-shell-hero-border, var(--journal-border));
+  border-radius: 0 !important;
+  box-shadow: var(--journal-shell-hero-shadow, 0 18px 40px var(--color-shadow-soft));
+}
+
 .journal-shell.journal-shell-admin .journal-panel {
   border-color: var(--journal-shell-hero-border, var(--journal-border));
   border-radius: var(--journal-shell-hero-radius, 16px) !important;

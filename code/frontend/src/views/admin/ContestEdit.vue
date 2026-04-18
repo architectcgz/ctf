@@ -547,7 +547,7 @@ onMounted(() => {
 
 <template>
   <section
-    class="workspace-shell journal-shell journal-shell-admin journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
+    class="workspace-shell journal-shell journal-shell-admin journal-hero flex min-h-full flex-1 flex-col"
   >
     <header class="workspace-topbar">
       <div class="topbar-leading">

@@ -82,6 +82,50 @@ describe('ChallengeWriteupEditorPage', () => {
     )
   })
 
+  it('题解页根壳应统一挂到管理员 workspace shell，不再手写外层圆角', async () => {
+    expect(challengeWriteupEditorSource).toContain('workspace-shell')
+    expect(challengeWriteupEditorSource).toContain('journal-shell-admin')
+    expect(challengeWriteupEditorSource).toContain('journal-hero')
+    expect(challengeWriteupEditorSource).not.toContain('rounded-[24px]')
+
+    const editorWrapper = mount(ChallengeWriteupEditorPage, {
+      props: {
+        challengeId: '11',
+      },
+      global: {
+        stubs: {
+          AppCard: { template: '<section><slot name="header" /><slot /></section>' },
+          AppEmpty: { template: '<div><slot /></div>' },
+          AppLoading: { template: '<div><slot /></div>' },
+          PageHeader: { template: '<div><slot /></div>' },
+        },
+      },
+    })
+
+    const viewWrapper = mount(ChallengeWriteupViewPage, {
+      props: {
+        challengeId: '11',
+      },
+      global: {
+        stubs: {
+          AppCard: { template: '<section><slot name="header" /><slot /></section>' },
+          AppEmpty: { template: '<div><slot /></div>' },
+          AppLoading: { template: '<div><slot /></div>' },
+          PageHeader: { template: '<div><slot /></div>' },
+        },
+      },
+    })
+
+    await flushPromises()
+
+    expect(editorWrapper.classes()).toContain('workspace-shell')
+    expect(editorWrapper.classes()).toContain('journal-shell-admin')
+    expect(editorWrapper.classes()).toContain('journal-hero')
+    expect(viewWrapper.classes()).toContain('workspace-shell')
+    expect(viewWrapper.classes()).toContain('journal-shell-admin')
+    expect(viewWrapper.classes()).toContain('journal-hero')
+  })
+
   it('删除题解失败时应优先展示接口返回消息', async () => {
     confirmMock.mockResolvedValue(true)
     adminApiMocks.deleteChallengeWriteup.mockRejectedValue(

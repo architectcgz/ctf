@@ -368,7 +368,7 @@ function getWorkbenchStageRail(wrapper: VueWrapper<any>) {
 
 describe('ContestEdit', () => {
   beforeEach(() => {
-    window.history.replaceState({}, '', '/admin/contests/contest-1/edit')
+    window.history.replaceState({}, '', '/platform/contests/contest-1/edit')
     pushMock.mockReset()
     contestApiMocks.getContest.mockReset()
     contestApiMocks.updateContest.mockReset()
@@ -832,7 +832,7 @@ describe('ContestEdit', () => {
 
   it('应该在管理页工作台交接时强制落到轮次态势而不是恢复旧子页签', async () => {
     window.sessionStorage.setItem('ctf_admin_awd_ops_panel:contest-1', 'challenges')
-    window.history.replaceState({}, '', '/admin/contests/contest-1/edit?panel=operations&opsPanel=inspector')
+    window.history.replaceState({}, '', '/platform/contests/contest-1/edit?panel=operations&opsPanel=inspector')
     contestApiMocks.getContest.mockResolvedValue(
       buildContestDetail({
         title: '2026 AWD 联赛',
@@ -852,7 +852,7 @@ describe('ContestEdit', () => {
   })
 
   it('应该在 URL 已指定有效阶段时保留该阶段', async () => {
-    window.history.replaceState({}, '', '/admin/contests/contest-1/edit?panel=operations')
+    window.history.replaceState({}, '', '/platform/contests/contest-1/edit?panel=operations')
     contestApiMocks.getContest.mockResolvedValue(
       buildContestDetail({
         title: '2026 AWD 联赛',

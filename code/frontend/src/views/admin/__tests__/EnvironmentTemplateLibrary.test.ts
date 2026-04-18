@@ -78,6 +78,10 @@ describe('EnvironmentTemplateLibrary', () => {
 
     await flushPromises()
 
+    expect(wrapper.classes()).toContain('workspace-shell')
+    expect(wrapper.classes()).toContain('journal-shell-admin')
+    expect(wrapper.classes()).toContain('journal-hero')
+    expect(wrapper.classes()).not.toContain('teacher-management-shell')
     expect(wrapper.text()).toContain('环境模板库')
     expect(wrapper.text()).toContain('双节点模板')
     expect(wrapper.text()).toContain('载入编辑')
@@ -86,8 +90,12 @@ describe('EnvironmentTemplateLibrary', () => {
   })
 
   it('模板库概览卡片应补齐统一的说明文案', () => {
+    expect(challengeTopologyStudioPageSource).not.toContain('rounded-[30px]')
     expect(challengeTopologyStudioPageSource).toContain(
       'class="topology-summary-grid progress-strip metric-panel-grid metric-panel-default-surface"'
+    )
+    expect(challengeTopologyStudioPageSource).toMatch(
+      /\.topology-page--template-library \.template-library-main,\s*\.topology-page--template-library :deep\(\.page-header\)\s*\{[\s\S]*border-radius:\s*0;/s
     )
     expect(challengeTopologyStudioPageSource).toContain(
       'class="topology-summary-tile progress-card metric-panel-card"'
