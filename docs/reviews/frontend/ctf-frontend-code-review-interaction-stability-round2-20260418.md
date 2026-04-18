@@ -23,6 +23,7 @@
   - `M6` 通知详情已移除静态禁用占位按钮，改为说明块。
   - `L2` 后台页面级按钮原语已完成收敛，目标范围内不再残留 `admin-btn` / `publish-btn` / `template-action-btn` / `topology-toolbar-btn` 等私有按钮族。
   - `L1` 共享布局层与通用弹层已继续收敛一批裸魔法值，`Sidebar`、`TopNav`、`AppToast`、`CLightActionPopover`、`CFocusedInputDialog`、`CImmersiveConfirmDialog`、`MinimalFloatingModal`、`SlideOverDrawer`、`ClassicCenteredModal`、`CContextTooltip`、`ModalTemplateShell` 不再保留 `w-[260px]`、`max-w-[1600px]`、`rounded-[22px]`、局部绿色按钮色或大段亮色硬编码。
+  - `L1` 个人中心页已继续清理 `UserProfile`、`SkillProfile` 的骨架圆角、图表高度和内文字色魔法值，改为语义类承接，不再把 `rounded-[24px]`、`h-[30rem]`、`text-[11px]` 和模板内 `text-[var(...)]` 直接写在结构节点上。
   - 教师班级工作区已补 `TeacherClassWorkspaceSection` 桥接视图，旧明细路由会回落到统一 `TeacherClassStudents` 工作区，并通过 `panel` 查询参数恢复目标标签页。
 - 未完成：
   - `M4` 教师分析面板和 AWD 轮次面板的 props 透传与职责过载。
@@ -87,7 +88,7 @@
 - [L1] Tailwind 任意值与魔法数仍是系统性问题，但需区分 token bridge 与裸像素
   - 状态：未完成
   - 说明：
-    - 已完成 `NotificationDropdown`、`PageHeader`、`AppCard`、`Sidebar`、`TopNav`、`AppToast`、`CLightActionPopover`、`CFocusedInputDialog`、`CImmersiveConfirmDialog`、`MinimalFloatingModal`、`SlideOverDrawer`、`ClassicCenteredModal`、`CContextTooltip`、`ModalTemplateShell` 这批共享组件/壳层/通用弹层的低信息度裸字号、裸尺寸、亮色硬编码和 `1px` 任意值清理，相关回归测试已补齐。
+    - 已完成 `NotificationDropdown`、`PageHeader`、`AppCard`、`Sidebar`、`TopNav`、`AppToast`、`CLightActionPopover`、`CFocusedInputDialog`、`CImmersiveConfirmDialog`、`MinimalFloatingModal`、`SlideOverDrawer`、`ClassicCenteredModal`、`CContextTooltip`、`ModalTemplateShell`、`UserProfile`、`SkillProfile` 这批共享组件/壳层/通用弹层/个人中心页面的低信息度裸字号、裸尺寸、亮色硬编码和 `1px` 任意值清理，相关回归测试已补齐。
     - 剩余项主要集中在表格列宽声明、实验/参考页面，以及少量需要转成 CSS token 或共享类的布局尺寸，仍需分批替换，避免把 token bridge 与真正的裸像素混改。
 
 - [L2] 按钮原语已经存在，但页面级按钮体系仍然碎片化

@@ -58,6 +58,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } =
     orderedTabs: contentTabOrder,
     defaultTab: 'analysis',
   })
+const skillRadarHeightClass = 'skill-radar-height'
 </script>
 
 <template>
@@ -69,11 +70,11 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } =
         <div class="space-y-6">
           <div class="h-12 animate-pulse rounded-2xl bg-[var(--journal-surface)]/90"></div>
           <div class="grid gap-6 xl:grid-cols-[minmax(0,1.06fr)_minmax(300px,0.94fr)]">
-            <div class="h-80 animate-pulse rounded-[24px] bg-[var(--journal-surface)]"></div>
-            <div class="h-80 animate-pulse rounded-[24px] bg-[var(--journal-surface)]"></div>
+            <div class="skill-loading-card h-80 animate-pulse bg-[var(--journal-surface)]"></div>
+            <div class="skill-loading-card h-80 animate-pulse bg-[var(--journal-surface)]"></div>
           </div>
-          <div class="h-56 animate-pulse rounded-[24px] bg-[var(--journal-surface)]"></div>
-          <div class="h-56 animate-pulse rounded-[24px] bg-[var(--journal-surface)]"></div>
+          <div class="skill-loading-card h-56 animate-pulse bg-[var(--journal-surface)]"></div>
+          <div class="skill-loading-card h-56 animate-pulse bg-[var(--journal-surface)]"></div>
         </div>
       </div>
 
@@ -178,7 +179,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } =
                           :indicators="radarIndicators"
                           :values="radarValues"
                           name="维度得分"
-                          height-class="h-[30rem] md:h-[34rem] xl:h-[38rem]"
+                          :height-class="skillRadarHeightClass"
                           :label-font-size="20"
                           :axis-name-gap="12"
                           radius="74%"
@@ -195,19 +196,15 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } =
                       class="skill-dimension-legend__item"
                     >
                       <div class="min-w-0">
-                        <div
-                          class="text-base font-semibold text-[var(--journal-ink)] md:text-[1.05rem]"
-                        >
+                        <div class="skill-dimension-legend__name">
                           {{ dim.name }}
                         </div>
-                        <div class="mt-1 text-[0.8rem] text-[var(--journal-muted)]">
+                        <div class="skill-dimension-legend__hint mt-1">
                           当前维度表现
                         </div>
                       </div>
                       <div class="text-right">
-                        <div
-                          class="text-[1.9rem] font-semibold tracking-tight text-[var(--journal-ink)] tech-font md:text-[2.1rem]"
-                        >
+                        <div class="skill-dimension-legend__score tech-font">
                           {{ dim.value }}
                         </div>
                         <div class="text-xs text-[var(--journal-muted)]">/ 100</div>
@@ -297,7 +294,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } =
                       item.title
                     }}</span>
                     <span
-                      class="shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold"
+                      class="skill-difficulty-pill shrink-0 rounded-full px-2 py-0.5 font-semibold"
                       :class="difficultyClass(item.difficulty)"
                     >
                       {{ difficultyLabel(item.difficulty) }}
@@ -400,6 +397,10 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } =
 
 .journal-hero {
   border-color: var(--journal-shell-border);
+}
+
+.skill-loading-card {
+  border-radius: 1.5rem;
 }
 
 .skill-teacher-panel {
@@ -534,6 +535,32 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } =
   z-index: 1;
 }
 
+.skill-radar-height {
+  height: 30rem;
+}
+
+.skill-dimension-legend__name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--journal-ink);
+}
+
+.skill-dimension-legend__hint {
+  font-size: 0.8rem;
+  color: var(--journal-muted);
+}
+
+.skill-dimension-legend__score {
+  font-size: 1.9rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--journal-ink);
+}
+
+.skill-difficulty-pill {
+  font-size: 0.6875rem;
+}
+
 .skill-dimension-legend {
   display: grid;
   gap: 0;
@@ -579,6 +606,10 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } =
 }
 
 @media (min-width: 768px) {
+  .skill-radar-height {
+    height: 34rem;
+  }
+
   .skill-weak-list {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -629,6 +660,20 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } =
 :global([data-theme='dark']) .skill-dimension-chart__frame::after {
   background: color-mix(in srgb, var(--journal-surface) 92%, transparent);
   border-color: color-mix(in srgb, var(--journal-muted) 20%, transparent);
+}
+
+@media (min-width: 1280px) {
+  .skill-radar-height {
+    height: 38rem;
+  }
+
+  .skill-dimension-legend__name {
+    font-size: 1.05rem;
+  }
+
+  .skill-dimension-legend__score {
+    font-size: 2.1rem;
+  }
 }
 
 @media (max-width: 767px) {
