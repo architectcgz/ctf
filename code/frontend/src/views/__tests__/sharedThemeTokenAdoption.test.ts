@@ -70,6 +70,17 @@ describe('shared theme token adoption', () => {
     ])
   })
 
+  it('共享组件不应继续保留低信息度的 Tailwind 任意值魔法数', () => {
+    expect(pageHeaderSource).not.toContain('text-[11px]')
+    expect(pageHeaderSource).not.toContain('tracking-[0.26em]')
+
+    expect(appCardSource).not.toContain('text-[24px]')
+    expect(appCardSource).not.toContain('text-[15px]')
+    expect(appCardSource).not.toContain('text-[13px]')
+    expect(appCardSource).not.toContain('text-[10px]')
+    expect(appCardSource).not.toContain('w-[3px]')
+  })
+
   it('学生仪表盘与学习工作区不应继续写死状态色', () => {
     expectNoHardcodedThemeTokens(studentDifficultySource, 'StudentDifficultyPage', [
       "beginner: '#10b981'",

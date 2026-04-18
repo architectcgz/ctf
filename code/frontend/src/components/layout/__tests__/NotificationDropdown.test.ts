@@ -88,7 +88,8 @@ describe('NotificationDropdown', () => {
     expect(notificationDropdownSource).toContain('class="notification-drawer')
     expect(notificationDropdownSource).toContain('fixed top-0 right-0')
     expect(notificationDropdownSource).toContain('h-screen')
-    expect(notificationDropdownSource).toContain('sm:w-[420px]')
+    expect(notificationDropdownSource).toContain('@media (min-width: 640px)')
+    expect(notificationDropdownSource).toContain('width: 420px;')
     expect(notificationDropdownSource).toContain('全部标为已读')
     expect(notificationDropdownSource).toContain('End of Notifications')
     expect(notificationDropdownSource).toContain('.notification-shell-enter-active')
@@ -102,6 +103,12 @@ describe('NotificationDropdown', () => {
     expect(notificationDropdownSource).toContain('class="notification-panel-head')
     expect(notificationDropdownSource).toContain('class="notification-panel-body')
     expect(notificationDropdownSource).toContain(":global([data-theme='dark']) .notification-drawer")
+  })
+
+  it('notification summary chrome should avoid low-level arbitrary tailwind values', () => {
+    expect(notificationDropdownSource).not.toContain('text-[12px]')
+    expect(notificationDropdownSource).not.toContain('w-[1px]')
+    expect(notificationDropdownSource).not.toContain('h-[1px]')
   })
 
   it('navigates to notification detail when clicking a timeline item', async () => {

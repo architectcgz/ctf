@@ -11,7 +11,7 @@ defineProps<{
     <div class="space-y-2">
       <p
         v-if="eyebrow"
-        class="page-header__eyebrow inline-flex border-l-2 border-primary pl-3 text-[11px] font-semibold uppercase tracking-[0.26em] text-primary"
+        class="page-header__eyebrow inline-flex border-l-2 border-primary pl-3 font-semibold uppercase text-primary"
       >
         {{ eyebrow }}
       </p>
@@ -42,6 +42,8 @@ defineProps<{
 }
 
 .page-header__eyebrow {
+  font-size: var(--font-size-11);
+  letter-spacing: 0.26em;
   border-left-color: color-mix(in srgb, var(--color-primary) 90%, var(--color-bg-surface));
 }
 
