@@ -276,7 +276,9 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
 </script>
 
 <template>
-  <div class="workspace-shell challenge-manage-shell journal-shell journal-shell-admin journal-notes-card">
+  <div
+    class="workspace-shell challenge-manage-shell journal-shell journal-shell-admin journal-notes-card journal-hero"
+  >
     <div class="workspace-grid">
       <main class="content-pane challenge-manage-content">
         <section class="challenge-manage-panel">
@@ -575,58 +577,65 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
 
 <style scoped>
 .challenge-manage-shell {
-  --workspace-brand: #2563eb;
-  --workspace-brand-ink: #1e40af;
-  --workspace-brand-soft: #eff6ff;
-  --workspace-faint: #f8fafc;
-  --workspace-shell-border: #e2e8f0;
-  --workspace-shadow-shell: 0 1px 3px rgba(0, 0, 0, 0.05);
+  --workspace-brand: var(--journal-accent);
+  --workspace-brand-ink: color-mix(in srgb, var(--journal-accent) 74%, var(--journal-ink));
+  --workspace-brand-soft: color-mix(in srgb, var(--journal-accent) 10%, transparent);
+  --workspace-faint: color-mix(in srgb, var(--journal-muted) 92%, transparent);
+  --workspace-line-soft: color-mix(in srgb, var(--journal-border) 82%, transparent);
+  --workspace-shell-bg: color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base));
+  --workspace-page: color-mix(in srgb, var(--journal-surface-subtle) 94%, var(--color-bg-base));
+  --workspace-panel: color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base));
+  --workspace-panel-soft: color-mix(in srgb, var(--journal-surface-subtle) 90%, var(--color-bg-base));
+  --workspace-shadow-shell: 0 22px 52px color-mix(in srgb, var(--color-shadow-soft) 54%, transparent);
+  --workspace-shadow-panel: 0 14px 34px color-mix(in srgb, var(--color-shadow-soft) 42%, transparent);
   --workspace-side-padding: 2rem;
   --workspace-content-padding: 2rem;
-  --challenge-page-bg: color-mix(in srgb, var(--journal-surface-subtle) 90%, var(--color-bg-base));
-  --challenge-page-surface: color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-surface));
+  --journal-shell-hero-radial-strength: 10%;
+  --journal-shell-hero-radial-size: 20rem;
+  --journal-shell-dark-accent: var(--color-primary-hover);
+  --challenge-page-bg: var(--workspace-page);
+  --challenge-page-surface: var(--workspace-panel);
   --challenge-page-surface-subtle: color-mix(
     in srgb,
-    var(--color-bg-elevated) 82%,
-    var(--color-bg-surface)
+    var(--workspace-panel-soft) 94%,
+    var(--color-bg-base)
   );
   --challenge-page-surface-elevated: color-mix(
     in srgb,
-    var(--color-bg-elevated) 90%,
-    var(--color-bg-surface)
+    var(--workspace-panel) 98%,
+    var(--journal-surface)
   );
   --challenge-page-line: color-mix(in srgb, var(--journal-border) 84%, transparent);
   --challenge-page-line-strong: color-mix(in srgb, var(--journal-border) 92%, transparent);
   --challenge-page-text: color-mix(in srgb, var(--journal-ink) 94%, transparent);
   --challenge-page-muted: color-mix(in srgb, var(--journal-muted) 92%, transparent);
-  --challenge-page-faint: color-mix(in srgb, var(--color-text-muted) 90%, transparent);
+  --challenge-page-faint: color-mix(in srgb, var(--journal-muted) 72%, var(--color-bg-base));
   --challenge-page-accent: color-mix(in srgb, var(--workspace-brand) 88%, var(--challenge-page-text));
   --challenge-page-accent-soft: color-mix(
     in srgb,
     var(--workspace-brand) 10%,
     var(--challenge-page-surface)
   );
-  border: none;
   background: var(--challenge-page-bg);
 }
 
 .challenge-row-menu-button,
 .challenge-row-menu {
-  --challenge-action-surface: color-mix(in srgb, var(--color-bg-surface) 94%, var(--color-bg-base));
+  --challenge-action-surface: color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base));
   --challenge-action-surface-subtle: color-mix(
     in srgb,
-    var(--color-bg-elevated) 82%,
-    var(--color-bg-surface)
+    var(--journal-surface-subtle) 92%,
+    var(--color-bg-base)
   );
   --challenge-action-surface-elevated: color-mix(
     in srgb,
-    var(--color-bg-elevated) 90%,
-    var(--color-bg-surface)
+    var(--journal-surface) 98%,
+    var(--journal-surface-subtle)
   );
-  --challenge-action-line: color-mix(in srgb, var(--color-border-default) 86%, transparent);
-  --challenge-action-line-strong: color-mix(in srgb, var(--color-border-default) 94%, transparent);
-  --challenge-action-text: color-mix(in srgb, var(--color-text-primary) 94%, transparent);
-  --challenge-action-muted: color-mix(in srgb, var(--color-text-secondary) 90%, transparent);
+  --challenge-action-line: color-mix(in srgb, var(--journal-border) 82%, transparent);
+  --challenge-action-line-strong: color-mix(in srgb, var(--journal-border) 92%, transparent);
+  --challenge-action-text: color-mix(in srgb, var(--journal-ink) 94%, transparent);
+  --challenge-action-muted: color-mix(in srgb, var(--journal-muted) 90%, transparent);
   --challenge-action-accent: color-mix(in srgb, var(--workspace-brand) 88%, var(--challenge-action-text));
   --challenge-action-accent-soft: color-mix(
     in srgb,
@@ -740,11 +749,11 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
 }
 
 .manage-summary-grid > :nth-child(3) .metric-panel-value {
-  color: color-mix(in srgb, #7c3aed 78%, var(--journal-ink));
+  color: color-mix(in srgb, var(--workspace-brand) 78%, var(--journal-ink));
 }
 
 .manage-summary-grid > :nth-child(4) .metric-panel-value {
-  color: color-mix(in srgb, #f97316 82%, var(--journal-ink));
+  color: color-mix(in srgb, var(--color-warning) 84%, var(--journal-ink));
 }
 
 .challenge-filter-grid {
@@ -863,7 +872,7 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
 }
 
 .challenge-table-status__dot--published {
-  background: #10b981;
+  background: color-mix(in srgb, var(--color-success) 88%, transparent);
   animation: challengeStatusPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
@@ -999,59 +1008,6 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
 
 .challenge-directory-state {
   color: var(--challenge-page-muted);
-}
-
-:global([data-theme='light']) .challenge-manage-shell {
-  --challenge-page-bg: #f8fafc;
-  --challenge-page-surface: white;
-  --challenge-page-surface-subtle: #f8fafc;
-  --challenge-page-surface-elevated: white;
-  --challenge-page-line: color-mix(in srgb, #e2e8f0 90%, transparent);
-  --challenge-page-line-strong: color-mix(in srgb, #d4dde8 94%, transparent);
-  --challenge-page-text: #0f172a;
-  --challenge-page-muted: #64748b;
-  --challenge-page-faint: #94a3b8;
-}
-
-:global([data-theme='dark']) .challenge-manage-shell {
-  --challenge-page-bg: color-mix(in srgb, var(--color-bg-base) 92%, var(--color-bg-surface));
-  --challenge-page-surface: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
-  --challenge-page-surface-subtle: color-mix(in srgb, var(--color-bg-elevated) 84%, var(--color-bg-surface));
-  --challenge-page-surface-elevated: color-mix(in srgb, var(--color-bg-elevated) 92%, var(--color-bg-surface));
-  --challenge-page-line: color-mix(in srgb, var(--color-border-default) 88%, transparent);
-  --challenge-page-line-strong: color-mix(in srgb, var(--color-border-default) 94%, transparent);
-  --challenge-page-text: color-mix(in srgb, var(--color-text-primary) 94%, transparent);
-  --challenge-page-muted: color-mix(in srgb, var(--color-text-secondary) 90%, transparent);
-  --challenge-page-faint: color-mix(in srgb, var(--color-text-muted) 90%, transparent);
-}
-
-:global([data-theme='dark']) .challenge-row-menu,
-:global([data-theme='dark']) .challenge-row-menu-button {
-  --challenge-action-surface: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
-  --challenge-action-surface-subtle: color-mix(
-    in srgb,
-    var(--color-bg-elevated) 84%,
-    var(--color-bg-surface)
-  );
-  --challenge-action-surface-elevated: color-mix(
-    in srgb,
-    var(--color-bg-elevated) 92%,
-    var(--color-bg-surface)
-  );
-  --challenge-action-line: color-mix(in srgb, var(--color-border-default) 88%, transparent);
-  --challenge-action-line-strong: color-mix(in srgb, var(--color-border-default) 94%, transparent);
-  --challenge-action-text: color-mix(in srgb, var(--color-text-primary) 94%, transparent);
-  --challenge-action-muted: color-mix(in srgb, var(--color-text-secondary) 90%, transparent);
-}
-
-:global([data-theme='dark']) .challenge-row-menu {
-  box-shadow:
-    0 22px 56px color-mix(in srgb, var(--color-shadow-strong) 28%, transparent),
-    0 0 0 1px color-mix(in srgb, var(--color-border-subtle) 46%, transparent);
-}
-
-:global([data-theme='dark']) .challenge-row-menu-button {
-  background: var(--challenge-action-surface-elevated);
 }
 
 @keyframes challengeStatusPulse {
