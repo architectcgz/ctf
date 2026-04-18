@@ -7,6 +7,7 @@ vi.mock('@/api/request', () => ({
 }))
 
 import {
+  getContestChallenges,
   getContestAWDWorkspace,
   startContestChallengeInstance,
   submitContestAWDAttack,
@@ -15,6 +16,42 @@ import {
 describe('contest api contract', () => {
   beforeEach(() => {
     requestMock.mockReset()
+  })
+
+  it('获取竞赛题目列表时应标准化 awd service 标识', async () => {
+    requestMock.mockResolvedValue([
+      {
+        id: 21,
+        challenge_id: 9,
+        awd_service_id: 7009,
+        title: 'Bank Portal',
+        category: 'web',
+        difficulty: 'medium',
+        points: 100,
+        solved_count: 3,
+        is_solved: false,
+      },
+    ])
+
+    const result = await getContestChallenges('7')
+
+    expect(requestMock).toHaveBeenCalledWith({
+      method: 'GET',
+      url: '/contests/7/challenges',
+    })
+    expect(result).toEqual([
+      {
+        id: '21',
+        challenge_id: '9',
+        awd_service_id: '7009',
+        title: 'Bank Portal',
+        category: 'web',
+        difficulty: 'medium',
+        points: 100,
+        solved_count: 3,
+        is_solved: false,
+      },
+    ])
   })
 
   it('获取学生 AWD 工作台时应透传 contest id 并标准化字段', async () => {

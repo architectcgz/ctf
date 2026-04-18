@@ -109,6 +109,74 @@ func TestChallengeServiceListAdminChallengesIncludesAWDServiceFields(t *testing.
 	}
 }
 
+func TestChallengeServiceGetContestChallengesIncludesAWDServiceID(t *testing.T) {
+	service, challengeRepo, contestRepo, challengeRelationRepo, awdRepo := newContestChallengeQueryService(t)
+
+	now := time.Now()
+	if err := contestRepo.Create(context.Background(), &model.Contest{
+		ID:        611,
+		Title:     "awd-visible-query",
+		Mode:      model.ContestModeAWD,
+		Status:    model.ContestStatusRunning,
+		StartTime: now.Add(-time.Hour),
+		EndTime:   now.Add(time.Hour),
+		CreatedAt: now,
+		UpdatedAt: now,
+	}); err != nil {
+		t.Fatalf("create contest: %v", err)
+	}
+	if err := challengeRepo.Create(&model.Challenge{
+		ID:         9111,
+		Title:      "awd-visible-query-challenge",
+		Category:   "web",
+		Difficulty: model.ChallengeDifficultyMedium,
+		Points:     100,
+		Status:     model.ChallengeStatusPublished,
+		FlagType:   model.FlagTypeStatic,
+		CreatedAt:  now,
+		UpdatedAt:  now,
+	}); err != nil {
+		t.Fatalf("create challenge: %v", err)
+	}
+	if err := challengeRelationRepo.AddChallenge(context.Background(), &model.ContestChallenge{
+		ContestID:        611,
+		ChallengeID:      9111,
+		Points:           100,
+		IsVisible:        true,
+		AWDCheckerType:   model.AWDCheckerTypeHTTPStandard,
+		AWDCheckerConfig: `{"get_flag":{"path":"/internal/flag"}}`,
+		CreatedAt:        now,
+		UpdatedAt:        now,
+	}); err != nil {
+		t.Fatalf("add challenge: %v", err)
+	}
+	if err := awdRepo.CreateContestAWDService(context.Background(), &model.ContestAWDService{
+		ID:            7201,
+		ContestID:     611,
+		ChallengeID:   9111,
+		DisplayName:   "Bank Portal",
+		Order:         0,
+		IsVisible:     true,
+		ScoreConfig:   `{"points":100}`,
+		RuntimeConfig: `{"challenge_id":9111}`,
+		CreatedAt:     now,
+		UpdatedAt:     now,
+	}); err != nil {
+		t.Fatalf("create contest awd service: %v", err)
+	}
+
+	resp, err := service.GetContestChallenges(context.Background(), 3001, 611)
+	if err != nil {
+		t.Fatalf("GetContestChallenges() error = %v", err)
+	}
+	if len(resp) != 1 {
+		t.Fatalf("unexpected challenge count: %d", len(resp))
+	}
+	if resp[0].AWDServiceID == nil || *resp[0].AWDServiceID != 7201 {
+		t.Fatalf("expected awd service id 7201, got %+v", resp[0])
+	}
+}
+
 func TestChallengeServiceListAdminChallengesIncludesCheckerValidationState(t *testing.T) {
 	service, challengeRepo, contestRepo, challengeRelationRepo, _ := newContestChallengeQueryService(t)
 

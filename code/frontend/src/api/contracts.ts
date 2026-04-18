@@ -307,6 +307,7 @@ export interface ContestDetailData extends ContestListItem {
 export interface ContestChallengeItem {
   id: ID
   challenge_id: ID
+  awd_service_id?: ID
   title: string
   category: ChallengeCategory
   difficulty: ChallengeDifficulty
