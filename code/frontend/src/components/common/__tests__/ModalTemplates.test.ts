@@ -116,12 +116,17 @@ describe('modal templates', () => {
     expect(classicSource).toContain('#2563eb')
 
     expect(drawerSource).toContain('.modal-template-panel--drawer')
-    expect(drawerSource).toContain('#059669')
+    expect(drawerSource).toContain('.modal-template-drawer__icon')
     expect(drawerSource).toContain('高度承载')
+    expect(drawerSource).not.toContain('background: #ffffff;')
+    expect(drawerSource).not.toContain('color: #059669;')
+    expect(drawerSource).not.toContain('background: rgba(236, 253, 245, 1);')
 
     expect(minimalSource).toContain('.modal-template-panel--minimal')
-    expect(minimalSource).toContain('#7c3aed')
+    expect(minimalSource).toContain('.modal-template-minimal__title')
     expect(minimalSource).toContain('快捷编辑')
+    expect(minimalSource).not.toContain('background: #ffffff;')
+    expect(minimalSource).not.toContain('border-bottom-color: #7c3aed;')
 
     expect(tooltipSource).toContain('TLS 握手')
     expect(tooltipSource).toContain('border-dashed')
