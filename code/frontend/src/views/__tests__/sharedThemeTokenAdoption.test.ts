@@ -17,6 +17,7 @@ import challengeListSource from '@/views/challenges/ChallengeList.vue?raw'
 import notificationDropdownSource from '@/components/layout/NotificationDropdown.vue?raw'
 import sidebarSource from '@/components/layout/Sidebar.vue?raw'
 import topNavSource from '@/components/layout/TopNav.vue?raw'
+import cLightActionPopoverSource from '@/components/common/modal-templates/CLightActionPopover.vue?raw'
 import challengePackageImportEntrySource from '@/components/admin/challenge/ChallengePackageImportEntry.vue?raw'
 import adminDashboardSource from '@/components/admin/dashboard/AdminDashboardPage.vue?raw'
 import writeupManageSource from '@/components/admin/writeup/ChallengeWriteupManagePanel.vue?raw'
@@ -67,6 +68,15 @@ describe('shared theme token adoption', () => {
       '#0b4f60',
       '#f8feff',
       '#f1f5f9',
+    ])
+    expectNoHardcodedThemeTokens(cLightActionPopoverSource, 'CLightActionPopover', [
+      '#2a7a58',
+      '#206346',
+      'bg-white',
+      'text-slate-700',
+      'text-slate-900',
+      'border-slate-200',
+      'shadow-[0_12px_40px_rgba(0,0,0,0.12)]',
     ])
   })
 
