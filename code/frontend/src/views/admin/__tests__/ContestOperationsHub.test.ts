@@ -62,6 +62,10 @@ describe('ContestOperationsHub', () => {
     expect(wrapper.text()).toContain('竞赛管理')
     expect(wrapper.text()).toContain('全部 AWD 赛事')
     expect(wrapper.text()).toContain('2026 AWD 联赛')
+    expect(wrapper.text()).not.toContain('按开始时间查看全部可操作 AWD 赛事')
+    expect(wrapper.text()).not.toContain(
+      '这里直接承接可运维的 AWD 赛事，用统一目录处理 checker、SLA、防守分和赛前准备，不再通过漂浮入口反复跳转。'
+    )
 
     await wrapper.get('#contest-ops-row-primary-awd-running').trigger('click')
 

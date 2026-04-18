@@ -41,8 +41,8 @@ const operationDefinitions: Record<ContestOpsViewKey, ContestOpsDefinition> = {
   environment: {
     overline: 'Contest Environment',
     title: '竞赛管理',
-    copy: '这里直接承接可运维的 AWD 赛事，用统一目录处理 checker、SLA、防守分和赛前准备，不再通过漂浮入口反复跳转。',
-    directoryMeta: '按开始时间查看全部可操作 AWD 赛事',
+    copy: '',
+    directoryMeta: '',
     metricLabel: '待配置赛事',
     metricHint: '优先处理进行中与已冻结赛事的环境准备',
     metricValue: ({ activeCount }) => activeCount,
@@ -213,7 +213,7 @@ onMounted(() => {
       <div class="contest-ops-workbench-head__main">
         <div class="workspace-overline">{{ currentDefinition.overline }}</div>
         <h1 class="workspace-page-title">{{ currentDefinition.title }}</h1>
-        <p class="workspace-page-copy">{{ currentDefinition.copy }}</p>
+        <p v-if="currentDefinition.copy" class="workspace-page-copy">{{ currentDefinition.copy }}</p>
       </div>
 
       <div class="contest-ops-workbench-head__actions">
@@ -301,7 +301,7 @@ onMounted(() => {
           <h2 class="list-heading__title">全部 AWD 赛事</h2>
         </div>
         <div class="contest-ops-directory-meta">
-          <span>{{ currentDefinition.directoryMeta }}</span>
+          <span v-if="currentDefinition.directoryMeta">{{ currentDefinition.directoryMeta }}</span>
           <span>{{ directoryLabel }}</span>
         </div>
       </header>

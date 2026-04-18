@@ -255,16 +255,14 @@ describe('ImageManage', () => {
     expect(getImagesMock).toHaveBeenCalledTimes(2)
   })
 
-  it('当前页无进行中镜像时应展示可用状态条', async () => {
+  it('当前页无异常或进行中镜像时不应继续重复展示总量状态条', async () => {
     const wrapper = mountPage()
 
     await flushPromises()
 
     const pills = wrapper.findAll('[data-testid="image-status-pill"]')
 
-    expect(pills).toHaveLength(1)
-    expect(pills[0].text()).toContain('可用')
-    expect(pills[0].text()).toContain('1')
+    expect(pills).toHaveLength(0)
     expect(wrapper.find('.image-status-strip__note').text()).toContain(
       '当前无进行中镜像，可手动刷新'
     )

@@ -140,9 +140,6 @@ const statusSummary = computed(() => {
 
   const summary = []
 
-  if (counts.available > 0) {
-    summary.push({ key: 'available', label: '可用', value: counts.available, tone: 'success' })
-  }
   if (counts.building > 0) {
     summary.push({ key: 'building', label: '构建中', value: counts.building, tone: 'warning' })
   }
@@ -153,11 +150,7 @@ const statusSummary = computed(() => {
     summary.push({ key: 'failed', label: '失败', value: counts.failed, tone: 'danger' })
   }
 
-  if (summary.length > 0) {
-    return summary
-  }
-
-  return [{ key: 'empty', label: '当前页', value: 0, tone: 'muted' as const }]
+  return summary
 })
 
 const imageStatusMeta: Record<
@@ -330,7 +323,7 @@ onUnmounted(() => {
           </button>
         </div>
         <div class="image-status-strip" aria-label="镜像状态摘要">
-          <div class="image-status-strip__row">
+          <div v-if="statusSummary.length > 0" class="image-status-strip__row">
             <div
               v-for="item in statusSummary"
               :key="item.key"
