@@ -16,7 +16,7 @@ const props = defineProps<{
   challenges: ContestChallengeItem[]
 }>()
 
-const activeChallengeId = ref('')
+const activeChallengeKey = ref('')
 const flagInputs = ref<Record<string, string>>({})
 const targetKeyword = ref('')
 const showOnlyReachableTargets = ref(false)
@@ -67,7 +67,7 @@ const lastSyncedLabel = computed(() =>
 const targetFilterKeyword = computed(() => targetKeyword.value.trim().toLowerCase())
 
 const activeChallenge = computed(
-  () => props.challenges.find((item) => item.challenge_id === activeChallengeId.value) || null
+  () => props.challenges.find((item) => getChallengeRuntimeKey(item) === activeChallengeKey.value) || null
 )
 const activeChallengeRuntimeKey = computed(() => getChallengeRuntimeKey(activeChallenge.value))
 
@@ -143,14 +143,14 @@ const defenseAlerts = computed(() => {
 })
 
 watch(
-  () => props.challenges.map((item) => item.challenge_id),
-  (challengeIDs) => {
-    if (challengeIDs.length === 0) {
-      activeChallengeId.value = ''
+  () => props.challenges.map((item) => getChallengeRuntimeKey(item)),
+  (challengeKeys) => {
+    if (challengeKeys.length === 0) {
+      activeChallengeKey.value = ''
       return
     }
-    if (!challengeIDs.includes(activeChallengeId.value)) {
-      activeChallengeId.value = challengeIDs[0]
+    if (!challengeKeys.includes(activeChallengeKey.value)) {
+      activeChallengeKey.value = challengeKeys[0]
     }
   },
   { immediate: true }
@@ -429,14 +429,14 @@ async function handleSubmit(challengeId: string, serviceKey: string, teamId: str
             <div class="awd-target-toolbar__field">
               <label class="ui-field__label" for="awd-target-challenge">攻击题目</label>
               <div class="ui-control-wrap awd-target-control">
-                <select id="awd-target-challenge" v-model="activeChallengeId" class="ui-control">
+                <select id="awd-target-challenge" v-model="activeChallengeKey" class="ui-control">
                   <option v-if="challenges.length === 0" value="" disabled>
                     当前没有可选攻击题目
                   </option>
                   <option
                     v-for="challenge in challenges"
-                    :key="challenge.challenge_id"
-                    :value="challenge.challenge_id"
+                    :key="getChallengeRuntimeKey(challenge)"
+                    :value="getChallengeRuntimeKey(challenge)"
                   >
                     {{ challenge.title }}
                   </option>

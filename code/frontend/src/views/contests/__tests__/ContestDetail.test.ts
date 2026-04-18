@@ -802,6 +802,120 @@ describe('ContestDetail', () => {
     expect(wrapper.text()).toContain('在线')
   })
 
+  it('学生 AWD 工作台应允许用 awd service 标识切换攻击题目', async () => {
+    contestApiMocks.getContestDetail.mockResolvedValueOnce({
+      id: '1',
+      title: '2026 春季校园 AWD 联赛',
+      description: '测试描述',
+      status: 'running',
+      mode: 'awd',
+      starts_at: '2024-03-15T09:00:00Z',
+      ends_at: '2024-03-15T21:00:00Z',
+    })
+    contestApiMocks.getContestChallenges.mockResolvedValueOnce([
+      {
+        id: '201',
+        challenge_id: '101',
+        awd_service_id: '7009',
+        title: 'Service A',
+        category: 'web',
+        difficulty: 'medium',
+        points: 100,
+        solved_count: 0,
+        is_solved: false,
+      },
+      {
+        id: '202',
+        challenge_id: '102',
+        awd_service_id: '7010',
+        title: 'Service B',
+        category: 'pwn',
+        difficulty: 'hard',
+        points: 200,
+        solved_count: 0,
+        is_solved: false,
+      },
+    ])
+    contestApiMocks.getContestAWDWorkspace.mockResolvedValueOnce({
+      contest_id: '1',
+      current_round: {
+        id: '41',
+        contest_id: '1',
+        round_number: 2,
+        status: 'running',
+        attack_score: 60,
+        defense_score: 40,
+        created_at: '2024-03-15T09:00:00Z',
+        updated_at: '2024-03-15T09:01:00Z',
+      },
+      my_team: {
+        team_id: '13',
+        team_name: 'Red',
+      },
+      services: [
+        {
+          service_id: '7009',
+          challenge_id: 'legacy-101',
+          access_url: 'http://red-a.internal',
+          service_status: 'up',
+          checker_type: 'http_standard',
+          attack_received: 0,
+          sla_score: 18,
+          defense_score: 40,
+          attack_score: 0,
+          updated_at: '2024-03-15T09:02:00Z',
+        },
+        {
+          service_id: '7010',
+          challenge_id: 'legacy-102',
+          access_url: 'http://red-b.internal',
+          service_status: 'up',
+          checker_type: 'http_standard',
+          attack_received: 0,
+          sla_score: 18,
+          defense_score: 40,
+          attack_score: 0,
+          updated_at: '2024-03-15T09:02:30Z',
+        },
+      ],
+      targets: [
+        {
+          team_id: '14',
+          team_name: 'Blue',
+          services: [
+            {
+              service_id: '7009',
+              challenge_id: 'legacy-101',
+              access_url: 'http://blue-a.internal',
+            },
+            {
+              service_id: '7010',
+              challenge_id: 'legacy-102',
+              access_url: 'http://blue-b.internal',
+            },
+          ],
+        },
+      ],
+      recent_events: [],
+    })
+
+    const wrapper = mount(ContestDetail, {
+      global: {
+        plugins: [createPinia(), router],
+      },
+    })
+
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('http://blue-a.internal')
+
+    await wrapper.get('#awd-target-challenge').setValue('7010')
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('http://blue-b.internal')
+    expect(wrapper.text()).not.toContain('http://blue-a.internal')
+  })
+
   it('竞赛详情 hero 应使用共享 workspace overline 语义', () => {
     expect(contestDetailSource).toContain('<div class="workspace-overline">Contest</div>')
     expect(contestDetailSource).not.toContain('<div class="contest-overline">Contest</div>')
