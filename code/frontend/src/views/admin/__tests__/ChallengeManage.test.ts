@@ -111,7 +111,7 @@ describe('ChallengeManage', () => {
 
   it('应使用统一的管理端 workspace 壳层，而不是页面内重复一套路由级顶栏', () => {
     expect(challengeManageSource).toContain(
-      'class="workspace-shell challenge-manage-shell journal-shell journal-shell-admin journal-notes-card"'
+      'class="workspace-shell challenge-manage-shell journal-shell journal-shell-admin journal-notes-card journal-hero"'
     )
     expect(challengeManageSource).not.toContain('<header class="workspace-topbar">')
     expect(challengeManageSource).toContain('<div class="workspace-overline">Challenge Workspace</div>')
@@ -142,16 +142,20 @@ describe('ChallengeManage', () => {
     expect(wrapper.text()).not.toContain('待确认导入')
   })
 
-  it('页面壳层与题目更多菜单应声明暗色主题 token，避免夜间模式继续露出浅色背景', () => {
+  it('页面壳层与题目更多菜单应复用 journal surface token，而不是继续维护页面私有的 light/dark 分支', () => {
     expect(challengeManageSource).toContain('--challenge-page-bg')
     expect(challengeManageSource).toContain('--challenge-action-surface')
-    expect(challengeManageSource).toContain(":global([data-theme='dark']) .challenge-manage-shell")
-    expect(challengeManageSource).toContain(":global([data-theme='dark']) .challenge-row-menu")
+    expect(challengeManageSource).toContain('--workspace-shell-bg')
+    expect(challengeManageSource).toContain('var(--journal-surface)')
+    expect(challengeManageSource).toContain('var(--journal-surface-subtle)')
+    expect(challengeManageSource).not.toContain(":global([data-theme='light']) .challenge-manage-shell")
+    expect(challengeManageSource).not.toContain(":global([data-theme='dark']) .challenge-manage-shell")
+    expect(challengeManageSource).not.toContain(":global([data-theme='dark']) .challenge-row-menu")
   })
 
-  it('最外层 workspace shell 不应保留额外边框', () => {
+  it('最外层 workspace shell 应保留共享边框，而不是自行抹掉 shell 边界', () => {
     expect(challengeManageSource).toContain('.challenge-manage-shell {')
-    expect(challengeManageSource).toContain('border: none;')
+    expect(challengeManageSource).not.toContain('border: none;')
   })
 
   it('题目管理列表应改用共享列表组件，并且不再显示题目 ID 列', async () => {
