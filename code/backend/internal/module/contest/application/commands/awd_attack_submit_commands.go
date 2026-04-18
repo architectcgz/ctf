@@ -7,8 +7,8 @@ import (
 	"ctf-platform/internal/model"
 )
 
-func (s *AWDService) SubmitAttack(ctx context.Context, userID, contestID, challengeID int64, req *dto.SubmitAWDAttackReq) (*dto.AWDAttackLogResp, error) {
-	attackContext, err := s.prepareSubmitAttackContext(ctx, userID, contestID, challengeID, req)
+func (s *AWDService) SubmitAttack(ctx context.Context, userID, contestID, serviceID int64, req *dto.SubmitAWDAttackReq) (*dto.AWDAttackLogResp, error) {
+	attackContext, err := s.prepareSubmitAttackContext(ctx, userID, contestID, serviceID, req)
 	if err != nil {
 		return nil, err
 	}
@@ -16,7 +16,7 @@ func (s *AWDService) SubmitAttack(ctx context.Context, userID, contestID, challe
 	return s.createAttackLog(ctx, contestID, attackContext.round.ID, &dto.CreateAWDAttackLogReq{
 		AttackerTeamID: attackContext.attackerTeamID,
 		VictimTeamID:   req.VictimTeamID,
-		ChallengeID:    challengeID,
+		ServiceID:      serviceID,
 		AttackType:     model.AWDAttackTypeFlagCapture,
 		SubmittedFlag:  req.Flag,
 		IsSuccess:      validateSubmittedAttackFlag(req.Flag, attackContext.acceptedFlags),

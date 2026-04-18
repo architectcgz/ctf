@@ -571,7 +571,7 @@ export function useAdminContestAWD(selectedContest: Readonly<Ref<ContestDetailDa
 
   async function createServiceCheck(payload: {
     team_id: number
-    challenge_id: number
+    service_id: number
     service_status: AWDTeamServiceData['service_status']
     check_result?: Record<string, unknown>
   }) {
@@ -592,7 +592,7 @@ export function useAdminContestAWD(selectedContest: Readonly<Ref<ContestDetailDa
   async function createAttackLog(payload: {
     attacker_team_id: number
     victim_team_id: number
-    challenge_id: number
+    service_id: number
     attack_type: AWDAttackLogData['attack_type']
     submitted_flag?: string
     is_success: boolean

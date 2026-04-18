@@ -182,14 +182,14 @@ describe('contest api contract', () => {
       created_at: '2026-04-12T08:03:00Z',
     })
 
-    const result = await submitContestAWDAttack('7', '9', {
+    const result = await submitContestAWDAttack('7', '7009', {
       victim_team_id: 14,
       flag: 'flag{demo}',
     })
 
     expect(requestMock).toHaveBeenCalledWith({
       method: 'POST',
-      url: '/contests/7/awd/challenges/9/submissions',
+      url: '/contests/7/awd/services/7009/submissions',
       data: {
         victim_team_id: 14,
         flag: 'flag{demo}',

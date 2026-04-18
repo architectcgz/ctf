@@ -128,6 +128,41 @@ func TestAWDQueryServiceGetReadinessTreatsZeroChallengesAsGlobalBlock(t *testing
 	}
 }
 
+func TestAWDQueryServiceGetReadinessIgnoresLegacyContestChallengeBridge(t *testing.T) {
+	service, db := newAWDQueryServiceForTest(t)
+	now := time.Now()
+
+	createAWDReadinessContestFixture(t, db, 706, now)
+	createAWDReadinessChallengeFixture(t, db, 7061, "legacy-only", now)
+	if err := db.Create(&model.ContestChallenge{
+		ContestID:                 706,
+		ChallengeID:               7061,
+		Points:                    100,
+		IsVisible:                 true,
+		AWDCheckerType:            model.AWDCheckerTypeHTTPStandard,
+		AWDCheckerConfig:          `{"get_flag":{"path":"/health"}}`,
+		AWDCheckerValidationState: model.AWDCheckerValidationStatePassed,
+		CreatedAt:                 now,
+		UpdatedAt:                 now,
+	}).Error; err != nil {
+		t.Fatalf("create legacy-only contest challenge: %v", err)
+	}
+
+	resp, err := service.GetReadiness(context.Background(), 706)
+	if err != nil {
+		t.Fatalf("GetReadiness() error = %v", err)
+	}
+	if resp.TotalChallenges != 0 || resp.PassedChallenges != 0 {
+		t.Fatalf("expected legacy-only relation ignored, got %+v", resp)
+	}
+	if resp.BlockingCount != 1 {
+		t.Fatalf("expected blocking count 1, got %d", resp.BlockingCount)
+	}
+	if len(resp.GlobalBlockingReasons) != 1 || resp.GlobalBlockingReasons[0] != "no_challenges" {
+		t.Fatalf("unexpected global blocking reasons: %+v", resp.GlobalBlockingReasons)
+	}
+}
+
 func TestAWDQueryServiceGetReadinessTreatsBrokenCheckerConfigAsMissingChecker(t *testing.T) {
 	service, db := newAWDQueryServiceForTest(t)
 	now := time.Now()
@@ -227,25 +262,19 @@ func TestAWDQueryServiceGetReadinessPrefersContestAWDServiceRuntimeConfig(t *tes
 		CreatedAt:                 now,
 		UpdatedAt:                 now,
 	})
-	if err := contestinfra.NewAWDRepository(db).CreateContestAWDService(context.Background(), &model.ContestAWDService{
-		ContestID:   705,
-		ChallengeID: 7051,
-		DisplayName: "Bank Portal",
-		Order:       0,
-		IsVisible:   true,
-		ScoreConfig: `{"points":100,"awd_sla_score":18,"awd_defense_score":28}`,
-		RuntimeConfig: `{
-			"challenge_id":7051,
-			"checker_type":"http_standard",
-			"checker_config":{
-				"get_flag":{"path":"/service-health","expected_status":200}
-			}
-		}`,
-		CreatedAt: now,
-		UpdatedAt: now,
-	}); err != nil {
-		t.Fatalf("create contest awd service: %v", err)
-	}
+	contesttestsupport.SyncAWDContestServiceFixture(
+		t,
+		db,
+		705,
+		7051,
+		"Bank Portal",
+		model.AWDCheckerTypeHTTPStandard,
+		`{"get_flag":{"path":"/service-health","expected_status":200}}`,
+		100,
+		18,
+		28,
+		now,
+	)
 
 	resp, err := service.GetReadiness(context.Background(), 705)
 	if err != nil {
@@ -535,6 +564,33 @@ func createAWDReadinessRelationFixture(t *testing.T, db *gorm.DB, relation *mode
 	if err := db.Create(relation).Error; err != nil {
 		t.Fatalf("create contest challenge: %v", err)
 	}
+
+	var challenge model.Challenge
+	if err := db.Where("id = ?", relation.ChallengeID).First(&challenge).Error; err != nil {
+		t.Fatalf("load challenge for awd service fixture: %v", err)
+	}
+	contesttestsupport.SyncAWDContestServiceFixture(
+		t,
+		db,
+		relation.ContestID,
+		relation.ChallengeID,
+		challenge.Title,
+		relation.AWDCheckerType,
+		relation.AWDCheckerConfig,
+		relation.Points,
+		relation.AWDSLAScore,
+		relation.AWDDefenseScore,
+		relation.UpdatedAt,
+	)
+	contesttestsupport.SyncAWDContestServiceReadinessFixture(
+		t,
+		db,
+		relation.ContestID,
+		relation.ChallengeID,
+		relation.AWDCheckerValidationState,
+		relation.AWDCheckerLastPreviewAt,
+		relation.AWDCheckerLastPreviewResult,
+	)
 }
 
 func readinessBlockingReasonByChallenge(items []*dto.AWDReadinessItemResp, challengeID int64) string {

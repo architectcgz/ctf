@@ -380,12 +380,12 @@ export async function startContestChallengeInstance(
 
 export async function submitContestAWDAttack(
   contestId: string,
-  challengeId: string,
+  serviceId: string,
   data: { victim_team_id: number; flag: string }
 ): Promise<AWDAttackLogData> {
   const response = await request<RawAWDAttackLogData>({
     method: 'POST',
-    url: `/contests/${encodeURIComponent(contestId)}/awd/challenges/${encodeURIComponent(challengeId)}/submissions`,
+    url: `/contests/${encodeURIComponent(contestId)}/awd/services/${encodeURIComponent(serviceId)}/submissions`,
     data,
   })
   return normalizeAWDAttackLog(response)

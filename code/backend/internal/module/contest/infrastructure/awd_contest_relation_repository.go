@@ -12,20 +12,16 @@ import (
 )
 
 type awdContestServiceRuntimeRow struct {
-	ServiceID               int64                           `gorm:"column:service_id"`
-	ChallengeID             int64                           `gorm:"column:challenge_id"`
-	FlagPrefix              string                          `gorm:"column:flag_prefix"`
-	DisplayName             string                          `gorm:"column:display_name"`
-	RuntimeConfig           string                          `gorm:"column:runtime_config"`
-	ScoreConfig             string                          `gorm:"column:score_config"`
-	LegacyCheckerType       model.AWDCheckerType            `gorm:"column:legacy_checker_type"`
-	LegacyCheckerConfig     string                          `gorm:"column:legacy_checker_config"`
-	LegacySLAScore          int                             `gorm:"column:legacy_sla_score"`
-	LegacyDefenseScore      int                             `gorm:"column:legacy_defense_score"`
-	LegacyValidationState   model.AWDCheckerValidationState `gorm:"column:legacy_validation_state"`
-	LegacyLastPreviewAt     *time.Time                      `gorm:"column:legacy_last_preview_at"`
-	LegacyLastPreviewResult string                          `gorm:"column:legacy_last_preview_result"`
-	LegacyChallengeTitle    string                          `gorm:"column:legacy_challenge_title"`
+	ServiceID         int64                           `gorm:"column:service_id"`
+	ChallengeID       int64                           `gorm:"column:challenge_id"`
+	FlagPrefix        string                          `gorm:"column:flag_prefix"`
+	DisplayName       string                          `gorm:"column:display_name"`
+	RuntimeConfig     string                          `gorm:"column:runtime_config"`
+	ScoreConfig       string                          `gorm:"column:score_config"`
+	ValidationState   model.AWDCheckerValidationState `gorm:"column:validation_state"`
+	LastPreviewAt     *time.Time                      `gorm:"column:last_preview_at"`
+	LastPreviewResult string                          `gorm:"column:last_preview_result"`
+	ChallengeTitle    string                          `gorm:"column:challenge_title"`
 }
 
 func (r *AWDRepository) ListSchedulableAWDContests(ctx context.Context, now, recentCutoff time.Time, limit int) ([]model.Contest, error) {
@@ -69,9 +65,6 @@ func (r *AWDRepository) ListServiceDefinitionsByContest(ctx context.Context, con
 	if err != nil {
 		return nil, err
 	}
-	if len(rows) == 0 {
-		return r.listLegacyServiceDefinitionsByContest(ctx, contestID)
-	}
 
 	definitions := make([]contestports.AWDServiceDefinition, 0, len(rows))
 	for _, row := range rows {
@@ -81,10 +74,10 @@ func (r *AWDRepository) ListServiceDefinitionsByContest(ctx context.Context, con
 			ServiceID:     row.ServiceID,
 			ChallengeID:   row.ChallengeID,
 			FlagPrefix:    row.FlagPrefix,
-			CheckerType:   resolveContestAWDServiceCheckerType(runtimeConfig, row.LegacyCheckerType),
-			CheckerConfig: resolveContestAWDServiceCheckerConfig(runtimeConfig, row.LegacyCheckerConfig),
-			SLAScore:      resolveContestAWDServiceScore(scoreConfig, "awd_sla_score", row.LegacySLAScore),
-			DefenseScore:  resolveContestAWDServiceScore(scoreConfig, "awd_defense_score", row.LegacyDefenseScore),
+			CheckerType:   resolveContestAWDServiceCheckerType(runtimeConfig),
+			CheckerConfig: resolveContestAWDServiceCheckerConfig(runtimeConfig),
+			SLAScore:      resolveContestAWDServiceScore(scoreConfig, "awd_sla_score"),
+			DefenseScore:  resolveContestAWDServiceScore(scoreConfig, "awd_defense_score"),
 		})
 	}
 	return definitions, nil
@@ -95,69 +88,23 @@ func (r *AWDRepository) ListReadinessChallengesByContest(ctx context.Context, co
 	if err != nil {
 		return nil, err
 	}
-	if len(rows) == 0 {
-		return r.listLegacyReadinessChallengesByContest(ctx, contestID)
-	}
 
 	records := make([]contestports.AWDReadinessChallengeRecord, 0, len(rows))
 	for _, row := range rows {
 		runtimeConfig := contestdomain.ParseAWDCheckerConfig(row.RuntimeConfig)
 		title := strings.TrimSpace(row.DisplayName)
 		if title == "" {
-			title = row.LegacyChallengeTitle
+			title = row.ChallengeTitle
 		}
 		records = append(records, contestports.AWDReadinessChallengeRecord{
 			ChallengeID:       row.ChallengeID,
 			Title:             title,
-			CheckerType:       resolveContestAWDServiceCheckerType(runtimeConfig, row.LegacyCheckerType),
-			CheckerConfig:     resolveContestAWDServiceCheckerConfig(runtimeConfig, row.LegacyCheckerConfig),
-			ValidationState:   row.LegacyValidationState,
-			LastPreviewAt:     row.LegacyLastPreviewAt,
-			LastPreviewResult: row.LegacyLastPreviewResult,
+			CheckerType:       resolveContestAWDServiceCheckerType(runtimeConfig),
+			CheckerConfig:     resolveContestAWDServiceCheckerConfig(runtimeConfig),
+			ValidationState:   row.ValidationState,
+			LastPreviewAt:     row.LastPreviewAt,
+			LastPreviewResult: row.LastPreviewResult,
 		})
-	}
-	return records, nil
-}
-
-func (r *AWDRepository) listLegacyServiceDefinitionsByContest(ctx context.Context, contestID int64) ([]contestports.AWDServiceDefinition, error) {
-	var definitions []contestports.AWDServiceDefinition
-	if err := r.dbWithContext(ctx).
-		Table("contest_challenges AS cc").
-		Select(`
-			cc.challenge_id AS challenge_id,
-			c.flag_prefix AS flag_prefix,
-			cc.awd_checker_type AS awd_checker_type,
-			cc.awd_checker_config AS awd_checker_config,
-			cc.awd_sla_score AS awd_sla_score,
-			cc.awd_defense_score AS awd_defense_score
-		`).
-		Joins("JOIN challenges AS c ON c.id = cc.challenge_id").
-		Where("cc.contest_id = ?", contestID).
-		Order("cc.challenge_id ASC").
-		Scan(&definitions).Error; err != nil {
-		return nil, err
-	}
-	return definitions, nil
-}
-
-func (r *AWDRepository) listLegacyReadinessChallengesByContest(ctx context.Context, contestID int64) ([]contestports.AWDReadinessChallengeRecord, error) {
-	var records []contestports.AWDReadinessChallengeRecord
-	if err := r.dbWithContext(ctx).
-		Table("contest_challenges AS cc").
-		Select(`
-			cc.challenge_id AS challenge_id,
-			c.title AS title,
-			cc.awd_checker_type AS awd_checker_type,
-			cc.awd_checker_config AS awd_checker_config,
-			cc.awd_checker_validation_state AS awd_checker_validation_state,
-			cc.awd_checker_last_preview_at AS awd_checker_last_preview_at,
-			cc.awd_checker_last_preview_result AS awd_checker_last_preview_result
-		`).
-		Joins("JOIN challenges AS c ON c.id = cc.challenge_id").
-		Where("cc.contest_id = ?", contestID).
-		Order("cc.challenge_id ASC").
-		Scan(&records).Error; err != nil {
-		return nil, err
 	}
 	return records, nil
 }
@@ -173,17 +120,12 @@ func (r *AWDRepository) listContestAWDServiceRuntimeRows(ctx context.Context, co
 			cas.display_name AS display_name,
 			cas.runtime_config AS runtime_config,
 			cas.score_config AS score_config,
-			cc.awd_checker_type AS legacy_checker_type,
-			cc.awd_checker_config AS legacy_checker_config,
-			cc.awd_sla_score AS legacy_sla_score,
-			cc.awd_defense_score AS legacy_defense_score,
-			cc.awd_checker_validation_state AS legacy_validation_state,
-			cc.awd_checker_last_preview_at AS legacy_last_preview_at,
-			cc.awd_checker_last_preview_result AS legacy_last_preview_result,
-			c.title AS legacy_challenge_title
+			cas.awd_checker_validation_state AS validation_state,
+			cas.awd_checker_last_preview_at AS last_preview_at,
+			cas.awd_checker_last_preview_result AS last_preview_result,
+			c.title AS challenge_title
 		`).
 		Joins("JOIN challenges AS c ON c.id = cas.challenge_id").
-		Joins("LEFT JOIN contest_challenges AS cc ON cc.contest_id = cas.contest_id AND cc.challenge_id = cas.challenge_id").
 		Where("cas.contest_id = ?", contestID).
 		Order("cas.\"order\" ASC, cas.id ASC").
 		Scan(&rows).Error; err != nil {
@@ -192,7 +134,7 @@ func (r *AWDRepository) listContestAWDServiceRuntimeRows(ctx context.Context, co
 	return rows, nil
 }
 
-func resolveContestAWDServiceCheckerType(runtimeConfig map[string]any, fallback model.AWDCheckerType) model.AWDCheckerType {
+func resolveContestAWDServiceCheckerType(runtimeConfig map[string]any) model.AWDCheckerType {
 	if runtimeConfig != nil {
 		if raw, ok := runtimeConfig["checker_type"]; ok {
 			if value, ok := raw.(string); ok {
@@ -202,21 +144,26 @@ func resolveContestAWDServiceCheckerType(runtimeConfig map[string]any, fallback 
 			}
 		}
 	}
-	return fallback
+	return ""
 }
 
-func resolveContestAWDServiceCheckerConfig(runtimeConfig map[string]any, fallback string) string {
+func resolveContestAWDServiceCheckerConfig(runtimeConfig map[string]any) string {
 	if runtimeConfig != nil {
+		if raw, ok := runtimeConfig["checker_config_raw"]; ok {
+			if value, ok := raw.(string); ok {
+				return value
+			}
+		}
 		if raw, ok := runtimeConfig["checker_config"]; ok {
 			if encoded := marshalContestAWDServiceJSON(raw); encoded != "" {
 				return encoded
 			}
 		}
 	}
-	return fallback
+	return ""
 }
 
-func resolveContestAWDServiceScore(scoreConfig map[string]any, key string, fallback int) int {
+func resolveContestAWDServiceScore(scoreConfig map[string]any, key string) int {
 	if scoreConfig != nil {
 		if raw, ok := scoreConfig[key]; ok {
 			if value, ok := normalizeContestAWDServiceInt(raw); ok {
@@ -224,7 +171,7 @@ func resolveContestAWDServiceScore(scoreConfig map[string]any, key string, fallb
 			}
 		}
 	}
-	return fallback
+	return 0
 }
 
 func normalizeContestAWDServiceInt(value any) (int, bool) {

@@ -30,7 +30,7 @@ type AWDRoundResp struct {
 
 type UpsertAWDServiceCheckReq struct {
 	TeamID        int64          `json:"team_id" binding:"required,min=1"`
-	ChallengeID   int64          `json:"challenge_id" binding:"required,min=1"`
+	ServiceID     int64          `json:"service_id" binding:"required,min=1"`
 	ServiceStatus string         `json:"service_status" binding:"required,oneof=up down compromised"`
 	CheckResult   map[string]any `json:"check_result"`
 }
@@ -55,7 +55,7 @@ type AWDTeamServiceResp struct {
 type CreateAWDAttackLogReq struct {
 	AttackerTeamID int64  `json:"attacker_team_id" binding:"required,min=1"`
 	VictimTeamID   int64  `json:"victim_team_id" binding:"required,min=1"`
-	ChallengeID    int64  `json:"challenge_id" binding:"required,min=1"`
+	ServiceID      int64  `json:"service_id" binding:"required,min=1"`
 	AttackType     string `json:"attack_type" binding:"required,oneof=flag_capture service_exploit"`
 	SubmittedFlag  string `json:"submitted_flag" binding:"omitempty,max=512"`
 	IsSuccess      bool   `json:"is_success"`

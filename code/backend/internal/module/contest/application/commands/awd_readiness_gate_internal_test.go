@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	contesttestsupport "ctf-platform/internal/module/contest/testsupport"
@@ -25,6 +26,16 @@ func TestEvaluateAWDReadinessGateReturnsDecisionSnapshotAndNormalizedOverride(t 
 	`, "legacy_probe", "{}", "pending", 5101, 51011).Error; err != nil {
 		t.Fatalf("seed readiness item: %v", err)
 	}
+	contesttestsupport.SyncAWDContestServiceFixture(t, db, 5101, 51011, "awd-service", "legacy_probe", `{}`, 100, 0, 0, now)
+	contesttestsupport.SyncAWDContestServiceReadinessFixture(
+		t,
+		db,
+		5101,
+		51011,
+		model.AWDCheckerValidationStatePending,
+		nil,
+		"",
+	)
 
 	decision, err := evaluateAWDReadinessGate(context.Background(), repo, 5101, boolPtr(true), strPtr("  teacher drill  "))
 	if err != nil {

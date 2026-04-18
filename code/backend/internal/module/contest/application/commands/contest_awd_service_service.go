@@ -70,13 +70,14 @@ func (s *ContestAWDServiceService) CreateContestAWDService(ctx context.Context, 
 		isVisible = *req.IsVisible
 	}
 	record := &model.ContestAWDService{
-		ContestID:   contestID,
-		ChallengeID: req.ChallengeID,
-		TemplateID:  &req.TemplateID,
-		DisplayName: firstNonEmpty(req.DisplayName, template.Name, challenge.Title),
-		Order:       req.Order,
-		IsVisible:   isVisible,
-		ScoreConfig: buildContestAWDServiceScoreConfig(challenge.Points, 0, 0),
+		ContestID:       contestID,
+		ChallengeID:     req.ChallengeID,
+		TemplateID:      &req.TemplateID,
+		DisplayName:     firstNonEmpty(req.DisplayName, template.Name, challenge.Title),
+		Order:           req.Order,
+		IsVisible:       isVisible,
+		ScoreConfig:     buildContestAWDServiceScoreConfig(challenge.Points, 0, 0),
+		ValidationState: model.AWDCheckerValidationStatePending,
 		RuntimeConfig: buildContestAWDServiceRuntimeConfig(
 			req.ChallengeID,
 			template.CheckerType,

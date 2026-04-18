@@ -63,17 +63,7 @@ func (s *AWDService) resolveRoundFlag(ctx context.Context, contestID int64, roun
 		return "", errcode.ErrAWDFlagUnavailable
 	}
 	if s.redis != nil {
-		if serviceID > 0 {
-			flag, err := s.redis.HGet(ctx, rediskeys.AWDRoundFlagsKey(contestID, round.ID), rediskeys.AWDRoundFlagServiceField(victimTeamID, serviceID)).Result()
-			if err == nil && strings.TrimSpace(flag) != "" {
-				return flag, nil
-			}
-			if err != nil && !errors.Is(err, redislib.Nil) {
-				return "", errcode.ErrInternal.WithCause(err)
-			}
-		}
-
-		flag, err := s.redis.HGet(ctx, rediskeys.AWDRoundFlagsKey(contestID, round.ID), rediskeys.AWDRoundFlagField(victimTeamID, challenge.ID)).Result()
+		flag, err := s.redis.HGet(ctx, rediskeys.AWDRoundFlagsKey(contestID, round.ID), rediskeys.AWDRoundFlagServiceField(victimTeamID, serviceID)).Result()
 		if err == nil && strings.TrimSpace(flag) != "" {
 			return flag, nil
 		}

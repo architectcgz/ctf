@@ -587,17 +587,17 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 		}),
 		deps.contest.SubmissionHandler.SubmitFlag,
 	)
-	protected.POST("/contests/:id/awd/challenges/:cid/submissions",
-		middleware.ParseInt64Param("id"),
-		middleware.ParseInt64Param("cid"),
-		audit(middleware.AuditOptions{
-			Action:          model.AuditActionSubmit,
-			ResourceType:    "awd_attack_submission",
-			ResourceIDParam: "cid",
-			DetailBuilder:   middleware.DetailFromParams("id", "cid"),
-		}),
-		deps.contest.AWDHandler.SubmitAttack,
-	)
+		protected.POST("/contests/:id/awd/services/:sid/submissions",
+			middleware.ParseInt64Param("id"),
+			middleware.ParseInt64Param("sid"),
+			audit(middleware.AuditOptions{
+				Action:          model.AuditActionSubmit,
+				ResourceType:    "awd_attack_submission",
+				ResourceIDParam: "sid",
+				DetailBuilder:   middleware.DetailFromParams("id", "sid"),
+			}),
+			deps.contest.AWDHandler.SubmitAttack,
+		)
 	protected.GET("/contests/:id/teams", deps.contest.TeamHandler.ListTeams)
 	protected.GET("/contests/:id/my-team", deps.contest.TeamHandler.GetMyTeam)
 	protected.POST("/contests/:id/teams",

@@ -2,9 +2,11 @@ package testsupport
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -189,18 +191,128 @@ func CreateAWDContestChallengeFixture(t *testing.T, db *gorm.DB, contestID, chal
 	}
 
 	if err := db.Create(&model.ContestAWDService{
-		ID:            DefaultAWDContestServiceID(contestID, challengeID),
-		ContestID:     contestID,
-		ChallengeID:   challengeID,
-		DisplayName:   fmt.Sprintf("awd-service-%d", challengeID),
-		Order:         0,
-		IsVisible:     true,
-		ScoreConfig:   `{"points":100}`,
-		RuntimeConfig: fmt.Sprintf(`{"challenge_id":%d}`, challengeID),
-		CreatedAt:     now,
-		UpdatedAt:     now,
+		ID:                DefaultAWDContestServiceID(contestID, challengeID),
+		ContestID:         contestID,
+		ChallengeID:       challengeID,
+		DisplayName:       fmt.Sprintf("awd-service-%d", challengeID),
+		Order:             0,
+		IsVisible:         true,
+		ScoreConfig:       `{"points":100}`,
+		RuntimeConfig:     fmt.Sprintf(`{"challenge_id":%d}`, challengeID),
+		ValidationState:   model.AWDCheckerValidationStatePending,
+		LastPreviewResult: "",
+		CreatedAt:         now,
+		UpdatedAt:         now,
 	}).Error; err != nil {
 		t.Fatalf("create awd contest service fixture: %v", err)
+	}
+}
+
+func SyncAWDContestServiceFixture(
+	t *testing.T,
+	db *gorm.DB,
+	contestID, challengeID int64,
+	displayName string,
+	checkerType model.AWDCheckerType,
+	checkerConfig string,
+	points, slaScore, defenseScore int,
+	now time.Time,
+) {
+	t.Helper()
+
+	if strings.TrimSpace(displayName) == "" {
+		displayName = fmt.Sprintf("awd-service-%d", challengeID)
+	}
+
+	runtimeConfig := map[string]any{
+		"challenge_id": challengeID,
+	}
+	if checkerType != "" {
+		runtimeConfig["checker_type"] = string(checkerType)
+	}
+	trimmedCheckerConfig := strings.TrimSpace(checkerConfig)
+	if trimmedCheckerConfig != "" {
+		var checkerValue any
+		if err := json.Unmarshal([]byte(trimmedCheckerConfig), &checkerValue); err == nil {
+			runtimeConfig["checker_config"] = checkerValue
+		} else {
+			runtimeConfig["checker_config_raw"] = checkerConfig
+		}
+	}
+
+	scoreConfig := map[string]any{
+		"points":            points,
+		"awd_sla_score":     slaScore,
+		"awd_defense_score": defenseScore,
+	}
+
+	runtimeConfigRaw, err := json.Marshal(runtimeConfig)
+	if err != nil {
+		t.Fatalf("marshal awd runtime config: %v", err)
+	}
+	scoreConfigRaw, err := json.Marshal(scoreConfig)
+	if err != nil {
+		t.Fatalf("marshal awd score config: %v", err)
+	}
+
+	updates := map[string]any{
+		"display_name":   displayName,
+		"is_visible":     true,
+		"score_config":   string(scoreConfigRaw),
+		"runtime_config": string(runtimeConfigRaw),
+		"updated_at":     now,
+	}
+	result := db.Model(&model.ContestAWDService{}).
+		Where("contest_id = ? AND challenge_id = ?", contestID, challengeID).
+		Updates(updates)
+	if result.Error != nil {
+		t.Fatalf("update awd contest service fixture: %v", result.Error)
+	}
+	if result.RowsAffected > 0 {
+		return
+	}
+
+	if err := db.Create(&model.ContestAWDService{
+		ID:                DefaultAWDContestServiceID(contestID, challengeID),
+		ContestID:         contestID,
+		ChallengeID:       challengeID,
+		DisplayName:       displayName,
+		Order:             0,
+		IsVisible:         true,
+		ScoreConfig:       string(scoreConfigRaw),
+		RuntimeConfig:     string(runtimeConfigRaw),
+		ValidationState:   model.AWDCheckerValidationStatePending,
+		LastPreviewResult: "",
+		CreatedAt:         now,
+		UpdatedAt:         now,
+	}).Error; err != nil {
+		t.Fatalf("create awd contest service fixture: %v", err)
+	}
+}
+
+func SyncAWDContestServiceReadinessFixture(
+	t *testing.T,
+	db *gorm.DB,
+	contestID, challengeID int64,
+	state model.AWDCheckerValidationState,
+	lastPreviewAt *time.Time,
+	lastPreviewResult string,
+) {
+	t.Helper()
+
+	updates := map[string]any{
+		"awd_checker_validation_state":    state,
+		"awd_checker_last_preview_at":     lastPreviewAt,
+		"awd_checker_last_preview_result": lastPreviewResult,
+	}
+	result := db.Model(&model.ContestAWDService{}).
+		Where("contest_id = ? AND challenge_id = ?", contestID, challengeID).
+		Updates(updates)
+	if result.Error != nil {
+		t.Fatalf("update awd contest service readiness fixture: %v", result.Error)
+	}
+	if result.RowsAffected == 0 {
+		t.Fatalf("missing awd contest service fixture for readiness sync: contest=%d challenge=%d", contestID, challengeID)
 	}
 }
 
@@ -280,26 +392,26 @@ func AssertContestRedisScoreMissing(t *testing.T, redisClient *redis.Client, con
 	}
 }
 
-func AssertAWDServiceStatusCache(t *testing.T, redisClient *redis.Client, contestID, teamID, challengeID int64, expected string) {
+func AssertAWDServiceStatusCache(t *testing.T, redisClient *redis.Client, contestID, teamID, serviceID int64, expected string) {
 	t.Helper()
 
-	value, err := redisClient.HGet(context.Background(), rediskeys.AWDServiceStatusKey(contestID), rediskeys.AWDRoundFlagField(teamID, challengeID)).Result()
+	value, err := redisClient.HGet(context.Background(), rediskeys.AWDServiceStatusKey(contestID), rediskeys.AWDRoundFlagServiceField(teamID, serviceID)).Result()
 	if err != nil {
-		t.Fatalf("load awd service status cache for %d/%d: %v", teamID, challengeID, err)
+		t.Fatalf("load awd service status cache for %d/%d: %v", teamID, serviceID, err)
 	}
 	if value != expected {
-		t.Fatalf("unexpected awd service status cache for %d/%d: got %q want %q", teamID, challengeID, value, expected)
+		t.Fatalf("unexpected awd service status cache for %d/%d: got %q want %q", teamID, serviceID, value, expected)
 	}
 }
 
-func AssertAWDServiceStatusCacheMissing(t *testing.T, redisClient *redis.Client, contestID, teamID, challengeID int64) {
+func AssertAWDServiceStatusCacheMissing(t *testing.T, redisClient *redis.Client, contestID, teamID, serviceID int64) {
 	t.Helper()
 
-	_, err := redisClient.HGet(context.Background(), rediskeys.AWDServiceStatusKey(contestID), rediskeys.AWDRoundFlagField(teamID, challengeID)).Result()
+	_, err := redisClient.HGet(context.Background(), rediskeys.AWDServiceStatusKey(contestID), rediskeys.AWDRoundFlagServiceField(teamID, serviceID)).Result()
 	if err == nil {
-		t.Fatalf("expected missing awd service status cache for %d/%d", teamID, challengeID)
+		t.Fatalf("expected missing awd service status cache for %d/%d", teamID, serviceID)
 	}
 	if !errors.Is(err, redis.Nil) {
-		t.Fatalf("unexpected awd service status cache error for %d/%d: %v", teamID, challengeID, err)
+		t.Fatalf("unexpected awd service status cache error for %d/%d: %v", teamID, serviceID, err)
 	}
 }

@@ -21,7 +21,7 @@ const emit = defineEmits<{
     value: {
       attacker_team_id: number
       victim_team_id: number
-      challenge_id: number
+      service_id: number
       attack_type: AWDAttackLogData['attack_type']
       submitted_flag?: string
       is_success: boolean
@@ -56,6 +56,14 @@ function getChallengeLabel(challenge: AdminContestChallengeData): string {
     ? challenge.title.trim()
     : `Challenge #${challenge.challenge_id}`
   return `${prefix} · ${challenge.is_visible ? '可见' : '隐藏'}`
+}
+
+function getSelectedServiceId(): number | null {
+  const challenge = challengeOptions.value.find((item) => item.challenge_id === form.challenge_id)
+  if (!challenge?.awd_service_id) {
+    return null
+  }
+  return Number(challenge.awd_service_id)
 }
 
 watch(
@@ -104,15 +112,22 @@ function handleSubmit() {
   ) {
     fieldErrors.victim_team_id = '攻击队伍和受害队伍不能相同'
   }
+  const selectedServiceId = getSelectedServiceId()
+  if (form.challenge_id && selectedServiceId == null) {
+    fieldErrors.challenge_id = '当前题目缺少 AWD 服务标识'
+  }
 
   if (fieldErrors.attacker_team_id || fieldErrors.victim_team_id || fieldErrors.challenge_id) {
+    return
+  }
+  if (selectedServiceId == null) {
     return
   }
 
   emit('save', {
     attacker_team_id: Number(form.attacker_team_id),
     victim_team_id: Number(form.victim_team_id),
-    challenge_id: Number(form.challenge_id),
+    service_id: selectedServiceId,
     attack_type: form.attack_type,
     submitted_flag: form.submitted_flag.trim() || undefined,
     is_success: form.is_success,
@@ -211,9 +226,7 @@ function handleSubmit() {
         <input v-model="form.is_success" type="checkbox" class="awd-attack-check__box" />
         <span class="awd-attack-check__label">本次攻击判定成功</span>
       </label>
-      <p class="ui-field__hint">
-        人工补录仅进入当前轮复盘记录，不写入正式排行榜与实时竞赛得分。
-      </p>
+      <p class="ui-field__hint">人工补录仅进入当前轮复盘记录，不写入正式排行榜与实时竞赛得分。</p>
       <p v-if="!hasTargets" class="ui-field__hint awd-attack-field__warning">
         至少需要 2 支队伍且已关联题目后，才能补录攻击日志。
       </p>
@@ -221,13 +234,7 @@ function handleSubmit() {
 
     <template #footer>
       <div class="awd-attack-dialog__footer">
-        <button
-          type="button"
-          class="ui-btn ui-btn--secondary"
-          @click="closeDialog"
-        >
-          取消
-        </button>
+        <button type="button" class="ui-btn ui-btn--secondary" @click="closeDialog">取消</button>
         <button
           id="awd-attack-log-submit"
           type="button"

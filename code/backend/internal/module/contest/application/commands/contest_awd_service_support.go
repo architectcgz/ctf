@@ -64,14 +64,17 @@ func (s *ChallengeService) syncContestAWDServiceForChallenge(
 	}
 
 	record := &model.ContestAWDService{
-		ContestID:     contestChallenge.ContestID,
-		ChallengeID:   contestChallenge.ChallengeID,
-		TemplateID:    templateID,
-		DisplayName:   displayName,
-		Order:         contestChallenge.Order,
-		IsVisible:     contestChallenge.IsVisible,
-		ScoreConfig:   buildContestAWDServiceScoreConfig(contestChallenge.Points, contestChallenge.AWDSLAScore, contestChallenge.AWDDefenseScore),
-		RuntimeConfig: buildContestAWDServiceRuntimeConfig(contestChallenge.ChallengeID, contestChallenge.AWDCheckerType, contestChallenge.AWDCheckerConfig, ""),
+		ContestID:         contestChallenge.ContestID,
+		ChallengeID:       contestChallenge.ChallengeID,
+		TemplateID:        templateID,
+		DisplayName:       displayName,
+		Order:             contestChallenge.Order,
+		IsVisible:         contestChallenge.IsVisible,
+		ScoreConfig:       buildContestAWDServiceScoreConfig(contestChallenge.Points, contestChallenge.AWDSLAScore, contestChallenge.AWDDefenseScore),
+		RuntimeConfig:     buildContestAWDServiceRuntimeConfig(contestChallenge.ChallengeID, contestChallenge.AWDCheckerType, contestChallenge.AWDCheckerConfig, ""),
+		ValidationState:   contestChallenge.AWDCheckerValidationState,
+		LastPreviewAt:     contestChallenge.AWDCheckerLastPreviewAt,
+		LastPreviewResult: contestChallenge.AWDCheckerLastPreviewResult,
 	}
 
 	stored, err := s.awdRepo.FindContestAWDServiceByContestAndChallenge(ctx, contestChallenge.ContestID, contestChallenge.ChallengeID)
@@ -83,11 +86,14 @@ func (s *ChallengeService) syncContestAWDServiceForChallenge(
 	}
 
 	updates := map[string]any{
-		"display_name":   record.DisplayName,
-		"order":          record.Order,
-		"is_visible":     record.IsVisible,
-		"score_config":   record.ScoreConfig,
-		"runtime_config": record.RuntimeConfig,
+		"display_name":                    record.DisplayName,
+		"order":                           record.Order,
+		"is_visible":                      record.IsVisible,
+		"score_config":                    record.ScoreConfig,
+		"runtime_config":                  record.RuntimeConfig,
+		"awd_checker_validation_state":    record.ValidationState,
+		"awd_checker_last_preview_at":     record.LastPreviewAt,
+		"awd_checker_last_preview_result": record.LastPreviewResult,
 	}
 	if templateID != nil {
 		updates["template_id"] = templateID

@@ -14,6 +14,7 @@ type AWDRepository interface {
 	CreateContestAWDService(ctx context.Context, service *model.ContestAWDService) error
 	UpdateContestAWDService(ctx context.Context, contestID, challengeID int64, updates map[string]any) error
 	FindContestAWDServiceByContestAndChallenge(ctx context.Context, contestID, challengeID int64) (*model.ContestAWDService, error)
+	FindContestAWDServiceByContestAndID(ctx context.Context, contestID, serviceID int64) (*model.ContestAWDService, error)
 	ListContestAWDServicesByContest(ctx context.Context, contestID int64) ([]model.ContestAWDService, error)
 	DeleteContestAWDServiceByContestAndChallenge(ctx context.Context, contestID, challengeID int64) error
 	CreateRound(ctx context.Context, round *model.AWDRound) error

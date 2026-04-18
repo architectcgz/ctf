@@ -210,6 +210,8 @@ func seedCommandReadinessItem(t *testing.T, db *gorm.DB, contestID, challengeID 
 		}).Error; err != nil {
 		t.Fatalf("seed readiness relation: %v", err)
 	}
+	syncAWDContestServiceFixture(t, db, contestID, challengeID, "awd-service", seed.CheckerType, seed.CheckerConfig, 100, 0, 0, seed.Now)
+	syncAWDContestServiceReadinessFixture(t, db, contestID, challengeID, seed.ValidationState, seed.LastPreviewAt, seed.LastPreviewResult)
 }
 
 func assertCommandReadinessBlockingReason(t *testing.T, db *gorm.DB, contestID, challengeID int64, want string) {
