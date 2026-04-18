@@ -50,9 +50,9 @@ const backofficeModules: BackofficeModule[] = [
       {
         routeName: 'AdminDashboard',
         label: '系统概览',
-        path: '/admin/dashboard',
+        path: '/platform/overview',
         roles: ['admin'],
-        isMatch: (path) => matchAny(path, ['/admin/dashboard', '/platform/overview']),
+        isMatch: (path) => matchAny(path, ['/platform/overview']),
       },
     ],
   },
@@ -66,14 +66,14 @@ const backofficeModules: BackofficeModule[] = [
         label: '班级管理',
         path: '/academy/classes',
         roles: ['teacher'],
-        isMatch: (path) => matchExact(path, ['/academy/classes', '/teacher/classes']),
+        isMatch: (path) => matchExact(path, ['/academy/classes']),
       },
       {
         routeName: 'AdminClassManagement',
         label: '班级管理',
         path: '/platform/classes',
         roles: ['admin'],
-        isMatch: (path) => matchExact(path, ['/platform/classes', '/admin/classes']),
+        isMatch: (path) => matchExact(path, ['/platform/classes']),
       },
       {
         routeName: 'TeacherStudentManagement',
@@ -81,12 +81,7 @@ const backofficeModules: BackofficeModule[] = [
         path: '/academy/students',
         roles: ['teacher'],
         isMatch: (path) =>
-          matchAny(path, [
-            '/academy/students',
-            '/teacher/students',
-            '/academy/classes',
-            '/teacher/classes',
-          ]),
+          matchAny(path, ['/academy/students', '/academy/classes']),
       },
       {
         routeName: 'AdminStudentManagement',
@@ -94,40 +89,35 @@ const backofficeModules: BackofficeModule[] = [
         path: '/platform/students',
         roles: ['admin'],
         isMatch: (path) =>
-          matchAny(path, [
-            '/platform/students',
-            '/admin/students',
-            '/platform/classes',
-            '/admin/classes',
-          ]),
+          matchAny(path, ['/platform/students', '/platform/classes']),
       },
       {
         routeName: 'TeacherAWDReviewIndex',
         label: 'AWD复盘',
         path: '/academy/awd-reviews',
         roles: ['teacher'],
-        isMatch: (path) => matchAny(path, ['/academy/awd-reviews', '/teacher/awd-reviews']),
+        isMatch: (path) => matchAny(path, ['/academy/awd-reviews']),
       },
       {
         routeName: 'AdminAWDReviewIndex',
         label: 'AWD复盘',
         path: '/platform/awd-reviews',
         roles: ['admin'],
-        isMatch: (path) => matchAny(path, ['/platform/awd-reviews', '/admin/awd-reviews']),
+        isMatch: (path) => matchAny(path, ['/platform/awd-reviews']),
       },
       {
         routeName: 'TeacherInstanceManagement',
         label: '实例管理',
         path: '/academy/instances',
         roles: ['teacher'],
-        isMatch: (path) => matchAny(path, ['/academy/instances', '/teacher/instances']),
+        isMatch: (path) => matchAny(path, ['/academy/instances']),
       },
       {
         routeName: 'AdminInstanceManagement',
         label: '实例管理',
         path: '/platform/instances',
         roles: ['admin'],
-        isMatch: (path) => matchAny(path, ['/platform/instances', '/admin/instances']),
+        isMatch: (path) => matchAny(path, ['/platform/instances']),
       },
     ],
   },
@@ -142,22 +132,22 @@ const backofficeModules: BackofficeModule[] = [
         path: '/platform/challenges',
         roles: ['teacher', 'admin'],
         isMatch: (path) =>
-          matchAny(path, ['/platform/challenges', '/admin/challenges']) &&
-          !matchAny(path, ['/platform/challenges/package-format', '/admin/challenges/package-format']),
+          matchAny(path, ['/platform/challenges']) &&
+          !matchAny(path, ['/platform/challenges/package-format']),
       },
       {
         routeName: 'AdminEnvironmentTemplateLibrary',
         label: '环境模板',
         path: '/platform/environment-templates',
         roles: ['teacher', 'admin'],
-        isMatch: (path) => matchAny(path, ['/platform/environment-templates', '/admin/environment-templates']),
+        isMatch: (path) => matchAny(path, ['/platform/environment-templates']),
       },
       {
         routeName: 'ImageManage',
         label: '镜像管理',
         path: '/platform/images',
         roles: ['teacher', 'admin'],
-        isMatch: (path) => matchAny(path, ['/platform/images', '/admin/images']),
+        isMatch: (path) => matchAny(path, ['/platform/images']),
       },
     ],
   },
@@ -169,30 +159,30 @@ const backofficeModules: BackofficeModule[] = [
       {
         routeName: 'AdminContestOpsEnvironment',
         label: '环境管理',
-        path: '/admin/contest-ops/environment',
+        path: '/platform/contest-ops/environment',
         roles: ['admin'],
-        isMatch: (path) => matchAny(path, ['/admin/contest-ops/environment']),
+        isMatch: (path) => matchAny(path, ['/platform/contest-ops/environment']),
       },
       {
         routeName: 'AdminContestOpsTraffic',
         label: '流量监控',
-        path: '/admin/contest-ops/traffic',
+        path: '/platform/contest-ops/traffic',
         roles: ['admin'],
-        isMatch: (path) => matchAny(path, ['/admin/contest-ops/traffic']),
+        isMatch: (path) => matchAny(path, ['/platform/contest-ops/traffic']),
       },
       {
         routeName: 'AdminContestOpsProjector',
         label: '大屏投射',
-        path: '/admin/contest-ops/projector',
+        path: '/platform/contest-ops/projector',
         roles: ['admin'],
-        isMatch: (path) => matchAny(path, ['/admin/contest-ops/projector']),
+        isMatch: (path) => matchAny(path, ['/platform/contest-ops/projector']),
       },
       {
         routeName: 'AdminContestOpsScoreboard',
         label: '排行榜',
-        path: '/admin/contest-ops/scoreboard',
+        path: '/platform/contest-ops/scoreboard',
         roles: ['admin'],
-        isMatch: (path) => matchAny(path, ['/admin/contest-ops/scoreboard']),
+        isMatch: (path) => matchAny(path, ['/platform/contest-ops/scoreboard']),
       },
     ],
   },
@@ -204,37 +194,37 @@ const backofficeModules: BackofficeModule[] = [
       {
         routeName: 'ContestManage',
         label: '竞赛管理',
-        path: '/admin/contests',
+        path: '/platform/contests',
         roles: ['admin'],
-        isMatch: (path) => matchAny(path, ['/admin/contests', '/platform/contests']),
+        isMatch: (path) => matchAny(path, ['/platform/contests']),
       },
       {
         routeName: 'UserManage',
         label: '用户管理',
-        path: '/admin/users',
+        path: '/platform/users',
         roles: ['admin'],
-        isMatch: (path) => matchAny(path, ['/admin/users', '/platform/users']),
+        isMatch: (path) => matchAny(path, ['/platform/users']),
       },
       {
         routeName: 'CheatDetection',
         label: '作弊检测',
-        path: '/admin/integrity',
+        path: '/platform/integrity',
         roles: ['admin'],
-        isMatch: (path) => matchAny(path, ['/admin/integrity', '/platform/integrity']),
+        isMatch: (path) => matchAny(path, ['/platform/integrity']),
       },
       {
         routeName: 'AuditLog',
         label: '审计日志',
-        path: '/admin/audit',
+        path: '/platform/audit',
         roles: ['admin'],
-        isMatch: (path) => matchAny(path, ['/admin/audit', '/platform/audit']),
+        isMatch: (path) => matchAny(path, ['/platform/audit']),
       },
     ],
   },
 ]
 
 export function isBackofficePath(path: string): boolean {
-  return path.startsWith('/academy/') || path.startsWith('/platform/') || path.startsWith('/admin/')
+  return path.startsWith('/academy/') || path.startsWith('/platform/')
 }
 
 export function getVisibleBackofficeModules(role?: string | null): BackofficeModule[] {
