@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest'
 import appCardSource from '@/components/common/AppCard.vue?raw'
 import appLayoutSource from '@/components/layout/AppLayout.vue?raw'
 import pageHeaderSource from '@/components/common/PageHeader.vue?raw'
+import minimalFloatingModalSource from '@/components/common/modal-templates/MinimalFloatingModal.vue?raw'
+import slideOverDrawerSource from '@/components/common/modal-templates/SlideOverDrawer.vue?raw'
 import skillRadarSource from '@/components/common/SkillRadar.vue?raw'
 import radarChartSource from '@/components/charts/RadarChart.vue?raw'
 import errorStatusShellSource from '@/components/errors/ErrorStatusShell.vue?raw'
@@ -100,6 +102,26 @@ describe('shared theme token adoption', () => {
       '#475569',
       '#e2e8f0',
       '#f8fafc',
+    ])
+    expectNoHardcodedThemeTokens(minimalFloatingModalSource, 'MinimalFloatingModal', [
+      '#ffffff',
+      '#7c3aed',
+      'rgba(226, 232, 240, 0.85)',
+      'rgba(0, 0, 0, 0.12)',
+      'rgba(30, 41, 59, 1)',
+      'rgba(148, 163, 184, 1)',
+      'rgba(51, 65, 85, 1)',
+      'rgba(15, 23, 42, 1)',
+    ])
+    expectNoHardcodedThemeTokens(slideOverDrawerSource, 'SlideOverDrawer', [
+      '#ffffff',
+      '#059669',
+      'rgba(15, 23, 42, 0.2)',
+      'rgba(236, 253, 245, 1)',
+      'rgba(241, 245, 249, 1)',
+      'rgba(248, 250, 252, 1)',
+      'rgba(255, 255, 255, 0.82)',
+      'rgba(100, 116, 139, 1)',
     ])
   })
 
