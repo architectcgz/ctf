@@ -133,7 +133,7 @@ function getCardDescription(
 
 <template>
   <section
-    class="journal-shell journal-shell-user journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
+    class="workspace-shell journal-shell journal-shell-user journal-hero flex min-h-full flex-1 flex-col"
   >
     <div class="scoreboard-page">
       <nav class="top-tabs" role="tablist" aria-label="排行榜视图切换">

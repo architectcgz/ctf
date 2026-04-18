@@ -118,10 +118,11 @@ function openPrimaryDifficulty(): void {
     :class="
       embedded
         ? 'journal-shell-embedded'
-        : 'journal-shell journal-hero rounded-[30px] border px-6 py-6 md:px-8'
+        : 'workspace-shell journal-shell journal-shell-user journal-hero'
     "
   >
-    <div class="difficulty-header">
+    <div :class="embedded ? undefined : 'content-pane'">
+      <div class="difficulty-header">
       <div class="workspace-overline">Intensity Workspace</div>
       <h1 class="journal-page-title workspace-page-title text-[var(--journal-ink)]">
         {{ headlineTitle }}
@@ -162,13 +163,13 @@ function openPrimaryDifficulty(): void {
           </div>
         </article>
       </div>
-    </div>
+      </div>
 
-    <div
-      class="difficulty-board mt-6 px-1 pt-5 md:px-2 md:pt-6"
-      :class="{ 'difficulty-board--embedded': embedded }"
-    >
-      <section class="difficulty-section">
+      <div
+        class="difficulty-board mt-6 px-1 pt-5 md:px-2 md:pt-6"
+        :class="{ 'difficulty-board--embedded': embedded }"
+      >
+        <section class="difficulty-section">
         <div v-if="hasDifficultyStats" class="difficulty-toolbar">
           <p class="difficulty-toolbar__copy">
             难度顺序固定，主推档位已高亮，按列表从上往下看就够了。
@@ -231,20 +232,21 @@ function openPrimaryDifficulty(): void {
             </div>
           </article>
         </div>
-      </section>
+        </section>
 
-      <section v-if="hasDifficultyStats" class="difficulty-section difficulty-section--compact">
-        <div class="difficulty-note">
-          <Flame class="difficulty-note__icon h-4 w-4" />
-          <p class="difficulty-note__copy">
-            {{
-              primaryDifficulty
-                ? `当前最需要补的是${difficultyLabel(primaryDifficulty.difficulty)}。先补当前断档，再按层级继续往上推。`
-                : '先积累一批真实训练样本，这一页才会开始根据你的强度分布安排下一步动作。'
-            }}
-          </p>
-        </div>
-      </section>
+        <section v-if="hasDifficultyStats" class="difficulty-section difficulty-section--compact">
+          <div class="difficulty-note">
+            <Flame class="difficulty-note__icon h-4 w-4" />
+            <p class="difficulty-note__copy">
+              {{
+                primaryDifficulty
+                  ? `当前最需要补的是${difficultyLabel(primaryDifficulty.difficulty)}。先补当前断档，再按层级继续往上推。`
+                  : '先积累一批真实训练样本，这一页才会开始根据你的强度分布安排下一步动作。'
+              }}
+            </p>
+          </div>
+        </section>
+      </div>
     </div>
   </section>
 </template>

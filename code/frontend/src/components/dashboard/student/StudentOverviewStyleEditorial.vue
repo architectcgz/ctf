@@ -110,27 +110,28 @@ const operationsSummary = computed(() => [
     :class="
       embedded
         ? 'journal-shell-embedded'
-        : 'journal-shell journal-hero rounded-[30px] border px-6 py-6 md:px-8'
+        : 'workspace-shell journal-shell journal-shell-user journal-hero'
     "
   >
-    <div>
-      <div class="workspace-overline">Training Journal</div>
-      <h1 class="journal-page-title workspace-page-title max-w-3xl text-[var(--journal-ink)]">
-        {{ displayName }} 的训练总览
-      </h1>
-      <p class="workspace-page-copy max-w-2xl">先看进度、短板和最近状态，再决定下一步训练。</p>
+    <div :class="embedded ? undefined : 'content-pane'">
+      <div>
+        <div class="workspace-overline">Training Journal</div>
+        <h1 class="journal-page-title workspace-page-title max-w-3xl text-[var(--journal-ink)]">
+          {{ displayName }} 的训练总览
+        </h1>
+        <p class="workspace-page-copy max-w-2xl">先看进度、短板和最近状态，再决定下一步训练。</p>
 
-      <div class="journal-actions mt-6">
-        <button type="button" class="journal-btn-primary" @click="emit('openChallenges')">
-          继续训练
-        </button>
-        <button type="button" class="journal-btn-outline" @click="emit('openSkillProfile')">
-          查看能力画像
-        </button>
+        <div class="journal-actions mt-6">
+          <button type="button" class="journal-btn-primary" @click="emit('openChallenges')">
+            继续训练
+          </button>
+          <button type="button" class="journal-btn-outline" @click="emit('openSkillProfile')">
+            查看能力画像
+          </button>
+        </div>
       </div>
-    </div>
-    <div class="journal-board" :class="{ 'journal-board--embedded': embedded }">
-      <section class="journal-bento">
+      <div class="journal-board" :class="{ 'journal-board--embedded': embedded }">
+        <section class="journal-bento">
         <article class="journal-panel journal-radar-card px-6 py-6">
           <div class="journal-panel-head">
             <div>
@@ -247,7 +248,8 @@ const operationsSummary = computed(() => [
             </article>
           </div>
         </article>
-      </section>
+        </section>
+      </div>
     </div>
   </section>
 </template>

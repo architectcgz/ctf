@@ -102,37 +102,38 @@ watch(
 <template>
   <div class="notification-detail-shell">
     <section
-      class="journal-shell journal-shell-user journal-hero notification-workspace min-h-full rounded-[30px] border"
+      class="workspace-shell journal-shell journal-shell-user journal-hero flex min-h-full flex-1 flex-col"
     >
-      <section v-if="loading && !notification" class="notification-detail-loading">
-        <div class="notification-detail-spinner" />
-        <span>正在加载通知详情...</span>
-      </section>
+      <main class="content-pane notification-workspace">
+        <section v-if="loading && !notification" class="notification-detail-loading">
+          <div class="notification-detail-spinner" />
+          <span>正在加载通知详情...</span>
+        </section>
 
-      <section v-else-if="!notification" class="notification-detail-empty">
-        <AppEmpty
-          :icon="loadFailed ? 'AlertTriangle' : 'Inbox'"
-          :title="loadFailed ? '通知加载失败' : '通知不存在'"
-          :description="
-            loadFailed
-              ? '当前无法读取通知详情，请稍后重试。'
-              : '这条通知可能已被移除，或不在当前可读取的通知范围内。'
-          "
-        >
-          <template #action>
-            <button
-              type="button"
-              class="ui-btn ui-btn--primary"
-              @click="goBackToNotifications"
-            >
-              返回通知列表
-            </button>
-          </template>
-        </AppEmpty>
-      </section>
+        <section v-else-if="!notification" class="notification-detail-empty">
+          <AppEmpty
+            :icon="loadFailed ? 'AlertTriangle' : 'Inbox'"
+            :title="loadFailed ? '通知加载失败' : '通知不存在'"
+            :description="
+              loadFailed
+                ? '当前无法读取通知详情，请稍后重试。'
+                : '这条通知可能已被移除，或不在当前可读取的通知范围内。'
+            "
+          >
+            <template #action>
+              <button
+                type="button"
+                class="ui-btn ui-btn--primary"
+                @click="goBackToNotifications"
+              >
+                返回通知列表
+              </button>
+            </template>
+          </AppEmpty>
+        </section>
 
-      <article v-else class="notification-detail-page">
-        <header class="notification-detail-header">
+        <article v-else class="notification-detail-page">
+          <header class="notification-detail-header">
           <div class="notification-detail-header-main">
             <button type="button" class="notification-detail-back" @click="goBackToNotifications">
               <ArrowLeft class="h-4 w-4" />
@@ -188,38 +189,39 @@ watch(
               </div>
             </div>
           </aside>
-        </header>
+          </header>
 
-        <div class="notification-divider" />
+          <div class="notification-divider" />
 
-        <section class="notification-detail-content">
-          <div class="notification-detail-content-head">
-            <div>
-              <div class="workspace-overline">Message</div>
-              <h2 class="notification-section-title">通知正文</h2>
+          <section class="notification-detail-content">
+            <div class="notification-detail-content-head">
+              <div>
+                <div class="workspace-overline">Message</div>
+                <h2 class="notification-section-title">通知正文</h2>
+              </div>
             </div>
-          </div>
-          <div class="notification-detail-content-body">
-            {{ notification.content || '该通知暂无补充内容。' }}
-          </div>
-        </section>
+            <div class="notification-detail-content-body">
+              {{ notification.content || '该通知暂无补充内容。' }}
+            </div>
+          </section>
 
-        <div class="notification-divider" />
+          <div class="notification-divider" />
 
-        <footer class="notification-detail-footer">
-          <button
-            type="button"
-            class="ui-btn ui-btn--primary"
-            @click="goBackToNotifications"
-          >
-            返回通知列表
-          </button>
-          <button type="button" class="ui-btn ui-btn--secondary" disabled>
-            <Inbox class="h-4 w-4" />
-            暂无关联对象
-          </button>
-        </footer>
-      </article>
+          <footer class="notification-detail-footer">
+            <button
+              type="button"
+              class="ui-btn ui-btn--primary"
+              @click="goBackToNotifications"
+            >
+              返回通知列表
+            </button>
+            <button type="button" class="ui-btn ui-btn--secondary" disabled>
+              <Inbox class="h-4 w-4" />
+              暂无关联对象
+            </button>
+          </footer>
+        </article>
+      </main>
     </section>
   </div>
 </template>

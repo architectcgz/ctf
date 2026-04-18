@@ -407,7 +407,7 @@ describe('ScoreboardView', () => {
 
   it('排行榜页级 shell 不应继续携带 journal-eyebrow-text 修饰类', () => {
     expect(scoreboardSource).toContain(
-      'class="journal-shell journal-shell-user journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"'
+      'class="workspace-shell journal-shell journal-shell-user journal-hero flex min-h-full flex-1 flex-col"'
     )
     expect(scoreboardSource).not.toContain('journal-eyebrow-text')
   })

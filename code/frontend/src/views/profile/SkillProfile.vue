@@ -62,39 +62,44 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } =
 
 <template>
   <section
-    class="journal-shell journal-shell-user journal-hero flex min-h-full flex-1 flex-col space-y-6 rounded-[30px] border px-6 py-6 md:px-8"
+    class="workspace-shell journal-shell journal-shell-user journal-hero flex min-h-full flex-1 flex-col space-y-6"
   >
-    <div v-if="loading" class="space-y-6">
-      <div class="space-y-6">
-        <div class="h-12 animate-pulse rounded-2xl bg-[var(--journal-surface)]/90"></div>
-        <div class="grid gap-6 xl:grid-cols-[minmax(0,1.06fr)_minmax(300px,0.94fr)]">
-          <div class="h-80 animate-pulse rounded-[24px] bg-[var(--journal-surface)]"></div>
-          <div class="h-80 animate-pulse rounded-[24px] bg-[var(--journal-surface)]"></div>
+    <main class="content-pane">
+      <div v-if="loading" class="space-y-6">
+        <div class="space-y-6">
+          <div class="h-12 animate-pulse rounded-2xl bg-[var(--journal-surface)]/90"></div>
+          <div class="grid gap-6 xl:grid-cols-[minmax(0,1.06fr)_minmax(300px,0.94fr)]">
+            <div class="h-80 animate-pulse rounded-[24px] bg-[var(--journal-surface)]"></div>
+            <div class="h-80 animate-pulse rounded-[24px] bg-[var(--journal-surface)]"></div>
+          </div>
+          <div class="h-56 animate-pulse rounded-[24px] bg-[var(--journal-surface)]"></div>
+          <div class="h-56 animate-pulse rounded-[24px] bg-[var(--journal-surface)]"></div>
         </div>
-        <div class="h-56 animate-pulse rounded-[24px] bg-[var(--journal-surface)]"></div>
-        <div class="h-56 animate-pulse rounded-[24px] bg-[var(--journal-surface)]"></div>
       </div>
-    </div>
 
-    <div v-else-if="error" class="py-8 text-center">
-      <TriangleAlert class="mx-auto h-10 w-10 text-[var(--color-danger)]" />
-      <p class="mt-3 text-sm text-[var(--color-danger)]">{{ error }}</p>
-      <button type="button" class="journal-btn journal-btn--primary mt-4" @click="loadCurrentData">
-        重试
-      </button>
-    </div>
+      <div v-else-if="error" class="py-8 text-center">
+        <TriangleAlert class="mx-auto h-10 w-10 text-[var(--color-danger)]" />
+        <p class="mt-3 text-sm text-[var(--color-danger)]">{{ error }}</p>
+        <button
+          type="button"
+          class="journal-btn journal-btn--primary mt-4"
+          @click="loadCurrentData"
+        >
+          重试
+        </button>
+      </div>
 
-    <!-- 空状态 -->
-    <AppEmpty
-      v-else-if="!skillProfile"
-      title="暂无能力画像数据"
-      description="完成更多靶场题目后，系统将为你生成能力画像。"
-      icon="Radar"
-    />
+      <!-- 空状态 -->
+      <AppEmpty
+        v-else-if="!skillProfile"
+        title="暂无能力画像数据"
+        description="完成更多靶场题目后，系统将为你生成能力画像。"
+        icon="Radar"
+      />
 
-    <div v-else class="flex flex-1 flex-col">
-      <div>
-        <div class="workspace-overline">Skill Profile</div>
+      <div v-else class="flex flex-1 flex-col">
+        <div>
+          <div class="workspace-overline">Skill Profile</div>
 
         <nav class="top-tabs" role="tablist" aria-label="能力画像内容切换">
           <button
@@ -308,7 +313,8 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } =
           </div>
         </section>
       </div>
-    </div>
+      </div>
+    </main>
   </section>
 </template>
 
@@ -394,8 +400,6 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } =
 
 .journal-hero {
   border-color: var(--journal-shell-border);
-  border-radius: 16px !important;
-  overflow: hidden;
 }
 
 .skill-teacher-panel {

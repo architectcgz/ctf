@@ -120,12 +120,14 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
 <template>
   <div class="contest-page-shell" :style="contestAccentStyle">
     <section
-      class="journal-shell journal-shell-user journal-hero contest-detail-view min-h-full rounded-[30px] border"
+      class="workspace-shell journal-shell journal-shell-user journal-hero contest-detail-view flex min-h-full flex-1 flex-col"
     >
-      <div v-if="loading" class="contest-loading">
-        <div class="contest-loading__spinner" />
-        <div class="contest-loading__text">正在同步竞赛详情...</div>
-      </div>
+      <main v-if="loading" class="content-pane">
+        <div class="contest-loading">
+          <div class="contest-loading__spinner" />
+          <div class="contest-loading__text">正在同步竞赛详情...</div>
+        </div>
+      </main>
 
       <template v-else-if="contest && contestAccessible">
         <ContestAnnouncementRealtimeBridge
@@ -153,13 +155,14 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
           </button>
         </div>
 
-        <section
-          v-if="activeWorkspaceTab === 'overview'"
-          id="contest-workspace-panel-overview"
-          class="workspace-panel"
-          role="tabpanel"
-          aria-labelledby="contest-workspace-tab-overview"
-        >
+        <main class="content-pane">
+          <section
+            v-if="activeWorkspaceTab === 'overview'"
+            id="contest-workspace-panel-overview"
+            class="workspace-panel"
+            role="tabpanel"
+            aria-labelledby="contest-workspace-tab-overview"
+          >
           <header class="contest-hero">
             <div class="contest-hero__main">
               <div class="workspace-overline">Contest</div>
@@ -296,15 +299,15 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
               </article>
             </div>
           </section>
-        </section>
+          </section>
 
-        <section
-          v-else-if="activeWorkspaceTab === 'announcements'"
-          id="contest-workspace-panel-announcements"
-          class="workspace-panel"
-          role="tabpanel"
-          aria-labelledby="contest-workspace-tab-announcements"
-        >
+          <section
+            v-else-if="activeWorkspaceTab === 'announcements'"
+            id="contest-workspace-panel-announcements"
+            class="workspace-panel"
+            role="tabpanel"
+            aria-labelledby="contest-workspace-tab-announcements"
+          >
           <section class="contest-section">
             <div class="contest-section__head workspace-tab-heading">
               <div class="workspace-tab-heading__main">
@@ -340,15 +343,15 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
               </article>
             </div>
           </section>
-        </section>
+          </section>
 
-        <section
-          v-else-if="activeWorkspaceTab === 'challenges'"
-          id="contest-workspace-panel-challenges"
-          class="workspace-panel"
-          role="tabpanel"
-          aria-labelledby="contest-workspace-tab-challenges"
-        >
+          <section
+            v-else-if="activeWorkspaceTab === 'challenges'"
+            id="contest-workspace-panel-challenges"
+            class="workspace-panel"
+            role="tabpanel"
+            aria-labelledby="contest-workspace-tab-challenges"
+          >
           <section class="contest-section">
             <div class="contest-section__head workspace-tab-heading">
               <div class="workspace-tab-heading__main">
@@ -473,15 +476,15 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
               </article>
             </div>
           </section>
-        </section>
+          </section>
 
-        <section
-          v-else
-          id="contest-workspace-panel-team"
-          class="workspace-panel"
-          role="tabpanel"
-          aria-labelledby="contest-workspace-tab-team"
-        >
+          <section
+            v-else
+            id="contest-workspace-panel-team"
+            class="workspace-panel"
+            role="tabpanel"
+            aria-labelledby="contest-workspace-tab-team"
+          >
           <section class="contest-section">
             <div class="contest-section__head workspace-tab-heading">
               <div class="workspace-tab-heading__main">
@@ -541,45 +544,50 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
               </div>
             </div>
           </section>
-        </section>
+          </section>
+        </main>
       </template>
 
-      <div v-else-if="contest" class="contest-not-found">
-        <AppEmpty
-          icon="Flag"
-          title="当前竞赛暂未开放"
-          description="该竞赛还处于筹备阶段，暂不对学生开放查看或报名。"
-        >
-          <template #action>
-            <RouterLink class="ui-btn ui-btn--primary" to="/contests">
-              <Trophy class="h-4 w-4" />
-              返回竞赛中心
-            </RouterLink>
-          </template>
-        </AppEmpty>
-      </div>
+      <main v-else-if="contest" class="content-pane">
+        <div class="contest-not-found">
+          <AppEmpty
+            icon="Flag"
+            title="当前竞赛暂未开放"
+            description="该竞赛还处于筹备阶段，暂不对学生开放查看或报名。"
+          >
+            <template #action>
+              <RouterLink class="ui-btn ui-btn--primary" to="/contests">
+                <Trophy class="h-4 w-4" />
+                返回竞赛中心
+              </RouterLink>
+            </template>
+          </AppEmpty>
+        </div>
+      </main>
 
-      <div v-else class="contest-not-found">
-        <AppEmpty
-          icon="AlertTriangle"
-          title="竞赛不存在或暂不可用"
-          description="请返回竞赛中心重新选择竞赛，或稍后再试。"
-        >
-          <template #action>
-            <RouterLink class="ui-btn ui-btn--primary" to="/contests">
-              <Trophy class="h-4 w-4" />
-              返回竞赛中心
-            </RouterLink>
-          </template>
-        </AppEmpty>
-      </div>
+      <main v-else class="content-pane">
+        <div class="contest-not-found">
+          <AppEmpty
+            icon="AlertTriangle"
+            title="竞赛不存在或暂不可用"
+            description="请返回竞赛中心重新选择竞赛，或稍后再试。"
+          >
+            <template #action>
+              <RouterLink class="ui-btn ui-btn--primary" to="/contests">
+                <Trophy class="h-4 w-4" />
+                返回竞赛中心
+              </RouterLink>
+            </template>
+          </AppEmpty>
+        </div>
+      </main>
     </section>
 
     <CFocusedInputDialog
       :open="showCreateTeam"
       title="创建新队伍"
       description="为你的战队起一个响亮的代号。创建完成后，你可以生成邀请链接让其他队友加入。"
-      width="34rem"
+      width="35rem"
       aria-label="创建队伍"
       overlay-class="c-focused-input-shell--plain"
       :close-on-backdrop="false"
@@ -693,7 +701,7 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
   flex: 1 1 auto;
 }
 
-.journal-shell {
+.content-pane {
   padding: 1.5rem;
 }
 

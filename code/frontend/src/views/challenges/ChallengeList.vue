@@ -222,9 +222,10 @@ watch(
 
 <template>
   <section
-    class="journal-shell journal-shell-user journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
+    class="workspace-shell journal-shell journal-shell-user journal-hero flex min-h-full flex-1 flex-col"
   >
-    <div class="challenge-page">
+    <main class="content-pane">
+      <div class="challenge-page">
       <header class="challenge-topbar">
         <div class="challenge-heading">
           <div class="workspace-overline">Challenges</div>
@@ -501,7 +502,8 @@ watch(
           </section>
         </template>
       </section>
-    </div>
+      </div>
+    </main>
   </section>
 </template>
 

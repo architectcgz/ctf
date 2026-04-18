@@ -171,37 +171,43 @@ onUnmounted(() => {
 
 <template>
   <section
-    class="journal-shell journal-shell-user journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
+    class="workspace-shell journal-shell journal-shell-user journal-hero flex min-h-full flex-1 flex-col"
   >
-    <div v-if="error" class="profile-inline-notice">
-      {{ error }}
-    </div>
-
-    <div v-if="loading" class="profile-loading">
-      <div class="h-12 animate-pulse rounded-2xl bg-[var(--journal-surface)]/90"></div>
-      <div class="grid gap-4 md:grid-cols-2">
-        <div class="h-24 animate-pulse rounded-2xl bg-[var(--journal-surface)]"></div>
-        <div class="h-24 animate-pulse rounded-2xl bg-[var(--journal-surface)]"></div>
+    <main class="content-pane">
+      <div v-if="error" class="profile-inline-notice">
+        {{ error }}
       </div>
-      <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(320px,0.98fr)]">
-        <div class="h-72 animate-pulse rounded-[24px] bg-[var(--journal-surface)]"></div>
-        <div class="h-72 animate-pulse rounded-[24px] bg-[var(--journal-surface)]"></div>
-      </div>
-    </div>
 
-    <div v-else class="profile-page flex flex-1 flex-col">
-      <PageHeader class="profile-topbar" title="个人资料" :description="pageCopy" eyebrow="Profile">
-        <div class="profile-topbar-actions">
-          <div class="profile-pill">
-            <span class="status-dot status-dot-ready" />
-            账号状态正常
-          </div>
-          <button type="button" class="journal-btn" @click="loadProfile">
-            <RefreshCw class="h-4 w-4" />
-            刷新
-          </button>
+      <div v-if="loading" class="profile-loading">
+        <div class="h-12 animate-pulse rounded-2xl bg-[var(--journal-surface)]/90"></div>
+        <div class="grid gap-4 md:grid-cols-2">
+          <div class="h-24 animate-pulse rounded-2xl bg-[var(--journal-surface)]"></div>
+          <div class="h-24 animate-pulse rounded-2xl bg-[var(--journal-surface)]"></div>
         </div>
-      </PageHeader>
+        <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(320px,0.98fr)]">
+          <div class="h-72 animate-pulse rounded-[24px] bg-[var(--journal-surface)]"></div>
+          <div class="h-72 animate-pulse rounded-[24px] bg-[var(--journal-surface)]"></div>
+        </div>
+      </div>
+
+      <div v-else class="profile-page flex flex-1 flex-col">
+        <PageHeader
+          class="profile-topbar"
+          title="个人资料"
+          :description="pageCopy"
+          eyebrow="Profile"
+        >
+          <div class="profile-topbar-actions">
+            <div class="profile-pill">
+              <span class="status-dot status-dot-ready" />
+              账号状态正常
+            </div>
+            <button type="button" class="journal-btn" @click="loadProfile">
+              <RefreshCw class="h-4 w-4" />
+              刷新
+            </button>
+          </div>
+        </PageHeader>
 
       <section class="profile-summary" aria-label="账号概况">
         <div class="profile-summary-title">
@@ -371,7 +377,8 @@ onUnmounted(() => {
           </template>
         </section>
       </div>
-    </div>
+      </div>
+    </main>
   </section>
 </template>
 
@@ -687,7 +694,7 @@ onUnmounted(() => {
 }
 
 @media (max-width: 720px) {
-  .journal-shell {
+  .content-pane {
     padding-inline: 1rem;
   }
 

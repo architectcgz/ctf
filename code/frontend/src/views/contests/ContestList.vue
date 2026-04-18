@@ -122,9 +122,10 @@ function contestAccentStyle(status: ContestStatus): Record<string, string> {
 
 <template>
   <section
-    class="journal-shell journal-shell-user journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
+    class="workspace-shell journal-shell journal-shell-user journal-hero flex min-h-full flex-1 flex-col"
   >
-    <div class="contest-page">
+    <main class="content-pane">
+      <div class="contest-page">
       <header class="contest-topbar">
         <div class="contest-heading">
           <div class="workspace-overline">Contests</div>
@@ -239,7 +240,8 @@ function contestAccentStyle(status: ContestStatus): Record<string, string> {
           </div>
         </button>
       </section>
-    </div>
+      </div>
+    </main>
   </section>
 </template>
 
