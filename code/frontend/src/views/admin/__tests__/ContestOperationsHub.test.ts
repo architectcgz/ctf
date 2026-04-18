@@ -6,7 +6,7 @@ import contestOperationsHubSource from '../ContestOperationsHub.vue?raw'
 
 const pushMock = vi.fn()
 const routeState = vi.hoisted(() => ({
-  path: '/admin/contest-ops/environment',
+  path: '/platform/contest-ops/contests',
   name: 'AdminContestOpsEnvironment',
 }))
 const adminApiMocks = vi.hoisted(() => ({
@@ -52,14 +52,14 @@ describe('ContestOperationsHub', () => {
     })
   })
 
-  it('renders environment management as an awd contest directory and routes from row actions', async () => {
-    routeState.path = '/admin/contest-ops/environment'
+  it('renders contest management as an awd contest directory and routes from row actions', async () => {
+    routeState.path = '/platform/contest-ops/contests'
     routeState.name = 'AdminContestOpsEnvironment'
 
     const wrapper = mount(ContestOperationsHub)
     await flushPromises()
 
-    expect(wrapper.text()).toContain('环境管理')
+    expect(wrapper.text()).toContain('竞赛管理')
     expect(wrapper.text()).toContain('全部 AWD 赛事')
     expect(wrapper.text()).toContain('2026 AWD 联赛')
 
@@ -73,7 +73,7 @@ describe('ContestOperationsHub', () => {
   })
 
   it('renders traffic monitoring as an awd contest directory and routes from row actions', async () => {
-    routeState.path = '/admin/contest-ops/traffic'
+    routeState.path = '/platform/contest-ops/traffic'
     routeState.name = 'AdminContestOpsTraffic'
 
     const wrapper = mount(ContestOperationsHub)

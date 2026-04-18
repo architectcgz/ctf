@@ -78,16 +78,20 @@ describe('backofficeNavigation', () => {
   })
 
   it('maps admin event operations routes back to 赛事运维 and marks the matched secondary item active', () => {
-    expect(getBackofficeModuleByPath('/admin/contest-ops/environment')?.key).toBe('contestOps')
+    expect(getBackofficeModuleByPath('/platform/contest-ops/contests')?.key).toBe('contestOps')
+    expect(getBackofficeModuleByPath('/platform/contest-ops/environment')?.key).toBe('contestOps')
 
-    const items = getVisibleBackofficeSecondaryItems('/admin/contest-ops/traffic', 'admin')
+    const items = getVisibleBackofficeSecondaryItems('/platform/contest-ops/traffic', 'admin')
 
     expect(items.map((item) => item.label)).toEqual([
-      '环境管理',
+      '竞赛管理',
       '流量监控',
       '大屏投射',
       '排行榜',
     ])
     expect(items.find((item) => item.active)?.routeName).toBe('AdminContestOpsTraffic')
+
+    const contestItems = getVisibleBackofficeSecondaryItems('/platform/contest-ops/contests', 'admin')
+    expect(contestItems.find((item) => item.active)?.routeName).toBe('AdminContestOpsEnvironment')
   })
 })
