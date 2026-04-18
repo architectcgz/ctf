@@ -40,10 +40,20 @@ const {
   contestStatus: computed(() => props.contest.status),
 })
 
-const servicesByChallenge = computed(() => {
+const servicesByChallengeId = computed(() => {
   const map = new Map<string, ContestAWDWorkspaceServiceData>()
   for (const item of workspace.value?.services || []) {
     map.set(item.challenge_id, item)
+  }
+  return map
+})
+
+const servicesByServiceId = computed(() => {
+  const map = new Map<string, ContestAWDWorkspaceServiceData>()
+  for (const item of workspace.value?.services || []) {
+    if (item.service_id) {
+      map.set(item.service_id, item)
+    }
   }
   return map
 })
@@ -59,15 +69,16 @@ const targetFilterKeyword = computed(() => targetKeyword.value.trim().toLowerCas
 const activeChallenge = computed(
   () => props.challenges.find((item) => item.challenge_id === activeChallengeId.value) || null
 )
+const activeChallengeRuntimeKey = computed(() => getChallengeRuntimeKey(activeChallenge.value))
 
 const activeTargets = computed(() => {
-  if (!workspace.value || !activeChallengeId.value) {
+  if (!workspace.value || !activeChallenge.value) {
     return []
   }
   return workspace.value.targets.map((target) => ({
     ...target,
     active_service: target.services.find(
-      (service) => service.challenge_id === activeChallengeId.value
+      (service) => isTargetServiceForChallenge(service, activeChallenge.value as ContestChallengeItem)
     ),
   }))
 })
@@ -93,7 +104,7 @@ const defenseAlerts = computed(() => {
   }> = []
 
   for (const challenge of props.challenges) {
-    const service = servicesByChallenge.value.get(challenge.challenge_id)
+    const service = getWorkspaceService(challenge)
     if (!service) {
       continue
     }
@@ -183,7 +194,41 @@ function formatServiceRef(serviceId?: string): string {
   return `Service #${serviceId || '--'}`
 }
 
-function buildAttackKey(challengeId: string, teamId: string): string {
+function getChallengeRuntimeKey(challenge: ContestChallengeItem | null | undefined): string {
+  if (!challenge) {
+    return ''
+  }
+  return challenge.awd_service_id || challenge.challenge_id
+}
+
+function getWorkspaceService(challenge: ContestChallengeItem): ContestAWDWorkspaceServiceData | undefined {
+  if (challenge.awd_service_id) {
+    return (
+      servicesByServiceId.value.get(challenge.awd_service_id) ||
+      servicesByChallengeId.value.get(challenge.challenge_id)
+    )
+  }
+  return servicesByChallengeId.value.get(challenge.challenge_id)
+}
+
+function isTargetServiceForChallenge(
+  service: { service_id?: string; challenge_id: string },
+  challenge: ContestChallengeItem
+): boolean {
+  if (challenge.awd_service_id) {
+    return (
+      service.service_id === challenge.awd_service_id ||
+      service.challenge_id === challenge.challenge_id
+    )
+  }
+  return service.challenge_id === challenge.challenge_id
+}
+
+function buildAttackStateKey(serviceKey: string, teamId: string): string {
+  return `${serviceKey}:${teamId}`
+}
+
+function buildAttackSubmissionKey(challengeId: string, teamId: string): string {
   return `${challengeId}:${teamId}`
 }
 
@@ -193,12 +238,12 @@ function getDefenseAlertClass(tone: 'danger' | 'warning'): string {
     : 'awd-defense-row awd-defense-row--warning'
 }
 
-async function handleSubmit(challengeId: string, teamId: string): Promise<void> {
-  const key = buildAttackKey(challengeId, teamId)
-  const flag = flagInputs.value[key] || ''
+async function handleSubmit(challengeId: string, serviceKey: string, teamId: string): Promise<void> {
+  const stateKey = buildAttackStateKey(serviceKey, teamId)
+  const flag = flagInputs.value[stateKey] || ''
   const result = await submitAttack(challengeId, Number(teamId), flag)
   if (result) {
-    flagInputs.value[key] = ''
+    flagInputs.value[stateKey] = ''
   }
 }
 </script>
@@ -320,27 +365,21 @@ async function handleSubmit(challengeId: string, teamId: string): Promise<void> 
                 <div class="awd-service-row__head">
                   <h3>{{ challenge.title }}</h3>
                   <span
-                    :class="
-                      getServiceStatusClass(
-                        servicesByChallenge.get(challenge.challenge_id)?.service_status
-                      )
-                    "
+                    :class="getServiceStatusClass(getWorkspaceService(challenge)?.service_status)"
                   >
                     {{
-                      getServiceStatusLabel(
-                        servicesByChallenge.get(challenge.challenge_id)?.service_status
-                      )
+                      getServiceStatusLabel(getWorkspaceService(challenge)?.service_status)
                     }}
                   </span>
                 </div>
                 <div class="awd-service-row__meta">
                   <span>{{ challenge.category }}</span>
                   <span>{{ challenge.points }} pts</span>
-                  <span v-if="servicesByChallenge.get(challenge.challenge_id)?.service_id">
-                    {{ formatServiceRef(servicesByChallenge.get(challenge.challenge_id)?.service_id) }}
+                  <span v-if="getWorkspaceService(challenge)?.service_id">
+                    {{ formatServiceRef(getWorkspaceService(challenge)?.service_id) }}
                   </span>
-                  <span v-if="servicesByChallenge.get(challenge.challenge_id)?.access_url">
-                    {{ servicesByChallenge.get(challenge.challenge_id)?.access_url }}
+                  <span v-if="getWorkspaceService(challenge)?.access_url">
+                    {{ getWorkspaceService(challenge)?.access_url }}
                   </span>
                   <span v-else>尚未生成访问地址</span>
                 </div>
@@ -348,9 +387,9 @@ async function handleSubmit(challengeId: string, teamId: string): Promise<void> 
 
               <div class="awd-service-row__actions" role="group" aria-label="服务操作">
                 <a
-                  v-if="servicesByChallenge.get(challenge.challenge_id)?.access_url"
+                  v-if="getWorkspaceService(challenge)?.access_url"
                   class="ui-btn ui-btn--ghost"
-                  :href="servicesByChallenge.get(challenge.challenge_id)?.access_url"
+                  :href="getWorkspaceService(challenge)?.access_url"
                   target="_blank"
                   rel="noreferrer"
                 >
@@ -365,7 +404,7 @@ async function handleSubmit(challengeId: string, teamId: string): Promise<void> 
                   {{
                     startingChallengeId === challenge.challenge_id
                       ? '启动中...'
-                      : servicesByChallenge.get(challenge.challenge_id)?.access_url
+                      : getWorkspaceService(challenge)?.access_url
                         ? '刷新服务'
                         : '启动服务'
                   }}
@@ -454,14 +493,12 @@ async function handleSubmit(challengeId: string, teamId: string): Promise<void> 
               <div class="awd-target-row__form">
                 <div class="ui-control-wrap flag-submit__control">
                   <input
-                    :value="
-                      flagInputs[buildAttackKey(activeChallenge.challenge_id, target.team_id)] || ''
-                    "
+                    :value="flagInputs[buildAttackStateKey(activeChallengeRuntimeKey, target.team_id)] || ''"
                     type="text"
                     class="ui-control"
                     placeholder="flag{...}"
                     @input="
-                      flagInputs[buildAttackKey(activeChallenge.challenge_id, target.team_id)] =
+                      flagInputs[buildAttackStateKey(activeChallengeRuntimeKey, target.team_id)] =
                         String(($event.target as HTMLInputElement).value)
                     "
                   />
@@ -471,12 +508,20 @@ async function handleSubmit(challengeId: string, teamId: string): Promise<void> 
                   class="ui-btn ui-btn--primary"
                   :disabled="
                     !target.active_service?.access_url ||
-                    submittingKey === buildAttackKey(activeChallenge.challenge_id, target.team_id)
+                    submittingKey ===
+                      buildAttackSubmissionKey(activeChallenge.challenge_id, target.team_id)
                   "
-                  @click="handleSubmit(activeChallenge.challenge_id, target.team_id)"
+                  @click="
+                    handleSubmit(
+                      activeChallenge.challenge_id,
+                      activeChallengeRuntimeKey,
+                      target.team_id
+                    )
+                  "
                 >
                   {{
-                    submittingKey === buildAttackKey(activeChallenge.challenge_id, target.team_id)
+                    submittingKey ===
+                    buildAttackSubmissionKey(activeChallenge.challenge_id, target.team_id)
                       ? '提交中...'
                       : '提交 stolen flag'
                   }}
