@@ -109,7 +109,16 @@ function closeDialog(): void {
 
 <style scoped>
 .c-focused-input-shell {
-  background: rgba(15, 23, 42, 0.3);
+  --c-focused-input-overlay: color-mix(in srgb, var(--color-bg-base) 28%, transparent);
+  --c-focused-input-surface: color-mix(in srgb, var(--color-bg-elevated) 96%, var(--color-bg-surface));
+  --c-focused-input-surface-muted: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
+  --c-focused-input-line: color-mix(in srgb, var(--color-border-default) 86%, transparent);
+  --c-focused-input-line-strong: color-mix(in srgb, var(--color-border-default) 94%, transparent);
+  --c-focused-input-text: color-mix(in srgb, var(--color-text-primary) 94%, transparent);
+  --c-focused-input-muted: color-mix(in srgb, var(--color-text-secondary) 92%, transparent);
+  --c-focused-input-faint: color-mix(in srgb, var(--color-text-muted) 94%, transparent);
+  --c-focused-input-accent: var(--color-primary);
+  background: var(--c-focused-input-overlay);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
 }
@@ -132,10 +141,10 @@ function closeDialog(): void {
   position: relative;
   overflow: hidden;
   border-radius: 1rem;
-  background: #ffffff;
+  background: var(--c-focused-input-surface);
   box-shadow:
-    0 26px 70px rgba(15, 23, 42, 0.24),
-    0 8px 24px rgba(15, 23, 42, 0.12);
+    0 26px 70px color-mix(in srgb, var(--color-shadow-strong) 26%, transparent),
+    0 8px 24px color-mix(in srgb, var(--color-shadow-soft) 24%, transparent);
 }
 
 .c-focused-input-dialog__header {
@@ -153,10 +162,14 @@ function closeDialog(): void {
   align-items: center;
   justify-content: center;
   border-radius: 999px;
-  border: 1px solid rgba(16, 185, 129, 0.15);
-  background: linear-gradient(180deg, #f2fcf7 0%, #e4f6ed 100%);
-  color: #2a7a58;
-  box-shadow: 0 10px 24px rgba(42, 122, 88, 0.14);
+  border: 1px solid color-mix(in srgb, var(--c-focused-input-accent) 18%, var(--c-focused-input-line));
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--c-focused-input-accent) 14%, var(--c-focused-input-surface)),
+    color-mix(in srgb, var(--c-focused-input-accent) 6%, var(--c-focused-input-surface-muted))
+  );
+  color: color-mix(in srgb, var(--c-focused-input-accent) 92%, var(--c-focused-input-text));
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--c-focused-input-accent) 14%, transparent);
 }
 
 .c-focused-input-dialog__close {
@@ -169,16 +182,16 @@ function closeDialog(): void {
   align-items: center;
   justify-content: center;
   border-radius: 999px;
-  background: rgba(248, 250, 252, 0.96);
-  color: #94a3b8;
+  background: color-mix(in srgb, var(--c-focused-input-surface-muted) 96%, transparent);
+  color: var(--c-focused-input-faint);
   transition:
     color 0.18s ease,
     background-color 0.18s ease;
 }
 
 .c-focused-input-dialog__close:hover {
-  color: #475569;
-  background: #f1f5f9;
+  color: var(--c-focused-input-muted);
+  background: color-mix(in srgb, var(--c-focused-input-line) 18%, var(--c-focused-input-surface-muted));
 }
 
 .c-focused-input-dialog__title {
@@ -186,7 +199,7 @@ function closeDialog(): void {
   font-size: 1.9rem;
   font-weight: 700;
   line-height: 1.1;
-  color: #0f172a;
+  color: var(--c-focused-input-text);
 }
 
 .c-focused-input-dialog__description {
@@ -194,7 +207,7 @@ function closeDialog(): void {
   max-width: 27ch;
   font-size: 14px;
   line-height: 1.7;
-  color: #475569;
+  color: var(--c-focused-input-muted);
 }
 
 .c-focused-input-dialog__form {
@@ -208,7 +221,7 @@ function closeDialog(): void {
   margin-bottom: 0.5rem;
   font-size: 12px;
   font-weight: 700;
-  color: #334155;
+  color: var(--c-focused-input-muted);
 }
 
 .c-focused-input-dialog__form :deep(input),
@@ -216,29 +229,30 @@ function closeDialog(): void {
 .c-focused-input-dialog__form :deep(select) {
   width: 100%;
   padding: 0.75rem 1rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--c-focused-input-line);
   border-radius: 0.8rem;
-  background: #f8fafc;
+  background: var(--c-focused-input-surface-muted);
   font-size: 14px;
+  color: var(--c-focused-input-text);
   outline: none;
   transition:
     background-color 0.18s ease,
     border-color 0.18s ease,
     box-shadow 0.18s ease;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--c-focused-input-surface) 40%, transparent);
 }
 
 .c-focused-input-dialog__form :deep(input::placeholder),
 .c-focused-input-dialog__form :deep(textarea::placeholder) {
-  color: #94a3b8;
+  color: var(--c-focused-input-faint);
 }
 
 .c-focused-input-dialog__form :deep(input:focus),
 .c-focused-input-dialog__form :deep(textarea:focus),
 .c-focused-input-dialog__form :deep(select:focus) {
-  border-color: #2a7a58;
-  background: #ffffff;
-  box-shadow: 0 0 0 4px rgba(42, 122, 88, 0.1);
+  border-color: color-mix(in srgb, var(--c-focused-input-accent) 32%, var(--c-focused-input-line));
+  background: var(--c-focused-input-surface);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--c-focused-input-accent) 12%, transparent);
 }
 
 .c-focused-input-dialog__footer {
@@ -264,22 +278,22 @@ function closeDialog(): void {
 
 .c-focused-input-dialog__footer :deep([data-c-modal-action='ghost']) {
   padding: 0.7rem 1.2rem;
-  color: #475569;
+  color: var(--c-focused-input-muted);
 }
 
 .c-focused-input-dialog__footer :deep([data-c-modal-action='ghost']:hover) {
-  background: #f1f5f9;
+  background: color-mix(in srgb, var(--c-focused-input-line) 18%, var(--c-focused-input-surface-muted));
 }
 
 .c-focused-input-dialog__footer :deep([data-c-modal-action='primary']) {
   padding: 0.7rem 1.5rem;
-  background: #2a7a58;
-  color: #ffffff;
-  box-shadow: 0 12px 24px rgba(42, 122, 88, 0.2);
+  background: color-mix(in srgb, var(--c-focused-input-accent) 92%, var(--c-focused-input-text));
+  color: var(--color-text-inverse);
+  box-shadow: 0 12px 24px color-mix(in srgb, var(--c-focused-input-accent) 20%, transparent);
 }
 
 .c-focused-input-dialog__footer :deep([data-c-modal-action='primary']:hover) {
-  background: #206346;
+  background: color-mix(in srgb, var(--c-focused-input-accent) 82%, var(--c-focused-input-text));
   transform: translateY(-1px);
 }
 
