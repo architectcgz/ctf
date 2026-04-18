@@ -110,10 +110,14 @@ describe('modal templates', () => {
     expect(shellSource).toContain('Teleport to="body"')
     expect(shellSource).toContain("emit('update:open', false)")
     expect(shellSource).toContain('.modal-template-shell')
+    expect(shellSource).not.toContain('background: rgba(15, 23, 42, 0.4);')
 
     expect(classicSource).toContain('.modal-template-panel--classic')
     expect(classicSource).toContain('Resource Editor')
-    expect(classicSource).toContain('#2563eb')
+    expect(classicSource).toContain('.modal-template-classic__icon')
+    expect(classicSource).not.toContain('background: #ffffff;')
+    expect(classicSource).not.toContain('color: #2563eb;')
+    expect(classicSource).not.toContain('background: rgba(219, 234, 254, 1);')
 
     expect(drawerSource).toContain('.modal-template-panel--drawer')
     expect(drawerSource).toContain('.modal-template-drawer__icon')
@@ -129,8 +133,11 @@ describe('modal templates', () => {
     expect(minimalSource).not.toContain('border-bottom-color: #7c3aed;')
 
     expect(tooltipSource).toContain('TLS 握手')
-    expect(tooltipSource).toContain('border-dashed')
-    expect(tooltipSource).toContain('bg-slate-900')
+    expect(tooltipSource).toContain('.c-context-tooltip__trigger')
+    expect(tooltipSource).toContain('.c-context-tooltip__panel')
+    expect(tooltipSource).not.toContain('bg-slate-900')
+    expect(tooltipSource).not.toContain('text-[13px]')
+    expect(tooltipSource).not.toContain('border-slate-400')
 
     expect(popoverSource).toContain('发现题目问题？')
     expect(popoverSource).toContain('发送反馈')

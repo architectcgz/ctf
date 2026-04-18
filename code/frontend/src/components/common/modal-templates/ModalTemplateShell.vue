@@ -89,6 +89,7 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .modal-template-shell {
+  --modal-template-shell-overlay: color-mix(in srgb, var(--color-bg-base) 40%, transparent);
   position: fixed;
   inset: 0;
   z-index: 90;
@@ -96,7 +97,7 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   padding: 1rem;
-  background: rgba(15, 23, 42, 0.4);
+  background: var(--modal-template-shell-overlay);
 }
 
 .modal-template-panel {
