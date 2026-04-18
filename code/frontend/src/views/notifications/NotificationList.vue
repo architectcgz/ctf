@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { Bell, RefreshCw } from 'lucide-vue-next'
+import { RefreshCw } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
 
 import { getNotifications, markAsRead } from '@/api/notification'
@@ -31,7 +31,6 @@ async function fetchNotifications(params: { page: number; page_size: number }) {
 const { list, total, page, pageSize, loading, error, changePage, refresh } =
   usePagination<NotificationItem>(fetchNotifications)
 const unreadOnPage = computed(() => list.value.filter((item) => item.unread).length)
-const readOnPage = computed(() => list.value.length - unreadOnPage.value)
 const totalPages = computed(() => Math.max(1, Math.ceil(total.value / pageSize.value)))
 const hasLoadError = computed(() => Boolean(error.value) && list.value.length === 0)
 const loadErrorMessage = computed(() => {
@@ -77,11 +76,9 @@ onMounted(() => {
   void refresh()
 })
 
-const summaryStats = computed(() => [
-  { key: 'page', label: '本页消息', value: list.value.length, helper: '当前分页已加载的通知数量' },
-  { key: 'unread', label: '未读消息', value: unreadOnPage.value, helper: '仍待你确认或处理的消息' },
-  { key: 'read', label: '已读消息', value: readOnPage.value, helper: '当前页中已经处理过的消息' },
-  { key: 'total', label: '总消息数', value: total.value, helper: '通知中心累计消息总数' },
+const headStats = computed(() => [
+  { key: 'total', label: '消息数', value: total.value },
+  { key: 'unread', label: '未读数', value: unreadOnPage.value },
 ])
 
 const canPublishNotification = computed(() => authStore.isAdmin)
@@ -113,42 +110,33 @@ async function handlePublishSuccess(): Promise<void> {
           <p class="notification-subtitle">系统、竞赛和训练相关通知会在这里按时间顺序汇总。</p>
         </div>
 
-        <div class="notification-actions">
-          <button
-            v-if="canPublishNotification"
-            type="button"
-            class="ui-btn ui-btn--primary"
-            @click="openPublishDrawer"
-          >
-            发布通知
-          </button>
-          <button type="button" class="ui-btn ui-btn--secondary" @click="markCurrentPageRead">
-            本页已读
-          </button>
-          <button type="button" class="ui-btn ui-btn--secondary" @click="refresh">
-            <RefreshCw class="h-4 w-4" />
-            刷新
-          </button>
-        </div>
-      </header>
+        <div class="notification-topbar-meta">
+          <div class="notification-head-stats" aria-label="消息概况">
+            <div v-for="stat in headStats" :key="stat.key" class="notification-head-stat">
+              <span class="notification-head-stat__label">{{ stat.label }}</span>
+              <strong class="notification-head-stat__value">{{ stat.value }}</strong>
+            </div>
+          </div>
 
-      <section class="notification-summary">
-        <div class="notification-summary-title">
-          <Bell class="h-4 w-4" />
-          <span>当前消息概况</span>
-        </div>
-        <div class="notification-summary-grid metric-panel-grid">
-          <div
-            v-for="stat in summaryStats"
-            :key="stat.key"
-            class="notification-summary-item metric-panel-card"
-          >
-            <div class="notification-summary-label metric-panel-label">{{ stat.label }}</div>
-            <div class="notification-summary-value metric-panel-value">{{ stat.value }}</div>
-            <div class="notification-summary-helper metric-panel-helper">{{ stat.helper }}</div>
+          <div class="notification-actions">
+            <button
+              v-if="canPublishNotification"
+              type="button"
+              class="ui-btn ui-btn--primary"
+              @click="openPublishDrawer"
+            >
+              发布通知
+            </button>
+            <button type="button" class="ui-btn ui-btn--secondary" @click="markCurrentPageRead">
+              本页已读
+            </button>
+            <button type="button" class="ui-btn ui-btn--secondary" @click="refresh">
+              <RefreshCw class="h-4 w-4" />
+              刷新
+            </button>
           </div>
         </div>
-      </section>
+      </header>
 
       <div v-if="loading" class="notification-loading">
         <div class="notification-loading-spinner" />
@@ -264,9 +252,47 @@ async function handlePublishSuccess(): Promise<void> {
   max-width: 720px;
 }
 
+.notification-topbar-meta {
+  display: grid;
+  justify-items: end;
+  gap: 12px;
+}
+
+.notification-head-stats {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.notification-head-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid color-mix(in srgb, var(--journal-border) 82%, transparent);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--journal-surface) 92%, var(--color-bg-base));
+}
+
+.notification-head-stat__label {
+  font-size: var(--font-size-13);
+  font-weight: 600;
+  color: var(--journal-muted);
+}
+
+.notification-head-stat__value {
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-16);
+  font-weight: 700;
+  color: var(--journal-ink);
+}
+
 .notification-actions {
   display: flex;
   flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 8px;
 }
 
@@ -408,6 +434,16 @@ async function handlePublishSuccess(): Promise<void> {
 }
 
 @media (max-width: 1180px) {
+  .notification-topbar-meta {
+    width: 100%;
+    justify-items: start;
+  }
+
+  .notification-head-stats,
+  .notification-actions {
+    justify-content: flex-start;
+  }
+
   .notification-directory-head {
     display: none;
   }
