@@ -352,7 +352,7 @@ describe('UserManage', () => {
 
   it('用户导入流应保留独立导入面板和回执区', () => {
     expect(userGovernanceSource).toContain('class="workspace-directory-section user-import-panel"')
-    expect(userGovernanceSource).toContain('class="list-heading user-import-head"')
+    expect(userGovernanceSource).toContain('class="workspace-tab-heading user-import-head"')
     expect(userGovernanceSource).toContain('<h2 class="workspace-page-title">导入用户</h2>')
     expect(userGovernanceSource).toContain('<h2 class="list-heading__title">导入回执</h2>')
     expect(userGovernanceSource).toContain('id="user-return-overview"')

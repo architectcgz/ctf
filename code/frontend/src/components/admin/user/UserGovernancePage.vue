@@ -203,7 +203,7 @@ function handleImportChange(event: Event): void {
 
 <template>
   <section
-    class="journal-shell journal-shell-admin journal-notes-card journal-hero workspace-shell flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
+    class="journal-shell journal-shell-admin journal-notes-card journal-hero workspace-shell flex min-h-full flex-1 flex-col rounded-[30px] border"
   >
     <main class="content-pane">
       <section
@@ -212,7 +212,7 @@ function handleImportChange(event: Event): void {
         class="user-panel user-panel--workspace"
         :aria-hidden="activePanel === 'overview' ? 'false' : 'true'"
       >
-        <header class="list-heading user-overview-head">
+        <header class="workspace-tab-heading user-overview-head">
           <div class="workspace-tab-heading__main">
             <div class="workspace-overline">User Workspace</div>
             <h1 class="workspace-page-title">用户治理台</h1>
@@ -484,7 +484,7 @@ function handleImportChange(event: Event): void {
         :aria-hidden="activePanel === 'import' ? 'false' : 'true'"
       >
         <section class="workspace-directory-section user-import-panel">
-          <header class="list-heading user-import-head">
+          <header class="workspace-tab-heading user-import-head">
             <div class="workspace-tab-heading__main">
               <div class="workspace-overline">User Import</div>
               <h2 class="workspace-page-title">导入用户</h2>
@@ -570,12 +570,12 @@ function handleImportChange(event: Event): void {
 
 .user-panel {
   display: grid;
-  gap: var(--space-5);
+  gap: var(--space-4);
 }
 
 .user-overview-head,
 .user-import-head {
-  gap: var(--space-4);
+  gap: var(--space-3);
 }
 
 .user-panel-actions {
@@ -616,15 +616,15 @@ function handleImportChange(event: Event): void {
 
 .user-directory-head {
   gap: var(--space-4);
-  margin-bottom: clamp(1.1rem, 0.95rem + 0.4vw, 1.35rem);
+  margin-bottom: 0;
 }
 
 .user-directory-section,
 .user-import-panel,
 .user-import-receipt-section {
   display: grid;
-  gap: var(--space-5);
-  padding: var(--space-5) var(--space-5-5);
+  gap: var(--space-4);
+  padding: 0;
 }
 
 .user-directory-meta {
@@ -883,11 +883,6 @@ function handleImportChange(event: Event): void {
     justify-content: flex-start;
   }
 
-  .user-directory-section,
-  .user-import-panel,
-  .user-import-receipt-section {
-    padding: var(--space-4-5) var(--space-4);
-  }
 }
 
 @media (max-width: 560px) {
