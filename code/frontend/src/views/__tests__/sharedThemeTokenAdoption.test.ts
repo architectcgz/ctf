@@ -79,6 +79,14 @@ describe('shared theme token adoption', () => {
     expect(appCardSource).not.toContain('text-[13px]')
     expect(appCardSource).not.toContain('text-[10px]')
     expect(appCardSource).not.toContain('w-[3px]')
+    expect(notificationDropdownSource).not.toContain('w-[1px]')
+    expect(sidebarSource).not.toContain('w-[260px]')
+    expect(sidebarSource).not.toContain('text-[10px]')
+    expect(sidebarSource).not.toContain('text-[13px]')
+    expect(sidebarSource).not.toContain('ml-[22px]')
+    expect(sidebarSource).not.toContain('-left-[14px]')
+    expect(topNavSource).not.toContain('max-w-[1600px]')
+    expect(topNavSource).not.toContain('md:text-[15px]')
   })
 
   it('学生仪表盘与学习工作区不应继续写死状态色', () => {

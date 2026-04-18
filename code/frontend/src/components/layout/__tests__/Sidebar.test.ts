@@ -16,7 +16,8 @@ describe('Sidebar desktop layout', () => {
     expect(sidebarSource).toMatch(
       /<aside[\s\S]*class="[^"]*backoffice-sidebar[^"]*backoffice-sidebar--desktop[^"]*relative[^"]*z-\[60\][^"]*hidden[^"]*h-screen[^"]*shrink-0[^"]*flex-col[^"]*md:flex"/s
     )
-    expect(sidebarSource).toContain(":class=\"collapsed ? 'w-20' : 'w-[260px]'\"")
+    expect(sidebarSource).toContain(":class=\"collapsed ? 'w-20' : 'backoffice-sidebar--expanded'\"")
+    expect(sidebarSource).toContain('.backoffice-sidebar--expanded')
     expect(sidebarSource).toMatch(
       /<nav[\s\S]*class="[^"]*flex-1[^"]*space-y-1\.5[^"]*overflow-x-hidden[^"]*"/s
     )
@@ -29,6 +30,17 @@ describe('Sidebar desktop layout', () => {
     expect(sidebarSource).toContain('backoffice-sidebar__children')
     expect(sidebarSource).toContain('backoffice-sidebar__child')
     expect(sidebarSource).toContain('backoffice-sidebar__child-indicator')
+  })
+
+  it('avoids low-information arbitrary Tailwind values in the shared backoffice shell', () => {
+    expect(sidebarSource).not.toContain('w-[260px]')
+    expect(sidebarSource).not.toContain('text-[10px]')
+    expect(sidebarSource).not.toContain('text-[13px]')
+    expect(sidebarSource).not.toContain('h-[18px]')
+    expect(sidebarSource).not.toContain('w-[18px]')
+    expect(sidebarSource).not.toContain('ml-[22px]')
+    expect(sidebarSource).not.toContain('-left-[14px]')
+    expect(sidebarSource).not.toContain('w-[3px]')
   })
 
   it('uses the same ChallengeOps shell identity across academy and platform backoffice routes', () => {
