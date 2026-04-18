@@ -12,7 +12,8 @@
 - 已落地：管理员赛事题目列表返回 `awd_service_id / awd_template_id / awd_service_display_name`
 - 已切换：`ListServiceDefinitionsByContest` 优先读取 `contest_awd_services.runtime_config + score_config`
 - 已切换：`ListReadinessChallengesByContest` 优先读取 `contest_awd_services.runtime_config`，验证状态仍兼容复用 `contest_challenges`
-- 未切换：workspace 编排、flag 注入目标标识、攻击提交流程仍以 `challenge_id + contest_challenges` 兼容键运转
+- 已切换：round flag 存储、checker 取 flag、攻击提交支持 `service_id` 优先、`challenge_id` 回退
+- 未切换：workspace 编排、`awd_team_services`、`awd_attack_logs` 仍以 `challenge_id` 作为持久化与聚合兼容键
 
 也就是说，当前已经形成：
 
@@ -20,7 +21,7 @@
 2. 赛事服务层：`contest_awd_services`
 3. 兼容运行层：`contest_challenges.awd_*`
 
-其中第 1、2 层已经开始进入运行态读路径，但第 3 层仍承担兼容字段、验证状态和挑战关系承接职责，后续 runtime cutover 继续沿着“先 service 定义，再 target 身份”的顺序推进。
+其中第 1、2 层已经开始进入运行态读路径，且 runtime flag 解析已经具备 `service_id` 桥接能力，但第 3 层仍承担兼容字段、挑战关系和聚合键承接职责，后续 runtime cutover 继续沿着“先 service 定义，再 target 身份，再切持久化聚合键”的顺序推进。
 
 ## 1. 背景
 

@@ -12,6 +12,7 @@ import (
 )
 
 type awdContestServiceRuntimeRow struct {
+	ServiceID               int64                           `gorm:"column:service_id"`
 	ChallengeID             int64                           `gorm:"column:challenge_id"`
 	FlagPrefix              string                          `gorm:"column:flag_prefix"`
 	DisplayName             string                          `gorm:"column:display_name"`
@@ -77,6 +78,7 @@ func (r *AWDRepository) ListServiceDefinitionsByContest(ctx context.Context, con
 		runtimeConfig := contestdomain.ParseAWDCheckerConfig(row.RuntimeConfig)
 		scoreConfig := contestdomain.ParseAWDCheckerConfig(row.ScoreConfig)
 		definitions = append(definitions, contestports.AWDServiceDefinition{
+			ServiceID:     row.ServiceID,
 			ChallengeID:   row.ChallengeID,
 			FlagPrefix:    row.FlagPrefix,
 			CheckerType:   resolveContestAWDServiceCheckerType(runtimeConfig, row.LegacyCheckerType),
@@ -165,6 +167,7 @@ func (r *AWDRepository) listContestAWDServiceRuntimeRows(ctx context.Context, co
 	if err := r.dbWithContext(ctx).
 		Table("contest_awd_services AS cas").
 		Select(`
+			cas.id AS service_id,
 			cas.challenge_id AS challenge_id,
 			c.flag_prefix AS flag_prefix,
 			cas.display_name AS display_name,

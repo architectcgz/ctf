@@ -94,6 +94,87 @@ func TestAWDRoundUpdaterCreatesAndAdvancesRounds(t *testing.T) {
 	}
 }
 
+func TestAWDRoundUpdaterCreatesAndAdvancesRoundsWritesServiceAndLegacyFlagFields(t *testing.T) {
+	db := newAWDTestDB(t)
+
+	mini, err := miniredis.Run()
+	if err != nil {
+		t.Fatalf("start miniredis: %v", err)
+	}
+	t.Cleanup(mini.Close)
+
+	redisClient := redis.NewClient(&redis.Options{Addr: mini.Addr()})
+	t.Cleanup(func() {
+		_ = redisClient.Close()
+	})
+
+	roundInterval := 5 * time.Minute
+	now := time.Date(2026, 3, 10, 12, 11, 0, 0, time.UTC)
+	createAWDContestFixture(t, db, 153, now.Add(-11*time.Minute))
+	createAWDChallengeFixture(t, db, 153001, now)
+	createAWDContestChallengeFixture(t, db, 153, 153001, now)
+	createAWDTeamFixture(t, db, 153011, 153, "Alpha", now)
+	if err := db.Model(&model.Contest{}).Where("id = ?", 153).Updates(map[string]any{
+		"start_time": now.Add(-11 * time.Minute),
+		"end_time":   now.Add(14 * time.Minute),
+	}).Error; err != nil {
+		t.Fatalf("update contest time window: %v", err)
+	}
+	if err := db.Model(&model.Challenge{}).Where("id = ?", 153001).Update("flag_prefix", "awd").Error; err != nil {
+		t.Fatalf("update challenge flag prefix: %v", err)
+	}
+	serviceRecord := &model.ContestAWDService{
+		ID:            1539001,
+		ContestID:     153,
+		ChallengeID:   153001,
+		DisplayName:   "Bridge Service",
+		Order:         0,
+		IsVisible:     true,
+		ScoreConfig:   `{"points":100,"awd_sla_score":18,"awd_defense_score":28}`,
+		RuntimeConfig: `{"challenge_id":153001,"checker_type":"legacy_probe","checker_config":{}}`,
+		CreatedAt:     now,
+		UpdatedAt:     now,
+	}
+	if err := contestinfra.NewAWDRepository(db).CreateContestAWDService(context.Background(), serviceRecord); err != nil {
+		t.Fatalf("create contest awd service: %v", err)
+	}
+
+	updater := newAWDRoundUpdaterForTest(db, redisClient, config.ContestAWDConfig{
+		SchedulerInterval:  time.Second,
+		SchedulerBatchSize: 10,
+		RoundInterval:      roundInterval,
+		RoundLockTTL:       time.Minute,
+	}, "test-flag-secret", nil, zap.NewNop())
+
+	updater.UpdateRoundsAt(context.Background(), now)
+
+	var rounds []model.AWDRound
+	if err := db.Order("round_number ASC").Find(&rounds, "contest_id = ?", 153).Error; err != nil {
+		t.Fatalf("list rounds: %v", err)
+	}
+	if len(rounds) != 3 {
+		t.Fatalf("expected 3 rounds, got %d", len(rounds))
+	}
+
+	flags, err := redisClient.HGetAll(context.Background(), rediskeys.AWDRoundFlagsKey(153, rounds[2].ID)).Result()
+	if err != nil {
+		t.Fatalf("load round flags: %v", err)
+	}
+	legacyField := rediskeys.AWDRoundFlagField(153011, 153001)
+	serviceField := rediskeys.AWDRoundFlagServiceField(153011, 1539001)
+	legacyFlag := flags[legacyField]
+	serviceFlag := flags[serviceField]
+	if !strings.HasPrefix(legacyFlag, "awd{") {
+		t.Fatalf("expected legacy round flag field, got %+v", flags)
+	}
+	if !strings.HasPrefix(serviceFlag, "awd{") {
+		t.Fatalf("expected service round flag field, got %+v", flags)
+	}
+	if legacyFlag != serviceFlag {
+		t.Fatalf("expected service and legacy fields to share same flag, got %+v", flags)
+	}
+}
+
 func TestAWDRoundUpdaterSkipsWhenRoundLockHeld(t *testing.T) {
 	db := newAWDTestDB(t)
 

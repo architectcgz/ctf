@@ -304,6 +304,12 @@ func AWDRoundFlagField(teamID, challengeID int64) string {
 	return fmt.Sprintf("%d:%d", teamID, challengeID)
 }
 
+// AWDRoundFlagServiceField 每轮 Flag 的 service 维度哈希字段
+// 结构: {team_id}:s:{service_id}
+func AWDRoundFlagServiceField(teamID, serviceID int64) string {
+	return fmt.Sprintf("%d:s:%d", teamID, serviceID)
+}
+
 // AWDServiceStatusKey 各队服务实时状态
 // 数据结构: HASH (field=team_id:challenge_id, value=status) | TTL: 无过期
 func AWDServiceStatusKey(contestID int64) string {
