@@ -156,6 +156,15 @@
   outline-offset: 2px;
 }
 
+.journal-soft-surface .journal-soft-empty-state {
+  border: 1px dashed var(--journal-shell-border);
+  border-radius: 22px;
+  padding: var(--space-12) var(--space-4);
+  text-align: center;
+  font-size: var(--font-size-0-875);
+  color: var(--journal-muted);
+}
+
 [data-theme='dark'] .journal-soft-surface .journal-shell {
   --journal-ink: color-mix(in srgb, var(--color-text-primary) 88%, var(--color-text-secondary));
   --journal-muted: var(--color-text-secondary);

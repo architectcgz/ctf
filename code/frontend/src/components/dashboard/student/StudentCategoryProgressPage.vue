@@ -154,7 +154,7 @@ function openPrimaryCategory(): void {
 
         <div
           v-if="rankedCategories.length === 0"
-          class="mt-5 rounded-[22px] border border-dashed border-[var(--journal-shell-border)] px-4 py-12 text-center text-sm text-[var(--journal-muted)]"
+          class="journal-soft-empty-state mt-5"
         >
           当前还没有分类统计数据，先完成几道题再回来查看。
         </div>

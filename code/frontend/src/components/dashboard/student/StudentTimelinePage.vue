@@ -151,7 +151,7 @@ function changeTimelinePage(page: number): void {
 
         <div
           v-if="groupedTimeline.length === 0"
-          class="mt-5 rounded-[22px] border border-dashed border-[var(--journal-shell-border)] px-4 py-12 text-center text-sm text-[var(--journal-muted)]"
+          class="journal-soft-empty-state mt-5"
         >
           当前还没有训练动态。
         </div>
