@@ -36,6 +36,7 @@ describe('contest api contract', () => {
       },
       services: [
         {
+          service_id: 7009,
           challenge_id: 9,
           access_url: 'http://red.internal',
           service_status: 'up',
@@ -53,6 +54,7 @@ describe('contest api contract', () => {
           team_name: 'Blue',
           services: [
             {
+              service_id: 7009,
               challenge_id: 9,
               access_url: 'http://blue.internal',
             },
@@ -63,6 +65,7 @@ describe('contest api contract', () => {
         {
           id: 88,
           direction: 'attack_out',
+          service_id: 7009,
           challenge_id: 9,
           peer_team_id: 14,
           peer_team_name: 'Blue',
@@ -82,8 +85,11 @@ describe('contest api contract', () => {
     expect(result.contest_id).toBe('7')
     expect(result.current_round?.id).toBe('41')
     expect(result.my_team?.team_id).toBe('13')
+    expect(result.services[0].service_id).toBe('7009')
     expect(result.services[0].challenge_id).toBe('9')
+    expect(result.targets[0].services[0].service_id).toBe('7009')
     expect(result.targets[0].services[0].challenge_id).toBe('9')
+    expect(result.recent_events[0].service_id).toBe('7009')
     expect(result.recent_events[0].id).toBe('88')
   })
 
@@ -129,6 +135,7 @@ describe('contest api contract', () => {
       attacker_team: 'Red',
       victim_team_id: 14,
       victim_team: 'Blue',
+      service_id: 7009,
       challenge_id: 9,
       attack_type: 'flag_capture',
       source: 'submission',
@@ -158,6 +165,7 @@ describe('contest api contract', () => {
       attacker_team: 'Red',
       victim_team_id: '14',
       victim_team: 'Blue',
+      service_id: '7009',
       challenge_id: '9',
       attack_type: 'flag_capture',
       source: 'submission',

@@ -67,12 +67,13 @@ interface RawAWDRoundData extends Omit<AWDRoundData, 'id' | 'contest_id'> {
 
 interface RawAWDAttackLogData extends Omit<
   AWDAttackLogData,
-  'id' | 'round_id' | 'attacker_team_id' | 'victim_team_id' | 'challenge_id'
+  'id' | 'round_id' | 'attacker_team_id' | 'victim_team_id' | 'service_id' | 'challenge_id'
 > {
   id: string | number
   round_id: string | number
   attacker_team_id: string | number
   victim_team_id: string | number
+  service_id?: string | number
   challenge_id: string | number
 }
 
@@ -82,15 +83,17 @@ interface RawContestAWDWorkspaceTeamData extends Omit<ContestAWDWorkspaceTeamDat
 
 interface RawContestAWDWorkspaceServiceData extends Omit<
   ContestAWDWorkspaceServiceData,
-  'challenge_id'
+  'service_id' | 'challenge_id'
 > {
+  service_id?: string | number
   challenge_id: string | number
 }
 
 interface RawContestAWDWorkspaceTargetServiceData extends Omit<
   ContestAWDWorkspaceTargetServiceData,
-  'challenge_id'
+  'service_id' | 'challenge_id'
 > {
+  service_id?: string | number
   challenge_id: string | number
 }
 
@@ -104,9 +107,10 @@ interface RawContestAWDWorkspaceTargetTeamData extends Omit<
 
 interface RawContestAWDWorkspaceRecentEventData extends Omit<
   ContestAWDWorkspaceRecentEventData,
-  'id' | 'challenge_id' | 'peer_team_id'
+  'id' | 'service_id' | 'challenge_id' | 'peer_team_id'
 > {
   id: string | number
+  service_id?: string | number
   challenge_id: string | number
   peer_team_id: string | number
 }
@@ -178,6 +182,7 @@ function normalizeAWDAttackLog(item: RawAWDAttackLogData): AWDAttackLogData {
     round_id: String(item.round_id),
     attacker_team_id: String(item.attacker_team_id),
     victim_team_id: String(item.victim_team_id),
+    service_id: item.service_id == null ? undefined : String(item.service_id),
     challenge_id: String(item.challenge_id),
   }
 }
@@ -196,6 +201,7 @@ function normalizeContestAWDWorkspaceService(
 ): ContestAWDWorkspaceServiceData {
   return {
     ...item,
+    service_id: item.service_id == null ? undefined : String(item.service_id),
     challenge_id: String(item.challenge_id),
   }
 }
@@ -205,6 +211,7 @@ function normalizeContestAWDWorkspaceTargetService(
 ): ContestAWDWorkspaceTargetServiceData {
   return {
     ...item,
+    service_id: item.service_id == null ? undefined : String(item.service_id),
     challenge_id: String(item.challenge_id),
   }
 }
@@ -225,6 +232,7 @@ function normalizeContestAWDWorkspaceEvent(
   return {
     ...item,
     id: String(item.id),
+    service_id: item.service_id == null ? undefined : String(item.service_id),
     challenge_id: String(item.challenge_id),
     peer_team_id: String(item.peer_team_id),
   }
