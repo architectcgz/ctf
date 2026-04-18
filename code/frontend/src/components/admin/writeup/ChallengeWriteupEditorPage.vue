@@ -56,10 +56,10 @@ const {
         <span class="class-chip">题解管理</span>
       </div>
       <div class="writeup-top-actions">
-        <button class="admin-btn admin-btn-ghost" type="button" @click="emit('back')">
+        <button class="ui-btn ui-btn--ghost" type="button" @click="emit('back')">
           返回题目
         </button>
-        <button class="admin-btn admin-btn-ghost" type="button" @click="void loadPage()">
+        <button class="ui-btn ui-btn--ghost" type="button" @click="void loadPage()">
           <RefreshCw class="h-4 w-4" />
           刷新
         </button>
@@ -151,7 +151,7 @@ const {
           <div class="writeup-editor-actions" role="group" aria-label="题解编辑操作">
             <button
               :disabled="saving"
-              class="admin-btn admin-btn-primary"
+              class="ui-btn ui-btn--primary"
               type="button"
               @click="void handleSave()"
             >
@@ -161,7 +161,7 @@ const {
             <button
               v-if="hasWriteup"
               :disabled="togglingRecommendation"
-              class="admin-btn admin-btn-accent"
+              class="ui-btn ui-btn--secondary"
               type="button"
               @click="void handleToggleRecommendation()"
             >
@@ -175,7 +175,7 @@ const {
             </button>
             <button
               v-if="hasWriteup"
-              class="admin-btn admin-btn-ghost"
+              class="ui-btn ui-btn--ghost"
               type="button"
               @click="restoreExistingWriteup"
             >
@@ -184,7 +184,7 @@ const {
             <button
               v-if="hasWriteup"
               :disabled="deleting"
-              class="admin-btn admin-btn-danger"
+              class="ui-btn ui-btn--danger"
               type="button"
               @click="void handleDelete()"
             >
@@ -307,6 +307,49 @@ const {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
+}
+
+.writeup-top-actions > .ui-btn,
+.writeup-editor-actions > .ui-btn {
+  --ui-btn-height: 2.25rem;
+  --ui-btn-radius: 0.65rem;
+  --ui-btn-padding: var(--space-2) var(--space-3-5);
+  --ui-btn-font-size: var(--font-size-0-84);
+  --ui-btn-font-weight: 600;
+  --ui-btn-focus-ring: color-mix(in srgb, var(--journal-accent) 18%, transparent);
+}
+
+.writeup-top-actions > .ui-btn.ui-btn--ghost,
+.writeup-editor-actions > .ui-btn.ui-btn--ghost {
+  --ui-btn-border: var(--journal-border);
+  --ui-btn-background: color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base));
+  --ui-btn-color: var(--journal-ink);
+  --ui-btn-hover-border: color-mix(in srgb, var(--journal-accent) 28%, transparent);
+  --ui-btn-hover-background: color-mix(in srgb, var(--journal-accent) 4%, var(--journal-surface));
+  --ui-btn-hover-color: var(--journal-accent);
+}
+
+.writeup-editor-actions > .ui-btn.ui-btn--primary {
+  --ui-btn-primary-border: color-mix(in srgb, var(--journal-accent) 18%, transparent);
+  --ui-btn-primary-background: var(--journal-accent);
+  --ui-btn-primary-hover-background: color-mix(in srgb, var(--journal-accent) 88%, black);
+}
+
+.writeup-editor-actions > .ui-btn.ui-btn--secondary {
+  --ui-btn-secondary-border: color-mix(in srgb, var(--journal-accent) 30%, transparent);
+  --ui-btn-secondary-background: color-mix(in srgb, var(--journal-accent) 12%, transparent);
+  --ui-btn-secondary-color: var(--journal-accent);
+  --ui-btn-secondary-hover-border: color-mix(in srgb, var(--journal-accent) 38%, transparent);
+  --ui-btn-secondary-hover-background: color-mix(in srgb, var(--journal-accent) 18%, transparent);
+  --ui-btn-secondary-hover-color: color-mix(in srgb, var(--journal-accent) 92%, white);
+}
+
+.writeup-editor-actions > .ui-btn.ui-btn--danger {
+  --ui-btn-danger-border: color-mix(in srgb, var(--color-danger) 28%, transparent);
+  --ui-btn-danger-background: color-mix(in srgb, var(--color-danger) 10%, transparent);
+  --ui-btn-danger-color: var(--color-danger);
+  --ui-btn-danger-hover-border: color-mix(in srgb, var(--color-danger) 34%, transparent);
+  --ui-btn-danger-hover-background: color-mix(in srgb, var(--color-danger) 14%, transparent);
 }
 
 .writeup-loading {
@@ -456,58 +499,6 @@ const {
   gap: var(--space-2);
 }
 
-.admin-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  min-height: 2.25rem;
-  border-radius: 0.65rem;
-  border: 1px solid transparent;
-  padding: var(--space-2) var(--space-3-5);
-  font-size: var(--font-size-0-84);
-  font-weight: 600;
-  transition:
-    border-color 150ms ease,
-    background 150ms ease,
-    color 150ms ease,
-    box-shadow 150ms ease;
-}
-
-.admin-btn:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--journal-accent) 18%, transparent);
-}
-
-.admin-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.admin-btn-primary {
-  border-color: color-mix(in srgb, var(--journal-accent) 18%, transparent);
-  background: var(--journal-accent);
-  color: #fff;
-}
-
-.admin-btn-ghost {
-  border-color: var(--journal-border);
-  background: color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base));
-  color: var(--journal-ink);
-}
-
-.admin-btn-accent {
-  border-color: color-mix(in srgb, var(--journal-accent) 30%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 12%, transparent);
-  color: var(--journal-accent);
-}
-
-.admin-btn-danger {
-  border-color: color-mix(in srgb, var(--color-danger) 28%, transparent);
-  background: color-mix(in srgb, var(--color-danger) 10%, transparent);
-  color: var(--color-danger);
-}
-
 .writeup-snapshot-grid {
   display: grid;
   gap: 0;
@@ -613,7 +604,7 @@ const {
     width: 100%;
   }
 
-  .writeup-top-actions .admin-btn {
+  .writeup-top-actions .ui-btn {
     flex: 1 1 auto;
   }
 }
