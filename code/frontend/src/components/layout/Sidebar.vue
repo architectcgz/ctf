@@ -510,10 +510,7 @@ const route = useRoute()
 const authStore = useAuthStore()
 const expandedMenus = ref<Record<string, boolean>>({})
 const isBackofficeRoute = computed(
-  () =>
-    route.path.startsWith('/academy/') ||
-    route.path.startsWith('/platform/') ||
-    route.path.startsWith('/admin/')
+  () => route.path.startsWith('/academy/') || route.path.startsWith('/platform/')
 )
 const brandMark = computed(() => (isBackofficeRoute.value ? 'OPS' : 'CTF'))
 const brandKicker = computed(() => (isBackofficeRoute.value ? 'ChallengeOps' : 'Student Space'))
@@ -576,16 +573,10 @@ const defaultNavGroups = computed<NavGroup[]>(() => {
   const mainItems = items.filter(
     (i) =>
       !i.path.startsWith('/academy/') &&
-      !i.path.startsWith('/teacher/') &&
-      !i.path.startsWith('/platform/') &&
-      !i.path.startsWith('/admin/')
+      !i.path.startsWith('/platform/')
   )
-  const teacherItems = items.filter(
-    (i) => i.path.startsWith('/academy/') || i.path.startsWith('/teacher/')
-  )
-  const adminItems = items.filter(
-    (i) => i.path.startsWith('/platform/') || i.path.startsWith('/admin/')
-  )
+  const teacherItems = items.filter((i) => i.path.startsWith('/academy/'))
+  const adminItems = items.filter((i) => i.path.startsWith('/platform/'))
 
   const groups: NavGroup[] = [{ key: 'main', title: '导航', shortTitle: '导', items: mainItems }]
   if (teacherItems.length > 0)
