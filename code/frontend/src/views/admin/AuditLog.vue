@@ -474,6 +474,8 @@ watch(
 }
 
 .admin-board {
+  display: grid;
+  gap: var(--space-4);
   padding-top: var(--space-1);
 }
 
@@ -494,7 +496,11 @@ watch(
 }
 
 .audit-board__head {
-  margin-bottom: clamp(1.1rem, 0.95rem + 0.4vw, 1.35rem);
+  margin-bottom: 0;
+}
+
+.admin-board :deep(.workspace-directory-toolbar) {
+  margin-bottom: 0;
 }
 
 .admin-caption {

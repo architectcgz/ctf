@@ -375,6 +375,7 @@ describe('ContestManage', () => {
     })
 
     const wrapper = mount(ContestManage, {
+      attachTo: document.body,
       global: {
         stubs: {
           ElDialog: {
@@ -403,6 +404,12 @@ describe('ContestManage', () => {
     expect(contestOrchestrationSource).toContain('<WorkspaceDirectoryToolbar')
     expect(contestOrchestrationSource).toContain('filter-panel-title="赛事筛选"')
     expect(contestOrchestrationSource).toContain('total-suffix="场赛事"')
+    expect(contestOrchestrationSource).toMatch(
+      /\.contest-directory-section,\s*\.contest-create-panel\s*\{[\s\S]*gap:\s*var\(--space-4\);/s
+    )
+    expect(contestOrchestrationSource).toMatch(
+      /\.contest-directory-section :deep\(\.workspace-directory-toolbar\)\s*\{[\s\S]*margin-bottom:\s*0;/s
+    )
     expect(contestOrchestrationSource).not.toContain('<nav class="top-tabs"')
     expect(contestOrchestrationSource).not.toContain('class="contest-filter-grid"')
     expect(contestOrchestrationSource).not.toContain('class="contest-filter-strip"')
@@ -451,7 +458,7 @@ describe('ContestManage', () => {
     })
   })
 
-  it('应该在赛事目录点击编辑后跳转到独立编辑页', async () => {
+  it('应该在赛事目录通过更多操作菜单点击编辑后跳转到独立编辑页', async () => {
     contestMocks.getContests.mockResolvedValue({
       list: [
         {
@@ -480,15 +487,20 @@ describe('ContestManage', () => {
     })
 
     await flushPromises()
-    const editButton = wrapper
-      .findAll('button')
-      .find((node) => node.text().trim() === '编辑')
+    await wrapper.get('#contest-row-more-contest-1').trigger('click')
+    await flushPromises()
+
+    const editButton = document.body.querySelector<HTMLButtonElement>(
+      '#contest-row-menu-edit-contest-1'
+    )
 
     expect(editButton).toBeTruthy()
 
-    await editButton!.trigger('click')
+    editButton!.click()
+    await flushPromises()
 
     expect(pushMock).toHaveBeenCalledWith({ name: 'ContestEdit', params: { id: 'contest-1' } })
+    wrapper.unmount()
   })
 
   it('管理页工作台入口应跳转到具体竞赛工作台，且不再保留顶层并行运维标签', async () => {

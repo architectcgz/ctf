@@ -627,6 +627,10 @@ function handleImportChange(event: Event): void {
   padding: 0;
 }
 
+.user-directory-section :deep(.workspace-directory-toolbar) {
+  margin-bottom: 0;
+}
+
 .user-directory-meta {
   font-size: var(--font-size-0-82);
   color: var(--journal-muted);

@@ -131,6 +131,12 @@ describe('AuditLog', () => {
     expect(auditLogSource).toContain('search-placeholder="检索动作、资源类型、执行人..."')
     expect(auditLogSource).toContain('total-suffix="条日志"')
     expect(auditLogSource).toContain('class="audit-list workspace-directory-list"')
+    expect(auditLogSource).toMatch(
+      /\.admin-board\s*\{[\s\S]*display:\s*grid;[\s\S]*gap:\s*var\(--space-4\);/s
+    )
+    expect(auditLogSource).toMatch(
+      /\.admin-board :deep\(\.workspace-directory-toolbar\)\s*\{[\s\S]*margin-bottom:\s*0;/s
+    )
   })
 
   it('应使用统一进度卡片样式展示审计摘要', () => {
