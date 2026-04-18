@@ -179,6 +179,10 @@ function eventResultLabel(success: boolean): string {
   return success ? '命中' : '未命中'
 }
 
+function formatServiceRef(serviceId?: string): string {
+  return `Service #${serviceId || '--'}`
+}
+
 function buildAttackKey(challengeId: string, teamId: string): string {
   return `${challengeId}:${teamId}`
 }
@@ -332,6 +336,9 @@ async function handleSubmit(challengeId: string, teamId: string): Promise<void> 
                 <div class="awd-service-row__meta">
                   <span>{{ challenge.category }}</span>
                   <span>{{ challenge.points }} pts</span>
+                  <span v-if="servicesByChallenge.get(challenge.challenge_id)?.service_id">
+                    {{ formatServiceRef(servicesByChallenge.get(challenge.challenge_id)?.service_id) }}
+                  </span>
                   <span v-if="servicesByChallenge.get(challenge.challenge_id)?.access_url">
                     {{ servicesByChallenge.get(challenge.challenge_id)?.access_url }}
                   </span>
@@ -429,12 +436,18 @@ async function handleSubmit(challengeId: string, teamId: string): Promise<void> 
 
           <div v-else class="awd-target-list">
             <article v-for="target in filteredTargets" :key="target.team_id" class="awd-target-row">
-              <div class="awd-target-row__main">
-                <div class="awd-target-row__head">
-                  <div class="contest-chip contest-chip--neutral">{{ target.team_name }}</div>
-                  <div class="awd-target-row__url">
-                    {{ target.active_service?.access_url || '当前没有可用目标地址' }}
-                  </div>
+                <div class="awd-target-row__main">
+                  <div class="awd-target-row__head">
+                    <div class="contest-chip contest-chip--neutral">{{ target.team_name }}</div>
+                    <div
+                      v-if="target.active_service?.service_id"
+                      class="awd-runtime-ref-chip"
+                    >
+                      {{ formatServiceRef(target.active_service.service_id) }}
+                    </div>
+                    <div class="awd-target-row__url">
+                      {{ target.active_service?.access_url || '当前没有可用目标地址' }}
+                    </div>
                 </div>
               </div>
 
@@ -577,6 +590,7 @@ async function handleSubmit(challengeId: string, teamId: string): Promise<void> 
               <div class="awd-event-row__meta">
                 <span>{{ eventResultLabel(event.is_success) }}</span>
                 <span>{{ event.score_gained }} 分</span>
+                <span v-if="event.service_id">{{ formatServiceRef(event.service_id) }}</span>
                 <span>{{ formatTime(event.created_at) }}</span>
               </div>
             </article>
@@ -674,6 +688,20 @@ async function handleSubmit(challengeId: string, teamId: string): Promise<void> 
 
 .contest-chip--neutral {
   background: color-mix(in srgb, var(--journal-surface) 86%, transparent);
+}
+
+.awd-runtime-ref-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--journal-accent) 28%, transparent);
+  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
+  padding: 0.32rem 0.72rem;
+  color: var(--journal-accent-strong);
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-0-74);
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 .flag-submit__control {

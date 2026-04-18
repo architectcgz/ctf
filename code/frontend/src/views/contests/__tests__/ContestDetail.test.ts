@@ -628,6 +628,98 @@ describe('ContestDetail', () => {
     expect(contestApiMocks.getScoreboard).toHaveBeenCalledTimes(2)
   })
 
+  it('学生 AWD 工作台应展示运行态 service 标识', async () => {
+    contestApiMocks.getContestDetail.mockResolvedValueOnce({
+      id: '1',
+      title: '2026 春季校园 AWD 联赛',
+      description: '测试描述',
+      status: 'running',
+      mode: 'awd',
+      starts_at: '2024-03-15T09:00:00Z',
+      ends_at: '2024-03-15T21:00:00Z',
+    })
+    contestApiMocks.getContestChallenges.mockResolvedValueOnce([
+      {
+        id: '201',
+        challenge_id: '101',
+        title: 'Service A',
+        category: 'web',
+        difficulty: 'medium',
+        points: 100,
+        solved_count: 0,
+        is_solved: false,
+      },
+    ])
+    contestApiMocks.getContestAWDWorkspace.mockResolvedValueOnce({
+      contest_id: '1',
+      current_round: {
+        id: '41',
+        contest_id: '1',
+        round_number: 2,
+        status: 'running',
+        attack_score: 60,
+        defense_score: 40,
+        created_at: '2024-03-15T09:00:00Z',
+        updated_at: '2024-03-15T09:01:00Z',
+      },
+      my_team: {
+        team_id: '13',
+        team_name: 'Red',
+      },
+      services: [
+        {
+          service_id: '7009',
+          challenge_id: '101',
+          access_url: 'http://red.internal',
+          service_status: 'up',
+          checker_type: 'http_standard',
+          attack_received: 0,
+          sla_score: 18,
+          defense_score: 40,
+          attack_score: 0,
+          updated_at: '2024-03-15T09:02:00Z',
+        },
+      ],
+      targets: [
+        {
+          team_id: '14',
+          team_name: 'Blue',
+          services: [
+            {
+              service_id: '7010',
+              challenge_id: '101',
+              access_url: 'http://blue.internal',
+            },
+          ],
+        },
+      ],
+      recent_events: [
+        {
+          id: 'attack-1',
+          service_id: '7010',
+          challenge_id: '101',
+          direction: 'attack_out',
+          peer_team_id: '14',
+          peer_team_name: 'Blue',
+          is_success: true,
+          score_gained: 60,
+          created_at: '2024-03-15T09:03:00Z',
+        },
+      ],
+    })
+
+    const wrapper = mount(ContestDetail, {
+      global: {
+        plugins: [createPinia(), router],
+      },
+    })
+
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('Service #7009')
+    expect(wrapper.text()).toContain('Service #7010')
+  })
+
   it('竞赛详情 hero 应使用共享 workspace overline 语义', () => {
     expect(contestDetailSource).toContain('<div class="workspace-overline">Contest</div>')
     expect(contestDetailSource).not.toContain('<div class="contest-overline">Contest</div>')
