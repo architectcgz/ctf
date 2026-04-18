@@ -69,6 +69,16 @@ describe('admin management surface alignment', () => {
     expect(userGovernanceSource).toContain('<h2 class="list-heading__title">全部用户</h2>')
     expect(userGovernanceSource).toContain('<h2 class="workspace-page-title">导入用户</h2>')
     expect(userGovernanceSource).toContain('<h2 class="list-heading__title">导入回执</h2>')
+    expect(userGovernanceSource).toContain('<header class="workspace-tab-heading user-overview-head">')
+    expect(userGovernanceSource).toContain('<header class="workspace-tab-heading user-import-head">')
+    expect(userGovernanceSource).not.toContain('<header class="list-heading user-overview-head">')
+    expect(userGovernanceSource).not.toContain('<header class="list-heading user-import-head">')
+    expect(userGovernanceSource).toMatch(
+      /\.user-directory-section,\s*\.user-import-panel,\s*\.user-import-receipt-section\s*\{[\s\S]*gap:\s*var\(--space-4\);[\s\S]*padding:\s*0;/s
+    )
+    expect(userGovernanceSource).toMatch(
+      /\.user-directory-head\s*\{[\s\S]*margin-bottom:\s*0;/s
+    )
     expect(userGovernanceSource).not.toContain('<nav class="top-tabs"')
     expect(userGovernanceSource).toContain('id="user-panel-overview"')
     expect(userGovernanceSource).toContain('id="user-panel-import"')
@@ -228,12 +238,20 @@ describe('admin management surface alignment', () => {
   })
 
   it('cheat detection sections should use list-heading for directory headers', () => {
+    expect(cheatDetectionSource).toContain('<header class="workspace-tab-heading cheat-workbench-head">')
+    expect(cheatDetectionSource).not.toContain('<header class="list-heading cheat-workbench-head">')
+    expect(cheatDetectionSource).toMatch(
+      /\.cheat-workbench\s*\{[\s\S]*gap:\s*var\(--space-4\);/s
+    )
+    expect(cheatDetectionSource).toMatch(
+      /\.cheat-directory-section\s*\{[\s\S]*gap:\s*var\(--space-4\);[\s\S]*padding:\s*0;/s
+    )
     expect(cheatDetectionSource).toContain('<h2 class="list-heading__title">高频提交账号</h2>')
     expect(cheatDetectionSource).toContain('<h2 class="list-heading__title">共享 IP 线索</h2>')
-    expect(cheatDetectionSource).toContain('<h2 class="list-heading__title">快速排查入口</h2>')
+    expect(cheatDetectionSource).toContain('<h2 class="list-heading__title">审计联动</h2>')
     expect(cheatDetectionSource).not.toContain('workspace-tab-heading__title">高频提交账号</h2>')
     expect(cheatDetectionSource).not.toContain('workspace-tab-heading__title">共享 IP 线索</h2>')
-    expect(cheatDetectionSource).not.toContain('workspace-tab-heading__title">快速排查入口</h2>')
+    expect(cheatDetectionSource).not.toContain('workspace-tab-heading__title">审计联动</h2>')
   })
 
   it('contest orchestration should merge metrics and directory into one workspace instead of keeping a top tab rail', () => {
