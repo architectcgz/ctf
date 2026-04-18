@@ -13,6 +13,7 @@ import (
 func (s *AWDService) upsertServiceCheckAndRecalculate(
 	ctx context.Context,
 	contestID, roundID int64,
+	serviceID int64,
 	req *dto.UpsertAWDServiceCheckReq,
 	checkResult string,
 	defenseScore int,
@@ -21,7 +22,7 @@ func (s *AWDService) upsertServiceCheckAndRecalculate(
 	var record *model.AWDTeamService
 	if err := s.repo.WithinTransaction(ctx, func(txRepo contestports.AWDRepository) error {
 		var txErr error
-		record, txErr = txRepo.UpsertServiceCheck(ctx, roundID, req.TeamID, req.ChallengeID, req.ServiceStatus, checkResult, defenseScore, now)
+		record, txErr = txRepo.UpsertServiceCheck(ctx, roundID, req.TeamID, serviceID, req.ChallengeID, req.ServiceStatus, checkResult, defenseScore, now)
 		if txErr != nil {
 			return txErr
 		}

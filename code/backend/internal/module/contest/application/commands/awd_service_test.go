@@ -48,6 +48,7 @@ var (
 	createAWDTeamFixture                     = testsupport.CreateAWDTeamFixture
 	createAWDTeamMemberFixture               = testsupport.CreateAWDTeamMemberFixture
 	createContestRegistrationForExistingTeam = testsupport.CreateContestRegistrationForExistingTeam
+	defaultAWDContestServiceID               = testsupport.DefaultAWDContestServiceID
 	assertTeamTotalScore                     = testsupport.AssertTeamTotalScore
 	assertContestRedisScore                  = testsupport.AssertContestRedisScore
 	assertContestRedisScoreMissing           = testsupport.AssertContestRedisScoreMissing
@@ -1109,20 +1110,18 @@ func TestAWDServiceSubmitAttackAcceptsServiceScopedRoundFlagField(t *testing.T) 
 	if err := db.Model(&model.Challenge{}).Where("id = ?", 2401).Update("flag_prefix", "awd").Error; err != nil {
 		t.Fatalf("set flag prefix: %v", err)
 	}
-	serviceRecord := &model.ContestAWDService{
-		ID:            2409001,
-		ContestID:     24,
-		ChallengeID:   2401,
-		DisplayName:   "Bank Portal",
-		Order:         0,
-		IsVisible:     true,
-		ScoreConfig:   `{"points":100,"awd_sla_score":18,"awd_defense_score":28}`,
-		RuntimeConfig: `{"challenge_id":2401,"checker_type":"legacy_probe","checker_config":{}}`,
-		CreatedAt:     now,
-		UpdatedAt:     now,
-	}
-	if err := contestinfra.NewAWDRepository(db).CreateContestAWDService(context.Background(), serviceRecord); err != nil {
-		t.Fatalf("create contest awd service: %v", err)
+	serviceID := defaultAWDContestServiceID(24, 2401)
+	if err := db.Model(&model.ContestAWDService{}).
+		Where("contest_id = ? AND challenge_id = ?", 24, 2401).
+		Updates(map[string]any{
+			"display_name":   "Bank Portal",
+			"order":          0,
+			"is_visible":     true,
+			"score_config":   `{"points":100,"awd_sla_score":18,"awd_defense_score":28}`,
+			"runtime_config": `{"challenge_id":2401,"checker_type":"legacy_probe","checker_config":{}}`,
+			"updated_at":     now,
+		}).Error; err != nil {
+		t.Fatalf("update contest awd service: %v", err)
 	}
 
 	if err := redisClient.Set(context.Background(), rediskeys.AWDCurrentRoundKey(24), "1", 0).Err(); err != nil {
@@ -1130,7 +1129,7 @@ func TestAWDServiceSubmitAttackAcceptsServiceScopedRoundFlagField(t *testing.T) 
 	}
 	flag := contestdomain.BuildAWDRoundFlag(24, 1, 2412, 2401, "awd-secret", "awd")
 	if err := redisClient.HSet(context.Background(), rediskeys.AWDRoundFlagsKey(24, 241), map[string]any{
-		rediskeys.AWDRoundFlagServiceField(2412, 2409001): flag,
+		rediskeys.AWDRoundFlagServiceField(2412, serviceID): flag,
 	}).Err(); err != nil {
 		t.Fatalf("set service scoped round flag: %v", err)
 	}
@@ -1144,6 +1143,22 @@ func TestAWDServiceSubmitAttackAcceptsServiceScopedRoundFlagField(t *testing.T) 
 	}
 	if resp.Source != model.AWDAttackSourceSubmission || !resp.IsSuccess || resp.ScoreGained != 80 {
 		t.Fatalf("unexpected service scoped submit resp: %+v", resp)
+	}
+
+	var logRecord model.AWDAttackLog
+	if err := db.Where("round_id = ? AND attacker_team_id = ? AND victim_team_id = ?", 241, 2411, 2412).First(&logRecord).Error; err != nil {
+		t.Fatalf("load service scoped attack log: %v", err)
+	}
+	if logRecord.ServiceID != serviceID {
+		t.Fatalf("expected attack log service_id=%d, got %+v", serviceID, logRecord)
+	}
+
+	var victimService model.AWDTeamService
+	if err := db.Where("round_id = ? AND team_id = ? AND challenge_id = ?", 241, 2412, 2401).First(&victimService).Error; err != nil {
+		t.Fatalf("load victim service after service scoped submit: %v", err)
+	}
+	if victimService.ServiceID != serviceID {
+		t.Fatalf("expected victim service service_id=%d, got %+v", serviceID, victimService)
 	}
 }
 

@@ -46,13 +46,12 @@ func (s *AWDService) prepareSubmitAttackContext(ctx context.Context, userID, con
 	if err := s.ensureContestChallenge(ctx, contestID, challengeID); err != nil {
 		return nil, err
 	}
-	var serviceID int64
-	service, err := s.repo.FindContestAWDServiceByContestAndChallenge(ctx, contestID, challengeID)
-	if err == nil && service != nil {
-		serviceID = service.ID
+	service, err := s.resolveContestRuntimeService(ctx, contestID, challengeID)
+	if err != nil {
+		return nil, err
 	}
 
-	acceptedFlags, err := s.resolveAcceptedRoundFlags(ctx, contestID, round, req.VictimTeamID, challengeItem, serviceID, now)
+	acceptedFlags, err := s.resolveAcceptedRoundFlags(ctx, contestID, round, req.VictimTeamID, challengeItem, service.ID, now)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +59,7 @@ func (s *AWDService) prepareSubmitAttackContext(ctx context.Context, userID, con
 		attackerTeamID: attackerTeamID,
 		round:          round,
 		challenge:      challengeItem,
-		serviceID:      serviceID,
+		serviceID:      service.ID,
 		acceptedFlags:  acceptedFlags,
 	}, nil
 }

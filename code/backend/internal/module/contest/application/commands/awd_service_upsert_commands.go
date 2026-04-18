@@ -26,6 +26,10 @@ func (s *AWDService) UpsertServiceCheck(ctx context.Context, contestID, roundID 
 	if err := s.ensureContestChallenge(ctx, contestID, req.ChallengeID); err != nil {
 		return nil, err
 	}
+	runtimeService, err := s.resolveContestRuntimeService(ctx, contestID, req.ChallengeID)
+	if err != nil {
+		return nil, err
+	}
 
 	normalizedCheckResult := contestdomain.NormalizeManualAWDCheckResult(req.CheckResult)
 	checkResult, err := contestdomain.MarshalAWDCheckResult(normalizedCheckResult)
@@ -37,7 +41,7 @@ func (s *AWDService) UpsertServiceCheck(ctx context.Context, contestID, roundID 
 		defenseScore = round.DefenseScore
 	}
 
-	record, err := s.upsertServiceCheckAndRecalculate(ctx, contestID, roundID, req, checkResult, defenseScore, time.Now())
+	record, err := s.upsertServiceCheckAndRecalculate(ctx, contestID, roundID, runtimeService.ID, req, checkResult, defenseScore, time.Now())
 	if err != nil {
 		return nil, err
 	}

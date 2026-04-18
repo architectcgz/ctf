@@ -16,7 +16,6 @@ import (
 
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
-	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	rediskeys "ctf-platform/internal/pkg/redis"
 )
 
@@ -88,8 +87,16 @@ func TestAWDRoundUpdaterCreatesAndAdvancesRounds(t *testing.T) {
 	if err != nil {
 		t.Fatalf("load round flags: %v", err)
 	}
-	field := rediskeys.AWDRoundFlagField(10011, 1001)
-	if len(flags) != 1 || !strings.HasPrefix(flags[field], "awd{") {
+	serviceID := defaultAWDContestServiceID(101, 1001)
+	legacyField := rediskeys.AWDRoundFlagField(10011, 1001)
+	serviceField := rediskeys.AWDRoundFlagServiceField(10011, serviceID)
+	if !strings.HasPrefix(flags[legacyField], "awd{") {
+		t.Fatalf("unexpected legacy round flag field: %+v", flags)
+	}
+	if !strings.HasPrefix(flags[serviceField], "awd{") {
+		t.Fatalf("unexpected service round flag field: %+v", flags)
+	}
+	if flags[legacyField] != flags[serviceField] {
 		t.Fatalf("unexpected round flags: %+v", flags)
 	}
 }
@@ -123,20 +130,18 @@ func TestAWDRoundUpdaterCreatesAndAdvancesRoundsWritesServiceAndLegacyFlagFields
 	if err := db.Model(&model.Challenge{}).Where("id = ?", 153001).Update("flag_prefix", "awd").Error; err != nil {
 		t.Fatalf("update challenge flag prefix: %v", err)
 	}
-	serviceRecord := &model.ContestAWDService{
-		ID:            1539001,
-		ContestID:     153,
-		ChallengeID:   153001,
-		DisplayName:   "Bridge Service",
-		Order:         0,
-		IsVisible:     true,
-		ScoreConfig:   `{"points":100,"awd_sla_score":18,"awd_defense_score":28}`,
-		RuntimeConfig: `{"challenge_id":153001,"checker_type":"legacy_probe","checker_config":{}}`,
-		CreatedAt:     now,
-		UpdatedAt:     now,
-	}
-	if err := contestinfra.NewAWDRepository(db).CreateContestAWDService(context.Background(), serviceRecord); err != nil {
-		t.Fatalf("create contest awd service: %v", err)
+	serviceID := defaultAWDContestServiceID(153, 153001)
+	if err := db.Model(&model.ContestAWDService{}).
+		Where("contest_id = ? AND challenge_id = ?", 153, 153001).
+		Updates(map[string]any{
+			"display_name":   "Bridge Service",
+			"order":          0,
+			"is_visible":     true,
+			"score_config":   `{"points":100,"awd_sla_score":18,"awd_defense_score":28}`,
+			"runtime_config": `{"challenge_id":153001,"checker_type":"legacy_probe","checker_config":{}}`,
+			"updated_at":     now,
+		}).Error; err != nil {
+		t.Fatalf("update contest awd service: %v", err)
 	}
 
 	updater := newAWDRoundUpdaterForTest(db, redisClient, config.ContestAWDConfig{
@@ -161,7 +166,7 @@ func TestAWDRoundUpdaterCreatesAndAdvancesRoundsWritesServiceAndLegacyFlagFields
 		t.Fatalf("load round flags: %v", err)
 	}
 	legacyField := rediskeys.AWDRoundFlagField(153011, 153001)
-	serviceField := rediskeys.AWDRoundFlagServiceField(153011, 1539001)
+	serviceField := rediskeys.AWDRoundFlagServiceField(153011, serviceID)
 	legacyFlag := flags[legacyField]
 	serviceFlag := flags[serviceField]
 	if !strings.HasPrefix(legacyFlag, "awd{") {
@@ -606,25 +611,25 @@ func TestAWDRoundUpdaterPrefersContestAWDServiceDefinitionsForRuntimeChecks(t *t
 		}).Error; err != nil {
 		t.Fatalf("update legacy awd contest challenge config: %v", err)
 	}
-	if err := contestinfra.NewAWDRepository(db).CreateContestAWDService(context.Background(), &model.ContestAWDService{
-		ContestID:   144,
-		ChallengeID: 144001,
-		DisplayName: "Service First",
-		Order:       0,
-		IsVisible:   true,
-		ScoreConfig: `{"points":100,"awd_sla_score":18,"awd_defense_score":28}`,
-		RuntimeConfig: `{
-			"challenge_id":144001,
-			"checker_type":"http_standard",
-			"checker_config":{
-				"put_flag":{"method":"PUT","path":"/api/service-flag","body_template":"{{FLAG}}","expected_status":200},
-				"get_flag":{"method":"GET","path":"/api/service-flag","expected_status":200,"expected_substring":"{{FLAG}}"}
-			}
-		}`,
-		CreatedAt: now,
-		UpdatedAt: now,
-	}); err != nil {
-		t.Fatalf("create contest awd service: %v", err)
+	serviceID := defaultAWDContestServiceID(144, 144001)
+	if err := db.Model(&model.ContestAWDService{}).
+		Where("contest_id = ? AND challenge_id = ?", 144, 144001).
+		Updates(map[string]any{
+			"display_name": "Service First",
+			"order":        0,
+			"is_visible":   true,
+			"score_config": `{"points":100,"awd_sla_score":18,"awd_defense_score":28}`,
+			"runtime_config": `{
+				"challenge_id":144001,
+				"checker_type":"http_standard",
+				"checker_config":{
+					"put_flag":{"method":"PUT","path":"/api/service-flag","body_template":"{{FLAG}}","expected_status":200},
+					"get_flag":{"method":"GET","path":"/api/service-flag","expected_status":200,"expected_substring":"{{FLAG}}"}
+				}
+			}`,
+			"updated_at": now,
+		}).Error; err != nil {
+		t.Fatalf("update contest awd service: %v", err)
 	}
 
 	storedFlag := ""
@@ -677,6 +682,9 @@ func TestAWDRoundUpdaterPrefersContestAWDServiceDefinitionsForRuntimeChecks(t *t
 	var record model.AWDTeamService
 	if err := db.Where("round_id = ? AND team_id = ? AND challenge_id = ?", 14401, 144011, 144001).First(&record).Error; err != nil {
 		t.Fatalf("load service check: %v", err)
+	}
+	if record.ServiceID != serviceID {
+		t.Fatalf("expected persisted service_id=%d, got %+v", serviceID, record)
 	}
 	if record.ServiceStatus != model.AWDServiceStatusUp || record.SLAScore != 18 || record.DefenseScore != 28 || record.CheckerType != model.AWDCheckerTypeHTTPStandard {
 		t.Fatalf("expected runtime check to prefer contest_awd_services, got %+v", record)

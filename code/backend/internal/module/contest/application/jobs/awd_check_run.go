@@ -47,6 +47,7 @@ func (u *AWDRoundUpdater) runRoundServiceChecks(ctx context.Context, contest *mo
 			records = append(records, model.AWDTeamService{
 				RoundID:       round.ID,
 				TeamID:        team.ID,
+				ServiceID:     definition.ServiceID,
 				ChallengeID:   definition.ChallengeID,
 				ServiceStatus: outcome.serviceStatus,
 				CheckResult:   outcome.checkResult,

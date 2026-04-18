@@ -2,6 +2,7 @@ package commands
 
 import (
 	"context"
+	"errors"
 
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
@@ -9,6 +10,7 @@ import (
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	"ctf-platform/internal/platform/events"
 	"ctf-platform/pkg/errcode"
+	"gorm.io/gorm"
 )
 
 func (s *AWDService) CreateAttackLog(ctx context.Context, contestID, roundID int64, req *dto.CreateAWDAttackLogReq) (*dto.AWDAttackLogResp, error) {
@@ -39,10 +41,14 @@ func (s *AWDService) createAttackLog(
 	if err := s.ensureContestChallenge(ctx, contestID, req.ChallengeID); err != nil {
 		return nil, err
 	}
+	runtimeService, err := s.resolveContestRuntimeService(ctx, contestID, req.ChallengeID)
+	if err != nil {
+		return nil, err
+	}
 
 	scoreGained := 0
 	if req.IsSuccess {
-		count, err := s.repo.CountSuccessfulAttacks(ctx, roundID, req.AttackerTeamID, req.VictimTeamID, req.ChallengeID)
+		count, err := s.repo.CountSuccessfulAttacks(ctx, roundID, req.AttackerTeamID, req.VictimTeamID, runtimeService.ID)
 		if err != nil {
 			return nil, errcode.ErrInternal.WithCause(err)
 		}
@@ -55,6 +61,7 @@ func (s *AWDService) createAttackLog(
 		RoundID:           roundID,
 		AttackerTeamID:    req.AttackerTeamID,
 		VictimTeamID:      req.VictimTeamID,
+		ServiceID:         runtimeService.ID,
 		ChallengeID:       req.ChallengeID,
 		AttackType:        req.AttackType,
 		Source:            contestdomain.NormalizeAWDAttackSource(source),
@@ -64,6 +71,9 @@ func (s *AWDService) createAttackLog(
 		ScoreGained:       scoreGained,
 	}
 	if err := s.persistAttackLogAndScores(ctx, contestID, round.ID, req, logRecord); err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errcode.ErrNotFound
+		}
 		return nil, err
 	}
 	resp, err := s.buildAttackLogResponse(ctx, contestID, roundID, req, logRecord, teams)

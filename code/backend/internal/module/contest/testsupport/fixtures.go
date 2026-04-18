@@ -168,6 +168,44 @@ func CreateAWDContestChallengeFixture(t *testing.T, db *gorm.DB, contestID, chal
 	}).Error; err != nil {
 		t.Fatalf("create awd contest challenge: %v", err)
 	}
+
+	var contest model.Contest
+	if err := db.WithContext(context.Background()).Where("id = ?", contestID).First(&contest).Error; err != nil {
+		return
+	}
+	if contest.Mode != model.ContestModeAWD {
+		return
+	}
+
+	var count int64
+	if err := db.WithContext(context.Background()).
+		Model(&model.ContestAWDService{}).
+		Where("contest_id = ? AND challenge_id = ?", contestID, challengeID).
+		Count(&count).Error; err != nil {
+		t.Fatalf("count awd contest services: %v", err)
+	}
+	if count > 0 {
+		return
+	}
+
+	if err := db.Create(&model.ContestAWDService{
+		ID:            DefaultAWDContestServiceID(contestID, challengeID),
+		ContestID:     contestID,
+		ChallengeID:   challengeID,
+		DisplayName:   fmt.Sprintf("awd-service-%d", challengeID),
+		Order:         0,
+		IsVisible:     true,
+		ScoreConfig:   `{"points":100}`,
+		RuntimeConfig: fmt.Sprintf(`{"challenge_id":%d}`, challengeID),
+		CreatedAt:     now,
+		UpdatedAt:     now,
+	}).Error; err != nil {
+		t.Fatalf("create awd contest service fixture: %v", err)
+	}
+}
+
+func DefaultAWDContestServiceID(contestID, challengeID int64) int64 {
+	return contestID*1_000_000_000 + challengeID
 }
 
 func CreateAWDTeamFixture(t *testing.T, db *gorm.DB, teamID, contestID int64, name string, now time.Time) {
