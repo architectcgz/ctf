@@ -78,6 +78,10 @@ function roundStatusLabel(status: string): string {
       return status || '待开始'
   }
 }
+
+function formatServiceRef(serviceId?: string): string {
+  return `Service #${serviceId || '--'}`
+}
 </script>
 
 <template>
@@ -361,7 +365,16 @@ function roundStatusLabel(status: string): string {
                     :key="service.id"
                     class="awd-review-event-item"
                   >
-                    <strong>{{ service.team_name }} · {{ service.challenge_title }}</strong>
+                    <div class="awd-review-event-item__head">
+                      <strong>{{ service.team_name }} · {{ service.challenge_title }}</strong>
+                      <span
+                        v-if="service.service_id"
+                        class="awd-review-event-item__chip"
+                        data-testid="awd-review-service-id"
+                      >
+                        {{ formatServiceRef(service.service_id) }}
+                      </span>
+                    </div>
                     <p>
                       {{ service.service_status }} · SLA {{ service.sla_score }} · Def
                       {{ service.defense_score }}
@@ -392,7 +405,16 @@ function roundStatusLabel(status: string): string {
                     :key="attack.id"
                     class="awd-review-event-item"
                   >
-                    <strong>{{ attack.attacker_team_name }} → {{ attack.victim_team_name }}</strong>
+                    <div class="awd-review-event-item__head">
+                      <strong>{{ attack.attacker_team_name }} → {{ attack.victim_team_name }}</strong>
+                      <span
+                        v-if="attack.service_id"
+                        class="awd-review-event-item__chip"
+                        data-testid="awd-review-attack-service-id"
+                      >
+                        {{ formatServiceRef(attack.service_id) }}
+                      </span>
+                    </div>
                     <p>
                       {{ attack.challenge_title }} · {{ attack.attack_type }} · +{{
                         attack.score_gained
@@ -809,9 +831,31 @@ function roundStatusLabel(status: string): string {
   background: color-mix(in srgb, var(--journal-surface) 88%, transparent);
 }
 
+.awd-review-event-item__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
 .awd-review-event-item strong {
   display: block;
   color: var(--journal-ink);
+}
+
+.awd-review-event-item__chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.6rem;
+  padding: 0 var(--space-2-5);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
+  color: var(--journal-accent-strong);
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-0-74);
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 .awd-review-event-item p {

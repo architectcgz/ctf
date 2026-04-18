@@ -28,6 +28,12 @@ vi.mock('vue-router', async () => {
 
 vi.mock('@/api/teacher', () => teacherApiMocks)
 
+function collectTestIdTexts(testId: string): string[] {
+  return [...document.body.querySelectorAll(`[data-testid="${testId}"]`)]
+    .map((node) => node.textContent?.trim() || '')
+    .filter(Boolean)
+}
+
 describe('TeacherAWDReviewDetail', () => {
   beforeEach(() => {
     routeMock.params.contestId = 'contest-1'
@@ -187,6 +193,113 @@ describe('TeacherAWDReviewDetail', () => {
     expect(
       wrapper.find('[data-testid="awd-review-export-report"]').attributes('disabled')
     ).toBeUndefined()
+  })
+
+  it('单轮复盘应在主视图和队伍抽屉中保留运行态 service 标识', async () => {
+    routeMock.query = { round: '2' }
+    teacherApiMocks.getTeacherAWDReview.mockResolvedValueOnce({
+      generated_at: '2026-04-12T10:00:00Z',
+      scope: {
+        snapshot_type: 'final',
+        requested_by: 5,
+        requested_id: 'contest-1',
+      },
+      contest: {
+        id: 'contest-1',
+        title: '期末 AWD 复盘',
+        mode: 'awd',
+        status: 'ended',
+        current_round: 4,
+        round_count: 4,
+        team_count: 6,
+        export_ready: true,
+      },
+      overview: {
+        round_count: 4,
+        team_count: 6,
+        service_count: 12,
+        attack_count: 8,
+        traffic_count: 20,
+      },
+      rounds: [],
+      selected_round: {
+        round: {
+          id: 'round-2',
+          contest_id: 'contest-1',
+          round_number: 2,
+          status: 'finished',
+          service_count: 1,
+          attack_count: 1,
+          traffic_count: 0,
+        },
+        teams: [
+          {
+            team_id: 'team-1',
+            team_name: 'Blue Team',
+            captain_id: 'stu-1',
+            total_score: 320,
+            member_count: 4,
+          },
+        ],
+        services: [
+          {
+            id: 'service-row-1',
+            round_id: 'round-2',
+            team_id: 'team-1',
+            team_name: 'Blue Team',
+            service_id: '7009',
+            challenge_id: 'challenge-1',
+            challenge_title: 'Bank Portal',
+            service_status: 'up',
+            attack_received: 0,
+            sla_score: 18,
+            defense_score: 40,
+            attack_score: 0,
+            updated_at: '2026-04-12T10:02:00Z',
+          },
+        ],
+        attacks: [
+          {
+            id: 'attack-row-1',
+            round_id: 'round-2',
+            attacker_team_id: 'team-2',
+            attacker_team_name: 'Red Team',
+            victim_team_id: 'team-1',
+            victim_team_name: 'Blue Team',
+            service_id: '7009',
+            challenge_id: 'challenge-1',
+            challenge_title: 'Bank Portal',
+            attack_type: 'flag_capture',
+            source: 'submission',
+            is_success: true,
+            score_gained: 60,
+            created_at: '2026-04-12T10:03:00Z',
+          },
+        ],
+        traffic: [],
+      },
+    })
+
+    const wrapper = mount(TeacherAWDReviewDetail)
+
+    await flushPromises()
+
+    expect(
+      wrapper
+        .findAll('[data-testid="awd-review-service-id"]')
+        .map((node) => node.text())
+    ).toContain('Service #7009')
+    expect(
+      wrapper
+        .findAll('[data-testid="awd-review-attack-service-id"]')
+        .map((node) => node.text())
+    ).toContain('Service #7009')
+
+    await wrapper.find('.teacher-directory-row').trigger('click')
+    await flushPromises()
+
+    expect(collectTestIdTexts('awd-review-drawer-service-id')).toContain('Service #7009')
+    expect(collectTestIdTexts('awd-review-drawer-attack-service-id')).toContain('Service #7009')
   })
 
   it('轮次切换区应并入目录段结构，不再保留独立筛选卡片壳', () => {
