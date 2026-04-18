@@ -142,7 +142,7 @@ const rootClasses = computed(() => [
     >
       <button
         type="button"
-        class="topology-toolbar-btn topology-toolbar-btn--ghost"
+        class="ui-btn ui-btn--ghost topology-action-btn"
         @click="handleResetTemplateEditor"
       >
         <Plus class="h-4 w-4" />
@@ -150,7 +150,7 @@ const rootClasses = computed(() => [
       </button>
       <button
         type="button"
-        class="topology-toolbar-btn topology-toolbar-btn--ghost"
+        class="ui-btn ui-btn--ghost topology-action-btn"
         @click="void reloadAll()"
       >
         <RefreshCw class="h-4 w-4" />
@@ -166,14 +166,14 @@ const rootClasses = computed(() => [
       <div class="topology-topbar-actions">
         <button
           type="button"
-          class="topology-toolbar-btn topology-toolbar-btn--ghost"
+          class="ui-btn ui-btn--ghost topology-action-btn"
           @click="emit('back')"
         >
           返回题目详情
         </button>
         <button
           type="button"
-          class="topology-toolbar-btn topology-toolbar-btn--ghost"
+          class="ui-btn ui-btn--ghost topology-action-btn"
           @click="void reloadAll()"
         >
           <RefreshCw class="h-4 w-4" />
@@ -181,7 +181,7 @@ const rootClasses = computed(() => [
         </button>
         <button
           type="button"
-          class="topology-toolbar-btn topology-toolbar-btn--primary"
+          class="ui-btn ui-btn--primary topology-action-btn"
           :disabled="saving"
           @click="void handleSaveTopology()"
         >
@@ -628,7 +628,7 @@ const rootClasses = computed(() => [
                 <template #footer>
                   <button
                     type="button"
-                    class="topology-toolbar-btn topology-toolbar-btn--ghost"
+                    class="ui-btn ui-btn--ghost topology-action-btn"
                     @click="addNode"
                   >
                     <Plus class="h-4 w-4" />
@@ -679,7 +679,7 @@ const rootClasses = computed(() => [
                     </label>
                     <button
                       type="button"
-                      class="inline-flex items-center justify-center rounded-xl border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger transition hover:bg-danger/15"
+                      class="ui-btn ui-btn--danger topology-action-btn topology-action-btn--icon"
                       :disabled="draft.networks.length <= 1"
                       @click="removeNetwork(network.uid)"
                     >
@@ -691,7 +691,7 @@ const rootClasses = computed(() => [
                 <template #footer>
                   <button
                     type="button"
-                    class="topology-toolbar-btn topology-toolbar-btn--ghost"
+                    class="ui-btn ui-btn--ghost topology-action-btn"
                     @click="addNetwork"
                   >
                     <Plus class="h-4 w-4" />
@@ -738,7 +738,7 @@ const rootClasses = computed(() => [
                     </select>
                     <button
                       type="button"
-                      class="inline-flex items-center justify-center rounded-xl border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger transition hover:bg-danger/15"
+                      class="ui-btn ui-btn--danger topology-action-btn topology-action-btn--icon"
                       @click="draft.links = draft.links.filter((item) => item.uid !== link.uid)"
                     >
                       <Trash2 class="h-4 w-4" />
@@ -749,7 +749,7 @@ const rootClasses = computed(() => [
                 <template #footer>
                   <button
                     type="button"
-                    class="topology-toolbar-btn topology-toolbar-btn--ghost"
+                    class="ui-btn ui-btn--ghost topology-action-btn"
                     @click="addLink"
                   >
                     <Link2 class="h-4 w-4" />
@@ -801,7 +801,7 @@ const rootClasses = computed(() => [
                     </select>
                     <button
                       type="button"
-                      class="inline-flex items-center justify-center rounded-xl border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger transition hover:bg-danger/15"
+                      class="ui-btn ui-btn--danger topology-action-btn topology-action-btn--icon"
                       @click="
                         draft.policies = draft.policies.filter((item) => item.uid !== policy.uid)
                       "
@@ -814,7 +814,7 @@ const rootClasses = computed(() => [
                 <template #footer>
                   <button
                     type="button"
-                    class="topology-toolbar-btn topology-toolbar-btn--ghost"
+                    class="ui-btn ui-btn--ghost topology-action-btn"
                     @click="addPolicy"
                   >
                     <ShieldBan class="h-4 w-4" />
@@ -846,7 +846,7 @@ const rootClasses = computed(() => [
                     <button
                       v-if="selectedTemplate"
                       type="button"
-                      class="template-action-btn"
+                      class="ui-btn ui-btn--secondary topology-action-btn"
                       @click="loadTemplateIntoDraft(selectedTemplate)"
                     >
                       重新载入当前模板
@@ -854,7 +854,7 @@ const rootClasses = computed(() => [
                     <button
                       v-if="selectedTemplate"
                       type="button"
-                      class="template-action-btn"
+                      class="ui-btn ui-btn--secondary topology-action-btn"
                       @click="clearTemplateSelection"
                     >
                       清空模板选择
@@ -869,7 +869,11 @@ const rootClasses = computed(() => [
                     class="w-full rounded-xl border border-border bg-elevated px-3 py-3 text-sm text-text-primary outline-none transition focus:border-primary"
                     placeholder="按模板名称搜索"
                   />
-                  <button type="button" class="template-action-btn" @click="void loadTemplates()">
+                  <button
+                    type="button"
+                    class="ui-btn ui-btn--secondary topology-action-btn"
+                    @click="void loadTemplates()"
+                  >
                     搜索
                   </button>
                 </div>
@@ -934,14 +938,14 @@ const rootClasses = computed(() => [
                     <div class="template-library-item__actions">
                       <button
                         type="button"
-                        class="template-action-btn"
+                        class="ui-btn ui-btn--secondary topology-action-btn"
                         @click="loadTemplateIntoDraft(template)"
                       >
                         载入编辑
                       </button>
                       <button
                         type="button"
-                        class="template-action-btn template-action-btn--danger"
+                        class="ui-btn ui-btn--danger topology-action-btn"
                         :disabled="templateBusy"
                         @click="void handleDeleteTemplate(template.id)"
                       >
@@ -981,14 +985,14 @@ const rootClasses = computed(() => [
                 <div class="flex flex-wrap gap-2">
                   <button
                     type="button"
-                    class="template-action-btn flex-1"
+                    class="ui-btn ui-btn--secondary topology-action-btn flex-1"
                     @click="handleResetTemplateEditor"
                   >
                     新建空白模板
                   </button>
                   <button
                     type="button"
-                    class="template-action-btn template-action-btn--primary flex-1"
+                    class="ui-btn ui-btn--primary topology-action-btn flex-1"
                     :disabled="templateBusy"
                     @click="void handleCreateTemplate()"
                   >
@@ -997,7 +1001,7 @@ const rootClasses = computed(() => [
                   </button>
                   <button
                     type="button"
-                    class="template-action-btn flex-1"
+                    class="ui-btn ui-btn--secondary topology-action-btn flex-1"
                     :disabled="templateBusy || !selectedTemplateId"
                     @click="void handleUpdateTemplate()"
                   >
@@ -1460,7 +1464,7 @@ const rootClasses = computed(() => [
                   </label>
                   <button
                     type="button"
-                    class="inline-flex items-center justify-center rounded-xl border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger transition hover:bg-danger/15"
+                    class="ui-btn ui-btn--danger topology-action-btn topology-action-btn--icon"
                     :disabled="draft.networks.length <= 1"
                     @click="removeNetwork(network.uid)"
                   >
@@ -1472,7 +1476,7 @@ const rootClasses = computed(() => [
               <template #footer>
                 <button
                   type="button"
-                  class="topology-toolbar-btn topology-toolbar-btn--ghost"
+                  class="ui-btn ui-btn--ghost topology-action-btn"
                   @click="addNetwork"
                 >
                   <Plus class="h-4 w-4" />
@@ -1504,7 +1508,7 @@ const rootClasses = computed(() => [
               <template #footer>
                 <button
                   type="button"
-                  class="topology-toolbar-btn topology-toolbar-btn--ghost"
+                  class="ui-btn ui-btn--ghost topology-action-btn"
                   @click="addNode"
                 >
                   <Plus class="h-4 w-4" />
@@ -1546,7 +1550,7 @@ const rootClasses = computed(() => [
                   </select>
                   <button
                     type="button"
-                    class="inline-flex items-center justify-center rounded-xl border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger transition hover:bg-danger/15"
+                    class="ui-btn ui-btn--danger topology-action-btn topology-action-btn--icon"
                     @click="draft.links = draft.links.filter((item) => item.uid !== link.uid)"
                   >
                     <Trash2 class="h-4 w-4" />
@@ -1557,7 +1561,7 @@ const rootClasses = computed(() => [
               <template #footer>
                 <button
                   type="button"
-                  class="topology-toolbar-btn topology-toolbar-btn--ghost"
+                  class="ui-btn ui-btn--ghost topology-action-btn"
                   @click="addLink"
                 >
                   <Link2 class="h-4 w-4" />
@@ -1609,7 +1613,7 @@ const rootClasses = computed(() => [
                   </select>
                   <button
                     type="button"
-                    class="inline-flex items-center justify-center rounded-xl border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger transition hover:bg-danger/15"
+                    class="ui-btn ui-btn--danger topology-action-btn topology-action-btn--icon"
                     @click="
                       draft.policies = draft.policies.filter((item) => item.uid !== policy.uid)
                     "
@@ -1622,7 +1626,7 @@ const rootClasses = computed(() => [
               <template #footer>
                 <button
                   type="button"
-                  class="topology-toolbar-btn topology-toolbar-btn--ghost"
+                  class="ui-btn ui-btn--ghost topology-action-btn"
                   @click="addPolicy"
                 >
                   <ShieldBan class="h-4 w-4" />
@@ -1792,7 +1796,7 @@ const rootClasses = computed(() => [
                             type="button"
                             :class="
                               isTemplateLibraryMode
-                                ? 'template-action-btn'
+                                ? 'ui-btn ui-btn--secondary topology-action-btn'
                                 : 'ui-btn ui-btn--sm ui-btn--secondary'
                             "
                             @click="loadTemplateIntoDraft(template)"
@@ -1804,7 +1808,7 @@ const rootClasses = computed(() => [
                             type="button"
                             :class="
                               isTemplateLibraryMode
-                                ? 'template-action-btn'
+                                ? 'ui-btn ui-btn--secondary topology-action-btn'
                                 : 'ui-btn ui-btn--sm ui-btn--secondary'
                             "
                             @click="resetTemplateForm(template)"
@@ -1816,7 +1820,7 @@ const rootClasses = computed(() => [
                             type="button"
                             :class="
                               isTemplateLibraryMode
-                                ? 'template-action-btn template-action-btn--primary'
+                                ? 'ui-btn ui-btn--primary topology-action-btn'
                                 : 'ui-btn ui-btn--sm ui-btn--primary'
                             "
                             :disabled="templateBusy"
@@ -1828,7 +1832,7 @@ const rootClasses = computed(() => [
                             type="button"
                             :class="
                               isTemplateLibraryMode
-                                ? 'template-action-btn template-action-btn--danger'
+                                ? 'ui-btn ui-btn--danger topology-action-btn'
                                 : 'ui-btn ui-btn--sm ui-btn--danger'
                             "
                             :disabled="templateBusy"
@@ -1877,8 +1881,8 @@ const rootClasses = computed(() => [
                         type="button"
                         :class="
                           isTemplateLibraryMode
-                            ? 'template-action-btn'
-                            : 'topology-toolbar-btn topology-toolbar-btn--ghost'
+                            ? 'ui-btn ui-btn--secondary topology-action-btn'
+                            : 'ui-btn ui-btn--ghost topology-action-btn'
                         "
                         @click="handleResetTemplateEditor"
                       >
@@ -1888,8 +1892,8 @@ const rootClasses = computed(() => [
                         type="button"
                         :class="
                           isTemplateLibraryMode
-                            ? 'template-action-btn template-action-btn--primary'
-                            : 'topology-toolbar-btn topology-toolbar-btn--primary'
+                            ? 'ui-btn ui-btn--primary topology-action-btn'
+                            : 'ui-btn ui-btn--primary topology-action-btn'
                         "
                         :disabled="templateBusy"
                         @click="void handleCreateTemplate()"
@@ -1901,8 +1905,8 @@ const rootClasses = computed(() => [
                         type="button"
                         :class="
                           isTemplateLibraryMode
-                            ? 'template-action-btn'
-                            : 'topology-toolbar-btn topology-toolbar-btn--ghost'
+                            ? 'ui-btn ui-btn--secondary topology-action-btn'
+                            : 'ui-btn ui-btn--ghost topology-action-btn'
                         "
                         :disabled="templateBusy || !selectedTemplateId"
                         @click="void handleUpdateTemplate()"
@@ -2049,54 +2053,46 @@ const rootClasses = computed(() => [
   gap: var(--space-2);
 }
 
-.topology-page--challenge .topology-toolbar-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  min-height: 2.45rem;
-  border-radius: 0.75rem;
-  border: 1px solid var(--journal-border);
-  padding: var(--space-2) var(--space-4);
-  font-size: var(--font-size-0-84);
-  font-weight: 600;
-  transition:
-    border-color 150ms ease,
-    background 150ms ease,
-    color 150ms ease,
-    box-shadow 150ms ease;
+.topology-page--challenge .topology-action-btn,
+.topology-page--template-library .topology-action-btn {
+  --ui-btn-height: 2.45rem;
+  --ui-btn-padding: var(--space-2) var(--space-4);
+  --ui-btn-radius: 0.75rem;
+  --ui-btn-font-size: var(--font-size-0-84);
 }
 
-.topology-page--challenge .topology-toolbar-btn:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--journal-accent) 18%, transparent);
+.topology-page--challenge .topology-action-btn {
+  --ui-btn-secondary-border: var(--journal-border);
+  --ui-btn-secondary-background: color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base));
+  --ui-btn-secondary-color: var(--journal-ink);
+  --ui-btn-secondary-hover-border: color-mix(in srgb, var(--journal-accent) 28%, transparent);
+  --ui-btn-secondary-hover-background: color-mix(in srgb, var(--journal-accent) 4%, var(--journal-surface));
+  --ui-btn-secondary-hover-color: var(--journal-accent);
+  --ui-btn-ghost-color: var(--journal-ink);
+  --ui-btn-ghost-hover-color: var(--journal-accent);
+  --ui-btn-ghost-hover-background: color-mix(in srgb, var(--journal-accent) 4%, var(--journal-surface));
+  --ui-btn-primary-border: transparent;
+  --ui-btn-primary-background: var(--journal-accent);
+  --ui-btn-primary-color: var(--color-bg-base);
+  --ui-btn-primary-hover-background: color-mix(in srgb, var(--journal-accent) 88%, black);
+  --ui-btn-primary-hover-shadow: 0 12px 28px color-mix(in srgb, var(--journal-accent) 16%, transparent);
+  --ui-btn-danger-border: color-mix(in srgb, var(--color-danger) 28%, transparent);
+  --ui-btn-danger-background: color-mix(in srgb, var(--color-danger) 10%, var(--journal-surface));
+  --ui-btn-danger-color: color-mix(in srgb, var(--color-danger) 88%, var(--journal-ink));
+  --ui-btn-danger-hover-border: color-mix(in srgb, var(--color-danger) 34%, transparent);
+  --ui-btn-danger-hover-background: color-mix(in srgb, var(--color-danger) 14%, var(--journal-surface));
+  --ui-btn-focus-ring: color-mix(in srgb, var(--journal-accent) 18%, transparent);
 }
 
-.topology-page--challenge .topology-toolbar-btn--ghost {
-  background: color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base));
-  color: var(--journal-ink);
-}
-
-.topology-page--challenge .topology-toolbar-btn--ghost:hover {
-  border-color: color-mix(in srgb, var(--journal-accent) 28%, transparent);
-  color: var(--journal-accent);
-}
-
-.topology-page--challenge .topology-toolbar-btn--primary {
-  border-color: transparent;
-  background: var(--journal-accent);
-  color: var(--color-bg-base);
-  box-shadow: 0 12px 28px color-mix(in srgb, var(--journal-accent) 16%, transparent);
-}
-
-.topology-page--challenge .topology-toolbar-btn--primary:hover {
-  background: color-mix(in srgb, var(--journal-accent) 88%, black);
-}
-
-.topology-page--challenge .topology-toolbar-btn:disabled {
+.topology-page--challenge .topology-action-btn:disabled {
   opacity: 0.65;
   cursor: not-allowed;
   box-shadow: none;
+}
+
+.topology-action-btn--icon {
+  min-width: 2.75rem;
+  padding-inline: var(--space-3);
 }
 
 .topology-page--challenge .topology-page-heading {
@@ -2441,24 +2437,6 @@ const rootClasses = computed(() => [
   color: var(--color-danger);
 }
 
-.topology-page--template-library .topology-toolbar-btn,
-.topology-page--template-library .template-action-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  min-height: 2.45rem;
-  border-radius: 0.75rem;
-  border: 1px solid var(--journal-border);
-  padding: var(--space-2) var(--space-4);
-  font-size: var(--font-size-0-82);
-  font-weight: 600;
-  transition:
-    border-color 150ms ease,
-    background 150ms ease,
-    color 150ms ease;
-}
-
 .topology-page--template-library .template-toolbar-tabs {
   display: flex;
   flex: 1 1 auto;
@@ -2518,36 +2496,27 @@ const rootClasses = computed(() => [
   color: var(--journal-accent);
 }
 
-.topology-page--template-library .topology-toolbar-btn--ghost,
-.topology-page--template-library .template-action-btn {
-  background: color-mix(in srgb, var(--journal-surface) 92%, var(--color-bg-base));
-  color: var(--journal-ink);
-}
-
-.topology-page--template-library .topology-toolbar-btn--ghost:hover,
-.topology-page--template-library .template-action-btn:hover {
-  border-color: color-mix(in srgb, var(--journal-accent) 28%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 4%, var(--journal-surface));
-  color: var(--journal-accent);
-}
-
-.topology-page--template-library .topology-toolbar-btn--primary,
-.topology-page--template-library .template-action-btn--primary {
-  border-color: transparent;
-  background: var(--journal-accent);
-  color: #fff;
-}
-
-.topology-page--template-library .topology-toolbar-btn--primary:hover,
-.topology-page--template-library .template-action-btn--primary:hover {
-  background: color-mix(in srgb, var(--journal-accent) 88%, black);
-  color: #fff;
-}
-
-.topology-page--template-library .template-action-btn--danger {
-  border-color: color-mix(in srgb, var(--color-danger) 28%, transparent);
-  background: color-mix(in srgb, var(--color-danger) 10%, var(--journal-surface));
-  color: color-mix(in srgb, var(--color-danger) 88%, var(--journal-ink));
+.topology-page--template-library .topology-action-btn {
+  --ui-btn-font-size: var(--font-size-0-82);
+  --ui-btn-secondary-border: var(--journal-border);
+  --ui-btn-secondary-background: color-mix(in srgb, var(--journal-surface) 92%, var(--color-bg-base));
+  --ui-btn-secondary-color: var(--journal-ink);
+  --ui-btn-secondary-hover-border: color-mix(in srgb, var(--journal-accent) 28%, transparent);
+  --ui-btn-secondary-hover-background: color-mix(in srgb, var(--journal-accent) 4%, var(--journal-surface));
+  --ui-btn-secondary-hover-color: var(--journal-accent);
+  --ui-btn-ghost-color: var(--journal-ink);
+  --ui-btn-ghost-hover-color: var(--journal-accent);
+  --ui-btn-ghost-hover-background: color-mix(in srgb, var(--journal-accent) 4%, var(--journal-surface));
+  --ui-btn-primary-border: transparent;
+  --ui-btn-primary-background: var(--journal-accent);
+  --ui-btn-primary-hover-background: color-mix(in srgb, var(--journal-accent) 88%, black);
+  --ui-btn-primary-hover-color: #fff;
+  --ui-btn-primary-color: #fff;
+  --ui-btn-danger-border: color-mix(in srgb, var(--color-danger) 28%, transparent);
+  --ui-btn-danger-background: color-mix(in srgb, var(--color-danger) 10%, var(--journal-surface));
+  --ui-btn-danger-color: color-mix(in srgb, var(--color-danger) 88%, var(--journal-ink));
+  --ui-btn-danger-hover-border: color-mix(in srgb, var(--color-danger) 34%, transparent);
+  --ui-btn-danger-hover-background: color-mix(in srgb, var(--color-danger) 14%, var(--journal-surface));
 }
 
 .topology-page--template-library :deep(.page-header__eyebrow) {
@@ -2795,8 +2764,7 @@ const rootClasses = computed(() => [
     );
 }
 
-:global([data-theme='dark']) .topology-page--template-library .topology-toolbar-btn--ghost,
-:global([data-theme='dark']) .topology-page--template-library .template-action-btn,
+:global([data-theme='dark']) .topology-page--template-library .topology-action-btn,
 :global([data-theme='dark']) .topology-page--template-library :deep([data-node-editor]),
 :global([data-theme='dark']) .topology-page--template-library :deep(input),
 :global([data-theme='dark']) .topology-page--template-library :deep(select),

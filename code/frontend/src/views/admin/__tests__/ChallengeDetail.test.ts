@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 
 import ChallengeDetail from '../ChallengeDetail.vue'
+import challengeDetailSource from '../ChallengeDetail.vue?raw'
 
 const pushMock = vi.fn()
 const replaceMock = vi.fn()
@@ -111,6 +112,13 @@ describe('Admin ChallengeDetail', () => {
     await topologyButton!.trigger('click')
 
     expect(pushMock).toHaveBeenCalledWith('/platform/challenges/11/topology')
+  })
+
+  it('应改用共享 ui-btn 原语而不是页面私有 admin-btn 按钮族', () => {
+    expect(challengeDetailSource).toContain('class="ui-btn ui-btn--primary"')
+    expect(challengeDetailSource).toContain('class="ui-btn ui-btn--ghost"')
+    expect(challengeDetailSource).not.toContain('admin-btn admin-btn-primary')
+    expect(challengeDetailSource).not.toContain('admin-btn admin-btn-ghost')
   })
 
   it('应该根据 query 切到题解管理 tab', async () => {

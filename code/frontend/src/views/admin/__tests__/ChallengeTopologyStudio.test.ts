@@ -156,6 +156,15 @@ describe('ChallengeTopologyStudioPage', () => {
     expect(challengeTopologyStudioPageSource).not.toContain('teacher-surface-workspace-bg')
   })
 
+  it('应使用共享 ui-btn 原语而不是拓扑页私有按钮族', () => {
+    expect(challengeTopologyStudioPageSource).toContain('class="ui-btn ui-btn--ghost topology-action-btn')
+    expect(challengeTopologyStudioPageSource).toContain('class="ui-btn ui-btn--primary topology-action-btn')
+    expect(challengeTopologyStudioPageSource).toContain('class="ui-btn ui-btn--secondary topology-action-btn')
+    expect(challengeTopologyStudioPageSource).toContain('class="ui-btn ui-btn--danger topology-action-btn')
+    expect(challengeTopologyStudioPageSource).not.toContain('topology-toolbar-btn')
+    expect(challengeTopologyStudioPageSource).not.toContain('template-action-btn')
+  })
+
   it('删除拓扑失败时应优先展示接口返回消息', async () => {
     adminApiMocks.deleteChallengeTopology.mockRejectedValue(
       new ApiError('拓扑已被实例引用，暂时不能删除', { status: 409 })
