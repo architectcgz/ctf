@@ -48,10 +48,8 @@ const currentPageStudentCount = computed(() =>
 </script>
 
 <template>
-  <div class="teacher-management-shell teacher-surface flex min-h-full flex-1 flex-col">
-    <section
-      class="teacher-hero teacher-surface-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
-    >
+  <div class="workspace-shell teacher-management-shell teacher-surface flex min-h-full flex-1 flex-col">
+    <main class="content-pane">
       <div class="teacher-page">
         <header class="teacher-topbar">
           <div class="teacher-heading">
@@ -227,13 +225,12 @@ const currentPageStudentCount = computed(() =>
             </div>
           </section>
         </section>
+        <div v-if="error" class="teacher-surface-error">
+          {{ error }}
+          <button type="button" class="ml-3 font-medium underline" @click="emit('retry')">重试</button>
+        </div>
       </div>
-    </section>
-
-    <div v-if="error" class="teacher-surface-error">
-      {{ error }}
-      <button type="button" class="ml-3 font-medium underline" @click="emit('retry')">重试</button>
-    </div>
+    </main>
   </div>
 </template>
 

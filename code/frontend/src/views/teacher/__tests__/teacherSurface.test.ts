@@ -47,10 +47,17 @@ describe('teacher surface source regression', () => {
     expect(teacherSurfacePattern.test(source)).toBe(true)
   })
 
+  it('教师端共享 hero 外壳应统一改为直角', () => {
+    expect(teacherSurfaceSource).toMatch(
+      /\.teacher-surface-hero\s*\{[\s\S]*border-radius:\s*0\s*!important;/s
+    )
+  })
+
   it.each(teacherManagementSources)(
     '%s 应通过共享 teacher-management-shell 承接教师端 surface token',
     (_name, source) => {
       expect(source).toContain('teacher-management-shell')
+      expect(source).toContain('workspace-shell')
       expect(source).not.toContain('--journal-ink: var(--color-text-primary);')
     }
   )

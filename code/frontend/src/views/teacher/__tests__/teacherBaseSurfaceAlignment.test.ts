@@ -166,13 +166,17 @@ describe('teacher base surface alignment', () => {
 
   it('awd review pages should soften page header, cards, and divider borders through shared teacher shells', () => {
     expect(awdReviewIndexSource).toContain('teacher-management-shell')
+    expect(awdReviewIndexSource).toContain('workspace-shell')
     expect(awdReviewIndexSource).not.toContain('.teacher-btn {')
     expect(awdReviewIndexSource).not.toMatch(/^\.teacher-hero\s*\{/m)
     expect(awdReviewIndexSource).not.toMatch(/^\.teacher-summary\s*\{/m)
+    expect(awdReviewIndexSource).not.toContain('rounded-[30px]')
 
     expect(awdReviewDetailSource).toContain('teacher-management-shell')
+    expect(awdReviewDetailSource).toContain('workspace-shell')
     expect(awdReviewDetailSource).not.toContain('.teacher-btn {')
     expect(awdReviewDetailSource).not.toMatch(/^\.teacher-hero\s*\{/m)
     expect(awdReviewDetailSource).not.toMatch(/^\.teacher-summary\s*\{/m)
+    expect(awdReviewDetailSource).not.toContain('rounded-[30px]')
   })
 })
