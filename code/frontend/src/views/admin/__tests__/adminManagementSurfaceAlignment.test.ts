@@ -55,7 +55,13 @@ describe('admin management surface alignment', () => {
       /--user-row-divider:\s*color-mix\(in srgb,\s*var\(--journal-border\) 58%, transparent\);/
     )
     expect(userGovernanceSource).toMatch(
-      /\.admin-btn-ghost\s*\{[\s\S]*border:\s*1px solid var\(--admin-control-border\);/s
+      /\.user-panel-actions\s*>\s*\.ui-btn,[\s\S]*\.workspace-directory-empty\s+\.ui-btn\s*\{[\s\S]*--ui-btn-height:\s*2\.75rem;[\s\S]*--ui-btn-radius:\s*1rem;/s
+    )
+    expect(userGovernanceSource).toMatch(
+      /\.user-panel-actions\s*>\s*\.ui-btn\.ui-btn--ghost\s*\{[\s\S]*--ui-btn-border:\s*var\(--admin-control-border\);[\s\S]*--ui-btn-background:\s*color-mix\(in srgb,\s*var\(--journal-surface\) 94%, transparent\);/s
+    )
+    expect(userGovernanceSource).toMatch(
+      /\.user-row__actions\s*>\s*\.ui-btn\.ui-btn--secondary\s*\{[\s\S]*--ui-btn-border:\s*var\(--admin-control-border\);/s
     )
     expect(userGovernanceSource).toMatch(
       /\.admin-input\s*\{[\s\S]*border:\s*1px solid var\(--admin-control-border\);/s

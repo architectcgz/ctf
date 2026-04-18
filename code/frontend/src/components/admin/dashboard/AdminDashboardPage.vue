@@ -77,14 +77,14 @@ const {
               <div class="quick-actions">
                 <button
                   type="button"
-                  class="quick-action admin-btn admin-btn-primary"
+                  class="quick-action ui-btn ui-btn--primary"
                   @click="emit('openAuditLog')"
                 >
                   <span>审计日志</span><span>→</span>
                 </button>
                 <button
                   type="button"
-                  class="quick-action admin-btn admin-btn-ghost"
+                  class="quick-action ui-btn ui-btn--ghost"
                   @click="emit('openCheatDetection')"
                 >
                   <span>风险研判</span><span>→</span>
@@ -442,6 +442,51 @@ const {
   min-height: 42px;
 }
 
+.quick-action.ui-btn {
+  min-height: var(--ui-btn-height, 52px);
+  border-color: var(--ui-btn-border, var(--workspace-line-soft));
+  background: var(--ui-btn-background, color-mix(in srgb, var(--workspace-panel) 82%, transparent));
+  padding: var(--ui-btn-padding, 0 var(--space-3-5));
+  color: var(--ui-btn-color, var(--journal-ink));
+  box-shadow: none;
+}
+
+.quick-action.ui-btn:hover:not(:disabled) {
+  border-color: var(--ui-btn-hover-border, color-mix(in srgb, var(--workspace-brand) 34%, transparent));
+  background: var(--ui-btn-hover-background, color-mix(in srgb, var(--workspace-brand) 8%, var(--workspace-panel)));
+  color: var(--ui-btn-hover-color, var(--workspace-brand-ink));
+}
+
+.quick-action.ui-btn:focus-visible {
+  outline: 2px solid var(--ui-btn-focus-ring, color-mix(in srgb, var(--workspace-brand) 16%, transparent));
+  outline-offset: 2px;
+}
+
+.quick-actions > .ui-btn {
+  --ui-btn-height: 2.75rem;
+  --ui-btn-padding: var(--space-2-5) var(--space-4);
+  --ui-btn-radius: 1rem;
+  --ui-btn-font-size: var(--font-size-0-875);
+  --ui-btn-font-weight: 600;
+  --ui-btn-focus-ring: color-mix(in srgb, var(--journal-accent) 16%, transparent);
+}
+
+.quick-actions > .ui-btn.ui-btn--primary {
+  --ui-btn-primary-border: color-mix(in srgb, var(--journal-accent) 46%, var(--journal-border));
+  --ui-btn-primary-background: var(--journal-accent);
+  --ui-btn-primary-hover-background: var(--color-primary-hover);
+  --ui-btn-primary-hover-shadow: 0 12px 24px color-mix(in srgb, var(--journal-accent) 24%, transparent);
+}
+
+.quick-actions > .ui-btn.ui-btn--ghost {
+  --ui-btn-border: var(--journal-border);
+  --ui-btn-background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
+  --ui-btn-color: var(--journal-ink);
+  --ui-btn-hover-border: color-mix(in srgb, var(--journal-accent) 28%, transparent);
+  --ui-btn-hover-background: color-mix(in srgb, var(--journal-accent) 4%, var(--journal-surface));
+  --ui-btn-hover-color: var(--journal-accent);
+}
+
 .hero-rail {
   padding-left: var(--space-6);
   border-left: 1px solid var(--workspace-line-soft);
@@ -689,49 +734,6 @@ const {
 
 .bg-\[var\(--color-primary\)\] {
   background: var(--color-primary);
-}
-
-.admin-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  min-height: 2.75rem;
-  border: 1px solid transparent;
-  border-radius: 1rem;
-  padding: var(--space-2-5) var(--space-4);
-  font-size: var(--font-size-0-875);
-  font-weight: 600;
-  box-shadow: var(--admin-btn-shadow, none);
-  transition: all 150ms ease;
-}
-
-.admin-btn:focus-visible {
-  outline: none;
-  box-shadow:
-    var(--admin-btn-shadow, none),
-    0 0 0 3px color-mix(in srgb, var(--journal-accent) 16%, transparent);
-}
-
-.admin-btn-primary {
-  --admin-btn-shadow: 0 12px 24px color-mix(in srgb, var(--journal-accent) 24%, transparent);
-  border-color: color-mix(in srgb, var(--journal-accent) 46%, var(--journal-border));
-  background: var(--journal-accent);
-  color: #fff;
-}
-
-.admin-btn-primary:hover {
-  background: var(--color-primary-hover);
-}
-
-.admin-btn-ghost {
-  border-color: var(--journal-border);
-  background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
-  color: var(--journal-ink);
-}
-
-.admin-btn-ghost:hover {
-  border-color: color-mix(in srgb, var(--journal-accent) 28%, transparent);
-  color: var(--journal-accent);
 }
 
 .admin-action-row {

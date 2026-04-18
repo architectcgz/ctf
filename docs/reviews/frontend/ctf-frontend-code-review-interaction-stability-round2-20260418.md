@@ -21,11 +21,11 @@
   - `M2` 教师实例筛选延迟请求已在卸载时清理。
   - `M3` 后台题目详情的延迟跳转已补 timer 清理。
   - `M6` 通知详情已移除静态禁用占位按钮，改为说明块。
+  - `L2` 后台页面级按钮原语已完成收敛，目标范围内不再残留 `admin-btn` / `publish-btn` / `template-action-btn` / `topology-toolbar-btn` 等私有按钮族。
 - 未完成：
   - `M4` 教师分析面板和 AWD 轮次面板的 props 透传与职责过载。
   - `M5` 超大组件继续拆分。
   - `L1` Tailwind 裸魔法数清理。
-  - `L2` 页面级按钮原语收敛。
 
 ## 问题清单
 
@@ -88,18 +88,19 @@
     - 需要单独扫描和分批替换，避免把 token bridge 与真正的裸像素混改。
 
 - [L2] 按钮原语已经存在，但页面级按钮体系仍然碎片化
-  - 状态：未完成
-  - 说明：
-    - 本轮已完成 `AdminNotificationPublishDrawer`、`ChallengeWriteupManagePanel`、`ChallengeTopologyStudioPage`、`ChallengeDetail`、`ImageManage` 的页面私有按钮族清理。
-    - 仍有残留在 `AdminDashboardPage`、`ChallengeWriteupViewPage`、`ChallengeWriteupEditorPage`、`UserGovernancePage` 等后台页，后续继续分批收敛。
+  - 状态：已完成
+  - 处理结果：
+    - 已完成 `AdminNotificationPublishDrawer`、`ChallengeWriteupManagePanel`、`ChallengeTopologyStudioPage`、`ChallengeDetail`、`ImageManage`、`AdminDashboardPage`、`ChallengeWriteupViewPage`、`ChallengeWriteupEditorPage`、`UserGovernancePage` 的页面私有按钮族清理。
+    - 后台目标范围已统一切到 `ui-btn` 原语，并通过页面级 `--ui-btn-*` token 覆盖保留各自的深色工作台视觉。
+    - 经扫描，`src/views/admin`、`src/components/admin`、`src/components/notifications` 中不再残留 `admin-btn` / `publish-btn` / `publish-inline-btn` / `template-action-btn` / `topology-toolbar-btn`。
 
 ## 已完成提交
 
 - `126caba4 fix(frontend): 收口学生目录与交互稳定性`
 - `c1f95ea3 fix(frontend): 收口通知发布搜索竞态`
+- `50ab319a fix(frontend): 收敛后台页面按钮原语`
 
 ## 下一批建议
 
-1. 先做 `L2`，把后台和通知发布里的页面级按钮继续收敛到统一原语。
-2. 再做 `L1`，只清理纯魔法数，不碰 token bridge。
-3. `M4`、`M5` 单独立项拆分，不与稳定性修复混提。
+1. 继续做 `L1`，只清理纯魔法数，不碰 token bridge。
+2. `M4`、`M5` 单独立项拆分，不与稳定性修复混提。
