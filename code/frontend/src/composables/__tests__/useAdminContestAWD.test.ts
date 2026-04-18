@@ -312,4 +312,74 @@ describe('useAdminContestAWD', () => {
 
     wrapper.unmount()
   })
+
+  it('录入服务检查时应提交 service_id 载荷', async () => {
+    let composable!: ReturnType<typeof useAdminContestAWD>
+    const selectedContest = ref<ContestDetailData | null>(buildContest())
+    adminApiMocks.listContestAWDRounds.mockResolvedValueOnce([buildRound()])
+
+    const Harness = defineComponent({
+      setup() {
+        composable = useAdminContestAWD(selectedContest)
+        return () => null
+      },
+    })
+
+    const wrapper = mount(Harness)
+    await flushPromises()
+
+    await composable.createServiceCheck({
+      team_id: 12,
+      service_id: 7009,
+      service_status: 'up',
+      check_result: { latency_ms: 38 },
+    })
+    await flushPromises()
+
+    expect(adminApiMocks.createContestAWDServiceCheck).toHaveBeenCalledWith('awd-1', 'round-1', {
+      team_id: 12,
+      service_id: 7009,
+      service_status: 'up',
+      check_result: { latency_ms: 38 },
+    })
+
+    wrapper.unmount()
+  })
+
+  it('补录攻击日志时应提交 service_id 载荷', async () => {
+    let composable!: ReturnType<typeof useAdminContestAWD>
+    const selectedContest = ref<ContestDetailData | null>(buildContest())
+    adminApiMocks.listContestAWDRounds.mockResolvedValueOnce([buildRound()])
+
+    const Harness = defineComponent({
+      setup() {
+        composable = useAdminContestAWD(selectedContest)
+        return () => null
+      },
+    })
+
+    const wrapper = mount(Harness)
+    await flushPromises()
+
+    await composable.createAttackLog({
+      attacker_team_id: 12,
+      victim_team_id: 13,
+      service_id: 7009,
+      attack_type: 'flag_capture',
+      submitted_flag: 'flag{demo}',
+      is_success: true,
+    })
+    await flushPromises()
+
+    expect(adminApiMocks.createContestAWDAttackLog).toHaveBeenCalledWith('awd-1', 'round-1', {
+      attacker_team_id: 12,
+      victim_team_id: 13,
+      service_id: 7009,
+      attack_type: 'flag_capture',
+      submitted_flag: 'flag{demo}',
+      is_success: true,
+    })
+
+    wrapper.unmount()
+  })
 })
