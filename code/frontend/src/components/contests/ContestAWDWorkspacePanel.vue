@@ -38,6 +38,7 @@ const {
 } = useContestAWDWorkspace({
   contestId: computed(() => props.contest.id),
   contestStatus: computed(() => props.contest.status),
+  formatAttackResultToast,
 })
 
 const servicesByChallengeId = computed(() => {
@@ -234,9 +235,18 @@ function getSubmitResultMessage(): string {
     return ''
   }
 
-  const challengeTitle = getChallengeTitleForEvent(submitResult.value)
-  if (submitResult.value.is_success) {
-    return `${challengeTitle} 攻击成功，+${submitResult.value.score_gained} 分`
+  return formatAttackResultToast(submitResult.value)
+}
+
+function formatAttackResultToast(result: {
+  service_id?: string
+  challenge_id: string
+  is_success: boolean
+  score_gained: number
+}): string {
+  const challengeTitle = getChallengeTitleForEvent(result)
+  if (result.is_success) {
+    return `${challengeTitle} 攻击成功，+${result.score_gained} 分`
   }
   return `${challengeTitle} 攻击未命中有效 flag`
 }
