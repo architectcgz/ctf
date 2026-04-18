@@ -1,5 +1,6 @@
 import { ref, type Ref } from 'vue'
 
+import { useAbortController } from '@/composables/useAbortController'
 import { DEFAULT_PAGE_SIZE } from '@/utils/constants'
 
 export interface PaginationState<T> {
@@ -18,6 +19,7 @@ export function usePagination<T>(
   fetchFn: (params: {
     page: number
     page_size: number
+    signal: AbortSignal
   }) => Promise<{ list: T[]; total: number; page: number; page_size: number }>
 ): PaginationState<T> {
   const list = ref<T[]>([]) as Ref<T[]>
@@ -27,13 +29,27 @@ export function usePagination<T>(
   const loading = ref(false)
   const error = ref<unknown | null>(null)
   let latestRequestId = 0
+  const { createController } = useAbortController()
+
+  function isCanceledError(err: unknown): boolean {
+    return (
+      !!err &&
+      typeof err === 'object' &&
+      ('code' in err ? (err as { code?: unknown }).code === 'ERR_CANCELED' : false)
+    )
+  }
 
   async function refresh(): Promise<void> {
     const requestId = ++latestRequestId
+    const controller = createController()
     loading.value = true
     error.value = null
     try {
-      const data = await fetchFn({ page: page.value, page_size: pageSize.value })
+      const data = await fetchFn({
+        page: page.value,
+        page_size: pageSize.value,
+        signal: controller.signal,
+      })
       if (requestId !== latestRequestId) return
       if (!Number.isInteger(data.page_size) || data.page_size < 1) {
         throw new Error('分页响应缺少合法的 page_size 字段')
@@ -44,6 +60,10 @@ export function usePagination<T>(
       pageSize.value = data.page_size
     } catch (err) {
       if (requestId !== latestRequestId) return
+      if (isCanceledError(err)) {
+        error.value = null
+        return
+      }
       error.value = err
     } finally {
       if (requestId !== latestRequestId) return

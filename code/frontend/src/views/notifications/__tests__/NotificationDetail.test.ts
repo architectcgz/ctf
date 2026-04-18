@@ -71,6 +71,7 @@ describe('NotificationDetail', () => {
         type: 'system',
         title: '系统维护窗口',
         content: '今晚 23:00 到 23:30 进行维护。',
+        link: '/platform/overview',
         unread: true,
         created_at: '2026-03-31T09:00:00Z',
       },
@@ -92,6 +93,7 @@ describe('NotificationDetail', () => {
           type: 'contest',
           title: '比赛开始提醒',
           content: '春季赛将在明天 20:00 开始。',
+          link: '/contests/2',
           unread: false,
           created_at: '2026-03-31T08:00:00Z',
         },
@@ -142,9 +144,28 @@ describe('NotificationDetail', () => {
 
   it('通知详情页操作按钮应接入共享 ui-btn 原语', () => {
     expect(notificationDetailSource).toContain('class="ui-btn ui-btn--primary"')
-    expect(notificationDetailSource).toContain('class="ui-btn ui-btn--secondary"')
     expect(notificationDetailSource).not.toContain('notification-detail-action')
     expect(notificationDetailSource).not.toMatch(/^\.notification-detail-action\s*\{/m)
     expect(notificationDetailSource).not.toMatch(/^\.notification-detail-action--primary\s*\{/m)
+  })
+
+  it('存在 link 时应显示关联入口，不再渲染静态禁用占位按钮', async () => {
+    const store = useNotificationStore()
+    store.setNotifications([
+      {
+        id: '9',
+        type: 'challenge',
+        title: '题目更新',
+        content: '请查看最新题目说明。',
+        link: '/challenges/9',
+        unread: false,
+        created_at: '2026-03-31T10:00:00Z',
+      },
+    ])
+
+    const { wrapper } = await mountPage('/notifications/9')
+
+    expect(wrapper.text()).toContain('查看关联对象')
+    expect(wrapper.find('button[disabled]').exists()).toBe(false)
   })
 })

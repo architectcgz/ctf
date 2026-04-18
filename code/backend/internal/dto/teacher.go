@@ -58,6 +58,7 @@ type TeacherStudentItem struct {
 	Username         string  `json:"username"`
 	StudentNo        *string `json:"student_no,omitempty"`
 	Name             *string `json:"name,omitempty"`
+	ClassName        *string `json:"class_name,omitempty"`
 	SolvedCount      int     `json:"solved_count"`
 	TotalScore       int     `json:"total_score"`
 	RecentEventCount int     `json:"recent_event_count"`
@@ -67,6 +68,16 @@ type TeacherStudentItem struct {
 type TeacherStudentQuery struct {
 	Keyword   string `form:"keyword" binding:"omitempty,max=128"`
 	StudentNo string `form:"student_no" binding:"omitempty,max=64"`
+}
+
+type TeacherStudentDirectoryQuery struct {
+	ClassName string `form:"class_name" binding:"omitempty,max=128"`
+	Keyword   string `form:"keyword" binding:"omitempty,max=128"`
+	StudentNo string `form:"student_no" binding:"omitempty,max=64"`
+	Page      int    `form:"page" binding:"omitempty,min=1"`
+	Size      int    `form:"page_size" binding:"omitempty,min=1,max=100"`
+	SortKey   string `form:"sort_key" binding:"omitempty,oneof=name student_no total_score solved_count"`
+	SortOrder string `form:"sort_order" binding:"omitempty,oneof=asc desc"`
 }
 
 type ProgressBreakdown struct {

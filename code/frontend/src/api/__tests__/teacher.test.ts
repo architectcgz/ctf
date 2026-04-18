@@ -11,6 +11,7 @@ import {
   exportTeacherAWDReviewArchive,
   exportTeacherAWDReviewReport,
   getClasses,
+  getStudentsDirectory,
   getTeacherAWDReview,
   getTeacherWriteupSubmissions,
   listTeacherAWDReviews,
@@ -65,6 +66,69 @@ describe('teacher api contract', () => {
       total: 21,
       page: 2,
       page_size: 20,
+    })
+  })
+
+  it('获取学生目录分页时应透传筛选和排序参数，并标准化标识字段', async () => {
+    requestMock.mockResolvedValue({
+      list: [
+        {
+          id: 9,
+          username: 'alice',
+          student_no: '20240001',
+          name: '张三',
+          class_name: 'Class A',
+          solved_count: 5,
+          total_score: 320,
+          recent_event_count: 2,
+          weak_dimension: 'Web',
+        },
+      ],
+      total: 31,
+      page: 2,
+      page_size: 10,
+    })
+
+    const result = await getStudentsDirectory({
+      class_name: 'Class A',
+      keyword: 'alice',
+      student_no: '20240001',
+      sort_key: 'total_score',
+      sort_order: 'desc',
+      page: 2,
+      page_size: 10,
+    })
+
+    expect(requestMock).toHaveBeenCalledWith({
+      method: 'GET',
+      url: '/teacher/students',
+      params: {
+        class_name: 'Class A',
+        keyword: 'alice',
+        student_no: '20240001',
+        sort_key: 'total_score',
+        sort_order: 'desc',
+        page: 2,
+        page_size: 10,
+      },
+    })
+    expect(result).toEqual({
+      list: [
+        {
+          id: '9',
+          username: 'alice',
+          student_no: '20240001',
+          name: '张三',
+          class_name: 'Class A',
+          solved_count: 5,
+          total_score: 320,
+          recent_event_count: 2,
+          weak_dimension: 'Web',
+        },
+      ],
+      total: 31,
+      page: 2,
+      page_size: 10,
     })
   })
 

@@ -671,6 +671,7 @@ export interface NotificationItem {
   type: NotificationType
   title: string
   content?: string
+  link?: string
   level?: 'info' | 'success' | 'warning' | 'error'
   unread: boolean
   created_at: ISODateTime

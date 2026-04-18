@@ -275,4 +275,16 @@ describe('ChallengeManage', () => {
 
     wrapper.unmount()
   })
+
+  it('题目目录加载失败时应显示错误态而不是空目录提示', async () => {
+    adminApiMocks.getChallenges.mockRejectedValueOnce(new Error('服务暂时不可用'))
+
+    const wrapper = mount(ChallengeManage)
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('题目目录加载失败')
+    expect(wrapper.text()).toContain('服务暂时不可用')
+    expect(wrapper.text()).toContain('重新加载')
+    expect(wrapper.text()).not.toContain('当前还没有题目，请先前往导入页上传题目包。')
+  })
 })

@@ -8,7 +8,7 @@ const pushMock = vi.fn()
 
 const teacherApiMocks = vi.hoisted(() => ({
   getClasses: vi.fn(),
-  getClassStudents: vi.fn(),
+  getStudentsDirectory: vi.fn(),
 }))
 
 vi.mock('vue-router', async () => {
@@ -26,63 +26,62 @@ describe('AdminStudentManagement', () => {
     vi.useFakeTimers()
     pushMock.mockReset()
     teacherApiMocks.getClasses.mockReset()
-    teacherApiMocks.getClassStudents.mockReset()
+    teacherApiMocks.getStudentsDirectory.mockReset()
 
     teacherApiMocks.getClasses.mockResolvedValue([
       { name: 'Class A', student_count: 2 },
       { name: 'Class B', student_count: 1 },
     ])
-    teacherApiMocks.getClassStudents.mockImplementation(async (className, params) => {
-      const all = {
-        'Class A': [
-          {
-            id: 'stu-1',
-            username: 'alice',
-            name: 'Alice Zhang',
-            student_no: '2024001',
-            solved_count: 5,
-            total_score: 320,
-            weak_dimension: 'Web',
-            class_name: 'Class A',
-          },
-          {
-            id: 'stu-2',
-            username: 'bob',
-            name: 'Bob Li',
-            student_no: '2024002',
-            solved_count: 3,
-            total_score: 180,
-            weak_dimension: 'Pwn',
-            class_name: 'Class A',
-          },
-        ],
-        'Class B': [
-          {
-            id: 'stu-3',
-            username: 'charlie',
-            name: 'Charlie Wang',
-            student_no: '2024011',
-            solved_count: 1,
-            total_score: 60,
-            weak_dimension: 'Crypto',
-            class_name: 'Class B',
-          },
-        ],
-      } as const
+    teacherApiMocks.getStudentsDirectory.mockImplementation(async (params) => {
+      const all = [
+        {
+          id: 'stu-1',
+          username: 'alice',
+          name: 'Alice Zhang',
+          student_no: '2024001',
+          solved_count: 5,
+          total_score: 320,
+          weak_dimension: 'Web',
+          class_name: 'Class A',
+        },
+        {
+          id: 'stu-2',
+          username: 'bob',
+          name: 'Bob Li',
+          student_no: '2024002',
+          solved_count: 3,
+          total_score: 180,
+          weak_dimension: 'Pwn',
+          class_name: 'Class A',
+        },
+        {
+          id: 'stu-3',
+          username: 'charlie',
+          name: 'Charlie Wang',
+          student_no: '2024011',
+          solved_count: 1,
+          total_score: 60,
+          weak_dimension: 'Crypto',
+          class_name: 'Class B',
+        },
+      ]
 
-      const merged = className ? (all[className as keyof typeof all] ?? []) : []
-      if (!params?.keyword && !params?.student_no) {
-        return merged
-      }
-
-      return merged.filter((item) => {
+      const filtered = all.filter((item) => {
+        const classMatched = !params?.class_name || item.class_name === params.class_name
         const keywordMatched =
           !params?.keyword ||
           item.username.includes(params.keyword) ||
           (item.name ?? '').includes(params.keyword)
         const studentNoMatched = !params?.student_no || item.student_no?.includes(params.student_no)
-        return keywordMatched && studentNoMatched
+        return classMatched && keywordMatched && studentNoMatched
       })
+
+      return {
+        list: filtered,
+        total: filtered.length,
+        page: params?.page ?? 1,
+        page_size: params?.page_size ?? 20,
+      }
     })
   })
 
@@ -121,6 +120,15 @@ describe('AdminStudentManagement', () => {
     expect(wrapper.text()).toContain('学号')
     expect(wrapper.text()).toContain('班级')
     expect(wrapper.text()).toContain('得分')
+    expect(teacherApiMocks.getStudentsDirectory).toHaveBeenCalledWith({
+      class_name: undefined,
+      keyword: undefined,
+      student_no: undefined,
+      sort_key: 'name',
+      sort_order: 'asc',
+      page: 1,
+      page_size: 20,
+    })
   })
 
   it('应支持检索并可进入学员分析页', async () => {
@@ -134,6 +142,15 @@ describe('AdminStudentManagement', () => {
 
     expect(wrapper.text()).toContain('Alice Zhang')
     expect(wrapper.text()).not.toContain('Bob Li')
+    expect(teacherApiMocks.getStudentsDirectory).toHaveBeenLastCalledWith({
+      class_name: undefined,
+      keyword: 'Alice',
+      student_no: undefined,
+      sort_key: 'name',
+      sort_order: 'asc',
+      page: 1,
+      page_size: 20,
+    })
 
     await wrapper
       .findAll('button')

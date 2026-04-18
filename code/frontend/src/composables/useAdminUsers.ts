@@ -57,7 +57,7 @@ export function useAdminUsers() {
   const formDraft = ref<AdminUserFormDraft>(createEmptyDraft())
   const importResult = ref<AdminUserImportData | null>(null)
 
-  const pagination = usePagination<AdminUserListItem>(({ page, page_size }) =>
+  const pagination = usePagination<AdminUserListItem>(({ page, page_size, signal }) =>
     getUsers({
       page,
       page_size,
@@ -66,6 +66,8 @@ export function useAdminUsers() {
       teacher_no: teacherNo.value.trim() || undefined,
       role: roleFilter.value === 'all' ? undefined : roleFilter.value,
       status: statusFilter.value === 'all' ? undefined : statusFilter.value,
+    }, {
+      signal,
     })
   )
 

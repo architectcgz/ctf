@@ -1,4 +1,4 @@
-import { onUnmounted, ref } from 'vue'
+import { getCurrentInstance, onUnmounted, ref } from 'vue'
 
 export function useAbortController() {
   const controller = ref<AbortController | null>(null)
@@ -14,9 +14,11 @@ export function useAbortController() {
     controller.value = null
   }
 
-  onUnmounted(() => {
-    abort()
-  })
+  if (getCurrentInstance()) {
+    onUnmounted(() => {
+      abort()
+    })
+  }
 
   return {
     createController,
