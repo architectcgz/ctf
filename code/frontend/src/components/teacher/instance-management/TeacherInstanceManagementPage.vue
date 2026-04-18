@@ -86,10 +86,8 @@ function statusMeta(status: string): { label: string; chipClass: string } {
 </script>
 
 <template>
-  <div class="teacher-management-shell teacher-surface flex min-h-full flex-1 flex-col">
-    <section
-      class="teacher-hero teacher-surface-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
-    >
+  <div class="workspace-shell teacher-management-shell teacher-surface flex min-h-full flex-1 flex-col">
+    <main class="content-pane">
       <div class="teacher-page">
         <header class="teacher-topbar">
           <div class="teacher-heading">
@@ -311,13 +309,12 @@ function statusMeta(status: string): { label: string; chipClass: string } {
             </div>
           </section>
         </section>
+        <div v-if="error" class="teacher-surface-error">
+          {{ error }}
+          <button type="button" class="ml-3 font-medium underline" @click="emit('retry')">重试</button>
+        </div>
       </div>
-    </section>
-
-    <div v-if="error" class="teacher-surface-error">
-      {{ error }}
-      <button type="button" class="ml-3 font-medium underline" @click="emit('retry')">重试</button>
-    </div>
+    </main>
   </div>
 </template>
 
@@ -390,26 +387,11 @@ function statusMeta(status: string): { label: string; chipClass: string } {
   flex-direction: column;
 }
 
-.teacher-directory-meta {
-  color: var(--journal-muted);
-  font-size: var(--font-size-0-82);
-}
-
 .teacher-directory-head,
 .teacher-directory-row {
   display: grid;
   grid-template-columns: var(--teacher-directory-columns);
   gap: var(--space-4);
-}
-
-.teacher-directory-head {
-  padding: 0 0 var(--space-3);
-  border-bottom: 1px dashed var(--teacher-divider);
-  color: var(--journal-muted);
-  font-size: var(--font-size-0-76);
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
 }
 
 .teacher-directory-row {
