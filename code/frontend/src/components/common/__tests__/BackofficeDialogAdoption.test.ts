@@ -39,6 +39,14 @@ describe('backoffice dialog adoption', () => {
     })
   })
 
+  it('admin notification drawer should adopt shared button primitives instead of drawer-local button classes', () => {
+    expect(adminNotificationPublishDrawerSource).toContain('class="ui-btn ui-btn--sm ui-btn--secondary"')
+    expect(adminNotificationPublishDrawerSource).toContain('class="ui-btn ui-btn--secondary"')
+    expect(adminNotificationPublishDrawerSource).toContain('class="ui-btn ui-btn--primary"')
+    expect(adminNotificationPublishDrawerSource).not.toContain('publish-inline-btn')
+    expect(adminNotificationPublishDrawerSource).not.toContain('publish-btn')
+  })
+
   it('admin user form dialog should adopt shared form and action primitives', () => {
     expect(adminUserFormDialogSource).toContain('<AdminSurfaceModal')
     expect(adminUserFormDialogSource).toContain('class="ui-field')

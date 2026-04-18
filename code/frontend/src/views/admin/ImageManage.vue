@@ -313,13 +313,13 @@ onUnmounted(() => {
         <div class="image-header__actions" role="group" aria-label="镜像列表操作">
           <button
             :disabled="loading"
-            class="admin-btn admin-btn-ghost"
+            class="ui-btn ui-btn--ghost"
             data-testid="image-refresh-button"
             @click="handleManualRefresh"
           >
             立即刷新
           </button>
-          <button class="admin-btn admin-btn-primary" @click="dialogVisible = true">
+          <button class="ui-btn ui-btn--primary" @click="dialogVisible = true">
             创建镜像
           </button>
         </div>
@@ -442,7 +442,7 @@ onUnmounted(() => {
           <template #cell-actions="{ row }">
             <div class="image-row__actions">
               <button
-                class="admin-btn admin-btn-danger admin-btn-compact"
+                class="ui-btn ui-btn--sm ui-btn--danger"
                 @click="handleDelete((row as AdminImageListItem).id)"
               >
                 删除
@@ -559,43 +559,24 @@ onUnmounted(() => {
   );
 }
 
-.admin-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  min-height: 2.45rem;
-  border-radius: 0.75rem;
-  padding: var(--space-2) var(--space-4);
-  font-size: var(--font-size-0-875);
-  font-weight: 600;
-  transition:
-    border-color 150ms ease,
-    background 150ms ease,
-    color 150ms ease;
-}
-
-.admin-btn-compact {
-  min-height: 2.35rem;
-  padding: var(--space-2) var(--space-3);
-}
-
-.admin-btn-primary {
-  background: var(--journal-accent);
-  color: #fff;
-  box-shadow: 0 10px 24px color-mix(in srgb, var(--journal-accent) 18%, transparent);
-}
-
-.admin-btn-danger {
-  border: 1px solid color-mix(in srgb, var(--color-danger) 28%, transparent);
-  background: color-mix(in srgb, var(--color-danger) 10%, var(--journal-surface));
-  color: color-mix(in srgb, var(--color-danger) 88%, var(--journal-ink));
-}
-
-.admin-btn-ghost {
-  border: 1px solid var(--journal-border);
-  background: color-mix(in srgb, var(--journal-surface) 92%, var(--color-bg-base));
-  color: var(--journal-ink);
+.image-header__actions > .ui-btn,
+.image-row__actions .ui-btn {
+  --ui-btn-height: 2.45rem;
+  --ui-btn-radius: 0.75rem;
+  --ui-btn-padding: var(--space-2) var(--space-4);
+  --ui-btn-font-size: var(--font-size-0-875);
+  --ui-btn-font-weight: 600;
+  --ui-btn-primary-background: var(--journal-accent);
+  --ui-btn-primary-hover-background: color-mix(in srgb, var(--journal-accent) 88%, black);
+  --ui-btn-primary-hover-shadow: 0 10px 24px color-mix(in srgb, var(--journal-accent) 18%, transparent);
+  --ui-btn-ghost-color: var(--journal-ink);
+  --ui-btn-ghost-hover-color: var(--journal-accent);
+  --ui-btn-ghost-hover-background: color-mix(in srgb, var(--journal-accent) 4%, var(--journal-surface));
+  --ui-btn-danger-border: color-mix(in srgb, var(--color-danger) 28%, transparent);
+  --ui-btn-danger-background: color-mix(in srgb, var(--color-danger) 10%, var(--journal-surface));
+  --ui-btn-danger-color: color-mix(in srgb, var(--color-danger) 88%, var(--journal-ink));
+  --ui-btn-danger-hover-border: color-mix(in srgb, var(--color-danger) 34%, transparent);
+  --ui-btn-danger-hover-background: color-mix(in srgb, var(--color-danger) 14%, var(--journal-surface));
 }
 
 .admin-status-chip {

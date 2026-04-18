@@ -217,7 +217,7 @@ onUnmounted(() => {
                 <span class="text-xs text-[var(--color-text-muted)]">班级候选来自班级管理</span>
                 <button
                   type="button"
-                  class="publish-inline-btn"
+                  class="ui-btn ui-btn--sm ui-btn--secondary"
                   :disabled="publisher.loadingClasses.value"
                   @click="publisher.loadClasses"
                 >
@@ -262,7 +262,7 @@ onUnmounted(() => {
                 />
                 <button
                   type="button"
-                  class="publish-inline-btn"
+                  class="ui-btn ui-btn--sm ui-btn--secondary"
                   :disabled="publisher.loadingUsers.value"
                   @click="handleUserSearch"
                 >
@@ -299,10 +299,10 @@ onUnmounted(() => {
 
     <template #footer>
       <footer class="publish-footer border-t px-6 py-4">
-        <button type="button" class="publish-btn" @click="handleClose">取消</button>
+        <button type="button" class="ui-btn ui-btn--secondary" @click="handleClose">取消</button>
         <button
           type="button"
-          class="publish-btn publish-btn-primary"
+          class="ui-btn ui-btn--primary"
           :disabled="publisher.submitting.value"
           @click="handleSubmit"
         >
@@ -381,37 +381,14 @@ onUnmounted(() => {
   color: var(--color-text-muted);
 }
 
-.publish-inline-btn,
-.publish-btn {
-  border: 1px solid color-mix(in srgb, var(--color-border-default) 80%, transparent);
-  border-radius: 0.75rem;
-  padding: 0.45rem 0.75rem;
-  font-size: var(--font-size-0-82);
-  color: var(--color-text-primary);
-  background: var(--color-bg-elevated);
-  cursor: pointer;
-}
-
-.publish-inline-btn:disabled,
-.publish-btn:disabled {
-  cursor: not-allowed;
-  opacity: 0.55;
-}
-
-.publish-btn {
-  min-width: 6rem;
-}
-
-.publish-btn-primary {
-  border-color: color-mix(in srgb, var(--color-primary) 45%, transparent);
-  background: color-mix(in srgb, var(--color-primary) 14%, transparent);
-  color: var(--color-primary);
-}
-
 .publish-footer {
   display: flex;
   justify-content: flex-end;
   gap: 0.6rem;
+}
+
+.publish-footer > .ui-btn {
+  min-width: 6rem;
 }
 
 .publish-error {

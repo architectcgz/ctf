@@ -90,7 +90,8 @@
 - [L2] 按钮原语已经存在，但页面级按钮体系仍然碎片化
   - 状态：未完成
   - 说明：
-    - 需要按后台、教师端、学生端三类视图继续收敛按钮族，不能在这轮稳定性修复里顺带大改。
+    - 本轮已完成 `AdminNotificationPublishDrawer`、`ChallengeWriteupManagePanel`、`ChallengeTopologyStudioPage`、`ChallengeDetail`、`ImageManage` 的页面私有按钮族清理。
+    - 仍有残留在 `AdminDashboardPage`、`ChallengeWriteupViewPage`、`ChallengeWriteupEditorPage`、`UserGovernancePage` 等后台页，后续继续分批收敛。
 
 ## 已完成提交
 
