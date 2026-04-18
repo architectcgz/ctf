@@ -393,6 +393,56 @@ func TestAWDServiceGetUserWorkspaceBuildsOwnServicesTargetsAndRecentEvents(t *te
 	if incoming == nil || incoming.PeerTeamID != 8102 || incoming.IsSuccess {
 		t.Fatalf("expected incoming failed event from blue, got %+v", incoming)
 	}
+
+	raw, err := json.Marshal(resp)
+	if err != nil {
+		t.Fatalf("marshal workspace resp: %v", err)
+	}
+	payload := map[string]any{}
+	if err := json.Unmarshal(raw, &payload); err != nil {
+		t.Fatalf("unmarshal workspace resp: %v", err)
+	}
+	services, ok := payload["services"].([]any)
+	if !ok || len(services) != 2 {
+		t.Fatalf("unexpected services payload: %s", string(raw))
+	}
+	firstService, ok := services[0].(map[string]any)
+	if !ok {
+		t.Fatalf("unexpected first service payload: %#v", services[0])
+	}
+	if firstService["service_id"] != float64(contesttestsupport.DefaultAWDContestServiceID(801, 8011)) {
+		t.Fatalf("expected own service to expose service_id, got %s", string(raw))
+	}
+	targets, ok := payload["targets"].([]any)
+	if !ok || len(targets) != 2 {
+		t.Fatalf("unexpected targets payload: %s", string(raw))
+	}
+	blueTarget := findWorkspaceTargetPayload(targets, 8102)
+	if blueTarget == nil {
+		t.Fatalf("expected blue target in payload: %s", string(raw))
+	}
+	targetServices, ok := blueTarget["services"].([]any)
+	if !ok || len(targetServices) != 1 {
+		t.Fatalf("unexpected blue target services payload: %#v", blueTarget)
+	}
+	targetService, ok := targetServices[0].(map[string]any)
+	if !ok {
+		t.Fatalf("unexpected target service payload: %#v", targetServices[0])
+	}
+	if targetService["service_id"] != float64(contesttestsupport.DefaultAWDContestServiceID(801, 8011)) {
+		t.Fatalf("expected target service to expose service_id, got %s", string(raw))
+	}
+	events, ok := payload["recent_events"].([]any)
+	if !ok || len(events) != 2 {
+		t.Fatalf("unexpected recent events payload: %s", string(raw))
+	}
+	outgoingPayload := findWorkspaceEventPayload(events, "attack_out")
+	if outgoingPayload == nil {
+		t.Fatalf("expected outgoing event payload: %s", string(raw))
+	}
+	if outgoingPayload["service_id"] != float64(contesttestsupport.DefaultAWDContestServiceID(801, 8011)) {
+		t.Fatalf("expected outgoing event to expose service_id, got %s", string(raw))
+	}
 }
 
 func TestAWDServiceGetUserWorkspaceWithoutTeamHidesTargets(t *testing.T) {
@@ -537,6 +587,32 @@ func findAWDWorkspaceEventByDirection(items []*dto.ContestAWDWorkspaceRecentEven
 	for _, item := range items {
 		if item.Direction == direction {
 			return item
+		}
+	}
+	return nil
+}
+
+func findWorkspaceTargetPayload(items []any, teamID int64) map[string]any {
+	for _, item := range items {
+		record, ok := item.(map[string]any)
+		if !ok {
+			continue
+		}
+		if record["team_id"] == float64(teamID) {
+			return record
+		}
+	}
+	return nil
+}
+
+func findWorkspaceEventPayload(items []any, direction string) map[string]any {
+	for _, item := range items {
+		record, ok := item.(map[string]any)
+		if !ok {
+			continue
+		}
+		if record["direction"] == direction {
+			return record
 		}
 	}
 	return nil
