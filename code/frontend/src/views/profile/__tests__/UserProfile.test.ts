@@ -169,7 +169,7 @@ describe('UserProfile', () => {
 
   it('应该移除个人资料页级 shell 上遗留的 journal-eyebrow-text 修饰类', () => {
     expect(userProfileSource).toContain(
-      'class="journal-shell journal-shell-user journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"'
+      'class="workspace-shell journal-shell journal-shell-user journal-hero flex min-h-full flex-1 flex-col"'
     )
     expect(userProfileSource).not.toContain('journal-eyebrow-text')
   })

@@ -102,9 +102,10 @@ async function handlePublishSuccess(): Promise<void> {
 
 <template>
   <section
-    class="journal-shell journal-shell-user journal-hero flex min-h-full flex-1 flex-col space-y-6 rounded-[30px] border px-6 py-6 md:px-8"
+    class="workspace-shell journal-shell journal-shell-user journal-hero flex min-h-full flex-1 flex-col space-y-6"
   >
-    <div class="notification-page">
+    <main class="content-pane">
+      <div class="notification-page">
       <header class="notification-topbar">
         <div class="notification-heading">
           <div class="workspace-overline">Notifications</div>
@@ -226,7 +227,8 @@ async function handlePublishSuccess(): Promise<void> {
           />
         </div>
       </template>
-    </div>
+      </div>
+    </main>
 
     <AdminNotificationPublishDrawer
       :open="publishDrawerOpen"

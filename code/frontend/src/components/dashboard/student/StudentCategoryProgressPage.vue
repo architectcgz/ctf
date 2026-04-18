@@ -97,10 +97,11 @@ function openPrimaryCategory(): void {
     :class="
       embedded
         ? 'journal-shell-embedded'
-        : 'journal-shell journal-hero rounded-[30px] border px-6 py-6 md:px-8'
+        : 'workspace-shell journal-shell journal-shell-user journal-hero'
     "
   >
-    <div class="category-header">
+    <div :class="embedded ? undefined : 'content-pane'">
+      <div class="category-header">
       <div class="workspace-overline">Action Ranking</div>
       <h1 class="journal-page-title workspace-page-title text-[var(--journal-ink)]">
         {{ headlineTitle }}
@@ -140,13 +141,13 @@ function openPrimaryCategory(): void {
           </div>
         </article>
       </div>
-    </div>
+      </div>
 
-    <div
-      class="category-board mt-6 px-1 pt-5 md:px-2 md:pt-6"
-      :class="{ 'category-board--embedded': embedded }"
-    >
-      <section class="category-section">
+      <div
+        class="category-board mt-6 px-1 pt-5 md:px-2 md:pt-6"
+        :class="{ 'category-board--embedded': embedded }"
+      >
+        <section class="category-section">
         <div v-if="rankedCategories.length > 0" class="category-toolbar">
           <p class="category-toolbar__copy">从排序最前的分类开始，完成一类再继续往后推。</p>
         </div>
@@ -198,7 +199,8 @@ function openPrimaryCategory(): void {
             </div>
           </article>
         </div>
-      </section>
+        </section>
+      </div>
     </div>
   </section>
 </template>

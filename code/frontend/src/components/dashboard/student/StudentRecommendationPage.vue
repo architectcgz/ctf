@@ -64,10 +64,11 @@ const summaryCards = computed(() => [
     :class="
       embedded
         ? 'journal-shell-embedded'
-        : 'journal-shell journal-hero rounded-[30px] border px-6 py-6 md:px-8'
+        : 'workspace-shell journal-shell journal-shell-user journal-hero'
     "
   >
-    <div class="recommendation-header">
+    <div :class="embedded ? undefined : 'content-pane'">
+      <div class="recommendation-header">
       <div class="workspace-overline">Action Queue</div>
       <h1 class="journal-page-title workspace-page-title text-[var(--journal-ink)]">
         现在先练这几道
@@ -109,13 +110,13 @@ const summaryCards = computed(() => [
           </div>
         </article>
       </div>
-    </div>
+      </div>
 
-    <div
-      class="recommend-board mt-6 px-1 pt-5 md:px-2 md:pt-6"
-      :class="{ 'recommend-board--embedded': embedded }"
-    >
-      <section class="recommend-section">
+      <div
+        class="recommend-board mt-6 px-1 pt-5 md:px-2 md:pt-6"
+        :class="{ 'recommend-board--embedded': embedded }"
+      >
+        <section class="recommend-section">
         <div v-if="recommendations.length > 0" class="recommend-toolbar">
           <p class="recommend-toolbar__copy">按当前顺序直接推进，做完这组再回来刷新下一批建议。</p>
           <div class="recommend-toolbar__actions">
@@ -177,7 +178,8 @@ const summaryCards = computed(() => [
             </div>
           </button>
         </div>
-      </section>
+        </section>
+      </div>
     </div>
   </section>
 </template>
