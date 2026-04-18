@@ -108,4 +108,48 @@ describe('useContestAWDWorkspace', () => {
 
     wrapper.unmount()
   })
+
+  it('提交攻击后应允许外部格式化 toast 文案', async () => {
+    contestApiMocks.submitContestAWDAttack.mockResolvedValueOnce({
+      id: '88',
+      round_id: '41',
+      attacker_team_id: '13',
+      attacker_team: 'Red',
+      victim_team_id: '14',
+      victim_team: 'Blue',
+      service_id: '7009',
+      challenge_id: 'legacy-101',
+      attack_type: 'flag_capture',
+      source: 'submission',
+      submitted_flag: 'flag{demo}',
+      is_success: true,
+      score_gained: 60,
+      created_at: '2026-04-12T08:03:00Z',
+    })
+
+    let submitAttack:
+      | ((challengeId: string, victimTeamId: number, flag: string) => Promise<unknown>)
+      | null = null
+
+    mount(
+      defineComponent({
+        setup() {
+          const workspace = useContestAWDWorkspace({
+            contestId: computed(() => '1'),
+            contestStatus: computed(() => 'running'),
+            formatAttackResultToast: (result) =>
+              result.service_id === '7009' ? `Bank Portal 攻击成功，+${result.score_gained} 分` : '',
+          } as any)
+          submitAttack = workspace.submitAttack
+          return () => null
+        },
+      })
+    )
+
+    await flushPromises()
+    await submitAttack?.('101', 14, 'flag{demo}')
+    await flushPromises()
+
+    expect(toastMocks.success).toHaveBeenCalledWith('Bank Portal 攻击成功，+60 分')
+  })
 })
