@@ -73,6 +73,7 @@ const radarIndicators = computed(() =>
   normalizedSkillDimensions.value.map((item) => ({ name: item.name, max: 100 }))
 )
 const radarValues = computed(() => normalizedSkillDimensions.value.map((item) => item.value))
+const radarHeightClass = 'student-overview-radar-height'
 const rankSummary = computed(() => props.progress.rank ?? '-')
 const operationsSummary = computed(() => [
   {
@@ -147,7 +148,7 @@ const operationsSummary = computed(() => [
                     :indicators="radarIndicators"
                     :values="radarValues"
                     name="能力值"
-                    height-class="h-[18rem] md:h-[21rem] xl:h-[23rem]"
+                    :height-class="radarHeightClass"
                     :label-font-size="15"
                     :axis-name-gap="10"
                     radius="70%"
@@ -169,7 +170,7 @@ const operationsSummary = computed(() => [
           </div>
           <div
             v-else
-            class="mt-6 rounded-[18px] border border-dashed border-[var(--journal-shell-border)] px-4 py-10 text-center text-sm text-[var(--journal-muted)]"
+            class="journal-soft-empty-state journal-soft-empty-state--compact mt-6"
           >
             当前能力数据不足，完成更多题目后将生成雷达图。
           </div>
@@ -366,6 +367,10 @@ const operationsSummary = computed(() => [
   margin: 0 auto;
 }
 
+.student-overview-radar-height {
+  height: 18rem;
+}
+
 .skill-dimension-chart__frame {
   position: relative;
   margin: 0 auto;
@@ -455,6 +460,10 @@ const operationsSummary = computed(() => [
 }
 
 @media (min-width: 1280px) {
+  .student-overview-radar-height {
+    height: 23rem;
+  }
+
   .journal-bento {
     grid-template-columns: 1.1fr 0.92fr 0.88fr;
     grid-template-areas: 'radar rank ops';
@@ -557,6 +566,12 @@ const operationsSummary = computed(() => [
 
   .journal-radar-dimension + .journal-radar-dimension {
     border-top: 1px solid var(--journal-divider);
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1279px) {
+  .student-overview-radar-height {
+    height: 21rem;
   }
 }
 

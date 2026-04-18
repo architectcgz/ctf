@@ -235,11 +235,11 @@ async function submitPasswordChange(): Promise<void> {
           </div>
 
           <div class="security-side-lead">
-            <div class="flex items-center gap-2 text-sm font-medium text-[var(--journal-ink)]">
+            <div class="security-side-status flex items-center gap-2">
               <span class="status-dot status-dot-active" />
               修改后会同步退出其他设备
             </div>
-            <p class="mt-3 text-sm leading-6 text-[var(--journal-muted)]">
+            <p class="security-side-copy mt-3">
               提交后会立即更新当前账号密码，并提示其他设备重新完成认证。
             </p>
           </div>
@@ -247,7 +247,7 @@ async function submitPasswordChange(): Promise<void> {
           <div class="security-tip-list">
             <div v-for="tip in passwordTips" :key="tip" class="security-tip-item">
               <div class="journal-note-label">安全提示</div>
-              <div class="mt-2 text-sm leading-6 text-[var(--journal-ink)]">{{ tip }}</div>
+              <div class="security-tip-copy mt-2">{{ tip }}</div>
             </div>
           </div>
         </aside>
@@ -393,6 +393,26 @@ async function submitPasswordChange(): Promise<void> {
 .security-tip-list {
   margin-top: 1rem;
   border-top: 1px solid color-mix(in srgb, var(--journal-border) 86%, transparent);
+}
+
+.security-side-status {
+  font-size: var(--font-size-0-875);
+  font-weight: 500;
+  color: var(--journal-ink);
+}
+
+.security-side-copy,
+.security-tip-copy {
+  font-size: var(--font-size-0-875);
+  line-height: 1.5rem;
+}
+
+.security-side-copy {
+  color: var(--journal-muted);
+}
+
+.security-tip-copy {
+  color: var(--journal-ink);
 }
 
 .security-tip-item {
