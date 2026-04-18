@@ -58,6 +58,24 @@ const servicesByServiceId = computed(() => {
   return map
 })
 
+const challengeByChallengeId = computed(() => {
+  const map = new Map<string, ContestChallengeItem>()
+  for (const item of props.challenges) {
+    map.set(item.challenge_id, item)
+  }
+  return map
+})
+
+const challengeByServiceId = computed(() => {
+  const map = new Map<string, ContestChallengeItem>()
+  for (const item of props.challenges) {
+    if (item.awd_service_id) {
+      map.set(item.awd_service_id, item)
+    }
+  }
+  return map
+})
+
 const currentRound = computed(() => workspace.value?.current_round)
 const myTeam = computed(() => workspace.value?.my_team ?? null)
 const topScore = computed(() => scoreboardRows.value[0]?.score ?? 0)
@@ -199,6 +217,16 @@ function getChallengeRuntimeKey(challenge: ContestChallengeItem | null | undefin
     return ''
   }
   return challenge.awd_service_id || challenge.challenge_id
+}
+
+function getChallengeTitleForEvent(event: { service_id?: string; challenge_id: string }): string {
+  if (event.service_id) {
+    const matchedByService = challengeByServiceId.value.get(event.service_id)
+    if (matchedByService) {
+      return matchedByService.title
+    }
+  }
+  return challengeByChallengeId.value.get(event.challenge_id)?.title || event.challenge_id
 }
 
 function getWorkspaceService(challenge: ContestChallengeItem): ContestAWDWorkspaceServiceData | undefined {
@@ -631,6 +659,9 @@ async function handleSubmit(challengeId: string, serviceKey: string, teamId: str
                   eventDirectionLabel(event.direction)
                 }}</span>
                 <span>{{ event.peer_team_name }}</span>
+                <span class="awd-event-row__challenge" data-testid="awd-feedback-challenge-title">
+                  {{ getChallengeTitleForEvent(event) }}
+                </span>
               </div>
               <div class="awd-event-row__meta">
                 <span>{{ eventResultLabel(event.is_success) }}</span>
@@ -917,6 +948,11 @@ async function handleSubmit(challengeId: string, serviceKey: string, teamId: str
 .awd-scoreboard-team {
   min-width: 0;
   color: var(--journal-ink);
+}
+
+.awd-event-row__challenge {
+  color: var(--journal-ink);
+  font-weight: 700;
 }
 
 .awd-scoreboard-score {
