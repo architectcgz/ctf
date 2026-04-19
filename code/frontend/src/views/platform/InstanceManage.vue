@@ -295,40 +295,38 @@ onMounted(() => {
         </div>
       </header>
 
-      <div
-        class="admin-summary-grid admin-instance-manage-shell__summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"
-      >
-        <article class="journal-note progress-card metric-panel-card">
-          <div class="admin-instance-manage-shell__metric-head">
-            <span class="journal-note-label progress-card-label metric-panel-label">当前可见</span>
+      <div class="metric-panel-grid--premium cols-3">
+        <article class="metric-panel-card--premium">
+          <div class="metric-panel-label">
+            <span>当前可见</span>
             <Server class="h-4 w-4" />
           </div>
-          <div class="journal-note-value progress-card-value metric-panel-value">
-            {{ totalCount }}
+          <div class="metric-panel-value">
+            {{ totalCount.toString().padStart(2, '0') }}
           </div>
-          <div class="journal-note-helper progress-card-hint metric-panel-helper">符合当前筛选条件的实例数量</div>
+          <div class="metric-panel-helper">符合当前筛选条件的实例数量</div>
         </article>
 
-        <article class="journal-note progress-card metric-panel-card">
-          <div class="admin-instance-manage-shell__metric-head">
-            <span class="journal-note-label progress-card-label metric-panel-label">运行中</span>
+        <article class="metric-panel-card--premium">
+          <div class="metric-panel-label">
+            <span>运行中</span>
             <Activity class="h-4 w-4" />
           </div>
-          <div class="journal-note-value progress-card-value metric-panel-value">
-            {{ runningCount }}
+          <div class="metric-panel-value">
+            {{ runningCount.toString().padStart(2, '0') }}
           </div>
-          <div class="journal-note-helper progress-card-hint metric-panel-helper">仍在占用环境资源的实例数量</div>
+          <div class="metric-panel-helper">仍在占用环境资源的实例数量</div>
         </article>
 
-        <article class="journal-note progress-card metric-panel-card">
-          <div class="admin-instance-manage-shell__metric-head">
-            <span class="journal-note-label progress-card-label metric-panel-label">即将到期</span>
+        <article class="metric-panel-card--premium">
+          <div class="metric-panel-label">
+            <span>即将到期</span>
             <AlertTriangle class="h-4 w-4" />
           </div>
-          <div class="journal-note-value progress-card-value metric-panel-value">
-            {{ expiringSoonCount }}
+          <div class="metric-panel-value">
+            {{ expiringSoonCount.toString().padStart(2, '0') }}
           </div>
-          <div class="journal-note-helper progress-card-hint metric-panel-helper">剩余时间不足 10 分钟的实例数量</div>
+          <div class="metric-panel-helper">剩余时间不足 10 分钟的实例</div>
         </article>
       </div>
 
@@ -583,26 +581,6 @@ onMounted(() => {
   background: color-mix(in srgb, var(--color-danger) 11%, var(--journal-surface));
 }
 
-.admin-instance-manage-shell__summary {
-  --admin-summary-grid-columns: repeat(3, minmax(0, 1fr));
-  --metric-panel-border: color-mix(in srgb, var(--workspace-brand) 16%, var(--workspace-line-soft));
-  --metric-panel-background:
-    radial-gradient(circle at top left, color-mix(in srgb, var(--workspace-brand) 10%, transparent), transparent 15rem),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--journal-surface) 98%, var(--color-bg-base)),
-      color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base))
-    );
-}
-
-.admin-instance-manage-shell__metric-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  color: var(--journal-ink);
-}
-
 .admin-instance-manage-filter-grid {
   display: grid;
   gap: var(--space-4);
@@ -733,11 +711,5 @@ onMounted(() => {
   border-radius: 1rem;
   background: color-mix(in srgb, var(--color-danger) 8%, var(--journal-surface));
   color: color-mix(in srgb, var(--color-danger) 76%, var(--journal-ink));
-}
-
-@media (max-width: 900px) {
-  .admin-instance-manage-shell__summary {
-    --admin-summary-grid-columns: 1fr;
-  }
 }
 </style>

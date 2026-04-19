@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, useTemplateRef } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { FileUp, RefreshCw, UserPlus, UserRoundCheck } from 'lucide-vue-next'
+import { FileUp, GraduationCap, RefreshCw, UserPlus, UserRoundCheck, Users } from 'lucide-vue-next'
 
 import type { AdminUserImportData, AdminUserListItem, UserStatus } from '@/api/contracts'
 import PlatformPaginationControls from '@/components/platform/PlatformPaginationControls.vue'
@@ -247,42 +247,49 @@ function handleImportChange(event: Event): void {
           </div>
         </header>
 
-        <div
-          class="admin-summary-grid user-overview-grid progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"
-        >
-          <div class="journal-note user-overview-stat progress-card metric-panel-card">
-            <div class="journal-note-label progress-card-label metric-panel-label">用户总量</div>
-            <div class="journal-note-value progress-card-value metric-panel-value">{{ total }}</div>
-            <div class="journal-note-helper progress-card-hint metric-panel-helper">
-              当前筛选条件下的用户总数
+        <div class="metric-panel-grid--premium cols-4">
+          <div class="metric-panel-card--premium">
+            <div class="metric-panel-label">
+              <span>用户总量</span>
+              <Users class="h-4 w-4" />
             </div>
+            <div class="metric-panel-value">
+              {{ total.toString().padStart(2, '0') }}
+            </div>
+            <div class="metric-panel-helper">当前条件下的用户总数</div>
           </div>
-          <div class="journal-note user-overview-stat progress-card metric-panel-card">
-            <div class="journal-note-label progress-card-label metric-panel-label">活跃账号</div>
-            <div class="journal-note-value progress-card-value metric-panel-value">
-              {{ activeCount }}
+
+          <div class="metric-panel-card--premium">
+            <div class="metric-panel-label">
+              <span>活跃账号</span>
+              <UserPlus class="h-4 w-4" />
             </div>
-            <div class="journal-note-helper progress-card-hint metric-panel-helper">
-              当前页处于 active 的账号
+            <div class="metric-panel-value">
+              {{ activeCount.toString().padStart(2, '0') }}
             </div>
+            <div class="metric-panel-helper">当前活跃状态的账号</div>
           </div>
-          <div class="journal-note user-overview-stat progress-card metric-panel-card">
-            <div class="journal-note-label progress-card-label metric-panel-label">教师角色</div>
-            <div class="journal-note-value progress-card-value metric-panel-value">
-              {{ teacherCount }}
+
+          <div class="metric-panel-card--premium">
+            <div class="metric-panel-label">
+              <span>教师角色</span>
+              <GraduationCap class="h-4 w-4" />
             </div>
-            <div class="journal-note-helper progress-card-hint metric-panel-helper">
-              当前页教师账号数量
+            <div class="metric-panel-value">
+              {{ teacherCount.toString().padStart(2, '0') }}
             </div>
+            <div class="metric-panel-helper">当前页教师账号数量</div>
           </div>
-          <div class="journal-note user-overview-stat progress-card metric-panel-card">
-            <div class="journal-note-label progress-card-label metric-panel-label">导入回执</div>
-            <div class="journal-note-value progress-card-value metric-panel-value">
-              {{ importSummary }}
+
+          <div class="metric-panel-card--premium">
+            <div class="metric-panel-label">
+              <span>导入回执</span>
+              <FileUp class="h-4 w-4" />
             </div>
-            <div class="journal-note-helper progress-card-hint metric-panel-helper">
-              最近一次导入结果
+            <div class="metric-panel-value">
+              {{ props.importResult ? (props.importResult.created + props.importResult.updated).toString().padStart(2, '0') : '00' }}
             </div>
+            <div class="metric-panel-helper">{{ importSummary }}</div>
           </div>
         </div>
 

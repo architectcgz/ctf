@@ -310,67 +310,49 @@ function getChallengeRow(row: unknown): PlatformChallengeListRow {
             </div>
           </div>
 
-          <div
-            class="manage-summary-grid progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"
-          >
-            <article class="journal-note progress-card metric-panel-card">
-              <div class="challenge-metric-head">
-                <span class="journal-note-label progress-card-label metric-panel-label">题目总量</span>
+          <div class="metric-panel-grid--premium cols-4">
+            <article class="metric-panel-card--premium">
+              <div class="metric-panel-label">
+                <span>题目总量</span>
                 <Book class="h-4 w-4" />
               </div>
-              <div class="challenge-metric-value-wrap">
-                <div class="journal-note-value progress-card-value metric-panel-value">
-                  {{ total.toString().padStart(2, '0') }}
-                </div>
-                <div class="journal-note-helper progress-card-hint metric-panel-helper">
-                  题目资源总计
-                </div>
+              <div class="metric-panel-value">
+                {{ total.toString().padStart(2, '0') }}
               </div>
+              <div class="metric-panel-helper">题目资源总计</div>
             </article>
 
-            <article class="journal-note progress-card metric-panel-card">
-              <div class="challenge-metric-head">
-                <span class="journal-note-label progress-card-label metric-panel-label">已发布</span>
+            <article class="metric-panel-card--premium">
+              <div class="metric-panel-label">
+                <span>已发布</span>
                 <CheckCircle class="h-4 w-4" />
               </div>
-              <div class="challenge-metric-value-wrap">
-                <div class="journal-note-value progress-card-value metric-panel-value">
-                  {{ publishedCount.toString().padStart(2, '0') }}
-                </div>
-                <div class="journal-note-helper progress-card-hint metric-panel-helper">
-                  线上公开题目
-                </div>
+              <div class="metric-panel-value">
+                {{ publishedCount.toString().padStart(2, '0') }}
               </div>
+              <div class="metric-panel-helper">线上公开题目</div>
             </article>
 
-            <article class="journal-note progress-card metric-panel-card">
-              <div class="challenge-metric-head">
-                <span class="journal-note-label progress-card-label metric-panel-label">草稿存量</span>
+            <article class="metric-panel-card--premium">
+              <div class="metric-panel-label">
+                <span>草稿存量</span>
                 <Edit3 class="h-4 w-4" />
               </div>
-              <div class="challenge-metric-value-wrap">
-                <div class="journal-note-value progress-card-value metric-panel-value">
-                  {{ draftCount.toString().padStart(2, '0') }}
-                </div>
-                <div class="journal-note-helper progress-card-hint metric-panel-helper">
-                  导入后仍待发布
-                </div>
+              <div class="metric-panel-value">
+                {{ draftCount.toString().padStart(2, '0') }}
               </div>
+              <div class="metric-panel-helper">导入后仍待发布</div>
             </article>
 
-            <article class="journal-note progress-card metric-panel-card">
-              <div class="challenge-metric-head">
-                <span class="journal-note-label progress-card-label metric-panel-label">已归档</span>
+            <article class="metric-panel-card--premium">
+              <div class="metric-panel-label">
+                <span>已归档</span>
                 <Calendar class="h-4 w-4" />
               </div>
-              <div class="challenge-metric-value-wrap">
-                <div class="journal-note-value progress-card-value metric-panel-value">
-                  {{ archivedCount.toString().padStart(2, '0') }}
-                </div>
-                <div class="journal-note-helper progress-card-hint metric-panel-helper">
-                  只读保留题目
-                </div>
+              <div class="metric-panel-value">
+                {{ archivedCount.toString().padStart(2, '0') }}
               </div>
+              <div class="metric-panel-helper">只读保留题目</div>
             </article>
           </div>
 
@@ -739,53 +721,6 @@ function getChallengeRow(row: unknown): PlatformChallengeListRow {
   border-color: color-mix(in srgb, var(--workspace-brand-ink) 62%, transparent);
 }
 
-.challenge-manage-shell .manage-summary-grid {
-  --admin-summary-grid-columns: repeat(4, minmax(0, 1fr));
-}
-
-.metric-panel-card.progress-card {
-  position: relative;
-  overflow: hidden;
-  transition: all 0.2s ease;
-}
-
-.metric-panel-card.progress-card:hover {
-  border-color: color-mix(in srgb, var(--journal-accent) 32%, var(--metric-panel-border));
-  transform: translateY(-1px);
-}
-
-.challenge-metric-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: var(--space-2);
-  color: var(--journal-muted);
-}
-
-.challenge-metric-value-wrap {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 0.75rem;
-}
-
-.challenge-metric-value-wrap .metric-panel-value,
-.challenge-metric-value-wrap .metric-panel-helper {
-  margin-top: 0;
-}
-
-.manage-summary-grid > :nth-child(2) .metric-panel-value {
-  color: var(--color-success);
-}
-
-.manage-summary-grid > :nth-child(3) .metric-panel-value {
-  color: color-mix(in srgb, var(--workspace-brand) 78%, var(--journal-ink));
-}
-
-.manage-summary-grid > :nth-child(4) .metric-panel-value {
-  color: color-mix(in srgb, var(--color-warning) 84%, var(--journal-ink));
-}
-
 .challenge-filter-grid {
   display: grid;
   gap: var(--space-4);
@@ -823,6 +758,10 @@ function getChallengeRow(row: unknown): PlatformChallengeListRow {
 .challenge-filter-select:focus {
   border-color: color-mix(in srgb, var(--journal-accent) 44%, transparent);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--journal-accent) 12%, transparent);
+}
+
+.challenge-manage-directory :deep(.workspace-directory-toolbar) {
+  margin-bottom: 0.5rem;
 }
 
 .challenge-list {
@@ -1062,16 +1001,7 @@ function getChallengeRow(row: unknown): PlatformChallengeListRow {
   }
 }
 
-@media (max-width: 1023px) {
-  .challenge-manage-shell .manage-summary-grid {
-    --admin-summary-grid-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
 @media (max-width: 767px) {
-  .challenge-manage-shell .manage-summary-grid {
-    --admin-summary-grid-columns: 1fr;
-  }
   .challenge-search-input {
     width: 100%;
   }

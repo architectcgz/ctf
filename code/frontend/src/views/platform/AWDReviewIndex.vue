@@ -124,45 +124,43 @@ function resetFilters(): void {
         </div>
       </header>
 
-      <div
-        class="admin-summary-grid admin-awd-review-shell__summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"
-      >
-        <article class="journal-note progress-card metric-panel-card">
-          <div class="admin-awd-review-shell__metric-head">
-            <span class="journal-note-label progress-card-label metric-panel-label">赛事数量</span>
+      <div class="metric-panel-grid--premium cols-3">
+        <article class="metric-panel-card--premium">
+          <div class="metric-panel-label">
+            <span>赛事数量</span>
             <FolderKanban class="h-4 w-4" />
           </div>
-          <div class="journal-note-value progress-card-value metric-panel-value">
-            {{ contests.length }}
+          <div class="metric-panel-value">
+            {{ contests.length.toString().padStart(2, '0') }}
           </div>
-          <div class="journal-note-helper progress-card-hint metric-panel-helper">
-            当前可进入平台复盘的 AWD 赛事总数
+          <div class="metric-panel-helper">
+            当前可进入复盘的 AWD 赛事
           </div>
         </article>
 
-        <article class="journal-note progress-card metric-panel-card">
-          <div class="admin-awd-review-shell__metric-head">
-            <span class="journal-note-label progress-card-label metric-panel-label">进行中</span>
+        <article class="metric-panel-card--premium">
+          <div class="metric-panel-label">
+            <span>进行中</span>
             <ScanEye class="h-4 w-4" />
           </div>
-          <div class="journal-note-value progress-card-value metric-panel-value">
-            {{ runningCount }}
+          <div class="metric-panel-value">
+            {{ runningCount.toString().padStart(2, '0') }}
           </div>
-          <div class="journal-note-helper progress-card-hint metric-panel-helper">
+          <div class="metric-panel-helper">
             仍在持续产出攻防信号的赛事
           </div>
         </article>
 
-        <article class="journal-note progress-card metric-panel-card">
-          <div class="admin-awd-review-shell__metric-head">
-            <span class="journal-note-label progress-card-label metric-panel-label">可导出报告</span>
+        <article class="metric-panel-card--premium">
+          <div class="metric-panel-label">
+            <span>可导出报告</span>
             <Waypoints class="h-4 w-4" />
           </div>
-          <div class="journal-note-value progress-card-value metric-panel-value">
-            {{ exportReadyCount }}
+          <div class="metric-panel-value">
+            {{ exportReadyCount.toString().padStart(2, '0') }}
           </div>
-          <div class="journal-note-helper progress-card-hint metric-panel-helper">
-            已结束并允许导出教师复盘报告的赛事
+          <div class="metric-panel-helper">
+            已允许导出教师复盘报告的赛事
           </div>
         </article>
       </div>
@@ -358,18 +356,6 @@ function resetFilters(): void {
   --ui-btn-color: var(--journal-ink);
 }
 
-.admin-awd-review-shell__summary {
-  --admin-summary-grid-columns: repeat(3, minmax(0, 1fr));
-  --metric-panel-border: color-mix(in srgb, var(--workspace-brand) 16%, var(--workspace-line-soft));
-  --metric-panel-background:
-    radial-gradient(circle at top left, color-mix(in srgb, var(--workspace-brand) 10%, transparent), transparent 15rem),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--journal-surface) 98%, var(--color-bg-base)),
-      color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base))
-    );
-}
-
 .admin-awd-review-shell__metric-head {
   display: flex;
   align-items: center;
@@ -474,7 +460,6 @@ function resetFilters(): void {
   min-height: 2rem;
   border: 1px solid color-mix(in srgb, var(--color-primary) 18%, transparent);
   border-radius: 999px;
-  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
   padding: 0 var(--space-3);
   font-size: var(--font-size-0-75);
   font-weight: 700;
@@ -510,10 +495,6 @@ function resetFilters(): void {
 }
 
 @media (max-width: 900px) {
-  .admin-awd-review-shell__summary {
-    --admin-summary-grid-columns: 1fr;
-  }
-
   .admin-awd-review-shell__hero-actions {
     width: 100%;
   }

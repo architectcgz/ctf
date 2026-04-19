@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import { computed, watch } from 'vue'
-import { Plus, RefreshCw } from 'lucide-vue-next'
+import {
+  Activity,
+  Layers,
+  Plus,
+  RefreshCw,
+  Trophy,
+  Users,
+} from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
 
 import PlatformContestFormPanel from '@/components/platform/contest/PlatformContestFormPanel.vue'
@@ -121,42 +128,49 @@ function openContestWorkbench(contest: ContestDetailData) {
           </div>
         </header>
 
-        <div
-          class="admin-summary-grid contest-overview-summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"
-        >
-          <div class="journal-note progress-card metric-panel-card">
-            <div class="journal-note-label progress-card-label metric-panel-label">赛事总量</div>
-            <div class="journal-note-value progress-card-value metric-panel-value">{{ total }}</div>
-            <div class="journal-note-helper progress-card-hint metric-panel-helper">
-              当前筛选条件下的赛事总数
+        <div class="metric-panel-grid--premium">
+          <div class="metric-panel-card--premium">
+            <div class="metric-panel-label">
+              <span>赛事总量</span>
+              <Trophy class="h-4 w-4" />
             </div>
+            <div class="metric-panel-value">
+              {{ total.toString().padStart(2, '0') }}
+            </div>
+            <div class="metric-panel-helper">当前条件下的赛事总数</div>
           </div>
-          <div class="journal-note progress-card metric-panel-card">
-            <div class="journal-note-label progress-card-label metric-panel-label">报名中</div>
-            <div class="journal-note-value progress-card-value metric-panel-value">
-              {{ registeringCount }}
+
+          <div class="metric-panel-card--premium">
+            <div class="metric-panel-label">
+              <span>报名中</span>
+              <Users class="h-4 w-4" />
             </div>
-            <div class="journal-note-helper progress-card-hint metric-panel-helper">
-              当前页开放报名的赛事
+            <div class="metric-panel-value">
+              {{ registeringCount.toString().padStart(2, '0') }}
             </div>
+            <div class="metric-panel-helper">当前页开放报名的赛事</div>
           </div>
-          <div class="journal-note progress-card metric-panel-card">
-            <div class="journal-note-label progress-card-label metric-panel-label">进行中</div>
-            <div class="journal-note-value progress-card-value metric-panel-value">
-              {{ runningCount }}
+
+          <div class="metric-panel-card--premium">
+            <div class="metric-panel-label">
+              <span>进行中</span>
+              <Activity class="h-4 w-4" />
             </div>
-            <div class="journal-note-helper progress-card-hint metric-panel-helper">
-              当前页正在进行的赛事
+            <div class="metric-panel-value">
+              {{ runningCount.toString().padStart(2, '0') }}
             </div>
+            <div class="metric-panel-helper">当前页正在进行的赛事</div>
           </div>
-          <div class="journal-note progress-card metric-panel-card">
-            <div class="journal-note-label progress-card-label metric-panel-label">AWD</div>
-            <div class="journal-note-value progress-card-value metric-panel-value">
-              {{ awdCount }}
+
+          <div class="metric-panel-card--premium">
+            <div class="metric-panel-label">
+              <span>AWD 模式</span>
+              <Layers class="h-4 w-4" />
             </div>
-            <div class="journal-note-helper progress-card-hint metric-panel-helper">
-              当前页已接入攻防运维链路的 AWD 赛事
+            <div class="metric-panel-value">
+              {{ awdCount.toString().padStart(2, '0') }}
             </div>
+            <div class="metric-panel-helper">已接入运维链路的赛事</div>
           </div>
         </div>
 
@@ -326,29 +340,15 @@ function openContestWorkbench(contest: ContestDetailData) {
   gap: var(--space-3);
 }
 
-.contest-overview-summary {
-  --admin-summary-grid-columns: repeat(4, minmax(0, 1fr));
-}
-
-.contest-overview-summary.metric-panel-default-surface.metric-panel-workspace-surface {
-  --metric-panel-border: color-mix(in srgb, var(--workspace-brand) 16%, var(--workspace-line-soft));
-  --metric-panel-background:
-    radial-gradient(
-      circle at top right,
-      color-mix(in srgb, var(--workspace-brand) 16%, transparent),
-      transparent 42%
-    ),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--workspace-panel) 94%, var(--color-bg-base)),
-      color-mix(in srgb, var(--workspace-panel-soft) 82%, transparent)
-    );
-  --metric-panel-shadow: var(--workspace-shadow-panel);
-}
-
 .contest-directory-section,
 .contest-create-panel {
-  --workspace-directory-section-padding: var(--space-5) var(--space-5-5);
+  --workspace-directory-section-padding: var(--space-2) 0;
+  background: transparent;
+  border: none;
+}
+
+.contest-directory-section :deep(.workspace-directory-toolbar) {
+  margin-bottom: 0.5rem;
 }
 
 .contest-create-head {
@@ -400,12 +400,6 @@ function openContestWorkbench(contest: ContestDetailData) {
   border-bottom-color: color-mix(in srgb, var(--journal-border) 68%, transparent);
 }
 
-@media (max-width: 1023px) {
-  .contest-overview-summary {
-    --admin-summary-grid-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
 @media (max-width: 767px) {
   .content-pane {
     gap: var(--space-5);
@@ -419,12 +413,6 @@ function openContestWorkbench(contest: ContestDetailData) {
 
   .contest-panel-actions {
     align-items: stretch;
-  }
-}
-
-@media (max-width: 640px) {
-  .contest-overview-summary {
-    --admin-summary-grid-columns: 1fr;
   }
 }
 </style>

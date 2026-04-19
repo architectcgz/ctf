@@ -274,40 +274,38 @@ onMounted(() => {
         </div>
       </header>
 
-      <div
-        class="admin-summary-grid admin-student-manage-shell__summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"
-      >
-        <article class="journal-note progress-card metric-panel-card">
-          <div class="admin-student-manage-shell__metric-head">
-            <span class="journal-note-label progress-card-label metric-panel-label">学生总量</span>
+      <div class="metric-panel-grid--premium cols-3">
+        <article class="metric-panel-card--premium">
+          <div class="metric-panel-label">
+            <span>学生总量</span>
             <GraduationCap class="h-4 w-4" />
           </div>
-          <div class="journal-note-value progress-card-value metric-panel-value">
-            {{ totalStudents }}
+          <div class="metric-panel-value">
+            {{ totalStudents.toString().padStart(2, '0') }}
           </div>
-          <div class="journal-note-helper progress-card-hint metric-panel-helper">平台已纳入学生</div>
+          <div class="metric-panel-helper">平台已纳入学生</div>
         </article>
 
-        <article class="journal-note progress-card metric-panel-card">
-          <div class="admin-student-manage-shell__metric-head">
-            <span class="journal-note-label progress-card-label metric-panel-label">可查看班级</span>
+        <article class="metric-panel-card--premium">
+          <div class="metric-panel-label">
+            <span>可查看班级</span>
             <UsersRound class="h-4 w-4" />
           </div>
-          <div class="journal-note-value progress-card-value metric-panel-value">
-            {{ activeClassCount }}
+          <div class="metric-panel-value">
+            {{ activeClassCount.toString().padStart(2, '0') }}
           </div>
-          <div class="journal-note-helper progress-card-hint metric-panel-helper">已有学生数据的班级数</div>
+          <div class="metric-panel-helper">已有学生数据的班级数</div>
         </article>
 
-        <article class="journal-note progress-card metric-panel-card">
-          <div class="admin-student-manage-shell__metric-head">
-            <span class="journal-note-label progress-card-label metric-panel-label">当前结果</span>
+        <article class="metric-panel-card--premium">
+          <div class="metric-panel-label">
+            <span>当前结果</span>
             <SearchCode class="h-4 w-4" />
           </div>
-          <div class="journal-note-value progress-card-value metric-panel-value">
-            {{ filteredTotal }}
+          <div class="metric-panel-value">
+            {{ filteredTotal.toString().padStart(2, '0') }}
           </div>
-          <div class="journal-note-helper progress-card-hint metric-panel-helper">当前筛选条件下的学生数量</div>
+          <div class="metric-panel-helper">当前条件下的学生数量</div>
         </article>
       </div>
 
@@ -534,26 +532,6 @@ onMounted(() => {
   background: color-mix(in srgb, var(--color-primary) 12%, var(--journal-surface));
 }
 
-.admin-student-manage-shell__summary {
-  --admin-summary-grid-columns: repeat(3, minmax(0, 1fr));
-  --metric-panel-border: color-mix(in srgb, var(--workspace-brand) 16%, var(--workspace-line-soft));
-  --metric-panel-background:
-    radial-gradient(circle at top left, color-mix(in srgb, var(--workspace-brand) 10%, transparent), transparent 15rem),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--journal-surface) 98%, var(--color-bg-base)),
-      color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base))
-    );
-}
-
-.admin-student-manage-shell__metric-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  color: var(--journal-ink);
-}
-
 .admin-student-manage-filter-grid {
   display: grid;
   gap: var(--space-4);
@@ -659,11 +637,5 @@ onMounted(() => {
   border-radius: 1rem;
   background: color-mix(in srgb, var(--color-danger) 8%, var(--journal-surface));
   color: color-mix(in srgb, var(--color-danger) 76%, var(--journal-ink));
-}
-
-@media (max-width: 900px) {
-  .admin-student-manage-shell__summary {
-    --admin-summary-grid-columns: 1fr;
-  }
 }
 </style>
