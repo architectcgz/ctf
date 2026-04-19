@@ -748,22 +748,9 @@ function handleImportChange(event: Event): void {
 }
 
 .user-table-shell {
-  border: 1px solid var(--user-table-border);
-  border-radius: 1.35rem;
-  background: color-mix(in srgb, var(--journal-surface) 98%, var(--color-bg-base));
-  padding: 0.25rem 0.9rem 0.4rem;
-}
-
-.user-table-shell :deep(.workspace-data-table__head-cell) {
-  border-bottom-color: var(--user-table-border);
-}
-
-.user-table-shell :deep(.workspace-data-table__row) {
-  border-bottom-color: var(--user-row-divider);
-}
-
-.user-table-shell :deep(.workspace-data-table__body tr:last-child) {
-  border-bottom-color: transparent;
+  --workspace-directory-shell-border: var(--user-table-border);
+  --workspace-directory-head-divider: var(--user-table-border);
+  --workspace-directory-row-divider: var(--user-row-divider);
 }
 
 .user-table-row {
