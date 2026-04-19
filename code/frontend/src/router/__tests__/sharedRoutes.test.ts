@@ -85,33 +85,45 @@ describe('shared route canonical paths', () => {
       'AdminAWDServiceTemplateLibrary'
     )
     expect(findChild('platform/images')?.name).toBe('ImageManage')
-
-    expect(findChild('admin/classes')?.redirect).toBeTruthy()
-    expect(findChild('admin/students')?.redirect).toBeTruthy()
-    expect(findChild('admin/classes/:className')?.redirect).toBeTruthy()
-    expect(findChild('admin/classes/:className/students/:studentId')?.redirect).toBeTruthy()
-    expect(
-      findChild('admin/classes/:className/students/:studentId/review-archive')?.redirect
-    ).toBeTruthy()
-    expect(findChild('admin/awd-reviews')?.redirect).toBeTruthy()
-    expect(findChild('admin/awd-reviews/:contestId')?.redirect).toBeTruthy()
-    expect(findChild('admin/instances')?.redirect).toBeTruthy()
-    expect(findChild('admin/challenges')?.redirect).toBeTruthy()
-    expect(findChild('admin/challenges/package-format')?.redirect).toBeTruthy()
-    expect(findChild('admin/challenges/imports')?.redirect).toBeTruthy()
-    expect(findChild('admin/challenges/imports/:importId')?.redirect).toBeTruthy()
-    expect(findChild('admin/challenges/:id')?.redirect).toBeTruthy()
-    expect(findChild('admin/challenges/:id/topology')?.redirect).toBeTruthy()
-    expect(findChild('admin/challenges/:id/writeup')?.redirect).toBeTruthy()
-    expect(findChild('admin/challenges/:id/writeup/view')?.redirect).toBeTruthy()
-    expect(findChild('admin/environment-templates')?.redirect).toBeTruthy()
-    expect(findChild('admin/awd-service-templates')?.redirect).toBeTruthy()
-    expect(findChild('admin/images')?.redirect).toBeTruthy()
   })
 
-  it('keeps contest management on admin paths and exposes a dedicated contest edit route', () => {
-    expect(findChild('admin/contests')?.name).toBe('ContestManage')
-    expect(findChild('admin/contests/:id/edit')?.name).toBe('ContestEdit')
-    expect(findChild('platform/contests')?.redirect).toBeTruthy()
+  it('moves contest management to platform paths without keeping admin redirects', () => {
+    expect(findChild('platform/contests')?.name).toBe('ContestManage')
+    expect(findChild('platform/contests/:id/edit')?.name).toBe('ContestEdit')
+    expect(findChild('admin/contests')).toBeUndefined()
+    expect(findChild('admin/contests/:id/edit')).toBeUndefined()
+  })
+
+  it('removes legacy admin-prefixed frontend routes', () => {
+    const removedAdminPaths = [
+      'admin/dashboard',
+      'admin/classes',
+      'admin/students',
+      'admin/classes/:className',
+      'admin/classes/:className/trend',
+      'admin/classes/:className/review',
+      'admin/classes/:className/insights',
+      'admin/classes/:className/intervention',
+      'admin/classes/:className/students/:studentId',
+      'admin/classes/:className/students/:studentId/review-archive',
+      'admin/awd-reviews',
+      'admin/awd-reviews/:contestId',
+      'admin/instances',
+      'admin/challenges',
+      'admin/challenges/package-format',
+      'admin/challenges/imports',
+      'admin/challenges/imports/:importId',
+      'admin/challenges/:id',
+      'admin/challenges/:id/topology',
+      'admin/challenges/:id/writeup',
+      'admin/challenges/:id/writeup/view',
+      'admin/environment-templates',
+      'admin/awd-service-templates',
+      'admin/images',
+    ]
+
+    removedAdminPaths.forEach((path) => {
+      expect(findChild(path)).toBeUndefined()
+    })
   })
 })

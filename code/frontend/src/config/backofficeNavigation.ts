@@ -147,8 +147,7 @@ const backofficeModules: BackofficeModule[] = [
         label: 'AWD服务模板',
         path: '/platform/awd-service-templates',
         roles: ['teacher', 'admin'],
-        isMatch: (path) =>
-          matchAny(path, ['/platform/awd-service-templates', '/admin/awd-service-templates']),
+        isMatch: (path) => matchAny(path, ['/platform/awd-service-templates']),
       },
       {
         routeName: 'ImageManage',
