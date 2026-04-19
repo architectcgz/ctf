@@ -1,9 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
+import { createPinia, setActivePinia } from 'pinia'
 
 import TeacherStudentReviewArchive from '../TeacherStudentReviewArchive.vue'
 import reviewArchiveSource from '../TeacherStudentReviewArchive.vue?raw'
 import reviewArchiveHeroSource from '@/components/teacher/review-archive/ReviewArchiveHero.vue?raw'
+import { useAuthStore } from '@/stores/auth'
 
 const pushMock = vi.fn()
 const routeMock = {
@@ -36,6 +38,7 @@ vi.mock('@/api/assessment', () => assessmentApiMocks)
 
 describe('TeacherStudentReviewArchive', () => {
   beforeEach(() => {
+    setActivePinia(createPinia())
     pushMock.mockReset()
     routeMock.params.className = 'Class A'
     routeMock.params.studentId = 'stu-1'
@@ -178,6 +181,17 @@ describe('TeacherStudentReviewArchive', () => {
         ],
       },
     })
+
+    const authStore = useAuthStore()
+    authStore.setAuth(
+      {
+        id: 'teacher-1',
+        username: 'teacher',
+        role: 'teacher',
+        class_name: 'Class A',
+      },
+      'token'
+    )
   })
 
   it('应该渲染完整复盘页的核心区块', async () => {
@@ -203,5 +217,37 @@ describe('TeacherStudentReviewArchive', () => {
     expect(reviewArchiveHeroSource).toContain('class="ui-btn ui-btn--secondary"')
     expect(reviewArchiveHeroSource).toContain('class="ui-btn ui-btn--primary"')
     expect(reviewArchiveHeroSource).not.toContain('<ElButton')
+  })
+
+  it('管理员在复盘归档页返回分析和班级页时应使用后台教学运营路由', async () => {
+    const authStore = useAuthStore()
+    authStore.setAuth(
+      {
+        id: 'admin-1',
+        username: 'admin',
+        role: 'admin',
+        class_name: 'Class A',
+      },
+      'token'
+    )
+
+    const wrapper = mount(TeacherStudentReviewArchive)
+
+    await flushPromises()
+
+    wrapper.findComponent({ name: 'ReviewArchiveHero' }).vm.$emit('openAnalysis')
+    wrapper.findComponent({ name: 'ReviewArchiveHero' }).vm.$emit('back')
+
+    expect(pushMock).toHaveBeenCalledWith({
+      name: 'AdminStudentAnalysis',
+      params: {
+        className: 'Class A',
+        studentId: 'stu-1',
+      },
+    })
+    expect(pushMock).toHaveBeenCalledWith({
+      name: 'AdminClassStudents',
+      params: { className: 'Class A' },
+    })
   })
 })

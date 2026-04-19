@@ -9,7 +9,10 @@ import TeacherClassReportExportDialog from '@/components/teacher/reports/Teacher
 import { useStudentDirectoryQuery } from '@/composables/useStudentDirectoryQuery'
 import { useStudentFilters } from '@/composables/useStudentFilters'
 import { useAuthStore } from '@/stores/auth'
-import { resolveClassManagementRouteName } from '@/utils/classManagementRouting'
+import {
+  resolveClassManagementRouteName,
+  resolveStudentAnalysisRouteName,
+} from '@/utils/teachingWorkspaceRouting'
 import { DEFAULT_PAGE_SIZE } from '@/utils/constants'
 
 const router = useRouter()
@@ -100,7 +103,7 @@ async function initialize(): Promise<void> {
 function openStudent(studentId: string): void {
   const student = students.value.find((item) => item.id === studentId)
   router.push({
-    name: 'TeacherStudentAnalysis',
+    name: resolveStudentAnalysisRouteName(authStore.user?.role),
     params: {
       className: selectedClassName.value || student?.class_name || '',
       studentId,

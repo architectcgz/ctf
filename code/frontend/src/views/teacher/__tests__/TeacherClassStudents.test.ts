@@ -9,6 +9,7 @@ import classStudentsPageSource from '@/components/teacher/class-management/Class
 
 const pushMock = vi.fn()
 const routeMock = {
+  name: 'TeacherClassStudents',
   params: {
     className: 'Class A',
   },
@@ -57,6 +58,7 @@ describe('TeacherClassStudents', () => {
     setActivePinia(createPinia())
     localStorage.clear()
     pushMock.mockReset()
+    routeMock.name = 'TeacherClassStudents'
     routeMock.params.className = 'Class A'
     routeMock.query.panel = 'students'
     teacherApiMocks.getClasses.mockReset()
@@ -177,29 +179,31 @@ describe('TeacherClassStudents', () => {
     expect(wrapper.find('.teacher-topbar').exists()).toBe(true)
     expect(wrapper.find('.teacher-summary').exists()).toBe(true)
     expect(wrapper.find('.teacher-controls').exists()).toBe(true)
-    expect(wrapper.find('[role="tablist"]').exists()).toBe(true)
-    expect(wrapper.find('#class-tab-overview').exists()).toBe(true)
-    expect(wrapper.find('#class-tab-trend').exists()).toBe(true)
-    expect(wrapper.find('#class-tab-students').exists()).toBe(true)
-    expect(wrapper.find('#class-tab-review').exists()).toBe(true)
-    expect(wrapper.find('#class-tab-insight').exists()).toBe(true)
-    expect(wrapper.find('#class-tab-action').exists()).toBe(true)
+    expect(wrapper.find('[role="tablist"]').exists()).toBe(false)
+    expect(wrapper.find('#class-tab-overview').exists()).toBe(false)
+    expect(wrapper.find('#class-tab-trend').exists()).toBe(false)
+    expect(wrapper.find('#class-tab-students').exists()).toBe(false)
+    expect(wrapper.find('#class-tab-review').exists()).toBe(false)
+    expect(wrapper.find('#class-tab-insight').exists()).toBe(false)
+    expect(wrapper.find('#class-tab-action').exists()).toBe(false)
     expect(wrapper.text()).toContain('alice')
     expect(wrapper.text()).toContain('bob')
     expect(wrapper.text()).toContain('50%')
     expect(wrapper.text()).toContain('280')
-    expect(wrapper.text()).toContain('crypto')
-    expect(wrapper.text()).toContain('教学复盘结论')
-    expect(wrapper.text()).toContain('班级活跃度需要补强')
-    expect(wrapper.text()).toContain('优先补薄弱维度')
-    expect(wrapper.text()).toContain('先跟进重点学生')
-    expect(wrapper.text()).toContain('班级 Top 学生')
-    expect(wrapper.text()).toContain('薄弱维度分布')
-    expect(wrapper.text()).toContain('优先介入学生')
-    expect(wrapper.text()).toContain('建议训练题')
-    expect(wrapper.text()).toContain('推荐训练题')
-    expect(wrapper.text()).toContain('crypto-lab')
-    await wrapper.find('#class-tab-students').trigger('click')
+    expect(wrapper.text()).toContain('查看训练趋势')
+    expect(wrapper.text()).toContain('查看教学复盘')
+    expect(wrapper.text()).toContain('查看学生洞察')
+    expect(wrapper.text()).toContain('查看介入建议')
+    expect(wrapper.text()).not.toContain('教学复盘结论')
+    expect(wrapper.text()).not.toContain('班级活跃度需要补强')
+    expect(wrapper.text()).not.toContain('优先补薄弱维度')
+    expect(wrapper.text()).not.toContain('先跟进重点学生')
+    expect(wrapper.text()).not.toContain('班级 Top 学生')
+    expect(wrapper.text()).not.toContain('薄弱维度分布')
+    expect(wrapper.text()).not.toContain('优先介入学生')
+    expect(wrapper.text()).not.toContain('建议训练题')
+    expect(wrapper.text()).not.toContain('推荐训练题')
+    expect(wrapper.text()).not.toContain('crypto-lab')
     expect(wrapper.find('.teacher-directory-head').exists()).toBe(true)
     expect(wrapper.findAll('.teacher-directory-row')).toHaveLength(2)
     expect(wrapper.find('.teacher-directory-head').text()).toContain('学号')
@@ -208,25 +212,37 @@ describe('TeacherClassStudents', () => {
     expect(wrapper.find('.teacher-directory-row-title').attributes('title')).toBe('Alice Zhang')
     expect(wrapper.find('.teacher-directory-row-points').attributes('title')).toBe('@alice')
     expect(teacherApiMocks.getClassReview).toHaveBeenCalledWith('Class A')
-    expect(teacherApiMocks.getStudentRecommendations).toHaveBeenCalledWith('stu-1')
+    expect(teacherApiMocks.getStudentRecommendations).not.toHaveBeenCalled()
 
     wrapper.findComponent({ name: 'ClassStudentsPage' }).vm.$emit('openStudent', 'stu-1')
+    wrapper.findComponent({ name: 'ClassStudentsPage' }).vm.$emit('openWorkspaceSection', 'trend')
 
     expect(pushMock).toHaveBeenCalledWith({
       name: 'TeacherStudentAnalysis',
       params: { className: 'Class A', studentId: 'stu-1' },
     })
+    expect(pushMock).toHaveBeenCalledWith({
+      name: 'TeacherClassTrend',
+      params: { className: 'Class A' },
+      query: {},
+    })
   })
 
-  it('班级详情页应采用与教学概览一致的顶部 tabs 壳层结构，并去掉页面内重复顶栏', () => {
+  it('班级详情页应改为单一工作台布局，而不是继续在页内维护 tabs', () => {
     expect(classStudentsPageSource).toMatch(/class="[^"]*\bworkspace-shell\b[^"]*"/)
     expect(classStudentsPageSource).toMatch(/class="[^"]*\bteacher-management-shell\b[^"]*"/)
     expect(classStudentsPageSource).not.toContain('class="workspace-topbar"')
-    expect(classStudentsPageSource).toContain('class="top-tabs"')
+    expect(classStudentsPageSource).not.toContain('class="top-tabs"')
+    expect(classStudentsPageSource).not.toContain("from '@/composables/useUrlSyncedTabs'")
     expect(classStudentsPageSource).toContain('class="content-pane"')
-    expect(classStudentsPageSource).toMatch(
-      /<div class="[^"]*\bworkspace-shell\b[^"]*">[\s\S]*<nav class="top-tabs"[\s\S]*<main class="content-pane">/s
-    )
+    expect(classStudentsPageSource).toContain('<h1 class="teacher-title">{{ workspaceTitle }}</h1>')
+    expect(classStudentsPageSource).toContain('<h2 class="list-heading__title">学生列表</h2>')
+    expect(classStudentsPageSource).toContain('v-for="entry in workspaceEntries"')
+    expect(classStudentsPageSource).toContain("@click=\"emit('openWorkspaceSection', entry.key)\"")
+    expect(classStudentsPageSource).not.toContain('TeacherClassTrendPanel')
+    expect(classStudentsPageSource).not.toContain('TeacherClassReviewPanel')
+    expect(classStudentsPageSource).not.toContain('TeacherClassInsightsPanel')
+    expect(classStudentsPageSource).not.toContain('TeacherInterventionPanel')
     expect(classStudentsPageSource).toMatch(
       /class="teacher-directory-row-title"[\s\S]*:title="student\.name \|\| '未设置姓名'"/s
     )
@@ -302,7 +318,84 @@ describe('TeacherClassStudents', () => {
     expect(pushMock).toHaveBeenCalledWith({ name: 'AdminClassManagement' })
   })
 
-  it('选择班级下拉框后应跳转到对应班级页面并保持 panel 查询参数', async () => {
+  it('管理员从班级详情进入学生分析和返回概览时应使用后台路由', async () => {
+    const authStore = useAuthStore()
+    authStore.setAuth(
+      {
+        id: 'admin-1',
+        username: 'admin',
+        role: 'admin',
+        class_name: 'Class A',
+      },
+      'token'
+    )
+
+    const wrapper = mount(TeacherClassStudents, {
+      global: {
+        components: {
+          ElTable,
+          ElTableColumn,
+          ElButton,
+        },
+        stubs: {
+          LineChart: true,
+          TeacherClassReportExportDialog: reportDialogStub,
+        },
+      },
+    })
+
+    await flushPromises()
+    await flushPromises()
+
+    wrapper.findComponent({ name: 'ClassStudentsPage' }).vm.$emit('openStudent', 'stu-1')
+    wrapper.findComponent({ name: 'ClassStudentsPage' }).vm.$emit('openDashboard')
+
+    expect(pushMock).toHaveBeenCalledWith({
+      name: 'AdminStudentAnalysis',
+      params: { className: 'Class A', studentId: 'stu-1' },
+    })
+    expect(pushMock).toHaveBeenCalledWith({ name: 'AdminDashboard' })
+  })
+
+  it('管理员从班级总览进入独立工作区子页面时应使用后台路由', async () => {
+    const authStore = useAuthStore()
+    authStore.setAuth(
+      {
+        id: 'admin-1',
+        username: 'admin',
+        role: 'admin',
+        class_name: 'Class A',
+      },
+      'token'
+    )
+
+    const wrapper = mount(TeacherClassStudents, {
+      global: {
+        components: {
+          ElTable,
+          ElTableColumn,
+          ElButton,
+        },
+        stubs: {
+          LineChart: true,
+          TeacherClassReportExportDialog: reportDialogStub,
+        },
+      },
+    })
+
+    await flushPromises()
+    await flushPromises()
+
+    wrapper.findComponent({ name: 'ClassStudentsPage' }).vm.$emit('openWorkspaceSection', 'review')
+
+    expect(pushMock).toHaveBeenCalledWith({
+      name: 'AdminClassReview',
+      params: { className: 'Class A' },
+      query: {},
+    })
+  })
+
+  it('选择班级下拉框后应跳转到对应班级页面，并清理旧的 panel 查询参数', async () => {
     teacherApiMocks.getClasses.mockResolvedValue([
       { name: 'Class A', student_count: 2 },
       { name: 'Class B', student_count: 1 },
@@ -324,7 +417,6 @@ describe('TeacherClassStudents', () => {
 
     await flushPromises()
     await flushPromises()
-    await wrapper.find('#class-tab-students').trigger('click')
 
     const classSelect = wrapper.find('select[aria-label="选择班级"]')
     expect(classSelect.exists()).toBe(true)
@@ -335,7 +427,7 @@ describe('TeacherClassStudents', () => {
     expect(pushMock).toHaveBeenCalledWith({
       name: 'TeacherClassStudents',
       params: { className: 'Class B' },
-      query: { panel: 'students' },
+      query: {},
     })
   })
 
@@ -441,7 +533,6 @@ describe('TeacherClassStudents', () => {
     })
 
     await flushPromises()
-    await wrapper.find('#class-tab-students').trigger('click')
 
     const studentNoInput = wrapper.find('input[placeholder="输入学号精确查询"]')
     await studentNoInput.setValue('20260001')
@@ -493,8 +584,6 @@ describe('TeacherClassStudents', () => {
 
     await flushPromises()
     await flushPromises()
-
-    await wrapper.find('#class-tab-students').trigger('click')
 
     expect(wrapper.text()).not.toContain('学生筛选')
 

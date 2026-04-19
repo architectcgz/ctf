@@ -13,11 +13,18 @@ import ReviewArchiveReflectionPanel from '@/components/teacher/review-archive/Re
 import { useTeacherStudentReviewArchive } from '@/composables/useTeacherStudentReviewArchive'
 import { useReportStatusPolling } from '@/composables/useReportStatusPolling'
 import { useToast } from '@/composables/useToast'
+import { useAuthStore } from '@/stores/auth'
 import { formatDate } from '@/utils/format'
+import {
+  resolveClassStudentsRouteName,
+  resolveStudentAnalysisRouteName,
+  resolveStudentManagementRouteName,
+} from '@/utils/teachingWorkspaceRouting'
 
 const route = useRoute()
 const router = useRouter()
 const toast = useToast()
+const authStore = useAuthStore()
 const { start: startPolling, stop: stopPolling } = useReportStatusPolling()
 
 const className = computed(() => String(route.params.className || ''))
@@ -48,7 +55,7 @@ const rankedSkillDimensions = computed(() =>
 function openStudentAnalysis(): void {
   if (!studentId.value || !className.value) return
   router.push({
-    name: 'TeacherStudentAnalysis',
+    name: resolveStudentAnalysisRouteName(authStore.user?.role),
     params: {
       className: className.value,
       studentId: studentId.value,
@@ -58,11 +65,11 @@ function openStudentAnalysis(): void {
 
 function goBack(): void {
   if (!className.value) {
-    router.push({ name: 'TeacherStudentManagement' })
+    router.push({ name: resolveStudentManagementRouteName(authStore.user?.role) })
     return
   }
   router.push({
-    name: 'TeacherClassStudents',
+    name: resolveClassStudentsRouteName(authStore.user?.role),
     params: { className: className.value },
   })
 }

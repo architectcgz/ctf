@@ -499,4 +499,43 @@ describe('TeacherStudentAnalysis', () => {
 
     expect(pushMock).toHaveBeenCalledWith({ name: 'AdminClassManagement' })
   })
+
+  it('管理员在学员分析内继续切换学生链路时应停留在后台教学运营路由', async () => {
+    const authStore = useAuthStore()
+    authStore.setAuth(
+      {
+        id: 'admin-1',
+        username: 'admin',
+        role: 'admin',
+        class_name: 'Class A',
+      },
+      'token'
+    )
+
+    const wrapper = mount(TeacherStudentAnalysis, {
+      global: {
+        stubs: {
+          SkillRadar: true,
+          TeacherClassReportExportDialog: reportDialogStub,
+        },
+      },
+    })
+
+    await flushPromises()
+
+    wrapper.findComponent({ name: 'StudentAnalysisPage' }).vm.$emit('openClassStudents')
+    wrapper.findComponent({ name: 'StudentAnalysisPage' }).vm.$emit('openReviewArchive')
+
+    expect(pushMock).toHaveBeenCalledWith({
+      name: 'AdminClassStudents',
+      params: { className: 'Class A' },
+    })
+    expect(pushMock).toHaveBeenCalledWith({
+      name: 'AdminStudentReviewArchive',
+      params: {
+        className: 'Class A',
+        studentId: 'stu-1',
+      },
+    })
+  })
 })

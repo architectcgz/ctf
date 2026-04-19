@@ -4,9 +4,12 @@ import { useRouter } from 'vue-router'
 
 import { listTeacherAWDReviews } from '@/api/teacher'
 import type { TeacherAWDReviewContestItemData } from '@/api/contracts'
+import { useAuthStore } from '@/stores/auth'
+import { resolveAwdReviewDetailRouteName } from '@/utils/teachingWorkspaceRouting'
 
 export function useTeacherAwdReviewIndex() {
   const router = useRouter()
+  const authStore = useAuthStore()
 
   const loading = ref(false)
   const error = ref<string | null>(null)
@@ -56,7 +59,7 @@ export function useTeacherAwdReviewIndex() {
 
   function openContest(contestId: string): void {
     router.push({
-      name: 'TeacherAWDReviewDetail',
+      name: resolveAwdReviewDetailRouteName(authStore.user?.role),
       params: { contestId },
     })
   }

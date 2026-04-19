@@ -5,7 +5,10 @@ import StudentAnalysisPage from '@/components/teacher/class-management/StudentAn
 import TeacherClassReportExportDialog from '@/components/teacher/reports/TeacherClassReportExportDialog.vue'
 import { useTeacherStudentAnalysisPage } from '@/composables/useTeacherStudentAnalysisPage'
 import { useAuthStore } from '@/stores/auth'
-import { resolveClassManagementRouteName } from '@/utils/classManagementRouting'
+import {
+  resolveClassManagementRouteName,
+  resolveClassStudentsRouteName,
+} from '@/utils/teachingWorkspaceRouting'
 
 const reportDialogVisible = ref(false)
 const authStore = useAuthStore()
@@ -86,7 +89,10 @@ function openClassReportDialog(): void {
       router.push({ name: resolveClassManagementRouteName(authStore.user?.role) })
     "
     @open-class-students="
-      router.push({ name: 'TeacherClassStudents', params: { className: selectedClassName } })
+      router.push({
+        name: resolveClassStudentsRouteName(authStore.user?.role),
+        params: { className: selectedClassName },
+      })
     "
     @open-report-export="openClassReportDialog"
     @open-review-archive="openReviewArchivePage"

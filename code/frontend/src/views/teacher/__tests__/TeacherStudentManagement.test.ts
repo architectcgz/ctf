@@ -59,7 +59,13 @@ describe('TeacherStudentManagement', () => {
           recent_event_count: 0,
           class_name: 'Class A',
         },
-        { id: 'stu-2', username: 'bob', recent_event_count: 2, solved_count: 1, class_name: 'Class A' },
+        {
+          id: 'stu-2',
+          username: 'bob',
+          recent_event_count: 2,
+          solved_count: 1,
+          class_name: 'Class A',
+        },
       ]
       const filtered = all.filter((item) => {
         const keywordMatched =
@@ -237,6 +243,41 @@ describe('TeacherStudentManagement', () => {
     wrapper.findComponent({ name: 'StudentManagementPage' }).vm.$emit('openClassManagement')
 
     expect(pushMock).toHaveBeenCalledWith({ name: 'AdminClassManagement' })
+  })
+
+  it('管理员从学生管理进入学员分析时应停留在后台教学运营路由', async () => {
+    const authStore = useAuthStore()
+    authStore.setAuth(
+      {
+        id: 'admin-1',
+        username: 'admin',
+        role: 'admin',
+        class_name: 'Class A',
+      },
+      'token'
+    )
+
+    const wrapper = mount(TeacherStudentManagement, {
+      global: {
+        components: {
+          ElTable,
+          ElTableColumn,
+          ElButton,
+        },
+        stubs: {
+          TeacherClassReportExportDialog: reportDialogStub,
+        },
+      },
+    })
+
+    await flushPromises()
+
+    wrapper.findComponent({ name: 'StudentManagementPage' }).vm.$emit('openStudent', 'stu-1')
+
+    expect(pushMock).toHaveBeenCalledWith({
+      name: 'AdminStudentAnalysis',
+      params: { className: 'Class A', studentId: 'stu-1' },
+    })
   })
 
   it('应该忽略过期搜索请求的返回结果', async () => {
