@@ -217,9 +217,10 @@
 
 遗留说明：
 
-- 数据库中的 `contest_challenges.awd_*` 字段仍在清理路径上，当前主要作为历史兼容载体存在
 - `ContestChallenge` 代码模型与 AWD 主测试夹具已经移除这些字段，不再围绕 `contest_challenges.awd_*` 建模或 seed
-- 后续收口重点是逐步去掉剩余非核心入口对这些遗留字段的依赖
+- 本次通过迁移 `000062_drop_legacy_awd_fields_from_contest_challenges` 将这些列从 `contest_challenges` 正式删除
+- 如需回退，只允许从 `contest_awd_services` 回填这些列，不再恢复其主事实源地位
+- 后续兼容清理重点转到 `contest_awd_services.runtime_config.challenge_id` 等影子字段
 
 ### 6.4 `service_id` / `challenge_id` 的职责边界
 
@@ -508,7 +509,7 @@
 
 第二步（收尾中）：
 
-- 将 `contest_challenges.awd_*` 明确降级为遗留兼容字段，不再作为管理端主写入口或运行态主读来源
+- 通过 `000062` 删除 `contest_challenges.awd_*`，彻底结束 relation 表承载 AWD service 配置的阶段
 - 将 `contest_awd_services.runtime_config.challenge_id` 明确为派生影子字段，后续逐步移除剩余读取点
 - 将运行态事实表中的 `challenge_id` 固定为由 `service_id` 回填的展示字段，待旧查询和导出切换完成后再评估是否继续保留
 - 旧 AWD 赛事若没有显式配置 checker，则使用默认 `http_standard`
@@ -523,7 +524,7 @@
 - `contest_awd_services.runtime_config.challenge_id` 与运行态事实表中的 `challenge_id` 继续作为兼容影子字段存在
 - 这些影子字段现在只允许留在内部存储与兼容测试中；管理接口、前端合成视图与新运行链路不得继续透传或回退读取
 - checker preview 在“创建前、service 尚未落库”场景下允许继续接受 `challenge_id`，但 service 已存在时必须切到 `service_id`
-- 少量仍依赖 `contest_challenges.awd_*` 的内部代码路径视为待清理债务，不再新增新依赖
+- 本次删列不触碰 `contest_awd_services.runtime_config.challenge_id`；它仍是下一阶段单独处理的兼容主题
 
 兼容范围之外，边界明确如下：
 
@@ -594,8 +595,8 @@
 - `contest_challenges` 只承担赛事题目关系与编排字段
 - `awd_team_services` 承担每轮 checker 结果
 - `service_id` 是 AWD 运行态主身份，`challenge_id` 降级为题目元数据与兼容展示字段
-- `contest_challenges.awd_*` 与 `runtime_config.challenge_id` 属于待清理兼容字段，不再作为主读写契约
-- 当前代码层已经不再把 `contest_challenges.awd_*` 暴露为 `ContestChallenge` 主模型字段，后续可以继续按迁移节奏处理存量列
+- `contest_challenges.awd_*` 已通过 `000062` 从 relation 表删除，不再存在于主 schema
+- `contest_awd_services.runtime_config.challenge_id` 仍属于待清理兼容影子字段，但不在这次删列迁移内处理
 - 第一版只实现 `http_standard` checker
 - 排行榜升级为 `sla / attack / defense / total`
 - 保留现有 flag 轮换、攻击提交流程、流量监控和后台面板框架
