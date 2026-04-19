@@ -2,19 +2,13 @@ package commands
 
 import (
 	"context"
-	"errors"
-	"strings"
-
-	redis "github.com/redis/go-redis/v9"
-	"gorm.io/gorm"
 
 	"ctf-platform/internal/dto"
-	"ctf-platform/internal/model"
 	"ctf-platform/pkg/errcode"
 )
 
 func (s *ChallengeService) RemoveChallengeFromContest(ctx context.Context, contestID, challengeID int64) error {
-	contest, err := s.ensureMutableContest(ctx, contestID)
+	_, err := s.ensureMutableContest(ctx, contestID)
 	if err != nil {
 		return err
 	}
@@ -38,17 +32,11 @@ func (s *ChallengeService) RemoveChallengeFromContest(ctx context.Context, conte
 	if err := s.repo.RemoveChallenge(ctx, contestID, challengeID); err != nil {
 		return err
 	}
-	if contest.Mode == model.ContestModeAWD && s.awdRepo != nil {
-		if err := s.awdRepo.DeleteContestAWDServiceByContestAndChallenge(ctx, contestID, challengeID); err != nil {
-			return errcode.ErrInternal.WithCause(err)
-		}
-	}
 	return nil
 }
 
 func (s *ChallengeService) UpdateChallenge(ctx context.Context, contestID, challengeID int64, req *dto.UpdateContestChallengeReq) error {
-	contest, err := s.ensureMutableContest(ctx, contestID)
-	if err != nil {
+	if _, err := s.ensureMutableContest(ctx, contestID); err != nil {
 		return err
 	}
 
@@ -59,11 +47,6 @@ func (s *ChallengeService) UpdateChallenge(ctx context.Context, contestID, chall
 	if !exists {
 		return errcode.ErrChallengeNotInContest
 	}
-	current, err := s.repo.FindChallenge(ctx, contestID, challengeID)
-	if err != nil {
-		return errcode.ErrInternal.WithCause(err)
-	}
-
 	updates := make(map[string]any)
 	if req.Points != nil {
 		updates["points"] = *req.Points
@@ -74,144 +57,9 @@ func (s *ChallengeService) UpdateChallenge(ctx context.Context, contestID, chall
 	if req.IsVisible != nil {
 		updates["is_visible"] = *req.IsVisible
 	}
-	checkerTypeValue := ""
-	if req.AWDCheckerType != nil {
-		checkerTypeValue = *req.AWDCheckerType
-	}
-	checkerType, checkerConfig, err := validateAndNormalizeContestAWDFields(
-		contest,
-		checkerTypeValue,
-		req.AWDCheckerConfig,
-		zeroIfNil(req.AWDSLAScore),
-		zeroIfNil(req.AWDDefenseScore),
-	)
-	if err != nil {
-		return err
-	}
-	if req.AWDCheckerType != nil {
-		updates["awd_checker_type"] = checkerType
-	}
-	if req.AWDCheckerConfig != nil {
-		updates["awd_checker_config"] = checkerConfig
-	}
-	if req.AWDSLAScore != nil {
-		updates["awd_sla_score"] = *req.AWDSLAScore
-	}
-	if req.AWDDefenseScore != nil {
-		updates["awd_defense_score"] = *req.AWDDefenseScore
-	}
-	nextCheckerType := current.AWDCheckerType
-	if req.AWDCheckerType != nil {
-		nextCheckerType = checkerType
-	}
-	nextCheckerConfig := current.AWDCheckerConfig
-	if req.AWDCheckerConfig != nil {
-		nextCheckerConfig = checkerConfig
-	}
-	previewToken := ""
-	if req.AWDCheckerPreviewToken != nil {
-		previewToken = *req.AWDCheckerPreviewToken
-	}
-	if validationUpdates, ok, validationErr := buildCheckerValidationUpdate(
-		ctx,
-		s.redis,
-		current,
-		contestID,
-		challengeID,
-		nextCheckerType,
-		nextCheckerConfig,
-		previewToken,
-	); validationErr != nil {
-		return errcode.ErrInternal.WithCause(validationErr)
-	} else if ok {
-		for key, value := range validationUpdates {
-			updates[key] = value
-		}
-	}
 
 	if err := s.repo.UpdateChallenge(ctx, contestID, challengeID, updates); err != nil {
 		return err
 	}
-	if contest.Mode != model.ContestModeAWD || s.awdRepo == nil {
-		return nil
-	}
-
-	challenge, err := s.challengeRepo.FindByID(challengeID)
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return errcode.ErrChallengeNotFound
-		}
-		return errcode.ErrInternal.WithCause(err)
-	}
-	updated, err := s.repo.FindChallenge(ctx, contestID, challengeID)
-	if err != nil {
-		return errcode.ErrInternal.WithCause(err)
-	}
-	if err := s.syncContestAWDServiceForChallenge(ctx, contest, challenge, updated, req.TemplateID); err != nil {
-		return errcode.ErrInternal.WithCause(err)
-	}
 	return nil
-}
-
-func zeroIfNil(value *int) int {
-	if value == nil {
-		return 0
-	}
-	return *value
-}
-
-func buildCheckerValidationUpdate(
-	ctx context.Context,
-	redisClient *redis.Client,
-	current *model.ContestChallenge,
-	contestID, challengeID int64,
-	nextCheckerType model.AWDCheckerType,
-	nextCheckerConfig string,
-	previewToken string,
-) (map[string]any, bool, error) {
-	state, previewAt, previewResult, err := consumeCheckerPreviewValidationState(
-		ctx,
-		redisClient,
-		contestID,
-		challengeID,
-		nextCheckerType,
-		nextCheckerConfig,
-		previewToken,
-	)
-	if err != nil {
-		return nil, false, err
-	}
-	if strings.TrimSpace(previewToken) != "" && previewResult != "" {
-		return map[string]any{
-			"awd_checker_validation_state":    state,
-			"awd_checker_last_preview_at":     previewAt,
-			"awd_checker_last_preview_result": previewResult,
-		}, true, nil
-	}
-
-	configChanged := current.AWDCheckerType != nextCheckerType || current.AWDCheckerConfig != nextCheckerConfig
-	if !configChanged {
-		return nil, false, nil
-	}
-
-	nextState := model.AWDCheckerValidationStatePending
-	if hasPersistedCheckerValidation(current) {
-		nextState = model.AWDCheckerValidationStateStale
-	}
-	return map[string]any{
-		"awd_checker_validation_state": nextState,
-	}, true, nil
-}
-
-func hasPersistedCheckerValidation(value *model.ContestChallenge) bool {
-	if value == nil {
-		return false
-	}
-	if value.AWDCheckerLastPreviewAt != nil {
-		return true
-	}
-	if strings.TrimSpace(value.AWDCheckerLastPreviewResult) != "" {
-		return true
-	}
-	return value.AWDCheckerValidationState != "" && value.AWDCheckerValidationState != model.AWDCheckerValidationStatePending
 }

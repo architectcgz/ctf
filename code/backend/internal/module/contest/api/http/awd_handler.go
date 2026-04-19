@@ -16,6 +16,12 @@ type awdCommandService interface {
 	SubmitAttack(ctx context.Context, userID, contestID, serviceID int64, req *dto.SubmitAWDAttackReq) (*dto.AWDAttackLogResp, error)
 }
 
+type awdServiceCommandService interface {
+	CreateContestAWDService(ctx context.Context, contestID int64, req *dto.CreateContestAWDServiceReq) (*dto.ContestAWDServiceResp, error)
+	UpdateContestAWDService(ctx context.Context, contestID, serviceID int64, req *dto.UpdateContestAWDServiceReq) error
+	DeleteContestAWDService(ctx context.Context, contestID, serviceID int64) error
+}
+
 type awdQueryService interface {
 	ListRounds(ctx context.Context, contestID int64) ([]*dto.AWDRoundResp, error)
 	ListServices(ctx context.Context, contestID, roundID int64) ([]*dto.AWDTeamServiceResp, error)
@@ -27,11 +33,27 @@ type awdQueryService interface {
 	GetUserWorkspace(ctx context.Context, userID, contestID int64) (*dto.ContestAWDWorkspaceResp, error)
 }
 
-type AWDHandler struct {
-	commands awdCommandService
-	queries  awdQueryService
+type awdServiceQueryService interface {
+	ListContestAWDServices(ctx context.Context, contestID int64) ([]*dto.ContestAWDServiceResp, error)
 }
 
-func NewAWDHandler(commands awdCommandService, queries awdQueryService) *AWDHandler {
-	return &AWDHandler{commands: commands, queries: queries}
+type AWDHandler struct {
+	commands        awdCommandService
+	queries         awdQueryService
+	serviceCommands awdServiceCommandService
+	serviceQueries  awdServiceQueryService
+}
+
+func NewAWDHandler(
+	commands awdCommandService,
+	queries awdQueryService,
+	serviceCommands awdServiceCommandService,
+	serviceQueries awdServiceQueryService,
+) *AWDHandler {
+	return &AWDHandler{
+		commands:        commands,
+		queries:         queries,
+		serviceCommands: serviceCommands,
+		serviceQueries:  serviceQueries,
+	}
 }

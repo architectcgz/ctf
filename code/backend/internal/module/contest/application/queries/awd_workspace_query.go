@@ -53,16 +53,17 @@ func (s *AWDService) GetUserWorkspace(ctx context.Context, userID, contestID int
 		return nil, err
 	}
 
-	challenges, err := s.repo.ListChallengesByContest(ctx, contestID)
+	definitions, err := s.repo.ListServiceDefinitionsByContest(ctx, contestID)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	challengeIDs := make([]int64, 0, len(challenges))
-	for _, challenge := range challenges {
-		challengeIDs = append(challengeIDs, challenge.ID)
-	}
 
 	serviceMap := make(map[int64]*dto.ContestAWDWorkspaceServiceResp)
+	serviceIDs := make([]int64, 0, len(definitions))
+	for _, definition := range definitions {
+		serviceIDs = append(serviceIDs, definition.ServiceID)
+		ensureAWDWorkspaceService(serviceMap, definition.ServiceID, definition.ChallengeID)
+	}
 	targetMap := make(map[int64]*dto.ContestAWDWorkspaceTargetTeamResp)
 	for teamID, team := range teams {
 		if teamID == myTeam.ID {
@@ -75,7 +76,7 @@ func (s *AWDService) GetUserWorkspace(ctx context.Context, userID, contestID int
 		}
 	}
 
-	instances, err := s.repo.ListServiceInstancesByContest(ctx, contestID, challengeIDs)
+	instances, err := s.repo.ListServiceInstancesByContest(ctx, contestID, serviceIDs)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
@@ -123,6 +124,9 @@ func (s *AWDService) populateAWDWorkspaceCurrentRound(
 	}
 	for _, record := range records {
 		if record.TeamID != myTeamID {
+			continue
+		}
+		if record.ServiceID <= 0 {
 			continue
 		}
 		item := ensureAWDWorkspaceService(serviceMap, record.ServiceID, record.ChallengeID)

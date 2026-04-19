@@ -65,14 +65,13 @@ type TeacherInstanceRow struct {
 }
 
 type ProxyTicketClaims struct {
-	UserID      int64            `json:"user_id"`
-	Username    string           `json:"username"`
-	Role        string           `json:"role"`
-	InstanceID  int64            `json:"instance_id"`
-	ChallengeID int64            `json:"challenge_id"`
-	ContestID   *int64           `json:"contest_id,omitempty"`
-	ShareScope  model.ShareScope `json:"share_scope"`
-	IssuedAt    time.Time        `json:"issued_at"`
+	UserID     int64            `json:"user_id"`
+	Username   string           `json:"username"`
+	Role       string           `json:"role"`
+	InstanceID int64            `json:"instance_id"`
+	ContestID  *int64           `json:"contest_id,omitempty"`
+	ShareScope model.ShareScope `json:"share_scope"`
+	IssuedAt   time.Time        `json:"issued_at"`
 }
 
 type ProxyTicketStore interface {

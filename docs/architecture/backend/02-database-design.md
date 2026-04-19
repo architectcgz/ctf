@@ -759,6 +759,7 @@ CREATE TABLE awd_traffic_events (
     round_id         BIGINT          NOT NULL REFERENCES awd_rounds(id) ON DELETE CASCADE,
     attacker_team_id BIGINT          NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
     victim_team_id   BIGINT          NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+    service_id       BIGINT          NOT NULL,
     challenge_id     BIGINT          NOT NULL REFERENCES challenges(id) ON DELETE RESTRICT,
     method           VARCHAR(16)     NOT NULL,
     path             VARCHAR(1024)   NOT NULL,
@@ -776,11 +777,13 @@ CREATE INDEX idx_awd_traffic_attacker ON awd_traffic_events(round_id, attacker_t
   -- 用途：统计攻击方活跃度和队伍筛选
 CREATE INDEX idx_awd_traffic_victim ON awd_traffic_events(round_id, victim_team_id);
   -- 用途：统计受害方热点和队伍筛选
+CREATE INDEX idx_awd_traffic_service ON awd_traffic_events(service_id);
+  -- 用途：按显式 AWD service 归因流量事件，避免再依赖 challenge_id 推断运行态服务
 ```
 
 说明：
 
-- 该表是 AWD 管理后台“攻击流量态势”能力的轻量事实表，只保存轮次、队伍、题目和路径级摘要。
+- 该表是 AWD 管理后台“攻击流量态势”能力的轻量事实表，只保存轮次、队伍、服务、题目和路径级摘要。
 - 第一版不持久化请求体；若需要请求体预览，仍从通用审计链路读取。
 - `source` 当前固定为 `runtime_proxy`，为后续接入其他流量来源预留扩展位。
 

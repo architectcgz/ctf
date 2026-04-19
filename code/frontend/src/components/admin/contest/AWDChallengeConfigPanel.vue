@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import type { AdminContestChallengeData } from '@/api/contracts'
+import type { AdminContestChallengeViewData } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import { useAwdCheckResultPresentation } from '@/composables/useAwdCheckResultPresentation'
 
 const props = withDefaults(
   defineProps<{
-    challengeLinks: AdminContestChallengeData[]
+    challengeLinks: AdminContestChallengeViewData[]
     activeChallengeId?: string | null
     focusSource?: 'pool' | 'preflight' | null
     canNavigatePrevious?: boolean
@@ -23,7 +23,7 @@ const props = withDefaults(
 
 const emit = defineEmits<{
   create: []
-  edit: [challenge: AdminContestChallengeData]
+  edit: [challenge: AdminContestChallengeViewData]
   previous: []
   next: []
 }>()
@@ -121,7 +121,7 @@ function getCheckerTypeLabel(value?: string): string {
   }
 }
 
-function getConfigSummary(item: AdminContestChallengeData): string {
+function getConfigSummary(item: AdminContestChallengeViewData): string {
   const config = item.awd_checker_config || {}
   const putFlag = readActionSummary(config.put_flag, 'PUT')
   const getFlag = readActionSummary(config.get_flag, 'GET')
@@ -146,11 +146,11 @@ function readActionSummary(value: unknown, label: string): string {
   return `${label} ${path}`
 }
 
-function getChallengeTitle(item: AdminContestChallengeData): string {
+function getChallengeTitle(item: AdminContestChallengeViewData): string {
   return item.title?.trim() || `Challenge #${item.challenge_id}`
 }
 
-function getServiceAssociationSummary(item: AdminContestChallengeData): string {
+function getServiceAssociationSummary(item: AdminContestChallengeViewData): string {
   if (!item.awd_service_id) {
     return '赛事服务关联待补齐'
   }
@@ -161,7 +161,7 @@ function getServiceAssociationSummary(item: AdminContestChallengeData): string {
   return entries.join(' · ')
 }
 
-function buildPresentationResult(item: AdminContestChallengeData): Record<string, unknown> {
+function buildPresentationResult(item: AdminContestChallengeViewData): Record<string, unknown> {
   const preview = item.awd_checker_last_preview_result
   if (!preview) {
     return {}
@@ -172,16 +172,16 @@ function buildPresentationResult(item: AdminContestChallengeData): Record<string
   }
 }
 
-function getValidationStateText(item: AdminContestChallengeData): string {
+function getValidationStateText(item: AdminContestChallengeViewData): string {
   return getValidationStateLabel(item.awd_checker_validation_state) || '未验证'
 }
 
-function getValidationStateClass(item: AdminContestChallengeData): string {
+function getValidationStateClass(item: AdminContestChallengeViewData): string {
   const state = item.awd_checker_validation_state || 'pending'
   return `config-validation-chip config-validation-chip--${state}`
 }
 
-function getValidationHint(item: AdminContestChallengeData): string {
+function getValidationHint(item: AdminContestChallengeViewData): string {
   const previewAccessURL = getPrimaryAccessURL(buildPresentationResult(item))
   const entries = [
     item.awd_checker_last_preview_at
@@ -207,7 +207,7 @@ function getValidationHint(item: AdminContestChallengeData): string {
   }
 }
 
-function isActiveChallenge(item: AdminContestChallengeData): boolean {
+function isActiveChallenge(item: AdminContestChallengeViewData): boolean {
   return item.challenge_id === props.activeChallengeId
 }
 </script>

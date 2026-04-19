@@ -651,29 +651,6 @@ export interface AdminContestTeamData {
   created_at: ISODateTime
 }
 
-export interface AdminContestChallengeData {
-  id: ID
-  contest_id: ID
-  challenge_id: ID
-  awd_service_id?: ID
-  awd_template_id?: ID
-  awd_service_display_name?: string
-  title?: string
-  category?: ChallengeCategory
-  difficulty?: ChallengeDifficulty
-  points: number
-  order: number
-  is_visible: boolean
-  awd_checker_type?: AWDCheckerType
-  awd_checker_config?: Record<string, unknown>
-  awd_sla_score?: number
-  awd_defense_score?: number
-  awd_checker_validation_state?: AWDCheckerValidationState
-  awd_checker_last_preview_at?: ISODateTime
-  awd_checker_last_preview_result?: AWDCheckerPreviewData
-  created_at: ISODateTime
-}
-
 export interface AdminContestChallengeRelationData {
   id: ID
   contest_id: ID
@@ -687,7 +664,20 @@ export interface AdminContestChallengeRelationData {
   created_at: ISODateTime
 }
 
-export type AdminContestChallengeViewData = AdminContestChallengeData
+export interface AdminContestChallengeViewData extends AdminContestChallengeRelationData {
+  awd_service_id?: ID
+  awd_template_id?: ID
+  awd_service_display_name?: string
+  awd_checker_type?: AWDCheckerType
+  awd_checker_config?: Record<string, unknown>
+  awd_sla_score?: number
+  awd_defense_score?: number
+  awd_checker_validation_state?: AWDCheckerValidationState
+  awd_checker_last_preview_at?: ISODateTime
+  awd_checker_last_preview_result?: AWDCheckerPreviewData
+}
+
+export type AdminContestChallengeData = AdminContestChallengeViewData
 
 export interface AdminContestAWDServiceData {
   id: ID
@@ -966,6 +956,7 @@ export interface TeacherAWDReviewTrafficItemData {
   attacker_team_name: string
   victim_team_id: ID
   victim_team_name: string
+  service_id?: ID
   challenge_id: ID
   challenge_title: string
   method: string

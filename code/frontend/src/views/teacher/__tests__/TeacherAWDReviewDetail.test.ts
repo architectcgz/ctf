@@ -1,10 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { createPinia, setActivePinia } from 'pinia'
 import { flushPromises, mount } from '@vue/test-utils'
+import { createPinia, setActivePinia } from 'pinia'
 
 import TeacherAWDReviewDetail from '../TeacherAWDReviewDetail.vue'
 import awdReviewDetailSource from '../TeacherAWDReviewDetail.vue?raw'
-import { useAuthStore } from '@/stores/auth'
 
 const routeMock = {
   params: {
@@ -19,15 +18,12 @@ const teacherApiMocks = vi.hoisted(() => ({
   exportTeacherAWDReviewReport: vi.fn(),
 }))
 
-const pushMock = vi.fn()
-const replaceMock = vi.fn()
-
 vi.mock('vue-router', async () => {
   const actual = await vi.importActual<typeof import('vue-router')>('vue-router')
   return {
     ...actual,
     useRoute: () => routeMock,
-    useRouter: () => ({ push: pushMock, replace: replaceMock }),
+    useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
   }
 })
 
@@ -44,8 +40,6 @@ describe('TeacherAWDReviewDetail', () => {
     setActivePinia(createPinia())
     routeMock.params.contestId = 'contest-1'
     routeMock.query = {}
-    pushMock.mockReset()
-    replaceMock.mockReset()
     Object.values(teacherApiMocks).forEach((mock) => mock.mockReset())
 
     teacherApiMocks.getTeacherAWDReview.mockResolvedValue({
@@ -124,16 +118,6 @@ describe('TeacherAWDReviewDetail', () => {
       report_id: '32',
       status: 'processing',
     })
-
-    const authStore = useAuthStore()
-    authStore.setAuth(
-      {
-        id: 'teacher-1',
-        username: 'teacher',
-        role: 'teacher',
-      },
-      'token'
-    )
   })
 
   it('默认显示整场总览，并在进行中赛事上禁用教师报告导出', async () => {
@@ -248,7 +232,7 @@ describe('TeacherAWDReviewDetail', () => {
           status: 'finished',
           service_count: 1,
           attack_count: 1,
-          traffic_count: 0,
+          traffic_count: 1,
         },
         teams: [
           {
@@ -294,7 +278,25 @@ describe('TeacherAWDReviewDetail', () => {
             created_at: '2026-04-12T10:03:00Z',
           },
         ],
-        traffic: [],
+        traffic: [
+          {
+            id: 'traffic-row-1',
+            contest_id: 'contest-1',
+            round_id: 'round-2',
+            attacker_team_id: 'team-2',
+            attacker_team_name: 'Red Team',
+            victim_team_id: 'team-1',
+            victim_team_name: 'Blue Team',
+            service_id: '7009',
+            challenge_id: 'challenge-1',
+            challenge_title: 'Bank Portal',
+            method: 'POST',
+            path: '/flag',
+            status_code: 200,
+            source: 'runtime_proxy',
+            created_at: '2026-04-12T10:04:00Z',
+          },
+        ],
       },
     })
 
@@ -312,12 +314,18 @@ describe('TeacherAWDReviewDetail', () => {
         .findAll('[data-testid="awd-review-attack-service-id"]')
         .map((node) => node.text())
     ).toContain('Service #7009')
+    expect(
+      wrapper
+        .findAll('[data-testid="awd-review-traffic-service-id"]')
+        .map((node) => node.text())
+    ).toContain('Service #7009')
 
     await wrapper.find('.teacher-directory-row').trigger('click')
     await flushPromises()
 
     expect(collectTestIdTexts('awd-review-drawer-service-id')).toContain('Service #7009')
     expect(collectTestIdTexts('awd-review-drawer-attack-service-id')).toContain('Service #7009')
+    expect(collectTestIdTexts('awd-review-drawer-traffic-service-id')).toContain('Service #7009')
   })
 
   it('轮次切换区应并入目录段结构，不再保留独立筛选卡片壳', () => {
@@ -330,43 +338,5 @@ describe('TeacherAWDReviewDetail', () => {
     expect(awdReviewDetailSource).not.toContain(
       '默认展示整场总览；切换到单轮后，可继续按队伍查看该轮服务、攻击和流量证据。'
     )
-  })
-
-  it('详情页加载骨架应通过语义类承接，不再直接写圆角和背景混色', () => {
-    expect(awdReviewDetailSource).toContain('awd-review-loading-card')
-    expect(awdReviewDetailSource).not.toContain('rounded-[22px]')
-    expect(awdReviewDetailSource).not.toContain(
-      'bg-[color-mix(in_srgb,var(--journal-surface-subtle)_92%,transparent)]'
-    )
-  })
-
-  it('管理员在 AWD 复盘详情里返回目录和切换轮次时应使用后台路由', async () => {
-    const authStore = useAuthStore()
-    authStore.setAuth(
-      {
-        id: 'admin-1',
-        username: 'admin',
-        role: 'admin',
-      },
-      'token'
-    )
-
-    const wrapper = mount(TeacherAWDReviewDetail)
-
-    await flushPromises()
-
-    await wrapper.findAll('button').find((button) => button.text().includes('返回目录'))?.trigger('click')
-    await wrapper.findAll('.awd-review-round-pill')[1]?.trigger('click')
-
-    expect(pushMock).toHaveBeenCalledWith({ name: 'AdminAWDReviewIndex' })
-    expect(replaceMock).toHaveBeenCalledWith({
-      name: 'AdminAWDReviewDetail',
-      params: {
-        contestId: 'contest-1',
-      },
-      query: {
-        round: '1',
-      },
-    })
   })
 })

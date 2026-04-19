@@ -1,6 +1,6 @@
 import { computed, ref, watch, type Ref } from 'vue'
 
-import type { AdminContestChallengeData, ContestMode } from '@/api/contracts'
+import type { AdminContestChallengeViewData, ContestMode } from '@/api/contracts'
 
 export type ContestChallengePoolFilter = 'all' | 'unconfigured' | 'validation-failed'
 
@@ -18,16 +18,16 @@ interface ContestChallengePoolFilterItem {
   count: number
 }
 
-function hasAwdConfiguration(item: AdminContestChallengeData): boolean {
+function hasAwdConfiguration(item: AdminContestChallengeViewData): boolean {
   return Boolean(item.awd_checker_type)
 }
 
-function isValidationFailure(item: AdminContestChallengeData): boolean {
+function isValidationFailure(item: AdminContestChallengeViewData): boolean {
   return item.awd_checker_validation_state === 'failed' || item.awd_checker_validation_state === 'stale'
 }
 
 export function useContestChallengePool(
-  challengeLinks: Ref<AdminContestChallengeData[]>,
+  challengeLinks: Ref<AdminContestChallengeViewData[]>,
   contestMode: Ref<ContestMode | null>
 ) {
   const activeFilter = ref<ContestChallengePoolFilter>('all')

@@ -6,7 +6,7 @@ import type {
   AWDTrafficStatusGroup,
   AWDTrafficSummaryData,
   AWDTeamServiceData,
-  AdminContestChallengeData,
+  AdminContestChallengeViewData,
   ContestDetailData,
   ScoreboardRow,
 } from '@/api/contracts'
@@ -18,7 +18,7 @@ export interface AWDRoundInspectorProps {
   selectedRoundId: string | null
   services: AWDTeamServiceData[]
   attacks: AWDAttackLogData[]
-  challengeLinks: AdminContestChallengeData[]
+  challengeLinks: AdminContestChallengeViewData[]
   summary: AWDRoundSummaryData | null
   trafficSummary: AWDTrafficSummaryData | null
   trafficEvents: AWDTrafficEventData[]
@@ -200,7 +200,7 @@ export interface AWDScoreboardSummaryPanelProps {
 
 export interface AWDTrafficPanelProps {
   updatedAt?: string
-  challengeLinks: AdminContestChallengeData[]
+  challengeLinks: AdminContestChallengeViewData[]
   trafficSummary: AWDTrafficSummaryData | null
   trafficEvents: AWDTrafficEventData[]
   trafficEventsTotal: number

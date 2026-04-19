@@ -18,7 +18,7 @@ import {
 import type {
   AdminAwdServiceTemplateData,
   AdminChallengeListItem,
-  AdminContestChallengeData,
+  AdminContestChallengeViewData,
   AWDReadinessData,
   ContestDetailData,
 } from '@/api/contracts'
@@ -75,23 +75,23 @@ const loadError = ref('')
 const saving = ref(false)
 const loadingAwdStageData = ref(false)
 const loadingChallengeCatalog = ref(false)
-const loadingAwdServiceTemplateCatalog = ref(false)
 const savingChallengeConfig = ref(false)
 const contest = ref<ContestDetailData | null>(null)
 const editingBaseStatus = ref<AdminContestStatus | null>(null)
 const formDraft = ref<ContestFormDraft | null>(null)
 const awdConfigLoadError = ref('')
 const awdPreflightLoadError = ref('')
-const awdChallengeLinks = ref<AdminContestChallengeData[]>([])
+const awdChallengeLinks = ref<AdminContestChallengeViewData[]>([])
 const awdChallengeLinksLoaded = ref(false)
 const awdReadiness = ref<AWDReadinessData | null>(null)
 const awdChallengeCatalog = ref<AdminChallengeListItem[]>([])
 const awdServiceTemplateCatalog = ref<AdminAwdServiceTemplateData[]>([])
 const awdChallengeConfigDialogOpen = ref(false)
 const awdChallengeConfigMode = ref<'create' | 'edit'>('create')
-const editingAwdChallengeLink = ref<AdminContestChallengeData | null>(null)
+const editingAwdChallengeLink = ref<AdminContestChallengeViewData | null>(null)
 const activeAwdChallengeId = ref<string | null>(null)
 const awdConfigFocusSource = ref<'pool' | 'preflight' | null>(null)
+const loadingAwdServiceTemplateCatalog = ref(false)
 const awdStartOverrideDialogState = ref<AWDStartOverrideDialogState>(createDefaultAWDStartOverrideDialogState())
 
 const fieldLocks = computed(() => createFieldLocks(editingBaseStatus.value))
@@ -363,7 +363,7 @@ function openAwdChallengeCreateDialog() {
   void loadAwdServiceTemplateCatalog()
 }
 
-function openAwdChallengeEditDialog(challenge: AdminContestChallengeData) {
+function openAwdChallengeEditDialog(challenge: AdminContestChallengeViewData) {
   setActiveAwdChallenge(challenge.challenge_id, awdConfigFocusSource.value)
   awdChallengeConfigMode.value = 'edit'
   editingAwdChallengeLink.value = challenge
@@ -413,40 +413,32 @@ async function handleSaveAwdChallengeConfig(payload: {
       })
       setActiveAwdChallenge(String(payload.challenge_id), null)
     } else if (editingAwdChallengeLink.value) {
-      const { challenge_id: _challengeId, ...updatePayload } = payload
-      const currentTemplateId =
-        Number(editingAwdChallengeLink.value.awd_template_id || 0) || undefined
-      const templateId = updatePayload.template_id ?? currentTemplateId
-
-      if (templateId) {
-        if (editingAwdChallengeLink.value.awd_service_id) {
-          await updateContestAWDService(contest.value.id, editingAwdChallengeLink.value.awd_service_id, {
-            template_id: templateId,
-            order: updatePayload.order,
-            is_visible: updatePayload.is_visible,
-            checker_type: updatePayload.awd_checker_type,
-            checker_config: updatePayload.awd_checker_config,
-            awd_sla_score: updatePayload.awd_sla_score,
-            awd_defense_score: updatePayload.awd_defense_score,
-            awd_checker_preview_token: updatePayload.awd_checker_preview_token,
-          })
-        } else {
-          await createContestAWDService(contest.value.id, {
-            challenge_id: Number(editingAwdChallengeLink.value.challenge_id),
-            template_id: templateId,
-            order: updatePayload.order,
-            is_visible: updatePayload.is_visible,
-            checker_type: updatePayload.awd_checker_type,
-            checker_config: updatePayload.awd_checker_config,
-            awd_sla_score: updatePayload.awd_sla_score,
-            awd_defense_score: updatePayload.awd_defense_score,
-            awd_checker_preview_token: updatePayload.awd_checker_preview_token,
-          })
-        }
+      if (editingAwdChallengeLink.value.awd_service_id) {
+        await updateContestAWDService(contest.value.id, editingAwdChallengeLink.value.awd_service_id, {
+          template_id: payload.template_id,
+          order: payload.order,
+          is_visible: payload.is_visible,
+          checker_type: payload.awd_checker_type,
+          checker_config: payload.awd_checker_config,
+          awd_sla_score: payload.awd_sla_score,
+          awd_defense_score: payload.awd_defense_score,
+          awd_checker_preview_token: payload.awd_checker_preview_token,
+        })
+      } else {
+        await createContestAWDService(contest.value.id, {
+          challenge_id: Number(editingAwdChallengeLink.value.challenge_id),
+          template_id: payload.template_id,
+          order: payload.order,
+          is_visible: payload.is_visible,
+          checker_type: payload.awd_checker_type,
+          checker_config: payload.awd_checker_config,
+          awd_sla_score: payload.awd_sla_score,
+          awd_defense_score: payload.awd_defense_score,
+          awd_checker_preview_token: payload.awd_checker_preview_token,
+        })
       }
-
       await updateAdminContestChallenge(contest.value.id, editingAwdChallengeLink.value.challenge_id, {
-        points: updatePayload.points,
+        points: payload.points,
       })
       setActiveAwdChallenge(editingAwdChallengeLink.value.challenge_id, awdConfigFocusSource.value)
     }
@@ -462,7 +454,7 @@ async function handleSaveAwdChallengeConfig(payload: {
   }
 }
 
-function handleOpenAwdConfigFromPool(challenge: AdminContestChallengeData) {
+function handleOpenAwdConfigFromPool(challenge: AdminContestChallengeViewData) {
   setActiveAwdChallenge(challenge.challenge_id, 'pool')
   selectStage('awd-config')
 }
@@ -650,7 +642,7 @@ onMounted(() => {
 
 <template>
   <section
-    class="workspace-shell journal-shell journal-shell-admin journal-hero flex min-h-full flex-1 flex-col"
+    class="workspace-shell journal-shell journal-shell-admin journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
   >
     <header class="workspace-topbar">
       <div class="topbar-leading">

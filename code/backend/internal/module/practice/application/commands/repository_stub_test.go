@@ -15,6 +15,7 @@ type stubPracticeRepository struct {
 	withinTransactionFn                    func(ctx context.Context, fn func(txRepo practiceports.PracticeCommandTxRepository) error) error
 	findContestByIDWithContextFn           func(ctx context.Context, contestID int64) (*model.Contest, error)
 	findContestChallengeWithContextFn      func(ctx context.Context, contestID, challengeID int64) (*model.ContestChallenge, error)
+	findContestAWDServiceWithContextFn     func(ctx context.Context, contestID, serviceID int64) (*model.ContestAWDService, error)
 	findContestRegistrationWithContextFn   func(ctx context.Context, contestID, userID int64) (*model.ContestRegistration, error)
 	lockInstanceScopeFn                    func(userID, challengeID int64, scope practiceports.InstanceScope) error
 	findScopedExistingInstanceFn           func(userID, challengeID int64, scope practiceports.InstanceScope) (*model.Instance, error)
@@ -50,6 +51,13 @@ func (s *stubPracticeRepository) FindContestByIDWithContext(ctx context.Context,
 func (s *stubPracticeRepository) FindContestChallengeWithContext(ctx context.Context, contestID, challengeID int64) (*model.ContestChallenge, error) {
 	if s.findContestChallengeWithContextFn != nil {
 		return s.findContestChallengeWithContextFn(ctx, contestID, challengeID)
+	}
+	return nil, gorm.ErrRecordNotFound
+}
+
+func (s *stubPracticeRepository) FindContestAWDServiceWithContext(ctx context.Context, contestID, serviceID int64) (*model.ContestAWDService, error) {
+	if s.findContestAWDServiceWithContextFn != nil {
+		return s.findContestAWDServiceWithContextFn(ctx, contestID, serviceID)
 	}
 	return nil, gorm.ErrRecordNotFound
 }

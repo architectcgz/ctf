@@ -40,17 +40,19 @@ function mountDialog(props?: Record<string, unknown>) {
       ],
       templateOptions: [
         {
-          id: '1',
-          name: 'Web 标准模板',
-          slug: 'web-standard',
+          id: '501',
+          name: 'Bank Portal',
+          slug: 'bank-portal',
           category: 'web',
           difficulty: 'easy',
-          description: '标准 Web AWD 服务模板',
+          description: 'Bank portal template',
           service_type: 'web_http',
           deployment_mode: 'single_container',
           version: '1.0.0',
           status: 'published',
           readiness_status: 'passed',
+          created_by: '9',
+          last_verified_at: '2026-03-20T09:00:00.000Z',
           created_at: '2026-03-20T09:00:00.000Z',
           updated_at: '2026-03-20T09:00:00.000Z',
         },
@@ -92,6 +94,7 @@ describe('AWDChallengeConfigDialog', () => {
         points: 120,
         order: 1,
         is_visible: true,
+        awd_template_id: '501',
         awd_checker_type: 'http_standard',
         awd_checker_config: {
           put_flag: {
@@ -134,7 +137,7 @@ describe('AWDChallengeConfigDialog', () => {
 
     expect(wrapper.emitted('save')?.[0]?.[0]).toEqual({
       challenge_id: 101,
-      template_id: 1,
+      template_id: 501,
       points: 120,
       order: 1,
       is_visible: true,
@@ -175,7 +178,7 @@ describe('AWDChallengeConfigDialog', () => {
 
     expect(wrapper.emitted('save')?.[0]?.[0]).toEqual({
       challenge_id: 101,
-      template_id: 1,
+      template_id: 501,
       points: 100,
       order: 0,
       is_visible: true,
@@ -213,7 +216,7 @@ describe('AWDChallengeConfigDialog', () => {
 
     expect(wrapper.emitted('save')?.[0]?.[0]).toEqual({
       challenge_id: 101,
-      template_id: 1,
+      template_id: 501,
       points: 100,
       order: 0,
       is_visible: true,
@@ -318,7 +321,7 @@ describe('AWDChallengeConfigDialog', () => {
 
     expect(wrapper.emitted('save')?.[0]?.[0]).toEqual({
       challenge_id: 101,
-      template_id: 1,
+      template_id: 501,
       points: 100,
       order: 0,
       is_visible: true,
@@ -380,7 +383,7 @@ describe('AWDChallengeConfigDialog', () => {
 
     expect(wrapper.emitted('save')?.[0]?.[0]).toEqual({
       challenge_id: 101,
-      template_id: 1,
+      template_id: 501,
       points: 100,
       order: 0,
       is_visible: true,
@@ -423,6 +426,7 @@ describe('AWDChallengeConfigDialog', () => {
         points: 120,
         order: 1,
         is_visible: true,
+        awd_template_id: '501',
         awd_checker_type: 'http_standard',
         awd_checker_config: {
           put_flag: {

@@ -85,6 +85,7 @@ type AWDTrafficEvent struct {
 	RoundID        int64     `gorm:"column:round_id;not null;index:idx_awd_traffic_round_created,priority:1;index:idx_awd_traffic_attacker,priority:1;index:idx_awd_traffic_victim,priority:1"`
 	AttackerTeamID int64     `gorm:"column:attacker_team_id;not null;index:idx_awd_traffic_attacker,priority:2"`
 	VictimTeamID   int64     `gorm:"column:victim_team_id;not null;index:idx_awd_traffic_victim,priority:2"`
+	ServiceID      int64     `gorm:"column:service_id;not null;index"`
 	ChallengeID    int64     `gorm:"column:challenge_id;not null;index"`
 	Method         string    `gorm:"column:method;size:16;not null"`
 	Path           string    `gorm:"column:path;size:1024;not null"`
