@@ -5,6 +5,7 @@ import { useRoute, useRouter } from 'vue-router'
 
 import { getAuditLogs } from '@/api/admin'
 import type { AuditLogItem } from '@/api/contracts'
+import AdminSurfaceModal from '@/components/common/modal-templates/AdminSurfaceModal.vue'
 import PlatformPaginationControls from '@/components/platform/PlatformPaginationControls.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
@@ -35,6 +36,7 @@ const pageSize = ref(20)
 const loading = ref(false)
 const error = ref<string | null>(null)
 const keyword = ref('')
+const activeActorLog = ref<AuditLogItem | null>(null)
 let textFilterTimer: ReturnType<typeof setTimeout> | null = null
 let suppressAutoApply = false
 const autoApplyReady = ref(false)
@@ -91,17 +93,13 @@ const filteredRows = computed<AuditLogItem[]>(() => {
       return true
     }
 
-    const resourceLabel = `${item.resource_type}${item.resource_id ? `#${item.resource_id}` : ''}`
-    const actorLabel = `${item.actor_username || ''} ${item.actor_user_id || ''}`
+    const resourceLabel = resourceDisplayName(item)
+    const actorLabel = `${actorDisplayName(item)} ${item.actor_user_id || ''}`
     const detailLabel = detailPreview(item.detail)
 
-    return [
-      item.action,
-      resourceLabel,
-      actorLabel,
-      detailLabel,
-      formatDate(item.created_at),
-    ].some((value) => value.toLowerCase().includes(normalizedKeyword))
+    return [item.action, resourceLabel, actorLabel, detailLabel, formatDate(item.created_at)].some(
+      (value) => value.toLowerCase().includes(normalizedKeyword)
+    )
   })
 
   const sortedRows = [...nextRows]
@@ -164,21 +162,40 @@ function detailPreview(detail: Record<string, unknown> | undefined): string {
     .join(' / ')
 }
 
+function actorDisplayName(item: AuditLogItem): string {
+  return item.actor_username || '未知执行人'
+}
+
+function resourceDisplayName(item: AuditLogItem): string {
+  return item.resource_id ? `${item.resource_type} #${item.resource_id}` : item.resource_type
+}
+
+function openActorDetail(item: AuditLogItem): void {
+  activeActorLog.value = item
+}
+
+function closeActorDetail(): void {
+  activeActorLog.value = null
+}
+
 async function loadLogs(): Promise<void> {
   const requestId = ++latestLogsRequestId
   const controller = createController()
   loading.value = true
   error.value = null
   try {
-    const payload = await getAuditLogs({
-      page: page.value,
-      page_size: pageSize.value,
-      action: filters.action || undefined,
-      resource_type: filters.resource_type || undefined,
-      actor_user_id: filters.actor_user_id ? Number(filters.actor_user_id) : undefined,
-    }, {
-      signal: controller.signal,
-    })
+    const payload = await getAuditLogs(
+      {
+        page: page.value,
+        page_size: pageSize.value,
+        action: filters.action || undefined,
+        resource_type: filters.resource_type || undefined,
+        actor_user_id: filters.actor_user_id ? Number(filters.actor_user_id) : undefined,
+      },
+      {
+        signal: controller.signal,
+      }
+    )
     if (requestId !== latestLogsRequestId) {
       return
     }
@@ -298,49 +315,49 @@ watch(
   >
     <main class="content-pane">
       <header class="admin-overview">
-      <div class="admin-overview__intro">
-        <div class="workspace-overline">Audit Log</div>
-        <h1 class="admin-page-title">审计日志</h1>
-      </div>
+        <div class="admin-overview__intro">
+          <div class="workspace-overline">Audit Log</div>
+          <h1 class="admin-page-title">审计日志</h1>
+        </div>
 
-      <div
-        class="admin-summary-grid progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"
-      >
-        <article class="journal-note progress-card metric-panel-card">
-          <div class="journal-note-label progress-card-label metric-panel-label">当前页</div>
-          <div class="journal-note-value progress-card-value metric-panel-value">
-            {{ list.length }}
-          </div>
-          <div class="journal-note-helper progress-card-hint metric-panel-helper">
-            本页已加载的日志条数
-          </div>
-        </article>
-        <article class="journal-note progress-card metric-panel-card">
-          <div class="journal-note-label progress-card-label metric-panel-label">总记录</div>
-          <div class="journal-note-value progress-card-value metric-panel-value">{{ total }}</div>
-          <div class="journal-note-helper progress-card-hint metric-panel-helper">
-            符合条件的审计记录总量
-          </div>
-        </article>
-        <article class="journal-note progress-card metric-panel-card">
-          <div class="journal-note-label progress-card-label metric-panel-label">总页数</div>
-          <div class="journal-note-value progress-card-value metric-panel-value">
-            {{ totalPages }}
-          </div>
-          <div class="journal-note-helper progress-card-hint metric-panel-helper">
-            当前筛选结果的分页范围
-          </div>
-        </article>
-      </div>
+        <div
+          class="admin-summary-grid progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"
+        >
+          <article class="journal-note progress-card metric-panel-card">
+            <div class="journal-note-label progress-card-label metric-panel-label">当前页</div>
+            <div class="journal-note-value progress-card-value metric-panel-value">
+              {{ list.length }}
+            </div>
+            <div class="journal-note-helper progress-card-hint metric-panel-helper">
+              本页已加载的日志条数
+            </div>
+          </article>
+          <article class="journal-note progress-card metric-panel-card">
+            <div class="journal-note-label progress-card-label metric-panel-label">总记录</div>
+            <div class="journal-note-value progress-card-value metric-panel-value">{{ total }}</div>
+            <div class="journal-note-helper progress-card-hint metric-panel-helper">
+              符合条件的审计记录总量
+            </div>
+          </article>
+          <article class="journal-note progress-card metric-panel-card">
+            <div class="journal-note-label progress-card-label metric-panel-label">总页数</div>
+            <div class="journal-note-value progress-card-value metric-panel-value">
+              {{ totalPages }}
+            </div>
+            <div class="journal-note-helper progress-card-hint metric-panel-helper">
+              当前筛选结果的分页范围
+            </div>
+          </article>
+        </div>
       </header>
 
       <section class="admin-board workspace-directory-section">
         <header class="list-heading audit-board__head">
-        <div>
-          <div class="workspace-overline">Audit Trail</div>
-          <h2 class="list-heading__title">操作流水</h2>
-        </div>
-        <div class="admin-caption">第 {{ page }} / {{ totalPages }} 页</div>
+          <div>
+            <div class="workspace-overline">Audit Trail</div>
+            <h2 class="list-heading__title">操作流水</h2>
+          </div>
+          <div class="admin-caption">第 {{ page }} / {{ totalPages }} 页</div>
         </header>
 
         <WorkspaceDirectoryToolbar
@@ -357,40 +374,40 @@ watch(
         >
           <template #filter-panel>
             <div class="audit-filter-grid">
-            <label class="audit-filter-field">
-              <span class="audit-filter-label">动作</span>
-              <select v-model="filters.action" class="audit-filter-select">
-                <option value="">全部动作</option>
-                <option value="login">登录</option>
-                <option value="logout">登出</option>
-                <option value="create">创建</option>
-                <option value="update">更新</option>
-                <option value="delete">删除</option>
-                <option value="submit">提交</option>
-                <option value="admin_op">管理员操作</option>
-              </select>
-            </label>
+              <label class="audit-filter-field">
+                <span class="audit-filter-label">动作</span>
+                <select v-model="filters.action" class="audit-filter-select">
+                  <option value="">全部动作</option>
+                  <option value="login">登录</option>
+                  <option value="logout">登出</option>
+                  <option value="create">创建</option>
+                  <option value="update">更新</option>
+                  <option value="delete">删除</option>
+                  <option value="submit">提交</option>
+                  <option value="admin_op">管理员操作</option>
+                </select>
+              </label>
 
-            <label class="audit-filter-field">
-              <span class="audit-filter-label">资源类型</span>
-              <input
-                v-model="filters.resource_type"
-                type="text"
-                placeholder="资源类型，如 challenge"
-                class="audit-filter-input"
-              />
-            </label>
+              <label class="audit-filter-field">
+                <span class="audit-filter-label">资源类型</span>
+                <input
+                  v-model="filters.resource_type"
+                  type="text"
+                  placeholder="资源类型，如 challenge"
+                  class="audit-filter-input"
+                />
+              </label>
 
-            <label class="audit-filter-field">
-              <span class="audit-filter-label">执行人</span>
-              <input
-                v-model="filters.actor_user_id"
-                type="number"
-                min="1"
-                placeholder="执行人 ID"
-                class="audit-filter-input"
-              />
-            </label>
+              <label class="audit-filter-field">
+                <span class="audit-filter-label">执行人</span>
+                <input
+                  v-model="filters.actor_user_id"
+                  type="number"
+                  min="1"
+                  placeholder="执行人 ID"
+                  class="audit-filter-input"
+                />
+              </label>
             </div>
           </template>
         </WorkspaceDirectoryToolbar>
@@ -433,33 +450,42 @@ watch(
             </span>
           </template>
 
-        <template #cell-action="{ row }">
-          <span class="audit-chip">{{ (row as AuditLogItem).action }}</span>
-        </template>
+          <template #cell-action="{ row }">
+            <span class="audit-chip">{{ (row as AuditLogItem).action }}</span>
+          </template>
 
-        <template #cell-resource="{ row }">
-          <div class="audit-row__resource">
-            <span class="audit-row__resource-type">{{ (row as AuditLogItem).resource_type }}</span>
-            <span v-if="(row as AuditLogItem).resource_id" class="audit-row__resource-id">
-              #{{ (row as AuditLogItem).resource_id }}
-            </span>
-          </div>
-        </template>
+          <template #cell-resource="{ row }">
+            <div class="audit-row__resource">
+              <span class="audit-row__resource-type">{{
+                (row as AuditLogItem).resource_type
+              }}</span>
+              <span v-if="(row as AuditLogItem).resource_id" class="audit-row__resource-id">
+                #{{ (row as AuditLogItem).resource_id }}
+              </span>
+            </div>
+          </template>
 
-        <template #cell-actor="{ row }">
-          <div class="audit-row__actor">
-            <span class="audit-row__actor-name">{{ (row as AuditLogItem).actor_username }}</span>
-            <span v-if="(row as AuditLogItem).actor_user_id" class="audit-row__actor-id">
-              ID {{ (row as AuditLogItem).actor_user_id }}
-            </span>
-          </div>
-        </template>
+          <template #cell-actor="{ row }">
+            <div class="audit-row__actor">
+              <button
+                type="button"
+                class="audit-row__actor-trigger"
+                :aria-label="`查看 ${actorDisplayName(row as AuditLogItem)} 的执行人详情`"
+                @click="openActorDetail(row as AuditLogItem)"
+              >
+                <span class="audit-row__actor-name">
+                  {{ actorDisplayName(row as AuditLogItem) }}
+                </span>
+                <span class="audit-row__actor-hint">查看详情</span>
+              </button>
+            </div>
+          </template>
 
-        <template #cell-detail="{ row }">
-          <p class="audit-row__detail" :title="detailPreview((row as AuditLogItem).detail)">
-            {{ detailPreview((row as AuditLogItem).detail) }}
-          </p>
-        </template>
+          <template #cell-detail="{ row }">
+            <p class="audit-row__detail" :title="detailPreview((row as AuditLogItem).detail)">
+              {{ detailPreview((row as AuditLogItem).detail) }}
+            </p>
+          </template>
         </WorkspaceDataTable>
 
         <div v-if="!loading && total > 0" class="admin-pagination workspace-directory-pagination">
@@ -473,6 +499,55 @@ watch(
         </div>
       </section>
     </main>
+
+    <AdminSurfaceModal
+      :open="!!activeActorLog"
+      title="执行人详情"
+      subtitle="查看当前审计记录中执行人的标识、动作和资源上下文。"
+      eyebrow="Audit Trail"
+      width="34rem"
+      @close="closeActorDetail"
+      @update:open="!$event && closeActorDetail()"
+    >
+      <section v-if="activeActorLog" class="audit-actor-detail">
+        <div class="audit-actor-detail__grid">
+          <article class="audit-actor-detail__item">
+            <span class="audit-actor-detail__label">用户名</span>
+            <strong class="audit-actor-detail__value">
+              {{ actorDisplayName(activeActorLog) }}
+            </strong>
+          </article>
+          <article class="audit-actor-detail__item">
+            <span class="audit-actor-detail__label">用户 ID</span>
+            <strong class="audit-actor-detail__value audit-actor-detail__value--mono">
+              {{ activeActorLog.actor_user_id || '-' }}
+            </strong>
+          </article>
+          <article class="audit-actor-detail__item">
+            <span class="audit-actor-detail__label">动作</span>
+            <strong class="audit-actor-detail__value">{{ activeActorLog.action }}</strong>
+          </article>
+          <article class="audit-actor-detail__item">
+            <span class="audit-actor-detail__label">时间</span>
+            <strong class="audit-actor-detail__value">
+              {{ formatDate(activeActorLog.created_at) }}
+            </strong>
+          </article>
+          <article class="audit-actor-detail__item">
+            <span class="audit-actor-detail__label">资源</span>
+            <strong class="audit-actor-detail__value">
+              {{ resourceDisplayName(activeActorLog) }}
+            </strong>
+          </article>
+          <article class="audit-actor-detail__item audit-actor-detail__item--wide">
+            <span class="audit-actor-detail__label">明细</span>
+            <p class="audit-actor-detail__detail">
+              {{ detailPreview(activeActorLog.detail) }}
+            </p>
+          </article>
+        </div>
+      </section>
+    </AdminSurfaceModal>
   </section>
 </template>
 
@@ -507,6 +582,10 @@ watch(
   display: grid;
   gap: var(--space-4);
   padding-top: var(--space-1);
+}
+
+.admin-board :deep(.workspace-directory-toolbar) {
+  margin-bottom: 0;
 }
 
 .admin-caption {
@@ -632,11 +711,42 @@ watch(
   color: var(--journal-ink);
 }
 
-.audit-row__resource-id,
-.audit-row__actor-id {
+.audit-row__resource-id {
   font-family: var(--font-family-mono);
   font-size: var(--font-size-0-78);
   color: var(--journal-muted);
+}
+
+.audit-row__actor-trigger {
+  display: grid;
+  justify-items: start;
+  gap: 0.15rem;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+}
+
+.audit-row__actor-trigger:hover .audit-row__actor-name,
+.audit-row__actor-trigger:focus-visible .audit-row__actor-name {
+  color: color-mix(in srgb, var(--journal-accent) 88%, var(--journal-ink));
+}
+
+.audit-row__actor-trigger:focus-visible {
+  outline: none;
+}
+
+.audit-row__actor-trigger:focus-visible .audit-row__actor-hint {
+  color: color-mix(in srgb, var(--journal-accent) 76%, var(--journal-muted));
+}
+
+.audit-row__actor-hint {
+  font-size: var(--font-size-0-72);
+  font-weight: 700;
+  color: var(--journal-muted);
+  transition: color 150ms ease;
 }
 
 .audit-row__detail {
@@ -649,6 +759,54 @@ watch(
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+.audit-actor-detail {
+  display: grid;
+}
+
+.audit-actor-detail__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.audit-actor-detail__item {
+  display: grid;
+  gap: var(--space-1-5);
+  border: 1px solid var(--audit-table-border);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--journal-surface-subtle) 92%, var(--color-bg-base));
+  padding: var(--space-3);
+}
+
+.audit-actor-detail__item--wide {
+  grid-column: 1 / -1;
+}
+
+.audit-actor-detail__label {
+  font-size: var(--font-size-0-72);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--journal-muted);
+}
+
+.audit-actor-detail__value {
+  font-size: var(--font-size-0-94);
+  line-height: 1.55;
+  color: var(--journal-ink);
+}
+
+.audit-actor-detail__value--mono {
+  font-family: var(--font-family-mono);
+}
+
+.audit-actor-detail__detail {
+  margin: 0;
+  font-size: var(--font-size-0-88);
+  line-height: 1.7;
+  color: var(--journal-muted);
 }
 
 @media (max-width: 1080px) {
@@ -664,6 +822,10 @@ watch(
 
   .audit-list {
     min-width: 56rem;
+  }
+
+  .audit-actor-detail__grid {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .journal-shell {
