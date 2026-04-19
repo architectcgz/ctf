@@ -77,15 +77,21 @@ function forwardClose(): void {
 
 <style scoped>
 .modal-template-shell--minimal {
+  --modal-template-minimal-surface: color-mix(in srgb, var(--color-bg-elevated) 96%, var(--color-bg-surface));
+  --modal-template-minimal-line: color-mix(in srgb, var(--color-border-default) 86%, transparent);
+  --modal-template-minimal-text: color-mix(in srgb, var(--color-text-primary) 94%, transparent);
+  --modal-template-minimal-muted: color-mix(in srgb, var(--color-text-secondary) 92%, transparent);
+  --modal-template-minimal-faint: color-mix(in srgb, var(--color-text-muted) 92%, transparent);
+  --modal-template-minimal-accent: var(--color-primary);
   background: transparent;
 }
 
 .modal-template-panel--minimal {
   width: min(var(--modal-template-minimal-width, 25rem), 100%);
-  border: 1px solid rgba(226, 232, 240, 0.85);
+  border: 1px solid var(--modal-template-minimal-line);
   border-radius: 1.5rem;
-  background: #ffffff;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+  background: var(--modal-template-minimal-surface);
+  box-shadow: 0 12px 40px color-mix(in srgb, var(--color-shadow-strong) 16%, transparent);
 }
 
 .modal-template-minimal {
@@ -105,7 +111,7 @@ function forwardClose(): void {
   font-size: 1rem;
   font-weight: 900;
   letter-spacing: -0.01em;
-  color: rgba(30, 41, 59, 1);
+  color: var(--modal-template-minimal-text);
 }
 
 .modal-template-minimal__close {
@@ -115,16 +121,16 @@ function forwardClose(): void {
   padding: 0;
   border: 0;
   background: transparent;
-  color: rgba(148, 163, 184, 1);
+  color: var(--modal-template-minimal-faint);
   transition: color 0.18s ease;
 }
 
 .modal-template-minimal__close:hover {
-  color: rgba(51, 65, 85, 1);
+  color: var(--modal-template-minimal-muted);
 }
 
 .modal-template-minimal__body {
-  color: rgba(15, 23, 42, 1);
+  color: var(--modal-template-minimal-text);
 }
 
 .modal-template-minimal__footer {
@@ -134,12 +140,12 @@ function forwardClose(): void {
 .modal-template-minimal :deep(input),
 .modal-template-minimal :deep(select),
 .modal-template-minimal :deep(textarea) {
-  border-bottom-color: rgba(226, 232, 240, 1);
+  border-bottom-color: var(--modal-template-minimal-line);
 }
 
 .modal-template-minimal :deep(input:focus),
 .modal-template-minimal :deep(select:focus),
 .modal-template-minimal :deep(textarea:focus) {
-  border-bottom-color: #7c3aed;
+  border-bottom-color: color-mix(in srgb, var(--modal-template-minimal-accent) 92%, var(--modal-template-minimal-text));
 }
 </style>

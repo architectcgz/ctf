@@ -87,4 +87,19 @@ describe('SecuritySettings', () => {
     expect(securitySettingsSource).not.toMatch(/^\.journal-input:focus\s*\{/m)
     expect(securitySettingsSource).not.toMatch(/^\.journal-input--error\s*\{/m)
   })
+
+  it('应把安全提示区的内文字色收敛为语义类', () => {
+    expect(securitySettingsSource).toContain('security-side-status')
+    expect(securitySettingsSource).toContain('security-side-copy')
+    expect(securitySettingsSource).toContain('security-tip-copy')
+    expect(securitySettingsSource).not.toContain(
+      'class="flex items-center gap-2 text-sm font-medium text-[var(--journal-ink)]"'
+    )
+    expect(securitySettingsSource).not.toContain(
+      'class="mt-3 text-sm leading-6 text-[var(--journal-muted)]"'
+    )
+    expect(securitySettingsSource).not.toContain(
+      'class="mt-2 text-sm leading-6 text-[var(--journal-ink)]"'
+    )
+  })
 })

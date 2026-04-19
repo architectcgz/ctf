@@ -218,7 +218,7 @@ function latestEvidenceLabel(contest: TeacherAWDReviewContestItemData): string {
             <div
               v-for="index in 3"
               :key="index"
-              class="h-28 animate-pulse rounded-[22px] bg-[color-mix(in_srgb,var(--journal-surface-subtle)_92%,transparent)]"
+              class="awd-review-loading-card h-28 animate-pulse"
             />
           </div>
 
@@ -372,6 +372,11 @@ function latestEvidenceLabel(contest: TeacherAWDReviewContestItemData): string {
 .teacher-skeleton-list {
   display: grid;
   gap: var(--space-3);
+}
+
+.awd-review-loading-card {
+  border-radius: 22px;
+  background: color-mix(in srgb, var(--journal-surface-subtle) 92%, transparent);
 }
 
 .awd-review-filter-grid {

@@ -140,16 +140,16 @@ export function timelineTypeLabel(event: TimelineEvent): string {
 
 export function timelineTypeTone(event: TimelineEvent): string {
   if (event.type === 'challenge_detail_view')
-    return 'border-[var(--color-primary)]/30 bg-[var(--color-primary)]/10 text-[var(--color-primary)]'
+    return 'timeline-type-pill timeline-type-pill--primary'
   if (event.type === 'instance_access')
-    return 'border-[var(--color-primary)]/30 bg-[var(--color-primary)]/10 text-[var(--color-primary)]'
+    return 'timeline-type-pill timeline-type-pill--primary'
   if (event.type === 'instance_proxy_request')
-    return 'border-[var(--color-danger)]/30 bg-[var(--color-danger)]/10 text-[var(--color-danger)]'
+    return 'timeline-type-pill timeline-type-pill--danger'
   if (event.type === 'solve')
-    return 'border-[var(--color-success)]/30 bg-[var(--color-success)]/10 text-[var(--color-success)]'
+    return 'timeline-type-pill timeline-type-pill--success'
   if (event.type === 'submit')
-    return 'border-[var(--color-warning)]/30 bg-[var(--color-warning)]/10 text-[var(--color-warning)]'
+    return 'timeline-type-pill timeline-type-pill--warning'
   if (event.type === 'hint')
-    return 'border-[var(--color-cat-reverse)]/30 bg-[var(--color-cat-reverse)]/10 text-[var(--color-cat-reverse)]'
-  return 'border-[var(--color-primary)]/30 bg-[var(--color-primary)]/10 text-[var(--color-primary)]'
+    return 'timeline-type-pill timeline-type-pill--reverse'
+  return 'timeline-type-pill timeline-type-pill--primary'
 }

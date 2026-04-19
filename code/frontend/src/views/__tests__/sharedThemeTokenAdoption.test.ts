@@ -3,6 +3,11 @@ import { describe, expect, it } from 'vitest'
 import appCardSource from '@/components/common/AppCard.vue?raw'
 import appLayoutSource from '@/components/layout/AppLayout.vue?raw'
 import pageHeaderSource from '@/components/common/PageHeader.vue?raw'
+import modalTemplateShellSource from '@/components/common/modal-templates/ModalTemplateShell.vue?raw'
+import classicCenteredModalSource from '@/components/common/modal-templates/ClassicCenteredModal.vue?raw'
+import minimalFloatingModalSource from '@/components/common/modal-templates/MinimalFloatingModal.vue?raw'
+import slideOverDrawerSource from '@/components/common/modal-templates/SlideOverDrawer.vue?raw'
+import cContextTooltipSource from '@/components/common/modal-templates/CContextTooltip.vue?raw'
 import skillRadarSource from '@/components/common/SkillRadar.vue?raw'
 import radarChartSource from '@/components/charts/RadarChart.vue?raw'
 import errorStatusShellSource from '@/components/errors/ErrorStatusShell.vue?raw'
@@ -17,6 +22,9 @@ import challengeListSource from '@/views/challenges/ChallengeList.vue?raw'
 import notificationDropdownSource from '@/components/layout/NotificationDropdown.vue?raw'
 import sidebarSource from '@/components/layout/Sidebar.vue?raw'
 import topNavSource from '@/components/layout/TopNav.vue?raw'
+import cLightActionPopoverSource from '@/components/common/modal-templates/CLightActionPopover.vue?raw'
+import cFocusedInputDialogSource from '@/components/common/modal-templates/CFocusedInputDialog.vue?raw'
+import cImmersiveConfirmDialogSource from '@/components/common/modal-templates/CImmersiveConfirmDialog.vue?raw'
 import challengePackageImportEntrySource from '@/components/admin/challenge/ChallengePackageImportEntry.vue?raw'
 import adminDashboardSource from '@/components/admin/dashboard/AdminDashboardPage.vue?raw'
 import writeupManageSource from '@/components/admin/writeup/ChallengeWriteupManagePanel.vue?raw'
@@ -68,6 +76,97 @@ describe('shared theme token adoption', () => {
       '#f8feff',
       '#f1f5f9',
     ])
+    expectNoHardcodedThemeTokens(modalTemplateShellSource, 'ModalTemplateShell', [
+      'rgba(15, 23, 42, 0.4)',
+    ])
+    expectNoHardcodedThemeTokens(classicCenteredModalSource, 'ClassicCenteredModal', [
+      '#ffffff',
+      '#2563eb',
+      'rgba(226, 232, 240, 0.9)',
+      'rgba(241, 245, 249, 1)',
+      'rgba(248, 250, 252, 0.68)',
+      'rgba(219, 234, 254, 1)',
+      'rgba(148, 163, 184, 1)',
+      'rgba(51, 65, 85, 1)',
+      'rgba(15, 23, 42, 1)',
+    ])
+    expectNoHardcodedThemeTokens(cContextTooltipSource, 'CContextTooltip', [
+      'bg-slate-900',
+      'text-slate-900',
+      'text-slate-300',
+      'text-white',
+      'border-slate-400',
+      'border-t-slate-900',
+    ])
+    expectNoHardcodedThemeTokens(cLightActionPopoverSource, 'CLightActionPopover', [
+      '#2a7a58',
+      '#206346',
+      'bg-white',
+      'text-slate-700',
+      'text-slate-900',
+      'border-slate-200',
+      'shadow-[0_12px_40px_rgba(0,0,0,0.12)]',
+    ])
+    expectNoHardcodedThemeTokens(cFocusedInputDialogSource, 'CFocusedInputDialog', [
+      '#ffffff',
+      '#f8fafc',
+      '#2a7a58',
+      '#206346',
+      '#94a3b8',
+      '#475569',
+      'rgba(42, 122, 88, 0.1)',
+      'rgba(42, 122, 88, 0.2)',
+    ])
+    expectNoHardcodedThemeTokens(cImmersiveConfirmDialogSource, 'CImmersiveConfirmDialog', [
+      '#ffffff',
+      '#fef2f2',
+      '#ef4444',
+      '#dc2626',
+      '#b91c1c',
+      '#0f172a',
+      '#475569',
+      '#e2e8f0',
+      '#f8fafc',
+    ])
+    expectNoHardcodedThemeTokens(minimalFloatingModalSource, 'MinimalFloatingModal', [
+      '#ffffff',
+      '#7c3aed',
+      'rgba(226, 232, 240, 0.85)',
+      'rgba(0, 0, 0, 0.12)',
+      'rgba(30, 41, 59, 1)',
+      'rgba(148, 163, 184, 1)',
+      'rgba(51, 65, 85, 1)',
+      'rgba(15, 23, 42, 1)',
+    ])
+    expectNoHardcodedThemeTokens(slideOverDrawerSource, 'SlideOverDrawer', [
+      '#ffffff',
+      '#059669',
+      'rgba(15, 23, 42, 0.2)',
+      'rgba(236, 253, 245, 1)',
+      'rgba(241, 245, 249, 1)',
+      'rgba(248, 250, 252, 1)',
+      'rgba(255, 255, 255, 0.82)',
+      'rgba(100, 116, 139, 1)',
+    ])
+  })
+
+  it('共享组件不应继续保留低信息度的 Tailwind 任意值魔法数', () => {
+    expect(pageHeaderSource).not.toContain('text-[11px]')
+    expect(pageHeaderSource).not.toContain('tracking-[0.26em]')
+
+    expect(appCardSource).not.toContain('text-[24px]')
+    expect(appCardSource).not.toContain('text-[15px]')
+    expect(appCardSource).not.toContain('text-[13px]')
+    expect(appCardSource).not.toContain('text-[10px]')
+    expect(appCardSource).not.toContain('w-[3px]')
+    expect(notificationDropdownSource).not.toContain('w-[1px]')
+    expect(sidebarSource).not.toContain('w-[260px]')
+    expect(sidebarSource).not.toContain('text-[10px]')
+    expect(sidebarSource).not.toContain('text-[13px]')
+    expect(sidebarSource).not.toContain('ml-[22px]')
+    expect(sidebarSource).not.toContain('-left-[14px]')
+    expect(topNavSource).not.toContain('max-w-[1600px]')
+    expect(topNavSource).not.toContain('md:text-[15px]')
   })
 
   it('学生仪表盘与学习工作区不应继续写死状态色', () => {

@@ -222,14 +222,14 @@ function handleImportChange(event: Event): void {
           </div>
 
           <div class="user-panel-actions">
-            <button type="button" class="admin-btn admin-btn-ghost" @click="emit('refresh')">
+            <button type="button" class="ui-btn ui-btn--ghost" @click="emit('refresh')">
               <RefreshCw class="h-4 w-4" />
               刷新列表
             </button>
             <button
               id="user-open-import"
               type="button"
-              class="admin-btn admin-btn-ghost"
+              class="ui-btn ui-btn--ghost"
               @click="switchPanel('import')"
             >
               <FileUp class="h-4 w-4" />
@@ -238,7 +238,7 @@ function handleImportChange(event: Event): void {
             <button
               id="user-open-create"
               type="button"
-              class="admin-btn admin-btn-primary"
+              class="ui-btn ui-btn--primary"
               @click="emit('openCreateDialog')"
             >
               <UserPlus class="h-4 w-4" />
@@ -369,7 +369,7 @@ function handleImportChange(event: Event): void {
             <template #action>
               <button
                 type="button"
-                class="admin-btn admin-btn-primary"
+                class="ui-btn ui-btn--primary"
                 @click="emit('openCreateDialog')"
               >
                 创建第一个用户
@@ -449,14 +449,14 @@ function handleImportChange(event: Event): void {
               <div class="user-row__actions">
                 <button
                   type="button"
-                  class="admin-btn admin-btn-ghost admin-btn-compact user-action-btn"
+                  class="ui-btn ui-btn--secondary user-action-btn"
                   @click="emit('openEditDialog', row as AdminUserListItem)"
                 >
                   编辑
                 </button>
                 <button
                   type="button"
-                  class="admin-btn admin-btn-danger admin-btn-compact user-action-btn"
+                  class="ui-btn ui-btn--danger user-action-btn"
                   @click="emit('deleteUser', (row as AdminUserListItem).id)"
                 >
                   删除
@@ -497,12 +497,12 @@ function handleImportChange(event: Event): void {
               <button
                 id="user-return-overview"
                 type="button"
-                class="admin-btn admin-btn-ghost"
+                class="ui-btn ui-btn--ghost"
                 @click="switchPanel('overview')"
               >
                 返回工作台
               </button>
-              <button type="button" class="admin-btn admin-btn-primary" @click="triggerImport">
+              <button type="button" class="ui-btn ui-btn--primary" @click="triggerImport">
                 <FileUp class="h-4 w-4" />
                 批量导入
               </button>
@@ -636,55 +636,52 @@ function handleImportChange(event: Event): void {
   color: var(--journal-muted);
 }
 
-.admin-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  min-height: 2.75rem;
-  border-radius: 1rem;
-  padding: var(--space-2-5) var(--space-4);
-  font-size: var(--font-size-0-875);
-  font-weight: 600;
-  transition: all 150ms ease;
-}
-
-.admin-btn-compact {
-  min-height: 2.35rem;
-  padding: var(--space-2) var(--space-3-5);
+.user-panel-actions > .ui-btn,
+.user-row__actions > .ui-btn,
+.workspace-directory-empty .ui-btn {
+  --ui-btn-height: 2.75rem;
+  --ui-btn-radius: 1rem;
+  --ui-btn-padding: var(--space-2-5) var(--space-4);
+  --ui-btn-font-size: var(--font-size-0-875);
+  --ui-btn-font-weight: 600;
+  --ui-btn-focus-ring: color-mix(in srgb, var(--journal-accent) 18%, transparent);
 }
 
 .user-action-btn {
-  min-height: 2rem;
-  padding: var(--space-1-5) var(--space-3);
-  border-radius: 0.8rem;
-  font-size: var(--font-size-0-8125);
+  --ui-btn-height: 2rem;
+  --ui-btn-padding: var(--space-1-5) var(--space-3);
+  --ui-btn-radius: 0.8rem;
+  --ui-btn-font-size: var(--font-size-0-8125);
 }
 
-.admin-btn-primary {
-  background: var(--journal-accent);
-  color: #fff;
+.user-panel-actions > .ui-btn.ui-btn--primary,
+.workspace-directory-empty .ui-btn.ui-btn--primary {
+  --ui-btn-primary-background: var(--journal-accent);
+  --ui-btn-primary-hover-background: var(--color-primary-hover);
 }
 
-.admin-btn-primary:hover {
-  background: var(--color-primary-hover);
+.user-panel-actions > .ui-btn.ui-btn--ghost {
+  --ui-btn-border: var(--admin-control-border);
+  --ui-btn-background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
+  --ui-btn-color: var(--journal-ink);
+  --ui-btn-hover-border: color-mix(in srgb, var(--journal-accent) 28%, transparent);
+  --ui-btn-hover-background: color-mix(in srgb, var(--journal-accent) 4%, var(--journal-surface));
+  --ui-btn-hover-color: var(--journal-accent);
 }
 
-.admin-btn-ghost {
-  border: 1px solid var(--admin-control-border);
-  background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
-  color: var(--journal-ink);
+.user-row__actions > .ui-btn.ui-btn--secondary {
+  --ui-btn-border: var(--admin-control-border);
+  --ui-btn-background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
+  --ui-btn-color: var(--journal-ink);
+  --ui-btn-hover-border: color-mix(in srgb, var(--journal-accent) 28%, transparent);
+  --ui-btn-hover-background: color-mix(in srgb, var(--journal-accent) 4%, var(--journal-surface));
+  --ui-btn-hover-color: var(--journal-accent);
 }
 
-.admin-btn-ghost:hover {
-  border-color: color-mix(in srgb, var(--journal-accent) 28%, transparent);
-  color: var(--journal-accent);
-}
-
-.admin-btn-danger {
-  border: 1px solid color-mix(in srgb, var(--color-danger) 20%, transparent);
-  background: color-mix(in srgb, var(--color-danger) 10%, var(--journal-surface));
-  color: color-mix(in srgb, var(--color-danger) 88%, var(--journal-ink));
+.user-row__actions > .ui-btn.ui-btn--danger {
+  --ui-btn-danger-border: color-mix(in srgb, var(--color-danger) 20%, transparent);
+  --ui-btn-danger-background: color-mix(in srgb, var(--color-danger) 10%, var(--journal-surface));
+  --ui-btn-danger-color: color-mix(in srgb, var(--color-danger) 88%, var(--journal-ink));
 }
 
 .admin-input {

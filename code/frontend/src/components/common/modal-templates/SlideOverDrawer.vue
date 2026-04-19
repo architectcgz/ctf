@@ -92,18 +92,27 @@ function forwardClose(): void {
 
 <style scoped>
 .modal-template-shell--drawer {
+  --modal-template-drawer-overlay: color-mix(in srgb, var(--color-bg-base) 22%, transparent);
+  --modal-template-drawer-surface: color-mix(in srgb, var(--color-bg-elevated) 96%, var(--color-bg-surface));
+  --modal-template-drawer-surface-muted: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
+  --modal-template-drawer-line: color-mix(in srgb, var(--color-border-default) 86%, transparent);
+  --modal-template-drawer-line-strong: color-mix(in srgb, var(--color-border-default) 94%, transparent);
+  --modal-template-drawer-text: color-mix(in srgb, var(--color-text-primary) 94%, transparent);
+  --modal-template-drawer-muted: color-mix(in srgb, var(--color-text-secondary) 92%, transparent);
+  --modal-template-drawer-faint: color-mix(in srgb, var(--color-text-muted) 92%, transparent);
+  --modal-template-drawer-accent: var(--color-primary);
   justify-content: flex-end;
   padding: 0;
-  background: rgba(15, 23, 42, 0.2);
+  background: var(--modal-template-drawer-overlay);
   backdrop-filter: blur(8px);
 }
 
 .modal-template-panel--drawer {
   width: min(var(--modal-template-drawer-width, 32rem), 100vw);
   height: 100%;
-  border-left: 1px solid rgba(226, 232, 240, 1);
-  background: #ffffff;
-  box-shadow: -24px 0 64px rgba(15, 23, 42, 0.16);
+  border-left: 1px solid var(--modal-template-drawer-line-strong);
+  background: var(--modal-template-drawer-surface);
+  box-shadow: -24px 0 64px color-mix(in srgb, var(--color-shadow-strong) 18%, transparent);
 }
 
 .modal-template-drawer {
@@ -114,7 +123,7 @@ function forwardClose(): void {
 
 .modal-template-drawer__header {
   padding: 1.75rem 2rem 1.5rem;
-  border-bottom: 1px solid rgba(241, 245, 249, 1);
+  border-bottom: 1px solid var(--modal-template-drawer-line);
 }
 
 .modal-template-drawer__head-row {
@@ -131,10 +140,10 @@ function forwardClose(): void {
   width: 2.5rem;
   height: 2.5rem;
   border-radius: 1rem;
-  border: 1px solid rgba(209, 250, 229, 1);
-  background: rgba(236, 253, 245, 1);
-  color: #059669;
-  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.08);
+  border: 1px solid color-mix(in srgb, var(--modal-template-drawer-accent) 18%, var(--modal-template-drawer-line));
+  background: color-mix(in srgb, var(--modal-template-drawer-accent) 10%, var(--modal-template-drawer-surface));
+  color: color-mix(in srgb, var(--modal-template-drawer-accent) 92%, var(--modal-template-drawer-text));
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--modal-template-drawer-accent) 10%, transparent);
 }
 
 .modal-template-drawer__close {
@@ -143,18 +152,18 @@ function forwardClose(): void {
   justify-content: center;
   width: 2.25rem;
   height: 2.25rem;
-  border: 1px solid rgba(226, 232, 240, 1);
+  border: 1px solid var(--modal-template-drawer-line);
   border-radius: 999px;
-  background: rgba(248, 250, 252, 1);
-  color: rgba(148, 163, 184, 1);
+  background: var(--modal-template-drawer-surface-muted);
+  color: var(--modal-template-drawer-faint);
   transition:
     background-color 0.18s ease,
     color 0.18s ease;
 }
 
 .modal-template-drawer__close:hover {
-  background: rgba(241, 245, 249, 1);
-  color: rgba(51, 65, 85, 1);
+  background: color-mix(in srgb, var(--modal-template-drawer-line) 18%, var(--modal-template-drawer-surface-muted));
+  color: var(--modal-template-drawer-muted);
 }
 
 .modal-template-drawer__eyebrow {
@@ -163,7 +172,7 @@ function forwardClose(): void {
   font-weight: 800;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: rgba(148, 163, 184, 1);
+  color: var(--modal-template-drawer-faint);
 }
 
 .modal-template-drawer__title {
@@ -171,14 +180,14 @@ function forwardClose(): void {
   font-size: 1.6rem;
   font-weight: 900;
   line-height: 1.08;
-  color: rgba(15, 23, 42, 1);
+  color: var(--modal-template-drawer-text);
 }
 
 .modal-template-drawer__subtitle {
   margin: 0.75rem 0 0;
   font-size: 0.8rem;
   line-height: 1.7;
-  color: rgba(100, 116, 139, 1);
+  color: var(--modal-template-drawer-muted);
 }
 
 .modal-template-drawer__body {
@@ -193,8 +202,8 @@ function forwardClose(): void {
   align-items: center;
   gap: 1rem;
   padding: 1.5rem;
-  border-top: 1px solid rgba(226, 232, 240, 1);
-  background: rgba(255, 255, 255, 0.82);
+  border-top: 1px solid var(--modal-template-drawer-line);
+  background: color-mix(in srgb, var(--modal-template-drawer-surface) 82%, transparent);
   backdrop-filter: blur(14px);
   flex-shrink: 0;
 }

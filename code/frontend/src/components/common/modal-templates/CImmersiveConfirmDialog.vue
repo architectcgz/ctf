@@ -76,7 +76,7 @@ function handleConfirm(): void {
 
       <div class="c-immersive-confirm__note">
         <slot name="note-icon">
-          <ShieldAlert :size="16" class="shrink-0 text-slate-500" />
+          <ShieldAlert :size="16" class="c-immersive-confirm__note-icon shrink-0" />
         </slot>
         <span>{{ props.note }}</span>
       </div>
@@ -97,7 +97,14 @@ function handleConfirm(): void {
 
 <style scoped>
 .c-immersive-confirm-shell {
-  background: rgba(15, 23, 42, 0.3);
+  --c-immersive-confirm-overlay: color-mix(in srgb, var(--color-bg-base) 28%, transparent);
+  --c-immersive-confirm-surface: color-mix(in srgb, var(--color-bg-elevated) 96%, var(--color-bg-surface));
+  --c-immersive-confirm-surface-muted: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
+  --c-immersive-confirm-line: color-mix(in srgb, var(--color-border-default) 86%, transparent);
+  --c-immersive-confirm-text: color-mix(in srgb, var(--color-text-primary) 94%, transparent);
+  --c-immersive-confirm-muted: color-mix(in srgb, var(--color-text-secondary) 92%, transparent);
+  --c-immersive-confirm-danger: var(--color-danger);
+  background: var(--c-immersive-confirm-overlay);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
 }
@@ -106,8 +113,8 @@ function handleConfirm(): void {
   width: min(var(--c-immersive-confirm-width, 32rem), 100%);
   overflow: hidden;
   border-radius: 0.25rem;
-  background: #ffffff;
-  box-shadow: 0 25px 50px rgba(15, 23, 42, 0.28);
+  background: var(--c-immersive-confirm-surface);
+  box-shadow: 0 25px 50px color-mix(in srgb, var(--color-shadow-strong) 28%, transparent);
 }
 
 .c-immersive-confirm {
@@ -126,22 +133,22 @@ function handleConfirm(): void {
   align-items: center;
   justify-content: center;
   border-radius: 999px;
-  background: #fef2f2;
-  color: #ef4444;
+  background: color-mix(in srgb, var(--c-immersive-confirm-danger) 12%, var(--c-immersive-confirm-surface));
+  color: color-mix(in srgb, var(--c-immersive-confirm-danger) 92%, var(--c-immersive-confirm-text));
 }
 
 .c-immersive-confirm__title {
   margin: 0 0 1rem;
   font-size: 1.5rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--c-immersive-confirm-text);
 }
 
 .c-immersive-confirm__description {
   margin: 0 0 2rem;
   font-size: 15px;
   line-height: 1.75;
-  color: #475569;
+  color: var(--c-immersive-confirm-muted);
 }
 
 .c-immersive-confirm__note {
@@ -150,14 +157,18 @@ function handleConfirm(): void {
   align-items: flex-start;
   gap: 0.75rem;
   margin-bottom: 2rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--c-immersive-confirm-line);
   border-radius: 0.25rem;
-  background: #f8fafc;
+  background: var(--c-immersive-confirm-surface-muted);
   padding: 1rem;
   text-align: left;
   font-size: 13px;
   line-height: 1.65;
-  color: #475569;
+  color: var(--c-immersive-confirm-muted);
+}
+
+.c-immersive-confirm__note-icon {
+  color: var(--c-immersive-confirm-muted);
 }
 
 .c-immersive-confirm__actions {
@@ -176,20 +187,20 @@ function handleConfirm(): void {
 }
 
 .c-immersive-confirm__button--ghost {
-  background: #f1f5f9;
-  color: #475569;
+  background: color-mix(in srgb, var(--c-immersive-confirm-line) 18%, var(--c-immersive-confirm-surface-muted));
+  color: var(--c-immersive-confirm-muted);
 }
 
 .c-immersive-confirm__button--ghost:hover {
-  background: #e2e8f0;
+  background: color-mix(in srgb, var(--c-immersive-confirm-line) 28%, var(--c-immersive-confirm-surface-muted));
 }
 
 .c-immersive-confirm__button--danger {
-  background: #dc2626;
-  color: #ffffff;
+  background: color-mix(in srgb, var(--c-immersive-confirm-danger) 92%, var(--c-immersive-confirm-text));
+  color: var(--color-text-inverse);
 }
 
 .c-immersive-confirm__button--danger:hover {
-  background: #b91c1c;
+  background: color-mix(in srgb, var(--c-immersive-confirm-danger) 82%, var(--c-immersive-confirm-text));
 }
 </style>

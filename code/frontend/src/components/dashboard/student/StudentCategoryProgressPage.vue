@@ -103,7 +103,7 @@ function openPrimaryCategory(): void {
     <div :class="embedded ? undefined : 'content-pane'">
       <div class="category-header">
       <div class="workspace-overline">Action Ranking</div>
-      <h1 class="journal-page-title workspace-page-title text-[var(--journal-ink)]">
+      <h1 class="journal-page-title workspace-page-title journal-soft-page-title">
         {{ headlineTitle }}
       </h1>
       <p class="workspace-page-copy max-w-2xl">
@@ -154,7 +154,7 @@ function openPrimaryCategory(): void {
 
         <div
           v-if="rankedCategories.length === 0"
-          class="mt-5 rounded-[22px] border border-dashed border-[var(--journal-shell-border)] px-4 py-12 text-center text-sm text-[var(--journal-muted)]"
+          class="journal-soft-empty-state mt-5"
         >
           当前还没有分类统计数据，先完成几道题再回来查看。
         </div>
@@ -178,7 +178,7 @@ function openPrimaryCategory(): void {
                     >{{ item.solved }}/{{ item.total }}</span
                   >
                 </div>
-                <p class="mt-2 text-sm leading-6 text-[var(--journal-muted)]">
+                <p class="journal-soft-body-copy mt-2 text-sm leading-6">
                   {{ categoryActionCopy(item, index) }}
                 </p>
               </div>

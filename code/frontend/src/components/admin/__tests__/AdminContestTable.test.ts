@@ -35,6 +35,11 @@ describe('AdminContestTable', () => {
     expect(adminContestTableSource).toContain(":global([data-theme='dark']) .contest-row-menu-button")
   })
 
+  it('分页壳层应通过语义类承接弱文本色，而不是继续在模板里内联主题 utility', () => {
+    expect(adminContestTableSource).toContain('contest-pagination-tone')
+    expect(adminContestTableSource).not.toContain('text-[var(--color-text-muted)]')
+  })
+
   it('应将编辑和导出结果收纳进更多菜单，并通过浮层渲染', async () => {
     const wrapper = mount(AdminContestTable, {
       attachTo: document.body,

@@ -56,4 +56,65 @@ describe('student journal soft shared styles', () => {
       expect(source).not.toMatch(/^:global\(\[data-theme='dark'\]\) \.journal-hero\s*\{/m)
     }
   })
+
+  it('student journal 页面应复用共享空态面板样式，而不是重复写裸圆角和主题色类', () => {
+    expect(journalSoftSurfacesSource).toContain('.journal-soft-surface .journal-soft-empty-state')
+
+    for (const source of [
+      studentCategoryProgressSource,
+      studentDifficultySource,
+      studentRecommendationSource,
+      studentTimelineSource,
+    ]) {
+      expect(source).toContain('journal-soft-empty-state')
+      expect(source).not.toContain(
+        'rounded-[22px] border border-dashed border-[var(--journal-shell-border)]'
+      )
+    }
+  })
+
+  it('student overview 页面应把雷达图高度和紧凑空态收敛为语义类', () => {
+    expect(studentOverviewEditorialSource).toContain('student-overview-radar-height')
+    expect(studentOverviewEditorialSource).toContain('journal-soft-empty-state--compact')
+    expect(studentOverviewEditorialSource).not.toContain('h-[18rem]')
+    expect(studentOverviewEditorialSource).not.toContain('md:h-[21rem]')
+    expect(studentOverviewEditorialSource).not.toContain('xl:h-[23rem]')
+    expect(studentOverviewEditorialSource).not.toContain('rounded-[18px]')
+  })
+
+  it('student journal 页面应复用共享标题、正文与强调图标语义类，而不是继续写主题 utility', () => {
+    expect(journalSoftSurfacesSource).toContain('.journal-soft-surface .journal-soft-page-title')
+    expect(journalSoftSurfacesSource).toContain('.journal-soft-surface .journal-soft-section-title')
+    expect(journalSoftSurfacesSource).toContain('.journal-soft-surface .journal-soft-body-title')
+    expect(journalSoftSurfacesSource).toContain('.journal-soft-surface .journal-soft-body-copy')
+    expect(journalSoftSurfacesSource).toContain('.journal-soft-surface .journal-soft-meta')
+    expect(journalSoftSurfacesSource).toContain('.journal-soft-surface .journal-soft-accent-icon')
+    expect(journalSoftSurfacesSource).toContain('.journal-soft-surface .journal-soft-accent-pill')
+
+    for (const source of [
+      studentCategoryProgressSource,
+      studentDifficultySource,
+      studentOverviewEditorialSource,
+      studentRecommendationSource,
+      studentTimelineSource,
+    ]) {
+      expect(source).not.toContain('text-[var(--journal-ink)]')
+    }
+
+    for (const source of [
+      studentCategoryProgressSource,
+      studentOverviewEditorialSource,
+      studentRecommendationSource,
+      studentTimelineSource,
+    ]) {
+      expect(source).not.toContain('text-[var(--journal-muted)]')
+    }
+
+    for (const source of [studentOverviewEditorialSource, studentRecommendationSource]) {
+      expect(source).not.toContain('text-[var(--journal-accent-strong)]')
+    }
+
+    expect(studentRecommendationSource).not.toContain('border-[var(--journal-accent)]/20')
+    expect(studentRecommendationSource).not.toContain('bg-[var(--journal-accent)]/8')
+  })
 })

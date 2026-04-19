@@ -128,4 +128,12 @@ describe('TeacherAWDReviewIndex', () => {
       '支持按状态或关键字快速定位要进入的 AWD 赛事。'
     )
   })
+
+  it('加载骨架应通过语义类承接，不再直接写圆角和背景混色', () => {
+    expect(teacherAwdReviewIndexSource).toContain('awd-review-loading-card')
+    expect(teacherAwdReviewIndexSource).not.toContain('rounded-[22px]')
+    expect(teacherAwdReviewIndexSource).not.toContain(
+      'bg-[color-mix(in_srgb,var(--journal-surface-subtle)_92%,transparent)]'
+    )
+  })
 })

@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { watch } from 'vue'
-import { useDebounceFn } from '@vueuse/core'
+import { onUnmounted, watch } from 'vue'
 
 import type { AdminNotificationPublishResult } from '@/api/contracts'
 import AdminSurfaceDrawer from '@/components/common/modal-templates/AdminSurfaceDrawer.vue'
@@ -15,20 +14,33 @@ const emit = defineEmits<{
 }>()
 
 const publisher = useAdminNotificationPublisher()
-type DebouncedUserSearch = ReturnType<typeof useDebounceFn> & {
-  cancel?: () => void
+let userSearchTimer: number | null = null
+
+function clearUserSearchTimer(): void {
+  if (userSearchTimer !== null) {
+    window.clearTimeout(userSearchTimer)
+    userSearchTimer = null
+  }
 }
-const scheduleUserSearch = useDebounceFn(() => {
-  if (publisher.audienceTarget.value !== 'user') return
-  void publisher.searchUsers(publisher.userKeyword.value)
-}, 250) as DebouncedUserSearch
+
+function scheduleUserSearch(): void {
+  clearUserSearchTimer()
+  userSearchTimer = window.setTimeout(() => {
+    userSearchTimer = null
+    if (publisher.audienceTarget.value !== 'user') return
+    void publisher.searchUsers(publisher.userKeyword.value)
+  }, 250)
+}
 
 watch(
   () => props.open,
   (open) => {
+    clearUserSearchTimer()
     if (open) {
       publisher.reset()
+      return
     }
+    publisher.reset()
   }
 )
 
@@ -94,9 +106,13 @@ function toggleUser(id: string, checked: boolean): void {
 }
 
 async function handleUserSearch(): Promise<void> {
-  scheduleUserSearch.cancel?.()
+  clearUserSearchTimer()
   await publisher.searchUsers(publisher.userKeyword.value)
 }
+
+onUnmounted(() => {
+  clearUserSearchTimer()
+})
 </script>
 
 <template>
@@ -201,7 +217,7 @@ async function handleUserSearch(): Promise<void> {
                 <span class="text-xs text-[var(--color-text-muted)]">班级候选来自班级管理</span>
                 <button
                   type="button"
-                  class="publish-inline-btn"
+                  class="ui-btn ui-btn--sm ui-btn--secondary"
                   :disabled="publisher.loadingClasses.value"
                   @click="publisher.loadClasses"
                 >
@@ -246,7 +262,7 @@ async function handleUserSearch(): Promise<void> {
                 />
                 <button
                   type="button"
-                  class="publish-inline-btn"
+                  class="ui-btn ui-btn--sm ui-btn--secondary"
                   :disabled="publisher.loadingUsers.value"
                   @click="handleUserSearch"
                 >
@@ -283,10 +299,10 @@ async function handleUserSearch(): Promise<void> {
 
     <template #footer>
       <footer class="publish-footer border-t px-6 py-4">
-        <button type="button" class="publish-btn" @click="handleClose">取消</button>
+        <button type="button" class="ui-btn ui-btn--secondary" @click="handleClose">取消</button>
         <button
           type="button"
-          class="publish-btn publish-btn-primary"
+          class="ui-btn ui-btn--primary"
           :disabled="publisher.submitting.value"
           @click="handleSubmit"
         >
@@ -365,37 +381,14 @@ async function handleUserSearch(): Promise<void> {
   color: var(--color-text-muted);
 }
 
-.publish-inline-btn,
-.publish-btn {
-  border: 1px solid color-mix(in srgb, var(--color-border-default) 80%, transparent);
-  border-radius: 0.75rem;
-  padding: 0.45rem 0.75rem;
-  font-size: var(--font-size-0-82);
-  color: var(--color-text-primary);
-  background: var(--color-bg-elevated);
-  cursor: pointer;
-}
-
-.publish-inline-btn:disabled,
-.publish-btn:disabled {
-  cursor: not-allowed;
-  opacity: 0.55;
-}
-
-.publish-btn {
-  min-width: 6rem;
-}
-
-.publish-btn-primary {
-  border-color: color-mix(in srgb, var(--color-primary) 45%, transparent);
-  background: color-mix(in srgb, var(--color-primary) 14%, transparent);
-  color: var(--color-primary);
-}
-
 .publish-footer {
   display: flex;
   justify-content: flex-end;
   gap: 0.6rem;
+}
+
+.publish-footer > .ui-btn {
+  min-width: 6rem;
 }
 
 .publish-error {

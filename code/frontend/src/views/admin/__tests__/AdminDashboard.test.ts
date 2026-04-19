@@ -90,6 +90,13 @@ describe('AdminDashboard', () => {
     expect(adminDashboardPageSource).not.toContain('admin-dashboard-tab-hotspots')
   })
 
+  it('应改用共享 ui-btn 原语而不是页面私有 admin-btn 按钮族', () => {
+    expect(adminDashboardPageSource).toContain('class="quick-action ui-btn ui-btn--primary"')
+    expect(adminDashboardPageSource).toContain('class="quick-action ui-btn ui-btn--ghost"')
+    expect(adminDashboardPageSource).not.toContain('admin-btn admin-btn-primary')
+    expect(adminDashboardPageSource).not.toContain('admin-btn admin-btn-ghost')
+  })
+
   it('应该采用与 teacher dashboard 一致的 workspace 骨架，并去掉页面内重复顶栏', () => {
     expect(adminDashboardPageSource).toContain('class="workspace-shell"')
     expect(adminDashboardPageSource).not.toContain('class="workspace-topbar"')

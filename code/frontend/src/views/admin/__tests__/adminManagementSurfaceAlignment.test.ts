@@ -10,6 +10,7 @@ import contestEditSource from '../ContestEdit.vue?raw'
 import imageManageSource from '../ImageManage.vue?raw'
 import cheatDetectionSource from '../CheatDetection.vue?raw'
 import awdRoundInspectorSource from '@/components/admin/contest/AWDRoundInspector.vue?raw'
+import awdTrafficPanelSource from '@/components/admin/contest/AWDTrafficPanel.vue?raw'
 import awdChallengeConfigPanelSource from '@/components/admin/contest/AWDChallengeConfigPanel.vue?raw'
 import awdReadinessSummarySource from '@/components/admin/contest/AWDReadinessSummary.vue?raw'
 import awdReadinessOverrideDialogSource from '@/components/admin/contest/AWDReadinessOverrideDialog.vue?raw'
@@ -55,7 +56,13 @@ describe('admin management surface alignment', () => {
       /--user-row-divider:\s*color-mix\(in srgb,\s*var\(--journal-border\) 58%, transparent\);/
     )
     expect(userGovernanceSource).toMatch(
-      /\.admin-btn-ghost\s*\{[\s\S]*border:\s*1px solid var\(--admin-control-border\);/s
+      /\.user-panel-actions\s*>\s*\.ui-btn,[\s\S]*\.workspace-directory-empty\s+\.ui-btn\s*\{[\s\S]*--ui-btn-height:\s*2\.75rem;[\s\S]*--ui-btn-radius:\s*1rem;/s
+    )
+    expect(userGovernanceSource).toMatch(
+      /\.user-panel-actions\s*>\s*\.ui-btn\.ui-btn--ghost\s*\{[\s\S]*--ui-btn-border:\s*var\(--admin-control-border\);[\s\S]*--ui-btn-background:\s*color-mix\(in srgb,\s*var\(--journal-surface\) 94%, transparent\);/s
+    )
+    expect(userGovernanceSource).toMatch(
+      /\.user-row__actions\s*>\s*\.ui-btn\.ui-btn--secondary\s*\{[\s\S]*--ui-btn-border:\s*var\(--admin-control-border\);/s
     )
     expect(userGovernanceSource).toMatch(
       /\.admin-input\s*\{[\s\S]*border:\s*1px solid var\(--admin-control-border\);/s
@@ -162,7 +169,8 @@ describe('admin management surface alignment', () => {
   })
 
   it('awd round inspector traffic filters should stay flattened into the table section instead of using a split intro bar', () => {
-    expect(awdRoundInspectorSource).toContain('id="awd-traffic-reset-filters"')
+    expect(awdRoundInspectorSource).toContain('<AWDTrafficPanel')
+    expect(awdTrafficPanelSource).toContain('id="awd-traffic-reset-filters"')
     expect(awdRoundInspectorSource).not.toContain(
       '按攻击方、受害方、题目、状态分桶和路径关键字筛选。'
     )
@@ -305,7 +313,8 @@ describe('admin management surface alignment', () => {
     expect(auditLogSource).toContain('AdminPaginationControls')
     expect(challengeManageSource).toContain('WorkspaceDirectoryPagination')
     expect(adminContestTableSource).toContain('AdminPaginationControls')
-    expect(awdRoundInspectorSource).toContain('AdminPaginationControls')
+    expect(awdRoundInspectorSource).toContain('<AWDTrafficPanel')
+    expect(awdTrafficPanelSource).toContain('AdminPaginationControls')
   })
 
   it('admin summary grids should use shared summary-grid base styles', () => {

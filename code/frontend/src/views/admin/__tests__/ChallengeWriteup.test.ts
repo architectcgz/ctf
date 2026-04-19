@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest'
 import ChallengeWriteupEditorPage from '@/components/admin/writeup/ChallengeWriteupEditorPage.vue'
 import ChallengeWriteupViewPage from '@/components/admin/writeup/ChallengeWriteupViewPage.vue'
 import challengeWriteupEditorSource from '@/components/admin/writeup/ChallengeWriteupEditorPage.vue?raw'
+import challengeWriteupViewSource from '@/components/admin/writeup/ChallengeWriteupViewPage.vue?raw'
 import { ApiError } from '@/api/request'
 
 const adminApiMocks = vi.hoisted(() => ({
@@ -68,6 +69,22 @@ vi.mock('@/composables/useDestructiveConfirm', () => ({
 }))
 
 describe('ChallengeWriteupEditorPage', () => {
+  it('题解查看页和编辑页应改用共享 ui-btn 原语而不是页面私有 admin-btn 按钮族', () => {
+    expect(challengeWriteupViewSource).toContain('class="ui-btn ui-btn--ghost"')
+    expect(challengeWriteupViewSource).toContain('class="ui-btn ui-btn--primary"')
+    expect(challengeWriteupViewSource).not.toContain('admin-btn admin-btn-ghost')
+    expect(challengeWriteupViewSource).not.toContain('admin-btn admin-btn-primary')
+
+    expect(challengeWriteupEditorSource).toContain('class="ui-btn ui-btn--ghost"')
+    expect(challengeWriteupEditorSource).toContain('class="ui-btn ui-btn--primary"')
+    expect(challengeWriteupEditorSource).toContain('class="ui-btn ui-btn--secondary"')
+    expect(challengeWriteupEditorSource).toContain('class="ui-btn ui-btn--danger"')
+    expect(challengeWriteupEditorSource).not.toContain('admin-btn admin-btn-ghost')
+    expect(challengeWriteupEditorSource).not.toContain('admin-btn admin-btn-primary')
+    expect(challengeWriteupEditorSource).not.toContain('admin-btn admin-btn-accent')
+    expect(challengeWriteupEditorSource).not.toContain('admin-btn admin-btn-danger')
+  })
+
   it('嵌入态题解编辑页应使用统一头部样式而不是旧 workspace-tab-heading', () => {
     expect(challengeWriteupEditorSource).toContain('class="list-heading writeup-tab-heading"')
     expect(challengeWriteupEditorSource).toContain(

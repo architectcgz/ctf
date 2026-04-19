@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { nextTick } from 'vue'
 
 import AppToast from '../AppToast.vue'
+import appToastSource from '../AppToast.vue?raw'
 import { useToast, useToastState } from '@/composables/useToast'
 
 function resetToastState() {
@@ -66,5 +67,11 @@ describe('AppToast', () => {
 
     expect(style).toContain('var(--color-primary)')
     expect(style).not.toContain('8, 145, 178')
+  })
+
+  it('avoids layout arbitrary values in the shared toast shell', () => {
+    expect(appToastSource).not.toContain('max-w-[calc(100vw-2rem)]')
+    expect(appToastSource).not.toContain('w-[380px]')
+    expect(appToastSource).not.toContain('rounded-[22px]')
   })
 })

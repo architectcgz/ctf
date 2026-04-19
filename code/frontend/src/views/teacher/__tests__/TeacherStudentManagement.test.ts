@@ -11,7 +11,7 @@ const pushMock = vi.fn()
 
 const teacherApiMocks = vi.hoisted(() => ({
   getClasses: vi.fn(),
-  getClassStudents: vi.fn(),
+  getStudentsDirectory: vi.fn(),
 }))
 
 vi.mock('vue-router', async () => {
@@ -46,42 +46,34 @@ describe('TeacherStudentManagement', () => {
     localStorage.clear()
     pushMock.mockReset()
     teacherApiMocks.getClasses.mockReset()
-    teacherApiMocks.getClassStudents.mockReset()
+    teacherApiMocks.getStudentsDirectory.mockReset()
 
     teacherApiMocks.getClasses.mockResolvedValue([{ name: 'Class A', student_count: 2 }])
-    teacherApiMocks.getClassStudents.mockImplementation(async (_className, params) => {
-      if (params?.keyword === 'alice') {
-        return [
-          {
-            id: 'stu-1',
-            username: 'alice',
-            name: 'Alice Zhang',
-            student_no: '2024001',
-            recent_event_count: 0,
-          },
-        ]
-      }
-      if (params?.keyword === 'Alice') {
-        return [
-          {
-            id: 'stu-1',
-            username: 'alice',
-            name: 'Alice Zhang',
-            student_no: '2024001',
-            recent_event_count: 0,
-          },
-        ]
-      }
-      return [
+    teacherApiMocks.getStudentsDirectory.mockImplementation(async (params) => {
+      const all = [
         {
           id: 'stu-1',
           username: 'alice',
           name: 'Alice Zhang',
           student_no: '2024001',
           recent_event_count: 0,
+          class_name: 'Class A',
         },
-        { id: 'stu-2', username: 'bob', recent_event_count: 2, solved_count: 1 },
+        { id: 'stu-2', username: 'bob', recent_event_count: 2, solved_count: 1, class_name: 'Class A' },
       ]
+      const filtered = all.filter((item) => {
+        const keywordMatched =
+          !params?.keyword ||
+          item.username.includes(params.keyword) ||
+          (item.name ?? '').includes(params.keyword)
+        return keywordMatched
+      })
+      return {
+        list: filtered,
+        total: filtered.length,
+        page: params?.page ?? 1,
+        page_size: params?.page_size ?? 20,
+      }
     })
 
     const authStore = useAuthStore()
@@ -166,13 +158,18 @@ describe('TeacherStudentManagement', () => {
 
     const searchInput = wrapper.find('input[placeholder="搜索姓名或用户名"]')
     await searchInput.setValue('Alice')
-    expect(teacherApiMocks.getClassStudents).toHaveBeenCalledTimes(1)
+    expect(teacherApiMocks.getStudentsDirectory).toHaveBeenCalledTimes(1)
     vi.advanceTimersByTime(250)
     await flushPromises()
 
-    expect(teacherApiMocks.getClassStudents).toHaveBeenLastCalledWith('Class A', {
+    expect(teacherApiMocks.getStudentsDirectory).toHaveBeenLastCalledWith({
+      class_name: 'Class A',
       keyword: 'Alice',
       student_no: undefined,
+      sort_key: 'solved_count',
+      sort_order: 'desc',
+      page: 1,
+      page_size: 20,
     })
     expect(wrapper.text()).toContain('alice')
     expect(wrapper.text()).not.toContain('bob')
@@ -243,39 +240,59 @@ describe('TeacherStudentManagement', () => {
   })
 
   it('应该忽略过期搜索请求的返回结果', async () => {
-    const slowRequest = deferred<
-      Array<{
+    const slowRequest = deferred<{
+      list: Array<{
         id: string
         username: string
         name?: string
         student_no?: string
         recent_event_count?: number
         solved_count?: number
+        class_name?: string
       }>
-    >()
-    const fastRequest = deferred<
-      Array<{
+      total: number
+      page: number
+      page_size: number
+    }>()
+    const fastRequest = deferred<{
+      list: Array<{
         id: string
         username: string
         name?: string
         student_no?: string
         recent_event_count?: number
         solved_count?: number
+        class_name?: string
       }>
-    >()
+      total: number
+      page: number
+      page_size: number
+    }>()
 
-    teacherApiMocks.getClassStudents.mockReset()
-    teacherApiMocks.getClassStudents
-      .mockResolvedValueOnce([
-        {
-          id: 'stu-1',
-          username: 'alice',
-          name: 'Alice Zhang',
-          student_no: '2024001',
-          recent_event_count: 0,
-        },
-        { id: 'stu-2', username: 'bob', recent_event_count: 2, solved_count: 1 },
-      ])
+    teacherApiMocks.getStudentsDirectory.mockReset()
+    teacherApiMocks.getStudentsDirectory
+      .mockResolvedValueOnce({
+        list: [
+          {
+            id: 'stu-1',
+            username: 'alice',
+            name: 'Alice Zhang',
+            student_no: '2024001',
+            recent_event_count: 0,
+            class_name: 'Class A',
+          },
+          {
+            id: 'stu-2',
+            username: 'bob',
+            recent_event_count: 2,
+            solved_count: 1,
+            class_name: 'Class A',
+          },
+        ],
+        total: 2,
+        page: 1,
+        page_size: 20,
+      })
       .mockImplementationOnce(() => slowRequest.promise)
       .mockImplementationOnce(() => fastRequest.promise)
 
@@ -301,18 +318,29 @@ describe('TeacherStudentManagement', () => {
     await searchInput.setValue('Ali')
     vi.advanceTimersByTime(250)
 
-    fastRequest.resolve([
-      {
-        id: 'stu-1',
-        username: 'alice',
-        name: 'Alice Zhang',
-        student_no: '2024001',
-        recent_event_count: 0,
-      },
-    ])
+    fastRequest.resolve({
+      list: [
+        {
+          id: 'stu-1',
+          username: 'alice',
+          name: 'Alice Zhang',
+          student_no: '2024001',
+          recent_event_count: 0,
+          class_name: 'Class A',
+        },
+      ],
+      total: 1,
+      page: 1,
+      page_size: 20,
+    })
     await flushPromises()
 
-    slowRequest.resolve([{ id: 'stu-2', username: 'bob', recent_event_count: 2 }])
+    slowRequest.resolve({
+      list: [{ id: 'stu-2', username: 'bob', recent_event_count: 2, class_name: 'Class A' }],
+      total: 1,
+      page: 1,
+      page_size: 20,
+    })
     await flushPromises()
 
     expect(wrapper.text()).toContain('alice')
@@ -324,50 +352,74 @@ describe('TeacherStudentManagement', () => {
       { name: 'Class A', student_count: 1 },
       { name: 'Class B', student_count: 2 },
     ])
-    teacherApiMocks.getClassStudents.mockImplementation(async (className, params) => {
-      if (className === 'Class A') {
-        if (params?.keyword === 'Carol') {
-          return []
+    teacherApiMocks.getStudentsDirectory.mockImplementation(async (params) => {
+      if (params?.class_name === 'Class A') {
+        return {
+          list: [
+            {
+              id: 'stu-1',
+              username: 'alice',
+              name: 'Alice Zhang',
+              student_no: '2024001',
+              recent_event_count: 0,
+              class_name: 'Class A',
+            },
+          ],
+          total: 1,
+          page: params?.page ?? 1,
+          page_size: params?.page_size ?? 20,
         }
-        return [
+      }
+
+      if (params?.keyword === 'Carol') {
+        return {
+          list: [
+            {
+              id: 'stu-3',
+              username: 'carol',
+              name: 'Carol Chen',
+              student_no: '2024003',
+              recent_event_count: 1,
+              class_name: 'Class B',
+            },
+          ],
+          total: 1,
+          page: params?.page ?? 1,
+          page_size: params?.page_size ?? 20,
+        }
+      }
+
+      return {
+        list: [
           {
             id: 'stu-1',
             username: 'alice',
             name: 'Alice Zhang',
             student_no: '2024001',
             recent_event_count: 0,
+            class_name: 'Class A',
           },
-        ]
-      }
-
-      if (params?.keyword === 'Carol') {
-        return [
+          {
+            id: 'stu-2',
+            username: 'bob',
+            name: 'Bob Li',
+            student_no: '2024002',
+            recent_event_count: 2,
+            class_name: 'Class B',
+          },
           {
             id: 'stu-3',
             username: 'carol',
             name: 'Carol Chen',
             student_no: '2024003',
             recent_event_count: 1,
+            class_name: 'Class B',
           },
-        ]
+        ],
+        total: 3,
+        page: params?.page ?? 1,
+        page_size: params?.page_size ?? 20,
       }
-
-      return [
-        {
-          id: 'stu-2',
-          username: 'bob',
-          name: 'Bob Li',
-          student_no: '2024002',
-          recent_event_count: 2,
-        },
-        {
-          id: 'stu-3',
-          username: 'carol',
-          name: 'Carol Chen',
-          student_no: '2024003',
-          recent_event_count: 1,
-        },
-      ]
     })
 
     const wrapper = mount(TeacherStudentManagement, {
@@ -400,13 +452,14 @@ describe('TeacherStudentManagement', () => {
     await classSelect.setValue('')
     await flushPromises()
 
-    expect(teacherApiMocks.getClassStudents).toHaveBeenNthCalledWith(2, 'Class A', {
+    expect(teacherApiMocks.getStudentsDirectory).toHaveBeenNthCalledWith(2, {
+      class_name: undefined,
       keyword: undefined,
       student_no: undefined,
-    })
-    expect(teacherApiMocks.getClassStudents).toHaveBeenNthCalledWith(3, 'Class B', {
-      keyword: undefined,
-      student_no: undefined,
+      sort_key: 'solved_count',
+      sort_order: 'desc',
+      page: 1,
+      page_size: 20,
     })
     expect(wrapper.findAll('.teacher-directory-row')).toHaveLength(3)
     expect(wrapper.text()).toContain('Alice Zhang')
@@ -418,13 +471,14 @@ describe('TeacherStudentManagement', () => {
     vi.advanceTimersByTime(250)
     await flushPromises()
 
-    expect(teacherApiMocks.getClassStudents).toHaveBeenNthCalledWith(4, 'Class A', {
+    expect(teacherApiMocks.getStudentsDirectory).toHaveBeenNthCalledWith(3, {
+      class_name: undefined,
       keyword: 'Carol',
       student_no: undefined,
-    })
-    expect(teacherApiMocks.getClassStudents).toHaveBeenNthCalledWith(5, 'Class B', {
-      keyword: 'Carol',
-      student_no: undefined,
+      sort_key: 'solved_count',
+      sort_order: 'desc',
+      page: 1,
+      page_size: 20,
     })
     expect(wrapper.findAll('.teacher-directory-row')).toHaveLength(1)
     expect(wrapper.text()).toContain('Carol Chen')
@@ -447,26 +501,26 @@ describe('TeacherStudentManagement', () => {
       { name: 'Class A', student_count: 1 },
       { name: 'Class B', student_count: 1 },
     ])
-    teacherApiMocks.getClassStudents.mockImplementation(async (className) => {
-      if (className === 'Class A') {
-        return [
-          {
-            id: 'stu-1',
-            username: 'alice',
-            name: 'Alice Zhang',
-            student_no: '2024001',
-          },
-        ]
-      }
-
-      return [
+    teacherApiMocks.getStudentsDirectory.mockResolvedValue({
+      list: [
+        {
+          id: 'stu-1',
+          username: 'alice',
+          name: 'Alice Zhang',
+          student_no: '2024001',
+          class_name: 'Class A',
+        },
         {
           id: 'stu-2',
           username: 'bob',
           name: 'Bob Li',
           student_no: '2024002',
+          class_name: 'Class B',
         },
-      ]
+      ],
+      total: 2,
+      page: 1,
+      page_size: 20,
     })
 
     const authStore = useAuthStore()
@@ -496,13 +550,14 @@ describe('TeacherStudentManagement', () => {
     await flushPromises()
 
     expect(wrapper.find('select').element.value).toBe('')
-    expect(teacherApiMocks.getClassStudents).toHaveBeenNthCalledWith(1, 'Class A', {
+    expect(teacherApiMocks.getStudentsDirectory).toHaveBeenNthCalledWith(1, {
+      class_name: undefined,
       keyword: undefined,
       student_no: undefined,
-    })
-    expect(teacherApiMocks.getClassStudents).toHaveBeenNthCalledWith(2, 'Class B', {
-      keyword: undefined,
-      student_no: undefined,
+      sort_key: 'solved_count',
+      sort_order: 'desc',
+      page: 1,
+      page_size: 20,
     })
     expect(wrapper.text()).toContain('Alice Zhang')
     expect(wrapper.text()).toContain('Bob Li')
@@ -510,14 +565,37 @@ describe('TeacherStudentManagement', () => {
 
   it('应该支持学生目录分页切换', async () => {
     teacherApiMocks.getClasses.mockResolvedValue([{ name: 'Class A', student_count: 21 }])
-    teacherApiMocks.getClassStudents.mockResolvedValue(
-      Array.from({ length: 21 }, (_, index) => ({
-        id: `stu-${index + 1}`,
-        username: `student-${index + 1}`,
-        name: `Student ${index + 1}`,
-        student_no: `2024${String(index + 1).padStart(3, '0')}`,
-      }))
-    )
+    teacherApiMocks.getStudentsDirectory.mockImplementation(async (params) => {
+      if (params?.page === 2) {
+        return {
+          list: [
+            {
+              id: 'stu-21',
+              username: 'student-21',
+              name: 'Student 21',
+              student_no: '2024021',
+              class_name: 'Class A',
+            },
+          ],
+          total: 21,
+          page: 2,
+          page_size: 20,
+        }
+      }
+
+      return {
+        list: Array.from({ length: 20 }, (_, index) => ({
+          id: `stu-${index + 1}`,
+          username: `student-${index + 1}`,
+          name: `Student ${index + 1}`,
+          student_no: `2024${String(index + 1).padStart(3, '0')}`,
+          class_name: 'Class A',
+        })),
+        total: 21,
+        page: 1,
+        page_size: 20,
+      }
+    })
 
     const wrapper = mount(TeacherStudentManagement, {
       global: {

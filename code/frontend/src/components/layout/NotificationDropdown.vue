@@ -11,7 +11,7 @@
       <Bell class="h-4 w-4" />
       <span
         v-if="unreadCount > 0"
-        class="notification-trigger-badge absolute -right-1 -top-1 inline-flex min-w-4 items-center justify-center rounded-full px-1 text-[10px] leading-4 text-white"
+        class="notification-trigger-badge absolute -right-1 -top-1 inline-flex min-w-4 items-center justify-center rounded-full px-1 text-white"
       >
         {{ unreadCount > 99 ? '99+' : unreadCount }}
       </span>
@@ -27,7 +27,7 @@
 
           <div
             ref="panel"
-            class="notification-drawer fixed top-0 right-0 z-[130] flex h-screen w-full flex-col shadow-2xl sm:w-[420px]"
+            class="notification-drawer fixed top-0 right-0 z-[130] flex h-screen w-full flex-col shadow-2xl"
             @click.stop
           >
             <div class="notification-panel-head relative z-10 flex flex-col gap-4 px-6 py-6">
@@ -40,7 +40,7 @@
                 </div>
                 <div class="flex items-center gap-3">
                   <div
-                    class="notification-status-pill inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-[11px] font-bold"
+                    class="notification-status-pill inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 font-bold"
                     :style="statusPillStyle"
                   >
                     <span
@@ -61,7 +61,7 @@
               </div>
 
               <div class="flex items-center justify-between mt-2">
-                <span class="notification-summary text-[12px] font-medium">
+                <span class="notification-summary text-xs font-medium">
                   最近 <span class="notification-summary__value font-bold">{{ items.length }}</span> 条消息，<span
                     class="notification-summary__accent font-bold"
                   >
@@ -72,16 +72,16 @@
                 <div class="flex items-center gap-3">
                   <button
                     type="button"
-                    class="notification-summary-action text-[12px] font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+                    class="notification-summary-action text-xs font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-50"
                     :disabled="unreadCount === 0"
                     @click="markAllRead"
                   >
                     全部标为已读
                   </button>
-                  <div class="notification-summary-divider h-3.5 w-[1px]" />
+                  <div class="notification-summary-divider h-3.5 w-px" />
                   <button
                     type="button"
-                    class="notification-summary-link flex items-center gap-0.5 text-[12px] font-bold transition-colors"
+                    class="notification-summary-link flex items-center gap-0.5 text-xs font-bold transition-colors"
                     @click="goToNotifications"
                   >
                     查看全部 <ChevronRight class="h-3.5 w-3.5" />
@@ -93,7 +93,7 @@
             <div class="notification-panel-body relative flex-1 overflow-y-auto">
               <div
                 v-if="items.length > 0"
-                class="notification-rail absolute top-0 bottom-0 left-[35px] z-0 w-[1px]"
+                class="notification-rail absolute top-0 bottom-0 z-0 w-px"
               />
 
               <div
@@ -115,7 +115,7 @@
                   :class="item.unread ? 'notification-item--unread' : 'notification-item--read'"
                 >
                   <div
-                    class="notification-item-dot absolute left-[31.5px] top-8 z-10 h-[8px] w-[8px] rounded-full ring-[4px] transition-colors"
+                    class="notification-item-dot absolute z-10 rounded-full transition-colors"
                     :class="
                       item.unread
                         ? 'notification-item-dot--unread'
@@ -126,39 +126,39 @@
                   <div class="flex justify-between items-center mb-3 gap-3">
                     <div class="flex items-center gap-2 min-w-0">
                       <span
-                        class="notification-item-type rounded border px-2 py-0.5 text-[10px] font-black uppercase tracking-wider"
+                        class="notification-item-type rounded border px-2 py-0.5 font-black uppercase"
                         :style="typeMeta(item.type).badgeStyle"
                       >
                         {{ typeMeta(item.type).label }}
                       </span>
                       <span
                         v-if="item.unread"
-                        class="notification-item-unread rounded px-2 py-0.5 text-[10px] font-black uppercase tracking-wider"
+                        class="notification-item-unread rounded px-2 py-0.5 font-black uppercase"
                       >
                         未读
                       </span>
                     </div>
-                    <span class="notification-item-time shrink-0 text-[11px] font-mono font-bold">
+                    <span class="notification-item-time shrink-0 font-mono font-bold">
                       {{ formatDate(item.created_at) }}
                     </span>
                   </div>
 
                   <h3
-                    class="notification-item-title mb-1.5 text-[14px] font-black tracking-tight"
+                    class="notification-item-title mb-1.5 font-black tracking-tight"
                     :class="{ 'notification-item-title--read': !item.unread }"
                   >
                     {{ item.title }}
                   </h3>
                   <p
                     v-if="item.content"
-                    class="notification-entry-copy notification-item-copy mb-4 text-[13px] font-medium leading-relaxed"
+                    class="notification-entry-copy notification-item-copy mb-4 font-medium"
                   >
                     {{ item.content }}
                   </p>
 
                   <button
                     type="button"
-                    class="inline-flex items-center gap-1.5 text-[11px] font-black transition-colors"
+                    class="notification-item-link inline-flex items-center gap-1.5 font-black transition-colors"
                     :style="{ color: typeMeta(item.type).accentColor }"
                     @click="goToNotificationDetail(item.id)"
                   >
@@ -168,11 +168,11 @@
                 </div>
 
                 <div class="notification-endcap flex items-center justify-center gap-3 py-8 text-center opacity-60">
-                  <div class="notification-endcap__line h-[1px] w-12" />
-                  <span class="notification-endcap__label text-[10px] font-black uppercase tracking-widest">
+                  <div class="notification-endcap__line h-px w-12" />
+                  <span class="notification-endcap__label font-black uppercase">
                     End of Notifications
                   </span>
-                  <div class="notification-endcap__line h-[1px] w-12" />
+                  <div class="notification-endcap__line h-px w-12" />
                 </div>
               </div>
             </div>
@@ -232,6 +232,12 @@ const {
     );
 }
 
+@media (min-width: 640px) {
+  .notification-drawer {
+    width: 420px;
+  }
+}
+
 .notification-panel-head {
   border-bottom: 1px solid var(--notification-line);
   background:
@@ -281,6 +287,42 @@ const {
   background: color-mix(in srgb, var(--notification-line) 86%, transparent);
 }
 
+.notification-status-pill,
+.notification-item-time,
+.notification-item-link {
+  font-size: var(--font-size-11);
+}
+
+.notification-rail {
+  left: 35px;
+}
+
+.notification-item-dot {
+  top: 2rem;
+  left: 31.5px;
+  width: 8px;
+  height: 8px;
+  box-shadow: 0 0 0 4px var(--tw-ring-color);
+}
+
+.notification-item-type,
+.notification-item-unread,
+.notification-endcap__label {
+  font-size: var(--font-size-10);
+  letter-spacing: 0.08em;
+}
+
+.notification-item-title {
+  font-size: 0.875rem;
+  color: var(--notification-text);
+}
+
+.notification-item-copy {
+  font-size: 0.8125rem;
+  line-height: 1.625rem;
+  color: var(--notification-muted);
+}
+
 .notification-panel-body {
   background: linear-gradient(
     180deg,
@@ -305,6 +347,8 @@ const {
 }
 
 .notification-trigger-badge {
+  font-size: var(--font-size-10);
+  line-height: 1rem;
   background: color-mix(in srgb, var(--color-danger) 88%, var(--color-text-primary));
   box-shadow: 0 0 0 2px var(--notification-surface, var(--color-bg-surface));
 }
@@ -382,16 +426,8 @@ const {
   color: var(--notification-faint);
 }
 
-.notification-item-title {
-  color: var(--notification-text);
-}
-
 .notification-item-title--read {
   color: color-mix(in srgb, var(--notification-text) 78%, var(--notification-muted));
-}
-
-.notification-item-copy {
-  color: var(--notification-muted);
 }
 
 :global([data-theme='light']) .notification-drawer {

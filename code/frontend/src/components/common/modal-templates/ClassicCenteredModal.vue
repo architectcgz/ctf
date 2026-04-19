@@ -90,11 +90,18 @@ function forwardClose(): void {
 
 <style scoped>
 .modal-template-panel--classic {
+  --modal-template-classic-surface: color-mix(in srgb, var(--color-bg-elevated) 96%, var(--color-bg-surface));
+  --modal-template-classic-surface-muted: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
+  --modal-template-classic-line: color-mix(in srgb, var(--color-border-default) 86%, transparent);
+  --modal-template-classic-text: color-mix(in srgb, var(--color-text-primary) 94%, transparent);
+  --modal-template-classic-muted: color-mix(in srgb, var(--color-text-secondary) 92%, transparent);
+  --modal-template-classic-faint: color-mix(in srgb, var(--color-text-muted) 92%, transparent);
+  --modal-template-classic-accent: var(--color-primary);
   width: min(var(--modal-template-classic-width, 32rem), 100%);
-  border: 1px solid rgba(226, 232, 240, 0.9);
+  border: 1px solid var(--modal-template-classic-line);
   border-radius: 1.5rem;
-  background: #ffffff;
-  box-shadow: 0 28px 80px rgba(15, 23, 42, 0.22);
+  background: var(--modal-template-classic-surface);
+  box-shadow: 0 28px 80px color-mix(in srgb, var(--color-shadow-strong) 24%, transparent);
   overflow: hidden;
 }
 
@@ -104,8 +111,8 @@ function forwardClose(): void {
   justify-content: space-between;
   gap: 1rem;
   padding: 1.35rem 1.5rem 1.2rem;
-  border-bottom: 1px solid rgba(241, 245, 249, 1);
-  background: rgba(248, 250, 252, 0.68);
+  border-bottom: 1px solid var(--modal-template-classic-line);
+  background: color-mix(in srgb, var(--modal-template-classic-surface-muted) 72%, transparent);
 }
 
 .modal-template-classic__identity {
@@ -122,8 +129,8 @@ function forwardClose(): void {
   width: 2rem;
   height: 2rem;
   border-radius: 0.85rem;
-  background: rgba(219, 234, 254, 1);
-  color: #2563eb;
+  background: color-mix(in srgb, var(--modal-template-classic-accent) 10%, var(--modal-template-classic-surface));
+  color: color-mix(in srgb, var(--modal-template-classic-accent) 92%, var(--modal-template-classic-text));
   flex-shrink: 0;
 }
 
@@ -137,7 +144,7 @@ function forwardClose(): void {
   font-weight: 800;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: rgba(148, 163, 184, 1);
+  color: var(--modal-template-classic-faint);
 }
 
 .modal-template-classic__title {
@@ -145,7 +152,7 @@ function forwardClose(): void {
   font-size: 0.95rem;
   font-weight: 900;
   line-height: 1.2;
-  color: rgba(15, 23, 42, 1);
+  color: var(--modal-template-classic-text);
 }
 
 .modal-template-classic__subtitle {
@@ -154,7 +161,7 @@ function forwardClose(): void {
   font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: rgba(148, 163, 184, 1);
+  color: var(--modal-template-classic-faint);
 }
 
 .modal-template-classic__close {
@@ -166,15 +173,15 @@ function forwardClose(): void {
   border: 0;
   border-radius: 0.75rem;
   background: transparent;
-  color: rgba(148, 163, 184, 1);
+  color: var(--modal-template-classic-faint);
   transition:
     background-color 0.18s ease,
     color 0.18s ease;
 }
 
 .modal-template-classic__close:hover {
-  background: rgba(241, 245, 249, 1);
-  color: rgba(51, 65, 85, 1);
+  background: color-mix(in srgb, var(--modal-template-classic-line) 18%, var(--modal-template-classic-surface-muted));
+  color: var(--modal-template-classic-muted);
 }
 
 .modal-template-classic__body {
@@ -186,7 +193,7 @@ function forwardClose(): void {
   justify-content: flex-end;
   gap: 0.75rem;
   padding: 1rem 1.5rem 1.25rem;
-  border-top: 1px solid rgba(241, 245, 249, 1);
-  background: rgba(248, 250, 252, 0.68);
+  border-top: 1px solid var(--modal-template-classic-line);
+  background: color-mix(in srgb, var(--modal-template-classic-surface-muted) 72%, transparent);
 }
 </style>

@@ -1,9 +1,9 @@
 <template>
-  <div class="fixed right-4 top-4 z-50 flex max-w-[calc(100vw-2rem)] w-[380px] flex-col gap-3">
+  <div class="app-toast-stack fixed right-4 top-4 z-50 flex flex-col gap-3">
     <div
       v-for="item in toasts"
       :key="item.id"
-      :class="['app-toast-item group relative overflow-hidden rounded-[22px] border px-4 py-3.5']"
+      :class="['app-toast-item group relative overflow-hidden border px-4 py-3.5']"
       :style="toneMeta(item.type).containerStyle"
       :role="item.type === 'error' ? 'alert' : 'status'"
       :aria-live="item.type === 'error' ? 'assertive' : 'polite'"
@@ -150,7 +150,12 @@ function toneMeta(type: ToastType): ToastToneMeta {
 </script>
 
 <style scoped>
+.app-toast-stack {
+  width: min(23.75rem, calc(100vw - 2rem));
+}
+
 .app-toast-item {
+  border-radius: 1.375rem;
   background: linear-gradient(
     180deg,
     color-mix(in srgb, var(--color-bg-surface) 94%, var(--color-bg-base)),

@@ -260,7 +260,7 @@ onMounted(() => {
         </div>
 
         <div class="writeup-manage-actions">
-          <button class="admin-btn admin-btn-primary" type="button" @click="openWriteup('edit')">
+          <button class="ui-btn ui-btn--primary" type="button" @click="openWriteup('edit')">
             编写题解
           </button>
         </div>
@@ -324,11 +324,7 @@ onMounted(() => {
             "
           >
             <template #actions>
-              <button
-                class="admin-btn admin-btn-primary"
-                type="button"
-                @click="openWriteup('edit')"
-              >
+              <button class="ui-btn ui-btn--primary" type="button" @click="openWriteup('edit')">
                 编写题解
               </button>
             </template>
@@ -379,7 +375,7 @@ onMounted(() => {
                 <div class="writeup-row__actions" role="group" aria-label="题解目录操作">
                   <template v-if="row.source === 'official'">
                     <button
-                      class="admin-btn admin-btn-outline admin-btn-compact"
+                      class="ui-btn ui-btn--secondary ui-btn--sm"
                       type="button"
                       @click="openWriteup('view')"
                     >
@@ -394,7 +390,7 @@ onMounted(() => {
                       @keydown.esc="closeActionMenu"
                     >
                       <button
-                        class="admin-btn admin-btn-ghost admin-btn-compact writeup-actions-menu-trigger"
+                        class="ui-btn ui-btn--ghost ui-btn--sm writeup-actions-menu-trigger"
                         data-testid="writeup-more-actions"
                         type="button"
                         aria-label="更多题解操作"
@@ -413,7 +409,7 @@ onMounted(() => {
                         aria-label="更多题解操作"
                       >
                         <button
-                          class="admin-btn admin-btn-ghost admin-btn-compact writeup-actions-menu__button"
+                          class="ui-btn ui-btn--ghost ui-btn--sm writeup-actions-menu__button"
                           role="menuitem"
                           type="button"
                           @click="openWriteup('edit')"
@@ -422,7 +418,7 @@ onMounted(() => {
                         </button>
                         <button
                           :disabled="deleting"
-                          class="admin-btn admin-btn-danger admin-btn-compact writeup-actions-menu__button"
+                          class="ui-btn ui-btn--danger ui-btn--sm writeup-actions-menu__button"
                           role="menuitem"
                           type="button"
                           @click="void handleDelete()"
@@ -659,59 +655,6 @@ onMounted(() => {
   color: var(--journal-muted);
 }
 
-.admin-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  min-height: 2.25rem;
-  border-radius: 0.65rem;
-  border: 1px solid transparent;
-  padding: var(--space-2) var(--space-3-5);
-  font-size: var(--font-size-0-84);
-  font-weight: 600;
-  transition:
-    border-color 150ms ease,
-    background 150ms ease,
-    color 150ms ease,
-    box-shadow 150ms ease;
-}
-
-.admin-btn:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--journal-accent) 18%, transparent);
-}
-
-.admin-btn-primary {
-  border-color: color-mix(in srgb, var(--journal-accent) 18%, transparent);
-  background: var(--journal-accent);
-  color: #fff;
-}
-
-.admin-btn-outline,
-.admin-btn-ghost {
-  border-color: color-mix(in srgb, var(--journal-border) 92%, transparent);
-  background: color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base));
-  color: var(--journal-ink);
-}
-
-.admin-btn-danger {
-  border-color: color-mix(in srgb, var(--color-danger) 20%, transparent);
-  background: color-mix(in srgb, var(--color-danger) 10%, var(--journal-surface));
-  color: color-mix(in srgb, var(--color-danger) 88%, var(--journal-ink));
-}
-
-.admin-btn-compact {
-  min-height: 2.1rem;
-}
-
-.admin-btn:hover,
-.admin-btn:focus-visible {
-  outline: none;
-  border-color: color-mix(in srgb, var(--journal-accent) 42%, transparent);
-  box-shadow: 0 8px 18px color-mix(in srgb, var(--color-shadow-soft) 72%, transparent);
-}
-
 .writeup-actions-menu-shell {
   position: relative;
 }
@@ -743,6 +686,41 @@ onMounted(() => {
 .writeup-actions-menu__button {
   justify-content: flex-start;
   width: 100%;
+}
+
+.writeup-manage-actions > .ui-btn,
+.writeup-row__actions > .ui-btn,
+.writeup-actions-menu__button.ui-btn {
+  --ui-btn-secondary-background: color-mix(
+    in srgb,
+    var(--journal-surface) 96%,
+    var(--color-bg-base)
+  );
+  --ui-btn-secondary-border: color-mix(in srgb, var(--journal-border) 92%, transparent);
+  --ui-btn-secondary-hover-border: color-mix(in srgb, var(--journal-accent) 42%, transparent);
+  --ui-btn-secondary-hover-background: color-mix(
+    in srgb,
+    var(--journal-accent) 4%,
+    var(--journal-surface)
+  );
+  --ui-btn-secondary-hover-shadow: 0 8px 18px color-mix(in srgb, var(--color-shadow-soft) 72%, transparent);
+  --ui-btn-secondary-color: var(--journal-ink);
+  --ui-btn-secondary-hover-color: var(--journal-accent);
+  --ui-btn-ghost-color: var(--journal-ink);
+  --ui-btn-ghost-hover-color: var(--journal-accent);
+  --ui-btn-ghost-hover-background: color-mix(in srgb, var(--journal-accent) 4%, var(--journal-surface));
+  --ui-btn-danger-border: color-mix(in srgb, var(--color-danger) 20%, transparent);
+  --ui-btn-danger-background: color-mix(in srgb, var(--color-danger) 10%, var(--journal-surface));
+  --ui-btn-danger-color: color-mix(in srgb, var(--color-danger) 88%, var(--journal-ink));
+  --ui-btn-danger-hover-border: color-mix(in srgb, var(--color-danger) 26%, transparent);
+  --ui-btn-danger-hover-background: color-mix(in srgb, var(--color-danger) 14%, var(--journal-surface));
+}
+
+.writeup-manage-actions > .ui-btn,
+.writeup-manage-section :deep(.app-empty__actions .ui-btn) {
+  --ui-btn-primary-background: var(--journal-accent);
+  --ui-btn-primary-hover-background: color-mix(in srgb, var(--journal-accent) 88%, black);
+  --ui-btn-primary-border: color-mix(in srgb, var(--journal-accent) 18%, transparent);
 }
 
 @media (max-width: 960px) {

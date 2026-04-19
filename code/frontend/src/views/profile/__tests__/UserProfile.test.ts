@@ -180,4 +180,15 @@ describe('UserProfile', () => {
     expect(userProfileSource).not.toContain('<div class="journal-eyebrow journal-eyebrow-soft">Account</div>')
     expect(userProfileSource).not.toContain('<div class="journal-eyebrow journal-eyebrow-soft">Report</div>')
   })
+
+  it('应该把个人资料页残留的骨架圆角与内文字色收敛为语义类', () => {
+    expect(userProfileSource).not.toContain('rounded-[24px]')
+    expect(userProfileSource).not.toContain('text-[var(--journal-accent)]')
+    expect(userProfileSource).not.toContain('text-[var(--journal-ink)]')
+    expect(userProfileSource).not.toContain('text-[var(--journal-muted)]')
+    expect(userProfileSource).toContain('profile-loading-card')
+    expect(userProfileSource).toContain('profile-accent-icon')
+    expect(userProfileSource).toContain('profile-format-title')
+    expect(userProfileSource).toContain('profile-format-copy')
+  })
 })

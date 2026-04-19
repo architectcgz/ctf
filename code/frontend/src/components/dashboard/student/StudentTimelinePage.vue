@@ -111,7 +111,7 @@ function changeTimelinePage(page: number): void {
   >
     <div class="timeline-header">
       <div>
-        <h1 class="journal-page-title workspace-page-title text-[var(--journal-ink)]">
+        <h1 class="journal-page-title workspace-page-title journal-soft-page-title">
           训练记录总览
         </h1>
         <p class="workspace-page-copy max-w-2xl">按时间回看最近训练动作，看看节奏有没有断。</p>
@@ -144,14 +144,14 @@ function changeTimelinePage(page: number): void {
       <div class="journal-divider timeline-board-divider" aria-hidden="true" />
       <section class="timeline-section">
         <div class="workspace-overline">Timeline Log</div>
-        <h3 class="text-xl font-semibold text-[var(--journal-ink)]">训练记录</h3>
-        <p class="mt-2 text-sm leading-6 text-[var(--journal-muted)]">
+        <h3 class="journal-soft-section-title text-xl font-semibold">训练记录</h3>
+        <p class="journal-soft-body-copy mt-2 text-sm leading-6">
           按日期回看最近的提交、解题和实例操作。
         </p>
 
         <div
           v-if="groupedTimeline.length === 0"
-          class="mt-5 rounded-[22px] border border-dashed border-[var(--journal-shell-border)] px-4 py-12 text-center text-sm text-[var(--journal-muted)]"
+          class="journal-soft-empty-state mt-5"
         >
           当前还没有训练动态。
         </div>
@@ -168,22 +168,19 @@ function changeTimelinePage(page: number): void {
                       :class="`status-dot-${event.type === 'solve' ? 'solved' : event.type.includes('instance') ? 'ready' : 'idle'}`"
                     />
                     <div>
-                      <div class="text-sm font-semibold text-[var(--journal-ink)]">
+                      <div class="journal-soft-body-title text-sm font-semibold">
                         {{ event.title }}
                       </div>
-                      <div class="mt-1 text-sm leading-6 text-[var(--journal-muted)]">
+                      <div class="journal-soft-body-copy mt-1 text-sm leading-6">
                         {{ timelineSummary(event) }}
                       </div>
                     </div>
                   </div>
                   <div class="flex items-center gap-2">
-                    <span
-                      class="rounded-full border px-2.5 py-1 text-xs font-medium"
-                      :class="timelineTypeTone(event)"
-                    >
+                    <span :class="timelineTypeTone(event)">
                       {{ timelineTypeLabel(event) }}
                     </span>
-                    <span class="tech-font text-xs text-[var(--journal-muted)]">{{
+                    <span class="journal-soft-meta tech-font text-xs">{{
                       formatTime(event.created_at)
                     }}</span>
                   </div>
@@ -372,6 +369,46 @@ function changeTimelinePage(page: number): void {
   width: 8px;
   height: 8px;
   border-radius: 999px;
+}
+
+.timeline-type-pill {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 0.25rem 0.625rem;
+  font-size: var(--font-size-0-72);
+  font-weight: 600;
+}
+
+.timeline-type-pill--primary {
+  color: var(--color-primary);
+  border-color: color-mix(in srgb, var(--color-primary) 30%, transparent);
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+}
+
+.timeline-type-pill--danger {
+  color: var(--color-danger);
+  border-color: color-mix(in srgb, var(--color-danger) 30%, transparent);
+  background: color-mix(in srgb, var(--color-danger) 10%, transparent);
+}
+
+.timeline-type-pill--success {
+  color: var(--color-success);
+  border-color: color-mix(in srgb, var(--color-success) 30%, transparent);
+  background: color-mix(in srgb, var(--color-success) 10%, transparent);
+}
+
+.timeline-type-pill--warning {
+  color: var(--color-warning);
+  border-color: color-mix(in srgb, var(--color-warning) 30%, transparent);
+  background: color-mix(in srgb, var(--color-warning) 10%, transparent);
+}
+
+.timeline-type-pill--reverse {
+  color: var(--color-cat-reverse);
+  border-color: color-mix(in srgb, var(--color-cat-reverse) 30%, transparent);
+  background: color-mix(in srgb, var(--color-cat-reverse) 10%, transparent);
 }
 
 .status-dot-solved {

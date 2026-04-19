@@ -85,13 +85,20 @@ describe('UserManage', () => {
     expect(wrapper.text()).toContain('alice')
     expect(wrapper.text()).toContain('alice@example.com')
     expect(wrapper.text()).toContain('teacher')
-    expect(adminApiMocks.getUsers).toHaveBeenCalledWith({
-      page: 1,
-      page_size: 20,
-      keyword: undefined,
-      role: undefined,
-      status: undefined,
-    })
+    expect(adminApiMocks.getUsers).toHaveBeenCalledWith(
+      {
+        page: 1,
+        page_size: 20,
+        keyword: undefined,
+        role: undefined,
+        status: undefined,
+        student_no: undefined,
+        teacher_no: undefined,
+      },
+      {
+        signal: expect.any(AbortSignal),
+      }
+    )
   })
 
   it('应该将用户总览与目录合并为一个工作台，并保留导入用户独立面板', async () => {
@@ -298,15 +305,20 @@ describe('UserManage', () => {
     await flushPromises()
 
     expect(adminApiMocks.getUsers).toHaveBeenCalledTimes(1)
-    expect(adminApiMocks.getUsers).toHaveBeenLastCalledWith({
-      page: 1,
-      page_size: 20,
-      keyword: 'alice',
-      student_no: undefined,
-      teacher_no: undefined,
-      role: undefined,
-      status: undefined,
-    })
+    expect(adminApiMocks.getUsers).toHaveBeenLastCalledWith(
+      {
+        page: 1,
+        page_size: 20,
+        keyword: 'alice',
+        student_no: undefined,
+        teacher_no: undefined,
+        role: undefined,
+        status: undefined,
+      },
+      {
+        signal: expect.any(AbortSignal),
+      }
+    )
   })
 
   it('用户目录筛选与列表应切到共享目录原语', () => {
@@ -321,6 +333,17 @@ describe('UserManage', () => {
     expect(userGovernanceSource).toContain('total-suffix="个用户"')
     expect(userGovernanceSource).not.toContain('class="mt-5 grid gap-4"')
     expect(userGovernanceSource).not.toContain('<table class="user-table min-w-full text-sm">')
+  })
+
+  it('用户治理页应改用共享 ui-btn 原语而不是页面私有 admin-btn 按钮族', () => {
+    expect(userGovernanceSource).toContain('class="ui-btn ui-btn--ghost"')
+    expect(userGovernanceSource).toContain('class="ui-btn ui-btn--primary"')
+    expect(userGovernanceSource).toContain('class="ui-btn ui-btn--secondary user-action-btn"')
+    expect(userGovernanceSource).toContain('class="ui-btn ui-btn--danger user-action-btn"')
+    expect(userGovernanceSource).not.toContain('admin-btn admin-btn-ghost')
+    expect(userGovernanceSource).not.toContain('admin-btn admin-btn-primary')
+    expect(userGovernanceSource).not.toContain('admin-btn admin-btn-danger')
+    expect(userGovernanceSource).not.toContain('admin-btn-compact')
   })
 
   it('用户治理页应改成 SaaS 全景工作台，并仅保留导入独立面板', () => {
