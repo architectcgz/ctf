@@ -89,7 +89,7 @@
       </aside>
 
       <aside
-        class="backoffice-sidebar backoffice-sidebar--desktop sticky top-0 z-[60] hidden h-screen shrink-0 flex-col transition-all duration-300 md:flex"
+        class="backoffice-sidebar backoffice-sidebar--desktop sticky top-0 z-[60] hidden min-h-screen shrink-0 self-stretch flex-col transition-all duration-300 md:flex"
         :class="collapsed ? 'w-20' : 'backoffice-sidebar--expanded'"
       >
         <button
