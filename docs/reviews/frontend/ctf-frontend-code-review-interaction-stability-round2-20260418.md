@@ -32,6 +32,7 @@
   - `M4` / `M5` AWD 轮次详情页已继续拆分，`AWDRoundInspector` 的攻击流量、服务状态、攻击日志、排行榜与轮次汇总已拆为独立子组件，父组件进一步收敛为编排层。
   - `M4` / `M5` AWD 轮次详情页已继续拆分顶部结构，`AWDRoundInspector` 的 hero 操作区与轮次切换区已拆到 `AWDRoundHeaderPanel`、`AWDRoundSelectionPanel`，父组件不再直接承载顶部工具栏、轮次选择器和基础状态卡片。
   - `L1` AWD 运行面板与轮次详情相关组件已继续清理一批裸魔法数和模板内主题 utility，`AWDOperationsPanel`、`AWDRoundInspector`、`AWDTrafficPanel`、`AWDServiceStatusPanel`、`AWDAttackLogPanel` 不再直接保留 `rounded-[28px]`、`shadow-[0_24px_70px_var(--color-shadow-soft)]`、`text-[11px]`、`tracking-[0.22em]`、`xl:grid-cols-[1.3fr_0.7fr]` 这类片段。
+  - `L1` `AdminContestTable` 的分页壳层已切到 `contest-pagination-tone` 语义类承接弱文本色，不再在模板结构节点直接内联 `text-[var(--color-text-muted)]`。
   - 教师班级工作区已补 `TeacherClassWorkspaceSection` 桥接视图，旧明细路由会回落到统一 `TeacherClassStudents` 工作区，并通过 `panel` 查询参数恢复目标标签页。
 - 未完成：
   - `M4` 教师分析面板和 AWD 轮次面板的 props 透传与职责过载。
@@ -119,6 +120,7 @@
 - `e11e03be fix(frontend): 拆分 awd 流量态势面板`
 - `defd62dd fix(frontend): 继续拆分 awd 轮次详情面板`
 - `cc00a68c fix(frontend): 继续收敛 awd 面板结构与样式`
+- `b7dab8b3 fix(frontend): 继续拆分 awd 顶部面板`
 
 ## 下一批建议
 

@@ -251,9 +251,7 @@ watch(openActionMenuId, async (contestId, _previousId, onCleanup) => {
       </div>
     </Teleport>
 
-    <div
-      class="admin-pagination workspace-directory-pagination text-sm text-[var(--color-text-muted)]"
-    >
+    <div class="admin-pagination workspace-directory-pagination contest-pagination-tone text-sm">
       <AdminPaginationControls
         :page="page"
         :total-pages="totalPages"
@@ -428,6 +426,10 @@ watch(openActionMenuId, async (contestId, _previousId, onCleanup) => {
 .contest-row__actions {
   justify-content: flex-end;
   flex-wrap: nowrap;
+}
+
+.contest-pagination-tone {
+  color: var(--color-text-muted);
 }
 
 .contest-action {
