@@ -952,7 +952,6 @@ describe('ContestEdit', () => {
       })
     )
   })
-
   it('应该在 AWD 启动门禁拦截后展示放行弹层并在确认后回到赛事目录', async () => {
     contestApiMocks.getContest.mockResolvedValue({
       id: 'contest-1',

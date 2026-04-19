@@ -180,7 +180,6 @@ export function buildContestUpdatePayload(
 
   return payload
 }
-
 function shouldGateAWDContestStart(
   mode: ContestDetailData['mode'] | null,
   targetStatus: AdminContestStatus
