@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import { toRef } from 'vue'
-import { AlertTriangle } from 'lucide-vue-next'
+import { 
+  Activity, 
+  AlertTriangle, 
+  Clock, 
+  ShieldCheck, 
+  Server, 
+  Users 
+} from 'lucide-vue-next'
 
 import type { AdminDashboardData } from '@/api/contracts'
 import { usePlatformOverviewWorkspace } from '@/composables/usePlatformOverviewWorkspace'
@@ -43,7 +50,7 @@ const {
             <h1 class="hero-title">系统值守台</h1>
             <p class="hero-summary">在这里查看平台状态、异常和当前资源热点。</p>
 
-            <div class="meta-strip">
+            <div class="meta-strip mb-10">
               <span
                 v-for="(pill, index) in metaPills"
                 :key="pill"
@@ -54,19 +61,23 @@ const {
               </span>
             </div>
 
-            <div class="progress-strip metric-panel-grid">
+            <div class="metric-panel-grid--premium cols-4 mb-14">
               <article
                 v-for="item in overviewMetrics"
                 :key="item.key"
-                class="progress-card metric-panel-card"
+                class="metric-panel-card--premium"
               >
-                <div class="progress-card-label metric-panel-label">
-                  {{ item.label }}
+                <div class="metric-panel-label">
+                  <span>{{ item.label }}</span>
+                  <component 
+                    :is="item.key === 'users' ? 'Users' : item.key === 'nodes' ? 'Server' : item.key === 'uptime' ? 'Clock' : 'ShieldCheck'" 
+                    class="h-4 w-4" 
+                  />
                 </div>
-                <div class="progress-card-value metric-panel-value">
-                  {{ item.value }}
+                <div class="metric-panel-value">
+                  {{ item.value.toString().padStart(2, '0') }}
                 </div>
-                <div class="progress-card-hint metric-panel-helper">
+                <div class="metric-panel-helper">
                   {{ item.hint }}
                 </div>
               </article>
@@ -127,12 +138,14 @@ const {
               </div>
             </div>
 
-            <div v-else-if="loading" class="progress-strip metric-panel-grid">
+            <div v-else-if="loading" class="metric-panel-grid--premium cols-4 mb-10">
               <div
                 v-for="index in 4"
                 :key="index"
-                class="progress-card progress-card--skeleton metric-panel-card"
-              />
+                class="metric-panel-card--premium animate-pulse"
+              >
+                <div class="h-24 bg-white/5 rounded-2xl" />
+              </div>
             </div>
           </div>
 
@@ -326,7 +339,7 @@ const {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2-5);
-  margin-top: var(--space-4-5);
+  margin-top: var(--space-6);
 }
 
 .meta-pill {
@@ -349,8 +362,8 @@ const {
 
 .progress-strip {
   --metric-panel-columns: repeat(4, minmax(0, 1fr));
-  --metric-panel-grid-gap: var(--space-3);
-  margin-top: var(--space-5-5);
+  --metric-panel-grid-gap: 0;
+  margin-top: var(--space-8);
 }
 
 .panel {

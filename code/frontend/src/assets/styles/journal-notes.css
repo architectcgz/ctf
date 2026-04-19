@@ -131,8 +131,9 @@
 }
 
 .progress-card-label {
-  --metric-panel-label-size: var(--font-size-11);
-  --metric-panel-label-spacing: 0.18em;
+  --metric-panel-label-size: var(--font-size-15, 15px);
+  --metric-panel-label-weight: 800;
+  --metric-panel-label-spacing: 0.01em;
   --metric-panel-label-color: color-mix(
     in srgb,
     var(--journal-muted, var(--color-text-secondary)) 88%,
@@ -141,8 +142,8 @@
 }
 
 .progress-card-value {
-  --metric-panel-value-margin-top: var(--space-2-5);
-  --metric-panel-value-size: 26px;
+  --metric-panel-value-margin-top: var(--space-2);
+  --metric-panel-value-size: var(--metric-panel-value-size, 30px);
 }
 
 .progress-card-hint {
@@ -168,12 +169,13 @@
     );
   --metric-panel-shadow: 0 14px 28px color-mix(in srgb, var(--color-shadow-soft) 55%, transparent);
   --metric-panel-padding: var(--space-4);
-  --metric-panel-label-size: var(--font-size-11);
-  --metric-panel-label-spacing: 0.12em;
-  --metric-panel-value-margin-top: var(--space-2-5);
-  --metric-panel-value-size: var(--font-size-26);
+  --metric-panel-label-size: var(--font-size-15, 15px);
+  --metric-panel-label-weight: 800;
+  --metric-panel-label-spacing: 0.01em;
+  --metric-panel-value-margin-top: var(--space-2);
+  --metric-panel-value-size: var(--font-size-30, 1.875rem);
   --metric-panel-helper-margin-top: var(--space-2);
-  --metric-panel-helper-size: var(--font-size-13);
+  --metric-panel-helper-size: var(--font-size-12, 12px);
   --metric-panel-helper-line-height: 1.7;
 }
 
@@ -214,8 +216,9 @@
     0 14px 34px color-mix(in srgb, var(--color-shadow-soft) 42%, transparent)
   );
   --metric-panel-padding: var(--space-3-5, 0.875rem) var(--space-4, 1rem) var(--space-4, 1rem);
-  --metric-panel-label-size: var(--font-size-11);
-  --metric-panel-label-spacing: 0.18em;
+  --metric-panel-label-size: var(--font-size-15, 15px);
+  --metric-panel-label-weight: 800;
+  --metric-panel-label-spacing: 0.01em;
   --metric-panel-label-color: color-mix(
     in srgb,
     var(--workspace-brand, var(--journal-accent, var(--color-primary-default))) 58%,
@@ -246,8 +249,9 @@
     --workspace-shadow-panel,
     0 14px 34px color-mix(in srgb, var(--color-shadow-soft) 42%, transparent)
   );
-  --metric-panel-label-size: var(--font-size-11);
-  --metric-panel-label-spacing: 0.18em;
+  --metric-panel-label-size: var(--font-size-15, 15px);
+  --metric-panel-label-weight: 800;
+  --metric-panel-label-spacing: 0.01em;
   --metric-panel-label-color: var(
     --workspace-faint,
     color-mix(in srgb, var(--color-text-secondary) 88%, var(--color-bg-base))
@@ -348,9 +352,9 @@
 }
 
 .journal-shell-admin :is(.admin-summary-grid, .manage-summary-grid, .image-summary-grid) > .journal-note .journal-note-label {
-  font-size: var(--metric-panel-label-size, var(--font-size-11));
-  font-weight: 700;
-  letter-spacing: var(--metric-panel-label-spacing, 0.12em);
+  font-size: var(--metric-panel-label-size, var(--font-size-15, 15px));
+  font-weight: var(--metric-panel-label-weight, 800);
+  letter-spacing: var(--metric-panel-label-spacing, 0.01em);
   text-transform: uppercase;
   color: var(--metric-panel-label-color, var(--journal-muted));
 }
@@ -394,3 +398,127 @@
   );
   background: transparent;
 }
+
+/**
+ * Premium Metric Panel System
+ * ----------------------------------------------------------------------------
+ * 高质感仪表盘指标面板规范：包含毛玻璃背景、悬浮分隔线、大字号排版。
+ */
+
+/* 1. 容器：Premium 玻璃底座 */
+.metric-panel-grid--premium {
+  display: grid !important;
+  /* 默认 4 列，支持通过变量 --metric-panel-columns 自定义 */
+  grid-template-columns: repeat(var(--metric-panel-columns, 4), minmax(0, 1fr)) !important;
+  gap: 0 !important;
+  background: 
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--journal-accent, var(--color-primary)) 5%, transparent),
+      transparent 40%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--journal-surface) 40%, transparent),
+      color-mix(in srgb, var(--journal-surface-subtle, var(--color-bg-elevated)) 20%, transparent)
+    ) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  
+  /* 智能勾边：浅色模式亮白，深色模式半透明柔和 */
+  --premium-metric-halo: rgba(255, 255, 255, 0.85);
+  --premium-metric-border: rgba(15, 23, 42, 0.15);
+  --premium-metric-shadow: rgba(0, 0, 0, 0.08);
+  
+  border: 1px solid var(--premium-metric-border) !important;
+  box-shadow: 
+    0 0 0 1px var(--premium-metric-halo),
+    0 12px 30px var(--premium-metric-shadow) !important;
+  
+  border-radius: 1.5rem !important;
+  padding: var(--space-2) !important;
+  overflow: hidden !important;
+}
+
+/* 深色模式适配：让边框不再扎眼 */
+[data-theme='dark'] .metric-panel-grid--premium {
+  --premium-metric-halo: rgba(255, 255, 255, 0.05); /* 大幅调低白边亮度 */
+  --premium-metric-border: rgba(255, 255, 255, 0.1); /* 使用浅色描边 */
+  --premium-metric-shadow: rgba(0, 0, 0, 0.3); /* 加深阴影以适应暗场 */
+}
+
+/* 2. 子项：指标卡片 */
+.metric-panel-card--premium {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  position: relative !important;
+  padding: var(--space-4) var(--space-6) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+}
+
+/* 3. 核心：高对比度悬浮分隔线 */
+.metric-panel-card--premium:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 15%;
+  bottom: 15%;
+  width: 1px;
+  background: color-mix(in srgb, var(--color-border-default, #e2e8f0) 40%, var(--color-text-primary));
+  opacity: 0.65;
+  box-shadow: 1px 0 0 rgba(255, 255, 255, 0.08);
+}
+
+/* 4. 排版：标签与数值 */
+.metric-panel-card--premium .metric-panel-label {
+  font-size: var(--font-size-15, 15px) !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.01em !important;
+  margin-bottom: var(--space-2) !important;
+  color: var(--journal-muted) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+}
+
+
+.metric-panel-card--premium .metric-panel-value {
+  font-size: var(--font-size-30, 1.875rem) !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.02em !important;
+  color: var(--journal-ink, var(--color-text-primary)) !important;
+  line-height: 1.1 !important;
+}
+
+/* 5. 响应式处理 */
+@media (max-width: 1023px) {
+  .metric-panel-grid--premium {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+  .metric-panel-card--premium:nth-child(2n)::after {
+    display: none !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .metric-panel-grid--premium {
+    grid-template-columns: 1fr !important;
+  }
+  .metric-panel-card--premium::after {
+    display: none !important;
+  }
+  .metric-panel-card--premium {
+    border-bottom: 1px solid color-mix(in srgb, var(--color-border-default) 40%, transparent) !important;
+  }
+  .metric-panel-card--premium:last-child {
+    border-bottom: none !important;
+  }
+}
+
+/* 快捷列数定义 */
+.metric-panel-grid--premium.cols-2 { --metric-panel-columns: 2; }
+.metric-panel-grid--premium.cols-3 { --metric-panel-columns: 3; }
+.metric-panel-grid--premium.cols-4 { --metric-panel-columns: 4; }

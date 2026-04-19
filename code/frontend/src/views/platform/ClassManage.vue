@@ -213,40 +213,38 @@ onMounted(() => {
         </div>
       </header>
 
-      <div
-        class="admin-summary-grid admin-class-manage-shell__summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"
-      >
-        <article class="journal-note progress-card metric-panel-card">
-          <div class="admin-class-manage-shell__metric-head">
-            <span class="journal-note-label progress-card-label metric-panel-label">班级总量</span>
+      <div class="metric-panel-grid--premium cols-3">
+        <article class="metric-panel-card--premium">
+          <div class="metric-panel-label">
+            <span>班级总量</span>
             <FolderKanban class="h-4 w-4" />
           </div>
-          <div class="journal-note-value progress-card-value metric-panel-value">{{ total }}</div>
-          <div class="journal-note-helper progress-card-hint metric-panel-helper">平台已接入班级</div>
+          <div class="metric-panel-value">{{ total.toString().padStart(2, '0') }}</div>
+          <div class="metric-panel-helper">平台已接入班级</div>
         </article>
 
-        <article class="journal-note progress-card metric-panel-card">
-          <div class="admin-class-manage-shell__metric-head">
-            <span class="journal-note-label progress-card-label metric-panel-label">当前页学生数</span>
+        <article class="metric-panel-card--premium">
+          <div class="metric-panel-label">
+            <span>当前页学生数</span>
             <UsersRound class="h-4 w-4" />
           </div>
-          <div class="journal-note-value progress-card-value metric-panel-value">
-            {{ summaryStudentCount }}
+          <div class="metric-panel-value">
+            {{ summaryStudentCount.toString().padStart(2, '0') }}
           </div>
-          <div class="journal-note-helper progress-card-hint metric-panel-helper">
+          <div class="metric-panel-helper">
             本页已加载班级学生汇总
           </div>
         </article>
 
-        <article class="journal-note progress-card metric-panel-card">
-          <div class="admin-class-manage-shell__metric-head">
-            <span class="journal-note-label progress-card-label metric-panel-label">可查看班级</span>
+        <article class="metric-panel-card--premium">
+          <div class="metric-panel-label">
+            <span>可查看班级</span>
             <SearchCode class="h-4 w-4" />
           </div>
-          <div class="journal-note-value progress-card-value metric-panel-value">
-            {{ activeClassCount }}
+          <div class="metric-panel-value">
+            {{ activeClassCount.toString().padStart(2, '0') }}
           </div>
-          <div class="journal-note-helper progress-card-hint metric-panel-helper">
+          <div class="metric-panel-helper">
             当前页已有学生的班级
           </div>
         </article>
@@ -440,26 +438,6 @@ onMounted(() => {
   background: color-mix(in srgb, var(--color-primary) 12%, var(--journal-surface));
 }
 
-.admin-class-manage-shell__summary {
-  --admin-summary-grid-columns: repeat(3, minmax(0, 1fr));
-  --metric-panel-border: color-mix(in srgb, var(--workspace-brand) 16%, var(--workspace-line-soft));
-  --metric-panel-background:
-    radial-gradient(circle at top left, color-mix(in srgb, var(--workspace-brand) 10%, transparent), transparent 15rem),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--journal-surface) 98%, var(--color-bg-base)),
-      color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base))
-    );
-}
-
-.admin-class-manage-shell__metric-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  color: var(--journal-ink);
-}
-
 .admin-class-manage-filter-grid {
   display: grid;
   gap: var(--space-4);
@@ -580,10 +558,6 @@ onMounted(() => {
 
   .admin-class-manage-shell__hero-side {
     width: 100%;
-  }
-
-  .admin-class-manage-shell__summary {
-    --admin-summary-grid-columns: 1fr;
   }
 }
 </style>

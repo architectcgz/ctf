@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { RefreshCw, SearchCheck } from 'lucide-vue-next'
+import { AlertCircle, Fingerprint, RefreshCw, SearchCheck, ShieldAlert, Users } from 'lucide-vue-next'
 
 import { getCheatDetection } from '@/api/admin'
 import type { AdminCheatDetectionData } from '@/api/contracts'
@@ -68,8 +68,7 @@ onMounted(() => {
               <div class="workspace-overline">Integrity Workspace</div>
               <h1 class="workspace-page-title">作弊检测</h1>
               <p class="workspace-page-copy">
-                上面先看风险规模，下面直接复核高频提交账号、共享 IP
-                和审计联动动作，不再切换并行视图。
+                基于提交爆发、IP 共享及行为指纹的多维度合规分析。
               </p>
             </div>
 
@@ -91,39 +90,38 @@ onMounted(() => {
             </div>
           </header>
 
-          <div
-            class="admin-summary-grid cheat-kpi-summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"
-          >
-            <article class="journal-note progress-card metric-panel-card">
-              <div class="journal-note-label progress-card-label metric-panel-label">
-                Submit Burst
+          <div class="metric-panel-grid--premium cols-3">
+            <article class="metric-panel-card--premium">
+              <div class="metric-panel-label">
+                <span>Submit Burst</span>
+                <ShieldAlert class="h-4 w-4" />
               </div>
-              <div class="journal-note-value progress-card-value metric-panel-value">
-                {{ riskData.summary.submit_burst_users }}
+              <div class="metric-panel-value">
+                {{ riskData.summary.submit_burst_users.toString().padStart(2, '0') }}
               </div>
-              <div class="journal-note-helper progress-card-hint metric-panel-helper">
-                高频提交账号
-              </div>
+              <div class="metric-panel-helper">高频提交风险账号</div>
             </article>
-            <article class="journal-note progress-card metric-panel-card">
-              <div class="journal-note-label progress-card-label metric-panel-label">Shared IP</div>
-              <div class="journal-note-value progress-card-value metric-panel-value">
-                {{ riskData.summary.shared_ip_groups }}
+
+            <article class="metric-panel-card--premium">
+              <div class="metric-panel-label">
+                <span>Shared IP</span>
+                <Fingerprint class="h-4 w-4" />
               </div>
-              <div class="journal-note-helper progress-card-hint metric-panel-helper">
-                共享 IP 组数
+              <div class="metric-panel-value">
+                {{ riskData.summary.shared_ip_groups.toString().padStart(2, '0') }}
               </div>
+              <div class="metric-panel-helper">多账号共享 IP 组数</div>
             </article>
-            <article class="journal-note progress-card metric-panel-card">
-              <div class="journal-note-label progress-card-label metric-panel-label">
-                Affected Users
+
+            <article class="metric-panel-card--premium">
+              <div class="metric-panel-label">
+                <span>Affected Users</span>
+                <Users class="h-4 w-4" />
               </div>
-              <div class="journal-note-value progress-card-value metric-panel-value">
-                {{ riskData.summary.affected_users }}
+              <div class="metric-panel-value">
+                {{ riskData.summary.affected_users.toString().padStart(2, '0') }}
               </div>
-              <div class="journal-note-helper progress-card-hint metric-panel-helper">
-                受影响账号数
-              </div>
+              <div class="metric-panel-helper">受风险波及的学生总数</div>
             </article>
           </div>
 
@@ -262,23 +260,11 @@ onMounted(() => {
 .journal-shell {
   --cheat-card-border: color-mix(in srgb, var(--journal-border) 74%, transparent);
   --cheat-divider: color-mix(in srgb, var(--journal-border) 68%, transparent);
-  --journal-overline-font-size: var(--font-size-0-72);
-  --journal-overline-letter-spacing: 0.18em;
   --workspace-brand: var(--journal-accent);
   --workspace-brand-ink: color-mix(in srgb, var(--journal-accent) 74%, var(--journal-ink));
-  --workspace-brand-soft: color-mix(in srgb, var(--journal-accent) 10%, transparent);
   --workspace-panel: color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-bg-base));
   --workspace-panel-soft: color-mix(in srgb, var(--color-bg-surface) 82%, var(--color-bg-base));
   --workspace-line-soft: color-mix(in srgb, var(--color-text-primary) 10%, transparent);
-  --page-top-tabs-gap: 28px;
-  --page-top-tabs-margin: var(--space-2-5) calc(var(--space-6) * -1) 0;
-  --page-top-tabs-padding: 0 var(--space-6);
-  --page-top-tabs-border: color-mix(in srgb, var(--journal-ink) 10%, transparent);
-  --page-top-tab-min-height: 52px;
-  --page-top-tab-padding: var(--space-2-5) 0 var(--space-3-5);
-  --page-top-tab-font-size: var(--font-size-15);
-  --page-top-tab-active-color: color-mix(in srgb, var(--journal-accent) 74%, var(--journal-ink));
-  --page-top-tab-active-border: color-mix(in srgb, var(--journal-accent) 86%, var(--journal-ink));
   --journal-divider-border: 1px dashed var(--cheat-divider);
   --journal-shell-dark-accent: var(--color-primary-hover);
 }
@@ -327,26 +313,6 @@ onMounted(() => {
   color: var(--journal-ink);
 }
 
-.list-heading {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: var(--space-3);
-}
-
-.list-heading__title {
-  margin: 0.35rem 0 0;
-  font-size: clamp(1.2rem, 1rem + 0.5vw, 1.45rem);
-  font-weight: 700;
-  line-height: 1.15;
-  color: var(--journal-ink);
-}
-
-.cheat-kpi-summary {
-  --admin-summary-grid-columns: repeat(3, minmax(0, 1fr));
-}
-
 .cheat-directory-section {
   display: grid;
   gap: var(--space-4);
@@ -376,10 +342,7 @@ onMounted(() => {
   background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
   padding: var(--space-4);
   text-align: left;
-  transition:
-    border-color 160ms ease,
-    background 160ms ease,
-    transform 160ms ease;
+  transition: all 160ms ease;
 }
 
 .cheat-directory-row + .cheat-directory-row,
@@ -475,18 +438,13 @@ onMounted(() => {
 }
 
 @media (max-width: 720px) {
-  .cheat-workbench-head,
-  .list-heading {
+  .cheat-workbench-head {
     align-items: flex-start;
     flex-direction: column;
   }
 
   .cheat-workbench-actions {
     justify-content: flex-start;
-  }
-
-  .cheat-kpi-summary {
-    --admin-summary-grid-columns: 1fr;
   }
 
   .cheat-workbench-meta,
@@ -499,6 +457,5 @@ onMounted(() => {
     align-items: flex-start;
     flex-direction: column;
   }
-
 }
 </style>

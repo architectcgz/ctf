@@ -6,7 +6,9 @@ import {
   Clock,
   FileJson,
   Fingerprint,
+  Layers,
   Package,
+  Trophy,
   User,
   UserRound,
 } from 'lucide-vue-next'
@@ -330,33 +332,38 @@ watch(
           <h1 class="admin-page-title">审计日志</h1>
         </div>
 
-        <div
-          class="admin-summary-grid progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"
-        >
-          <article class="journal-note progress-card metric-panel-card">
-            <div class="journal-note-label progress-card-label metric-panel-label">当前页</div>
-            <div class="journal-note-value progress-card-value metric-panel-value">
-              {{ list.length }}
+        <div class="metric-panel-grid--premium cols-3">
+          <article class="metric-panel-card--premium">
+            <div class="metric-panel-label">
+              <span>当前页加载</span>
+              <Activity class="h-4 w-4" />
             </div>
-            <div class="journal-note-helper progress-card-hint metric-panel-helper">
-              本页已加载的日志条数
+            <div class="metric-panel-value">
+              {{ list.length.toString().padStart(2, '0') }}
             </div>
+            <div class="metric-panel-helper">本页已加载的日志条数</div>
           </article>
-          <article class="journal-note progress-card metric-panel-card">
-            <div class="journal-note-label progress-card-label metric-panel-label">总记录</div>
-            <div class="journal-note-value progress-card-value metric-panel-value">{{ total }}</div>
-            <div class="journal-note-helper progress-card-hint metric-panel-helper">
-              符合条件的审计记录总量
+          
+          <article class="metric-panel-card--premium">
+            <div class="metric-panel-label">
+              <span>全站总记录</span>
+              <Trophy class="h-4 w-4" />
             </div>
+            <div class="metric-panel-value">
+              {{ total.toString().padStart(2, '0') }}
+            </div>
+            <div class="metric-panel-helper">审计数据库中的累计总量</div>
           </article>
-          <article class="journal-note progress-card metric-panel-card">
-            <div class="journal-note-label progress-card-label metric-panel-label">总页数</div>
-            <div class="journal-note-value progress-card-value metric-panel-value">
-              {{ totalPages }}
+
+          <article class="metric-panel-card--premium">
+            <div class="metric-panel-label">
+              <span>总分页范围</span>
+              <Layers class="h-4 w-4" />
             </div>
-            <div class="journal-note-helper progress-card-hint metric-panel-helper">
-              当前筛选结果的分页范围
+            <div class="metric-panel-value">
+              {{ totalPages.toString().padStart(2, '0') }}
             </div>
+            <div class="metric-panel-helper">当前条件下的分页总数</div>
           </article>
         </div>
       </header>
