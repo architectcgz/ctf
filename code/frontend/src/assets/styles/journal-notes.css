@@ -203,10 +203,9 @@
       color-mix(
         in srgb,
         var(
-            --workspace-panel-soft,
-            var(--workspace-panel, var(--journal-surface, var(--color-bg-surface)))
-          )
-          90%,
+          --workspace-panel-soft,
+          var(--workspace-panel, var(--journal-surface, var(--color-bg-surface)))
+        ) 90%,
         var(--color-bg-base)
       )
     );

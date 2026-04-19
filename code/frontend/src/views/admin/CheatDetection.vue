@@ -270,6 +270,15 @@ onMounted(() => {
   --workspace-panel: color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-bg-base));
   --workspace-panel-soft: color-mix(in srgb, var(--color-bg-surface) 82%, var(--color-bg-base));
   --workspace-line-soft: color-mix(in srgb, var(--color-text-primary) 10%, transparent);
+  --page-top-tabs-gap: 28px;
+  --page-top-tabs-margin: var(--space-2-5) calc(var(--space-6) * -1) 0;
+  --page-top-tabs-padding: 0 var(--space-6);
+  --page-top-tabs-border: color-mix(in srgb, var(--journal-ink) 10%, transparent);
+  --page-top-tab-min-height: 52px;
+  --page-top-tab-padding: var(--space-2-5) 0 var(--space-3-5);
+  --page-top-tab-font-size: var(--font-size-15);
+  --page-top-tab-active-color: color-mix(in srgb, var(--journal-accent) 74%, var(--journal-ink));
+  --page-top-tab-active-border: color-mix(in srgb, var(--journal-accent) 86%, var(--journal-ink));
   --journal-divider-border: 1px dashed var(--cheat-divider);
   --journal-shell-dark-accent: var(--color-primary-hover);
 }
