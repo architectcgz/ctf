@@ -89,6 +89,42 @@ select {
   margin-top: var(--workspace-directory-gap-top);
 }
 
+.workspace-directory-list {
+  --workspace-directory-shell-border: var(
+    --workspace-line-soft,
+    color-mix(in srgb, var(--journal-border, var(--color-border-default)) 76%, transparent)
+  );
+  --workspace-directory-head-divider: var(--workspace-directory-shell-border);
+  --workspace-directory-row-divider: color-mix(
+    in srgb,
+    var(--workspace-directory-shell-border) 84%,
+    transparent
+  );
+  --workspace-directory-shell-background: color-mix(
+    in srgb,
+    var(--journal-surface, var(--color-bg-surface)) 98%,
+    var(--color-bg-base)
+  );
+  --workspace-directory-shell-radius: 1.35rem;
+  --workspace-directory-shell-padding: 0.25rem 0.9rem 0.4rem;
+  border: 1px solid var(--workspace-directory-shell-border);
+  border-radius: var(--workspace-directory-shell-radius);
+  background: var(--workspace-directory-shell-background);
+  padding: var(--workspace-directory-shell-padding);
+}
+
+.workspace-directory-list .workspace-data-table__head-cell {
+  border-bottom-color: var(--workspace-directory-head-divider);
+}
+
+.workspace-directory-list .workspace-data-table__row {
+  border-bottom-color: var(--workspace-directory-row-divider);
+}
+
+.workspace-directory-list .workspace-data-table__body tr:last-child {
+  border-bottom-color: transparent;
+}
+
 .workspace-directory-section > .workspace-directory-pagination {
   margin-top: var(--workspace-directory-gap-pagination);
 }
