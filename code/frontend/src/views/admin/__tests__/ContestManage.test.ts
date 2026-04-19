@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 
 import ContestManage from '../ContestManage.vue'
-import contestOrchestrationSource from '@/components/admin/contest/ContestOrchestrationPage.vue?raw'
+import contestGovernanceSource from '@/components/admin/contest/ContestGovernancePage.vue?raw'
 import { ApiError } from '@/api/request'
 
 const pushMock = vi.fn()
@@ -116,7 +116,7 @@ describe('ContestManage', () => {
     const wrapper = mount(ContestManage, {
       global: {
         stubs: {
-          ContestOrchestrationPage: {
+          ContestGovernancePage: {
             props: ['list'],
             template:
               '<div><button id="open-awd-edit" type="button" @click="$emit(\'openEditDialog\', list[0])">编辑 AWD</button></div>',
@@ -201,7 +201,7 @@ describe('ContestManage', () => {
     const wrapper = mount(ContestManage, {
       global: {
         stubs: {
-          ContestOrchestrationPage: {
+          ContestGovernancePage: {
             props: ['list'],
             template:
               '<div><button id="open-awd-edit" type="button" @click="$emit(\'openEditDialog\', list[0])">编辑 AWD</button></div>',
@@ -260,7 +260,7 @@ describe('ContestManage', () => {
     const wrapper = mount(ContestManage, {
       global: {
         stubs: {
-          ContestOrchestrationPage: {
+          ContestGovernancePage: {
             props: ['list'],
             template:
               '<div><button id="open-edit" type="button" @click="$emit(\'openEditDialog\', list[0])">编辑</button></div>',
@@ -312,7 +312,7 @@ describe('ContestManage', () => {
     const wrapper = mount(ContestManage, {
       global: {
         stubs: {
-          ContestOrchestrationPage: {
+          ContestGovernancePage: {
             props: ['list'],
             template:
               '<div><button id="open-edit" type="button" @click="$emit(\'openEditDialog\', list[0])">编辑</button></div>',
@@ -397,21 +397,28 @@ describe('ContestManage', () => {
   })
 
   it('赛事目录筛选应切到共享目录工具栏', () => {
-    expect(contestOrchestrationSource).toContain(
+    expect(contestGovernanceSource).toContain(
       "from '@/components/common/WorkspaceDirectoryToolbar.vue'"
     )
-    expect(contestOrchestrationSource).toContain('<WorkspaceDirectoryToolbar')
-    expect(contestOrchestrationSource).toContain('filter-panel-title="赛事筛选"')
-    expect(contestOrchestrationSource).toContain('total-suffix="场赛事"')
-    expect(contestOrchestrationSource).toMatch(
+    expect(contestGovernanceSource).toContain('<WorkspaceDirectoryToolbar')
+    expect(contestGovernanceSource).toContain('filter-panel-title="赛事筛选"')
+    expect(contestGovernanceSource).toContain('total-suffix="场赛事"')
+    expect(contestGovernanceSource).toContain(
+      '<div class="workspace-overline">Contest Governance</div>'
+    )
+    expect(contestGovernanceSource).toContain('<h2 class="list-heading__title">全部竞赛</h2>')
+    expect(contestGovernanceSource).not.toContain('Contest Workspace')
+    expect(contestGovernanceSource).not.toContain('返回工作台')
+    expect(contestGovernanceSource).not.toContain('赛事工作台')
+    expect(contestGovernanceSource).toMatch(
       /\.contest-directory-section,\s*\.contest-create-panel\s*\{[\s\S]*gap:\s*var\(--space-4\);/s
     )
-    expect(contestOrchestrationSource).toMatch(
+    expect(contestGovernanceSource).toMatch(
       /\.contest-directory-section :deep\(\.workspace-directory-toolbar\)\s*\{[\s\S]*margin-bottom:\s*0;/s
     )
-    expect(contestOrchestrationSource).not.toContain('<nav class="top-tabs"')
-    expect(contestOrchestrationSource).not.toContain('class="contest-filter-grid"')
-    expect(contestOrchestrationSource).not.toContain('class="contest-filter-strip"')
+    expect(contestGovernanceSource).not.toContain('<nav class="top-tabs"')
+    expect(contestGovernanceSource).not.toContain('class="contest-filter-grid"')
+    expect(contestGovernanceSource).not.toContain('class="contest-filter-strip"')
   })
 
   it('应该在赛事目录通过共享筛选面板切换状态筛选', async () => {
@@ -502,7 +509,7 @@ describe('ContestManage', () => {
     wrapper.unmount()
   })
 
-  it('管理页工作台入口应跳转到具体竞赛工作台，且不再保留顶层并行运维标签', async () => {
+  it('管理页运维入口应跳转到具体竞赛运维页，且不再保留顶层并行运维标签', async () => {
     window.sessionStorage.setItem('ctf_admin_awd_ops_panel:awd-running', 'challenges')
     contestMocks.getContests.mockResolvedValue({
       list: [
@@ -554,7 +561,7 @@ describe('ContestManage', () => {
     })
   })
 
-  it('应该在创建竞赛成功后切回赛事工作台', async () => {
+  it('应该在创建竞赛成功后切回竞赛目录', async () => {
     contestMocks.getContests.mockResolvedValue({
       list: [
         {
@@ -608,7 +615,7 @@ describe('ContestManage', () => {
       ends_at: new Date('2026-03-20T12:00').toISOString(),
     })
     expect(wrapper.get('#contest-panel-overview').attributes('aria-hidden')).toBe('false')
-    expect(wrapper.text()).toContain('竞赛列表')
+    expect(wrapper.text()).toContain('全部竞赛')
   })
 
   it('应该在空列表时展示显式空态', async () => {

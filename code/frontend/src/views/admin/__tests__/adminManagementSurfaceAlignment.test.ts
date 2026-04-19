@@ -17,6 +17,7 @@ import awdReadinessOverrideDialogSource from '@/components/admin/contest/AWDRead
 import awdChallengeConfigDialogSource from '@/components/admin/contest/AWDChallengeConfigDialog.vue?raw'
 import adminContestFormDialogSource from '@/components/admin/contest/AdminContestFormDialog.vue?raw'
 import adminContestFormPanelSource from '@/components/admin/contest/AdminContestFormPanel.vue?raw'
+import contestGovernanceSource from '@/components/admin/contest/ContestGovernancePage.vue?raw'
 import contestOrchestrationSource from '@/components/admin/contest/ContestOrchestrationPage.vue?raw'
 import adminContestTableSource from '@/components/admin/contest/AdminContestTable.vue?raw'
 import userGovernanceSource from '@/components/admin/user/UserGovernancePage.vue?raw'
@@ -130,6 +131,24 @@ describe('admin management surface alignment', () => {
     expect(contestOrchestrationSource).not.toContain('class="contest-filter-actions"')
     expect(contestOrchestrationSource).toMatch(
       /\.contest-overview-summary\.metric-panel-default-surface\.metric-panel-workspace-surface\s*\{[\s\S]*--metric-panel-border:\s*color-mix\(in srgb,\s*var\(--workspace-brand\)\s*16%,\s*var\(--workspace-line-soft\)\);[\s\S]*--metric-panel-background:\s*radial-gradient\([\s\S]*linear-gradient\(/s
+    )
+  })
+
+  it('contest governance should stay on the governance shell instead of the orchestration copy set', () => {
+    expect(contestGovernanceSource).toMatch(
+      /--admin-control-border:\s*color-mix\(in srgb,\s*var\(--journal-border\) 76%, transparent\);/
+    )
+    expect(contestGovernanceSource).toContain(
+      '<div class="workspace-overline">Contest Governance</div>'
+    )
+    expect(contestGovernanceSource).toContain('<h1 class="workspace-page-title">竞赛目录</h1>')
+    expect(contestGovernanceSource).toContain('<h2 class="list-heading__title">全部竞赛</h2>')
+    expect(contestGovernanceSource).toContain('<h2 class="workspace-page-title">创建竞赛</h2>')
+    expect(contestGovernanceSource).toContain('返回竞赛目录')
+    expect(contestGovernanceSource).not.toContain('Contest Workspace')
+    expect(contestGovernanceSource).not.toContain('赛事工作台')
+    expect(contestGovernanceSource).toMatch(
+      /\.contest-directory-section,\s*\.contest-create-panel\s*\{[\s\S]*gap:\s*var\(--space-4\);[\s\S]*padding:\s*0;/s
     )
   })
 
