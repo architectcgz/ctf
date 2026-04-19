@@ -68,7 +68,10 @@ describe('admin management surface alignment', () => {
       /\.admin-input\s*\{[\s\S]*border:\s*1px solid var\(--admin-control-border\);/s
     )
     expect(userGovernanceSource).toMatch(
-      /\.user-table-shell\s*\{[\s\S]*border:\s*1px solid var\(--user-table-border\);/s
+      /\.user-table-shell\s*\{[\s\S]*--workspace-directory-shell-border:\s*var\(--user-table-border\);/s
+    )
+    expect(userGovernanceSource).toMatch(
+      /\.user-table-shell\s*\{[\s\S]*--workspace-directory-row-divider:\s*var\(--user-row-divider\);/s
     )
     expect(userGovernanceSource).toMatch(
       /\.user-table-row\s*\{[\s\S]*border-top:\s*1px solid var\(--user-row-divider\);/s
@@ -274,6 +277,10 @@ describe('admin management surface alignment', () => {
   it('admin list pages should use shared directory spacing utilities', () => {
     expect(styleSource).toContain('--workspace-directory-gap-top: 0.75rem;')
     expect(styleSource).toContain('--workspace-directory-gap-pagination: 0.5rem;')
+    expect(styleSource).toContain('.workspace-directory-list {')
+    expect(styleSource).toContain('--workspace-directory-shell-border')
+    expect(styleSource).toContain('.workspace-directory-list .workspace-data-table__head-cell')
+    expect(styleSource).toContain('.workspace-directory-list .workspace-data-table__row')
     expect(styleSource).toContain(
       '.workspace-directory-section > :where(.workspace-directory-loading, .workspace-directory-empty, .workspace-directory-list)'
     )
