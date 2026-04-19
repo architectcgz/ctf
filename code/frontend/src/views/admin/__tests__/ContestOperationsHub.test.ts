@@ -6,7 +6,7 @@ import contestOperationsHubSource from '../ContestOperationsHub.vue?raw'
 
 const pushMock = vi.fn()
 const routeState = vi.hoisted(() => ({
-  path: '/admin/contest-ops/environment',
+  path: '/platform/contest-ops/environment',
   name: 'AdminContestOpsEnvironment',
 }))
 const adminApiMocks = vi.hoisted(() => ({
@@ -211,7 +211,7 @@ describe('ContestOperationsHub', () => {
   })
 
   it('renders environment management copy and routes to awd config for the preferred contest', async () => {
-    routeState.path = '/admin/contest-ops/environment'
+    routeState.path = '/platform/contest-ops/environment'
     routeState.name = 'AdminContestOpsEnvironment'
 
     const wrapper = mount(ContestOperationsHub)
@@ -230,7 +230,7 @@ describe('ContestOperationsHub', () => {
   })
 
   it('renders traffic monitoring copy and routes to the operations inspector', async () => {
-    routeState.path = '/admin/contest-ops/traffic'
+    routeState.path = '/platform/contest-ops/traffic'
     routeState.name = 'AdminContestOpsTraffic'
 
     const wrapper = mount(ContestOperationsHub)
@@ -248,7 +248,7 @@ describe('ContestOperationsHub', () => {
   })
 
   it('renders projector telemetry for the preferred contest instead of only jump links', async () => {
-    routeState.path = '/admin/contest-ops/projector'
+    routeState.path = '/platform/contest-ops/projector'
     routeState.name = 'AdminContestOpsProjector'
     adminApiMocks.listContestAWDRounds.mockResolvedValueOnce([
       {

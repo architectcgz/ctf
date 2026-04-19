@@ -147,8 +147,7 @@ const backofficeModules: BackofficeModule[] = [
         label: 'AWD服务模板',
         path: '/platform/awd-service-templates',
         roles: ['teacher', 'admin'],
-        isMatch: (path) =>
-          matchAny(path, ['/platform/awd-service-templates', '/admin/awd-service-templates']),
+        isMatch: (path) => matchAny(path, ['/platform/awd-service-templates']),
       },
       {
         routeName: 'ImageManage',
@@ -167,10 +166,9 @@ const backofficeModules: BackofficeModule[] = [
       {
         routeName: 'AdminContestOpsEnvironment',
         label: '环境管理',
-        path: '/platform/contest-ops/contests',
+        path: '/platform/contest-ops/environment',
         roles: ['admin'],
-        isMatch: (path) =>
-          matchAny(path, ['/platform/contest-ops/contests', '/platform/contest-ops/environment']),
+        isMatch: (path) => matchAny(path, ['/platform/contest-ops/environment']),
       },
       {
         routeName: 'AdminContestOpsTraffic',
