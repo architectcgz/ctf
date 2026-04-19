@@ -24,6 +24,11 @@ describe('AWDRoundInspector extraction', () => {
     expect(awdTrafficPanelSource).toContain('AdminPaginationControls')
   })
 
+  it('应将流量摘要卡的响应式边框规则收口到语义类，而不是继续把任意选择器类写在模板里', () => {
+    expect(awdTrafficPanelSource).toContain('awd-traffic-summary-card')
+    expect(awdTrafficPanelSource).not.toContain('md:[&:nth-last-child(-n+2)]:border-b-0')
+  })
+
   it('应将服务状态表收口到独立的 AWDServiceStatusPanel，而不是继续堆在 AWDRoundInspector 内', () => {
     expect(awdRoundInspectorSource).toContain('<AWDServiceStatusPanel')
     expect(awdRoundInspectorSource).not.toContain('id="awd-service-filter-team"')
