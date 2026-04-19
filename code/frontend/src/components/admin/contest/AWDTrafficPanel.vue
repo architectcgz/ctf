@@ -80,7 +80,7 @@ function getTrafficStatusGroupLabel(statusGroup: AWDTrafficStatusGroup): string 
           <div
             v-for="item in trafficSummaryStats"
             :key="item.key"
-            class="border-b border-border/70 px-4 py-4 last:border-b-0 md:[&:nth-last-child(-n+2)]:border-b-0 xl:border-b-0 xl:border-r xl:last:border-r-0"
+            class="awd-traffic-summary-card border-b border-border/70 px-4 py-4 last:border-b-0 xl:border-b-0 xl:border-r xl:last:border-r-0"
           >
             <p class="awd-traffic-stat-label">
               {{ item.label }}
@@ -532,6 +532,16 @@ function getTrafficStatusGroupLabel(statusGroup: AWDTrafficStatusGroup): string 
 
   .awd-traffic-filter-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr)) minmax(0, 1.35fr) auto;
+  }
+
+  .awd-traffic-summary-card {
+    border-bottom-width: 0;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1279px) {
+  .awd-traffic-summary-card:nth-last-child(-n + 2) {
+    border-bottom-width: 0;
   }
 }
 </style>
