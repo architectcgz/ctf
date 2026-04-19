@@ -19,10 +19,12 @@ import (
 	"ctf-platform/internal/app/composition"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	contesttestsupport "ctf-platform/internal/module/contest/testsupport"
 	practicereadmodelhttp "ctf-platform/internal/module/practice_readmodel/api/http"
 	teachinghttp "ctf-platform/internal/module/teaching_readmodel/api/http"
 	rediskeys "ctf-platform/internal/pkg/redis"
 	flagcrypto "ctf-platform/pkg/crypto"
+	"ctf-platform/pkg/errcode"
 	redislib "github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 	xws "golang.org/x/net/websocket"
@@ -605,11 +607,26 @@ func TestFullRouter_TeacherAWDReviewExportStateMatrix(t *testing.T) {
 		t.Fatalf("create teacher awd review round2: %v", err)
 	}
 
+	reviewServiceID := contesttestsupport.DefaultAWDContestServiceID(reviewContest.ID, env.challenge.ID)
+	contesttestsupport.SyncAWDContestServiceFixture(
+		t,
+		env.db,
+		reviewContest.ID,
+		env.challenge.ID,
+		"review-service",
+		model.AWDCheckerTypeHTTPStandard,
+		`{"method":"GET","path":"/health"}`,
+		100,
+		60,
+		40,
+		now,
+	)
+
 	serviceSeeds := []*model.AWDTeamService{
-		{RoundID: round1.ID, TeamID: blueTeam.ID, ChallengeID: env.challenge.ID, ServiceStatus: model.AWDServiceStatusUp, AttackReceived: 1, SLAScore: 30, DefenseScore: 40, AttackScore: 20, UpdatedAt: now.Add(-70 * time.Minute)},
-		{RoundID: round1.ID, TeamID: redTeam.ID, ChallengeID: env.challenge.ID, ServiceStatus: model.AWDServiceStatusCompromised, AttackReceived: 2, SLAScore: 20, DefenseScore: 30, AttackScore: 15, UpdatedAt: now.Add(-68 * time.Minute)},
-		{RoundID: round2.ID, TeamID: blueTeam.ID, ChallengeID: env.challenge.ID, ServiceStatus: model.AWDServiceStatusUp, AttackReceived: 1, SLAScore: 40, DefenseScore: 50, AttackScore: 35, UpdatedAt: now.Add(-12 * time.Minute)},
-		{RoundID: round2.ID, TeamID: redTeam.ID, ChallengeID: env.challenge.ID, ServiceStatus: model.AWDServiceStatusDown, AttackReceived: 3, SLAScore: 10, DefenseScore: 15, AttackScore: 10, UpdatedAt: now.Add(-11 * time.Minute)},
+		{RoundID: round1.ID, TeamID: blueTeam.ID, ServiceID: reviewServiceID, ChallengeID: env.challenge.ID, ServiceStatus: model.AWDServiceStatusUp, AttackReceived: 1, SLAScore: 30, DefenseScore: 40, AttackScore: 20, UpdatedAt: now.Add(-70 * time.Minute)},
+		{RoundID: round1.ID, TeamID: redTeam.ID, ServiceID: reviewServiceID, ChallengeID: env.challenge.ID, ServiceStatus: model.AWDServiceStatusCompromised, AttackReceived: 2, SLAScore: 20, DefenseScore: 30, AttackScore: 15, UpdatedAt: now.Add(-68 * time.Minute)},
+		{RoundID: round2.ID, TeamID: blueTeam.ID, ServiceID: reviewServiceID, ChallengeID: env.challenge.ID, ServiceStatus: model.AWDServiceStatusUp, AttackReceived: 1, SLAScore: 40, DefenseScore: 50, AttackScore: 35, UpdatedAt: now.Add(-12 * time.Minute)},
+		{RoundID: round2.ID, TeamID: redTeam.ID, ServiceID: reviewServiceID, ChallengeID: env.challenge.ID, ServiceStatus: model.AWDServiceStatusDown, AttackReceived: 3, SLAScore: 10, DefenseScore: 15, AttackScore: 10, UpdatedAt: now.Add(-11 * time.Minute)},
 	}
 	for _, item := range serviceSeeds {
 		if err := env.db.Create(item).Error; err != nil {
@@ -618,8 +635,8 @@ func TestFullRouter_TeacherAWDReviewExportStateMatrix(t *testing.T) {
 	}
 
 	attackSeeds := []*model.AWDAttackLog{
-		{RoundID: round1.ID, AttackerTeamID: blueTeam.ID, VictimTeamID: redTeam.ID, ChallengeID: env.challenge.ID, AttackType: model.AWDAttackTypeFlagCapture, Source: model.AWDAttackSourceManual, IsSuccess: true, ScoreGained: 30, CreatedAt: now.Add(-65 * time.Minute)},
-		{RoundID: round2.ID, AttackerTeamID: redTeam.ID, VictimTeamID: blueTeam.ID, ChallengeID: env.challenge.ID, AttackType: model.AWDAttackTypeFlagCapture, Source: model.AWDAttackSourceManual, IsSuccess: false, ScoreGained: 0, CreatedAt: now.Add(-10 * time.Minute)},
+		{RoundID: round1.ID, AttackerTeamID: blueTeam.ID, VictimTeamID: redTeam.ID, ServiceID: reviewServiceID, ChallengeID: env.challenge.ID, AttackType: model.AWDAttackTypeFlagCapture, Source: model.AWDAttackSourceManual, IsSuccess: true, ScoreGained: 30, CreatedAt: now.Add(-65 * time.Minute)},
+		{RoundID: round2.ID, AttackerTeamID: redTeam.ID, VictimTeamID: blueTeam.ID, ServiceID: reviewServiceID, ChallengeID: env.challenge.ID, AttackType: model.AWDAttackTypeFlagCapture, Source: model.AWDAttackSourceManual, IsSuccess: false, ScoreGained: 0, CreatedAt: now.Add(-10 * time.Minute)},
 	}
 	for _, item := range attackSeeds {
 		if err := env.db.Create(item).Error; err != nil {
@@ -628,8 +645,8 @@ func TestFullRouter_TeacherAWDReviewExportStateMatrix(t *testing.T) {
 	}
 
 	trafficSeeds := []*model.AWDTrafficEvent{
-		{ContestID: reviewContest.ID, RoundID: round1.ID, AttackerTeamID: blueTeam.ID, VictimTeamID: redTeam.ID, ChallengeID: env.challenge.ID, Method: http.MethodGet, Path: "/health", StatusCode: http.StatusOK, Source: model.AWDAttackSourceSubmission, CreatedAt: now.Add(-64 * time.Minute)},
-		{ContestID: reviewContest.ID, RoundID: round2.ID, AttackerTeamID: redTeam.ID, VictimTeamID: blueTeam.ID, ChallengeID: env.challenge.ID, Method: http.MethodPost, Path: "/exploit", StatusCode: http.StatusForbidden, Source: model.AWDAttackSourceManual, CreatedAt: now.Add(-9 * time.Minute)},
+		{ContestID: reviewContest.ID, RoundID: round1.ID, AttackerTeamID: blueTeam.ID, VictimTeamID: redTeam.ID, ServiceID: reviewServiceID, ChallengeID: env.challenge.ID, Method: http.MethodGet, Path: "/health", StatusCode: http.StatusOK, Source: model.AWDAttackSourceSubmission, CreatedAt: now.Add(-64 * time.Minute)},
+		{ContestID: reviewContest.ID, RoundID: round2.ID, AttackerTeamID: redTeam.ID, VictimTeamID: blueTeam.ID, ServiceID: reviewServiceID, ChallengeID: env.challenge.ID, Method: http.MethodPost, Path: "/exploit", StatusCode: http.StatusForbidden, Source: model.AWDAttackSourceManual, CreatedAt: now.Add(-9 * time.Minute)},
 	}
 	for _, item := range trafficSeeds {
 		if err := env.db.Create(item).Error; err != nil {
@@ -672,6 +689,9 @@ func TestFullRouter_TeacherAWDReviewExportStateMatrix(t *testing.T) {
 	}
 	if len(reviewDetail.SelectedRound.Teams) != 2 || len(reviewDetail.SelectedRound.Services) == 0 || len(reviewDetail.SelectedRound.Traffic) == 0 {
 		t.Fatalf("expected populated selected round payload, got %+v", reviewDetail.SelectedRound)
+	}
+	if reviewDetail.SelectedRound.Traffic[0].ServiceID != reviewServiceID {
+		t.Fatalf("expected selected round traffic service_id=%d, got %+v", reviewServiceID, reviewDetail.SelectedRound.Traffic[0])
 	}
 
 	resp = performFullRouterRequest(t, env.router, http.MethodPost, fmt.Sprintf("/api/v1/teacher/awd/reviews/%d/export/archive", reviewContest.ID), map[string]any{
@@ -1479,6 +1499,20 @@ func TestFullRouter_AWDTrafficAdminStateMatrix(t *testing.T) {
 	studentHeaders := bearerHeaders(loginForToken(t, env.router, env.student.Username, env.studentPwd))
 
 	awdTeam := createContestTeam(t, env, env.awdContest.ID, env.student.ID, "AWD-Traffic-Blue", 4)
+	trafficServiceID := contesttestsupport.DefaultAWDContestServiceID(env.awdContest.ID, env.challenge.ID)
+	contesttestsupport.SyncAWDContestServiceFixture(
+		t,
+		env.db,
+		env.awdContest.ID,
+		env.challenge.ID,
+		"traffic-service",
+		model.AWDCheckerTypeHTTPStandard,
+		`{"method":"GET","path":"/ping"}`,
+		100,
+		60,
+		40,
+		time.Now(),
+	)
 
 	proxyTarget := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte("awd-proxied:" + r.URL.Path))
@@ -1489,6 +1523,7 @@ func TestFullRouter_AWDTrafficAdminStateMatrix(t *testing.T) {
 		"user_id":      env.student.ID,
 		"contest_id":   env.awdContest.ID,
 		"team_id":      awdTeam.ID,
+		"service_id":   trafficServiceID,
 		"challenge_id": env.challenge.ID,
 		"access_url":   proxyTarget.URL,
 		"status":       model.InstanceStatusRunning,
@@ -1549,6 +1584,9 @@ func TestFullRouter_AWDTrafficAdminStateMatrix(t *testing.T) {
 	}
 	if page.List[0].Method != http.MethodGet || page.List[0].Path != "/ping" {
 		t.Fatalf("unexpected traffic event item: %+v", page.List[0])
+	}
+	if page.List[0].ServiceID <= 0 {
+		t.Fatalf("expected traffic event service_id, got %+v", page.List[0])
 	}
 }
 
@@ -1876,9 +1914,9 @@ func TestFullRouter_ContestChallengeAndScoreboardStateMatrix(t *testing.T) {
 		t.Fatalf("unexpected unfrozen scoreboard: %+v", unfrozenScoreboard)
 	}
 
-notFrozenContest := createFullRouterContest(t, env, "Not Frozen Contest", model.ContestStatusRunning)
-resp = performFullRouterRequest(t, env.router, http.MethodPost, fmt.Sprintf("/api/v1/admin/contests/%d/unfreeze", notFrozenContest.ID), nil, adminHeaders)
-assertFullRouterStatus(t, resp, http.StatusBadRequest)
+	notFrozenContest := createFullRouterContest(t, env, "Not Frozen Contest", model.ContestStatusRunning)
+	resp = performFullRouterRequest(t, env.router, http.MethodPost, fmt.Sprintf("/api/v1/admin/contests/%d/unfreeze", notFrozenContest.ID), nil, adminHeaders)
+	assertFullRouterStatus(t, resp, http.StatusBadRequest)
 }
 
 func TestFullRouter_VisibleContestChallengesIncludeAWDServiceID(t *testing.T) {
@@ -1926,8 +1964,8 @@ func TestFullRouter_VisibleContestChallengesIncludeAWDServiceID(t *testing.T) {
 
 	var adminChallenges []dto.ContestChallengeResp
 	decodeFullRouterData(t, resp, &adminChallenges)
-	if len(adminChallenges) != 1 || adminChallenges[0].AWDServiceID == nil || *adminChallenges[0].AWDServiceID != awdService.ID {
-		t.Fatalf("unexpected admin awd service metadata: %+v", adminChallenges)
+	if len(adminChallenges) != 1 || adminChallenges[0].ChallengeID != challenge.ID {
+		t.Fatalf("unexpected admin challenge payload: %+v", adminChallenges)
 	}
 
 	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/contests/%d/challenges", contest.ID), nil, studentHeaders)
@@ -1937,6 +1975,54 @@ func TestFullRouter_VisibleContestChallengesIncludeAWDServiceID(t *testing.T) {
 	decodeFullRouterData(t, resp, &visibleChallenges)
 	if len(visibleChallenges) != 1 || visibleChallenges[0].AWDServiceID == nil || *visibleChallenges[0].AWDServiceID != awdService.ID {
 		t.Fatalf("unexpected visible awd service metadata: %+v", visibleChallenges)
+	}
+}
+
+func TestFullRouter_AWDContestLegacyChallengeInstanceRouteRejected(t *testing.T) {
+	env := newFullRouterTestEnv(t)
+
+	studentHeaders := bearerHeaders(loginForToken(t, env.router, env.student.Username, env.studentPwd))
+	awdTeam := createContestTeam(t, env, env.awdContest.ID, env.student.ID, "AWD Legacy Route Team", 4)
+	contesttestsupport.SyncAWDContestServiceFixture(
+		t,
+		env.db,
+		env.awdContest.ID,
+		env.challenge.ID,
+		"Matrix AWD Service",
+		model.AWDCheckerTypeHTTPStandard,
+		`{"get_flag":{"path":"/health"}}`,
+		100,
+		18,
+		28,
+		time.Now(),
+	)
+
+	resp := performFullRouterRequest(
+		t,
+		env.router,
+		http.MethodPost,
+		fmt.Sprintf("/api/v1/contests/%d/challenges/%d/instances", env.awdContest.ID, env.challenge.ID),
+		nil,
+		studentHeaders,
+	)
+	assertFullRouterStatus(t, resp, http.StatusBadRequest)
+
+	var envelope fullRouterEnvelope
+	if err := json.Unmarshal(resp.Body.Bytes(), &envelope); err != nil {
+		t.Fatalf("decode legacy awd instance route response: %v body=%s", err, resp.Body.String())
+	}
+	if envelope.Code != errcode.ErrInvalidParams.Code || envelope.Message != errcode.ErrInvalidParams.Message {
+		t.Fatalf("expected invalid params envelope, got %+v", envelope)
+	}
+
+	var awdInstanceCount int64
+	if err := env.db.Model(&model.Instance{}).
+		Where("contest_id = ? AND team_id = ? AND user_id = ?", env.awdContest.ID, awdTeam.ID, env.student.ID).
+		Count(&awdInstanceCount).Error; err != nil {
+		t.Fatalf("count awd instances after legacy route request: %v", err)
+	}
+	if awdInstanceCount != 0 {
+		t.Fatalf("expected no awd instance created through legacy route, got %d", awdInstanceCount)
 	}
 }
 

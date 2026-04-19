@@ -523,6 +523,231 @@ func TestAWDServiceGetUserWorkspaceWithoutTeamHidesTargets(t *testing.T) {
 	}
 }
 
+func TestAWDServiceGetUserWorkspacePrefersContestServicesAndSeedsMissingDefinitions(t *testing.T) {
+	service, db := newAWDQueryServiceForTest(t)
+	now := time.Date(2026, 4, 12, 16, 0, 0, 0, time.UTC)
+
+	contesttestsupport.CreateAWDContestFixture(t, db, 803, now)
+	contesttestsupport.CreateAWDChallengeFixture(t, db, 8031, now)
+	contesttestsupport.CreateAWDChallengeFixture(t, db, 8032, now)
+	contesttestsupport.CreateAWDChallengeFixture(t, db, 8033, now)
+	contesttestsupport.CreateAWDContestChallengeFixture(t, db, 803, 8031, now)
+	contesttestsupport.CreateAWDContestChallengeFixture(t, db, 803, 8032, now)
+	contesttestsupport.CreateAWDContestChallengeFixture(t, db, 803, 8033, now)
+	contesttestsupport.SyncAWDContestServiceFixture(
+		t,
+		db,
+		803,
+		8031,
+		"Bank Portal",
+		model.AWDCheckerTypeHTTPStandard,
+		`{"get_flag":{"path":"/health"}}`,
+		100,
+		18,
+		28,
+		now,
+	)
+	contesttestsupport.SyncAWDContestServiceFixture(
+		t,
+		db,
+		803,
+		8032,
+		"Admin Gateway",
+		model.AWDCheckerTypeHTTPStandard,
+		`{"get_flag":{"path":"/ready"}}`,
+		100,
+		18,
+		28,
+		now,
+	)
+	if err := db.Where("contest_id = ? AND challenge_id = ?", 803, 8033).
+		Delete(&model.ContestAWDService{}).Error; err != nil {
+		t.Fatalf("delete generated contest awd service definition: %v", err)
+	}
+
+	contesttestsupport.CreateAWDTeamFixture(t, db, 8301, 803, "Red", now)
+	contesttestsupport.CreateAWDTeamFixture(t, db, 8302, 803, "Blue", now)
+	contesttestsupport.CreateAWDTeamMemberFixture(t, db, 803, 8301, 9301, now)
+	contesttestsupport.CreateAWDTeamMemberFixture(t, db, 803, 8302, 9302, now)
+
+	seedAWDWorkspaceInstance(t, db, 6, 9301, 803, 8301, 8031, "http://red-bank.internal", now)
+	seedAWDWorkspaceInstance(t, db, 7, 9302, 803, 8302, 8031, "http://blue-bank.internal", now)
+	seedAWDWorkspaceInstance(t, db, 8, 9302, 803, 8302, 8033, "http://blue-unmapped.internal", now)
+
+	resp, err := service.GetUserWorkspace(context.Background(), 9301, 803)
+	if err != nil {
+		t.Fatalf("GetUserWorkspace() error = %v", err)
+	}
+	if len(resp.Services) != 2 {
+		t.Fatalf("expected 2 seeded contest services, got %+v", resp.Services)
+	}
+
+	serviceIDs := []int64{resp.Services[0].ServiceID, resp.Services[1].ServiceID}
+	expectedBankServiceID := contesttestsupport.DefaultAWDContestServiceID(803, 8031)
+	expectedAdminServiceID := contesttestsupport.DefaultAWDContestServiceID(803, 8032)
+	if serviceIDs[0] != expectedBankServiceID || serviceIDs[1] != expectedAdminServiceID {
+		t.Fatalf("expected contest service ids [%d %d], got %+v", expectedBankServiceID, expectedAdminServiceID, serviceIDs)
+	}
+	if resp.Services[0].ChallengeID != 8031 || resp.Services[0].AccessURL != "http://red-bank.internal" {
+		t.Fatalf("expected bank portal service bound by contest service mapping, got %+v", resp.Services[0])
+	}
+	if resp.Services[1].ChallengeID != 8032 || resp.Services[1].AccessURL != "" {
+		t.Fatalf("expected admin gateway definition seeded without instance url, got %+v", resp.Services[1])
+	}
+	if len(resp.Targets) != 1 {
+		t.Fatalf("expected 1 target team, got %+v", resp.Targets)
+	}
+	if len(resp.Targets[0].Services) != 1 {
+		t.Fatalf("expected unmapped target instance filtered out, got %+v", resp.Targets[0].Services)
+	}
+	if resp.Targets[0].Services[0].ServiceID != expectedBankServiceID {
+		t.Fatalf("expected target service keyed by contest service id, got %+v", resp.Targets[0].Services[0])
+	}
+}
+
+func TestAWDServiceGetUserWorkspaceMatchesInstancesByPersistedServiceID(t *testing.T) {
+	service, db := newAWDQueryServiceForTest(t)
+	now := time.Date(2026, 4, 12, 16, 30, 0, 0, time.UTC)
+
+	contesttestsupport.CreateAWDContestFixture(t, db, 804, now)
+	contesttestsupport.CreateAWDChallengeFixture(t, db, 8041, now)
+	contesttestsupport.CreateAWDChallengeFixture(t, db, 8042, now)
+	contesttestsupport.CreateAWDContestChallengeFixture(t, db, 804, 8041, now)
+	contesttestsupport.CreateAWDContestChallengeFixture(t, db, 804, 8042, now)
+	contesttestsupport.SyncAWDContestServiceFixture(
+		t,
+		db,
+		804,
+		8041,
+		"Bank Portal",
+		model.AWDCheckerTypeHTTPStandard,
+		`{"get_flag":{"path":"/health"}}`,
+		100,
+		18,
+		28,
+		now,
+	)
+	contesttestsupport.CreateAWDTeamFixture(t, db, 8401, 804, "Red", now)
+	contesttestsupport.CreateAWDTeamFixture(t, db, 8402, 804, "Blue", now)
+	contesttestsupport.CreateAWDTeamMemberFixture(t, db, 804, 8401, 9401, now)
+	contesttestsupport.CreateAWDTeamMemberFixture(t, db, 804, 8402, 9402, now)
+
+	if err := ensureAWDWorkspaceInstanceServiceIDColumn(db); err != nil {
+		t.Fatalf("ensure instances.service_id column: %v", err)
+	}
+
+	serviceID := contesttestsupport.DefaultAWDContestServiceID(804, 8041)
+	seedAWDWorkspaceInstance(t, db, 9, 9401, 804, 8401, 8042, "http://red-bank.internal", now)
+	seedAWDWorkspaceInstance(t, db, 10, 9402, 804, 8402, 8042, "http://blue-bank.internal", now)
+	if err := db.Exec("UPDATE instances SET service_id = ? WHERE id IN (?, ?)", serviceID, 9, 10).Error; err != nil {
+		t.Fatalf("persist awd instance service ids: %v", err)
+	}
+
+	resp, err := service.GetUserWorkspace(context.Background(), 9401, 804)
+	if err != nil {
+		t.Fatalf("GetUserWorkspace() error = %v", err)
+	}
+	if len(resp.Services) != 2 {
+		t.Fatalf("expected 2 service definitions, got %+v", resp.Services)
+	}
+	matchedOwnService := findAWDWorkspaceServiceByID(resp.Services, serviceID)
+	if matchedOwnService == nil {
+		t.Fatalf("expected contest service %d in own services, got %+v", serviceID, resp.Services)
+	}
+	if matchedOwnService.AccessURL != "http://red-bank.internal" || matchedOwnService.ChallengeID != 8041 {
+		t.Fatalf("expected own service matched by persisted service_id, got %+v", matchedOwnService)
+	}
+	generatedOwnService := findAWDWorkspaceServiceByChallenge(resp.Services, 8042)
+	if generatedOwnService == nil {
+		t.Fatalf("expected generated service definition for challenge 8042, got %+v", resp.Services)
+	}
+	if generatedOwnService.AccessURL != "" {
+		t.Fatalf("expected generated service definition to keep empty access url, got %+v", generatedOwnService)
+	}
+	if len(resp.Targets) != 1 || len(resp.Targets[0].Services) != 1 {
+		t.Fatalf("expected 1 target service matched by persisted service_id, got %+v", resp.Targets)
+	}
+	if resp.Targets[0].Services[0].ServiceID != serviceID || resp.Targets[0].Services[0].AccessURL != "http://blue-bank.internal" {
+		t.Fatalf("expected target service matched by persisted service_id, got %+v", resp.Targets[0].Services[0])
+	}
+	if resp.Targets[0].Services[0].ChallengeID != 8041 {
+		t.Fatalf("expected contest service metadata to stay on challenge 8041, got %+v", resp.Targets[0].Services[0])
+	}
+}
+
+func TestAWDServiceGetUserWorkspaceIgnoresLegacyServiceRowsWithoutServiceID(t *testing.T) {
+	service, db := newAWDQueryServiceForTest(t)
+	now := time.Date(2026, 4, 12, 17, 0, 0, 0, time.UTC)
+
+	contesttestsupport.CreateAWDContestFixture(t, db, 805, now)
+	contesttestsupport.CreateAWDRoundFixture(t, db, 80501, 805, 3, 60, 40, now)
+	contesttestsupport.CreateAWDChallengeFixture(t, db, 8051, now)
+	contesttestsupport.CreateAWDContestChallengeFixture(t, db, 805, 8051, now)
+	contesttestsupport.SyncAWDContestServiceFixture(
+		t,
+		db,
+		805,
+		8051,
+		"Bank Portal",
+		model.AWDCheckerTypeHTTPStandard,
+		`{"get_flag":{"path":"/health"}}`,
+		100,
+		18,
+		28,
+		now,
+	)
+	contesttestsupport.CreateAWDTeamFixture(t, db, 8501, 805, "Red", now)
+	contesttestsupport.CreateAWDTeamMemberFixture(t, db, 805, 8501, 9501, now)
+
+	serviceID := contesttestsupport.DefaultAWDContestServiceID(805, 8051)
+	seedAWDWorkspaceServiceRecord(t, db, &model.AWDTeamService{
+		RoundID:        80501,
+		TeamID:         8501,
+		ServiceID:      serviceID,
+		ChallengeID:    8051,
+		ServiceStatus:  model.AWDServiceStatusUp,
+		AttackReceived: 1,
+		SLAScore:       30,
+		DefenseScore:   20,
+		AttackScore:    10,
+		UpdatedAt:      now.Add(-time.Minute),
+		CreatedAt:      now.Add(-2 * time.Minute),
+	})
+	seedAWDWorkspaceServiceRecord(t, db, &model.AWDTeamService{
+		ID:             8050199,
+		RoundID:        80501,
+		TeamID:         8501,
+		ServiceID:      0,
+		ChallengeID:    8051,
+		ServiceStatus:  model.AWDServiceStatusDown,
+		AttackReceived: 9,
+		SLAScore:       0,
+		DefenseScore:   0,
+		AttackScore:    0,
+		UpdatedAt:      now,
+		CreatedAt:      now,
+	})
+
+	resp, err := service.GetUserWorkspace(context.Background(), 9501, 805)
+	if err != nil {
+		t.Fatalf("GetUserWorkspace() error = %v", err)
+	}
+	if len(resp.Services) != 1 {
+		t.Fatalf("expected only explicit contest service in workspace, got %+v", resp.Services)
+	}
+	if resp.Services[0].ServiceID != serviceID {
+		t.Fatalf("expected workspace service_id=%d, got %+v", serviceID, resp.Services[0])
+	}
+	if resp.Services[0].ServiceStatus != model.AWDServiceStatusUp {
+		t.Fatalf("expected explicit service row to stay authoritative, got %+v", resp.Services[0])
+	}
+	for _, item := range resp.Services {
+		if item.ServiceID == 0 {
+			t.Fatalf("expected legacy service row without service_id ignored, got %+v", resp.Services)
+		}
+	}
+}
+
 func createAWDReadinessContestFixture(t *testing.T, db *gorm.DB, contestID int64, now time.Time) {
 	t.Helper()
 
@@ -604,6 +829,7 @@ func readinessBlockingReasonByChallenge(items []*dto.AWDReadinessItemResp, chall
 
 func seedAWDWorkspaceInstance(t *testing.T, db *gorm.DB, instanceID, userID, contestID, teamID, challengeID int64, accessURL string, now time.Time) {
 	t.Helper()
+	serviceID := contesttestsupport.DefaultAWDContestServiceID(contestID, challengeID)
 
 	if err := db.Create(&model.Instance{
 		ID:          instanceID,
@@ -611,6 +837,7 @@ func seedAWDWorkspaceInstance(t *testing.T, db *gorm.DB, instanceID, userID, con
 		ContestID:   &contestID,
 		TeamID:      &teamID,
 		ChallengeID: challengeID,
+		ServiceID:   &serviceID,
 		ContainerID: "container",
 		ShareScope:  model.InstanceSharingPerTeam,
 		Status:      model.InstanceStatusRunning,
@@ -621,6 +848,13 @@ func seedAWDWorkspaceInstance(t *testing.T, db *gorm.DB, instanceID, userID, con
 	}).Error; err != nil {
 		t.Fatalf("create awd workspace instance: %v", err)
 	}
+}
+
+func ensureAWDWorkspaceInstanceServiceIDColumn(db *gorm.DB) error {
+	if db.Migrator().HasColumn(&model.Instance{}, "service_id") {
+		return nil
+	}
+	return db.Exec("ALTER TABLE instances ADD COLUMN service_id integer").Error
 }
 
 func seedAWDWorkspaceServiceRecord(t *testing.T, db *gorm.DB, record *model.AWDTeamService) {
@@ -642,6 +876,24 @@ func seedAWDWorkspaceAttackLog(t *testing.T, db *gorm.DB, record *model.AWDAttac
 func findAWDWorkspaceEventByDirection(items []*dto.ContestAWDWorkspaceRecentEventResp, direction string) *dto.ContestAWDWorkspaceRecentEventResp {
 	for _, item := range items {
 		if item.Direction == direction {
+			return item
+		}
+	}
+	return nil
+}
+
+func findAWDWorkspaceServiceByID(items []*dto.ContestAWDWorkspaceServiceResp, serviceID int64) *dto.ContestAWDWorkspaceServiceResp {
+	for _, item := range items {
+		if item.ServiceID == serviceID {
+			return item
+		}
+	}
+	return nil
+}
+
+func findAWDWorkspaceServiceByChallenge(items []*dto.ContestAWDWorkspaceServiceResp, challengeID int64) *dto.ContestAWDWorkspaceServiceResp {
+	for _, item := range items {
+		if item.ChallengeID == challengeID {
 			return item
 		}
 	}
