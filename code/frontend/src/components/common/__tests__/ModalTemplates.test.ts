@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs'
 
 import { mount } from '@vue/test-utils'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { nextTick } from 'vue'
 
 const shellPath = `${process.cwd()}/src/components/common/modal-templates/ModalTemplateShell.vue`
@@ -93,6 +93,50 @@ describe('modal templates', () => {
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
     await nextTick()
     expect(wrapper.emitted('update:open')?.[1]).toEqual([false])
+  })
+
+  it('后台弹窗模板应把外部 class 和 data 属性绑定到外层壳而不是触发 fallthrough warning', async () => {
+    const AdminSurfaceModal = await loadComponent('../modal-templates/AdminSurfaceModal.vue')
+
+    expect(AdminSurfaceModal).not.toBeNull()
+    if (!AdminSurfaceModal) return
+
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+    try {
+      const wrapper = mount(AdminSurfaceModal, {
+        attrs: {
+          class: 'admin-surface-tone',
+          'data-dialog-surface': 'contest',
+        },
+        props: {
+          open: true,
+          title: '创建竞赛',
+          subtitle: '填写竞赛基础信息',
+        },
+        slots: {
+          default: '<div class="admin-surface-body">内容</div>',
+        },
+        global: {
+          stubs: {
+            teleport: true,
+          },
+        },
+      })
+
+      await nextTick()
+
+      const shell = wrapper.get('.modal-template-shell')
+      expect(shell.classes()).toContain('admin-surface-tone')
+      expect(shell.attributes('data-dialog-surface')).toBe('contest')
+      expect(
+        warnSpy.mock.calls.some(([message]) =>
+          String(message).includes('Extraneous non-props attributes')
+        )
+      ).toBe(false)
+    } finally {
+      warnSpy.mockRestore()
+    }
   })
 
   it('模板组件应保留文档里的关键视觉骨架', () => {
