@@ -100,6 +100,11 @@ func (s *awdServiceForTest) RunRoundChecks(ctx context.Context, contestID, round
 	return s.commands.RunRoundChecks(ctx, contestID, roundID)
 }
 
+func awdServiceIDPtr(contestID, challengeID int64) *int64 {
+	id := defaultAWDContestServiceID(contestID, challengeID)
+	return &id
+}
+
 func setReflectedField(t *testing.T, target reflect.Value, field string, value any) {
 	t.Helper()
 	item := target.FieldByName(field)
@@ -158,15 +163,6 @@ func TestAWDServiceCreateRoundAndListRounds(t *testing.T) {
 	createAWDContestFixture(t, db, 1, now)
 	createAWDChallengeFixture(t, db, 101, now)
 	createAWDContestChallengeFixture(t, db, 1, 101, now)
-	if err := db.Model(&model.ContestChallenge{}).
-		Where("contest_id = ? AND challenge_id = ?", 1, 101).
-		Updates(map[string]any{
-			"awd_checker_type":             model.AWDCheckerTypeHTTPStandard,
-			"awd_checker_config":           `{"get_flag":{"path":"/health"}}`,
-			"awd_checker_validation_state": model.AWDCheckerValidationStatePassed,
-		}).Error; err != nil {
-		t.Fatalf("update readiness challenge: %v", err)
-	}
 	syncAWDContestServiceFixture(t, db, 1, 101, "awd-service", model.AWDCheckerTypeHTTPStandard, `{"get_flag":{"path":"/health"}}`, 100, 0, 0, now)
 	syncAWDContestServiceReadinessFixture(t, db, 1, 101, model.AWDCheckerValidationStatePassed, nil, "")
 
@@ -287,15 +283,6 @@ func TestAWDServiceRunCurrentRoundChecksRefreshesServices(t *testing.T) {
 	createAWDRoundFixture(t, db, 221, 22, 1, 70, 35, now)
 	createAWDChallengeFixture(t, db, 2201, now)
 	createAWDContestChallengeFixture(t, db, 22, 2201, now)
-	if err := db.Model(&model.ContestChallenge{}).
-		Where("contest_id = ? AND challenge_id = ?", 22, 2201).
-		Updates(map[string]any{
-			"awd_checker_type":             model.AWDCheckerTypeHTTPStandard,
-			"awd_checker_config":           `{"get_flag":{"path":"/health"}}`,
-			"awd_checker_validation_state": model.AWDCheckerValidationStatePassed,
-		}).Error; err != nil {
-		t.Fatalf("update readiness challenge: %v", err)
-	}
 	syncAWDContestServiceFixture(t, db, 22, 2201, "awd-service", model.AWDCheckerTypeHTTPStandard, `{"get_flag":{"path":"/health"}}`, 100, 0, 0, now)
 	syncAWDContestServiceReadinessFixture(t, db, 22, 2201, model.AWDCheckerValidationStatePassed, nil, "")
 	createAWDTeamFixture(t, db, 2211, 22, "Ops", now)
@@ -314,6 +301,7 @@ func TestAWDServiceRunCurrentRoundChecksRefreshesServices(t *testing.T) {
 		ID:          8221,
 		UserID:      8201,
 		ChallengeID: 2201,
+		ServiceID:   awdServiceIDPtr(22, 2201),
 		ContainerID: "ctr-ops",
 		Status:      model.InstanceStatusRunning,
 		AccessURL:   server.URL,
@@ -519,6 +507,7 @@ func TestAWDServiceRunRoundChecksRefreshesSelectedRound(t *testing.T) {
 		ID:          8321,
 		UserID:      8301,
 		ChallengeID: 2301,
+		ServiceID:   awdServiceIDPtr(23, 2301),
 		ContainerID: "ctr-selected-ops",
 		Status:      model.InstanceStatusRunning,
 		AccessURL:   server.URL,
@@ -689,6 +678,93 @@ func TestAWDServicePreviewCheckerRunsWithoutPersistingServices(t *testing.T) {
 	}
 	if serviceCount != 0 {
 		t.Fatalf("expected no persisted awd team services, got %d", serviceCount)
+	}
+}
+
+func TestAWDServicePreviewCheckerAcceptsServiceIDAndReturnsServiceContext(t *testing.T) {
+	db := newAWDTestDB(t)
+	mini, err := miniredis.Run()
+	if err != nil {
+		t.Fatalf("start miniredis: %v", err)
+	}
+	t.Cleanup(mini.Close)
+
+	redisClient := redis.NewClient(&redis.Options{Addr: mini.Addr()})
+	t.Cleanup(func() {
+		_ = redisClient.Close()
+	})
+
+	now := time.Now()
+
+	createAWDContestFixture(t, db, 25, now)
+	createAWDChallengeFixture(t, db, 2501, now)
+	createAWDContestChallengeFixture(t, db, 25, 2501, now)
+	serviceID := defaultAWDContestServiceID(25, 2501)
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/healthz":
+			w.WriteHeader(http.StatusOK)
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	t.Cleanup(server.Close)
+
+	service := newAWDServiceForTest(db, redisClient, "", config.ContestAWDConfig{
+		CheckerTimeout:    time.Second,
+		CheckerHealthPath: "/healthz",
+	})
+
+	method := reflect.ValueOf(service.commands).MethodByName("PreviewChecker")
+	if !method.IsValid() {
+		t.Fatalf("PreviewChecker method not implemented")
+	}
+
+	reqValue := reflect.New(method.Type().In(2).Elem())
+	setReflectedField(t, reqValue.Elem(), "ServiceID", serviceID)
+	setReflectedField(t, reqValue.Elem(), "CheckerType", string(model.AWDCheckerTypeHTTPStandard))
+	setReflectedField(t, reqValue.Elem(), "CheckerConfig", map[string]any{
+		"get_flag": map[string]any{
+			"method":             "GET",
+			"path":               "/healthz",
+			"expected_status":    http.StatusOK,
+			"expected_substring": "",
+		},
+	})
+	setReflectedField(t, reqValue.Elem(), "AccessURL", server.URL)
+
+	results := method.Call([]reflect.Value{
+		reflect.ValueOf(context.Background()),
+		reflect.ValueOf(int64(25)),
+		reqValue,
+	})
+
+	if len(results) != 2 {
+		t.Fatalf("unexpected result count: %d", len(results))
+	}
+	if errValue := results[1].Interface(); errValue != nil {
+		t.Fatalf("PreviewChecker() error = %v", errValue)
+	}
+
+	respValue := results[0]
+	if respValue.IsNil() {
+		t.Fatal("expected preview response")
+	}
+	resp := respValue.Elem()
+	previewContext := resp.FieldByName("PreviewContext")
+	if !previewContext.IsValid() {
+		t.Fatal("expected preview context")
+	}
+	if gotServiceID := previewContext.FieldByName("ServiceID").Int(); gotServiceID != serviceID {
+		t.Fatalf("unexpected preview service_id: %d", gotServiceID)
+	}
+	if gotChallengeID := previewContext.FieldByName("ChallengeID").Int(); gotChallengeID != 2501 {
+		t.Fatalf("unexpected preview challenge_id: %d", gotChallengeID)
+	}
+	previewToken := resp.FieldByName("PreviewToken")
+	if !previewToken.IsValid() || strings.TrimSpace(previewToken.String()) == "" {
+		t.Fatal("expected preview_token")
 	}
 }
 
@@ -1680,6 +1756,7 @@ func TestAWDServiceGetTrafficSummaryBuildsAggregateMetrics(t *testing.T) {
 		ContestID:   int64Ptr(90),
 		TeamID:      int64Ptr(9102),
 		ChallengeID: 9001,
+		ServiceID:   awdServiceIDPtr(90, 9001),
 		ContainerID: "ctr-blue-web",
 		Status:      model.InstanceStatusRunning,
 		AccessURL:   "http://blue-web.local",
@@ -1695,6 +1772,7 @@ func TestAWDServiceGetTrafficSummaryBuildsAggregateMetrics(t *testing.T) {
 		ContestID:   int64Ptr(90),
 		TeamID:      int64Ptr(9101),
 		ChallengeID: 9002,
+		ServiceID:   awdServiceIDPtr(90, 9002),
 		ContainerID: "ctr-red-pwn",
 		Status:      model.InstanceStatusRunning,
 		AccessURL:   "http://red-pwn.local",
@@ -1705,9 +1783,9 @@ func TestAWDServiceGetTrafficSummaryBuildsAggregateMetrics(t *testing.T) {
 		t.Fatalf("create red instance: %v", err)
 	}
 
-	mustCreateAWDTrafficEvent(t, db, 9401, 90, 901, 9101, 9102, 9001, "GET", "/health", 200, now.Add(-9*time.Minute))
-	mustCreateAWDTrafficEvent(t, db, 9402, 90, 901, 9101, 9102, 9001, "POST", "/admin/login", 500, now.Add(-8*time.Minute))
-	mustCreateAWDTrafficEvent(t, db, 9403, 90, 901, 9102, 9101, 9002, "GET", "/index", 302, now.Add(-7*time.Minute))
+	mustCreateAWDTrafficEvent(t, db, 9401, 90, 901, 9101, 9102, defaultAWDContestServiceID(90, 9001), 9001, "GET", "/health", 200, now.Add(-9*time.Minute))
+	mustCreateAWDTrafficEvent(t, db, 9402, 90, 901, 9101, 9102, defaultAWDContestServiceID(90, 9001), 9001, "POST", "/admin/login", 500, now.Add(-8*time.Minute))
+	mustCreateAWDTrafficEvent(t, db, 9403, 90, 901, 9102, 9101, defaultAWDContestServiceID(90, 9002), 9002, "GET", "/index", 302, now.Add(-7*time.Minute))
 
 	summary, err := service.GetTrafficSummary(context.Background(), 90, 901)
 	if err != nil {
@@ -1756,6 +1834,7 @@ func TestAWDServiceListTrafficEventsSupportsFiltersAndPagination(t *testing.T) {
 		ContestID:   int64Ptr(91),
 		TeamID:      int64Ptr(9112),
 		ChallengeID: 91001,
+		ServiceID:   awdServiceIDPtr(91, 91001),
 		ContainerID: "ctr-beta-web",
 		Status:      model.InstanceStatusRunning,
 		AccessURL:   "http://beta-web.local",
@@ -1766,9 +1845,9 @@ func TestAWDServiceListTrafficEventsSupportsFiltersAndPagination(t *testing.T) {
 		t.Fatalf("create beta instance: %v", err)
 	}
 
-	mustCreateAWDTrafficEvent(t, db, 9411, 91, 911, 9111, 9112, 91001, "GET", "/api/status", 200, now.Add(-19*time.Minute))
-	mustCreateAWDTrafficEvent(t, db, 9412, 91, 911, 9111, 9112, 91001, "POST", "/admin/login", 401, now.Add(-18*time.Minute))
-	mustCreateAWDTrafficEvent(t, db, 9413, 91, 911, 9111, 9112, 91001, "POST", "/admin/login", 500, now.Add(-17*time.Minute))
+	mustCreateAWDTrafficEvent(t, db, 9411, 91, 911, 9111, 9112, defaultAWDContestServiceID(91, 91001), 91001, "GET", "/api/status", 200, now.Add(-19*time.Minute))
+	mustCreateAWDTrafficEvent(t, db, 9412, 91, 911, 9111, 9112, defaultAWDContestServiceID(91, 91001), 91001, "POST", "/admin/login", 401, now.Add(-18*time.Minute))
+	mustCreateAWDTrafficEvent(t, db, 9413, 91, 911, 9111, 9112, defaultAWDContestServiceID(91, 91001), 91001, "POST", "/admin/login", 500, now.Add(-17*time.Minute))
 
 	page, err := service.ListTrafficEvents(context.Background(), 91, 911, &dto.ListAWDTrafficEventsReq{
 		StatusGroup: "server_error",
@@ -1784,6 +1863,21 @@ func TestAWDServiceListTrafficEventsSupportsFiltersAndPagination(t *testing.T) {
 	}
 	if page.List[0].StatusCode != 500 || page.List[0].Path != "/admin/login" {
 		t.Fatalf("unexpected filtered traffic event: %+v", page.List[0])
+	}
+	if page.List[0].ServiceID != defaultAWDContestServiceID(91, 91001) {
+		t.Fatalf("expected traffic event to expose service_id, got %+v", page.List[0])
+	}
+
+	emptyPage, err := service.ListTrafficEvents(context.Background(), 91, 911, &dto.ListAWDTrafficEventsReq{
+		ServiceID: defaultAWDContestServiceID(91, 91001) + 1,
+		Page:      1,
+		Size:      20,
+	})
+	if err != nil {
+		t.Fatalf("ListTrafficEvents() with service_id filter error = %v", err)
+	}
+	if emptyPage.Total != 0 || len(emptyPage.List) != 0 {
+		t.Fatalf("expected service_id filter to exclude all traffic events, got %+v", emptyPage)
 	}
 }
 
@@ -1821,6 +1915,7 @@ func mustCreateAWDTrafficEvent(
 	roundID int64,
 	attackerTeamID int64,
 	victimTeamID int64,
+	serviceID int64,
 	challengeID int64,
 	method string,
 	requestPath string,
@@ -1835,6 +1930,7 @@ func mustCreateAWDTrafficEvent(
 		RoundID:        roundID,
 		AttackerTeamID: attackerTeamID,
 		VictimTeamID:   victimTeamID,
+		ServiceID:      serviceID,
 		ChallengeID:    challengeID,
 		Method:         method,
 		Path:           requestPath,
