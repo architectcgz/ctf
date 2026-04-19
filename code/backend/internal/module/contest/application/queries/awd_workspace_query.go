@@ -81,7 +81,7 @@ func (s *AWDService) GetUserWorkspace(ctx context.Context, userID, contestID int
 	}
 	for _, instance := range instances {
 		if instance.TeamID == myTeam.ID {
-			item := ensureAWDWorkspaceService(serviceMap, instance.ChallengeID)
+			item := ensureAWDWorkspaceService(serviceMap, instance.ServiceID, instance.ChallengeID)
 			if item.AccessURL == "" {
 				item.AccessURL = instance.AccessURL
 			}
@@ -93,6 +93,7 @@ func (s *AWDService) GetUserWorkspace(ctx context.Context, userID, contestID int
 			continue
 		}
 		target.Services = append(target.Services, &dto.ContestAWDWorkspaceTargetServiceResp{
+			ServiceID:   instance.ServiceID,
 			ChallengeID: instance.ChallengeID,
 			AccessURL:   instance.AccessURL,
 		})
@@ -124,7 +125,7 @@ func (s *AWDService) populateAWDWorkspaceCurrentRound(
 		if record.TeamID != myTeamID {
 			continue
 		}
-		item := ensureAWDWorkspaceService(serviceMap, record.ChallengeID)
+		item := ensureAWDWorkspaceService(serviceMap, record.ServiceID, record.ChallengeID)
 		item.ServiceStatus = record.ServiceStatus
 		item.CheckerType = record.CheckerType
 		item.AttackReceived = record.AttackReceived
@@ -146,6 +147,7 @@ func (s *AWDService) populateAWDWorkspaceCurrentRound(
 
 		event := &dto.ContestAWDWorkspaceRecentEventResp{
 			ID:          log.ID,
+			ServiceID:   log.ServiceID,
 			ChallengeID: log.ChallengeID,
 			IsSuccess:   log.IsSuccess,
 			ScoreGained: log.ScoreGained,
@@ -177,15 +179,16 @@ func (s *AWDService) populateAWDWorkspaceCurrentRound(
 	return nil
 }
 
-func ensureAWDWorkspaceService(items map[int64]*dto.ContestAWDWorkspaceServiceResp, challengeID int64) *dto.ContestAWDWorkspaceServiceResp {
-	item := items[challengeID]
+func ensureAWDWorkspaceService(items map[int64]*dto.ContestAWDWorkspaceServiceResp, serviceID, challengeID int64) *dto.ContestAWDWorkspaceServiceResp {
+	item := items[serviceID]
 	if item != nil {
 		return item
 	}
 	item = &dto.ContestAWDWorkspaceServiceResp{
+		ServiceID:   serviceID,
 		ChallengeID: challengeID,
 	}
-	items[challengeID] = item
+	items[serviceID] = item
 	return item
 }
 
@@ -195,7 +198,10 @@ func sortAWDWorkspaceServices(items map[int64]*dto.ContestAWDWorkspaceServiceRes
 		resp = append(resp, item)
 	}
 	sort.Slice(resp, func(i, j int) bool {
-		return resp[i].ChallengeID < resp[j].ChallengeID
+		if resp[i].ServiceID == resp[j].ServiceID {
+			return resp[i].ChallengeID < resp[j].ChallengeID
+		}
+		return resp[i].ServiceID < resp[j].ServiceID
 	})
 	return resp
 }
@@ -204,10 +210,16 @@ func sortAWDWorkspaceTargets(items map[int64]*dto.ContestAWDWorkspaceTargetTeamR
 	resp := make([]*dto.ContestAWDWorkspaceTargetTeamResp, 0, len(items))
 	for _, item := range items {
 		sort.Slice(item.Services, func(i, j int) bool {
+			if item.Services[i].ServiceID == item.Services[j].ServiceID {
+				if item.Services[i].ChallengeID == item.Services[j].ChallengeID {
+					return item.Services[i].AccessURL < item.Services[j].AccessURL
+				}
+				return item.Services[i].ChallengeID < item.Services[j].ChallengeID
+			}
 			if item.Services[i].ChallengeID == item.Services[j].ChallengeID {
 				return item.Services[i].AccessURL < item.Services[j].AccessURL
 			}
-			return item.Services[i].ChallengeID < item.Services[j].ChallengeID
+			return item.Services[i].ServiceID < item.Services[j].ServiceID
 		})
 		resp = append(resp, item)
 	}

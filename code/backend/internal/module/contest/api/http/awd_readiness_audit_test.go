@@ -199,7 +199,7 @@ func (stubAWDCommandService) CreateAttackLog(ctx context.Context, contestID, rou
 	return nil, nil
 }
 
-func (stubAWDCommandService) SubmitAttack(ctx context.Context, userID, contestID, challengeID int64, req *dto.SubmitAWDAttackReq) (*dto.AWDAttackLogResp, error) {
+func (stubAWDCommandService) SubmitAttack(ctx context.Context, userID, contestID, serviceID int64, req *dto.SubmitAWDAttackReq) (*dto.AWDAttackLogResp, error) {
 	return nil, nil
 }
 
@@ -216,6 +216,10 @@ func (stubAWDQueryService) ListServices(ctx context.Context, contestID, roundID 
 }
 
 func (stubAWDQueryService) ListAttackLogs(ctx context.Context, contestID, roundID int64) ([]*dto.AWDAttackLogResp, error) {
+	return nil, nil
+}
+
+func (stubAWDQueryService) GetUserWorkspace(ctx context.Context, userID, contestID int64) (*dto.ContestAWDWorkspaceResp, error) {
 	return nil, nil
 }
 

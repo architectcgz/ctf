@@ -6,7 +6,8 @@ import (
 	"ctf-platform/internal/model"
 )
 
-func (i *dockerAWDFlagInjector) findTargetContainers(ctx context.Context, contestID, teamID, challengeID int64) ([]string, error) {
+func (i *dockerAWDFlagInjector) findTargetContainers(ctx context.Context, contestID, teamID, serviceID, challengeID int64) ([]string, error) {
+	_ = serviceID
 	var instances []model.Instance
 	if err := i.db.WithContext(ctx).
 		Table("instances AS inst").

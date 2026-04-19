@@ -19,6 +19,7 @@ const AWD_WORKSPACE_AUTO_REFRESH_INTERVAL_MS = 15_000
 interface UseContestAWDWorkspaceOptions {
   contestId: MaybeRefOrGetter<string>
   contestStatus?: MaybeRefOrGetter<ContestDetailData['status'] | null | undefined>
+  formatAttackResultToast?: (result: AWDAttackLogData) => string
 }
 
 export function useContestAWDWorkspace(options: UseContestAWDWorkspaceOptions) {
@@ -124,7 +125,7 @@ export function useContestAWDWorkspace(options: UseContestAWDWorkspaceOptions) {
   }
 
   async function submitAttack(
-    challengeId: string,
+    serviceId: string,
     victimTeamId: number,
     flag: string
   ): Promise<AWDAttackLogData | null> {
@@ -137,18 +138,20 @@ export function useContestAWDWorkspace(options: UseContestAWDWorkspaceOptions) {
       return null
     }
 
-    submittingKey.value = `${challengeId}:${victimTeamId}`
+    submittingKey.value = `${serviceId}:${victimTeamId}`
     submitResult.value = null
 
     try {
-      const result = await submitContestAWDAttack(contestId, challengeId, {
+      const result = await submitContestAWDAttack(contestId, serviceId, {
         victim_team_id: victimTeamId,
         flag: normalizedFlag,
       })
       submitResult.value = result
       await refreshAll()
+      const formattedMessage = options.formatAttackResultToast?.(result)
       toast.success(
-        result.is_success ? `攻击成功，+${result.score_gained} 分` : '攻击未命中有效 flag'
+        formattedMessage ||
+          (result.is_success ? `攻击成功，+${result.score_gained} 分` : '攻击未命中有效 flag')
       )
       return result
     } catch (err) {

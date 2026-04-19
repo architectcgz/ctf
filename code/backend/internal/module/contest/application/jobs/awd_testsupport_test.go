@@ -30,6 +30,8 @@ var (
 	createAWDTeamFixture                     = testsupport.CreateAWDTeamFixture
 	createAWDTeamMemberFixture               = testsupport.CreateAWDTeamMemberFixture
 	createContestRegistrationForExistingTeam = testsupport.CreateContestRegistrationForExistingTeam
+	syncAWDContestServiceFixture             = testsupport.SyncAWDContestServiceFixture
+	defaultAWDContestServiceID               = testsupport.DefaultAWDContestServiceID
 	assertTeamTotalScore                     = testsupport.AssertTeamTotalScore
 	assertContestRedisScore                  = testsupport.AssertContestRedisScore
 	assertContestRedisScoreMissing           = testsupport.AssertContestRedisScoreMissing

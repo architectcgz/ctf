@@ -53,20 +53,43 @@ func ChallengeRespFromModel(challenge *model.Challenge, hints []*model.Challenge
 	}
 
 	return &dto.ChallengeResp{
-		ID:            challenge.ID,
-		Title:         challenge.Title,
-		Description:   challenge.Description,
-		Category:      challenge.Category,
-		Difficulty:    challenge.Difficulty,
-		Points:        challenge.Points,
-		ImageID:       challenge.ImageID,
-		AttachmentURL: challenge.AttachmentURL,
+		ID:              challenge.ID,
+		Title:           challenge.Title,
+		Description:     challenge.Description,
+		Category:        challenge.Category,
+		Difficulty:      challenge.Difficulty,
+		Points:          challenge.Points,
+		ImageID:         challenge.ImageID,
+		AttachmentURL:   challenge.AttachmentURL,
 		InstanceSharing: challenge.InstanceSharing,
-		Hints:         adminHints,
-		Status:        challenge.Status,
-		CreatedBy:     challenge.CreatedBy,
-		CreatedAt:     challenge.CreatedAt,
-		UpdatedAt:     challenge.UpdatedAt,
+		Hints:           adminHints,
+		Status:          challenge.Status,
+		CreatedBy:       challenge.CreatedBy,
+		CreatedAt:       challenge.CreatedAt,
+		UpdatedAt:       challenge.UpdatedAt,
+	}
+}
+
+func AWDServiceTemplateRespFromModel(template *model.AWDServiceTemplate) *dto.AWDServiceTemplateResp {
+	if template == nil {
+		return nil
+	}
+	return &dto.AWDServiceTemplateResp{
+		ID:              template.ID,
+		Name:            template.Name,
+		Slug:            template.Slug,
+		Category:        template.Category,
+		Difficulty:      template.Difficulty,
+		Description:     template.Description,
+		ServiceType:     string(template.ServiceType),
+		DeploymentMode:  string(template.DeploymentMode),
+		Version:         template.Version,
+		Status:          string(template.Status),
+		ReadinessStatus: string(template.ReadinessStatus),
+		CreatedBy:       template.CreatedBy,
+		LastVerifiedAt:  template.LastVerifiedAt,
+		UpdatedAt:       template.UpdatedAt,
+		CreatedAt:       template.CreatedAt,
 	}
 }
 

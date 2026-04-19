@@ -29,8 +29,8 @@ type AWDRoundUpdater struct {
 }
 
 type awdServiceTargetKey struct {
-	teamID      int64
-	challengeID int64
+	teamID    int64
+	serviceID int64
 }
 
 type noopAWDFlagInjector struct {

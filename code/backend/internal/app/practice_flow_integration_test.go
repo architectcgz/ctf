@@ -46,6 +46,7 @@ import (
 	opsinfra "ctf-platform/internal/module/ops/infrastructure"
 	practicehttp "ctf-platform/internal/module/practice/api/http"
 	practicecmd "ctf-platform/internal/module/practice/application/commands"
+	practiceqry "ctf-platform/internal/module/practice/application/queries"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	practicereadmodelhttp "ctf-platform/internal/module/practice_readmodel/api/http"
 	practicereadmodelqueries "ctf-platform/internal/module/practice_readmodel/application/queries"
@@ -860,7 +861,8 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 		cfg,
 		logger,
 	)
-	practiceHandler := practicehttp.NewHandler(practiceService)
+	practiceScoreQueryService := practiceqry.NewScoreService(practiceRepo, cache, logger, &cfg.Score)
+	practiceHandler := practicehttp.NewHandler(practiceService, practiceScoreQueryService)
 	practiceReadmodelRepo := practicereadmodelinfra.NewRepository(db)
 	practiceReadmodelService := practicereadmodelqueries.NewQueryService(practiceReadmodelRepo, cache, cfg.Cache.ProgressTTL, logger)
 	practiceReadmodelHandler := practicereadmodelhttp.NewHandler(practiceReadmodelService)

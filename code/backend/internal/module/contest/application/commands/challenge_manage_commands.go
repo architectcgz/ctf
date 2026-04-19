@@ -2,9 +2,11 @@ package commands
 
 import (
 	"context"
+	"errors"
 	"strings"
 
 	redis "github.com/redis/go-redis/v9"
+	"gorm.io/gorm"
 
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
@@ -12,7 +14,8 @@ import (
 )
 
 func (s *ChallengeService) RemoveChallengeFromContest(ctx context.Context, contestID, challengeID int64) error {
-	if _, err := s.ensureMutableContest(ctx, contestID); err != nil {
+	contest, err := s.ensureMutableContest(ctx, contestID)
+	if err != nil {
 		return err
 	}
 
@@ -32,7 +35,15 @@ func (s *ChallengeService) RemoveChallengeFromContest(ctx context.Context, conte
 		return errcode.ErrContestChallengeHasSubs
 	}
 
-	return s.repo.RemoveChallenge(ctx, contestID, challengeID)
+	if err := s.repo.RemoveChallenge(ctx, contestID, challengeID); err != nil {
+		return err
+	}
+	if contest.Mode == model.ContestModeAWD && s.awdRepo != nil {
+		if err := s.awdRepo.DeleteContestAWDServiceByContestAndChallenge(ctx, contestID, challengeID); err != nil {
+			return errcode.ErrInternal.WithCause(err)
+		}
+	}
+	return nil
 }
 
 func (s *ChallengeService) UpdateChallenge(ctx context.Context, contestID, challengeID int64, req *dto.UpdateContestChallengeReq) error {
@@ -118,7 +129,28 @@ func (s *ChallengeService) UpdateChallenge(ctx context.Context, contestID, chall
 		}
 	}
 
-	return s.repo.UpdateChallenge(ctx, contestID, challengeID, updates)
+	if err := s.repo.UpdateChallenge(ctx, contestID, challengeID, updates); err != nil {
+		return err
+	}
+	if contest.Mode != model.ContestModeAWD || s.awdRepo == nil {
+		return nil
+	}
+
+	challenge, err := s.challengeRepo.FindByID(challengeID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errcode.ErrChallengeNotFound
+		}
+		return errcode.ErrInternal.WithCause(err)
+	}
+	updated, err := s.repo.FindChallenge(ctx, contestID, challengeID)
+	if err != nil {
+		return errcode.ErrInternal.WithCause(err)
+	}
+	if err := s.syncContestAWDServiceForChallenge(ctx, contest, challenge, updated, req.TemplateID); err != nil {
+		return errcode.ErrInternal.WithCause(err)
+	}
+	return nil
 }
 
 func zeroIfNil(value *int) int {

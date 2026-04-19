@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
+import { defineComponent } from 'vue'
 
 import AWDOperationsPanel from '../contest/AWDOperationsPanel.vue'
 
@@ -27,7 +28,16 @@ vi.mock('@/composables/useAdminContestAWD', async () => {
     trafficSummary: ref(null),
     trafficEvents: ref([]),
     trafficEventsTotal: ref(0),
-    trafficFilters: ref({}),
+    trafficFilters: ref({
+      attacker_team_id: '',
+      victim_team_id: '',
+      service_id: '',
+      challenge_id: '',
+      status_group: 'all',
+      path_keyword: '',
+      page: 1,
+      page_size: 20,
+    }),
     scoreboardRows: ref([]),
     scoreboardFrozen: ref(false),
     teams: ref([]),
@@ -528,5 +538,103 @@ describe('AWDOperationsPanel', () => {
     await flushPromises()
 
     expect(wrapper.text()).not.toContain('填写本次放行原因')
+  })
+
+  it('应该把服务检查与攻击日志的 service_id 载荷透传给 composable', async () => {
+    const awdState = getAwdState()
+    awdState.challengeLinks.value = [
+      {
+        id: 'link-1',
+        contest_id: 'awd-1',
+        challenge_id: 'challenge-1',
+        awd_service_id: '7009',
+        title: 'Web Checker',
+        category: 'web',
+        difficulty: 'easy',
+        points: 120,
+        order: 1,
+        is_visible: true,
+        created_at: '2026-03-18T09:00:00.000Z',
+      },
+    ]
+    awdState.teams.value = [
+      {
+        id: '12',
+        name: 'Red',
+        leader_id: '1',
+        member_count: 1,
+        total_score: 0,
+        created_at: '2026-03-18T09:00:00.000Z',
+      },
+      {
+        id: '13',
+        name: 'Blue',
+        leader_id: '2',
+        member_count: 1,
+        total_score: 0,
+        created_at: '2026-03-18T09:00:00.000Z',
+      },
+    ]
+
+    const ServiceDialogStub = defineComponent({
+      emits: ['save', 'update:open'],
+      template:
+        '<button id="stub-save-service-check" type="button" @click="$emit(\'save\', { team_id: 12, service_id: 7009, service_status: \'up\', check_result: { latency_ms: 38 } })">save service</button>',
+    })
+    const AttackDialogStub = defineComponent({
+      emits: ['save', 'update:open'],
+      template:
+        '<button id="stub-save-attack-log" type="button" @click="$emit(\'save\', { attacker_team_id: 12, victim_team_id: 13, service_id: 7009, attack_type: \'flag_capture\', submitted_flag: \'flag{demo}\', is_success: true })">save attack</button>',
+    })
+
+    const wrapper = mount(AWDOperationsPanel, {
+      props: {
+        contests: [
+          {
+            id: 'awd-1',
+            title: '2026 AWD 联赛',
+            description: '攻防赛',
+            mode: 'awd',
+            status: 'running',
+            starts_at: '2026-03-18T09:00:00.000Z',
+            ends_at: '2026-03-18T18:00:00.000Z',
+          },
+        ],
+        selectedContestId: 'awd-1',
+      },
+      global: {
+        stubs: {
+          ElDialog: {
+            props: ['modelValue', 'title'],
+            template:
+              '<div><div v-if="modelValue"><div>{{ title }}</div><slot /><slot name="footer" /></div></div>',
+          },
+          AWDRoundInspector: true,
+          AWDRoundCreateDialog: true,
+          AWDServiceCheckDialog: ServiceDialogStub,
+          AWDAttackLogDialog: AttackDialogStub,
+          AWDChallengeConfigPanel: true,
+          AWDChallengeConfigDialog: true,
+        },
+      },
+    })
+
+    await wrapper.get('#stub-save-service-check').trigger('click')
+    await wrapper.get('#stub-save-attack-log').trigger('click')
+
+    expect(awdState.createServiceCheck).toHaveBeenCalledWith({
+      team_id: 12,
+      service_id: 7009,
+      service_status: 'up',
+      check_result: { latency_ms: 38 },
+    })
+    expect(awdState.createAttackLog).toHaveBeenCalledWith({
+      attacker_team_id: 12,
+      victim_team_id: 13,
+      service_id: 7009,
+      attack_type: 'flag_capture',
+      submitted_flag: 'flag{demo}',
+      is_success: true,
+    })
   })
 })

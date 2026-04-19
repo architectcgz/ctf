@@ -199,17 +199,8 @@ func seedCommandReadinessItem(t *testing.T, db *gorm.DB, contestID, challengeID 
 
 	createAWDChallengeFixture(t, db, challengeID, seed.Now)
 	createAWDContestChallengeFixture(t, db, contestID, challengeID, seed.Now)
-	if err := db.Model(&model.ContestChallenge{}).
-		Where("contest_id = ? AND challenge_id = ?", contestID, challengeID).
-		Updates(map[string]any{
-			"awd_checker_type":                seed.CheckerType,
-			"awd_checker_config":              seed.CheckerConfig,
-			"awd_checker_validation_state":    seed.ValidationState,
-			"awd_checker_last_preview_at":     seed.LastPreviewAt,
-			"awd_checker_last_preview_result": seed.LastPreviewResult,
-		}).Error; err != nil {
-		t.Fatalf("seed readiness relation: %v", err)
-	}
+	syncAWDContestServiceFixture(t, db, contestID, challengeID, "awd-service", seed.CheckerType, seed.CheckerConfig, 100, 0, 0, seed.Now)
+	syncAWDContestServiceReadinessFixture(t, db, contestID, challengeID, seed.ValidationState, seed.LastPreviewAt, seed.LastPreviewResult)
 }
 
 func assertCommandReadinessBlockingReason(t *testing.T, db *gorm.DB, contestID, challengeID int64, want string) {

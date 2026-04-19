@@ -2,11 +2,27 @@ package infrastructure
 
 import (
 	"context"
+	"encoding/json"
+	"strings"
 	"time"
 
 	"ctf-platform/internal/model"
+	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestports "ctf-platform/internal/module/contest/ports"
 )
+
+type awdContestServiceRuntimeRow struct {
+	ServiceID         int64                           `gorm:"column:service_id"`
+	ChallengeID       int64                           `gorm:"column:challenge_id"`
+	FlagPrefix        string                          `gorm:"column:flag_prefix"`
+	DisplayName       string                          `gorm:"column:display_name"`
+	RuntimeConfig     string                          `gorm:"column:runtime_config"`
+	ScoreConfig       string                          `gorm:"column:score_config"`
+	ValidationState   model.AWDCheckerValidationState `gorm:"column:validation_state"`
+	LastPreviewAt     *time.Time                      `gorm:"column:last_preview_at"`
+	LastPreviewResult string                          `gorm:"column:last_preview_result"`
+	ChallengeTitle    string                          `gorm:"column:challenge_title"`
+}
 
 func (r *AWDRepository) ListSchedulableAWDContests(ctx context.Context, now, recentCutoff time.Time, limit int) ([]model.Contest, error) {
 	var contests []model.Contest
@@ -45,46 +61,146 @@ func (r *AWDRepository) ListChallengesByContest(ctx context.Context, contestID i
 }
 
 func (r *AWDRepository) ListServiceDefinitionsByContest(ctx context.Context, contestID int64) ([]contestports.AWDServiceDefinition, error) {
-	var definitions []contestports.AWDServiceDefinition
-	if err := r.dbWithContext(ctx).
-		Table("contest_challenges AS cc").
-		Select(`
-			cc.challenge_id AS challenge_id,
-			c.flag_prefix AS flag_prefix,
-			cc.awd_checker_type AS awd_checker_type,
-			cc.awd_checker_config AS awd_checker_config,
-			cc.awd_sla_score AS awd_sla_score,
-			cc.awd_defense_score AS awd_defense_score
-		`).
-		Joins("JOIN challenges AS c ON c.id = cc.challenge_id").
-		Where("cc.contest_id = ?", contestID).
-		Order("cc.challenge_id ASC").
-		Scan(&definitions).Error; err != nil {
+	rows, err := r.listContestAWDServiceRuntimeRows(ctx, contestID)
+	if err != nil {
 		return nil, err
+	}
+
+	definitions := make([]contestports.AWDServiceDefinition, 0, len(rows))
+	for _, row := range rows {
+		runtimeConfig := contestdomain.ParseAWDCheckerConfig(row.RuntimeConfig)
+		scoreConfig := contestdomain.ParseAWDCheckerConfig(row.ScoreConfig)
+		definitions = append(definitions, contestports.AWDServiceDefinition{
+			ServiceID:     row.ServiceID,
+			ChallengeID:   row.ChallengeID,
+			FlagPrefix:    row.FlagPrefix,
+			CheckerType:   resolveContestAWDServiceCheckerType(runtimeConfig),
+			CheckerConfig: resolveContestAWDServiceCheckerConfig(runtimeConfig),
+			SLAScore:      resolveContestAWDServiceScore(scoreConfig, "awd_sla_score"),
+			DefenseScore:  resolveContestAWDServiceScore(scoreConfig, "awd_defense_score"),
+		})
 	}
 	return definitions, nil
 }
 
 func (r *AWDRepository) ListReadinessChallengesByContest(ctx context.Context, contestID int64) ([]contestports.AWDReadinessChallengeRecord, error) {
-	var records []contestports.AWDReadinessChallengeRecord
-	if err := r.dbWithContext(ctx).
-		Table("contest_challenges AS cc").
-		Select(`
-			cc.challenge_id AS challenge_id,
-			c.title AS title,
-			cc.awd_checker_type AS awd_checker_type,
-			cc.awd_checker_config AS awd_checker_config,
-			cc.awd_checker_validation_state AS awd_checker_validation_state,
-			cc.awd_checker_last_preview_at AS awd_checker_last_preview_at,
-			cc.awd_checker_last_preview_result AS awd_checker_last_preview_result
-		`).
-		Joins("JOIN challenges AS c ON c.id = cc.challenge_id").
-		Where("cc.contest_id = ?", contestID).
-		Order("cc.challenge_id ASC").
-		Scan(&records).Error; err != nil {
+	rows, err := r.listContestAWDServiceRuntimeRows(ctx, contestID)
+	if err != nil {
 		return nil, err
 	}
+
+	records := make([]contestports.AWDReadinessChallengeRecord, 0, len(rows))
+	for _, row := range rows {
+		runtimeConfig := contestdomain.ParseAWDCheckerConfig(row.RuntimeConfig)
+		title := strings.TrimSpace(row.DisplayName)
+		if title == "" {
+			title = row.ChallengeTitle
+		}
+		records = append(records, contestports.AWDReadinessChallengeRecord{
+			ChallengeID:       row.ChallengeID,
+			Title:             title,
+			CheckerType:       resolveContestAWDServiceCheckerType(runtimeConfig),
+			CheckerConfig:     resolveContestAWDServiceCheckerConfig(runtimeConfig),
+			ValidationState:   row.ValidationState,
+			LastPreviewAt:     row.LastPreviewAt,
+			LastPreviewResult: row.LastPreviewResult,
+		})
+	}
 	return records, nil
+}
+
+func (r *AWDRepository) listContestAWDServiceRuntimeRows(ctx context.Context, contestID int64) ([]awdContestServiceRuntimeRow, error) {
+	var rows []awdContestServiceRuntimeRow
+	if err := r.dbWithContext(ctx).
+		Table("contest_awd_services AS cas").
+		Select(`
+			cas.id AS service_id,
+			cas.challenge_id AS challenge_id,
+			c.flag_prefix AS flag_prefix,
+			cas.display_name AS display_name,
+			cas.runtime_config AS runtime_config,
+			cas.score_config AS score_config,
+			cas.awd_checker_validation_state AS validation_state,
+			cas.awd_checker_last_preview_at AS last_preview_at,
+			cas.awd_checker_last_preview_result AS last_preview_result,
+			c.title AS challenge_title
+		`).
+		Joins("JOIN challenges AS c ON c.id = cas.challenge_id").
+		Where("cas.contest_id = ?", contestID).
+		Order("cas.\"order\" ASC, cas.id ASC").
+		Scan(&rows).Error; err != nil {
+		return nil, err
+	}
+	return rows, nil
+}
+
+func resolveContestAWDServiceCheckerType(runtimeConfig map[string]any) model.AWDCheckerType {
+	if runtimeConfig != nil {
+		if raw, ok := runtimeConfig["checker_type"]; ok {
+			if value, ok := raw.(string); ok {
+				if normalized := contestdomain.NormalizeAWDCheckerType(value); normalized != "" {
+					return normalized
+				}
+			}
+		}
+	}
+	return ""
+}
+
+func resolveContestAWDServiceCheckerConfig(runtimeConfig map[string]any) string {
+	if runtimeConfig != nil {
+		if raw, ok := runtimeConfig["checker_config_raw"]; ok {
+			if value, ok := raw.(string); ok {
+				return value
+			}
+		}
+		if raw, ok := runtimeConfig["checker_config"]; ok {
+			if encoded := marshalContestAWDServiceJSON(raw); encoded != "" {
+				return encoded
+			}
+		}
+	}
+	return ""
+}
+
+func resolveContestAWDServiceScore(scoreConfig map[string]any, key string) int {
+	if scoreConfig != nil {
+		if raw, ok := scoreConfig[key]; ok {
+			if value, ok := normalizeContestAWDServiceInt(raw); ok {
+				return value
+			}
+		}
+	}
+	return 0
+}
+
+func normalizeContestAWDServiceInt(value any) (int, bool) {
+	switch typed := value.(type) {
+	case int:
+		return typed, true
+	case int32:
+		return int(typed), true
+	case int64:
+		return int(typed), true
+	case float64:
+		return int(typed), true
+	case json.Number:
+		next, err := typed.Int64()
+		if err != nil {
+			return 0, false
+		}
+		return int(next), true
+	default:
+		return 0, false
+	}
+}
+
+func marshalContestAWDServiceJSON(value any) string {
+	raw, err := json.Marshal(value)
+	if err != nil {
+		return ""
+	}
+	return string(raw)
 }
 
 func (r *AWDRepository) ContestHasChallenge(ctx context.Context, contestID, challengeID int64) (bool, error) {

@@ -20,6 +20,10 @@ defineProps<{
 const emit = defineEmits<{
   close: []
 }>()
+
+function formatServiceRef(serviceId?: string): string {
+  return `Service #${serviceId || '--'}`
+}
 </script>
 
 <template>
@@ -68,7 +72,16 @@ const emit = defineEmits<{
         <div v-else class="awd-review-drawer__list">
           <article v-for="service in services" :key="service.id" class="awd-review-drawer__item">
             <div>
-              <strong>{{ service.challenge_title }}</strong>
+              <div class="awd-review-drawer__item-head">
+                <strong>{{ service.challenge_title }}</strong>
+                <span
+                  v-if="service.service_id"
+                  class="awd-review-drawer__item-chip"
+                  data-testid="awd-review-drawer-service-id"
+                >
+                  {{ formatServiceRef(service.service_id) }}
+                </span>
+              </div>
               <p>{{ service.team_name }} · {{ service.service_status }}</p>
             </div>
             <div class="awd-review-drawer__item-meta">
@@ -94,7 +107,16 @@ const emit = defineEmits<{
         <div v-else class="awd-review-drawer__list">
           <article v-for="attack in attacks" :key="attack.id" class="awd-review-drawer__item">
             <div>
-              <strong>{{ attack.attacker_team_name }} → {{ attack.victim_team_name }}</strong>
+              <div class="awd-review-drawer__item-head">
+                <strong>{{ attack.attacker_team_name }} → {{ attack.victim_team_name }}</strong>
+                <span
+                  v-if="attack.service_id"
+                  class="awd-review-drawer__item-chip"
+                  data-testid="awd-review-drawer-attack-service-id"
+                >
+                  {{ formatServiceRef(attack.service_id) }}
+                </span>
+              </div>
               <p>{{ attack.challenge_title }} · {{ attack.attack_type }} · {{ attack.source }}</p>
             </div>
             <div class="awd-review-drawer__item-meta">
@@ -196,9 +218,30 @@ const emit = defineEmits<{
   background: color-mix(in srgb, var(--journal-surface-subtle) 82%, transparent);
 }
 
+.awd-review-drawer__item-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
 .awd-review-drawer__item strong {
   display: block;
   color: var(--journal-ink);
+}
+
+.awd-review-drawer__item-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.55rem;
+  padding: 0 var(--space-2-5);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
+  color: var(--journal-accent-strong);
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-0-74);
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 .awd-review-drawer__item p {
