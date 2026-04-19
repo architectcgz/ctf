@@ -190,6 +190,25 @@ function getServiceCheckPresentationResult(service: AWDTeamServiceData): Record<
     ...service.check_result,
   }
 }
+
+function formatServiceRef(serviceId?: string): string {
+  if (!serviceId) {
+    return 'Service 未绑定'
+  }
+  return `Service #${serviceId}`
+}
+
+const trafficServiceOptions = computed(() => {
+  const seen = new Set<string>()
+  return props.challengeLinks.filter((challenge) => {
+    const serviceId = challenge.awd_service_id?.trim()
+    if (!serviceId || seen.has(serviceId)) {
+      return false
+    }
+    seen.add(serviceId)
+    return true
+  })
+})
 </script>
 
 <template>
@@ -727,25 +746,27 @@ function getServiceCheckPresentationResult(service: AWDTeamServiceData): Record<
                   </span>
                 </label>
                 <label class="ui-field awd-round-filter-field">
-                  <span class="ui-field__label">题目</span>
+                  <span class="ui-field__label">服务</span>
                   <span class="ui-control-wrap awd-round-filter-control">
                     <select
-                      id="awd-traffic-filter-challenge"
-                      :value="trafficFilters.challenge_id"
+                      id="awd-traffic-filter-service"
+                      :value="trafficFilters.service_id"
                       class="ui-control"
                       @change="
                         applyTrafficFilterPatch({
-                          challenge_id: ($event.target as HTMLSelectElement).value,
+                          service_id: ($event.target as HTMLSelectElement).value,
                         })
                       "
                     >
-                      <option value="">全部题目</option>
+                      <option value="">全部服务</option>
                       <option
-                        v-for="challenge in challengeLinks"
+                        v-for="challenge in trafficServiceOptions"
                         :key="challenge.id"
-                        :value="challenge.challenge_id"
+                        :value="challenge.awd_service_id"
                       >
-                        {{ challenge.title || `Challenge #${challenge.challenge_id}` }}
+                        {{
+                          `${challenge.title || `Challenge #${challenge.challenge_id}`} · Service #${challenge.awd_service_id}`
+                        }}
                       </option>
                     </select>
                   </span>
@@ -849,7 +870,13 @@ function getServiceCheckPresentationResult(service: AWDTeamServiceData): Record<
                       </p>
                     </td>
                     <td class="px-4 py-4 text-sm text-[var(--color-text-secondary)]">
-                      {{ getTrafficChallengeTitle(event.challenge_id, event.challenge_title) }}
+                      <p>{{ getTrafficChallengeTitle(event.challenge_id, event.challenge_title) }}</p>
+                      <p
+                        v-if="event.service_id"
+                        class="mt-1 text-xs font-mono text-[var(--color-text-muted)]"
+                      >
+                        {{ formatServiceRef(event.service_id) }}
+                      </p>
                     </td>
                     <td class="px-4 py-4 text-sm">
                       <p class="font-mono text-[var(--color-text-primary)]">
@@ -926,7 +953,7 @@ function getServiceCheckPresentationResult(service: AWDTeamServiceData): Record<
                     <div class="mt-2 space-y-1 text-xs">
                       <div
                         v-for="sample in alert.samples"
-                        :key="`${alert.key}-${sample.service_id}`"
+                        :key="`${alert.key}-${sample.service_id || sample.team_name}-${sample.challenge_title}`"
                       >
                         {{ sample.team_name }} · {{ sample.challenge_title }}
                       </div>

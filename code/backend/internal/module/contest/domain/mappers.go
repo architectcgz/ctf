@@ -1,6 +1,8 @@
 package domain
 
 import (
+	"encoding/json"
+
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 )
@@ -22,20 +24,13 @@ func ContestRespFromModel(contest *model.Contest) *dto.ContestResp {
 
 func ContestChallengeRespFromModel(cc *model.ContestChallenge, challenge *model.Challenge) *dto.ContestChallengeResp {
 	resp := &dto.ContestChallengeResp{
-		ID:                          cc.ID,
-		ContestID:                   cc.ContestID,
-		ChallengeID:                 cc.ChallengeID,
-		Points:                      cc.Points,
-		Order:                       cc.Order,
-		IsVisible:                   cc.IsVisible,
-		AWDCheckerType:              NormalizeAWDCheckerType(string(cc.AWDCheckerType)),
-		AWDCheckerConfig:            ParseAWDCheckerConfig(cc.AWDCheckerConfig),
-		AWDSLAScore:                 cc.AWDSLAScore,
-		AWDDefenseScore:             cc.AWDDefenseScore,
-		AWDCheckerValidationState:   NormalizeAWDCheckerValidationState(string(cc.AWDCheckerValidationState)),
-		AWDCheckerLastPreviewAt:     cc.AWDCheckerLastPreviewAt,
-		AWDCheckerLastPreviewResult: ParseAWDCheckerPreviewResult(cc.AWDCheckerLastPreviewResult),
-		CreatedAt:                   cc.CreatedAt,
+		ID:          cc.ID,
+		ContestID:   cc.ContestID,
+		ChallengeID: cc.ChallengeID,
+		Points:      cc.Points,
+		Order:       cc.Order,
+		IsVisible:   cc.IsVisible,
+		CreatedAt:   cc.CreatedAt,
 	}
 	if challenge != nil {
 		resp.Title = challenge.Title
@@ -49,18 +44,97 @@ func ContestAWDServiceRespFromModel(item *model.ContestAWDService) *dto.ContestA
 	if item == nil {
 		return nil
 	}
+	runtimeConfig := sanitizeContestAWDServiceRuntimeConfig(ParseAWDCheckerConfig(item.RuntimeConfig))
 	return &dto.ContestAWDServiceResp{
-		ID:            item.ID,
-		ContestID:     item.ContestID,
-		ChallengeID:   item.ChallengeID,
-		TemplateID:    item.TemplateID,
-		DisplayName:   item.DisplayName,
-		Order:         item.Order,
-		IsVisible:     item.IsVisible,
-		ScoreConfig:   ParseAWDCheckerConfig(item.ScoreConfig),
-		RuntimeConfig: ParseAWDCheckerConfig(item.RuntimeConfig),
-		CreatedAt:     item.CreatedAt,
-		UpdatedAt:     item.UpdatedAt,
+		ID:                item.ID,
+		ContestID:         item.ContestID,
+		ChallengeID:       item.ChallengeID,
+		TemplateID:        item.TemplateID,
+		DisplayName:       item.DisplayName,
+		Order:             item.Order,
+		IsVisible:         item.IsVisible,
+		ScoreConfig:       ParseAWDCheckerConfig(item.ScoreConfig),
+		RuntimeConfig:     runtimeConfig,
+		ValidationState:   NormalizeAWDCheckerValidationState(string(item.ValidationState)),
+		LastPreviewAt:     item.LastPreviewAt,
+		LastPreviewResult: ParseAWDCheckerPreviewResult(item.LastPreviewResult),
+		CreatedAt:         item.CreatedAt,
+		UpdatedAt:         item.UpdatedAt,
+	}
+}
+
+func parseContestAWDServiceCheckerType(runtimeConfig map[string]any) model.AWDCheckerType {
+	if runtimeConfig == nil {
+		return ""
+	}
+	raw, ok := runtimeConfig["checker_type"]
+	if !ok {
+		return ""
+	}
+	value, ok := raw.(string)
+	if !ok {
+		return ""
+	}
+	return NormalizeAWDCheckerType(value)
+}
+
+func parseContestAWDServiceCheckerConfig(runtimeConfig map[string]any) map[string]any {
+	if runtimeConfig == nil {
+		return map[string]any{}
+	}
+	if raw, ok := runtimeConfig["checker_config_raw"]; ok {
+		if value, ok := raw.(string); ok {
+			return ParseAWDCheckerConfig(value)
+		}
+	}
+	if raw, ok := runtimeConfig["checker_config"]; ok {
+		encoded, err := json.Marshal(raw)
+		if err == nil {
+			return ParseAWDCheckerConfig(string(encoded))
+		}
+	}
+	return map[string]any{}
+}
+
+func sanitizeContestAWDServiceRuntimeConfig(runtimeConfig map[string]any) map[string]any {
+	if len(runtimeConfig) == 0 {
+		return runtimeConfig
+	}
+	sanitized := make(map[string]any, len(runtimeConfig))
+	for key, value := range runtimeConfig {
+		if key == "challenge_id" {
+			continue
+		}
+		sanitized[key] = value
+	}
+	return sanitized
+}
+
+func parseContestAWDServiceScore(scoreConfig map[string]any, key string) (int, bool) {
+	if scoreConfig == nil {
+		return 0, false
+	}
+	raw, ok := scoreConfig[key]
+	if !ok {
+		return 0, false
+	}
+	switch value := raw.(type) {
+	case int:
+		return value, true
+	case int32:
+		return int(value), true
+	case int64:
+		return int(value), true
+	case float64:
+		return int(value), true
+	case json.Number:
+		next, err := value.Int64()
+		if err != nil {
+			return 0, false
+		}
+		return int(next), true
+	default:
+		return 0, false
 	}
 }
 
