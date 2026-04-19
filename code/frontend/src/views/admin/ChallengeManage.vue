@@ -673,7 +673,7 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
 
 .challenge-manage-panel {
   display: grid;
-  gap: var(--space-6);
+  gap: var(--space-section-gap-compact, var(--space-4));
   min-width: 0;
 }
 

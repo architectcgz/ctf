@@ -202,7 +202,7 @@ describe('ChallengeManage', () => {
       /\.challenge-manage-content\s*\{[\s\S]*gap:\s*var\(--space-6\);/s
     )
     expect(challengeManageSource).toMatch(
-      /\.challenge-manage-panel\s*\{[\s\S]*gap:\s*var\(--space-6\);/s
+      /\.challenge-manage-panel\s*\{[\s\S]*gap:\s*var\(--space-section-gap-compact,\s*var\(--space-4\)\);/s
     )
     expect(challengeManageSource).toMatch(
       /\.challenge-manage-directory\s*\{[\s\S]*gap:\s*var\(--space-4\);/s
