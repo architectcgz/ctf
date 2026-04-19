@@ -4,10 +4,14 @@ import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 import auditLogSource from '../AuditLog.vue?raw'
+import awdReviewIndexSource from '../AWDReviewIndex.vue?raw'
 import challengeManageSource from '../ChallengeManage.vue?raw'
+import classManageSource from '../ClassManage.vue?raw'
+import instanceManageSource from '../InstanceManage.vue?raw'
 import challengeDetailSource from '../ChallengeDetail.vue?raw'
 import contestEditSource from '../ContestEdit.vue?raw'
 import imageManageSource from '../ImageManage.vue?raw'
+import studentManageSource from '../StudentManage.vue?raw'
 import cheatDetectionSource from '../CheatDetection.vue?raw'
 import awdRoundInspectorSource from '@/components/platform/contest/AWDRoundInspector.vue?raw'
 import awdTrafficPanelSource from '@/components/platform/contest/AWDTrafficPanel.vue?raw'
@@ -15,6 +19,8 @@ import awdChallengeConfigPanelSource from '@/components/platform/contest/AWDChal
 import awdReadinessSummarySource from '@/components/platform/contest/AWDReadinessSummary.vue?raw'
 import awdReadinessOverrideDialogSource from '@/components/platform/contest/AWDReadinessOverrideDialog.vue?raw'
 import awdChallengeConfigDialogSource from '@/components/platform/contest/AWDChallengeConfigDialog.vue?raw'
+import workspaceDataTableSource from '@/components/common/WorkspaceDataTable.vue?raw'
+import workspaceDirectoryToolbarSource from '@/components/common/WorkspaceDirectoryToolbar.vue?raw'
 import adminContestFormDialogSource from '@/components/platform/contest/PlatformContestFormDialog.vue?raw'
 import adminContestFormPanelSource from '@/components/platform/contest/PlatformContestFormPanel.vue?raw'
 import contestOrchestrationSource from '@/components/platform/contest/ContestOrchestrationPage.vue?raw'
@@ -83,11 +89,15 @@ describe('admin management surface alignment', () => {
     expect(userGovernanceSource).toContain('<header class="workspace-tab-heading user-import-head">')
     expect(userGovernanceSource).not.toContain('<header class="list-heading user-overview-head">')
     expect(userGovernanceSource).not.toContain('<header class="list-heading user-import-head">')
-    expect(userGovernanceSource).toMatch(
-      /\.user-directory-section,\s*\.user-import-panel,\s*\.user-import-receipt-section\s*\{[\s\S]*gap:\s*var\(--space-4\);[\s\S]*padding:\s*0;/s
+    expect(userGovernanceSource).not.toMatch(/^\.list-heading\s*\{/m)
+    expect(userGovernanceSource).not.toMatch(
+      /\.user-directory-section,\s*\.user-import-panel,\s*\.user-import-receipt-section\s*\{/s
     )
-    expect(userGovernanceSource).toMatch(
+    expect(userGovernanceSource).not.toMatch(
       /\.user-directory-head\s*\{[\s\S]*margin-bottom:\s*0;/s
+    )
+    expect(userGovernanceSource).not.toMatch(
+      /\.user-directory-section :deep\(\.workspace-directory-toolbar\)\s*\{[\s\S]*margin-bottom:\s*0;/s
     )
     expect(userGovernanceSource).not.toContain('<nav class="top-tabs"')
     expect(userGovernanceSource).toContain('id="user-panel-overview"')
@@ -115,6 +125,13 @@ describe('admin management surface alignment', () => {
     expect(contestOrchestrationSource).toMatch(
       /\.contest-empty-state\s*\{[\s\S]*border-top-color:\s*color-mix\(in srgb,\s*var\(--journal-border\) 68%, transparent\);[\s\S]*border-bottom-color:\s*color-mix\(in srgb,\s*var\(--journal-border\) 68%, transparent\);/s
     )
+    expect(contestOrchestrationSource).not.toMatch(/^\.list-heading\s*\{/m)
+    expect(contestOrchestrationSource).toMatch(
+      /\.contest-directory-section,\s*\.contest-create-panel\s*\{[\s\S]*--workspace-directory-section-padding:\s*var\(--space-5\)\s*var\(--space-5-5\);/s
+    )
+    expect(contestOrchestrationSource).not.toMatch(
+      /\.contest-directory-section :deep\(\.workspace-directory-toolbar\)\s*\{[\s\S]*margin-bottom:\s*0;/s
+    )
     expect(contestOrchestrationSource).toContain(
       '<div class="workspace-overline">Contest Workspace</div>'
     )
@@ -131,6 +148,13 @@ describe('admin management surface alignment', () => {
     expect(contestOrchestrationSource).not.toContain('class="contest-filter-grid"')
     expect(contestOrchestrationSource).not.toContain('contest-filter-field--action')
     expect(contestOrchestrationSource).not.toContain('class="contest-filter-actions"')
+    expect(contestOrchestrationSource).not.toMatch(/^\.list-heading\s*\{/m)
+    expect(contestOrchestrationSource).toMatch(
+      /\.contest-directory-section,\s*\.contest-create-panel\s*\{[\s\S]*--workspace-directory-section-padding:\s*var\(--space-5\)\s*var\(--space-5-5\);/s
+    )
+    expect(contestOrchestrationSource).not.toMatch(
+      /\.contest-directory-section :deep\(\.workspace-directory-toolbar\)\s*\{[\s\S]*margin-bottom:\s*0;/s
+    )
     expect(contestOrchestrationSource).toMatch(
       /\.contest-overview-summary\.metric-panel-default-surface\.metric-panel-workspace-surface\s*\{[\s\S]*--metric-panel-border:\s*color-mix\(in srgb,\s*var\(--workspace-brand\)\s*16%,\s*var\(--workspace-line-soft\)\);[\s\S]*--metric-panel-background:\s*radial-gradient\([\s\S]*linear-gradient\(/s
     )
@@ -277,14 +301,29 @@ describe('admin management surface alignment', () => {
   it('admin list pages should use shared directory spacing utilities', () => {
     expect(styleSource).toContain('--workspace-directory-gap-top: 0.75rem;')
     expect(styleSource).toContain('--workspace-directory-gap-pagination: 0.5rem;')
+    expect(styleSource).toContain('--workspace-directory-page-block-gap: var(--space-5);')
+    expect(styleSource).toContain('--workspace-directory-toolbar-gap-bottom: 0;')
+    expect(styleSource).toContain('.workspace-directory-section {')
+    expect(styleSource).toContain('.workspace-directory-section > .list-heading {')
+    expect(styleSource).toContain('.list-heading {')
+    expect(styleSource).toContain('.list-heading__title {')
+    expect(styleSource).toContain('.workspace-directory-loading,')
     expect(styleSource).toContain('.workspace-directory-list {')
     expect(styleSource).toContain('--workspace-directory-shell-border')
     expect(styleSource).toContain('.workspace-directory-list .workspace-data-table__head-cell')
     expect(styleSource).toContain('.workspace-directory-list .workspace-data-table__row')
+    expect(styleSource).toContain('@media (max-width: 768px) {')
+    expect(styleSource).toContain('.list-heading {')
     expect(styleSource).toContain(
       '.workspace-directory-section > :where(.workspace-directory-loading, .workspace-directory-empty, .workspace-directory-list)'
     )
     expect(styleSource).toContain('.workspace-directory-section > .workspace-directory-pagination')
+    expect(workspaceDataTableSource).not.toMatch(
+      /\.workspace-data-table-shell\s*\{[^}]*\bborder:\s*none;/s
+    )
+    expect(workspaceDataTableSource).not.toMatch(
+      /\.workspace-data-table-shell\s*\{[^}]*\bbackground:\s*transparent;/s
+    )
 
     expect(userGovernanceSource).toContain('workspace-directory-section')
     expect(userGovernanceSource).toContain(
@@ -306,11 +345,85 @@ describe('admin management surface alignment', () => {
       'class="workspace-directory-section challenge-manage-directory"'
     )
     expect(challengeManageSource).toContain('class="challenge-list workspace-directory-list"')
+    expect(challengeManageSource).toContain('class="workspace-directory-loading"')
+    expect(challengeManageSource).toContain('class="workspace-directory-empty"')
     expect(challengeManageSource).toContain('<WorkspaceDirectoryPagination')
 
     expect(adminContestTableSource).toContain('class="contest-directory workspace-directory-list"')
     expect(adminContestTableSource).toContain(
       'class="admin-pagination workspace-directory-pagination'
+    )
+
+    expect(classManageSource).toContain('class="workspace-directory-section admin-class-manage-directory"')
+    expect(classManageSource).toContain('class="workspace-directory-list admin-class-manage-table"')
+    expect(classManageSource).toContain('<WorkspaceDirectoryPagination')
+    expect(classManageSource).toMatch(
+      /\.admin-class-manage-shell__content\s*\{[\s\S]*gap:\s*var\(--workspace-directory-page-block-gap\);/s
+    )
+
+    expect(studentManageSource).toContain(
+      'class="workspace-directory-section admin-student-manage-directory"'
+    )
+    expect(studentManageSource).toContain(
+      'class="workspace-directory-list admin-student-manage-table"'
+    )
+    expect(studentManageSource).toContain('<WorkspaceDirectoryPagination')
+    expect(studentManageSource).toMatch(
+      /\.admin-student-manage-shell__content\s*\{[\s\S]*gap:\s*var\(--workspace-directory-page-block-gap\);/s
+    )
+
+    expect(instanceManageSource).toContain(
+      'class="workspace-directory-section admin-instance-manage-directory"'
+    )
+    expect(instanceManageSource).toContain(
+      'class="workspace-directory-list admin-instance-manage-table"'
+    )
+    expect(instanceManageSource).toContain('<WorkspaceDirectoryPagination')
+    expect(instanceManageSource).toMatch(
+      /\.admin-instance-manage-shell__content\s*\{[\s\S]*gap:\s*var\(--workspace-directory-page-block-gap\);/s
+    )
+
+    expect(awdReviewIndexSource).toContain(
+      'class="workspace-directory-section admin-awd-review-directory"'
+    )
+    expect(awdReviewIndexSource).toContain(
+      'class="workspace-directory-list admin-awd-review-table"'
+    )
+    expect(awdReviewIndexSource).toContain('class="workspace-directory-loading"')
+    expect(awdReviewIndexSource).toContain('class="workspace-directory-empty"')
+    expect(awdReviewIndexSource).toMatch(
+      /\.admin-awd-review-shell__content\s*\{[\s\S]*gap:\s*var\(--workspace-directory-page-block-gap\);/s
+    )
+
+    expect(challengeManageSource).toMatch(
+      /\.challenge-manage-content\s*\{[\s\S]*gap:\s*var\(--workspace-directory-page-block-gap\);/s
+    )
+    expect(challengeManageSource).toMatch(
+      /\.challenge-metric-head\s*\{[\s\S]*margin-bottom:\s*var\(--space-2\);/s
+    )
+    expect(challengeManageSource).toMatch(
+      /\.challenge-metric-value-wrap\s+\.metric-panel-value,\s*[\s\S]*\.challenge-metric-value-wrap\s+\.metric-panel-helper\s*\{[\s\S]*margin-top:\s*0;/s
+    )
+    expect(workspaceDirectoryToolbarSource).toContain(
+      'margin-bottom: var(--workspace-directory-toolbar-gap-bottom, 1.5rem);'
+    )
+    expect(auditLogSource).not.toMatch(
+      /\.admin-board :deep\(\.workspace-directory-toolbar\)\s*\{[\s\S]*margin-bottom:\s*0;/s
+    )
+    expect(imageManageSource).not.toMatch(
+      /\.image-board :deep\(\.workspace-directory-toolbar\)\s*\{[\s\S]*margin-bottom:\s*0;/s
+    )
+    expect(challengeManageSource).not.toMatch(
+      /\.challenge-manage-directory :deep\(\.workspace-directory-toolbar\)\s*\{[\s\S]*margin-bottom:/s
+    )
+    expect(classManageSource).not.toMatch(
+      /\.admin-class-manage-directory :deep\(\.workspace-directory-toolbar\)\s*\{[\s\S]*margin-bottom:\s*0;/s
+    )
+    expect(studentManageSource).not.toMatch(
+      /\.admin-student-manage-directory :deep\(\.workspace-directory-toolbar\)\s*\{[\s\S]*margin-bottom:\s*0;/s
+    )
+    expect(instanceManageSource).not.toMatch(
+      /\.admin-instance-manage-directory :deep\(\.workspace-directory-toolbar\)\s*\{[\s\S]*margin-bottom:\s*0;/s
     )
   })
 
@@ -338,10 +451,23 @@ describe('admin management surface alignment', () => {
     expect(imageManageSource).not.toMatch(
       /^\.image-summary-grid\s*\{[\s\S]*display:\s*grid;[\s\S]*grid-template-columns:/m
     )
+    expect(auditLogSource).not.toMatch(/^\.list-heading\s*\{/m)
+    expect(imageManageSource).not.toMatch(/^\.list-heading\s*\{/m)
+    expect(classManageSource).not.toMatch(/^\.list-heading\s*\{/m)
+    expect(studentManageSource).not.toMatch(/^\.list-heading\s*\{/m)
+    expect(instanceManageSource).not.toMatch(/^\.list-heading\s*\{/m)
     expect(userGovernanceSource).toContain('class="admin-summary-grid user-overview-grid')
     expect(contestOrchestrationSource).toContain(
       'class="admin-summary-grid contest-overview-summary'
     )
+    expect(classManageSource).toContain('class="admin-summary-grid admin-class-manage-shell__summary')
+    expect(studentManageSource).toContain(
+      'class="admin-summary-grid admin-student-manage-shell__summary'
+    )
+    expect(instanceManageSource).toContain(
+      'class="admin-summary-grid admin-instance-manage-shell__summary'
+    )
+    expect(awdReviewIndexSource).toContain('class="admin-summary-grid admin-awd-review-shell__summary')
   })
 
   it('admin summary cards should explicitly adopt metric-panel utility classes', () => {
@@ -362,6 +488,9 @@ describe('admin management surface alignment', () => {
     expect(journalNotesSource).toContain('.metric-panel-default-surface {')
     expect(journalNotesSource).toContain('.metric-panel-workspace-surface {')
     expect(journalNotesSource).toContain('.progress-card {')
+    expect(journalNotesSource).toContain(
+      '--metric-panel-padding: var(--space-3-5) var(--space-4) var(--space-3-5);'
+    )
     expect(journalNotesSource).toContain('.progress-card-label {')
     expect(journalNotesSource).toContain('.progress-card-value {')
     expect(journalNotesSource).toContain('.progress-card-hint {')
@@ -400,7 +529,7 @@ describe('admin management surface alignment', () => {
       '.journal-shell-admin.journal-notes-card .journal-note {'
     )
     expect(challengeManageSource).toContain(
-      'class="manage-summary-grid progress-strip metric-panel-grid metric-panel-default-surface"'
+      'class="manage-summary-grid progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
     )
     expect(challengeManageSource).toContain('class="journal-note progress-card metric-panel-card"')
     expect(challengeManageSource).toContain(
@@ -419,7 +548,7 @@ describe('admin management surface alignment', () => {
     )
 
     expect(userGovernanceSource).toContain(
-      'class="admin-summary-grid user-overview-grid progress-strip metric-panel-grid metric-panel-default-surface'
+      'class="admin-summary-grid user-overview-grid progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface'
     )
     expect(userGovernanceSource).toContain(
       'class="journal-note user-overview-stat progress-card metric-panel-card"'
@@ -451,6 +580,19 @@ describe('admin management surface alignment', () => {
     )
     expect(contestOrchestrationSource).toContain(
       'class="journal-note-helper progress-card-hint metric-panel-helper"'
+    )
+
+    expect(classManageSource).toContain(
+      'class="admin-summary-grid admin-class-manage-shell__summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
+    )
+    expect(studentManageSource).toContain(
+      'class="admin-summary-grid admin-student-manage-shell__summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
+    )
+    expect(instanceManageSource).toContain(
+      'class="admin-summary-grid admin-instance-manage-shell__summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
+    )
+    expect(awdReviewIndexSource).toContain(
+      'class="admin-summary-grid admin-awd-review-shell__summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
     )
   })
 })

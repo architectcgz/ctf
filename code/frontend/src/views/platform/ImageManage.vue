@@ -712,30 +712,6 @@ onUnmounted(() => {
   padding-top: var(--space-1);
 }
 
-.list-heading {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: var(--space-3);
-}
-
-.list-heading__title {
-  margin: 0.35rem 0 0;
-  font-size: clamp(1.2rem, 1rem + 0.5vw, 1.45rem);
-  font-weight: 700;
-  line-height: 1.15;
-  color: var(--journal-ink);
-}
-
-.image-board__head {
-  margin-bottom: 0;
-}
-
-.image-board :deep(.workspace-directory-toolbar) {
-  margin-bottom: 0;
-}
-
 .image-section-title,
 .image-row__time {
   color: var(--journal-ink);

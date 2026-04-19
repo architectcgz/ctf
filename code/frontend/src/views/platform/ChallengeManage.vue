@@ -59,6 +59,7 @@ const hasActiveFilters = computed(() =>
     keyword.value.trim() || categoryFilter.value || difficultyFilter.value || statusFilter.value
   )
 )
+const manageEmptyTitle = computed(() => (hasActiveFilters.value ? '没有匹配题目' : '暂无题目'))
 const manageEmptyMessage = computed(() =>
   hasActiveFilters.value
     ? '当前筛选条件下没有匹配题目。'
@@ -309,7 +310,9 @@ function getChallengeRow(row: unknown): PlatformChallengeListRow {
             </div>
           </div>
 
-          <div class="manage-summary-grid progress-strip metric-panel-grid metric-panel-default-surface">
+          <div
+            class="manage-summary-grid progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"
+          >
             <article class="journal-note progress-card metric-panel-card">
               <div class="challenge-metric-head">
                 <span class="journal-note-label progress-card-label metric-panel-label">题目总量</span>
@@ -429,9 +432,10 @@ function getChallengeRow(row: unknown): PlatformChallengeListRow {
               </template>
             </WorkspaceDirectoryToolbar>
 
-            <div v-if="loading" class="challenge-directory-state">正在同步题目目录...</div>
+            <div v-if="loading" class="workspace-directory-loading">正在同步题目目录...</div>
             <AppEmpty
               v-else-if="hasLoadError"
+              class="workspace-directory-empty"
               icon="AlertTriangle"
               title="题目目录加载失败"
               :description="loadErrorMessage"
@@ -442,9 +446,13 @@ function getChallengeRow(row: unknown): PlatformChallengeListRow {
                 </button>
               </template>
             </AppEmpty>
-            <div v-else-if="list.length === 0" class="challenge-directory-state">
-              {{ manageEmptyMessage }}
-            </div>
+            <AppEmpty
+              v-else-if="list.length === 0"
+              class="workspace-directory-empty"
+              icon="BookOpen"
+              :title="manageEmptyTitle"
+              :description="manageEmptyMessage"
+            />
             <WorkspaceDataTable
               v-else
               class="challenge-list workspace-directory-list"
@@ -632,6 +640,9 @@ function getChallengeRow(row: unknown): PlatformChallengeListRow {
   --challenge-page-muted: color-mix(in srgb, var(--journal-muted) 92%, transparent);
   --challenge-page-faint: color-mix(in srgb, var(--journal-muted) 72%, var(--color-bg-base));
   --challenge-page-accent: color-mix(in srgb, var(--workspace-brand) 88%, var(--challenge-page-text));
+  --challenge-directory-border: color-mix(in srgb, var(--journal-border) 72%, transparent);
+  --challenge-directory-row-divider: color-mix(in srgb, var(--journal-border) 58%, transparent);
+  --admin-control-border: color-mix(in srgb, var(--journal-border) 76%, transparent);
   --challenge-page-accent-soft: color-mix(
     in srgb,
     var(--workspace-brand) 10%,
@@ -667,7 +678,7 @@ function getChallengeRow(row: unknown): PlatformChallengeListRow {
 
 .challenge-manage-content {
   display: grid;
-  gap: var(--space-6);
+  gap: var(--workspace-directory-page-block-gap);
   background: transparent;
 }
 
@@ -732,11 +743,6 @@ function getChallengeRow(row: unknown): PlatformChallengeListRow {
   --admin-summary-grid-columns: repeat(4, minmax(0, 1fr));
 }
 
-.challenge-manage-directory {
-  display: grid;
-  gap: var(--space-4);
-}
-
 .metric-panel-card.progress-card {
   position: relative;
   overflow: hidden;
@@ -752,7 +758,7 @@ function getChallengeRow(row: unknown): PlatformChallengeListRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 1rem;
+  margin-bottom: var(--space-2);
   color: var(--journal-muted);
 }
 
@@ -761,6 +767,11 @@ function getChallengeRow(row: unknown): PlatformChallengeListRow {
   align-items: flex-end;
   justify-content: space-between;
   gap: 0.75rem;
+}
+
+.challenge-metric-value-wrap .metric-panel-value,
+.challenge-metric-value-wrap .metric-panel-helper {
+  margin-top: 0;
 }
 
 .manage-summary-grid > :nth-child(2) .metric-panel-value {
@@ -777,32 +788,47 @@ function getChallengeRow(row: unknown): PlatformChallengeListRow {
 
 .challenge-filter-grid {
   display: grid;
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
 .challenge-filter-field {
   display: grid;
-  gap: 0.35rem;
+  gap: var(--space-2);
 }
 
 .challenge-filter-label {
-  font-size: 10px;
+  font-size: var(--font-size-0-72);
   font-weight: 800;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--challenge-page-faint);
+  color: var(--journal-muted);
 }
 
 .challenge-filter-select {
   width: 100%;
-  min-height: 2.25rem;
-  padding: 0 0.75rem;
-  font-size: 12px;
+  min-height: 2.75rem;
+  padding: 0 var(--space-4);
+  font-size: var(--font-size-0-875);
   font-weight: 500;
-  border: 1px solid var(--challenge-page-line);
-  border-radius: 8px;
-  background: var(--challenge-page-surface-subtle);
-  color: var(--challenge-page-text);
+  border: 1px solid var(--admin-control-border);
+  border-radius: 0.95rem;
+  background: color-mix(in srgb, var(--journal-surface) 92%, var(--color-bg-base));
+  color: var(--journal-ink);
+  outline: none;
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.challenge-filter-select:focus {
+  border-color: color-mix(in srgb, var(--journal-accent) 44%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--journal-accent) 12%, transparent);
+}
+
+.challenge-list {
+  --workspace-directory-shell-border: var(--challenge-directory-border);
+  --workspace-directory-head-divider: var(--challenge-directory-border);
+  --workspace-directory-row-divider: var(--challenge-directory-row-divider);
 }
 
 .challenge-row-menu__title {
@@ -1023,10 +1049,6 @@ function getChallengeRow(row: unknown): PlatformChallengeListRow {
 .challenge-row-menu__item--danger:hover {
   background: color-mix(in srgb, var(--color-danger) 10%, var(--challenge-action-surface-subtle));
   color: color-mix(in srgb, var(--color-danger) 96%, var(--challenge-action-text));
-}
-
-.challenge-directory-state {
-  color: var(--challenge-page-muted);
 }
 
 @keyframes challengeStatusPulse {

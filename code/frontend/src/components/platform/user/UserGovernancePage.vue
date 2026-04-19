@@ -248,7 +248,7 @@ function handleImportChange(event: Event): void {
         </header>
 
         <div
-          class="admin-summary-grid user-overview-grid progress-strip metric-panel-grid metric-panel-default-surface"
+          class="admin-summary-grid user-overview-grid progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"
         >
           <div class="journal-note user-overview-stat progress-card metric-panel-card">
             <div class="journal-note-label progress-card-label metric-panel-label">用户总量</div>
@@ -598,37 +598,8 @@ function handleImportChange(event: Event): void {
   justify-content: space-between;
 }
 
-.list-heading {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: var(--space-3);
-}
-
-.list-heading__title {
-  margin: 0.35rem 0 0;
-  font-size: clamp(1.2rem, 1rem + 0.5vw, 1.45rem);
-  font-weight: 700;
-  line-height: 1.15;
-  color: var(--journal-ink);
-}
-
 .user-directory-head {
   gap: var(--space-4);
-  margin-bottom: 0;
-}
-
-.user-directory-section,
-.user-import-panel,
-.user-import-receipt-section {
-  display: grid;
-  gap: var(--space-4);
-  padding: 0;
-}
-
-.user-directory-section :deep(.workspace-directory-toolbar) {
-  margin-bottom: 0;
 }
 
 .user-directory-meta {
@@ -860,11 +831,6 @@ function handleImportChange(event: Event): void {
 
   .user-overview-grid {
     --admin-summary-grid-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .list-heading {
-    align-items: flex-start;
-    flex-direction: column;
   }
 
   .user-panel-actions {
