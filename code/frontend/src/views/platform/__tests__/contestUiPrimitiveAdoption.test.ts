@@ -9,7 +9,8 @@ describe('contest ui primitive adoption', () => {
   it('contest workspace pages should consume shared ui button and control primitives', () => {
     expect(contestOperationsHubSource).toContain('class="ui-btn ui-btn--ghost"')
     expect(contestOperationsHubSource).toContain('class="ui-btn ui-btn--primary"')
-    expect(contestOperationsHubSource).toContain('class="ui-row-actions contest-ops-row__actions"')
+    expect(contestOperationsHubSource).toContain('class="contest-ops-hero__actions"')
+    expect(contestOperationsHubSource).toContain('class="contest-ops-actions"')
 
     expect(contestOrchestrationSource).toContain('class="ui-btn ui-btn--ghost"')
     expect(contestOrchestrationSource).toContain('class="ui-btn ui-btn--primary"')
@@ -30,9 +31,10 @@ describe('contest ui primitive adoption', () => {
     expect(adminContestTableSource).toContain('class="ui-badge contest-status-pill')
     expect(adminContestTableSource).toContain('class="ui-row-actions contest-row__actions"')
     expect(adminContestTableSource).toContain('class="ui-btn ui-btn--sm ui-btn--primary')
-    expect(adminContestTableSource).toContain('class="contest-row-menu-button"')
+    expect(adminContestTableSource).toContain("from '@/components/common/menus/CActionMenu.vue'")
+    expect(adminContestTableSource).toContain('class="c-action-menu__trigger c-action-menu__trigger--icon')
     expect(adminContestTableSource).toContain('aria-label="更多竞赛操作"')
-    expect(adminContestTableSource).toContain('<Teleport to="body">')
+    expect(adminContestTableSource).not.toContain('<Teleport to="body">')
     expect(adminContestTableSource).toContain('contest-action--workbench')
     expect(adminContestTableSource).not.toContain('class="contest-action contest-action--primary"')
     expect(adminContestTableSource).not.toContain('class="contest-action contest-action--ghost"')
