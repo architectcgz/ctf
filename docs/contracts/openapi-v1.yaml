@@ -1464,7 +1464,7 @@ components:
           type: object
           nullable: true
           additionalProperties: true
-          description: 正式 runtime 配置字段集合；兼容影子字段 challenge_id 不再对外暴露
+          description: 正式 runtime 配置字段集合；新写入记录不再持久化兼容影子字段 challenge_id
         validation_state:
           allOf:
             - $ref: "#/components/schemas/AWDCheckerValidationState"

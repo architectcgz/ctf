@@ -1587,7 +1587,7 @@ export interface UpdateAdminContestAWDServiceReq {
 > - `contest_awd_services` 是 AWD 运行态配置的显式服务层。
 > - `checker_type / checker_config / awd_sla_score / awd_defense_score / awd_checker_preview_token` 统一通过该接口写入。
 > - `points` 不属于 service 资源，仍通过 `contest_challenges` 关系接口维护。
-> - 返回体中的 `runtime_config` 仅保留正式 runtime 配置字段，不再对外暴露兼容影子字段 `challenge_id`。
+> - 返回体中的 `runtime_config` 仅保留正式 runtime 配置字段；新写入记录也不再持久化兼容影子字段 `challenge_id`。
 > - `validation_state / last_preview_at / last_preview_result` 反映最近一次保存到 service 层的 checker 校验状态。
 
 ### 8.18.2 GET `/api/v1/admin/contests/:id/awd/readiness`

@@ -198,7 +198,7 @@ func CreateAWDContestChallengeFixture(t *testing.T, db *gorm.DB, contestID, chal
 		Order:             0,
 		IsVisible:         true,
 		ScoreConfig:       `{"points":100}`,
-		RuntimeConfig:     fmt.Sprintf(`{"challenge_id":%d}`, challengeID),
+		RuntimeConfig:     `{}`,
 		ValidationState:   model.AWDCheckerValidationStatePending,
 		LastPreviewResult: "",
 		CreatedAt:         now,
@@ -224,9 +224,7 @@ func SyncAWDContestServiceFixture(
 		displayName = fmt.Sprintf("awd-service-%d", challengeID)
 	}
 
-	runtimeConfig := map[string]any{
-		"challenge_id": challengeID,
-	}
+	runtimeConfig := map[string]any{}
 	if checkerType != "" {
 		runtimeConfig["checker_type"] = string(checkerType)
 	}

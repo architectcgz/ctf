@@ -16,7 +16,6 @@ const contestApiMocks = vi.hoisted(() => ({
   joinTeam: vi.fn(),
   kickTeamMember: vi.fn(),
   startContestAWDServiceInstance: vi.fn(),
-  startContestChallengeInstance: vi.fn(),
   submitContestAWDAttack: vi.fn(),
   submitContestFlag: vi.fn(),
 }))
@@ -65,7 +64,6 @@ describe('ContestDetail', () => {
     contestApiMocks.joinTeam.mockReset()
     contestApiMocks.kickTeamMember.mockReset()
     contestApiMocks.startContestAWDServiceInstance.mockReset()
-    contestApiMocks.startContestChallengeInstance.mockReset()
     contestApiMocks.submitContestAWDAttack.mockReset()
     contestApiMocks.submitContestFlag.mockReset()
     webSocketMocks.connect.mockClear()
@@ -127,17 +125,6 @@ describe('ContestDetail', () => {
         page_size: 10,
       },
       frozen: false,
-    })
-    contestApiMocks.startContestChallengeInstance.mockResolvedValue({
-      id: '900',
-      challenge_id: '101',
-      status: 'running',
-      share_scope: 'per_team',
-      access_url: 'http://red.internal',
-      flag_type: 'dynamic',
-      expires_at: '2024-03-15T12:00:00Z',
-      remaining_extends: 1,
-      created_at: '2024-03-15T09:02:00Z',
     })
     contestApiMocks.startContestAWDServiceInstance.mockResolvedValue({
       id: '900',

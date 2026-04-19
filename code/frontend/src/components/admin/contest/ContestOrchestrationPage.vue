@@ -102,9 +102,9 @@ function openContestWorkbench(contest: ContestDetailData) {
         <header class="list-heading contest-overview-head">
           <div class="workspace-tab-heading__main">
             <div class="workspace-overline">Contest Workspace</div>
-            <h1 class="workspace-page-title">赛事管理台</h1>
+            <h1 class="workspace-page-title">竞赛目录</h1>
             <p class="workspace-page-copy">
-              上面直接查看关键赛事指标，下面围绕具体赛事对象完成筛选、编辑、导出和进入攻防运维。
+              上面直接查看关键赛事指标，下面围绕具体竞赛对象完成筛选、编辑、导出和进入攻防运维。
             </p>
           </div>
 
@@ -168,7 +168,7 @@ function openContestWorkbench(contest: ContestDetailData) {
           <header class="list-heading">
             <div>
               <div class="journal-note-label">Contest Directory</div>
-              <h2 class="list-heading__title">全部赛事</h2>
+              <h2 class="list-heading__title">竞赛列表</h2>
             </div>
             <div class="contest-section-meta">当前页 {{ listCount }} 场赛事</div>
           </header>

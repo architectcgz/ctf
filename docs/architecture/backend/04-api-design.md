@@ -544,7 +544,8 @@ TTL:         与 Token 剩余有效期一致（避免无限膨胀）
 | `GET` | `/api/v1/contests/:id/scoreboard` | @ | 竞赛排行榜 |
 | `GET` | `/api/v1/contests/:id/announcements` | @ | 竞赛公告列表 |
 | `POST` | `/api/v1/contests/:id/challenges/:cid/submissions` | S | 竞赛中提交 Flag |
-| `POST` | `/api/v1/contests/:id/challenges/:cid/instances` | S | 竞赛中启动靶机实例（校验竞赛状态=running/frozen、用户已报名） |
+| `POST` | `/api/v1/contests/:id/challenges/:cid/instances` | S | 非 AWD 竞赛中启动靶机实例（校验竞赛状态=running/frozen、用户已报名） |
+| `POST` | `/api/v1/contests/:id/awd/services/:sid/instances` | S | AWD 竞赛中按 `service_id` 启动队伍共享实例（校验竞赛状态=running/frozen、用户已报名且已入队） |
 | `GET` | `/api/v1/contests/:id/challenges` | S | 竞赛题目列表（学员视图，仅 running/frozen 状态可见） |
 | `GET` | `/api/v1/contests/:id/my-progress` | S | 我在该竞赛的解题进度 |
 

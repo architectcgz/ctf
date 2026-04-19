@@ -366,18 +366,6 @@ export async function getContestAWDWorkspace(contestId: string): Promise<Contest
   }
 }
 
-export async function startContestChallengeInstance(
-  contestId: string,
-  challengeId: string
-): Promise<InstanceData> {
-  const payload = await request<RawInstanceData>({
-    method: 'POST',
-    url: `/contests/${encodeURIComponent(contestId)}/challenges/${encodeURIComponent(challengeId)}/instances`,
-    suppressErrorToast: true,
-  })
-  return normalizeInstanceData(payload)
-}
-
 export async function startContestAWDServiceInstance(
   contestId: string,
   serviceId: string

@@ -797,7 +797,7 @@ const routes: RouteRecordRaw[] = [
         meta: {
           requiresAuth: true,
           roles: ['admin'],
-          title: '竞赛管理',
+          title: '竞赛目录',
           icon: 'Trophy',
           contentLayout: 'bleed',
         },
@@ -836,7 +836,7 @@ const routes: RouteRecordRaw[] = [
         meta: {
           requiresAuth: true,
           roles: ['admin'],
-          title: '竞赛管理',
+          title: '环境管理',
           contentLayout: 'bleed',
         },
       },

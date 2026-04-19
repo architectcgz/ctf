@@ -152,7 +152,7 @@ describe('Sidebar desktop layout', () => {
     })
 
     expect(wrapper.text()).toContain('赛事运维')
-    expect(wrapper.text()).toContain('竞赛管理')
+    expect(wrapper.text()).toContain('环境管理')
     expect(wrapper.text()).toContain('流量监控')
     expect(wrapper.text()).toContain('大屏投射')
     expect(wrapper.text()).toContain('排行榜')
