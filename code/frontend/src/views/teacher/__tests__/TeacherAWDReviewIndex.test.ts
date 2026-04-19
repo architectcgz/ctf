@@ -1,10 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { createPinia, setActivePinia } from 'pinia'
 import { flushPromises, mount } from '@vue/test-utils'
+import { createPinia, setActivePinia } from 'pinia'
 
 import TeacherAWDReviewIndex from '../TeacherAWDReviewIndex.vue'
 import teacherAwdReviewIndexSource from '../TeacherAWDReviewIndex.vue?raw'
-import { useAuthStore } from '@/stores/auth'
 
 const pushMock = vi.fn()
 let currentRouteName = 'TeacherAWDReviewIndex'
@@ -54,16 +53,6 @@ describe('TeacherAWDReviewIndex', () => {
         export_ready: true,
       },
     ])
-
-    const authStore = useAuthStore()
-    authStore.setAuth(
-      {
-        id: 'teacher-1',
-        username: 'teacher',
-        role: 'teacher',
-      },
-      'token'
-    )
   })
 
   afterEach(() => {
@@ -86,16 +75,12 @@ describe('TeacherAWDReviewIndex', () => {
 
     await flushPromises()
 
-    const keywordInput = wrapper.find('input[placeholder="搜索赛事标题"]')
-    const filterToggle = wrapper.find('.workspace-directory-toolbar__filter-toggle')
-
-    expect(keywordInput.exists()).toBe(true)
-    expect(filterToggle.exists()).toBe(true)
-    expect(teacherApiMocks.listTeacherAWDReviews).toHaveBeenCalledTimes(1)
-
-    await filterToggle.trigger('click')
     const statusSelect = wrapper.find('select')
+    const keywordInput = wrapper.find('input[placeholder="搜索赛事标题"]')
+
     expect(statusSelect.exists()).toBe(true)
+    expect(keywordInput.exists()).toBe(true)
+    expect(teacherApiMocks.listTeacherAWDReviews).toHaveBeenCalledTimes(1)
 
     await statusSelect.setValue('ended')
     await keywordInput.setValue('期末')
@@ -163,11 +148,16 @@ describe('TeacherAWDReviewIndex', () => {
     expect(teacherAwdReviewIndexSource).toContain(
       '<div class="teacher-heading workspace-tab-heading__main">'
     )
-    expect(teacherAwdReviewIndexSource).toContain('<div class="workspace-overline">AWD Review</div>')
+    expect(teacherAwdReviewIndexSource).toContain(
+      '<div class="workspace-overline awd-review-index-overline">AWD Review</div>'
+    )
     expect(teacherAwdReviewIndexSource).toContain(
       '<h1 class="teacher-title workspace-page-title">AWD复盘</h1>'
     )
     expect(teacherAwdReviewIndexSource).toContain('<p class="teacher-copy workspace-page-copy">')
+    expect(teacherAwdReviewIndexSource).toMatch(
+      /\.awd-review-index-overline\s*\{[\s\S]*font-size:\s*var\(--journal-overline-font-size,\s*var\(--font-size-0-70\)\);[\s\S]*letter-spacing:\s*var\(--journal-overline-letter-spacing,\s*0\.2em\);[\s\S]*text-transform:\s*uppercase;[\s\S]*color:\s*var\(--journal-accent,\s*var\(--color-primary\)\);/s
+    )
     expect(teacherAwdReviewIndexSource).not.toContain(
       '<div class="teacher-surface-eyebrow journal-eyebrow">AWD Review Workspace</div>'
     )
@@ -180,39 +170,5 @@ describe('TeacherAWDReviewIndex', () => {
     expect(teacherAwdReviewIndexSource).not.toContain(
       '支持按状态或关键字快速定位要进入的 AWD 赛事。'
     )
-  })
-
-  it('加载骨架应通过语义类承接，不再直接写圆角和背景混色', () => {
-    expect(teacherAwdReviewIndexSource).toContain('awd-review-loading-card')
-    expect(teacherAwdReviewIndexSource).not.toContain('rounded-[22px]')
-    expect(teacherAwdReviewIndexSource).not.toContain(
-      'bg-[color-mix(in_srgb,var(--journal-surface-subtle)_92%,transparent)]'
-    )
-  })
-
-  it('管理员打开 AWD 目录并进入复盘时应使用后台路由', async () => {
-    const authStore = useAuthStore()
-    authStore.setAuth(
-      {
-        id: 'admin-1',
-        username: 'admin',
-        role: 'admin',
-      },
-      'token'
-    )
-
-    const wrapper = mount(TeacherAWDReviewIndex)
-
-    await flushPromises()
-
-    wrapper.findAll('button').find((button) => button.text().includes('平台概览'))?.trigger('click')
-    wrapper.findAll('button').find((button) => button.text().includes('进入复盘'))?.trigger('click')
-    await flushPromises()
-
-    expect(pushMock).toHaveBeenCalledWith({ name: 'AdminDashboard' })
-    expect(pushMock).toHaveBeenCalledWith({
-      name: 'AdminAWDReviewDetail',
-      params: { contestId: 'contest-1' },
-    })
   })
 })

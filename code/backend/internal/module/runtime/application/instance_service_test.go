@@ -87,6 +87,188 @@ func TestInstanceServiceGetUserInstancesShowsContestSharedInstanceToTeamMember(t
 	}
 }
 
+func TestInstanceServiceGetUserInstancesPrefersContestAWDServiceMetadata(t *testing.T) {
+	t.Parallel()
+
+	db := newInstanceServiceTestDB(t)
+	now := time.Now()
+	contestID := int64(701)
+	teamID := int64(801)
+	serviceID := int64(9701)
+
+	seedInstanceServiceChallenge(t, db, &model.Challenge{
+		ID:         201,
+		Title:      "Legacy Runtime Challenge",
+		Category:   model.DimensionWeb,
+		Difficulty: model.ChallengeDifficultyEasy,
+		FlagType:   model.FlagTypeStatic,
+		Status:     model.ChallengeStatusPublished,
+		Points:     100,
+		CreatedAt:  now,
+		UpdatedAt:  now,
+	})
+	seedInstanceServiceChallenge(t, db, &model.Challenge{
+		ID:         202,
+		Title:      "Bank Portal Source",
+		Category:   model.DimensionPwn,
+		Difficulty: model.ChallengeDifficultyHard,
+		FlagType:   model.FlagTypeDynamic,
+		Status:     model.ChallengeStatusPublished,
+		Points:     300,
+		CreatedAt:  now,
+		UpdatedAt:  now,
+	})
+	if err := db.Create(&model.Contest{
+		ID:        contestID,
+		Title:     "AWD Contest",
+		Mode:      model.ContestModeAWD,
+		Status:    model.ContestStatusRunning,
+		StartTime: now.Add(-time.Minute),
+		EndTime:   now.Add(time.Hour),
+		CreatedAt: now,
+		UpdatedAt: now,
+	}).Error; err != nil {
+		t.Fatalf("create contest: %v", err)
+	}
+	if err := db.Create(&model.ContestAWDService{
+		ID:              serviceID,
+		ContestID:       contestID,
+		ChallengeID:     202,
+		DisplayName:     "Bank Portal",
+		Order:           1,
+		IsVisible:       true,
+		ScoreConfig:     `{"points":300}`,
+		RuntimeConfig:   `{"checker_type":"http_standard"}`,
+		ValidationState: model.AWDCheckerValidationStatePassed,
+		CreatedAt:       now,
+		UpdatedAt:       now,
+	}).Error; err != nil {
+		t.Fatalf("create contest awd service: %v", err)
+	}
+	seedInstanceServiceTeam(t, db, &model.Team{
+		ID:         teamID,
+		ContestID:  contestID,
+		Name:       "Runtime AWD Team",
+		CaptainID:  1,
+		InviteCode: "runtime-awd",
+		MaxMembers: 4,
+		CreatedAt:  now,
+		UpdatedAt:  now,
+	})
+	seedInstanceServiceTeamMember(t, db, &model.TeamMember{
+		ContestID: contestID,
+		TeamID:    teamID,
+		UserID:    2,
+		JoinedAt:  now,
+		CreatedAt: now,
+	})
+	seedInstanceServiceInstance(t, db, &model.Instance{
+		ID:          1201,
+		UserID:      1,
+		ContestID:   &contestID,
+		TeamID:      &teamID,
+		ChallengeID: 201,
+		ServiceID:   &serviceID,
+		Status:      model.InstanceStatusRunning,
+		AccessURL:   "http://127.0.0.1:31201",
+		ExpiresAt:   now.Add(time.Hour),
+		MaxExtends:  2,
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	})
+
+	service := runtimeqry.NewInstanceService(runtimeinfrarepo.NewRepository(db))
+
+	items, err := service.GetUserInstancesWithContext(context.Background(), 2)
+	if err != nil {
+		t.Fatalf("GetUserInstancesWithContext() error = %v", err)
+	}
+	if len(items) != 1 {
+		t.Fatalf("expected 1 visible awd instance, got %+v", items)
+	}
+	if items[0].ChallengeID != 202 {
+		t.Fatalf("expected awd instance challenge id from contest service, got %+v", items[0])
+	}
+	if items[0].ChallengeTitle != "Bank Portal" {
+		t.Fatalf("expected awd instance title from contest service display name, got %+v", items[0])
+	}
+	if items[0].Category != model.DimensionPwn || items[0].Difficulty != model.ChallengeDifficultyHard || items[0].FlagType != model.FlagTypeDynamic {
+		t.Fatalf("expected awd instance metadata from contest service challenge, got %+v", items[0])
+	}
+}
+
+func TestInstanceServiceGetUserInstancesFiltersLegacyAWDInstanceWithoutServiceID(t *testing.T) {
+	t.Parallel()
+
+	db := newInstanceServiceTestDB(t)
+	now := time.Now()
+	contestID := int64(703)
+	teamID := int64(803)
+
+	seedInstanceServiceChallenge(t, db, &model.Challenge{
+		ID:         221,
+		Title:      "Legacy AWD Runtime Challenge",
+		Category:   model.DimensionWeb,
+		Difficulty: model.ChallengeDifficultyMedium,
+		FlagType:   model.FlagTypeDynamic,
+		Status:     model.ChallengeStatusPublished,
+		CreatedAt:  now,
+		UpdatedAt:  now,
+	})
+	if err := db.Create(&model.Contest{
+		ID:        contestID,
+		Title:     "AWD Contest",
+		Mode:      model.ContestModeAWD,
+		Status:    model.ContestStatusRunning,
+		StartTime: now.Add(-time.Minute),
+		EndTime:   now.Add(time.Hour),
+		CreatedAt: now,
+		UpdatedAt: now,
+	}).Error; err != nil {
+		t.Fatalf("create contest: %v", err)
+	}
+	seedInstanceServiceTeam(t, db, &model.Team{
+		ID:         teamID,
+		ContestID:  contestID,
+		Name:       "Runtime AWD Team",
+		CaptainID:  1,
+		InviteCode: "runtime-awd-legacy",
+		MaxMembers: 4,
+		CreatedAt:  now,
+		UpdatedAt:  now,
+	})
+	seedInstanceServiceTeamMember(t, db, &model.TeamMember{
+		ContestID: contestID,
+		TeamID:    teamID,
+		UserID:    2,
+		JoinedAt:  now,
+		CreatedAt: now,
+	})
+	seedInstanceServiceInstance(t, db, &model.Instance{
+		ID:          1202,
+		UserID:      1,
+		ContestID:   &contestID,
+		TeamID:      &teamID,
+		ChallengeID: 221,
+		Status:      model.InstanceStatusRunning,
+		AccessURL:   "http://127.0.0.1:31202",
+		ExpiresAt:   now.Add(time.Hour),
+		MaxExtends:  2,
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	})
+
+	service := runtimeqry.NewInstanceService(runtimeinfrarepo.NewRepository(db))
+
+	items, err := service.GetUserInstancesWithContext(context.Background(), 2)
+	if err != nil {
+		t.Fatalf("GetUserInstancesWithContext() error = %v", err)
+	}
+	if len(items) != 0 {
+		t.Fatalf("expected legacy awd instance without service_id to be filtered out, got %+v", items)
+	}
+}
+
 func TestInstanceServiceGetUserInstancesIncludesPendingInstance(t *testing.T) {
 	t.Parallel()
 
@@ -294,6 +476,119 @@ func TestInstanceServiceListTeacherInstancesScopesTeacherAndAppliesFilters(t *te
 	}
 }
 
+func TestInstanceServiceListTeacherInstancesPrefersContestAWDServiceMetadata(t *testing.T) {
+	t.Parallel()
+
+	db := newInstanceServiceTestDB(t)
+	now := time.Now()
+	contestID := int64(702)
+	serviceID := int64(9702)
+
+	seedInstanceServiceUser(t, db, &model.User{ID: 1, Username: "teacher-a", Role: model.RoleTeacher, ClassName: "Class A", Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now})
+	seedInstanceServiceUser(t, db, &model.User{ID: 2, Username: "alice", StudentNo: "S-1001", Role: model.RoleStudent, ClassName: "Class A", Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now})
+	seedInstanceServiceChallenge(t, db, &model.Challenge{ID: 211, Title: "Legacy Runtime Challenge", Category: model.DimensionWeb, Difficulty: model.ChallengeDifficultyEasy, FlagType: model.FlagTypeStatic, Status: model.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now})
+	seedInstanceServiceChallenge(t, db, &model.Challenge{ID: 212, Title: "Bank Portal Source", Category: model.DimensionPwn, Difficulty: model.ChallengeDifficultyHard, FlagType: model.FlagTypeDynamic, Status: model.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now})
+	if err := db.Create(&model.Contest{
+		ID:        contestID,
+		Title:     "AWD Contest",
+		Mode:      model.ContestModeAWD,
+		Status:    model.ContestStatusRunning,
+		StartTime: now.Add(-time.Minute),
+		EndTime:   now.Add(time.Hour),
+		CreatedAt: now,
+		UpdatedAt: now,
+	}).Error; err != nil {
+		t.Fatalf("create contest: %v", err)
+	}
+	if err := db.Create(&model.ContestAWDService{
+		ID:              serviceID,
+		ContestID:       contestID,
+		ChallengeID:     212,
+		DisplayName:     "Bank Portal",
+		Order:           1,
+		IsVisible:       true,
+		ScoreConfig:     `{"points":300}`,
+		RuntimeConfig:   `{"checker_type":"http_standard"}`,
+		ValidationState: model.AWDCheckerValidationStatePassed,
+		CreatedAt:       now,
+		UpdatedAt:       now,
+	}).Error; err != nil {
+		t.Fatalf("create contest awd service: %v", err)
+	}
+	seedInstanceServiceInstance(t, db, &model.Instance{
+		ID:          1301,
+		UserID:      2,
+		ContestID:   &contestID,
+		ChallengeID: 211,
+		ServiceID:   &serviceID,
+		Status:      model.InstanceStatusRunning,
+		AccessURL:   "http://127.0.0.1:31301",
+		ExpiresAt:   now.Add(time.Hour),
+		MaxExtends:  2,
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	})
+
+	service := runtimeqry.NewInstanceService(runtimeinfrarepo.NewRepository(db))
+
+	items, err := service.ListTeacherInstances(context.Background(), 1, model.RoleTeacher, nil)
+	if err != nil {
+		t.Fatalf("ListTeacherInstances() error = %v", err)
+	}
+	if len(items) != 1 {
+		t.Fatalf("expected 1 visible awd teacher instance, got %+v", items)
+	}
+	if items[0].ChallengeID != 212 || items[0].ChallengeTitle != "Bank Portal" {
+		t.Fatalf("expected teacher instance metadata from contest awd service, got %+v", items[0])
+	}
+}
+
+func TestInstanceServiceListTeacherInstancesFiltersLegacyAWDInstanceWithoutServiceID(t *testing.T) {
+	t.Parallel()
+
+	db := newInstanceServiceTestDB(t)
+	now := time.Now()
+	contestID := int64(704)
+
+	seedInstanceServiceUser(t, db, &model.User{ID: 1, Username: "teacher-a", Role: model.RoleTeacher, ClassName: "Class A", Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now})
+	seedInstanceServiceUser(t, db, &model.User{ID: 2, Username: "alice", StudentNo: "S-1001", Role: model.RoleStudent, ClassName: "Class A", Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now})
+	seedInstanceServiceChallenge(t, db, &model.Challenge{ID: 222, Title: "Legacy AWD Runtime Challenge", Category: model.DimensionWeb, Difficulty: model.ChallengeDifficultyMedium, FlagType: model.FlagTypeDynamic, Status: model.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now})
+	if err := db.Create(&model.Contest{
+		ID:        contestID,
+		Title:     "AWD Contest",
+		Mode:      model.ContestModeAWD,
+		Status:    model.ContestStatusRunning,
+		StartTime: now.Add(-time.Minute),
+		EndTime:   now.Add(time.Hour),
+		CreatedAt: now,
+		UpdatedAt: now,
+	}).Error; err != nil {
+		t.Fatalf("create contest: %v", err)
+	}
+	seedInstanceServiceInstance(t, db, &model.Instance{
+		ID:          1302,
+		UserID:      2,
+		ContestID:   &contestID,
+		ChallengeID: 222,
+		Status:      model.InstanceStatusRunning,
+		AccessURL:   "http://127.0.0.1:31302",
+		ExpiresAt:   now.Add(time.Hour),
+		MaxExtends:  2,
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	})
+
+	service := runtimeqry.NewInstanceService(runtimeinfrarepo.NewRepository(db))
+
+	items, err := service.ListTeacherInstances(context.Background(), 1, model.RoleTeacher, nil)
+	if err != nil {
+		t.Fatalf("ListTeacherInstances() error = %v", err)
+	}
+	if len(items) != 0 {
+		t.Fatalf("expected legacy awd teacher instance without service_id to be filtered out, got %+v", items)
+	}
+}
+
 func TestInstanceServiceDestroyTeacherInstanceHonorsClassScope(t *testing.T) {
 	t.Parallel()
 
@@ -346,6 +641,9 @@ func newInstanceServiceTestDB(t *testing.T) *gorm.DB {
 	}
 	if err := db.AutoMigrate(&model.Team{}, &model.TeamMember{}); err != nil {
 		t.Fatalf("migrate tables: %v", err)
+	}
+	if err := db.AutoMigrate(&model.Contest{}, &model.ContestAWDService{}); err != nil {
+		t.Fatalf("migrate awd tables: %v", err)
 	}
 	return db
 }

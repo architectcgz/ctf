@@ -466,6 +466,41 @@ func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 		middleware.ParseInt64Param("id"),
 		deps.contest.AWDHandler.GetReadiness,
 	)
+	adminOnly.GET("/contests/:id/awd/services",
+		middleware.ParseInt64Param("id"),
+		deps.contest.AWDHandler.ListContestAWDServices,
+	)
+	adminOnly.POST("/contests/:id/awd/services",
+		middleware.ParseInt64Param("id"),
+		audit(middleware.AuditOptions{
+			Action:        model.AuditActionCreate,
+			ResourceType:  "contest_awd_service",
+			DetailBuilder: middleware.DetailFromParams("id"),
+		}),
+		deps.contest.AWDHandler.CreateContestAWDService,
+	)
+	adminOnly.PUT("/contests/:id/awd/services/:sid",
+		middleware.ParseInt64Param("id"),
+		middleware.ParseInt64Param("sid"),
+		audit(middleware.AuditOptions{
+			Action:          model.AuditActionUpdate,
+			ResourceType:    "contest_awd_service",
+			ResourceIDParam: "sid",
+			DetailBuilder:   middleware.DetailFromParams("id", "sid"),
+		}),
+		deps.contest.AWDHandler.UpdateContestAWDService,
+	)
+	adminOnly.DELETE("/contests/:id/awd/services/:sid",
+		middleware.ParseInt64Param("id"),
+		middleware.ParseInt64Param("sid"),
+		audit(middleware.AuditOptions{
+			Action:          model.AuditActionDelete,
+			ResourceType:    "contest_awd_service",
+			ResourceIDParam: "sid",
+			DetailBuilder:   middleware.DetailFromParams("id", "sid"),
+		}),
+		deps.contest.AWDHandler.DeleteContestAWDService,
+	)
 	adminOnly.GET("/contests/:id/scoreboard/live", deps.contest.Handler.GetLiveScoreboard)
 	adminOnly.POST("/contests/:id/awd/rounds",
 		middleware.ParseInt64Param("id"),
@@ -587,17 +622,17 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 		}),
 		deps.contest.SubmissionHandler.SubmitFlag,
 	)
-		protected.POST("/contests/:id/awd/services/:sid/submissions",
-			middleware.ParseInt64Param("id"),
-			middleware.ParseInt64Param("sid"),
-			audit(middleware.AuditOptions{
-				Action:          model.AuditActionSubmit,
-				ResourceType:    "awd_attack_submission",
-				ResourceIDParam: "sid",
-				DetailBuilder:   middleware.DetailFromParams("id", "sid"),
-			}),
-			deps.contest.AWDHandler.SubmitAttack,
-		)
+	protected.POST("/contests/:id/awd/services/:sid/submissions",
+		middleware.ParseInt64Param("id"),
+		middleware.ParseInt64Param("sid"),
+		audit(middleware.AuditOptions{
+			Action:          model.AuditActionSubmit,
+			ResourceType:    "awd_attack_submission",
+			ResourceIDParam: "sid",
+			DetailBuilder:   middleware.DetailFromParams("id", "sid"),
+		}),
+		deps.contest.AWDHandler.SubmitAttack,
+	)
 	protected.GET("/contests/:id/teams", deps.contest.TeamHandler.ListTeams)
 	protected.GET("/contests/:id/my-team", deps.contest.TeamHandler.GetMyTeam)
 	protected.POST("/contests/:id/teams",
@@ -685,6 +720,17 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 			DetailBuilder:   middleware.DetailFromParams("id", "cid"),
 		}),
 		deps.practice.Handler.StartContestChallenge,
+	)
+	protected.POST("/contests/:id/awd/services/:sid/instances",
+		middleware.ParseInt64Param("id"),
+		middleware.ParseInt64Param("sid"),
+		audit(middleware.AuditOptions{
+			Action:          model.AuditActionCreate,
+			ResourceType:    "contest_awd_instance",
+			ResourceIDParam: "sid",
+			DetailBuilder:   middleware.DetailFromParams("id", "sid"),
+		}),
+		deps.practice.Handler.StartContestAWDService,
 	)
 	protected.POST("/challenges/:id/submit",
 		audit(middleware.AuditOptions{

@@ -5,12 +5,8 @@ import { ArrowLeft, Download, FileDown, Shield, Waypoints } from 'lucide-vue-nex
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import TeacherAWDReviewTeamDrawer from '@/components/teacher/awd-review/TeacherAWDReviewTeamDrawer.vue'
 import { useTeacherAwdReviewDetail } from '@/composables/useTeacherAwdReviewDetail'
-import { useAuthStore } from '@/stores/auth'
 import { formatDate } from '@/utils/format'
-import { resolveAwdReviewIndexRouteName } from '@/utils/teachingWorkspaceRouting'
 
-const authStore = useAuthStore()
-const isAdminView = computed(() => authStore.user?.role === 'admin')
 const {
   router,
   polling,
@@ -36,21 +32,6 @@ const {
 const activeTitle = computed(() => review.value?.contest.title || 'AWD复盘')
 const activeSummaryTitle = computed(() =>
   selectedRoundNumber.value ? `第 ${selectedRoundNumber.value} 轮` : '整场总览'
-)
-const rootClasses = computed(() =>
-  isAdminView.value
-    ? 'workspace-shell journal-shell journal-shell-admin journal-notes-card journal-hero flex min-h-full flex-1 flex-col'
-    : 'workspace-shell teacher-management-shell teacher-surface flex min-h-full flex-1 flex-col'
-)
-const shellTag = computed(() => 'main')
-const shellClasses = computed(() =>
-  isAdminView.value ? 'content-pane awd-review-admin-pane' : 'content-pane'
-)
-const ghostActionClass = computed(() =>
-  isAdminView.value ? 'ui-btn ui-btn--ghost' : 'teacher-btn teacher-btn--ghost'
-)
-const primaryActionClass = computed(() =>
-  isAdminView.value ? 'ui-btn ui-btn--primary' : 'teacher-btn teacher-btn--primary'
 )
 const summaryStats = computed(() => {
   if (selectedRound.value) {
@@ -104,14 +85,16 @@ function formatServiceRef(serviceId?: string): string {
 </script>
 
 <template>
-  <div :class="rootClasses">
-    <component :is="shellTag" :class="shellClasses">
+  <div class="teacher-management-shell teacher-surface flex min-h-full flex-1 flex-col">
+    <section
+      class="teacher-hero teacher-surface-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
+    >
       <div class="teacher-page">
-        <header class="teacher-topbar workspace-tab-heading awd-review-detail-header">
-          <div class="teacher-heading workspace-tab-heading__main">
-            <div class="workspace-overline awd-review-detail-overline">AWD Review</div>
-            <h1 class="teacher-title workspace-page-title">{{ activeTitle }}</h1>
-            <p class="teacher-copy workspace-page-copy">
+        <header class="teacher-topbar">
+          <div class="teacher-heading">
+            <div class="teacher-surface-eyebrow journal-eyebrow">AWD Review Workspace</div>
+            <h1 class="teacher-title">{{ activeTitle }}</h1>
+            <p class="teacher-copy">
               AWD复盘支持整场纵览、单轮聚焦和队伍下钻，当前视图可直接复用同一条导出链路。
             </p>
           </div>
@@ -119,15 +102,15 @@ function formatServiceRef(serviceId?: string): string {
           <div class="teacher-actions" role="group" aria-label="AWD 复盘操作">
             <button
               type="button"
-              :class="ghostActionClass"
-              @click="router.push({ name: resolveAwdReviewIndexRouteName(authStore.user?.role) })"
+              class="teacher-btn teacher-btn--ghost"
+              @click="router.push({ name: 'TeacherAWDReviewIndex' })"
             >
               <ArrowLeft class="h-4 w-4" />
               返回目录
             </button>
             <button
               type="button"
-              :class="ghostActionClass"
+              class="teacher-btn teacher-btn--ghost"
               data-testid="awd-review-export-archive"
               :disabled="loading || !review || exporting === 'archive'"
               @click="exportArchive"
@@ -137,7 +120,7 @@ function formatServiceRef(serviceId?: string): string {
             </button>
             <button
               type="button"
-              :class="primaryActionClass"
+              class="teacher-btn teacher-btn--primary"
               data-testid="awd-review-export-report"
               :disabled="loading || !review || exporting === 'report' || !canExportReport"
               @click="exportReport"
@@ -229,7 +212,7 @@ function formatServiceRef(serviceId?: string): string {
           <div
             v-for="index in 4"
             :key="index"
-            class="awd-review-loading-card h-28 animate-pulse"
+            class="h-28 animate-pulse rounded-[22px] bg-[color-mix(in_srgb,var(--journal-surface-subtle)_92%,transparent)]"
           />
         </div>
 
@@ -239,13 +222,13 @@ function formatServiceRef(serviceId?: string): string {
           icon="AlertTriangle"
           title="AWD复盘详情加载失败"
           :description="error"
-          >
-            <template #action>
-            <button type="button" :class="primaryActionClass" @click="loadReview">
+        >
+          <template #action>
+            <button type="button" class="teacher-btn teacher-btn--primary" @click="loadReview">
               重新加载
             </button>
-            </template>
-          </AppEmpty>
+          </template>
+        </AppEmpty>
 
         <AppEmpty
           v-else-if="!review"
@@ -260,7 +243,7 @@ function formatServiceRef(serviceId?: string): string {
             <section class="awd-review-panel">
               <div class="awd-review-panel__head">
                 <div>
-                  <div class="workspace-overline awd-review-section-overline">Round Summary</div>
+                  <div class="teacher-surface-eyebrow journal-eyebrow">Round Summary</div>
                   <h3>{{ activeSummaryTitle }}</h3>
                   <p>
                     {{
@@ -289,7 +272,7 @@ function formatServiceRef(serviceId?: string): string {
                     </div>
                     <button
                       type="button"
-                      :class="ghostActionClass"
+                      class="teacher-btn teacher-btn--ghost"
                       @click="setRound(round.round_number)"
                     >
                       进入单轮
@@ -363,7 +346,7 @@ function formatServiceRef(serviceId?: string): string {
               <article class="awd-review-panel">
                 <div class="awd-review-panel__head awd-review-panel__head--compact">
                   <div>
-                    <div class="workspace-overline awd-review-section-overline">Services</div>
+                    <div class="teacher-surface-eyebrow journal-eyebrow">Services</div>
                     <h3>服务状态</h3>
                   </div>
                   <span>{{ selectedRound.services.length }} 条</span>
@@ -403,7 +386,7 @@ function formatServiceRef(serviceId?: string): string {
               <article class="awd-review-panel">
                 <div class="awd-review-panel__head awd-review-panel__head--compact">
                   <div>
-                    <div class="workspace-overline awd-review-section-overline">Attacks</div>
+                    <div class="teacher-surface-eyebrow journal-eyebrow">Attacks</div>
                     <h3>攻击记录</h3>
                   </div>
                   <span>{{ selectedRound.attacks.length }} 条</span>
@@ -444,7 +427,7 @@ function formatServiceRef(serviceId?: string): string {
               <article class="awd-review-panel">
                 <div class="awd-review-panel__head awd-review-panel__head--compact">
                   <div>
-                    <div class="workspace-overline awd-review-section-overline">Traffic</div>
+                    <div class="teacher-surface-eyebrow journal-eyebrow">Traffic</div>
                     <h3>流量证据</h3>
                   </div>
                   <span>{{ selectedRound.traffic.length }} 条</span>
@@ -463,10 +446,19 @@ function formatServiceRef(serviceId?: string): string {
                     :key="event.id"
                     class="awd-review-event-item"
                   >
-                    <strong>{{ event.method }} {{ event.path }}</strong>
+                    <div class="awd-review-event-item__head">
+                      <strong>{{ event.method }} {{ event.path }}</strong>
+                      <span
+                        v-if="event.service_id"
+                        class="awd-review-event-item__chip"
+                        data-testid="awd-review-traffic-service-id"
+                      >
+                        {{ formatServiceRef(event.service_id) }}
+                      </span>
+                    </div>
                     <p>
                       {{ event.attacker_team_name }} → {{ event.victim_team_name }} ·
-                      {{ event.status_code }}
+                      {{ event.challenge_title }} · {{ event.status_code }}
                     </p>
                   </article>
                 </div>
@@ -478,7 +470,7 @@ function formatServiceRef(serviceId?: string): string {
             <section class="awd-review-panel">
               <div class="awd-review-panel__head awd-review-panel__head--compact">
                 <div>
-                  <div class="workspace-overline awd-review-section-overline">Contest Meta</div>
+                  <div class="teacher-surface-eyebrow journal-eyebrow">Contest Meta</div>
                   <h3>赛事态势</h3>
                 </div>
               </div>
@@ -510,7 +502,7 @@ function formatServiceRef(serviceId?: string): string {
           </aside>
         </div>
       </div>
-    </component>
+    </section>
 
     <TeacherAWDReviewTeamDrawer
       :visible="Boolean(selectedTeam)"
@@ -534,22 +526,6 @@ function formatServiceRef(serviceId?: string): string {
 
 .teacher-directory-section {
   margin-top: var(--space-6);
-}
-
-.awd-review-detail-overline {
-  font-size: var(--journal-overline-font-size, var(--font-size-0-70));
-  font-weight: 700;
-  letter-spacing: var(--journal-overline-letter-spacing, 0.2em);
-  text-transform: uppercase;
-  color: var(--journal-accent, var(--color-primary));
-}
-
-.awd-review-section-overline {
-  font-size: var(--journal-overline-font-size, var(--font-size-0-70));
-  font-weight: 700;
-  letter-spacing: var(--journal-overline-letter-spacing, 0.2em);
-  text-transform: uppercase;
-  color: var(--journal-accent, var(--color-primary));
 }
 
 .awd-review-round-section {
@@ -616,11 +592,6 @@ function formatServiceRef(serviceId?: string): string {
   margin-top: var(--space-6);
   display: grid;
   gap: var(--space-3);
-}
-
-.awd-review-loading-card {
-  border-radius: 22px;
-  background: color-mix(in srgb, var(--journal-surface-subtle) 92%, transparent);
 }
 
 .teacher-empty-state {

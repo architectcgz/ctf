@@ -7,6 +7,7 @@ import { useContestAWDWorkspace } from '@/composables/useContestAWDWorkspace'
 const contestApiMocks = vi.hoisted(() => ({
   getContestAWDWorkspace: vi.fn(),
   getScoreboard: vi.fn(),
+  startContestAWDServiceInstance: vi.fn(),
   startContestChallengeInstance: vi.fn(),
   submitContestAWDAttack: vi.fn(),
 }))
@@ -26,6 +27,7 @@ describe('useContestAWDWorkspace', () => {
     vi.useRealTimers()
     contestApiMocks.getContestAWDWorkspace.mockReset()
     contestApiMocks.getScoreboard.mockReset()
+    contestApiMocks.startContestAWDServiceInstance.mockReset()
     contestApiMocks.startContestChallengeInstance.mockReset()
     contestApiMocks.submitContestAWDAttack.mockReset()
     toastMocks.success.mockReset()
@@ -151,5 +153,41 @@ describe('useContestAWDWorkspace', () => {
     await flushPromises()
 
     expect(toastMocks.success).toHaveBeenCalledWith('Bank Portal 攻击成功，+60 分')
+  })
+
+  it('启动 AWD 服务时应优先调用 service_id 实例接口', async () => {
+    contestApiMocks.startContestAWDServiceInstance.mockResolvedValueOnce({
+      id: '900',
+      challenge_id: 'legacy-101',
+      status: 'running',
+      share_scope: 'per_team',
+      access_url: 'http://red.internal',
+      flag_type: 'dynamic',
+      expires_at: '2026-04-12T12:00:00Z',
+      remaining_extends: 1,
+      created_at: '2026-04-12T09:02:00Z',
+    })
+
+    let startService!: (serviceId: string, challengeId?: string) => Promise<void>
+
+    mount(
+      defineComponent({
+        setup() {
+          const workspace = useContestAWDWorkspace({
+            contestId: computed(() => '1'),
+            contestStatus: computed(() => 'running'),
+          } as any)
+          startService = workspace.startService
+          return () => null
+        },
+      })
+    )
+
+    await flushPromises()
+    await startService('7009', 'legacy-101')
+    await flushPromises()
+
+    expect(contestApiMocks.startContestAWDServiceInstance).toHaveBeenCalledWith('1', '7009')
+    expect(contestApiMocks.startContestChallengeInstance).not.toHaveBeenCalled()
   })
 })

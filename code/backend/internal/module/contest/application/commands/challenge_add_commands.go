@@ -13,8 +13,7 @@ import (
 )
 
 func (s *ChallengeService) AddChallengeToContest(ctx context.Context, contestID int64, req *dto.AddContestChallengeReq) (*dto.ContestChallengeResp, error) {
-	contest, err := s.ensureMutableContest(ctx, contestID)
-	if err != nil {
+	if _, err := s.ensureMutableContest(ctx, contestID); err != nil {
 		return nil, err
 	}
 
@@ -45,48 +44,15 @@ func (s *ChallengeService) AddChallengeToContest(ctx context.Context, contestID 
 	if req.IsVisible != nil {
 		isVisible = *req.IsVisible
 	}
-	checkerType, checkerConfig, err := validateAndNormalizeContestAWDFields(
-		contest,
-		string(req.AWDCheckerType),
-		req.AWDCheckerConfig,
-		req.AWDSLAScore,
-		req.AWDDefenseScore,
-	)
-	if err != nil {
-		return nil, err
-	}
-	validationState, lastPreviewAt, lastPreviewResult, err := consumeCheckerPreviewValidationState(
-		ctx,
-		s.redis,
-		contestID,
-		req.ChallengeID,
-		checkerType,
-		checkerConfig,
-		req.AWDCheckerPreviewToken,
-	)
-	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
-	}
 
 	cc := &model.ContestChallenge{
-		ContestID:                   contestID,
-		ChallengeID:                 req.ChallengeID,
-		Points:                      points,
-		Order:                       req.Order,
-		IsVisible:                   isVisible,
-		AWDCheckerType:              checkerType,
-		AWDCheckerConfig:            checkerConfig,
-		AWDSLAScore:                 req.AWDSLAScore,
-		AWDDefenseScore:             req.AWDDefenseScore,
-		AWDCheckerValidationState:   validationState,
-		AWDCheckerLastPreviewAt:     lastPreviewAt,
-		AWDCheckerLastPreviewResult: lastPreviewResult,
+		ContestID:   contestID,
+		ChallengeID: req.ChallengeID,
+		Points:      points,
+		Order:       req.Order,
+		IsVisible:   isVisible,
 	}
 	if err := s.repo.AddChallenge(ctx, cc); err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
-	}
-	if err := s.syncContestAWDServiceForChallenge(ctx, contest, challenge, cc, req.TemplateID); err != nil {
-		_ = s.repo.RemoveChallenge(ctx, contestID, req.ChallengeID)
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 	return contestdomain.ContestChallengeRespFromModel(cc, challenge), nil

@@ -24,6 +24,7 @@ func (s *AWDService) GetReadiness(ctx context.Context, contestID int64) (*dto.AW
 	for _, item := range summary.Items {
 		itemCopy := item
 		items = append(items, &dto.AWDReadinessItemResp{
+			ServiceID:       itemCopy.ServiceID,
 			ChallengeID:     itemCopy.ChallengeID,
 			Title:           itemCopy.Title,
 			CheckerType:     itemCopy.CheckerType,
@@ -54,6 +55,7 @@ func mapAWDReadinessChallenges(records []contestports.AWDReadinessChallengeRecor
 	challenges := make([]contestdomain.AWDReadinessChallenge, 0, len(records))
 	for _, record := range records {
 		challenges = append(challenges, contestdomain.AWDReadinessChallenge{
+			ServiceID:         record.ServiceID,
 			ChallengeID:       record.ChallengeID,
 			Title:             record.Title,
 			CheckerType:       record.CheckerType,

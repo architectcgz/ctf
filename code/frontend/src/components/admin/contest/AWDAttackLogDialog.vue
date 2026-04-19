@@ -3,7 +3,7 @@ import { computed, reactive, watch } from 'vue'
 
 import AdminSurfaceModal from '@/components/common/modal-templates/AdminSurfaceModal.vue'
 import type {
-  AdminContestChallengeData,
+  AdminContestChallengeViewData,
   AdminContestTeamData,
   AWDAttackLogData,
 } from '@/api/contracts'
@@ -11,7 +11,7 @@ import type {
 const props = defineProps<{
   open: boolean
   teams: AdminContestTeamData[]
-  challengeLinks: AdminContestChallengeData[]
+  challengeLinks: AdminContestChallengeViewData[]
   saving: boolean
 }>()
 
@@ -51,7 +51,7 @@ const challengeOptions = computed(() =>
 )
 const hasTargets = computed(() => props.teams.length >= 2 && challengeOptions.value.length > 0)
 
-function getChallengeLabel(challenge: AdminContestChallengeData): string {
+function getChallengeLabel(challenge: AdminContestChallengeViewData): string {
   const prefix = challenge.title?.trim()
     ? challenge.title.trim()
     : `Challenge #${challenge.challenge_id}`

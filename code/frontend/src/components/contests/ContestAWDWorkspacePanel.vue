@@ -28,7 +28,7 @@ const {
   error,
   hasTeam,
   submitResult,
-  startingChallengeId,
+  startingServiceKey,
   submittingKey,
   shouldAutoRefresh,
   lastSyncedAt,
@@ -41,14 +41,6 @@ const {
   formatAttackResultToast,
 })
 
-const servicesByChallengeId = computed(() => {
-  const map = new Map<string, ContestAWDWorkspaceServiceData>()
-  for (const item of workspace.value?.services || []) {
-    map.set(item.challenge_id, item)
-  }
-  return map
-})
-
 const servicesByServiceId = computed(() => {
   const map = new Map<string, ContestAWDWorkspaceServiceData>()
   for (const item of workspace.value?.services || []) {
@@ -58,6 +50,12 @@ const servicesByServiceId = computed(() => {
   }
   return map
 })
+
+const runtimeChallenges = computed(() =>
+  props.challenges.filter(
+    (item): item is ContestChallengeItem & { awd_service_id: string } => Boolean(item.awd_service_id)
+  )
+)
 
 const challengeByChallengeId = computed(() => {
   const map = new Map<string, ContestChallengeItem>()
@@ -87,7 +85,7 @@ const targetFilterKeyword = computed(() => targetKeyword.value.trim().toLowerCas
 
 const activeChallenge = computed(
   () =>
-    props.challenges.find((item) => getChallengeRuntimeKey(item) === activeChallengeKey.value) ||
+    runtimeChallenges.value.find((item) => getChallengeRuntimeKey(item) === activeChallengeKey.value) ||
     null
 )
 const activeChallengeRuntimeKey = computed(() => getChallengeRuntimeKey(activeChallenge.value))
@@ -124,7 +122,7 @@ const defenseAlerts = computed(() => {
     issues: string[]
   }> = []
 
-  for (const challenge of props.challenges) {
+  for (const challenge of runtimeChallenges.value) {
     const service = getWorkspaceService(challenge)
     if (!service) {
       continue
@@ -164,7 +162,7 @@ const defenseAlerts = computed(() => {
 })
 
 watch(
-  () => props.challenges.map((item) => getChallengeRuntimeKey(item)),
+  () => runtimeChallenges.value.map((item) => getChallengeRuntimeKey(item)),
   (challengeKeys) => {
     if (challengeKeys.length === 0) {
       activeChallengeKey.value = ''
@@ -216,10 +214,14 @@ function formatServiceRef(serviceId?: string): string {
 }
 
 function getChallengeRuntimeKey(challenge: ContestChallengeItem | null | undefined): string {
-  if (!challenge) {
+  if (!challenge?.awd_service_id) {
     return ''
   }
-  return challenge.awd_service_id || challenge.challenge_id
+  return challenge.awd_service_id
+}
+
+function getServiceStartKey(challenge: ContestChallengeItem): string {
+  return challenge.awd_service_id || ''
 }
 
 function getChallengeTitleForEvent(event: { service_id?: string; challenge_id: string }): string {
@@ -256,26 +258,17 @@ function formatAttackResultToast(result: {
 function getWorkspaceService(
   challenge: ContestChallengeItem
 ): ContestAWDWorkspaceServiceData | undefined {
-  if (challenge.awd_service_id) {
-    return (
-      servicesByServiceId.value.get(challenge.awd_service_id) ||
-      servicesByChallengeId.value.get(challenge.challenge_id)
-    )
+  if (!challenge.awd_service_id) {
+    return undefined
   }
-  return servicesByChallengeId.value.get(challenge.challenge_id)
+  return servicesByServiceId.value.get(challenge.awd_service_id)
 }
 
 function isTargetServiceForChallenge(
   service: { service_id?: string; challenge_id: string },
   challenge: ContestChallengeItem
 ): boolean {
-  if (challenge.awd_service_id) {
-    return (
-      service.service_id === challenge.awd_service_id ||
-      service.challenge_id === challenge.challenge_id
-    )
-  }
-  return service.challenge_id === challenge.challenge_id
+  return Boolean(challenge.awd_service_id) && service.service_id === challenge.awd_service_id
 }
 
 function buildAttackStateKey(serviceKey: string, teamId: string): string {
@@ -406,15 +399,19 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
               <div class="workspace-overline">My Services</div>
               <h2 class="contest-section__title workspace-tab-heading__title">我的服务</h2>
             </div>
-            <div class="contest-section__hint">{{ challenges.length }} 题</div>
+            <div class="contest-section__hint">{{ runtimeChallenges.length }} 题</div>
           </div>
 
-          <div v-if="challenges.length === 0" class="contest-inline-note">
+          <div v-if="runtimeChallenges.length === 0" class="contest-inline-note">
             当前赛事还没有发布可用服务。
           </div>
 
           <div v-else class="awd-service-list">
-            <article v-for="challenge in challenges" :key="challenge.id" class="awd-service-row">
+            <article
+              v-for="challenge in runtimeChallenges"
+              :key="challenge.id"
+              class="awd-service-row"
+            >
               <div class="awd-service-row__main">
                 <div class="awd-service-row__head">
                   <h3>{{ challenge.title }}</h3>
@@ -450,11 +447,11 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
                 <button
                   type="button"
                   class="ui-btn ui-btn--primary"
-                  :disabled="startingChallengeId === challenge.challenge_id"
-                  @click="startService(challenge.challenge_id)"
+                  :disabled="!challenge.awd_service_id || startingServiceKey === getServiceStartKey(challenge)"
+                  @click="challenge.awd_service_id && startService(challenge.awd_service_id)"
                 >
                   {{
-                    startingChallengeId === challenge.challenge_id
+                    startingServiceKey === getServiceStartKey(challenge)
                       ? '启动中...'
                       : getWorkspaceService(challenge)?.access_url
                         ? '刷新服务'
@@ -482,11 +479,11 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
               <label class="ui-field__label" for="awd-target-challenge">攻击题目</label>
               <div class="ui-control-wrap awd-target-control">
                 <select id="awd-target-challenge" v-model="activeChallengeKey" class="ui-control">
-                  <option v-if="challenges.length === 0" value="" disabled>
+                  <option v-if="runtimeChallenges.length === 0" value="" disabled>
                     当前没有可选攻击题目
                   </option>
                   <option
-                    v-for="challenge in challenges"
+                    v-for="challenge in runtimeChallenges"
                     :key="getChallengeRuntimeKey(challenge)"
                     :value="getChallengeRuntimeKey(challenge)"
                   >

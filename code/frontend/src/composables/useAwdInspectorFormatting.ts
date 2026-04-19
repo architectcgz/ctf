@@ -6,13 +6,13 @@ import type {
   AWDRoundSummaryData,
   AWDTrafficStatusGroup,
   AWDTeamServiceData,
-  AdminContestChallengeData,
+  AdminContestChallengeViewData,
   ContestDetailData,
 } from '@/api/contracts'
 
 interface UseAwdInspectorFormattingOptions {
   contest: Ref<ContestDetailData>
-  challengeLinks: Ref<AdminContestChallengeData[]>
+  challengeLinks: Ref<AdminContestChallengeViewData[]>
   selectedRound: Ref<AWDRoundData | null>
   summaryMetrics: Ref<AWDRoundSummaryData['metrics'] | null>
   manualCheckCount: Ref<number>

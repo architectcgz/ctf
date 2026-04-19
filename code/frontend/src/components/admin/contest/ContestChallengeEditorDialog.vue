@@ -3,8 +3,9 @@ import { computed, reactive, watch } from 'vue'
 
 import AdminSurfaceModal from '@/components/common/modal-templates/AdminSurfaceModal.vue'
 import type {
+  AdminAwdServiceTemplateData,
   AdminChallengeListItem,
-  AdminContestChallengeData,
+  AdminContestChallengeViewData,
   ContestDetailData,
 } from '@/api/contracts'
 
@@ -15,9 +16,11 @@ const props = defineProps<{
   mode: DialogMode
   contestMode: ContestDetailData['mode']
   challengeOptions: AdminChallengeListItem[]
+  templateOptions?: AdminAwdServiceTemplateData[]
   existingChallengeIds: string[]
-  draft?: AdminContestChallengeData | null
+  draft?: AdminContestChallengeViewData | null
   loadingChallengeCatalog: boolean
+  loadingTemplateCatalog?: boolean
   saving: boolean
 }>()
 
@@ -26,6 +29,7 @@ const emit = defineEmits<{
   save: [
     value: {
       challenge_id: number
+      template_id?: number
       points: number
       order: number
       is_visible: boolean
@@ -35,6 +39,7 @@ const emit = defineEmits<{
 
 const form = reactive({
   challenge_id: '',
+  template_id: '',
   points: '100',
   order: '0',
   is_visible: 'true',
@@ -42,6 +47,7 @@ const form = reactive({
 
 const fieldErrors = reactive({
   challenge_id: '',
+  template_id: '',
   points: '',
   order: '',
 })
@@ -53,11 +59,12 @@ const selectableChallenges = computed(() =>
     (item) => props.mode === 'edit' || !props.existingChallengeIds.includes(item.id)
   )
 )
+const selectableTemplates = computed(() => props.templateOptions ?? [])
 
 const isAwdContest = computed(() => props.contestMode === 'awd')
 
 watch(
-  () => [props.open, props.mode, props.draft] as const,
+  () => [props.open, props.mode, props.draft, selectableChallenges.value, selectableTemplates.value] as const,
   ([open]) => {
     if (!open) {
       return
@@ -66,16 +73,20 @@ watch(
       props.mode === 'edit'
         ? props.draft?.challenge_id || ''
         : selectableChallenges.value[0]?.id || ''
+    form.template_id = isAwdContest.value
+      ? props.draft?.awd_template_id || selectableTemplates.value[0]?.id || ''
+      : ''
     form.points = String(props.draft?.points ?? 100)
     form.order = String(props.draft?.order ?? 0)
     form.is_visible = props.draft?.is_visible === false ? 'false' : 'true'
     clearErrors()
   },
-  { immediate: true }
+  { immediate: true, deep: true }
 )
 
 function clearErrors() {
   fieldErrors.challenge_id = ''
+  fieldErrors.template_id = ''
   fieldErrors.points = ''
   fieldErrors.order = ''
 }
@@ -90,6 +101,9 @@ function submit() {
   if (!form.challenge_id.trim()) {
     fieldErrors.challenge_id = '请选择题目'
   }
+  if (isAwdContest.value && !form.template_id.trim()) {
+    fieldErrors.template_id = '请选择服务模板'
+  }
 
   const points = Number(form.points)
   if (!Number.isFinite(points) || points < 1) {
@@ -101,12 +115,18 @@ function submit() {
     fieldErrors.order = '顺序不能小于 0'
   }
 
-  if (fieldErrors.challenge_id || fieldErrors.points || fieldErrors.order) {
+  if (
+    fieldErrors.challenge_id ||
+    fieldErrors.template_id ||
+    fieldErrors.points ||
+    fieldErrors.order
+  ) {
     return
   }
 
   emit('save', {
     challenge_id: Number(form.challenge_id),
+    template_id: isAwdContest.value ? Number(form.template_id) : undefined,
     points,
     order,
     is_visible: form.is_visible === 'true',
@@ -120,7 +140,7 @@ function submit() {
     :title="dialogTitle"
     :subtitle="
       isAwdContest
-        ? '先处理题目关联、顺序、分值和可见性，AWD 深度配置继续留在专用工作台。'
+        ? '在题目池里完成题目关联、服务模板、顺序、分值和可见性；Checker 等检查配置继续留在 AWD 工作台。'
         : '维护赛事题目的关联关系、顺序、分值和可见性。'
     "
     eyebrow="Contest Orchestration"
@@ -130,7 +150,7 @@ function submit() {
   >
     <form class="contest-challenge-dialog" @submit.prevent="submit">
       <p v-if="isAwdContest" class="contest-challenge-dialog__hint">
-        当前弹层只处理题目关联、顺序、分值和可见性；AWD 深度配置在下一阶段完成。
+        这里先完成服务模板、分值和可见性编排；Checker 与预检细节继续在 AWD 配置页补充。
       </p>
 
       <label class="ui-field contest-challenge-dialog__field" for="contest-challenge-select">
@@ -165,6 +185,42 @@ function submit() {
         </template>
         <span v-if="fieldErrors.challenge_id" class="ui-field__error contest-challenge-dialog__error">
           {{ fieldErrors.challenge_id }}
+        </span>
+      </label>
+
+      <label
+        v-if="isAwdContest"
+        class="ui-field contest-challenge-dialog__field"
+        for="contest-challenge-template"
+      >
+        <span class="ui-field__label contest-challenge-dialog__label">服务模板</span>
+        <span
+          class="ui-control-wrap"
+          :class="{
+            'is-disabled': loadingTemplateCatalog || selectableTemplates.length === 0,
+            'is-error': !!fieldErrors.template_id,
+          }"
+        >
+          <select
+            id="contest-challenge-template"
+            v-model="form.template_id"
+            class="ui-control contest-challenge-dialog__control"
+            :disabled="loadingTemplateCatalog || selectableTemplates.length === 0"
+          >
+            <option value="" disabled>
+              {{ loadingTemplateCatalog ? '正在加载服务模板...' : '请选择服务模板' }}
+            </option>
+            <option
+              v-for="template in selectableTemplates"
+              :key="template.id"
+              :value="template.id"
+            >
+              {{ template.name }}
+            </option>
+          </select>
+        </span>
+        <span v-if="fieldErrors.template_id" class="ui-field__error contest-challenge-dialog__error">
+          {{ fieldErrors.template_id }}
         </span>
       </label>
 

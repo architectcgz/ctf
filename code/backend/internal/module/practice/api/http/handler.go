@@ -21,6 +21,7 @@ type Handler struct {
 type practiceService interface {
 	StartChallengeWithContext(ctx context.Context, userID, challengeID int64) (*dto.InstanceResp, error)
 	StartContestChallenge(ctx context.Context, userID, contestID, challengeID int64) (*dto.InstanceResp, error)
+	StartContestAWDService(ctx context.Context, userID, contestID, serviceID int64) (*dto.InstanceResp, error)
 	SubmitFlagWithContext(ctx context.Context, userID, challengeID int64, flag string) (*dto.SubmissionResp, error)
 	ListMyChallengeSubmissions(userID, challengeID int64) ([]*dto.ChallengeSubmissionRecordResp, error)
 	ListTeacherManualReviewSubmissions(requesterID int64, requesterRole string, query *dto.TeacherManualReviewSubmissionQuery) (*dto.PageResult, error)
@@ -71,6 +72,30 @@ func (h *Handler) StartContestChallenge(c *gin.Context) {
 	}
 
 	instance, err := h.service.StartContestChallenge(c.Request.Context(), userID, contestID, challengeID)
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+
+	response.Success(c, instance)
+}
+
+// StartContestAWDService 启动 AWD 服务实例
+// POST /api/v1/contests/:id/awd/services/:sid/instances
+func (h *Handler) StartContestAWDService(c *gin.Context) {
+	userID := authctx.MustCurrentUser(c).UserID
+	contestID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		response.Error(c, errcode.ErrInvalidParams)
+		return
+	}
+	serviceID, err := strconv.ParseInt(c.Param("sid"), 10, 64)
+	if err != nil {
+		response.Error(c, errcode.ErrInvalidParams)
+		return
+	}
+
+	instance, err := h.service.StartContestAWDService(c.Request.Context(), userID, contestID, serviceID)
 	if err != nil {
 		response.FromError(c, err)
 		return

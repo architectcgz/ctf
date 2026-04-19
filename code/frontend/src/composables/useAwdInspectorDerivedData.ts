@@ -146,7 +146,7 @@ export function useAwdInspectorDerivedData({
       }
       if (existing.samples.length < 3) {
         existing.samples.push({
-          service_id: service.id,
+          service_id: service.service_id || '',
           team_name: service.team_name,
           challenge_title: getChallengeTitle(service.challenge_id),
         })

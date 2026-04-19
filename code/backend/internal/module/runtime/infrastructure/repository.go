@@ -271,8 +271,8 @@ func (r *Repository) ListVisibleByUser(ctx context.Context, userID int64) ([]run
 		Table("instances AS inst").
 		Select(strings.Join([]string{
 			"inst.id",
-			"inst.challenge_id",
-			"c.title AS challenge_title",
+			"CASE WHEN co.mode = 'awd' THEN cas.challenge_id ELSE inst.challenge_id END AS challenge_id",
+			"COALESCE(NULLIF(cas.display_name, ''), c.title) AS challenge_title",
 			"c.category",
 			"c.difficulty",
 			"c.flag_type",
@@ -284,10 +284,13 @@ func (r *Repository) ListVisibleByUser(ctx context.Context, userID int64) ([]run
 			"inst.max_extends",
 			"inst.created_at",
 		}, ", ")).
-		Joins("JOIN challenges c ON c.id = inst.challenge_id").
+		Joins("LEFT JOIN contests co ON co.id = inst.contest_id").
+		Joins("LEFT JOIN contest_awd_services AS cas ON cas.id = inst.service_id AND cas.deleted_at IS NULL").
+		Joins("JOIN challenges c ON c.id = CASE WHEN co.mode = 'awd' THEN cas.challenge_id ELSE inst.challenge_id END").
 		Joins("LEFT JOIN team_members AS tm ON tm.team_id = inst.team_id AND tm.contest_id = inst.contest_id AND tm.user_id = ?", userID).
 		Joins("LEFT JOIN contest_registrations AS reg ON reg.contest_id = inst.contest_id AND reg.user_id = ? AND reg.status = ?", userID, model.ContestRegistrationStatusApproved).
 		Where("inst.status IN ?", []string{model.InstanceStatusPending, model.InstanceStatusCreating, model.InstanceStatusRunning, model.InstanceStatusFailed, model.InstanceStatusExpired}).
+		Where("(co.mode IS NULL OR co.mode <> ? OR cas.id IS NOT NULL)", model.ContestModeAWD).
 		Where(strings.Join([]string{
 			"(inst.share_scope = 'shared' AND inst.contest_id IS NULL)",
 			"(inst.share_scope = 'shared' AND inst.contest_id IS NOT NULL AND reg.user_id IS NOT NULL)",
@@ -341,8 +344,8 @@ func (r *Repository) ListTeacherInstances(ctx context.Context, filter runtimepor
 			"u.username AS student_username",
 			"NULLIF(u.student_no, '') AS student_no",
 			"u.class_name",
-			"i.challenge_id",
-			"c.title AS challenge_title",
+			"CASE WHEN co.mode = 'awd' THEN cas.challenge_id ELSE i.challenge_id END AS challenge_id",
+			"COALESCE(NULLIF(cas.display_name, ''), c.title) AS challenge_title",
 			"i.status",
 			"i.access_url",
 			"i.expires_at",
@@ -351,8 +354,11 @@ func (r *Repository) ListTeacherInstances(ctx context.Context, filter runtimepor
 			"i.created_at",
 		}, ", ")).
 		Joins("JOIN users u ON u.id = i.user_id").
-		Joins("JOIN challenges c ON c.id = i.challenge_id").
+		Joins("LEFT JOIN contests co ON co.id = i.contest_id").
+		Joins("LEFT JOIN contest_awd_services AS cas ON cas.id = i.service_id AND cas.deleted_at IS NULL").
+		Joins("JOIN challenges c ON c.id = CASE WHEN co.mode = 'awd' THEN cas.challenge_id ELSE i.challenge_id END").
 		Where("i.status <> ?", model.InstanceStatusStopped).
+		Where("(co.mode IS NULL OR co.mode <> ? OR cas.id IS NOT NULL)", model.ContestModeAWD).
 		Where("u.role = ? AND u.deleted_at IS NULL", model.RoleStudent)
 
 	if filter.ClassName != "" {

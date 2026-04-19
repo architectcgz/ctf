@@ -22,17 +22,6 @@ func (s *AWDService) loadContestTeams(ctx context.Context, contestID int64) (map
 	return result, nil
 }
 
-func (s *AWDService) ensureContestChallenge(ctx context.Context, contestID, challengeID int64) error {
-	ok, err := s.repo.ContestHasChallenge(ctx, contestID, challengeID)
-	if err != nil {
-		return errcode.ErrInternal.WithCause(err)
-	}
-	if !ok {
-		return errcode.ErrChallengeNotInContest
-	}
-	return nil
-}
-
 func (s *AWDService) loadChallenge(ctx context.Context, challengeID int64) (*model.Challenge, error) {
 	challenge, err := s.repo.FindChallengeByID(ctx, challengeID)
 	if err != nil {

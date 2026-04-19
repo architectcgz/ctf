@@ -1054,6 +1054,9 @@ func newTestRepository(t *testing.T) *runtimeTestRepository {
 	if err := db.AutoMigrate(&model.Team{}, &model.TeamMember{}); err != nil {
 		t.Fatalf("migrate tables: %v", err)
 	}
+	if err := db.AutoMigrate(&model.Contest{}, &model.ContestAWDService{}); err != nil {
+		t.Fatalf("migrate awd tables: %v", err)
+	}
 	return &runtimeTestRepository{
 		Repository: runtimeinfra.NewRepository(db),
 		db:         db,

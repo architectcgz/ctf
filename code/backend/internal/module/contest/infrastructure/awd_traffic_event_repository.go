@@ -12,6 +12,7 @@ import (
 type runtimeProxyTrafficInstanceRow struct {
 	ContestID   *int64 `gorm:"column:contest_id"`
 	TeamID      *int64 `gorm:"column:team_id"`
+	ServiceID   *int64 `gorm:"column:service_id"`
 	ChallengeID int64  `gorm:"column:challenge_id"`
 }
 
@@ -20,7 +21,7 @@ func (r *AWDRepository) RecordRuntimeProxyTrafficEvent(ctx context.Context, inst
 	if err != nil || instanceScope == nil {
 		return err
 	}
-	if instanceScope.ContestID == nil || instanceScope.TeamID == nil || instanceScope.ChallengeID <= 0 {
+	if instanceScope.ContestID == nil || instanceScope.TeamID == nil || instanceScope.ServiceID == nil || *instanceScope.ServiceID <= 0 || instanceScope.ChallengeID <= 0 {
 		return nil
 	}
 
@@ -45,6 +46,7 @@ func (r *AWDRepository) RecordRuntimeProxyTrafficEvent(ctx context.Context, inst
 		RoundID:        round.ID,
 		AttackerTeamID: attackerTeam.ID,
 		VictimTeamID:   *instanceScope.TeamID,
+		ServiceID:      *instanceScope.ServiceID,
 		ChallengeID:    instanceScope.ChallengeID,
 		Method:         trimToLength(method, 16),
 		Path:           trimToLength(requestPath, 1024),
@@ -65,6 +67,7 @@ func (r *AWDRepository) ListTrafficEvents(ctx context.Context, contestID, roundI
 			COALESCE(att.name, '') AS attacker_team_name,
 			te.victim_team_id AS victim_team_id,
 			COALESCE(vic.name, '') AS victim_team_name,
+			te.service_id AS service_id,
 			te.challenge_id AS challenge_id,
 			COALESCE(ch.title, '') AS challenge_title,
 			te.method AS method,
@@ -85,9 +88,10 @@ func (r *AWDRepository) ListTrafficEvents(ctx context.Context, contestID, roundI
 func (r *AWDRepository) loadRuntimeProxyTrafficInstanceScope(ctx context.Context, instanceID int64) (*runtimeProxyTrafficInstanceRow, error) {
 	var row runtimeProxyTrafficInstanceRow
 	err := r.dbWithContext(ctx).
-		Table("instances").
-		Select("contest_id, team_id, challenge_id").
-		Where("id = ?", instanceID).
+		Table("instances AS inst").
+		Select("inst.contest_id, inst.team_id, inst.service_id, cas.challenge_id AS challenge_id").
+		Joins("LEFT JOIN contest_awd_services AS cas ON cas.id = inst.service_id AND cas.deleted_at IS NULL").
+		Where("inst.id = ?", instanceID).
 		First(&row).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {

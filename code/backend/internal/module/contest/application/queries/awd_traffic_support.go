@@ -26,6 +26,7 @@ func buildAWDTrafficEvents(records []contestports.AWDTrafficEventRecord) []*dto.
 			VictimTeamID:     record.VictimTeamID,
 			VictimTeam:       record.VictimTeamName,
 			VictimTeamName:   record.VictimTeamName,
+			ServiceID:        record.ServiceID,
 			ChallengeID:      record.ChallengeID,
 			ChallengeTitle:   record.ChallengeTitle,
 			Method:           strings.TrimSpace(record.Method),
@@ -60,6 +61,9 @@ func filterAWDTrafficEvents(items []*dto.AWDTrafficEventResp, req *dto.ListAWDTr
 			continue
 		}
 		if req.VictimTeamID > 0 && item.VictimTeamID != req.VictimTeamID {
+			continue
+		}
+		if req.ServiceID > 0 && item.ServiceID != req.ServiceID {
 			continue
 		}
 		if req.ChallengeID > 0 && item.ChallengeID != req.ChallengeID {

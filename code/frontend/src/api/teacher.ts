@@ -187,13 +187,20 @@ interface RawTeacherAWDReviewAttackItem extends Omit<
 
 interface RawTeacherAWDReviewTrafficItem extends Omit<
   TeacherAWDReviewTrafficItemData,
-  'id' | 'contest_id' | 'round_id' | 'attacker_team_id' | 'victim_team_id' | 'challenge_id'
+  | 'id'
+  | 'contest_id'
+  | 'round_id'
+  | 'attacker_team_id'
+  | 'victim_team_id'
+  | 'service_id'
+  | 'challenge_id'
 > {
   id: string | number
   contest_id: string | number
   round_id: string | number
   attacker_team_id: string | number
   victim_team_id: string | number
+  service_id?: string | number
   challenge_id: string | number
 }
 
@@ -907,6 +914,7 @@ function normalizeTeacherAWDReviewTraffic(
     round_id: String(item.round_id),
     attacker_team_id: String(item.attacker_team_id),
     victim_team_id: String(item.victim_team_id),
+    service_id: item.service_id == null ? undefined : String(item.service_id),
     challenge_id: String(item.challenge_id),
   }
 }

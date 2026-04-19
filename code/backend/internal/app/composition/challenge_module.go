@@ -24,6 +24,7 @@ type asyncTaskCloser interface {
 type ChallengeModule struct {
 	BackgroundCloser          asyncTaskCloser
 	AWDServiceTemplateHandler *challengehttp.AWDServiceTemplateHandler
+	AWDServiceTemplateQuery   challengeports.AWDServiceTemplateQueryRepository
 	Catalog                   challengecontracts.ChallengeContract
 	FlagHandler               *challengehttp.FlagHandler
 	FlagValidator             challengecontracts.FlagValidator
@@ -71,6 +72,7 @@ func BuildChallengeModule(root *Root, runtime *RuntimeModule, ops *OpsModule) (*
 	return &ChallengeModule{
 		BackgroundCloser:          imageCommandService,
 		AWDServiceTemplateHandler: awdServiceTemplateHandler,
+		AWDServiceTemplateQuery:   deps.awdServiceTemplateQueryRepo,
 		Catalog:                   deps.catalog,
 		FlagHandler:               flagHandler,
 		FlagValidator:             flagValidator,

@@ -3,7 +3,7 @@ import { computed, onBeforeUnmount, ref, toValue, watch, type MaybeRefOrGetter }
 import {
   getContestAWDWorkspace,
   getScoreboard,
-  startContestChallengeInstance,
+  startContestAWDServiceInstance,
   submitContestAWDAttack,
 } from '@/api/contest'
 import type {
@@ -30,7 +30,7 @@ export function useContestAWDWorkspace(options: UseContestAWDWorkspaceOptions) {
   const loading = ref(false)
   const error = ref('')
   const submitResult = ref<AWDAttackLogData | null>(null)
-  const startingChallengeId = ref('')
+  const startingServiceKey = ref('')
   const submittingKey = ref('')
   const lastSyncedAt = ref<string | null>(null)
 
@@ -101,15 +101,15 @@ export function useContestAWDWorkspace(options: UseContestAWDWorkspaceOptions) {
     }
   }
 
-  async function startService(challengeId: string): Promise<void> {
+  async function startService(serviceId: string): Promise<void> {
     const contestId = toValue(options.contestId)
-    if (!contestId || startingChallengeId.value) {
+    if (!contestId || !serviceId || startingServiceKey.value) {
       return
     }
 
-    startingChallengeId.value = challengeId
+    startingServiceKey.value = serviceId
     try {
-      const instance = await startContestChallengeInstance(contestId, challengeId)
+      const instance = await startContestAWDServiceInstance(contestId, serviceId)
       await refreshAll()
       if (instance.access_url) {
         toast.success('服务已就绪，可直接进入')
@@ -120,7 +120,7 @@ export function useContestAWDWorkspace(options: UseContestAWDWorkspaceOptions) {
       console.error(err)
       toast.error(err instanceof Error ? err.message : '启动服务失败')
     } finally {
-      startingChallengeId.value = ''
+      startingServiceKey.value = ''
     }
   }
 
@@ -196,7 +196,7 @@ export function useContestAWDWorkspace(options: UseContestAWDWorkspaceOptions) {
     error,
     hasTeam,
     submitResult,
-    startingChallengeId,
+    startingServiceKey,
     submittingKey,
     shouldAutoRefresh,
     lastSyncedAt,

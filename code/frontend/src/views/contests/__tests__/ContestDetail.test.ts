@@ -15,6 +15,7 @@ const contestApiMocks = vi.hoisted(() => ({
   createTeam: vi.fn(),
   joinTeam: vi.fn(),
   kickTeamMember: vi.fn(),
+  startContestAWDServiceInstance: vi.fn(),
   startContestChallengeInstance: vi.fn(),
   submitContestAWDAttack: vi.fn(),
   submitContestFlag: vi.fn(),
@@ -63,6 +64,7 @@ describe('ContestDetail', () => {
     contestApiMocks.createTeam.mockReset()
     contestApiMocks.joinTeam.mockReset()
     contestApiMocks.kickTeamMember.mockReset()
+    contestApiMocks.startContestAWDServiceInstance.mockReset()
     contestApiMocks.startContestChallengeInstance.mockReset()
     contestApiMocks.submitContestAWDAttack.mockReset()
     contestApiMocks.submitContestFlag.mockReset()
@@ -127,6 +129,17 @@ describe('ContestDetail', () => {
       frozen: false,
     })
     contestApiMocks.startContestChallengeInstance.mockResolvedValue({
+      id: '900',
+      challenge_id: '101',
+      status: 'running',
+      share_scope: 'per_team',
+      access_url: 'http://red.internal',
+      flag_type: 'dynamic',
+      expires_at: '2024-03-15T12:00:00Z',
+      remaining_extends: 1,
+      created_at: '2024-03-15T09:02:00Z',
+    })
+    contestApiMocks.startContestAWDServiceInstance.mockResolvedValue({
       id: '900',
       challenge_id: '101',
       status: 'running',
@@ -261,6 +274,7 @@ describe('ContestDetail', () => {
       {
         id: '201',
         challenge_id: '101',
+        awd_service_id: '7009',
         title: 'Service A',
         category: 'web',
         difficulty: 'medium',
@@ -287,6 +301,7 @@ describe('ContestDetail', () => {
       },
       services: [
         {
+          service_id: '7009',
           challenge_id: '101',
           access_url: 'http://red.internal',
           service_status: 'up',
@@ -304,6 +319,7 @@ describe('ContestDetail', () => {
           team_name: 'Blue',
           services: [
             {
+              service_id: '7009',
               challenge_id: '101',
               access_url: 'http://blue.internal',
             },
@@ -509,6 +525,7 @@ describe('ContestDetail', () => {
       {
         id: '201',
         challenge_id: '101',
+        awd_service_id: '7009',
         title: 'Service A',
         category: 'web',
         difficulty: 'medium',
@@ -552,6 +569,7 @@ describe('ContestDetail', () => {
           team_name: 'Blue',
           services: [
             {
+              service_id: '7009',
               challenge_id: '101',
               access_url: 'http://blue.internal',
             },
@@ -562,6 +580,7 @@ describe('ContestDetail', () => {
           team_name: 'Green',
           services: [
             {
+              service_id: '7009',
               challenge_id: '101',
               access_url: '',
             },
@@ -642,6 +661,7 @@ describe('ContestDetail', () => {
       {
         id: '201',
         challenge_id: '101',
+        awd_service_id: '7009',
         title: 'Service A',
         category: 'web',
         difficulty: 'medium',
@@ -998,6 +1018,156 @@ describe('ContestDetail', () => {
         .findAll('[data-testid="awd-feedback-challenge-title"]')
         .map((node) => node.text())
     ).toContain('Bank Portal')
+  })
+
+  it('学生 AWD 服务匹配在存在 awd_service_id 时不应再回退到 challenge_id', async () => {
+    contestApiMocks.getContestDetail.mockResolvedValueOnce({
+      id: '1',
+      title: '2026 春季校园 AWD 联赛',
+      description: '测试描述',
+      status: 'running',
+      mode: 'awd',
+      starts_at: '2024-03-15T09:00:00Z',
+      ends_at: '2024-03-15T21:00:00Z',
+    })
+    contestApiMocks.getContestChallenges.mockResolvedValueOnce([
+      {
+        id: '201',
+        challenge_id: '101',
+        awd_service_id: '7010',
+        title: 'Admin Gateway',
+        category: 'web',
+        difficulty: 'medium',
+        points: 100,
+        solved_count: 0,
+        is_solved: false,
+      },
+    ])
+    contestApiMocks.getContestAWDWorkspace.mockResolvedValueOnce({
+      contest_id: '1',
+      current_round: {
+        id: '41',
+        contest_id: '1',
+        round_number: 2,
+        status: 'running',
+        attack_score: 60,
+        defense_score: 40,
+        created_at: '2024-03-15T09:00:00Z',
+        updated_at: '2024-03-15T09:01:00Z',
+      },
+      my_team: {
+        team_id: '13',
+        team_name: 'Red',
+      },
+      services: [
+        {
+          service_id: '7009',
+          challenge_id: '101',
+          access_url: 'http://wrong.internal',
+          service_status: 'up',
+          checker_type: 'http_standard',
+          attack_received: 0,
+          sla_score: 18,
+          defense_score: 40,
+          attack_score: 0,
+          updated_at: '2024-03-15T09:02:00Z',
+        },
+      ],
+      targets: [
+        {
+          team_id: '14',
+          team_name: 'Blue',
+          services: [
+            {
+              service_id: '7009',
+              challenge_id: '101',
+              access_url: 'http://wrong-target.internal',
+            },
+          ],
+        },
+      ],
+      recent_events: [],
+    })
+
+    const wrapper = mount(ContestDetail, {
+      global: {
+        plugins: [createPinia(), router],
+      },
+    })
+
+    await flushPromises()
+
+    expect(wrapper.text()).not.toContain('http://wrong.internal')
+    expect(wrapper.text()).not.toContain('http://wrong-target.internal')
+  })
+
+  it('学生 AWD 面板不应渲染缺少 awd_service_id 的遗留题目', async () => {
+    contestApiMocks.getContestDetail.mockResolvedValueOnce({
+      id: '1',
+      title: '2026 春季校园 AWD 联赛',
+      description: '测试描述',
+      status: 'running',
+      mode: 'awd',
+      starts_at: '2024-03-15T09:00:00Z',
+      ends_at: '2024-03-15T21:00:00Z',
+    })
+    contestApiMocks.getContestChallenges.mockResolvedValueOnce([
+      {
+        id: '201',
+        challenge_id: '101',
+        title: 'Legacy Gateway',
+        category: 'web',
+        difficulty: 'medium',
+        points: 100,
+        solved_count: 0,
+        is_solved: false,
+      },
+    ])
+    contestApiMocks.getContestAWDWorkspace.mockResolvedValueOnce({
+      contest_id: '1',
+      current_round: {
+        id: '41',
+        contest_id: '1',
+        round_number: 2,
+        status: 'running',
+        attack_score: 60,
+        defense_score: 40,
+        created_at: '2024-03-15T09:00:00Z',
+        updated_at: '2024-03-15T09:01:00Z',
+      },
+      my_team: {
+        team_id: '13',
+        team_name: 'Red',
+      },
+      services: [
+        {
+          service_id: '7009',
+          challenge_id: '101',
+          access_url: 'http://legacy.internal',
+          service_status: 'up',
+          checker_type: 'http_standard',
+          attack_received: 0,
+          sla_score: 18,
+          defense_score: 40,
+          attack_score: 0,
+          updated_at: '2024-03-15T09:02:00Z',
+        },
+      ],
+      targets: [],
+      recent_events: [],
+    })
+
+    const wrapper = mount(ContestDetail, {
+      global: {
+        plugins: [createPinia(), router],
+      },
+    })
+
+    await flushPromises()
+
+    expect(wrapper.text()).not.toContain('Legacy Gateway')
+    expect(wrapper.text()).toContain('当前赛事还没有发布可用服务')
+    expect(wrapper.text()).toContain('当前没有可选攻击题目。')
   })
 
   it('学生 AWD 提交结果提示应优先按 service 标识回填题目标题', async () => {

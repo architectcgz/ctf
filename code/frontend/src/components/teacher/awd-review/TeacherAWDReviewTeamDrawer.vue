@@ -141,7 +141,16 @@ function formatServiceRef(serviceId?: string): string {
         <div v-else class="awd-review-drawer__list">
           <article v-for="event in traffic" :key="event.id" class="awd-review-drawer__item">
             <div>
-              <strong>{{ event.method }} {{ event.path }}</strong>
+              <div class="awd-review-drawer__item-head">
+                <strong>{{ event.method }} {{ event.path }}</strong>
+                <span
+                  v-if="event.service_id"
+                  class="awd-review-drawer__item-chip"
+                  data-testid="awd-review-drawer-traffic-service-id"
+                >
+                  {{ formatServiceRef(event.service_id) }}
+                </span>
+              </div>
               <p>
                 {{ event.attacker_team_name }} → {{ event.victim_team_name }} ·
                 {{ event.challenge_title }}

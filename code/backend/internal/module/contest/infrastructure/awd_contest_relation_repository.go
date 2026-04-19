@@ -97,6 +97,7 @@ func (r *AWDRepository) ListReadinessChallengesByContest(ctx context.Context, co
 			title = row.ChallengeTitle
 		}
 		records = append(records, contestports.AWDReadinessChallengeRecord{
+			ServiceID:         row.ServiceID,
 			ChallengeID:       row.ChallengeID,
 			Title:             title,
 			CheckerType:       resolveContestAWDServiceCheckerType(runtimeConfig),
@@ -127,6 +128,7 @@ func (r *AWDRepository) listContestAWDServiceRuntimeRows(ctx context.Context, co
 		`).
 		Joins("JOIN challenges AS c ON c.id = cas.challenge_id").
 		Where("cas.contest_id = ?", contestID).
+		Where("cas.deleted_at IS NULL").
 		Order("cas.\"order\" ASC, cas.id ASC").
 		Scan(&rows).Error; err != nil {
 		return nil, err
@@ -201,17 +203,6 @@ func marshalContestAWDServiceJSON(value any) string {
 		return ""
 	}
 	return string(raw)
-}
-
-func (r *AWDRepository) ContestHasChallenge(ctx context.Context, contestID, challengeID int64) (bool, error) {
-	var count int64
-	if err := r.dbWithContext(ctx).
-		Model(&model.ContestChallenge{}).
-		Where("contest_id = ? AND challenge_id = ?", contestID, challengeID).
-		Count(&count).Error; err != nil {
-		return false, err
-	}
-	return count > 0, nil
 }
 
 func (r *AWDRepository) FindChallengeByID(ctx context.Context, challengeID int64) (*model.Challenge, error) {

@@ -12,11 +12,10 @@ import (
 type AWDRepository interface {
 	WithinTransaction(ctx context.Context, fn func(repo AWDRepository) error) error
 	CreateContestAWDService(ctx context.Context, service *model.ContestAWDService) error
-	UpdateContestAWDService(ctx context.Context, contestID, challengeID int64, updates map[string]any) error
-	FindContestAWDServiceByContestAndChallenge(ctx context.Context, contestID, challengeID int64) (*model.ContestAWDService, error)
+	UpdateContestAWDServiceByContestAndID(ctx context.Context, contestID, serviceID int64, updates map[string]any) error
 	FindContestAWDServiceByContestAndID(ctx context.Context, contestID, serviceID int64) (*model.ContestAWDService, error)
 	ListContestAWDServicesByContest(ctx context.Context, contestID int64) ([]model.ContestAWDService, error)
-	DeleteContestAWDServiceByContestAndChallenge(ctx context.Context, contestID, challengeID int64) error
+	DeleteContestAWDServiceByContestAndID(ctx context.Context, contestID, serviceID int64) error
 	CreateRound(ctx context.Context, round *model.AWDRound) error
 	UpsertRound(ctx context.Context, round *model.AWDRound) error
 	ListRoundsByContest(ctx context.Context, contestID int64) ([]model.AWDRound, error)
@@ -28,11 +27,10 @@ type AWDRepository interface {
 	ListServiceDefinitionsByContest(ctx context.Context, contestID int64) ([]AWDServiceDefinition, error)
 	ListReadinessChallengesByContest(ctx context.Context, contestID int64) ([]AWDReadinessChallengeRecord, error)
 	ListChallengesByContest(ctx context.Context, contestID int64) ([]model.Challenge, error)
-	ContestHasChallenge(ctx context.Context, contestID, challengeID int64) (bool, error)
 	FindRegistration(ctx context.Context, contestID, userID int64) (*model.ContestRegistration, error)
 	FindContestTeamByMember(ctx context.Context, contestID, userID int64) (*model.Team, error)
 	FindChallengeByID(ctx context.Context, challengeID int64) (*model.Challenge, error)
-	ListServiceInstancesByContest(ctx context.Context, contestID int64, challengeIDs []int64) ([]AWDServiceInstance, error)
+	ListServiceInstancesByContest(ctx context.Context, contestID int64, serviceIDs []int64) ([]AWDServiceInstance, error)
 	UpsertServiceCheck(ctx context.Context, roundID, teamID, serviceID, challengeID int64, serviceStatus, checkResult string, defenseScore int, updatedAt time.Time) (*model.AWDTeamService, error)
 	UpsertTeamServices(ctx context.Context, records []model.AWDTeamService) error
 	ListServicesByRound(ctx context.Context, roundID int64) ([]model.AWDTeamService, error)
@@ -63,6 +61,7 @@ type AWDServiceDefinition struct {
 }
 
 type AWDReadinessChallengeRecord struct {
+	ServiceID         int64                           `gorm:"column:service_id"`
 	ChallengeID       int64                           `gorm:"column:challenge_id"`
 	Title             string                          `gorm:"column:title"`
 	CheckerType       model.AWDCheckerType            `gorm:"column:awd_checker_type"`
@@ -95,6 +94,7 @@ type AWDTrafficEventRecord struct {
 	AttackerTeamName string
 	VictimTeamID     int64
 	VictimTeamName   string
+	ServiceID        int64
 	ChallengeID      int64
 	ChallengeTitle   string
 	Method           string
@@ -105,6 +105,7 @@ type AWDTrafficEventRecord struct {
 }
 
 type AWDCheckerPreviewContext struct {
+	ServiceID   int64
 	AccessURL   string
 	PreviewFlag string
 	RoundNumber int
@@ -113,6 +114,7 @@ type AWDCheckerPreviewContext struct {
 }
 
 type AWDServicePreviewRequest struct {
+	ServiceID     int64
 	ChallengeID   int64
 	CheckerType   model.AWDCheckerType
 	CheckerConfig string

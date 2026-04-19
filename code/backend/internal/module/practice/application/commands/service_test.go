@@ -1149,6 +1149,104 @@ func TestStartChallengeQueuesProvisioningWithoutSynchronousContainerCreation(t *
 	}
 }
 
+func TestStartContestAWDServiceDoesNotRequireContestChallengeLookup(t *testing.T) {
+	t.Parallel()
+
+	teamID := int64(4104)
+	repo := &stubPracticeRepository{
+		findContestByIDWithContextFn: func(ctx context.Context, contestID int64) (*model.Contest, error) {
+			if contestID != 3104 {
+				t.Fatalf("unexpected contest id: %d", contestID)
+			}
+			return &model.Contest{
+				ID:     contestID,
+				Mode:   model.ContestModeAWD,
+				Status: model.ContestStatusRunning,
+			}, nil
+		},
+		findContestAWDServiceWithContextFn: func(ctx context.Context, contestID, serviceID int64) (*model.ContestAWDService, error) {
+			if contestID != 3104 || serviceID != 7104 {
+				t.Fatalf("unexpected awd service lookup: contest=%d service=%d", contestID, serviceID)
+			}
+			return &model.ContestAWDService{
+				ID:          serviceID,
+				ContestID:   contestID,
+				ChallengeID: 2104,
+				IsVisible:   true,
+			}, nil
+		},
+		findContestChallengeWithContextFn: func(ctx context.Context, contestID, challengeID int64) (*model.ContestChallenge, error) {
+			t.Fatalf("unexpected contest challenge lookup for awd start: contest=%d challenge=%d", contestID, challengeID)
+			return nil, nil
+		},
+		findContestRegistrationWithContextFn: func(ctx context.Context, contestID, userID int64) (*model.ContestRegistration, error) {
+			if contestID != 3104 || userID != 5104 {
+				t.Fatalf("unexpected registration lookup: contest=%d user=%d", contestID, userID)
+			}
+			return &model.ContestRegistration{
+				ContestID: contestID,
+				UserID:    userID,
+				TeamID:    &teamID,
+				Status:    model.ContestRegistrationStatusApproved,
+			}, nil
+		},
+		createInstanceFn: func(instance *model.Instance) error {
+			instance.ID = 9104
+			return nil
+		},
+	}
+
+	service := NewService(
+		repo,
+		&stubPracticeChallengeContract{
+			findByIDFn: func(id int64) (*model.Challenge, error) {
+				if id != 2104 {
+					t.Fatalf("unexpected challenge lookup: %d", id)
+				}
+				return &model.Challenge{
+					ID:       id,
+					Status:   model.ChallengeStatusPublished,
+					ImageID:  104,
+					FlagType: model.FlagTypeStatic,
+					FlagHash: "flag{awd-static}",
+				}, nil
+			},
+		},
+		nil,
+		&stubPracticeInstanceStore{},
+		&stubPracticeRuntimeService{},
+		nil,
+		nil,
+		nil,
+		&config.Config{
+			Container: config.ContainerConfig{
+				PortRangeStart:       30000,
+				PortRangeEnd:         30010,
+				DefaultTTL:           time.Hour,
+				MaxConcurrentPerUser: 3,
+				Scheduler: config.ContainerSchedulerConfig{
+					Enabled: true,
+				},
+			},
+		},
+		nil,
+	)
+
+	resp, err := service.StartContestAWDService(context.Background(), 5104, 3104, 7104)
+	if err != nil {
+		t.Fatalf("StartContestAWDService() error = %v", err)
+	}
+	if resp.ID != 9104 {
+		t.Fatalf("expected created awd service instance id, got %+v", resp)
+	}
+	if resp.ChallengeID != 2104 {
+		t.Fatalf("expected awd service challenge id 2104, got %+v", resp)
+	}
+	if resp.Status != model.InstanceStatusPending {
+		t.Fatalf("expected pending awd service instance, got %+v", resp)
+	}
+}
+
 func TestRunProvisioningLoopPromotesPendingInstanceToRunning(t *testing.T) {
 	t.Parallel()
 

@@ -43,6 +43,11 @@ func buildAWDRoundFlag(contestID int64, roundNumber int, teamID, challengeID int
 	return contestdomain.BuildAWDRoundFlag(contestID, roundNumber, teamID, challengeID, secret, prefix)
 }
 
+func awdServiceIDPtr(contestID, challengeID int64) *int64 {
+	id := defaultAWDContestServiceID(contestID, challengeID)
+	return &id
+}
+
 func newAWDRoundUpdaterForTest(db *gorm.DB, redisClient *redis.Client, cfg config.ContestAWDConfig, flagSecret string, injector contestports.AWDFlagInjector, log *zap.Logger) *contestjobs.AWDRoundUpdater {
 	return contestjobs.NewAWDRoundUpdater(contestinfra.NewAWDRepository(db), redisClient, cfg, flagSecret, injector, log)
 }
