@@ -270,7 +270,7 @@ onUnmounted(() => {
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: var(--workspace-directory-toolbar-gap-bottom, 1.5rem);
 }
 
 .workspace-directory-toolbar__main,

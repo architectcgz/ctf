@@ -331,22 +331,6 @@ function openContestWorkbench(contest: ContestDetailData) {
   gap: var(--space-3);
 }
 
-.list-heading {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: var(--space-3);
-}
-
-.list-heading__title {
-  margin: 0.35rem 0 0;
-  font-size: clamp(1.2rem, 1rem + 0.5vw, 1.45rem);
-  font-weight: 700;
-  line-height: 1.15;
-  color: var(--journal-ink);
-}
-
 .contest-section-meta {
   font-size: var(--font-size-0-82);
   color: var(--journal-muted);
@@ -374,13 +358,7 @@ function openContestWorkbench(contest: ContestDetailData) {
 
 .contest-directory-section,
 .contest-create-panel {
-  display: grid;
-  gap: var(--space-4);
-  padding: var(--space-5) var(--space-5-5);
-}
-
-.contest-directory-section :deep(.workspace-directory-toolbar) {
-  margin-bottom: 0;
+  --workspace-directory-section-padding: var(--space-5) var(--space-5-5);
 }
 
 .contest-create-head {
@@ -446,7 +424,7 @@ function openContestWorkbench(contest: ContestDetailData) {
 
   .contest-directory-section,
   .contest-create-panel {
-    padding: var(--space-4-5) var(--space-4);
+    --workspace-directory-section-padding: var(--space-4-5) var(--space-4);
   }
 
   .contest-panel-actions {

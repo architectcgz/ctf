@@ -509,30 +509,6 @@ watch(
   padding-top: var(--space-1);
 }
 
-.list-heading {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: var(--space-3);
-}
-
-.list-heading__title {
-  margin: 0.35rem 0 0;
-  font-size: clamp(1.2rem, 1rem + 0.5vw, 1.45rem);
-  font-weight: 700;
-  line-height: 1.15;
-  color: var(--journal-ink);
-}
-
-.audit-board__head {
-  margin-bottom: 0;
-}
-
-.admin-board :deep(.workspace-directory-toolbar) {
-  margin-bottom: 0;
-}
-
 .admin-caption {
   font-size: var(--font-size-0-82);
   line-height: 1.6;
@@ -682,11 +658,6 @@ watch(
 }
 
 @media (max-width: 720px) {
-  .list-heading {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
   .admin-summary-grid {
     grid-template-columns: minmax(0, 1fr);
   }

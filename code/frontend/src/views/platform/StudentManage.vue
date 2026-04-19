@@ -256,8 +256,10 @@ onMounted(() => {
 </script>
 
 <template>
-  <section class="workspace-shell admin-student-manage-shell">
-    <div class="admin-student-manage-shell__content">
+  <section
+    class="workspace-shell journal-shell journal-shell-admin journal-notes-card journal-hero admin-student-manage-shell flex min-h-full flex-1 flex-col"
+  >
+    <main class="content-pane admin-student-manage-shell__content">
       <header class="admin-student-manage-shell__hero">
         <div class="admin-student-manage-shell__hero-main">
           <div class="workspace-overline">Student Workspace</div>
@@ -273,7 +275,7 @@ onMounted(() => {
       </header>
 
       <div
-        class="admin-student-manage-shell__summary progress-strip metric-panel-grid metric-panel-default-surface"
+        class="admin-summary-grid admin-student-manage-shell__summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"
       >
         <article class="journal-note progress-card metric-panel-card">
           <div class="admin-student-manage-shell__metric-head">
@@ -361,14 +363,14 @@ onMounted(() => {
 
         <div
           v-if="loading"
-          class="workspace-directory-loading admin-student-manage-directory__loading"
+          class="workspace-directory-loading"
         >
           正在同步学生目录...
         </div>
 
         <AppEmpty
           v-else-if="students.length === 0 && !hasActiveFilters && !hasAnyStudents"
-          class="workspace-directory-empty admin-student-manage-directory__empty"
+          class="workspace-directory-empty"
           icon="Users"
           title="暂无学生"
           description="当前平台还没有可查看的学生数据。"
@@ -376,7 +378,7 @@ onMounted(() => {
 
         <AppEmpty
           v-else-if="students.length === 0"
-          class="workspace-directory-empty admin-student-manage-directory__empty"
+          class="workspace-directory-empty"
           icon="Search"
           title="没有匹配学生"
           description="调整关键词、班级或学号后再试。"
@@ -458,7 +460,7 @@ onMounted(() => {
           重试
         </button>
       </div>
-    </div>
+    </main>
   </section>
 </template>
 
@@ -467,6 +469,9 @@ onMounted(() => {
   --workspace-line-soft: color-mix(in srgb, var(--color-text-primary) 10%, transparent);
   --workspace-shell-bg: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
   --workspace-brand: color-mix(in srgb, var(--color-primary) 82%, var(--journal-ink));
+  --student-directory-border: color-mix(in srgb, var(--journal-border) 72%, transparent);
+  --student-directory-row-divider: color-mix(in srgb, var(--journal-border) 58%, transparent);
+  --admin-control-border: color-mix(in srgb, var(--journal-border) 76%, transparent);
   background:
     linear-gradient(
       180deg,
@@ -481,12 +486,8 @@ onMounted(() => {
 }
 
 .admin-student-manage-shell__content {
-  display: flex;
-  min-height: 100%;
-  flex: 1 1 auto;
-  flex-direction: column;
-  gap: 1.5rem;
-  padding: 1.6rem 1.6rem 1.2rem;
+  display: grid;
+  gap: var(--workspace-directory-page-block-gap);
 }
 
 .admin-student-manage-shell__hero {
@@ -534,6 +535,7 @@ onMounted(() => {
 }
 
 .admin-student-manage-shell__summary {
+  --admin-summary-grid-columns: repeat(3, minmax(0, 1fr));
   --metric-panel-border: color-mix(in srgb, var(--workspace-brand) 16%, var(--workspace-line-soft));
   --metric-panel-background:
     radial-gradient(circle at top left, color-mix(in srgb, var(--workspace-brand) 10%, transparent), transparent 15rem),
@@ -552,90 +554,47 @@ onMounted(() => {
   color: var(--journal-ink);
 }
 
-.list-heading {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 0.9rem;
-}
-
-.list-heading__title {
-  margin: 0.35rem 0 0;
-  font-size: clamp(1.2rem, 1rem + 0.5vw, 1.45rem);
-  font-weight: 700;
-  line-height: 1.15;
-  color: var(--journal-ink);
-}
-
-.admin-student-manage-directory {
+.admin-student-manage-filter-grid {
   display: grid;
   gap: var(--space-4);
 }
 
-.admin-student-manage-directory > .list-heading {
-  margin-bottom: 0;
-}
-
-.admin-student-manage-directory :deep(.workspace-directory-toolbar) {
-  margin-bottom: 0;
-}
-
-.admin-student-manage-filter-grid {
-  display: grid;
-  gap: 0.85rem;
-}
-
 .admin-student-manage-filter-field {
   display: grid;
-  gap: 0.45rem;
+  gap: var(--space-2);
 }
 
 .admin-student-manage-filter-field__label {
-  font-size: 0.8rem;
-  font-weight: 600;
+  font-size: var(--font-size-0-72);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   color: var(--journal-muted);
 }
 
 .admin-student-manage-filter-field__control {
   min-height: 2.75rem;
-  border: 1px solid color-mix(in srgb, var(--journal-border) 76%, transparent);
-  border-radius: 1rem;
-  background: color-mix(in srgb, var(--journal-surface) 92%, transparent);
-  padding: 0 0.9rem;
+  border: 1px solid var(--admin-control-border);
+  border-radius: 0.95rem;
+  background: color-mix(in srgb, var(--journal-surface) 92%, var(--color-bg-base));
+  padding: 0 var(--space-4);
+  font-size: var(--font-size-0-875);
   color: var(--journal-ink);
+  outline: none;
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease;
 }
 
-.admin-student-manage-directory__loading,
-.admin-student-manage-directory__empty {
-  border: 1px solid color-mix(in srgb, var(--journal-border) 72%, transparent);
-  border-radius: 1.25rem;
-  background: color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base));
-}
-
-.admin-student-manage-directory__loading {
-  padding: 1.4rem 1.2rem;
-  font-size: 0.95rem;
-  color: var(--journal-muted);
+.admin-student-manage-filter-field__control:focus {
+  border-color: color-mix(in srgb, var(--journal-accent) 44%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--journal-accent) 12%, transparent);
 }
 
 .admin-student-manage-table {
-  border: 1px solid var(--workspace-line-soft);
-  border-radius: 1.35rem;
-  background: color-mix(in srgb, var(--journal-surface) 98%, var(--color-bg-base));
-  padding: 0.25rem 0.9rem 0.4rem;
-}
-
-.admin-student-manage-table :deep(.workspace-data-table__head-cell) {
-  border-bottom-color: var(--workspace-line-soft);
-}
-
-.admin-student-manage-table :deep(.workspace-data-table__row) {
-  border-bottom-color: var(--workspace-line-soft);
-}
-
-.admin-student-manage-table :deep(.workspace-data-table__body tr:last-child) {
-  border-bottom-color: transparent;
+  --workspace-directory-shell-border: var(--student-directory-border);
+  --workspace-directory-head-divider: var(--student-directory-border);
+  --workspace-directory-row-divider: var(--student-directory-row-divider);
 }
 
 .admin-student-manage-table :deep(.workspace-data-table__row:hover) {
@@ -703,8 +662,8 @@ onMounted(() => {
 }
 
 @media (max-width: 900px) {
-  .admin-student-manage-shell__content {
-    padding-inline: 1rem;
+  .admin-student-manage-shell__summary {
+    --admin-summary-grid-columns: 1fr;
   }
 }
 </style>
