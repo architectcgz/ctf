@@ -22,7 +22,9 @@ import { useContestChallengePool } from '@/composables/useContestChallengePool'
 import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
 import { useToast } from '@/composables/useToast'
 
+import ContestChallengeFilterStrip from './ContestChallengeFilterStrip.vue'
 import ContestChallengeEditorDialog from './ContestChallengeEditorDialog.vue'
+import ContestChallengeSummaryStrip from './ContestChallengeSummaryStrip.vue'
 
 const props = defineProps<{
   contestId: string
@@ -312,25 +314,7 @@ onMounted(() => {
         题目池刷新失败，当前显示上次成功同步的数据。{{ panelLoadError }}
       </p>
 
-      <div
-        class="progress-strip metric-panel-grid metric-panel-default-surface contest-challenge-panel__summary"
-      >
-        <article
-          v-for="item in summaryItems"
-          :key="item.key"
-          class="journal-note progress-card metric-panel-card"
-        >
-          <div class="journal-note-label progress-card-label metric-panel-label">
-            {{ item.label }}
-          </div>
-          <div class="journal-note-value progress-card-value metric-panel-value">
-            {{ item.value }}
-          </div>
-          <div class="journal-note-helper progress-card-hint metric-panel-helper">
-            {{ item.hint }}
-          </div>
-        </article>
-      </div>
+      <ContestChallengeSummaryStrip :summary-items="summaryItems" />
 
       <section class="workspace-directory-section contest-challenge-directory">
         <header class="list-heading">
@@ -341,21 +325,12 @@ onMounted(() => {
           <div class="contest-section-meta">共 {{ currentChallengeLinks.length }} 道题目</div>
         </header>
 
-        <div v-if="isAwdContest && filterItems.length > 0" class="contest-challenge-filters">
-          <button
-            v-for="filter in filterItems"
-            :id="`contest-challenge-filter-${filter.key}`"
-            :key="filter.key"
-            type="button"
-            class="contest-challenge-filter"
-            :class="{ 'contest-challenge-filter--active': activeFilter === filter.key }"
-            @click="setFilter(filter.key)"
-          >
-            <span class="contest-challenge-filter__label">{{ filter.label }}</span>
-            <span class="contest-challenge-filter__count">{{ filter.count }}</span>
-            <span class="contest-challenge-filter__hint">{{ filter.hint }}</span>
-          </button>
-        </div>
+        <ContestChallengeFilterStrip
+          v-if="isAwdContest && filterItems.length > 0"
+          :filter-items="filterItems"
+          :active-filter="activeFilter"
+          @select="setFilter"
+        />
 
         <div
           v-if="panelLoading"
@@ -490,10 +465,6 @@ onMounted(() => {
   gap: var(--space-3);
 }
 
-.contest-challenge-panel__summary {
-  --admin-summary-grid-columns: repeat(auto-fit, minmax(11rem, 1fr));
-}
-
 .contest-challenge-panel__warning {
   margin: 0;
   border: 1px solid color-mix(in srgb, var(--journal-danger, #d9594c) 32%, transparent);
@@ -532,48 +503,6 @@ onMounted(() => {
 }
 
 .contest-section-meta {
-  font-size: var(--font-size-0-82);
-  color: var(--journal-muted);
-}
-
-.contest-challenge-filters {
-  display: grid;
-  gap: var(--space-3);
-  grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr));
-}
-
-.contest-challenge-filter {
-  display: grid;
-  gap: var(--space-1);
-  justify-items: start;
-  border: 1px solid color-mix(in srgb, var(--journal-border) 76%, transparent);
-  border-radius: 1rem;
-  background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
-  padding: var(--space-3);
-  text-align: left;
-  transition: all 150ms ease;
-}
-
-.contest-challenge-filter:hover {
-  border-color: color-mix(in srgb, var(--journal-accent) 28%, transparent);
-}
-
-.contest-challenge-filter--active {
-  border-color: color-mix(in srgb, var(--journal-accent) 42%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 10%, var(--journal-surface));
-}
-
-.contest-challenge-filter__label,
-.contest-challenge-filter__count {
-  font-weight: 700;
-  color: var(--journal-ink);
-}
-
-.contest-challenge-filter__count {
-  font-size: var(--font-size-1-20);
-}
-
-.contest-challenge-filter__hint {
   font-size: var(--font-size-0-82);
   color: var(--journal-muted);
 }
@@ -650,10 +579,6 @@ onMounted(() => {
 }
 
 @media (max-width: 900px) {
-  .contest-challenge-panel__summary {
-    --admin-summary-grid-columns: minmax(0, 1fr);
-  }
-
   .contest-challenge-directory__head {
     display: none;
   }
