@@ -56,7 +56,7 @@ describe('ForbiddenView', () => {
     expect(wrapper.find('aside').exists()).toBe(false)
     expect(wrapper.text()).toContain('返回上一页')
     expect(wrapper.text()).toContain('返回管理工作台')
-    expect(links[0]?.props('to')).toBe('/admin/dashboard')
+    expect(links[0]?.props('to')).toBe('/platform/overview')
     expect(links).toHaveLength(1)
     expect(wrapper.get('button.error-status-action-primary').text()).toContain('返回上一页')
   })
