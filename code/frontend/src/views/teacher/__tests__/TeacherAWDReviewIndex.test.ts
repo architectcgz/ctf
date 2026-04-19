@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { flushPromises, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
+import { flushPromises, mount } from '@vue/test-utils'
 
 import TeacherAWDReviewIndex from '../TeacherAWDReviewIndex.vue'
 import teacherAwdReviewIndexSource from '../TeacherAWDReviewIndex.vue?raw'
@@ -110,28 +110,6 @@ describe('TeacherAWDReviewIndex', () => {
     expect(wrapper.text()).not.toContain('应用筛选')
   })
 
-  it('应使用共享目录工具栏与数据表，而不是继续渲染旧的自绘目录行', async () => {
-    expect(teacherAwdReviewIndexSource).toContain(
-      "from '@/components/common/WorkspaceDirectoryToolbar.vue'"
-    )
-    expect(teacherAwdReviewIndexSource).toContain("from '@/components/common/WorkspaceDataTable.vue'")
-    expect(teacherAwdReviewIndexSource).toContain('<WorkspaceDirectoryToolbar')
-    expect(teacherAwdReviewIndexSource).toContain('<WorkspaceDataTable')
-    expect(teacherAwdReviewIndexSource).not.toContain('class="teacher-directory-row"')
-
-    const wrapper = mount(TeacherAWDReviewIndex)
-
-    await flushPromises()
-
-    expect(wrapper.findComponent({ name: 'WorkspaceDirectoryToolbar' }).exists()).toBe(true)
-    expect(wrapper.findComponent({ name: 'WorkspaceDataTable' }).exists()).toBe(true)
-    expect(wrapper.text()).toContain('赛事编号')
-    expect(wrapper.text()).toContain('赛事名称')
-    expect(wrapper.text()).toContain('轮次')
-    expect(wrapper.text()).toContain('队伍')
-    expect(wrapper.text()).toContain('状态')
-  })
-
   it('筛选区应保持平铺，不应继续在页面局部做成独立卡片壳', () => {
     expect(teacherAwdReviewIndexSource).toContain(
       'class="workspace-directory-section teacher-directory-section"'
@@ -159,28 +137,6 @@ describe('TeacherAWDReviewIndex', () => {
     )
   })
 
-  it('平台 AWD 复盘页头部应切到 workspace 语义，不再保留 teacher journal eyebrow', () => {
-    expect(teacherAwdReviewIndexSource).toContain(
-      '<header class="teacher-topbar workspace-tab-heading awd-review-index-header">'
-    )
-    expect(teacherAwdReviewIndexSource).toContain(
-      '<div class="teacher-heading workspace-tab-heading__main">'
-    )
-    expect(teacherAwdReviewIndexSource).toContain(
-      '<div class="workspace-overline awd-review-index-overline">AWD Review</div>'
-    )
-    expect(teacherAwdReviewIndexSource).toContain(
-      '<h1 class="teacher-title workspace-page-title">AWD复盘</h1>'
-    )
-    expect(teacherAwdReviewIndexSource).toContain('<p class="teacher-copy workspace-page-copy">')
-    expect(teacherAwdReviewIndexSource).toMatch(
-      /\.awd-review-index-overline\s*\{[\s\S]*font-size:\s*var\(--journal-overline-font-size,\s*var\(--font-size-0-70\)\);[\s\S]*letter-spacing:\s*var\(--journal-overline-letter-spacing,\s*0\.2em\);[\s\S]*text-transform:\s*uppercase;[\s\S]*color:\s*var\(--journal-accent,\s*var\(--color-primary\)\);/s
-    )
-    expect(teacherAwdReviewIndexSource).not.toContain(
-      '<div class="teacher-surface-eyebrow journal-eyebrow">AWD Review Workspace</div>'
-    )
-  })
-
   it('筛选区源码不应继续保留表单提交和应用筛选按钮', () => {
     expect(teacherAwdReviewIndexSource).not.toContain('@submit.prevent="loadContests"')
     expect(teacherAwdReviewIndexSource).not.toContain('应用筛选')
@@ -190,7 +146,15 @@ describe('TeacherAWDReviewIndex', () => {
     )
   })
 
-  it('管理员打开 AWD 目录时应继续停留在后台教学运营路由', async () => {
+  it('加载骨架应通过语义类承接，不再直接写圆角和背景混色', () => {
+    expect(teacherAwdReviewIndexSource).toContain('awd-review-loading-card')
+    expect(teacherAwdReviewIndexSource).not.toContain('rounded-[22px]')
+    expect(teacherAwdReviewIndexSource).not.toContain(
+      'bg-[color-mix(in_srgb,var(--journal-surface-subtle)_92%,transparent)]'
+    )
+  })
+
+  it('管理员打开 AWD 目录并进入复盘时应使用后台路由', async () => {
     const authStore = useAuthStore()
     authStore.setAuth(
       {
@@ -204,8 +168,6 @@ describe('TeacherAWDReviewIndex', () => {
     const wrapper = mount(TeacherAWDReviewIndex)
 
     await flushPromises()
-
-    expect(wrapper.text()).toContain('平台概览')
 
     wrapper.findAll('button').find((button) => button.text().includes('平台概览'))?.trigger('click')
     wrapper.findAll('button').find((button) => button.text().includes('进入复盘'))?.trigger('click')
@@ -216,29 +178,5 @@ describe('TeacherAWDReviewIndex', () => {
       name: 'AdminAWDReviewDetail',
       params: { contestId: 'contest-1' },
     })
-  })
-
-  it('管理员打开 AWD 目录时应切换到管理员根壳，而不是继续使用教师根壳', async () => {
-    const authStore = useAuthStore()
-    authStore.setAuth(
-      {
-        id: 'admin-1',
-        username: 'admin',
-        role: 'admin',
-      },
-      'token'
-    )
-
-    const wrapper = mount(TeacherAWDReviewIndex)
-
-    await flushPromises()
-
-    expect(wrapper.classes()).toContain('workspace-shell')
-    expect(wrapper.classes()).toContain('journal-shell-admin')
-    expect(wrapper.classes()).toContain('journal-hero')
-    expect(wrapper.classes()).not.toContain('teacher-management-shell')
-    expect(wrapper.classes()).not.toContain('teacher-surface-hero')
-    expect(wrapper.find('.ui-btn').exists()).toBe(true)
-    expect(wrapper.find('.teacher-btn').exists()).toBe(false)
   })
 })

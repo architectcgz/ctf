@@ -1,5 +1,4 @@
 type TeachingWorkspaceRole = string | null | undefined
-export type ClassWorkspaceSectionKey = 'trend' | 'review' | 'insights' | 'intervention'
 
 export function resolveClassManagementRouteName(
   role?: TeachingWorkspaceRole
@@ -23,64 +22,6 @@ export function resolveClassStudentsRouteName(
   role?: TeachingWorkspaceRole
 ): 'AdminClassStudents' | 'TeacherClassStudents' {
   return role === 'admin' ? 'AdminClassStudents' : 'TeacherClassStudents'
-}
-
-export function resolveClassWorkspaceSectionRouteName(
-  role: TeachingWorkspaceRole,
-  section: ClassWorkspaceSectionKey
-):
-  | 'AdminClassTrend'
-  | 'AdminClassReview'
-  | 'AdminClassInsights'
-  | 'AdminClassIntervention'
-  | 'TeacherClassTrend'
-  | 'TeacherClassReview'
-  | 'TeacherClassInsights'
-  | 'TeacherClassIntervention' {
-  if (role === 'admin') {
-    switch (section) {
-      case 'trend':
-        return 'AdminClassTrend'
-      case 'review':
-        return 'AdminClassReview'
-      case 'insights':
-        return 'AdminClassInsights'
-      case 'intervention':
-        return 'AdminClassIntervention'
-    }
-  }
-
-  switch (section) {
-    case 'trend':
-      return 'TeacherClassTrend'
-    case 'review':
-      return 'TeacherClassReview'
-    case 'insights':
-      return 'TeacherClassInsights'
-    case 'intervention':
-      return 'TeacherClassIntervention'
-  }
-}
-
-export function resolveClassWorkspaceSectionKeyFromRouteName(
-  routeName: unknown
-): ClassWorkspaceSectionKey | null {
-  switch (routeName) {
-    case 'TeacherClassTrend':
-    case 'AdminClassTrend':
-      return 'trend'
-    case 'TeacherClassReview':
-    case 'AdminClassReview':
-      return 'review'
-    case 'TeacherClassInsights':
-    case 'AdminClassInsights':
-      return 'insights'
-    case 'TeacherClassIntervention':
-    case 'AdminClassIntervention':
-      return 'intervention'
-    default:
-      return null
-  }
 }
 
 export function resolveStudentAnalysisRouteName(
