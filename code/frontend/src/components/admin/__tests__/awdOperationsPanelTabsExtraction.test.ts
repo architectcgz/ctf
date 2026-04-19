@@ -19,4 +19,12 @@ describe('awd operations panel tabs extraction', () => {
       'function handlePanelKeydown(event: KeyboardEvent, index: number) {'
     )
   })
+
+  it('AWDOperationsPanel 应将赛事选择器与未开赛运行壳层下沉到独立子组件，而不是继续在父组件内联整段结构', () => {
+    expect(awdOperationsPanelSource).toContain('<AWDContestSelectorField')
+    expect(awdOperationsPanelSource).toContain('<AWDRuntimePendingState')
+    expect(awdOperationsPanelSource).not.toContain('id="awd-runtime-shell-create-round"')
+    expect(awdOperationsPanelSource).not.toContain('id="awd-runtime-shell-run-check"')
+    expect(awdOperationsPanelSource).not.toContain('id="awd-contest-selector"')
+  })
 })
