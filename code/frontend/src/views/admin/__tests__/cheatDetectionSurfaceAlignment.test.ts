@@ -125,8 +125,9 @@ describe('cheat detection surface alignment', () => {
   })
 
   it('uses workspace directory sections and flat rows instead of stacked cards for integrity review flows', () => {
-    expect(cheatDetectionSource).toContain('<h2 class="list-heading__title">风险焦点</h2>')
-    expect(cheatDetectionSource).toContain('<h2 class="list-heading__title">复核动作</h2>')
+    expect(cheatDetectionSource).toContain('<h2 class="list-heading__title">高频提交账号</h2>')
+    expect(cheatDetectionSource).toContain('<h2 class="list-heading__title">共享 IP 线索</h2>')
+    expect(cheatDetectionSource).toContain('<h2 class="list-heading__title">审计联动</h2>')
     expect(cheatDetectionSource).toContain(
       'class="workspace-directory-section cheat-directory-section"'
     )
