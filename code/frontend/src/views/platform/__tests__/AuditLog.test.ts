@@ -120,9 +120,9 @@ describe('AuditLog', () => {
 
     expect(wrapper.text()).toContain('alice')
     expect(wrapper.text()).not.toContain('ID 12')
-    expect(wrapper.text()).toContain('查看详情')
+    expect(wrapper.text()).not.toContain('查看详情')
 
-    await wrapper.get('.audit-row__actor-trigger').trigger('click')
+    await wrapper.get('.audit-row__actor-link').trigger('click')
     await flushPromises()
 
     expect(document.body.textContent).toContain('执行人详情')
@@ -161,8 +161,10 @@ describe('AuditLog', () => {
     expect(auditLogSource).toContain('search-placeholder="检索动作、资源类型、执行人..."')
     expect(auditLogSource).toContain('total-suffix="条日志"')
     expect(auditLogSource).toContain('class="audit-list workspace-directory-list"')
-    expect(auditLogSource).toContain('class="audit-row__actor-trigger"')
+    expect(auditLogSource).toContain('class="audit-row__actor-link"')
     expect(auditLogSource).not.toContain('class="audit-row__actor-id"')
+    expect(auditLogSource).toContain('class="audit-actor-modal"')
+    expect(auditLogSource).not.toContain('audit-row__actor-hint')
     expect(auditLogSource).toMatch(
       /\.admin-board\s*\{[\s\S]*display:\s*grid;[\s\S]*gap:\s*var\(--space-4\);/s
     )
