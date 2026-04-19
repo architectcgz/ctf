@@ -218,6 +218,7 @@
 遗留说明：
 
 - 数据库中的 `contest_challenges.awd_*` 字段仍在清理路径上，当前主要作为历史兼容载体存在
+- `ContestChallenge` 代码模型与 AWD 主测试夹具已经移除这些字段，不再围绕 `contest_challenges.awd_*` 建模或 seed
 - 后续收口重点是逐步去掉剩余非核心入口对这些遗留字段的依赖
 
 ### 6.4 `service_id` / `challenge_id` 的职责边界
@@ -594,6 +595,7 @@
 - `awd_team_services` 承担每轮 checker 结果
 - `service_id` 是 AWD 运行态主身份，`challenge_id` 降级为题目元数据与兼容展示字段
 - `contest_challenges.awd_*` 与 `runtime_config.challenge_id` 属于待清理兼容字段，不再作为主读写契约
+- 当前代码层已经不再把 `contest_challenges.awd_*` 暴露为 `ContestChallenge` 主模型字段，后续可以继续按迁移节奏处理存量列
 - 第一版只实现 `http_standard` checker
 - 排行榜升级为 `sla / attack / defense / total`
 - 保留现有 flag 轮换、攻击提交流程、流量监控和后台面板框架

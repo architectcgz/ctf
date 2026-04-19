@@ -19,13 +19,6 @@ func TestEvaluateAWDReadinessGateReturnsDecisionSnapshotAndNormalizedOverride(t 
 	contesttestsupport.CreateAWDContestFixture(t, db, 5101, now)
 	contesttestsupport.CreateAWDChallengeFixture(t, db, 51011, now)
 	contesttestsupport.CreateAWDContestChallengeFixture(t, db, 5101, 51011, now)
-	if err := db.Exec(`
-		UPDATE contest_challenges
-		SET awd_checker_type = ?, awd_checker_config = ?, awd_checker_validation_state = ?
-		WHERE contest_id = ? AND challenge_id = ?
-	`, "legacy_probe", "{}", "pending", 5101, 51011).Error; err != nil {
-		t.Fatalf("seed readiness item: %v", err)
-	}
 	contesttestsupport.SyncAWDContestServiceFixture(t, db, 5101, 51011, "awd-service", "legacy_probe", `{}`, 100, 0, 0, now)
 	contesttestsupport.SyncAWDContestServiceReadinessFixture(
 		t,

@@ -191,15 +191,12 @@ func TestAWDRoundUpdaterIgnoresLegacyContestChallengeBridgeWithoutServiceDefinit
 	createAWDTeamFixture(t, db, 154011, 154, "LegacyOnly", now)
 	createAWDTeamMemberFixture(t, db, 154, 154011, 154101, now)
 	if err := db.Create(&model.ContestChallenge{
-		ContestID:                 154,
-		ChallengeID:               154001,
-		Points:                    100,
-		IsVisible:                 true,
-		AWDCheckerType:            model.AWDCheckerTypeHTTPStandard,
-		AWDCheckerConfig:          `{"get_flag":{"path":"/health"}}`,
-		AWDCheckerValidationState: model.AWDCheckerValidationStatePassed,
-		CreatedAt:                 now,
-		UpdatedAt:                 now,
+		ContestID:   154,
+		ChallengeID: 154001,
+		Points:      100,
+		IsVisible:   true,
+		CreatedAt:   now,
+		UpdatedAt:   now,
 	}).Error; err != nil {
 		t.Fatalf("create legacy-only contest challenge: %v", err)
 	}
@@ -410,6 +407,7 @@ func TestAWDRoundUpdaterSyncsServiceChecksAsUp(t *testing.T) {
 		ID:          9301,
 		UserID:      5301,
 		ChallengeID: 103001,
+		ServiceID:   awdServiceIDPtr(103, 103001),
 		ContainerID: "ctr-up",
 		Status:      model.InstanceStatusRunning,
 		AccessURL:   server.URL,
@@ -488,16 +486,6 @@ func TestAWDRoundUpdaterUsesContestServiceCheckerConfig(t *testing.T) {
 	createAWDTeamFixture(t, db, 104011, 104, "Config", now)
 	createAWDTeamMemberFixture(t, db, 104, 104011, 5401, now)
 
-	if err := db.Model(&model.ContestChallenge{}).
-		Where("contest_id = ? AND challenge_id = ?", 104, 104001).
-		Updates(map[string]any{
-			"awd_checker_type":   model.AWDCheckerTypeHTTPStandard,
-			"awd_checker_config": `{"get_flag":{"path":"/internal/flag"}}`,
-			"awd_sla_score":      18,
-			"awd_defense_score":  28,
-		}).Error; err != nil {
-		t.Fatalf("update awd contest challenge config: %v", err)
-	}
 	syncAWDContestServiceFixture(t, db, 104, 104001, "awd-service", model.AWDCheckerTypeHTTPStandard, `{"get_flag":{"path":"/internal/flag"}}`, 100, 18, 28, now)
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -514,6 +502,7 @@ func TestAWDRoundUpdaterUsesContestServiceCheckerConfig(t *testing.T) {
 		ID:          9401,
 		UserID:      5401,
 		ChallengeID: 104001,
+		ServiceID:   awdServiceIDPtr(104, 104001),
 		ContainerID: "ctr-config",
 		Status:      model.InstanceStatusRunning,
 		AccessURL:   server.URL,
@@ -572,19 +561,6 @@ func TestAWDRoundUpdaterSyncsHTTPStandardChecksAsUp(t *testing.T) {
 	if err := db.Model(&model.Challenge{}).Where("id = ?", 141001).Update("flag_prefix", "awd").Error; err != nil {
 		t.Fatalf("set flag prefix: %v", err)
 	}
-	if err := db.Model(&model.ContestChallenge{}).
-		Where("contest_id = ? AND challenge_id = ?", 141, 141001).
-		Updates(map[string]any{
-			"awd_checker_type": model.AWDCheckerTypeHTTPStandard,
-			"awd_checker_config": `{
-				"put_flag":{"method":"PUT","path":"/api/flag","body_template":"{{FLAG}}","expected_status":200},
-				"get_flag":{"method":"GET","path":"/api/flag","expected_status":200,"expected_substring":"{{FLAG}}"}
-			}`,
-			"awd_sla_score":     18,
-			"awd_defense_score": 28,
-		}).Error; err != nil {
-		t.Fatalf("update http_standard checker config: %v", err)
-	}
 	syncAWDContestServiceFixture(t, db, 141, 141001, "awd-service", model.AWDCheckerTypeHTTPStandard, `{
 				"put_flag":{"method":"PUT","path":"/api/flag","body_template":"{{FLAG}}","expected_status":200},
 				"get_flag":{"method":"GET","path":"/api/flag","expected_status":200,"expected_substring":"{{FLAG}}"}
@@ -613,6 +589,7 @@ func TestAWDRoundUpdaterSyncsHTTPStandardChecksAsUp(t *testing.T) {
 		ID:          9411,
 		UserID:      6411,
 		ChallengeID: 141001,
+		ServiceID:   awdServiceIDPtr(141, 141001),
 		ContainerID: "ctr-http-up",
 		Status:      model.InstanceStatusRunning,
 		AccessURL:   server.URL,
@@ -676,16 +653,6 @@ func TestAWDRoundUpdaterPrefersContestAWDServiceDefinitionsForRuntimeChecks(t *t
 	if err := db.Model(&model.Challenge{}).Where("id = ?", 144001).Update("flag_prefix", "awd").Error; err != nil {
 		t.Fatalf("set flag prefix: %v", err)
 	}
-	if err := db.Model(&model.ContestChallenge{}).
-		Where("contest_id = ? AND challenge_id = ?", 144, 144001).
-		Updates(map[string]any{
-			"awd_checker_type":   model.AWDCheckerTypeLegacyProbe,
-			"awd_checker_config": `{}`,
-			"awd_sla_score":      3,
-			"awd_defense_score":  9,
-		}).Error; err != nil {
-		t.Fatalf("update legacy awd contest challenge config: %v", err)
-	}
 	serviceID := defaultAWDContestServiceID(144, 144001)
 	if err := db.Model(&model.ContestAWDService{}).
 		Where("contest_id = ? AND challenge_id = ?", 144, 144001).
@@ -730,6 +697,7 @@ func TestAWDRoundUpdaterPrefersContestAWDServiceDefinitionsForRuntimeChecks(t *t
 		ID:          9441,
 		UserID:      6441,
 		ChallengeID: 144001,
+		ServiceID:   awdServiceIDPtr(144, 144001),
 		ContainerID: "ctr-service-first",
 		Status:      model.InstanceStatusRunning,
 		AccessURL:   server.URL,
@@ -780,19 +748,6 @@ func TestAWDRoundUpdaterMarksHTTPStandardChecksCompromisedOnFlagMismatch(t *test
 	if err := db.Model(&model.Challenge{}).Where("id = ?", 142001).Update("flag_prefix", "awd").Error; err != nil {
 		t.Fatalf("set flag prefix: %v", err)
 	}
-	if err := db.Model(&model.ContestChallenge{}).
-		Where("contest_id = ? AND challenge_id = ?", 142, 142001).
-		Updates(map[string]any{
-			"awd_checker_type": model.AWDCheckerTypeHTTPStandard,
-			"awd_checker_config": `{
-				"put_flag":{"method":"PUT","path":"/api/flag","body_template":"{{FLAG}}","expected_status":200},
-				"get_flag":{"method":"GET","path":"/api/flag","expected_status":200,"expected_substring":"{{FLAG}}"}
-			}`,
-			"awd_sla_score":     18,
-			"awd_defense_score": 28,
-		}).Error; err != nil {
-		t.Fatalf("update http_standard checker config: %v", err)
-	}
 	syncAWDContestServiceFixture(t, db, 142, 142001, "awd-service", model.AWDCheckerTypeHTTPStandard, `{
 				"put_flag":{"method":"PUT","path":"/api/flag","body_template":"{{FLAG}}","expected_status":200},
 				"get_flag":{"method":"GET","path":"/api/flag","expected_status":200,"expected_substring":"{{FLAG}}"}
@@ -815,6 +770,7 @@ func TestAWDRoundUpdaterMarksHTTPStandardChecksCompromisedOnFlagMismatch(t *test
 		ID:          9421,
 		UserID:      6421,
 		ChallengeID: 142001,
+		ServiceID:   awdServiceIDPtr(142, 142001),
 		ContainerID: "ctr-http-mismatch",
 		Status:      model.InstanceStatusRunning,
 		AccessURL:   server.URL,
@@ -874,20 +830,6 @@ func TestAWDRoundUpdaterMarksHTTPStandardChecksDownWhenHavocFails(t *testing.T) 
 	if err := db.Model(&model.Challenge{}).Where("id = ?", 143001).Update("flag_prefix", "awd").Error; err != nil {
 		t.Fatalf("set flag prefix: %v", err)
 	}
-	if err := db.Model(&model.ContestChallenge{}).
-		Where("contest_id = ? AND challenge_id = ?", 143, 143001).
-		Updates(map[string]any{
-			"awd_checker_type": model.AWDCheckerTypeHTTPStandard,
-			"awd_checker_config": `{
-				"put_flag":{"method":"PUT","path":"/api/flag","body_template":"{{FLAG}}","expected_status":200},
-				"get_flag":{"method":"GET","path":"/api/flag","expected_status":200,"expected_substring":"{{FLAG}}"},
-				"havoc":{"method":"GET","path":"/api/ping","expected_status":200}
-			}`,
-			"awd_sla_score":     18,
-			"awd_defense_score": 28,
-		}).Error; err != nil {
-		t.Fatalf("update http_standard checker config: %v", err)
-	}
 	syncAWDContestServiceFixture(t, db, 143, 143001, "awd-service", model.AWDCheckerTypeHTTPStandard, `{
 				"put_flag":{"method":"PUT","path":"/api/flag","body_template":"{{FLAG}}","expected_status":200},
 				"get_flag":{"method":"GET","path":"/api/flag","expected_status":200,"expected_substring":"{{FLAG}}"},
@@ -919,6 +861,7 @@ func TestAWDRoundUpdaterMarksHTTPStandardChecksDownWhenHavocFails(t *testing.T) 
 		ID:          9431,
 		UserID:      6431,
 		ChallengeID: 143001,
+		ServiceID:   awdServiceIDPtr(143, 143001),
 		ContainerID: "ctr-http-havoc",
 		Status:      model.InstanceStatusRunning,
 		AccessURL:   server.URL,
@@ -988,6 +931,7 @@ func TestAWDRoundUpdaterSyncsServiceChecksForContestScopedTeamInstance(t *testin
 		ContestID:   &contestID,
 		TeamID:      &teamID,
 		ChallengeID: 105001,
+		ServiceID:   awdServiceIDPtr(105, 105001),
 		ContainerID: "ctr-team-scoped",
 		Status:      model.InstanceStatusRunning,
 		AccessURL:   server.URL,
@@ -1057,6 +1001,7 @@ func TestAWDRoundUpdaterHistoricalRoundChecksDoNotOverwriteLiveStatusCache(t *te
 		ID:          9801,
 		UserID:      5801,
 		ChallengeID: 108001,
+		ServiceID:   awdServiceIDPtr(108, 108001),
 		ContainerID: "ctr-history",
 		Status:      model.InstanceStatusRunning,
 		AccessURL:   server.URL,
@@ -1143,6 +1088,7 @@ func TestAWDRoundUpdaterCurrentRoundChecksRefreshLiveStatusCache(t *testing.T) {
 		ID:          9901,
 		UserID:      5901,
 		ChallengeID: 109001,
+		ServiceID:   awdServiceIDPtr(109, 109001),
 		ContainerID: "ctr-current",
 		Status:      model.InstanceStatusRunning,
 		AccessURL:   server.URL,
@@ -1215,6 +1161,7 @@ func TestAWDRoundUpdaterHistoricalRoundChecksIgnoreStaleCurrentRoundPointer(t *t
 		ID:          10001,
 		UserID:      6001,
 		ChallengeID: 110001,
+		ServiceID:   awdServiceIDPtr(110, 110001),
 		ContainerID: "ctr-stale-pointer",
 		Status:      model.InstanceStatusRunning,
 		AccessURL:   server.URL,
@@ -1283,6 +1230,7 @@ func TestAWDRoundUpdaterSyncsServiceChecksWithPartialAvailability(t *testing.T) 
 		ContestID:   &contestID,
 		TeamID:      &teamID,
 		ChallengeID: 107001,
+		ServiceID:   awdServiceIDPtr(107, 107001),
 		ContainerID: "ctr-partial-ok",
 		Status:      model.InstanceStatusRunning,
 		AccessURL:   healthyServer.URL,
@@ -1298,6 +1246,7 @@ func TestAWDRoundUpdaterSyncsServiceChecksWithPartialAvailability(t *testing.T) 
 		ContestID:   &contestID,
 		TeamID:      &teamID,
 		ChallengeID: 107001,
+		ServiceID:   awdServiceIDPtr(107, 107001),
 		ContainerID: "ctr-partial-fail",
 		Status:      model.InstanceStatusRunning,
 		AccessURL:   failedServer.URL,
@@ -1420,6 +1369,7 @@ func TestAWDRoundUpdaterMarksServiceDownAfterHTTPFailure(t *testing.T) {
 		ID:          9601,
 		UserID:      5601,
 		ChallengeID: 106001,
+		ServiceID:   awdServiceIDPtr(106, 106001),
 		ContainerID: "ctr-fallback",
 		Status:      model.InstanceStatusRunning,
 		AccessURL:   server.URL,

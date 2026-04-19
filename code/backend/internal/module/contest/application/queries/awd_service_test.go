@@ -24,6 +24,17 @@ func newAWDQueryServiceForTest(t *testing.T) (*AWDService, *gorm.DB) {
 	), db
 }
 
+type awdReadinessRelationSeed struct {
+	relation          *model.ContestChallenge
+	checkerType       model.AWDCheckerType
+	checkerConfig     string
+	slaScore          int
+	defenseScore      int
+	validationState   model.AWDCheckerValidationState
+	lastPreviewAt     *time.Time
+	lastPreviewResult string
+}
+
 func TestAWDQueryServiceGetReadinessCountsBlockingStates(t *testing.T) {
 	service, db := newAWDQueryServiceForTest(t)
 	now := time.Now()
@@ -33,51 +44,59 @@ func TestAWDQueryServiceGetReadinessCountsBlockingStates(t *testing.T) {
 	createAWDReadinessChallengeFixture(t, db, 7012, "pending-service", now)
 	createAWDReadinessChallengeFixture(t, db, 7013, "stale-service", now)
 	createAWDReadinessChallengeFixture(t, db, 7014, "passed-service", now)
-	createAWDReadinessRelationFixture(t, db, &model.ContestChallenge{
-		ContestID:                   701,
-		ChallengeID:                 7011,
-		Points:                      100,
-		IsVisible:                   true,
-		AWDCheckerType:              model.AWDCheckerTypeHTTPStandard,
-		AWDCheckerConfig:            `{"get_flag":{"path":"/health"}}`,
-		AWDCheckerValidationState:   model.AWDCheckerValidationStateFailed,
-		AWDCheckerLastPreviewAt:     &now,
-		AWDCheckerLastPreviewResult: `{"service_status":"down","preview_context":{"access_url":"http://preview.internal"}}`,
-		CreatedAt:                   now,
-		UpdatedAt:                   now,
+	createAWDReadinessRelationFixture(t, db, awdReadinessRelationSeed{
+		relation: &model.ContestChallenge{
+			ContestID:   701,
+			ChallengeID: 7011,
+			Points:      100,
+			IsVisible:   true,
+			CreatedAt:   now,
+			UpdatedAt:   now,
+		},
+		checkerType:       model.AWDCheckerTypeHTTPStandard,
+		checkerConfig:     `{"get_flag":{"path":"/health"}}`,
+		validationState:   model.AWDCheckerValidationStateFailed,
+		lastPreviewAt:     &now,
+		lastPreviewResult: `{"service_status":"down","preview_context":{"access_url":"http://preview.internal"}}`,
 	})
-	createAWDReadinessRelationFixture(t, db, &model.ContestChallenge{
-		ContestID:                 701,
-		ChallengeID:               7012,
-		Points:                    100,
-		IsVisible:                 true,
-		AWDCheckerType:            model.AWDCheckerTypeLegacyProbe,
-		AWDCheckerConfig:          `{}`,
-		AWDCheckerValidationState: model.AWDCheckerValidationStatePending,
-		CreatedAt:                 now,
-		UpdatedAt:                 now,
+	createAWDReadinessRelationFixture(t, db, awdReadinessRelationSeed{
+		relation: &model.ContestChallenge{
+			ContestID:   701,
+			ChallengeID: 7012,
+			Points:      100,
+			IsVisible:   true,
+			CreatedAt:   now,
+			UpdatedAt:   now,
+		},
+		checkerType:     model.AWDCheckerTypeLegacyProbe,
+		checkerConfig:   `{}`,
+		validationState: model.AWDCheckerValidationStatePending,
 	})
-	createAWDReadinessRelationFixture(t, db, &model.ContestChallenge{
-		ContestID:                 701,
-		ChallengeID:               7013,
-		Points:                    100,
-		IsVisible:                 true,
-		AWDCheckerType:            model.AWDCheckerTypeLegacyProbe,
-		AWDCheckerConfig:          `{}`,
-		AWDCheckerValidationState: model.AWDCheckerValidationStateStale,
-		CreatedAt:                 now,
-		UpdatedAt:                 now,
+	createAWDReadinessRelationFixture(t, db, awdReadinessRelationSeed{
+		relation: &model.ContestChallenge{
+			ContestID:   701,
+			ChallengeID: 7013,
+			Points:      100,
+			IsVisible:   true,
+			CreatedAt:   now,
+			UpdatedAt:   now,
+		},
+		checkerType:     model.AWDCheckerTypeLegacyProbe,
+		checkerConfig:   `{}`,
+		validationState: model.AWDCheckerValidationStateStale,
 	})
-	createAWDReadinessRelationFixture(t, db, &model.ContestChallenge{
-		ContestID:                 701,
-		ChallengeID:               7014,
-		Points:                    100,
-		IsVisible:                 true,
-		AWDCheckerType:            model.AWDCheckerTypeHTTPStandard,
-		AWDCheckerConfig:          `{"get_flag":{"path":"/health"}}`,
-		AWDCheckerValidationState: model.AWDCheckerValidationStatePassed,
-		CreatedAt:                 now,
-		UpdatedAt:                 now,
+	createAWDReadinessRelationFixture(t, db, awdReadinessRelationSeed{
+		relation: &model.ContestChallenge{
+			ContestID:   701,
+			ChallengeID: 7014,
+			Points:      100,
+			IsVisible:   true,
+			CreatedAt:   now,
+			UpdatedAt:   now,
+		},
+		checkerType:     model.AWDCheckerTypeHTTPStandard,
+		checkerConfig:   `{"get_flag":{"path":"/health"}}`,
+		validationState: model.AWDCheckerValidationStatePassed,
 	})
 
 	resp, err := service.GetReadiness(context.Background(), 701)
@@ -135,15 +154,12 @@ func TestAWDQueryServiceGetReadinessIgnoresChallengeOnlyContestRelation(t *testi
 	createAWDReadinessContestFixture(t, db, 706, now)
 	createAWDReadinessChallengeFixture(t, db, 7061, "challenge-only", now)
 	if err := db.Create(&model.ContestChallenge{
-		ContestID:                 706,
-		ChallengeID:               7061,
-		Points:                    100,
-		IsVisible:                 true,
-		AWDCheckerType:            model.AWDCheckerTypeHTTPStandard,
-		AWDCheckerConfig:          `{"get_flag":{"path":"/health"}}`,
-		AWDCheckerValidationState: model.AWDCheckerValidationStatePassed,
-		CreatedAt:                 now,
-		UpdatedAt:                 now,
+		ContestID:   706,
+		ChallengeID: 7061,
+		Points:      100,
+		IsVisible:   true,
+		CreatedAt:   now,
+		UpdatedAt:   now,
 	}).Error; err != nil {
 		t.Fatalf("create challenge-only contest relation: %v", err)
 	}
@@ -169,16 +185,18 @@ func TestAWDQueryServiceGetReadinessTreatsBrokenCheckerConfigAsMissingChecker(t 
 
 	createAWDReadinessContestFixture(t, db, 703, now)
 	createAWDReadinessChallengeFixture(t, db, 7031, "broken-config", now)
-	createAWDReadinessRelationFixture(t, db, &model.ContestChallenge{
-		ContestID:                 703,
-		ChallengeID:               7031,
-		Points:                    100,
-		IsVisible:                 true,
-		AWDCheckerType:            model.AWDCheckerTypeHTTPStandard,
-		AWDCheckerConfig:          `{"get_flag":`,
-		AWDCheckerValidationState: model.AWDCheckerValidationStatePassed,
-		CreatedAt:                 now,
-		UpdatedAt:                 now,
+	createAWDReadinessRelationFixture(t, db, awdReadinessRelationSeed{
+		relation: &model.ContestChallenge{
+			ContestID:   703,
+			ChallengeID: 7031,
+			Points:      100,
+			IsVisible:   true,
+			CreatedAt:   now,
+			UpdatedAt:   now,
+		},
+		checkerType:     model.AWDCheckerTypeHTTPStandard,
+		checkerConfig:   `{"get_flag":`,
+		validationState: model.AWDCheckerValidationStatePassed,
 	})
 
 	resp, err := service.GetReadiness(context.Background(), 703)
@@ -202,16 +220,18 @@ func TestAWDQueryServiceGetReadinessItemJSONIncludesRequiredNullableKeys(t *test
 
 	createAWDReadinessContestFixture(t, db, 704, now)
 	createAWDReadinessChallengeFixture(t, db, 7041, "missing-checker", now)
-	createAWDReadinessRelationFixture(t, db, &model.ContestChallenge{
-		ContestID:                 704,
-		ChallengeID:               7041,
-		Points:                    100,
-		IsVisible:                 true,
-		AWDCheckerType:            "",
-		AWDCheckerConfig:          `{}`,
-		AWDCheckerValidationState: model.AWDCheckerValidationStatePending,
-		CreatedAt:                 now,
-		UpdatedAt:                 now,
+	createAWDReadinessRelationFixture(t, db, awdReadinessRelationSeed{
+		relation: &model.ContestChallenge{
+			ContestID:   704,
+			ChallengeID: 7041,
+			Points:      100,
+			IsVisible:   true,
+			CreatedAt:   now,
+			UpdatedAt:   now,
+		},
+		checkerType:     "",
+		checkerConfig:   `{}`,
+		validationState: model.AWDCheckerValidationStatePending,
 	})
 
 	resp, err := service.GetReadiness(context.Background(), 704)
@@ -251,16 +271,18 @@ func TestAWDQueryServiceGetReadinessPrefersContestAWDServiceRuntimeConfig(t *tes
 
 	createAWDReadinessContestFixture(t, db, 705, now)
 	createAWDReadinessChallengeFixture(t, db, 7051, "service-defined-missing-checker", now)
-	createAWDReadinessRelationFixture(t, db, &model.ContestChallenge{
-		ContestID:                 705,
-		ChallengeID:               7051,
-		Points:                    100,
-		IsVisible:                 true,
-		AWDCheckerType:            "",
-		AWDCheckerConfig:          `{}`,
-		AWDCheckerValidationState: model.AWDCheckerValidationStatePassed,
-		CreatedAt:                 now,
-		UpdatedAt:                 now,
+	createAWDReadinessRelationFixture(t, db, awdReadinessRelationSeed{
+		relation: &model.ContestChallenge{
+			ContestID:   705,
+			ChallengeID: 7051,
+			Points:      100,
+			IsVisible:   true,
+			CreatedAt:   now,
+			UpdatedAt:   now,
+		},
+		checkerType:     "",
+		checkerConfig:   `{}`,
+		validationState: model.AWDCheckerValidationStatePassed,
 	})
 	contesttestsupport.SyncAWDContestServiceFixture(
 		t,
@@ -291,6 +313,39 @@ func TestAWDQueryServiceGetReadinessPrefersContestAWDServiceRuntimeConfig(t *tes
 	}
 	if resp.Items[0].Title != "Bank Portal" {
 		t.Fatalf("expected display_name preferred in readiness title, got %+v", resp.Items[0])
+	}
+}
+
+func TestAWDQueryServiceGetReadinessExposesServiceID(t *testing.T) {
+	service, db := newAWDQueryServiceForTest(t)
+	now := time.Now()
+
+	createAWDReadinessContestFixture(t, db, 707, now)
+	createAWDReadinessChallengeFixture(t, db, 7071, "service-id-ready", now)
+	contesttestsupport.SyncAWDContestServiceFixture(
+		t,
+		db,
+		707,
+		7071,
+		"Readiness Service",
+		model.AWDCheckerTypeHTTPStandard,
+		`{"get_flag":{"path":"/ready"}}`,
+		100,
+		12,
+		18,
+		now,
+	)
+
+	resp, err := service.GetReadiness(context.Background(), 707)
+	if err != nil {
+		t.Fatalf("GetReadiness() error = %v", err)
+	}
+	if len(resp.Items) != 1 {
+		t.Fatalf("expected 1 readiness item, got %+v", resp.Items)
+	}
+	expectedServiceID := contesttestsupport.DefaultAWDContestServiceID(707, 7071)
+	if resp.Items[0].ServiceID != expectedServiceID {
+		t.Fatalf("expected readiness service_id=%d, got %+v", expectedServiceID, resp.Items[0])
 	}
 }
 
@@ -783,38 +838,38 @@ func createAWDReadinessChallengeFixture(t *testing.T, db *gorm.DB, challengeID i
 	}
 }
 
-func createAWDReadinessRelationFixture(t *testing.T, db *gorm.DB, relation *model.ContestChallenge) {
+func createAWDReadinessRelationFixture(t *testing.T, db *gorm.DB, seed awdReadinessRelationSeed) {
 	t.Helper()
 
-	if err := db.Create(relation).Error; err != nil {
+	if err := db.Create(seed.relation).Error; err != nil {
 		t.Fatalf("create contest challenge: %v", err)
 	}
 
 	var challenge model.Challenge
-	if err := db.Where("id = ?", relation.ChallengeID).First(&challenge).Error; err != nil {
+	if err := db.Where("id = ?", seed.relation.ChallengeID).First(&challenge).Error; err != nil {
 		t.Fatalf("load challenge for awd service fixture: %v", err)
 	}
 	contesttestsupport.SyncAWDContestServiceFixture(
 		t,
 		db,
-		relation.ContestID,
-		relation.ChallengeID,
+		seed.relation.ContestID,
+		seed.relation.ChallengeID,
 		challenge.Title,
-		relation.AWDCheckerType,
-		relation.AWDCheckerConfig,
-		relation.Points,
-		relation.AWDSLAScore,
-		relation.AWDDefenseScore,
-		relation.UpdatedAt,
+		seed.checkerType,
+		seed.checkerConfig,
+		seed.relation.Points,
+		seed.slaScore,
+		seed.defenseScore,
+		seed.relation.UpdatedAt,
 	)
 	contesttestsupport.SyncAWDContestServiceReadinessFixture(
 		t,
 		db,
-		relation.ContestID,
-		relation.ChallengeID,
-		relation.AWDCheckerValidationState,
-		relation.AWDCheckerLastPreviewAt,
-		relation.AWDCheckerLastPreviewResult,
+		seed.relation.ContestID,
+		seed.relation.ChallengeID,
+		seed.validationState,
+		seed.lastPreviewAt,
+		seed.lastPreviewResult,
 	)
 }
 
