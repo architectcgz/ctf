@@ -667,13 +667,13 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
 
 .challenge-manage-content {
   display: grid;
-  gap: 2rem;
+  gap: var(--space-6);
   background: transparent;
 }
 
 .challenge-manage-panel {
   display: grid;
-  gap: 2rem;
+  gap: var(--space-6);
   min-width: 0;
 }
 
@@ -730,13 +730,11 @@ function getChallengeRow(row: unknown): AdminChallengeListRow {
 
 .challenge-manage-shell .manage-summary-grid {
   --admin-summary-grid-columns: repeat(4, minmax(0, 1fr));
-  margin-top: 1.25rem;
-  margin-bottom: 2.5rem;
 }
 
 .challenge-manage-directory {
   display: grid;
-  gap: 1.5rem;
+  gap: var(--space-4);
 }
 
 .metric-panel-card.progress-card {
