@@ -6,6 +6,7 @@ import { useRouter } from 'vue-router'
 import { deleteChallengeWriteup, getChallengeWriteup } from '@/api/admin'
 import { getTeacherWriteupSubmissions } from '@/api/teacher'
 import type { AdminChallengeWriteupData, TeacherSubmissionWriteupItemData } from '@/api/contracts'
+import CActionMenu from '@/components/common/menus/CActionMenu.vue'
 import PlatformPaginationControls from '@/components/platform/PlatformPaginationControls.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
@@ -140,31 +141,12 @@ function openWriteup(mode: 'view' | 'edit') {
   })
 }
 
-function openActionMenu() {
-  actionMenuOpen.value = true
-}
-
 function closeActionMenu() {
   actionMenuOpen.value = false
 }
 
-function toggleActionMenu() {
-  actionMenuOpen.value = !actionMenuOpen.value
-}
-
-function handleActionMenuFocusout(event: FocusEvent) {
-  const currentTarget = event.currentTarget
-  if (!(currentTarget instanceof HTMLElement)) {
-    closeActionMenu()
-    return
-  }
-
-  const nextTarget = event.relatedTarget
-  if (nextTarget instanceof Node && currentTarget.contains(nextTarget)) {
-    return
-  }
-
-  closeActionMenu()
+function setActionMenuOpen(nextOpen: boolean) {
+  actionMenuOpen.value = nextOpen
 }
 
 async function handleDelete() {
@@ -381,35 +363,30 @@ onMounted(() => {
                     >
                       查看
                     </button>
-                    <div
-                      class="writeup-actions-menu-shell"
-                      @mouseenter="openActionMenu"
-                      @mouseleave="closeActionMenu"
-                      @focusin="openActionMenu"
-                      @focusout="handleActionMenuFocusout"
-                      @keydown.esc="closeActionMenu"
+                    <CActionMenu
+                      :open="actionMenuOpen"
+                      title="Management"
+                      menu-label="更多题解操作"
+                      @update:open="setActionMenuOpen"
                     >
-                      <button
-                        class="ui-btn ui-btn--ghost ui-btn--sm writeup-actions-menu-trigger"
-                        data-testid="writeup-more-actions"
-                        type="button"
-                        aria-label="更多题解操作"
-                        :aria-expanded="actionMenuOpen ? 'true' : 'false'"
-                        @mouseenter="openActionMenu"
-                        @focus="openActionMenu"
-                        @click="toggleActionMenu"
-                      >
-                        <MoreHorizontal class="h-4 w-4" />
-                      </button>
-
-                      <div
-                        v-if="actionMenuOpen"
-                        class="writeup-actions-menu"
-                        role="menu"
-                        aria-label="更多题解操作"
-                      >
+                      <template #trigger="{ open, toggle, setTriggerRef }">
                         <button
-                          class="ui-btn ui-btn--ghost ui-btn--sm writeup-actions-menu__button"
+                          :ref="setTriggerRef"
+                          class="c-action-menu__trigger c-action-menu__trigger--icon"
+                          data-testid="writeup-more-actions"
+                          type="button"
+                          aria-label="更多题解操作"
+                          aria-haspopup="menu"
+                          :aria-expanded="open ? 'true' : 'false'"
+                          @click="toggle"
+                        >
+                          <MoreHorizontal class="h-4 w-4" />
+                        </button>
+                      </template>
+
+                      <template #default>
+                        <button
+                          class="c-action-menu__item"
                           role="menuitem"
                           type="button"
                           @click="openWriteup('edit')"
@@ -418,15 +395,15 @@ onMounted(() => {
                         </button>
                         <button
                           :disabled="deleting"
-                          class="ui-btn ui-btn--danger ui-btn--sm writeup-actions-menu__button"
+                          class="c-action-menu__item c-action-menu__item--danger"
                           role="menuitem"
                           type="button"
                           @click="void handleDelete()"
                         >
                           {{ deleting ? '删除中...' : '删除' }}
                         </button>
-                      </div>
-                    </div>
+                      </template>
+                    </CActionMenu>
                   </template>
                   <span v-else class="writeup-row__placeholder">--</span>
                 </div>
@@ -655,42 +632,8 @@ onMounted(() => {
   color: var(--journal-muted);
 }
 
-.writeup-actions-menu-shell {
-  position: relative;
-}
-
-.writeup-actions-menu-trigger {
-  min-width: 2.5rem;
-  padding-inline: var(--space-2-5);
-}
-
-.writeup-actions-menu {
-  position: absolute;
-  top: calc(100% + var(--space-1-5));
-  right: 0;
-  z-index: 10;
-  display: grid;
-  gap: var(--space-2);
-  min-width: 9rem;
-  padding: var(--space-2-5);
-  border: 1px solid color-mix(in srgb, var(--journal-border) 92%, transparent);
-  border-radius: 0.9rem;
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--journal-surface) 98%, var(--color-bg-base)),
-    color-mix(in srgb, var(--journal-surface-subtle) 96%, var(--color-bg-base))
-  );
-  box-shadow: 0 16px 32px var(--color-shadow-soft);
-}
-
-.writeup-actions-menu__button {
-  justify-content: flex-start;
-  width: 100%;
-}
-
 .writeup-manage-actions > .ui-btn,
-.writeup-row__actions > .ui-btn,
-.writeup-actions-menu__button.ui-btn {
+.writeup-row__actions > .ui-btn {
   --ui-btn-secondary-background: color-mix(
     in srgb,
     var(--journal-surface) 96%,
@@ -754,11 +697,6 @@ onMounted(() => {
   .writeup-row__actions {
     justify-content: flex-start;
     margin-top: var(--space-2);
-  }
-
-  .writeup-actions-menu {
-    right: auto;
-    left: 0;
   }
 }
 </style>
