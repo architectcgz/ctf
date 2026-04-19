@@ -70,7 +70,7 @@ const summaryCards = computed(() => [
     <div :class="embedded ? undefined : 'content-pane'">
       <div class="recommendation-header">
       <div class="workspace-overline">Action Queue</div>
-      <h1 class="journal-page-title workspace-page-title text-[var(--journal-ink)]">
+      <h1 class="journal-page-title workspace-page-title journal-soft-page-title">
         现在先练这几道
       </h1>
       <p class="workspace-page-copy max-w-2xl">
@@ -82,7 +82,7 @@ const summaryCards = computed(() => [
           <span
             v-for="dim in visibleWeakDimensions"
             :key="dim"
-            class="inline-flex items-center gap-1.5 rounded-full border border-[var(--journal-accent)]/20 bg-[var(--journal-accent)]/8 px-3 py-1 text-xs font-semibold text-[var(--journal-accent-strong)]"
+            class="journal-soft-accent-pill inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold"
           >
             <ShieldAlert class="h-3 w-3" />
             {{ dim }}
@@ -131,7 +131,7 @@ const summaryCards = computed(() => [
 
         <div
           v-if="recommendations.length === 0"
-          class="mt-5 rounded-[22px] border border-dashed border-[var(--journal-shell-border)] px-4 py-12 text-center text-sm text-[var(--journal-muted)]"
+          class="journal-soft-empty-state mt-5"
         >
           当前没有推荐题目，可以先去题目列表探索新的方向。
           <div class="mt-4">
@@ -157,7 +157,7 @@ const summaryCards = computed(() => [
               </div>
               <div class="min-w-0 flex-1">
                 <div class="flex flex-wrap items-center gap-2">
-                  <span class="text-sm font-semibold text-[var(--journal-ink)]">{{
+                  <span class="journal-soft-body-title text-sm font-semibold">{{
                     item.title
                   }}</span>
                   <span
@@ -170,10 +170,10 @@ const summaryCards = computed(() => [
                     {{ item.category }}
                   </span>
                 </div>
-                <p class="mt-2 text-sm leading-6 text-[var(--journal-muted)]">{{ item.reason }}</p>
+                <p class="journal-soft-body-copy mt-2 text-sm leading-6">{{ item.reason }}</p>
               </div>
               <ArrowRight
-                class="mt-1 h-4 w-4 shrink-0 text-[var(--journal-accent-strong)] opacity-0 transition group-hover:opacity-100"
+                class="journal-soft-accent-icon mt-1 h-4 w-4 shrink-0 opacity-0 transition group-hover:opacity-100"
               />
             </div>
           </button>

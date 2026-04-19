@@ -10,7 +10,7 @@
       />
 
       <aside
-        class="backoffice-sidebar backoffice-sidebar--mobile fixed inset-y-0 left-0 z-50 flex w-[260px] shrink-0 flex-col transition-all duration-300 md:hidden"
+        class="backoffice-sidebar backoffice-sidebar--mobile backoffice-sidebar--expanded fixed inset-y-0 left-0 z-50 flex shrink-0 flex-col transition-all duration-300 md:hidden"
         :class="mobileOpen ? 'translate-x-0' : '-translate-x-full'"
       >
         <div class="backoffice-sidebar__header relative flex h-16 items-center px-5 overflow-hidden whitespace-nowrap">
@@ -33,7 +33,7 @@
         </div>
 
         <div class="backoffice-sidebar__workspace px-6 py-5 overflow-hidden whitespace-nowrap transition-all duration-200">
-          <span class="backoffice-sidebar__workspace-label text-[10px] font-black uppercase tracking-widest">
+          <span class="backoffice-sidebar__workspace-label font-black uppercase tracking-widest">
             Workspace
           </span>
         </div>
@@ -51,7 +51,7 @@
                   class="backoffice-sidebar__item-icon shrink-0"
                   :class="backofficeItemIconClass(item)"
                 >
-                  <component :is="item.icon" class="h-[18px] w-[18px]" />
+                  <component :is="item.icon" class="backoffice-sidebar__icon-svg" />
                 </div>
                 <span class="transition-opacity duration-200 whitespace-nowrap">
                   {{ item.title }}
@@ -67,19 +67,19 @@
 
             <div
               v-if="item.children?.length && isBackofficeItemExpanded(item)"
-              class="backoffice-sidebar__children mt-1 mb-2 ml-[22px] pl-3 flex flex-col gap-1 animate-in slide-in-from-top-2 duration-200"
+              class="backoffice-sidebar__children mt-1 mb-2 pl-3 flex flex-col gap-1 animate-in slide-in-from-top-2 duration-200"
             >
               <button
                 v-for="child in item.children"
                 :key="child.name"
                 type="button"
-                class="backoffice-sidebar__child text-left py-2 px-3 rounded-lg text-[13px] transition-all relative group"
+                class="backoffice-sidebar__child text-left py-2 px-3 rounded-lg transition-all relative group"
                 :class="backofficeChildButtonClass(child)"
                 @click="navigate(child)"
               >
                 <div
                   v-if="isItemActive(child)"
-                  class="backoffice-sidebar__child-indicator absolute -left-[14px] top-1/2 -translate-y-1/2 w-[3px] h-4 rounded-full"
+                  class="backoffice-sidebar__child-indicator absolute top-1/2 -translate-y-1/2 h-4 rounded-full"
                 />
                 <span class="relative z-10">{{ child.title }}</span>
               </button>
@@ -90,7 +90,7 @@
 
       <aside
         class="backoffice-sidebar backoffice-sidebar--desktop relative z-[60] hidden h-screen shrink-0 flex-col transition-all duration-300 md:flex"
-        :class="collapsed ? 'w-20' : 'w-[260px]'"
+        :class="collapsed ? 'w-20' : 'backoffice-sidebar--expanded'"
       >
         <button
           type="button"
@@ -122,7 +122,7 @@
           class="backoffice-sidebar__workspace px-6 py-5 overflow-hidden whitespace-nowrap transition-all duration-200"
           :class="collapsed ? 'opacity-0 h-0 p-0' : 'opacity-100 h-14'"
         >
-          <span class="backoffice-sidebar__workspace-label text-[10px] font-black uppercase tracking-widest">
+          <span class="backoffice-sidebar__workspace-label font-black uppercase tracking-widest">
             Workspace
           </span>
         </div>
@@ -144,7 +144,7 @@
                   class="backoffice-sidebar__item-icon shrink-0"
                   :class="backofficeItemIconClass(item)"
                 >
-                  <component :is="item.icon" class="h-[18px] w-[18px]" />
+                  <component :is="item.icon" class="backoffice-sidebar__icon-svg" />
                 </div>
                 <span
                   class="transition-opacity duration-200 whitespace-nowrap"
@@ -163,19 +163,19 @@
 
             <div
               v-if="item.children?.length && isBackofficeItemExpanded(item) && !collapsed"
-              class="backoffice-sidebar__children mt-1 mb-2 ml-[22px] pl-3 flex flex-col gap-1 animate-in slide-in-from-top-2 duration-200"
+              class="backoffice-sidebar__children mt-1 mb-2 pl-3 flex flex-col gap-1 animate-in slide-in-from-top-2 duration-200"
             >
               <button
                 v-for="child in item.children"
                 :key="child.name"
                 type="button"
-                class="backoffice-sidebar__child text-left py-2 px-3 rounded-lg text-[13px] transition-all relative group"
+                class="backoffice-sidebar__child text-left py-2 px-3 rounded-lg transition-all relative group"
                 :class="backofficeChildButtonClass(child)"
                 @click="navigate(child)"
               >
                 <div
                   v-if="isItemActive(child)"
-                  class="backoffice-sidebar__child-indicator absolute -left-[14px] top-1/2 -translate-y-1/2 w-[3px] h-4 rounded-full"
+                  class="backoffice-sidebar__child-indicator absolute top-1/2 -translate-y-1/2 h-4 rounded-full"
                 />
                 <span class="relative z-10">{{ child.title }}</span>
               </button>
@@ -766,6 +766,10 @@ async function navigate(item: NavItem): Promise<void> {
     );
 }
 
+.backoffice-sidebar--expanded {
+  width: 16.25rem;
+}
+
 .backoffice-sidebar__header {
   border-bottom: 1px solid var(--backoffice-shell-line);
 }
@@ -805,7 +809,14 @@ async function navigate(item: NavItem): Promise<void> {
 }
 
 .backoffice-sidebar__workspace-label {
+  font-size: 0.625rem;
+  line-height: 1;
   color: var(--backoffice-shell-faint);
+}
+
+.backoffice-sidebar__icon-svg {
+  height: 1.125rem;
+  width: 1.125rem;
 }
 
 .backoffice-sidebar__item {
@@ -854,10 +865,13 @@ async function navigate(item: NavItem): Promise<void> {
 }
 
 .backoffice-sidebar__children {
+  margin-left: 1.375rem;
   border-left: 2px solid color-mix(in srgb, var(--backoffice-shell-line) 82%, transparent);
 }
 
 .backoffice-sidebar__child {
+  font-size: 0.8125rem;
+  line-height: 1.125rem;
   color: var(--backoffice-shell-muted);
 }
 
@@ -879,6 +893,8 @@ async function navigate(item: NavItem): Promise<void> {
 }
 
 .backoffice-sidebar__child-indicator {
+  left: -0.875rem;
+  width: 0.1875rem;
   background: color-mix(in srgb, var(--color-primary) 90%, var(--backoffice-shell-text));
 }
 

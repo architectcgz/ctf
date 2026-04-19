@@ -124,6 +124,15 @@ describe('ImageManage', () => {
     expect(imageManageSource).toContain('class="ui-btn ui-btn--primary')
   })
 
+  it('应改用共享 ui-btn 原语而不是页面私有 admin-btn 按钮族', () => {
+    expect(imageManageSource).toContain('class="ui-btn ui-btn--ghost"')
+    expect(imageManageSource).toContain('class="ui-btn ui-btn--primary"')
+    expect(imageManageSource).toContain('class="ui-btn ui-btn--sm ui-btn--danger"')
+    expect(imageManageSource).not.toContain('admin-btn admin-btn-ghost')
+    expect(imageManageSource).not.toContain('admin-btn admin-btn-primary')
+    expect(imageManageSource).not.toContain('admin-btn admin-btn-danger')
+  })
+
   it('不应在头部摘要和镜像列表之间重复渲染分割线', () => {
     expect(imageManageSource).toMatch(
       /\.image-header\s*\{[\s\S]*border-bottom:\s*1px solid color-mix\(in srgb, var\(--journal-border\) 88%, transparent\);/s

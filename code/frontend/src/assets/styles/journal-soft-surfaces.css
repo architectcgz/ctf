@@ -156,6 +156,41 @@
   outline-offset: 2px;
 }
 
+.journal-soft-surface .journal-soft-empty-state {
+  border: 1px dashed var(--journal-shell-border);
+  border-radius: 22px;
+  padding: var(--space-12) var(--space-4);
+  text-align: center;
+  font-size: var(--font-size-0-875);
+  color: var(--journal-muted);
+}
+
+.journal-soft-surface .journal-soft-empty-state--compact {
+  border-radius: 18px;
+  padding-block: var(--space-10);
+}
+
+.journal-soft-surface .journal-soft-page-title,
+.journal-soft-surface .journal-soft-section-title,
+.journal-soft-surface .journal-soft-body-title {
+  color: var(--journal-ink);
+}
+
+.journal-soft-surface .journal-soft-body-copy,
+.journal-soft-surface .journal-soft-meta {
+  color: var(--journal-muted);
+}
+
+.journal-soft-surface .journal-soft-accent-icon {
+  color: var(--journal-accent-strong);
+}
+
+.journal-soft-surface .journal-soft-accent-pill {
+  border: 1px solid color-mix(in srgb, var(--journal-accent) 20%, transparent);
+  background: color-mix(in srgb, var(--journal-accent) 8%, transparent);
+  color: var(--journal-accent-strong);
+}
+
 [data-theme='dark'] .journal-soft-surface .journal-shell {
   --journal-ink: color-mix(in srgb, var(--color-text-primary) 88%, var(--color-text-secondary));
   --journal-muted: var(--color-text-secondary);

@@ -1,26 +1,39 @@
 import { describe, expect, it } from 'vitest'
 
 import awdChallengeConfigPanelSource from '@/components/admin/contest/AWDChallengeConfigPanel.vue?raw'
+import awdContestSelectorFieldSource from '@/components/admin/contest/AWDContestSelectorField.vue?raw'
 import awdOperationsPanelSource from '@/components/admin/contest/AWDOperationsPanel.vue?raw'
+import awdRoundHeaderPanelSource from '@/components/admin/contest/AWDRoundHeaderPanel.vue?raw'
 import awdRoundInspectorSource from '@/components/admin/contest/AWDRoundInspector.vue?raw'
+import awdRoundSelectionPanelSource from '@/components/admin/contest/AWDRoundSelectionPanel.vue?raw'
+import awdRuntimePendingStateSource from '@/components/admin/contest/AWDRuntimePendingState.vue?raw'
+import awdTrafficPanelSource from '@/components/admin/contest/AWDTrafficPanel.vue?raw'
 import contestAwdPreflightPanelSource from '@/components/admin/contest/ContestAwdPreflightPanel.vue?raw'
 
 describe('contest ui primitive adoption phase 4', () => {
   it('awd operations panel should consume shared field and button primitives for selector and runtime shell', () => {
-    expect(awdOperationsPanelSource).toContain('class="ui-field awd-ops-selector-field"')
-    expect(awdOperationsPanelSource).toContain('class="ui-control-wrap"')
-    expect(awdOperationsPanelSource).toContain('class="ui-control"')
-    expect(awdOperationsPanelSource).toContain('class="ui-btn ui-btn--secondary"')
-    expect(awdOperationsPanelSource).toContain('class="ui-btn ui-btn--primary"')
+    expect(awdOperationsPanelSource).toContain('<AWDContestSelectorField')
+    expect(awdOperationsPanelSource).toContain('<AWDRuntimePendingState')
+    expect(awdContestSelectorFieldSource).toContain('class="ui-field awd-ops-selector-field"')
+    expect(awdContestSelectorFieldSource).toContain('class="ui-control-wrap"')
+    expect(awdContestSelectorFieldSource).toContain('class="ui-control"')
+    expect(awdRuntimePendingStateSource).toContain('class="ui-btn ui-btn--secondary"')
+    expect(awdRuntimePendingStateSource).toContain('class="ui-btn ui-btn--primary"')
   })
 
   it('awd round inspector should consume shared buttons and field primitives for toolbar and filters', () => {
-    expect(awdRoundInspectorSource).toContain('class="ui-btn ui-btn--secondary awd-round-toolbar__button"')
-    expect(awdRoundInspectorSource).toContain('class="ui-btn ui-btn--primary awd-round-toolbar__button"')
-    expect(awdRoundInspectorSource).toContain('class="ui-field awd-round-filter-field"')
-    expect(awdRoundInspectorSource).toContain('class="ui-control-wrap awd-round-filter-control"')
-    expect(awdRoundInspectorSource).toContain('class="ui-control"')
-    expect(awdRoundInspectorSource).toContain('class="ui-btn ui-btn--ghost awd-round-filter-search"')
+    expect(awdRoundInspectorSource).toContain('<AWDRoundHeaderPanel')
+    expect(awdRoundInspectorSource).toContain('<AWDRoundSelectionPanel')
+    expect(awdRoundInspectorSource).toContain('<AWDTrafficPanel')
+    expect(awdRoundHeaderPanelSource).toContain('class="ui-btn ui-btn--secondary awd-round-toolbar__button"')
+    expect(awdRoundHeaderPanelSource).toContain('class="ui-btn ui-btn--primary awd-round-toolbar__button"')
+    expect(awdRoundSelectionPanelSource).toContain('class="ui-field awd-round-filter-field"')
+    expect(awdRoundSelectionPanelSource).toContain('class="ui-control-wrap awd-round-filter-control"')
+    expect(awdRoundSelectionPanelSource).toContain('class="ui-control"')
+    expect(awdTrafficPanelSource).toContain('class="ui-field awd-round-filter-field"')
+    expect(awdTrafficPanelSource).toContain('class="ui-control-wrap awd-round-filter-control"')
+    expect(awdTrafficPanelSource).toContain('class="ui-control"')
+    expect(awdTrafficPanelSource).toContain('class="ui-btn ui-btn--ghost awd-round-filter-search"')
   })
 
   it('awd challenge config panel should consume shared action and row action primitives', () => {

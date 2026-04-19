@@ -29,19 +29,19 @@ const { loading, challenge, writeup, loadPage } = useChallengeWriteupEditorPage(
         <span class="class-chip">查看题解</span>
       </div>
       <div class="writeup-top-actions">
-        <button class="admin-btn admin-btn-ghost" type="button" @click="emit('back')">
+        <button class="ui-btn ui-btn--ghost" type="button" @click="emit('back')">
           返回题目
         </button>
         <button
           v-if="writeup"
-          class="admin-btn admin-btn-primary"
+          class="ui-btn ui-btn--primary"
           type="button"
           @click="emit('edit')"
         >
           <Edit3 class="h-4 w-4" />
           编辑题解
         </button>
-        <button class="admin-btn admin-btn-ghost" type="button" @click="void loadPage()">
+        <button class="ui-btn ui-btn--ghost" type="button" @click="void loadPage()">
           <RefreshCw class="h-4 w-4" />
           刷新
         </button>
@@ -114,6 +114,30 @@ const { loading, challenge, writeup, loadPage } = useChallengeWriteupEditorPage(
   gap: var(--space-3);
 }
 
+.writeup-top-actions > .ui-btn {
+  --ui-btn-height: 2.4rem;
+  --ui-btn-radius: 0.75rem;
+  --ui-btn-padding: var(--space-2) var(--space-4);
+  --ui-btn-font-size: var(--font-size-0-875);
+  --ui-btn-font-weight: 600;
+  --ui-btn-focus-ring: color-mix(in srgb, var(--journal-accent) 18%, transparent);
+}
+
+.writeup-top-actions > .ui-btn.ui-btn--ghost {
+  --ui-btn-border: var(--journal-border);
+  --ui-btn-background: color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base));
+  --ui-btn-color: var(--journal-ink);
+  --ui-btn-hover-border: color-mix(in srgb, var(--journal-accent) 28%, transparent);
+  --ui-btn-hover-background: color-mix(in srgb, var(--journal-accent) 4%, var(--journal-surface));
+  --ui-btn-hover-color: var(--journal-accent);
+}
+
+.writeup-top-actions > .ui-btn.ui-btn--primary {
+  --ui-btn-primary-border: color-mix(in srgb, var(--journal-accent) 18%, transparent);
+  --ui-btn-primary-background: var(--journal-accent);
+  --ui-btn-primary-hover-background: color-mix(in srgb, var(--journal-accent) 88%, black);
+}
+
 .writeup-loading {
   padding-block: var(--space-7);
 }
@@ -161,35 +185,6 @@ const { loading, challenge, writeup, loadPage } = useChallengeWriteupEditorPage(
 .writeup-view-body {
   display: grid;
   gap: var(--space-2);
-}
-
-.admin-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  min-height: 2.4rem;
-  border-radius: 0.75rem;
-  border: 1px solid transparent;
-  padding: var(--space-2) var(--space-4);
-  font-size: var(--font-size-0-875);
-  font-weight: 600;
-  transition:
-    border-color 150ms ease,
-    background 150ms ease,
-    color 150ms ease;
-}
-
-.admin-btn-ghost {
-  border-color: var(--journal-border);
-  background: color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base));
-  color: var(--journal-ink);
-}
-
-.admin-btn-primary {
-  border-color: color-mix(in srgb, var(--journal-accent) 18%, transparent);
-  background: var(--journal-accent);
-  color: #fff;
 }
 
 @media (max-width: 960px) {

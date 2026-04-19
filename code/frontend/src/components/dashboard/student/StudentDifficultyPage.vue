@@ -124,7 +124,7 @@ function openPrimaryDifficulty(): void {
     <div :class="embedded ? undefined : 'content-pane'">
       <div class="difficulty-header">
       <div class="workspace-overline">Intensity Workspace</div>
-      <h1 class="journal-page-title workspace-page-title text-[var(--journal-ink)]">
+      <h1 class="journal-page-title workspace-page-title journal-soft-page-title">
         {{ headlineTitle }}
       </h1>
       <p class="workspace-page-copy max-w-2xl">
@@ -178,7 +178,7 @@ function openPrimaryDifficulty(): void {
 
         <div
           v-if="!hasDifficultyStats"
-          class="mt-5 rounded-[22px] border border-dashed border-[var(--journal-shell-border)] px-4 py-12 text-center text-sm text-[var(--journal-muted)]"
+          class="journal-soft-empty-state mt-5"
         >
           当前还没有难度统计数据，先完成几道题再回来查看。
         </div>

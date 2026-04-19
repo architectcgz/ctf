@@ -83,6 +83,17 @@ describe('ChallengeWriteupManagePanel', () => {
     )
   })
 
+  it('应改用共享 ui-btn 原语而不是页面私有 admin-btn 按钮族', () => {
+    expect(challengeWriteupManagePanelSource).toContain('class="ui-btn ui-btn--primary"')
+    expect(challengeWriteupManagePanelSource).toContain('class="ui-btn ui-btn--secondary ui-btn--sm"')
+    expect(challengeWriteupManagePanelSource).toContain('class="ui-btn ui-btn--ghost ui-btn--sm')
+    expect(challengeWriteupManagePanelSource).toContain('class="ui-btn ui-btn--danger ui-btn--sm')
+    expect(challengeWriteupManagePanelSource).not.toContain('admin-btn admin-btn-primary')
+    expect(challengeWriteupManagePanelSource).not.toContain('admin-btn admin-btn-outline')
+    expect(challengeWriteupManagePanelSource).not.toContain('admin-btn admin-btn-ghost')
+    expect(challengeWriteupManagePanelSource).not.toContain('admin-btn admin-btn-danger')
+  })
+
   it('存在题解时应显示带边框的查看入口，并通过更多菜单进入编辑', async () => {
     adminApiMocks.getChallengeWriteup.mockResolvedValue({
       id: '21',
@@ -179,7 +190,7 @@ describe('ChallengeWriteupManagePanel', () => {
     const viewButton = wrapper.findAll('button').find((button) => button.text().trim() === '查看')
     const moreButton = wrapper.get('[data-testid="writeup-more-actions"]')
     expect(viewButton).toBeTruthy()
-    expect(viewButton!.classes()).toContain('admin-btn-outline')
+    expect(viewButton!.classes()).toContain('ui-btn--secondary')
     expect(moreButton.attributes('aria-expanded')).toBe('false')
 
     await viewButton!.trigger('click')

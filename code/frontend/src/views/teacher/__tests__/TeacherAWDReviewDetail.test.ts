@@ -200,4 +200,12 @@ describe('TeacherAWDReviewDetail', () => {
       '默认展示整场总览；切换到单轮后，可继续按队伍查看该轮服务、攻击和流量证据。'
     )
   })
+
+  it('详情页加载骨架应通过语义类承接，不再直接写圆角和背景混色', () => {
+    expect(awdReviewDetailSource).toContain('awd-review-loading-card')
+    expect(awdReviewDetailSource).not.toContain('rounded-[22px]')
+    expect(awdReviewDetailSource).not.toContain(
+      'bg-[color-mix(in_srgb,var(--journal-surface-subtle)_92%,transparent)]'
+    )
+  })
 })

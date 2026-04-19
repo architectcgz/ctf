@@ -10,13 +10,13 @@
       <div class="topbar-actions">
         <button
           v-if="challengeId"
-          class="admin-btn admin-btn-primary"
+          class="ui-btn ui-btn--primary"
           type="button"
           @click="openTopology"
         >
           拓扑编排
         </button>
-        <button class="admin-btn admin-btn-ghost" type="button" @click="openChallengeList">
+        <button class="ui-btn ui-btn--ghost" type="button" @click="openChallengeList">
           返回题库
         </button>
       </div>
@@ -283,7 +283,7 @@
                 </div>
                 <button
                   :disabled="saving"
-                  class="admin-btn admin-btn-primary"
+                  class="ui-btn ui-btn--primary"
                   type="button"
                   @click="saveFlagConfig"
                 >
@@ -825,43 +825,20 @@ onUnmounted(() => {
   color: var(--journal-ink);
 }
 
-.admin-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 2.45rem;
-  border-radius: 0.75rem;
-  border: 1px solid transparent;
-  padding: var(--space-2) var(--space-4);
-  font-size: var(--font-size-0-875);
-  font-weight: 600;
-  transition:
-    border-color 150ms ease,
-    background 150ms ease,
-    color 150ms ease,
-    box-shadow 150ms ease;
-}
-
-.admin-btn:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--journal-accent) 18%, transparent);
-}
-
-.admin-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.admin-btn-primary {
-  border-color: color-mix(in srgb, var(--journal-accent) 18%, transparent);
-  background: var(--journal-accent);
-  color: #fff;
-}
-
-.admin-btn-ghost {
-  border-color: var(--journal-border);
-  background: color-mix(in srgb, var(--journal-surface) 96%, transparent);
-  color: var(--journal-ink);
+.topbar-actions > .ui-btn,
+.challenge-flag-panel .ui-btn {
+  --ui-btn-height: 2.45rem;
+  --ui-btn-radius: 0.75rem;
+  --ui-btn-padding: var(--space-2) var(--space-4);
+  --ui-btn-font-size: var(--font-size-0-875);
+  --ui-btn-font-weight: 600;
+  --ui-btn-primary-border: color-mix(in srgb, var(--journal-accent) 18%, transparent);
+  --ui-btn-primary-background: var(--journal-accent);
+  --ui-btn-primary-hover-background: color-mix(in srgb, var(--journal-accent) 88%, black);
+  --ui-btn-ghost-color: var(--journal-ink);
+  --ui-btn-ghost-hover-color: var(--journal-accent);
+  --ui-btn-ghost-hover-background: color-mix(in srgb, var(--journal-accent) 4%, var(--journal-surface));
+  --ui-btn-focus-ring: color-mix(in srgb, var(--journal-accent) 18%, transparent);
 }
 
 .flag-summary-chip {

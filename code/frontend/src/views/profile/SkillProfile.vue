@@ -58,6 +58,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } =
     orderedTabs: contentTabOrder,
     defaultTab: 'analysis',
   })
+const skillRadarHeightClass = 'skill-radar-height'
 </script>
 
 <template>
@@ -69,17 +70,17 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } =
         <div class="space-y-6">
           <div class="h-12 animate-pulse rounded-2xl bg-[var(--journal-surface)]/90"></div>
           <div class="grid gap-6 xl:grid-cols-[minmax(0,1.06fr)_minmax(300px,0.94fr)]">
-            <div class="h-80 animate-pulse rounded-[24px] bg-[var(--journal-surface)]"></div>
-            <div class="h-80 animate-pulse rounded-[24px] bg-[var(--journal-surface)]"></div>
+            <div class="skill-loading-card h-80 animate-pulse bg-[var(--journal-surface)]"></div>
+            <div class="skill-loading-card h-80 animate-pulse bg-[var(--journal-surface)]"></div>
           </div>
-          <div class="h-56 animate-pulse rounded-[24px] bg-[var(--journal-surface)]"></div>
-          <div class="h-56 animate-pulse rounded-[24px] bg-[var(--journal-surface)]"></div>
+          <div class="skill-loading-card h-56 animate-pulse bg-[var(--journal-surface)]"></div>
+          <div class="skill-loading-card h-56 animate-pulse bg-[var(--journal-surface)]"></div>
         </div>
       </div>
 
       <div v-else-if="error" class="py-8 text-center">
-        <TriangleAlert class="mx-auto h-10 w-10 text-[var(--color-danger)]" />
-        <p class="mt-3 text-sm text-[var(--color-danger)]">{{ error }}</p>
+        <TriangleAlert class="skill-error-icon mx-auto h-10 w-10" />
+        <p class="skill-error-copy mt-3 text-sm">{{ error }}</p>
         <button
           type="button"
           class="journal-btn journal-btn--primary mt-4"
@@ -148,7 +149,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } =
           <div class="skill-analysis-stack">
             <div>
               <div class="skill-overview-head">
-                <h1 class="journal-page-title workspace-page-title text-[var(--journal-ink)]">
+                <h1 class="journal-page-title workspace-page-title skill-page-title">
                   能力画像
                 </h1>
                 <p class="skill-overview-copy workspace-page-copy">
@@ -178,7 +179,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } =
                           :indicators="radarIndicators"
                           :values="radarValues"
                           name="维度得分"
-                          height-class="h-[30rem] md:h-[34rem] xl:h-[38rem]"
+                          :height-class="skillRadarHeightClass"
                           :label-font-size="20"
                           :axis-name-gap="12"
                           radius="74%"
@@ -195,22 +196,18 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } =
                       class="skill-dimension-legend__item"
                     >
                       <div class="min-w-0">
-                        <div
-                          class="text-base font-semibold text-[var(--journal-ink)] md:text-[1.05rem]"
-                        >
+                        <div class="skill-dimension-legend__name">
                           {{ dim.name }}
                         </div>
-                        <div class="mt-1 text-[0.8rem] text-[var(--journal-muted)]">
+                        <div class="skill-dimension-legend__hint mt-1">
                           当前维度表现
                         </div>
                       </div>
                       <div class="text-right">
-                        <div
-                          class="text-[1.9rem] font-semibold tracking-tight text-[var(--journal-ink)] tech-font md:text-[2.1rem]"
-                        >
+                        <div class="skill-dimension-legend__score tech-font">
                           {{ dim.value }}
                         </div>
-                        <div class="text-xs text-[var(--journal-muted)]">/ 100</div>
+                        <div class="skill-dimension-legend__total text-xs">/ 100</div>
                       </div>
                     </article>
                   </div>
@@ -230,22 +227,20 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } =
         >
           <div class="skill-weak-wrap">
             <div class="skill-section-kicker">Weak Points</div>
-            <div
-              class="mt-3 flex items-center gap-3 text-base font-semibold text-[var(--journal-ink)]"
-            >
-              <Flame class="h-5 w-5 text-[var(--journal-accent)]" />
+            <div class="skill-weak-title mt-3 flex items-center gap-3 text-base font-semibold">
+              <Flame class="skill-weak-title__icon h-5 w-5" />
               薄弱项提示
             </div>
             <div v-if="weakDimensions.length > 0" class="skill-weak-list mt-5">
               <div v-for="dim in weakDimensions.slice(0, 4)" :key="dim" class="skill-weak-item">
                 <div class="journal-note-label">建议加强</div>
-                <div class="mt-2 text-sm font-semibold text-[var(--journal-ink)]">{{ dim }}</div>
+                <div class="skill-weak-dimension mt-2 text-sm font-semibold">{{ dim }}</div>
               </div>
             </div>
             <div v-else class="skill-weak-list mt-5">
               <div class="skill-weak-item">
                 <div class="journal-note-label">当前状态</div>
-                <div class="mt-2 text-sm font-semibold text-[var(--journal-ink)]">
+                <div class="skill-weak-dimension mt-2 text-sm font-semibold">
                   暂时没有明显短板
                 </div>
               </div>
@@ -263,13 +258,13 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } =
         >
           <div class="skill-section-kicker">Recommendations</div>
           <h3 class="workspace-tab-heading__title">推荐靶场</h3>
-          <p class="mt-2 text-sm leading-6 text-[var(--journal-muted)]">
+          <p class="skill-section-copy mt-2 text-sm leading-6">
             优先从当前最匹配的题目开始。
           </p>
 
           <div
             v-if="loadingRecommendations"
-            class="mt-6 flex items-center gap-3 text-sm text-[var(--journal-muted)]"
+            class="skill-recommend-feedback skill-recommend-feedback--loading mt-6 flex items-center gap-3 text-sm"
           >
             <Loader2 class="h-4 w-4 animate-spin" />
             加载推荐中…
@@ -277,7 +272,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } =
 
           <div
             v-else-if="recommendations.length === 0"
-            class="mt-6 text-sm text-[var(--journal-muted)]"
+            class="skill-recommend-feedback mt-6 text-sm"
           >
             暂无推荐靶场，完成更多题目后会自动生成。
           </div>
@@ -293,21 +288,21 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } =
               <div class="flex items-center justify-between gap-4">
                 <div class="min-w-0">
                   <div class="flex flex-wrap items-center gap-2">
-                    <span class="text-sm font-semibold text-[var(--journal-ink)]">{{
+                    <span class="skill-recommend-title text-sm font-semibold">{{
                       item.title
                     }}</span>
                     <span
-                      class="shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold"
+                      class="skill-difficulty-pill shrink-0 rounded-full px-2 py-0.5 font-semibold"
                       :class="difficultyClass(item.difficulty)"
                     >
                       {{ difficultyLabel(item.difficulty) }}
                     </span>
                   </div>
-                  <p class="mt-1 text-xs leading-5 text-[var(--journal-muted)]">
+                  <p class="skill-recommend-reason mt-1 text-xs leading-5">
                     {{ item.reason }}
                   </p>
                 </div>
-                <ChevronRight class="h-4 w-4 shrink-0 text-[var(--journal-accent-strong)]" />
+                <ChevronRight class="skill-recommend-arrow h-4 w-4 shrink-0" />
               </div>
             </button>
           </div>
@@ -400,6 +395,22 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } =
 
 .journal-hero {
   border-color: var(--journal-shell-border);
+}
+
+.skill-error-icon,
+.skill-error-copy {
+  color: var(--color-danger);
+}
+
+.skill-loading-card {
+  border-radius: 1.5rem;
+}
+
+.skill-page-title,
+.skill-weak-title,
+.skill-weak-dimension,
+.skill-recommend-title {
+  color: var(--journal-ink);
 }
 
 .skill-teacher-panel {
@@ -534,6 +545,47 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } =
   z-index: 1;
 }
 
+.skill-radar-height {
+  height: 30rem;
+}
+
+.skill-dimension-legend__name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--journal-ink);
+}
+
+.skill-dimension-legend__hint {
+  font-size: 0.8rem;
+  color: var(--journal-muted);
+}
+
+.skill-dimension-legend__score {
+  font-size: 1.9rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--journal-ink);
+}
+
+.skill-dimension-legend__total,
+.skill-section-copy,
+.skill-recommend-feedback,
+.skill-recommend-reason {
+  color: var(--journal-muted);
+}
+
+.skill-difficulty-pill {
+  font-size: 0.6875rem;
+}
+
+.skill-weak-title__icon {
+  color: var(--journal-accent);
+}
+
+.skill-recommend-arrow {
+  color: var(--journal-accent-strong);
+}
+
 .skill-dimension-legend {
   display: grid;
   gap: 0;
@@ -579,6 +631,10 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } =
 }
 
 @media (min-width: 768px) {
+  .skill-radar-height {
+    height: 34rem;
+  }
+
   .skill-weak-list {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -629,6 +685,20 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } =
 :global([data-theme='dark']) .skill-dimension-chart__frame::after {
   background: color-mix(in srgb, var(--journal-surface) 92%, transparent);
   border-color: color-mix(in srgb, var(--journal-muted) 20%, transparent);
+}
+
+@media (min-width: 1280px) {
+  .skill-radar-height {
+    height: 38rem;
+  }
+
+  .skill-dimension-legend__name {
+    font-size: 1.05rem;
+  }
+
+  .skill-dimension-legend__score {
+    font-size: 2.1rem;
+  }
 }
 
 @media (max-width: 767px) {

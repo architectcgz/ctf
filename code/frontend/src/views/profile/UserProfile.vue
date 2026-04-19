@@ -185,8 +185,8 @@ onUnmounted(() => {
           <div class="h-24 animate-pulse rounded-2xl bg-[var(--journal-surface)]"></div>
         </div>
         <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(320px,0.98fr)]">
-          <div class="h-72 animate-pulse rounded-[24px] bg-[var(--journal-surface)]"></div>
-          <div class="h-72 animate-pulse rounded-[24px] bg-[var(--journal-surface)]"></div>
+          <div class="profile-loading-card h-72 animate-pulse bg-[var(--journal-surface)]"></div>
+          <div class="profile-loading-card h-72 animate-pulse bg-[var(--journal-surface)]"></div>
         </div>
       </div>
 
@@ -245,7 +245,7 @@ onUnmounted(() => {
             <div>
               <div class="profile-section-kicker">Account</div>
               <h2 class="profile-section-title">
-                <UserCircle2 class="h-5 w-5 text-[var(--journal-accent)]" />
+                <UserCircle2 class="profile-accent-icon h-5 w-5" />
                 账号信息
               </h2>
             </div>
@@ -280,7 +280,7 @@ onUnmounted(() => {
           <div class="profile-status">
             <div class="profile-status__row">
               <div class="profile-status__label">
-                <Activity class="h-4 w-4 text-[var(--journal-accent)]" />
+                <Activity class="profile-accent-icon h-4 w-4" />
                 当前状态
               </div>
               <div class="profile-status__value">
@@ -309,16 +309,16 @@ onUnmounted(() => {
                 :class="{ 'journal-format-option--active': reportFormat === 'pdf' }"
               >
                 <input v-model="reportFormat" type="radio" value="pdf" class="sr-only" />
-                <div class="text-sm font-semibold text-[var(--journal-ink)]">PDF 报告</div>
-                <div class="mt-1 text-xs text-[var(--journal-muted)]">适合阅读和保存</div>
+                <div class="profile-format-title">PDF 报告</div>
+                <div class="profile-format-copy mt-1">适合阅读和保存</div>
               </label>
               <label
                 class="journal-format-option"
                 :class="{ 'journal-format-option--active': reportFormat === 'excel' }"
               >
                 <input v-model="reportFormat" type="radio" value="excel" class="sr-only" />
-                <div class="text-sm font-semibold text-[var(--journal-ink)]">Excel 报告</div>
-                <div class="mt-1 text-xs text-[var(--journal-muted)]">适合筛选和整理数据</div>
+                <div class="profile-format-title">Excel 报告</div>
+                <div class="profile-format-copy mt-1">适合筛选和整理数据</div>
               </label>
             </div>
           </fieldset>
@@ -430,6 +430,10 @@ onUnmounted(() => {
   gap: 1rem;
 }
 
+.profile-loading-card {
+  border-radius: 1.5rem;
+}
+
 .profile-page {
   min-height: 100%;
 }
@@ -499,6 +503,10 @@ onUnmounted(() => {
   font-size: var(--font-size-1-15);
   font-weight: 700;
   color: var(--journal-ink);
+}
+
+.profile-accent-icon {
+  color: var(--journal-accent);
 }
 
 .profile-field-list {
@@ -584,6 +592,17 @@ onUnmounted(() => {
 .journal-format-option--active {
   border-color: color-mix(in srgb, var(--journal-accent) 60%, transparent);
   background: color-mix(in srgb, var(--journal-accent) 6%, transparent);
+}
+
+.profile-format-title {
+  font-size: var(--font-size-0-875);
+  font-weight: 600;
+  color: var(--journal-ink);
+}
+
+.profile-format-copy {
+  font-size: var(--font-size-0-75);
+  color: var(--journal-muted);
 }
 
 .journal-btn--download {
