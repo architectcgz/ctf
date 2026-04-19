@@ -318,7 +318,7 @@ function getServiceCheckPresentationResult(service: AWDTeamServiceData): Record<
                     <div class="mt-2 space-y-1 text-xs">
                       <div
                         v-for="sample in alert.samples"
-                        :key="`${alert.key}-${sample.service_id}`"
+                        :key="`${alert.key}-${sample.service_id || sample.team_name}-${sample.challenge_title}`"
                       >
                         {{ sample.team_name }} · {{ sample.challenge_title }}
                       </div>

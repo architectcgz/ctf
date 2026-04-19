@@ -43,6 +43,8 @@ declare module 'vue' {
     AWDScoreboardSummaryPanel: typeof import('./components/admin/contest/AWDScoreboardSummaryPanel.vue')['default']
     AWDServiceCheckDialog: typeof import('./components/admin/contest/AWDServiceCheckDialog.vue')['default']
     AWDServiceStatusPanel: typeof import('./components/admin/contest/AWDServiceStatusPanel.vue')['default']
+    AWDServiceTemplateEditorDialog: typeof import('./components/admin/awd-service/AWDServiceTemplateEditorDialog.vue')['default']
+    AWDServiceTemplateLibraryPage: typeof import('./components/admin/awd-service/AWDServiceTemplateLibraryPage.vue')['default']
     AWDTrafficPanel: typeof import('./components/admin/contest/AWDTrafficPanel.vue')['default']
     BackofficeSubNav: typeof import('./components/layout/BackofficeSubNav.vue')['default']
     BarChart: typeof import('./components/charts/BarChart.vue')['default']

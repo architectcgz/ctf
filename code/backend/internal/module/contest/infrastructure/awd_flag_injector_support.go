@@ -6,12 +6,15 @@ import (
 	"ctf-platform/internal/model"
 )
 
-func (i *dockerAWDFlagInjector) findTargetContainers(ctx context.Context, contestID, teamID, challengeID int64) ([]string, error) {
+func (i *dockerAWDFlagInjector) findTargetContainers(ctx context.Context, contestID, teamID, serviceID, _ int64) ([]string, error) {
 	var instances []model.Instance
+	if serviceID <= 0 {
+		return nil, nil
+	}
 	if err := i.db.WithContext(ctx).
 		Table("instances AS inst").
 		Select("inst.*").
-		Where("inst.challenge_id = ?", challengeID).
+		Where("inst.service_id = ?", serviceID).
 		Where("inst.status = ?", model.InstanceStatusRunning).
 		Where(
 			"(inst.contest_id = ? AND inst.team_id = ?) OR ("+

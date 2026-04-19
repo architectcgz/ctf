@@ -21,6 +21,7 @@ type ContestAWDWorkspaceTeamResp struct {
 }
 
 type ContestAWDWorkspaceServiceResp struct {
+	ServiceID      int64                `json:"service_id"`
 	ChallengeID    int64                `json:"challenge_id"`
 	AccessURL      string               `json:"access_url,omitempty"`
 	ServiceStatus  string               `json:"service_status,omitempty"`
@@ -39,6 +40,7 @@ type ContestAWDWorkspaceTargetTeamResp struct {
 }
 
 type ContestAWDWorkspaceTargetServiceResp struct {
+	ServiceID   int64  `json:"service_id"`
 	ChallengeID int64  `json:"challenge_id"`
 	AccessURL   string `json:"access_url,omitempty"`
 }
@@ -46,6 +48,7 @@ type ContestAWDWorkspaceTargetServiceResp struct {
 type ContestAWDWorkspaceRecentEventResp struct {
 	ID           int64     `json:"id"`
 	Direction    string    `json:"direction"`
+	ServiceID    int64     `json:"service_id"`
 	ChallengeID  int64     `json:"challenge_id"`
 	PeerTeamID   int64     `json:"peer_team_id"`
 	PeerTeamName string    `json:"peer_team_name"`

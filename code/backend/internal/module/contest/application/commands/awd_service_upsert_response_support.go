@@ -12,6 +12,7 @@ import (
 func (s *AWDService) buildUpsertServiceCheckResp(
 	ctx context.Context,
 	contestID, roundID int64,
+	runtimeService *model.ContestAWDService,
 	req *dto.UpsertAWDServiceCheckReq,
 	team *model.Team,
 	record *model.AWDTeamService,
@@ -23,7 +24,16 @@ func (s *AWDService) buildUpsertServiceCheckResp(
 	if err != nil {
 		return nil, err
 	}
-	if err := syncAWDServiceStatusField(ctx, s.redis, contestID, roundID, currentRoundID, req.TeamID, req.ChallengeID, req.ServiceStatus); err != nil {
+	if err := syncAWDServiceStatusField(
+		ctx,
+		s.redis,
+		contestID,
+		roundID,
+		currentRoundID,
+		req.TeamID,
+		runtimeService.ID,
+		req.ServiceStatus,
+	); err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 

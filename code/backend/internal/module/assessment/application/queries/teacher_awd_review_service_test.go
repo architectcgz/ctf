@@ -214,11 +214,18 @@ func TestTeacherAWDReviewServiceGetContestArchiveFiltersSelectedRoundByTeam(t *t
 	if len(resp.SelectedRound.Services) != 1 || resp.SelectedRound.Services[0].TeamID != 3401 {
 		t.Fatalf("expected selected team services only, got %+v", resp.SelectedRound.Services)
 	}
+	expectedServiceID := contesttestsupport.DefaultAWDContestServiceID(340, 3401)
+	if resp.SelectedRound.Services[0].ServiceID != expectedServiceID {
+		t.Fatalf("expected selected service_id=%d, got %+v", expectedServiceID, resp.SelectedRound.Services[0])
+	}
 	if resp.SelectedRound.Round.ServiceCount != len(resp.SelectedRound.Services) {
 		t.Fatalf("expected service count %d, got %d", len(resp.SelectedRound.Services), resp.SelectedRound.Round.ServiceCount)
 	}
 	if len(resp.SelectedRound.Attacks) != 1 {
 		t.Fatalf("expected 1 related attack, got %+v", resp.SelectedRound.Attacks)
+	}
+	if resp.SelectedRound.Attacks[0].ServiceID != expectedServiceID {
+		t.Fatalf("expected attack service_id=%d, got %+v", expectedServiceID, resp.SelectedRound.Attacks[0])
 	}
 	if resp.SelectedRound.Round.AttackCount != len(resp.SelectedRound.Attacks) {
 		t.Fatalf("expected attack count %d, got %d", len(resp.SelectedRound.Attacks), resp.SelectedRound.Round.AttackCount)
@@ -234,6 +241,9 @@ func TestTeacherAWDReviewServiceGetContestArchiveFiltersSelectedRoundByTeam(t *t
 	}
 	if resp.SelectedRound.Traffic[0].AttackerTeamID != 3401 && resp.SelectedRound.Traffic[0].VictimTeamID != 3401 {
 		t.Fatalf("expected traffic involving selected team, got %+v", resp.SelectedRound.Traffic[0])
+	}
+	if resp.SelectedRound.Traffic[0].ServiceID != expectedServiceID {
+		t.Fatalf("expected traffic service_id=%d, got %+v", expectedServiceID, resp.SelectedRound.Traffic[0])
 	}
 }
 
@@ -301,8 +311,22 @@ func assertInvalidParamsError(t *testing.T, err error) {
 func seedTeacherAWDReviewTeamsAndChallenge(t *testing.T, db *gorm.DB, contestID int64, now time.Time) {
 	t.Helper()
 
-	contesttestsupport.CreateAWDChallengeFixture(t, db, contestID*10+1, now)
-	contesttestsupport.CreateAWDContestChallengeFixture(t, db, contestID, contestID*10+1, now)
+	challengeID := contestID*10 + 1
+	contesttestsupport.CreateAWDChallengeFixture(t, db, challengeID, now)
+	contesttestsupport.CreateAWDContestChallengeFixture(t, db, contestID, challengeID, now)
+	contesttestsupport.SyncAWDContestServiceFixture(
+		t,
+		db,
+		contestID,
+		challengeID,
+		"teacher-review-service",
+		model.AWDCheckerTypeHTTPStandard,
+		`{"get_flag":{"path":"/flag"}}`,
+		100,
+		20,
+		30,
+		now,
+	)
 	contesttestsupport.CreateAWDTeamFixture(t, db, contestID*10+1, contestID, "team-alpha", now)
 	contesttestsupport.CreateAWDTeamFixture(t, db, contestID*10+2, contestID, "team-beta", now)
 	contesttestsupport.CreateAWDTeamFixture(t, db, contestID*10+3, contestID, "team-gamma", now)
@@ -314,11 +338,15 @@ func seedTeacherAWDReviewTeamsAndChallenge(t *testing.T, db *gorm.DB, contestID 
 func seedTeacherAWDReviewSignals(t *testing.T, db *gorm.DB, contestID, roundID int64, attackAt, trafficAt time.Time) {
 	t.Helper()
 
+	challengeID := contestID*10 + 1
+	serviceID := contesttestsupport.DefaultAWDContestServiceID(contestID, challengeID)
+
 	if err := db.Create(&model.AWDTeamService{
 		ID:            roundID*10 + 1,
 		RoundID:       roundID,
 		TeamID:        contestID*10 + 1,
-		ChallengeID:   contestID*10 + 1,
+		ServiceID:     serviceID,
+		ChallengeID:   challengeID,
 		ServiceStatus: model.AWDServiceStatusUp,
 		UpdatedAt:     attackAt.Add(-time.Minute),
 		CreatedAt:     attackAt.Add(-2 * time.Minute),
@@ -330,7 +358,8 @@ func seedTeacherAWDReviewSignals(t *testing.T, db *gorm.DB, contestID, roundID i
 		RoundID:        roundID,
 		AttackerTeamID: contestID*10 + 1,
 		VictimTeamID:   contestID*10 + 2,
-		ChallengeID:    contestID*10 + 1,
+		ServiceID:      serviceID,
+		ChallengeID:    challengeID,
 		AttackType:     model.AWDAttackTypeFlagCapture,
 		Source:         model.AWDAttackSourceManual,
 		IsSuccess:      true,
@@ -345,7 +374,8 @@ func seedTeacherAWDReviewSignals(t *testing.T, db *gorm.DB, contestID, roundID i
 		RoundID:        roundID,
 		AttackerTeamID: contestID*10 + 2,
 		VictimTeamID:   contestID*10 + 1,
-		ChallengeID:    contestID*10 + 1,
+		ServiceID:      serviceID,
+		ChallengeID:    challengeID,
 		Method:         "POST",
 		Path:           "/flag",
 		StatusCode:     200,
@@ -360,11 +390,13 @@ func seedTeacherAWDReviewFilterData(t *testing.T, db *gorm.DB, contestID, roundI
 	t.Helper()
 
 	challengeID := contestID*10 + 1
+	serviceID := contesttestsupport.DefaultAWDContestServiceID(contestID, challengeID)
 	rows := []any{
 		&model.AWDTeamService{
 			ID:            roundID*10 + 1,
 			RoundID:       roundID,
 			TeamID:        contestID*10 + 1,
+			ServiceID:     serviceID,
 			ChallengeID:   challengeID,
 			ServiceStatus: model.AWDServiceStatusUp,
 			UpdatedAt:     now.Add(-10 * time.Minute),
@@ -374,6 +406,7 @@ func seedTeacherAWDReviewFilterData(t *testing.T, db *gorm.DB, contestID, roundI
 			ID:            roundID*10 + 2,
 			RoundID:       roundID,
 			TeamID:        contestID*10 + 2,
+			ServiceID:     serviceID,
 			ChallengeID:   challengeID,
 			ServiceStatus: model.AWDServiceStatusDown,
 			UpdatedAt:     now.Add(-9 * time.Minute),
@@ -383,6 +416,7 @@ func seedTeacherAWDReviewFilterData(t *testing.T, db *gorm.DB, contestID, roundI
 			ID:            roundID*10 + 3,
 			RoundID:       roundID,
 			TeamID:        contestID*10 + 3,
+			ServiceID:     serviceID,
 			ChallengeID:   challengeID,
 			ServiceStatus: model.AWDServiceStatusCompromised,
 			UpdatedAt:     now.Add(-8 * time.Minute),
@@ -393,6 +427,7 @@ func seedTeacherAWDReviewFilterData(t *testing.T, db *gorm.DB, contestID, roundI
 			RoundID:        roundID,
 			AttackerTeamID: contestID*10 + 1,
 			VictimTeamID:   contestID*10 + 2,
+			ServiceID:      serviceID,
 			ChallengeID:    challengeID,
 			AttackType:     model.AWDAttackTypeFlagCapture,
 			Source:         model.AWDAttackSourceManual,
@@ -405,6 +440,7 @@ func seedTeacherAWDReviewFilterData(t *testing.T, db *gorm.DB, contestID, roundI
 			RoundID:        roundID,
 			AttackerTeamID: contestID*10 + 2,
 			VictimTeamID:   contestID*10 + 3,
+			ServiceID:      serviceID,
 			ChallengeID:    challengeID,
 			AttackType:     model.AWDAttackTypeFlagCapture,
 			Source:         model.AWDAttackSourceManual,
@@ -418,6 +454,7 @@ func seedTeacherAWDReviewFilterData(t *testing.T, db *gorm.DB, contestID, roundI
 			RoundID:        roundID,
 			AttackerTeamID: contestID*10 + 1,
 			VictimTeamID:   contestID*10 + 2,
+			ServiceID:      serviceID,
 			ChallengeID:    challengeID,
 			Method:         "GET",
 			Path:           "/health",
@@ -431,6 +468,7 @@ func seedTeacherAWDReviewFilterData(t *testing.T, db *gorm.DB, contestID, roundI
 			RoundID:        roundID,
 			AttackerTeamID: contestID*10 + 2,
 			VictimTeamID:   contestID*10 + 3,
+			ServiceID:      serviceID,
 			ChallengeID:    challengeID,
 			Method:         "POST",
 			Path:           "/exploit",

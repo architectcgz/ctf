@@ -48,6 +48,9 @@ var (
 	createAWDTeamFixture                     = testsupport.CreateAWDTeamFixture
 	createAWDTeamMemberFixture               = testsupport.CreateAWDTeamMemberFixture
 	createContestRegistrationForExistingTeam = testsupport.CreateContestRegistrationForExistingTeam
+	syncAWDContestServiceFixture             = testsupport.SyncAWDContestServiceFixture
+	syncAWDContestServiceReadinessFixture    = testsupport.SyncAWDContestServiceReadinessFixture
+	defaultAWDContestServiceID               = testsupport.DefaultAWDContestServiceID
 	assertTeamTotalScore                     = testsupport.AssertTeamTotalScore
 	assertContestRedisScore                  = testsupport.AssertContestRedisScore
 	assertContestRedisScoreMissing           = testsupport.AssertContestRedisScoreMissing
@@ -97,6 +100,11 @@ func (s *awdServiceForTest) RunRoundChecks(ctx context.Context, contestID, round
 	return s.commands.RunRoundChecks(ctx, contestID, roundID)
 }
 
+func awdServiceIDPtr(contestID, challengeID int64) *int64 {
+	id := defaultAWDContestServiceID(contestID, challengeID)
+	return &id
+}
+
 func setReflectedField(t *testing.T, target reflect.Value, field string, value any) {
 	t.Helper()
 	item := target.FieldByName(field)
@@ -131,8 +139,8 @@ func (s *awdServiceForTest) CreateAttackLog(ctx context.Context, contestID, roun
 	return s.commands.CreateAttackLog(ctx, contestID, roundID, req)
 }
 
-func (s *awdServiceForTest) SubmitAttack(ctx context.Context, userID, contestID, challengeID int64, req *dto.SubmitAWDAttackReq) (*dto.AWDAttackLogResp, error) {
-	return s.commands.SubmitAttack(ctx, userID, contestID, challengeID, req)
+func (s *awdServiceForTest) SubmitAttack(ctx context.Context, userID, contestID, serviceID int64, req *dto.SubmitAWDAttackReq) (*dto.AWDAttackLogResp, error) {
+	return s.commands.SubmitAttack(ctx, userID, contestID, serviceID, req)
 }
 
 func (s *awdServiceForTest) GetRoundSummary(ctx context.Context, contestID, roundID int64) (*dto.AWDRoundSummaryResp, error) {
@@ -155,15 +163,8 @@ func TestAWDServiceCreateRoundAndListRounds(t *testing.T) {
 	createAWDContestFixture(t, db, 1, now)
 	createAWDChallengeFixture(t, db, 101, now)
 	createAWDContestChallengeFixture(t, db, 1, 101, now)
-	if err := db.Model(&model.ContestChallenge{}).
-		Where("contest_id = ? AND challenge_id = ?", 1, 101).
-		Updates(map[string]any{
-			"awd_checker_type":             model.AWDCheckerTypeHTTPStandard,
-			"awd_checker_config":           `{"get_flag":{"path":"/health"}}`,
-			"awd_checker_validation_state": model.AWDCheckerValidationStatePassed,
-		}).Error; err != nil {
-		t.Fatalf("update readiness challenge: %v", err)
-	}
+	syncAWDContestServiceFixture(t, db, 1, 101, "awd-service", model.AWDCheckerTypeHTTPStandard, `{"get_flag":{"path":"/health"}}`, 100, 0, 0, now)
+	syncAWDContestServiceReadinessFixture(t, db, 1, 101, model.AWDCheckerValidationStatePassed, nil, "")
 
 	round, err := service.CreateRound(context.Background(), 1, &dto.CreateAWDRoundReq{
 		RoundNumber:  1,
@@ -207,11 +208,12 @@ func TestAWDServiceUpsertServiceCheckAppliesDefenseScore(t *testing.T) {
 	createAWDChallengeFixture(t, db, 201, now)
 	createAWDContestChallengeFixture(t, db, 2, 201, now)
 	createAWDTeamFixture(t, db, 211, 2, "Alpha", now)
+	serviceID := defaultAWDContestServiceID(2, 201)
 
 	var resp *dto.AWDTeamServiceResp
 	resp, err = service.UpsertServiceCheck(context.Background(), 2, 21, &dto.UpsertAWDServiceCheckReq{
 		TeamID:        211,
-		ChallengeID:   201,
+		ServiceID:     serviceID,
 		ServiceStatus: model.AWDServiceStatusUp,
 		CheckResult: map[string]any{
 			"is_alive":   true,
@@ -235,11 +237,11 @@ func TestAWDServiceUpsertServiceCheckAppliesDefenseScore(t *testing.T) {
 	}
 	assertTeamTotalScore(t, db, 211, 40)
 	assertContestRedisScore(t, redisClient, 2, 211, 40)
-	assertAWDServiceStatusCache(t, redisClient, 2, 211, 201, model.AWDServiceStatusUp)
+	assertAWDServiceStatusCache(t, redisClient, 2, 211, serviceID, model.AWDServiceStatusUp)
 
 	resp, err = service.UpsertServiceCheck(context.Background(), 2, 21, &dto.UpsertAWDServiceCheckReq{
 		TeamID:        211,
-		ChallengeID:   201,
+		ServiceID:     serviceID,
 		ServiceStatus: model.AWDServiceStatusDown,
 		CheckResult: map[string]any{
 			"is_alive": false,
@@ -259,7 +261,7 @@ func TestAWDServiceUpsertServiceCheckAppliesDefenseScore(t *testing.T) {
 	}
 	assertTeamTotalScore(t, db, 211, 0)
 	assertContestRedisScoreMissing(t, redisClient, 2, 211)
-	assertAWDServiceStatusCache(t, redisClient, 2, 211, 201, model.AWDServiceStatusDown)
+	assertAWDServiceStatusCache(t, redisClient, 2, 211, serviceID, model.AWDServiceStatusDown)
 }
 
 func TestAWDServiceRunCurrentRoundChecksRefreshesServices(t *testing.T) {
@@ -281,15 +283,8 @@ func TestAWDServiceRunCurrentRoundChecksRefreshesServices(t *testing.T) {
 	createAWDRoundFixture(t, db, 221, 22, 1, 70, 35, now)
 	createAWDChallengeFixture(t, db, 2201, now)
 	createAWDContestChallengeFixture(t, db, 22, 2201, now)
-	if err := db.Model(&model.ContestChallenge{}).
-		Where("contest_id = ? AND challenge_id = ?", 22, 2201).
-		Updates(map[string]any{
-			"awd_checker_type":             model.AWDCheckerTypeHTTPStandard,
-			"awd_checker_config":           `{"get_flag":{"path":"/health"}}`,
-			"awd_checker_validation_state": model.AWDCheckerValidationStatePassed,
-		}).Error; err != nil {
-		t.Fatalf("update readiness challenge: %v", err)
-	}
+	syncAWDContestServiceFixture(t, db, 22, 2201, "awd-service", model.AWDCheckerTypeHTTPStandard, `{"get_flag":{"path":"/health"}}`, 100, 0, 0, now)
+	syncAWDContestServiceReadinessFixture(t, db, 22, 2201, model.AWDCheckerValidationStatePassed, nil, "")
 	createAWDTeamFixture(t, db, 2211, 22, "Ops", now)
 	createAWDTeamMemberFixture(t, db, 22, 2211, 8201, now)
 
@@ -306,6 +301,7 @@ func TestAWDServiceRunCurrentRoundChecksRefreshesServices(t *testing.T) {
 		ID:          8221,
 		UserID:      8201,
 		ChallengeID: 2201,
+		ServiceID:   awdServiceIDPtr(22, 2201),
 		ContainerID: "ctr-ops",
 		Status:      model.InstanceStatusRunning,
 		AccessURL:   server.URL,
@@ -511,6 +507,7 @@ func TestAWDServiceRunRoundChecksRefreshesSelectedRound(t *testing.T) {
 		ID:          8321,
 		UserID:      8301,
 		ChallengeID: 2301,
+		ServiceID:   awdServiceIDPtr(23, 2301),
 		ContainerID: "ctr-selected-ops",
 		Status:      model.InstanceStatusRunning,
 		AccessURL:   server.URL,
@@ -684,6 +681,93 @@ func TestAWDServicePreviewCheckerRunsWithoutPersistingServices(t *testing.T) {
 	}
 }
 
+func TestAWDServicePreviewCheckerAcceptsServiceIDAndReturnsServiceContext(t *testing.T) {
+	db := newAWDTestDB(t)
+	mini, err := miniredis.Run()
+	if err != nil {
+		t.Fatalf("start miniredis: %v", err)
+	}
+	t.Cleanup(mini.Close)
+
+	redisClient := redis.NewClient(&redis.Options{Addr: mini.Addr()})
+	t.Cleanup(func() {
+		_ = redisClient.Close()
+	})
+
+	now := time.Now()
+
+	createAWDContestFixture(t, db, 25, now)
+	createAWDChallengeFixture(t, db, 2501, now)
+	createAWDContestChallengeFixture(t, db, 25, 2501, now)
+	serviceID := defaultAWDContestServiceID(25, 2501)
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/healthz":
+			w.WriteHeader(http.StatusOK)
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	t.Cleanup(server.Close)
+
+	service := newAWDServiceForTest(db, redisClient, "", config.ContestAWDConfig{
+		CheckerTimeout:    time.Second,
+		CheckerHealthPath: "/healthz",
+	})
+
+	method := reflect.ValueOf(service.commands).MethodByName("PreviewChecker")
+	if !method.IsValid() {
+		t.Fatalf("PreviewChecker method not implemented")
+	}
+
+	reqValue := reflect.New(method.Type().In(2).Elem())
+	setReflectedField(t, reqValue.Elem(), "ServiceID", serviceID)
+	setReflectedField(t, reqValue.Elem(), "CheckerType", string(model.AWDCheckerTypeHTTPStandard))
+	setReflectedField(t, reqValue.Elem(), "CheckerConfig", map[string]any{
+		"get_flag": map[string]any{
+			"method":             "GET",
+			"path":               "/healthz",
+			"expected_status":    http.StatusOK,
+			"expected_substring": "",
+		},
+	})
+	setReflectedField(t, reqValue.Elem(), "AccessURL", server.URL)
+
+	results := method.Call([]reflect.Value{
+		reflect.ValueOf(context.Background()),
+		reflect.ValueOf(int64(25)),
+		reqValue,
+	})
+
+	if len(results) != 2 {
+		t.Fatalf("unexpected result count: %d", len(results))
+	}
+	if errValue := results[1].Interface(); errValue != nil {
+		t.Fatalf("PreviewChecker() error = %v", errValue)
+	}
+
+	respValue := results[0]
+	if respValue.IsNil() {
+		t.Fatal("expected preview response")
+	}
+	resp := respValue.Elem()
+	previewContext := resp.FieldByName("PreviewContext")
+	if !previewContext.IsValid() {
+		t.Fatal("expected preview context")
+	}
+	if gotServiceID := previewContext.FieldByName("ServiceID").Int(); gotServiceID != serviceID {
+		t.Fatalf("unexpected preview service_id: %d", gotServiceID)
+	}
+	if gotChallengeID := previewContext.FieldByName("ChallengeID").Int(); gotChallengeID != 2501 {
+		t.Fatalf("unexpected preview challenge_id: %d", gotChallengeID)
+	}
+	previewToken := resp.FieldByName("PreviewToken")
+	if !previewToken.IsValid() || strings.TrimSpace(previewToken.String()) == "" {
+		t.Fatal("expected preview_token")
+	}
+}
+
 func TestAWDServiceCreateAttackLogDeduplicatesScoringAndBuildsSummary(t *testing.T) {
 	db := newAWDTestDB(t)
 	mini, err := miniredis.Run()
@@ -707,10 +791,11 @@ func TestAWDServiceCreateAttackLogDeduplicatesScoringAndBuildsSummary(t *testing
 	createAWDTeamFixture(t, db, 311, 3, "Red", now)
 	createAWDTeamFixture(t, db, 312, 3, "Blue", now)
 	createAWDTeamFixture(t, db, 313, 3, "Green", now)
+	serviceID := defaultAWDContestServiceID(3, 301)
 
 	if _, err := service.UpsertServiceCheck(context.Background(), 3, 31, &dto.UpsertAWDServiceCheckReq{
 		TeamID:        311,
-		ChallengeID:   301,
+		ServiceID:     serviceID,
 		ServiceStatus: model.AWDServiceStatusUp,
 		CheckResult:   map[string]any{"latency_ms": 10},
 	}); err != nil {
@@ -718,7 +803,7 @@ func TestAWDServiceCreateAttackLogDeduplicatesScoringAndBuildsSummary(t *testing
 	}
 	if _, err := service.UpsertServiceCheck(context.Background(), 3, 31, &dto.UpsertAWDServiceCheckReq{
 		TeamID:        312,
-		ChallengeID:   301,
+		ServiceID:     serviceID,
 		ServiceStatus: model.AWDServiceStatusCompromised,
 		CheckResult:   map[string]any{"latency_ms": 25},
 	}); err != nil {
@@ -726,7 +811,7 @@ func TestAWDServiceCreateAttackLogDeduplicatesScoringAndBuildsSummary(t *testing
 	}
 	if _, err := service.UpsertServiceCheck(context.Background(), 3, 31, &dto.UpsertAWDServiceCheckReq{
 		TeamID:        313,
-		ChallengeID:   301,
+		ServiceID:     serviceID,
 		ServiceStatus: model.AWDServiceStatusUp,
 		CheckResult:   map[string]any{"latency_ms": 8},
 	}); err != nil {
@@ -760,7 +845,7 @@ func TestAWDServiceCreateAttackLogDeduplicatesScoringAndBuildsSummary(t *testing
 	first, err := service.CreateAttackLog(context.Background(), 3, 31, &dto.CreateAWDAttackLogReq{
 		AttackerTeamID: 311,
 		VictimTeamID:   312,
-		ChallengeID:    301,
+		ServiceID:      serviceID,
 		AttackType:     model.AWDAttackTypeFlagCapture,
 		SubmittedFlag:  "flag{awd}",
 		IsSuccess:      true,
@@ -778,7 +863,7 @@ func TestAWDServiceCreateAttackLogDeduplicatesScoringAndBuildsSummary(t *testing
 	second, err := service.CreateAttackLog(context.Background(), 3, 31, &dto.CreateAWDAttackLogReq{
 		AttackerTeamID: 311,
 		VictimTeamID:   312,
-		ChallengeID:    301,
+		ServiceID:      serviceID,
 		AttackType:     model.AWDAttackTypeFlagCapture,
 		SubmittedFlag:  "flag{awd}",
 		IsSuccess:      true,
@@ -800,7 +885,7 @@ func TestAWDServiceCreateAttackLogDeduplicatesScoringAndBuildsSummary(t *testing
 	if _, err := service.CreateAttackLog(context.Background(), 3, 31, &dto.CreateAWDAttackLogReq{
 		AttackerTeamID: 313,
 		VictimTeamID:   312,
-		ChallengeID:    301,
+		ServiceID:      serviceID,
 		AttackType:     model.AWDAttackTypeServiceExploit,
 		IsSuccess:      true,
 	}); err != nil {
@@ -884,11 +969,12 @@ func TestAWDServiceCreateAttackLogCreatesVictimServiceImpactWhenMissing(t *testi
 	createAWDContestChallengeFixture(t, db, 6, 601, now)
 	createAWDTeamFixture(t, db, 611, 6, "Red", now)
 	createAWDTeamFixture(t, db, 612, 6, "Blue", now)
+	serviceID := defaultAWDContestServiceID(6, 601)
 
 	resp, err := service.CreateAttackLog(context.Background(), 6, 61, &dto.CreateAWDAttackLogReq{
 		AttackerTeamID: 611,
 		VictimTeamID:   612,
-		ChallengeID:    601,
+		ServiceID:      serviceID,
 		AttackType:     model.AWDAttackTypeFlagCapture,
 		SubmittedFlag:  "flag{awd}",
 		IsSuccess:      true,
@@ -902,7 +988,7 @@ func TestAWDServiceCreateAttackLogCreatesVictimServiceImpactWhenMissing(t *testi
 	if resp.ScoreGained != 75 {
 		t.Fatalf("unexpected score gained: %+v", resp)
 	}
-	assertAWDServiceStatusCache(t, redisClient, 6, 612, 601, model.AWDServiceStatusCompromised)
+	assertAWDServiceStatusCache(t, redisClient, 6, 612, serviceID, model.AWDServiceStatusCompromised)
 
 	var victimService model.AWDTeamService
 	if err := db.Where("round_id = ? AND team_id = ? AND challenge_id = ?", 61, 612, 601).First(&victimService).Error; err != nil {
@@ -936,6 +1022,7 @@ func TestAWDServiceHistoricalManualUpdatesDoNotOverrideLiveServiceStatusCache(t 
 	createAWDChallengeFixture(t, db, 1601, now)
 	createAWDContestChallengeFixture(t, db, 16, 1601, now)
 	createAWDTeamFixture(t, db, 1611, 16, "Alpha", now)
+	serviceID := defaultAWDContestServiceID(16, 1601)
 
 	if err := redisClient.Set(context.Background(), rediskeys.AWDCurrentRoundKey(16), "2", 0).Err(); err != nil {
 		t.Fatalf("set current round: %v", err)
@@ -943,14 +1030,14 @@ func TestAWDServiceHistoricalManualUpdatesDoNotOverrideLiveServiceStatusCache(t 
 
 	if _, err := service.UpsertServiceCheck(context.Background(), 16, 161, &dto.UpsertAWDServiceCheckReq{
 		TeamID:        1611,
-		ChallengeID:   1601,
+		ServiceID:     serviceID,
 		ServiceStatus: model.AWDServiceStatusDown,
 		CheckResult:   map[string]any{"reason": "historical-fix"},
 	}); err != nil {
 		t.Fatalf("historical UpsertServiceCheck() error = %v", err)
 	}
 
-	assertAWDServiceStatusCacheMissing(t, redisClient, 16, 1611, 1601)
+	assertAWDServiceStatusCacheMissing(t, redisClient, 16, 1611, serviceID)
 }
 
 func TestAWDServiceEndedContestManualUpdatesDoNotRestoreLiveServiceStatusCache(t *testing.T) {
@@ -975,6 +1062,7 @@ func TestAWDServiceEndedContestManualUpdatesDoNotRestoreLiveServiceStatusCache(t
 	createAWDChallengeFixture(t, db, 1701, now)
 	createAWDContestChallengeFixture(t, db, 17, 1701, now)
 	createAWDTeamFixture(t, db, 1711, 17, "Alpha", now)
+	serviceID := defaultAWDContestServiceID(17, 1701)
 
 	if err := db.Model(&model.Contest{}).Where("id = ?", 17).Updates(map[string]any{
 		"status":   model.ContestStatusEnded,
@@ -988,14 +1076,14 @@ func TestAWDServiceEndedContestManualUpdatesDoNotRestoreLiveServiceStatusCache(t
 
 	if _, err := service.UpsertServiceCheck(context.Background(), 17, 171, &dto.UpsertAWDServiceCheckReq{
 		TeamID:        1711,
-		ChallengeID:   1701,
+		ServiceID:     serviceID,
 		ServiceStatus: model.AWDServiceStatusUp,
 		CheckResult:   map[string]any{"reason": "postmortem-fix"},
 	}); err != nil {
 		t.Fatalf("ended contest UpsertServiceCheck() error = %v", err)
 	}
 
-	assertAWDServiceStatusCacheMissing(t, redisClient, 17, 1711, 1701)
+	assertAWDServiceStatusCacheMissing(t, redisClient, 17, 1711, serviceID)
 }
 
 func TestAWDServiceSubmitAttackUsesCurrentRoundFlagAndDeduplicatesByTeam(t *testing.T) {
@@ -1031,14 +1119,15 @@ func TestAWDServiceSubmitAttackUsesCurrentRoundFlagAndDeduplicatesByTeam(t *test
 	if err := redisClient.Set(context.Background(), rediskeys.AWDCurrentRoundKey(4), "1", 0).Err(); err != nil {
 		t.Fatalf("set current round: %v", err)
 	}
+	serviceID := defaultAWDContestServiceID(4, 401)
 	flag := contestdomain.BuildAWDRoundFlag(4, 1, 412, 401, "awd-secret", "awd")
 	if err := redisClient.HSet(context.Background(), rediskeys.AWDRoundFlagsKey(4, 41), map[string]any{
-		rediskeys.AWDRoundFlagField(412, 401): flag,
+		rediskeys.AWDRoundFlagServiceField(412, serviceID): flag,
 	}).Err(); err != nil {
 		t.Fatalf("set round flag: %v", err)
 	}
 
-	first, err := service.SubmitAttack(context.Background(), 4001, 4, 401, &dto.SubmitAWDAttackReq{
+	first, err := service.SubmitAttack(context.Background(), 4001, 4, serviceID, &dto.SubmitAWDAttackReq{
 		VictimTeamID: 412,
 		Flag:         flag,
 	})
@@ -1052,7 +1141,7 @@ func TestAWDServiceSubmitAttackUsesCurrentRoundFlagAndDeduplicatesByTeam(t *test
 		t.Fatalf("unexpected first attack resp: %+v", first)
 	}
 
-	second, err := service.SubmitAttack(context.Background(), 4002, 4, 401, &dto.SubmitAWDAttackReq{
+	second, err := service.SubmitAttack(context.Background(), 4002, 4, serviceID, &dto.SubmitAWDAttackReq{
 		VictimTeamID: 412,
 		Flag:         flag,
 	})
@@ -1078,6 +1167,86 @@ func TestAWDServiceSubmitAttackUsesCurrentRoundFlagAndDeduplicatesByTeam(t *test
 	}
 	if logs[1].SubmittedByUserID == nil || *logs[1].SubmittedByUserID != 4002 {
 		t.Fatalf("expected second log submitted_by_user_id=4002, got %+v", logs[1])
+	}
+}
+
+func TestAWDServiceSubmitAttackAcceptsServiceScopedRoundFlagField(t *testing.T) {
+	db := newAWDTestDB(t)
+
+	mini, err := miniredis.Run()
+	if err != nil {
+		t.Fatalf("start miniredis: %v", err)
+	}
+	t.Cleanup(mini.Close)
+
+	redisClient := redis.NewClient(&redis.Options{Addr: mini.Addr()})
+	t.Cleanup(func() {
+		_ = redisClient.Close()
+	})
+
+	service := newAWDServiceForTest(db, redisClient, "awd-secret", config.ContestAWDConfig{})
+	now := time.Now()
+
+	createAWDContestFixture(t, db, 24, now)
+	createAWDRoundFixture(t, db, 241, 24, 1, 80, 20, now)
+	createAWDChallengeFixture(t, db, 2401, now)
+	createAWDContestChallengeFixture(t, db, 24, 2401, now)
+	createAWDTeamFixture(t, db, 2411, 24, "Red", now)
+	createAWDTeamFixture(t, db, 2412, 24, "Blue", now)
+	createContestRegistrationForExistingTeam(t, db, 24, 2411, 24001, now)
+
+	if err := db.Model(&model.Challenge{}).Where("id = ?", 2401).Update("flag_prefix", "awd").Error; err != nil {
+		t.Fatalf("set flag prefix: %v", err)
+	}
+	serviceID := defaultAWDContestServiceID(24, 2401)
+	if err := db.Model(&model.ContestAWDService{}).
+		Where("contest_id = ? AND challenge_id = ?", 24, 2401).
+		Updates(map[string]any{
+			"display_name":   "Bank Portal",
+			"order":          0,
+			"is_visible":     true,
+			"score_config":   `{"points":100,"awd_sla_score":18,"awd_defense_score":28}`,
+			"runtime_config": `{"challenge_id":2401,"checker_type":"legacy_probe","checker_config":{}}`,
+			"updated_at":     now,
+		}).Error; err != nil {
+		t.Fatalf("update contest awd service: %v", err)
+	}
+
+	if err := redisClient.Set(context.Background(), rediskeys.AWDCurrentRoundKey(24), "1", 0).Err(); err != nil {
+		t.Fatalf("set current round: %v", err)
+	}
+	flag := contestdomain.BuildAWDRoundFlag(24, 1, 2412, 2401, "awd-secret", "awd")
+	if err := redisClient.HSet(context.Background(), rediskeys.AWDRoundFlagsKey(24, 241), map[string]any{
+		rediskeys.AWDRoundFlagServiceField(2412, serviceID): flag,
+	}).Err(); err != nil {
+		t.Fatalf("set service scoped round flag: %v", err)
+	}
+
+	resp, err := service.SubmitAttack(context.Background(), 24001, 24, serviceID, &dto.SubmitAWDAttackReq{
+		VictimTeamID: 2412,
+		Flag:         flag,
+	})
+	if err != nil {
+		t.Fatalf("SubmitAttack() service scoped flag error = %v", err)
+	}
+	if resp.Source != model.AWDAttackSourceSubmission || !resp.IsSuccess || resp.ScoreGained != 80 {
+		t.Fatalf("unexpected service scoped submit resp: %+v", resp)
+	}
+
+	var logRecord model.AWDAttackLog
+	if err := db.Where("round_id = ? AND attacker_team_id = ? AND victim_team_id = ?", 241, 2411, 2412).First(&logRecord).Error; err != nil {
+		t.Fatalf("load service scoped attack log: %v", err)
+	}
+	if logRecord.ServiceID != serviceID {
+		t.Fatalf("expected attack log service_id=%d, got %+v", serviceID, logRecord)
+	}
+
+	var victimService model.AWDTeamService
+	if err := db.Where("round_id = ? AND team_id = ? AND challenge_id = ?", 241, 2412, 2401).First(&victimService).Error; err != nil {
+		t.Fatalf("load victim service after service scoped submit: %v", err)
+	}
+	if victimService.ServiceID != serviceID {
+		t.Fatalf("expected victim service service_id=%d, got %+v", serviceID, victimService)
 	}
 }
 
@@ -1108,6 +1277,7 @@ func TestAWDServiceSubmitAttackPublishesAttackAcceptedEvent(t *testing.T) {
 	createAWDTeamFixture(t, db, 1412, 14, "Blue", now)
 	createContestRegistrationForExistingTeam(t, db, 14, 1411, 14001, now)
 	createContestRegistrationForExistingTeam(t, db, 14, 1411, 14002, now)
+	serviceID := defaultAWDContestServiceID(14, 1401)
 
 	if err := db.Model(&model.Challenge{}).Where("id = ?", 1401).Updates(map[string]any{
 		"flag_prefix": "awd",
@@ -1121,7 +1291,7 @@ func TestAWDServiceSubmitAttackPublishesAttackAcceptedEvent(t *testing.T) {
 
 	flag := contestdomain.BuildAWDRoundFlag(14, 1, 1412, 1401, "awd-secret", "awd")
 	if err := redisClient.HSet(context.Background(), rediskeys.AWDRoundFlagsKey(14, 141), map[string]any{
-		rediskeys.AWDRoundFlagField(1412, 1401): flag,
+		rediskeys.AWDRoundFlagServiceField(1412, serviceID): flag,
 	}).Err(); err != nil {
 		t.Fatalf("set round flag: %v", err)
 	}
@@ -1136,7 +1306,7 @@ func TestAWDServiceSubmitAttackPublishesAttackAcceptedEvent(t *testing.T) {
 		return nil
 	})
 
-	first, err := service.SubmitAttack(context.Background(), 14001, 14, 1401, &dto.SubmitAWDAttackReq{
+	first, err := service.SubmitAttack(context.Background(), 14001, 14, serviceID, &dto.SubmitAWDAttackReq{
 		VictimTeamID: 1412,
 		Flag:         flag,
 	})
@@ -1147,7 +1317,7 @@ func TestAWDServiceSubmitAttackPublishesAttackAcceptedEvent(t *testing.T) {
 		t.Fatalf("unexpected first attack resp: %+v", first)
 	}
 
-	second, err := service.SubmitAttack(context.Background(), 14002, 14, 1401, &dto.SubmitAWDAttackReq{
+	second, err := service.SubmitAttack(context.Background(), 14002, 14, serviceID, &dto.SubmitAWDAttackReq{
 		VictimTeamID: 1412,
 		Flag:         flag,
 	})
@@ -1201,6 +1371,7 @@ func TestAWDServiceSubmitAttackAcceptsPreviousRoundFlagWithinGrace(t *testing.T)
 	createAWDTeamFixture(t, db, 511, 5, "Red", now)
 	createAWDTeamFixture(t, db, 512, 5, "Blue", now)
 	createContestRegistrationForExistingTeam(t, db, 5, 511, 5001, now)
+	serviceID := defaultAWDContestServiceID(5, 501)
 
 	if err := db.Model(&model.Challenge{}).Where("id = ?", 501).Update("flag_prefix", "awd").Error; err != nil {
 		t.Fatalf("set flag prefix: %v", err)
@@ -1210,13 +1381,13 @@ func TestAWDServiceSubmitAttackAcceptsPreviousRoundFlagWithinGrace(t *testing.T)
 	}
 	currentFlag := contestdomain.BuildAWDRoundFlag(5, 2, 512, 501, "awd-secret", "awd")
 	if err := redisClient.HSet(context.Background(), rediskeys.AWDRoundFlagsKey(5, 52), map[string]any{
-		rediskeys.AWDRoundFlagField(512, 501): currentFlag,
+		rediskeys.AWDRoundFlagServiceField(512, serviceID): currentFlag,
 	}).Err(); err != nil {
 		t.Fatalf("set current round flag: %v", err)
 	}
 
 	previousFlag := contestdomain.BuildAWDRoundFlag(5, 1, 512, 501, "awd-secret", "awd")
-	resp, err := service.SubmitAttack(context.Background(), 5001, 5, 501, &dto.SubmitAWDAttackReq{
+	resp, err := service.SubmitAttack(context.Background(), 5001, 5, serviceID, &dto.SubmitAWDAttackReq{
 		VictimTeamID: 512,
 		Flag:         previousFlag,
 	})
@@ -1252,6 +1423,7 @@ func TestAWDServiceSubmitAttackAllowsFrozenContest(t *testing.T) {
 	createAWDTeamFixture(t, db, 611, 6, "Red", now)
 	createAWDTeamFixture(t, db, 612, 6, "Blue", now)
 	createContestRegistrationForExistingTeam(t, db, 6, 611, 6001, now)
+	serviceID := defaultAWDContestServiceID(6, 601)
 
 	if err := db.Model(&model.Contest{}).Where("id = ?", 6).Update("status", model.ContestStatusFrozen).Error; err != nil {
 		t.Fatalf("set contest frozen: %v", err)
@@ -1265,12 +1437,12 @@ func TestAWDServiceSubmitAttackAllowsFrozenContest(t *testing.T) {
 
 	flag := contestdomain.BuildAWDRoundFlag(6, 1, 612, 601, "awd-secret", "awd")
 	if err := redisClient.HSet(context.Background(), rediskeys.AWDRoundFlagsKey(6, 61), map[string]any{
-		rediskeys.AWDRoundFlagField(612, 601): flag,
+		rediskeys.AWDRoundFlagServiceField(612, serviceID): flag,
 	}).Err(); err != nil {
 		t.Fatalf("set round flag: %v", err)
 	}
 
-	resp, err := service.SubmitAttack(context.Background(), 6001, 6, 601, &dto.SubmitAWDAttackReq{
+	resp, err := service.SubmitAttack(context.Background(), 6001, 6, serviceID, &dto.SubmitAWDAttackReq{
 		VictimTeamID: 612,
 		Flag:         flag,
 	})
@@ -1309,6 +1481,7 @@ func TestAWDServiceSubmitAttackIgnoresStaleCurrentRoundPointer(t *testing.T) {
 	createAWDTeamFixture(t, db, 711, 7, "Red", now)
 	createAWDTeamFixture(t, db, 712, 7, "Blue", now)
 	createContestRegistrationForExistingTeam(t, db, 7, 711, 7001, now)
+	serviceID := defaultAWDContestServiceID(7, 701)
 
 	if err := db.Model(&model.Challenge{}).Where("id = ?", 701).Update("flag_prefix", "awd").Error; err != nil {
 		t.Fatalf("set flag prefix: %v", err)
@@ -1319,12 +1492,12 @@ func TestAWDServiceSubmitAttackIgnoresStaleCurrentRoundPointer(t *testing.T) {
 
 	currentFlag := contestdomain.BuildAWDRoundFlag(7, 2, 712, 701, "awd-secret", "awd")
 	if err := redisClient.HSet(context.Background(), rediskeys.AWDRoundFlagsKey(7, 72), map[string]any{
-		rediskeys.AWDRoundFlagField(712, 701): currentFlag,
+		rediskeys.AWDRoundFlagServiceField(712, serviceID): currentFlag,
 	}).Err(); err != nil {
 		t.Fatalf("set current round flag: %v", err)
 	}
 
-	resp, err := service.SubmitAttack(context.Background(), 7001, 7, 701, &dto.SubmitAWDAttackReq{
+	resp, err := service.SubmitAttack(context.Background(), 7001, 7, serviceID, &dto.SubmitAWDAttackReq{
 		VictimTeamID: 712,
 		Flag:         currentFlag,
 	})
@@ -1370,6 +1543,7 @@ func TestAWDServiceSubmitAttackUsesTimeDerivedCurrentRoundWhenRoundStatusLags(t 
 	createAWDTeamFixture(t, db, 811, 8, "Red", now)
 	createAWDTeamFixture(t, db, 812, 8, "Blue", now)
 	createContestRegistrationForExistingTeam(t, db, 8, 811, 8001, now)
+	serviceID := defaultAWDContestServiceID(8, 801)
 
 	if err := db.Model(&model.AWDRound{}).Where("id = ?", 81).Updates(map[string]any{
 		"status":   model.AWDRoundStatusRunning,
@@ -1391,12 +1565,12 @@ func TestAWDServiceSubmitAttackUsesTimeDerivedCurrentRoundWhenRoundStatusLags(t 
 
 	currentFlag := contestdomain.BuildAWDRoundFlag(8, 2, 812, 801, "awd-secret", "awd")
 	if err := redisClient.HSet(context.Background(), rediskeys.AWDRoundFlagsKey(8, 82), map[string]any{
-		rediskeys.AWDRoundFlagField(812, 801): currentFlag,
+		rediskeys.AWDRoundFlagServiceField(812, serviceID): currentFlag,
 	}).Err(); err != nil {
 		t.Fatalf("set actual round flag: %v", err)
 	}
 
-	resp, err := service.SubmitAttack(context.Background(), 8001, 8, 801, &dto.SubmitAWDAttackReq{
+	resp, err := service.SubmitAttack(context.Background(), 8001, 8, serviceID, &dto.SubmitAWDAttackReq{
 		VictimTeamID: 812,
 		Flag:         currentFlag,
 	})
@@ -1441,6 +1615,7 @@ func TestAWDServiceSubmitAttackRejectsPreviousFlagAfterMaterializingMissingCurre
 	createAWDTeamFixture(t, db, 911, 9, "Red", now)
 	createAWDTeamFixture(t, db, 912, 9, "Blue", now)
 	createContestRegistrationForExistingTeam(t, db, 9, 911, 9001, now)
+	serviceID := defaultAWDContestServiceID(9, 901)
 
 	if err := db.Model(&model.AWDRound{}).Where("id = ?", 91).Updates(map[string]any{
 		"status":   model.AWDRoundStatusRunning,
@@ -1456,7 +1631,7 @@ func TestAWDServiceSubmitAttackRejectsPreviousFlagAfterMaterializingMissingCurre
 	}
 
 	previousFlag := contestdomain.BuildAWDRoundFlag(9, 1, 912, 901, "awd-secret", "awd")
-	resp, err := service.SubmitAttack(context.Background(), 9001, 9, 901, &dto.SubmitAWDAttackReq{
+	resp, err := service.SubmitAttack(context.Background(), 9001, 9, serviceID, &dto.SubmitAWDAttackReq{
 		VictimTeamID: 912,
 		Flag:         previousFlag,
 	})
@@ -1509,13 +1684,14 @@ func TestAWDServiceSubmitAttackMaterializesMissingCurrentRound(t *testing.T) {
 	createAWDTeamFixture(t, db, 1011, 10, "Red", now)
 	createAWDTeamFixture(t, db, 1012, 10, "Blue", now)
 	createContestRegistrationForExistingTeam(t, db, 10, 1011, 10001, now)
+	serviceID := defaultAWDContestServiceID(10, 1001)
 
 	if err := db.Model(&model.Challenge{}).Where("id = ?", 1001).Update("flag_prefix", "awd").Error; err != nil {
 		t.Fatalf("set flag prefix: %v", err)
 	}
 
 	currentFlag := contestdomain.BuildAWDRoundFlag(10, 2, 1012, 1001, "awd-secret", "awd")
-	resp, err := service.SubmitAttack(context.Background(), 10001, 10, 1001, &dto.SubmitAWDAttackReq{
+	resp, err := service.SubmitAttack(context.Background(), 10001, 10, serviceID, &dto.SubmitAWDAttackReq{
 		VictimTeamID: 1012,
 		Flag:         currentFlag,
 	})
@@ -1548,7 +1724,7 @@ func TestAWDServiceSubmitAttackMaterializesMissingCurrentRound(t *testing.T) {
 	flagValue, err := redisClient.HGet(
 		context.Background(),
 		rediskeys.AWDRoundFlagsKey(10, round.ID),
-		rediskeys.AWDRoundFlagField(1012, 1001),
+		rediskeys.AWDRoundFlagServiceField(1012, serviceID),
 	).Result()
 	if err != nil {
 		t.Fatalf("load materialized round flag: %v", err)
@@ -1580,6 +1756,7 @@ func TestAWDServiceGetTrafficSummaryBuildsAggregateMetrics(t *testing.T) {
 		ContestID:   int64Ptr(90),
 		TeamID:      int64Ptr(9102),
 		ChallengeID: 9001,
+		ServiceID:   awdServiceIDPtr(90, 9001),
 		ContainerID: "ctr-blue-web",
 		Status:      model.InstanceStatusRunning,
 		AccessURL:   "http://blue-web.local",
@@ -1595,6 +1772,7 @@ func TestAWDServiceGetTrafficSummaryBuildsAggregateMetrics(t *testing.T) {
 		ContestID:   int64Ptr(90),
 		TeamID:      int64Ptr(9101),
 		ChallengeID: 9002,
+		ServiceID:   awdServiceIDPtr(90, 9002),
 		ContainerID: "ctr-red-pwn",
 		Status:      model.InstanceStatusRunning,
 		AccessURL:   "http://red-pwn.local",
@@ -1605,9 +1783,9 @@ func TestAWDServiceGetTrafficSummaryBuildsAggregateMetrics(t *testing.T) {
 		t.Fatalf("create red instance: %v", err)
 	}
 
-	mustCreateAWDTrafficEvent(t, db, 9401, 90, 901, 9101, 9102, 9001, "GET", "/health", 200, now.Add(-9*time.Minute))
-	mustCreateAWDTrafficEvent(t, db, 9402, 90, 901, 9101, 9102, 9001, "POST", "/admin/login", 500, now.Add(-8*time.Minute))
-	mustCreateAWDTrafficEvent(t, db, 9403, 90, 901, 9102, 9101, 9002, "GET", "/index", 302, now.Add(-7*time.Minute))
+	mustCreateAWDTrafficEvent(t, db, 9401, 90, 901, 9101, 9102, defaultAWDContestServiceID(90, 9001), 9001, "GET", "/health", 200, now.Add(-9*time.Minute))
+	mustCreateAWDTrafficEvent(t, db, 9402, 90, 901, 9101, 9102, defaultAWDContestServiceID(90, 9001), 9001, "POST", "/admin/login", 500, now.Add(-8*time.Minute))
+	mustCreateAWDTrafficEvent(t, db, 9403, 90, 901, 9102, 9101, defaultAWDContestServiceID(90, 9002), 9002, "GET", "/index", 302, now.Add(-7*time.Minute))
 
 	summary, err := service.GetTrafficSummary(context.Background(), 90, 901)
 	if err != nil {
@@ -1656,6 +1834,7 @@ func TestAWDServiceListTrafficEventsSupportsFiltersAndPagination(t *testing.T) {
 		ContestID:   int64Ptr(91),
 		TeamID:      int64Ptr(9112),
 		ChallengeID: 91001,
+		ServiceID:   awdServiceIDPtr(91, 91001),
 		ContainerID: "ctr-beta-web",
 		Status:      model.InstanceStatusRunning,
 		AccessURL:   "http://beta-web.local",
@@ -1666,9 +1845,9 @@ func TestAWDServiceListTrafficEventsSupportsFiltersAndPagination(t *testing.T) {
 		t.Fatalf("create beta instance: %v", err)
 	}
 
-	mustCreateAWDTrafficEvent(t, db, 9411, 91, 911, 9111, 9112, 91001, "GET", "/api/status", 200, now.Add(-19*time.Minute))
-	mustCreateAWDTrafficEvent(t, db, 9412, 91, 911, 9111, 9112, 91001, "POST", "/admin/login", 401, now.Add(-18*time.Minute))
-	mustCreateAWDTrafficEvent(t, db, 9413, 91, 911, 9111, 9112, 91001, "POST", "/admin/login", 500, now.Add(-17*time.Minute))
+	mustCreateAWDTrafficEvent(t, db, 9411, 91, 911, 9111, 9112, defaultAWDContestServiceID(91, 91001), 91001, "GET", "/api/status", 200, now.Add(-19*time.Minute))
+	mustCreateAWDTrafficEvent(t, db, 9412, 91, 911, 9111, 9112, defaultAWDContestServiceID(91, 91001), 91001, "POST", "/admin/login", 401, now.Add(-18*time.Minute))
+	mustCreateAWDTrafficEvent(t, db, 9413, 91, 911, 9111, 9112, defaultAWDContestServiceID(91, 91001), 91001, "POST", "/admin/login", 500, now.Add(-17*time.Minute))
 
 	page, err := service.ListTrafficEvents(context.Background(), 91, 911, &dto.ListAWDTrafficEventsReq{
 		StatusGroup: "server_error",
@@ -1684,6 +1863,21 @@ func TestAWDServiceListTrafficEventsSupportsFiltersAndPagination(t *testing.T) {
 	}
 	if page.List[0].StatusCode != 500 || page.List[0].Path != "/admin/login" {
 		t.Fatalf("unexpected filtered traffic event: %+v", page.List[0])
+	}
+	if page.List[0].ServiceID != defaultAWDContestServiceID(91, 91001) {
+		t.Fatalf("expected traffic event to expose service_id, got %+v", page.List[0])
+	}
+
+	emptyPage, err := service.ListTrafficEvents(context.Background(), 91, 911, &dto.ListAWDTrafficEventsReq{
+		ServiceID: defaultAWDContestServiceID(91, 91001) + 1,
+		Page:      1,
+		Size:      20,
+	})
+	if err != nil {
+		t.Fatalf("ListTrafficEvents() with service_id filter error = %v", err)
+	}
+	if emptyPage.Total != 0 || len(emptyPage.List) != 0 {
+		t.Fatalf("expected service_id filter to exclude all traffic events, got %+v", emptyPage)
 	}
 }
 
@@ -1721,6 +1915,7 @@ func mustCreateAWDTrafficEvent(
 	roundID int64,
 	attackerTeamID int64,
 	victimTeamID int64,
+	serviceID int64,
 	challengeID int64,
 	method string,
 	requestPath string,
@@ -1735,6 +1930,7 @@ func mustCreateAWDTrafficEvent(
 		RoundID:        roundID,
 		AttackerTeamID: attackerTeamID,
 		VictimTeamID:   victimTeamID,
+		ServiceID:      serviceID,
 		ChallengeID:    challengeID,
 		Method:         method,
 		Path:           requestPath,

@@ -96,6 +96,7 @@ type TeacherAWDReviewServiceResp struct {
 	RoundID        int64     `json:"round_id"`
 	TeamID         int64     `json:"team_id"`
 	TeamName       string    `json:"team_name"`
+	ServiceID      int64     `json:"service_id"`
 	ChallengeID    int64     `json:"challenge_id"`
 	ChallengeTitle string    `json:"challenge_title"`
 	ServiceStatus  string    `json:"service_status"`
@@ -113,6 +114,7 @@ type TeacherAWDReviewAttackResp struct {
 	AttackerTeamName string    `json:"attacker_team_name"`
 	VictimTeamID     int64     `json:"victim_team_id"`
 	VictimTeamName   string    `json:"victim_team_name"`
+	ServiceID        int64     `json:"service_id"`
 	ChallengeID      int64     `json:"challenge_id"`
 	ChallengeTitle   string    `json:"challenge_title"`
 	AttackType       string    `json:"attack_type"`
@@ -131,6 +133,7 @@ type TeacherAWDReviewTrafficResp struct {
 	AttackerTeamName string    `json:"attacker_team_name"`
 	VictimTeamID     int64     `json:"victim_team_id"`
 	VictimTeamName   string    `json:"victim_team_name"`
+	ServiceID        int64     `json:"service_id"`
 	ChallengeID      int64     `json:"challenge_id"`
 	ChallengeTitle   string    `json:"challenge_title"`
 	Method           string    `json:"method"`

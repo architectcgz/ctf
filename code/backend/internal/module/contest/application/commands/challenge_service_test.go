@@ -2,50 +2,44 @@ package commands
 
 import (
 	"context"
-	"errors"
-	"net/http"
-	"net/http/httptest"
-	"reflect"
 	"testing"
 	"time"
 
-	"github.com/alicebob/miniredis/v2"
 	"github.com/redis/go-redis/v9"
-	"go.uber.org/zap"
 
-	"ctf-platform/internal/model"
-	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
-	contestjobs "ctf-platform/internal/module/contest/application/jobs"
+	"ctf-platform/internal/model"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	contesttestsupport "ctf-platform/internal/module/contest/testsupport"
-	"ctf-platform/pkg/errcode"
 )
 
-func newContestChallengeCommandService(t *testing.T) (*ChallengeService, *challengeinfra.Repository, *contestinfra.Repository, *contestinfra.ChallengeRepository) {
+func newContestChallengeCommandService(t *testing.T) (*ChallengeService, *challengeinfra.Repository, *contestinfra.Repository, *contestinfra.ChallengeRepository, *contestinfra.AWDRepository) {
 	t.Helper()
 
 	return newContestChallengeCommandServiceWithRedis(t, nil)
 }
 
-func newContestChallengeCommandServiceWithRedis(t *testing.T, redisClient *redis.Client) (*ChallengeService, *challengeinfra.Repository, *contestinfra.Repository, *contestinfra.ChallengeRepository) {
+func newContestChallengeCommandServiceWithRedis(t *testing.T, redisClient *redis.Client) (*ChallengeService, *challengeinfra.Repository, *contestinfra.Repository, *contestinfra.ChallengeRepository, *contestinfra.AWDRepository) {
 	t.Helper()
 
 	db := contesttestsupport.SetupContestTestDB(t)
+	awdRepo := contestinfra.NewAWDRepository(db)
 	return NewChallengeService(
 			contestinfra.NewChallengeRepository(db),
 			challengeinfra.NewRepository(db),
 			contestinfra.NewRepository(db),
+			awdRepo,
 			redisClient,
 		),
 		challengeinfra.NewRepository(db),
 		contestinfra.NewRepository(db),
-		contestinfra.NewChallengeRepository(db)
+		contestinfra.NewChallengeRepository(db),
+		awdRepo
 }
 
-func TestChallengeServiceAddChallengeToAWDContestPersistsAWDServiceConfig(t *testing.T) {
-	service, challengeRepo, contestRepo, challengeRelationRepo := newContestChallengeCommandService(t)
+func TestChallengeServiceAddChallengeToAWDContestDoesNotCreateAWDService(t *testing.T) {
+	service, challengeRepo, contestRepo, challengeRelationRepo, awdRepo := newContestChallengeCommandService(t)
 
 	now := time.Now()
 	contest := &model.Contest{
@@ -76,21 +70,16 @@ func TestChallengeServiceAddChallengeToAWDContestPersistsAWDServiceConfig(t *tes
 	}
 
 	resp, err := service.AddChallengeToContest(context.Background(), contest.ID, &dto.AddContestChallengeReq{
-		ChallengeID:      9001,
-		Points:           120,
-		AWDCheckerType:   model.AWDCheckerTypeHTTPStandard,
-		AWDCheckerConfig: map[string]any{"get_flag": map[string]any{"path": "/internal/flag"}},
-		AWDSLAScore:      15,
-		AWDDefenseScore:  25,
+		ChallengeID: 9001,
+		Points:      120,
+		Order:       2,
+		IsVisible:   boolPtr(true),
 	})
 	if err != nil {
 		t.Fatalf("AddChallengeToContest() error = %v", err)
 	}
-	if resp.AWDCheckerType != model.AWDCheckerTypeHTTPStandard || resp.AWDSLAScore != 15 || resp.AWDDefenseScore != 25 {
+	if resp.Points != 120 || resp.Order != 2 || !resp.IsVisible {
 		t.Fatalf("unexpected awd challenge response: %+v", resp)
-	}
-	if path := resp.AWDCheckerConfig["get_flag"].(map[string]any)["path"]; path != "/internal/flag" {
-		t.Fatalf("unexpected checker config: %+v", resp.AWDCheckerConfig)
 	}
 
 	items, err := challengeRelationRepo.ListChallenges(context.Background(), contest.ID, false)
@@ -100,59 +89,21 @@ func TestChallengeServiceAddChallengeToAWDContestPersistsAWDServiceConfig(t *tes
 	if len(items) != 1 {
 		t.Fatalf("unexpected challenge count: %d", len(items))
 	}
-	if items[0].AWDCheckerType != model.AWDCheckerTypeHTTPStandard || items[0].AWDSLAScore != 15 || items[0].AWDDefenseScore != 25 {
+	if items[0].Points != 120 || items[0].Order != 2 || !items[0].IsVisible {
 		t.Fatalf("unexpected stored contest challenge: %+v", items[0])
 	}
-}
 
-func TestChallengeServiceRejectsAWDServiceConfigOnNonAWDContest(t *testing.T) {
-	service, challengeRepo, contestRepo, _ := newContestChallengeCommandService(t)
-
-	now := time.Now()
-	contest := &model.Contest{
-		ID:        502,
-		Title:     "jeopardy",
-		Mode:      model.ContestModeJeopardy,
-		Status:    model.ContestStatusDraft,
-		StartTime: now.Add(time.Hour),
-		EndTime:   now.Add(2 * time.Hour),
-		CreatedAt: now,
-		UpdatedAt: now,
+	services, err := awdRepo.ListContestAWDServicesByContest(context.Background(), contest.ID)
+	if err != nil {
+		t.Fatalf("ListContestAWDServicesByContest() error = %v", err)
 	}
-	if err := contestRepo.Create(context.Background(), contest); err != nil {
-		t.Fatalf("create contest: %v", err)
-	}
-	if err := challengeRepo.Create(&model.Challenge{
-		ID:         9002,
-		Title:      "web",
-		Category:   "web",
-		Difficulty: model.ChallengeDifficultyEasy,
-		Points:     100,
-		Status:     model.ChallengeStatusPublished,
-		FlagType:   model.FlagTypeStatic,
-		CreatedAt:  now,
-		UpdatedAt:  now,
-	}); err != nil {
-		t.Fatalf("create challenge: %v", err)
-	}
-
-	_, err := service.AddChallengeToContest(context.Background(), contest.ID, &dto.AddContestChallengeReq{
-		ChallengeID:     9002,
-		AWDCheckerType:  model.AWDCheckerTypeHTTPStandard,
-		AWDSLAScore:     10,
-		AWDDefenseScore: 20,
-	})
-	if err == nil {
-		t.Fatal("expected AddChallengeToContest() to reject awd config on non-awd contest")
-	}
-	var appErr *errcode.AppError
-	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrInvalidParams.Code {
-		t.Fatalf("expected invalid params, got %v", err)
+	if len(services) != 0 {
+		t.Fatalf("expected generic challenge add to not create contest awd service, got %+v", services)
 	}
 }
 
-func TestChallengeServiceUpdateChallengePersistsAWDServiceConfig(t *testing.T) {
-	service, challengeRepo, contestRepo, challengeRelationRepo := newContestChallengeCommandService(t)
+func TestChallengeServiceUpdateChallengeDoesNotCreateAWDService(t *testing.T) {
+	service, challengeRepo, contestRepo, challengeRelationRepo, awdRepo := newContestChallengeCommandService(t)
 
 	now := time.Now()
 	contest := &model.Contest{
@@ -193,10 +144,9 @@ func TestChallengeServiceUpdateChallengePersistsAWDServiceConfig(t *testing.T) {
 	}
 
 	err := service.UpdateChallenge(context.Background(), contest.ID, 9003, &dto.UpdateContestChallengeReq{
-		AWDCheckerType:   stringPtr(string(model.AWDCheckerTypeHTTPStandard)),
-		AWDCheckerConfig: map[string]any{"havoc": map[string]any{"path": "/healthz"}},
-		AWDSLAScore:      intPtr(18),
-		AWDDefenseScore:  intPtr(28),
+		Points:    intPtr(140),
+		Order:     intPtr(3),
+		IsVisible: boolPtr(false),
 	})
 	if err != nil {
 		t.Fatalf("UpdateChallenge() error = %v", err)
@@ -209,29 +159,26 @@ func TestChallengeServiceUpdateChallengePersistsAWDServiceConfig(t *testing.T) {
 	if len(items) != 1 {
 		t.Fatalf("unexpected challenge count: %d", len(items))
 	}
-	if items[0].AWDCheckerType != model.AWDCheckerTypeHTTPStandard || items[0].AWDSLAScore != 18 || items[0].AWDDefenseScore != 28 {
+	if items[0].Points != 140 || items[0].Order != 3 || items[0].IsVisible {
 		t.Fatalf("unexpected updated contest challenge: %+v", items[0])
 	}
+
+	services, err := awdRepo.ListContestAWDServicesByContest(context.Background(), contest.ID)
+	if err != nil {
+		t.Fatalf("ListContestAWDServicesByContest() error = %v", err)
+	}
+	if len(services) != 0 {
+		t.Fatalf("expected generic challenge update to not create contest awd service, got %+v", services)
+	}
 }
 
-func TestChallengeServiceAddChallengeConsumesCheckerPreviewToken(t *testing.T) {
-	mini, err := miniredis.Run()
-	if err != nil {
-		t.Fatalf("start miniredis: %v", err)
-	}
-	t.Cleanup(mini.Close)
-
-	redisClient := redis.NewClient(&redis.Options{Addr: mini.Addr()})
-	t.Cleanup(func() {
-		_ = redisClient.Close()
-	})
-
-	service, challengeRepo, contestRepo, challengeRelationRepo := newContestChallengeCommandServiceWithRedis(t, redisClient)
+func TestChallengeServiceRemoveChallengeFromContestDoesNotDeleteAWDService(t *testing.T) {
+	service, challengeRepo, contestRepo, challengeRelationRepo, awdRepo := newContestChallengeCommandService(t)
 
 	now := time.Now()
 	contest := &model.Contest{
-		ID:        504,
-		Title:     "awd-preview-token",
+		ID:        506,
+		Title:     "awd-remove",
 		Mode:      model.ContestModeAWD,
 		Status:    model.ContestStatusDraft,
 		StartTime: now.Add(time.Hour),
@@ -243,209 +190,8 @@ func TestChallengeServiceAddChallengeConsumesCheckerPreviewToken(t *testing.T) {
 		t.Fatalf("create contest: %v", err)
 	}
 	if err := challengeRepo.Create(&model.Challenge{
-		ID:         9004,
-		Title:      "token-preview",
-		Category:   "web",
-		Difficulty: model.ChallengeDifficultyEasy,
-		Points:     100,
-		Status:     model.ChallengeStatusPublished,
-		FlagType:   model.FlagTypeStatic,
-		CreatedAt:  now,
-		UpdatedAt:  now,
-	}); err != nil {
-		t.Fatalf("create challenge: %v", err)
-	}
-
-	previewServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		switch r.URL.Path {
-		case "/api/flag":
-			if r.Method == http.MethodPut {
-				w.WriteHeader(http.StatusCreated)
-				return
-			}
-			if r.Method == http.MethodGet {
-				_, _ = w.Write([]byte("flag{preview}"))
-				return
-			}
-			http.Error(w, "method_not_allowed", http.StatusMethodNotAllowed)
-		case "/healthz":
-			w.WriteHeader(http.StatusOK)
-		default:
-			http.NotFound(w, r)
-		}
-	}))
-	t.Cleanup(previewServer.Close)
-
-	previewDB := contesttestsupport.SetupAWDTestDB(t)
-	if err := contestinfra.NewRepository(previewDB).Create(context.Background(), &model.Contest{
-		ID:        contest.ID,
-		Title:     contest.Title,
-		Mode:      contest.Mode,
-		Status:    model.ContestStatusRunning,
-		StartTime: now.Add(-time.Hour),
-		EndTime:   now.Add(time.Hour),
-		CreatedAt: now,
-		UpdatedAt: now,
-	}); err != nil {
-		t.Fatalf("create preview contest: %v", err)
-	}
-	if err := challengeinfra.NewRepository(previewDB).Create(&model.Challenge{
-		ID:         9004,
-		Title:      "token-preview",
-		Category:   "web",
-		Difficulty: model.ChallengeDifficultyEasy,
-		Points:     100,
-		Status:     model.ChallengeStatusPublished,
-		FlagType:   model.FlagTypeStatic,
-		CreatedAt:  now,
-		UpdatedAt:  now,
-	}); err != nil {
-		t.Fatalf("create preview challenge: %v", err)
-	}
-
-	previewService := NewAWDService(
-		contestinfra.NewAWDRepository(previewDB),
-		contestinfra.NewRepository(previewDB),
-		redisClient,
-		"",
-		config.ContestAWDConfig{
-		CheckerTimeout:    time.Second,
-		CheckerHealthPath: "/healthz",
-		},
-		zap.NewNop(),
-		contestjobs.NewAWDRoundUpdater(
-			contestinfra.NewAWDRepository(previewDB),
-			redisClient,
-			config.ContestAWDConfig{
-				CheckerTimeout:    time.Second,
-				CheckerHealthPath: "/healthz",
-			},
-			"",
-			nil,
-			zap.NewNop(),
-		),
-	)
-
-	method := reflect.ValueOf(previewService).MethodByName("PreviewChecker")
-	if !method.IsValid() {
-		t.Fatalf("PreviewChecker method not implemented")
-	}
-	reqValue := reflect.New(method.Type().In(2).Elem())
-	setAnyField(t, reqValue.Elem(), "ChallengeID", int64(9004))
-	setAnyField(t, reqValue.Elem(), "CheckerType", string(model.AWDCheckerTypeHTTPStandard))
-	setAnyField(t, reqValue.Elem(), "CheckerConfig", map[string]any{
-		"put_flag": map[string]any{
-			"method":          "PUT",
-			"path":            "/api/flag",
-			"expected_status": http.StatusCreated,
-			"body_template":   "{{FLAG}}",
-		},
-		"get_flag": map[string]any{
-			"method":             "GET",
-			"path":               "/api/flag",
-			"expected_status":    http.StatusOK,
-			"expected_substring": "{{FLAG}}",
-		},
-		"havoc": map[string]any{
-			"method":          "GET",
-			"path":            "/healthz",
-			"expected_status": http.StatusOK,
-		},
-	})
-	setAnyField(t, reqValue.Elem(), "AccessURL", previewServer.URL)
-
-	results := method.Call([]reflect.Value{
-		reflect.ValueOf(context.Background()),
-		reflect.ValueOf(int64(504)),
-		reqValue,
-	})
-	if errValue := results[1].Interface(); errValue != nil {
-		t.Fatalf("PreviewChecker() error = %v", errValue)
-	}
-	previewResp := results[0]
-	if previewResp.IsNil() {
-		t.Fatal("expected preview response")
-	}
-	previewTokenField := previewResp.Elem().FieldByName("PreviewToken")
-	if !previewTokenField.IsValid() || previewTokenField.String() == "" {
-		t.Fatal("expected preview token")
-	}
-
-	req := &dto.AddContestChallengeReq{
-		ChallengeID:    9004,
-		Points:         130,
-		AWDCheckerType: model.AWDCheckerTypeHTTPStandard,
-		AWDCheckerConfig: map[string]any{
-			"put_flag": map[string]any{
-				"method":          "PUT",
-				"path":            "/api/flag",
-				"expected_status": http.StatusCreated,
-				"body_template":   "{{FLAG}}",
-			},
-			"get_flag": map[string]any{
-				"method":             "GET",
-				"path":               "/api/flag",
-				"expected_status":    http.StatusOK,
-				"expected_substring": "{{FLAG}}",
-			},
-			"havoc": map[string]any{
-				"method":          "GET",
-				"path":            "/healthz",
-				"expected_status": http.StatusOK,
-			},
-		},
-	}
-	setAnyField(t, reflect.ValueOf(req).Elem(), "AWDCheckerPreviewToken", previewTokenField.String())
-
-	resp, err := service.AddChallengeToContest(context.Background(), contest.ID, req)
-	if err != nil {
-		t.Fatalf("AddChallengeToContest() error = %v", err)
-	}
-	respValue := reflect.ValueOf(resp).Elem()
-	stateField := respValue.FieldByName("AWDCheckerValidationState")
-	if !stateField.IsValid() || stateField.String() != "passed" {
-		t.Fatalf("expected passed validation state, got %#v", stateField)
-	}
-
-	items, err := challengeRelationRepo.ListChallenges(context.Background(), contest.ID, false)
-	if err != nil {
-		t.Fatalf("ListChallenges() error = %v", err)
-	}
-	if len(items) != 1 {
-		t.Fatalf("unexpected challenge count: %d", len(items))
-	}
-	itemValue := reflect.ValueOf(items[0]).Elem()
-	if state := itemValue.FieldByName("AWDCheckerValidationState"); !state.IsValid() || state.String() != "passed" {
-		t.Fatalf("expected persisted passed validation state, got %#v", state)
-	}
-	if previewAt := itemValue.FieldByName("AWDCheckerLastPreviewAt"); !previewAt.IsValid() || previewAt.IsNil() {
-		t.Fatal("expected persisted preview time")
-	}
-	if previewResult := itemValue.FieldByName("AWDCheckerLastPreviewResult"); !previewResult.IsValid() || previewResult.String() == "" {
-		t.Fatal("expected persisted preview result")
-	}
-}
-
-func TestChallengeServiceUpdateChallengeMarksValidationStateStaleWhenCheckerConfigChanges(t *testing.T) {
-	service, challengeRepo, contestRepo, challengeRelationRepo := newContestChallengeCommandService(t)
-
-	now := time.Now()
-	contest := &model.Contest{
-		ID:        505,
-		Title:     "awd-stale",
-		Mode:      model.ContestModeAWD,
-		Status:    model.ContestStatusDraft,
-		StartTime: now.Add(time.Hour),
-		EndTime:   now.Add(2 * time.Hour),
-		CreatedAt: now,
-		UpdatedAt: now,
-	}
-	if err := contestRepo.Create(context.Background(), contest); err != nil {
-		t.Fatalf("create contest: %v", err)
-	}
-	if err := challengeRepo.Create(&model.Challenge{
-		ID:         9005,
-		Title:      "stale-checker",
+		ID:         9006,
+		Title:      "awd-remove-challenge",
 		Category:   "web",
 		Difficulty: model.ChallengeDifficultyMedium,
 		Points:     100,
@@ -456,93 +202,54 @@ func TestChallengeServiceUpdateChallengeMarksValidationStateStaleWhenCheckerConf
 	}); err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
-
-	existing := &model.ContestChallenge{
-		ContestID:        contest.ID,
-		ChallengeID:      9005,
-		Points:           100,
-		IsVisible:        true,
-		AWDCheckerType:   model.AWDCheckerTypeHTTPStandard,
-		AWDCheckerConfig: `{"get_flag":{"path":"/api/flag"}}`,
-		CreatedAt:        now,
-		UpdatedAt:        now,
-	}
-	setChallengeModelField(t, existing, "AWDCheckerValidationState", "passed")
-	setChallengeModelField(t, existing, "AWDCheckerLastPreviewAt", &now)
-	setChallengeModelField(t, existing, "AWDCheckerLastPreviewResult", `{"service_status":"up"}`)
-	if err := challengeRelationRepo.AddChallenge(context.Background(), existing); err != nil {
+	if err := challengeRelationRepo.AddChallenge(context.Background(), &model.ContestChallenge{
+		ContestID:   contest.ID,
+		ChallengeID: 9006,
+		Points:      100,
+		IsVisible:   true,
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	}); err != nil {
 		t.Fatalf("add challenge: %v", err)
 	}
+	if err := awdRepo.CreateContestAWDService(context.Background(), &model.ContestAWDService{
+		ID:              contesttestsupport.DefaultAWDContestServiceID(contest.ID, 9006),
+		ContestID:       contest.ID,
+		ChallengeID:     9006,
+		DisplayName:     "AWD Remove Service",
+		Order:           1,
+		IsVisible:       true,
+		ScoreConfig:     `{"points":100}`,
+		RuntimeConfig:   `{"checker_type":"http_standard"}`,
+		ValidationState: model.AWDCheckerValidationStatePending,
+		CreatedAt:       now,
+		UpdatedAt:       now,
+	}); err != nil {
+		t.Fatalf("create contest awd service: %v", err)
+	}
 
-	err := service.UpdateChallenge(context.Background(), contest.ID, 9005, &dto.UpdateContestChallengeReq{
-		AWDCheckerType:   stringPtr(string(model.AWDCheckerTypeLegacyProbe)),
-		AWDCheckerConfig: map[string]any{"health_path": "/healthz"},
-	})
+	if err := service.RemoveChallengeFromContest(context.Background(), contest.ID, 9006); err != nil {
+		t.Fatalf("RemoveChallengeFromContest() error = %v", err)
+	}
+
+	exists, err := challengeRelationRepo.Exists(context.Background(), contest.ID, 9006)
 	if err != nil {
-		t.Fatalf("UpdateChallenge() error = %v", err)
+		t.Fatalf("Exists() error = %v", err)
 	}
-
-	items, err := challengeRelationRepo.ListChallenges(context.Background(), contest.ID, false)
+	if exists {
+		t.Fatal("expected contest challenge relation removed")
+	}
+	serviceAssociation, err := awdRepo.FindContestAWDServiceByContestAndID(
+		context.Background(),
+		contest.ID,
+		contesttestsupport.DefaultAWDContestServiceID(contest.ID, 9006),
+	)
 	if err != nil {
-		t.Fatalf("ListChallenges() error = %v", err)
+		t.Fatalf("expected explicit awd service to remain after generic challenge removal, got %v", err)
 	}
-	if len(items) != 1 {
-		t.Fatalf("unexpected challenge count: %d", len(items))
+	if serviceAssociation.ID != contesttestsupport.DefaultAWDContestServiceID(contest.ID, 9006) {
+		t.Fatalf("unexpected retained awd service: %+v", serviceAssociation)
 	}
-	itemValue := reflect.ValueOf(items[0]).Elem()
-	if state := itemValue.FieldByName("AWDCheckerValidationState"); !state.IsValid() || state.String() != "stale" {
-		t.Fatalf("expected stale validation state, got %#v", state)
-	}
-}
-
-func setChallengeModelField(t *testing.T, target *model.ContestChallenge, field string, value any) {
-	t.Helper()
-
-	item := reflect.ValueOf(target).Elem().FieldByName(field)
-	if !item.IsValid() {
-		t.Fatalf("field %s not found", field)
-	}
-	if !item.CanSet() {
-		t.Fatalf("field %s cannot set", field)
-	}
-
-	next := reflect.ValueOf(value)
-	if next.Type().AssignableTo(item.Type()) {
-		item.Set(next)
-		return
-	}
-	if next.Type().ConvertibleTo(item.Type()) {
-		item.Set(next.Convert(item.Type()))
-		return
-	}
-	t.Fatalf("field %s type mismatch: have %s want %s", field, next.Type(), item.Type())
-}
-
-func setAnyField(t *testing.T, target reflect.Value, field string, value any) {
-	t.Helper()
-
-	item := target.FieldByName(field)
-	if !item.IsValid() {
-		t.Fatalf("field %s not found", field)
-	}
-	if !item.CanSet() {
-		t.Fatalf("field %s cannot set", field)
-	}
-
-	next := reflect.ValueOf(value)
-	if !next.IsValid() {
-		item.Set(reflect.Zero(item.Type()))
-		return
-	}
-	if next.Type().AssignableTo(item.Type()) {
-		item.Set(next)
-		return
-	}
-	if next.Type().ConvertibleTo(item.Type()) {
-		item.Set(next.Convert(item.Type()))
-		return
-	}
-	t.Fatalf("field %s type mismatch: have %s want %s", field, next.Type(), item.Type())
 }
 
 func intPtr(value int) *int {

@@ -2,6 +2,7 @@ package composition
 
 import (
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	challengeports "ctf-platform/internal/module/challenge/ports"
 	contesthttp "ctf-platform/internal/module/contest/api/http"
 	contestcmd "ctf-platform/internal/module/contest/application/commands"
 	contestjobs "ctf-platform/internal/module/contest/application/jobs"
@@ -35,6 +36,7 @@ type contestModuleDeps struct {
 	participationRepo contestports.ContestParticipationRepository
 	submissionRepo    contestports.ContestSubmissionRepository
 	challengeCatalog  challengecontracts.ContestChallengeContract
+	templateQueryRepo challengeports.AWDServiceTemplateQueryRepository
 	flagValidator     challengecontracts.FlagValidator
 	containerFiles    contestports.AWDContainerFileWriter
 }
@@ -99,6 +101,7 @@ func newContestModuleDeps(root *Root, challenge *ChallengeModule, runtime *Runti
 		participationRepo: participationRepo,
 		submissionRepo:    submissionRepo,
 		challengeCatalog:  challenge.Catalog,
+		templateQueryRepo: challenge.AWDServiceTemplateQuery,
 		flagValidator:     challenge.FlagValidator,
 		containerFiles:    runtime.ContestContainerFiles,
 	}
@@ -151,13 +154,22 @@ func buildContestAWDHandler(deps *contestModuleDeps) (*contesthttp.AWDHandler, *
 	)
 	awdCommands.SetEventBus(deps.root.Events)
 	awdQueries := contestqry.NewAWDService(deps.awdRepo, deps.contestLookup)
+	awdServiceCommands := contestcmd.NewContestAWDServiceService(
+		deps.awdRepo,
+		deps.contestLookup,
+		deps.challengeRepo,
+		deps.challengeCatalog,
+		deps.templateQueryRepo,
+		deps.root.Cache(),
+	)
+	awdServiceQueries := contestqry.NewContestAWDServiceQueryService(deps.awdRepo, deps.contestLookup)
 
-	return contesthttp.NewAWDHandler(awdCommands, awdQueries), awdUpdater
+	return contesthttp.NewAWDHandler(awdCommands, awdQueries, awdServiceCommands, awdServiceQueries), awdUpdater
 }
 
 func buildContestChallengeHandler(deps *contestModuleDeps) *contesthttp.ChallengeHandler {
-	contestChallengeCommands := contestcmd.NewChallengeService(deps.challengeRepo, deps.challengeCatalog, deps.contestLookup, deps.root.Cache())
-	contestChallengeQueries := contestqry.NewChallengeService(deps.challengeRepo, deps.challengeCatalog, deps.contestLookup)
+	contestChallengeCommands := contestcmd.NewChallengeService(deps.challengeRepo, deps.challengeCatalog, deps.contestLookup, deps.awdRepo, deps.root.Cache())
+	contestChallengeQueries := contestqry.NewChallengeService(deps.challengeRepo, deps.challengeCatalog, deps.contestLookup, deps.awdRepo)
 	return contesthttp.NewChallengeHandler(contestChallengeCommands, contestChallengeQueries)
 }
 

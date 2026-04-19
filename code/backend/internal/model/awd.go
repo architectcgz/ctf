@@ -42,7 +42,8 @@ type AWDTeamService struct {
 	ID             int64          `gorm:"column:id;primaryKey"`
 	RoundID        int64          `gorm:"column:round_id;not null;uniqueIndex:uk_awd_team_services"`
 	TeamID         int64          `gorm:"column:team_id;not null;index:idx_awd_ts_team;uniqueIndex:uk_awd_team_services"`
-	ChallengeID    int64          `gorm:"column:challenge_id;not null;uniqueIndex:uk_awd_team_services"`
+	ServiceID      int64          `gorm:"column:service_id;not null;index:idx_awd_ts_round_team_service;uniqueIndex:uk_awd_team_services"`
+	ChallengeID    int64          `gorm:"column:challenge_id;not null;index"`
 	ServiceStatus  string         `gorm:"column:service_status;size:16;not null;default:up"`
 	CheckResult    string         `gorm:"column:check_result;type:text;not null;default:'{}'"`
 	CheckerType    AWDCheckerType `gorm:"column:checker_type;size:32;not null;default:''"`
@@ -63,12 +64,13 @@ type AWDAttackLog struct {
 	RoundID           int64     `gorm:"column:round_id;not null;index"`
 	AttackerTeamID    int64     `gorm:"column:attacker_team_id;not null;index"`
 	VictimTeamID      int64     `gorm:"column:victim_team_id;not null;index"`
+	ServiceID         int64     `gorm:"column:service_id;not null;index:idx_awd_attack_round_service_success,priority:4"`
 	ChallengeID       int64     `gorm:"column:challenge_id;not null"`
 	AttackType        string    `gorm:"column:attack_type;size:32;not null"`
 	Source            string    `gorm:"column:source;size:32;not null;default:legacy"`
 	SubmittedFlag     string    `gorm:"column:submitted_flag;size:512"`
 	SubmittedByUserID *int64    `gorm:"column:submitted_by_user_id"`
-	IsSuccess         bool      `gorm:"column:is_success;not null;default:false;index"`
+	IsSuccess         bool      `gorm:"column:is_success;not null;default:false;index;index:idx_awd_attack_round_service_success,priority:5"`
 	ScoreGained       int       `gorm:"column:score_gained;not null;default:0"`
 	CreatedAt         time.Time `gorm:"column:created_at"`
 }
@@ -83,6 +85,7 @@ type AWDTrafficEvent struct {
 	RoundID        int64     `gorm:"column:round_id;not null;index:idx_awd_traffic_round_created,priority:1;index:idx_awd_traffic_attacker,priority:1;index:idx_awd_traffic_victim,priority:1"`
 	AttackerTeamID int64     `gorm:"column:attacker_team_id;not null;index:idx_awd_traffic_attacker,priority:2"`
 	VictimTeamID   int64     `gorm:"column:victim_team_id;not null;index:idx_awd_traffic_victim,priority:2"`
+	ServiceID      int64     `gorm:"column:service_id;not null;index"`
 	ChallengeID    int64     `gorm:"column:challenge_id;not null;index"`
 	Method         string    `gorm:"column:method;size:16;not null"`
 	Path           string    `gorm:"column:path;size:1024;not null"`

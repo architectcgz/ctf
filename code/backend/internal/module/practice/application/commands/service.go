@@ -111,7 +111,15 @@ func (s *Service) StartChallengeWithContext(ctx context.Context, userID, challen
 }
 
 func (s *Service) StartContestChallenge(ctx context.Context, userID, contestID, challengeID int64) (*dto.InstanceResp, error) {
-	scope, err := s.resolveContestInstanceScope(ctx, userID, contestID, challengeID)
+	scope, err := s.resolveContestChallengeInstanceScope(ctx, userID, contestID, challengeID)
+	if err != nil {
+		return nil, err
+	}
+	return s.startChallengeWithScope(ctx, userID, challengeID, scope)
+}
+
+func (s *Service) StartContestAWDService(ctx context.Context, userID, contestID, serviceID int64) (*dto.InstanceResp, error) {
+	challengeID, scope, err := s.resolveContestAWDServiceInstanceScope(ctx, userID, contestID, serviceID)
 	if err != nil {
 		return nil, err
 	}
@@ -203,6 +211,7 @@ func (s *Service) startChallengeWithScope(ctx context.Context, userID, challenge
 			ContestID:   scope.ContestID,
 			TeamID:      scope.TeamID,
 			ChallengeID: challengeID,
+			ServiceID:   scope.ServiceID,
 			HostPort:    hostPort,
 			ShareScope:  scope.ShareScope,
 			Status:      initialStatus,
@@ -961,7 +970,50 @@ func challengeSubmissionRecordRespFromModel(item model.Submission) *dto.Challeng
 	}
 }
 
-func (s *Service) resolveContestInstanceScope(ctx context.Context, userID, contestID, challengeID int64) (practiceports.InstanceScope, error) {
+func (s *Service) resolveContestChallengeInstanceScope(ctx context.Context, userID, contestID, challengeID int64) (practiceports.InstanceScope, error) {
+	scope, err := s.resolveContestBaseInstanceScope(ctx, userID, contestID)
+	if err != nil {
+		return practiceports.InstanceScope{}, err
+	}
+	if scope.ContestMode == model.ContestModeAWD {
+		return practiceports.InstanceScope{}, errcode.ErrInvalidParams.WithCause(
+			errors.New("awd 赛事实例启动必须使用 service_id 入口"),
+		)
+	}
+	contestChallenge, err := s.repo.FindContestChallengeWithContext(ctx, contestID, challengeID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return practiceports.InstanceScope{}, errcode.ErrChallengeNotInContest
+		}
+		return practiceports.InstanceScope{}, errcode.ErrInternal.WithCause(err)
+	}
+	if !contestChallenge.IsVisible {
+		return practiceports.InstanceScope{}, errcode.ErrContestChallengeVisible
+	}
+	return scope, nil
+}
+
+func (s *Service) resolveContestAWDServiceInstanceScope(ctx context.Context, userID, contestID, serviceID int64) (int64, practiceports.InstanceScope, error) {
+	scope, err := s.resolveContestBaseInstanceScope(ctx, userID, contestID)
+	if err != nil {
+		return 0, practiceports.InstanceScope{}, err
+	}
+	service, err := s.repo.FindContestAWDServiceWithContext(ctx, contestID, serviceID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return 0, practiceports.InstanceScope{}, errcode.ErrChallengeNotInContest
+		}
+		return 0, practiceports.InstanceScope{}, errcode.ErrInternal.WithCause(err)
+	}
+	if !service.IsVisible {
+		return 0, practiceports.InstanceScope{}, errcode.ErrContestChallengeVisible
+	}
+	serviceIDCopy := service.ID
+	scope.ServiceID = &serviceIDCopy
+	return service.ChallengeID, scope, nil
+}
+
+func (s *Service) resolveContestBaseInstanceScope(ctx context.Context, userID, contestID int64) (practiceports.InstanceScope, error) {
 	if s.repo == nil {
 		return practiceports.InstanceScope{}, errcode.ErrInternal.WithCause(fmt.Errorf("practice repository is nil"))
 	}
@@ -980,17 +1032,6 @@ func (s *Service) resolveContestInstanceScope(ctx context.Context, userID, conte
 			return practiceports.InstanceScope{}, errcode.ErrContestEnded
 		}
 		return practiceports.InstanceScope{}, errcode.ErrContestNotRunning
-	}
-
-	contestChallenge, err := s.repo.FindContestChallengeWithContext(ctx, contestID, challengeID)
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return practiceports.InstanceScope{}, errcode.ErrChallengeNotInContest
-		}
-		return practiceports.InstanceScope{}, errcode.ErrInternal.WithCause(err)
-	}
-	if !contestChallenge.IsVisible {
-		return practiceports.InstanceScope{}, errcode.ErrContestChallengeVisible
 	}
 
 	registration, err := s.repo.FindContestRegistrationWithContext(ctx, contestID, userID)

@@ -13,11 +13,12 @@ import (
 type submitAttackContext struct {
 	attackerTeamID int64
 	round          *model.AWDRound
+	runtimeService *model.ContestAWDService
 	challenge      *model.Challenge
 	acceptedFlags  []string
 }
 
-func (s *AWDService) prepareSubmitAttackContext(ctx context.Context, userID, contestID, challengeID int64, req *dto.SubmitAWDAttackReq) (*submitAttackContext, error) {
+func (s *AWDService) prepareSubmitAttackContext(ctx context.Context, userID, contestID, serviceID int64, req *dto.SubmitAWDAttackReq) (*submitAttackContext, error) {
 	contest, err := s.ensureAWDContest(ctx, contestID)
 	if err != nil {
 		return nil, err
@@ -38,21 +39,23 @@ func (s *AWDService) prepareSubmitAttackContext(ctx context.Context, userID, con
 	if err != nil {
 		return nil, err
 	}
-	challengeItem, err := s.loadChallenge(ctx, challengeID)
+	runtimeService, err := s.resolveContestRuntimeService(ctx, contestID, serviceID)
 	if err != nil {
 		return nil, err
 	}
-	if err := s.ensureContestChallenge(ctx, contestID, challengeID); err != nil {
+	challengeItem, err := s.loadChallenge(ctx, runtimeService.ChallengeID)
+	if err != nil {
 		return nil, err
 	}
 
-	acceptedFlags, err := s.resolveAcceptedRoundFlags(ctx, contestID, round, req.VictimTeamID, challengeItem, now)
+	acceptedFlags, err := s.resolveAcceptedRoundFlags(ctx, contestID, round, req.VictimTeamID, challengeItem, runtimeService.ID, now)
 	if err != nil {
 		return nil, err
 	}
 	return &submitAttackContext{
 		attackerTeamID: attackerTeamID,
 		round:          round,
+		runtimeService: runtimeService,
 		challenge:      challengeItem,
 		acceptedFlags:  acceptedFlags,
 	}, nil

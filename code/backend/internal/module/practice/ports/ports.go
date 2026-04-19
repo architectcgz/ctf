@@ -12,6 +12,7 @@ type InstanceScope struct {
 	ContestID     *int64
 	ContestMode   string
 	TeamID        *int64
+	ServiceID     *int64
 	FlagSubjectID int64
 	ShareScope    model.ShareScope
 }
@@ -60,6 +61,7 @@ type PracticeCommandRepository interface {
 	WithinTransaction(ctx context.Context, fn func(txRepo PracticeCommandTxRepository) error) error
 	FindContestByIDWithContext(ctx context.Context, contestID int64) (*model.Contest, error)
 	FindContestChallengeWithContext(ctx context.Context, contestID, challengeID int64) (*model.ContestChallenge, error)
+	FindContestAWDServiceWithContext(ctx context.Context, contestID, serviceID int64) (*model.ContestAWDService, error)
 	FindContestRegistrationWithContext(ctx context.Context, contestID, userID int64) (*model.ContestRegistration, error)
 	CreateSubmission(submission *model.Submission) error
 	FindCorrectSubmission(userID, challengeID int64) (*model.Submission, error)

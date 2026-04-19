@@ -29,7 +29,7 @@ func (u *AWDRoundUpdater) runRoundServiceChecks(ctx context.Context, contest *mo
 
 	grouped := make(map[awdServiceTargetKey][]contestports.AWDServiceInstance, len(instances))
 	for _, instance := range instances {
-		key := awdServiceTargetKey{teamID: instance.TeamID, challengeID: instance.ChallengeID}
+		key := awdServiceTargetKey{teamID: instance.TeamID, serviceID: instance.ServiceID}
 		grouped[key] = append(grouped[key], instance)
 	}
 
@@ -38,7 +38,7 @@ func (u *AWDRoundUpdater) runRoundServiceChecks(ctx context.Context, contest *mo
 	statusFields := make(map[string]any, len(teams)*len(definitions))
 	for _, team := range teams {
 		for _, definition := range definitions {
-			key := awdServiceTargetKey{teamID: team.ID, challengeID: definition.ChallengeID}
+			key := awdServiceTargetKey{teamID: team.ID, serviceID: definition.ServiceID}
 			outcome, checkErr := u.checkTeamChallengeServices(ctx, contest.ID, team.ID, definition, grouped[key], round, source)
 			if checkErr != nil {
 				return checkErr
@@ -47,6 +47,7 @@ func (u *AWDRoundUpdater) runRoundServiceChecks(ctx context.Context, contest *mo
 			records = append(records, model.AWDTeamService{
 				RoundID:       round.ID,
 				TeamID:        team.ID,
+				ServiceID:     definition.ServiceID,
 				ChallengeID:   definition.ChallengeID,
 				ServiceStatus: outcome.serviceStatus,
 				CheckResult:   outcome.checkResult,
@@ -56,7 +57,7 @@ func (u *AWDRoundUpdater) runRoundServiceChecks(ctx context.Context, contest *mo
 				CreatedAt:     now,
 				UpdatedAt:     now,
 			})
-			statusFields[rediskeys.AWDRoundFlagField(team.ID, definition.ChallengeID)] = outcome.serviceStatus
+			statusFields[rediskeys.AWDRoundFlagServiceField(team.ID, definition.ServiceID)] = outcome.serviceStatus
 		}
 	}
 

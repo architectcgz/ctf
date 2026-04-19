@@ -73,7 +73,24 @@ func (s *AWDService) PreviewChecker(ctx context.Context, contestID int64, req *d
 	if err != nil {
 		return nil, err
 	}
-	if _, err := s.loadChallenge(ctx, req.ChallengeID); err != nil {
+
+	var previewServiceID int64
+	previewChallengeID := req.ChallengeID
+	if req.ServiceID > 0 {
+		service, err := s.resolveContestRuntimeService(ctx, contestID, req.ServiceID)
+		if err != nil {
+			return nil, err
+		}
+		previewServiceID = service.ID
+		previewChallengeID = service.ChallengeID
+		if req.ChallengeID > 0 && req.ChallengeID != service.ChallengeID {
+			return nil, errcode.ErrInvalidParams
+		}
+	}
+	if previewChallengeID <= 0 {
+		return nil, errcode.ErrInvalidParams
+	}
+	if _, err := s.loadChallenge(ctx, previewChallengeID); err != nil {
 		return nil, err
 	}
 
@@ -96,7 +113,8 @@ func (s *AWDService) PreviewChecker(ctx context.Context, contestID int64, req *d
 	}
 
 	preview, err := s.roundManager.PreviewServiceCheck(ctx, contestports.AWDServicePreviewRequest{
-		ChallengeID:   req.ChallengeID,
+		ServiceID:     previewServiceID,
+		ChallengeID:   previewChallengeID,
 		CheckerType:   checkerType,
 		CheckerConfig: checkerConfig,
 		AccessURL:     strings.TrimSpace(req.AccessURL),
@@ -111,6 +129,7 @@ func (s *AWDService) PreviewChecker(ctx context.Context, contestID int64, req *d
 		ServiceStatus: preview.ServiceStatus,
 		CheckResult:   contestdomain.ParseAWDCheckResult(preview.CheckResult),
 		PreviewContext: dto.AWDCheckerPreviewContextResp{
+			ServiceID:   preview.PreviewContext.ServiceID,
 			AccessURL:   preview.PreviewContext.AccessURL,
 			PreviewFlag: preview.PreviewContext.PreviewFlag,
 			RoundNumber: preview.PreviewContext.RoundNumber,
@@ -118,7 +137,7 @@ func (s *AWDService) PreviewChecker(ctx context.Context, contestID int64, req *d
 			ChallengeID: preview.PreviewContext.ChallengeID,
 		},
 	}
-	previewToken, err := storeAWDCheckerPreviewToken(ctx, s.redis, contestID, req.ChallengeID, checkerType, checkerConfig, resp)
+	previewToken, err := storeAWDCheckerPreviewToken(ctx, s.redis, contestID, previewServiceID, previewChallengeID, checkerType, checkerConfig, resp)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}

@@ -15,6 +15,7 @@ const contestApiMocks = vi.hoisted(() => ({
   createTeam: vi.fn(),
   joinTeam: vi.fn(),
   kickTeamMember: vi.fn(),
+  startContestAWDServiceInstance: vi.fn(),
   startContestChallengeInstance: vi.fn(),
   submitContestAWDAttack: vi.fn(),
   submitContestFlag: vi.fn(),
@@ -63,6 +64,7 @@ describe('ContestDetail', () => {
     contestApiMocks.createTeam.mockReset()
     contestApiMocks.joinTeam.mockReset()
     contestApiMocks.kickTeamMember.mockReset()
+    contestApiMocks.startContestAWDServiceInstance.mockReset()
     contestApiMocks.startContestChallengeInstance.mockReset()
     contestApiMocks.submitContestAWDAttack.mockReset()
     contestApiMocks.submitContestFlag.mockReset()
@@ -127,6 +129,17 @@ describe('ContestDetail', () => {
       frozen: false,
     })
     contestApiMocks.startContestChallengeInstance.mockResolvedValue({
+      id: '900',
+      challenge_id: '101',
+      status: 'running',
+      share_scope: 'per_team',
+      access_url: 'http://red.internal',
+      flag_type: 'dynamic',
+      expires_at: '2024-03-15T12:00:00Z',
+      remaining_extends: 1,
+      created_at: '2024-03-15T09:02:00Z',
+    })
+    contestApiMocks.startContestAWDServiceInstance.mockResolvedValue({
       id: '900',
       challenge_id: '101',
       status: 'running',
@@ -261,6 +274,7 @@ describe('ContestDetail', () => {
       {
         id: '201',
         challenge_id: '101',
+        awd_service_id: '7009',
         title: 'Service A',
         category: 'web',
         difficulty: 'medium',
@@ -287,6 +301,7 @@ describe('ContestDetail', () => {
       },
       services: [
         {
+          service_id: '7009',
           challenge_id: '101',
           access_url: 'http://red.internal',
           service_status: 'up',
@@ -304,6 +319,7 @@ describe('ContestDetail', () => {
           team_name: 'Blue',
           services: [
             {
+              service_id: '7009',
               challenge_id: '101',
               access_url: 'http://blue.internal',
             },
@@ -509,6 +525,7 @@ describe('ContestDetail', () => {
       {
         id: '201',
         challenge_id: '101',
+        awd_service_id: '7009',
         title: 'Service A',
         category: 'web',
         difficulty: 'medium',
@@ -552,6 +569,7 @@ describe('ContestDetail', () => {
           team_name: 'Blue',
           services: [
             {
+              service_id: '7009',
               challenge_id: '101',
               access_url: 'http://blue.internal',
             },
@@ -562,6 +580,7 @@ describe('ContestDetail', () => {
           team_name: 'Green',
           services: [
             {
+              service_id: '7009',
               challenge_id: '101',
               access_url: '',
             },
@@ -626,6 +645,645 @@ describe('ContestDetail', () => {
 
     expect(contestApiMocks.getContestAWDWorkspace).toHaveBeenCalledTimes(2)
     expect(contestApiMocks.getScoreboard).toHaveBeenCalledTimes(2)
+  })
+
+  it('学生 AWD 工作台应展示运行态 service 标识', async () => {
+    contestApiMocks.getContestDetail.mockResolvedValueOnce({
+      id: '1',
+      title: '2026 春季校园 AWD 联赛',
+      description: '测试描述',
+      status: 'running',
+      mode: 'awd',
+      starts_at: '2024-03-15T09:00:00Z',
+      ends_at: '2024-03-15T21:00:00Z',
+    })
+    contestApiMocks.getContestChallenges.mockResolvedValueOnce([
+      {
+        id: '201',
+        challenge_id: '101',
+        awd_service_id: '7009',
+        title: 'Service A',
+        category: 'web',
+        difficulty: 'medium',
+        points: 100,
+        solved_count: 0,
+        is_solved: false,
+      },
+    ])
+    contestApiMocks.getContestAWDWorkspace.mockResolvedValueOnce({
+      contest_id: '1',
+      current_round: {
+        id: '41',
+        contest_id: '1',
+        round_number: 2,
+        status: 'running',
+        attack_score: 60,
+        defense_score: 40,
+        created_at: '2024-03-15T09:00:00Z',
+        updated_at: '2024-03-15T09:01:00Z',
+      },
+      my_team: {
+        team_id: '13',
+        team_name: 'Red',
+      },
+      services: [
+        {
+          service_id: '7009',
+          challenge_id: '101',
+          access_url: 'http://red.internal',
+          service_status: 'up',
+          checker_type: 'http_standard',
+          attack_received: 0,
+          sla_score: 18,
+          defense_score: 40,
+          attack_score: 0,
+          updated_at: '2024-03-15T09:02:00Z',
+        },
+      ],
+      targets: [
+        {
+          team_id: '14',
+          team_name: 'Blue',
+          services: [
+            {
+              service_id: '7010',
+              challenge_id: '101',
+              access_url: 'http://blue.internal',
+            },
+          ],
+        },
+      ],
+      recent_events: [
+        {
+          id: 'attack-1',
+          service_id: '7010',
+          challenge_id: '101',
+          direction: 'attack_out',
+          peer_team_id: '14',
+          peer_team_name: 'Blue',
+          is_success: true,
+          score_gained: 60,
+          created_at: '2024-03-15T09:03:00Z',
+        },
+      ],
+    })
+
+    const wrapper = mount(ContestDetail, {
+      global: {
+        plugins: [createPinia(), router],
+      },
+    })
+
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('Service #7009')
+    expect(wrapper.text()).toContain('Service #7010')
+  })
+
+  it('学生 AWD 工作台应优先用 awd service 标识匹配运行态服务', async () => {
+    contestApiMocks.getContestDetail.mockResolvedValueOnce({
+      id: '1',
+      title: '2026 春季校园 AWD 联赛',
+      description: '测试描述',
+      status: 'running',
+      mode: 'awd',
+      starts_at: '2024-03-15T09:00:00Z',
+      ends_at: '2024-03-15T21:00:00Z',
+    })
+    contestApiMocks.getContestChallenges.mockResolvedValueOnce([
+      {
+        id: '201',
+        challenge_id: '101',
+        awd_service_id: '7009',
+        title: 'Service A',
+        category: 'web',
+        difficulty: 'medium',
+        points: 100,
+        solved_count: 0,
+        is_solved: false,
+      },
+    ])
+    contestApiMocks.getContestAWDWorkspace.mockResolvedValueOnce({
+      contest_id: '1',
+      current_round: {
+        id: '41',
+        contest_id: '1',
+        round_number: 2,
+        status: 'running',
+        attack_score: 60,
+        defense_score: 40,
+        created_at: '2024-03-15T09:00:00Z',
+        updated_at: '2024-03-15T09:01:00Z',
+      },
+      my_team: {
+        team_id: '13',
+        team_name: 'Red',
+      },
+      services: [
+        {
+          service_id: '7009',
+          challenge_id: 'legacy-9',
+          access_url: 'http://red.runtime.internal',
+          service_status: 'up',
+          checker_type: 'http_standard',
+          attack_received: 0,
+          sla_score: 18,
+          defense_score: 40,
+          attack_score: 0,
+          updated_at: '2024-03-15T09:02:00Z',
+        },
+      ],
+      targets: [
+        {
+          team_id: '14',
+          team_name: 'Blue',
+          services: [
+            {
+              service_id: '7009',
+              challenge_id: 'legacy-9',
+              access_url: 'http://blue.runtime.internal',
+            },
+          ],
+        },
+      ],
+      recent_events: [],
+    })
+
+    const wrapper = mount(ContestDetail, {
+      global: {
+        plugins: [createPinia(), router],
+      },
+    })
+
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('http://red.runtime.internal')
+    expect(wrapper.text()).toContain('http://blue.runtime.internal')
+    expect(wrapper.text()).toContain('在线')
+  })
+
+  it('学生 AWD 工作台应允许用 awd service 标识切换攻击题目', async () => {
+    contestApiMocks.getContestDetail.mockResolvedValueOnce({
+      id: '1',
+      title: '2026 春季校园 AWD 联赛',
+      description: '测试描述',
+      status: 'running',
+      mode: 'awd',
+      starts_at: '2024-03-15T09:00:00Z',
+      ends_at: '2024-03-15T21:00:00Z',
+    })
+    contestApiMocks.getContestChallenges.mockResolvedValueOnce([
+      {
+        id: '201',
+        challenge_id: '101',
+        awd_service_id: '7009',
+        title: 'Service A',
+        category: 'web',
+        difficulty: 'medium',
+        points: 100,
+        solved_count: 0,
+        is_solved: false,
+      },
+      {
+        id: '202',
+        challenge_id: '102',
+        awd_service_id: '7010',
+        title: 'Service B',
+        category: 'pwn',
+        difficulty: 'hard',
+        points: 200,
+        solved_count: 0,
+        is_solved: false,
+      },
+    ])
+    contestApiMocks.getContestAWDWorkspace.mockResolvedValueOnce({
+      contest_id: '1',
+      current_round: {
+        id: '41',
+        contest_id: '1',
+        round_number: 2,
+        status: 'running',
+        attack_score: 60,
+        defense_score: 40,
+        created_at: '2024-03-15T09:00:00Z',
+        updated_at: '2024-03-15T09:01:00Z',
+      },
+      my_team: {
+        team_id: '13',
+        team_name: 'Red',
+      },
+      services: [
+        {
+          service_id: '7009',
+          challenge_id: 'legacy-101',
+          access_url: 'http://red-a.internal',
+          service_status: 'up',
+          checker_type: 'http_standard',
+          attack_received: 0,
+          sla_score: 18,
+          defense_score: 40,
+          attack_score: 0,
+          updated_at: '2024-03-15T09:02:00Z',
+        },
+        {
+          service_id: '7010',
+          challenge_id: 'legacy-102',
+          access_url: 'http://red-b.internal',
+          service_status: 'up',
+          checker_type: 'http_standard',
+          attack_received: 0,
+          sla_score: 18,
+          defense_score: 40,
+          attack_score: 0,
+          updated_at: '2024-03-15T09:02:30Z',
+        },
+      ],
+      targets: [
+        {
+          team_id: '14',
+          team_name: 'Blue',
+          services: [
+            {
+              service_id: '7009',
+              challenge_id: 'legacy-101',
+              access_url: 'http://blue-a.internal',
+            },
+            {
+              service_id: '7010',
+              challenge_id: 'legacy-102',
+              access_url: 'http://blue-b.internal',
+            },
+          ],
+        },
+      ],
+      recent_events: [],
+    })
+
+    const wrapper = mount(ContestDetail, {
+      global: {
+        plugins: [createPinia(), router],
+      },
+    })
+
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('http://blue-a.internal')
+
+    await wrapper.get('#awd-target-challenge').setValue('7010')
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('http://blue-b.internal')
+    expect(wrapper.text()).not.toContain('http://blue-a.internal')
+  })
+
+  it('学生 AWD 最近反馈应优先按 service 标识回填题目标题', async () => {
+    contestApiMocks.getContestDetail.mockResolvedValueOnce({
+      id: '1',
+      title: '2026 春季校园 AWD 联赛',
+      description: '测试描述',
+      status: 'running',
+      mode: 'awd',
+      starts_at: '2024-03-15T09:00:00Z',
+      ends_at: '2024-03-15T21:00:00Z',
+    })
+    contestApiMocks.getContestChallenges.mockResolvedValueOnce([
+      {
+        id: '201',
+        challenge_id: '101',
+        awd_service_id: '7009',
+        title: 'Bank Portal',
+        category: 'web',
+        difficulty: 'medium',
+        points: 100,
+        solved_count: 0,
+        is_solved: false,
+      },
+    ])
+    contestApiMocks.getContestAWDWorkspace.mockResolvedValueOnce({
+      contest_id: '1',
+      current_round: {
+        id: '41',
+        contest_id: '1',
+        round_number: 2,
+        status: 'running',
+        attack_score: 60,
+        defense_score: 40,
+        created_at: '2024-03-15T09:00:00Z',
+        updated_at: '2024-03-15T09:01:00Z',
+      },
+      my_team: {
+        team_id: '13',
+        team_name: 'Red',
+      },
+      services: [
+        {
+          service_id: '7009',
+          challenge_id: 'legacy-101',
+          access_url: 'http://red.internal',
+          service_status: 'up',
+          checker_type: 'http_standard',
+          attack_received: 0,
+          sla_score: 18,
+          defense_score: 40,
+          attack_score: 0,
+          updated_at: '2024-03-15T09:02:00Z',
+        },
+      ],
+      targets: [],
+      recent_events: [
+        {
+          id: 'attack-1',
+          service_id: '7009',
+          challenge_id: 'legacy-101',
+          direction: 'attack_out',
+          peer_team_id: '14',
+          peer_team_name: 'Blue',
+          is_success: true,
+          score_gained: 60,
+          created_at: '2024-03-15T09:03:00Z',
+        },
+      ],
+    })
+
+    const wrapper = mount(ContestDetail, {
+      global: {
+        plugins: [createPinia(), router],
+      },
+    })
+
+    await flushPromises()
+
+    expect(
+      wrapper
+        .findAll('[data-testid="awd-feedback-challenge-title"]')
+        .map((node) => node.text())
+    ).toContain('Bank Portal')
+  })
+
+  it('学生 AWD 服务匹配在存在 awd_service_id 时不应再回退到 challenge_id', async () => {
+    contestApiMocks.getContestDetail.mockResolvedValueOnce({
+      id: '1',
+      title: '2026 春季校园 AWD 联赛',
+      description: '测试描述',
+      status: 'running',
+      mode: 'awd',
+      starts_at: '2024-03-15T09:00:00Z',
+      ends_at: '2024-03-15T21:00:00Z',
+    })
+    contestApiMocks.getContestChallenges.mockResolvedValueOnce([
+      {
+        id: '201',
+        challenge_id: '101',
+        awd_service_id: '7010',
+        title: 'Admin Gateway',
+        category: 'web',
+        difficulty: 'medium',
+        points: 100,
+        solved_count: 0,
+        is_solved: false,
+      },
+    ])
+    contestApiMocks.getContestAWDWorkspace.mockResolvedValueOnce({
+      contest_id: '1',
+      current_round: {
+        id: '41',
+        contest_id: '1',
+        round_number: 2,
+        status: 'running',
+        attack_score: 60,
+        defense_score: 40,
+        created_at: '2024-03-15T09:00:00Z',
+        updated_at: '2024-03-15T09:01:00Z',
+      },
+      my_team: {
+        team_id: '13',
+        team_name: 'Red',
+      },
+      services: [
+        {
+          service_id: '7009',
+          challenge_id: '101',
+          access_url: 'http://wrong.internal',
+          service_status: 'up',
+          checker_type: 'http_standard',
+          attack_received: 0,
+          sla_score: 18,
+          defense_score: 40,
+          attack_score: 0,
+          updated_at: '2024-03-15T09:02:00Z',
+        },
+      ],
+      targets: [
+        {
+          team_id: '14',
+          team_name: 'Blue',
+          services: [
+            {
+              service_id: '7009',
+              challenge_id: '101',
+              access_url: 'http://wrong-target.internal',
+            },
+          ],
+        },
+      ],
+      recent_events: [],
+    })
+
+    const wrapper = mount(ContestDetail, {
+      global: {
+        plugins: [createPinia(), router],
+      },
+    })
+
+    await flushPromises()
+
+    expect(wrapper.text()).not.toContain('http://wrong.internal')
+    expect(wrapper.text()).not.toContain('http://wrong-target.internal')
+  })
+
+  it('学生 AWD 面板不应渲染缺少 awd_service_id 的遗留题目', async () => {
+    contestApiMocks.getContestDetail.mockResolvedValueOnce({
+      id: '1',
+      title: '2026 春季校园 AWD 联赛',
+      description: '测试描述',
+      status: 'running',
+      mode: 'awd',
+      starts_at: '2024-03-15T09:00:00Z',
+      ends_at: '2024-03-15T21:00:00Z',
+    })
+    contestApiMocks.getContestChallenges.mockResolvedValueOnce([
+      {
+        id: '201',
+        challenge_id: '101',
+        title: 'Legacy Gateway',
+        category: 'web',
+        difficulty: 'medium',
+        points: 100,
+        solved_count: 0,
+        is_solved: false,
+      },
+    ])
+    contestApiMocks.getContestAWDWorkspace.mockResolvedValueOnce({
+      contest_id: '1',
+      current_round: {
+        id: '41',
+        contest_id: '1',
+        round_number: 2,
+        status: 'running',
+        attack_score: 60,
+        defense_score: 40,
+        created_at: '2024-03-15T09:00:00Z',
+        updated_at: '2024-03-15T09:01:00Z',
+      },
+      my_team: {
+        team_id: '13',
+        team_name: 'Red',
+      },
+      services: [
+        {
+          service_id: '7009',
+          challenge_id: '101',
+          access_url: 'http://legacy.internal',
+          service_status: 'up',
+          checker_type: 'http_standard',
+          attack_received: 0,
+          sla_score: 18,
+          defense_score: 40,
+          attack_score: 0,
+          updated_at: '2024-03-15T09:02:00Z',
+        },
+      ],
+      targets: [],
+      recent_events: [],
+    })
+
+    const wrapper = mount(ContestDetail, {
+      global: {
+        plugins: [createPinia(), router],
+      },
+    })
+
+    await flushPromises()
+
+    expect(wrapper.text()).not.toContain('Legacy Gateway')
+    expect(wrapper.text()).toContain('当前赛事还没有发布可用服务')
+    expect(wrapper.text()).toContain('当前没有可选攻击题目。')
+  })
+
+  it('学生 AWD 提交结果提示应优先按 service 标识回填题目标题', async () => {
+    contestApiMocks.getContestDetail.mockResolvedValueOnce({
+      id: '1',
+      title: '2026 春季校园 AWD 联赛',
+      description: '测试描述',
+      status: 'running',
+      mode: 'awd',
+      starts_at: '2024-03-15T09:00:00Z',
+      ends_at: '2024-03-15T21:00:00Z',
+    })
+    contestApiMocks.getContestChallenges.mockResolvedValueOnce([
+      {
+        id: '201',
+        challenge_id: '101',
+        awd_service_id: '7009',
+        title: 'Bank Portal',
+        category: 'web',
+        difficulty: 'medium',
+        points: 100,
+        solved_count: 0,
+        is_solved: false,
+      },
+    ])
+    contestApiMocks.getContestAWDWorkspace.mockResolvedValue({
+      contest_id: '1',
+      current_round: {
+        id: '41',
+        contest_id: '1',
+        round_number: 2,
+        status: 'running',
+        attack_score: 60,
+        defense_score: 40,
+        created_at: '2024-03-15T09:00:00Z',
+        updated_at: '2024-03-15T09:01:00Z',
+      },
+      my_team: {
+        team_id: '13',
+        team_name: 'Red',
+      },
+      services: [
+        {
+          service_id: '7009',
+          challenge_id: 'legacy-101',
+          access_url: 'http://red.internal',
+          service_status: 'up',
+          checker_type: 'http_standard',
+          attack_received: 0,
+          sla_score: 18,
+          defense_score: 40,
+          attack_score: 0,
+          updated_at: '2024-03-15T09:02:00Z',
+        },
+      ],
+      targets: [
+        {
+          team_id: '14',
+          team_name: 'Blue',
+          services: [
+            {
+              service_id: '7009',
+              challenge_id: 'legacy-101',
+              access_url: 'http://blue.internal',
+            },
+          ],
+        },
+      ],
+      recent_events: [],
+    })
+    contestApiMocks.getScoreboard.mockResolvedValue({
+      contest: {
+        id: '1',
+        title: '2026 春季校园 AWD 联赛',
+        status: 'running',
+        started_at: '2024-03-15T09:00:00Z',
+        ends_at: '2024-03-15T21:00:00Z',
+      },
+      scoreboard: {
+        list: [],
+        total: 0,
+        page: 1,
+        page_size: 10,
+      },
+      frozen: false,
+    })
+    contestApiMocks.submitContestAWDAttack.mockResolvedValueOnce({
+      id: '88',
+      round_id: '41',
+      attacker_team_id: '13',
+      attacker_team: 'Red',
+      victim_team_id: '14',
+      victim_team: 'Blue',
+      service_id: '7009',
+      challenge_id: 'legacy-101',
+      attack_type: 'flag_capture',
+      source: 'submission',
+      submitted_flag: 'flag{demo}',
+      is_success: true,
+      score_gained: 60,
+      created_at: '2024-03-15T09:03:00Z',
+    })
+
+    const wrapper = mount(ContestDetail, {
+      global: {
+        plugins: [createPinia(), router],
+      },
+    })
+
+    await flushPromises()
+
+    await wrapper.find('input[placeholder="flag{...}"]').setValue('flag{demo}')
+    await wrapper.findAll('button').find((node) => node.text().trim() === '提交 stolen flag')?.trigger('click')
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('Bank Portal 攻击成功，+60 分')
   })
 
   it('竞赛详情 hero 应使用共享 workspace overline 语义', () => {

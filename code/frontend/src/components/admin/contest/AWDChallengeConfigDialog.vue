@@ -3,8 +3,9 @@ import { computed, reactive, ref, watch } from 'vue'
 
 import { runContestAWDCheckerPreview } from '@/api/admin'
 import type {
+  AdminAwdServiceTemplateData,
   AdminChallengeListItem,
-  AdminContestChallengeData,
+  AdminContestChallengeViewData,
   AWDCheckerPreviewData,
   AWDCheckerType,
   AWDTeamServiceData,
@@ -27,22 +28,31 @@ import {
 
 type DialogMode = 'create' | 'edit'
 
-const props = defineProps<{
-  contestId?: string | null
-  open: boolean
-  mode: DialogMode
-  challengeOptions: AdminChallengeListItem[]
-  existingChallengeIds: string[]
-  draft?: AdminContestChallengeData | null
-  loadingChallengeCatalog: boolean
-  saving: boolean
-}>()
+const props = withDefaults(
+  defineProps<{
+    contestId?: string | null
+    open: boolean
+    mode: DialogMode
+    challengeOptions: AdminChallengeListItem[]
+    templateOptions?: AdminAwdServiceTemplateData[]
+    existingChallengeIds: string[]
+    draft?: AdminContestChallengeViewData | null
+    loadingChallengeCatalog: boolean
+    loadingTemplateCatalog?: boolean
+    saving: boolean
+  }>(),
+  {
+    templateOptions: () => [],
+    loadingTemplateCatalog: false,
+  },
+)
 
 const emit = defineEmits<{
   'update:open': [value: boolean]
   save: [
     value: {
       challenge_id: number
+      template_id: number
       points: number
       order: number
       is_visible: boolean
@@ -57,6 +67,7 @@ const emit = defineEmits<{
 
 const form = reactive({
   challenge_id: '',
+  template_id: '',
   points: 100,
   order: 0,
   is_visible: 'true',
@@ -82,6 +93,7 @@ const syncingDialogState = ref(false)
 function createFieldErrorState() {
   return {
     challenge_id: '',
+    template_id: '',
     points: '',
     order: '',
     awd_sla_score: '',
@@ -110,6 +122,7 @@ const selectableChallenges = computed(() =>
     (item) => props.mode === 'edit' || !props.existingChallengeIds.includes(item.id)
   )
 )
+const selectableTemplates = computed(() => props.templateOptions)
 
 const activeChallengeLabel = computed(() => {
   if (props.mode === 'edit') {
@@ -252,6 +265,10 @@ watch(
       props.mode === 'edit'
         ? props.draft?.challenge_id || ''
         : selectableChallenges.value[0]?.id || ''
+    form.template_id =
+      props.draft?.awd_template_id ||
+      selectableTemplates.value[0]?.id ||
+      ''
     form.points = props.draft?.points ?? 100
     form.order = props.draft?.order ?? 0
     form.is_visible = props.draft?.is_visible === false ? 'false' : 'true'
@@ -285,6 +302,21 @@ watch(
     )
     if (!hasSelectedChallenge) {
       form.challenge_id = selectableChallenges.value[0]?.id || ''
+    }
+  },
+  { immediate: true }
+)
+
+watch(
+  () =>
+    [props.open, props.mode, selectableTemplates.value.map((item) => item.id).join(',')] as const,
+  ([open]) => {
+    if (!open) {
+      return
+    }
+    const hasSelectedTemplate = selectableTemplates.value.some((item) => item.id === form.template_id)
+    if (!hasSelectedTemplate) {
+      form.template_id = props.draft?.awd_template_id || selectableTemplates.value[0]?.id || ''
     }
   },
   { immediate: true }
@@ -333,6 +365,9 @@ function validate(): boolean {
 
   if (props.mode === 'create' && !form.challenge_id) {
     fieldErrors.challenge_id = '请选择题目'
+  }
+  if (!form.template_id) {
+    fieldErrors.template_id = '请选择服务模板'
   }
   if (!Number.isInteger(form.points) || form.points <= 0) {
     fieldErrors.points = '分值必须是大于 0 的整数'
@@ -468,6 +503,7 @@ function handleSubmit() {
 
   const payload = {
     challenge_id: Number(form.challenge_id),
+    template_id: Number(form.template_id),
     points: form.points,
     order: form.order,
     is_visible: form.is_visible === 'true',
@@ -477,6 +513,7 @@ function handleSubmit() {
     awd_defense_score: form.awd_defense_score,
   } as {
     challenge_id: number
+    template_id: number
     points: number
     order: number
     is_visible: boolean
@@ -539,6 +576,32 @@ function handleSubmit() {
         </span>
         <p v-if="fieldErrors.challenge_id" class="ui-field__error">
           {{ fieldErrors.challenge_id }}
+        </p>
+      </div>
+
+      <div class="ui-field awd-config-field">
+        <label class="ui-field__label" for="awd-challenge-config-template">服务模板</label>
+        <span class="ui-control-wrap" :class="{ 'is-error': !!fieldErrors.template_id }">
+          <select
+            id="awd-challenge-config-template"
+            v-model="form.template_id"
+            class="ui-control"
+            :disabled="loadingTemplateCatalog"
+          >
+            <option value="" disabled>
+              {{ loadingTemplateCatalog ? '正在加载模板...' : '请选择服务模板' }}
+            </option>
+            <option
+              v-for="template in selectableTemplates"
+              :key="template.id"
+              :value="template.id"
+            >
+              {{ template.name }}
+            </option>
+          </select>
+        </span>
+        <p v-if="fieldErrors.template_id" class="ui-field__error">
+          {{ fieldErrors.template_id }}
         </p>
       </div>
 

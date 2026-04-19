@@ -13,7 +13,13 @@ type awdCommandService interface {
 	PreviewChecker(ctx context.Context, contestID int64, req *dto.PreviewAWDCheckerReq) (*dto.AWDCheckerPreviewResp, error)
 	UpsertServiceCheck(ctx context.Context, contestID, roundID int64, req *dto.UpsertAWDServiceCheckReq) (*dto.AWDTeamServiceResp, error)
 	CreateAttackLog(ctx context.Context, contestID, roundID int64, req *dto.CreateAWDAttackLogReq) (*dto.AWDAttackLogResp, error)
-	SubmitAttack(ctx context.Context, userID, contestID, challengeID int64, req *dto.SubmitAWDAttackReq) (*dto.AWDAttackLogResp, error)
+	SubmitAttack(ctx context.Context, userID, contestID, serviceID int64, req *dto.SubmitAWDAttackReq) (*dto.AWDAttackLogResp, error)
+}
+
+type awdServiceCommandService interface {
+	CreateContestAWDService(ctx context.Context, contestID int64, req *dto.CreateContestAWDServiceReq) (*dto.ContestAWDServiceResp, error)
+	UpdateContestAWDService(ctx context.Context, contestID, serviceID int64, req *dto.UpdateContestAWDServiceReq) error
+	DeleteContestAWDService(ctx context.Context, contestID, serviceID int64) error
 }
 
 type awdQueryService interface {
@@ -27,11 +33,27 @@ type awdQueryService interface {
 	GetUserWorkspace(ctx context.Context, userID, contestID int64) (*dto.ContestAWDWorkspaceResp, error)
 }
 
-type AWDHandler struct {
-	commands awdCommandService
-	queries  awdQueryService
+type awdServiceQueryService interface {
+	ListContestAWDServices(ctx context.Context, contestID int64) ([]*dto.ContestAWDServiceResp, error)
 }
 
-func NewAWDHandler(commands awdCommandService, queries awdQueryService) *AWDHandler {
-	return &AWDHandler{commands: commands, queries: queries}
+type AWDHandler struct {
+	commands        awdCommandService
+	queries         awdQueryService
+	serviceCommands awdServiceCommandService
+	serviceQueries  awdServiceQueryService
+}
+
+func NewAWDHandler(
+	commands awdCommandService,
+	queries awdQueryService,
+	serviceCommands awdServiceCommandService,
+	serviceQueries awdServiceQueryService,
+) *AWDHandler {
+	return &AWDHandler{
+		commands:        commands,
+		queries:         queries,
+		serviceCommands: serviceCommands,
+		serviceQueries:  serviceQueries,
+	}
 }

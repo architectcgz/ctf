@@ -21,9 +21,10 @@ func (s *AWDService) resolveAcceptedRoundFlags(
 	round *model.AWDRound,
 	victimTeamID int64,
 	challenge *model.Challenge,
+	serviceID int64,
 	now time.Time,
 ) ([]string, error) {
-	currentFlag, err := s.resolveRoundFlag(ctx, contestID, round, victimTeamID, challenge)
+	currentFlag, err := s.resolveRoundFlag(ctx, contestID, round, victimTeamID, challenge, serviceID)
 	if err != nil {
 		return nil, err
 	}
@@ -40,7 +41,7 @@ func (s *AWDService) resolveAcceptedRoundFlags(
 		}
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	previousFlag, err := s.resolveRoundFlag(ctx, contestID, previousRound, victimTeamID, challenge)
+	previousFlag, err := s.resolveRoundFlag(ctx, contestID, previousRound, victimTeamID, challenge, serviceID)
 	if err != nil {
 		if err == errcode.ErrAWDFlagUnavailable {
 			return flags, nil
@@ -57,12 +58,12 @@ func (s *AWDService) allowPreviousRoundFlag(round *model.AWDRound, now time.Time
 	return now.Before(round.StartedAt.Add(s.awdConfig.PreviousRoundGrace))
 }
 
-func (s *AWDService) resolveRoundFlag(ctx context.Context, contestID int64, round *model.AWDRound, victimTeamID int64, challenge *model.Challenge) (string, error) {
+func (s *AWDService) resolveRoundFlag(ctx context.Context, contestID int64, round *model.AWDRound, victimTeamID int64, challenge *model.Challenge, serviceID int64) (string, error) {
 	if round == nil || challenge == nil {
 		return "", errcode.ErrAWDFlagUnavailable
 	}
 	if s.redis != nil {
-		flag, err := s.redis.HGet(ctx, rediskeys.AWDRoundFlagsKey(contestID, round.ID), rediskeys.AWDRoundFlagField(victimTeamID, challenge.ID)).Result()
+		flag, err := s.redis.HGet(ctx, rediskeys.AWDRoundFlagsKey(contestID, round.ID), rediskeys.AWDRoundFlagServiceField(victimTeamID, serviceID)).Result()
 		if err == nil && strings.TrimSpace(flag) != "" {
 			return flag, nil
 		}

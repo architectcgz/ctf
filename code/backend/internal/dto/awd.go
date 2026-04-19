@@ -30,7 +30,7 @@ type AWDRoundResp struct {
 
 type UpsertAWDServiceCheckReq struct {
 	TeamID        int64          `json:"team_id" binding:"required,min=1"`
-	ChallengeID   int64          `json:"challenge_id" binding:"required,min=1"`
+	ServiceID     int64          `json:"service_id" binding:"required,min=1"`
 	ServiceStatus string         `json:"service_status" binding:"required,oneof=up down compromised"`
 	CheckResult   map[string]any `json:"check_result"`
 }
@@ -40,6 +40,7 @@ type AWDTeamServiceResp struct {
 	RoundID        int64                `json:"round_id"`
 	TeamID         int64                `json:"team_id"`
 	TeamName       string               `json:"team_name"`
+	ServiceID      int64                `json:"service_id"`
 	ChallengeID    int64                `json:"challenge_id"`
 	ServiceStatus  string               `json:"service_status"`
 	CheckResult    map[string]any       `json:"check_result"`
@@ -54,7 +55,7 @@ type AWDTeamServiceResp struct {
 type CreateAWDAttackLogReq struct {
 	AttackerTeamID int64  `json:"attacker_team_id" binding:"required,min=1"`
 	VictimTeamID   int64  `json:"victim_team_id" binding:"required,min=1"`
-	ChallengeID    int64  `json:"challenge_id" binding:"required,min=1"`
+	ServiceID      int64  `json:"service_id" binding:"required,min=1"`
 	AttackType     string `json:"attack_type" binding:"required,oneof=flag_capture service_exploit"`
 	SubmittedFlag  string `json:"submitted_flag" binding:"omitempty,max=512"`
 	IsSuccess      bool   `json:"is_success"`
@@ -72,6 +73,7 @@ type AWDAttackLogResp struct {
 	AttackerTeam   string    `json:"attacker_team"`
 	VictimTeamID   int64     `json:"victim_team_id"`
 	VictimTeam     string    `json:"victim_team"`
+	ServiceID      int64     `json:"service_id"`
 	ChallengeID    int64     `json:"challenge_id"`
 	AttackType     string    `json:"attack_type"`
 	Source         string    `json:"source"`
@@ -147,6 +149,7 @@ type AWDReadinessResp struct {
 }
 
 type AWDReadinessItemResp struct {
+	ServiceID       int64                `json:"service_id"`
 	ChallengeID     int64                `json:"challenge_id"`
 	Title           string               `json:"title"`
 	CheckerType     model.AWDCheckerType `json:"checker_type"`
@@ -157,7 +160,8 @@ type AWDReadinessItemResp struct {
 }
 
 type PreviewAWDCheckerReq struct {
-	ChallengeID   int64          `json:"challenge_id" binding:"required,min=1"`
+	ServiceID     int64          `json:"service_id" binding:"omitempty,min=1"`
+	ChallengeID   int64          `json:"challenge_id" binding:"omitempty,min=1"`
 	CheckerType   string         `json:"checker_type" binding:"required,oneof=legacy_probe http_standard"`
 	CheckerConfig map[string]any `json:"checker_config"`
 	AccessURL     string         `json:"access_url" binding:"required,max=1024"`
@@ -165,6 +169,7 @@ type PreviewAWDCheckerReq struct {
 }
 
 type AWDCheckerPreviewContextResp struct {
+	ServiceID   int64  `json:"service_id"`
 	AccessURL   string `json:"access_url"`
 	PreviewFlag string `json:"preview_flag"`
 	RoundNumber int    `json:"round_number"`
@@ -183,6 +188,7 @@ type AWDCheckerPreviewResp struct {
 type ListAWDTrafficEventsReq struct {
 	AttackerTeamID int64  `form:"attacker_team_id" binding:"omitempty,min=1"`
 	VictimTeamID   int64  `form:"victim_team_id" binding:"omitempty,min=1"`
+	ServiceID      int64  `form:"service_id" binding:"omitempty,min=1"`
 	ChallengeID    int64  `form:"challenge_id" binding:"omitempty,min=1"`
 	StatusGroup    string `form:"status_group" binding:"omitempty,oneof=success redirect client_error server_error"`
 	PathKeyword    string `form:"path_keyword" binding:"omitempty,max=200"`
@@ -245,6 +251,7 @@ type AWDTrafficEventResp struct {
 	VictimTeamID     int64     `json:"victim_team_id"`
 	VictimTeam       string    `json:"-"`
 	VictimTeamName   string    `json:"victim_team_name"`
+	ServiceID        int64     `json:"service_id"`
 	ChallengeID      int64     `json:"challenge_id"`
 	ChallengeTitle   string    `json:"challenge_title"`
 	Method           string    `json:"method"`

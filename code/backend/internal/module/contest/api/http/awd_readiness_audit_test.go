@@ -82,6 +82,8 @@ func TestRunCurrentRoundChecksWritesReadinessAuditPayloadAfterGateAllowsFailure(
 				return testAWDReadinessSnapshot(contestID), nil
 			},
 		},
+		stubAWDServiceCommandService{},
+		stubAWDServiceQueryService{},
 	)
 
 	ctx, recorder := newJSONTestContext(t, http.MethodPost, "/admin/contests/42/awd/current-round/check", `{"force_override":true,"override_reason":"teacher drill"}`)
@@ -199,12 +201,32 @@ func (stubAWDCommandService) CreateAttackLog(ctx context.Context, contestID, rou
 	return nil, nil
 }
 
-func (stubAWDCommandService) SubmitAttack(ctx context.Context, userID, contestID, challengeID int64, req *dto.SubmitAWDAttackReq) (*dto.AWDAttackLogResp, error) {
+func (stubAWDCommandService) SubmitAttack(ctx context.Context, userID, contestID, serviceID int64, req *dto.SubmitAWDAttackReq) (*dto.AWDAttackLogResp, error) {
 	return nil, nil
 }
 
 type stubAWDQueryService struct {
 	getReadinessFunc func(ctx context.Context, contestID int64) (*dto.AWDReadinessResp, error)
+}
+
+type stubAWDServiceCommandService struct{}
+
+func (stubAWDServiceCommandService) CreateContestAWDService(ctx context.Context, contestID int64, req *dto.CreateContestAWDServiceReq) (*dto.ContestAWDServiceResp, error) {
+	return nil, nil
+}
+
+func (stubAWDServiceCommandService) UpdateContestAWDService(ctx context.Context, contestID, serviceID int64, req *dto.UpdateContestAWDServiceReq) error {
+	return nil
+}
+
+func (stubAWDServiceCommandService) DeleteContestAWDService(ctx context.Context, contestID, serviceID int64) error {
+	return nil
+}
+
+type stubAWDServiceQueryService struct{}
+
+func (stubAWDServiceQueryService) ListContestAWDServices(ctx context.Context, contestID int64) ([]*dto.ContestAWDServiceResp, error) {
+	return nil, nil
 }
 
 func (stubAWDQueryService) ListRounds(ctx context.Context, contestID int64) ([]*dto.AWDRoundResp, error) {
@@ -216,6 +238,10 @@ func (stubAWDQueryService) ListServices(ctx context.Context, contestID, roundID 
 }
 
 func (stubAWDQueryService) ListAttackLogs(ctx context.Context, contestID, roundID int64) ([]*dto.AWDAttackLogResp, error) {
+	return nil, nil
+}
+
+func (stubAWDQueryService) GetUserWorkspace(ctx context.Context, userID, contestID int64) (*dto.ContestAWDWorkspaceResp, error) {
 	return nil, nil
 }
 

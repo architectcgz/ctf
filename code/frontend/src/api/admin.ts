@@ -2,6 +2,7 @@ import { ApiError, request } from './request'
 
 import type {
   AWDAttackLogData,
+  AWDDeploymentMode,
   AWDCheckerPreviewData,
   AWDCheckerType,
   AWDCheckerRunData,
@@ -10,10 +11,13 @@ import type {
   AWDReadinessData,
   AWDReadinessGlobalReason,
   AWDReadinessItemData,
+  AWDReadinessStatus,
   AWDRoundData,
   AWDRoundMetricsData,
   AWDRoundSummaryData,
   AWDRoundSummaryItemData,
+  AWDServiceTemplateStatus,
+  AWDServiceType,
   AWDTrafficEventData,
   AWDTrafficEventPageData,
   AWDTrafficStatusGroup,
@@ -23,7 +27,9 @@ import type {
   AWDTrafficTopTeamData,
   AWDTrafficTrendBucketData,
   AWDTeamServiceData,
-  AdminContestChallengeData,
+  AdminAwdServiceTemplateData,
+  AdminContestAWDServiceData,
+  AdminContestChallengeRelationData,
   AdminContestTeamData,
   AdminChallengeHint,
   AdminChallengeImportCommitData,
@@ -102,19 +108,34 @@ export interface AdminContestChallengeCreatePayload {
   points: number
   order?: number
   is_visible?: boolean
-  awd_checker_type?: AWDCheckerType
-  awd_checker_config?: Record<string, unknown>
-  awd_sla_score?: number
-  awd_defense_score?: number
-  awd_checker_preview_token?: string
 }
 
 export interface AdminContestChallengeUpdatePayload {
   points?: number
   order?: number
   is_visible?: boolean
-  awd_checker_type?: AWDCheckerType
-  awd_checker_config?: Record<string, unknown>
+}
+
+export interface AdminContestAWDServiceCreatePayload {
+  challenge_id: number
+  template_id: number
+  display_name?: string
+  order?: number
+  is_visible?: boolean
+  checker_type?: AWDCheckerType
+  checker_config?: Record<string, unknown>
+  awd_sla_score?: number
+  awd_defense_score?: number
+  awd_checker_preview_token?: string
+}
+
+export interface AdminContestAWDServiceUpdatePayload {
+  template_id?: number
+  display_name?: string
+  order?: number
+  is_visible?: boolean
+  checker_type?: AWDCheckerType
+  checker_config?: Record<string, unknown>
   awd_sla_score?: number
   awd_defense_score?: number
   awd_checker_preview_token?: string
@@ -175,6 +196,7 @@ interface RawAWDTeamServiceItem {
   round_id: string | number
   team_id: string | number
   team_name: string
+  service_id?: string | number
   challenge_id: string | number
   service_status: AWDTeamServiceData['service_status']
   checker_type?: string | null
@@ -193,6 +215,7 @@ interface RawAWDAttackLogItem {
   attacker_team: string
   victim_team_id: string | number
   victim_team: string
+  service_id?: string | number
   challenge_id: string | number
   attack_type: AWDAttackLogData['attack_type']
   source?: AWDAttackLogData['source']
@@ -301,6 +324,7 @@ interface RawAWDTrafficEventItem {
   attacker_team_name?: string
   victim_team_id: string | number
   victim_team_name?: string
+  service_id?: string | number
   challenge_id: string | number
   challenge_title?: string
   method: string
@@ -375,19 +399,29 @@ interface RawAdminContestChallengeItem {
   contest_id: string | number
   challenge_id: string | number
   title?: string
-  category?: AdminContestChallengeData['category']
-  difficulty?: AdminContestChallengeData['difficulty']
+  category?: AdminContestChallengeRelationData['category']
+  difficulty?: AdminContestChallengeRelationData['difficulty']
   points: number
   order: number
   is_visible: boolean
-  awd_checker_type?: string | null
-  awd_checker_config?: Record<string, unknown> | null
-  awd_sla_score?: number | null
-  awd_defense_score?: number | null
-  awd_checker_validation_state?: AdminContestChallengeData['awd_checker_validation_state'] | null
-  awd_checker_last_preview_at?: string | null
-  awd_checker_last_preview_result?: RawAWDCheckerPreviewData | null
   created_at: string
+}
+
+interface RawAdminContestAWDServiceItem {
+  id: string | number
+  contest_id: string | number
+  challenge_id: string | number
+  template_id?: string | number | null
+  display_name: string
+  order: number
+  is_visible: boolean
+  score_config?: Record<string, unknown> | null
+  runtime_config?: Record<string, unknown> | null
+  validation_state?: string | null
+  last_preview_at?: string | null
+  last_preview_result?: RawAWDCheckerPreviewData | null
+  created_at: string
+  updated_at: string
 }
 
 interface RawAdminChallengeItem {
@@ -555,6 +589,31 @@ interface RawEnvironmentTemplateData {
   updated_at: string
 }
 
+interface RawAdminAwdServiceTemplateData {
+  id: string | number
+  name: string
+  slug: string
+  category: string
+  difficulty: AdminAwdServiceTemplateData['difficulty']
+  description: string
+  service_type: AWDServiceType
+  deployment_mode: AWDDeploymentMode
+  version: string
+  status: AWDServiceTemplateStatus
+  readiness_status: AWDReadinessStatus
+  created_by?: string | number | null
+  last_verified_at?: string | null
+  created_at: string
+  updated_at: string
+}
+
+interface RawAdminAwdServiceTemplatePageData {
+  items: RawAdminAwdServiceTemplateData[]
+  total: number
+  page: number
+  size: number
+}
+
 interface RawChallengeFlagConfig {
   flag_type: 'static' | 'dynamic' | 'regex' | 'manual_review'
   flag_regex?: string
@@ -679,7 +738,7 @@ function resolveUpdateContestSuppressErrorToast(
 
 export interface AdminAWDServiceCheckPayload {
   team_id: number
-  challenge_id: number
+  service_id: number
   service_status: AWDTeamServiceData['service_status']
   check_result?: Record<string, unknown>
 }
@@ -687,7 +746,7 @@ export interface AdminAWDServiceCheckPayload {
 export interface AdminAWDAttackLogPayload {
   attacker_team_id: number
   victim_team_id: number
-  challenge_id: number
+  service_id: number
   attack_type: AWDAttackLogData['attack_type']
   submitted_flag?: string
   is_success: boolean
@@ -696,11 +755,41 @@ export interface AdminAWDAttackLogPayload {
 export interface AdminAWDTrafficEventsParams {
   attacker_team_id?: string
   victim_team_id?: string
+  service_id?: string
   challenge_id?: string
   status_group?: AWDTrafficStatusGroup
   path_keyword?: string
   page?: number
   page_size?: number
+}
+
+export interface AdminAwdServiceTemplateListParams {
+  page?: number
+  page_size?: number
+  keyword?: string
+  service_type?: AWDServiceType
+  status?: AWDServiceTemplateStatus
+}
+
+export interface AdminAwdServiceTemplateCreatePayload {
+  name: string
+  slug: string
+  category: string
+  difficulty: AdminAwdServiceTemplateData['difficulty']
+  description?: string
+  service_type: AWDServiceType
+  deployment_mode: AWDDeploymentMode
+}
+
+export interface AdminAwdServiceTemplateUpdatePayload {
+  name?: string
+  slug?: string
+  category?: string
+  difficulty?: AdminAwdServiceTemplateData['difficulty']
+  description?: string
+  service_type?: AWDServiceType
+  deployment_mode?: AWDDeploymentMode
+  status?: AWDServiceTemplateStatus
 }
 
 function normalizeContestStatus(status: RawContestItem['status']): AdminContestStatus {
@@ -782,6 +871,7 @@ function normalizeAWDTeamService(item: RawAWDTeamServiceItem): AWDTeamServiceDat
     round_id: String(item.round_id),
     team_id: String(item.team_id),
     team_name: item.team_name,
+    service_id: item.service_id == null ? undefined : String(item.service_id),
     challenge_id: String(item.challenge_id),
     service_status: item.service_status,
     checker_type: normalizeAWDCheckerType(item.checker_type),
@@ -802,6 +892,7 @@ function normalizeAWDAttackLog(item: RawAWDAttackLogItem): AWDAttackLogData {
     attacker_team: item.attacker_team,
     victim_team_id: String(item.victim_team_id),
     victim_team: item.victim_team,
+    service_id: item.service_id == null ? undefined : String(item.service_id),
     challenge_id: String(item.challenge_id),
     attack_type: item.attack_type,
     source: item.source || 'legacy',
@@ -941,6 +1032,7 @@ function normalizeAWDTrafficEvent(item: RawAWDTrafficEventItem): AWDTrafficEvent
     attacker_team_name: item.attacker_team_name,
     victim_team_id: String(item.victim_team_id),
     victim_team_name: item.victim_team_name,
+    service_id: item.service_id == null ? undefined : String(item.service_id),
     challenge_id: String(item.challenge_id),
     challenge_title: item.challenge_title,
     method: item.method,
@@ -1041,7 +1133,7 @@ function normalizeAdminContestTeam(item: RawAdminContestTeamItem): AdminContestT
 
 function normalizeAdminContestChallenge(
   item: RawAdminContestChallengeItem
-): AdminContestChallengeData {
+): AdminContestChallengeRelationData {
   return {
     id: String(item.id),
     contest_id: String(item.contest_id),
@@ -1052,17 +1144,76 @@ function normalizeAdminContestChallenge(
     points: item.points,
     order: item.order,
     is_visible: item.is_visible,
-    awd_checker_type: normalizeAWDCheckerType(item.awd_checker_type),
-    awd_checker_config: item.awd_checker_config || {},
-    awd_sla_score: typeof item.awd_sla_score === 'number' ? item.awd_sla_score : 0,
-    awd_defense_score: typeof item.awd_defense_score === 'number' ? item.awd_defense_score : 0,
-    awd_checker_validation_state: item.awd_checker_validation_state || 'pending',
-    awd_checker_last_preview_at: item.awd_checker_last_preview_at || undefined,
-    awd_checker_last_preview_result: item.awd_checker_last_preview_result
-      ? normalizeAWDCheckerPreview(item.awd_checker_last_preview_result)
-      : undefined,
     created_at: item.created_at,
   }
+}
+
+function normalizeAdminContestAWDService(
+  item: RawAdminContestAWDServiceItem
+): AdminContestAWDServiceData {
+  const runtimeConfig = { ...(item.runtime_config || {}) }
+  delete runtimeConfig.challenge_id
+  const scoreConfig = item.score_config || {}
+  return {
+    id: String(item.id),
+    contest_id: String(item.contest_id),
+    challenge_id: String(item.challenge_id),
+    template_id: item.template_id == null ? undefined : String(item.template_id),
+    display_name: item.display_name,
+    order: item.order,
+    is_visible: item.is_visible,
+    score_config: scoreConfig,
+    runtime_config: runtimeConfig,
+    checker_type: normalizeAWDCheckerType(runtimeConfig.checker_type),
+    checker_config: normalizeContestAWDServiceCheckerConfig(runtimeConfig),
+    sla_score: normalizeContestAWDServiceScore(scoreConfig.awd_sla_score),
+    defense_score: normalizeContestAWDServiceScore(scoreConfig.awd_defense_score),
+    validation_state: normalizeContestAWDServiceValidationState(item.validation_state),
+    last_preview_at: item.last_preview_at || undefined,
+    last_preview_result: item.last_preview_result
+      ? normalizeAWDCheckerPreview(item.last_preview_result)
+      : undefined,
+    created_at: item.created_at,
+    updated_at: item.updated_at,
+  }
+}
+
+function normalizeContestAWDServiceCheckerConfig(
+  runtimeConfig?: Record<string, unknown> | null
+): Record<string, unknown> {
+  if (!runtimeConfig) {
+    return {}
+  }
+  const rawString = runtimeConfig.checker_config_raw
+  if (typeof rawString === 'string' && rawString.trim()) {
+    try {
+      const parsed = JSON.parse(rawString)
+      return parsed && typeof parsed === 'object' ? (parsed as Record<string, unknown>) : {}
+    } catch {
+      return {}
+    }
+  }
+  const rawConfig = runtimeConfig.checker_config
+  if (rawConfig && typeof rawConfig === 'object') {
+    return rawConfig as Record<string, unknown>
+  }
+  return {}
+}
+
+function normalizeContestAWDServiceScore(value: unknown): number | undefined {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value
+  }
+  return undefined
+}
+
+function normalizeContestAWDServiceValidationState(
+  value: unknown
+): AdminContestAWDServiceData['validation_state'] {
+  if (value === 'pending' || value === 'failed' || value === 'stale' || value === 'passed') {
+    return value
+  }
+  return undefined
 }
 
 function normalizeChallenge(
@@ -1246,6 +1397,28 @@ function normalizeEnvironmentTemplate(item: RawEnvironmentTemplateData): Environ
     links: item.links?.map(normalizeTopologyLink),
     policies: item.policies?.map(normalizeTopologyPolicy),
     usage_count: item.usage_count,
+    created_at: item.created_at,
+    updated_at: item.updated_at,
+  }
+}
+
+function normalizeAdminAwdServiceTemplate(
+  item: RawAdminAwdServiceTemplateData
+): AdminAwdServiceTemplateData {
+  return {
+    id: String(item.id),
+    name: item.name,
+    slug: item.slug,
+    category: item.category,
+    difficulty: item.difficulty,
+    description: item.description,
+    service_type: item.service_type,
+    deployment_mode: item.deployment_mode,
+    version: item.version,
+    status: item.status,
+    readiness_status: item.readiness_status,
+    created_by: item.created_by == null ? undefined : String(item.created_by),
+    last_verified_at: item.last_verified_at || undefined,
     created_at: item.created_at,
     updated_at: item.updated_at,
   }
@@ -1756,6 +1929,62 @@ export async function deleteEnvironmentTemplate(id: string) {
   })
 }
 
+export async function listAdminAwdServiceTemplates(
+  params?: AdminAwdServiceTemplateListParams
+): Promise<PageResult<AdminAwdServiceTemplateData>> {
+  const response = await request<RawAdminAwdServiceTemplatePageData>({
+    method: 'GET',
+    url: '/authoring/awd-service-templates',
+    params,
+  })
+
+  return {
+    list: response.items.map(normalizeAdminAwdServiceTemplate),
+    total: response.total,
+    page: response.page,
+    page_size: response.size,
+  }
+}
+
+export async function getAdminAwdServiceTemplate(id: string): Promise<AdminAwdServiceTemplateData> {
+  const response = await request<RawAdminAwdServiceTemplateData>({
+    method: 'GET',
+    url: `/authoring/awd-service-templates/${encodeURIComponent(id)}`,
+  })
+  return normalizeAdminAwdServiceTemplate(response)
+}
+
+export async function createAdminAwdServiceTemplate(
+  data: AdminAwdServiceTemplateCreatePayload
+): Promise<AdminAwdServiceTemplateData> {
+  const response = await request<RawAdminAwdServiceTemplateData>({
+    method: 'POST',
+    url: '/authoring/awd-service-templates',
+    data,
+  })
+  return normalizeAdminAwdServiceTemplate(response)
+}
+
+export async function updateAdminAwdServiceTemplate(
+  id: string,
+  data: AdminAwdServiceTemplateUpdatePayload
+): Promise<AdminAwdServiceTemplateData> {
+  const response = await request<RawAdminAwdServiceTemplateData>({
+    method: 'PUT',
+    url: `/authoring/awd-service-templates/${encodeURIComponent(id)}`,
+    data,
+  })
+  return normalizeAdminAwdServiceTemplate(response)
+}
+
+export async function deleteAdminAwdServiceTemplate(id: string) {
+  return request<void>({
+    method: 'DELETE',
+    url: `/authoring/awd-service-templates/${encodeURIComponent(id)}`,
+    suppressErrorToast: true,
+  })
+}
+
 export async function getImages(params?: Record<string, unknown>) {
   const response = await request<PageResult<RawImageItem>>({
     method: 'GET',
@@ -1904,7 +2133,7 @@ export async function listContestTeams(contestId: string): Promise<AdminContestT
 
 export async function listAdminContestChallenges(
   contestId: string
-): Promise<AdminContestChallengeData[]> {
+): Promise<AdminContestChallengeRelationData[]> {
   const response = await request<RawAdminContestChallengeItem[]>({
     method: 'GET',
     url: `/admin/contests/${encodeURIComponent(contestId)}/challenges`,
@@ -1915,11 +2144,16 @@ export async function listAdminContestChallenges(
 export async function createAdminContestChallenge(
   contestId: string,
   data: AdminContestChallengeCreatePayload
-): Promise<AdminContestChallengeData> {
+): Promise<AdminContestChallengeRelationData> {
   const response = await request<RawAdminContestChallengeItem>({
     method: 'POST',
     url: `/admin/contests/${encodeURIComponent(contestId)}/challenges`,
-    data,
+    data: {
+      challenge_id: data.challenge_id,
+      points: data.points,
+      order: data.order,
+      is_visible: data.is_visible,
+    },
   })
   return normalizeAdminContestChallenge(response)
 }
@@ -1932,7 +2166,11 @@ export async function updateAdminContestChallenge(
   await request<void>({
     method: 'PUT',
     url: `/admin/contests/${encodeURIComponent(contestId)}/challenges/${encodeURIComponent(challengeId)}`,
-    data,
+    data: {
+      points: data.points,
+      order: data.order,
+      is_visible: data.is_visible,
+    },
   })
 }
 
@@ -1943,6 +2181,50 @@ export async function deleteAdminContestChallenge(
   await request<void>({
     method: 'DELETE',
     url: `/admin/contests/${encodeURIComponent(contestId)}/challenges/${encodeURIComponent(challengeId)}`,
+  })
+}
+
+export async function listContestAWDServices(
+  contestId: string
+): Promise<AdminContestAWDServiceData[]> {
+  const response = await request<RawAdminContestAWDServiceItem[]>({
+    method: 'GET',
+    url: `/admin/contests/${encodeURIComponent(contestId)}/awd/services`,
+  })
+  return response.map(normalizeAdminContestAWDService)
+}
+
+export async function createContestAWDService(
+  contestId: string,
+  data: AdminContestAWDServiceCreatePayload
+): Promise<AdminContestAWDServiceData> {
+  const response = await request<RawAdminContestAWDServiceItem>({
+    method: 'POST',
+    url: `/admin/contests/${encodeURIComponent(contestId)}/awd/services`,
+    data,
+  })
+  return normalizeAdminContestAWDService(response)
+}
+
+export async function updateContestAWDService(
+  contestId: string,
+  serviceId: string,
+  data: AdminContestAWDServiceUpdatePayload
+): Promise<void> {
+  await request<void>({
+    method: 'PUT',
+    url: `/admin/contests/${encodeURIComponent(contestId)}/awd/services/${encodeURIComponent(serviceId)}`,
+    data,
+  })
+}
+
+export async function deleteContestAWDService(
+  contestId: string,
+  serviceId: string
+): Promise<void> {
+  await request<void>({
+    method: 'DELETE',
+    url: `/admin/contests/${encodeURIComponent(contestId)}/awd/services/${encodeURIComponent(serviceId)}`,
   })
 }
 

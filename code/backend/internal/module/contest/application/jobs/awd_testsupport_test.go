@@ -30,6 +30,8 @@ var (
 	createAWDTeamFixture                     = testsupport.CreateAWDTeamFixture
 	createAWDTeamMemberFixture               = testsupport.CreateAWDTeamMemberFixture
 	createContestRegistrationForExistingTeam = testsupport.CreateContestRegistrationForExistingTeam
+	syncAWDContestServiceFixture             = testsupport.SyncAWDContestServiceFixture
+	defaultAWDContestServiceID               = testsupport.DefaultAWDContestServiceID
 	assertTeamTotalScore                     = testsupport.AssertTeamTotalScore
 	assertContestRedisScore                  = testsupport.AssertContestRedisScore
 	assertContestRedisScoreMissing           = testsupport.AssertContestRedisScoreMissing
@@ -39,6 +41,11 @@ var (
 
 func buildAWDRoundFlag(contestID int64, roundNumber int, teamID, challengeID int64, secret, prefix string) string {
 	return contestdomain.BuildAWDRoundFlag(contestID, roundNumber, teamID, challengeID, secret, prefix)
+}
+
+func awdServiceIDPtr(contestID, challengeID int64) *int64 {
+	id := defaultAWDContestServiceID(contestID, challengeID)
+	return &id
 }
 
 func newAWDRoundUpdaterForTest(db *gorm.DB, redisClient *redis.Client, cfg config.ContestAWDConfig, flagSecret string, injector contestports.AWDFlagInjector, log *zap.Logger) *contestjobs.AWDRoundUpdater {

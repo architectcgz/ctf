@@ -307,6 +307,7 @@ export interface ContestDetailData extends ContestListItem {
 export interface ContestChallengeItem {
   id: ID
   challenge_id: ID
+  awd_service_id?: ID
   title: string
   category: ChallengeCategory
   difficulty: ChallengeDifficulty
@@ -398,6 +399,7 @@ export interface AWDTeamServiceData {
   round_id: ID
   team_id: ID
   team_name: string
+  service_id?: ID
   challenge_id: ID
   service_status: AWDServiceStatus
   checker_type?: AWDCheckerType
@@ -416,6 +418,7 @@ export interface AWDAttackLogData {
   attacker_team: string
   victim_team_id: ID
   victim_team: string
+  service_id?: ID
   challenge_id: ID
   attack_type: AWDAttackType
   source: AWDAttackSource
@@ -433,6 +436,7 @@ export interface ContestAWDWorkspaceTeamData {
 }
 
 export interface ContestAWDWorkspaceServiceData {
+  service_id?: ID
   challenge_id: ID
   access_url?: string
   service_status?: AWDServiceStatus
@@ -445,6 +449,7 @@ export interface ContestAWDWorkspaceServiceData {
 }
 
 export interface ContestAWDWorkspaceTargetServiceData {
+  service_id?: ID
   challenge_id: ID
   access_url?: string
 }
@@ -458,6 +463,7 @@ export interface ContestAWDWorkspaceTargetTeamData {
 export interface ContestAWDWorkspaceRecentEventData {
   id: ID
   direction: ContestAWDWorkspaceEventDirection
+  service_id?: ID
   challenge_id: ID
   peer_team_id: ID
   peer_team_name: string
@@ -571,6 +577,7 @@ export interface AWDTrafficEventData {
   attacker_team_name?: string
   victim_team_id: ID
   victim_team_name?: string
+  service_id?: ID
   challenge_id: ID
   challenge_title?: string
   method: string
@@ -644,7 +651,7 @@ export interface AdminContestTeamData {
   created_at: ISODateTime
 }
 
-export interface AdminContestChallengeData {
+export interface AdminContestChallengeRelationData {
   id: ID
   contest_id: ID
   challenge_id: ID
@@ -654,6 +661,13 @@ export interface AdminContestChallengeData {
   points: number
   order: number
   is_visible: boolean
+  created_at: ISODateTime
+}
+
+export interface AdminContestChallengeViewData extends AdminContestChallengeRelationData {
+  awd_service_id?: ID
+  awd_template_id?: ID
+  awd_service_display_name?: string
   awd_checker_type?: AWDCheckerType
   awd_checker_config?: Record<string, unknown>
   awd_sla_score?: number
@@ -661,7 +675,29 @@ export interface AdminContestChallengeData {
   awd_checker_validation_state?: AWDCheckerValidationState
   awd_checker_last_preview_at?: ISODateTime
   awd_checker_last_preview_result?: AWDCheckerPreviewData
+}
+
+export type AdminContestChallengeData = AdminContestChallengeViewData
+
+export interface AdminContestAWDServiceData {
+  id: ID
+  contest_id: ID
+  challenge_id: ID
+  template_id?: ID
+  display_name: string
+  order: number
+  is_visible: boolean
+  score_config?: Record<string, unknown>
+  runtime_config?: Record<string, unknown>
+  checker_type?: AWDCheckerType
+  checker_config?: Record<string, unknown>
+  sla_score?: number
+  defense_score?: number
+  validation_state?: AWDCheckerValidationState
+  last_preview_at?: ISODateTime
+  last_preview_result?: AWDCheckerPreviewData
   created_at: ISODateTime
+  updated_at: ISODateTime
 }
 
 export type NotificationType = 'system' | 'contest' | 'challenge' | 'team'
@@ -883,6 +919,7 @@ export interface TeacherAWDReviewServiceItemData {
   round_id: ID
   team_id: ID
   team_name: string
+  service_id?: ID
   challenge_id: ID
   challenge_title: string
   service_status: string
@@ -900,6 +937,7 @@ export interface TeacherAWDReviewAttackItemData {
   attacker_team_name: string
   victim_team_id: ID
   victim_team_name: string
+  service_id?: ID
   challenge_id: ID
   challenge_title: string
   attack_type: string
@@ -918,6 +956,7 @@ export interface TeacherAWDReviewTrafficItemData {
   attacker_team_name: string
   victim_team_id: ID
   victim_team_name: string
+  service_id?: ID
   challenge_id: ID
   challenge_title: string
   method: string
@@ -1229,6 +1268,29 @@ export interface EnvironmentTemplateData {
   links?: TopologyLinkData[]
   policies?: TopologyTrafficPolicyData[]
   usage_count: number
+  created_at: ISODateTime
+  updated_at: ISODateTime
+}
+
+export type AWDServiceType = 'web_http' | 'binary_tcp' | 'multi_container'
+export type AWDDeploymentMode = 'single_container' | 'topology'
+export type AWDServiceTemplateStatus = 'draft' | 'published' | 'archived'
+export type AWDReadinessStatus = 'pending' | 'passed' | 'failed'
+
+export interface AdminAwdServiceTemplateData {
+  id: ID
+  name: string
+  slug: string
+  category: string
+  difficulty: ChallengeDifficulty
+  description: string
+  service_type: AWDServiceType
+  deployment_mode: AWDDeploymentMode
+  version: string
+  status: AWDServiceTemplateStatus
+  readiness_status: AWDReadinessStatus
+  created_by?: ID
+  last_verified_at?: ISODateTime
   created_at: ISODateTime
   updated_at: ISODateTime
 }

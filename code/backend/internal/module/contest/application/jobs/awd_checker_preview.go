@@ -17,6 +17,7 @@ const (
 func (u *AWDRoundUpdater) PreviewServiceCheck(ctx context.Context, req contestports.AWDServicePreviewRequest) (*contestports.AWDServicePreviewResult, error) {
 	checkerType := effectiveAWDCheckerType(req.CheckerType)
 	previewContext := contestports.AWDCheckerPreviewContext{
+		ServiceID:   req.ServiceID,
 		AccessURL:   strings.TrimSpace(req.AccessURL),
 		PreviewFlag: normalizeAWDCheckerPreviewFlag(req.PreviewFlag),
 		RoundNumber: 0,
@@ -24,12 +25,14 @@ func (u *AWDRoundUpdater) PreviewServiceCheck(ctx context.Context, req contestpo
 		ChallengeID: req.ChallengeID,
 	}
 	definition := contestports.AWDServiceDefinition{
+		ServiceID:     req.ServiceID,
 		ChallengeID:   req.ChallengeID,
 		CheckerType:   checkerType,
 		CheckerConfig: req.CheckerConfig,
 	}
 	instances := []contestports.AWDServiceInstance{
 		{
+			ServiceID:   req.ServiceID,
 			ChallengeID: req.ChallengeID,
 			AccessURL:   previewContext.AccessURL,
 		},
