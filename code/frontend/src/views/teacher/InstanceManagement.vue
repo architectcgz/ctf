@@ -5,9 +5,12 @@ import { useRouter } from 'vue-router'
 import TeacherInstanceManagementPage from '@/components/teacher/instance-management/TeacherInstanceManagementPage.vue'
 import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
 import { useTeacherInstances } from '@/composables/useTeacherInstances'
+import { useAuthStore } from '@/stores/auth'
 import { DEFAULT_PAGE_SIZE } from '@/utils/constants'
+import { resolveTeachingDashboardRouteName } from '@/utils/teachingWorkspaceRouting'
 
 const router = useRouter()
+const authStore = useAuthStore()
 const page = ref(1)
 const pageSize = ref(DEFAULT_PAGE_SIZE)
 
@@ -98,6 +101,6 @@ watch(totalCount, () => {
     @update-student-no="updateFilter('studentNo', $event)"
     @change-page="handlePageChange"
     @destroy="handleDestroy"
-    @open-dashboard="router.push({ name: 'TeacherDashboard' })"
+    @open-dashboard="router.push({ name: resolveTeachingDashboardRouteName(authStore.user?.role) })"
   />
 </template>

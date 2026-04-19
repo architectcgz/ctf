@@ -91,11 +91,16 @@ describe('InstanceManagement', () => {
 
     await flushPromises()
 
-    expect(teacherApiMocks.getTeacherInstances).toHaveBeenCalledWith({
-      class_name: 'Class A',
-      keyword: undefined,
-      student_no: undefined,
-    })
+    expect(teacherApiMocks.getTeacherInstances).toHaveBeenCalledWith(
+      {
+        class_name: 'Class A',
+        keyword: undefined,
+        student_no: undefined,
+      },
+      expect.objectContaining({
+        signal: expect.any(AbortSignal),
+      })
+    )
     expect(wrapper.findAll('.progress-card.metric-panel-card')).toHaveLength(3)
     expect(wrapper.find('.teacher-directory-head').exists()).toBe(true)
     expect(wrapper.text()).toContain('Web SQLi 101')
@@ -132,11 +137,16 @@ describe('InstanceManagement', () => {
     vi.advanceTimersByTime(250)
     await flushPromises()
 
-    expect(teacherApiMocks.getTeacherInstances).toHaveBeenLastCalledWith({
-      class_name: 'Class A',
-      keyword: 'ali',
-      student_no: 'S-1001',
-    })
+    expect(teacherApiMocks.getTeacherInstances).toHaveBeenLastCalledWith(
+      {
+        class_name: 'Class A',
+        keyword: 'ali',
+        student_no: 'S-1001',
+      },
+      expect.objectContaining({
+        signal: expect.any(AbortSignal),
+      })
+    )
 
     await wrapper.find('[data-instance-id="inst-1"]').trigger('click')
     await flushPromises()
@@ -166,6 +176,34 @@ describe('InstanceManagement', () => {
     expect(confirmMock).toHaveBeenCalled()
     expect(teacherApiMocks.destroyTeacherInstance).not.toHaveBeenCalled()
     expect(wrapper.text()).toContain('Web SQLi 101')
+  })
+
+  it('管理员从实例管理返回概览时应回到后台概览页', async () => {
+    const authStore = useAuthStore()
+    authStore.setAuth(
+      {
+        id: 'admin-1',
+        username: 'admin',
+        role: 'admin',
+        class_name: 'Class A',
+      },
+      'token'
+    )
+
+    const wrapper = mount(InstanceManagement, {
+      global: {
+        components: {
+          ElTable,
+          ElTableColumn,
+          ElButton,
+        },
+      },
+    })
+    await flushPromises()
+
+    wrapper.findComponent({ name: 'TeacherInstanceManagementPage' }).vm.$emit('openDashboard')
+
+    expect(pushMock).toHaveBeenCalledWith({ name: 'AdminDashboard' })
   })
 
   it('应该支持实例目录分页切换', async () => {

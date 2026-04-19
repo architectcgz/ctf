@@ -14,6 +14,8 @@ import type {
 } from '@/api/contracts'
 import { useReportStatusPolling } from '@/composables/useReportStatusPolling'
 import { useToast } from '@/composables/useToast'
+import { useAuthStore } from '@/stores/auth'
+import { resolveAwdReviewDetailRouteName } from '@/utils/teachingWorkspaceRouting'
 
 type ExportKind = 'archive' | 'report'
 
@@ -21,6 +23,7 @@ export function useTeacherAwdReviewDetail() {
   const route = useRoute()
   const router = useRouter()
   const toast = useToast()
+  const authStore = useAuthStore()
   const { polling, start: startPolling, stop: stopPolling } = useReportStatusPolling()
 
   const loading = ref(false)
@@ -194,7 +197,7 @@ export function useTeacherAwdReviewDetail() {
     }
 
     router.replace({
-      name: 'TeacherAWDReviewDetail',
+      name: resolveAwdReviewDetailRouteName(authStore.user?.role),
       params: {
         contestId: contestId.value,
       },

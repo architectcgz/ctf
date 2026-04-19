@@ -34,12 +34,19 @@ import type {
 } from '@/api/contracts'
 import { useReportStatusPolling } from '@/composables/useReportStatusPolling'
 import { useToast } from '@/composables/useToast'
+import { useAuthStore } from '@/stores/auth'
 import { getWeakDimensions } from '@/utils/skillProfile'
+import {
+  resolveClassStudentsRouteName,
+  resolveStudentAnalysisRouteName,
+  resolveStudentReviewArchiveRouteName,
+} from '@/utils/teachingWorkspaceRouting'
 
 export function useTeacherStudentAnalysisPage() {
   const route = useRoute()
   const router = useRouter()
   const toast = useToast()
+  const authStore = useAuthStore()
   const { start: startPolling, stop: stopPolling } = useReportStatusPolling()
 
   const classes = ref<TeacherClassItem[]>([])
@@ -291,14 +298,14 @@ export function useTeacherStudentAnalysisPage() {
 
   function selectClass(className: string): void {
     router.push({
-      name: 'TeacherClassStudents',
+      name: resolveClassStudentsRouteName(authStore.user?.role),
       params: { className },
     })
   }
 
   function selectStudent(studentId: string): void {
     router.push({
-      name: 'TeacherStudentAnalysis',
+      name: resolveStudentAnalysisRouteName(authStore.user?.role),
       params: {
         className: selectedClassName.value,
         studentId,
@@ -313,7 +320,7 @@ export function useTeacherStudentAnalysisPage() {
   function openReviewArchivePage(): void {
     if (!selectedStudentId.value || !selectedClassName.value) return
     router.push({
-      name: 'TeacherStudentReviewArchive',
+      name: resolveStudentReviewArchiveRouteName(authStore.user?.role),
       params: {
         className: selectedClassName.value,
         studentId: selectedStudentId.value,
