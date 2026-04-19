@@ -64,6 +64,7 @@ describe('AuditLog', () => {
   afterEach(() => {
     vi.runOnlyPendingTimers()
     vi.useRealTimers()
+    document.body.innerHTML = ''
   })
 
   it('应该根据路由 query 加载预置筛选结果', async () => {
@@ -110,6 +111,26 @@ describe('AuditLog', () => {
     })
   })
 
+  it('执行人列应改成点击查看详情，而不是直接常驻显示用户 ID', async () => {
+    const wrapper = mount(AuditLog, {
+      attachTo: document.body,
+    })
+
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('alice')
+    expect(wrapper.text()).not.toContain('ID 12')
+    expect(wrapper.text()).toContain('查看详情')
+
+    await wrapper.get('.audit-row__actor-trigger').trigger('click')
+    await flushPromises()
+
+    expect(document.body.textContent).toContain('执行人详情')
+    expect(document.body.textContent).toContain('用户 ID')
+    expect(document.body.textContent).toContain('12')
+    expect(document.body.textContent).toContain('challenge #5')
+  })
+
   it('筛选区应改成平铺目录筛选，不应继续保留显式应用按钮和说明壳', () => {
     expect(auditLogSource).toContain('class="admin-board workspace-directory-section"')
     expect(auditLogSource).not.toContain('class="admin-section-title">筛选条件</h2>')
@@ -129,13 +150,19 @@ describe('AuditLog', () => {
   it('应接入共享目录工具栏与列表表格，而不是继续使用原生 table', () => {
     expect(auditLogSource).toContain("from '@/components/common/WorkspaceDirectoryToolbar.vue'")
     expect(auditLogSource).toContain("from '@/components/common/WorkspaceDataTable.vue'")
+    expect(auditLogSource).toContain(
+      "from '@/components/common/modal-templates/AdminSurfaceModal.vue'"
+    )
     expect(auditLogSource).toContain('<WorkspaceDirectoryToolbar')
     expect(auditLogSource).toContain('<WorkspaceDataTable')
+    expect(auditLogSource).toContain('<AdminSurfaceModal')
     expect(auditLogSource).not.toContain('<section class="audit-filter-strip"')
     expect(auditLogSource).not.toContain('<table class="min-w-full text-sm">')
     expect(auditLogSource).toContain('search-placeholder="检索动作、资源类型、执行人..."')
     expect(auditLogSource).toContain('total-suffix="条日志"')
     expect(auditLogSource).toContain('class="audit-list workspace-directory-list"')
+    expect(auditLogSource).toContain('class="audit-row__actor-trigger"')
+    expect(auditLogSource).not.toContain('class="audit-row__actor-id"')
     expect(auditLogSource).toMatch(
       /\.admin-board\s*\{[\s\S]*display:\s*grid;[\s\S]*gap:\s*var\(--space-4\);/s
     )
