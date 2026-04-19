@@ -10,6 +10,7 @@ import contestEditSource from '../ContestEdit.vue?raw'
 import imageManageSource from '../ImageManage.vue?raw'
 import cheatDetectionSource from '../CheatDetection.vue?raw'
 import awdRoundInspectorSource from '@/components/admin/contest/AWDRoundInspector.vue?raw'
+import awdTrafficPanelSource from '@/components/admin/contest/AWDTrafficPanel.vue?raw'
 import awdChallengeConfigPanelSource from '@/components/admin/contest/AWDChallengeConfigPanel.vue?raw'
 import awdReadinessSummarySource from '@/components/admin/contest/AWDReadinessSummary.vue?raw'
 import awdReadinessOverrideDialogSource from '@/components/admin/contest/AWDReadinessOverrideDialog.vue?raw'
@@ -168,7 +169,8 @@ describe('admin management surface alignment', () => {
   })
 
   it('awd round inspector traffic filters should stay flattened into the table section instead of using a split intro bar', () => {
-    expect(awdRoundInspectorSource).toContain('id="awd-traffic-reset-filters"')
+    expect(awdRoundInspectorSource).toContain('<AWDTrafficPanel')
+    expect(awdTrafficPanelSource).toContain('id="awd-traffic-reset-filters"')
     expect(awdRoundInspectorSource).not.toContain(
       '按攻击方、受害方、题目、状态分桶和路径关键字筛选。'
     )
@@ -311,7 +313,8 @@ describe('admin management surface alignment', () => {
     expect(auditLogSource).toContain('AdminPaginationControls')
     expect(challengeManageSource).toContain('WorkspaceDirectoryPagination')
     expect(adminContestTableSource).toContain('AdminPaginationControls')
-    expect(awdRoundInspectorSource).toContain('AdminPaginationControls')
+    expect(awdRoundInspectorSource).toContain('<AWDTrafficPanel')
+    expect(awdTrafficPanelSource).toContain('AdminPaginationControls')
   })
 
   it('admin summary grids should use shared summary-grid base styles', () => {
