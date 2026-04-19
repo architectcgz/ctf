@@ -1,5 +1,9 @@
 <script setup lang="ts">
-import { onBeforeUnmount, watch } from 'vue'
+import { onBeforeUnmount, useAttrs, watch } from 'vue'
+
+defineOptions({
+  inheritAttrs: false,
+})
 
 const props = withDefaults(
   defineProps<{
@@ -29,6 +33,8 @@ const emit = defineEmits<{
   'update:open': [value: boolean]
   close: []
 }>()
+
+const attrs = useAttrs()
 
 function closeDialog(): void {
   emit('update:open', false)
@@ -69,6 +75,7 @@ onBeforeUnmount(() => {
     <Transition name="modal-template-fade">
       <div
         v-if="open"
+        v-bind="attrs"
         :class="['modal-template-shell', overlayClass]"
         @click.self="handleBackdropClick"
       >
