@@ -28,7 +28,8 @@ import type {
   AWDTrafficTrendBucketData,
   AWDTeamServiceData,
   AdminAwdServiceTemplateData,
-  AdminContestChallengeData,
+  AdminContestAWDServiceData,
+  AdminContestChallengeRelationData,
   AdminContestTeamData,
   AdminChallengeHint,
   AdminChallengeImportCommitData,
@@ -104,24 +105,37 @@ export interface AdminUserUpdatePayload {
 
 export interface AdminContestChallengeCreatePayload {
   challenge_id: number
-  template_id?: number
   points: number
   order?: number
   is_visible?: boolean
-  awd_checker_type?: AWDCheckerType
-  awd_checker_config?: Record<string, unknown>
+}
+
+export interface AdminContestChallengeUpdatePayload {
+  points?: number
+  order?: number
+  is_visible?: boolean
+}
+
+export interface AdminContestAWDServiceCreatePayload {
+  challenge_id: number
+  template_id: number
+  display_name?: string
+  order?: number
+  is_visible?: boolean
+  checker_type?: AWDCheckerType
+  checker_config?: Record<string, unknown>
   awd_sla_score?: number
   awd_defense_score?: number
   awd_checker_preview_token?: string
 }
 
-export interface AdminContestChallengeUpdatePayload {
+export interface AdminContestAWDServiceUpdatePayload {
   template_id?: number
-  points?: number
+  display_name?: string
   order?: number
   is_visible?: boolean
-  awd_checker_type?: AWDCheckerType
-  awd_checker_config?: Record<string, unknown>
+  checker_type?: AWDCheckerType
+  checker_config?: Record<string, unknown>
   awd_sla_score?: number
   awd_defense_score?: number
   awd_checker_preview_token?: string
@@ -310,6 +324,7 @@ interface RawAWDTrafficEventItem {
   attacker_team_name?: string
   victim_team_id: string | number
   victim_team_name?: string
+  service_id?: string | number
   challenge_id: string | number
   challenge_title?: string
   method: string
@@ -383,23 +398,30 @@ interface RawAdminContestChallengeItem {
   id: string | number
   contest_id: string | number
   challenge_id: string | number
-  awd_service_id?: string | number | null
-  awd_template_id?: string | number | null
-  awd_service_display_name?: string | null
   title?: string
-  category?: AdminContestChallengeData['category']
-  difficulty?: AdminContestChallengeData['difficulty']
+  category?: AdminContestChallengeRelationData['category']
+  difficulty?: AdminContestChallengeRelationData['difficulty']
   points: number
   order: number
   is_visible: boolean
-  awd_checker_type?: string | null
-  awd_checker_config?: Record<string, unknown> | null
-  awd_sla_score?: number | null
-  awd_defense_score?: number | null
-  awd_checker_validation_state?: AdminContestChallengeData['awd_checker_validation_state'] | null
-  awd_checker_last_preview_at?: string | null
-  awd_checker_last_preview_result?: RawAWDCheckerPreviewData | null
   created_at: string
+}
+
+interface RawAdminContestAWDServiceItem {
+  id: string | number
+  contest_id: string | number
+  challenge_id: string | number
+  template_id?: string | number | null
+  display_name: string
+  order: number
+  is_visible: boolean
+  score_config?: Record<string, unknown> | null
+  runtime_config?: Record<string, unknown> | null
+  validation_state?: string | null
+  last_preview_at?: string | null
+  last_preview_result?: RawAWDCheckerPreviewData | null
+  created_at: string
+  updated_at: string
 }
 
 interface RawAdminChallengeItem {
@@ -733,6 +755,7 @@ export interface AdminAWDAttackLogPayload {
 export interface AdminAWDTrafficEventsParams {
   attacker_team_id?: string
   victim_team_id?: string
+  service_id?: string
   challenge_id?: string
   status_group?: AWDTrafficStatusGroup
   path_keyword?: string
@@ -1009,6 +1032,7 @@ function normalizeAWDTrafficEvent(item: RawAWDTrafficEventItem): AWDTrafficEvent
     attacker_team_name: item.attacker_team_name,
     victim_team_id: String(item.victim_team_id),
     victim_team_name: item.victim_team_name,
+    service_id: item.service_id == null ? undefined : String(item.service_id),
     challenge_id: String(item.challenge_id),
     challenge_title: item.challenge_title,
     method: item.method,
@@ -1109,31 +1133,87 @@ function normalizeAdminContestTeam(item: RawAdminContestTeamItem): AdminContestT
 
 function normalizeAdminContestChallenge(
   item: RawAdminContestChallengeItem
-): AdminContestChallengeData {
+): AdminContestChallengeRelationData {
   return {
     id: String(item.id),
     contest_id: String(item.contest_id),
     challenge_id: String(item.challenge_id),
-    awd_service_id: item.awd_service_id == null ? undefined : String(item.awd_service_id),
-    awd_template_id: item.awd_template_id == null ? undefined : String(item.awd_template_id),
-    awd_service_display_name: item.awd_service_display_name || undefined,
     title: item.title,
     category: item.category,
     difficulty: item.difficulty,
     points: item.points,
     order: item.order,
     is_visible: item.is_visible,
-    awd_checker_type: normalizeAWDCheckerType(item.awd_checker_type),
-    awd_checker_config: item.awd_checker_config || {},
-    awd_sla_score: typeof item.awd_sla_score === 'number' ? item.awd_sla_score : 0,
-    awd_defense_score: typeof item.awd_defense_score === 'number' ? item.awd_defense_score : 0,
-    awd_checker_validation_state: item.awd_checker_validation_state || 'pending',
-    awd_checker_last_preview_at: item.awd_checker_last_preview_at || undefined,
-    awd_checker_last_preview_result: item.awd_checker_last_preview_result
-      ? normalizeAWDCheckerPreview(item.awd_checker_last_preview_result)
-      : undefined,
     created_at: item.created_at,
   }
+}
+
+function normalizeAdminContestAWDService(
+  item: RawAdminContestAWDServiceItem
+): AdminContestAWDServiceData {
+  const runtimeConfig = { ...(item.runtime_config || {}) }
+  delete runtimeConfig.challenge_id
+  const scoreConfig = item.score_config || {}
+  return {
+    id: String(item.id),
+    contest_id: String(item.contest_id),
+    challenge_id: String(item.challenge_id),
+    template_id: item.template_id == null ? undefined : String(item.template_id),
+    display_name: item.display_name,
+    order: item.order,
+    is_visible: item.is_visible,
+    score_config: scoreConfig,
+    runtime_config: runtimeConfig,
+    checker_type: normalizeAWDCheckerType(runtimeConfig.checker_type),
+    checker_config: normalizeContestAWDServiceCheckerConfig(runtimeConfig),
+    sla_score: normalizeContestAWDServiceScore(scoreConfig.awd_sla_score),
+    defense_score: normalizeContestAWDServiceScore(scoreConfig.awd_defense_score),
+    validation_state: normalizeContestAWDServiceValidationState(item.validation_state),
+    last_preview_at: item.last_preview_at || undefined,
+    last_preview_result: item.last_preview_result
+      ? normalizeAWDCheckerPreview(item.last_preview_result)
+      : undefined,
+    created_at: item.created_at,
+    updated_at: item.updated_at,
+  }
+}
+
+function normalizeContestAWDServiceCheckerConfig(
+  runtimeConfig?: Record<string, unknown> | null
+): Record<string, unknown> {
+  if (!runtimeConfig) {
+    return {}
+  }
+  const rawString = runtimeConfig.checker_config_raw
+  if (typeof rawString === 'string' && rawString.trim()) {
+    try {
+      const parsed = JSON.parse(rawString)
+      return parsed && typeof parsed === 'object' ? (parsed as Record<string, unknown>) : {}
+    } catch {
+      return {}
+    }
+  }
+  const rawConfig = runtimeConfig.checker_config
+  if (rawConfig && typeof rawConfig === 'object') {
+    return rawConfig as Record<string, unknown>
+  }
+  return {}
+}
+
+function normalizeContestAWDServiceScore(value: unknown): number | undefined {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value
+  }
+  return undefined
+}
+
+function normalizeContestAWDServiceValidationState(
+  value: unknown
+): AdminContestAWDServiceData['validation_state'] {
+  if (value === 'pending' || value === 'failed' || value === 'stale' || value === 'passed') {
+    return value
+  }
+  return undefined
 }
 
 function normalizeChallenge(
@@ -2037,7 +2117,7 @@ export async function listContestTeams(contestId: string): Promise<AdminContestT
 
 export async function listAdminContestChallenges(
   contestId: string
-): Promise<AdminContestChallengeData[]> {
+): Promise<AdminContestChallengeRelationData[]> {
   const response = await request<RawAdminContestChallengeItem[]>({
     method: 'GET',
     url: `/admin/contests/${encodeURIComponent(contestId)}/challenges`,
@@ -2048,11 +2128,16 @@ export async function listAdminContestChallenges(
 export async function createAdminContestChallenge(
   contestId: string,
   data: AdminContestChallengeCreatePayload
-): Promise<AdminContestChallengeData> {
+): Promise<AdminContestChallengeRelationData> {
   const response = await request<RawAdminContestChallengeItem>({
     method: 'POST',
     url: `/admin/contests/${encodeURIComponent(contestId)}/challenges`,
-    data,
+    data: {
+      challenge_id: data.challenge_id,
+      points: data.points,
+      order: data.order,
+      is_visible: data.is_visible,
+    },
   })
   return normalizeAdminContestChallenge(response)
 }
@@ -2065,7 +2150,11 @@ export async function updateAdminContestChallenge(
   await request<void>({
     method: 'PUT',
     url: `/admin/contests/${encodeURIComponent(contestId)}/challenges/${encodeURIComponent(challengeId)}`,
-    data,
+    data: {
+      points: data.points,
+      order: data.order,
+      is_visible: data.is_visible,
+    },
   })
 }
 
@@ -2076,6 +2165,50 @@ export async function deleteAdminContestChallenge(
   await request<void>({
     method: 'DELETE',
     url: `/admin/contests/${encodeURIComponent(contestId)}/challenges/${encodeURIComponent(challengeId)}`,
+  })
+}
+
+export async function listContestAWDServices(
+  contestId: string
+): Promise<AdminContestAWDServiceData[]> {
+  const response = await request<RawAdminContestAWDServiceItem[]>({
+    method: 'GET',
+    url: `/admin/contests/${encodeURIComponent(contestId)}/awd/services`,
+  })
+  return response.map(normalizeAdminContestAWDService)
+}
+
+export async function createContestAWDService(
+  contestId: string,
+  data: AdminContestAWDServiceCreatePayload
+): Promise<AdminContestAWDServiceData> {
+  const response = await request<RawAdminContestAWDServiceItem>({
+    method: 'POST',
+    url: `/admin/contests/${encodeURIComponent(contestId)}/awd/services`,
+    data,
+  })
+  return normalizeAdminContestAWDService(response)
+}
+
+export async function updateContestAWDService(
+  contestId: string,
+  serviceId: string,
+  data: AdminContestAWDServiceUpdatePayload
+): Promise<void> {
+  await request<void>({
+    method: 'PUT',
+    url: `/admin/contests/${encodeURIComponent(contestId)}/awd/services/${encodeURIComponent(serviceId)}`,
+    data,
+  })
+}
+
+export async function deleteContestAWDService(
+  contestId: string,
+  serviceId: string
+): Promise<void> {
+  await request<void>({
+    method: 'DELETE',
+    url: `/admin/contests/${encodeURIComponent(contestId)}/awd/services/${encodeURIComponent(serviceId)}`,
   })
 }
 

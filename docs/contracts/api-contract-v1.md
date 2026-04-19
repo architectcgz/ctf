@@ -4,7 +4,7 @@
 >
 > 机器可读版本：`ctf/docs/contracts/openapi-v1.yaml`（OpenAPI 3.0），应与本文保持一致。
 >
-> 最后更新：2026-04-17
+> 最后更新：2026-04-18
 
 ---
 
@@ -510,10 +510,19 @@ export type ContestChallengeListData = ContestChallengeItem[]
 
 > 说明：
 > - 当前要求竞赛已进入 `running/frozen` 且当前用户报名状态为 `approved`。
-> - `mode=awd` 时必须已加入队伍，并按 `contest_id + team_id + challenge_id` 复用同队共享实例；同队成员再次启动会直接拿到同一实例。
+> - 该入口仅用于非 AWD 竞赛的题目实例启动。
 > - 非 AWD 竞赛仍按用户维度创建竞赛实例，不影响练习模式实例。
 
-### 4.6.1 POST `/api/v1/admin/contests/:id/awd/current-round/check`
+### 4.6.1 POST `/api/v1/contests/:id/awd/services/:sid/instances`
+
+`data`：同 `InstanceData`
+
+> 说明：
+> - 当前要求竞赛已进入 `running/frozen` 且当前用户报名状态为 `approved`。
+> - `mode=awd` 时必须已加入队伍，并按 `contest_id + team_id + service_id` 复用同队共享实例；同队成员再次启动会直接拿到同一实例。
+> - AWD 学生端运行链路统一以 `contest_awd_services.id` 作为实例启动主键，旧的 `challenge_id` 入口不再作为 AWD 实例启动入口。
+
+### 4.6.2 POST `/api/v1/admin/contests/:id/awd/current-round/check`
 
 `data`：
 
@@ -1479,22 +1488,12 @@ export interface AdminContestChallengeData {
   id: ID
   contest_id: ID
   challenge_id: ID
-  awd_service_id?: ID
-  awd_template_id?: ID
-  awd_service_display_name?: string
   title?: string
   category?: ChallengeCategory
   difficulty?: ChallengeDifficulty
   points: number
   order: number
   is_visible: boolean
-  awd_checker_type?: 'legacy_probe' | 'http_standard'
-  awd_checker_config?: Record<string, unknown>
-  awd_sla_score?: number
-  awd_defense_score?: number
-  awd_checker_validation_state?: 'pending' | 'passed' | 'failed' | 'stale'
-  awd_checker_last_preview_at?: ISODateTime
-  awd_checker_last_preview_result?: AWDCheckerPreviewData
   created_at: ISODateTime
 }
 
@@ -1506,12 +1505,62 @@ export type AdminContestChallengeListData = AdminContestChallengeData[]
 ```ts
 export interface CreateAdminContestChallengeReq {
   challenge_id: ID
-  template_id?: ID
   points?: number
   order?: number
   is_visible?: boolean
-  awd_checker_type?: 'legacy_probe' | 'http_standard'
-  awd_checker_config?: Record<string, unknown>
+}
+```
+
+`PUT` 请求体：
+
+```ts
+export interface UpdateAdminContestChallengeReq {
+  points?: number
+  order?: number
+  is_visible?: boolean
+}
+```
+
+> 说明：
+> - `contest_challenges` 只负责赛事题目关系、分值、顺序与可见性等编排字段。
+> - 当赛事模式为 `awd` 时，管理员侧的服务关联、checker / SLA / 防守分 / 最近试跑结果等运行态字段统一通过 `contest_awd_services` 读写；关系接口不再承载这些字段。
+
+### 8.18.1.1 GET `/api/v1/admin/contests/:id/awd/services` / POST `/api/v1/admin/contests/:id/awd/services` / PUT `/api/v1/admin/contests/:id/awd/services/:sid` / DELETE `/api/v1/admin/contests/:id/awd/services/:sid`
+
+`data`：
+
+```ts
+export interface AdminContestAWDServiceData {
+  id: ID
+  contest_id: ID
+  challenge_id: ID
+  template_id?: ID
+  display_name: string
+  order: number
+  is_visible: boolean
+  score_config?: Record<string, unknown>
+  runtime_config?: Record<string, unknown>
+  validation_state?: 'pending' | 'passed' | 'failed' | 'stale'
+  last_preview_at?: ISODateTime
+  last_preview_result?: AWDCheckerPreviewData
+  created_at: ISODateTime
+  updated_at: ISODateTime
+}
+
+export type AdminContestAWDServiceListData = AdminContestAWDServiceData[]
+```
+
+`POST` 请求体：
+
+```ts
+export interface CreateAdminContestAWDServiceReq {
+  challenge_id: ID
+  template_id: ID
+  display_name?: string
+  order?: number
+  is_visible?: boolean
+  checker_type?: 'legacy_probe' | 'http_standard'
+  checker_config?: Record<string, unknown>
   awd_sla_score?: number
   awd_defense_score?: number
   awd_checker_preview_token?: string
@@ -1521,13 +1570,13 @@ export interface CreateAdminContestChallengeReq {
 `PUT` 请求体：
 
 ```ts
-export interface UpdateAdminContestChallengeReq {
+export interface UpdateAdminContestAWDServiceReq {
   template_id?: ID
-  points?: number
+  display_name?: string
   order?: number
   is_visible?: boolean
-  awd_checker_type?: 'legacy_probe' | 'http_standard'
-  awd_checker_config?: Record<string, unknown>
+  checker_type?: 'legacy_probe' | 'http_standard'
+  checker_config?: Record<string, unknown>
   awd_sla_score?: number
   awd_defense_score?: number
   awd_checker_preview_token?: string
@@ -1535,9 +1584,11 @@ export interface UpdateAdminContestChallengeReq {
 ```
 
 > 说明：
-> - 当前管理员赛事题目配置仍以 `contest_challenges` 为兼容编辑入口。
-> - 当赛事模式为 `awd` 时，新增/更新/删除题目会同步维护 `contest_awd_services`。
-> - `awd_service_id / awd_template_id / awd_service_display_name` 用于前端识别显式服务关联是否已经建立。
+> - `contest_awd_services` 是 AWD 运行态配置的显式服务层。
+> - `checker_type / checker_config / awd_sla_score / awd_defense_score / awd_checker_preview_token` 统一通过该接口写入。
+> - `points` 不属于 service 资源，仍通过 `contest_challenges` 关系接口维护。
+> - 返回体中的 `runtime_config` 仅保留正式 runtime 配置字段，不再对外暴露兼容影子字段 `challenge_id`。
+> - `validation_state / last_preview_at / last_preview_result` 反映最近一次保存到 service 层的 checker 校验状态。
 
 ### 8.18.2 GET `/api/v1/admin/contests/:id/awd/readiness`
 
@@ -1615,7 +1666,7 @@ export interface PreviewAwdCheckerReq {
 
 > 说明：
 > - 试跑接口会返回 `preview_token`，后续管理员保存赛事题目配置时可通过 `awd_checker_preview_token` 把最近一次试跑结果与配置草稿绑定。
-> - 当前 readiness 与 checker preview 仍以 `contest_challenges.awd_*` 作为底层配置事实源。
+> - 当前 readiness 与 checker preview 统一读取 `contest_awd_services.runtime_config + score_config + validation`。
 
 ### 8.19 GET `/api/v1/admin/contests/:id/awd/rounds` / POST `/api/v1/admin/contests/:id/awd/rounds` / GET `/api/v1/admin/contests/:id/awd/rounds/:rid/services` / POST `/api/v1/admin/contests/:id/awd/rounds/:rid/services/check` / GET `/api/v1/admin/contests/:id/awd/rounds/:rid/attacks` / POST `/api/v1/admin/contests/:id/awd/rounds/:rid/attacks` / GET `/api/v1/admin/contests/:id/awd/rounds/:rid/summary`
 
@@ -1747,6 +1798,7 @@ export interface AwdTrafficEventData {
   attacker_team_name: string
   victim_team_id: ID
   victim_team_name: string
+  service_id?: ID
   challenge_id: ID
   challenge_title: string
   method: string
@@ -1793,6 +1845,7 @@ export interface ListAwdTrafficEventsQuery {
 
 > 说明：
 > - 按 `created_at DESC, id DESC` 返回，适合管理员查看最新代理流量。
+> - 事件会显式返回 `service_id`，用于和 AWD 赛事服务建立一一对应的运行态归因。
 > - 第一版 `source` 固定为 `runtime_proxy`；`request_id` 目前预留，实际明细返回中可以省略。
 
 ### 8.19.3 POST `/api/v1/contests/:id/awd/challenges/:cid/submissions`
