@@ -128,12 +128,12 @@ func TestAWDQueryServiceGetReadinessTreatsZeroChallengesAsGlobalBlock(t *testing
 	}
 }
 
-func TestAWDQueryServiceGetReadinessIgnoresLegacyContestChallengeBridge(t *testing.T) {
+func TestAWDQueryServiceGetReadinessIgnoresChallengeOnlyContestRelation(t *testing.T) {
 	service, db := newAWDQueryServiceForTest(t)
 	now := time.Now()
 
 	createAWDReadinessContestFixture(t, db, 706, now)
-	createAWDReadinessChallengeFixture(t, db, 7061, "legacy-only", now)
+	createAWDReadinessChallengeFixture(t, db, 7061, "challenge-only", now)
 	if err := db.Create(&model.ContestChallenge{
 		ContestID:                 706,
 		ChallengeID:               7061,
@@ -145,7 +145,7 @@ func TestAWDQueryServiceGetReadinessIgnoresLegacyContestChallengeBridge(t *testi
 		CreatedAt:                 now,
 		UpdatedAt:                 now,
 	}).Error; err != nil {
-		t.Fatalf("create legacy-only contest challenge: %v", err)
+		t.Fatalf("create challenge-only contest relation: %v", err)
 	}
 
 	resp, err := service.GetReadiness(context.Background(), 706)
@@ -153,7 +153,7 @@ func TestAWDQueryServiceGetReadinessIgnoresLegacyContestChallengeBridge(t *testi
 		t.Fatalf("GetReadiness() error = %v", err)
 	}
 	if resp.TotalChallenges != 0 || resp.PassedChallenges != 0 {
-		t.Fatalf("expected legacy-only relation ignored, got %+v", resp)
+		t.Fatalf("expected challenge-only relation ignored, got %+v", resp)
 	}
 	if resp.BlockingCount != 1 {
 		t.Fatalf("expected blocking count 1, got %d", resp.BlockingCount)
@@ -250,7 +250,7 @@ func TestAWDQueryServiceGetReadinessPrefersContestAWDServiceRuntimeConfig(t *tes
 	now := time.Now()
 
 	createAWDReadinessContestFixture(t, db, 705, now)
-	createAWDReadinessChallengeFixture(t, db, 7051, "legacy-missing-checker", now)
+	createAWDReadinessChallengeFixture(t, db, 7051, "service-defined-missing-checker", now)
 	createAWDReadinessRelationFixture(t, db, &model.ContestChallenge{
 		ContestID:                 705,
 		ChallengeID:               7051,
@@ -743,7 +743,7 @@ func TestAWDServiceGetUserWorkspaceIgnoresLegacyServiceRowsWithoutServiceID(t *t
 	}
 	for _, item := range resp.Services {
 		if item.ServiceID == 0 {
-			t.Fatalf("expected legacy service row without service_id ignored, got %+v", resp.Services)
+			t.Fatalf("expected service row without service_id ignored, got %+v", resp.Services)
 		}
 	}
 }

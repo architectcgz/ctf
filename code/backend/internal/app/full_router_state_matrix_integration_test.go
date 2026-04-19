@@ -2009,7 +2009,7 @@ func TestFullRouter_AWDContestLegacyChallengeInstanceRouteRejected(t *testing.T)
 
 	var envelope fullRouterEnvelope
 	if err := json.Unmarshal(resp.Body.Bytes(), &envelope); err != nil {
-		t.Fatalf("decode legacy awd instance route response: %v body=%s", err, resp.Body.String())
+		t.Fatalf("decode challenge-based awd instance route response: %v body=%s", err, resp.Body.String())
 	}
 	if envelope.Code != errcode.ErrInvalidParams.Code || envelope.Message != errcode.ErrInvalidParams.Message {
 		t.Fatalf("expected invalid params envelope, got %+v", envelope)
@@ -2019,10 +2019,10 @@ func TestFullRouter_AWDContestLegacyChallengeInstanceRouteRejected(t *testing.T)
 	if err := env.db.Model(&model.Instance{}).
 		Where("contest_id = ? AND team_id = ? AND user_id = ?", env.awdContest.ID, awdTeam.ID, env.student.ID).
 		Count(&awdInstanceCount).Error; err != nil {
-		t.Fatalf("count awd instances after legacy route request: %v", err)
+		t.Fatalf("count awd instances after challenge-based route request: %v", err)
 	}
 	if awdInstanceCount != 0 {
-		t.Fatalf("expected no awd instance created through legacy route, got %d", awdInstanceCount)
+		t.Fatalf("expected no awd instance created through challenge-based route, got %d", awdInstanceCount)
 	}
 }
 
