@@ -469,14 +469,11 @@ watch(
             <div class="audit-row__actor">
               <button
                 type="button"
-                class="audit-row__actor-trigger"
+                class="audit-row__actor-link"
                 :aria-label="`查看 ${actorDisplayName(row as AuditLogItem)} 的执行人详情`"
                 @click="openActorDetail(row as AuditLogItem)"
               >
-                <span class="audit-row__actor-name">
-                  {{ actorDisplayName(row as AuditLogItem) }}
-                </span>
-                <span class="audit-row__actor-hint">查看详情</span>
+                {{ actorDisplayName(row as AuditLogItem) }}
               </button>
             </div>
           </template>
@@ -501,6 +498,7 @@ watch(
     </main>
 
     <AdminSurfaceModal
+      class="audit-actor-modal"
       :open="!!activeActorLog"
       title="执行人详情"
       subtitle="查看当前审计记录中执行人的标识、动作和资源上下文。"
@@ -704,8 +702,7 @@ watch(
   min-width: 0;
 }
 
-.audit-row__resource-type,
-.audit-row__actor-name {
+.audit-row__resource-type {
   font-size: var(--font-size-1-00);
   font-weight: 700;
   color: var(--journal-ink);
@@ -717,36 +714,36 @@ watch(
   color: var(--journal-muted);
 }
 
-.audit-row__actor-trigger {
-  display: grid;
-  justify-items: start;
-  gap: 0.15rem;
+.audit-row__actor-link {
+  display: inline-flex;
+  align-items: center;
   min-width: 0;
   border: 0;
   background: transparent;
   padding: 0;
   text-align: left;
   cursor: pointer;
-}
-
-.audit-row__actor-trigger:hover .audit-row__actor-name,
-.audit-row__actor-trigger:focus-visible .audit-row__actor-name {
   color: color-mix(in srgb, var(--journal-accent) 88%, var(--journal-ink));
-}
-
-.audit-row__actor-trigger:focus-visible {
-  outline: none;
-}
-
-.audit-row__actor-trigger:focus-visible .audit-row__actor-hint {
-  color: color-mix(in srgb, var(--journal-accent) 76%, var(--journal-muted));
-}
-
-.audit-row__actor-hint {
-  font-size: var(--font-size-0-72);
+  font-size: var(--font-size-1-00);
   font-weight: 700;
-  color: var(--journal-muted);
-  transition: color 150ms ease;
+  line-height: 1.45;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+  transition:
+    color 150ms ease,
+    text-decoration-color 150ms ease;
+}
+
+.audit-row__actor-link:hover,
+.audit-row__actor-link:focus-visible {
+  color: color-mix(in srgb, var(--journal-accent) 100%, var(--journal-ink));
+  text-decoration-color: currentColor;
+}
+
+.audit-row__actor-link:focus-visible {
+  outline: none;
+  box-shadow: 0 2px 0 0 color-mix(in srgb, var(--journal-accent) 26%, transparent);
 }
 
 .audit-row__detail {
@@ -807,6 +804,21 @@ watch(
   font-size: var(--font-size-0-88);
   line-height: 1.7;
   color: var(--journal-muted);
+}
+
+:deep(.audit-actor-modal .modal-template-panel--classic) {
+  --modal-template-classic-surface: #fff;
+  --modal-template-classic-surface-muted: #fff;
+  --modal-template-classic-line: color-mix(in srgb, var(--color-border-default) 88%, transparent);
+  --modal-template-classic-text: color-mix(in srgb, var(--color-text-primary) 96%, transparent);
+  --modal-template-classic-muted: color-mix(in srgb, var(--color-text-secondary) 94%, transparent);
+  --modal-template-classic-faint: color-mix(in srgb, var(--color-text-muted) 92%, transparent);
+}
+
+:deep(.audit-actor-modal .modal-template-classic__header),
+:deep(.audit-actor-modal .modal-template-classic__body),
+:deep(.audit-actor-modal .modal-template-classic__footer) {
+  background: #fff;
 }
 
 @media (max-width: 1080px) {
