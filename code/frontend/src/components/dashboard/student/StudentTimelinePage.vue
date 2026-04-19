@@ -177,10 +177,7 @@ function changeTimelinePage(page: number): void {
                     </div>
                   </div>
                   <div class="flex items-center gap-2">
-                    <span
-                      class="rounded-full border px-2.5 py-1 text-xs font-medium"
-                      :class="timelineTypeTone(event)"
-                    >
+                    <span :class="timelineTypeTone(event)">
                       {{ timelineTypeLabel(event) }}
                     </span>
                     <span class="journal-soft-meta tech-font text-xs">{{
@@ -372,6 +369,46 @@ function changeTimelinePage(page: number): void {
   width: 8px;
   height: 8px;
   border-radius: 999px;
+}
+
+.timeline-type-pill {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 0.25rem 0.625rem;
+  font-size: var(--font-size-0-72);
+  font-weight: 600;
+}
+
+.timeline-type-pill--primary {
+  color: var(--color-primary);
+  border-color: color-mix(in srgb, var(--color-primary) 30%, transparent);
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+}
+
+.timeline-type-pill--danger {
+  color: var(--color-danger);
+  border-color: color-mix(in srgb, var(--color-danger) 30%, transparent);
+  background: color-mix(in srgb, var(--color-danger) 10%, transparent);
+}
+
+.timeline-type-pill--success {
+  color: var(--color-success);
+  border-color: color-mix(in srgb, var(--color-success) 30%, transparent);
+  background: color-mix(in srgb, var(--color-success) 10%, transparent);
+}
+
+.timeline-type-pill--warning {
+  color: var(--color-warning);
+  border-color: color-mix(in srgb, var(--color-warning) 30%, transparent);
+  background: color-mix(in srgb, var(--color-warning) 10%, transparent);
+}
+
+.timeline-type-pill--reverse {
+  color: var(--color-cat-reverse);
+  border-color: color-mix(in srgb, var(--color-cat-reverse) 30%, transparent);
+  background: color-mix(in srgb, var(--color-cat-reverse) 10%, transparent);
 }
 
 .status-dot-solved {
