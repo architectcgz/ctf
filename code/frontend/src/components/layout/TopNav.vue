@@ -1,7 +1,7 @@
 <template>
   <header class="topnav-shell sticky top-0 z-50" :class="{ 'topnav-shell--admin': isBackofficeRoute }">
     <div
-      class="topnav-inner topnav-inner-shell mx-auto flex min-h-16 w-full items-center justify-between gap-4 px-4 py-3 md:px-6 xl:px-8"
+      class="topnav-inner topnav-inner-shell mx-auto flex h-16 w-full items-center justify-between gap-4 px-4 md:px-6 xl:px-8"
     >
       <div class="topnav-main flex min-w-0 items-center gap-3 md:gap-4">
         <button

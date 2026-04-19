@@ -748,9 +748,8 @@ async function navigate(item: NavItem): Promise<void> {
   --backoffice-shell-muted: color-mix(in srgb, var(--color-text-secondary) 92%, transparent);
   --backoffice-shell-faint: color-mix(in srgb, var(--color-text-muted) 88%, transparent);
   border-right: 1px solid var(--backoffice-shell-line-strong);
-  /* 解决过渡时抖动 */
+  /* 允许按钮悬浮 */
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  overflow: hidden;
   white-space: nowrap;
   background:
     linear-gradient(
@@ -804,6 +803,7 @@ async function navigate(item: NavItem): Promise<void> {
   background: var(--backoffice-shell-surface);
   color: var(--backoffice-shell-faint);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  z-index: 70; /* 提升层级，确保高于 TopNav (50) */
 }
 
 .backoffice-sidebar__close:hover,
@@ -824,6 +824,10 @@ async function navigate(item: NavItem): Promise<void> {
 .backoffice-sidebar__icon-svg {
   height: 1.125rem;
   width: 1.125rem;
+}
+
+.backoffice-sidebar__nav {
+  overflow-x: hidden;
 }
 
 .backoffice-sidebar__item {
@@ -1104,5 +1108,15 @@ async function navigate(item: NavItem): Promise<void> {
   box-shadow:
     0 22px 56px color-mix(in srgb, var(--color-shadow-strong) 28%, transparent),
     0 0 0 1px color-mix(in srgb, var(--color-border-subtle) 48%, transparent);
+}
+</style>
+
+<style scoped>
+.backoffice-sidebar__nav {
+  overflow-x: hidden;
+}
+
+.backoffice-sidebar__collapse {
+  z-index: 100 !important; /* 确保不被顶部导航遮挡 */
 }
 </style>
