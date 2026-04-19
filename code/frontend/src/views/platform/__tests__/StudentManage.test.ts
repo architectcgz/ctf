@@ -97,16 +97,23 @@ describe('PlatformStudentManagement', () => {
     expect(adminStudentManageSource).toContain(
       "from '@/components/common/WorkspaceDirectoryPagination.vue'"
     )
-    expect(adminStudentManageSource).toContain('class="workspace-shell admin-student-manage-shell"')
+    expect(adminStudentManageSource).toContain(
+      'class="workspace-shell journal-shell journal-shell-admin journal-notes-card journal-hero admin-student-manage-shell flex min-h-full flex-1 flex-col"'
+    )
+    expect(adminStudentManageSource).toContain(
+      'class="admin-summary-grid admin-student-manage-shell__summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
+    )
+    expect(adminStudentManageSource).toContain(
+      'class="workspace-directory-section admin-student-manage-directory"'
+    )
+    expect(adminStudentManageSource).toContain(
+      'class="workspace-directory-list admin-student-manage-table"'
+    )
     expect(adminStudentManageSource).toContain('<WorkspaceDirectoryToolbar')
     expect(adminStudentManageSource).toContain('<WorkspaceDataTable')
     expect(adminStudentManageSource).toContain('<WorkspaceDirectoryPagination')
-    expect(adminStudentManageSource).toMatch(
-      /\.admin-student-manage-directory\s*\{[\s\S]*display:\s*grid;[\s\S]*gap:\s*var\(--space-4\);/s
-    )
-    expect(adminStudentManageSource).toMatch(
-      /\.admin-student-manage-directory :deep\(\.workspace-directory-toolbar\)\s*\{[\s\S]*margin-bottom:\s*0;/s
-    )
+    expect(adminStudentManageSource).not.toMatch(/^\.list-heading\s*\{/m)
+    expect(adminStudentManageSource).not.toMatch(/\.admin-student-manage-directory\s*\{/s)
     expect(adminStudentManageSource).not.toContain('teacher-management-shell')
     expect(adminStudentManageSource).not.toContain('teacher-directory-row')
 

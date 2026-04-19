@@ -1,7 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
 import { ArrowRight, FolderKanban, RefreshCcw, Waypoints } from 'lucide-vue-next'
-import { useRoute } from 'vue-router'
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import { useTeacherAwdReviewIndex } from '@/composables/useTeacherAwdReviewIndex'
@@ -9,10 +7,6 @@ import { formatDate } from '@/utils/format'
 
 const { router, loading, error, contests, filters, hasContests, loadContests, openContest } =
   useTeacherAwdReviewIndex()
-const route = useRoute()
-const isAdminRoute = computed(() => route.name === 'PlatformAwdReviewIndex')
-const overviewRouteName = computed(() => (isAdminRoute.value ? 'PlatformOverview' : 'TeacherDashboard'))
-const overviewLabel = computed(() => (isAdminRoute.value ? '平台概览' : '教学概览'))
 
 const statusOptions = [
   { value: '', label: '全部状态' },
@@ -56,9 +50,9 @@ function contestStatusLabel(status: string): string {
             <button
               type="button"
               class="teacher-btn teacher-btn--ghost"
-              @click="router.push({ name: overviewRouteName })"
+              @click="router.push({ name: 'TeacherDashboard' })"
             >
-              {{ overviewLabel }}
+              教学概览
             </button>
             <button type="button" class="teacher-btn teacher-btn--primary" @click="loadContests">
               <RefreshCcw class="h-4 w-4" />

@@ -1,5 +1,15 @@
 <script setup lang="ts">
-import { ArrowDownWideNarrow, Calendar, UserRound } from 'lucide-vue-next'
+import {
+  Activity,
+  ArrowDownWideNarrow,
+  Calendar,
+  Clock,
+  FileJson,
+  Fingerprint,
+  Package,
+  User,
+  UserRound,
+} from 'lucide-vue-next'
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -501,7 +511,6 @@ watch(
       class="audit-actor-modal"
       :open="!!activeActorLog"
       title="执行人详情"
-      subtitle="查看当前审计记录中执行人的标识、动作和资源上下文。"
       eyebrow="Audit Trail"
       width="34rem"
       @close="closeActorDetail"
@@ -510,35 +519,58 @@ watch(
       <section v-if="activeActorLog" class="audit-actor-detail">
         <div class="audit-actor-detail__grid">
           <article class="audit-actor-detail__item">
-            <span class="audit-actor-detail__label">用户名</span>
+            <div class="audit-actor-detail__head">
+              <User class="h-3.5 w-3.5" />
+              <span class="audit-actor-detail__label">用户名</span>
+            </div>
             <strong class="audit-actor-detail__value">
               {{ actorDisplayName(activeActorLog) }}
             </strong>
           </article>
+
           <article class="audit-actor-detail__item">
-            <span class="audit-actor-detail__label">用户 ID</span>
+            <div class="audit-actor-detail__head">
+              <Fingerprint class="h-3.5 w-3.5" />
+              <span class="audit-actor-detail__label">用户 ID</span>
+            </div>
             <strong class="audit-actor-detail__value audit-actor-detail__value--mono">
               {{ activeActorLog.actor_user_id || '-' }}
             </strong>
           </article>
+
           <article class="audit-actor-detail__item">
-            <span class="audit-actor-detail__label">动作</span>
+            <div class="audit-actor-detail__head">
+              <Activity class="h-3.5 w-3.5" />
+              <span class="audit-actor-detail__label">动作</span>
+            </div>
             <strong class="audit-actor-detail__value">{{ activeActorLog.action }}</strong>
           </article>
+
           <article class="audit-actor-detail__item">
-            <span class="audit-actor-detail__label">时间</span>
+            <div class="audit-actor-detail__head">
+              <Clock class="h-3.5 w-3.5" />
+              <span class="audit-actor-detail__label">发生时间</span>
+            </div>
             <strong class="audit-actor-detail__value">
               {{ formatDate(activeActorLog.created_at) }}
             </strong>
           </article>
+
           <article class="audit-actor-detail__item">
-            <span class="audit-actor-detail__label">资源</span>
+            <div class="audit-actor-detail__head">
+              <Package class="h-3.5 w-3.5" />
+              <span class="audit-actor-detail__label">目标资源</span>
+            </div>
             <strong class="audit-actor-detail__value">
               {{ resourceDisplayName(activeActorLog) }}
             </strong>
           </article>
+
           <article class="audit-actor-detail__item audit-actor-detail__item--wide">
-            <span class="audit-actor-detail__label">明细</span>
+            <div class="audit-actor-detail__head">
+              <FileJson class="h-3.5 w-3.5" />
+              <span class="audit-actor-detail__label">明细上下文</span>
+            </div>
             <p class="audit-actor-detail__detail">
               {{ detailPreview(activeActorLog.detail) }}
             </p>
@@ -765,34 +797,39 @@ watch(
 .audit-actor-detail__grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-3);
+  gap: 1.75rem 2rem;
+  padding: 0.25rem;
 }
 
 .audit-actor-detail__item {
-  display: grid;
-  gap: var(--space-1-5);
-  border: 1px solid var(--audit-table-border);
-  border-radius: 1rem;
-  background: color-mix(in srgb, var(--journal-surface-subtle) 92%, var(--color-bg-base));
-  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.audit-actor-detail__head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--journal-muted);
+}
+
+.audit-actor-detail__label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.audit-actor-detail__value {
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.2;
+  color: var(--journal-ink);
 }
 
 .audit-actor-detail__item--wide {
   grid-column: 1 / -1;
-}
-
-.audit-actor-detail__label {
-  font-size: var(--font-size-0-72);
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--journal-muted);
-}
-
-.audit-actor-detail__value {
-  font-size: var(--font-size-0-94);
-  line-height: 1.55;
-  color: var(--journal-ink);
 }
 
 .audit-actor-detail__value--mono {
@@ -804,21 +841,6 @@ watch(
   font-size: var(--font-size-0-88);
   line-height: 1.7;
   color: var(--journal-muted);
-}
-
-:deep(.audit-actor-modal .modal-template-panel--classic) {
-  --modal-template-classic-surface: #fff;
-  --modal-template-classic-surface-muted: #fff;
-  --modal-template-classic-line: color-mix(in srgb, var(--color-border-default) 88%, transparent);
-  --modal-template-classic-text: color-mix(in srgb, var(--color-text-primary) 96%, transparent);
-  --modal-template-classic-muted: color-mix(in srgb, var(--color-text-secondary) 94%, transparent);
-  --modal-template-classic-faint: color-mix(in srgb, var(--color-text-muted) 92%, transparent);
-}
-
-:deep(.audit-actor-modal .modal-template-classic__header),
-:deep(.audit-actor-modal .modal-template-classic__body),
-:deep(.audit-actor-modal .modal-template-classic__footer) {
-  background: #fff;
 }
 
 @media (max-width: 1080px) {
@@ -845,3 +867,5 @@ watch(
   }
 }
 </style>
+
+
