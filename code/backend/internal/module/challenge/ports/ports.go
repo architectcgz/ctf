@@ -44,6 +44,18 @@ type ChallengeQueryRepository interface {
 	ListPublishedWithContext(ctx context.Context, query *dto.ChallengeQuery) ([]*model.Challenge, int64, error)
 }
 
+type AWDServiceTemplateCommandRepository interface {
+	CreateAWDServiceTemplate(template *model.AWDServiceTemplate) error
+	FindAWDServiceTemplateByID(id int64) (*model.AWDServiceTemplate, error)
+	UpdateAWDServiceTemplate(template *model.AWDServiceTemplate) error
+	DeleteAWDServiceTemplate(id int64) error
+}
+
+type AWDServiceTemplateQueryRepository interface {
+	FindAWDServiceTemplateByID(id int64) (*model.AWDServiceTemplate, error)
+	ListAWDServiceTemplates(ctx context.Context, query *dto.AWDServiceTemplateQuery) ([]*model.AWDServiceTemplate, int64, error)
+}
+
 type ChallengeImageUsageRepository interface {
 	CountByImageID(imageID int64) (int64, error)
 }
@@ -87,9 +99,9 @@ type RecommendedSolutionRecord struct {
 }
 
 type CommunitySolutionRecord struct {
-	Submission   model.SubmissionWriteup
-	AuthorName   string
-	ChallengeID  int64
+	Submission     model.SubmissionWriteup
+	AuthorName     string
+	ChallengeID    int64
 	ChallengeTitle string
 }
 

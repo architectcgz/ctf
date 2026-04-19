@@ -11,7 +11,7 @@ import (
 
 func (r *AWDRepository) UpsertServiceCheck(
 	ctx context.Context,
-	roundID, teamID, challengeID int64,
+	roundID, teamID, serviceID, challengeID int64,
 	serviceStatus, checkResult string,
 	defenseScore int,
 	updatedAt time.Time,
@@ -19,6 +19,7 @@ func (r *AWDRepository) UpsertServiceCheck(
 	record := &model.AWDTeamService{
 		RoundID:       roundID,
 		TeamID:        teamID,
+		ServiceID:     serviceID,
 		ChallengeID:   challengeID,
 		ServiceStatus: serviceStatus,
 		CheckResult:   checkResult,
@@ -27,8 +28,10 @@ func (r *AWDRepository) UpsertServiceCheck(
 		DefenseScore:  defenseScore,
 	}
 	if err := r.dbWithContext(ctx).
-		Where("round_id = ? AND team_id = ? AND challenge_id = ?", roundID, teamID, challengeID).
+		Where("round_id = ? AND team_id = ? AND service_id = ?", roundID, teamID, serviceID).
 		Assign(map[string]any{
+			"service_id":     serviceID,
+			"challenge_id":   challengeID,
 			"service_status": serviceStatus,
 			"check_result":   checkResult,
 			"defense_score":  defenseScore,
@@ -48,9 +51,10 @@ func (r *AWDRepository) UpsertTeamServices(ctx context.Context, records []model.
 		Columns: []clause.Column{
 			{Name: "round_id"},
 			{Name: "team_id"},
-			{Name: "challenge_id"},
+			{Name: "service_id"},
 		},
 		DoUpdates: clause.AssignmentColumns([]string{
+			"challenge_id",
 			"service_status",
 			"check_result",
 			"checker_type",
@@ -65,7 +69,7 @@ func (r *AWDRepository) ListServicesByRound(ctx context.Context, roundID int64) 
 	var records []model.AWDTeamService
 	err := r.dbWithContext(ctx).
 		Where("round_id = ?", roundID).
-		Order("team_id ASC, challenge_id ASC").
+		Order("team_id ASC, service_id ASC, challenge_id ASC").
 		Find(&records).Error
 	return records, err
 }

@@ -3,6 +3,7 @@ import { computed, reactive, ref, watch } from 'vue'
 
 import { runContestAWDCheckerPreview } from '@/api/admin'
 import type {
+  AdminAwdServiceTemplateData,
   AdminChallengeListItem,
   AdminContestChallengeData,
   AWDCheckerPreviewData,
@@ -32,9 +33,11 @@ const props = defineProps<{
   open: boolean
   mode: DialogMode
   challengeOptions: AdminChallengeListItem[]
+  templateOptions: AdminAwdServiceTemplateData[]
   existingChallengeIds: string[]
   draft?: AdminContestChallengeData | null
   loadingChallengeCatalog: boolean
+  loadingTemplateCatalog: boolean
   saving: boolean
 }>()
 
@@ -43,6 +46,7 @@ const emit = defineEmits<{
   save: [
     value: {
       challenge_id: number
+      template_id: number
       points: number
       order: number
       is_visible: boolean
@@ -57,6 +61,7 @@ const emit = defineEmits<{
 
 const form = reactive({
   challenge_id: '',
+  template_id: '',
   points: 100,
   order: 0,
   is_visible: 'true',
@@ -82,6 +87,7 @@ const syncingDialogState = ref(false)
 function createFieldErrorState() {
   return {
     challenge_id: '',
+    template_id: '',
     points: '',
     order: '',
     awd_sla_score: '',
@@ -110,6 +116,9 @@ const selectableChallenges = computed(() =>
     (item) => props.mode === 'edit' || !props.existingChallengeIds.includes(item.id)
   )
 )
+const templateLabelMap = computed(
+  () => new Map(props.templateOptions.map((item) => [item.id, item.name]))
+)
 
 const activeChallengeLabel = computed(() => {
   if (props.mode === 'edit') {
@@ -119,6 +128,16 @@ const activeChallengeLabel = computed(() => {
   return (
     selectableChallenges.value.find((item) => item.id === form.challenge_id)?.title || '请选择题目'
   )
+})
+const activeTemplateLabel = computed(() => {
+  const templateName = templateLabelMap.value.get(form.template_id)
+  if (templateName) {
+    return templateName
+  }
+  if (props.mode === 'edit' && props.draft?.awd_service_display_name?.trim()) {
+    return props.draft.awd_service_display_name.trim()
+  }
+  return '请选择服务模板'
 })
 
 const checkerPreviewText = computed(() =>
@@ -241,7 +260,7 @@ function assignHTTPStandardDraft(next: AWDHTTPStandardDraft) {
 }
 
 watch(
-  () => [props.open, props.mode, props.draft] as const,
+  () => [props.open, props.mode, props.draft, selectableChallenges.value, props.templateOptions] as const,
   ([open]) => {
     if (!open) {
       return
@@ -252,6 +271,7 @@ watch(
       props.mode === 'edit'
         ? props.draft?.challenge_id || ''
         : selectableChallenges.value[0]?.id || ''
+    form.template_id = props.draft?.awd_template_id || props.templateOptions[0]?.id || ''
     form.points = props.draft?.points ?? 100
     form.order = props.draft?.order ?? 0
     form.is_visible = props.draft?.is_visible === false ? 'false' : 'true'
@@ -333,6 +353,9 @@ function validate(): boolean {
 
   if (props.mode === 'create' && !form.challenge_id) {
     fieldErrors.challenge_id = '请选择题目'
+  }
+  if (!form.template_id) {
+    fieldErrors.template_id = '请选择服务模板'
   }
   if (!Number.isInteger(form.points) || form.points <= 0) {
     fieldErrors.points = '分值必须是大于 0 的整数'
@@ -468,6 +491,7 @@ function handleSubmit() {
 
   const payload = {
     challenge_id: Number(form.challenge_id),
+    template_id: Number(form.template_id),
     points: form.points,
     order: form.order,
     is_visible: form.is_visible === 'true',
@@ -477,6 +501,7 @@ function handleSubmit() {
     awd_defense_score: form.awd_defense_score,
   } as {
     challenge_id: number
+    template_id: number
     points: number
     order: number
     is_visible: boolean
@@ -539,6 +564,38 @@ function handleSubmit() {
         </span>
         <p v-if="fieldErrors.challenge_id" class="ui-field__error">
           {{ fieldErrors.challenge_id }}
+        </p>
+      </div>
+
+      <div class="ui-field awd-config-field">
+        <label class="ui-field__label" for="awd-challenge-config-template">服务模板</label>
+        <span class="ui-control-wrap" :class="{ 'is-error': !!fieldErrors.template_id }">
+          <select
+            id="awd-challenge-config-template"
+            v-model="form.template_id"
+            class="ui-control"
+            :disabled="loadingTemplateCatalog"
+          >
+            <option value="" disabled>
+              {{
+                loadingTemplateCatalog
+                  ? '正在加载服务模板...'
+                  : mode === 'edit'
+                    ? activeTemplateLabel
+                    : '请选择服务模板'
+              }}
+            </option>
+            <option
+              v-for="template in templateOptions"
+              :key="template.id"
+              :value="template.id"
+            >
+              {{ template.name }}
+            </option>
+          </select>
+        </span>
+        <p v-if="fieldErrors.template_id" class="ui-field__error">
+          {{ fieldErrors.template_id }}
         </p>
       </div>
 

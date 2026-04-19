@@ -20,7 +20,7 @@ const emit = defineEmits<{
   save: [
     value: {
       team_id: number
-      challenge_id: number
+      service_id: number
       service_status: AWDTeamServiceData['service_status']
       check_result?: Record<string, unknown>
     },
@@ -52,6 +52,14 @@ function getChallengeLabel(challenge: AdminContestChallengeData): string {
     ? challenge.title.trim()
     : `Challenge #${challenge.challenge_id}`
   return `${prefix} · ${challenge.is_visible ? '可见' : '隐藏'}`
+}
+
+function getSelectedServiceId(): number | null {
+  const challenge = challengeOptions.value.find((item) => item.challenge_id === form.challenge_id)
+  if (!challenge?.awd_service_id) {
+    return null
+  }
+  return Number(challenge.awd_service_id)
 }
 
 watch(
@@ -107,15 +115,19 @@ function handleSubmit() {
   if (!form.challenge_id) {
     fieldErrors.challenge_id = '请选择题目'
   }
+  const selectedServiceId = getSelectedServiceId()
+  if (form.challenge_id && selectedServiceId == null) {
+    fieldErrors.challenge_id = '当前题目缺少 AWD 服务标识'
+  }
 
   const checkResult = parseCheckResult()
-  if (!form.team_id || !form.challenge_id || !checkResult) {
+  if (!form.team_id || !form.challenge_id || selectedServiceId == null || !checkResult) {
     return
   }
 
   emit('save', {
     team_id: Number(form.team_id),
-    challenge_id: Number(form.challenge_id),
+    service_id: selectedServiceId,
     service_status: form.service_status,
     check_result: checkResult,
   })
@@ -202,13 +214,7 @@ function handleSubmit() {
 
     <template #footer>
       <div class="awd-service-dialog__footer">
-        <button
-          type="button"
-          class="ui-btn ui-btn--secondary"
-          @click="closeDialog"
-        >
-          取消
-        </button>
+        <button type="button" class="ui-btn ui-btn--secondary" @click="closeDialog">取消</button>
         <button
           id="awd-service-check-submit"
           type="button"

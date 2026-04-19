@@ -2,6 +2,7 @@ package commands
 
 import (
 	"context"
+	"errors"
 
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
@@ -9,6 +10,7 @@ import (
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	"ctf-platform/internal/platform/events"
 	"ctf-platform/pkg/errcode"
+	"gorm.io/gorm"
 )
 
 func (s *AWDService) CreateAttackLog(ctx context.Context, contestID, roundID int64, req *dto.CreateAWDAttackLogReq) (*dto.AWDAttackLogResp, error) {
@@ -36,13 +38,14 @@ func (s *AWDService) createAttackLog(
 	if teams[req.AttackerTeamID] == nil || teams[req.VictimTeamID] == nil {
 		return nil, errcode.ErrNotFound
 	}
-	if err := s.ensureContestChallenge(ctx, contestID, req.ChallengeID); err != nil {
+	runtimeService, err := s.resolveContestRuntimeService(ctx, contestID, req.ServiceID)
+	if err != nil {
 		return nil, err
 	}
 
 	scoreGained := 0
 	if req.IsSuccess {
-		count, err := s.repo.CountSuccessfulAttacks(ctx, roundID, req.AttackerTeamID, req.VictimTeamID, req.ChallengeID)
+		count, err := s.repo.CountSuccessfulAttacks(ctx, roundID, req.AttackerTeamID, req.VictimTeamID, runtimeService.ID)
 		if err != nil {
 			return nil, errcode.ErrInternal.WithCause(err)
 		}
@@ -55,7 +58,8 @@ func (s *AWDService) createAttackLog(
 		RoundID:           roundID,
 		AttackerTeamID:    req.AttackerTeamID,
 		VictimTeamID:      req.VictimTeamID,
-		ChallengeID:       req.ChallengeID,
+		ServiceID:         runtimeService.ID,
+		ChallengeID:       runtimeService.ChallengeID,
 		AttackType:        req.AttackType,
 		Source:            contestdomain.NormalizeAWDAttackSource(source),
 		SubmittedFlag:     req.SubmittedFlag,
@@ -64,6 +68,9 @@ func (s *AWDService) createAttackLog(
 		ScoreGained:       scoreGained,
 	}
 	if err := s.persistAttackLogAndScores(ctx, contestID, round.ID, req, logRecord); err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errcode.ErrNotFound
+		}
 		return nil, err
 	}
 	resp, err := s.buildAttackLogResponse(ctx, contestID, roundID, req, logRecord, teams)
@@ -71,7 +78,7 @@ func (s *AWDService) createAttackLog(
 		return nil, err
 	}
 	if submittedByUserID != nil && logRecord.IsSuccess && logRecord.ScoreGained > 0 {
-		challengeItem, err := s.loadChallenge(ctx, req.ChallengeID)
+		challengeItem, err := s.loadChallenge(ctx, runtimeService.ChallengeID)
 		if err != nil {
 			return nil, err
 		}
@@ -80,7 +87,7 @@ func (s *AWDService) createAttackLog(
 			Payload: contestcontracts.AWDAttackAcceptedEvent{
 				UserID:      *submittedByUserID,
 				ContestID:   contestID,
-				ChallengeID: req.ChallengeID,
+				ChallengeID: runtimeService.ChallengeID,
 				Dimension:   challengeItem.Category,
 				OccurredAt:  logRecord.CreatedAt,
 			},

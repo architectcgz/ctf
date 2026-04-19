@@ -23,7 +23,8 @@ func (s *AWDService) UpsertServiceCheck(ctx context.Context, contestID, roundID 
 	if !ok {
 		return nil, errcode.ErrNotFound
 	}
-	if err := s.ensureContestChallenge(ctx, contestID, req.ChallengeID); err != nil {
+	runtimeService, err := s.resolveContestRuntimeService(ctx, contestID, req.ServiceID)
+	if err != nil {
 		return nil, err
 	}
 
@@ -37,9 +38,18 @@ func (s *AWDService) UpsertServiceCheck(ctx context.Context, contestID, roundID 
 		defenseScore = round.DefenseScore
 	}
 
-	record, err := s.upsertServiceCheckAndRecalculate(ctx, contestID, roundID, req, checkResult, defenseScore, time.Now())
+	record, err := s.upsertServiceCheckAndRecalculate(
+		ctx,
+		contestID,
+		roundID,
+		runtimeService,
+		req,
+		checkResult,
+		defenseScore,
+		time.Now(),
+	)
 	if err != nil {
 		return nil, err
 	}
-	return s.buildUpsertServiceCheckResp(ctx, contestID, roundID, req, team, record)
+	return s.buildUpsertServiceCheckResp(ctx, contestID, roundID, runtimeService, req, team, record)
 }

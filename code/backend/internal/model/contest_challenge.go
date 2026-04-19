@@ -23,24 +23,17 @@ const (
 )
 
 type ContestChallenge struct {
-	ID                        int64                     `gorm:"column:id;primaryKey"`
-	ContestID                 int64                     `gorm:"column:contest_id"`
-	ChallengeID               int64                     `gorm:"column:challenge_id"`
-	Points                    int                       `gorm:"column:points"`
-	ContestScore              *int                      `gorm:"column:contest_score"`
-	Order                     int                       `gorm:"column:order"`
-	IsVisible                 bool                      `gorm:"column:is_visible"`
-	AWDCheckerType            AWDCheckerType            `gorm:"column:awd_checker_type;size:32;default:''"`
-	AWDCheckerConfig          string                    `gorm:"column:awd_checker_config;type:text;default:'{}'"`
-	AWDSLAScore               int                       `gorm:"column:awd_sla_score;not null;default:0"`
-	AWDDefenseScore           int                       `gorm:"column:awd_defense_score;not null;default:0"`
-	AWDCheckerValidationState AWDCheckerValidationState `gorm:"column:awd_checker_validation_state;size:24;not null;default:'pending'"`
-	AWDCheckerLastPreviewAt   *time.Time                `gorm:"column:awd_checker_last_preview_at"`
-	AWDCheckerLastPreviewResult string                  `gorm:"column:awd_checker_last_preview_result;type:text;default:''"`
-	FirstBloodBy              *int64                    `gorm:"column:first_blood_by"`
-	CreatedAt                 time.Time                 `gorm:"column:created_at"`
-	UpdatedAt                 time.Time                 `gorm:"column:updated_at"`
-	DeletedAt                 gorm.DeletedAt            `gorm:"column:deleted_at"`
+	ID           int64          `gorm:"column:id;primaryKey"`
+	ContestID    int64          `gorm:"column:contest_id"`
+	ChallengeID  int64          `gorm:"column:challenge_id"`
+	Points       int            `gorm:"column:points"`
+	ContestScore *int           `gorm:"column:contest_score"`
+	Order        int            `gorm:"column:order"`
+	IsVisible    bool           `gorm:"column:is_visible"`
+	FirstBloodBy *int64         `gorm:"column:first_blood_by"`
+	CreatedAt    time.Time      `gorm:"column:created_at"`
+	UpdatedAt    time.Time      `gorm:"column:updated_at"`
+	DeletedAt    gorm.DeletedAt `gorm:"column:deleted_at"`
 }
 
 func (ContestChallenge) TableName() string {

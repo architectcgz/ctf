@@ -60,6 +60,15 @@ interface RawTeamCreateResp {
   created_at: string
 }
 
+interface RawContestChallengeItem extends Omit<
+  ContestChallengeItem,
+  'id' | 'challenge_id' | 'awd_service_id'
+> {
+  id: string | number
+  challenge_id: string | number
+  awd_service_id?: string | number | null
+}
+
 interface RawAWDRoundData extends Omit<AWDRoundData, 'id' | 'contest_id'> {
   id: string | number
   contest_id: string | number
@@ -67,12 +76,13 @@ interface RawAWDRoundData extends Omit<AWDRoundData, 'id' | 'contest_id'> {
 
 interface RawAWDAttackLogData extends Omit<
   AWDAttackLogData,
-  'id' | 'round_id' | 'attacker_team_id' | 'victim_team_id' | 'challenge_id'
+  'id' | 'round_id' | 'attacker_team_id' | 'victim_team_id' | 'service_id' | 'challenge_id'
 > {
   id: string | number
   round_id: string | number
   attacker_team_id: string | number
   victim_team_id: string | number
+  service_id?: string | number
   challenge_id: string | number
 }
 
@@ -82,15 +92,17 @@ interface RawContestAWDWorkspaceTeamData extends Omit<ContestAWDWorkspaceTeamDat
 
 interface RawContestAWDWorkspaceServiceData extends Omit<
   ContestAWDWorkspaceServiceData,
-  'challenge_id'
+  'service_id' | 'challenge_id'
 > {
+  service_id?: string | number
   challenge_id: string | number
 }
 
 interface RawContestAWDWorkspaceTargetServiceData extends Omit<
   ContestAWDWorkspaceTargetServiceData,
-  'challenge_id'
+  'service_id' | 'challenge_id'
 > {
+  service_id?: string | number
   challenge_id: string | number
 }
 
@@ -104,9 +116,10 @@ interface RawContestAWDWorkspaceTargetTeamData extends Omit<
 
 interface RawContestAWDWorkspaceRecentEventData extends Omit<
   ContestAWDWorkspaceRecentEventData,
-  'id' | 'challenge_id' | 'peer_team_id'
+  'id' | 'service_id' | 'challenge_id' | 'peer_team_id'
 > {
   id: string | number
+  service_id?: string | number
   challenge_id: string | number
   peer_team_id: string | number
 }
@@ -145,6 +158,15 @@ function normalizeContest(item: RawContestItem): ContestDetailData {
   }
 }
 
+function normalizeContestChallenge(item: RawContestChallengeItem): ContestChallengeItem {
+  return {
+    ...item,
+    id: String(item.id),
+    challenge_id: String(item.challenge_id),
+    awd_service_id: item.awd_service_id == null ? undefined : String(item.awd_service_id),
+  }
+}
+
 function normalizeTeam(payload: RawTeamData | null): TeamData | null {
   if (!payload) {
     return null
@@ -178,6 +200,7 @@ function normalizeAWDAttackLog(item: RawAWDAttackLogData): AWDAttackLogData {
     round_id: String(item.round_id),
     attacker_team_id: String(item.attacker_team_id),
     victim_team_id: String(item.victim_team_id),
+    service_id: item.service_id == null ? undefined : String(item.service_id),
     challenge_id: String(item.challenge_id),
   }
 }
@@ -196,6 +219,7 @@ function normalizeContestAWDWorkspaceService(
 ): ContestAWDWorkspaceServiceData {
   return {
     ...item,
+    service_id: item.service_id == null ? undefined : String(item.service_id),
     challenge_id: String(item.challenge_id),
   }
 }
@@ -205,6 +229,7 @@ function normalizeContestAWDWorkspaceTargetService(
 ): ContestAWDWorkspaceTargetServiceData {
   return {
     ...item,
+    service_id: item.service_id == null ? undefined : String(item.service_id),
     challenge_id: String(item.challenge_id),
   }
 }
@@ -225,6 +250,7 @@ function normalizeContestAWDWorkspaceEvent(
   return {
     ...item,
     id: String(item.id),
+    service_id: item.service_id == null ? undefined : String(item.service_id),
     challenge_id: String(item.challenge_id),
     peer_team_id: String(item.peer_team_id),
   }
@@ -255,10 +281,11 @@ export async function registerContest(id: string) {
 }
 
 export async function getContestChallenges(id: string): Promise<ContestChallengeItem[]> {
-  return request<ContestChallengeItem[]>({
+  const response = await request<RawContestChallengeItem[]>({
     method: 'GET',
     url: `/contests/${encodeURIComponent(id)}/challenges`,
   })
+  return response.map(normalizeContestChallenge)
 }
 
 export async function submitContestFlag(
@@ -353,12 +380,12 @@ export async function startContestChallengeInstance(
 
 export async function submitContestAWDAttack(
   contestId: string,
-  challengeId: string,
+  serviceId: string,
   data: { victim_team_id: number; flag: string }
 ): Promise<AWDAttackLogData> {
   const response = await request<RawAWDAttackLogData>({
     method: 'POST',
-    url: `/contests/${encodeURIComponent(contestId)}/awd/challenges/${encodeURIComponent(challengeId)}/submissions`,
+    url: `/contests/${encodeURIComponent(contestId)}/awd/services/${encodeURIComponent(serviceId)}/submissions`,
     data,
   })
   return normalizeAWDAttackLog(response)

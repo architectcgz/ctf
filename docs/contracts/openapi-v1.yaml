@@ -8,7 +8,7 @@ info:
     - 业务字段/返回结构以 `ctf/docs/contracts/api-contract-v1.md` 为准
     - 错误码以 `ctf/docs/architecture/backend/04-api-design.md` §3 为准
     - WebSocket 端点与消息格式见 `ctf/docs/contracts/api-contract-v1.md` §9（不在 OpenAPI 范围）
-  x-last-updated: "2026-04-01"
+  x-last-updated: "2026-04-18"
 
 servers:
   - url: /api/v1
@@ -1219,6 +1219,14 @@ components:
       type: string
       enum: [flag_capture, service_exploit]
 
+    AWDCheckerType:
+      type: string
+      enum: [legacy_probe, http_standard]
+
+    AWDCheckerValidationState:
+      type: string
+      enum: [pending, passed, failed, stale]
+
     AwdRound:
       type: object
       required: [id, contest_id, round_number, status, attack_score, defense_score, created_at, updated_at]
@@ -1254,7 +1262,7 @@ components:
 
     AwdTeamService:
       type: object
-      required: [id, round_id, team_id, team_name, challenge_id, service_status, check_result, attack_received, defense_score, attack_score, updated_at]
+      required: [id, round_id, team_id, team_name, challenge_id, service_status, check_result, attack_received, sla_score, defense_score, attack_score, updated_at]
       properties:
         id: { $ref: "#/components/schemas/ID" }
         round_id: { $ref: "#/components/schemas/ID" }
@@ -1262,10 +1270,15 @@ components:
         team_name: { type: string }
         challenge_id: { $ref: "#/components/schemas/ID" }
         service_status: { $ref: "#/components/schemas/AwdServiceStatus" }
+        checker_type:
+          allOf:
+            - $ref: "#/components/schemas/AWDCheckerType"
+          nullable: true
         check_result:
           type: object
           additionalProperties: true
         attack_received: { type: integer, minimum: 0 }
+        sla_score: { type: integer, minimum: 0 }
         defense_score: { type: integer, minimum: 0 }
         attack_score: { type: integer, minimum: 0 }
         updated_at: { $ref: "#/components/schemas/ISODateTime" }
@@ -1325,13 +1338,14 @@ components:
 
     AwdRoundSummaryItem:
       type: object
-      required: [team_id, team_name, service_up_count, service_down_count, service_compromised_count, defense_score, attack_score, successful_attack_count, successful_breach_count, unique_attackers_against, total_score]
+      required: [team_id, team_name, service_up_count, service_down_count, service_compromised_count, sla_score, defense_score, attack_score, successful_attack_count, successful_breach_count, unique_attackers_against, total_score]
       properties:
         team_id: { $ref: "#/components/schemas/ID" }
         team_name: { type: string }
         service_up_count: { type: integer, minimum: 0 }
         service_down_count: { type: integer, minimum: 0 }
         service_compromised_count: { type: integer, minimum: 0 }
+        sla_score: { type: integer }
         defense_score: { type: integer }
         attack_score: { type: integer }
         successful_attack_count: { type: integer, minimum: 0 }
@@ -1372,6 +1386,267 @@ components:
           required: [data]
           properties:
             data: { $ref: "#/components/schemas/AwdCheckerRunData" }
+
+    AdminContestChallengeData:
+      type: object
+      required: [id, contest_id, challenge_id, points, order, is_visible, created_at]
+      properties:
+        id: { $ref: "#/components/schemas/ID" }
+        contest_id: { $ref: "#/components/schemas/ID" }
+        challenge_id: { $ref: "#/components/schemas/ID" }
+        title: { type: string, nullable: true }
+        category:
+          allOf:
+            - $ref: "#/components/schemas/ChallengeCategory"
+          nullable: true
+        difficulty:
+          allOf:
+            - $ref: "#/components/schemas/ChallengeDifficulty"
+          nullable: true
+        points: { type: integer, minimum: 1 }
+        order: { type: integer, minimum: 0 }
+        is_visible: { type: boolean }
+        created_at: { $ref: "#/components/schemas/ISODateTime" }
+
+    ApiEnvelopeAdminContestChallengeData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/AdminContestChallengeData" }
+
+    ApiEnvelopeAdminContestChallengeListData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data:
+              type: array
+              items: { $ref: "#/components/schemas/AdminContestChallengeData" }
+
+    CreateAdminContestChallengeRequest:
+      type: object
+      required: [challenge_id]
+      properties:
+        challenge_id: { $ref: "#/components/schemas/ID" }
+        points: { type: integer, minimum: 1, nullable: true }
+        order: { type: integer, minimum: 0, nullable: true }
+        is_visible: { type: boolean, nullable: true }
+
+    UpdateAdminContestChallengeRequest:
+      type: object
+      properties:
+        points: { type: integer, minimum: 1, nullable: true }
+        order: { type: integer, minimum: 0, nullable: true }
+        is_visible: { type: boolean, nullable: true }
+
+    AdminContestAWDServiceData:
+      type: object
+      required: [id, contest_id, challenge_id, display_name, order, is_visible, created_at, updated_at]
+      properties:
+        id: { $ref: "#/components/schemas/ID" }
+        contest_id: { $ref: "#/components/schemas/ID" }
+        challenge_id: { $ref: "#/components/schemas/ID" }
+        template_id:
+          allOf:
+            - $ref: "#/components/schemas/ID"
+          nullable: true
+        display_name: { type: string }
+        order: { type: integer, minimum: 0 }
+        is_visible: { type: boolean }
+        score_config:
+          type: object
+          nullable: true
+          additionalProperties: true
+        runtime_config:
+          type: object
+          nullable: true
+          additionalProperties: true
+          description: 正式 runtime 配置字段集合；兼容影子字段 challenge_id 不再对外暴露
+        validation_state:
+          allOf:
+            - $ref: "#/components/schemas/AWDCheckerValidationState"
+          nullable: true
+        last_preview_at:
+          allOf:
+            - $ref: "#/components/schemas/ISODateTime"
+          nullable: true
+        last_preview_result:
+          allOf:
+            - $ref: "#/components/schemas/AWDCheckerPreviewData"
+          nullable: true
+        created_at: { $ref: "#/components/schemas/ISODateTime" }
+        updated_at: { $ref: "#/components/schemas/ISODateTime" }
+
+    ApiEnvelopeAdminContestAWDServiceData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/AdminContestAWDServiceData" }
+
+    ApiEnvelopeAdminContestAWDServiceListData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data:
+              type: array
+              items: { $ref: "#/components/schemas/AdminContestAWDServiceData" }
+
+    CreateAdminContestAWDServiceRequest:
+      type: object
+      required: [challenge_id, template_id]
+      properties:
+        challenge_id: { $ref: "#/components/schemas/ID" }
+        template_id: { $ref: "#/components/schemas/ID" }
+        display_name: { type: string, maxLength: 128, nullable: true }
+        order: { type: integer, minimum: 0, nullable: true }
+        is_visible: { type: boolean, nullable: true }
+        checker_type:
+          allOf:
+            - $ref: "#/components/schemas/AWDCheckerType"
+          nullable: true
+        checker_config:
+          type: object
+          nullable: true
+          additionalProperties: true
+        awd_sla_score: { type: integer, minimum: 0, nullable: true }
+        awd_defense_score: { type: integer, minimum: 0, nullable: true }
+        awd_checker_preview_token: { type: string, maxLength: 200, nullable: true }
+
+    UpdateAdminContestAWDServiceRequest:
+      type: object
+      properties:
+        template_id:
+          allOf:
+            - $ref: "#/components/schemas/ID"
+          nullable: true
+        display_name: { type: string, maxLength: 128, nullable: true }
+        order: { type: integer, minimum: 0, nullable: true }
+        is_visible: { type: boolean, nullable: true }
+        checker_type:
+          allOf:
+            - $ref: "#/components/schemas/AWDCheckerType"
+          nullable: true
+        checker_config:
+          type: object
+          nullable: true
+          additionalProperties: true
+        awd_sla_score: { type: integer, minimum: 0, nullable: true }
+        awd_defense_score: { type: integer, minimum: 0, nullable: true }
+        awd_checker_preview_token: { type: string, maxLength: 200, nullable: true }
+
+    AWDCheckerPreviewContextData:
+      type: object
+      required: [access_url, preview_flag, round_number, team_id, challenge_id]
+      properties:
+        access_url: { type: string }
+        preview_flag: { type: string }
+        round_number: { type: integer, minimum: 0 }
+        team_id: { $ref: "#/components/schemas/ID" }
+        challenge_id: { $ref: "#/components/schemas/ID" }
+
+    AWDCheckerPreviewData:
+      type: object
+      required: [service_status, check_result, preview_context]
+      properties:
+        checker_type:
+          allOf:
+            - $ref: "#/components/schemas/AWDCheckerType"
+          nullable: true
+        service_status: { $ref: "#/components/schemas/AwdServiceStatus" }
+        check_result:
+          type: object
+          additionalProperties: true
+        preview_context: { $ref: "#/components/schemas/AWDCheckerPreviewContextData" }
+        preview_token: { type: string, nullable: true }
+
+    ApiEnvelopeAWDCheckerPreviewData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/AWDCheckerPreviewData" }
+
+    PreviewAwdCheckerRequest:
+      type: object
+      required: [challenge_id, checker_type, access_url]
+      properties:
+        challenge_id: { $ref: "#/components/schemas/ID" }
+        checker_type: { $ref: "#/components/schemas/AWDCheckerType" }
+        checker_config:
+          type: object
+          additionalProperties: true
+        access_url: { type: string, maxLength: 1024 }
+        preview_flag: { type: string, maxLength: 512, nullable: true }
+
+    AWDReadinessBlockingReason:
+      type: string
+      enum: [missing_checker, invalid_checker_config, pending_validation, last_preview_failed, validation_stale]
+
+    AWDReadinessAction:
+      type: string
+      enum: [create_round, run_current_round_check, start_contest]
+
+    AWDReadinessGlobalReason:
+      type: string
+      enum: [no_challenges]
+
+    AWDReadinessItemData:
+      type: object
+      required: [challenge_id, title, validation_state, blocking_reason]
+      properties:
+        challenge_id: { $ref: "#/components/schemas/ID" }
+        title: { type: string }
+        checker_type:
+          allOf:
+            - $ref: "#/components/schemas/AWDCheckerType"
+          nullable: true
+        validation_state: { $ref: "#/components/schemas/AWDCheckerValidationState" }
+        last_preview_at:
+          allOf:
+            - $ref: "#/components/schemas/ISODateTime"
+          nullable: true
+        last_access_url: { type: string, nullable: true }
+        blocking_reason: { $ref: "#/components/schemas/AWDReadinessBlockingReason" }
+
+    AWDReadinessData:
+      type: object
+      required:
+        [contest_id, ready, total_challenges, passed_challenges, pending_challenges, failed_challenges, stale_challenges, missing_checker_challenges, blocking_count, blocking_actions, global_blocking_reasons, items]
+      properties:
+        contest_id: { $ref: "#/components/schemas/ID" }
+        ready: { type: boolean }
+        total_challenges: { type: integer, minimum: 0 }
+        passed_challenges: { type: integer, minimum: 0 }
+        pending_challenges: { type: integer, minimum: 0 }
+        failed_challenges: { type: integer, minimum: 0 }
+        stale_challenges: { type: integer, minimum: 0 }
+        missing_checker_challenges: { type: integer, minimum: 0 }
+        blocking_count: { type: integer, minimum: 0 }
+        blocking_actions:
+          type: array
+          items: { $ref: "#/components/schemas/AWDReadinessAction" }
+        global_blocking_reasons:
+          type: array
+          items: { $ref: "#/components/schemas/AWDReadinessGlobalReason" }
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/AWDReadinessItemData" }
+
+    ApiEnvelopeAWDReadinessData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/AWDReadinessData" }
 
     ReviewContestRegistrationRequest:
       type: object
@@ -1933,6 +2208,106 @@ components:
           required: [data]
           properties:
             data: { $ref: "#/components/schemas/AdminChallengeUpsertData" }
+
+    AWDServiceType:
+      type: string
+      enum: [web_http, binary_tcp, multi_container]
+
+    AWDDeploymentMode:
+      type: string
+      enum: [single_container, topology]
+
+    AWDServiceTemplateStatus:
+      type: string
+      enum: [draft, published, archived]
+
+    AWDReadinessStatus:
+      type: string
+      enum: [pending, passed, failed]
+
+    AuthoringAWDServiceTemplate:
+      type: object
+      required:
+        [id, name, slug, category, difficulty, description, service_type, deployment_mode, version, status, readiness_status, created_at, updated_at]
+      properties:
+        id: { $ref: "#/components/schemas/ID" }
+        name: { type: string }
+        slug: { type: string }
+        category: { type: string }
+        difficulty:
+          type: string
+          enum: [beginner, easy, medium, hard, insane]
+        description: { type: string }
+        service_type: { $ref: "#/components/schemas/AWDServiceType" }
+        deployment_mode: { $ref: "#/components/schemas/AWDDeploymentMode" }
+        version: { type: string }
+        status: { $ref: "#/components/schemas/AWDServiceTemplateStatus" }
+        readiness_status: { $ref: "#/components/schemas/AWDReadinessStatus" }
+        created_by:
+          allOf:
+            - $ref: "#/components/schemas/ID"
+          nullable: true
+        last_verified_at:
+          allOf:
+            - $ref: "#/components/schemas/ISODateTime"
+          nullable: true
+        created_at: { $ref: "#/components/schemas/ISODateTime" }
+        updated_at: { $ref: "#/components/schemas/ISODateTime" }
+
+    CreateAWDServiceTemplateRequest:
+      type: object
+      required: [name, slug, category, difficulty, service_type, deployment_mode]
+      properties:
+        name: { type: string }
+        slug: { type: string }
+        category: { type: string }
+        difficulty:
+          type: string
+          enum: [beginner, easy, medium, hard, insane]
+        description: { type: string }
+        service_type: { $ref: "#/components/schemas/AWDServiceType" }
+        deployment_mode: { $ref: "#/components/schemas/AWDDeploymentMode" }
+
+    UpdateAWDServiceTemplateRequest:
+      type: object
+      properties:
+        name: { type: string }
+        slug: { type: string }
+        category: { type: string }
+        difficulty:
+          type: string
+          enum: [beginner, easy, medium, hard, insane]
+        description: { type: string }
+        service_type: { $ref: "#/components/schemas/AWDServiceType" }
+        deployment_mode: { $ref: "#/components/schemas/AWDDeploymentMode" }
+        status: { $ref: "#/components/schemas/AWDServiceTemplateStatus" }
+
+    AWDServiceTemplatePageData:
+      type: object
+      required: [items, total, page, size]
+      properties:
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/AuthoringAWDServiceTemplate" }
+        total: { type: integer, minimum: 0 }
+        page: { type: integer, minimum: 1 }
+        size: { type: integer, minimum: 1 }
+
+    ApiEnvelopeAWDServiceTemplateData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/AuthoringAWDServiceTemplate" }
+
+    ApiEnvelopeAWDServiceTemplatePageData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/AWDServiceTemplatePageData" }
 
     ChallengeSelfCheckStepData:
       type: object
@@ -2800,7 +3175,7 @@ paths:
     post:
       tags: [Contests]
       summary: 竞赛中启动靶机实例
-      description: AWD 竞赛按队伍复用共享实例，普通竞赛按用户维度创建实例。
+      description: 仅非 AWD 竞赛使用该入口；实例按用户维度创建或复用。
       security:
         - bearerAuth: []
       parameters:
@@ -2810,6 +3185,29 @@ paths:
           schema: { $ref: "#/components/schemas/ID" }
         - in: path
           name: cid
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeInstanceData" }
+
+  /contests/{id}/awd/services/{sid}/instances:
+    post:
+      tags: [Contests]
+      summary: AWD 竞赛中按服务启动靶机实例
+      description: AWD 竞赛统一按 service_id 复用同队共享实例。
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+        - in: path
+          name: sid
           required: true
           schema: { $ref: "#/components/schemas/ID" }
       responses:
@@ -3528,6 +3926,112 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/ApiEnvelopeAdminChallengeUpsertData" }
 
+  /authoring/awd-service-templates:
+    get:
+      tags: [Authoring]
+      summary: AWD 服务模板列表（分页）
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: keyword
+          schema: { type: string }
+        - in: query
+          name: service_type
+          schema: { $ref: "#/components/schemas/AWDServiceType" }
+        - in: query
+          name: status
+          schema: { $ref: "#/components/schemas/AWDServiceTemplateStatus" }
+        - in: query
+          name: page
+          schema: { type: integer, minimum: 1, default: 1 }
+        - in: query
+          name: page_size
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeAWDServiceTemplatePageData" }
+    post:
+      tags: [Authoring]
+      summary: 创建 AWD 服务模板
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateAWDServiceTemplateRequest" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeAWDServiceTemplateData" }
+
+  /authoring/awd-service-templates/{id}:
+    get:
+      tags: [Authoring]
+      summary: 获取 AWD 服务模板详情
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeAWDServiceTemplateData" }
+        "404":
+          description: Not Found
+    put:
+      tags: [Authoring]
+      summary: 更新 AWD 服务模板
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateAWDServiceTemplateRequest" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeAWDServiceTemplateData" }
+        "404":
+          description: Not Found
+    delete:
+      tags: [Authoring]
+      summary: 删除 AWD 服务模板
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeNull" }
+        "404":
+          description: Not Found
+
   /authoring/challenges/{id}:
     put:
       tags: [Authoring]
@@ -3938,6 +4442,220 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/ApiEnvelopeNull" }
+
+  /admin/contests/{id}/challenges:
+    get:
+      tags: [Admin]
+      summary: 获取管理员赛事题目配置列表
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeAdminContestChallengeListData" }
+    post:
+      tags: [Admin]
+      summary: 向赛事添加题目并写入 AWD 配置
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateAdminContestChallengeRequest" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeAdminContestChallengeData" }
+
+  /admin/contests/{id}/challenges/{cid}:
+    put:
+      tags: [Admin]
+      summary: 更新赛事题目配置
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+        - in: path
+          name: cid
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateAdminContestChallengeRequest" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeNull" }
+    delete:
+      tags: [Admin]
+      summary: 移除赛事题目
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+        - in: path
+          name: cid
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeNull" }
+
+  /admin/contests/{id}/awd/readiness:
+    get:
+      tags: [Admin]
+      summary: 获取 AWD 开赛就绪检查结果
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeAWDReadinessData" }
+
+  /admin/contests/{id}/awd/services:
+    get:
+      tags: [Admin]
+      summary: 获取赛事 AWD 显式服务列表
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeAdminContestAWDServiceListData" }
+    post:
+      tags: [Admin]
+      summary: 新增赛事 AWD 显式服务
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateAdminContestAWDServiceRequest" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeAdminContestAWDServiceData" }
+
+  /admin/contests/{id}/awd/services/{sid}:
+    put:
+      tags: [Admin]
+      summary: 更新赛事 AWD 显式服务
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+        - in: path
+          name: sid
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateAdminContestAWDServiceRequest" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeNull" }
+    delete:
+      tags: [Admin]
+      summary: 删除赛事 AWD 显式服务
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+        - in: path
+          name: sid
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeNull" }
+
+  /admin/contests/{id}/awd/checker-preview:
+    post:
+      tags: [Admin]
+      summary: 试跑 AWD Checker 并返回保存令牌
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PreviewAwdCheckerRequest" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeAWDCheckerPreviewData" }
+
   /admin/contests/{id}/awd/rounds:
     get:
       tags: [Admin]

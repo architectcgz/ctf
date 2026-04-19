@@ -11,6 +11,7 @@ type ChallengeService struct {
 	repo          contestports.ContestChallengeRepository
 	challengeRepo challengecontracts.ContestChallengeContract
 	contestRepo   contestports.ContestLookupRepository
+	awdRepo       contestports.AWDRepository
 	redis         *redislib.Client
 }
 
@@ -18,12 +19,14 @@ func NewChallengeService(
 	repo contestports.ContestChallengeRepository,
 	challengeRepo challengecontracts.ContestChallengeContract,
 	contestRepo contestports.ContestLookupRepository,
+	awdRepo contestports.AWDRepository,
 	redis *redislib.Client,
 ) *ChallengeService {
 	return &ChallengeService{
 		repo:          repo,
 		challengeRepo: challengeRepo,
 		contestRepo:   contestRepo,
+		awdRepo:       awdRepo,
 		redis:         redis,
 	}
 }

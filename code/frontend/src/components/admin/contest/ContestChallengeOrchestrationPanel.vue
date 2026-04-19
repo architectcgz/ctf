@@ -3,13 +3,19 @@ import { computed, onMounted, ref, toRef } from 'vue'
 import { Plus, RefreshCw } from 'lucide-vue-next'
 
 import {
+  createContestAWDService,
   createAdminContestChallenge,
+  deleteContestAWDService,
   deleteAdminContestChallenge,
   getChallenges,
+  listAdminAwdServiceTemplates,
   listAdminContestChallenges,
+  listContestAWDServices,
+  updateContestAWDService,
   updateAdminContestChallenge,
 } from '@/api/admin'
 import type {
+  AdminAwdServiceTemplateData,
   AdminChallengeListItem,
   AdminContestChallengeData,
   ContestDetailData,
@@ -21,6 +27,7 @@ import { useAwdCheckResultPresentation } from '@/composables/useAwdCheckResultPr
 import { useContestChallengePool } from '@/composables/useContestChallengePool'
 import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
 import { useToast } from '@/composables/useToast'
+import { mergeAdminContestChallengesWithAWDServices } from '@/utils/adminContestAwdChallengeLinks'
 
 import ContestChallengeFilterStrip from './ContestChallengeFilterStrip.vue'
 import ContestChallengeEditorDialog from './ContestChallengeEditorDialog.vue'
@@ -44,9 +51,11 @@ const CHALLENGE_CATALOG_PAGE_SIZE = 100
 const loading = ref(true)
 const saving = ref(false)
 const loadingChallengeCatalog = ref(false)
+const loadingTemplateCatalog = ref(false)
 const localChallengeLinks = ref<AdminContestChallengeData[]>([])
 const localLoadError = ref('')
 const challengeCatalog = ref<AdminChallengeListItem[]>([])
+const templateCatalog = ref<AdminAwdServiceTemplateData[]>([])
 const dialogOpen = ref(false)
 const dialogMode = ref<'create' | 'edit'>('create')
 const editingChallenge = ref<AdminContestChallengeData | null>(null)
@@ -69,7 +78,7 @@ const {
 
 const panelCopy = computed(() =>
   isAwdContest.value
-    ? '先在这里维护统一题目池，完成题目关联、顺序、分值和可见性；AWD 深度配置在下一阶段完成。'
+    ? '先在这里维护统一题目池，完成题目关联、服务模板、顺序、分值和可见性；Checker 等检查配置继续留在 AWD 工作台。'
     : '在这里维护统一题目池，安排题目顺序、基础分值和可见状态。'
 )
 const emptyState = computed(() =>
@@ -142,7 +151,12 @@ async function refresh() {
 
   loading.value = true
   try {
-    localChallengeLinks.value = await listAdminContestChallenges(props.contestId)
+    const nextChallengeLinks = await listAdminContestChallenges(props.contestId)
+    const nextAwdServices = props.contestMode === 'awd' ? await listContestAWDServices(props.contestId) : []
+    localChallengeLinks.value = mergeAdminContestChallengesWithAWDServices(
+      nextChallengeLinks,
+      nextAwdServices
+    )
     localLoadError.value = ''
   } catch (error) {
     localLoadError.value = humanizeRequestError(error, '赛事题目加载失败')
@@ -182,17 +196,53 @@ async function ensureChallengeCatalogLoaded() {
   }
 }
 
+async function ensureTemplateCatalogLoaded() {
+  if (loadingTemplateCatalog.value || templateCatalog.value.length > 0) {
+    return
+  }
+
+  loadingTemplateCatalog.value = true
+  try {
+    const list: AdminAwdServiceTemplateData[] = []
+    let page = 1
+    let total = 0
+
+    do {
+      const result = await listAdminAwdServiceTemplates({
+        page,
+        page_size: 100,
+        status: 'published',
+      })
+      list.push(...result.list)
+      total = result.total
+      page += 1
+    } while (list.length < total)
+
+    templateCatalog.value = list
+  } catch (error) {
+    toast.error(humanizeRequestError(error, '服务模板目录加载失败'))
+  } finally {
+    loadingTemplateCatalog.value = false
+  }
+}
+
 function openCreateDialog() {
   dialogMode.value = 'create'
   editingChallenge.value = null
   dialogOpen.value = true
   void ensureChallengeCatalogLoaded()
+  if (isAwdContest.value) {
+    void ensureTemplateCatalogLoaded()
+  }
 }
 
 function openEditDialog(challenge: AdminContestChallengeData) {
   dialogMode.value = 'edit'
   editingChallenge.value = challenge
   dialogOpen.value = true
+  if (isAwdContest.value) {
+    void ensureTemplateCatalogLoaded()
+  }
 }
 
 function closeDialog() {
@@ -202,13 +252,52 @@ function closeDialog() {
 
 async function handleSave(payload: {
   challenge_id: number
+  template_id?: number
   points: number
   order: number
   is_visible: boolean
 }) {
+  const templateId = payload.template_id
+  if (isAwdContest.value && (!templateId || templateId < 1)) {
+    toast.error('请选择服务模板')
+    return
+  }
+
   saving.value = true
   try {
-    if (dialogMode.value === 'create') {
+    if (isAwdContest.value) {
+      if (dialogMode.value === 'create') {
+        await createContestAWDService(props.contestId, {
+          challenge_id: payload.challenge_id,
+          template_id: templateId as number,
+          order: payload.order,
+          is_visible: payload.is_visible,
+        })
+        await updateAdminContestChallenge(props.contestId, String(payload.challenge_id), {
+          points: payload.points,
+        })
+        toast.success('AWD 题目已关联')
+      } else if (editingChallenge.value) {
+        if (editingChallenge.value.awd_service_id) {
+          await updateContestAWDService(props.contestId, editingChallenge.value.awd_service_id, {
+            template_id: templateId as number,
+            order: payload.order,
+            is_visible: payload.is_visible,
+          })
+        } else {
+          await createContestAWDService(props.contestId, {
+            challenge_id: Number(editingChallenge.value.challenge_id),
+            template_id: templateId as number,
+            order: payload.order,
+            is_visible: payload.is_visible,
+          })
+        }
+        await updateAdminContestChallenge(props.contestId, editingChallenge.value.challenge_id, {
+          points: payload.points,
+        })
+        toast.success('AWD 题目已更新')
+      }
+    } else if (dialogMode.value === 'create') {
       await createAdminContestChallenge(props.contestId, payload)
       toast.success('赛事题目已关联')
     } else if (editingChallenge.value) {
@@ -247,7 +336,11 @@ async function handleRemove(challenge: AdminContestChallengeData) {
 
   removingChallengeId.value = challenge.id
   try {
-    await deleteAdminContestChallenge(props.contestId, challenge.challenge_id)
+    if (props.contestMode === 'awd' && challenge.awd_service_id) {
+      await deleteContestAWDService(props.contestId, challenge.awd_service_id)
+    } else {
+      await deleteAdminContestChallenge(props.contestId, challenge.challenge_id)
+    }
     toast.success('赛事题目已移除')
     if (usingExternalChallengeLinks.value) {
       emit('updated')
@@ -438,9 +531,11 @@ onMounted(() => {
       :mode="dialogMode"
       :contest-mode="contestMode"
       :challenge-options="challengeCatalog"
+      :template-options="templateCatalog"
       :existing-challenge-ids="existingChallengeIds"
       :draft="editingChallenge"
       :loading-challenge-catalog="loadingChallengeCatalog"
+      :loading-template-catalog="loadingTemplateCatalog"
       :saving="saving"
       @update:open="dialogOpen = $event"
       @save="handleSave"

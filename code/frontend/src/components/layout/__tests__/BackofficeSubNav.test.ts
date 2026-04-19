@@ -30,6 +30,7 @@ async function mountWithRoute(path: string, role: 'teacher' | 'admin') {
       { path: '/platform/challenges', component: { template: '<div>challenges</div>' } },
       { path: '/platform/challenges/:id/writeup', component: { template: '<div>writeup</div>' } },
       { path: '/platform/environment-templates', component: { template: '<div>env</div>' } },
+      { path: '/platform/awd-service-templates', component: { template: '<div>awd</div>' } },
       { path: '/platform/images', component: { template: '<div>images</div>' } },
       { path: '/admin/contests', component: { template: '<div>contests</div>' } },
       { path: '/admin/users', component: { template: '<div>users</div>' } },

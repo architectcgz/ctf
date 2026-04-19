@@ -2,6 +2,32 @@
 
 > 状态：已采用
 
+## 0. 当前阶段落地边界（2026-04-18）
+
+当前仓库已经落地了 AWD 显式服务模型的前两层，并已把核心运行态读路径切到赛事服务层：
+
+- 已落地：独立 `awd_service_templates` 题库
+- 已落地：服务模板后台 CRUD 与基础管理页
+- 已落地：`contest_awd_services` 赛事服务关联存储
+- 已落地：管理员赛事题目关系接口收口为纯 relation 字段，AWD 运行态详情统一由 `contest_awd_services` 返回
+- 已切换：`ListServiceDefinitionsByContest` 优先读取 `contest_awd_services.runtime_config + score_config`
+- 已切换：`ListReadinessChallengesByContest` 优先读取 `contest_awd_services.runtime_config + validation`
+- 已切换：round flag 存储、checker 取 flag、攻击提交支持 `service_id` 优先、`challenge_id` 回退
+- 已切换：`awd_team_services`、`awd_attack_logs` 以 `contest_awd_services.id` 作为运行态主身份
+- 已切换：`awd_traffic_events` 显式持久化 `service_id`，runtime proxy 归因改为 `instance.service_id -> contest_awd_services.challenge_id`
+- 已降级：`challenge_id` 在运行态持久化中只承担题目元数据与展示字段
+- 已切换：workspace 查询、实例聚合与学生工作台服务目录改为以 `contest_awd_services.id` 为主键驱动
+- 已切换：学生 AWD 工作台实例启动入口支持 `/contests/:id/awd/services/:sid/instances`，以 `service_id` 作为主入口
+- 已收口：学生 AWD 工作台不再通过 `/contests/:id/challenges/:cid/instances` 启动实例，实例启动统一走 `service_id` 入口
+
+也就是说，当前已经形成：
+
+1. 模板层：`awd_service_templates`
+2. 赛事服务层：`contest_awd_services`
+3. 关系层：`contest_challenges`
+
+其中第 1、2 层已经进入运行态主链路，runtime 写入、攻击去重、受害服务影响、workspace 读路径、学生 AWD 工作台实例启动入口，以及管理员投屏页和管理页的核心读路径都已经切到 `service_id`。当前第 3 层只承担赛事题目关系、分值、顺序、可见性等编排职责；数据库中的 `contest_challenges.awd_*` 仍属于待清理遗留字段，但已经不再作为对外运行态读契约。
+
 ## 1. 背景
 
 当前平台已经有一套可运行的 AWD 基础能力：
@@ -121,7 +147,9 @@
 采用方案 B，在现有平台中加入标准化的 AWD 领域闭环：
 
 - `AWD Contest`：现有 `contests(mode=awd)`，负责比赛窗口、轮次和权重
-- `AWD Service`：现有 `contest_challenges` 在 AWD 赛事里的 service 化配置
+- `AWD Service Template`：`awd_service_templates`，负责独立 AWD 服务模板题库
+- `Contest AWD Service`：`contest_awd_services`，负责模板到赛事题目的显式服务映射
+- `Contest Challenge Relation`：`contest_challenges`，负责赛事题目关系与编排字段
 - `AWD Team Target`：现有 `team + challenge + instance` 关系，表示每队每服务的目标实例
 - `AWD Checker`：每轮对目标实例执行 `putflag / getflag / havoc`
 - `AWD Tick Result`：写入 `awd_team_services`，记录本轮服务结果和明细
@@ -146,36 +174,78 @@
 
 ## 6. 数据模型
 
-### 6.1 `contest_challenges` 作为 AWD Service 配置载体
+### 6.1 `awd_service_templates` 作为模板层
 
-本轮不新增平行的 `awd_services` 表，而是在 `contest_challenges` 上扩 AWD 专属字段。
+当前已新增独立 `awd_service_templates`，用于沉淀与复用 AWD 服务模板。
+
+模板层职责：
+
+- 管理独立 AWD 题库，不与普通 Jeopardy 题目语义混用
+- 保存服务类型、部署模式、checker 草稿、访问配置、运行配置和 readiness 草稿状态
+- 为后续赛事服务映射与多场复用提供来源
+
+### 6.2 `contest_awd_services` 作为赛事服务层
+
+当前已新增 `contest_awd_services`，负责把某场 AWD 赛事中的题目映射成显式服务。
+
+核心字段：
+
+- `contest_id`
+- `challenge_id`
+- `template_id`
+- `display_name`
+- `order`
+- `is_visible`
+- `score_config`
+- `runtime_config`
+
+这一层当前已经进入运行态主链路：
+
+- 读路径：管理员赛事题目列表、readiness、workspace、服务定义与学生工作台目录优先读取 `contest_awd_services`
+- 写路径：管理员 AWD 配置保存优先通过 `create/update contest_awd_services` 写入 checker、score 与 preview validation
+- 关系层：`contest_challenges` 继续保留 `points/order/is_visible` 等编排字段
+
+### 6.3 `contest_challenges` 作为关系层
+
+当前 `contest_challenges` 只负责赛事题目关系与编排字段；对外运行态读取已经不再依赖 `contest_challenges.awd_*`。
 
 原因：
 
-- 当前 AWD 全链路已经以 `contest + challenge` 为主关联键
-- `awd_round_flag_support.go`、`awd_check_run.go`、`awd_attack_submit_support.go` 都直接依赖赛事题目关系
-- 继续沿用 `contest_challenges` 可以避免把同一 service 关系拆成两份事实源
+- `awd_round_flag_support.go`、`awd_check_run.go`、`awd_attack_submit_support.go` 仍直接依赖赛事题目关系
+- `points/order/is_visible` 这类编排字段天然属于关系层，不适合并入 service runtime 配置
+- 运行态配置收口到 `contest_awd_services` 后，可以把管理读写、readiness、checker preview 与工作台视图统一到同一事实源
 
-新增字段建议：
+遗留说明：
 
-- `awd_checker_type`
-  - 类型：字符串
-  - 默认值：空
-  - 当前枚举：`http_standard`
-- `awd_checker_config`
-  - 类型：JSON 文本
-  - 默认值：空对象
-  - 用于存放 `putflag/getflag/havoc` 所需配置
-- `awd_sla_score`
-  - 类型：整数
-  - 默认值：0
-  - 该 service 在每轮存活时可获得的 SLA 分
-- `awd_defense_score`
-  - 类型：整数
-  - 默认值：沿用当前轮次默认值或显式配置
-  - 该 service 在防守维度使用的分值权重
+- `ContestChallenge` 代码模型与 AWD 主测试夹具已经移除这些字段，不再围绕 `contest_challenges.awd_*` 建模或 seed
+- 本次通过迁移 `000062_drop_legacy_awd_fields_from_contest_challenges` 将这些列从 `contest_challenges` 正式删除
+- 如需回退，只允许从 `contest_awd_services` 回填这些列，不再恢复其主事实源地位
+- 后续兼容清理重点转到 `contest_awd_services.runtime_config.challenge_id` 等影子字段
 
-当 `contest.mode != awd` 时，这些字段为空或零值，不参与普通比赛逻辑。
+### 6.4 `service_id` / `challenge_id` 的职责边界
+
+当前阶段需要把“服务身份”和“题目身份”明确拆开，避免文档和实现再次把两者混用：
+
+- `service_id = contest_awd_services.id`
+  - AWD 运行态唯一身份
+  - 用于实例启动入口、轮次结果 upsert、攻击去重、受害服务影响写回、流量归因、workspace 服务查询，以及已存在 service 的 checker preview / preview token 绑定
+  - 只要表达的是“这场比赛里的某个 service”，就必须使用 `service_id`
+- `challenge_id = challenges.id`
+  - 题目元数据身份
+  - 用于关联题目标题、`flag_prefix`、镜像/题库资产和赛事题目关系
+  - 可以继续出现在返回体、导出、展示聚合和兼容持久化中，但不再承担 AWD 运行态主定位或唯一键职责
+- `contest_awd_services.challenge_id`
+  - 是 service 到题目元数据的正式关联列
+  - 新代码若需要题目身份，应直接读取这一列，不再从 `runtime_config.challenge_id` 反推
+- `contest_awd_services.runtime_config.challenge_id`
+  - 当前仅作为兼容影子字段保留，服务于旧解析逻辑、测试夹具和迁移期数据核对
+  - 该字段不是独立配置入口，写入时必须由 `contest_awd_services.challenge_id` 派生，不能允许客户端单独覆盖
+  - 管理接口与前端归一化结果不再把该字段当作正式 runtime 配置对外暴露
+  - 当前剩余使用面只应存在于内部存储、旧测试夹具和迁移核对代码中，不再允许新查询或新 UI 依赖它
+- `awd_team_services.challenge_id`、`awd_attack_logs.challenge_id`、`awd_traffic_events.challenge_id`
+  - 当前保留为展示字段、旧接口字段和兼容聚合字段
+  - 写入时必须由 `service_id -> contest_awd_services.challenge_id` 派生
+  - 不参与唯一键、攻击去重、实例定位和流量主归因
 
 ### 6.2 `awd_team_services` 作为每轮 service 结果表
 
@@ -185,6 +255,7 @@
 
 - `round_id`
 - `team_id`
+- `service_id`
 - `challenge_id`
 - `service_status`
 - `check_result`
@@ -200,6 +271,12 @@
   - 本轮实际执行的 checker 类型
 - `checker_version`
   - 可选，便于后续兼容 checker 迭代
+
+当前实现约定：
+
+- `service_id` 是运行态唯一身份，用于 upsert、攻击去重和受害服务影响写回
+- `challenge_id` 保留在记录中，主要用于题目展示、旧接口字段和兼容聚合
+- `uk_awd_team_services` 已切到 `(round_id, team_id, service_id)`
 
 `check_result` 继续保留为 JSON，但其结构升级为标准 checker 执行结果。第一版统一包含：
 
@@ -366,7 +443,7 @@
 2. 物化轮次记录
 3. 生成当前轮 flag 并注入目标实例
 4. 加载参赛队伍、AWD service 配置、目标实例
-5. 对每个 `team + challenge` 执行 checker
+5. 对每个 `team + service` 执行 checker
 6. 写入 `awd_team_services`
 7. 重算队伍官方总分
 8. 刷新 scoreboard cache
@@ -380,16 +457,24 @@
 
 ## 11. API 影响
 
-### 11.1 赛事题目管理
+### 11.1 赛事题目管理与 AWD service 管理
 
-给管理端 `contest_challenges` 相关接口增加 AWD service 配置字段：
+管理端 AWD 配置主写口已经切到 `contest_awd_services`：
 
-- `awd_checker_type`
-- `awd_checker_config`
+- `checker_type`
+- `checker_config`
 - `awd_sla_score`
 - `awd_defense_score`
+- `display_name`
+- `order`
+- `is_visible`
+- preview validation 相关字段
 
-这些字段仅在 `contest.mode = awd` 时允许设置。
+`contest_challenges` 相关接口继续只承担 relation 视图：
+
+- 维护 `points / order / is_visible` 等赛事题目关系字段
+- 必要时回传 `awd_service_id` 作为跳转或关联句柄
+- 不再把 `awd_checker_type`、`awd_checker_config`、`awd_sla_score`、`awd_defense_score` 作为主契约平铺到 relation 响应里
 
 ### 11.2 AWD 轮次摘要
 
@@ -415,22 +500,38 @@
 
 ### 12.1 数据迁移
 
-第一步：
+第一步（已完成）：
 
-- 给 `contest_challenges` 增加 AWD checker 配置字段
+- 新增 `contest_awd_services`，把 checker、score、preview validation 与服务展示字段收口到赛事服务层
 - 给 `awd_team_services` 增加 `sla_score`、`checker_type`
+- 给 `awd_team_services`、`awd_attack_logs`、`awd_traffic_events` 增加 `service_id`，并把唯一键、攻击去重与流量归因条件切到 `service_id`
+- `contest_challenges` 只同步维护 `points / order / is_visible` 等关系层字段
 
-第二步：
+第二步（收尾中）：
 
+- 通过 `000062` 删除 `contest_challenges.awd_*`，彻底结束 relation 表承载 AWD service 配置的阶段
+- 将 `contest_awd_services.runtime_config.challenge_id` 明确为派生影子字段，后续逐步移除剩余读取点
+- 将运行态事实表中的 `challenge_id` 固定为由 `service_id` 回填的展示字段，待旧查询和导出切换完成后再评估是否继续保留
 - 旧 AWD 赛事若没有显式配置 checker，则使用默认 `http_standard`
 - 默认 `awd_checker_config` 从现有全局 `CheckerHealthPath` 推导出最小 `getflag/havoc` 占位配置
 
 ### 12.2 运行兼容
 
-为了避免一次切换导致现有赛事无法运行：
+当前阶段没有旧赛事数据包袱，因此运行态主链路直接切到 `service_id`，不再长期保留 `challenge_id` 持久化桥接。兼容范围只保留：
 
-- 若某 AWD 题目未配置 `awd_checker_type`，仍允许回退到当前简化探活逻辑
-- 但新建或更新 AWD service 时，管理端应优先要求配置 checker
+- `legacy_probe` 作为 checker 类型回退，保证未完成标准 checker 配置的 service 仍可过渡运行
+- 学生端、教师端与部分查询接口继续回传 `challenge_id` 作为展示字段
+- `contest_awd_services.runtime_config.challenge_id` 与运行态事实表中的 `challenge_id` 继续作为兼容影子字段存在
+- 这些影子字段现在只允许留在内部存储与兼容测试中；管理接口、前端合成视图与新运行链路不得继续透传或回退读取
+- checker preview 在“创建前、service 尚未落库”场景下允许继续接受 `challenge_id`，但 service 已存在时必须切到 `service_id`
+- 本次删列不触碰 `contest_awd_services.runtime_config.challenge_id`；它仍是下一阶段单独处理的兼容主题
+
+兼容范围之外，边界明确如下：
+
+- 不再允许用 `challenge_id` 作为 AWD 实例启动入口、服务详情主键、攻击去重条件或流量主归因条件
+- 不再允许把 `contest_challenges.awd_*` 当作 AWD service 正式配置契约继续扩展
+- 不再允许客户端通过 `runtime_config.challenge_id` 改写 service 与 challenge 的绑定关系
+- 新建或更新 AWD service 时，管理端与学生端运行链路都必须以 `contest_awd_services.id` 作为运行态服务标识
 
 这意味着迁移期会同时存在两类 service：
 
@@ -490,8 +591,12 @@
 本设计采用以下具体落地原则：
 
 - 不新起独立 A/D 引擎服务
-- `contest_challenges` 承担 AWD service 配置
+- `contest_awd_services` 承担 AWD service 配置
+- `contest_challenges` 只承担赛事题目关系与编排字段
 - `awd_team_services` 承担每轮 checker 结果
+- `service_id` 是 AWD 运行态主身份，`challenge_id` 降级为题目元数据与兼容展示字段
+- `contest_challenges.awd_*` 已通过 `000062` 从 relation 表删除，不再存在于主 schema
+- `contest_awd_services.runtime_config.challenge_id` 仍属于待清理兼容影子字段，但不在这次删列迁移内处理
 - 第一版只实现 `http_standard` checker
 - 排行榜升级为 `sla / attack / defense / total`
 - 保留现有 flag 轮换、攻击提交流程、流量监控和后台面板框架

@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 
+import { listAdminAwdServiceTemplates } from '@/api/admin'
 import type {
+  AdminAwdServiceTemplateData,
   AdminContestChallengeData,
   AWDTrafficStatusGroup,
   ContestDetailData,
@@ -47,6 +49,8 @@ const attackLogDialogOpen = ref(false)
 const challengeConfigDialogOpen = ref(false)
 const challengeConfigMode = ref<'create' | 'edit'>('create')
 const editingChallengeLink = ref<AdminContestChallengeData | null>(null)
+const loadingTemplateCatalog = ref(false)
+const templateCatalog = ref<AdminAwdServiceTemplateData[]>([])
 
 const operationTabs = [
   {
@@ -232,6 +236,7 @@ function openChallengeCreateDialog() {
   editingChallengeLink.value = null
   challengeConfigDialogOpen.value = true
   void loadChallengeCatalog()
+  void ensureTemplateCatalogLoaded()
 }
 
 function openChallengeEditDialog(challenge: AdminContestChallengeData) {
@@ -239,6 +244,7 @@ function openChallengeEditDialog(challenge: AdminContestChallengeData) {
   editingChallengeLink.value = challenge
   challengeConfigDialogOpen.value = true
   activePanel.value = 'challenges'
+  void ensureTemplateCatalogLoaded()
 }
 
 function updateChallengeConfigDialogOpen(value: boolean) {
@@ -260,7 +266,7 @@ async function handleCreateRound(payload: {
 
 async function handleCreateServiceCheck(payload: {
   team_id: number
-  challenge_id: number
+  service_id: number
   service_status: 'up' | 'down' | 'compromised'
   check_result?: Record<string, unknown>
 }) {
@@ -271,7 +277,7 @@ async function handleCreateServiceCheck(payload: {
 async function handleCreateAttackLog(payload: {
   attacker_team_id: number
   victim_team_id: number
-  challenge_id: number
+  service_id: number
   attack_type: 'flag_capture' | 'service_exploit'
   submitted_flag?: string
   is_success: boolean
@@ -282,6 +288,7 @@ async function handleCreateAttackLog(payload: {
 
 async function handleSaveChallengeConfig(payload: {
   challenge_id: number
+  template_id: number
   points: number
   order: number
   is_visible: boolean
@@ -304,6 +311,7 @@ async function handleSaveChallengeConfig(payload: {
 async function handleApplyTrafficFilters(payload: {
   attacker_team_id?: string
   victim_team_id?: string
+  service_id?: string
   challenge_id?: string
   status_group?: 'all' | AWDTrafficStatusGroup
   path_keyword?: string
@@ -332,6 +340,34 @@ function handleEditReadinessConfig(challengeId: string) {
 function handleOverrideDialogOpenChange(value: boolean) {
   if (!value) {
     closeOverrideDialog()
+  }
+}
+
+async function ensureTemplateCatalogLoaded() {
+  if (loadingTemplateCatalog.value || templateCatalog.value.length > 0) {
+    return
+  }
+
+  loadingTemplateCatalog.value = true
+  try {
+    const list: AdminAwdServiceTemplateData[] = []
+    let page = 1
+    let total = 0
+
+    do {
+      const result = await listAdminAwdServiceTemplates({
+        page,
+        page_size: 100,
+        status: 'published',
+      })
+      list.push(...result.list)
+      total = result.total
+      page += 1
+    } while (list.length < total)
+
+    templateCatalog.value = list
+  } finally {
+    loadingTemplateCatalog.value = false
   }
 }
 
@@ -506,9 +542,11 @@ watch(
       :open="challengeConfigDialogOpen"
       :mode="challengeConfigMode"
       :challenge-options="challengeCatalog"
+      :template-options="templateCatalog"
       :existing-challenge-ids="existingChallengeIds"
       :draft="editingChallengeLink"
       :loading-challenge-catalog="loadingChallengeCatalog"
+      :loading-template-catalog="loadingTemplateCatalog"
       :saving="savingChallengeConfig"
       @update:open="updateChallengeConfigDialogOpen"
       @save="handleSaveChallengeConfig"

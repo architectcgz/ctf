@@ -7,6 +7,7 @@ import teacherAwdReviewIndexSource from '../TeacherAWDReviewIndex.vue?raw'
 import { useAuthStore } from '@/stores/auth'
 
 const pushMock = vi.fn()
+let currentRouteName = 'TeacherAWDReviewIndex'
 
 const teacherApiMocks = vi.hoisted(() => ({
   listTeacherAWDReviews: vi.fn(),
@@ -17,6 +18,7 @@ vi.mock('vue-router', async () => {
   return {
     ...actual,
     useRouter: () => ({ push: pushMock }),
+    useRoute: () => ({ name: currentRouteName }),
   }
 })
 
@@ -27,6 +29,7 @@ describe('TeacherAWDReviewIndex', () => {
     vi.useFakeTimers()
     setActivePinia(createPinia())
     pushMock.mockReset()
+    currentRouteName = 'TeacherAWDReviewIndex'
     Object.values(teacherApiMocks).forEach((mock) => mock.mockReset())
 
     teacherApiMocks.listTeacherAWDReviews.mockResolvedValue([
@@ -110,6 +113,22 @@ describe('TeacherAWDReviewIndex', () => {
     expect(wrapper.text()).not.toContain('应用筛选')
   })
 
+  it('平台路由下头部概览按钮应切到平台文案并返回后台概览', async () => {
+    currentRouteName = 'AdminAWDReviewIndex'
+
+    const wrapper = mount(TeacherAWDReviewIndex)
+
+    await flushPromises()
+
+    const overviewButton = wrapper.get('button.teacher-btn--ghost')
+
+    expect(overviewButton.text()).toContain('平台概览')
+
+    await overviewButton.trigger('click')
+
+    expect(pushMock).toHaveBeenCalledWith({ name: 'AdminDashboard' })
+  })
+
   it('筛选区应保持平铺，不应继续在页面局部做成独立卡片壳', () => {
     expect(teacherAwdReviewIndexSource).toContain(
       'class="workspace-directory-section teacher-directory-section"'
@@ -134,6 +153,23 @@ describe('TeacherAWDReviewIndex', () => {
     )
     expect(teacherAwdReviewIndexSource).toMatch(
       /\.teacher-summary--flat\s*\{[\s\S]*border-bottom:\s*0;/s
+    )
+  })
+
+  it('平台 AWD 复盘页头部应切到 workspace 语义，不再保留 teacher journal eyebrow', () => {
+    expect(teacherAwdReviewIndexSource).toContain(
+      '<header class="teacher-topbar workspace-tab-heading awd-review-index-header">'
+    )
+    expect(teacherAwdReviewIndexSource).toContain(
+      '<div class="teacher-heading workspace-tab-heading__main">'
+    )
+    expect(teacherAwdReviewIndexSource).toContain('<div class="workspace-overline">AWD Review</div>')
+    expect(teacherAwdReviewIndexSource).toContain(
+      '<h1 class="teacher-title workspace-page-title">AWD复盘</h1>'
+    )
+    expect(teacherAwdReviewIndexSource).toContain('<p class="teacher-copy workspace-page-copy">')
+    expect(teacherAwdReviewIndexSource).not.toContain(
+      '<div class="teacher-surface-eyebrow journal-eyebrow">AWD Review Workspace</div>'
     )
   })
 

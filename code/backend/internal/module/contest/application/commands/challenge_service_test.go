@@ -13,39 +13,43 @@ import (
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 
-	"ctf-platform/internal/model"
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
-	contestjobs "ctf-platform/internal/module/contest/application/jobs"
+	"ctf-platform/internal/model"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
+	contestjobs "ctf-platform/internal/module/contest/application/jobs"
+	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	contesttestsupport "ctf-platform/internal/module/contest/testsupport"
 	"ctf-platform/pkg/errcode"
 )
 
-func newContestChallengeCommandService(t *testing.T) (*ChallengeService, *challengeinfra.Repository, *contestinfra.Repository, *contestinfra.ChallengeRepository) {
+func newContestChallengeCommandService(t *testing.T) (*ChallengeService, *challengeinfra.Repository, *contestinfra.Repository, *contestinfra.ChallengeRepository, *contestinfra.AWDRepository) {
 	t.Helper()
 
 	return newContestChallengeCommandServiceWithRedis(t, nil)
 }
 
-func newContestChallengeCommandServiceWithRedis(t *testing.T, redisClient *redis.Client) (*ChallengeService, *challengeinfra.Repository, *contestinfra.Repository, *contestinfra.ChallengeRepository) {
+func newContestChallengeCommandServiceWithRedis(t *testing.T, redisClient *redis.Client) (*ChallengeService, *challengeinfra.Repository, *contestinfra.Repository, *contestinfra.ChallengeRepository, *contestinfra.AWDRepository) {
 	t.Helper()
 
 	db := contesttestsupport.SetupContestTestDB(t)
+	awdRepo := contestinfra.NewAWDRepository(db)
 	return NewChallengeService(
 			contestinfra.NewChallengeRepository(db),
 			challengeinfra.NewRepository(db),
 			contestinfra.NewRepository(db),
+			awdRepo,
 			redisClient,
 		),
 		challengeinfra.NewRepository(db),
 		contestinfra.NewRepository(db),
-		contestinfra.NewChallengeRepository(db)
+		contestinfra.NewChallengeRepository(db),
+		awdRepo
 }
 
 func TestChallengeServiceAddChallengeToAWDContestPersistsAWDServiceConfig(t *testing.T) {
-	service, challengeRepo, contestRepo, challengeRelationRepo := newContestChallengeCommandService(t)
+	service, challengeRepo, contestRepo, challengeRelationRepo, awdRepo := newContestChallengeCommandService(t)
 
 	now := time.Now()
 	contest := &model.Contest{
@@ -103,10 +107,18 @@ func TestChallengeServiceAddChallengeToAWDContestPersistsAWDServiceConfig(t *tes
 	if items[0].AWDCheckerType != model.AWDCheckerTypeHTTPStandard || items[0].AWDSLAScore != 15 || items[0].AWDDefenseScore != 25 {
 		t.Fatalf("unexpected stored contest challenge: %+v", items[0])
 	}
+
+	serviceAssociation, err := awdRepo.FindContestAWDServiceByContestAndChallenge(context.Background(), contest.ID, 9001)
+	if err != nil {
+		t.Fatalf("FindContestAWDServiceByContestAndChallenge() error = %v", err)
+	}
+	if serviceAssociation.DisplayName != "awd-web" {
+		t.Fatalf("unexpected contest awd service display name: %s", serviceAssociation.DisplayName)
+	}
 }
 
 func TestChallengeServiceRejectsAWDServiceConfigOnNonAWDContest(t *testing.T) {
-	service, challengeRepo, contestRepo, _ := newContestChallengeCommandService(t)
+	service, challengeRepo, contestRepo, _, _ := newContestChallengeCommandService(t)
 
 	now := time.Now()
 	contest := &model.Contest{
@@ -152,7 +164,7 @@ func TestChallengeServiceRejectsAWDServiceConfigOnNonAWDContest(t *testing.T) {
 }
 
 func TestChallengeServiceUpdateChallengePersistsAWDServiceConfig(t *testing.T) {
-	service, challengeRepo, contestRepo, challengeRelationRepo := newContestChallengeCommandService(t)
+	service, challengeRepo, contestRepo, challengeRelationRepo, awdRepo := newContestChallengeCommandService(t)
 
 	now := time.Now()
 	contest := &model.Contest{
@@ -212,6 +224,15 @@ func TestChallengeServiceUpdateChallengePersistsAWDServiceConfig(t *testing.T) {
 	if items[0].AWDCheckerType != model.AWDCheckerTypeHTTPStandard || items[0].AWDSLAScore != 18 || items[0].AWDDefenseScore != 28 {
 		t.Fatalf("unexpected updated contest challenge: %+v", items[0])
 	}
+
+	serviceAssociation, err := awdRepo.FindContestAWDServiceByContestAndChallenge(context.Background(), contest.ID, 9003)
+	if err != nil {
+		t.Fatalf("FindContestAWDServiceByContestAndChallenge() error = %v", err)
+	}
+	scoreConfig := contestdomain.ParseAWDCheckerConfig(serviceAssociation.ScoreConfig)
+	if got := int(scoreConfig["awd_sla_score"].(float64)); got != 18 {
+		t.Fatalf("unexpected awd service sla score: %+v", scoreConfig)
+	}
 }
 
 func TestChallengeServiceAddChallengeConsumesCheckerPreviewToken(t *testing.T) {
@@ -226,7 +247,7 @@ func TestChallengeServiceAddChallengeConsumesCheckerPreviewToken(t *testing.T) {
 		_ = redisClient.Close()
 	})
 
-	service, challengeRepo, contestRepo, challengeRelationRepo := newContestChallengeCommandServiceWithRedis(t, redisClient)
+	service, challengeRepo, contestRepo, challengeRelationRepo, _ := newContestChallengeCommandServiceWithRedis(t, redisClient)
 
 	now := time.Now()
 	contest := &model.Contest{
@@ -309,8 +330,8 @@ func TestChallengeServiceAddChallengeConsumesCheckerPreviewToken(t *testing.T) {
 		redisClient,
 		"",
 		config.ContestAWDConfig{
-		CheckerTimeout:    time.Second,
-		CheckerHealthPath: "/healthz",
+			CheckerTimeout:    time.Second,
+			CheckerHealthPath: "/healthz",
 		},
 		zap.NewNop(),
 		contestjobs.NewAWDRoundUpdater(
@@ -427,7 +448,7 @@ func TestChallengeServiceAddChallengeConsumesCheckerPreviewToken(t *testing.T) {
 }
 
 func TestChallengeServiceUpdateChallengeMarksValidationStateStaleWhenCheckerConfigChanges(t *testing.T) {
-	service, challengeRepo, contestRepo, challengeRelationRepo := newContestChallengeCommandService(t)
+	service, challengeRepo, contestRepo, challengeRelationRepo, _ := newContestChallengeCommandService(t)
 
 	now := time.Now()
 	contest := &model.Contest{

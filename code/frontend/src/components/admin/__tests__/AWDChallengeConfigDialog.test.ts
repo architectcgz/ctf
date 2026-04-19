@@ -38,18 +38,36 @@ function mountDialog(props?: Record<string, unknown>) {
           flag_config: undefined,
         },
       ],
+      templateOptions: [
+        {
+          id: '1',
+          name: 'Web 标准模板',
+          slug: 'web-standard',
+          category: 'web',
+          difficulty: 'easy',
+          description: '标准 Web AWD 服务模板',
+          service_type: 'web_http',
+          deployment_mode: 'single_container',
+          version: '1.0.0',
+          status: 'published',
+          readiness_status: 'passed',
+          created_at: '2026-03-20T09:00:00.000Z',
+          updated_at: '2026-03-20T09:00:00.000Z',
+        },
+      ],
       existingChallengeIds: [],
       draft: null,
       loadingChallengeCatalog: false,
+      loadingTemplateCatalog: false,
       saving: false,
       ...props,
     },
     global: {
       stubs: {
-        ElDialog: {
-          props: ['modelValue', 'title'],
+        AdminSurfaceModal: {
+          props: ['open', 'title'],
           template:
-            '<div><div v-if="modelValue">{{ title }}</div><slot /><slot name="footer" /></div>',
+            '<div v-if="open"><div>{{ title }}</div><slot /><slot name="footer" /></div>',
         },
       },
     },
@@ -116,6 +134,7 @@ describe('AWDChallengeConfigDialog', () => {
 
     expect(wrapper.emitted('save')?.[0]?.[0]).toEqual({
       challenge_id: 101,
+      template_id: 1,
       points: 120,
       order: 1,
       is_visible: true,
@@ -156,6 +175,7 @@ describe('AWDChallengeConfigDialog', () => {
 
     expect(wrapper.emitted('save')?.[0]?.[0]).toEqual({
       challenge_id: 101,
+      template_id: 1,
       points: 100,
       order: 0,
       is_visible: true,
@@ -193,6 +213,7 @@ describe('AWDChallengeConfigDialog', () => {
 
     expect(wrapper.emitted('save')?.[0]?.[0]).toEqual({
       challenge_id: 101,
+      template_id: 1,
       points: 100,
       order: 0,
       is_visible: true,
@@ -297,6 +318,7 @@ describe('AWDChallengeConfigDialog', () => {
 
     expect(wrapper.emitted('save')?.[0]?.[0]).toEqual({
       challenge_id: 101,
+      template_id: 1,
       points: 100,
       order: 0,
       is_visible: true,
@@ -358,6 +380,7 @@ describe('AWDChallengeConfigDialog', () => {
 
     expect(wrapper.emitted('save')?.[0]?.[0]).toEqual({
       challenge_id: 101,
+      template_id: 1,
       points: 100,
       order: 0,
       is_visible: true,

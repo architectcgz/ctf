@@ -4,7 +4,8 @@ import type { WorkspaceDirectorySortOption } from '@/components/common/Workspace
 import type { WorkspaceDataTableColumn } from '@/components/common/WorkspaceDataTable.vue'
 
 import { computed } from 'vue'
-import { ArrowRight, FolderKanban, RefreshCcw, Shield, Waypoints } from 'lucide-vue-next'
+import { ArrowRight, FolderKanban, RefreshCcw, Waypoints } from 'lucide-vue-next'
+import { useRoute } from 'vue-router'
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
@@ -12,12 +13,14 @@ import WorkspaceDirectoryToolbar from '@/components/common/WorkspaceDirectoryToo
 import { useTeacherAwdReviewIndex } from '@/composables/useTeacherAwdReviewIndex'
 import { useAuthStore } from '@/stores/auth'
 import { formatDate } from '@/utils/format'
-import { resolveTeachingDashboardRouteName } from '@/utils/teachingWorkspaceRouting'
 
 const authStore = useAuthStore()
+const route = useRoute()
 const { router, loading, error, contests, filters, hasContests, loadContests, openContest } =
   useTeacherAwdReviewIndex()
 const isAdminView = computed(() => authStore.user?.role === 'admin')
+const isAdminRoute = computed(() => route.name === 'AdminAWDReviewIndex')
+const useAdminOverview = computed(() => isAdminRoute.value || authStore.user?.role === 'admin')
 
 const statusOptions = [
   { value: '', label: '全部状态' },
@@ -71,7 +74,8 @@ const toolbarSortOptions: WorkspaceDirectorySortOption[] = []
 const runningContestCount = computed(() => contests.value.filter((item) => item.status === 'running').length)
 const exportReadyContestCount = computed(() => contests.value.filter((item) => item.export_ready).length)
 const hasActiveFilters = computed(() => Boolean(filters.value.status || filters.value.keyword.trim()))
-const overviewLabel = computed(() => (authStore.user?.role === 'admin' ? '平台概览' : '教学概览'))
+const overviewRouteName = computed(() => (useAdminOverview.value ? 'AdminDashboard' : 'TeacherDashboard'))
+const overviewLabel = computed(() => (useAdminOverview.value ? '平台概览' : '教学概览'))
 const rootClasses = computed(() =>
   isAdminView.value
     ? 'workspace-shell journal-shell journal-shell-admin journal-notes-card journal-hero flex min-h-full flex-1 flex-col'
@@ -119,7 +123,7 @@ function latestEvidenceLabel(contest: TeacherAWDReviewContestItemData): string {
       <div class="teacher-page">
         <header class="teacher-topbar workspace-tab-heading awd-review-index-header">
           <div class="teacher-heading workspace-tab-heading__main">
-            <div class="workspace-overline awd-review-index-overline">AWD Review</div>
+            <div class="workspace-overline">AWD Review</div>
             <h1 class="teacher-title workspace-page-title">AWD复盘</h1>
             <p class="teacher-copy workspace-page-copy">
               集中查看赛事轮次、状态与导出就绪度，从统一入口进入整场或单轮复盘。
@@ -130,7 +134,7 @@ function latestEvidenceLabel(contest: TeacherAWDReviewContestItemData): string {
             <button
               type="button"
               :class="ghostActionClass"
-              @click="router.push({ name: resolveTeachingDashboardRouteName(authStore.user?.role) })"
+              @click="router.push({ name: overviewRouteName })"
             >
               {{ overviewLabel }}
             </button>
@@ -336,14 +340,6 @@ function latestEvidenceLabel(contest: TeacherAWDReviewContestItemData): string {
 
 .teacher-summary--flat {
   border-bottom: 0;
-}
-
-.awd-review-index-overline {
-  font-size: var(--journal-overline-font-size, var(--font-size-0-70));
-  font-weight: 700;
-  letter-spacing: var(--journal-overline-letter-spacing, 0.2em);
-  text-transform: uppercase;
-  color: var(--journal-accent, var(--color-primary));
 }
 
 .teacher-directory-section {

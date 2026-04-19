@@ -29,6 +29,17 @@ func (s *ChallengeService) GetContestChallenges(ctx context.Context, userID, con
 	if len(challenges) == 0 {
 		return []*dto.ContestChallengeInfo{}, nil
 	}
+	servicesByChallenge := make(map[int64]model.ContestAWDService)
+	if s.awdRepo != nil {
+		services, listErr := s.awdRepo.ListContestAWDServicesByContest(ctx, contestID)
+		if listErr != nil {
+			return nil, errcode.ErrInternal.WithCause(listErr)
+		}
+		for i := range services {
+			item := services[i]
+			servicesByChallenge[item.ChallengeID] = item
+		}
+	}
 
 	challengeIDs := make([]int64, 0, len(challenges))
 	for _, item := range challenges {
@@ -50,7 +61,7 @@ func (s *ChallengeService) GetContestChallenges(ctx context.Context, userID, con
 		if findErr != nil {
 			return nil, errcode.ErrInternal.WithCause(findErr)
 		}
-		result = append(result, &dto.ContestChallengeInfo{
+		resp := &dto.ContestChallengeInfo{
 			ID:          item.ID,
 			ChallengeID: item.ChallengeID,
 			Title:       challenge.Title,
@@ -60,7 +71,11 @@ func (s *ChallengeService) GetContestChallenges(ctx context.Context, userID, con
 			Order:       item.Order,
 			SolvedCount: solvedCountMap[item.ChallengeID],
 			IsSolved:    solvedMap[item.ChallengeID],
-		})
+		}
+		if service, ok := servicesByChallenge[item.ChallengeID]; ok {
+			resp.AWDServiceID = &service.ID
+		}
+		result = append(result, resp)
 	}
 	return result, nil
 }
