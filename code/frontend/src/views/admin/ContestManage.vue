@@ -6,7 +6,7 @@ import { exportContestArchive } from '@/api/admin'
 import type { ContestDetailData } from '@/api/contracts'
 import AdminContestFormDialog from '@/components/admin/contest/AdminContestFormDialog.vue'
 import AWDReadinessOverrideDialog from '@/components/admin/contest/AWDReadinessOverrideDialog.vue'
-import ContestOrchestrationPage from '@/components/admin/contest/ContestOrchestrationPage.vue'
+import ContestGovernancePage from '@/components/admin/contest/ContestGovernancePage.vue'
 import { useReportStatusPolling } from '@/composables/useReportStatusPolling'
 import { useToast } from '@/composables/useToast'
 import { useAdminContests } from '@/composables/useAdminContests'
@@ -135,7 +135,7 @@ async function handleCreateContestSave(draft: Parameters<typeof saveContest>[0])
 
 <template>
   <div class="space-y-6">
-    <ContestOrchestrationPage
+    <ContestGovernancePage
       :list="list"
       :total="total"
       :page="page"
