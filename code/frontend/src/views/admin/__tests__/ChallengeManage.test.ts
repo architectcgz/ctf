@@ -193,6 +193,25 @@ describe('ChallengeManage', () => {
     expect(challengeManageSource).not.toContain('<div class="challenge-manage-directory">')
   })
 
+  it('题目管理页应复用共享 spacing token，而不是给 summary strip 叠加额外上下 margin', () => {
+    const summaryGridStyleBlock = challengeManageSource.match(
+      /\.challenge-manage-shell \.manage-summary-grid\s*\{[^}]*\}/s
+    )?.[0]
+
+    expect(challengeManageSource).toMatch(
+      /\.challenge-manage-content\s*\{[\s\S]*gap:\s*var\(--space-6\);/s
+    )
+    expect(challengeManageSource).toMatch(
+      /\.challenge-manage-panel\s*\{[\s\S]*gap:\s*var\(--space-6\);/s
+    )
+    expect(challengeManageSource).toMatch(
+      /\.challenge-manage-directory\s*\{[\s\S]*gap:\s*var\(--space-4\);/s
+    )
+    expect(summaryGridStyleBlock).toBeTruthy()
+    expect(summaryGridStyleBlock).not.toContain('margin-top')
+    expect(summaryGridStyleBlock).not.toContain('margin-bottom')
+  })
+
   it('更多操作菜单应浮到表格滚动层之上，而不是渲染在列表容器内部', async () => {
     const wrapper = mount(ChallengeManage, {
       attachTo: document.body,
