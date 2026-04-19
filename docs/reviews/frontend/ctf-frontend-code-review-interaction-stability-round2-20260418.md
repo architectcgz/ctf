@@ -32,6 +32,7 @@
   - `M4` / `M5` AWD 轮次详情页已继续拆分，`AWDRoundInspector` 的攻击流量、服务状态、攻击日志、排行榜与轮次汇总已拆为独立子组件，父组件进一步收敛为编排层。
   - `M4` / `M5` AWD 轮次详情页已继续拆分顶部结构，`AWDRoundInspector` 的 hero 操作区与轮次切换区已拆到 `AWDRoundHeaderPanel`、`AWDRoundSelectionPanel`，父组件不再直接承载顶部工具栏、轮次选择器和基础状态卡片。
   - `M4` / `M5` `AWDOperationsPanel` 已继续下沉赛事选择器与未开赛运行壳层，`AWDContestSelectorField`、`AWDRuntimePendingState` 负责静态工作台结构，父组件进一步收敛为面板编排、状态持久化和对话框调度层。
+  - `M5` `ContestChallengeOrchestrationPanel` 已继续下沉题目池汇总条与 AWD 筛选条，`ContestChallengeSummaryStrip`、`ContestChallengeFilterStrip` 承接静态展示与筛选切换 UI，父组件进一步收敛到题目数据获取、保存/移除动作和空态编排。
   - `L1` AWD 运行面板与轮次详情相关组件已继续清理一批裸魔法数和模板内主题 utility，`AWDOperationsPanel`、`AWDRoundInspector`、`AWDTrafficPanel`、`AWDServiceStatusPanel`、`AWDAttackLogPanel` 不再直接保留 `rounded-[28px]`、`shadow-[0_24px_70px_var(--color-shadow-soft)]`、`text-[11px]`、`tracking-[0.22em]`、`xl:grid-cols-[1.3fr_0.7fr]` 这类片段。
   - `L1` `AdminContestTable` 的分页壳层已切到 `contest-pagination-tone` 语义类承接弱文本色，不再在模板结构节点直接内联 `text-[var(--color-text-muted)]`。
   - `L1` `AWDTrafficPanel` 的流量摘要卡已切到 `awd-traffic-summary-card` 语义类，并通过 scoped media rule 承接中屏两列布局的末行边框逻辑，不再在模板里保留 `md:[&:nth-last-child(-n+2)]:border-b-0`。
