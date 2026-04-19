@@ -53,14 +53,23 @@ function handleWindowKeydown(event: KeyboardEvent): void {
   closeDialog()
 }
 
+// 统一管理副作用：键盘监听与滚动锁定
 watch(
   () => [props.open, props.closeOnEscape] as const,
   ([open, closeOnEscape]) => {
     if (typeof window === 'undefined') return
 
+    // 处理键盘事件
     window.removeEventListener('keydown', handleWindowKeydown)
     if (open && closeOnEscape) {
       window.addEventListener('keydown', handleWindowKeydown)
+    }
+
+    // 处理背景滚动锁定
+    if (open) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
     }
   },
   { immediate: true }
@@ -69,6 +78,8 @@ watch(
 onBeforeUnmount(() => {
   if (typeof window === 'undefined') return
   window.removeEventListener('keydown', handleWindowKeydown)
+  // 确保组件销毁时恢复滚动
+  document.body.style.overflow = ''
 })
 </script>
 
