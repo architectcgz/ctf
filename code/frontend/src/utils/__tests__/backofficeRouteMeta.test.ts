@@ -7,7 +7,7 @@ import {
 } from '../backofficeRouteMeta'
 
 describe('backofficeRouteMeta', () => {
-  it('marks academy, platform and admin paths as backoffice routes', () => {
+  it('marks academy and platform paths as backoffice routes', () => {
     expect(isBackofficeRoute('/academy/overview')).toBe(true)
     expect(isBackofficeRoute('/platform/challenges')).toBe(true)
     expect(isBackofficeRoute('/platform/users')).toBe(true)

@@ -398,10 +398,6 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
-        path: 'admin/dashboard',
-        redirect: redirectWithQuery('/platform/overview'),
-      },
-      {
         path: 'platform/classes',
         name: 'AdminClassManagement',
         component: () => import('@/views/admin/ClassManage.vue'),
@@ -412,10 +408,6 @@ const routes: RouteRecordRaw[] = [
           icon: 'Users',
           contentLayout: 'bleed',
         },
-      },
-      {
-        path: 'admin/classes',
-        redirect: redirectWithQuery('/platform/classes'),
       },
       {
         path: 'platform/students',
@@ -430,10 +422,6 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
-        path: 'admin/students',
-        redirect: redirectWithQuery('/platform/students'),
-      },
-      {
         path: 'platform/classes/:className',
         name: 'AdminClassStudents',
         component: () => import('@/views/teacher/TeacherClassStudents.vue'),
@@ -443,14 +431,6 @@ const routes: RouteRecordRaw[] = [
           title: '班级学生',
           contentLayout: 'bleed',
         },
-      },
-      {
-        path: 'admin/classes/:className',
-        redirect: (to) => ({
-          path: `/platform/classes/${encodeURIComponent(String(to.params.className || ''))}`,
-          query: to.query,
-          hash: to.hash,
-        }),
       },
       {
         path: 'platform/classes/:className/trend',
@@ -464,14 +444,6 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
-        path: 'admin/classes/:className/trend',
-        redirect: (to) => ({
-          path: `/platform/classes/${encodeURIComponent(String(to.params.className || ''))}/trend`,
-          query: to.query,
-          hash: to.hash,
-        }),
-      },
-      {
         path: 'platform/classes/:className/review',
         name: 'AdminClassReview',
         component: () => import('@/views/teacher/TeacherClassWorkspaceSection.vue'),
@@ -481,14 +453,6 @@ const routes: RouteRecordRaw[] = [
           title: '教学复盘',
           contentLayout: 'bleed',
         },
-      },
-      {
-        path: 'admin/classes/:className/review',
-        redirect: (to) => ({
-          path: `/platform/classes/${encodeURIComponent(String(to.params.className || ''))}/review`,
-          query: to.query,
-          hash: to.hash,
-        }),
       },
       {
         path: 'platform/classes/:className/insights',
@@ -502,14 +466,6 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
-        path: 'admin/classes/:className/insights',
-        redirect: (to) => ({
-          path: `/platform/classes/${encodeURIComponent(String(to.params.className || ''))}/insights`,
-          query: to.query,
-          hash: to.hash,
-        }),
-      },
-      {
         path: 'platform/classes/:className/intervention',
         name: 'AdminClassIntervention',
         component: () => import('@/views/teacher/TeacherClassWorkspaceSection.vue'),
@@ -519,14 +475,6 @@ const routes: RouteRecordRaw[] = [
           title: '介入建议',
           contentLayout: 'bleed',
         },
-      },
-      {
-        path: 'admin/classes/:className/intervention',
-        redirect: (to) => ({
-          path: `/platform/classes/${encodeURIComponent(String(to.params.className || ''))}/intervention`,
-          query: to.query,
-          hash: to.hash,
-        }),
       },
       {
         path: 'platform/classes/:className/students/:studentId',
@@ -540,14 +488,6 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
-        path: 'admin/classes/:className/students/:studentId',
-        redirect: (to) => ({
-          path: `/platform/classes/${encodeURIComponent(String(to.params.className || ''))}/students/${encodeURIComponent(String(to.params.studentId || ''))}`,
-          query: to.query,
-          hash: to.hash,
-        }),
-      },
-      {
         path: 'platform/classes/:className/students/:studentId/review-archive',
         name: 'AdminStudentReviewArchive',
         component: () => import('@/views/teacher/TeacherStudentReviewArchive.vue'),
@@ -557,14 +497,6 @@ const routes: RouteRecordRaw[] = [
           title: '学生复盘归档',
           contentLayout: 'bleed',
         },
-      },
-      {
-        path: 'admin/classes/:className/students/:studentId/review-archive',
-        redirect: (to) => ({
-          path: `/platform/classes/${encodeURIComponent(String(to.params.className || ''))}/students/${encodeURIComponent(String(to.params.studentId || ''))}/review-archive`,
-          query: to.query,
-          hash: to.hash,
-        }),
       },
       {
         path: 'platform/awd-reviews',
@@ -579,10 +511,6 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
-        path: 'admin/awd-reviews',
-        redirect: redirectWithQuery('/platform/awd-reviews'),
-      },
-      {
         path: 'platform/awd-reviews/:contestId',
         name: 'AdminAWDReviewDetail',
         component: () => import('@/views/teacher/TeacherAWDReviewDetail.vue'),
@@ -592,14 +520,6 @@ const routes: RouteRecordRaw[] = [
           title: 'AWD复盘详情',
           contentLayout: 'bleed',
         },
-      },
-      {
-        path: 'admin/awd-reviews/:contestId',
-        redirect: (to) => ({
-          path: `/platform/awd-reviews/${encodeURIComponent(String(to.params.contestId || ''))}`,
-          query: to.query,
-          hash: to.hash,
-        }),
       },
       {
         path: 'platform/instances',
@@ -614,10 +534,6 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
-        path: 'admin/instances',
-        redirect: redirectWithQuery('/platform/instances'),
-      },
-      {
         path: 'platform/challenges',
         name: 'ChallengeManage',
         component: () => import('@/views/admin/ChallengeManage.vue'),
@@ -628,10 +544,6 @@ const routes: RouteRecordRaw[] = [
           icon: 'Settings',
           contentLayout: 'bleed',
         },
-      },
-      {
-        path: 'admin/challenges',
-        redirect: redirectWithQuery('/platform/challenges'),
       },
       {
         path: 'platform/challenges/package-format',
@@ -645,10 +557,6 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
-        path: 'admin/challenges/package-format',
-        redirect: redirectWithQuery('/platform/challenges/package-format'),
-      },
-      {
         path: 'platform/challenges/imports',
         name: 'AdminChallengeImportManage',
         component: () => import('@/views/admin/ChallengeImportManage.vue'),
@@ -658,10 +566,6 @@ const routes: RouteRecordRaw[] = [
           title: '导入资源包',
           contentLayout: 'bleed',
         },
-      },
-      {
-        path: 'admin/challenges/imports',
-        redirect: redirectWithQuery('/platform/challenges/imports'),
       },
       {
         path: 'platform/challenges/imports/:importId',
@@ -675,14 +579,6 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
-        path: 'admin/challenges/imports/:importId',
-        redirect: (to) => ({
-          path: `/platform/challenges/imports/${encodeURIComponent(String(to.params.importId || ''))}`,
-          query: to.query,
-          hash: to.hash,
-        }),
-      },
-      {
         path: 'platform/challenges/:id',
         name: 'AdminChallengeDetail',
         component: () => import('@/views/admin/ChallengeDetail.vue'),
@@ -694,14 +590,6 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
-        path: 'admin/challenges/:id',
-        redirect: (to) => ({
-          path: `/platform/challenges/${encodeURIComponent(String(to.params.id || ''))}`,
-          query: to.query,
-          hash: to.hash,
-        }),
-      },
-      {
         path: 'platform/challenges/:id/topology',
         name: 'AdminChallengeTopologyStudio',
         component: () => import('@/views/admin/ChallengeTopologyStudio.vue'),
@@ -711,14 +599,6 @@ const routes: RouteRecordRaw[] = [
           title: '拓扑编排',
           contentLayout: 'bleed',
         },
-      },
-      {
-        path: 'admin/challenges/:id/topology',
-        redirect: (to) => ({
-          path: `/platform/challenges/${encodeURIComponent(String(to.params.id || ''))}/topology`,
-          query: to.query,
-          hash: to.hash,
-        }),
       },
       {
         path: 'platform/environment-templates',
@@ -733,10 +613,6 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
-        path: 'admin/environment-templates',
-        redirect: redirectWithQuery('/platform/environment-templates'),
-      },
-      {
         path: 'platform/awd-service-templates',
         name: 'AdminAWDServiceTemplateLibrary',
         component: () => import('@/views/admin/AWDServiceTemplateLibrary.vue'),
@@ -747,10 +623,6 @@ const routes: RouteRecordRaw[] = [
           icon: 'Shield',
           contentLayout: 'bleed',
         },
-      },
-      {
-        path: 'admin/awd-service-templates',
-        redirect: redirectWithQuery('/platform/awd-service-templates'),
       },
       {
         path: 'platform/challenges/:id/writeup',
@@ -764,14 +636,6 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
-        path: 'admin/challenges/:id/writeup',
-        redirect: (to) => ({
-          path: `/platform/challenges/${encodeURIComponent(String(to.params.id || ''))}/writeup`,
-          query: to.query,
-          hash: to.hash,
-        }),
-      },
-      {
         path: 'platform/challenges/:id/writeup/view',
         name: 'AdminChallengeWriteupView',
         component: () => import('@/views/admin/ChallengeWriteupView.vue'),
@@ -783,15 +647,7 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
-        path: 'admin/challenges/:id/writeup/view',
-        redirect: (to) => ({
-          path: `/platform/challenges/${encodeURIComponent(String(to.params.id || ''))}/writeup/view`,
-          query: to.query,
-          hash: to.hash,
-        }),
-      },
-      {
-        path: 'admin/contests',
+        path: 'platform/contests',
         name: 'ContestManage',
         component: () => import('@/views/admin/ContestManage.vue'),
         meta: {
@@ -803,7 +659,7 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
-        path: 'admin/contests/:id/edit',
+        path: 'platform/contests/:id/edit',
         name: 'ContestEdit',
         component: () => import('@/views/admin/ContestEdit.vue'),
         meta: {
@@ -814,23 +670,7 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
-        path: 'platform/contests',
-        redirect: redirectWithQuery('/admin/contests'),
-      },
-      {
-        path: 'platform/contests/:id/edit',
-        redirect: (to) => ({
-          path: `/admin/contests/${encodeURIComponent(String(to.params.id || ''))}/edit`,
-          query: to.query,
-          hash: to.hash,
-        }),
-      },
-      {
         path: 'platform/contest-ops/environment',
-        redirect: { name: 'AdminContestOpsEnvironment' },
-      },
-      {
-        path: 'platform/contest-ops/contests',
         name: 'AdminContestOpsEnvironment',
         component: () => import('@/views/admin/ContestOperationsHub.vue'),
         meta: {
@@ -896,10 +736,6 @@ const routes: RouteRecordRaw[] = [
           icon: 'Layers',
           contentLayout: 'bleed',
         },
-      },
-      {
-        path: 'admin/images',
-        redirect: redirectWithQuery('/platform/images'),
       },
       {
         path: 'platform/integrity',

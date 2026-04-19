@@ -77,7 +77,7 @@ describe('Sidebar desktop layout', () => {
         { path: '/platform/overview', component: { template: '<div>admin</div>' } },
         { path: '/academy/classes', component: { template: '<div>classes</div>' } },
         { path: '/platform/challenges', component: { template: '<div>challenges</div>' } },
-        { path: '/platform/contest-ops/contests', component: { template: '<div>event ops</div>' } },
+        { path: '/platform/contest-ops/environment', component: { template: '<div>event ops</div>' } },
         { path: '/platform/contests', component: { template: '<div>contests</div>' } },
       ],
     })
@@ -120,7 +120,7 @@ describe('Sidebar desktop layout', () => {
       history: createMemoryHistory(),
       routes: [
         { path: '/platform/overview', component: { template: '<div>admin</div>' } },
-        { path: '/platform/contest-ops/contests', component: { template: '<div>contest management</div>' } },
+        { path: '/platform/contest-ops/environment', component: { template: '<div>contest management</div>' } },
         { path: '/platform/contest-ops/traffic', component: { template: '<div>traffic</div>' } },
         { path: '/platform/contest-ops/projector', component: { template: '<div>projector</div>' } },
         { path: '/platform/contest-ops/scoreboard', component: { template: '<div>scoreboard</div>' } },
@@ -138,7 +138,7 @@ describe('Sidebar desktop layout', () => {
       'token'
     )
 
-    await router.push('/platform/contest-ops/contests')
+    await router.push('/platform/contest-ops/environment')
     await router.isReady()
 
     const wrapper = mount(Sidebar, {
