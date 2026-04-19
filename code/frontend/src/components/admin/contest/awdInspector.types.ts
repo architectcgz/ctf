@@ -144,6 +144,14 @@ export type AWDAttackLogPanelEmits = {
   exportAttacks: []
 }
 
+export interface AWDScoreboardSummaryPanelProps {
+  scoreboardRows: ScoreboardRow[]
+  scoreboardFrozen: boolean
+  summary: AWDRoundSummaryData | null
+  formatScore: (value: number) => string
+  formatDateTime: (value?: string) => string
+}
+
 export interface AWDTrafficPanelProps {
   updatedAt?: string
   challengeLinks: AdminContestChallengeData[]

@@ -54,25 +54,23 @@ function getTrafficStatusGroupLabel(statusGroup: AWDTrafficStatusGroup): string 
   <section class="space-y-4 border-t border-border pt-6">
     <div class="flex items-center justify-between gap-3">
       <div>
-        <h3 class="text-base font-semibold text-[var(--color-text-primary)]">攻击流量态势</h3>
-        <p class="mt-1 text-xs text-[var(--color-text-muted)]">
+        <h3 class="awd-traffic-title text-base font-semibold">攻击流量态势</h3>
+        <p class="awd-traffic-muted mt-1 text-xs">
           代理请求摘要，不等同于已确认攻破结果。
         </p>
       </div>
-      <span class="text-xs text-[var(--color-text-muted)]"
-        >最近更新时间：{{ formatDateTime(updatedAt) }}</span
-      >
+      <span class="awd-traffic-muted text-xs">最近更新时间：{{ formatDateTime(updatedAt) }}</span>
     </div>
 
     <div
       v-if="loadingTrafficSummary"
-      class="rounded-xl border border-dashed border-border px-4 py-8 text-center text-sm text-[var(--color-text-muted)]"
+      class="awd-traffic-empty rounded-xl border border-dashed border-border px-4 py-8 text-center text-sm"
     >
       正在加载攻击流量摘要...
     </div>
     <div
       v-else-if="!trafficSummary"
-      class="rounded-xl border border-dashed border-border px-4 py-8 text-center text-sm text-[var(--color-text-muted)]"
+      class="awd-traffic-empty rounded-xl border border-dashed border-border px-4 py-8 text-center text-sm"
     >
       当前轮次暂未返回攻击流量摘要。
     </div>
@@ -84,27 +82,23 @@ function getTrafficStatusGroupLabel(statusGroup: AWDTrafficStatusGroup): string 
             :key="item.key"
             class="border-b border-border/70 px-4 py-4 last:border-b-0 md:[&:nth-last-child(-n+2)]:border-b-0 xl:border-b-0 xl:border-r xl:last:border-r-0"
           >
-            <p
-              class="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]"
-            >
+            <p class="awd-traffic-stat-label">
               {{ item.label }}
             </p>
-            <p class="mt-3 text-2xl font-semibold tracking-tight text-[var(--color-text-primary)]">
+            <p class="awd-traffic-stat-value mt-3 text-2xl font-semibold tracking-tight">
               {{ item.value }}
             </p>
-            <p class="mt-2 text-xs leading-6 text-[var(--color-text-muted)]">
+            <p class="awd-traffic-stat-hint mt-2 text-xs leading-6">
               {{ item.hint }}
             </p>
           </div>
         </div>
       </div>
 
-      <div class="grid gap-4 xl:grid-cols-[1.3fr_0.7fr]">
+      <div class="awd-traffic-overview-grid grid gap-4">
         <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <div class="rounded-xl border border-border/80">
-            <div
-              class="border-b border-border bg-surface-alt/40 px-3 py-2 text-xs font-semibold tracking-[0.12em] text-[var(--color-text-muted)]"
-            >
+            <div class="awd-traffic-block-head border-b border-border bg-surface-alt/40 px-3 py-2">
               热点攻击队
             </div>
             <ol class="divide-y divide-border/70">
@@ -113,23 +107,18 @@ function getTrafficStatusGroupLabel(statusGroup: AWDTrafficStatusGroup): string 
                 :key="`traffic-attacker-${item.team_id}`"
                 class="flex items-center justify-between px-3 py-2 text-sm"
               >
-                <span class="text-[var(--color-text-primary)]">{{ item.team_name }}</span>
-                <span class="font-medium text-[var(--color-text-secondary)]">{{
+                <span class="awd-traffic-primary">{{ item.team_name }}</span>
+                <span class="awd-traffic-secondary font-medium">{{
                   item.request_count
                 }}</span>
               </li>
-              <li
-                v-if="trafficSummary.top_attackers.length === 0"
-                class="px-3 py-3 text-xs text-[var(--color-text-muted)]"
-              >
+              <li v-if="trafficSummary.top_attackers.length === 0" class="awd-traffic-empty-copy px-3 py-3 text-xs">
                 暂无攻击队热点数据
               </li>
             </ol>
           </div>
           <div class="rounded-xl border border-border/80">
-            <div
-              class="border-b border-border bg-surface-alt/40 px-3 py-2 text-xs font-semibold tracking-[0.12em] text-[var(--color-text-muted)]"
-            >
+            <div class="awd-traffic-block-head border-b border-border bg-surface-alt/40 px-3 py-2">
               热点受害队
             </div>
             <ol class="divide-y divide-border/70">
@@ -138,23 +127,18 @@ function getTrafficStatusGroupLabel(statusGroup: AWDTrafficStatusGroup): string 
                 :key="`traffic-victim-${item.team_id}`"
                 class="flex items-center justify-between px-3 py-2 text-sm"
               >
-                <span class="text-[var(--color-text-primary)]">{{ item.team_name }}</span>
-                <span class="font-medium text-[var(--color-text-secondary)]">{{
+                <span class="awd-traffic-primary">{{ item.team_name }}</span>
+                <span class="awd-traffic-secondary font-medium">{{
                   item.request_count
                 }}</span>
               </li>
-              <li
-                v-if="trafficSummary.top_victims.length === 0"
-                class="px-3 py-3 text-xs text-[var(--color-text-muted)]"
-              >
+              <li v-if="trafficSummary.top_victims.length === 0" class="awd-traffic-empty-copy px-3 py-3 text-xs">
                 暂无目标热点数据
               </li>
             </ol>
           </div>
           <div class="rounded-xl border border-border/80">
-            <div
-              class="border-b border-border bg-surface-alt/40 px-3 py-2 text-xs font-semibold tracking-[0.12em] text-[var(--color-text-muted)]"
-            >
+            <div class="awd-traffic-block-head border-b border-border bg-surface-alt/40 px-3 py-2">
               热点题目
             </div>
             <ol class="divide-y divide-border/70">
@@ -163,25 +147,20 @@ function getTrafficStatusGroupLabel(statusGroup: AWDTrafficStatusGroup): string 
                 :key="`traffic-challenge-${item.challenge_id}`"
                 class="flex items-center justify-between gap-3 px-3 py-2 text-sm"
               >
-                <span class="truncate text-[var(--color-text-primary)]">{{
+                <span class="awd-traffic-primary truncate">{{
                   getTrafficChallengeTitle(item.challenge_id, item.challenge_title)
                 }}</span>
-                <span class="shrink-0 font-medium text-[var(--color-text-secondary)]">{{
+                <span class="awd-traffic-secondary shrink-0 font-medium">{{
                   item.request_count
                 }}</span>
               </li>
-              <li
-                v-if="trafficSummary.top_challenges.length === 0"
-                class="px-3 py-3 text-xs text-[var(--color-text-muted)]"
-              >
+              <li v-if="trafficSummary.top_challenges.length === 0" class="awd-traffic-empty-copy px-3 py-3 text-xs">
                 暂无题目热点数据
               </li>
             </ol>
           </div>
           <div class="rounded-xl border border-border/80">
-            <div
-              class="border-b border-border bg-surface-alt/40 px-3 py-2 text-xs font-semibold tracking-[0.12em] text-[var(--color-text-muted)]"
-            >
+            <div class="awd-traffic-block-head border-b border-border bg-surface-alt/40 px-3 py-2">
               异常路径
             </div>
             <ol class="divide-y divide-border/70">
@@ -190,17 +169,14 @@ function getTrafficStatusGroupLabel(statusGroup: AWDTrafficStatusGroup): string 
                 :key="`traffic-path-${item.path}`"
                 class="px-3 py-2 text-sm"
               >
-                <p class="truncate font-mono text-[var(--color-text-primary)]">
+                <p class="awd-traffic-primary truncate font-mono">
                   {{ item.path }}
                 </p>
-                <p class="mt-1 text-xs text-[var(--color-text-muted)]">
+                <p class="awd-traffic-muted mt-1 text-xs">
                   请求 {{ item.request_count }} / 错误 {{ item.error_count }}
                 </p>
               </li>
-              <li
-                v-if="trafficSummary.top_error_paths.length === 0"
-                class="px-3 py-3 text-xs text-[var(--color-text-muted)]"
-              >
+              <li v-if="trafficSummary.top_error_paths.length === 0" class="awd-traffic-empty-copy px-3 py-3 text-xs">
                 暂无异常路径数据
               </li>
             </ol>
@@ -209,10 +185,10 @@ function getTrafficStatusGroupLabel(statusGroup: AWDTrafficStatusGroup): string 
 
         <div class="rounded-xl border border-border/80">
           <div class="border-b border-border bg-surface-alt/40 px-3 py-2">
-            <p class="text-xs font-semibold tracking-[0.12em] text-[var(--color-text-muted)]">
+            <p class="awd-traffic-block-head">
               趋势摘要（最近 12 桶）
             </p>
-            <p class="mt-2 text-xs leading-6 text-[var(--color-text-muted)]">
+            <p class="awd-traffic-muted mt-2 text-xs leading-6">
               {{ trafficTrendNarrative }}
             </p>
           </div>
@@ -222,18 +198,18 @@ function getTrafficStatusGroupLabel(statusGroup: AWDTrafficStatusGroup): string 
               :key="bucket.bucket_start_at"
               class="space-y-1"
             >
-              <div class="flex items-center justify-between text-xs text-[var(--color-text-muted)]">
+              <div class="awd-traffic-muted flex items-center justify-between text-xs">
                 <span>{{ bucket.label }}</span>
                 <span>请求 {{ bucket.request_count }} / 错误 {{ bucket.error_count }}</span>
               </div>
-              <div class="h-1.5 overflow-hidden rounded-full bg-[var(--color-text-muted)]/20">
+              <div class="awd-traffic-trend-track h-1.5 overflow-hidden rounded-full">
                 <div
-                  class="h-full rounded-full bg-[var(--color-primary)]/70"
+                  class="awd-traffic-trend-bar h-full rounded-full"
                   :style="{ width: `${bucket.ratio}%` }"
                 />
               </div>
             </div>
-            <p v-if="trafficTrendRows.length === 0" class="text-xs text-[var(--color-text-muted)]">
+            <p v-if="trafficTrendRows.length === 0" class="awd-traffic-muted text-xs">
               当前没有趋势桶数据。
             </p>
           </div>
@@ -462,6 +438,43 @@ function getTrafficStatusGroupLabel(statusGroup: AWDTrafficStatusGroup): string 
   );
 }
 
+.awd-traffic-title,
+.awd-traffic-primary {
+  color: var(--color-text-primary);
+}
+
+.awd-traffic-muted,
+.awd-traffic-stat-hint,
+.awd-traffic-empty,
+.awd-traffic-empty-copy {
+  color: var(--color-text-muted);
+}
+
+.awd-traffic-secondary {
+  color: var(--color-text-secondary);
+}
+
+.awd-traffic-stat-label,
+.awd-traffic-block-head {
+  font-size: var(--font-size-11);
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.awd-traffic-stat-value {
+  color: var(--color-text-primary);
+}
+
+.awd-traffic-trend-track {
+  background: color-mix(in srgb, var(--color-text-muted) 20%, transparent);
+}
+
+.awd-traffic-trend-bar {
+  background: color-mix(in srgb, var(--color-primary) 70%, transparent);
+}
+
 .awd-round-filter-field {
   --ui-field-gap: var(--space-2);
   --ui-field-label-size: var(--font-size-11);
@@ -483,5 +496,11 @@ function getTrafficStatusGroupLabel(statusGroup: AWDTrafficStatusGroup): string 
   flex-shrink: 0;
   min-width: var(--ui-control-height-md);
   padding: 0;
+}
+
+@media (min-width: 1280px) {
+  .awd-traffic-overview-grid {
+    grid-template-columns: 1.3fr 0.7fr;
+  }
 }
 </style>

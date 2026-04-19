@@ -3,6 +3,7 @@ import { toRef } from 'vue'
 import { RefreshCw, ShieldAlert, ShieldCheck, Sword, TimerReset } from 'lucide-vue-next'
 import type { AWDTeamServiceData } from '@/api/contracts'
 import AWDAttackLogPanel from '@/components/admin/contest/AWDAttackLogPanel.vue'
+import AWDScoreboardSummaryPanel from '@/components/admin/contest/AWDScoreboardSummaryPanel.vue'
 import AWDServiceStatusPanel from '@/components/admin/contest/AWDServiceStatusPanel.vue'
 import AWDTrafficPanel from '@/components/admin/contest/AWDTrafficPanel.vue'
 import type {
@@ -172,20 +173,16 @@ function getServiceCheckPresentationResult(service: AWDTeamServiceData): Record<
 
 <template>
   <div class="space-y-6">
-    <section class="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
-      <div
-        class="awd-round-hero rounded-[28px] border p-6 shadow-[0_24px_70px_var(--color-shadow-soft)]"
-      >
-        <div
-          class="flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--color-primary-hover)]/75"
-        >
+    <section class="awd-round-shell-grid grid gap-4">
+      <div class="awd-round-hero border p-6">
+        <div class="awd-round-hero-overline flex flex-wrap items-center gap-2">
           <span>AWD Operations</span>
           <span class="awd-round-hero-chip rounded-full px-2 py-1">真实接口</span>
         </div>
         <div class="mt-3 flex flex-wrap items-start justify-between gap-3">
           <div>
             <h2 class="text-3xl font-semibold tracking-tight text-white">{{ contest.title }}</h2>
-            <p class="mt-3 text-sm leading-7 text-[var(--color-text-secondary)]/90">
+            <p class="awd-round-hero-description mt-3 text-sm leading-7">
               针对当前 AWD 赛事查看轮次态势、服务健康、攻击记录，并支持立即触发当前轮巡检。
             </p>
           </div>
@@ -244,18 +241,18 @@ function getServiceCheckPresentationResult(service: AWDTeamServiceData): Record<
             {{ checkButtonLabel }}
           </button>
         </div>
-        <p v-if="shouldAutoRefresh" class="mt-3 text-xs text-[var(--color-primary-hover)]/70">
+        <p v-if="shouldAutoRefresh" class="awd-round-hint mt-3 text-xs">
           当前正在跟随 live 轮次，面板会每 15 秒自动刷新一次。
         </p>
         <p
           v-if="selectedRoundId && !canRecordServiceChecks && serviceCheckHint"
-          class="mt-1 text-xs text-[var(--color-primary-hover)]/70"
+          class="awd-round-hint mt-1 text-xs"
         >
           {{ serviceCheckHint }}
         </p>
         <p
           v-if="selectedRoundId && !canRecordAttackLogs && attackLogHint"
-          class="mt-1 text-xs text-[var(--color-primary-hover)]/70"
+          class="awd-round-hint mt-1 text-xs"
         >
           {{ attackLogHint }}
         </p>
@@ -287,7 +284,7 @@ function getServiceCheckPresentationResult(service: AWDTeamServiceData): Record<
         >
           <template #header>
             <div
-              class="flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--color-danger)]/20 bg-[var(--color-danger)]/10 text-[var(--color-danger)]"
+              class="awd-metric-icon awd-metric-icon--danger"
             >
               <ShieldAlert class="h-5 w-5" />
             </div>
@@ -303,7 +300,7 @@ function getServiceCheckPresentationResult(service: AWDTeamServiceData): Record<
         >
           <template #header>
             <div
-              class="flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--color-success)]/20 bg-[var(--color-success)]/10 text-[var(--color-success)]"
+              class="awd-metric-icon awd-metric-icon--success"
             >
               <Sword class="h-5 w-5" />
             </div>
@@ -312,7 +309,7 @@ function getServiceCheckPresentationResult(service: AWDTeamServiceData): Record<
       </div>
     </section>
 
-    <section class="grid gap-6 xl:grid-cols-[0.85fr_1.15fr]">
+    <section class="awd-round-workspace-grid grid gap-6">
       <SectionCard title="轮次切换" subtitle="查看当前轮的基础参数与状态。">
         <div class="space-y-4">
           <label class="ui-field awd-round-filter-field">
@@ -503,7 +500,7 @@ function getServiceCheckPresentationResult(service: AWDTeamServiceData): Record<
                         {{ sample.team_name }} · {{ sample.challenge_title }}
                       </div>
                     </div>
-                    <div class="mt-2 text-xs text-[var(--color-text-secondary)]/80">
+                    <div class="awd-alert-hint mt-2 text-xs">
                       {{
                         serviceAlertReasonFilter === alert.key
                           ? '再次点击可取消筛选'
@@ -516,102 +513,13 @@ function getServiceCheckPresentationResult(service: AWDTeamServiceData): Record<
             </button>
           </div>
 
-          <div class="overflow-hidden rounded-2xl border border-border">
-            <div
-              class="flex items-center justify-between gap-3 border-b border-border bg-surface-alt/70 px-4 py-3"
-            >
-              <div class="text-sm font-semibold text-[var(--color-text-primary)]">实时排行榜</div>
-              <span
-                v-if="scoreboardFrozen"
-                class="inline-flex rounded-full border border-[var(--color-warning)]/20 bg-[var(--color-warning)]/10 px-3 py-1 text-xs font-semibold text-[var(--color-warning)]"
-              >
-                排行榜已冻结
-              </span>
-            </div>
-            <table class="min-w-full divide-y divide-border">
-              <thead
-                class="bg-surface-alt/40 text-left text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]"
-              >
-                <tr>
-                  <th class="px-4 py-3">排名</th>
-                  <th class="px-4 py-3">队伍</th>
-                  <th class="px-4 py-3">得分</th>
-                  <th class="px-4 py-3">解题数</th>
-                  <th class="px-4 py-3">最近得分</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-border bg-surface/70">
-                <tr v-for="item in scoreboardRows" :key="item.team_id">
-                  <td class="px-4 py-4 text-sm font-semibold text-[var(--color-text-primary)]">
-                    #{{ item.rank }}
-                  </td>
-                  <td class="px-4 py-4 text-sm text-[var(--color-text-primary)]">
-                    {{ item.team_name }}
-                  </td>
-                  <td class="px-4 py-4 text-sm text-[var(--color-text-primary)]">
-                    {{ formatScore(item.score) }}
-                  </td>
-                  <td class="px-4 py-4 text-sm text-[var(--color-text-muted)]">
-                    {{ item.solved_count }}
-                  </td>
-                  <td class="px-4 py-4 text-sm text-[var(--color-text-muted)]">
-                    {{ formatDateTime(item.last_submission_at) }}
-                  </td>
-                </tr>
-                <tr v-if="scoreboardRows.length === 0">
-                  <td
-                    colspan="5"
-                    class="px-4 py-8 text-center text-sm text-[var(--color-text-muted)]"
-                  >
-                    当前赛事还没有排行榜数据。
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div class="overflow-hidden rounded-2xl border border-border">
-            <div
-              class="border-b border-border bg-surface-alt/70 px-4 py-3 text-sm font-semibold text-[var(--color-text-primary)]"
-            >
-              本轮汇总
-            </div>
-            <table class="min-w-full divide-y divide-border">
-              <thead
-                class="bg-surface-alt/40 text-left text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]"
-              >
-                <tr>
-                  <th class="px-4 py-3">队伍</th>
-                  <th class="px-4 py-3">总分</th>
-                  <th class="px-4 py-3">SLA / 攻击 / 防守</th>
-                  <th class="px-4 py-3">服务状态</th>
-                  <th class="px-4 py-3">被攻击情况</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-border bg-surface/70">
-                <tr v-for="item in summary?.items || []" :key="item.team_id">
-                  <td class="px-4 py-4 text-sm font-medium text-[var(--color-text-primary)]">
-                    {{ item.team_name }}
-                  </td>
-                  <td class="px-4 py-4 text-sm text-[var(--color-text-primary)]">
-                    {{ item.total_score }}
-                  </td>
-                  <td class="px-4 py-4 text-sm text-[var(--color-text-secondary)]">
-                    SLA {{ item.sla_score ?? 0 }} / 攻击 {{ item.attack_score }} / 防守
-                    {{ item.defense_score }}
-                  </td>
-                  <td class="px-4 py-4 text-sm text-[var(--color-text-secondary)]">
-                    正常 {{ item.service_up_count }} / 下线 {{ item.service_down_count }} / 失陷
-                    {{ item.service_compromised_count }}
-                  </td>
-                  <td class="px-4 py-4 text-sm text-[var(--color-text-secondary)]">
-                    攻破 {{ item.successful_breach_count }} 次，攻击方
-                    {{ item.unique_attackers_against }} 支
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+          <AWDScoreboardSummaryPanel
+            :scoreboard-rows="scoreboardRows"
+            :scoreboard-frozen="scoreboardFrozen"
+            :summary="summary"
+            :format-score="formatScore"
+            :format-date-time="formatDateTime"
+          />
 
           <div class="grid gap-6 xl:grid-cols-2">
             <AWDServiceStatusPanel
@@ -669,12 +577,26 @@ function getServiceCheckPresentationResult(service: AWDTeamServiceData): Record<
 
 <style scoped>
 .awd-round-hero {
+  border-radius: 1.75rem;
   border-color: color-mix(in srgb, var(--color-primary) 20%, transparent);
   background: linear-gradient(
     145deg,
     color-mix(in srgb, var(--color-primary) 15%, var(--color-bg-surface)),
     color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base))
   );
+  box-shadow: 0 24px 70px var(--color-shadow-soft);
+}
+
+.awd-round-hero-overline {
+  font-size: var(--font-size-11);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  color: color-mix(in srgb, var(--color-primary-hover) 75%, transparent);
+}
+
+.awd-round-hero-description {
+  color: color-mix(in srgb, var(--color-text-secondary) 90%, transparent);
 }
 
 .awd-round-hero-chip {
@@ -682,8 +604,38 @@ function getServiceCheckPresentationResult(service: AWDTeamServiceData): Record<
   background: color-mix(in srgb, var(--color-bg-surface) 24%, transparent);
 }
 
+.awd-round-hint {
+  color: color-mix(in srgb, var(--color-primary-hover) 70%, transparent);
+}
+
 .awd-round-toolbar__button {
   white-space: nowrap;
+}
+
+.awd-metric-icon {
+  display: flex;
+  height: 2.75rem;
+  width: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 1rem;
+  border: 1px solid transparent;
+}
+
+.awd-metric-icon--danger {
+  border-color: color-mix(in srgb, var(--color-danger) 20%, transparent);
+  background: color-mix(in srgb, var(--color-danger) 10%, transparent);
+  color: var(--color-danger);
+}
+
+.awd-metric-icon--success {
+  border-color: color-mix(in srgb, var(--color-success) 20%, transparent);
+  background: color-mix(in srgb, var(--color-success) 10%, transparent);
+  color: var(--color-success);
+}
+
+.awd-alert-hint {
+  color: color-mix(in srgb, var(--color-text-secondary) 80%, transparent);
 }
 
 .awd-round-filter-field {
@@ -701,5 +653,15 @@ function getServiceCheckPresentationResult(service: AWDTeamServiceData): Record<
 
 .awd-round-filter-control {
   width: 100%;
+}
+
+@media (min-width: 1280px) {
+  .awd-round-shell-grid {
+    grid-template-columns: 1.05fr 0.95fr;
+  }
+
+  .awd-round-workspace-grid {
+    grid-template-columns: 0.85fr 1.15fr;
+  }
 }
 </style>
