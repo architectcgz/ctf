@@ -13,6 +13,7 @@ const props = withDefaults(
     width?: string
     closeOnBackdrop?: boolean
     closeOnEscape?: boolean
+    frosted?: boolean
   }>(),
   {
     subtitle: '',
@@ -20,6 +21,7 @@ const props = withDefaults(
     width: '32rem',
     closeOnBackdrop: true,
     closeOnEscape: true,
+    frosted: false,
   }
 )
 
@@ -49,6 +51,7 @@ function forwardClose(): void {
     :aria-label="title"
     :close-on-backdrop="closeOnBackdrop"
     :close-on-escape="closeOnEscape"
+    :frosted="frosted"
     @update:open="forwardOpen"
     @close="forwardClose"
   >
@@ -89,20 +92,14 @@ function forwardClose(): void {
 </template>
 
 <style scoped>
+/* 
+ * 这里只保留【结构性】样式。
+ * 视觉风格（背景、边框、毛玻璃）已移至全局 style.css 以解决 Teleport 样式隔离问题。
+ */
 .modal-template-panel--classic {
-  --modal-template-classic-surface: color-mix(in srgb, var(--color-bg-elevated) 96%, var(--color-bg-surface));
-  --modal-template-classic-surface-muted: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
-  --modal-template-classic-line: color-mix(in srgb, var(--color-border-default) 86%, transparent);
-  --modal-template-classic-text: color-mix(in srgb, var(--color-text-primary) 94%, transparent);
-  --modal-template-classic-muted: color-mix(in srgb, var(--color-text-secondary) 92%, transparent);
-  --modal-template-classic-faint: color-mix(in srgb, var(--color-text-muted) 92%, transparent);
-  --modal-template-classic-accent: var(--color-primary);
   width: min(var(--modal-template-classic-width, 32rem), 100%);
-  border: 1px solid var(--modal-template-classic-line);
-  border-radius: 1.5rem;
-  background: var(--modal-template-classic-surface);
-  box-shadow: 0 28px 80px color-mix(in srgb, var(--color-shadow-strong) 24%, transparent);
-  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .modal-template-classic__header {
@@ -110,15 +107,13 @@ function forwardClose(): void {
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
-  padding: 1.35rem 1.5rem 1.2rem;
-  border-bottom: 1px solid var(--modal-template-classic-line);
-  background: color-mix(in srgb, var(--modal-template-classic-surface-muted) 72%, transparent);
+  padding: 1.5rem 1.75rem 1.25rem;
 }
 
 .modal-template-classic__identity {
   display: flex;
   align-items: flex-start;
-  gap: 0.75rem;
+  gap: 0.85rem;
   min-width: 0;
 }
 
@@ -126,11 +121,12 @@ function forwardClose(): void {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2rem;
-  height: 2rem;
-  border-radius: 0.85rem;
-  background: color-mix(in srgb, var(--modal-template-classic-accent) 10%, var(--modal-template-classic-surface));
-  color: color-mix(in srgb, var(--modal-template-classic-accent) 92%, var(--modal-template-classic-text));
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.95rem;
+  /* 图标背景仍保留少许局部逻辑，或者可移出 */
+  background: color-mix(in srgb, var(--color-primary) 10%, var(--color-bg-surface));
+  color: color-mix(in srgb, var(--color-primary) 92%, var(--color-text-primary));
   flex-shrink: 0;
 }
 
@@ -144,56 +140,51 @@ function forwardClose(): void {
   font-weight: 800;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--modal-template-classic-faint);
+  color: var(--color-text-muted);
 }
 
 .modal-template-classic__title {
   margin: 0.25rem 0 0;
-  font-size: 0.95rem;
+  font-size: 1rem;
   font-weight: 900;
   line-height: 1.2;
-  color: var(--modal-template-classic-text);
+  color: var(--color-text-primary);
 }
 
 .modal-template-classic__subtitle {
   margin: 0.35rem 0 0;
-  font-size: 0.625rem;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--modal-template-classic-faint);
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
 }
 
 .modal-template-classic__close {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2rem;
-  height: 2rem;
+  width: 2.25rem;
+  height: 2.25rem;
   border: 0;
-  border-radius: 0.75rem;
+  border-radius: 0.85rem;
   background: transparent;
-  color: var(--modal-template-classic-faint);
-  transition:
-    background-color 0.18s ease,
-    color 0.18s ease;
+  color: var(--color-text-muted);
+  transition: all 0.18s ease;
 }
 
 .modal-template-classic__close:hover {
-  background: color-mix(in srgb, var(--modal-template-classic-line) 18%, var(--modal-template-classic-surface-muted));
-  color: var(--modal-template-classic-muted);
+  background: color-mix(in srgb, var(--color-text-primary) 8%, transparent);
+  color: var(--color-text-primary);
 }
 
 .modal-template-classic__body {
-  padding: 1.5rem;
+  padding: 1.75rem;
 }
 
 .modal-template-classic__footer {
   display: flex;
   justify-content: flex-end;
   gap: 0.75rem;
-  padding: 1rem 1.5rem 1.25rem;
-  border-top: 1px solid var(--modal-template-classic-line);
-  background: color-mix(in srgb, var(--modal-template-classic-surface-muted) 72%, transparent);
+  padding: 1.25rem 1.75rem 1.5rem;
 }
 </style>

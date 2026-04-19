@@ -501,7 +501,7 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'platform/awd-reviews',
         name: 'PlatformAwdReviewIndex',
-        component: () => import('@/views/teacher/TeacherAWDReviewIndex.vue'),
+        component: () => import('@/views/platform/AWDReviewIndex.vue'),
         meta: {
           requiresAuth: true,
           roles: ['admin'],

@@ -16,6 +16,7 @@ const props = withDefaults(
     role?: string
     closeOnBackdrop?: boolean
     closeOnEscape?: boolean
+    frosted?: boolean
   }>(),
   {
     panelClass: '',
@@ -26,6 +27,7 @@ const props = withDefaults(
     role: 'dialog',
     closeOnBackdrop: true,
     closeOnEscape: true,
+    frosted: false,
   }
 )
 
@@ -76,7 +78,11 @@ onBeforeUnmount(() => {
       <div
         v-if="open"
         v-bind="attrs"
-        :class="['modal-template-shell', overlayClass]"
+        :class="[
+          'modal-template-shell',
+          overlayClass,
+          { 'modal-template-shell--frosted': frosted },
+        ]"
         @click.self="handleBackdropClick"
       >
         <component
@@ -105,6 +111,12 @@ onBeforeUnmount(() => {
   justify-content: center;
   padding: 1rem;
   background: var(--modal-template-shell-overlay);
+}
+
+.modal-template-shell--frosted {
+  --modal-template-shell-overlay: color-mix(in srgb, var(--color-bg-base) 60%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .modal-template-panel {

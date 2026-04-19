@@ -1,6 +1,18 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
-import { ArrowDownWideNarrow, Calendar, SortAsc } from 'lucide-vue-next'
+import {
+  ArrowDownWideNarrow,
+  Calendar,
+  Clock,
+  Database,
+  FileText,
+  Fingerprint,
+  Info,
+  Maximize2,
+  RefreshCw,
+  SortAsc,
+  Tag,
+} from 'lucide-vue-next'
 
 import { createImage, deleteImage, getImages, type AdminImagePayload } from '@/api/admin'
 import type { AdminImageListItem, ImageStatus } from '@/api/contracts'
@@ -22,6 +34,7 @@ type ImageSortOption = WorkspaceDirectorySortOption & {
 
 const toast = useToast()
 const dialogVisible = ref(false)
+const activeImage = ref<AdminImageListItem | null>(null)
 const creating = ref(false)
 const keyword = ref('')
 const statusFilter = ref<ImageStatus | ''>('')
@@ -235,6 +248,26 @@ async function handleManualRefresh() {
   await refresh()
 }
 
+function openDetail(row: AdminImageListItem): void {
+  activeImage.value = row
+}
+
+function closeDetail(): void {
+  activeImage.value = null
+}
+
+function formatSize(bytes?: number): string {
+  if (!bytes) return '未知大小'
+  const units = ['B', 'KB', 'MB', 'GB', 'TB']
+  let size = bytes
+  let unitIndex = 0
+  while (size >= 1024 && unitIndex < units.length - 1) {
+    size /= 1024
+    unitIndex++
+  }
+  return `${size.toFixed(2)} ${units[unitIndex]}`
+}
+
 function getStatusLabel(status: ImageStatus): string {
   return imageStatusMeta[status].label
 }
@@ -442,6 +475,12 @@ onUnmounted(() => {
           <template #cell-actions="{ row }">
             <div class="image-row__actions">
               <button
+                class="ui-btn ui-btn--sm ui-btn--ghost"
+                @click="openDetail(row as AdminImageListItem)"
+              >
+                详情
+              </button>
+              <button
                 class="ui-btn ui-btn--sm ui-btn--danger"
                 @click="handleDelete((row as AdminImageListItem).id)"
               >
@@ -465,7 +504,93 @@ onUnmounted(() => {
     </main>
 
     <AdminSurfaceModal
+      class="image-detail-modal"
+      :open="!!activeImage"
+      :frosted="true"
+      title="镜像详情"
+      eyebrow="Image Registry"
+      width="34rem"
+      @close="closeDetail"
+      @update:open="!$event && closeDetail()"
+    >
+      <section v-if="activeImage" class="image-detail">
+        <div class="image-detail__grid">
+          <article class="image-detail__item">
+            <div class="image-detail__head">
+              <Database class="h-3.5 w-3.5" />
+              <span class="image-detail__label">镜像名称</span>
+            </div>
+            <strong class="image-detail__value">{{ activeImage.name }}</strong>
+          </article>
+
+          <article class="image-detail__item">
+            <div class="image-detail__head">
+              <Tag class="h-3.5 w-3.5" />
+              <span class="image-detail__label">标签版本</span>
+            </div>
+            <strong class="image-detail__value">{{ activeImage.tag }}</strong>
+          </article>
+
+          <article class="image-detail__item">
+            <div class="image-detail__head">
+              <Fingerprint class="h-3.5 w-3.5" />
+              <span class="image-detail__label">镜像 ID</span>
+            </div>
+            <strong class="image-detail__value image-detail__value--mono">
+              {{ activeImage.id }}
+            </strong>
+          </article>
+
+          <article class="image-detail__item">
+            <div class="image-detail__head">
+              <Info class="h-3.5 w-3.5" />
+              <span class="image-detail__label">状态</span>
+            </div>
+            <div class="image-detail__value">
+              <span
+                class="admin-status-chip"
+                :style="getStatusStyle(activeImage.status)"
+              >
+                {{ getStatusLabel(activeImage.status) }}
+              </span>
+            </div>
+          </article>
+
+          <article class="image-detail__item">
+            <div class="image-detail__head">
+              <Maximize2 class="h-3.5 w-3.5" />
+              <span class="image-detail__label">占用空间</span>
+            </div>
+            <strong class="image-detail__value">{{ formatSize(activeImage.size_bytes) }}</strong>
+          </article>
+
+          <article class="image-detail__item">
+            <div class="image-detail__head">
+              <Clock class="h-3.5 w-3.5" />
+              <span class="image-detail__label">最后更新</span>
+            </div>
+            <strong class="image-detail__value">
+              {{ formatDateTime(activeImage.updated_at || activeImage.created_at) }}
+            </strong>
+          </article>
+
+          <article class="image-detail__item image-detail__item--wide">
+            <div class="image-detail__head">
+              <FileText class="h-3.5 w-3.5" />
+              <span class="image-detail__label">描述信息</span>
+            </div>
+            <p class="image-detail__description">
+              {{ activeImage.description || '未提供详细描述' }}
+            </p>
+          </article>
+        </div>
+      </section>
+    </AdminSurfaceModal>
+
+    <AdminSurfaceModal
+      class="image-create-modal"
       :open="dialogVisible"
+      :frosted="true"
       title="创建镜像"
       subtitle="填写镜像名称、标签和说明，提交后会进入镜像目录并参与构建状态跟踪。"
       eyebrow="Image Registry"
@@ -822,6 +947,56 @@ onUnmounted(() => {
 .image-row__actions {
   display: flex;
   justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.image-detail__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.75rem 2rem;
+  padding: 0.25rem;
+}
+
+.image-detail__item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.image-detail__item--wide {
+  grid-column: 1 / -1;
+}
+
+.image-detail__head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--journal-muted);
+}
+
+.image-detail__label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.image-detail__value {
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.2;
+  color: var(--journal-ink);
+}
+
+.image-detail__value--mono {
+  font-family: var(--font-family-mono);
+}
+
+.image-detail__description {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--journal-muted);
 }
 
 @media (max-width: 1040px) {
@@ -848,3 +1023,7 @@ onUnmounted(() => {
   }
 }
 </style>
+
+
+
+

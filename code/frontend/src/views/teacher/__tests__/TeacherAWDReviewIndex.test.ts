@@ -6,7 +6,6 @@ import TeacherAWDReviewIndex from '../TeacherAWDReviewIndex.vue'
 import teacherAwdReviewIndexSource from '../TeacherAWDReviewIndex.vue?raw'
 
 const pushMock = vi.fn()
-let currentRouteName = 'TeacherAWDReviewIndex'
 
 const teacherApiMocks = vi.hoisted(() => ({
   listTeacherAWDReviews: vi.fn(),
@@ -17,7 +16,6 @@ vi.mock('vue-router', async () => {
   return {
     ...actual,
     useRouter: () => ({ push: pushMock }),
-    useRoute: () => ({ name: currentRouteName }),
   }
 })
 
@@ -28,7 +26,6 @@ describe('TeacherAWDReviewIndex', () => {
     vi.useFakeTimers()
     setActivePinia(createPinia())
     pushMock.mockReset()
-    currentRouteName = 'TeacherAWDReviewIndex'
     Object.values(teacherApiMocks).forEach((mock) => mock.mockReset())
 
     teacherApiMocks.listTeacherAWDReviews.mockResolvedValue([
@@ -98,20 +95,18 @@ describe('TeacherAWDReviewIndex', () => {
     expect(wrapper.text()).not.toContain('应用筛选')
   })
 
-  it('平台路由下头部概览按钮应切到平台文案并返回后台概览', async () => {
-    currentRouteName = 'PlatformAwdReviewIndex'
-
+  it('头部概览按钮应返回教学概览', async () => {
     const wrapper = mount(TeacherAWDReviewIndex)
 
     await flushPromises()
 
     const overviewButton = wrapper.get('button.teacher-btn--ghost')
 
-    expect(overviewButton.text()).toContain('平台概览')
+    expect(overviewButton.text()).toContain('教学概览')
 
     await overviewButton.trigger('click')
 
-    expect(pushMock).toHaveBeenCalledWith({ name: 'PlatformOverview' })
+    expect(pushMock).toHaveBeenCalledWith({ name: 'TeacherDashboard' })
   })
 
   it('筛选区应保持平铺，不应继续在页面局部做成独立卡片壳', () => {

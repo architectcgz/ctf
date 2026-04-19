@@ -540,3 +540,41 @@ select {
     color-mix(in srgb, var(--journal-accent, var(--color-primary)) 46%, transparent);
   outline-offset: 2px;
 }
+
+/**
+ * Premium Global Modal Theme
+ * ----------------------------------------------------------------------------
+ * 统一全站弹窗视觉规范，采用玻璃拟物风格，解决 Teleport 导致的样式隔离问题。
+ */
+
+/* 1. 遮罩层与毛玻璃 */
+.modal-template-shell--frosted {
+  background-color: rgba(15, 23, 42, 0.45) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+}
+
+/* 2. 弹窗面板核心样式 */
+.modal-template-panel--classic {
+  background-color: var(--color-bg-surface, #ffffff) !important;
+  border: 1px solid rgba(15, 23, 42, 0.12) !important;
+  border-radius: 1.5rem !important;
+  /* 关键：使用双重描边（外白内黑影），创造极致的区分度 */
+  box-shadow: 
+    0 0 0 1px rgba(255, 255, 255, 0.9),
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 25px 50px -12px rgba(0, 0, 0, 0.18) !important;
+  overflow: hidden !important;
+}
+
+/* 3. 统一各级背景色（去卡片化） */
+.modal-template-panel--classic .modal-template-classic__header,
+.modal-template-panel--classic .modal-template-classic__body,
+.modal-template-panel--classic .modal-template-classic__footer {
+  background-color: var(--color-bg-surface, #ffffff) !important;
+}
+
+/* 4. 优化头部边界感 */
+.modal-template-panel--classic .modal-template-classic__header {
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08) !important;
+}

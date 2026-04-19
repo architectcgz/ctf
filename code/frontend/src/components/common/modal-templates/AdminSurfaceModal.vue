@@ -10,6 +10,7 @@ withDefaults(
     width?: string
     closeOnBackdrop?: boolean
     closeOnEscape?: boolean
+    frosted?: boolean
   }>(),
   {
     subtitle: '',
@@ -17,6 +18,7 @@ withDefaults(
     width: '40rem',
     closeOnBackdrop: true,
     closeOnEscape: true,
+    frosted: true,
   }
 )
 
@@ -35,6 +37,7 @@ const emit = defineEmits<{
     :width="width"
     :close-on-backdrop="closeOnBackdrop"
     :close-on-escape="closeOnEscape"
+    :frosted="frosted"
     @update:open="emit('update:open', $event)"
     @close="emit('close')"
   >

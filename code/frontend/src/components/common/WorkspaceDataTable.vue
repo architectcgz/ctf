@@ -107,8 +107,6 @@ function getCellValue(row: unknown, key: string): unknown {
   --workspace-table-row-hover: color-mix(in srgb, var(--color-border-default) 14%, transparent);
   width: 100%;
   overflow-x: auto;
-  border: none;
-  background: transparent;
 }
 
 .workspace-data-table {

@@ -88,17 +88,22 @@ describe('PlatformInstanceManagement', () => {
       "from '@/components/common/WorkspaceDirectoryPagination.vue'"
     )
     expect(adminInstanceManageSource).toContain(
-      'class="workspace-shell admin-instance-manage-shell"'
+      'class="workspace-shell journal-shell journal-shell-admin journal-notes-card journal-hero admin-instance-manage-shell flex min-h-full flex-1 flex-col"'
+    )
+    expect(adminInstanceManageSource).toContain(
+      'class="admin-summary-grid admin-instance-manage-shell__summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
+    )
+    expect(adminInstanceManageSource).toContain(
+      'class="workspace-directory-section admin-instance-manage-directory"'
+    )
+    expect(adminInstanceManageSource).toContain(
+      'class="workspace-directory-list admin-instance-manage-table"'
     )
     expect(adminInstanceManageSource).toContain('<WorkspaceDirectoryToolbar')
     expect(adminInstanceManageSource).toContain('<WorkspaceDataTable')
     expect(adminInstanceManageSource).toContain('<WorkspaceDirectoryPagination')
-    expect(adminInstanceManageSource).toMatch(
-      /\.admin-instance-manage-directory\s*\{[\s\S]*display:\s*grid;[\s\S]*gap:\s*var\(--space-4\);/s
-    )
-    expect(adminInstanceManageSource).toMatch(
-      /\.admin-instance-manage-directory :deep\(\.workspace-directory-toolbar\)\s*\{[\s\S]*margin-bottom:\s*0;/s
-    )
+    expect(adminInstanceManageSource).not.toMatch(/^\.list-heading\s*\{/m)
+    expect(adminInstanceManageSource).not.toMatch(/\.admin-instance-manage-directory\s*\{/s)
     expect(adminInstanceManageSource).not.toContain('teacher-management-shell')
     expect(adminInstanceManageSource).not.toContain('teacher-directory-row')
 
