@@ -1,15 +1,15 @@
 import { describe, expect, it } from 'vitest'
 
-import adminContestFormDialogSource from '@/components/admin/contest/AdminContestFormDialog.vue?raw'
-import contestChallengeEditorDialogSource from '@/components/admin/contest/ContestChallengeEditorDialog.vue?raw'
-import adminUserFormDialogSource from '@/components/admin/user/AdminUserFormDialog.vue?raw'
-import awdRoundCreateDialogSource from '@/components/admin/contest/AWDRoundCreateDialog.vue?raw'
-import awdServiceCheckDialogSource from '@/components/admin/contest/AWDServiceCheckDialog.vue?raw'
-import awdAttackLogDialogSource from '@/components/admin/contest/AWDAttackLogDialog.vue?raw'
-import awdReadinessOverrideDialogSource from '@/components/admin/contest/AWDReadinessOverrideDialog.vue?raw'
+import adminContestFormDialogSource from '@/components/platform/contest/PlatformContestFormDialog.vue?raw'
+import contestChallengeEditorDialogSource from '@/components/platform/contest/ContestChallengeEditorDialog.vue?raw'
+import adminUserFormDialogSource from '@/components/platform/user/PlatformUserFormDialog.vue?raw'
+import awdRoundCreateDialogSource from '@/components/platform/contest/AWDRoundCreateDialog.vue?raw'
+import awdServiceCheckDialogSource from '@/components/platform/contest/AWDServiceCheckDialog.vue?raw'
+import awdAttackLogDialogSource from '@/components/platform/contest/AWDAttackLogDialog.vue?raw'
+import awdReadinessOverrideDialogSource from '@/components/platform/contest/AWDReadinessOverrideDialog.vue?raw'
 import adminNotificationPublishDrawerSource from '@/components/notifications/AdminNotificationPublishDrawer.vue?raw'
 import teacherAwdReviewTeamDrawerSource from '@/components/teacher/awd-review/TeacherAWDReviewTeamDrawer.vue?raw'
-import imageManageSource from '@/views/admin/ImageManage.vue?raw'
+import imageManageSource from '@/views/platform/ImageManage.vue?raw'
 
 describe('backoffice dialog adoption', () => {
   it('centered backoffice dialogs should adopt AdminSurfaceModal', () => {

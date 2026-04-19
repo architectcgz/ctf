@@ -2,12 +2,12 @@ import { readFileSync } from 'node:fs'
 
 import { describe, expect, it } from 'vitest'
 
-import userGovernanceSource from '@/components/admin/user/UserGovernancePage.vue?raw'
+import userGovernanceSource from '@/components/platform/user/UserGovernancePage.vue?raw'
 import classManagementSource from '@/components/teacher/class-management/ClassManagementPage.vue?raw'
 import challengeDetailSource from '@/views/challenges/ChallengeDetail.vue?raw'
 import contestDetailSource from '@/views/contests/ContestDetail.vue?raw'
-import challengeManageSource from '@/views/admin/ChallengeManage.vue?raw'
-import cheatDetectionSource from '@/views/admin/CheatDetection.vue?raw'
+import challengeManageSource from '@/views/platform/ChallengeManage.vue?raw'
+import cheatDetectionSource from '@/views/platform/CheatDetection.vue?raw'
 import skillProfileSource from '@/views/profile/SkillProfile.vue?raw'
 
 const pageTabsSource = readFileSync(`${process.cwd()}/src/assets/styles/page-tabs.css`, 'utf-8')

@@ -299,7 +299,7 @@ describe('TeacherClassStudents', () => {
 
     wrapper.findComponent({ name: 'ClassStudentsPage' }).vm.$emit('openClassManagement')
 
-    expect(pushMock).toHaveBeenCalledWith({ name: 'AdminClassManagement' })
+    expect(pushMock).toHaveBeenCalledWith({ name: 'PlatformClassManagement' })
   })
 
   it('选择班级下拉框后应跳转到对应班级页面并保持 panel 查询参数', async () => {

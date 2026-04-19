@@ -49,40 +49,40 @@ describe('shared route canonical paths', () => {
   })
 
   it('uses platform paths as the canonical location for shared governance pages', () => {
-    expect(findChild('platform/students')?.name).toBe('AdminStudentManagement')
-    expect(findChild('platform/classes/:className')?.name).toBe('AdminClassStudents')
+    expect(findChild('platform/students')?.name).toBe('PlatformStudentManagement')
+    expect(findChild('platform/classes/:className')?.name).toBe('PlatformClassStudents')
     expect(findChild('platform/classes/:className/students/:studentId')?.name).toBe(
-      'AdminStudentAnalysis'
+      'PlatformStudentAnalysis'
     )
     expect(
       findChild('platform/classes/:className/students/:studentId/review-archive')?.name
-    ).toBe('AdminStudentReviewArchive')
-    expect(findChild('platform/awd-reviews')?.name).toBe('AdminAWDReviewIndex')
-    expect(findChild('platform/awd-reviews/:contestId')?.name).toBe('AdminAWDReviewDetail')
-    expect(findChild('platform/instances')?.name).toBe('AdminInstanceManagement')
-    expect(findChild('platform/classes')?.name).toBe('AdminClassManagement')
+    ).toBe('PlatformStudentReviewArchive')
+    expect(findChild('platform/awd-reviews')?.name).toBe('PlatformAwdReviewIndex')
+    expect(findChild('platform/awd-reviews/:contestId')?.name).toBe('PlatformAwdReviewDetail')
+    expect(findChild('platform/instances')?.name).toBe('PlatformInstanceManagement')
+    expect(findChild('platform/classes')?.name).toBe('PlatformClassManagement')
     expect(findChild('platform/challenges')?.name).toBe('ChallengeManage')
     expect(findChild('platform/challenges/filter-patterns/mock')).toBeUndefined()
     expect(findChild('platform/challenges/package-format')?.name).toBe(
-      'AdminChallengePackageFormat'
+      'PlatformChallengePackageFormat'
     )
-    expect(findChild('platform/challenges/imports')?.name).toBe('AdminChallengeImportManage')
+    expect(findChild('platform/challenges/imports')?.name).toBe('PlatformChallengeImportManage')
     expect(findChild('platform/challenges/imports/:importId')?.name).toBe(
-      'AdminChallengeImportPreview'
+      'PlatformChallengeImportPreview'
     )
-    expect(findChild('platform/challenges/:id')?.name).toBe('AdminChallengeDetail')
-    expect(findChild('platform/challenges/:id/topology')?.name).toBe('AdminChallengeTopologyStudio')
-    expect(findChild('platform/challenges/:id/writeup')?.name).toBe('AdminChallengeWriteup')
+    expect(findChild('platform/challenges/:id')?.name).toBe('PlatformChallengeDetail')
+    expect(findChild('platform/challenges/:id/topology')?.name).toBe('PlatformChallengeTopologyStudio')
+    expect(findChild('platform/challenges/:id/writeup')?.name).toBe('PlatformChallengeWriteup')
     expect(findChild('platform/challenges/:id/writeup/view')?.name).toBe(
-      'AdminChallengeWriteupView'
+      'PlatformChallengeWriteupView'
     )
     expect(findChild('platform/challenges/:id/writeup')?.redirect).toBeFalsy()
     expect(findChild('platform/challenges/:id/writeup/view')?.redirect).toBeFalsy()
     expect(findChild('platform/environment-templates')?.name).toBe(
-      'AdminEnvironmentTemplateLibrary'
+      'PlatformEnvironmentTemplateLibrary'
     )
     expect(findChild('platform/awd-service-templates')?.name).toBe(
-      'AdminAWDServiceTemplateLibrary'
+      'PlatformAwdServiceTemplateLibrary'
     )
     expect(findChild('platform/images')?.name).toBe('ImageManage')
   })

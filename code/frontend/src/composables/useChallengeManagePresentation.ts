@@ -8,11 +8,11 @@ import type {
   ChallengeDifficulty,
   ChallengeStatus,
 } from '@/api/contracts'
-import type { AdminChallengeListRow } from '@/composables/useAdminChallenges'
+import type { PlatformChallengeListRow } from '@/composables/usePlatformChallenges'
 
 interface UseChallengeManagePresentationOptions {
   router: Router
-  publish: (row: AdminChallengeListRow) => Promise<void>
+  publish: (row: PlatformChallengeListRow) => Promise<void>
   remove: (challengeId: string) => Promise<void>
 }
 
@@ -103,7 +103,7 @@ export function useChallengeManagePresentation({
 
   async function inspectImportTask(item: AdminChallengeImportPreview): Promise<void> {
     await router.push({
-      name: 'AdminChallengeImportPreview',
+      name: 'PlatformChallengeImportPreview',
       params: { importId: item.id },
     })
   }
@@ -129,13 +129,13 @@ export function useChallengeManagePresentation({
   function openChallengeWriteup(challengeId: string): void {
     closeActionMenu()
     void router.push({
-      name: 'AdminChallengeDetail',
+      name: 'PlatformChallengeDetail',
       params: { id: challengeId },
       query: { panel: 'writeup' },
     })
   }
 
-  async function submitPublishCheck(row: AdminChallengeListRow): Promise<void> {
+  async function submitPublishCheck(row: PlatformChallengeListRow): Promise<void> {
     closeActionMenu()
     await publish(row)
   }

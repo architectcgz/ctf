@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
 const topologyStudioPageSource = readFileSync(
-  `${process.cwd()}/src/components/admin/topology/ChallengeTopologyStudioPage.vue`,
+  `${process.cwd()}/src/components/platform/topology/ChallengeTopologyStudioPage.vue`,
   'utf-8'
 )
 

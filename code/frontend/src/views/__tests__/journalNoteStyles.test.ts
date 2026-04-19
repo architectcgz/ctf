@@ -2,14 +2,14 @@ import { readFileSync } from 'node:fs'
 
 import { describe, expect, it } from 'vitest'
 
-import contestOrchestrationSource from '@/components/admin/contest/ContestOrchestrationPage.vue?raw'
-import userGovernanceSource from '@/components/admin/user/UserGovernancePage.vue?raw'
-import auditLogSource from '@/views/admin/AuditLog.vue?raw'
-import challengeDetailSource from '@/views/admin/ChallengeDetail.vue?raw'
-import challengeManageSource from '@/views/admin/ChallengeManage.vue?raw'
-import challengePackageFormatSource from '@/views/admin/ChallengePackageFormat.vue?raw'
-import cheatDetectionSource from '@/views/admin/CheatDetection.vue?raw'
-import imageManageSource from '@/views/admin/ImageManage.vue?raw'
+import contestOrchestrationSource from '@/components/platform/contest/ContestOrchestrationPage.vue?raw'
+import userGovernanceSource from '@/components/platform/user/UserGovernancePage.vue?raw'
+import auditLogSource from '@/views/platform/AuditLog.vue?raw'
+import challengeDetailSource from '@/views/platform/ChallengeDetail.vue?raw'
+import challengeManageSource from '@/views/platform/ChallengeManage.vue?raw'
+import challengePackageFormatSource from '@/views/platform/ChallengePackageFormat.vue?raw'
+import cheatDetectionSource from '@/views/platform/CheatDetection.vue?raw'
+import imageManageSource from '@/views/platform/ImageManage.vue?raw'
 
 const journalNotesSource = readFileSync(
   `${process.cwd()}/src/assets/styles/journal-notes.css`,

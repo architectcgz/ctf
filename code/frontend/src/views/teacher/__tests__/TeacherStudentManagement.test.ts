@@ -236,7 +236,7 @@ describe('TeacherStudentManagement', () => {
 
     wrapper.findComponent({ name: 'StudentManagementPage' }).vm.$emit('openClassManagement')
 
-    expect(pushMock).toHaveBeenCalledWith({ name: 'AdminClassManagement' })
+    expect(pushMock).toHaveBeenCalledWith({ name: 'PlatformClassManagement' })
   })
 
   it('管理员从学生管理进入学员分析时应停留在后台路由', async () => {
@@ -269,7 +269,7 @@ describe('TeacherStudentManagement', () => {
     wrapper.findComponent({ name: 'StudentManagementPage' }).vm.$emit('openStudent', 'stu-1')
 
     expect(pushMock).toHaveBeenCalledWith({
-      name: 'AdminStudentAnalysis',
+      name: 'PlatformStudentAnalysis',
       params: { className: 'Class A', studentId: 'stu-1' },
     })
   })

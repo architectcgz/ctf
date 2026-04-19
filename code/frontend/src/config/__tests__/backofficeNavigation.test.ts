@@ -52,7 +52,7 @@ describe('backofficeNavigation', () => {
       '/platform/awd-reviews',
       '/platform/instances',
     ])
-    expect(items.find((item) => item.active)?.routeName).toBe('AdminStudentManagement')
+    expect(items.find((item) => item.active)?.routeName).toBe('PlatformStudentManagement')
   })
 
   it('filters visible modules by role', () => {
@@ -94,9 +94,9 @@ describe('backofficeNavigation', () => {
       '大屏投射',
       '排行榜',
     ])
-    expect(items.find((item) => item.active)?.routeName).toBe('AdminContestOpsTraffic')
+    expect(items.find((item) => item.active)?.routeName).toBe('PlatformContestOpsTraffic')
 
     const contestItems = getVisibleBackofficeSecondaryItems('/platform/contest-ops/contests', 'admin')
-    expect(contestItems.find((item) => item.active)?.routeName).toBe('AdminContestOpsEnvironment')
+    expect(contestItems.find((item) => item.active)?.routeName).toBe('PlatformContestOpsEnvironment')
   })
 })
