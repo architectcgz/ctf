@@ -791,6 +791,28 @@ func TestFullRouter_TeacherAccessAndRecommendationStateMatrix(t *testing.T) {
 		t.Fatalf("expected admin class pagination, got %+v", adminClasses)
 	}
 
+	resp = performFullRouterRequest(t, env.router, http.MethodGet, "/api/v1/teacher/students?page=1&page_size=1&sort_key=total_score&sort_order=desc", nil, adminHeaders)
+	assertFullRouterStatus(t, resp, http.StatusOK)
+
+	var studentDirectory struct {
+		List []struct {
+			ID         int64   `json:"id"`
+			Username   string  `json:"username"`
+			ClassName  *string `json:"class_name"`
+			TotalScore int     `json:"total_score"`
+		} `json:"list"`
+		Total    int64 `json:"total"`
+		Page     int   `json:"page"`
+		PageSize int   `json:"page_size"`
+	}
+	decodeFullRouterData(t, resp, &studentDirectory)
+	if studentDirectory.Page != 1 || studentDirectory.PageSize != 1 || studentDirectory.Total < 2 || len(studentDirectory.List) != 1 {
+		t.Fatalf("expected paged teacher student directory, got %+v", studentDirectory)
+	}
+	if studentDirectory.List[0].ClassName == nil || *studentDirectory.List[0].ClassName == "" {
+		t.Fatalf("expected class_name in student directory item, got %+v", studentDirectory.List[0])
+	}
+
 	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/teacher/classes/%s/summary", env.className), nil, teacherHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 

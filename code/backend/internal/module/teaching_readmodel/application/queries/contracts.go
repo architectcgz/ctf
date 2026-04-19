@@ -8,6 +8,7 @@ import (
 
 type Service interface {
 	ListClasses(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherClassQuery) ([]dto.TeacherClassItem, int64, int, int, error)
+	ListStudents(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherStudentDirectoryQuery) ([]dto.TeacherStudentItem, int64, int, int, error)
 	ListClassStudents(ctx context.Context, requesterID int64, requesterRole, className string, query *dto.TeacherStudentQuery) ([]dto.TeacherStudentItem, error)
 	GetClassSummary(ctx context.Context, requesterID int64, requesterRole, className string) (*dto.TeacherClassSummaryResp, error)
 	GetClassTrend(ctx context.Context, requesterID int64, requesterRole, className string) (*dto.TeacherClassTrendResp, error)

@@ -298,4 +298,32 @@ describe('Admin ChallengeDetail', () => {
     createElementSpy.mockRestore()
     vi.unstubAllGlobals()
   })
+
+  it('加载失败后卸载页面时应清理延迟跳转定时器', async () => {
+    vi.useFakeTimers()
+    adminApiMocks.getChallengeDetail.mockRejectedValueOnce(new Error('load failed'))
+
+    const pushSpy = pushMock.mockImplementation(() => Promise.resolve())
+    const clearTimeoutSpy = vi.spyOn(globalThis, 'clearTimeout')
+
+    const wrapper = mount(ChallengeDetail, {
+      global: {
+        stubs: {
+          ChallengeDescriptionPanel: { template: '<div>描述面板</div>' },
+          ChallengeWriteupManagePanel: { template: '<div>题解目录</div>' },
+        },
+      },
+    })
+
+    await flushPromises()
+
+    wrapper.unmount()
+    vi.runAllTimers()
+
+    expect(clearTimeoutSpy).toHaveBeenCalled()
+    expect(pushSpy).not.toHaveBeenCalledWith('/platform/challenges')
+
+    clearTimeoutSpy.mockRestore()
+    vi.useRealTimers()
+  })
 })

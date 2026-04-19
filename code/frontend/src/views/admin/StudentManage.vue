@@ -3,7 +3,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { GraduationCap, UsersRound, SearchCode, Calendar, SortAsc } from 'lucide-vue-next'
 
-import { getClasses, getClassStudents } from '@/api/teacher'
+import { getClasses, getStudentsDirectory } from '@/api/teacher'
 import type { TeacherClassItem, TeacherStudentItem } from '@/api/contracts'
 import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
 import WorkspaceDirectoryPagination from '@/components/common/WorkspaceDirectoryPagination.vue'
@@ -12,10 +12,10 @@ import WorkspaceDirectoryToolbar, {
 } from '@/components/common/WorkspaceDirectoryToolbar.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import { DEFAULT_PAGE_SIZE } from '@/utils/constants'
+import { useStudentDirectoryQuery } from '@/composables/useStudentDirectoryQuery'
 import { useStudentFilters } from '@/composables/useStudentFilters'
-import { useStudentListQuery } from '@/composables/useStudentListQuery'
 
-type StudentSortKey = 'name' | 'student_no' | 'total_score' | 'solved_count' | 'class_name'
+type StudentSortKey = 'name' | 'student_no' | 'total_score' | 'solved_count'
 type StudentSortOption = WorkspaceDirectorySortOption & {
   key: StudentSortKey
   order: 'asc' | 'desc'
@@ -29,8 +29,6 @@ interface AdminStudentRow extends TeacherStudentItem {
   solved: number
 }
 
-const ALL_CLASSES_KEY = '__all_classes__'
-
 const router = useRouter()
 
 const classes = ref<TeacherClassItem[]>([])
@@ -42,14 +40,13 @@ const pageError = ref<string | null>(null)
 const filters = useStudentFilters()
 const { selectedClassName, searchQuery, studentNoQuery } = filters
 
-const studentListQuery = useStudentListQuery({
+const studentDirectoryQuery = useStudentDirectoryQuery({
   debounceMs: 250,
   errorMessage: '加载学生目录失败，请稍后重试',
-  getParams: () => filters.studentQueryParams.value,
-  request: loadStudentsByClassFilter,
+  request: getStudentsDirectory,
 })
 
-const { students, loading } = studentListQuery
+const { students, total, loading } = studentDirectoryQuery
 
 const sortOptions: StudentSortOption[] = [
   { key: 'name', order: 'asc', label: '学生姓名 A-Z', icon: SortAsc },
@@ -59,7 +56,7 @@ const sortOptions: StudentSortOption[] = [
 ]
 const sortConfig = ref<StudentSortOption>(sortOptions[0]!)
 
-const error = computed(() => pageError.value ?? studentListQuery.error.value)
+const error = computed(() => pageError.value ?? studentDirectoryQuery.error.value)
 const hasActiveFilters = computed(
   () =>
     Boolean(
@@ -70,9 +67,23 @@ const hasActiveFilters = computed(
 const totalStudents = computed(() =>
   classes.value.reduce((sum, item) => sum + (item.student_count || 0), 0)
 )
-const activeClassCount = computed(() => classes.value.filter((item) => (item.student_count || 0) > 0).length)
-const filteredTotal = computed(() => students.value.length)
-const totalPages = computed(() => Math.max(1, Math.ceil(filteredTotal.value / Math.max(pageSize.value, 1))))
+const activeClassCount = computed(
+  () => classes.value.filter((item) => (item.student_count || 0) > 0).length
+)
+const filteredTotal = computed(() => total.value)
+const totalPages = computed(() =>
+  Math.max(1, Math.ceil(filteredTotal.value / Math.max(pageSize.value, 1)))
+)
+const hasAnyStudents = computed(() => totalStudents.value > 0)
+const directoryParams = computed(() => ({
+  class_name: selectedClassName.value || undefined,
+  keyword: searchQuery.value.trim() || undefined,
+  student_no: studentNoQuery.value.trim() || undefined,
+  sort_key: sortConfig.value.key,
+  sort_order: sortConfig.value.order,
+  page: page.value,
+  page_size: pageSize.value,
+}))
 
 const studentRows = computed<AdminStudentRow[]>(() =>
   students.value.map((student, index) => {
@@ -87,31 +98,6 @@ const studentRows = computed<AdminStudentRow[]>(() =>
     }
   })
 )
-
-const filteredRows = computed<AdminStudentRow[]>(() => {
-  const nextRows = [...studentRows.value]
-  nextRows.sort((left, right) => {
-    switch (sortConfig.value.key) {
-      case 'total_score':
-        return sortConfig.value.order === 'asc' ? left.score - right.score : right.score - left.score
-      case 'solved_count':
-        return sortConfig.value.order === 'asc' ? left.solved - right.solved : right.solved - left.solved
-      case 'student_no':
-        return left.studentCode.localeCompare(right.studentCode, 'zh-CN', { numeric: true })
-      case 'class_name':
-        return left.classLabel.localeCompare(right.classLabel, 'zh-CN')
-      case 'name':
-      default:
-        return left.displayName.localeCompare(right.displayName, 'zh-CN')
-    }
-  })
-  return nextRows
-})
-
-const paginatedRows = computed(() => {
-  const start = (page.value - 1) * pageSize.value
-  return filteredRows.value.slice(start, start + pageSize.value)
-})
 
 const studentTableColumns = [
   {
@@ -161,35 +147,6 @@ const studentTableColumns = [
   },
 ]
 
-function resolveClassFilterKey(className: string): string {
-  return className || ALL_CLASSES_KEY
-}
-
-async function loadStudentsByClassFilter(
-  classFilterKey: string,
-  params?: { keyword?: string; student_no?: string }
-): Promise<TeacherStudentItem[]> {
-  if (classFilterKey !== ALL_CLASSES_KEY) {
-    return getClassStudents(classFilterKey, params)
-  }
-
-  if (classes.value.length === 0) {
-    return []
-  }
-
-  const studentGroups = await Promise.all(
-    classes.value.map(async (item) => {
-      const classStudents = await getClassStudents(item.name, params)
-      return classStudents.map((student) => ({
-        ...student,
-        class_name: item.name,
-      }))
-    })
-  )
-
-  return studentGroups.flat()
-}
-
 async function loadClasses(): Promise<void> {
   loadingClasses.value = true
   try {
@@ -200,9 +157,14 @@ async function loadClasses(): Promise<void> {
 }
 
 async function selectClass(className: string): Promise<void> {
-  studentListQuery.cancelScheduledLoad()
+  studentDirectoryQuery.cancelScheduledLoad()
   filters.updateSelectedClassName(className)
-  await studentListQuery.loadStudents(resolveClassFilterKey(className))
+  page.value = 1
+  await studentDirectoryQuery.loadStudents({
+    ...directoryParams.value,
+    class_name: className || undefined,
+    page: 1,
+  })
 }
 
 async function initialize(): Promise<void> {
@@ -241,6 +203,7 @@ function handlePageChange(nextPage: number): void {
     return
   }
   page.value = normalizedPage
+  void studentDirectoryQuery.loadStudents(directoryParams.value)
 }
 
 function setSort(option: WorkspaceDirectorySortOption): void {
@@ -262,17 +225,29 @@ function resetFilters(): void {
 
 watch([searchQuery, studentNoQuery], () => {
   page.value = 1
-  studentListQuery.scheduleLoadStudents(resolveClassFilterKey(selectedClassName.value))
+  studentDirectoryQuery.scheduleLoadStudents({
+    ...directoryParams.value,
+    page: 1,
+  })
 })
 
-watch(selectedClassName, () => {
-  page.value = 1
-})
-
-watch(filteredTotal, () => {
-  if (page.value > totalPages.value) {
-    page.value = totalPages.value
+watch(
+  () => [sortConfig.value.key, sortConfig.value.order],
+  () => {
+    page.value = 1
+    studentDirectoryQuery.scheduleLoadStudents({
+      ...directoryParams.value,
+      page: 1,
+    })
   }
+)
+
+watch(filteredTotal, (nextTotal) => {
+  if (nextTotal === 0 || page.value <= totalPages.value) {
+    return
+  }
+  page.value = totalPages.value
+  void studentDirectoryQuery.loadStudents(directoryParams.value)
 })
 
 onMounted(() => {
@@ -392,7 +367,7 @@ onMounted(() => {
         </div>
 
         <AppEmpty
-          v-else-if="students.length === 0"
+          v-else-if="students.length === 0 && !hasActiveFilters && !hasAnyStudents"
           class="workspace-directory-empty admin-student-manage-directory__empty"
           icon="Users"
           title="暂无学生"
@@ -400,7 +375,7 @@ onMounted(() => {
         />
 
         <AppEmpty
-          v-else-if="filteredRows.length === 0"
+          v-else-if="students.length === 0"
           class="workspace-directory-empty admin-student-manage-directory__empty"
           icon="Search"
           title="没有匹配学生"
@@ -411,7 +386,7 @@ onMounted(() => {
           v-else
           class="workspace-directory-list admin-student-manage-table"
           :columns="studentTableColumns"
-          :rows="paginatedRows"
+          :rows="studentRows"
           row-key="id"
           row-class="admin-student-manage-table__row"
         >
@@ -468,7 +443,7 @@ onMounted(() => {
         </WorkspaceDataTable>
 
         <WorkspaceDirectoryPagination
-          v-if="filteredTotal > 0 && filteredRows.length > 0"
+          v-if="filteredTotal > 0 && studentRows.length > 0"
           :page="page"
           :total-pages="totalPages"
           :total="filteredTotal"

@@ -74,14 +74,14 @@ func (r *Repository) ListClasses(ctx context.Context, offset, limit int) ([]read
 	return items, nil
 }
 
-func (r *Repository) ListStudentsByClass(ctx context.Context, className, keyword, studentNo string, since time.Time) ([]readmodelports.StudentItem, error) {
-	items := make([]readmodelports.StudentItem, 0)
-	query := r.db.WithContext(ctx).Table("users AS u").
+func (r *Repository) listStudentsBaseQuery(ctx context.Context, since time.Time) *gorm.DB {
+	return r.db.WithContext(ctx).Table("users AS u").
 		Select(`
 			u.id,
 			u.username,
 			NULLIF(u.name, '') AS name,
 			NULLIF(u.student_no, '') AS student_no,
+			NULLIF(u.class_name, '') AS class_name,
 			COALESCE((
 				SELECT COUNT(DISTINCT s.challenge_id)
 				FROM submissions s
@@ -118,7 +118,13 @@ func (r *Repository) ListStudentsByClass(ctx context.Context, className, keyword
 				LIMIT 1
 			) AS weak_dimension
 		`, model.ChallengeStatusPublished, model.ChallengeStatusPublished, since, since, since).
-		Where("u.role = ? AND u.class_name = ? AND u.deleted_at IS NULL", model.RoleStudent, className)
+		Where("u.role = ? AND u.deleted_at IS NULL", model.RoleStudent)
+}
+
+func applyStudentFilters(query *gorm.DB, className, keyword, studentNo string) *gorm.DB {
+	if className != "" {
+		query = query.Where("u.class_name = ?", className)
+	}
 	if keyword != "" {
 		likeKeyword := "%" + strings.ToLower(keyword) + "%"
 		query = query.Where("(LOWER(u.username) LIKE ? OR LOWER(u.name) LIKE ?)", likeKeyword, likeKeyword)
@@ -126,9 +132,68 @@ func (r *Repository) ListStudentsByClass(ctx context.Context, className, keyword
 	if studentNo != "" {
 		query = query.Where("u.student_no = ?", studentNo)
 	}
-	if err := query.Order("solved_count DESC, total_score DESC, COALESCE(NULLIF(u.student_no, ''), u.username) ASC, u.username ASC").
-		Scan(&items).Error; err != nil {
-		return nil, fmt.Errorf("list students by class: %w", err)
+	return query
+}
+
+func resolveStudentOrder(sortKey, sortOrder string) string {
+	direction := "DESC"
+	if strings.EqualFold(sortOrder, "asc") {
+		direction = "ASC"
+	}
+
+	switch sortKey {
+	case "name":
+		return fmt.Sprintf("COALESCE(NULLIF(u.name, ''), u.username) %s, u.username ASC", direction)
+	case "student_no":
+		return fmt.Sprintf("COALESCE(NULLIF(u.student_no, ''), u.username) %s, u.username ASC", direction)
+	case "total_score":
+		return fmt.Sprintf("total_score %s, solved_count DESC, COALESCE(NULLIF(u.student_no, ''), u.username) ASC, u.username ASC", direction)
+	case "solved_count":
+		fallthrough
+	default:
+		return fmt.Sprintf("solved_count %s, total_score DESC, COALESCE(NULLIF(u.student_no, ''), u.username) ASC, u.username ASC", direction)
+	}
+}
+
+func (r *Repository) ListStudents(
+	ctx context.Context,
+	className, keyword, studentNo, sortKey, sortOrder string,
+	since time.Time,
+	offset, limit int,
+) ([]readmodelports.StudentItem, int64, error) {
+	items := make([]readmodelports.StudentItem, 0)
+	var total int64
+	countQuery := applyStudentFilters(
+		r.db.WithContext(ctx).Table("users AS u").Where("u.role = ? AND u.deleted_at IS NULL", model.RoleStudent),
+		className,
+		keyword,
+		studentNo,
+	)
+	if err := countQuery.Count(&total).Error; err != nil {
+		return nil, 0, fmt.Errorf("count students: %w", err)
+	}
+	if total == 0 {
+		return items, 0, nil
+	}
+
+	query := applyStudentFilters(r.listStudentsBaseQuery(ctx, since), className, keyword, studentNo).
+		Order(resolveStudentOrder(sortKey, sortOrder))
+	if offset > 0 {
+		query = query.Offset(offset)
+	}
+	if limit > 0 {
+		query = query.Limit(limit)
+	}
+	if err := query.Scan(&items).Error; err != nil {
+		return nil, 0, fmt.Errorf("list students: %w", err)
+	}
+	return items, total, nil
+}
+
+func (r *Repository) ListStudentsByClass(ctx context.Context, className, keyword, studentNo string, since time.Time) ([]readmodelports.StudentItem, error) {
+	items, _, err := r.ListStudents(ctx, className, keyword, studentNo, "solved_count", "desc", since, 0, 0)
+	if err != nil {
+		return nil, err
 	}
 	return items, nil
 }

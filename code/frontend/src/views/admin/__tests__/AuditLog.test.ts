@@ -71,13 +71,18 @@ describe('AuditLog', () => {
 
     await flushPromises()
 
-    expect(adminApiMocks.getAuditLogs).toHaveBeenCalledWith({
-      page: 2,
-      page_size: 20,
-      action: 'submit',
-      resource_type: 'challenge',
-      actor_user_id: 12,
-    })
+    expect(adminApiMocks.getAuditLogs).toHaveBeenLastCalledWith(
+      {
+        page: 2,
+        page_size: 20,
+        action: 'submit',
+        resource_type: 'challenge',
+        actor_user_id: 12,
+      },
+      expect.objectContaining({
+        signal: expect.any(AbortSignal),
+      })
+    )
     expect(wrapper.text()).toContain('alice')
     expect(wrapper.text()).toContain('submit')
   })
