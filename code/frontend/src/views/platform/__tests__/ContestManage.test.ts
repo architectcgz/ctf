@@ -396,6 +396,43 @@ describe('ContestManage', () => {
     })
   })
 
+  it('竞赛目录页不应渲染说明性文案和重复统计摘要', async () => {
+    contestMocks.getContests.mockResolvedValue({
+      list: [
+        {
+          id: '1',
+          title: '2026 春季校园 CTF',
+          description: '校内赛',
+          mode: 'jeopardy',
+          status: 'registering',
+          starts_at: '2026-03-15T09:00:00.000Z',
+          ends_at: '2026-03-15T13:00:00.000Z',
+        },
+      ],
+      total: 1,
+      page: 1,
+      page_size: 20,
+    })
+
+    const wrapper = mount(ContestManage, {
+      attachTo: document.body,
+      global: {
+        stubs: {
+          ElDialog: {
+            template: '<div><slot /><slot name="footer" /></div>',
+          },
+        },
+      },
+    })
+
+    await flushPromises()
+
+    expect(wrapper.text()).not.toContain(
+      '上面直接查看关键赛事指标，下面围绕具体竞赛对象完成筛选、编辑、导出和进入攻防运维。'
+    )
+    expect(wrapper.text()).not.toContain('当前页 1 场赛事')
+  })
+
   it('赛事目录筛选应切到共享目录工具栏', () => {
     expect(contestOrchestrationSource).toContain(
       "from '@/components/common/WorkspaceDirectoryToolbar.vue'"
@@ -403,10 +440,10 @@ describe('ContestManage', () => {
     expect(contestOrchestrationSource).toContain('<WorkspaceDirectoryToolbar')
     expect(contestOrchestrationSource).toContain('filter-panel-title="赛事筛选"')
     expect(contestOrchestrationSource).toContain('total-suffix="场赛事"')
-    expect(contestOrchestrationSource).toMatch(
+    expect(contestOrchestrationSource).not.toMatch(
       /\.contest-directory-section,\s*\.contest-create-panel\s*\{[\s\S]*gap:\s*var\(--space-4\);/s
     )
-    expect(contestOrchestrationSource).toMatch(
+    expect(contestOrchestrationSource).not.toMatch(
       /\.contest-directory-section :deep\(\.workspace-directory-toolbar\)\s*\{[\s\S]*margin-bottom:\s*0;/s
     )
     expect(contestOrchestrationSource).not.toContain('<nav class="top-tabs"')
