@@ -355,7 +355,6 @@ describe('ContestManage', () => {
       })
     )
   })
-
   it('应该渲染真实竞赛列表', async () => {
     contestMocks.getContests.mockResolvedValue({
       list: [
