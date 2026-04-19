@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { computed, toRef } from 'vue'
-import { RefreshCw, Search, ShieldAlert, ShieldCheck, Sword, TimerReset } from 'lucide-vue-next'
+import { toRef } from 'vue'
+import { RefreshCw, ShieldAlert, ShieldCheck, Sword, TimerReset } from 'lucide-vue-next'
 import type { AWDTeamServiceData } from '@/api/contracts'
-import AdminPaginationControls from '@/components/admin/AdminPaginationControls.vue'
+import AWDTrafficPanel from '@/components/admin/contest/AWDTrafficPanel.vue'
 import type {
   AWDRoundInspectorEmits,
   AWDRoundInspectorProps,
@@ -16,7 +16,6 @@ import { useAwdInspectorCoreState } from '@/composables/useAwdInspectorCoreState
 import { useAwdInspectorDerivedData } from '@/composables/useAwdInspectorDerivedData'
 import { useAwdInspectorExports } from '@/composables/useAwdInspectorExports'
 import { useAwdInspectorFormatting } from '@/composables/useAwdInspectorFormatting'
-import { useAwdTrafficPanel } from '@/composables/useAwdTrafficPanel'
 const props = defineProps<AWDRoundInspectorProps>()
 const emit = defineEmits<AWDRoundInspectorEmits>()
 const {
@@ -120,29 +119,6 @@ const {
   attackSourceFilter,
   getChallengeTitle,
   getCheckStatusLabel,
-})
-const {
-  trafficPathKeywordInput,
-  trafficTotalPages,
-  trafficTrendRows,
-  trafficSummaryStats,
-  trafficTrendNarrative,
-  trafficStatusGroupOptions,
-  applyTrafficKeywordFilter,
-  onTrafficStatusGroupChange,
-  clearTrafficKeywordFilter,
-  applyTrafficFilterPatch,
-  handleTrafficPageChange,
-} = useAwdTrafficPanel({
-  trafficSummary: toRef(props, 'trafficSummary'),
-  trafficEventsTotal: toRef(props, 'trafficEventsTotal'),
-  trafficFilters: toRef(props, 'trafficFilters'),
-  loadingTrafficEvents: toRef(props, 'loadingTrafficEvents'),
-  trafficPathKeyword: computed(() => props.trafficFilters.path_keyword),
-  formatDateTime,
-  formatPercent,
-  applyTrafficFilters: (patch) => emit('applyTrafficFilters', patch),
-  changeTrafficPage: (page) => emit('changeTrafficPage', page),
 })
 const {
   getTrafficTeamName,
@@ -471,433 +447,27 @@ function getServiceCheckPresentationResult(service: AWDTeamServiceData): Record<
             />
           </div>
 
-          <section class="space-y-4 border-t border-border pt-6">
-            <div class="flex items-center justify-between gap-3">
-              <div>
-                <h3 class="text-base font-semibold text-[var(--color-text-primary)]">
-                  攻击流量态势
-                </h3>
-                <p class="mt-1 text-xs text-[var(--color-text-muted)]">
-                  代理请求摘要，不等同于已确认攻破结果。
-                </p>
-              </div>
-              <span class="text-xs text-[var(--color-text-muted)]"
-                >最近更新时间：{{ formatDateTime(selectedRound.updated_at) }}</span
-              >
-            </div>
-
-            <div
-              v-if="loadingTrafficSummary"
-              class="rounded-xl border border-dashed border-border px-4 py-8 text-center text-sm text-[var(--color-text-muted)]"
-            >
-              正在加载攻击流量摘要...
-            </div>
-            <div
-              v-else-if="!trafficSummary"
-              class="rounded-xl border border-dashed border-border px-4 py-8 text-center text-sm text-[var(--color-text-muted)]"
-            >
-              当前轮次暂未返回攻击流量摘要。
-            </div>
-            <template v-else>
-              <div class="awd-traffic-summary-strip border-y border-border/80">
-                <div class="grid gap-0 md:grid-cols-2 xl:grid-cols-5">
-                  <div
-                    v-for="item in trafficSummaryStats"
-                    :key="item.key"
-                    class="border-b border-border/70 px-4 py-4 last:border-b-0 md:[&:nth-last-child(-n+2)]:border-b-0 xl:border-b-0 xl:border-r xl:last:border-r-0"
-                  >
-                    <p
-                      class="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]"
-                    >
-                      {{ item.label }}
-                    </p>
-                    <p
-                      class="mt-3 text-2xl font-semibold tracking-tight text-[var(--color-text-primary)]"
-                    >
-                      {{ item.value }}
-                    </p>
-                    <p class="mt-2 text-xs leading-6 text-[var(--color-text-muted)]">
-                      {{ item.hint }}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div class="grid gap-4 xl:grid-cols-[1.3fr_0.7fr]">
-                <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                  <div class="rounded-xl border border-border/80">
-                    <div
-                      class="border-b border-border bg-surface-alt/40 px-3 py-2 text-xs font-semibold tracking-[0.12em] text-[var(--color-text-muted)]"
-                    >
-                      热点攻击队
-                    </div>
-                    <ol class="divide-y divide-border/70">
-                      <li
-                        v-for="item in trafficSummary.top_attackers.slice(0, 5)"
-                        :key="`traffic-attacker-${item.team_id}`"
-                        class="flex items-center justify-between px-3 py-2 text-sm"
-                      >
-                        <span class="text-[var(--color-text-primary)]">{{ item.team_name }}</span>
-                        <span class="font-medium text-[var(--color-text-secondary)]">{{
-                          item.request_count
-                        }}</span>
-                      </li>
-                      <li
-                        v-if="trafficSummary.top_attackers.length === 0"
-                        class="px-3 py-3 text-xs text-[var(--color-text-muted)]"
-                      >
-                        暂无攻击队热点数据
-                      </li>
-                    </ol>
-                  </div>
-                  <div class="rounded-xl border border-border/80">
-                    <div
-                      class="border-b border-border bg-surface-alt/40 px-3 py-2 text-xs font-semibold tracking-[0.12em] text-[var(--color-text-muted)]"
-                    >
-                      热点受害队
-                    </div>
-                    <ol class="divide-y divide-border/70">
-                      <li
-                        v-for="item in trafficSummary.top_victims.slice(0, 5)"
-                        :key="`traffic-victim-${item.team_id}`"
-                        class="flex items-center justify-between px-3 py-2 text-sm"
-                      >
-                        <span class="text-[var(--color-text-primary)]">{{ item.team_name }}</span>
-                        <span class="font-medium text-[var(--color-text-secondary)]">{{
-                          item.request_count
-                        }}</span>
-                      </li>
-                      <li
-                        v-if="trafficSummary.top_victims.length === 0"
-                        class="px-3 py-3 text-xs text-[var(--color-text-muted)]"
-                      >
-                        暂无目标热点数据
-                      </li>
-                    </ol>
-                  </div>
-                  <div class="rounded-xl border border-border/80">
-                    <div
-                      class="border-b border-border bg-surface-alt/40 px-3 py-2 text-xs font-semibold tracking-[0.12em] text-[var(--color-text-muted)]"
-                    >
-                      热点题目
-                    </div>
-                    <ol class="divide-y divide-border/70">
-                      <li
-                        v-for="item in trafficSummary.top_challenges.slice(0, 5)"
-                        :key="`traffic-challenge-${item.challenge_id}`"
-                        class="flex items-center justify-between gap-3 px-3 py-2 text-sm"
-                      >
-                        <span class="truncate text-[var(--color-text-primary)]">{{
-                          getTrafficChallengeTitle(item.challenge_id, item.challenge_title)
-                        }}</span>
-                        <span class="shrink-0 font-medium text-[var(--color-text-secondary)]">{{
-                          item.request_count
-                        }}</span>
-                      </li>
-                      <li
-                        v-if="trafficSummary.top_challenges.length === 0"
-                        class="px-3 py-3 text-xs text-[var(--color-text-muted)]"
-                      >
-                        暂无题目热点数据
-                      </li>
-                    </ol>
-                  </div>
-                  <div class="rounded-xl border border-border/80">
-                    <div
-                      class="border-b border-border bg-surface-alt/40 px-3 py-2 text-xs font-semibold tracking-[0.12em] text-[var(--color-text-muted)]"
-                    >
-                      异常路径
-                    </div>
-                    <ol class="divide-y divide-border/70">
-                      <li
-                        v-for="item in trafficSummary.top_error_paths.slice(0, 5)"
-                        :key="`traffic-path-${item.path}`"
-                        class="px-3 py-2 text-sm"
-                      >
-                        <p class="truncate font-mono text-[var(--color-text-primary)]">
-                          {{ item.path }}
-                        </p>
-                        <p class="mt-1 text-xs text-[var(--color-text-muted)]">
-                          请求 {{ item.request_count }} / 错误 {{ item.error_count }}
-                        </p>
-                      </li>
-                      <li
-                        v-if="trafficSummary.top_error_paths.length === 0"
-                        class="px-3 py-3 text-xs text-[var(--color-text-muted)]"
-                      >
-                        暂无异常路径数据
-                      </li>
-                    </ol>
-                  </div>
-                </div>
-
-                <div class="rounded-xl border border-border/80">
-                  <div class="border-b border-border bg-surface-alt/40 px-3 py-2">
-                    <p
-                      class="text-xs font-semibold tracking-[0.12em] text-[var(--color-text-muted)]"
-                    >
-                      趋势摘要（最近 12 桶）
-                    </p>
-                    <p class="mt-2 text-xs leading-6 text-[var(--color-text-muted)]">
-                      {{ trafficTrendNarrative }}
-                    </p>
-                  </div>
-                  <div class="space-y-2 px-3 py-3">
-                    <div
-                      v-for="bucket in trafficTrendRows"
-                      :key="bucket.bucket_start_at"
-                      class="space-y-1"
-                    >
-                      <div
-                        class="flex items-center justify-between text-xs text-[var(--color-text-muted)]"
-                      >
-                        <span>{{ bucket.label }}</span>
-                        <span>请求 {{ bucket.request_count }} / 错误 {{ bucket.error_count }}</span>
-                      </div>
-                      <div
-                        class="h-1.5 overflow-hidden rounded-full bg-[var(--color-text-muted)]/20"
-                      >
-                        <div
-                          class="h-full rounded-full bg-[var(--color-primary)]/70"
-                          :style="{ width: `${bucket.ratio}%` }"
-                        />
-                      </div>
-                    </div>
-                    <p
-                      v-if="trafficTrendRows.length === 0"
-                      class="text-xs text-[var(--color-text-muted)]"
-                    >
-                      当前没有趋势桶数据。
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </template>
-
-            <div class="overflow-hidden rounded-xl border border-border">
-              <div
-                class="grid gap-3 border-b border-border bg-surface-alt/30 px-4 py-3 md:grid-cols-[repeat(4,minmax(0,1fr))_minmax(0,1.35fr)_auto]"
-              >
-                <label class="ui-field awd-round-filter-field">
-                  <span class="ui-field__label">攻击方</span>
-                  <span class="ui-control-wrap awd-round-filter-control">
-                    <select
-                      id="awd-traffic-filter-attacker"
-                      :value="trafficFilters.attacker_team_id"
-                      class="ui-control"
-                      @change="
-                        applyTrafficFilterPatch({
-                          attacker_team_id: ($event.target as HTMLSelectElement).value,
-                        })
-                      "
-                    >
-                      <option value="">全部攻击方</option>
-                      <option
-                        v-for="team in trafficTeamOptions"
-                        :key="`traffic-attacker-option-${team.id}`"
-                        :value="team.id"
-                      >
-                        {{ team.name }}
-                      </option>
-                    </select>
-                  </span>
-                </label>
-                <label class="ui-field awd-round-filter-field">
-                  <span class="ui-field__label">受害方</span>
-                  <span class="ui-control-wrap awd-round-filter-control">
-                    <select
-                      id="awd-traffic-filter-victim"
-                      :value="trafficFilters.victim_team_id"
-                      class="ui-control"
-                      @change="
-                        applyTrafficFilterPatch({
-                          victim_team_id: ($event.target as HTMLSelectElement).value,
-                        })
-                      "
-                    >
-                      <option value="">全部受害方</option>
-                      <option
-                        v-for="team in trafficTeamOptions"
-                        :key="`traffic-victim-option-${team.id}`"
-                        :value="team.id"
-                      >
-                        {{ team.name }}
-                      </option>
-                    </select>
-                  </span>
-                </label>
-                <label class="ui-field awd-round-filter-field">
-                  <span class="ui-field__label">题目</span>
-                  <span class="ui-control-wrap awd-round-filter-control">
-                    <select
-                      id="awd-traffic-filter-challenge"
-                      :value="trafficFilters.challenge_id"
-                      class="ui-control"
-                      @change="
-                        applyTrafficFilterPatch({
-                          challenge_id: ($event.target as HTMLSelectElement).value,
-                        })
-                      "
-                    >
-                      <option value="">全部题目</option>
-                      <option
-                        v-for="challenge in challengeLinks"
-                        :key="challenge.id"
-                        :value="challenge.challenge_id"
-                      >
-                        {{ challenge.title || `Challenge #${challenge.challenge_id}` }}
-                      </option>
-                    </select>
-                  </span>
-                </label>
-                <label class="ui-field awd-round-filter-field">
-                  <span class="ui-field__label">状态分桶</span>
-                  <span class="ui-control-wrap awd-round-filter-control">
-                    <select
-                      id="awd-traffic-filter-status-group"
-                      :value="trafficFilters.status_group"
-                      class="ui-control"
-                      @change="onTrafficStatusGroupChange(($event.target as HTMLSelectElement).value)"
-                    >
-                      <option
-                        v-for="item in trafficStatusGroupOptions"
-                        :key="item.value"
-                        :value="item.value"
-                      >
-                        {{ item.label }}
-                      </option>
-                    </select>
-                  </span>
-                </label>
-                <label class="ui-field awd-round-filter-field">
-                  <span class="ui-field__label">路径关键字</span>
-                  <div class="flex items-center gap-2">
-                    <span class="ui-control-wrap awd-round-filter-control">
-                      <input
-                        id="awd-traffic-filter-path"
-                        v-model="trafficPathKeywordInput"
-                        type="text"
-                        class="ui-control"
-                        placeholder="/api/..."
-                        @keydown.enter.prevent="applyTrafficKeywordFilter"
-                      />
-                    </span>
-                    <button
-                      id="awd-traffic-filter-search"
-                      type="button"
-                      class="ui-btn ui-btn--ghost awd-round-filter-search"
-                      @click="applyTrafficKeywordFilter"
-                    >
-                      <Search class="h-4 w-4" />
-                    </button>
-                  </div>
-                  <button
-                    v-if="trafficFilters.path_keyword"
-                    type="button"
-                    class="ui-btn ui-btn--ghost"
-                    @click="clearTrafficKeywordFilter"
-                  >
-                    清除路径关键字
-                  </button>
-                </label>
-                <div class="flex items-end md:justify-end">
-                  <button
-                    id="awd-traffic-reset-filters"
-                    type="button"
-                    class="ui-btn ui-btn--secondary awd-round-toolbar__button"
-                    @click="emit('resetTrafficFilters')"
-                  >
-                    重置筛选
-                  </button>
-                </div>
-              </div>
-
-              <table class="min-w-full divide-y divide-border">
-                <thead
-                  class="bg-surface-alt/40 text-left text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]"
-                >
-                  <tr>
-                    <th class="px-4 py-3">时间</th>
-                    <th class="px-4 py-3">攻击方 / 受害方</th>
-                    <th class="px-4 py-3">靶题</th>
-                    <th class="px-4 py-3">请求</th>
-                    <th class="px-4 py-3">状态</th>
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-border bg-surface/70">
-                  <tr v-if="loadingTrafficEvents">
-                    <td
-                      colspan="5"
-                      class="px-4 py-8 text-center text-sm text-[var(--color-text-muted)]"
-                    >
-                      正在加载流量明细...
-                    </td>
-                  </tr>
-                  <tr
-                    v-for="event in trafficEvents"
-                    :key="`${event.occurred_at}-${event.attacker_team_id}-${event.victim_team_id}-${event.challenge_id}-${event.method}-${event.path}`"
-                  >
-                    <td class="px-4 py-4 text-sm text-[var(--color-text-secondary)]">
-                      {{ formatDateTime(event.occurred_at) }}
-                    </td>
-                    <td class="px-4 py-4 text-sm text-[var(--color-text-primary)]">
-                      <p>
-                        {{ getTrafficTeamName(event.attacker_team_id, event.attacker_team_name) }}
-                      </p>
-                      <p class="mt-1 text-xs text-[var(--color-text-muted)]">
-                        → {{ getTrafficTeamName(event.victim_team_id, event.victim_team_name) }}
-                      </p>
-                    </td>
-                    <td class="px-4 py-4 text-sm text-[var(--color-text-secondary)]">
-                      {{ getTrafficChallengeTitle(event.challenge_id, event.challenge_title) }}
-                    </td>
-                    <td class="px-4 py-4 text-sm">
-                      <p class="font-mono text-[var(--color-text-primary)]">
-                        {{ event.method.toUpperCase() }} {{ event.path }}
-                      </p>
-                      <p class="mt-1 text-xs text-[var(--color-text-muted)]">
-                        HTTP {{ event.status_code }}
-                      </p>
-                    </td>
-                    <td class="px-4 py-4 text-sm">
-                      <span
-                        class="inline-flex rounded-full px-3 py-1 text-xs font-semibold"
-                        :class="getTrafficStatusGroupClass(event.status_group)"
-                      >
-                        {{ getTrafficStatusGroupLabel(event.status_group) }}
-                      </span>
-                      <p class="mt-1 text-xs text-[var(--color-text-muted)]">
-                        {{ getTrafficSourceLabel(event.source) }}
-                      </p>
-                    </td>
-                  </tr>
-                  <tr v-if="!loadingTrafficEvents && trafficEvents.length === 0">
-                    <td
-                      colspan="5"
-                      class="px-4 py-8 text-center text-sm text-[var(--color-text-muted)]"
-                    >
-                      当前筛选条件下没有流量事件。
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-
-              <div
-                class="border-t border-border bg-surface-alt/20 px-4 py-3 text-xs text-[var(--color-text-muted)]"
-              >
-                <AdminPaginationControls
-                  :page="trafficFilters.page"
-                  :total-pages="trafficTotalPages"
-                  :total="trafficEventsTotal"
-                  :disabled="loadingTrafficEvents"
-                  :total-label="`共 ${trafficEventsTotal} 条流量事件`"
-                  prev-button-id="awd-traffic-page-prev"
-                  next-button-id="awd-traffic-page-next"
-                  @change-page="handleTrafficPageChange"
-                />
-              </div>
-            </div>
-          </section>
+          <AWDTrafficPanel
+            :updated-at="selectedRound.updated_at"
+            :challenge-links="challengeLinks"
+            :traffic-summary="trafficSummary"
+            :traffic-events="trafficEvents"
+            :traffic-events-total="trafficEventsTotal"
+            :traffic-filters="trafficFilters"
+            :traffic-team-options="trafficTeamOptions"
+            :loading-traffic-summary="loadingTrafficSummary"
+            :loading-traffic-events="loadingTrafficEvents"
+            :format-date-time="formatDateTime"
+            :format-percent="formatPercent"
+            :get-traffic-status-group-label="getTrafficStatusGroupLabel"
+            :get-traffic-status-group-class="getTrafficStatusGroupClass"
+            :get-traffic-team-name="getTrafficTeamName"
+            :get-traffic-challenge-title="getTrafficChallengeTitle"
+            :get-traffic-source-label="getTrafficSourceLabel"
+            @apply-traffic-filters="emit('applyTrafficFilters', $event)"
+            @change-traffic-page="emit('changeTrafficPage', $event)"
+            @reset-traffic-filters="emit('resetTrafficFilters')"
+          />
 
           <div v-if="serviceAlerts.length > 0" class="grid gap-3 md:grid-cols-2 2xl:grid-cols-3">
             <button
@@ -1438,14 +1008,6 @@ function getServiceCheckPresentationResult(service: AWDTeamServiceData): Record<
   background: color-mix(in srgb, var(--color-bg-surface) 24%, transparent);
 }
 
-.awd-traffic-summary-strip {
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--color-primary) 6%, transparent),
-    color-mix(in srgb, var(--color-primary) 0%, transparent)
-  );
-}
-
 .awd-round-toolbar__button {
   white-space: nowrap;
 }
@@ -1465,11 +1027,5 @@ function getServiceCheckPresentationResult(service: AWDTeamServiceData): Record<
 
 .awd-round-filter-control {
   width: 100%;
-}
-
-.awd-round-filter-search {
-  flex-shrink: 0;
-  min-width: var(--ui-control-height-md);
-  padding: 0;
 }
 </style>

@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import awdChallengeConfigPanelSource from '@/components/admin/contest/AWDChallengeConfigPanel.vue?raw'
 import awdOperationsPanelSource from '@/components/admin/contest/AWDOperationsPanel.vue?raw'
 import awdRoundInspectorSource from '@/components/admin/contest/AWDRoundInspector.vue?raw'
+import awdTrafficPanelSource from '@/components/admin/contest/AWDTrafficPanel.vue?raw'
 import contestAwdPreflightPanelSource from '@/components/admin/contest/ContestAwdPreflightPanel.vue?raw'
 
 describe('contest ui primitive adoption phase 4', () => {
@@ -20,7 +21,11 @@ describe('contest ui primitive adoption phase 4', () => {
     expect(awdRoundInspectorSource).toContain('class="ui-field awd-round-filter-field"')
     expect(awdRoundInspectorSource).toContain('class="ui-control-wrap awd-round-filter-control"')
     expect(awdRoundInspectorSource).toContain('class="ui-control"')
-    expect(awdRoundInspectorSource).toContain('class="ui-btn ui-btn--ghost awd-round-filter-search"')
+    expect(awdRoundInspectorSource).toContain('<AWDTrafficPanel')
+    expect(awdTrafficPanelSource).toContain('class="ui-field awd-round-filter-field"')
+    expect(awdTrafficPanelSource).toContain('class="ui-control-wrap awd-round-filter-control"')
+    expect(awdTrafficPanelSource).toContain('class="ui-control"')
+    expect(awdTrafficPanelSource).toContain('class="ui-btn ui-btn--ghost awd-round-filter-search"')
   })
 
   it('awd challenge config panel should consume shared action and row action primitives', () => {
