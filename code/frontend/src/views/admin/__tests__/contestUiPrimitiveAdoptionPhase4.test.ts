@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest'
 
 import awdChallengeConfigPanelSource from '@/components/admin/contest/AWDChallengeConfigPanel.vue?raw'
 import awdOperationsPanelSource from '@/components/admin/contest/AWDOperationsPanel.vue?raw'
+import awdRoundHeaderPanelSource from '@/components/admin/contest/AWDRoundHeaderPanel.vue?raw'
 import awdRoundInspectorSource from '@/components/admin/contest/AWDRoundInspector.vue?raw'
+import awdRoundSelectionPanelSource from '@/components/admin/contest/AWDRoundSelectionPanel.vue?raw'
 import awdTrafficPanelSource from '@/components/admin/contest/AWDTrafficPanel.vue?raw'
 import contestAwdPreflightPanelSource from '@/components/admin/contest/ContestAwdPreflightPanel.vue?raw'
 
@@ -16,12 +18,14 @@ describe('contest ui primitive adoption phase 4', () => {
   })
 
   it('awd round inspector should consume shared buttons and field primitives for toolbar and filters', () => {
-    expect(awdRoundInspectorSource).toContain('class="ui-btn ui-btn--secondary awd-round-toolbar__button"')
-    expect(awdRoundInspectorSource).toContain('class="ui-btn ui-btn--primary awd-round-toolbar__button"')
-    expect(awdRoundInspectorSource).toContain('class="ui-field awd-round-filter-field"')
-    expect(awdRoundInspectorSource).toContain('class="ui-control-wrap awd-round-filter-control"')
-    expect(awdRoundInspectorSource).toContain('class="ui-control"')
+    expect(awdRoundInspectorSource).toContain('<AWDRoundHeaderPanel')
+    expect(awdRoundInspectorSource).toContain('<AWDRoundSelectionPanel')
     expect(awdRoundInspectorSource).toContain('<AWDTrafficPanel')
+    expect(awdRoundHeaderPanelSource).toContain('class="ui-btn ui-btn--secondary awd-round-toolbar__button"')
+    expect(awdRoundHeaderPanelSource).toContain('class="ui-btn ui-btn--primary awd-round-toolbar__button"')
+    expect(awdRoundSelectionPanelSource).toContain('class="ui-field awd-round-filter-field"')
+    expect(awdRoundSelectionPanelSource).toContain('class="ui-control-wrap awd-round-filter-control"')
+    expect(awdRoundSelectionPanelSource).toContain('class="ui-control"')
     expect(awdTrafficPanelSource).toContain('class="ui-field awd-round-filter-field"')
     expect(awdTrafficPanelSource).toContain('class="ui-control-wrap awd-round-filter-control"')
     expect(awdTrafficPanelSource).toContain('class="ui-control"')

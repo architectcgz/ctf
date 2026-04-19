@@ -218,9 +218,7 @@ function getTrafficStatusGroupLabel(statusGroup: AWDTrafficStatusGroup): string 
     </template>
 
     <div class="overflow-hidden rounded-xl border border-border">
-      <div
-        class="grid gap-3 border-b border-border bg-surface-alt/30 px-4 py-3 md:grid-cols-[repeat(4,minmax(0,1fr))_minmax(0,1.35fr)_auto]"
-      >
+      <div class="awd-traffic-filter-grid grid gap-3 border-b border-border bg-surface-alt/30 px-4 py-3">
         <label class="ui-field awd-round-filter-field">
           <span class="ui-field__label">攻击方</span>
           <span class="ui-control-wrap awd-round-filter-control">
@@ -352,9 +350,7 @@ function getTrafficStatusGroupLabel(statusGroup: AWDTrafficStatusGroup): string 
       </div>
 
       <table class="min-w-full divide-y divide-border">
-        <thead
-          class="bg-surface-alt/40 text-left text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]"
-        >
+        <thead class="awd-traffic-table-head">
           <tr>
             <th class="px-4 py-3">时间</th>
             <th class="px-4 py-3">攻击方 / 受害方</th>
@@ -365,7 +361,7 @@ function getTrafficStatusGroupLabel(statusGroup: AWDTrafficStatusGroup): string 
         </thead>
         <tbody class="divide-y divide-border bg-surface/70">
           <tr v-if="loadingTrafficEvents">
-            <td colspan="5" class="px-4 py-8 text-center text-sm text-[var(--color-text-muted)]">
+            <td colspan="5" class="awd-traffic-empty-row">
               正在加载流量明细...
             </td>
           </tr>
@@ -373,47 +369,47 @@ function getTrafficStatusGroupLabel(statusGroup: AWDTrafficStatusGroup): string 
             v-for="event in trafficEvents"
             :key="`${event.occurred_at}-${event.attacker_team_id}-${event.victim_team_id}-${event.challenge_id}-${event.method}-${event.path}`"
           >
-            <td class="px-4 py-4 text-sm text-[var(--color-text-secondary)]">
+            <td class="awd-traffic-table-cell awd-traffic-table-cell--secondary">
               {{ formatDateTime(event.occurred_at) }}
             </td>
-            <td class="px-4 py-4 text-sm text-[var(--color-text-primary)]">
+            <td class="awd-traffic-table-cell awd-traffic-table-cell--primary">
               <p>
                 {{ getTrafficTeamName(event.attacker_team_id, event.attacker_team_name) }}
               </p>
-              <p class="mt-1 text-xs text-[var(--color-text-muted)]">
+              <p class="awd-traffic-muted mt-1 text-xs">
                 → {{ getTrafficTeamName(event.victim_team_id, event.victim_team_name) }}
               </p>
             </td>
-            <td class="px-4 py-4 text-sm text-[var(--color-text-secondary)]">
+            <td class="awd-traffic-table-cell awd-traffic-table-cell--secondary">
               {{ getTrafficChallengeTitle(event.challenge_id, event.challenge_title) }}
             </td>
-            <td class="px-4 py-4 text-sm">
-              <p class="font-mono text-[var(--color-text-primary)]">
+            <td class="awd-traffic-table-cell">
+              <p class="awd-traffic-primary font-mono">
                 {{ event.method.toUpperCase() }} {{ event.path }}
               </p>
-              <p class="mt-1 text-xs text-[var(--color-text-muted)]">HTTP {{ event.status_code }}</p>
+              <p class="awd-traffic-muted mt-1 text-xs">HTTP {{ event.status_code }}</p>
             </td>
-            <td class="px-4 py-4 text-sm">
+            <td class="awd-traffic-table-cell">
               <span
                 class="inline-flex rounded-full px-3 py-1 text-xs font-semibold"
                 :class="getTrafficStatusGroupClass(event.status_group)"
               >
                 {{ getTrafficStatusGroupLabel(event.status_group) }}
               </span>
-              <p class="mt-1 text-xs text-[var(--color-text-muted)]">
+              <p class="awd-traffic-muted mt-1 text-xs">
                 {{ getTrafficSourceLabel(event.source) }}
               </p>
             </td>
           </tr>
           <tr v-if="!loadingTrafficEvents && trafficEvents.length === 0">
-            <td colspan="5" class="px-4 py-8 text-center text-sm text-[var(--color-text-muted)]">
+            <td colspan="5" class="awd-traffic-empty-row">
               当前筛选条件下没有流量事件。
             </td>
           </tr>
         </tbody>
       </table>
 
-      <div class="border-t border-border bg-surface-alt/20 px-4 py-3 text-xs text-[var(--color-text-muted)]">
+      <div class="awd-traffic-pagination border-t border-border bg-surface-alt/20 px-4 py-3 text-xs">
         <AdminPaginationControls
           :page="trafficFilters.page"
           :total-pages="trafficTotalPages"
@@ -452,6 +448,37 @@ function getTrafficStatusGroupLabel(statusGroup: AWDTrafficStatusGroup): string 
 
 .awd-traffic-secondary {
   color: var(--color-text-secondary);
+}
+
+.awd-traffic-table-head {
+  background: color-mix(in srgb, var(--color-bg-surface) 86%, var(--color-bg-base));
+  text-align: left;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--color-text-muted);
+}
+
+.awd-traffic-table-cell {
+  padding: var(--space-4);
+  font-size: var(--font-size-sm);
+}
+
+.awd-traffic-table-cell--primary {
+  color: var(--color-text-primary);
+}
+
+.awd-traffic-table-cell--secondary,
+.awd-traffic-pagination {
+  color: var(--color-text-secondary);
+}
+
+.awd-traffic-empty-row {
+  padding: var(--space-8) var(--space-4);
+  text-align: center;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
 }
 
 .awd-traffic-stat-label,
@@ -501,6 +528,10 @@ function getTrafficStatusGroupLabel(statusGroup: AWDTrafficStatusGroup): string 
 @media (min-width: 1280px) {
   .awd-traffic-overview-grid {
     grid-template-columns: 1.3fr 0.7fr;
+  }
+
+  .awd-traffic-filter-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) minmax(0, 1.35fr) auto;
   }
 }
 </style>
