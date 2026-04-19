@@ -1,0 +1,337 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { flushPromises, mount } from '@vue/test-utils'
+
+import ChallengeDetail from '../ChallengeDetail.vue'
+import challengeDetailSource from '../ChallengeDetail.vue?raw'
+
+const pushMock = vi.fn()
+const replaceMock = vi.fn()
+const routeState = vi.hoisted(() => ({
+  params: { id: '11' } as Record<string, string>,
+  query: {} as Record<string, string>,
+}))
+
+const adminApiMocks = vi.hoisted(() => ({
+  getChallengeDetail: vi.fn(),
+  configureChallengeFlag: vi.fn(),
+}))
+
+const challengeApiMocks = vi.hoisted(() => ({
+  downloadAttachment: vi.fn(),
+}))
+
+const toastMocks = vi.hoisted(() => ({
+  success: vi.fn(),
+  error: vi.fn(),
+}))
+
+vi.mock('vue-router', async () => {
+  const actual = await vi.importActual<typeof import('vue-router')>('vue-router')
+  return {
+    ...actual,
+    useRoute: () => routeState,
+    useRouter: () => ({ push: pushMock, replace: replaceMock, back: vi.fn() }),
+  }
+})
+
+vi.mock('@/api/admin', () => adminApiMocks)
+vi.mock('@/api/challenge', () => challengeApiMocks)
+vi.mock('@/composables/useToast', () => ({
+  useToast: () => toastMocks,
+}))
+
+describe('Admin ChallengeDetail', () => {
+  beforeEach(() => {
+    pushMock.mockReset()
+    replaceMock.mockReset()
+    toastMocks.success.mockReset()
+    toastMocks.error.mockReset()
+    challengeApiMocks.downloadAttachment.mockReset()
+    routeState.params = { id: '11' }
+    routeState.query = {}
+    adminApiMocks.getChallengeDetail.mockReset()
+    adminApiMocks.configureChallengeFlag.mockReset()
+    adminApiMocks.getChallengeDetail.mockResolvedValue({
+      id: '11',
+      title: '双节点演练',
+      category: 'web',
+      difficulty: 'easy',
+      status: 'draft',
+      points: 100,
+      image_id: 'img-1',
+      attachment_url: 'https://example.com/demo.zip',
+      description: 'desc',
+      hints: [{ id: 'hint-1', level: 1, title: '入口', content: '观察回显' }],
+      flag_config: {
+        configured: true,
+        flag_type: 'static',
+      },
+      created_at: '2026-03-10T00:00:00.000Z',
+      updated_at: '2026-03-10T00:00:00.000Z',
+    })
+    challengeApiMocks.downloadAttachment.mockResolvedValue({
+      blob: new Blob(['demo']),
+      filename: 'demo.zip',
+    })
+  })
+
+  it('应该默认显示题目管理 tab，并保留独立的拓扑编排入口', async () => {
+    const wrapper = mount(ChallengeDetail, {
+      global: {
+        stubs: {
+          ChallengeDescriptionPanel: { template: '<div>描述面板</div>' },
+          ChallengeWriteupManagePanel: {
+            template: '<div data-testid="challenge-writeup-manage-panel">题解目录</div>',
+          },
+        },
+      },
+    })
+
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('题目管理')
+    expect(wrapper.text()).toContain('题解管理')
+    expect(wrapper.find('#admin-challenge-tab-detail').attributes('aria-selected')).toBe('true')
+    expect(wrapper.find('#admin-challenge-panel-detail').attributes('aria-hidden')).toBe('false')
+    expect(wrapper.find('#admin-challenge-panel-writeup').attributes('aria-hidden')).toBe('true')
+    expect(wrapper.text()).toContain('双节点演练')
+    expect(
+      wrapper
+        .find(
+          '.challenge-overview-summary.progress-strip.metric-panel-grid.metric-panel-default-surface'
+        )
+        .exists()
+    ).toBe(true)
+    expect(wrapper.text()).toContain('基础信息')
+
+    const topologyButton = wrapper
+      .findAll('button')
+      .find((button) => button.text().includes('拓扑编排'))
+    expect(topologyButton).toBeTruthy()
+
+    await topologyButton!.trigger('click')
+
+    expect(pushMock).toHaveBeenCalledWith('/platform/challenges/11/topology')
+  })
+
+  it('应改用共享 ui-btn 原语而不是页面私有 admin-btn 按钮族', () => {
+    expect(challengeDetailSource).toContain('class="ui-btn ui-btn--primary"')
+    expect(challengeDetailSource).toContain('class="ui-btn ui-btn--ghost"')
+    expect(challengeDetailSource).not.toContain('admin-btn admin-btn-primary')
+    expect(challengeDetailSource).not.toContain('admin-btn admin-btn-ghost')
+  })
+
+  it('应该根据 query 切到题解管理 tab', async () => {
+    routeState.query = { panel: 'writeup' }
+
+    const wrapper = mount(ChallengeDetail, {
+      global: {
+        stubs: {
+          ChallengeDescriptionPanel: { template: '<div>描述面板</div>' },
+          ChallengeWriteupManagePanel: {
+            template: '<div data-testid="challenge-writeup-tab">题解目录</div>',
+          },
+        },
+      },
+    })
+
+    await flushPromises()
+
+    expect(wrapper.find('#admin-challenge-tab-writeup').attributes('aria-selected')).toBe('true')
+    expect(wrapper.find('#admin-challenge-panel-writeup').attributes('aria-hidden')).toBe('false')
+    expect(wrapper.find('[data-testid="challenge-writeup-tab"]').exists()).toBe(true)
+  })
+
+  it('切换题解管理 tab 时应同步更新 panel query', async () => {
+    const wrapper = mount(ChallengeDetail, {
+      global: {
+        stubs: {
+          ChallengeDescriptionPanel: { template: '<div>描述面板</div>' },
+          ChallengeWriteupManagePanel: { template: '<div>题解目录</div>' },
+        },
+      },
+    })
+
+    await flushPromises()
+    await wrapper.get('#admin-challenge-tab-writeup').trigger('click')
+
+    expect(replaceMock).toHaveBeenCalledWith({
+      name: 'PlatformChallengeDetail',
+      params: { id: '11' },
+      query: { panel: 'writeup' },
+    })
+  })
+
+  it('共享实例题应明确提示答案不做用户隔离', async () => {
+    adminApiMocks.getChallengeDetail.mockResolvedValue({
+      id: '11',
+      title: '共享密码题',
+      category: 'crypto',
+      difficulty: 'easy',
+      status: 'draft',
+      points: 100,
+      image_id: 'img-1',
+      description: 'desc',
+      instance_sharing: 'shared',
+      flag_config: {
+        configured: true,
+        flag_type: 'static',
+      },
+      created_at: '2026-03-10T00:00:00.000Z',
+      updated_at: '2026-03-10T00:00:00.000Z',
+    })
+
+    const wrapper = mount(ChallengeDetail, {
+      global: {
+        stubs: {
+          ChallengeDescriptionPanel: { template: '<div>描述面板</div>' },
+          ChallengeWriteupManagePanel: { template: '<div>题解目录</div>' },
+        },
+      },
+    })
+
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('共享实例只适用于无状态题')
+    expect(wrapper.text()).toContain('不提供用户级答案隔离')
+    expect(wrapper.text()).toContain('若需隔离答案，请使用 per_user 或 per_team')
+  })
+
+  it('共享实例题不应允许保存动态 Flag', async () => {
+    adminApiMocks.getChallengeDetail.mockResolvedValue({
+      id: '11',
+      title: '共享密码题',
+      category: 'crypto',
+      difficulty: 'easy',
+      status: 'draft',
+      points: 100,
+      image_id: 'img-1',
+      description: 'desc',
+      instance_sharing: 'shared',
+      flag_config: {
+        configured: true,
+        flag_type: 'static',
+      },
+      created_at: '2026-03-10T00:00:00.000Z',
+      updated_at: '2026-03-10T00:00:00.000Z',
+    })
+
+    const wrapper = mount(ChallengeDetail, {
+      global: {
+        stubs: {
+          ChallengeDescriptionPanel: { template: '<div>描述面板</div>' },
+          ChallengeWriteupManagePanel: { template: '<div>题解目录</div>' },
+        },
+      },
+    })
+
+    await flushPromises()
+
+    await wrapper.get('select.flag-field-input').setValue('dynamic')
+    const saveButton = wrapper
+      .findAll('button')
+      .find((button) => button.text().includes('保存配置'))
+    expect(saveButton).toBeTruthy()
+    await saveButton!.trigger('click')
+
+    expect(adminApiMocks.configureChallengeFlag).not.toHaveBeenCalled()
+    expect(toastMocks.error).toHaveBeenCalledWith(
+      '共享实例只适用于无状态题，不支持动态 Flag；若需隔离答案，请使用 per_user 或 per_team'
+    )
+  })
+
+  it('管理员下载内部附件时应走带鉴权的下载接口', async () => {
+    adminApiMocks.getChallengeDetail.mockResolvedValueOnce({
+      id: '11',
+      title: '双节点演练',
+      category: 'web',
+      difficulty: 'easy',
+      status: 'draft',
+      points: 100,
+      image_id: 'img-1',
+      attachment_url: '/api/v1/challenges/attachments/imports/demo.zip',
+      description: 'desc',
+      hints: [],
+      flag_config: {
+        configured: true,
+        flag_type: 'static',
+      },
+      created_at: '2026-03-10T00:00:00.000Z',
+      updated_at: '2026-03-10T00:00:00.000Z',
+    })
+
+    const originalCreateElement = document.createElement.bind(document)
+    const clickMock = vi.fn()
+    const createElementSpy = vi
+      .spyOn(document, 'createElement')
+      .mockImplementation((tagName: string) => {
+        if (tagName === 'a') {
+          const anchor = originalCreateElement(tagName)
+          anchor.click = clickMock
+          return anchor
+        }
+        return originalCreateElement(tagName)
+      })
+
+    vi.stubGlobal('URL', {
+      createObjectURL: vi.fn(() => 'blob:demo'),
+      revokeObjectURL: vi.fn(),
+    })
+
+    const wrapper = mount(ChallengeDetail, {
+      global: {
+        stubs: {
+          ChallengeDescriptionPanel: { template: '<div>描述面板</div>' },
+          ChallengeWriteupManagePanel: { template: '<div>题解目录</div>' },
+        },
+      },
+    })
+
+    await flushPromises()
+
+    const downloadButton = wrapper
+      .findAll('button')
+      .find((button) => button.text().includes('下载附件'))
+    expect(downloadButton).toBeTruthy()
+    expect(wrapper.text()).not.toContain('/api/v1/challenges/attachments/imports/demo.zip')
+
+    await downloadButton!.trigger('click')
+    await flushPromises()
+
+    expect(challengeApiMocks.downloadAttachment).toHaveBeenCalledWith(
+      '/api/v1/challenges/attachments/imports/demo.zip'
+    )
+    expect(clickMock).toHaveBeenCalled()
+
+    createElementSpy.mockRestore()
+    vi.unstubAllGlobals()
+  })
+
+  it('加载失败后卸载页面时应清理延迟跳转定时器', async () => {
+    vi.useFakeTimers()
+    adminApiMocks.getChallengeDetail.mockRejectedValueOnce(new Error('load failed'))
+
+    const pushSpy = pushMock.mockImplementation(() => Promise.resolve())
+    const clearTimeoutSpy = vi.spyOn(globalThis, 'clearTimeout')
+
+    const wrapper = mount(ChallengeDetail, {
+      global: {
+        stubs: {
+          ChallengeDescriptionPanel: { template: '<div>描述面板</div>' },
+          ChallengeWriteupManagePanel: { template: '<div>题解目录</div>' },
+        },
+      },
+    })
+
+    await flushPromises()
+
+    wrapper.unmount()
+    vi.runAllTimers()
+
+    expect(clearTimeoutSpy).toHaveBeenCalled()
+    expect(pushSpy).not.toHaveBeenCalledWith('/platform/challenges')
+
+    clearTimeoutSpy.mockRestore()
+    vi.useRealTimers()
+  })
+})

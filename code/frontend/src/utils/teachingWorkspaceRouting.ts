@@ -2,54 +2,54 @@ type TeachingWorkspaceRole = string | null | undefined
 
 export function resolveClassManagementRouteName(
   role?: TeachingWorkspaceRole
-): 'AdminClassManagement' | 'ClassManagement' {
-  return role === 'admin' ? 'AdminClassManagement' : 'ClassManagement'
+): 'PlatformClassManagement' | 'ClassManagement' {
+  return role === 'admin' ? 'PlatformClassManagement' : 'ClassManagement'
 }
 
 export function resolveTeachingDashboardRouteName(
   role?: TeachingWorkspaceRole
-): 'AdminDashboard' | 'TeacherDashboard' {
-  return role === 'admin' ? 'AdminDashboard' : 'TeacherDashboard'
+): 'PlatformOverview' | 'TeacherDashboard' {
+  return role === 'admin' ? 'PlatformOverview' : 'TeacherDashboard'
 }
 
 export function resolveStudentManagementRouteName(
   role?: TeachingWorkspaceRole
-): 'AdminStudentManagement' | 'TeacherStudentManagement' {
-  return role === 'admin' ? 'AdminStudentManagement' : 'TeacherStudentManagement'
+): 'PlatformStudentManagement' | 'TeacherStudentManagement' {
+  return role === 'admin' ? 'PlatformStudentManagement' : 'TeacherStudentManagement'
 }
 
 export function resolveClassStudentsRouteName(
   role?: TeachingWorkspaceRole
-): 'AdminClassStudents' | 'TeacherClassStudents' {
-  return role === 'admin' ? 'AdminClassStudents' : 'TeacherClassStudents'
+): 'PlatformClassStudents' | 'TeacherClassStudents' {
+  return role === 'admin' ? 'PlatformClassStudents' : 'TeacherClassStudents'
 }
 
 export function resolveStudentAnalysisRouteName(
   role?: TeachingWorkspaceRole
-): 'AdminStudentAnalysis' | 'TeacherStudentAnalysis' {
-  return role === 'admin' ? 'AdminStudentAnalysis' : 'TeacherStudentAnalysis'
+): 'PlatformStudentAnalysis' | 'TeacherStudentAnalysis' {
+  return role === 'admin' ? 'PlatformStudentAnalysis' : 'TeacherStudentAnalysis'
 }
 
 export function resolveStudentReviewArchiveRouteName(
   role?: TeachingWorkspaceRole
-): 'AdminStudentReviewArchive' | 'TeacherStudentReviewArchive' {
-  return role === 'admin' ? 'AdminStudentReviewArchive' : 'TeacherStudentReviewArchive'
+): 'PlatformStudentReviewArchive' | 'TeacherStudentReviewArchive' {
+  return role === 'admin' ? 'PlatformStudentReviewArchive' : 'TeacherStudentReviewArchive'
 }
 
 export function resolveAwdReviewIndexRouteName(
   role?: TeachingWorkspaceRole
-): 'AdminAWDReviewIndex' | 'TeacherAWDReviewIndex' {
-  return role === 'admin' ? 'AdminAWDReviewIndex' : 'TeacherAWDReviewIndex'
+): 'PlatformAwdReviewIndex' | 'TeacherAWDReviewIndex' {
+  return role === 'admin' ? 'PlatformAwdReviewIndex' : 'TeacherAWDReviewIndex'
 }
 
 export function resolveAwdReviewDetailRouteName(
   role?: TeachingWorkspaceRole
-): 'AdminAWDReviewDetail' | 'TeacherAWDReviewDetail' {
-  return role === 'admin' ? 'AdminAWDReviewDetail' : 'TeacherAWDReviewDetail'
+): 'PlatformAwdReviewDetail' | 'TeacherAWDReviewDetail' {
+  return role === 'admin' ? 'PlatformAwdReviewDetail' : 'TeacherAWDReviewDetail'
 }
 
 export function resolveInstanceManagementRouteName(
   role?: TeachingWorkspaceRole
-): 'AdminInstanceManagement' | 'TeacherInstanceManagement' {
-  return role === 'admin' ? 'AdminInstanceManagement' : 'TeacherInstanceManagement'
+): 'PlatformInstanceManagement' | 'TeacherInstanceManagement' {
+  return role === 'admin' ? 'PlatformInstanceManagement' : 'TeacherInstanceManagement'
 }

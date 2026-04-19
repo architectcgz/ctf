@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
-import userGovernanceSource from '@/components/admin/user/UserGovernancePage.vue?raw'
-import cheatDetectionSource from '@/views/admin/CheatDetection.vue?raw'
-import adminChallengeDetailSource from '@/views/admin/ChallengeDetail.vue?raw'
+import userGovernanceSource from '@/components/platform/user/UserGovernancePage.vue?raw'
+import cheatDetectionSource from '@/views/platform/CheatDetection.vue?raw'
+import adminChallengeDetailSource from '@/views/platform/ChallengeDetail.vue?raw'
 
 describe('route query tabs adoption', () => {
   it('admin 多 panel 页面应统一复用 useRouteQueryTabs，而不是继续在页面内手写状态机', () => {

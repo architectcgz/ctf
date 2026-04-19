@@ -239,14 +239,14 @@ describe('TeacherStudentReviewArchive', () => {
     wrapper.findComponent({ name: 'ReviewArchiveHero' }).vm.$emit('back')
 
     expect(pushMock).toHaveBeenCalledWith({
-      name: 'AdminStudentAnalysis',
+      name: 'PlatformStudentAnalysis',
       params: {
         className: 'Class A',
         studentId: 'stu-1',
       },
     })
     expect(pushMock).toHaveBeenCalledWith({
-      name: 'AdminClassStudents',
+      name: 'PlatformClassStudents',
       params: { className: 'Class A' },
     })
   })

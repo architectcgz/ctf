@@ -497,7 +497,7 @@ describe('TeacherStudentAnalysis', () => {
 
     wrapper.findComponent({ name: 'StudentAnalysisPage' }).vm.$emit('openClassManagement')
 
-    expect(pushMock).toHaveBeenCalledWith({ name: 'AdminClassManagement' })
+    expect(pushMock).toHaveBeenCalledWith({ name: 'PlatformClassManagement' })
   })
 
   it('管理员在学员分析内继续切换学生链路时应停留在后台路由', async () => {
@@ -527,11 +527,11 @@ describe('TeacherStudentAnalysis', () => {
     wrapper.findComponent({ name: 'StudentAnalysisPage' }).vm.$emit('openReviewArchive')
 
     expect(pushMock).toHaveBeenCalledWith({
-      name: 'AdminClassStudents',
+      name: 'PlatformClassStudents',
       params: { className: 'Class A' },
     })
     expect(pushMock).toHaveBeenCalledWith({
-      name: 'AdminStudentReviewArchive',
+      name: 'PlatformStudentReviewArchive',
       params: {
         className: 'Class A',
         studentId: 'stu-1',

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import AdminPaginationControls from '@/components/admin/AdminPaginationControls.vue'
+import PlatformPaginationControls from '@/components/platform/PlatformPaginationControls.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -22,7 +22,7 @@ const emit = defineEmits<{
 
 <template>
   <div v-if="total > 0" class="workspace-directory-pagination workspace-directory-pagination-shell">
-    <AdminPaginationControls
+    <PlatformPaginationControls
       :page="page"
       :total-pages="totalPages"
       :total="total"

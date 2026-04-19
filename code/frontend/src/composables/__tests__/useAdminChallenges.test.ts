@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import { defineComponent } from 'vue'
 
-import { useAdminChallenges } from '@/composables/useAdminChallenges'
+import { usePlatformChallenges } from '@/composables/usePlatformChallenges'
 import { ApiError } from '@/api/request'
 
 const adminApiMocks = vi.hoisted(() => ({
@@ -37,7 +37,7 @@ function deferred<T>() {
   return { promise, resolve }
 }
 
-describe('useAdminChallenges', () => {
+describe('usePlatformChallenges', () => {
   beforeEach(() => {
     vi.useRealTimers()
     adminApiMocks.createChallengePublishRequest.mockReset()
@@ -101,10 +101,10 @@ describe('useAdminChallenges', () => {
         updated_at: '2026-04-01T08:05:30.000Z',
       })
 
-    let composable!: ReturnType<typeof useAdminChallenges>
+    let composable!: ReturnType<typeof usePlatformChallenges>
     const Harness = defineComponent({
       setup() {
-        composable = useAdminChallenges()
+        composable = usePlatformChallenges()
         return () => null
       },
     })
@@ -203,10 +203,10 @@ describe('useAdminChallenges', () => {
         updated_at: '2026-04-01T08:05:30.000Z',
       })
 
-    let composable!: ReturnType<typeof useAdminChallenges>
+    let composable!: ReturnType<typeof usePlatformChallenges>
     const Harness = defineComponent({
       setup() {
-        composable = useAdminChallenges()
+        composable = usePlatformChallenges()
         return () => null
       },
     })
@@ -233,10 +233,10 @@ describe('useAdminChallenges', () => {
       new ApiError('还有学生正在解题，暂时不能删除', { code: 10007, status: 409 })
     )
 
-    let composable!: ReturnType<typeof useAdminChallenges>
+    let composable!: ReturnType<typeof usePlatformChallenges>
     const Harness = defineComponent({
       setup() {
-        composable = useAdminChallenges()
+        composable = usePlatformChallenges()
         return () => null
       },
     })
@@ -302,10 +302,10 @@ describe('useAdminChallenges', () => {
         updated_at: '2026-04-02T08:05:10.000Z',
       })
 
-    let composable!: ReturnType<typeof useAdminChallenges>
+    let composable!: ReturnType<typeof usePlatformChallenges>
     const Harness = defineComponent({
       setup() {
-        composable = useAdminChallenges()
+        composable = usePlatformChallenges()
         return () => null
       },
     })

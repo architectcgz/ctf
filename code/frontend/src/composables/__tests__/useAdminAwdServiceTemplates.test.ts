@@ -3,7 +3,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { defineComponent } from 'vue'
 
 import { ApiError } from '@/api/request'
-import { useAdminAwdServiceTemplates } from '@/composables/useAdminAwdServiceTemplates'
+import { usePlatformAwdServiceTemplates } from '@/composables/usePlatformAwdServiceTemplates'
 
 const adminApiMocks = vi.hoisted(() => ({
   createAdminAwdServiceTemplate: vi.fn(),
@@ -27,7 +27,7 @@ vi.mock('@/composables/useDestructiveConfirm', () => ({
   confirmDestructiveAction: confirmMock,
 }))
 
-describe('useAdminAwdServiceTemplates', () => {
+describe('usePlatformAwdServiceTemplates', () => {
   beforeEach(() => {
     adminApiMocks.createAdminAwdServiceTemplate.mockReset()
     adminApiMocks.deleteAdminAwdServiceTemplate.mockReset()
@@ -62,10 +62,10 @@ describe('useAdminAwdServiceTemplates', () => {
   })
 
   it('loads list data and creates templates', async () => {
-    let composable!: ReturnType<typeof useAdminAwdServiceTemplates>
+    let composable!: ReturnType<typeof usePlatformAwdServiceTemplates>
     const Harness = defineComponent({
       setup() {
-        composable = useAdminAwdServiceTemplates()
+        composable = usePlatformAwdServiceTemplates()
         return () => null
       },
     })
@@ -124,10 +124,10 @@ describe('useAdminAwdServiceTemplates', () => {
   })
 
   it('preserves delete failure messages', async () => {
-    let composable!: ReturnType<typeof useAdminAwdServiceTemplates>
+    let composable!: ReturnType<typeof usePlatformAwdServiceTemplates>
     const Harness = defineComponent({
       setup() {
-        composable = useAdminAwdServiceTemplates()
+        composable = usePlatformAwdServiceTemplates()
         return () => null
       },
     })

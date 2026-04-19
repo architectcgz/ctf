@@ -1,15 +1,15 @@
 import { describe, expect, it } from 'vitest'
 
-import auditLogSource from '../admin/AuditLog.vue?raw'
-import challengeDetailSource from '../admin/ChallengeDetail.vue?raw'
-import challengeManageSource from '../admin/ChallengeManage.vue?raw'
-import challengeImportManageSource from '../admin/ChallengeImportManage.vue?raw'
-import challengePackageFormatSource from '../admin/ChallengePackageFormat.vue?raw'
-import cheatDetectionSource from '../admin/CheatDetection.vue?raw'
-import imageManageSource from '../admin/ImageManage.vue?raw'
-import adminDashboardSource from '../../components/admin/dashboard/AdminDashboardPage.vue?raw'
-import contestOrchestrationSource from '../../components/admin/contest/ContestOrchestrationPage.vue?raw'
-import userGovernanceSource from '../../components/admin/user/UserGovernancePage.vue?raw'
+import auditLogSource from '../platform/AuditLog.vue?raw'
+import challengeDetailSource from '../platform/ChallengeDetail.vue?raw'
+import challengeManageSource from '../platform/ChallengeManage.vue?raw'
+import challengeImportManageSource from '../platform/ChallengeImportManage.vue?raw'
+import challengePackageFormatSource from '../platform/ChallengePackageFormat.vue?raw'
+import cheatDetectionSource from '../platform/CheatDetection.vue?raw'
+import imageManageSource from '../platform/ImageManage.vue?raw'
+import adminDashboardSource from '../../components/platform/dashboard/PlatformOverviewPage.vue?raw'
+import contestOrchestrationSource from '../../components/platform/contest/ContestOrchestrationPage.vue?raw'
+import userGovernanceSource from '../../components/platform/user/UserGovernancePage.vue?raw'
 
 describe('admin full-bleed hero roots', () => {
   it('uses a section root that carries the hero background', () => {

@@ -25,22 +25,22 @@ import topNavSource from '@/components/layout/TopNav.vue?raw'
 import cLightActionPopoverSource from '@/components/common/modal-templates/CLightActionPopover.vue?raw'
 import cFocusedInputDialogSource from '@/components/common/modal-templates/CFocusedInputDialog.vue?raw'
 import cImmersiveConfirmDialogSource from '@/components/common/modal-templates/CImmersiveConfirmDialog.vue?raw'
-import challengePackageImportEntrySource from '@/components/admin/challenge/ChallengePackageImportEntry.vue?raw'
-import adminDashboardSource from '@/components/admin/dashboard/AdminDashboardPage.vue?raw'
-import writeupManageSource from '@/components/admin/writeup/ChallengeWriteupManagePanel.vue?raw'
-import awdRoundInspectorSource from '@/components/admin/contest/AWDRoundInspector.vue?raw'
-import contestOrchestrationSource from '@/components/admin/contest/ContestOrchestrationPage.vue?raw'
-import topologyCanvasBoardSource from '@/components/admin/topology/TopologyCanvasBoard.vue?raw'
-import topologyStudioSource from '@/components/admin/topology/ChallengeTopologyStudioPage.vue?raw'
+import challengePackageImportEntrySource from '@/components/platform/challenge/ChallengePackageImportEntry.vue?raw'
+import adminDashboardSource from '@/components/platform/dashboard/PlatformOverviewPage.vue?raw'
+import writeupManageSource from '@/components/platform/writeup/ChallengeWriteupManagePanel.vue?raw'
+import awdRoundInspectorSource from '@/components/platform/contest/AWDRoundInspector.vue?raw'
+import contestOrchestrationSource from '@/components/platform/contest/ContestOrchestrationPage.vue?raw'
+import topologyCanvasBoardSource from '@/components/platform/topology/TopologyCanvasBoard.vue?raw'
+import topologyStudioSource from '@/components/platform/topology/ChallengeTopologyStudioPage.vue?raw'
 import adminNotificationPublishDrawerSource from '@/components/notifications/AdminNotificationPublishDrawer.vue?raw'
 import skillProfileSource from '@/views/profile/SkillProfile.vue?raw'
 import userProfileSource from '@/views/profile/UserProfile.vue?raw'
 import securitySettingsSource from '@/views/profile/SecuritySettings.vue?raw'
-import imageManageSource from '@/views/admin/ImageManage.vue?raw'
-import challengeManageSource from '@/views/admin/ChallengeManage.vue?raw'
-import adminChallengeDetailSource from '@/views/admin/ChallengeDetail.vue?raw'
+import imageManageSource from '@/views/platform/ImageManage.vue?raw'
+import challengeManageSource from '@/views/platform/ChallengeManage.vue?raw'
+import adminChallengeDetailSource from '@/views/platform/ChallengeDetail.vue?raw'
 import challengeDetailSource from '@/views/challenges/ChallengeDetail.vue?raw'
-import userGovernanceSource from '@/components/admin/user/UserGovernancePage.vue?raw'
+import userGovernanceSource from '@/components/platform/user/UserGovernancePage.vue?raw'
 
 function expectNoHardcodedThemeTokens(
   source: string,
@@ -281,7 +281,7 @@ describe('shared theme token adoption', () => {
       '#2563eb',
       'rgba(37, 99, 235, 0.12)',
     ])
-    expectNoHardcodedThemeTokens(adminDashboardSource, 'AdminDashboardPage', [
+    expectNoHardcodedThemeTokens(adminDashboardSource, 'PlatformOverviewPage', [
       'background: #1d4ed8;',
       'border-color: rgba(37, 99, 235, 0.28);',
     ])
@@ -324,7 +324,7 @@ describe('shared theme token adoption', () => {
       '#dc2626',
       '#b91c1c',
     ])
-    expectNoHardcodedThemeTokens(adminChallengeDetailSource, 'AdminChallengeDetail', [
+    expectNoHardcodedThemeTokens(adminChallengeDetailSource, 'PlatformChallengeDetail', [
       'rgba(37, 99, 235, 0.18)',
       'rgba(37, 99, 235, 0.08)',
       'rgba(37, 99, 235, 0.42)',

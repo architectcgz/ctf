@@ -203,7 +203,7 @@ describe('InstanceManagement', () => {
 
     wrapper.findComponent({ name: 'TeacherInstanceManagementPage' }).vm.$emit('openDashboard')
 
-    expect(pushMock).toHaveBeenCalledWith({ name: 'AdminDashboard' })
+    expect(pushMock).toHaveBeenCalledWith({ name: 'PlatformOverview' })
   })
 
   it('应该支持实例目录分页切换', async () => {

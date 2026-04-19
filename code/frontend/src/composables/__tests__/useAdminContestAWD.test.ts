@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import { defineComponent, ref } from 'vue'
 
-import { useAdminContestAWD } from '@/composables/useAdminContestAWD'
+import { usePlatformContestAwd } from '@/composables/usePlatformContestAwd'
 import type { ContestDetailData } from '@/api/contracts'
 import { ApiError } from '@/api/request'
 
@@ -146,7 +146,7 @@ function buildContestAWDService(overrides: Record<string, unknown> = {}) {
   }
 }
 
-describe('useAdminContestAWD', () => {
+describe('usePlatformContestAwd', () => {
   beforeEach(() => {
     vi.useRealTimers()
     toastMocks.success.mockReset()
@@ -259,11 +259,11 @@ describe('useAdminContestAWD', () => {
       }),
     ])
 
-    let composable!: ReturnType<typeof useAdminContestAWD>
+    let composable!: ReturnType<typeof usePlatformContestAwd>
     const selectedContest = ref<ContestDetailData | null>(buildContest())
     const Harness = defineComponent({
       setup() {
-        composable = useAdminContestAWD(selectedContest)
+        composable = usePlatformContestAwd(selectedContest)
         return () => null
       },
     })
@@ -308,11 +308,11 @@ describe('useAdminContestAWD', () => {
       page_size: 20,
     })
 
-    let composable!: ReturnType<typeof useAdminContestAWD>
+    let composable!: ReturnType<typeof usePlatformContestAwd>
     const selectedContest = ref<ContestDetailData | null>(buildContest())
     const Harness = defineComponent({
       setup() {
-        composable = useAdminContestAWD(selectedContest)
+        composable = usePlatformContestAwd(selectedContest)
         return () => null
       },
     })
@@ -381,11 +381,11 @@ describe('useAdminContestAWD', () => {
       }),
     ])
 
-    let composable!: ReturnType<typeof useAdminContestAWD>
+    let composable!: ReturnType<typeof usePlatformContestAwd>
     const selectedContest = ref<ContestDetailData | null>(buildContest())
     const Harness = defineComponent({
       setup() {
-        composable = useAdminContestAWD(selectedContest)
+        composable = usePlatformContestAwd(selectedContest)
         return () => null
       },
     })
@@ -417,11 +417,11 @@ describe('useAdminContestAWD', () => {
       )
       .mockResolvedValueOnce(buildRound())
 
-    let composable!: ReturnType<typeof useAdminContestAWD>
+    let composable!: ReturnType<typeof usePlatformContestAwd>
     const selectedContest = ref<ContestDetailData | null>(buildContest())
     const Harness = defineComponent({
       setup() {
-        composable = useAdminContestAWD(selectedContest)
+        composable = usePlatformContestAwd(selectedContest)
         return () => null
       },
     })
@@ -476,11 +476,11 @@ describe('useAdminContestAWD', () => {
         services: [],
       })
 
-    let composable!: ReturnType<typeof useAdminContestAWD>
+    let composable!: ReturnType<typeof usePlatformContestAwd>
     const selectedContest = ref<ContestDetailData | null>(buildContest())
     const Harness = defineComponent({
       setup() {
-        composable = useAdminContestAWD(selectedContest)
+        composable = usePlatformContestAwd(selectedContest)
         return () => null
       },
     })
@@ -518,11 +518,11 @@ describe('useAdminContestAWD', () => {
       new ApiError('普通冲突', { code: 14099, status: 409 })
     )
 
-    let composable!: ReturnType<typeof useAdminContestAWD>
+    let composable!: ReturnType<typeof usePlatformContestAwd>
     const selectedContest = ref<ContestDetailData | null>(buildContest())
     const Harness = defineComponent({
       setup() {
-        composable = useAdminContestAWD(selectedContest)
+        composable = usePlatformContestAwd(selectedContest)
         return () => null
       },
     })
@@ -548,13 +548,13 @@ describe('useAdminContestAWD', () => {
   })
 
   it('录入服务检查时应提交 service_id 载荷', async () => {
-    let composable!: ReturnType<typeof useAdminContestAWD>
+    let composable!: ReturnType<typeof usePlatformContestAwd>
     const selectedContest = ref<ContestDetailData | null>(buildContest())
     adminApiMocks.listContestAWDRounds.mockResolvedValueOnce([buildRound()])
 
     const Harness = defineComponent({
       setup() {
-        composable = useAdminContestAWD(selectedContest)
+        composable = usePlatformContestAwd(selectedContest)
         return () => null
       },
     })
@@ -581,13 +581,13 @@ describe('useAdminContestAWD', () => {
   })
 
   it('补录攻击日志时应提交 service_id 载荷', async () => {
-    let composable!: ReturnType<typeof useAdminContestAWD>
+    let composable!: ReturnType<typeof usePlatformContestAwd>
     const selectedContest = ref<ContestDetailData | null>(buildContest())
     adminApiMocks.listContestAWDRounds.mockResolvedValueOnce([buildRound()])
 
     const Harness = defineComponent({
       setup() {
-        composable = useAdminContestAWD(selectedContest)
+        composable = usePlatformContestAwd(selectedContest)
         return () => null
       },
     })
@@ -618,12 +618,12 @@ describe('useAdminContestAWD', () => {
   })
 
   it('创建 AWD 配置时应通过显式 service 写入 runtime 字段，关系层只更新分值', async () => {
-    let composable!: ReturnType<typeof useAdminContestAWD>
+    let composable!: ReturnType<typeof usePlatformContestAwd>
     const selectedContest = ref<ContestDetailData | null>(buildContest())
 
     const Harness = defineComponent({
       setup() {
-        composable = useAdminContestAWD(selectedContest)
+        composable = usePlatformContestAwd(selectedContest)
         return () => null
       },
     })
@@ -664,7 +664,7 @@ describe('useAdminContestAWD', () => {
   })
 
   it('更新 AWD 配置时应优先更新显式 service，关系层只更新分值', async () => {
-    let composable!: ReturnType<typeof useAdminContestAWD>
+    let composable!: ReturnType<typeof usePlatformContestAwd>
     const selectedContest = ref<ContestDetailData | null>(buildContest())
     adminApiMocks.listAdminContestChallenges.mockResolvedValueOnce([
       {
@@ -698,7 +698,7 @@ describe('useAdminContestAWD', () => {
 
     const Harness = defineComponent({
       setup() {
-        composable = useAdminContestAWD(selectedContest)
+        composable = usePlatformContestAwd(selectedContest)
         return () => null
       },
     })

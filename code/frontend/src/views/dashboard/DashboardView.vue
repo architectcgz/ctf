@@ -127,7 +127,7 @@ async function loadDashboard(): Promise<void> {
     return
   }
   if (role === 'admin') {
-    await router.replace({ name: 'AdminDashboard' })
+    await router.replace({ name: 'PlatformOverview' })
     return
   }
 

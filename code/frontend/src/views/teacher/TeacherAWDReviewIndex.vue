@@ -10,8 +10,8 @@ import { formatDate } from '@/utils/format'
 const { router, loading, error, contests, filters, hasContests, loadContests, openContest } =
   useTeacherAwdReviewIndex()
 const route = useRoute()
-const isAdminRoute = computed(() => route.name === 'AdminAWDReviewIndex')
-const overviewRouteName = computed(() => (isAdminRoute.value ? 'AdminDashboard' : 'TeacherDashboard'))
+const isAdminRoute = computed(() => route.name === 'PlatformAwdReviewIndex')
+const overviewRouteName = computed(() => (isAdminRoute.value ? 'PlatformOverview' : 'TeacherDashboard'))
 const overviewLabel = computed(() => (isAdminRoute.value ? '平台概览' : '教学概览'))
 
 const statusOptions = [

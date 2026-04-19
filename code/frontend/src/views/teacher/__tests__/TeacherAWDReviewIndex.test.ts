@@ -99,7 +99,7 @@ describe('TeacherAWDReviewIndex', () => {
   })
 
   it('平台路由下头部概览按钮应切到平台文案并返回后台概览', async () => {
-    currentRouteName = 'AdminAWDReviewIndex'
+    currentRouteName = 'PlatformAwdReviewIndex'
 
     const wrapper = mount(TeacherAWDReviewIndex)
 
@@ -111,7 +111,7 @@ describe('TeacherAWDReviewIndex', () => {
 
     await overviewButton.trigger('click')
 
-    expect(pushMock).toHaveBeenCalledWith({ name: 'AdminDashboard' })
+    expect(pushMock).toHaveBeenCalledWith({ name: 'PlatformOverview' })
   })
 
   it('筛选区应保持平铺，不应继续在页面局部做成独立卡片壳', () => {

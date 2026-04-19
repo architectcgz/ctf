@@ -288,7 +288,7 @@ describe('TeacherDashboard', () => {
 
     wrapper.findComponent({ name: 'TeacherDashboardPage' }).vm.$emit('openClassManagement')
 
-    expect(pushMock).toHaveBeenCalledWith({ name: 'AdminClassManagement' })
+    expect(pushMock).toHaveBeenCalledWith({ name: 'PlatformClassManagement' })
   })
 
   it('切换工作台 tab 时应同步 panel 查询参数且次级标题使用公共样式类', async () => {
