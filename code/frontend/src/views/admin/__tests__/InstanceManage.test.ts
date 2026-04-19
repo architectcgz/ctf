@@ -122,11 +122,16 @@ describe('AdminInstanceManagement', () => {
     vi.advanceTimersByTime(250)
     await flushPromises()
 
-    expect(teacherApiMocks.getTeacherInstances).toHaveBeenLastCalledWith({
-      class_name: undefined,
-      keyword: 'ali',
-      student_no: undefined,
-    })
+    expect(teacherApiMocks.getTeacherInstances).toHaveBeenLastCalledWith(
+      {
+        class_name: undefined,
+        keyword: 'ali',
+        student_no: undefined,
+      },
+      expect.objectContaining({
+        signal: expect.any(AbortSignal),
+      })
+    )
 
     await wrapper.find('[data-instance-id="inst-1"]').trigger('click')
     await flushPromises()
@@ -134,5 +139,20 @@ describe('AdminInstanceManagement', () => {
     expect(confirmMock).toHaveBeenCalled()
     expect(teacherApiMocks.destroyTeacherInstance).toHaveBeenCalledWith('inst-1')
     expect(wrapper.text()).not.toContain('Web SQLi 101')
+  })
+
+  it('卸载页面前的延迟筛选不应在离开后继续发请求', async () => {
+    const wrapper = mount(AdminInstanceManagement)
+    await flushPromises()
+
+    const searchInput = wrapper.get('input[placeholder="检索学生、用户名或题目名称..."]')
+    await searchInput.setValue('alice')
+
+    wrapper.unmount()
+
+    vi.advanceTimersByTime(250)
+    await flushPromises()
+
+    expect(teacherApiMocks.getTeacherInstances).toHaveBeenCalledTimes(1)
   })
 })

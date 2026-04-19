@@ -29,6 +29,14 @@ vi.mock('element-plus', () => ({
   },
 }))
 
+function deferred<T>() {
+  let resolve!: (value: T | PromiseLike<T>) => void
+  const promise = new Promise<T>((nextResolve) => {
+    resolve = nextResolve
+  })
+  return { promise, resolve }
+}
+
 describe('useAdminChallenges', () => {
   beforeEach(() => {
     vi.useRealTimers()
@@ -241,5 +249,79 @@ describe('useAdminChallenges', () => {
 
     expect(toastMocks.error).toHaveBeenCalledWith('还有学生正在解题，暂时不能删除')
     expect(toastMocks.error).not.toHaveBeenCalledWith('删除失败')
+  })
+
+  it('忽略翻页后才返回的旧发布状态结果', async () => {
+    const stalePageOneRequest = deferred<null>()
+
+    adminApiMocks.getChallenges
+      .mockResolvedValueOnce({
+        list: [
+          {
+            id: '1',
+            title: 'Page One Challenge',
+            category: 'web',
+            difficulty: 'easy',
+            status: 'draft',
+            points: 100,
+            created_at: '2026-04-01T08:00:00.000Z',
+            updated_at: '2026-04-01T08:00:00.000Z',
+          },
+        ],
+        total: 2,
+        page: 1,
+        page_size: 20,
+      })
+      .mockResolvedValueOnce({
+        list: [
+          {
+            id: '2',
+            title: 'Page Two Challenge',
+            category: 'pwn',
+            difficulty: 'medium',
+            status: 'draft',
+            points: 200,
+            created_at: '2026-04-02T08:00:00.000Z',
+            updated_at: '2026-04-02T08:00:00.000Z',
+          },
+        ],
+        total: 2,
+        page: 2,
+        page_size: 20,
+      })
+
+    adminApiMocks.getLatestChallengePublishRequest
+      .mockImplementationOnce(() => stalePageOneRequest.promise)
+      .mockResolvedValueOnce({
+        id: 'req-2',
+        challenge_id: '2',
+        status: 'succeeded',
+        active: false,
+        failure_summary: '',
+        created_at: '2026-04-02T08:05:00.000Z',
+        updated_at: '2026-04-02T08:05:10.000Z',
+      })
+
+    let composable!: ReturnType<typeof useAdminChallenges>
+    const Harness = defineComponent({
+      setup() {
+        composable = useAdminChallenges()
+        return () => null
+      },
+    })
+
+    mount(Harness)
+
+    await composable.changePage(2)
+    await flushPromises()
+
+    expect(composable.list.value[0]?.id).toBe('2')
+    expect(composable.list.value[0]?.latestPublishRequest?.id).toBe('req-2')
+
+    stalePageOneRequest.resolve(null)
+    await flushPromises()
+
+    expect(composable.list.value[0]?.id).toBe('2')
+    expect(composable.list.value[0]?.latestPublishRequest?.id).toBe('req-2')
   })
 })

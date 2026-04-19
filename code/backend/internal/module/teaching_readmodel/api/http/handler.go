@@ -36,6 +36,23 @@ func (h *Handler) ListClasses(c *gin.Context) {
 	response.Page(c, items, total, page, pageSize)
 }
 
+func (h *Handler) ListStudents(c *gin.Context) {
+	currentUser := authctx.MustCurrentUser(c)
+	var query dto.TeacherStudentDirectoryQuery
+	if err := c.ShouldBindQuery(&query); err != nil {
+		response.ValidationError(c, err)
+		return
+	}
+
+	items, total, page, pageSize, err := h.service.ListStudents(c.Request.Context(), currentUser.UserID, currentUser.Role, &query)
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+
+	response.Page(c, items, total, page, pageSize)
+}
+
 func (h *Handler) ListClassStudents(c *gin.Context) {
 	currentUser := authctx.MustCurrentUser(c)
 	var query dto.TeacherStudentQuery

@@ -1,9 +1,9 @@
-import { computed, reactive, ref, watch } from 'vue'
-import { useDebounceFn } from '@vueuse/core'
+import { computed, onUnmounted, reactive, ref, watch } from 'vue'
 
 import { destroyTeacherInstance, getClasses, getTeacherInstances } from '@/api/teacher'
 import type { TeacherClassItem, TeacherInstanceItem } from '@/api/contracts'
 import { useAuthStore } from '@/stores/auth'
+import { useAbortController } from '@/composables/useAbortController'
 import { useToast } from '@/composables/useToast'
 
 type TeacherInstanceFilters = {
@@ -30,6 +30,8 @@ export function useTeacherInstances() {
   const error = ref<string | null>(null)
   const autoSearchReady = ref(false)
   let latestInstanceRequestID = 0
+  let instanceSearchTimer: number | null = null
+  const { createController, abort } = useAbortController()
 
   const isAdmin = computed(() => authStore.user?.role === 'admin')
   const totalCount = computed(() => instances.value.length)
@@ -66,6 +68,7 @@ export function useTeacherInstances() {
 
   async function loadInstances(): Promise<void> {
     const requestID = ++latestInstanceRequestID
+    const controller = createController()
     loadingInstances.value = true
     error.value = null
 
@@ -74,11 +77,21 @@ export function useTeacherInstances() {
         class_name: filters.className || undefined,
         keyword: filters.keyword.trim() || undefined,
         student_no: filters.studentNo.trim() || undefined,
+      }, {
+        signal: controller.signal,
       })
       if (requestID !== latestInstanceRequestID) return
       instances.value = nextInstances
     } catch (err) {
       if (requestID !== latestInstanceRequestID) return
+      if (
+        err &&
+        typeof err === 'object' &&
+        'code' in err &&
+        (err as { code?: unknown }).code === 'ERR_CANCELED'
+      ) {
+        return
+      }
       console.error('加载教师实例列表失败:', err)
       error.value = '加载实例列表失败，请稍后重试'
       instances.value = []
@@ -88,12 +101,20 @@ export function useTeacherInstances() {
     }
   }
 
-  type DebouncedInstanceSearch = ReturnType<typeof useDebounceFn> & {
-    cancel?: () => void
+  function clearScheduledInstanceSearch(): void {
+    if (instanceSearchTimer !== null) {
+      window.clearTimeout(instanceSearchTimer)
+      instanceSearchTimer = null
+    }
   }
-  const scheduleInstanceSearch = useDebounceFn(() => {
-    void loadInstances()
-  }, 250) as DebouncedInstanceSearch
+
+  function scheduleInstanceSearch(): void {
+    clearScheduledInstanceSearch()
+    instanceSearchTimer = window.setTimeout(() => {
+      instanceSearchTimer = null
+      void loadInstances()
+    }, 250)
+  }
 
   function updateFilter<K extends keyof TeacherInstanceFilters>(
     key: K,
@@ -125,6 +146,11 @@ export function useTeacherInstances() {
       scheduleInstanceSearch()
     }
   )
+
+  onUnmounted(() => {
+    clearScheduledInstanceSearch()
+    abort()
+  })
 
   return {
     classes,

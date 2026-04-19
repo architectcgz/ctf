@@ -11,6 +11,7 @@ import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
 import WorkspaceDirectoryToolbar, {
   type WorkspaceDirectorySortOption,
 } from '@/components/common/WorkspaceDirectoryToolbar.vue'
+import { useAbortController } from '@/composables/useAbortController'
 
 type AuditSortKey = 'created_at' | 'action' | 'actor'
 type AuditSortOption = WorkspaceDirectorySortOption & {
@@ -37,6 +38,8 @@ const keyword = ref('')
 let textFilterTimer: ReturnType<typeof setTimeout> | null = null
 let suppressAutoApply = false
 const autoApplyReady = ref(false)
+const { createController, abort } = useAbortController()
+let latestLogsRequestId = 0
 
 const sortOptions: AuditSortOption[] = [
   { key: 'created_at', order: 'desc', label: '最近操作', icon: Calendar },
@@ -162,6 +165,8 @@ function detailPreview(detail: Record<string, unknown> | undefined): string {
 }
 
 async function loadLogs(): Promise<void> {
+  const requestId = ++latestLogsRequestId
+  const controller = createController()
   loading.value = true
   error.value = null
   try {
@@ -171,15 +176,34 @@ async function loadLogs(): Promise<void> {
       action: filters.action || undefined,
       resource_type: filters.resource_type || undefined,
       actor_user_id: filters.actor_user_id ? Number(filters.actor_user_id) : undefined,
+    }, {
+      signal: controller.signal,
     })
+    if (requestId !== latestLogsRequestId) {
+      return
+    }
     list.value = payload.list
     total.value = payload.total
     page.value = payload.page
     pageSize.value = payload.page_size
   } catch (err) {
+    if (requestId !== latestLogsRequestId) {
+      return
+    }
+    if (
+      err &&
+      typeof err === 'object' &&
+      'code' in err &&
+      (err as { code?: unknown }).code === 'ERR_CANCELED'
+    ) {
+      return
+    }
     console.error('加载审计日志失败:', err)
     error.value = '加载审计日志失败，请稍后重试'
   } finally {
+    if (requestId !== latestLogsRequestId) {
+      return
+    }
     loading.value = false
   }
 }
@@ -246,6 +270,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   clearTextFilterTimer()
+  abort()
 })
 
 watch(
