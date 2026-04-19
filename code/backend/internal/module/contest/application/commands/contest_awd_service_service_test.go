@@ -205,7 +205,7 @@ func TestContestAWDServiceServiceUpdateMaintainsContestChallengeRelation(t *test
 	}
 }
 
-func TestContestAWDServiceServiceCreatePersistsRuntimeFieldsOnService(t *testing.T) {
+func TestContestAWDServiceServiceCreateDoesNotPersistLegacyChallengeIDInRuntimeConfig(t *testing.T) {
 	service, challengeRepo, contestRepo, _, awdRepo := newContestAWDServiceForTest(t)
 
 	now := time.Now()
@@ -279,8 +279,8 @@ func TestContestAWDServiceServiceCreatePersistsRuntimeFieldsOnService(t *testing
 	if runtimeConfig["checker_type"] != string(model.AWDCheckerTypeHTTPStandard) {
 		t.Fatalf("unexpected checker type: %+v", runtimeConfig)
 	}
-	if runtimeConfig["challenge_id"] != float64(9804) {
-		t.Fatalf("expected compatibility challenge_id derived from service challenge id, got %+v", runtimeConfig)
+	if _, ok := runtimeConfig["challenge_id"]; ok {
+		t.Fatalf("expected runtime config to stop persisting legacy challenge_id, got %+v", runtimeConfig)
 	}
 	checkerConfig, ok := runtimeConfig["checker_config"].(map[string]any)
 	if !ok {
@@ -302,7 +302,7 @@ func TestContestAWDServiceServiceCreatePersistsRuntimeFieldsOnService(t *testing
 	}
 }
 
-func TestContestAWDServiceServiceUpdatePersistsRuntimeFieldsOnService(t *testing.T) {
+func TestContestAWDServiceServiceUpdateDoesNotPersistLegacyChallengeIDInRuntimeConfig(t *testing.T) {
 	service, challengeRepo, contestRepo, _, awdRepo := newContestAWDServiceForTest(t)
 
 	now := time.Now()
@@ -381,8 +381,8 @@ func TestContestAWDServiceServiceUpdatePersistsRuntimeFieldsOnService(t *testing
 	if runtimeConfig["checker_type"] != string(model.AWDCheckerTypeHTTPStandard) {
 		t.Fatalf("unexpected checker type: %+v", runtimeConfig)
 	}
-	if runtimeConfig["challenge_id"] != float64(9805) {
-		t.Fatalf("expected compatibility challenge_id derived from stored challenge id, got %+v", runtimeConfig)
+	if _, ok := runtimeConfig["challenge_id"]; ok {
+		t.Fatalf("expected runtime config to stop persisting legacy challenge_id, got %+v", runtimeConfig)
 	}
 
 	var scoreConfig map[string]any

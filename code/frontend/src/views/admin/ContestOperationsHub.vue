@@ -513,7 +513,7 @@ watch(
       v-else-if="awdContests.length === 0"
       class="workspace-directory-section contest-ops-section"
       title="当前还没有可运维的 AWD 赛事"
-      description="先在竞赛管理中创建或切换到 AWD 赛事，这里再承接环境、流量和榜单入口。"
+      description="先在竞赛目录中创建或切换到 AWD 赛事，这里再承接环境、流量和榜单入口。"
       icon="Trophy"
     >
       <template #action>

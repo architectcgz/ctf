@@ -386,7 +386,7 @@ describe('ContestManage', () => {
 
     await flushPromises()
 
-    expect(wrapper.text()).toContain('赛事管理台')
+    expect(wrapper.text()).toContain('竞赛目录')
     expect(wrapper.text()).toContain('2026 春季校园 CTF')
     expect(wrapper.text()).toContain('报名中')
     expect(contestMocks.getContests).toHaveBeenCalledWith({
@@ -608,7 +608,7 @@ describe('ContestManage', () => {
       ends_at: new Date('2026-03-20T12:00').toISOString(),
     })
     expect(wrapper.get('#contest-panel-overview').attributes('aria-hidden')).toBe('false')
-    expect(wrapper.text()).toContain('全部赛事')
+    expect(wrapper.text()).toContain('竞赛列表')
   })
 
   it('应该在空列表时展示显式空态', async () => {

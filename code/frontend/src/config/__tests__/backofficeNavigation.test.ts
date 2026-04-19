@@ -89,7 +89,7 @@ describe('backofficeNavigation', () => {
     const items = getVisibleBackofficeSecondaryItems('/platform/contest-ops/traffic', 'admin')
 
     expect(items.map((item) => item.label)).toEqual([
-      '竞赛管理',
+      '环境管理',
       '流量监控',
       '大屏投射',
       '排行榜',

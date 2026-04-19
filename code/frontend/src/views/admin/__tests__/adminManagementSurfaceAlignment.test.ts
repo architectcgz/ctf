@@ -115,8 +115,8 @@ describe('admin management surface alignment', () => {
     expect(contestOrchestrationSource).toContain(
       '<div class="workspace-overline">Contest Workspace</div>'
     )
-    expect(contestOrchestrationSource).toContain('<h1 class="workspace-page-title">赛事管理台</h1>')
-    expect(contestOrchestrationSource).toContain('<h2 class="list-heading__title">全部赛事</h2>')
+    expect(contestOrchestrationSource).toContain('<h1 class="workspace-page-title">竞赛目录</h1>')
+    expect(contestOrchestrationSource).toContain('<h2 class="list-heading__title">竞赛列表</h2>')
     expect(contestOrchestrationSource).toContain('workspace-directory-empty contest-empty-state')
     expect(contestOrchestrationSource).not.toContain('当前筛选结果')
     expect(contestOrchestrationSource).not.toContain(

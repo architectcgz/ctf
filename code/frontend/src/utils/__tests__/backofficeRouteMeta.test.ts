@@ -10,7 +10,7 @@ describe('backofficeRouteMeta', () => {
   it('marks academy, platform and admin paths as backoffice routes', () => {
     expect(isBackofficeRoute('/academy/overview')).toBe(true)
     expect(isBackofficeRoute('/platform/challenges')).toBe(true)
-    expect(isBackofficeRoute('/admin/users')).toBe(true)
+    expect(isBackofficeRoute('/platform/users')).toBe(true)
     expect(isBackofficeRoute('/student/dashboard')).toBe(false)
   })
 
@@ -20,7 +20,7 @@ describe('backofficeRouteMeta', () => {
   })
 
   it('maps deep backoffice routes back to their owning secondary entry', () => {
-    expect(getBackofficeActiveSecondaryRouteName('/admin/contests/77/edit')).toBe('ContestManage')
+    expect(getBackofficeActiveSecondaryRouteName('/platform/contests/77/edit')).toBe('ContestManage')
     expect(getBackofficeActiveSecondaryRouteName('/academy/awd-reviews/contest-1')).toBe(
       'TeacherAWDReviewIndex'
     )

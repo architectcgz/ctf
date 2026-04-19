@@ -10,7 +10,6 @@ import {
   getContestChallenges,
   getContestAWDWorkspace,
   startContestAWDServiceInstance,
-  startContestChallengeInstance,
   submitContestAWDAttack,
 } from '@/api/contest'
 
@@ -129,40 +128,6 @@ describe('contest api contract', () => {
     expect(result.targets[0].services[0].challenge_id).toBe('9')
     expect(result.recent_events[0].service_id).toBe('7009')
     expect(result.recent_events[0].id).toBe('88')
-  })
-
-  it('启动竞赛题目实例时应命中 contest 实例接口并复用实例标准化', async () => {
-    requestMock.mockResolvedValue({
-      id: 21,
-      challenge_id: 9,
-      status: 'running',
-      share_scope: 'per_team',
-      access_url: 'http://red.internal',
-      flag_type: 'dynamic',
-      expires_at: '2026-04-12T09:00:00Z',
-      created_at: '2026-04-12T08:00:00Z',
-      max_extends: 2,
-      extend_count: 1,
-    })
-
-    const result = await startContestChallengeInstance('7', '9')
-
-    expect(requestMock).toHaveBeenCalledWith({
-      method: 'POST',
-      url: '/contests/7/challenges/9/instances',
-      suppressErrorToast: true,
-    })
-    expect(result).toEqual({
-      id: '21',
-      challenge_id: '9',
-      status: 'running',
-      share_scope: 'per_team',
-      access_url: 'http://red.internal',
-      flag_type: 'dynamic',
-      expires_at: '2026-04-12T09:00:00Z',
-      created_at: '2026-04-12T08:00:00Z',
-      remaining_extends: 1,
-    })
   })
 
   it('启动 AWD 服务实例时应命中 service 实例接口并复用实例标准化', async () => {

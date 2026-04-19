@@ -26,16 +26,12 @@ func buildContestAWDServiceScoreConfig(points, slaScore, defenseScore int) strin
 }
 
 func buildContestAWDServiceRuntimeConfig(
-	challengeID int64,
+	_ int64,
 	checkerType model.AWDCheckerType,
 	checkerConfig string,
 	extraRuntimeConfig string,
 ) string {
 	value := map[string]any{
-		// challenge_id remains an internal compatibility shadow field.
-		// New code must use contest_awd_services.challenge_id as the source of truth
-		// and must not expose or accept this runtime field as an independent contract.
-		"challenge_id":   challengeID,
 		"checker_type":   contestdomain.NormalizeAWDCheckerType(string(checkerType)),
 		"checker_config": contestdomain.ParseAWDCheckerConfig(checkerConfig),
 	}

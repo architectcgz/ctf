@@ -32,10 +32,10 @@ async function mountWithRoute(path: string, role: 'teacher' | 'admin') {
       { path: '/platform/environment-templates', component: { template: '<div>env</div>' } },
       { path: '/platform/awd-service-templates', component: { template: '<div>awd</div>' } },
       { path: '/platform/images', component: { template: '<div>images</div>' } },
-      { path: '/admin/contests', component: { template: '<div>contests</div>' } },
-      { path: '/admin/users', component: { template: '<div>users</div>' } },
-      { path: '/admin/integrity', component: { template: '<div>integrity</div>' } },
-      { path: '/admin/audit', component: { template: '<div>audit</div>' } },
+      { path: '/platform/contests', component: { template: '<div>contests</div>' } },
+      { path: '/platform/users', component: { template: '<div>users</div>' } },
+      { path: '/platform/integrity', component: { template: '<div>integrity</div>' } },
+      { path: '/platform/audit', component: { template: '<div>audit</div>' } },
     ],
   })
 
@@ -69,9 +69,9 @@ describe('BackofficeSubNav', () => {
   })
 
   it('shows governance entries only for admin routes', async () => {
-    const { wrapper } = await mountWithRoute('/admin/contests', 'admin')
+    const { wrapper } = await mountWithRoute('/platform/contests', 'admin')
 
-    expect(wrapper.text()).toContain('竞赛管理')
+    expect(wrapper.text()).toContain('竞赛目录')
     expect(wrapper.text()).toContain('用户管理')
     expect(wrapper.text()).toContain('作弊检测')
     expect(wrapper.text()).toContain('审计日志')

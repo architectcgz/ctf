@@ -166,7 +166,7 @@ const backofficeModules: BackofficeModule[] = [
     secondaryItems: [
       {
         routeName: 'AdminContestOpsEnvironment',
-        label: '竞赛管理',
+        label: '环境管理',
         path: '/platform/contest-ops/contests',
         roles: ['admin'],
         isMatch: (path) =>
@@ -202,7 +202,7 @@ const backofficeModules: BackofficeModule[] = [
     secondaryItems: [
       {
         routeName: 'ContestManage',
-        label: '竞赛管理',
+        label: '竞赛目录',
         path: '/platform/contests',
         roles: ['admin'],
         isMatch: (path) => matchAny(path, ['/platform/contests']),

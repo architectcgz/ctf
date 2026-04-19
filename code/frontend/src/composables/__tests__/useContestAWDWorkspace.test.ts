@@ -8,7 +8,6 @@ const contestApiMocks = vi.hoisted(() => ({
   getContestAWDWorkspace: vi.fn(),
   getScoreboard: vi.fn(),
   startContestAWDServiceInstance: vi.fn(),
-  startContestChallengeInstance: vi.fn(),
   submitContestAWDAttack: vi.fn(),
 }))
 
@@ -28,7 +27,6 @@ describe('useContestAWDWorkspace', () => {
     contestApiMocks.getContestAWDWorkspace.mockReset()
     contestApiMocks.getScoreboard.mockReset()
     contestApiMocks.startContestAWDServiceInstance.mockReset()
-    contestApiMocks.startContestChallengeInstance.mockReset()
     contestApiMocks.submitContestAWDAttack.mockReset()
     toastMocks.success.mockReset()
     toastMocks.error.mockReset()
@@ -188,6 +186,5 @@ describe('useContestAWDWorkspace', () => {
     await flushPromises()
 
     expect(contestApiMocks.startContestAWDServiceInstance).toHaveBeenCalledWith('1', '7009')
-    expect(contestApiMocks.startContestChallengeInstance).not.toHaveBeenCalled()
   })
 })

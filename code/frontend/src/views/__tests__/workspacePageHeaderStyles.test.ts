@@ -172,7 +172,7 @@ describe('workspace page header styles', () => {
 
   it('student overview 标题应接入共享页级标题类，而不是继续混用 tab 标题类', () => {
     expect(studentOverviewSource).toContain(
-      '<h1 class="journal-page-title workspace-page-title max-w-3xl text-[var(--journal-ink)]">'
+      '<h1 class="journal-page-title workspace-page-title journal-soft-page-title max-w-3xl">'
     )
     expect(studentOverviewSource).not.toContain(
       '<h1 class="journal-page-title workspace-tab-heading__title max-w-3xl text-[var(--journal-ink)]">'
@@ -223,8 +223,8 @@ describe('workspace page header styles', () => {
       },
       {
         source: contestOrchestrationSource,
-        include: '<h1 class="workspace-page-title">赛事管理台</h1>',
-        exclude: '<h1 class="workspace-page-title workspace-tab-heading__title">赛事管理台</h1>',
+        include: '<h1 class="workspace-page-title">竞赛目录</h1>',
+        exclude: '<h1 class="workspace-page-title workspace-tab-heading__title">竞赛目录</h1>',
       },
       {
         source: challengeManageSource,
