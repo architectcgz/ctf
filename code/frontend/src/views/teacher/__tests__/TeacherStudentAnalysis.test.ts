@@ -500,7 +500,7 @@ describe('TeacherStudentAnalysis', () => {
     expect(pushMock).toHaveBeenCalledWith({ name: 'AdminClassManagement' })
   })
 
-  it('管理员在学员分析内继续切换学生链路时应停留在后台教学运营路由', async () => {
+  it('管理员在学员分析内继续切换学生链路时应停留在后台路由', async () => {
     const authStore = useAuthStore()
     authStore.setAuth(
       {

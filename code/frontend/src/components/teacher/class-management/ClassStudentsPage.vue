@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ArrowRight, ChevronLeft, Search } from 'lucide-vue-next'
-import { computed } from 'vue'
+import { computed, type Component } from 'vue'
 
 import type {
   TeacherClassItem,
@@ -10,6 +10,11 @@ import type {
   TeacherStudentItem,
 } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
+import TeacherClassInsightsPanel from '@/components/teacher/TeacherClassInsightsPanel.vue'
+import TeacherInterventionPanel from '@/components/teacher/TeacherInterventionPanel.vue'
+import TeacherClassReviewPanel from '@/components/teacher/TeacherClassReviewPanel.vue'
+import TeacherClassTrendPanel from '@/components/teacher/TeacherClassTrendPanel.vue'
+import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'
 
 const props = defineProps<{
   classes: TeacherClassItem[]
@@ -28,103 +33,165 @@ const emit = defineEmits<{
   openClassManagement: []
   openDashboard: []
   openReportExport: []
-  openWorkspaceSection: [section: WorkspaceEntryKey]
   selectClass: [className: string]
   updateStudentNoQuery: [value: string]
   openStudent: [studentId: string]
 }>()
 
-const workspaceTitle = computed(() =>
-  props.selectedClassName ? `${props.selectedClassName} 班级工作台` : '班级工作台'
-)
 const averageSolvedText = computed(() => {
   if (!props.summary) return '--'
   return props.summary.average_solved.toFixed(1)
 })
+
 const activeRateText = computed(() => {
   if (!props.summary) return '--'
   return `${Math.round(props.summary.active_rate)}%`
 })
-const recentEventCountText = computed(() => {
-  if (!props.summary) return '--'
-  return String(props.summary.recent_event_count ?? 0)
-})
 
-type WorkspaceEntryKey = 'trend' | 'review' | 'insights' | 'intervention'
+type WorkspaceTab = 'overview' | 'trend' | 'students' | 'review' | 'insight' | 'action'
+type WorkspacePanelTab = Exclude<WorkspaceTab, 'overview' | 'students'>
 
-interface WorkspaceEntryItem {
-  key: WorkspaceEntryKey
-  eyebrow: string
-  title: string
-  description: string
-  detail: string
-  actionLabel: string
+interface WorkspaceTabItem {
+  key: WorkspaceTab
+  label: string
+  buttonId: string
+  panelId: string
 }
 
-const priorityStudentCount = computed(
-  () => props.students.filter((student) => (student.recent_event_count ?? 0) <= 1).length
-)
+interface WorkspacePanelTabItem extends WorkspaceTabItem {
+  key: WorkspacePanelTab
+}
 
-const workspaceEntries = computed<WorkspaceEntryItem[]>(() => [
-  {
-    key: 'trend',
-    eyebrow: 'Trend',
-    title: '训练趋势',
-    description: '查看班级近 7 天训练节奏、活跃学生与解题走势。',
-    detail:
-      props.trend?.points?.length && props.trend.points.length > 0
-        ? `已采集 ${props.trend.points.length} 个趋势采样点`
-        : '最近一周还没有可展示的趋势数据',
-    actionLabel: '查看训练趋势',
-  },
-  {
-    key: 'review',
-    eyebrow: 'Review',
-    title: '教学复盘',
-    description: '集中查看当前班级已经形成的复盘结论与跟进建议。',
-    detail:
-      props.review?.items && props.review.items.length > 0
-        ? `当前已有 ${props.review.items.length} 条复盘结论待查看`
-        : '当前班级还没有稳定的复盘结论',
-    actionLabel: '查看教学复盘',
-  },
-  {
-    key: 'insights',
-    eyebrow: 'Insights',
-    title: '学生洞察',
-    description: '快速进入学生画像与班级能力结构视角。',
-    detail: props.students.length > 0 ? `当前纳入 ${props.students.length} 名学生画像` : '暂无学生画像数据',
-    actionLabel: '查看学生洞察',
-  },
-  {
-    key: 'intervention',
-    eyebrow: 'Intervention',
-    title: '介入建议',
-    description: '查看当前最值得优先跟进的学生名单与跟进方向。',
-    detail:
-      priorityStudentCount.value > 0
-        ? `当前有 ${priorityStudentCount.value} 名学生需要优先关注`
-        : '当前暂无高优先级介入对象',
-    actionLabel: '查看介入建议',
-  },
-])
+const workspaceTabs: WorkspaceTabItem[] = [
+  { key: 'overview', label: '主看板', buttonId: 'class-tab-overview', panelId: 'class-overview' },
+  { key: 'trend', label: '趋势复盘', buttonId: 'class-tab-trend', panelId: 'class-trend' },
+  { key: 'students', label: '学生列表', buttonId: 'class-tab-students', panelId: 'class-students' },
+  { key: 'review', label: '复盘结论', buttonId: 'class-tab-review', panelId: 'class-review' },
+  { key: 'insight', label: '学生洞察', buttonId: 'class-tab-insight', panelId: 'class-insight' },
+  { key: 'action', label: '介入建议', buttonId: 'class-tab-action', panelId: 'class-action' },
+]
+
+const workspaceTabOrder = workspaceTabs.map((tab) => tab.key) as WorkspaceTab[]
+const panelWorkspaceTabs = workspaceTabs.filter(
+  (tab): tab is WorkspacePanelTabItem => tab.key !== 'overview' && tab.key !== 'students'
+)
+const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSyncedTabs<WorkspaceTab>({
+  orderedTabs: workspaceTabOrder,
+  defaultTab: 'overview',
+})
+
+function resolveWorkspacePanelComponent(tabKey: WorkspacePanelTab): Component {
+  switch (tabKey) {
+    case 'trend':
+      return TeacherClassTrendPanel
+    case 'review':
+      return TeacherClassReviewPanel
+    case 'insight':
+      return TeacherClassInsightsPanel
+    case 'action':
+      return TeacherInterventionPanel
+  }
+}
+
+function resolveWorkspacePanelProps(tabKey: WorkspacePanelTab): Record<string, unknown> {
+  switch (tabKey) {
+    case 'trend':
+      return {
+        trend: props.trend,
+        title: '班级近 7 天训练趋势',
+        subtitle: '先看整体节奏，再下钻到具体学生。',
+      }
+    case 'review':
+      return {
+        review: props.review,
+        className: props.selectedClassName,
+      }
+    case 'insight':
+      return {
+        students: props.students,
+        className: props.selectedClassName,
+        splitCards: true,
+      }
+    case 'action':
+      return {
+        students: props.students,
+        className: props.selectedClassName,
+      }
+  }
+}
+
+function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] {
+  return tabKey === 'insight'
+    ? ['workspace-subpanel', 'workspace-subpanel--flat', 'workspace-subpanel--insight']
+    : ['workspace-subpanel', 'workspace-subpanel--flat']
+}
 </script>
 
 <template>
   <div class="workspace-shell teacher-management-shell teacher-surface">
+    <nav class="top-tabs" role="tablist" aria-label="班级详情标签页">
+      <button
+        v-for="(tab, index) in workspaceTabs"
+        :id="tab.buttonId"
+        :key="tab.key"
+        :ref="(element) => setTabButtonRef(tab.key, element as HTMLButtonElement | null)"
+        class="top-tab"
+        :class="{ active: activeTab === tab.key }"
+        type="button"
+        role="tab"
+        :tabindex="activeTab === tab.key ? 0 : -1"
+        :aria-selected="activeTab === tab.key ? 'true' : 'false'"
+        :aria-controls="tab.panelId"
+        @click="selectTab(tab.key)"
+        @keydown="handleTabKeydown($event, index)"
+      >
+        {{ tab.label }}
+      </button>
+    </nav>
+
     <div class="workspace-grid">
       <main class="content-pane">
-        <section class="teacher-class-workspace">
+        <section
+          id="class-overview"
+          class="tab-panel section active"
+          :class="{ active: activeTab === 'overview' }"
+          role="tabpanel"
+          aria-labelledby="class-tab-overview"
+          :aria-hidden="activeTab === 'overview' ? 'false' : 'true'"
+          v-show="activeTab === 'overview'"
+        >
           <header class="teacher-topbar">
-            <div class="teacher-heading">
-              <div class="teacher-eyebrow-row">
-                <div class="teacher-surface-eyebrow journal-eyebrow">Class Workspace</div>
-                <span v-if="selectedClassName" class="teacher-class-chip">
-                  {{ selectedClassName }}
-                </span>
-              </div>
-              <h1 class="teacher-title">{{ workspaceTitle }}</h1>
-              <p class="teacher-copy">先看班级概况与学生目录，再按入口进入趋势、复盘、洞察和介入页面。</p>
+            <div class="teacher-heading workspace-tab-heading__main">
+              <section class="teacher-summary">
+                <div class="teacher-summary-title">
+                  <span>Class Snapshot</span>
+                </div>
+                <div class="teacher-summary-grid progress-strip metric-panel-grid">
+                  <div class="progress-card metric-panel-card">
+                    <div class="progress-card-label metric-panel-label">班级人数</div>
+                    <div class="progress-card-value metric-panel-value">
+                      {{ props.summary?.student_count ?? students.length }}
+                    </div>
+                    <div class="progress-card-hint metric-panel-helper">
+                      当前班级纳入统计的学生数量
+                    </div>
+                  </div>
+                  <div class="progress-card metric-panel-card">
+                    <div class="progress-card-label metric-panel-label">平均解题</div>
+                    <div class="progress-card-value metric-panel-value">
+                      {{ averageSolvedText }}
+                    </div>
+                    <div class="progress-card-hint metric-panel-helper">班级当前平均完成情况</div>
+                  </div>
+                  <div class="progress-card metric-panel-card">
+                    <div class="progress-card-label metric-panel-label">近 7 天活跃率</div>
+                    <div class="progress-card-value metric-panel-value">{{ activeRateText }}</div>
+                    <div class="progress-card-hint metric-panel-helper">
+                      当前班级近 7 天训练参与情况
+                    </div>
+                  </div>
+                </div>
+              </section>
             </div>
 
             <div class="teacher-actions">
@@ -152,38 +219,6 @@ const workspaceEntries = computed<WorkspaceEntryItem[]>(() => [
             </div>
           </header>
 
-          <section class="teacher-summary metric-panel-default-surface">
-            <div class="teacher-summary-title">
-              <span>Class Snapshot</span>
-            </div>
-            <div class="teacher-summary-grid progress-strip metric-panel-grid">
-              <div class="progress-card metric-panel-card">
-                <div class="progress-card-label metric-panel-label">班级人数</div>
-                <div class="progress-card-value metric-panel-value">
-                  {{ props.summary?.student_count ?? students.length }}
-                </div>
-                <div class="progress-card-hint metric-panel-helper">当前班级纳入统计的学生数量</div>
-              </div>
-              <div class="progress-card metric-panel-card">
-                <div class="progress-card-label metric-panel-label">平均解题</div>
-                <div class="progress-card-value metric-panel-value">
-                  {{ averageSolvedText }}
-                </div>
-                <div class="progress-card-hint metric-panel-helper">班级当前平均完成情况</div>
-              </div>
-              <div class="progress-card metric-panel-card">
-                <div class="progress-card-label metric-panel-label">近 7 天活跃率</div>
-                <div class="progress-card-value metric-panel-value">{{ activeRateText }}</div>
-                <div class="progress-card-hint metric-panel-helper">当前班级近 7 天训练参与情况</div>
-              </div>
-              <div class="progress-card metric-panel-card">
-                <div class="progress-card-label metric-panel-label">近 7 天训练动作</div>
-                <div class="progress-card-value metric-panel-value">{{ recentEventCountText }}</div>
-                <div class="progress-card-hint metric-panel-helper">最近一周训练事件总量</div>
-              </div>
-            </div>
-          </section>
-
           <div v-if="error" class="workspace-alert" role="alert" aria-live="polite">
             <div class="workspace-alert-title">班级详情加载失败</div>
             <div class="workspace-alert-copy">{{ error }}</div>
@@ -198,48 +233,22 @@ const workspaceEntries = computed<WorkspaceEntryItem[]>(() => [
               </button>
             </div>
           </div>
+        </section>
 
-          <section class="teacher-workspace-launchpad" aria-label="班级工作区入口">
-            <header class="list-heading">
-              <div>
-                <div class="workspace-overline">Workspace Entry</div>
-                <h2 class="list-heading__title">班级工作区入口</h2>
-                <p class="teacher-section-copy">将互补视角拆成独立页面，避免在总览页继续堆叠长内容。</p>
-              </div>
-            </header>
-
-            <div class="workspace-entry-grid">
-              <button
-                v-for="entry in workspaceEntries"
-                :key="entry.key"
-                type="button"
-                class="workspace-entry-card"
-                @click="emit('openWorkspaceSection', entry.key)"
-              >
-                <div class="workspace-entry-card__main">
-                  <div class="workspace-entry-card__eyebrow">{{ entry.eyebrow }}</div>
-                  <h3 class="workspace-entry-card__title">{{ entry.title }}</h3>
-                  <p class="workspace-entry-card__description">{{ entry.description }}</p>
-                </div>
-                <div class="workspace-entry-card__footer">
-                  <span class="workspace-entry-card__detail">{{ entry.detail }}</span>
-                  <span class="workspace-entry-card__action">
-                    <span>{{ entry.actionLabel }}</span>
-                    <ArrowRight class="h-4 w-4" />
-                  </span>
-                </div>
-              </button>
-            </div>
-          </section>
-
-          <section
-            class="workspace-directory-section teacher-student-list-section teacher-anchor-section"
-            aria-label="学生目录"
-          >
-            <header class="list-heading">
-              <div>
-                <div class="workspace-overline">Student Directory</div>
-                <h2 class="list-heading__title">学生列表</h2>
+        <section
+          id="class-students"
+          class="tab-panel section"
+          :class="{ active: activeTab === 'students' }"
+          role="tabpanel"
+          aria-labelledby="class-tab-students"
+          :aria-hidden="activeTab === 'students' ? 'false' : 'true'"
+          v-show="activeTab === 'students'"
+        >
+          <section class="teacher-student-list-section">
+            <div class="teacher-section-head workspace-tab-heading">
+              <div class="workspace-tab-heading__main">
+                <div class="teacher-surface-eyebrow journal-eyebrow">Students</div>
+                <h3 class="teacher-section-title workspace-tab-heading__title">学生列表</h3>
                 <p class="teacher-section-copy">选择学生后进入学员分析。</p>
               </div>
               <button
@@ -250,7 +259,7 @@ const workspaceEntries = computed<WorkspaceEntryItem[]>(() => [
                 <ChevronLeft class="h-4 w-4" />
                 返回班级列表
               </button>
-            </header>
+            </div>
 
             <section class="teacher-controls teacher-student-controls">
               <div class="teacher-controls-bar">
@@ -302,7 +311,9 @@ const workspaceEntries = computed<WorkspaceEntryItem[]>(() => [
                       type="text"
                       placeholder="输入学号精确查询"
                       class="teacher-input"
-                      @input="emit('updateStudentNoQuery', ($event.target as HTMLInputElement).value)"
+                      @input="
+                        emit('updateStudentNoQuery', ($event.target as HTMLInputElement).value)
+                      "
                     />
                     <button
                       v-if="studentNoQuery"
@@ -334,26 +345,26 @@ const workspaceEntries = computed<WorkspaceEntryItem[]>(() => [
               description="该班级下还没有可用学生记录。"
             />
 
-            <section v-else class="teacher-directory" aria-label="学生目录列表">
+            <section v-else class="teacher-directory" aria-label="学生目录">
               <div class="teacher-directory-head">
-                <span class="teacher-directory-head-cell teacher-directory-head-cell-student-no">
-                  学号
-                </span>
-                <span class="teacher-directory-head-cell teacher-directory-head-cell-name">
-                  学生名称
-                </span>
-                <span class="teacher-directory-head-cell teacher-directory-head-cell-alias">
-                  昵称
-                </span>
-                <span class="teacher-directory-head-cell teacher-directory-head-cell-status">
-                  状态
-                </span>
-                <span class="teacher-directory-head-cell teacher-directory-head-cell-metrics">
-                  数据
-                </span>
-                <span class="teacher-directory-head-cell teacher-directory-head-cell-action">
-                  操作
-                </span>
+                <span class="teacher-directory-head-cell teacher-directory-head-cell-student-no"
+                  >学号</span
+                >
+                <span class="teacher-directory-head-cell teacher-directory-head-cell-name"
+                  >学生名称</span
+                >
+                <span class="teacher-directory-head-cell teacher-directory-head-cell-alias"
+                  >昵称</span
+                >
+                <span class="teacher-directory-head-cell teacher-directory-head-cell-status"
+                  >状态</span
+                >
+                <span class="teacher-directory-head-cell teacher-directory-head-cell-metrics"
+                  >数据</span
+                >
+                <span class="teacher-directory-head-cell teacher-directory-head-cell-action"
+                  >操作</span
+                >
               </div>
 
               <button
@@ -405,6 +416,25 @@ const workspaceEntries = computed<WorkspaceEntryItem[]>(() => [
               </button>
             </section>
           </section>
+        </section>
+
+        <section
+          v-for="tab in panelWorkspaceTabs"
+          :id="tab.panelId"
+          :key="tab.panelId"
+          class="tab-panel section"
+          :class="{ active: activeTab === tab.key }"
+          role="tabpanel"
+          :aria-labelledby="tab.buttonId"
+          :aria-hidden="activeTab === tab.key ? 'false' : 'true'"
+          v-show="activeTab === tab.key"
+        >
+          <div :class="resolveWorkspacePanelWrapperClass(tab.key)">
+            <component
+              :is="resolveWorkspacePanelComponent(tab.key)"
+              v-bind="resolveWorkspacePanelProps(tab.key)"
+            />
+          </div>
         </section>
       </main>
     </div>
@@ -468,12 +498,6 @@ const workspaceEntries = computed<WorkspaceEntryItem[]>(() => [
   --teacher-workspace-mono-font: var(--font-family-mono);
 }
 
-.teacher-class-workspace {
-  display: grid;
-  gap: var(--space-8);
-  min-width: 0;
-}
-
 .teacher-eyebrow-row {
   display: flex;
   flex-wrap: wrap;
@@ -494,118 +518,14 @@ const workspaceEntries = computed<WorkspaceEntryItem[]>(() => [
   color: var(--journal-muted);
 }
 
-.list-heading {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: var(--space-3);
-}
-
-.list-heading__title {
-  margin: var(--space-1) 0 0;
-  font-size: var(--font-size-1-20);
-  font-weight: 700;
-  color: var(--journal-ink);
-}
-
 .teacher-filter-grid {
   display: grid;
   gap: var(--space-4);
   grid-template-columns: minmax(0, 18rem) minmax(0, 1fr);
 }
 
-.teacher-workspace-launchpad {
-  display: grid;
-  gap: var(--space-5);
-}
-
-.workspace-entry-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-4);
-}
-
-.workspace-entry-card {
-  display: grid;
-  gap: var(--space-4);
-  min-width: 0;
-  padding: var(--space-5);
-  border: 1px solid color-mix(in srgb, var(--teacher-card-border) 96%, transparent);
-  border-radius: 1.25rem;
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--journal-surface) 96%, transparent),
-    color-mix(in srgb, var(--journal-surface-subtle) 94%, transparent)
-  );
-  text-align: left;
-  box-shadow: 0 14px 32px color-mix(in srgb, var(--color-shadow-soft) 34%, transparent);
-  transition:
-    border-color 160ms ease,
-    background 160ms ease,
-    transform 160ms ease,
-    box-shadow 160ms ease;
-}
-
-.workspace-entry-card:hover,
-.workspace-entry-card:focus-visible {
-  border-color: color-mix(in srgb, var(--workspace-brand) 34%, transparent);
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--workspace-brand) 7%, var(--journal-surface)),
-    color-mix(in srgb, var(--workspace-brand) 5%, var(--journal-surface-subtle))
-  );
-  box-shadow: 0 18px 40px color-mix(in srgb, var(--color-shadow-soft) 42%, transparent);
-  transform: translateY(-1px);
-  outline: none;
-}
-
-.workspace-entry-card__main {
-  display: grid;
-  gap: var(--space-2);
-}
-
-.workspace-entry-card__eyebrow {
-  font-size: var(--font-size-0-72);
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: color-mix(in srgb, var(--workspace-brand) 72%, var(--journal-muted));
-}
-
-.workspace-entry-card__title {
-  margin: 0;
-  font-size: var(--font-size-1-05);
-  font-weight: 700;
-  color: var(--journal-ink);
-}
-
-.workspace-entry-card__description,
-.workspace-entry-card__detail {
-  margin: 0;
-  font-size: var(--font-size-0-84);
-  line-height: 1.68;
-  color: var(--journal-muted);
-}
-
-.workspace-entry-card__footer {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: var(--space-4);
-}
-
-.workspace-entry-card__action {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1-5);
-  flex-shrink: 0;
-  font-size: var(--font-size-0-82);
-  font-weight: 700;
-  color: var(--journal-accent-strong);
-}
-
 .workspace-alert {
+  margin-bottom: var(--space-section-gap, var(--space-6));
   border: 1px solid var(--workspace-line-soft);
   border-radius: var(--workspace-radius-lg);
   background: color-mix(in srgb, var(--workspace-panel) 88%, transparent);
@@ -664,6 +584,15 @@ const workspaceEntries = computed<WorkspaceEntryItem[]>(() => [
   min-height: 42px;
 }
 
+.tab-panel.section {
+  padding-top: 0;
+  border-top: 0;
+}
+
+#class-overview > .teacher-surface-board {
+  border-top: 0;
+}
+
 .teacher-tip-block {
   display: grid;
   gap: var(--space-1-5);
@@ -679,6 +608,21 @@ const workspaceEntries = computed<WorkspaceEntryItem[]>(() => [
 
 .teacher-anchor-section {
   scroll-margin-top: 84px;
+}
+
+.teacher-section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.teacher-section-title:not(.workspace-tab-heading__title) {
+  margin-top: var(--space-1-5);
+  font-size: var(--font-size-1-15);
+  font-weight: 700;
+  color: var(--journal-ink);
 }
 
 .teacher-section-copy {
@@ -751,6 +695,19 @@ const workspaceEntries = computed<WorkspaceEntryItem[]>(() => [
   font-size: var(--font-size-0-875);
   font-weight: 600;
   color: var(--journal-accent);
+}
+
+.teacher-student-toolbar {
+  margin: var(--space-4) 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.teacher-student-filter {
+  min-width: min(100%, 20rem);
 }
 
 .teacher-skeleton-list {
@@ -945,7 +902,6 @@ const workspaceEntries = computed<WorkspaceEntryItem[]>(() => [
   }
 
   .teacher-summary-grid,
-  .workspace-entry-grid,
   .teacher-filter-grid,
   .teacher-summary-cards {
     grid-template-columns: 1fr;
@@ -971,6 +927,7 @@ const workspaceEntries = computed<WorkspaceEntryItem[]>(() => [
 }
 
 @media (max-width: 640px) {
+  .top-tabs,
   .content-pane {
     padding-left: var(--space-4-5);
     padding-right: var(--space-4-5);

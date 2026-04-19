@@ -59,13 +59,7 @@ describe('TeacherStudentManagement', () => {
           recent_event_count: 0,
           class_name: 'Class A',
         },
-        {
-          id: 'stu-2',
-          username: 'bob',
-          recent_event_count: 2,
-          solved_count: 1,
-          class_name: 'Class A',
-        },
+        { id: 'stu-2', username: 'bob', recent_event_count: 2, solved_count: 1, class_name: 'Class A' },
       ]
       const filtered = all.filter((item) => {
         const keywordMatched =
@@ -245,7 +239,7 @@ describe('TeacherStudentManagement', () => {
     expect(pushMock).toHaveBeenCalledWith({ name: 'AdminClassManagement' })
   })
 
-  it('管理员从学生管理进入学员分析时应停留在后台教学运营路由', async () => {
+  it('管理员从学生管理进入学员分析时应停留在后台路由', async () => {
     const authStore = useAuthStore()
     authStore.setAuth(
       {

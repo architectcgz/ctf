@@ -1,94 +1,48 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import ClassWorkspaceSectionPage from '@/components/teacher/class-management/ClassWorkspaceSectionPage.vue'
-import TeacherClassReportExportDialog from '@/components/teacher/reports/TeacherClassReportExportDialog.vue'
-import { useTeacherClassWorkspacePage } from '@/composables/useTeacherClassWorkspacePage'
-import { useAuthStore } from '@/stores/auth'
-import {
-  resolveClassManagementRouteName,
-  resolveClassWorkspaceSectionKeyFromRouteName,
-  resolveClassWorkspaceSectionRouteName,
-  resolveClassStudentsRouteName,
-  resolveTeachingDashboardRouteName,
-} from '@/utils/teachingWorkspaceRouting'
+import TeacherClassStudents from '@/views/teacher/TeacherClassStudents.vue'
 
 const route = useRoute()
 const router = useRouter()
-const authStore = useAuthStore()
 
-const reportDialogVisible = ref(false)
-const {
-  classes,
-  review,
-  summary,
-  trend,
-  selectedClassName,
-  students,
-  error,
-  initialize,
-} = useTeacherClassWorkspacePage()
+const panelByRouteName = {
+  TeacherClassTrend: 'trend',
+  TeacherClassReview: 'review',
+  TeacherClassInsights: 'insight',
+  TeacherClassIntervention: 'action',
+} as const
 
-const activeSectionKey = computed(
-  () => resolveClassWorkspaceSectionKeyFromRouteName(route.name) ?? 'trend'
-)
+const targetPanel = computed(() => {
+  const routeName = route.name as keyof typeof panelByRouteName | undefined
+  return routeName ? panelByRouteName[routeName] : null
+})
 
-function pushClassRoute(routeName: string, className: string): void {
-  if (!className) {
-    return
-  }
+async function redirectToCanonicalWorkspace(): Promise<void> {
+  if (!targetPanel.value) return
 
-  if (className === selectedClassName.value && route.name === routeName) {
-    return
-  }
-
-  const { panel: _panel, ...nextQuery } = route.query
-  router.push({
-    name: routeName,
-    params: { className },
-    query: nextQuery,
+  await router.replace({
+    name: 'TeacherClassStudents',
+    params: {
+      className: route.params.className,
+    },
+    query: {
+      ...route.query,
+      panel: targetPanel.value,
+    },
   })
 }
 
-function selectClass(className: string): void {
-  pushClassRoute(
-    resolveClassWorkspaceSectionRouteName(authStore.user?.role, activeSectionKey.value),
-    className
-  )
-}
-
-function openClassReportDialog(): void {
-  reportDialogVisible.value = true
-}
+watch(
+  () => [route.name, route.params.className, route.query.panel] as const,
+  () => {
+    void redirectToCanonicalWorkspace()
+  },
+  { immediate: true }
+)
 </script>
 
 <template>
-  <ClassWorkspaceSectionPage
-    :section-key="activeSectionKey"
-    :classes="classes"
-    :selected-class-name="selectedClassName"
-    :students="students"
-    :review="review"
-    :summary="summary"
-    :trend="trend"
-    :error="error"
-    @retry="initialize"
-    @open-class-overview="
-      router.push({
-        name: resolveClassStudentsRouteName(authStore.user?.role),
-        params: { className: selectedClassName },
-      })
-    "
-    @open-class-management="
-      router.push({ name: resolveClassManagementRouteName(authStore.user?.role) })
-    "
-    @open-dashboard="router.push({ name: resolveTeachingDashboardRouteName(authStore.user?.role) })"
-    @open-report-export="openClassReportDialog"
-    @select-class="selectClass"
-  />
-  <TeacherClassReportExportDialog
-    v-model="reportDialogVisible"
-    :default-class-name="selectedClassName"
-  />
+  <TeacherClassStudents />
 </template>

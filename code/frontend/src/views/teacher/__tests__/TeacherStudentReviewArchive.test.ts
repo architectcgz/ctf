@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { flushPromises, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
+import { flushPromises, mount } from '@vue/test-utils'
 
 import TeacherStudentReviewArchive from '../TeacherStudentReviewArchive.vue'
 import reviewArchiveSource from '../TeacherStudentReviewArchive.vue?raw'
@@ -219,7 +219,7 @@ describe('TeacherStudentReviewArchive', () => {
     expect(reviewArchiveHeroSource).not.toContain('<ElButton')
   })
 
-  it('管理员在复盘归档页返回分析和班级页时应使用后台教学运营路由', async () => {
+  it('管理员在复盘归档页返回分析和班级页时应使用后台路由', async () => {
     const authStore = useAuthStore()
     authStore.setAuth(
       {
