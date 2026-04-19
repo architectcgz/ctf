@@ -467,18 +467,16 @@ watch(
 
         <section
           v-else
-          class="awd-runtime-shell rounded-[28px] border p-6 shadow-[0_24px_70px_var(--color-shadow-soft)]"
+          class="awd-runtime-shell border p-6"
         >
-          <div
-            class="flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--color-primary-hover)]/75"
-          >
+          <div class="awd-runtime-shell-overline flex flex-wrap items-center gap-2">
             <span>Operations</span>
             <span class="awd-runtime-shell-chip rounded-full px-2 py-1">待开赛</span>
           </div>
           <div class="mt-3 grid gap-4">
             <div>
               <h2 class="text-3xl font-semibold tracking-tight text-white">尚未进入运行阶段</h2>
-              <p class="mt-3 text-sm leading-7 text-[var(--color-text-secondary)]/90">
+              <p class="awd-runtime-shell-description mt-3 text-sm leading-7">
                 当前赛事还不能进入轮次运行。需先通过赛前检查并开赛，随后才会接管创建轮次、服务巡检、攻击补录和当前轮态势。
               </p>
             </div>
@@ -518,7 +516,7 @@ watch(
               </button>
             </div>
 
-            <p class="text-xs text-[var(--color-primary-hover)]/75">需先通过赛前检查并开赛</p>
+            <p class="awd-runtime-shell-hint text-xs">需先通过赛前检查并开赛</p>
           </div>
         </section>
       </section>
@@ -604,13 +602,31 @@ watch(
 }
 
 .awd-runtime-shell {
+  border-radius: 1.75rem;
+  box-shadow: 0 24px 70px var(--color-shadow-soft);
   background:
     linear-gradient(145deg, color-mix(in srgb, var(--color-surface-panel) 94%, white 6%), var(--color-surface-panel)),
     radial-gradient(circle at top right, color-mix(in srgb, var(--color-primary) 18%, transparent), transparent 52%);
 }
 
+.awd-runtime-shell-overline {
+  font-size: var(--font-size-11);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  color: color-mix(in srgb, var(--color-primary-hover) 75%, transparent);
+}
+
 .awd-runtime-shell-chip {
   background: color-mix(in srgb, var(--color-warning) 18%, transparent);
   color: color-mix(in srgb, var(--color-warning) 74%, white 26%);
+}
+
+.awd-runtime-shell-description {
+  color: color-mix(in srgb, var(--color-text-secondary) 90%, transparent);
+}
+
+.awd-runtime-shell-hint {
+  color: color-mix(in srgb, var(--color-primary-hover) 75%, transparent);
 }
 </style>

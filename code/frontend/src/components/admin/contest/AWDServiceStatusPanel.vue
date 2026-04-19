@@ -26,7 +26,7 @@ function getServiceCheckTargets(checkResult: Record<string, unknown>) {
 <template>
   <div class="overflow-hidden rounded-2xl border border-border">
     <div class="flex items-center justify-between gap-3 border-b border-border bg-surface-alt/70 px-4 py-3">
-      <div class="text-sm font-semibold text-[var(--color-text-primary)]">服务状态表</div>
+      <div class="awd-panel-title text-sm font-semibold">服务状态表</div>
       <button
         id="awd-export-services"
         type="button"
@@ -108,9 +108,7 @@ function getServiceCheckTargets(checkResult: Record<string, unknown>) {
       </label>
     </div>
     <table class="min-w-full divide-y divide-border">
-      <thead
-        class="bg-surface-alt/40 text-left text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]"
-      >
+      <thead class="awd-table-head">
         <tr>
           <th class="px-4 py-3">队伍</th>
           <th class="px-4 py-3">靶题</th>
@@ -121,13 +119,13 @@ function getServiceCheckTargets(checkResult: Record<string, unknown>) {
       </thead>
       <tbody class="divide-y divide-border bg-surface/70">
         <tr v-for="service in filteredServices" :key="service.id">
-          <td class="px-4 py-4 text-sm font-medium text-[var(--color-text-primary)]">
+          <td class="awd-table-cell awd-table-cell--primary awd-table-cell--strong">
             {{ service.team_name }}
           </td>
-          <td class="px-4 py-4 text-sm text-[var(--color-text-secondary)]">
+          <td class="awd-table-cell awd-table-cell--secondary">
             {{ getChallengeTitle(service.challenge_id) }}
           </td>
-          <td class="px-4 py-4">
+          <td class="awd-table-cell">
             <span
               class="inline-flex rounded-full px-3 py-1 text-xs font-semibold"
               :class="getServiceStatusClass(service.service_status)"
@@ -135,22 +133,22 @@ function getServiceCheckTargets(checkResult: Record<string, unknown>) {
               {{ getServiceStatusLabel(service.service_status) }}
             </span>
           </td>
-          <td class="px-4 py-4 text-sm text-[var(--color-text-secondary)]">
+          <td class="awd-table-cell awd-table-cell--secondary">
             <div>
               SLA {{ service.sla_score ?? 0 }} / 防守 {{ service.defense_score }} / 攻击
               {{ service.attack_score }}
             </div>
-            <div class="mt-1 text-xs text-[var(--color-text-muted)]">
+            <div class="awd-service-muted mt-1 text-xs">
               受攻击 {{ service.attack_received }}
             </div>
           </td>
-          <td class="px-4 py-4 text-sm text-[var(--color-text-muted)]">
+          <td class="awd-table-cell awd-table-cell--muted">
             <div>
               {{ summarizeCheckResult(getServiceCheckPresentationResult(service)) }}
             </div>
             <div
               v-if="getServiceCheckActions(service.check_result).length > 0"
-              class="mt-2 flex flex-wrap gap-2 text-xs text-[var(--color-text-secondary)]"
+              class="awd-service-action-list mt-2 flex flex-wrap gap-2 text-xs"
             >
               <span
                 v-for="action in getServiceCheckActions(service.check_result)"
@@ -167,15 +165,15 @@ function getServiceCheckTargets(checkResult: Record<string, unknown>) {
             </div>
             <div
               v-if="getTargetProbeSummary(service.check_result)"
-              class="mt-2 text-xs text-[var(--color-text-muted)]"
+              class="awd-service-muted mt-2 text-xs"
             >
               {{ getTargetProbeSummary(service.check_result) }}
             </div>
             <details
               v-if="getServiceCheckTargets(service.check_result).length > 0"
-              class="mt-2 rounded-xl border border-border/80 bg-surface-alt/40 p-3 text-xs text-[var(--color-text-secondary)]"
+              class="awd-service-details mt-2 rounded-xl border border-border/80 bg-surface-alt/40 p-3 text-xs"
             >
-              <summary class="cursor-pointer select-none text-[var(--color-text-primary)]">
+              <summary class="awd-service-details-summary cursor-pointer select-none">
                 查看检查明细
               </summary>
               <div class="mt-3 space-y-3">
@@ -184,10 +182,10 @@ function getServiceCheckTargets(checkResult: Record<string, unknown>) {
                   :key="`${service.id}-target-${targetIndex}`"
                   class="rounded-xl border border-border/70 bg-surface/70 p-3"
                 >
-                  <div class="font-medium text-[var(--color-text-primary)]">
+                  <div class="awd-service-details-title font-medium">
                     {{ target.access_url || `Target #${targetIndex + 1}` }}
                   </div>
-                  <div class="mt-1 text-[var(--color-text-muted)]">
+                  <div class="awd-service-muted mt-1">
                     {{ getProbeStatusText(target.healthy, target.error_code, target.error) }}
                     <span v-if="target.probe"> · {{ target.probe.toUpperCase() }}</span>
                     <span v-if="formatLatency(target.latency_ms)">
@@ -233,7 +231,7 @@ function getServiceCheckTargets(checkResult: Record<string, unknown>) {
           </td>
         </tr>
         <tr v-if="filteredServices.length === 0">
-          <td colspan="5" class="px-4 py-8 text-center text-sm text-[var(--color-text-muted)]">
+          <td colspan="5" class="awd-empty-row">
             {{
               services.length === 0 ? '当前轮次还没有服务巡检记录。' : '当前筛选条件下没有服务记录。'
             }}
@@ -245,6 +243,53 @@ function getServiceCheckTargets(checkResult: Record<string, unknown>) {
 </template>
 
 <style scoped>
+.awd-panel-title,
+.awd-service-details-summary,
+.awd-service-details-title {
+  color: var(--color-text-primary);
+}
+
+.awd-table-head {
+  background: color-mix(in srgb, var(--color-surface-alt, var(--color-bg-surface)) 40%, transparent);
+  text-align: left;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--color-text-muted);
+}
+
+.awd-table-cell {
+  padding: var(--space-4);
+  font-size: var(--font-size-sm);
+}
+
+.awd-table-cell--primary {
+  color: var(--color-text-primary);
+}
+
+.awd-table-cell--secondary,
+.awd-service-action-list,
+.awd-service-details {
+  color: var(--color-text-secondary);
+}
+
+.awd-table-cell--muted,
+.awd-service-muted,
+.awd-empty-row {
+  color: var(--color-text-muted);
+}
+
+.awd-table-cell--strong {
+  font-weight: 500;
+}
+
+.awd-empty-row {
+  padding: var(--space-8) var(--space-4);
+  text-align: center;
+  font-size: var(--font-size-sm);
+}
+
 .awd-round-filter-field {
   --ui-field-gap: var(--space-2);
   --ui-field-label-size: var(--font-size-11);

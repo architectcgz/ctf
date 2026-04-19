@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import awdAttackLogPanelSource from '@/components/admin/contest/AWDAttackLogPanel.vue?raw'
 import awdRoundInspectorSource from '@/components/admin/contest/AWDRoundInspector.vue?raw'
+import awdScoreboardSummaryPanelSource from '@/components/admin/contest/AWDScoreboardSummaryPanel.vue?raw'
 import awdServiceStatusPanelSource from '@/components/admin/contest/AWDServiceStatusPanel.vue?raw'
 import awdTrafficPanelSource from '@/components/admin/contest/AWDTrafficPanel.vue?raw'
 
@@ -47,5 +48,16 @@ describe('AWDRoundInspector extraction', () => {
     expect(awdAttackLogPanelSource).toContain('id="awd-attack-filter-result"')
     expect(awdAttackLogPanelSource).toContain('id="awd-attack-filter-source"')
     expect(awdAttackLogPanelSource).toContain('id="awd-export-attacks"')
+  })
+
+  it('应将排行榜与轮次汇总收口到独立的 AWDScoreboardSummaryPanel，而不是继续堆在 AWDRoundInspector 内', () => {
+    expect(awdRoundInspectorSource).toContain('<AWDScoreboardSummaryPanel')
+    expect(awdRoundInspectorSource).not.toContain('排行榜已冻结')
+    expect(awdRoundInspectorSource).not.toContain('item.solved_count')
+    expect(awdRoundInspectorSource).not.toContain('item.unique_attackers_against')
+
+    expect(awdScoreboardSummaryPanelSource).toContain('实时排行榜')
+    expect(awdScoreboardSummaryPanelSource).toContain('排行榜已冻结')
+    expect(awdScoreboardSummaryPanelSource).toContain('本轮汇总')
   })
 })
