@@ -58,7 +58,6 @@ const registeringCount = computed(
 )
 const runningCount = computed(() => props.list.filter((item) => item.status === 'running').length)
 const awdCount = computed(() => props.awdContests.length)
-const listCount = computed(() => props.list.length)
 const hasStatusFilter = computed(() => props.statusFilter !== 'all')
 
 watch(
@@ -103,9 +102,6 @@ function openContestWorkbench(contest: ContestDetailData) {
           <div class="workspace-tab-heading__main">
             <div class="workspace-overline">Contest Workspace</div>
             <h1 class="workspace-page-title">竞赛目录</h1>
-            <p class="workspace-page-copy">
-              上面直接查看关键赛事指标，下面围绕具体竞赛对象完成筛选、编辑、导出和进入攻防运维。
-            </p>
           </div>
 
           <div class="ui-toolbar-actions contest-panel-actions">
@@ -170,7 +166,6 @@ function openContestWorkbench(contest: ContestDetailData) {
               <div class="journal-note-label">Contest Directory</div>
               <h2 class="list-heading__title">竞赛列表</h2>
             </div>
-            <div class="contest-section-meta">当前页 {{ listCount }} 场赛事</div>
           </header>
           <WorkspaceDirectoryToolbar
             model-value=""
@@ -329,11 +324,6 @@ function openContestWorkbench(contest: ContestDetailData) {
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-3);
-}
-
-.contest-section-meta {
-  font-size: var(--font-size-0-82);
-  color: var(--journal-muted);
 }
 
 .contest-overview-summary {
