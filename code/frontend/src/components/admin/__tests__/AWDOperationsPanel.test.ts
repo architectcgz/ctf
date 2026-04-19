@@ -394,6 +394,11 @@ describe('AWDOperationsPanel', () => {
             template:
               '<div><div v-if="modelValue"><div>{{ title }}</div><slot /><slot name="footer" /></div></div>',
           },
+          AWDRoundCreateDialog: {
+            props: ['open'],
+            template:
+              '<div v-if="open"><button id="awd-round-create-submit" type="button" @click="$emit(\'save\', { round_number: 1, status: \'pending\', attack_score: 10, defense_score: 20 })">提交</button></div>',
+          },
           AWDRoundInspector: {
             template:
               '<div><button id="stub-open-create-round" type="button" @click="$emit(\'openCreateRoundDialog\')">创建轮次</button></div>',
@@ -499,6 +504,11 @@ describe('AWDOperationsPanel', () => {
             props: ['modelValue', 'title'],
             template:
               '<div><div v-if="modelValue"><div>{{ title }}</div><slot /><slot name="footer" /></div></div>',
+          },
+          AWDRoundCreateDialog: {
+            props: ['open'],
+            template:
+              '<div v-if="open"><button id="awd-round-create-submit" type="button" @click="$emit(\'save\', { round_number: 1, status: \'pending\', attack_score: 10, defense_score: 20 })">提交</button></div>',
           },
           AWDRoundInspector: {
             template:
