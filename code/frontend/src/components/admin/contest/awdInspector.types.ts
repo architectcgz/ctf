@@ -50,6 +50,52 @@ export type AWDRoundInspectorEmits = {
   'update:selectedRoundId': [roundId: string]
 }
 
+export interface AWDRoundHeaderPanelProps {
+  contest: ContestDetailData
+  roundsCount: number
+  selectedRound: AWDRoundData | null
+  selectedRoundId: string | null
+  loadingRounds: boolean
+  loadingRoundDetail: boolean
+  checking: boolean
+  shouldAutoRefresh: boolean
+  canRecordServiceChecks: boolean
+  canRecordAttackLogs: boolean
+  serviceCheckHint?: string
+  attackLogHint?: string
+  compromisedCount: number
+  totalAttackCount: number
+  successfulAttackCount: number
+  failedAttackCount: number
+  getRoundStatusLabel: (status: AWDRoundData['status']) => string
+  getRoundStatusClass: (status: AWDRoundData['status']) => string
+  checkButtonLabel: string
+}
+
+export type AWDRoundHeaderPanelEmits = {
+  refresh: []
+  openCreateRoundDialog: []
+  openServiceCheckDialog: []
+  openAttackLogDialog: []
+  runSelectedRoundCheck: []
+}
+
+export interface AWDRoundSelectionPanelProps {
+  rounds: AWDRoundData[]
+  selectedRoundId: string | null
+  selectedRound: AWDRoundData | null
+  loadingRounds: boolean
+  compromisedCount: number
+  downCount: number
+  totalServiceCount: number
+  formatDateTime: (value?: string) => string
+  getRoundStatusLabel: (status: AWDRoundData['status']) => string
+}
+
+export type AWDRoundSelectionPanelEmits = {
+  'update:selectedRoundId': [roundId: string]
+}
+
 export interface AWDServiceAlertView {
   key: string
   label: string
