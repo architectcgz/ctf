@@ -21,13 +21,12 @@ import (
 	practicecmd "ctf-platform/internal/module/practice/application/commands"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
-	runtimeqry "ctf-platform/internal/module/runtime/application/queries"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 	runtimeadapters "ctf-platform/internal/testutil/runtimeadapters"
 	"ctf-platform/pkg/errcode"
 )
 
-func TestServiceStartContestChallengeAWDCreatesAndReusesTeamInstance(t *testing.T) {
+func TestServiceStartContestChallengeRejectsAWDContest(t *testing.T) {
 	db := newContestInstanceTestDB(t)
 	now := time.Now()
 
@@ -41,54 +40,13 @@ func TestServiceStartContestChallengeAWDCreatesAndReusesTeamInstance(t *testing.
 
 	service := newContestInstanceTestService(t, db)
 
-	first, err := service.StartContestChallenge(context.Background(), 5001, 3001, 2001)
-	if err != nil {
-		t.Fatalf("StartContestChallenge() first error = %v", err)
-	}
-	if first.ID == 0 {
-		t.Fatalf("expected created instance id, got %+v", first)
-	}
-
-	second, err := service.StartContestChallenge(context.Background(), 5002, 3001, 2001)
-	if err != nil {
-		t.Fatalf("StartContestChallenge() second error = %v", err)
-	}
-	if second.ID != first.ID {
-		t.Fatalf("expected shared instance reuse, got first=%d second=%d", first.ID, second.ID)
-	}
-
-	var instance model.Instance
-	if err := db.First(&instance, first.ID).Error; err != nil {
-		t.Fatalf("load created instance: %v", err)
-	}
-	if instance.ContestID == nil || *instance.ContestID != 3001 {
-		t.Fatalf("expected contest scoped instance, got %+v", instance)
-	}
-	if instance.TeamID == nil || *instance.TeamID != 4001 {
-		t.Fatalf("expected team scoped instance, got %+v", instance)
-	}
-
-	runtimeCleanupService := runtimecmd.NewRuntimeCleanupService(nil, nil)
-	_ = runtimeCleanupService
-	instanceQueries := runtimeqry.NewInstanceService(runtimeinfrarepo.NewRepository(db))
-	visible, err := instanceQueries.GetUserInstancesWithContext(context.Background(), 5002)
-	if err != nil {
-		t.Fatalf("GetUserInstancesWithContext() error = %v", err)
-	}
-	if len(visible) != 1 || visible[0].ID != first.ID {
-		t.Fatalf("expected teammate to see shared instance, got %+v", visible)
-	}
-
-	accessURL, err := instanceQueries.GetAccessURLWithContext(context.Background(), first.ID, 5002)
-	if err != nil {
-		t.Fatalf("GetAccessURLWithContext() error = %v", err)
-	}
-	if accessURL != first.AccessURL {
-		t.Fatalf("expected teammate to access shared instance, got %q", accessURL)
+	resp, err := service.StartContestChallenge(context.Background(), 5001, 3001, 2001)
+	if err == nil || err.Error() != errcode.ErrInvalidParams.Error() {
+		t.Fatalf("expected awd contest challenge entry rejected, resp=%+v err=%v", resp, err)
 	}
 }
 
-func TestServiceStartContestChallengeAWDReturnsExistingTeamInstance(t *testing.T) {
+func TestServiceStartContestChallengeAWDDoesNotReuseExistingTeamInstance(t *testing.T) {
 	db := newContestInstanceTestDB(t)
 	now := time.Now()
 
@@ -121,11 +79,70 @@ func TestServiceStartContestChallengeAWDReturnsExistingTeamInstance(t *testing.T
 
 	service := newContestInstanceTestService(t, db)
 	resp, err := service.StartContestChallenge(context.Background(), 5004, 3002, 2002)
-	if err != nil {
-		t.Fatalf("StartContestChallenge() error = %v", err)
+	if err == nil || err.Error() != errcode.ErrInvalidParams.Error() {
+		t.Fatalf("expected awd contest challenge entry rejected even with existing instance, resp=%+v err=%v", resp, err)
 	}
-	if resp.ID != 9002 {
-		t.Fatalf("expected existing shared instance, got %+v", resp)
+}
+
+func TestServiceStartContestAWDServiceResolvesServiceIDAndReusesTeamInstance(t *testing.T) {
+	db := newContestInstanceTestDB(t)
+	now := time.Now()
+
+	seedContestInstanceChallenge(t, db, 1003, 2003, now)
+	seedContestInstanceAWDContest(t, db, 3003, 2003, now)
+	seedContestInstanceAWDService(t, db, 7003003, 3003, 2003, now)
+	seedContestInstanceTeam(t, db, 3003, 4003, 5005, now)
+	seedContestInstanceRegistration(t, db, 3003, 5005, 4003, model.ContestRegistrationStatusApproved, now)
+	seedContestInstanceRegistration(t, db, 3003, 5006, 4003, model.ContestRegistrationStatusApproved, now)
+	seedContestInstanceTeamMember(t, db, 3003, 4003, 5005, now)
+	seedContestInstanceTeamMember(t, db, 3003, 4003, 5006, now)
+
+	service := newContestInstanceTestService(t, db)
+
+	first, err := service.StartContestAWDService(context.Background(), 5005, 3003, 7003003)
+	if err != nil {
+		t.Fatalf("StartContestAWDService() first error = %v", err)
+	}
+	second, err := service.StartContestAWDService(context.Background(), 5006, 3003, 7003003)
+	if err != nil {
+		t.Fatalf("StartContestAWDService() second error = %v", err)
+	}
+	if first.ID != second.ID {
+		t.Fatalf("expected shared instance reuse via awd service id, got first=%d second=%d", first.ID, second.ID)
+	}
+	if first.ChallengeID != 2003 {
+		t.Fatalf("expected awd service to resolve challenge 2003, got %+v", first)
+	}
+}
+
+func TestServiceStartContestAWDServicePersistsServiceIDOnInstance(t *testing.T) {
+	db := newContestInstanceTestDB(t)
+	now := time.Now()
+
+	seedContestInstanceChallenge(t, db, 1004, 2004, now)
+	seedContestInstanceAWDContest(t, db, 3004, 2004, now)
+	seedContestInstanceAWDService(t, db, 7003004, 3004, 2004, now)
+	seedContestInstanceTeam(t, db, 3004, 4004, 5007, now)
+	seedContestInstanceRegistration(t, db, 3004, 5007, 4004, model.ContestRegistrationStatusApproved, now)
+	seedContestInstanceTeamMember(t, db, 3004, 4004, 5007, now)
+
+	if err := ensureContestInstanceServiceIDColumn(db); err != nil {
+		t.Fatalf("ensure instances.service_id column: %v", err)
+	}
+
+	service := newContestInstanceTestService(t, db)
+	resp, err := service.StartContestAWDService(context.Background(), 5007, 3004, 7003004)
+	if err != nil {
+		t.Fatalf("StartContestAWDService() error = %v", err)
+	}
+
+	var persistedServiceID int64
+	if err := db.Raw("SELECT service_id FROM instances WHERE id = ?", resp.ID).
+		Scan(&persistedServiceID).Error; err != nil {
+		t.Fatalf("load persisted instance service_id: %v", err)
+	}
+	if persistedServiceID != 7003004 {
+		t.Fatalf("expected instance.service_id=7003004, got %d", persistedServiceID)
 	}
 }
 
@@ -280,6 +297,7 @@ func newContestInstanceTestDB(t *testing.T) *gorm.DB {
 		&model.Challenge{},
 		&model.ChallengeTopology{},
 		&model.Contest{},
+		&model.ContestAWDService{},
 		&model.ContestChallenge{},
 		&model.ContestRegistration{},
 		&model.Team{},
@@ -291,6 +309,13 @@ func newContestInstanceTestDB(t *testing.T) *gorm.DB {
 		t.Fatalf("auto migrate contest instance test schema: %v", err)
 	}
 	return db
+}
+
+func ensureContestInstanceServiceIDColumn(db *gorm.DB) error {
+	if db.Migrator().HasColumn(&model.Instance{}, "service_id") {
+		return nil
+	}
+	return db.Exec("ALTER TABLE instances ADD COLUMN service_id integer").Error
 }
 
 func newContestInstanceTestService(t *testing.T, db *gorm.DB) *practicecmd.Service {
@@ -413,6 +438,25 @@ func seedContestInstanceAWDContest(t *testing.T, db *gorm.DB, contestID, challen
 		UpdatedAt:   now,
 	}).Error; err != nil {
 		t.Fatalf("create contest challenge: %v", err)
+	}
+}
+
+func seedContestInstanceAWDService(t *testing.T, db *gorm.DB, serviceID, contestID, challengeID int64, now time.Time) {
+	t.Helper()
+	if err := db.Create(&model.ContestAWDService{
+		ID:              serviceID,
+		ContestID:       contestID,
+		ChallengeID:     challengeID,
+		DisplayName:     "Bank Portal",
+		Order:           1,
+		IsVisible:       true,
+		ScoreConfig:     `{"points":100}`,
+		RuntimeConfig:   `{"checker_type":"http_standard"}`,
+		ValidationState: model.AWDCheckerValidationStatePending,
+		CreatedAt:       now,
+		UpdatedAt:       now,
+	}).Error; err != nil {
+		t.Fatalf("create contest awd service: %v", err)
 	}
 }
 

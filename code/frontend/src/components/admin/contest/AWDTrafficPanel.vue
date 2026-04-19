@@ -37,6 +37,25 @@ const {
   changeTrafficPage: (page) => emit('changeTrafficPage', page),
 })
 
+function formatServiceRef(serviceId?: string): string {
+  if (!serviceId) {
+    return 'Service 未绑定'
+  }
+  return `Service #${serviceId}`
+}
+
+const trafficServiceOptions = computed(() => {
+  const seen = new Set<string>()
+  return props.challengeLinks.filter((challenge) => {
+    const serviceId = challenge.awd_service_id?.trim()
+    if (!serviceId || seen.has(serviceId)) {
+      return false
+    }
+    seen.add(serviceId)
+    return true
+  })
+})
+
 function handleTrafficStatusGroupChange(value: string): void {
   onTrafficStatusGroupChange(value)
 }
@@ -268,6 +287,32 @@ function getTrafficStatusGroupLabel(statusGroup: AWDTrafficStatusGroup): string 
           </span>
         </label>
         <label class="ui-field awd-round-filter-field">
+          <span class="ui-field__label">服务</span>
+          <span class="ui-control-wrap awd-round-filter-control">
+            <select
+              id="awd-traffic-filter-service"
+              :value="trafficFilters.service_id"
+              class="ui-control"
+              @change="
+                applyTrafficFilterPatch({
+                  service_id: ($event.target as HTMLSelectElement).value,
+                })
+              "
+            >
+              <option value="">全部服务</option>
+              <option
+                v-for="challenge in trafficServiceOptions"
+                :key="challenge.id"
+                :value="challenge.awd_service_id"
+              >
+                {{
+                  `${challenge.title || `Challenge #${challenge.challenge_id}`} · Service #${challenge.awd_service_id}`
+                }}
+              </option>
+            </select>
+          </span>
+        </label>
+        <label class="ui-field awd-round-filter-field">
           <span class="ui-field__label">题目</span>
           <span class="ui-control-wrap awd-round-filter-control">
             <select
@@ -381,7 +426,13 @@ function getTrafficStatusGroupLabel(statusGroup: AWDTrafficStatusGroup): string 
               </p>
             </td>
             <td class="awd-traffic-table-cell awd-traffic-table-cell--secondary">
-              {{ getTrafficChallengeTitle(event.challenge_id, event.challenge_title) }}
+              <p>{{ getTrafficChallengeTitle(event.challenge_id, event.challenge_title) }}</p>
+              <p
+                v-if="event.service_id"
+                class="awd-traffic-muted mt-1 text-xs font-mono"
+              >
+                {{ formatServiceRef(event.service_id) }}
+              </p>
             </td>
             <td class="awd-traffic-table-cell">
               <p class="awd-traffic-primary font-mono">

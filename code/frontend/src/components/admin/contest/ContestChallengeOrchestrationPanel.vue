@@ -3,15 +3,21 @@ import { computed, onMounted, ref, toRef } from 'vue'
 import { Plus, RefreshCw } from 'lucide-vue-next'
 
 import {
+  createContestAWDService,
   createAdminContestChallenge,
+  listAdminAwdServiceTemplates,
+  listContestAWDServices,
+  deleteContestAWDService,
   deleteAdminContestChallenge,
   getChallenges,
   listAdminContestChallenges,
+  updateContestAWDService,
   updateAdminContestChallenge,
 } from '@/api/admin'
 import type {
+  AdminAwdServiceTemplateData,
   AdminChallengeListItem,
-  AdminContestChallengeData,
+  AdminContestChallengeViewData,
   ContestDetailData,
 } from '@/api/contracts'
 import { ApiError } from '@/api/request'
@@ -21,21 +27,20 @@ import { useAwdCheckResultPresentation } from '@/composables/useAwdCheckResultPr
 import { useContestChallengePool } from '@/composables/useContestChallengePool'
 import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
 import { useToast } from '@/composables/useToast'
+import { mergeAdminContestChallengesWithAWDServices } from '@/utils/adminContestAwdChallengeLinks'
 
-import ContestChallengeFilterStrip from './ContestChallengeFilterStrip.vue'
 import ContestChallengeEditorDialog from './ContestChallengeEditorDialog.vue'
-import ContestChallengeSummaryStrip from './ContestChallengeSummaryStrip.vue'
 
 const props = defineProps<{
   contestId: string
   contestMode: ContestDetailData['mode']
-  challengeLinks?: AdminContestChallengeData[]
+  challengeLinks?: AdminContestChallengeViewData[]
   loadingExternal?: boolean
   loadErrorExternal?: string
 }>()
 
 const emit = defineEmits<{
-  'open:awd-config': [challenge: AdminContestChallengeData]
+  'open:awd-config': [challenge: AdminContestChallengeViewData]
   updated: []
 }>()
 
@@ -44,12 +49,14 @@ const CHALLENGE_CATALOG_PAGE_SIZE = 100
 const loading = ref(true)
 const saving = ref(false)
 const loadingChallengeCatalog = ref(false)
-const localChallengeLinks = ref<AdminContestChallengeData[]>([])
+const loadingTemplateCatalog = ref(false)
+const localChallengeLinks = ref<AdminContestChallengeViewData[]>([])
 const localLoadError = ref('')
 const challengeCatalog = ref<AdminChallengeListItem[]>([])
+const templateCatalog = ref<AdminAwdServiceTemplateData[]>([])
 const dialogOpen = ref(false)
 const dialogMode = ref<'create' | 'edit'>('create')
-const editingChallenge = ref<AdminContestChallengeData | null>(null)
+const editingChallenge = ref<AdminContestChallengeViewData | null>(null)
 const removingChallengeId = ref<string | null>(null)
 const usingExternalChallengeLinks = computed(() => props.challengeLinks !== undefined)
 const currentChallengeLinks = computed(() => props.challengeLinks ?? localChallengeLinks.value)
@@ -69,7 +76,7 @@ const {
 
 const panelCopy = computed(() =>
   isAwdContest.value
-    ? '先在这里维护统一题目池，完成题目关联、顺序、分值和可见性；AWD 深度配置在下一阶段完成。'
+    ? '先在这里维护统一题目池，完成题目关联、服务模板、顺序、分值和可见性；Checker 等检查配置继续留在 AWD 工作台。'
     : '在这里维护统一题目池，安排题目顺序、基础分值和可见状态。'
 )
 const emptyState = computed(() =>
@@ -104,23 +111,23 @@ const { getCheckerTypeLabel, getValidationStateLabel } = useAwdCheckResultPresen
   formatDateTime,
 })
 
-function getChallengeTitle(item: AdminContestChallengeData): string {
+function getChallengeTitle(item: AdminContestChallengeViewData): string {
   return item.title?.trim() || `Challenge #${item.challenge_id}`
 }
 
-function getCheckerLabel(item: AdminContestChallengeData): string {
+function getCheckerLabel(item: AdminContestChallengeViewData): string {
   return getCheckerTypeLabel(item.awd_checker_type) || '未配置 AWD'
 }
 
-function getValidationSummary(item: AdminContestChallengeData): string {
+function getValidationSummary(item: AdminContestChallengeViewData): string {
   return getValidationStateLabel(item.awd_checker_validation_state) || '未验证'
 }
 
-function getAwdScoreSummary(item: AdminContestChallengeData): string {
+function getAwdScoreSummary(item: AdminContestChallengeViewData): string {
   return `SLA ${item.awd_sla_score ?? 0} / 防守 ${item.awd_defense_score ?? 0}`
 }
 
-function getPreviewSummary(item: AdminContestChallengeData): string {
+function getPreviewSummary(item: AdminContestChallengeViewData): string {
   return formatDateTime(item.awd_checker_last_preview_at)
 }
 
@@ -142,7 +149,13 @@ async function refresh() {
 
   loading.value = true
   try {
-    localChallengeLinks.value = await listAdminContestChallenges(props.contestId)
+    const nextChallengeLinks = await listAdminContestChallenges(props.contestId)
+    const nextAwdServices =
+      props.contestMode === 'awd' ? await listContestAWDServices(props.contestId) : []
+    localChallengeLinks.value = mergeAdminContestChallengesWithAWDServices(
+      nextChallengeLinks,
+      nextAwdServices
+    )
     localLoadError.value = ''
   } catch (error) {
     localLoadError.value = humanizeRequestError(error, '赛事题目加载失败')
@@ -182,17 +195,53 @@ async function ensureChallengeCatalogLoaded() {
   }
 }
 
+async function ensureTemplateCatalogLoaded() {
+  if (loadingTemplateCatalog.value || templateCatalog.value.length > 0) {
+    return
+  }
+
+  loadingTemplateCatalog.value = true
+  try {
+    const list: AdminAwdServiceTemplateData[] = []
+    let page = 1
+    let total = 0
+
+    do {
+      const result = await listAdminAwdServiceTemplates({
+        page,
+        page_size: 100,
+        status: 'published',
+      })
+      list.push(...result.list)
+      total = result.total
+      page += 1
+    } while (list.length < total)
+
+    templateCatalog.value = list
+  } catch (error) {
+    toast.error(humanizeRequestError(error, '服务模板目录加载失败'))
+  } finally {
+    loadingTemplateCatalog.value = false
+  }
+}
+
 function openCreateDialog() {
   dialogMode.value = 'create'
   editingChallenge.value = null
   dialogOpen.value = true
   void ensureChallengeCatalogLoaded()
+  if (isAwdContest.value) {
+    void ensureTemplateCatalogLoaded()
+  }
 }
 
-function openEditDialog(challenge: AdminContestChallengeData) {
+function openEditDialog(challenge: AdminContestChallengeViewData) {
   dialogMode.value = 'edit'
   editingChallenge.value = challenge
   dialogOpen.value = true
+  if (isAwdContest.value) {
+    void ensureTemplateCatalogLoaded()
+  }
 }
 
 function closeDialog() {
@@ -202,13 +251,53 @@ function closeDialog() {
 
 async function handleSave(payload: {
   challenge_id: number
+  template_id?: number
   points: number
   order: number
   is_visible: boolean
 }) {
+  const templateId = payload.template_id
+  if (isAwdContest.value && (!templateId || templateId < 1)) {
+    toast.error('请选择服务模板')
+    return
+  }
+  const ensuredTemplateId = templateId as number | undefined
+
   saving.value = true
   try {
-    if (dialogMode.value === 'create') {
+    if (isAwdContest.value) {
+      if (dialogMode.value === 'create') {
+        await createContestAWDService(props.contestId, {
+          challenge_id: payload.challenge_id,
+          template_id: ensuredTemplateId as number,
+          order: payload.order,
+          is_visible: payload.is_visible,
+        })
+        await updateAdminContestChallenge(props.contestId, String(payload.challenge_id), {
+          points: payload.points,
+        })
+        toast.success('AWD 题目已关联')
+      } else if (editingChallenge.value) {
+        if (editingChallenge.value.awd_service_id) {
+          await updateContestAWDService(props.contestId, editingChallenge.value.awd_service_id, {
+            template_id: ensuredTemplateId as number,
+            order: payload.order,
+            is_visible: payload.is_visible,
+          })
+        } else {
+          await createContestAWDService(props.contestId, {
+            challenge_id: Number(editingChallenge.value.challenge_id),
+            template_id: ensuredTemplateId as number,
+            order: payload.order,
+            is_visible: payload.is_visible,
+          })
+        }
+        await updateAdminContestChallenge(props.contestId, editingChallenge.value.challenge_id, {
+          points: payload.points,
+        })
+        toast.success('AWD 题目已更新')
+      }
+    } else if (dialogMode.value === 'create') {
       await createAdminContestChallenge(props.contestId, payload)
       toast.success('赛事题目已关联')
     } else if (editingChallenge.value) {
@@ -235,7 +324,7 @@ async function handleSave(payload: {
   }
 }
 
-async function handleRemove(challenge: AdminContestChallengeData) {
+async function handleRemove(challenge: AdminContestChallengeViewData) {
   const confirmed = await confirmDestructiveAction({
     title: '移除赛事题目',
     confirmButtonText: '确认移除',
@@ -247,7 +336,11 @@ async function handleRemove(challenge: AdminContestChallengeData) {
 
   removingChallengeId.value = challenge.id
   try {
-    await deleteAdminContestChallenge(props.contestId, challenge.challenge_id)
+    if (props.contestMode === 'awd' && challenge.awd_service_id) {
+      await deleteContestAWDService(props.contestId, challenge.awd_service_id)
+    } else {
+      await deleteAdminContestChallenge(props.contestId, challenge.challenge_id)
+    }
     toast.success('赛事题目已移除')
     if (usingExternalChallengeLinks.value) {
       emit('updated')
@@ -314,7 +407,25 @@ onMounted(() => {
         题目池刷新失败，当前显示上次成功同步的数据。{{ panelLoadError }}
       </p>
 
-      <ContestChallengeSummaryStrip :summary-items="summaryItems" />
+      <div
+        class="progress-strip metric-panel-grid metric-panel-default-surface contest-challenge-panel__summary"
+      >
+        <article
+          v-for="item in summaryItems"
+          :key="item.key"
+          class="journal-note progress-card metric-panel-card"
+        >
+          <div class="journal-note-label progress-card-label metric-panel-label">
+            {{ item.label }}
+          </div>
+          <div class="journal-note-value progress-card-value metric-panel-value">
+            {{ item.value }}
+          </div>
+          <div class="journal-note-helper progress-card-hint metric-panel-helper">
+            {{ item.hint }}
+          </div>
+        </article>
+      </div>
 
       <section class="workspace-directory-section contest-challenge-directory">
         <header class="list-heading">
@@ -325,12 +436,21 @@ onMounted(() => {
           <div class="contest-section-meta">共 {{ currentChallengeLinks.length }} 道题目</div>
         </header>
 
-        <ContestChallengeFilterStrip
-          v-if="isAwdContest && filterItems.length > 0"
-          :filter-items="filterItems"
-          :active-filter="activeFilter"
-          @select="setFilter"
-        />
+        <div v-if="isAwdContest && filterItems.length > 0" class="contest-challenge-filters">
+          <button
+            v-for="filter in filterItems"
+            :id="`contest-challenge-filter-${filter.key}`"
+            :key="filter.key"
+            type="button"
+            class="contest-challenge-filter"
+            :class="{ 'contest-challenge-filter--active': activeFilter === filter.key }"
+            @click="setFilter(filter.key)"
+          >
+            <span class="contest-challenge-filter__label">{{ filter.label }}</span>
+            <span class="contest-challenge-filter__count">{{ filter.count }}</span>
+            <span class="contest-challenge-filter__hint">{{ filter.hint }}</span>
+          </button>
+        </div>
 
         <div
           v-if="panelLoading"
@@ -438,9 +558,11 @@ onMounted(() => {
       :mode="dialogMode"
       :contest-mode="contestMode"
       :challenge-options="challengeCatalog"
+      :template-options="templateCatalog"
       :existing-challenge-ids="existingChallengeIds"
       :draft="editingChallenge"
       :loading-challenge-catalog="loadingChallengeCatalog"
+      :loading-template-catalog="loadingTemplateCatalog"
       :saving="saving"
       @update:open="dialogOpen = $event"
       @save="handleSave"
@@ -463,6 +585,10 @@ onMounted(() => {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-3);
+}
+
+.contest-challenge-panel__summary {
+  --admin-summary-grid-columns: repeat(auto-fit, minmax(11rem, 1fr));
 }
 
 .contest-challenge-panel__warning {
@@ -503,6 +629,48 @@ onMounted(() => {
 }
 
 .contest-section-meta {
+  font-size: var(--font-size-0-82);
+  color: var(--journal-muted);
+}
+
+.contest-challenge-filters {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr));
+}
+
+.contest-challenge-filter {
+  display: grid;
+  gap: var(--space-1);
+  justify-items: start;
+  border: 1px solid color-mix(in srgb, var(--journal-border) 76%, transparent);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
+  padding: var(--space-3);
+  text-align: left;
+  transition: all 150ms ease;
+}
+
+.contest-challenge-filter:hover {
+  border-color: color-mix(in srgb, var(--journal-accent) 28%, transparent);
+}
+
+.contest-challenge-filter--active {
+  border-color: color-mix(in srgb, var(--journal-accent) 42%, transparent);
+  background: color-mix(in srgb, var(--journal-accent) 10%, var(--journal-surface));
+}
+
+.contest-challenge-filter__label,
+.contest-challenge-filter__count {
+  font-weight: 700;
+  color: var(--journal-ink);
+}
+
+.contest-challenge-filter__count {
+  font-size: var(--font-size-1-20);
+}
+
+.contest-challenge-filter__hint {
   font-size: var(--font-size-0-82);
   color: var(--journal-muted);
 }
@@ -579,6 +747,10 @@ onMounted(() => {
 }
 
 @media (max-width: 900px) {
+  .contest-challenge-panel__summary {
+    --admin-summary-grid-columns: minmax(0, 1fr);
+  }
+
   .contest-challenge-directory__head {
     display: none;
   }

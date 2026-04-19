@@ -59,6 +59,17 @@ func (r *Repository) FindContestChallengeWithContext(ctx context.Context, contes
 	return &contestChallenge, nil
 }
 
+func (r *Repository) FindContestAWDServiceWithContext(ctx context.Context, contestID, serviceID int64) (*model.ContestAWDService, error) {
+	var service model.ContestAWDService
+	if err := r.dbWithContext(ctx).
+		Where("contest_id = ? AND id = ?", contestID, serviceID).
+		Where("deleted_at IS NULL").
+		First(&service).Error; err != nil {
+		return nil, err
+	}
+	return &service, nil
+}
+
 func (r *Repository) FindContestRegistrationWithContext(ctx context.Context, contestID, userID int64) (*model.ContestRegistration, error) {
 	var registration model.ContestRegistration
 	if err := r.dbWithContext(ctx).
@@ -70,6 +81,11 @@ func (r *Repository) FindContestRegistrationWithContext(ctx context.Context, con
 }
 
 func (r *Repository) LockInstanceScope(userID, challengeID int64, scope practiceports.InstanceScope) error {
+	if scope.ServiceID != nil {
+		return r.db.Clauses(clause.Locking{Strength: "UPDATE"}).
+			Where("id = ?", *scope.ServiceID).
+			First(&model.ContestAWDService{}).Error
+	}
 	switch scope.ShareScope {
 	case model.InstanceSharingShared:
 		return r.db.Clauses(clause.Locking{Strength: "UPDATE"}).
@@ -95,13 +111,18 @@ func (r *Repository) LockInstanceScope(userID, challengeID int64, scope practice
 func (r *Repository) FindScopedExistingInstance(userID, challengeID int64, scope practiceports.InstanceScope) (*model.Instance, error) {
 	now := time.Now()
 	query := r.db.Model(&model.Instance{}).
-		Where("challenge_id = ? AND share_scope = ?", challengeID, scope.ShareScope).
+		Where("share_scope = ?", scope.ShareScope).
 		Where(
 			"(status IN ? OR (status = ? AND expires_at > ?))",
 			[]string{model.InstanceStatusPending, model.InstanceStatusCreating},
 			model.InstanceStatusRunning,
 			now,
 		)
+	if scope.ServiceID != nil {
+		query = query.Where("service_id = ?", *scope.ServiceID)
+	} else {
+		query = query.Where("challenge_id = ?", challengeID)
+	}
 
 	switch {
 	case scope.ShareScope == model.InstanceSharingShared && scope.ContestID != nil:

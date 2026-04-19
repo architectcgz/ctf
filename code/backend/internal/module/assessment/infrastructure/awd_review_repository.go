@@ -225,6 +225,7 @@ func (r *TeacherAWDReviewRepository) ListTeacherAWDReviewRoundServices(ctx conte
 			ts.round_id,
 			ts.team_id,
 			t.name AS team_name,
+			ts.service_id,
 			ts.challenge_id,
 			COALESCE(ch.title, '') AS challenge_title,
 			ts.service_status,
@@ -237,7 +238,7 @@ func (r *TeacherAWDReviewRepository) ListTeacherAWDReviewRoundServices(ctx conte
 		JOIN teams t ON t.id = ts.team_id
 		LEFT JOIN challenges ch ON ch.id = ts.challenge_id
 		WHERE ts.round_id = ? AND t.deleted_at IS NULL
-		ORDER BY ts.team_id ASC, ts.challenge_id ASC
+		ORDER BY ts.team_id ASC, ts.service_id ASC, ts.challenge_id ASC
 	`, roundID).Scan(&rows).Error
 	if err != nil {
 		return nil, fmt.Errorf("list teacher awd review round services: %w", err)
@@ -255,6 +256,7 @@ func (r *TeacherAWDReviewRepository) ListTeacherAWDReviewRoundAttacks(ctx contex
 			COALESCE(attacker.name, '') AS attacker_team_name,
 			al.victim_team_id,
 			COALESCE(victim.name, '') AS victim_team_name,
+			al.service_id,
 			al.challenge_id,
 			COALESCE(ch.title, '') AS challenge_title,
 			al.attack_type,
@@ -287,6 +289,7 @@ func (r *TeacherAWDReviewRepository) ListTeacherAWDReviewRoundTraffic(ctx contex
 			COALESCE(attacker.name, '') AS attacker_team_name,
 			te.victim_team_id,
 			COALESCE(victim.name, '') AS victim_team_name,
+			te.service_id,
 			te.challenge_id,
 			COALESCE(ch.title, '') AS challenge_title,
 			te.method,

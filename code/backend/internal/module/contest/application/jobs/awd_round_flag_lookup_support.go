@@ -70,7 +70,7 @@ func (u *AWDRoundUpdater) resolveRoundFlag(
 		return "", errAWDFlagUnavailable
 	}
 	if u.redis != nil {
-		flag, err := u.redis.HGet(ctx, rediskeys.AWDRoundFlagsKey(contestID, round.ID), rediskeys.AWDRoundFlagField(teamID, definition.ChallengeID)).Result()
+		flag, err := u.redis.HGet(ctx, rediskeys.AWDRoundFlagsKey(contestID, round.ID), rediskeys.AWDRoundFlagServiceField(teamID, definition.ServiceID)).Result()
 		if err == nil && strings.TrimSpace(flag) != "" {
 			return flag, nil
 		}

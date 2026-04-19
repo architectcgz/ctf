@@ -246,6 +246,64 @@ describe('teacher api contract', () => {
         export_ready: false,
       },
       rounds: [],
+      selected_round: {
+        round: {
+          id: 41,
+          contest_id: 9,
+          round_number: 2,
+          status: 'running',
+          attack_score: 60,
+          defense_score: 40,
+          service_count: 4,
+          attack_count: 3,
+          traffic_count: 18,
+        },
+        teams: [
+          {
+            team_id: 13,
+            team_name: 'Red',
+            captain_id: 101,
+            total_score: 118,
+            member_count: 3,
+          },
+        ],
+        services: [
+          {
+            id: 501,
+            round_id: 41,
+            team_id: 13,
+            team_name: 'Red',
+            service_id: 7009,
+            challenge_id: 9,
+            challenge_title: 'Bank Portal',
+            service_status: 'up',
+            attack_received: 0,
+            sla_score: 18,
+            defense_score: 40,
+            attack_score: 0,
+            updated_at: '2026-04-12T10:02:00Z',
+          },
+        ],
+        attacks: [
+          {
+            id: 601,
+            round_id: 41,
+            attacker_team_id: 13,
+            attacker_team_name: 'Red',
+            victim_team_id: 14,
+            victim_team_name: 'Blue',
+            service_id: 7009,
+            challenge_id: 9,
+            challenge_title: 'Bank Portal',
+            attack_type: 'flag_capture',
+            source: 'submission',
+            is_success: true,
+            score_gained: 60,
+            created_at: '2026-04-12T10:03:00Z',
+          },
+        ],
+        traffic: [],
+      },
     })
 
     const result = await getTeacherAWDReview('9', { round: 2, team_id: 'team-2' })
@@ -259,6 +317,8 @@ describe('teacher api contract', () => {
       },
     })
     expect(result.contest.id).toBe('9')
+    expect(result.selected_round?.services[0].service_id).toBe('7009')
+    expect(result.selected_round?.attacks[0].service_id).toBe('7009')
   })
 
   it('创建教师 AWD 复盘归档导出时应标准化 report_id', async () => {

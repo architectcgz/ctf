@@ -3,7 +3,7 @@ import { computed, onBeforeUnmount, ref, toValue, watch, type MaybeRefOrGetter }
 import {
   getContestAWDWorkspace,
   getScoreboard,
-  startContestChallengeInstance,
+  startContestAWDServiceInstance,
   submitContestAWDAttack,
 } from '@/api/contest'
 import type {
@@ -19,6 +19,7 @@ const AWD_WORKSPACE_AUTO_REFRESH_INTERVAL_MS = 15_000
 interface UseContestAWDWorkspaceOptions {
   contestId: MaybeRefOrGetter<string>
   contestStatus?: MaybeRefOrGetter<ContestDetailData['status'] | null | undefined>
+  formatAttackResultToast?: (result: AWDAttackLogData) => string
 }
 
 export function useContestAWDWorkspace(options: UseContestAWDWorkspaceOptions) {
@@ -29,7 +30,7 @@ export function useContestAWDWorkspace(options: UseContestAWDWorkspaceOptions) {
   const loading = ref(false)
   const error = ref('')
   const submitResult = ref<AWDAttackLogData | null>(null)
-  const startingChallengeId = ref('')
+  const startingServiceKey = ref('')
   const submittingKey = ref('')
   const lastSyncedAt = ref<string | null>(null)
 
@@ -100,15 +101,15 @@ export function useContestAWDWorkspace(options: UseContestAWDWorkspaceOptions) {
     }
   }
 
-  async function startService(challengeId: string): Promise<void> {
+  async function startService(serviceId: string): Promise<void> {
     const contestId = toValue(options.contestId)
-    if (!contestId || startingChallengeId.value) {
+    if (!contestId || !serviceId || startingServiceKey.value) {
       return
     }
 
-    startingChallengeId.value = challengeId
+    startingServiceKey.value = serviceId
     try {
-      const instance = await startContestChallengeInstance(contestId, challengeId)
+      const instance = await startContestAWDServiceInstance(contestId, serviceId)
       await refreshAll()
       if (instance.access_url) {
         toast.success('服务已就绪，可直接进入')
@@ -119,12 +120,12 @@ export function useContestAWDWorkspace(options: UseContestAWDWorkspaceOptions) {
       console.error(err)
       toast.error(err instanceof Error ? err.message : '启动服务失败')
     } finally {
-      startingChallengeId.value = ''
+      startingServiceKey.value = ''
     }
   }
 
   async function submitAttack(
-    challengeId: string,
+    serviceId: string,
     victimTeamId: number,
     flag: string
   ): Promise<AWDAttackLogData | null> {
@@ -137,18 +138,20 @@ export function useContestAWDWorkspace(options: UseContestAWDWorkspaceOptions) {
       return null
     }
 
-    submittingKey.value = `${challengeId}:${victimTeamId}`
+    submittingKey.value = `${serviceId}:${victimTeamId}`
     submitResult.value = null
 
     try {
-      const result = await submitContestAWDAttack(contestId, challengeId, {
+      const result = await submitContestAWDAttack(contestId, serviceId, {
         victim_team_id: victimTeamId,
         flag: normalizedFlag,
       })
       submitResult.value = result
       await refreshAll()
+      const formattedMessage = options.formatAttackResultToast?.(result)
       toast.success(
-        result.is_success ? `攻击成功，+${result.score_gained} 分` : '攻击未命中有效 flag'
+        formattedMessage ||
+          (result.is_success ? `攻击成功，+${result.score_gained} 分` : '攻击未命中有效 flag')
       )
       return result
     } catch (err) {
@@ -193,7 +196,7 @@ export function useContestAWDWorkspace(options: UseContestAWDWorkspaceOptions) {
     error,
     hasTeam,
     submitResult,
-    startingChallengeId,
+    startingServiceKey,
     submittingKey,
     shouldAutoRefresh,
     lastSyncedAt,

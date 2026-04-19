@@ -51,6 +51,7 @@ type TeacherAWDReviewServiceRecord struct {
 	RoundID        int64
 	TeamID         int64
 	TeamName       string
+	ServiceID      int64
 	ChallengeID    int64
 	ChallengeTitle string
 	ServiceStatus  string
@@ -68,6 +69,7 @@ type TeacherAWDReviewAttackRecord struct {
 	AttackerTeamName string
 	VictimTeamID     int64
 	VictimTeamName   string
+	ServiceID        int64
 	ChallengeID      int64
 	ChallengeTitle   string
 	AttackType       string
@@ -86,6 +88,7 @@ type TeacherAWDReviewTrafficRecord struct {
 	AttackerTeamName string
 	VictimTeamID     int64
 	VictimTeamName   string
+	ServiceID        int64
 	ChallengeID      int64
 	ChallengeTitle   string
 	Method           string

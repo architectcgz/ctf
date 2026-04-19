@@ -11,10 +11,10 @@ func (u *AWDRoundUpdater) loadContestServiceInstances(ctx context.Context, conte
 		return nil, nil
 	}
 
-	challengeIDs := make([]int64, 0, len(definitions))
+	serviceIDs := make([]int64, 0, len(definitions))
 	for _, definition := range definitions {
-		challengeIDs = append(challengeIDs, definition.ChallengeID)
+		serviceIDs = append(serviceIDs, definition.ServiceID)
 	}
 
-	return u.repo.ListServiceInstancesByContest(ctx, contestID, challengeIDs)
+	return u.repo.ListServiceInstancesByContest(ctx, contestID, serviceIDs)
 }

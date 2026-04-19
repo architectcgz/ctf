@@ -76,7 +76,7 @@ func TestProxyTicketServiceIssueTicketPersistsClaimsWithTTL(t *testing.T) {
 	if store.savedTicket != ticket {
 		t.Fatalf("expected stored ticket %q, got %q", ticket, store.savedTicket)
 	}
-	if store.savedClaims.UserID != 1001 || store.savedClaims.InstanceID != 2001 || store.savedClaims.ChallengeID != 2001 {
+	if store.savedClaims.UserID != 1001 || store.savedClaims.InstanceID != 2001 {
 		t.Fatalf("unexpected saved claims: %+v", store.savedClaims)
 	}
 	if store.savedClaims.ContestID == nil || *store.savedClaims.ContestID != 3001 {
@@ -90,6 +90,29 @@ func TestProxyTicketServiceIssueTicketPersistsClaimsWithTTL(t *testing.T) {
 	}
 	if service.MaxAge() != 900 {
 		t.Fatalf("MaxAge() = %d, want 900", service.MaxAge())
+	}
+}
+
+func TestProxyTicketServiceResolveTicketAllowsClaimsWithoutChallengeID(t *testing.T) {
+	t.Parallel()
+
+	store := &stubProxyTicketStore{
+		findClaims: &runtimeports.ProxyTicketClaims{
+			UserID:     1001,
+			Username:   "alice",
+			Role:       model.RoleStudent,
+			InstanceID: 2001,
+			ShareScope: model.InstanceSharingPerTeam,
+		},
+	}
+	service := runtimeqry.NewProxyTicketService(store, &stubProxyTicketInstanceReader{}, 15*time.Minute)
+
+	claims, err := service.ResolveTicket(context.Background(), "ticket-1")
+	if err != nil {
+		t.Fatalf("ResolveTicket() error = %v", err)
+	}
+	if claims == nil || claims.InstanceID != 2001 || claims.UserID != 1001 {
+		t.Fatalf("unexpected resolved claims: %+v", claims)
 	}
 }
 

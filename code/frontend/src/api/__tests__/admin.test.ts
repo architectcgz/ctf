@@ -16,6 +16,7 @@ vi.mock('@/api/request', () => ({
 }))
 
 import {
+  createAdminAwdServiceTemplate,
   createAdminContestChallenge,
   createEnvironmentTemplate,
   createChallenge,
@@ -23,7 +24,10 @@ import {
   createContest,
   createContestAWDRound,
   configureChallengeFlag,
+  createContestAWDService,
+  deleteAdminAwdServiceTemplate,
   deleteAdminContestChallenge,
+  deleteContestAWDService,
   deleteChallengeTopology,
   deleteEnvironmentTemplate,
   deleteImage,
@@ -42,8 +46,10 @@ import {
   getEnvironmentTemplates,
   getImages,
   getUsers,
+  listAdminAwdServiceTemplates,
   listChallengeImports,
   listAdminContestChallenges,
+  listContestAWDServices,
   listContestAWDRoundAttacks,
   listContestAWDRoundTrafficEvents,
   publishAdminNotification,
@@ -54,6 +60,8 @@ import {
   saveChallengeWriteup,
   unrecommendChallengeWriteup,
   updateAdminContestChallenge,
+  updateAdminAwdServiceTemplate,
+  updateContestAWDService,
   updateContest,
 } from '@/api/admin'
 import * as adminApi from '@/api/admin'
@@ -174,7 +182,7 @@ describe('admin contest api contract', () => {
     expect(result).toEqual([])
   })
 
-  it('应该归一化管理员竞赛题目列表中的题目元信息', async () => {
+  it('应该归一化管理员竞赛题目列表中的关系字段', async () => {
     requestMock.mockResolvedValue([
       {
         id: 31,
@@ -186,31 +194,6 @@ describe('admin contest api contract', () => {
         points: 120,
         order: 2,
         is_visible: true,
-        awd_checker_type: 'http_standard',
-        awd_checker_config: {
-          put_flag: { method: 'PUT', path: '/api/flag' },
-          get_flag: { method: 'GET', path: '/api/flag' },
-        },
-        awd_sla_score: 18,
-        awd_defense_score: 28,
-        awd_checker_validation_state: 'passed',
-        awd_checker_last_preview_at: '2026-03-12T00:10:00.000Z',
-        awd_checker_last_preview_result: {
-          checker_type: 'http_standard',
-          service_status: 'up',
-          check_result: {
-            checker_type: 'http_standard',
-            check_source: 'checker_preview',
-            status_reason: 'healthy',
-          },
-          preview_context: {
-            access_url: 'http://preview.internal',
-            preview_flag: 'flag{preview}',
-            round_number: 0,
-            team_id: 0,
-            challenge_id: 11,
-          },
-        },
         created_at: '2026-03-12T00:00:00.000Z',
       },
     ])
@@ -232,37 +215,12 @@ describe('admin contest api contract', () => {
         points: 120,
         order: 2,
         is_visible: true,
-        awd_checker_type: 'http_standard',
-        awd_checker_config: {
-          put_flag: { method: 'PUT', path: '/api/flag' },
-          get_flag: { method: 'GET', path: '/api/flag' },
-        },
-        awd_sla_score: 18,
-        awd_defense_score: 28,
-        awd_checker_validation_state: 'passed',
-        awd_checker_last_preview_at: '2026-03-12T00:10:00.000Z',
-        awd_checker_last_preview_result: {
-          checker_type: 'http_standard',
-          service_status: 'up',
-          check_result: {
-            checker_type: 'http_standard',
-            check_source: 'checker_preview',
-            status_reason: 'healthy',
-          },
-          preview_context: {
-            access_url: 'http://preview.internal',
-            preview_flag: 'flag{preview}',
-            round_number: 0,
-            team_id: '0',
-            challenge_id: '11',
-          },
-        },
         created_at: '2026-03-12T00:00:00.000Z',
       },
     ])
   })
 
-  it('应该按后端契约创建带 AWD 配置的竞赛题目', async () => {
+  it('应该按后端契约创建竞赛题目，并忽略误传的 AWD 兼容字段', async () => {
     requestMock.mockResolvedValue({
       id: 31,
       contest_id: 7,
@@ -273,12 +231,6 @@ describe('admin contest api contract', () => {
       points: 120,
       order: 2,
       is_visible: true,
-      awd_checker_type: 'http_standard',
-      awd_checker_config: {
-        put_flag: { method: 'PUT', path: '/api/flag' },
-      },
-      awd_sla_score: 18,
-      awd_defense_score: 28,
       created_at: '2026-03-12T00:00:00.000Z',
     })
 
@@ -287,13 +239,16 @@ describe('admin contest api contract', () => {
       points: 120,
       order: 2,
       is_visible: true,
-      awd_checker_type: 'http_standard',
-      awd_checker_config: {
-        put_flag: { method: 'PUT', path: '/api/flag' },
-      },
-      awd_sla_score: 18,
-      awd_defense_score: 28,
-      awd_checker_preview_token: 'preview-token-1',
+      ...( {
+        template_id: 5,
+        awd_checker_type: 'http_standard',
+        awd_checker_config: {
+          put_flag: { method: 'PUT', path: '/api/flag' },
+        },
+        awd_sla_score: 18,
+        awd_defense_score: 28,
+        awd_checker_preview_token: 'preview-token-1',
+      } as Record<string, unknown> ),
     })
 
     expect(requestMock).toHaveBeenCalledWith({
@@ -304,13 +259,6 @@ describe('admin contest api contract', () => {
         points: 120,
         order: 2,
         is_visible: true,
-        awd_checker_type: 'http_standard',
-        awd_checker_config: {
-          put_flag: { method: 'PUT', path: '/api/flag' },
-        },
-        awd_sla_score: 18,
-        awd_defense_score: 28,
-        awd_checker_preview_token: 'preview-token-1',
       },
     })
     expect(result).toEqual({
@@ -323,33 +271,27 @@ describe('admin contest api contract', () => {
       points: 120,
       order: 2,
       is_visible: true,
-      awd_checker_type: 'http_standard',
-      awd_checker_config: {
-        put_flag: { method: 'PUT', path: '/api/flag' },
-      },
-      awd_sla_score: 18,
-      awd_defense_score: 28,
-      awd_checker_validation_state: 'pending',
-      awd_checker_last_preview_at: undefined,
-      awd_checker_last_preview_result: undefined,
       created_at: '2026-03-12T00:00:00.000Z',
     })
   })
 
-  it('应该按后端契约更新竞赛题目的 AWD 配置', async () => {
+  it('应该按后端契约更新竞赛题目，并忽略误传的 AWD 兼容字段', async () => {
     requestMock.mockResolvedValue(null)
 
     await updateAdminContestChallenge('7', '11', {
       points: 150,
       order: 3,
       is_visible: false,
-      awd_checker_type: 'legacy_probe',
-      awd_checker_config: {
-        health_path: '/healthz',
-      },
-      awd_sla_score: 10,
-      awd_defense_score: 20,
-      awd_checker_preview_token: 'preview-token-2',
+      ...( {
+        template_id: 7,
+        awd_checker_type: 'legacy_probe',
+        awd_checker_config: {
+          health_path: '/healthz',
+        },
+        awd_sla_score: 10,
+        awd_defense_score: 20,
+        awd_checker_preview_token: 'preview-token-2',
+      } as Record<string, unknown> ),
     })
 
     expect(requestMock).toHaveBeenCalledWith({
@@ -359,13 +301,6 @@ describe('admin contest api contract', () => {
         points: 150,
         order: 3,
         is_visible: false,
-        awd_checker_type: 'legacy_probe',
-        awd_checker_config: {
-          health_path: '/healthz',
-        },
-        awd_sla_score: 10,
-        awd_defense_score: 20,
-        awd_checker_preview_token: 'preview-token-2',
       },
     })
   })
@@ -378,6 +313,257 @@ describe('admin contest api contract', () => {
     expect(requestMock).toHaveBeenCalledWith({
       method: 'DELETE',
       url: '/admin/contests/7/challenges/11',
+    })
+  })
+
+  it('应该归一化显式 AWD service 列表', async () => {
+    requestMock.mockResolvedValue([
+      {
+        id: 7009,
+        contest_id: 7,
+        challenge_id: 11,
+        template_id: 5,
+        display_name: 'Bank Portal',
+        order: 2,
+        is_visible: true,
+        score_config: {
+          attack_score: 60,
+          awd_sla_score: 18,
+          awd_defense_score: 28,
+        },
+        runtime_config: {
+          challenge_id: 11,
+          checker_type: 'http_standard',
+          checker_config: {
+            get_flag: {
+              path: '/health',
+            },
+          },
+        },
+        validation_state: 'passed',
+        last_preview_at: '2026-03-12T00:04:00.000Z',
+        last_preview_result: {
+          service_status: 'up',
+          check_result: {
+            status_code: 200,
+          },
+          preview_context: {
+            access_url: 'http://checker.internal/health',
+            preview_flag: 'FLAG{preview}',
+            round_number: 0,
+            team_id: 0,
+            challenge_id: 11,
+          },
+        },
+        created_at: '2026-03-12T00:00:00.000Z',
+        updated_at: '2026-03-12T00:05:00.000Z',
+      },
+    ])
+
+    const result = await listContestAWDServices('7')
+
+    expect(requestMock).toHaveBeenCalledWith({
+      method: 'GET',
+      url: '/admin/contests/7/awd/services',
+    })
+    expect(result).toEqual([
+      {
+        id: '7009',
+        contest_id: '7',
+        challenge_id: '11',
+        template_id: '5',
+        display_name: 'Bank Portal',
+        order: 2,
+        is_visible: true,
+        score_config: {
+          attack_score: 60,
+          awd_sla_score: 18,
+          awd_defense_score: 28,
+        },
+        runtime_config: {
+          checker_type: 'http_standard',
+          checker_config: {
+            get_flag: {
+              path: '/health',
+            },
+          },
+        },
+        checker_type: 'http_standard',
+        checker_config: {
+          get_flag: {
+            path: '/health',
+          },
+        },
+        sla_score: 18,
+        defense_score: 28,
+        validation_state: 'passed',
+        last_preview_at: '2026-03-12T00:04:00.000Z',
+        last_preview_result: {
+          checker_type: undefined,
+          service_status: 'up',
+          check_result: {
+            status_code: 200,
+          },
+          preview_context: {
+            access_url: 'http://checker.internal/health',
+            preview_flag: 'FLAG{preview}',
+            round_number: 0,
+            team_id: '0',
+            challenge_id: '11',
+          },
+        },
+        created_at: '2026-03-12T00:00:00.000Z',
+        updated_at: '2026-03-12T00:05:00.000Z',
+      },
+    ])
+  })
+
+  it('应该按后端契约创建显式 AWD service', async () => {
+    requestMock.mockResolvedValue({
+      id: 7009,
+      contest_id: 7,
+      challenge_id: 11,
+      template_id: 5,
+      display_name: 'Bank Portal',
+      order: 2,
+      is_visible: true,
+      score_config: {
+        attack_score: 60,
+        awd_sla_score: 18,
+        awd_defense_score: 28,
+      },
+      runtime_config: {
+        checker_type: 'http_standard',
+        checker_config: {
+          put_flag: {
+            method: 'PUT',
+            path: '/api/flag',
+          },
+        },
+      },
+      validation_state: 'pending',
+      last_preview_at: undefined,
+      last_preview_result: undefined,
+      created_at: '2026-03-12T00:00:00.000Z',
+      updated_at: '2026-03-12T00:05:00.000Z',
+    })
+
+    const result = await createContestAWDService('7', {
+      challenge_id: 11,
+      template_id: 5,
+      display_name: 'Bank Portal',
+      order: 2,
+      is_visible: true,
+      checker_type: 'http_standard',
+      checker_config: {
+        put_flag: { method: 'PUT', path: '/api/flag' },
+      },
+      awd_sla_score: 18,
+      awd_defense_score: 28,
+      awd_checker_preview_token: 'preview-token',
+    })
+
+    expect(requestMock).toHaveBeenCalledWith({
+      method: 'POST',
+      url: '/admin/contests/7/awd/services',
+      data: {
+        challenge_id: 11,
+        template_id: 5,
+        display_name: 'Bank Portal',
+        order: 2,
+        is_visible: true,
+        checker_type: 'http_standard',
+        checker_config: {
+          put_flag: { method: 'PUT', path: '/api/flag' },
+        },
+        awd_sla_score: 18,
+        awd_defense_score: 28,
+        awd_checker_preview_token: 'preview-token',
+      },
+    })
+    expect(result).toEqual({
+      id: '7009',
+      contest_id: '7',
+      challenge_id: '11',
+      template_id: '5',
+      display_name: 'Bank Portal',
+      order: 2,
+      is_visible: true,
+      score_config: {
+        attack_score: 60,
+        awd_sla_score: 18,
+        awd_defense_score: 28,
+      },
+      runtime_config: {
+        checker_type: 'http_standard',
+        checker_config: {
+          put_flag: {
+            method: 'PUT',
+            path: '/api/flag',
+          },
+        },
+      },
+      checker_type: 'http_standard',
+      checker_config: {
+        put_flag: {
+          method: 'PUT',
+          path: '/api/flag',
+        },
+      },
+      sla_score: 18,
+      defense_score: 28,
+      validation_state: 'pending',
+      last_preview_at: undefined,
+      last_preview_result: undefined,
+      created_at: '2026-03-12T00:00:00.000Z',
+      updated_at: '2026-03-12T00:05:00.000Z',
+    })
+  })
+
+  it('应该按后端契约更新显式 AWD service', async () => {
+    requestMock.mockResolvedValue(null)
+
+    await updateContestAWDService('7', '7009', {
+      template_id: 6,
+      display_name: 'Bank Portal v2',
+      order: 3,
+      is_visible: false,
+      checker_type: 'legacy_probe',
+      checker_config: {
+        health: { path: '/healthz' },
+      },
+      awd_sla_score: 12,
+      awd_defense_score: 22,
+      awd_checker_preview_token: 'preview-token-2',
+    })
+
+    expect(requestMock).toHaveBeenCalledWith({
+      method: 'PUT',
+      url: '/admin/contests/7/awd/services/7009',
+      data: {
+        template_id: 6,
+        display_name: 'Bank Portal v2',
+        order: 3,
+        is_visible: false,
+        checker_type: 'legacy_probe',
+        checker_config: {
+          health: { path: '/healthz' },
+        },
+        awd_sla_score: 12,
+        awd_defense_score: 22,
+        awd_checker_preview_token: 'preview-token-2',
+      },
+    })
+  })
+
+  it('应该按后端契约删除显式 AWD service', async () => {
+    requestMock.mockResolvedValue(null)
+
+    await deleteContestAWDService('7', '7009')
+
+    expect(requestMock).toHaveBeenCalledWith({
+      method: 'DELETE',
+      url: '/admin/contests/7/awd/services/7009',
     })
   })
 
@@ -813,6 +999,7 @@ describe('admin contest api contract', () => {
       page: 2,
       page_size: 20,
       attacker_team_id: '11',
+      service_id: '7009',
       status_group: 'server_error',
     })
 
@@ -823,6 +1010,7 @@ describe('admin contest api contract', () => {
         page: 2,
         page_size: 20,
         attacker_team_id: '11',
+        service_id: '7009',
         status_group: 'server_error',
       },
     })
@@ -1982,6 +2170,158 @@ describe('admin contest api contract', () => {
         links: [],
         policies: [],
       },
+    })
+  })
+
+  it('应该把 AWD 服务模板分页结果归一化', async () => {
+    requestMock.mockResolvedValueOnce({
+      items: [
+        {
+          id: 5,
+          name: 'Bank Portal AWD',
+          slug: 'bank-portal-awd',
+          category: 'web',
+          difficulty: 'hard',
+          description: 'multi-step banking target',
+          service_type: 'web_http',
+          deployment_mode: 'single_container',
+          version: 'v1',
+          status: 'draft',
+          readiness_status: 'pending',
+          created_by: 9,
+          last_verified_at: null,
+          created_at: '2026-04-17T08:00:00.000Z',
+          updated_at: '2026-04-17T09:00:00.000Z',
+        },
+      ],
+      total: 1,
+      page: 2,
+      size: 10,
+    })
+
+    const page = await listAdminAwdServiceTemplates({
+      page: 2,
+      page_size: 10,
+      keyword: 'bank',
+      service_type: 'web_http',
+      status: 'draft',
+    })
+
+    expect(requestMock).toHaveBeenCalledWith({
+      method: 'GET',
+      url: '/authoring/awd-service-templates',
+      params: {
+        page: 2,
+        page_size: 10,
+        keyword: 'bank',
+        service_type: 'web_http',
+        status: 'draft',
+      },
+    })
+    expect(page).toEqual({
+      list: [
+        {
+          id: '5',
+          name: 'Bank Portal AWD',
+          slug: 'bank-portal-awd',
+          category: 'web',
+          difficulty: 'hard',
+          description: 'multi-step banking target',
+          service_type: 'web_http',
+          deployment_mode: 'single_container',
+          version: 'v1',
+          status: 'draft',
+          readiness_status: 'pending',
+          created_by: '9',
+          last_verified_at: undefined,
+          created_at: '2026-04-17T08:00:00.000Z',
+          updated_at: '2026-04-17T09:00:00.000Z',
+        },
+      ],
+      total: 1,
+      page: 2,
+      page_size: 10,
+    })
+  })
+
+  it('应该把 AWD 服务模板创建更新删除请求转换成后台接口格式', async () => {
+    requestMock.mockResolvedValueOnce({
+      id: 5,
+      name: 'Bank Portal AWD',
+      slug: 'bank-portal-awd',
+      category: 'web',
+      difficulty: 'hard',
+      description: 'desc',
+      service_type: 'web_http',
+      deployment_mode: 'single_container',
+      version: 'v1',
+      status: 'draft',
+      readiness_status: 'pending',
+      created_at: '2026-04-17T08:00:00.000Z',
+      updated_at: '2026-04-17T09:00:00.000Z',
+    })
+
+    await createAdminAwdServiceTemplate({
+      name: 'Bank Portal AWD',
+      slug: 'bank-portal-awd',
+      category: 'web',
+      difficulty: 'hard',
+      description: 'desc',
+      service_type: 'web_http',
+      deployment_mode: 'single_container',
+    })
+
+    expect(requestMock).toHaveBeenNthCalledWith(1, {
+      method: 'POST',
+      url: '/authoring/awd-service-templates',
+      data: {
+        name: 'Bank Portal AWD',
+        slug: 'bank-portal-awd',
+        category: 'web',
+        difficulty: 'hard',
+        description: 'desc',
+        service_type: 'web_http',
+        deployment_mode: 'single_container',
+      },
+    })
+
+    requestMock.mockResolvedValueOnce({
+      id: 5,
+      name: 'Bank Portal AWD v2',
+      slug: 'bank-portal-awd',
+      category: 'web',
+      difficulty: 'hard',
+      description: 'desc',
+      service_type: 'web_http',
+      deployment_mode: 'single_container',
+      version: 'v1',
+      status: 'published',
+      readiness_status: 'passed',
+      created_at: '2026-04-17T08:00:00.000Z',
+      updated_at: '2026-04-17T10:00:00.000Z',
+    })
+
+    await updateAdminAwdServiceTemplate('5', {
+      name: 'Bank Portal AWD v2',
+      status: 'published',
+    })
+
+    expect(requestMock).toHaveBeenNthCalledWith(2, {
+      method: 'PUT',
+      url: '/authoring/awd-service-templates/5',
+      data: {
+        name: 'Bank Portal AWD v2',
+        status: 'published',
+      },
+    })
+
+    requestMock.mockResolvedValueOnce(undefined)
+    await deleteAdminAwdServiceTemplate('5')
+
+    expect(requestMock).toHaveBeenNthCalledWith(3, {
+      method: 'DELETE',
+      url: '/authoring/awd-service-templates/5',
+      suppressErrorToast: true,
     })
   })
 })

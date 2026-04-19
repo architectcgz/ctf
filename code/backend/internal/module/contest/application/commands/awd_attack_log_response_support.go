@@ -23,7 +23,16 @@ func (s *AWDService) buildAttackLogResponse(
 	if err != nil {
 		return nil, err
 	}
-	if err := syncAWDServiceStatusField(ctx, s.redis, contestID, roundID, currentRoundID, req.VictimTeamID, req.ChallengeID, model.AWDServiceStatusCompromised); err != nil {
+	if err := syncAWDServiceStatusField(
+		ctx,
+		s.redis,
+		contestID,
+		roundID,
+		currentRoundID,
+		req.VictimTeamID,
+		logRecord.ServiceID,
+		model.AWDServiceStatusCompromised,
+	); err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
