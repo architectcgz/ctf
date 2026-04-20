@@ -20,3 +20,16 @@ export interface AwdPageDefinition<TPageKey extends string> {
   label: string
   description: string
 }
+
+export interface AwdHeroMetric {
+  label: string
+  value: string
+  helper?: string
+}
+
+export interface AwdTimelineItem {
+  id: string
+  time: string
+  title: string
+  description: string
+}
