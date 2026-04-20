@@ -63,8 +63,15 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div ref="rootRef" class="c-light-action-popover relative inline-flex">
-    <slot name="trigger" :open="props.modelValue" :toggle="togglePopover">
+  <div
+    ref="rootRef"
+    class="c-light-action-popover relative inline-flex"
+  >
+    <slot
+      name="trigger"
+      :open="props.modelValue"
+      :toggle="togglePopover"
+    >
       <button
         type="button"
         class="c-light-action-popover__trigger"
@@ -82,8 +89,12 @@ onBeforeUnmount(() => {
       :style="panelStyle"
     >
       <div class="c-light-action-popover__body">
-        <h3 class="c-light-action-popover__title">{{ props.title }}</h3>
-        <p class="c-light-action-popover__description">{{ props.description }}</p>
+        <h3 class="c-light-action-popover__title">
+          {{ props.title }}
+        </h3>
+        <p class="c-light-action-popover__description">
+          {{ props.description }}
+        </p>
 
         <slot>
           <textarea
@@ -93,7 +104,10 @@ onBeforeUnmount(() => {
         </slot>
 
         <div class="c-light-action-popover__actions">
-          <slot name="actions" :close="closePopover">
+          <slot
+            name="actions"
+            :close="closePopover"
+          >
             <button
               type="button"
               class="c-light-action-popover__action c-light-action-popover__action--ghost"

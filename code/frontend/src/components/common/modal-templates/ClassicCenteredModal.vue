@@ -64,9 +64,21 @@ function forwardClose(): void {
             </slot>
           </div>
           <div class="modal-template-classic__copy">
-            <p v-if="eyebrow" class="modal-template-classic__eyebrow">{{ eyebrow }}</p>
-            <h2 class="modal-template-classic__title">{{ title }}</h2>
-            <p v-if="subtitle" class="modal-template-classic__subtitle">{{ subtitle }}</p>
+            <p
+              v-if="eyebrow"
+              class="modal-template-classic__eyebrow"
+            >
+              {{ eyebrow }}
+            </p>
+            <h2 class="modal-template-classic__title">
+              {{ title }}
+            </h2>
+            <p
+              v-if="subtitle"
+              class="modal-template-classic__subtitle"
+            >
+              {{ subtitle }}
+            </p>
           </div>
         </div>
 
@@ -84,7 +96,10 @@ function forwardClose(): void {
         <slot />
       </div>
 
-      <footer v-if="$slots.footer" class="modal-template-classic__footer">
+      <footer
+        v-if="$slots.footer"
+        class="modal-template-classic__footer"
+      >
         <slot name="footer" />
       </footer>
     </div>

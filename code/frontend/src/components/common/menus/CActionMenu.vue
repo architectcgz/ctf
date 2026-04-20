@@ -174,7 +174,12 @@ onBeforeUnmount(() => {
           :aria-label="menuLabel"
           @click.stop
         >
-          <div v-if="title" class="c-action-menu__title">{{ title }}</div>
+          <div
+            v-if="title"
+            class="c-action-menu__title"
+          >
+            {{ title }}
+          </div>
           <div class="c-action-menu__content">
             <slot :close="closeMenu" />
           </div>

@@ -67,26 +67,48 @@ function handleConfirm(): void {
     <div class="c-immersive-confirm">
       <div class="c-immersive-confirm__icon">
         <slot name="icon">
-          <AlertTriangle :size="32" :stroke-width="2" />
+          <AlertTriangle
+            :size="32"
+            :stroke-width="2"
+          />
         </slot>
       </div>
 
-      <h2 class="c-immersive-confirm__title">{{ props.title }}</h2>
-      <p class="c-immersive-confirm__description">{{ props.description }}</p>
+      <h2 class="c-immersive-confirm__title">
+        {{ props.title }}
+      </h2>
+      <p class="c-immersive-confirm__description">
+        {{ props.description }}
+      </p>
 
       <div class="c-immersive-confirm__note">
         <slot name="note-icon">
-          <ShieldAlert :size="16" class="c-immersive-confirm__note-icon shrink-0" />
+          <ShieldAlert
+            :size="16"
+            class="c-immersive-confirm__note-icon shrink-0"
+          />
         </slot>
         <span>{{ props.note }}</span>
       </div>
 
       <div class="c-immersive-confirm__actions">
-        <slot name="actions" :cancel="handleCancel" :confirm="handleConfirm">
-          <button type="button" class="c-immersive-confirm__button c-immersive-confirm__button--ghost" @click="handleCancel">
+        <slot
+          name="actions"
+          :cancel="handleCancel"
+          :confirm="handleConfirm"
+        >
+          <button
+            type="button"
+            class="c-immersive-confirm__button c-immersive-confirm__button--ghost"
+            @click="handleCancel"
+          >
             {{ props.cancelLabel }}
           </button>
-          <button type="button" class="c-immersive-confirm__button c-immersive-confirm__button--danger" @click="handleConfirm">
+          <button
+            type="button"
+            class="c-immersive-confirm__button c-immersive-confirm__button--danger"
+            @click="handleConfirm"
+          >
             {{ props.confirmLabel }}
           </button>
         </slot>

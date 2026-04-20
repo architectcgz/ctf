@@ -12,10 +12,16 @@ defineProps<{
       class="section-card__header mb-4 flex items-start justify-between gap-4 border-b border-border-subtle pb-3"
     >
       <div class="min-w-0">
-        <h2 v-if="title" class="text-base font-semibold text-text-primary">
+        <h2
+          v-if="title"
+          class="text-base font-semibold text-text-primary"
+        >
           {{ title }}
         </h2>
-        <p v-if="subtitle" class="mt-1 text-sm leading-6 text-text-secondary">
+        <p
+          v-if="subtitle"
+          class="mt-1 text-sm leading-6 text-text-secondary"
+        >
           {{ subtitle }}
         </p>
       </div>

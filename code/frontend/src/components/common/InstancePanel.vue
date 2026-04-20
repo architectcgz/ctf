@@ -2,38 +2,68 @@
   <section class="instance-panel">
     <header class="instance-panel__header">
       <span class="instance-panel__title">我的实例</span>
-      <button type="button" class="ui-btn ui-btn--secondary ui-btn--sm" @click="emit('refresh')">
+      <button
+        type="button"
+        class="ui-btn ui-btn--secondary ui-btn--sm"
+        @click="emit('refresh')"
+      >
         刷新
       </button>
     </header>
 
-    <div v-if="loading" class="instance-panel__empty">加载中...</div>
+    <div
+      v-if="loading"
+      class="instance-panel__empty"
+    >
+      加载中...
+    </div>
 
-    <div v-else-if="instances.length === 0" class="instance-panel__empty">
+    <div
+      v-else-if="instances.length === 0"
+      class="instance-panel__empty"
+    >
       暂无运行中的实例
     </div>
 
-    <div v-else class="instance-panel__list">
-      <article v-for="instance in instances" :key="instance.id" class="instance-card">
+    <div
+      v-else
+      class="instance-panel__list"
+    >
+      <article
+        v-for="instance in instances"
+        :key="instance.id"
+        class="instance-card"
+      >
         <div class="instance-card__body">
           <div class="instance-card__head">
             <div>
               <h3 class="instance-card__title">
                 {{ instance.challenge_title }}
               </h3>
-              <span class="instance-chip" :class="getStatusChipClass(instance.status)">
+              <span
+                class="instance-chip"
+                :class="getStatusChipClass(instance.status)"
+              >
                 {{ getStatusLabel(instance.status) }}
               </span>
             </div>
             <div class="instance-card__countdown">
-              <div :class="getTimeColor(instance.expires_at)" class="instance-card__countdown-value">
+              <div
+                :class="getTimeColor(instance.expires_at)"
+                class="instance-card__countdown-value"
+              >
                 {{ formatCountdown(instance.expires_at) }}
               </div>
-              <div class="instance-card__countdown-label">剩余时间</div>
+              <div class="instance-card__countdown-label">
+                剩余时间
+              </div>
             </div>
           </div>
 
-          <div v-if="instance.access_url" class="instance-card__access">
+          <div
+            v-if="instance.access_url"
+            class="instance-card__access"
+          >
             <div class="instance-card__access-row">
               <span class="instance-card__access-label">访问地址：</span>
               <button

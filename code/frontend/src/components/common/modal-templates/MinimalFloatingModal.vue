@@ -53,7 +53,9 @@ function forwardClose(): void {
   >
     <div class="modal-template-minimal">
       <header class="modal-template-minimal__header">
-        <h2 class="modal-template-minimal__title">{{ title }}</h2>
+        <h2 class="modal-template-minimal__title">
+          {{ title }}
+        </h2>
         <button
           type="button"
           class="modal-template-minimal__close"
@@ -68,7 +70,10 @@ function forwardClose(): void {
         <slot />
       </div>
 
-      <footer v-if="$slots.footer" class="modal-template-minimal__footer">
+      <footer
+        v-if="$slots.footer"
+        class="modal-template-minimal__footer"
+      >
         <slot name="footer" />
       </footer>
     </div>

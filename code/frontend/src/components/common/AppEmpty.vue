@@ -1,9 +1,22 @@
 <template>
   <div class="app-empty flex flex-col items-center justify-center px-6 py-10 text-center">
-    <component :is="iconComp" class="h-12 w-12 text-text-muted" />
-    <div class="mt-3 text-sm font-semibold">{{ title }}</div>
-    <div v-if="description" class="mt-1 text-sm text-text-secondary">{{ description }}</div>
-    <div v-if="$slots.action" class="mt-4">
+    <component
+      :is="iconComp"
+      class="h-12 w-12 text-text-muted"
+    />
+    <div class="mt-3 text-sm font-semibold">
+      {{ title }}
+    </div>
+    <div
+      v-if="description"
+      class="mt-1 text-sm text-text-secondary"
+    >
+      {{ description }}
+    </div>
+    <div
+      v-if="$slots.action"
+      class="mt-4"
+    >
       <slot name="action" />
     </div>
   </div>

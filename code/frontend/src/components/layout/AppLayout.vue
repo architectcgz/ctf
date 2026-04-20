@@ -19,10 +19,20 @@
           @toggle-sidebar="sidebarOpen = true"
           @toggle-collapse="sidebarCollapsed = !sidebarCollapsed"
         />
-        <main class="workspace-main mx-auto w-full" :class="[mainShellClass, backofficeMainClass]">
-          <div class="workspace-page" :class="pageShellClass">
+        <main
+          class="workspace-main mx-auto w-full"
+          :class="[mainShellClass, backofficeMainClass]"
+        >
+          <div
+            class="workspace-page"
+            :class="pageShellClass"
+          >
             <RouterView v-slot="{ Component }">
-              <component :is="Component" class="workspace-route-root" :class="routeRootClass" />
+              <component
+                :is="Component"
+                class="workspace-route-root"
+                :class="routeRootClass"
+              />
             </RouterView>
           </div>
         </main>

@@ -1,6 +1,11 @@
 <template>
   <div class="animate-pulse space-y-3">
-    <div v-for="i in rows" :key="i" class="h-4 rounded bg-elevated" :style="{ width: width(i) }" />
+    <div
+      v-for="i in rows"
+      :key="i"
+      class="h-4 rounded bg-elevated"
+      :style="{ width: width(i) }"
+    />
   </div>
 </template>
 

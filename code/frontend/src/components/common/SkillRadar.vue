@@ -51,7 +51,10 @@ function ringPoints(scale) {
 
 <template>
   <div class="rounded-2xl border border-[var(--color-primary)]/10 bg-[var(--color-bg-surface)] p-4">
-    <svg viewBox="0 0 280 280" class="h-[280px] w-full">
+    <svg
+      viewBox="0 0 280 280"
+      class="h-[280px] w-full"
+    >
       <polygon
         v-for="scale in rings"
         :key="scale"
@@ -69,10 +72,28 @@ function ringPoints(scale) {
         :y2="point.labelY - (point.labelY - center) * 0.12"
         :stroke="gridStroke"
       />
-      <polygon :points="polygon" :fill="polygonFill" :stroke="polygonStroke" stroke-width="2" />
-      <circle cx="140" cy="140" r="4" :fill="centerFill" />
-      <g v-for="point in points" :key="point.name">
-        <circle :cx="point.x" :cy="point.y" r="4" :fill="point.color" />
+      <polygon
+        :points="polygon"
+        :fill="polygonFill"
+        :stroke="polygonStroke"
+        stroke-width="2"
+      />
+      <circle
+        cx="140"
+        cy="140"
+        r="4"
+        :fill="centerFill"
+      />
+      <g
+        v-for="point in points"
+        :key="point.name"
+      >
+        <circle
+          :cx="point.x"
+          :cy="point.y"
+          r="4"
+          :fill="point.color"
+        />
         <text
           :x="point.labelX"
           :y="point.labelY"
