@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed, nextTick, ref, watch, type ComponentPublicInstance } from 'vue'
+import { computed, ref } from 'vue'
 import { MoreHorizontal, Swords } from 'lucide-vue-next'
 
 import type { ContestDetailData, ContestStatus } from '@/api/contracts'
+import CActionMenu from '@/components/common/menus/CActionMenu.vue'
 import PlatformPaginationControls from '@/components/platform/PlatformPaginationControls.vue'
 import { getModeLabel, getStatusLabel } from '@/utils/contest'
 
@@ -22,12 +23,6 @@ const emit = defineEmits<{
 
 const totalPages = computed(() => Math.max(1, Math.ceil(props.total / props.pageSize)))
 const openActionMenuId = ref<string | null>(null)
-const actionMenuPanelRef = ref<HTMLElement | null>(null)
-const actionMenuStyle = ref<Record<string, string>>({})
-const actionMenuButtonRefs = new Map<string, HTMLButtonElement>()
-const activeActionContest = computed(
-  () => props.contests.find((contest) => contest.id === openActionMenuId.value) ?? null
-)
 
 function formatTime(value: string): string {
   return new Date(value).toLocaleString('zh-CN', {
@@ -53,65 +48,12 @@ function canEnterWorkbench(contest: ContestDetailData): boolean {
   return contest.mode === 'awd' && (contest.status === 'running' || contest.status === 'frozen')
 }
 
-function setActionMenuButtonRef(
-  contestId: string,
-  element: Element | ComponentPublicInstance | null
-): void {
-  if (element instanceof HTMLButtonElement) {
-    actionMenuButtonRefs.set(contestId, element)
-    return
-  }
-
-  actionMenuButtonRefs.delete(contestId)
-}
-
 function closeActionMenu(): void {
   openActionMenuId.value = null
 }
 
-function updateActionMenuPosition(): void {
-  if (!openActionMenuId.value) {
-    return
-  }
-
-  const trigger = actionMenuButtonRefs.get(openActionMenuId.value)
-  if (!trigger) {
-    return
-  }
-
-  const rect = trigger.getBoundingClientRect()
-  const viewportPadding = 12
-  const gap = 8
-  const panelWidth = actionMenuPanelRef.value?.offsetWidth ?? 176
-  const panelHeight = actionMenuPanelRef.value?.offsetHeight ?? 132
-  const maxLeft = Math.max(viewportPadding, window.innerWidth - panelWidth - viewportPadding)
-  const left = Math.min(Math.max(viewportPadding, rect.right - panelWidth), maxLeft)
-  const spaceBelow = window.innerHeight - rect.bottom - viewportPadding
-  const spaceAbove = rect.top - viewportPadding
-  const shouldOpenUpward = spaceBelow < panelHeight + gap && spaceAbove > spaceBelow
-  const maxTop = Math.max(viewportPadding, window.innerHeight - panelHeight - viewportPadding)
-  const top = shouldOpenUpward
-    ? Math.max(viewportPadding, rect.top - panelHeight - gap)
-    : Math.min(rect.bottom + gap, maxTop)
-
-  actionMenuStyle.value = {
-    top: `${top}px`,
-    left: `${left}px`,
-    width: `${panelWidth}px`,
-  }
-}
-
-async function toggleActionMenu(contestId: string): Promise<void> {
-  const shouldOpen = openActionMenuId.value !== contestId
-  openActionMenuId.value = shouldOpen ? contestId : null
-
-  if (!shouldOpen) {
-    actionMenuStyle.value = {}
-    return
-  }
-
-  await nextTick()
-  updateActionMenuPosition()
+function setActionMenuOpen(contestId: string, nextOpen: boolean): void {
+  openActionMenuId.value = nextOpen ? contestId : null
 }
 
 function handleEdit(contest: ContestDetailData): void {
@@ -123,35 +65,6 @@ function handleExport(contest: ContestDetailData): void {
   closeActionMenu()
   emit('export', contest)
 }
-
-watch(openActionMenuId, async (contestId, _previousId, onCleanup) => {
-  if (!contestId) {
-    actionMenuStyle.value = {}
-    return
-  }
-
-  await nextTick()
-  updateActionMenuPosition()
-
-  const handleViewportChange = () => {
-    updateActionMenuPosition()
-  }
-  const handleEscape = (event: KeyboardEvent) => {
-    if (event.key === 'Escape') {
-      closeActionMenu()
-    }
-  }
-
-  window.addEventListener('resize', handleViewportChange)
-  window.addEventListener('scroll', handleViewportChange, true)
-  window.addEventListener('keydown', handleEscape)
-
-  onCleanup(() => {
-    window.removeEventListener('resize', handleViewportChange)
-    window.removeEventListener('scroll', handleViewportChange, true)
-    window.removeEventListener('keydown', handleEscape)
-  })
-})
 </script>
 
 <template>
@@ -201,55 +114,51 @@ watch(openActionMenuId, async (contestId, _previousId, onCleanup) => {
             <Swords class="h-3.5 w-3.5" />
             进入 AWD 赛区
           </button>
-          <button
-            :id="`contest-row-more-${contest.id}`"
-            :ref="(element) => setActionMenuButtonRef(contest.id, element)"
-            type="button"
-            class="contest-row-menu-button"
-            :aria-expanded="openActionMenuId === contest.id ? 'true' : 'false'"
-            aria-haspopup="menu"
-            aria-label="更多竞赛操作"
-            :class="{ 'contest-row-menu-button--active': openActionMenuId === contest.id }"
-            @click.stop="void toggleActionMenu(contest.id)"
+          <CActionMenu
+            :open="openActionMenuId === contest.id"
+            title="Management"
+            menu-label="更多竞赛操作"
+            @update:open="setActionMenuOpen(contest.id, $event)"
           >
-            <MoreHorizontal class="h-3.5 w-3.5" />
-          </button>
+            <template #trigger="{ open, toggle, setTriggerRef }">
+              <button
+                :id="`contest-row-more-${contest.id}`"
+                :ref="setTriggerRef"
+                type="button"
+                class="c-action-menu__trigger c-action-menu__trigger--icon"
+                :aria-expanded="open ? 'true' : 'false'"
+                aria-haspopup="menu"
+                aria-label="更多竞赛操作"
+                @click.stop="toggle"
+              >
+                <MoreHorizontal class="h-3.5 w-3.5" />
+              </button>
+            </template>
+
+            <template #default>
+              <button
+                :id="`contest-row-menu-edit-${contest.id}`"
+                type="button"
+                class="c-action-menu__item"
+                role="menuitem"
+                @click="handleEdit(contest)"
+              >
+                编辑
+              </button>
+              <button
+                :id="`contest-row-menu-export-${contest.id}`"
+                type="button"
+                class="c-action-menu__item"
+                role="menuitem"
+                @click="handleExport(contest)"
+              >
+                导出结果
+              </button>
+            </template>
+          </CActionMenu>
         </div>
       </article>
     </div>
-
-    <Teleport to="body">
-      <div v-if="activeActionContest" class="contest-row-menu-layer" @click="closeActionMenu">
-        <div
-          ref="actionMenuPanelRef"
-          class="contest-row-menu"
-          :style="actionMenuStyle"
-          role="menu"
-          aria-label="更多竞赛操作"
-          @click.stop
-        >
-          <div class="contest-row-menu__title">Management</div>
-          <button
-            :id="`contest-row-menu-edit-${activeActionContest.id}`"
-            type="button"
-            class="contest-row-menu__item"
-            role="menuitem"
-            @click="handleEdit(activeActionContest)"
-          >
-            编辑
-          </button>
-          <button
-            :id="`contest-row-menu-export-${activeActionContest.id}`"
-            type="button"
-            class="contest-row-menu__item"
-            role="menuitem"
-            @click="handleExport(activeActionContest)"
-          >
-            导出结果
-          </button>
-        </div>
-      </div>
-    </Teleport>
 
     <div class="admin-pagination workspace-directory-pagination contest-pagination-tone text-sm">
       <PlatformPaginationControls
@@ -264,31 +173,6 @@ watch(openActionMenuId, async (contestId, _previousId, onCleanup) => {
 </template>
 
 <style scoped>
-.contest-row-menu-button,
-.contest-row-menu {
-  --contest-action-surface: color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-surface));
-  --contest-action-surface-subtle: color-mix(
-    in srgb,
-    var(--journal-surface-alt) 90%,
-    var(--journal-surface)
-  );
-  --contest-action-surface-elevated: color-mix(
-    in srgb,
-    var(--color-bg-elevated) 88%,
-    var(--journal-surface)
-  );
-  --contest-action-line: color-mix(in srgb, var(--journal-border) 84%, transparent);
-  --contest-action-line-strong: color-mix(in srgb, var(--journal-border) 92%, transparent);
-  --contest-action-text: color-mix(in srgb, var(--journal-ink) 92%, transparent);
-  --contest-action-muted: color-mix(in srgb, var(--journal-muted) 92%, transparent);
-  --contest-action-accent: color-mix(in srgb, var(--workspace-brand) 88%, var(--contest-action-text));
-  --contest-action-accent-soft: color-mix(
-    in srgb,
-    var(--workspace-brand) 10%,
-    var(--contest-action-surface)
-  );
-}
-
 .contest-directory {
   --contest-directory-columns: minmax(17rem, 1.46fr) minmax(6rem, 0.54fr) minmax(7rem, 0.68fr)
     minmax(9.5rem, 0.78fr) minmax(9.5rem, 0.78fr) minmax(11rem, 11rem);
@@ -441,118 +325,6 @@ watch(openActionMenuId, async (contestId, _previousId, onCleanup) => {
   --ui-btn-primary-border: color-mix(in srgb, var(--color-success) 56%, transparent);
   --ui-btn-primary-color: white;
   box-shadow: 0 10px 24px color-mix(in srgb, var(--color-success) 18%, transparent);
-}
-
-.contest-row-menu-button {
-  display: inline-flex;
-  flex: 0 0 auto;
-  align-items: center;
-  justify-content: center;
-  width: 1.95rem;
-  height: 1.95rem;
-  border: 1px solid var(--contest-action-line);
-  border-radius: 0.75rem;
-  background: var(--contest-action-surface);
-  color: var(--contest-action-muted);
-  transition:
-    background-color 160ms ease,
-    border-color 160ms ease,
-    color 160ms ease,
-    box-shadow 160ms ease;
-}
-
-.contest-row-menu-button:hover,
-.contest-row-menu-button--active {
-  border-color: color-mix(in srgb, var(--workspace-brand) 26%, var(--contest-action-line-strong));
-  background: var(--contest-action-accent-soft);
-  color: var(--contest-action-accent);
-  box-shadow: 0 12px 26px color-mix(in srgb, var(--workspace-brand) 10%, transparent);
-}
-
-.contest-row-menu-layer {
-  position: fixed;
-  inset: 0;
-  z-index: 120;
-}
-
-.contest-row-menu {
-  position: fixed;
-  z-index: 130;
-  width: 11rem;
-  overflow: hidden;
-  border: 1px solid var(--contest-action-line);
-  border-radius: 1rem;
-  background-color: var(--contest-action-surface);
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--contest-action-surface) 98%, var(--color-bg-base)),
-    color-mix(in srgb, var(--contest-action-surface-subtle) 96%, var(--color-bg-base))
-  );
-  box-shadow:
-    0 24px 60px color-mix(in srgb, var(--color-shadow-strong) 18%, transparent),
-    0 10px 24px color-mix(in srgb, var(--color-shadow-soft) 16%, transparent);
-}
-
-.contest-row-menu__title {
-  padding: 0.78rem 1rem 0.55rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--contest-action-line) 78%, transparent);
-  background: color-mix(in srgb, var(--workspace-brand) 5%, var(--contest-action-surface-subtle));
-  font-size: 0.62rem;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--contest-action-muted);
-}
-
-.contest-row-menu__item {
-  display: flex;
-  width: 100%;
-  align-items: center;
-  justify-content: flex-start;
-  padding: 0.72rem 1rem;
-  font-size: var(--font-size-0-82);
-  font-weight: 600;
-  color: var(--contest-action-text);
-  transition:
-    background-color 160ms ease,
-    color 160ms ease;
-}
-
-.contest-row-menu__item:hover {
-  background: color-mix(in srgb, var(--workspace-brand) 7%, var(--contest-action-surface-subtle));
-  color: var(--contest-action-accent);
-}
-
-.contest-row-menu-button,
-.contest-row-menu {
-  --contest-action-surface: #ffffff;
-  --contest-action-surface-subtle: #f8fafc;
-  --contest-action-surface-elevated: #ffffff;
-  --contest-action-line: #e2e8f0;
-  --contest-action-line-strong: #cbd5e1;
-  --contest-action-text: #0f172a;
-  --contest-action-muted: #64748b;
-}
-
-:global([data-theme='dark']) .contest-row-menu-button,
-:global([data-theme='dark']) .contest-row-menu {
-  --contest-action-surface: #1e293b;
-  --contest-action-surface-subtle: #0f172a;
-  --contest-action-surface-elevated: #1e293b;
-  --contest-action-line: #334155;
-  --contest-action-line-strong: #475569;
-  --contest-action-text: #f8fafc;
-  --contest-action-muted: #94a3b8;
-}
-
-:global([data-theme='dark']) .contest-row-menu {
-  box-shadow:
-    0 22px 56px color-mix(in srgb, var(--color-shadow-strong) 26%, transparent),
-    0 0 0 1px color-mix(in srgb, var(--color-border-subtle) 46%, transparent);
-}
-
-:global([data-theme='dark']) .contest-row-menu-button {
-  background: var(--contest-action-surface-elevated);
 }
 
 @media (max-width: 1023px) {

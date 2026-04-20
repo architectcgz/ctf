@@ -83,15 +83,27 @@ describe('ChallengeWriteupManagePanel', () => {
     )
   })
 
-  it('应改用共享 ui-btn 原语而不是页面私有 admin-btn 按钮族', () => {
+  it('操作按钮应只保留共享 ui-btn 原语，更多菜单项改由共享 action menu 承接', () => {
     expect(challengeWriteupManagePanelSource).toContain('class="ui-btn ui-btn--primary"')
     expect(challengeWriteupManagePanelSource).toContain('class="ui-btn ui-btn--secondary ui-btn--sm"')
-    expect(challengeWriteupManagePanelSource).toContain('class="ui-btn ui-btn--ghost ui-btn--sm')
-    expect(challengeWriteupManagePanelSource).toContain('class="ui-btn ui-btn--danger ui-btn--sm')
+    expect(challengeWriteupManagePanelSource).toContain(
+      "from '@/components/common/menus/CActionMenu.vue'"
+    )
+    expect(challengeWriteupManagePanelSource).toContain('class="c-action-menu__item"')
+    expect(challengeWriteupManagePanelSource).toContain('class="c-action-menu__item c-action-menu__item--danger"')
     expect(challengeWriteupManagePanelSource).not.toContain('admin-btn admin-btn-primary')
     expect(challengeWriteupManagePanelSource).not.toContain('admin-btn admin-btn-outline')
     expect(challengeWriteupManagePanelSource).not.toContain('admin-btn admin-btn-ghost')
     expect(challengeWriteupManagePanelSource).not.toContain('admin-btn admin-btn-danger')
+  })
+
+  it('官方题解更多操作应改用共享 action menu primitive，而不是页面内 hover 浮层', () => {
+    expect(challengeWriteupManagePanelSource).toContain(
+      "from '@/components/common/menus/CActionMenu.vue'"
+    )
+    expect(challengeWriteupManagePanelSource).not.toContain('@mouseenter="openActionMenu"')
+    expect(challengeWriteupManagePanelSource).not.toContain('class="writeup-actions-menu"')
+    expect(challengeWriteupManagePanelSource).not.toContain('class="writeup-actions-menu-shell"')
   })
 
   it('存在题解时应显示带边框的查看入口，并通过更多菜单进入编辑', async () => {
@@ -132,6 +144,7 @@ describe('ChallengeWriteupManagePanel', () => {
     })
 
     const wrapper = mount(ChallengeWriteupManagePanel, {
+      attachTo: document.body,
       props: {
         challengeId: '11',
         challengeTitle: '双节点演练',
@@ -198,18 +211,22 @@ describe('ChallengeWriteupManagePanel', () => {
       path: '/platform/challenges/11/writeup/view',
     })
 
-    await moreButton.trigger('mouseenter')
+    await moreButton.trigger('click')
+    await flushPromises()
 
-    const editButton = wrapper
-      .findAll('[role="menuitem"]')
-      .find((button) => button.text().trim() === '编辑')
+    const editButton = Array.from(document.body.querySelectorAll<HTMLButtonElement>('[role="menuitem"]')).find(
+      (button) => button.textContent?.trim() === '编辑'
+    )
     expect(moreButton.attributes('aria-expanded')).toBe('true')
     expect(editButton).toBeTruthy()
 
-    await editButton!.trigger('click')
+    editButton?.click()
+    await flushPromises()
     expect(pushMock).toHaveBeenNthCalledWith(2, {
       path: '/platform/challenges/11/writeup',
     })
+
+    wrapper.unmount()
   })
 
   it('存在题解时应支持直接删除并刷新为空状态', async () => {
@@ -235,6 +252,7 @@ describe('ChallengeWriteupManagePanel', () => {
     })
 
     const wrapper = mount(ChallengeWriteupManagePanel, {
+      attachTo: document.body,
       props: {
         challengeId: '11',
         challengeTitle: '双节点演练',
@@ -252,14 +270,15 @@ describe('ChallengeWriteupManagePanel', () => {
 
     await flushPromises()
 
-    await wrapper.get('[data-testid="writeup-more-actions"]').trigger('mouseenter')
+    await wrapper.get('[data-testid="writeup-more-actions"]').trigger('click')
+    await flushPromises()
 
-    const deleteButton = wrapper
-      .findAll('[role="menuitem"]')
-      .find((button) => button.text().trim() === '删除')
+    const deleteButton = Array.from(document.body.querySelectorAll<HTMLButtonElement>('[role="menuitem"]')).find(
+      (button) => button.textContent?.trim() === '删除'
+    )
     expect(deleteButton).toBeTruthy()
 
-    await deleteButton!.trigger('click')
+    deleteButton?.click()
     await flushPromises()
 
     expect(confirmMock).toHaveBeenCalledWith({
@@ -268,6 +287,8 @@ describe('ChallengeWriteupManagePanel', () => {
     expect(adminApiMocks.deleteChallengeWriteup).toHaveBeenCalledWith('11')
     expect(toastMocks.success).toHaveBeenCalledWith('题解已删除')
     expect(wrapper.text()).toContain('当前还没有题解')
+
+    wrapper.unmount()
   })
 
   it('目录删除失败时应优先展示接口返回消息', async () => {
@@ -294,6 +315,7 @@ describe('ChallengeWriteupManagePanel', () => {
     )
 
     const wrapper = mount(ChallengeWriteupManagePanel, {
+      attachTo: document.body,
       props: {
         challengeId: '11',
         challengeTitle: '双节点演练',
@@ -308,18 +330,21 @@ describe('ChallengeWriteupManagePanel', () => {
 
     await flushPromises()
 
-    await wrapper.get('[data-testid="writeup-more-actions"]').trigger('mouseenter')
+    await wrapper.get('[data-testid="writeup-more-actions"]').trigger('click')
+    await flushPromises()
 
-    const deleteButton = wrapper
-      .findAll('[role="menuitem"]')
-      .find((button) => button.text().trim() === '删除')
+    const deleteButton = Array.from(document.body.querySelectorAll<HTMLButtonElement>('[role="menuitem"]')).find(
+      (button) => button.textContent?.trim() === '删除'
+    )
     expect(deleteButton).toBeTruthy()
 
-    await deleteButton!.trigger('click')
+    deleteButton?.click()
     await flushPromises()
 
     expect(toastMocks.error).toHaveBeenCalledWith('题解正在审核流程中，暂时不能删除')
     expect(wrapper.text()).toContain('官方题解')
+
+    wrapper.unmount()
   })
 
   it('没有题解时应显示空状态并支持编写题解', async () => {

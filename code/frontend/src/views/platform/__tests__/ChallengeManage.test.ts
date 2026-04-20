@@ -142,15 +142,17 @@ describe('ChallengeManage', () => {
     expect(wrapper.text()).not.toContain('待确认导入')
   })
 
-  it('页面壳层与题目更多菜单应复用 journal surface token，而不是继续维护页面私有的 light/dark 分支', () => {
+  it('页面壳层应继续复用 journal surface token，而题目更多菜单则应改用共享 action menu primitive', () => {
     expect(challengeManageSource).toContain('--challenge-page-bg')
-    expect(challengeManageSource).toContain('--challenge-action-surface')
     expect(challengeManageSource).toContain('--workspace-shell-bg')
     expect(challengeManageSource).toContain('var(--journal-surface)')
     expect(challengeManageSource).toContain('var(--journal-surface-subtle)')
+    expect(challengeManageSource).toContain("from '@/components/common/menus/CActionMenu.vue'")
+    expect(challengeManageSource).not.toContain('--challenge-action-surface')
     expect(challengeManageSource).not.toContain(":global([data-theme='light']) .challenge-manage-shell")
     expect(challengeManageSource).not.toContain(":global([data-theme='dark']) .challenge-manage-shell")
-    expect(challengeManageSource).not.toContain(":global([data-theme='dark']) .challenge-row-menu")
+    expect(challengeManageSource).not.toContain('<Teleport to="body">')
+    expect(challengeManageSource).not.toContain('.challenge-row-menu')
   })
 
   it('最外层 workspace shell 应保留共享边框，而不是自行抹掉 shell 边界', () => {
@@ -218,14 +220,12 @@ describe('ChallengeManage', () => {
     })
     await flushPromises()
 
-    await wrapper.get('.challenge-row-menu-button').trigger('click')
+    await wrapper.get('button[aria-haspopup="menu"]').trigger('click')
     await flushPromises()
 
-    const teleportedMenu = document.body.querySelector('.challenge-row-menu')
+    const teleportedMenu = document.body.querySelector('[data-action-menu-panel]')
     expect(teleportedMenu).not.toBeNull()
-    expect(
-      wrapper.find('.workspace-directory-list .challenge-row-menu').exists()
-    ).toBe(false)
+    expect(wrapper.find('.workspace-directory-list [data-action-menu-panel]').exists()).toBe(false)
 
     wrapper.unmount()
   })
