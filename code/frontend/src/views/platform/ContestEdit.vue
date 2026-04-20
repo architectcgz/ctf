@@ -296,11 +296,19 @@ async function loadContestDetail(): Promise<void> {
   loading.value = true
   try {
     const detail = await getContest(contestId.value)
+    if (detail.mode === 'awd') {
+      contest.value = detail
+      void router.replace({
+        name: 'AdminAwdOverview',
+        params: { id: detail.id },
+      })
+      return
+    }
+
     contest.value = detail
     editingBaseStatus.value = normalizeEditableStatus(detail.status)
     formDraft.value = createDraftFromContest(detail)
     syncWorkbenchStageSelection()
-    if (detail.mode === 'awd') await refreshAwdWorkbenchData(detail.id)
   } catch (error) {
     loadError.value = humanizeRequestError(error, '竞赛详情加载失败')
   } finally {
@@ -361,6 +369,13 @@ onMounted(() => {
       class="studio-loading-overlay"
     >
       <AppLoading>正在同步竞赛工作台...</AppLoading>
+    </div>
+
+    <div
+      v-if="!loading && contest?.mode === 'awd'"
+      class="studio-loading-overlay"
+    >
+      <AppLoading>正在进入 AWD 工作台...</AppLoading>
     </div>
 
     <aside class="studio-sidebar">
