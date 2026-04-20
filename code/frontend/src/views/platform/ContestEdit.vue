@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch, nextTick } from 'vue'
-import { ChevronLeft, Info, Trophy, Save, RotateCcw, ShieldCheck } from 'lucide-vue-next'
+import { computed, onMounted, ref, watch } from 'vue'
+import { ChevronLeft, Trophy, Save, ShieldCheck } from 'lucide-vue-next'
 import { useRoute, useRouter } from 'vue-router'
 
 import {
@@ -148,12 +148,19 @@ function humanizeRequestError(error: unknown, fallback: string): string {
 
 function syncWorkbenchStageSelection(): void {
   const visibleStageKeys = workbench.visibleStages.map((stage) => stage.key)
-  const requestedStage = new URLSearchParams(window.location.search).get('panel') as ContestWorkbenchStageKey
+  const searchParams = new URLSearchParams(window.location.search)
+  const requestedStage = searchParams.get('panel') as ContestWorkbenchStageKey | null
   if (requestedStage && visibleStageKeys.includes(requestedStage)) {
     if (activeStage.value !== requestedStage) selectTab(requestedStage)
     return
   }
-  if (!visibleStageKeys.includes(activeStage.value)) selectTab(workbench.defaultStage)
+  if (!requestedStage) {
+    if (activeStage.value !== workbench.defaultStage) selectTab(workbench.defaultStage)
+    return
+  }
+  if (!visibleStageKeys.includes(activeStage.value) || activeStage.value !== workbench.defaultStage) {
+    selectTab(workbench.defaultStage)
+  }
 }
 
 function resetAwdWorkbenchState() {
@@ -629,6 +636,27 @@ onMounted(() => {
   background: #f8fafc;
   color: #0f172a;
   border-color: #cbd5e1;
+}
+
+.studio-save-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  height: 2.4rem;
+  padding: 0 1.25rem;
+  background: var(--color-primary);
+  color: white;
+  border-radius: 0.85rem;
+  font-size: 12px;
+  font-weight: 800;
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--color-primary) 24%, transparent);
+  transition: all 0.2s ease;
+}
+
+.studio-save-btn:hover {
+  background: var(--color-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--color-primary) 30%, transparent);
 }
 
 .studio-title-group {
