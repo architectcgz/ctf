@@ -69,7 +69,10 @@ function submitJumpPage(): void {
 </script>
 
 <template>
-  <div class="page-pagination-controls" :class="{ 'is-disabled': disabled }">
+  <div
+    class="page-pagination-controls"
+    :class="{ 'is-disabled': disabled }"
+  >
     <span class="page-pagination-controls__summary">{{ summaryText }}</span>
 
     <div class="page-pagination-controls__actions">
@@ -95,7 +98,11 @@ function submitJumpPage(): void {
         下一页
       </button>
 
-      <form v-if="showJump" class="page-pagination-controls__jump" @submit.prevent="submitJumpPage">
+      <form
+        v-if="showJump"
+        class="page-pagination-controls__jump"
+        @submit.prevent="submitJumpPage"
+      >
         <label class="page-pagination-controls__jump-label">
           <span>跳至</span>
           <input
@@ -107,7 +114,7 @@ function submitJumpPage(): void {
             :max="safeTotalPages"
             :disabled="disabled"
             aria-label="跳转到页码"
-          />
+          >
         </label>
         <span class="page-pagination-controls__jump-suffix">页</span>
         <button

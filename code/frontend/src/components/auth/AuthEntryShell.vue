@@ -37,14 +37,22 @@ const signals: AuthSignalItem[] = [
 
     <div class="auth-entry-shell__frame">
       <section class="auth-entry-shell__overview">
-        <div class="auth-entry-shell__kicker">Teaching Platform Access</div>
-        <h1 class="auth-entry-shell__title workspace-page-title">教学平台入口</h1>
+        <div class="auth-entry-shell__kicker">
+          Teaching Platform Access
+        </div>
+        <h1 class="auth-entry-shell__title workspace-page-title">
+          教学平台入口
+        </h1>
         <p class="auth-entry-shell__copy workspace-page-copy">
           学生训练、教师教学和管理员值守共用同一套账号体系。登录后按角色进入对应工作台。
         </p>
 
         <div class="auth-entry-shell__signals">
-          <article v-for="signal in signals" :key="signal.key" class="auth-entry-shell__signal">
+          <article
+            v-for="signal in signals"
+            :key="signal.key"
+            class="auth-entry-shell__signal"
+          >
             <div class="auth-entry-shell__signal-title">
               {{ signal.title }}
             </div>
@@ -72,7 +80,10 @@ const signals: AuthSignalItem[] = [
           <slot />
         </div>
 
-        <footer v-if="$slots.footer" class="auth-entry-shell__panel-footer">
+        <footer
+          v-if="$slots.footer"
+          class="auth-entry-shell__panel-footer"
+        >
           <slot name="footer" />
         </footer>
       </section>

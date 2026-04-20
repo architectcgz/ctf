@@ -18,8 +18,14 @@
     </button>
 
     <Teleport to="body">
-      <Transition appear name="notification-shell">
-        <div v-if="open" class="fixed inset-0 z-[120]">
+      <Transition
+        appear
+        name="notification-shell"
+      >
+        <div
+          v-if="open"
+          class="fixed inset-0 z-[120]"
+        >
           <div
             class="notification-backdrop fixed inset-0 backdrop-blur-sm"
             @click="close"
@@ -36,7 +42,9 @@
                   <p class="notification-panel-kicker mb-1.5 flex items-center gap-1.5">
                     <Bell class="h-3 w-3" /> Notification Hub
                   </p>
-                  <h2 class="notification-panel-title text-2xl font-black tracking-tight">通知中心</h2>
+                  <h2 class="notification-panel-title text-2xl font-black tracking-tight">
+                    通知中心
+                  </h2>
                 </div>
                 <div class="flex items-center gap-3">
                   <div
@@ -107,7 +115,10 @@
                 />
               </div>
 
-              <div v-else class="notification-timeline py-2">
+              <div
+                v-else
+                class="notification-timeline py-2"
+              >
                 <div
                   v-for="item in items"
                   :key="item.id"
@@ -162,7 +173,10 @@
                     :style="{ color: typeMeta(item.type).accentColor }"
                     @click="goToNotificationDetail(item.id)"
                   >
-                    <component :is="typeMeta(item.type).icon" class="h-3 w-3" />
+                    <component
+                      :is="typeMeta(item.type).icon"
+                      class="h-3 w-3"
+                    />
                     {{ item.unread ? '打开详情并自动已读' : '查看详情' }}
                   </button>
                 </div>

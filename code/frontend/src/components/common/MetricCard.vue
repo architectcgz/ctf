@@ -20,8 +20,16 @@ const displayValue = computed(() => String(props.value))
 </script>
 
 <template>
-  <AppCard variant="metric" :accent="props.accent" :eyebrow="props.label" :title="displayValue">
-    <div v-if="props.hint || $slots.default" class="text-sm leading-6 text-text-secondary">
+  <AppCard
+    variant="metric"
+    :accent="props.accent"
+    :eyebrow="props.label"
+    :title="displayValue"
+  >
+    <div
+      v-if="props.hint || $slots.default"
+      class="text-sm leading-6 text-text-secondary"
+    >
       <slot>
         {{ props.hint }}
       </slot>

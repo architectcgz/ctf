@@ -77,30 +77,60 @@ function closeDialog(): void {
           aria-label="关闭弹窗"
           @click="closeDialog"
         >
-          <X :size="20" :stroke-width="2" />
+          <X
+            :size="20"
+            :stroke-width="2"
+          />
         </button>
 
         <header class="c-focused-input-dialog__header">
           <div class="c-focused-input-dialog__icon">
             <slot name="icon">
-              <Users :size="24" :stroke-width="2" />
+              <Users
+                :size="24"
+                :stroke-width="2"
+              />
             </slot>
           </div>
 
-          <h2 class="c-focused-input-dialog__title">{{ props.title }}</h2>
-          <p class="c-focused-input-dialog__description">{{ props.description }}</p>
+          <h2 class="c-focused-input-dialog__title">
+            {{ props.title }}
+          </h2>
+          <p class="c-focused-input-dialog__description">
+            {{ props.description }}
+          </p>
         </header>
 
         <section class="c-focused-input-dialog__form">
           <slot />
         </section>
 
-        <footer v-if="$slots.footer" class="c-focused-input-dialog__footer">
-          <slot name="footer" :close="closeDialog" />
+        <footer
+          v-if="$slots.footer"
+          class="c-focused-input-dialog__footer"
+        >
+          <slot
+            name="footer"
+            :close="closeDialog"
+          />
         </footer>
-        <footer v-else class="c-focused-input-dialog__footer">
-          <button type="button" data-c-modal-action="ghost" @click="closeDialog">取消</button>
-          <button type="button" data-c-modal-action="primary">确认创建</button>
+        <footer
+          v-else
+          class="c-focused-input-dialog__footer"
+        >
+          <button
+            type="button"
+            data-c-modal-action="ghost"
+            @click="closeDialog"
+          >
+            取消
+          </button>
+          <button
+            type="button"
+            data-c-modal-action="primary"
+          >
+            确认创建
+          </button>
         </footer>
       </div>
     </div>

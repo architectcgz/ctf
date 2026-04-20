@@ -41,13 +41,19 @@ const emit = defineEmits<{
     @update:open="emit('update:open', $event)"
     @close="emit('close')"
   >
-    <template v-if="$slots.icon" #icon>
+    <template
+      v-if="$slots.icon"
+      #icon
+    >
       <slot name="icon" />
     </template>
 
     <slot />
 
-    <template v-if="$slots.footer" #footer>
+    <template
+      v-if="$slots.footer"
+      #footer
+    >
       <slot name="footer" />
     </template>
   </ClassicCenteredModal>

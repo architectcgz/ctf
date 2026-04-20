@@ -74,16 +74,31 @@ function forwardClose(): void {
           </button>
         </div>
 
-        <p v-if="eyebrow" class="modal-template-drawer__eyebrow">{{ eyebrow }}</p>
-        <h2 class="modal-template-drawer__title">{{ title }}</h2>
-        <p v-if="subtitle" class="modal-template-drawer__subtitle">{{ subtitle }}</p>
+        <p
+          v-if="eyebrow"
+          class="modal-template-drawer__eyebrow"
+        >
+          {{ eyebrow }}
+        </p>
+        <h2 class="modal-template-drawer__title">
+          {{ title }}
+        </h2>
+        <p
+          v-if="subtitle"
+          class="modal-template-drawer__subtitle"
+        >
+          {{ subtitle }}
+        </p>
       </header>
 
       <div class="modal-template-drawer__body">
         <slot />
       </div>
 
-      <footer v-if="$slots.footer" class="modal-template-drawer__footer">
+      <footer
+        v-if="$slots.footer"
+        class="modal-template-drawer__footer"
+      >
         <slot name="footer" />
       </footer>
     </div>

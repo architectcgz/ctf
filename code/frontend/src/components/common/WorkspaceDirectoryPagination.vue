@@ -21,7 +21,10 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <div v-if="total > 0" class="workspace-directory-pagination workspace-directory-pagination-shell">
+  <div
+    v-if="total > 0"
+    class="workspace-directory-pagination workspace-directory-pagination-shell"
+  >
     <PlatformPaginationControls
       :page="page"
       :total-pages="totalPages"

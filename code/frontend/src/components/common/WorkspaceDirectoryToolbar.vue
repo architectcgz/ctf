@@ -138,7 +138,10 @@ onUnmounted(() => {
 <template>
   <div class="workspace-directory-toolbar">
     <div class="workspace-directory-toolbar__main">
-      <label v-if="showSearch" class="workspace-directory-toolbar__search">
+      <label
+        v-if="showSearch"
+        class="workspace-directory-toolbar__search"
+      >
         <Search class="workspace-directory-toolbar__search-icon h-3.5 w-3.5" />
         <input
           :value="modelValue"
@@ -146,7 +149,7 @@ onUnmounted(() => {
           class="workspace-directory-toolbar__search-input"
           :placeholder="searchPlaceholder"
           @input="handleSearchInput"
-        />
+        >
       </label>
 
       <button
@@ -162,7 +165,10 @@ onUnmounted(() => {
     </div>
 
     <div class="workspace-directory-toolbar__meta">
-      <div class="workspace-directory-toolbar__sort" v-if="hasSortOptions">
+      <div
+        v-if="hasSortOptions"
+        class="workspace-directory-toolbar__sort"
+      >
         <span class="workspace-directory-toolbar__sort-caption">{{ sortCaption }}</span>
         <button
           ref="sortButtonRef"
@@ -182,7 +188,9 @@ onUnmounted(() => {
           ref="sortMenuRef"
           class="workspace-directory-toolbar__sort-menu"
         >
-          <div class="workspace-directory-toolbar__menu-title">Sort Strategy</div>
+          <div class="workspace-directory-toolbar__menu-title">
+            Sort Strategy
+          </div>
           <div class="workspace-directory-toolbar__menu-list">
             <button
               v-for="option in sortOptions"
@@ -196,7 +204,11 @@ onUnmounted(() => {
               @click="handleSelectSort(option)"
             >
               <span class="workspace-directory-toolbar__menu-item-content">
-                <component :is="option.icon" v-if="option.icon" class="h-3.5 w-3.5" />
+                <component
+                  :is="option.icon"
+                  v-if="option.icon"
+                  class="h-3.5 w-3.5"
+                />
                 {{ option.label }}
               </span>
             </button>
@@ -217,8 +229,12 @@ onUnmounted(() => {
     >
       <div class="workspace-directory-toolbar__filter-panel-header">
         <div>
-          <div class="workspace-overline">{{ filterPanelKicker }}</div>
-          <h3 class="workspace-directory-toolbar__filter-panel-title">{{ filterPanelTitle }}</h3>
+          <div class="workspace-overline">
+            {{ filterPanelKicker }}
+          </div>
+          <h3 class="workspace-directory-toolbar__filter-panel-title">
+            {{ filterPanelTitle }}
+          </h3>
         </div>
         <button
           type="button"
@@ -230,7 +246,10 @@ onUnmounted(() => {
         </button>
       </div>
 
-      <slot name="filter-panel" :close="closeFilter" />
+      <slot
+        name="filter-panel"
+        :close="closeFilter"
+      />
     </div>
   </div>
 </template>

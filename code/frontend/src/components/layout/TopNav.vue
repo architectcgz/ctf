@@ -1,5 +1,8 @@
 <template>
-  <header class="topnav-shell sticky top-0 z-50" :class="{ 'topnav-shell--admin': isBackofficeRoute }">
+  <header
+    class="topnav-shell sticky top-0 z-50"
+    :class="{ 'topnav-shell--admin': isBackofficeRoute }"
+  >
     <div
       class="topnav-inner topnav-inner-shell mx-auto flex h-16 w-full items-center justify-between gap-4 px-4 md:px-6 xl:px-8"
     >
@@ -12,8 +15,14 @@
           @click="isMobile ? $emit('toggleSidebar') : $emit('toggleCollapse')"
         >
           <Menu class="h-4 w-4 md:hidden" />
-          <PanelLeftClose v-if="!sidebarCollapsed" class="hidden h-4 w-4 md:block" />
-          <PanelLeftOpen v-else class="hidden h-4 w-4 md:block" />
+          <PanelLeftClose
+            v-if="!sidebarCollapsed"
+            class="hidden h-4 w-4 md:block"
+          />
+          <PanelLeftOpen
+            v-else
+            class="hidden h-4 w-4 md:block"
+          />
         </button>
 
         <div
@@ -40,18 +49,30 @@
       </div>
 
       <div class="topnav-actions flex shrink-0 items-center gap-3">
-        <div class="topnav-tool-cluster" :class="{ 'topnav-tool-cluster--admin': isBackofficeRoute }">
+        <div
+          class="topnav-tool-cluster"
+          :class="{ 'topnav-tool-cluster--admin': isBackofficeRoute }"
+        >
           <button
             type="button"
             class="topnav-icon-button"
             :aria-label="theme === 'light' ? '切换到深色模式' : '切换到浅色模式'"
             @click="toggleTheme"
           >
-            <Sun v-if="theme === 'dark'" class="h-4 w-4" />
-            <Moon v-else class="h-4 w-4" />
+            <Sun
+              v-if="theme === 'dark'"
+              class="h-4 w-4"
+            />
+            <Moon
+              v-else
+              class="h-4 w-4"
+            />
           </button>
 
-          <div ref="brandPickerRef" class="topnav-brand-picker">
+          <div
+            ref="brandPickerRef"
+            class="topnav-brand-picker"
+          >
             <button
               type="button"
               class="topnav-icon-button"

@@ -123,9 +123,15 @@ function executeAction(action: NonNullable<Props['primaryAction'] | Props['secon
 </script>
 
 <template>
-  <section class="error-status-view" :style="accentVars">
+  <section
+    class="error-status-view"
+    :style="accentVars"
+  >
     <div class="error-status-kicker">
-      <component :is="icon" class="h-4 w-4" />
+      <component
+        :is="icon"
+        class="h-4 w-4"
+      />
       <span>{{ kicker }}</span>
     </div>
 
@@ -145,7 +151,10 @@ function executeAction(action: NonNullable<Props['primaryAction'] | Props['secon
             class="error-status-action error-status-action-primary"
             @click="executeAction(primaryAction)"
           >
-            <component :is="primaryIcon" class="h-4 w-4" />
+            <component
+              :is="primaryIcon"
+              class="h-4 w-4"
+            />
             {{ resolvedPrimaryLabel }}
           </button>
           <RouterLink
@@ -153,7 +162,10 @@ function executeAction(action: NonNullable<Props['primaryAction'] | Props['secon
             :to="resolvedPrimaryTo"
             class="error-status-action error-status-action-primary"
           >
-            <component :is="primaryIcon" class="h-4 w-4" />
+            <component
+              :is="primaryIcon"
+              class="h-4 w-4"
+            />
             {{ resolvedPrimaryLabel }}
           </RouterLink>
           <button
@@ -162,7 +174,10 @@ function executeAction(action: NonNullable<Props['primaryAction'] | Props['secon
             class="error-status-action error-status-action-secondary"
             @click="executeAction(secondaryAction)"
           >
-            <component :is="secondaryIcon" class="h-4 w-4" />
+            <component
+              :is="secondaryIcon"
+              class="h-4 w-4"
+            />
             {{ resolvedSecondaryLabel }}
           </button>
           <RouterLink
@@ -170,7 +185,10 @@ function executeAction(action: NonNullable<Props['primaryAction'] | Props['secon
             :to="resolvedSecondaryTo"
             class="error-status-action error-status-action-secondary"
           >
-            <component :is="secondaryIcon" class="h-4 w-4" />
+            <component
+              :is="secondaryIcon"
+              class="h-4 w-4"
+            />
             {{ resolvedSecondaryLabel }}
           </RouterLink>
         </div>

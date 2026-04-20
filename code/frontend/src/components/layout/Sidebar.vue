@@ -39,7 +39,11 @@
         </div>
 
         <nav class="backoffice-sidebar__nav flex-1 space-y-1.5 overflow-x-hidden px-4">
-          <div v-for="item in backofficeItems" :key="item.name" class="w-full">
+          <div
+            v-for="item in backofficeItems"
+            :key="item.name"
+            class="w-full"
+          >
             <button
               type="button"
               class="backoffice-sidebar__item w-full flex items-center justify-between py-2.5 rounded-xl text-sm transition-all overflow-hidden px-3"
@@ -51,7 +55,10 @@
                   class="backoffice-sidebar__item-icon shrink-0"
                   :class="backofficeItemIconClass(item)"
                 >
-                  <component :is="item.icon" class="backoffice-sidebar__icon-svg" />
+                  <component
+                    :is="item.icon"
+                    class="backoffice-sidebar__icon-svg"
+                  />
                 </div>
                 <span class="transition-opacity duration-200 whitespace-nowrap">
                   {{ item.title }}
@@ -98,8 +105,14 @@
           :aria-label="collapsed ? '展开导航' : '折叠导航'"
           @click="emit('toggleCollapse')"
         >
-          <ChevronRight v-if="collapsed" class="h-3.5 w-3.5" />
-          <ChevronLeft v-else class="h-3.5 w-3.5" />
+          <ChevronRight
+            v-if="collapsed"
+            class="h-3.5 w-3.5"
+          />
+          <ChevronLeft
+            v-else
+            class="h-3.5 w-3.5"
+          />
         </button>
 
         <div
@@ -131,7 +144,11 @@
           class="backoffice-sidebar__nav flex-1 space-y-1.5 overflow-x-hidden"
           :class="collapsed ? 'px-3 pt-4' : 'px-4'"
         >
-          <div v-for="item in backofficeItems" :key="item.name" class="w-full">
+          <div
+            v-for="item in backofficeItems"
+            :key="item.name"
+            class="w-full"
+          >
             <button
               type="button"
               class="backoffice-sidebar__item w-full flex items-center justify-between py-2.5 rounded-xl text-sm transition-all overflow-hidden"
@@ -144,7 +161,10 @@
                   class="backoffice-sidebar__item-icon shrink-0"
                   :class="backofficeItemIconClass(item)"
                 >
-                  <component :is="item.icon" class="backoffice-sidebar__icon-svg" />
+                  <component
+                    :is="item.icon"
+                    class="backoffice-sidebar__icon-svg"
+                  />
                 </div>
                 <span
                   class="transition-opacity duration-200 whitespace-nowrap"
@@ -204,9 +224,15 @@
               {{ brandMark }}
             </div>
             <div class="min-w-0">
-              <div class="sidebar-brand-kicker tech-accent">{{ brandKicker }}</div>
-              <div class="truncate text-sm font-semibold text-text-primary">{{ brandTitle }}</div>
-              <div class="truncate text-xs text-text-muted">{{ roleBadge }}</div>
+              <div class="sidebar-brand-kicker tech-accent">
+                {{ brandKicker }}
+              </div>
+              <div class="truncate text-sm font-semibold text-text-primary">
+                {{ brandTitle }}
+              </div>
+              <div class="truncate text-xs text-text-muted">
+                {{ roleBadge }}
+              </div>
             </div>
           </div>
           <button
@@ -221,13 +247,23 @@
 
         <div class="sidebar-nav-scroll mt-6 flex min-h-0 flex-1 overflow-y-auto">
           <nav class="sidebar-nav-list flex min-h-full flex-col space-y-7">
-            <section v-for="group in navGroups" :key="group.key" class="sidebar-group space-y-2.5">
+            <section
+              v-for="group in navGroups"
+              :key="group.key"
+              class="sidebar-group space-y-2.5"
+            >
               <div class="sidebar-group-title px-2">
                 <span>{{ group.title }}</span>
               </div>
               <div class="space-y-1.5">
-                <template v-for="item in group.items" :key="item.name">
-                  <div v-if="item.children?.length" class="space-y-1.5">
+                <template
+                  v-for="item in group.items"
+                  :key="item.name"
+                >
+                  <div
+                    v-if="item.children?.length"
+                    class="space-y-1.5"
+                  >
                     <div class="flex items-center gap-2">
                       <button
                         type="button"
@@ -236,7 +272,10 @@
                         @click="navigate(item)"
                       >
                         <span class="sidebar-item-icon-wrap">
-                          <component :is="item.icon" class="sidebar-item-icon h-4 w-4 shrink-0" />
+                          <component
+                            :is="item.icon"
+                            class="sidebar-item-icon h-4 w-4 shrink-0"
+                          />
                         </span>
                         <span class="truncate">{{ item.title }}</span>
                       </button>
@@ -266,7 +305,10 @@
                         @click="navigate(child)"
                       >
                         <span class="sidebar-item-icon-wrap sidebar-item-icon-wrap-child">
-                          <component :is="child.icon" class="sidebar-item-icon h-4 w-4 shrink-0" />
+                          <component
+                            :is="child.icon"
+                            class="sidebar-item-icon h-4 w-4 shrink-0"
+                          />
                         </span>
                         <span class="truncate">{{ child.title }}</span>
                       </button>
@@ -281,7 +323,10 @@
                     @click="navigate(item)"
                   >
                     <span class="sidebar-item-icon-wrap">
-                      <component :is="item.icon" class="sidebar-item-icon h-4 w-4 shrink-0" />
+                      <component
+                        :is="item.icon"
+                        class="sidebar-item-icon h-4 w-4 shrink-0"
+                      />
                     </span>
                     <span class="truncate">{{ item.title }}</span>
                   </button>
@@ -314,18 +359,34 @@
             >
               {{ brandMark }}
             </div>
-            <div v-if="!collapsed" class="min-w-0">
-              <div class="sidebar-brand-kicker tech-accent">{{ brandKicker }}</div>
-              <div class="truncate text-sm font-semibold text-text-primary">{{ brandTitle }}</div>
-              <div class="truncate text-xs text-text-muted">{{ roleBadge }}</div>
+            <div
+              v-if="!collapsed"
+              class="min-w-0"
+            >
+              <div class="sidebar-brand-kicker tech-accent">
+                {{ brandKicker }}
+              </div>
+              <div class="truncate text-sm font-semibold text-text-primary">
+                {{ brandTitle }}
+              </div>
+              <div class="truncate text-xs text-text-muted">
+                {{ roleBadge }}
+              </div>
             </div>
           </button>
         </div>
 
         <div class="sidebar-nav-scroll mt-6 flex min-h-0 flex-1 overflow-y-auto">
           <nav class="sidebar-nav-list flex min-h-full flex-col space-y-7">
-            <section v-for="group in navGroups" :key="group.key" class="sidebar-group space-y-2.5">
-              <div v-if="!collapsed" class="sidebar-group-title px-2">
+            <section
+              v-for="group in navGroups"
+              :key="group.key"
+              class="sidebar-group space-y-2.5"
+            >
+              <div
+                v-if="!collapsed"
+                class="sidebar-group-title px-2"
+              >
                 <span>{{ group.title }}</span>
               </div>
               <div
@@ -337,8 +398,14 @@
               </div>
 
               <div class="space-y-1.5">
-                <template v-for="item in group.items" :key="item.name">
-                  <div v-if="item.children?.length && !collapsed" class="space-y-1.5">
+                <template
+                  v-for="item in group.items"
+                  :key="item.name"
+                >
+                  <div
+                    v-if="item.children?.length && !collapsed"
+                    class="space-y-1.5"
+                  >
                     <div class="flex items-center gap-2">
                       <button
                         type="button"
@@ -347,7 +414,10 @@
                         @click="navigate(item)"
                       >
                         <span class="sidebar-item-icon-wrap">
-                          <component :is="item.icon" class="sidebar-item-icon h-4 w-4 shrink-0" />
+                          <component
+                            :is="item.icon"
+                            class="sidebar-item-icon h-4 w-4 shrink-0"
+                          />
                         </span>
                         <span class="truncate text-sm">{{ item.title }}</span>
                       </button>
@@ -377,7 +447,10 @@
                         @click="navigate(child)"
                       >
                         <span class="sidebar-item-icon-wrap sidebar-item-icon-wrap-child">
-                          <component :is="child.icon" class="sidebar-item-icon h-4 w-4 shrink-0" />
+                          <component
+                            :is="child.icon"
+                            class="sidebar-item-icon h-4 w-4 shrink-0"
+                          />
                         </span>
                         <span class="truncate">{{ child.title }}</span>
                       </button>
@@ -401,9 +474,15 @@
                       class="sidebar-item-icon-wrap"
                       :class="collapsed ? 'sidebar-item-icon-wrap-collapsed' : ''"
                     >
-                      <component :is="item.icon" class="sidebar-item-icon h-4 w-4 shrink-0" />
+                      <component
+                        :is="item.icon"
+                        class="sidebar-item-icon h-4 w-4 shrink-0"
+                      />
                     </span>
-                    <span v-if="!collapsed" class="truncate text-sm">{{ item.title }}</span>
+                    <span
+                      v-if="!collapsed"
+                      class="truncate text-sm"
+                    >{{ item.title }}</span>
                   </button>
                 </template>
               </div>
