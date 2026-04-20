@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
-import awdWorkspaceSource from '@/components/contests/ContestAWDWorkspacePanel.vue?raw'
+import studentAwdCollabSource from '@/modules/awd/views/student/StudentAwdCollabView.vue?raw'
+import studentAwdOverviewSource from '@/modules/awd/views/student/StudentAwdOverviewView.vue?raw'
+import studentAwdServicesSource from '@/modules/awd/views/student/StudentAwdServicesView.vue?raw'
 import contestDetailSource from '@/views/contests/ContestDetail.vue?raw'
 
 describe('contest student action primitives', () => {
@@ -16,15 +18,13 @@ describe('contest student action primitives', () => {
     expect(contestDetailSource).not.toMatch(/^\.flag-submit__input:focus\s*\{/m)
   })
 
-  it('AWD 工作台也应复用共享 ui 按钮与输入控件原语', () => {
-    expect(awdWorkspaceSource).toContain('class="ui-btn ui-btn--ghost"')
-    expect(awdWorkspaceSource).toContain('class="ui-btn ui-btn--primary"')
-    expect(awdWorkspaceSource).toMatch(/class="ui-control-wrap(?:\s+[^\"]+)?"/)
-    expect(awdWorkspaceSource).toContain('class="ui-control"')
-    expect(awdWorkspaceSource).not.toMatch(/^\.contest-btn\s*\{/m)
-    expect(awdWorkspaceSource).not.toMatch(/^\.contest-btn--primary\s*\{/m)
-    expect(awdWorkspaceSource).not.toMatch(/^\.contest-btn--ghost\s*\{/m)
-    expect(awdWorkspaceSource).not.toMatch(/^\.flag-submit__input\s*\{/m)
-    expect(awdWorkspaceSource).not.toMatch(/^\.awd-target-select\s*\{/m)
+  it('学生 AWD 页面族应统一接入共享 shell，并保持旧面板完全移除', () => {
+    expect(studentAwdOverviewSource).toContain('StudentAwdWorkspaceLayout')
+    expect(studentAwdServicesSource).toContain('StudentAwdWorkspaceLayout')
+    expect(studentAwdCollabSource).toContain('StudentAwdWorkspaceLayout')
+    expect(studentAwdServicesSource).toContain('class="ui-btn ui-btn--secondary"')
+    expect(studentAwdOverviewSource).not.toContain('ContestAWDWorkspacePanel')
+    expect(studentAwdServicesSource).not.toContain('ContestAWDWorkspacePanel')
+    expect(studentAwdCollabSource).not.toContain('ContestAWDWorkspacePanel')
   })
 })

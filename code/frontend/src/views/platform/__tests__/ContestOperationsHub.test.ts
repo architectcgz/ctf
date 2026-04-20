@@ -223,9 +223,8 @@ describe('ContestOperationsHub', () => {
     await wrapper.get('#contest-ops-primary-action').trigger('click')
 
     expect(pushMock).toHaveBeenCalledWith({
-      name: 'ContestEdit',
+      name: 'AdminAwdOverview',
       params: { id: 'awd-running' },
-      query: { panel: 'awd-config' },
     })
   })
 
@@ -241,9 +240,8 @@ describe('ContestOperationsHub', () => {
     await wrapper.get('#contest-ops-primary-action').trigger('click')
 
     expect(pushMock).toHaveBeenCalledWith({
-      name: 'ContestEdit',
+      name: 'AdminAwdTraffic',
       params: { id: 'awd-running' },
-      query: { panel: 'operations', opsPanel: 'inspector' },
     })
   })
 

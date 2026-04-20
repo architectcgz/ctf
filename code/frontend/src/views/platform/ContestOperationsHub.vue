@@ -94,18 +94,16 @@ const operationDefinitions: Record<ContestOpsViewKey, ContestOpsDefinition> = {
       type: 'contest-route',
       label: '进入 AWD 配置',
       buildLocation: (contestId) => ({
-        name: 'ContestEdit',
+        name: 'AdminAwdOverview',
         params: { id: contestId },
-        query: { panel: 'awd-config' },
       }),
     },
     secondaryAction: {
       type: 'contest-route',
-      label: '打开赛前检查',
+      label: '打开服务矩阵',
       buildLocation: (contestId) => ({
-        name: 'ContestEdit',
+        name: 'AdminAwdServices',
         params: { id: contestId },
-        query: { panel: 'preflight' },
       }),
     },
   },
@@ -121,9 +119,8 @@ const operationDefinitions: Record<ContestOpsViewKey, ContestOpsDefinition> = {
       type: 'contest-route',
       label: '进入流量态势',
       buildLocation: (contestId) => ({
-        name: 'ContestEdit',
+        name: 'AdminAwdTraffic',
         params: { id: contestId },
-        query: { panel: 'operations', opsPanel: 'inspector' },
       }),
     },
     secondaryAction: {
@@ -180,9 +177,8 @@ const operationDefinitions: Record<ContestOpsViewKey, ContestOpsDefinition> = {
       type: 'contest-route',
       label: '查看实时榜单',
       buildLocation: (contestId) => ({
-        name: 'ContestEdit',
+        name: 'AdminAwdOverview',
         params: { id: contestId },
-        query: { panel: 'operations', opsPanel: 'inspector' },
       }),
     },
   },
