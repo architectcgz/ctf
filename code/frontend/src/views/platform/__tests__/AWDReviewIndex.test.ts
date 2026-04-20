@@ -74,12 +74,14 @@ describe('PlatformAWDReviewIndex', () => {
       'class="workspace-shell journal-shell journal-shell-admin journal-notes-card journal-hero admin-awd-review-shell flex min-h-full flex-1 flex-col"'
     )
     expect(platformAwdReviewIndexSource).toContain(
+      'class="admin-summary-grid admin-awd-review-shell__summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
+    )
+    expect(platformAwdReviewIndexSource).toContain(
       'class="workspace-directory-section admin-awd-review-directory"'
     )
     expect(platformAwdReviewIndexSource).toContain(
       'class="workspace-directory-list admin-awd-review-table"'
     )
-    expect(platformAwdReviewIndexSource).toContain('class="metric-panel-grid--premium cols-3"')
     expect(platformAwdReviewIndexSource).not.toContain('teacher-management-shell')
     expect(platformAwdReviewIndexSource).not.toContain('teacher-directory-row')
 
@@ -116,8 +118,8 @@ describe('PlatformAWDReviewIndex', () => {
       ?.trigger('click')
 
     expect(pushMock).toHaveBeenCalledWith({
-      name: 'AdminAwdReplay',
-      params: { id: 'contest-2' },
+      name: 'PlatformAwdReviewDetail',
+      params: { contestId: 'contest-2' },
     })
   })
 

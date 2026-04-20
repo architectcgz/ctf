@@ -29,7 +29,7 @@ import AWDChallengeConfigPanel from '@/components/platform/contest/AWDChallengeC
 import AWDOperationsPanel from '@/components/platform/contest/AWDOperationsPanel.vue'
 import ContestAwdPreflightPanel from '@/components/platform/contest/ContestAwdPreflightPanel.vue'
 import ContestChallengeOrchestrationPanel from '@/components/platform/contest/ContestChallengeOrchestrationPanel.vue'
-import ContestWorkbenchStageRail from '@/components/platform/contest/ContestWorkbenchStageRail.vue'
+import ContestWorkbenchStageTabs from '@/components/platform/contest/ContestWorkbenchStageTabs.vue'
 import AWDReadinessOverrideDialog from '@/components/platform/contest/AWDReadinessOverrideDialog.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
@@ -279,6 +279,11 @@ function handleNavigateAwdChallengeFromPreflight(challengeId: string) {
   selectTab('awd-config')
 }
 
+function handleNavigateAwdChallengeFromOperations(challengeId: string) {
+  setActiveAwdChallenge(challengeId, null)
+  selectTab('awd-config')
+}
+
 async function openPreflightOverrideDialog() {
   if (!contest.value) return
   const readiness = await getContestAWDReadiness(contest.value.id)
@@ -296,19 +301,11 @@ async function loadContestDetail(): Promise<void> {
   loading.value = true
   try {
     const detail = await getContest(contestId.value)
-    if (detail.mode === 'awd') {
-      contest.value = detail
-      void router.replace({
-        name: 'AdminAwdOverview',
-        params: { id: detail.id },
-      })
-      return
-    }
-
     contest.value = detail
     editingBaseStatus.value = normalizeEditableStatus(detail.status)
     formDraft.value = createDraftFromContest(detail)
     syncWorkbenchStageSelection()
+    if (detail.mode === 'awd') await refreshAwdWorkbenchData(detail.id)
   } catch (error) {
     loadError.value = humanizeRequestError(error, '竞赛详情加载失败')
   } finally {
@@ -371,38 +368,20 @@ onMounted(() => {
       <AppLoading>正在同步竞赛工作台...</AppLoading>
     </div>
 
-    <div
-      v-if="!loading && contest?.mode === 'awd'"
-      class="studio-loading-overlay"
-    >
-      <AppLoading>正在进入 AWD 工作台...</AppLoading>
-    </div>
-
-    <aside class="studio-sidebar">
-      <ContestWorkbenchStageRail
-        v-if="contest"
-        :stages="workbench.visibleStages"
-        :active-stage="activeStage"
-        :select-stage="selectTab"
-      />
-      
-      <div class="studio-sidebar-footer">
-        <button
-          class="studio-exit-btn"
-          @click="goBackToContestList"
-        >
-          <ChevronLeft class="h-4 w-4" />
-          <span>退出工作室</span>
-        </button>
-      </div>
-    </aside>
-
     <main class="studio-content">
       <header
         v-if="contest"
         class="studio-topbar"
       >
         <div class="studio-topbar-left">
+          <button
+            class="studio-back-btn"
+            title="退出工作室"
+            @click="goBackToContestList"
+          >
+            <ChevronLeft class="h-5 w-5" />
+          </button>
+          
           <div class="studio-title-group">
             <h1
               class="studio-contest-title"
@@ -425,9 +404,26 @@ onMounted(() => {
         </div>
 
         <div class="studio-topbar-right">
-          <!-- 移除全局 Save 按钮，改为各面板独立保存 -->
+          <button
+            v-if="activeStage === 'basics'"
+            type="button"
+            class="studio-save-btn"
+            :disabled="saving"
+            @click="() => (formDraft && handleSave(formDraft))"
+          >
+            <Save class="h-4 w-4" />
+            <span>{{ saving ? '正在保存...' : '保存变更' }}</span>
+          </button>
         </div>
       </header>
+
+      <!-- Horizontal Stage Navigation -->
+      <ContestWorkbenchStageTabs
+        v-if="contest"
+        :stages="workbench.visibleStages"
+        :active-stage="activeStage"
+        :select-stage="selectTab"
+      />
 
       <div class="studio-canvas">
         <div class="studio-scroll-area">
@@ -545,6 +541,7 @@ onMounted(() => {
                 :contests="[contest]"
                 :selected-contest-id="contest.id"
                 :hide-contest-selector="true"
+                @open:awd-config="handleNavigateAwdChallengeFromOperations"
               />
             </div>
           </template>
@@ -583,57 +580,23 @@ onMounted(() => {
 .contest-studio-shell {
   --workspace-line-soft: color-mix(in srgb, var(--color-text-primary) 10%, transparent);
   display: flex;
-  flex-direction: row !important;
-  align-items: stretch;
+  flex-direction: column;
   height: calc(100vh - 64px);
   width: 100%;
   overflow: hidden;
   background: var(--color-bg-base);
 }
 
-.studio-sidebar {
-  width: 15rem;
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  background: var(--color-bg-surface, #ffffff);
-  border-right: 1px solid var(--workspace-line-soft);
-  z-index: 20;
-}
-
-.studio-sidebar-footer {
-  padding: 1rem;
-  border-top: 1px solid var(--workspace-line-soft);
-}
-
-.studio-exit-btn {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  padding: 0.75rem 1rem;
-  border-radius: 0.85rem;
-  font-size: 13px;
-  font-weight: 800;
-  color: var(--journal-muted);
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.studio-exit-btn:hover {
-  background: color-mix(in srgb, var(--color-danger) 8%, var(--journal-surface));
-  color: var(--color-danger);
-  transform: translateX(-2px);
-}
-
 .studio-content {
-  flex: 1 1 0;
-  min-width: 0;
+  flex: 1;
   display: flex;
   flex-direction: column;
+  min-height: 0;
+  min-width: 0;
 }
 
 .studio-topbar {
-  height: 4rem; /* 压缩高度，更精致 */
+  height: 4.5rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -641,6 +604,31 @@ onMounted(() => {
   background: var(--color-bg-surface);
   border-bottom: 1px solid var(--workspace-line-soft);
   z-index: 10;
+}
+
+.studio-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.studio-back-btn {
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem;
+  color: var(--journal-muted);
+  border: 1px solid var(--workspace-line-soft);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.studio-back-btn:hover {
+  background: #f8fafc;
+  color: #0f172a;
+  border-color: #cbd5e1;
 }
 
 .studio-title-group {
@@ -692,80 +680,41 @@ onMounted(() => {
   border-color: color-mix(in srgb, var(--journal-muted) 20%, transparent);
 }
 
-.studio-global-actions {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.studio-action-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.25rem;
-  height: 2.25rem;
-  border-radius: 0.75rem;
-  border: 1px solid var(--workspace-line-soft);
-  color: var(--journal-muted);
-  transition: all 0.2s ease;
-}
-
-.studio-action-btn:hover {
-  background: var(--color-bg-base);
-  color: var(--journal-ink);
-  border-color: var(--journal-muted);
-}
-
-.studio-save-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.65rem;
-  height: 2.4rem;
-  padding: 0 1.25rem;
-  background: var(--color-primary);
-  color: white;
-  border-radius: 0.85rem;
-  font-size: 12px;
-  font-weight: 800;
-  box-shadow: 0 8px 20px color-mix(in srgb, var(--color-primary) 24%, transparent);
-  transition: all 0.2s ease;
-}
-
-.studio-save-btn:hover {
-  background: var(--color-primary-hover);
-  transform: translateY(-1px);
-  box-shadow: 0 10px 24px color-mix(in srgb, var(--color-primary) 30%, transparent);
-}
-
 .studio-canvas {
   flex: 1;
-  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0; /* 关键：防止 Flex 子项溢出导致滚动失效 */
   position: relative;
   background: var(--color-bg-surface, #ffffff);
 }
 
 .studio-scroll-area {
-  height: 100%;
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 0;
+  display: flex;
+  flex-direction: column;
 }
 
-.studio-scroll-area::-webkit-scrollbar { width: 4px; }
-.studio-scroll-area::-webkit-scrollbar-thumb { background: var(--workspace-line-soft); border-radius: 10px; }
+.studio-scroll-area::-webkit-scrollbar { width: 6px; }
+.studio-scroll-area::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--workspace-line-soft) 50%, transparent); border-radius: 10px; }
 
 .studio-pane {
   width: 100%;
-  max-width: 64rem;
-  margin: 0;
+  flex: 1 0 auto; /* 确保子项能撑开内容 */
 }
 
 /* 基础设置表单：去卡片化，自然平铺 */
 .studio-form-canvas {
   background: transparent;
   border: none;
-  padding: 0;
+  padding: 2rem;
   box-shadow: none;
   width: 100%;
+  max-width: 64rem;
 }
 
 .studio-loading-overlay {

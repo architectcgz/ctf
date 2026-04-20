@@ -1,16 +1,8 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 
-import { listAdminAwdServiceTemplates } from '@/api/admin'
-import type {
-  AdminAwdServiceTemplateData,
-  AdminContestChallengeData,
-  AWDTrafficStatusGroup,
-  ContestDetailData,
-} from '@/api/contracts'
+import type { AWDTrafficStatusGroup, ContestDetailData } from '@/api/contracts'
 import AWDAttackLogDialog from './AWDAttackLogDialog.vue'
-import AWDChallengeConfigDialog from './AWDChallengeConfigDialog.vue'
-import AWDChallengeConfigPanel from './AWDChallengeConfigPanel.vue'
 import AWDContestSelectorField from './AWDContestSelectorField.vue'
 import AWDReadinessOverrideDialog from './AWDReadinessOverrideDialog.vue'
 import AWDReadinessSummary from './AWDReadinessSummary.vue'
@@ -31,6 +23,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:selectedContestId': [contestId: string]
+  'open:awd-config': [challengeId: string]
 }>()
 
 const selectedContest = computed(
@@ -46,11 +39,6 @@ const runtimeStageReady = computed(
 const roundDialogOpen = ref(false)
 const serviceCheckDialogOpen = ref(false)
 const attackLogDialogOpen = ref(false)
-const challengeConfigDialogOpen = ref(false)
-const challengeConfigMode = ref<'create' | 'edit'>('create')
-const editingChallengeLink = ref<AdminContestChallengeData | null>(null)
-const loadingTemplateCatalog = ref(false)
-const templateCatalog = ref<AdminAwdServiceTemplateData[]>([])
 
 const operationTabs = [
   {
@@ -59,47 +47,10 @@ const operationTabs = [
     tabId: 'awd-ops-tab-inspector',
     panelId: 'awd-ops-panel-inspector',
   },
-  {
-    key: 'challenges',
-    label: '题目配置',
-    tabId: 'awd-ops-tab-challenges',
-    panelId: 'awd-ops-panel-challenges',
-  },
 ] as const
 
 type AWDOperationsPanelKey = (typeof operationTabs)[number]['key']
 const operationTabOrder = operationTabs.map((tab) => tab.key) as AWDOperationsPanelKey[]
-
-function getOperationsPanelStorageKey(contestId: string): string {
-  return `ctf_admin_awd_ops_panel:${contestId}`
-}
-
-function loadStoredOperationsPanel(contestId: string): AWDOperationsPanelKey {
-  if (typeof window === 'undefined') {
-    return 'inspector'
-  }
-  const value = window.sessionStorage.getItem(getOperationsPanelStorageKey(contestId))
-  return value === 'challenges' ? 'challenges' : 'inspector'
-}
-
-function readRequestedOperationsPanel(): AWDOperationsPanelKey | null {
-  if (typeof window === 'undefined') {
-    return null
-  }
-  const value = new URLSearchParams(window.location.search).get('opsPanel')
-  if (value === 'inspector' || value === 'challenges') {
-    return value
-  }
-  return null
-}
-
-function persistOperationsPanel(contestId: string, value: AWDOperationsPanelKey): void {
-  if (typeof window === 'undefined') {
-    return
-  }
-  window.sessionStorage.setItem(getOperationsPanelStorageKey(contestId), value)
-}
-
 const activePanel = ref<AWDOperationsPanelKey>('inspector')
 
 const {
@@ -116,19 +67,16 @@ const {
   scoreboardFrozen,
   teams,
   challengeLinks,
-  challengeCatalog,
   readiness,
   loadingRounds,
   loadingRoundDetail,
   loadingTrafficSummary,
   loadingTrafficEvents,
-  loadingChallengeCatalog,
   loadingReadiness,
   checking,
   creatingRound,
   savingServiceCheck,
   savingAttackLog,
-  savingChallengeConfig,
   shouldAutoRefresh,
   overrideDialogState,
   refresh,
@@ -141,9 +89,6 @@ const {
   createRound,
   createServiceCheck,
   createAttackLog,
-  loadChallengeCatalog,
-  createChallengeLink,
-  updateChallengeLink,
 } = usePlatformContestAwd(selectedContest)
 
 const nextRoundNumber = computed(() =>
@@ -179,7 +124,6 @@ const attackLogHint = computed(() => {
   }
   return ''
 })
-const existingChallengeIds = computed(() => challengeLinks.value.map((item) => item.challenge_id))
 
 function updateSelectedContestId(value: string) {
   emit('update:selectedContestId', value)
@@ -231,29 +175,6 @@ const { setTabButtonRef, handleTabKeydown } = useTabKeyboardNavigation<AWDOperat
   selectTab: selectPanel,
 })
 
-function openChallengeCreateDialog() {
-  challengeConfigMode.value = 'create'
-  editingChallengeLink.value = null
-  challengeConfigDialogOpen.value = true
-  void loadChallengeCatalog()
-  void ensureTemplateCatalogLoaded()
-}
-
-function openChallengeEditDialog(challenge: AdminContestChallengeData) {
-  challengeConfigMode.value = 'edit'
-  editingChallengeLink.value = challenge
-  challengeConfigDialogOpen.value = true
-  activePanel.value = 'challenges'
-  void ensureTemplateCatalogLoaded()
-}
-
-function updateChallengeConfigDialogOpen(value: boolean) {
-  challengeConfigDialogOpen.value = value
-  if (!value) {
-    editingChallengeLink.value = null
-  }
-}
-
 async function handleCreateRound(payload: {
   round_number: number
   status: 'pending' | 'running' | 'finished'
@@ -286,28 +207,6 @@ async function handleCreateAttackLog(payload: {
   attackLogDialogOpen.value = false
 }
 
-async function handleSaveChallengeConfig(payload: {
-  challenge_id: number
-  template_id: number
-  points: number
-  order: number
-  is_visible: boolean
-  awd_checker_type: 'legacy_probe' | 'http_standard'
-  awd_checker_config: Record<string, unknown>
-  awd_sla_score: number
-  awd_defense_score: number
-  awd_checker_preview_token?: string
-}) {
-  if (challengeConfigMode.value === 'create') {
-    await createChallengeLink(payload)
-  } else if (editingChallengeLink.value) {
-    const { challenge_id: _challengeId, ...updatePayload } = payload
-    await updateChallengeLink(editingChallengeLink.value.challenge_id, updatePayload)
-  }
-  challengeConfigDialogOpen.value = false
-  editingChallengeLink.value = null
-}
-
 async function handleApplyTrafficFilters(payload: {
   attacker_team_id?: string
   victim_team_id?: string
@@ -328,13 +227,7 @@ async function handleResetTrafficFilters() {
 }
 
 function handleEditReadinessConfig(challengeId: string) {
-  const matchedChallenge = challengeLinks.value.find((item) => item.challenge_id === challengeId)
-  activePanel.value = 'challenges'
-  if (matchedChallenge) {
-    openChallengeEditDialog(matchedChallenge)
-    return
-  }
-  void loadChallengeCatalog()
+  emit('open:awd-config', challengeId)
 }
 
 function handleOverrideDialogOpenChange(value: boolean) {
@@ -342,64 +235,10 @@ function handleOverrideDialogOpenChange(value: boolean) {
     closeOverrideDialog()
   }
 }
-
-async function ensureTemplateCatalogLoaded() {
-  if (loadingTemplateCatalog.value || templateCatalog.value.length > 0) {
-    return
-  }
-
-  loadingTemplateCatalog.value = true
-  try {
-    const list: AdminAwdServiceTemplateData[] = []
-    let page = 1
-    let total = 0
-
-    do {
-      const result = await listAdminAwdServiceTemplates({
-        page,
-        page_size: 100,
-        status: 'published',
-      })
-      list.push(...result.list)
-      total = result.total
-      page += 1
-    } while (list.length < total)
-
-    templateCatalog.value = list
-  } finally {
-    loadingTemplateCatalog.value = false
-  }
-}
-
-watch(
-  () => selectedContest.value?.id || null,
-  (contestId) => {
-    if (!contestId) {
-      activePanel.value = 'inspector'
-      return
-    }
-    activePanel.value = readRequestedOperationsPanel() ?? loadStoredOperationsPanel(contestId)
-  },
-  { immediate: true }
-)
-
-watch(
-  () => [selectedContest.value?.id || null, activePanel.value] as const,
-  ([contestId, panel]) => {
-    if (!contestId) {
-      return
-    }
-    persistOperationsPanel(contestId, panel)
-    if (panel === 'challenges' && challengeCatalog.value.length === 0) {
-      void loadChallengeCatalog()
-    }
-  },
-  { immediate: true }
-)
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="studio-ops-shell">
     <AWDContestSelectorField
       v-if="shouldShowContestSelector"
       :contests="contests"
@@ -409,107 +248,87 @@ watch(
 
     <AppEmpty
       v-if="contests.length === 0"
-      title="当前页没有 AWD 赛事"
-      description="先切到包含 AWD 比赛的筛选结果或分页，这里才会展示可操作的攻防运营面板。"
+      title="暂无 AWD 赛事"
+      description="当前列表没有可操作的攻防赛事。"
       icon="Flag"
+      class="py-20"
     />
 
     <AppEmpty
       v-else-if="!selectedContest"
-      title="暂无 AWD 赛事"
-      description="当前没有可用的 AWD 赛事选择，请先返回赛事列表确认筛选结果。"
+      title="未选择赛事"
+      description="请先选择一个 AWD 赛事以进入运维面板。"
       icon="Flag"
+      class="py-20"
     />
 
-    <section v-else class="space-y-6">
-      <AWDReadinessSummary
-        :readiness="readiness"
-        :loading="loadingReadiness"
-        @edit-config="handleEditReadinessConfig"
-      />
-
-      <nav class="top-tabs awd-ops-tabs" role="tablist" aria-label="AWD 运维工作区切换">
-        <button
-          v-for="(tab, index) in operationTabs"
-          :id="tab.tabId"
-          :key="tab.key"
-          :ref="(element) => setTabButtonRef(tab.key, element as HTMLButtonElement | null)"
-          type="button"
-          role="tab"
-          class="top-tab"
-          :class="{ active: activePanel === tab.key }"
-          :aria-selected="activePanel === tab.key ? 'true' : 'false'"
-          :aria-controls="tab.panelId"
-          :tabindex="activePanel === tab.key ? 0 : -1"
-          @click="selectPanel(tab.key)"
-          @keydown="handleTabKeydown($event, index)"
-        >
-          {{ tab.label }}
-        </button>
-      </nav>
-
-      <section
-        id="awd-ops-panel-inspector"
-        class="awd-ops-tab-panel"
-        role="tabpanel"
-        aria-labelledby="awd-ops-tab-inspector"
-        :aria-hidden="activePanel === 'inspector' ? 'false' : 'true'"
-        v-show="activePanel === 'inspector'"
-      >
-        <AWDRoundInspector
-          v-if="runtimeStageReady"
-          :contest="selectedContest"
-          :rounds="rounds"
-          :selected-round-id="selectedRoundId"
-          :services="services"
-          :attacks="attacks"
-          :challenge-links="challengeLinks"
-          :summary="summary"
-          :traffic-summary="trafficSummary"
-          :traffic-events="trafficEvents"
-          :traffic-events-total="trafficEventsTotal"
-          :traffic-filters="trafficFilters"
-          :scoreboard-rows="scoreboardRows"
-          :scoreboard-frozen="scoreboardFrozen"
-          :loading-rounds="loadingRounds"
-          :loading-round-detail="loadingRoundDetail"
-          :loading-traffic-summary="loadingTrafficSummary"
-          :loading-traffic-events="loadingTrafficEvents"
-          :checking="checking"
-          :should-auto-refresh="shouldAutoRefresh"
-          :can-record-service-checks="canRecordServiceChecks"
-          :can-record-attack-logs="canRecordAttackLogs"
-          :service-check-hint="serviceCheckHint"
-          :attack-log-hint="attackLogHint"
-          @refresh="refresh"
-          @apply-traffic-filters="handleApplyTrafficFilters"
-          @change-traffic-page="handleTrafficPageChange"
-          @reset-traffic-filters="handleResetTrafficFilters"
-          @open-create-round-dialog="openRoundDialog"
-          @open-service-check-dialog="openServiceCheckDialog"
-          @open-attack-log-dialog="openAttackLogDialog"
-          @run-selected-round-check="runSelectedRoundCheck"
-          @update:selected-round-id="updateSelectedRoundId"
-        />
-
-        <AWDRuntimePendingState v-else />
-      </section>
-
-      <section
-        id="awd-ops-panel-challenges"
-        class="awd-ops-tab-panel"
-        role="tabpanel"
-        aria-labelledby="awd-ops-tab-challenges"
-        :aria-hidden="activePanel === 'challenges' ? 'false' : 'true'"
-        v-show="activePanel === 'challenges'"
-      >
-        <AWDChallengeConfigPanel
-          :challenge-links="challengeLinks"
-          @create="openChallengeCreateDialog"
-          @edit="openChallengeEditDialog"
+    <div v-else class="studio-ops-content">
+      <!-- 1. Pre-runtime Readiness (shown if not running) -->
+      <section v-if="!runtimeStageReady" class="studio-ops-section">
+        <header class="section-header mb-6">
+          <h2 class="section-title">运维就绪审计</h2>
+          <p class="section-hint">开赛前必须修正以下阻塞项，以确保裁判引擎正常运行。</p>
+        </header>
+        <AWDReadinessSummary
+          :readiness="readiness"
+          :loading="loadingReadiness"
+          @edit-config="handleEditReadinessConfig"
         />
       </section>
-    </section>
+
+      <!-- 2. Runtime Workspace -->
+      <section v-else class="studio-ops-section">
+        <!-- Dashboard Navigation (Integrated) -->
+        <nav v-if="operationTabs.length > 1" class="studio-ops-tabs">
+          <button
+            v-for="(tab, index) in operationTabs"
+            :key="tab.key"
+            class="tab-item"
+            :class="{ active: activePanel === tab.key }"
+            @click="selectPanel(tab.key)"
+          >
+            {{ tab.label }}
+          </button>
+        </nav>
+
+        <div class="inspector-wrap">
+          <AWDRoundInspector
+            :contest="selectedContest"
+            :rounds="rounds"
+            :selected-round-id="selectedRoundId"
+            :services="services"
+            :attacks="attacks"
+            :challenge-links="challengeLinks"
+            :summary="summary"
+            :traffic-summary="trafficSummary"
+            :traffic-events="trafficEvents"
+            :traffic-events-total="trafficEventsTotal"
+            :traffic-filters="trafficFilters"
+            :scoreboard-rows="scoreboardRows"
+            :scoreboard-frozen="scoreboardFrozen"
+            :loading-rounds="loadingRounds"
+            :loading-round-detail="loadingRoundDetail"
+            :loading-traffic-summary="loadingTrafficSummary"
+            :loading-traffic-events="loadingTrafficEvents"
+            :checking="checking"
+            :should-auto-refresh="shouldAutoRefresh"
+            :can-record-service-checks="canRecordServiceChecks"
+            :can-record-attack-logs="canRecordAttackLogs"
+            :service-check-hint="serviceCheckHint"
+            :attack-log-hint="attackLogHint"
+            @refresh="refresh"
+            @apply-traffic-filters="handleApplyTrafficFilters"
+            @change-traffic-page="handleTrafficPageChange"
+            @reset-traffic-filters="handleResetTrafficFilters"
+            @open-create-round-dialog="openRoundDialog"
+            @open-service-check-dialog="openServiceCheckDialog"
+            @open-attack-log-dialog="openAttackLogDialog"
+            @run-selected-round-check="runSelectedRoundCheck"
+            @update:selected-round-id="updateSelectedRoundId"
+          />
+        </div>
+      </section>
+    </div>
 
     <AWDRoundCreateDialog
       :open="roundDialogOpen"
@@ -537,21 +356,6 @@ watch(
       @save="handleCreateAttackLog"
     />
 
-    <AWDChallengeConfigDialog
-      :contest-id="selectedContest?.id || null"
-      :open="challengeConfigDialogOpen"
-      :mode="challengeConfigMode"
-      :challenge-options="challengeCatalog"
-      :template-options="templateCatalog"
-      :existing-challenge-ids="existingChallengeIds"
-      :draft="editingChallengeLink"
-      :loading-challenge-catalog="loadingChallengeCatalog"
-      :loading-template-catalog="loadingTemplateCatalog"
-      :saving="savingChallengeConfig"
-      @update:open="updateChallengeConfigDialogOpen"
-      @save="handleSaveChallengeConfig"
-    />
-
     <AWDReadinessOverrideDialog
       :open="overrideDialogState.open"
       :title="overrideDialogState.title"
@@ -564,12 +368,31 @@ watch(
 </template>
 
 <style scoped>
-.awd-ops-tabs {
-  margin-top: 0.5rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 84%, transparent);
+.studio-ops-shell {
+  min-height: 100%;
+  background: #fdfdfd;
 }
 
-.awd-ops-tab-panel {
-  min-width: 0;
+.studio-ops-content {
+  padding: 1.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
 }
+
+.studio-ops-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.section-header { border-left: 4px solid #3b82f6; padding-left: 1.25rem; }
+.section-title { font-size: 1.15rem; font-weight: 900; color: #0f172a; margin: 0; }
+.section-hint { font-size: 13px; color: #64748b; margin-top: 0.35rem; }
+
+.studio-ops-tabs { display: flex; gap: 2rem; border-bottom: 1px solid #e2e8f0; margin-bottom: 1.5rem; }
+.tab-item { padding: 0.75rem 0.25rem; font-size: 13px; font-weight: 800; color: #64748b; border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.2s ease; }
+.tab-item:hover { color: #0f172a; }
+.tab-item.active { color: #2563eb; border-bottom-color: #2563eb; }
+
+.inspector-wrap { min-width: 0; }
 </style>
