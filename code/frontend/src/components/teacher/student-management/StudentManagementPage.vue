@@ -38,9 +38,15 @@ const emit = defineEmits<{
       <div class="teacher-page">
         <header class="teacher-topbar">
           <div class="teacher-heading">
-            <div class="teacher-surface-eyebrow journal-eyebrow">Student Directory</div>
-            <h1 class="teacher-title">学生管理</h1>
-            <p class="teacher-copy">按班级筛选、搜索并进入学员分析。</p>
+            <div class="teacher-surface-eyebrow journal-eyebrow">
+              Student Directory
+            </div>
+            <h1 class="teacher-title">
+              学生管理
+            </h1>
+            <p class="teacher-copy">
+              按班级筛选、搜索并进入学员分析。
+            </p>
           </div>
 
           <div class="teacher-actions">
@@ -67,25 +73,37 @@ const emit = defineEmits<{
           </div>
           <div class="teacher-summary-grid progress-strip metric-panel-grid">
             <article class="progress-card metric-panel-card">
-              <div class="progress-card-label metric-panel-label">可访问班级</div>
+              <div class="progress-card-label metric-panel-label">
+                可访问班级
+              </div>
               <div class="progress-card-value metric-panel-value">
                 {{ classes.length }}
               </div>
-              <div class="progress-card-hint metric-panel-helper">当前教师可切换的班级数量</div>
+              <div class="progress-card-hint metric-panel-helper">
+                当前教师可切换的班级数量
+              </div>
             </article>
             <article class="progress-card metric-panel-card">
-              <div class="progress-card-label metric-panel-label">当前班级学生</div>
+              <div class="progress-card-label metric-panel-label">
+                当前班级学生
+              </div>
               <div class="progress-card-value metric-panel-value">
                 {{ totalStudents }}
               </div>
-              <div class="progress-card-hint metric-panel-helper">当前选中班级的学生总数</div>
+              <div class="progress-card-hint metric-panel-helper">
+                当前选中班级的学生总数
+              </div>
             </article>
             <article class="progress-card metric-panel-card">
-              <div class="progress-card-label metric-panel-label">搜索结果</div>
+              <div class="progress-card-label metric-panel-label">
+                搜索结果
+              </div>
               <div class="progress-card-value metric-panel-value">
                 {{ filteredStudents.length }}
               </div>
-              <div class="progress-card-hint metric-panel-helper">当前搜索条件下匹配的学生数量</div>
+              <div class="progress-card-hint metric-panel-helper">
+                当前搜索条件下匹配的学生数量
+              </div>
             </article>
           </div>
         </section>
@@ -96,13 +114,22 @@ const emit = defineEmits<{
         >
           <header class="list-heading">
             <div>
-              <div class="journal-note-label">Student Directory</div>
-              <h3 class="list-heading__title">学生目录</h3>
+              <div class="journal-note-label">
+                Student Directory
+              </div>
+              <h3 class="list-heading__title">
+                学生目录
+              </h3>
             </div>
-            <div class="teacher-directory-meta">共 {{ filteredTotal }} 名学生</div>
+            <div class="teacher-directory-meta">
+              共 {{ filteredTotal }} 名学生
+            </div>
           </header>
 
-          <section class="teacher-directory-filters" aria-label="学生过滤">
+          <section
+            class="teacher-directory-filters"
+            aria-label="学生过滤"
+          >
             <div class="teacher-filter-grid">
               <label class="teacher-field">
                 <span class="teacher-field-label">班级</span>
@@ -113,7 +140,11 @@ const emit = defineEmits<{
                   @change="emit('selectClass', ($event.target as HTMLSelectElement).value)"
                 >
                   <option value="">全部班级</option>
-                  <option v-for="item in classes" :key="item.name" :value="item.name">
+                  <option
+                    v-for="item in classes"
+                    :key="item.name"
+                    :value="item.name"
+                  >
                     {{ item.name }} · {{ item.student_count || 0 }}
                   </option>
                 </select>
@@ -129,7 +160,7 @@ const emit = defineEmits<{
                     placeholder="搜索姓名或用户名"
                     class="teacher-input"
                     @input="emit('updateSearchQuery', ($event.target as HTMLInputElement).value)"
-                  />
+                  >
                 </div>
               </label>
 
@@ -143,13 +174,16 @@ const emit = defineEmits<{
                     placeholder="输入学号精确查询"
                     class="teacher-input"
                     @input="emit('updateStudentNoQuery', ($event.target as HTMLInputElement).value)"
-                  />
+                  >
                 </div>
               </label>
             </div>
           </section>
 
-          <div v-if="loadingStudents" class="teacher-skeleton-list workspace-directory-loading">
+          <div
+            v-if="loadingStudents"
+            class="teacher-skeleton-list workspace-directory-loading"
+          >
             <div
               v-for="index in 6"
               :key="index"
@@ -165,7 +199,10 @@ const emit = defineEmits<{
             description="调整搜索词或切换班级后再试。"
           />
 
-          <section v-else class="teacher-directory">
+          <section
+            v-else
+            class="teacher-directory"
+          >
             <div class="teacher-directory-head">
               <span class="teacher-directory-head-cell teacher-directory-head-cell-student-no">
                 学号
@@ -195,13 +232,19 @@ const emit = defineEmits<{
               </div>
 
               <div class="teacher-directory-cell teacher-directory-cell-name">
-                <h4 class="teacher-directory-row-title" :title="student.name || '未设置姓名'">
+                <h4
+                  class="teacher-directory-row-title"
+                  :title="student.name || '未设置姓名'"
+                >
                   {{ student.name || '未设置姓名' }}
                 </h4>
               </div>
 
               <div class="teacher-directory-cell teacher-directory-cell-alias">
-                <div class="teacher-directory-row-points" :title="student.username">
+                <div
+                  class="teacher-directory-row-points"
+                  :title="student.username"
+                >
                   {{ student.username }}
                 </div>
               </div>
@@ -212,9 +255,13 @@ const emit = defineEmits<{
                 </span>
               </div>
 
-              <div class="teacher-directory-row-solved">{{ student.solved_count ?? 0 }}</div>
+              <div class="teacher-directory-row-solved">
+                {{ student.solved_count ?? 0 }}
+              </div>
 
-              <div class="teacher-directory-row-score">{{ student.total_score ?? 0 }}</div>
+              <div class="teacher-directory-row-score">
+                {{ student.total_score ?? 0 }}
+              </div>
 
               <div class="teacher-directory-row-cta">
                 <span>查看学员分析</span>
@@ -236,9 +283,18 @@ const emit = defineEmits<{
             </div>
           </section>
         </section>
-        <div v-if="error" class="teacher-surface-error">
+        <div
+          v-if="error"
+          class="teacher-surface-error"
+        >
           {{ error }}
-          <button type="button" class="ml-3 font-medium underline" @click="emit('retry')">重试</button>
+          <button
+            type="button"
+            class="ml-3 font-medium underline"
+            @click="emit('retry')"
+          >
+            重试
+          </button>
         </div>
       </div>
     </main>

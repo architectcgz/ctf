@@ -43,7 +43,10 @@ const weakDimensionStats = computed(() => {
 </script>
 
 <template>
-  <section class="teacher-panel" :class="{ 'teacher-panel--shellless': splitCards }">
+  <section
+    class="teacher-panel"
+    :class="{ 'teacher-panel--shellless': splitCards }"
+  >
     <div
       class="teacher-insight-layout"
       :class="{
@@ -58,8 +61,12 @@ const weakDimensionStats = computed(() => {
         "
       >
         <header class="teacher-subsection__header">
-          <div class="journal-eyebrow">Students</div>
-          <h2 class="teacher-panel__title">班级 Top 学生</h2>
+          <div class="journal-eyebrow">
+            Students
+          </div>
+          <h2 class="teacher-panel__title">
+            班级 Top 学生
+          </h2>
           <p class="teacher-panel__subtitle">
             {{
               className
@@ -76,7 +83,10 @@ const weakDimensionStats = computed(() => {
           description="当前班级还没有可用于排序的学生记录。"
         />
 
-        <div v-else class="top-student-list">
+        <div
+          v-else
+          class="top-student-list"
+        >
           <article
             v-for="(student, index) in topStudents"
             :key="student.id"
@@ -109,8 +119,12 @@ const weakDimensionStats = computed(() => {
         "
       >
         <header class="teacher-subsection__header">
-          <div class="journal-eyebrow">Weak Dimensions</div>
-          <h2 class="teacher-panel__title">薄弱维度分布</h2>
+          <div class="journal-eyebrow">
+            Weak Dimensions
+          </div>
+          <h2 class="teacher-panel__title">
+            薄弱维度分布
+          </h2>
           <p class="teacher-panel__subtitle">
             {{
               className
@@ -127,14 +141,24 @@ const weakDimensionStats = computed(() => {
           description="当前班级还没有可用于聚合的能力画像数据。"
         />
 
-        <div v-else class="dimension-list">
-          <div v-for="item in weakDimensionStats" :key="item.dimension" class="dimension-item">
+        <div
+          v-else
+          class="dimension-list"
+        >
+          <div
+            v-for="item in weakDimensionStats"
+            :key="item.dimension"
+            class="dimension-item"
+          >
             <div class="dimension-item__head">
               <span class="dimension-item__name">{{ item.dimension }}</span>
               <span class="dimension-item__count">{{ item.count }} 人</span>
             </div>
             <div class="dimension-item__bar">
-              <div class="dimension-item__bar-fill" :style="{ width: item.width }" />
+              <div
+                class="dimension-item__bar-fill"
+                :style="{ width: item.width }"
+              />
             </div>
           </div>
         </div>

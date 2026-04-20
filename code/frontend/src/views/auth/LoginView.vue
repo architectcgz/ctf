@@ -4,7 +4,10 @@
     panel-title="登录平台"
     panel-description="使用你的训练账号进入工作台。"
   >
-    <form class="auth-login-form" @submit.prevent="onSubmit">
+    <form
+      class="auth-login-form"
+      @submit.prevent="onSubmit"
+    >
       <label class="auth-login-form__field">
         <span class="ui-field__label">用户名</span>
         <div class="ui-control-wrap">
@@ -14,7 +17,7 @@
             autocomplete="username"
             class="ui-control"
             @keyup.enter="onSubmit"
-          />
+          >
         </div>
       </label>
       <label class="auth-login-form__field">
@@ -26,7 +29,7 @@
             type="password"
             autocomplete="current-password"
             class="ui-control"
-          />
+          >
         </div>
       </label>
 
@@ -42,7 +45,12 @@
     <template #footer>
       <div class="auth-login-form__footer">
         没有账号？
-        <RouterLink class="auth-login-form__link" to="/register"> 创建新账号 </RouterLink>
+        <RouterLink
+          class="auth-login-form__link"
+          to="/register"
+        >
+          创建新账号
+        </RouterLink>
       </div>
     </template>
   </AuthEntryShell>

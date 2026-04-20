@@ -279,9 +279,15 @@ onMounted(() => {
     <main class="content-pane admin-instance-manage-shell__content">
       <header class="admin-instance-manage-shell__hero">
         <div class="admin-instance-manage-shell__hero-main">
-          <div class="workspace-overline">Instance Workspace</div>
-          <h1 class="workspace-page-title">实例管理</h1>
-          <p class="workspace-page-copy">在后台视角查看实例状态、到期节奏与访问地址，并快速销毁异常环境。</p>
+          <div class="workspace-overline">
+            Instance Workspace
+          </div>
+          <h1 class="workspace-page-title">
+            实例管理
+          </h1>
+          <p class="workspace-page-copy">
+            在后台视角查看实例状态、到期节奏与访问地址，并快速销毁异常环境。
+          </p>
         </div>
 
         <div class="admin-instance-manage-shell__hero-side">
@@ -304,7 +310,9 @@ onMounted(() => {
           <div class="metric-panel-value">
             {{ totalCount.toString().padStart(2, '0') }}
           </div>
-          <div class="metric-panel-helper">符合当前筛选条件的实例数量</div>
+          <div class="metric-panel-helper">
+            符合当前筛选条件的实例数量
+          </div>
         </article>
 
         <article class="metric-panel-card--premium">
@@ -315,7 +323,9 @@ onMounted(() => {
           <div class="metric-panel-value">
             {{ runningCount.toString().padStart(2, '0') }}
           </div>
-          <div class="metric-panel-helper">仍在占用环境资源的实例数量</div>
+          <div class="metric-panel-helper">
+            仍在占用环境资源的实例数量
+          </div>
         </article>
 
         <article class="metric-panel-card--premium">
@@ -326,15 +336,21 @@ onMounted(() => {
           <div class="metric-panel-value">
             {{ expiringSoonCount.toString().padStart(2, '0') }}
           </div>
-          <div class="metric-panel-helper">剩余时间不足 10 分钟的实例</div>
+          <div class="metric-panel-helper">
+            剩余时间不足 10 分钟的实例
+          </div>
         </article>
       </div>
 
       <section class="workspace-directory-section admin-instance-manage-directory">
         <header class="list-heading">
           <div>
-            <div class="workspace-overline">Instance Directory</div>
-            <h2 class="list-heading__title">实例目录</h2>
+            <div class="workspace-overline">
+              Instance Directory
+            </div>
+            <h2 class="list-heading__title">
+              实例目录
+            </h2>
           </div>
         </header>
 
@@ -361,7 +377,11 @@ onMounted(() => {
                   @change="updateFilter('className', ($event.target as HTMLSelectElement).value)"
                 >
                   <option value="">全部班级</option>
-                  <option v-for="item in classes" :key="item.name" :value="item.name">
+                  <option
+                    v-for="item in classes"
+                    :key="item.name"
+                    :value="item.name"
+                  >
                     {{ item.name }} · {{ item.student_count || 0 }}
                   </option>
                 </select>
@@ -375,7 +395,7 @@ onMounted(() => {
                   class="admin-instance-manage-filter-field__control"
                   placeholder="输入学号精确查询"
                   @input="updateFilter('studentNo', ($event.target as HTMLInputElement).value)"
-                />
+                >
               </label>
             </div>
           </template>
@@ -458,7 +478,10 @@ onMounted(() => {
           </template>
 
           <template #cell-displayUrl="{ row }">
-            <span class="admin-instance-manage-table__url-text" :title="(row as PlatformInstanceRow).displayUrl">
+            <span
+              class="admin-instance-manage-table__url-text"
+              :title="(row as PlatformInstanceRow).displayUrl"
+            >
               {{ (row as PlatformInstanceRow).displayUrl }}
             </span>
           </template>
@@ -486,7 +509,10 @@ onMounted(() => {
         />
       </section>
 
-      <div v-if="error" class="admin-instance-manage-shell__error">
+      <div
+        v-if="error"
+        class="admin-instance-manage-shell__error"
+      >
         {{ error }}
         <button
           type="button"

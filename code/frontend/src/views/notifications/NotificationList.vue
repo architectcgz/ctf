@@ -103,118 +103,168 @@ async function handlePublishSuccess(): Promise<void> {
   >
     <main class="content-pane">
       <div class="notification-page">
-      <header class="notification-topbar">
-        <div class="notification-heading">
-          <div class="workspace-overline">Notifications</div>
-          <h1 class="notification-title workspace-page-title">通知中心</h1>
-          <p class="notification-subtitle">系统、竞赛和训练相关通知会在这里按时间顺序汇总。</p>
-        </div>
-
-        <div class="notification-topbar-meta">
-          <div class="notification-head-stats" aria-label="消息概况">
-            <div v-for="stat in headStats" :key="stat.key" class="notification-head-stat">
-              <span class="notification-head-stat__label">{{ stat.label }}</span>
-              <strong class="notification-head-stat__value">{{ stat.value }}</strong>
+        <header class="notification-topbar">
+          <div class="notification-heading">
+            <div class="workspace-overline">
+              Notifications
             </div>
+            <h1 class="notification-title workspace-page-title">
+              通知中心
+            </h1>
+            <p class="notification-subtitle">
+              系统、竞赛和训练相关通知会在这里按时间顺序汇总。
+            </p>
           </div>
 
-          <div class="notification-actions">
-            <button
-              v-if="canPublishNotification"
-              type="button"
-              class="ui-btn ui-btn--primary"
-              @click="openPublishDrawer"
+          <div class="notification-topbar-meta">
+            <div
+              class="notification-head-stats"
+              aria-label="消息概况"
             >
-              发布通知
-            </button>
-            <button type="button" class="ui-btn ui-btn--secondary" @click="markCurrentPageRead">
-              本页已读
-            </button>
-            <button type="button" class="ui-btn ui-btn--secondary" @click="refresh">
-              <RefreshCw class="h-4 w-4" />
-              刷新
-            </button>
-          </div>
-        </div>
-      </header>
-
-      <div v-if="loading" class="notification-loading">
-        <div class="notification-loading-spinner" />
-      </div>
-
-      <AppEmpty
-        v-else-if="hasLoadError"
-        class="notification-empty-state"
-        icon="AlertTriangle"
-        title="通知加载失败"
-        :description="loadErrorMessage"
-      >
-        <template #action>
-          <button type="button" class="ui-btn ui-btn--secondary" @click="refresh">
-            重新加载
-          </button>
-        </template>
-      </AppEmpty>
-
-      <AppEmpty
-        v-else-if="list.length === 0"
-        class="notification-empty-state"
-        icon="Inbox"
-        title="暂无通知"
-        description="新的系统、竞赛、团队和训练消息会在这里汇总展示。"
-      />
-
-      <template v-else>
-        <section class="notification-directory" aria-label="通知目录">
-          <div class="notification-directory-top">
-            <h2 class="notification-directory-title">消息列表</h2>
-            <div class="notification-directory-meta">共 {{ total }} 条</div>
-          </div>
-
-          <div class="notification-directory-head">
-            <span>类型</span>
-            <span>标题与内容</span>
-            <span>时间</span>
-            <span>状态</span>
-          </div>
-
-          <button
-            v-for="item in list"
-            :key="item.id"
-            type="button"
-            class="notification-row"
-            :class="{ 'notification-row-unread': item.unread }"
-            @click="openNotificationDetail(item)"
-          >
-            <div class="notification-row-type">
-              <span class="notification-chip">{{ typeLabel(item.type) }}</span>
-            </div>
-            <div class="notification-row-main">
-              <div class="notification-row-title" :title="item.title">{{ item.title }}</div>
-              <div class="notification-row-copy" :title="item.content">{{ item.content }}</div>
-            </div>
-            <div class="notification-row-time">{{ formatDate(item.created_at) }}</div>
-            <div class="notification-row-state">
-              <span
-                class="notification-state-chip"
-                :class="{ 'notification-state-chip-unread': item.unread }"
+              <div
+                v-for="stat in headStats"
+                :key="stat.key"
+                class="notification-head-stat"
               >
-                {{ item.unread ? '未读' : '已读' }}
-              </span>
+                <span class="notification-head-stat__label">{{ stat.label }}</span>
+                <strong class="notification-head-stat__value">{{ stat.value }}</strong>
+              </div>
             </div>
-          </button>
-        </section>
 
-        <div v-if="total > 0" class="notification-pagination workspace-directory-pagination">
-          <PagePaginationControls
-            :page="page"
-            :total-pages="totalPages"
-            :total="total"
-            :total-label="`共 ${total} 条`"
-            @change-page="changePage"
-          />
+            <div class="notification-actions">
+              <button
+                v-if="canPublishNotification"
+                type="button"
+                class="ui-btn ui-btn--primary"
+                @click="openPublishDrawer"
+              >
+                发布通知
+              </button>
+              <button
+                type="button"
+                class="ui-btn ui-btn--secondary"
+                @click="markCurrentPageRead"
+              >
+                本页已读
+              </button>
+              <button
+                type="button"
+                class="ui-btn ui-btn--secondary"
+                @click="refresh"
+              >
+                <RefreshCw class="h-4 w-4" />
+                刷新
+              </button>
+            </div>
+          </div>
+        </header>
+
+        <div
+          v-if="loading"
+          class="notification-loading"
+        >
+          <div class="notification-loading-spinner" />
         </div>
-      </template>
+
+        <AppEmpty
+          v-else-if="hasLoadError"
+          class="notification-empty-state"
+          icon="AlertTriangle"
+          title="通知加载失败"
+          :description="loadErrorMessage"
+        >
+          <template #action>
+            <button
+              type="button"
+              class="ui-btn ui-btn--secondary"
+              @click="refresh"
+            >
+              重新加载
+            </button>
+          </template>
+        </AppEmpty>
+
+        <AppEmpty
+          v-else-if="list.length === 0"
+          class="notification-empty-state"
+          icon="Inbox"
+          title="暂无通知"
+          description="新的系统、竞赛、团队和训练消息会在这里汇总展示。"
+        />
+
+        <template v-else>
+          <section
+            class="notification-directory"
+            aria-label="通知目录"
+          >
+            <div class="notification-directory-top">
+              <h2 class="notification-directory-title">
+                消息列表
+              </h2>
+              <div class="notification-directory-meta">
+                共 {{ total }} 条
+              </div>
+            </div>
+
+            <div class="notification-directory-head">
+              <span>类型</span>
+              <span>标题与内容</span>
+              <span>时间</span>
+              <span>状态</span>
+            </div>
+
+            <button
+              v-for="item in list"
+              :key="item.id"
+              type="button"
+              class="notification-row"
+              :class="{ 'notification-row-unread': item.unread }"
+              @click="openNotificationDetail(item)"
+            >
+              <div class="notification-row-type">
+                <span class="notification-chip">{{ typeLabel(item.type) }}</span>
+              </div>
+              <div class="notification-row-main">
+                <div
+                  class="notification-row-title"
+                  :title="item.title"
+                >
+                  {{ item.title }}
+                </div>
+                <div
+                  class="notification-row-copy"
+                  :title="item.content"
+                >
+                  {{ item.content }}
+                </div>
+              </div>
+              <div class="notification-row-time">
+                {{ formatDate(item.created_at) }}
+              </div>
+              <div class="notification-row-state">
+                <span
+                  class="notification-state-chip"
+                  :class="{ 'notification-state-chip-unread': item.unread }"
+                >
+                  {{ item.unread ? '未读' : '已读' }}
+                </span>
+              </div>
+            </button>
+          </section>
+
+          <div
+            v-if="total > 0"
+            class="notification-pagination workspace-directory-pagination"
+          >
+            <PagePaginationControls
+              :page="page"
+              :total-pages="totalPages"
+              :total="total"
+              :total-label="`共 ${total} 条`"
+              @change-page="changePage"
+            />
+          </div>
+        </template>
       </div>
     </main>
 

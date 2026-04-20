@@ -32,169 +32,224 @@ const {
   >
     <main class="content-pane">
       <div class="instance-page">
-      <header class="instance-topbar">
-        <div class="instance-heading">
-          <div class="workspace-overline">Instances</div>
-          <h1 class="instance-title workspace-page-title">我的实例</h1>
-          <p class="instance-subtitle">
-            管理运行中与等待创建中的靶机实例，查看状态并执行延时或销毁。
-          </p>
-        </div>
-      </header>
-
-      <section class="instance-summary">
-        <div class="instance-summary-title">当前运行概况</div>
-        <div class="instance-summary-grid metric-panel-grid">
-          <div class="instance-summary-item metric-panel-card">
-            <div class="instance-summary-label metric-panel-label">运行中</div>
-            <div class="instance-summary-value metric-panel-value">{{ runningCount }}</div>
-            <div class="instance-summary-helper metric-panel-helper">
-              当前仍在运行、可直接访问的实例数量
+        <header class="instance-topbar">
+          <div class="instance-heading">
+            <div class="workspace-overline">
+              Instances
             </div>
+            <h1 class="instance-title workspace-page-title">
+              我的实例
+            </h1>
+            <p class="instance-subtitle">
+              管理运行中与等待创建中的靶机实例，查看状态并执行延时或销毁。
+            </p>
           </div>
-          <div class="instance-summary-item metric-panel-card">
-            <div class="instance-summary-label metric-panel-label">等待创建</div>
-            <div class="instance-summary-value metric-panel-value">{{ waitingCount }}</div>
-            <div class="instance-summary-helper metric-panel-helper">
-              已经提交创建请求、正在排队或启动中的实例数量
-            </div>
+        </header>
+
+        <section class="instance-summary">
+          <div class="instance-summary-title">
+            当前运行概况
           </div>
-          <div class="instance-summary-item metric-panel-card">
-            <div class="instance-summary-label metric-panel-label">实例上限</div>
-            <div class="instance-summary-value metric-panel-value">{{ maxInstances }}</div>
-            <div class="instance-summary-helper metric-panel-helper">
-              当前账号最多可同时保留的实例数量
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <div v-if="loading" class="instance-loading">
-        <div class="instance-loading-spinner" />
-      </div>
-
-      <div v-else-if="instances.length === 0" class="instance-empty">
-        <div class="instance-empty-title">暂无运行中或等待创建的实例</div>
-        <router-link to="/challenges" class="instance-empty-link">前往靶场列表创建实例</router-link>
-      </div>
-
-      <section v-else class="instance-directory" aria-label="实例目录">
-        <div class="instance-directory-top">
-          <h2 class="instance-directory-title">实例列表</h2>
-          <div class="instance-directory-meta">共 {{ instances.length }} 个实例</div>
-        </div>
-
-        <div class="instance-directory-head">
-          <span>题目</span>
-          <span>访问</span>
-          <span>状态</span>
-          <span>剩余时间</span>
-          <span>操作</span>
-        </div>
-
-        <article v-for="instance in instances" :key="instance.id" class="instance-row">
-          <div class="instance-row-main">
-            <h2 class="instance-row-title" :title="instance.challenge_title">
-              {{ instance.challenge_title }}
-            </h2>
-            <div class="instance-row-tags">
-              <span class="instance-chip instance-chip-category">{{ instance.category }}</span>
-              <span class="instance-chip instance-chip-difficulty">{{ instance.difficulty }}</span>
-            </div>
-          </div>
-
-          <div class="instance-row-access">
-            <template v-if="instance.status === 'running'">
-              <div
-                class="instance-row-mono instance-row-access-value"
-                :title="
-                  instance.access_url ||
-                  (instance.ssh_info ? `${instance.ssh_info.host}:${instance.ssh_info.port}` : '')
-                "
-              >
-                {{
-                  instance.access_url ||
-                  (instance.ssh_info ? `${instance.ssh_info.host}:${instance.ssh_info.port}` : '')
-                }}
+          <div class="instance-summary-grid metric-panel-grid">
+            <div class="instance-summary-item metric-panel-card">
+              <div class="instance-summary-label metric-panel-label">
+                运行中
               </div>
-              <div class="instance-row-inline-actions">
-                <button
-                  type="button"
-                  class="ui-btn ui-btn--link instance-link-btn"
-                  @click="
-                    copyAddress(
-                      instance.access_url ||
-                        (instance.ssh_info
-                          ? `${instance.ssh_info.host}:${instance.ssh_info.port}`
-                          : '')
-                    )
+              <div class="instance-summary-value metric-panel-value">
+                {{ runningCount }}
+              </div>
+              <div class="instance-summary-helper metric-panel-helper">
+                当前仍在运行、可直接访问的实例数量
+              </div>
+            </div>
+            <div class="instance-summary-item metric-panel-card">
+              <div class="instance-summary-label metric-panel-label">
+                等待创建
+              </div>
+              <div class="instance-summary-value metric-panel-value">
+                {{ waitingCount }}
+              </div>
+              <div class="instance-summary-helper metric-panel-helper">
+                已经提交创建请求、正在排队或启动中的实例数量
+              </div>
+            </div>
+            <div class="instance-summary-item metric-panel-card">
+              <div class="instance-summary-label metric-panel-label">
+                实例上限
+              </div>
+              <div class="instance-summary-value metric-panel-value">
+                {{ maxInstances }}
+              </div>
+              <div class="instance-summary-helper metric-panel-helper">
+                当前账号最多可同时保留的实例数量
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div
+          v-if="loading"
+          class="instance-loading"
+        >
+          <div class="instance-loading-spinner" />
+        </div>
+
+        <div
+          v-else-if="instances.length === 0"
+          class="instance-empty"
+        >
+          <div class="instance-empty-title">
+            暂无运行中或等待创建的实例
+          </div>
+          <router-link
+            to="/challenges"
+            class="instance-empty-link"
+          >
+            前往靶场列表创建实例
+          </router-link>
+        </div>
+
+        <section
+          v-else
+          class="instance-directory"
+          aria-label="实例目录"
+        >
+          <div class="instance-directory-top">
+            <h2 class="instance-directory-title">
+              实例列表
+            </h2>
+            <div class="instance-directory-meta">
+              共 {{ instances.length }} 个实例
+            </div>
+          </div>
+
+          <div class="instance-directory-head">
+            <span>题目</span>
+            <span>访问</span>
+            <span>状态</span>
+            <span>剩余时间</span>
+            <span>操作</span>
+          </div>
+
+          <article
+            v-for="instance in instances"
+            :key="instance.id"
+            class="instance-row"
+          >
+            <div class="instance-row-main">
+              <h2
+                class="instance-row-title"
+                :title="instance.challenge_title"
+              >
+                {{ instance.challenge_title }}
+              </h2>
+              <div class="instance-row-tags">
+                <span class="instance-chip instance-chip-category">{{ instance.category }}</span>
+                <span class="instance-chip instance-chip-difficulty">{{ instance.difficulty }}</span>
+              </div>
+            </div>
+
+            <div class="instance-row-access">
+              <template v-if="instance.status === 'running'">
+                <div
+                  class="instance-row-mono instance-row-access-value"
+                  :title="
+                    instance.access_url ||
+                      (instance.ssh_info ? `${instance.ssh_info.host}:${instance.ssh_info.port}` : '')
                   "
                 >
-                  复制
-                </button>
-                <button
-                  v-if="instance.access_url"
-                  type="button"
-                  class="ui-btn ui-btn--link instance-link-btn"
-                  @click="openTarget(instance.id)"
-                >
-                  打开目标
-                </button>
+                  {{
+                    instance.access_url ||
+                      (instance.ssh_info ? `${instance.ssh_info.host}:${instance.ssh_info.port}` : '')
+                  }}
+                </div>
+                <div class="instance-row-inline-actions">
+                  <button
+                    type="button"
+                    class="ui-btn ui-btn--link instance-link-btn"
+                    @click="
+                      copyAddress(
+                        instance.access_url ||
+                          (instance.ssh_info
+                            ? `${instance.ssh_info.host}:${instance.ssh_info.port}`
+                            : '')
+                      )
+                    "
+                  >
+                    复制
+                  </button>
+                  <button
+                    v-if="instance.access_url"
+                    type="button"
+                    class="ui-btn ui-btn--link instance-link-btn"
+                    @click="openTarget(instance.id)"
+                  >
+                    打开目标
+                  </button>
+                </div>
+              </template>
+              <div
+                v-else
+                class="instance-row-note"
+              >
+                {{ getInstanceWaitingHint(instance) }}
               </div>
-            </template>
-            <div v-else class="instance-row-note">
-              {{ getInstanceWaitingHint(instance) }}
             </div>
-          </div>
 
-          <div class="instance-row-status">
-            <span class="instance-state-chip">
-              <span :class="getInstanceStatusClass(instance.status)">●</span>
-              <span>{{ getInstanceStatusLabel(instance.status) }}</span>
-            </span>
-          </div>
+            <div class="instance-row-status">
+              <span class="instance-state-chip">
+                <span :class="getInstanceStatusClass(instance.status)">●</span>
+                <span>{{ getInstanceStatusLabel(instance.status) }}</span>
+              </span>
+            </div>
 
-          <div class="instance-row-remaining">
-            <span
-              v-if="instance.status === 'running'"
-              class="instance-row-mono"
-              :class="
-                instance.remaining < WARNING_THRESHOLD_SECONDS ? 'instance-row-mono-warning' : ''
-              "
-            >
-              {{ formatRemainingTime(instance.remaining) }}
-            </span>
-            <span v-else class="instance-row-note">
-              {{
-                instance.status === 'failed'
-                  ? '启动失败'
-                  : instance.status === 'crashed'
-                    ? '运行异常'
-                    : '等待创建'
-              }}
-            </span>
-          </div>
+            <div class="instance-row-remaining">
+              <span
+                v-if="instance.status === 'running'"
+                class="instance-row-mono"
+                :class="
+                  instance.remaining < WARNING_THRESHOLD_SECONDS ? 'instance-row-mono-warning' : ''
+                "
+              >
+                {{ formatRemainingTime(instance.remaining) }}
+              </span>
+              <span
+                v-else
+                class="instance-row-note"
+              >
+                {{
+                  instance.status === 'failed'
+                    ? '启动失败'
+                    : instance.status === 'crashed'
+                      ? '运行异常'
+                      : '等待创建'
+                }}
+              </span>
+            </div>
 
-          <div class="instance-row-actions">
-            <button
-              v-if="instance.status === 'running' && instance.share_scope !== 'shared'"
-              :disabled="instance.remaining_extends <= 0"
-              class="ui-btn ui-btn--sm ui-btn--primary"
-              @click="extendTime(instance.id)"
-            >
-              延时 +{{ EXTEND_DURATION_SECONDS / 60 }}min
-            </button>
-            <button
-              v-if="instance.share_scope !== 'shared'"
-              class="ui-btn ui-btn--sm ui-btn--danger"
-              @click="destroyInstance(instance.id)"
-            >
-              销毁
-            </button>
-            <span v-if="instance.share_scope === 'shared'" class="instance-row-note">系统托管</span>
-          </div>
-        </article>
-      </section>
+            <div class="instance-row-actions">
+              <button
+                v-if="instance.status === 'running' && instance.share_scope !== 'shared'"
+                :disabled="instance.remaining_extends <= 0"
+                class="ui-btn ui-btn--sm ui-btn--primary"
+                @click="extendTime(instance.id)"
+              >
+                延时 +{{ EXTEND_DURATION_SECONDS / 60 }}min
+              </button>
+              <button
+                v-if="instance.share_scope !== 'shared'"
+                class="ui-btn ui-btn--sm ui-btn--danger"
+                @click="destroyInstance(instance.id)"
+              >
+                销毁
+              </button>
+              <span
+                v-if="instance.share_scope === 'shared'"
+                class="instance-row-note"
+              >系统托管</span>
+            </div>
+          </article>
+        </section>
       </div>
     </main>
 
@@ -204,13 +259,23 @@ const {
       @click.self="closeWarning"
     >
       <div class="warning-dialog w-full max-w-md rounded-[24px] border px-6 py-6 shadow-xl">
-        <h3 class="text-lg font-semibold text-[var(--journal-ink)]">实例即将过期</h3>
+        <h3 class="text-lg font-semibold text-[var(--journal-ink)]">
+          实例即将过期
+        </h3>
         <p class="mt-2 text-sm leading-6 text-[var(--journal-muted)]">
           实例 "{{ warningInstance?.challenge_title }}" 剩余时间不足 5 分钟，是否延长？
         </p>
         <div class="mt-6 flex justify-end gap-3">
-          <button class="ui-btn ui-btn--secondary" @click="closeWarning">取消</button>
-          <button class="ui-btn ui-btn--primary" @click="extendFromWarning">
+          <button
+            class="ui-btn ui-btn--secondary"
+            @click="closeWarning"
+          >
+            取消
+          </button>
+          <button
+            class="ui-btn ui-btn--primary"
+            @click="extendFromWarning"
+          >
             延长 {{ EXTEND_DURATION_SECONDS / 60 }} 分钟
           </button>
         </div>

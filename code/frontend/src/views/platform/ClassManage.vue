@@ -201,13 +201,23 @@ onMounted(() => {
     <main class="content-pane admin-class-manage-shell__content">
       <header class="admin-class-manage-shell__hero">
         <div class="admin-class-manage-shell__hero-main">
-          <div class="workspace-overline">Class Workspace</div>
-          <h1 class="workspace-page-title">班级管理</h1>
-          <p class="workspace-page-copy">在后台视角查看班级目录、学生规模，并快速进入班级详情。</p>
+          <div class="workspace-overline">
+            Class Workspace
+          </div>
+          <h1 class="workspace-page-title">
+            班级管理
+          </h1>
+          <p class="workspace-page-copy">
+            在后台视角查看班级目录、学生规模，并快速进入班级详情。
+          </p>
         </div>
 
         <div class="admin-class-manage-shell__hero-side">
-          <button type="button" class="admin-class-manage-shell__hero-action" @click="loadClasses()">
+          <button
+            type="button"
+            class="admin-class-manage-shell__hero-action"
+            @click="loadClasses()"
+          >
             刷新目录
           </button>
         </div>
@@ -219,8 +229,12 @@ onMounted(() => {
             <span>班级总量</span>
             <FolderKanban class="h-4 w-4" />
           </div>
-          <div class="metric-panel-value">{{ total.toString().padStart(2, '0') }}</div>
-          <div class="metric-panel-helper">平台已接入班级</div>
+          <div class="metric-panel-value">
+            {{ total.toString().padStart(2, '0') }}
+          </div>
+          <div class="metric-panel-helper">
+            平台已接入班级
+          </div>
         </article>
 
         <article class="metric-panel-card--premium">
@@ -253,8 +267,12 @@ onMounted(() => {
       <section class="workspace-directory-section admin-class-manage-directory">
         <header class="list-heading">
           <div>
-            <div class="workspace-overline">Class Directory</div>
-            <h2 class="list-heading__title">班级目录</h2>
+            <div class="workspace-overline">
+              Class Directory
+            </div>
+            <h2 class="list-heading__title">
+              班级目录
+            </h2>
           </div>
         </header>
 
@@ -273,7 +291,10 @@ onMounted(() => {
             <div class="admin-class-manage-filter-grid">
               <label class="admin-class-manage-filter-field">
                 <span class="admin-class-manage-filter-field__label">班级状态</span>
-                <select v-model="rosterFilter" class="admin-class-manage-filter-field__control">
+                <select
+                  v-model="rosterFilter"
+                  class="admin-class-manage-filter-field__control"
+                >
                   <option value="all">全部班级</option>
                   <option value="active">已有学生</option>
                   <option value="empty">待入班</option>
@@ -320,7 +341,10 @@ onMounted(() => {
 
           <template #cell-name="{ row }">
             <div class="admin-class-manage-table__name-wrap">
-              <span class="admin-class-manage-table__name-text" :title="(row as PlatformClassRow).name">
+              <span
+                class="admin-class-manage-table__name-text"
+                :title="(row as PlatformClassRow).name"
+              >
                 {{ (row as PlatformClassRow).name }}
               </span>
             </div>
@@ -362,9 +386,16 @@ onMounted(() => {
         />
       </section>
 
-      <div v-if="error" class="admin-class-manage-shell__error">
+      <div
+        v-if="error"
+        class="admin-class-manage-shell__error"
+      >
         {{ error }}
-        <button type="button" class="admin-class-manage-shell__error-action" @click="loadClasses()">
+        <button
+          type="button"
+          class="admin-class-manage-shell__error-action"
+          @click="loadClasses()"
+        >
           重试
         </button>
       </div>

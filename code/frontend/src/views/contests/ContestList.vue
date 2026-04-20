@@ -126,120 +126,154 @@ function contestAccentStyle(status: ContestStatus): Record<string, string> {
   >
     <main class="content-pane">
       <div class="contest-page">
-      <header class="contest-topbar">
-        <div class="contest-heading">
-          <div class="workspace-overline">Contests</div>
-          <h1 class="contest-title workspace-page-title">竞赛中心</h1>
-          <p class="contest-subtitle">查看当前可参加和已结束的竞赛，直接进入竞赛工作区。</p>
-        </div>
-      </header>
-
-      <section class="contest-summary">
-        <div class="contest-summary-title">
-          <Trophy class="h-4 w-4" />
-          <span>当前竞赛概况</span>
-        </div>
-        <div class="contest-summary-grid metric-panel-grid">
-          <div
-            v-for="stat in summaryMetrics"
-            :key="stat.key"
-            class="contest-summary-item metric-panel-card"
-          >
-            <div class="contest-summary-label metric-panel-label">{{ stat.label }}</div>
-            <div class="contest-summary-value metric-panel-value">{{ stat.value }}</div>
-            <div class="contest-summary-helper metric-panel-helper">{{ stat.hint }}</div>
+        <header class="contest-topbar">
+          <div class="contest-heading">
+            <div class="workspace-overline">
+              Contests
+            </div>
+            <h1 class="contest-title workspace-page-title">
+              竞赛中心
+            </h1>
+            <p class="contest-subtitle">
+              查看当前可参加和已结束的竞赛，直接进入竞赛工作区。
+            </p>
           </div>
-        </div>
-      </section>
+        </header>
 
-      <div v-if="loading" class="contest-loading">
-        <div class="contest-loading-spinner" />
-      </div>
+        <section class="contest-summary">
+          <div class="contest-summary-title">
+            <Trophy class="h-4 w-4" />
+            <span>当前竞赛概况</span>
+          </div>
+          <div class="contest-summary-grid metric-panel-grid">
+            <div
+              v-for="stat in summaryMetrics"
+              :key="stat.key"
+              class="contest-summary-item metric-panel-card"
+            >
+              <div class="contest-summary-label metric-panel-label">
+                {{ stat.label }}
+              </div>
+              <div class="contest-summary-value metric-panel-value">
+                {{ stat.value }}
+              </div>
+              <div class="contest-summary-helper metric-panel-helper">
+                {{ stat.hint }}
+              </div>
+            </div>
+          </div>
+        </section>
 
-      <AppEmpty
-        v-else-if="loadErrorMessage"
-        class="contest-empty-state"
-        icon="AlertTriangle"
-        title="竞赛列表加载失败"
-        :description="loadErrorMessage"
-      >
-        <template #action>
-          <button type="button" class="ui-btn ui-btn--secondary" @click="refresh">重试</button>
-        </template>
-      </AppEmpty>
-
-      <AppEmpty
-        v-else-if="visibleContests.length === 0"
-        class="contest-empty-state"
-        icon="Flag"
-        title="暂无竞赛"
-        description="当前没有可展示的竞赛，稍后再来查看新的开赛计划。"
-      />
-
-      <section v-else class="contest-directory" aria-label="竞赛目录">
-        <div class="contest-directory-top">
-          <h2 class="contest-directory-title">竞赛列表</h2>
-          <div class="contest-directory-meta">共 {{ visibleContests.length }} 场</div>
-        </div>
-
-        <div class="contest-directory-head">
-          <span>竞赛</span>
-          <span>时间</span>
-          <span>状态</span>
-          <span>节奏</span>
-          <span>操作</span>
-        </div>
-
-        <button
-          v-for="contest in visibleContests"
-          :key="contest.id"
-          type="button"
-          class="contest-row"
-          :style="contestAccentStyle(contest.status)"
-          :aria-label="`${contest.title}，${getStatusLabel(contest.status)}，${getModeLabel(contest.mode)}`"
-          @click="openContest(contest)"
+        <div
+          v-if="loading"
+          class="contest-loading"
         >
-          <div class="contest-row-main">
-            <div class="contest-row-status-strip">
+          <div class="contest-loading-spinner" />
+        </div>
+
+        <AppEmpty
+          v-else-if="loadErrorMessage"
+          class="contest-empty-state"
+          icon="AlertTriangle"
+          title="竞赛列表加载失败"
+          :description="loadErrorMessage"
+        >
+          <template #action>
+            <button
+              type="button"
+              class="ui-btn ui-btn--secondary"
+              @click="refresh"
+            >
+              重试
+            </button>
+          </template>
+        </AppEmpty>
+
+        <AppEmpty
+          v-else-if="visibleContests.length === 0"
+          class="contest-empty-state"
+          icon="Flag"
+          title="暂无竞赛"
+          description="当前没有可展示的竞赛，稍后再来查看新的开赛计划。"
+        />
+
+        <section
+          v-else
+          class="contest-directory"
+          aria-label="竞赛目录"
+        >
+          <div class="contest-directory-top">
+            <h2 class="contest-directory-title">
+              竞赛列表
+            </h2>
+            <div class="contest-directory-meta">
+              共 {{ visibleContests.length }} 场
+            </div>
+          </div>
+
+          <div class="contest-directory-head">
+            <span>竞赛</span>
+            <span>时间</span>
+            <span>状态</span>
+            <span>节奏</span>
+            <span>操作</span>
+          </div>
+
+          <button
+            v-for="contest in visibleContests"
+            :key="contest.id"
+            type="button"
+            class="contest-row"
+            :style="contestAccentStyle(contest.status)"
+            :aria-label="`${contest.title}，${getStatusLabel(contest.status)}，${getModeLabel(contest.mode)}`"
+            @click="openContest(contest)"
+          >
+            <div class="contest-row-main">
+              <div class="contest-row-status-strip">
+                <span
+                  class="contest-chip"
+                  :style="{ '--contest-chip-color': 'var(--contest-row-accent)' }"
+                >
+                  {{ getStatusLabel(contest.status) }}
+                </span>
+                <span class="contest-chip contest-chip-muted">{{ getModeLabel(contest.mode) }}</span>
+              </div>
+              <h3
+                class="contest-row-title"
+                :title="contest.title"
+              >
+                {{ contest.title }}
+              </h3>
+            </div>
+
+            <div class="contest-row-time">
+              <div class="contest-row-time-item">
+                <CalendarRange class="h-3.5 w-3.5" />
+                <span>{{ formatTime(contest.starts_at) }} - {{ formatTime(contest.ends_at) }}</span>
+              </div>
+            </div>
+
+            <div class="contest-row-state">
               <span
-                class="contest-chip"
-                :style="{ '--contest-chip-color': 'var(--contest-row-accent)' }"
+                class="contest-state-chip"
+                :style="{ '--contest-state-color': 'var(--contest-row-accent)' }"
               >
                 {{ getStatusLabel(contest.status) }}
               </span>
-              <span class="contest-chip contest-chip-muted">{{ getModeLabel(contest.mode) }}</span>
             </div>
-            <h3 class="contest-row-title" :title="contest.title">{{ contest.title }}</h3>
-          </div>
 
-          <div class="contest-row-time">
-            <div class="contest-row-time-item">
-              <CalendarRange class="h-3.5 w-3.5" />
-              <span>{{ formatTime(contest.starts_at) }} - {{ formatTime(contest.ends_at) }}</span>
+            <div class="contest-row-timeline">
+              <div class="contest-row-time-item contest-row-time-item-strong">
+                <Clock3 class="h-3.5 w-3.5" />
+                <span>{{ getTimelineHint(contest) }}</span>
+              </div>
             </div>
-          </div>
 
-          <div class="contest-row-state">
-            <span
-              class="contest-state-chip"
-              :style="{ '--contest-state-color': 'var(--contest-row-accent)' }"
-            >
-              {{ getStatusLabel(contest.status) }}
-            </span>
-          </div>
-
-          <div class="contest-row-timeline">
-            <div class="contest-row-time-item contest-row-time-item-strong">
-              <Clock3 class="h-3.5 w-3.5" />
-              <span>{{ getTimelineHint(contest) }}</span>
+            <div class="contest-row-cta">
+              <span>{{ getContestActionLabel(contest.status) }}</span>
             </div>
-          </div>
-
-          <div class="contest-row-cta">
-            <span>{{ getContestActionLabel(contest.status) }}</span>
-          </div>
-        </button>
-      </section>
+          </button>
+        </section>
       </div>
     </main>
   </section>

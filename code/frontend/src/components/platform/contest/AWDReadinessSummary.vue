@@ -16,7 +16,7 @@ const props = withDefaults(
     actionLabel?: string
   }>(),
   {
-    actionLabel: '配置',
+    actionLabel: '编辑配置',
   }
 )
 
@@ -25,19 +25,20 @@ const emit = defineEmits<{
 }>()
 
 const summaryItems = computed(() => {
-  if (!props.readiness) return []
+  const readiness = props.readiness
   return [
-    { key: 'total', label: '题目总数', value: props.readiness.total_count },
-    { key: 'ready', label: '已就绪', value: props.readiness.ready_count },
-    { key: 'blocking', label: '阻塞项', value: props.readiness.blocking_count },
+    { key: 'passed', label: '最近通过', value: readiness?.passed_challenges ?? 0 },
+    { key: 'pending', label: '未验证', value: readiness?.pending_challenges ?? 0 },
+    { key: 'failed', label: '最近失败', value: readiness?.failed_challenges ?? 0 },
+    { key: 'stale', label: '待重新验证', value: readiness?.stale_challenges ?? 0 },
+    { key: 'missing', label: '未配 Checker', value: readiness?.missing_checker_challenges ?? 0 },
   ]
 })
 
 const readinessDecision = computed(() => {
   if (!props.readiness) return { key: 'pending', title: '正在审计...', description: '请稍候，系统正在扫描题目状态。' }
   if (props.readiness.ready) return { key: 'ready', title: '环境已就绪', description: '所有服务 Checker 均已通过验证，可以安全开启竞赛。' }
-  if (props.readiness.override_active) return { key: 'override', title: '强制放行模式', description: '由于操作员干预，校验规则已被临时跳过。' }
-  return { key: 'blocked', title: '存在阻塞风险', description: '部分题目配置不完整或校验失败，将限制运维操作。' }
+  return { key: 'blocked', title: '存在阻塞风险', description: '部分题目仍有阻塞或校验失败，将限制运维操作。' }
 })
 
 const blockingActionLabels = computed(() => {
@@ -46,7 +47,7 @@ const blockingActionLabels = computed(() => {
   const actions = props.readiness.blocking_actions || []
   if (actions.includes('start_contest')) labels.push('开启比赛')
   if (actions.includes('create_round')) labels.push('创建轮次')
-  if (actions.includes('run_check')) labels.push('即时巡检')
+  if (actions.includes('run_current_round_check')) labels.push('即时巡检')
   return labels
 })
 
@@ -58,6 +59,7 @@ const blockingEmptyDescription = computed(() => props.readiness?.ready ? '所有
 
 function getGlobalReasonCopy(reason: string): string {
   switch (reason) {
+    case 'no_challenges': return '当前赛事还没有关联题目，无法执行开赛关键动作。'
     case 'missing_teams': return '竞赛中尚未加入任何参赛队伍。'
     case 'missing_challenges': return '题目池为空，至少需要关联一道题目。'
     case 'invalid_schedule': return '赛程时间设置有误或尚未开始。'
@@ -179,7 +181,11 @@ function formatDateTime(value?: string): string {
               </td>
               <td class="col-meta text-[11px] text-slate-500">{{ formatDateTime(item.last_preview_at) }}</td>
               <td class="col-actions">
-                <button class="action-btn" @click="emit('editConfig', item.challenge_id)">
+                <button
+                  :id="`awd-readiness-edit-${item.challenge_id}`"
+                  class="action-btn"
+                  @click="emit('editConfig', item.challenge_id)"
+                >
                   {{ props.actionLabel }}
                 </button>
               </td>

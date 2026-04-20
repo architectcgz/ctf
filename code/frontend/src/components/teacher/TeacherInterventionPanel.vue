@@ -158,8 +158,12 @@ watch(
 <template>
   <section class="teacher-panel">
     <header class="teacher-panel__header">
-      <div class="journal-eyebrow">Intervention</div>
-      <h2 class="teacher-panel__title">优先介入学生</h2>
+      <div class="journal-eyebrow">
+        Intervention
+      </div>
+      <h2 class="teacher-panel__title">
+        优先介入学生
+      </h2>
       <p class="teacher-panel__subtitle">
         {{
           className
@@ -176,7 +180,10 @@ watch(
       description="当前班级学生的训练活跃度和解题表现暂时没有明显风险。"
     />
 
-    <div v-else class="intervention-list">
+    <div
+      v-else
+      class="intervention-list"
+    >
       <article
         v-for="item in candidates"
         :key="item.student.id"
@@ -187,7 +194,9 @@ watch(
             <div class="intervention-item__name">
               {{ item.student.name || item.student.username }}
             </div>
-            <div class="intervention-item__username">@{{ item.student.username }}</div>
+            <div class="intervention-item__username">
+              @{{ item.student.username }}
+            </div>
             <div class="intervention-item__reason">
               {{ item.reason }}
             </div>
@@ -203,7 +212,9 @@ watch(
               v-else-if="getRecommendation(item.student.id)"
               class="intervention-item__recommendation"
             >
-              <div class="intervention-item__recommendation-label">建议训练题</div>
+              <div class="intervention-item__recommendation-label">
+                建议训练题
+              </div>
               <div class="intervention-item__recommendation-title">
                 {{ getRecommendation(item.student.id)?.title }}
               </div>

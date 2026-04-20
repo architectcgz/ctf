@@ -16,8 +16,12 @@ function levelClass(level: string): string {
   <section class="observation-strip teacher-surface-section">
     <header class="observation-strip__header">
       <div>
-        <div class="observation-strip__eyebrow">Teaching Signals</div>
-        <h2 class="observation-strip__title">教学观察摘要</h2>
+        <div class="observation-strip__eyebrow">
+          Teaching Signals
+        </div>
+        <h2 class="observation-strip__title">
+          教学观察摘要
+        </h2>
       </div>
       <p class="observation-strip__hint">
         这些结论全部来自当前归档中的训练事件与评阅记录，没有附加 AI 黑盒判断。
@@ -34,8 +38,15 @@ function levelClass(level: string): string {
           <span class="observation__label">{{ item.label }}</span>
           <span class="observation__level">{{ item.level }}</span>
         </div>
-        <p class="observation__summary">{{ item.summary }}</p>
-        <p v-if="item.evidence" class="observation__evidence">{{ item.evidence }}</p>
+        <p class="observation__summary">
+          {{ item.summary }}
+        </p>
+        <p
+          v-if="item.evidence"
+          class="observation__evidence"
+        >
+          {{ item.evidence }}
+        </p>
       </article>
     </div>
   </section>

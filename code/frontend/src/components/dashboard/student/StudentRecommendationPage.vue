@@ -69,47 +69,52 @@ const summaryCards = computed(() => [
   >
     <div :class="embedded ? undefined : 'content-pane'">
       <div class="recommendation-header">
-      <div class="workspace-overline">Action Queue</div>
-      <h1 class="journal-page-title workspace-page-title journal-soft-page-title">
-        现在先练这几道
-      </h1>
-      <p class="workspace-page-copy max-w-2xl">
-        按当前顺序直接开练，做完这一组再回来刷新下一批建议。
-      </p>
+        <div class="workspace-overline">
+          Action Queue
+        </div>
+        <h1 class="journal-page-title workspace-page-title journal-soft-page-title">
+          现在先练这几道
+        </h1>
+        <p class="workspace-page-copy max-w-2xl">
+          按当前顺序直接开练，做完这一组再回来刷新下一批建议。
+        </p>
 
-      <div class="mt-5 flex flex-wrap gap-2">
-        <template v-if="visibleWeakDimensions.length > 0">
+        <div class="mt-5 flex flex-wrap gap-2">
+          <template v-if="visibleWeakDimensions.length > 0">
+            <span
+              v-for="dim in visibleWeakDimensions"
+              :key="dim"
+              class="journal-soft-accent-pill inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold"
+            >
+              <ShieldAlert class="h-3 w-3" />
+              {{ dim }}
+            </span>
+          </template>
           <span
-            v-for="dim in visibleWeakDimensions"
-            :key="dim"
-            class="journal-soft-accent-pill inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold"
-          >
-            <ShieldAlert class="h-3 w-3" />
-            {{ dim }}
-          </span>
-        </template>
-        <span v-else class="journal-weak-tag journal-weak-tag--stable"> 暂无明显短板 </span>
-      </div>
+            v-else
+            class="journal-weak-tag journal-weak-tag--stable"
+          > 暂无明显短板 </span>
+        </div>
 
-      <div
-        class="recommendation-summary-strip mt-5 progress-strip metric-panel-grid metric-panel-default-surface"
-      >
-        <article
-          v-for="card in summaryCards"
-          :key="card.key"
-          class="recommendation-summary-card progress-card metric-panel-card"
+        <div
+          class="recommendation-summary-strip mt-5 progress-strip metric-panel-grid metric-panel-default-surface"
         >
-          <div class="journal-note-label progress-card-label metric-panel-label">
-            {{ card.label }}
-          </div>
-          <div class="journal-note-value progress-card-value metric-panel-value">
-            {{ card.value }}
-          </div>
-          <div class="journal-note-helper progress-card-hint metric-panel-helper">
-            {{ card.helper }}
-          </div>
-        </article>
-      </div>
+          <article
+            v-for="card in summaryCards"
+            :key="card.key"
+            class="recommendation-summary-card progress-card metric-panel-card"
+          >
+            <div class="journal-note-label progress-card-label metric-panel-label">
+              {{ card.label }}
+            </div>
+            <div class="journal-note-value progress-card-value metric-panel-value">
+              {{ card.value }}
+            </div>
+            <div class="journal-note-helper progress-card-hint metric-panel-helper">
+              {{ card.helper }}
+            </div>
+          </article>
+        </div>
       </div>
 
       <div
@@ -117,67 +122,89 @@ const summaryCards = computed(() => [
         :class="{ 'recommend-board--embedded': embedded }"
       >
         <section class="recommend-section">
-        <div v-if="recommendations.length > 0" class="recommend-toolbar">
-          <p class="recommend-toolbar__copy">按当前顺序直接推进，做完这组再回来刷新下一批建议。</p>
-          <div class="recommend-toolbar__actions">
-            <button type="button" class="journal-btn-outline" @click="emit('openSkillProfile')">
-              能力画像
-            </button>
-            <button type="button" class="journal-btn-primary" @click="emit('openChallenges')">
-              浏览全部题目
-            </button>
-          </div>
-        </div>
-
-        <div
-          v-if="recommendations.length === 0"
-          class="journal-soft-empty-state mt-5"
-        >
-          当前没有推荐题目，可以先去题目列表探索新的方向。
-          <div class="mt-4">
-            <button type="button" class="journal-btn-primary" @click="emit('openChallenges')">
-              浏览全部题目
-            </button>
-          </div>
-        </div>
-
-        <div v-else class="recommend-list mt-4">
-          <button
-            v-for="(item, index) in recommendations"
-            :key="item.challenge_id"
-            class="recommend-item group w-full cursor-pointer text-left"
-            @click="emit('openChallenge', item.challenge_id)"
+          <div
+            v-if="recommendations.length > 0"
+            class="recommend-toolbar"
           >
-            <div class="flex items-start gap-4">
-              <div
-                class="rec-index shrink-0"
-                :class="index === 0 ? 'rec-index--top' : 'rec-index--rest'"
+            <p class="recommend-toolbar__copy">
+              按当前顺序直接推进，做完这组再回来刷新下一批建议。
+            </p>
+            <div class="recommend-toolbar__actions">
+              <button
+                type="button"
+                class="journal-btn-outline"
+                @click="emit('openSkillProfile')"
               >
-                {{ index + 1 }}
-              </div>
-              <div class="min-w-0 flex-1">
-                <div class="flex flex-wrap items-center gap-2">
-                  <span class="journal-soft-body-title text-sm font-semibold">{{
-                    item.title
-                  }}</span>
-                  <span
-                    class="rounded-full px-2 py-0.5 text-xs font-medium"
-                    :class="difficultyClass(item.difficulty)"
-                  >
-                    {{ difficultyLabel(item.difficulty) }}
-                  </span>
-                  <span class="journal-category-chip">
-                    {{ item.category }}
-                  </span>
-                </div>
-                <p class="journal-soft-body-copy mt-2 text-sm leading-6">{{ item.reason }}</p>
-              </div>
-              <ArrowRight
-                class="journal-soft-accent-icon mt-1 h-4 w-4 shrink-0 opacity-0 transition group-hover:opacity-100"
-              />
+                能力画像
+              </button>
+              <button
+                type="button"
+                class="journal-btn-primary"
+                @click="emit('openChallenges')"
+              >
+                浏览全部题目
+              </button>
             </div>
-          </button>
-        </div>
+          </div>
+
+          <div
+            v-if="recommendations.length === 0"
+            class="journal-soft-empty-state mt-5"
+          >
+            当前没有推荐题目，可以先去题目列表探索新的方向。
+            <div class="mt-4">
+              <button
+                type="button"
+                class="journal-btn-primary"
+                @click="emit('openChallenges')"
+              >
+                浏览全部题目
+              </button>
+            </div>
+          </div>
+
+          <div
+            v-else
+            class="recommend-list mt-4"
+          >
+            <button
+              v-for="(item, index) in recommendations"
+              :key="item.challenge_id"
+              class="recommend-item group w-full cursor-pointer text-left"
+              @click="emit('openChallenge', item.challenge_id)"
+            >
+              <div class="flex items-start gap-4">
+                <div
+                  class="rec-index shrink-0"
+                  :class="index === 0 ? 'rec-index--top' : 'rec-index--rest'"
+                >
+                  {{ index + 1 }}
+                </div>
+                <div class="min-w-0 flex-1">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <span class="journal-soft-body-title text-sm font-semibold">{{
+                      item.title
+                    }}</span>
+                    <span
+                      class="rounded-full px-2 py-0.5 text-xs font-medium"
+                      :class="difficultyClass(item.difficulty)"
+                    >
+                      {{ difficultyLabel(item.difficulty) }}
+                    </span>
+                    <span class="journal-category-chip">
+                      {{ item.category }}
+                    </span>
+                  </div>
+                  <p class="journal-soft-body-copy mt-2 text-sm leading-6">
+                    {{ item.reason }}
+                  </p>
+                </div>
+                <ArrowRight
+                  class="journal-soft-accent-icon mt-1 h-4 w-4 shrink-0 opacity-0 transition group-hover:opacity-100"
+                />
+              </div>
+            </button>
+          </div>
         </section>
       </div>
     </div>

@@ -29,7 +29,11 @@ const { loading, challenge, writeup, loadPage } = useChallengeWriteupEditorPage(
         <span class="class-chip">查看题解</span>
       </div>
       <div class="writeup-top-actions">
-        <button class="ui-btn ui-btn--ghost" type="button" @click="emit('back')">
+        <button
+          class="ui-btn ui-btn--ghost"
+          type="button"
+          @click="emit('back')"
+        >
           返回题目
         </button>
         <button
@@ -41,7 +45,11 @@ const { loading, challenge, writeup, loadPage } = useChallengeWriteupEditorPage(
           <Edit3 class="h-4 w-4" />
           编辑题解
         </button>
-        <button class="ui-btn ui-btn--ghost" type="button" @click="void loadPage()">
+        <button
+          class="ui-btn ui-btn--ghost"
+          type="button"
+          @click="void loadPage()"
+        >
           <RefreshCw class="h-4 w-4" />
           刷新
         </button>
@@ -56,12 +64,26 @@ const { loading, challenge, writeup, loadPage } = useChallengeWriteupEditorPage(
       description="当前保存版本会按这里的正文与公开范围对外展示，适合用于复核发布前的阅读效果。"
     />
 
-    <div v-if="writeup" class="journal-divider" />
+    <div
+      v-if="writeup"
+      class="journal-divider"
+    />
 
-    <AppLoading v-if="loading" class="writeup-loading">正在加载题解数据...</AppLoading>
+    <AppLoading
+      v-if="loading"
+      class="writeup-loading"
+    >
+      正在加载题解数据...
+    </AppLoading>
 
-    <main v-else class="content-pane writeup-workspace">
-      <dl v-if="writeup" class="writeup-snapshot-grid">
+    <main
+      v-else
+      class="content-pane writeup-workspace"
+    >
+      <dl
+        v-if="writeup"
+        class="writeup-snapshot-grid"
+      >
         <div class="writeup-snapshot-item">
           <dt>可见性</dt>
           <dd>{{ writeup.visibility }}</dd>
@@ -80,7 +102,10 @@ const { loading, challenge, writeup, loadPage } = useChallengeWriteupEditorPage(
         </div>
       </dl>
 
-      <div v-if="writeup" class="writeup-view-body">
+      <div
+        v-if="writeup"
+        class="writeup-view-body"
+      >
         <ChallengeDescriptionPanel
           :content="writeup.content"
           label="题解正文"
@@ -88,7 +113,10 @@ const { loading, challenge, writeup, loadPage } = useChallengeWriteupEditorPage(
         />
       </div>
 
-      <section v-else class="writeup-view-section">
+      <section
+        v-else
+        class="writeup-view-section"
+      >
         <AppEmpty
           title="当前还没有管理员题解"
           description="可以先进入编辑页创建题解，再回到查看页确认最终展示效果。"

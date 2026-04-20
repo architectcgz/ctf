@@ -16,13 +16,21 @@
         >
           拓扑编排
         </button>
-        <button class="ui-btn ui-btn--ghost" type="button" @click="openChallengeList">
+        <button
+          class="ui-btn ui-btn--ghost"
+          type="button"
+          @click="openChallengeList"
+        >
           返回题库
         </button>
       </div>
     </header>
 
-    <nav class="top-tabs" role="tablist" aria-label="题目管理视图切换">
+    <nav
+      class="top-tabs"
+      role="tablist"
+      aria-label="题目管理视图切换"
+    >
       <button
         v-for="(tab, index) in panelTabs"
         :id="tab.tabId"
@@ -43,7 +51,10 @@
     </nav>
 
     <main class="content-pane">
-      <div v-if="loading" class="flex items-center justify-center py-12">
+      <div
+        v-if="loading"
+        class="flex items-center justify-center py-12"
+      >
         <div
           class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--journal-border)] border-t-[var(--journal-accent)]"
         />
@@ -51,17 +62,21 @@
 
       <template v-else-if="challenge">
         <section
+          v-show="activePanel === 'detail'"
           id="admin-challenge-panel-detail"
           class="tab-panel challenge-panel"
           role="tabpanel"
           aria-labelledby="admin-challenge-tab-detail"
           :aria-hidden="activePanel === 'detail' ? 'false' : 'true'"
-          v-show="activePanel === 'detail'"
         >
           <header class="challenge-detail-header">
             <div class="challenge-detail-header__intro workspace-tab-heading__main">
-              <div class="workspace-overline">Challenge Profile</div>
-              <h1 class="workspace-page-title">题目管理</h1>
+              <div class="workspace-overline">
+                Challenge Profile
+              </div>
+              <h1 class="workspace-page-title">
+                题目管理
+              </h1>
             </div>
             <p class="workspace-page-copy">
               聚合《{{
@@ -74,7 +89,9 @@
             class="challenge-overview-summary progress-strip metric-panel-grid metric-panel-default-surface"
           >
             <article class="journal-note progress-card metric-panel-card">
-              <div class="journal-note-label progress-card-label metric-panel-label">分类</div>
+              <div class="journal-note-label progress-card-label metric-panel-label">
+                分类
+              </div>
               <div class="journal-note-value progress-card-value metric-panel-value">
                 {{ getCategoryLabel(challenge.category) }}
               </div>
@@ -83,7 +100,9 @@
               </div>
             </article>
             <article class="journal-note progress-card metric-panel-card">
-              <div class="journal-note-label progress-card-label metric-panel-label">难度</div>
+              <div class="journal-note-label progress-card-label metric-panel-label">
+                难度
+              </div>
               <div class="journal-note-value progress-card-value metric-panel-value">
                 {{ getDifficultyLabel(challenge.difficulty) }}
               </div>
@@ -92,7 +111,9 @@
               </div>
             </article>
             <article class="journal-note progress-card metric-panel-card">
-              <div class="journal-note-label progress-card-label metric-panel-label">分值</div>
+              <div class="journal-note-label progress-card-label metric-panel-label">
+                分值
+              </div>
               <div class="journal-note-value progress-card-value metric-panel-value">
                 {{ challenge.points }}
               </div>
@@ -101,7 +122,9 @@
               </div>
             </article>
             <article class="journal-note progress-card metric-panel-card">
-              <div class="journal-note-label progress-card-label metric-panel-label">状态</div>
+              <div class="journal-note-label progress-card-label metric-panel-label">
+                状态
+              </div>
               <div class="journal-note-value progress-card-value metric-panel-value">
                 {{ getStatusLabel(challenge.status) }}
               </div>
@@ -114,8 +137,12 @@
           <section class="workspace-directory-section challenge-section challenge-profile-section">
             <header class="list-heading">
               <div>
-                <div class="journal-note-label">Challenge Directory</div>
-                <h2 class="list-heading__title">基础信息</h2>
+                <div class="journal-note-label">
+                  Challenge Directory
+                </div>
+                <h2 class="list-heading__title">
+                  基础信息
+                </h2>
               </div>
             </header>
 
@@ -127,11 +154,18 @@
                 </div>
                 <div class="challenge-meta-item">
                   <dt>Flag 配置</dt>
-                  <dd class="challenge-meta-item__mono">{{ flagConfigSummary }}</dd>
+                  <dd class="challenge-meta-item__mono">
+                    {{ flagConfigSummary }}
+                  </dd>
                 </div>
-                <div v-if="challenge.image_id" class="challenge-meta-item">
+                <div
+                  v-if="challenge.image_id"
+                  class="challenge-meta-item"
+                >
                   <dt>镜像</dt>
-                  <dd class="challenge-meta-item__mono">ID #{{ challenge.image_id }}</dd>
+                  <dd class="challenge-meta-item__mono">
+                    ID #{{ challenge.image_id }}
+                  </dd>
                 </div>
                 <div class="challenge-meta-item">
                   <dt>实例模式</dt>
@@ -171,8 +205,12 @@
           >
             <header class="list-heading">
               <div>
-                <div class="journal-note-label">Challenge Description</div>
-                <h2 class="list-heading__title">题目描述</h2>
+                <div class="journal-note-label">
+                  Challenge Description
+                </div>
+                <h2 class="list-heading__title">
+                  题目描述
+                </h2>
               </div>
             </header>
 
@@ -189,8 +227,12 @@
           >
             <div class="list-heading">
               <div>
-                <div class="journal-note-label">Hints</div>
-                <h2 class="list-heading__title">提示管理</h2>
+                <div class="journal-note-label">
+                  Hints
+                </div>
+                <h2 class="list-heading__title">
+                  提示管理
+                </h2>
               </div>
             </div>
 
@@ -203,7 +245,9 @@
                 <div class="hint-card__title">
                   Level {{ hint.level }}{{ hint.title ? ` · ${hint.title}` : '' }}
                 </div>
-                <div class="hint-card__content">{{ hint.content }}</div>
+                <div class="hint-card__content">
+                  {{ hint.content }}
+                </div>
               </article>
             </div>
           </section>
@@ -211,8 +255,12 @@
           <section class="workspace-directory-section challenge-section">
             <header class="list-heading">
               <div>
-                <div class="journal-note-label">Judge Mode</div>
-                <h2 class="list-heading__title">判题模式配置</h2>
+                <div class="journal-note-label">
+                  Judge Mode
+                </div>
+                <h2 class="list-heading__title">
+                  判题模式配置
+                </h2>
               </div>
             </header>
 
@@ -229,7 +277,10 @@
               <div class="grid gap-4 md:grid-cols-2">
                 <label class="flag-field">
                   <span class="flag-field-label">判题模式</span>
-                  <select v-model="flagType" class="flag-field-input">
+                  <select
+                    v-model="flagType"
+                    class="flag-field-input"
+                  >
                     <option value="static">静态 Flag</option>
                     <option value="dynamic">动态前缀</option>
                     <option value="regex">正则匹配</option>
@@ -237,43 +288,58 @@
                   </select>
                 </label>
 
-                <label v-if="flagType === 'dynamic' || flagType === 'regex'" class="flag-field">
+                <label
+                  v-if="flagType === 'dynamic' || flagType === 'regex'"
+                  class="flag-field"
+                >
                   <span class="flag-field-label">Flag 前缀</span>
                   <input
                     v-model="flagPrefix"
                     type="text"
                     placeholder="例如：flag"
                     class="flag-field-input"
-                  />
+                  >
                 </label>
 
-                <label v-if="flagType === 'static'" class="flag-field md:col-span-2">
+                <label
+                  v-if="flagType === 'static'"
+                  class="flag-field md:col-span-2"
+                >
                   <span class="flag-field-label">静态 Flag</span>
                   <input
                     v-model="flagValue"
                     type="text"
                     placeholder="例如：flag{demo}"
                     class="flag-field-input font-mono"
-                  />
+                  >
                 </label>
 
-                <label v-if="flagType === 'regex'" class="flag-field md:col-span-2">
+                <label
+                  v-if="flagType === 'regex'"
+                  class="flag-field md:col-span-2"
+                >
                   <span class="flag-field-label">正则表达式</span>
                   <input
                     v-model="flagRegex"
                     type="text"
                     placeholder="例如：^flag\\{demo-[0-9]+\\}$"
                     class="flag-field-input font-mono"
-                  />
+                  >
                 </label>
               </div>
 
-              <div v-if="isSharedInstanceChallenge" class="challenge-flag-panel__warning">
+              <div
+                v-if="isSharedInstanceChallenge"
+                class="challenge-flag-panel__warning"
+              >
                 共享实例只适用于无状态题。该模式不提供用户级答案隔离，静态/正则答案可能被转发；若需隔离答案，请使用
                 per_user 或 per_team。
               </div>
 
-              <div v-if="flagType === 'manual_review'" class="challenge-flag-panel__warning">
+              <div
+                v-if="flagType === 'manual_review'"
+                class="challenge-flag-panel__warning"
+              >
                 学生提交的答案将进入教师审核队列。审核通过后才会计分并更新通过状态。
               </div>
 
@@ -295,12 +361,12 @@
         </section>
 
         <section
+          v-show="activePanel === 'writeup'"
           id="admin-challenge-panel-writeup"
           class="tab-panel challenge-panel"
           role="tabpanel"
           aria-labelledby="admin-challenge-tab-writeup"
           :aria-hidden="activePanel === 'writeup' ? 'false' : 'true'"
-          v-show="activePanel === 'writeup'"
         >
           <ChallengeWriteupManagePanel
             :challenge-id="challengeId"

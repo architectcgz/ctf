@@ -106,18 +106,30 @@ function resetFilters(): void {
     <main class="content-pane admin-awd-review-shell__content">
       <header class="admin-awd-review-shell__hero">
         <div class="admin-awd-review-shell__hero-main">
-          <div class="workspace-overline">Review Workspace</div>
-          <h1 class="workspace-page-title">AWD复盘</h1>
+          <div class="workspace-overline">
+            Review Workspace
+          </div>
+          <h1 class="workspace-page-title">
+            AWD复盘
+          </h1>
           <p class="workspace-page-copy">
             在平台视角统一查看可进入的 AWD 赛事、当前状态和报告就绪度，并直接进入复盘详情。
           </p>
         </div>
 
         <div class="admin-awd-review-shell__hero-actions">
-          <button type="button" class="ui-btn ui-btn--ghost" @click="router.push({ name: 'PlatformOverview' })">
+          <button
+            type="button"
+            class="ui-btn ui-btn--ghost"
+            @click="router.push({ name: 'PlatformOverview' })"
+          >
             返回平台概览
           </button>
-          <button type="button" class="ui-btn ui-btn--primary" @click="loadContests">
+          <button
+            type="button"
+            class="ui-btn ui-btn--primary"
+            @click="loadContests"
+          >
             <RefreshCcw class="h-4 w-4" />
             刷新目录
           </button>
@@ -168,10 +180,16 @@ function resetFilters(): void {
       <section class="workspace-directory-section admin-awd-review-directory">
         <header class="list-heading">
           <div>
-            <div class="workspace-overline">Review Directory</div>
-            <h2 class="list-heading__title">赛事目录</h2>
+            <div class="workspace-overline">
+              Review Directory
+            </div>
+            <h2 class="list-heading__title">
+              赛事目录
+            </h2>
           </div>
-          <div class="admin-awd-review-directory__meta">共 {{ contests.length }} 场赛事</div>
+          <div class="admin-awd-review-directory__meta">
+            共 {{ contests.length }} 场赛事
+          </div>
         </header>
 
         <WorkspaceDirectoryToolbar
@@ -189,7 +207,10 @@ function resetFilters(): void {
             <div class="admin-awd-review-filter-grid">
               <label class="admin-awd-review-filter-field">
                 <span class="admin-awd-review-filter-field__label">赛事状态</span>
-                <select v-model="filters.status" class="admin-awd-review-filter-field__control">
+                <select
+                  v-model="filters.status"
+                  class="admin-awd-review-filter-field__control"
+                >
                   <option value="">全部状态</option>
                   <option value="running">进行中</option>
                   <option value="ended">已结束</option>
@@ -200,7 +221,12 @@ function resetFilters(): void {
           </template>
         </WorkspaceDirectoryToolbar>
 
-        <div v-if="loading" class="workspace-directory-loading">正在同步 AWD 复盘目录...</div>
+        <div
+          v-if="loading"
+          class="workspace-directory-loading"
+        >
+          正在同步 AWD 复盘目录...
+        </div>
 
         <AppEmpty
           v-else-if="error"
@@ -210,7 +236,11 @@ function resetFilters(): void {
           :description="error"
         >
           <template #action>
-            <button type="button" class="ui-btn ui-btn--primary" @click="loadContests">
+            <button
+              type="button"
+              class="ui-btn ui-btn--primary"
+              @click="loadContests"
+            >
               重新加载
             </button>
           </template>
@@ -240,7 +270,10 @@ function resetFilters(): void {
 
           <template #cell-title="{ row }">
             <div class="admin-awd-review-table__title-wrap">
-              <span class="admin-awd-review-table__title-text" :title="(row as PlatformAwdReviewRow).title">
+              <span
+                class="admin-awd-review-table__title-text"
+                :title="(row as PlatformAwdReviewRow).title"
+              >
                 {{ (row as PlatformAwdReviewRow).title }}
               </span>
               <span class="admin-awd-review-table__hint">

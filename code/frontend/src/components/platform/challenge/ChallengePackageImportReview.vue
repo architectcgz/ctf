@@ -26,11 +26,21 @@ const metadata = computed(() => [
   <section class="import-review">
     <header class="import-review__header">
       <div>
-        <div class="import-review__eyebrow">Preview</div>
-        <h2 class="import-review__title">{{ preview.title }}</h2>
+        <div class="import-review__eyebrow">
+          Preview
+        </div>
+        <h2 class="import-review__title">
+          {{ preview.title }}
+        </h2>
       </div>
       <div class="import-review__actions">
-        <button class="import-review__ghost" type="button" @click="emit('reset')">重新选择</button>
+        <button
+          class="import-review__ghost"
+          type="button"
+          @click="emit('reset')"
+        >
+          重新选择
+        </button>
         <button
           class="import-review__primary"
           type="button"
@@ -44,10 +54,16 @@ const metadata = computed(() => [
 
     <div class="import-review__grid">
       <article class="import-review__section">
-        <div class="import-review__section-title">题目概览</div>
+        <div class="import-review__section-title">
+          题目概览
+        </div>
         <div class="import-review__overview">
           <div class="import-review__meta">
-            <div v-for="item in metadata" :key="item.label" class="import-review__meta-item">
+            <div
+              v-for="item in metadata"
+              :key="item.label"
+              class="import-review__meta-item"
+            >
               <span class="import-review__meta-label">{{ item.label }}</span>
               <strong class="import-review__meta-value">{{ item.value }}</strong>
             </div>
@@ -80,23 +96,38 @@ const metadata = computed(() => [
       </article>
 
       <article class="import-review__section">
-        <div class="import-review__section-title">提示</div>
+        <div class="import-review__section-title">
+          提示
+        </div>
         <dl
           v-if="preview.hints?.length"
           class="import-review__definition import-review__definition--hints"
         >
-          <div v-for="hint in preview.hints" :key="hint.level">
+          <div
+            v-for="hint in preview.hints"
+            :key="hint.level"
+          >
             <dt>Level {{ hint.level }}{{ hint.title ? ` · ${hint.title}` : '' }}</dt>
             <dd>{{ hint.content }}</dd>
           </div>
         </dl>
-        <div v-else class="import-review__empty">当前题目包未声明提示。</div>
+        <div
+          v-else
+          class="import-review__empty"
+        >
+          当前题目包未声明提示。
+        </div>
       </article>
     </div>
 
     <article class="import-review__section">
-      <div class="import-review__section-title">附件</div>
-      <div v-if="preview.attachments?.length" class="import-review__list">
+      <div class="import-review__section-title">
+        附件
+      </div>
+      <div
+        v-if="preview.attachments?.length"
+        class="import-review__list"
+      >
         <div
           v-for="attachment in preview.attachments"
           :key="attachment.path"
@@ -106,13 +137,28 @@ const metadata = computed(() => [
           <span>{{ attachment.path }}</span>
         </div>
       </div>
-      <div v-else class="import-review__empty">当前题目包未包含附件。</div>
+      <div
+        v-else
+        class="import-review__empty"
+      >
+        当前题目包未包含附件。
+      </div>
     </article>
 
-    <article v-if="preview.warnings?.length" class="import-review__warning">
-      <div class="import-review__section-title">导入提醒</div>
+    <article
+      v-if="preview.warnings?.length"
+      class="import-review__warning"
+    >
+      <div class="import-review__section-title">
+        导入提醒
+      </div>
       <ul class="import-review__warnings">
-        <li v-for="warning in preview.warnings" :key="warning">{{ warning }}</li>
+        <li
+          v-for="warning in preview.warnings"
+          :key="warning"
+        >
+          {{ warning }}
+        </li>
       </ul>
     </article>
   </section>

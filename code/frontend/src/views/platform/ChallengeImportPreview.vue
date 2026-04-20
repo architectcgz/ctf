@@ -67,7 +67,11 @@ watch(importId, () => {
         <span class="workspace-overline">Challenge Workspace</span>
         <span class="class-chip">导入预览</span>
       </div>
-      <button class="nav-back" type="button" @click="void backToImportPanel()">
+      <button
+        class="nav-back"
+        type="button"
+        @click="void backToImportPanel()"
+      >
         返回导入题目包
       </button>
     </header>
@@ -80,7 +84,10 @@ watch(importId, () => {
         description="请仔细检查题目，确认题头、运行信息和提示内容后再正式导入题库。"
       />
 
-      <div v-if="uploading" class="import-preview-loading flex items-center justify-center py-12">
+      <div
+        v-if="uploading"
+        class="import-preview-loading flex items-center justify-center py-12"
+      >
         <div
           class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--journal-border)] border-t-[var(--journal-accent)]"
         />
@@ -95,10 +102,18 @@ watch(importId, () => {
       >
         <template #action>
           <div class="import-preview-empty__actions">
-            <button class="nav-back" type="button" @click="void backToImportPanel()">
+            <button
+              class="nav-back"
+              type="button"
+              @click="void backToImportPanel()"
+            >
               返回导入页
             </button>
-            <button class="nav-back" type="button" @click="void backToQueuePanel()">
+            <button
+              class="nav-back"
+              type="button"
+              @click="void backToQueuePanel()"
+            >
               查看待确认导入
             </button>
           </div>

@@ -47,17 +47,27 @@ function cardClass(item: ReviewArchiveCase, section: 'practice' | 'awd'): string
     <article class="archive-panel teacher-surface-section">
       <header class="archive-panel__header">
         <div>
-          <div class="archive-panel__eyebrow">Practice Review</div>
-          <h3 class="archive-panel__title">练习复盘</h3>
+          <div class="archive-panel__eyebrow">
+            Practice Review
+          </div>
+          <h3 class="archive-panel__title">
+            练习复盘
+          </h3>
         </div>
         <p class="archive-panel__hint">
           以练习题为单位整理接入、利用、提交和复盘材料，优先还原训练闭环。
         </p>
       </header>
-      <div v-if="caseGroups.practiceCases.length === 0" class="archive-panel__empty">
+      <div
+        v-if="caseGroups.practiceCases.length === 0"
+        class="archive-panel__empty"
+      >
         暂无练习复盘案例。
       </div>
-      <div v-else class="case-list">
+      <div
+        v-else
+        class="case-list"
+      >
         <article
           v-for="item in caseGroups.practiceCases"
           :key="item.id"
@@ -70,17 +80,27 @@ function cardClass(item: ReviewArchiveCase, section: 'practice' | 'awd'): string
                 <strong>{{ item.title }}</strong>
                 <span class="archive-case__status">{{ item.statusLabel }}</span>
               </div>
-              <p class="archive-case__subtitle">{{ item.subtitle }}</p>
+              <p class="archive-case__subtitle">
+                {{ item.subtitle }}
+              </p>
             </div>
             <div class="archive-case__meta-grid">
-              <div v-for="metric in item.metrics" :key="metric.label" class="archive-case__metric">
+              <div
+                v-for="metric in item.metrics"
+                :key="metric.label"
+                class="archive-case__metric"
+              >
                 <span>{{ metric.label }}</span>
                 <strong>{{ metric.value }}</strong>
               </div>
             </div>
           </div>
           <div class="archive-case__stages">
-            <span v-for="stage in item.stages" :key="stage.key" class="archive-case__stage">
+            <span
+              v-for="stage in item.stages"
+              :key="stage.key"
+              class="archive-case__stage"
+            >
               {{ stage.label }} {{ stage.count }}
             </span>
           </div>
@@ -93,14 +113,23 @@ function cardClass(item: ReviewArchiveCase, section: 'practice' | 'awd'): string
           >
             {{ isExpanded(item.id) ? '收起案例' : '展开案例' }}
           </button>
-          <div v-if="isExpanded(item.id)" class="archive-case__details">
+          <div
+            v-if="isExpanded(item.id)"
+            class="archive-case__details"
+          >
             <ol class="archive-event-list">
-              <li v-for="event in item.events" :key="event.id" class="archive-event">
+              <li
+                v-for="event in item.events"
+                :key="event.id"
+                class="archive-event"
+              >
                 <div class="archive-event__head">
                   <strong>{{ event.label }}</strong>
                   <span>{{ event.timestamp }}</span>
                 </div>
-                <p class="archive-event__detail">{{ event.detail }}</p>
+                <p class="archive-event__detail">
+                  {{ event.detail }}
+                </p>
                 <div class="archive-event__meta">
                   <span>{{ event.stageLabel }}</span>
                   <span v-if="event.meta">{{ event.meta }}</span>
@@ -115,17 +144,27 @@ function cardClass(item: ReviewArchiveCase, section: 'practice' | 'awd'): string
     <article class="archive-panel teacher-surface-section">
       <header class="archive-panel__header">
         <div>
-          <div class="archive-panel__eyebrow">AWD Review</div>
-          <h3 class="archive-panel__title">AWD 复盘</h3>
+          <div class="archive-panel__eyebrow">
+            AWD Review
+          </div>
+          <h3 class="archive-panel__title">
+            AWD 复盘
+          </h3>
         </div>
         <p class="archive-panel__hint">
           以题目和目标队伍为单位收束对抗过程，突出命中结果、得分和攻击节奏。
         </p>
       </header>
-      <div v-if="caseGroups.awdCases.length === 0" class="archive-panel__empty">
+      <div
+        v-if="caseGroups.awdCases.length === 0"
+        class="archive-panel__empty"
+      >
         暂无 AWD 对抗案例。
       </div>
-      <div v-else class="case-list">
+      <div
+        v-else
+        class="case-list"
+      >
         <article
           v-for="item in caseGroups.awdCases"
           :key="item.id"
@@ -138,17 +177,27 @@ function cardClass(item: ReviewArchiveCase, section: 'practice' | 'awd'): string
                 <strong>{{ item.title }}</strong>
                 <span class="archive-case__status">{{ item.statusLabel }}</span>
               </div>
-              <p class="archive-case__subtitle">{{ item.subtitle }}</p>
+              <p class="archive-case__subtitle">
+                {{ item.subtitle }}
+              </p>
             </div>
             <div class="archive-case__meta-grid">
-              <div v-for="metric in item.metrics" :key="metric.label" class="archive-case__metric">
+              <div
+                v-for="metric in item.metrics"
+                :key="metric.label"
+                class="archive-case__metric"
+              >
                 <span>{{ metric.label }}</span>
                 <strong>{{ metric.value }}</strong>
               </div>
             </div>
           </div>
           <div class="archive-case__stages">
-            <span v-for="stage in item.stages" :key="stage.key" class="archive-case__stage">
+            <span
+              v-for="stage in item.stages"
+              :key="stage.key"
+              class="archive-case__stage"
+            >
               {{ stage.label }} {{ stage.count }}
             </span>
           </div>
@@ -160,14 +209,23 @@ function cardClass(item: ReviewArchiveCase, section: 'practice' | 'awd'): string
           >
             {{ isExpanded(item.id) ? '收起案例' : '展开案例' }}
           </button>
-          <div v-if="isExpanded(item.id)" class="archive-case__details">
+          <div
+            v-if="isExpanded(item.id)"
+            class="archive-case__details"
+          >
             <ol class="archive-event-list">
-              <li v-for="event in item.events" :key="event.id" class="archive-event">
+              <li
+                v-for="event in item.events"
+                :key="event.id"
+                class="archive-event"
+              >
                 <div class="archive-event__head">
                   <strong>{{ event.label }}</strong>
                   <span>{{ event.timestamp }}</span>
                 </div>
-                <p class="archive-event__detail">{{ event.detail }}</p>
+                <p class="archive-event__detail">
+                  {{ event.detail }}
+                </p>
                 <div class="archive-event__meta">
                   <span>{{ event.stageLabel }}</span>
                   <span v-if="event.meta">{{ event.meta }}</span>

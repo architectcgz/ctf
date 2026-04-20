@@ -123,46 +123,60 @@ function openPrimaryDifficulty(): void {
   >
     <div :class="embedded ? undefined : 'content-pane'">
       <div class="difficulty-header">
-      <div class="workspace-overline">Intensity Workspace</div>
-      <h1 class="journal-page-title workspace-page-title journal-soft-page-title">
-        {{ headlineTitle }}
-      </h1>
-      <p class="workspace-page-copy max-w-2xl">
-        {{
-          hasDifficultyStats
-            ? '先补当前最该推进的一档，再决定要不要继续抬强度。'
-            : '先积累几道题的样本，这里会开始告诉你下一步该推哪一档。'
-        }}
-      </p>
-
-      <div class="mt-5 flex flex-wrap gap-3" role="group" aria-label="难度进度快捷操作">
-        <button class="journal-btn-primary" @click="openPrimaryDifficulty">
+        <div class="workspace-overline">
+          Intensity Workspace
+        </div>
+        <h1 class="journal-page-title workspace-page-title journal-soft-page-title">
+          {{ headlineTitle }}
+        </h1>
+        <p class="workspace-page-copy max-w-2xl">
           {{
-            primaryDifficulty ? `先做${difficultyLabel(primaryDifficulty.difficulty)}` : '去训练'
+            hasDifficultyStats
+              ? '先补当前最该推进的一档，再决定要不要继续抬强度。'
+              : '先积累几道题的样本，这里会开始告诉你下一步该推哪一档。'
           }}
-        </button>
-        <button class="journal-btn-outline" @click="emit('openChallenges')">浏览全部题目</button>
-      </div>
+        </p>
 
-      <div
-        class="difficulty-summary-strip mt-5 progress-strip metric-panel-grid metric-panel-default-surface"
-      >
-        <article
-          v-for="card in summaryCards"
-          :key="card.key"
-          class="difficulty-summary-card progress-card metric-panel-card"
+        <div
+          class="mt-5 flex flex-wrap gap-3"
+          role="group"
+          aria-label="难度进度快捷操作"
         >
-          <div class="journal-note-label progress-card-label metric-panel-label">
-            {{ card.label }}
-          </div>
-          <div class="journal-note-value progress-card-value metric-panel-value">
-            {{ card.value }}
-          </div>
-          <div class="journal-note-helper progress-card-hint metric-panel-helper">
-            {{ card.helper }}
-          </div>
-        </article>
-      </div>
+          <button
+            class="journal-btn-primary"
+            @click="openPrimaryDifficulty"
+          >
+            {{
+              primaryDifficulty ? `先做${difficultyLabel(primaryDifficulty.difficulty)}` : '去训练'
+            }}
+          </button>
+          <button
+            class="journal-btn-outline"
+            @click="emit('openChallenges')"
+          >
+            浏览全部题目
+          </button>
+        </div>
+
+        <div
+          class="difficulty-summary-strip mt-5 progress-strip metric-panel-grid metric-panel-default-surface"
+        >
+          <article
+            v-for="card in summaryCards"
+            :key="card.key"
+            class="difficulty-summary-card progress-card metric-panel-card"
+          >
+            <div class="journal-note-label progress-card-label metric-panel-label">
+              {{ card.label }}
+            </div>
+            <div class="journal-note-value progress-card-value metric-panel-value">
+              {{ card.value }}
+            </div>
+            <div class="journal-note-helper progress-card-hint metric-panel-helper">
+              {{ card.helper }}
+            </div>
+          </article>
+        </div>
       </div>
 
       <div
@@ -170,71 +184,78 @@ function openPrimaryDifficulty(): void {
         :class="{ 'difficulty-board--embedded': embedded }"
       >
         <section class="difficulty-section">
-        <div v-if="hasDifficultyStats" class="difficulty-toolbar">
-          <p class="difficulty-toolbar__copy">
-            难度顺序固定，主推档位已高亮，按列表从上往下看就够了。
-          </p>
-        </div>
-
-        <div
-          v-if="!hasDifficultyStats"
-          class="journal-soft-empty-state mt-5"
-        >
-          当前还没有难度统计数据，先完成几道题再回来查看。
-        </div>
-
-        <div v-else class="difficulty-action-list mt-5">
-          <article
-            v-for="(item, index) in orderedStats"
-            :key="item.difficulty"
-            class="difficulty-action-item"
-            :class="{
-              'difficulty-action-item--primary': primaryDifficulty?.difficulty === item.difficulty,
-            }"
-            :data-test="`difficulty-action-${item.difficulty}`"
-            :aria-current="primaryDifficulty?.difficulty === item.difficulty ? 'step' : undefined"
+          <div
+            v-if="hasDifficultyStats"
+            class="difficulty-toolbar"
           >
-            <div class="difficulty-action-item__body">
-              <div class="difficulty-action-rank">
-                {{ String(index + 1).padStart(2, '0') }}
-              </div>
-              <div class="difficulty-action-item__content">
-                <div class="difficulty-action-item__meta">
-                  <span class="difficulty-action-item__name">{{
-                    difficultyLabel(item.difficulty)
-                  }}</span>
-                  <span class="difficulty-action-item__rate">{{ item.rate }}%</span>
-                  <span class="difficulty-action-item__count"
-                    >{{ item.solved }}/{{ item.total }}</span
-                  >
+            <p class="difficulty-toolbar__copy">
+              难度顺序固定，主推档位已高亮，按列表从上往下看就够了。
+            </p>
+          </div>
+
+          <div
+            v-if="!hasDifficultyStats"
+            class="journal-soft-empty-state mt-5"
+          >
+            当前还没有难度统计数据，先完成几道题再回来查看。
+          </div>
+
+          <div
+            v-else
+            class="difficulty-action-list mt-5"
+          >
+            <article
+              v-for="(item, index) in orderedStats"
+              :key="item.difficulty"
+              class="difficulty-action-item"
+              :class="{
+                'difficulty-action-item--primary': primaryDifficulty?.difficulty === item.difficulty,
+              }"
+              :data-test="`difficulty-action-${item.difficulty}`"
+              :aria-current="primaryDifficulty?.difficulty === item.difficulty ? 'step' : undefined"
+            >
+              <div class="difficulty-action-item__body">
+                <div class="difficulty-action-rank">
+                  {{ String(index + 1).padStart(2, '0') }}
                 </div>
-                <p class="difficulty-action-item__copy">
-                  {{ difficultyActionCopy(item) }}
-                </p>
-                <div class="difficulty-track">
-                  <div
-                    class="difficulty-track-fill h-2 rounded-full"
-                    :style="{ width: `${item.rate}%`, background: barColorMap[item.difficulty] }"
-                  />
+                <div class="difficulty-action-item__content">
+                  <div class="difficulty-action-item__meta">
+                    <span class="difficulty-action-item__name">{{
+                      difficultyLabel(item.difficulty)
+                    }}</span>
+                    <span class="difficulty-action-item__rate">{{ item.rate }}%</span>
+                    <span class="difficulty-action-item__count">{{ item.solved }}/{{ item.total }}</span>
+                  </div>
+                  <p class="difficulty-action-item__copy">
+                    {{ difficultyActionCopy(item) }}
+                  </p>
+                  <div class="difficulty-track">
+                    <div
+                      class="difficulty-track-fill h-2 rounded-full"
+                      :style="{ width: `${item.rate}%`, background: barColorMap[item.difficulty] }"
+                    />
+                  </div>
                 </div>
+                <button
+                  type="button"
+                  class="journal-btn-primary difficulty-action-item__cta"
+                  :class="{
+                    'difficulty-action-item__cta--secondary':
+                      primaryDifficulty?.difficulty !== item.difficulty,
+                  }"
+                  @click="emit('openDifficultyChallenges', item.difficulty)"
+                >
+                  去做这一档
+                </button>
               </div>
-              <button
-                type="button"
-                class="journal-btn-primary difficulty-action-item__cta"
-                :class="{
-                  'difficulty-action-item__cta--secondary':
-                    primaryDifficulty?.difficulty !== item.difficulty,
-                }"
-                @click="emit('openDifficultyChallenges', item.difficulty)"
-              >
-                去做这一档
-              </button>
-            </div>
-          </article>
-        </div>
+            </article>
+          </div>
         </section>
 
-        <section v-if="hasDifficultyStats" class="difficulty-section difficulty-section--compact">
+        <section
+          v-if="hasDifficultyStats"
+          class="difficulty-section difficulty-section--compact"
+        >
           <div class="difficulty-note">
             <Flame class="difficulty-note__icon h-4 w-4" />
             <p class="difficulty-note__copy">

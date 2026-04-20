@@ -1,13 +1,23 @@
 <template>
   <section class="journal-shell journal-shell-user journal-hero workspace-shell min-h-full">
-    <div v-if="loading" class="flex items-center justify-center py-12">
+    <div
+      v-if="loading"
+      class="flex items-center justify-center py-12"
+    >
       <div
         class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--journal-border)] border-t-[var(--journal-accent)]"
       />
     </div>
 
-    <div v-else-if="challenge" class="detail-content">
-      <div class="workspace-tabbar top-tabs" role="tablist" aria-label="题目页面主切换">
+    <div
+      v-else-if="challenge"
+      class="detail-content"
+    >
+      <div
+        class="workspace-tabbar top-tabs"
+        role="tablist"
+        aria-label="题目页面主切换"
+      >
         <button
           v-for="(tab, index) in workspaceTabs"
           :id="`challenge-workspace-tab-${tab.id}`"
@@ -41,7 +51,9 @@
           >
             <div class="question-hero">
               <div class="question-hero-main">
-                <div class="workspace-overline">Question</div>
+                <div class="workspace-overline">
+                  Question
+                </div>
                 <h1 class="question-title workspace-page-title">
                   {{ challenge.title }}
                 </h1>
@@ -58,17 +70,31 @@
                   >
                     {{ getDifficultyLabel(challenge.difficulty) }}
                   </span>
-                  <span v-if="challenge?.is_solved" class="meta-pill"> 已解出 </span>
-                  <span v-if="challenge.attachment_url" class="meta-pill"> 附件可下载 </span>
-                  <span v-for="tag in challenge.tags" :key="tag" class="meta-pill">
+                  <span
+                    v-if="challenge?.is_solved"
+                    class="meta-pill"
+                  > 已解出 </span>
+                  <span
+                    v-if="challenge.attachment_url"
+                    class="meta-pill"
+                  > 附件可下载 </span>
+                  <span
+                    v-for="tag in challenge.tags"
+                    :key="tag"
+                    class="meta-pill"
+                  >
                     {{ tag }}
                   </span>
                 </div>
               </div>
 
               <aside class="score-rail">
-                <div class="score-label">分值</div>
-                <div class="score-value">{{ challenge.points }} <small>pts</small></div>
+                <div class="score-label">
+                  分值
+                </div>
+                <div class="score-value">
+                  {{ challenge.points }} <small>pts</small>
+                </div>
                 <div class="score-note">
                   {{ challenge.attachment_url ? '当前题目包含附件。' : '当前题目无附件。' }}
                 </div>
@@ -78,8 +104,12 @@
             <section class="section">
               <div class="section-head workspace-tab-heading">
                 <div class="workspace-tab-heading__main">
-                  <div class="workspace-overline">Statement</div>
-                  <h2 class="section-title workspace-tab-heading__title">题目描述</h2>
+                  <div class="workspace-overline">
+                    Statement
+                  </div>
+                  <h2 class="section-title workspace-tab-heading__title">
+                    题目描述
+                  </h2>
                 </div>
                 <button
                   v-if="challenge.attachment_url"
@@ -97,16 +127,29 @@
               />
             </section>
 
-            <section v-if="challenge.hints.length > 0" class="section">
+            <section
+              v-if="challenge.hints.length > 0"
+              class="section"
+            >
               <div class="section-head workspace-tab-heading">
                 <div class="workspace-tab-heading__main">
-                  <div class="workspace-overline">Hints</div>
-                  <h2 class="section-title workspace-tab-heading__title">提示</h2>
+                  <div class="workspace-overline">
+                    Hints
+                  </div>
+                  <h2 class="section-title workspace-tab-heading__title">
+                    提示
+                  </h2>
                 </div>
-                <div class="section-hint">共 {{ challenge.hints.length }} 条</div>
+                <div class="section-hint">
+                  共 {{ challenge.hints.length }} 条
+                </div>
               </div>
               <div class="hint-list">
-                <div v-for="hint in challenge.hints" :key="hint.id" class="hint-line">
+                <div
+                  v-for="hint in challenge.hints"
+                  :key="hint.id"
+                  class="hint-line"
+                >
                   <div>
                     <div class="hint-label">
                       提示 {{ hint.level }}{{ hint.title ? ` · ${hint.title}` : '' }}
@@ -143,8 +186,12 @@
             <section class="section section--flat">
               <div class="section-head workspace-tab-heading">
                 <div class="workspace-tab-heading__main">
-                  <div class="workspace-overline">Solutions</div>
-                  <h2 class="section-title workspace-tab-heading__title">题解区</h2>
+                  <div class="workspace-overline">
+                    Solutions
+                  </div>
+                  <h2 class="section-title workspace-tab-heading__title">
+                    题解区
+                  </h2>
                 </div>
                 <div class="section-hint">
                   推荐 {{ recommendedSolutions.length }} · 社区 {{ communitySolutions.length }}
@@ -152,7 +199,10 @@
               </div>
 
               <div class="space-y-5">
-                <div v-if="!challenge?.is_solved" class="inline-note inline-note--warning">
+                <div
+                  v-if="!challenge?.is_solved"
+                  class="inline-note inline-note--warning"
+                >
                   解出题目后可查看推荐题解与社区题解。
                 </div>
 
@@ -166,8 +216,6 @@
                       >
                         <button
                           id="challenge-solutions-tab-recommended"
-                          type="button"
-                          role="tab"
                           :ref="
                             (element) =>
                               setSolutionTabButtonRef(
@@ -175,6 +223,8 @@
                                 element as HTMLButtonElement | null
                               )
                           "
+                          type="button"
+                          role="tab"
                           class="solution-tab top-tab challenge-subtab"
                           :class="{ active: activeSolutionTab === 'recommended' }"
                           :aria-selected="activeSolutionTab === 'recommended'"
@@ -187,8 +237,6 @@
                         </button>
                         <button
                           id="challenge-solutions-tab-community"
-                          type="button"
-                          role="tab"
                           :ref="
                             (element) =>
                               setSolutionTabButtonRef(
@@ -196,6 +244,8 @@
                                 element as HTMLButtonElement | null
                               )
                           "
+                          type="button"
+                          role="tab"
                           class="solution-tab top-tab challenge-subtab"
                           :class="{ active: activeSolutionTab === 'community' }"
                           :aria-selected="activeSolutionTab === 'community'"
@@ -208,7 +258,10 @@
                         </button>
                       </div>
 
-                      <div v-if="displayedSolutionCards.length === 0" class="inline-note">
+                      <div
+                        v-if="displayedSolutionCards.length === 0"
+                        class="inline-note"
+                      >
                         {{
                           activeSolutionTab === 'recommended'
                             ? '还没有推荐题解。'
@@ -267,7 +320,12 @@
                         />
                       </template>
 
-                      <div v-else class="inline-note">当前分组还没有可展示的题解。</div>
+                      <div
+                        v-else
+                        class="inline-note"
+                      >
+                        当前分组还没有可展示的题解。
+                      </div>
                     </article>
                   </div>
                 </template>
@@ -285,17 +343,29 @@
             <section class="section section--flat">
               <div class="section-head workspace-tab-heading">
                 <div class="workspace-tab-heading__main">
-                  <div class="workspace-overline">Submissions</div>
-                  <h2 class="section-title workspace-tab-heading__title">提交记录</h2>
+                  <div class="workspace-overline">
+                    Submissions
+                  </div>
+                  <h2 class="section-title workspace-tab-heading__title">
+                    提交记录
+                  </h2>
                 </div>
-                <div class="section-hint">最近提交</div>
+                <div class="section-hint">
+                  最近提交
+                </div>
               </div>
 
-              <div v-if="submissionRecords.length === 0" class="inline-note">
+              <div
+                v-if="submissionRecords.length === 0"
+                class="inline-note"
+              >
                 还没有提交记录。你在右侧提交 Flag 后，新的提交结果会出现在这里。
               </div>
 
-              <div v-else class="submission-records record-list">
+              <div
+                v-else
+                class="submission-records record-list"
+              >
                 <div
                   v-for="item in paginatedSubmissionRecords"
                   :key="item.id"
@@ -341,8 +411,12 @@
             <section class="section section--flat">
               <div class="section-head workspace-tab-heading">
                 <div class="workspace-tab-heading__main">
-                  <div class="workspace-overline">My Writeup</div>
-                  <h2 class="section-title workspace-tab-heading__title">编写题解</h2>
+                  <div class="workspace-overline">
+                    My Writeup
+                  </div>
+                  <h2 class="section-title workspace-tab-heading__title">
+                    编写题解
+                  </h2>
                 </div>
                 <div class="section-hint">
                   解题过程复盘 · {{ challenge?.is_solved ? '可发布到社区' : '仅可保存草稿' }}
@@ -369,7 +443,7 @@
                 <span
                   v-else-if="
                     myWriteup?.submission_status === 'published' ||
-                    myWriteup?.submission_status === 'submitted'
+                      myWriteup?.submission_status === 'submitted'
                   "
                   class="writeup-status-pill writeup-status-pill--success"
                 >
@@ -383,7 +457,10 @@
                 </span>
               </div>
 
-              <form class="writeup-form" @submit.prevent>
+              <form
+                class="writeup-form"
+                @submit.prevent
+              >
                 <div class="field">
                   <label for="challenge-writeup-title">标题</label>
                   <div class="ui-control-wrap">
@@ -394,7 +471,7 @@
                       maxlength="256"
                       placeholder="例如：从回显异常到拿到 flag 的完整链路"
                       class="ui-control challenge-input"
-                    />
+                    >
                   </div>
                 </div>
 
@@ -447,13 +524,22 @@
           </section>
         </main>
 
-        <aside v-if="activeWorkspaceTab === 'question'" class="detail-aside tool-pane">
+        <aside
+          v-if="activeWorkspaceTab === 'question'"
+          class="detail-aside tool-pane"
+        >
           <div class="tool-pane-inner">
             <section class="tool-group">
               <div>
-                <div class="workspace-overline">Primary Action</div>
-                <h2 class="tool-title">{{ submitPanelTitle }}</h2>
-                <p class="tool-copy">{{ submitPanelCopy }}</p>
+                <div class="workspace-overline">
+                  Primary Action
+                </div>
+                <h2 class="tool-title">
+                  {{ submitPanelTitle }}
+                </h2>
+                <p class="tool-copy">
+                  {{ submitPanelCopy }}
+                </p>
               </div>
               <span
                 v-if="challenge?.is_solved"
@@ -462,7 +548,10 @@
                 已通过
               </span>
               <div class="flag-field">
-                <label for="challenge-flag-input" class="flag-label">
+                <label
+                  for="challenge-flag-input"
+                  class="flag-label"
+                >
                   {{ submitFieldLabel }}
                 </label>
                 <div class="flag-row">
@@ -479,7 +568,7 @@
                       class="ui-control challenge-input flag-input disabled:cursor-not-allowed disabled:opacity-50"
                       :disabled="submitting"
                       @keyup.enter="submitFlagHandler"
-                    />
+                    >
                   </div>
                   <button
                     type="button"

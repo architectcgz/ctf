@@ -226,282 +226,338 @@ watch(
   >
     <main class="content-pane">
       <div class="challenge-page">
-      <header class="challenge-topbar">
-        <div class="challenge-heading">
-          <div class="workspace-overline">Challenges</div>
-          <h1 class="workspace-page-title challenge-title">靶场训练</h1>
-        </div>
-
-        <div class="challenge-actions">
-          <button type="button" class="ui-btn ui-btn--primary" @click="goToDashboard">
-            <LayoutDashboard class="h-4 w-4" />
-            返回仪表盘
-          </button>
-          <button type="button" class="ui-btn ui-btn--ghost" @click="openSkillProfile">
-            能力画像
-          </button>
-        </div>
-      </header>
-
-      <section class="challenge-summary metric-panel-default-surface">
-        <div class="challenge-summary-title">
-          <Target class="h-4 w-4" />
-          <span>当前题库概况</span>
-        </div>
-        <div class="challenge-summary-grid metric-panel-grid">
-          <div
-            v-for="stat in summaryStats"
-            :key="stat.key"
-            class="challenge-summary-item metric-panel-card"
-          >
-            <div class="challenge-summary-label metric-panel-label">{{ stat.label }}</div>
-            <div class="challenge-summary-value metric-panel-value">{{ stat.value }}</div>
-            <div class="challenge-summary-helper metric-panel-helper">{{ stat.helper }}</div>
+        <header class="challenge-topbar">
+          <div class="challenge-heading">
+            <div class="workspace-overline">
+              Challenges
+            </div>
+            <h1 class="workspace-page-title challenge-title">
+              靶场训练
+            </h1>
           </div>
-        </div>
-      </section>
 
-      <section
-        class="workspace-directory-section challenge-directory-section"
-        aria-label="题目目录"
-      >
-        <header class="list-heading">
-          <div>
-            <div class="journal-note-label">Challenge Directory</div>
-            <h2 class="list-heading__title">题目列表</h2>
-          </div>
-          <div id="challenge-directory-meta" class="challenge-directory-meta">
-            共 {{ total }} 题
-            <span v-if="hasActiveFilters">· 已按当前筛选收束结果</span>
+          <div class="challenge-actions">
+            <button
+              type="button"
+              class="ui-btn ui-btn--primary"
+              @click="goToDashboard"
+            >
+              <LayoutDashboard class="h-4 w-4" />
+              返回仪表盘
+            </button>
+            <button
+              type="button"
+              class="ui-btn ui-btn--ghost"
+              @click="openSkillProfile"
+            >
+              能力画像
+            </button>
           </div>
         </header>
 
-        <section class="challenge-directory-filters" aria-label="题目筛选">
-          <div class="challenge-directory-filter-grid">
-            <label class="challenge-directory-filter-field" for="challenge-category-filter">
-              <span class="challenge-directory-filter-label">分类</span>
-              <div class="ui-control-wrap">
-                <select
-                  id="challenge-category-filter"
-                  v-model="categoryFilter"
-                  class="ui-control"
-                  @change="onFilterChange"
-                >
-                  <option value="">全部分类</option>
-                  <option value="web">Web</option>
-                  <option value="pwn">Pwn</option>
-                  <option value="reverse">逆向</option>
-                  <option value="crypto">密码</option>
-                  <option value="misc">杂项</option>
-                  <option value="forensics">取证</option>
-                </select>
+        <section class="challenge-summary metric-panel-default-surface">
+          <div class="challenge-summary-title">
+            <Target class="h-4 w-4" />
+            <span>当前题库概况</span>
+          </div>
+          <div class="challenge-summary-grid metric-panel-grid">
+            <div
+              v-for="stat in summaryStats"
+              :key="stat.key"
+              class="challenge-summary-item metric-panel-card"
+            >
+              <div class="challenge-summary-label metric-panel-label">
+                {{ stat.label }}
               </div>
-            </label>
-
-            <label class="challenge-directory-filter-field" for="challenge-difficulty-filter">
-              <span class="challenge-directory-filter-label">难度</span>
-              <div class="ui-control-wrap">
-                <select
-                  id="challenge-difficulty-filter"
-                  v-model="difficultyFilter"
-                  class="ui-control"
-                  @change="onFilterChange"
-                >
-                  <option value="">全部难度</option>
-                  <option value="beginner">入门</option>
-                  <option value="easy">简单</option>
-                  <option value="medium">中等</option>
-                  <option value="hard">困难</option>
-                  <option value="insane">地狱</option>
-                </select>
+              <div class="challenge-summary-value metric-panel-value">
+                {{ stat.value }}
               </div>
-            </label>
-
-            <div class="challenge-directory-filter-search">
-              <label class="challenge-directory-filter-search__label" for="challenge-search-input">
-                <span
-                  class="challenge-directory-filter-label challenge-directory-filter-label--ghost"
-                  aria-hidden="true"
-                >
-                  搜索
-                </span>
-                <span class="ui-control-wrap challenge-directory-filter-search__control">
-                  <span class="ui-control-prefix">
-                    <Search class="h-4 w-4" />
-                  </span>
-                  <input
-                    id="challenge-search-input"
-                    v-model="searchQuery"
-                    type="text"
-                    placeholder="搜索题目标题或描述..."
-                    class="ui-control"
-                    aria-describedby="challenge-directory-meta"
-                    @input="onSearch"
-                  />
-                </span>
-              </label>
-            </div>
-
-            <div class="challenge-directory-filter-actions">
-              <span
-                class="challenge-directory-filter-label challenge-directory-filter-label--ghost"
-                aria-hidden="true"
-              >
-                操作
-              </span>
-              <div class="challenge-directory-filter-action-row">
-                <button
-                  type="button"
-                  class="ui-btn ui-btn--ghost challenge-filter-clear"
-                  :disabled="!hasActiveFilters"
-                  @click="resetFilters"
-                >
-                  清空筛选
-                </button>
+              <div class="challenge-summary-helper metric-panel-helper">
+                {{ stat.helper }}
               </div>
             </div>
           </div>
         </section>
 
-        <div v-if="loading" class="challenge-loading workspace-directory-loading">
-          <div class="challenge-loading-spinner" />
-        </div>
-
-        <AppEmpty
-          v-else-if="hasLoadError"
-          class="challenge-empty-state workspace-directory-empty"
-          icon="AlertTriangle"
-          title="题目列表加载失败"
-          :description="errorMessage"
+        <section
+          class="workspace-directory-section challenge-directory-section"
+          aria-label="题目目录"
         >
-          <template #action>
-            <button type="button" class="ui-btn ui-btn--secondary" @click="refresh">
-              重新加载
-            </button>
-          </template>
-        </AppEmpty>
-
-        <AppEmpty
-          v-else-if="list.length === 0"
-          class="challenge-empty-state workspace-directory-empty"
-          icon="Flag"
-          :title="emptyTitle"
-          :description="emptyDescription"
-        >
-          <template #action>
-            <button
-              v-if="hasActiveFilters"
-              type="button"
-              class="ui-btn ui-btn--secondary"
-              @click="resetFilters"
-            >
-              清空筛选
-            </button>
-          </template>
-        </AppEmpty>
-
-        <template v-else>
-          <section class="challenge-directory">
-            <div class="challenge-directory-head">
-              <span>题目</span>
-              <span>积分</span>
-              <span>分类</span>
-              <span>难度</span>
-              <span>标签</span>
-              <span>状态</span>
-              <span>解出</span>
-              <span>尝试</span>
-              <span>操作</span>
+          <header class="list-heading">
+            <div>
+              <div class="journal-note-label">
+                Challenge Directory
+              </div>
+              <h2 class="list-heading__title">
+                题目列表
+              </h2>
             </div>
-
-            <button
-              v-for="challenge in list"
-              :key="challenge.id"
-              type="button"
-              class="challenge-row"
-              :style="{ '--challenge-row-accent': getCategoryColor(challenge.category) }"
-              :aria-label="`${challenge.title}，${getCategoryLabel(challenge.category)}，${getDifficultyLabel(challenge.difficulty)}，${challenge.is_solved ? '已解出' : '待攻克'}`"
-              @click="goToDetail(challenge.id)"
+            <div
+              id="challenge-directory-meta"
+              class="challenge-directory-meta"
             >
-              <div class="challenge-row-main">
-                <div class="challenge-row-title-group">
-                  <h2 class="challenge-row-title" :title="challenge.title">
-                    {{ challenge.title }}
-                  </h2>
+              共 {{ total }} 题
+              <span v-if="hasActiveFilters">· 已按当前筛选收束结果</span>
+            </div>
+          </header>
+
+          <section
+            class="challenge-directory-filters"
+            aria-label="题目筛选"
+          >
+            <div class="challenge-directory-filter-grid">
+              <label
+                class="challenge-directory-filter-field"
+                for="challenge-category-filter"
+              >
+                <span class="challenge-directory-filter-label">分类</span>
+                <div class="ui-control-wrap">
+                  <select
+                    id="challenge-category-filter"
+                    v-model="categoryFilter"
+                    class="ui-control"
+                    @change="onFilterChange"
+                  >
+                    <option value="">全部分类</option>
+                    <option value="web">Web</option>
+                    <option value="pwn">Pwn</option>
+                    <option value="reverse">逆向</option>
+                    <option value="crypto">密码</option>
+                    <option value="misc">杂项</option>
+                    <option value="forensics">取证</option>
+                  </select>
+                </div>
+              </label>
+
+              <label
+                class="challenge-directory-filter-field"
+                for="challenge-difficulty-filter"
+              >
+                <span class="challenge-directory-filter-label">难度</span>
+                <div class="ui-control-wrap">
+                  <select
+                    id="challenge-difficulty-filter"
+                    v-model="difficultyFilter"
+                    class="ui-control"
+                    @change="onFilterChange"
+                  >
+                    <option value="">全部难度</option>
+                    <option value="beginner">入门</option>
+                    <option value="easy">简单</option>
+                    <option value="medium">中等</option>
+                    <option value="hard">困难</option>
+                    <option value="insane">地狱</option>
+                  </select>
+                </div>
+              </label>
+
+              <div class="challenge-directory-filter-search">
+                <label
+                  class="challenge-directory-filter-search__label"
+                  for="challenge-search-input"
+                >
+                  <span
+                    class="challenge-directory-filter-label challenge-directory-filter-label--ghost"
+                    aria-hidden="true"
+                  >
+                    搜索
+                  </span>
+                  <span class="ui-control-wrap challenge-directory-filter-search__control">
+                    <span class="ui-control-prefix">
+                      <Search class="h-4 w-4" />
+                    </span>
+                    <input
+                      id="challenge-search-input"
+                      v-model="searchQuery"
+                      type="text"
+                      placeholder="搜索题目标题或描述..."
+                      class="ui-control"
+                      aria-describedby="challenge-directory-meta"
+                      @input="onSearch"
+                    >
+                  </span>
+                </label>
+              </div>
+
+              <div class="challenge-directory-filter-actions">
+                <span
+                  class="challenge-directory-filter-label challenge-directory-filter-label--ghost"
+                  aria-hidden="true"
+                >
+                  操作
+                </span>
+                <div class="challenge-directory-filter-action-row">
+                  <button
+                    type="button"
+                    class="ui-btn ui-btn--ghost challenge-filter-clear"
+                    :disabled="!hasActiveFilters"
+                    @click="resetFilters"
+                  >
+                    清空筛选
+                  </button>
                 </div>
               </div>
-
-              <div class="challenge-row-points">{{ challenge.points }} pts</div>
-
-              <div class="challenge-row-category">
-                <span
-                  class="challenge-chip"
-                  :style="{
-                    '--challenge-chip-bg': `${getCategoryColor(challenge.category)}18`,
-                    '--challenge-chip-color': getCategoryColor(challenge.category),
-                  }"
-                >
-                  {{ getCategoryLabel(challenge.category) }}
-                </span>
-              </div>
-
-              <div class="challenge-row-difficulty">
-                <span
-                  class="challenge-chip"
-                  :style="{
-                    '--challenge-chip-bg': `${getDifficultyColor(challenge.difficulty)}18`,
-                    '--challenge-chip-color': getDifficultyColor(challenge.difficulty),
-                  }"
-                >
-                  {{ getDifficultyLabel(challenge.difficulty) }}
-                </span>
-              </div>
-
-              <div class="challenge-row-tags">
-                <span
-                  v-for="tag in challenge.tags.slice(0, 2)"
-                  :key="tag"
-                  class="challenge-chip challenge-chip-muted"
-                >
-                  {{ tag }}
-                </span>
-              </div>
-
-              <div class="challenge-row-status">
-                <span
-                  class="challenge-state-chip"
-                  :class="
-                    challenge.is_solved
-                      ? 'challenge-state-chip-solved'
-                      : 'challenge-state-chip-ready'
-                  "
-                >
-                  {{ challenge.is_solved ? '已解出' : '待攻克' }}
-                </span>
-              </div>
-
-              <div class="challenge-row-solved">{{ challenge.solved_count }} 人解出</div>
-
-              <div class="challenge-row-attempts">尝试 {{ challenge.total_attempts }} 次</div>
-
-              <div class="challenge-row-cta">
-                <span>{{ challenge.is_solved ? '继续查看' : '开始做题' }}</span>
-                <ArrowRight class="h-4 w-4" />
-              </div>
-            </button>
-
-            <div v-if="total > 0" class="challenge-pagination workspace-directory-pagination">
-              <PagePaginationControls
-                :page="page"
-                :total-pages="totalPages"
-                :total="total"
-                :total-label="`共 ${total} 题`"
-                @change-page="changePage"
-              />
             </div>
           </section>
-        </template>
-      </section>
+
+          <div
+            v-if="loading"
+            class="challenge-loading workspace-directory-loading"
+          >
+            <div class="challenge-loading-spinner" />
+          </div>
+
+          <AppEmpty
+            v-else-if="hasLoadError"
+            class="challenge-empty-state workspace-directory-empty"
+            icon="AlertTriangle"
+            title="题目列表加载失败"
+            :description="errorMessage"
+          >
+            <template #action>
+              <button
+                type="button"
+                class="ui-btn ui-btn--secondary"
+                @click="refresh"
+              >
+                重新加载
+              </button>
+            </template>
+          </AppEmpty>
+
+          <AppEmpty
+            v-else-if="list.length === 0"
+            class="challenge-empty-state workspace-directory-empty"
+            icon="Flag"
+            :title="emptyTitle"
+            :description="emptyDescription"
+          >
+            <template #action>
+              <button
+                v-if="hasActiveFilters"
+                type="button"
+                class="ui-btn ui-btn--secondary"
+                @click="resetFilters"
+              >
+                清空筛选
+              </button>
+            </template>
+          </AppEmpty>
+
+          <template v-else>
+            <section class="challenge-directory">
+              <div class="challenge-directory-head">
+                <span>题目</span>
+                <span>积分</span>
+                <span>分类</span>
+                <span>难度</span>
+                <span>标签</span>
+                <span>状态</span>
+                <span>解出</span>
+                <span>尝试</span>
+                <span>操作</span>
+              </div>
+
+              <button
+                v-for="challenge in list"
+                :key="challenge.id"
+                type="button"
+                class="challenge-row"
+                :style="{ '--challenge-row-accent': getCategoryColor(challenge.category) }"
+                :aria-label="`${challenge.title}，${getCategoryLabel(challenge.category)}，${getDifficultyLabel(challenge.difficulty)}，${challenge.is_solved ? '已解出' : '待攻克'}`"
+                @click="goToDetail(challenge.id)"
+              >
+                <div class="challenge-row-main">
+                  <div class="challenge-row-title-group">
+                    <h2
+                      class="challenge-row-title"
+                      :title="challenge.title"
+                    >
+                      {{ challenge.title }}
+                    </h2>
+                  </div>
+                </div>
+
+                <div class="challenge-row-points">
+                  {{ challenge.points }} pts
+                </div>
+
+                <div class="challenge-row-category">
+                  <span
+                    class="challenge-chip"
+                    :style="{
+                      '--challenge-chip-bg': `${getCategoryColor(challenge.category)}18`,
+                      '--challenge-chip-color': getCategoryColor(challenge.category),
+                    }"
+                  >
+                    {{ getCategoryLabel(challenge.category) }}
+                  </span>
+                </div>
+
+                <div class="challenge-row-difficulty">
+                  <span
+                    class="challenge-chip"
+                    :style="{
+                      '--challenge-chip-bg': `${getDifficultyColor(challenge.difficulty)}18`,
+                      '--challenge-chip-color': getDifficultyColor(challenge.difficulty),
+                    }"
+                  >
+                    {{ getDifficultyLabel(challenge.difficulty) }}
+                  </span>
+                </div>
+
+                <div class="challenge-row-tags">
+                  <span
+                    v-for="tag in challenge.tags.slice(0, 2)"
+                    :key="tag"
+                    class="challenge-chip challenge-chip-muted"
+                  >
+                    {{ tag }}
+                  </span>
+                </div>
+
+                <div class="challenge-row-status">
+                  <span
+                    class="challenge-state-chip"
+                    :class="
+                      challenge.is_solved
+                        ? 'challenge-state-chip-solved'
+                        : 'challenge-state-chip-ready'
+                    "
+                  >
+                    {{ challenge.is_solved ? '已解出' : '待攻克' }}
+                  </span>
+                </div>
+
+                <div class="challenge-row-solved">
+                  {{ challenge.solved_count }} 人解出
+                </div>
+
+                <div class="challenge-row-attempts">
+                  尝试 {{ challenge.total_attempts }} 次
+                </div>
+
+                <div class="challenge-row-cta">
+                  <span>{{ challenge.is_solved ? '继续查看' : '开始做题' }}</span>
+                  <ArrowRight class="h-4 w-4" />
+                </div>
+              </button>
+
+              <div
+                v-if="total > 0"
+                class="challenge-pagination workspace-directory-pagination"
+              >
+                <PagePaginationControls
+                  :page="page"
+                  :total-pages="totalPages"
+                  :total="total"
+                  :total-label="`共 ${total} 题`"
+                  @change-page="changePage"
+                />
+              </div>
+            </section>
+          </template>
+        </section>
       </div>
     </main>
   </section>

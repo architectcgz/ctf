@@ -39,8 +39,12 @@ function contestStatusLabel(status: string): string {
       <div class="teacher-page">
         <header class="teacher-topbar workspace-tab-heading awd-review-index-header">
           <div class="teacher-heading workspace-tab-heading__main">
-            <div class="workspace-overline awd-review-index-overline">AWD Review</div>
-            <h1 class="teacher-title workspace-page-title">AWD复盘</h1>
+            <div class="workspace-overline awd-review-index-overline">
+              AWD Review
+            </div>
+            <h1 class="teacher-title workspace-page-title">
+              AWD复盘
+            </h1>
             <p class="teacher-copy workspace-page-copy">
               集中查看赛事轮次、状态与导出就绪度，从统一入口进入整场或单轮复盘。
             </p>
@@ -54,7 +58,11 @@ function contestStatusLabel(status: string): string {
             >
               教学概览
             </button>
-            <button type="button" class="teacher-btn teacher-btn--primary" @click="loadContests">
+            <button
+              type="button"
+              class="teacher-btn teacher-btn--primary"
+              @click="loadContests"
+            >
               <RefreshCcw class="h-4 w-4" />
               刷新目录
             </button>
@@ -68,14 +76,20 @@ function contestStatusLabel(status: string): string {
           </div>
           <div class="teacher-summary-grid progress-strip metric-panel-grid">
             <article class="progress-card metric-panel-card">
-              <div class="progress-card-label metric-panel-label">赛事数量</div>
-              <div class="progress-card-value metric-panel-value">{{ contests.length }}</div>
+              <div class="progress-card-label metric-panel-label">
+                赛事数量
+              </div>
+              <div class="progress-card-value metric-panel-value">
+                {{ contests.length }}
+              </div>
               <div class="progress-card-hint metric-panel-helper">
                 当前可进入 AWD 复盘的赛事总数
               </div>
             </article>
             <article class="progress-card metric-panel-card">
-              <div class="progress-card-label metric-panel-label">进行中</div>
+              <div class="progress-card-label metric-panel-label">
+                进行中
+              </div>
               <div class="progress-card-value metric-panel-value">
                 {{ contests.filter((item) => item.status === 'running').length }}
               </div>
@@ -84,7 +98,9 @@ function contestStatusLabel(status: string): string {
               </div>
             </article>
             <article class="progress-card metric-panel-card">
-              <div class="progress-card-label metric-panel-label">可导出教师报告</div>
+              <div class="progress-card-label metric-panel-label">
+                可导出教师报告
+              </div>
               <div class="progress-card-value metric-panel-value">
                 {{ contests.filter((item) => item.export_ready).length }}
               </div>
@@ -101,17 +117,29 @@ function contestStatusLabel(status: string): string {
         >
           <header class="list-heading">
             <div>
-              <div class="journal-note-label">Review Directory</div>
-              <h3 class="list-heading__title">赛事目录</h3>
+              <div class="journal-note-label">
+                Review Directory
+              </div>
+              <h3 class="list-heading__title">
+                赛事目录
+              </h3>
             </div>
-            <div class="teacher-directory-meta">共 {{ contests.length }} 场赛事</div>
+            <div class="teacher-directory-meta">
+              共 {{ contests.length }} 场赛事
+            </div>
           </header>
 
-          <section class="teacher-directory-filters" aria-label="赛事过滤">
+          <section
+            class="teacher-directory-filters"
+            aria-label="赛事过滤"
+          >
             <div class="awd-review-filter-grid">
               <label class="awd-review-field">
                 <span class="awd-review-field__label">赛事状态</span>
-                <select v-model="filters.status" class="awd-review-field__control">
+                <select
+                  v-model="filters.status"
+                  class="awd-review-field__control"
+                >
                   <option
                     v-for="option in statusOptions"
                     :key="option.value || 'all'"
@@ -129,12 +157,15 @@ function contestStatusLabel(status: string): string {
                   type="text"
                   class="awd-review-field__control"
                   placeholder="搜索赛事标题"
-                />
+                >
               </label>
             </div>
           </section>
 
-          <div v-if="loading" class="teacher-skeleton-list workspace-directory-loading">
+          <div
+            v-if="loading"
+            class="teacher-skeleton-list workspace-directory-loading"
+          >
             <div
               v-for="index in 3"
               :key="index"
@@ -150,7 +181,11 @@ function contestStatusLabel(status: string): string {
             :description="error"
           >
             <template #action>
-              <button type="button" class="teacher-btn teacher-btn--primary" @click="loadContests">
+              <button
+                type="button"
+                class="teacher-btn teacher-btn--primary"
+                @click="loadContests"
+              >
                 重新加载
               </button>
             </template>
@@ -164,7 +199,10 @@ function contestStatusLabel(status: string): string {
             description="当前还没有可进入复盘的 AWD 赛事。"
           />
 
-          <section v-else class="teacher-directory">
+          <section
+            v-else
+            class="teacher-directory"
+          >
             <div class="teacher-directory-head">
               <span class="teacher-directory-head-cell teacher-directory-head-cell-code">代号</span>
               <span class="teacher-directory-head-cell teacher-directory-head-cell-name">赛事</span>
@@ -186,7 +224,9 @@ function contestStatusLabel(status: string): string {
               </div>
 
               <div class="teacher-directory-cell teacher-directory-cell-name">
-                <h4 class="teacher-directory-row-title">{{ contest.title }}</h4>
+                <h4 class="teacher-directory-row-title">
+                  {{ contest.title }}
+                </h4>
                 <p class="teacher-directory-row-copy">
                   最近信号
                   {{ contest.latest_evidence_at ? formatDate(contest.latest_evidence_at) : '暂无' }}

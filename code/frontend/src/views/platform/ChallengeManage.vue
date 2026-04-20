@@ -210,9 +210,15 @@ function getChallengeRow(row: unknown): PlatformChallengeListRow {
         <section class="challenge-manage-panel">
           <div class="workspace-tab-heading challenge-manage-actions">
             <div class="workspace-tab-heading__main">
-              <div class="workspace-overline">Challenge Workspace</div>
-              <h1 class="workspace-page-title">题目资源管理中心</h1>
-              <p class="workspace-page-copy">集中查看题目目录、发布状态与题库变更。</p>
+              <div class="workspace-overline">
+                Challenge Workspace
+              </div>
+              <h1 class="workspace-page-title">
+                题目资源管理中心
+              </h1>
+              <p class="workspace-page-copy">
+                集中查看题目目录、发布状态与题库变更。
+              </p>
             </div>
             <div class="challenge-manage-hero-actions">
               <button
@@ -235,7 +241,9 @@ function getChallengeRow(row: unknown): PlatformChallengeListRow {
               <div class="metric-panel-value">
                 {{ total.toString().padStart(2, '0') }}
               </div>
-              <div class="metric-panel-helper">题目资源总计</div>
+              <div class="metric-panel-helper">
+                题目资源总计
+              </div>
             </article>
 
             <article class="metric-panel-card--premium">
@@ -246,7 +254,9 @@ function getChallengeRow(row: unknown): PlatformChallengeListRow {
               <div class="metric-panel-value">
                 {{ publishedCount.toString().padStart(2, '0') }}
               </div>
-              <div class="metric-panel-helper">线上公开题目</div>
+              <div class="metric-panel-helper">
+                线上公开题目
+              </div>
             </article>
 
             <article class="metric-panel-card--premium">
@@ -257,7 +267,9 @@ function getChallengeRow(row: unknown): PlatformChallengeListRow {
               <div class="metric-panel-value">
                 {{ draftCount.toString().padStart(2, '0') }}
               </div>
-              <div class="metric-panel-helper">导入后仍待发布</div>
+              <div class="metric-panel-helper">
+                导入后仍待发布
+              </div>
             </article>
 
             <article class="metric-panel-card--premium">
@@ -268,15 +280,21 @@ function getChallengeRow(row: unknown): PlatformChallengeListRow {
               <div class="metric-panel-value">
                 {{ archivedCount.toString().padStart(2, '0') }}
               </div>
-              <div class="metric-panel-helper">只读保留题目</div>
+              <div class="metric-panel-helper">
+                只读保留题目
+              </div>
             </article>
           </div>
 
           <section class="workspace-directory-section challenge-manage-directory">
             <header class="list-heading">
               <div>
-                <div class="workspace-overline">Challenge Directory</div>
-                <h2 class="list-heading__title">题目目录</h2>
+                <div class="workspace-overline">
+                  Challenge Directory
+                </div>
+                <h2 class="list-heading__title">
+                  题目目录
+                </h2>
               </div>
             </header>
 
@@ -294,7 +312,10 @@ function getChallengeRow(row: unknown): PlatformChallengeListRow {
                 <div class="challenge-filter-grid">
                   <label class="challenge-filter-field">
                     <span class="challenge-filter-label">题目分类</span>
-                    <select v-model="categoryFilter" class="challenge-filter-select">
+                    <select
+                      v-model="categoryFilter"
+                      class="challenge-filter-select"
+                    >
                       <option value="">全部分类</option>
                       <option value="web">Web</option>
                       <option value="pwn">Pwn</option>
@@ -307,7 +328,10 @@ function getChallengeRow(row: unknown): PlatformChallengeListRow {
 
                   <label class="challenge-filter-field">
                     <span class="challenge-filter-label">难度等级</span>
-                    <select v-model="difficultyFilter" class="challenge-filter-select">
+                    <select
+                      v-model="difficultyFilter"
+                      class="challenge-filter-select"
+                    >
                       <option value="">全部难度</option>
                       <option value="beginner">入门</option>
                       <option value="easy">简单</option>
@@ -319,7 +343,10 @@ function getChallengeRow(row: unknown): PlatformChallengeListRow {
 
                   <label class="challenge-filter-field">
                     <span class="challenge-filter-label">发布状态</span>
-                    <select v-model="statusFilter" class="challenge-filter-select">
+                    <select
+                      v-model="statusFilter"
+                      class="challenge-filter-select"
+                    >
                       <option value="">全部状态</option>
                       <option value="draft">草稿</option>
                       <option value="published">已发布</option>
@@ -330,7 +357,12 @@ function getChallengeRow(row: unknown): PlatformChallengeListRow {
               </template>
             </WorkspaceDirectoryToolbar>
 
-            <div v-if="loading" class="workspace-directory-loading">正在同步题目目录...</div>
+            <div
+              v-if="loading"
+              class="workspace-directory-loading"
+            >
+              正在同步题目目录...
+            </div>
             <AppEmpty
               v-else-if="hasLoadError"
               class="workspace-directory-empty"
@@ -339,7 +371,11 @@ function getChallengeRow(row: unknown): PlatformChallengeListRow {
               :description="loadErrorMessage"
             >
               <template #action>
-                <button type="button" class="ui-btn ui-btn--secondary" @click="void refresh()">
+                <button
+                  type="button"
+                  class="ui-btn ui-btn--secondary"
+                  @click="void refresh()"
+                >
                   重新加载
                 </button>
               </template>
@@ -360,7 +396,10 @@ function getChallengeRow(row: unknown): PlatformChallengeListRow {
               row-class="challenge-table-row group"
             >
               <template #cell-title="{ row }">
-                <div class="challenge-table-title" :title="getChallengeRow(row).title">
+                <div
+                  class="challenge-table-title"
+                  :title="getChallengeRow(row).title"
+                >
                   {{ getChallengeRow(row).title }}
                 </div>
               </template>

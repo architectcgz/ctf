@@ -29,7 +29,7 @@ const distinctChallengeIds = computed(() => {
 })
 
 const teamMap = computed(() => {
-  const map = new Map<number, { team_name: string, services: Record<string, any> }>()
+  const map = new Map<string, { team_name: string, services: Record<string, any> }>()
   props.filteredServices.forEach(s => {
     if (!map.has(s.team_id)) {
       map.set(s.team_id, { team_name: s.team_name, services: {} })

@@ -262,13 +262,23 @@ onMounted(() => {
     <main class="content-pane admin-student-manage-shell__content">
       <header class="admin-student-manage-shell__hero">
         <div class="admin-student-manage-shell__hero-main">
-          <div class="workspace-overline">Student Workspace</div>
-          <h1 class="workspace-page-title">学生管理</h1>
-          <p class="workspace-page-copy">在后台视角查看学生目录、班级归属与学习表现，并快速进入学员分析。</p>
+          <div class="workspace-overline">
+            Student Workspace
+          </div>
+          <h1 class="workspace-page-title">
+            学生管理
+          </h1>
+          <p class="workspace-page-copy">
+            在后台视角查看学生目录、班级归属与学习表现，并快速进入学员分析。
+          </p>
         </div>
 
         <div class="admin-student-manage-shell__hero-side">
-          <button type="button" class="admin-student-manage-shell__hero-action" @click="initialize()">
+          <button
+            type="button"
+            class="admin-student-manage-shell__hero-action"
+            @click="initialize()"
+          >
             刷新目录
           </button>
         </div>
@@ -283,7 +293,9 @@ onMounted(() => {
           <div class="metric-panel-value">
             {{ totalStudents.toString().padStart(2, '0') }}
           </div>
-          <div class="metric-panel-helper">平台已纳入学生</div>
+          <div class="metric-panel-helper">
+            平台已纳入学生
+          </div>
         </article>
 
         <article class="metric-panel-card--premium">
@@ -294,7 +306,9 @@ onMounted(() => {
           <div class="metric-panel-value">
             {{ activeClassCount.toString().padStart(2, '0') }}
           </div>
-          <div class="metric-panel-helper">已有学生数据的班级数</div>
+          <div class="metric-panel-helper">
+            已有学生数据的班级数
+          </div>
         </article>
 
         <article class="metric-panel-card--premium">
@@ -305,15 +319,21 @@ onMounted(() => {
           <div class="metric-panel-value">
             {{ filteredTotal.toString().padStart(2, '0') }}
           </div>
-          <div class="metric-panel-helper">当前条件下的学生数量</div>
+          <div class="metric-panel-helper">
+            当前条件下的学生数量
+          </div>
         </article>
       </div>
 
       <section class="workspace-directory-section admin-student-manage-directory">
         <header class="list-heading">
           <div>
-            <div class="workspace-overline">Student Directory</div>
-            <h2 class="list-heading__title">学生目录</h2>
+            <div class="workspace-overline">
+              Student Directory
+            </div>
+            <h2 class="list-heading__title">
+              学生目录
+            </h2>
           </div>
         </header>
 
@@ -339,7 +359,11 @@ onMounted(() => {
                   @change="selectClass(($event.target as HTMLSelectElement).value)"
                 >
                   <option value="">全部班级</option>
-                  <option v-for="item in classes" :key="item.name" :value="item.name">
+                  <option
+                    v-for="item in classes"
+                    :key="item.name"
+                    :value="item.name"
+                  >
                     {{ item.name }} · {{ item.student_count || 0 }}
                   </option>
                 </select>
@@ -353,7 +377,7 @@ onMounted(() => {
                   class="admin-student-manage-filter-field__control"
                   placeholder="输入学号精确查询"
                   @input="updateStudentNoQuery(($event.target as HTMLInputElement).value)"
-                />
+                >
               </label>
             </div>
           </template>
@@ -408,7 +432,10 @@ onMounted(() => {
           </template>
 
           <template #cell-username="{ row }">
-            <span class="admin-student-manage-table__alias-text" :title="(row as PlatformStudentRow).username">
+            <span
+              class="admin-student-manage-table__alias-text"
+              :title="(row as PlatformStudentRow).username"
+            >
               {{ (row as PlatformStudentRow).username }}
             </span>
           </template>
@@ -452,9 +479,16 @@ onMounted(() => {
         />
       </section>
 
-      <div v-if="error" class="admin-student-manage-shell__error">
+      <div
+        v-if="error"
+        class="admin-student-manage-shell__error"
+      >
         {{ error }}
-        <button type="button" class="admin-student-manage-shell__error-action" @click="initialize()">
+        <button
+          type="button"
+          class="admin-student-manage-shell__error-action"
+          @click="initialize()"
+        >
           重试
         </button>
       </div>

@@ -4,11 +4,18 @@
     panel-title="创建账号"
     panel-description="填写基础信息后进入平台。"
   >
-    <form class="auth-register-form" @submit.prevent="onSubmit">
+    <form
+      class="auth-register-form"
+      @submit.prevent="onSubmit"
+    >
       <label class="auth-register-form__field">
         <span class="ui-field__label">用户名</span>
         <div class="ui-control-wrap">
-          <input v-model="form.username" autocomplete="username" class="ui-control" />
+          <input
+            v-model="form.username"
+            autocomplete="username"
+            class="ui-control"
+          >
         </div>
       </label>
       <label class="auth-register-form__field">
@@ -19,13 +26,16 @@
             type="password"
             autocomplete="new-password"
             class="ui-control"
-          />
+          >
         </div>
       </label>
       <label class="auth-register-form__field">
         <span class="ui-field__label">班级（可选）</span>
         <div class="ui-control-wrap">
-          <input v-model="form.class_name" class="ui-control" />
+          <input
+            v-model="form.class_name"
+            class="ui-control"
+          >
         </div>
       </label>
 
@@ -41,7 +51,12 @@
     <template #footer>
       <div class="auth-register-form__footer">
         已有账号，
-        <RouterLink class="auth-register-form__link" to="/login"> 去登录 </RouterLink>
+        <RouterLink
+          class="auth-register-form__link"
+          to="/login"
+        >
+          去登录
+        </RouterLink>
       </div>
     </template>
   </AuthEntryShell>

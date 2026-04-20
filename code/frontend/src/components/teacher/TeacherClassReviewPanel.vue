@@ -27,8 +27,12 @@ function getAccentClass(accent: TeacherClassReviewItemData['accent']): string {
 <template>
   <section class="teacher-panel">
     <header class="teacher-panel__header">
-      <div class="journal-eyebrow">Review</div>
-      <h2 class="teacher-panel__title">教学复盘结论</h2>
+      <div class="journal-eyebrow">
+        Review
+      </div>
+      <h2 class="teacher-panel__title">
+        教学复盘结论
+      </h2>
       <p class="teacher-panel__subtitle">
         {{ panelSubtitle }}
       </p>
@@ -41,8 +45,15 @@ function getAccentClass(accent: TeacherClassReviewItemData['accent']): string {
       description="当前班级还没有足够的训练数据形成稳定结论。"
     />
 
-    <div v-else class="review-list">
-      <article v-for="item in reviewItems" :key="item.key" :class="getAccentClass(item.accent)">
+    <div
+      v-else
+      class="review-list"
+    >
+      <article
+        v-for="item in reviewItems"
+        :key="item.key"
+        :class="getAccentClass(item.accent)"
+      >
         <div class="review-item__title">
           {{ item.title }}
         </div>
@@ -50,7 +61,10 @@ function getAccentClass(accent: TeacherClassReviewItemData['accent']): string {
           {{ item.detail }}
         </div>
 
-        <div v-if="item.students && item.students.length > 0" class="review-item__students">
+        <div
+          v-if="item.students && item.students.length > 0"
+          class="review-item__students"
+        >
           <span
             v-for="student in item.students"
             :key="student.id"
@@ -60,8 +74,13 @@ function getAccentClass(accent: TeacherClassReviewItemData['accent']): string {
           </span>
         </div>
 
-        <div v-if="item.recommendation" class="review-item__recommendation">
-          <div class="review-item__recommendation-label">推荐训练题</div>
+        <div
+          v-if="item.recommendation"
+          class="review-item__recommendation"
+        >
+          <div class="review-item__recommendation-label">
+            推荐训练题
+          </div>
           <div class="review-item__recommendation-title">
             {{ item.recommendation.title }}
           </div>

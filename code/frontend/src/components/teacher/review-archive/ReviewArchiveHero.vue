@@ -26,17 +26,29 @@ const statItems = [
     <div class="archive-hero__content">
       <div class="archive-hero__meta">
         <div>
-          <div class="archive-hero__eyebrow">Teaching Review Archive</div>
-          <h1 class="archive-hero__title workspace-page-title">教学复盘归档</h1>
+          <div class="archive-hero__eyebrow">
+            Teaching Review Archive
+          </div>
+          <h1 class="archive-hero__title workspace-page-title">
+            教学复盘归档
+          </h1>
           <p class="archive-hero__description workspace-page-copy">
             将学生训练摘要、攻防证据、Writeup 与评阅记录收束为一份可讲解、可导出的课堂复盘视图。
           </p>
         </div>
         <div class="archive-hero__actions">
-          <button type="button" class="ui-btn ui-btn--secondary" @click="emit('back')">
+          <button
+            type="button"
+            class="ui-btn ui-btn--secondary"
+            @click="emit('back')"
+          >
             返回学生列表
           </button>
-          <button type="button" class="ui-btn ui-btn--secondary" @click="emit('openAnalysis')">
+          <button
+            type="button"
+            class="ui-btn ui-btn--secondary"
+            @click="emit('openAnalysis')"
+          >
             返回学员分析
           </button>
           <button
@@ -52,7 +64,9 @@ const statItems = [
 
       <div class="archive-hero__grid">
         <article class="archive-hero__profile">
-          <div class="archive-hero__label">当前学员</div>
+          <div class="archive-hero__label">
+            当前学员
+          </div>
           <div class="archive-hero__student">
             {{ archive?.student.name || archive?.student.username || '--' }}
           </div>
@@ -72,8 +86,12 @@ const statItems = [
             :key="item.key"
             class="archive-hero__stat teacher-surface-metric"
           >
-            <div class="archive-hero__stat-label">{{ item.label }}</div>
-            <div class="archive-hero__stat-value">{{ archive?.summary[item.field] ?? 0 }}</div>
+            <div class="archive-hero__stat-label">
+              {{ item.label }}
+            </div>
+            <div class="archive-hero__stat-value">
+              {{ archive?.summary[item.field] ?? 0 }}
+            </div>
           </article>
         </div>
       </div>

@@ -85,8 +85,12 @@ const statementGuide = `statement.md 写法建议
 
     <main class="content-pane">
       <div class="hero-copy">
-        <div class="workspace-overline">Uploader Guide</div>
-        <h1 class="hero-title">题目包示例</h1>
+        <div class="workspace-overline">
+          Uploader Guide
+        </div>
+        <h1 class="hero-title">
+          题目包示例
+        </h1>
         <p class="hero-summary">
           上传 zip 之前，先核对目录结构、`challenge.yml` 字段和题面文件路径。教师自己写的 Web
           服务代码通常也放在 `docker/` 目录里，这里的示例与当前导入解析规则保持一致。
@@ -97,20 +101,32 @@ const statementGuide = `statement.md 写法建议
 
       <div class="guide-grid">
         <article class="guide-section guide-section--plain">
-          <div class="guide-section__label">目录结构</div>
-          <h2 class="guide-section__title">建议保留最小目录</h2>
+          <div class="guide-section__label">
+            目录结构
+          </div>
+          <h2 class="guide-section__title">
+            建议保留最小目录
+          </h2>
           <pre class="guide-code"><code>{{ packageTree }}</code></pre>
         </article>
         <article class="guide-section guide-section--plain">
-          <div class="guide-section__label">statement.md</div>
-          <h2 class="guide-section__title">题面正文写法</h2>
+          <div class="guide-section__label">
+            statement.md
+          </div>
+          <h2 class="guide-section__title">
+            题面正文写法
+          </h2>
           <pre class="guide-code"><code>{{ statementGuide }}</code></pre>
         </article>
       </div>
 
       <article class="guide-section guide-section--full guide-section--plain">
-        <div class="guide-section__label">challenge.yml</div>
-        <h2 class="guide-section__title">最小可用示例</h2>
+        <div class="guide-section__label">
+          challenge.yml
+        </div>
+        <h2 class="guide-section__title">
+          最小可用示例
+        </h2>
         <pre class="guide-code"><code>{{ challengeManifest }}</code></pre>
       </article>
     </main>

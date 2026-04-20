@@ -119,139 +119,186 @@ async function submitPasswordChange(): Promise<void> {
           </div>
         </PageHeader>
 
-      <section class="security-summary" aria-label="安全概况">
-        <div class="security-summary-title">
-          <KeyRound class="h-4 w-4" />
-          <span>安全概况</span>
-        </div>
-        <div class="security-summary-grid metric-panel-grid">
-          <article
-            v-for="stat in securityStats"
-            :key="stat.key"
-            class="security-summary-item metric-panel-card"
-          >
-            <div class="security-summary-icon">
-              <KeyRound class="h-4 w-4" />
-            </div>
-            <div>
-              <div class="journal-note-label metric-panel-label">{{ stat.label }}</div>
-              <div
-                class="security-summary-value metric-panel-value"
-                :class="{ 'tech-font': stat.key === 'rotation' }"
-              >
-                {{ stat.value }}
+        <section
+          class="security-summary"
+          aria-label="安全概况"
+        >
+          <div class="security-summary-title">
+            <KeyRound class="h-4 w-4" />
+            <span>安全概况</span>
+          </div>
+          <div class="security-summary-grid metric-panel-grid">
+            <article
+              v-for="stat in securityStats"
+              :key="stat.key"
+              class="security-summary-item metric-panel-card"
+            >
+              <div class="security-summary-icon">
+                <KeyRound class="h-4 w-4" />
               </div>
-              <div class="journal-note-helper metric-panel-helper">{{ stat.helper }}</div>
-            </div>
-          </article>
-        </div>
-      </section>
-
-      <div class="journal-divider security-divider" />
-
-      <div class="security-layout">
-        <form class="security-section" @submit.prevent="submitPasswordChange">
-          <div class="security-section-head">
-            <div>
-              <div class="security-section-kicker">Password</div>
-              <h2 class="security-section-title">密码修改</h2>
-            </div>
+              <div>
+                <div class="journal-note-label metric-panel-label">
+                  {{ stat.label }}
+                </div>
+                <div
+                  class="security-summary-value metric-panel-value"
+                  :class="{ 'tech-font': stat.key === 'rotation' }"
+                >
+                  {{ stat.value }}
+                </div>
+                <div class="journal-note-helper metric-panel-helper">
+                  {{ stat.helper }}
+                </div>
+              </div>
+            </article>
           </div>
+        </section>
 
-          <div class="space-y-1.5">
-            <label class="ui-field__label">当前密码</label>
-            <div class="ui-control-wrap" :class="{ 'is-error': passwordFieldErrors.oldPassword }">
-              <input
-                v-model="passwordForm.oldPassword"
-                type="password"
-                autocomplete="current-password"
-                class="ui-control"
-                placeholder="输入当前密码"
-              />
+        <div class="journal-divider security-divider" />
+
+        <div class="security-layout">
+          <form
+            class="security-section"
+            @submit.prevent="submitPasswordChange"
+          >
+            <div class="security-section-head">
+              <div>
+                <div class="security-section-kicker">
+                  Password
+                </div>
+                <h2 class="security-section-title">
+                  密码修改
+                </h2>
+              </div>
             </div>
-            <p v-if="passwordFieldErrors.oldPassword" class="journal-field-error">
-              {{ passwordFieldErrors.oldPassword }}
-            </p>
-          </div>
 
-          <div class="space-y-1.5">
-            <label class="ui-field__label">新密码</label>
-            <div class="ui-control-wrap" :class="{ 'is-error': passwordFieldErrors.newPassword }">
-              <input
-                v-model="passwordForm.newPassword"
-                type="password"
-                autocomplete="new-password"
-                class="ui-control"
-                placeholder="至少 8 位"
-              />
+            <div class="space-y-1.5">
+              <label class="ui-field__label">当前密码</label>
+              <div
+                class="ui-control-wrap"
+                :class="{ 'is-error': passwordFieldErrors.oldPassword }"
+              >
+                <input
+                  v-model="passwordForm.oldPassword"
+                  type="password"
+                  autocomplete="current-password"
+                  class="ui-control"
+                  placeholder="输入当前密码"
+                >
+              </div>
+              <p
+                v-if="passwordFieldErrors.oldPassword"
+                class="journal-field-error"
+              >
+                {{ passwordFieldErrors.oldPassword }}
+              </p>
             </div>
-            <p v-if="passwordFieldErrors.newPassword" class="journal-field-error">
-              {{ passwordFieldErrors.newPassword }}
-            </p>
-          </div>
 
-          <div class="space-y-1.5">
-            <label class="ui-field__label">确认新密码</label>
+            <div class="space-y-1.5">
+              <label class="ui-field__label">新密码</label>
+              <div
+                class="ui-control-wrap"
+                :class="{ 'is-error': passwordFieldErrors.newPassword }"
+              >
+                <input
+                  v-model="passwordForm.newPassword"
+                  type="password"
+                  autocomplete="new-password"
+                  class="ui-control"
+                  placeholder="至少 8 位"
+                >
+              </div>
+              <p
+                v-if="passwordFieldErrors.newPassword"
+                class="journal-field-error"
+              >
+                {{ passwordFieldErrors.newPassword }}
+              </p>
+            </div>
+
+            <div class="space-y-1.5">
+              <label class="ui-field__label">确认新密码</label>
+              <div
+                class="ui-control-wrap"
+                :class="{ 'is-error': passwordFieldErrors.confirmPassword }"
+              >
+                <input
+                  v-model="passwordForm.confirmPassword"
+                  type="password"
+                  autocomplete="new-password"
+                  class="ui-control"
+                  placeholder="再次输入新密码"
+                >
+              </div>
+              <p
+                v-if="passwordFieldErrors.confirmPassword"
+                class="journal-field-error"
+              >
+                {{ passwordFieldErrors.confirmPassword }}
+              </p>
+            </div>
+
             <div
-              class="ui-control-wrap"
-              :class="{ 'is-error': passwordFieldErrors.confirmPassword }"
+              v-if="passwordError"
+              class="security-error"
             >
-              <input
-                v-model="passwordForm.confirmPassword"
-                type="password"
-                autocomplete="new-password"
-                class="ui-control"
-                placeholder="再次输入新密码"
-              />
+              {{ passwordError }}
             </div>
-            <p v-if="passwordFieldErrors.confirmPassword" class="journal-field-error">
-              {{ passwordFieldErrors.confirmPassword }}
-            </p>
-          </div>
 
-          <div v-if="passwordError" class="security-error">
-            {{ passwordError }}
-          </div>
-
-          <div class="security-actions">
-            <button
-              type="button"
-              class="journal-btn journal-btn--primary"
-              :disabled="passwordSaving"
-              @click="submitPasswordChange"
-            >
-              <Loader2 v-if="passwordSaving" class="h-4 w-4 animate-spin" />
-              {{ passwordSaving ? '提交中…' : '更新密码' }}
-            </button>
-          </div>
-        </form>
-
-        <aside class="security-section security-section--aside">
-          <div class="security-section-head">
-            <div>
-              <div class="security-section-kicker">Tips</div>
-              <h2 class="security-section-title">安全提示</h2>
+            <div class="security-actions">
+              <button
+                type="button"
+                class="journal-btn journal-btn--primary"
+                :disabled="passwordSaving"
+                @click="submitPasswordChange"
+              >
+                <Loader2
+                  v-if="passwordSaving"
+                  class="h-4 w-4 animate-spin"
+                />
+                {{ passwordSaving ? '提交中…' : '更新密码' }}
+              </button>
             </div>
-          </div>
+          </form>
 
-          <div class="security-side-lead">
-            <div class="security-side-status flex items-center gap-2">
-              <span class="status-dot status-dot-active" />
-              修改后会同步退出其他设备
+          <aside class="security-section security-section--aside">
+            <div class="security-section-head">
+              <div>
+                <div class="security-section-kicker">
+                  Tips
+                </div>
+                <h2 class="security-section-title">
+                  安全提示
+                </h2>
+              </div>
             </div>
-            <p class="security-side-copy mt-3">
-              提交后会立即更新当前账号密码，并提示其他设备重新完成认证。
-            </p>
-          </div>
 
-          <div class="security-tip-list">
-            <div v-for="tip in passwordTips" :key="tip" class="security-tip-item">
-              <div class="journal-note-label">安全提示</div>
-              <div class="security-tip-copy mt-2">{{ tip }}</div>
+            <div class="security-side-lead">
+              <div class="security-side-status flex items-center gap-2">
+                <span class="status-dot status-dot-active" />
+                修改后会同步退出其他设备
+              </div>
+              <p class="security-side-copy mt-3">
+                提交后会立即更新当前账号密码，并提示其他设备重新完成认证。
+              </p>
             </div>
-          </div>
-        </aside>
-      </div>
+
+            <div class="security-tip-list">
+              <div
+                v-for="tip in passwordTips"
+                :key="tip"
+                class="security-tip-item"
+              >
+                <div class="journal-note-label">
+                  安全提示
+                </div>
+                <div class="security-tip-copy mt-2">
+                  {{ tip }}
+                </div>
+              </div>
+            </div>
+          </aside>
+        </div>
       </div>
     </main>
   </section>

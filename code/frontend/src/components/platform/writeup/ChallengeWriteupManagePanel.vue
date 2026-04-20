@@ -237,12 +237,20 @@ onMounted(() => {
     <div class="writeup-manage-header">
       <div class="list-heading writeup-manage-heading">
         <div>
-          <div class="workspace-overline">Writeup Directory</div>
-          <h1 class="workspace-page-title">题解管理</h1>
+          <div class="workspace-overline">
+            Writeup Directory
+          </div>
+          <h1 class="workspace-page-title">
+            题解管理
+          </h1>
         </div>
 
         <div class="writeup-manage-actions">
-          <button class="ui-btn ui-btn--primary" type="button" @click="openWriteup('edit')">
+          <button
+            class="ui-btn ui-btn--primary"
+            type="button"
+            @click="openWriteup('edit')"
+          >
             编写题解
           </button>
         </div>
@@ -254,7 +262,9 @@ onMounted(() => {
         class="admin-summary-grid writeup-summary-grid progress-strip metric-panel-grid metric-panel-default-surface"
       >
         <article class="journal-note progress-card metric-panel-card">
-          <div class="journal-note-label progress-card-label metric-panel-label">官方题解</div>
+          <div class="journal-note-label progress-card-label metric-panel-label">
+            官方题解
+          </div>
           <div class="journal-note-value progress-card-value metric-panel-value">
             {{ officialWriteupCount }}
           </div>
@@ -263,7 +273,9 @@ onMounted(() => {
           </div>
         </article>
         <article class="journal-note progress-card metric-panel-card">
-          <div class="journal-note-label progress-card-label metric-panel-label">学员题解</div>
+          <div class="journal-note-label progress-card-label metric-panel-label">
+            学员题解
+          </div>
           <div class="journal-note-value progress-card-value metric-panel-value">
             {{ submissionTotal }}
           </div>
@@ -274,7 +286,10 @@ onMounted(() => {
       </div>
     </div>
 
-    <AppLoading v-if="loading && submissionLoading" class="writeup-manage-loading">
+    <AppLoading
+      v-if="loading && submissionLoading"
+      class="writeup-manage-loading"
+    >
       正在加载题解内容...
     </AppLoading>
 
@@ -282,17 +297,24 @@ onMounted(() => {
       <section class="writeup-manage-section">
         <header class="list-heading writeup-manage-section__head">
           <div class="writeup-manage-section__intro">
-            <div class="journal-note-label">Writeup Directory</div>
-            <h2 class="list-heading__title">题解目录</h2>
+            <div class="journal-note-label">
+              Writeup Directory
+            </div>
+            <h2 class="list-heading__title">
+              题解目录
+            </h2>
           </div>
           <div class="writeup-manage-section__meta">
             共 {{ officialWriteupCount + submissionTotal }} 篇题解
           </div>
         </header>
 
-        <AppLoading v-if="submissionLoading" class="writeup-manage-loading"
-          >正在加载题解投稿...</AppLoading
+        <AppLoading
+          v-if="submissionLoading"
+          class="writeup-manage-loading"
         >
+          正在加载题解投稿...
+        </AppLoading>
 
         <template v-else>
           <AppEmpty
@@ -306,7 +328,11 @@ onMounted(() => {
             "
           >
             <template #actions>
-              <button class="ui-btn ui-btn--primary" type="button" @click="openWriteup('edit')">
+              <button
+                class="ui-btn ui-btn--primary"
+                type="button"
+                @click="openWriteup('edit')"
+              >
                 编写题解
               </button>
             </template>
@@ -314,7 +340,10 @@ onMounted(() => {
 
           <template v-else>
             <section class="writeup-directory">
-              <div class="writeup-directory-head" aria-hidden="true">
+              <div
+                class="writeup-directory-head"
+                aria-hidden="true"
+              >
                 <span>题解标题</span>
                 <span>来源</span>
                 <span>作者</span>
@@ -324,10 +353,21 @@ onMounted(() => {
                 <span class="writeup-directory-head__actions">操作</span>
               </div>
 
-              <article v-for="row in directoryRows" :key="row.key" class="writeup-row">
+              <article
+                v-for="row in directoryRows"
+                :key="row.key"
+                class="writeup-row"
+              >
                 <div class="writeup-row__title">
-                  <div class="writeup-row__name">{{ row.title }}</div>
-                  <div v-if="row.preview" class="writeup-row__preview">{{ row.preview }}</div>
+                  <div class="writeup-row__name">
+                    {{ row.title }}
+                  </div>
+                  <div
+                    v-if="row.preview"
+                    class="writeup-row__preview"
+                  >
+                    {{ row.preview }}
+                  </div>
                 </div>
                 <div class="writeup-row__source">
                   <span
@@ -338,23 +378,42 @@ onMounted(() => {
                   </span>
                 </div>
                 <div class="writeup-row__author">
-                  <div class="writeup-row__author-name">{{ row.authorPrimary }}</div>
-                  <div v-if="row.authorSecondary" class="writeup-row__author-meta">
+                  <div class="writeup-row__author-name">
+                    {{ row.authorPrimary }}
+                  </div>
+                  <div
+                    v-if="row.authorSecondary"
+                    class="writeup-row__author-meta"
+                  >
                     {{ row.authorSecondary }}
                   </div>
-                  <div v-if="row.authorTertiary" class="writeup-row__author-meta">
+                  <div
+                    v-if="row.authorTertiary"
+                    class="writeup-row__author-meta"
+                  >
                     {{ row.authorTertiary }}
                   </div>
                 </div>
-                <div class="writeup-row__student-no">{{ row.studentNo }}</div>
+                <div class="writeup-row__student-no">
+                  {{ row.studentNo }}
+                </div>
                 <div class="writeup-row__status">
                   <div>{{ row.statusPrimary }}</div>
-                  <div v-if="row.statusSecondary" class="writeup-row__status-subtle">
+                  <div
+                    v-if="row.statusSecondary"
+                    class="writeup-row__status-subtle"
+                  >
                     {{ row.statusSecondary }}
                   </div>
                 </div>
-                <div class="writeup-row__updated">{{ row.updatedAt }}</div>
-                <div class="writeup-row__actions" role="group" aria-label="题解目录操作">
+                <div class="writeup-row__updated">
+                  {{ row.updatedAt }}
+                </div>
+                <div
+                  class="writeup-row__actions"
+                  role="group"
+                  aria-label="题解目录操作"
+                >
                   <template v-if="row.source === 'official'">
                     <button
                       class="ui-btn ui-btn--secondary ui-btn--sm"
@@ -405,7 +464,10 @@ onMounted(() => {
                       </template>
                     </CActionMenu>
                   </template>
-                  <span v-else class="writeup-row__placeholder">--</span>
+                  <span
+                    v-else
+                    class="writeup-row__placeholder"
+                  >--</span>
                 </div>
               </article>
             </section>

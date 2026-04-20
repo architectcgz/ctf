@@ -129,7 +129,11 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
 
 <template>
   <div class="workspace-shell journal-eyebrow-text">
-    <nav class="top-tabs" role="tablist" aria-label="学员分析标签页">
+    <nav
+      class="top-tabs"
+      role="tablist"
+      aria-label="学员分析标签页"
+    >
       <button
         v-for="(tab, index) in workspaceTabs"
         :id="tab.buttonId"
@@ -151,19 +155,30 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
 
     <div class="workspace-grid">
       <main class="content-pane">
-        <header v-if="activeTab === 'overview'" class="teacher-topbar">
+        <header
+          v-if="activeTab === 'overview'"
+          class="teacher-topbar"
+        >
           <div class="teacher-heading workspace-tab-heading__main">
             <div class="teacher-eyebrow-row">
-              <div class="journal-eyebrow">Student Analysis</div>
+              <div class="journal-eyebrow">
+                Student Analysis
+              </div>
               <span class="teacher-student-chip">@{{ selectedStudent?.username || '未选择' }}</span>
             </div>
             <h1 class="teacher-title">
               {{ selectedStudent?.name || selectedStudent?.username || '学员分析' }}
             </h1>
-            <p class="teacher-copy">查看当前学员的学习进度、推荐任务、题解与审核信息。</p>
+            <p class="teacher-copy">
+              查看当前学员的学习进度、推荐任务、题解与审核信息。
+            </p>
           </div>
 
-          <div class="teacher-actions" role="group" aria-label="学员分析快捷操作">
+          <div
+            class="teacher-actions"
+            role="group"
+            aria-label="学员分析快捷操作"
+          >
             <button
               type="button"
               class="teacher-btn teacher-btn--ghost"
@@ -195,41 +210,72 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
           </div>
         </header>
 
-        <div v-if="error" class="workspace-alert" role="alert" aria-live="polite">
-          <div class="workspace-alert-title">学员分析加载失败</div>
-          <div class="workspace-alert-copy">{{ error }}</div>
+        <div
+          v-if="error"
+          class="workspace-alert"
+          role="alert"
+          aria-live="polite"
+        >
+          <div class="workspace-alert-title">
+            学员分析加载失败
+          </div>
+          <div class="workspace-alert-copy">
+            {{ error }}
+          </div>
           <div class="workspace-alert-actions">
-            <button type="button" class="quick-action quick-action--compact" @click="emit('retry')">
+            <button
+              type="button"
+              class="quick-action quick-action--compact"
+              @click="emit('retry')"
+            >
               <span>重试加载</span>
               <span>→</span>
             </button>
           </div>
         </div>
 
-        <section v-if="activeTab === 'overview'" class="summary-strip metric-panel-grid">
+        <section
+          v-if="activeTab === 'overview'"
+          class="summary-strip metric-panel-grid"
+        >
           <article class="summary-card metric-panel-card">
-            <div class="summary-card__label metric-panel-label">已做题目数</div>
+            <div class="summary-card__label metric-panel-label">
+              已做题目数
+            </div>
             <div class="summary-card__value metric-panel-value">
               {{ progress?.solved_challenges ?? 0 }}
             </div>
-            <div class="summary-card__hint metric-panel-helper">已成功完成的题目数量</div>
+            <div class="summary-card__hint metric-panel-helper">
+              已成功完成的题目数量
+            </div>
           </article>
           <article class="summary-card metric-panel-card">
-            <div class="summary-card__label metric-panel-label">完成率</div>
-            <div class="summary-card__value metric-panel-value">{{ solvedRate }}%</div>
-            <div class="summary-card__hint metric-panel-helper">基于当前学员训练数据计算</div>
+            <div class="summary-card__label metric-panel-label">
+              完成率
+            </div>
+            <div class="summary-card__value metric-panel-value">
+              {{ solvedRate }}%
+            </div>
+            <div class="summary-card__hint metric-panel-helper">
+              基于当前学员训练数据计算
+            </div>
           </article>
           <article class="summary-card metric-panel-card">
-            <div class="summary-card__label metric-panel-label">薄弱维度</div>
+            <div class="summary-card__label metric-panel-label">
+              薄弱维度
+            </div>
             <div class="summary-card__value metric-panel-value">
               {{ weakDimensions.length > 0 ? weakDimensions.join('、') : '暂无' }}
             </div>
-            <div class="summary-card__hint metric-panel-helper">基于能力画像提炼的风险点</div>
+            <div class="summary-card__hint metric-panel-helper">
+              基于能力画像提炼的风险点
+            </div>
           </article>
         </section>
 
         <section
           v-for="tab in workspaceTabs"
+          v-show="activeTab === tab.key"
           :id="tab.panelId"
           :key="tab.panelId"
           class="tab-panel section"
@@ -237,7 +283,6 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
           role="tabpanel"
           :aria-labelledby="tab.buttonId"
           :aria-hidden="activeTab === tab.key ? 'false' : 'true'"
-          v-show="activeTab === tab.key"
         >
           <StudentInsightPanel
             :active-section="tab.key"

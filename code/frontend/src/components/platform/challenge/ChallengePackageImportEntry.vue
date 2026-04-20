@@ -35,9 +35,16 @@ function handleFileChange(event: Event) {
 
 <template>
   <section class="import-entry">
-    <div v-if="!props.hideHeader" class="import-entry__lead">
-      <div class="import-entry__eyebrow">Challenge Package</div>
-      <h2 class="import-entry__title">导入题目包</h2>
+    <div
+      v-if="!props.hideHeader"
+      class="import-entry__lead"
+    >
+      <div class="import-entry__eyebrow">
+        Challenge Package
+      </div>
+      <h2 class="import-entry__title">
+        导入题目包
+      </h2>
     </div>
 
     <div class="import-entry__panel import-entry__panel--single">
@@ -58,7 +65,10 @@ function handleFileChange(event: Event) {
         <span class="import-entry__drop-copy">
           支持一次选择多个 Zip；每个包都需要单目录 Zip 或根目录直接包含 `challenge.yml`
         </span>
-        <span v-if="selectedFileName" class="import-entry__file">{{ selectedFileName }}</span>
+        <span
+          v-if="selectedFileName"
+          class="import-entry__file"
+        >{{ selectedFileName }}</span>
       </button>
 
       <input
@@ -68,7 +78,7 @@ function handleFileChange(event: Event) {
         multiple
         accept=".zip,application/zip"
         @change="handleFileChange"
-      />
+      >
     </div>
   </section>
 </template>

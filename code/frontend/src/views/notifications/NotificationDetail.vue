@@ -120,12 +120,18 @@ watch(
       class="workspace-shell journal-shell journal-shell-user journal-hero flex min-h-full flex-1 flex-col"
     >
       <main class="content-pane notification-workspace">
-        <section v-if="loading && !notification" class="notification-detail-loading">
+        <section
+          v-if="loading && !notification"
+          class="notification-detail-loading"
+        >
           <div class="notification-detail-spinner" />
           <span>正在加载通知详情...</span>
         </section>
 
-        <section v-else-if="!notification" class="notification-detail-empty">
+        <section
+          v-else-if="!notification"
+          class="notification-detail-empty"
+        >
           <AppEmpty
             :icon="loadFailed ? 'AlertTriangle' : 'Inbox'"
             :title="loadFailed ? '通知加载失败' : '通知不存在'"
@@ -147,63 +153,76 @@ watch(
           </AppEmpty>
         </section>
 
-        <article v-else class="notification-detail-page">
+        <article
+          v-else
+          class="notification-detail-page"
+        >
           <header class="notification-detail-header">
-          <div class="notification-detail-header-main">
-            <button type="button" class="notification-detail-back" @click="goBackToNotifications">
-              <ArrowLeft class="h-4 w-4" />
-              返回通知列表
-            </button>
-
-            <div class="workspace-overline">Notification</div>
-            <h1 class="notification-detail-title workspace-page-title">
-              {{ notification.title }}
-            </h1>
-
-            <div class="notification-detail-meta">
-              <span
-                class="notification-detail-badge"
-                :style="{
-                  color: accentColorMap[notificationAccent(notification.type)],
-                  borderColor: `color-mix(in srgb, ${accentColorMap[notificationAccent(notification.type)]} 22%, transparent)`,
-                  backgroundColor: `color-mix(in srgb, ${accentColorMap[notificationAccent(notification.type)]} 12%, transparent)`,
-                }"
+            <div class="notification-detail-header-main">
+              <button
+                type="button"
+                class="notification-detail-back"
+                @click="goBackToNotifications"
               >
-                {{ notificationTypeLabel(notification.type) }}
-              </span>
-              <span
-                class="notification-detail-status"
-                :class="{ 'notification-detail-status--read': !notification.unread }"
-              >
-                <CircleCheckBig class="h-3.5 w-3.5" />
-                {{ notification.unread ? '未读' : '已读' }}
-              </span>
-              <span class="notification-detail-meta-text">
-                {{ formatDate(notification.created_at) }}
-              </span>
-            </div>
-          </div>
+                <ArrowLeft class="h-4 w-4" />
+                返回通知列表
+              </button>
 
-          <aside class="notification-detail-side">
-            <div class="notification-detail-side-card">
-              <div class="workspace-overline">Meta</div>
-              <div class="notification-detail-side-item">
-                <CalendarClock class="h-3.5 w-3.5" />
-                <span>{{ formatDate(notification.created_at) }}</span>
+              <div class="workspace-overline">
+                Notification
               </div>
-              <div class="notification-detail-side-item">
-                <BellRing class="h-3.5 w-3.5" />
-                <span>{{ notificationTypeLabel(notification.type) }}</span>
+              <h1 class="notification-detail-title workspace-page-title">
+                {{ notification.title }}
+              </h1>
+
+              <div class="notification-detail-meta">
+                <span
+                  class="notification-detail-badge"
+                  :style="{
+                    color: accentColorMap[notificationAccent(notification.type)],
+                    borderColor: `color-mix(in srgb, ${accentColorMap[notificationAccent(notification.type)]} 22%, transparent)`,
+                    backgroundColor: `color-mix(in srgb, ${accentColorMap[notificationAccent(notification.type)]} 12%, transparent)`,
+                  }"
+                >
+                  {{ notificationTypeLabel(notification.type) }}
+                </span>
+                <span
+                  class="notification-detail-status"
+                  :class="{ 'notification-detail-status--read': !notification.unread }"
+                >
+                  <CircleCheckBig class="h-3.5 w-3.5" />
+                  {{ notification.unread ? '未读' : '已读' }}
+                </span>
+                <span class="notification-detail-meta-text">
+                  {{ formatDate(notification.created_at) }}
+                </span>
               </div>
             </div>
 
-            <div class="notification-detail-side-card">
-              <div class="workspace-overline">ID</div>
-              <div class="notification-detail-side-value notification-detail-side-value--mono">
-                {{ notification.id }}
+            <aside class="notification-detail-side">
+              <div class="notification-detail-side-card">
+                <div class="workspace-overline">
+                  Meta
+                </div>
+                <div class="notification-detail-side-item">
+                  <CalendarClock class="h-3.5 w-3.5" />
+                  <span>{{ formatDate(notification.created_at) }}</span>
+                </div>
+                <div class="notification-detail-side-item">
+                  <BellRing class="h-3.5 w-3.5" />
+                  <span>{{ notificationTypeLabel(notification.type) }}</span>
+                </div>
               </div>
-            </div>
-          </aside>
+
+              <div class="notification-detail-side-card">
+                <div class="workspace-overline">
+                  ID
+                </div>
+                <div class="notification-detail-side-value notification-detail-side-value--mono">
+                  {{ notification.id }}
+                </div>
+              </div>
+            </aside>
           </header>
 
           <div class="notification-divider" />
@@ -211,8 +230,12 @@ watch(
           <section class="notification-detail-content">
             <div class="notification-detail-content-head">
               <div>
-                <div class="workspace-overline">Message</div>
-                <h2 class="notification-section-title">通知正文</h2>
+                <div class="workspace-overline">
+                  Message
+                </div>
+                <h2 class="notification-section-title">
+                  通知正文
+                </h2>
               </div>
             </div>
             <div class="notification-detail-content-body">
@@ -239,7 +262,10 @@ watch(
               <Inbox class="h-4 w-4" />
               查看关联对象
             </button>
-            <div v-else class="notification-detail-related-empty">
+            <div
+              v-else
+              class="notification-detail-related-empty"
+            >
               当前通知没有可直接跳转的关联对象。
             </div>
           </footer>
