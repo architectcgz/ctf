@@ -53,9 +53,15 @@ const currentPageStudentCount = computed(() =>
       <div class="teacher-page">
         <header class="teacher-topbar">
           <div class="teacher-heading">
-            <div class="teacher-surface-eyebrow journal-eyebrow">Class Directory</div>
-            <h1 class="teacher-title">班级管理</h1>
-            <p class="teacher-copy">查看当前可管理班级，并进入对应班级继续查看学生和训练表现。</p>
+            <div class="teacher-surface-eyebrow journal-eyebrow">
+              Class Directory
+            </div>
+            <h1 class="teacher-title">
+              班级管理
+            </h1>
+            <p class="teacher-copy">
+              查看当前可管理班级，并进入对应班级继续查看学生和训练表现。
+            </p>
           </div>
 
           <div class="teacher-actions">
@@ -83,12 +89,20 @@ const currentPageStudentCount = computed(() =>
           </div>
           <div class="teacher-summary-grid progress-strip metric-panel-grid">
             <div class="progress-card metric-panel-card">
-              <div class="progress-card-label metric-panel-label">班级数量</div>
-              <div class="progress-card-value metric-panel-value">{{ total }}</div>
-              <div class="progress-card-hint metric-panel-helper">当前可管理班级总数</div>
+              <div class="progress-card-label metric-panel-label">
+                班级数量
+              </div>
+              <div class="progress-card-value metric-panel-value">
+                {{ total }}
+              </div>
+              <div class="progress-card-hint metric-panel-helper">
+                当前可管理班级总数
+              </div>
             </div>
             <div class="progress-card metric-panel-card">
-              <div class="progress-card-label metric-panel-label">当前页学生数</div>
+              <div class="progress-card-label metric-panel-label">
+                当前页学生数
+              </div>
               <div class="progress-card-value metric-panel-value">
                 {{ currentPageStudentCount }}
               </div>
@@ -105,8 +119,12 @@ const currentPageStudentCount = computed(() =>
         >
           <header class="list-heading">
             <div>
-              <div class="journal-note-label">Class Directory</div>
-              <h3 class="list-heading__title">班级目录</h3>
+              <div class="journal-note-label">
+                Class Directory
+              </div>
+              <h3 class="list-heading__title">
+                班级目录
+              </h3>
             </div>
             <div class="teacher-directory-meta">
               本页 {{ filteredClassEntries.length }} / {{ classes.length }} 个班级，共
@@ -114,7 +132,10 @@ const currentPageStudentCount = computed(() =>
             </div>
           </header>
 
-          <section class="teacher-directory-filters" aria-label="班级过滤">
+          <section
+            class="teacher-directory-filters"
+            aria-label="班级过滤"
+          >
             <div class="teacher-filter-grid teacher-filter-grid--single">
               <label class="teacher-field">
                 <span class="teacher-field-label">搜索班级</span>
@@ -125,13 +146,16 @@ const currentPageStudentCount = computed(() =>
                     type="text"
                     placeholder="搜索班级编号或名称"
                     class="teacher-input"
-                  />
+                  >
                 </div>
               </label>
             </div>
           </section>
 
-          <div v-if="loading" class="teacher-skeleton-list workspace-directory-loading">
+          <div
+            v-if="loading"
+            class="teacher-skeleton-list workspace-directory-loading"
+          >
             <div
               v-for="index in 5"
               :key="index"
@@ -147,8 +171,14 @@ const currentPageStudentCount = computed(() =>
             description="当前教师账号下还没有可访问的班级。"
           />
 
-          <section v-else class="teacher-directory">
-            <div v-if="filteredClassEntries.length > 0" class="teacher-directory-head">
+          <section
+            v-else
+            class="teacher-directory"
+          >
+            <div
+              v-if="filteredClassEntries.length > 0"
+              class="teacher-directory-head"
+            >
               <span class="teacher-directory-head-cell teacher-directory-head-cell-class-code">
                 班级编号
               </span>
@@ -170,7 +200,10 @@ const currentPageStudentCount = computed(() =>
               description="调整搜索关键词后再试。"
             />
 
-            <div v-if="filteredClassEntries.length > 0" class="workspace-directory-list">
+            <div
+              v-if="filteredClassEntries.length > 0"
+              class="workspace-directory-list"
+            >
               <button
                 v-for="{ item, code } in filteredClassEntries"
                 :key="item.name"
@@ -184,11 +217,18 @@ const currentPageStudentCount = computed(() =>
                 </div>
 
                 <div class="teacher-directory-cell teacher-directory-cell-class-name">
-                  <h4 class="teacher-directory-row-title" :title="item.name">{{ item.name }}</h4>
+                  <h4
+                    class="teacher-directory-row-title"
+                    :title="item.name"
+                  >
+                    {{ item.name }}
+                  </h4>
                 </div>
 
                 <div class="teacher-directory-cell teacher-directory-cell-student-count">
-                  <div class="teacher-directory-row-points">{{ item.student_count || 0 }}</div>
+                  <div class="teacher-directory-row-points">
+                    {{ item.student_count || 0 }}
+                  </div>
                 </div>
 
                 <div class="teacher-directory-row-status">
@@ -225,9 +265,18 @@ const currentPageStudentCount = computed(() =>
             </div>
           </section>
         </section>
-        <div v-if="error" class="teacher-surface-error">
+        <div
+          v-if="error"
+          class="teacher-surface-error"
+        >
           {{ error }}
-          <button type="button" class="ml-3 font-medium underline" @click="emit('retry')">重试</button>
+          <button
+            type="button"
+            class="ml-3 font-medium underline"
+            @click="emit('retry')"
+          >
+            重试
+          </button>
         </div>
       </div>
     </main>

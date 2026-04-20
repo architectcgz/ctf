@@ -336,49 +336,74 @@ onUnmounted(() => {
   >
     <main class="content-pane">
       <header class="image-header">
-      <div class="image-header__intro">
-        <div class="workspace-overline">Image Registry</div>
-        <h1 class="image-title">镜像管理</h1>
-        <p class="image-copy">集中查看镜像构建状态、描述与创建时间。</p>
-      </div>
-
-      <div class="image-header__side">
-        <div class="image-header__actions" role="group" aria-label="镜像列表操作">
-          <button
-            :disabled="loading"
-            class="ui-btn ui-btn--ghost"
-            data-testid="image-refresh-button"
-            @click="handleManualRefresh"
-          >
-            立即刷新
-          </button>
-          <button class="ui-btn ui-btn--primary" @click="dialogVisible = true">
-            创建镜像
-          </button>
+        <div class="image-header__intro">
+          <div class="workspace-overline">
+            Image Registry
+          </div>
+          <h1 class="image-title">
+            镜像管理
+          </h1>
+          <p class="image-copy">
+            集中查看镜像构建状态、描述与创建时间。
+          </p>
         </div>
-        <div class="image-status-strip" aria-label="镜像状态摘要">
-          <div v-if="statusSummary.length > 0" class="image-status-strip__row">
-            <div
-              v-for="item in statusSummary"
-              :key="item.key"
-              :class="['image-status-pill', `image-status-pill--${item.tone}`]"
-              data-testid="image-status-pill"
+
+        <div class="image-header__side">
+          <div
+            class="image-header__actions"
+            role="group"
+            aria-label="镜像列表操作"
+          >
+            <button
+              :disabled="loading"
+              class="ui-btn ui-btn--ghost"
+              data-testid="image-refresh-button"
+              @click="handleManualRefresh"
             >
-              <span>{{ item.label }}</span>
-              <strong>{{ item.value }}</strong>
+              立即刷新
+            </button>
+            <button
+              class="ui-btn ui-btn--primary"
+              @click="dialogVisible = true"
+            >
+              创建镜像
+            </button>
+          </div>
+          <div
+            class="image-status-strip"
+            aria-label="镜像状态摘要"
+          >
+            <div
+              v-if="statusSummary.length > 0"
+              class="image-status-strip__row"
+            >
+              <div
+                v-for="item in statusSummary"
+                :key="item.key"
+                :class="['image-status-pill', `image-status-pill--${item.tone}`]"
+                data-testid="image-status-pill"
+              >
+                <span>{{ item.label }}</span>
+                <strong>{{ item.value }}</strong>
+              </div>
+            </div>
+            <div class="image-status-strip__note">
+              {{ refreshHint }}
             </div>
           </div>
-          <div class="image-status-strip__note">{{ refreshHint }}</div>
         </div>
-      </div>
       </header>
 
       <section class="image-board workspace-directory-section">
         <header class="list-heading image-board__head">
-        <div>
-          <div class="workspace-overline">Images</div>
-          <h2 class="list-heading__title image-section-title">镜像列表</h2>
-        </div>
+          <div>
+            <div class="workspace-overline">
+              Images
+            </div>
+            <h2 class="list-heading__title image-section-title">
+              镜像列表
+            </h2>
+          </div>
         </header>
 
         <WorkspaceDirectoryToolbar
@@ -394,16 +419,19 @@ onUnmounted(() => {
         >
           <template #filter-panel>
             <div class="image-filter-grid">
-            <label class="image-filter-field">
-              <span class="image-filter-label">构建状态</span>
-              <select v-model="statusFilter" class="image-filter-select">
-                <option value="">全部状态</option>
-                <option value="available">可用</option>
-                <option value="building">构建中</option>
-                <option value="pending">等待中</option>
-                <option value="failed">失败</option>
-              </select>
-            </label>
+              <label class="image-filter-field">
+                <span class="image-filter-label">构建状态</span>
+                <select
+                  v-model="statusFilter"
+                  class="image-filter-select"
+                >
+                  <option value="">全部状态</option>
+                  <option value="available">可用</option>
+                  <option value="building">构建中</option>
+                  <option value="pending">等待中</option>
+                  <option value="failed">失败</option>
+                </select>
+              </label>
             </div>
           </template>
         </WorkspaceDirectoryToolbar>
@@ -414,83 +442,98 @@ onUnmounted(() => {
         >
           <div
             class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--journal-border)] border-t-[var(--journal-accent)]"
-          ></div>
+          />
         </div>
 
         <template v-else>
-          <div v-if="list.length === 0" class="admin-empty workspace-directory-empty">
+          <div
+            v-if="list.length === 0"
+            class="admin-empty workspace-directory-empty"
+          >
             当前还没有镜像。
           </div>
 
-        <div v-else-if="filteredRows.length === 0" class="admin-empty workspace-directory-empty">
-          当前筛选条件下没有匹配镜像。
-        </div>
+          <div
+            v-else-if="filteredRows.length === 0"
+            class="admin-empty workspace-directory-empty"
+          >
+            当前筛选条件下没有匹配镜像。
+          </div>
 
-        <WorkspaceDataTable
-          v-else
-          class="image-list workspace-directory-list"
-          :columns="imageTableColumns"
-          :rows="filteredRows"
-          row-key="id"
-          row-class="image-row"
-        >
-          <template #cell-name="{ row }">
-            <span class="image-row__name" :title="(row as AdminImageListItem).name">
-              {{ (row as AdminImageListItem).name }}
-            </span>
-          </template>
-
-          <template #cell-tag="{ row }">
-            <span class="image-row__tag" :title="(row as AdminImageListItem).tag">
-              {{ (row as AdminImageListItem).tag }}
-            </span>
-          </template>
-
-          <template #cell-description="{ row }">
-            <p
-              class="image-row__description"
-              :title="(row as AdminImageListItem).description || '未填写镜像说明'"
-            >
-              {{ (row as AdminImageListItem).description || '未填写镜像说明' }}
-            </p>
-          </template>
-
-          <template #cell-status="{ row }">
-            <div class="image-row__status">
+          <WorkspaceDataTable
+            v-else
+            class="image-list workspace-directory-list"
+            :columns="imageTableColumns"
+            :rows="filteredRows"
+            row-key="id"
+            row-class="image-row"
+          >
+            <template #cell-name="{ row }">
               <span
-                class="admin-status-chip"
-                :style="getStatusStyle((row as AdminImageListItem).status)"
+                class="image-row__name"
+                :title="(row as AdminImageListItem).name"
               >
-                {{ getStatusLabel((row as AdminImageListItem).status) }}
+                {{ (row as AdminImageListItem).name }}
               </span>
-            </div>
-          </template>
+            </template>
 
-          <template #cell-created_at="{ row }">
-            <span class="image-row__time">
-              {{ formatDateTime((row as AdminImageListItem).created_at) }}
-            </span>
-          </template>
-
-          <template #cell-actions="{ row }">
-            <div class="image-row__actions">
-              <button
-                class="ui-btn ui-btn--sm ui-btn--ghost"
-                @click="openDetail(row as AdminImageListItem)"
+            <template #cell-tag="{ row }">
+              <span
+                class="image-row__tag"
+                :title="(row as AdminImageListItem).tag"
               >
-                详情
-              </button>
-              <button
-                class="ui-btn ui-btn--sm ui-btn--danger"
-                @click="handleDelete((row as AdminImageListItem).id)"
-              >
-                删除
-              </button>
-            </div>
-          </template>
-        </WorkspaceDataTable>
+                {{ (row as AdminImageListItem).tag }}
+              </span>
+            </template>
 
-          <div v-if="total > 0" class="admin-pagination workspace-directory-pagination">
+            <template #cell-description="{ row }">
+              <p
+                class="image-row__description"
+                :title="(row as AdminImageListItem).description || '未填写镜像说明'"
+              >
+                {{ (row as AdminImageListItem).description || '未填写镜像说明' }}
+              </p>
+            </template>
+
+            <template #cell-status="{ row }">
+              <div class="image-row__status">
+                <span
+                  class="admin-status-chip"
+                  :style="getStatusStyle((row as AdminImageListItem).status)"
+                >
+                  {{ getStatusLabel((row as AdminImageListItem).status) }}
+                </span>
+              </div>
+            </template>
+
+            <template #cell-created_at="{ row }">
+              <span class="image-row__time">
+                {{ formatDateTime((row as AdminImageListItem).created_at) }}
+              </span>
+            </template>
+
+            <template #cell-actions="{ row }">
+              <div class="image-row__actions">
+                <button
+                  class="ui-btn ui-btn--sm ui-btn--ghost"
+                  @click="openDetail(row as AdminImageListItem)"
+                >
+                  详情
+                </button>
+                <button
+                  class="ui-btn ui-btn--sm ui-btn--danger"
+                  @click="handleDelete((row as AdminImageListItem).id)"
+                >
+                  删除
+                </button>
+              </div>
+            </template>
+          </WorkspaceDataTable>
+
+          <div
+            v-if="total > 0"
+            class="admin-pagination workspace-directory-pagination"
+          >
             <PlatformPaginationControls
               :page="page"
               :total-pages="Math.max(1, Math.ceil(total / pageSize))"
@@ -513,7 +556,10 @@ onUnmounted(() => {
       @close="closeDetail"
       @update:open="!$event && closeDetail()"
     >
-      <section v-if="activeImage" class="image-detail">
+      <section
+        v-if="activeImage"
+        class="image-detail"
+      >
         <div class="image-detail__grid">
           <article class="image-detail__item">
             <div class="image-detail__head">
@@ -598,24 +644,43 @@ onUnmounted(() => {
       @close="dialogVisible = false"
       @update:open="dialogVisible = $event"
     >
-      <form class="image-create-form" @submit.prevent="handleCreate">
+      <form
+        class="image-create-form"
+        @submit.prevent="handleCreate"
+      >
         <label class="ui-field image-create-field">
           <span class="ui-field__label">
             镜像名称
-            <span class="ui-field__required" aria-hidden="true">*</span>
+            <span
+              class="ui-field__required"
+              aria-hidden="true"
+            >*</span>
           </span>
           <span class="ui-control-wrap">
-            <input v-model="form.name" type="text" class="ui-control" placeholder="例如：ubuntu" />
+            <input
+              v-model="form.name"
+              type="text"
+              class="ui-control"
+              placeholder="例如：ubuntu"
+            >
           </span>
         </label>
 
         <label class="ui-field image-create-field">
           <span class="ui-field__label">
             标签
-            <span class="ui-field__required" aria-hidden="true">*</span>
+            <span
+              class="ui-field__required"
+              aria-hidden="true"
+            >*</span>
           </span>
           <span class="ui-control-wrap">
-            <input v-model="form.tag" type="text" class="ui-control" placeholder="例如：22.04" />
+            <input
+              v-model="form.tag"
+              type="text"
+              class="ui-control"
+              placeholder="例如：22.04"
+            >
           </span>
         </label>
 
@@ -633,7 +698,11 @@ onUnmounted(() => {
       </form>
       <template #footer>
         <div class="image-create-dialog__footer">
-          <button type="button" class="ui-btn ui-btn--secondary" @click="dialogVisible = false">
+          <button
+            type="button"
+            class="ui-btn ui-btn--secondary"
+            @click="dialogVisible = false"
+          >
             取消
           </button>
           <button

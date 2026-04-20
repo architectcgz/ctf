@@ -36,24 +36,43 @@ function formatServiceRef(serviceId?: string): string {
     @close="emit('close')"
   >
     <div class="awd-review-drawer teacher-surface-dialog">
-      <section v-if="team" class="awd-review-drawer__summary metric-panel-default-surface">
+      <section
+        v-if="team"
+        class="awd-review-drawer__summary metric-panel-default-surface"
+      >
         <div class="awd-review-drawer__metrics metric-panel-grid">
           <article class="metric-panel-card">
-            <div class="metric-panel-label">总分</div>
-            <div class="metric-panel-value">{{ team.total_score }}</div>
-            <div class="metric-panel-helper">队伍当前累计分数</div>
+            <div class="metric-panel-label">
+              总分
+            </div>
+            <div class="metric-panel-value">
+              {{ team.total_score }}
+            </div>
+            <div class="metric-panel-helper">
+              队伍当前累计分数
+            </div>
           </article>
           <article class="metric-panel-card">
-            <div class="metric-panel-label">成员数</div>
-            <div class="metric-panel-value">{{ team.member_count }}</div>
-            <div class="metric-panel-helper">当前队伍成员数量</div>
+            <div class="metric-panel-label">
+              成员数
+            </div>
+            <div class="metric-panel-value">
+              {{ team.member_count }}
+            </div>
+            <div class="metric-panel-helper">
+              当前队伍成员数量
+            </div>
           </article>
           <article class="metric-panel-card">
-            <div class="metric-panel-label">最近命中</div>
+            <div class="metric-panel-label">
+              最近命中
+            </div>
             <div class="metric-panel-value awd-review-drawer__time">
               {{ team.last_solve_at ? formatDate(team.last_solve_at) : '--' }}
             </div>
-            <div class="metric-panel-helper">最近一次有效命中时间</div>
+            <div class="metric-panel-helper">
+              最近一次有效命中时间
+            </div>
           </article>
         </div>
       </section>
@@ -69,8 +88,15 @@ function formatServiceRef(serviceId?: string): string {
           title="暂无服务记录"
           description="当前筛选下还没有可展示的服务状态。"
         />
-        <div v-else class="awd-review-drawer__list">
-          <article v-for="service in services" :key="service.id" class="awd-review-drawer__item">
+        <div
+          v-else
+          class="awd-review-drawer__list"
+        >
+          <article
+            v-for="service in services"
+            :key="service.id"
+            class="awd-review-drawer__item"
+          >
             <div>
               <div class="awd-review-drawer__item-head">
                 <strong>{{ service.challenge_title }}</strong>
@@ -104,8 +130,15 @@ function formatServiceRef(serviceId?: string): string {
           title="暂无攻击记录"
           description="当前筛选下还没有与该队伍相关的攻击事件。"
         />
-        <div v-else class="awd-review-drawer__list">
-          <article v-for="attack in attacks" :key="attack.id" class="awd-review-drawer__item">
+        <div
+          v-else
+          class="awd-review-drawer__list"
+        >
+          <article
+            v-for="attack in attacks"
+            :key="attack.id"
+            class="awd-review-drawer__item"
+          >
             <div>
               <div class="awd-review-drawer__item-head">
                 <strong>{{ attack.attacker_team_name }} → {{ attack.victim_team_name }}</strong>
@@ -138,8 +171,15 @@ function formatServiceRef(serviceId?: string): string {
           title="暂无流量证据"
           description="当前筛选下还没有与该队伍相关的流量事件。"
         />
-        <div v-else class="awd-review-drawer__list">
-          <article v-for="event in traffic" :key="event.id" class="awd-review-drawer__item">
+        <div
+          v-else
+          class="awd-review-drawer__list"
+        >
+          <article
+            v-for="event in traffic"
+            :key="event.id"
+            class="awd-review-drawer__item"
+          >
             <div>
               <div class="awd-review-drawer__item-head">
                 <strong>{{ event.method }} {{ event.path }}</strong>

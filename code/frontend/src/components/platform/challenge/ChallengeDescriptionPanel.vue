@@ -32,7 +32,11 @@ const renderedContent = computed(() => {
   <span class="import-review__statement-label">{{ label }}</span>
   <div class="import-review__statement">
     <!-- eslint-disable-next-line vue/no-v-html -->
-    <div class="import-review__description" :data-testid="testId" v-html="renderedContent" />
+    <div
+      class="import-review__description"
+      :data-testid="testId"
+      v-html="renderedContent"
+    />
   </div>
 </template>
 

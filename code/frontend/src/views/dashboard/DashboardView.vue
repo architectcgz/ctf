@@ -244,7 +244,11 @@ function resolveDashboardPanelBindings(panelKey: DashboardPanelKey): Record<stri
   <section
     class="workspace-shell journal-shell journal-shell-user journal-hero flex min-h-full flex-1 flex-col"
   >
-    <nav class="top-tabs" role="tablist" aria-label="学生仪表盘视图切换">
+    <nav
+      class="top-tabs"
+      role="tablist"
+      aria-label="学生仪表盘视图切换"
+    >
       <button
         v-for="(tab, index) in panelTabs"
         :id="tab.tabId"
@@ -266,19 +270,38 @@ function resolveDashboardPanelBindings(panelKey: DashboardPanelKey): Record<stri
 
     <div class="workspace-grid">
       <main class="content-pane">
-        <div v-if="error" class="workspace-alert" role="alert" aria-live="polite">
+        <div
+          v-if="error"
+          class="workspace-alert"
+          role="alert"
+          aria-live="polite"
+        >
           {{ error }}
-          <button type="button" class="workspace-alert-action" @click="loadDashboard">重试</button>
+          <button
+            type="button"
+            class="workspace-alert-action"
+            @click="loadDashboard"
+          >
+            重试
+          </button>
         </div>
 
-        <div v-if="loading" class="dashboard-loading-grid">
-          <div v-for="index in 4" :key="index" class="dashboard-loading-item" />
+        <div
+          v-if="loading"
+          class="dashboard-loading-grid"
+        >
+          <div
+            v-for="index in 4"
+            :key="index"
+            class="dashboard-loading-item"
+          />
         </div>
 
         <template v-else-if="progress">
           <component
-            v-for="tab in panelTabs"
             :is="resolveDashboardPanelComponent(tab.key)"
+            v-for="tab in panelTabs"
+            v-show="activePanel === tab.key"
             :id="tab.panelId"
             :key="tab.panelId"
             class="tab-panel"
@@ -286,7 +309,6 @@ function resolveDashboardPanelBindings(panelKey: DashboardPanelKey): Record<stri
             role="tabpanel"
             :aria-labelledby="tab.tabId"
             :aria-hidden="activePanel === tab.key ? 'false' : 'true'"
-            v-show="activePanel === tab.key"
             v-bind="resolveDashboardPanelBindings(tab.key)"
           />
         </template>

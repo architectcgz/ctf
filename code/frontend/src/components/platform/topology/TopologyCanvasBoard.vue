@@ -168,8 +168,12 @@ onBeforeUnmount(() => {
   <div class="topology-canvas-board__root">
     <div class="topology-canvas-board__head">
       <div>
-        <div class="topology-canvas-board__eyebrow">Graph Canvas</div>
-        <div class="topology-canvas-board__title">拖拽节点调整拓扑视图</div>
+        <div class="topology-canvas-board__eyebrow">
+          Graph Canvas
+        </div>
+        <div class="topology-canvas-board__title">
+          拖拽节点调整拓扑视图
+        </div>
       </div>
       <div class="topology-canvas-board__legend">
         <span class="topology-canvas-board__legend-pill"> 灰线：逻辑连线 </span>
@@ -192,7 +196,12 @@ onBeforeUnmount(() => {
       @pointerleave="stopDrag"
     >
       <defs>
-        <pattern id="topology-grid" width="36" height="36" patternUnits="userSpaceOnUse">
+        <pattern
+          id="topology-grid"
+          width="36"
+          height="36"
+          patternUnits="userSpaceOnUse"
+        >
           <path
             d="M 36 0 L 0 0 0 36"
             fill="none"
@@ -202,7 +211,13 @@ onBeforeUnmount(() => {
         </pattern>
       </defs>
 
-      <rect x="0" y="0" width="920" height="600" fill="url(#topology-grid)" />
+      <rect
+        x="0"
+        y="0"
+        width="920"
+        height="600"
+        fill="url(#topology-grid)"
+      />
 
       <path
         v-for="edge in edgePaths"
@@ -257,25 +272,60 @@ onBeforeUnmount(() => {
           stroke-width="1.5"
         />
 
-        <text x="0" y="-8" text-anchor="middle" class="topology-canvas-board__node-label">
+        <text
+          x="0"
+          y="-8"
+          text-anchor="middle"
+          class="topology-canvas-board__node-label"
+        >
           {{ node.label.slice(0, 14) }}
         </text>
-        <text x="0" y="12" text-anchor="middle" class="topology-canvas-board__node-key">
+        <text
+          x="0"
+          y="12"
+          text-anchor="middle"
+          class="topology-canvas-board__node-key"
+        >
           {{ node.key }}
         </text>
-        <text x="0" y="30" text-anchor="middle" class="topology-canvas-board__node-meta">
+        <text
+          x="0"
+          y="30"
+          text-anchor="middle"
+          class="topology-canvas-board__node-meta"
+        >
           {{ node.networks.join(', ') || 'no-network' }}
         </text>
 
         <g v-if="node.isEntry">
-          <circle cx="38" cy="-36" r="10" fill="var(--topology-canvas-node-entry)" />
-          <text x="38" y="-32" text-anchor="middle" class="topology-canvas-board__node-badge-text">
+          <circle
+            cx="38"
+            cy="-36"
+            r="10"
+            fill="var(--topology-canvas-node-entry)"
+          />
+          <text
+            x="38"
+            y="-32"
+            text-anchor="middle"
+            class="topology-canvas-board__node-badge-text"
+          >
             IN
           </text>
         </g>
         <g v-if="node.injectFlag">
-          <circle cx="-38" cy="-36" r="10" fill="var(--topology-canvas-edge-allow)" />
-          <text x="-38" y="-32" text-anchor="middle" class="topology-canvas-board__node-badge-text">
+          <circle
+            cx="-38"
+            cy="-36"
+            r="10"
+            fill="var(--topology-canvas-edge-allow)"
+          />
+          <text
+            x="-38"
+            y="-32"
+            text-anchor="middle"
+            class="topology-canvas-board__node-badge-text"
+          >
             F
           </text>
         </g>

@@ -102,45 +102,64 @@ function openPrimaryCategory(): void {
   >
     <div :class="embedded ? undefined : 'content-pane'">
       <div class="category-header">
-      <div class="workspace-overline">Action Ranking</div>
-      <h1 class="journal-page-title workspace-page-title journal-soft-page-title">
-        {{ headlineTitle }}
-      </h1>
-      <p class="workspace-page-copy max-w-2xl">
-        {{
-          hasCategoryStats
-            ? '按分类找短板，先补当前最需要回填的那一类。'
-            : '先完成几道题，这里会自动排出下一步最该补的分类。'
-        }}
-      </p>
+        <div class="workspace-overline">
+          Action Ranking
+        </div>
+        <h1 class="journal-page-title workspace-page-title journal-soft-page-title">
+          {{ headlineTitle }}
+        </h1>
+        <p class="workspace-page-copy max-w-2xl">
+          {{
+            hasCategoryStats
+              ? '按分类找短板，先补当前最需要回填的那一类。'
+              : '先完成几道题，这里会自动排出下一步最该补的分类。'
+          }}
+        </p>
 
-      <div class="mt-5 flex flex-wrap gap-3" role="group" aria-label="分类进度快捷操作">
-        <button class="journal-btn-primary" @click="openPrimaryCategory">
-          {{ primaryCategory ? `先去 ${primaryCategory.category}` : '去训练' }}
-        </button>
-        <button class="journal-btn-outline" @click="emit('openChallenges')">浏览全部题目</button>
-        <button class="journal-btn-outline" @click="emit('openSkillProfile')">能力画像</button>
-      </div>
-
-      <div
-        class="category-summary-strip mt-5 progress-strip metric-panel-grid metric-panel-default-surface"
-      >
-        <article
-          v-for="card in summaryCards"
-          :key="card.key"
-          class="category-summary-card progress-card metric-panel-card"
+        <div
+          class="mt-5 flex flex-wrap gap-3"
+          role="group"
+          aria-label="分类进度快捷操作"
         >
-          <div class="journal-note-label progress-card-label metric-panel-label">
-            {{ card.label }}
-          </div>
-          <div class="journal-note-value progress-card-value metric-panel-value">
-            {{ card.value }}
-          </div>
-          <div class="journal-note-helper progress-card-hint metric-panel-helper">
-            {{ card.helper }}
-          </div>
-        </article>
-      </div>
+          <button
+            class="journal-btn-primary"
+            @click="openPrimaryCategory"
+          >
+            {{ primaryCategory ? `先去 ${primaryCategory.category}` : '去训练' }}
+          </button>
+          <button
+            class="journal-btn-outline"
+            @click="emit('openChallenges')"
+          >
+            浏览全部题目
+          </button>
+          <button
+            class="journal-btn-outline"
+            @click="emit('openSkillProfile')"
+          >
+            能力画像
+          </button>
+        </div>
+
+        <div
+          class="category-summary-strip mt-5 progress-strip metric-panel-grid metric-panel-default-surface"
+        >
+          <article
+            v-for="card in summaryCards"
+            :key="card.key"
+            class="category-summary-card progress-card metric-panel-card"
+          >
+            <div class="journal-note-label progress-card-label metric-panel-label">
+              {{ card.label }}
+            </div>
+            <div class="journal-note-value progress-card-value metric-panel-value">
+              {{ card.value }}
+            </div>
+            <div class="journal-note-helper progress-card-hint metric-panel-helper">
+              {{ card.helper }}
+            </div>
+          </article>
+        </div>
       </div>
 
       <div
@@ -148,57 +167,63 @@ function openPrimaryCategory(): void {
         :class="{ 'category-board--embedded': embedded }"
       >
         <section class="category-section">
-        <div v-if="rankedCategories.length > 0" class="category-toolbar">
-          <p class="category-toolbar__copy">从排序最前的分类开始，完成一类再继续往后推。</p>
-        </div>
-
-        <div
-          v-if="rankedCategories.length === 0"
-          class="journal-soft-empty-state mt-5"
-        >
-          当前还没有分类统计数据，先完成几道题再回来查看。
-        </div>
-
-        <div v-else class="category-action-list mt-5">
-          <article
-            v-for="(item, index) in rankedCategories"
-            :key="item.category"
-            class="category-action-item"
-            :data-test="`category-action-${item.category}`"
+          <div
+            v-if="rankedCategories.length > 0"
+            class="category-toolbar"
           >
-            <div class="category-action-item__body">
-              <div class="category-action-rank">
-                {{ index + 1 }}
-              </div>
-              <div class="min-w-0 flex-1">
-                <div class="flex flex-wrap items-center gap-2">
-                  <span class="category-action-item__name">{{ item.category }}</span>
-                  <span class="category-action-item__rate">{{ item.rate }}%</span>
-                  <span class="category-action-item__count"
-                    >{{ item.solved }}/{{ item.total }}</span
-                  >
-                </div>
-                <p class="journal-soft-body-copy mt-2 text-sm leading-6">
-                  {{ categoryActionCopy(item, index) }}
-                </p>
-              </div>
-              <button
-                type="button"
-                class="journal-btn-primary category-action-item__cta"
-                @click="emit('openCategoryChallenges', item.category)"
-              >
-                去做这个分类
-              </button>
-            </div>
+            <p class="category-toolbar__copy">
+              从排序最前的分类开始，完成一类再继续往后推。
+            </p>
+          </div>
 
-            <div class="category-track mt-4 h-2 rounded-full">
-              <div
-                class="category-track-fill h-2 rounded-full"
-                :style="{ width: `${item.rate}%` }"
-              />
-            </div>
-          </article>
-        </div>
+          <div
+            v-if="rankedCategories.length === 0"
+            class="journal-soft-empty-state mt-5"
+          >
+            当前还没有分类统计数据，先完成几道题再回来查看。
+          </div>
+
+          <div
+            v-else
+            class="category-action-list mt-5"
+          >
+            <article
+              v-for="(item, index) in rankedCategories"
+              :key="item.category"
+              class="category-action-item"
+              :data-test="`category-action-${item.category}`"
+            >
+              <div class="category-action-item__body">
+                <div class="category-action-rank">
+                  {{ index + 1 }}
+                </div>
+                <div class="min-w-0 flex-1">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <span class="category-action-item__name">{{ item.category }}</span>
+                    <span class="category-action-item__rate">{{ item.rate }}%</span>
+                    <span class="category-action-item__count">{{ item.solved }}/{{ item.total }}</span>
+                  </div>
+                  <p class="journal-soft-body-copy mt-2 text-sm leading-6">
+                    {{ categoryActionCopy(item, index) }}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  class="journal-btn-primary category-action-item__cta"
+                  @click="emit('openCategoryChallenges', item.category)"
+                >
+                  去做这个分类
+                </button>
+              </div>
+
+              <div class="category-track mt-4 h-2 rounded-full">
+                <div
+                  class="category-track-fill h-2 rounded-full"
+                  :style="{ width: `${item.rate}%` }"
+                />
+              </div>
+            </article>
+          </div>
         </section>
       </div>
     </div>

@@ -46,9 +46,15 @@ const {
           class="workspace-hero"
         >
           <div class="workspace-tab-heading__main">
-            <div class="workspace-overline">Operations Workspace</div>
-            <h1 class="hero-title">系统值守台</h1>
-            <p class="hero-summary">在这里查看平台状态、异常和当前资源热点。</p>
+            <div class="workspace-overline">
+              Operations Workspace
+            </div>
+            <h1 class="hero-title">
+              系统值守台
+            </h1>
+            <p class="hero-summary">
+              在这里查看平台状态、异常和当前资源热点。
+            </p>
 
             <div class="meta-strip mb-10">
               <span
@@ -84,7 +90,9 @@ const {
             </div>
 
             <div class="overview-quick-actions">
-              <div class="workspace-overline">Quick Actions</div>
+              <div class="workspace-overline">
+                Quick Actions
+              </div>
               <div class="quick-actions">
                 <button
                   type="button"
@@ -100,19 +108,32 @@ const {
                 >
                   <span>风险研判</span><span>→</span>
                 </button>
-                <a class="quick-action" href="#admin-dashboard-alerts">
+                <a
+                  class="quick-action"
+                  href="#admin-dashboard-alerts"
+                >
                   <span>查看当前告警</span><span>→</span>
                 </a>
-                <a class="quick-action" href="#admin-dashboard-hotspots">
+                <a
+                  class="quick-action"
+                  href="#admin-dashboard-hotspots"
+                >
                   <span>查看资源热点</span><span>→</span>
                 </a>
               </div>
             </div>
 
-            <div v-if="error" class="workspace-alert" role="alert" aria-live="polite">
+            <div
+              v-if="error"
+              class="workspace-alert"
+              role="alert"
+              aria-live="polite"
+            >
               <div class="workspace-alert-title-row">
                 <AlertTriangle class="workspace-alert-icon" />
-                <div class="workspace-alert-title">管理端概览加载失败</div>
+                <div class="workspace-alert-title">
+                  管理端概览加载失败
+                </div>
               </div>
               <div class="workspace-alert-copy">
                 {{ error }}
@@ -138,7 +159,10 @@ const {
               </div>
             </div>
 
-            <div v-else-if="loading" class="metric-panel-grid--premium cols-4 mb-10">
+            <div
+              v-else-if="loading"
+              class="metric-panel-grid--premium cols-4 mb-10"
+            >
               <div
                 v-for="index in 4"
                 :key="index"
@@ -150,7 +174,9 @@ const {
           </div>
 
           <aside class="hero-rail">
-            <div class="rail-label">System Pulse</div>
+            <div class="rail-label">
+              System Pulse
+            </div>
             <div class="rail-score">
               {{ railScore }}
               <small>% peak</small>
@@ -167,18 +193,38 @@ const {
         >
           <div class="section-head list-heading">
             <div>
-              <div class="section-kicker">Alert Stack</div>
-              <h2 class="section-title list-heading__title">当前告警</h2>
+              <div class="section-kicker">
+                Alert Stack
+              </div>
+              <h2 class="section-title list-heading__title">
+                当前告警
+              </h2>
             </div>
-            <div class="status-pill" :class="alertCount > 0 ? 'danger' : 'ready'">
+            <div
+              class="status-pill"
+              :class="alertCount > 0 ? 'danger' : 'ready'"
+            >
               {{ alertCount }} 条
             </div>
           </div>
 
           <article class="panel panel-pad">
-            <div v-if="loading" class="empty-inline">正在同步告警数据...</div>
-            <div v-else-if="alertCount === 0" class="empty-inline">当前没有资源告警。</div>
-            <div v-else class="insight-list">
+            <div
+              v-if="loading"
+              class="empty-inline"
+            >
+              正在同步告警数据...
+            </div>
+            <div
+              v-else-if="alertCount === 0"
+              class="empty-inline"
+            >
+              当前没有资源告警。
+            </div>
+            <div
+              v-else
+              class="insight-list"
+            >
               <div
                 v-for="alert in dashboard?.alerts"
                 :key="`${alert.container_id}-${alert.type}`"
@@ -195,7 +241,9 @@ const {
                     {{ Math.round(alert.threshold) }}%，建议优先核查该容器最近任务与资源分配情况。
                   </div>
                 </div>
-                <div class="status-pill danger">{{ Math.round(alert.value) }}%</div>
+                <div class="status-pill danger">
+                  {{ Math.round(alert.value) }}%
+                </div>
               </div>
             </div>
           </article>
@@ -207,17 +255,32 @@ const {
         >
           <div class="section-head list-heading">
             <div>
-              <div class="section-kicker">Resource Hotspots</div>
-              <h2 class="section-title list-heading__title">资源热点</h2>
+              <div class="section-kicker">
+                Resource Hotspots
+              </div>
+              <h2 class="section-title list-heading__title">
+                资源热点
+              </h2>
             </div>
           </div>
 
           <article class="panel panel-pad">
-            <div v-if="loading" class="empty-inline">正在同步容器资源数据...</div>
-            <div v-else-if="sortedContainers.length === 0" class="empty-inline">
+            <div
+              v-if="loading"
+              class="empty-inline"
+            >
+              正在同步容器资源数据...
+            </div>
+            <div
+              v-else-if="sortedContainers.length === 0"
+              class="empty-inline"
+            >
               暂无容器运行数据。
             </div>
-            <div v-else class="hotspot-list">
+            <div
+              v-else
+              class="hotspot-list"
+            >
               <article
                 v-for="item in sortedContainers"
                 :key="item.container_id"

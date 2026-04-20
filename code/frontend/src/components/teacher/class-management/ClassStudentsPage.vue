@@ -129,7 +129,11 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
 
 <template>
   <div class="workspace-shell teacher-management-shell teacher-surface">
-    <nav class="top-tabs" role="tablist" aria-label="班级详情标签页">
+    <nav
+      class="top-tabs"
+      role="tablist"
+      aria-label="班级详情标签页"
+    >
       <button
         v-for="(tab, index) in workspaceTabs"
         :id="tab.buttonId"
@@ -152,13 +156,13 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
     <div class="workspace-grid">
       <main class="content-pane">
         <section
+          v-show="activeTab === 'overview'"
           id="class-overview"
           class="tab-panel section active"
           :class="{ active: activeTab === 'overview' }"
           role="tabpanel"
           aria-labelledby="class-tab-overview"
           :aria-hidden="activeTab === 'overview' ? 'false' : 'true'"
-          v-show="activeTab === 'overview'"
         >
           <header class="teacher-topbar">
             <div class="teacher-heading workspace-tab-heading__main">
@@ -168,7 +172,9 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
                 </div>
                 <div class="teacher-summary-grid progress-strip metric-panel-grid">
                   <div class="progress-card metric-panel-card">
-                    <div class="progress-card-label metric-panel-label">班级人数</div>
+                    <div class="progress-card-label metric-panel-label">
+                      班级人数
+                    </div>
                     <div class="progress-card-value metric-panel-value">
                       {{ props.summary?.student_count ?? students.length }}
                     </div>
@@ -177,15 +183,23 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
                     </div>
                   </div>
                   <div class="progress-card metric-panel-card">
-                    <div class="progress-card-label metric-panel-label">平均解题</div>
+                    <div class="progress-card-label metric-panel-label">
+                      平均解题
+                    </div>
                     <div class="progress-card-value metric-panel-value">
                       {{ averageSolvedText }}
                     </div>
-                    <div class="progress-card-hint metric-panel-helper">班级当前平均完成情况</div>
+                    <div class="progress-card-hint metric-panel-helper">
+                      班级当前平均完成情况
+                    </div>
                   </div>
                   <div class="progress-card metric-panel-card">
-                    <div class="progress-card-label metric-panel-label">近 7 天活跃率</div>
-                    <div class="progress-card-value metric-panel-value">{{ activeRateText }}</div>
+                    <div class="progress-card-label metric-panel-label">
+                      近 7 天活跃率
+                    </div>
+                    <div class="progress-card-value metric-panel-value">
+                      {{ activeRateText }}
+                    </div>
                     <div class="progress-card-hint metric-panel-helper">
                       当前班级近 7 天训练参与情况
                     </div>
@@ -219,9 +233,18 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
             </div>
           </header>
 
-          <div v-if="error" class="workspace-alert" role="alert" aria-live="polite">
-            <div class="workspace-alert-title">班级详情加载失败</div>
-            <div class="workspace-alert-copy">{{ error }}</div>
+          <div
+            v-if="error"
+            class="workspace-alert"
+            role="alert"
+            aria-live="polite"
+          >
+            <div class="workspace-alert-title">
+              班级详情加载失败
+            </div>
+            <div class="workspace-alert-copy">
+              {{ error }}
+            </div>
             <div class="workspace-alert-actions">
               <button
                 type="button"
@@ -236,20 +259,26 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
         </section>
 
         <section
+          v-show="activeTab === 'students'"
           id="class-students"
           class="tab-panel section"
           :class="{ active: activeTab === 'students' }"
           role="tabpanel"
           aria-labelledby="class-tab-students"
           :aria-hidden="activeTab === 'students' ? 'false' : 'true'"
-          v-show="activeTab === 'students'"
         >
           <section class="teacher-student-list-section">
             <div class="teacher-section-head workspace-tab-heading">
               <div class="workspace-tab-heading__main">
-                <div class="teacher-surface-eyebrow journal-eyebrow">Students</div>
-                <h3 class="teacher-section-title workspace-tab-heading__title">学生列表</h3>
-                <p class="teacher-section-copy">选择学生后进入学员分析。</p>
+                <div class="teacher-surface-eyebrow journal-eyebrow">
+                  Students
+                </div>
+                <h3 class="teacher-section-title workspace-tab-heading__title">
+                  学生列表
+                </h3>
+                <p class="teacher-section-copy">
+                  选择学生后进入学员分析。
+                </p>
               </div>
               <button
                 type="button"
@@ -264,7 +293,10 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
             <section class="teacher-controls teacher-student-controls">
               <div class="teacher-controls-bar">
                 <div class="teacher-controls-meta">
-                  <div class="teacher-section-meta" aria-live="polite">
+                  <div
+                    class="teacher-section-meta"
+                    aria-live="polite"
+                  >
                     {{
                       studentNoQuery
                         ? `学号筛选：${studentNoQuery} · 匹配 ${students.length} 名学生`
@@ -294,8 +326,16 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
                       aria-label="选择班级"
                       @change="emit('selectClass', ($event.target as HTMLSelectElement).value)"
                     >
-                      <option v-if="classes.length === 0" value="" disabled>暂无可切换班级</option>
-                      <option v-for="item in classes" :key="item.name" :value="item.name">
+                      <option
+                        v-if="classes.length === 0"
+                        value=""
+                        disabled
+                      >暂无可切换班级</option>
+                      <option
+                        v-for="item in classes"
+                        :key="item.name"
+                        :value="item.name"
+                      >
                         {{ item.name }} · {{ item.student_count || 0 }} 人
                       </option>
                     </select>
@@ -314,7 +354,7 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
                       @input="
                         emit('updateStudentNoQuery', ($event.target as HTMLInputElement).value)
                       "
-                    />
+                    >
                     <button
                       v-if="studentNoQuery"
                       type="button"
@@ -329,7 +369,10 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
               </div>
             </section>
 
-            <div v-if="loadingStudents" class="teacher-skeleton-list">
+            <div
+              v-if="loadingStudents"
+              class="teacher-skeleton-list"
+            >
               <div
                 v-for="index in 6"
                 :key="index"
@@ -345,26 +388,18 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
               description="该班级下还没有可用学生记录。"
             />
 
-            <section v-else class="teacher-directory" aria-label="学生目录">
+            <section
+              v-else
+              class="teacher-directory"
+              aria-label="学生目录"
+            >
               <div class="teacher-directory-head">
-                <span class="teacher-directory-head-cell teacher-directory-head-cell-student-no"
-                  >学号</span
-                >
-                <span class="teacher-directory-head-cell teacher-directory-head-cell-name"
-                  >学生名称</span
-                >
-                <span class="teacher-directory-head-cell teacher-directory-head-cell-alias"
-                  >昵称</span
-                >
-                <span class="teacher-directory-head-cell teacher-directory-head-cell-status"
-                  >状态</span
-                >
-                <span class="teacher-directory-head-cell teacher-directory-head-cell-metrics"
-                  >数据</span
-                >
-                <span class="teacher-directory-head-cell teacher-directory-head-cell-action"
-                  >操作</span
-                >
+                <span class="teacher-directory-head-cell teacher-directory-head-cell-student-no">学号</span>
+                <span class="teacher-directory-head-cell teacher-directory-head-cell-name">学生名称</span>
+                <span class="teacher-directory-head-cell teacher-directory-head-cell-alias">昵称</span>
+                <span class="teacher-directory-head-cell teacher-directory-head-cell-status">状态</span>
+                <span class="teacher-directory-head-cell teacher-directory-head-cell-metrics">数据</span>
+                <span class="teacher-directory-head-cell teacher-directory-head-cell-action">操作</span>
               </div>
 
               <button
@@ -380,13 +415,19 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
                 </div>
 
                 <div class="teacher-directory-cell teacher-directory-cell-name">
-                  <h4 class="teacher-directory-row-title" :title="student.name || '未设置姓名'">
+                  <h4
+                    class="teacher-directory-row-title"
+                    :title="student.name || '未设置姓名'"
+                  >
                     {{ student.name || '未设置姓名' }}
                   </h4>
                 </div>
 
                 <div class="teacher-directory-cell teacher-directory-cell-alias">
-                  <div class="teacher-directory-row-points" :title="`@${student.username}`">
+                  <div
+                    class="teacher-directory-row-points"
+                    :title="`@${student.username}`"
+                  >
                     @{{ student.username }}
                   </div>
                 </div>
@@ -420,6 +461,7 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
 
         <section
           v-for="tab in panelWorkspaceTabs"
+          v-show="activeTab === tab.key"
           :id="tab.panelId"
           :key="tab.panelId"
           class="tab-panel section"
@@ -427,7 +469,6 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
           role="tabpanel"
           :aria-labelledby="tab.buttonId"
           :aria-hidden="activeTab === tab.key ? 'false' : 'true'"
-          v-show="activeTab === tab.key"
         >
           <div :class="resolveWorkspacePanelWrapperClass(tab.key)">
             <component

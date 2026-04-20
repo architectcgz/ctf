@@ -135,6 +135,31 @@ const operationDefinitions: Record<ContestOpsViewKey, ContestOpsDefinition> = {
       },
     },
   },
+  projector: {
+    overline: 'Command Projector',
+    title: '指挥投屏',
+    copy: '面向大屏展示当前轮次的排行、攻击事件、热点题目与失陷服务，方便在赛场中控台直接投屏。',
+    helper: '优先同步推荐赛事的最新轮次，用于现场播报和运维联动。',
+    metricLabel: '投屏轮次',
+    metricHint: 'Round / Attack Feed / Leaderboard',
+    icon: Cast,
+    primaryAction: {
+      type: 'route',
+      label: '打开投屏台',
+      location: {
+        path: '/platform/contests/operations/projector',
+      },
+    },
+    secondaryAction: {
+      type: 'contest-route',
+      label: '进入运行控制台',
+      buildLocation: (contestId) => ({
+        name: 'ContestOperations',
+        params: { id: contestId },
+        query: { activeTab: 'scoreboard' },
+      }),
+    },
+  },
   scoreboard: {
     overline: 'Live Standings',
     title: '指挥中心排行榜',

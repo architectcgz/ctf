@@ -114,7 +114,9 @@ function changeTimelinePage(page: number): void {
         <h1 class="journal-page-title workspace-page-title journal-soft-page-title">
           训练记录总览
         </h1>
-        <p class="workspace-page-copy max-w-2xl">按时间回看最近训练动作，看看节奏有没有断。</p>
+        <p class="workspace-page-copy max-w-2xl">
+          按时间回看最近训练动作，看看节奏有没有断。
+        </p>
         <div
           class="timeline-metric-grid mt-5 progress-strip metric-panel-grid metric-panel-default-surface"
         >
@@ -141,10 +143,17 @@ function changeTimelinePage(page: number): void {
       class="timeline-board mt-0 px-0 pt-0 md:px-0 md:pt-0"
       :class="{ 'timeline-board--embedded': embedded }"
     >
-      <div class="journal-divider timeline-board-divider" aria-hidden="true" />
+      <div
+        class="journal-divider timeline-board-divider"
+        aria-hidden="true"
+      />
       <section class="timeline-section">
-        <div class="workspace-overline">Timeline Log</div>
-        <h3 class="journal-soft-section-title text-xl font-semibold">训练记录</h3>
+        <div class="workspace-overline">
+          Timeline Log
+        </div>
+        <h3 class="journal-soft-section-title text-xl font-semibold">
+          训练记录
+        </h3>
         <p class="journal-soft-body-copy mt-2 text-sm leading-6">
           按日期回看最近的提交、解题和实例操作。
         </p>
@@ -156,11 +165,24 @@ function changeTimelinePage(page: number): void {
           当前还没有训练动态。
         </div>
 
-        <div v-else class="timeline-group-list mt-5">
-          <section v-for="group in groupedTimeline" :key="group.date" class="timeline-group">
-            <div class="timeline-group-date">{{ group.date }}</div>
+        <div
+          v-else
+          class="timeline-group-list mt-5"
+        >
+          <section
+            v-for="group in groupedTimeline"
+            :key="group.date"
+            class="timeline-group"
+          >
+            <div class="timeline-group-date">
+              {{ group.date }}
+            </div>
             <div class="timeline-event-list">
-              <article v-for="event in group.events" :key="event.id" class="timeline-event-item">
+              <article
+                v-for="event in group.events"
+                :key="event.id"
+                class="timeline-event-item"
+              >
                 <div class="flex flex-wrap items-start justify-between gap-3">
                   <div class="flex items-start gap-3">
                     <span
@@ -190,7 +212,10 @@ function changeTimelinePage(page: number): void {
           </section>
         </div>
 
-        <div v-if="totalTimelineCount > 0" class="timeline-pagination mt-5">
+        <div
+          v-if="totalTimelineCount > 0"
+          class="timeline-pagination mt-5"
+        >
           <PagePaginationControls
             :page="timelinePage"
             :total-pages="totalTimelinePages"

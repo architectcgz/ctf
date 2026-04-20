@@ -180,19 +180,38 @@ const startButtonLabel = computed(() => {
 
 <template>
   <section class="instance-shell tool-group">
-    <div class="instance-kicker">Instance</div>
-    <h2 class="instance-title">靶机实例</h2>
+    <div class="instance-kicker">
+      Instance
+    </div>
+    <h2 class="instance-title">
+      靶机实例
+    </h2>
 
-    <div v-if="loading && !instance" class="instance-note">正在同步当前题目的实例状态...</div>
+    <div
+      v-if="loading && !instance"
+      class="instance-note"
+    >
+      正在同步当前题目的实例状态...
+    </div>
 
     <div v-else-if="instance">
       <div class="instance-hero">
-        <div class="instance-meta-label">剩余时间</div>
-        <div class="instance-time" :class="isUrgent ? 'instance-time--urgent' : ''">
+        <div class="instance-meta-label">
+          剩余时间
+        </div>
+        <div
+          class="instance-time"
+          :class="isUrgent ? 'instance-time--urgent' : ''"
+        >
           {{ remainingLabel }}
         </div>
-        <div class="instance-created">创建于 {{ createdAtLabel }}</div>
-        <div v-if="sharedStrategyLabel" class="instance-created">
+        <div class="instance-created">
+          创建于 {{ createdAtLabel }}
+        </div>
+        <div
+          v-if="sharedStrategyLabel"
+          class="instance-created"
+        >
           {{ sharedStrategyLabel }}
         </div>
       </div>
@@ -212,13 +231,21 @@ const startButtonLabel = computed(() => {
         </div>
       </div>
 
-      <div v-if="isWaiting" class="instance-callout instance-callout--warning">
+      <div
+        v-if="isWaiting"
+        class="instance-callout instance-callout--warning"
+      >
         <div>实例正在排队创建，系统会自动刷新状态。</div>
         <div>{{ queueLabel }}</div>
         <div>{{ etaLabel }}</div>
-        <div v-if="progressLabel">{{ progressLabel }}</div>
+        <div v-if="progressLabel">
+          {{ progressLabel }}
+        </div>
       </div>
-      <div v-else-if="isReclaimingState" class="instance-callout instance-callout--success">
+      <div
+        v-else-if="isReclaimingState"
+        class="instance-callout instance-callout--success"
+      >
         <div>
           {{
             effectiveStatus === 'expired'
@@ -228,7 +255,10 @@ const startButtonLabel = computed(() => {
         </div>
         <div>如需继续验证，可直接重启实例。</div>
       </div>
-      <div v-else-if="isFailed" class="instance-callout instance-callout--danger">
+      <div
+        v-else-if="isFailed"
+        class="instance-callout instance-callout--danger"
+      >
         <div>
           {{
             props.instance?.status === 'failed'
@@ -239,7 +269,10 @@ const startButtonLabel = computed(() => {
         <div>可直接重启实例，系统会为你申请新的环境。</div>
       </div>
 
-      <div class="tool-actions" :class="{ 'tool-actions--single': isRestartable }">
+      <div
+        class="tool-actions"
+        :class="{ 'tool-actions--single': isRestartable }"
+      >
         <button
           v-if="isRestartable"
           type="button"
@@ -276,7 +309,10 @@ const startButtonLabel = computed(() => {
           >
             {{ destroying ? '销毁中...' : '销毁' }}
           </button>
-          <div v-if="isSharedInstance" class="instance-note instance-note--managed">
+          <div
+            v-if="isSharedInstance"
+            class="instance-note instance-note--managed"
+          >
             共享实例由系统统一保活与回收。
           </div>
         </template>

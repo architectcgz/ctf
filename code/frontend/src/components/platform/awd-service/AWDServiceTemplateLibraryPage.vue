@@ -190,17 +190,32 @@ function handleStatusFilterChange(event: Event): void {
   <section class="journal-shell journal-shell-admin journal-notes-card journal-hero workspace-shell flex min-h-full flex-1 flex-col">
     <header class="list-heading awd-template-library__header">
       <div class="workspace-tab-heading__main">
-        <div class="workspace-overline">AWD Service Library</div>
-        <h1 class="workspace-page-title">AWD 服务模板库</h1>
-        <p class="workspace-page-copy">这里单独维护 AWD 题目的服务模板，不再和解题赛题目混在同一资源目录。</p>
+        <div class="workspace-overline">
+          AWD Service Library
+        </div>
+        <h1 class="workspace-page-title">
+          AWD 服务模板库
+        </h1>
+        <p class="workspace-page-copy">
+          这里单独维护 AWD 题目的服务模板，不再和解题赛题目混在同一资源目录。
+        </p>
       </div>
 
       <div class="awd-template-library__actions">
-        <button type="button" class="ui-btn ui-btn--ghost" @click="emit('refresh')">
+        <button
+          type="button"
+          class="ui-btn ui-btn--ghost"
+          @click="emit('refresh')"
+        >
           <RefreshCw class="h-4 w-4" />
           刷新列表
         </button>
-        <button id="awd-template-open-create" type="button" class="ui-btn ui-btn--primary" @click="emit('openCreateDialog')">
+        <button
+          id="awd-template-open-create"
+          type="button"
+          class="ui-btn ui-btn--primary"
+          @click="emit('openCreateDialog')"
+        >
           <Plus class="h-4 w-4" />
           创建模板
         </button>
@@ -213,8 +228,12 @@ function handleStatusFilterChange(event: Event): void {
           <span>模板总量</span>
           <Box class="h-4 w-4" />
         </div>
-        <div class="metric-panel-value">{{ total.toString().padStart(2, '0') }}</div>
-        <div class="metric-panel-helper">当前条件下的模板总数</div>
+        <div class="metric-panel-value">
+          {{ total.toString().padStart(2, '0') }}
+        </div>
+        <div class="metric-panel-helper">
+          当前条件下的模板总数
+        </div>
       </article>
 
       <article class="metric-panel-card--premium">
@@ -222,8 +241,12 @@ function handleStatusFilterChange(event: Event): void {
           <span>已发布</span>
           <CheckCircle class="h-4 w-4" />
         </div>
-        <div class="metric-panel-value">{{ publishedCount.toString().padStart(2, '0') }}</div>
-        <div class="metric-panel-helper">处于线上可用状态的模板</div>
+        <div class="metric-panel-value">
+          {{ publishedCount.toString().padStart(2, '0') }}
+        </div>
+        <div class="metric-panel-helper">
+          处于线上可用状态的模板
+        </div>
       </article>
 
       <article class="metric-panel-card--premium">
@@ -231,8 +254,12 @@ function handleStatusFilterChange(event: Event): void {
           <span>Web HTTP</span>
           <Activity class="h-4 w-4" />
         </div>
-        <div class="metric-panel-value">{{ webHttpCount.toString().padStart(2, '0') }}</div>
-        <div class="metric-panel-helper">HTTP 类服务模板数量</div>
+        <div class="metric-panel-value">
+          {{ webHttpCount.toString().padStart(2, '0') }}
+        </div>
+        <div class="metric-panel-helper">
+          HTTP 类服务模板数量
+        </div>
       </article>
 
       <article class="metric-panel-card--premium">
@@ -240,16 +267,24 @@ function handleStatusFilterChange(event: Event): void {
           <span>待验证</span>
           <Clock class="h-4 w-4" />
         </div>
-        <div class="metric-panel-value">{{ pendingReadinessCount.toString().padStart(2, '0') }}</div>
-        <div class="metric-panel-helper">尚未完成就绪度自检</div>
+        <div class="metric-panel-value">
+          {{ pendingReadinessCount.toString().padStart(2, '0') }}
+        </div>
+        <div class="metric-panel-helper">
+          尚未完成就绪度自检
+        </div>
       </article>
     </div>
 
     <section class="workspace-directory-section awd-template-library__directory">
       <header class="list-heading awd-template-library__directory-head">
         <div>
-          <div class="workspace-overline">Template Directory</div>
-          <h2 class="list-heading__title">全部模板</h2>
+          <div class="workspace-overline">
+            Template Directory
+          </div>
+          <h2 class="list-heading__title">
+            全部模板
+          </h2>
         </div>
       </header>
 
@@ -270,7 +305,11 @@ function handleStatusFilterChange(event: Event): void {
           <div class="awd-template-library__filter-grid">
             <label class="awd-template-library__filter-field">
               <span class="awd-template-library__filter-label">服务类型</span>
-              <select :value="serviceTypeFilter" class="awd-filter-control" @change="handleServiceTypeFilterChange">
+              <select
+                :value="serviceTypeFilter"
+                class="awd-filter-control"
+                @change="handleServiceTypeFilterChange"
+              >
                 <option value="">全部类型</option>
                 <option value="web_http">Web HTTP</option>
                 <option value="binary_tcp">Binary TCP</option>
@@ -280,7 +319,11 @@ function handleStatusFilterChange(event: Event): void {
 
             <label class="awd-template-library__filter-field">
               <span class="awd-template-library__filter-label">发布状态</span>
-              <select :value="statusFilter" class="awd-filter-control" @change="handleStatusFilterChange">
+              <select
+                :value="statusFilter"
+                class="awd-filter-control"
+                @change="handleStatusFilterChange"
+              >
                 <option value="">全部状态</option>
                 <option value="draft">草稿</option>
                 <option value="published">已发布</option>
@@ -291,7 +334,10 @@ function handleStatusFilterChange(event: Event): void {
         </template>
       </WorkspaceDirectoryToolbar>
 
-      <div v-if="loading && list.length === 0" class="flex justify-center py-12">
+      <div
+        v-if="loading && list.length === 0"
+        class="flex justify-center py-12"
+      >
         <AppLoading>正在同步模板数据...</AppLoading>
       </div>
 
@@ -314,8 +360,12 @@ function handleStatusFilterChange(event: Event): void {
         >
           <template #cell-name="{ row }">
             <div class="awd-template-table__name">
-              <div class="awd-template-table__title">{{ (row as AdminAwdServiceTemplateData).name }}</div>
-              <div class="awd-template-table__slug">@{{ (row as AdminAwdServiceTemplateData).slug }}</div>
+              <div class="awd-template-table__title">
+                {{ (row as AdminAwdServiceTemplateData).name }}
+              </div>
+              <div class="awd-template-table__slug">
+                @{{ (row as AdminAwdServiceTemplateData).slug }}
+              </div>
             </div>
           </template>
 
@@ -332,26 +382,47 @@ function handleStatusFilterChange(event: Event): void {
           </template>
 
           <template #cell-readiness_status="{ row }">
-            <span class="awd-status-pill" :class="getReadinessClass((row as AdminAwdServiceTemplateData).readiness_status)">
+            <span
+              class="awd-status-pill"
+              :class="getReadinessClass((row as AdminAwdServiceTemplateData).readiness_status)"
+            >
               {{ getReadinessLabel((row as AdminAwdServiceTemplateData).readiness_status) }}
             </span>
           </template>
 
           <template #cell-status="{ row }">
-            <span class="awd-status-pill" :class="getStatusClass((row as AdminAwdServiceTemplateData).status)">
+            <span
+              class="awd-status-pill"
+              :class="getStatusClass((row as AdminAwdServiceTemplateData).status)"
+            >
               {{ getStatusLabel((row as AdminAwdServiceTemplateData).status) }}
             </span>
           </template>
 
           <template #cell-actions="{ row }">
             <div class="awd-template-table__actions">
-              <button type="button" class="awd-row-btn" @click="emit('openEditDialog', row as AdminAwdServiceTemplateData)">编辑</button>
-              <button type="button" class="awd-row-btn awd-row-btn--danger" @click="emit('deleteTemplate', row as AdminAwdServiceTemplateData)">删除</button>
+              <button
+                type="button"
+                class="awd-row-btn"
+                @click="emit('openEditDialog', row as AdminAwdServiceTemplateData)"
+              >
+                编辑
+              </button>
+              <button
+                type="button"
+                class="awd-row-btn awd-row-btn--danger"
+                @click="emit('deleteTemplate', row as AdminAwdServiceTemplateData)"
+              >
+                删除
+              </button>
             </div>
           </template>
         </WorkspaceDataTable>
 
-        <div v-if="total > 0" class="admin-pagination workspace-directory-pagination mt-6">
+        <div
+          v-if="total > 0"
+          class="admin-pagination workspace-directory-pagination mt-6"
+        >
           <WorkspaceDirectoryPagination
             :page="page"
             :total-pages="totalPages"

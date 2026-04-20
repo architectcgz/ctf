@@ -328,8 +328,12 @@ watch(
     <main class="content-pane">
       <header class="admin-overview">
         <div class="admin-overview__intro">
-          <div class="workspace-overline">Audit Log</div>
-          <h1 class="admin-page-title">审计日志</h1>
+          <div class="workspace-overline">
+            Audit Log
+          </div>
+          <h1 class="admin-page-title">
+            审计日志
+          </h1>
         </div>
 
         <div class="metric-panel-grid--premium cols-3">
@@ -341,7 +345,9 @@ watch(
             <div class="metric-panel-value">
               {{ list.length.toString().padStart(2, '0') }}
             </div>
-            <div class="metric-panel-helper">本页已加载的日志条数</div>
+            <div class="metric-panel-helper">
+              本页已加载的日志条数
+            </div>
           </article>
           
           <article class="metric-panel-card--premium">
@@ -352,7 +358,9 @@ watch(
             <div class="metric-panel-value">
               {{ total.toString().padStart(2, '0') }}
             </div>
-            <div class="metric-panel-helper">审计数据库中的累计总量</div>
+            <div class="metric-panel-helper">
+              审计数据库中的累计总量
+            </div>
           </article>
 
           <article class="metric-panel-card--premium">
@@ -363,7 +371,9 @@ watch(
             <div class="metric-panel-value">
               {{ totalPages.toString().padStart(2, '0') }}
             </div>
-            <div class="metric-panel-helper">当前条件下的分页总数</div>
+            <div class="metric-panel-helper">
+              当前条件下的分页总数
+            </div>
           </article>
         </div>
       </header>
@@ -371,10 +381,16 @@ watch(
       <section class="admin-board workspace-directory-section">
         <header class="list-heading audit-board__head">
           <div>
-            <div class="workspace-overline">Audit Trail</div>
-            <h2 class="list-heading__title">操作流水</h2>
+            <div class="workspace-overline">
+              Audit Trail
+            </div>
+            <h2 class="list-heading__title">
+              操作流水
+            </h2>
           </div>
-          <div class="admin-caption">第 {{ page }} / {{ totalPages }} 页</div>
+          <div class="admin-caption">
+            第 {{ page }} / {{ totalPages }} 页
+          </div>
         </header>
 
         <WorkspaceDirectoryToolbar
@@ -393,7 +409,10 @@ watch(
             <div class="audit-filter-grid">
               <label class="audit-filter-field">
                 <span class="audit-filter-label">动作</span>
-                <select v-model="filters.action" class="audit-filter-select">
+                <select
+                  v-model="filters.action"
+                  class="audit-filter-select"
+                >
                   <option value="">全部动作</option>
                   <option value="login">登录</option>
                   <option value="logout">登出</option>
@@ -412,7 +431,7 @@ watch(
                   type="text"
                   placeholder="资源类型，如 challenge"
                   class="audit-filter-input"
-                />
+                >
               </label>
 
               <label class="audit-filter-field">
@@ -423,18 +442,30 @@ watch(
                   min="1"
                   placeholder="执行人 ID"
                   class="audit-filter-input"
-                />
+                >
               </label>
             </div>
           </template>
         </WorkspaceDirectoryToolbar>
 
-        <div v-if="error" class="admin-error">
+        <div
+          v-if="error"
+          class="admin-error"
+        >
           {{ error }}
-          <button type="button" class="ml-3 font-medium underline" @click="loadLogs">重试</button>
+          <button
+            type="button"
+            class="ml-3 font-medium underline"
+            @click="loadLogs"
+          >
+            重试
+          </button>
         </div>
 
-        <div v-else-if="loading" class="space-y-3 workspace-directory-loading">
+        <div
+          v-else-if="loading"
+          class="space-y-3 workspace-directory-loading"
+        >
           <div
             v-for="index in 6"
             :key="index"
@@ -476,7 +507,10 @@ watch(
               <span class="audit-row__resource-type">{{
                 (row as AuditLogItem).resource_type
               }}</span>
-              <span v-if="(row as AuditLogItem).resource_id" class="audit-row__resource-id">
+              <span
+                v-if="(row as AuditLogItem).resource_id"
+                class="audit-row__resource-id"
+              >
                 #{{ (row as AuditLogItem).resource_id }}
               </span>
             </div>
@@ -496,13 +530,19 @@ watch(
           </template>
 
           <template #cell-detail="{ row }">
-            <p class="audit-row__detail" :title="detailPreview((row as AuditLogItem).detail)">
+            <p
+              class="audit-row__detail"
+              :title="detailPreview((row as AuditLogItem).detail)"
+            >
               {{ detailPreview((row as AuditLogItem).detail) }}
             </p>
           </template>
         </WorkspaceDataTable>
 
-        <div v-if="!loading && total > 0" class="admin-pagination workspace-directory-pagination">
+        <div
+          v-if="!loading && total > 0"
+          class="admin-pagination workspace-directory-pagination"
+        >
           <PlatformPaginationControls
             :page="page"
             :total-pages="totalPages"
@@ -523,7 +563,10 @@ watch(
       @close="closeActorDetail"
       @update:open="!$event && closeActorDetail()"
     >
-      <section v-if="activeActorLog" class="audit-actor-detail">
+      <section
+        v-if="activeActorLog"
+        class="audit-actor-detail"
+      >
         <div class="audit-actor-detail__grid">
           <article class="audit-actor-detail__item">
             <div class="audit-actor-detail__head">

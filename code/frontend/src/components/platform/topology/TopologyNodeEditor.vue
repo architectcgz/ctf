@@ -89,7 +89,7 @@ function removeEnvEntry(uid: string) {
             type="text"
             class="ui-control"
             placeholder="例如 web"
-          />
+          >
         </span>
       </label>
 
@@ -101,16 +101,23 @@ function removeEnvEntry(uid: string) {
             type="text"
             class="ui-control"
             placeholder="例如 Web 应用"
-          />
+          >
         </span>
       </label>
 
       <label class="ui-field topology-node-editor__field">
         <span class="ui-field__label">镜像</span>
         <span class="ui-control-wrap">
-          <select v-model="node.image_id" class="ui-control">
+          <select
+            v-model="node.image_id"
+            class="ui-control"
+          >
             <option value="">复用题目主镜像</option>
-            <option v-for="image in images" :key="image.id" :value="image.id">
+            <option
+              v-for="image in images"
+              :key="image.id"
+              :value="image.id"
+            >
               {{ image.name }}:{{ image.tag }}
             </option>
           </select>
@@ -128,14 +135,17 @@ function removeEnvEntry(uid: string) {
             class="ui-control"
             placeholder="例如 8080"
             @input="updateNumberField('service_port', ($event.target as HTMLInputElement).value)"
-          />
+          >
         </span>
       </label>
 
       <label class="ui-field topology-node-editor__field">
         <span class="ui-field__label">节点层级</span>
         <span class="ui-control-wrap">
-          <select v-model="node.tier" class="ui-control">
+          <select
+            v-model="node.tier"
+            class="ui-control"
+          >
             <option value="public">public</option>
             <option value="service">service</option>
             <option value="internal">internal</option>
@@ -150,13 +160,15 @@ function removeEnvEntry(uid: string) {
           v-model="node.inject_flag"
           type="checkbox"
           class="topology-node-editor__checkbox"
-        />
+        >
         启用 Flag 注入
       </label>
     </div>
 
     <div class="mt-5 space-y-3">
-      <div class="text-sm font-medium text-text-primary">所属网络</div>
+      <div class="text-sm font-medium text-text-primary">
+        所属网络
+      </div>
       <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         <label
           v-for="network in networks"
@@ -168,7 +180,7 @@ function removeEnvEntry(uid: string) {
             type="checkbox"
             class="topology-node-editor__checkbox"
             @change="toggleNetwork(network.key, ($event.target as HTMLInputElement).checked)"
-          />
+          >
           <div class="min-w-0">
             <div class="truncate font-medium">{{ network.name || network.key }}</div>
             <div class="truncate text-xs text-text-muted">{{ network.key }}</div>
@@ -179,7 +191,9 @@ function removeEnvEntry(uid: string) {
 
     <div class="mt-5 space-y-3">
       <div class="flex items-center justify-between gap-3">
-        <div class="text-sm font-medium text-text-primary">环境变量</div>
+        <div class="text-sm font-medium text-text-primary">
+          环境变量
+        </div>
         <button
           type="button"
           class="ui-btn ui-btn--secondary topology-node-editor__secondary-btn"
@@ -197,17 +211,30 @@ function removeEnvEntry(uid: string) {
         暂无环境变量
       </div>
 
-      <div v-else class="space-y-3">
+      <div
+        v-else
+        class="space-y-3"
+      >
         <div
           v-for="entry in node.env_entries"
           :key="entry.uid"
           class="topology-node-editor__env-row"
         >
           <span class="ui-control-wrap">
-            <input v-model="entry.key" type="text" class="ui-control" placeholder="变量名" />
+            <input
+              v-model="entry.key"
+              type="text"
+              class="ui-control"
+              placeholder="变量名"
+            >
           </span>
           <span class="ui-control-wrap">
-            <input v-model="entry.value" type="text" class="ui-control" placeholder="变量值" />
+            <input
+              v-model="entry.value"
+              type="text"
+              class="ui-control"
+              placeholder="变量值"
+            >
           </span>
           <button
             type="button"
@@ -221,7 +248,9 @@ function removeEnvEntry(uid: string) {
     </div>
 
     <div class="mt-5">
-      <div class="mb-3 text-sm font-medium text-text-primary">资源限制</div>
+      <div class="mb-3 text-sm font-medium text-text-primary">
+        资源限制
+      </div>
       <div class="grid gap-4 md:grid-cols-3">
         <label class="ui-field topology-node-editor__field">
           <span class="ui-field__label">CPU Quota</span>
@@ -234,7 +263,7 @@ function removeEnvEntry(uid: string) {
               class="ui-control"
               placeholder="例如 1"
               @input="updateNumberField('cpu_quota', ($event.target as HTMLInputElement).value)"
-            />
+            >
           </span>
         </label>
 
@@ -248,7 +277,7 @@ function removeEnvEntry(uid: string) {
               class="ui-control"
               placeholder="例如 256"
               @input="updateNumberField('memory_mb', ($event.target as HTMLInputElement).value)"
-            />
+            >
           </span>
         </label>
 
@@ -262,7 +291,7 @@ function removeEnvEntry(uid: string) {
               class="ui-control"
               placeholder="例如 256"
               @input="updateNumberField('pids_limit', ($event.target as HTMLInputElement).value)"
-            />
+            >
           </span>
         </label>
       </div>

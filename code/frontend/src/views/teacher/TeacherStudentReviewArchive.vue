@@ -135,7 +135,10 @@ async function handleExportArchive(): Promise<void> {
       @export-archive="handleExportArchive"
     />
 
-    <div v-if="loading" class="review-archive-loading">
+    <div
+      v-if="loading"
+      class="review-archive-loading"
+    >
       <div class="review-archive-loading__hero" />
       <div class="review-archive-loading__grid">
         <div class="review-archive-loading__block" />
@@ -143,9 +146,20 @@ async function handleExportArchive(): Promise<void> {
       </div>
     </div>
 
-    <AppEmpty v-else-if="error" title="复盘归档加载失败" :description="error" icon="AlertTriangle">
+    <AppEmpty
+      v-else-if="error"
+      title="复盘归档加载失败"
+      :description="error"
+      icon="AlertTriangle"
+    >
       <template #action>
-        <button type="button" class="ui-btn ui-btn--primary" @click="reload">重新加载</button>
+        <button
+          type="button"
+          class="ui-btn ui-btn--primary"
+          @click="reload"
+        >
+          重新加载
+        </button>
       </template>
     </AppEmpty>
 
@@ -160,41 +174,66 @@ async function handleExportArchive(): Promise<void> {
       <ReviewArchiveObservationStrip :items="archive.teacher_observations.items" />
 
       <section class="review-archive-summary-grid">
-        <SectionCard title="训练摘要" subtitle="将当前归档的关键指标收束为一页课堂摘要。">
+        <SectionCard
+          title="训练摘要"
+          subtitle="将当前归档的关键指标收束为一页课堂摘要。"
+        >
           <div class="summary-grid metric-panel-grid">
             <article class="summary-card summary-card--primary metric-panel-card">
-              <div class="summary-card__label metric-panel-label">完成率</div>
-              <div class="summary-card__value metric-panel-value">{{ solvedRate }}%</div>
+              <div class="summary-card__label metric-panel-label">
+                完成率
+              </div>
+              <div class="summary-card__value metric-panel-value">
+                {{ solvedRate }}%
+              </div>
               <div class="summary-card__hint metric-panel-helper">
                 已完成 {{ archive.summary.total_solved }} / {{ archive.summary.total_challenges }}
               </div>
             </article>
             <article class="summary-card summary-card--warning metric-panel-card">
-              <div class="summary-card__label metric-panel-label">有效提交</div>
+              <div class="summary-card__label metric-panel-label">
+                有效提交
+              </div>
               <div class="summary-card__value metric-panel-value">
                 {{ archive.summary.correct_submission_count }}
               </div>
-              <div class="summary-card__hint metric-panel-helper">归档内命中 Flag 的提交次数</div>
+              <div class="summary-card__hint metric-panel-helper">
+                归档内命中 Flag 的提交次数
+              </div>
             </article>
             <article class="summary-card summary-card--neutral metric-panel-card">
-              <div class="summary-card__label metric-panel-label">最近活跃</div>
+              <div class="summary-card__label metric-panel-label">
+                最近活跃
+              </div>
               <div class="summary-card__value summary-card__value--time metric-panel-value">
                 {{ formattedLastActivity }}
               </div>
-              <div class="summary-card__hint metric-panel-helper">归档内最后一条训练活动</div>
+              <div class="summary-card__hint metric-panel-helper">
+                归档内最后一条训练活动
+              </div>
             </article>
           </div>
         </SectionCard>
 
-        <SectionCard title="能力画像" subtitle="优先识别当前最强与最弱的训练维度。">
+        <SectionCard
+          title="能力画像"
+          subtitle="优先识别当前最强与最弱的训练维度。"
+        >
           <div class="skill-bars">
-            <article v-for="item in rankedSkillDimensions" :key="item.key" class="skill-bars__item">
+            <article
+              v-for="item in rankedSkillDimensions"
+              :key="item.key"
+              class="skill-bars__item"
+            >
               <div class="skill-bars__head">
                 <strong>{{ item.name }}</strong>
                 <span>{{ item.value }}%</span>
               </div>
               <div class="skill-bars__track">
-                <div class="skill-bars__fill" :style="{ width: `${item.value}%` }" />
+                <div
+                  class="skill-bars__fill"
+                  :style="{ width: `${item.value}%` }"
+                />
               </div>
             </article>
           </div>

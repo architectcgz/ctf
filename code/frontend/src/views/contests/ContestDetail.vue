@@ -118,14 +118,22 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
 </script>
 
 <template>
-  <div class="contest-page-shell" :style="contestAccentStyle">
+  <div
+    class="contest-page-shell"
+    :style="contestAccentStyle"
+  >
     <section
       class="workspace-shell journal-shell journal-shell-user journal-hero contest-detail-view flex min-h-full flex-1 flex-col"
     >
-      <main v-if="loading" class="content-pane">
+      <main
+        v-if="loading"
+        class="content-pane"
+      >
         <div class="contest-loading">
           <div class="contest-loading__spinner" />
-          <div class="contest-loading__text">正在同步竞赛详情...</div>
+          <div class="contest-loading__text">
+            正在同步竞赛详情...
+          </div>
         </div>
       </main>
 
@@ -135,7 +143,11 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
           @updated="refreshAnnouncements"
         />
 
-        <div class="workspace-tabbar top-tabs" role="tablist" aria-label="竞赛页面主切换">
+        <div
+          class="workspace-tabbar top-tabs"
+          role="tablist"
+          aria-label="竞赛页面主切换"
+        >
           <button
             v-for="(tab, index) in workspaceTabs"
             :id="`contest-workspace-tab-${tab.id}`"
@@ -163,142 +175,210 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
             role="tabpanel"
             aria-labelledby="contest-workspace-tab-overview"
           >
-          <header class="contest-hero">
-            <div class="contest-hero__main">
-              <div class="workspace-overline">Contest</div>
-              <h1 class="contest-hero__title workspace-page-title">{{ contest.title }}</h1>
-              <p class="contest-hero__desc workspace-page-copy">
-                {{ contest.description || '当前竞赛暂未提供描述。' }}
-              </p>
-
-              <div class="contest-meta-strip">
-                <span class="contest-chip contest-chip--status">
-                  {{ getStatusLabel(contest.status) }}
-                </span>
-                <span class="contest-chip contest-chip--neutral">
-                  {{ getModeLabel(contest.mode) }}
-                </span>
-                <span class="contest-chip contest-chip--neutral">
-                  {{ formatTime(contest.starts_at) }} ~ {{ formatTime(contest.ends_at) }}
-                </span>
-                <span v-if="countdown" class="contest-chip contest-chip--accent">
-                  {{ countdown }}
-                </span>
-              </div>
-            </div>
-
-            <aside class="contest-score-rail">
-              <div class="contest-score-rail__label">总分</div>
-              <div class="contest-score-rail__value">{{ totalPoints }} <small>pts</small></div>
-              <div class="contest-score-rail__note">
-                {{ challenges.length }} 题 · {{ solvedCount }} 已解 · {{ memberCount }} 人
-              </div>
-            </aside>
-          </header>
-
-          <div class="contest-divider" />
-
-          <section class="contest-stat-grid metric-panel-grid">
-            <article class="contest-stat metric-panel-card">
-              <div class="contest-stat__label metric-panel-label">队伍成员</div>
-              <div class="contest-stat__value metric-panel-value">{{ memberCount }}</div>
-              <div class="contest-stat__hint metric-panel-helper">当前队伍人数</div>
-            </article>
-            <article class="contest-stat metric-panel-card">
-              <div class="contest-stat__label metric-panel-label">题目数量</div>
-              <div class="contest-stat__value metric-panel-value">{{ challenges.length }}</div>
-              <div class="contest-stat__hint metric-panel-helper">本场竞赛题目总数</div>
-            </article>
-            <article class="contest-stat metric-panel-card">
-              <div class="contest-stat__label metric-panel-label">已解题目</div>
-              <div class="contest-stat__value metric-panel-value">{{ solvedCount }}</div>
-              <div class="contest-stat__hint metric-panel-helper">当前账号已完成数量</div>
-            </article>
-            <article class="contest-stat metric-panel-card">
-              <div class="contest-stat__label metric-panel-label">积分总览</div>
-              <div class="contest-stat__value metric-panel-value">{{ totalPoints }}</div>
-              <div class="contest-stat__hint metric-panel-helper">全部题目可获得积分</div>
-            </article>
-          </section>
-
-          <div class="contest-divider" />
-
-          <div class="contest-overview-grid">
-            <section class="contest-section contest-section--flat">
-              <div class="contest-section__head workspace-tab-heading">
-                <div class="workspace-tab-heading__main">
-                  <div class="workspace-overline">Rules</div>
-                  <h2 class="contest-section__title workspace-tab-heading__title">竞赛规则</h2>
+            <header class="contest-hero">
+              <div class="contest-hero__main">
+                <div class="workspace-overline">
+                  Contest
                 </div>
-              </div>
-              <div class="contest-copy">{{ contest.rules || '当前竞赛暂无额外规则说明。' }}</div>
-            </section>
-
-            <section class="contest-section contest-section--flat">
-              <div class="contest-section__head workspace-tab-heading">
-                <div class="workspace-tab-heading__main">
-                  <div class="workspace-overline">Schedule</div>
-                  <h2 class="contest-section__title workspace-tab-heading__title">赛程信息</h2>
-                </div>
-              </div>
-              <div class="contest-copy-list">
-                <div class="contest-copy-row">
-                  <span>开始时间</span>
-                  <strong>{{ formatTime(contest.starts_at) }}</strong>
-                </div>
-                <div class="contest-copy-row">
-                  <span>结束时间</span>
-                  <strong>{{ formatTime(contest.ends_at) }}</strong>
-                </div>
-                <div class="contest-copy-row">
-                  <span>参赛模式</span>
-                  <strong>{{ getModeLabel(contest.mode) }}</strong>
-                </div>
-                <div class="contest-copy-row">
-                  <span>冻结榜单</span>
-                  <strong>{{ contest.scoreboard_frozen ? '是' : '否' }}</strong>
-                </div>
-              </div>
-            </section>
-          </div>
-
-          <div class="contest-divider" />
-
-          <section class="contest-section contest-section--flat">
-            <div class="contest-section__head workspace-tab-heading">
-              <div class="workspace-tab-heading__main">
-                <div class="workspace-overline">Announcements</div>
-                <h2 class="contest-section__title workspace-tab-heading__title">公告预览</h2>
-              </div>
-              <div class="contest-section__hint">{{ announcements.length }} 条</div>
-            </div>
-
-            <div v-if="announcementsError" class="contest-alert contest-alert--warning">
-              {{ announcementsError }}
-            </div>
-
-            <div v-else-if="announcements.length === 0" class="contest-inline-note">
-              当前竞赛暂无新的公告通知。
-            </div>
-
-            <div v-else class="announcement-list">
-              <article
-                v-for="announcement in announcements"
-                :key="announcement.id"
-                class="announcement-item"
-              >
-                <div class="announcement-item__head">
-                  <h3 class="announcement-item__title">{{ announcement.title }}</h3>
-                  <time class="announcement-item__time" :datetime="announcement.created_at">
-                    {{ formatTime(announcement.created_at) }}
-                  </time>
-                </div>
-                <p v-if="announcement.content" class="announcement-item__content">
-                  {{ announcement.content }}
+                <h1 class="contest-hero__title workspace-page-title">
+                  {{ contest.title }}
+                </h1>
+                <p class="contest-hero__desc workspace-page-copy">
+                  {{ contest.description || '当前竞赛暂未提供描述。' }}
                 </p>
+
+                <div class="contest-meta-strip">
+                  <span class="contest-chip contest-chip--status">
+                    {{ getStatusLabel(contest.status) }}
+                  </span>
+                  <span class="contest-chip contest-chip--neutral">
+                    {{ getModeLabel(contest.mode) }}
+                  </span>
+                  <span class="contest-chip contest-chip--neutral">
+                    {{ formatTime(contest.starts_at) }} ~ {{ formatTime(contest.ends_at) }}
+                  </span>
+                  <span
+                    v-if="countdown"
+                    class="contest-chip contest-chip--accent"
+                  >
+                    {{ countdown }}
+                  </span>
+                </div>
+              </div>
+
+              <aside class="contest-score-rail">
+                <div class="contest-score-rail__label">
+                  总分
+                </div>
+                <div class="contest-score-rail__value">
+                  {{ totalPoints }} <small>pts</small>
+                </div>
+                <div class="contest-score-rail__note">
+                  {{ challenges.length }} 题 · {{ solvedCount }} 已解 · {{ memberCount }} 人
+                </div>
+              </aside>
+            </header>
+
+            <div class="contest-divider" />
+
+            <section class="contest-stat-grid metric-panel-grid">
+              <article class="contest-stat metric-panel-card">
+                <div class="contest-stat__label metric-panel-label">
+                  队伍成员
+                </div>
+                <div class="contest-stat__value metric-panel-value">
+                  {{ memberCount }}
+                </div>
+                <div class="contest-stat__hint metric-panel-helper">
+                  当前队伍人数
+                </div>
               </article>
+              <article class="contest-stat metric-panel-card">
+                <div class="contest-stat__label metric-panel-label">
+                  题目数量
+                </div>
+                <div class="contest-stat__value metric-panel-value">
+                  {{ challenges.length }}
+                </div>
+                <div class="contest-stat__hint metric-panel-helper">
+                  本场竞赛题目总数
+                </div>
+              </article>
+              <article class="contest-stat metric-panel-card">
+                <div class="contest-stat__label metric-panel-label">
+                  已解题目
+                </div>
+                <div class="contest-stat__value metric-panel-value">
+                  {{ solvedCount }}
+                </div>
+                <div class="contest-stat__hint metric-panel-helper">
+                  当前账号已完成数量
+                </div>
+              </article>
+              <article class="contest-stat metric-panel-card">
+                <div class="contest-stat__label metric-panel-label">
+                  积分总览
+                </div>
+                <div class="contest-stat__value metric-panel-value">
+                  {{ totalPoints }}
+                </div>
+                <div class="contest-stat__hint metric-panel-helper">
+                  全部题目可获得积分
+                </div>
+              </article>
+            </section>
+
+            <div class="contest-divider" />
+
+            <div class="contest-overview-grid">
+              <section class="contest-section contest-section--flat">
+                <div class="contest-section__head workspace-tab-heading">
+                  <div class="workspace-tab-heading__main">
+                    <div class="workspace-overline">
+                      Rules
+                    </div>
+                    <h2 class="contest-section__title workspace-tab-heading__title">
+                      竞赛规则
+                    </h2>
+                  </div>
+                </div>
+                <div class="contest-copy">
+                  {{ contest.rules || '当前竞赛暂无额外规则说明。' }}
+                </div>
+              </section>
+
+              <section class="contest-section contest-section--flat">
+                <div class="contest-section__head workspace-tab-heading">
+                  <div class="workspace-tab-heading__main">
+                    <div class="workspace-overline">
+                      Schedule
+                    </div>
+                    <h2 class="contest-section__title workspace-tab-heading__title">
+                      赛程信息
+                    </h2>
+                  </div>
+                </div>
+                <div class="contest-copy-list">
+                  <div class="contest-copy-row">
+                    <span>开始时间</span>
+                    <strong>{{ formatTime(contest.starts_at) }}</strong>
+                  </div>
+                  <div class="contest-copy-row">
+                    <span>结束时间</span>
+                    <strong>{{ formatTime(contest.ends_at) }}</strong>
+                  </div>
+                  <div class="contest-copy-row">
+                    <span>参赛模式</span>
+                    <strong>{{ getModeLabel(contest.mode) }}</strong>
+                  </div>
+                  <div class="contest-copy-row">
+                    <span>冻结榜单</span>
+                    <strong>{{ contest.scoreboard_frozen ? '是' : '否' }}</strong>
+                  </div>
+                </div>
+              </section>
             </div>
-          </section>
+
+            <div class="contest-divider" />
+
+            <section class="contest-section contest-section--flat">
+              <div class="contest-section__head workspace-tab-heading">
+                <div class="workspace-tab-heading__main">
+                  <div class="workspace-overline">
+                    Announcements
+                  </div>
+                  <h2 class="contest-section__title workspace-tab-heading__title">
+                    公告预览
+                  </h2>
+                </div>
+                <div class="contest-section__hint">
+                  {{ announcements.length }} 条
+                </div>
+              </div>
+
+              <div
+                v-if="announcementsError"
+                class="contest-alert contest-alert--warning"
+              >
+                {{ announcementsError }}
+              </div>
+
+              <div
+                v-else-if="announcements.length === 0"
+                class="contest-inline-note"
+              >
+                当前竞赛暂无新的公告通知。
+              </div>
+
+              <div
+                v-else
+                class="announcement-list"
+              >
+                <article
+                  v-for="announcement in announcements"
+                  :key="announcement.id"
+                  class="announcement-item"
+                >
+                  <div class="announcement-item__head">
+                    <h3 class="announcement-item__title">
+                      {{ announcement.title }}
+                    </h3>
+                    <time
+                      class="announcement-item__time"
+                      :datetime="announcement.created_at"
+                    >
+                      {{ formatTime(announcement.created_at) }}
+                    </time>
+                  </div>
+                  <p
+                    v-if="announcement.content"
+                    class="announcement-item__content"
+                  >
+                    {{ announcement.content }}
+                  </p>
+                </article>
+              </div>
+            </section>
           </section>
 
           <section
@@ -308,41 +388,68 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
             role="tabpanel"
             aria-labelledby="contest-workspace-tab-announcements"
           >
-          <section class="contest-section">
-            <div class="contest-section__head workspace-tab-heading">
-              <div class="workspace-tab-heading__main">
-                <div class="workspace-overline">Announcements</div>
-                <h2 class="contest-section__title workspace-tab-heading__title">公告</h2>
-              </div>
-              <div class="contest-section__hint">{{ announcements.length }} 条</div>
-            </div>
-
-            <div v-if="announcementsError" class="contest-alert contest-alert--warning">
-              {{ announcementsError }}
-            </div>
-
-            <div v-else-if="announcements.length === 0" class="contest-empty-state">
-              <AppEmpty icon="Bell" title="暂无公告" description="当前竞赛暂无新的公告通知。" />
-            </div>
-
-            <div v-else class="announcement-list">
-              <article
-                v-for="announcement in announcements"
-                :key="announcement.id"
-                class="announcement-item"
-              >
-                <div class="announcement-item__head">
-                  <h3 class="announcement-item__title">{{ announcement.title }}</h3>
-                  <time class="announcement-item__time" :datetime="announcement.created_at">
-                    {{ formatTime(announcement.created_at) }}
-                  </time>
+            <section class="contest-section">
+              <div class="contest-section__head workspace-tab-heading">
+                <div class="workspace-tab-heading__main">
+                  <div class="workspace-overline">
+                    Announcements
+                  </div>
+                  <h2 class="contest-section__title workspace-tab-heading__title">
+                    公告
+                  </h2>
                 </div>
-                <p v-if="announcement.content" class="announcement-item__content">
-                  {{ announcement.content }}
-                </p>
-              </article>
-            </div>
-          </section>
+                <div class="contest-section__hint">
+                  {{ announcements.length }} 条
+                </div>
+              </div>
+
+              <div
+                v-if="announcementsError"
+                class="contest-alert contest-alert--warning"
+              >
+                {{ announcementsError }}
+              </div>
+
+              <div
+                v-else-if="announcements.length === 0"
+                class="contest-empty-state"
+              >
+                <AppEmpty
+                  icon="Bell"
+                  title="暂无公告"
+                  description="当前竞赛暂无新的公告通知。"
+                />
+              </div>
+
+              <div
+                v-else
+                class="announcement-list"
+              >
+                <article
+                  v-for="announcement in announcements"
+                  :key="announcement.id"
+                  class="announcement-item"
+                >
+                  <div class="announcement-item__head">
+                    <h3 class="announcement-item__title">
+                      {{ announcement.title }}
+                    </h3>
+                    <time
+                      class="announcement-item__time"
+                      :datetime="announcement.created_at"
+                    >
+                      {{ formatTime(announcement.created_at) }}
+                    </time>
+                  </div>
+                  <p
+                    v-if="announcement.content"
+                    class="announcement-item__content"
+                  >
+                    {{ announcement.content }}
+                  </p>
+                </article>
+              </div>
+            </section>
           </section>
 
           <section
@@ -352,130 +459,163 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
             role="tabpanel"
             aria-labelledby="contest-workspace-tab-challenges"
           >
-          <section class="contest-section">
-            <div class="contest-section__head workspace-tab-heading">
-              <div class="workspace-tab-heading__main">
-                <div class="workspace-overline">
-                  {{ contest.mode === 'awd' ? 'Battle' : 'Challenges' }}
+            <section class="contest-section">
+              <div class="contest-section__head workspace-tab-heading">
+                <div class="workspace-tab-heading__main">
+                  <div class="workspace-overline">
+                    {{ contest.mode === 'awd' ? 'Battle' : 'Challenges' }}
+                  </div>
+                  <h2 class="contest-section__title workspace-tab-heading__title">
+                    {{ contest.mode === 'awd' ? '战场' : '题目' }}
+                  </h2>
                 </div>
-                <h2 class="contest-section__title workspace-tab-heading__title">
-                  {{ contest.mode === 'awd' ? '战场' : '题目' }}
-                </h2>
-              </div>
-              <div class="contest-section__hint">
-                {{
-                  contest.mode === 'awd'
-                    ? `${challenges.length} 题`
-                    : `${solvedCount} / ${challenges.length} 已解`
-                }}
-              </div>
-            </div>
-
-            <ContestAWDWorkspacePanel
-              v-if="contest.mode === 'awd'"
-              :contest="contest"
-              :challenges="challenges"
-            />
-
-            <div v-else-if="challenges.length === 0" class="contest-empty-state">
-              <AppEmpty icon="Flag" title="暂无题目" description="当前竞赛尚未发布题目。" />
-            </div>
-
-            <div v-else class="contest-challenge-workspace">
-              <div class="contest-challenge-list">
-                <button
-                  v-for="challenge in challenges"
-                  :key="challenge.id"
-                  type="button"
-                  :class="challengeClass(challenge.id, challenge.is_solved)"
-                  @click="selectChallenge(challenge)"
-                >
-                  <div class="contest-challenge__head">
-                    <h3 class="contest-challenge__title">{{ challenge.title }}</h3>
-                    <span v-if="challenge.is_solved" class="contest-challenge__solved">✓</span>
-                  </div>
-                  <div class="contest-challenge__meta">
-                    <span>{{ challenge.category }}</span>
-                    <span>{{ challenge.points }} pts</span>
-                    <span>{{ challenge.solved_count }} 人解出</span>
-                  </div>
-                </button>
+                <div class="contest-section__hint">
+                  {{
+                    contest.mode === 'awd'
+                      ? `${challenges.length} 题`
+                      : `${solvedCount} / ${challenges.length} 已解`
+                  }}
+                </div>
               </div>
 
-              <article class="challenge-focus">
-                <template v-if="selectedChallenge">
-                  <div class="challenge-focus__head">
-                    <div>
-                      <div class="workspace-overline">Selected</div>
-                      <h3 class="challenge-focus__title">{{ selectedChallenge.title }}</h3>
+              <ContestAWDWorkspacePanel
+                v-if="contest.mode === 'awd'"
+                :contest="contest"
+                :challenges="challenges"
+              />
+
+              <div
+                v-else-if="challenges.length === 0"
+                class="contest-empty-state"
+              >
+                <AppEmpty
+                  icon="Flag"
+                  title="暂无题目"
+                  description="当前竞赛尚未发布题目。"
+                />
+              </div>
+
+              <div
+                v-else
+                class="contest-challenge-workspace"
+              >
+                <div class="contest-challenge-list">
+                  <button
+                    v-for="challenge in challenges"
+                    :key="challenge.id"
+                    type="button"
+                    :class="challengeClass(challenge.id, challenge.is_solved)"
+                    @click="selectChallenge(challenge)"
+                  >
+                    <div class="contest-challenge__head">
+                      <h3 class="contest-challenge__title">
+                        {{ challenge.title }}
+                      </h3>
+                      <span
+                        v-if="challenge.is_solved"
+                        class="contest-challenge__solved"
+                      >✓</span>
                     </div>
-                    <div class="challenge-focus__meta">{{ selectedChallengeMeta }}</div>
-                  </div>
-
-                  <div class="challenge-focus__stats">
-                    <span class="contest-chip contest-chip--neutral">
-                      解出人数 {{ selectedChallenge.solved_count }}
-                    </span>
-                    <span
-                      v-if="selectedChallenge.is_solved"
-                      class="contest-chip contest-chip--success"
-                    >
-                      已解出
-                    </span>
-                  </div>
-
-                  <div class="contest-divider contest-divider--compact" />
-
-                  <div class="challenge-focus__form">
-                    <div>
-                      <div class="workspace-overline">Primary Action</div>
-                      <h4 class="challenge-focus__form-title">提交 Flag</h4>
+                    <div class="contest-challenge__meta">
+                      <span>{{ challenge.category }}</span>
+                      <span>{{ challenge.points }} pts</span>
+                      <span>{{ challenge.solved_count }} 人解出</span>
                     </div>
+                  </button>
+                </div>
 
-                    <label class="ui-field__label flag-submit__label" for="contest-flag-input">
-                      Flag
-                    </label>
-                    <div class="flag-submit">
-                      <div class="ui-control-wrap flag-submit__control">
-                        <input
-                          id="contest-flag-input"
-                          v-model="flagInput"
-                          type="text"
-                          placeholder="flag{...}"
-                          class="ui-control"
-                          @keyup.enter="submitFlagAction"
-                        />
+                <article class="challenge-focus">
+                  <template v-if="selectedChallenge">
+                    <div class="challenge-focus__head">
+                      <div>
+                        <div class="workspace-overline">
+                          Selected
+                        </div>
+                        <h3 class="challenge-focus__title">
+                          {{ selectedChallenge.title }}
+                        </h3>
                       </div>
-                      <button
-                        type="button"
-                        :disabled="submitting"
-                        class="ui-btn ui-btn--primary"
-                        @click="submitFlagAction"
+                      <div class="challenge-focus__meta">
+                        {{ selectedChallengeMeta }}
+                      </div>
+                    </div>
+
+                    <div class="challenge-focus__stats">
+                      <span class="contest-chip contest-chip--neutral">
+                        解出人数 {{ selectedChallenge.solved_count }}
+                      </span>
+                      <span
+                        v-if="selectedChallenge.is_solved"
+                        class="contest-chip contest-chip--success"
                       >
-                        {{ submitting ? '提交中...' : '提交' }}
-                      </button>
+                        已解出
+                      </span>
                     </div>
 
-                    <div
-                      v-if="submitResult"
-                      class="contest-alert"
-                      :class="
-                        submitResult.is_correct ? 'contest-alert--success' : 'contest-alert--danger'
-                      "
-                    >
-                      {{
-                        submitResult.is_correct
-                          ? `正确！+${submitResult.points ?? 0} 分`
-                          : submitResult.message
-                      }}
+                    <div class="contest-divider contest-divider--compact" />
+
+                    <div class="challenge-focus__form">
+                      <div>
+                        <div class="workspace-overline">
+                          Primary Action
+                        </div>
+                        <h4 class="challenge-focus__form-title">
+                          提交 Flag
+                        </h4>
+                      </div>
+
+                      <label
+                        class="ui-field__label flag-submit__label"
+                        for="contest-flag-input"
+                      >
+                        Flag
+                      </label>
+                      <div class="flag-submit">
+                        <div class="ui-control-wrap flag-submit__control">
+                          <input
+                            id="contest-flag-input"
+                            v-model="flagInput"
+                            type="text"
+                            placeholder="flag{...}"
+                            class="ui-control"
+                            @keyup.enter="submitFlagAction"
+                          >
+                        </div>
+                        <button
+                          type="button"
+                          :disabled="submitting"
+                          class="ui-btn ui-btn--primary"
+                          @click="submitFlagAction"
+                        >
+                          {{ submitting ? '提交中...' : '提交' }}
+                        </button>
+                      </div>
+
+                      <div
+                        v-if="submitResult"
+                        class="contest-alert"
+                        :class="
+                          submitResult.is_correct ? 'contest-alert--success' : 'contest-alert--danger'
+                        "
+                      >
+                        {{
+                          submitResult.is_correct
+                            ? `正确！+${submitResult.points ?? 0} 分`
+                            : submitResult.message
+                        }}
+                      </div>
                     </div>
+                  </template>
+
+                  <div
+                    v-else
+                    class="contest-inline-note"
+                  >
+                    从左侧选择题目后可在这里提交 Flag。
                   </div>
-                </template>
-
-                <div v-else class="contest-inline-note">从左侧选择题目后可在这里提交 Flag。</div>
-              </article>
-            </div>
-          </section>
+                </article>
+              </div>
+            </section>
           </section>
 
           <section
@@ -485,70 +625,100 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
             role="tabpanel"
             aria-labelledby="contest-workspace-tab-team"
           >
-          <section class="contest-section">
-            <div class="contest-section__head workspace-tab-heading">
-              <div class="workspace-tab-heading__main">
-                <div class="workspace-overline">Team</div>
-                <h2 class="contest-section__title workspace-tab-heading__title">队伍</h2>
-              </div>
-              <div class="contest-section__hint">{{ memberCount }} 人</div>
-            </div>
-
-            <div v-if="!team" class="team-empty">
-              <div class="contest-inline-note">当前账号尚未加入队伍。</div>
-              <div class="team-actions">
-                <button
-                  type="button"
-                  class="ui-btn ui-btn--primary"
-                  @click="openCreateTeam"
-                >
-                  创建队伍
-                </button>
-                <button type="button" class="ui-btn ui-btn--ghost" @click="openJoinTeam">
-                  加入队伍
-                </button>
-              </div>
-            </div>
-
-            <div v-else class="team-board">
-              <div class="team-summary">
-                <div>
-                  <div class="workspace-overline">Current Team</div>
-                  <h3 class="team-summary__name">{{ team.name }}</h3>
+            <section class="contest-section">
+              <div class="contest-section__head workspace-tab-heading">
+                <div class="workspace-tab-heading__main">
+                  <div class="workspace-overline">
+                    Team
+                  </div>
+                  <h2 class="contest-section__title workspace-tab-heading__title">
+                    队伍
+                  </h2>
                 </div>
-                <span v-if="team.invite_code" class="team-summary__invite"
-                  >邀请码: {{ team.invite_code }}</span
-                >
+                <div class="contest-section__hint">
+                  {{ memberCount }} 人
+                </div>
               </div>
 
-              <div class="team-member-list">
-                <div v-for="member in team.members" :key="member.user_id" class="team-member">
-                  <span class="team-member__name">{{ member.username }}</span>
-                  <div class="team-member__actions">
-                    <span
-                      v-if="member.user_id === team.captain_user_id"
-                      class="team-member__captain"
-                    >
-                      队长
-                    </span>
-                    <button
-                      v-if="isCaptain && member.user_id !== team.captain_user_id"
-                      type="button"
-                      class="team-member__kick"
-                      @click="kickMember(member.user_id)"
-                    >
-                      踢出
-                    </button>
+              <div
+                v-if="!team"
+                class="team-empty"
+              >
+                <div class="contest-inline-note">
+                  当前账号尚未加入队伍。
+                </div>
+                <div class="team-actions">
+                  <button
+                    type="button"
+                    class="ui-btn ui-btn--primary"
+                    @click="openCreateTeam"
+                  >
+                    创建队伍
+                  </button>
+                  <button
+                    type="button"
+                    class="ui-btn ui-btn--ghost"
+                    @click="openJoinTeam"
+                  >
+                    加入队伍
+                  </button>
+                </div>
+              </div>
+
+              <div
+                v-else
+                class="team-board"
+              >
+                <div class="team-summary">
+                  <div>
+                    <div class="workspace-overline">
+                      Current Team
+                    </div>
+                    <h3 class="team-summary__name">
+                      {{ team.name }}
+                    </h3>
+                  </div>
+                  <span
+                    v-if="team.invite_code"
+                    class="team-summary__invite"
+                  >邀请码: {{ team.invite_code }}</span>
+                </div>
+
+                <div class="team-member-list">
+                  <div
+                    v-for="member in team.members"
+                    :key="member.user_id"
+                    class="team-member"
+                  >
+                    <span class="team-member__name">{{ member.username }}</span>
+                    <div class="team-member__actions">
+                      <span
+                        v-if="member.user_id === team.captain_user_id"
+                        class="team-member__captain"
+                      >
+                        队长
+                      </span>
+                      <button
+                        v-if="isCaptain && member.user_id !== team.captain_user_id"
+                        type="button"
+                        class="team-member__kick"
+                        @click="kickMember(member.user_id)"
+                      >
+                        踢出
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </section>
+            </section>
           </section>
         </main>
       </template>
 
-      <main v-else-if="contest" class="content-pane">
+      <main
+        v-else-if="contest"
+        class="content-pane"
+      >
         <div class="contest-not-found">
           <AppEmpty
             icon="Flag"
@@ -556,7 +726,10 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
             description="该竞赛还处于筹备阶段，暂不对学生开放查看或报名。"
           >
             <template #action>
-              <RouterLink class="ui-btn ui-btn--primary" to="/contests">
+              <RouterLink
+                class="ui-btn ui-btn--primary"
+                to="/contests"
+              >
                 <Trophy class="h-4 w-4" />
                 返回竞赛中心
               </RouterLink>
@@ -565,7 +738,10 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
         </div>
       </main>
 
-      <main v-else class="content-pane">
+      <main
+        v-else
+        class="content-pane"
+      >
         <div class="contest-not-found">
           <AppEmpty
             icon="AlertTriangle"
@@ -573,7 +749,10 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
             description="请返回竞赛中心重新选择竞赛，或稍后再试。"
           >
             <template #action>
-              <RouterLink class="ui-btn ui-btn--primary" to="/contests">
+              <RouterLink
+                class="ui-btn ui-btn--primary"
+                to="/contests"
+              >
                 <Trophy class="h-4 w-4" />
                 返回竞赛中心
               </RouterLink>
@@ -595,7 +774,10 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
       @close="closeCreateTeam"
     >
       <template #icon>
-        <UsersRound class="h-6 w-6" :stroke-width="2" />
+        <UsersRound
+          class="h-6 w-6"
+          :stroke-width="2"
+        />
       </template>
 
       <div class="contest-team-dialog-field">
@@ -606,11 +788,15 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
           type="text"
           placeholder="例如：HackerG1"
           @keyup.enter="createTeamAction"
-        />
+        >
       </div>
 
       <template #footer="{ close }">
-        <button type="button" data-c-modal-action="ghost" @click="close">
+        <button
+          type="button"
+          data-c-modal-action="ghost"
+          @click="close"
+        >
           取消
         </button>
         <button
@@ -636,7 +822,10 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
       @close="closeJoinTeam"
     >
       <template #icon>
-        <UsersRound class="h-6 w-6" :stroke-width="2" />
+        <UsersRound
+          class="h-6 w-6"
+          :stroke-width="2"
+        />
       </template>
 
       <div class="contest-team-dialog-field">
@@ -647,11 +836,15 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
           type="text"
           placeholder="输入队伍 ID"
           @keyup.enter="joinTeamAction"
-        />
+        >
       </div>
 
       <template #footer="{ close }">
-        <button type="button" data-c-modal-action="ghost" @click="close">
+        <button
+          type="button"
+          data-c-modal-action="ghost"
+          @click="close"
+        >
           取消
         </button>
         <button

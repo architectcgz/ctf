@@ -106,9 +106,15 @@ function handleSubmit() {
     @close="closeDialog"
     @update:open="emit('update:open', $event)"
   >
-    <form class="admin-user-form" @submit.prevent="handleSubmit">
+    <form
+      class="admin-user-form"
+      @submit.prevent="handleSubmit"
+    >
       <div class="admin-user-form__grid">
-        <label class="ui-field admin-user-form__field" for="user-username">
+        <label
+          class="ui-field admin-user-form__field"
+          for="user-username"
+        >
           <span class="ui-field__label">用户名</span>
           <span
             class="ui-control-wrap"
@@ -124,55 +130,85 @@ function handleSubmit() {
               :disabled="mode === 'edit'"
               class="ui-control"
               placeholder="例如：alice"
-            />
+            >
           </span>
-          <p v-if="fieldErrors.username" class="ui-field__error">{{ fieldErrors.username }}</p>
+          <p
+            v-if="fieldErrors.username"
+            class="ui-field__error"
+          >{{ fieldErrors.username }}</p>
         </label>
 
-        <label class="ui-field admin-user-form__field" for="user-name">
+        <label
+          class="ui-field admin-user-form__field"
+          for="user-name"
+        >
           <span class="ui-field__label">姓名</span>
-          <span class="ui-control-wrap" :class="{ 'is-error': !!fieldErrors.name }">
+          <span
+            class="ui-control-wrap"
+            :class="{ 'is-error': !!fieldErrors.name }"
+          >
             <input
               id="user-name"
               v-model="localDraft.name"
               type="text"
               class="ui-control"
               placeholder="例如：Alice Zhang"
-            />
+            >
           </span>
-          <p v-if="fieldErrors.name" class="ui-field__error">{{ fieldErrors.name }}</p>
+          <p
+            v-if="fieldErrors.name"
+            class="ui-field__error"
+          >{{ fieldErrors.name }}</p>
         </label>
 
-        <label class="ui-field admin-user-form__field admin-user-form__field--wide" for="user-password">
+        <label
+          class="ui-field admin-user-form__field admin-user-form__field--wide"
+          for="user-password"
+        >
           <span class="ui-field__label">
             {{ mode === 'create' ? '初始密码' : '重置密码（可选）' }}
           </span>
-          <span class="ui-control-wrap" :class="{ 'is-error': !!fieldErrors.password }">
+          <span
+            class="ui-control-wrap"
+            :class="{ 'is-error': !!fieldErrors.password }"
+          >
             <input
               id="user-password"
               v-model="localDraft.password"
               type="password"
               class="ui-control"
               :placeholder="mode === 'create' ? '至少 8 位' : '留空则保持不变'"
-            />
+            >
           </span>
-          <p v-if="fieldErrors.password" class="ui-field__error">{{ fieldErrors.password }}</p>
+          <p
+            v-if="fieldErrors.password"
+            class="ui-field__error"
+          >{{ fieldErrors.password }}</p>
         </label>
       </div>
 
       <div class="admin-user-form__grid">
-        <label class="ui-field admin-user-form__field" for="user-email">
+        <label
+          class="ui-field admin-user-form__field"
+          for="user-email"
+        >
           <span class="ui-field__label">邮箱</span>
-          <span class="ui-control-wrap" :class="{ 'is-error': !!fieldErrors.email }">
+          <span
+            class="ui-control-wrap"
+            :class="{ 'is-error': !!fieldErrors.email }"
+          >
             <input
               id="user-email"
               v-model="localDraft.email"
               type="email"
               class="ui-control"
               placeholder="user@example.com"
-            />
+            >
           </span>
-          <p v-if="fieldErrors.email" class="ui-field__error">{{ fieldErrors.email }}</p>
+          <p
+            v-if="fieldErrors.email"
+            class="ui-field__error"
+          >{{ fieldErrors.email }}</p>
         </label>
 
         <label
@@ -194,13 +230,16 @@ function handleSubmit() {
                   ? (localDraft.teacher_no = ($event.target as HTMLInputElement).value)
                   : (localDraft.student_no = ($event.target as HTMLInputElement).value)
               "
-            />
+            >
           </span>
         </label>
       </div>
 
       <div class="admin-user-form__grid admin-user-form__grid--single">
-        <label class="ui-field admin-user-form__field" for="user-class-name">
+        <label
+          class="ui-field admin-user-form__field"
+          for="user-class-name"
+        >
           <span class="ui-field__label">班级</span>
           <span class="ui-control-wrap">
             <input
@@ -209,17 +248,28 @@ function handleSubmit() {
               type="text"
               class="ui-control"
               placeholder="例如：Class A"
-            />
+            >
           </span>
         </label>
       </div>
 
       <div class="admin-user-form__grid">
-        <label class="ui-field admin-user-form__field" for="user-role">
+        <label
+          class="ui-field admin-user-form__field"
+          for="user-role"
+        >
           <span class="ui-field__label">角色</span>
           <span class="ui-control-wrap">
-            <select id="user-role" v-model="localDraft.role" class="ui-control">
-              <option v-for="role in USER_ROLES" :key="role" :value="role">
+            <select
+              id="user-role"
+              v-model="localDraft.role"
+              class="ui-control"
+            >
+              <option
+                v-for="role in USER_ROLES"
+                :key="role"
+                :value="role"
+              >
                 {{ role }}
               </option>
             </select>
@@ -229,10 +279,17 @@ function handleSubmit() {
           </p>
         </label>
 
-        <label class="ui-field admin-user-form__field" for="user-status">
+        <label
+          class="ui-field admin-user-form__field"
+          for="user-status"
+        >
           <span class="ui-field__label">状态</span>
           <span class="ui-control-wrap">
-            <select id="user-status" v-model="localDraft.status" class="ui-control">
+            <select
+              id="user-status"
+              v-model="localDraft.status"
+              class="ui-control"
+            >
               <option value="active">active</option>
               <option value="inactive">inactive</option>
               <option value="locked">locked</option>
@@ -245,7 +302,11 @@ function handleSubmit() {
 
     <template #footer>
       <div class="admin-user-form__footer">
-        <button type="button" class="ui-btn ui-btn--secondary" @click="closeDialog">
+        <button
+          type="button"
+          class="ui-btn ui-btn--secondary"
+          @click="closeDialog"
+        >
           取消
         </button>
         <button

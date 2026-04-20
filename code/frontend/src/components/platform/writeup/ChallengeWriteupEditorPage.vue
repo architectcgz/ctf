@@ -50,16 +50,27 @@ const {
     :is="isEmbedded ? 'div' : 'section'"
     :class="pageShellClass"
   >
-    <header v-if="!isEmbedded" class="workspace-topbar">
+    <header
+      v-if="!isEmbedded"
+      class="workspace-topbar"
+    >
       <div class="topbar-leading">
         <span class="workspace-overline">Challenge Workspace</span>
         <span class="class-chip">题解管理</span>
       </div>
       <div class="writeup-top-actions">
-        <button class="ui-btn ui-btn--ghost" type="button" @click="emit('back')">
+        <button
+          class="ui-btn ui-btn--ghost"
+          type="button"
+          @click="emit('back')"
+        >
           返回题目
         </button>
-        <button class="ui-btn ui-btn--ghost" type="button" @click="void loadPage()">
+        <button
+          class="ui-btn ui-btn--ghost"
+          type="button"
+          @click="void loadPage()"
+        >
           <RefreshCw class="h-4 w-4" />
           刷新
         </button>
@@ -77,10 +88,17 @@ const {
           : '为题目维护管理员题解，控制公开范围。'
       "
     />
-    <div v-else class="list-heading writeup-tab-heading">
+    <div
+      v-else
+      class="list-heading writeup-tab-heading"
+    >
       <div>
-        <div class="workspace-overline">Admin Writeup</div>
-        <h1 class="workspace-page-title">题解管理</h1>
+        <div class="workspace-overline">
+          Admin Writeup
+        </div>
+        <h1 class="workspace-page-title">
+          题解管理
+        </h1>
       </div>
       <p class="workspace-page-copy">
         {{
@@ -93,15 +111,27 @@ const {
 
     <div class="journal-divider" />
 
-    <AppLoading v-if="loading" class="writeup-loading">正在加载题解数据...</AppLoading>
+    <AppLoading
+      v-if="loading"
+      class="writeup-loading"
+    >
+      正在加载题解数据...
+    </AppLoading>
 
-    <main v-else :class="isEmbedded ? 'writeup-workspace' : 'content-pane writeup-workspace'">
+    <main
+      v-else
+      :class="isEmbedded ? 'writeup-workspace' : 'content-pane writeup-workspace'"
+    >
       <section class="writeup-main">
         <section class="writeup-section writeup-editor-section">
           <header class="writeup-editor-head">
             <div>
-              <div class="journal-note-label">Writeup Editor</div>
-              <h2 class="writeup-section-title">编辑器</h2>
+              <div class="journal-note-label">
+                Writeup Editor
+              </div>
+              <h2 class="writeup-section-title">
+                编辑器
+              </h2>
             </div>
             <div class="writeup-badges">
               <span
@@ -110,7 +140,10 @@ const {
               >
                 {{ hasWriteup ? '已存在题解' : '尚未创建' }}
               </span>
-              <span v-if="writeup?.is_recommended" class="writeup-badge writeup-badge--accent">
+              <span
+                v-if="writeup?.is_recommended"
+                class="writeup-badge writeup-badge--accent"
+              >
                 推荐题解
               </span>
             </div>
@@ -124,19 +157,24 @@ const {
                 type="text"
                 class="writeup-field-input"
                 placeholder="例如：官方解题思路 / 赛后复盘"
-              />
+              >
             </label>
 
             <label class="writeup-field writeup-field--visibility">
               <span class="writeup-field-label">可见性</span>
-              <select v-model="form.visibility" class="writeup-field-input">
+              <select
+                v-model="form.visibility"
+                class="writeup-field-input"
+              >
                 <option value="private">private</option>
                 <option value="public">public</option>
               </select>
             </label>
           </div>
 
-          <div class="writeup-visibility-note">{{ visibilityLabel }}</div>
+          <div class="writeup-visibility-note">
+            {{ visibilityLabel }}
+          </div>
 
           <label class="writeup-field writeup-field--content">
             <span class="writeup-field-label">题解正文</span>
@@ -148,7 +186,11 @@ const {
             />
           </label>
 
-          <div class="writeup-editor-actions" role="group" aria-label="题解编辑操作">
+          <div
+            class="writeup-editor-actions"
+            role="group"
+            aria-label="题解编辑操作"
+          >
             <button
               :disabled="saving"
               class="ui-btn ui-btn--primary"
@@ -196,8 +238,12 @@ const {
 
         <section class="writeup-section writeup-snapshot-section">
           <header class="writeup-subsection-head">
-            <div class="journal-note-label">Snapshot</div>
-            <h2 class="writeup-section-title">当前已保存版本</h2>
+            <div class="journal-note-label">
+              Snapshot
+            </div>
+            <h2 class="writeup-section-title">
+              当前已保存版本
+            </h2>
           </header>
 
           <template v-if="writeup">
@@ -236,10 +282,17 @@ const {
 
       <aside class="context-rail writeup-rail">
         <div class="writeup-rail-card">
-          <div class="journal-note-label">Challenge</div>
-          <h2 class="writeup-rail-title">题目信息</h2>
+          <div class="journal-note-label">
+            Challenge
+          </div>
+          <h2 class="writeup-rail-title">
+            题目信息
+          </h2>
 
-          <dl v-if="challenge" class="writeup-rail-meta">
+          <dl
+            v-if="challenge"
+            class="writeup-rail-meta"
+          >
             <div>
               <dt>标题</dt>
               <dd>{{ challenge.title }}</dd>
@@ -261,7 +314,12 @@ const {
               <dd>{{ challenge.points }}</dd>
             </div>
           </dl>
-          <div v-else class="writeup-rail-empty">题目信息加载中。</div>
+          <div
+            v-else
+            class="writeup-rail-empty"
+          >
+            题目信息加载中。
+          </div>
         </div>
       </aside>
     </main>

@@ -57,7 +57,10 @@ onMounted(() => {
     class="workspace-shell journal-shell journal-shell-admin journal-notes-card journal-hero flex min-h-full flex-1 flex-col"
   >
     <main class="content-pane">
-      <div v-if="loading" class="flex justify-center py-10">
+      <div
+        v-if="loading"
+        class="flex justify-center py-10"
+      >
         <AppLoading>正在加载风险线索...</AppLoading>
       </div>
 
@@ -65,8 +68,12 @@ onMounted(() => {
         <section class="cheat-workbench">
           <header class="workspace-tab-heading cheat-workbench-head">
             <div class="workspace-tab-heading__main">
-              <div class="workspace-overline">Integrity Workspace</div>
-              <h1 class="workspace-page-title">作弊检测</h1>
+              <div class="workspace-overline">
+                Integrity Workspace
+              </div>
+              <h1 class="workspace-page-title">
+                作弊检测
+              </h1>
               <p class="workspace-page-copy">
                 基于提交爆发、IP 共享及行为指纹的多维度合规分析。
               </p>
@@ -79,11 +86,19 @@ onMounted(() => {
                   {{ formatDateTime(riskData.generated_at) }}
                 </span>
               </div>
-              <button type="button" class="ui-btn ui-btn--ghost" @click="openAudit({})">
+              <button
+                type="button"
+                class="ui-btn ui-btn--ghost"
+                @click="openAudit({})"
+              >
                 <SearchCheck class="h-4 w-4" />
                 打开审计日志
               </button>
-              <button type="button" class="ui-btn ui-btn--primary" @click="loadRiskData">
+              <button
+                type="button"
+                class="ui-btn ui-btn--primary"
+                @click="loadRiskData"
+              >
                 <RefreshCw class="h-4 w-4" />
                 刷新线索
               </button>
@@ -99,7 +114,9 @@ onMounted(() => {
               <div class="metric-panel-value">
                 {{ riskData.summary.submit_burst_users.toString().padStart(2, '0') }}
               </div>
-              <div class="metric-panel-helper">高频提交风险账号</div>
+              <div class="metric-panel-helper">
+                高频提交风险账号
+              </div>
             </article>
 
             <article class="metric-panel-card--premium">
@@ -110,7 +127,9 @@ onMounted(() => {
               <div class="metric-panel-value">
                 {{ riskData.summary.shared_ip_groups.toString().padStart(2, '0') }}
               </div>
-              <div class="metric-panel-helper">多账号共享 IP 组数</div>
+              <div class="metric-panel-helper">
+                多账号共享 IP 组数
+              </div>
             </article>
 
             <article class="metric-panel-card--premium">
@@ -121,17 +140,25 @@ onMounted(() => {
               <div class="metric-panel-value">
                 {{ riskData.summary.affected_users.toString().padStart(2, '0') }}
               </div>
-              <div class="metric-panel-helper">受风险波及的学生总数</div>
+              <div class="metric-panel-helper">
+                受风险波及的学生总数
+              </div>
             </article>
           </div>
 
           <section class="workspace-directory-section cheat-directory-section">
             <header class="list-heading">
               <div>
-                <div class="journal-note-label">Burst Accounts</div>
-                <h2 class="list-heading__title">高频提交账号</h2>
+                <div class="journal-note-label">
+                  Burst Accounts
+                </div>
+                <h2 class="list-heading__title">
+                  高频提交账号
+                </h2>
               </div>
-              <div class="cheat-directory-caption">按账号查看提交频次、最近出现时间和审计入口</div>
+              <div class="cheat-directory-caption">
+                按账号查看提交频次、最近出现时间和审计入口
+              </div>
             </header>
 
             <AppEmpty
@@ -142,7 +169,10 @@ onMounted(() => {
               description="说明最近窗口内还没有明显的提交爆发样本。"
             />
 
-            <div v-else class="cheat-directory-list">
+            <div
+              v-else
+              class="cheat-directory-list"
+            >
               <button
                 v-for="suspect in riskData.suspects"
                 :key="suspect.user_id"
@@ -151,8 +181,12 @@ onMounted(() => {
                 @click="openAudit({ action: 'submit', actor_user_id: suspect.user_id })"
               >
                 <div class="cheat-directory-row-main">
-                  <h3 class="cheat-directory-row-title">{{ suspect.username }}</h3>
-                  <p class="cheat-directory-row-copy">{{ suspect.reason }}</p>
+                  <h3 class="cheat-directory-row-title">
+                    {{ suspect.username }}
+                  </h3>
+                  <p class="cheat-directory-row-copy">
+                    {{ suspect.reason }}
+                  </p>
                 </div>
                 <div class="cheat-directory-row-meta">
                   <span class="cheat-directory-row-chip cheat-directory-row-chip-warning">
@@ -170,10 +204,16 @@ onMounted(() => {
           <section class="workspace-directory-section cheat-directory-section">
             <header class="list-heading">
               <div>
-                <div class="journal-note-label">Shared IP</div>
-                <h2 class="list-heading__title">共享 IP 线索</h2>
+                <div class="journal-note-label">
+                  Shared IP
+                </div>
+                <h2 class="list-heading__title">
+                  共享 IP 线索
+                </h2>
               </div>
-              <div class="cheat-directory-caption">按 IP 聚合查看复用账号范围和登录审计入口</div>
+              <div class="cheat-directory-caption">
+                按 IP 聚合查看复用账号范围和登录审计入口
+              </div>
             </header>
 
             <AppEmpty
@@ -184,7 +224,10 @@ onMounted(() => {
               description="最近 24 小时内还没有发现明显的多账号复用 IP。"
             />
 
-            <div v-else class="cheat-directory-list">
+            <div
+              v-else
+              class="cheat-directory-list"
+            >
               <button
                 v-for="group in riskData.shared_ips"
                 :key="group.ip"
@@ -212,10 +255,16 @@ onMounted(() => {
           <section class="workspace-directory-section cheat-directory-section">
             <header class="list-heading">
               <div>
-                <div class="journal-note-label">Audit Actions</div>
-                <h2 class="list-heading__title">审计联动</h2>
+                <div class="journal-note-label">
+                  Audit Actions
+                </div>
+                <h2 class="list-heading__title">
+                  审计联动
+                </h2>
               </div>
-              <div class="cheat-directory-caption">保留常用的日志入口，作为底部补充动作区</div>
+              <div class="cheat-directory-caption">
+                保留常用的日志入口，作为底部补充动作区
+              </div>
             </header>
 
             <div class="quick-action-directory">
@@ -227,7 +276,9 @@ onMounted(() => {
                 @click="openAudit(action.query)"
               >
                 <div class="cheat-directory-row-main">
-                  <h3 class="cheat-directory-row-title">{{ action.title }}</h3>
+                  <h3 class="cheat-directory-row-title">
+                    {{ action.title }}
+                  </h3>
                   <p class="cheat-directory-row-copy">
                     {{ action.description }}
                   </p>
@@ -251,7 +302,12 @@ onMounted(() => {
         {{ error }}
       </div>
 
-      <div v-else class="admin-empty">当前没有风险线索。</div>
+      <div
+        v-else
+        class="admin-empty"
+      >
+        当前没有风险线索。
+      </div>
     </main>
   </section>
 </template>

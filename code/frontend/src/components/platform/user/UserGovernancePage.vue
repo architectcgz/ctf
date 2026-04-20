@@ -207,22 +207,30 @@ function handleImportChange(event: Event): void {
   >
     <main class="content-pane">
       <section
-        id="user-panel-overview"
         v-show="activePanel === 'overview'"
+        id="user-panel-overview"
         class="user-panel user-panel--workspace"
         :aria-hidden="activePanel === 'overview' ? 'false' : 'true'"
       >
         <header class="workspace-tab-heading user-overview-head">
           <div class="workspace-tab-heading__main">
-            <div class="workspace-overline">User Workspace</div>
-            <h1 class="workspace-page-title">用户治理台</h1>
+            <div class="workspace-overline">
+              User Workspace
+            </div>
+            <h1 class="workspace-page-title">
+              用户治理台
+            </h1>
             <p class="workspace-page-copy">
               上面直接查看用户规模和导入回执，下面围绕具体账号完成搜索、筛选、编辑与治理操作。
             </p>
           </div>
 
           <div class="user-panel-actions">
-            <button type="button" class="ui-btn ui-btn--ghost" @click="emit('refresh')">
+            <button
+              type="button"
+              class="ui-btn ui-btn--ghost"
+              @click="emit('refresh')"
+            >
               <RefreshCw class="h-4 w-4" />
               刷新列表
             </button>
@@ -256,7 +264,9 @@ function handleImportChange(event: Event): void {
             <div class="metric-panel-value">
               {{ total.toString().padStart(2, '0') }}
             </div>
-            <div class="metric-panel-helper">当前条件下的用户总数</div>
+            <div class="metric-panel-helper">
+              当前条件下的用户总数
+            </div>
           </div>
 
           <div class="metric-panel-card--premium">
@@ -267,7 +277,9 @@ function handleImportChange(event: Event): void {
             <div class="metric-panel-value">
               {{ activeCount.toString().padStart(2, '0') }}
             </div>
-            <div class="metric-panel-helper">当前活跃状态的账号</div>
+            <div class="metric-panel-helper">
+              当前活跃状态的账号
+            </div>
           </div>
 
           <div class="metric-panel-card--premium">
@@ -278,7 +290,9 @@ function handleImportChange(event: Event): void {
             <div class="metric-panel-value">
               {{ teacherCount.toString().padStart(2, '0') }}
             </div>
-            <div class="metric-panel-helper">当前页教师账号数量</div>
+            <div class="metric-panel-helper">
+              当前页教师账号数量
+            </div>
           </div>
 
           <div class="metric-panel-card--premium">
@@ -289,17 +303,25 @@ function handleImportChange(event: Event): void {
             <div class="metric-panel-value">
               {{ props.importResult ? (props.importResult.created + props.importResult.updated).toString().padStart(2, '0') : '00' }}
             </div>
-            <div class="metric-panel-helper">{{ importSummary }}</div>
+            <div class="metric-panel-helper">
+              {{ importSummary }}
+            </div>
           </div>
         </div>
 
         <section class="workspace-directory-section user-directory-section">
           <header class="list-heading user-directory-head">
             <div>
-              <div class="journal-note-label">User Directory</div>
-              <h2 class="list-heading__title">全部用户</h2>
+              <div class="journal-note-label">
+                User Directory
+              </div>
+              <h2 class="list-heading__title">
+                全部用户
+              </h2>
             </div>
-            <div class="user-directory-meta">当前页 {{ listCount }} 个用户</div>
+            <div class="user-directory-meta">
+              当前页 {{ listCount }} 个用户
+            </div>
           </header>
 
           <WorkspaceDirectoryToolbar
@@ -394,9 +416,7 @@ function handleImportChange(event: Event): void {
           >
             <template #cell-username="{ row }">
               <div class="user-row__username">
-                <span class="user-row__username-handle"
-                  >@{{ (row as AdminUserListItem).username }}</span
-                >
+                <span class="user-row__username-handle">@{{ (row as AdminUserListItem).username }}</span>
               </div>
             </template>
 
@@ -472,7 +492,10 @@ function handleImportChange(event: Event): void {
             </template>
           </WorkspaceDataTable>
 
-          <div v-if="list.length > 0" class="admin-pagination workspace-directory-pagination">
+          <div
+            v-if="list.length > 0"
+            class="admin-pagination workspace-directory-pagination"
+          >
             <PlatformPaginationControls
               :page="page"
               :total-pages="totalPages"
@@ -485,16 +508,20 @@ function handleImportChange(event: Event): void {
       </section>
 
       <section
-        id="user-panel-import"
         v-show="activePanel === 'import'"
+        id="user-panel-import"
         class="user-panel user-panel--import"
         :aria-hidden="activePanel === 'import' ? 'false' : 'true'"
       >
         <section class="workspace-directory-section user-import-panel">
           <header class="workspace-tab-heading user-import-head">
             <div class="workspace-tab-heading__main">
-              <div class="workspace-overline">User Import</div>
-              <h2 class="workspace-page-title">导入用户</h2>
+              <div class="workspace-overline">
+                User Import
+              </div>
+              <h2 class="workspace-page-title">
+                导入用户
+              </h2>
               <p class="workspace-page-copy">
                 统一导入账号、角色与班级归属，导入完成后可回到工作台继续筛选和治理具体用户。
               </p>
@@ -509,7 +536,11 @@ function handleImportChange(event: Event): void {
               >
                 返回工作台
               </button>
-              <button type="button" class="ui-btn ui-btn--primary" @click="triggerImport">
+              <button
+                type="button"
+                class="ui-btn ui-btn--primary"
+                @click="triggerImport"
+              >
                 <FileUp class="h-4 w-4" />
                 批量导入
               </button>
@@ -517,7 +548,9 @@ function handleImportChange(event: Event): void {
           </header>
 
           <div class="journal-note user-import-format">
-            <div class="journal-note-label">CSV 格式</div>
+            <div class="journal-note-label">
+              CSV 格式
+            </div>
             <div class="journal-note-helper">
               列顺序：`username,password,email,class_name,role,status,student_no,teacher_no,name`
             </div>
@@ -526,12 +559,19 @@ function handleImportChange(event: Event): void {
           <section class="workspace-directory-section user-import-receipt-section">
             <header class="list-heading user-import-receipt-head">
               <div>
-                <div class="journal-note-label">Import Receipt</div>
-                <h2 class="list-heading__title">导入回执</h2>
+                <div class="journal-note-label">
+                  Import Receipt
+                </div>
+                <h2 class="list-heading__title">
+                  导入回执
+                </h2>
               </div>
             </header>
 
-            <div v-if="importResult" class="admin-receipt">
+            <div
+              v-if="importResult"
+              class="admin-receipt"
+            >
               <p>
                 创建 {{ importResult.created }}，更新 {{ importResult.updated }}，失败
                 {{ importResult.failed }}
@@ -548,7 +588,12 @@ function handleImportChange(event: Event): void {
                 </li>
               </ul>
             </div>
-            <div v-else class="admin-empty">还没有导入记录。</div>
+            <div
+              v-else
+              class="admin-empty"
+            >
+              还没有导入记录。
+            </div>
           </section>
         </section>
       </section>
@@ -560,7 +605,7 @@ function handleImportChange(event: Event): void {
       accept=".csv,text/csv"
       class="hidden"
       @change="handleImportChange"
-    />
+    >
   </section>
 </template>
 

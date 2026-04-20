@@ -136,7 +136,11 @@ function getCardDescription(
     class="workspace-shell journal-shell journal-shell-user journal-hero flex min-h-full flex-1 flex-col"
   >
     <div class="scoreboard-page">
-      <nav class="top-tabs" role="tablist" aria-label="排行榜视图切换">
+      <nav
+        class="top-tabs"
+        role="tablist"
+        aria-label="排行榜视图切换"
+      >
         <button
           v-for="(tab, index) in panelTabs"
           :id="tab.tabId"
@@ -158,14 +162,16 @@ function getCardDescription(
 
       <main class="content-pane">
         <section
+          v-show="activeTab === 'contest'"
           id="scoreboard-panel-contest"
           class="tab-panel"
           role="tabpanel"
           aria-labelledby="scoreboard-tab-contest"
           :aria-hidden="activeTab === 'contest' ? 'false' : 'true'"
-          v-show="activeTab === 'contest'"
         >
-          <div class="workspace-overline scoreboard-panel-overline">Contest Scoreboard</div>
+          <div class="workspace-overline scoreboard-panel-overline">
+            Contest Scoreboard
+          </div>
 
           <section class="scoreboard-summary">
             <div class="scoreboard-summary-title">
@@ -174,38 +180,62 @@ function getCardDescription(
             </div>
             <div class="scoreboard-summary-grid metric-panel-grid">
               <div class="scoreboard-summary-item metric-panel-card">
-                <div class="scoreboard-summary-label metric-panel-label">展示竞赛</div>
-                <div class="scoreboard-summary-value metric-panel-value">{{ contestCount }}</div>
+                <div class="scoreboard-summary-label metric-panel-label">
+                  展示竞赛
+                </div>
+                <div class="scoreboard-summary-value metric-panel-value">
+                  {{ contestCount }}
+                </div>
                 <div class="scoreboard-summary-helper metric-panel-helper">
                   当前可查看排行的竞赛总数
                 </div>
               </div>
               <div class="scoreboard-summary-item metric-panel-card">
-                <div class="scoreboard-summary-label metric-panel-label">参赛队伍</div>
-                <div class="scoreboard-summary-value metric-panel-value">{{ teamCount }}</div>
+                <div class="scoreboard-summary-label metric-panel-label">
+                  参赛队伍
+                </div>
+                <div class="scoreboard-summary-value metric-panel-value">
+                  {{ teamCount }}
+                </div>
                 <div class="scoreboard-summary-helper metric-panel-helper">
                   已进入榜单统计的队伍规模
                 </div>
               </div>
               <div class="scoreboard-summary-item metric-panel-card">
-                <div class="scoreboard-summary-label metric-panel-label">冻结竞赛</div>
-                <div class="scoreboard-summary-value metric-panel-value">{{ frozenCount }}</div>
+                <div class="scoreboard-summary-label metric-panel-label">
+                  冻结竞赛
+                </div>
+                <div class="scoreboard-summary-value metric-panel-value">
+                  {{ frozenCount }}
+                </div>
                 <div class="scoreboard-summary-helper metric-panel-helper">
                   当前处于封榜阶段的竞赛数量
                 </div>
               </div>
               <div class="scoreboard-summary-item metric-panel-card">
-                <div class="scoreboard-summary-label metric-panel-label">异常分区</div>
-                <div class="scoreboard-summary-value metric-panel-value">{{ failureCount }}</div>
+                <div class="scoreboard-summary-label metric-panel-label">
+                  异常分区
+                </div>
+                <div class="scoreboard-summary-value metric-panel-value">
+                  {{ failureCount }}
+                </div>
                 <div class="scoreboard-summary-helper metric-panel-helper">
                   排行榜加载异常的竞赛分区
                 </div>
               </div>
             </div>
-            <div v-if="hasPartialFailure" class="scoreboard-inline-note">部分竞赛加载失败</div>
+            <div
+              v-if="hasPartialFailure"
+              class="scoreboard-inline-note"
+            >
+              部分竞赛加载失败
+            </div>
           </section>
 
-          <div v-if="loading && !hasSections" class="scoreboard-loading">
+          <div
+            v-if="loading && !hasSections"
+            class="scoreboard-loading"
+          >
             <div class="scoreboard-loading-spinner" />
           </div>
 
@@ -217,16 +247,28 @@ function getCardDescription(
             :description="selectionHint"
           >
             <template #action>
-              <button type="button" class="ui-btn ui-btn--secondary" @click="refresh">
+              <button
+                type="button"
+                class="ui-btn ui-btn--secondary"
+                @click="refresh"
+              >
                 重新加载
               </button>
             </template>
           </AppEmpty>
 
-          <section v-else class="scoreboard-directory" aria-label="排行榜列表">
+          <section
+            v-else
+            class="scoreboard-directory"
+            aria-label="排行榜列表"
+          >
             <div class="scoreboard-directory-top">
-              <h2 class="scoreboard-directory-title">竞赛排行列表</h2>
-              <div class="scoreboard-directory-meta">按竞赛开始时间倒序展示排行榜</div>
+              <h2 class="scoreboard-directory-title">
+                竞赛排行列表
+              </h2>
+              <div class="scoreboard-directory-meta">
+                按竞赛开始时间倒序展示排行榜
+              </div>
             </div>
 
             <div class="scoreboard-sections">
@@ -250,11 +292,16 @@ function getCardDescription(
                         getStatusLabel(section.contest.status)
                       }}</span>
                       <span class="sb-mode-chip">{{ getModeLabel(section.contest.mode) }}</span>
-                      <span v-if="section.frozen" class="sb-frozen-chip">
+                      <span
+                        v-if="section.frozen"
+                        class="sb-frozen-chip"
+                      >
                         <Shield class="h-3 w-3" /> 已冻结
                       </span>
                     </div>
-                    <h3 class="scoreboard-card-title">{{ section.contest.title }}</h3>
+                    <h3 class="scoreboard-card-title">
+                      {{ section.contest.title }}
+                    </h3>
                     <p class="scoreboard-card-time">
                       {{ formatContestWindow(section.contest.starts_at, section.contest.ends_at) }}
                     </p>
@@ -288,11 +335,17 @@ function getCardDescription(
                   该竞赛排行榜加载失败，请稍后重试
                 </div>
 
-                <div v-else-if="section.rows.length === 0" class="scoreboard-inline-note">
+                <div
+                  v-else-if="section.rows.length === 0"
+                  class="scoreboard-inline-note"
+                >
                   暂无排行榜数据
                 </div>
 
-                <div v-else class="scoreboard-table-shell overflow-x-auto">
+                <div
+                  v-else
+                  class="scoreboard-table-shell overflow-x-auto"
+                >
                   <table class="sb-table">
                     <thead>
                       <tr>
@@ -313,7 +366,9 @@ function getCardDescription(
                           <span :class="getRankPillClass(item.rank)">{{ item.rank }}</span>
                         </td>
                         <td>{{ item.team_name }}</td>
-                        <td class="sb-cell--mono">{{ item.score }}</td>
+                        <td class="sb-cell--mono">
+                          {{ item.score }}
+                        </td>
                         <td>{{ item.solved_count }}</td>
                         <td class="sb-cell--muted">
                           {{ formatDateTime(item.last_submission_at) }}
@@ -328,16 +383,21 @@ function getCardDescription(
         </section>
 
         <section
+          v-show="activeTab === 'points'"
           id="scoreboard-panel-points"
           class="tab-panel"
           role="tabpanel"
           aria-labelledby="scoreboard-tab-points"
           :aria-hidden="activeTab === 'points' ? 'false' : 'true'"
-          v-show="activeTab === 'points'"
         >
-          <div class="workspace-overline scoreboard-panel-overline">Points Scoreboard</div>
+          <div class="workspace-overline scoreboard-panel-overline">
+            Points Scoreboard
+          </div>
 
-          <div v-if="rankingLoading" class="scoreboard-loading">
+          <div
+            v-if="rankingLoading"
+            class="scoreboard-loading"
+          >
             <div class="scoreboard-loading-spinner" />
           </div>
 
@@ -359,7 +419,10 @@ function getCardDescription(
             </template>
           </AppEmpty>
 
-          <div v-else class="scoreboard-table-shell overflow-x-auto">
+          <div
+            v-else
+            class="scoreboard-table-shell overflow-x-auto"
+          >
             <table class="sb-table">
               <thead>
                 <tr>
@@ -371,14 +434,22 @@ function getCardDescription(
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="item in rankingRows" :key="item.user_id" :class="getRowClass(item.rank)">
+                <tr
+                  v-for="item in rankingRows"
+                  :key="item.user_id"
+                  :class="getRowClass(item.rank)"
+                >
                   <td class="sb-cell--rank">
                     <span :class="getRankPillClass(item.rank)">{{ item.rank }}</span>
                   </td>
                   <td>{{ item.username }}</td>
-                  <td class="sb-cell--mono">{{ item.total_score }}</td>
+                  <td class="sb-cell--mono">
+                    {{ item.total_score }}
+                  </td>
                   <td>{{ item.solved_count }}</td>
-                  <td class="sb-cell--muted">{{ item.class_name || '未分配班级' }}</td>
+                  <td class="sb-cell--muted">
+                    {{ item.class_name || '未分配班级' }}
+                  </td>
                 </tr>
               </tbody>
             </table>

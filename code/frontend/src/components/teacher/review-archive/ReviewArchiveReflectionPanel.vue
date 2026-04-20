@@ -23,20 +23,38 @@ defineProps<{
     <article class="archive-panel teacher-surface-section">
       <header class="archive-panel__header">
         <div>
-          <div class="archive-panel__eyebrow">Writeups</div>
-          <h3 class="archive-panel__title">社区题解沉淀</h3>
+          <div class="archive-panel__eyebrow">
+            Writeups
+          </div>
+          <h3 class="archive-panel__title">
+            社区题解沉淀
+          </h3>
         </div>
       </header>
-      <div v-if="writeups.length === 0" class="archive-panel__empty">暂无 Writeup 记录。</div>
-      <div v-else class="reflection-list">
-        <article v-for="item in writeups" :key="item.id" class="reflection-item">
+      <div
+        v-if="writeups.length === 0"
+        class="archive-panel__empty"
+      >
+        暂无 Writeup 记录。
+      </div>
+      <div
+        v-else
+        class="reflection-list"
+      >
+        <article
+          v-for="item in writeups"
+          :key="item.id"
+          class="reflection-item"
+        >
           <div class="reflection-item__head">
             <strong>{{ item.title }}</strong>
             <span>{{
               item.is_recommended ? '推荐题解' : visibilityStatusLabel(item.visibility_status)
             }}</span>
           </div>
-          <p class="reflection-item__subhead">{{ item.challenge_title }}</p>
+          <p class="reflection-item__subhead">
+            {{ item.challenge_title }}
+          </p>
           <div class="reflection-item__meta">
             <span>{{ submissionStatusLabel(item.submission_status) }}</span>
             <span>{{ visibilityStatusLabel(item.visibility_status) }}</span>
@@ -49,18 +67,36 @@ defineProps<{
     <article class="archive-panel teacher-surface-section">
       <header class="archive-panel__header">
         <div>
-          <div class="archive-panel__eyebrow">Manual Reviews</div>
-          <h3 class="archive-panel__title">人工审核题</h3>
+          <div class="archive-panel__eyebrow">
+            Manual Reviews
+          </div>
+          <h3 class="archive-panel__title">
+            人工审核题
+          </h3>
         </div>
       </header>
-      <div v-if="manualReviews.length === 0" class="archive-panel__empty">暂无人工审核记录。</div>
-      <div v-else class="reflection-list">
-        <article v-for="item in manualReviews" :key="item.id" class="reflection-item">
+      <div
+        v-if="manualReviews.length === 0"
+        class="archive-panel__empty"
+      >
+        暂无人工审核记录。
+      </div>
+      <div
+        v-else
+        class="reflection-list"
+      >
+        <article
+          v-for="item in manualReviews"
+          :key="item.id"
+          class="reflection-item"
+        >
           <div class="reflection-item__head">
             <strong>{{ item.challenge_title }}</strong>
             <span>{{ item.review_status }}</span>
           </div>
-          <p class="reflection-item__body">{{ item.answer }}</p>
+          <p class="reflection-item__body">
+            {{ item.answer }}
+          </p>
           <div class="reflection-item__meta">
             <span>score {{ item.score }}</span>
             <span>{{ item.reviewer_name || '待审核' }}</span>

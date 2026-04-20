@@ -116,139 +116,178 @@ const operationsSummary = computed(() => [
   >
     <div :class="embedded ? undefined : 'content-pane'">
       <div>
-        <div class="workspace-overline">Training Journal</div>
+        <div class="workspace-overline">
+          Training Journal
+        </div>
         <h1 class="journal-page-title workspace-page-title journal-soft-page-title max-w-3xl">
           {{ displayName }} 的训练总览
         </h1>
-        <p class="workspace-page-copy max-w-2xl">先看进度、短板和最近状态，再决定下一步训练。</p>
+        <p class="workspace-page-copy max-w-2xl">
+          先看进度、短板和最近状态，再决定下一步训练。
+        </p>
 
         <div class="journal-actions mt-6">
-          <button type="button" class="journal-btn-primary" @click="emit('openChallenges')">
+          <button
+            type="button"
+            class="journal-btn-primary"
+            @click="emit('openChallenges')"
+          >
             继续训练
           </button>
-          <button type="button" class="journal-btn-outline" @click="emit('openSkillProfile')">
+          <button
+            type="button"
+            class="journal-btn-outline"
+            @click="emit('openSkillProfile')"
+          >
             查看能力画像
           </button>
         </div>
       </div>
-      <div class="journal-board" :class="{ 'journal-board--embedded': embedded }">
+      <div
+        class="journal-board"
+        :class="{ 'journal-board--embedded': embedded }"
+      >
         <section class="journal-bento">
-        <article class="journal-panel journal-radar-card px-6 py-6">
-          <div class="journal-panel-head">
-            <div>
-              <h3 class="journal-soft-section-title text-xl font-semibold">能力雷达</h3>
-            </div>
-            <MapPinned class="journal-soft-accent-icon h-5 w-5" />
-          </div>
-          <div v-if="hasRadarData" class="journal-radar-body mt-4">
-            <div class="journal-radar-chart">
-              <div class="skill-dimension-chart__frame">
-                <div class="skill-dimension-chart__inner">
-                  <RadarChart
-                    :indicators="radarIndicators"
-                    :values="radarValues"
-                    name="能力值"
-                    :height-class="radarHeightClass"
-                    :label-font-size="15"
-                    :axis-name-gap="10"
-                    radius="70%"
-                    center-y="50%"
-                  />
-                </div>
+          <article class="journal-panel journal-radar-card px-6 py-6">
+            <div class="journal-panel-head">
+              <div>
+                <h3 class="journal-soft-section-title text-xl font-semibold">
+                  能力雷达
+                </h3>
               </div>
-            </div>
-            <div class="journal-radar-dimensions mt-4">
-              <article
-                v-for="item in normalizedSkillDimensions"
-                :key="item.key"
-                class="journal-radar-dimension"
-              >
-                <div class="journal-radar-dimension__label">{{ item.name }}</div>
-                <div class="journal-radar-dimension__value tech-font">{{ item.value }}</div>
-              </article>
-            </div>
-          </div>
-          <div
-            v-else
-            class="journal-soft-empty-state journal-soft-empty-state--compact mt-6"
-          >
-            当前能力数据不足，完成更多题目后将生成雷达图。
-          </div>
-        </article>
-
-        <article class="journal-panel journal-rank-card px-6 py-6">
-          <div class="journal-panel-head">
-            <div>
-              <h3 class="journal-soft-section-title text-xl font-semibold">竞技表现</h3>
-            </div>
-            <Trophy class="journal-soft-accent-icon h-5 w-5" />
-          </div>
-          <div v-if="hasStoryMetrics" :class="storyMetricGridClass">
-            <article
-              v-for="item in storyMetrics"
-              :key="item.label"
-              class="journal-metric progress-card metric-panel-card"
-            >
-              <div class="progress-card-label metric-panel-label">
-                {{ item.label }}
-              </div>
-              <div class="progress-card-value metric-panel-value">
-                {{ item.value }}
-              </div>
-              <div class="progress-card-hint metric-panel-helper">{{ item.helper }}</div>
-            </article>
-          </div>
-          <div
-            class="journal-rank-summary mt-5 progress-card metric-panel-card metric-panel-default-surface"
-          >
-            <div class="journal-rank-summary__label progress-card-label metric-panel-label">
-              <span class="status-dot status-dot-solved" />
-              当前排名
+              <MapPinned class="journal-soft-accent-icon h-5 w-5" />
             </div>
             <div
-              class="journal-rank-summary__value progress-card-value metric-panel-value tech-font"
+              v-if="hasRadarData"
+              class="journal-radar-body mt-4"
             >
-              #{{ rankSummary }}
-            </div>
-            <div class="journal-rank-summary__helper progress-card-hint metric-panel-helper">
-              当前所在积分排名，继续解题后会按最新积分刷新。
-            </div>
-          </div>
-        </article>
-
-        <article class="journal-panel journal-ops-card px-6 py-6">
-          <div class="journal-panel-head">
-            <div>
-              <h3 class="journal-soft-section-title text-xl font-semibold">公告与状态</h3>
-            </div>
-            <BellRing class="journal-soft-accent-icon h-5 w-5" />
-          </div>
-          <div class="mt-5 space-y-3">
-            <article
-              v-for="item in operationsSummary"
-              :key="item.label"
-              class="journal-inline-item px-4 py-4"
-            >
-              <div class="flex items-center justify-between gap-3">
-                <div class="flex items-center gap-3">
-                  <component :is="item.icon" class="journal-soft-accent-icon h-4 w-4" />
-                  <div class="journal-soft-body-title text-sm font-medium">
-                    {{ item.label }}
+              <div class="journal-radar-chart">
+                <div class="skill-dimension-chart__frame">
+                  <div class="skill-dimension-chart__inner">
+                    <RadarChart
+                      :indicators="radarIndicators"
+                      :values="radarValues"
+                      name="能力值"
+                      :height-class="radarHeightClass"
+                      :label-font-size="15"
+                      :axis-name-gap="10"
+                      radius="70%"
+                      center-y="50%"
+                    />
                   </div>
                 </div>
-                <div class="flex items-center gap-2">
-                  <span class="status-dot" :class="`status-dot-${item.status}`" />
-                  <span class="journal-soft-body-title tech-font text-sm font-medium">{{
-                    item.value
-                  }}</span>
+              </div>
+              <div class="journal-radar-dimensions mt-4">
+                <article
+                  v-for="item in normalizedSkillDimensions"
+                  :key="item.key"
+                  class="journal-radar-dimension"
+                >
+                  <div class="journal-radar-dimension__label">
+                    {{ item.name }}
+                  </div>
+                  <div class="journal-radar-dimension__value tech-font">
+                    {{ item.value }}
+                  </div>
+                </article>
+              </div>
+            </div>
+            <div
+              v-else
+              class="journal-soft-empty-state journal-soft-empty-state--compact mt-6"
+            >
+              当前能力数据不足，完成更多题目后将生成雷达图。
+            </div>
+          </article>
+
+          <article class="journal-panel journal-rank-card px-6 py-6">
+            <div class="journal-panel-head">
+              <div>
+                <h3 class="journal-soft-section-title text-xl font-semibold">
+                  竞技表现
+                </h3>
+              </div>
+              <Trophy class="journal-soft-accent-icon h-5 w-5" />
+            </div>
+            <div
+              v-if="hasStoryMetrics"
+              :class="storyMetricGridClass"
+            >
+              <article
+                v-for="item in storyMetrics"
+                :key="item.label"
+                class="journal-metric progress-card metric-panel-card"
+              >
+                <div class="progress-card-label metric-panel-label">
+                  {{ item.label }}
                 </div>
+                <div class="progress-card-value metric-panel-value">
+                  {{ item.value }}
+                </div>
+                <div class="progress-card-hint metric-panel-helper">
+                  {{ item.helper }}
+                </div>
+              </article>
+            </div>
+            <div
+              class="journal-rank-summary mt-5 progress-card metric-panel-card metric-panel-default-surface"
+            >
+              <div class="journal-rank-summary__label progress-card-label metric-panel-label">
+                <span class="status-dot status-dot-solved" />
+                当前排名
               </div>
-              <div class="journal-soft-body-copy mt-2 text-sm leading-6">
-                {{ item.description }}
+              <div
+                class="journal-rank-summary__value progress-card-value metric-panel-value tech-font"
+              >
+                #{{ rankSummary }}
               </div>
-            </article>
-          </div>
-        </article>
+              <div class="journal-rank-summary__helper progress-card-hint metric-panel-helper">
+                当前所在积分排名，继续解题后会按最新积分刷新。
+              </div>
+            </div>
+          </article>
+
+          <article class="journal-panel journal-ops-card px-6 py-6">
+            <div class="journal-panel-head">
+              <div>
+                <h3 class="journal-soft-section-title text-xl font-semibold">
+                  公告与状态
+                </h3>
+              </div>
+              <BellRing class="journal-soft-accent-icon h-5 w-5" />
+            </div>
+            <div class="mt-5 space-y-3">
+              <article
+                v-for="item in operationsSummary"
+                :key="item.label"
+                class="journal-inline-item px-4 py-4"
+              >
+                <div class="flex items-center justify-between gap-3">
+                  <div class="flex items-center gap-3">
+                    <component
+                      :is="item.icon"
+                      class="journal-soft-accent-icon h-4 w-4"
+                    />
+                    <div class="journal-soft-body-title text-sm font-medium">
+                      {{ item.label }}
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <span
+                      class="status-dot"
+                      :class="`status-dot-${item.status}`"
+                    />
+                    <span class="journal-soft-body-title tech-font text-sm font-medium">{{
+                      item.value
+                    }}</span>
+                  </div>
+                </div>
+                <div class="journal-soft-body-copy mt-2 text-sm leading-6">
+                  {{ item.description }}
+                </div>
+              </article>
+            </div>
+          </article>
         </section>
       </div>
     </div>

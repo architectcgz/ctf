@@ -105,56 +105,93 @@ function handleSubmit() {
     @close="closeDialog"
     @update:open="emit('update:open', $event)"
   >
-    <form class="awd-template-dialog" @submit.prevent="handleSubmit">
+    <form
+      class="awd-template-dialog"
+      @submit.prevent="handleSubmit"
+    >
       <div class="awd-template-dialog__grid">
-        <label class="ui-field awd-template-dialog__field" for="awd-template-name">
+        <label
+          class="ui-field awd-template-dialog__field"
+          for="awd-template-name"
+        >
           <span class="ui-field__label">模板名称</span>
-          <span class="ui-control-wrap" :class="{ 'is-error': !!fieldErrors.name }">
+          <span
+            class="ui-control-wrap"
+            :class="{ 'is-error': !!fieldErrors.name }"
+          >
             <input
               id="awd-template-name"
               v-model="localDraft.name"
               type="text"
               class="ui-control"
               placeholder="例如：Bank Portal AWD"
-            />
+            >
           </span>
-          <p v-if="fieldErrors.name" class="ui-field__error">{{ fieldErrors.name }}</p>
+          <p
+            v-if="fieldErrors.name"
+            class="ui-field__error"
+          >{{ fieldErrors.name }}</p>
         </label>
 
-        <label class="ui-field awd-template-dialog__field" for="awd-template-slug">
+        <label
+          class="ui-field awd-template-dialog__field"
+          for="awd-template-slug"
+        >
           <span class="ui-field__label">模板 slug</span>
-          <span class="ui-control-wrap" :class="{ 'is-error': !!fieldErrors.slug }">
+          <span
+            class="ui-control-wrap"
+            :class="{ 'is-error': !!fieldErrors.slug }"
+          >
             <input
               id="awd-template-slug"
               v-model="localDraft.slug"
               type="text"
               class="ui-control awd-template-dialog__mono"
               placeholder="bank-portal-awd"
-            />
+            >
           </span>
-          <p v-if="fieldErrors.slug" class="ui-field__error">{{ fieldErrors.slug }}</p>
+          <p
+            v-if="fieldErrors.slug"
+            class="ui-field__error"
+          >{{ fieldErrors.slug }}</p>
         </label>
       </div>
 
       <div class="awd-template-dialog__grid">
-        <label class="ui-field awd-template-dialog__field" for="awd-template-category">
+        <label
+          class="ui-field awd-template-dialog__field"
+          for="awd-template-category"
+        >
           <span class="ui-field__label">分类</span>
-          <span class="ui-control-wrap" :class="{ 'is-error': !!fieldErrors.category }">
+          <span
+            class="ui-control-wrap"
+            :class="{ 'is-error': !!fieldErrors.category }"
+          >
             <input
               id="awd-template-category"
               v-model="localDraft.category"
               type="text"
               class="ui-control"
               placeholder="例如：web"
-            />
+            >
           </span>
-          <p v-if="fieldErrors.category" class="ui-field__error">{{ fieldErrors.category }}</p>
+          <p
+            v-if="fieldErrors.category"
+            class="ui-field__error"
+          >{{ fieldErrors.category }}</p>
         </label>
 
-        <label class="ui-field awd-template-dialog__field" for="awd-template-difficulty">
+        <label
+          class="ui-field awd-template-dialog__field"
+          for="awd-template-difficulty"
+        >
           <span class="ui-field__label">难度</span>
           <span class="ui-control-wrap">
-            <select id="awd-template-difficulty" v-model="localDraft.difficulty" class="ui-control">
+            <select
+              id="awd-template-difficulty"
+              v-model="localDraft.difficulty"
+              class="ui-control"
+            >
               <option value="beginner">beginner</option>
               <option value="easy">easy</option>
               <option value="medium">medium</option>
@@ -166,10 +203,17 @@ function handleSubmit() {
       </div>
 
       <div class="awd-template-dialog__grid">
-        <label class="ui-field awd-template-dialog__field" for="awd-template-service-type">
+        <label
+          class="ui-field awd-template-dialog__field"
+          for="awd-template-service-type"
+        >
           <span class="ui-field__label">服务类型</span>
           <span class="ui-control-wrap">
-            <select id="awd-template-service-type" v-model="localDraft.service_type" class="ui-control">
+            <select
+              id="awd-template-service-type"
+              v-model="localDraft.service_type"
+              class="ui-control"
+            >
               <option value="web_http">web_http</option>
               <option value="binary_tcp">binary_tcp</option>
               <option value="multi_container">multi_container</option>
@@ -177,7 +221,10 @@ function handleSubmit() {
           </span>
         </label>
 
-        <label class="ui-field awd-template-dialog__field" for="awd-template-deployment">
+        <label
+          class="ui-field awd-template-dialog__field"
+          for="awd-template-deployment"
+        >
           <span class="ui-field__label">部署方式</span>
           <span class="ui-control-wrap">
             <select
@@ -192,9 +239,15 @@ function handleSubmit() {
         </label>
       </div>
 
-      <label class="ui-field awd-template-dialog__field awd-template-dialog__field--wide" for="awd-template-description">
+      <label
+        class="ui-field awd-template-dialog__field awd-template-dialog__field--wide"
+        for="awd-template-description"
+      >
         <span class="ui-field__label">描述</span>
-        <span class="ui-control-wrap" :class="{ 'is-error': !!fieldErrors.description }">
+        <span
+          class="ui-control-wrap"
+          :class="{ 'is-error': !!fieldErrors.description }"
+        >
           <textarea
             id="awd-template-description"
             v-model="localDraft.description"
@@ -203,7 +256,10 @@ function handleSubmit() {
             placeholder="概述服务的核心攻击面、运行方式和目标业务场景。"
           />
         </span>
-        <p v-if="fieldErrors.description" class="ui-field__error">{{ fieldErrors.description }}</p>
+        <p
+          v-if="fieldErrors.description"
+          class="ui-field__error"
+        >{{ fieldErrors.description }}</p>
       </label>
 
       <label
@@ -213,7 +269,11 @@ function handleSubmit() {
       >
         <span class="ui-field__label">发布状态</span>
         <span class="ui-control-wrap">
-          <select id="awd-template-status" v-model="localDraft.status" class="ui-control">
+          <select
+            id="awd-template-status"
+            v-model="localDraft.status"
+            class="ui-control"
+          >
             <option value="draft">draft</option>
             <option value="published">published</option>
             <option value="archived">archived</option>
@@ -224,7 +284,11 @@ function handleSubmit() {
 
     <template #footer>
       <div class="awd-template-dialog__footer">
-        <button type="button" class="ui-btn ui-btn--secondary" @click="closeDialog">
+        <button
+          type="button"
+          class="ui-btn ui-btn--secondary"
+          @click="closeDialog"
+        >
           取消
         </button>
         <button

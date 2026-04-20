@@ -88,7 +88,11 @@ const {
 
 <template>
   <div class="workspace-shell teacher-management-shell teacher-surface">
-    <nav class="top-tabs" role="tablist" aria-label="教学概览标签页">
+    <nav
+      class="top-tabs"
+      role="tablist"
+      aria-label="教学概览标签页"
+    >
       <button
         v-for="(tab, index) in workspaceTabs"
         :id="tab.buttonId"
@@ -111,18 +115,24 @@ const {
     <div class="workspace-grid">
       <main class="content-pane">
         <section
+          v-show="activeTab === 'overview'"
           id="overview"
           class="workspace-hero tab-panel"
           :class="{ active: activeTab === 'overview' }"
           role="tabpanel"
           aria-labelledby="top-tab-overview"
           :aria-hidden="activeTab === 'overview' ? 'false' : 'true'"
-          v-show="activeTab === 'overview'"
         >
           <div class="workspace-tab-heading__main">
-            <div class="workspace-overline">Progress Signal</div>
-            <h1 class="hero-title">教学介入台</h1>
-            <p class="hero-summary">{{ overviewDescription }}</p>
+            <div class="workspace-overline">
+              Progress Signal
+            </div>
+            <h1 class="hero-title">
+              教学介入台
+            </h1>
+            <p class="hero-summary">
+              {{ overviewDescription }}
+            </p>
 
             <div class="meta-strip">
               <span
@@ -141,18 +151,33 @@ const {
                 :key="item.key"
                 class="progress-card metric-panel-card"
               >
-                <div class="progress-card-label metric-panel-label">{{ item.label }}</div>
-                <div class="progress-card-value metric-panel-value">{{ item.value }}</div>
-                <div class="progress-card-hint metric-panel-helper">{{ item.hint }}</div>
+                <div class="progress-card-label metric-panel-label">
+                  {{ item.label }}
+                </div>
+                <div class="progress-card-value metric-panel-value">
+                  {{ item.value }}
+                </div>
+                <div class="progress-card-hint metric-panel-helper">
+                  {{ item.hint }}
+                </div>
               </article>
             </div>
 
-            <div v-if="error" class="workspace-alert" role="alert" aria-live="polite">
+            <div
+              v-if="error"
+              class="workspace-alert"
+              role="alert"
+              aria-live="polite"
+            >
               <div class="workspace-alert-title-row">
                 <AlertTriangle class="workspace-alert-icon" />
-                <div class="workspace-alert-title">教师概览加载失败</div>
+                <div class="workspace-alert-title">
+                  教师概览加载失败
+                </div>
               </div>
-              <div class="workspace-alert-copy">{{ error }}</div>
+              <div class="workspace-alert-copy">
+                {{ error }}
+              </div>
               <div class="workspace-alert-copy">
                 可先重试刷新数据，再继续查看趋势与复盘信息；若持续失败，可先进入班级管理确认当前班级与权限状态。
               </div>
@@ -176,7 +201,9 @@ const {
           </div>
 
           <aside class="hero-rail">
-            <div class="rail-label">Class Pulse</div>
+            <div class="rail-label">
+              Class Pulse
+            </div>
             <div class="rail-score">
               {{ activeRateText.replace('%', '') }}
               <small v-if="activeRateText !== '--'">% active</small>
@@ -192,43 +219,63 @@ const {
         </section>
 
         <section
+          v-show="activeTab === 'portrait'"
           id="portrait"
           class="section tab-panel"
           :class="{ active: activeTab === 'portrait' }"
           role="tabpanel"
           aria-labelledby="top-tab-portrait"
           :aria-hidden="activeTab === 'portrait' ? 'false' : 'true'"
-          v-show="activeTab === 'portrait'"
         >
           <div class="section-head workspace-tab-heading">
             <div class="workspace-tab-heading__main">
-              <div class="section-kicker">Skill Portrait</div>
-              <h2 class="workspace-tab-heading__title">能力画像与薄弱维度</h2>
+              <div class="section-kicker">
+                Skill Portrait
+              </div>
+              <h2 class="workspace-tab-heading__title">
+                能力画像与薄弱维度
+              </h2>
             </div>
           </div>
 
           <div class="portrait-grid">
             <div class="portrait-summary-block">
-              <h3 class="panel-title">优先补强方向</h3>
+              <h3 class="panel-title">
+                优先补强方向
+              </h3>
 
-              <div v-if="weakDimensionStats.length > 0" class="weak-list">
+              <div
+                v-if="weakDimensionStats.length > 0"
+                class="weak-list"
+              >
                 <article
                   v-for="(item, index) in weakDimensionStats.slice(0, 3)"
                   :key="item.dimension"
                   class="weak-item"
                 >
-                  <div class="weak-rank">{{ `${index + 1}`.padStart(2, '0') }}</div>
+                  <div class="weak-rank">
+                    {{ `${index + 1}`.padStart(2, '0') }}
+                  </div>
                   <div>
-                    <div class="weak-name">{{ item.dimension }}</div>
+                    <div class="weak-name">
+                      {{ item.dimension }}
+                    </div>
                     <div class="weak-copy">
                       {{ item.count }}
                       名学生当前在该方向暴露弱项，建议优先投放基础题并安排一次路径梳理。
                     </div>
                   </div>
-                  <div class="weak-score">{{ item.count }} 人</div>
+                  <div class="weak-score">
+                    {{ item.count }} 人
+                  </div>
                 </article>
               </div>
-              <div v-else class="empty-inline">当前班级还没有足够的能力画像数据。</div>
+              <div
+                v-else
+                class="empty-inline"
+              >
+                当前班级还没有足够的能力画像数据。
+              </div>
 
               <div
                 class="summary-grid progress-strip metric-panel-grid metric-panel-default-surface"
@@ -262,121 +309,184 @@ const {
         </section>
 
         <section
+          v-show="activeTab === 'trend'"
           id="trend"
           class="section tab-panel"
           :class="{ active: activeTab === 'trend' }"
           role="tabpanel"
           aria-labelledby="top-tab-trend"
           :aria-hidden="activeTab === 'trend' ? 'false' : 'true'"
-          v-show="activeTab === 'trend'"
         >
           <div class="section-head workspace-tab-heading">
             <div class="workspace-tab-heading__main">
-              <div class="section-kicker">Trend Review</div>
-              <h2 class="workspace-tab-heading__title">近 7 天训练趋势</h2>
+              <div class="section-kicker">
+                Trend Review
+              </div>
+              <h2 class="workspace-tab-heading__title">
+                近 7 天训练趋势
+              </h2>
             </div>
           </div>
 
           <div class="trend-layout">
             <div class="workspace-subpanel">
-              <TeacherClassTrendPanel :trend="trend" title="班级近 7 天训练趋势" subtitle="" bare />
+              <TeacherClassTrendPanel
+                :trend="trend"
+                title="班级近 7 天训练趋势"
+                subtitle=""
+                bare
+              />
             </div>
 
             <aside class="trend-side">
-              <article v-for="item in trendSignals" :key="item.key" class="trend-signal">
-                <div class="trend-signal-label">{{ item.label }}</div>
-                <div class="trend-signal-value">{{ item.value }}</div>
-                <div class="trend-signal-copy">{{ item.copy }}</div>
+              <article
+                v-for="item in trendSignals"
+                :key="item.key"
+                class="trend-signal"
+              >
+                <div class="trend-signal-label">
+                  {{ item.label }}
+                </div>
+                <div class="trend-signal-value">
+                  {{ item.value }}
+                </div>
+                <div class="trend-signal-copy">
+                  {{ item.copy }}
+                </div>
               </article>
             </aside>
           </div>
         </section>
 
         <section
+          v-show="activeTab === 'insight'"
           id="insight"
           class="section tab-panel"
           :class="{ active: activeTab === 'insight' }"
           role="tabpanel"
           aria-labelledby="top-tab-insight"
           :aria-hidden="activeTab === 'insight' ? 'false' : 'true'"
-          v-show="activeTab === 'insight'"
         >
           <div class="section-head workspace-tab-heading">
             <div class="workspace-tab-heading__main">
-              <div class="section-kicker">Student Insight</div>
-              <h2 class="workspace-tab-heading__title">学生洞察</h2>
+              <div class="section-kicker">
+                Student Insight
+              </div>
+              <h2 class="workspace-tab-heading__title">
+                学生洞察
+              </h2>
             </div>
           </div>
 
           <article class="panel panel-pad">
             <div class="insight-list">
-              <div v-for="item in studentInsightRows" :key="item.key" class="insight-item">
+              <div
+                v-for="item in studentInsightRows"
+                :key="item.key"
+                class="insight-item"
+              >
                 <div>
                   <strong>{{ item.title }}</strong>
                   <div class="insight-meta">
-                    <span v-for="chip in item.chips" :key="chip" class="chip" :class="item.tone">
+                    <span
+                      v-for="chip in item.chips"
+                      :key="chip"
+                      class="chip"
+                      :class="item.tone"
+                    >
                       {{ chip }}
                     </span>
                   </div>
-                  <div class="item-copy">{{ item.detail }}</div>
+                  <div class="item-copy">
+                    {{ item.detail }}
+                  </div>
                 </div>
-                <div class="status-pill" :class="item.tone">{{ item.status }}</div>
+                <div
+                  class="status-pill"
+                  :class="item.tone"
+                >
+                  {{ item.status }}
+                </div>
               </div>
             </div>
           </article>
         </section>
 
         <section
+          v-show="activeTab === 'advice'"
           id="advice"
           class="section tab-panel"
           :class="{ active: activeTab === 'advice' }"
           role="tabpanel"
           aria-labelledby="top-tab-advice"
           :aria-hidden="activeTab === 'advice' ? 'false' : 'true'"
-          v-show="activeTab === 'advice'"
         >
           <div class="section-head workspace-tab-heading">
             <div class="workspace-tab-heading__main">
-              <div class="section-kicker">Today Focus</div>
-              <h2 class="workspace-tab-heading__title">今日教学建议</h2>
+              <div class="section-kicker">
+                Today Focus
+              </div>
+              <h2 class="workspace-tab-heading__title">
+                今日教学建议
+              </h2>
             </div>
           </div>
 
           <article class="panel panel-pad">
             <div class="advice-lines">
-              <div v-for="(item, index) in teachingAdvice" :key="item.title" class="hint-line">
-                <div class="hint-index">{{ index + 1 }}</div>
+              <div
+                v-for="(item, index) in teachingAdvice"
+                :key="item.title"
+                class="hint-line"
+              >
+                <div class="hint-index">
+                  {{ index + 1 }}
+                </div>
                 <div>
-                  <div class="hint-label">{{ item.title }}</div>
-                  <div class="hint-copy">{{ item.detail }}</div>
+                  <div class="hint-label">
+                    {{ item.title }}
+                  </div>
+                  <div class="hint-copy">
+                    {{ item.detail }}
+                  </div>
                 </div>
               </div>
             </div>
           </article>
 
           <div class="workspace-subpanel section-stack">
-            <TeacherClassReviewPanel :review="review" :class-name="selectedClassName" />
+            <TeacherClassReviewPanel
+              :review="review"
+              :class-name="selectedClassName"
+            />
           </div>
         </section>
 
         <section
+          v-show="activeTab === 'action'"
           id="action"
           class="section tab-panel"
           :class="{ active: activeTab === 'action' }"
           role="tabpanel"
           aria-labelledby="top-tab-action"
           :aria-hidden="activeTab === 'action' ? 'false' : 'true'"
-          v-show="activeTab === 'action'"
         >
           <div class="section-head workspace-tab-heading">
             <div class="workspace-tab-heading__main">
-              <div class="section-kicker">Intervention Board</div>
-              <h2 class="workspace-tab-heading__title">介入建议</h2>
+              <div class="section-kicker">
+                Intervention Board
+              </div>
+              <h2 class="workspace-tab-heading__title">
+                介入建议
+              </h2>
             </div>
           </div>
 
           <div class="workspace-subpanel section-stack">
-            <TeacherInterventionPanel :students="students" :class-name="selectedClassName" />
+            <TeacherInterventionPanel
+              :students="students"
+              :class-name="selectedClassName"
+            />
           </div>
         </section>
       </main>

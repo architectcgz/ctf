@@ -88,16 +88,30 @@ function formatDateTime(value: string): string {
         <section class="challenge-import-panel">
           <div class="workspace-tab-heading challenge-import-actions">
             <div class="workspace-tab-heading__main">
-              <div class="workspace-overline">Challenge Import</div>
-              <h1 class="workspace-page-title">导入资源包</h1>
-              <p class="workspace-page-copy">在独立导入页完成上传、核对题目包规范，并处理待确认导入任务。</p>
+              <div class="workspace-overline">
+                Challenge Import
+              </div>
+              <h1 class="workspace-page-title">
+                导入资源包
+              </h1>
+              <p class="workspace-page-copy">
+                在独立导入页完成上传、核对题目包规范，并处理待确认导入任务。
+              </p>
             </div>
             <div class="challenge-import-hero-actions">
-              <button type="button" class="challenge-import-action" @click="backToChallenges">
+              <button
+                type="button"
+                class="challenge-import-action"
+                @click="backToChallenges"
+              >
                 <ArrowLeft class="mr-1.5 h-3.5 w-3.5" />
                 返回题目目录
               </button>
-              <button type="button" class="challenge-import-action" @click="openPackageFormatGuide">
+              <button
+                type="button"
+                class="challenge-import-action"
+                @click="openPackageFormatGuide"
+              >
                 <FileSearch class="mr-1.5 h-3.5 w-3.5" />
                 题目包规范
               </button>
@@ -118,13 +132,19 @@ function formatDateTime(value: string): string {
           >
             <header class="list-heading challenge-section-heading">
               <div>
-                <div class="workspace-overline">Challenge Package</div>
-                <h2 class="list-heading__title">导入题目包</h2>
+                <div class="workspace-overline">
+                  Challenge Package
+                </div>
+                <h2 class="list-heading__title">
+                  导入题目包
+                </h2>
                 <p class="challenge-section-copy">
                   上传压缩包后先进入预览，再确认是否写入题库。格式规范与示例已收敛到当前导入页。
                 </p>
               </div>
-              <div class="challenge-directory-meta">共 {{ queueCount }} 个待处理任务</div>
+              <div class="challenge-directory-meta">
+                共 {{ queueCount }} 个待处理任务
+              </div>
             </header>
 
             <ChallengePackageImportEntry
@@ -138,16 +158,26 @@ function formatDateTime(value: string): string {
           <section class="workspace-directory-section challenge-import-directory challenge-plain-section">
             <div class="list-heading">
               <div>
-                <div class="workspace-overline">Upload Receipt</div>
-                <h2 class="list-heading__title">最近上传结果</h2>
+                <div class="workspace-overline">
+                  Upload Receipt
+                </div>
+                <h2 class="list-heading__title">
+                  最近上传结果
+                </h2>
               </div>
             </div>
 
-            <div v-if="uploadResults.length === 0" class="challenge-directory-state">
+            <div
+              v-if="uploadResults.length === 0"
+              class="challenge-directory-state"
+            >
               还没有新的上传回执，选择题目包后会在这里显示解析结果。
             </div>
 
-            <div v-else class="challenge-panel-stack">
+            <div
+              v-else
+              class="challenge-panel-stack"
+            >
               <article
                 v-for="result in uploadResults"
                 :key="result.id"
@@ -169,11 +199,16 @@ function formatDateTime(value: string): string {
                   >
                     {{ result.status === 'success' ? '成功' : '失败' }}
                   </span>
-                  <strong class="challenge-upload-result__title" :title="result.fileName">
+                  <strong
+                    class="challenge-upload-result__title"
+                    :title="result.fileName"
+                  >
                     {{ result.fileName }}
                   </strong>
                 </div>
-                <p class="challenge-upload-result__copy">{{ result.message }}</p>
+                <p class="challenge-upload-result__copy">
+                  {{ result.message }}
+                </p>
                 <div class="challenge-upload-result__meta">
                   <span>{{ formatDateTime(result.createdAt) }}</span>
                   <span v-if="result.code !== undefined">错误码 {{ result.code }}</span>
@@ -189,33 +224,58 @@ function formatDateTime(value: string): string {
           >
             <div class="list-heading challenge-directory-head challenge-section-heading">
               <div>
-                <div class="workspace-overline">Import Review</div>
-                <h2 class="list-heading__title">待确认导入</h2>
+                <div class="workspace-overline">
+                  Import Review
+                </div>
+                <h2 class="list-heading__title">
+                  待确认导入
+                </h2>
                 <p class="challenge-section-copy">
                   这里列出已生成预览、但还没正式导入题库的题目包。确认无误后，再继续写入题库。
                 </p>
               </div>
-              <div class="challenge-directory-meta">共 {{ queueCount }} 个待处理任务</div>
+              <div class="challenge-directory-meta">
+                共 {{ queueCount }} 个待处理任务
+              </div>
             </div>
 
-            <div v-if="queueLoading" class="challenge-directory-state">正在同步导入队列...</div>
-            <div v-else-if="queue.length === 0" class="challenge-directory-state">
+            <div
+              v-if="queueLoading"
+              class="challenge-directory-state"
+            >
+              正在同步导入队列...
+            </div>
+            <div
+              v-else-if="queue.length === 0"
+              class="challenge-directory-state"
+            >
               当前没有待确认的导入任务。
             </div>
 
-            <div v-else class="challenge-panel-stack">
+            <div
+              v-else
+              class="challenge-panel-stack"
+            >
               <article
                 v-for="item in queue"
                 :key="item.id"
                 class="challenge-plain-section challenge-queue-item"
               >
                 <div class="flex min-w-0 items-start gap-4">
-                  <div class="challenge-queue-id">IMP-{{ item.id.slice(0, 6).toUpperCase() }}</div>
+                  <div class="challenge-queue-id">
+                    IMP-{{ item.id.slice(0, 6).toUpperCase() }}
+                  </div>
                   <div class="min-w-0 flex-1">
-                    <h2 class="challenge-queue-title" :title="item.title">
+                    <h2
+                      class="challenge-queue-title"
+                      :title="item.title"
+                    >
                       {{ item.title }}
                     </h2>
-                    <p class="challenge-queue-file" :title="item.file_name">
+                    <p
+                      class="challenge-queue-file"
+                      :title="item.file_name"
+                    >
                       {{ item.file_name }}
                     </p>
                     <div class="mt-3 flex flex-wrap gap-2">

@@ -188,29 +188,50 @@ function isManualReviewVisible(): boolean {
     />
 
     <template v-else>
-      <div v-if="loading" class="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
-        <AppCard variant="panel" accent="neutral">
+      <div
+        v-if="loading"
+        class="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]"
+      >
+        <AppCard
+          variant="panel"
+          accent="neutral"
+        >
           <div class="insight-skeleton-line h-6 w-36 animate-pulse rounded" />
           <div class="mt-6 space-y-3">
             <div class="insight-skeleton-block h-16 animate-pulse rounded-xl" />
             <div class="insight-skeleton-block h-16 animate-pulse rounded-xl" />
           </div>
         </AppCard>
-        <AppCard variant="panel" accent="neutral">
+        <AppCard
+          variant="panel"
+          accent="neutral"
+        >
           <div class="insight-skeleton-block h-[280px] animate-pulse rounded-2xl" />
         </AppCard>
       </div>
 
       <template v-else-if="student">
-        <div v-if="isSectionVisible('overview')" class="insight-overview-layout">
-          <SectionCard title="能力雷达" subtitle="左侧雷达图展示当前能力维度分布。">
+        <div
+          v-if="isSectionVisible('overview')"
+          class="insight-overview-layout"
+        >
+          <SectionCard
+            title="能力雷达"
+            subtitle="左侧雷达图展示当前能力维度分布。"
+          >
             <div class="mt-4">
               <SkillRadar :scores="radarScores" />
             </div>
           </SectionCard>
 
-          <SectionCard title="能力比例" subtitle="右侧条状图展示各维度当前分值。">
-            <div v-if="rankedProfileDimensions.length > 0" class="insight-dimension-bars mt-4">
+          <SectionCard
+            title="能力比例"
+            subtitle="右侧条状图展示各维度当前分值。"
+          >
+            <div
+              v-if="rankedProfileDimensions.length > 0"
+              class="insight-dimension-bars mt-4"
+            >
               <article
                 v-for="item in rankedProfileDimensions"
                 :key="item.key"
@@ -221,11 +242,19 @@ function isManualReviewVisible(): boolean {
                   <span>{{ item.value }}%</span>
                 </div>
                 <div class="insight-dimension-item__track">
-                  <div class="insight-dimension-item__fill" :style="{ width: `${item.value}%` }" />
+                  <div
+                    class="insight-dimension-item__fill"
+                    :style="{ width: `${item.value}%` }"
+                  />
                 </div>
               </article>
             </div>
-            <div v-else class="insight-dimension-empty mt-4">暂无画像维度数据</div>
+            <div
+              v-else
+              class="insight-dimension-empty mt-4"
+            >
+              暂无画像维度数据
+            </div>
           </SectionCard>
         </div>
 
@@ -242,7 +271,10 @@ function isManualReviewVisible(): boolean {
             icon="BookOpen"
           />
 
-          <div v-else class="mt-5 grid gap-3 lg:grid-cols-2">
+          <div
+            v-else
+            class="mt-5 grid gap-3 lg:grid-cols-2"
+          >
             <AppCard
               v-for="item in recommendations"
               :key="item.challenge_id"
@@ -255,8 +287,12 @@ function isManualReviewVisible(): boolean {
             >
               <div class="flex items-start justify-between gap-3">
                 <div>
-                  <h5 class="font-semibold text-[var(--color-text-primary)]">{{ item.title }}</h5>
-                  <p class="mt-1 text-sm text-[var(--color-text-secondary)]">{{ item.reason }}</p>
+                  <h5 class="font-semibold text-[var(--color-text-primary)]">
+                    {{ item.title }}
+                  </h5>
+                  <p class="mt-1 text-sm text-[var(--color-text-secondary)]">
+                    {{ item.reason }}
+                  </p>
                 </div>
                 <span
                   class="rounded-full px-2.5 py-1 text-xs font-medium"
@@ -304,7 +340,9 @@ function isManualReviewVisible(): boolean {
                 </div>
               </article>
               <article class="insight-kpi-card writeup-kpi-card progress-card metric-panel-card">
-                <div class="insight-kpi-label progress-card-label metric-panel-label">对应题目</div>
+                <div class="insight-kpi-label progress-card-label metric-panel-label">
+                  对应题目
+                </div>
                 <div class="insight-kpi-value progress-card-value metric-panel-value">
                   {{ publishedChallengeCount }}
                 </div>
@@ -313,7 +351,9 @@ function isManualReviewVisible(): boolean {
                 </div>
               </article>
               <article class="insight-kpi-card writeup-kpi-card progress-card metric-panel-card">
-                <div class="insight-kpi-label progress-card-label metric-panel-label">推荐中</div>
+                <div class="insight-kpi-label progress-card-label metric-panel-label">
+                  推荐中
+                </div>
                 <div class="insight-kpi-value progress-card-value metric-panel-value">
                   {{ publishedRecommendedWriteupCount }}
                 </div>
@@ -338,24 +378,33 @@ function isManualReviewVisible(): boolean {
                 class="writeup-directory-row"
               >
                 <div class="writeup-directory-cell">
-                  <div class="writeup-directory-challenge">{{ item.challenge_title }}</div>
+                  <div class="writeup-directory-challenge">
+                    {{ item.challenge_title }}
+                  </div>
                 </div>
 
                 <div class="writeup-directory-cell">
-                  <div class="writeup-directory-title">{{ item.title }}</div>
+                  <div class="writeup-directory-title">
+                    {{ item.title }}
+                  </div>
                   <div class="writeup-directory-preview">
                     {{ item.content_preview || '暂无摘要' }}
                   </div>
                 </div>
 
                 <div class="writeup-directory-cell">
-                  <div class="writeup-directory-status-label">社区题解状态</div>
+                  <div class="writeup-directory-status-label">
+                    社区题解状态
+                  </div>
                   <div class="writeup-directory-status">
                     <span class="writeup-chip writeup-chip--muted">已发布</span>
                     <span :class="visibilityStatusClass(item.visibility_status)">
                       {{ visibilityStatusLabel(item.visibility_status) }}
                     </span>
-                    <span v-if="item.is_recommended" class="writeup-chip writeup-chip--primary">
+                    <span
+                      v-if="item.is_recommended"
+                      class="writeup-chip writeup-chip--primary"
+                    >
                       推荐题解
                     </span>
                   </div>
@@ -433,7 +482,9 @@ function isManualReviewVisible(): boolean {
               class="insight-kpi-grid progress-strip metric-panel-grid metric-panel-default-surface md:grid-cols-3"
             >
               <article class="insight-kpi-card progress-card metric-panel-card">
-                <div class="insight-kpi-label progress-card-label metric-panel-label">待处理</div>
+                <div class="insight-kpi-label progress-card-label metric-panel-label">
+                  待处理
+                </div>
                 <div class="insight-kpi-value progress-card-value metric-panel-value">
                   {{ manualReviewSubmissions.length }}
                 </div>
@@ -442,7 +493,9 @@ function isManualReviewVisible(): boolean {
                 </div>
               </article>
               <article class="insight-kpi-card progress-card metric-panel-card">
-                <div class="insight-kpi-label progress-card-label metric-panel-label">待审核</div>
+                <div class="insight-kpi-label progress-card-label metric-panel-label">
+                  待审核
+                </div>
                 <div class="insight-kpi-value progress-card-value metric-panel-value">
                   {{
                     manualReviewSubmissions.filter((item) => item.review_status === 'pending')
@@ -454,7 +507,9 @@ function isManualReviewVisible(): boolean {
                 </div>
               </article>
               <article class="insight-kpi-card progress-card metric-panel-card">
-                <div class="insight-kpi-label progress-card-label metric-panel-label">已通过</div>
+                <div class="insight-kpi-label progress-card-label metric-panel-label">
+                  已通过
+                </div>
                 <div class="insight-kpi-value progress-card-value metric-panel-value">
                   {{ approvedManualReviewCount }}
                 </div>
@@ -502,8 +557,14 @@ function isManualReviewVisible(): boolean {
                 </AppCard>
               </div>
 
-              <AppCard variant="panel" accent="neutral">
-                <div v-if="manualReviewLoading" class="space-y-3">
+              <AppCard
+                variant="panel"
+                accent="neutral"
+              >
+                <div
+                  v-if="manualReviewLoading"
+                  class="space-y-3"
+                >
                   <div class="insight-skeleton-line h-5 w-32 animate-pulse rounded" />
                   <div class="insight-skeleton-block h-24 animate-pulse rounded-2xl" />
                   <div class="insight-skeleton-block h-24 animate-pulse rounded-2xl" />
@@ -519,7 +580,9 @@ function isManualReviewVisible(): boolean {
                 <template v-else>
                   <div class="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                      <div class="journal-eyebrow">Writeup Review</div>
+                      <div class="journal-eyebrow">
+                        Writeup Review
+                      </div>
                       <h4 class="mt-2 text-lg font-semibold text-[var(--color-text-primary)]">
                         {{ activeManualReview.challenge_title }}
                       </h4>
@@ -546,9 +609,7 @@ function isManualReviewVisible(): boolean {
                   </div>
 
                   <label class="mt-5 block">
-                    <span class="text-sm font-medium text-[var(--color-text-primary)]"
-                      >审核意见</span
-                    >
+                    <span class="text-sm font-medium text-[var(--color-text-primary)]">审核意见</span>
                     <textarea
                       v-model="manualReviewComment"
                       rows="5"
@@ -610,7 +671,9 @@ function isManualReviewVisible(): boolean {
               class="insight-kpi-grid progress-strip metric-panel-grid metric-panel-default-surface md:grid-cols-4"
             >
               <article class="insight-kpi-card progress-card metric-panel-card">
-                <div class="insight-kpi-label progress-card-label metric-panel-label">总事件数</div>
+                <div class="insight-kpi-label progress-card-label metric-panel-label">
+                  总事件数
+                </div>
                 <div class="insight-kpi-value progress-card-value metric-panel-value">
                   {{ evidence.summary.total_events }}
                 </div>
@@ -619,7 +682,9 @@ function isManualReviewVisible(): boolean {
                 </div>
               </article>
               <article class="insight-kpi-card progress-card metric-panel-card">
-                <div class="insight-kpi-label progress-card-label metric-panel-label">利用请求</div>
+                <div class="insight-kpi-label progress-card-label metric-panel-label">
+                  利用请求
+                </div>
                 <div class="insight-kpi-value progress-card-value metric-panel-value">
                   {{ evidence.summary.proxy_request_count }}
                 </div>
@@ -628,7 +693,9 @@ function isManualReviewVisible(): boolean {
                 </div>
               </article>
               <article class="insight-kpi-card progress-card metric-panel-card">
-                <div class="insight-kpi-label progress-card-label metric-panel-label">提交次数</div>
+                <div class="insight-kpi-label progress-card-label metric-panel-label">
+                  提交次数
+                </div>
                 <div class="insight-kpi-value progress-card-value metric-panel-value">
                   {{ evidence.summary.submit_count }}
                 </div>
@@ -637,7 +704,9 @@ function isManualReviewVisible(): boolean {
                 </div>
               </article>
               <article class="insight-kpi-card progress-card metric-panel-card">
-                <div class="insight-kpi-label progress-card-label metric-panel-label">成功次数</div>
+                <div class="insight-kpi-label progress-card-label metric-panel-label">
+                  成功次数
+                </div>
                 <div class="insight-kpi-value progress-card-value metric-panel-value">
                   {{ evidence.summary.success_count }}
                 </div>
@@ -693,7 +762,10 @@ function isManualReviewVisible(): boolean {
           </template>
         </SectionCard>
 
-        <StudentTimelinePage v-if="isSectionVisible('timeline')" :timeline="timeline" />
+        <StudentTimelinePage
+          v-if="isSectionVisible('timeline')"
+          :timeline="timeline"
+        />
       </template>
     </template>
   </div>

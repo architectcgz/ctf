@@ -91,9 +91,15 @@ function statusMeta(status: string): { label: string; chipClass: string } {
       <div class="teacher-page">
         <header class="teacher-topbar">
           <div class="teacher-heading">
-            <div class="teacher-surface-eyebrow journal-eyebrow">Teacher Instance Ops</div>
-            <h1 class="teacher-title">实例管理</h1>
-            <p class="teacher-copy">先筛班级与学员，再快速定位异常或即将到期的训练实例。</p>
+            <div class="teacher-surface-eyebrow journal-eyebrow">
+              Teacher Instance Ops
+            </div>
+            <h1 class="teacher-title">
+              实例管理
+            </h1>
+            <p class="teacher-copy">
+              先筛班级与学员，再快速定位异常或即将到期的训练实例。
+            </p>
           </div>
 
           <div class="teacher-actions">
@@ -113,21 +119,31 @@ function statusMeta(status: string): { label: string; chipClass: string } {
           </div>
           <div class="teacher-summary-grid progress-strip metric-panel-grid">
             <article class="progress-card metric-panel-card">
-              <div class="progress-card-label metric-panel-label">当前可见</div>
+              <div class="progress-card-label metric-panel-label">
+                当前可见
+              </div>
               <div class="progress-card-value metric-panel-value">
                 {{ totalCount }}
               </div>
-              <div class="progress-card-hint metric-panel-helper">符合当前筛选条件的实例数量</div>
+              <div class="progress-card-hint metric-panel-helper">
+                符合当前筛选条件的实例数量
+              </div>
             </article>
             <article class="progress-card metric-panel-card">
-              <div class="progress-card-label metric-panel-label">运行中</div>
+              <div class="progress-card-label metric-panel-label">
+                运行中
+              </div>
               <div class="progress-card-value metric-panel-value">
                 {{ runningCount }}
               </div>
-              <div class="progress-card-hint metric-panel-helper">仍在占用环境资源的实例数量</div>
+              <div class="progress-card-hint metric-panel-helper">
+                仍在占用环境资源的实例数量
+              </div>
             </article>
             <article class="progress-card metric-panel-card">
-              <div class="progress-card-label metric-panel-label">即将到期</div>
+              <div class="progress-card-label metric-panel-label">
+                即将到期
+              </div>
               <div class="progress-card-value metric-panel-value">
                 {{ expiringSoonCount }}
               </div>
@@ -144,13 +160,22 @@ function statusMeta(status: string): { label: string; chipClass: string } {
         >
           <header class="list-heading">
             <div>
-              <div class="journal-note-label">Instance Directory</div>
-              <h3 class="list-heading__title">实例目录</h3>
+              <div class="journal-note-label">
+                Instance Directory
+              </div>
+              <h3 class="list-heading__title">
+                实例目录
+              </h3>
             </div>
-            <div class="teacher-directory-meta">共 {{ totalCount }} 条记录</div>
+            <div class="teacher-directory-meta">
+              共 {{ totalCount }} 条记录
+            </div>
           </header>
 
-          <section class="teacher-directory-filters" aria-label="实例过滤">
+          <section
+            class="teacher-directory-filters"
+            aria-label="实例过滤"
+          >
             <div class="teacher-filter-grid">
               <label class="teacher-field">
                 <span class="teacher-field-label">班级</span>
@@ -160,8 +185,15 @@ function statusMeta(status: string): { label: string; chipClass: string } {
                   :disabled="loadingClasses || (!isAdmin && classes.length <= 1)"
                   @change="emit('updateClassName', ($event.target as HTMLSelectElement).value)"
                 >
-                  <option v-if="isAdmin" value="">全部班级</option>
-                  <option v-for="item in classes" :key="item.name" :value="item.name">
+                  <option
+                    v-if="isAdmin"
+                    value=""
+                  >全部班级</option>
+                  <option
+                    v-for="item in classes"
+                    :key="item.name"
+                    :value="item.name"
+                  >
                     {{ item.name }} · {{ item.student_count || 0 }}
                   </option>
                 </select>
@@ -177,7 +209,7 @@ function statusMeta(status: string): { label: string; chipClass: string } {
                     placeholder="按用户名或学号搜索"
                     class="teacher-input"
                     @input="emit('updateKeyword', ($event.target as HTMLInputElement).value)"
-                  />
+                  >
                 </div>
               </label>
 
@@ -191,13 +223,16 @@ function statusMeta(status: string): { label: string; chipClass: string } {
                     placeholder="输入学号精确查询"
                     class="teacher-input"
                     @input="emit('updateStudentNo', ($event.target as HTMLInputElement).value)"
-                  />
+                  >
                 </div>
               </label>
             </div>
           </section>
 
-          <div v-if="loadingInstances" class="teacher-skeleton-list workspace-directory-loading">
+          <div
+            v-if="loadingInstances"
+            class="teacher-skeleton-list workspace-directory-loading"
+          >
             <div
               v-for="index in 6"
               :key="index"
@@ -213,7 +248,11 @@ function statusMeta(status: string): { label: string; chipClass: string } {
             description="可以调整筛选条件，或等待学员创建新的训练环境后再查看。"
           />
 
-          <section v-else class="teacher-directory" aria-label="实例目录">
+          <section
+            v-else
+            class="teacher-directory"
+            aria-label="实例目录"
+          >
             <div class="teacher-directory-head">
               <span>学生</span>
               <span>题目</span>
@@ -227,7 +266,11 @@ function statusMeta(status: string): { label: string; chipClass: string } {
               <span>操作</span>
             </div>
 
-            <div v-for="item in instances" :key="item.id" class="teacher-directory-row">
+            <div
+              v-for="item in instances"
+              :key="item.id"
+              class="teacher-directory-row"
+            >
               <div class="teacher-directory-row-main">
                 <div class="teacher-directory-row-index">
                   {{ item.student_no || `@${item.student_username}` }}
@@ -246,7 +289,10 @@ function statusMeta(status: string): { label: string; chipClass: string } {
                 </div>
               </div>
 
-              <div class="teacher-directory-row-challenge" :title="item.challenge_title">
+              <div
+                class="teacher-directory-row-challenge"
+                :title="item.challenge_title"
+              >
                 {{ item.challenge_title }}
               </div>
 
@@ -263,7 +309,9 @@ function statusMeta(status: string): { label: string; chipClass: string } {
                 </span>
               </div>
 
-              <div class="teacher-directory-row-created">{{ formatDateTime(item.created_at) }}</div>
+              <div class="teacher-directory-row-created">
+                {{ formatDateTime(item.created_at) }}
+              </div>
 
               <div class="teacher-directory-row-expires-at">
                 {{ formatDateTime(item.expires_at) }}
@@ -277,7 +325,10 @@ function statusMeta(status: string): { label: string; chipClass: string } {
                 {{ formatRemainingTime(item.remaining_time) }}
               </div>
 
-              <div class="teacher-directory-row-url" :title="item.access_url || '暂未分配访问地址'">
+              <div
+                class="teacher-directory-row-url"
+                :title="item.access_url || '暂未分配访问地址'"
+              >
                 {{ item.access_url || '暂未分配访问地址' }}
               </div>
 
@@ -309,9 +360,18 @@ function statusMeta(status: string): { label: string; chipClass: string } {
             </div>
           </section>
         </section>
-        <div v-if="error" class="teacher-surface-error">
+        <div
+          v-if="error"
+          class="teacher-surface-error"
+        >
           {{ error }}
-          <button type="button" class="ml-3 font-medium underline" @click="emit('retry')">重试</button>
+          <button
+            type="button"
+            class="ml-3 font-medium underline"
+            @click="emit('retry')"
+          >
+            重试
+          </button>
         </div>
       </div>
     </main>

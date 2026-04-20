@@ -45,30 +45,63 @@ const series = computed(() => [
 </script>
 
 <template>
-  <section v-if="!bare" class="teacher-panel">
+  <section
+    v-if="!bare"
+    class="teacher-panel"
+  >
     <header class="teacher-panel__header">
-      <div class="journal-eyebrow">Trend</div>
-      <h2 class="teacher-panel__title">{{ panelTitle }}</h2>
+      <div class="journal-eyebrow">
+        Trend
+      </div>
+      <h2 class="teacher-panel__title">
+        {{ panelTitle }}
+      </h2>
     </header>
 
-    <div v-if="!hasTrendPoints" class="teacher-panel__empty-state">
-      <p class="teacher-panel__empty-title">暂无</p>
-      <p class="teacher-panel__empty-copy">近 7 天还没有可展示的训练趋势</p>
+    <div
+      v-if="!hasTrendPoints"
+      class="teacher-panel__empty-state"
+    >
+      <p class="teacher-panel__empty-title">
+        暂无
+      </p>
+      <p class="teacher-panel__empty-copy">
+        近 7 天还没有可展示的训练趋势
+      </p>
     </div>
 
-    <div v-else class="teacher-panel__chart">
-      <LineChart :categories="categories" :series="series" />
+    <div
+      v-else
+      class="teacher-panel__chart"
+    >
+      <LineChart
+        :categories="categories"
+        :series="series"
+      />
     </div>
   </section>
 
   <template v-else>
-    <div v-if="!hasTrendPoints" class="teacher-panel__empty-state teacher-panel__empty-state--bare">
-      <p class="teacher-panel__empty-title">暂无</p>
-      <p class="teacher-panel__empty-copy">近 7 天还没有可展示的训练趋势</p>
+    <div
+      v-if="!hasTrendPoints"
+      class="teacher-panel__empty-state teacher-panel__empty-state--bare"
+    >
+      <p class="teacher-panel__empty-title">
+        暂无
+      </p>
+      <p class="teacher-panel__empty-copy">
+        近 7 天还没有可展示的训练趋势
+      </p>
     </div>
 
-    <div v-else class="teacher-panel__chart teacher-panel__chart--bare">
-      <LineChart :categories="categories" :series="series" />
+    <div
+      v-else
+      class="teacher-panel__chart teacher-panel__chart--bare"
+    >
+      <LineChart
+        :categories="categories"
+        :series="series"
+      />
     </div>
   </template>
 </template>

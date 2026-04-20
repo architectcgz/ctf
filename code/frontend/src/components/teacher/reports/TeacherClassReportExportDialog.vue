@@ -91,8 +91,12 @@ function closeDialog(): void {
         <section class="class-report-section class-report-section--context">
           <div class="class-report-section__head">
             <div>
-              <div class="journal-eyebrow">Current Context</div>
-              <h4 class="class-report-section__title">当前教师上下文</h4>
+              <div class="journal-eyebrow">
+                Current Context
+              </div>
+              <h4 class="class-report-section__title">
+                当前教师上下文
+              </h4>
               <p class="class-report-section__copy">
                 导出任务会优先使用当前教师绑定班级，也可以临时切换到其他班级。
               </p>
@@ -106,8 +110,12 @@ function closeDialog(): void {
         <section class="class-report-section class-report-section--controls">
           <div class="class-report-section__head">
             <div>
-              <div class="journal-eyebrow">Context Action</div>
-              <h4 class="class-report-section__title">导出设置</h4>
+              <div class="journal-eyebrow">
+                Context Action
+              </div>
+              <h4 class="class-report-section__title">
+                导出设置
+              </h4>
               <p class="class-report-section__copy">
                 默认沿用当前教师或页面上下文班级，也可以在这里临时改成其他班级。
               </p>
@@ -123,18 +131,24 @@ function closeDialog(): void {
                   type="text"
                   :placeholder="classNamePlaceholder"
                   class="ui-control class-report-field__control"
-                />
+                >
               </span>
             </label>
 
             <fieldset class="class-report-format-group">
-              <legend class="ui-field__label class-report-format-group__label">导出格式</legend>
+              <legend class="ui-field__label class-report-format-group__label">
+                导出格式
+              </legend>
               <div class="class-report-format-grid">
                 <label
                   class="class-report-format-option"
                   :class="{ 'class-report-format-option--active': form.format === 'pdf' }"
                 >
-                  <input v-model="form.format" type="radio" value="pdf" />
+                  <input
+                    v-model="form.format"
+                    type="radio"
+                    value="pdf"
+                  >
                   <span>
                     <span class="class-report-format-option__title">PDF</span>
                     <span class="class-report-format-option__copy">适合打印、归档和正式汇报。</span>
@@ -145,19 +159,25 @@ function closeDialog(): void {
                   class="class-report-format-option"
                   :class="{ 'class-report-format-option--active': form.format === 'excel' }"
                 >
-                  <input v-model="form.format" type="radio" value="excel" />
+                  <input
+                    v-model="form.format"
+                    type="radio"
+                    value="excel"
+                  >
                   <span>
                     <span class="class-report-format-option__title">Excel</span>
-                    <span class="class-report-format-option__copy"
-                      >适合继续分析、筛选和二次加工。</span
-                    >
+                    <span class="class-report-format-option__copy">适合继续分析、筛选和二次加工。</span>
                   </span>
                 </label>
               </div>
             </fieldset>
           </div>
 
-          <div class="class-report-section__actions" role="group" aria-label="班级报告操作">
+          <div
+            class="class-report-section__actions"
+            role="group"
+            aria-label="班级报告操作"
+          >
             <button
               type="button"
               class="ui-btn ui-btn--secondary"
@@ -179,10 +199,14 @@ function closeDialog(): void {
           </div>
 
           <section class="class-report-preview-summary metric-panel-default-surface">
-            <div class="class-report-preview-summary__title">Preview Snapshot</div>
+            <div class="class-report-preview-summary__title">
+              Preview Snapshot
+            </div>
             <div class="class-report-preview-summary__grid progress-strip metric-panel-grid">
               <article class="progress-card metric-panel-card">
-                <div class="progress-card-label metric-panel-label">目标班级</div>
+                <div class="progress-card-label metric-panel-label">
+                  目标班级
+                </div>
                 <div class="progress-card-value metric-panel-value">
                   {{ normalizedClassNameText }}
                 </div>
@@ -191,12 +215,20 @@ function closeDialog(): void {
                 </div>
               </article>
               <article class="progress-card metric-panel-card">
-                <div class="progress-card-label metric-panel-label">导出格式</div>
-                <div class="progress-card-value metric-panel-value">{{ selectedFormatLabel }}</div>
-                <div class="progress-card-hint metric-panel-helper">{{ selectedFormatHint }}</div>
+                <div class="progress-card-label metric-panel-label">
+                  导出格式
+                </div>
+                <div class="progress-card-value metric-panel-value">
+                  {{ selectedFormatLabel }}
+                </div>
+                <div class="progress-card-hint metric-panel-helper">
+                  {{ selectedFormatHint }}
+                </div>
               </article>
               <article class="progress-card metric-panel-card">
-                <div class="progress-card-label metric-panel-label">任务状态</div>
+                <div class="progress-card-label metric-panel-label">
+                  任务状态
+                </div>
                 <div class="progress-card-value metric-panel-value">
                   {{ latestStatusMeta.label }}
                 </div>
@@ -215,39 +247,67 @@ function closeDialog(): void {
         <section class="class-report-section class-report-section--preview">
           <div class="class-report-section__head">
             <div>
-              <div class="journal-eyebrow">Live Preview</div>
-              <h4 class="class-report-section__title">当前班级报告预览</h4>
+              <div class="journal-eyebrow">
+                Live Preview
+              </div>
+              <h4 class="class-report-section__title">
+                当前班级报告预览
+              </h4>
               <p class="class-report-section__copy">
                 不下载也能先看班级近 7 天趋势、教学复盘结论和学生洞察。
               </p>
             </div>
           </div>
 
-          <div v-if="previewError" class="teacher-surface-error class-report-preview-error">
+          <div
+            v-if="previewError"
+            class="teacher-surface-error class-report-preview-error"
+          >
             {{ previewError }}
           </div>
 
-          <div v-else-if="previewLoading" class="class-report-preview-skeletons">
-            <div v-for="index in 3" :key="index" class="class-report-preview-skeleton" />
+          <div
+            v-else-if="previewLoading"
+            class="class-report-preview-skeletons"
+          >
+            <div
+              v-for="index in 3"
+              :key="index"
+              class="class-report-preview-skeleton"
+            />
           </div>
 
           <template v-else-if="previewSummary">
             <section class="metric-panel-grid metric-panel-workspace-surface class-report-kpi-grid">
               <article class="progress-card metric-panel-card">
-                <div class="progress-card-label metric-panel-label">班级人数</div>
+                <div class="progress-card-label metric-panel-label">
+                  班级人数
+                </div>
                 <div class="progress-card-value metric-panel-value">
                   {{ previewSummary.student_count }}
                 </div>
-                <div class="progress-card-hint metric-panel-helper">当前班级纳入统计的学生数</div>
+                <div class="progress-card-hint metric-panel-helper">
+                  当前班级纳入统计的学生数
+                </div>
               </article>
               <article class="progress-card metric-panel-card">
-                <div class="progress-card-label metric-panel-label">平均解题</div>
-                <div class="progress-card-value metric-panel-value">{{ averageSolvedText }}</div>
-                <div class="progress-card-hint metric-panel-helper">当前班级学生的人均解题数</div>
+                <div class="progress-card-label metric-panel-label">
+                  平均解题
+                </div>
+                <div class="progress-card-value metric-panel-value">
+                  {{ averageSolvedText }}
+                </div>
+                <div class="progress-card-hint metric-panel-helper">
+                  当前班级学生的人均解题数
+                </div>
               </article>
               <article class="progress-card metric-panel-card">
-                <div class="progress-card-label metric-panel-label">近 7 天活跃率</div>
-                <div class="progress-card-value metric-panel-value">{{ activeRateText }}</div>
+                <div class="progress-card-label metric-panel-label">
+                  近 7 天活跃率
+                </div>
+                <div class="progress-card-value metric-panel-value">
+                  {{ activeRateText }}
+                </div>
                 <div class="progress-card-hint metric-panel-helper">
                   近 7 天至少有一次训练动作的学生占比
                 </div>
@@ -261,7 +321,10 @@ function closeDialog(): void {
                 subtitle="直接查看当前班级训练事件、成功解题和活跃学生走势。"
               />
 
-              <TeacherClassReviewPanel :review="previewReview" :class-name="previewClassName" />
+              <TeacherClassReviewPanel
+                :review="previewReview"
+                :class-name="previewClassName"
+              />
 
               <TeacherClassInsightsPanel
                 :students="previewStudents"
@@ -283,8 +346,12 @@ function closeDialog(): void {
         <section class="class-report-section class-report-section--aside">
           <div class="class-report-section__head">
             <div>
-              <div class="journal-eyebrow">Latest Task</div>
-              <h4 class="class-report-section__title">最近一次任务</h4>
+              <div class="journal-eyebrow">
+                Latest Task
+              </div>
+              <h4 class="class-report-section__title">
+                最近一次任务
+              </h4>
             </div>
           </div>
 
@@ -296,14 +363,26 @@ function closeDialog(): void {
             icon="FileChartColumnIncreasing"
           />
 
-          <div v-else class="class-report-task-stack">
+          <div
+            v-else
+            class="class-report-task-stack"
+          >
             <div class="class-report-task-banner">
               <div>
-                <div class="class-report-task-label">任务编号</div>
-                <div class="class-report-task-value">#{{ latestExport.result.report_id }}</div>
-                <div class="class-report-task-copy">{{ derivedDownloadHint }}</div>
+                <div class="class-report-task-label">
+                  任务编号
+                </div>
+                <div class="class-report-task-value">
+                  #{{ latestExport.result.report_id }}
+                </div>
+                <div class="class-report-task-copy">
+                  {{ derivedDownloadHint }}
+                </div>
               </div>
-              <span class="class-report-task-chip" :class="latestStatusMeta.chipClass">
+              <span
+                class="class-report-task-chip"
+                :class="latestStatusMeta.chipClass"
+              >
                 {{ latestStatusMeta.label }}
               </span>
             </div>
@@ -353,8 +432,12 @@ function closeDialog(): void {
         <section class="class-report-section class-report-section--aside">
           <div class="class-report-section__head">
             <div>
-              <div class="journal-eyebrow">Guide</div>
-              <h4 class="class-report-section__title">使用说明</h4>
+              <div class="journal-eyebrow">
+                Guide
+              </div>
+              <h4 class="class-report-section__title">
+                使用说明
+              </h4>
             </div>
           </div>
 
@@ -369,7 +452,13 @@ function closeDialog(): void {
 
     <template #footer>
       <div class="class-report-dialog__footer">
-        <button type="button" class="ui-btn ui-btn--secondary" @click="closeDialog">取消</button>
+        <button
+          type="button"
+          class="ui-btn ui-btn--secondary"
+          @click="closeDialog"
+        >
+          取消
+        </button>
         <button
           type="button"
           class="ui-btn ui-btn--primary"
