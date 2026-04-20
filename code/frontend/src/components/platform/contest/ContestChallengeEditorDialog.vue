@@ -148,22 +148,37 @@ function submit() {
     @close="closeDialog"
     @update:open="emit('update:open', $event)"
   >
-    <form class="contest-challenge-dialog" @submit.prevent="submit">
-      <p v-if="isAwdContest" class="contest-challenge-dialog__hint">
+    <form
+      class="contest-challenge-dialog"
+      @submit.prevent="submit"
+    >
+      <p
+        v-if="isAwdContest"
+        class="contest-challenge-dialog__hint"
+      >
         这里先完成服务模板、分值和可见性编排；Checker 与预检细节继续在 AWD 配置页补充。
       </p>
 
-      <label class="ui-field contest-challenge-dialog__field" for="contest-challenge-select">
+      <label
+        class="ui-field contest-challenge-dialog__field"
+        for="contest-challenge-select"
+      >
         <span class="ui-field__label contest-challenge-dialog__label">题目</span>
         <template v-if="mode === 'create'">
-          <span class="ui-control-wrap" :class="{ 'is-disabled': loadingChallengeCatalog || selectableChallenges.length === 0, 'is-error': !!fieldErrors.challenge_id }">
+          <span
+            class="ui-control-wrap"
+            :class="{ 'is-disabled': loadingChallengeCatalog || selectableChallenges.length === 0, 'is-error': !!fieldErrors.challenge_id }"
+          >
             <select
               id="contest-challenge-select"
               v-model="form.challenge_id"
               class="ui-control contest-challenge-dialog__control"
               :disabled="loadingChallengeCatalog || selectableChallenges.length === 0"
             >
-              <option value="" disabled>
+              <option
+                value=""
+                disabled
+              >
                 {{ loadingChallengeCatalog ? '正在加载题目目录...' : '请选择题目' }}
               </option>
               <option
@@ -183,7 +198,10 @@ function submit() {
             </span>
           </span>
         </template>
-        <span v-if="fieldErrors.challenge_id" class="ui-field__error contest-challenge-dialog__error">
+        <span
+          v-if="fieldErrors.challenge_id"
+          class="ui-field__error contest-challenge-dialog__error"
+        >
           {{ fieldErrors.challenge_id }}
         </span>
       </label>
@@ -207,7 +225,10 @@ function submit() {
             class="ui-control contest-challenge-dialog__control"
             :disabled="loadingTemplateCatalog || selectableTemplates.length === 0"
           >
-            <option value="" disabled>
+            <option
+              value=""
+              disabled
+            >
               {{ loadingTemplateCatalog ? '正在加载服务模板...' : '请选择服务模板' }}
             </option>
             <option
@@ -219,15 +240,24 @@ function submit() {
             </option>
           </select>
         </span>
-        <span v-if="fieldErrors.template_id" class="ui-field__error contest-challenge-dialog__error">
+        <span
+          v-if="fieldErrors.template_id"
+          class="ui-field__error contest-challenge-dialog__error"
+        >
           {{ fieldErrors.template_id }}
         </span>
       </label>
 
       <div class="contest-challenge-dialog__grid">
-        <label class="ui-field contest-challenge-dialog__field" for="contest-challenge-points">
+        <label
+          class="ui-field contest-challenge-dialog__field"
+          for="contest-challenge-points"
+        >
           <span class="ui-field__label contest-challenge-dialog__label">分值</span>
-          <span class="ui-control-wrap" :class="{ 'is-error': !!fieldErrors.points }">
+          <span
+            class="ui-control-wrap"
+            :class="{ 'is-error': !!fieldErrors.points }"
+          >
             <input
               id="contest-challenge-points"
               v-model="form.points"
@@ -235,16 +265,25 @@ function submit() {
               min="1"
               step="1"
               class="ui-control contest-challenge-dialog__control"
-            />
+            >
           </span>
-          <span v-if="fieldErrors.points" class="ui-field__error contest-challenge-dialog__error">
+          <span
+            v-if="fieldErrors.points"
+            class="ui-field__error contest-challenge-dialog__error"
+          >
             {{ fieldErrors.points }}
           </span>
         </label>
 
-        <label class="ui-field contest-challenge-dialog__field" for="contest-challenge-order">
+        <label
+          class="ui-field contest-challenge-dialog__field"
+          for="contest-challenge-order"
+        >
           <span class="ui-field__label contest-challenge-dialog__label">顺序</span>
-          <span class="ui-control-wrap" :class="{ 'is-error': !!fieldErrors.order }">
+          <span
+            class="ui-control-wrap"
+            :class="{ 'is-error': !!fieldErrors.order }"
+          >
             <input
               id="contest-challenge-order"
               v-model="form.order"
@@ -252,15 +291,21 @@ function submit() {
               min="0"
               step="1"
               class="ui-control contest-challenge-dialog__control"
-            />
+            >
           </span>
-          <span v-if="fieldErrors.order" class="ui-field__error contest-challenge-dialog__error">
+          <span
+            v-if="fieldErrors.order"
+            class="ui-field__error contest-challenge-dialog__error"
+          >
             {{ fieldErrors.order }}
           </span>
         </label>
       </div>
 
-      <label class="ui-field contest-challenge-dialog__field" for="contest-challenge-visibility">
+      <label
+        class="ui-field contest-challenge-dialog__field"
+        for="contest-challenge-visibility"
+      >
         <span class="ui-field__label contest-challenge-dialog__label">可见性</span>
         <span class="ui-control-wrap">
           <select

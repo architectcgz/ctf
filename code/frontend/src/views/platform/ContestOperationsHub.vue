@@ -119,71 +119,45 @@ const operationDefinitions: Record<ContestOpsViewKey, ContestOpsDefinition> = {
     icon: Radar,
     primaryAction: {
       type: 'contest-route',
-      label: '进入流量态势',
+      label: '进入控制台',
       buildLocation: (contestId) => ({
-        name: 'ContestEdit',
+        name: 'ContestOperations',
         params: { id: contestId },
-        query: { panel: 'operations', opsPanel: 'inspector' },
+        query: { activeTab: 'matrix' },
       }),
     },
     secondaryAction: {
       type: 'route',
-      label: '返回竞赛目录',
-      location: {
-        name: 'ContestManage',
-        query: { panel: 'list' },
-      },
-    },
-  },
-  projector: {
-    overline: 'Projection Desk',
-    title: '大屏投射',
-    copy: '把推荐 AWD 赛事的轮次进度、实时榜单、攻击反馈和流量热点收拢到同一页，便于现场直接投屏。',
-    helper: '默认展示推荐赛事的当前轮次数据，也可以继续跳转到赛事详情或全站排行榜。',
-    metricLabel: '投屏候选',
-    metricHint: '当前轮次 / 实时榜单 / 最新攻击',
-    icon: Cast,
-    primaryAction: {
-      type: 'route',
-      label: '打开竞赛排行榜',
+      label: '查看全站排行',
       location: {
         path: '/scoreboard',
         query: { tab: 'contest' },
       },
-    },
-    secondaryAction: {
-      type: 'contest-route',
-      label: '打开赛事详情',
-      buildLocation: (contestId) => ({
-        name: 'ContestDetail',
-        params: { id: contestId },
-      }),
     },
   },
   scoreboard: {
-    overline: 'Scoreboard Desk',
-    title: '排行榜',
-    copy: '集中给出竞赛榜单入口和当前推荐赛事，便于在管理员后台快速切到榜单视图或继续回到工作台复核实时分数。',
-    helper: '默认打开全站竞赛排行榜，也可以继续进入推荐赛事的运行段查看实时排行。',
-    metricLabel: '榜单入口',
-    metricHint: '竞赛排行 / 封榜状态 / 实时榜单',
+    overline: 'Live Standings',
+    title: '指挥中心排行榜',
+    copy: '快速进入正在运行赛事的实时计分监控，查看全场总分排名及解题趋势。',
+    helper: '进入当前推荐赛事的指挥中心排行榜视图。',
+    metricLabel: '进行中赛事',
+    metricHint: 'Live Leaderboards',
     icon: Trophy,
     primaryAction: {
-      type: 'route',
-      label: '打开竞赛排行榜',
-      location: {
-        path: '/scoreboard',
-        query: { tab: 'contest' },
-      },
+      type: 'contest-route',
+      label: '进入实时榜单',
+      buildLocation: (contestId) => ({
+        name: 'ContestOperations',
+        params: { id: contestId },
+        query: { activeTab: 'scoreboard' },
+      }),
     },
     secondaryAction: {
-      type: 'contest-route',
-      label: '查看实时榜单',
-      buildLocation: (contestId) => ({
-        name: 'ContestEdit',
-        params: { id: contestId },
-        query: { panel: 'operations', opsPanel: 'inspector' },
-      }),
+      type: 'route',
+      label: '全站总榜',
+      location: {
+        path: '/scoreboard',
+      },
     },
   },
 }
@@ -431,9 +405,15 @@ watch(
   >
     <header class="list-heading contest-ops-hero workspace-directory-section">
       <div class="contest-ops-hero__main">
-        <div class="workspace-overline">{{ currentDefinition.overline }}</div>
-        <h1 class="workspace-page-title">{{ currentDefinition.title }}</h1>
-        <p class="workspace-page-copy">{{ currentDefinition.copy }}</p>
+        <div class="workspace-overline">
+          {{ currentDefinition.overline }}
+        </div>
+        <h1 class="workspace-page-title">
+          {{ currentDefinition.title }}
+        </h1>
+        <p class="workspace-page-copy">
+          {{ currentDefinition.copy }}
+        </p>
       </div>
 
       <div class="contest-ops-hero__actions">
@@ -460,12 +440,20 @@ watch(
       class="progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface contest-ops-summary"
     >
       <article class="journal-note progress-card metric-panel-card">
-        <div class="journal-note-label progress-card-label metric-panel-label">AWD 赛事</div>
-        <div class="journal-note-value progress-card-value metric-panel-value">{{ awdContests.length }}</div>
-        <div class="journal-note-helper progress-card-hint metric-panel-helper">当前可纳入赛事运维的 AWD 赛事总数</div>
+        <div class="journal-note-label progress-card-label metric-panel-label">
+          AWD 赛事
+        </div>
+        <div class="journal-note-value progress-card-value metric-panel-value">
+          {{ awdContests.length }}
+        </div>
+        <div class="journal-note-helper progress-card-hint metric-panel-helper">
+          当前可纳入赛事运维的 AWD 赛事总数
+        </div>
       </article>
       <article class="journal-note progress-card metric-panel-card">
-        <div class="journal-note-label progress-card-label metric-panel-label">推荐赛事</div>
+        <div class="journal-note-label progress-card-label metric-panel-label">
+          推荐赛事
+        </div>
         <div class="journal-note-value progress-card-value metric-panel-value">
           {{ preferredContest ? preferredContest.title : '暂无' }}
         </div>
@@ -485,15 +473,22 @@ watch(
         </div>
       </article>
       <article class="journal-note progress-card metric-panel-card">
-        <div class="journal-note-label progress-card-label metric-panel-label">进行中</div>
-        <div class="journal-note-value progress-card-value metric-panel-value">{{ runningCount }}</div>
+        <div class="journal-note-label progress-card-label metric-panel-label">
+          进行中
+        </div>
+        <div class="journal-note-value progress-card-value metric-panel-value">
+          {{ runningCount }}
+        </div>
         <div class="journal-note-helper progress-card-hint metric-panel-helper">
           可直接承接流量与榜单运维的赛事数量
         </div>
       </article>
     </div>
 
-    <section v-if="loading" class="workspace-directory-section contest-ops-section">
+    <section
+      v-if="loading"
+      class="workspace-directory-section contest-ops-section"
+    >
       <AppLoading>正在同步赛事运维入口...</AppLoading>
     </section>
 
@@ -505,7 +500,13 @@ watch(
       icon="AlertTriangle"
     >
       <template #action>
-        <button type="button" class="ui-btn ui-btn--ghost" @click="loadContests">重试加载</button>
+        <button
+          type="button"
+          class="ui-btn ui-btn--ghost"
+          @click="loadContests"
+        >
+          重试加载
+        </button>
       </template>
     </AppEmpty>
 
@@ -517,7 +518,11 @@ watch(
       icon="Trophy"
     >
       <template #action>
-        <button type="button" class="ui-btn ui-btn--primary" @click="router.push({ name: 'ContestManage', query: { panel: 'create' } })">
+        <button
+          type="button"
+          class="ui-btn ui-btn--primary"
+          @click="router.push({ name: 'ContestManage', query: { panel: 'create' } })"
+        >
           前往创建竞赛
         </button>
       </template>
@@ -527,8 +532,12 @@ watch(
       <section class="workspace-directory-section contest-ops-section contest-projector-stage">
         <header class="list-heading">
           <div>
-            <div class="workspace-overline">Projector Live</div>
-            <h2 class="list-heading__title">{{ preferredContest.title }}</h2>
+            <div class="workspace-overline">
+              Projector Live
+            </div>
+            <h2 class="list-heading__title">
+              {{ preferredContest.title }}
+            </h2>
           </div>
           <div class="contest-section-meta">
             {{ getStatusLabel(preferredContest.status) }} ·
@@ -536,7 +545,10 @@ watch(
           </div>
         </header>
 
-        <div v-if="projectorLoading" class="contest-projector-loading">
+        <div
+          v-if="projectorLoading"
+          class="contest-projector-loading"
+        >
           <AppLoading>正在同步投屏数据...</AppLoading>
         </div>
 
@@ -548,12 +560,17 @@ watch(
           icon="Cast"
         />
 
-        <div v-else class="contest-projector-layout">
+        <div
+          v-else
+          class="contest-projector-layout"
+        >
           <div class="contest-projector-spotlight">
             <article class="contest-projector-hero-card">
               <div class="contest-projector-hero-card__head">
                 <div>
-                  <div class="journal-note-label">当前轮次</div>
+                  <div class="journal-note-label">
+                    当前轮次
+                  </div>
                   <h3>{{ projectorRound ? `Round ${projectorRound.round_number}` : '待同步' }}</h3>
                 </div>
                 <div class="contest-projector-chip">
@@ -573,9 +590,15 @@ watch(
                 :key="item.label"
                 class="journal-note progress-card metric-panel-card"
               >
-                <div class="journal-note-label progress-card-label metric-panel-label">{{ item.label }}</div>
-                <div class="journal-note-value progress-card-value metric-panel-value">{{ item.value }}</div>
-                <div class="journal-note-helper progress-card-hint metric-panel-helper">{{ item.helper }}</div>
+                <div class="journal-note-label progress-card-label metric-panel-label">
+                  {{ item.label }}
+                </div>
+                <div class="journal-note-value progress-card-value metric-panel-value">
+                  {{ item.value }}
+                </div>
+                <div class="journal-note-helper progress-card-hint metric-panel-helper">
+                  {{ item.helper }}
+                </div>
               </article>
             </div>
           </div>
@@ -583,11 +606,21 @@ watch(
           <div class="contest-projector-board">
             <section class="contest-projector-panel">
               <header class="contest-projector-panel__head">
-                <div class="workspace-overline">Scoreboard</div>
+                <div class="workspace-overline">
+                  Scoreboard
+                </div>
                 <h3>实时榜单</h3>
               </header>
-              <div v-if="projectorScoreboardRows.length === 0" class="contest-projector-note">当前还没有榜单数据。</div>
-              <div v-else class="contest-projector-scoreboard">
+              <div
+                v-if="projectorScoreboardRows.length === 0"
+                class="contest-projector-note"
+              >
+                当前还没有榜单数据。
+              </div>
+              <div
+                v-else
+                class="contest-projector-scoreboard"
+              >
                 <div
                   v-for="item in projectorScoreboardRows.slice(0, 6)"
                   :key="item.team_id"
@@ -602,11 +635,21 @@ watch(
 
             <section class="contest-projector-panel">
               <header class="contest-projector-panel__head">
-                <div class="workspace-overline">Attack Feed</div>
+                <div class="workspace-overline">
+                  Attack Feed
+                </div>
                 <h3>最新攻击</h3>
               </header>
-              <div v-if="projectorLatestAttacks.length === 0" class="contest-projector-note">当前轮次还没有攻击记录。</div>
-              <div v-else class="contest-projector-feed">
+              <div
+                v-if="projectorLatestAttacks.length === 0"
+                class="contest-projector-note"
+              >
+                当前轮次还没有攻击记录。
+              </div>
+              <div
+                v-else
+                class="contest-projector-feed"
+              >
                 <article
                   v-for="item in projectorLatestAttacks"
                   :key="item.id"
@@ -630,11 +673,21 @@ watch(
           <div class="contest-projector-board contest-projector-board--lower">
             <section class="contest-projector-panel">
               <header class="contest-projector-panel__head">
-                <div class="workspace-overline">Service Heat</div>
+                <div class="workspace-overline">
+                  Service Heat
+                </div>
                 <h3>热点服务</h3>
               </header>
-              <div v-if="projectorHotChallenges.length === 0" class="contest-projector-note">当前轮次还没有服务热点。</div>
-              <div v-else class="contest-projector-list">
+              <div
+                v-if="projectorHotChallenges.length === 0"
+                class="contest-projector-note"
+              >
+                当前轮次还没有服务热点。
+              </div>
+              <div
+                v-else
+                class="contest-projector-list"
+              >
                 <article
                   v-for="item in projectorHotChallenges"
                   :key="item.challenge_id"
@@ -642,7 +695,9 @@ watch(
                 >
                   <div>
                     <strong>{{ item.challenge_title || item.challenge_id }}</strong>
-                    <div class="contest-projector-list__meta">请求 {{ item.request_count }} · 错误 {{ item.error_count }}</div>
+                    <div class="contest-projector-list__meta">
+                      请求 {{ item.request_count }} · 错误 {{ item.error_count }}
+                    </div>
                   </div>
                 </article>
               </div>
@@ -650,11 +705,21 @@ watch(
 
             <section class="contest-projector-panel">
               <header class="contest-projector-panel__head">
-                <div class="workspace-overline">Compromised</div>
+                <div class="workspace-overline">
+                  Compromised
+                </div>
                 <h3>服务状态</h3>
               </header>
-              <div v-if="projectorCompromisedServices.length === 0" class="contest-projector-note">当前没有失陷服务。</div>
-              <div v-else class="contest-projector-list">
+              <div
+                v-if="projectorCompromisedServices.length === 0"
+                class="contest-projector-note"
+              >
+                当前没有失陷服务。
+              </div>
+              <div
+                v-else
+                class="contest-projector-list"
+              >
                 <article
                   v-for="item in projectorCompromisedServices"
                   :key="item.id"
@@ -672,11 +737,21 @@ watch(
 
             <section class="contest-projector-panel">
               <header class="contest-projector-panel__head">
-                <div class="workspace-overline">Traffic Focus</div>
+                <div class="workspace-overline">
+                  Traffic Focus
+                </div>
                 <h3>流量焦点</h3>
               </header>
-              <div v-if="projectorTopAttackers.length === 0" class="contest-projector-note">当前轮次还没有活跃流量。</div>
-              <div v-else class="contest-projector-list">
+              <div
+                v-if="projectorTopAttackers.length === 0"
+                class="contest-projector-note"
+              >
+                当前轮次还没有活跃流量。
+              </div>
+              <div
+                v-else
+                class="contest-projector-list"
+              >
                 <article
                   v-for="item in projectorTopAttackers"
                   :key="item.team_id"
@@ -700,8 +775,12 @@ watch(
       <section class="workspace-directory-section contest-ops-section">
         <header class="list-heading">
           <div>
-            <div class="journal-note-label">Recommended Contest</div>
-            <h2 class="list-heading__title">{{ preferredContest.title }}</h2>
+            <div class="journal-note-label">
+              Recommended Contest
+            </div>
+            <h2 class="list-heading__title">
+              {{ preferredContest.title }}
+            </h2>
           </div>
           <div class="contest-section-meta">
             {{ getStatusLabel(preferredContest.status) }} · {{ getModeLabel(preferredContest.mode) }}
@@ -711,11 +790,18 @@ watch(
         <div class="contest-ops-grid">
           <article class="contest-ops-card">
             <div class="contest-ops-card__icon">
-              <component :is="currentDefinition.icon" class="h-4 w-4" />
+              <component
+                :is="currentDefinition.icon"
+                class="h-4 w-4"
+              />
             </div>
             <div class="contest-ops-card__body">
-              <h3 class="contest-ops-card__title">{{ currentDefinition.title }}</h3>
-              <p class="contest-ops-card__copy">{{ currentDefinition.helper }}</p>
+              <h3 class="contest-ops-card__title">
+                {{ currentDefinition.title }}
+              </h3>
+              <p class="contest-ops-card__copy">
+                {{ currentDefinition.helper }}
+              </p>
             </div>
           </article>
 
@@ -724,7 +810,9 @@ watch(
               <BarChart3 class="h-4 w-4" />
             </div>
             <div class="contest-ops-card__body">
-              <h3 class="contest-ops-card__title">赛事窗口</h3>
+              <h3 class="contest-ops-card__title">
+                赛事窗口
+              </h3>
               <p class="contest-ops-card__copy">
                 {{ formatDateTime(preferredContest.starts_at) }} 至
                 {{ formatDateTime(preferredContest.ends_at) }}
@@ -737,10 +825,16 @@ watch(
       <section class="workspace-directory-section contest-ops-section">
         <header class="list-heading">
           <div>
-            <div class="journal-note-label">Next Step</div>
-            <h2 class="list-heading__title">继续处理当前赛事</h2>
+            <div class="journal-note-label">
+              Next Step
+            </div>
+            <h2 class="list-heading__title">
+              继续处理当前赛事
+            </h2>
           </div>
-          <div class="contest-section-meta">优先承接正在运行或最近可操作的一场赛事</div>
+          <div class="contest-section-meta">
+            优先承接正在运行或最近可操作的一场赛事
+          </div>
         </header>
 
         <div class="contest-ops-actions">

@@ -150,9 +150,15 @@ function handleSubmit() {
           :key="item.key"
           class="journal-note progress-card metric-panel-card"
         >
-          <div class="journal-note-label progress-card-label metric-panel-label">{{ item.label }}</div>
-          <div class="journal-note-value progress-card-value metric-panel-value">{{ item.value }}</div>
-          <div class="journal-note-helper progress-card-hint metric-panel-helper">{{ item.hint }}</div>
+          <div class="journal-note-label progress-card-label metric-panel-label">
+            {{ item.label }}
+          </div>
+          <div class="journal-note-value progress-card-value metric-panel-value">
+            {{ item.value }}
+          </div>
+          <div class="journal-note-helper progress-card-hint metric-panel-helper">
+            {{ item.hint }}
+          </div>
         </article>
       </div>
 
@@ -162,12 +168,19 @@ function handleSubmit() {
       >
         <header class="list-heading">
           <div>
-            <div class="journal-note-label">Global Blocking</div>
-            <h3 class="list-heading__title">系统级阻塞</h3>
+            <div class="journal-note-label">
+              Global Blocking
+            </div>
+            <h3 class="list-heading__title">
+              系统级阻塞
+            </h3>
           </div>
         </header>
         <ul class="readiness-override-list">
-          <li v-for="reasonCode in readiness.global_blocking_reasons" :key="reasonCode">
+          <li
+            v-for="reasonCode in readiness.global_blocking_reasons"
+            :key="reasonCode"
+          >
             {{ getGlobalReasonCopy(reasonCode) }}
           </li>
         </ul>
@@ -176,12 +189,19 @@ function handleSubmit() {
       <section class="workspace-directory-section readiness-override-section">
         <header class="list-heading">
           <div>
-            <div class="journal-note-label">Blocking Items</div>
-            <h3 class="list-heading__title">阻塞题目</h3>
+            <div class="journal-note-label">
+              Blocking Items
+            </div>
+            <h3 class="list-heading__title">
+              阻塞题目
+            </h3>
           </div>
         </header>
 
-        <div v-if="readiness?.items?.length" class="readiness-override-rows">
+        <div
+          v-if="readiness?.items?.length"
+          class="readiness-override-rows"
+        >
           <article
             v-for="item in readiness.items"
             :key="item.challenge_id"
@@ -195,27 +215,45 @@ function handleSubmit() {
               {{ getBlockingReasonLabel(item) }} · 最近校验
               {{ formatDateTime(item.last_preview_at) }}
             </p>
-            <p v-if="item.last_access_url" class="readiness-override-row__detail">
+            <p
+              v-if="item.last_access_url"
+              class="readiness-override-row__detail"
+            >
               目标地址 {{ item.last_access_url }}
             </p>
           </article>
         </div>
-        <p v-else class="readiness-override-empty">当前没有题目级阻塞项。</p>
+        <p
+          v-else
+          class="readiness-override-empty"
+        >
+          当前没有题目级阻塞项。
+        </p>
       </section>
 
       <section class="workspace-directory-section readiness-override-section">
         <header class="list-heading">
           <div>
-            <div class="journal-note-label">Override Reason</div>
-            <h3 class="list-heading__title">填写本次放行原因</h3>
+            <div class="journal-note-label">
+              Override Reason
+            </div>
+            <h3 class="list-heading__title">
+              填写本次放行原因
+            </h3>
           </div>
         </header>
 
-        <label class="ui-field readiness-override-form" for="awd-readiness-override-reason">
+        <label
+          class="ui-field readiness-override-form"
+          for="awd-readiness-override-reason"
+        >
           <span class="ui-field__label readiness-override-form__label">
             原因会附带到审计日志，用于说明本次为什么仍要继续。
           </span>
-          <span class="ui-control-wrap" :class="{ 'is-error': !!fieldError }">
+          <span
+            class="ui-control-wrap"
+            :class="{ 'is-error': !!fieldError }"
+          >
             <textarea
               id="awd-readiness-override-reason"
               v-model="reason"
@@ -224,7 +262,10 @@ function handleSubmit() {
               placeholder="例如：赛前演练，允许临时绕过当前 checker 阻塞。"
             />
           </span>
-          <span v-if="fieldError" class="readiness-override-error">{{ fieldError }}</span>
+          <span
+            v-if="fieldError"
+            class="readiness-override-error"
+          >{{ fieldError }}</span>
         </label>
       </section>
     </div>

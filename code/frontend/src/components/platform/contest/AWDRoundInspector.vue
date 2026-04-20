@@ -1,24 +1,39 @@
 <script setup lang="ts">
-import { toRef } from 'vue'
+import { ref, toRef, computed } from 'vue'
+import { 
+  Activity, 
+  BarChart3, 
+  Download, 
+  History, 
+  LayoutGrid, 
+  ShieldAlert, 
+  Sword, 
+  Zap,
+  Radar
+} from 'lucide-vue-next'
 import type { AWDTeamServiceData } from '@/api/contracts'
 import AWDAttackLogPanel from '@/components/platform/contest/AWDAttackLogPanel.vue'
 import AWDRoundHeaderPanel from '@/components/platform/contest/AWDRoundHeaderPanel.vue'
 import AWDScoreboardSummaryPanel from '@/components/platform/contest/AWDScoreboardSummaryPanel.vue'
-import AWDRoundSelectionPanel from '@/components/platform/contest/AWDRoundSelectionPanel.vue'
 import AWDServiceStatusPanel from '@/components/platform/contest/AWDServiceStatusPanel.vue'
 import AWDTrafficPanel from '@/components/platform/contest/AWDTrafficPanel.vue'
 import type {
   AWDRoundInspectorEmits,
   AWDRoundInspectorProps,
 } from '@/components/platform/contest/awdInspector.types'
-import SectionCard from '@/components/common/SectionCard.vue'
+import AppLoading from '@/components/common/AppLoading.vue'
+import AppEmpty from '@/components/common/AppEmpty.vue'
 import { useAwdCheckResultPresentation } from '@/composables/useAwdCheckResultPresentation'
 import { useAwdInspectorCoreState } from '@/composables/useAwdInspectorCoreState'
 import { useAwdInspectorDerivedData } from '@/composables/useAwdInspectorDerivedData'
 import { useAwdInspectorExports } from '@/composables/useAwdInspectorExports'
 import { useAwdInspectorFormatting } from '@/composables/useAwdInspectorFormatting'
-const props = defineProps<AWDRoundInspectorProps>()
+
+const props = defineProps<AWDRoundInspectorProps & { initialTab?: 'matrix' | 'attacks' | 'traffic' | 'scoreboard' }>()
 const emit = defineEmits<AWDRoundInspectorEmits>()
+
+const activeSubTab = ref<'matrix' | 'attacks' | 'traffic' | 'scoreboard'>(props.initialTab || 'matrix')
+
 const {
   serviceTeamFilter,
   serviceStatusFilter,
@@ -27,7 +42,6 @@ const {
   attackTeamFilter,
   attackResultFilter,
   attackSourceFilter,
-  resetFilters,
   selectedRound,
   summaryMetrics,
   totalServiceCount,
@@ -38,8 +52,6 @@ const {
   successfulAttackCount,
   failedAttackCount,
   attackedServiceCount,
-  defenseSuccessCount,
-  manualCheckCount,
   checkButtonLabel,
 } = useAwdInspectorCoreState({
   contest: toRef(props, 'contest'),
@@ -73,13 +85,12 @@ const {
   challengeLinks: toRef(props, 'challengeLinks'),
   selectedRound,
   summaryMetrics,
-  manualCheckCount,
+  manualCheckCount: toRef(props, 'manualCheckCount' as any),
 })
 
 const {
   getCheckSourceLabel,
   getCheckerTypeLabel,
-  getCheckStatusLabel,
   summarizeCheckResult,
   getCheckActions,
   getCheckTargets,
@@ -101,10 +112,7 @@ const {
   attackSourceOptions,
   trafficTeamOptions,
   filteredAttacks,
-  getServiceAlertReason,
-  getServiceAlertSubtitle,
   getServiceAlertClass,
-  getServiceAlertLabel,
   applyServiceAlertFilter,
 } = useAwdInspectorDerivedData({
   services: toRef(props, 'services'),
@@ -119,8 +127,9 @@ const {
   attackResultFilter,
   attackSourceFilter,
   getChallengeTitle,
-  getCheckStatusLabel,
+  getCheckStatusLabel: (s: any) => s,
 })
+
 const {
   getTrafficTeamName,
   getTrafficChallengeTitle,
@@ -156,7 +165,7 @@ const {
   getAttackSourceLabel,
   getCheckSourceLabel,
   getCheckerTypeLabel,
-  getServiceAlertLabel,
+  getServiceAlertLabel: (s: any) => s,
   summarizeCheckResult,
   getServiceCheckSourceValue,
 })
@@ -170,9 +179,11 @@ function getServiceCheckPresentationResult(service: AWDTeamServiceData): Record<
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="awd-inspector-workbench">
+    <!-- 1. Header (Stateless Header) -->
     <AWDRoundHeaderPanel
       :contest="contest"
+      :rounds="rounds"
       :rounds-count="rounds.length"
       :selected-round="selectedRound"
       :selected-round-id="selectedRoundId"
@@ -196,158 +207,94 @@ function getServiceCheckPresentationResult(service: AWDTeamServiceData): Record<
       @open-service-check-dialog="emit('openServiceCheckDialog')"
       @open-attack-log-dialog="emit('openAttackLogDialog')"
       @run-selected-round-check="emit('runSelectedRoundCheck')"
+      @update:selected-round-id="emit('update:selectedRoundId', $event)"
     />
 
-    <section class="awd-round-workspace-grid grid gap-6">
-      <AWDRoundSelectionPanel
-        :rounds="rounds"
-        :selected-round-id="selectedRoundId"
-        :selected-round="selectedRound"
-        :loading-rounds="loadingRounds"
-        :compromised-count="compromisedCount"
-        :down-count="downCount"
-        :total-service-count="totalServiceCount"
-        :format-date-time="formatDateTime"
-        :get-round-status-label="getRoundStatusLabel"
-        @update:selected-round-id="emit('update:selectedRoundId', $event)"
-      />
+    <!-- 2. Integrated Metric HUD (Borderless) -->
+    <div v-if="selectedRound" class="awd-stats-hud">
+      <div class="stat-unit">
+        <div class="unit-label">Infrastructure</div>
+        <div class="unit-value font-mono">{{ totalServiceCount }} <small>SRV</small></div>
+        <div class="unit-helper">ONLINE: {{ upCount }} · OFF: {{ downCount }}</div>
+      </div>
+      <div class="unit-divider"></div>
+      <div class="stat-unit">
+        <div class="unit-label">Battle Traffic</div>
+        <div class="unit-value font-mono">{{ totalAttackCount }} <small>HITS</small></div>
+        <div class="unit-helper text-emerald-600">SUCCESS: {{ successfulAttackCount }}</div>
+      </div>
+      <div class="unit-divider"></div>
+      <div class="stat-unit">
+        <div class="unit-label">Compromised</div>
+        <div class="unit-value font-mono text-orange-500">{{ compromisedCount }} <small>EXP</small></div>
+        <div class="unit-helper">AFFECTED: {{ attackedServiceCount }} TEAMS</div>
+      </div>
+      <div class="unit-divider"></div>
+      <div class="stat-unit">
+        <div class="unit-label">Composition</div>
+        <div class="unit-value">{{ getSourceOverviewLabel() }}</div>
+        <div class="unit-helper">{{ getSourceOverviewDescription() }}</div>
+      </div>
+    </div>
 
-      <SectionCard title="回合态势" subtitle="排行榜、服务明细与攻击流水共用当前选中轮次。">
-        <div v-if="loadingRoundDetail" class="flex justify-center py-12">
-          <AppLoading>正在同步当前轮次数据...</AppLoading>
+    <!-- 3. Main Workspace (Flat Design) -->
+    <div class="awd-detail-canvas">
+      <header class="canvas-tabs-header">
+        <nav class="sub-tabs">
+          <button class="sub-tab" :class="{ active: activeSubTab === 'matrix' }" @click="activeSubTab = 'matrix'">
+            <LayoutGrid class="h-3.5 w-3.5" /> 运行矩阵
+          </button>
+          <button class="sub-tab" :class="{ active: activeSubTab === 'scoreboard' }" @click="activeSubTab = 'scoreboard'">
+            <BarChart3 class="h-3.5 w-3.5" /> 排行榜单
+          </button>
+          <button class="sub-tab" :class="{ active: activeSubTab === 'attacks' }" @click="activeSubTab = 'attacks'">
+            <Sword class="h-3.5 w-3.5" /> 攻击流水
+          </button>
+          <button class="sub-tab" :class="{ active: activeSubTab === 'traffic' }" @click="activeSubTab = 'traffic'">
+            <Zap class="h-3.5 w-3.5" /> 流量分析
+          </button>
+        </nav>
+
+        <div class="canvas-actions">
+          <button type="button" class="ops-btn ops-btn--neutral" @click="exportReviewPackage">
+            <Download class="h-3.5 w-3.5 mr-2" /> 导出复盘包
+          </button>
+        </div>
+      </header>
+
+      <div class="canvas-content custom-scrollbar">
+        <div v-if="loadingRoundDetail" class="canvas-loading-overlay">
+          <AppLoading>同步态势中...</AppLoading>
         </div>
 
-        <div v-else-if="!selectedRound" class="py-4">
-          <AppEmpty
-            title="请选择一个 AWD 轮次"
-            description="轮次选定后即可查看服务健康、攻击记录和本轮汇总。"
-            icon="FileChartColumnIncreasing"
-          />
-        </div>
+        <AppEmpty
+          v-else-if="!selectedRound"
+          title="等待激活"
+          description="在上方选择轮次以展开战场监控。"
+          icon="History"
+          class="py-24"
+        />
 
-        <div v-else class="space-y-6">
-          <div class="flex justify-end">
-            <button
-              id="awd-export-review-package"
-              type="button"
-              class="ui-btn ui-btn--secondary awd-round-toolbar__button"
-              :disabled="!selectedRound"
-              @click="exportReviewPackage"
-            >
-              导出当前轮复盘包
-            </button>
-          </div>
-
-          <div class="grid gap-3 md:grid-cols-2 2xl:grid-cols-4">
-            <AppCard
-              variant="metric"
-              accent="primary"
-              eyebrow="服务总览"
-              :title="String(totalServiceCount)"
-              :subtitle="`正常 ${upCount} / 下线 ${downCount} / 失陷 ${compromisedCount}`"
-            />
-            <AppCard
-              variant="metric"
-              accent="success"
-              eyebrow="攻击流量"
-              :title="String(totalAttackCount)"
-              :subtitle="`成功 ${successfulAttackCount} / 失败 ${failedAttackCount}`"
-            />
-            <AppCard
-              variant="metric"
-              accent="warning"
-              eyebrow="防守成功"
-              :title="String(defenseSuccessCount)"
-              :subtitle="`受攻击服务 ${attackedServiceCount}`"
-            />
-            <AppCard
-              variant="metric"
-              accent="neutral"
-              eyebrow="来源构成"
-              :title="getSourceOverviewLabel()"
-              :subtitle="getSourceOverviewDescription()"
-            />
-          </div>
-
-          <AWDTrafficPanel
-            :updated-at="selectedRound.updated_at"
-            :challenge-links="challengeLinks"
-            :traffic-summary="trafficSummary"
-            :traffic-events="trafficEvents"
-            :traffic-events-total="trafficEventsTotal"
-            :traffic-filters="trafficFilters"
-            :traffic-team-options="trafficTeamOptions"
-            :loading-traffic-summary="loadingTrafficSummary"
-            :loading-traffic-events="loadingTrafficEvents"
-            :format-date-time="formatDateTime"
-            :format-percent="formatPercent"
-            :get-traffic-status-group-label="getTrafficStatusGroupLabel"
-            :get-traffic-status-group-class="getTrafficStatusGroupClass"
-            :get-traffic-team-name="getTrafficTeamName"
-            :get-traffic-challenge-title="getTrafficChallengeTitle"
-            :get-traffic-source-label="getTrafficSourceLabel"
-            @apply-traffic-filters="emit('applyTrafficFilters', $event)"
-            @change-traffic-page="emit('changeTrafficPage', $event)"
-            @reset-traffic-filters="emit('resetTrafficFilters')"
-          />
-
-          <div v-if="serviceAlerts.length > 0" class="grid gap-3 md:grid-cols-2 2xl:grid-cols-3">
-            <button
-              v-for="alert in serviceAlerts"
-              :key="alert.key"
-              type="button"
-              class="text-left"
-              @click="applyServiceAlertFilter(alert.key)"
-            >
-              <AppCard
-                variant="action"
-                accent="warning"
-                eyebrow="重点告警"
-                :title="alert.label"
-                :subtitle="getServiceAlertSubtitle(alert)"
-              >
-                <template #default>
-                  <div
-                    class="rounded-2xl border px-3 py-3 text-sm transition"
-                    :class="[
-                      getServiceAlertClass(alert.key),
-                      serviceAlertReasonFilter === alert.key ? 'ring-2 ring-primary/60' : '',
-                    ]"
-                  >
-                    <div class="font-medium">受影响服务 {{ alert.count }} 个</div>
-                    <div class="mt-2 space-y-1 text-xs">
-                      <div
-                        v-for="sample in alert.samples"
-                        :key="`${alert.key}-${sample.service_id || sample.team_name}-${sample.challenge_title}`"
-                      >
-                        {{ sample.team_name }} · {{ sample.challenge_title }}
-                      </div>
-                    </div>
-                    <div class="awd-alert-hint mt-2 text-xs">
-                      {{
-                        serviceAlertReasonFilter === alert.key
-                          ? '再次点击可取消筛选'
-                          : '点击筛选同类异常'
-                      }}
-                    </div>
-                  </div>
-                </template>
-              </AppCard>
-            </button>
-          </div>
-
-          <AWDScoreboardSummaryPanel
-            :scoreboard-rows="scoreboardRows"
-            :scoreboard-frozen="scoreboardFrozen"
-            :summary="summary"
-            :format-score="formatScore"
-            :format-date-time="formatDateTime"
-          />
-
-          <div class="grid gap-6 xl:grid-cols-2">
+        <div v-else class="pane-wrap">
+          <div v-show="activeSubTab === 'matrix'" class="pane-matrix">
+            <div v-if="serviceAlerts.length > 0" class="alert-banner mb-8">
+              <span class="banner-tag">重点异常告警</span>
+              <div class="alert-pills">
+                <button
+                  v-for="alert in serviceAlerts"
+                  :key="alert.key"
+                  class="alert-pill"
+                  :class="[getServiceAlertClass(alert.key), { 'is-active': serviceAlertReasonFilter === alert.key }]"
+                  @click="applyServiceAlertFilter(alert.key)"
+                >
+                  {{ alert.label }} ({{ alert.count }})
+                </button>
+              </div>
+            </div>
             <AWDServiceStatusPanel
               :services="services"
               :filtered-services="filteredServices"
+              :summary="summary"
               :service-alerts="serviceAlerts"
               :service-team-options="serviceTeamOptions"
               :service-check-source-options="serviceCheckSourceOptions"
@@ -373,7 +320,19 @@ function getServiceCheckPresentationResult(service: AWDTeamServiceData): Record<
               @update-service-alert-reason-filter="serviceAlertReasonFilter = $event"
               @export-services="exportFilteredServices"
             />
+          </div>
 
+          <div v-show="activeSubTab === 'scoreboard'" class="pane-scoreboard">
+            <AWDScoreboardSummaryPanel
+              :scoreboard-rows="scoreboardRows"
+              :scoreboard-frozen="scoreboardFrozen"
+              :summary="summary"
+              :format-score="formatScore"
+              :format-date-time="formatDateTime"
+            />
+          </div>
+
+          <div v-show="activeSubTab === 'attacks'" class="pane-attacks">
             <AWDAttackLogPanel
               :attacks="attacks"
               :filtered-attacks="filteredAttacks"
@@ -392,24 +351,77 @@ function getServiceCheckPresentationResult(service: AWDTeamServiceData): Record<
               @export-attacks="exportFilteredAttacks"
             />
           </div>
+
+          <div v-show="activeSubTab === 'traffic'" class="pane-traffic">
+            <AWDTrafficPanel
+              :updated-at="selectedRound.updated_at"
+              :challenge-links="challengeLinks"
+              :traffic-summary="trafficSummary"
+              :traffic-events="trafficEvents"
+              :traffic-events-total="trafficEventsTotal"
+              :traffic-filters="trafficFilters"
+              :traffic-team-options="trafficTeamOptions"
+              :loading-traffic-summary="loadingTrafficSummary"
+              :loading-traffic-events="loadingTrafficEvents"
+              :format-date-time="formatDateTime"
+              :format-percent="formatPercent"
+              :get-traffic-status-group-label="getTrafficStatusGroupLabel"
+              :get-traffic-status-group-class="getTrafficStatusGroupClass"
+              :get-traffic-team-name="getTrafficTeamName"
+              :get-traffic-challenge-title="getTrafficChallengeTitle"
+              :get-traffic-source-label="getTrafficSourceLabel"
+              @apply-traffic-filters="emit('applyTrafficFilters', $event)"
+              @change-traffic-page="emit('changeTrafficPage', $event)"
+              @reset-traffic-filters="emit('resetTrafficFilters')"
+            />
+          </div>
         </div>
-      </SectionCard>
-    </section>
+      </div>
+    </div>
   </div>
 </template>
 
 <style scoped>
-.awd-round-toolbar__button {
-  white-space: nowrap;
-}
+.awd-inspector-workbench { display: flex; flex-direction: column; height: 100%; }
 
-.awd-alert-hint {
-  color: color-mix(in srgb, var(--color-text-secondary) 80%, transparent);
+.awd-stats-hud {
+  display: flex; align-items: center; padding: 1.5rem 0;
+  background: transparent; border-bottom: 1px solid color-mix(in srgb, var(--workspace-line-soft) 60%, transparent);
 }
+.stat-unit { flex: 1; display: flex; flex-direction: column; gap: 0.25rem; }
+.unit-label { font-size: 9px; font-weight: 800; text-transform: uppercase; color: #94a3b8; letter-spacing: 0.1em; }
+.unit-value { font-size: 1.15rem; font-weight: 900; color: #0f172a; line-height: 1; }
+.unit-value small { font-size: 10px; opacity: 0.5; margin-left: 2px; }
+.unit-helper { font-size: 11px; font-weight: 600; color: #64748b; }
+.unit-divider { width: 1px; height: 2.5rem; background: #e2e8f0; margin: 0 2rem; }
 
-@media (min-width: 1280px) {
-  .awd-round-workspace-grid {
-    grid-template-columns: 0.85fr 1.15fr;
-  }
+.awd-detail-canvas { flex: 1; display: flex; flex-direction: column; background: transparent; min-height: 0; }
+.canvas-tabs-header {
+  height: 3.5rem; padding: 0; border-bottom: 1px solid color-mix(in srgb, var(--workspace-line-soft) 80%, transparent);
+  display: flex; justify-content: space-between; align-items: center; background: transparent;
+}
+.sub-tabs { display: flex; gap: 2rem; height: 100%; }
+.sub-tab {
+  display: flex; align-items: center; gap: 0.5rem; padding: 0 0.25rem;
+  font-size: 13px; font-weight: 800; color: #64748b;
+  border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.2s ease;
+}
+.sub-tab:hover { color: #0f172a; }
+.sub-tab.active { color: #2563eb; border-bottom-color: #2563eb; }
+
+.canvas-content { flex: 1; overflow-y: auto; padding: 2rem 0; position: relative; }
+.canvas-loading-overlay { position: absolute; inset: 0; background: rgba(255,255,255,0.7); display: flex; align-items: center; justify-content: center; z-index: 10; }
+
+.alert-banner { display: flex; align-items: center; gap: 1.5rem; padding: 0.75rem 1.25rem; background: #fff7ed; border: 1px solid #ffedd5; border-radius: 0.75rem; }
+.banner-tag { font-size: 10px; font-weight: 800; color: #c2410c; text-transform: uppercase; }
+.alert-pills { display: flex; gap: 0.5rem; }
+.alert-pill { padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; border: 1px solid rgba(194, 65, 12, 0.2); color: #9a3412; transition: all 0.2s ease; }
+.alert-pill:hover { background: white; }
+.alert-pill.is-active { background: #f97316; color: white; border-color: #f97316; }
+
+.ops-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  height: 2.25rem; padding: 0 1rem; border-radius: 0.75rem;
+  font-size: 12px; font-weight: 700; background: white; border: 1px solid #e2e8f0; color: #475569; cursor: pointer;
 }
 </style>

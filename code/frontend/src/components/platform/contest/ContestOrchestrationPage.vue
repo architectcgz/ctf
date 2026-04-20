@@ -100,19 +100,27 @@ function openContestWorkbench(contest: ContestDetailData) {
   >
     <main class="content-pane">
       <section
-        id="contest-panel-overview"
         v-show="activePanel === 'overview'"
+        id="contest-panel-overview"
         class="contest-panel contest-panel--workspace"
         :aria-hidden="activePanel === 'overview' ? 'false' : 'true'"
       >
         <header class="list-heading contest-overview-head">
           <div class="workspace-tab-heading__main">
-            <div class="workspace-overline">Contest Workspace</div>
-            <h1 class="workspace-page-title">竞赛目录</h1>
+            <div class="workspace-overline">
+              Contest Workspace
+            </div>
+            <h1 class="workspace-page-title">
+              竞赛目录
+            </h1>
           </div>
 
           <div class="ui-toolbar-actions contest-panel-actions">
-            <button type="button" class="ui-btn ui-btn--ghost" @click="emit('refresh')">
+            <button
+              type="button"
+              class="ui-btn ui-btn--ghost"
+              @click="emit('refresh')"
+            >
               <RefreshCw class="h-4 w-4" />
               刷新列表
             </button>
@@ -137,7 +145,9 @@ function openContestWorkbench(contest: ContestDetailData) {
             <div class="metric-panel-value">
               {{ total.toString().padStart(2, '0') }}
             </div>
-            <div class="metric-panel-helper">当前条件下的赛事总数</div>
+            <div class="metric-panel-helper">
+              当前条件下的赛事总数
+            </div>
           </div>
 
           <div class="metric-panel-card--premium">
@@ -148,7 +158,9 @@ function openContestWorkbench(contest: ContestDetailData) {
             <div class="metric-panel-value">
               {{ registeringCount.toString().padStart(2, '0') }}
             </div>
-            <div class="metric-panel-helper">当前页开放报名的赛事</div>
+            <div class="metric-panel-helper">
+              当前页开放报名的赛事
+            </div>
           </div>
 
           <div class="metric-panel-card--premium">
@@ -159,7 +171,9 @@ function openContestWorkbench(contest: ContestDetailData) {
             <div class="metric-panel-value">
               {{ runningCount.toString().padStart(2, '0') }}
             </div>
-            <div class="metric-panel-helper">当前页正在进行的赛事</div>
+            <div class="metric-panel-helper">
+              当前页正在进行的赛事
+            </div>
           </div>
 
           <div class="metric-panel-card--premium">
@@ -170,15 +184,21 @@ function openContestWorkbench(contest: ContestDetailData) {
             <div class="metric-panel-value">
               {{ awdCount.toString().padStart(2, '0') }}
             </div>
-            <div class="metric-panel-helper">已接入运维链路的赛事</div>
+            <div class="metric-panel-helper">
+              已接入运维链路的赛事
+            </div>
           </div>
         </div>
 
         <section class="workspace-directory-section contest-directory-section">
           <header class="list-heading">
             <div>
-              <div class="journal-note-label">Contest Directory</div>
-              <h2 class="list-heading__title">竞赛列表</h2>
+              <div class="journal-note-label">
+                Contest Directory
+              </div>
+              <h2 class="list-heading__title">
+                竞赛列表
+              </h2>
             </div>
           </header>
           <WorkspaceDirectoryToolbar
@@ -236,7 +256,11 @@ function openContestWorkbench(contest: ContestDetailData) {
             icon="Trophy"
           >
             <template #action>
-              <button type="button" class="ui-btn ui-btn--primary" @click="openCreatePanel">
+              <button
+                type="button"
+                class="ui-btn ui-btn--primary"
+                @click="openCreatePanel"
+              >
                 创建第一场竞赛
               </button>
             </template>
@@ -257,23 +281,31 @@ function openContestWorkbench(contest: ContestDetailData) {
       </section>
 
       <section
-        id="contest-panel-create"
         v-show="activePanel === 'create'"
+        id="contest-panel-create"
         class="contest-panel contest-panel--create"
         :aria-hidden="activePanel === 'create' ? 'false' : 'true'"
       >
         <section class="workspace-directory-section contest-create-panel">
           <header class="list-heading contest-create-head">
             <div class="workspace-tab-heading__main">
-              <div class="workspace-overline">Contest Setup</div>
-              <h2 class="workspace-page-title">创建竞赛</h2>
+              <div class="workspace-overline">
+                Contest Setup
+              </div>
+              <h2 class="workspace-page-title">
+                创建竞赛
+              </h2>
               <p class="workspace-page-copy">
                 在当前工作区里补齐竞赛基础信息和时间窗口，保存后直接回到赛事工作台继续编排。
               </p>
             </div>
 
             <div class="ui-toolbar-actions contest-panel-actions">
-              <button type="button" class="ui-btn ui-btn--ghost" @click="selectPanel('overview')">
+              <button
+                type="button"
+                class="ui-btn ui-btn--ghost"
+                @click="selectPanel('overview')"
+              >
                 返回工作台
               </button>
             </div>

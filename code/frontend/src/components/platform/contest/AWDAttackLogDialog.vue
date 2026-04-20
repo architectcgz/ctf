@@ -145,34 +145,77 @@ function handleSubmit() {
     @close="closeDialog"
     @update:open="emit('update:open', $event)"
   >
-    <form class="space-y-5" @submit.prevent="handleSubmit">
+    <form
+      class="space-y-5"
+      @submit.prevent="handleSubmit"
+    >
       <div class="grid gap-4 sm:grid-cols-2">
         <div class="ui-field awd-attack-field">
-          <label class="ui-field__label" for="awd-attack-team">攻击队伍</label>
-          <span class="ui-control-wrap" :class="{ 'is-error': !!fieldErrors.attacker_team_id }">
-            <select id="awd-attack-team" v-model="form.attacker_team_id" class="ui-control">
-              <option value="" disabled>请选择攻击队伍</option>
-              <option v-for="team in teams" :key="team.id" :value="team.id">
+          <label
+            class="ui-field__label"
+            for="awd-attack-team"
+          >攻击队伍</label>
+          <span
+            class="ui-control-wrap"
+            :class="{ 'is-error': !!fieldErrors.attacker_team_id }"
+          >
+            <select
+              id="awd-attack-team"
+              v-model="form.attacker_team_id"
+              class="ui-control"
+            >
+              <option
+                value=""
+                disabled
+              >请选择攻击队伍</option>
+              <option
+                v-for="team in teams"
+                :key="team.id"
+                :value="team.id"
+              >
                 {{ team.name }}
               </option>
             </select>
           </span>
-          <p v-if="fieldErrors.attacker_team_id" class="ui-field__error">
+          <p
+            v-if="fieldErrors.attacker_team_id"
+            class="ui-field__error"
+          >
             {{ fieldErrors.attacker_team_id }}
           </p>
         </div>
 
         <div class="ui-field awd-attack-field">
-          <label class="ui-field__label" for="awd-victim-team">受害队伍</label>
-          <span class="ui-control-wrap" :class="{ 'is-error': !!fieldErrors.victim_team_id }">
-            <select id="awd-victim-team" v-model="form.victim_team_id" class="ui-control">
-              <option value="" disabled>请选择受害队伍</option>
-              <option v-for="team in teams" :key="team.id" :value="team.id">
+          <label
+            class="ui-field__label"
+            for="awd-victim-team"
+          >受害队伍</label>
+          <span
+            class="ui-control-wrap"
+            :class="{ 'is-error': !!fieldErrors.victim_team_id }"
+          >
+            <select
+              id="awd-victim-team"
+              v-model="form.victim_team_id"
+              class="ui-control"
+            >
+              <option
+                value=""
+                disabled
+              >请选择受害队伍</option>
+              <option
+                v-for="team in teams"
+                :key="team.id"
+                :value="team.id"
+              >
                 {{ team.name }}
               </option>
             </select>
           </span>
-          <p v-if="fieldErrors.victim_team_id" class="ui-field__error">
+          <p
+            v-if="fieldErrors.victim_team_id"
+            class="ui-field__error"
+          >
             {{ fieldErrors.victim_team_id }}
           </p>
         </div>
@@ -180,10 +223,23 @@ function handleSubmit() {
 
       <div class="grid gap-4 sm:grid-cols-2">
         <div class="ui-field awd-attack-field">
-          <label class="ui-field__label" for="awd-attack-challenge">题目</label>
-          <span class="ui-control-wrap" :class="{ 'is-error': !!fieldErrors.challenge_id }">
-            <select id="awd-attack-challenge" v-model="form.challenge_id" class="ui-control">
-              <option value="" disabled>请选择题目</option>
+          <label
+            class="ui-field__label"
+            for="awd-attack-challenge"
+          >题目</label>
+          <span
+            class="ui-control-wrap"
+            :class="{ 'is-error': !!fieldErrors.challenge_id }"
+          >
+            <select
+              id="awd-attack-challenge"
+              v-model="form.challenge_id"
+              class="ui-control"
+            >
+              <option
+                value=""
+                disabled
+              >请选择题目</option>
               <option
                 v-for="challenge in challengeOptions"
                 :key="challenge.id"
@@ -193,15 +249,25 @@ function handleSubmit() {
               </option>
             </select>
           </span>
-          <p v-if="fieldErrors.challenge_id" class="ui-field__error">
+          <p
+            v-if="fieldErrors.challenge_id"
+            class="ui-field__error"
+          >
             {{ fieldErrors.challenge_id }}
           </p>
         </div>
 
         <div class="ui-field awd-attack-field">
-          <label class="ui-field__label" for="awd-attack-type">攻击类型</label>
+          <label
+            class="ui-field__label"
+            for="awd-attack-type"
+          >攻击类型</label>
           <span class="ui-control-wrap">
-            <select id="awd-attack-type" v-model="form.attack_type" class="ui-control">
+            <select
+              id="awd-attack-type"
+              v-model="form.attack_type"
+              class="ui-control"
+            >
               <option value="flag_capture">Flag 获取</option>
               <option value="service_exploit">服务利用</option>
             </select>
@@ -210,7 +276,10 @@ function handleSubmit() {
       </div>
 
       <div class="ui-field awd-attack-field">
-        <label class="ui-field__label" for="awd-attack-flag">提交 Flag</label>
+        <label
+          class="ui-field__label"
+          for="awd-attack-flag"
+        >提交 Flag</label>
         <span class="ui-control-wrap">
           <input
             id="awd-attack-flag"
@@ -218,23 +287,38 @@ function handleSubmit() {
             type="text"
             class="ui-control"
             placeholder="可选，补录 flag_capture 时填写"
-          />
+          >
         </span>
       </div>
 
       <label class="ui-control-wrap awd-attack-check">
-        <input v-model="form.is_success" type="checkbox" class="awd-attack-check__box" />
+        <input
+          v-model="form.is_success"
+          type="checkbox"
+          class="awd-attack-check__box"
+        >
         <span class="awd-attack-check__label">本次攻击判定成功</span>
       </label>
-      <p class="ui-field__hint">人工补录仅进入当前轮复盘记录，不写入正式排行榜与实时竞赛得分。</p>
-      <p v-if="!hasTargets" class="ui-field__hint awd-attack-field__warning">
+      <p class="ui-field__hint">
+        人工补录仅进入当前轮复盘记录，不写入正式排行榜与实时竞赛得分。
+      </p>
+      <p
+        v-if="!hasTargets"
+        class="ui-field__hint awd-attack-field__warning"
+      >
         至少需要 2 支队伍且已关联题目后，才能补录攻击日志。
       </p>
     </form>
 
     <template #footer>
       <div class="awd-attack-dialog__footer">
-        <button type="button" class="ui-btn ui-btn--secondary" @click="closeDialog">取消</button>
+        <button
+          type="button"
+          class="ui-btn ui-btn--secondary"
+          @click="closeDialog"
+        >
+          取消
+        </button>
         <button
           id="awd-attack-log-submit"
           type="button"

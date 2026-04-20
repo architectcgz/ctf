@@ -144,28 +144,64 @@ function handleSubmit() {
     @close="closeDialog"
     @update:open="emit('update:open', $event)"
   >
-    <form class="space-y-5" @submit.prevent="handleSubmit">
+    <form
+      class="space-y-5"
+      @submit.prevent="handleSubmit"
+    >
       <div class="grid gap-4 sm:grid-cols-2">
         <div class="ui-field awd-service-field">
-          <label class="ui-field__label" for="awd-service-team">队伍</label>
-          <span class="ui-control-wrap" :class="{ 'is-error': !!fieldErrors.team_id }">
-            <select id="awd-service-team" v-model="form.team_id" class="ui-control">
-              <option value="" disabled>请选择队伍</option>
-              <option v-for="team in teams" :key="team.id" :value="team.id">
+          <label
+            class="ui-field__label"
+            for="awd-service-team"
+          >队伍</label>
+          <span
+            class="ui-control-wrap"
+            :class="{ 'is-error': !!fieldErrors.team_id }"
+          >
+            <select
+              id="awd-service-team"
+              v-model="form.team_id"
+              class="ui-control"
+            >
+              <option
+                value=""
+                disabled
+              >请选择队伍</option>
+              <option
+                v-for="team in teams"
+                :key="team.id"
+                :value="team.id"
+              >
                 {{ team.name }}
               </option>
             </select>
           </span>
-          <p v-if="fieldErrors.team_id" class="ui-field__error">
+          <p
+            v-if="fieldErrors.team_id"
+            class="ui-field__error"
+          >
             {{ fieldErrors.team_id }}
           </p>
         </div>
 
         <div class="ui-field awd-service-field">
-          <label class="ui-field__label" for="awd-service-challenge">题目</label>
-          <span class="ui-control-wrap" :class="{ 'is-error': !!fieldErrors.challenge_id }">
-            <select id="awd-service-challenge" v-model="form.challenge_id" class="ui-control">
-              <option value="" disabled>请选择题目</option>
+          <label
+            class="ui-field__label"
+            for="awd-service-challenge"
+          >题目</label>
+          <span
+            class="ui-control-wrap"
+            :class="{ 'is-error': !!fieldErrors.challenge_id }"
+          >
+            <select
+              id="awd-service-challenge"
+              v-model="form.challenge_id"
+              class="ui-control"
+            >
+              <option
+                value=""
+                disabled
+              >请选择题目</option>
               <option
                 v-for="challenge in challengeOptions"
                 :key="challenge.id"
@@ -175,16 +211,26 @@ function handleSubmit() {
               </option>
             </select>
           </span>
-          <p v-if="fieldErrors.challenge_id" class="ui-field__error">
+          <p
+            v-if="fieldErrors.challenge_id"
+            class="ui-field__error"
+          >
             {{ fieldErrors.challenge_id }}
           </p>
         </div>
       </div>
 
       <div class="ui-field awd-service-field">
-        <label class="ui-field__label" for="awd-service-status">服务状态</label>
+        <label
+          class="ui-field__label"
+          for="awd-service-status"
+        >服务状态</label>
         <span class="ui-control-wrap">
-          <select id="awd-service-status" v-model="form.service_status" class="ui-control">
+          <select
+            id="awd-service-status"
+            v-model="form.service_status"
+            class="ui-control"
+          >
             <option value="up">正常</option>
             <option value="down">下线</option>
             <option value="compromised">已失陷</option>
@@ -193,20 +239,32 @@ function handleSubmit() {
       </div>
 
       <div class="ui-field awd-service-field">
-        <label class="ui-field__label" for="awd-service-check-result">检查结果 JSON</label>
-        <span class="ui-control-wrap" :class="{ 'is-error': !!fieldErrors.check_result_text }">
+        <label
+          class="ui-field__label"
+          for="awd-service-check-result"
+        >检查结果 JSON</label>
+        <span
+          class="ui-control-wrap"
+          :class="{ 'is-error': !!fieldErrors.check_result_text }"
+        >
           <textarea
             id="awd-service-check-result"
             v-model="form.check_result_text"
             rows="6"
             class="ui-control awd-service-field__textarea"
-            placeholder='{"http_status":200,"latency_ms":38}'
+            placeholder="{&quot;http_status&quot;:200,&quot;latency_ms&quot;:38}"
           />
         </span>
-        <p v-if="fieldErrors.check_result_text" class="ui-field__error">
+        <p
+          v-if="fieldErrors.check_result_text"
+          class="ui-field__error"
+        >
           {{ fieldErrors.check_result_text }}
         </p>
-        <p v-else-if="!hasTargets" class="ui-field__hint awd-service-field__warning">
+        <p
+          v-else-if="!hasTargets"
+          class="ui-field__hint awd-service-field__warning"
+        >
           当前赛事缺少队伍或题目，暂时无法录入服务检查。
         </p>
       </div>
@@ -214,7 +272,13 @@ function handleSubmit() {
 
     <template #footer>
       <div class="awd-service-dialog__footer">
-        <button type="button" class="ui-btn ui-btn--secondary" @click="closeDialog">取消</button>
+        <button
+          type="button"
+          class="ui-btn ui-btn--secondary"
+          @click="closeDialog"
+        >
+          取消
+        </button>
         <button
           id="awd-service-check-submit"
           type="button"

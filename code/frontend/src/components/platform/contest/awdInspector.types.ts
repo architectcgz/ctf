@@ -52,6 +52,7 @@ export type AWDRoundInspectorEmits = {
 
 export interface AWDRoundHeaderPanelProps {
   contest: ContestDetailData
+  rounds: AWDRoundData[]
   roundsCount: number
   selectedRound: AWDRoundData | null
   selectedRoundId: string | null
@@ -78,21 +79,6 @@ export type AWDRoundHeaderPanelEmits = {
   openServiceCheckDialog: []
   openAttackLogDialog: []
   runSelectedRoundCheck: []
-}
-
-export interface AWDRoundSelectionPanelProps {
-  rounds: AWDRoundData[]
-  selectedRoundId: string | null
-  selectedRound: AWDRoundData | null
-  loadingRounds: boolean
-  compromisedCount: number
-  downCount: number
-  totalServiceCount: number
-  formatDateTime: (value?: string) => string
-  getRoundStatusLabel: (status: AWDRoundData['status']) => string
-}
-
-export type AWDRoundSelectionPanelEmits = {
   'update:selectedRoundId': [roundId: string]
 }
 
@@ -140,6 +126,7 @@ export interface AWDCheckTargetView {
 export interface AWDServiceStatusPanelProps {
   services: AWDTeamServiceData[]
   filteredServices: AWDTeamServiceData[]
+  summary: AWDRoundSummaryData | null
   serviceAlerts: AWDServiceAlertView[]
   serviceTeamOptions: Array<{ team_id: string; team_name: string }>
   serviceCheckSourceOptions: string[]

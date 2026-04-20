@@ -3,6 +3,11 @@ import { computed } from 'vue'
 
 import type { AWDReadinessData, AWDReadinessItemData } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
+import { 
+  ShieldCheck, 
+  AlertTriangle, 
+  AlertCircle 
+} from 'lucide-vue-next'
 
 const props = withDefaults(
   defineProps<{
@@ -11,7 +16,7 @@ const props = withDefaults(
     actionLabel?: string
   }>(),
   {
-    actionLabel: '编辑配置',
+    actionLabel: '配置',
   }
 )
 
@@ -20,532 +25,224 @@ const emit = defineEmits<{
 }>()
 
 const summaryItems = computed(() => {
-  const readiness = props.readiness
+  if (!props.readiness) return []
   return [
-    {
-      key: 'passed',
-      label: '最近通过',
-      value: String(readiness?.passed_challenges ?? 0),
-      hint: '最近一次试跑已通过的题目数',
-    },
-    {
-      key: 'pending',
-      label: '未验证',
-      value: String(readiness?.pending_challenges ?? 0),
-      hint: '还没有可用试跑结果的题目数',
-    },
-    {
-      key: 'failed',
-      label: '最近失败',
-      value: String(readiness?.failed_challenges ?? 0),
-      hint: '最近一次试跑未通过的题目数',
-    },
-    {
-      key: 'stale',
-      label: '待重新验证',
-      value: String(readiness?.stale_challenges ?? 0),
-      hint: '配置变更后尚未重新试跑的题目数',
-    },
-    {
-      key: 'missing',
-      label: '未配 Checker',
-      value: String(readiness?.missing_checker_challenges ?? 0),
-      hint: '还没有可执行 checker 的题目数',
-    },
+    { key: 'total', label: '题目总数', value: props.readiness.total_count },
+    { key: 'ready', label: '已就绪', value: props.readiness.ready_count },
+    { key: 'blocking', label: '阻塞项', value: props.readiness.blocking_count },
   ]
 })
 
-const blockingItems = computed(() => props.readiness?.items || [])
-const globalBlockingReasons = computed(() => props.readiness?.global_blocking_reasons ?? [])
-const hasGlobalBlockingReasons = computed(
-  () => (props.readiness?.global_blocking_reasons?.length ?? 0) > 0
-)
-const blockingActionLabels = computed(() =>
-  (props.readiness?.blocking_actions || []).map((action) => getBlockingActionLabel(action))
-)
 const readinessDecision = computed(() => {
-  const readiness = props.readiness
-  if (readiness?.ready) {
-    return {
-      key: 'ready',
-      title: '可开赛',
-      description: '当前 checker 校验状态已经满足开赛关键动作要求，可以继续进入运行阶段。',
-    }
-  }
-
-  if (hasGlobalBlockingReasons.value) {
-    return {
-      key: 'blocked',
-      title: '不可开赛',
-      description: '当前仍有系统级阻塞，需先补齐基础条件后才能继续。',
-    }
-  }
-
-  return {
-    key: 'override',
-    title: '可强制开赛',
-    description: '题目侧仍有阻塞项，如需演练或临时放行，可以在确认风险后强制继续。',
-  }
+  if (!props.readiness) return { key: 'pending', title: '正在审计...', description: '请稍候，系统正在扫描题目状态。' }
+  if (props.readiness.ready) return { key: 'ready', title: '环境已就绪', description: '所有服务 Checker 均已通过验证，可以安全开启竞赛。' }
+  if (props.readiness.override_active) return { key: 'override', title: '强制放行模式', description: '由于操作员干预，校验规则已被临时跳过。' }
+  return { key: 'blocked', title: '存在阻塞风险', description: '部分题目配置不完整或校验失败，将限制运维操作。' }
 })
-const blockingEmptyDescription = computed(() =>
-  hasGlobalBlockingReasons.value
-    ? '当前没有题目级阻塞项，系统级阻塞仍会拦截开赛关键动作。'
-    : '题目侧的 checker 校验已经满足开赛关键动作要求。'
-)
 
-function getBlockingActionLabel(action: string): string {
-  switch (action) {
-    case 'create_round':
-      return '创建轮次'
-    case 'run_current_round_check':
-      return '立即巡检当前轮'
-    case 'start_contest':
-      return '启动赛事'
-    default:
-      return action
-  }
-}
+const blockingActionLabels = computed(() => {
+  if (!props.readiness) return []
+  const labels: string[] = []
+  const actions = props.readiness.blocking_actions || []
+  if (actions.includes('start_contest')) labels.push('开启比赛')
+  if (actions.includes('create_round')) labels.push('创建轮次')
+  if (actions.includes('run_check')) labels.push('即时巡检')
+  return labels
+})
+
+const hasGlobalBlockingReasons = computed(() => (props.readiness?.global_blocking_reasons?.length ?? 0) > 0)
+const globalBlockingReasons = computed(() => props.readiness?.global_blocking_reasons || [])
+
+const blockingItems = computed(() => props.readiness?.items || [])
+const blockingEmptyDescription = computed(() => props.readiness?.ready ? '所有题目均已通过自动审计。' : '题目级别暂无直接阻塞，请检查系统级配置。')
 
 function getGlobalReasonCopy(reason: string): string {
   switch (reason) {
-    case 'no_challenges':
-      return '当前赛事还没有关联题目，无法执行开赛关键动作。'
-    default:
-      return reason
+    case 'missing_teams': return '竞赛中尚未加入任何参赛队伍。'
+    case 'missing_challenges': return '题目池为空，至少需要关联一道题目。'
+    case 'invalid_schedule': return '赛程时间设置有误或尚未开始。'
+    default: return reason
   }
 }
 
 function getValidationStateLabel(item: AWDReadinessItemData): string {
   switch (item.validation_state) {
-    case 'passed':
-      return '最近通过'
-    case 'failed':
-      return '最近失败'
-    case 'stale':
-      return '待重新验证'
-    case 'pending':
-    default:
-      return '未验证'
+    case 'passed': return '最近通过'
+    case 'failed': return '最近失败'
+    case 'stale': return '待重新验证'
+    default: return '未验证'
   }
 }
 
 function getBlockingReasonLabel(item: AWDReadinessItemData): string {
   switch (item.blocking_reason) {
-    case 'missing_checker':
-      return '未配置 Checker'
-    case 'invalid_checker_config':
-      return 'Checker 配置不可用'
-    case 'pending_validation':
-      return '还没有试跑结果'
-    case 'last_preview_failed':
-      return '最近一次试跑失败'
-    case 'validation_stale':
-      return '配置变更后待重新验证'
-    default:
-      return item.blocking_reason
+    case 'missing_checker': return '未配置 Checker'
+    case 'invalid_checker_config': return 'Checker 配置不可用'
+    case 'pending_validation': return '还没有试跑结果'
+    case 'last_preview_failed': return '最近一次试跑失败'
+    case 'validation_stale': return '配置变更后待重新验证'
+    default: return item.blocking_reason
   }
 }
 
 function formatDateTime(value?: string): string {
-  if (!value) {
-    return '未记录'
-  }
+  if (!value) return '未记录'
   return new Date(value).toLocaleString('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
+    month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit',
   })
 }
 </script>
 
 <template>
-  <section class="space-y-6">
-    <header class="panel-head panel-head--readiness">
-      <div class="panel-copy workspace-tab-heading__main">
-        <div class="workspace-overline">AWD Readiness</div>
-        <h2 class="workspace-tab-heading__title">开赛就绪摘要</h2>
-        <p class="admin-page-copy">
-          这里汇总当前赛事的 checker 校验状态，并标记会阻塞创建轮次、当前轮巡检和启动赛事的风险项。
-        </p>
+  <div class="studio-readiness-flow">
+    <!-- 1. Global Metric Band -->
+    <div v-if="readiness" class="studio-metric-band">
+      <div v-for="item in summaryItems" :key="item.key" class="metric-pill">
+        <span class="metric-pill__label">{{ item.label }}</span>
+        <span class="metric-pill__value">{{ item.value }}</span>
       </div>
+    </div>
 
-      <div class="progress-strip metric-panel-grid metric-panel-default-surface readiness-summary-grid">
-        <article
-          v-for="item in summaryItems"
-          :key="item.key"
-          class="journal-note progress-card metric-panel-card"
-        >
-          <div class="journal-note-label progress-card-label metric-panel-label">{{ item.label }}</div>
-          <div class="journal-note-value progress-card-value metric-panel-value">{{ item.value }}</div>
-          <div class="journal-note-helper progress-card-hint metric-panel-helper">{{ item.hint }}</div>
-        </article>
+    <!-- 2. Decision HUD -->
+    <div v-if="readiness" class="decision-hud" :class="readinessDecision.key">
+      <div class="decision-main">
+        <div class="decision-icon">
+          <ShieldCheck v-if="readinessDecision.key === 'ready'" class="h-6 w-6" />
+          <AlertTriangle v-else class="h-6 w-6" />
+        </div>
+        <div class="decision-text">
+          <h3 class="decision-title">{{ readinessDecision.title }}</h3>
+          <p class="decision-description">{{ readinessDecision.description }}</p>
+        </div>
       </div>
-    </header>
+      <div class="decision-meta">
+        <div class="impact-label">受影响动作</div>
+        <div class="impact-tags">
+          <span v-for="label in blockingActionLabels" :key="label" class="impact-tag">{{ label }}</span>
+          <span v-if="blockingActionLabels.length === 0" class="impact-tag neutral">无阻塞</span>
+        </div>
+      </div>
+    </div>
 
-    <section v-if="loading" class="workspace-directory-section readiness-section">
-      <div class="readiness-loading">正在同步开赛就绪状态...</div>
+    <!-- 3. Global Blockers -->
+    <section v-if="hasGlobalBlockingReasons" class="global-blockers">
+      <header class="section-header">
+        <h3 class="section-title">系统级阻塞项</h3>
+      </header>
+      <div class="blocker-list">
+        <div v-for="reason in globalBlockingReasons" :key="reason" class="blocker-item">
+          <AlertCircle class="h-4 w-4 text-red-500" />
+          <span>{{ getGlobalReasonCopy(reason) }}</span>
+        </div>
+      </div>
     </section>
 
-    <template v-else>
-      <section
-        v-if="readiness"
-        class="workspace-directory-section readiness-decision"
-        :class="`readiness-decision--${readinessDecision.key}`"
-      >
-        <header class="list-heading readiness-decision__head">
-          <div>
-            <div class="journal-note-label">Start Decision</div>
-            <h3 class="list-heading__title">{{ readinessDecision.title }}</h3>
-            <p class="readiness-decision__copy">{{ readinessDecision.description }}</p>
-          </div>
-        </header>
-        <div class="readiness-decision__meta">
-          <span class="readiness-count">阻塞 {{ readiness.blocking_count }} 项</span>
-          <span v-if="blockingActionLabels.length > 0" class="readiness-decision__actions">
-            影响 {{ blockingActionLabels.join(' / ') }}
-          </span>
-        </div>
-      </section>
+    <!-- 4. Challenge Blockers Directory -->
+    <section class="challenge-blockers">
+      <header class="directory-header">
+        <h3 class="directory-title">题目级就绪明细</h3>
+        <div class="directory-meta">发现 {{ readiness?.blocking_count ?? 0 }} 个阻塞点</div>
+      </header>
 
-      <section
-        v-if="hasGlobalBlockingReasons"
-        class="workspace-directory-section readiness-alert"
-      >
-        <header class="list-heading">
-          <div>
-            <div class="journal-note-label">Global Blocking</div>
-            <h3 class="list-heading__title">系统级阻塞</h3>
-          </div>
-        </header>
-        <ul class="readiness-alert-list">
-          <li v-for="reason in globalBlockingReasons" :key="reason" class="readiness-alert-item">
-            {{ getGlobalReasonCopy(reason) }}
-          </li>
-        </ul>
-      </section>
+      <AppEmpty
+        v-if="blockingItems.length === 0"
+        title="题目校验通过"
+        :description="blockingEmptyDescription"
+        icon="ShieldCheck"
+        class="py-12"
+      />
 
-      <section class="workspace-directory-section readiness-section">
-        <header class="list-heading readiness-list-head">
-          <div>
-            <div class="journal-note-label">Blocking Items</div>
-            <h3 class="list-heading__title">阻塞短名单</h3>
-          </div>
-          <div class="readiness-list-head__meta">
-            <span class="readiness-count">阻塞 {{ readiness?.blocking_count ?? 0 }} 项</span>
-            <div
-              v-if="blockingActionLabels.length > 0"
-              class="readiness-action-list"
-              aria-label="阻塞动作"
-            >
-              <span
-                v-for="label in blockingActionLabels"
-                :key="label"
-                class="readiness-action-chip"
-              >
-                {{ label }}
-              </span>
-            </div>
-          </div>
-        </header>
-
-        <AppEmpty
-          v-if="blockingItems.length === 0"
-          title="当前没有题目级阻塞项"
-          :description="blockingEmptyDescription"
-          icon="ShieldCheck"
-        />
-
-        <template v-else>
-          <div class="readiness-directory-head" aria-hidden="true">
-            <span>题目</span>
-            <span>当前状态</span>
-            <span>阻塞原因</span>
-            <span>最近校验</span>
-            <span>目标地址</span>
-            <span class="readiness-directory-head__actions">操作</span>
-          </div>
-
-          <article v-for="item in blockingItems" :key="item.challenge_id" class="readiness-row">
-            <div class="readiness-row__identity">
-              <h4 class="readiness-row__title">{{ item.title }}</h4>
-              <p class="readiness-row__meta">
-                {{ item.checker_type === 'http_standard' ? 'HTTP Standard' : 'Checker 未配置' }}
-              </p>
-            </div>
-            <div class="readiness-row__status">
-              <span class="ui-badge readiness-status-chip">
-                {{ getValidationStateLabel(item) }}
-              </span>
-            </div>
-            <div class="readiness-row__reason">{{ getBlockingReasonLabel(item) }}</div>
-            <div class="readiness-row__time">{{ formatDateTime(item.last_preview_at) }}</div>
-            <div class="readiness-row__target">{{ item.last_access_url || '无目标地址' }}</div>
-            <div
-              class="ui-row-actions readiness-row__actions"
-              role="group"
-              :aria-label="`题目 ${item.title} 操作`"
-            >
-              <button
-                :id="`awd-readiness-edit-${item.challenge_id}`"
-                type="button"
-                class="ui-btn ui-btn--sm ui-btn--secondary"
-                @click="emit('editConfig', item.challenge_id)"
-              >
-                {{ props.actionLabel }}
-              </button>
-            </div>
-          </article>
-        </template>
-      </section>
-    </template>
-  </section>
+      <div v-else class="studio-table-wrap">
+        <table class="studio-table">
+          <thead>
+            <tr>
+              <th class="col-identity">题目资源</th>
+              <th class="col-status">当前状态</th>
+              <th class="col-reason">阻塞原因</th>
+              <th class="col-meta">最近校验</th>
+              <th class="col-actions">操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="item in blockingItems" :key="item.challenge_id" class="studio-row">
+              <td class="col-identity">
+                <div class="challenge-identity">
+                  <div class="challenge-title">{{ item.title }}</div>
+                  <div class="challenge-subtitle">{{ item.checker_type === 'http_standard' ? 'HTTP Standard' : '基础探活' }}</div>
+                </div>
+              </td>
+              <td class="col-status">
+                <span class="status-pill" :class="item.validation_state">{{ getValidationStateLabel(item) }}</span>
+              </td>
+              <td class="col-reason">
+                <div class="reason-text">{{ getBlockingReasonLabel(item) }}</div>
+              </td>
+              <td class="col-meta text-[11px] text-slate-500">{{ formatDateTime(item.last_preview_at) }}</td>
+              <td class="col-actions">
+                <button class="action-btn" @click="emit('editConfig', item.challenge_id)">
+                  {{ props.actionLabel }}
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
 </template>
 
 <style scoped>
-.panel-head--readiness {
-  display: grid;
-  gap: 1.5rem;
-}
+.studio-readiness-flow { display: flex; flex-direction: column; gap: 2rem; }
 
-.list-heading {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: var(--space-3);
-}
+/* Metric Band */
+.studio-metric-band { display: flex; gap: 0.5rem; background: #f1f5f9; padding: 1rem; border-radius: 1rem; border: 1px solid #e2e8f0; }
+.metric-pill { background: white; border: 1px solid #e2e8f0; padding: 0.45rem 1rem; border-radius: 0.75rem; display: flex; align-items: baseline; gap: 0.75rem; }
+.metric-pill__label { font-size: 8px; font-weight: 800; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em; }
+.metric-pill__value { font-size: 13px; font-weight: 900; color: #1e293b; font-family: var(--font-family-mono); }
 
-.list-heading__title {
-  margin: var(--space-1) 0 0;
-  font-size: var(--font-size-1-20);
-  font-weight: 700;
-  color: var(--journal-ink);
-}
+/* Decision HUD */
+.decision-hud { display: flex; justify-content: space-between; align-items: center; padding: 2rem; border-radius: 1.25rem; }
+.decision-hud.ready { background: #f0fdf4; color: #166534; }
+.decision-hud.blocked { background: #fef2f2; color: #991b1b; }
+.decision-hud.override { background: #fffbeb; color: #92400e; }
 
-.readiness-summary-grid {
-  --metric-panel-columns: repeat(5, minmax(0, 1fr));
-}
+.decision-main { display: flex; align-items: center; gap: 1.5rem; }
+.decision-icon { width: 3.5rem; height: 3.5rem; border-radius: 1rem; background: white; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+.decision-title { font-size: 1.15rem; font-weight: 900; margin: 0; }
+.decision-description { font-size: 13px; margin-top: 0.25rem; opacity: 0.8; font-weight: 500; }
 
-.readiness-section,
-.readiness-alert,
-.readiness-decision {
-  padding: 1.5rem;
-}
+.decision-meta { text-align: right; }
+.impact-label { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.5rem; opacity: 0.6; }
+.impact-tags { display: flex; gap: 0.35rem; justify-content: flex-end; }
+.impact-tag { font-size: 10px; font-weight: 800; padding: 0.15rem 0.6rem; border-radius: 4px; background: rgba(0,0,0,0.05); }
 
-.readiness-loading {
-  color: var(--journal-muted);
-  font-size: 0.95rem;
-}
+/* Global Blockers */
+.global-blockers { background: #fff1f2; border-radius: 1.25rem; padding: 2rem; }
+.section-title { font-size: 13px; font-weight: 900; color: #991b1b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1rem; }
+.blocker-list { display: flex; flex-direction: column; gap: 0.75rem; }
+.blocker-item { display: flex; align-items: center; gap: 0.75rem; font-size: 13px; font-weight: 700; color: #7f1d1d; }
 
-.readiness-decision {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  border: 1px solid color-mix(in srgb, var(--journal-border) 76%, transparent);
-}
+/* Directory */
+.directory-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1rem; }
+.directory-title { font-size: 13px; font-weight: 900; color: #0f172a; text-transform: uppercase; letter-spacing: 0.1em; }
+.directory-meta { font-size: 11px; font-weight: 600; color: #94a3b8; }
 
-.readiness-decision__head {
-  flex: 1 1 22rem;
-  min-width: min(100%, 22rem);
-}
+/* Table Styles */
+.studio-table-wrap { border: none; border-radius: 0; background: transparent; overflow: hidden; }
+.studio-table { width: 100%; border-collapse: collapse; background: white; }
+.studio-table th { background: #f8fafc; padding: 0.75rem 1rem; text-align: left; font-size: 10px; font-weight: 800; text-transform: uppercase; color: #94a3b8; border-bottom: 1px solid #e2e8f0; border-top: 1px solid #e2e8f0; }
+.studio-table td { padding: 1rem; border-bottom: 1px solid #f1f5f9; }
 
-.readiness-decision--ready {
-  border-color: color-mix(in srgb, var(--color-success) 24%, transparent);
-  background: color-mix(in srgb, var(--color-success) 8%, var(--journal-surface));
-}
+.challenge-title { font-size: 14px; font-weight: 800; color: #1e293b; }
+.challenge-subtitle { font-size: 11px; color: #94a3b8; margin-top: 0.15rem; }
 
-.readiness-decision--override {
-  border-color: color-mix(in srgb, var(--color-warning) 28%, transparent);
-  background: color-mix(in srgb, var(--color-warning) 8%, var(--journal-surface));
-}
+.status-pill { font-size: 9px; font-weight: 800; padding: 0.15rem 0.5rem; border-radius: 99px; }
+.status-pill.passed { background: #dcfce7; color: #166534; }
+.status-pill.failed { background: #fee2e2; color: #991b1b; }
+.status-pill.pending, .status-pill.stale { background: #fef3c7; color: #92400e; }
 
-.readiness-decision--blocked {
-  border-color: color-mix(in srgb, var(--color-danger) 24%, transparent);
-  background: color-mix(in srgb, var(--color-danger) 8%, var(--journal-surface));
-}
+.reason-text { font-size: 12px; font-weight: 700; color: #475569; }
 
-.readiness-decision__copy {
-  margin: 0.5rem 0 0;
-  max-width: 46rem;
-  color: var(--journal-ink);
-  line-height: 1.7;
-}
-
-.readiness-decision__meta {
-  display: grid;
-  gap: 0.5rem;
-  justify-items: end;
-}
-
-.readiness-decision__actions {
-  color: var(--journal-muted);
-  font-size: 0.85rem;
-}
-
-.readiness-alert-list {
-  margin: 0;
-  padding-left: 1.1rem;
-  color: var(--journal-ink);
-  display: grid;
-  gap: 0.65rem;
-}
-
-.readiness-alert-item {
-  line-height: 1.6;
-}
-
-.readiness-list-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 82%, transparent);
-}
-
-.readiness-list-head__meta {
-  display: grid;
-  gap: 0.65rem;
-  justify-items: end;
-}
-
-.readiness-count {
-  color: var(--journal-muted);
-  font-size: 0.875rem;
-}
-
-.readiness-action-list {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 0.5rem;
-}
-
-.readiness-action-chip {
-  display: inline-flex;
-  align-items: center;
-  min-height: 30px;
-  padding: 0 0.8rem;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--journal-accent) 22%, transparent);
-  color: var(--journal-accent);
-  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
-  font-size: 0.8rem;
-  font-weight: 600;
-}
-
-.readiness-directory-head,
-.readiness-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(140px, 0.8fr) minmax(180px, 0.9fr) minmax(
-      170px,
-      0.8fr
-    ) minmax(180px, 1fr) minmax(112px, 0.6fr);
-  gap: 1rem;
-  align-items: center;
-}
-
-.readiness-directory-head {
-  padding: 1rem 0;
-  color: var(--journal-muted);
-  font-size: 0.75rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.readiness-directory-head__actions {
-  text-align: right;
-}
-
-.readiness-row {
-  padding: 1.1rem 0;
-  border-top: 1px solid color-mix(in srgb, var(--journal-border) 78%, transparent);
-}
-
-.readiness-row__identity,
-.readiness-row__status,
-.readiness-row__reason,
-.readiness-row__time,
-.readiness-row__target,
-.readiness-row__actions {
-  min-width: 0;
-}
-
-.readiness-row__title {
-  margin: 0;
-  color: var(--journal-ink);
-  font-size: 1rem;
-  font-weight: 600;
-}
-
-.readiness-row__meta {
-  margin: 0.35rem 0 0;
-  color: var(--journal-muted);
-  font-size: 0.82rem;
-}
-
-.readiness-row__reason,
-.readiness-row__time,
-.readiness-row__target {
-  color: var(--journal-ink);
-  font-size: 0.9rem;
-  line-height: 1.5;
-  word-break: break-word;
-}
-
-.readiness-row__actions {
-  justify-content: flex-end;
-}
-
-.readiness-status-chip {
-  --ui-badge-radius: 999px;
-  --ui-badge-padding: 0.35rem 0.8rem;
-  --ui-badge-size: 0.8rem;
-  --ui-badge-spacing: 0;
-  --ui-badge-border: color-mix(in srgb, var(--journal-border) 88%, transparent);
-  --ui-badge-background: color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base));
-  --ui-badge-color: var(--journal-ink);
-  text-transform: none;
-}
-
-@media (max-width: 1100px) {
-  .list-heading {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .readiness-summary-grid {
-    --metric-panel-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .readiness-directory-head,
-  .readiness-row {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .readiness-directory-head {
-    display: none;
-  }
-
-  .readiness-row {
-    gap: 0.75rem;
-  }
-
-  .readiness-row__actions {
-    justify-content: flex-start;
-  }
-
-  .readiness-decision__meta {
-    justify-items: start;
-  }
-
-  .readiness-list-head,
-  .readiness-list-head__meta {
-    justify-items: start;
-  }
-}
+.action-btn { font-size: 11px; font-weight: 800; color: #2563eb; background: #eff6ff; padding: 0.35rem 0.75rem; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s ease; border: none; }
+.action-btn:hover { background: #dbeafe; }
 </style>

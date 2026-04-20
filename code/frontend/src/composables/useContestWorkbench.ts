@@ -32,13 +32,13 @@ export interface ContestWorkbenchSummaryItem {
 
 const BASE_STAGES: ContestWorkbenchStage[] = [
   { key: 'basics', label: '基础信息' },
-  { key: 'pool', label: '题目池' },
+  { key: 'pool', label: '题目编排' },
 ]
 
 const AWD_STAGES: ContestWorkbenchStage[] = [
   ...BASE_STAGES,
-  { key: 'awd-config', label: 'AWD 配置' },
-  { key: 'preflight', label: '赛前检查' },
+  { key: 'awd-config', label: 'AWD 服务配置' },
+  { key: 'preflight', label: '就绪审计' },
   { key: 'operations', label: '轮次运行' },
 ]
 
@@ -75,7 +75,7 @@ function buildAwdReadinessSummary(contest: ContestDetailData | null): string {
     return ''
   }
   if (hasContestStarted(contest.status)) {
-    return '轮次运行已开启'
+    return '指挥中心已开启'
   }
   return '请在开赛前完成 AWD 配置与赛前检查'
 }
@@ -90,7 +90,10 @@ export function useContestWorkbench(
 
   const defaultStage = computed<ContestWorkbenchStageKey>(() => {
     if (isAwdContest(contest.value)) {
-      return hasContestStarted(contest.value?.status) ? 'operations' : 'pool'
+      if (hasContestStarted(contest.value?.status)) {
+        return 'operations'
+      }
+      return 'pool'
     }
     return 'basics'
   })

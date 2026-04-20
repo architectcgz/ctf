@@ -665,7 +665,18 @@ const routes: RouteRecordRaw[] = [
         meta: {
           requiresAuth: true,
           roles: ['admin'],
-          title: '编辑竞赛',
+          title: '竞赛工作室',
+          contentLayout: 'bleed',
+        },
+      },
+      {
+        path: 'platform/contests/:id/manage',
+        name: 'ContestOperations',
+        component: () => import('@/views/platform/ContestOperations.vue'),
+        meta: {
+          requiresAuth: true,
+          roles: ['admin'],
+          title: '运维指挥中心',
           contentLayout: 'bleed',
         },
       },

@@ -16,9 +16,16 @@ defineProps<{
       :key="item.key"
       class="journal-note progress-card metric-panel-card contest-workbench-summary-strip__item"
     >
-      <div class="journal-note-label progress-card-label metric-panel-label">{{ item.label }}</div>
-      <div class="journal-note-value progress-card-value metric-panel-value">{{ item.value }}</div>
-      <div v-if="item.hint" class="journal-note-helper progress-card-hint metric-panel-helper">
+      <div class="journal-note-label progress-card-label metric-panel-label">
+        {{ item.label }}
+      </div>
+      <div class="journal-note-value progress-card-value metric-panel-value">
+        {{ item.value }}
+      </div>
+      <div
+        v-if="item.hint"
+        class="journal-note-helper progress-card-hint metric-panel-helper"
+      >
         {{ item.hint }}
       </div>
     </article>

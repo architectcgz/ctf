@@ -1,5 +1,19 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { 
+  ShieldAlert, 
+  Sword, 
+  Target, 
+  Activity, 
+  Wifi, 
+  Zap, 
+  BarChart3, 
+  History, 
+  Terminal,
+  ExternalLink,
+  RefreshCw,
+  AlertTriangle
+} from 'lucide-vue-next'
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import ScoreboardRealtimeBridge from '@/components/scoreboard/ScoreboardRealtimeBridge.vue'
@@ -79,7 +93,7 @@ const currentRound = computed(() => workspace.value?.current_round)
 const myTeam = computed(() => workspace.value?.my_team ?? null)
 const topScore = computed(() => scoreboardRows.value[0]?.score ?? 0)
 const lastSyncedLabel = computed(() =>
-  lastSyncedAt.value ? formatTime(lastSyncedAt.value) : '未同步'
+  lastSyncedAt.value ? formatTime(lastSyncedAt.value) : 'UNSYNCED'
 )
 const targetFilterKeyword = computed(() => targetKeyword.value.trim().toLowerCase())
 
@@ -124,30 +138,26 @@ const defenseAlerts = computed(() => {
 
   for (const challenge of runtimeChallenges.value) {
     const service = getWorkspaceService(challenge)
-    if (!service) {
-      continue
-    }
+    if (!service) continue
 
     const issues: string[] = []
-    let statusLabel = '留意'
+    let statusLabel = 'STABLE'
     let tone: 'danger' | 'warning' = 'warning'
 
     if (service.service_status === 'compromised') {
-      issues.push('本轮服务状态为失陷')
-      statusLabel = '失陷'
+      issues.push('INFILTRATED')
+      statusLabel = 'CRITICAL'
       tone = 'danger'
     } else if (service.service_status === 'down') {
-      issues.push('本轮服务状态为离线')
-      statusLabel = '离线'
+      issues.push('OFFLINE')
+      statusLabel = 'ALERT'
     }
 
     if ((service.attack_received ?? 0) > 0) {
-      issues.push(`本轮收到 ${service.attack_received} 次攻击`)
+      issues.push(`${service.attack_received} HITS DETECTED`)
     }
 
-    if (issues.length === 0) {
-      continue
-    }
+    if (issues.length === 0) continue
 
     items.push({
       challengeId: challenge.challenge_id,
@@ -157,7 +167,6 @@ const defenseAlerts = computed(() => {
       issues,
     })
   }
-
   return items
 })
 
@@ -177,47 +186,31 @@ watch(
 
 function getServiceStatusLabel(status?: string): string {
   switch (status) {
-    case 'up':
-      return '在线'
-    case 'down':
-      return '离线'
-    case 'compromised':
-      return '失陷'
-    default:
-      return '待启动'
+    case 'up': return 'STABLE'
+    case 'down': return 'OFFLINE'
+    case 'compromised': return 'CRITICAL'
+    default: return 'STANDBY'
   }
 }
 
 function getServiceStatusClass(status?: string): string {
-  switch (status) {
-    case 'up':
-      return 'contest-chip contest-chip--success'
-    case 'down':
-      return 'contest-chip contest-chip--neutral'
-    case 'compromised':
-      return 'contest-chip contest-chip--status'
-    default:
-      return 'contest-chip contest-chip--neutral'
-  }
+  return `status-badge status-badge--${status || 'pending'}`
 }
 
 function eventDirectionLabel(direction: 'attack_in' | 'attack_out'): string {
-  return direction === 'attack_out' ? '我方攻击' : '我方被打'
+  return direction === 'attack_out' ? 'OUTBOUND' : 'INBOUND'
 }
 
 function eventResultLabel(success: boolean): string {
-  return success ? '命中' : '未命中'
+  return success ? 'SUCCESS' : 'FAILED'
 }
 
 function formatServiceRef(serviceId?: string): string {
-  return `Service #${serviceId || '--'}`
+  return `SRV-${serviceId || '--'}`
 }
 
 function getChallengeRuntimeKey(challenge: ContestChallengeItem | null | undefined): string {
-  if (!challenge?.awd_service_id) {
-    return ''
-  }
-  return challenge.awd_service_id
+  return challenge?.awd_service_id || ''
 }
 
 function getServiceStartKey(challenge: ContestChallengeItem): string {
@@ -227,18 +220,13 @@ function getServiceStartKey(challenge: ContestChallengeItem): string {
 function getChallengeTitleForEvent(event: { service_id?: string; challenge_id: string }): string {
   if (event.service_id) {
     const matchedByService = challengeByServiceId.value.get(event.service_id)
-    if (matchedByService) {
-      return matchedByService.title
-    }
+    if (matchedByService) return matchedByService.title
   }
   return challengeByChallengeId.value.get(event.challenge_id)?.title || event.challenge_id
 }
 
 function getSubmitResultMessage(): string {
-  if (!submitResult.value) {
-    return ''
-  }
-
+  if (!submitResult.value) return ''
   return formatAttackResultToast(submitResult.value)
 }
 
@@ -249,40 +237,21 @@ function formatAttackResultToast(result: {
   score_gained: number
 }): string {
   const challengeTitle = getChallengeTitleForEvent(result)
-  if (result.is_success) {
-    return `${challengeTitle} 攻击成功，+${result.score_gained} 分`
-  }
-  return `${challengeTitle} 攻击未命中有效 flag`
+  if (result.is_success) return `${challengeTitle}: HIT SUCCESSFUL. +${result.score_gained} PTS`
+  return `${challengeTitle}: NO VALID FLAG RECOVERED.`
 }
 
-function getWorkspaceService(
-  challenge: ContestChallengeItem
-): ContestAWDWorkspaceServiceData | undefined {
-  if (!challenge.awd_service_id) {
-    return undefined
-  }
+function getWorkspaceService(challenge: ContestChallengeItem): ContestAWDWorkspaceServiceData | undefined {
+  if (!challenge.awd_service_id) return undefined
   return servicesByServiceId.value.get(challenge.awd_service_id)
 }
 
-function isTargetServiceForChallenge(
-  service: { service_id?: string; challenge_id: string },
-  challenge: ContestChallengeItem
-): boolean {
+function isTargetServiceForChallenge(service: { service_id?: string; challenge_id: string }, challenge: ContestChallengeItem): boolean {
   return Boolean(challenge.awd_service_id) && service.service_id === challenge.awd_service_id
 }
 
 function buildAttackStateKey(serviceKey: string, teamId: string): string {
   return `${serviceKey}:${teamId}`
-}
-
-function buildAttackSubmissionKey(serviceKey: string, teamId: string): string {
-  return `${serviceKey}:${teamId}`
-}
-
-function getDefenseAlertClass(tone: 'danger' | 'warning'): string {
-  return tone === 'danger'
-    ? 'awd-defense-row awd-defense-row--danger'
-    : 'awd-defense-row awd-defense-row--warning'
 }
 
 async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
@@ -296,706 +265,549 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
 </script>
 
 <template>
-  <section class="awd-workspace-shell">
+  <div class="awd-war-room">
     <ScoreboardRealtimeBridge
       v-if="contest.status === 'running' || contest.status === 'frozen'"
       :contest-id="contest.id"
       @updated="refreshAll"
     />
 
-    <section class="awd-workspace-summary metric-panel-grid">
-      <article class="metric-panel-card">
-        <div class="metric-panel-label">当前轮次</div>
-        <div class="metric-panel-value">
-          {{ currentRound ? `Round ${currentRound.round_number}` : '等待开赛' }}
+    <!-- HUD KPI Strip -->
+    <header class="awd-hud-strip">
+      <div class="hud-item">
+        <div class="hud-label">OPERATIONAL ROUND</div>
+        <div class="hud-value font-mono">
+          {{ currentRound ? `#${String(currentRound.round_number).padStart(2, '0')}` : '--' }}
         </div>
-        <div class="metric-panel-helper">
-          {{
-            currentRound
-              ? `${currentRound.attack_score}/${currentRound.defense_score} 分值`
-              : '轮次尚未开始'
-          }}
-        </div>
-      </article>
-      <article class="metric-panel-card">
-        <div class="metric-panel-label">我的队伍</div>
-        <div class="metric-panel-value">{{ myTeam?.team_name || '未加入' }}</div>
-        <div class="metric-panel-helper">{{ hasTeam ? '已进入战场视角' : '请先加入队伍' }}</div>
-      </article>
-      <article class="metric-panel-card">
-        <div class="metric-panel-label">服务目录</div>
-        <div class="metric-panel-value">{{ workspace?.services.length || 0 }}</div>
-        <div class="metric-panel-helper">当前已同步到工作台的本队服务数</div>
-      </article>
-      <article class="metric-panel-card">
-        <div class="metric-panel-label">榜首分数</div>
-        <div class="metric-panel-value">{{ topScore }}</div>
-        <div class="metric-panel-helper">实时排行榜 Top 1 官方总分</div>
-      </article>
-    </section>
-
-    <div v-if="loading && !workspace" class="contest-loading">
-      <div class="contest-loading__spinner" />
-      <div class="contest-loading__text">正在同步 AWD 战场...</div>
-    </div>
-
-    <div v-else-if="error" class="contest-alert contest-alert--warning">
-      {{ error }}
-    </div>
-
-    <AppEmpty
-      v-else-if="!hasTeam"
-      icon="Users"
-      title="先加入队伍"
-      description="先在队伍页创建或加入队伍，再进入 AWD 战场获取目标和提交 stolen flag。"
-    />
-
-    <div v-else class="awd-workspace-layout">
-      <div class="awd-workspace-main">
-        <section class="contest-section contest-section--flat">
-          <div class="contest-section__head workspace-tab-heading">
-            <div class="workspace-tab-heading__main">
-              <div class="workspace-overline">Defense</div>
-              <h2 class="contest-section__title workspace-tab-heading__title">防守告警</h2>
-            </div>
-            <div class="contest-section__hint">
-              {{ defenseAlerts.length > 0 ? `${defenseAlerts.length} 项待处理` : '当前轮次无异常' }}
-            </div>
-          </div>
-
-          <div v-if="defenseAlerts.length === 0" class="contest-inline-note">
-            当前轮次未发现本队服务异常，战场会继续保持同步。
-          </div>
-
-          <div v-else class="awd-defense-list">
-            <article
-              v-for="alert in defenseAlerts"
-              :key="alert.challengeId"
-              :class="getDefenseAlertClass(alert.tone)"
-            >
-              <div class="awd-defense-row__head">
-                <div class="awd-defense-row__title">
-                  <h3>{{ alert.challengeTitle }}</h3>
-                  <span
-                    class="contest-chip"
-                    :class="
-                      alert.tone === 'danger' ? 'contest-chip--status' : 'contest-chip--neutral'
-                    "
-                  >
-                    {{ alert.statusLabel }}
-                  </span>
-                </div>
-              </div>
-              <div class="awd-defense-row__issues">
-                <span v-for="issue in alert.issues" :key="issue">{{ issue }}</span>
-              </div>
-            </article>
-          </div>
-        </section>
-
-        <section class="contest-section contest-section--flat">
-          <div class="contest-section__head workspace-tab-heading">
-            <div class="workspace-tab-heading__main">
-              <div class="workspace-overline">My Services</div>
-              <h2 class="contest-section__title workspace-tab-heading__title">我的服务</h2>
-            </div>
-            <div class="contest-section__hint">{{ runtimeChallenges.length }} 题</div>
-          </div>
-
-          <div v-if="runtimeChallenges.length === 0" class="contest-inline-note">
-            当前赛事还没有发布可用服务。
-          </div>
-
-          <div v-else class="awd-service-list">
-            <article
-              v-for="challenge in runtimeChallenges"
-              :key="challenge.id"
-              class="awd-service-row"
-            >
-              <div class="awd-service-row__main">
-                <div class="awd-service-row__head">
-                  <h3>{{ challenge.title }}</h3>
-                  <span
-                    :class="getServiceStatusClass(getWorkspaceService(challenge)?.service_status)"
-                  >
-                    {{ getServiceStatusLabel(getWorkspaceService(challenge)?.service_status) }}
-                  </span>
-                </div>
-                <div class="awd-service-row__meta">
-                  <span>{{ challenge.category }}</span>
-                  <span>{{ challenge.points }} pts</span>
-                  <span v-if="getWorkspaceService(challenge)?.service_id">
-                    {{ formatServiceRef(getWorkspaceService(challenge)?.service_id) }}
-                  </span>
-                  <span v-if="getWorkspaceService(challenge)?.access_url">
-                    {{ getWorkspaceService(challenge)?.access_url }}
-                  </span>
-                  <span v-else>尚未生成访问地址</span>
-                </div>
-              </div>
-
-              <div class="awd-service-row__actions" role="group" aria-label="服务操作">
-                <a
-                  v-if="getWorkspaceService(challenge)?.access_url"
-                  class="ui-btn ui-btn--ghost"
-                  :href="getWorkspaceService(challenge)?.access_url"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  打开服务
-                </a>
-                <button
-                  type="button"
-                  class="ui-btn ui-btn--primary"
-                  :disabled="!challenge.awd_service_id || startingServiceKey === getServiceStartKey(challenge)"
-                  @click="challenge.awd_service_id && startService(challenge.awd_service_id)"
-                >
-                  {{
-                    startingServiceKey === getServiceStartKey(challenge)
-                      ? '启动中...'
-                      : getWorkspaceService(challenge)?.access_url
-                        ? '刷新服务'
-                        : '启动服务'
-                  }}
-                </button>
-              </div>
-            </article>
-          </div>
-        </section>
-
-        <section class="contest-section contest-section--flat">
-          <div class="contest-section__head workspace-tab-heading">
-            <div class="workspace-tab-heading__main">
-              <div class="workspace-overline">Targets</div>
-              <h2 class="contest-section__title workspace-tab-heading__title">目标目录</h2>
-            </div>
-            <div class="contest-section__hint">
-              {{ filteredTargets.length }}/{{ activeTargets.length }} 支队伍
-            </div>
-          </div>
-
-          <div class="awd-target-toolbar">
-            <div class="awd-target-toolbar__field">
-              <label class="ui-field__label" for="awd-target-challenge">攻击题目</label>
-              <div class="ui-control-wrap awd-target-control">
-                <select id="awd-target-challenge" v-model="activeChallengeKey" class="ui-control">
-                  <option v-if="runtimeChallenges.length === 0" value="" disabled>
-                    当前没有可选攻击题目
-                  </option>
-                  <option
-                    v-for="challenge in runtimeChallenges"
-                    :key="getChallengeRuntimeKey(challenge)"
-                    :value="getChallengeRuntimeKey(challenge)"
-                  >
-                    {{ challenge.title }}
-                  </option>
-                </select>
-              </div>
-            </div>
-
-            <div class="awd-target-toolbar__field awd-target-toolbar__field--wide">
-              <label class="ui-field__label" for="awd-target-search">筛选队伍</label>
-              <div class="ui-control-wrap awd-target-control awd-target-search">
-                <input
-                  id="awd-target-search"
-                  v-model="targetKeyword"
-                  type="text"
-                  class="ui-control"
-                  placeholder="输入队伍名"
-                />
-              </div>
-            </div>
-
-            <label class="awd-target-toggle" for="awd-target-reachable-only">
-              <input
-                id="awd-target-reachable-only"
-                v-model="showOnlyReachableTargets"
-                type="checkbox"
-              />
-              <span>仅看可用地址</span>
-            </label>
-          </div>
-
-          <div v-if="!activeChallenge" class="contest-inline-note">当前没有可选攻击题目。</div>
-
-          <div v-else-if="filteredTargets.length === 0" class="contest-inline-note">
-            没有匹配的目标队伍。
-          </div>
-
-          <div v-else class="awd-target-list">
-            <article v-for="target in filteredTargets" :key="target.team_id" class="awd-target-row">
-              <div class="awd-target-row__main">
-                <div class="awd-target-row__head">
-                  <div class="contest-chip contest-chip--neutral">{{ target.team_name }}</div>
-                  <div v-if="target.active_service?.service_id" class="awd-runtime-ref-chip">
-                    {{ formatServiceRef(target.active_service.service_id) }}
-                  </div>
-                  <div class="awd-target-row__url">
-                    {{ target.active_service?.access_url || '当前没有可用目标地址' }}
-                  </div>
-                </div>
-              </div>
-
-              <div class="awd-target-row__form">
-                <div class="ui-control-wrap flag-submit__control">
-                  <input
-                    :value="
-                      flagInputs[buildAttackStateKey(activeChallengeRuntimeKey, target.team_id)] ||
-                      ''
-                    "
-                    type="text"
-                    class="ui-control"
-                    placeholder="flag{...}"
-                    @input="
-                      flagInputs[buildAttackStateKey(activeChallengeRuntimeKey, target.team_id)] =
-                        String(($event.target as HTMLInputElement).value)
-                    "
-                  />
-                </div>
-                <button
-                  type="button"
-                  class="ui-btn ui-btn--primary"
-                  :disabled="
-                    !target.active_service?.access_url ||
-                    submittingKey ===
-                      buildAttackSubmissionKey(activeChallengeRuntimeKey, target.team_id)
-                  "
-                  @click="handleSubmit(activeChallengeRuntimeKey, target.team_id)"
-                >
-                  {{
-                    submittingKey ===
-                    buildAttackSubmissionKey(activeChallengeRuntimeKey, target.team_id)
-                      ? '提交中...'
-                      : '提交 stolen flag'
-                  }}
-                </button>
-              </div>
-            </article>
-          </div>
-
-          <div
-            v-if="submitResult"
-            class="contest-alert"
-            :class="submitResult.is_success ? 'contest-alert--success' : 'contest-alert--danger'"
-          >
-            {{ getSubmitResultMessage() }}
-          </div>
-        </section>
+        <div class="hud-helper">{{ currentRound?.status.toUpperCase() || 'WAITING' }}</div>
       </div>
+      <div class="hud-item">
+        <div class="hud-label">BATTLE SQUAD</div>
+        <div class="hud-value">{{ myTeam?.team_name || 'UNASSIGNED' }}</div>
+        <div class="hud-helper">RANK: #{{ scoreboardRows.find(r => r.team_id === myTeam?.team_id)?.rank || '--' }}</div>
+      </div>
+      <div class="hud-item">
+        <div class="hud-label">SQUAD ASSETS</div>
+        <div class="hud-value font-mono">{{ workspace?.services.length || 0 }}</div>
+        <div class="hud-helper">ACTIVE SERVICES</div>
+      </div>
+      <div class="hud-item">
+        <div class="hud-label">APEX SCORE</div>
+        <div class="hud-value font-mono text-cyan-400">{{ topScore }}</div>
+        <div class="hud-helper">BATTLEFIELD PEAK</div>
+      </div>
+      <div class="hud-actions">
+        <button class="hud-refresh-btn" :disabled="loading" @click="refreshAll">
+          <RefreshCw class="h-4 w-4" :class="{ 'animate-spin': loading }" />
+          <span>{{ lastSyncedLabel }}</span>
+        </button>
+      </div>
+    </header>
 
-      <aside class="awd-workspace-rail">
-        <section class="contest-section contest-section--flat">
-          <div class="contest-section__head workspace-tab-heading">
-            <div class="workspace-tab-heading__main">
-              <div class="workspace-overline">Status</div>
-              <h2 class="contest-section__title workspace-tab-heading__title">战场状态</h2>
-            </div>
-            <button
-              type="button"
-              class="ui-btn ui-btn--ghost ui-btn--sm"
-              :disabled="loading"
-              @click="refreshAll"
-            >
-              {{ loading ? '刷新中...' : '立即刷新' }}
-            </button>
-          </div>
+    <div v-if="loading && !workspace" class="war-room-loading">
+      <div class="radar-scan"></div>
+      <p>ESTABLISHING BATTLEFIELD LINK...</p>
+    </div>
 
-          <div class="awd-rail-list">
-            <div class="awd-rail-row">
-              <span>当前轮次</span>
-              <strong>{{
-                currentRound ? `Round ${currentRound.round_number}` : '等待开赛'
-              }}</strong>
-            </div>
-            <div class="awd-rail-row">
-              <span>轮次状态</span>
-              <strong>{{ currentRound?.status || 'pending' }}</strong>
-            </div>
-            <div class="awd-rail-row">
-              <span>同步策略</span>
-              <strong>{{ shouldAutoRefresh ? '每 15 秒自动刷新' : '手动刷新' }}</strong>
-            </div>
-            <div class="awd-rail-row">
-              <span>最近同步</span>
-              <strong>{{ lastSyncedLabel }}</strong>
-            </div>
-            <div class="awd-rail-row">
-              <span>轮次更新时间</span>
-              <strong>{{ currentRound ? formatTime(currentRound.updated_at) : '未记录' }}</strong>
-            </div>
-          </div>
-        </section>
+    <AppEmpty v-else-if="!hasTeam" icon="Users" title="JOIN A SQUAD" description="You must be part of a team to access the AWD battlefield." class="war-room-empty" />
 
-        <section class="contest-section contest-section--flat">
-          <div class="contest-section__head workspace-tab-heading">
-            <div class="workspace-tab-heading__main">
-              <div class="workspace-overline">Scoreboard</div>
-              <h2 class="contest-section__title workspace-tab-heading__title">实时榜单</h2>
-            </div>
-          </div>
-
-          <div v-if="scoreboardRows.length === 0" class="contest-inline-note">
-            当前还没有榜单数据。
-          </div>
-
-          <div v-else class="awd-scoreboard-list">
-            <div v-for="item in scoreboardRows" :key="item.team_id" class="awd-scoreboard-row">
-              <span class="awd-scoreboard-rank">{{ item.rank }}</span>
-              <span class="awd-scoreboard-team">{{ item.team_name }}</span>
-              <strong class="awd-scoreboard-score">{{ item.score }}</strong>
-            </div>
-          </div>
-        </section>
-
-        <section class="contest-section contest-section--flat">
-          <div class="contest-section__head workspace-tab-heading">
-            <div class="workspace-tab-heading__main">
-              <div class="workspace-overline">Feedback</div>
-              <h2 class="contest-section__title workspace-tab-heading__title">最近反馈</h2>
-            </div>
-          </div>
-
-          <div v-if="workspace?.recent_events.length === 0" class="contest-inline-note">
-            当前轮次还没有与你队伍相关的攻防反馈。
-          </div>
-
-          <div v-else class="awd-event-list">
-            <article
-              v-for="event in workspace?.recent_events"
-              :key="event.id"
-              class="awd-event-row"
-            >
-              <div class="awd-event-row__head">
-                <span class="contest-chip contest-chip--neutral">{{
-                  eventDirectionLabel(event.direction)
-                }}</span>
-                <span>{{ event.peer_team_name }}</span>
-                <span class="awd-event-row__challenge" data-testid="awd-feedback-challenge-title">
-                  {{ getChallengeTitleForEvent(event) }}
-                </span>
+    <div v-else class="war-room-grid">
+      <!-- 1. Defense Monitor (Left) -->
+      <aside class="war-room-col column-defense">
+        <section class="ops-panel">
+          <header class="ops-panel__header">
+            <ShieldAlert class="h-4 w-4 text-orange-500" />
+            <h3 class="ops-panel__title">DEFENSE MONITOR</h3>
+          </header>
+          
+          <div class="ops-panel__content custom-scrollbar">
+            <!-- Alerts -->
+            <div v-if="defenseAlerts.length > 0" class="defense-alerts">
+              <div v-for="alert in defenseAlerts" :key="alert.challengeId" class="defense-alert" :class="alert.tone">
+                <div class="flex items-center justify-between">
+                  <span class="alert-title">{{ alert.challengeTitle }}</span>
+                  <span class="alert-badge">{{ alert.statusLabel }}</span>
+                </div>
+                <div class="alert-issues">
+                  <span v-for="issue in alert.issues" :key="issue">{{ issue }}</span>
+                </div>
               </div>
-              <div class="awd-event-row__meta">
-                <span>{{ eventResultLabel(event.is_success) }}</span>
-                <span>{{ event.score_gained }} 分</span>
-                <span v-if="event.service_id">{{ formatServiceRef(event.service_id) }}</span>
+            </div>
+
+            <!-- Services -->
+            <div class="asset-list mt-4">
+              <div class="asset-header">SQUAD SERVICES</div>
+              <div v-for="challenge in runtimeChallenges" :key="challenge.id" class="asset-item">
+                <div class="asset-main">
+                  <div class="flex items-center justify-between">
+                    <span class="asset-title">{{ challenge.title }}</span>
+                    <span :class="getServiceStatusClass(getWorkspaceService(challenge)?.service_status)">
+                      {{ getServiceStatusLabel(getWorkspaceService(challenge)?.service_status) }}
+                    </span>
+                  </div>
+                  <div class="asset-meta font-mono text-[10px]">
+                    {{ getWorkspaceService(challenge)?.access_url || 'WAITING FOR ALLOCATION' }}
+                  </div>
+                </div>
+                <div class="asset-actions">
+                  <a v-if="getWorkspaceService(challenge)?.access_url" :href="getWorkspaceService(challenge)?.access_url" target="_blank" class="asset-btn"><ExternalLink class="h-3 w-3" /></a>
+                  <button @click="challenge.awd_service_id && startService(challenge.awd_service_id)" :disabled="startingServiceKey === getServiceStartKey(challenge)" class="asset-btn asset-btn--primary">
+                    {{ startingServiceKey === getServiceStartKey(challenge) ? '...' : 'REBOOT' }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </aside>
+
+      <!-- 2. Attack Vector (Middle) -->
+      <main class="war-room-col column-attack">
+        <section class="ops-panel">
+          <header class="ops-panel__header">
+            <Sword class="h-4 w-4 text-red-500" />
+            <h3 class="ops-panel__title">ATTACK VECTOR</h3>
+          </header>
+
+          <div class="ops-panel__toolbar">
+            <div class="toolbar-field">
+              <label>TARGET SECTOR</label>
+              <select v-model="activeChallengeKey" class="war-room-select">
+                <option v-for="challenge in runtimeChallenges" :key="getChallengeRuntimeKey(challenge)" :value="getChallengeRuntimeKey(challenge)">
+                  {{ challenge.title }}
+                </option>
+              </select>
+            </div>
+            <div class="toolbar-field">
+              <label>SQUAD FILTER</label>
+              <input v-model="targetKeyword" type="text" placeholder="FILTER BY NAME..." class="war-room-input" />
+            </div>
+          </div>
+
+          <div class="ops-panel__content custom-scrollbar">
+            <div v-if="!activeChallenge" class="panel-note">SELECT A TARGET SECTOR TO COMMENCE ATTACK.</div>
+            <div v-else-if="filteredTargets.length === 0" class="panel-note">NO MATCHING HOSTILES IN CURRENT SECTOR.</div>
+            <div v-else class="target-grid">
+              <article v-for="target in filteredTargets" :key="target.team_id" class="target-card">
+                <div class="target-info">
+                  <div class="target-team font-black text-cyan-400">{{ target.team_name.toUpperCase() }}</div>
+                  <div class="target-url font-mono">{{ target.active_service?.access_url || 'UNREACHABLE' }}</div>
+                </div>
+                <div class="target-action">
+                  <input 
+                    :value="flagInputs[buildAttackStateKey(activeChallengeRuntimeKey, target.team_id)] || ''"
+                    @input="flagInputs[buildAttackStateKey(activeChallengeRuntimeKey, target.team_id)] = String(($event.target as HTMLInputElement).value)"
+                    placeholder="ENTER STOLEN FLAG..." 
+                    class="flag-input" 
+                    @keyup.enter="handleSubmit(activeChallengeRuntimeKey, target.team_id)"
+                  />
+                  <button 
+                    @click="handleSubmit(activeChallengeRuntimeKey, target.team_id)"
+                    :disabled="!target.active_service?.access_url || submittingKey === buildAttackStateKey(activeChallengeRuntimeKey, target.team_id)"
+                    class="submit-btn"
+                  >
+                    {{ submittingKey === buildAttackStateKey(activeChallengeRuntimeKey, target.team_id) ? '...' : 'SUBMIT' }}
+                  </button>
+                </div>
+              </article>
+            </div>
+          </div>
+
+          <footer v-if="submitResult" class="ops-panel__footer">
+            <div class="result-alert" :class="submitResult.is_success ? 'success' : 'danger'">
+              <Terminal class="h-3.5 w-3.5" />
+              <span>{{ getSubmitResultMessage().toUpperCase() }}</span>
+            </div>
+          </footer>
+        </section>
+      </main>
+
+      <!-- 3. Intelligence (Right) -->
+      <aside class="war-room-col column-intel">
+        <section class="ops-panel h-1/2 mb-4">
+          <header class="ops-panel__header">
+            <BarChart3 class="h-4 w-4 text-cyan-500" />
+            <h3 class="ops-panel__title">FIELD INTEL</h3>
+          </header>
+          <div class="ops-panel__content custom-scrollbar">
+            <div v-for="item in scoreboardRows.slice(0, 10)" :key="item.team_id" class="intel-row" :class="{ 'is-me': item.team_id === myTeam?.team_id }">
+              <span class="intel-rank">#{{ item.rank }}</span>
+              <span class="intel-name truncate">{{ item.team_name }}</span>
+              <span class="intel-score font-mono">{{ item.score }}</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="ops-panel h-1/2">
+          <header class="ops-panel__header">
+            <History class="h-4 w-4 text-purple-500" />
+            <h3 class="ops-panel__title">RECENT FEEDBACK</h3>
+          </header>
+          <div class="ops-panel__content custom-scrollbar">
+            <div v-for="event in workspace?.recent_events" :key="event.id" class="feedback-item" :class="event.direction">
+              <div class="flex items-center justify-between text-[10px] font-black">
+                <span>{{ eventDirectionLabel(event.direction) }}</span>
                 <span>{{ formatTime(event.created_at) }}</span>
               </div>
-            </article>
+              <div class="mt-1 text-xs">{{ event.peer_team_name }} / {{ getChallengeTitleForEvent(event) }}</div>
+              <div class="mt-1 flex items-center justify-between font-mono text-[10px]">
+                <span :class="event.is_success ? 'text-emerald-400' : 'text-slate-500'">{{ eventResultLabel(event.is_success) }}</span>
+                <span class="text-cyan-400">+{{ event.score_gained }}</span>
+              </div>
+            </div>
+            <div v-if="workspace?.recent_events.length === 0" class="panel-note">NO RECENT OPERATIONAL DATA.</div>
           </div>
         </section>
       </aside>
     </div>
-  </section>
+  </div>
 </template>
 
 <style scoped>
-.awd-workspace-shell {
-  display: grid;
+.awd-war-room {
+  --war-bg: #0f172a;
+  --war-panel: rgba(30, 41, 59, 0.7);
+  --war-border: #334155;
+  --war-accent: #22d3ee;
+  --war-text: #f8fafc;
+  --war-muted: #94a3b8;
+  
+  background: var(--war-bg);
+  color: var(--war-text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
   gap: 1rem;
-}
-
-.contest-section {
-  border-radius: 24px;
-  border: 1px solid color-mix(in srgb, var(--journal-border) 82%, transparent);
-  background: color-mix(in srgb, var(--journal-surface-subtle) 92%, transparent);
   padding: 1rem;
 }
 
-.contest-section__head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  margin-bottom: 0.95rem;
-}
-
-.contest-section__title {
-  margin: 0.35rem 0 0;
-  color: var(--journal-ink);
-  font-size: var(--font-size-1-12);
-}
-
-.contest-section__hint {
-  color: var(--journal-muted);
-  font-size: var(--font-size-0-82);
-}
-
-.contest-inline-note {
-  border-radius: 16px;
-  border: 1px dashed color-mix(in srgb, var(--journal-border) 78%, transparent);
-  padding: 0.9rem 1rem;
-  color: var(--journal-muted);
-  background: color-mix(in srgb, var(--journal-surface) 88%, transparent);
-}
-
-.contest-alert {
-  margin-top: 0.95rem;
-  border-radius: 16px;
-  padding: 0.8rem 0.95rem;
-  font-size: var(--font-size-0-84);
-}
-
-.contest-alert--success {
-  background: color-mix(in srgb, #34d399 12%, transparent);
-  color: color-mix(in srgb, #34d399 88%, var(--journal-ink));
-}
-
-.contest-alert--danger {
-  background: color-mix(in srgb, #f87171 12%, transparent);
-  color: color-mix(in srgb, #f87171 88%, var(--journal-ink));
-}
-
-.contest-alert--warning {
-  background: color-mix(in srgb, #fbbf24 12%, transparent);
-  color: color-mix(in srgb, #fbbf24 88%, var(--journal-ink));
-}
-
-.contest-chip {
-  display: inline-flex;
-  align-items: center;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--journal-border) 86%, transparent);
-  padding: 0.36rem 0.78rem;
-  font-size: var(--font-size-0-76);
-  font-weight: 700;
-  color: var(--journal-muted);
-}
-
-.contest-chip--status {
-  color: color-mix(in srgb, #f59e0b 88%, var(--journal-ink));
-  border-color: color-mix(in srgb, #f59e0b 28%, transparent);
-  background: color-mix(in srgb, #f59e0b 11%, transparent);
-}
-
-.contest-chip--success {
-  color: color-mix(in srgb, #34d399 88%, var(--journal-ink));
-  border-color: color-mix(in srgb, #34d399 26%, transparent);
-  background: color-mix(in srgb, #34d399 10%, transparent);
-}
-
-.contest-chip--neutral {
-  background: color-mix(in srgb, var(--journal-surface) 86%, transparent);
-}
-
-.awd-runtime-ref-chip {
-  display: inline-flex;
-  align-items: center;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--journal-accent) 28%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
-  padding: 0.32rem 0.72rem;
-  color: var(--journal-accent-strong);
-  font-family: var(--font-family-mono);
-  font-size: var(--font-size-0-74);
-  font-weight: 700;
-  white-space: nowrap;
-}
-
-.flag-submit__control {
-  flex: 1 1 12rem;
-  min-width: 0;
-}
-
-.awd-workspace-summary {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-.awd-workspace-layout {
+/* HUD Strip */
+.awd-hud-strip {
   display: grid;
-  grid-template-columns: minmax(0, 1.45fr) minmax(18rem, 0.8fr);
+  grid-template-columns: repeat(4, 1fr) auto;
   gap: 1rem;
+  background: var(--war-panel);
+  border: 1px solid var(--war-border);
+  border-radius: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  backdrop-filter: blur(10px);
 }
 
-.awd-workspace-main,
-.awd-workspace-rail {
-  display: grid;
-  gap: 1rem;
-}
-
-.awd-service-list,
-.awd-defense-list,
-.awd-target-list,
-.awd-event-list,
-.awd-scoreboard-list {
-  display: grid;
-  gap: 0.85rem;
-}
-
-.awd-defense-row,
-.awd-service-row,
-.awd-target-row,
-.awd-event-row,
-.awd-scoreboard-row {
-  display: grid;
-  gap: 0.75rem;
-  border: 1px solid color-mix(in srgb, var(--journal-border) 84%, transparent);
-  border-radius: 18px;
-  background: color-mix(in srgb, var(--journal-surface-subtle) 92%, transparent);
-  padding: 1rem;
-}
-
-.awd-defense-row {
-  gap: 0.85rem;
-}
-
-.awd-defense-row--danger {
-  border-color: color-mix(in srgb, #f87171 28%, transparent);
-  background: color-mix(in srgb, #f87171 10%, var(--journal-surface-subtle));
-}
-
-.awd-defense-row--warning {
-  border-color: color-mix(in srgb, #f59e0b 24%, transparent);
-  background: color-mix(in srgb, #f59e0b 8%, var(--journal-surface-subtle));
-}
-
-.awd-service-row {
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-}
-
-.awd-defense-row__head,
-.awd-service-row__head,
-.awd-target-row__head,
-.awd-event-row__head {
+.hud-item {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.65rem;
+  flex-direction: column;
 }
 
-.awd-defense-row__title {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.65rem;
+.hud-label {
+  font-size: 9px;
+  font-weight: 900;
+  color: var(--war-muted);
+  letter-spacing: 0.1em;
 }
 
-.awd-defense-row__title h3,
-.awd-service-row__head h3 {
-  margin: 0;
-  font-size: 1rem;
-  color: var(--journal-ink);
+.hud-value {
+  font-size: 1.15rem;
+  font-weight: 900;
+  margin: 0.15rem 0;
 }
 
-.awd-defense-row__issues,
-.awd-service-row__meta,
-.awd-event-row__meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  color: var(--journal-muted);
-  font-size: var(--font-size-0-82);
-}
-
-.awd-service-row__actions,
-.awd-target-row__form {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.65rem;
-  align-items: center;
-}
-
-.awd-target-toolbar {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.75rem;
-  margin-bottom: 0.95rem;
-}
-
-.awd-target-toolbar__field {
-  display: grid;
-  gap: 0.45rem;
-}
-
-.awd-target-toolbar__field--wide {
-  grid-column: span 2;
-}
-
-.awd-target-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.55rem;
-  color: var(--journal-muted);
-  font-size: var(--font-size-0-80);
+.hud-helper {
+  font-size: 10px;
   font-weight: 700;
+  color: var(--war-accent);
 }
 
-.awd-target-control {
-  width: 100%;
-}
-
-.awd-target-row__url {
-  font-family: var(--font-family-mono, monospace);
-  font-size: var(--font-size-0-80);
-  color: var(--journal-muted);
-  word-break: break-all;
-}
-
-.awd-rail-list {
-  display: grid;
-  gap: 0.75rem;
-}
-
-.awd-rail-row,
-.awd-scoreboard-row {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.awd-scoreboard-rank {
-  display: inline-flex;
+.hud-refresh-btn {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 1.9rem;
-  height: 1.9rem;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--journal-border) 86%, transparent);
-  color: var(--journal-ink);
+  gap: 0.25rem;
+  padding: 0 1rem;
+  border-left: 1px solid var(--war-border);
+  color: var(--war-muted);
+  font-size: 10px;
   font-weight: 700;
+  cursor: pointer;
 }
 
-.awd-scoreboard-team {
-  min-width: 0;
-  color: var(--journal-ink);
+.hud-refresh-btn:hover { color: var(--war-text); }
+
+/* Layout Grid */
+.war-room-grid {
+  display: grid;
+  grid-template-columns: 18rem 1fr 18rem;
+  gap: 1rem;
+  flex: 1;
+  min-height: 0;
 }
 
-.awd-event-row__challenge {
-  color: var(--journal-ink);
+.ops-panel {
+  background: var(--war-panel);
+  border: 1px solid var(--war-border);
+  border-radius: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.ops-panel__header {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--war-border);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: rgba(0,0,0,0.1);
+}
+
+.ops-panel__title {
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.15em;
+  color: var(--war-text);
+  margin: 0;
+}
+
+.ops-panel__toolbar {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--war-border);
+  display: flex;
+  gap: 1rem;
+}
+
+.toolbar-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+}
+
+.toolbar-field label {
+  font-size: 8px;
+  font-weight: 900;
+  color: var(--war-muted);
+}
+
+.war-room-select, .war-room-input {
+  background: #0f172a;
+  border: 1px solid var(--war-border);
+  border-radius: 0.25rem;
+  color: var(--war-text);
+  font-size: 11px;
   font-weight: 700;
+  padding: 0.35rem;
+  outline: none;
 }
 
-.awd-scoreboard-score {
-  font-family: var(--font-family-mono, monospace);
-  color: var(--journal-ink);
+.ops-panel__content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
 }
 
-@media (max-width: 1080px) {
-  .awd-workspace-summary {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .awd-workspace-layout {
-    grid-template-columns: minmax(0, 1fr);
-  }
+/* Defense Components */
+.defense-alert {
+  background: rgba(249, 115, 22, 0.05);
+  border: 1px solid rgba(249, 115, 22, 0.2);
+  border-left: 3px solid #f97316;
+  border-radius: 0.25rem;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.5rem;
 }
 
-@media (max-width: 720px) {
-  .awd-workspace-summary {
-    grid-template-columns: minmax(0, 1fr);
-  }
+.defense-alert.danger {
+  background: rgba(239, 68, 68, 0.05);
+  border-color: rgba(239, 68, 68, 0.2);
+  border-left-color: #ef4444;
+}
 
-  .awd-target-toolbar {
-    grid-template-columns: minmax(0, 1fr);
-  }
+.alert-title { font-size: 11px; font-weight: 800; }
+.alert-badge { font-size: 9px; font-weight: 900; }
+.alert-issues { font-size: 9px; color: var(--war-muted); margin-top: 0.25rem; }
 
-  .awd-target-toolbar__field--wide {
-    grid-column: auto;
-  }
+.asset-header {
+  font-size: 9px;
+  font-weight: 900;
+  color: var(--war-muted);
+  margin-bottom: 0.5rem;
+}
 
-  .awd-service-row {
-    grid-template-columns: minmax(0, 1fr);
-  }
+.asset-item {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--war-border);
+  padding: 0.75rem;
+  border-radius: 0.25rem;
+  margin-bottom: 0.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.asset-title { font-size: 12px; font-weight: 800; }
+.asset-meta { color: var(--war-muted); margin-top: 0.25rem; }
+
+.status-badge {
+  font-size: 9px;
+  font-weight: 900;
+  padding: 0.15rem 0.45rem;
+  border-radius: 99px;
+}
+
+.status-badge--up { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+.status-badge--down { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+.status-badge--compromised { background: rgba(249, 115, 22, 0.1); color: #f97316; }
+
+.asset-btn {
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.25rem;
+  background: var(--war-border);
+  color: var(--war-text);
+  border: none;
+  cursor: pointer;
+}
+
+.asset-btn--primary {
+  width: auto;
+  padding: 0 0.75rem;
+  font-size: 10px;
+  font-weight: 900;
+  background: var(--war-accent);
+  color: #0f172a;
+}
+
+/* Attack Components */
+.target-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
+  gap: 1rem;
+}
+
+.target-card {
+  background: rgba(0,0,0,0.2);
+  border: 1px solid var(--war-border);
+  padding: 1rem;
+  border-radius: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.target-team { font-size: 13px; letter-spacing: 0.05em; }
+.target-url { font-size: 10px; color: var(--war-muted); }
+
+.target-action {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.flag-input {
+  flex: 1;
+  background: #0f172a;
+  border: 1px solid var(--war-border);
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+  color: var(--war-text);
+  font-family: var(--font-family-mono);
+  font-size: 12px;
+  outline: none;
+}
+
+.submit-btn {
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 0 1rem;
+  border-radius: 0.25rem;
+  font-weight: 900;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+/* Intel Components */
+.intel-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid rgba(255,255,255,0.02);
+  font-size: 12px;
+}
+
+.intel-row.is-me { color: var(--war-accent); }
+.intel-rank { font-weight: 900; color: var(--war-muted); width: 2rem; }
+.intel-name { flex: 1; font-weight: 700; }
+.intel-score { font-weight: 900; }
+
+.feedback-item {
+  background: rgba(255,255,255,0.01);
+  padding: 0.65rem;
+  border-radius: 0.25rem;
+  border-left: 2px solid #334155;
+  margin-bottom: 0.5rem;
+}
+
+.feedback-item.attack_out { border-left-color: #ef4444; }
+.feedback-item.attack_in { border-left-color: #f97316; }
+
+.panel-note { font-size: 11px; color: var(--war-muted); text-align: center; padding: 2rem 0; }
+
+.ops-panel__footer {
+  padding: 0.75rem 1rem;
+  border-top: 1px solid var(--war-border);
+}
+
+.result-alert {
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.result-alert.success { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+.result-alert.danger { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+
+.war-room-loading {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  font-size: 12px;
+  font-weight: 900;
+  color: var(--war-accent);
+}
+
+.radar-scan {
+  width: 4rem;
+  height: 4rem;
+  border: 2px solid var(--war-accent);
+  border-radius: 50%;
+  position: relative;
+}
+
+.radar-scan::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: conic-gradient(from 0deg, var(--war-accent), transparent);
+  border-radius: 50%;
+  animation: radar 2s linear infinite;
+}
+
+@keyframes radar { to { transform: rotate(360deg); } }
+
+@media (max-width: 1280px) {
+  .war-room-grid { grid-template-columns: 1fr; }
+  .column-defense, .column-intel { grid-row: auto; }
 }
 </style>
+

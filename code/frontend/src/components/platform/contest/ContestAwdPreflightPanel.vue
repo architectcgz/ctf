@@ -27,99 +27,122 @@ function handleNavigateChallenge(challengeId: string) {
 </script>
 
 <template>
-  <section class="contest-awd-preflight-panel">
-    <header class="contest-awd-preflight-panel__header">
-      <div class="workspace-tab-heading__main">
-        <div class="workspace-overline">Preflight</div>
-        <h2 class="workspace-page-title">赛前检查</h2>
-        <p class="workspace-page-copy">
-          开赛前先看这里，集中确认还有哪些题目需要回到 AWD 配置继续补齐。
-        </p>
+  <section class="studio-preflight">
+    <header class="studio-pane-header">
+      <div class="header-main">
+        <h1 class="pane-title">赛前就绪检查</h1>
+        <p class="pane-description">全自动审计所有 AWD 题目与服务的配置状态，确保比赛在裁判逻辑完整的前提下开启。</p>
       </div>
 
-      <section
-        v-if="canForceStart"
-        class="workspace-directory-section contest-awd-preflight-panel__override"
-      >
-        <header class="list-heading contest-awd-preflight-panel__override-head">
-          <div>
-            <div class="journal-note-label">Override Entry</div>
-            <h3 class="list-heading__title">强制开赛</h3>
-            <p class="contest-awd-preflight-panel__override-copy">
-              如果这是演练或临时放行场景，可以直接打开强制开赛弹层，保留原因说明。
-            </p>
-          </div>
-        </header>
+      <!-- Override Entry with a more balanced style -->
+      <div v-if="canForceStart" class="studio-override-card">
+        <div class="override-content">
+          <div class="override-overline">Operational Bypass</div>
+          <h3 class="override-title">强制启动赛事</h3>
+          <p class="override-hint">针对紧急演练或特定场景，可跳过就绪校验。请保留操作备注。</p>
+        </div>
         <button
           id="contest-awd-preflight-force-start"
           type="button"
-          class="ui-btn ui-btn--primary"
+          class="ops-btn ops-btn--primary"
           @click="emit('open:override')"
         >
-          强制开赛
+          强制放行
         </button>
-      </section>
+      </div>
     </header>
 
-    <AWDReadinessSummary
-      :readiness="readiness"
-      :loading="loading"
-      action-label="返回 AWD 配置"
-      @edit-config="handleNavigateChallenge"
-    />
+    <div class="studio-preflight-body">
+      <AWDReadinessSummary
+        :readiness="readiness"
+        :loading="loading"
+        action-label="修正配置"
+        @edit-config="handleNavigateChallenge"
+      />
+    </div>
   </section>
 </template>
 
 <style scoped>
-.contest-awd-preflight-panel {
-  display: grid;
-  gap: var(--space-5);
-}
-
-.contest-awd-preflight-panel__header {
-  display: grid;
-  gap: var(--space-4);
-}
-
-.contest-awd-preflight-panel__override {
+.studio-preflight {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 2rem;
+  padding: 1.5rem 2rem;
+  background: #fdfdfd;
+}
+
+.studio-pane-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.pane-title {
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: #0f172a;
+  margin: 0;
+}
+
+.pane-description {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0.5rem 0 0;
+  max-width: 32rem;
+  line-height: 1.6;
+}
+
+/* Override Card Styles */
+.studio-override-card {
+  background: #fff7ed;
+  border: 1px solid #ffedd5;
+  border-radius: 1rem;
+  padding: 1.25rem 1.5rem;
+  display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 1.25rem 1.35rem;
+  gap: 2rem;
+  max-width: 40rem;
 }
 
-.list-heading {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: var(--space-3);
+.override-overline { font-size: 9px; font-weight: 800; text-transform: uppercase; color: #c2410c; letter-spacing: 0.1em; }
+.override-title { font-size: 14px; font-weight: 900; color: #9a3412; margin: 0.15rem 0; }
+.override-hint { font-size: 11px; color: #9a3412; opacity: 0.8; margin: 0; }
+
+.ops-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.25rem;
+  padding: 0 1.25rem;
+  border-radius: 0.75rem;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.contest-awd-preflight-panel__override-head {
-  flex: 1 1 22rem;
-  min-width: min(100%, 22rem);
+.ops-btn--primary {
+  background: #f97316;
+  color: white;
+  border: none;
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.2);
 }
 
-.contest-awd-preflight-panel__override-copy {
-  margin: 0.45rem 0 0;
-  max-width: 44rem;
-  color: var(--journal-ink);
-  line-height: 1.7;
+.ops-btn--primary:hover {
+  background: #ea580c;
+  transform: translateY(-1px);
 }
 
-.list-heading__title {
-  margin: var(--space-1) 0 0;
-  font-size: var(--font-size-1-20);
-  font-weight: 700;
-  color: var(--journal-ink);
+.studio-preflight-body {
+  background: white;
+  border-radius: 1.25rem;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
 }
 
-@media (max-width: 767px) {
-  .contest-awd-preflight-panel__override {
-    align-items: flex-start;
-  }
+@media (max-width: 1280px) {
+  .studio-pane-header { flex-direction: column; gap: 1.5rem; }
+  .studio-override-card { max-width: 100%; width: 100%; }
 }
 </style>
