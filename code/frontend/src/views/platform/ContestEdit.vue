@@ -631,7 +631,6 @@ onMounted(() => {
   transition: all 0.2s ease;
   cursor: pointer;
 }
-
 .studio-back-btn:hover {
   background: #f8fafc;
   color: #0f172a;

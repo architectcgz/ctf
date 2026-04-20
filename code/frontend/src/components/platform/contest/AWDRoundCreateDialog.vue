@@ -102,10 +102,19 @@ function handleSubmit() {
     @close="closeDialog"
     @update:open="emit('update:open', $event)"
   >
-    <form class="space-y-5" @submit.prevent="handleSubmit">
+    <form
+      class="space-y-5"
+      @submit.prevent="handleSubmit"
+    >
       <div class="ui-field awd-round-field">
-        <label class="ui-field__label" for="awd-round-number">轮次编号</label>
-        <span class="ui-control-wrap" :class="{ 'is-error': !!fieldErrors.round_number }">
+        <label
+          class="ui-field__label"
+          for="awd-round-number"
+        >轮次编号</label>
+        <span
+          class="ui-control-wrap"
+          :class="{ 'is-error': !!fieldErrors.round_number }"
+        >
           <input
             id="awd-round-number"
             v-model.number="form.round_number"
@@ -113,17 +122,27 @@ function handleSubmit() {
             min="1"
             step="1"
             class="ui-control"
-          />
+          >
         </span>
-        <p v-if="fieldErrors.round_number" class="ui-field__error">
+        <p
+          v-if="fieldErrors.round_number"
+          class="ui-field__error"
+        >
           {{ fieldErrors.round_number }}
         </p>
       </div>
 
       <div class="ui-field awd-round-field">
-        <label class="ui-field__label" for="awd-round-status">初始状态</label>
+        <label
+          class="ui-field__label"
+          for="awd-round-status"
+        >初始状态</label>
         <span class="ui-control-wrap">
-          <select id="awd-round-status" v-model="form.status" class="ui-control">
+          <select
+            id="awd-round-status"
+            v-model="form.status"
+            class="ui-control"
+          >
             <option value="pending">待开始</option>
             <option value="running">进行中</option>
             <option value="finished">已结束</option>
@@ -133,8 +152,14 @@ function handleSubmit() {
 
       <div class="grid gap-4 sm:grid-cols-2">
         <div class="ui-field awd-round-field">
-          <label class="ui-field__label" for="awd-attack-score">攻击分</label>
-          <span class="ui-control-wrap" :class="{ 'is-error': !!fieldErrors.attack_score }">
+          <label
+            class="ui-field__label"
+            for="awd-attack-score"
+          >攻击分</label>
+          <span
+            class="ui-control-wrap"
+            :class="{ 'is-error': !!fieldErrors.attack_score }"
+          >
             <input
               id="awd-attack-score"
               v-model.number="form.attack_score"
@@ -142,16 +167,25 @@ function handleSubmit() {
               min="0"
               step="1"
               class="ui-control"
-            />
+            >
           </span>
-          <p v-if="fieldErrors.attack_score" class="ui-field__error">
+          <p
+            v-if="fieldErrors.attack_score"
+            class="ui-field__error"
+          >
             {{ fieldErrors.attack_score }}
           </p>
         </div>
 
         <div class="ui-field awd-round-field">
-          <label class="ui-field__label" for="awd-defense-score">防守分</label>
-          <span class="ui-control-wrap" :class="{ 'is-error': !!fieldErrors.defense_score }">
+          <label
+            class="ui-field__label"
+            for="awd-defense-score"
+          >防守分</label>
+          <span
+            class="ui-control-wrap"
+            :class="{ 'is-error': !!fieldErrors.defense_score }"
+          >
             <input
               id="awd-defense-score"
               v-model.number="form.defense_score"
@@ -159,9 +193,12 @@ function handleSubmit() {
               min="0"
               step="1"
               class="ui-control"
-            />
+            >
           </span>
-          <p v-if="fieldErrors.defense_score" class="ui-field__error">
+          <p
+            v-if="fieldErrors.defense_score"
+            class="ui-field__error"
+          >
             {{ fieldErrors.defense_score }}
           </p>
         </div>

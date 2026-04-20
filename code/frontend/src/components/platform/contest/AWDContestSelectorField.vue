@@ -22,8 +22,16 @@ const emit = defineEmits<{
         :disabled="contests.length === 0"
         @change="emit('update:selectedContestId', ($event.target as HTMLSelectElement).value)"
       >
-        <option v-if="contests.length === 0" value="" disabled>暂无 AWD 赛事</option>
-        <option v-for="contest in contests" :key="contest.id" :value="contest.id">
+        <option
+          v-if="contests.length === 0"
+          value=""
+          disabled
+        >暂无 AWD 赛事</option>
+        <option
+          v-for="contest in contests"
+          :key="contest.id"
+          :value="contest.id"
+        >
           {{ contest.title }}
         </option>
       </select>

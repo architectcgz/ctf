@@ -21,6 +21,10 @@ describe('contest ui primitive adoption phase 2', () => {
     )
   })
 
+  it('contest edit source should not contain truncated placeholder fragments', () => {
+    expect(contestEditSource).not.toContain('\n...\n')
+  })
+
   it('contest challenge orchestration panel should consume shared ui buttons and row actions', () => {
     expect(contestChallengeOrchestrationPanelSource).toContain(
       "from '@/components/common/menus/CActionMenu.vue'"

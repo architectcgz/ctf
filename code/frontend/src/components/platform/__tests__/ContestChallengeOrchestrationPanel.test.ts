@@ -133,6 +133,30 @@ function mountPanel(props?: Record<string, unknown>) {
                 : null
           },
         }),
+        CActionMenu: defineComponent({
+          name: 'CActionMenu',
+          props: {
+            open: { type: Boolean, default: false },
+          },
+          emits: ['update:open'],
+          setup(props, { slots, emit }) {
+            const toggle = () => emit('update:open', !props.open)
+            const close = () => emit('update:open', false)
+
+            return () =>
+              h('div', { class: 'c-action-menu-stub' }, [
+                slots.trigger?.({
+                  open: props.open,
+                  toggle,
+                  close,
+                  setTriggerRef: () => undefined,
+                }),
+                props.open
+                  ? h('div', { class: 'c-action-menu-stub__panel' }, slots.default?.({ close }))
+                  : null,
+              ])
+          },
+        }),
       },
     },
   })
@@ -422,7 +446,9 @@ describe('ContestChallengeOrchestrationPanel', () => {
     })
 
     await flushPromises()
-    await wrapper.get('#contest-challenge-edit-link-1').trigger('click')
+    await wrapper.get('#contest-challenge-more-link-1').trigger('click')
+    await flushPromises()
+    await wrapper.get('#contest-challenge-menu-edit-link-1').trigger('click')
     await flushPromises()
 
     await wrapper.get('#contest-challenge-template').setValue('12')

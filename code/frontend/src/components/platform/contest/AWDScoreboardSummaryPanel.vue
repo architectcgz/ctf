@@ -1,70 +1,71 @@
 <script setup lang="ts">
+import { Trophy, TrendingUp, Users } from 'lucide-vue-next'
 import type { AWDScoreboardSummaryPanelProps } from '@/components/platform/contest/awdInspector.types'
 
 defineProps<AWDScoreboardSummaryPanelProps>()
 </script>
 
 <template>
-  <div class="space-y-6">
-    <div class="overflow-hidden rounded-2xl border border-border">
-      <div class="awd-scoreboard-head">
-        <div class="awd-section-title">实时排行榜</div>
-        <span v-if="scoreboardFrozen" class="awd-scoreboard-frozen-pill">排行榜已冻结</span>
+  <div class="studio-scoreboard-stack">
+    <!-- 1. Rank Context HUD (Subtle) -->
+    <div class="rank-context">
+      <div class="context-item">
+        <Trophy class="h-4 w-4 text-amber-500" />
+        <span>全场总分排名</span>
       </div>
-      <table class="min-w-full divide-y divide-border">
-        <thead class="awd-table-head">
+      <div class="context-divider"></div>
+      <div class="context-item">
+        <Users class="h-4 w-4 text-slate-400" />
+        <span>活跃参赛队伍: {{ scoreboardRows.length }}</span>
+      </div>
+      <div class="context-divider"></div>
+      <div class="context-item" v-if="scoreboardFrozen">
+        <div class="frozen-dot"></div>
+        <span class="text-orange-500 font-bold">排行榜已冻结</span>
+      </div>
+    </div>
+
+    <!-- 2. The Grand Leaderboard -->
+    <div class="log-table-wrap">
+      <table class="studio-table">
+        <thead>
           <tr>
-            <th class="px-4 py-3">排名</th>
-            <th class="px-4 py-3">队伍</th>
-            <th class="px-4 py-3">得分</th>
-            <th class="px-4 py-3">解题数</th>
-            <th class="px-4 py-3">最近得分</th>
+            <th class="w-24">当前排名</th>
+            <th>队伍/选手</th>
+            <th class="text-right">累积总分</th>
+            <th class="text-right">解题进度</th>
+            <th class="text-right">最后命中时间</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-border bg-surface/70">
-          <tr v-for="item in scoreboardRows" :key="item.team_id">
-            <td class="awd-table-cell awd-table-cell--primary awd-scoreboard-rank">#{{ item.rank }}</td>
-            <td class="awd-table-cell awd-table-cell--primary">{{ item.team_name }}</td>
-            <td class="awd-table-cell awd-table-cell--primary">{{ formatScore(item.score) }}</td>
-            <td class="awd-table-cell awd-table-cell--muted">{{ item.solved_count }}</td>
-            <td class="awd-table-cell awd-table-cell--muted">
-              {{ formatDateTime(item.last_submission_at) }}
+        <tbody>
+          <tr v-for="item in scoreboardRows" :key="item.team_id" class="studio-row">
+            <td>
+              <div class="rank-badge" :class="`rank-${item.rank}`">
+                #{{ String(item.rank).padStart(2, '0') }}
+              </div>
+            </td>
+            <td>
+              <div class="team-cell">
+                <span class="team-name">{{ item.team_name }}</span>
+                <span class="team-id">ID: {{ item.team_id }}</span>
+              </div>
+            </td>
+            <td class="text-right font-mono font-black text-blue-600 text-lg">
+              {{ formatScore(item.score) }}
+            </td>
+            <td class="text-right font-mono text-slate-500">
+              <span class="font-bold text-slate-900">{{ item.solved_count }}</span> <small>SOLVED</small>
+            </td>
+            <td class="text-right text-[11px] text-slate-400">
+              {{ formatDateTime(item.last_submission_at).split(' ')[1] || '--' }}
             </td>
           </tr>
           <tr v-if="scoreboardRows.length === 0">
-            <td colspan="5" class="awd-empty-row">当前赛事还没有排行榜数据。</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="overflow-hidden rounded-2xl border border-border">
-      <div class="awd-summary-head">本轮汇总</div>
-      <table class="min-w-full divide-y divide-border">
-        <thead class="awd-table-head">
-          <tr>
-            <th class="px-4 py-3">队伍</th>
-            <th class="px-4 py-3">总分</th>
-            <th class="px-4 py-3">SLA / 攻击 / 防守</th>
-            <th class="px-4 py-3">服务状态</th>
-            <th class="px-4 py-3">被攻击情况</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-border bg-surface/70">
-          <tr v-for="item in summary?.items || []" :key="item.team_id">
-            <td class="awd-table-cell awd-table-cell--primary awd-summary-team">{{ item.team_name }}</td>
-            <td class="awd-table-cell awd-table-cell--primary">{{ item.total_score }}</td>
-            <td class="awd-table-cell awd-table-cell--secondary">
-              SLA {{ item.sla_score ?? 0 }} / 攻击 {{ item.attack_score }} / 防守
-              {{ item.defense_score }}
-            </td>
-            <td class="awd-table-cell awd-table-cell--secondary">
-              正常 {{ item.service_up_count }} / 下线 {{ item.service_down_count }} / 失陷
-              {{ item.service_compromised_count }}
-            </td>
-            <td class="awd-table-cell awd-table-cell--secondary">
-              攻破 {{ item.successful_breach_count }} 次，攻击方
-              {{ item.unique_attackers_against }} 支
+            <td colspan="5" class="py-24 text-center">
+              <div class="flex flex-col items-center gap-3 opacity-20">
+                <Trophy class="h-12 w-12" />
+                <p class="text-sm font-bold">暂无积分记录，比赛尚未产生得分</p>
+              </div>
             </td>
           </tr>
         </tbody>
@@ -74,81 +75,33 @@ defineProps<AWDScoreboardSummaryPanelProps>()
 </template>
 
 <style scoped>
-.awd-scoreboard-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  border-bottom: 1px solid var(--color-border-default);
-  background: color-mix(in srgb, var(--color-bg-surface) 86%, var(--color-bg-base));
-  padding: var(--space-3) var(--space-4);
-}
+.studio-scoreboard-stack { display: flex; flex-direction: column; gap: 1.5rem; }
 
-.awd-summary-head {
-  border-bottom: 1px solid var(--color-border-default);
-  background: color-mix(in srgb, var(--color-bg-surface) 86%, var(--color-bg-base));
-  padding: var(--space-3) var(--space-4);
-  font-size: var(--font-size-sm);
-  font-weight: 600;
-  color: var(--color-text-primary);
-}
+/* Rank HUD */
+.rank-context { display: flex; align-items: center; gap: 1.5rem; padding: 0.5rem 0; }
+.context-item { display: flex; align-items: center; gap: 0.65rem; font-size: 12px; font-weight: 700; color: #64748b; }
+.context-divider { width: 1px; height: 1rem; background: #e2e8f0; }
 
-.awd-section-title {
-  font-size: var(--font-size-sm);
-  font-weight: 600;
-  color: var(--color-text-primary);
-}
+.frozen-dot { width: 6px; height: 6px; border-radius: 50%; background: #f97316; animation: blink 1.5s infinite; }
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
-.awd-scoreboard-frozen-pill {
-  display: inline-flex;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--color-warning) 20%, transparent);
-  background: color-mix(in srgb, var(--color-warning) 10%, transparent);
-  padding: 0.25rem 0.75rem;
-  font-size: var(--font-size-xs);
-  font-weight: 600;
-  color: var(--color-warning);
-}
+/* Leaderboard Table */
+.log-table-wrap { width: 100%; overflow: hidden; background: white; }
+.studio-table { width: 100%; border-collapse: collapse; }
+.studio-table th { background: #f8fafc; padding: 0.75rem 1rem; text-align: left; font-size: 10px; font-weight: 800; text-transform: uppercase; color: #94a3b8; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; }
+.studio-table td { padding: 1.15rem 1rem; border-bottom: 1px solid #f1f5f9; }
 
-.awd-table-head {
-  background: color-mix(in srgb, var(--color-surface-alt) 40%, transparent);
-  text-align: left;
-  font-size: var(--font-size-xs);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.18em;
-  color: var(--color-text-muted);
-}
+.studio-row:hover { background: #f8fafc; }
 
-.awd-table-cell {
-  padding: var(--space-4);
-  font-size: var(--font-size-sm);
-}
+.rank-badge { font-family: var(--font-family-mono); font-size: 14px; font-weight: 900; color: #94a3b8; }
+.rank-1 { color: #f59e0b; font-size: 18px; }
+.rank-2 { color: #94a3b8; }
+.rank-3 { color: #b45309; }
 
-.awd-table-cell--primary {
-  color: var(--color-text-primary);
-}
+.team-cell { display: flex; flex-direction: column; gap: 0.15rem; }
+.team-name { font-size: 14px; font-weight: 800; color: #0f172a; }
+.team-id { font-size: 10px; color: #94a3b8; font-weight: 600; }
 
-.awd-table-cell--secondary {
-  color: var(--color-text-secondary);
-}
-
-.awd-table-cell--muted {
-  color: var(--color-text-muted);
-}
-
-.awd-scoreboard-rank {
-  font-weight: 600;
-}
-
-.awd-summary-team {
-  font-weight: 500;
-}
-
-.awd-empty-row {
-  padding: var(--space-8) var(--space-4);
-  text-align: center;
-  font-size: var(--font-size-sm);
-  color: var(--color-text-muted);
-}
+.text-right { text-align: right; }
+.w-24 { width: 6rem; }
 </style>

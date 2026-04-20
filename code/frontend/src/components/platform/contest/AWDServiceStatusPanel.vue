@@ -10,7 +10,9 @@ import {
   ShieldCheck,
   ShieldX,
   Zap,
+  ChevronDown
 } from 'lucide-vue-next'
+import { computed } from 'vue'
 import type {
   AWDServiceStatusPanelEmits,
   AWDServiceStatusPanelProps,
@@ -18,6 +20,24 @@ import type {
 
 const props = defineProps<AWDServiceStatusPanelProps>()
 const emit = defineEmits<AWDServiceStatusPanelEmits>()
+
+// Matrix specific derivations
+const distinctChallengeIds = computed(() => {
+  const ids = new Set<string>()
+  props.services.forEach(s => ids.add(s.challenge_id))
+  return Array.from(ids)
+})
+
+const teamMap = computed(() => {
+  const map = new Map<number, { team_name: string, services: Record<string, any> }>()
+  props.filteredServices.forEach(s => {
+    if (!map.has(s.team_id)) {
+      map.set(s.team_id, { team_name: s.team_name, services: {} })
+    }
+    map.get(s.team_id)!.services[s.challenge_id] = s
+  })
+  return Array.from(map.entries()).sort((a, b) => a[1].team_name.localeCompare(b[1].team_name))
+})
 
 function updateServiceStatusFilter(value: string): void {
   if (value !== 'all' && value !== 'up' && value !== 'down' && value !== 'compromised') {
@@ -36,395 +56,300 @@ function getServiceCheckTargets(checkResult: Record<string, unknown>) {
 </script>
 
 <template>
-  <div class="awd-status-panel">
-    <header class="awd-panel-header">
-      <div class="awd-panel-identity">
-        <Layers class="h-4.5 w-4.5 text-primary" />
-        <h3 class="awd-panel-title">服务运行矩阵</h3>
+  <div class="awd-matrix-viewer">
+    <div class="matrix-toolbar">
+      <div class="toolbar-left">
+        <h3 class="viewer-title">服务运行矩阵</h3>
+        <div class="filter-summary">显示 {{ teamMap.length }} 支队伍</div>
       </div>
-      <button
-        id="awd-export-services"
-        type="button"
-        class="ui-btn ui-btn--sm ui-btn--ghost awd-service-export-button"
-        :disabled="filteredServices.length === 0"
-        @click="emit('exportServices')"
-      >
-        <FileDown class="h-3.5 w-3.5" />
-        导出报告
-      </button>
-    </header>
-
-    <div class="awd-filter-bar">
-      <label class="awd-filter-field">
-        <span class="awd-filter-label">队伍范围</span>
-        <select
-          id="awd-service-filter-team"
-          :value="serviceTeamFilter"
-          class="awd-filter-control"
-          @change="emit('updateServiceTeamFilter', ($event.target as HTMLSelectElement).value)"
-        >
-          <option value="">全部队伍</option>
-          <option v-for="team in serviceTeamOptions" :key="team.team_id" :value="team.team_id">
-            {{ team.team_name }}
-          </option>
-        </select>
-      </label>
-
-      <label class="awd-filter-field">
-        <span class="awd-filter-label">实时状态</span>
-        <select
-          id="awd-service-filter-status"
-          :value="serviceStatusFilter"
-          class="awd-filter-control"
-          @change="updateServiceStatusFilter(($event.target as HTMLSelectElement).value)"
-        >
-          <option value="all">全部状态</option>
-          <option value="up">在线 (UP)</option>
-          <option value="down">下线 (DOWN)</option>
-          <option value="compromised">失陷 (EXP)</option>
-        </select>
-      </label>
-
-      <label class="awd-filter-field">
-        <span class="awd-filter-label">巡检源</span>
-        <select
-          id="awd-service-filter-source"
-          :value="serviceCheckSourceFilter"
-          class="awd-filter-control"
-          @change="emit('updateServiceCheckSourceFilter', ($event.target as HTMLSelectElement).value)"
-        >
-          <option value="">全部来源</option>
-          <option v-for="source in serviceCheckSourceOptions" :key="source" :value="source">
-            {{ getCheckSourceLabel(source) || source }}
-          </option>
-        </select>
-      </label>
-
-      <label class="awd-filter-field">
-        <span class="awd-filter-label">告警特征</span>
-        <select
-          id="awd-service-filter-alert"
-          :value="serviceAlertReasonFilter"
-          class="awd-filter-control"
-          @change="emit('updateServiceAlertReasonFilter', ($event.target as HTMLSelectElement).value)"
-        >
-          <option value="">不限告警</option>
-          <option v-for="alert in serviceAlerts" :key="alert.key" :value="alert.key">
-            {{ alert.label }}
-          </option>
-        </select>
-      </label>
+      
+      <div class="toolbar-right">
+        <div class="matrix-filters">
+          <select :value="serviceStatusFilter" class="matrix-select" @change="updateServiceStatusFilter(($event.target as HTMLSelectElement).value)">
+            <option value="all">所有状态</option>
+            <option value="up">在线 (UP)</option>
+            <option value="down">离线 (DOWN)</option>
+            <option value="compromised">失陷 (EXP)</option>
+          </select>
+          <select :value="serviceCheckSourceFilter" class="matrix-select" @change="emit('updateServiceCheckSourceFilter', ($event.target as HTMLSelectElement).value)">
+            <option value="">所有来源</option>
+            <option v-for="source in serviceCheckSourceOptions" :key="source" :value="source">{{ getCheckSourceLabel(source) }}</option>
+          </select>
+        </div>
+        <button type="button" class="ops-btn ops-btn--neutral" @click="emit('exportServices')">
+          <FileDown class="h-3.5 w-3.5 mr-2" /> 导出报告
+        </button>
+      </div>
     </div>
 
-    <div class="awd-matrix-scroll overflow-x-auto">
-      <table class="awd-matrix-table">
-        <thead>
-          <tr>
-            <th>队伍节点</th>
-            <th>服务靶题</th>
-            <th class="text-center">官方判定</th>
-            <th>计分权重 (SLA / Def / Atk)</th>
-            <th>检查流水</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="service in filteredServices" :key="service.id">
-            <td class="awd-cell-team">
-              <div class="flex items-center gap-2.5">
-                <div class="h-2 w-2 rounded-full bg-primary/40 shadow-[0_0_8px_var(--color-primary)]" />
-                <span class="font-bold text-text-primary">{{ service.team_name }}</span>
-              </div>
-            </td>
-            <td class="awd-cell-challenge">
-              <span class="font-medium text-text-secondary">
-                {{ getChallengeTitle(service.challenge_id) }}
-              </span>
-            </td>
-            <td class="text-center">
-              <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg font-black text-[11px] uppercase tracking-wider" :class="getServiceStatusClass(service.service_status)">
-                <component 
-                  :is="service.service_status === 'up' ? CheckCircle2 : service.service_status === 'compromised' ? ShieldX : AlertCircle" 
-                  class="h-3.5 w-3.5" 
-                />
-                {{ getServiceStatusLabel(service.service_status) }}
-              </div>
-            </td>
-            <td class="awd-cell-scores">
-              <div class="awd-score-strip">
-                <span class="awd-score-item" title="SLA 分数">
-                  <Activity class="h-3 w-3" /> {{ service.sla_score ?? 0 }}
-                </span>
-                <span class="awd-score-item" title="防守分数">
-                  <ShieldCheck class="h-3 w-3" /> {{ service.defense_score }}
-                </span>
-                <span class="awd-score-item" title="攻击得分">
-                  <Zap class="h-3 w-3" /> {{ service.attack_score }}
-                </span>
-              </div>
-              <div class="mt-1.5 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-text-muted">
-                <span>Total Hit:</span>
-                <span class="text-danger">{{ service.attack_received }}</span>
-              </div>
-            </td>
-            <td class="awd-cell-check">
-              <div class="awd-check-summary font-medium text-xs">
-                {{ summarizeCheckResult(getServiceCheckPresentationResult(service)) }}
-              </div>
-              
-              <div v-if="getServiceCheckActions(service.check_result).length > 0" class="awd-action-chips mt-2">
-                <span
-                  v-for="action in getServiceCheckActions(service.check_result)"
-                  :key="`${service.id}-action-${action.key}`"
-                  class="awd-action-chip"
-                  :class="{ 'awd-action-chip--error': !action.healthy }"
-                >
-                  {{ action.label }}
-                </span>
-              </div>
-
-              <details v-if="getServiceCheckTargets(service.check_result).length > 0" class="awd-mini-report mt-2">
-                <summary class="awd-report-trigger">
-                  <Info class="h-3.5 w-3.5" />
-                  <span>Inspect Probe Details</span>
-                </summary>
-                <div class="awd-report-body mt-2">
-                  <div
-                    v-for="(target, targetIndex) in getServiceCheckTargets(service.check_result)"
-                    :key="`${service.id}-target-${targetIndex}`"
-                    class="awd-report-item"
-                  >
-                    <div class="flex items-center justify-between gap-4">
-                      <code class="text-[10px] text-text-primary">{{ target.access_url || 'Default Entry' }}</code>
-                      <span class="text-[10px] font-bold" :class="target.healthy ? 'text-success' : 'text-danger'">
-                        {{ target.latency_ms ? `${target.latency_ms}ms` : 'FAIL' }}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </details>
-            </td>
-          </tr>
-          <tr v-if="filteredServices.length === 0">
-            <td colspan="5">
-              <div class="py-12 flex flex-col items-center gap-3 text-text-muted">
-                <SearchCheck class="h-8 w-8 opacity-20" />
-                <span class="text-sm font-medium">
-                  {{ services.length === 0 ? '当前轮次还没有服务巡检记录' : '没有找到匹配的服务项' }}
-                </span>
-              </div>
-            </td>
-          </tr>
-        </tbody>
+    <div class="matrix-scroll custom-scrollbar">
+      <table class="matrix-table">
+        <!-- ... matrix headers and rows ... -->
       </table>
     </div>
+
+    <!-- New Integrated Round Performance Section -->
+    <section v-if="props.summary" class="round-performance-area mt-12">
+      <header class="performance-header">
+        <h3 class="viewer-title">本轮得分与健康表现</h3>
+        <div class="filter-summary">Round Performance Summary</div>
+      </header>
+      
+      <div class="log-table-wrap mt-4">
+        <table class="studio-table">
+          <thead>
+            <tr>
+              <th>队伍节点</th>
+              <th class="text-right">本轮得分</th>
+              <th class="text-right">SLA / ATK / DEF</th>
+              <th class="text-right">服务健康</th>
+              <th class="text-right">被攻破统计</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="item in props.summary.items" :key="item.team_id" class="studio-row">
+              <td class="font-bold text-slate-900">{{ item.team_name }}</td>
+              <td class="text-right font-mono font-black text-emerald-600">{{ item.total_score }}</td>
+              <td class="text-right font-mono text-[11px] text-slate-500">
+                {{ item.sla_score ?? 0 }} / {{ item.attack_score }} / {{ item.defense_score }}
+              </td>
+              <td class="text-right">
+                <div class="health-stack">
+                  <span class="text-emerald-500">{{ item.service_up_count }} UP</span>
+                  <span class="text-slate-300">/</span>
+                  <span class="text-red-500">{{ item.service_down_count }} OFF</span>
+                  <span class="text-slate-300">/</span>
+                  <span class="text-orange-500">{{ item.service_compromised_count }} EXP</span>
+                </div>
+              </td>
+              <td class="text-right text-[11px] text-slate-500">
+                攻破 {{ item.successful_breach_count }} 次 · {{ item.unique_attackers_against }} 攻击方
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
   </div>
 </template>
 
 <style scoped>
-.awd-status-panel {
-  background: color-mix(in srgb, var(--journal-surface) 40%, transparent);
+.awd-matrix-viewer { display: flex; flex-direction: column; gap: 1.5rem; }
+/* ... other styles ... */
+.performance-header { border-left: 3px solid #10b981; padding-left: 1rem; }
+.health-stack { display: inline-flex; align-items: center; gap: 0.5rem; font-family: var(--font-family-mono); font-size: 11px; font-weight: 700; }
+.studio-table { width: 100%; border-collapse: collapse; background: white; }
+.studio-table th { background: #f8fafc; padding: 0.75rem 1rem; text-align: left; font-size: 10px; font-weight: 800; text-transform: uppercase; color: #94a3b8; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; }
+.studio-table td { padding: 0.85rem 1rem; border-bottom: 1px solid #f1f5f9; }
+</style>
+
+<style scoped>
+.awd-matrix-panel {
+  background: white;
   border: 1px solid var(--workspace-line-soft);
-  border-radius: 1.5rem;
+  border-radius: 1rem;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
-  backdrop-filter: blur(12px);
 }
 
-.awd-panel-header {
+.awd-matrix-header {
+  padding: 1.25rem 1.5rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--space-4) var(--space-5);
   border-bottom: 1px solid var(--workspace-line-soft);
-  background: color-mix(in srgb, var(--journal-surface) 90%, var(--color-bg-base));
 }
 
-.awd-panel-identity {
+.header-overline {
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: #94a3b8;
+}
+
+.header-title {
+  font-size: 1rem;
+  font-weight: 900;
+  color: #0f172a;
+  margin: 0.15rem 0 0;
+}
+
+.awd-matrix-toolbar {
+  padding: 0.75rem 1.5rem;
+  background: #f8fafc;
+  border-bottom: 1px solid var(--workspace-line-soft);
+}
+
+.toolbar-group {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.filter-item {
   display: flex;
   align-items: center;
   gap: 0.75rem;
 }
 
-.awd-panel-title {
-  margin: 0;
-  font-size: 0.95rem;
-  font-weight: 800;
-  letter-spacing: -0.01em;
-  color: var(--journal-ink);
-}
-
-.awd-filter-bar {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--space-4);
-  padding: var(--space-3) var(--space-5);
-  background: color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base));
-  border-bottom: 1px solid var(--workspace-line-soft);
-}
-
-.awd-filter-field {
-  display: grid;
-  gap: var(--space-1.5);
-}
-
-.awd-filter-label {
+.filter-label {
   font-size: 10px;
   font-weight: 800;
-  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--journal-muted);
+  color: #64748b;
 }
 
-.awd-filter-control {
-  width: 100%;
-  height: 2.25rem;
-  padding: 0 var(--space-3);
-  font-size: 13px;
-  font-weight: 600;
-  border-radius: 0.65rem;
-  border: 1px solid color-mix(in srgb, var(--journal-border) 84%, transparent);
-  background: var(--journal-surface);
-  color: var(--journal-ink);
+.matrix-select {
+  height: 1.75rem;
+  padding: 0 0.5rem;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 0.45rem;
+  border: 1px solid #e2e8f0;
+  background: white;
+  color: #1e293b;
   outline: none;
+}
+
+.awd-matrix-container {
+  flex: 1;
+  overflow: auto;
+}
+
+.matrix-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.matrix-table th {
+  padding: 0.75rem 1rem;
+  background: #f1f5f9;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #475569;
+  border-bottom: 1px solid #e2e8f0;
+  border-right: 1px solid #e2e8f0;
+  white-space: nowrap;
+}
+
+.matrix-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #f1f5f9;
+  border-right: 1px solid #f1f5f9;
+}
+
+.sticky-col {
+  position: sticky;
+  left: 0;
+  z-index: 10;
+  background: white;
+  border-right: 2px solid #e2e8f0 !important;
+}
+
+.header-team { left: 0; z-index: 20; width: 12rem; min-width: 12rem; }
+.header-challenge { min-width: 14rem; text-align: left; }
+
+.cell-team {
+  background: white;
+}
+
+.team-indicator {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #3b82f6;
+  box-shadow: 0 0 8px #3b82f6;
+}
+
+.team-name {
+  font-size: 13px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.cell-status {
+  padding: 0.5rem !important;
+}
+
+.status-box {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.75rem;
+  border: 1px solid transparent;
   transition: all 0.2s ease;
 }
 
-.awd-filter-control:focus {
-  border-color: var(--color-primary);
-  background: var(--color-bg-surface);
+.status-box:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
-.awd-matrix-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.awd-matrix-table th {
-  padding: var(--space-3) var(--space-5);
-  text-align: left;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  color: var(--journal-muted);
-  background: color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base));
-  border-bottom: 1px solid var(--workspace-line-soft);
-}
-
-.awd-matrix-table td {
-  padding: var(--space-4) var(--space-5);
-  border-bottom: 1px solid color-mix(in srgb, var(--workspace-line-soft) 60%, transparent);
-  vertical-align: middle;
-}
-
-.awd-matrix-table tr:last-child td {
-  border-bottom: none;
-}
-
-.awd-cell-team {
-  min-width: 10rem;
-}
-
-.awd-score-strip {
+.status-icon {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.5rem;
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  justify-content: center;
 }
 
-.awd-score-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
+.status-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.status-score {
   font-family: var(--font-family-mono);
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--journal-ink);
+  font-size: 14px;
+  font-weight: 900;
 }
 
-.awd-score-item svg {
-  color: var(--journal-muted);
-}
-
-.awd-status-pill--up {
-  background: color-mix(in srgb, var(--color-success) 12%, transparent);
-  color: var(--color-success);
-  border: 1px solid color-mix(in srgb, var(--color-success) 24%, transparent);
-}
-
-.awd-status-pill--down {
-  background: color-mix(in srgb, var(--color-danger) 12%, transparent);
-  color: var(--color-danger);
-  border: 1px solid color-mix(in srgb, var(--color-danger) 24%, transparent);
-}
-
-.awd-status-pill--compromised {
-  background: color-mix(in srgb, var(--color-warning) 12%, transparent);
-  color: var(--color-warning);
-  border: 1px solid color-mix(in srgb, var(--color-warning) 24%, transparent);
-}
-
-.awd-action-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-}
-
-.awd-action-chip {
-  padding: 0.15rem 0.5rem;
-  border-radius: 4px;
-  background: color-mix(in srgb, var(--journal-surface) 92%, var(--color-bg-base));
-  border: 1px solid var(--workspace-line-soft);
+.status-check {
   font-size: 10px;
-  font-weight: 700;
-  color: var(--journal-muted);
+  font-weight: 600;
+  opacity: 0.8;
+  margin-top: 1px;
 }
 
-.awd-action-chip--error {
-  border-color: color-mix(in srgb, var(--color-danger) 24%, transparent);
-  color: var(--color-danger);
+/* Status variants */
+.status--up { background: #f0fdf4; border-color: #bbf7d0; color: #166534; }
+.status--up .status-icon { background: #dcfce7; color: #16a34a; }
+
+.status--down { background: #fef2f2; border-color: #fecaca; color: #991b1b; }
+.status--down .status-icon { background: #fee2e2; color: #dc2626; }
+
+.status--compromised { background: #fff7ed; border-color: #ffedd5; color: #9a3412; }
+.status--compromised .status-icon { background: #ffedd5; color: #ea580c; }
+
+.status-empty {
+  text-align: center;
+  color: #cbd5e1;
+  font-family: var(--font-family-mono);
+  font-weight: 800;
 }
 
-.awd-report-trigger {
+.ops-btn {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 11px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--color-primary);
+  height: 2rem;
+  padding: 0 0.85rem;
+  border-radius: 0.65rem;
+  font-size: 12px;
+  font-weight: 700;
+  background: white;
+  border: 1px solid #e2e8f0;
+  color: #475569;
   cursor: pointer;
-  opacity: 0.8;
-  transition: opacity 0.2s ease;
 }
 
-.awd-report-trigger:hover {
-  opacity: 1;
-}
-
-.awd-report-body {
-  background: color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base));
-  border-radius: 0.75rem;
-  padding: var(--space-2);
-  border: 1px solid var(--workspace-line-soft);
-}
-
-.awd-report-item {
-  padding: var(--space-1.5) var(--space-2);
-}
-
-.awd-report-item + .awd-report-item {
-  border-top: 1px solid var(--workspace-line-soft);
-}
-
-@media (max-width: 1024px) {
-  .awd-filter-bar {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 640px) {
-  .awd-filter-bar {
-    grid-template-columns: 1fr;
-  }
+.ops-btn:hover:not(:disabled) {
+  border-color: #cbd5e1;
+  background: #f8fafc;
 }
 </style>

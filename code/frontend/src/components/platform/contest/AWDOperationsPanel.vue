@@ -19,6 +19,7 @@ const props = defineProps<{
   contests: ContestDetailData[]
   selectedContestId: string | null
   hideContestSelector?: boolean
+  initialTab?: 'matrix' | 'attacks' | 'traffic' | 'scoreboard'
 }>()
 
 const emit = defineEmits<{
@@ -278,6 +279,19 @@ function handleOverrideDialogOpenChange(value: boolean) {
 
       <!-- 2. Runtime Workspace -->
       <section v-else class="studio-ops-section">
+        <header class="section-header mb-6">
+          <h2 class="section-title">轮次态势</h2>
+          <p class="section-hint">围绕当前轮次查看服务矩阵、攻击流水、流量审计与得分变化。</p>
+        </header>
+
+        <div class="runtime-readiness-strip">
+          <AWDReadinessSummary
+            :readiness="readiness"
+            :loading="loadingReadiness"
+            @edit-config="handleEditReadinessConfig"
+          />
+        </div>
+
         <!-- Dashboard Navigation (Integrated) -->
         <nav v-if="operationTabs.length > 1" class="studio-ops-tabs">
           <button
@@ -316,6 +330,7 @@ function handleOverrideDialogOpenChange(value: boolean) {
             :can-record-attack-logs="canRecordAttackLogs"
             :service-check-hint="serviceCheckHint"
             :attack-log-hint="attackLogHint"
+            :initial-tab="initialTab"
             @refresh="refresh"
             @apply-traffic-filters="handleApplyTrafficFilters"
             @change-traffic-page="handleTrafficPageChange"
@@ -393,6 +408,8 @@ function handleOverrideDialogOpenChange(value: boolean) {
 .tab-item { padding: 0.75rem 0.25rem; font-size: 13px; font-weight: 800; color: #64748b; border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.2s ease; }
 .tab-item:hover { color: #0f172a; }
 .tab-item.active { color: #2563eb; border-bottom-color: #2563eb; }
+
+.runtime-readiness-strip { margin-bottom: 1.5rem; }
 
 .inspector-wrap { min-width: 0; }
 </style>

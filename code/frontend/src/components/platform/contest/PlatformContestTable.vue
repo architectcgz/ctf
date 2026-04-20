@@ -70,7 +70,10 @@ function handleExport(contest: ContestDetailData): void {
 <template>
   <div class="space-y-5">
     <div class="contest-directory workspace-directory-list">
-      <div class="contest-directory-head" aria-hidden="true">
+      <div
+        class="contest-directory-head"
+        aria-hidden="true"
+      >
         <span>竞赛</span>
         <span>模式</span>
         <span>状态</span>
@@ -79,18 +82,32 @@ function handleExport(contest: ContestDetailData): void {
         <span class="contest-directory-head__actions">操作</span>
       </div>
 
-      <article v-for="contest in contests" :key="contest.id" class="contest-row">
+      <article
+        v-for="contest in contests"
+        :key="contest.id"
+        class="contest-row"
+      >
         <div class="contest-row__identity">
-          <h3 class="contest-row__title" :title="contest.title">{{ contest.title }}</h3>
+          <h3
+            class="contest-row__title"
+            :title="contest.title"
+          >
+            {{ contest.title }}
+          </h3>
           <p class="contest-row__description">
             {{ contest.description || '当前未填写竞赛描述。' }}
           </p>
         </div>
 
-        <div class="contest-row__mode">{{ getModeLabel(contest.mode) }}</div>
+        <div class="contest-row__mode">
+          {{ getModeLabel(contest.mode) }}
+        </div>
 
         <div class="contest-row__status">
-          <span class="ui-badge contest-status-pill" :class="getStatusPillClass(contest.status)">
+          <span
+            class="ui-badge contest-status-pill"
+            :class="getStatusPillClass(contest.status)"
+          >
             {{ getStatusLabel(contest.status) }}
           </span>
         </div>
@@ -103,7 +120,11 @@ function handleExport(contest: ContestDetailData): void {
           <p>{{ formatTime(contest.ends_at) }}</p>
         </div>
 
-        <div class="ui-row-actions contest-row__actions" role="group" aria-label="竞赛操作">
+        <div
+          class="ui-row-actions contest-row__actions"
+          role="group"
+          aria-label="竞赛操作"
+        >
           <button
             v-if="canEnterWorkbench(contest)"
             :id="`contest-open-workbench-${contest.id}`"

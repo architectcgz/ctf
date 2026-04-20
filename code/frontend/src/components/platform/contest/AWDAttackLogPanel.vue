@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ShieldCheck } from 'lucide-vue-next'
+import { ShieldCheck, FileDown, ArrowRight, Sword, Target, History } from 'lucide-vue-next'
 
 import type {
   AWDAttackLogPanelEmits,
@@ -17,203 +17,189 @@ function updateAttackResultFilter(value: string): void {
 }
 
 function updateAttackSourceFilter(value: string): void {
-  if (value !== 'all' && !props.attackSourceOptions.includes(value as typeof props.attackSourceOptions[number])) {
+  if (value !== 'all' && !props.attackSourceOptions.includes(value as any)) {
     return
   }
-  emit('updateAttackSourceFilter', value as 'all' | (typeof props.attackSourceOptions)[number])
-}
-
-function getAttackResultBadgeClass(isSuccess: boolean): string {
-  return isSuccess ? 'awd-attack-result-badge awd-attack-result-badge--success' : 'awd-attack-result-badge awd-attack-result-badge--muted'
+  emit('updateAttackSourceFilter', value as any)
 }
 </script>
 
 <template>
-  <div class="overflow-hidden rounded-2xl border border-border">
-    <div class="flex items-center justify-between gap-3 border-b border-border bg-surface-alt/70 px-4 py-3">
-      <div class="awd-panel-title text-sm font-semibold">攻击日志</div>
-      <button
-        id="awd-export-attacks"
-        type="button"
-        class="ui-btn ui-btn--secondary awd-attack-export-button"
-        :disabled="filteredAttacks.length === 0"
-        @click="emit('exportAttacks')"
-      >
-        导出当前筛选
-      </button>
-    </div>
-    <div class="grid gap-3 border-b border-border bg-surface-alt/30 px-4 py-3 md:grid-cols-3">
-      <label class="ui-field awd-round-filter-field">
-        <span class="ui-field__label">队伍</span>
-        <span class="ui-control-wrap awd-round-filter-control">
-          <select
-            id="awd-attack-filter-team"
-            :value="attackTeamFilter"
-            class="ui-control"
-            @change="emit('updateAttackTeamFilter', ($event.target as HTMLSelectElement).value)"
+  <div class="studio-attack-log">
+    <!-- 1. Sophisticated Log Toolbar -->
+    <header class="log-toolbar">
+      <div class="toolbar-left">
+        <div class="flex items-center gap-3">
+          <div class="toolbar-icon"><Sword class="h-4 w-4" /></div>
+          <div>
+            <h3 class="toolbar-title">攻击流量审计流水</h3>
+            <p class="toolbar-hint">Real-time Attack Vector Monitoring</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="toolbar-right">
+        <div class="filter-actions-group">
+          <div class="filter-pills">
+            <select
+              :value="attackTeamFilter"
+              class="log-select"
+              @change="emit('updateAttackTeamFilter', ($event.target as HTMLSelectElement).value)"
+            >
+              <option value="">全部参与队</option>
+              <option v-for="team in attackTeamOptions" :key="team.id" :value="team.id">{{ team.name }}</option>
+            </select>
+            <select
+              :value="attackResultFilter"
+              class="log-select"
+              @change="updateAttackResultFilter(($event.target as HTMLSelectElement).value)"
+            >
+              <option value="all">所有交互结果</option>
+              <option value="success">攻击成功 (BREACH)</option>
+              <option value="failed">尝试失败 (DROP)</option>
+            </select>
+          </div>
+          <button
+            type="button"
+            class="ops-btn ops-btn--neutral"
+            :disabled="filteredAttacks.length === 0"
+            @click="emit('exportAttacks')"
           >
-            <option value="">全部队伍</option>
-            <option v-for="team in attackTeamOptions" :key="team.id" :value="team.id">
-              {{ team.name }}
-            </option>
-          </select>
-        </span>
-      </label>
-      <label class="ui-field awd-round-filter-field">
-        <span class="ui-field__label">结果</span>
-        <span class="ui-control-wrap awd-round-filter-control">
-          <select
-            id="awd-attack-filter-result"
-            :value="attackResultFilter"
-            class="ui-control"
-            @change="updateAttackResultFilter(($event.target as HTMLSelectElement).value)"
-          >
-            <option value="all">全部结果</option>
-            <option value="success">仅成功</option>
-            <option value="failed">仅失败</option>
-          </select>
-        </span>
-      </label>
-      <label class="ui-field awd-round-filter-field">
-        <span class="ui-field__label">记录来源</span>
-        <span class="ui-control-wrap awd-round-filter-control">
-          <select
-            id="awd-attack-filter-source"
-            :value="attackSourceFilter"
-            class="ui-control"
-            @change="updateAttackSourceFilter(($event.target as HTMLSelectElement).value)"
-          >
-            <option value="all">全部来源</option>
-            <option v-for="source in attackSourceOptions" :key="source" :value="source">
-              {{ getAttackSourceLabel(source) }}
-            </option>
-          </select>
-        </span>
-      </label>
-    </div>
-    <table class="min-w-full divide-y divide-border">
-      <thead class="awd-table-head">
-        <tr>
-          <th class="px-4 py-3">时间</th>
-          <th class="px-4 py-3">攻击方</th>
-          <th class="px-4 py-3">受害方</th>
-          <th class="px-4 py-3">类型</th>
-          <th class="px-4 py-3">结果</th>
-        </tr>
-      </thead>
-      <tbody class="divide-y divide-border bg-surface/70">
-        <tr v-for="attack in filteredAttacks" :key="attack.id">
-          <td class="awd-table-cell awd-table-cell--secondary">
-            {{ formatDateTime(attack.created_at) }}
-          </td>
-          <td class="awd-table-cell awd-table-cell--primary awd-table-cell--strong">
-            {{ attack.attacker_team }}
-          </td>
-          <td class="awd-table-cell awd-table-cell--secondary">
-            {{ attack.victim_team }}
-          </td>
-          <td class="awd-table-cell awd-table-cell--secondary">
-            <div>{{ getAttackTypeLabel(attack.attack_type) }}</div>
-            <div class="awd-attack-meta mt-1 text-xs">
-              {{ getChallengeTitle(attack.challenge_id) }}
+            <FileDown class="h-3.5 w-3.5" />
+            <span>导出审计日志</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- 2. High-Density Event Feed -->
+    <div class="event-feed-container custom-scrollbar">
+      <div v-if="filteredAttacks.length === 0" class="empty-feed">
+        <History class="h-10 w-10 opacity-10 mb-4" />
+        <p>当前时段未监测到符合条件的攻击矢量</p>
+      </div>
+
+      <div v-else class="event-list">
+        <article 
+          v-for="attack in filteredAttacks" 
+          :key="attack.id" 
+          class="event-row"
+          :class="{ 'is-success': attack.is_success }"
+        >
+          <!-- Time & Status Marker -->
+          <div class="event-marker">
+            <div class="marker-time font-mono">{{ formatDateTime(attack.created_at).split(' ')[1] }}</div>
+            <div class="marker-dot"></div>
+          </div>
+
+          <!-- Interaction Detail -->
+          <div class="event-body">
+            <div class="event-primary">
+              <div class="vector-wrap">
+                <span class="actor attacker" title="攻击方">{{ attack.attacker_team }}</span>
+                <div class="vector-line">
+                  <div class="line-path"></div>
+                  <ArrowRight class="h-3 w-3 line-head" />
+                </div>
+                <span class="actor victim" title="受害方">{{ attack.victim_team }}</span>
+              </div>
+
+              <div class="event-meta">
+                <div class="meta-item">
+                  <Target class="h-3 w-3" />
+                  <span>{{ getChallengeTitle(attack.challenge_id) }}</span>
+                </div>
+                <div class="meta-divider"></div>
+                <div class="meta-item opacity-60">
+                  <span>{{ getAttackSourceLabel(attack.source) }}</span>
+                </div>
+              </div>
             </div>
-            <div class="awd-attack-meta mt-1 text-xs">
-              {{ getAttackSourceLabel(attack.source) }}
+
+            <div class="event-secondary">
+              <div v-if="attack.is_success" class="result-badge success">
+                <ShieldCheck class="h-3 w-3" />
+                <span>SUCCESS</span>
+                <span class="score-delta font-mono">+{{ attack.score_gained }}</span>
+              </div>
+              <div v-else class="result-badge failed">
+                <span>DROPPED</span>
+              </div>
             </div>
-          </td>
-          <td class="awd-table-cell">
-            <span :class="getAttackResultBadgeClass(attack.is_success)">
-              <ShieldCheck v-if="attack.is_success" class="h-3.5 w-3.5" />
-              {{ attack.is_success ? `成功 +${attack.score_gained}` : '失败' }}
-            </span>
-          </td>
-        </tr>
-        <tr v-if="filteredAttacks.length === 0">
-          <td colspan="5" class="awd-empty-row">
-            {{
-              attacks.length === 0 ? '当前轮次还没有攻击记录。' : '当前筛选条件下没有攻击记录。'
-            }}
-          </td>
-        </tr>
-      </tbody>
-    </table>
+          </div>
+        </article>
+      </div>
+    </div>
   </div>
 </template>
 
 <style scoped>
-.awd-panel-title {
-  color: var(--color-text-primary);
-}
+.studio-attack-log { display: flex; flex-direction: column; gap: 2rem; background: transparent; }
 
-.awd-table-head {
-  background: color-mix(in srgb, var(--color-surface-alt, var(--color-bg-surface)) 40%, transparent);
-  text-align: left;
-  font-size: var(--font-size-xs);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.18em;
-  color: var(--color-text-muted);
-}
+/* Toolbar Enhancement */
+.log-toolbar { display: flex; justify-content: space-between; align-items: flex-end; padding: 0 0 1.5rem; border-bottom: 1px solid color-mix(in srgb, var(--workspace-line-soft) 60%, transparent); }
+.toolbar-icon { width: 2.75rem; height: 2.75rem; border-radius: 0.85rem; background: #f1f5f9; color: #475569; display: flex; align-items: center; justify-content: center; }
+.toolbar-title { font-size: 15px; font-weight: 900; color: #0f172a; margin: 0; letter-spacing: -0.01em; }
+.toolbar-hint { font-size: 11px; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 0.15rem; }
 
-.awd-table-cell {
-  padding: var(--space-4);
-  font-size: var(--font-size-sm);
-}
+.filter-actions-group { display: flex; align-items: center; gap: 1.5rem; }
+.filter-pills { display: flex; gap: 0.5rem; }
+.log-select { height: 2.25rem; padding: 0 0.75rem; font-size: 12px; font-weight: 700; border-radius: 0.6rem; border: 1px solid #e2e8f0; background: white; color: #475569; outline: none; transition: all 0.2s ease; }
+.log-select:hover { border-color: #cbd5e1; }
 
-.awd-table-cell--primary {
-  color: var(--color-text-primary);
-}
+/* Event Feed Design */
+.event-feed-container { flex: 1; position: relative; }
 
-.awd-table-cell--secondary,
-.awd-attack-meta,
-.awd-empty-row {
-  color: var(--color-text-muted);
-}
+.event-list { display: flex; flex-direction: column; }
 
-.awd-table-cell--strong {
-  font-weight: 500;
-}
+.event-row { display: flex; gap: 2rem; padding: 1rem 0; transition: all 0.2s ease; border-bottom: 1px solid #f1f5f9; }
+.event-row:hover { background: rgba(248, 250, 252, 0.6); }
+.event-row:last-child { border-bottom: none; }
 
-.awd-attack-result-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  border-radius: 999px;
-  padding: 0.25rem 0.75rem;
-  font-size: var(--font-size-xs);
-  font-weight: 600;
-}
+/* Timeline Marker */
+.event-marker { display: flex; flex-direction: column; align-items: flex-end; width: 5rem; shrink: 0; padding-top: 0.25rem; }
+.marker-time { font-size: 11px; font-weight: 800; color: #94a3b8; }
+.marker-dot { width: 8px; height: 8px; border-radius: 50%; background: #e2e8f0; margin-top: 0.5rem; position: relative; }
+.marker-dot::after { content: ''; position: absolute; top: 8px; left: 50%; transform: translateX(-50%); width: 1px; height: 2.5rem; background: #f1f5f9; }
+.event-row:last-child .marker-dot::after { display: none; }
 
-.awd-attack-result-badge--success {
-  background: color-mix(in srgb, var(--color-success) 10%, transparent);
-  color: var(--color-success);
-}
+.is-success .marker-dot { background: #22c55e; box-shadow: 0 0 10px rgba(34, 197, 94, 0.4); }
 
-.awd-attack-result-badge--muted {
-  background: color-mix(in srgb, var(--color-text-muted) 10%, transparent);
-  color: var(--color-text-secondary);
-}
+/* Event Body */
+.event-body { flex: 1; display: flex; justify-content: space-between; align-items: center; }
 
-.awd-empty-row {
-  padding: var(--space-8) var(--space-4);
-  text-align: center;
-  font-size: var(--font-size-sm);
-}
+.event-primary { display: flex; flex-direction: column; gap: 0.75rem; }
 
-.awd-round-filter-field {
-  --ui-field-gap: var(--space-2);
-  --ui-field-label-size: var(--font-size-11);
-  --ui-field-label-weight: 700;
-  --ui-field-label-color: var(--color-text-muted);
-  min-width: 0;
-}
+.vector-wrap { display: flex; align-items: center; gap: 1rem; }
+.actor { font-size: 14px; font-weight: 900; letter-spacing: -0.01em; }
+.actor.attacker { color: #0f172a; }
+.actor.victim { color: #64748b; }
 
-.awd-round-filter-field .ui-field__label {
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-}
+.vector-line { position: relative; width: 4rem; display: flex; align-items: center; }
+.line-path { height: 2px; width: 100%; background: #e2e8f0; border-radius: 1px; }
+.line-head { position: absolute; right: -4px; }
+.is-success .line-path { background: #cbd5e1; }
+.is-success .line-head { color: #94a3b8; }
 
-.awd-round-filter-control {
-  width: 100%;
-}
+.event-meta { display: flex; align-items: center; gap: 1rem; }
+.meta-item { display: flex; align-items: center; gap: 0.5rem; font-size: 11px; font-weight: 700; color: #64748b; }
+.meta-divider { width: 3px; height: 3px; border-radius: 50%; background: #cbd5e1; }
+
+/* Result Badges */
+.event-secondary { display: flex; align-items: center; }
+.result-badge { display: flex; align-items: center; gap: 0.65rem; padding: 0.45rem 1rem; border-radius: 0.75rem; font-size: 10px; font-weight: 900; letter-spacing: 0.05em; }
+.result-badge.success { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+.result-badge.failed { background: #f8fafc; color: #94a3b8; border: 1px solid #e2e8f0; }
+
+.score-delta { font-size: 13px; color: #16a34a; margin-left: 0.5rem; border-left: 1px solid rgba(22, 101, 52, 0.1); padding-left: 0.75rem; }
+
+/* Global UI Primitives */
+.ops-btn { display: inline-flex; align-items: center; gap: 0.5rem; height: 2.25rem; padding: 0 1.25rem; border-radius: 0.75rem; font-size: 12px; font-weight: 800; cursor: pointer; transition: all 0.2s ease; }
+.ops-btn--neutral { background: white; border: 1px solid #e2e8f0; color: #475569; }
+.ops-btn--neutral:hover { border-color: #cbd5e1; background: #f8fafc; }
+
+.empty-feed { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 5rem 0; color: #94a3b8; font-size: 14px; font-weight: 600; }
+
+.custom-scrollbar::-webkit-scrollbar { width: 4px; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
 </style>

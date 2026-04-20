@@ -213,386 +213,175 @@ function isActiveChallenge(item: AdminContestChallengeViewData): boolean {
 </script>
 
 <template>
-  <section class="space-y-6">
-    <header class="panel-head panel-head--config">
-      <div class="panel-copy workspace-tab-heading__main">
-        <div class="workspace-overline">AWD Service Config</div>
-        <h2 class="workspace-tab-heading__title">题目配置</h2>
-        <p class="admin-page-copy">
-          在这里管理赛事题目的 Checker 类型、动作配置和每轮 SLA / 防守分。
-        </p>
+  <div class="studio-awd-config">
+    <!-- 1. Header with Global Metrics -->
+    <header class="studio-pane-header">
+      <div class="header-main">
+        <h1 class="pane-title">AWD 服务配置</h1>
+        <p class="pane-description">针对每道题目深度定义 Checker 裁判逻辑、分值权重及就绪状态验证。</p>
       </div>
 
-      <div class="progress-strip metric-panel-grid metric-panel-default-surface">
-        <article
-          v-for="item in summaryItems"
-          :key="item.key"
-          class="journal-note progress-card metric-panel-card"
-        >
-          <div class="journal-note-label progress-card-label metric-panel-label">{{ item.label }}</div>
-          <div class="journal-note-value progress-card-value metric-panel-value">{{ item.value }}</div>
-          <div class="journal-note-helper progress-card-hint metric-panel-helper">{{ item.hint }}</div>
-        </article>
+      <div class="studio-metric-band">
+        <div v-for="item in summaryItems" :key="item.key" class="metric-pill">
+          <span class="metric-pill__label">{{ item.label }}</span>
+          <span class="metric-pill__value">{{ item.value }}</span>
+        </div>
       </div>
     </header>
 
-    <section class="workspace-directory-section">
-      <header class="list-heading config-list-head">
-        <div>
-          <div class="journal-note-label">Contest Challenges</div>
-          <h3 class="list-heading__title">题目目录</h3>
-        </div>
-        <div class="config-list-actions">
-          <div class="config-list-meta">共 {{ sortedChallengeLinks.length }} 道题目</div>
-          <button
-            id="awd-challenge-config-create"
-            type="button"
-            class="ui-btn ui-btn--primary"
-            @click="emit('create')"
-          >
-            新增题目
-          </button>
-        </div>
-      </header>
+    <!-- 2. Active Focus Highlighting -->
+    <section v-if="activeChallenge" class="studio-focus-shelf">
+      <div class="focus-identity">
+        <div class="focus-overline">正在编辑</div>
+        <h2 class="focus-title">{{ activeChallengeHeading }}</h2>
+        <p class="focus-hint">{{ activeChallengeContext }}</p>
+      </div>
+      <div class="focus-actions">
+        <button class="ops-btn ops-btn--neutral" :disabled="!canNavigatePrevious" @click="emit('previous')">
+          <ChevronLeft class="h-4 w-4" /> 上一题
+        </button>
+        <button class="ops-btn ops-btn--neutral" :disabled="!canNavigateNext" @click="emit('next')">
+          下一题 <ChevronRight class="h-4 w-4" />
+        </button>
+        <button class="ops-btn ops-btn--primary ml-4" @click="emit('edit', activeChallenge)">
+          <Edit class="h-3.5 w-3.5 mr-2" /> 调整 Checker
+        </button>
+      </div>
+    </section>
 
-      <section
-        v-if="activeChallenge"
-        class="workspace-directory-section config-focus-card"
-      >
-        <header class="list-heading config-focus-card__head">
-          <div>
-            <div class="journal-note-label">Current Focus</div>
-            <h3 class="list-heading__title">当前聚焦题目</h3>
-            <p class="config-focus-card__title">{{ activeChallengeHeading }}</p>
-            <p class="config-focus-card__copy">{{ activeChallengeContext }}</p>
-          </div>
-        </header>
-        <div class="ui-row-actions config-focus-card__actions">
-          <button
-            id="awd-challenge-config-prev"
-            type="button"
-            class="ui-btn ui-btn--secondary"
-            :disabled="!canNavigatePrevious"
-            @click="emit('previous')"
-          >
-            上一题
-          </button>
-          <button
-            id="awd-challenge-config-next"
-            type="button"
-            class="ui-btn ui-btn--secondary"
-            :disabled="!canNavigateNext"
-            @click="emit('next')"
-          >
-            下一题
-          </button>
-        </div>
-      </section>
+    <!-- 3. Challenge Asset Directory -->
+    <section class="studio-asset-directory">
+      <header class="directory-header">
+        <h3 class="directory-title">服务资源清单</h3>
+        <button class="ops-btn ops-btn--primary" @click="emit('create')">
+          <Plus class="h-3.5 w-3.5" /> 关联新资源
+        </button>
+      </header>
 
       <AppEmpty
         v-if="sortedChallengeLinks.length === 0"
-        title="当前赛事还没有关联题目"
-        description="先关联赛事题目，再为每道服务配置 checker 与分值。"
-        icon="FileChartColumnIncreasing"
+        title="暂无关联服务"
+        description="请先在题目池中关联题目，或点击右侧新增。"
+        icon="Layers"
+        class="py-20"
       />
 
-      <template v-else>
-        <div class="config-directory-head" aria-hidden="true">
-          <span>题目</span>
-          <span>可见性</span>
-          <span>分值</span>
-          <span>Checker</span>
-          <span>规则摘要</span>
-          <span class="config-directory-head__actions">操作</span>
-        </div>
-
-        <article
-          v-for="item in sortedChallengeLinks"
-          :key="item.id"
-          class="config-row"
-          :class="{ 'config-row--active': isActiveChallenge(item) }"
-        >
-          <div class="config-row__identity">
-            <h4 class="config-row__title">{{ getChallengeTitle(item) }}</h4>
-            <p class="config-row__meta">
-              {{ item.category || '未分类' }} · {{ item.difficulty || '未标记难度' }} · 顺序
-              {{ item.order }}
-            </p>
-            <p class="config-row__service-meta">{{ getServiceAssociationSummary(item) }}</p>
-          </div>
-          <div class="config-row__visibility">
-            {{ item.is_visible ? '可见' : '隐藏' }}
-          </div>
-          <div class="config-row__scores">
-            <p>{{ item.points }} 分</p>
-            <p class="config-row__scores-sub">
-              SLA {{ item.awd_sla_score ?? 0 }} / 防守 {{ item.awd_defense_score ?? 0 }}
-            </p>
-          </div>
-          <div class="config-row__checker">
-            <div class="config-row__checker-main">
-              {{ getCheckerTypeLabel(item.awd_checker_type) }}
-            </div>
-            <span :class="getValidationStateClass(item)">
-              {{ getValidationStateText(item) }}
-            </span>
-          </div>
-          <div class="config-row__summary">
-            <p class="config-row__summary-main">{{ getConfigSummary(item) }}</p>
-            <p class="config-row__summary-sub">{{ getValidationHint(item) }}</p>
-          </div>
-          <div
-            class="ui-row-actions config-row__actions"
-            role="group"
-            :aria-label="`题目 ${getChallengeTitle(item)} 操作`"
-          >
-            <button
-              :id="`awd-challenge-config-edit-${item.id}`"
-              type="button"
-              class="ui-btn ui-btn--secondary"
-              @click="emit('edit', item)"
-            >
-              编辑配置
-            </button>
-          </div>
-        </article>
-      </template>
+      <div v-else class="studio-table-wrap">
+        <table class="studio-table">
+          <thead>
+            <tr>
+              <th class="col-identity">服务身份</th>
+              <th class="col-meta">裁判引擎</th>
+              <th class="col-meta">分值权重</th>
+              <th class="col-meta">规则摘要</th>
+              <th class="col-status">就绪验证</th>
+              <th class="col-actions">操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="item in sortedChallengeLinks" :key="item.id" class="studio-row" :class="{ 'is-active': isActiveChallenge(item) }">
+              <td class="col-identity">
+                <div class="challenge-identity">
+                  <div class="challenge-title">{{ getChallengeTitle(item) }}</div>
+                  <div class="challenge-subtitle">{{ item.category }} · RANK {{ item.order }}</div>
+                </div>
+              </td>
+              <td class="col-meta">
+                <div class="engine-tag">{{ getCheckerTypeLabel(item.awd_checker_type) }}</div>
+              </td>
+              <td class="col-meta">
+                <div class="score-stack">
+                  <span class="score-main">{{ item.points }} pts</span>
+                  <span class="score-sub">SLA:{{ item.awd_sla_score }} / D:{{ item.awd_defense_score }}</span>
+                </div>
+              </td>
+              <td class="col-meta">
+                <div class="rules-summary" :title="getConfigSummary(item)">{{ getConfigSummary(item) }}</div>
+              </td>
+              <td class="col-status">
+                <div class="validation-block">
+                  <span class="validation-pill" :class="item.awd_checker_validation_state">
+                    {{ getValidationStateText(item) }}
+                  </span>
+                  <span class="validation-time">{{ getValidationHint(item).split(' · ')[0] }}</span>
+                </div>
+              </td>
+              <td class="col-actions">
+                <button class="action-btn" @click="emit('edit', item)">
+                  <Edit class="h-3.5 w-3.5" />
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </section>
-  </section>
+  </div>
 </template>
 
 <style scoped>
-.panel-head--config {
-  display: grid;
-  gap: 1.5rem;
-}
+.studio-awd-config { display: flex; flex-direction: column; gap: 2rem; padding: 1.5rem 2rem; background: #fdfdfd; }
+.studio-pane-header { display: flex; justify-content: space-between; align-items: flex-end; }
+.pane-title { font-size: 1.25rem; font-weight: 900; color: #0f172a; margin: 0; }
+.pane-description { font-size: 13px; color: #64748b; margin: 0.5rem 0 0; }
 
-.list-heading {
+/* Metric Band */
+.studio-metric-band { display: flex; gap: 0.5rem; }
+.metric-pill { background: #f1f5f9; padding: 0.45rem 1rem; border-radius: 0.75rem; display: flex; align-items: baseline; gap: 0.75rem; border: 1px solid #e2e8f0; }
+.metric-pill__label { font-size: 8px; font-weight: 800; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em; }
+.metric-pill__value { font-size: 13px; font-weight: 900; color: #1e293b; font-family: var(--font-family-mono); }
+
+/* Focus Shelf */
+.studio-focus-shelf {
+  background: #0f172a;
+  border-radius: 1.25rem;
+  padding: 2rem;
   display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
   justify-content: space-between;
-  gap: var(--space-3);
-}
-
-.list-heading__title {
-  margin: var(--space-1) 0 0;
-  font-size: var(--font-size-1-20);
-  font-weight: 700;
-  color: var(--journal-ink);
-}
-
-.config-list-head {
-  margin-bottom: 1.25rem;
-}
-
-.config-focus-card {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 1.25rem;
-  padding: 1.25rem 1.35rem;
-  border: 1px solid color-mix(in srgb, var(--journal-accent) 24%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 8%, var(--journal-surface));
-}
-
-.config-focus-card__head {
-  flex: 1 1 22rem;
-  min-width: min(100%, 22rem);
-}
-
-.config-focus-card__title,
-.config-focus-card__copy {
-  margin: 0.4rem 0 0;
-}
-
-.config-focus-card__title {
-  color: var(--journal-ink);
-  font-size: 1rem;
-  font-weight: 600;
-}
-
-.config-focus-card__copy {
-  max-width: 44rem;
-  color: var(--color-text-secondary);
-  line-height: 1.7;
-}
-
-.config-focus-card__actions {
-  gap: 0.75rem;
-}
-
-.config-list-actions {
-  display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  justify-content: flex-end;
-  gap: 0.85rem;
+  color: white;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.1);
 }
+.focus-overline { font-size: 10px; font-weight: 800; text-transform: uppercase; color: #3b82f6; letter-spacing: 0.2em; margin-bottom: 0.5rem; }
+.focus-title { font-size: 1.5rem; font-weight: 900; margin: 0; }
+.focus-hint { font-size: 13px; color: #94a3b8; margin-top: 0.5rem; max-width: 30rem; line-height: 1.6; }
+.focus-actions { display: flex; align-items: center; gap: 0.75rem; }
 
-.config-list-meta {
-  color: var(--journal-muted);
-  font-size: 0.82rem;
-}
+/* Directory Header */
+.directory-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+.directory-title { font-size: 14px; font-weight: 900; color: #0f172a; text-transform: uppercase; letter-spacing: 0.1em; }
 
-.config-directory-head,
-.config-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1.4fr) 0.7fr 0.9fr 0.9fr minmax(0, 1.2fr) auto;
-  gap: 1rem;
-  align-items: center;
-}
+/* Table Styles */
+.studio-table-wrap { border: 1px solid #e2e8f0; border-radius: 1rem; background: white; overflow: hidden; }
+.studio-table { width: 100%; border-collapse: collapse; }
+.studio-table th { background: #f8fafc; padding: 0.75rem 1rem; text-align: left; font-size: 10px; font-weight: 800; text-transform: uppercase; color: #94a3b8; border-bottom: 1px solid #e2e8f0; }
+.studio-table td { padding: 1.25rem 1rem; border-bottom: 1px solid #f1f5f9; }
 
-.config-directory-head {
-  padding: 0 0 0.9rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 85%, transparent);
-  color: var(--journal-muted);
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-}
+.studio-row.is-active { background: #eff6ff; }
+.studio-row.is-active .challenge-title { color: #2563eb; }
 
-.config-directory-head__actions {
-  text-align: right;
-}
+.challenge-title { font-size: 14px; font-weight: 800; color: #1e293b; }
+.challenge-subtitle { font-size: 11px; color: #94a3b8; margin-top: 0.2rem; }
 
-.config-row {
-  padding: 1rem 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 72%, transparent);
-}
+.engine-tag { font-size: 11px; font-weight: 700; color: #475569; }
 
-.config-row--active {
-  padding-inline: 0.85rem;
-  margin-inline: -0.85rem;
-  border-radius: 1.15rem;
-  background: color-mix(in srgb, var(--journal-accent) 8%, var(--journal-surface));
-}
+.score-stack { display: flex; flex-direction: column; }
+.score-main { font-size: 13px; font-weight: 900; color: #1e293b; }
+.score-sub { font-size: 10px; font-weight: 600; color: #94a3b8; }
 
-.config-row:last-child {
-  border-bottom: none;
-}
+.rules-summary { font-size: 11px; color: #64748b; max-width: 12rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-.config-row__title {
-  margin: 0;
-  color: var(--color-text-primary);
-  font-size: 0.98rem;
-  font-weight: 600;
-}
+.validation-block { display: flex; flex-direction: column; gap: 0.25rem; }
+.validation-pill { font-size: 9px; font-weight: 800; padding: 0.15rem 0.5rem; border-radius: 99px; width: fit-content; }
+.validation-pill.passed { background: #dcfce7; color: #166534; }
+.validation-pill.failed { background: #fee2e2; color: #991b1b; }
+.validation-pill.pending, .validation-pill.stale { background: #fef3c7; color: #92400e; }
+.validation-time { font-size: 10px; color: #cbd5e1; }
 
-.config-row__meta,
-.config-row__scores-sub,
-.config-row__service-meta {
-  margin: 0.35rem 0 0;
-  color: var(--color-text-muted);
-  font-size: 0.8rem;
-}
+.action-btn { width: 2.25rem; height: 2.25rem; border-radius: 0.75rem; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center; color: #64748b; cursor: pointer; transition: all 0.2s ease; }
+.action-btn:hover { background: #f8fafc; color: #2563eb; border-color: #bfdbfe; }
 
-.config-row__service-meta {
-  color: var(--journal-accent-soft, var(--color-text-secondary));
-}
-
-.config-row__visibility,
-.config-row__scores,
-.config-row__summary {
-  color: var(--color-text-secondary);
-  font-size: 0.9rem;
-}
-
-.config-row__scores p {
-  margin: 0;
-}
-
-.config-row__checker,
-.config-row__summary {
-  display: grid;
-  gap: 0.45rem;
-}
-
-.config-row__checker-main {
-  color: var(--color-text-secondary);
-  font-size: 0.9rem;
-}
-
-.config-row__summary {
-  line-height: 1.6;
-}
-
-.config-row__summary-main,
-.config-row__summary-sub {
-  margin: 0;
-}
-
-.config-row__summary-sub {
-  color: var(--color-text-muted);
-  font-size: 0.78rem;
-}
-
-.config-validation-chip {
-  display: inline-flex;
-  width: fit-content;
-  align-items: center;
-  justify-content: center;
-  min-height: 1.9rem;
-  padding: 0.2rem 0.75rem;
-  border-radius: 999px;
-  border: 1px solid transparent;
-  font-size: 0.78rem;
-  font-weight: 600;
-}
-
-.config-validation-chip--pending {
-  border-color: color-mix(in srgb, var(--journal-border) 82%, transparent);
-  background: color-mix(in srgb, var(--journal-surface) 92%, var(--color-bg-surface-elevated));
-  color: var(--color-text-secondary);
-}
-
-.config-validation-chip--passed {
-  border-color: color-mix(in srgb, var(--color-success) 28%, transparent);
-  background: color-mix(in srgb, var(--color-success) 10%, transparent);
-  color: var(--color-success);
-}
-
-.config-validation-chip--failed {
-  border-color: color-mix(in srgb, var(--color-danger) 28%, transparent);
-  background: color-mix(in srgb, var(--color-danger) 10%, transparent);
-  color: var(--color-danger);
-}
-
-.config-validation-chip--stale {
-  border-color: color-mix(in srgb, var(--color-warning) 28%, transparent);
-  background: color-mix(in srgb, var(--color-warning) 10%, transparent);
-  color: color-mix(in srgb, var(--color-warning) 82%, var(--color-text-primary));
-}
-
-.config-row__actions {
-  justify-content: flex-end;
-}
-
-@media (max-width: 1100px) {
-  .list-heading {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .config-focus-card {
-    align-items: stretch;
-  }
-
-  .config-directory-head {
-    display: none;
-  }
-
-  .config-row {
-    grid-template-columns: 1fr;
-    gap: 0.6rem;
-    padding: 1rem 0;
-  }
-
-  .config-row__actions {
-    justify-content: flex-start;
-  }
-}
+.ops-btn { display: inline-flex; align-items: center; gap: 0.5rem; height: 2.5rem; padding: 0 1.25rem; border-radius: 0.85rem; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s ease; }
+.ops-btn--neutral { background: white; border: 1px solid #e2e8f0; color: #475569; }
+.ops-btn--primary { background: #2563eb; color: white; border: none; }
 </style>
