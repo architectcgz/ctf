@@ -566,6 +566,7 @@ onMounted(() => {
 
 <style scoped>
 .contest-studio-shell {
+  --workspace-line-soft: color-mix(in srgb, var(--color-text-primary) 10%, transparent);
   display: flex;
   flex-direction: row !important;
   align-items: stretch;
@@ -581,6 +582,7 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   background: var(--color-bg-surface, #ffffff);
+  border-right: 1px solid var(--workspace-line-soft);
   z-index: 20;
 }
 

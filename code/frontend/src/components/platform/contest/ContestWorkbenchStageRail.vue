@@ -6,6 +6,7 @@ import {
   Settings2,
   UsersRound,
   CheckCircle2,
+  LayoutGrid,
 } from 'lucide-vue-next'
 import type { Component } from 'vue'
 import type { ContestWorkbenchStage, ContestWorkbenchStageKey } from '@/composables/useContestWorkbench'
@@ -31,11 +32,13 @@ function handleStageSelect(stage: ContestWorkbenchStage): void {
 </script>
 
 <template>
-  <nav
-    class="studio-rail-v2"
-    role="tablist"
-  >
-    <div class="studio-nav-group pt-6">
+  <nav class="studio-rail-v2" role="tablist">
+    <div class="studio-rail-header">
+      <LayoutGrid class="h-4 w-4 text-[var(--color-primary)]" />
+      <span class="brand-text">竞赛工作室</span>
+    </div>
+
+    <div class="studio-nav-group">
       <button
         v-for="stage in stages"
         :key="stage.key"
@@ -110,6 +113,23 @@ function handleStageSelect(stage: ContestWorkbenchStage): void {
   letter-spacing: -0.02em;
 }
 
+.studio-rail-header {
+  height: 4rem;
+  min-height: 4rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0 1.25rem;
+  border-bottom: 1px solid var(--workspace-line-soft);
+}
+
+.brand-text {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--journal-ink);
+  letter-spacing: -0.01em;
+}
+
 .brand-tag {
   font-size: 10px;
   font-weight: 800;
@@ -121,11 +141,10 @@ function handleStageSelect(stage: ContestWorkbenchStage): void {
 
 .studio-nav-group {
   flex: 1;
-  padding: 0 0.75rem;
+  padding: 0.75rem;
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
-  border-right: 1px solid var(--workspace-line-soft);
 }
 
 .nav-item {
