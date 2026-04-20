@@ -185,7 +185,8 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-.c-action-menu {
+.c-action-menu,
+.c-action-menu__layer {
   --c-action-menu-surface: var(
     --action-menu-surface,
     var(
@@ -222,6 +223,9 @@ onBeforeUnmount(() => {
     var(--c-action-menu-accent) 10%,
     var(--c-action-menu-surface)
   );
+}
+
+.c-action-menu {
   display: inline-flex;
 }
 

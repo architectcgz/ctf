@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { defineComponent, nextTick, ref } from 'vue'
 
 import CActionMenu from '../menus/CActionMenu.vue'
+import actionMenuSource from '../menus/CActionMenu.vue?raw'
 
 const ActionMenuHost = defineComponent({
   components: {
@@ -88,5 +89,11 @@ describe('CActionMenu', () => {
     expect(menuWrapper.emitted('close')?.[1]).toEqual([])
 
     wrapper.unmount()
+  })
+
+  it('Teleport 出去的菜单层应直接持有 surface token，避免脱离本地根节点后背景变透明', () => {
+    expect(actionMenuSource).toContain('.c-action-menu__layer')
+    expect(actionMenuSource).toContain('--c-action-menu-surface')
+    expect(actionMenuSource).toMatch(/\.c-action-menu__layer[\s\S]*--c-action-menu-surface:/)
   })
 })
