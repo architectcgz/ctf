@@ -260,8 +260,8 @@ onUnmounted(() => {
   background:
     linear-gradient(
       180deg,
-      color-mix(in srgb, var(--topnav-surface) 98%, transparent),
-      color-mix(in srgb, var(--topnav-surface-subtle) 96%, transparent)
+      color-mix(in srgb, var(--topnav-surface) 98%, var(--color-bg-base)),
+      color-mix(in srgb, var(--topnav-surface-subtle) 96%, var(--color-bg-base))
     ),
     radial-gradient(
       circle at top left,
@@ -531,8 +531,8 @@ onUnmounted(() => {
 
 :global([data-theme='dark']) .topnav-shell--admin {
   --topnav-surface: color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-bg-base));
-  --topnav-surface-subtle: color-mix(in srgb, var(--color-bg-elevated) 84%, var(--color-bg-surface));
-  --topnav-surface-elevated: color-mix(in srgb, var(--color-bg-elevated) 92%, var(--color-bg-surface));
+  --topnav-surface-subtle: color-mix(in srgb, var(--color-bg-elevated) 84%, var(--color-bg-base));
+  --topnav-surface-elevated: color-mix(in srgb, var(--color-bg-elevated) 92%, var(--color-bg-base));
   --topnav-line: color-mix(in srgb, var(--color-border-default) 84%, transparent);
   --topnav-line-strong: color-mix(in srgb, var(--color-border-default) 92%, transparent);
   --topnav-text: color-mix(in srgb, var(--color-text-primary) 94%, transparent);

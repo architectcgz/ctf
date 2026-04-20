@@ -1098,8 +1098,8 @@ async function navigate(item: NavItem): Promise<void> {
 
 :global([data-theme='dark']) .backoffice-sidebar {
   --backoffice-shell-surface: color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-bg-base));
-  --backoffice-shell-surface-subtle: color-mix(in srgb, var(--color-bg-elevated) 84%, var(--color-bg-surface));
-  --backoffice-shell-surface-strong: color-mix(in srgb, var(--color-bg-elevated) 92%, var(--color-bg-surface));
+  --backoffice-shell-surface-subtle: color-mix(in srgb, var(--color-bg-elevated) 84%, var(--color-bg-base));
+  --backoffice-shell-surface-strong: color-mix(in srgb, var(--color-bg-elevated) 92%, var(--color-bg-base));
   --backoffice-shell-line: color-mix(in srgb, var(--color-border-default) 88%, transparent);
   --backoffice-shell-line-strong: color-mix(in srgb, var(--color-border-default) 94%, transparent);
   --backoffice-shell-text: color-mix(in srgb, var(--color-text-primary) 94%, transparent);
