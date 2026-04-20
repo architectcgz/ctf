@@ -58,14 +58,6 @@ export function useTeacherAwdReviewIndex() {
   }, 250) as DebouncedContestLoader
 
   function openContest(contestId: string): void {
-    if (authStore.user?.role === 'admin') {
-      router.push({
-        name: resolveAwdReviewDetailRouteName(authStore.user?.role),
-        params: { id: contestId },
-      })
-      return
-    }
-
     router.push({
       name: resolveAwdReviewDetailRouteName(authStore.user?.role),
       params: { contestId },

@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { computed, watch } from 'vue'
 import { BellRing, CalendarRange, Clock3, Flag, Swords, Trophy, UsersRound } from 'lucide-vue-next'
-import { RouterLink, useRoute, useRouter } from 'vue-router'
+import { RouterLink, useRoute } from 'vue-router'
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import CFocusedInputDialog from '@/components/common/modal-templates/CFocusedInputDialog.vue'
+import ContestAWDWorkspacePanel from '@/components/contests/ContestAWDWorkspacePanel.vue'
 import ContestAnnouncementRealtimeBridge from '@/components/contests/ContestAnnouncementRealtimeBridge.vue'
 import { useContestDetailPage } from '@/composables/useContestDetailPage'
 import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'
@@ -20,7 +21,6 @@ import { formatTime } from '@/utils/format'
 type ContestWorkspaceTab = 'overview' | 'announcements' | 'challenges' | 'team'
 
 const route = useRoute()
-const router = useRouter()
 const authStore = useAuthStore()
 const contestId = computed(() => String(route.params.id ?? ''))
 const currentUserId = computed(() => authStore.user?.id)
@@ -106,27 +106,6 @@ const contestAccentStyle = computed<Record<string, string> | undefined>(() => {
 const contestAccessible = computed(() =>
   contest.value ? isStudentVisibleContestStatus(contest.value.status) : false
 )
-const redirectingToAwdWorkspace = computed(() =>
-  Boolean(contest.value && contestAccessible.value && contest.value.mode === 'awd')
-)
-
-watch(
-  () => ({
-    contestId: contest.value?.id,
-    mode: contest.value?.mode,
-    routeName: route.name,
-  }),
-  ({ contestId: nextContestId, mode, routeName }) => {
-    if (!nextContestId || mode !== 'awd' || routeName === 'ContestAwdOverview') {
-      return
-    }
-
-    void router.replace({
-      name: 'ContestAwdOverview',
-      params: { id: nextContestId },
-    })
-  }
-)
 
 function challengeClass(challengeId: string, solved: boolean): string[] {
   const active = selectedChallenge.value?.id === challengeId
@@ -147,13 +126,6 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
         <div class="contest-loading">
           <div class="contest-loading__spinner" />
           <div class="contest-loading__text">正在同步竞赛详情...</div>
-        </div>
-      </main>
-
-      <main v-else-if="redirectingToAwdWorkspace" class="content-pane">
-        <div class="contest-loading">
-          <div class="contest-loading__spinner" />
-          <div class="contest-loading__text">正在进入 AWD 战场工作台...</div>
         </div>
       </main>
 
@@ -399,7 +371,13 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
               </div>
             </div>
 
-            <div v-if="challenges.length === 0" class="contest-empty-state">
+            <ContestAWDWorkspacePanel
+              v-if="contest.mode === 'awd'"
+              :contest="contest"
+              :challenges="challenges"
+            />
+
+            <div v-else-if="challenges.length === 0" class="contest-empty-state">
               <AppEmpty icon="Flag" title="暂无题目" description="当前竞赛尚未发布题目。" />
             </div>
 

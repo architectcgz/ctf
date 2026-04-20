@@ -215,7 +215,7 @@ describe('AWDOperationsPanel', () => {
     expect(wrapper.html()).not.toContain('a-w-d-round-inspector-stub')
   })
 
-  it('应该在选中 AWD 赛事后展示题目配置入口', () => {
+  it('应该在选中 AWD 赛事后只保留轮次态势，并把题目配置收口到外层工作台', async () => {
     const awdState = getAwdState()
     awdState.challengeLinks.value = [
       {
@@ -255,6 +255,23 @@ describe('AWDOperationsPanel', () => {
         created_at: '2026-03-18T09:00:00.000Z',
       },
     ]
+    awdState.readiness.value = buildReadinessState({
+      pending_challenges: 0,
+      failed_challenges: 1,
+      missing_checker_challenges: 0,
+      blocking_count: 1,
+      items: [
+        {
+          challenge_id: 'challenge-1',
+          title: 'Web Checker',
+          checker_type: 'http_standard',
+          validation_state: 'failed',
+          last_preview_at: '2026-04-12T08:00:00.000Z',
+          last_access_url: 'http://checker.internal/flag',
+          blocking_reason: 'last_preview_failed',
+        },
+      ],
+    })
 
     const wrapper = mount(AWDOperationsPanel, {
       props: {
@@ -287,10 +304,13 @@ describe('AWDOperationsPanel', () => {
       },
     })
 
-    expect(wrapper.text()).toContain('题目配置')
-    expect(wrapper.text()).toContain('新增题目')
-    expect(wrapper.text()).toContain('编辑配置')
+    expect(wrapper.text()).toContain('轮次态势')
+    expect(wrapper.text()).not.toContain('题目配置')
     expect(wrapper.text()).toContain('最近通过')
+
+    await wrapper.get('#awd-readiness-edit-challenge-1').trigger('click')
+
+    expect(wrapper.emitted('open:awd-config')).toEqual([['challenge-1']])
   })
 
   it('应该渲染 readiness 摘要与系统级阻塞提示', () => {

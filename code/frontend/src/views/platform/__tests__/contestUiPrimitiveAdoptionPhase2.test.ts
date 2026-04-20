@@ -12,17 +12,29 @@ describe('contest ui primitive adoption phase 2', () => {
     expect(contestEditSource).not.toContain('class="admin-btn admin-btn-ghost"')
   })
 
+  it('contest edit workspace should keep the inner scroll container shrinkable so basics panel can scroll', () => {
+    expect(contestEditSource).toMatch(
+      /\.studio-content\s*\{[^}]*min-height:\s*0;[^}]*\}/
+    )
+    expect(contestEditSource).toMatch(
+      /\.studio-scroll-area\s*\{[^}]*overflow-y:\s*auto;[^}]*\}/
+    )
+  })
+
   it('contest challenge orchestration panel should consume shared ui buttons and row actions', () => {
+    expect(contestChallengeOrchestrationPanelSource).toContain(
+      "from '@/components/common/menus/CActionMenu.vue'"
+    )
     expect(contestChallengeOrchestrationPanelSource).toContain('class="ui-btn ui-btn--ghost"')
     expect(contestChallengeOrchestrationPanelSource).toContain('class="ui-btn ui-btn--primary"')
     expect(contestChallengeOrchestrationPanelSource).toContain(
       'class="ui-row-actions contest-challenge-row__actions"'
     )
     expect(contestChallengeOrchestrationPanelSource).toContain(
-      'class="ui-btn ui-btn--sm ui-btn--secondary contest-challenge-row__button'
+      'class="c-action-menu__trigger c-action-menu__trigger--icon"'
     )
     expect(contestChallengeOrchestrationPanelSource).toContain(
-      'class="ui-btn ui-btn--sm ui-btn--danger contest-challenge-row__button'
+      'class="c-action-menu__item c-action-menu__item--danger"'
     )
     expect(contestChallengeOrchestrationPanelSource).not.toContain('class="admin-btn')
   })

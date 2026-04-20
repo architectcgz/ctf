@@ -103,9 +103,7 @@ const backofficeModules: BackofficeModule[] = [
         label: 'AWD复盘',
         path: '/platform/awd-reviews',
         roles: ['admin'],
-        isMatch: (path) =>
-          matchAny(path, ['/platform/awd-reviews']) ||
-          /^\/platform\/contests\/[^/]+\/awd(?:\/|$)/.test(path),
+        isMatch: (path) => matchAny(path, ['/platform/awd-reviews']),
       },
       {
         routeName: 'TeacherInstanceManagement',

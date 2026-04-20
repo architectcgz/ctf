@@ -44,8 +44,8 @@ export function resolveAwdReviewIndexRouteName(
 
 export function resolveAwdReviewDetailRouteName(
   role?: TeachingWorkspaceRole
-): 'AdminAwdReplay' | 'TeacherAwdOverview' {
-  return role === 'admin' ? 'AdminAwdReplay' : 'TeacherAwdOverview'
+): 'PlatformAwdReviewDetail' | 'TeacherAWDReviewDetail' {
+  return role === 'admin' ? 'PlatformAwdReviewDetail' : 'TeacherAWDReviewDetail'
 }
 
 export function resolveInstanceManagementRouteName(
