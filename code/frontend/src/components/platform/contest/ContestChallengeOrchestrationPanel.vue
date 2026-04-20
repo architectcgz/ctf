@@ -58,6 +58,7 @@ const dialogOpen = ref(false)
 const dialogMode = ref<'create' | 'edit'>('create')
 const editingChallenge = ref<AdminContestChallengeViewData | null>(null)
 const removingChallengeId = ref<string | null>(null)
+const quickActionKey = ref<string | null>(null)
 const usingExternalChallengeLinks = computed(() => props.challengeLinks !== undefined)
 const currentChallengeLinks = computed(() => props.challengeLinks ?? localChallengeLinks.value)
 const panelLoading = computed(() => (usingExternalChallengeLinks.value ? Boolean(props.loadingExternal) : loading.value))
@@ -66,6 +67,7 @@ const panelLoadError = computed(() =>
 )
 
 const {
+  sortedItems,
   visibleItems,
   summaryItems,
   filterItems,
@@ -354,6 +356,105 @@ async function handleRemove(challenge: AdminContestChallengeViewData) {
   }
 }
 
+function createQuickActionKey(action: string, challengeId: string): string {
+  return `${action}:${challengeId}`
+}
+
+function isQuickActionPending(action: string, challengeId: string): boolean {
+  return quickActionKey.value === createQuickActionKey(action, challengeId)
+}
+
+function canMoveChallenge(challenge: AdminContestChallengeViewData, offset: -1 | 1): boolean {
+  const currentIndex = sortedItems.value.findIndex((item) => item.id === challenge.id)
+  return currentIndex >= 0 && currentIndex + offset >= 0 && currentIndex + offset < sortedItems.value.length
+}
+
+async function refreshAfterMutation() {
+  if (usingExternalChallengeLinks.value) {
+    emit('updated')
+    return
+  }
+
+  await refresh()
+}
+
+async function updateChallengeVisibility(
+  challenge: AdminContestChallengeViewData,
+  nextVisibility: boolean
+) {
+  if (props.contestMode === 'awd' && challenge.awd_service_id) {
+    await updateContestAWDService(props.contestId, challenge.awd_service_id, {
+      is_visible: nextVisibility,
+    })
+    return
+  }
+
+  await updateAdminContestChallenge(props.contestId, challenge.challenge_id, {
+    is_visible: nextVisibility,
+  })
+}
+
+async function updateChallengeOrder(challenge: AdminContestChallengeViewData, nextOrder: number) {
+  if (props.contestMode === 'awd' && challenge.awd_service_id) {
+    await updateContestAWDService(props.contestId, challenge.awd_service_id, {
+      order: nextOrder,
+    })
+    return
+  }
+
+  await updateAdminContestChallenge(props.contestId, challenge.challenge_id, {
+    order: nextOrder,
+  })
+}
+
+async function handleToggleVisibility(challenge: AdminContestChallengeViewData) {
+  const nextVisibility = !challenge.is_visible
+  const actionKey = createQuickActionKey('toggle-visibility', challenge.id)
+  if (quickActionKey.value) {
+    return
+  }
+
+  quickActionKey.value = actionKey
+  try {
+    await updateChallengeVisibility(challenge, nextVisibility)
+    toast.success(nextVisibility ? '题目已设为可见' : '题目已隐藏')
+    await refreshAfterMutation()
+  } catch (error) {
+    toast.error(humanizeRequestError(error, nextVisibility ? '显示题目失败' : '隐藏题目失败'))
+  } finally {
+    quickActionKey.value = null
+  }
+}
+
+async function handleMoveChallenge(challenge: AdminContestChallengeViewData, offset: -1 | 1) {
+  if (quickActionKey.value) {
+    return
+  }
+
+  const currentIndex = sortedItems.value.findIndex((item) => item.id === challenge.id)
+  if (currentIndex < 0) {
+    return
+  }
+
+  const adjacentChallenge = sortedItems.value[currentIndex + offset]
+  if (!adjacentChallenge) {
+    return
+  }
+
+  const actionKey = createQuickActionKey(offset < 0 ? 'move-up' : 'move-down', challenge.id)
+  quickActionKey.value = actionKey
+  try {
+    await updateChallengeOrder(challenge, adjacentChallenge.order)
+    await updateChallengeOrder(adjacentChallenge, challenge.order)
+    toast.success(offset < 0 ? '题目已上移' : '题目已下移')
+    await refreshAfterMutation()
+  } catch (error) {
+    toast.error(humanizeRequestError(error, offset < 0 ? '题目上移失败' : '题目下移失败'))
+  } finally {
+    quickActionKey.value = null
+  }
+}
+
 onMounted(() => {
   if (!usingExternalChallengeLinks.value) {
     void refresh()
@@ -531,9 +632,45 @@ onMounted(() => {
                 补 AWD 配置
               </button>
               <button
+                :id="`contest-challenge-move-up-${challenge.id}`"
+                type="button"
+                class="ui-btn ui-btn--sm ui-btn--ghost contest-challenge-row__button"
+                :disabled="!canMoveChallenge(challenge, -1) || quickActionKey !== null"
+                @click="handleMoveChallenge(challenge, -1)"
+              >
+                {{ isQuickActionPending('move-up', challenge.id) ? '上移中...' : '上移' }}
+              </button>
+              <button
+                :id="`contest-challenge-move-down-${challenge.id}`"
+                type="button"
+                class="ui-btn ui-btn--sm ui-btn--ghost contest-challenge-row__button"
+                :disabled="!canMoveChallenge(challenge, 1) || quickActionKey !== null"
+                @click="handleMoveChallenge(challenge, 1)"
+              >
+                {{ isQuickActionPending('move-down', challenge.id) ? '下移中...' : '下移' }}
+              </button>
+              <button
+                :id="`contest-challenge-toggle-visibility-${challenge.id}`"
+                type="button"
+                class="ui-btn ui-btn--sm ui-btn--ghost contest-challenge-row__button"
+                :disabled="quickActionKey !== null"
+                @click="handleToggleVisibility(challenge)"
+              >
+                {{
+                  isQuickActionPending('toggle-visibility', challenge.id)
+                    ? challenge.is_visible
+                      ? '隐藏中...'
+                      : '显示中...'
+                    : challenge.is_visible
+                      ? '隐藏'
+                      : '显示'
+                }}
+              </button>
+              <button
                 :id="`contest-challenge-edit-${challenge.id}`"
                 type="button"
                 class="ui-btn ui-btn--sm ui-btn--primary contest-challenge-row__button"
+                :disabled="quickActionKey !== null"
                 @click="openEditDialog(challenge)"
               >
                 编辑
@@ -542,7 +679,7 @@ onMounted(() => {
                 :id="`contest-challenge-remove-${challenge.id}`"
                 type="button"
                 class="ui-btn ui-btn--sm ui-btn--danger contest-challenge-row__button"
-                :disabled="removingChallengeId === challenge.id"
+                :disabled="removingChallengeId === challenge.id || quickActionKey !== null"
                 @click="handleRemove(challenge)"
               >
                 {{ removingChallengeId === challenge.id ? '移除中...' : '移除' }}
