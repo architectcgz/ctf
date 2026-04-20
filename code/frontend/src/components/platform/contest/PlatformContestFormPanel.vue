@@ -17,7 +17,7 @@ const props = withDefaults(
   {
     statusOptions: () => [],
     showCancel: true,
-    note: '若需下线竞赛，当前仍通过状态流转控制访问窗口。',
+    note: '',
   }
 )
 
@@ -124,33 +124,49 @@ function handleSubmit() {
 </script>
 
 <template>
-  <form class="contest-form-dialog__form" @submit.prevent="handleSubmit">
+  <form
+    class="contest-form-dialog__form"
+    @submit.prevent="handleSubmit"
+  >
     <section class="workspace-directory-section contest-form-section">
       <header class="list-heading contest-form-section__head">
         <div>
-          <div class="journal-note-label">Contest Setup</div>
-          <h3 class="list-heading__title">基础信息</h3>
+          <h3 class="list-heading__title">
+            基础信息
+          </h3>
         </div>
       </header>
 
       <div class="contest-form-grid">
-        <label class="ui-field contest-form-field contest-form-field--wide" for="contest-title">
+        <label
+          class="ui-field contest-form-field contest-form-field--wide"
+          for="contest-title"
+        >
           <span class="ui-field__label contest-form-label">竞赛标题</span>
-          <span class="ui-control-wrap" :class="{ 'is-error': !!fieldErrors.title }">
+          <span
+            class="ui-control-wrap"
+            :class="{ 'is-error': !!fieldErrors.title }"
+          >
             <input
               id="contest-title"
               v-model="localDraft.title"
               type="text"
               class="ui-control"
               placeholder="例如：2026 春季校园 CTF"
-            />
+            >
           </span>
-          <span v-if="fieldErrors.title" class="ui-field__error contest-form-error">
+          <span
+            v-if="fieldErrors.title"
+            class="ui-field__error contest-form-error"
+          >
             {{ fieldErrors.title }}
           </span>
         </label>
 
-        <label class="ui-field contest-form-field" for="contest-mode">
+        <label
+          class="ui-field contest-form-field"
+          for="contest-mode"
+        >
           <span class="ui-field__label contest-form-label">竞赛模式</span>
           <span
             class="ui-control-wrap"
@@ -166,23 +182,41 @@ function handleSubmit() {
               <option value="awd">AWD</option>
             </select>
           </span>
-          <span v-if="fieldLocks.mode" class="ui-field__hint contest-form-hint">
+          <span
+            v-if="fieldLocks.mode"
+            class="ui-field__hint contest-form-hint"
+          >
             竞赛进入 draft 之后不再允许修改模式。
           </span>
         </label>
 
-        <label v-if="mode === 'edit'" class="ui-field contest-form-field" for="contest-status">
+        <label
+          v-if="mode === 'edit'"
+          class="ui-field contest-form-field"
+          for="contest-status"
+        >
           <span class="ui-field__label contest-form-label">状态</span>
           <span class="ui-control-wrap">
-            <select id="contest-status" v-model="localDraft.status" class="ui-control">
-              <option v-for="option in statusOptions" :key="option.value" :value="option.value">
+            <select
+              id="contest-status"
+              v-model="localDraft.status"
+              class="ui-control"
+            >
+              <option
+                v-for="option in statusOptions"
+                :key="option.value"
+                :value="option.value"
+              >
                 {{ getStatusLabel(option.value) }}
               </option>
             </select>
           </span>
         </label>
 
-        <label class="ui-field contest-form-field contest-form-field--wide" for="contest-description">
+        <label
+          class="ui-field contest-form-field contest-form-field--wide"
+          for="contest-description"
+        >
           <span class="ui-field__label contest-form-label">竞赛描述</span>
           <span class="ui-control-wrap">
             <textarea
@@ -200,13 +234,17 @@ function handleSubmit() {
     <section class="workspace-directory-section contest-form-section">
       <header class="list-heading contest-form-section__head">
         <div>
-          <div class="journal-note-label">Schedule</div>
-          <h3 class="list-heading__title">赛制与时间</h3>
+          <h3 class="list-heading__title">
+            赛制与时间
+          </h3>
         </div>
       </header>
 
       <div class="contest-form-grid">
-        <label class="ui-field contest-form-field" for="contest-starts-at">
+        <label
+          class="ui-field contest-form-field"
+          for="contest-starts-at"
+        >
           <span class="ui-field__label contest-form-label">开始时间</span>
           <span
             class="ui-control-wrap"
@@ -218,17 +256,26 @@ function handleSubmit() {
               type="datetime-local"
               class="ui-control"
               :disabled="fieldLocks.starts_at"
-            />
+            >
           </span>
-          <span v-if="fieldErrors.starts_at" class="ui-field__error contest-form-error">
+          <span
+            v-if="fieldErrors.starts_at"
+            class="ui-field__error contest-form-error"
+          >
             {{ fieldErrors.starts_at }}
           </span>
-          <span v-else-if="fieldLocks.starts_at" class="ui-field__hint contest-form-hint">
+          <span
+            v-else-if="fieldLocks.starts_at"
+            class="ui-field__hint contest-form-hint"
+          >
             报名中、进行中、已结束状态禁止修改开始时间。
           </span>
         </label>
 
-        <label class="ui-field contest-form-field" for="contest-ends-at">
+        <label
+          class="ui-field contest-form-field"
+          for="contest-ends-at"
+        >
           <span class="ui-field__label contest-form-label">结束时间</span>
           <span
             class="ui-control-wrap"
@@ -240,12 +287,18 @@ function handleSubmit() {
               type="datetime-local"
               class="ui-control"
               :disabled="fieldLocks.ends_at"
-            />
+            >
           </span>
-          <span v-if="fieldErrors.ends_at" class="ui-field__error contest-form-error">
+          <span
+            v-if="fieldErrors.ends_at"
+            class="ui-field__error contest-form-error"
+          >
             {{ fieldErrors.ends_at }}
           </span>
-          <span v-else-if="fieldLocks.ends_at" class="ui-field__hint contest-form-hint">
+          <span
+            v-else-if="fieldLocks.ends_at"
+            class="ui-field__hint contest-form-hint"
+          >
             进行中、已结束状态禁止修改结束时间。
           </span>
         </label>
@@ -254,7 +307,12 @@ function handleSubmit() {
   </form>
 
   <div class="contest-form-dialog__footer">
-    <p class="contest-form-dialog__note">{{ note }}</p>
+    <p
+      v-if="note"
+      class="contest-form-dialog__note"
+    >
+      {{ note }}
+    </p>
     <div class="contest-form-dialog__actions">
       <button
         v-if="showCancel"
@@ -284,12 +342,13 @@ function handleSubmit() {
 
 .contest-form-section {
   display: grid;
-  gap: var(--space-4);
-  padding: var(--space-5) var(--space-5-5);
+  gap: var(--space-2);
+  padding: var(--space-2-5) var(--space-4);
 }
 
 .contest-form-section__head {
   align-items: flex-end;
+  margin-bottom: var(--space-1);
 }
 
 .list-heading {
@@ -297,25 +356,26 @@ function handleSubmit() {
   flex-wrap: wrap;
   align-items: flex-end;
   justify-content: space-between;
-  gap: var(--space-3);
+  gap: var(--space-1-5);
 }
 
 .list-heading__title {
-  margin: var(--space-1) 0 0;
-  font-size: var(--font-size-1-20);
+  margin: 0;
+  font-size: var(--font-size-1-10);
   font-weight: 700;
   color: var(--journal-ink, var(--color-text-primary));
 }
 
 .contest-form-grid {
   display: grid;
-  gap: var(--space-4);
+  gap: var(--space-2-5);
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
 }
 
 .contest-form-field {
   display: grid;
-  gap: var(--space-2);
+  gap: var(--space-1);
 }
 
 .contest-form-field--wide {
@@ -335,8 +395,15 @@ function handleSubmit() {
   resize: vertical;
 }
 
-.contest-form-hint,
+.contest-form-hint {
+  font-size: var(--font-size-0-78);
+  line-height: 1.65;
+  color: var(--journal-muted, var(--color-text-secondary));
+}
+
 .contest-form-dialog__note {
+  flex: 1;
+  margin-right: var(--space-4);
   font-size: var(--font-size-0-78);
   line-height: 1.65;
   color: var(--journal-muted, var(--color-text-secondary));
@@ -351,8 +418,11 @@ function handleSubmit() {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: var(--space-3);
+  padding: var(--space-4);
+  margin-top: var(--space-2);
+  border-top: 1px solid var(--workspace-line-soft);
 }
 
 .contest-form-dialog__actions {
