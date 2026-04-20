@@ -905,6 +905,30 @@ function getChallengeRow(row: unknown): PlatformChallengeListRow {
   box-shadow: 0 8px 20px color-mix(in srgb, var(--workspace-brand) 18%, transparent);
 }
 
+.challenge-row-menu-button,
+.challenge-row-menu {
+  --challenge-action-surface: #ffffff;
+  --challenge-action-surface-subtle: #f8fafc;
+  --challenge-action-line: #e2e8f0;
+  --challenge-action-line-strong: #cbd5e1;
+  --challenge-action-text: #0f172a;
+  --challenge-action-muted: #64748b;
+  --challenge-action-accent: var(--workspace-brand);
+  --challenge-action-accent-soft: color-mix(in srgb, var(--workspace-brand) 10%, #ffffff);
+}
+
+:global([data-theme='dark']) .challenge-row-menu-button,
+:global([data-theme='dark']) .challenge-row-menu {
+  --challenge-action-surface: #1e293b;
+  --challenge-action-surface-subtle: #0f172a;
+  --challenge-action-line: #334155;
+  --challenge-action-line-strong: #475569;
+  --challenge-action-text: #f8fafc;
+  --challenge-action-muted: #94a3b8;
+  --challenge-action-accent: color-mix(in srgb, var(--workspace-brand) 88%, #f8fafc);
+  --challenge-action-accent-soft: color-mix(in srgb, var(--workspace-brand) 10%, #1e293b);
+}
+
 .challenge-row-menu-button {
   display: inline-flex;
   align-items: center;
@@ -945,8 +969,8 @@ function getChallengeRow(row: unknown): PlatformChallengeListRow {
   border: 1px solid var(--challenge-action-line);
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--challenge-action-surface) 98%, transparent),
-    color-mix(in srgb, var(--challenge-action-surface-subtle) 96%, transparent)
+    color-mix(in srgb, var(--challenge-action-surface) 98%, var(--color-bg-base)),
+    color-mix(in srgb, var(--challenge-action-surface-subtle) 96%, var(--color-bg-base))
   );
   box-shadow:
     0 24px 60px color-mix(in srgb, var(--color-shadow-strong) 20%, transparent),
@@ -1007,3 +1031,4 @@ function getChallengeRow(row: unknown): PlatformChallengeListRow {
   }
 }
 </style>
+

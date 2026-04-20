@@ -227,8 +227,8 @@ const {
   background:
     linear-gradient(
       180deg,
-      color-mix(in srgb, var(--notification-surface) 98%, transparent),
-      color-mix(in srgb, var(--notification-surface-subtle) 96%, transparent)
+      color-mix(in srgb, var(--notification-surface) 98%, var(--color-bg-base)),
+      color-mix(in srgb, var(--notification-surface-subtle) 96%, var(--color-bg-base))
     );
 }
 
@@ -243,8 +243,8 @@ const {
   background:
     linear-gradient(
       180deg,
-      color-mix(in srgb, var(--notification-surface) 98%, transparent),
-      color-mix(in srgb, var(--notification-surface-subtle) 92%, transparent)
+      color-mix(in srgb, var(--notification-surface) 98%, var(--color-bg-base)),
+      color-mix(in srgb, var(--notification-surface-subtle) 92%, var(--color-bg-base))
     );
 }
 
@@ -326,8 +326,8 @@ const {
 .notification-panel-body {
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--notification-surface) 98%, transparent),
-    color-mix(in srgb, var(--notification-surface-subtle) 90%, transparent)
+    color-mix(in srgb, var(--notification-surface) 98%, var(--color-bg-base)),
+    color-mix(in srgb, var(--notification-surface-subtle) 90%, var(--color-bg-base))
   );
 }
 
@@ -443,8 +443,8 @@ const {
 
 :global([data-theme='dark']) .notification-drawer {
   --notification-surface: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
-  --notification-surface-subtle: color-mix(in srgb, var(--color-bg-elevated) 84%, var(--color-bg-surface));
-  --notification-surface-elevated: color-mix(in srgb, var(--color-bg-elevated) 92%, var(--color-bg-surface));
+  --notification-surface-subtle: color-mix(in srgb, var(--color-bg-elevated) 84%, var(--color-bg-base));
+  --notification-surface-elevated: color-mix(in srgb, var(--color-bg-elevated) 92%, var(--color-bg-base));
   --notification-line: color-mix(in srgb, var(--color-border-default) 88%, transparent);
   --notification-line-strong: color-mix(in srgb, var(--color-border-default) 94%, transparent);
   --notification-text: color-mix(in srgb, var(--color-text-primary) 94%, transparent);

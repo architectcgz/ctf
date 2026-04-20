@@ -260,8 +260,8 @@ onUnmounted(() => {
   --workspace-toolbar-control-shadow: 0 1px 2px color-mix(in srgb, var(--color-shadow-soft) 36%, transparent);
   --workspace-toolbar-menu-surface: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--workspace-toolbar-surface) 98%, transparent),
-    color-mix(in srgb, var(--workspace-toolbar-surface-subtle) 96%, transparent)
+    color-mix(in srgb, var(--workspace-toolbar-surface) 98%, var(--color-bg-base)),
+    color-mix(in srgb, var(--workspace-toolbar-surface-subtle) 96%, var(--color-bg-base))
   );
   --workspace-toolbar-menu-border: color-mix(in srgb, var(--color-border-default) 88%, transparent);
   position: relative;
@@ -479,26 +479,14 @@ onUnmounted(() => {
 }
 
 :global([data-theme='dark']) .workspace-directory-toolbar {
-  --workspace-toolbar-surface: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
-  --workspace-toolbar-surface-subtle: color-mix(
-    in srgb,
-    var(--color-bg-elevated) 84%,
-    var(--color-bg-surface)
-  );
-  --workspace-toolbar-surface-elevated: color-mix(
-    in srgb,
-    var(--color-bg-elevated) 92%,
-    var(--color-bg-surface)
-  );
-  --workspace-toolbar-control-border: color-mix(in srgb, var(--color-border-default) 88%, transparent);
-  --workspace-toolbar-control-border-strong: color-mix(
-    in srgb,
-    var(--color-border-default) 94%,
-    transparent
-  );
-  --workspace-toolbar-control-text: color-mix(in srgb, var(--color-text-primary) 94%, transparent);
-  --workspace-toolbar-control-muted: color-mix(in srgb, var(--color-text-secondary) 90%, transparent);
-  --workspace-toolbar-menu-border: color-mix(in srgb, var(--color-border-default) 92%, transparent);
+  --workspace-toolbar-surface: #1e293b;
+  --workspace-toolbar-surface-subtle: #0f172a;
+  --workspace-toolbar-surface-elevated: #1e293b;
+  --workspace-toolbar-control-border: #334155;
+  --workspace-toolbar-control-border-strong: #475569;
+  --workspace-toolbar-control-text: #f8fafc;
+  --workspace-toolbar-control-muted: #94a3b8;
+  --workspace-toolbar-menu-border: #334155;
 }
 
 @media (max-width: 767px) {

@@ -33,6 +33,17 @@ describe('PlatformContestTable', () => {
     expect(adminContestTableSource).toContain('--contest-action-line')
     expect(adminContestTableSource).toContain(":global([data-theme='dark']) .contest-row-menu")
     expect(adminContestTableSource).toContain(":global([data-theme='dark']) .contest-row-menu-button")
+    expect(adminContestTableSource).not.toContain(":global([data-theme='light']) .contest-row-menu")
+    expect(adminContestTableSource).not.toContain(
+      ":global([data-theme='light']) .contest-row-menu-button"
+    )
+    expect(adminContestTableSource).toContain('background-color: var(--contest-action-surface);')
+    expect(adminContestTableSource).toContain('background: linear-gradient(')
+    expect(adminContestTableSource).toContain('var(--color-bg-base)')
+    expect(adminContestTableSource).toContain(
+      'background: color-mix(in srgb, var(--workspace-brand) 5%, var(--contest-action-surface-subtle));'
+    )
+    expect(adminContestTableSource).not.toContain('!important')
   })
 
   it('分页壳层应通过语义类承接弱文本色，而不是继续在模板里内联主题 utility', () => {

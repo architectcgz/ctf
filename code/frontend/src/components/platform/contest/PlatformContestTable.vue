@@ -482,10 +482,11 @@ watch(openActionMenuId, async (contestId, _previousId, onCleanup) => {
   overflow: hidden;
   border: 1px solid var(--contest-action-line);
   border-radius: 1rem;
+  background-color: var(--contest-action-surface);
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--contest-action-surface) 98%, transparent),
-    color-mix(in srgb, var(--contest-action-surface-subtle) 96%, transparent)
+    color-mix(in srgb, var(--contest-action-surface) 98%, var(--color-bg-base)),
+    color-mix(in srgb, var(--contest-action-surface-subtle) 96%, var(--color-bg-base))
   );
   box-shadow:
     0 24px 60px color-mix(in srgb, var(--color-shadow-strong) 18%, transparent),
@@ -522,34 +523,26 @@ watch(openActionMenuId, async (contestId, _previousId, onCleanup) => {
   color: var(--contest-action-accent);
 }
 
-:global([data-theme='light']) .contest-row-menu-button,
-:global([data-theme='light']) .contest-row-menu {
-  --contest-action-surface: color-mix(in srgb, white 96%, var(--journal-surface));
+.contest-row-menu-button,
+.contest-row-menu {
+  --contest-action-surface: #ffffff;
   --contest-action-surface-subtle: #f8fafc;
-  --contest-action-surface-elevated: white;
-  --contest-action-line: color-mix(in srgb, #dde5ee 90%, transparent);
-  --contest-action-line-strong: color-mix(in srgb, #d4dde8 94%, transparent);
+  --contest-action-surface-elevated: #ffffff;
+  --contest-action-line: #e2e8f0;
+  --contest-action-line-strong: #cbd5e1;
   --contest-action-text: #0f172a;
   --contest-action-muted: #64748b;
 }
 
 :global([data-theme='dark']) .contest-row-menu-button,
 :global([data-theme='dark']) .contest-row-menu {
-  --contest-action-surface: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
-  --contest-action-surface-subtle: color-mix(
-    in srgb,
-    var(--color-bg-elevated) 84%,
-    var(--color-bg-surface)
-  );
-  --contest-action-surface-elevated: color-mix(
-    in srgb,
-    var(--color-bg-elevated) 92%,
-    var(--color-bg-surface)
-  );
-  --contest-action-line: color-mix(in srgb, var(--color-border-default) 88%, transparent);
-  --contest-action-line-strong: color-mix(in srgb, var(--color-border-default) 94%, transparent);
-  --contest-action-text: color-mix(in srgb, var(--color-text-primary) 94%, transparent);
-  --contest-action-muted: color-mix(in srgb, var(--color-text-secondary) 90%, transparent);
+  --contest-action-surface: #1e293b;
+  --contest-action-surface-subtle: #0f172a;
+  --contest-action-surface-elevated: #1e293b;
+  --contest-action-line: #334155;
+  --contest-action-line-strong: #475569;
+  --contest-action-text: #f8fafc;
+  --contest-action-muted: #94a3b8;
 }
 
 :global([data-theme='dark']) .contest-row-menu {

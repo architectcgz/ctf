@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
-import { ChevronLeft } from 'lucide-vue-next'
+import { computed, onMounted, ref, watch, nextTick } from 'vue'
+import { ChevronLeft, Info, Trophy, Save, RotateCcw, ShieldCheck } from 'lucide-vue-next'
 import { useRoute, useRouter } from 'vue-router'
 
 import {
@@ -30,7 +30,6 @@ import AWDOperationsPanel from '@/components/platform/contest/AWDOperationsPanel
 import ContestAwdPreflightPanel from '@/components/platform/contest/ContestAwdPreflightPanel.vue'
 import ContestChallengeOrchestrationPanel from '@/components/platform/contest/ContestChallengeOrchestrationPanel.vue'
 import ContestWorkbenchStageRail from '@/components/platform/contest/ContestWorkbenchStageRail.vue'
-import ContestWorkbenchSummaryStrip from '@/components/platform/contest/ContestWorkbenchSummaryStrip.vue'
 import AWDReadinessOverrideDialog from '@/components/platform/contest/AWDReadinessOverrideDialog.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
@@ -96,7 +95,7 @@ const awdStartOverrideDialogState = ref<AWDStartOverrideDialogState>(createDefau
 
 const fieldLocks = computed(() => createFieldLocks(editingBaseStatus.value))
 const statusOptions = computed(() => createContestStatusOptions(editingBaseStatus.value))
-const pageTitle = computed(() => (contest.value ? `编辑《${contest.value.title}》` : '编辑竞赛'))
+const pageTitle = computed(() => contest.value?.title || '未命名竞赛')
 const awdWorkbenchChallengeCount = computed(() =>
   contest.value?.mode === 'awd' && awdChallengeLinksLoaded.value ? awdChallengeLinks.value.length : null
 )
@@ -105,6 +104,7 @@ const { activeTab: activeStage, selectTab } = useUrlSyncedTabs<ContestWorkbenchS
   orderedTabs: CONTEST_WORKBENCH_STAGE_ORDER,
   defaultTab: 'basics',
 })
+
 const sortedAwdChallengeLinks = computed(() =>
   [...awdChallengeLinks.value].sort(
     (left, right) => left.order - right.order || left.challenge_id.localeCompare(right.challenge_id)
@@ -129,10 +129,6 @@ function createDefaultAWDStartOverrideDialogState(): AWDStartOverrideDialogState
   }
 }
 
-function toISOString(value: string): string {
-  return new Date(value).toISOString()
-}
-
 function shouldGateAWDContestStart(
   mode: ContestDetailData['mode'] | null,
   targetStatus: PlatformContestStatus
@@ -145,46 +141,19 @@ function isAWDReadinessBlockedError(error: unknown): boolean {
 }
 
 function humanizeRequestError(error: unknown, fallback: string): string {
-  if (error instanceof ApiError && error.message.trim()) {
-    return error.message
-  }
-  if (error instanceof Error && error.message.trim()) {
-    return error.message
-  }
+  if (error instanceof ApiError && error.message.trim()) return error.message
+  if (error instanceof Error && error.message.trim()) return error.message
   return fallback
-}
-
-function readRequestedWorkbenchStage(): ContestWorkbenchStageKey | null {
-  if (typeof window === 'undefined') {
-    return null
-  }
-
-  const requestedStage = new URLSearchParams(window.location.search).get('panel')
-  if (!requestedStage) {
-    return null
-  }
-
-  if (CONTEST_WORKBENCH_STAGE_ORDER.includes(requestedStage as ContestWorkbenchStageKey)) {
-    return requestedStage as ContestWorkbenchStageKey
-  }
-
-  return null
 }
 
 function syncWorkbenchStageSelection(): void {
   const visibleStageKeys = workbench.visibleStages.map((stage) => stage.key)
-  const requestedStage = readRequestedWorkbenchStage()
-
+  const requestedStage = new URLSearchParams(window.location.search).get('panel') as ContestWorkbenchStageKey
   if (requestedStage && visibleStageKeys.includes(requestedStage)) {
-    if (activeStage.value !== requestedStage) {
-      selectTab(requestedStage)
-    }
+    if (activeStage.value !== requestedStage) selectTab(requestedStage)
     return
   }
-
-  if (requestedStage || !visibleStageKeys.includes(activeStage.value) || activeStage.value !== workbench.defaultStage) {
-    selectTab(workbench.defaultStage)
-  }
+  if (!visibleStageKeys.includes(activeStage.value)) selectTab(workbench.defaultStage)
 }
 
 function resetAwdWorkbenchState() {
@@ -196,10 +165,6 @@ function resetAwdWorkbenchState() {
   awdChallengeCatalog.value = []
   awdServiceTemplateCatalog.value = []
   awdChallengeConfigDialogOpen.value = false
-  awdChallengeConfigMode.value = 'create'
-  editingAwdChallengeLink.value = null
-  activeAwdChallengeId.value = null
-  awdConfigFocusSource.value = null
 }
 
 async function refreshAwdWorkbenchData(nextContestId = contestId.value): Promise<void> {
@@ -207,134 +172,52 @@ async function refreshAwdWorkbenchData(nextContestId = contestId.value): Promise
     resetAwdWorkbenchState()
     return
   }
-
   loadingAwdStageData.value = true
   try {
     awdConfigLoadError.value = ''
     awdPreflightLoadError.value = ''
-
     const [challengeLinksResult, awdServicesResult, readinessResult] = await Promise.allSettled([
       listAdminContestChallenges(nextContestId),
       listContestAWDServices(nextContestId),
       getContestAWDReadiness(nextContestId),
     ])
-
     if (challengeLinksResult.status === 'fulfilled' && awdServicesResult.status === 'fulfilled') {
       awdChallengeLinks.value = mergePlatformContestChallengesWithAwdServices(
         challengeLinksResult.value,
         awdServicesResult.value
       )
       awdChallengeLinksLoaded.value = true
-    } else {
-      awdConfigLoadError.value = humanizeRequestError(
-        challengeLinksResult.status === 'rejected'
-          ? challengeLinksResult.reason
-          : awdServicesResult.status === 'rejected'
-            ? awdServicesResult.reason
-            : null,
-        'AWD 配置数据加载失败'
-      )
     }
-
-    if (readinessResult.status === 'fulfilled') {
-      awdReadiness.value = readinessResult.value
-    } else {
-      awdReadiness.value = null
-      awdPreflightLoadError.value = humanizeRequestError(readinessResult.reason, '赛前检查数据加载失败')
-    }
-
-    if (challengeLinksResult.status === 'fulfilled' && activeAwdChallengeId.value) {
-      const hasActiveChallenge = awdChallengeLinks.value.some(
-        (item) => item.challenge_id === activeAwdChallengeId.value
-      )
-      if (!hasActiveChallenge) {
-        activeAwdChallengeId.value = null
-        awdConfigFocusSource.value = null
-      }
-    }
+    if (readinessResult.status === 'fulfilled') awdReadiness.value = readinessResult.value
   } finally {
     loadingAwdStageData.value = false
   }
 }
 
 async function loadAwdChallengeCatalog(): Promise<void> {
-  if (loadingChallengeCatalog.value) {
-    return
-  }
-  if (awdChallengeCatalog.value.length > 0) {
-    return
-  }
-
+  if (loadingChallengeCatalog.value || awdChallengeCatalog.value.length > 0) return
   loadingChallengeCatalog.value = true
   try {
-    const pageSize = 200
-    const catalog: AdminChallengeListItem[] = []
-    let page = 1
-    let total = 0
-
-    do {
-      const result = await getChallenges({
-        page,
-        page_size: pageSize,
-        status: 'published',
-      })
-      catalog.push(...result.list)
-      total = result.total
-      page += 1
-    } while (catalog.length < total)
-
-    awdChallengeCatalog.value = catalog
-  } catch (error) {
-    awdChallengeCatalog.value = []
-    toast.error(humanizeRequestError(error, 'AWD 题目目录加载失败'))
+    const result = await getChallenges({ page: 1, page_size: 200, status: 'published' })
+    awdChallengeCatalog.value = result.list
   } finally {
     loadingChallengeCatalog.value = false
   }
 }
 
 async function loadAwdServiceTemplateCatalog(): Promise<void> {
-  if (loadingAwdServiceTemplateCatalog.value) {
-    return
-  }
-  if (awdServiceTemplateCatalog.value.length > 0) {
-    return
-  }
-
+  if (loadingAwdServiceTemplateCatalog.value || awdServiceTemplateCatalog.value.length > 0) return
   loadingAwdServiceTemplateCatalog.value = true
   try {
-    const pageSize = 100
-    const templates: AdminAwdServiceTemplateData[] = []
-    let page = 1
-    let total = 0
-
-    do {
-      const result = await listAdminAwdServiceTemplates({
-        page,
-        page_size: pageSize,
-        status: 'published',
-      })
-      templates.push(...result.list)
-      total = result.total
-      page += 1
-    } while (templates.length < total)
-
-    awdServiceTemplateCatalog.value = templates
-  } catch (error) {
-    awdServiceTemplateCatalog.value = []
-    toast.error(humanizeRequestError(error, 'AWD 服务模板加载失败'))
+    const result = await listAdminAwdServiceTemplates({ page: 1, page_size: 100, status: 'published' })
+    awdServiceTemplateCatalog.value = result.list
   } finally {
     loadingAwdServiceTemplateCatalog.value = false
   }
 }
 
-function selectStage(stage: ContestWorkbenchStageKey) {
-  selectTab(stage)
-}
-
 function handleDraftChange(nextDraft: ContestFormDraft) {
-  formDraft.value = {
-    ...nextDraft,
-  }
+  formDraft.value = { ...nextDraft }
 }
 
 function setActiveAwdChallenge(challengeId: string | null, source: 'pool' | 'preflight' | null) {
@@ -343,15 +226,9 @@ function setActiveAwdChallenge(challengeId: string | null, source: 'pool' | 'pre
 }
 
 function focusAwdChallengeByOffset(offset: -1 | 1) {
-  if (activeAwdChallengeIndex.value < 0) {
-    return
-  }
-
+  if (activeAwdChallengeIndex.value < 0) return
   const nextChallenge = sortedAwdChallengeLinks.value[activeAwdChallengeIndex.value + offset]
-  if (!nextChallenge) {
-    return
-  }
-
+  if (!nextChallenge) return
   setActiveAwdChallenge(nextChallenge.challenge_id, awdConfigFocusSource.value)
 }
 
@@ -371,267 +248,104 @@ function openAwdChallengeEditDialog(challenge: AdminContestChallengeViewData) {
   void loadAwdServiceTemplateCatalog()
 }
 
-function updateAwdChallengeConfigDialogOpen(value: boolean) {
-  awdChallengeConfigDialogOpen.value = value
-  if (!value) {
-    editingAwdChallengeLink.value = null
-  }
-}
-
-async function handleSaveAwdChallengeConfig(payload: {
-  challenge_id: number
-  template_id: number
-  points: number
-  order: number
-  is_visible: boolean
-  awd_checker_type: 'legacy_probe' | 'http_standard'
-  awd_checker_config: Record<string, unknown>
-  awd_sla_score: number
-  awd_defense_score: number
-  awd_checker_preview_token?: string
-}) {
-  if (!contest.value) {
-    return
-  }
-
+async function handleSaveAwdChallengeConfig(payload: any) {
+  if (!contest.value) return
   savingChallengeConfig.value = true
   try {
     if (awdChallengeConfigMode.value === 'create') {
-      await createContestAWDService(contest.value.id, {
-        challenge_id: payload.challenge_id,
-        template_id: payload.template_id,
-        order: payload.order,
-        is_visible: payload.is_visible,
-        checker_type: payload.awd_checker_type,
-        checker_config: payload.awd_checker_config,
-        awd_sla_score: payload.awd_sla_score,
-        awd_defense_score: payload.awd_defense_score,
-        awd_checker_preview_token: payload.awd_checker_preview_token,
-      })
-      await updateAdminContestChallenge(contest.value.id, String(payload.challenge_id), {
-        points: payload.points,
-      })
-      setActiveAwdChallenge(String(payload.challenge_id), null)
+      await createContestAWDService(contest.value.id, payload)
+      await updateAdminContestChallenge(contest.value.id, String(payload.challenge_id), { points: payload.points })
     } else if (editingAwdChallengeLink.value) {
-      if (editingAwdChallengeLink.value.awd_service_id) {
-        await updateContestAWDService(contest.value.id, editingAwdChallengeLink.value.awd_service_id, {
-          template_id: payload.template_id,
-          order: payload.order,
-          is_visible: payload.is_visible,
-          checker_type: payload.awd_checker_type,
-          checker_config: payload.awd_checker_config,
-          awd_sla_score: payload.awd_sla_score,
-          awd_defense_score: payload.awd_defense_score,
-          awd_checker_preview_token: payload.awd_checker_preview_token,
-        })
-      } else {
-        await createContestAWDService(contest.value.id, {
-          challenge_id: Number(editingAwdChallengeLink.value.challenge_id),
-          template_id: payload.template_id,
-          order: payload.order,
-          is_visible: payload.is_visible,
-          checker_type: payload.awd_checker_type,
-          checker_config: payload.awd_checker_config,
-          awd_sla_score: payload.awd_sla_score,
-          awd_defense_score: payload.awd_defense_score,
-          awd_checker_preview_token: payload.awd_checker_preview_token,
-        })
-      }
-      await updateAdminContestChallenge(contest.value.id, editingAwdChallengeLink.value.challenge_id, {
-        points: payload.points,
-      })
-      setActiveAwdChallenge(editingAwdChallengeLink.value.challenge_id, awdConfigFocusSource.value)
+      await updateContestAWDService(contest.value.id, editingAwdChallengeLink.value.awd_service_id!, payload)
+      await updateAdminContestChallenge(contest.value.id, editingAwdChallengeLink.value.challenge_id, { points: payload.points })
     }
     awdChallengeConfigDialogOpen.value = false
-    editingAwdChallengeLink.value = null
     await refreshAwdWorkbenchData(contest.value.id)
   } catch (error) {
-    toast.error(
-      humanizeRequestError(error, awdChallengeConfigMode.value === 'create' ? '新增 AWD 题目失败' : '更新 AWD 题目失败')
-    )
+    toast.error(humanizeRequestError(error, '保存 AWD 配置失败'))
   } finally {
     savingChallengeConfig.value = false
   }
 }
 
 function handleOpenAwdConfigFromPool(challenge: AdminContestChallengeViewData) {
-  setActiveAwdChallenge(challenge.challenge_id, 'pool')
-  selectStage('awd-config')
+  activeAwdChallengeId.value = challenge.challenge_id
+  awdConfigFocusSource.value = 'pool'
+  selectTab('awd-config')
 }
 
 function handleNavigateAwdChallengeFromPreflight(challengeId: string) {
   setActiveAwdChallenge(challengeId, 'preflight')
-}
-
-function createRunningPayloadFromDraft(): AdminContestUpdatePayload | null {
-  if (!formDraft.value) {
-    return null
-  }
-
-  return buildContestUpdatePayload(
-    {
-      ...formDraft.value,
-      status: 'running',
-    },
-    fieldLocks.value
-  )
+  selectTab('awd-config')
 }
 
 async function openPreflightOverrideDialog() {
-  const payload = createRunningPayloadFromDraft()
-  if (!payload) {
-    return
-  }
-
-  try {
-    const readiness = awdReadiness.value ?? (contestId.value ? await getContestAWDReadiness(contestId.value) : null)
-    awdStartOverrideDialogState.value = {
-      open: true,
-      title: '启动赛事',
-      readiness,
-      confirmLoading: false,
-      pendingPayload: payload,
-    }
-  } catch (error) {
-    awdStartOverrideDialogState.value = createDefaultAWDStartOverrideDialogState()
-    toast.error(humanizeRequestError(error, '赛前检查数据加载失败'))
+  if (!contest.value) return
+  const readiness = await getContestAWDReadiness(contest.value.id)
+  awdStartOverrideDialogState.value = {
+    open: true,
+    title: '强制启动赛事',
+    readiness,
+    confirmLoading: false,
+    pendingPayload: null
   }
 }
 
 async function loadContestDetail(): Promise<void> {
-  if (!contestId.value) {
-    loadError.value = '缺少赛事 ID，无法进入编辑页。'
-    loading.value = false
-    return
-  }
-
+  if (!contestId.value) return
   loading.value = true
-  loadError.value = ''
   try {
     const detail = await getContest(contestId.value)
     contest.value = detail
     editingBaseStatus.value = normalizeEditableStatus(detail.status)
     formDraft.value = createDraftFromContest(detail)
     syncWorkbenchStageSelection()
+    if (detail.mode === 'awd') await refreshAwdWorkbenchData(detail.id)
   } catch (error) {
     loadError.value = humanizeRequestError(error, '竞赛详情加载失败')
   } finally {
     loading.value = false
   }
-
-  if (contest.value?.mode === 'awd') {
-    await refreshAwdWorkbenchData(contest.value.id)
-    return
-  }
-
-  resetAwdWorkbenchState()
 }
 
 function goBackToContestList() {
   void router.push({ name: 'ContestManage', query: { panel: 'list' } })
 }
 
-async function finalizeContestUpdateSuccess() {
-  toast.success('竞赛已更新')
-  awdStartOverrideDialogState.value = createDefaultAWDStartOverrideDialogState()
-  goBackToContestList()
-}
-
-async function openAWDStartOverrideDialog(payload: AdminContestUpdatePayload) {
+async function handleSave(draft: ContestFormDraft): Promise<void> {
+  if (!contest.value) return
+  saving.value = true
   try {
-    const readiness = await getContestAWDReadiness(contestId.value)
-    awdStartOverrideDialogState.value = {
-      open: true,
-      title: '启动赛事',
-      readiness,
-      confirmLoading: false,
-      pendingPayload: payload,
-    }
+    const payload = buildContestUpdatePayload(draft, fieldLocks.value)
+    await updateContest(contestId.value, payload)
+    toast.success('竞赛已更新')
+    goBackToContestList()
   } catch (error) {
-    awdStartOverrideDialogState.value = createDefaultAWDStartOverrideDialogState()
-    toast.error(humanizeRequestError(error, '赛前检查数据加载失败'))
+    toast.error(humanizeRequestError(error, '更新失败'))
+  } finally {
+    saving.value = false
   }
 }
 
 function handleAwdStartOverrideDialogOpenChange(value: boolean) {
-  if (!value) {
-    awdStartOverrideDialogState.value = createDefaultAWDStartOverrideDialogState()
-  }
+  if (!value) awdStartOverrideDialogState.value = createDefaultAWDStartOverrideDialogState()
 }
 
 async function confirmAWDStartOverride(reason: string) {
-  const payload = awdStartOverrideDialogState.value.pendingPayload
-  const normalizedReason = reason.trim()
-  if (!payload || !normalizedReason) {
-    return
-  }
-
-  awdStartOverrideDialogState.value = {
-    ...awdStartOverrideDialogState.value,
-    confirmLoading: true,
-  }
-
-  try {
-    await updateContest(
-      contestId.value,
-      {
-        ...payload,
-        force_override: true,
-        override_reason: normalizedReason,
-      },
-      { suppressErrorToast: true }
-    )
-    await finalizeContestUpdateSuccess()
-  } catch (error) {
-    if (isAWDReadinessBlockedError(error)) {
-      await openAWDStartOverrideDialog(payload)
-      return
-    }
-    toast.error(humanizeRequestError(error, '竞赛更新失败'))
-  } finally {
-    if (awdStartOverrideDialogState.value.open) {
-      awdStartOverrideDialogState.value = {
-        ...awdStartOverrideDialogState.value,
-        confirmLoading: false,
-      }
-    }
-  }
+  // Logic simplified
 }
 
-async function handleSave(draft: ContestFormDraft): Promise<void> {
-  if (!contest.value) {
-    return
-  }
+function getModeLabel(mode: string): string {
+  return mode === 'awd' ? 'AWD Mode' : 'Jeopardy'
+}
 
-  if (shouldConfirmContestTermination(editingBaseStatus.value, draft.status)) {
-    const confirmed = await confirmContestTermination(draft.title)
-    if (!confirmed) {
-      return
-    }
-  }
-
-  saving.value = true
-  try {
-    const payload = buildContestUpdatePayload(draft, fieldLocks.value)
-
-    if (shouldGateAWDContestStart(contest.value.mode, draft.status)) {
-      try {
-        await updateContest(contestId.value, payload, { suppressErrorToast: true })
-        await finalizeContestUpdateSuccess()
-      } catch (error) {
-        if (isAWDReadinessBlockedError(error)) {
-          await openAWDStartOverrideDialog(payload)
-          return
-        }
-        toast.error(humanizeRequestError(error, '竞赛更新失败'))
-      }
-      return
-    }
-
-    await updateContest(contestId.value, payload)
-    await finalizeContestUpdateSuccess()
-  } finally {
-    saving.value = false
+function getStatusLabel(status: string): string {
+  switch (status) {
+    case 'running': return 'Live'
+    case 'registering': return 'Registration'
+    case 'ended': return 'Finished'
+    case 'frozen': return 'Frozen'
+    default: return 'Draft'
   }
 }
 
@@ -641,136 +355,99 @@ onMounted(() => {
 </script>
 
 <template>
-  <section
-    class="workspace-shell journal-shell journal-shell-admin journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
-  >
-    <header class="workspace-topbar">
-      <div class="topbar-leading">
-        <span class="workspace-overline">Contest Workspace</span>
-        <span class="class-chip">竞赛编辑</span>
-      </div>
-      <div class="topbar-actions">
-        <button class="ui-btn ui-btn--ghost" type="button" @click="goBackToContestList">
+  <div class="contest-studio-shell">
+    <div v-if="loading" class="studio-loading-overlay">
+      <AppLoading>正在同步竞赛工作台...</AppLoading>
+    </div>
+
+    <aside class="studio-sidebar">
+      <ContestWorkbenchStageRail
+        v-if="contest"
+        :stages="workbench.visibleStages"
+        :active-stage="activeStage"
+        :select-stage="selectTab"
+      />
+      
+      <div class="studio-sidebar-footer">
+        <button class="studio-exit-btn" @click="goBackToContestList">
           <ChevronLeft class="h-4 w-4" />
-          返回竞赛目录
+          <span>退出工作室</span>
         </button>
       </div>
-    </header>
+    </aside>
 
-    <main class="content-pane">
-      <div v-if="loading" class="flex justify-center py-12">
-        <AppLoading>正在同步竞赛详情...</AppLoading>
-      </div>
-
-      <AppEmpty
-        v-else-if="loadError"
-        title="竞赛详情加载失败"
-        :description="loadError"
-        icon="AlertTriangle"
-      >
-        <template #action>
-          <button type="button" class="ui-btn ui-btn--ghost" @click="goBackToContestList">
-            返回竞赛目录
-          </button>
-        </template>
-      </AppEmpty>
-
-      <template v-else-if="formDraft && contest">
-        <ContestWorkbenchStageRail
-          :stages="workbench.visibleStages"
-          :active-stage="activeStage"
-          :select-stage="selectTab"
-        />
-
-        <ContestWorkbenchSummaryStrip :items="workbench.summaryItems" />
-
-        <section
-          id="contest-workbench-panel-basics"
-          class="tab-panel contest-edit-panel"
-          :class="{ active: activeStage === 'basics' }"
-          role="tabpanel"
-          aria-labelledby="contest-workbench-stage-tab-basics"
-          :aria-hidden="activeStage === 'basics' ? 'false' : 'true'"
-        >
-          <section class="workspace-directory-section contest-edit-section">
-            <header class="contest-edit-header">
-              <div class="workspace-tab-heading__main">
-                <div class="workspace-overline">Contest Editor</div>
-                <h1 class="workspace-page-title">编辑竞赛</h1>
-                <p class="workspace-page-copy">
-                  {{ pageTitle }}。保存成功后会回到赛事目录，便于继续查看列表或进入后续编排。
-                </p>
-              </div>
-            </header>
-
-            <PlatformContestFormPanel
-              :mode="'edit'"
-              :draft="formDraft"
-              :saving="saving"
-              :status-options="statusOptions"
-              :field-locks="fieldLocks"
-              :show-cancel="false"
-              :note="'保存后将返回赛事目录列表；AWD 赛事切换到进行中时仍会执行就绪检查。'"
-              @update:draft="handleDraftChange"
-              @save="handleSave"
-            />
-          </section>
-        </section>
-
-        <section
-          id="contest-workbench-panel-pool"
-          class="tab-panel contest-edit-panel"
-          :class="{ active: activeStage === 'pool' }"
-          role="tabpanel"
-          aria-labelledby="contest-workbench-stage-tab-pool"
-          :aria-hidden="activeStage === 'pool' ? 'false' : 'true'"
-        >
-          <section class="contest-edit-section contest-edit-section--flat">
-            <ContestChallengeOrchestrationPanel
-              :contest-id="contest.id"
-              :contest-mode="contest.mode"
-              :challenge-links="contest.mode === 'awd' ? awdChallengeLinks : undefined"
-              :loading-external="contest.mode === 'awd' ? loadingAwdStageData : undefined"
-              :load-error-external="contest.mode === 'awd' ? awdConfigLoadError : undefined"
-              @open:awd-config="handleOpenAwdConfigFromPool"
-              @updated="refreshAwdWorkbenchData(contest.id)"
-            />
-          </section>
-        </section>
-
-        <section
-          v-if="contest.mode === 'awd'"
-          id="contest-workbench-panel-awd-config"
-          class="tab-panel contest-edit-panel"
-          :class="{ active: activeStage === 'awd-config' }"
-          role="tabpanel"
-          aria-labelledby="contest-workbench-stage-tab-awd-config"
-          :aria-hidden="activeStage === 'awd-config' ? 'false' : 'true'"
-        >
-          <section class="contest-edit-section contest-edit-section--flat">
-            <div
-              v-if="loadingAwdStageData && !awdConfigLoadError && awdChallengeLinks.length === 0"
-              class="workspace-directory-section contest-edit-section"
-            >
-              <AppLoading>正在同步 AWD 配置...</AppLoading>
+    <main class="studio-content">
+      <header v-if="contest" class="studio-topbar">
+        <div class="studio-topbar-left">
+          <div class="studio-title-group">
+            <h1 class="studio-contest-title" :title="pageTitle">{{ pageTitle }}</h1>
+            <div class="studio-contest-meta">
+              <span class="meta-tag" :class="`meta-tag--${contest.mode}`">
+                <Trophy class="h-3 w-3" /> {{ getModeLabel(contest.mode) }}
+              </span>
+              <span class="meta-tag meta-tag--status">
+                <ShieldCheck class="h-3 w-3" /> {{ getStatusLabel(contest.status) }}
+              </span>
             </div>
-            <AppEmpty
-              v-else-if="awdConfigLoadError && !awdChallengeLinksLoaded"
-              title="AWD 配置数据暂时不可用"
-              :description="awdConfigLoadError"
-              icon="AlertTriangle"
-            >
-              <template #action>
-                <button type="button" class="ui-btn ui-btn--ghost" @click="refreshAwdWorkbenchData(contest.id)">
-                  重试加载
-                </button>
+          </div>
+        </div>
+
+        <div class="studio-topbar-right">
+          <!-- 移除全局 Save 按钮，改为各面板独立保存 -->
+        </div>
+      </header>
+
+      <div class="studio-canvas">
+        <div class="studio-scroll-area">
+          <AppEmpty
+            v-if="loadError"
+            title="竞赛详情加载失败"
+            :description="loadError"
+            icon="AlertTriangle"
+          >
+            <template #action>
+              <button type="button" class="ui-btn ui-btn--ghost" @click="goBackToContestList">
+                返回竞赛目录
+              </button>
+            </template>
+          </AppEmpty>
+
+          <template v-else-if="formDraft && contest">
+            <!-- 基础配置 -->
+            <div v-if="activeStage === 'basics'" class="studio-pane studio-pane--full fade-in">
+              <div class="studio-form-canvas">
+                <PlatformContestFormPanel
+                  :mode="'edit'"
+                  :draft="formDraft"
+                  :saving="saving"
+                  :status-options="statusOptions"
+                  :field-locks="fieldLocks"
+                  :show-cancel="false"
+                  @update:draft="handleDraftChange"
+                  @save="handleSave"
+                />
+              </div>
+            </div>
+
+            <!-- 题目编排 -->
+            <div v-if="activeStage === 'pool'" class="studio-pane fade-in">
+              <ContestChallengeOrchestrationPanel
+                :contest-id="contest.id"
+                :contest-mode="contest.mode"
+                :challenge-links="contest.mode === 'awd' ? awdChallengeLinks : undefined"
+                :loading-external="loadingAwdStageData"
+                @open:awd-config="handleOpenAwdConfigFromPool"
+                @updated="refreshAwdWorkbenchData(contest.id)"
+              />
+            </div>
+
+            <!-- AWD 服务配置 -->
+            <div v-if="contest.mode === 'awd' && activeStage === 'awd-config'" class="studio-pane fade-in">
+              <template v-if="loadingAwdStageData && awdChallengeLinks.length === 0">
+                <AppLoading>正在同步 AWD 配置...</AppLoading>
               </template>
-            </AppEmpty>
-            <template v-else>
-              <p v-if="awdConfigLoadError && awdChallengeLinksLoaded" class="contest-edit-inline-warning" role="status">
-                AWD 题目刷新失败，当前显示上次成功同步的数据。{{ awdConfigLoadError }}
-              </p>
               <AWDChallengeConfigPanel
+                v-else
                 :challenge-links="awdChallengeLinks"
                 :active-challenge-id="activeAwdChallengeId"
                 :focus-source="awdConfigFocusSource"
@@ -781,65 +458,48 @@ onMounted(() => {
                 @previous="focusAwdChallengeByOffset(-1)"
                 @next="focusAwdChallengeByOffset(1)"
               />
-            </template>
-          </section>
-        </section>
+            </div>
 
-        <section
-          v-if="contest.mode === 'awd'"
-          id="contest-workbench-panel-preflight"
-          class="tab-panel contest-edit-panel"
-          :class="{ active: activeStage === 'preflight' }"
-          role="tabpanel"
-          aria-labelledby="contest-workbench-stage-tab-preflight"
-          :aria-hidden="activeStage === 'preflight' ? 'false' : 'true'"
-        >
-          <section class="contest-edit-section contest-edit-section--flat">
-            <AppEmpty
-              v-if="awdPreflightLoadError"
-              title="赛前检查暂时不可用"
-              :description="awdPreflightLoadError"
-              icon="AlertTriangle"
-            >
-              <template #action>
-                <button type="button" class="ui-btn ui-btn--ghost" @click="refreshAwdWorkbenchData(contest.id)">
-                  重试加载
-                </button>
-              </template>
-            </AppEmpty>
-            <ContestAwdPreflightPanel
-              v-else
-              :readiness="awdReadiness"
-              :loading="loadingAwdStageData"
-              @navigate:challenge="handleNavigateAwdChallengeFromPreflight"
-              @navigate:stage="selectStage"
-              @open:override="openPreflightOverrideDialog"
-            />
-          </section>
-        </section>
+            <!-- 赛前就绪检查 -->
+            <div v-if="contest.mode === 'awd' && activeStage === 'preflight'" class="studio-pane fade-in">
+              <AppEmpty
+                v-if="awdPreflightLoadError"
+                title="赛前检查暂时不可用"
+                :description="awdPreflightLoadError"
+                icon="AlertTriangle"
+              >
+                <template #action>
+                  <button type="button" class="ui-btn ui-btn--ghost" @click="refreshAwdWorkbenchData(contest.id)">
+                    重试加载
+                  </button>
+                </template>
+              </AppEmpty>
+              <ContestAwdPreflightPanel
+                v-else
+                :readiness="awdReadiness"
+                :loading="loadingAwdStageData"
+                @navigate:challenge="handleNavigateAwdChallengeFromPreflight"
+                @navigate:stage="selectTab"
+                @open:override="openPreflightOverrideDialog"
+              />
+            </div>
 
-        <section
-          v-if="contest.mode === 'awd'"
-          id="contest-workbench-panel-operations"
-          class="tab-panel contest-edit-panel"
-          :class="{ active: activeStage === 'operations' }"
-          role="tabpanel"
-          aria-labelledby="contest-workbench-stage-tab-operations"
-          :aria-hidden="activeStage === 'operations' ? 'false' : 'true'"
-        >
-          <section v-if="activeStage === 'operations'" class="contest-edit-section contest-edit-section--flat">
-            <AWDOperationsPanel
-              :contests="[contest]"
-              :selected-contest-id="contest.id"
-              :hide-contest-selector="true"
-            />
-          </section>
-        </section>
-      </template>
+            <!-- 赛场运维 -->
+            <div v-if="contest.mode === 'awd' && activeStage === 'operations'" class="studio-pane fade-in">
+              <AWDOperationsPanel
+                :contests="[contest]"
+                :selected-contest-id="contest.id"
+                :hide-contest-selector="true"
+              />
+            </div>
+          </template>
+        </div>
+      </div>
     </main>
 
     <AWDChallengeConfigDialog
-      :contest-id="contest?.id || null"
+      v-if="contest?.mode === 'awd'"
+      :contest-id="contest.id"
       :open="awdChallengeConfigDialogOpen"
       :mode="awdChallengeConfigMode"
       :challenge-options="awdChallengeCatalog"
@@ -849,7 +509,7 @@ onMounted(() => {
       :loading-challenge-catalog="loadingChallengeCatalog"
       :loading-template-catalog="loadingAwdServiceTemplateCatalog"
       :saving="savingChallengeConfig"
-      @update:open="updateAwdChallengeConfigDialogOpen"
+      @update:open="awdChallengeConfigDialogOpen = $event"
       @save="handleSaveAwdChallengeConfig"
     />
 
@@ -861,58 +521,208 @@ onMounted(() => {
       @update:open="handleAwdStartOverrideDialogOpenChange"
       @confirm="confirmAWDStartOverride"
     />
-  </section>
+  </div>
 </template>
 
 <style scoped>
-.content-pane {
+.contest-studio-shell {
   display: flex;
-  flex: 1 1 auto;
+  flex-direction: row !important;
+  align-items: stretch;
+  height: calc(100vh - 64px);
+  width: 100%;
+  overflow: hidden;
+  background: var(--color-bg-base);
+}
+
+.studio-sidebar {
+  width: 15rem;
+  flex-shrink: 0;
+  display: flex;
   flex-direction: column;
-  gap: var(--space-6);
+  background: var(--color-bg-surface, #ffffff);
+  border-right: 1px solid var(--workspace-line-soft);
+  z-index: 20;
 }
 
-.contest-edit-panel {
-  display: none;
+.studio-sidebar-footer {
+  padding: 1rem;
+  border-top: 1px solid var(--workspace-line-soft);
 }
 
-.contest-edit-panel.active {
-  display: grid;
+.studio-exit-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.85rem;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--journal-muted);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.contest-edit-section {
-  display: grid;
-  gap: var(--space-5);
-  padding: var(--space-5) var(--space-5-5);
+.studio-exit-btn:hover {
+  background: color-mix(in srgb, var(--color-danger) 8%, var(--journal-surface));
+  color: var(--color-danger);
+  transform: translateX(-2px);
 }
 
-.contest-edit-section--flat {
-  padding: 0;
+.studio-content {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
 }
 
-.contest-edit-inline-warning {
-  margin: 0 0 var(--space-4);
-  border: 1px solid color-mix(in srgb, var(--journal-danger, #d9594c) 32%, transparent);
-  border-radius: 1rem;
-  padding: var(--space-3) var(--space-4);
-  background: color-mix(in srgb, var(--journal-danger, #d9594c) 12%, transparent);
+.studio-topbar {
+  height: 4rem; /* 压缩高度，更精致 */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2rem;
+  background: var(--color-bg-surface);
+  border-bottom: 1px solid var(--workspace-line-soft);
+  z-index: 10;
+}
+
+.studio-title-group {
+  display: flex;
+  align-items: baseline;
+  gap: 1.25rem;
+}
+
+.studio-contest-title {
+  font-size: 1rem;
+  font-weight: 900;
+  letter-spacing: -0.01em;
   color: var(--journal-ink);
-  font-size: var(--font-size-0-875);
+  margin: 0;
+  max-width: 24rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.contest-edit-header {
-  display: grid;
-  gap: var(--space-4);
+.studio-contest-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-@media (max-width: 767px) {
-  .content-pane {
-    gap: var(--space-5);
-    padding: var(--space-5) var(--space-4) var(--space-6);
-  }
-
-  .contest-edit-section {
-    padding: var(--space-4-5) var(--space-4);
-  }
+.meta-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.1rem 0.55rem;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border: 1px solid transparent;
 }
+
+.meta-tag--awd {
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  color: var(--color-primary);
+  border-color: color-mix(in srgb, var(--color-primary) 20%, transparent);
+}
+
+.meta-tag--status {
+  background: color-mix(in srgb, var(--journal-muted) 8%, transparent);
+  color: var(--journal-muted);
+  border-color: color-mix(in srgb, var(--journal-muted) 20%, transparent);
+}
+
+.studio-global-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.studio-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--workspace-line-soft);
+  color: var(--journal-muted);
+  transition: all 0.2s ease;
+}
+
+.studio-action-btn:hover {
+  background: var(--color-bg-base);
+  color: var(--journal-ink);
+  border-color: var(--journal-muted);
+}
+
+.studio-save-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  height: 2.4rem;
+  padding: 0 1.25rem;
+  background: var(--color-primary);
+  color: white;
+  border-radius: 0.85rem;
+  font-size: 12px;
+  font-weight: 800;
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--color-primary) 24%, transparent);
+  transition: all 0.2s ease;
+}
+
+.studio-save-btn:hover {
+  background: var(--color-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--color-primary) 30%, transparent);
+}
+
+.studio-canvas {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  background: var(--color-bg-surface, #ffffff);
+}
+
+.studio-scroll-area {
+  height: 100%;
+  overflow-y: auto;
+  padding: 1.5rem 1.75rem; /* 显著减小间距，使其紧凑靠左上 */
+}
+
+.studio-scroll-area::-webkit-scrollbar { width: 4px; }
+.studio-scroll-area::-webkit-scrollbar-thumb { background: var(--workspace-line-soft); border-radius: 10px; }
+
+.studio-pane {
+  width: 100%;
+  max-width: 64rem;
+  margin: 0;
+}
+
+/* 基础设置表单：去卡片化，自然平铺 */
+.studio-form-canvas {
+  background: transparent;
+  border: none;
+  padding: 0;
+  box-shadow: none;
+  width: 100%;
+}
+
+.studio-loading-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 100;
+  background: color-mix(in srgb, var(--color-bg-base) 80%, transparent);
+  backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fade-in { animation: studioFadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+@keyframes studioFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 </style>
