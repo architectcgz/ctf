@@ -31,7 +31,10 @@ function handleStageSelect(stage: ContestWorkbenchStage): void {
 </script>
 
 <template>
-  <nav class="studio-rail-v2" role="tablist">
+  <nav
+    class="studio-rail-v2"
+    role="tablist"
+  >
     <div class="studio-nav-group pt-6">
       <button
         v-for="stage in stages"
@@ -46,12 +49,18 @@ function handleStageSelect(stage: ContestWorkbenchStage): void {
       >
         <div class="nav-item-inner">
           <div class="icon-stack">
-            <component :is="stageIcons[stage.key] || Settings2" class="main-icon" />
+            <component
+              :is="stageIcons[stage.key] || Settings2"
+              class="main-icon"
+            />
           </div>
           <span class="label-text">{{ stage.label }}</span>
           
           <!-- 状态指示：如果是活跃阶段则显示发光点，如果是已完成建议显示 Check (逻辑可后续扩展) -->
-          <div v-if="activeStage === stage.key" class="status-dot-active" />
+          <div
+            v-if="activeStage === stage.key"
+            class="status-dot-active"
+          />
         </div>
       </button>
     </div>
@@ -116,6 +125,7 @@ function handleStageSelect(stage: ContestWorkbenchStage): void {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
+  border-right: 1px solid var(--workspace-line-soft);
 }
 
 .nav-item {

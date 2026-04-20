@@ -356,7 +356,10 @@ onMounted(() => {
 
 <template>
   <div class="contest-studio-shell">
-    <div v-if="loading" class="studio-loading-overlay">
+    <div
+      v-if="loading"
+      class="studio-loading-overlay"
+    >
       <AppLoading>正在同步竞赛工作台...</AppLoading>
     </div>
 
@@ -369,7 +372,10 @@ onMounted(() => {
       />
       
       <div class="studio-sidebar-footer">
-        <button class="studio-exit-btn" @click="goBackToContestList">
+        <button
+          class="studio-exit-btn"
+          @click="goBackToContestList"
+        >
           <ChevronLeft class="h-4 w-4" />
           <span>退出工作室</span>
         </button>
@@ -377,12 +383,23 @@ onMounted(() => {
     </aside>
 
     <main class="studio-content">
-      <header v-if="contest" class="studio-topbar">
+      <header
+        v-if="contest"
+        class="studio-topbar"
+      >
         <div class="studio-topbar-left">
           <div class="studio-title-group">
-            <h1 class="studio-contest-title" :title="pageTitle">{{ pageTitle }}</h1>
+            <h1
+              class="studio-contest-title"
+              :title="pageTitle"
+            >
+              {{ pageTitle }}
+            </h1>
             <div class="studio-contest-meta">
-              <span class="meta-tag" :class="`meta-tag--${contest.mode}`">
+              <span
+                class="meta-tag"
+                :class="`meta-tag--${contest.mode}`"
+              >
                 <Trophy class="h-3 w-3" /> {{ getModeLabel(contest.mode) }}
               </span>
               <span class="meta-tag meta-tag--status">
@@ -406,7 +423,11 @@ onMounted(() => {
             icon="AlertTriangle"
           >
             <template #action>
-              <button type="button" class="ui-btn ui-btn--ghost" @click="goBackToContestList">
+              <button
+                type="button"
+                class="ui-btn ui-btn--ghost"
+                @click="goBackToContestList"
+              >
                 返回竞赛目录
               </button>
             </template>
@@ -414,7 +435,10 @@ onMounted(() => {
 
           <template v-else-if="formDraft && contest">
             <!-- 基础配置 -->
-            <div v-if="activeStage === 'basics'" class="studio-pane studio-pane--full fade-in">
+            <div
+              v-if="activeStage === 'basics'"
+              class="studio-pane studio-pane--full fade-in"
+            >
               <div class="studio-form-canvas">
                 <PlatformContestFormPanel
                   :mode="'edit'"
@@ -430,7 +454,10 @@ onMounted(() => {
             </div>
 
             <!-- 题目编排 -->
-            <div v-if="activeStage === 'pool'" class="studio-pane fade-in">
+            <div
+              v-if="activeStage === 'pool'"
+              class="studio-pane fade-in"
+            >
               <ContestChallengeOrchestrationPanel
                 :contest-id="contest.id"
                 :contest-mode="contest.mode"
@@ -442,7 +469,10 @@ onMounted(() => {
             </div>
 
             <!-- AWD 服务配置 -->
-            <div v-if="contest.mode === 'awd' && activeStage === 'awd-config'" class="studio-pane fade-in">
+            <div
+              v-if="contest.mode === 'awd' && activeStage === 'awd-config'"
+              class="studio-pane fade-in"
+            >
               <template v-if="loadingAwdStageData && awdChallengeLinks.length === 0">
                 <AppLoading>正在同步 AWD 配置...</AppLoading>
               </template>
@@ -461,7 +491,10 @@ onMounted(() => {
             </div>
 
             <!-- 赛前就绪检查 -->
-            <div v-if="contest.mode === 'awd' && activeStage === 'preflight'" class="studio-pane fade-in">
+            <div
+              v-if="contest.mode === 'awd' && activeStage === 'preflight'"
+              class="studio-pane fade-in"
+            >
               <AppEmpty
                 v-if="awdPreflightLoadError"
                 title="赛前检查暂时不可用"
@@ -469,7 +502,11 @@ onMounted(() => {
                 icon="AlertTriangle"
               >
                 <template #action>
-                  <button type="button" class="ui-btn ui-btn--ghost" @click="refreshAwdWorkbenchData(contest.id)">
+                  <button
+                    type="button"
+                    class="ui-btn ui-btn--ghost"
+                    @click="refreshAwdWorkbenchData(contest.id)"
+                  >
                     重试加载
                   </button>
                 </template>
@@ -485,7 +522,10 @@ onMounted(() => {
             </div>
 
             <!-- 赛场运维 -->
-            <div v-if="contest.mode === 'awd' && activeStage === 'operations'" class="studio-pane fade-in">
+            <div
+              v-if="contest.mode === 'awd' && activeStage === 'operations'"
+              class="studio-pane fade-in"
+            >
               <AWDOperationsPanel
                 :contests="[contest]"
                 :selected-contest-id="contest.id"
@@ -541,7 +581,6 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   background: var(--color-bg-surface, #ffffff);
-  border-right: 1px solid var(--workspace-line-soft);
   z-index: 20;
 }
 
@@ -691,7 +730,7 @@ onMounted(() => {
 .studio-scroll-area {
   height: 100%;
   overflow-y: auto;
-  padding: 1.5rem 1.75rem; /* 显著减小间距，使其紧凑靠左上 */
+  padding: 0;
 }
 
 .studio-scroll-area::-webkit-scrollbar { width: 4px; }
