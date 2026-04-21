@@ -259,31 +259,34 @@ onMounted(() => {
   <section
     class="workspace-shell journal-shell journal-shell-admin journal-notes-card journal-hero admin-student-manage-shell flex min-h-full flex-1 flex-col"
   >
-    <main class="content-pane admin-student-manage-shell__content">
-      <header class="admin-student-manage-shell__hero">
-        <div class="admin-student-manage-shell__hero-main">
+    <header class="admin-workbench-header">
+      <div class="admin-workbench-header__top">
+        <div class="admin-workbench-header__identity">
           <div class="workspace-overline">
             Student Workspace
           </div>
-          <h1 class="workspace-page-title">
+          <h1 class="admin-workbench-header__title">
             学生管理
           </h1>
-          <p class="workspace-page-copy">
+          <p class="admin-workbench-header__description">
             在后台视角查看学生目录、班级归属与学习表现，并快速进入学员分析。
           </p>
         </div>
 
-        <div class="admin-student-manage-shell__hero-side">
+        <div class="admin-workbench-header__actions">
           <button
             type="button"
-            class="admin-student-manage-shell__hero-action"
+            class="ui-btn ui-btn--ghost ui-btn--sm"
             @click="initialize()"
           >
+            <RefreshCw class="h-3.5 w-3.5" />
             刷新目录
           </button>
         </div>
-      </header>
+      </div>
+    </header>
 
+    <main class="admin-workbench-content flex-1 p-[2rem_3rem] space-y-6">
       <div class="metric-panel-grid metric-panel-grid--premium cols-3">
         <article class="metric-panel-card metric-panel-card--premium">
           <div class="metric-panel-label">

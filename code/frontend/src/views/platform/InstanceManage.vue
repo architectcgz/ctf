@@ -276,31 +276,33 @@ onMounted(() => {
   <section
     class="workspace-shell journal-shell journal-shell-admin journal-notes-card journal-hero admin-instance-manage-shell flex min-h-full flex-1 flex-col"
   >
-    <main class="content-pane admin-instance-manage-shell__content">
-      <header class="admin-instance-manage-shell__hero">
-        <div class="admin-instance-manage-shell__hero-main">
+    <header class="admin-workbench-header">
+      <div class="admin-workbench-header__top">
+        <div class="admin-workbench-header__identity">
           <div class="workspace-overline">
             Instance Workspace
           </div>
-          <h1 class="workspace-page-title">
+          <h1 class="admin-workbench-header__title">
             实例管理
           </h1>
-          <p class="workspace-page-copy">
+          <p class="admin-workbench-header__description">
             在后台视角查看实例状态、到期节奏与访问地址，并快速销毁异常环境。
           </p>
         </div>
 
-        <div class="admin-instance-manage-shell__hero-side">
+        <div class="admin-workbench-header__actions">
           <button
             type="button"
-            class="admin-instance-manage-shell__hero-action"
+            class="ui-btn ui-btn--ghost ui-btn--sm"
             @click="router.push({ name: 'PlatformOverview' })"
           >
             返回后台概览
           </button>
         </div>
-      </header>
+      </div>
+    </header>
 
+    <main class="admin-workbench-content flex-1 p-[2rem_3rem] space-y-6">
       <div class="metric-panel-grid metric-panel-grid--premium cols-3">
         <article class="metric-panel-card metric-panel-card--premium">
           <div class="metric-panel-label">
