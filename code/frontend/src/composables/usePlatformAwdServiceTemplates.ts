@@ -15,6 +15,7 @@ import type {
   AWDDeploymentMode,
   AWDServiceTemplateStatus,
   AWDServiceType,
+  ChallengeCategory,
   ChallengeDifficulty,
 } from '@/api/contracts'
 import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
@@ -27,7 +28,7 @@ type AwdServiceStatusFilter = AWDServiceTemplateStatus | ''
 export interface PlatformAwdServiceTemplateFormDraft {
   name: string
   slug: string
-  category: string
+  category: ChallengeCategory
   difficulty: ChallengeDifficulty
   description: string
   service_type: AWDServiceType
@@ -129,7 +130,7 @@ export function usePlatformAwdServiceTemplates() {
         const payload: AdminAwdServiceTemplateUpdatePayload = {
           name: draft.name.trim(),
           slug: draft.slug.trim(),
-          category: draft.category.trim(),
+          category: draft.category,
           difficulty: draft.difficulty,
           description: draft.description.trim(),
           service_type: draft.service_type,
@@ -142,7 +143,7 @@ export function usePlatformAwdServiceTemplates() {
         const payload: AdminAwdServiceTemplateCreatePayload = {
           name: draft.name.trim(),
           slug: draft.slug.trim(),
-          category: draft.category.trim(),
+          category: draft.category,
           difficulty: draft.difficulty,
           description: draft.description.trim() || undefined,
           service_type: draft.service_type,

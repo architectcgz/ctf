@@ -90,9 +90,6 @@ func (s *AWDService) PreviewChecker(ctx context.Context, contestID int64, req *d
 	if previewChallengeID <= 0 {
 		return nil, errcode.ErrInvalidParams
 	}
-	if _, err := s.loadChallenge(ctx, previewChallengeID); err != nil {
-		return nil, err
-	}
 
 	checkerType, checkerConfig, err := validateAndNormalizeContestAWDFields(
 		contest,

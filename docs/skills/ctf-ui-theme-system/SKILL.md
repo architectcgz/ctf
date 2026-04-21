@@ -152,8 +152,26 @@ Core outcome: **professional, restrained, technical, high-readability workspace 
 ## Color And Surface Rules
 - Use semantic tokens/variables; avoid ad-hoc hardcoded palette drift.
 - Accent is theme-driven (support user theme preferences).
+- **Prohibit hardcoded colors**: NEVER use hex/rgb values like `#ffffff` or `#0f172a` directly in `<style>` blocks. Always use CSS variables (e.g., `var(--color-bg-base)`).
+- **Prohibit !important**: DO NOT use `!important` in component styles. Resolve specificity issues via higher-specificity selectors or proper CSS inheritance. Exception: accessibility (reduced-motion) and absolute layering (z-index).
 - Keep backgrounds solid or subtly layered; avoid foggy overlays.
 - No glassmorphism/backdrop blur in primary workspaces.
+
+## Modal and Drawer Patterns
+
+### Side-over Drawer (The "Slide-over" Contract)
+- Use for complex forms, extensive configurations, or real-time logs.
+- Component: Base on `SlideOverDrawer.vue`.
+- **Layout Contract**: Must use CSS variables to drive layout.
+  - `--modal-shell-justify: flex-end` (right alignment)
+  - `--modal-shell-padding: 0`
+- **Visuals**: Aside body must be **fully opaque** solid color (`var(--color-bg-surface)`). Overlay shell must use strong blur (`backdrop-filter: blur(12px)`).
+
+### Modal Safety (Scrollability)
+- Every modal or drawer must have a safety guard for overflow.
+- **Constraints**: Set `max-height: calc(100vh - 4rem)` on the container.
+- **Scroll**: Use `overflow-y: auto` and `flex-grow: 1` on the body to keep footer actions visible and accessible on small screens.
+
 
 ## Copy Rules
 - Keep structural labels and functional hints.

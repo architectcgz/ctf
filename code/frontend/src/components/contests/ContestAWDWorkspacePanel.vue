@@ -275,69 +275,129 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
     <!-- HUD KPI Strip -->
     <header class="awd-hud-strip">
       <div class="hud-item">
-        <div class="hud-label">OPERATIONAL ROUND</div>
+        <div class="hud-label">
+          OPERATIONAL ROUND
+        </div>
         <div class="hud-value font-mono">
           {{ currentRound ? `#${String(currentRound.round_number).padStart(2, '0')}` : '--' }}
         </div>
-        <div class="hud-helper">{{ currentRound?.status.toUpperCase() || 'WAITING' }}</div>
+        <div class="hud-helper">
+          {{ currentRound?.status.toUpperCase() || 'WAITING' }}
+        </div>
       </div>
       <div class="hud-item">
-        <div class="hud-label">BATTLE SQUAD</div>
-        <div class="hud-value">{{ myTeam?.team_name || 'UNASSIGNED' }}</div>
-        <div class="hud-helper">RANK: #{{ scoreboardRows.find(r => r.team_id === myTeam?.team_id)?.rank || '--' }}</div>
+        <div class="hud-label">
+          BATTLE SQUAD
+        </div>
+        <div class="hud-value">
+          {{ myTeam?.team_name || 'UNASSIGNED' }}
+        </div>
+        <div class="hud-helper">
+          RANK: #{{ scoreboardRows.find(r => r.team_id === myTeam?.team_id)?.rank || '--' }}
+        </div>
       </div>
       <div class="hud-item">
-        <div class="hud-label">SQUAD ASSETS</div>
-        <div class="hud-value font-mono">{{ workspace?.services.length || 0 }}</div>
-        <div class="hud-helper">ACTIVE SERVICES</div>
+        <div class="hud-label">
+          SQUAD ASSETS
+        </div>
+        <div class="hud-value font-mono">
+          {{ workspace?.services.length || 0 }}
+        </div>
+        <div class="hud-helper">
+          ACTIVE SERVICES
+        </div>
       </div>
       <div class="hud-item">
-        <div class="hud-label">APEX SCORE</div>
-        <div class="hud-value font-mono text-cyan-400">{{ topScore }}</div>
-        <div class="hud-helper">BATTLEFIELD PEAK</div>
+        <div class="hud-label">
+          APEX SCORE
+        </div>
+        <div class="hud-value font-mono text-cyan-400">
+          {{ topScore }}
+        </div>
+        <div class="hud-helper">
+          BATTLEFIELD PEAK
+        </div>
       </div>
       <div class="hud-actions">
-        <button class="hud-refresh-btn" :disabled="loading" @click="refreshAll">
-          <RefreshCw class="h-4 w-4" :class="{ 'animate-spin': loading }" />
+        <button
+          class="hud-refresh-btn"
+          :disabled="loading"
+          @click="refreshAll"
+        >
+          <RefreshCw
+            class="h-4 w-4"
+            :class="{ 'animate-spin': loading }"
+          />
           <span>{{ lastSyncedLabel }}</span>
         </button>
       </div>
     </header>
 
-    <div v-if="loading && !workspace" class="war-room-loading">
-      <div class="radar-scan"></div>
+    <div
+      v-if="loading && !workspace"
+      class="war-room-loading"
+    >
+      <div class="radar-scan" />
       <p>ESTABLISHING BATTLEFIELD LINK...</p>
     </div>
 
-    <AppEmpty v-else-if="!hasTeam" icon="Users" title="JOIN A SQUAD" description="You must be part of a team to access the AWD battlefield." class="war-room-empty" />
+    <AppEmpty
+      v-else-if="!hasTeam"
+      icon="Users"
+      title="JOIN A SQUAD"
+      description="You must be part of a team to access the AWD battlefield."
+      class="war-room-empty"
+    />
 
-    <div v-else class="war-room-grid">
+    <div
+      v-else
+      class="war-room-grid"
+    >
       <!-- 1. Defense Monitor (Left) -->
       <aside class="war-room-col column-defense">
         <section class="ops-panel">
           <header class="ops-panel__header">
             <ShieldAlert class="h-4 w-4 text-orange-500" />
-            <h3 class="ops-panel__title">DEFENSE MONITOR</h3>
+            <h3 class="ops-panel__title">
+              DEFENSE MONITOR
+            </h3>
           </header>
           
           <div class="ops-panel__content custom-scrollbar">
             <!-- Alerts -->
-            <div v-if="defenseAlerts.length > 0" class="defense-alerts">
-              <div v-for="alert in defenseAlerts" :key="alert.challengeId" class="defense-alert" :class="alert.tone">
+            <div
+              v-if="defenseAlerts.length > 0"
+              class="defense-alerts"
+            >
+              <div
+                v-for="alert in defenseAlerts"
+                :key="alert.challengeId"
+                class="defense-alert"
+                :class="alert.tone"
+              >
                 <div class="flex items-center justify-between">
                   <span class="alert-title">{{ alert.challengeTitle }}</span>
                   <span class="alert-badge">{{ alert.statusLabel }}</span>
                 </div>
                 <div class="alert-issues">
-                  <span v-for="issue in alert.issues" :key="issue">{{ issue }}</span>
+                  <span
+                    v-for="issue in alert.issues"
+                    :key="issue"
+                  >{{ issue }}</span>
                 </div>
               </div>
             </div>
 
             <!-- Services -->
             <div class="asset-list mt-4">
-              <div class="asset-header">SQUAD SERVICES</div>
-              <div v-for="challenge in runtimeChallenges" :key="challenge.id" class="asset-item">
+              <div class="asset-header">
+                SQUAD SERVICES
+              </div>
+              <div
+                v-for="challenge in runtimeChallenges"
+                :key="challenge.id"
+                class="asset-item"
+              >
                 <div class="asset-main">
                   <div class="flex items-center justify-between">
                     <span class="asset-title">{{ challenge.title }}</span>
@@ -350,8 +410,17 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
                   </div>
                 </div>
                 <div class="asset-actions">
-                  <a v-if="getWorkspaceService(challenge)?.access_url" :href="getWorkspaceService(challenge)?.access_url" target="_blank" class="asset-btn"><ExternalLink class="h-3 w-3" /></a>
-                  <button @click="challenge.awd_service_id && startService(challenge.awd_service_id)" :disabled="startingServiceKey === getServiceStartKey(challenge)" class="asset-btn asset-btn--primary">
+                  <a
+                    v-if="getWorkspaceService(challenge)?.access_url"
+                    :href="getWorkspaceService(challenge)?.access_url"
+                    target="_blank"
+                    class="asset-btn"
+                  ><ExternalLink class="h-3 w-3" /></a>
+                  <button
+                    :disabled="startingServiceKey === getServiceStartKey(challenge)"
+                    class="asset-btn asset-btn--primary"
+                    @click="challenge.awd_service_id && startService(challenge.awd_service_id)"
+                  >
                     {{ startingServiceKey === getServiceStartKey(challenge) ? '...' : 'REBOOT' }}
                   </button>
                 </div>
@@ -366,45 +435,80 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
         <section class="ops-panel">
           <header class="ops-panel__header">
             <Sword class="h-4 w-4 text-red-500" />
-            <h3 class="ops-panel__title">ATTACK VECTOR</h3>
+            <h3 class="ops-panel__title">
+              ATTACK VECTOR
+            </h3>
           </header>
 
           <div class="ops-panel__toolbar">
             <div class="toolbar-field">
               <label>TARGET SECTOR</label>
-              <select v-model="activeChallengeKey" class="war-room-select">
-                <option v-for="challenge in runtimeChallenges" :key="getChallengeRuntimeKey(challenge)" :value="getChallengeRuntimeKey(challenge)">
+              <select
+                v-model="activeChallengeKey"
+                class="war-room-select"
+              >
+                <option
+                  v-for="challenge in runtimeChallenges"
+                  :key="getChallengeRuntimeKey(challenge)"
+                  :value="getChallengeRuntimeKey(challenge)"
+                >
                   {{ challenge.title }}
                 </option>
               </select>
             </div>
             <div class="toolbar-field">
               <label>SQUAD FILTER</label>
-              <input v-model="targetKeyword" type="text" placeholder="FILTER BY NAME..." class="war-room-input" />
+              <input
+                v-model="targetKeyword"
+                type="text"
+                placeholder="FILTER BY NAME..."
+                class="war-room-input"
+              >
             </div>
           </div>
 
           <div class="ops-panel__content custom-scrollbar">
-            <div v-if="!activeChallenge" class="panel-note">SELECT A TARGET SECTOR TO COMMENCE ATTACK.</div>
-            <div v-else-if="filteredTargets.length === 0" class="panel-note">NO MATCHING HOSTILES IN CURRENT SECTOR.</div>
-            <div v-else class="target-grid">
-              <article v-for="target in filteredTargets" :key="target.team_id" class="target-card">
+            <div
+              v-if="!activeChallenge"
+              class="panel-note"
+            >
+              SELECT A TARGET SECTOR TO COMMENCE ATTACK.
+            </div>
+            <div
+              v-else-if="filteredTargets.length === 0"
+              class="panel-note"
+            >
+              NO MATCHING HOSTILES IN CURRENT SECTOR.
+            </div>
+            <div
+              v-else
+              class="target-grid"
+            >
+              <article
+                v-for="target in filteredTargets"
+                :key="target.team_id"
+                class="target-card"
+              >
                 <div class="target-info">
-                  <div class="target-team font-black text-cyan-400">{{ target.team_name.toUpperCase() }}</div>
-                  <div class="target-url font-mono">{{ target.active_service?.access_url || 'UNREACHABLE' }}</div>
+                  <div class="target-team font-black text-cyan-400">
+                    {{ target.team_name.toUpperCase() }}
+                  </div>
+                  <div class="target-url font-mono">
+                    {{ target.active_service?.access_url || 'UNREACHABLE' }}
+                  </div>
                 </div>
                 <div class="target-action">
-                  <input 
+                  <input
                     :value="flagInputs[buildAttackStateKey(activeChallengeRuntimeKey, target.team_id)] || ''"
+                    placeholder="ENTER STOLEN FLAG..."
+                    class="flag-input"
                     @input="flagInputs[buildAttackStateKey(activeChallengeRuntimeKey, target.team_id)] = String(($event.target as HTMLInputElement).value)"
-                    placeholder="ENTER STOLEN FLAG..." 
-                    class="flag-input" 
                     @keyup.enter="handleSubmit(activeChallengeRuntimeKey, target.team_id)"
-                  />
-                  <button 
-                    @click="handleSubmit(activeChallengeRuntimeKey, target.team_id)"
+                  >
+                  <button
                     :disabled="!target.active_service?.access_url || submittingKey === buildAttackStateKey(activeChallengeRuntimeKey, target.team_id)"
                     class="submit-btn"
+                    @click="handleSubmit(activeChallengeRuntimeKey, target.team_id)"
                   >
                     {{ submittingKey === buildAttackStateKey(activeChallengeRuntimeKey, target.team_id) ? '...' : 'SUBMIT' }}
                   </button>
@@ -413,8 +517,14 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
             </div>
           </div>
 
-          <footer v-if="submitResult" class="ops-panel__footer">
-            <div class="result-alert" :class="submitResult.is_success ? 'success' : 'danger'">
+          <footer
+            v-if="submitResult"
+            class="ops-panel__footer"
+          >
+            <div
+              class="result-alert"
+              :class="submitResult.is_success ? 'success' : 'danger'"
+            >
               <Terminal class="h-3.5 w-3.5" />
               <span>{{ getSubmitResultMessage().toUpperCase() }}</span>
             </div>
@@ -427,10 +537,17 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
         <section class="ops-panel h-1/2 mb-4">
           <header class="ops-panel__header">
             <BarChart3 class="h-4 w-4 text-cyan-500" />
-            <h3 class="ops-panel__title">FIELD INTEL</h3>
+            <h3 class="ops-panel__title">
+              FIELD INTEL
+            </h3>
           </header>
           <div class="ops-panel__content custom-scrollbar">
-            <div v-for="item in scoreboardRows.slice(0, 10)" :key="item.team_id" class="intel-row" :class="{ 'is-me': item.team_id === myTeam?.team_id }">
+            <div
+              v-for="item in scoreboardRows.slice(0, 10)"
+              :key="item.team_id"
+              class="intel-row"
+              :class="{ 'is-me': item.team_id === myTeam?.team_id }"
+            >
               <span class="intel-rank">#{{ item.rank }}</span>
               <span class="intel-name truncate">{{ item.team_name }}</span>
               <span class="intel-score font-mono">{{ item.score }}</span>
@@ -441,21 +558,35 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
         <section class="ops-panel h-1/2">
           <header class="ops-panel__header">
             <History class="h-4 w-4 text-purple-500" />
-            <h3 class="ops-panel__title">RECENT FEEDBACK</h3>
+            <h3 class="ops-panel__title">
+              RECENT FEEDBACK
+            </h3>
           </header>
           <div class="ops-panel__content custom-scrollbar">
-            <div v-for="event in workspace?.recent_events" :key="event.id" class="feedback-item" :class="event.direction">
+            <div
+              v-for="event in workspace?.recent_events"
+              :key="event.id"
+              class="feedback-item"
+              :class="event.direction"
+            >
               <div class="flex items-center justify-between text-[10px] font-black">
                 <span>{{ eventDirectionLabel(event.direction) }}</span>
                 <span>{{ formatTime(event.created_at) }}</span>
               </div>
-              <div class="mt-1 text-xs">{{ event.peer_team_name }} / {{ getChallengeTitleForEvent(event) }}</div>
+              <div class="mt-1 text-xs">
+                {{ event.peer_team_name }} / {{ getChallengeTitleForEvent(event) }}
+              </div>
               <div class="mt-1 flex items-center justify-between font-mono text-[10px]">
                 <span :class="event.is_success ? 'text-emerald-400' : 'text-slate-500'">{{ eventResultLabel(event.is_success) }}</span>
                 <span class="text-cyan-400">+{{ event.score_gained }}</span>
               </div>
             </div>
-            <div v-if="workspace?.recent_events.length === 0" class="panel-note">NO RECENT OPERATIONAL DATA.</div>
+            <div
+              v-if="workspace?.recent_events.length === 0"
+              class="panel-note"
+            >
+              NO RECENT OPERATIONAL DATA.
+            </div>
           </div>
         </section>
       </aside>
@@ -810,4 +941,3 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
   .column-defense, .column-intel { grid-row: auto; }
 }
 </style>
-

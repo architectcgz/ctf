@@ -3,11 +3,13 @@ package commands
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"testing"
 	"time"
 
 	"github.com/alicebob/miniredis/v2"
 	"github.com/redis/go-redis/v9"
+	"gorm.io/gorm"
 
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
@@ -83,8 +85,8 @@ func TestContestAWDServiceServiceCreateFromTemplate(t *testing.T) {
 	}
 
 	resp, err := service.CreateContestAWDService(context.Background(), 801, &dto.CreateContestAWDServiceReq{
-		ChallengeID: 9801,
 		TemplateID:  1001,
+		Points:      100,
 		DisplayName: "Bank Portal",
 		Order:       1,
 		IsVisible:   boolPtr(true),
@@ -95,7 +97,7 @@ func TestContestAWDServiceServiceCreateFromTemplate(t *testing.T) {
 	if resp.TemplateID == nil || *resp.TemplateID != 1001 {
 		t.Fatalf("unexpected template id: %+v", resp.TemplateID)
 	}
-	if resp.ChallengeID != 9801 {
+	if resp.ChallengeID != 1001 {
 		t.Fatalf("unexpected challenge id: %d", resp.ChallengeID)
 	}
 
@@ -110,16 +112,12 @@ func TestContestAWDServiceServiceCreateFromTemplate(t *testing.T) {
 		t.Fatalf("unexpected display name: %s", stored.DisplayName)
 	}
 
-	relation, err := contestChallengeRepo.FindChallenge(context.Background(), 801, 9801)
-	if err != nil {
-		t.Fatalf("FindChallenge() error = %v", err)
-	}
-	if relation.Points != 100 || relation.Order != 1 || !relation.IsVisible {
-		t.Fatalf("expected explicit awd service creation to seed contest challenge relation, got %+v", relation)
+	if _, err := contestChallengeRepo.FindChallenge(context.Background(), 801, 1001); !errors.Is(err, gorm.ErrRecordNotFound) {
+		t.Fatalf("expected contest_challenges bridge removed, got err=%v", err)
 	}
 }
 
-func TestContestAWDServiceServiceUpdateMaintainsContestChallengeRelation(t *testing.T) {
+func TestContestAWDServiceServiceUpdateMaintainsSnapshotOnly(t *testing.T) {
 	service, challengeRepo, contestRepo, contestChallengeRepo, awdRepo := newContestAWDServiceForTest(t)
 
 	now := time.Now()
@@ -167,8 +165,8 @@ func TestContestAWDServiceServiceUpdateMaintainsContestChallengeRelation(t *test
 	}
 
 	resp, err := service.CreateContestAWDService(context.Background(), 802, &dto.CreateContestAWDServiceReq{
-		ChallengeID: 9802,
 		TemplateID:  1002,
+		Points:      100,
 		DisplayName: "Billing API",
 		Order:       2,
 		IsVisible:   boolPtr(true),
@@ -196,12 +194,8 @@ func TestContestAWDServiceServiceUpdateMaintainsContestChallengeRelation(t *test
 		t.Fatalf("unexpected updated service: %+v", stored)
 	}
 
-	relation, err := contestChallengeRepo.FindChallenge(context.Background(), 802, 9802)
-	if err != nil {
-		t.Fatalf("FindChallenge() error = %v", err)
-	}
-	if relation.Order != 5 || relation.IsVisible {
-		t.Fatalf("expected explicit awd service update to sync contest challenge relation, got %+v", relation)
+	if _, err := contestChallengeRepo.FindChallenge(context.Background(), 802, 1002); !errors.Is(err, gorm.ErrRecordNotFound) {
+		t.Fatalf("expected contest_challenges bridge removed, got err=%v", err)
 	}
 }
 
@@ -253,8 +247,8 @@ func TestContestAWDServiceServiceCreateDoesNotPersistLegacyChallengeIDInRuntimeC
 	}
 
 	resp, err := service.CreateContestAWDService(context.Background(), 804, &dto.CreateContestAWDServiceReq{
-		ChallengeID:            9804,
 		TemplateID:             1004,
+		Points:                 100,
 		Order:                  1,
 		IsVisible:              boolPtr(true),
 		CheckerType:            stringPtr(string(model.AWDCheckerTypeHTTPStandard)),
@@ -350,8 +344,8 @@ func TestContestAWDServiceServiceUpdateDoesNotPersistLegacyChallengeIDInRuntimeC
 	}
 
 	resp, err := service.CreateContestAWDService(context.Background(), 805, &dto.CreateContestAWDServiceReq{
-		ChallengeID: 9805,
 		TemplateID:  1005,
+		Points:      100,
 		Order:       2,
 		IsVisible:   boolPtr(true),
 	})
@@ -466,7 +460,7 @@ func TestContestAWDServiceServiceCreateConsumesCheckerPreviewToken(t *testing.T)
 		redisClient,
 		806,
 		0,
-		9806,
+		1006,
 		model.AWDCheckerTypeHTTPStandard,
 		rawCheckerConfig,
 		&dto.AWDCheckerPreviewResp{
@@ -478,7 +472,7 @@ func TestContestAWDServiceServiceCreateConsumesCheckerPreviewToken(t *testing.T)
 			PreviewContext: dto.AWDCheckerPreviewContextResp{
 				AccessURL:   "http://preview.internal",
 				PreviewFlag: "flag{preview}",
-				ChallengeID: 9806,
+				ChallengeID: 1006,
 			},
 		},
 	)
@@ -487,8 +481,8 @@ func TestContestAWDServiceServiceCreateConsumesCheckerPreviewToken(t *testing.T)
 	}
 
 	resp, err := service.CreateContestAWDService(context.Background(), 806, &dto.CreateContestAWDServiceReq{
-		ChallengeID:            9806,
 		TemplateID:             1006,
+		Points:                 100,
 		Order:                  1,
 		IsVisible:              boolPtr(true),
 		CheckerType:            stringPtr(string(model.AWDCheckerTypeHTTPStandard)),
@@ -573,8 +567,8 @@ func TestContestAWDServiceServiceUpdateConsumesCheckerPreviewTokenByServiceID(t 
 	}
 
 	resp, err := service.CreateContestAWDService(context.Background(), 807, &dto.CreateContestAWDServiceReq{
-		ChallengeID: 9807,
 		TemplateID:  1007,
+		Points:      100,
 		Order:       1,
 		IsVisible:   boolPtr(true),
 	})
@@ -596,7 +590,7 @@ func TestContestAWDServiceServiceUpdateConsumesCheckerPreviewTokenByServiceID(t 
 		redisClient,
 		807,
 		resp.ID,
-		9807,
+		1007,
 		model.AWDCheckerTypeHTTPStandard,
 		rawCheckerConfig,
 		&dto.AWDCheckerPreviewResp{
@@ -609,7 +603,7 @@ func TestContestAWDServiceServiceUpdateConsumesCheckerPreviewTokenByServiceID(t 
 				ServiceID:   resp.ID,
 				AccessURL:   "http://preview-update.internal",
 				PreviewFlag: "flag{preview}",
-				ChallengeID: 9807,
+				ChallengeID: 1007,
 			},
 		},
 	)
@@ -638,7 +632,7 @@ func TestContestAWDServiceServiceUpdateConsumesCheckerPreviewTokenByServiceID(t 
 	}
 }
 
-func TestContestAWDServiceServiceDeleteRemovesContestChallengeRelation(t *testing.T) {
+func TestContestAWDServiceServiceDeleteRemovesOnlyServiceRecord(t *testing.T) {
 	service, challengeRepo, contestRepo, contestChallengeRepo, awdRepo := newContestAWDServiceForTest(t)
 
 	now := time.Now()
@@ -686,8 +680,8 @@ func TestContestAWDServiceServiceDeleteRemovesContestChallengeRelation(t *testin
 	}
 
 	resp, err := service.CreateContestAWDService(context.Background(), 803, &dto.CreateContestAWDServiceReq{
-		ChallengeID: 9803,
 		TemplateID:  1003,
+		Points:      100,
 		DisplayName: "User Center",
 		Order:       3,
 		IsVisible:   boolPtr(true),
@@ -705,7 +699,7 @@ func TestContestAWDServiceServiceDeleteRemovesContestChallengeRelation(t *testin
 		t.Fatal("expected service to be deleted")
 	}
 
-	if _, err := contestChallengeRepo.FindChallenge(context.Background(), 803, 9803); err == nil {
-		t.Fatal("expected contest challenge relation to be deleted together with explicit awd service")
+	if _, err := contestChallengeRepo.FindChallenge(context.Background(), 803, 1003); !errors.Is(err, gorm.ErrRecordNotFound) {
+		t.Fatalf("expected contest_challenges bridge removed, got err=%v", err)
 	}
 }

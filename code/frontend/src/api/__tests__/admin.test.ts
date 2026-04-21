@@ -424,6 +424,9 @@ describe('admin contest api contract', () => {
       contest_id: 7,
       challenge_id: 11,
       template_id: 5,
+      title: 'Bank Portal',
+      category: 'web',
+      difficulty: 'medium',
       display_name: 'Bank Portal',
       order: 2,
       is_visible: true,
@@ -449,8 +452,8 @@ describe('admin contest api contract', () => {
     })
 
     const result = await createContestAWDService('7', {
-      challenge_id: 11,
       template_id: 5,
+      points: 180,
       display_name: 'Bank Portal',
       order: 2,
       is_visible: true,
@@ -467,8 +470,8 @@ describe('admin contest api contract', () => {
       method: 'POST',
       url: '/admin/contests/7/awd/services',
       data: {
-        challenge_id: 11,
         template_id: 5,
+        points: 180,
         display_name: 'Bank Portal',
         order: 2,
         is_visible: true,
@@ -486,6 +489,9 @@ describe('admin contest api contract', () => {
       contest_id: '7',
       challenge_id: '11',
       template_id: '5',
+      title: 'Bank Portal',
+      category: 'web',
+      difficulty: 'medium',
       display_name: 'Bank Portal',
       order: 2,
       is_visible: true,
@@ -525,6 +531,7 @@ describe('admin contest api contract', () => {
 
     await updateContestAWDService('7', '7009', {
       template_id: 6,
+      points: 200,
       display_name: 'Bank Portal v2',
       order: 3,
       is_visible: false,
@@ -542,6 +549,7 @@ describe('admin contest api contract', () => {
       url: '/admin/contests/7/awd/services/7009',
       data: {
         template_id: 6,
+        points: 200,
         display_name: 'Bank Portal v2',
         order: 3,
         is_visible: false,

@@ -45,11 +45,15 @@ func ContestAWDServiceRespFromModel(item *model.ContestAWDService) *dto.ContestA
 		return nil
 	}
 	runtimeConfig := sanitizeContestAWDServiceRuntimeConfig(ParseAWDCheckerConfig(item.RuntimeConfig))
+	snapshot, _ := model.DecodeContestAWDServiceSnapshot(item.ServiceSnapshot)
 	return &dto.ContestAWDServiceResp{
 		ID:                item.ID,
 		ContestID:         item.ContestID,
 		ChallengeID:       item.ChallengeID,
 		TemplateID:        item.TemplateID,
+		Title:             snapshot.Name,
+		Category:          snapshot.Category,
+		Difficulty:        snapshot.Difficulty,
 		DisplayName:       item.DisplayName,
 		Order:             item.Order,
 		IsVisible:         item.IsVisible,

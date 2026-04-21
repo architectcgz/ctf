@@ -34,6 +34,10 @@ function matchExact(path: string, candidates: string[]): boolean {
   return candidates.includes(path)
 }
 
+function matchContestOperationsManagePath(path: string): boolean {
+  return /^\/platform\/contests\/[^/]+\/manage(?:\/.*)?$/.test(path)
+}
+
 const backofficeModules: BackofficeModule[] = [
   {
     key: 'overview',
@@ -164,33 +168,18 @@ const backofficeModules: BackofficeModule[] = [
     roles: ['admin'],
     secondaryItems: [
       {
-        routeName: 'PlatformContestOpsEnvironment',
-        label: '环境管理',
+        routeName: 'PlatformContestOpsIndex',
+        label: '竞赛列表',
         path: '/platform/contest-ops/contests',
         roles: ['admin'],
         isMatch: (path) =>
-          matchAny(path, ['/platform/contest-ops/contests', '/platform/contest-ops/environment']),
-      },
-      {
-        routeName: 'PlatformContestOpsTraffic',
-        label: '流量监控',
-        path: '/platform/contest-ops/traffic',
-        roles: ['admin'],
-        isMatch: (path) => matchAny(path, ['/platform/contest-ops/traffic']),
-      },
-      {
-        routeName: 'PlatformContestOpsProjector',
-        label: '大屏投射',
-        path: '/platform/contest-ops/projector',
-        roles: ['admin'],
-        isMatch: (path) => matchAny(path, ['/platform/contest-ops/projector']),
-      },
-      {
-        routeName: 'PlatformContestOpsScoreboard',
-        label: '排行榜',
-        path: '/platform/contest-ops/scoreboard',
-        roles: ['admin'],
-        isMatch: (path) => matchAny(path, ['/platform/contest-ops/scoreboard']),
+          matchAny(path, [
+            '/platform/contest-ops/contests',
+            '/platform/contest-ops/environment',
+            '/platform/contest-ops/traffic',
+            '/platform/contest-ops/projector',
+            '/platform/contest-ops/scoreboard',
+          ]) || matchContestOperationsManagePath(path),
       },
     ],
   },
@@ -204,7 +193,8 @@ const backofficeModules: BackofficeModule[] = [
         label: '竞赛目录',
         path: '/platform/contests',
         roles: ['admin'],
-        isMatch: (path) => matchAny(path, ['/platform/contests']),
+        isMatch: (path) =>
+          matchAny(path, ['/platform/contests']) && !matchContestOperationsManagePath(path),
       },
       {
         routeName: 'UserManage',

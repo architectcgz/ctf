@@ -84,10 +84,17 @@ const timelineRounds = computed(() => review.value?.rounds || [])
     <!-- 1. Academy Header -->
     <header class="academy-header">
       <div class="academy-header__identity">
-        <div class="academy-overline">AWD Instructional Review / Academy Workspace</div>
+        <div class="academy-overline">
+          AWD Instructional Review / Academy Workspace
+        </div>
         <div class="flex items-center gap-4">
-          <h1 class="academy-title">{{ activeTitle }}</h1>
-          <div class="academy-badge" :class="review?.contest.status">
+          <h1 class="academy-title">
+            {{ activeTitle }}
+          </h1>
+          <div
+            class="academy-badge"
+            :class="review?.contest.status"
+          >
             {{ contestStatusLabel(review?.contest.status || '') }}
           </div>
         </div>
@@ -97,15 +104,29 @@ const timelineRounds = computed(() => review.value?.rounds || [])
       </div>
 
       <div class="academy-header__actions">
-        <button type="button" class="academy-btn academy-btn--neutral" @click="router.push({ name: 'TeacherAWDReviewIndex' })">
+        <button
+          type="button"
+          class="academy-btn academy-btn--neutral"
+          @click="router.push({ name: 'TeacherAWDReviewIndex' })"
+        >
           <ArrowLeft class="h-3.5 w-3.5" />
           <span>返回列表</span>
         </button>
-        <button type="button" class="academy-btn academy-btn--neutral" :disabled="loading || !review || exporting === 'archive'" @click="exportArchive">
+        <button
+          type="button"
+          class="academy-btn academy-btn--neutral"
+          :disabled="loading || !review || exporting === 'archive'"
+          @click="exportArchive"
+        >
           <Download class="h-3.5 w-3.5" />
           <span>归档导出</span>
         </button>
-        <button type="button" class="academy-btn academy-btn--primary" :disabled="loading || !review || exporting === 'report' || !canExportReport" @click="exportReport">
+        <button
+          type="button"
+          class="academy-btn academy-btn--primary"
+          :disabled="loading || !review || exporting === 'report' || !canExportReport"
+          @click="exportReport"
+        >
           <FileDown class="h-3.5 w-3.5" />
           <span>生成评估报告</span>
         </button>
@@ -115,31 +136,55 @@ const timelineRounds = computed(() => review.value?.rounds || [])
     <!-- 2. Insight Strip -->
     <section class="academy-insight-strip">
       <div class="insight-card">
-        <div class="insight-icon insight-icon--blue"><TrendingUp class="h-4 w-4" /></div>
+        <div class="insight-icon insight-icon--blue">
+          <TrendingUp class="h-4 w-4" />
+        </div>
         <div class="insight-body">
-          <div class="insight-label">视图焦点</div>
-          <div class="insight-value">{{ activeSummaryTitle }}</div>
+          <div class="insight-label">
+            视图焦点
+          </div>
+          <div class="insight-value">
+            {{ activeSummaryTitle }}
+          </div>
         </div>
       </div>
       <div class="insight-card">
-        <div class="insight-icon insight-icon--emerald"><Award class="h-4 w-4" /></div>
+        <div class="insight-icon insight-icon--emerald">
+          <Award class="h-4 w-4" />
+        </div>
         <div class="insight-body">
-          <div class="insight-label">参与规模</div>
-          <div class="insight-value">{{ summaryStats.teamCount }} <small>TEAMS</small> / {{ summaryStats.roundCount }} <small>ROUNDS</small></div>
+          <div class="insight-label">
+            参与规模
+          </div>
+          <div class="insight-value">
+            {{ summaryStats.teamCount }} <small>TEAMS</small> / {{ summaryStats.roundCount }} <small>ROUNDS</small>
+          </div>
         </div>
       </div>
       <div class="insight-card">
-        <div class="insight-icon insight-icon--purple"><Zap class="h-4 w-4" /></div>
+        <div class="insight-icon insight-icon--purple">
+          <Zap class="h-4 w-4" />
+        </div>
         <div class="insight-body">
-          <div class="insight-label">证据总量 (SRV/ATK/TRF)</div>
-          <div class="insight-value">{{ summaryStats.serviceCount }} / {{ summaryStats.attackCount }} / {{ summaryStats.trafficCount }}</div>
+          <div class="insight-label">
+            证据总量 (SRV/ATK/TRF)
+          </div>
+          <div class="insight-value">
+            {{ summaryStats.serviceCount }} / {{ summaryStats.attackCount }} / {{ summaryStats.trafficCount }}
+          </div>
         </div>
       </div>
       <div class="insight-card">
-        <div class="insight-icon insight-icon--slate"><Clock class="h-4 w-4" /></div>
+        <div class="insight-icon insight-icon--slate">
+          <Clock class="h-4 w-4" />
+        </div>
         <div class="insight-body">
-          <div class="insight-label">导出状态</div>
-          <div class="insight-value text-slate-500">{{ polling ? '后台处理中...' : '链路就绪' }}</div>
+          <div class="insight-label">
+            导出状态
+          </div>
+          <div class="insight-value text-slate-500">
+            {{ polling ? '后台处理中...' : '链路就绪' }}
+          </div>
         </div>
       </div>
     </section>
@@ -151,10 +196,12 @@ const timelineRounds = computed(() => review.value?.rounds || [])
         :class="{ active: !selectedRoundNumber }"
         @click="setRound(undefined)"
       >
-        <div class="node-circle"></div>
-        <div class="node-label">整场总览</div>
+        <div class="node-circle" />
+        <div class="node-label">
+          整场总览
+        </div>
       </button>
-      <div class="timeline-line"></div>
+      <div class="timeline-line" />
       <div class="timeline-nodes custom-scrollbar">
         <button 
           v-for="round in timelineRounds" 
@@ -163,15 +210,20 @@ const timelineRounds = computed(() => review.value?.rounds || [])
           :class="{ active: selectedRoundNumber === round.round_number }"
           @click="setRound(round.round_number)"
         >
-          <div class="node-circle"></div>
-          <div class="node-label">R{{ round.round_number }}</div>
+          <div class="node-circle" />
+          <div class="node-label">
+            R{{ round.round_number }}
+          </div>
         </button>
       </div>
     </nav>
 
     <!-- 4. Main Canvas -->
-    <div v-if="loading" class="academy-loading-canvas">
-      <div class="academy-spinner"></div>
+    <div
+      v-if="loading"
+      class="academy-loading-canvas"
+    >
+      <div class="academy-spinner" />
       <p>正在载入复盘分析数据...</p>
     </div>
 
@@ -183,38 +235,76 @@ const timelineRounds = computed(() => review.value?.rounds || [])
       class="academy-empty"
     >
       <template #action>
-        <button type="button" class="academy-btn academy-btn--primary" @click="loadReview">重新加载</button>
+        <button
+          type="button"
+          class="academy-btn academy-btn--primary"
+          @click="loadReview"
+        >
+          重新加载
+        </button>
       </template>
     </AppEmpty>
 
-    <div v-else-if="review" class="academy-canvas">
+    <div
+      v-else-if="review"
+      class="academy-canvas"
+    >
       <!-- Round Overview / Team Analysis -->
       <section class="academy-section">
         <header class="section-header">
-          <h3 class="section-title">{{ activeSummaryTitle }} 表现分析</h3>
-          <div class="section-meta">共 {{ summaryStats.teamCount }} 支参与队伍</div>
+          <h3 class="section-title">
+            {{ activeSummaryTitle }} 表现分析
+          </h3>
+          <div class="section-meta">
+            共 {{ summaryStats.teamCount }} 支参与队伍
+          </div>
         </header>
 
-        <div v-if="!selectedRound" class="round-card-grid">
-          <article v-for="round in review.rounds" :key="round.id" class="round-summary-card">
+        <div
+          v-if="!selectedRound"
+          class="round-card-grid"
+        >
+          <article
+            v-for="round in review.rounds"
+            :key="round.id"
+            class="round-summary-card"
+          >
             <div class="round-summary-card__header">
-              <div class="round-number">ROUND {{ round.round_number }}</div>
-              <button type="button" class="academy-btn academy-btn--ghost academy-btn--xs" @click="setRound(round.round_number)">
+              <div class="round-number">
+                ROUND {{ round.round_number }}
+              </div>
+              <button
+                type="button"
+                class="academy-btn academy-btn--ghost academy-btn--xs"
+                @click="setRound(round.round_number)"
+              >
                 下钻分析 <ChevronRight class="h-3 w-3" />
               </button>
             </div>
             <div class="round-summary-card__metrics">
               <div class="metric-item">
-                <div class="metric-label">服务</div>
-                <div class="metric-value">{{ round.service_count }}</div>
+                <div class="metric-label">
+                  服务
+                </div>
+                <div class="metric-value">
+                  {{ round.service_count }}
+                </div>
               </div>
               <div class="metric-item">
-                <div class="metric-label">攻击</div>
-                <div class="metric-value">{{ round.attack_count }}</div>
+                <div class="metric-label">
+                  攻击
+                </div>
+                <div class="metric-value">
+                  {{ round.attack_count }}
+                </div>
               </div>
               <div class="metric-item">
-                <div class="metric-label">流量</div>
-                <div class="metric-value">{{ round.traffic_count }}</div>
+                <div class="metric-label">
+                  流量
+                </div>
+                <div class="metric-value">
+                  {{ round.traffic_count }}
+                </div>
               </div>
             </div>
             <div class="round-summary-card__footer">
@@ -223,7 +313,10 @@ const timelineRounds = computed(() => review.value?.rounds || [])
           </article>
         </div>
 
-        <div v-else class="academy-team-grid">
+        <div
+          v-else
+          class="academy-team-grid"
+        >
           <table class="academy-table">
             <thead>
               <tr>
@@ -231,14 +324,20 @@ const timelineRounds = computed(() => review.value?.rounds || [])
                 <th>得分表现</th>
                 <th>命中记录</th>
                 <th>成员结构</th>
-                <th class="text-right">操作</th>
+                <th class="text-right">
+                  操作
+                </th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="team in selectedRound.teams" :key="team.team_id" class="group">
+              <tr
+                v-for="team in selectedRound.teams"
+                :key="team.team_id"
+                class="group"
+              >
                 <td class="font-bold text-slate-900">
                   <div class="flex items-center gap-3">
-                    <div class="h-2 w-2 rounded-full bg-emerald-400"></div>
+                    <div class="h-2 w-2 rounded-full bg-emerald-400" />
                     {{ team.team_name }}
                   </div>
                 </td>
@@ -252,7 +351,11 @@ const timelineRounds = computed(() => review.value?.rounds || [])
                   {{ team.member_count }} 成员 (UID: {{ team.captain_id }})
                 </td>
                 <td class="text-right">
-                  <button type="button" class="academy-btn academy-btn--ghost academy-btn--xs" @click="openTeam(team)">
+                  <button
+                    type="button"
+                    class="academy-btn academy-btn--ghost academy-btn--xs"
+                    @click="openTeam(team)"
+                  >
                     调阅细节
                   </button>
                 </td>
@@ -263,18 +366,34 @@ const timelineRounds = computed(() => review.value?.rounds || [])
       </section>
 
       <!-- Evidence Grid -->
-      <section v-if="selectedRound" class="academy-evidence-grid">
+      <section
+        v-if="selectedRound"
+        class="academy-evidence-grid"
+      >
         <article class="evidence-panel">
           <header class="panel-header">
             <Activity class="h-4 w-4 text-emerald-600" />
             <span>服务运行</span>
           </header>
           <div class="evidence-list custom-scrollbar">
-            <div v-for="service in selectedRound.services" :key="service.id" class="evidence-item">
-              <div class="evidence-item__title">{{ service.team_name }} · {{ service.challenge_title }}</div>
-              <div class="evidence-item__meta">Status: {{ service.service_status }} · SLA: {{ service.sla_score }}</div>
+            <div
+              v-for="service in selectedRound.services"
+              :key="service.id"
+              class="evidence-item"
+            >
+              <div class="evidence-item__title">
+                {{ service.team_name }} · {{ service.challenge_title }}
+              </div>
+              <div class="evidence-item__meta">
+                Status: {{ service.service_status }} · SLA: {{ service.sla_score }}
+              </div>
             </div>
-            <AppEmpty v-if="selectedRound.services.length === 0" icon="Shield" title="无服务数据" class="compact-empty" />
+            <AppEmpty
+              v-if="selectedRound.services.length === 0"
+              icon="Shield"
+              title="无服务数据"
+              class="compact-empty"
+            />
           </div>
         </article>
 
@@ -284,11 +403,24 @@ const timelineRounds = computed(() => review.value?.rounds || [])
             <span>攻击记录</span>
           </header>
           <div class="evidence-list custom-scrollbar">
-            <div v-for="attack in selectedRound.attacks" :key="attack.id" class="evidence-item">
-              <div class="evidence-item__title">{{ attack.attacker_team_name }} → {{ attack.victim_team_name }}</div>
-              <div class="evidence-item__meta">{{ attack.challenge_title }} · {{ attack.attack_type }}</div>
+            <div
+              v-for="attack in selectedRound.attacks"
+              :key="attack.id"
+              class="evidence-item"
+            >
+              <div class="evidence-item__title">
+                {{ attack.attacker_team_name }} → {{ attack.victim_team_name }}
+              </div>
+              <div class="evidence-item__meta">
+                {{ attack.challenge_title }} · {{ attack.attack_type }}
+              </div>
             </div>
-            <AppEmpty v-if="selectedRound.attacks.length === 0" icon="Target" title="无攻击记录" class="compact-empty" />
+            <AppEmpty
+              v-if="selectedRound.attacks.length === 0"
+              icon="Target"
+              title="无攻击记录"
+              class="compact-empty"
+            />
           </div>
         </article>
 
@@ -298,11 +430,24 @@ const timelineRounds = computed(() => review.value?.rounds || [])
             <span>流量审计</span>
           </header>
           <div class="evidence-list custom-scrollbar">
-            <div v-for="event in selectedRound.traffic" :key="event.id" class="evidence-item">
-              <div class="evidence-item__title">{{ event.method }} {{ event.path }}</div>
-              <div class="evidence-item__meta">{{ event.attacker_team_name }} → {{ event.victim_team_name }} · {{ event.status_code }}</div>
+            <div
+              v-for="event in selectedRound.traffic"
+              :key="event.id"
+              class="evidence-item"
+            >
+              <div class="evidence-item__title">
+                {{ event.method }} {{ event.path }}
+              </div>
+              <div class="evidence-item__meta">
+                {{ event.attacker_team_name }} → {{ event.victim_team_name }} · {{ event.status_code }}
+              </div>
             </div>
-            <AppEmpty v-if="selectedRound.traffic.length === 0" icon="Activity" title="无流量证据" class="compact-empty" />
+            <AppEmpty
+              v-if="selectedRound.traffic.length === 0"
+              icon="Activity"
+              title="无流量证据"
+              class="compact-empty"
+            />
           </div>
         </article>
       </section>

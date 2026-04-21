@@ -46,6 +46,7 @@ import type {
   AdminUserListItem,
   AdminUserUpsertData,
   AuditLogItem,
+  ChallengeCategory,
   ChallengeTopologyData,
   ContestMode,
   ContestDetailData,
@@ -117,8 +118,8 @@ export interface AdminContestChallengeUpdatePayload {
 }
 
 export interface AdminContestAWDServiceCreatePayload {
-  challenge_id: number
   template_id: number
+  points: number
   display_name?: string
   order?: number
   is_visible?: boolean
@@ -131,6 +132,7 @@ export interface AdminContestAWDServiceCreatePayload {
 
 export interface AdminContestAWDServiceUpdatePayload {
   template_id?: number
+  points?: number
   display_name?: string
   order?: number
   is_visible?: boolean
@@ -412,6 +414,9 @@ interface RawAdminContestAWDServiceItem {
   contest_id: string | number
   challenge_id: string | number
   template_id?: string | number | null
+  title?: string | null
+  category?: AdminContestAWDServiceData['category'] | null
+  difficulty?: AdminContestAWDServiceData['difficulty'] | null
   display_name: string
   order: number
   is_visible: boolean
@@ -593,7 +598,7 @@ interface RawAdminAwdServiceTemplateData {
   id: string | number
   name: string
   slug: string
-  category: string
+  category: ChallengeCategory
   difficulty: AdminAwdServiceTemplateData['difficulty']
   description: string
   service_type: AWDServiceType
@@ -774,7 +779,7 @@ export interface AdminAwdServiceTemplateListParams {
 export interface AdminAwdServiceTemplateCreatePayload {
   name: string
   slug: string
-  category: string
+  category: AdminAwdServiceTemplateData['category']
   difficulty: AdminAwdServiceTemplateData['difficulty']
   description?: string
   service_type: AWDServiceType
@@ -784,7 +789,7 @@ export interface AdminAwdServiceTemplateCreatePayload {
 export interface AdminAwdServiceTemplateUpdatePayload {
   name?: string
   slug?: string
-  category?: string
+  category?: AdminAwdServiceTemplateData['category']
   difficulty?: AdminAwdServiceTemplateData['difficulty']
   description?: string
   service_type?: AWDServiceType
@@ -1159,6 +1164,9 @@ function normalizeAdminContestAWDService(
     contest_id: String(item.contest_id),
     challenge_id: String(item.challenge_id),
     template_id: item.template_id == null ? undefined : String(item.template_id),
+    title: item.title || undefined,
+    category: item.category || undefined,
+    difficulty: item.difficulty || undefined,
     display_name: item.display_name,
     order: item.order,
     is_visible: item.is_visible,

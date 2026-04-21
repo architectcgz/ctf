@@ -443,6 +443,10 @@ func seedContestInstanceAWDContest(t *testing.T, db *gorm.DB, contestID, challen
 
 func seedContestInstanceAWDService(t *testing.T, db *gorm.DB, serviceID, contestID, challengeID int64, now time.Time) {
 	t.Helper()
+	var challenge model.Challenge
+	if err := db.Where("id = ?", challengeID).First(&challenge).Error; err != nil {
+		t.Fatalf("load challenge for awd service snapshot: %v", err)
+	}
 	if err := db.Create(&model.ContestAWDService{
 		ID:              serviceID,
 		ContestID:       contestID,
@@ -452,6 +456,7 @@ func seedContestInstanceAWDService(t *testing.T, db *gorm.DB, serviceID, contest
 		IsVisible:       true,
 		ScoreConfig:     `{"points":100}`,
 		RuntimeConfig:   `{"checker_type":"http_standard"}`,
+		ServiceSnapshot: fmt.Sprintf(`{"name":"Bank Portal","category":"%s","difficulty":"%s","runtime_config":{"image_id":%d,"instance_sharing":"per_team"},"flag_config":{"flag_type":"%s","flag_prefix":"%s"}}`, challenge.Category, challenge.Difficulty, challenge.ImageID, challenge.FlagType, "flag"),
 		ValidationState: model.AWDCheckerValidationStatePending,
 		CreatedAt:       now,
 		UpdatedAt:       now,

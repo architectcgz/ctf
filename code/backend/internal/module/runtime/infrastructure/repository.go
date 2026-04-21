@@ -22,19 +22,22 @@ type Repository struct {
 }
 
 type userVisibleInstanceRow struct {
-	ID             int64            `gorm:"column:id"`
-	ChallengeID    int64            `gorm:"column:challenge_id"`
-	ChallengeTitle string           `gorm:"column:challenge_title"`
-	Category       string           `gorm:"column:category"`
-	Difficulty     string           `gorm:"column:difficulty"`
-	FlagType       string           `gorm:"column:flag_type"`
-	Status         string           `gorm:"column:status"`
-	ShareScope     model.ShareScope `gorm:"column:share_scope"`
-	AccessURL      string           `gorm:"column:access_url"`
-	ExpiresAt      time.Time        `gorm:"column:expires_at"`
-	ExtendCount    int              `gorm:"column:extend_count"`
-	MaxExtends     int              `gorm:"column:max_extends"`
-	CreatedAt      time.Time        `gorm:"column:created_at"`
+	ID              int64            `gorm:"column:id"`
+	ContestMode     string           `gorm:"column:contest_mode"`
+	ChallengeID     int64            `gorm:"column:challenge_id"`
+	ChallengeTitle  string           `gorm:"column:challenge_title"`
+	Category        string           `gorm:"column:category"`
+	Difficulty      string           `gorm:"column:difficulty"`
+	FlagType        string           `gorm:"column:flag_type"`
+	ServiceName     string           `gorm:"column:service_name"`
+	ServiceSnapshot string           `gorm:"column:service_snapshot"`
+	Status          string           `gorm:"column:status"`
+	ShareScope      model.ShareScope `gorm:"column:share_scope"`
+	AccessURL       string           `gorm:"column:access_url"`
+	ExpiresAt       time.Time        `gorm:"column:expires_at"`
+	ExtendCount     int              `gorm:"column:extend_count"`
+	MaxExtends      int              `gorm:"column:max_extends"`
+	CreatedAt       time.Time        `gorm:"column:created_at"`
 }
 
 type teacherInstanceRow struct {
@@ -44,8 +47,11 @@ type teacherInstanceRow struct {
 	StudentUsername string    `gorm:"column:student_username"`
 	StudentNo       *string   `gorm:"column:student_no"`
 	ClassName       string    `gorm:"column:class_name"`
+	ContestMode     string    `gorm:"column:contest_mode"`
 	ChallengeID     int64     `gorm:"column:challenge_id"`
 	ChallengeTitle  string    `gorm:"column:challenge_title"`
+	ServiceName     string    `gorm:"column:service_name"`
+	ServiceSnapshot string    `gorm:"column:service_snapshot"`
 	Status          string    `gorm:"column:status"`
 	AccessURL       string    `gorm:"column:access_url"`
 	ExpiresAt       time.Time `gorm:"column:expires_at"`
@@ -271,11 +277,14 @@ func (r *Repository) ListVisibleByUser(ctx context.Context, userID int64) ([]run
 		Table("instances AS inst").
 		Select(strings.Join([]string{
 			"inst.id",
+			"COALESCE(co.mode, '') AS contest_mode",
 			"CASE WHEN co.mode = 'awd' THEN cas.challenge_id ELSE inst.challenge_id END AS challenge_id",
-			"COALESCE(NULLIF(cas.display_name, ''), c.title) AS challenge_title",
+			"c.title AS challenge_title",
 			"c.category",
 			"c.difficulty",
 			"c.flag_type",
+			"cas.display_name AS service_name",
+			"cas.service_snapshot AS service_snapshot",
 			"inst.status",
 			"inst.share_scope",
 			"inst.access_url",
@@ -286,7 +295,7 @@ func (r *Repository) ListVisibleByUser(ctx context.Context, userID int64) ([]run
 		}, ", ")).
 		Joins("LEFT JOIN contests co ON co.id = inst.contest_id").
 		Joins("LEFT JOIN contest_awd_services AS cas ON cas.id = inst.service_id AND cas.deleted_at IS NULL").
-		Joins("JOIN challenges c ON c.id = CASE WHEN co.mode = 'awd' THEN cas.challenge_id ELSE inst.challenge_id END").
+		Joins("LEFT JOIN challenges c ON c.id = inst.challenge_id").
 		Joins("LEFT JOIN team_members AS tm ON tm.team_id = inst.team_id AND tm.contest_id = inst.contest_id AND tm.user_id = ?", userID).
 		Joins("LEFT JOIN contest_registrations AS reg ON reg.contest_id = inst.contest_id AND reg.user_id = ? AND reg.status = ?", userID, model.ContestRegistrationStatusApproved).
 		Where("inst.status IN ?", []string{model.InstanceStatusPending, model.InstanceStatusCreating, model.InstanceStatusRunning, model.InstanceStatusFailed, model.InstanceStatusExpired}).
@@ -305,13 +314,14 @@ func (r *Repository) ListVisibleByUser(ctx context.Context, userID int64) ([]run
 
 	items := make([]runtimeports.UserVisibleInstanceRow, len(rows))
 	for idx, row := range rows {
+		metadata := buildRuntimeInstanceMetadata(row.ContestMode, row.ServiceSnapshot, row.ServiceName, row.ChallengeTitle, row.Category, row.Difficulty, row.FlagType)
 		items[idx] = runtimeports.UserVisibleInstanceRow{
 			ID:             row.ID,
 			ChallengeID:    row.ChallengeID,
-			ChallengeTitle: row.ChallengeTitle,
-			Category:       row.Category,
-			Difficulty:     row.Difficulty,
-			FlagType:       row.FlagType,
+			ChallengeTitle: metadata.Title,
+			Category:       metadata.Category,
+			Difficulty:     metadata.Difficulty,
+			FlagType:       metadata.FlagType,
 			Status:         row.Status,
 			ShareScope:     row.ShareScope,
 			AccessURL:      row.AccessURL,
@@ -344,8 +354,11 @@ func (r *Repository) ListTeacherInstances(ctx context.Context, filter runtimepor
 			"u.username AS student_username",
 			"NULLIF(u.student_no, '') AS student_no",
 			"u.class_name",
+			"COALESCE(co.mode, '') AS contest_mode",
 			"CASE WHEN co.mode = 'awd' THEN cas.challenge_id ELSE i.challenge_id END AS challenge_id",
-			"COALESCE(NULLIF(cas.display_name, ''), c.title) AS challenge_title",
+			"c.title AS challenge_title",
+			"cas.display_name AS service_name",
+			"cas.service_snapshot AS service_snapshot",
 			"i.status",
 			"i.access_url",
 			"i.expires_at",
@@ -356,7 +369,7 @@ func (r *Repository) ListTeacherInstances(ctx context.Context, filter runtimepor
 		Joins("JOIN users u ON u.id = i.user_id").
 		Joins("LEFT JOIN contests co ON co.id = i.contest_id").
 		Joins("LEFT JOIN contest_awd_services AS cas ON cas.id = i.service_id AND cas.deleted_at IS NULL").
-		Joins("JOIN challenges c ON c.id = CASE WHEN co.mode = 'awd' THEN cas.challenge_id ELSE i.challenge_id END").
+		Joins("LEFT JOIN challenges c ON c.id = i.challenge_id").
 		Where("i.status <> ?", model.InstanceStatusStopped).
 		Where("(co.mode IS NULL OR co.mode <> ? OR cas.id IS NOT NULL)", model.ContestModeAWD).
 		Where("u.role = ? AND u.deleted_at IS NULL", model.RoleStudent)
@@ -382,6 +395,7 @@ func (r *Repository) ListTeacherInstances(ctx context.Context, filter runtimepor
 
 	items := make([]runtimeports.TeacherInstanceRow, len(rows))
 	for idx, row := range rows {
+		metadata := buildRuntimeInstanceMetadata(row.ContestMode, row.ServiceSnapshot, row.ServiceName, row.ChallengeTitle, "", "", "")
 		items[idx] = runtimeports.TeacherInstanceRow{
 			ID:              row.ID,
 			StudentID:       row.StudentID,
@@ -390,7 +404,7 @@ func (r *Repository) ListTeacherInstances(ctx context.Context, filter runtimepor
 			StudentNo:       row.StudentNo,
 			ClassName:       row.ClassName,
 			ChallengeID:     row.ChallengeID,
-			ChallengeTitle:  row.ChallengeTitle,
+			ChallengeTitle:  metadata.Title,
 			Status:          row.Status,
 			AccessURL:       row.AccessURL,
 			ExpiresAt:       row.ExpiresAt,
@@ -400,6 +414,49 @@ func (r *Repository) ListTeacherInstances(ctx context.Context, filter runtimepor
 		}
 	}
 	return items, nil
+}
+
+type runtimeInstanceMetadata struct {
+	Title      string
+	Category   string
+	Difficulty string
+	FlagType   string
+}
+
+func buildRuntimeInstanceMetadata(contestMode, serviceSnapshot, serviceName, challengeTitle, category, difficulty, flagType string) runtimeInstanceMetadata {
+	metadata := runtimeInstanceMetadata{
+		Title:      challengeTitle,
+		Category:   category,
+		Difficulty: difficulty,
+		FlagType:   flagType,
+	}
+	if contestMode != model.ContestModeAWD {
+		return metadata
+	}
+
+	snapshot, err := model.DecodeContestAWDServiceSnapshot(serviceSnapshot)
+	if err != nil {
+		return metadata
+	}
+	if title := strings.TrimSpace(snapshot.Name); title != "" {
+		metadata.Title = title
+	} else if title := strings.TrimSpace(serviceName); title != "" {
+		metadata.Title = title
+	}
+	if value := strings.TrimSpace(snapshot.Category); value != "" {
+		metadata.Category = value
+	}
+	if value := strings.TrimSpace(snapshot.Difficulty); value != "" {
+		metadata.Difficulty = value
+	}
+	if snapshot.FlagConfig != nil {
+		if value, ok := snapshot.FlagConfig["flag_type"].(string); ok {
+			if trimmed := strings.TrimSpace(value); trimmed != "" {
+				metadata.FlagType = trimmed
+			}
+		}
+	}
+	return metadata
 }
 
 func (r *Repository) UpdateExtend(id int64, expiresAt time.Time, extendCount int) error {

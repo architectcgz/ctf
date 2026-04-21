@@ -1169,10 +1169,11 @@ func TestStartContestAWDServiceDoesNotRequireContestChallengeLookup(t *testing.T
 				t.Fatalf("unexpected awd service lookup: contest=%d service=%d", contestID, serviceID)
 			}
 			return &model.ContestAWDService{
-				ID:          serviceID,
-				ContestID:   contestID,
-				ChallengeID: 2104,
-				IsVisible:   true,
+				ID:              serviceID,
+				ContestID:       contestID,
+				ChallengeID:     2104,
+				IsVisible:       true,
+				ServiceSnapshot: `{"name":"awd-service","category":"web","difficulty":"medium","runtime_config":{"image_id":104,"instance_sharing":"per_team"},"flag_config":{"flag_type":"static","flag_prefix":"flag"}}`,
 			}, nil
 		},
 		findContestChallengeWithContextFn: func(ctx context.Context, contestID, challengeID int64) (*model.ContestChallenge, error) {
@@ -1518,7 +1519,7 @@ func TestProvisionInstanceMarksInstanceFailedWhenAccessURLIsNotReady(t *testing.
 		nil,
 	)
 
-	err := service.provisionInstance(context.Background(), instance, challenge, "flag{static}")
+	err := service.provisionInstance(context.Background(), instance, challenge, nil, "flag{static}")
 	if err == nil || err.Error() != errcode.ErrContainerStartFailed.Error() {
 		t.Fatalf("expected container start failed error, got %v", err)
 	}

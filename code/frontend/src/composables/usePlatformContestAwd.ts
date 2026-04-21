@@ -6,11 +6,9 @@ import {
   createContestAWDAttackLog,
   createContestAWDServiceCheck,
   getContestAWDReadiness,
-  getChallenges,
   getAdminContestLiveScoreboard,
   getContestAWDRoundSummary,
   getContestAWDRoundTrafficSummary,
-  listAdminContestChallenges,
   listContestAWDServices,
   listContestTeams,
   listContestAWDRoundAttacks,
@@ -20,7 +18,6 @@ import {
   runContestAWDRoundCheck,
   runContestAWDCurrentRoundCheck,
   updateContestAWDService,
-  updateAdminContestChallenge,
 } from '@/api/admin'
 import { ApiError } from '@/api/request'
 import type {
@@ -40,7 +37,7 @@ import type {
   ScoreboardRow,
 } from '@/api/contracts'
 import { useToast } from '@/composables/useToast'
-import { mergePlatformContestChallengesWithAwdServices } from '@/utils/platformContestAwdChallengeLinks'
+import { mapPlatformContestAwdServicesToChallengeLinks } from '@/utils/platformContestAwdChallengeLinks'
 
 const AWD_AUTO_REFRESH_INTERVAL_MS = 15_000
 const AWD_TRAFFIC_DEFAULT_PAGE_SIZE = 20
@@ -327,14 +324,8 @@ export function usePlatformContestAwd(selectedContest: Readonly<Ref<ContestDetai
       challengeLinks.value = []
       return
     }
-    const [nextChallengeLinks, nextServices] = await Promise.all([
-      listAdminContestChallenges(selectedContest.value.id),
-      listContestAWDServices(selectedContest.value.id),
-    ])
-    challengeLinks.value = mergePlatformContestChallengesWithAwdServices(
-      nextChallengeLinks,
-      nextServices
-    )
+    const nextServices = await listContestAWDServices(selectedContest.value.id)
+    challengeLinks.value = mapPlatformContestAwdServicesToChallengeLinks(nextServices)
   }
 
   async function refreshRoundDetail(roundId = selectedRoundId.value) {
@@ -482,11 +473,9 @@ export function usePlatformContestAwd(selectedContest: Readonly<Ref<ContestDetai
       const previousSelectedRound = selectedRound.value
       const wasFollowingRunningRound = previousSelectedRound?.status === 'running'
       const storedRoundId = loadStoredSelectedRoundId(selectedContest.value.id)
-      const [nextRounds, nextTeams, nextChallengeLinks, nextContestAWDServices, nextReadiness] =
-        await Promise.all([
+      const [nextRounds, nextTeams, nextContestAWDServices, nextReadiness] = await Promise.all([
         listContestAWDRounds(selectedContest.value.id),
         listContestTeams(selectedContest.value.id),
-        listAdminContestChallenges(selectedContest.value.id),
         listContestAWDServices(selectedContest.value.id),
         getContestAWDReadiness(selectedContest.value.id),
       ])
@@ -496,10 +485,7 @@ export function usePlatformContestAwd(selectedContest: Readonly<Ref<ContestDetai
 
       rounds.value = nextRounds
       teams.value = nextTeams
-      challengeLinks.value = mergePlatformContestChallengesWithAwdServices(
-        nextChallengeLinks,
-        nextContestAWDServices
-      )
+      challengeLinks.value = mapPlatformContestAwdServicesToChallengeLinks(nextContestAWDServices)
       readiness.value = nextReadiness
       let nextPreferredRoundId = preferredRoundId || storedRoundId || undefined
       if (wasFollowingRunningRound) {
@@ -524,17 +510,7 @@ export function usePlatformContestAwd(selectedContest: Readonly<Ref<ContestDetai
   }
 
   async function loadChallengeCatalog() {
-    if (loadingChallengeCatalog.value) {
-      return
-    }
-
-    loadingChallengeCatalog.value = true
-    try {
-      const result = await getChallenges({ page: 1, page_size: 200 })
-      challengeCatalog.value = result.list
-    } finally {
-      loadingChallengeCatalog.value = false
-    }
+    challengeCatalog.value = []
   }
 
   async function runSelectedRoundCheck() {
@@ -657,8 +633,8 @@ export function usePlatformContestAwd(selectedContest: Readonly<Ref<ContestDetai
     savingChallengeConfig.value = true
     try {
       await createContestAWDService(selectedContest.value.id, {
-        challenge_id: payload.challenge_id,
         template_id: payload.template_id,
+        points: payload.points,
         order: payload.order,
         is_visible: payload.is_visible,
         checker_type: payload.awd_checker_type,
@@ -666,9 +642,6 @@ export function usePlatformContestAwd(selectedContest: Readonly<Ref<ContestDetai
         awd_sla_score: payload.awd_sla_score,
         awd_defense_score: payload.awd_defense_score,
         awd_checker_preview_token: payload.awd_checker_preview_token,
-      })
-      await updateAdminContestChallenge(selectedContest.value.id, String(payload.challenge_id), {
-        points: payload.points,
       })
       toast.success('赛事题目已关联')
       await refreshChallengeLinks()
@@ -701,39 +674,27 @@ export function usePlatformContestAwd(selectedContest: Readonly<Ref<ContestDetai
       const currentChallenge = challengeLinks.value.find((item) => item.challenge_id === challengeId)
       const currentTemplateID = Number(currentChallenge?.awd_template_id || 0) || undefined
       const templateID = payload.template_id ?? currentTemplateID
+      const points = payload.points ?? currentChallenge?.points
       const order = payload.order ?? currentChallenge?.order
       const isVisible = payload.is_visible ?? currentChallenge?.is_visible
 
-      if (templateID) {
-        if (currentChallenge?.awd_service_id) {
-          await updateContestAWDService(selectedContest.value.id, currentChallenge.awd_service_id, {
-            template_id: templateID,
-            order,
-            is_visible: isVisible,
-            checker_type: payload.awd_checker_type,
-            checker_config: payload.awd_checker_config,
-            awd_sla_score: payload.awd_sla_score,
-            awd_defense_score: payload.awd_defense_score,
-            awd_checker_preview_token: payload.awd_checker_preview_token,
-          })
-        } else {
-          await createContestAWDService(selectedContest.value.id, {
-            challenge_id: Number(challengeId),
-            template_id: templateID,
-            order,
-            is_visible: isVisible,
-            checker_type: payload.awd_checker_type,
-            checker_config: payload.awd_checker_config,
-            awd_sla_score: payload.awd_sla_score,
-            awd_defense_score: payload.awd_defense_score,
-            awd_checker_preview_token: payload.awd_checker_preview_token,
-          })
+      if (templateID && points !== undefined) {
+        const nextPayload = {
+          template_id: templateID,
+          points,
+          order,
+          is_visible: isVisible,
+          checker_type: payload.awd_checker_type,
+          checker_config: payload.awd_checker_config,
+          awd_sla_score: payload.awd_sla_score,
+          awd_defense_score: payload.awd_defense_score,
+          awd_checker_preview_token: payload.awd_checker_preview_token,
         }
-      }
-      if (payload.points !== undefined) {
-        await updateAdminContestChallenge(selectedContest.value.id, challengeId, {
-          points: payload.points,
-        })
+        if (currentChallenge?.awd_service_id) {
+          await updateContestAWDService(selectedContest.value.id, currentChallenge.awd_service_id, nextPayload)
+        } else {
+          await createContestAWDService(selectedContest.value.id, nextPayload)
+        }
       }
       toast.success('题目配置已更新')
       await refreshChallengeLinks()

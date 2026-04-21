@@ -1,257 +1,39 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
-import { ArrowRight, BarChart3, Cast, Radar, Server, Trophy } from 'lucide-vue-next'
-import { useRoute, useRouter } from 'vue-router'
+import { computed, onMounted, ref } from 'vue'
+import { ArrowRight, Settings, Trophy } from 'lucide-vue-next'
+import { useRouter } from 'vue-router'
 
-import {
-  getAdminContestLiveScoreboard,
-  getContestAWDRoundSummary,
-  getContestAWDRoundTrafficSummary,
-  getContests,
-  listContestAWDRoundAttacks,
-  listContestAWDRoundServices,
-  listContestAWDRounds,
-} from '@/api/admin'
-import type {
-  AWDAttackLogData,
-  AWDRoundData,
-  AWDRoundSummaryData,
-  AWDTrafficSummaryData,
-  AWDTeamServiceData,
-  ContestDetailData,
-  ScoreboardRow,
-} from '@/api/contracts'
+import { getContests } from '@/api/admin'
+import type { ContestDetailData } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
 import { getModeLabel, getStatusLabel } from '@/utils/contest'
 
-type ContestOpsViewKey = 'environment' | 'traffic' | 'projector' | 'scoreboard'
-
-type ContestOpsAction =
-  | {
-      type: 'route'
-      label: string
-      location:
-        | {
-            name: string
-            params?: Record<string, string>
-            query?: Record<string, string>
-          }
-        | {
-            path: string
-            query?: Record<string, string>
-          }
-    }
-  | {
-      type: 'contest-route'
-      label: string
-      buildLocation: (contestId: string) => {
-        name: string
-        params?: Record<string, string>
-        query?: Record<string, string>
-      }
-    }
-
-interface ContestOpsDefinition {
-  overline: string
-  title: string
-  copy: string
-  helper: string
-  metricLabel: string
-  metricHint: string
-  icon: typeof Server
-  primaryAction: ContestOpsAction
-  secondaryAction: ContestOpsAction
-}
-
-const route = useRoute()
 const router = useRouter()
 
 const loading = ref(true)
 const loadError = ref('')
-const awdContests = ref<ContestDetailData[]>([])
-const projectorLoading = ref(false)
-const projectorError = ref('')
-const projectorRound = ref<AWDRoundData | null>(null)
-const projectorSummary = ref<AWDRoundSummaryData | null>(null)
-const projectorTrafficSummary = ref<AWDTrafficSummaryData | null>(null)
-const projectorServices = ref<AWDTeamServiceData[]>([])
-const projectorAttacks = ref<AWDAttackLogData[]>([])
-const projectorScoreboardRows = ref<ScoreboardRow[]>([])
+const contests = ref<ContestDetailData[]>([])
 
-let projectorRequestToken = 0
-
-const operationDefinitions: Record<ContestOpsViewKey, ContestOpsDefinition> = {
-  environment: {
-    overline: 'Event Operations',
-    title: '环境管理',
-    copy: '统一接入当前可操作 AWD 赛事的 checker、SLA、防守分和赛前环境准备，不再分散到平行后台里维护。',
-    helper: '优先进入推荐赛事的 AWD 配置段，也可以回到竞赛目录切换其它赛事。',
-    metricLabel: '配置入口',
-    metricHint: 'AWD Checker / SLA / 防守分',
-    icon: Server,
-    primaryAction: {
-      type: 'contest-route',
-      label: '进入 AWD 配置',
-      buildLocation: (contestId) => ({
-        name: 'ContestEdit',
-        params: { id: contestId },
-        query: { panel: 'awd-config' },
-      }),
-    },
-    secondaryAction: {
-      type: 'contest-route',
-      label: '打开赛前检查',
-      buildLocation: (contestId) => ({
-        name: 'ContestEdit',
-        params: { id: contestId },
-        query: { panel: 'preflight' },
-      }),
-    },
-  },
-  traffic: {
-    overline: 'Traffic Control',
-    title: '流量监控',
-    copy: '从管理员后台直接进入轮次态势、服务巡检、攻击流水和流量筛选，减少先翻到竞赛目录再找运行段的路径。',
-    helper: '默认落到推荐赛事的运行段态势面板，继续看流量和当前轮状态。',
-    metricLabel: '态势入口',
-    metricHint: '回合态势 / 服务状态 / 攻击流水',
-    icon: Radar,
-    primaryAction: {
-      type: 'contest-route',
-      label: '进入控制台',
-      buildLocation: (contestId) => ({
-        name: 'ContestOperations',
-        params: { id: contestId },
-        query: { activeTab: 'matrix' },
-      }),
-    },
-    secondaryAction: {
-      type: 'route',
-      label: '查看全站排行',
-      location: {
-        path: '/scoreboard',
-        query: { tab: 'contest' },
-      },
-    },
-  },
-  projector: {
-    overline: 'Command Projector',
-    title: '指挥投屏',
-    copy: '面向大屏展示当前轮次的排行、攻击事件、热点题目与失陷服务，方便在赛场中控台直接投屏。',
-    helper: '优先同步推荐赛事的最新轮次，用于现场播报和运维联动。',
-    metricLabel: '投屏轮次',
-    metricHint: 'Round / Attack Feed / Leaderboard',
-    icon: Cast,
-    primaryAction: {
-      type: 'route',
-      label: '打开投屏台',
-      location: {
-        path: '/platform/contests/operations/projector',
-      },
-    },
-    secondaryAction: {
-      type: 'contest-route',
-      label: '进入运行控制台',
-      buildLocation: (contestId) => ({
-        name: 'ContestOperations',
-        params: { id: contestId },
-        query: { activeTab: 'scoreboard' },
-      }),
-    },
-  },
-  scoreboard: {
-    overline: 'Live Standings',
-    title: '指挥中心排行榜',
-    copy: '快速进入正在运行赛事的实时计分监控，查看全场总分排名及解题趋势。',
-    helper: '进入当前推荐赛事的指挥中心排行榜视图。',
-    metricLabel: '进行中赛事',
-    metricHint: 'Live Leaderboards',
-    icon: Trophy,
-    primaryAction: {
-      type: 'contest-route',
-      label: '进入实时榜单',
-      buildLocation: (contestId) => ({
-        name: 'ContestOperations',
-        params: { id: contestId },
-        query: { activeTab: 'scoreboard' },
-      }),
-    },
-    secondaryAction: {
-      type: 'route',
-      label: '全站总榜',
-      location: {
-        path: '/scoreboard',
-      },
-    },
-  },
-}
-
-const currentView = computed<ContestOpsViewKey>(() => {
-  if (route.name === 'PlatformContestOpsTraffic') return 'traffic'
-  if (route.name === 'PlatformContestOpsProjector') return 'projector'
-  if (route.name === 'PlatformContestOpsScoreboard') return 'scoreboard'
-  return 'environment'
-})
-
-const currentDefinition = computed(() => operationDefinitions[currentView.value])
+const awdContests = computed(() => contests.value.filter((item) => item.mode === 'awd'))
+const operableContests = computed(() =>
+  awdContests.value.filter((item) =>
+    ['running', 'frozen', 'registering'].includes(item.status)
+  )
+)
+const runningContestCount = computed(
+  () => operableContests.value.filter((item) => item.status === 'running').length
+)
+const frozenContestCount = computed(
+  () => operableContests.value.filter((item) => item.status === 'frozen').length
+)
 const preferredContest = computed(
   () =>
-    awdContests.value.find((item) => item.status === 'running' || item.status === 'frozen') ||
-    awdContests.value.find((item) => item.status === 'registering') ||
-    awdContests.value[0] ||
+    operableContests.value.find((item) => item.status === 'running') ||
+    operableContests.value.find((item) => item.status === 'frozen') ||
+    operableContests.value[0] ||
     null
 )
-const runningCount = computed(
-  () =>
-    awdContests.value.filter((item) => item.status === 'running' || item.status === 'frozen').length
-)
-const currentMetricValue = computed(() => {
-  if (currentView.value === 'projector') {
-    return projectorRound.value ? `Round ${projectorRound.value.round_number}` : '待同步'
-  }
-  if (currentView.value === 'scoreboard') {
-    return String(runningCount.value)
-  }
-  return preferredContest.value ? getStatusLabel(preferredContest.value.status) : '待选择'
-})
-
-const projectorMetrics = computed(() => {
-  const metrics = projectorSummary.value?.metrics
-  if (!metrics) {
-    return []
-  }
-  return [
-    {
-      label: '在线服务',
-      value: String(metrics.service_up_count),
-      helper: `共 ${metrics.total_service_count} 个服务单元`,
-    },
-    {
-      label: '失陷服务',
-      value: String(metrics.service_compromised_count),
-      helper: `离线 ${metrics.service_down_count} 个，受攻击 ${metrics.attacked_service_count} 个`,
-    },
-    {
-      label: '成功攻击',
-      value: String(metrics.successful_attack_count),
-      helper: `总攻击 ${metrics.total_attack_count} 次，失败 ${metrics.failed_attack_count} 次`,
-    },
-    {
-      label: '实时流量',
-      value: String(projectorTrafficSummary.value?.total_request_count ?? 0),
-      helper: `活跃攻击队 ${projectorTrafficSummary.value?.active_attacker_team_count ?? 0} 支`,
-    },
-  ]
-})
-
-const projectorLatestAttacks = computed(() => projectorAttacks.value.slice(0, 6))
-const projectorHotChallenges = computed(() => projectorTrafficSummary.value?.top_challenges.slice(0, 3) || [])
-const projectorTopAttackers = computed(() => projectorTrafficSummary.value?.top_attackers.slice(0, 3) || [])
-const projectorCompromisedServices = computed(() =>
-  projectorServices.value.filter((item) => item.service_status === 'compromised').slice(0, 5)
-)
-const projectorTopTeam = computed(() => projectorScoreboardRows.value[0] || null)
 
 function formatDateTime(value: string): string {
   return new Date(value).toLocaleString('zh-CN', {
@@ -263,44 +45,7 @@ function formatDateTime(value: string): string {
   })
 }
 
-function formatCompactTime(value?: string): string {
-  if (!value) {
-    return '未记录'
-  }
-  return new Date(value).toLocaleString('zh-CN', {
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  })
-}
-
-function formatAttackResultLabel(success: boolean): string {
-  return success ? '命中' : '未命中'
-}
-
-function formatServiceStatusLabel(status: string): string {
-  switch (status) {
-    case 'up':
-      return '在线'
-    case 'down':
-      return '离线'
-    case 'compromised':
-      return '失陷'
-    default:
-      return '待同步'
-  }
-}
-
-function pickProjectorRound(rounds: AWDRoundData[]): AWDRoundData | null {
-  return (
-    rounds.find((item) => item.status === 'running') ||
-    rounds.find((item) => item.status === 'finished') ||
-    rounds[rounds.length - 1] ||
-    null
-  )
-}
-
-async function loadContests() {
+async function loadContests(): Promise<void> {
   loading.value = true
   loadError.value = ''
 
@@ -309,119 +54,39 @@ async function loadContests() {
       page: 1,
       page_size: 100,
     })
-    awdContests.value = response.list.filter((item) => item.mode === 'awd')
+    contests.value = response.list
   } catch (error) {
-    awdContests.value = []
-    loadError.value = error instanceof Error ? error.message : '赛事运维入口加载失败'
+    contests.value = []
+    loadError.value = error instanceof Error ? error.message : '赛事运维目录加载失败'
   } finally {
     loading.value = false
   }
 }
 
-function resetProjectorData() {
-  projectorError.value = ''
-  projectorRound.value = null
-  projectorSummary.value = null
-  projectorTrafficSummary.value = null
-  projectorServices.value = []
-  projectorAttacks.value = []
-  projectorScoreboardRows.value = []
+async function handleEnterOperations(contestId: string): Promise<void> {
+  await router.push({
+    name: 'ContestOperations',
+    params: { id: contestId },
+  })
 }
 
-async function loadProjectorData(contestId: string) {
-  const requestToken = ++projectorRequestToken
-  projectorLoading.value = true
-  projectorError.value = ''
-
-  try {
-    const rounds = await listContestAWDRounds(contestId)
-    if (requestToken !== projectorRequestToken) {
-      return
-    }
-
-    const nextRound = pickProjectorRound(rounds)
-    projectorRound.value = nextRound
-    if (!nextRound) {
-      projectorSummary.value = null
-      projectorTrafficSummary.value = null
-      projectorServices.value = []
-      projectorAttacks.value = []
-      projectorScoreboardRows.value = []
-      projectorError.value = '当前赛事还没有生成可投屏轮次'
-      return
-    }
-
-    const [summary, trafficSummary, services, attacks, scoreboard] = await Promise.all([
-      getContestAWDRoundSummary(contestId, nextRound.id),
-      getContestAWDRoundTrafficSummary(contestId, nextRound.id),
-      listContestAWDRoundServices(contestId, nextRound.id),
-      listContestAWDRoundAttacks(contestId, nextRound.id),
-      getAdminContestLiveScoreboard(contestId, { page: 1, page_size: 10 }),
-    ])
-
-    if (requestToken !== projectorRequestToken) {
-      return
-    }
-
-    projectorSummary.value = summary
-    projectorTrafficSummary.value = trafficSummary
-    projectorServices.value = services
-    projectorAttacks.value = attacks
-    projectorScoreboardRows.value = scoreboard.scoreboard.list
-  } catch (error) {
-    if (requestToken !== projectorRequestToken) {
-      return
-    }
-    resetProjectorData()
-    projectorError.value = error instanceof Error ? error.message : '投屏数据加载失败'
-  } finally {
-    if (requestToken === projectorRequestToken) {
-      projectorLoading.value = false
-    }
-  }
+async function handleOpenStudio(contestId: string): Promise<void> {
+  await router.push({
+    name: 'ContestEdit',
+    params: { id: contestId },
+  })
 }
 
-function resolveLocation(action: ContestOpsAction) {
-  if (action.type === 'contest-route') {
-    const contest = preferredContest.value
-    if (!contest) {
-      return {
-        name: 'ContestManage',
-        query: { panel: 'list' },
-      }
-    }
-    return action.buildLocation(contest.id)
-  }
-
-  return action.location
-}
-
-async function executeAction(action: ContestOpsAction) {
-  await router.push(resolveLocation(action))
+async function handleBackToContestDirectory(): Promise<void> {
+  await router.push({
+    name: 'ContestManage',
+    query: { panel: 'list' },
+  })
 }
 
 onMounted(() => {
   void loadContests()
 })
-
-watch(
-  () => [currentView.value, preferredContest.value?.id || ''] as const,
-  ([view, contestId]) => {
-    if (view !== 'projector') {
-      projectorRequestToken++
-      projectorLoading.value = false
-      resetProjectorData()
-      return
-    }
-    if (!contestId) {
-      projectorLoading.value = false
-      resetProjectorData()
-      return
-    }
-    void loadProjectorData(contestId)
-  },
-  { immediate: true }
-)
 </script>
 
 <template>
@@ -431,32 +96,23 @@ watch(
     <header class="list-heading contest-ops-hero workspace-directory-section">
       <div class="contest-ops-hero__main">
         <div class="workspace-overline">
-          {{ currentDefinition.overline }}
+          Event Operations
         </div>
         <h1 class="workspace-page-title">
-          {{ currentDefinition.title }}
+          赛事运维
         </h1>
         <p class="workspace-page-copy">
-          {{ currentDefinition.copy }}
+          先从运维赛事目录中选择具体比赛，再进入单场运维台查看轮次、流量、大屏和榜单。
         </p>
       </div>
 
       <div class="contest-ops-hero__actions">
         <button
-          id="contest-ops-primary-action"
-          type="button"
-          class="ui-btn ui-btn--primary"
-          @click="executeAction(currentDefinition.primaryAction)"
-        >
-          <ArrowRight class="h-4 w-4" />
-          {{ currentDefinition.primaryAction.label }}
-        </button>
-        <button
           type="button"
           class="ui-btn ui-btn--ghost"
-          @click="executeAction(currentDefinition.secondaryAction)"
+          @click="handleBackToContestDirectory"
         >
-          {{ currentDefinition.secondaryAction.label }}
+          返回竞赛目录
         </button>
       </div>
     </header>
@@ -466,13 +122,35 @@ watch(
     >
       <article class="journal-note progress-card metric-panel-card">
         <div class="journal-note-label progress-card-label metric-panel-label">
-          AWD 赛事
+          可运维赛事
         </div>
         <div class="journal-note-value progress-card-value metric-panel-value">
-          {{ awdContests.length }}
+          {{ operableContests.length }}
         </div>
         <div class="journal-note-helper progress-card-hint metric-panel-helper">
-          当前可纳入赛事运维的 AWD 赛事总数
+          当前可直接进入运维台的 AWD 赛事
+        </div>
+      </article>
+      <article class="journal-note progress-card metric-panel-card">
+        <div class="journal-note-label progress-card-label metric-panel-label">
+          进行中
+        </div>
+        <div class="journal-note-value progress-card-value metric-panel-value">
+          {{ runningContestCount }}
+        </div>
+        <div class="journal-note-helper progress-card-hint metric-panel-helper">
+          正在运行的赛事数量
+        </div>
+      </article>
+      <article class="journal-note progress-card metric-panel-card">
+        <div class="journal-note-label progress-card-label metric-panel-label">
+          已冻结
+        </div>
+        <div class="journal-note-value progress-card-value metric-panel-value">
+          {{ frozenContestCount }}
+        </div>
+        <div class="journal-note-helper progress-card-hint metric-panel-helper">
+          已进入封榜阶段的赛事数量
         </div>
       </article>
       <article class="journal-note progress-card metric-panel-card">
@@ -483,29 +161,7 @@ watch(
           {{ preferredContest ? preferredContest.title : '暂无' }}
         </div>
         <div class="journal-note-helper progress-card-hint metric-panel-helper">
-          优先选择进行中，其次报名中 AWD 赛事
-        </div>
-      </article>
-      <article class="journal-note progress-card metric-panel-card">
-        <div class="journal-note-label progress-card-label metric-panel-label">
-          {{ currentDefinition.metricLabel }}
-        </div>
-        <div class="journal-note-value progress-card-value metric-panel-value">
-          {{ currentMetricValue }}
-        </div>
-        <div class="journal-note-helper progress-card-hint metric-panel-helper">
-          {{ currentDefinition.metricHint }}
-        </div>
-      </article>
-      <article class="journal-note progress-card metric-panel-card">
-        <div class="journal-note-label progress-card-label metric-panel-label">
-          进行中
-        </div>
-        <div class="journal-note-value progress-card-value metric-panel-value">
-          {{ runningCount }}
-        </div>
-        <div class="journal-note-helper progress-card-hint metric-panel-helper">
-          可直接承接流量与榜单运维的赛事数量
+          优先显示进行中，其次冻结中的赛事
         </div>
       </article>
     </div>
@@ -514,13 +170,13 @@ watch(
       v-if="loading"
       class="workspace-directory-section contest-ops-section"
     >
-      <AppLoading>正在同步赛事运维入口...</AppLoading>
+      <AppLoading>正在同步赛事运维目录...</AppLoading>
     </section>
 
     <AppEmpty
       v-else-if="loadError"
       class="workspace-directory-section contest-ops-section"
-      title="赛事运维入口暂时不可用"
+      title="赛事运维目录暂时不可用"
       :description="loadError"
       icon="AlertTriangle"
     >
@@ -536,359 +192,94 @@ watch(
     </AppEmpty>
 
     <AppEmpty
-      v-else-if="awdContests.length === 0"
+      v-else-if="operableContests.length === 0"
       class="workspace-directory-section contest-ops-section"
-      title="当前还没有可运维的 AWD 赛事"
-      description="先在竞赛目录中创建或切换到 AWD 赛事，这里再承接环境、流量和榜单入口。"
+      title="当前还没有可进入运维台的 AWD 赛事"
+      description="请先在竞赛目录中创建 AWD 赛事，或将赛事推进到可运维状态。"
       icon="Trophy"
     >
       <template #action>
         <button
           type="button"
-          class="ui-btn ui-btn--primary"
-          @click="router.push({ name: 'ContestManage', query: { panel: 'create' } })"
+          class="ui-btn ui-btn--ghost"
+          @click="handleBackToContestDirectory"
         >
-          前往创建竞赛
+          返回竞赛目录
         </button>
       </template>
     </AppEmpty>
 
-    <template v-else-if="preferredContest && currentView === 'projector'">
-      <section class="workspace-directory-section contest-ops-section contest-projector-stage">
-        <header class="list-heading">
-          <div>
-            <div class="workspace-overline">
-              Projector Live
-            </div>
-            <h2 class="list-heading__title">
-              {{ preferredContest.title }}
-            </h2>
+    <section
+      v-else
+      class="workspace-directory-section contest-ops-section contest-ops-directory"
+    >
+      <header class="list-heading">
+        <div>
+          <div class="journal-note-label">
+            Contest Ops Directory
           </div>
-          <div class="contest-section-meta">
-            {{ getStatusLabel(preferredContest.status) }} ·
-            {{ projectorRound ? `Round ${projectorRound.round_number}` : '待同步' }}
-          </div>
-        </header>
-
-        <div
-          v-if="projectorLoading"
-          class="contest-projector-loading"
-        >
-          <AppLoading>正在同步投屏数据...</AppLoading>
+          <h2 class="list-heading__title">
+            竞赛列表
+          </h2>
         </div>
-
-        <AppEmpty
-          v-else-if="projectorError"
-          class="contest-projector-empty"
-          title="投屏数据暂时不可用"
-          :description="projectorError"
-          icon="Cast"
-        />
-
-        <div
-          v-else
-          class="contest-projector-layout"
-        >
-          <div class="contest-projector-spotlight">
-            <article class="contest-projector-hero-card">
-              <div class="contest-projector-hero-card__head">
-                <div>
-                  <div class="journal-note-label">
-                    当前轮次
-                  </div>
-                  <h3>{{ projectorRound ? `Round ${projectorRound.round_number}` : '待同步' }}</h3>
-                </div>
-                <div class="contest-projector-chip">
-                  {{ projectorRound ? projectorRound.status : 'pending' }}
-                </div>
-              </div>
-              <div class="contest-projector-hero-card__meta">
-                <span>比赛窗口 {{ formatDateTime(preferredContest.starts_at) }} - {{ formatDateTime(preferredContest.ends_at) }}</span>
-                <span>最近事件 {{ formatCompactTime(projectorTrafficSummary?.latest_event_at) }}</span>
-                <span>榜首 {{ projectorTopTeam ? `${projectorTopTeam.team_name} · ${projectorTopTeam.score}` : '待同步' }}</span>
-              </div>
-            </article>
-
-            <div class="progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface contest-projector-metrics">
-              <article
-                v-for="item in projectorMetrics"
-                :key="item.label"
-                class="journal-note progress-card metric-panel-card"
-              >
-                <div class="journal-note-label progress-card-label metric-panel-label">
-                  {{ item.label }}
-                </div>
-                <div class="journal-note-value progress-card-value metric-panel-value">
-                  {{ item.value }}
-                </div>
-                <div class="journal-note-helper progress-card-hint metric-panel-helper">
-                  {{ item.helper }}
-                </div>
-              </article>
-            </div>
-          </div>
-
-          <div class="contest-projector-board">
-            <section class="contest-projector-panel">
-              <header class="contest-projector-panel__head">
-                <div class="workspace-overline">
-                  Scoreboard
-                </div>
-                <h3>实时榜单</h3>
-              </header>
-              <div
-                v-if="projectorScoreboardRows.length === 0"
-                class="contest-projector-note"
-              >
-                当前还没有榜单数据。
-              </div>
-              <div
-                v-else
-                class="contest-projector-scoreboard"
-              >
-                <div
-                  v-for="item in projectorScoreboardRows.slice(0, 6)"
-                  :key="item.team_id"
-                  class="contest-projector-scoreboard__row"
-                >
-                  <span class="contest-projector-rank">{{ item.rank }}</span>
-                  <span class="contest-projector-team">{{ item.team_name }}</span>
-                  <strong class="contest-projector-score">{{ item.score }}</strong>
-                </div>
-              </div>
-            </section>
-
-            <section class="contest-projector-panel">
-              <header class="contest-projector-panel__head">
-                <div class="workspace-overline">
-                  Attack Feed
-                </div>
-                <h3>最新攻击</h3>
-              </header>
-              <div
-                v-if="projectorLatestAttacks.length === 0"
-                class="contest-projector-note"
-              >
-                当前轮次还没有攻击记录。
-              </div>
-              <div
-                v-else
-                class="contest-projector-feed"
-              >
-                <article
-                  v-for="item in projectorLatestAttacks"
-                  :key="item.id"
-                  class="contest-projector-feed__row"
-                >
-                  <div class="contest-projector-feed__title">
-                    <span>{{ item.attacker_team }}</span>
-                    <span>→</span>
-                    <span>{{ item.victim_team }}</span>
-                  </div>
-                  <div class="contest-projector-feed__meta">
-                    <span>{{ formatAttackResultLabel(item.is_success) }}</span>
-                    <span>{{ item.score_gained }} 分</span>
-                    <span>{{ formatCompactTime(item.created_at) }}</span>
-                  </div>
-                </article>
-              </div>
-            </section>
-          </div>
-
-          <div class="contest-projector-board contest-projector-board--lower">
-            <section class="contest-projector-panel">
-              <header class="contest-projector-panel__head">
-                <div class="workspace-overline">
-                  Service Heat
-                </div>
-                <h3>热点服务</h3>
-              </header>
-              <div
-                v-if="projectorHotChallenges.length === 0"
-                class="contest-projector-note"
-              >
-                当前轮次还没有服务热点。
-              </div>
-              <div
-                v-else
-                class="contest-projector-list"
-              >
-                <article
-                  v-for="item in projectorHotChallenges"
-                  :key="item.challenge_id"
-                  class="contest-projector-list__row"
-                >
-                  <div>
-                    <strong>{{ item.challenge_title || item.challenge_id }}</strong>
-                    <div class="contest-projector-list__meta">
-                      请求 {{ item.request_count }} · 错误 {{ item.error_count }}
-                    </div>
-                  </div>
-                </article>
-              </div>
-            </section>
-
-            <section class="contest-projector-panel">
-              <header class="contest-projector-panel__head">
-                <div class="workspace-overline">
-                  Compromised
-                </div>
-                <h3>服务状态</h3>
-              </header>
-              <div
-                v-if="projectorCompromisedServices.length === 0"
-                class="contest-projector-note"
-              >
-                当前没有失陷服务。
-              </div>
-              <div
-                v-else
-                class="contest-projector-list"
-              >
-                <article
-                  v-for="item in projectorCompromisedServices"
-                  :key="item.id"
-                  class="contest-projector-list__row"
-                >
-                  <div>
-                    <strong>{{ item.team_name }}</strong>
-                    <div class="contest-projector-list__meta">
-                      {{ formatServiceStatusLabel(item.service_status) }} · 收到攻击 {{ item.attack_received }} 次
-                    </div>
-                  </div>
-                </article>
-              </div>
-            </section>
-
-            <section class="contest-projector-panel">
-              <header class="contest-projector-panel__head">
-                <div class="workspace-overline">
-                  Traffic Focus
-                </div>
-                <h3>流量焦点</h3>
-              </header>
-              <div
-                v-if="projectorTopAttackers.length === 0"
-                class="contest-projector-note"
-              >
-                当前轮次还没有活跃流量。
-              </div>
-              <div
-                v-else
-                class="contest-projector-list"
-              >
-                <article
-                  v-for="item in projectorTopAttackers"
-                  :key="item.team_id"
-                  class="contest-projector-list__row"
-                >
-                  <div>
-                    <strong>{{ item.team_name }}</strong>
-                    <div class="contest-projector-list__meta">
-                      请求 {{ item.request_count }} · 错误 {{ item.error_count }}
-                    </div>
-                  </div>
-                </article>
-              </div>
-            </section>
-          </div>
+        <div class="contest-section-meta">
+          进入具体赛事后查看轮次、流量、大屏和实时榜单
         </div>
-      </section>
-    </template>
+      </header>
 
-    <template v-else-if="preferredContest">
-      <section class="workspace-directory-section contest-ops-section">
-        <header class="list-heading">
-          <div>
-            <div class="journal-note-label">
-              Recommended Contest
-            </div>
-            <h2 class="list-heading__title">
-              {{ preferredContest.title }}
-            </h2>
-          </div>
-          <div class="contest-section-meta">
-            {{ getStatusLabel(preferredContest.status) }} · {{ getModeLabel(preferredContest.mode) }}
-          </div>
-        </header>
-
-        <div class="contest-ops-grid">
-          <article class="contest-ops-card">
-            <div class="contest-ops-card__icon">
-              <component
-                :is="currentDefinition.icon"
-                class="h-4 w-4"
-              />
-            </div>
-            <div class="contest-ops-card__body">
+      <div class="contest-ops-directory__list">
+        <article
+          v-for="contest in operableContests"
+          :key="contest.id"
+          class="contest-ops-card"
+        >
+          <div class="contest-ops-card__head">
+            <div class="contest-ops-card__title-wrap">
               <h3 class="contest-ops-card__title">
-                {{ currentDefinition.title }}
+                {{ contest.title }}
               </h3>
               <p class="contest-ops-card__copy">
-                {{ currentDefinition.helper }}
+                {{ contest.description || '当前未填写赛事描述。' }}
               </p>
             </div>
-          </article>
 
-          <article class="contest-ops-card">
-            <div class="contest-ops-card__icon">
-              <BarChart3 class="h-4 w-4" />
+            <div class="contest-ops-card__badges">
+              <span class="contest-ops-card__badge">
+                {{ getStatusLabel(contest.status) }}
+              </span>
+              <span class="contest-ops-card__badge contest-ops-card__badge--muted">
+                {{ getModeLabel(contest.mode) }}
+              </span>
             </div>
-            <div class="contest-ops-card__body">
-              <h3 class="contest-ops-card__title">
-                赛事窗口
-              </h3>
-              <p class="contest-ops-card__copy">
-                {{ formatDateTime(preferredContest.starts_at) }} 至
-                {{ formatDateTime(preferredContest.ends_at) }}
-              </p>
-            </div>
-          </article>
-        </div>
-      </section>
-
-      <section class="workspace-directory-section contest-ops-section">
-        <header class="list-heading">
-          <div>
-            <div class="journal-note-label">
-              Next Step
-            </div>
-            <h2 class="list-heading__title">
-              继续处理当前赛事
-            </h2>
           </div>
-          <div class="contest-section-meta">
-            优先承接正在运行或最近可操作的一场赛事
-          </div>
-        </header>
 
-        <div class="contest-ops-actions">
-          <button
-            id="contest-ops-inline-primary"
-            type="button"
-            class="ui-btn ui-btn--primary"
-            @click="executeAction(currentDefinition.primaryAction)"
-          >
-            <ArrowRight class="h-4 w-4" />
-            {{ currentDefinition.primaryAction.label }}
-          </button>
-          <button
-            type="button"
-            class="ui-btn ui-btn--ghost"
-            @click="executeAction(currentDefinition.secondaryAction)"
-          >
-            {{ currentDefinition.secondaryAction.label }}
-          </button>
-          <button
-            type="button"
-            class="ui-btn ui-btn--ghost"
-            @click="router.push({ name: 'ContestManage', query: { panel: 'list' } })"
-          >
-            返回竞赛目录
-          </button>
-        </div>
-      </section>
-    </template>
+          <div class="contest-ops-card__meta">
+            <span>开始：{{ formatDateTime(contest.starts_at) }}</span>
+            <span>结束：{{ formatDateTime(contest.ends_at) }}</span>
+          </div>
+
+          <div class="contest-ops-card__actions">
+            <button
+              :id="`contest-ops-enter-${contest.id}`"
+              type="button"
+              class="ui-btn ui-btn--primary"
+              @click="handleEnterOperations(contest.id)"
+            >
+              <ArrowRight class="h-4 w-4" />
+              进入运维台
+            </button>
+            <button
+              type="button"
+              class="ui-btn ui-btn--ghost"
+              @click="handleOpenStudio(contest.id)"
+            >
+              <Settings class="h-4 w-4" />
+              返回编辑
+            </button>
+          </div>
+        </article>
+      </div>
+    </section>
   </section>
 </template>
 
@@ -913,7 +304,7 @@ watch(
 }
 
 .contest-ops-hero__actions,
-.contest-ops-actions {
+.contest-ops-card__actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
@@ -923,191 +314,42 @@ watch(
   margin-top: 1.5rem;
 }
 
-.contest-projector-stage {
-  display: grid;
-  gap: 1.25rem;
-}
-
-.contest-projector-loading,
-.contest-projector-empty {
-  margin-top: 0.5rem;
-}
-
-.contest-projector-layout,
-.contest-projector-spotlight,
-.contest-projector-board {
+.contest-ops-directory {
   display: grid;
   gap: 1rem;
 }
 
-.contest-projector-board {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.contest-projector-board--lower {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.contest-projector-hero-card,
-.contest-projector-panel {
-  border: 1px solid color-mix(in srgb, var(--journal-border) 72%, transparent);
-  border-radius: 1.2rem;
-  background: color-mix(in srgb, var(--journal-surface) 95%, transparent);
-}
-
-.contest-projector-hero-card {
-  display: grid;
-  gap: 0.85rem;
-  padding: 1.15rem 1.25rem;
-}
-
-.contest-projector-hero-card__head,
-.contest-projector-panel__head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.contest-projector-hero-card__head h3,
-.contest-projector-panel__head h3 {
-  margin: 0.2rem 0 0;
-  color: var(--journal-ink);
-}
-
-.contest-projector-chip {
-  display: inline-flex;
-  align-items: center;
-  border-radius: 999px;
-  padding: 0.28rem 0.7rem;
-  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
-  color: var(--journal-accent);
-  font-size: 0.78rem;
-  font-weight: 600;
-  text-transform: uppercase;
-}
-
-.contest-projector-hero-card__meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem 1rem;
-  color: var(--color-text-secondary);
-  font-size: 0.88rem;
-}
-
-.contest-projector-metrics {
-  margin-top: 0;
-}
-
-.contest-projector-panel {
-  display: grid;
-  gap: 0.9rem;
-  padding: 1rem 1.05rem;
-}
-
-.contest-projector-note {
-  color: var(--color-text-secondary);
-  font-size: 0.9rem;
-}
-
-.contest-projector-scoreboard,
-.contest-projector-feed,
-.contest-projector-list {
-  display: grid;
-  gap: 0.7rem;
-}
-
-.contest-projector-scoreboard__row,
-.contest-projector-feed__row,
-.contest-projector-list__row {
-  display: grid;
-  gap: 0.35rem;
-  padding: 0.8rem 0.9rem;
-  border-radius: 0.95rem;
-  background: color-mix(in srgb, var(--journal-surface-muted) 82%, transparent);
-}
-
-.contest-projector-scoreboard__row {
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.contest-projector-rank,
-.contest-projector-score {
-  font-family: var(--font-family-mono, 'JetBrains Mono', monospace);
-}
-
-.contest-projector-rank {
-  color: var(--journal-accent);
-  font-weight: 700;
-}
-
-.contest-projector-team {
-  color: var(--journal-ink);
-  font-weight: 600;
-}
-
-.contest-projector-score {
-  color: var(--journal-ink);
-}
-
-.contest-projector-feed__title,
-.contest-projector-feed__meta,
-.contest-projector-list__meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.45rem 0.75rem;
-}
-
-.contest-projector-feed__title {
-  color: var(--journal-ink);
-  font-weight: 600;
-}
-
-.contest-projector-feed__meta,
-.contest-projector-list__meta {
-  color: var(--color-text-secondary);
-  font-size: 0.86rem;
-}
-
-.contest-ops-grid {
+.contest-ops-directory__list {
   display: grid;
   gap: 1rem;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
 }
 
 .contest-ops-card {
   display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 0.9rem;
-  padding: 1.1rem 1.2rem;
+  gap: 1rem;
+  padding: 1.2rem 1.25rem;
   border: 1px solid color-mix(in srgb, var(--journal-border) 72%, transparent);
   border-radius: 1.1rem;
-  background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
+  background: color-mix(in srgb, var(--journal-surface) 95%, transparent);
 }
 
-.contest-ops-card__icon {
-  display: inline-flex;
-  width: 2.1rem;
-  height: 2.1rem;
-  align-items: center;
-  justify-content: center;
-  border-radius: 0.8rem;
-  background: color-mix(in srgb, var(--journal-accent) 12%, transparent);
-  color: var(--journal-accent);
+.contest-ops-card__head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.9rem;
 }
 
-.contest-ops-card__body {
+.contest-ops-card__title-wrap {
   display: grid;
   gap: 0.45rem;
 }
 
 .contest-ops-card__title {
   margin: 0;
-  font-size: 1rem;
-  font-weight: 600;
   color: var(--journal-ink);
+  font-size: 1.05rem;
+  font-weight: 700;
 }
 
 .contest-ops-card__copy {
@@ -1116,10 +358,46 @@ watch(
   line-height: 1.7;
 }
 
-@media (max-width: 1100px) {
-  .contest-projector-board,
-  .contest-projector-board--lower {
-    grid-template-columns: 1fr;
+.contest-ops-card__badges,
+.contest-ops-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 0.9rem;
+}
+
+.contest-ops-card__badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.3rem 0.78rem;
+  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
+  color: var(--journal-accent);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.contest-ops-card__badge--muted {
+  background: color-mix(in srgb, var(--journal-border) 14%, transparent);
+  color: var(--color-text-secondary);
+}
+
+.contest-ops-card__meta {
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+  .contest-ops-hero,
+  .contest-ops-section {
+    padding: 1.15rem;
+  }
+
+  .contest-ops-card {
+    padding: 1rem;
+  }
+
+  .contest-ops-card__actions {
+    align-items: stretch;
   }
 }
 </style>

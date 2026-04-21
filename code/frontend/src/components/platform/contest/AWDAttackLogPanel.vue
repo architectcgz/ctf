@@ -30,10 +30,16 @@ function updateAttackSourceFilter(value: string): void {
     <header class="log-toolbar">
       <div class="toolbar-left">
         <div class="flex items-center gap-3">
-          <div class="toolbar-icon"><Sword class="h-4 w-4" /></div>
+          <div class="toolbar-icon">
+            <Sword class="h-4 w-4" />
+          </div>
           <div>
-            <h3 class="toolbar-title">攻击流量审计流水</h3>
-            <p class="toolbar-hint">Real-time Attack Vector Monitoring</p>
+            <h3 class="toolbar-title">
+              攻击流量审计流水
+            </h3>
+            <p class="toolbar-hint">
+              Real-time Attack Vector Monitoring
+            </p>
           </div>
         </div>
       </div>
@@ -46,17 +52,31 @@ function updateAttackSourceFilter(value: string): void {
               class="log-select"
               @change="emit('updateAttackTeamFilter', ($event.target as HTMLSelectElement).value)"
             >
-              <option value="">全部参与队</option>
-              <option v-for="team in attackTeamOptions" :key="team.id" :value="team.id">{{ team.name }}</option>
+              <option value="">
+                全部参与队
+              </option>
+              <option
+                v-for="team in attackTeamOptions"
+                :key="team.id"
+                :value="team.id"
+              >
+                {{ team.name }}
+              </option>
             </select>
             <select
               :value="attackResultFilter"
               class="log-select"
               @change="updateAttackResultFilter(($event.target as HTMLSelectElement).value)"
             >
-              <option value="all">所有交互结果</option>
-              <option value="success">攻击成功 (BREACH)</option>
-              <option value="failed">尝试失败 (DROP)</option>
+              <option value="all">
+                所有交互结果
+              </option>
+              <option value="success">
+                攻击成功 (BREACH)
+              </option>
+              <option value="failed">
+                尝试失败 (DROP)
+              </option>
             </select>
           </div>
           <button
@@ -74,12 +94,18 @@ function updateAttackSourceFilter(value: string): void {
 
     <!-- 2. High-Density Event Feed -->
     <div class="event-feed-container custom-scrollbar">
-      <div v-if="filteredAttacks.length === 0" class="empty-feed">
+      <div
+        v-if="filteredAttacks.length === 0"
+        class="empty-feed"
+      >
         <History class="h-10 w-10 opacity-10 mb-4" />
         <p>当前时段未监测到符合条件的攻击矢量</p>
       </div>
 
-      <div v-else class="event-list">
+      <div
+        v-else
+        class="event-list"
+      >
         <article 
           v-for="attack in filteredAttacks" 
           :key="attack.id" 
@@ -88,20 +114,28 @@ function updateAttackSourceFilter(value: string): void {
         >
           <!-- Time & Status Marker -->
           <div class="event-marker">
-            <div class="marker-time font-mono">{{ formatDateTime(attack.created_at).split(' ')[1] }}</div>
-            <div class="marker-dot"></div>
+            <div class="marker-time font-mono">
+              {{ formatDateTime(attack.created_at).split(' ')[1] }}
+            </div>
+            <div class="marker-dot" />
           </div>
 
           <!-- Interaction Detail -->
           <div class="event-body">
             <div class="event-primary">
               <div class="vector-wrap">
-                <span class="actor attacker" title="攻击方">{{ attack.attacker_team }}</span>
+                <span
+                  class="actor attacker"
+                  title="攻击方"
+                >{{ attack.attacker_team }}</span>
                 <div class="vector-line">
-                  <div class="line-path"></div>
+                  <div class="line-path" />
                   <ArrowRight class="h-3 w-3 line-head" />
                 </div>
-                <span class="actor victim" title="受害方">{{ attack.victim_team }}</span>
+                <span
+                  class="actor victim"
+                  title="受害方"
+                >{{ attack.victim_team }}</span>
               </div>
 
               <div class="event-meta">
@@ -109,7 +143,7 @@ function updateAttackSourceFilter(value: string): void {
                   <Target class="h-3 w-3" />
                   <span>{{ getChallengeTitle(attack.challenge_id) }}</span>
                 </div>
-                <div class="meta-divider"></div>
+                <div class="meta-divider" />
                 <div class="meta-item opacity-60">
                   <span>{{ getAttackSourceLabel(attack.source) }}</span>
                 </div>
@@ -117,12 +151,18 @@ function updateAttackSourceFilter(value: string): void {
             </div>
 
             <div class="event-secondary">
-              <div v-if="attack.is_success" class="result-badge success">
+              <div
+                v-if="attack.is_success"
+                class="result-badge success"
+              >
                 <ShieldCheck class="h-3 w-3" />
                 <span>SUCCESS</span>
                 <span class="score-delta font-mono">+{{ attack.score_gained }}</span>
               </div>
-              <div v-else class="result-badge failed">
+              <div
+                v-else
+                class="result-badge failed"
+              >
                 <span>DROPPED</span>
               </div>
             </div>

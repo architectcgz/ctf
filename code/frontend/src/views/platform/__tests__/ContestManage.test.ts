@@ -539,7 +539,7 @@ describe('ContestManage', () => {
     wrapper.unmount()
   })
 
-  it('管理页工作台入口应跳转到具体竞赛工作台，且不再保留顶层并行运维标签', async () => {
+  it('管理页运维入口应跳转到单场运维台，且不再回到编辑页 operations 阶段', async () => {
     window.sessionStorage.setItem('ctf_admin_awd_ops_panel:awd-running', 'challenges')
     contestMocks.getContests.mockResolvedValue({
       list: [
@@ -580,14 +580,13 @@ describe('ContestManage', () => {
     await flushPromises()
 
     expect(wrapper.find('#contest-panel-operations').exists()).toBe(false)
-    expect(wrapper.text()).toContain('进入 AWD 赛区')
+    expect(wrapper.text()).toContain('进入运维台')
 
     await wrapper.get('#contest-open-workbench-awd-running').trigger('click')
 
     expect(pushMock).toHaveBeenCalledWith({
-      name: 'ContestEdit',
+      name: 'ContestOperations',
       params: { id: 'awd-running' },
-      query: { panel: 'operations', opsPanel: 'inspector' },
     })
   })
 
@@ -634,7 +633,7 @@ describe('ContestManage', () => {
     await wrapper.get('#contest-description').setValue('迎新赛')
     await wrapper.get('#contest-starts-at').setValue('2026-03-20T09:00')
     await wrapper.get('#contest-ends-at').setValue('2026-03-20T12:00')
-    await wrapper.get('#contest-panel-create .contest-form-button--primary').trigger('click')
+    await wrapper.get('#contest-panel-create form').trigger('submit')
     await flushPromises()
 
     expect(contestMocks.createContest).toHaveBeenCalledWith({

@@ -684,6 +684,9 @@ export interface AdminContestAWDServiceData {
   contest_id: ID
   challenge_id: ID
   template_id?: ID
+  title?: string
+  category?: ChallengeCategory
+  difficulty?: ChallengeDifficulty
   display_name: string
   order: number
   is_visible: boolean
@@ -1281,7 +1284,7 @@ export interface AdminAwdServiceTemplateData {
   id: ID
   name: string
   slug: string
-  category: string
+  category: ChallengeCategory
   difficulty: ChallengeDifficulty
   description: string
   service_type: AWDServiceType

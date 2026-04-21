@@ -13,14 +13,17 @@ defineProps<AWDScoreboardSummaryPanelProps>()
         <Trophy class="h-4 w-4 text-amber-500" />
         <span>全场总分排名</span>
       </div>
-      <div class="context-divider"></div>
+      <div class="context-divider" />
       <div class="context-item">
         <Users class="h-4 w-4 text-slate-400" />
         <span>活跃参赛队伍: {{ scoreboardRows.length }}</span>
       </div>
-      <div class="context-divider"></div>
-      <div class="context-item" v-if="scoreboardFrozen">
-        <div class="frozen-dot"></div>
+      <div class="context-divider" />
+      <div
+        v-if="scoreboardFrozen"
+        class="context-item"
+      >
+        <div class="frozen-dot" />
         <span class="text-orange-500 font-bold">排行榜已冻结</span>
       </div>
     </div>
@@ -30,17 +33,32 @@ defineProps<AWDScoreboardSummaryPanelProps>()
       <table class="studio-table">
         <thead>
           <tr>
-            <th class="w-24">当前排名</th>
+            <th class="w-24">
+              当前排名
+            </th>
             <th>队伍/选手</th>
-            <th class="text-right">累积总分</th>
-            <th class="text-right">解题进度</th>
-            <th class="text-right">最后命中时间</th>
+            <th class="text-right">
+              累积总分
+            </th>
+            <th class="text-right">
+              解题进度
+            </th>
+            <th class="text-right">
+              最后命中时间
+            </th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="item in scoreboardRows" :key="item.team_id" class="studio-row">
+          <tr
+            v-for="item in scoreboardRows"
+            :key="item.team_id"
+            class="studio-row"
+          >
             <td>
-              <div class="rank-badge" :class="`rank-${item.rank}`">
+              <div
+                class="rank-badge"
+                :class="`rank-${item.rank}`"
+              >
                 #{{ String(item.rank).padStart(2, '0') }}
               </div>
             </td>
@@ -61,10 +79,15 @@ defineProps<AWDScoreboardSummaryPanelProps>()
             </td>
           </tr>
           <tr v-if="scoreboardRows.length === 0">
-            <td colspan="5" class="py-24 text-center">
+            <td
+              colspan="5"
+              class="py-24 text-center"
+            >
               <div class="flex flex-col items-center gap-3 opacity-20">
                 <Trophy class="h-12 w-12" />
-                <p class="text-sm font-bold">暂无积分记录，比赛尚未产生得分</p>
+                <p class="text-sm font-bold">
+                  暂无积分记录，比赛尚未产生得分
+                </p>
               </div>
             </td>
           </tr>

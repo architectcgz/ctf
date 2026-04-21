@@ -107,17 +107,6 @@ func TestInstanceServiceGetUserInstancesPrefersContestAWDServiceMetadata(t *test
 		CreatedAt:  now,
 		UpdatedAt:  now,
 	})
-	seedInstanceServiceChallenge(t, db, &model.Challenge{
-		ID:         202,
-		Title:      "Bank Portal Source",
-		Category:   model.DimensionPwn,
-		Difficulty: model.ChallengeDifficultyHard,
-		FlagType:   model.FlagTypeDynamic,
-		Status:     model.ChallengeStatusPublished,
-		Points:     300,
-		CreatedAt:  now,
-		UpdatedAt:  now,
-	})
 	if err := db.Create(&model.Contest{
 		ID:        contestID,
 		Title:     "AWD Contest",
@@ -139,6 +128,7 @@ func TestInstanceServiceGetUserInstancesPrefersContestAWDServiceMetadata(t *test
 		IsVisible:       true,
 		ScoreConfig:     `{"points":300}`,
 		RuntimeConfig:   `{"checker_type":"http_standard"}`,
+		ServiceSnapshot: `{"name":"Bank Portal","category":"pwn","difficulty":"hard","flag_config":{"flag_type":"dynamic","flag_prefix":"awd"}}`,
 		ValidationState: model.AWDCheckerValidationStatePassed,
 		CreatedAt:       now,
 		UpdatedAt:       now,
@@ -193,7 +183,7 @@ func TestInstanceServiceGetUserInstancesPrefersContestAWDServiceMetadata(t *test
 		t.Fatalf("expected awd instance title from contest service display name, got %+v", items[0])
 	}
 	if items[0].Category != model.DimensionPwn || items[0].Difficulty != model.ChallengeDifficultyHard || items[0].FlagType != model.FlagTypeDynamic {
-		t.Fatalf("expected awd instance metadata from contest service challenge, got %+v", items[0])
+		t.Fatalf("expected awd instance metadata from contest service snapshot, got %+v", items[0])
 	}
 }
 
@@ -487,7 +477,6 @@ func TestInstanceServiceListTeacherInstancesPrefersContestAWDServiceMetadata(t *
 	seedInstanceServiceUser(t, db, &model.User{ID: 1, Username: "teacher-a", Role: model.RoleTeacher, ClassName: "Class A", Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now})
 	seedInstanceServiceUser(t, db, &model.User{ID: 2, Username: "alice", StudentNo: "S-1001", Role: model.RoleStudent, ClassName: "Class A", Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now})
 	seedInstanceServiceChallenge(t, db, &model.Challenge{ID: 211, Title: "Legacy Runtime Challenge", Category: model.DimensionWeb, Difficulty: model.ChallengeDifficultyEasy, FlagType: model.FlagTypeStatic, Status: model.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now})
-	seedInstanceServiceChallenge(t, db, &model.Challenge{ID: 212, Title: "Bank Portal Source", Category: model.DimensionPwn, Difficulty: model.ChallengeDifficultyHard, FlagType: model.FlagTypeDynamic, Status: model.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now})
 	if err := db.Create(&model.Contest{
 		ID:        contestID,
 		Title:     "AWD Contest",
@@ -509,6 +498,7 @@ func TestInstanceServiceListTeacherInstancesPrefersContestAWDServiceMetadata(t *
 		IsVisible:       true,
 		ScoreConfig:     `{"points":300}`,
 		RuntimeConfig:   `{"checker_type":"http_standard"}`,
+		ServiceSnapshot: `{"name":"Bank Portal","category":"pwn","difficulty":"hard","flag_config":{"flag_type":"dynamic","flag_prefix":"awd"}}`,
 		ValidationState: model.AWDCheckerValidationStatePassed,
 		CreatedAt:       now,
 		UpdatedAt:       now,

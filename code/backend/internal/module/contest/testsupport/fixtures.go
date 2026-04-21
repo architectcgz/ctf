@@ -150,6 +150,7 @@ func CreateAWDChallengeFixture(t *testing.T, db *gorm.DB, challengeID int64, now
 		Points:     100,
 		Status:     model.ChallengeStatusPublished,
 		FlagType:   model.FlagTypeStatic,
+		FlagPrefix: "awd",
 		CreatedAt:  now,
 		UpdatedAt:  now,
 	}).Error; err != nil {
@@ -190,11 +191,14 @@ func CreateAWDContestChallengeFixture(t *testing.T, db *gorm.DB, contestID, chal
 		return
 	}
 
+	serviceSnapshot := buildAWDContestServiceFixtureSnapshot(t, db, challengeID)
+
 	if err := db.Create(&model.ContestAWDService{
 		ID:                DefaultAWDContestServiceID(contestID, challengeID),
 		ContestID:         contestID,
 		ChallengeID:       challengeID,
 		DisplayName:       fmt.Sprintf("awd-service-%d", challengeID),
+		ServiceSnapshot:   serviceSnapshot,
 		Order:             0,
 		IsVisible:         true,
 		ScoreConfig:       `{"points":100}`,
@@ -252,13 +256,15 @@ func SyncAWDContestServiceFixture(
 	if err != nil {
 		t.Fatalf("marshal awd score config: %v", err)
 	}
+	serviceSnapshot := buildAWDContestServiceFixtureSnapshot(t, db, challengeID)
 
 	updates := map[string]any{
-		"display_name":   displayName,
-		"is_visible":     true,
-		"score_config":   string(scoreConfigRaw),
-		"runtime_config": string(runtimeConfigRaw),
-		"updated_at":     now,
+		"display_name":     displayName,
+		"is_visible":       true,
+		"score_config":     string(scoreConfigRaw),
+		"runtime_config":   string(runtimeConfigRaw),
+		"service_snapshot": serviceSnapshot,
+		"updated_at":       now,
 	}
 	result := db.Model(&model.ContestAWDService{}).
 		Where("contest_id = ? AND challenge_id = ?", contestID, challengeID).
@@ -275,6 +281,7 @@ func SyncAWDContestServiceFixture(
 		ContestID:         contestID,
 		ChallengeID:       challengeID,
 		DisplayName:       displayName,
+		ServiceSnapshot:   serviceSnapshot,
 		Order:             0,
 		IsVisible:         true,
 		ScoreConfig:       string(scoreConfigRaw),
@@ -316,6 +323,42 @@ func SyncAWDContestServiceReadinessFixture(
 
 func DefaultAWDContestServiceID(contestID, challengeID int64) int64 {
 	return contestID*1_000_000_000 + challengeID
+}
+
+func buildAWDContestServiceFixtureSnapshot(t *testing.T, db *gorm.DB, challengeID int64) string {
+	t.Helper()
+
+	var challenge model.Challenge
+	if err := db.WithContext(context.Background()).Where("id = ?", challengeID).First(&challenge).Error; err != nil {
+		t.Fatalf("load awd challenge fixture: %v", err)
+	}
+	snapshot := model.ContestAWDServiceSnapshot{
+		Name:       challenge.Title,
+		Category:   challenge.Category,
+		Difficulty: challenge.Difficulty,
+		FlagConfig: map[string]any{
+			"flag_type":   challenge.FlagType,
+			"flag_prefix": firstFixtureValue(challenge.FlagPrefix, "flag"),
+		},
+		RuntimeConfig: map[string]any{},
+	}
+	if challenge.ImageID > 0 {
+		snapshot.RuntimeConfig["image_id"] = challenge.ImageID
+	}
+	raw, err := model.EncodeContestAWDServiceSnapshot(snapshot)
+	if err != nil {
+		t.Fatalf("encode awd service snapshot fixture: %v", err)
+	}
+	return raw
+}
+
+func firstFixtureValue(values ...string) string {
+	for _, value := range values {
+		if trimmed := strings.TrimSpace(value); trimmed != "" {
+			return trimmed
+		}
+	}
+	return ""
 }
 
 func CreateAWDTeamFixture(t *testing.T, db *gorm.DB, teamID, contestID int64, name string, now time.Time) {

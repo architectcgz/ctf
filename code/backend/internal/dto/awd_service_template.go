@@ -13,7 +13,7 @@ type AWDServiceTemplateQuery struct {
 type CreateAWDServiceTemplateReq struct {
 	Name           string `json:"name" binding:"required"`
 	Slug           string `json:"slug" binding:"required"`
-	Category       string `json:"category" binding:"required"`
+	Category       string `json:"category" binding:"required,oneof=web pwn reverse crypto misc forensics"`
 	Difficulty     string `json:"difficulty" binding:"required,oneof=beginner easy medium hard insane"`
 	Description    string `json:"description"`
 	ServiceType    string `json:"service_type" binding:"required,oneof=web_http binary_tcp multi_container"`
@@ -23,7 +23,7 @@ type CreateAWDServiceTemplateReq struct {
 type UpdateAWDServiceTemplateReq struct {
 	Name           string `json:"name"`
 	Slug           string `json:"slug"`
-	Category       string `json:"category"`
+	Category       string `json:"category" binding:"omitempty,oneof=web pwn reverse crypto misc forensics"`
 	Difficulty     string `json:"difficulty" binding:"omitempty,oneof=beginner easy medium hard insane"`
 	Description    string `json:"description"`
 	ServiceType    string `json:"service_type" binding:"omitempty,oneof=web_http binary_tcp multi_container"`

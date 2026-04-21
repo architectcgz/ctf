@@ -21,6 +21,9 @@ describe('backofficeRouteMeta', () => {
 
   it('maps deep backoffice routes back to their owning secondary entry', () => {
     expect(getBackofficeActiveSecondaryRouteName('/platform/contests/77/edit')).toBe('ContestManage')
+    expect(getBackofficeActiveSecondaryRouteName('/platform/contests/77/manage')).toBe(
+      'PlatformContestOpsIndex'
+    )
     expect(getBackofficeActiveSecondaryRouteName('/academy/awd-reviews/contest-1')).toBe(
       'TeacherAWDReviewIndex'
     )
