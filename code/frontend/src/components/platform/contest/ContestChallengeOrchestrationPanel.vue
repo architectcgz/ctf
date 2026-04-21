@@ -561,10 +561,40 @@ onMounted(() => {
 .ops-btn { display: inline-flex; align-items: center; gap: 0.5rem; height: 2.25rem; padding: 0 1rem; border-radius: 0.75rem; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s ease; }
 .ops-btn--neutral { background: var(--color-bg-surface); border: 1px solid var(--color-border-default); color: var(--color-text-secondary); }
 .ops-btn--primary { background: var(--color-primary); color: white; border: none; box-shadow: 0 4px 12px color-mix(in srgb, var(--color-primary) 15%, transparent); }
-.studio-metric-band { display: flex; gap: 0.75rem; padding: 1rem; background: var(--color-bg-elevated); border: 1px solid var(--color-border-default); border-radius: 1rem; }
-.metric-pill { background: var(--color-bg-surface); border: 1px solid var(--color-border-default); padding: 0.5rem 1rem; border-radius: 0.75rem; display: flex; align-items: baseline; gap: 0.75rem; }
-.metric-pill__label { font-size: 9px; font-weight: 800; text-transform: uppercase; color: var(--color-text-secondary); letter-spacing: 0.05em; }
-.metric-pill__value { font-size: 14px; font-weight: 900; color: var(--color-text-primary); font-family: var(--font-family-mono); }
+/* Metric Band - Flattened and Scaled Up */
+.studio-metric-band {
+  display: flex;
+  gap: var(--space-4);
+  background: transparent;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+}
+.metric-pill {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-default);
+  padding: var(--space-4) var(--space-6);
+  border-radius: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 9rem;
+  box-shadow: var(--color-shadow-soft);
+}
+.metric-pill__label {
+  font-size: var(--font-size-11);
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  letter-spacing: 0.1em;
+}
+.metric-pill__value {
+  font-size: var(--font-size-20);
+  font-weight: 900;
+  color: var(--color-primary);
+  font-family: var(--font-family-mono);
+  line-height: 1.1;
+}
 .studio-quick-nav { display: flex; gap: 0.5rem; margin-bottom: 0.5rem; }
 .nav-pill { padding: 0.45rem 1rem; border-radius: 999px; background: var(--color-bg-surface); border: 1px solid var(--color-border-default); font-size: 12px; font-weight: 700; color: var(--color-text-secondary); cursor: pointer; display: flex; align-items: center; gap: 0.5rem; }
 .nav-pill.active { background: var(--color-primary-soft); border-color: var(--color-primary); color: var(--color-primary); }
