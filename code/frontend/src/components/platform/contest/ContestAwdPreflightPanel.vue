@@ -65,14 +65,12 @@ function handleNavigateChallenge(challengeId: string) {
       </div>
     </header>
 
-    <div class="studio-preflight-body">
-      <AWDReadinessSummary
-        :readiness="readiness"
-        :loading="loading"
-        action-label="修正配置"
-        @edit-config="handleNavigateChallenge"
-      />
-    </div>
+    <AWDReadinessSummary
+      :readiness="readiness"
+      :loading="loading"
+      action-label="修正配置"
+      @edit-config="handleNavigateChallenge"
+    />
   </section>
 </template>
 
@@ -145,13 +143,6 @@ function handleNavigateChallenge(challengeId: string) {
 .ops-btn--primary:hover {
   background: color-mix(in srgb, var(--color-warning) 90%, black);
   transform: translateY(-1px);
-}
-
-.studio-preflight-body {
-  background: var(--color-bg-surface);
-  border-radius: 1.25rem;
-  border: 1px solid var(--color-border-default);
-  overflow: hidden;
 }
 
 @media (max-width: 1280px) {
