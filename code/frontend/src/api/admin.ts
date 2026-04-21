@@ -2105,6 +2105,7 @@ export async function previewAdminAwdServiceTemplateImport(
     method: 'POST',
     url: '/authoring/awd-service-template-imports',
     data: formData,
+    headers: { 'Content-Type': 'multipart/form-data' },
   })
   return normalizeAdminAwdServiceTemplateImportPreview(response)
 }
