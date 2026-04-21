@@ -420,16 +420,16 @@ function handleOverrideDialogOpenChange(value: boolean) {
   flex-direction: column;
 }
 
-.section-header { border-left: 4px solid var(--color-primary); padding-left: 1.25rem; }
-.section-title { font-size: 1.15rem; font-weight: 900; color: var(--color-text-primary); margin: 0; }
-.section-hint { font-size: 13px; color: var(--color-text-secondary); margin-top: 0.35rem; }
+.section-header { border-left: 4px solid var(--color-primary); padding-left: var(--space-5); }
+.section-title { font-size: var(--font-size-1-15); font-weight: 900; color: var(--color-text-primary); margin: 0; }
+.section-hint { font-size: var(--font-size-13); color: var(--color-text-secondary); margin-top: var(--space-1-5); }
 
-.studio-ops-tabs { display: flex; gap: 2rem; border-bottom: 1px solid var(--color-border-default); margin-bottom: 1.5rem; }
-.tab-item { padding: 0.75rem 0.25rem; font-size: 13px; font-weight: 800; color: var(--color-text-secondary); border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.2s ease; }
+.studio-ops-tabs { display: flex; gap: var(--space-8); border-bottom: 1px solid var(--color-border-default); margin-bottom: var(--space-6); }
+.tab-item { padding: 0.75rem 0.25rem; font-size: var(--font-size-13); font-weight: 800; color: var(--color-text-secondary); border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.2s ease; }
 .tab-item:hover { color: var(--color-text-primary); }
 .tab-item.active { color: var(--color-primary); border-bottom-color: var(--color-primary); }
 
-.runtime-readiness-strip { margin-bottom: 1.5rem; }
+.runtime-readiness-strip { margin-bottom: var(--space-6); }
 
 .inspector-wrap { min-width: 0; }
 </style>

@@ -193,11 +193,11 @@ function navigateRound(delta: number) {
 
 <style scoped>
 .awd-ops-header {
-  padding: 0 0 2rem; /* 移除外框，调整边距对齐主内容 */
+  padding: 0 0 2rem;
   background: transparent;
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: var(--space-5);
 }
 
 .awd-ops-header__top {
@@ -207,31 +207,31 @@ function navigateRound(delta: number) {
 }
 
 .awd-ops-header__overline {
-  font-size: 10px;
+  font-size: var(--font-size-10);
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.2em;
-  color: #94a3b8;
+  color: var(--color-text-muted);
   margin-bottom: 0.5rem;
 }
 
 .awd-ops-header__title {
-  font-size: 1.5rem;
+  font-size: var(--font-size-1-45);
   font-weight: 900;
   letter-spacing: -0.02em;
-  color: #0f172a;
+  color: var(--color-text-primary);
   margin: 0;
 }
 
-/* Round Switcher - 更加轻量 */
+/* Round Switcher */
 .round-switcher {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
-  background: white;
+  gap: var(--space-1);
+  background: var(--color-bg-surface);
   padding: 0.25rem;
   border-radius: 0.85rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--color-border-default);
 }
 
 .round-nav-btn {
@@ -241,14 +241,16 @@ function navigateRound(delta: number) {
   align-items: center;
   justify-content: center;
   border-radius: 0.65rem;
-  color: #64748b;
+  color: var(--color-text-secondary);
   transition: all 0.2s ease;
   cursor: pointer;
+  background: transparent;
+  border: none;
 }
 
 .round-nav-btn:hover:not(:disabled) {
-  background: #f8fafc;
-  color: #3b82f6;
+  background: var(--color-bg-elevated);
+  color: var(--color-primary);
 }
 
 .round-nav-btn:disabled {
@@ -259,16 +261,16 @@ function navigateRound(delta: number) {
 .round-select-wrapper {
   position: relative;
   height: 2.25rem;
-  padding: 0 1rem;
+  padding: 0 var(--space-4);
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  border-left: 1px solid #f1f5f9;
-  border-right: 1px solid #f1f5f9;
+  gap: var(--space-3);
+  border-left: 1px solid var(--color-border-subtle);
+  border-right: 1px solid var(--color-border-subtle);
   min-width: 10rem;
 }
 
-.select-icon { color: #cbd5e1; }
+.select-icon { color: var(--color-text-muted); }
 
 .round-select-native {
   position: absolute;
@@ -281,48 +283,48 @@ function navigateRound(delta: number) {
 .round-select-display {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 13px;
-  color: #1e293b;
+  gap: var(--space-2);
+  font-size: var(--font-size-13);
+  color: var(--color-text-primary);
 }
 
 .status-dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #cbd5e1;
+  background: var(--color-border-default);
 }
-.status-dot.running { background: #22c55e; box-shadow: 0 0 10px rgba(34, 197, 94, 0.4); }
+.status-dot.running { background: var(--color-success); box-shadow: 0 0 10px color-mix(in srgb, var(--color-success) 40%, transparent); }
 
 .ops-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  height: 2.5rem;
-  padding: 0 1.25rem;
+  gap: var(--space-2);
+  height: var(--ui-control-height-md);
+  padding: 0 var(--space-5);
   border-radius: 0.85rem;
-  font-size: 13px;
+  font-size: var(--font-size-13);
   font-weight: 700;
   transition: all 0.2s ease;
   cursor: pointer;
 }
 
 .ops-btn--neutral {
-  background: white;
-  border: 1px solid #e2e8f0;
-  color: #475569;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-default);
+  color: var(--color-text-secondary);
 }
 
 .ops-btn--neutral:hover:not(:disabled) {
-  border-color: #cbd5e1;
-  color: #0f172a;
+  border-color: var(--color-primary);
+  color: var(--color-text-primary);
 }
 
 .ops-btn--primary {
-  background: #2563eb;
+  background: var(--color-primary);
   color: white;
   border: none;
-  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.15);
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--color-primary) 15%, transparent);
 }
 
 .ops-btn:disabled {
@@ -333,18 +335,18 @@ function navigateRound(delta: number) {
 .ops-divider {
   width: 1px;
   height: 1.5rem;
-  background: #e2e8f0;
-  margin: 0 0.5rem;
+  background: var(--color-border-default);
+  margin: 0 var(--space-2);
 }
 
 .awd-ops-header__bottom {
-  padding-top: 1rem;
-  border-top: 1px solid color-mix(in srgb, var(--workspace-line-soft) 40%, transparent);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border-subtle);
 }
 
-.hint-item { font-size: 11px; font-weight: 600; color: #94a3b8; }
-.hint-item--live { color: #2563eb; display: flex; align-items: center; gap: 0.5rem; }
-.pulse-dot { width: 6px; height: 6px; background: #2563eb; border-radius: 50%; animation: pulse 2s infinite; }
+.hint-item { font-size: var(--font-size-11); font-weight: 600; color: var(--color-text-muted); }
+.hint-item--live { color: var(--color-primary); display: flex; align-items: center; gap: var(--space-2); }
+.pulse-dot { width: 6px; height: 6px; background: var(--color-primary); border-radius: 50%; animation: pulse 2s infinite; }
 
 @keyframes pulse {
   0% { transform: scale(0.95); }
@@ -353,7 +355,7 @@ function navigateRound(delta: number) {
 }
 
 @media (max-width: 1280px) {
-  .awd-ops-header__top { flex-direction: column; align-items: flex-start; gap: 1.5rem; }
+  .awd-ops-header__top { flex-direction: column; align-items: flex-start; gap: var(--space-6); }
   .awd-ops-header__actions { width: 100%; overflow-x: auto; padding-bottom: 0.5rem; }
 }
 </style>

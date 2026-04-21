@@ -14,6 +14,7 @@ import {
 } from '@/api/admin'
 import type {
   AdminAwdServiceTemplateData,
+  AdminContestAWDServiceSavePayload,
   AdminContestChallengeViewData,
   AWDReadinessData,
   ContestDetailData,
@@ -246,7 +247,7 @@ function openAwdChallengeEditDialog(challenge: AdminContestChallengeViewData) {
   void loadAwdServiceTemplateCatalog()
 }
 
-async function handleSaveAwdChallengeConfig(payload: any) {
+async function handleSaveAwdChallengeConfig(payload: AdminContestAWDServiceSavePayload) {
   if (!contest.value) return
   savingChallengeConfig.value = true
   try {

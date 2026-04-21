@@ -292,33 +292,33 @@ function handleExport(contest: ContestDetailData): void {
 }
 
 .contest-status-pill--running {
-  --ui-badge-border: color-mix(in srgb, #22d3ee 38%, transparent);
-  --ui-badge-background: color-mix(in srgb, #22d3ee 16%, var(--journal-surface));
-  --ui-badge-color: #67e8f9;
+  --ui-badge-border: color-mix(in srgb, var(--color-brand-swatch-cyan) 38%, transparent);
+  --ui-badge-background: color-mix(in srgb, var(--color-brand-swatch-cyan) 16%, var(--color-bg-surface));
+  --ui-badge-color: color-mix(in srgb, var(--color-brand-swatch-cyan) 85%, var(--color-text-primary));
 }
 
 .contest-status-pill--registering {
-  --ui-badge-border: color-mix(in srgb, #f59e0b 34%, transparent);
-  --ui-badge-background: color-mix(in srgb, #f59e0b 15%, var(--journal-surface));
-  --ui-badge-color: #fbbf24;
+  --ui-badge-border: color-mix(in srgb, var(--color-brand-swatch-orange) 34%, transparent);
+  --ui-badge-background: color-mix(in srgb, var(--color-brand-swatch-orange) 15%, var(--color-bg-surface));
+  --ui-badge-color: var(--color-warning);
 }
 
 .contest-status-pill--draft {
-  --ui-badge-border: color-mix(in srgb, #a78bfa 28%, transparent);
-  --ui-badge-background: color-mix(in srgb, #a78bfa 12%, var(--journal-surface));
-  --ui-badge-color: #c4b5fd;
+  --ui-badge-border: color-mix(in srgb, var(--color-primary) 28%, transparent);
+  --ui-badge-background: color-mix(in srgb, var(--color-primary) 12%, var(--color-bg-surface));
+  --ui-badge-color: var(--color-primary);
 }
 
 .contest-status-pill--frozen {
-  --ui-badge-border: color-mix(in srgb, #60a5fa 30%, transparent);
-  --ui-badge-background: color-mix(in srgb, #60a5fa 13%, var(--journal-surface));
-  --ui-badge-color: #93c5fd;
+  --ui-badge-border: color-mix(in srgb, var(--color-brand-swatch-blue) 30%, transparent);
+  --ui-badge-background: color-mix(in srgb, var(--color-brand-swatch-blue) 13%, var(--color-bg-surface));
+  --ui-badge-color: color-mix(in srgb, var(--color-brand-swatch-blue) 85%, var(--color-text-primary));
 }
 
 .contest-status-pill--ended {
-  --ui-badge-border: color-mix(in srgb, #34d399 28%, transparent);
-  --ui-badge-background: color-mix(in srgb, #34d399 12%, var(--journal-surface));
-  --ui-badge-color: #6ee7b7;
+  --ui-badge-border: color-mix(in srgb, var(--color-success) 28%, transparent);
+  --ui-badge-background: color-mix(in srgb, var(--color-success) 12%, var(--color-bg-surface));
+  --ui-badge-color: var(--color-success);
 }
 
 .contest-status-pill--cancelled,

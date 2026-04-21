@@ -346,13 +346,13 @@ function handleSubmit() {
 
 .info-icon {
   width: 2.25rem; height: 2.25rem; border-radius: 0.75rem;
-  background: #eff6ff; color: #3b82f6;
+  background: var(--color-primary-soft); color: var(--color-primary);
   display: flex; align-items: center; justify-content: center;
   margin-bottom: 1.25rem;
 }
 
-.info-title { font-size: 1rem; font-weight: 900; color: #0f172a; margin: 0; }
-.info-desc { font-size: 13px; color: #64748b; line-height: 1.6; margin-top: 0.5rem; }
+.info-title { font-size: var(--font-size-1-00); font-weight: 900; color: var(--color-text-primary); margin: 0; }
+.info-desc { font-size: var(--font-size-13); color: var(--color-text-secondary); line-height: 1.6; margin-top: 0.5rem; }
 
 .settings-group__content {
   display: flex;
@@ -366,26 +366,26 @@ function handleSubmit() {
   gap: 0.75rem;
 }
 
-.row-label { font-size: 13px; font-weight: 800; color: #1e293b; }
+.row-label { font-size: var(--font-size-13); font-weight: 800; color: var(--color-text-primary); }
 .row-control { width: 100%; max-width: 36rem; }
 
 .control-wrap {
-  width: 100%; border-radius: 0.6rem; border: 1px solid #e2e8f0;
-  background: white; transition: all 0.2s ease;
+  width: 100%; border-radius: 0.8rem; border: 1px solid var(--color-border-default);
+  background: var(--color-bg-surface); transition: all 0.2s ease;
   overflow: hidden;
 }
-.control-wrap:focus-within { border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.06); }
-.control-wrap.is-error { border-color: #ef4444; }
-.control-wrap.is-disabled { background: #f8fafc; opacity: 0.7; cursor: not-allowed; }
+.control-wrap:focus-within { border-color: var(--color-primary); box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-primary) 12%, transparent); }
+.control-wrap.is-error { border-color: var(--color-danger); }
+.control-wrap.is-disabled { background: var(--color-bg-elevated); opacity: 0.7; cursor: not-allowed; }
 
 .studio-input, .studio-select, .studio-textarea {
   width: 100%; border: none; background: transparent; padding: 0.65rem 0.85rem;
-  font-size: 14px; font-weight: 600; color: #1e293b; outline: none;
+  font-size: var(--font-size-14); font-weight: 600; color: var(--color-text-primary); outline: none;
 }
 .studio-textarea { min-height: 7rem; resize: vertical; line-height: 1.6; }
 
-.field-hint { font-size: 12px; color: #94a3b8; margin-top: 0.45rem; font-weight: 500; }
-.field-error { font-size: 12px; color: #ef4444; font-weight: 700; }
+.field-hint { font-size: var(--font-size-12); color: var(--color-text-muted); margin-top: 0.45rem; font-weight: 500; }
+.field-error { font-size: var(--font-size-12); color: var(--color-danger); font-weight: 700; }
 
 .contest-form-actions {
   display: flex;
@@ -396,17 +396,17 @@ function handleSubmit() {
 
 /* Mode Cards */
 .mode-card {
-  flex: 1; padding: 1.5rem; border-radius: 1rem; border: 1px solid #e2e8f0;
-  background: white; display: flex; flex-direction: column; align-items: center;
-  cursor: pointer; transition: all 0.2s ease; color: #64748b;
+  flex: 1; padding: 1.5rem; border-radius: 1rem; border: 1px solid var(--color-border-default);
+  background: var(--color-bg-surface); display: flex; flex-direction: column; align-items: center;
+  cursor: pointer; transition: all 0.2s ease; color: var(--color-text-secondary);
 }
-.mode-card:hover:not(.disabled) { border-color: #3b82f6; background: #f8fafc; }
-.mode-card.active { border-color: #3b82f6; background: #eff6ff; color: #2563eb; box-shadow: 0 4px 12px rgba(37,99,235,0.1); }
-.mode-card.active .mode-label { color: #1e293b; }
+.mode-card:hover:not(.disabled) { border-color: var(--color-primary); background: var(--color-bg-elevated); }
+.mode-card.active { border-color: var(--color-primary); background: var(--color-primary-soft); color: var(--color-primary); box-shadow: 0 4px 12px color-mix(in srgb, var(--color-primary) 15%, transparent); }
+.mode-card.active .mode-label { color: var(--color-text-primary); }
 .mode-card.disabled { opacity: 0.6; cursor: not-allowed; }
 
-.mode-label { font-size: 14px; font-weight: 900; margin-bottom: 0.25rem; }
-.mode-desc { font-size: 11px; opacity: 0.8; }
+.mode-label { font-size: var(--font-size-14); font-weight: 900; margin-bottom: 0.25rem; }
+.mode-desc { font-size: var(--font-size-11); opacity: 0.8; }
 
 @media (max-width: 1024px) {
   .settings-group { grid-template-columns: 1fr; gap: 1.5rem; }
