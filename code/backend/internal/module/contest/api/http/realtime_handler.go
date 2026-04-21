@@ -56,6 +56,15 @@ func (h *RealtimeHandler) ServeScoreboardWS(c *gin.Context) {
 	h.serveContestWS(c, contestports.ScoreboardChannel(contestID))
 }
 
+func (h *RealtimeHandler) ServeAWDPreviewWS(c *gin.Context) {
+	contestID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil || contestID <= 0 {
+		c.Status(http.StatusBadRequest)
+		return
+	}
+	h.serveContestUserWS(c)
+}
+
 func (h *RealtimeHandler) serveContestWS(c *gin.Context, channel string) {
 	server := xws.Server{
 		Handshake: h.handshake,
@@ -66,6 +75,21 @@ func (h *RealtimeHandler) serveContestWS(c *gin.Context, channel string) {
 				return
 			}
 			h.manager.ServeChannels(*claims, conn, channel)
+		},
+	}
+	server.ServeHTTP(c.Writer, c.Request)
+}
+
+func (h *RealtimeHandler) serveContestUserWS(c *gin.Context) {
+	server := xws.Server{
+		Handshake: h.handshake,
+		Handler: func(conn *xws.Conn) {
+			claims, _ := conn.Request().Context().Value(contestRealtimeAuthContextKey{}).(*authctx.CurrentUser)
+			if claims == nil {
+				_ = conn.Close()
+				return
+			}
+			h.manager.ServeChannels(*claims, conn)
 		},
 	}
 	server.ServeHTTP(c.Writer, c.Request)

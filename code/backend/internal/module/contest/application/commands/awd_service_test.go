@@ -31,6 +31,7 @@ import (
 	rediskeys "ctf-platform/internal/pkg/redis"
 	platformevents "ctf-platform/internal/platform/events"
 	"ctf-platform/pkg/errcode"
+	ctfws "ctf-platform/pkg/websocket"
 )
 
 const (
@@ -101,6 +102,66 @@ func (f *fakeContestPreviewRuntimeProbe) CleanupRuntimeDetails(_ context.Context
 		return errors.New("unexpected runtime details")
 	}
 	return nil
+}
+
+type fakeAWDPreviewRoundManager struct {
+	previewCalls     int
+	previewResponses []*contestports.AWDServicePreviewResult
+	previewErrors    []error
+	previewRequests  []contestports.AWDServicePreviewRequest
+}
+
+type testRealtimeEnvelope struct {
+	Type    string
+	Payload map[string]any
+}
+
+type testRealtimeBroadcaster struct {
+	userCalls []struct {
+		userID  int64
+		message testRealtimeEnvelope
+	}
+}
+
+func (b *testRealtimeBroadcaster) SendToChannel(_ string, _ ctfws.Envelope) int {
+	return 0
+}
+
+func (b *testRealtimeBroadcaster) SendToUser(userID int64, message ctfws.Envelope) int {
+	payload, _ := message.Payload.(map[string]any)
+	b.userCalls = append(b.userCalls, struct {
+		userID  int64
+		message testRealtimeEnvelope
+	}{
+		userID: userID,
+		message: testRealtimeEnvelope{
+			Type:    message.Type,
+			Payload: payload,
+		},
+	})
+	return 1
+}
+
+func (f *fakeAWDPreviewRoundManager) RunRoundServiceChecks(_ context.Context, _ *model.Contest, _ *model.AWDRound, _ string) error {
+	return errors.New("unexpected RunRoundServiceChecks call")
+}
+
+func (f *fakeAWDPreviewRoundManager) EnsureActiveRoundMaterialized(_ context.Context, _ *model.Contest, _ time.Time) error {
+	return errors.New("unexpected EnsureActiveRoundMaterialized call")
+}
+
+func (f *fakeAWDPreviewRoundManager) PreviewServiceCheck(_ context.Context, req contestports.AWDServicePreviewRequest) (*contestports.AWDServicePreviewResult, error) {
+	f.previewCalls++
+	f.previewRequests = append(f.previewRequests, req)
+
+	index := f.previewCalls - 1
+	if index < len(f.previewErrors) && f.previewErrors[index] != nil {
+		return nil, f.previewErrors[index]
+	}
+	if index >= len(f.previewResponses) {
+		return nil, errors.New("unexpected PreviewServiceCheck call")
+	}
+	return f.previewResponses[index], nil
 }
 
 func newAWDRoundUpdaterForTest(db *gorm.DB, redisClient *redis.Client, cfg config.ContestAWDConfig, flagSecret string, injector contestports.AWDFlagInjector, log *zap.Logger) *contestjobs.AWDRoundUpdater {
@@ -698,8 +759,11 @@ func TestAWDServicePreviewCheckerRunsWithoutPersistingServices(t *testing.T) {
 	if source := checkResult["check_source"]; source != "checker_preview" {
 		t.Fatalf("unexpected check_source: %#v", source)
 	}
-	if reason := checkResult["status_reason"]; reason != "healthy" {
+	if reason := checkResult["status_reason"]; reason != "preview_quorum_passed" {
 		t.Fatalf("unexpected status_reason: %#v", reason)
+	}
+	if summary := checkResult["preview_summary"]; summary != "3/3 通过" {
+		t.Fatalf("unexpected preview_summary: %#v", summary)
 	}
 
 	previewContext := resp.FieldByName("PreviewContext")
@@ -723,6 +787,392 @@ func TestAWDServicePreviewCheckerRunsWithoutPersistingServices(t *testing.T) {
 	}
 	if serviceCount != 0 {
 		t.Fatalf("expected no persisted awd team services, got %d", serviceCount)
+	}
+}
+
+func TestAWDServicePreviewCheckerRejectsWhenRedisUnavailable(t *testing.T) {
+	db := newAWDTestDB(t)
+	now := time.Now()
+
+	createAWDContestFixture(t, db, 27, now)
+	createAWDChallengeFixture(t, db, 2701, now)
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/api/flag":
+			if r.Method != http.MethodGet {
+				http.Error(w, "method_not_allowed", http.StatusMethodNotAllowed)
+				return
+			}
+			_, _ = w.Write([]byte("flag{preview}"))
+		case "/healthz":
+			w.WriteHeader(http.StatusOK)
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	t.Cleanup(server.Close)
+
+	service := newAWDServiceForTest(db, nil, "", config.ContestAWDConfig{
+		CheckerTimeout:    time.Second,
+		CheckerHealthPath: "/healthz",
+	})
+
+	_, err := service.commands.PreviewChecker(context.Background(), 27, &dto.PreviewAWDCheckerReq{
+		ChallengeID: 2701,
+		CheckerType: string(model.AWDCheckerTypeHTTPStandard),
+		CheckerConfig: map[string]any{
+			"get_flag": map[string]any{
+				"method":             "GET",
+				"path":               "/api/flag",
+				"expected_status":    http.StatusOK,
+				"expected_substring": "{{FLAG}}",
+			},
+		},
+		AccessURL:   server.URL,
+		PreviewFlag: "flag{preview}",
+	})
+	if err != errcode.ErrAWDCheckerPreviewUnavailable {
+		t.Fatalf("expected ErrAWDCheckerPreviewUnavailable, got %v", err)
+	}
+}
+
+func TestAWDServicePreviewCheckerReturnsQuorumPassWhenTwoOfThreeAttemptsSucceed(t *testing.T) {
+	db := newAWDTestDB(t)
+	mini, err := miniredis.Run()
+	if err != nil {
+		t.Fatalf("start miniredis: %v", err)
+	}
+	t.Cleanup(mini.Close)
+
+	redisClient := redis.NewClient(&redis.Options{Addr: mini.Addr()})
+	t.Cleanup(func() {
+		_ = redisClient.Close()
+	})
+
+	now := time.Now()
+	createAWDContestFixture(t, db, 28, now)
+	createAWDChallengeFixture(t, db, 2801, now)
+
+	roundManager := &fakeAWDPreviewRoundManager{
+		previewResponses: []*contestports.AWDServicePreviewResult{
+			{
+				ServiceStatus: model.AWDServiceStatusUp,
+				CheckerType:   model.AWDCheckerTypeHTTPStandard,
+				CheckResult:   `{"check_source":"checker_preview","checker_type":"http_standard","status_reason":"healthy","checked_at":"2026-04-21T11:00:00Z","targets":[{"access_url":"http://preview.internal","healthy":true,"latency_ms":21}],"put_flag":{"healthy":true,"method":"PUT","path":"/api/flag"},"get_flag":{"healthy":true,"method":"GET","path":"/api/flag"}}`,
+				PreviewContext: contestports.AWDCheckerPreviewContext{
+					AccessURL:   "http://preview.internal",
+					PreviewFlag: "flag{preview}",
+					ChallengeID: 2801,
+				},
+			},
+			{
+				ServiceStatus: model.AWDServiceStatusDown,
+				CheckerType:   model.AWDCheckerTypeHTTPStandard,
+				CheckResult:   `{"check_source":"checker_preview","checker_type":"http_standard","status_reason":"http_request_failed","checked_at":"2026-04-21T11:00:01Z","error_code":"http_request_failed","error":"connection reset by peer","targets":[{"access_url":"http://preview.internal","healthy":false,"error_code":"http_request_failed","error":"connection reset by peer"}]}`,
+				PreviewContext: contestports.AWDCheckerPreviewContext{
+					AccessURL:   "http://preview.internal",
+					PreviewFlag: "flag{preview}",
+					ChallengeID: 2801,
+				},
+			},
+			{
+				ServiceStatus: model.AWDServiceStatusUp,
+				CheckerType:   model.AWDCheckerTypeHTTPStandard,
+				CheckResult:   `{"check_source":"checker_preview","checker_type":"http_standard","status_reason":"healthy","checked_at":"2026-04-21T11:00:02Z","targets":[{"access_url":"http://preview.internal","healthy":true,"latency_ms":18}],"put_flag":{"healthy":true,"method":"PUT","path":"/api/flag"},"get_flag":{"healthy":true,"method":"GET","path":"/api/flag"},"havoc":{"healthy":true,"method":"GET","path":"/healthz"}}`,
+				PreviewContext: contestports.AWDCheckerPreviewContext{
+					AccessURL:   "http://preview.internal",
+					PreviewFlag: "flag{preview}",
+					ChallengeID: 2801,
+				},
+			},
+		},
+	}
+
+	awdRepo := contestinfra.NewAWDRepository(db)
+	contestRepo := contestinfra.NewRepository(db)
+	imageRepo := challengeinfra.NewImageRepository(db)
+	templateRepo := challengeinfra.NewRepository(db)
+	service := contestcmd.NewAWDService(
+		awdRepo,
+		contestRepo,
+		redisClient,
+		"",
+		config.ContestAWDConfig{},
+		zap.NewNop(),
+		roundManager,
+		imageRepo,
+		templateRepo,
+		nil,
+	)
+
+	resp, err := service.PreviewChecker(context.Background(), 28, &dto.PreviewAWDCheckerReq{
+		ChallengeID: 2801,
+		CheckerType: string(model.AWDCheckerTypeHTTPStandard),
+		CheckerConfig: map[string]any{
+			"get_flag": map[string]any{
+				"method":             "GET",
+				"path":               "/api/flag",
+				"expected_status":    http.StatusOK,
+				"expected_substring": "{{FLAG}}",
+			},
+		},
+		AccessURL:   "http://preview.internal",
+		PreviewFlag: "flag{preview}",
+	})
+	if err != nil {
+		t.Fatalf("PreviewChecker() error = %v", err)
+	}
+	if roundManager.previewCalls != 3 {
+		t.Fatalf("expected 3 preview attempts, got %d", roundManager.previewCalls)
+	}
+	if resp.ServiceStatus != model.AWDServiceStatusUp {
+		t.Fatalf("unexpected service status: %s", resp.ServiceStatus)
+	}
+	if resp.CheckResult["status_reason"] != "preview_quorum_passed" {
+		t.Fatalf("unexpected status_reason: %#v", resp.CheckResult["status_reason"])
+	}
+	if resp.CheckResult["preview_pass_count"] != float64(2) {
+		t.Fatalf("unexpected preview_pass_count: %#v", resp.CheckResult["preview_pass_count"])
+	}
+	if resp.CheckResult["preview_total_count"] != float64(3) {
+		t.Fatalf("unexpected preview_total_count: %#v", resp.CheckResult["preview_total_count"])
+	}
+	if resp.CheckResult["preview_summary"] != "2/3 通过" {
+		t.Fatalf("unexpected preview_summary: %#v", resp.CheckResult["preview_summary"])
+	}
+	if resp.CheckResult["check_source"] != "checker_preview" {
+		t.Fatalf("unexpected check_source: %#v", resp.CheckResult["check_source"])
+	}
+}
+
+func TestAWDServicePreviewCheckerBroadcastsRealtimeProgressToRequester(t *testing.T) {
+	db := newAWDTestDB(t)
+	mini, err := miniredis.Run()
+	if err != nil {
+		t.Fatalf("start miniredis: %v", err)
+	}
+	t.Cleanup(mini.Close)
+
+	redisClient := redis.NewClient(&redis.Options{Addr: mini.Addr()})
+	t.Cleanup(func() {
+		_ = redisClient.Close()
+	})
+
+	now := time.Now()
+	createAWDContestFixture(t, db, 281, now)
+	createAWDChallengeFixture(t, db, 2811, now)
+
+	roundManager := &fakeAWDPreviewRoundManager{
+		previewResponses: []*contestports.AWDServicePreviewResult{
+			{
+				ServiceStatus: model.AWDServiceStatusUp,
+				CheckerType:   model.AWDCheckerTypeHTTPStandard,
+				CheckResult:   `{"check_source":"checker_preview","checker_type":"http_standard","status_reason":"healthy","checked_at":"2026-04-21T11:00:00Z","targets":[{"access_url":"http://preview.internal","healthy":true}]}`,
+				PreviewContext: contestports.AWDCheckerPreviewContext{
+					AccessURL:   "http://preview.internal",
+					PreviewFlag: "flag{preview}",
+					ChallengeID: 2811,
+				},
+			},
+			{
+				ServiceStatus: model.AWDServiceStatusUp,
+				CheckerType:   model.AWDCheckerTypeHTTPStandard,
+				CheckResult:   `{"check_source":"checker_preview","checker_type":"http_standard","status_reason":"healthy","checked_at":"2026-04-21T11:00:01Z","targets":[{"access_url":"http://preview.internal","healthy":true}]}`,
+				PreviewContext: contestports.AWDCheckerPreviewContext{
+					AccessURL:   "http://preview.internal",
+					PreviewFlag: "flag{preview}",
+					ChallengeID: 2811,
+				},
+			},
+			{
+				ServiceStatus: model.AWDServiceStatusUp,
+				CheckerType:   model.AWDCheckerTypeHTTPStandard,
+				CheckResult:   `{"check_source":"checker_preview","checker_type":"http_standard","status_reason":"healthy","checked_at":"2026-04-21T11:00:02Z","targets":[{"access_url":"http://preview.internal","healthy":true}]}`,
+				PreviewContext: contestports.AWDCheckerPreviewContext{
+					AccessURL:   "http://preview.internal",
+					PreviewFlag: "flag{preview}",
+					ChallengeID: 2811,
+				},
+			},
+		},
+	}
+	broadcaster := &testRealtimeBroadcaster{}
+
+	awdRepo := contestinfra.NewAWDRepository(db)
+	contestRepo := contestinfra.NewRepository(db)
+	imageRepo := challengeinfra.NewImageRepository(db)
+	templateRepo := challengeinfra.NewRepository(db)
+	service := contestcmd.NewAWDService(
+		awdRepo,
+		contestRepo,
+		redisClient,
+		"",
+		config.ContestAWDConfig{},
+		zap.NewNop(),
+		roundManager,
+		imageRepo,
+		templateRepo,
+		nil,
+	)
+	service.SetRealtimeBroadcaster(broadcaster)
+
+	ctx := contestcmd.WithAWDPreviewRequester(context.Background(), 9001)
+	_, err = service.PreviewChecker(ctx, 281, &dto.PreviewAWDCheckerReq{
+		ChallengeID:      2811,
+		CheckerType:      string(model.AWDCheckerTypeHTTPStandard),
+		PreviewRequestID: "preview-progress-1",
+		AccessURL:        "http://preview.internal",
+		PreviewFlag:      "flag{preview}",
+		CheckerConfig: map[string]any{
+			"get_flag": map[string]any{
+				"method":             "GET",
+				"path":               "/api/flag",
+				"expected_status":    http.StatusOK,
+				"expected_substring": "{{FLAG}}",
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("PreviewChecker() error = %v", err)
+	}
+
+	expectedPhases := []string{"prepare", "attempt-1", "attempt-2", "attempt-3", "summary"}
+	if len(broadcaster.userCalls) != len(expectedPhases) {
+		t.Fatalf("expected %d realtime progress events, got %d", len(expectedPhases), len(broadcaster.userCalls))
+	}
+	for index, expectedPhase := range expectedPhases {
+		call := broadcaster.userCalls[index]
+		if call.userID != 9001 {
+			t.Fatalf("unexpected broadcast user: %d", call.userID)
+		}
+		if call.message.Type != "awd.preview.progress" {
+			t.Fatalf("unexpected realtime type: %s", call.message.Type)
+		}
+		if got := call.message.Payload["phase_key"]; got != expectedPhase {
+			t.Fatalf("event %d unexpected phase_key: %#v", index, got)
+		}
+		if got := call.message.Payload["preview_request_id"]; got != "preview-progress-1" {
+			t.Fatalf("event %d unexpected preview_request_id: %#v", index, got)
+		}
+		if got := call.message.Payload["status"]; got != "running" {
+			t.Fatalf("event %d unexpected status: %#v", index, got)
+		}
+	}
+	if broadcaster.userCalls[1].message.Payload["attempt"] != 1 {
+		t.Fatalf("attempt-1 payload missing attempt: %#v", broadcaster.userCalls[1].message.Payload)
+	}
+	if broadcaster.userCalls[3].message.Payload["attempt"] != 3 {
+		t.Fatalf("attempt-3 payload missing attempt: %#v", broadcaster.userCalls[3].message.Payload)
+	}
+}
+
+func TestAWDServicePreviewCheckerReturnsQuorumFailureWhenOnlyOneAttemptSucceeds(t *testing.T) {
+	db := newAWDTestDB(t)
+	mini, err := miniredis.Run()
+	if err != nil {
+		t.Fatalf("start miniredis: %v", err)
+	}
+	t.Cleanup(mini.Close)
+
+	redisClient := redis.NewClient(&redis.Options{Addr: mini.Addr()})
+	t.Cleanup(func() {
+		_ = redisClient.Close()
+	})
+
+	now := time.Now()
+	createAWDContestFixture(t, db, 29, now)
+	createAWDChallengeFixture(t, db, 2901, now)
+
+	roundManager := &fakeAWDPreviewRoundManager{
+		previewResponses: []*contestports.AWDServicePreviewResult{
+			{
+				ServiceStatus: model.AWDServiceStatusDown,
+				CheckerType:   model.AWDCheckerTypeHTTPStandard,
+				CheckResult:   `{"check_source":"checker_preview","checker_type":"http_standard","status_reason":"http_request_failed","checked_at":"2026-04-21T11:00:00Z","error_code":"http_request_failed","error":"connection reset by peer","targets":[{"access_url":"http://preview.internal","healthy":false,"error_code":"http_request_failed"}]}`,
+				PreviewContext: contestports.AWDCheckerPreviewContext{
+					AccessURL:   "http://preview.internal",
+					PreviewFlag: "flag{preview}",
+					ChallengeID: 2901,
+				},
+			},
+			{
+				ServiceStatus: model.AWDServiceStatusUp,
+				CheckerType:   model.AWDCheckerTypeHTTPStandard,
+				CheckResult:   `{"check_source":"checker_preview","checker_type":"http_standard","status_reason":"healthy","checked_at":"2026-04-21T11:00:01Z","targets":[{"access_url":"http://preview.internal","healthy":true,"latency_ms":20}]}`,
+				PreviewContext: contestports.AWDCheckerPreviewContext{
+					AccessURL:   "http://preview.internal",
+					PreviewFlag: "flag{preview}",
+					ChallengeID: 2901,
+				},
+			},
+			{
+				ServiceStatus: model.AWDServiceStatusDown,
+				CheckerType:   model.AWDCheckerTypeHTTPStandard,
+				CheckResult:   `{"check_source":"checker_preview","checker_type":"http_standard","status_reason":"unexpected_http_status","checked_at":"2026-04-21T11:00:02Z","error_code":"unexpected_http_status","error":"unexpected status 502","targets":[{"access_url":"http://preview.internal","healthy":false,"error_code":"unexpected_http_status"}]}`,
+				PreviewContext: contestports.AWDCheckerPreviewContext{
+					AccessURL:   "http://preview.internal",
+					PreviewFlag: "flag{preview}",
+					ChallengeID: 2901,
+				},
+			},
+		},
+	}
+
+	awdRepo := contestinfra.NewAWDRepository(db)
+	contestRepo := contestinfra.NewRepository(db)
+	imageRepo := challengeinfra.NewImageRepository(db)
+	templateRepo := challengeinfra.NewRepository(db)
+	service := contestcmd.NewAWDService(
+		awdRepo,
+		contestRepo,
+		redisClient,
+		"",
+		config.ContestAWDConfig{},
+		zap.NewNop(),
+		roundManager,
+		imageRepo,
+		templateRepo,
+		nil,
+	)
+
+	resp, err := service.PreviewChecker(context.Background(), 29, &dto.PreviewAWDCheckerReq{
+		ChallengeID: 2901,
+		CheckerType: string(model.AWDCheckerTypeHTTPStandard),
+		CheckerConfig: map[string]any{
+			"get_flag": map[string]any{
+				"method":             "GET",
+				"path":               "/api/flag",
+				"expected_status":    http.StatusOK,
+				"expected_substring": "{{FLAG}}",
+			},
+		},
+		AccessURL:   "http://preview.internal",
+		PreviewFlag: "flag{preview}",
+	})
+	if err != nil {
+		t.Fatalf("PreviewChecker() error = %v", err)
+	}
+	if roundManager.previewCalls != 3 {
+		t.Fatalf("expected 3 preview attempts, got %d", roundManager.previewCalls)
+	}
+	if resp.ServiceStatus != model.AWDServiceStatusDown {
+		t.Fatalf("unexpected service status: %s", resp.ServiceStatus)
+	}
+	if resp.CheckResult["status_reason"] != "preview_quorum_failed" {
+		t.Fatalf("unexpected status_reason: %#v", resp.CheckResult["status_reason"])
+	}
+	if resp.CheckResult["preview_pass_count"] != float64(1) {
+		t.Fatalf("unexpected preview_pass_count: %#v", resp.CheckResult["preview_pass_count"])
+	}
+	if resp.CheckResult["preview_total_count"] != float64(3) {
+		t.Fatalf("unexpected preview_total_count: %#v", resp.CheckResult["preview_total_count"])
+	}
+	if resp.CheckResult["preview_summary"] != "1/3 通过" {
+		t.Fatalf("unexpected preview_summary: %#v", resp.CheckResult["preview_summary"])
+	}
+	if resp.CheckResult["error_code"] != "http_request_failed" {
+		t.Fatalf("unexpected error_code: %#v", resp.CheckResult["error_code"])
 	}
 }
 

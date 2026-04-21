@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"strings"
 	"testing"
 	"time"
 
@@ -247,15 +248,14 @@ func TestContestAWDServiceServiceCreateDoesNotPersistLegacyChallengeIDInRuntimeC
 	}
 
 	resp, err := service.CreateContestAWDService(context.Background(), 804, &dto.CreateContestAWDServiceReq{
-		TemplateID:             1004,
-		Points:                 100,
-		Order:                  1,
-		IsVisible:              boolPtr(true),
-		CheckerType:            stringPtr(string(model.AWDCheckerTypeHTTPStandard)),
-		CheckerConfig:          map[string]any{"get_flag": map[string]any{"path": "/flag"}},
-		AWDSLAScore:            intPtr(20),
-		AWDDefenseScore:        intPtr(30),
-		AWDCheckerPreviewToken: stringPtr("preview-token"),
+		TemplateID:      1004,
+		Points:          100,
+		Order:           1,
+		IsVisible:       boolPtr(true),
+		CheckerType:     stringPtr(string(model.AWDCheckerTypeHTTPStandard)),
+		CheckerConfig:   map[string]any{"get_flag": map[string]any{"path": "/flag"}},
+		AWDSLAScore:     intPtr(20),
+		AWDDefenseScore: intPtr(30),
 	})
 	if err != nil {
 		t.Fatalf("create contest awd service: %v", err)
@@ -344,21 +344,20 @@ func TestContestAWDServiceServiceUpdateDoesNotPersistLegacyChallengeIDInRuntimeC
 	}
 
 	resp, err := service.CreateContestAWDService(context.Background(), 805, &dto.CreateContestAWDServiceReq{
-		TemplateID:  1005,
-		Points:      100,
-		Order:       2,
-		IsVisible:   boolPtr(true),
+		TemplateID: 1005,
+		Points:     100,
+		Order:      2,
+		IsVisible:  boolPtr(true),
 	})
 	if err != nil {
 		t.Fatalf("create contest awd service: %v", err)
 	}
 
 	if err := service.UpdateContestAWDService(context.Background(), 805, resp.ID, &dto.UpdateContestAWDServiceReq{
-		CheckerType:            stringPtr(string(model.AWDCheckerTypeHTTPStandard)),
-		CheckerConfig:          map[string]any{"get_flag": map[string]any{"path": "/healthz"}},
-		AWDSLAScore:            intPtr(26),
-		AWDDefenseScore:        intPtr(36),
-		AWDCheckerPreviewToken: stringPtr("preview-token-2"),
+		CheckerType:     stringPtr(string(model.AWDCheckerTypeHTTPStandard)),
+		CheckerConfig:   map[string]any{"get_flag": map[string]any{"path": "/healthz"}},
+		AWDSLAScore:     intPtr(26),
+		AWDDefenseScore: intPtr(36),
 	}); err != nil {
 		t.Fatalf("UpdateContestAWDService() error = %v", err)
 	}
@@ -508,6 +507,81 @@ func TestContestAWDServiceServiceCreateConsumesCheckerPreviewToken(t *testing.T)
 	}
 }
 
+func TestContestAWDServiceServiceCreateRejectsMissingCheckerPreviewToken(t *testing.T) {
+	mini, err := miniredis.Run()
+	if err != nil {
+		t.Fatalf("start miniredis: %v", err)
+	}
+	t.Cleanup(mini.Close)
+
+	redisClient := redis.NewClient(&redis.Options{Addr: mini.Addr()})
+	t.Cleanup(func() {
+		_ = redisClient.Close()
+	})
+
+	service, challengeRepo, contestRepo, _, _ := newContestAWDServiceForTestWithRedis(t, redisClient)
+
+	now := time.Now().UTC()
+	if err := contestRepo.Create(context.Background(), &model.Contest{
+		ID:        1806,
+		Title:     "awd-service-preview-token-missing",
+		Mode:      model.ContestModeAWD,
+		Status:    model.ContestStatusDraft,
+		StartTime: now.Add(time.Hour),
+		EndTime:   now.Add(2 * time.Hour),
+		CreatedAt: now,
+		UpdatedAt: now,
+	}); err != nil {
+		t.Fatalf("create contest: %v", err)
+	}
+	if err := challengeRepo.Create(&model.Challenge{
+		ID:         19806,
+		Title:      "preview-service-missing-token",
+		Category:   "web",
+		Difficulty: model.ChallengeDifficultyMedium,
+		Points:     100,
+		Status:     model.ChallengeStatusPublished,
+		FlagType:   model.FlagTypeStatic,
+		CreatedAt:  now,
+		UpdatedAt:  now,
+	}); err != nil {
+		t.Fatalf("create challenge: %v", err)
+	}
+	if err := challengeRepo.CreateAWDServiceTemplate(&model.AWDServiceTemplate{
+		ID:             1106,
+		Name:           "Preview Service Missing Token",
+		Slug:           "preview-service-missing-token",
+		Category:       "web",
+		Difficulty:     model.ChallengeDifficultyMedium,
+		ServiceType:    model.AWDServiceTypeWebHTTP,
+		DeploymentMode: model.AWDDeploymentModeSingleContainer,
+		Status:         model.AWDServiceTemplateStatusPublished,
+		CheckerType:    model.AWDCheckerTypeHTTPStandard,
+		CheckerConfig:  `{"get_flag":{"path":"/ready"}}`,
+		AccessConfig:   `{"primary_url":"http://preview-missing.internal"}`,
+		CreatedAt:      now,
+		UpdatedAt:      now,
+	}); err != nil {
+		t.Fatalf("create template: %v", err)
+	}
+
+	_, err = service.CreateContestAWDService(context.Background(), 1806, &dto.CreateContestAWDServiceReq{
+		TemplateID:             1106,
+		Points:                 100,
+		Order:                  1,
+		IsVisible:              boolPtr(true),
+		CheckerType:            stringPtr(string(model.AWDCheckerTypeHTTPStandard)),
+		CheckerConfig:          map[string]any{"get_flag": map[string]any{"path": "/flag"}},
+		AWDCheckerPreviewToken: stringPtr("missing-preview-token"),
+	})
+	if err == nil {
+		t.Fatal("expected CreateContestAWDService() to reject missing preview token")
+	}
+	if !strings.Contains(err.Error(), "试跑结果已失效") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
 func TestContestAWDServiceServiceUpdateConsumesCheckerPreviewTokenByServiceID(t *testing.T) {
 	mini, err := miniredis.Run()
 	if err != nil {
@@ -567,10 +641,10 @@ func TestContestAWDServiceServiceUpdateConsumesCheckerPreviewTokenByServiceID(t 
 	}
 
 	resp, err := service.CreateContestAWDService(context.Background(), 807, &dto.CreateContestAWDServiceReq{
-		TemplateID:  1007,
-		Points:      100,
-		Order:       1,
-		IsVisible:   boolPtr(true),
+		TemplateID: 1007,
+		Points:     100,
+		Order:      1,
+		IsVisible:  boolPtr(true),
 	})
 	if err != nil {
 		t.Fatalf("CreateContestAWDService() error = %v", err)
@@ -629,6 +703,85 @@ func TestContestAWDServiceServiceUpdateConsumesCheckerPreviewTokenByServiceID(t 
 	}
 	if stored.LastPreviewResult == "" {
 		t.Fatal("expected persisted preview result")
+	}
+}
+
+func TestContestAWDServiceServiceUpdateRejectsMissingCheckerPreviewToken(t *testing.T) {
+	mini, err := miniredis.Run()
+	if err != nil {
+		t.Fatalf("start miniredis: %v", err)
+	}
+	t.Cleanup(mini.Close)
+
+	redisClient := redis.NewClient(&redis.Options{Addr: mini.Addr()})
+	t.Cleanup(func() {
+		_ = redisClient.Close()
+	})
+
+	service, challengeRepo, contestRepo, _, _ := newContestAWDServiceForTestWithRedis(t, redisClient)
+
+	now := time.Now().UTC()
+	if err := contestRepo.Create(context.Background(), &model.Contest{
+		ID:        1807,
+		Title:     "awd-service-update-missing-preview-token",
+		Mode:      model.ContestModeAWD,
+		Status:    model.ContestStatusDraft,
+		StartTime: now.Add(time.Hour),
+		EndTime:   now.Add(2 * time.Hour),
+		CreatedAt: now,
+		UpdatedAt: now,
+	}); err != nil {
+		t.Fatalf("create contest: %v", err)
+	}
+	if err := challengeRepo.Create(&model.Challenge{
+		ID:         19807,
+		Title:      "preview-update-missing-token",
+		Category:   "web",
+		Difficulty: model.ChallengeDifficultyMedium,
+		Points:     100,
+		Status:     model.ChallengeStatusPublished,
+		FlagType:   model.FlagTypeStatic,
+		CreatedAt:  now,
+		UpdatedAt:  now,
+	}); err != nil {
+		t.Fatalf("create challenge: %v", err)
+	}
+	if err := challengeRepo.CreateAWDServiceTemplate(&model.AWDServiceTemplate{
+		ID:             1107,
+		Name:           "Preview Update Missing Token",
+		Slug:           "preview-update-missing-token",
+		Category:       "web",
+		Difficulty:     model.ChallengeDifficultyMedium,
+		ServiceType:    model.AWDServiceTypeWebHTTP,
+		DeploymentMode: model.AWDDeploymentModeSingleContainer,
+		Status:         model.AWDServiceTemplateStatusPublished,
+		CheckerType:    model.AWDCheckerTypeHTTPStandard,
+		CheckerConfig:  `{"get_flag":{"path":"/ready"}}`,
+		AccessConfig:   `{"primary_url":"http://preview-update-missing.internal"}`,
+		CreatedAt:      now,
+		UpdatedAt:      now,
+	}); err != nil {
+		t.Fatalf("create template: %v", err)
+	}
+
+	resp, err := service.CreateContestAWDService(context.Background(), 1807, &dto.CreateContestAWDServiceReq{
+		TemplateID: 1107,
+		Points:     100,
+		Order:      1,
+		IsVisible:  boolPtr(true),
+	})
+	if err != nil {
+		t.Fatalf("CreateContestAWDService() error = %v", err)
+	}
+
+	err = service.UpdateContestAWDService(context.Background(), 1807, resp.ID, &dto.UpdateContestAWDServiceReq{
+		AWDCheckerPreviewToken: stringPtr("missing-preview-token"),
+	})
+	if err == nil {
+		t.Fatal("expected UpdateContestAWDService() to reject missing preview token")
+	}
+	if !strings.Contains(err.Error(), "试跑结果已失效") {
+		t.Fatalf("unexpected error: %v", err)
 	}
 }
 

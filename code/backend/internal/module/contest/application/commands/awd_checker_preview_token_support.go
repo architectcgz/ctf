@@ -13,6 +13,7 @@ import (
 	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	rediskeys "ctf-platform/internal/pkg/redis"
+	"ctf-platform/pkg/errcode"
 )
 
 const awdCheckerPreviewTokenTTL = 30 * time.Minute
@@ -67,6 +68,9 @@ func consumeCheckerPreviewValidationState(
 	checkerConfig string,
 	previewToken string,
 ) (model.AWDCheckerValidationState, *time.Time, string, error) {
+	if strings.TrimSpace(previewToken) != "" && redisClient == nil {
+		return model.AWDCheckerValidationStatePending, nil, "", errcode.ErrAWDCheckerPreviewUnavailable
+	}
 	record, err := consumeAWDCheckerPreviewToken(ctx, redisClient, contestID, serviceID, challengeID, checkerType, checkerConfig, previewToken)
 	if err != nil {
 		return model.AWDCheckerValidationStatePending, nil, "", err

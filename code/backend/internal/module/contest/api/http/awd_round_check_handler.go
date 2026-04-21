@@ -1,7 +1,9 @@
 package http
 
 import (
+	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
+	contestcmd "ctf-platform/internal/module/contest/application/commands"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	"ctf-platform/pkg/response"
 
@@ -53,7 +55,8 @@ func (h *AWDHandler) PreviewChecker(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.commands.PreviewChecker(c.Request.Context(), contestID, &req)
+	requestCtx := contestcmd.WithAWDPreviewRequester(c.Request.Context(), authctx.MustCurrentUser(c).UserID)
+	resp, err := h.commands.PreviewChecker(requestCtx, contestID, &req)
 	if err != nil {
 		response.FromError(c, err)
 		return

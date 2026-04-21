@@ -10,6 +10,7 @@ import (
 
 	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	"ctf-platform/pkg/errcode"
 )
 
 func buildContestAWDServiceSnapshot(template *model.AWDServiceTemplate) string {
@@ -210,6 +211,9 @@ func buildContestAWDServiceValidationUpdate(
 	if err != nil {
 		return model.AWDCheckerValidationStatePending, nil, "", false, err
 	}
+	if err := ensureCheckerPreviewTokenConsumed(previewToken, previewResult); err != nil {
+		return model.AWDCheckerValidationStatePending, nil, "", false, err
+	}
 	if strings.TrimSpace(previewToken) != "" && previewResult != "" {
 		return state, previewAt, previewResult, true, nil
 	}
@@ -226,4 +230,14 @@ func buildContestAWDServiceValidationUpdate(
 		nextState = model.AWDCheckerValidationStateStale
 	}
 	return nextState, current.LastPreviewAt, current.LastPreviewResult, true, nil
+}
+
+func ensureCheckerPreviewTokenConsumed(previewToken, previewResult string) error {
+	if strings.TrimSpace(previewToken) == "" {
+		return nil
+	}
+	if strings.TrimSpace(previewResult) != "" {
+		return nil
+	}
+	return errcode.ErrAWDCheckerPreviewExpired
 }

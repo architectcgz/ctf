@@ -56,4 +56,29 @@ describe('useAwdCheckResultPresentation', () => {
       }),
     ])
   })
+
+  it('应该优先展示 preview 多次试跑的通过计数', () => {
+    const presentation = useAwdCheckResultPresentation({
+      formatDateTime: (value?: string) => (value ? `fmt:${value}` : '未记录'),
+    })
+
+    const summary = presentation.summarizeCheckResult({
+      check_source: 'checker_preview',
+      checker_type: 'http_standard',
+      status_reason: 'preview_quorum_passed',
+      preview_pass_count: 2,
+      preview_total_count: 3,
+      checked_at: '2026-04-21T12:00:00Z',
+    })
+
+    expect(summary).toContain('状态: 2/3 通过')
+    expect(summary).not.toContain('preview_quorum_passed')
+    expect(
+      presentation.getTargetProbeSummary({
+        preview_pass_count: 2,
+        preview_total_count: 3,
+        targets: [{ healthy: true }, { healthy: false }],
+      })
+    ).toBe('试跑 2/3 通过')
+  })
 })

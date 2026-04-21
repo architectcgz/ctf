@@ -8,6 +8,7 @@ import (
 
 type RealtimeBroadcaster interface {
 	SendToChannel(channel string, message ctfws.Envelope) int
+	SendToUser(userID int64, message ctfws.Envelope) int
 }
 
 func AnnouncementChannel(contestID int64) string {
