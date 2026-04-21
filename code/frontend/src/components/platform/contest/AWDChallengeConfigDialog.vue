@@ -10,7 +10,7 @@ import type {
   AWDCheckerType,
   AWDTeamServiceData,
 } from '@/api/contracts'
-import AdminSurfaceModal from '@/components/common/modal-templates/AdminSurfaceModal.vue'
+import SlideOverDrawer from '@/components/common/modal-templates/SlideOverDrawer.vue'
 import { useAwdCheckResultPresentation } from '@/composables/useAwdCheckResultPresentation'
 import {
   AWD_CHECKER_FIELD_ERROR_KEYS,
@@ -51,7 +51,7 @@ const emit = defineEmits<{
   'update:open': [value: boolean]
   save: [
     value: {
-      challenge_id: number
+      challenge_id?: number
       template_id: number
       points: number
       order: number
@@ -129,10 +129,15 @@ const activeChallengeLabel = computed(() => {
     const title = props.draft?.title?.trim() || `Challenge #${props.draft?.challenge_id || ''}`
     return title
   }
-  return (
-    selectableChallenges.value.find((item) => item.id === form.challenge_id)?.title || '请选择题目'
-  )
+  return selectableTemplates.value.find((item) => item.id === form.template_id)?.name || '请选择服务模板'
 })
+
+function resolvePreviewChallengeID(): number {
+  if (props.mode === 'edit') {
+    return Number(props.draft?.challenge_id || form.challenge_id || form.template_id || 0)
+  }
+  return Number(form.template_id || form.challenge_id || 0)
+}
 
 const checkerPreviewText = computed(() =>
   JSON.stringify(
@@ -216,7 +221,7 @@ const savedValidationStateLabel = computed(() =>
 
 const currentCheckerSignature = computed(() =>
   JSON.stringify({
-    challenge_id: form.challenge_id,
+    challenge_id: resolvePreviewChallengeID(),
     checker_type: form.awd_checker_type,
     checker_config: buildCheckerConfig(false),
   })
@@ -264,7 +269,7 @@ watch(
     form.challenge_id =
       props.mode === 'edit'
         ? props.draft?.challenge_id || ''
-        : selectableChallenges.value[0]?.id || ''
+        : selectableTemplates.value[0]?.id || ''
     form.template_id =
       props.draft?.awd_template_id ||
       selectableTemplates.value[0]?.id ||
@@ -297,6 +302,10 @@ watch(
     if (!open || mode !== 'create') {
       return
     }
+    if (selectableChallenges.value.length === 0) {
+      form.challenge_id = form.template_id
+      return
+    }
     const hasSelectedChallenge = selectableChallenges.value.some(
       (item) => item.id === form.challenge_id
     )
@@ -317,6 +326,9 @@ watch(
     const hasSelectedTemplate = selectableTemplates.value.some((item) => item.id === form.template_id)
     if (!hasSelectedTemplate) {
       form.template_id = props.draft?.awd_template_id || selectableTemplates.value[0]?.id || ''
+    }
+    if (props.mode === 'create') {
+      form.challenge_id = form.template_id
     }
   },
   { immediate: true }
@@ -363,7 +375,7 @@ function clearPreviewErrors() {
 function validate(): boolean {
   clearErrors()
 
-  if (props.mode === 'create' && !form.challenge_id) {
+  if (props.mode === 'create' && selectableChallenges.value.length > 0 && !form.challenge_id) {
     fieldErrors.challenge_id = '请选择题目'
   }
   if (!form.template_id) {
@@ -408,8 +420,8 @@ function validatePreview(): boolean {
   clearPreviewErrors()
   fieldErrors.challenge_id = ''
 
-  if (!form.challenge_id) {
-    fieldErrors.challenge_id = '请选择题目'
+  if (resolvePreviewChallengeID() <= 0) {
+    fieldErrors.challenge_id = '请选择服务模板'
   }
   if (!previewForm.access_url.trim()) {
     fieldErrors.preview_access_url = '请输入目标访问地址'
@@ -444,7 +456,7 @@ async function handlePreview() {
 
   try {
     const result = await runContestAWDCheckerPreview(props.contestId, {
-      challenge_id: Number(form.challenge_id),
+      challenge_id: resolvePreviewChallengeID(),
       checker_type: form.awd_checker_type,
       checker_config: buildCheckerConfig(),
       access_url: previewForm.access_url.trim(),
@@ -502,7 +514,6 @@ function handleSubmit() {
   }
 
   const payload = {
-    challenge_id: Number(form.challenge_id),
     template_id: Number(form.template_id),
     points: form.points,
     order: form.order,
@@ -512,7 +523,7 @@ function handleSubmit() {
     awd_sla_score: form.awd_sla_score,
     awd_defense_score: form.awd_defense_score,
   } as {
-    challenge_id: number
+    challenge_id?: number
     template_id: number
     points: number
     order: number
@@ -533,16 +544,16 @@ function handleSubmit() {
 </script>
 
 <template>
-  <AdminSurfaceModal
+  <SlideOverDrawer
     :open="open"
     :title="dialogTitle"
     :subtitle="
       mode === 'create'
-        ? '先完成题目关联和 Checker 草稿配置，保存后即可继续赛前试跑。'
-        : '统一维护赛事题目的 Checker、分值、顺序和试跑结果。'
+        ? '先选择服务模板并整理 Checker 草稿，保存后即可继续赛前试跑。'
+        : '统一维护赛事服务的 Checker、分值、顺序和试跑结果。'
     "
     eyebrow="AWD Operations"
-    width="57.5rem"
+    width="52rem"
     @close="closeDialog"
     @update:open="emit('update:open', $event)"
   >
@@ -555,7 +566,7 @@ function handleSubmit() {
           class="ui-field__label"
           for="awd-challenge-config-challenge"
         >题目</label>
-        <template v-if="mode === 'create'">
+        <template v-if="mode === 'create' && selectableChallenges.length > 0">
           <span
             class="ui-control-wrap"
             :class="{ 'is-error': !!fieldErrors.challenge_id }"
@@ -1492,7 +1503,7 @@ function handleSubmit() {
     </form>
 
     <template #footer>
-      <div class="awd-config-dialog__footer">
+      <div class="awd-config-drawer-footer">
         <button
           type="button"
           class="ui-btn ui-btn--secondary"
@@ -1511,7 +1522,7 @@ function handleSubmit() {
         </button>
       </div>
     </template>
-  </AdminSurfaceModal>
+  </SlideOverDrawer>
 </template>
 
 <style scoped>
@@ -1520,29 +1531,31 @@ function handleSubmit() {
 }
 
 .awd-config-readonly {
-  background: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-elevated));
+  background: var(--color-bg-elevated);
 }
 
 .awd-config-readonly__value {
   cursor: default;
+  color: var(--color-text-primary);
 }
 
 .awd-config-control--mono {
   font-family: var(--font-family-mono);
 }
 
-.awd-config-dialog__footer {
+.awd-config-drawer-footer {
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: var(--space-2);
+  width: 100%;
 }
 
 .checker-config-block {
   display: grid;
   gap: 1rem;
   padding-top: 1rem;
-  border-top: 1px solid color-mix(in srgb, var(--journal-border) 74%, transparent);
+  border-top: 1px solid var(--color-border-default);
 }
 
 .list-heading {
@@ -1557,7 +1570,7 @@ function handleSubmit() {
   margin: var(--space-1) 0 0;
   font-size: var(--font-size-1-20);
   font-weight: 700;
-  color: var(--journal-ink);
+  color: var(--color-text-primary);
 }
 
 .checker-config-block__head {
@@ -1589,9 +1602,9 @@ function handleSubmit() {
   justify-items: start;
   min-height: auto;
   padding: 0.9rem 1rem;
-  border: 1px solid color-mix(in srgb, var(--journal-border) 76%, transparent);
+  border: 1px solid var(--color-border-default);
   border-radius: 1rem;
-  background: color-mix(in srgb, var(--journal-surface) 88%, var(--color-bg-surface-elevated));
+  background: var(--color-bg-surface);
   color: var(--color-text-primary);
   text-align: left;
   transition:
@@ -1602,6 +1615,7 @@ function handleSubmit() {
 .checker-preset-button:hover {
   border-color: var(--color-primary);
   transform: translateY(-1px);
+  background: var(--color-bg-elevated);
 }
 
 .checker-preset-button__label {
@@ -1619,7 +1633,7 @@ function handleSubmit() {
   display: grid;
   gap: 1rem;
   padding: 1rem 0 0;
-  border-top: 1px solid color-mix(in srgb, var(--journal-border) 70%, transparent);
+  border-top: 1px solid var(--color-border-subtle);
 }
 
 .checker-action-section__head {
@@ -1672,10 +1686,10 @@ function handleSubmit() {
   margin: 0;
   padding: 1rem;
   border-radius: 1rem;
-  border: 1px solid color-mix(in srgb, var(--journal-border) 76%, transparent);
-  background: color-mix(in srgb, var(--journal-surface) 88%, var(--color-bg-surface-elevated));
+  border: 1px solid var(--color-border-default);
+  background: var(--color-bg-elevated);
   color: var(--color-text-primary);
-  font-family: 'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
+  font-family: var(--font-family-mono);
   font-size: 0.8rem;
   line-height: 1.7;
   white-space: pre-wrap;
@@ -1712,7 +1726,7 @@ function handleSubmit() {
 .checker-preview-notice--warning {
   border: 1px solid color-mix(in srgb, var(--color-warning) 30%, transparent);
   background: color-mix(in srgb, var(--color-warning) 8%, transparent);
-  color: color-mix(in srgb, var(--color-warning) 82%, var(--color-text-primary));
+  color: var(--color-warning);
 }
 
 .checker-preview-notice--success {
@@ -1725,9 +1739,9 @@ function handleSubmit() {
   display: grid;
   gap: 0.7rem;
   padding: 1rem 1.1rem;
-  border: 1px solid color-mix(in srgb, var(--journal-border) 76%, transparent);
+  border: 1px solid var(--color-border-default);
   border-radius: 1rem;
-  background: color-mix(in srgb, var(--journal-surface) 88%, var(--color-bg-surface-elevated));
+  background: var(--color-bg-surface);
 }
 
 .checker-validation-card__top {
@@ -1749,7 +1763,7 @@ function handleSubmit() {
 
 .checker-validation-card__meta {
   margin: 0;
-  font-family: 'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
+  font-family: var(--font-family-mono);
   word-break: break-all;
 }
 
@@ -1773,7 +1787,7 @@ function handleSubmit() {
   display: grid;
   gap: 1rem;
   padding-top: 1rem;
-  border-top: 1px solid color-mix(in srgb, var(--journal-border) 70%, transparent);
+  border-top: 1px solid var(--color-border-default);
 }
 
 .checker-preview-result__head {
@@ -1826,9 +1840,9 @@ function handleSubmit() {
   display: grid;
   gap: 0.5rem;
   padding: 0.95rem 1rem;
-  border: 1px solid color-mix(in srgb, var(--journal-border) 76%, transparent);
+  border: 1px solid var(--color-border-default);
   border-radius: 1rem;
-  background: color-mix(in srgb, var(--journal-surface) 88%, var(--color-bg-surface-elevated));
+  background: var(--color-bg-surface);
 }
 
 .checker-preview-action-card__top,
@@ -1854,7 +1868,7 @@ function handleSubmit() {
 
 .checker-preview-action-card__path,
 .checker-preview-target-card__url {
-  font-family: 'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
+  font-family: var(--font-family-mono);
   font-size: 0.82rem;
   color: var(--color-text-primary);
   word-break: break-all;

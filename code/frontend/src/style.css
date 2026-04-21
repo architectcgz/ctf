@@ -578,3 +578,21 @@ select {
 .modal-template-panel--classic .modal-template-classic__header {
   border-bottom: 1px solid rgba(15, 23, 42, 0.08) !important;
 }
+
+/**
+ * Slide-over Drawer Layout System
+ */
+.modal-template-shell--drawer {
+  /* 仅保留基础布局标识，具体视觉由组件变量控制 */
+  transition: all 0.3s ease;
+}
+
+.modal-template-panel--drawer {
+  height: 100%;
+  width: min(var(--modal-template-drawer-width, 32rem), 100vw);
+  border-radius: 0;
+  border: none;
+  border-left: 1px solid var(--color-border-default);
+  box-shadow: -24px 0 56px var(--color-shadow-strong);
+  background-color: var(--color-bg-surface);
+}

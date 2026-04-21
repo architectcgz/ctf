@@ -98,41 +98,80 @@ function formatDateTime(value?: string): string {
 <template>
   <div class="studio-readiness-flow">
     <!-- 1. Global Metric Band -->
-    <div v-if="readiness" class="studio-metric-band">
-      <div v-for="item in summaryItems" :key="item.key" class="metric-pill">
+    <div
+      v-if="readiness"
+      class="studio-metric-band"
+    >
+      <div
+        v-for="item in summaryItems"
+        :key="item.key"
+        class="metric-pill"
+      >
         <span class="metric-pill__label">{{ item.label }}</span>
         <span class="metric-pill__value">{{ item.value }}</span>
       </div>
     </div>
 
     <!-- 2. Decision HUD -->
-    <div v-if="readiness" class="decision-hud" :class="readinessDecision.key">
+    <div
+      v-if="readiness"
+      class="decision-hud"
+      :class="readinessDecision.key"
+    >
       <div class="decision-main">
         <div class="decision-icon">
-          <ShieldCheck v-if="readinessDecision.key === 'ready'" class="h-6 w-6" />
-          <AlertTriangle v-else class="h-6 w-6" />
+          <ShieldCheck
+            v-if="readinessDecision.key === 'ready'"
+            class="h-6 w-6"
+          />
+          <AlertTriangle
+            v-else
+            class="h-6 w-6"
+          />
         </div>
         <div class="decision-text">
-          <h3 class="decision-title">{{ readinessDecision.title }}</h3>
-          <p class="decision-description">{{ readinessDecision.description }}</p>
+          <h3 class="decision-title">
+            {{ readinessDecision.title }}
+          </h3>
+          <p class="decision-description">
+            {{ readinessDecision.description }}
+          </p>
         </div>
       </div>
       <div class="decision-meta">
-        <div class="impact-label">受影响动作</div>
+        <div class="impact-label">
+          受影响动作
+        </div>
         <div class="impact-tags">
-          <span v-for="label in blockingActionLabels" :key="label" class="impact-tag">{{ label }}</span>
-          <span v-if="blockingActionLabels.length === 0" class="impact-tag neutral">无阻塞</span>
+          <span
+            v-for="label in blockingActionLabels"
+            :key="label"
+            class="impact-tag"
+          >{{ label }}</span>
+          <span
+            v-if="blockingActionLabels.length === 0"
+            class="impact-tag neutral"
+          >无阻塞</span>
         </div>
       </div>
     </div>
 
     <!-- 3. Global Blockers -->
-    <section v-if="hasGlobalBlockingReasons" class="global-blockers">
+    <section
+      v-if="hasGlobalBlockingReasons"
+      class="global-blockers"
+    >
       <header class="section-header">
-        <h3 class="section-title">系统级阻塞项</h3>
+        <h3 class="section-title">
+          系统级阻塞项
+        </h3>
       </header>
       <div class="blocker-list">
-        <div v-for="reason in globalBlockingReasons" :key="reason" class="blocker-item">
+        <div
+          v-for="reason in globalBlockingReasons"
+          :key="reason"
+          class="blocker-item"
+        >
           <AlertCircle class="h-4 w-4 text-red-500" />
           <span>{{ getGlobalReasonCopy(reason) }}</span>
         </div>
@@ -142,8 +181,12 @@ function formatDateTime(value?: string): string {
     <!-- 4. Challenge Blockers Directory -->
     <section class="challenge-blockers">
       <header class="directory-header">
-        <h3 class="directory-title">题目级就绪明细</h3>
-        <div class="directory-meta">发现 {{ readiness?.blocking_count ?? 0 }} 个阻塞点</div>
+        <h3 class="directory-title">
+          题目级就绪明细
+        </h3>
+        <div class="directory-meta">
+          发现 {{ readiness?.blocking_count ?? 0 }} 个阻塞点
+        </div>
       </header>
 
       <AppEmpty
@@ -154,32 +197,60 @@ function formatDateTime(value?: string): string {
         class="py-12"
       />
 
-      <div v-else class="studio-table-wrap">
+      <div
+        v-else
+        class="studio-table-wrap"
+      >
         <table class="studio-table">
           <thead>
             <tr>
-              <th class="col-identity">题目资源</th>
-              <th class="col-status">当前状态</th>
-              <th class="col-reason">阻塞原因</th>
-              <th class="col-meta">最近校验</th>
-              <th class="col-actions">操作</th>
+              <th class="col-identity">
+                题目资源
+              </th>
+              <th class="col-status">
+                当前状态
+              </th>
+              <th class="col-reason">
+                阻塞原因
+              </th>
+              <th class="col-meta">
+                最近校验
+              </th>
+              <th class="col-actions">
+                操作
+              </th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="item in blockingItems" :key="item.challenge_id" class="studio-row">
+            <tr
+              v-for="item in blockingItems"
+              :key="item.challenge_id"
+              class="studio-row"
+            >
               <td class="col-identity">
                 <div class="challenge-identity">
-                  <div class="challenge-title">{{ item.title }}</div>
-                  <div class="challenge-subtitle">{{ item.checker_type === 'http_standard' ? 'HTTP Standard' : '基础探活' }}</div>
+                  <div class="challenge-title">
+                    {{ item.title }}
+                  </div>
+                  <div class="challenge-subtitle">
+                    {{ item.checker_type === 'http_standard' ? 'HTTP Standard' : '基础探活' }}
+                  </div>
                 </div>
               </td>
               <td class="col-status">
-                <span class="status-pill" :class="item.validation_state">{{ getValidationStateLabel(item) }}</span>
+                <span
+                  class="status-pill"
+                  :class="item.validation_state"
+                >{{ getValidationStateLabel(item) }}</span>
               </td>
               <td class="col-reason">
-                <div class="reason-text">{{ getBlockingReasonLabel(item) }}</div>
+                <div class="reason-text">
+                  {{ getBlockingReasonLabel(item) }}
+                </div>
               </td>
-              <td class="col-meta text-[11px] text-slate-500">{{ formatDateTime(item.last_preview_at) }}</td>
+              <td class="col-meta text-[11px] text-slate-500">
+                {{ formatDateTime(item.last_preview_at) }}
+              </td>
               <td class="col-actions">
                 <button
                   :id="`awd-readiness-edit-${item.challenge_id}`"
@@ -201,19 +272,19 @@ function formatDateTime(value?: string): string {
 .studio-readiness-flow { display: flex; flex-direction: column; gap: 2rem; }
 
 /* Metric Band */
-.studio-metric-band { display: flex; gap: 0.5rem; background: #f1f5f9; padding: 1rem; border-radius: 1rem; border: 1px solid #e2e8f0; }
-.metric-pill { background: white; border: 1px solid #e2e8f0; padding: 0.45rem 1rem; border-radius: 0.75rem; display: flex; align-items: baseline; gap: 0.75rem; }
-.metric-pill__label { font-size: 8px; font-weight: 800; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em; }
-.metric-pill__value { font-size: 13px; font-weight: 900; color: #1e293b; font-family: var(--font-family-mono); }
+.studio-metric-band { display: flex; gap: 0.5rem; background: var(--color-bg-elevated); padding: 1rem; border-radius: 1rem; border: 1px solid var(--color-border-default); }
+.metric-pill { background: var(--color-bg-surface); border: 1px solid var(--color-border-default); padding: 0.45rem 1rem; border-radius: 0.75rem; display: flex; align-items: baseline; gap: 0.75rem; }
+.metric-pill__label { font-size: 8px; font-weight: 800; text-transform: uppercase; color: var(--color-text-secondary); letter-spacing: 0.05em; }
+.metric-pill__value { font-size: 13px; font-weight: 900; color: var(--color-text-primary); font-family: var(--font-family-mono); }
 
 /* Decision HUD */
 .decision-hud { display: flex; justify-content: space-between; align-items: center; padding: 2rem; border-radius: 1.25rem; }
-.decision-hud.ready { background: #f0fdf4; color: #166534; }
-.decision-hud.blocked { background: #fef2f2; color: #991b1b; }
-.decision-hud.override { background: #fffbeb; color: #92400e; }
+.decision-hud.ready { background: color-mix(in srgb, var(--color-success) 10%, var(--color-bg-surface)); color: var(--color-success); border: 1px solid color-mix(in srgb, var(--color-success) 20%, transparent); }
+.decision-hud.blocked { background: color-mix(in srgb, var(--color-danger) 10%, var(--color-bg-surface)); color: var(--color-danger); border: 1px solid color-mix(in srgb, var(--color-danger) 20%, transparent); }
+.decision-hud.override { background: color-mix(in srgb, var(--color-warning) 10%, var(--color-bg-surface)); color: var(--color-warning); border: 1px solid color-mix(in srgb, var(--color-warning) 20%, transparent); }
 
 .decision-main { display: flex; align-items: center; gap: 1.5rem; }
-.decision-icon { width: 3.5rem; height: 3.5rem; border-radius: 1rem; background: white; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+.decision-icon { width: 3.5rem; height: 3.5rem; border-radius: 1rem; background: var(--color-bg-surface); display: flex; align-items: center; justify-content: center; box-shadow: var(--color-shadow-soft); }
 .decision-title { font-size: 1.15rem; font-weight: 900; margin: 0; }
 .decision-description { font-size: 13px; margin-top: 0.25rem; opacity: 0.8; font-weight: 500; }
 
@@ -223,32 +294,32 @@ function formatDateTime(value?: string): string {
 .impact-tag { font-size: 10px; font-weight: 800; padding: 0.15rem 0.6rem; border-radius: 4px; background: rgba(0,0,0,0.05); }
 
 /* Global Blockers */
-.global-blockers { background: #fff1f2; border-radius: 1.25rem; padding: 2rem; }
-.section-title { font-size: 13px; font-weight: 900; color: #991b1b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1rem; }
+.global-blockers { background: color-mix(in srgb, var(--color-danger) 10%, var(--color-bg-surface)); border-radius: 1.25rem; padding: 2rem; border: 1px solid color-mix(in srgb, var(--color-danger) 20%, transparent); }
+.section-title { font-size: 13px; font-weight: 900; color: var(--color-danger); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1rem; }
 .blocker-list { display: flex; flex-direction: column; gap: 0.75rem; }
-.blocker-item { display: flex; align-items: center; gap: 0.75rem; font-size: 13px; font-weight: 700; color: #7f1d1d; }
+.blocker-item { display: flex; align-items: center; gap: 0.75rem; font-size: 13px; font-weight: 700; color: var(--color-danger); }
 
 /* Directory */
 .directory-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1rem; }
-.directory-title { font-size: 13px; font-weight: 900; color: #0f172a; text-transform: uppercase; letter-spacing: 0.1em; }
-.directory-meta { font-size: 11px; font-weight: 600; color: #94a3b8; }
+.directory-title { font-size: 13px; font-weight: 900; color: var(--color-text-primary); text-transform: uppercase; letter-spacing: 0.1em; }
+.directory-meta { font-size: 11px; font-weight: 600; color: var(--color-text-muted); }
 
 /* Table Styles */
 .studio-table-wrap { border: none; border-radius: 0; background: transparent; overflow: hidden; }
-.studio-table { width: 100%; border-collapse: collapse; background: white; }
-.studio-table th { background: #f8fafc; padding: 0.75rem 1rem; text-align: left; font-size: 10px; font-weight: 800; text-transform: uppercase; color: #94a3b8; border-bottom: 1px solid #e2e8f0; border-top: 1px solid #e2e8f0; }
-.studio-table td { padding: 1rem; border-bottom: 1px solid #f1f5f9; }
+.studio-table { width: 100%; border-collapse: collapse; background: var(--color-bg-surface); }
+.studio-table th { background: var(--color-bg-elevated); padding: 0.75rem 1rem; text-align: left; font-size: 10px; font-weight: 800; text-transform: uppercase; color: var(--color-text-muted); border-bottom: 1px solid var(--color-border-default); border-top: 1px solid var(--color-border-default); }
+.studio-table td { padding: 1rem; border-bottom: 1px solid var(--color-border-subtle); }
 
-.challenge-title { font-size: 14px; font-weight: 800; color: #1e293b; }
-.challenge-subtitle { font-size: 11px; color: #94a3b8; margin-top: 0.15rem; }
+.challenge-title { font-size: 14px; font-weight: 800; color: var(--color-text-primary); }
+.challenge-subtitle { font-size: 11px; color: var(--color-text-muted); margin-top: 0.15rem; }
 
 .status-pill { font-size: 9px; font-weight: 800; padding: 0.15rem 0.5rem; border-radius: 99px; }
-.status-pill.passed { background: #dcfce7; color: #166534; }
-.status-pill.failed { background: #fee2e2; color: #991b1b; }
-.status-pill.pending, .status-pill.stale { background: #fef3c7; color: #92400e; }
+.status-pill.passed { background: var(--color-success); color: white; }
+.status-pill.failed { background: var(--color-danger); color: white; }
+.status-pill.pending, .status-pill.stale { background: var(--color-warning); color: white; }
 
-.reason-text { font-size: 12px; font-weight: 700; color: #475569; }
+.reason-text { font-size: 12px; font-weight: 700; color: var(--color-text-secondary); }
 
-.action-btn { font-size: 11px; font-weight: 800; color: #2563eb; background: #eff6ff; padding: 0.35rem 0.75rem; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s ease; border: none; }
-.action-btn:hover { background: #dbeafe; }
+.action-btn { font-size: 11px; font-weight: 800; color: var(--color-primary); background: var(--color-primary-soft); padding: 0.35rem 0.75rem; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s ease; border: none; }
+.action-btn:hover { background: color-mix(in srgb, var(--color-primary) 20%, var(--color-bg-surface)); }
 </style>
