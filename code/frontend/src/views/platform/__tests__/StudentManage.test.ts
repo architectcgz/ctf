@@ -39,9 +39,8 @@ describe('PlatformStudentManagement', () => {
           username: 'alice',
           name: 'Alice Zhang',
           student_no: '2024001',
-          solved_count: 5,
           total_score: 320,
-          weak_dimension: 'Web',
+          recent_event_count: 5,
           class_name: 'Class A',
         },
         {
@@ -49,9 +48,8 @@ describe('PlatformStudentManagement', () => {
           username: 'bob',
           name: 'Bob Li',
           student_no: '2024002',
-          solved_count: 3,
           total_score: 180,
-          weak_dimension: 'Pwn',
+          recent_event_count: 0,
           class_name: 'Class A',
         },
         {
@@ -59,9 +57,8 @@ describe('PlatformStudentManagement', () => {
           username: 'charlie',
           name: 'Charlie Wang',
           student_no: '2024011',
-          solved_count: 1,
           total_score: 60,
-          weak_dimension: 'Crypto',
+          recent_event_count: 2,
           class_name: 'Class B',
         },
       ]
@@ -71,9 +68,9 @@ describe('PlatformStudentManagement', () => {
         const keywordMatched =
           !params?.keyword ||
           item.username.includes(params.keyword) ||
-          (item.name ?? '').includes(params.keyword)
-        const studentNoMatched = !params?.student_no || item.student_no?.includes(params.student_no)
-        return classMatched && keywordMatched && studentNoMatched
+          (item.name ?? '').includes(params.keyword) ||
+          (item.student_no ?? '').includes(params.keyword)
+        return classMatched && keywordMatched
       })
 
       return {
@@ -89,7 +86,7 @@ describe('PlatformStudentManagement', () => {
     vi.useRealTimers()
   })
 
-  it('应使用后台工作台目录组件而不是教师端学生目录壳层', async () => {
+  it('应复用后台工作台目录组件和 teacher 学生目录接口', async () => {
     expect(adminStudentManageSource).toContain(
       "from '@/components/common/WorkspaceDirectoryToolbar.vue'"
     )
@@ -97,36 +94,17 @@ describe('PlatformStudentManagement', () => {
     expect(adminStudentManageSource).toContain(
       "from '@/components/common/WorkspaceDirectoryPagination.vue'"
     )
-    expect(adminStudentManageSource).toContain(
-      'class="workspace-shell journal-shell journal-shell-admin journal-notes-card journal-hero admin-student-manage-shell flex min-h-full flex-1 flex-col"'
-    )
-    expect(adminStudentManageSource).toContain(
-      'class="admin-summary-grid admin-student-manage-shell__summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
-    )
-    expect(adminStudentManageSource).toContain(
-      'class="workspace-directory-section admin-student-manage-directory"'
-    )
-    expect(adminStudentManageSource).toContain(
-      'class="workspace-directory-list admin-student-manage-table"'
-    )
+    expect(adminStudentManageSource).toContain("from '@/api/teacher'")
+    expect(adminStudentManageSource).toContain("from '@/composables/useStudentDirectoryQuery'")
+    expect(adminStudentManageSource).not.toContain("from '@/composables/usePlatformStudentDirectory'")
     expect(adminStudentManageSource).toContain('<WorkspaceDirectoryToolbar')
     expect(adminStudentManageSource).toContain('<WorkspaceDataTable')
     expect(adminStudentManageSource).toContain('<WorkspaceDirectoryPagination')
-    expect(adminStudentManageSource).not.toMatch(/^\.list-heading\s*\{/m)
-    expect(adminStudentManageSource).not.toMatch(/\.admin-student-manage-directory\s*\{/s)
-    expect(adminStudentManageSource).not.toContain('teacher-management-shell')
-    expect(adminStudentManageSource).not.toContain('teacher-directory-row')
 
     const wrapper = mount(PlatformStudentManagement)
     await flushPromises()
 
-    expect(wrapper.text()).toContain('学生管理')
-    expect(wrapper.text()).toContain('Alice Zhang')
-    expect(wrapper.text()).toContain('Bob Li')
-    expect(wrapper.text()).toContain('学生名称')
-    expect(wrapper.text()).toContain('学号')
-    expect(wrapper.text()).toContain('班级')
-    expect(wrapper.text()).toContain('得分')
+    expect(teacherApiMocks.getClasses).toHaveBeenCalledTimes(1)
     expect(teacherApiMocks.getStudentsDirectory).toHaveBeenCalledWith({
       class_name: undefined,
       keyword: undefined,
@@ -136,10 +114,21 @@ describe('PlatformStudentManagement', () => {
       page: 1,
       page_size: 20,
     })
+    expect(wrapper.text()).toContain('学生管理')
+    expect(wrapper.text()).toContain('Alice Zhang')
+    expect(wrapper.text()).toContain('Bob Li')
+    expect(wrapper.text()).toContain('Charlie Wang')
+    expect(wrapper.text()).toContain('学生姓名')
+    expect(wrapper.text()).toContain('用户名')
+    expect(wrapper.text()).toContain('学号')
+    expect(wrapper.text()).toContain('班级')
+    expect(wrapper.text()).toContain('查看学员')
   })
 
-  it('应支持检索并可进入学员分析页', async () => {
-    const wrapper = mount(PlatformStudentManagement)
+  it('应支持检索、班级筛选和进入学员分析页', async () => {
+    const wrapper = mount(PlatformStudentManagement, {
+      attachTo: document.body,
+    })
     await flushPromises()
 
     const searchInput = wrapper.get('input[placeholder="检索姓名、用户名或学号..."]')
@@ -159,6 +148,41 @@ describe('PlatformStudentManagement', () => {
       page_size: 20,
     })
 
+    await searchInput.setValue('')
+    vi.advanceTimersByTime(250)
+    await flushPromises()
+
+    await wrapper.get('.workspace-directory-toolbar__filter-toggle').trigger('click')
+    const classSelect = wrapper.get('select')
+    await classSelect.setValue('Class B')
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('Charlie Wang')
+    expect(wrapper.text()).not.toContain('Alice Zhang')
+    expect(teacherApiMocks.getStudentsDirectory).toHaveBeenLastCalledWith({
+      class_name: 'Class B',
+      keyword: undefined,
+      student_no: undefined,
+      sort_key: 'name',
+      sort_order: 'asc',
+      page: 1,
+      page_size: 20,
+    })
+
+    await wrapper.get('.workspace-directory-toolbar__filter-reset').trigger('click')
+    vi.advanceTimersByTime(250)
+    await flushPromises()
+
+    expect(teacherApiMocks.getStudentsDirectory).toHaveBeenLastCalledWith({
+      class_name: undefined,
+      keyword: undefined,
+      student_no: undefined,
+      sort_key: 'name',
+      sort_order: 'asc',
+      page: 1,
+      page_size: 20,
+    })
+
     await wrapper
       .findAll('button')
       .find((node) => node.text().includes('查看学员'))
@@ -168,5 +192,7 @@ describe('PlatformStudentManagement', () => {
       name: 'PlatformStudentAnalysis',
       params: { className: 'Class A', studentId: 'stu-1' },
     })
+
+    wrapper.unmount()
   })
 })
