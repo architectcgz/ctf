@@ -2,6 +2,35 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 
 const previewMock = vi.hoisted(() => vi.fn())
+const awdPreviewRealtimeMocks = vi.hoisted(() => {
+  let progressHandler: ((payload: Record<string, unknown>) => void) | null = null
+  const start = vi.fn(async () => undefined)
+  const stop = vi.fn()
+  const useContestAwdPreviewRealtime = vi.fn(
+    (_contestId: string, onProgress: (payload: Record<string, unknown>) => void) => {
+      progressHandler = onProgress
+      return {
+        status: { value: 'open' },
+        start,
+        stop,
+      }
+    }
+  )
+  return {
+    start,
+    stop,
+    useContestAwdPreviewRealtime,
+    emitProgress(payload: Record<string, unknown>) {
+      progressHandler?.(payload)
+    },
+    reset() {
+      progressHandler = null
+      start.mockClear()
+      stop.mockClear()
+      useContestAwdPreviewRealtime.mockClear()
+    },
+  }
+})
 
 vi.mock('@/api/admin', async () => {
   const actual = await vi.importActual<typeof import('@/api/admin')>('@/api/admin')
@@ -10,6 +39,10 @@ vi.mock('@/api/admin', async () => {
     runContestAWDCheckerPreview: previewMock,
   }
 })
+
+vi.mock('@/composables/useContestAwdPreviewRealtime', () => ({
+  useContestAwdPreviewRealtime: awdPreviewRealtimeMocks.useContestAwdPreviewRealtime,
+}))
 
 import AWDChallengeConfigDialog from '../contest/AWDChallengeConfigDialog.vue'
 
@@ -87,8 +120,7 @@ function mountDialog(props?: Record<string, unknown>) {
       stubs: {
         SlideOverDrawer: {
           props: ['open', 'title'],
-          template:
-            '<div v-if="open"><div>{{ title }}</div><slot /><slot name="footer" /></div>',
+          template: '<div v-if="open"><div>{{ title }}</div><slot /><slot name="footer" /></div>',
         },
       },
     },
@@ -97,7 +129,9 @@ function mountDialog(props?: Record<string, unknown>) {
 
 describe('AWDChallengeConfigDialog', () => {
   beforeEach(() => {
+    vi.useRealTimers()
     previewMock.mockReset()
+    awdPreviewRealtimeMocks.reset()
   })
 
   it('应该在创建时展示来自 AWD 题库模板的继承配置，并隐藏独立题目选择', async () => {
@@ -336,12 +370,17 @@ describe('AWDChallengeConfigDialog', () => {
         },
       },
       preview_flag: 'flag{preview}',
+      preview_request_id: expect.any(String),
     })
     expect(wrapper.text()).toContain('试跑结果')
     expect(wrapper.text()).toContain('正常')
     expect(wrapper.text()).toContain('PUT Flag')
     expect(wrapper.text()).toContain('GET Flag')
     expect(wrapper.text()).toContain('http://preview.internal')
+    expect(wrapper.text()).toContain(
+      '试跑已完成，这还是临时结果。点击下方保存按钮后，才会写入“最近一次已保存校验”。'
+    )
+    expect(wrapper.get('#awd-challenge-config-submit').text()).toContain('新增题目并写入试跑结果')
 
     await wrapper.get('#awd-challenge-config-submit').trigger('click')
 
@@ -374,6 +413,179 @@ describe('AWDChallengeConfigDialog', () => {
       awd_defense_score: 0,
       awd_checker_preview_token: 'preview-token-1',
     })
+  })
+
+  it('应该在试跑期间展示三轮进度并禁止保存', async () => {
+    let resolvePreview: ((value: Record<string, unknown>) => void) | null = null
+    previewMock.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolvePreview = resolve as (value: Record<string, unknown>) => void
+        })
+    )
+
+    const wrapper = mountDialog()
+
+    await wrapper.get('#awd-challenge-preview-submit').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.get('#awd-challenge-preview-submit').text()).toContain('试跑中')
+    expect(wrapper.get('#awd-challenge-config-submit').attributes('disabled')).toBeDefined()
+    expect(wrapper.get('#awd-challenge-preview-progress').text()).toContain('正在试跑 Checker')
+    expect(wrapper.get('#awd-challenge-preview-progress').text()).toContain('共 3 轮试跑')
+    expect(wrapper.get('#awd-challenge-preview-progress').text()).toContain('已接入实时进度事件')
+
+    const previewRequestId = (
+      previewMock.mock.calls[0]?.[1] as { preview_request_id?: string } | undefined
+    )?.preview_request_id
+    expect(previewRequestId).toBeTruthy()
+
+    awdPreviewRealtimeMocks.emitProgress({
+      preview_request_id: 'ignored-request',
+      phase_key: 'attempt-3',
+      phase_label: '第 3 轮试跑',
+      detail: '这条事件不应污染当前请求。',
+      attempt: 3,
+      total_attempts: 3,
+      status: 'running',
+    })
+    await flushPromises()
+    expect(wrapper.get('#awd-challenge-preview-progress-status').text()).not.toContain(
+      '第 3 轮试跑'
+    )
+
+    awdPreviewRealtimeMocks.emitProgress({
+      preview_request_id: previewRequestId,
+      phase_key: 'attempt-1',
+      phase_label: '第 1 轮试跑',
+      detail: '正在执行第 1 / 3 轮请求校验。',
+      attempt: 1,
+      total_attempts: 3,
+      status: 'running',
+    })
+    await flushPromises()
+    expect(wrapper.get('#awd-challenge-preview-progress-status').text()).toContain('第 1 轮试跑')
+    expect(wrapper.get('#awd-challenge-preview-progress').text()).toContain(
+      '正在执行第 1 / 3 轮请求校验。'
+    )
+    expect(wrapper.get('#awd-challenge-preview-progress').text()).toContain('第 1 / 3 轮')
+
+    awdPreviewRealtimeMocks.emitProgress({
+      preview_request_id: previewRequestId,
+      phase_key: 'attempt-2',
+      phase_label: '第 2 轮试跑',
+      detail: '正在执行第 2 / 3 轮请求校验。',
+      attempt: 2,
+      total_attempts: 3,
+      status: 'running',
+    })
+    await flushPromises()
+    expect(wrapper.get('#awd-challenge-preview-progress-status').text()).toContain('第 2 轮试跑')
+    expect(wrapper.get('#awd-challenge-preview-progress').text()).toContain('第 2 / 3 轮')
+
+    resolvePreview?.({
+      checker_type: 'http_standard',
+      service_status: 'up',
+      check_result: {
+        checker_type: 'http_standard',
+        check_source: 'checker_preview',
+        status_reason: 'preview_quorum_passed',
+        preview_pass_count: 2,
+        preview_total_count: 3,
+      },
+      preview_context: {
+        access_url: 'http://preview.internal',
+        preview_flag: 'flag{preview}',
+        round_number: 0,
+        team_id: '0',
+        challenge_id: '101',
+      },
+      preview_token: 'preview-token-progress',
+    })
+    await flushPromises()
+
+    expect(wrapper.find('#awd-challenge-preview-progress').exists()).toBe(false)
+    expect(wrapper.get('#awd-challenge-config-submit').attributes('disabled')).toBeUndefined()
+    expect(wrapper.text()).toContain('2/3 通过')
+  })
+
+  it('应该在编辑模式下明确区分临时试跑结果和已保存校验', async () => {
+    previewMock.mockResolvedValue({
+      checker_type: 'http_standard',
+      service_status: 'up',
+      check_result: {
+        checker_type: 'http_standard',
+        check_source: 'checker_preview',
+        status_reason: 'healthy',
+      },
+      preview_context: {
+        access_url: 'http://preview.internal',
+        preview_flag: 'flag{preview}',
+        round_number: 0,
+        team_id: '0',
+        challenge_id: '101',
+      },
+      preview_token: 'preview-token-2',
+    })
+
+    const wrapper = mountDialog({
+      mode: 'edit',
+      draft: {
+        id: 'link-1',
+        contest_id: 'awd-1',
+        challenge_id: '101',
+        title: 'Web Checker',
+        category: 'web',
+        difficulty: 'easy',
+        points: 120,
+        order: 1,
+        is_visible: true,
+        awd_service_id: '2',
+        awd_template_id: '501',
+        awd_checker_type: 'http_standard',
+        awd_checker_config: {
+          put_flag: {
+            method: 'PUT',
+            path: '/api/flag',
+            expected_status: 200,
+            body_template: '{{FLAG}}',
+          },
+          get_flag: {
+            method: 'GET',
+            path: '/api/flag',
+            expected_status: 200,
+            expected_substring: '{{FLAG}}',
+          },
+          havoc: {
+            method: 'GET',
+            path: '/healthz',
+            expected_status: 200,
+          },
+        },
+        awd_sla_score: 18,
+        awd_defense_score: 28,
+        awd_checker_validation_state: 'pending',
+        awd_checker_last_preview_result: undefined,
+        created_at: '2026-03-24T09:00:00.000Z',
+      },
+    })
+
+    await wrapper.get('#awd-challenge-preview-submit').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.text()).toContain(
+      '当前试跑结果尚未保存。点击下方保存按钮后，这里会显示最新一次已保存校验。'
+    )
+    expect(wrapper.text()).toContain(
+      '试跑已完成，这还是临时结果。点击下方保存按钮后，才会写入“最近一次已保存校验”。'
+    )
+    expect(wrapper.get('#awd-challenge-config-submit').text()).toContain('保存配置并写入试跑结果')
+    expect(previewMock).toHaveBeenCalledWith(
+      'awd-1',
+      expect.objectContaining({
+        service_id: 2,
+      })
+    )
   })
 
   it('应该在 checker 草稿变更后使试跑 token 失效', async () => {
@@ -434,6 +646,25 @@ describe('AWDChallengeConfigDialog', () => {
       awd_defense_score: 0,
     })
     expect(wrapper.text()).toContain('需要重新试跑')
+  })
+
+  it('应该把预览实例镜像拉取错误翻译成可执行提示', async () => {
+    previewMock.mockRejectedValue(
+      new Error(
+        'Error response from daemon: failed to resolve reference "registry.example.edu/ctf/awd-bank-portal:v1": failed to do request: Head "https://registry.example.edu/v2/ctf/awd-bank-portal/manifests/v1": EOF'
+      )
+    )
+
+    const wrapper = mountDialog()
+
+    await wrapper.get('#awd-challenge-preview-submit').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('自动拉起预览实例失败：当前模板引用的运行镜像暂时无法拉取。')
+    expect(wrapper.text()).toContain(
+      '如果这是示例占位地址，请先在当前环境构建同名镜像，或把模板镜像改成可直接拉取的真实地址。'
+    )
+    expect(wrapper.text()).toContain('registry.example.edu/ctf/awd-bank-portal:v1')
   })
 
   it('应该在编辑已有题目时展示最近一次已保存校验结果', async () => {

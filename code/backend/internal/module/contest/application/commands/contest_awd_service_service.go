@@ -92,7 +92,14 @@ func (s *ContestAWDServiceService) CreateContestAWDService(ctx context.Context, 
 		previewToken,
 	)
 	if err != nil {
+		var appErr *errcode.AppError
+		if errors.As(err, &appErr) {
+			return nil, err
+		}
 		return nil, errcode.ErrInternal.WithCause(err)
+	}
+	if err := ensureCheckerPreviewTokenConsumed(previewToken, lastPreviewResult); err != nil {
+		return nil, err
 	}
 	record := &model.ContestAWDService{
 		ContestID:         contestID,
@@ -223,6 +230,10 @@ func (s *ContestAWDServiceService) UpdateContestAWDService(ctx context.Context, 
 		previewToken,
 	)
 	if err != nil {
+		var appErr *errcode.AppError
+		if errors.As(err, &appErr) {
+			return err
+		}
 		return errcode.ErrInternal.WithCause(err)
 	}
 	if validationChanged {

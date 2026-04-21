@@ -188,6 +188,7 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 	})
 	engine.GET("/ws/contests/:id/announcements", contestRealtimeHandler.ServeAnnouncementWS)
 	engine.GET("/ws/contests/:id/scoreboard", contestRealtimeHandler.ServeScoreboardWS)
+	engine.GET("/ws/contests/:id/awd-preview", contestRealtimeHandler.ServeAWDPreviewWS)
 
 	return &routerRuntime{
 		engine:     engine,

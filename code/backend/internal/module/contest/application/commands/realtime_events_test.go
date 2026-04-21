@@ -17,13 +17,27 @@ type contestRealtimeBroadcastCall struct {
 	message ctfws.Envelope
 }
 
+type contestRealtimeUserBroadcastCall struct {
+	userID  int64
+	message ctfws.Envelope
+}
+
 type contestRealtimeBroadcasterStub struct {
-	calls []contestRealtimeBroadcastCall
+	calls     []contestRealtimeBroadcastCall
+	userCalls []contestRealtimeUserBroadcastCall
 }
 
 func (s *contestRealtimeBroadcasterStub) SendToChannel(channel string, message ctfws.Envelope) int {
 	s.calls = append(s.calls, contestRealtimeBroadcastCall{
 		channel: channel,
+		message: message,
+	})
+	return 1
+}
+
+func (s *contestRealtimeBroadcasterStub) SendToUser(userID int64, message ctfws.Envelope) int {
+	s.userCalls = append(s.userCalls, contestRealtimeUserBroadcastCall{
+		userID:  userID,
 		message: message,
 	})
 	return 1

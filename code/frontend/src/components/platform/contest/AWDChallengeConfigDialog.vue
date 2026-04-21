@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, onUnmounted, reactive, ref, watch } from 'vue'
 
 import { runContestAWDCheckerPreview } from '@/api/admin'
 import type {
@@ -11,6 +11,14 @@ import type {
   AWDTeamServiceData,
 } from '@/api/contracts'
 import SlideOverDrawer from '@/components/common/modal-templates/SlideOverDrawer.vue'
+import {
+  extractAwdRuntimeImageRef,
+  formatAwdPreviewRuntimeError,
+} from '@/components/platform/awdRuntimeImageSupport'
+import {
+  useContestAwdPreviewRealtime,
+  type ContestAwdPreviewProgressEvent,
+} from '@/composables/useContestAwdPreviewRealtime'
 import { useAwdCheckResultPresentation } from '@/composables/useAwdCheckResultPresentation'
 import {
   AWD_CHECKER_FIELD_ERROR_KEYS,
@@ -25,6 +33,13 @@ import {
   type AWDHTTPStandardDraft,
   type AWDLegacyProbeDraft,
 } from './awdCheckerConfigSupport'
+import {
+  AWD_CHECKER_PREVIEW_ATTEMPT_TOTAL,
+  AWD_CHECKER_PREVIEW_PROGRESS_PHASES,
+  formatAwdCheckerPreviewElapsed,
+  resolveAwdCheckerPreviewProgressPhaseIndex,
+  resolveAwdCheckerPreviewProgressPhaseIndexByKey,
+} from './awdCheckerPreviewProgress'
 
 type DialogMode = 'create' | 'edit'
 
@@ -44,7 +59,7 @@ const props = withDefaults(
   {
     templateOptions: () => [],
     loadingTemplateCatalog: false,
-  },
+  }
 )
 
 const emit = defineEmits<{
@@ -89,6 +104,17 @@ const previewToken = ref('')
 const previewSignature = ref('')
 const previewTokenInvalidated = ref(false)
 const syncingDialogState = ref(false)
+const previewProgressElapsedMs = ref(0)
+const previewProgressPhaseIndex = ref(0)
+const previewRequestId = ref('')
+const previewRealtimePhaseLabel = ref('')
+const previewRealtimePhaseDetail = ref('')
+const previewRealtimeAttempt = ref<number | null>(null)
+const previewRealtimeTotalAttempts = ref<number | null>(null)
+const previewRealtimeStatus = ref('')
+
+let previewProgressTimer: ReturnType<typeof globalThis.setInterval> | null = null
+let previewProgressStartedAt = 0
 
 function createFieldErrorState() {
   return {
@@ -175,7 +201,9 @@ const activeChallengeLabel = computed(() => {
     const title = props.draft?.title?.trim() || `Challenge #${props.draft?.challenge_id || ''}`
     return title
   }
-  return selectableTemplates.value.find((item) => item.id === form.template_id)?.name || '请选择服务模板'
+  return (
+    selectableTemplates.value.find((item) => item.id === form.template_id)?.name || '请选择服务模板'
+  )
 })
 
 function resolvePreviewChallengeID(): number {
@@ -183,6 +211,13 @@ function resolvePreviewChallengeID(): number {
     return Number(props.draft?.challenge_id || form.challenge_id || form.template_id || 0)
   }
   return Number(form.template_id || form.challenge_id || 0)
+}
+
+function resolvePreviewServiceID(): number {
+  if (props.mode !== 'edit') {
+    return 0
+  }
+  return Number(props.draft?.awd_service_id || 0)
 }
 
 const checkerPreviewText = computed(() =>
@@ -209,6 +244,9 @@ const selectedTemplateCategorySummary = computed(() => {
     selectedTemplate.value.deployment_mode,
   ].join(' · ')
 })
+const selectedTemplateRuntimeImageRef = computed(() =>
+  extractAwdRuntimeImageRef(selectedTemplate.value?.runtime_config)
+)
 
 function formatPreviewDateTime(value?: string): string {
   if (!value) {
@@ -261,6 +299,99 @@ const previewAccessURL = computed(() =>
 )
 const previewActions = computed(() => getCheckActions(previewCheckResult.value))
 const previewTargets = computed(() => getCheckTargets(previewCheckResult.value))
+const previewPendingSaveNotice = computed(() =>
+  canAttachPreviewToken.value
+    ? '试跑已完成，这还是临时结果。点击下方保存按钮后，才会写入“最近一次已保存校验”。'
+    : ''
+)
+const previewRealtime = useContestAwdPreviewRealtime(
+  props.contestId || '',
+  handlePreviewRealtimeProgress
+)
+const previewProgressPhase = computed(
+  () =>
+    AWD_CHECKER_PREVIEW_PROGRESS_PHASES[previewProgressPhaseIndex.value] ||
+    AWD_CHECKER_PREVIEW_PROGRESS_PHASES[0]
+)
+const previewProgressSteps = computed(() =>
+  AWD_CHECKER_PREVIEW_PROGRESS_PHASES.map((phase, index) => ({
+    ...phase,
+    state:
+      index < previewProgressPhaseIndex.value
+        ? 'done'
+        : index === previewProgressPhaseIndex.value
+          ? 'current'
+          : 'pending',
+  }))
+)
+const previewProgressAttemptText = computed(() => {
+  const totalAttempts = previewRealtimeTotalAttempts.value || AWD_CHECKER_PREVIEW_ATTEMPT_TOTAL
+  if (previewRealtimeAttempt.value) {
+    return `第 ${previewRealtimeAttempt.value} / ${totalAttempts} 轮`
+  }
+  const currentPhase = previewProgressPhase.value
+  if (currentPhase.attempt) {
+    return `第 ${currentPhase.attempt} / ${totalAttempts} 轮`
+  }
+  return `共 ${totalAttempts} 轮`
+})
+const previewProgressStatusText = computed(() => {
+  if (previewRealtimeStatus.value === 'failed') {
+    return '试跑失败'
+  }
+  if (previewRealtimePhaseLabel.value) {
+    return previewRealtimePhaseLabel.value
+  }
+  const currentPhase = previewProgressPhase.value
+  if (currentPhase.attempt) {
+    return `正在执行第 ${currentPhase.attempt} / ${AWD_CHECKER_PREVIEW_ATTEMPT_TOTAL} 轮`
+  }
+  return currentPhase.label
+})
+const previewProgressDetailText = computed(
+  () => previewRealtimePhaseDetail.value || previewProgressPhase.value.detail
+)
+const previewProgressElapsedText = computed(() =>
+  formatAwdCheckerPreviewElapsed(previewProgressElapsedMs.value)
+)
+const previewProgressPercent = computed(() => {
+  const phaseCount = AWD_CHECKER_PREVIEW_PROGRESS_PHASES.length
+  return Math.round(((previewProgressPhaseIndex.value + 1) / phaseCount) * 100)
+})
+const previewButtonText = computed(() => {
+  if (!previewing.value) {
+    return '试跑 Checker'
+  }
+  const currentPhase = previewProgressPhase.value
+  if (currentPhase.attempt) {
+    return `试跑中 · 第 ${currentPhase.attempt}/${AWD_CHECKER_PREVIEW_ATTEMPT_TOTAL} 轮`
+  }
+  if (currentPhase.key === 'summary') {
+    return '试跑中 · 汇总结果'
+  }
+  return '试跑中 · 准备环境'
+})
+const previewProgressConnectionHint = computed(() => {
+  if (previewRealtime.status.value === 'open') {
+    return '已接入实时进度事件'
+  }
+  if (previewRealtime.status.value === 'connecting') {
+    return '正在连接实时进度事件'
+  }
+  return '实时事件不可用时，将回退为本地进度提示'
+})
+const submitButtonText = computed(() => {
+  if (props.saving) {
+    return '保存中...'
+  }
+  if (previewing.value) {
+    return '试跑进行中，暂不能保存'
+  }
+  if (canAttachPreviewToken.value) {
+    return props.mode === 'create' ? '新增题目并写入试跑结果' : '保存配置并写入试跑结果'
+  }
+  return props.mode === 'create' ? '新增题目' : '保存配置'
+})
 
 const savedPreviewResult = computed(() => props.draft?.awd_checker_last_preview_result || null)
 const savedPreviewPresentationResult = computed(() =>
@@ -275,6 +406,12 @@ const savedPreviewAccessURL = computed(() =>
 const savedValidationStateLabel = computed(() =>
   getValidationStateLabel(props.draft?.awd_checker_validation_state)
 )
+const savedPreviewEmptyText = computed(() => {
+  if (previewPendingSaveNotice.value) {
+    return '当前试跑结果尚未保存。点击下方保存按钮后，这里会显示最新一次已保存校验。'
+  }
+  return '当前配置还没有保存过试跑结果。'
+})
 
 const currentCheckerSignature = computed(() =>
   JSON.stringify({
@@ -327,10 +464,7 @@ watch(
       props.mode === 'edit'
         ? props.draft?.challenge_id || ''
         : selectableTemplates.value[0]?.id || ''
-    form.template_id =
-      props.draft?.awd_template_id ||
-      selectableTemplates.value[0]?.id ||
-      ''
+    form.template_id = props.draft?.awd_template_id || selectableTemplates.value[0]?.id || ''
     form.points = props.draft?.points ?? 100
     form.order = props.draft?.order ?? 0
     form.is_visible = props.draft?.is_visible === false ? 'false' : 'true'
@@ -346,6 +480,7 @@ watch(
     previewToken.value = ''
     previewSignature.value = ''
     previewTokenInvalidated.value = false
+    resetPreviewProgress()
     clearErrors()
     syncingDialogState.value = false
   },
@@ -380,7 +515,9 @@ watch(
     if (!open) {
       return
     }
-    const hasSelectedTemplate = selectableTemplates.value.some((item) => item.id === form.template_id)
+    const hasSelectedTemplate = selectableTemplates.value.some(
+      (item) => item.id === form.template_id
+    )
     if (!hasSelectedTemplate) {
       form.template_id = props.draft?.awd_template_id || selectableTemplates.value[0]?.id || ''
     }
@@ -404,10 +541,19 @@ watch(
   }
 )
 
+onUnmounted(() => {
+  resetPreviewProgress()
+  previewRealtime.stop()
+})
+
 function clearErrors() {
   for (const key of Object.keys(fieldErrors) as Array<keyof typeof fieldErrors>) {
     fieldErrors[key] = ''
   }
+}
+
+function createPreviewRequestId(): string {
+  return `awd-preview-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
 }
 
 function closeDialog() {
@@ -489,10 +635,7 @@ function validatePreview(): boolean {
     }
   }
 
-  return (
-    !fieldErrors.challenge_id &&
-    AWD_CHECKER_FIELD_ERROR_KEYS.every((key) => !fieldErrors[key])
-  )
+  return !fieldErrors.challenge_id && AWD_CHECKER_FIELD_ERROR_KEYS.every((key) => !fieldErrors[key])
 }
 
 async function handlePreview() {
@@ -506,25 +649,109 @@ async function handlePreview() {
 
   previewing.value = true
   previewError.value = ''
+  previewResult.value = null
+  previewToken.value = ''
+  previewSignature.value = ''
+  previewTokenInvalidated.value = false
+  const nextPreviewRequestId = createPreviewRequestId()
+  startPreviewProgress()
+  previewRequestId.value = nextPreviewRequestId
 
   try {
+    await previewRealtime.start().catch(() => undefined)
     const accessURL = previewForm.access_url.trim()
     const result = await runContestAWDCheckerPreview(props.contestId, {
+      ...(resolvePreviewServiceID() > 0 ? { service_id: resolvePreviewServiceID() } : {}),
       challenge_id: resolvePreviewChallengeID(),
       checker_type: form.awd_checker_type,
       checker_config: buildCheckerConfig(),
       ...(accessURL ? { access_url: accessURL } : {}),
       preview_flag: previewForm.preview_flag.trim() || undefined,
+      preview_request_id: nextPreviewRequestId,
     })
     previewResult.value = result
     previewToken.value = result.preview_token || ''
     previewSignature.value = currentCheckerSignature.value
     previewTokenInvalidated.value = false
   } catch (error) {
-    previewError.value = error instanceof Error ? error.message : '试跑失败，请稍后重试。'
+    const message = error instanceof Error ? error.message : '试跑失败，请稍后重试。'
+    previewError.value = formatAwdPreviewRuntimeError(
+      message,
+      selectedTemplateRuntimeImageRef.value
+    )
   } finally {
+    stopPreviewProgress()
+    previewRealtime.stop()
     previewing.value = false
   }
+}
+
+function startPreviewProgress() {
+  resetPreviewProgress()
+  previewProgressStartedAt = Date.now()
+  syncPreviewProgress()
+  previewProgressTimer = globalThis.setInterval(() => {
+    syncPreviewProgress()
+  }, 240)
+}
+
+function stopPreviewProgress() {
+  syncPreviewProgress()
+  if (previewProgressTimer !== null) {
+    globalThis.clearInterval(previewProgressTimer)
+    previewProgressTimer = null
+  }
+}
+
+function resetPreviewProgress() {
+  if (previewProgressTimer !== null) {
+    globalThis.clearInterval(previewProgressTimer)
+    previewProgressTimer = null
+  }
+  previewProgressStartedAt = 0
+  previewProgressElapsedMs.value = 0
+  previewProgressPhaseIndex.value = 0
+  previewRequestId.value = ''
+  previewRealtimePhaseLabel.value = ''
+  previewRealtimePhaseDetail.value = ''
+  previewRealtimeAttempt.value = null
+  previewRealtimeTotalAttempts.value = null
+  previewRealtimeStatus.value = ''
+}
+
+function syncPreviewProgress() {
+  if (!previewProgressStartedAt) {
+    previewProgressElapsedMs.value = 0
+    previewProgressPhaseIndex.value = 0
+    return
+  }
+  const elapsedMs = Math.max(0, Date.now() - previewProgressStartedAt)
+  previewProgressElapsedMs.value = elapsedMs
+  previewProgressPhaseIndex.value = resolveAwdCheckerPreviewProgressPhaseIndex(elapsedMs)
+}
+
+function handlePreviewRealtimeProgress(payload: ContestAwdPreviewProgressEvent) {
+  if (!previewing.value) {
+    return
+  }
+  const nextRequestId = payload.preview_request_id?.trim()
+  if (previewRequestId.value && nextRequestId && nextRequestId !== previewRequestId.value) {
+    return
+  }
+  if (payload.phase_key) {
+    previewProgressPhaseIndex.value = resolveAwdCheckerPreviewProgressPhaseIndexByKey(
+      payload.phase_key
+    )
+  }
+  previewRealtimePhaseLabel.value = payload.phase_label?.trim() || ''
+  previewRealtimePhaseDetail.value = payload.detail?.trim() || ''
+  previewRealtimeStatus.value = payload.status?.trim() || ''
+  previewRealtimeAttempt.value =
+    typeof payload.attempt === 'number' && payload.attempt > 0 ? payload.attempt : null
+  previewRealtimeTotalAttempts.value =
+    typeof payload.total_attempts === 'number' && payload.total_attempts > 0
+      ? payload.total_attempts
+      : null
 }
 
 function getPreviewStatusLabel(status: AWDTeamServiceData['service_status']): string {
@@ -618,84 +845,50 @@ function handleSubmit() {
     @close="closeDialog"
     @update:open="emit('update:open', $event)"
   >
-    <form
-      class="space-y-6"
-      @submit.prevent="handleSubmit"
-    >
-      <div
-        v-if="mode === 'edit'"
-        class="ui-field awd-config-field"
-      >
-        <label
-          class="ui-field__label"
-          for="awd-challenge-config-challenge"
-        >赛事题目</label>
+    <form class="space-y-6" @submit.prevent="handleSubmit">
+      <div v-if="mode === 'edit'" class="ui-field awd-config-field">
+        <label class="ui-field__label" for="awd-challenge-config-challenge">赛事题目</label>
         <span class="ui-control-wrap awd-config-readonly">
           <span class="ui-control awd-config-readonly__value">
             {{ activeChallengeLabel }}
           </span>
         </span>
-        <p
-          v-if="fieldErrors.challenge_id"
-          class="ui-field__error"
-        >
+        <p v-if="fieldErrors.challenge_id" class="ui-field__error">
           {{ fieldErrors.challenge_id }}
         </p>
       </div>
 
       <div class="ui-field awd-config-field">
-        <label
-          class="ui-field__label"
-          for="awd-challenge-config-template"
-        >AWD 题库模板</label>
-        <span
-          class="ui-control-wrap"
-          :class="{ 'is-error': !!fieldErrors.template_id }"
-        >
+        <label class="ui-field__label" for="awd-challenge-config-template">AWD 题库模板</label>
+        <span class="ui-control-wrap" :class="{ 'is-error': !!fieldErrors.template_id }">
           <select
             id="awd-challenge-config-template"
             v-model="form.template_id"
             class="ui-control"
             :disabled="loadingTemplateCatalog"
           >
-            <option
-              value=""
-              disabled
-            >
+            <option value="" disabled>
               {{ loadingTemplateCatalog ? '正在加载模板...' : '请选择服务模板' }}
             </option>
-            <option
-              v-for="template in selectableTemplates"
-              :key="template.id"
-              :value="template.id"
-            >
+            <option v-for="template in selectableTemplates" :key="template.id" :value="template.id">
               {{ template.name }}
             </option>
           </select>
         </span>
-        <p
-          v-if="fieldErrors.template_id"
-          class="ui-field__error"
-        >
+        <p v-if="fieldErrors.template_id" class="ui-field__error">
           {{ fieldErrors.template_id }}
         </p>
         <p class="ui-field__hint">
-          比赛服务会直接继承题库模板里的入口、端口、flag 与基础 checker 定义，再叠加本页的分值和校验配置。
+          比赛服务会直接继承题库模板里的入口、端口、flag 与基础 checker
+          定义，再叠加本页的分值和校验配置。
         </p>
       </div>
 
-      <section
-        v-if="selectedTemplate"
-        class="template-snapshot-card"
-      >
+      <section v-if="selectedTemplate" class="template-snapshot-card">
         <header class="list-heading template-snapshot-card__head">
           <div>
-            <div class="journal-note-label">
-              Template Snapshot
-            </div>
-            <h3 class="list-heading__title template-snapshot-card__title">
-              题库模板快照
-            </h3>
+            <div class="journal-note-label">Template Snapshot</div>
+            <h3 class="list-heading__title template-snapshot-card__title">题库模板快照</h3>
           </div>
           <p class="template-snapshot-card__hint">
             新增题目时以题库模板为准，防守入口、可攻击端口和 flag 策略都应优先来自这里。
@@ -713,15 +906,21 @@ function handleSubmit() {
           </div>
           <div class="template-snapshot-chip">
             <span class="template-snapshot-chip__label">默认 Checker</span>
-            <span class="template-snapshot-chip__value">{{ selectedTemplateCheckerTypeLabel }}</span>
+            <span class="template-snapshot-chip__value">{{
+              selectedTemplateCheckerTypeLabel
+            }}</span>
           </div>
           <div class="template-snapshot-chip">
             <span class="template-snapshot-chip__label">防守入口</span>
-            <span class="template-snapshot-chip__value">{{ selectedTemplate.defense_entry_mode || '未定义' }}</span>
+            <span class="template-snapshot-chip__value">{{
+              selectedTemplate.defense_entry_mode || '未定义'
+            }}</span>
           </div>
           <div class="template-snapshot-chip">
             <span class="template-snapshot-chip__label">Flag 模式</span>
-            <span class="template-snapshot-chip__value">{{ selectedTemplate.flag_mode || '未定义' }}</span>
+            <span class="template-snapshot-chip__value">{{
+              selectedTemplate.flag_mode || '未定义'
+            }}</span>
           </div>
         </div>
 
@@ -742,21 +941,16 @@ function handleSubmit() {
             <pre
               :id="`awd-template-snapshot-${section.key}`"
               class="checker-preview template-snapshot-panel__json"
-            >{{ formatTemplateSnapshotJSON(section.value) }}</pre>
+              >{{ formatTemplateSnapshotJSON(section.value) }}</pre
+            >
           </article>
         </div>
       </section>
 
       <div class="grid gap-4 sm:grid-cols-3">
         <div class="ui-field awd-config-field">
-          <label
-            class="ui-field__label"
-            for="awd-challenge-config-points"
-          >分值</label>
-          <span
-            class="ui-control-wrap"
-            :class="{ 'is-error': !!fieldErrors.points }"
-          >
+          <label class="ui-field__label" for="awd-challenge-config-points">分值</label>
+          <span class="ui-control-wrap" :class="{ 'is-error': !!fieldErrors.points }">
             <input
               id="awd-challenge-config-points"
               v-model.number="form.points"
@@ -764,25 +958,16 @@ function handleSubmit() {
               min="1"
               step="1"
               class="ui-control"
-            >
+            />
           </span>
-          <p
-            v-if="fieldErrors.points"
-            class="ui-field__error"
-          >
+          <p v-if="fieldErrors.points" class="ui-field__error">
             {{ fieldErrors.points }}
           </p>
         </div>
 
         <div class="ui-field awd-config-field">
-          <label
-            class="ui-field__label"
-            for="awd-challenge-config-order"
-          >顺序</label>
-          <span
-            class="ui-control-wrap"
-            :class="{ 'is-error': !!fieldErrors.order }"
-          >
+          <label class="ui-field__label" for="awd-challenge-config-order">顺序</label>
+          <span class="ui-control-wrap" :class="{ 'is-error': !!fieldErrors.order }">
             <input
               id="awd-challenge-config-order"
               v-model.number="form.order"
@@ -790,27 +975,17 @@ function handleSubmit() {
               min="0"
               step="1"
               class="ui-control"
-            >
+            />
           </span>
-          <p
-            v-if="fieldErrors.order"
-            class="ui-field__error"
-          >
+          <p v-if="fieldErrors.order" class="ui-field__error">
             {{ fieldErrors.order }}
           </p>
         </div>
 
         <div class="ui-field awd-config-field">
-          <label
-            class="ui-field__label"
-            for="awd-challenge-config-visible"
-          >可见性</label>
+          <label class="ui-field__label" for="awd-challenge-config-visible">可见性</label>
           <span class="ui-control-wrap">
-            <select
-              id="awd-challenge-config-visible"
-              v-model="form.is_visible"
-              class="ui-control"
-            >
+            <select id="awd-challenge-config-visible" v-model="form.is_visible" class="ui-control">
               <option value="true">可见</option>
               <option value="false">隐藏</option>
             </select>
@@ -820,10 +995,7 @@ function handleSubmit() {
 
       <div class="grid gap-4 sm:grid-cols-3">
         <div class="ui-field awd-config-field">
-          <label
-            class="ui-field__label"
-            for="awd-challenge-config-checker-type"
-          >
+          <label class="ui-field__label" for="awd-challenge-config-checker-type">
             Checker 类型
           </label>
           <span class="ui-control-wrap">
@@ -839,14 +1011,8 @@ function handleSubmit() {
         </div>
 
         <div class="ui-field awd-config-field">
-          <label
-            class="ui-field__label"
-            for="awd-challenge-config-sla-score"
-          >SLA 分</label>
-          <span
-            class="ui-control-wrap"
-            :class="{ 'is-error': !!fieldErrors.awd_sla_score }"
-          >
+          <label class="ui-field__label" for="awd-challenge-config-sla-score">SLA 分</label>
+          <span class="ui-control-wrap" :class="{ 'is-error': !!fieldErrors.awd_sla_score }">
             <input
               id="awd-challenge-config-sla-score"
               v-model.number="form.awd_sla_score"
@@ -854,25 +1020,16 @@ function handleSubmit() {
               min="0"
               step="1"
               class="ui-control"
-            >
+            />
           </span>
-          <p
-            v-if="fieldErrors.awd_sla_score"
-            class="ui-field__error"
-          >
+          <p v-if="fieldErrors.awd_sla_score" class="ui-field__error">
             {{ fieldErrors.awd_sla_score }}
           </p>
         </div>
 
         <div class="ui-field awd-config-field">
-          <label
-            class="ui-field__label"
-            for="awd-challenge-config-defense-score"
-          >防守分</label>
-          <span
-            class="ui-control-wrap"
-            :class="{ 'is-error': !!fieldErrors.awd_defense_score }"
-          >
+          <label class="ui-field__label" for="awd-challenge-config-defense-score">防守分</label>
+          <span class="ui-control-wrap" :class="{ 'is-error': !!fieldErrors.awd_defense_score }">
             <input
               id="awd-challenge-config-defense-score"
               v-model.number="form.awd_defense_score"
@@ -880,12 +1037,9 @@ function handleSubmit() {
               min="0"
               step="1"
               class="ui-control"
-            >
+            />
           </span>
-          <p
-            v-if="fieldErrors.awd_defense_score"
-            class="ui-field__error"
-          >
+          <p v-if="fieldErrors.awd_defense_score" class="ui-field__error">
             {{ fieldErrors.awd_defense_score }}
           </p>
         </div>
@@ -894,9 +1048,7 @@ function handleSubmit() {
       <section class="checker-config-block">
         <header class="list-heading checker-config-block__head">
           <div>
-            <div class="journal-note-label">
-              Checker Config
-            </div>
+            <div class="journal-note-label">Checker Config</div>
             <h3 class="list-heading__title checker-config-block__title">
               {{
                 form.awd_checker_type === 'http_standard'
@@ -914,35 +1066,21 @@ function handleSubmit() {
           </p>
         </header>
 
-        <div
-          v-if="form.awd_checker_type === 'legacy_probe'"
-          class="ui-field awd-config-field"
-        >
-          <label
-            class="ui-field__label"
-            for="awd-challenge-config-legacy-health-path"
-          >
+        <div v-if="form.awd_checker_type === 'legacy_probe'" class="ui-field awd-config-field">
+          <label class="ui-field__label" for="awd-challenge-config-legacy-health-path">
             健康检查路径
           </label>
-          <span
-            class="ui-control-wrap"
-            :class="{ 'is-error': !!fieldErrors.legacy_health_path }"
-          >
+          <span class="ui-control-wrap" :class="{ 'is-error': !!fieldErrors.legacy_health_path }">
             <input
               id="awd-challenge-config-legacy-health-path"
               v-model="legacyProbeDraft.health_path"
               type="text"
               placeholder="/healthz"
               class="ui-control"
-            >
+            />
           </span>
-          <p class="ui-field__hint">
-            留空时使用当前全局健康检查路径。
-          </p>
-          <p
-            v-if="fieldErrors.legacy_health_path"
-            class="ui-field__error"
-          >
+          <p class="ui-field__hint">留空时使用当前全局健康检查路径。</p>
+          <p v-if="fieldErrors.legacy_health_path" class="ui-field__error">
             {{ fieldErrors.legacy_health_path }}
           </p>
         </div>
@@ -964,30 +1102,19 @@ function handleSubmit() {
 
           <section class="checker-action-section">
             <header class="list-heading checker-action-section__head">
-              <h4 class="list-heading__title checker-action-section__title">
-                PUT Flag
-              </h4>
-              <p class="checker-action-section__hint">
-                写入当前轮 flag。
-              </p>
+              <h4 class="list-heading__title checker-action-section__title">PUT Flag</h4>
+              <p class="checker-action-section__hint">写入当前轮 flag。</p>
             </header>
             <div class="checker-action-grid">
               <div class="ui-field awd-http-action-field">
-                <label
-                  class="ui-field__label"
-                  for="awd-http-put-method"
-                >Method</label>
+                <label class="ui-field__label" for="awd-http-put-method">Method</label>
                 <span class="ui-control-wrap awd-http-action-control">
                   <select
                     id="awd-http-put-method"
                     v-model="httpStandardDraft.put_flag.method"
                     class="ui-control"
                   >
-                    <option
-                      v-for="method in AWD_HTTP_METHOD_OPTIONS"
-                      :key="method"
-                      :value="method"
-                    >
+                    <option v-for="method in AWD_HTTP_METHOD_OPTIONS" :key="method" :value="method">
                       {{ method }}
                     </option>
                   </select>
@@ -995,10 +1122,7 @@ function handleSubmit() {
               </div>
 
               <div class="ui-field awd-http-action-field">
-                <label
-                  class="ui-field__label"
-                  for="awd-http-put-path"
-                >Path</label>
+                <label class="ui-field__label" for="awd-http-put-path">Path</label>
                 <span
                   class="ui-control-wrap awd-http-action-control"
                   :class="{ 'is-error': !!fieldErrors.http_put_path }"
@@ -1009,21 +1133,15 @@ function handleSubmit() {
                     type="text"
                     placeholder="/api/flag"
                     class="ui-control"
-                  >
+                  />
                 </span>
-                <p
-                  v-if="fieldErrors.http_put_path"
-                  class="ui-field__error awd-http-action-error"
-                >
+                <p v-if="fieldErrors.http_put_path" class="ui-field__error awd-http-action-error">
                   {{ fieldErrors.http_put_path }}
                 </p>
               </div>
 
               <div class="ui-field awd-http-action-field">
-                <label
-                  class="ui-field__label"
-                  for="awd-http-put-expected-status"
-                >状态码</label>
+                <label class="ui-field__label" for="awd-http-put-expected-status">状态码</label>
                 <span
                   class="ui-control-wrap awd-http-action-control"
                   :class="{ 'is-error': !!fieldErrors.http_put_expected_status }"
@@ -1035,7 +1153,7 @@ function handleSubmit() {
                     min="1"
                     step="1"
                     class="ui-control"
-                  >
+                  />
                 </span>
                 <p
                   v-if="fieldErrors.http_put_expected_status"
@@ -1048,10 +1166,7 @@ function handleSubmit() {
 
             <div class="checker-action-extra-grid">
               <div class="ui-field awd-http-action-field">
-                <label
-                  class="ui-field__label"
-                  for="awd-http-put-body-template"
-                >
+                <label class="ui-field__label" for="awd-http-put-body-template">
                   Body Template
                 </label>
                 <span class="ui-control-wrap awd-http-action-control">
@@ -1065,10 +1180,7 @@ function handleSubmit() {
               </div>
 
               <div class="ui-field awd-http-action-field">
-                <label
-                  class="ui-field__label"
-                  for="awd-http-put-headers"
-                >Headers JSON</label>
+                <label class="ui-field__label" for="awd-http-put-headers">Headers JSON</label>
                 <span
                   class="ui-control-wrap awd-http-action-control"
                   :class="{ 'is-error': !!fieldErrors.http_put_headers_text }"
@@ -1078,7 +1190,7 @@ function handleSubmit() {
                     v-model="httpStandardDraft.put_flag.headers_text"
                     rows="4"
                     class="ui-control awd-config-control--mono"
-                    placeholder="{&quot;Content-Type&quot;:&quot;application/json&quot;}"
+                    placeholder='{"Content-Type":"application/json"}'
                   />
                 </span>
                 <p
@@ -1093,30 +1205,19 @@ function handleSubmit() {
 
           <section class="checker-action-section">
             <header class="list-heading checker-action-section__head">
-              <h4 class="list-heading__title checker-action-section__title">
-                GET Flag
-              </h4>
-              <p class="checker-action-section__hint">
-                回读并校验当前轮 flag。
-              </p>
+              <h4 class="list-heading__title checker-action-section__title">GET Flag</h4>
+              <p class="checker-action-section__hint">回读并校验当前轮 flag。</p>
             </header>
             <div class="checker-action-grid">
               <div class="ui-field awd-http-action-field">
-                <label
-                  class="ui-field__label"
-                  for="awd-http-get-method"
-                >Method</label>
+                <label class="ui-field__label" for="awd-http-get-method">Method</label>
                 <span class="ui-control-wrap awd-http-action-control">
                   <select
                     id="awd-http-get-method"
                     v-model="httpStandardDraft.get_flag.method"
                     class="ui-control"
                   >
-                    <option
-                      v-for="method in AWD_HTTP_METHOD_OPTIONS"
-                      :key="method"
-                      :value="method"
-                    >
+                    <option v-for="method in AWD_HTTP_METHOD_OPTIONS" :key="method" :value="method">
                       {{ method }}
                     </option>
                   </select>
@@ -1124,10 +1225,7 @@ function handleSubmit() {
               </div>
 
               <div class="ui-field awd-http-action-field">
-                <label
-                  class="ui-field__label"
-                  for="awd-http-get-path"
-                >Path</label>
+                <label class="ui-field__label" for="awd-http-get-path">Path</label>
                 <span
                   class="ui-control-wrap awd-http-action-control"
                   :class="{ 'is-error': !!fieldErrors.http_get_path }"
@@ -1138,21 +1236,15 @@ function handleSubmit() {
                     type="text"
                     placeholder="/api/flag"
                     class="ui-control"
-                  >
+                  />
                 </span>
-                <p
-                  v-if="fieldErrors.http_get_path"
-                  class="ui-field__error awd-http-action-error"
-                >
+                <p v-if="fieldErrors.http_get_path" class="ui-field__error awd-http-action-error">
                   {{ fieldErrors.http_get_path }}
                 </p>
               </div>
 
               <div class="ui-field awd-http-action-field">
-                <label
-                  class="ui-field__label"
-                  for="awd-http-get-expected-status"
-                >状态码</label>
+                <label class="ui-field__label" for="awd-http-get-expected-status">状态码</label>
                 <span
                   class="ui-control-wrap awd-http-action-control"
                   :class="{ 'is-error': !!fieldErrors.http_get_expected_status }"
@@ -1164,7 +1256,7 @@ function handleSubmit() {
                     min="1"
                     step="1"
                     class="ui-control"
-                  >
+                  />
                 </span>
                 <p
                   v-if="fieldErrors.http_get_expected_status"
@@ -1177,10 +1269,7 @@ function handleSubmit() {
 
             <div class="checker-action-extra-grid">
               <div class="ui-field awd-http-action-field">
-                <label
-                  class="ui-field__label"
-                  for="awd-http-get-expected-substring"
-                >
+                <label class="ui-field__label" for="awd-http-get-expected-substring">
                   预期片段
                 </label>
                 <span class="ui-control-wrap awd-http-action-control">
@@ -1190,15 +1279,12 @@ function handleSubmit() {
                     type="text"
                     class="ui-control awd-config-control--mono"
                     placeholder="{{FLAG}}"
-                  >
+                  />
                 </span>
               </div>
 
               <div class="ui-field awd-http-action-field">
-                <label
-                  class="ui-field__label"
-                  for="awd-http-get-headers"
-                >Headers JSON</label>
+                <label class="ui-field__label" for="awd-http-get-headers">Headers JSON</label>
                 <span
                   class="ui-control-wrap awd-http-action-control"
                   :class="{ 'is-error': !!fieldErrors.http_get_headers_text }"
@@ -1208,7 +1294,7 @@ function handleSubmit() {
                     v-model="httpStandardDraft.get_flag.headers_text"
                     rows="4"
                     class="ui-control awd-config-control--mono"
-                    placeholder="{&quot;Accept&quot;:&quot;application/json&quot;}"
+                    placeholder='{"Accept":"application/json"}'
                   />
                 </span>
                 <p
@@ -1223,30 +1309,19 @@ function handleSubmit() {
 
           <section class="checker-action-section">
             <header class="list-heading checker-action-section__head">
-              <h4 class="list-heading__title checker-action-section__title">
-                Havoc
-              </h4>
-              <p class="checker-action-section__hint">
-                可选动作，路径留空时视为未启用。
-              </p>
+              <h4 class="list-heading__title checker-action-section__title">Havoc</h4>
+              <p class="checker-action-section__hint">可选动作，路径留空时视为未启用。</p>
             </header>
             <div class="checker-action-grid">
               <div class="ui-field awd-http-action-field">
-                <label
-                  class="ui-field__label"
-                  for="awd-http-havoc-method"
-                >Method</label>
+                <label class="ui-field__label" for="awd-http-havoc-method">Method</label>
                 <span class="ui-control-wrap awd-http-action-control">
                   <select
                     id="awd-http-havoc-method"
                     v-model="httpStandardDraft.havoc.method"
                     class="ui-control"
                   >
-                    <option
-                      v-for="method in AWD_HTTP_METHOD_OPTIONS"
-                      :key="method"
-                      :value="method"
-                    >
+                    <option v-for="method in AWD_HTTP_METHOD_OPTIONS" :key="method" :value="method">
                       {{ method }}
                     </option>
                   </select>
@@ -1254,10 +1329,7 @@ function handleSubmit() {
               </div>
 
               <div class="ui-field awd-http-action-field">
-                <label
-                  class="ui-field__label"
-                  for="awd-http-havoc-path"
-                >Path</label>
+                <label class="ui-field__label" for="awd-http-havoc-path">Path</label>
                 <span class="ui-control-wrap awd-http-action-control">
                   <input
                     id="awd-http-havoc-path"
@@ -1265,17 +1337,12 @@ function handleSubmit() {
                     type="text"
                     placeholder="/healthz"
                     class="ui-control"
-                  >
+                  />
                 </span>
               </div>
 
               <div class="ui-field awd-http-action-field">
-                <label
-                  class="ui-field__label"
-                  for="awd-http-havoc-expected-status"
-                >
-                  状态码
-                </label>
+                <label class="ui-field__label" for="awd-http-havoc-expected-status"> 状态码 </label>
                 <span
                   class="ui-control-wrap awd-http-action-control"
                   :class="{ 'is-error': !!fieldErrors.http_havoc_expected_status }"
@@ -1287,7 +1354,7 @@ function handleSubmit() {
                     min="1"
                     step="1"
                     class="ui-control"
-                  >
+                  />
                 </span>
                 <p
                   v-if="fieldErrors.http_havoc_expected_status"
@@ -1299,10 +1366,7 @@ function handleSubmit() {
             </div>
 
             <div class="ui-field awd-http-action-field">
-              <label
-                class="ui-field__label"
-                for="awd-http-havoc-headers"
-              >Headers JSON</label>
+              <label class="ui-field__label" for="awd-http-havoc-headers">Headers JSON</label>
               <span
                 class="ui-control-wrap awd-http-action-control"
                 :class="{ 'is-error': !!fieldErrors.http_havoc_headers_text }"
@@ -1312,7 +1376,7 @@ function handleSubmit() {
                   v-model="httpStandardDraft.havoc.headers_text"
                   rows="4"
                   class="ui-control awd-config-control--mono"
-                  placeholder="{&quot;X-Checker&quot;:&quot;havoc&quot;}"
+                  placeholder='{"X-Checker":"havoc"}'
                 />
               </span>
               <p
@@ -1329,22 +1393,13 @@ function handleSubmit() {
       <section class="checker-config-block">
         <header class="list-heading checker-config-block__head">
           <div>
-            <div class="journal-note-label">
-              Payload Preview
-            </div>
-            <h3 class="list-heading__title checker-config-block__title">
-              最终 JSON 预览
-            </h3>
+            <div class="journal-note-label">Payload Preview</div>
+            <h3 class="list-heading__title checker-config-block__title">最终 JSON 预览</h3>
           </div>
-          <p class="checker-config-block__hint">
-            保存时会按下面的结构写入 `awd_checker_config`。
-          </p>
+          <p class="checker-config-block__hint">保存时会按下面的结构写入 `awd_checker_config`。</p>
         </header>
 
-        <pre
-          id="awd-challenge-config-preview"
-          class="checker-preview"
-        >{{
+        <pre id="awd-challenge-config-preview" class="checker-preview">{{
           checkerPreviewText
         }}</pre>
       </section>
@@ -1355,12 +1410,8 @@ function handleSubmit() {
       >
         <header class="list-heading checker-config-block__head">
           <div>
-            <div class="journal-note-label">
-              Saved Validation
-            </div>
-            <h3 class="list-heading__title checker-config-block__title">
-              最近一次已保存校验
-            </h3>
+            <div class="journal-note-label">Saved Validation</div>
+            <h3 class="list-heading__title checker-config-block__title">最近一次已保存校验</h3>
           </div>
           <p class="checker-config-block__hint">
             这里显示已经写入赛事题目配置的校验状态；如果后续改了 Checker 草稿，需要重新试跑。
@@ -1379,22 +1430,13 @@ function handleSubmit() {
               {{ formatPreviewDateTime(props.draft?.awd_checker_last_preview_at) }}
             </span>
           </header>
-          <p
-            v-if="savedPreviewSummaryText"
-            class="checker-validation-card__summary"
-          >
+          <p v-if="savedPreviewSummaryText" class="checker-validation-card__summary">
             {{ savedPreviewSummaryText }}
           </p>
-          <p
-            v-else
-            class="checker-validation-card__summary"
-          >
-            当前配置还没有保存过试跑结果。
+          <p v-else class="checker-validation-card__summary">
+            {{ savedPreviewEmptyText }}
           </p>
-          <p
-            v-if="savedPreviewAccessURL"
-            class="checker-validation-card__meta"
-          >
+          <p v-if="savedPreviewAccessURL" class="checker-validation-card__meta">
             目标地址 {{ savedPreviewAccessURL }}
           </p>
         </article>
@@ -1403,12 +1445,8 @@ function handleSubmit() {
       <section class="checker-config-block">
         <header class="list-heading checker-config-block__head">
           <div>
-            <div class="journal-note-label">
-              Checker Preview
-            </div>
-            <h3 class="list-heading__title checker-config-block__title">
-              试跑 Checker
-            </h3>
+            <div class="journal-note-label">Checker Preview</div>
+            <h3 class="list-heading__title checker-config-block__title">试跑 Checker</h3>
           </div>
           <p class="checker-config-block__hint">
             会按当前配置真实请求目标地址，但不会写入轮次、服务状态和排行榜数据。
@@ -1417,28 +1455,19 @@ function handleSubmit() {
 
         <div class="checker-preview-input-grid">
           <div class="ui-field awd-config-field">
-            <label
-              class="ui-field__label"
-              for="awd-challenge-preview-access-url"
-            >
+            <label class="ui-field__label" for="awd-challenge-preview-access-url">
               目标访问地址（可选）
             </label>
-            <span
-              class="ui-control-wrap"
-              :class="{ 'is-error': !!fieldErrors.preview_access_url }"
-            >
+            <span class="ui-control-wrap" :class="{ 'is-error': !!fieldErrors.preview_access_url }">
               <input
                 id="awd-challenge-preview-access-url"
                 v-model="previewForm.access_url"
                 type="text"
                 placeholder="http://team1.example.com:8080"
                 class="ui-control"
-              >
+              />
             </span>
-            <p
-              v-if="fieldErrors.preview_access_url"
-              class="ui-field__error"
-            >
+            <p v-if="fieldErrors.preview_access_url" class="ui-field__error">
               {{ fieldErrors.preview_access_url }}
             </p>
             <p class="ui-field__hint">
@@ -1447,10 +1476,7 @@ function handleSubmit() {
           </div>
 
           <div class="ui-field awd-config-field">
-            <label
-              class="ui-field__label"
-              for="awd-challenge-preview-flag"
-            >预览 Flag</label>
+            <label class="ui-field__label" for="awd-challenge-preview-flag">预览 Flag</label>
             <span class="ui-control-wrap">
               <input
                 id="awd-challenge-preview-flag"
@@ -1458,11 +1484,9 @@ function handleSubmit() {
                 type="text"
                 placeholder="flag{preview}"
                 class="ui-control awd-config-control--mono"
-              >
+              />
             </span>
-            <p class="ui-field__hint">
-              未绑定正式轮次时，这个值会替代 FLAG 模板变量。
-            </p>
+            <p class="ui-field__hint">未绑定正式轮次时，这个值会替代 FLAG 模板变量。</p>
           </div>
         </div>
 
@@ -1477,7 +1501,7 @@ function handleSubmit() {
             :disabled="previewing || !contestId"
             @click="handlePreview"
           >
-            {{ previewing ? '试跑中...' : '试跑 Checker' }}
+            {{ previewButtonText }}
           </button>
         </header>
 
@@ -1499,17 +1523,70 @@ function handleSubmit() {
           v-else-if="canAttachPreviewToken"
           class="journal-note checker-preview-notice checker-preview-notice--success"
         >
-          当前保存会附带最近一次试跑结果。
+          {{ previewPendingSaveNotice }}
         </p>
 
         <section
-          v-if="previewResult"
-          class="checker-preview-result"
+          v-if="previewing"
+          id="awd-challenge-preview-progress"
+          class="journal-note checker-preview-progress"
+          aria-live="polite"
         >
+          <header class="list-heading checker-preview-progress__head">
+            <div>
+              <div class="journal-note-label">Preview Progress</div>
+              <h4 class="list-heading__title checker-preview-progress__title">正在试跑 Checker</h4>
+            </div>
+            <span class="ui-badge ui-badge--pill ui-badge--soft checker-preview-progress__badge">
+              {{ previewProgressAttemptText }}
+            </span>
+          </header>
+
+          <p id="awd-challenge-preview-progress-status" class="checker-preview-progress__summary">
+            {{ previewProgressStatusText }}
+          </p>
+          <p class="checker-preview-progress__hint">
+            {{ previewProgressDetailText }}
+          </p>
+
+          <div class="checker-preview-progress__meta">
+            <span>共 {{ AWD_CHECKER_PREVIEW_ATTEMPT_TOTAL }} 轮试跑</span>
+            <span>当前耗时 {{ previewProgressElapsedText }}</span>
+            <span>{{ previewProgressConnectionHint }}</span>
+          </div>
+
+          <div class="checker-preview-progress__bar" aria-hidden="true">
+            <span
+              class="checker-preview-progress__bar-fill"
+              :style="{ width: `${previewProgressPercent}%` }"
+            />
+          </div>
+
+          <ol class="checker-preview-progress__step-list">
+            <li
+              v-for="phase in previewProgressSteps"
+              :key="phase.key"
+              class="checker-preview-progress__step"
+              :class="`checker-preview-progress__step--${phase.state}`"
+            >
+              <span class="checker-preview-progress__step-index">
+                {{ phase.attempt || '·' }}
+              </span>
+              <div class="checker-preview-progress__step-body">
+                <strong class="checker-preview-progress__step-title">
+                  {{ phase.label }}
+                </strong>
+                <span class="checker-preview-progress__step-detail">
+                  {{ phase.detail }}
+                </span>
+              </div>
+            </li>
+          </ol>
+        </section>
+
+        <section v-if="previewResult" class="checker-preview-result">
           <header class="list-heading checker-preview-result__head">
-            <h4 class="list-heading__title checker-preview-result__title">
-              试跑结果
-            </h4>
+            <h4 class="list-heading__title checker-preview-result__title">试跑结果</h4>
             <div
               id="awd-challenge-preview-status"
               :class="getPreviewStatusClass(previewResult.service_status)"
@@ -1518,29 +1595,17 @@ function handleSubmit() {
             </div>
           </header>
 
-          <p
-            id="awd-challenge-preview-summary"
-            class="checker-preview-result__summary"
-          >
+          <p id="awd-challenge-preview-summary" class="checker-preview-result__summary">
             {{ previewSummaryText }}
           </p>
-          <p
-            v-if="previewAccessURL"
-            class="checker-preview-result__hint"
-          >
+          <p v-if="previewAccessURL" class="checker-preview-result__hint">
             目标地址 {{ previewAccessURL }}
           </p>
-          <p
-            v-if="previewTargetSummaryText"
-            class="checker-preview-result__hint"
-          >
+          <p v-if="previewTargetSummaryText" class="checker-preview-result__hint">
             {{ previewTargetSummaryText }}
           </p>
 
-          <div
-            v-if="previewActions.length > 0"
-            class="checker-preview-action-list"
-          >
+          <div v-if="previewActions.length > 0" class="checker-preview-action-list">
             <article
               v-for="action in previewActions"
               :id="`awd-checker-preview-action-${action.key}`"
@@ -1561,10 +1626,7 @@ function handleSubmit() {
             </article>
           </div>
 
-          <div
-            v-if="previewTargets.length > 0"
-            class="checker-preview-target-list"
-          >
+          <div v-if="previewTargets.length > 0" class="checker-preview-target-list">
             <article
               v-for="(target, index) in previewTargets"
               :key="target.access_url || index"
@@ -1580,10 +1642,7 @@ function handleSubmit() {
                   {{ getProbeStatusText(target.healthy, target.error_code, target.error) }}
                 </span>
               </header>
-              <p
-                v-if="formatLatency(target.latency_ms)"
-                class="checker-preview-target-card__hint"
-              >
+              <p v-if="formatLatency(target.latency_ms)" class="checker-preview-target-card__hint">
                 延迟 {{ formatLatency(target.latency_ms) }}
               </p>
             </article>
@@ -1591,14 +1650,9 @@ function handleSubmit() {
 
           <div class="journal-note checker-preview-result__json">
             <header class="list-heading checker-preview-result__json-head">
-              <h4 class="list-heading__title checker-preview-result__json-title">
-                原始结果
-              </h4>
+              <h4 class="list-heading__title checker-preview-result__json-title">原始结果</h4>
             </header>
-            <pre
-              id="awd-challenge-preview-result-json"
-              class="checker-preview"
-            >{{
+            <pre id="awd-challenge-preview-result-json" class="checker-preview">{{
               previewResultJSONText
             }}</pre>
           </div>
@@ -1608,21 +1662,15 @@ function handleSubmit() {
 
     <template #footer>
       <div class="awd-config-drawer-footer">
-        <button
-          type="button"
-          class="ui-btn ui-btn--secondary"
-          @click="closeDialog"
-        >
-          取消
-        </button>
+        <button type="button" class="ui-btn ui-btn--secondary" @click="closeDialog">取消</button>
         <button
           id="awd-challenge-config-submit"
           type="button"
           class="ui-btn ui-btn--primary"
-          :disabled="saving || (mode === 'create' && loadingChallengeCatalog)"
+          :disabled="saving || previewing || (mode === 'create' && loadingChallengeCatalog)"
           @click="handleSubmit"
         >
-          {{ saving ? '保存中...' : mode === 'create' ? '新增题目' : '保存配置' }}
+          {{ submitButtonText }}
         </button>
       </div>
     </template>
@@ -1926,6 +1974,152 @@ function handleSubmit() {
   border: 1px solid color-mix(in srgb, var(--color-success) 30%, transparent);
   background: color-mix(in srgb, var(--color-success) 8%, transparent);
   color: var(--color-success);
+}
+
+.checker-preview-progress {
+  display: grid;
+  gap: 0.9rem;
+  padding: 1rem 1.05rem;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 22%, var(--color-border-default));
+  border-radius: 1rem;
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--color-primary) 8%, transparent),
+      transparent 44%
+    ),
+    var(--color-bg-surface);
+}
+
+.checker-preview-progress__head {
+  align-items: center;
+}
+
+.checker-preview-progress__title {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--color-text-primary);
+}
+
+.checker-preview-progress__badge {
+  --ui-badge-tone: var(--color-primary);
+}
+
+.checker-preview-progress__summary {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: 0.92rem;
+  font-weight: 600;
+  line-height: 1.6;
+}
+
+.checker-preview-progress__hint {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 0.82rem;
+  line-height: 1.65;
+}
+
+.checker-preview-progress__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  color: var(--color-text-secondary);
+  font-size: 0.78rem;
+}
+
+.checker-preview-progress__bar {
+  position: relative;
+  overflow: hidden;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-primary) 10%, var(--color-bg-subtle));
+}
+
+.checker-preview-progress__bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    var(--color-primary),
+    color-mix(in srgb, var(--color-primary) 55%, white)
+  );
+  transition: width 240ms ease;
+}
+
+.checker-preview-progress__step-list {
+  display: grid;
+  gap: 0.7rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.checker-preview-progress__step {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: start;
+  padding: 0.72rem 0.8rem;
+  border: 1px solid var(--color-border-default);
+  border-radius: 0.9rem;
+  background: var(--color-bg-elevated);
+  transition:
+    border-color 180ms ease,
+    background-color 180ms ease,
+    transform 180ms ease;
+}
+
+.checker-preview-progress__step--current {
+  border-color: color-mix(in srgb, var(--color-primary) 42%, transparent);
+  background: color-mix(in srgb, var(--color-primary) 8%, var(--color-bg-elevated));
+  transform: translateY(-1px);
+}
+
+.checker-preview-progress__step--done {
+  border-color: color-mix(in srgb, var(--color-success) 26%, transparent);
+  background: color-mix(in srgb, var(--color-success) 6%, var(--color-bg-elevated));
+}
+
+.checker-preview-progress__step-index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  background: var(--color-bg-subtle);
+  color: var(--color-text-secondary);
+  font-family: var(--font-family-mono);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.checker-preview-progress__step--current .checker-preview-progress__step-index {
+  background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+  color: var(--color-primary);
+}
+
+.checker-preview-progress__step--done .checker-preview-progress__step-index {
+  background: color-mix(in srgb, var(--color-success) 14%, transparent);
+  color: var(--color-success);
+}
+
+.checker-preview-progress__step-body {
+  display: grid;
+  gap: 0.22rem;
+}
+
+.checker-preview-progress__step-title {
+  color: var(--color-text-primary);
+  font-size: 0.86rem;
+}
+
+.checker-preview-progress__step-detail {
+  color: var(--color-text-secondary);
+  font-size: 0.78rem;
+  line-height: 1.6;
 }
 
 .checker-validation-card {

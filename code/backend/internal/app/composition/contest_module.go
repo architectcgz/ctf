@@ -47,7 +47,7 @@ func BuildContestModule(root *Root, challenge *ChallengeModule, runtime *Runtime
 	deps := newContestModuleDeps(root, challenge, runtime)
 
 	handler, scoreboardCommands, statusUpdater := buildContestCoreHandler(deps)
-	awdHandler, awdUpdater := buildContestAWDHandler(deps)
+	awdHandler, awdUpdater, awdCommands := buildContestAWDHandler(deps)
 	challengeHandler := buildContestChallengeHandler(deps)
 	participationHandler, participationCommands := buildContestParticipationHandler(deps)
 	teamHandler := buildContestTeamHandler(deps)
@@ -67,6 +67,7 @@ func BuildContestModule(root *Root, challenge *ChallengeModule, runtime *Runtime
 			scoreboardCommands.SetRealtimeBroadcaster(broadcaster)
 			participationCommands.SetRealtimeBroadcaster(broadcaster)
 			submissionService.SetRealtimeBroadcaster(broadcaster)
+			awdCommands.SetRealtimeBroadcaster(broadcaster)
 		},
 	}
 }
@@ -133,7 +134,7 @@ func buildContestCoreHandler(deps *contestModuleDeps) (*contesthttp.Handler, *co
 	return contesthttp.NewHandler(contestCommands, contestQueries, readinessQueries, scoreboardQueries, scoreboardCommands), scoreboardCommands, statusUpdater
 }
 
-func buildContestAWDHandler(deps *contestModuleDeps) (*contesthttp.AWDHandler, *contestjobs.AWDRoundUpdater) {
+func buildContestAWDHandler(deps *contestModuleDeps) (*contesthttp.AWDHandler, *contestjobs.AWDRoundUpdater, *contestcmd.AWDService) {
 	cfg := deps.root.Config()
 	log := deps.root.Logger()
 	cache := deps.root.Cache()
@@ -171,7 +172,7 @@ func buildContestAWDHandler(deps *contestModuleDeps) (*contesthttp.AWDHandler, *
 	)
 	awdServiceQueries := contestqry.NewContestAWDServiceQueryService(deps.awdRepo, deps.contestLookup)
 
-	return contesthttp.NewAWDHandler(awdCommands, awdQueries, awdServiceCommands, awdServiceQueries), awdUpdater
+	return contesthttp.NewAWDHandler(awdCommands, awdQueries, awdServiceCommands, awdServiceQueries), awdUpdater, awdCommands
 }
 
 func buildContestChallengeHandler(deps *contestModuleDeps) *contesthttp.ChallengeHandler {

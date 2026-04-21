@@ -146,11 +146,13 @@ export interface AdminContestAWDServiceUpdatePayload {
 }
 
 export interface AdminAWDCheckerPreviewPayload {
+  service_id?: number
   challenge_id: number
   checker_type: AWDCheckerType
   checker_config: Record<string, unknown>
   access_url?: string
   preview_flag?: string
+  preview_request_id?: string
 }
 
 export async function exportContestArchive(
@@ -2110,7 +2112,9 @@ export async function previewAdminAwdServiceTemplateImport(
   return normalizeAdminAwdServiceTemplateImportPreview(response)
 }
 
-export async function listAdminAwdServiceTemplateImports(): Promise<AdminAwdServiceTemplateImportPreview[]> {
+export async function listAdminAwdServiceTemplateImports(): Promise<
+  AdminAwdServiceTemplateImportPreview[]
+> {
   const response = await request<RawAdminAwdServiceTemplateImportPreview[]>({
     method: 'GET',
     url: '/authoring/awd-service-template-imports',
@@ -2364,10 +2368,7 @@ export async function updateContestAWDService(
   })
 }
 
-export async function deleteContestAWDService(
-  contestId: string,
-  serviceId: string
-): Promise<void> {
+export async function deleteContestAWDService(contestId: string, serviceId: string): Promise<void> {
   await request<void>({
     method: 'DELETE',
     url: `/admin/contests/${encodeURIComponent(contestId)}/awd/services/${encodeURIComponent(serviceId)}`,

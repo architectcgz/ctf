@@ -111,6 +111,23 @@ export function useAwdCheckResultPresentation({
     return labels[value] || value
   }
 
+  function readPreviewPassSummary(result: Record<string, unknown>): string {
+    const passCount =
+      typeof result.preview_pass_count === 'number' ? result.preview_pass_count : undefined
+    const totalCount =
+      typeof result.preview_total_count === 'number' ? result.preview_total_count : undefined
+    if (
+      typeof passCount === 'number' &&
+      typeof totalCount === 'number' &&
+      Number.isFinite(passCount) &&
+      Number.isFinite(totalCount) &&
+      totalCount > 0
+    ) {
+      return `${passCount}/${totalCount} 通过`
+    }
+    return ''
+  }
+
   function readCheckerAction(
     key: AWDCheckerActionView['key'],
     label: AWDCheckerActionView['label'],
@@ -141,7 +158,7 @@ export function useAwdCheckResultPresentation({
   function summarizeCheckResult(result: Record<string, unknown>): string {
     const checkerLabel = getCheckerTypeLabel(result.checker_type)
     const sourceLabel = getCheckSourceLabel(result.check_source)
-    const statusLabel = getCheckStatusLabel(result.status_reason)
+    const statusLabel = readPreviewPassSummary(result) || getCheckStatusLabel(result.status_reason)
     const checkedAt =
       typeof result.checked_at === 'string' && result.checked_at.trim() !== ''
         ? formatDateTime(result.checked_at)
@@ -224,6 +241,10 @@ export function useAwdCheckResultPresentation({
   }
 
   function getTargetProbeSummary(result: Record<string, unknown>): string {
+    const previewSummary = readPreviewPassSummary(result)
+    if (previewSummary) {
+      return `试跑 ${previewSummary}`
+    }
     const targets = getCheckTargets(result)
     if (targets.length === 0) {
       return ''
