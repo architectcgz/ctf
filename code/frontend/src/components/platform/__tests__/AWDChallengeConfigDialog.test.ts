@@ -309,7 +309,6 @@ describe('AWDChallengeConfigDialog', () => {
     await wrapper.get('#awd-http-put-path').setValue('/api/flag')
     await wrapper.get('#awd-http-get-path').setValue('/api/flag')
     await wrapper.get('#awd-http-havoc-path').setValue('/healthz')
-    await wrapper.get('#awd-challenge-preview-access-url').setValue('http://preview.internal')
     await wrapper.get('#awd-challenge-preview-flag').setValue('flag{preview}')
     await wrapper.get('#awd-challenge-preview-submit').trigger('click')
     await flushPromises()
@@ -336,7 +335,6 @@ describe('AWDChallengeConfigDialog', () => {
           expected_status: 200,
         },
       },
-      access_url: 'http://preview.internal',
       preview_flag: 'flag{preview}',
     })
     expect(wrapper.text()).toContain('试跑结果')
@@ -401,7 +399,6 @@ describe('AWDChallengeConfigDialog', () => {
 
     await wrapper.get('#awd-challenge-config-checker-type').setValue('http_standard')
     await wrapper.get('#awd-http-preset-rest-api').trigger('click')
-    await wrapper.get('#awd-challenge-preview-access-url').setValue('http://preview.internal')
     await wrapper.get('#awd-challenge-preview-submit').trigger('click')
     await flushPromises()
 

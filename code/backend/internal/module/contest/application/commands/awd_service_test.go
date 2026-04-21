@@ -18,6 +18,8 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
+	challengeports "ctf-platform/internal/module/challenge/ports"
 	contestcmd "ctf-platform/internal/module/contest/application/commands"
 	contestjobs "ctf-platform/internal/module/contest/application/jobs"
 	contestqry "ctf-platform/internal/module/contest/application/queries"
@@ -63,6 +65,44 @@ type awdServiceForTest struct {
 	queries  *contestqry.AWDService
 }
 
+type fakeContestPreviewRuntimeProbe struct {
+	createContainerCalled bool
+	cleanupCalled         bool
+
+	lastImageName string
+	lastEnv       map[string]string
+
+	containerAccessURL string
+	containerDetails   model.InstanceRuntimeDetails
+	containerErr       error
+	cleanupErr         error
+}
+
+func (f *fakeContestPreviewRuntimeProbe) CreateTopology(_ context.Context, _ *challengeports.RuntimeTopologyCreateRequest) (*challengeports.RuntimeTopologyCreateResult, error) {
+	return nil, errors.New("unexpected CreateTopology call")
+}
+
+func (f *fakeContestPreviewRuntimeProbe) CreateContainer(_ context.Context, imageName string, env map[string]string) (string, model.InstanceRuntimeDetails, error) {
+	f.createContainerCalled = true
+	f.lastImageName = imageName
+	f.lastEnv = env
+	if f.containerErr != nil {
+		return "", model.InstanceRuntimeDetails{}, f.containerErr
+	}
+	return f.containerAccessURL, f.containerDetails, nil
+}
+
+func (f *fakeContestPreviewRuntimeProbe) CleanupRuntimeDetails(_ context.Context, details model.InstanceRuntimeDetails) error {
+	f.cleanupCalled = true
+	if f.cleanupErr != nil {
+		return f.cleanupErr
+	}
+	if !reflect.DeepEqual(details, f.containerDetails) {
+		return errors.New("unexpected runtime details")
+	}
+	return nil
+}
+
 func newAWDRoundUpdaterForTest(db *gorm.DB, redisClient *redis.Client, cfg config.ContestAWDConfig, flagSecret string, injector contestports.AWDFlagInjector, log *zap.Logger) *contestjobs.AWDRoundUpdater {
 	return contestjobs.NewAWDRoundUpdater(contestinfra.NewAWDRepository(db), redisClient, cfg, flagSecret, injector, log)
 }
@@ -70,6 +110,8 @@ func newAWDRoundUpdaterForTest(db *gorm.DB, redisClient *redis.Client, cfg confi
 func newAWDServiceForTest(db *gorm.DB, redisClient *redis.Client, flagSecret string, cfg config.ContestAWDConfig) *awdServiceForTest {
 	awdRepo := contestinfra.NewAWDRepository(db)
 	contestRepo := contestinfra.NewRepository(db)
+	imageRepo := challengeinfra.NewImageRepository(db)
+	templateRepo := challengeinfra.NewRepository(db)
 	return &awdServiceForTest{
 		commands: contestcmd.NewAWDService(
 			awdRepo,
@@ -79,6 +121,9 @@ func newAWDServiceForTest(db *gorm.DB, redisClient *redis.Client, flagSecret str
 			cfg,
 			zap.NewNop(),
 			newAWDRoundUpdaterForTest(db, redisClient, cfg, flagSecret, nil, zap.NewNop()),
+			imageRepo,
+			templateRepo,
+			nil,
 		),
 		queries: contestqry.NewAWDService(awdRepo, contestRepo),
 	}
@@ -765,6 +810,126 @@ func TestAWDServicePreviewCheckerAcceptsServiceIDAndReturnsServiceContext(t *tes
 	previewToken := resp.FieldByName("PreviewToken")
 	if !previewToken.IsValid() || strings.TrimSpace(previewToken.String()) == "" {
 		t.Fatal("expected preview_token")
+	}
+}
+
+func TestAWDServicePreviewCheckerStartsPreviewRuntimeWhenAccessURLMissing(t *testing.T) {
+	db := newAWDTestDB(t)
+	if err := db.AutoMigrate(&model.Image{}, &model.AWDServiceTemplate{}); err != nil {
+		t.Fatalf("auto migrate preview dependencies: %v", err)
+	}
+	mini, err := miniredis.Run()
+	if err != nil {
+		t.Fatalf("start miniredis: %v", err)
+	}
+	t.Cleanup(mini.Close)
+
+	redisClient := redis.NewClient(&redis.Options{Addr: mini.Addr()})
+	t.Cleanup(func() {
+		_ = redisClient.Close()
+	})
+
+	now := time.Now()
+	createAWDContestFixture(t, db, 26, now)
+	if err := db.Create(&model.Image{
+		ID:        26001,
+		Name:      "registry.example.edu/ctf/awd-preview",
+		Tag:       "v1",
+		Status:    model.ImageStatusAvailable,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}).Error; err != nil {
+		t.Fatalf("create image: %v", err)
+	}
+	if err := db.Create(&model.AWDServiceTemplate{
+		ID:             2601,
+		Name:           "Preview Target",
+		Slug:           "preview-target",
+		Category:       "web",
+		Difficulty:     model.ChallengeDifficultyEasy,
+		ServiceType:    model.AWDServiceTypeWebHTTP,
+		DeploymentMode: model.AWDDeploymentModeSingleContainer,
+		Status:         model.AWDServiceTemplateStatusPublished,
+		CheckerType:    model.AWDCheckerTypeHTTPStandard,
+		CheckerConfig:  `{"get_flag":{"method":"GET","path":"/api/flag","expected_status":200,"expected_substring":"{{FLAG}}"}}`,
+		RuntimeConfig:  `{"image_id":26001,"image_ref":"registry.example.edu/ctf/awd-preview:v1"}`,
+		CreatedAt:      now,
+		UpdatedAt:      now,
+	}).Error; err != nil {
+		t.Fatalf("create awd template: %v", err)
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/api/flag" {
+			http.NotFound(w, r)
+			return
+		}
+		_, _ = w.Write([]byte("flag{preview}"))
+	}))
+	t.Cleanup(server.Close)
+
+	runtimeProbe := &fakeContestPreviewRuntimeProbe{
+		containerAccessURL: server.URL,
+		containerDetails: model.InstanceRuntimeDetails{
+			Containers: []model.InstanceRuntimeContainer{{ContainerID: "preview-container"}},
+		},
+	}
+	awdRepo := contestinfra.NewAWDRepository(db)
+	contestRepo := contestinfra.NewRepository(db)
+	imageRepo := challengeinfra.NewImageRepository(db)
+	templateRepo := challengeinfra.NewRepository(db)
+	service := contestcmd.NewAWDService(
+		awdRepo,
+		contestRepo,
+		redisClient,
+		"",
+		config.ContestAWDConfig{
+			CheckerTimeout:    time.Second,
+			CheckerHealthPath: "/healthz",
+		},
+		zap.NewNop(),
+		newAWDRoundUpdaterForTest(db, redisClient, config.ContestAWDConfig{
+			CheckerTimeout:    time.Second,
+			CheckerHealthPath: "/healthz",
+		}, "", nil, zap.NewNop()),
+		imageRepo,
+		templateRepo,
+		runtimeProbe,
+	)
+
+	resp, err := service.PreviewChecker(context.Background(), 26, &dto.PreviewAWDCheckerReq{
+		ChallengeID: 2601,
+		CheckerType: string(model.AWDCheckerTypeHTTPStandard),
+		CheckerConfig: map[string]any{
+			"get_flag": map[string]any{
+				"method":             "GET",
+				"path":               "/api/flag",
+				"expected_status":    http.StatusOK,
+				"expected_substring": "{{FLAG}}",
+			},
+		},
+		PreviewFlag: "flag{preview}",
+	})
+	if err != nil {
+		t.Fatalf("PreviewChecker() error = %v", err)
+	}
+	if !runtimeProbe.createContainerCalled {
+		t.Fatal("expected preview runtime container startup")
+	}
+	if !runtimeProbe.cleanupCalled {
+		t.Fatal("expected preview runtime cleanup")
+	}
+	if runtimeProbe.lastImageName != "registry.example.edu/ctf/awd-preview:v1" {
+		t.Fatalf("unexpected preview image: %s", runtimeProbe.lastImageName)
+	}
+	if runtimeProbe.lastEnv["FLAG"] != "flag{preview}" {
+		t.Fatalf("unexpected preview FLAG env: %+v", runtimeProbe.lastEnv)
+	}
+	if resp.PreviewContext.AccessURL != server.URL {
+		t.Fatalf("unexpected preview access url: %s", resp.PreviewContext.AccessURL)
+	}
+	if resp.ServiceStatus != model.AWDServiceStatusUp {
+		t.Fatalf("unexpected service status: %s", resp.ServiceStatus)
 	}
 }
 

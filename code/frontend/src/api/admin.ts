@@ -149,7 +149,7 @@ export interface AdminAWDCheckerPreviewPayload {
   challenge_id: number
   checker_type: AWDCheckerType
   checker_config: Record<string, unknown>
-  access_url: string
+  access_url?: string
   preview_flag?: string
 }
 
