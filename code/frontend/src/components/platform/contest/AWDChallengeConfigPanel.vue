@@ -38,21 +38,6 @@ const activeChallenge = computed(
   () =>
     sortedChallengeLinks.value.find((item) => item.challenge_id === props.activeChallengeId) || null
 )
-const activeChallengeHeading = computed(() =>
-  activeChallenge.value ? getChallengeTitle(activeChallenge.value) : ''
-)
-const activeChallengeContext = computed(() => {
-  if (!activeChallenge.value) {
-    return ''
-  }
-  if (props.focusSource === 'preflight') {
-    return '这是赛前检查中仍需处理的题目，修正后可以回到赛前检查继续复核。'
-  }
-  if (props.focusSource === 'pool') {
-    return '这是你刚从题目池带回来的当前题，可以继续补齐 checker、分值和验证状态。'
-  }
-  return '当前题目会保持高亮，便于连续逐题整理配置。'
-})
 
 const summaryItems = computed(() => [
   {
@@ -151,17 +136,6 @@ function getChallengeTitle(item: AdminContestChallengeViewData): string {
   return item.title?.trim() || `Challenge #${item.challenge_id}`
 }
 
-function getServiceAssociationSummary(item: AdminContestChallengeViewData): string {
-  if (!item.awd_service_id) {
-    return '赛事服务关联待补齐'
-  }
-  const entries = [
-    item.awd_service_display_name?.trim() || '已建立赛事服务关联',
-    item.awd_template_id ? `模板 #${item.awd_template_id}` : '',
-  ].filter(Boolean)
-  return entries.join(' · ')
-}
-
 function buildPresentationResult(item: AdminContestChallengeViewData): Record<string, unknown> {
   const preview = item.awd_checker_last_preview_result
   if (!preview) {
@@ -175,11 +149,6 @@ function buildPresentationResult(item: AdminContestChallengeViewData): Record<st
 
 function getValidationStateText(item: AdminContestChallengeViewData): string {
   return getValidationStateLabel(item.awd_checker_validation_state) || '未验证'
-}
-
-function getValidationStateClass(item: AdminContestChallengeViewData): string {
-  const state = item.awd_checker_validation_state || 'pending'
-  return `config-validation-chip config-validation-chip--${state}`
 }
 
 function getValidationHint(item: AdminContestChallengeViewData): string {
@@ -237,46 +206,6 @@ function isActiveChallenge(item: AdminContestChallengeViewData): boolean {
         </div>
       </div>
     </header>
-
-    <!-- 2. Active Focus Highlighting -->
-    <section
-      v-if="activeChallenge"
-      class="studio-focus-shelf"
-    >
-      <div class="focus-identity">
-        <div class="focus-overline">
-          正在编辑
-        </div>
-        <h2 class="focus-title">
-          {{ activeChallengeHeading }}
-        </h2>
-        <p class="focus-hint">
-          {{ activeChallengeContext }}
-        </p>
-      </div>
-      <div class="focus-actions">
-        <button
-          class="ops-btn ops-btn--neutral"
-          :disabled="!canNavigatePrevious"
-          @click="emit('previous')"
-        >
-          <ChevronLeft class="h-4 w-4" /> 上一题
-        </button>
-        <button
-          class="ops-btn ops-btn--neutral"
-          :disabled="!canNavigateNext"
-          @click="emit('next')"
-        >
-          下一题 <ChevronRight class="h-4 w-4" />
-        </button>
-        <button
-          class="ops-btn ops-btn--primary ml-4"
-          @click="emit('edit', activeChallenge)"
-        >
-          <Edit class="h-3.5 w-3.5 mr-2" /> 调整 Checker
-        </button>
-      </div>
-    </section>
 
     <!-- 3. Challenge Asset Directory -->
     <section class="studio-asset-directory">
@@ -403,28 +332,6 @@ function isActiveChallenge(item: AdminContestChallengeViewData): boolean {
 .metric-pill { background: var(--color-bg-surface); padding: 0.45rem 1rem; border-radius: 0.75rem; display: flex; align-items: baseline; gap: 0.75rem; border: 1px solid var(--color-border-default); }
 .metric-pill__label { font-size: 8px; font-weight: 800; text-transform: uppercase; color: var(--color-text-secondary); letter-spacing: 0.05em; }
 .metric-pill__value { font-size: 13px; font-weight: 900; color: var(--color-text-primary); font-family: var(--font-family-mono); }
-
-/* Focus Shelf */
-.studio-focus-shelf {
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border-default);
-  border-radius: 1.25rem;
-  padding: 2rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  color: var(--color-text-primary);
-  box-shadow: var(--color-shadow-soft);
-}
-
-/* Maintain high-contrast dark shelf in dark mode if desired, 
-   but the request was specifically about light mode. 
-   Using variables above makes it light in light mode and dark in dark mode. */
-
-.focus-overline { font-size: 10px; font-weight: 800; text-transform: uppercase; color: var(--color-primary); letter-spacing: 0.2em; margin-bottom: 0.5rem; }
-.focus-title { font-size: 1.5rem; font-weight: 900; margin: 0; }
-.focus-hint { font-size: 13px; color: var(--color-text-secondary); margin-top: 0.5rem; max-width: 30rem; line-height: 1.6; }
-.focus-actions { display: flex; align-items: center; gap: 0.75rem; }
 
 /* Directory Header */
 .directory-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
