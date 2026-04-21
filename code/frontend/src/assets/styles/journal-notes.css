@@ -406,11 +406,11 @@
  */
 
 /* 1. 容器：Premium 玻璃底座 */
-.metric-panel-grid--premium {
-  display: grid !important;
+.metric-panel-grid.metric-panel-grid--premium {
+  display: grid;
   /* 默认 4 列，支持通过变量 --metric-panel-columns 自定义 */
-  grid-template-columns: repeat(var(--metric-panel-columns, 4), minmax(0, 1fr)) !important;
-  gap: 0 !important;
+  grid-template-columns: repeat(var(--metric-panel-columns, 4), minmax(0, 1fr));
+  gap: 0;
   background: 
     radial-gradient(
       circle at top right,
@@ -421,7 +421,7 @@
       180deg,
       color-mix(in srgb, var(--journal-surface) 40%, transparent),
       color-mix(in srgb, var(--journal-surface-subtle, var(--color-bg-elevated)) 20%, transparent)
-    ) !important;
+    );
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   
@@ -430,14 +430,14 @@
   --premium-metric-border: rgba(15, 23, 42, 0.15);
   --premium-metric-shadow: rgba(0, 0, 0, 0.08);
   
-  border: 1px solid var(--premium-metric-border) !important;
+  border: 1px solid var(--premium-metric-border);
   box-shadow: 
     0 0 0 1px var(--premium-metric-halo),
-    0 12px 30px var(--premium-metric-shadow) !important;
+    0 12px 30px var(--premium-metric-shadow);
   
-  border-radius: 1.5rem !important;
-  padding: var(--space-2) !important;
-  overflow: hidden !important;
+  border-radius: 1.5rem;
+  padding: var(--space-2);
+  overflow: hidden;
 }
 
 /* 深色模式适配：让边框不再扎眼 */
@@ -448,15 +448,15 @@
 }
 
 /* 2. 子项：指标卡片 */
-.metric-panel-card--premium {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  position: relative !important;
-  padding: var(--space-3) var(--space-6) !important;
-  display: flex !important;
-  flex-direction: column !important;
-  justify-content: center !important;
+.metric-panel-card.metric-panel-card--premium {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  position: relative;
+  padding: var(--space-3) var(--space-6);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 /* 3. 核心：高对比度悬浮分隔线 */
@@ -474,47 +474,47 @@
 
 /* 4. 排版：标签与数值 */
 .metric-panel-card--premium .metric-panel-label {
-  font-size: var(--font-size-15, 15px) !important;
-  font-weight: 800 !important;
-  letter-spacing: 0.01em !important;
-  margin-bottom: var(--space-1) !important;
-  color: var(--journal-muted) !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: space-between !important;
+  font-size: var(--font-size-15, 15px);
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  margin-bottom: var(--space-1);
+  color: var(--journal-muted);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 
 .metric-panel-card--premium .metric-panel-value {
-  font-size: var(--font-size-30, 1.875rem) !important;
-  font-weight: 800 !important;
-  letter-spacing: -0.02em !important;
-  color: var(--journal-ink, var(--color-text-primary)) !important;
-  line-height: 1.1 !important;
+  font-size: var(--font-size-30, 1.875rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--journal-ink, var(--color-text-primary));
+  line-height: 1.1;
 }
 
 /* 5. 响应式处理 */
 @media (max-width: 1023px) {
-  .metric-panel-grid--premium {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  .metric-panel-grid.metric-panel-grid--premium {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .metric-panel-card--premium:nth-child(2n)::after {
-    display: none !important;
+    display: none;
   }
 }
 
 @media (max-width: 640px) {
-  .metric-panel-grid--premium {
-    grid-template-columns: 1fr !important;
+  .metric-panel-grid.metric-panel-grid--premium {
+    grid-template-columns: 1fr;
   }
   .metric-panel-card--premium::after {
-    display: none !important;
+    display: none;
   }
-  .metric-panel-card--premium {
-    border-bottom: 1px solid color-mix(in srgb, var(--color-border-default) 40%, transparent) !important;
+  .metric-panel-card.metric-panel-card--premium {
+    border-bottom: 1px solid color-mix(in srgb, var(--color-border-default) 40%, transparent);
   }
-  .metric-panel-card--premium:last-child {
-    border-bottom: none !important;
+  .metric-panel-card.metric-panel-card--premium:last-child {
+    border-bottom: none;
   }
 }
 

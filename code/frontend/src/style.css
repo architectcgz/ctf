@@ -492,30 +492,30 @@ select {
 }
 
 .app-destructive-confirm-box .el-message-box__btns .app-destructive-confirm-cancel.el-button {
-  border: 1px solid var(--destructive-confirm-neutral-border) !important;
-  background: var(--destructive-confirm-neutral-bg) !important;
-  color: var(--destructive-confirm-neutral-text) !important;
+  border: 1px solid var(--destructive-confirm-neutral-border);
+  background: var(--destructive-confirm-neutral-bg);
+  color: var(--destructive-confirm-neutral-text);
 }
 
 .app-destructive-confirm-box .el-message-box__btns .el-button:not(.el-button--primary) {
-  border: 1px solid var(--destructive-confirm-neutral-border) !important;
-  background: var(--destructive-confirm-neutral-bg) !important;
-  color: var(--destructive-confirm-neutral-text) !important;
+  border: 1px solid var(--destructive-confirm-neutral-border);
+  background: var(--destructive-confirm-neutral-bg);
+  color: var(--destructive-confirm-neutral-text);
 }
 
 .app-destructive-confirm-box .el-message-box__btns .el-button:not(.el-button--primary):hover,
 .app-destructive-confirm-box
   .el-message-box__btns
   .el-button:not(.el-button--primary):focus-visible {
-  border-color: var(--destructive-confirm-neutral-border-hover) !important;
-  background: var(--destructive-confirm-neutral-bg-hover) !important;
-  color: var(--destructive-confirm-neutral-text-hover) !important;
+  border-color: var(--destructive-confirm-neutral-border-hover);
+  background: var(--destructive-confirm-neutral-bg-hover);
+  color: var(--destructive-confirm-neutral-text-hover);
 }
 
 .app-destructive-confirm-box .el-message-box__btns .app-destructive-confirm-primary.el-button {
-  border: 1px solid var(--destructive-confirm-border-strong) !important;
-  background: var(--destructive-confirm-soft-bg) !important;
-  color: var(--destructive-confirm-soft-text) !important;
+  border: 1px solid var(--destructive-confirm-border-strong);
+  background: var(--destructive-confirm-soft-bg);
+  color: var(--destructive-confirm-soft-text);
 }
 
 .app-destructive-confirm-box .el-message-box__btns .el-button--primary {
@@ -549,34 +549,34 @@ select {
 
 /* 1. 遮罩层与毛玻璃 */
 .modal-template-shell--frosted {
-  background-color: rgba(15, 23, 42, 0.45) !important;
-  backdrop-filter: blur(12px) !important;
-  -webkit-backdrop-filter: blur(12px) !important;
+  background-color: var(--modal-shell-overlay-frosted, rgba(15, 23, 42, 0.45));
+  backdrop-filter: blur(var(--modal-shell-blur, 12px));
+  -webkit-backdrop-filter: blur(var(--modal-shell-blur, 12px));
 }
 
 /* 2. 弹窗面板核心样式 */
 .modal-template-panel--classic {
-  background-color: var(--color-bg-surface, #ffffff) !important;
-  border: 1px solid rgba(15, 23, 42, 0.12) !important;
-  border-radius: 1.5rem !important;
+  background-color: var(--color-bg-surface);
+  border: 1px solid color-mix(in srgb, var(--color-text-primary) 12%, transparent);
+  border-radius: 1.5rem;
   /* 关键：使用双重描边（外白内黑影），创造极致的区分度 */
   box-shadow: 
-    0 0 0 1px rgba(255, 255, 255, 0.9),
+    0 0 0 1px color-mix(in srgb, var(--color-bg-surface) 90%, white),
     0 10px 15px -3px rgba(0, 0, 0, 0.1),
-    0 25px 50px -12px rgba(0, 0, 0, 0.18) !important;
-  overflow: hidden !important;
+    0 25px 50px -12px var(--color-shadow-soft);
+  overflow: hidden;
 }
 
 /* 3. 统一各级背景色（去卡片化） */
 .modal-template-panel--classic .modal-template-classic__header,
 .modal-template-panel--classic .modal-template-classic__body,
 .modal-template-panel--classic .modal-template-classic__footer {
-  background-color: var(--color-bg-surface, #ffffff) !important;
+  background-color: var(--color-bg-surface);
 }
 
 /* 4. 优化头部边界感 */
 .modal-template-panel--classic .modal-template-classic__header {
-  border-bottom: 1px solid rgba(15, 23, 42, 0.08) !important;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-text-primary) 8%, transparent);
 }
 
 /**

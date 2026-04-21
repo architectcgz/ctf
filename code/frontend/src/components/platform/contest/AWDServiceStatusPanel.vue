@@ -59,24 +59,56 @@ function getServiceCheckTargets(checkResult: Record<string, unknown>) {
   <div class="awd-matrix-viewer">
     <div class="matrix-toolbar">
       <div class="toolbar-left">
-        <h3 class="viewer-title">服务运行矩阵</h3>
-        <div class="filter-summary">显示 {{ teamMap.length }} 支队伍</div>
+        <h3 class="viewer-title">
+          服务运行矩阵
+        </h3>
+        <div class="filter-summary">
+          显示 {{ teamMap.length }} 支队伍
+        </div>
       </div>
       
       <div class="toolbar-right">
         <div class="matrix-filters">
-          <select :value="serviceStatusFilter" class="matrix-select" @change="updateServiceStatusFilter(($event.target as HTMLSelectElement).value)">
-            <option value="all">所有状态</option>
-            <option value="up">在线 (UP)</option>
-            <option value="down">离线 (DOWN)</option>
-            <option value="compromised">失陷 (EXP)</option>
+          <select
+            :value="serviceStatusFilter"
+            class="matrix-select"
+            @change="updateServiceStatusFilter(($event.target as HTMLSelectElement).value)"
+          >
+            <option value="all">
+              所有状态
+            </option>
+            <option value="up">
+              在线 (UP)
+            </option>
+            <option value="down">
+              离线 (DOWN)
+            </option>
+            <option value="compromised">
+              失陷 (EXP)
+            </option>
           </select>
-          <select :value="serviceCheckSourceFilter" class="matrix-select" @change="emit('updateServiceCheckSourceFilter', ($event.target as HTMLSelectElement).value)">
-            <option value="">所有来源</option>
-            <option v-for="source in serviceCheckSourceOptions" :key="source" :value="source">{{ getCheckSourceLabel(source) }}</option>
+          <select
+            :value="serviceCheckSourceFilter"
+            class="matrix-select"
+            @change="emit('updateServiceCheckSourceFilter', ($event.target as HTMLSelectElement).value)"
+          >
+            <option value="">
+              所有来源
+            </option>
+            <option
+              v-for="source in serviceCheckSourceOptions"
+              :key="source"
+              :value="source"
+            >
+              {{ getCheckSourceLabel(source) }}
+            </option>
           </select>
         </div>
-        <button type="button" class="ops-btn ops-btn--neutral" @click="emit('exportServices')">
+        <button
+          type="button"
+          class="ops-btn ops-btn--neutral"
+          @click="emit('exportServices')"
+        >
           <FileDown class="h-3.5 w-3.5 mr-2" /> 导出报告
         </button>
       </div>
@@ -89,10 +121,17 @@ function getServiceCheckTargets(checkResult: Record<string, unknown>) {
     </div>
 
     <!-- New Integrated Round Performance Section -->
-    <section v-if="props.summary" class="round-performance-area mt-12">
+    <section
+      v-if="props.summary"
+      class="round-performance-area mt-12"
+    >
       <header class="performance-header">
-        <h3 class="viewer-title">本轮得分与健康表现</h3>
-        <div class="filter-summary">Round Performance Summary</div>
+        <h3 class="viewer-title">
+          本轮得分与健康表现
+        </h3>
+        <div class="filter-summary">
+          Round Performance Summary
+        </div>
       </header>
       
       <div class="log-table-wrap mt-4">
@@ -100,16 +139,32 @@ function getServiceCheckTargets(checkResult: Record<string, unknown>) {
           <thead>
             <tr>
               <th>队伍节点</th>
-              <th class="text-right">本轮得分</th>
-              <th class="text-right">SLA / ATK / DEF</th>
-              <th class="text-right">服务健康</th>
-              <th class="text-right">被攻破统计</th>
+              <th class="text-right">
+                本轮得分
+              </th>
+              <th class="text-right">
+                SLA / ATK / DEF
+              </th>
+              <th class="text-right">
+                服务健康
+              </th>
+              <th class="text-right">
+                被攻破统计
+              </th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="item in props.summary.items" :key="item.team_id" class="studio-row">
-              <td class="font-bold text-slate-900">{{ item.team_name }}</td>
-              <td class="text-right font-mono font-black text-emerald-600">{{ item.total_score }}</td>
+            <tr
+              v-for="item in props.summary.items"
+              :key="item.team_id"
+              class="studio-row"
+            >
+              <td class="font-bold text-slate-900">
+                {{ item.team_name }}
+              </td>
+              <td class="text-right font-mono font-black text-emerald-600">
+                {{ item.total_score }}
+              </td>
               <td class="text-right font-mono text-[11px] text-slate-500">
                 {{ item.sla_score ?? 0 }} / {{ item.attack_score }} / {{ item.defense_score }}
               </td>
@@ -225,53 +280,53 @@ function getServiceCheckTargets(checkResult: Record<string, unknown>) {
 
 .matrix-table th {
   padding: 0.75rem 1rem;
-  background: #f1f5f9;
+  background: var(--color-bg-elevated);
   font-size: 10px;
   font-weight: 800;
   text-transform: uppercase;
-  color: #475569;
-  border-bottom: 1px solid #e2e8f0;
-  border-right: 1px solid #e2e8f0;
+  color: var(--color-text-secondary);
+  border-bottom: 1px solid var(--color-border-default);
+  border-right: 1px solid var(--color-border-default);
   white-space: nowrap;
 }
 
 .matrix-table td {
   padding: 0.75rem 1rem;
-  border-bottom: 1px solid #f1f5f9;
-  border-right: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--color-border-subtle);
+  border-right: 1px solid var(--color-border-subtle);
 }
 
 .sticky-col {
   position: sticky;
   left: 0;
   z-index: 10;
-  background: white;
-  border-right: 2px solid #e2e8f0 !important;
+  background: var(--color-bg-surface);
+  border-right: 2px solid var(--color-border-default);
 }
 
 .header-team { left: 0; z-index: 20; width: 12rem; min-width: 12rem; }
 .header-challenge { min-width: 14rem; text-align: left; }
 
 .cell-team {
-  background: white;
+  background: var(--color-bg-surface);
 }
 
 .team-indicator {
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: #3b82f6;
-  box-shadow: 0 0 8px #3b82f6;
+  background: var(--color-primary);
+  box-shadow: 0 0 8px var(--color-primary);
 }
 
 .team-name {
   font-size: 13px;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--color-text-primary);
 }
 
 .cell-status {
-  padding: 0.5rem !important;
+  padding: 0.5rem;
 }
 
 .status-box {
