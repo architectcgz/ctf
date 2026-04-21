@@ -18,3 +18,14 @@
 
 - `web-sqli-login-01.zip`：源包打包示例，用于说明目录与文件布局
 - `awd-bank-portal-01.zip`：AWD 服务模板包打包示例，可直接用于后台 AWD 模板导入预览与确认导入
+
+AWD 示例镜像准备：
+
+- `awd-bank-portal-01` 的 `runtime.image.ref` 默认写成 `registry.example.edu/ctf/awd-bank-portal:v1`
+- 这是为了让题包、导入记录和平台运行配置保持同一最终镜像引用
+- 在本地开发环境里，需要先把示例服务按同名 tag 构建到 Docker 本机，否则管理员侧“试跑 Checker”在自动拉起预览实例时会尝试访问占位 registry 并失败
+- 可直接执行：
+
+```bash
+./scripts/build-awd-sample-image.sh
+```
