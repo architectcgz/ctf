@@ -2369,6 +2369,7 @@ describe('admin contest api contract', () => {
       method: 'POST',
       url: '/authoring/awd-service-template-imports',
       data: expect.any(FormData),
+      headers: { 'Content-Type': 'multipart/form-data' },
     })
     expect(preview).toEqual({
       id: 'imp-1',
