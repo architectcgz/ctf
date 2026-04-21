@@ -5,7 +5,6 @@ import type { AWDReadinessData, AWDReadinessItemData } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import { 
   ShieldCheck, 
-  AlertTriangle, 
   AlertCircle 
 } from 'lucide-vue-next'
 
@@ -33,22 +32,6 @@ const summaryItems = computed(() => {
     { key: 'stale', label: '待重新验证', value: readiness?.stale_challenges ?? 0 },
     { key: 'missing', label: '未配 Checker', value: readiness?.missing_checker_challenges ?? 0 },
   ]
-})
-
-const readinessDecision = computed(() => {
-  if (!props.readiness) return { key: 'pending', title: '正在审计...', description: '请稍候，系统正在扫描题目状态。' }
-  if (props.readiness.ready) return { key: 'ready', title: '环境已就绪', description: '所有服务 Checker 均已通过验证，可以安全开启竞赛。' }
-  return { key: 'blocked', title: '存在阻塞风险', description: '部分题目仍有阻塞或校验失败，将限制运维操作。' }
-})
-
-const blockingActionLabels = computed(() => {
-  if (!props.readiness) return []
-  const labels: string[] = []
-  const actions = props.readiness.blocking_actions || []
-  if (actions.includes('start_contest')) labels.push('开启比赛')
-  if (actions.includes('create_round')) labels.push('创建轮次')
-  if (actions.includes('run_current_round_check')) labels.push('即时巡检')
-  return labels
 })
 
 const hasGlobalBlockingReasons = computed(() => (props.readiness?.global_blocking_reasons?.length ?? 0) > 0)
@@ -112,51 +95,7 @@ function formatDateTime(value?: string): string {
       </div>
     </div>
 
-    <!-- 2. Decision HUD -->
-    <div
-      v-if="readiness"
-      class="decision-hud"
-      :class="readinessDecision.key"
-    >
-      <div class="decision-main">
-        <div class="decision-icon">
-          <ShieldCheck
-            v-if="readinessDecision.key === 'ready'"
-            class="h-6 w-6"
-          />
-          <AlertTriangle
-            v-else
-            class="h-6 w-6"
-          />
-        </div>
-        <div class="decision-text">
-          <h3 class="decision-title">
-            {{ readinessDecision.title }}
-          </h3>
-          <p class="decision-description">
-            {{ readinessDecision.description }}
-          </p>
-        </div>
-      </div>
-      <div class="decision-meta">
-        <div class="impact-label">
-          受影响动作
-        </div>
-        <div class="impact-tags">
-          <span
-            v-for="label in blockingActionLabels"
-            :key="label"
-            class="impact-tag"
-          >{{ label }}</span>
-          <span
-            v-if="blockingActionLabels.length === 0"
-            class="impact-tag neutral"
-          >无阻塞</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- 3. Global Blockers -->
+    <!-- 2. Global Blockers -->
     <section
       v-if="hasGlobalBlockingReasons"
       class="global-blockers"
@@ -178,7 +117,7 @@ function formatDateTime(value?: string): string {
       </div>
     </section>
 
-    <!-- 4. Challenge Blockers Directory -->
+    <!-- 3. Challenge Blockers Directory -->
     <section class="challenge-blockers">
       <header class="directory-header">
         <h3 class="directory-title">
@@ -276,55 +215,6 @@ function formatDateTime(value?: string): string {
 .metric-pill { background: var(--color-bg-surface); border: 1px solid var(--color-border-default); padding: 0.45rem 1rem; border-radius: 0.75rem; display: flex; align-items: baseline; gap: 0.75rem; }
 .metric-pill__label { font-size: 8px; font-weight: 800; text-transform: uppercase; color: var(--color-text-secondary); letter-spacing: 0.05em; }
 .metric-pill__value { font-size: 13px; font-weight: 900; color: var(--color-text-primary); font-family: var(--font-family-mono); }
-
-/* Decision HUD - Standardized and Compact */
-.decision-hud {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1.25rem 1.5rem;
-  border-radius: 1rem;
-  border: 1px solid var(--color-border-default);
-  background: var(--color-bg-surface);
-}
-
-.decision-hud.ready {
-  border-color: color-mix(in srgb, var(--color-success) 30%, var(--color-border-default));
-}
-
-.decision-hud.blocked {
-  border-color: color-mix(in srgb, var(--color-danger) 30%, var(--color-border-default));
-}
-
-.decision-hud.override {
-  border-color: color-mix(in srgb, var(--color-warning) 30%, var(--color-border-default));
-}
-
-.decision-main { display: flex; align-items: center; gap: 1rem; }
-.decision-icon {
-  width: 2.75rem;
-  height: 2.75rem;
-  border-radius: 0.75rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.ready .decision-icon { background: var(--color-success-soft); color: var(--color-success); }
-.blocked .decision-icon { background: var(--color-danger-soft); color: var(--color-danger); }
-.override .decision-icon { background: var(--color-warning-soft); color: var(--color-warning); }
-
-.decision-title { font-size: var(--font-size-15); font-weight: 900; margin: 0; color: var(--color-text-primary); }
-.decision-description { font-size: var(--font-size-13); margin-top: 0.15rem; color: var(--color-text-secondary); font-weight: 500; }
-
-.decision-meta { text-align: right; }
-.impact-label { font-size: var(--font-size-10); font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.35rem; color: var(--color-text-muted); }
-.impact-tags { display: flex; gap: 0.35rem; justify-content: flex-end; }
-.impact-tag { font-size: var(--font-size-10); font-weight: 800; padding: 0.15rem 0.6rem; border-radius: 4px; background: var(--color-bg-elevated); color: var(--color-text-secondary); }
-.impact-tag.neutral { opacity: 0.5; }
-.ready .impact-tag { background: var(--color-success-soft); color: var(--color-success); }
-.blocked .impact-tag { background: var(--color-danger-soft); color: var(--color-danger); }
-.override .impact-tag { background: var(--color-warning-soft); color: var(--color-warning); }
 
 /* Global Blockers */
 .global-blockers {
