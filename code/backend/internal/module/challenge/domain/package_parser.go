@@ -25,10 +25,10 @@ func ParseChallengePackageDir(rootDir string) (*ParsedChallengePackage, error) {
 		return nil, fmt.Errorf("parse challenge.yml %s: %w", manifestPath, err)
 	}
 
-	return buildParsedChallengePackage(rootDir, &manifest)
+	return buildParsedChallengePackage(rootDir, &manifest, string(content))
 }
 
-func buildParsedChallengePackage(rootDir string, manifest *ChallengePackageManifest) (*ParsedChallengePackage, error) {
+func buildParsedChallengePackage(rootDir string, manifest *ChallengePackageManifest, manifestRaw string) (*ParsedChallengePackage, error) {
 	if manifest == nil {
 		return nil, errcode.ErrInvalidParams.WithCause(errors.New("challenge.yml 不能为空"))
 	}
@@ -99,8 +99,18 @@ func buildParsedChallengePackage(rootDir string, manifest *ChallengePackageManif
 		return nil, errcode.ErrInvalidParams.WithCause(errors.New("meta.points 必须大于 0"))
 	}
 
+	topology, err := parseChallengePackageTopology(rootDir, manifest.Extensions.Topology)
+	if err != nil {
+		return nil, err
+	}
+	packageFiles, err := listChallengePackageFiles(rootDir)
+	if err != nil {
+		return nil, fmt.Errorf("list package files: %w", err)
+	}
+
 	parsed := &ParsedChallengePackage{
 		Manifest:        *manifest,
+		ManifestRaw:     manifestRaw,
 		RootDir:         rootDir,
 		Slug:            slug,
 		Title:           title,
@@ -114,6 +124,8 @@ func buildParsedChallengePackage(rootDir string, manifest *ChallengePackageManif
 		RuntimeImageRef: resolvePackageRuntimeImageRef(manifest.Runtime),
 		Attachments:     attachments,
 		Hints:           hints,
+		Topology:        topology,
+		PackageFiles:    packageFiles,
 	}
 	return parsed, nil
 }

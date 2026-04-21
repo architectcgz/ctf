@@ -64,6 +64,60 @@ type ChallengePackageTopologyExtension struct {
 	Enabled bool   `yaml:"enabled"`
 }
 
+type ChallengePackageTopologyManifest struct {
+	APIVersion   string                               `yaml:"api_version"`
+	Kind         string                               `yaml:"kind"`
+	EntryNodeKey string                               `yaml:"entry_node_key"`
+	Networks     []ChallengePackageTopologyNetwork    `yaml:"networks"`
+	Nodes        []ChallengePackageTopologyNode       `yaml:"nodes"`
+	Links        []ChallengePackageTopologyLink       `yaml:"links"`
+	Policies     []ChallengePackageTopologyPolicy     `yaml:"policies"`
+}
+
+type ChallengePackageTopologyNetwork struct {
+	Key      string `yaml:"key"`
+	Name     string `yaml:"name"`
+	CIDR     string `yaml:"cidr"`
+	Internal bool   `yaml:"internal"`
+}
+
+type ChallengePackageTopologyNode struct {
+	Key         string                             `yaml:"key"`
+	Name        string                             `yaml:"name"`
+	Tier        string                             `yaml:"tier"`
+	Image       ChallengePackageTopologyNodeImage  `yaml:"image"`
+	ServicePort int                                `yaml:"service_port"`
+	InjectFlag  bool                               `yaml:"inject_flag"`
+	NetworkKeys []string                           `yaml:"network_keys"`
+	Env         map[string]string                  `yaml:"env"`
+	Resources   *ChallengePackageTopologyResources `yaml:"resources"`
+}
+
+type ChallengePackageTopologyNodeImage struct {
+	Ref        string `yaml:"ref"`
+	Dockerfile string `yaml:"dockerfile"`
+	Context    string `yaml:"context"`
+}
+
+type ChallengePackageTopologyResources struct {
+	CPUQuota  float64 `yaml:"cpu_quota"`
+	MemoryMB  int64   `yaml:"memory_mb"`
+	PidsLimit int64   `yaml:"pids_limit"`
+}
+
+type ChallengePackageTopologyLink struct {
+	FromNodeKey string `yaml:"from_node_key"`
+	ToNodeKey   string `yaml:"to_node_key"`
+}
+
+type ChallengePackageTopologyPolicy struct {
+	SourceNodeKey string `yaml:"source_node_key"`
+	TargetNodeKey string `yaml:"target_node_key"`
+	Action        string `yaml:"action"`
+	Protocol      string `yaml:"protocol"`
+	Ports         []int  `yaml:"ports"`
+}
+
 type ChallengePackageAWDExtension struct {
 	ServiceType    string                          `yaml:"service_type"`
 	DeploymentMode string                          `yaml:"deployment_mode"`
@@ -91,6 +145,7 @@ type ChallengePackageAWDDefenseEntry struct {
 
 type ParsedChallengePackage struct {
 	Manifest        ChallengePackageManifest
+	ManifestRaw     string
 	RootDir         string
 	Slug            string
 	Title           string
@@ -104,6 +159,8 @@ type ParsedChallengePackage struct {
 	RuntimeImageRef string
 	Attachments     []ParsedChallengePackageAttachment
 	Hints           []ParsedChallengePackageHint
+	Topology        *ParsedChallengePackageTopology
+	PackageFiles    []ParsedChallengePackageFile
 	Warnings        []string
 }
 
@@ -117,6 +174,21 @@ type ParsedChallengePackageHint struct {
 	Level   int
 	Title   string
 	Content string
+}
+
+type ParsedChallengePackageTopology struct {
+	Source       string
+	Raw          string
+	EntryNodeKey string
+	Networks     []ChallengePackageTopologyNetwork
+	Nodes        []ChallengePackageTopologyNode
+	Links        []ChallengePackageTopologyLink
+	Policies     []ChallengePackageTopologyPolicy
+}
+
+type ParsedChallengePackageFile struct {
+	Path string
+	Size int64
 }
 
 type ParsedAWDServiceTemplatePackage struct {

@@ -7,6 +7,7 @@ import (
 	"ctf-platform/internal/model"
 	"ctf-platform/pkg/errcode"
 	"ctf-platform/pkg/response"
+	"fmt"
 	"io"
 	nethttp "net/http"
 	"os"
@@ -33,6 +34,8 @@ type challengeCommandService interface {
 	ListChallengeImports(actorUserID int64) ([]dto.ChallengeImportPreviewResp, error)
 	GetChallengeImport(actorUserID int64, id string) (*dto.ChallengeImportPreviewResp, error)
 	CommitChallengeImport(ctx context.Context, actorUserID int64, id string) (*dto.ChallengeResp, error)
+	ExportChallengePackage(ctx context.Context, actorUserID int64, challengeID int64) (*dto.ChallengePackageExportResp, error)
+	GetChallengePackageExport(challengeID int64, revisionID *int64) (*dto.ChallengePackageExportResp, error)
 }
 
 type challengeQueryService interface {
@@ -193,6 +196,44 @@ func (h *Handler) CommitChallengeImport(c *gin.Context) {
 		return
 	}
 	response.Success(c, &dto.ChallengeImportCommitResp{Challenge: resp})
+}
+
+func (h *Handler) ExportChallengePackage(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		response.InvalidParams(c, "无效的ID")
+		return
+	}
+	resp, err := h.commands.ExportChallengePackage(c.Request.Context(), authctx.MustCurrentUser(c).UserID, id)
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+	resp.DownloadURL = fmt.Sprintf("/api/v1/authoring/challenges/%d/package-export/download?revision_id=%d", id, resp.RevisionID)
+	response.SuccessWithStatus(c, nethttp.StatusCreated, resp)
+}
+
+func (h *Handler) DownloadChallengePackageExport(c *gin.Context) {
+	challengeID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		response.InvalidParams(c, "无效的ID")
+		return
+	}
+	var revisionID *int64
+	if raw := strings.TrimSpace(c.Query("revision_id")); raw != "" {
+		parsed, parseErr := strconv.ParseInt(raw, 10, 64)
+		if parseErr != nil {
+			response.InvalidParams(c, "无效的 revision_id")
+			return
+		}
+		revisionID = &parsed
+	}
+	resp, err := h.commands.GetChallengePackageExport(challengeID, revisionID)
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+	c.FileAttachment(resp.ArchivePath, resp.FileName)
 }
 
 func (h *Handler) SelfCheckChallenge(c *gin.Context) {

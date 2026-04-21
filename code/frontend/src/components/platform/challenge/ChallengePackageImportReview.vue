@@ -26,21 +26,13 @@ const metadata = computed(() => [
   <section class="import-review">
     <header class="import-review__header">
       <div>
-        <div class="import-review__eyebrow">
-          Preview
-        </div>
+        <div class="import-review__eyebrow">Preview</div>
         <h2 class="import-review__title">
           {{ preview.title }}
         </h2>
       </div>
       <div class="import-review__actions">
-        <button
-          class="import-review__ghost"
-          type="button"
-          @click="emit('reset')"
-        >
-          重新选择
-        </button>
+        <button class="import-review__ghost" type="button" @click="emit('reset')">重新选择</button>
         <button
           class="import-review__primary"
           type="button"
@@ -54,16 +46,10 @@ const metadata = computed(() => [
 
     <div class="import-review__grid">
       <article class="import-review__section">
-        <div class="import-review__section-title">
-          题目概览
-        </div>
+        <div class="import-review__section-title">题目概览</div>
         <div class="import-review__overview">
           <div class="import-review__meta">
-            <div
-              v-for="item in metadata"
-              :key="item.label"
-              class="import-review__meta-item"
-            >
+            <div v-for="item in metadata" :key="item.label" class="import-review__meta-item">
               <span class="import-review__meta-label">{{ item.label }}</span>
               <strong class="import-review__meta-value">{{ item.value }}</strong>
             </div>
@@ -96,38 +82,23 @@ const metadata = computed(() => [
       </article>
 
       <article class="import-review__section">
-        <div class="import-review__section-title">
-          提示
-        </div>
+        <div class="import-review__section-title">提示</div>
         <dl
           v-if="preview.hints?.length"
           class="import-review__definition import-review__definition--hints"
         >
-          <div
-            v-for="hint in preview.hints"
-            :key="hint.level"
-          >
+          <div v-for="hint in preview.hints" :key="hint.level">
             <dt>Level {{ hint.level }}{{ hint.title ? ` · ${hint.title}` : '' }}</dt>
             <dd>{{ hint.content }}</dd>
           </div>
         </dl>
-        <div
-          v-else
-          class="import-review__empty"
-        >
-          当前题目包未声明提示。
-        </div>
+        <div v-else class="import-review__empty">当前题目包未声明提示。</div>
       </article>
     </div>
 
     <article class="import-review__section">
-      <div class="import-review__section-title">
-        附件
-      </div>
-      <div
-        v-if="preview.attachments?.length"
-        class="import-review__list"
-      >
+      <div class="import-review__section-title">附件</div>
+      <div v-if="preview.attachments?.length" class="import-review__list">
         <div
           v-for="attachment in preview.attachments"
           :key="attachment.path"
@@ -137,26 +108,58 @@ const metadata = computed(() => [
           <span>{{ attachment.path }}</span>
         </div>
       </div>
-      <div
-        v-else
-        class="import-review__empty"
-      >
-        当前题目包未包含附件。
-      </div>
+      <div v-else class="import-review__empty">当前题目包未包含附件。</div>
     </article>
 
-    <article
-      v-if="preview.warnings?.length"
-      class="import-review__warning"
-    >
-      <div class="import-review__section-title">
-        导入提醒
-      </div>
+    <div class="import-review__grid">
+      <article class="import-review__section">
+        <div class="import-review__section-title">拓扑摘要</div>
+        <div v-if="preview.topology" class="import-review__definition">
+          <div>
+            <dt>入口节点</dt>
+            <dd>{{ preview.topology.entry_node_key }}</dd>
+          </div>
+          <div>
+            <dt>结构规模</dt>
+            <dd>
+              {{ preview.topology.nodes.length }} 节点 /
+              {{ preview.topology.networks?.length || 0 }} 网络 /
+              {{ preview.topology.links?.length || 0 }} 连线
+            </dd>
+          </div>
+          <div>
+            <dt>节点镜像</dt>
+            <dd>
+              {{ preview.topology.nodes.map((node) => node.image_ref || node.key).join('，') }}
+            </dd>
+          </div>
+        </div>
+        <div v-else class="import-review__empty">当前题目包未声明拓扑文件。</div>
+      </article>
+
+      <article class="import-review__section">
+        <div class="import-review__section-title">题包文件</div>
+        <div v-if="preview.package_files?.length" class="import-review__list">
+          <div
+            v-for="item in preview.package_files.slice(0, 8)"
+            :key="item.path"
+            class="import-review__list-item"
+          >
+            <strong>{{ item.path }}</strong>
+            <span>{{ item.size }} bytes</span>
+          </div>
+          <div v-if="preview.package_files.length > 8" class="import-review__empty">
+            其余 {{ preview.package_files.length - 8 }} 个文件已省略，导入后仍会完整保留。
+          </div>
+        </div>
+        <div v-else class="import-review__empty">当前题目包没有可展示的文件清单。</div>
+      </article>
+    </div>
+
+    <article v-if="preview.warnings?.length" class="import-review__warning">
+      <div class="import-review__section-title">导入提醒</div>
       <ul class="import-review__warnings">
-        <li
-          v-for="warning in preview.warnings"
-          :key="warning"
-        >
+        <li v-for="warning in preview.warnings" :key="warning">
           {{ warning }}
         </li>
       </ul>

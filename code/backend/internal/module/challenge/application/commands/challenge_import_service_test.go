@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -293,6 +294,207 @@ flag:
 	}
 }
 
+func TestCommitChallengeImportCreatesTopologyAndPackageRevision(t *testing.T) {
+	tempDir := t.TempDir()
+	t.Setenv("CHALLENGE_IMPORT_PREVIEW_DIR", tempDir)
+	t.Setenv("CHALLENGE_ATTACHMENT_STORAGE_DIR", t.TempDir())
+	t.Setenv("CHALLENGE_PACKAGE_SOURCE_DIR", t.TempDir())
+
+	db := testsupport.SetupTestDB(t)
+	repo := challengeinfra.NewRepository(db)
+	imageRepo := challengeinfra.NewImageRepository(db)
+	service := NewChallengeService(db, repo, imageRepo, repo, nil, SelfCheckConfig{}, zap.NewNop())
+
+	packageDir := writeChallengePackageWithTopology(t, tempDir, "bank-portal")
+	mustWriteChallengeImportPreviewRecord(t, tempDir, storedChallengeImportPreview{
+		ID:        "import-with-topology",
+		FileName:  "import-with-topology.zip",
+		SourceDir: packageDir,
+		CreatedBy: 7,
+		CreatedAt: time.Now(),
+		Preview: dto.ChallengeImportPreviewResp{
+			ID:         "import-with-topology",
+			FileName:   "import-with-topology.zip",
+			Slug:       "bank-portal",
+			Title:      "Bank Portal",
+			Category:   "web",
+			Difficulty: "medium",
+			Points:     300,
+			Flag:       dto.ChallengeImportFlagResp{Type: "dynamic", Prefix: "flag"},
+			CreatedAt:  time.Now(),
+		},
+	})
+
+	resp, err := service.CommitChallengeImport(context.Background(), 7, "import-with-topology")
+	if err != nil {
+		t.Fatalf("CommitChallengeImport() error = %v", err)
+	}
+
+	var topology model.ChallengeTopology
+	if err := db.Where("challenge_id = ?", resp.ID).First(&topology).Error; err != nil {
+		t.Fatalf("load challenge topology: %v", err)
+	}
+	if topology.EntryNodeKey != "web" {
+		t.Fatalf("unexpected entry node key: %q", topology.EntryNodeKey)
+	}
+	if topology.SourceType != "package_import" {
+		t.Fatalf("unexpected topology source type: %q", topology.SourceType)
+	}
+	if topology.SourcePath != "docker/topology.yml" {
+		t.Fatalf("unexpected topology source path: %q", topology.SourcePath)
+	}
+	if topology.PackageRevisionID == nil || *topology.PackageRevisionID <= 0 {
+		t.Fatalf("expected package revision id, got %+v", topology.PackageRevisionID)
+	}
+	if topology.SyncStatus != "clean" {
+		t.Fatalf("expected clean sync status, got %q", topology.SyncStatus)
+	}
+	if strings.TrimSpace(topology.PackageBaselineSpec) == "" {
+		t.Fatal("expected package baseline spec")
+	}
+
+	spec, err := model.DecodeTopologySpec(topology.Spec)
+	if err != nil {
+		t.Fatalf("DecodeTopologySpec() error = %v", err)
+	}
+	if len(spec.Nodes) != 2 {
+		t.Fatalf("expected 2 topology nodes, got %d", len(spec.Nodes))
+	}
+	if spec.Nodes[0].ImageID == 0 {
+		t.Fatal("expected imported topology node image to resolve to image id")
+	}
+
+	var revision model.ChallengePackageRevision
+	if err := db.First(&revision, *topology.PackageRevisionID).Error; err != nil {
+		t.Fatalf("load challenge package revision: %v", err)
+	}
+	if revision.ChallengeID != resp.ID {
+		t.Fatalf("unexpected revision challenge id: %d", revision.ChallengeID)
+	}
+	if revision.SourceType != "imported" {
+		t.Fatalf("unexpected revision source type: %q", revision.SourceType)
+	}
+	if strings.TrimSpace(revision.SourceDir) == "" {
+		t.Fatal("expected revision source dir")
+	}
+	if _, err := os.Stat(filepath.Join(revision.SourceDir, "docker", "Dockerfile")); err != nil {
+		t.Fatalf("expected copied Dockerfile: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(revision.SourceDir, "docker", "app.py")); err != nil {
+		t.Fatalf("expected copied app.py: %v", err)
+	}
+}
+
+func TestExportChallengePackageRewritesManifestAndTopology(t *testing.T) {
+	tempDir := t.TempDir()
+	t.Setenv("CHALLENGE_IMPORT_PREVIEW_DIR", tempDir)
+	t.Setenv("CHALLENGE_ATTACHMENT_STORAGE_DIR", t.TempDir())
+	t.Setenv("CHALLENGE_PACKAGE_SOURCE_DIR", t.TempDir())
+	t.Setenv("CHALLENGE_PACKAGE_EXPORT_DIR", t.TempDir())
+
+	db := testsupport.SetupTestDB(t)
+	repo := challengeinfra.NewRepository(db)
+	imageRepo := challengeinfra.NewImageRepository(db)
+	service := NewChallengeService(db, repo, imageRepo, repo, nil, SelfCheckConfig{}, zap.NewNop())
+
+	packageDir := writeChallengePackageWithTopology(t, tempDir, "exportable-bank")
+	mustWriteChallengeImportPreviewRecord(t, tempDir, storedChallengeImportPreview{
+		ID:        "exportable-bank",
+		FileName:  "exportable-bank.zip",
+		SourceDir: packageDir,
+		CreatedBy: 9,
+		CreatedAt: time.Now(),
+		Preview: dto.ChallengeImportPreviewResp{
+			ID:         "exportable-bank",
+			FileName:   "exportable-bank.zip",
+			Slug:       "exportable-bank",
+			Title:      "Exportable Bank",
+			Category:   "web",
+			Difficulty: "medium",
+			Points:     300,
+			Flag:       dto.ChallengeImportFlagResp{Type: "dynamic", Prefix: "flag"},
+			CreatedAt:  time.Now(),
+		},
+	})
+
+	resp, err := service.CommitChallengeImport(context.Background(), 9, "exportable-bank")
+	if err != nil {
+		t.Fatalf("CommitChallengeImport() error = %v", err)
+	}
+
+	challengeID := resp.ID
+	if err := db.Model(&model.Challenge{}).Where("id = ?", challengeID).Updates(map[string]any{
+		"title":  "Exportable Bank v2",
+		"points": 450,
+	}).Error; err != nil {
+		t.Fatalf("update challenge: %v", err)
+	}
+	var topology model.ChallengeTopology
+	if err := db.Where("challenge_id = ?", challengeID).First(&topology).Error; err != nil {
+		t.Fatalf("load topology: %v", err)
+	}
+	spec, err := model.DecodeTopologySpec(topology.Spec)
+	if err != nil {
+		t.Fatalf("DecodeTopologySpec() error = %v", err)
+	}
+	spec.Nodes[0].ServicePort = 9090
+	topology.Spec, err = model.EncodeTopologySpec(spec)
+	if err != nil {
+		t.Fatalf("EncodeTopologySpec() error = %v", err)
+	}
+	if err := db.Save(&topology).Error; err != nil {
+		t.Fatalf("save topology: %v", err)
+	}
+
+	exportResp, err := service.ExportChallengePackage(context.Background(), 9, challengeID)
+	if err != nil {
+		t.Fatalf("ExportChallengePackage() error = %v", err)
+	}
+	if strings.TrimSpace(exportResp.ArchivePath) == "" {
+		t.Fatal("expected archive path")
+	}
+	if _, err := os.Stat(exportResp.ArchivePath); err != nil {
+		t.Fatalf("expected export archive: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(exportResp.SourceDir, "docker", "Dockerfile")); err != nil {
+		t.Fatalf("expected exported Dockerfile: %v", err)
+	}
+
+	manifestBytes, err := os.ReadFile(filepath.Join(exportResp.SourceDir, "challenge.yml"))
+	if err != nil {
+		t.Fatalf("read exported challenge.yml: %v", err)
+	}
+	manifest := string(manifestBytes)
+	if !strings.Contains(manifest, "title: Exportable Bank v2") {
+		t.Fatalf("expected rewritten title in challenge.yml, got:\n%s", manifest)
+	}
+	if !strings.Contains(manifest, "points: 450") {
+		t.Fatalf("expected rewritten points in challenge.yml, got:\n%s", manifest)
+	}
+
+	topologyBytes, err := os.ReadFile(filepath.Join(exportResp.SourceDir, "docker", "topology.yml"))
+	if err != nil {
+		t.Fatalf("read exported topology.yml: %v", err)
+	}
+	if !strings.Contains(string(topologyBytes), "service_port: 9090") {
+		t.Fatalf("expected rewritten service_port in topology.yml, got:\n%s", string(topologyBytes))
+	}
+
+	var refreshed model.ChallengeTopology
+	if err := db.Where("challenge_id = ?", challengeID).First(&refreshed).Error; err != nil {
+		t.Fatalf("reload topology: %v", err)
+	}
+	if refreshed.LastExportRevisionID == nil || *refreshed.LastExportRevisionID <= 0 {
+		t.Fatalf("expected last export revision id, got %+v", refreshed.LastExportRevisionID)
+	}
+	if refreshed.PackageRevisionID == nil || *refreshed.PackageRevisionID != *refreshed.LastExportRevisionID {
+		t.Fatalf("expected package revision id to move to exported revision, got package=%+v export=%+v", refreshed.PackageRevisionID, refreshed.LastExportRevisionID)
+	}
+	if refreshed.SyncStatus != "clean" {
+		t.Fatalf("expected clean sync status after export, got %q", refreshed.SyncStatus)
+	}
+}
+
 func mustWriteChallengeImportPreviewRecord(t *testing.T, root string, record storedChallengeImportPreview) {
 	t.Helper()
 
@@ -316,4 +518,95 @@ func int64Pointer(value int64) *int64 {
 
 func modelDeletedAt(value time.Time) gorm.DeletedAt {
 	return gorm.DeletedAt{Time: value, Valid: true}
+}
+
+func writeChallengePackageWithTopology(t *testing.T, root string, slug string) string {
+	t.Helper()
+
+	packageDir := filepath.Join(root, slug+"-package")
+	if err := os.MkdirAll(filepath.Join(packageDir, "docker"), 0o755); err != nil {
+		t.Fatalf("MkdirAll(packageDir/docker) error = %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(packageDir, "statement.md"), []byte("bank portal statement"), 0o644); err != nil {
+		t.Fatalf("WriteFile(statement.md) error = %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(packageDir, "docker", "Dockerfile"), []byte("FROM python:3.12-alpine"), 0o644); err != nil {
+		t.Fatalf("WriteFile(Dockerfile) error = %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(packageDir, "docker", "app.py"), []byte("print('bank')"), 0o644); err != nil {
+		t.Fatalf("WriteFile(app.py) error = %v", err)
+	}
+	topology := `api_version: v1
+kind: topology
+entry_node_key: web
+networks:
+  - key: public
+    name: Public
+  - key: internal
+    name: Internal
+    internal: true
+nodes:
+  - key: web
+    name: Web
+    tier: public
+    image:
+      ref: ctf/` + slug + `:web
+      dockerfile: docker/Dockerfile
+      context: .
+    service_port: 8080
+    inject_flag: true
+    network_keys: [public, internal]
+    env:
+      APP_ENV: prod
+  - key: db
+    name: Database
+    tier: internal
+    image:
+      ref: mysql:8.0
+    service_port: 3306
+    network_keys: [internal]
+links:
+  - from_node_key: web
+    to_node_key: db
+policies:
+  - source_node_key: web
+    target_node_key: db
+    action: allow
+    protocol: tcp
+    ports: [3306]
+`
+	if err := os.WriteFile(filepath.Join(packageDir, "docker", "topology.yml"), []byte(topology), 0o644); err != nil {
+		t.Fatalf("WriteFile(topology.yml) error = %v", err)
+	}
+	manifest := `api_version: v1
+kind: challenge
+
+meta:
+  slug: ` + slug + `
+  title: ` + strings.ReplaceAll(slug, "-", " ") + `
+  category: web
+  difficulty: medium
+  points: 300
+
+content:
+  statement: statement.md
+
+flag:
+  type: dynamic
+  prefix: flag
+
+runtime:
+  type: container
+  image:
+    ref: ctf/` + slug + `:web
+
+extensions:
+  topology:
+    enabled: true
+    source: docker/topology.yml
+`
+	if err := os.WriteFile(filepath.Join(packageDir, "challenge.yml"), []byte(manifest), 0o644); err != nil {
+		t.Fatalf("WriteFile(challenge.yml) error = %v", err)
+	}
+	return packageDir
 }

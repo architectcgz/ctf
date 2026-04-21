@@ -110,6 +110,10 @@ type ChallengeTopologyRepository interface {
 	FindChallengeTopologyByChallengeID(challengeID int64) (*model.ChallengeTopology, error)
 	UpsertChallengeTopology(topology *model.ChallengeTopology) error
 	DeleteChallengeTopologyByChallengeID(challengeID int64) error
+	CreateChallengePackageRevision(revision *model.ChallengePackageRevision) error
+	FindChallengePackageRevisionByID(id int64) (*model.ChallengePackageRevision, error)
+	FindLatestChallengePackageRevisionByChallengeID(challengeID int64) (*model.ChallengePackageRevision, error)
+	ListChallengePackageRevisionsByChallengeID(challengeID int64) ([]*model.ChallengePackageRevision, error)
 }
 
 type ImageRepository interface {

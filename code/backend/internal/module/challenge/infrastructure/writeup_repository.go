@@ -458,12 +458,52 @@ func (r *Repository) FindChallengeTopologyByChallengeID(challengeID int64) (*mod
 func (r *Repository) UpsertChallengeTopology(topology *model.ChallengeTopology) error {
 	return r.db.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "challenge_id"}},
-		DoUpdates: clause.AssignmentColumns([]string{"template_id", "entry_node_key", "spec", "updated_at", "deleted_at"}),
+		DoUpdates: clause.AssignmentColumns([]string{
+			"template_id",
+			"entry_node_key",
+			"spec",
+			"source_type",
+			"source_path",
+			"package_revision_id",
+			"package_baseline_spec",
+			"sync_status",
+			"last_export_revision_id",
+			"updated_at",
+			"deleted_at",
+		}),
 	}).Create(topology).Error
 }
 
 func (r *Repository) DeleteChallengeTopologyByChallengeID(challengeID int64) error {
 	return r.db.Where("challenge_id = ?", challengeID).Delete(&model.ChallengeTopology{}).Error
+}
+
+func (r *Repository) CreateChallengePackageRevision(revision *model.ChallengePackageRevision) error {
+	return r.db.Create(revision).Error
+}
+
+func (r *Repository) FindChallengePackageRevisionByID(id int64) (*model.ChallengePackageRevision, error) {
+	var revision model.ChallengePackageRevision
+	if err := r.db.Where("id = ?", id).First(&revision).Error; err != nil {
+		return nil, err
+	}
+	return &revision, nil
+}
+
+func (r *Repository) FindLatestChallengePackageRevisionByChallengeID(challengeID int64) (*model.ChallengePackageRevision, error) {
+	var revision model.ChallengePackageRevision
+	if err := r.db.Where("challenge_id = ?", challengeID).Order("revision_no DESC, id DESC").First(&revision).Error; err != nil {
+		return nil, err
+	}
+	return &revision, nil
+}
+
+func (r *Repository) ListChallengePackageRevisionsByChallengeID(challengeID int64) ([]*model.ChallengePackageRevision, error) {
+	var revisions []*model.ChallengePackageRevision
+	if err := r.db.Where("challenge_id = ?", challengeID).Order("revision_no DESC, id DESC").Find(&revisions).Error; err != nil {
+		return nil, err
+	}
+	return revisions, nil
 }
 
 type TemplateRepository struct {

@@ -29,6 +29,8 @@ import (
 const (
 	defaultChallengeImportPreviewRoot      = "./data/challenge-import-previews"
 	defaultChallengeImportedAttachmentRoot = "./data/challenge-attachments"
+	defaultChallengePackageSourceRoot      = "./data/challenge-packages"
+	defaultChallengePackageExportRoot      = "./data/challenge-package-exports"
 	maxChallengeImportArchiveFiles         = 128
 	maxChallengeImportArchiveFileSize      = 16 << 20
 	maxChallengeImportArchiveTotalSize     = 64 << 20
@@ -153,6 +155,7 @@ func (s *ChallengeService) CommitChallengeImport(
 	}
 
 	var challenge *model.Challenge
+	cleanupPaths := make([]string, 0, 2)
 	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		resolvedImageID, err := resolveImportedImageID(tx, parsed.Slug, parsed.RuntimeImageRef)
 		if err != nil {
@@ -214,10 +217,53 @@ func (s *ChallengeService) CommitChallengeImport(
 		if err := configureImportedFlag(tx, current.ID, parsed.FlagType, parsed.FlagPrefix, parsed.FlagValue); err != nil {
 			return err
 		}
+		if parsed.Topology != nil {
+			revision, revisionErr := s.createImportedPackageRevision(tx, actorUserID, &current, *record, parsed)
+			if revisionErr != nil {
+				return revisionErr
+			}
+			cleanupPaths = append(cleanupPaths, revision.SourceDir)
+			if strings.TrimSpace(revision.ArchivePath) != "" {
+				cleanupPaths = append(cleanupPaths, revision.ArchivePath)
+			}
+
+			topologySpec, entryNodeKey, topologyErr := domain.BuildTopologySpecFromImportedPackage(
+				parsed.Topology,
+				func(imageRef string) (int64, error) {
+					return resolveImportedImageID(tx, parsed.Slug, imageRef)
+				},
+			)
+			if topologyErr != nil {
+				return topologyErr
+			}
+			now = time.Now()
+			revisionID := revision.ID
+			item := &model.ChallengeTopology{
+				ChallengeID:          current.ID,
+				EntryNodeKey:         entryNodeKey,
+				Spec:                 topologySpec,
+				SourceType:           model.ChallengeTopologySourceTypePackageImport,
+				SourcePath:           parsed.Topology.Source,
+				PackageRevisionID:    &revisionID,
+				PackageBaselineSpec:  topologySpec,
+				SyncStatus:           model.ChallengeTopologySyncStatusClean,
+				LastExportRevisionID: nil,
+				UpdatedAt:            now,
+			}
+			if err := upsertChallengeTopologyTx(tx, item); err != nil {
+				return err
+			}
+		}
 
 		challenge = &current
 		return nil
 	}); err != nil {
+		for _, cleanupPath := range cleanupPaths {
+			if strings.TrimSpace(cleanupPath) == "" {
+				continue
+			}
+			_ = os.RemoveAll(cleanupPath)
+		}
 		return nil, err
 	}
 
@@ -273,8 +319,10 @@ func buildChallengeImportPreview(
 				Enabled: parsed.Manifest.Extensions.Topology.Enabled,
 			},
 		},
-		Warnings:  parsed.Warnings,
-		CreatedAt: createdAt,
+		Topology:     domain.ChallengeImportTopologyRespFromParsed(parsed.Topology),
+		PackageFiles: domain.ChallengePackageFileRespList(parsed.PackageFiles),
+		Warnings:     parsed.Warnings,
+		CreatedAt:    createdAt,
 	}
 }
 
@@ -801,6 +849,20 @@ func challengeImportedAttachmentRoot() string {
 	return defaultChallengeImportedAttachmentRoot
 }
 
+func challengePackageSourceRoot() string {
+	if value := strings.TrimSpace(os.Getenv("CHALLENGE_PACKAGE_SOURCE_DIR")); value != "" {
+		return value
+	}
+	return defaultChallengePackageSourceRoot
+}
+
+func challengePackageExportRoot() string {
+	if value := strings.TrimSpace(os.Getenv("CHALLENGE_PACKAGE_EXPORT_DIR")); value != "" {
+		return value
+	}
+	return defaultChallengePackageExportRoot
+}
+
 func generateChallengeImportPreviewID() (string, error) {
 	token := make([]byte, 12)
 	if _, err := rand.Read(token); err != nil {
@@ -815,6 +877,10 @@ func stringPointer(value string) *string {
 		return nil
 	}
 	return &trimmed
+}
+
+func int64Ptr(value int64) *int64 {
+	return &value
 }
 
 type fileInfoAdapter struct {

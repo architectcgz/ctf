@@ -48,12 +48,33 @@ func (s *TopologyService) SaveChallengeTopology(challengeID int64, req *dto.Save
 		return nil, err
 	}
 
+	var existing *model.ChallengeTopology
+	existing, err = s.repo.FindChallengeTopologyByChallengeID(challengeID)
+	switch {
+	case err == nil:
+	case errors.Is(err, gorm.ErrRecordNotFound):
+		existing = nil
+	default:
+		return nil, err
+	}
+
 	item := &model.ChallengeTopology{
 		ChallengeID:  challengeID,
 		TemplateID:   templateID,
 		EntryNodeKey: entryNodeKey,
 		Spec:         rawSpec,
 		UpdatedAt:    time.Now(),
+	}
+	if existing != nil {
+		item.SourceType = existing.SourceType
+		item.SourcePath = existing.SourcePath
+		item.PackageRevisionID = existing.PackageRevisionID
+		item.PackageBaselineSpec = existing.PackageBaselineSpec
+		item.LastExportRevisionID = existing.LastExportRevisionID
+		item.SyncStatus = resolveTopologySyncStatus(rawSpec, existing.PackageBaselineSpec)
+	} else {
+		item.SourceType = model.ChallengeTopologySourceTypeManual
+		item.SyncStatus = model.ChallengeTopologySyncStatusClean
 	}
 	if err := s.repo.UpsertChallengeTopology(item); err != nil {
 		return nil, err
@@ -68,6 +89,16 @@ func (s *TopologyService) SaveChallengeTopology(challengeID int64, req *dto.Save
 		return nil, err
 	}
 	return domain.TopologyRespFromModel(saved)
+}
+
+func resolveTopologySyncStatus(rawSpec string, baselineSpec string) string {
+	if strings.TrimSpace(baselineSpec) == "" {
+		return model.ChallengeTopologySyncStatusClean
+	}
+	if strings.TrimSpace(rawSpec) == strings.TrimSpace(baselineSpec) {
+		return model.ChallengeTopologySyncStatusClean
+	}
+	return model.ChallengeTopologySyncStatusDrifted
 }
 
 func validateSharedTopologyConstraint(challenge *model.Challenge, rawSpec string) error {

@@ -87,17 +87,47 @@ type TopologyTrafficPolicyResp struct {
 	Ports         []int  `json:"ports,omitempty"`
 }
 
-type ChallengeTopologyResp struct {
-	ID           int64                       `json:"id"`
-	ChallengeID  int64                       `json:"challenge_id"`
-	TemplateID   *int64                      `json:"template_id,omitempty"`
+type TopologySpecResp struct {
 	EntryNodeKey string                      `json:"entry_node_key"`
 	Networks     []TopologyNetworkResp       `json:"networks,omitempty"`
 	Nodes        []TopologyNodeResp          `json:"nodes"`
 	Links        []TopologyLinkResp          `json:"links,omitempty"`
 	Policies     []TopologyTrafficPolicyResp `json:"policies,omitempty"`
-	CreatedAt    time.Time                   `json:"created_at"`
-	UpdatedAt    time.Time                   `json:"updated_at"`
+}
+
+type ChallengePackageRevisionResp struct {
+	ID                 int64     `json:"id"`
+	RevisionNo         int       `json:"revision_no"`
+	SourceType         string    `json:"source_type"`
+	ParentRevisionID   *int64    `json:"parent_revision_id,omitempty"`
+	PackageSlug        string    `json:"package_slug,omitempty"`
+	ArchivePath        string    `json:"archive_path,omitempty"`
+	SourceDir          string    `json:"source_dir,omitempty"`
+	TopologySourcePath string    `json:"topology_source_path,omitempty"`
+	CreatedBy          *int64    `json:"created_by,omitempty"`
+	CreatedAt          time.Time `json:"created_at"`
+	UpdatedAt          time.Time `json:"updated_at"`
+}
+
+type ChallengeTopologyResp struct {
+	ID                   int64                          `json:"id"`
+	ChallengeID          int64                          `json:"challenge_id"`
+	TemplateID           *int64                         `json:"template_id,omitempty"`
+	EntryNodeKey         string                         `json:"entry_node_key"`
+	Networks             []TopologyNetworkResp          `json:"networks,omitempty"`
+	Nodes                []TopologyNodeResp             `json:"nodes"`
+	Links                []TopologyLinkResp             `json:"links,omitempty"`
+	Policies             []TopologyTrafficPolicyResp    `json:"policies,omitempty"`
+	SourceType           string                         `json:"source_type,omitempty"`
+	SourcePath           string                         `json:"source_path,omitempty"`
+	SyncStatus           string                         `json:"sync_status,omitempty"`
+	PackageRevisionID    *int64                         `json:"package_revision_id,omitempty"`
+	LastExportRevisionID *int64                         `json:"last_export_revision_id,omitempty"`
+	PackageBaseline      *TopologySpecResp              `json:"package_baseline,omitempty"`
+	PackageFiles         []ChallengePackageFileResp     `json:"package_files,omitempty"`
+	PackageRevisions     []ChallengePackageRevisionResp `json:"package_revisions,omitempty"`
+	CreatedAt            time.Time                      `json:"created_at"`
+	UpdatedAt            time.Time                      `json:"updated_at"`
 }
 
 type UpsertEnvironmentTemplateReq struct {

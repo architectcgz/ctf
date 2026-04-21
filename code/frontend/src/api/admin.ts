@@ -36,6 +36,7 @@ import type {
   AdminChallengeHint,
   AdminChallengeImportCommitData,
   AdminChallengeImportPreview,
+  AdminChallengeImportTopologyData,
   AdminChallengeListItem,
   AdminChallengePublishRequestData,
   AdminNotificationPublishPayload,
@@ -49,6 +50,9 @@ import type {
   AdminUserUpsertData,
   AuditLogItem,
   ChallengeCategory,
+  ChallengePackageExportData,
+  ChallengePackageFileData,
+  ChallengePackageRevisionData,
   ChallengeTopologyData,
   ContestMode,
   ContestDetailData,
@@ -56,6 +60,7 @@ import type {
   ContestStatus,
   EnvironmentTemplateData,
   PageResult,
+  TopologySpecData,
   TopologyLinkData,
   TopologyNetworkData,
   TopologyNodeData,
@@ -529,6 +534,27 @@ interface RawChallengeImportPreview {
       enabled: boolean
     }
   }
+  topology?: {
+    source?: string
+    entry_node_key: string
+    networks?: RawTopologyNetworkData[]
+    nodes: Array<{
+      key: string
+      name: string
+      image_ref?: string
+      service_port?: number
+      inject_flag?: boolean
+      tier?: TopologyNodeData['tier']
+      network_keys?: string[]
+      env?: Record<string, string>
+    }>
+    links?: RawTopologyLinkData[]
+    policies?: RawTopologyTrafficPolicyData[]
+  }
+  package_files?: Array<{
+    path: string
+    size: number
+  }>
   warnings?: string[]
   created_at: string
 }
@@ -544,6 +570,11 @@ interface RawTopologyNodeResourcesData {
   cpu_quota?: number
   memory_mb?: number
   pids_limit?: number
+}
+
+interface RawChallengePackageFileData {
+  path: string
+  size: number
 }
 
 interface RawTopologyNodeData {
@@ -580,8 +611,47 @@ interface RawChallengeTopologyData {
   nodes: RawTopologyNodeData[]
   links?: RawTopologyLinkData[]
   policies?: RawTopologyTrafficPolicyData[]
+  source_type?: ChallengeTopologyData['source_type']
+  source_path?: string
+  sync_status?: ChallengeTopologyData['sync_status']
+  package_revision_id?: string | number | null
+  last_export_revision_id?: string | number | null
+  package_baseline?: {
+    entry_node_key: string
+    networks?: RawTopologyNetworkData[]
+    nodes: RawTopologyNodeData[]
+    links?: RawTopologyLinkData[]
+    policies?: RawTopologyTrafficPolicyData[]
+  }
+  package_files?: Array<{
+    path: string
+    size: number
+  }>
+  package_revisions?: Array<{
+    id: string | number
+    revision_no: number
+    source_type: ChallengePackageRevisionData['source_type']
+    parent_revision_id?: string | number | null
+    package_slug?: string
+    archive_path?: string
+    source_dir?: string
+    topology_source_path?: string
+    created_by?: string | number | null
+    created_at: string
+    updated_at: string
+  }>
   created_at: string
   updated_at: string
+}
+
+interface RawChallengePackageExportData {
+  challenge_id: string | number
+  revision_id: string | number
+  archive_path: string
+  source_dir: string
+  file_name: string
+  download_url?: string
+  created_at: string
 }
 
 interface RawEnvironmentTemplateData {
@@ -1371,8 +1441,41 @@ function normalizeChallengeImportPreview(
     flag: item.flag,
     runtime: item.runtime,
     extensions: item.extensions,
+    topology: item.topology ? normalizeChallengeImportTopology(item.topology) : undefined,
+    package_files: item.package_files?.map(normalizeChallengePackageFile),
     warnings: item.warnings,
     created_at: item.created_at,
+  }
+}
+
+function normalizeChallengeImportTopology(
+  item: NonNullable<RawChallengeImportPreview['topology']>
+): AdminChallengeImportTopologyData {
+  return {
+    source: item.source,
+    entry_node_key: item.entry_node_key,
+    networks: item.networks?.map(normalizeTopologyNetwork),
+    nodes: item.nodes.map((node) => ({
+      key: node.key,
+      name: node.name,
+      image_ref: node.image_ref,
+      service_port: node.service_port,
+      inject_flag: node.inject_flag,
+      tier: node.tier,
+      network_keys: node.network_keys,
+      env: node.env,
+    })),
+    links: item.links?.map(normalizeTopologyLink),
+    policies: item.policies?.map(normalizeTopologyPolicy),
+  }
+}
+
+function normalizeChallengePackageFile(
+  item: RawChallengePackageFileData
+): ChallengePackageFileData {
+  return {
+    path: item.path,
+    size: item.size,
   }
 }
 
@@ -1426,8 +1529,65 @@ function normalizeChallengeTopology(item: RawChallengeTopologyData): ChallengeTo
     nodes: item.nodes.map(normalizeTopologyNode),
     links: item.links?.map(normalizeTopologyLink),
     policies: item.policies?.map(normalizeTopologyPolicy),
+    source_type: item.source_type,
+    source_path: item.source_path,
+    sync_status: item.sync_status,
+    package_revision_id:
+      item.package_revision_id == null ? undefined : String(item.package_revision_id),
+    last_export_revision_id:
+      item.last_export_revision_id == null ? undefined : String(item.last_export_revision_id),
+    package_baseline: item.package_baseline
+      ? normalizeTopologySpec(item.package_baseline)
+      : undefined,
+    package_files: item.package_files?.map(normalizeChallengePackageFile),
+    package_revisions: item.package_revisions?.map(normalizeChallengePackageRevision),
     created_at: item.created_at,
     updated_at: item.updated_at,
+  }
+}
+
+function normalizeTopologySpec(
+  item: NonNullable<RawChallengeTopologyData['package_baseline']>
+): TopologySpecData {
+  return {
+    entry_node_key: item.entry_node_key,
+    networks: item.networks?.map(normalizeTopologyNetwork),
+    nodes: item.nodes.map(normalizeTopologyNode),
+    links: item.links?.map(normalizeTopologyLink),
+    policies: item.policies?.map(normalizeTopologyPolicy),
+  }
+}
+
+function normalizeChallengePackageRevision(
+  item: NonNullable<RawChallengeTopologyData['package_revisions']>[number]
+): ChallengePackageRevisionData {
+  return {
+    id: String(item.id),
+    revision_no: item.revision_no,
+    source_type: item.source_type,
+    parent_revision_id:
+      item.parent_revision_id == null ? undefined : String(item.parent_revision_id),
+    package_slug: item.package_slug,
+    archive_path: item.archive_path,
+    source_dir: item.source_dir,
+    topology_source_path: item.topology_source_path,
+    created_by: item.created_by == null ? undefined : String(item.created_by),
+    created_at: item.created_at,
+    updated_at: item.updated_at,
+  }
+}
+
+function normalizeChallengePackageExport(
+  item: RawChallengePackageExportData
+): ChallengePackageExportData {
+  return {
+    challenge_id: String(item.challenge_id),
+    revision_id: String(item.revision_id),
+    archive_path: item.archive_path,
+    source_dir: item.source_dir,
+    file_name: item.file_name,
+    download_url: item.download_url,
+    created_at: item.created_at,
   }
 }
 
@@ -1986,6 +2146,14 @@ export async function saveChallengeTopology(id: string, data: AdminChallengeTopo
     data,
   })
   return normalizeChallengeTopology(response)
+}
+
+export async function exportChallengePackage(id: string): Promise<ChallengePackageExportData> {
+  const response = await request<RawChallengePackageExportData>({
+    method: 'POST',
+    url: `/authoring/challenges/${encodeURIComponent(id)}/package-export`,
+  })
+  return normalizeChallengePackageExport(response)
 }
 
 export async function deleteChallengeTopology(id: string) {

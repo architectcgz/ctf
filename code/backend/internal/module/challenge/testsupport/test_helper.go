@@ -18,6 +18,7 @@ func SetupTestDB(t *testing.T) *gorm.DB {
 	if err := db.AutoMigrate(
 		&model.User{},
 		&model.Challenge{},
+		&model.ChallengePackageRevision{},
 		&model.AWDServiceTemplate{},
 		&model.ChallengePublishCheckJob{},
 		&model.Image{},

@@ -11,6 +11,7 @@ const adminApiMocks = vi.hoisted(() => ({
   getChallengeTopology: vi.fn(),
   getEnvironmentTemplates: vi.fn(),
   saveChallengeTopology: vi.fn(),
+  exportChallengePackage: vi.fn(),
   deleteChallengeTopology: vi.fn(),
   createEnvironmentTemplate: vi.fn(),
   updateEnvironmentTemplate: vi.fn(),
@@ -66,6 +67,33 @@ describe('ChallengeTopologyStudioPage', () => {
       nodes: [{ key: 'web', name: 'Web', network_keys: ['default'], service_port: 8080 }],
       links: [],
       policies: [],
+      source_type: 'package_import',
+      source_path: 'docker/topology.yml',
+      sync_status: 'clean',
+      package_revision_id: '501',
+      last_export_revision_id: '502',
+      package_baseline: {
+        entry_node_key: 'web',
+        networks: [{ key: 'default', name: '默认网络' }],
+        nodes: [{ key: 'web', name: 'Web', network_keys: ['default'], service_port: 8080 }],
+        links: [],
+        policies: [],
+      },
+      package_files: [
+        { path: 'docker/Dockerfile', size: 32 },
+        { path: 'docker/topology.yml', size: 256 },
+      ],
+      package_revisions: [
+        {
+          id: '502',
+          revision_no: 2,
+          source_type: 'exported',
+          package_slug: 'dual-node-demo',
+          topology_source_path: 'docker/topology.yml',
+          created_at: '2026-03-10T03:00:00.000Z',
+          updated_at: '2026-03-10T03:00:00.000Z',
+        },
+      ],
       created_at: '2026-03-10T00:00:00.000Z',
       updated_at: '2026-03-10T02:00:00.000Z',
     })
@@ -85,6 +113,15 @@ describe('ChallengeTopologyStudioPage', () => {
       },
     ])
     adminApiMocks.saveChallengeTopology.mockResolvedValue(undefined)
+    adminApiMocks.exportChallengePackage.mockResolvedValue({
+      challenge_id: '11',
+      revision_id: '502',
+      archive_path: '/tmp/dual-node-demo.zip',
+      source_dir: '/tmp/source',
+      file_name: 'dual-node-demo.zip',
+      download_url: '/api/v1/authoring/challenges/11/package-export/download?revision_id=502',
+      created_at: '2026-03-10T03:00:00.000Z',
+    })
     adminApiMocks.deleteChallengeTopology.mockResolvedValue(undefined)
     adminApiMocks.createEnvironmentTemplate.mockResolvedValue(undefined)
     adminApiMocks.updateEnvironmentTemplate.mockResolvedValue(undefined)
@@ -157,10 +194,18 @@ describe('ChallengeTopologyStudioPage', () => {
   })
 
   it('应使用共享 ui-btn 原语而不是拓扑页私有按钮族', () => {
-    expect(challengeTopologyStudioPageSource).toContain('class="ui-btn ui-btn--ghost topology-action-btn')
-    expect(challengeTopologyStudioPageSource).toContain('class="ui-btn ui-btn--primary topology-action-btn')
-    expect(challengeTopologyStudioPageSource).toContain('class="ui-btn ui-btn--secondary topology-action-btn')
-    expect(challengeTopologyStudioPageSource).toContain('class="ui-btn ui-btn--danger topology-action-btn')
+    expect(challengeTopologyStudioPageSource).toContain(
+      'class="ui-btn ui-btn--ghost topology-action-btn'
+    )
+    expect(challengeTopologyStudioPageSource).toContain(
+      'class="ui-btn ui-btn--primary topology-action-btn'
+    )
+    expect(challengeTopologyStudioPageSource).toContain(
+      'class="ui-btn ui-btn--secondary topology-action-btn'
+    )
+    expect(challengeTopologyStudioPageSource).toContain(
+      'class="ui-btn ui-btn--danger topology-action-btn'
+    )
     expect(challengeTopologyStudioPageSource).not.toContain('topology-toolbar-btn')
     expect(challengeTopologyStudioPageSource).not.toContain('template-action-btn')
   })
