@@ -7,6 +7,8 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/config"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	challengeports "ctf-platform/internal/module/challenge/ports"
 	contestports "ctf-platform/internal/module/contest/ports"
 	platformevents "ctf-platform/internal/platform/events"
 )
@@ -20,6 +22,9 @@ type AWDService struct {
 	awdConfig    config.ContestAWDConfig
 	log          *zap.Logger
 	eventBus     platformevents.Bus
+	imageRepo    challengecontracts.ImageStore
+	templateRepo challengeports.AWDServiceTemplateQueryRepository
+	runtimeProbe challengeports.ChallengeRuntimeProbe
 }
 
 func NewAWDService(
@@ -30,6 +35,9 @@ func NewAWDService(
 	awdConfig config.ContestAWDConfig,
 	log *zap.Logger,
 	roundManager contestports.AWDRoundManager,
+	imageRepo challengecontracts.ImageStore,
+	templateRepo challengeports.AWDServiceTemplateQueryRepository,
+	runtimeProbe challengeports.ChallengeRuntimeProbe,
 ) *AWDService {
 	if log == nil {
 		log = zap.NewNop()
@@ -42,6 +50,9 @@ func NewAWDService(
 		flagSecret:   flagSecret,
 		awdConfig:    awdConfig,
 		log:          log,
+		imageRepo:    imageRepo,
+		templateRepo: templateRepo,
+		runtimeProbe: runtimeProbe,
 	}
 }
 

@@ -37,8 +37,10 @@ type contestModuleDeps struct {
 	submissionRepo    contestports.ContestSubmissionRepository
 	challengeCatalog  challengecontracts.ContestChallengeContract
 	templateQueryRepo challengeports.AWDServiceTemplateQueryRepository
+	imageRepo         challengecontracts.ImageStore
 	flagValidator     challengecontracts.FlagValidator
 	containerFiles    contestports.AWDContainerFileWriter
+	runtimeProbe      challengeports.ChallengeRuntimeProbe
 }
 
 func BuildContestModule(root *Root, challenge *ChallengeModule, runtime *RuntimeModule) *ContestModule {
@@ -102,8 +104,10 @@ func newContestModuleDeps(root *Root, challenge *ChallengeModule, runtime *Runti
 		submissionRepo:    submissionRepo,
 		challengeCatalog:  challenge.Catalog,
 		templateQueryRepo: challenge.AWDServiceTemplateQuery,
+		imageRepo:         challenge.ImageStore,
 		flagValidator:     challenge.FlagValidator,
 		containerFiles:    runtime.ContestContainerFiles,
+		runtimeProbe:      runtime.ChallengeRuntimeProbe,
 	}
 }
 
@@ -151,6 +155,9 @@ func buildContestAWDHandler(deps *contestModuleDeps) (*contesthttp.AWDHandler, *
 		cfg.Contest.AWD,
 		log.Named("contest_awd_service"),
 		awdUpdater,
+		deps.imageRepo,
+		deps.templateQueryRepo,
+		deps.runtimeProbe,
 	)
 	awdCommands.SetEventBus(deps.root.Events)
 	awdQueries := contestqry.NewAWDService(deps.awdRepo, deps.contestLookup)

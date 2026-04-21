@@ -164,7 +164,7 @@ type PreviewAWDCheckerReq struct {
 	ChallengeID   int64          `json:"challenge_id" binding:"omitempty,min=1"`
 	CheckerType   string         `json:"checker_type" binding:"required,oneof=legacy_probe http_standard"`
 	CheckerConfig map[string]any `json:"checker_config"`
-	AccessURL     string         `json:"access_url" binding:"required,max=1024"`
+	AccessURL     string         `json:"access_url" binding:"omitempty,max=1024"`
 	PreviewFlag   string         `json:"preview_flag" binding:"omitempty,max=512"`
 }
 

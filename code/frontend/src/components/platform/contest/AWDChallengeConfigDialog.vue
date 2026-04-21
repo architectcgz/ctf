@@ -480,9 +480,6 @@ function validatePreview(): boolean {
   if (resolvePreviewChallengeID() <= 0) {
     fieldErrors.challenge_id = '请选择服务模板'
   }
-  if (!previewForm.access_url.trim()) {
-    fieldErrors.preview_access_url = '请输入目标访问地址'
-  }
 
   const checkerResult = buildCheckerConfigResult(true)
 
@@ -494,7 +491,6 @@ function validatePreview(): boolean {
 
   return (
     !fieldErrors.challenge_id &&
-    !fieldErrors.preview_access_url &&
     AWD_CHECKER_FIELD_ERROR_KEYS.every((key) => !fieldErrors[key])
   )
 }
@@ -512,11 +508,12 @@ async function handlePreview() {
   previewError.value = ''
 
   try {
+    const accessURL = previewForm.access_url.trim()
     const result = await runContestAWDCheckerPreview(props.contestId, {
       challenge_id: resolvePreviewChallengeID(),
       checker_type: form.awd_checker_type,
       checker_config: buildCheckerConfig(),
-      access_url: previewForm.access_url.trim(),
+      ...(accessURL ? { access_url: accessURL } : {}),
       preview_flag: previewForm.preview_flag.trim() || undefined,
     })
     previewResult.value = result
@@ -1424,7 +1421,7 @@ function handleSubmit() {
               class="ui-field__label"
               for="awd-challenge-preview-access-url"
             >
-              目标访问地址
+              目标访问地址（可选）
             </label>
             <span
               class="ui-control-wrap"
@@ -1443,6 +1440,9 @@ function handleSubmit() {
               class="ui-field__error"
             >
               {{ fieldErrors.preview_access_url }}
+            </p>
+            <p class="ui-field__hint">
+              留空时系统会自动拉起预览实例并在试跑后回收；需要指定外部目标时也可以手动填写。
             </p>
           </div>
 

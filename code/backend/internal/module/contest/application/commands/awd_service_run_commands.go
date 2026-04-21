@@ -3,7 +3,6 @@ package commands
 import (
 	"context"
 	"errors"
-	"strings"
 	"time"
 
 	"ctf-platform/internal/dto"
@@ -76,11 +75,13 @@ func (s *AWDService) PreviewChecker(ctx context.Context, contestID int64, req *d
 
 	var previewServiceID int64
 	previewChallengeID := req.ChallengeID
+	var previewService *model.ContestAWDService
 	if req.ServiceID > 0 {
 		service, err := s.resolveContestRuntimeService(ctx, contestID, req.ServiceID)
 		if err != nil {
 			return nil, err
 		}
+		previewService = service
 		previewServiceID = service.ID
 		previewChallengeID = service.ChallengeID
 		if req.ChallengeID > 0 && req.ChallengeID != service.ChallengeID {
@@ -101,8 +102,19 @@ func (s *AWDService) PreviewChecker(ctx context.Context, contestID int64, req *d
 	if err != nil {
 		return nil, err
 	}
-	if checkerType == "" || strings.TrimSpace(req.AccessURL) == "" {
+	if checkerType == "" {
 		return nil, errcode.ErrInvalidParams
+	}
+
+	previewAccessURL, cleanupRuntime, err := s.prepareCheckerPreviewAccessURL(
+		ctx,
+		previewService,
+		previewChallengeID,
+		req.AccessURL,
+		req.PreviewFlag,
+	)
+	if err != nil {
+		return nil, err
 	}
 
 	if s.roundManager == nil {
@@ -114,9 +126,12 @@ func (s *AWDService) PreviewChecker(ctx context.Context, contestID int64, req *d
 		ChallengeID:   previewChallengeID,
 		CheckerType:   checkerType,
 		CheckerConfig: checkerConfig,
-		AccessURL:     strings.TrimSpace(req.AccessURL),
+		AccessURL:     previewAccessURL,
 		PreviewFlag:   req.PreviewFlag,
 	})
+	if cleanupErr := s.cleanupCheckerPreviewRuntime(ctx, cleanupRuntime, err); cleanupErr != nil {
+		return nil, cleanupErr
+	}
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
