@@ -30,8 +30,11 @@ const emit = defineEmits<{
 }>()
 
 const overlayClass = 'modal-template-shell--drawer'
+// 将布局参数和视觉参数统一通过 CSS 变量传递
 const panelStyle = computed<Record<string, string>>(() => ({
   '--modal-template-drawer-width': props.width,
+  '--drawer-overlay-blur': '12px',
+  '--drawer-overlay-bg': 'rgba(15, 23, 42, 0.45)',
 }))
 
 function forwardOpen(value: boolean): void {
@@ -53,6 +56,12 @@ function forwardClose(): void {
     :aria-label="title"
     :close-on-backdrop="closeOnBackdrop"
     :close-on-escape="closeOnEscape"
+    :style="{
+      '--modal-shell-justify': 'flex-end',
+      '--modal-shell-align': 'stretch',
+      '--modal-shell-padding': '0',
+      '--modal-shell-blur': '12px'
+    }"
     @update:open="forwardOpen"
     @close="forwardClose"
   >
@@ -106,34 +115,22 @@ function forwardClose(): void {
 </template>
 
 <style scoped>
+/* 
+  优雅的做法：
+  1. 通过变量继承影响 Shell 组件。
+  2. 局部定义抽屉内部的语义色，不再污染全局。
+*/
 .modal-template-shell--drawer {
-  --modal-template-drawer-overlay: color-mix(in srgb, var(--color-bg-base) 22%, transparent);
-  --modal-template-drawer-surface: color-mix(in srgb, var(--color-bg-elevated) 96%, var(--color-bg-surface));
-  --modal-template-drawer-surface-muted: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
-  --modal-template-drawer-line: color-mix(in srgb, var(--color-border-default) 86%, transparent);
-  --modal-template-drawer-line-strong: color-mix(in srgb, var(--color-border-default) 94%, transparent);
-  --modal-template-drawer-text: color-mix(in srgb, var(--color-text-primary) 94%, transparent);
-  --modal-template-drawer-muted: color-mix(in srgb, var(--color-text-secondary) 92%, transparent);
-  --modal-template-drawer-faint: color-mix(in srgb, var(--color-text-muted) 92%, transparent);
   --modal-template-drawer-accent: var(--color-primary);
-  justify-content: flex-end;
-  padding: 0;
-  background: var(--modal-template-drawer-overlay);
-  backdrop-filter: blur(8px);
-}
-
-.modal-template-panel--drawer {
-  width: min(var(--modal-template-drawer-width, 32rem), 100vw);
-  height: 100%;
-  border-left: 1px solid var(--modal-template-drawer-line-strong);
-  background: var(--modal-template-drawer-surface);
-  box-shadow: -24px 0 64px color-mix(in srgb, var(--color-shadow-strong) 18%, transparent);
+  --modal-template-drawer-line: var(--color-border-subtle);
 }
 
 .modal-template-drawer {
   display: flex;
   flex-direction: column;
   height: 100%;
+  /* 确保不透明背景 */
+  background-color: var(--color-bg-surface);
 }
 
 .modal-template-drawer__header {
@@ -156,8 +153,8 @@ function forwardClose(): void {
   height: 2.5rem;
   border-radius: 1rem;
   border: 1px solid color-mix(in srgb, var(--modal-template-drawer-accent) 18%, var(--modal-template-drawer-line));
-  background: color-mix(in srgb, var(--modal-template-drawer-accent) 10%, var(--modal-template-drawer-surface));
-  color: color-mix(in srgb, var(--modal-template-drawer-accent) 92%, var(--modal-template-drawer-text));
+  background: color-mix(in srgb, var(--modal-template-drawer-accent) 10%, var(--color-bg-surface));
+  color: color-mix(in srgb, var(--modal-template-drawer-accent) 92%, var(--color-text-primary));
   box-shadow: 0 8px 20px color-mix(in srgb, var(--modal-template-drawer-accent) 10%, transparent);
 }
 
@@ -169,16 +166,14 @@ function forwardClose(): void {
   height: 2.25rem;
   border: 1px solid var(--modal-template-drawer-line);
   border-radius: 999px;
-  background: var(--modal-template-drawer-surface-muted);
-  color: var(--modal-template-drawer-faint);
-  transition:
-    background-color 0.18s ease,
-    color 0.18s ease;
+  background: var(--color-bg-elevated);
+  color: var(--color-text-muted);
+  transition: all 0.18s ease;
 }
 
 .modal-template-drawer__close:hover {
-  background: color-mix(in srgb, var(--modal-template-drawer-line) 18%, var(--modal-template-drawer-surface-muted));
-  color: var(--modal-template-drawer-muted);
+  background: var(--color-border-default);
+  color: var(--color-text-primary);
 }
 
 .modal-template-drawer__eyebrow {
@@ -187,7 +182,7 @@ function forwardClose(): void {
   font-weight: 800;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--modal-template-drawer-faint);
+  color: var(--color-text-muted);
 }
 
 .modal-template-drawer__title {
@@ -195,14 +190,14 @@ function forwardClose(): void {
   font-size: 1.6rem;
   font-weight: 900;
   line-height: 1.08;
-  color: var(--modal-template-drawer-text);
+  color: var(--color-text-primary);
 }
 
 .modal-template-drawer__subtitle {
   margin: 0.75rem 0 0;
   font-size: 0.8rem;
   line-height: 1.7;
-  color: var(--modal-template-drawer-muted);
+  color: var(--color-text-secondary);
 }
 
 .modal-template-drawer__body {
@@ -218,8 +213,7 @@ function forwardClose(): void {
   gap: 1rem;
   padding: 1.5rem;
   border-top: 1px solid var(--modal-template-drawer-line);
-  background: color-mix(in srgb, var(--modal-template-drawer-surface) 82%, transparent);
-  backdrop-filter: blur(14px);
+  background-color: var(--color-bg-surface);
   flex-shrink: 0;
 }
 </style>

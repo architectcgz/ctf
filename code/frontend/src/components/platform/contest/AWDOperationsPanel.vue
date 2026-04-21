@@ -263,12 +263,22 @@ function handleOverrideDialogOpenChange(value: boolean) {
       class="py-20"
     />
 
-    <div v-else class="studio-ops-content">
+    <div
+      v-else
+      class="studio-ops-content"
+    >
       <!-- 1. Pre-runtime Readiness (shown if not running) -->
-      <section v-if="!runtimeStageReady" class="studio-ops-section">
+      <section
+        v-if="!runtimeStageReady"
+        class="studio-ops-section"
+      >
         <header class="section-header mb-6">
-          <h2 class="section-title">运维就绪审计</h2>
-          <p class="section-hint">开赛前必须修正以下阻塞项，以确保裁判引擎正常运行。</p>
+          <h2 class="section-title">
+            运维就绪审计
+          </h2>
+          <p class="section-hint">
+            开赛前必须修正以下阻塞项，以确保裁判引擎正常运行。
+          </p>
         </header>
         <AWDReadinessSummary
           :readiness="readiness"
@@ -278,10 +288,17 @@ function handleOverrideDialogOpenChange(value: boolean) {
       </section>
 
       <!-- 2. Runtime Workspace -->
-      <section v-else class="studio-ops-section">
+      <section
+        v-else
+        class="studio-ops-section"
+      >
         <header class="section-header mb-6">
-          <h2 class="section-title">轮次态势</h2>
-          <p class="section-hint">围绕当前轮次查看服务矩阵、攻击流水、流量审计与得分变化。</p>
+          <h2 class="section-title">
+            轮次态势
+          </h2>
+          <p class="section-hint">
+            围绕当前轮次查看服务矩阵、攻击流水、流量审计与得分变化。
+          </p>
         </header>
 
         <div class="runtime-readiness-strip">
@@ -293,9 +310,12 @@ function handleOverrideDialogOpenChange(value: boolean) {
         </div>
 
         <!-- Dashboard Navigation (Integrated) -->
-        <nav v-if="operationTabs.length > 1" class="studio-ops-tabs">
+        <nav
+          v-if="operationTabs.length > 1"
+          class="studio-ops-tabs"
+        >
           <button
-            v-for="(tab, index) in operationTabs"
+            v-for="tab in operationTabs"
             :key="tab.key"
             class="tab-item"
             :class="{ active: activePanel === tab.key }"
@@ -385,7 +405,7 @@ function handleOverrideDialogOpenChange(value: boolean) {
 <style scoped>
 .studio-ops-shell {
   min-height: 100%;
-  background: #fdfdfd;
+  background: var(--color-bg-base);
 }
 
 .studio-ops-content {
@@ -400,14 +420,14 @@ function handleOverrideDialogOpenChange(value: boolean) {
   flex-direction: column;
 }
 
-.section-header { border-left: 4px solid #3b82f6; padding-left: 1.25rem; }
-.section-title { font-size: 1.15rem; font-weight: 900; color: #0f172a; margin: 0; }
-.section-hint { font-size: 13px; color: #64748b; margin-top: 0.35rem; }
+.section-header { border-left: 4px solid var(--color-primary); padding-left: 1.25rem; }
+.section-title { font-size: 1.15rem; font-weight: 900; color: var(--color-text-primary); margin: 0; }
+.section-hint { font-size: 13px; color: var(--color-text-secondary); margin-top: 0.35rem; }
 
-.studio-ops-tabs { display: flex; gap: 2rem; border-bottom: 1px solid #e2e8f0; margin-bottom: 1.5rem; }
-.tab-item { padding: 0.75rem 0.25rem; font-size: 13px; font-weight: 800; color: #64748b; border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.2s ease; }
-.tab-item:hover { color: #0f172a; }
-.tab-item.active { color: #2563eb; border-bottom-color: #2563eb; }
+.studio-ops-tabs { display: flex; gap: 2rem; border-bottom: 1px solid var(--color-border-default); margin-bottom: 1.5rem; }
+.tab-item { padding: 0.75rem 0.25rem; font-size: 13px; font-weight: 800; color: var(--color-text-secondary); border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.2s ease; }
+.tab-item:hover { color: var(--color-text-primary); }
+.tab-item.active { color: var(--color-primary); border-bottom-color: var(--color-primary); }
 
 .runtime-readiness-strip { margin-bottom: 1.5rem; }
 

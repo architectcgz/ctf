@@ -113,8 +113,16 @@ function forwardClose(): void {
  */
 .modal-template-panel--classic {
   width: min(var(--modal-template-classic-width, 32rem), 100%);
+  max-height: calc(100vh - 4rem);
   display: flex;
   flex-direction: column;
+}
+
+.modal-template-classic {
+  display: flex;
+  flex-direction: column;
+  max-height: inherit;
+  min-height: 0;
 }
 
 .modal-template-classic__header {
@@ -123,6 +131,7 @@ function forwardClose(): void {
   justify-content: space-between;
   gap: 1rem;
   padding: 1.5rem 1.75rem 1.25rem;
+  flex-shrink: 0;
 }
 
 .modal-template-classic__identity {
@@ -185,6 +194,7 @@ function forwardClose(): void {
   background: transparent;
   color: var(--color-text-muted);
   transition: all 0.18s ease;
+  flex-shrink: 0;
 }
 
 .modal-template-classic__close:hover {
@@ -194,6 +204,9 @@ function forwardClose(): void {
 
 .modal-template-classic__body {
   padding: 1.75rem;
+  overflow-y: auto;
+  flex-grow: 1;
+  min-height: 0;
 }
 
 .modal-template-classic__footer {
@@ -201,5 +214,6 @@ function forwardClose(): void {
   justify-content: flex-end;
   gap: 0.75rem;
   padding: 1.25rem 1.75rem 1.5rem;
+  flex-shrink: 0;
 }
 </style>

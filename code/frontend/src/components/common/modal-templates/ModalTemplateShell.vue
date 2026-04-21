@@ -118,18 +118,21 @@ onBeforeUnmount(() => {
   inset: 0;
   z-index: 90;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
+
+  /* 优雅做法：使用变量控制布局，默认居中 */
+  align-items: var(--modal-shell-align, center);
+  justify-content: var(--modal-shell-justify, center);
+  padding: var(--modal-shell-padding, 1rem);
+
   background: var(--modal-template-shell-overlay);
 }
 
 .modal-template-shell--frosted {
   --modal-template-shell-overlay: color-mix(in srgb, var(--color-bg-base) 60%, transparent);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(var(--modal-shell-blur, 12px));
+  -webkit-backdrop-filter: blur(var(--modal-shell-blur, 12px));
 }
-
+...
 .modal-template-panel {
   position: relative;
 }

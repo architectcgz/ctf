@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { ChevronLeft, ChevronRight, Edit, Plus } from 'lucide-vue-next'
 
 import type { AdminContestChallengeViewData } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
@@ -217,12 +218,20 @@ function isActiveChallenge(item: AdminContestChallengeViewData): boolean {
     <!-- 1. Header with Global Metrics -->
     <header class="studio-pane-header">
       <div class="header-main">
-        <h1 class="pane-title">AWD 服务配置</h1>
-        <p class="pane-description">针对每道题目深度定义 Checker 裁判逻辑、分值权重及就绪状态验证。</p>
+        <h1 class="pane-title">
+          AWD 服务配置
+        </h1>
+        <p class="pane-description">
+          针对每道题目深度定义 Checker 裁判逻辑、分值权重及就绪状态验证。
+        </p>
       </div>
 
       <div class="studio-metric-band">
-        <div v-for="item in summaryItems" :key="item.key" class="metric-pill">
+        <div
+          v-for="item in summaryItems"
+          :key="item.key"
+          class="metric-pill"
+        >
           <span class="metric-pill__label">{{ item.label }}</span>
           <span class="metric-pill__value">{{ item.value }}</span>
         </div>
@@ -230,20 +239,40 @@ function isActiveChallenge(item: AdminContestChallengeViewData): boolean {
     </header>
 
     <!-- 2. Active Focus Highlighting -->
-    <section v-if="activeChallenge" class="studio-focus-shelf">
+    <section
+      v-if="activeChallenge"
+      class="studio-focus-shelf"
+    >
       <div class="focus-identity">
-        <div class="focus-overline">正在编辑</div>
-        <h2 class="focus-title">{{ activeChallengeHeading }}</h2>
-        <p class="focus-hint">{{ activeChallengeContext }}</p>
+        <div class="focus-overline">
+          正在编辑
+        </div>
+        <h2 class="focus-title">
+          {{ activeChallengeHeading }}
+        </h2>
+        <p class="focus-hint">
+          {{ activeChallengeContext }}
+        </p>
       </div>
       <div class="focus-actions">
-        <button class="ops-btn ops-btn--neutral" :disabled="!canNavigatePrevious" @click="emit('previous')">
+        <button
+          class="ops-btn ops-btn--neutral"
+          :disabled="!canNavigatePrevious"
+          @click="emit('previous')"
+        >
           <ChevronLeft class="h-4 w-4" /> 上一题
         </button>
-        <button class="ops-btn ops-btn--neutral" :disabled="!canNavigateNext" @click="emit('next')">
+        <button
+          class="ops-btn ops-btn--neutral"
+          :disabled="!canNavigateNext"
+          @click="emit('next')"
+        >
           下一题 <ChevronRight class="h-4 w-4" />
         </button>
-        <button class="ops-btn ops-btn--primary ml-4" @click="emit('edit', activeChallenge)">
+        <button
+          class="ops-btn ops-btn--primary ml-4"
+          @click="emit('edit', activeChallenge)"
+        >
           <Edit class="h-3.5 w-3.5 mr-2" /> 调整 Checker
         </button>
       </div>
@@ -252,8 +281,14 @@ function isActiveChallenge(item: AdminContestChallengeViewData): boolean {
     <!-- 3. Challenge Asset Directory -->
     <section class="studio-asset-directory">
       <header class="directory-header">
-        <h3 class="directory-title">服务资源清单</h3>
-        <button class="ops-btn ops-btn--primary" @click="emit('create')">
+        <h3 class="directory-title">
+          服务资源清单
+        </h3>
+        <button
+          id="awd-challenge-config-create"
+          class="ops-btn ops-btn--primary"
+          @click="emit('create')"
+        >
           <Plus class="h-3.5 w-3.5" /> 关联新资源
         </button>
       </header>
@@ -266,28 +301,54 @@ function isActiveChallenge(item: AdminContestChallengeViewData): boolean {
         class="py-20"
       />
 
-      <div v-else class="studio-table-wrap">
+      <div
+        v-else
+        class="studio-table-wrap"
+      >
         <table class="studio-table">
           <thead>
             <tr>
-              <th class="col-identity">服务身份</th>
-              <th class="col-meta">裁判引擎</th>
-              <th class="col-meta">分值权重</th>
-              <th class="col-meta">规则摘要</th>
-              <th class="col-status">就绪验证</th>
-              <th class="col-actions">操作</th>
+              <th class="col-identity">
+                服务身份
+              </th>
+              <th class="col-meta">
+                裁判引擎
+              </th>
+              <th class="col-meta">
+                分值权重
+              </th>
+              <th class="col-meta">
+                规则摘要
+              </th>
+              <th class="col-status">
+                就绪验证
+              </th>
+              <th class="col-actions">
+                操作
+              </th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="item in sortedChallengeLinks" :key="item.id" class="studio-row" :class="{ 'is-active': isActiveChallenge(item) }">
+            <tr
+              v-for="item in sortedChallengeLinks"
+              :key="item.id"
+              class="studio-row"
+              :class="{ 'is-active': isActiveChallenge(item) }"
+            >
               <td class="col-identity">
                 <div class="challenge-identity">
-                  <div class="challenge-title">{{ getChallengeTitle(item) }}</div>
-                  <div class="challenge-subtitle">{{ item.category }} · RANK {{ item.order }}</div>
+                  <div class="challenge-title">
+                    {{ getChallengeTitle(item) }}
+                  </div>
+                  <div class="challenge-subtitle">
+                    {{ item.category }} · RANK {{ item.order }}
+                  </div>
                 </div>
               </td>
               <td class="col-meta">
-                <div class="engine-tag">{{ getCheckerTypeLabel(item.awd_checker_type) }}</div>
+                <div class="engine-tag">
+                  {{ getCheckerTypeLabel(item.awd_checker_type) }}
+                </div>
               </td>
               <td class="col-meta">
                 <div class="score-stack">
@@ -296,18 +357,30 @@ function isActiveChallenge(item: AdminContestChallengeViewData): boolean {
                 </div>
               </td>
               <td class="col-meta">
-                <div class="rules-summary" :title="getConfigSummary(item)">{{ getConfigSummary(item) }}</div>
+                <div
+                  class="rules-summary"
+                  :title="getConfigSummary(item)"
+                >
+                  {{ getConfigSummary(item) }}
+                </div>
               </td>
               <td class="col-status">
                 <div class="validation-block">
-                  <span class="validation-pill" :class="item.awd_checker_validation_state">
+                  <span
+                    class="validation-pill"
+                    :class="item.awd_checker_validation_state"
+                  >
                     {{ getValidationStateText(item) }}
                   </span>
                   <span class="validation-time">{{ getValidationHint(item).split(' · ')[0] }}</span>
                 </div>
               </td>
               <td class="col-actions">
-                <button class="action-btn" @click="emit('edit', item)">
+                <button
+                  :id="`awd-challenge-config-edit-${item.challenge_id}`"
+                  class="action-btn"
+                  @click="emit('edit', item)"
+                >
                   <Edit class="h-3.5 w-3.5" />
                 </button>
               </td>
@@ -320,68 +393,74 @@ function isActiveChallenge(item: AdminContestChallengeViewData): boolean {
 </template>
 
 <style scoped>
-.studio-awd-config { display: flex; flex-direction: column; gap: 2rem; padding: 1.5rem 2rem; background: #fdfdfd; }
+.studio-awd-config { display: flex; flex-direction: column; gap: 2rem; padding: 1.5rem 2rem; background: var(--color-bg-base); }
 .studio-pane-header { display: flex; justify-content: space-between; align-items: flex-end; }
-.pane-title { font-size: 1.25rem; font-weight: 900; color: #0f172a; margin: 0; }
-.pane-description { font-size: 13px; color: #64748b; margin: 0.5rem 0 0; }
+.pane-title { font-size: 1.25rem; font-weight: 900; color: var(--color-text-primary); margin: 0; }
+.pane-description { font-size: 13px; color: var(--color-text-secondary); margin: 0.5rem 0 0; }
 
 /* Metric Band */
 .studio-metric-band { display: flex; gap: 0.5rem; }
-.metric-pill { background: #f1f5f9; padding: 0.45rem 1rem; border-radius: 0.75rem; display: flex; align-items: baseline; gap: 0.75rem; border: 1px solid #e2e8f0; }
-.metric-pill__label { font-size: 8px; font-weight: 800; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em; }
-.metric-pill__value { font-size: 13px; font-weight: 900; color: #1e293b; font-family: var(--font-family-mono); }
+.metric-pill { background: var(--color-bg-surface); padding: 0.45rem 1rem; border-radius: 0.75rem; display: flex; align-items: baseline; gap: 0.75rem; border: 1px solid var(--color-border-default); }
+.metric-pill__label { font-size: 8px; font-weight: 800; text-transform: uppercase; color: var(--color-text-secondary); letter-spacing: 0.05em; }
+.metric-pill__value { font-size: 13px; font-weight: 900; color: var(--color-text-primary); font-family: var(--font-family-mono); }
 
 /* Focus Shelf */
 .studio-focus-shelf {
-  background: #0f172a;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-default);
   border-radius: 1.25rem;
   padding: 2rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  color: white;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+  color: var(--color-text-primary);
+  box-shadow: var(--color-shadow-soft);
 }
-.focus-overline { font-size: 10px; font-weight: 800; text-transform: uppercase; color: #3b82f6; letter-spacing: 0.2em; margin-bottom: 0.5rem; }
+
+/* Maintain high-contrast dark shelf in dark mode if desired, 
+   but the request was specifically about light mode. 
+   Using variables above makes it light in light mode and dark in dark mode. */
+
+.focus-overline { font-size: 10px; font-weight: 800; text-transform: uppercase; color: var(--color-primary); letter-spacing: 0.2em; margin-bottom: 0.5rem; }
 .focus-title { font-size: 1.5rem; font-weight: 900; margin: 0; }
-.focus-hint { font-size: 13px; color: #94a3b8; margin-top: 0.5rem; max-width: 30rem; line-height: 1.6; }
+.focus-hint { font-size: 13px; color: var(--color-text-secondary); margin-top: 0.5rem; max-width: 30rem; line-height: 1.6; }
 .focus-actions { display: flex; align-items: center; gap: 0.75rem; }
 
 /* Directory Header */
 .directory-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
-.directory-title { font-size: 14px; font-weight: 900; color: #0f172a; text-transform: uppercase; letter-spacing: 0.1em; }
+.directory-title { font-size: 14px; font-weight: 900; color: var(--color-text-primary); text-transform: uppercase; letter-spacing: 0.1em; }
 
 /* Table Styles */
-.studio-table-wrap { border: 1px solid #e2e8f0; border-radius: 1rem; background: white; overflow: hidden; }
+.studio-table-wrap { border: 1px solid var(--color-border-default); border-radius: 1rem; background: var(--color-bg-surface); overflow: hidden; }
 .studio-table { width: 100%; border-collapse: collapse; }
-.studio-table th { background: #f8fafc; padding: 0.75rem 1rem; text-align: left; font-size: 10px; font-weight: 800; text-transform: uppercase; color: #94a3b8; border-bottom: 1px solid #e2e8f0; }
-.studio-table td { padding: 1.25rem 1rem; border-bottom: 1px solid #f1f5f9; }
+.studio-table th { background: var(--color-bg-elevated); padding: 0.75rem 1rem; text-align: left; font-size: 10px; font-weight: 800; text-transform: uppercase; color: var(--color-text-muted); border-bottom: 1px solid var(--color-border-default); }
+.studio-table td { padding: 1.25rem 1rem; border-bottom: 1px solid var(--color-border-subtle); }
 
-.studio-row.is-active { background: #eff6ff; }
-.studio-row.is-active .challenge-title { color: #2563eb; }
+.studio-row.is-active { background: var(--color-primary-soft); }
+.studio-row.is-active .challenge-title { color: var(--color-primary); }
 
-.challenge-title { font-size: 14px; font-weight: 800; color: #1e293b; }
-.challenge-subtitle { font-size: 11px; color: #94a3b8; margin-top: 0.2rem; }
+.challenge-title { font-size: 14px; font-weight: 800; color: var(--color-text-primary); }
+.challenge-subtitle { font-size: 11px; color: var(--color-text-muted); margin-top: 0.2rem; }
 
-.engine-tag { font-size: 11px; font-weight: 700; color: #475569; }
+.engine-tag { font-size: 11px; font-weight: 700; color: var(--color-text-secondary); }
 
 .score-stack { display: flex; flex-direction: column; }
-.score-main { font-size: 13px; font-weight: 900; color: #1e293b; }
-.score-sub { font-size: 10px; font-weight: 600; color: #94a3b8; }
+.score-main { font-size: 13px; font-weight: 900; color: var(--color-text-primary); }
+.score-sub { font-size: 10px; font-weight: 600; color: var(--color-text-muted); }
 
-.rules-summary { font-size: 11px; color: #64748b; max-width: 12rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rules-summary { font-size: 11px; color: var(--color-text-secondary); max-width: 12rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 .validation-block { display: flex; flex-direction: column; gap: 0.25rem; }
 .validation-pill { font-size: 9px; font-weight: 800; padding: 0.15rem 0.5rem; border-radius: 99px; width: fit-content; }
-.validation-pill.passed { background: #dcfce7; color: #166534; }
-.validation-pill.failed { background: #fee2e2; color: #991b1b; }
-.validation-pill.pending, .validation-pill.stale { background: #fef3c7; color: #92400e; }
-.validation-time { font-size: 10px; color: #cbd5e1; }
+.validation-pill.passed { background: var(--color-success); color: white; }
+.validation-pill.failed { background: var(--color-danger); color: white; }
+.validation-pill.pending, .validation-pill.stale { background: var(--color-warning); color: white; }
+.validation-time { font-size: 10px; color: var(--color-text-muted); }
 
-.action-btn { width: 2.25rem; height: 2.25rem; border-radius: 0.75rem; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center; color: #64748b; cursor: pointer; transition: all 0.2s ease; }
-.action-btn:hover { background: #f8fafc; color: #2563eb; border-color: #bfdbfe; }
+.action-btn { width: 2.25rem; height: 2.25rem; border-radius: 0.75rem; border: 1px solid var(--color-border-default); display: flex; align-items: center; justify-content: center; color: var(--color-text-secondary); cursor: pointer; transition: all 0.2s ease; background: var(--color-bg-surface); }
+.action-btn:hover { background: var(--color-bg-elevated); color: var(--color-primary); border-color: var(--color-primary); }
 
 .ops-btn { display: inline-flex; align-items: center; gap: 0.5rem; height: 2.5rem; padding: 0 1.25rem; border-radius: 0.85rem; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s ease; }
-.ops-btn--neutral { background: white; border: 1px solid #e2e8f0; color: #475569; }
-.ops-btn--primary { background: #2563eb; color: white; border: none; }
+.ops-btn--neutral { background: var(--color-bg-surface); border: 1px solid var(--color-border-default); color: var(--color-text-secondary); }
+.ops-btn--primary { background: var(--color-primary); color: white; border: none; }
 </style>
