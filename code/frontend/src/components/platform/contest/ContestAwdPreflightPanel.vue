@@ -82,7 +82,7 @@ function handleNavigateChallenge(challengeId: string) {
   flex-direction: column;
   gap: 2rem;
   padding: 1.5rem 2rem;
-  background: #fdfdfd;
+  background: var(--color-bg-base);
 }
 
 .studio-pane-header {
@@ -94,13 +94,13 @@ function handleNavigateChallenge(challengeId: string) {
 .pane-title {
   font-size: 1.25rem;
   font-weight: 900;
-  color: #0f172a;
+  color: var(--color-text-primary);
   margin: 0;
 }
 
 .pane-description {
   font-size: 13px;
-  color: #64748b;
+  color: var(--color-text-secondary);
   margin: 0.5rem 0 0;
   max-width: 32rem;
   line-height: 1.6;
@@ -108,8 +108,8 @@ function handleNavigateChallenge(challengeId: string) {
 
 /* Override Card Styles */
 .studio-override-card {
-  background: #fff7ed;
-  border: 1px solid #ffedd5;
+  background: color-mix(in srgb, var(--color-warning) 10%, var(--color-bg-surface));
+  border: 1px solid color-mix(in srgb, var(--color-warning) 20%, transparent);
   border-radius: 1rem;
   padding: 1.25rem 1.5rem;
   display: flex;
@@ -118,9 +118,9 @@ function handleNavigateChallenge(challengeId: string) {
   max-width: 40rem;
 }
 
-.override-overline { font-size: 9px; font-weight: 800; text-transform: uppercase; color: #c2410c; letter-spacing: 0.1em; }
-.override-title { font-size: 14px; font-weight: 900; color: #9a3412; margin: 0.15rem 0; }
-.override-hint { font-size: 11px; color: #9a3412; opacity: 0.8; margin: 0; }
+.override-overline { font-size: 9px; font-weight: 800; text-transform: uppercase; color: var(--color-warning); letter-spacing: 0.1em; }
+.override-title { font-size: 14px; font-weight: 900; color: var(--color-warning); margin: 0.15rem 0; }
+.override-hint { font-size: 11px; color: var(--color-warning); opacity: 0.8; margin: 0; }
 
 .ops-btn {
   display: inline-flex;
@@ -136,21 +136,21 @@ function handleNavigateChallenge(challengeId: string) {
 }
 
 .ops-btn--primary {
-  background: #f97316;
+  background: var(--color-warning);
   color: white;
   border: none;
-  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.2);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--color-warning) 20%, transparent);
 }
 
 .ops-btn--primary:hover {
-  background: #ea580c;
+  background: color-mix(in srgb, var(--color-warning) 90%, black);
   transform: translateY(-1px);
 }
 
 .studio-preflight-body {
-  background: white;
+  background: var(--color-bg-surface);
   border-radius: 1.25rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--color-border-default);
   overflow: hidden;
 }
 

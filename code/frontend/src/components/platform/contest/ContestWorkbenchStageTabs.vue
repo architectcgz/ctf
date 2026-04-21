@@ -69,8 +69,8 @@ function handleStageSelect(stage: ContestWorkbenchStage): void {
 
 <style scoped>
 .studio-tabs {
-  background: white;
-  border-bottom: 1px solid var(--workspace-line-soft);
+  background: var(--color-bg-base);
+  border-bottom: 1px solid var(--color-border-default);
   padding: 0 2rem;
 }
 
@@ -89,7 +89,7 @@ function handleStageSelect(stage: ContestWorkbenchStage): void {
   padding: 0 0.25rem;
   border: none;
   background: transparent;
-  color: var(--journal-muted);
+  color: var(--color-text-secondary);
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
@@ -97,7 +97,7 @@ function handleStageSelect(stage: ContestWorkbenchStage): void {
 }
 
 .studio-tab-item:hover:not(.is-disabled) {
-  color: var(--journal-ink);
+  color: var(--color-text-primary);
 }
 
 .studio-tab-item.is-active {
