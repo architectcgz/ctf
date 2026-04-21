@@ -284,8 +284,8 @@ onMounted(() => {
         </div>
       </header>
 
-      <div class="metric-panel-grid--premium cols-3">
-        <article class="metric-panel-card--premium">
+      <div class="metric-panel-grid metric-panel-grid--premium cols-3">
+        <article class="metric-panel-card metric-panel-card--premium">
           <div class="metric-panel-label">
             <span>学生总量</span>
             <GraduationCap class="h-4 w-4" />
@@ -298,7 +298,7 @@ onMounted(() => {
           </div>
         </article>
 
-        <article class="metric-panel-card--premium">
+        <article class="metric-panel-card metric-panel-card--premium">
           <div class="metric-panel-label">
             <span>可查看班级</span>
             <UsersRound class="h-4 w-4" />
@@ -311,7 +311,7 @@ onMounted(() => {
           </div>
         </article>
 
-        <article class="metric-panel-card--premium">
+        <article class="metric-panel-card metric-panel-card--premium">
           <div class="metric-panel-label">
             <span>当前结果</span>
             <SearchCode class="h-4 w-4" />

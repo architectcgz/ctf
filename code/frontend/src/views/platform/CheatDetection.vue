@@ -105,8 +105,8 @@ onMounted(() => {
             </div>
           </header>
 
-          <div class="metric-panel-grid--premium cols-3">
-            <article class="metric-panel-card--premium">
+          <div class="metric-panel-grid metric-panel-grid--premium cols-3">
+            <article class="metric-panel-card metric-panel-card--premium">
               <div class="metric-panel-label">
                 <span>Submit Burst</span>
                 <ShieldAlert class="h-4 w-4" />
@@ -119,7 +119,7 @@ onMounted(() => {
               </div>
             </article>
 
-            <article class="metric-panel-card--premium">
+            <article class="metric-panel-card metric-panel-card--premium">
               <div class="metric-panel-label">
                 <span>Shared IP</span>
                 <Fingerprint class="h-4 w-4" />
@@ -132,7 +132,7 @@ onMounted(() => {
               </div>
             </article>
 
-            <article class="metric-panel-card--premium">
+            <article class="metric-panel-card metric-panel-card--premium">
               <div class="metric-panel-label">
                 <span>Affected Users</span>
                 <Users class="h-4 w-4" />

@@ -377,8 +377,8 @@ function formatStructuredJSON(value?: Record<string, unknown>): string {
       </div>
     </section>
 
-    <div class="metric-panel-grid--premium cols-4 mb-6">
-      <article class="metric-panel-card--premium">
+    <div class="metric-panel-grid metric-panel-grid--premium cols-4 mb-6">
+      <article class="metric-panel-card metric-panel-card--premium">
         <div class="metric-panel-label">
           <span>模板总量</span>
           <Box class="h-4 w-4" />
@@ -391,7 +391,7 @@ function formatStructuredJSON(value?: Record<string, unknown>): string {
         </div>
       </article>
 
-      <article class="metric-panel-card--premium">
+      <article class="metric-panel-card metric-panel-card--premium">
         <div class="metric-panel-label">
           <span>已发布</span>
           <CheckCircle class="h-4 w-4" />
@@ -404,7 +404,7 @@ function formatStructuredJSON(value?: Record<string, unknown>): string {
         </div>
       </article>
 
-      <article class="metric-panel-card--premium">
+      <article class="metric-panel-card metric-panel-card--premium">
         <div class="metric-panel-label">
           <span>Web HTTP</span>
           <Activity class="h-4 w-4" />
@@ -417,7 +417,7 @@ function formatStructuredJSON(value?: Record<string, unknown>): string {
         </div>
       </article>
 
-      <article class="metric-panel-card--premium">
+      <article class="metric-panel-card metric-panel-card--premium">
         <div class="metric-panel-label">
           <span>待验证</span>
           <Clock class="h-4 w-4" />

@@ -475,6 +475,11 @@ function mountContestEdit() {
           template:
             '<div><div v-if="open"><div>{{ title }}</div><slot /><slot name="footer" /></div></div>',
         },
+        SlideOverDrawer: {
+          props: ['open', 'title'],
+          template:
+            '<div><div v-if="open"><div>{{ title }}</div><slot /><slot name="footer" /></div></div>',
+        },
         AdminSurfaceDrawer: {
           props: ['open', 'title'],
           template:
@@ -496,6 +501,11 @@ function mountContestEditWithRealChallengeDialog() {
         AWDChallengeConfigDialog: AWDChallengeConfigDialogStub,
         AWDReadinessOverrideDialog: AWDReadinessOverrideDialogStub,
         AdminSurfaceModal: {
+          props: ['open', 'title'],
+          template:
+            '<div><div v-if="open"><div>{{ title }}</div><slot /><slot name="footer" /></div></div>',
+        },
+        SlideOverDrawer: {
           props: ['open', 'title'],
           template:
             '<div><div v-if="open"><div>{{ title }}</div><slot /><slot name="footer" /></div></div>',
