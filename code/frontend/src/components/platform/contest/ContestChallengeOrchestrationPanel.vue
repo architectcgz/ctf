@@ -78,7 +78,7 @@ const {
 
 const panelCopy = computed(() =>
   isAwdContest.value
-    ? '维护统一题目池，完成题目关联、服务模板及分值配置。'
+    ? '维护统一题目池，从 AWD 题库模板选题并完成比赛级分值编排。'
     : '维护统一题目池，安排题目顺序、分值和可见状态。'
 )
 const emptyState = computed(() =>

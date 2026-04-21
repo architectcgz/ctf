@@ -114,7 +114,7 @@ function createFieldErrorState() {
 const fieldErrors = reactive(createFieldErrorState())
 
 const dialogTitle = computed(() =>
-  props.mode === 'create' ? '新增 AWD 题目' : '编辑 AWD 题目配置'
+  props.mode === 'create' ? '新增 AWD 题库题目' : '编辑 AWD 题目配置'
 )
 
 const selectableChallenges = computed(() =>
@@ -123,6 +123,52 @@ const selectableChallenges = computed(() =>
   )
 )
 const selectableTemplates = computed(() => props.templateOptions)
+const selectedTemplate = computed<AdminAwdServiceTemplateData | null>(() => {
+  const templateId = form.template_id || props.draft?.awd_template_id || ''
+  return selectableTemplates.value.find((item) => item.id === templateId) || null
+})
+const selectedTemplateName = computed(() => selectedTemplate.value?.name || '未选择模板')
+const selectedTemplateCheckerTypeLabel = computed(() => {
+  switch (selectedTemplate.value?.checker_type) {
+    case 'http_standard':
+      return 'HTTP Standard'
+    case 'legacy_probe':
+      return 'Legacy Probe'
+    default:
+      return '未定义'
+  }
+})
+const selectedTemplateSnapshotSections = computed(() => {
+  if (!selectedTemplate.value) {
+    return []
+  }
+  return [
+    {
+      key: 'checker',
+      label: 'Checker',
+      value: selectedTemplate.value.checker_config,
+      empty: '题库模板未写入 checker_config',
+    },
+    {
+      key: 'flag',
+      label: 'Flag 策略',
+      value: selectedTemplate.value.flag_config,
+      empty: '题库模板未写入 flag_config',
+    },
+    {
+      key: 'access',
+      label: '访问与入口',
+      value: selectedTemplate.value.access_config,
+      empty: '题库模板未写入 access_config',
+    },
+    {
+      key: 'runtime',
+      label: '运行参数',
+      value: selectedTemplate.value.runtime_config,
+      empty: '题库模板未写入 runtime_config',
+    },
+  ]
+})
 
 const activeChallengeLabel = computed(() => {
   if (props.mode === 'edit') {
@@ -152,6 +198,17 @@ const checkerPreviewText = computed(() =>
 const previewResultJSONText = computed(() =>
   JSON.stringify(previewResult.value?.check_result || {}, null, 2)
 )
+const selectedTemplateCategorySummary = computed(() => {
+  if (!selectedTemplate.value) {
+    return ''
+  }
+  return [
+    selectedTemplate.value.category.toUpperCase(),
+    selectedTemplate.value.difficulty,
+    selectedTemplate.value.service_type,
+    selectedTemplate.value.deployment_mode,
+  ].join(' · ')
+})
 
 function formatPreviewDateTime(value?: string): string {
   if (!value) {
@@ -497,6 +554,13 @@ function getValidationStateClass(value?: string): string {
   return `ui-badge ui-badge--pill ui-badge--soft checker-validation-chip checker-validation-chip--${state}`
 }
 
+function formatTemplateSnapshotJSON(value?: Record<string, unknown>): string {
+  if (!value || Object.keys(value).length === 0) {
+    return '{}'
+  }
+  return JSON.stringify(value, null, 2)
+}
+
 function getPreviewActionStateText(action: {
   healthy: boolean
   error_code?: string
@@ -549,7 +613,7 @@ function handleSubmit() {
     :title="dialogTitle"
     :subtitle="
       mode === 'create'
-        ? '先选择服务模板并整理 Checker 草稿，保存后即可继续赛前试跑。'
+        ? '先从 AWD 题库模板选题，再整理赛事级 Checker 草稿，保存后即可继续赛前试跑。'
         : '统一维护赛事服务的 Checker、分值、顺序和试跑结果。'
     "
     eyebrow="AWD Operations"
@@ -561,41 +625,15 @@ function handleSubmit() {
       class="space-y-6"
       @submit.prevent="handleSubmit"
     >
-      <div class="ui-field awd-config-field">
+      <div
+        v-if="mode === 'edit'"
+        class="ui-field awd-config-field"
+      >
         <label
           class="ui-field__label"
           for="awd-challenge-config-challenge"
-        >题目</label>
-        <template v-if="mode === 'create' && selectableChallenges.length > 0">
-          <span
-            class="ui-control-wrap"
-            :class="{ 'is-error': !!fieldErrors.challenge_id }"
-          >
-            <select
-              id="awd-challenge-config-challenge"
-              v-model="form.challenge_id"
-              class="ui-control"
-            >
-              <option
-                value=""
-                disabled
-              >
-                {{ loadingChallengeCatalog ? '正在加载题库...' : '请选择题目' }}
-              </option>
-              <option
-                v-for="challenge in selectableChallenges"
-                :key="challenge.id"
-                :value="challenge.id"
-              >
-                {{ challenge.title }}
-              </option>
-            </select>
-          </span>
-        </template>
-        <span
-          v-else
-          class="ui-control-wrap awd-config-readonly"
-        >
+        >赛事题目</label>
+        <span class="ui-control-wrap awd-config-readonly">
           <span class="ui-control awd-config-readonly__value">
             {{ activeChallengeLabel }}
           </span>
@@ -612,7 +650,7 @@ function handleSubmit() {
         <label
           class="ui-field__label"
           for="awd-challenge-config-template"
-        >服务模板</label>
+        >AWD 题库模板</label>
         <span
           class="ui-control-wrap"
           :class="{ 'is-error': !!fieldErrors.template_id }"
@@ -644,7 +682,73 @@ function handleSubmit() {
         >
           {{ fieldErrors.template_id }}
         </p>
+        <p class="ui-field__hint">
+          比赛服务会直接继承题库模板里的入口、端口、flag 与基础 checker 定义，再叠加本页的分值和校验配置。
+        </p>
       </div>
+
+      <section
+        v-if="selectedTemplate"
+        class="template-snapshot-card"
+      >
+        <header class="list-heading template-snapshot-card__head">
+          <div>
+            <div class="journal-note-label">
+              Template Snapshot
+            </div>
+            <h3 class="list-heading__title template-snapshot-card__title">
+              题库模板快照
+            </h3>
+          </div>
+          <p class="template-snapshot-card__hint">
+            新增题目时以题库模板为准，防守入口、可攻击端口和 flag 策略都应优先来自这里。
+          </p>
+        </header>
+
+        <div class="template-snapshot-card__summary">
+          <div class="template-snapshot-chip">
+            <span class="template-snapshot-chip__label">模板</span>
+            <span class="template-snapshot-chip__value">{{ selectedTemplateName }}</span>
+          </div>
+          <div class="template-snapshot-chip">
+            <span class="template-snapshot-chip__label">分类</span>
+            <span class="template-snapshot-chip__value">{{ selectedTemplateCategorySummary }}</span>
+          </div>
+          <div class="template-snapshot-chip">
+            <span class="template-snapshot-chip__label">默认 Checker</span>
+            <span class="template-snapshot-chip__value">{{ selectedTemplateCheckerTypeLabel }}</span>
+          </div>
+          <div class="template-snapshot-chip">
+            <span class="template-snapshot-chip__label">防守入口</span>
+            <span class="template-snapshot-chip__value">{{ selectedTemplate.defense_entry_mode || '未定义' }}</span>
+          </div>
+          <div class="template-snapshot-chip">
+            <span class="template-snapshot-chip__label">Flag 模式</span>
+            <span class="template-snapshot-chip__value">{{ selectedTemplate.flag_mode || '未定义' }}</span>
+          </div>
+        </div>
+
+        <div class="template-snapshot-card__grid">
+          <article
+            v-for="section in selectedTemplateSnapshotSections"
+            :key="section.key"
+            class="template-snapshot-panel"
+          >
+            <header class="template-snapshot-panel__head">
+              <h4 class="template-snapshot-panel__title">
+                {{ section.label }}
+              </h4>
+              <p class="template-snapshot-panel__hint">
+                {{ section.empty }}
+              </p>
+            </header>
+            <pre
+              :id="`awd-template-snapshot-${section.key}`"
+              class="checker-preview template-snapshot-panel__json"
+            >{{ formatTemplateSnapshotJSON(section.value) }}</pre>
+          </article>
+        </div>
+      </section>
 
       <div class="grid gap-4 sm:grid-cols-3">
         <div class="ui-field awd-config-field">
@@ -1556,6 +1660,95 @@ function handleSubmit() {
   gap: 1rem;
   padding-top: 1rem;
   border-top: 1px solid var(--color-border-default);
+}
+
+.template-snapshot-card {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--color-border-default);
+  border-radius: 1rem;
+  background: var(--color-bg-surface);
+}
+
+.template-snapshot-card__head {
+  align-items: flex-start;
+}
+
+.template-snapshot-card__title {
+  color: inherit;
+}
+
+.template-snapshot-card__hint {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 0.85rem;
+  line-height: 1.6;
+  max-width: 28rem;
+}
+
+.template-snapshot-card__summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.template-snapshot-chip {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 10rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 0.85rem;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-subtle);
+}
+
+.template-snapshot-chip__label {
+  font-size: 0.72rem;
+  color: var(--color-text-secondary);
+}
+
+.template-snapshot-chip__value {
+  color: var(--color-text-primary);
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.template-snapshot-card__grid {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.template-snapshot-panel {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.85rem;
+  border-radius: 0.9rem;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-subtle);
+}
+
+.template-snapshot-panel__head {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.template-snapshot-panel__title {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.template-snapshot-panel__hint {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--color-text-secondary);
+}
+
+.template-snapshot-panel__json {
+  margin: 0;
+  min-height: 5rem;
 }
 
 .list-heading {

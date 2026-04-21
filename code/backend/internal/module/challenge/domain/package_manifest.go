@@ -17,6 +17,7 @@ type ChallengePackageMeta struct {
 	Category   string   `yaml:"category"`
 	Difficulty string   `yaml:"difficulty"`
 	Points     int      `yaml:"points"`
+	Mode       string   `yaml:"mode"`
 	Tags       []string `yaml:"tags"`
 }
 
@@ -55,11 +56,37 @@ type ChallengePackageRuntimeImage struct {
 
 type ChallengePackageExtensions struct {
 	Topology ChallengePackageTopologyExtension `yaml:"topology"`
+	AWD      ChallengePackageAWDExtension      `yaml:"awd"`
 }
 
 type ChallengePackageTopologyExtension struct {
 	Source  string `yaml:"source"`
 	Enabled bool   `yaml:"enabled"`
+}
+
+type ChallengePackageAWDExtension struct {
+	ServiceType    string                          `yaml:"service_type"`
+	DeploymentMode string                          `yaml:"deployment_mode"`
+	Version        string                          `yaml:"version"`
+	Checker        ChallengePackageAWDChecker      `yaml:"checker"`
+	FlagPolicy     ChallengePackageAWDFlagPolicy   `yaml:"flag_policy"`
+	DefenseEntry   ChallengePackageAWDDefenseEntry `yaml:"defense_entry"`
+	AccessConfig   map[string]any                  `yaml:"access_config"`
+	RuntimeConfig  map[string]any                  `yaml:"runtime_config"`
+}
+
+type ChallengePackageAWDChecker struct {
+	Type   string         `yaml:"type"`
+	Config map[string]any `yaml:"config"`
+}
+
+type ChallengePackageAWDFlagPolicy struct {
+	Mode   string         `yaml:"mode"`
+	Config map[string]any `yaml:"config"`
+}
+
+type ChallengePackageAWDDefenseEntry struct {
+	Mode string `yaml:"mode"`
 }
 
 type ParsedChallengePackage struct {
@@ -90,4 +117,27 @@ type ParsedChallengePackageHint struct {
 	Level   int
 	Title   string
 	Content string
+}
+
+type ParsedAWDServiceTemplatePackage struct {
+	Manifest         ChallengePackageManifest
+	RootDir          string
+	Slug             string
+	Title            string
+	Description      string
+	Category         string
+	Difficulty       string
+	SuggestedPoints  int
+	RuntimeImageRef  string
+	ServiceType      string
+	DeploymentMode   string
+	Version          string
+	CheckerType      string
+	CheckerConfig    map[string]any
+	FlagMode         string
+	FlagConfig       map[string]any
+	DefenseEntryMode string
+	AccessConfig     map[string]any
+	RuntimeConfig    map[string]any
+	Warnings         []string
 }

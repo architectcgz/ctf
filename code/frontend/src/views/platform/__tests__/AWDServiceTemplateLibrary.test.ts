@@ -12,6 +12,9 @@ const actionMocks = vi.hoisted(() => ({
   closeDialog: vi.fn(),
   saveTemplate: vi.fn(),
   removeTemplate: vi.fn(),
+  refreshImportQueue: vi.fn(),
+  selectImportPackages: vi.fn(),
+  commitImportPreview: vi.fn(),
 }))
 
 vi.mock('@/composables/usePlatformAwdServiceTemplates', () => ({
@@ -43,6 +46,11 @@ vi.mock('@/composables/usePlatformAwdServiceTemplates', () => ({
     dialogOpen: ref(false),
     dialogMode: ref<'create' | 'edit'>('create'),
     saving: ref(false),
+    uploading: ref(false),
+    queueLoading: ref(false),
+    importQueue: ref([]),
+    uploadResults: ref([]),
+    selectedImportFileName: ref(''),
     formDraft: ref({
       name: '',
       slug: '',
@@ -63,7 +71,9 @@ describe('AWDServiceTemplateLibrary', () => {
     await flushPromises()
 
     expect(wrapper.text()).toContain('AWD 服务模板库')
+    expect(wrapper.text()).toContain('导入 AWD 题目包')
     expect(wrapper.text()).toContain('Bank Portal AWD')
     expect(actionMocks.refresh).toHaveBeenCalledTimes(1)
+    expect(actionMocks.refreshImportQueue).toHaveBeenCalledTimes(1)
   })
 })

@@ -1292,10 +1292,43 @@ export interface AdminAwdServiceTemplateData {
   version: string
   status: AWDServiceTemplateStatus
   readiness_status: AWDReadinessStatus
+  checker_type?: AWDCheckerType
+  checker_config?: Record<string, unknown>
+  flag_mode?: string
+  flag_config?: Record<string, unknown>
+  defense_entry_mode?: string
+  access_config?: Record<string, unknown>
+  runtime_config?: Record<string, unknown>
   created_by?: ID
   last_verified_at?: ISODateTime
   created_at: ISODateTime
   updated_at: ISODateTime
+}
+
+export interface AdminAwdServiceTemplateImportPreview {
+  id: ID
+  file_name: string
+  slug: string
+  title: string
+  category: ChallengeCategory
+  difficulty: ChallengeDifficulty
+  description: string
+  service_type: AWDServiceType
+  deployment_mode: AWDDeploymentMode
+  version: string
+  checker_type: AWDCheckerType
+  checker_config?: Record<string, unknown>
+  flag_mode?: string
+  flag_config?: Record<string, unknown>
+  defense_entry_mode?: string
+  access_config?: Record<string, unknown>
+  runtime_config?: Record<string, unknown>
+  warnings?: string[]
+  created_at: ISODateTime
+}
+
+export interface AdminAwdServiceTemplateImportCommitData {
+  template: AdminAwdServiceTemplateData
 }
 
 export interface AdminChallengeListItem {

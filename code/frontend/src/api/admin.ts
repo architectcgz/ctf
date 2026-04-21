@@ -27,6 +27,8 @@ import type {
   AWDTrafficTopTeamData,
   AWDTrafficTrendBucketData,
   AWDTeamServiceData,
+  AdminAwdServiceTemplateImportCommitData,
+  AdminAwdServiceTemplateImportPreview,
   AdminAwdServiceTemplateData,
   AdminContestAWDServiceData,
   AdminContestChallengeRelationData,
@@ -606,6 +608,13 @@ interface RawAdminAwdServiceTemplateData {
   version: string
   status: AWDServiceTemplateStatus
   readiness_status: AWDReadinessStatus
+  checker_type?: AWDCheckerType | null
+  checker_config?: Record<string, unknown> | null
+  flag_mode?: string | null
+  flag_config?: Record<string, unknown> | null
+  defense_entry_mode?: string | null
+  access_config?: Record<string, unknown> | null
+  runtime_config?: Record<string, unknown> | null
   created_by?: string | number | null
   last_verified_at?: string | null
   created_at: string
@@ -617,6 +626,32 @@ interface RawAdminAwdServiceTemplatePageData {
   total: number
   page: number
   size: number
+}
+
+interface RawAdminAwdServiceTemplateImportPreview {
+  id: string | number
+  file_name: string
+  slug: string
+  title: string
+  category: ChallengeCategory
+  difficulty: AdminAwdServiceTemplateImportPreview['difficulty']
+  description: string
+  service_type: AWDServiceType
+  deployment_mode: AWDDeploymentMode
+  version: string
+  checker_type: AWDCheckerType
+  checker_config?: Record<string, unknown> | null
+  flag_mode?: string | null
+  flag_config?: Record<string, unknown> | null
+  defense_entry_mode?: string | null
+  access_config?: Record<string, unknown> | null
+  runtime_config?: Record<string, unknown> | null
+  warnings?: string[] | null
+  created_at: string
+}
+
+interface RawAdminAwdServiceTemplateImportCommitData {
+  template: RawAdminAwdServiceTemplateData
 }
 
 interface RawChallengeFlagConfig {
@@ -1413,7 +1448,7 @@ function normalizeEnvironmentTemplate(item: RawEnvironmentTemplateData): Environ
 function normalizeAdminAwdServiceTemplate(
   item: RawAdminAwdServiceTemplateData
 ): AdminAwdServiceTemplateData {
-  return {
+  const normalized: AdminAwdServiceTemplateData = {
     id: String(item.id),
     name: item.name,
     slug: item.slug,
@@ -1430,6 +1465,73 @@ function normalizeAdminAwdServiceTemplate(
     created_at: item.created_at,
     updated_at: item.updated_at,
   }
+
+  if (item.checker_type) {
+    normalized.checker_type = item.checker_type
+  }
+  if (item.checker_config && Object.keys(item.checker_config).length > 0) {
+    normalized.checker_config = item.checker_config
+  }
+  if (item.flag_mode) {
+    normalized.flag_mode = item.flag_mode
+  }
+  if (item.flag_config && Object.keys(item.flag_config).length > 0) {
+    normalized.flag_config = item.flag_config
+  }
+  if (item.defense_entry_mode) {
+    normalized.defense_entry_mode = item.defense_entry_mode
+  }
+  if (item.access_config && Object.keys(item.access_config).length > 0) {
+    normalized.access_config = item.access_config
+  }
+  if (item.runtime_config && Object.keys(item.runtime_config).length > 0) {
+    normalized.runtime_config = item.runtime_config
+  }
+
+  return normalized
+}
+
+function normalizeAdminAwdServiceTemplateImportPreview(
+  item: RawAdminAwdServiceTemplateImportPreview
+): AdminAwdServiceTemplateImportPreview {
+  const normalized: AdminAwdServiceTemplateImportPreview = {
+    id: String(item.id),
+    file_name: item.file_name,
+    slug: item.slug,
+    title: item.title,
+    category: item.category,
+    difficulty: item.difficulty,
+    description: item.description,
+    service_type: item.service_type,
+    deployment_mode: item.deployment_mode,
+    version: item.version,
+    checker_type: item.checker_type,
+    created_at: item.created_at,
+  }
+
+  if (item.checker_config && Object.keys(item.checker_config).length > 0) {
+    normalized.checker_config = item.checker_config
+  }
+  if (item.flag_mode) {
+    normalized.flag_mode = item.flag_mode
+  }
+  if (item.flag_config && Object.keys(item.flag_config).length > 0) {
+    normalized.flag_config = item.flag_config
+  }
+  if (item.defense_entry_mode) {
+    normalized.defense_entry_mode = item.defense_entry_mode
+  }
+  if (item.access_config && Object.keys(item.access_config).length > 0) {
+    normalized.access_config = item.access_config
+  }
+  if (item.runtime_config && Object.keys(item.runtime_config).length > 0) {
+    normalized.runtime_config = item.runtime_config
+  }
+  if (item.warnings && item.warnings.length > 0) {
+    normalized.warnings = item.warnings
+  }
+
+  return normalized
 }
 
 function normalizeImage(item: RawImageItem): AdminImageListItem {
@@ -1991,6 +2093,41 @@ export async function deleteAdminAwdServiceTemplate(id: string) {
     url: `/authoring/awd-service-templates/${encodeURIComponent(id)}`,
     suppressErrorToast: true,
   })
+}
+
+export async function previewAdminAwdServiceTemplateImport(
+  file: File
+): Promise<AdminAwdServiceTemplateImportPreview> {
+  const formData = new FormData()
+  formData.append('file', file)
+
+  const response = await request<RawAdminAwdServiceTemplateImportPreview>({
+    method: 'POST',
+    url: '/authoring/awd-service-template-imports',
+    data: formData,
+  })
+  return normalizeAdminAwdServiceTemplateImportPreview(response)
+}
+
+export async function listAdminAwdServiceTemplateImports(): Promise<AdminAwdServiceTemplateImportPreview[]> {
+  const response = await request<RawAdminAwdServiceTemplateImportPreview[]>({
+    method: 'GET',
+    url: '/authoring/awd-service-template-imports',
+  })
+  return Array.isArray(response) ? response.map(normalizeAdminAwdServiceTemplateImportPreview) : []
+}
+
+export async function commitAdminAwdServiceTemplateImport(
+  id: string
+): Promise<AdminAwdServiceTemplateImportCommitData> {
+  const response = await request<RawAdminAwdServiceTemplateImportCommitData>({
+    method: 'POST',
+    url: `/authoring/awd-service-template-imports/${encodeURIComponent(id)}/commit`,
+  })
+
+  return {
+    template: normalizeAdminAwdServiceTemplate(response.template),
+  }
 }
 
 export async function getImages(params?: Record<string, unknown>) {

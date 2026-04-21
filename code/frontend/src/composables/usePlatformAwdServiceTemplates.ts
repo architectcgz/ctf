@@ -2,15 +2,19 @@ import { computed, ref, watch } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 
 import {
+  commitAdminAwdServiceTemplateImport,
   createAdminAwdServiceTemplate,
   deleteAdminAwdServiceTemplate,
+  listAdminAwdServiceTemplateImports,
   listAdminAwdServiceTemplates,
+  previewAdminAwdServiceTemplateImport,
   updateAdminAwdServiceTemplate,
   type AdminAwdServiceTemplateCreatePayload,
   type AdminAwdServiceTemplateUpdatePayload,
 } from '@/api/admin'
 import { ApiError } from '@/api/request'
 import type {
+  AdminAwdServiceTemplateImportPreview,
   AdminAwdServiceTemplateData,
   AWDDeploymentMode,
   AWDServiceTemplateStatus,
@@ -34,6 +38,16 @@ export interface PlatformAwdServiceTemplateFormDraft {
   service_type: AWDServiceType
   deployment_mode: AWDDeploymentMode
   status: AWDServiceTemplateStatus
+}
+
+export interface PlatformAwdServiceTemplateImportUploadResult {
+  id: string
+  status: 'success' | 'error'
+  fileName: string
+  message: string
+  createdAt: string
+  code?: number
+  requestId?: string
 }
 
 function createEmptyDraft(): PlatformAwdServiceTemplateFormDraft {
@@ -68,6 +82,11 @@ export function usePlatformAwdServiceTemplates() {
   const saving = ref(false)
   const editingTemplateId = ref<string | null>(null)
   const formDraft = ref<PlatformAwdServiceTemplateFormDraft>(createEmptyDraft())
+  const uploading = ref(false)
+  const queueLoading = ref(false)
+  const selectedImportFileName = ref('')
+  const importQueue = ref<AdminAwdServiceTemplateImportPreview[]>([])
+  const uploadResults = ref<PlatformAwdServiceTemplateImportUploadResult[]>([])
 
   const pagination = usePagination<AdminAwdServiceTemplateData>(({ page, page_size }) =>
     listAdminAwdServiceTemplates({
@@ -120,6 +139,80 @@ export function usePlatformAwdServiceTemplates() {
 
   function closeDialog() {
     dialogOpen.value = false
+  }
+
+  function appendUploadResult(result: Omit<PlatformAwdServiceTemplateImportUploadResult, 'id' | 'createdAt'>) {
+    uploadResults.value = [
+      {
+        id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+        createdAt: new Date().toISOString(),
+        ...result,
+      },
+      ...uploadResults.value,
+    ].slice(0, 8)
+  }
+
+  async function refreshImportQueue() {
+    queueLoading.value = true
+    try {
+      importQueue.value = await listAdminAwdServiceTemplateImports()
+    } catch (error) {
+      toast.error(humanizeRequestError(error, '加载 AWD 导入队列失败'))
+    } finally {
+      queueLoading.value = false
+    }
+  }
+
+  async function selectImportPackages(files: File[]) {
+    if (files.length === 0) {
+      return null
+    }
+
+    uploading.value = true
+    let latestSuccess: AdminAwdServiceTemplateImportPreview | null = null
+
+    try {
+      for (const file of files) {
+        selectedImportFileName.value = file.name
+        try {
+          const preview = await previewAdminAwdServiceTemplateImport(file)
+          latestSuccess = preview
+          appendUploadResult({
+            status: 'success',
+            fileName: file.name,
+            message: 'AWD 题目包解析完成，已进入待确认导入队列。',
+          })
+        } catch (error) {
+          appendUploadResult({
+            status: 'error',
+            fileName: file.name,
+            message: humanizeRequestError(error, 'AWD 题目包解析失败'),
+          })
+        }
+      }
+
+      if (latestSuccess) {
+        toast.success('AWD 题目包解析完成')
+      } else {
+        toast.error('AWD 题目包解析失败')
+      }
+      await refreshImportQueue()
+      return latestSuccess
+    } finally {
+      uploading.value = false
+    }
+  }
+
+  async function commitImportPreview(preview: AdminAwdServiceTemplateImportPreview) {
+    try {
+      const result = await commitAdminAwdServiceTemplateImport(preview.id)
+      toast.success(`已导入模板 ${result.template.name}`)
+      await Promise.all([pagination.refresh(), refreshImportQueue()])
+      return result
+    } catch (error) {
+      toast.error(humanizeRequestError(error, '导入 AWD 模板失败'))
+      return null
+    }
   }
 
   async function saveTemplate(draft: PlatformAwdServiceTemplateFormDraft) {
@@ -189,10 +282,18 @@ export function usePlatformAwdServiceTemplates() {
     dialogOpen,
     dialogMode,
     saving,
+    uploading,
+    queueLoading,
+    selectedImportFileName,
+    importQueue,
+    uploadResults,
     formDraft,
     openCreateDialog,
     openEditDialog,
     closeDialog,
+    refreshImportQueue,
+    selectImportPackages,
+    commitImportPreview,
     saveTemplate,
     removeTemplate,
   }
