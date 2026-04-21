@@ -1,39 +1,52 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   FolderKanban,
   Users,
   Calendar,
-  Plus,
   RefreshCw,
 } from 'lucide-vue-next'
 
-import type { AdminClassListItem } from '@/api/contracts'
-import { getAdminClasses } from '@/api/admin'
+import { getClasses } from '@/api/teacher'
+import type { TeacherClassItem } from '@/api/contracts'
 import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
 import WorkspaceDirectoryPagination from '@/components/common/WorkspaceDirectoryPagination.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
+import { DEFAULT_PAGE_SIZE } from '@/utils/constants'
 
 const router = useRouter()
-const list = ref<AdminClassListItem[]>([])
+const list = ref<TeacherClassItem[]>([])
 const total = ref(0)
 const page = ref(1)
-const pageSize = ref(15)
+const pageSize = ref(DEFAULT_PAGE_SIZE)
 const loading = ref(false)
+const error = ref<string | null>(null)
 
 async function loadClasses(): Promise<void> {
   loading.value = true
+  error.value = null
   try {
-    const data = await getAdminClasses({
+    const data = await getClasses({
       page: page.value,
-      pageSize: pageSize.value,
+      page_size: pageSize.value,
     })
-    list.value = data.items
+    if (Array.isArray(data)) {
+      list.value = data
+      total.value = data.length
+      return
+    }
+
+    list.value = data.list
     total.value = data.total
+    page.value = data.page
+    pageSize.value = data.page_size
   } catch (err) {
     console.error('加载班级列表失败:', err)
+    error.value = '加载班级列表失败，请稍后重试'
+    list.value = []
+    total.value = 0
   } finally {
     loading.value = false
   }
@@ -43,6 +56,29 @@ function handlePageChange(p: number): void {
   page.value = p
   void loadClasses()
 }
+
+function openClass(className: string): void {
+  void router.push({
+    name: 'PlatformClassStudents',
+    params: { className },
+  })
+}
+
+const totalStudents = computed(() =>
+  list.value.reduce((sum, item) => sum + (item.student_count || 0), 0)
+)
+
+const rows = computed(() =>
+  list.value.map((item, index) => ({
+    id: item.name,
+    name: item.name,
+    student_count: item.student_count || 0,
+    teacher_name: '--',
+    created_at: '--',
+    actions: '查看班级',
+    rowIndex: index,
+  }))
+)
 
 onMounted(() => {
   void loadClasses()
@@ -109,7 +145,7 @@ const columns = [
                 <Users class="h-4 w-4" />
               </div>
               <div class="metric-panel-value">
-                00
+                {{ totalStudents.toString().padStart(2, '0') }}
               </div>
               <div class="metric-panel-helper">
                 全平台在籍学生
@@ -162,9 +198,19 @@ const columns = [
                 v-else
                 class="workspace-directory-list"
                 :columns="columns"
-                :rows="list"
+                :rows="rows"
                 row-key="id"
-              />
+              >
+                <template #cell-actions="{ row }">
+                  <button
+                    type="button"
+                    class="ui-btn ui-btn--ghost"
+                    @click="openClass(String((row as { name: string }).name))"
+                  >
+                    查看班级
+                  </button>
+                </template>
+              </WorkspaceDataTable>
 
               <div class="mt-6">
                 <WorkspaceDirectoryPagination
@@ -177,6 +223,13 @@ const columns = [
               </div>
             </template>
           </section>
+
+          <div
+            v-if="error"
+            class="teacher-surface-error"
+          >
+            {{ error }}
+          </div>
         </div>
       </main>
     </div>
