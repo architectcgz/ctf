@@ -11,6 +11,7 @@ import {
   Trophy,
   User,
   UserRound,
+  RefreshCw,
 } from 'lucide-vue-next'
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -99,23 +100,9 @@ const hasActiveFilters = computed(() =>
   Boolean(keyword.value.trim() || filters.action || filters.resource_type || filters.actor_user_id)
 )
 const filteredRows = computed<AuditLogItem[]>(() => {
-  const normalizedKeyword = keyword.value.trim().toLowerCase()
-  const nextRows = list.value.filter((item) => {
-    if (!normalizedKeyword) {
-      return true
-    }
-
-    const resourceLabel = resourceDisplayName(item)
-    const actorLabel = `${actorDisplayName(item)} ${item.actor_user_id || ''}`
-    const detailLabel = detailPreview(item.detail)
-
-    return [item.action, resourceLabel, actorLabel, detailLabel, formatDate(item.created_at)].some(
-      (value) => value.toLowerCase().includes(normalizedKeyword)
-    )
-  })
-
-  const sortedRows = [...nextRows]
-  sortedRows.sort((left, right) => {
+  const nextRows = [...list.value]
+  
+  nextRows.sort((left, right) => {
     switch (sortConfig.value.key) {
       case 'action': {
         const delta = left.action.localeCompare(right.action, 'zh-CN')
@@ -133,9 +120,8 @@ const filteredRows = computed<AuditLogItem[]>(() => {
     }
   })
 
-  return sortedRows
+  return nextRows
 })
-const filteredTotal = computed(() => filteredRows.value.length)
 
 function formatDate(value: string): string {
   return new Date(value).toLocaleString('zh-CN')
@@ -322,240 +308,245 @@ watch(
 </script>
 
 <template>
-  <section
-    class="workspace-shell journal-shell journal-shell-admin journal-notes-card journal-hero flex min-h-full flex-1 flex-col"
-  >
-    <main class="content-pane">
-      <header class="admin-overview">
-        <div class="admin-overview__intro">
-          <div class="workspace-overline">
-            Audit Log
-          </div>
-          <h1 class="admin-page-title">
-            审计日志
-          </h1>
-        </div>
-
-        <div class="metric-panel-grid metric-panel-grid--premium cols-3">
-          <article class="metric-panel-card metric-panel-card--premium">
-            <div class="metric-panel-label">
-              <span>当前页加载</span>
-              <Activity class="h-4 w-4" />
-            </div>
-            <div class="metric-panel-value">
-              {{ list.length.toString().padStart(2, '0') }}
-            </div>
-            <div class="metric-panel-helper">
-              本页已加载的日志条数
-            </div>
-          </article>
-          
-          <article class="metric-panel-card metric-panel-card--premium">
-            <div class="metric-panel-label">
-              <span>全站总记录</span>
-              <Trophy class="h-4 w-4" />
-            </div>
-            <div class="metric-panel-value">
-              {{ total.toString().padStart(2, '0') }}
-            </div>
-            <div class="metric-panel-helper">
-              审计数据库中的累计总量
-            </div>
-          </article>
-
-          <article class="metric-panel-card metric-panel-card--premium">
-            <div class="metric-panel-label">
-              <span>总分页范围</span>
-              <Layers class="h-4 w-4" />
-            </div>
-            <div class="metric-panel-value">
-              {{ totalPages.toString().padStart(2, '0') }}
-            </div>
-            <div class="metric-panel-helper">
-              当前条件下的分页总数
-            </div>
-          </article>
-        </div>
-      </header>
-
-      <section class="admin-board workspace-directory-section">
-        <header class="list-heading audit-board__head">
-          <div>
+  <div class="workspace-shell">
+    <div class="workspace-grid">
+      <main class="content-pane">
+        <section class="workspace-hero">
+          <div class="workspace-tab-heading__main">
             <div class="workspace-overline">
               Audit Trail
             </div>
-            <h2 class="list-heading__title">
-              操作流水
-            </h2>
+            <h1 class="hero-title">
+              审计日志
+            </h1>
+            <p class="hero-summary">
+              追踪全站资源变更、用户行为与系统关键操作，确保平台安全与合规。
+            </p>
           </div>
-          <div class="admin-caption">
-            第 {{ page }} / {{ totalPages }} 页
-          </div>
-        </header>
 
-        <WorkspaceDirectoryToolbar
-          v-model="keyword"
-          :total="filteredTotal"
-          :selected-sort-label="sortConfig.label"
-          :sort-options="sortOptions"
-          search-placeholder="检索动作、资源类型、执行人..."
-          total-suffix="条日志"
-          reset-label="重置筛选"
-          :reset-disabled="!hasActiveFilters"
-          @select-sort="setSort"
-          @reset-filters="void resetFilters()"
-        >
-          <template #filter-panel>
-            <div class="audit-filter-grid">
-              <label class="audit-filter-field">
-                <span class="audit-filter-label">动作</span>
-                <select
-                  v-model="filters.action"
-                  class="audit-filter-select"
-                >
-                  <option value="">全部动作</option>
-                  <option value="login">登录</option>
-                  <option value="logout">登出</option>
-                  <option value="create">创建</option>
-                  <option value="update">更新</option>
-                  <option value="delete">删除</option>
-                  <option value="submit">提交</option>
-                  <option value="admin_op">管理员操作</option>
-                </select>
-              </label>
-
-              <label class="audit-filter-field">
-                <span class="audit-filter-label">资源类型</span>
-                <input
-                  v-model="filters.resource_type"
-                  type="text"
-                  placeholder="资源类型，如 challenge"
-                  class="audit-filter-input"
-                >
-              </label>
-
-              <label class="audit-filter-field">
-                <span class="audit-filter-label">执行人</span>
-                <input
-                  v-model="filters.actor_user_id"
-                  type="number"
-                  min="1"
-                  placeholder="执行人 ID"
-                  class="audit-filter-input"
-                >
-              </label>
-            </div>
-          </template>
-        </WorkspaceDirectoryToolbar>
-
-        <div
-          v-if="error"
-          class="admin-error"
-        >
-          {{ error }}
-          <button
-            type="button"
-            class="ml-3 font-medium underline"
-            @click="loadLogs"
-          >
-            重试
-          </button>
-        </div>
-
-        <div
-          v-else-if="loading"
-          class="space-y-3 workspace-directory-loading"
-        >
-          <div
-            v-for="index in 6"
-            :key="index"
-            class="h-14 animate-pulse rounded-2xl bg-[color-mix(in_srgb,var(--journal-surface)_90%,var(--color-bg-base))]"
-          />
-        </div>
-
-        <div
-          v-else-if="filteredRows.length === 0"
-          class="audit-empty-state workspace-directory-empty"
-        >
-          <AppEmpty
-            icon="Inbox"
-            title="当前筛选条件下没有日志记录"
-            description="可以放宽动作、资源类型或执行人条件，再重新检索。"
-          />
-        </div>
-
-        <WorkspaceDataTable
-          v-else
-          class="audit-list workspace-directory-list"
-          :columns="auditTableColumns"
-          :rows="filteredRows"
-          row-key="id"
-          row-class="audit-row"
-        >
-          <template #cell-created_at="{ row }">
-            <span class="audit-row__time">
-              {{ formatDate((row as AuditLogItem).created_at) }}
-            </span>
-          </template>
-
-          <template #cell-action="{ row }">
-            <span class="audit-chip">{{ (row as AuditLogItem).action }}</span>
-          </template>
-
-          <template #cell-resource="{ row }">
-            <div class="audit-row__resource">
-              <span class="audit-row__resource-type">{{
-                (row as AuditLogItem).resource_type
-              }}</span>
-              <span
-                v-if="(row as AuditLogItem).resource_id"
-                class="audit-row__resource-id"
-              >
-                #{{ (row as AuditLogItem).resource_id }}
-              </span>
-            </div>
-          </template>
-
-          <template #cell-actor="{ row }">
-            <div class="audit-row__actor">
+          <div class="awd-library-hero-actions">
+            <div class="quick-actions">
               <button
                 type="button"
-                class="audit-row__actor-link"
-                :aria-label="`查看 ${actorDisplayName(row as AuditLogItem)} 的执行人详情`"
-                @click="openActorDetail(row as AuditLogItem)"
+                class="ui-btn ui-btn--primary"
+                @click="loadLogs"
               >
-                {{ actorDisplayName(row as AuditLogItem) }}
+                <RefreshCw class="h-4 w-4" />
+                同步日志
               </button>
             </div>
-          </template>
+          </div>
+        </section>
 
-          <template #cell-detail="{ row }">
-            <p
-              class="audit-row__detail"
-              :title="detailPreview((row as AuditLogItem).detail)"
+        <div class="audit-log-body mt-10 space-y-10">
+          <div class="metric-panel-grid metric-panel-grid--premium cols-3">
+            <article class="metric-panel-card metric-panel-card--premium">
+              <div class="metric-panel-label">
+                <span>当前页加载</span>
+                <Activity class="h-4 w-4" />
+              </div>
+              <div class="metric-panel-value">
+                {{ list.length.toString().padStart(2, '0') }}
+              </div>
+              <div class="metric-panel-helper">
+                本页已加载的日志条数
+              </div>
+            </article>
+
+            <article class="metric-panel-card metric-panel-card--premium">
+              <div class="metric-panel-label">
+                <span>全站总记录</span>
+                <Trophy class="h-4 w-4" />
+              </div>
+              <div class="metric-panel-value">
+                {{ total.toString().padStart(2, '0') }}
+              </div>
+              <div class="metric-panel-helper">
+                审计数据库中的累计总量
+              </div>
+            </article>
+
+            <article class="metric-panel-card metric-panel-card--premium">
+              <div class="metric-panel-label">
+                <span>总分页范围</span>
+                <Layers class="h-4 w-4" />
+              </div>
+              <div class="metric-panel-value">
+                {{ totalPages.toString().padStart(2, '0') }}
+              </div>
+              <div class="metric-panel-helper">
+                当前条件下的分页总数
+              </div>
+            </article>
+          </div>
+
+          <section class="workspace-directory-section">
+            <header class="list-heading">
+              <div>
+                <div class="workspace-overline">
+                  Operational Stream
+                </div>
+                <h2 class="list-heading__title">
+                  操作流水
+                </h2>
+              </div>
+            </header>
+
+            <WorkspaceDirectoryToolbar
+              v-model="keyword"
+              :total="total"
+              :selected-sort-label="sortConfig.label"
+              :sort-options="sortOptions"
+              search-placeholder="检索动作、资源类型、执行人..."
+              total-suffix="条日志"
+              reset-label="重置筛选"
+              :reset-disabled="!hasActiveFilters"
+              @select-sort="setSort"
+              @reset-filters="void resetFilters()"
             >
-              {{ detailPreview((row as AuditLogItem).detail) }}
-            </p>
-          </template>
-        </WorkspaceDataTable>
+              <template #filter-panel>
+                <div class="audit-filter-grid">
+                  <label class="audit-filter-field">
+                    <span class="audit-filter-label">动作</span>
+                    <select
+                      v-model="filters.action"
+                      class="audit-filter-select"
+                    >
+                      <option value="">全部动作</option>
+                      <option value="login">登录</option>
+                      <option value="logout">登出</option>
+                      <option value="create">创建</option>
+                      <option value="update">更新</option>
+                      <option value="delete">删除</option>
+                      <option value="submit">提交</option>
+                      <option value="admin_op">管理员操作</option>
+                    </select>
+                  </label>
 
-        <div
-          v-if="!loading && total > 0"
-          class="admin-pagination workspace-directory-pagination"
-        >
-          <PlatformPaginationControls
-            :page="page"
-            :total-pages="totalPages"
-            :total="total"
-            :total-label="`共 ${total} 条记录`"
-            @change-page="void changePage($event)"
-          />
+                  <label class="audit-filter-field">
+                    <span class="audit-filter-label">资源类型</span>
+                    <input
+                      v-model="filters.resource_type"
+                      type="text"
+                      placeholder="资源类型，如 challenge"
+                      class="audit-filter-select"
+                    >
+                  </label>
+
+                  <label class="audit-filter-field">
+                    <span class="audit-filter-label">执行人</span>
+                    <input
+                      v-model="filters.actor_user_id"
+                      type="number"
+                      min="1"
+                      placeholder="执行人 ID"
+                      class="audit-filter-select"
+                    >
+                  </label>
+                </div>
+              </template>
+            </WorkspaceDirectoryToolbar>
+
+            <div
+              v-if="error"
+              class="audit-error-banner"
+            >
+              {{ error }}
+              <button
+                type="button"
+                class="ml-3 font-medium underline"
+                @click="loadLogs"
+              >
+                重试
+              </button>
+            </div>
+
+            <div
+              v-else-if="loading && list.length === 0"
+              class="py-12 flex justify-center"
+            >
+              <AppLoading>正在同步审计数据...</AppLoading>
+            </div>
+
+            <template v-else>
+              <AppEmpty
+                v-if="filteredRows.length === 0"
+                icon="Inbox"
+                title="当前筛选条件下没有日志记录"
+                description="可以放宽动作、资源类型或执行人条件，再重新检索。"
+                class="py-20"
+              />
+
+              <WorkspaceDataTable
+                v-else
+                class="audit-list workspace-directory-list"
+                :columns="auditTableColumns"
+                :rows="filteredRows"
+                row-key="id"
+                row-class="audit-row"
+              >
+                <template #cell-created_at="{ row }">
+                  <span class="audit-row__time">
+                    {{ formatDate((row as AuditLogItem).created_at) }}
+                  </span>
+                </template>
+
+                <template #cell-action="{ row }">
+                  <span class="audit-chip">{{ (row as AuditLogItem).action }}</span>
+                </template>
+
+                <template #cell-resource="{ row }">
+                  <div class="audit-row__resource">
+                    <span class="audit-row__resource-type">{{
+                      (row as AuditLogItem).resource_type
+                    }}</span>
+                    <span
+                      v-if="(row as AuditLogItem).resource_id"
+                      class="audit-row__resource-id"
+                    >
+                      #{{ (row as AuditLogItem).resource_id }}
+                    </span>
+                  </div>
+                </template>
+
+                <template #cell-actor="{ row }">
+                  <div class="audit-row__actor">
+                    <button
+                      type="button"
+                      class="audit-row__actor-link"
+                      @click="openActorDetail(row as AuditLogItem)"
+                    >
+                      {{ actorDisplayName(row as AuditLogItem) }}
+                    </button>
+                  </div>
+                </template>
+
+                <template #cell-detail="{ row }">
+                  <p
+                    class="audit-row__detail"
+                    :title="detailPreview((row as AuditLogItem).detail)"
+                  >
+                    {{ detailPreview((row as AuditLogItem).detail) }}
+                  </p>
+                </template>
+              </WorkspaceDataTable>
+
+              <div class="mt-6">
+                <PlatformPaginationControls
+                  :page="page"
+                  :total-pages="totalPages"
+                  :total="total"
+                  total-label="条记录"
+                  @change-page="void changePage($event)"
+                />
+              </div>
+            </template>
+          </section>
         </div>
-      </section>
-    </main>
+      </main>
+    </div>
 
     <AdminSurfaceModal
-      class="audit-actor-modal"
       :open="!!activeActorLog"
       title="执行人详情"
       eyebrow="Audit Trail"
@@ -628,50 +619,40 @@ watch(
         </div>
       </section>
     </AdminSurfaceModal>
-  </section>
+  </div>
 </template>
 
 <style scoped>
-.journal-shell {
-  --journal-shell-surface-subtle: color-mix(
-    in srgb,
-    var(--color-bg-surface) 80%,
-    var(--color-bg-base)
-  );
-  --admin-summary-grid-columns: repeat(3, minmax(0, 1fr));
-  --admin-control-border: color-mix(in srgb, var(--journal-border) 76%, transparent);
-  --audit-table-border: color-mix(in srgb, var(--journal-border) 74%, transparent);
-  --audit-row-divider: color-mix(in srgb, var(--journal-border) 62%, transparent);
-  --journal-eyebrow-spacing: 0.18em;
-  --journal-shell-hero-radial-strength: 10%;
-  --journal-shell-hero-radial-size: 16rem;
-  --journal-shell-hero-top-strength: 97%;
-  --journal-shell-hero-end-strength: 95%;
-}
-
-.admin-overview {
+.workspace-hero {
   display: grid;
-  gap: var(--space-4);
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-7);
+  padding-bottom: var(--space-6);
+  border-bottom: 1px solid var(--color-border-subtle);
 }
 
-.admin-page-copy {
-  max-width: 48rem;
+.hero-title {
+  margin: 0.5rem 0 0;
+  font-size: var(--workspace-page-title-font-size);
+  line-height: var(--workspace-page-title-line-height);
+  letter-spacing: var(--workspace-page-title-letter-spacing);
+  color: var(--color-text-primary);
 }
 
-.admin-board {
-  display: grid;
-  gap: var(--space-4);
-  padding-top: var(--space-1);
+.hero-summary {
+  max-width: 760px;
+  margin-top: var(--space-3-5);
+  font-size: var(--font-size-15);
+  line-height: 1.9;
+  color: var(--color-text-secondary);
 }
 
-.admin-board :deep(.workspace-directory-toolbar) {
-  margin-bottom: 0;
-}
-
-.admin-caption {
-  font-size: var(--font-size-0-82);
-  line-height: 1.6;
-  color: var(--journal-muted);
+.quick-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-end;
+  height: 100%;
+  padding-bottom: 0.5rem;
 }
 
 .audit-filter-grid {
@@ -689,111 +670,74 @@ watch(
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--journal-muted);
+  color: var(--color-text-muted);
 }
 
-.audit-filter-select,
-.audit-filter-input {
+.audit-filter-select {
   width: 100%;
   min-height: 2.75rem;
   border-radius: 0.95rem;
-  border: 1px solid var(--admin-control-border);
-  background: color-mix(in srgb, var(--journal-surface) 92%, var(--color-bg-base));
+  border: 1px solid var(--color-border-default);
+  background: var(--color-bg-surface);
   padding: 0 var(--space-4);
   font-size: var(--font-size-0-875);
-  color: var(--journal-ink);
+  color: var(--color-text-primary);
   outline: none;
-  transition:
-    border-color 150ms ease,
-    background 150ms ease,
-    box-shadow 150ms ease;
+  transition: all 150ms ease;
 }
 
-.audit-filter-input {
-  padding-block: var(--space-3);
+.audit-filter-select:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 12%, transparent);
 }
 
-.audit-filter-select:focus,
-.audit-filter-input:focus {
-  border-color: color-mix(in srgb, var(--journal-accent) 44%, transparent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--journal-accent) 12%, transparent);
-}
-
-.admin-error {
-  border: 1px solid color-mix(in srgb, var(--color-danger) 20%, var(--journal-border));
-  border-radius: 18px;
+.audit-error-banner {
+  border: 1px solid color-mix(in srgb, var(--color-danger) 20%, transparent);
+  border-radius: 1rem;
   background: color-mix(in srgb, var(--color-danger) 8%, transparent);
-  padding: var(--space-4) var(--space-4);
+  padding: var(--space-4);
   font-size: var(--font-size-0-875);
-  color: color-mix(in srgb, var(--color-danger) 88%, var(--journal-ink));
-}
-
-.audit-empty-state {
-  border: 1px solid var(--audit-table-border);
-  border-radius: 20px;
-  background: color-mix(in srgb, var(--journal-surface-subtle) 92%, var(--color-bg-base));
-  padding: var(--space-1-5);
-}
-
-.audit-list {
-  border: 1px solid var(--audit-table-border);
-  border-radius: 1.35rem;
-  background: color-mix(in srgb, var(--journal-surface) 98%, var(--color-bg-base));
-  padding: 0.25rem 0.9rem 0.4rem;
-}
-
-.audit-list :deep(.workspace-data-table__head-cell) {
-  border-bottom-color: var(--audit-table-border);
-}
-
-.audit-list :deep(.workspace-data-table__row) {
-  border-bottom-color: var(--audit-row-divider);
-}
-
-.audit-list :deep(.workspace-data-table__body tr:last-child) {
-  border-bottom-color: transparent;
-}
-
-.audit-list :deep(.workspace-data-table__body-cell) {
-  vertical-align: top;
+  color: var(--color-danger);
 }
 
 .audit-chip {
   display: inline-flex;
   align-items: center;
   border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--journal-accent) 18%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
-  padding: var(--space-1-5) var(--space-3);
-  font-size: var(--font-size-0-72);
+  border: 1px solid var(--color-border-default);
+  background: var(--color-bg-elevated);
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--font-size-11);
   font-weight: 700;
-  color: color-mix(in srgb, var(--journal-accent) 84%, var(--journal-ink));
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .audit-row__time {
   display: block;
-  font-size: var(--font-size-0-82);
+  font-size: var(--font-size-13);
   line-height: 1.6;
-  color: var(--journal-muted);
+  color: var(--color-text-muted);
 }
 
 .audit-row__resource,
 .audit-row__actor {
   display: grid;
-  gap: 0.18rem;
+  gap: 0.15rem;
   min-width: 0;
 }
 
 .audit-row__resource-type {
-  font-size: var(--font-size-1-00);
+  font-size: var(--font-size-14);
   font-weight: 700;
-  color: var(--journal-ink);
+  color: var(--color-text-primary);
 }
 
 .audit-row__resource-id {
   font-family: var(--font-family-mono);
-  font-size: var(--font-size-0-78);
-  color: var(--journal-muted);
+  font-size: var(--font-size-12);
+  color: var(--color-text-muted);
 }
 
 .audit-row__actor-link {
@@ -805,43 +749,30 @@ watch(
   padding: 0;
   text-align: left;
   cursor: pointer;
-  color: color-mix(in srgb, var(--journal-accent) 88%, var(--journal-ink));
-  font-size: var(--font-size-1-00);
+  color: var(--color-primary);
+  font-size: var(--font-size-14);
   font-weight: 700;
   line-height: 1.45;
   text-decoration: underline;
   text-decoration-thickness: 1px;
   text-underline-offset: 0.18em;
-  transition:
-    color 150ms ease,
-    text-decoration-color 150ms ease;
+  transition: all 150ms ease;
 }
 
-.audit-row__actor-link:hover,
-.audit-row__actor-link:focus-visible {
-  color: color-mix(in srgb, var(--journal-accent) 100%, var(--journal-ink));
-  text-decoration-color: currentColor;
-}
-
-.audit-row__actor-link:focus-visible {
-  outline: none;
-  box-shadow: 0 2px 0 0 color-mix(in srgb, var(--journal-accent) 26%, transparent);
+.audit-row__actor-link:hover {
+  color: var(--color-primary-hover);
 }
 
 .audit-row__detail {
   display: -webkit-box;
   margin: 0;
   min-width: 0;
-  font-size: var(--font-size-0-88);
+  font-size: var(--font-size-13);
   line-height: 1.65;
-  color: var(--journal-muted);
+  color: var(--color-text-secondary);
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-}
-
-.audit-actor-detail {
-  display: grid;
 }
 
 .audit-actor-detail__grid {
@@ -861,7 +792,7 @@ watch(
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: var(--journal-muted);
+  color: var(--color-text-muted);
 }
 
 .audit-actor-detail__label {
@@ -872,10 +803,10 @@ watch(
 }
 
 .audit-actor-detail__value {
-  font-size: 16px;
+  font-size: var(--font-size-16);
   font-weight: 800;
   line-height: 1.2;
-  color: var(--journal-ink);
+  color: var(--color-text-primary);
 }
 
 .audit-actor-detail__item--wide {
@@ -888,34 +819,14 @@ watch(
 
 .audit-actor-detail__detail {
   margin: 0;
-  font-size: var(--font-size-0-88);
+  font-size: var(--font-size-13);
   line-height: 1.7;
-  color: var(--journal-muted);
-}
-
-@media (max-width: 1080px) {
-  .admin-summary-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+  color: var(--color-text-secondary);
 }
 
 @media (max-width: 720px) {
-  .admin-summary-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .audit-list {
-    min-width: 56rem;
-  }
-
   .audit-actor-detail__grid {
     grid-template-columns: minmax(0, 1fr);
   }
-
-  .journal-shell {
-    padding-inline: var(--space-4);
-  }
 }
 </style>
-
-

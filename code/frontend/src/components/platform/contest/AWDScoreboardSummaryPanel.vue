@@ -98,32 +98,32 @@ defineProps<AWDScoreboardSummaryPanelProps>()
 </template>
 
 <style scoped>
-.studio-scoreboard-stack { display: flex; flex-direction: column; gap: 1.5rem; }
+.studio-scoreboard-stack { display: flex; flex-direction: column; gap: var(--space-6); }
 
 /* Rank HUD */
-.rank-context { display: flex; align-items: center; gap: 1.5rem; padding: 0.5rem 0; }
-.context-item { display: flex; align-items: center; gap: 0.65rem; font-size: 12px; font-weight: 700; color: #64748b; }
-.context-divider { width: 1px; height: 1rem; background: #e2e8f0; }
+.rank-context { display: flex; align-items: center; gap: var(--space-6); padding: var(--space-2) 0; }
+.context-item { display: flex; align-items: center; gap: var(--space-2-5); font-size: var(--font-size-12); font-weight: 700; color: var(--color-text-secondary); }
+.context-divider { width: 1px; height: 1rem; background: var(--color-border-default); }
 
-.frozen-dot { width: 6px; height: 6px; border-radius: 50%; background: #f97316; animation: blink 1.5s infinite; }
+.frozen-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--color-warning); animation: blink 1.5s infinite; }
 @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
 /* Leaderboard Table */
-.log-table-wrap { width: 100%; overflow: hidden; background: white; }
+.log-table-wrap { width: 100%; overflow: hidden; background: var(--color-bg-surface); }
 .studio-table { width: 100%; border-collapse: collapse; }
-.studio-table th { background: #f8fafc; padding: 0.75rem 1rem; text-align: left; font-size: 10px; font-weight: 800; text-transform: uppercase; color: #94a3b8; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; }
-.studio-table td { padding: 1.15rem 1rem; border-bottom: 1px solid #f1f5f9; }
+.studio-table th { background: var(--color-bg-elevated); padding: 0.75rem 1rem; text-align: left; font-size: var(--font-size-10); font-weight: 800; text-transform: uppercase; color: var(--color-text-muted); border-top: 1px solid var(--color-border-default); border-bottom: 1px solid var(--color-border-default); }
+.studio-table td { padding: 1.15rem 1rem; border-bottom: 1px solid var(--color-border-subtle); }
 
-.studio-row:hover { background: #f8fafc; }
+.studio-row:hover { background: var(--color-bg-elevated); }
 
-.rank-badge { font-family: var(--font-family-mono); font-size: 14px; font-weight: 900; color: #94a3b8; }
-.rank-1 { color: #f59e0b; font-size: 18px; }
-.rank-2 { color: #94a3b8; }
-.rank-3 { color: #b45309; }
+.rank-badge { font-family: var(--font-family-mono); font-size: var(--font-size-14); font-weight: 900; color: var(--color-text-muted); }
+.rank-1 { color: var(--color-warning); font-size: var(--font-size-18); }
+.rank-2 { color: var(--color-text-muted); }
+.rank-3 { color: color-mix(in srgb, var(--color-warning) 80%, black); }
 
 .team-cell { display: flex; flex-direction: column; gap: 0.15rem; }
-.team-name { font-size: 14px; font-weight: 800; color: #0f172a; }
-.team-id { font-size: 10px; color: #94a3b8; font-weight: 600; }
+.team-name { font-size: var(--font-size-14); font-weight: 800; color: var(--color-text-primary); }
+.team-id { font-size: var(--font-size-10); color: var(--color-text-muted); font-weight: 600; }
 
 .text-right { text-align: right; }
 .w-24 { width: 6rem; }

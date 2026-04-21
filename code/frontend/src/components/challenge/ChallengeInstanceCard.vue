@@ -350,18 +350,17 @@ const startButtonLabel = computed(() => {
 
 <style scoped>
 .instance-shell {
-  --line-soft: color-mix(in srgb, oklch(38% 0.014 252) 12%, transparent);
-  --line-strong: color-mix(in srgb, oklch(38% 0.014 252) 20%, transparent);
-  --text-main: oklch(24% 0.014 252);
-  --text-subtle: oklch(49% 0.016 252);
-  --text-faint: oklch(61% 0.012 252);
-  --brand: oklch(52% 0.12 254);
-  --warning: oklch(68% 0.14 82);
-  --danger: oklch(58% 0.16 28);
+  --line-soft: color-mix(in srgb, var(--color-border-default) 68%, transparent);
+  --text-main: var(--color-text-primary);
+  --text-subtle: var(--color-text-secondary);
+  --text-faint: var(--color-text-muted);
+  --brand: var(--color-primary);
+  --warning: var(--color-warning);
+  --danger: var(--color-danger);
   --font-sans: var(--font-family-sans);
   --font-mono: var(--font-family-mono);
-  margin-top: 26px;
-  padding-top: 26px;
+  margin-top: var(--space-6);
+  padding-top: var(--space-6);
   border-top: 1px solid var(--line-soft);
   font-family: var(--font-sans);
 }
@@ -377,40 +376,44 @@ const startButtonLabel = computed(() => {
 
 .instance-time,
 .instance-access {
-  font-family: var(--font-mono) !important;
+  font-family: var(--font-mono);
 }
 
 .instance-kicker {
   font-size: var(--font-size-11);
-  font-weight: 600;
-  letter-spacing: 0.18em;
+  font-weight: 800;
   text-transform: uppercase;
-  color: color-mix(in srgb, var(--brand) 68%, var(--text-faint));
+  letter-spacing: 0.18em;
+  color: var(--brand);
 }
 
 .instance-title {
-  margin: 10px 0 0;
+  margin: var(--space-2) 0 0;
   font-size: var(--font-size-18);
+  font-weight: 900;
   color: var(--text-main);
 }
 
 .instance-hero {
-  margin-top: 18px;
-  padding-left: 16px;
+  margin-top: var(--space-5);
+  padding-left: var(--space-4);
   border-left: 2px solid color-mix(in srgb, var(--brand) 24%, transparent);
 }
 
 .instance-meta-label {
   font-size: var(--font-size-11);
-  letter-spacing: 0.22em;
+  font-weight: 700;
   text-transform: uppercase;
+  letter-spacing: 0.22em;
   color: var(--text-faint);
 }
 
 .instance-time {
-  margin-top: 8px;
+  margin-top: var(--space-2);
   color: var(--text-main);
-  font: 700 28px/1 var(--font-mono);
+  font-size: var(--font-size-26);
+  font-weight: 800;
+  line-height: 1;
 }
 
 .instance-time--urgent {
@@ -418,20 +421,20 @@ const startButtonLabel = computed(() => {
 }
 
 .instance-created {
-  margin-top: 8px;
+  margin-top: var(--space-2);
   font-size: var(--font-size-12);
   color: var(--text-faint);
 }
 
 .instance-grid {
   display: grid;
-  gap: 12px;
+  gap: var(--space-3);
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  margin-top: 18px;
+  margin-top: var(--space-5);
 }
 
 .instance-stat {
-  padding-bottom: 12px;
+  padding-bottom: var(--space-3);
   border-bottom: 1px solid var(--line-soft);
 }
 
@@ -441,41 +444,43 @@ const startButtonLabel = computed(() => {
 
 .instance-stat span {
   display: block;
-  font-size: var(--font-size-12);
-  letter-spacing: 0.12em;
+  font-size: var(--font-size-11);
+  font-weight: 800;
   text-transform: uppercase;
+  letter-spacing: 0.1em;
   color: var(--text-faint);
 }
 
 .instance-stat strong {
   display: block;
-  margin-top: 8px;
-  font-size: var(--font-size-16);
+  margin-top: var(--space-2);
+  font-size: var(--font-size-15);
+  font-weight: 800;
   color: var(--text-main);
 }
 
 .instance-access {
-  font-family: var(--font-mono);
-  font-size: var(--font-size-14);
+  font-size: var(--font-size-13);
   line-height: 1.6;
   word-break: break-all;
+  font-weight: 600;
 }
 
 .instance-note {
-  margin-top: 16px;
-  font-size: var(--font-size-14);
+  margin-top: var(--space-4);
+  font-size: var(--font-size-13);
   line-height: 1.75;
   color: var(--text-subtle);
 }
 
 .instance-note div + div {
-  margin-top: 8px;
+  margin-top: var(--space-2);
 }
 
 .instance-callout {
-  margin-top: 16px;
+  margin-top: var(--space-4);
   border-left: 2px solid currentColor;
-  padding-left: 12px;
+  padding-left: var(--space-3);
   font-size: var(--font-size-12);
   line-height: 1.7;
 }
@@ -489,14 +494,14 @@ const startButtonLabel = computed(() => {
 }
 
 .instance-callout--success {
-  color: color-mix(in srgb, var(--color-success) 80%, var(--text-main));
+  color: var(--color-success);
 }
 
 .tool-actions {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-  margin-top: 18px;
+  gap: var(--space-2-5);
+  margin-top: var(--space-5);
 }
 
 .tool-actions--single {
@@ -506,8 +511,8 @@ const startButtonLabel = computed(() => {
 .tool-actions .ui-btn,
 .instance-shell > .ui-btn {
   width: 100%;
-  min-height: 48px;
-  border-radius: 14px;
+  min-height: var(--ui-control-height-lg);
+  border-radius: var(--ui-control-radius-lg);
 }
 
 @media (max-width: 1024px) {
@@ -515,15 +520,6 @@ const startButtonLabel = computed(() => {
   .tool-actions {
     grid-template-columns: minmax(0, 1fr);
   }
-}
-
-:global([data-theme='dark']) .instance-shell {
-  --line-soft: color-mix(in srgb, var(--color-border-default) 78%, transparent);
-  --line-strong: color-mix(in srgb, var(--color-border-default) 92%, transparent);
-  --text-main: var(--color-text-primary);
-  --text-subtle: var(--color-text-secondary);
-  --text-faint: color-mix(in srgb, var(--color-text-secondary) 82%, var(--color-bg-base));
-  --brand: color-mix(in srgb, var(--color-primary) 88%, var(--color-text-primary));
 }
 
 @media (prefers-reduced-motion: reduce) {

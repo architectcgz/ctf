@@ -238,7 +238,8 @@ function handleSubmit() {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: var(--space-2);
+  gap: var(--space-3);
+  width: 100%;
 }
 
 @media (max-width: 767px) {

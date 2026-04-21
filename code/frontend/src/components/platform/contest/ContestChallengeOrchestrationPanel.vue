@@ -217,7 +217,15 @@ function setActionMenuOpen(challengeId: string, nextOpen: boolean): void {
   openActionMenuId.value = nextOpen ? challengeId : null
 }
 
-async function handleSave(payload: any) {
+interface ContestOrchestrationSavePayload {
+  challenge_id?: number
+  template_id?: number
+  points: number
+  order: number
+  is_visible: boolean
+}
+
+async function handleSave(payload: ContestOrchestrationSavePayload) {
   saving.value = true
   try {
     if (isAwdContest.value) {
@@ -228,7 +236,7 @@ async function handleSave(payload: any) {
       }
     } else if (dialogMode.value === 'create') {
       await createAdminContestChallenge(props.contestId, {
-        challenge_id: payload.challenge_id,
+        challenge_id: payload.challenge_id!,
         points: payload.points,
         order: payload.order,
         is_visible: payload.is_visible,
