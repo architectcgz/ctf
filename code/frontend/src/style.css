@@ -580,114 +580,19 @@ select {
 }
 
 /**
- * Premium Admin Workbench Header
- * ----------------------------------------------------------------------------
- * 统一管理员/教师工作台头部规范：包含标题区、导航区和操作区。
+ * Slide-over Drawer Layout System
  */
-.admin-workbench-header {
-  padding: 2.5rem 3rem 0;
-  background-color: var(--color-bg-base);
-  border-bottom: 1px solid var(--color-border-default);
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  position: sticky;
-  top: 0;
-  z-index: 30;
+.modal-template-shell--drawer {
+  /* 仅保留基础布局标识，具体视觉由组件变量控制 */
+  transition: all 0.3s ease;
 }
 
-.admin-workbench-header__top {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-}
-
-.admin-workbench-header__identity {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.admin-workbench-header__title {
-  margin: 0 !important;
-  font-size: clamp(24px, 2.5vw, 32px) !important;
-  font-weight: 900 !important;
-  letter-spacing: -0.03em !important;
-  color: var(--color-text-primary);
-  line-height: 1.1;
-}
-
-.admin-workbench-header__description {
-  margin: 0.25rem 0 0;
-  font-size: 14px;
-  color: var(--color-text-secondary);
-  max-width: 40rem;
-  line-height: 1.6;
-}
-
-.admin-workbench-header__actions {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 0.25rem;
-}
-
-.admin-workbench-header__nav {
-  display: flex;
-  gap: 2.5rem;
-  margin-top: 0.5rem;
-}
-
-.admin-workbench-nav-item {
-  padding: 0.75rem 0 1rem;
-  font-size: 14px;
-  font-weight: 800;
-  color: var(--color-text-secondary);
+.modal-template-panel--drawer {
+  height: 100%;
+  width: min(var(--modal-template-drawer-width, 32rem), 100vw);
+  border-radius: 0;
   border: none;
-  border-bottom: 3px solid transparent;
-  background: transparent;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.admin-workbench-nav-item:hover {
-  color: var(--color-text-primary);
-}
-
-.admin-workbench-nav-item.is-active {
-  color: var(--color-primary);
-  border-bottom-color: var(--color-primary);
-}
-
-.admin-workbench-nav-badge {
-  background: var(--color-primary);
-  color: white;
-  font-size: 10px;
-  min-width: 1.25rem;
-  height: 1.25rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 99px;
-  font-family: var(--font-family-mono);
-}
-
-/* 适配窄屏 */
-@media (max-width: 1024px) {
-  .admin-workbench-header {
-    padding: 2rem 2rem 0;
-  }
-  .admin-workbench-header__top {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
-  }
-  .admin-workbench-header__actions {
-    width: 100%;
-    justify-content: flex-start;
-  }
+  border-left: 1px solid var(--color-border-default);
+  box-shadow: -24px 0 56px var(--color-shadow-strong);
+  background-color: var(--color-bg-surface);
 }
