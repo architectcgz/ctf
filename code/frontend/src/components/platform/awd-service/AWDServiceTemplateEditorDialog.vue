@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { reactive, watch } from 'vue'
 
-import AdminSurfaceModal from '@/components/common/modal-templates/AdminSurfaceModal.vue'
+import SlideOverDrawer from '@/components/common/modal-templates/SlideOverDrawer.vue'
 import type { PlatformAwdServiceTemplateFormDraft } from '@/composables/usePlatformAwdServiceTemplates'
 import type { ChallengeCategory } from '@/api/contracts'
 
@@ -102,7 +102,7 @@ function handleSubmit() {
 </script>
 
 <template>
-  <AdminSurfaceModal
+  <SlideOverDrawer
     :open="open"
     :title="mode === 'create' ? '创建 AWD 服务模板' : '编辑 AWD 服务模板'"
     :subtitle="
@@ -299,7 +299,7 @@ function handleSubmit() {
     </form>
 
     <template #footer>
-      <div class="awd-template-dialog__footer">
+      <div class="awd-template-drawer-footer">
         <button
           type="button"
           class="ui-btn ui-btn--secondary"
@@ -318,19 +318,19 @@ function handleSubmit() {
         </button>
       </div>
     </template>
-  </AdminSurfaceModal>
+  </SlideOverDrawer>
 </template>
 
 <style scoped>
 .awd-template-dialog {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 1.5rem;
 }
 
 .awd-template-dialog__grid {
   display: grid;
-  gap: 1rem;
+  gap: 1.25rem;
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
@@ -343,26 +343,23 @@ function handleSubmit() {
 }
 
 .awd-template-dialog__textarea {
-  min-height: 7.5rem;
+  min-height: 10rem;
 }
 
 .awd-template-dialog__mono {
   font-family: var(--font-family-mono);
 }
 
-.awd-template-dialog__footer {
+.awd-template-drawer-footer {
   display: flex;
   justify-content: flex-end;
   gap: 0.75rem;
+  width: 100%;
 }
 
 @media (max-width: 768px) {
   .awd-template-dialog__grid {
     grid-template-columns: 1fr;
-  }
-
-  .awd-template-dialog__footer {
-    flex-direction: column-reverse;
   }
 }
 </style>
