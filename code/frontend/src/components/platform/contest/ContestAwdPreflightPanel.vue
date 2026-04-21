@@ -4,6 +4,7 @@ import { computed } from 'vue'
 import type { AWDReadinessData } from '@/api/contracts'
 
 import AWDReadinessSummary from './AWDReadinessSummary.vue'
+import AWDReadinessDecisionHUD from './AWDReadinessDecisionHUD.vue'
 
 const props = defineProps<{
   readiness: AWDReadinessData | null
@@ -30,6 +31,7 @@ function handleNavigateChallenge(challengeId: string) {
   <section class="studio-preflight">
     <header class="studio-pane-header">
       <div class="header-main">
+        <div class="workspace-overline">AWD Preflight Check</div>
         <h1 class="pane-title">
           赛前就绪检查
         </h1>
@@ -38,23 +40,12 @@ function handleNavigateChallenge(challengeId: string) {
         </p>
       </div>
 
-      <!-- Override Entry with a more balanced style -->
-      <div
-        v-if="canForceStart"
-        class="studio-override-card"
-      >
-        <div class="override-content">
-          <div class="override-overline">
-            Operational Bypass
-          </div>
-          <h3 class="override-title">
-            强制启动赛事
-          </h3>
-          <p class="override-hint">
-            针对紧急演练或特定场景，可跳过就绪校验。请保留操作备注。
-          </p>
-        </div>
+      <div class="header-side">
+        <AWDReadinessDecisionHUD :readiness="readiness" />
+        
+        <!-- Override Entry - Compact -->
         <button
+          v-if="canForceStart"
           id="contest-awd-preflight-force-start"
           type="button"
           class="ops-btn ops-btn--primary"
@@ -86,39 +77,31 @@ function handleNavigateChallenge(challengeId: string) {
 .studio-pane-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: flex-end;
+  border-bottom: 1px solid var(--color-border-subtle);
+  padding-bottom: 1.5rem;
 }
 
 .pane-title {
-  font-size: 1.25rem;
+  font-size: 1.5rem;
   font-weight: 900;
   color: var(--color-text-primary);
-  margin: 0;
+  margin: 0.25rem 0 0;
 }
 
 .pane-description {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--color-text-secondary);
   margin: 0.5rem 0 0;
   max-width: 32rem;
   line-height: 1.6;
 }
 
-/* Override Card Styles */
-.studio-override-card {
-  background: color-mix(in srgb, var(--color-warning) 10%, var(--color-bg-surface));
-  border: 1px solid color-mix(in srgb, var(--color-warning) 20%, transparent);
-  border-radius: 1rem;
-  padding: 1.25rem 1.5rem;
+.header-side {
   display: flex;
   align-items: center;
-  gap: 2rem;
-  max-width: 40rem;
+  gap: 1rem;
 }
-
-.override-overline { font-size: 9px; font-weight: 800; text-transform: uppercase; color: var(--color-warning); letter-spacing: 0.1em; }
-.override-title { font-size: 14px; font-weight: 900; color: var(--color-warning); margin: 0.15rem 0; }
-.override-hint { font-size: 11px; color: var(--color-warning); opacity: 0.8; margin: 0; }
 
 .ops-btn {
   display: inline-flex;
@@ -146,7 +129,7 @@ function handleNavigateChallenge(challengeId: string) {
 }
 
 @media (max-width: 1280px) {
-  .studio-pane-header { flex-direction: column; gap: 1.5rem; }
-  .studio-override-card { max-width: 100%; width: 100%; }
+  .studio-pane-header { flex-direction: column; align-items: flex-start; gap: 1.5rem; }
+  .header-side { width: 100%; justify-content: space-between; }
 }
 </style>
