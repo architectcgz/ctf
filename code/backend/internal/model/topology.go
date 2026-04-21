@@ -11,6 +11,12 @@ const (
 	TopologyTierInternal      = "internal"
 	TopologyDefaultNetworkKey = "default"
 
+	ChallengeTopologySourceTypeManual        = "platform_manual"
+	ChallengeTopologySourceTypePackageImport = "package_import"
+
+	ChallengeTopologySyncStatusClean   = "clean"
+	ChallengeTopologySyncStatusDrifted = "drifted"
+
 	TopologyPolicyActionAllow = "allow"
 	TopologyPolicyActionDeny  = "deny"
 
@@ -23,14 +29,20 @@ const (
 )
 
 type ChallengeTopology struct {
-	ID           int64      `gorm:"column:id;primaryKey"`
-	ChallengeID  int64      `gorm:"column:challenge_id;uniqueIndex"`
-	TemplateID   *int64     `gorm:"column:template_id"`
-	EntryNodeKey string     `gorm:"column:entry_node_key"`
-	Spec         string     `gorm:"column:spec"`
-	CreatedAt    time.Time  `gorm:"column:created_at"`
-	UpdatedAt    time.Time  `gorm:"column:updated_at"`
-	DeletedAt    *time.Time `gorm:"column:deleted_at"`
+	ID                 int64      `gorm:"column:id;primaryKey"`
+	ChallengeID        int64      `gorm:"column:challenge_id;uniqueIndex"`
+	TemplateID         *int64     `gorm:"column:template_id"`
+	EntryNodeKey       string     `gorm:"column:entry_node_key"`
+	Spec               string     `gorm:"column:spec"`
+	SourceType         string     `gorm:"column:source_type"`
+	SourcePath         string     `gorm:"column:source_path"`
+	PackageRevisionID  *int64     `gorm:"column:package_revision_id"`
+	PackageBaselineSpec string    `gorm:"column:package_baseline_spec"`
+	SyncStatus         string     `gorm:"column:sync_status"`
+	LastExportRevisionID *int64   `gorm:"column:last_export_revision_id"`
+	CreatedAt          time.Time  `gorm:"column:created_at"`
+	UpdatedAt          time.Time  `gorm:"column:updated_at"`
+	DeletedAt          *time.Time `gorm:"column:deleted_at"`
 }
 
 func (ChallengeTopology) TableName() string {

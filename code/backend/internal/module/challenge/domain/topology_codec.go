@@ -153,18 +153,44 @@ func TopologyRespFromModel(item *model.ChallengeTopology) (*dto.ChallengeTopolog
 	if err != nil {
 		return nil, err
 	}
+	var baseline *dto.TopologySpecResp
+	if strings.TrimSpace(item.PackageBaselineSpec) != "" {
+		baselineSpec, decodeErr := model.DecodeTopologySpec(item.PackageBaselineSpec)
+		if decodeErr != nil {
+			return nil, decodeErr
+		}
+		baseline = topologySpecRespFromSpec(item.EntryNodeKey, baselineSpec)
+	}
 	return &dto.ChallengeTopologyResp{
-		ID:           item.ID,
-		ChallengeID:  item.ChallengeID,
-		TemplateID:   item.TemplateID,
-		EntryNodeKey: item.EntryNodeKey,
-		Networks:     topologyNetworkRespList(spec.Networks),
-		Nodes:        topologyNodeRespList(spec.Nodes),
-		Links:        topologyLinkRespList(spec.Links),
-		Policies:     topologyTrafficPolicyRespList(spec.Policies),
-		CreatedAt:    item.CreatedAt,
-		UpdatedAt:    item.UpdatedAt,
+		ID:                   item.ID,
+		ChallengeID:          item.ChallengeID,
+		TemplateID:           item.TemplateID,
+		EntryNodeKey:         item.EntryNodeKey,
+		Networks:             topologyNetworkRespList(spec.Networks),
+		Nodes:                topologyNodeRespList(spec.Nodes),
+		Links:                topologyLinkRespList(spec.Links),
+		Policies:             topologyTrafficPolicyRespList(spec.Policies),
+		SourceType:           item.SourceType,
+		SourcePath:           item.SourcePath,
+		SyncStatus:           item.SyncStatus,
+		PackageRevisionID:    item.PackageRevisionID,
+		LastExportRevisionID: item.LastExportRevisionID,
+		PackageBaseline:      baseline,
+		CreatedAt:            item.CreatedAt,
+		UpdatedAt:            item.UpdatedAt,
 	}, nil
+}
+
+func TopologySpecRespFromEncoded(entryNodeKey string, raw string) (*dto.TopologySpecResp, error) {
+	spec, err := model.DecodeTopologySpec(raw)
+	if err != nil {
+		return nil, err
+	}
+	return topologySpecRespFromSpec(entryNodeKey, spec), nil
+}
+
+func TopologySpecRespFromSpec(entryNodeKey string, spec model.TopologySpec) *dto.TopologySpecResp {
+	return topologySpecRespFromSpec(entryNodeKey, spec)
 }
 
 func TemplateRespFromModel(item *model.EnvironmentTemplate) (*dto.EnvironmentTemplateResp, error) {
@@ -249,6 +275,112 @@ func topologyTrafficPolicyRespList(policies []model.TopologyTrafficPolicy) []dto
 		})
 	}
 	return items
+}
+
+func ChallengePackageRevisionRespFromModel(item *model.ChallengePackageRevision) dto.ChallengePackageRevisionResp {
+	return dto.ChallengePackageRevisionResp{
+		ID:                 item.ID,
+		RevisionNo:         item.RevisionNo,
+		SourceType:         item.SourceType,
+		ParentRevisionID:   item.ParentRevisionID,
+		PackageSlug:        item.PackageSlug,
+		ArchivePath:        item.ArchivePath,
+		SourceDir:          item.SourceDir,
+		TopologySourcePath: item.TopologySourcePath,
+		CreatedBy:          item.CreatedBy,
+		CreatedAt:          item.CreatedAt,
+		UpdatedAt:          item.UpdatedAt,
+	}
+}
+
+func ChallengeImportTopologyRespFromParsed(item *ParsedChallengePackageTopology) *dto.ChallengeImportTopologyResp {
+	if item == nil {
+		return nil
+	}
+	nodes := make([]dto.ChallengeImportTopologyNodeResp, 0, len(item.Nodes))
+	for _, node := range item.Nodes {
+		nodes = append(nodes, dto.ChallengeImportTopologyNodeResp{
+			Key:         node.Key,
+			Name:        node.Name,
+			ImageRef:    strings.TrimSpace(node.Image.Ref),
+			ServicePort: node.ServicePort,
+			InjectFlag:  node.InjectFlag,
+			Tier:        node.Tier,
+			NetworkKeys: append([]string(nil), node.NetworkKeys...),
+			Env:         node.Env,
+		})
+	}
+	return &dto.ChallengeImportTopologyResp{
+		Source:       item.Source,
+		EntryNodeKey: item.EntryNodeKey,
+		Networks:     topologyNetworkRespList(importedTopologyNetworkList(item.Networks)),
+		Nodes:        nodes,
+		Links:        topologyLinkRespList(importedTopologyLinkList(item.Links)),
+		Policies:     topologyTrafficPolicyRespList(importedTopologyPolicyList(item.Policies)),
+	}
+}
+
+func ChallengePackageFileRespList(items []ParsedChallengePackageFile) []dto.ChallengePackageFileResp {
+	resp := make([]dto.ChallengePackageFileResp, 0, len(items))
+	for _, item := range items {
+		resp = append(resp, dto.ChallengePackageFileResp{
+			Path: item.Path,
+			Size: item.Size,
+		})
+	}
+	return resp
+}
+
+func ChallengePackageFileRespListFromRevisionFiles(items []dto.ChallengePackageFileResp) []dto.ChallengePackageFileResp {
+	return append([]dto.ChallengePackageFileResp(nil), items...)
+}
+
+func topologySpecRespFromSpec(entryNodeKey string, spec model.TopologySpec) *dto.TopologySpecResp {
+	return &dto.TopologySpecResp{
+		EntryNodeKey: entryNodeKey,
+		Networks:     topologyNetworkRespList(spec.Networks),
+		Nodes:        topologyNodeRespList(spec.Nodes),
+		Links:        topologyLinkRespList(spec.Links),
+		Policies:     topologyTrafficPolicyRespList(spec.Policies),
+	}
+}
+
+func importedTopologyNetworkList(items []ChallengePackageTopologyNetwork) []model.TopologyNetwork {
+	resp := make([]model.TopologyNetwork, 0, len(items))
+	for _, item := range items {
+		resp = append(resp, model.TopologyNetwork{
+			Key:      item.Key,
+			Name:     item.Name,
+			CIDR:     item.CIDR,
+			Internal: item.Internal,
+		})
+	}
+	return resp
+}
+
+func importedTopologyLinkList(items []ChallengePackageTopologyLink) []model.TopologyLink {
+	resp := make([]model.TopologyLink, 0, len(items))
+	for _, item := range items {
+		resp = append(resp, model.TopologyLink{
+			FromNodeKey: item.FromNodeKey,
+			ToNodeKey:   item.ToNodeKey,
+		})
+	}
+	return resp
+}
+
+func importedTopologyPolicyList(items []ChallengePackageTopologyPolicy) []model.TopologyTrafficPolicy {
+	resp := make([]model.TopologyTrafficPolicy, 0, len(items))
+	for _, item := range items {
+		resp = append(resp, model.TopologyTrafficPolicy{
+			SourceNodeKey: item.SourceNodeKey,
+			TargetNodeKey: item.TargetNodeKey,
+			Action:        item.Action,
+			Protocol:      item.Protocol,
+			Ports:         append([]int(nil), item.Ports...),
+		})
+	}
+	return resp
 }
 
 func normalizeTopologyNetworks(networks []dto.TopologyNetworkReq) ([]model.TopologyNetwork, map[string]struct{}, string, error) {

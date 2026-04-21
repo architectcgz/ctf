@@ -4,6 +4,7 @@ import {
   createEnvironmentTemplate,
   deleteChallengeTopology,
   deleteEnvironmentTemplate,
+  exportChallengePackage,
   getChallengeDetail,
   getChallengeTopology,
   getEnvironmentTemplates,
@@ -15,6 +16,7 @@ import type {
   AdminChallengeListItem,
   AdminImageListItem,
   ChallengeTopologyData,
+  ChallengePackageRevisionData,
   EnvironmentTemplateData,
 } from '@/api/contracts'
 import { useToast } from '@/composables/useToast'
@@ -54,6 +56,7 @@ export function useChallengeTopologyStudioPage(options: UseChallengeTopologyStud
 
   const loading = ref(true)
   const saving = ref(false)
+  const exporting = ref(false)
   const templateBusy = ref(false)
   const challenge = ref<AdminChallengeListItem | null>(null)
   const topology = ref<ChallengeTopologyData | null>(null)
@@ -103,7 +106,7 @@ export function useChallengeTopologyStudioPage(options: UseChallengeTopologyStud
   const heroDescription = computed(() =>
     isTemplateLibraryMode.value
       ? '当前页面直接调用环境模板接口，可独立维护模板列表、编辑器草稿与模板写回。'
-      : '当前页面会直接调用拓扑和环境模板接口。前端编辑器当前开放节点级 allow/deny，端口/协议级 ACL 暂未开放。'
+      : '题目拓扑现在会直接读取题包来源、基线和导出修订。平台允许继续编辑，但会明确标出与题包基线的偏离状态。'
   )
   const statusCard = computed(() => {
     if (isTemplateLibraryMode.value) {
@@ -134,11 +137,59 @@ export function useChallengeTopologyStudioPage(options: UseChallengeTopologyStud
       }
     }
     return {
-      eyebrow: '模板绑定',
-      title: topology.value?.template_id || '无',
-      subtitle: topology.value?.template_id
-        ? '当前题目最近一次是按模板保存的。'
-        : '当前拓扑为手工编排或尚未保存。',
+      eyebrow: '题包同步',
+      title:
+        topology.value?.source_type === 'package_import'
+          ? topology.value.sync_status === 'drifted'
+            ? '已偏离题包'
+            : '与题包一致'
+          : '平台手工拓扑',
+      subtitle:
+        topology.value?.source_type === 'package_import'
+          ? topology.value.source_path || '题包导入拓扑'
+          : topology.value?.template_id
+            ? `最近一次按模板 ${topology.value.template_id} 保存`
+            : '当前拓扑未绑定题包来源。',
+    }
+  })
+  const packageBaselineSummary = computed(() => {
+    const baseline = topology.value?.package_baseline
+    if (!baseline) {
+      return null
+    }
+    return {
+      entryNodeKey: baseline.entry_node_key,
+      networkCount: baseline.networks?.length || 0,
+      nodeCount: baseline.nodes.length,
+      linkCount: baseline.links?.length || 0,
+      policyCount: baseline.policies?.length || 0,
+    }
+  })
+  const packageFiles = computed(() => topology.value?.package_files || [])
+  const packageRevisionHistory = computed<ChallengePackageRevisionData[]>(
+    () => topology.value?.package_revisions || []
+  )
+  const packageSourceSummary = computed(() => {
+    if (!topology.value?.source_type) {
+      return {
+        title: '暂无题包来源',
+        subtitle: '当前题目拓扑还没有关联到题包导入基线。',
+        canExport: false,
+      }
+    }
+    if (topology.value.source_type === 'package_import') {
+      return {
+        title: topology.value.sync_status === 'drifted' ? '题包基线已漂移' : '题包基线已接入',
+        subtitle: topology.value.source_path || '来源于导入题包',
+        canExport: true,
+      }
+    }
+    return {
+      title: '平台手工拓扑',
+      subtitle: topology.value.template_id
+        ? `最近一次按模板 ${topology.value.template_id} 保存`
+        : '当前题目拓扑尚未来自题包导入。',
+      canExport: false,
     }
   })
   const selectedCanvasSummary = computed(() => {
@@ -674,6 +725,23 @@ export function useChallengeTopologyStudioPage(options: UseChallengeTopologyStud
     }
   }
 
+  async function handleExportPackage() {
+    if (isTemplateLibraryMode.value) {
+      return
+    }
+    exporting.value = true
+    try {
+      const exported = await exportChallengePackage(options.challengeId)
+      toast.success('题目包已导出')
+      await reloadAll()
+      if (typeof window !== 'undefined' && exported.download_url) {
+        window.open(exported.download_url, '_blank', 'noopener')
+      }
+    } finally {
+      exporting.value = false
+    }
+  }
+
   async function handleDeleteTopology() {
     if (!topology.value) {
       toast.warning('当前题目还没有已保存的拓扑')
@@ -843,6 +911,7 @@ export function useChallengeTopologyStudioPage(options: UseChallengeTopologyStud
   return {
     loading,
     saving,
+    exporting,
     templateBusy,
     challenge,
     topology,
@@ -869,6 +938,10 @@ export function useChallengeTopologyStudioPage(options: UseChallengeTopologyStud
     heroDescription,
     statusCard,
     secondaryCard,
+    packageBaselineSummary,
+    packageFiles,
+    packageRevisionHistory,
+    packageSourceSummary,
     selectedCanvasSummary,
     draftValidationIssues,
     selectedTemplateSummary,
@@ -905,6 +978,7 @@ export function useChallengeTopologyStudioPage(options: UseChallengeTopologyStud
     loadTemplateIntoDraft,
     handleApplyTemplate,
     handleSaveTopology,
+    handleExportPackage,
     handleDeleteTopology,
     handleCreateTemplate,
     handleUpdateTemplate,

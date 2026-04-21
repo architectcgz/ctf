@@ -140,7 +140,7 @@ func TestBuildParsedChallengePackageRejectsAwdModeForJeopardyImport(t *testing.T
 		t.Fatalf("write statement.md: %v", err)
 	}
 
-	if _, err := buildParsedChallengePackage(rootDir, manifest); err == nil {
+	if _, err := buildParsedChallengePackage(rootDir, manifest, ""); err == nil {
 		t.Fatal("expected buildParsedChallengePackage() to reject awd mode")
 	}
 }

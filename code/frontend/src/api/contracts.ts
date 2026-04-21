@@ -1174,6 +1174,31 @@ export interface AdminChallengeImportExtensions {
   }
 }
 
+export interface ChallengePackageFileData {
+  path: string
+  size: number
+}
+
+export interface AdminChallengeImportTopologyNodeData {
+  key: string
+  name: string
+  image_ref?: string
+  service_port?: number
+  inject_flag?: boolean
+  tier?: TopologyTier
+  network_keys?: string[]
+  env?: Record<string, string>
+}
+
+export interface AdminChallengeImportTopologyData {
+  source?: string
+  entry_node_key: string
+  networks?: TopologyNetworkData[]
+  nodes: AdminChallengeImportTopologyNodeData[]
+  links?: TopologyLinkData[]
+  policies?: TopologyTrafficPolicyData[]
+}
+
 export interface AdminChallengeImportPreview {
   id: ID
   file_name: string
@@ -1188,6 +1213,8 @@ export interface AdminChallengeImportPreview {
   flag: AdminChallengeImportFlag
   runtime: AdminChallengeImportRuntime
   extensions: AdminChallengeImportExtensions
+  topology?: AdminChallengeImportTopologyData
+  package_files?: ChallengePackageFileData[]
   warnings?: string[]
   created_at: ISODateTime
 }
@@ -1257,8 +1284,48 @@ export interface ChallengeTopologyData {
   nodes: TopologyNodeData[]
   links?: TopologyLinkData[]
   policies?: TopologyTrafficPolicyData[]
+  source_type?: 'platform_manual' | 'package_import'
+  source_path?: string
+  sync_status?: 'clean' | 'drifted'
+  package_revision_id?: ID
+  last_export_revision_id?: ID
+  package_baseline?: TopologySpecData
+  package_files?: ChallengePackageFileData[]
+  package_revisions?: ChallengePackageRevisionData[]
   created_at: ISODateTime
   updated_at: ISODateTime
+}
+
+export interface TopologySpecData {
+  entry_node_key: string
+  networks?: TopologyNetworkData[]
+  nodes: TopologyNodeData[]
+  links?: TopologyLinkData[]
+  policies?: TopologyTrafficPolicyData[]
+}
+
+export interface ChallengePackageRevisionData {
+  id: ID
+  revision_no: number
+  source_type: 'imported' | 'exported'
+  parent_revision_id?: ID
+  package_slug?: string
+  archive_path?: string
+  source_dir?: string
+  topology_source_path?: string
+  created_by?: ID
+  created_at: ISODateTime
+  updated_at: ISODateTime
+}
+
+export interface ChallengePackageExportData {
+  challenge_id: ID
+  revision_id: ID
+  archive_path: string
+  source_dir: string
+  file_name: string
+  download_url?: string
+  created_at: ISODateTime
 }
 
 export interface EnvironmentTemplateData {

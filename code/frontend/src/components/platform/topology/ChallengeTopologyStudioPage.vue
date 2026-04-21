@@ -50,6 +50,7 @@ const activeWorkbenchTab = ref<'visual' | 'compute' | 'network' | 'policy'>('vis
 const {
   loading,
   saving,
+  exporting,
   templateBusy,
   challenge,
   topology,
@@ -76,6 +77,10 @@ const {
   heroDescription,
   statusCard,
   secondaryCard,
+  packageBaselineSummary,
+  packageFiles,
+  packageRevisionHistory,
+  packageSourceSummary,
   selectedCanvasSummary,
   draftValidationIssues,
   selectedTemplateSummary,
@@ -112,6 +117,7 @@ const {
   loadTemplateIntoDraft,
   handleApplyTemplate,
   handleSaveTopology,
+  handleExportPackage,
   handleDeleteTopology,
   handleCreateTemplate,
   handleUpdateTemplate,
@@ -123,6 +129,16 @@ const {
   challengeId: props.challengeId,
   mode: props.mode,
 })
+
+function formatFileSize(size: number): string {
+  if (size < 1024) {
+    return `${size} B`
+  }
+  if (size < 1024 * 1024) {
+    return `${(size / 1024).toFixed(1)} KB`
+  }
+  return `${(size / (1024 * 1024)).toFixed(1)} MB`
+}
 
 const rootClasses = computed(() => [
   'topology-page',
@@ -158,10 +174,7 @@ const rootClasses = computed(() => [
       </button>
     </PageHeader>
 
-    <header
-      v-else
-      class="workspace-topbar topology-workspace-topbar"
-    >
+    <header v-else class="workspace-topbar topology-workspace-topbar">
       <div class="topology-topbar-leading">
         <span class="workspace-overline">Challenge Workspace</span>
         <span class="topology-topbar-chip">{{ pageHeader.eyebrow }}</span>
@@ -184,6 +197,15 @@ const rootClasses = computed(() => [
         </button>
         <button
           type="button"
+          class="ui-btn ui-btn--ghost topology-action-btn"
+          :disabled="exporting || !packageSourceSummary.canExport"
+          @click="void handleExportPackage()"
+        >
+          <GitBranch class="h-4 w-4" />
+          {{ exporting ? '导出中...' : '导出题目包' }}
+        </button>
+        <button
+          type="button"
           class="ui-btn ui-btn--primary topology-action-btn"
           :disabled="saving"
           @click="void handleSaveTopology()"
@@ -194,10 +216,7 @@ const rootClasses = computed(() => [
       </div>
     </header>
 
-    <div
-      v-if="loading && !isTemplateLibraryMode"
-      class="content-pane topology-loading-pane"
-    >
+    <div v-if="loading && !isTemplateLibraryMode" class="content-pane topology-loading-pane">
       <AppLoading>{{ loadingText }}</AppLoading>
     </div>
 
@@ -211,10 +230,7 @@ const rootClasses = computed(() => [
     </section>
 
     <template v-else>
-      <section
-        v-if="isTemplateLibraryMode"
-        class="content-pane template-library-main"
-      >
+      <section v-if="isTemplateLibraryMode" class="content-pane template-library-main">
         <section class="topology-hero-grid grid gap-4 xl:grid-cols-[1.04fr_0.96fr]">
           <div class="topology-hero-lead topology-hero-lead--library">
             <div class="topology-hero-kicker">
@@ -340,10 +356,7 @@ const rootClasses = computed(() => [
                   "
                   @click="activeWorkbenchTab = tab.id as any"
                 >
-                  <component
-                    :is="tab.icon"
-                    class="h-4 w-4"
-                  />
+                  <component :is="tab.icon" class="h-4 w-4" />
                   <span class="hidden sm:inline">{{ tab.label }}</span>
                 </button>
               </div>
@@ -357,10 +370,7 @@ const rootClasses = computed(() => [
               </button>
             </div>
 
-            <div
-              v-if="activeWorkbenchTab === 'visual'"
-              class="space-y-6"
-            >
+            <div v-if="activeWorkbenchTab === 'visual'" class="space-y-6">
               <SectionCard
                 title="图形画布"
                 subtitle="拖拽节点调整视图布局，点击节点可快速跳到对应节点编辑卡片。"
@@ -468,14 +478,8 @@ const rootClasses = computed(() => [
                   <div class="font-medium">
                     {{ draftValidationIssues.length === 0 ? '基础校验已通过' : '基础校验发现问题' }}
                   </div>
-                  <ul
-                    v-if="draftValidationIssues.length > 0"
-                    class="mt-2 space-y-1 text-xs"
-                  >
-                    <li
-                      v-for="issue in draftValidationIssues"
-                      :key="issue"
-                    >
+                  <ul v-if="draftValidationIssues.length > 0" class="mt-2 space-y-1 text-xs">
+                    <li v-for="issue in draftValidationIssues" :key="issue">
                       {{ issue }}
                     </li>
                   </ul>
@@ -499,9 +503,7 @@ const rootClasses = computed(() => [
                   <div
                     class="template-quick-editor rounded-2xl border border-border bg-elevated p-4"
                   >
-                    <div class="text-sm font-semibold text-text-primary">
-                      画布快速编辑
-                    </div>
+                    <div class="text-sm font-semibold text-text-primary">画布快速编辑</div>
 
                     <div
                       v-if="!selectedNodeDraft && !selectedEdgeMeta"
@@ -510,10 +512,7 @@ const rootClasses = computed(() => [
                       请在画布中选择一个节点或连线进行快速配置
                     </div>
 
-                    <div
-                      v-else-if="selectedNodeDraft"
-                      class="mt-3 space-y-4"
-                    >
+                    <div v-else-if="selectedNodeDraft" class="mt-3 space-y-4">
                       <div class="grid gap-3 md:grid-cols-2">
                         <label class="space-y-2">
                           <span class="text-sm text-text-secondary">节点名称</span>
@@ -521,7 +520,7 @@ const rootClasses = computed(() => [
                             v-model="selectedNodeDraft.name"
                             type="text"
                             class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
-                          >
+                          />
                         </label>
                         <label class="space-y-2">
                           <span class="text-sm text-text-secondary">服务端口</span>
@@ -538,14 +537,12 @@ const rootClasses = computed(() => [
                                 selectedNodeDraft
                               )
                             "
-                          >
+                          />
                         </label>
                       </div>
 
                       <div class="space-y-2">
-                        <div class="text-sm text-text-secondary">
-                          所属网络
-                        </div>
+                        <div class="text-sm text-text-secondary">所属网络</div>
                         <div class="flex flex-wrap gap-2">
                           <label
                             v-for="network in draft.networks"
@@ -562,17 +559,14 @@ const rootClasses = computed(() => [
                                   ($event.target as HTMLInputElement).checked
                                 )
                               "
-                            >
+                            />
                             <span>{{ network.name || network.key }}</span>
                           </label>
                         </div>
                       </div>
                     </div>
 
-                    <div
-                      v-else-if="selectedEdgeMeta"
-                      class="mt-3 space-y-4"
-                    >
+                    <div v-else-if="selectedEdgeMeta" class="mt-3 space-y-4">
                       <div class="grid gap-3 md:grid-cols-2">
                         <label class="space-y-2">
                           <span class="text-sm text-text-secondary">源节点</span>
@@ -585,11 +579,7 @@ const rootClasses = computed(() => [
                               )
                             "
                           >
-                            <option
-                              v-for="node in nodeOptions"
-                              :key="node.key"
-                              :value="node.key"
-                            >
+                            <option v-for="node in nodeOptions" :key="node.key" :value="node.key">
                               {{ node.label }}
                             </option>
                           </select>
@@ -605,11 +595,7 @@ const rootClasses = computed(() => [
                               )
                             "
                           >
-                            <option
-                              v-for="node in nodeOptions"
-                              :key="node.key"
-                              :value="node.key"
-                            >
+                            <option v-for="node in nodeOptions" :key="node.key" :value="node.key">
                               {{ node.label }}
                             </option>
                           </select>
@@ -636,14 +622,8 @@ const rootClasses = computed(() => [
               </SectionCard>
             </div>
 
-            <div
-              v-else-if="activeWorkbenchTab === 'compute'"
-              class="space-y-6"
-            >
-              <SectionCard
-                title="入口节点"
-                subtitle="实例访问入口和当前草稿的保存范围。"
-              >
+            <div v-else-if="activeWorkbenchTab === 'compute'" class="space-y-6">
+              <SectionCard title="入口节点" subtitle="实例访问入口和当前草稿的保存范围。">
                 <div class="grid gap-4">
                   <label class="space-y-2">
                     <span class="text-sm text-text-secondary">入口节点</span>
@@ -651,11 +631,7 @@ const rootClasses = computed(() => [
                       v-model="draft.entry_node_key"
                       class="w-full rounded-xl border border-border bg-elevated px-3 py-3 text-sm text-text-primary outline-none transition focus:border-primary"
                     >
-                      <option
-                        v-for="node in nodeOptions"
-                        :key="node.key"
-                        :value="node.key"
-                      >
+                      <option v-for="node in nodeOptions" :key="node.key" :value="node.key">
                         {{ node.label }} ({{ node.key }})
                       </option>
                     </select>
@@ -696,10 +672,7 @@ const rootClasses = computed(() => [
               </SectionCard>
             </div>
 
-            <div
-              v-else-if="activeWorkbenchTab === 'network'"
-              class="space-y-6"
-            >
+            <div v-else-if="activeWorkbenchTab === 'network'" class="space-y-6">
               <SectionCard
                 title="网络分段"
                 subtitle="一个节点可以挂多个网络，运行时会创建多个 Docker Network。"
@@ -715,19 +688,19 @@ const rootClasses = computed(() => [
                       type="text"
                       class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
                       placeholder="network key"
-                    >
+                    />
                     <input
                       v-model="network.name"
                       type="text"
                       class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
                       placeholder="网络名称"
-                    >
+                    />
                     <input
                       v-model="network.cidr"
                       type="text"
                       class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
                       placeholder="CIDR（可选）"
-                    >
+                    />
                     <label
                       class="flex items-center gap-3 rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary"
                     >
@@ -735,7 +708,7 @@ const rootClasses = computed(() => [
                         v-model="network.internal"
                         type="checkbox"
                         class="h-4 w-4 rounded border-border bg-transparent"
-                      >
+                      />
                       internal
                     </label>
                     <button
@@ -762,10 +735,7 @@ const rootClasses = computed(() => [
               </SectionCard>
             </div>
 
-            <div
-              v-else-if="activeWorkbenchTab === 'policy'"
-              class="space-y-6"
-            >
+            <div v-else-if="activeWorkbenchTab === 'policy'" class="space-y-6">
               <SectionCard
                 title="拓扑连线"
                 subtitle="用于表达逻辑依赖关系，不直接等同于运行时 ACL。"
@@ -776,10 +746,7 @@ const rootClasses = computed(() => [
                 >
                   暂无逻辑连线
                 </div>
-                <div
-                  v-else
-                  class="space-y-3"
-                >
+                <div v-else class="space-y-3">
                   <div
                     v-for="link in draft.links"
                     :key="link.uid"
@@ -789,14 +756,8 @@ const rootClasses = computed(() => [
                       v-model="link.from_node_key"
                       class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
                     >
-                      <option value="">
-                        选择源节点
-                      </option>
-                      <option
-                        v-for="node in nodeOptions"
-                        :key="node.key"
-                        :value="node.key"
-                      >
+                      <option value="">选择源节点</option>
+                      <option v-for="node in nodeOptions" :key="node.key" :value="node.key">
                         {{ node.label }}
                       </option>
                     </select>
@@ -804,14 +765,8 @@ const rootClasses = computed(() => [
                       v-model="link.to_node_key"
                       class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
                     >
-                      <option value="">
-                        选择目标节点
-                      </option>
-                      <option
-                        v-for="node in nodeOptions"
-                        :key="node.key"
-                        :value="node.key"
-                      >
+                      <option value="">选择目标节点</option>
+                      <option v-for="node in nodeOptions" :key="node.key" :value="node.key">
                         {{ node.label }}
                       </option>
                     </select>
@@ -847,10 +802,7 @@ const rootClasses = computed(() => [
                 >
                   暂无链路策略
                 </div>
-                <div
-                  v-else
-                  class="space-y-3"
-                >
+                <div v-else class="space-y-3">
                   <div
                     v-for="policy in draft.policies"
                     :key="policy.uid"
@@ -860,14 +812,8 @@ const rootClasses = computed(() => [
                       v-model="policy.source_node_key"
                       class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
                     >
-                      <option value="">
-                        选择源节点
-                      </option>
-                      <option
-                        v-for="node in nodeOptions"
-                        :key="node.key"
-                        :value="node.key"
-                      >
+                      <option value="">选择源节点</option>
+                      <option v-for="node in nodeOptions" :key="node.key" :value="node.key">
                         {{ node.label }}
                       </option>
                     </select>
@@ -875,14 +821,8 @@ const rootClasses = computed(() => [
                       v-model="policy.target_node_key"
                       class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
                     >
-                      <option value="">
-                        选择目标节点
-                      </option>
-                      <option
-                        v-for="node in nodeOptions"
-                        :key="node.key"
-                        :value="node.key"
-                      >
+                      <option value="">选择目标节点</option>
+                      <option v-for="node in nodeOptions" :key="node.key" :value="node.key">
                         {{ node.label }}
                       </option>
                     </select>
@@ -890,12 +830,8 @@ const rootClasses = computed(() => [
                       v-model="policy.action"
                       class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
                     >
-                      <option value="allow">
-                        allow
-                      </option>
-                      <option value="deny">
-                        deny
-                      </option>
+                      <option value="allow">allow</option>
+                      <option value="deny">deny</option>
                     </select>
                     <button
                       type="button"
@@ -966,7 +902,7 @@ const rootClasses = computed(() => [
                     type="text"
                     class="w-full rounded-xl border border-border bg-elevated px-3 py-3 text-sm text-text-primary outline-none transition focus:border-primary"
                     placeholder="按模板名称搜索"
-                  >
+                  />
                   <button
                     type="button"
                     class="ui-btn ui-btn--secondary topology-action-btn"
@@ -976,21 +912,12 @@ const rootClasses = computed(() => [
                   </button>
                 </div>
 
-                <div
-                  v-if="templates.length === 0"
-                  class="template-empty-state"
-                >
+                <div v-if="templates.length === 0" class="template-empty-state">
                   当前没有模板数据
                 </div>
 
-                <div
-                  v-else
-                  class="template-library-list"
-                >
-                  <div
-                    class="template-directory-head"
-                    aria-hidden="true"
-                  >
+                <div v-else class="template-library-list">
+                  <div class="template-directory-head" aria-hidden="true">
                     <span>模板</span>
                     <span>概况</span>
                     <span>操作</span>
@@ -1076,7 +1003,7 @@ const rootClasses = computed(() => [
                     type="text"
                     class="w-full rounded-xl border border-border bg-elevated px-3 py-3 text-sm text-text-primary outline-none transition focus:border-primary"
                     placeholder="例如 双节点 Web + DB"
-                  >
+                  />
                 </label>
 
                 <label class="space-y-2">
@@ -1118,31 +1045,22 @@ const rootClasses = computed(() => [
               </div>
             </SectionCard>
 
-            <SectionCard
-              title="当前边界"
-              subtitle="避免把未生效能力继续暴露成可用配置。"
-            >
+            <SectionCard title="当前边界" subtitle="避免把未生效能力继续暴露成可用配置。">
               <div class="template-boundary-list">
                 <article class="template-boundary-item template-boundary-item--warning">
-                  <div class="template-boundary-item__label">
-                    已开放
-                  </div>
+                  <div class="template-boundary-item__label">已开放</div>
                   <div class="template-boundary-item__copy">
                     多网络、节点、逻辑连线、粗粒度 allow/deny 策略、模板复用。
                   </div>
                 </article>
                 <article class="template-boundary-item template-boundary-item--danger">
-                  <div class="template-boundary-item__label">
-                    暂未开放
-                  </div>
+                  <div class="template-boundary-item__label">暂未开放</div>
                   <div class="template-boundary-item__copy">
                     protocol / ports 级细粒度 ACL 前端字段、模板版本化与批量比对能力。
                   </div>
                 </article>
                 <article class="template-boundary-item template-boundary-item--neutral">
-                  <div class="template-boundary-item__label">
-                    建议
-                  </div>
+                  <div class="template-boundary-item__label">建议</div>
                   <div class="template-boundary-item__copy">
                     继续开放高级能力前，先补参数校验、可视化提示和误操作保护。
                   </div>
@@ -1169,33 +1087,25 @@ const rootClasses = computed(() => [
 
           <div class="topology-summary-grid topology-summary-grid--challenge metric-panel-grid">
             <article class="topology-summary-card metric-panel-card">
-              <div class="topology-summary-label metric-panel-label">
-                网络
-              </div>
+              <div class="topology-summary-label metric-panel-label">网络</div>
               <div class="topology-summary-value metric-panel-value">
                 {{ topologySummary.networks }}
               </div>
             </article>
             <article class="topology-summary-card metric-panel-card">
-              <div class="topology-summary-label metric-panel-label">
-                节点
-              </div>
+              <div class="topology-summary-label metric-panel-label">节点</div>
               <div class="topology-summary-value metric-panel-value">
                 {{ topologySummary.nodes }}
               </div>
             </article>
             <article class="topology-summary-card metric-panel-card">
-              <div class="topology-summary-label metric-panel-label">
-                连线
-              </div>
+              <div class="topology-summary-label metric-panel-label">连线</div>
               <div class="topology-summary-value metric-panel-value">
                 {{ topologySummary.links }}
               </div>
             </article>
             <article class="topology-summary-card metric-panel-card">
-              <div class="topology-summary-label metric-panel-label">
-                策略
-              </div>
+              <div class="topology-summary-label metric-panel-label">策略</div>
               <div class="topology-summary-value metric-panel-value">
                 {{ topologySummary.policies }}
               </div>
@@ -1320,14 +1230,8 @@ const rootClasses = computed(() => [
                 >
                   当前草稿的入口、节点、网络和链路引用关系正常。
                 </div>
-                <ul
-                  v-else
-                  class="mt-2 space-y-1 text-xs"
-                >
-                  <li
-                    v-for="issue in draftValidationIssues"
-                    :key="issue"
-                  >
+                <ul v-else class="mt-2 space-y-1 text-xs">
+                  <li v-for="issue in draftValidationIssues" :key="issue">
                     {{ issue }}
                   </li>
                 </ul>
@@ -1349,9 +1253,7 @@ const rootClasses = computed(() => [
 
               <div class="mt-4 grid gap-4 xl:grid-cols-[1.08fr_0.92fr]">
                 <div class="rounded-2xl border border-border bg-elevated p-4">
-                  <div class="text-sm font-semibold text-text-primary">
-                    画布快速编辑
-                  </div>
+                  <div class="text-sm font-semibold text-text-primary">画布快速编辑</div>
 
                   <div
                     v-if="!selectedNodeDraft && !selectedEdgeMeta"
@@ -1360,10 +1262,7 @@ const rootClasses = computed(() => [
                     请选择一个节点或一条边
                   </div>
 
-                  <div
-                    v-else-if="selectedNodeDraft"
-                    class="mt-3 space-y-4"
-                  >
+                  <div v-else-if="selectedNodeDraft" class="mt-3 space-y-4">
                     <div class="grid gap-3 md:grid-cols-2">
                       <label class="space-y-2">
                         <span class="text-sm text-text-secondary">节点名称</span>
@@ -1371,7 +1270,7 @@ const rootClasses = computed(() => [
                           v-model="selectedNodeDraft.name"
                           type="text"
                           class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
-                        >
+                        />
                       </label>
                       <label class="space-y-2">
                         <span class="text-sm text-text-secondary">镜像</span>
@@ -1380,11 +1279,7 @@ const rootClasses = computed(() => [
                           class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
                         >
                           <option value="">复用题目主镜像</option>
-                          <option
-                            v-for="image in images"
-                            :key="image.id"
-                            :value="image.id"
-                          >
+                          <option v-for="image in images" :key="image.id" :value="image.id">
                             {{ image.name }}:{{ image.tag }}
                           </option>
                         </select>
@@ -1415,7 +1310,7 @@ const rootClasses = computed(() => [
                               selectedNodeDraft
                             )
                           "
-                        >
+                        />
                       </label>
                     </div>
 
@@ -1426,14 +1321,12 @@ const rootClasses = computed(() => [
                         v-model="selectedNodeDraft.inject_flag"
                         type="checkbox"
                         class="h-4 w-4 rounded border-border bg-transparent"
-                      >
+                      />
                       启用 Flag 注入
                     </label>
 
                     <div class="space-y-2">
-                      <div class="text-sm text-text-secondary">
-                        所属网络
-                      </div>
+                      <div class="text-sm text-text-secondary">所属网络</div>
                       <div class="grid gap-2 md:grid-cols-2">
                         <label
                           v-for="network in draft.networks"
@@ -1450,17 +1343,14 @@ const rootClasses = computed(() => [
                                 ($event.target as HTMLInputElement).checked
                               )
                             "
-                          >
+                          />
                           <span>{{ network.name || network.key }}</span>
                         </label>
                       </div>
                     </div>
                   </div>
 
-                  <div
-                    v-else-if="selectedEdgeMeta"
-                    class="mt-3 space-y-4"
-                  >
+                  <div v-else-if="selectedEdgeMeta" class="mt-3 space-y-4">
                     <div class="grid gap-3 md:grid-cols-2">
                       <label class="space-y-2">
                         <span class="text-sm text-text-secondary">源节点</span>
@@ -1471,11 +1361,7 @@ const rootClasses = computed(() => [
                             updateSelectedEdgeSourceKey(($event.target as HTMLSelectElement).value)
                           "
                         >
-                          <option
-                            v-for="node in nodeOptions"
-                            :key="node.key"
-                            :value="node.key"
-                          >
+                          <option v-for="node in nodeOptions" :key="node.key" :value="node.key">
                             {{ node.label }}
                           </option>
                         </select>
@@ -1489,11 +1375,7 @@ const rootClasses = computed(() => [
                             updateSelectedEdgeTargetKey(($event.target as HTMLSelectElement).value)
                           "
                         >
-                          <option
-                            v-for="node in nodeOptions"
-                            :key="node.key"
-                            :value="node.key"
-                          >
+                          <option v-for="node in nodeOptions" :key="node.key" :value="node.key">
                             {{ node.label }}
                           </option>
                         </select>
@@ -1518,9 +1400,7 @@ const rootClasses = computed(() => [
                 </div>
 
                 <div class="rounded-2xl border border-border bg-elevated p-4">
-                  <div class="text-sm font-semibold text-text-primary">
-                    网络快速编辑
-                  </div>
+                  <div class="text-sm font-semibold text-text-primary">网络快速编辑</div>
                   <div class="mt-3 space-y-3">
                     <div
                       v-for="network in draft.networks"
@@ -1532,13 +1412,13 @@ const rootClasses = computed(() => [
                         type="text"
                         class="w-full rounded-xl border border-border bg-elevated px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
                         placeholder="network key"
-                      >
+                      />
                       <input
                         v-model="network.name"
                         type="text"
                         class="w-full rounded-xl border border-border bg-elevated px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
                         placeholder="网络名称"
-                      >
+                      />
                       <label
                         class="flex items-center gap-2 rounded-xl border border-border bg-elevated px-3 py-2.5 text-sm text-text-primary"
                       >
@@ -1546,7 +1426,7 @@ const rootClasses = computed(() => [
                           v-model="network.internal"
                           type="checkbox"
                           class="h-4 w-4 rounded border-border bg-transparent"
-                        >
+                        />
                         internal
                       </label>
                     </div>
@@ -1555,10 +1435,7 @@ const rootClasses = computed(() => [
               </div>
             </SectionCard>
 
-            <SectionCard
-              title="入口节点"
-              subtitle="实例访问入口和当前草稿的保存范围。"
-            >
+            <SectionCard title="入口节点" subtitle="实例访问入口和当前草稿的保存范围。">
               <div class="grid gap-4 md:grid-cols-[1fr_auto]">
                 <label class="space-y-2">
                   <span class="text-sm text-text-secondary">入口节点</span>
@@ -1566,11 +1443,7 @@ const rootClasses = computed(() => [
                     v-model="draft.entry_node_key"
                     class="w-full rounded-xl border border-border bg-elevated px-3 py-3 text-sm text-text-primary outline-none transition focus:border-primary"
                   >
-                    <option
-                      v-for="node in nodeOptions"
-                      :key="node.key"
-                      :value="node.key"
-                    >
+                    <option v-for="node in nodeOptions" :key="node.key" :value="node.key">
                       {{ node.label }} ({{ node.key }})
                     </option>
                   </select>
@@ -1604,19 +1477,19 @@ const rootClasses = computed(() => [
                     type="text"
                     class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
                     placeholder="network key"
-                  >
+                  />
                   <input
                     v-model="network.name"
                     type="text"
                     class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
                     placeholder="网络名称"
-                  >
+                  />
                   <input
                     v-model="network.cidr"
                     type="text"
                     class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
                     placeholder="CIDR（可选）"
-                  >
+                  />
                   <label
                     class="flex items-center gap-3 rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary"
                   >
@@ -1624,7 +1497,7 @@ const rootClasses = computed(() => [
                       v-model="network.internal"
                       type="checkbox"
                       class="h-4 w-4 rounded border-border bg-transparent"
-                    >
+                    />
                     internal
                   </label>
                   <button
@@ -1682,20 +1555,14 @@ const rootClasses = computed(() => [
               </template>
             </SectionCard>
 
-            <SectionCard
-              title="拓扑连线"
-              subtitle="用于表达逻辑依赖关系，不直接等同于运行时 ACL。"
-            >
+            <SectionCard title="拓扑连线" subtitle="用于表达逻辑依赖关系，不直接等同于运行时 ACL。">
               <div
                 v-if="draft.links.length === 0"
                 class="rounded-xl border border-dashed border-border px-4 py-6 text-sm text-text-muted"
               >
                 暂无逻辑连线
               </div>
-              <div
-                v-else
-                class="space-y-3"
-              >
+              <div v-else class="space-y-3">
                 <div
                   v-for="link in draft.links"
                   :key="link.uid"
@@ -1705,14 +1572,8 @@ const rootClasses = computed(() => [
                     v-model="link.from_node_key"
                     class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
                   >
-                    <option value="">
-                      选择源节点
-                    </option>
-                    <option
-                      v-for="node in nodeOptions"
-                      :key="node.key"
-                      :value="node.key"
-                    >
+                    <option value="">选择源节点</option>
+                    <option v-for="node in nodeOptions" :key="node.key" :value="node.key">
                       {{ node.label }}
                     </option>
                   </select>
@@ -1720,14 +1581,8 @@ const rootClasses = computed(() => [
                     v-model="link.to_node_key"
                     class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
                   >
-                    <option value="">
-                      选择目标节点
-                    </option>
-                    <option
-                      v-for="node in nodeOptions"
-                      :key="node.key"
-                      :value="node.key"
-                    >
+                    <option value="">选择目标节点</option>
+                    <option v-for="node in nodeOptions" :key="node.key" :value="node.key">
                       {{ node.label }}
                     </option>
                   </select>
@@ -1763,10 +1618,7 @@ const rootClasses = computed(() => [
               >
                 暂无链路策略
               </div>
-              <div
-                v-else
-                class="space-y-3"
-              >
+              <div v-else class="space-y-3">
                 <div
                   v-for="policy in draft.policies"
                   :key="policy.uid"
@@ -1776,14 +1628,8 @@ const rootClasses = computed(() => [
                     v-model="policy.source_node_key"
                     class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
                   >
-                    <option value="">
-                      选择源节点
-                    </option>
-                    <option
-                      v-for="node in nodeOptions"
-                      :key="node.key"
-                      :value="node.key"
-                    >
+                    <option value="">选择源节点</option>
+                    <option v-for="node in nodeOptions" :key="node.key" :value="node.key">
                       {{ node.label }}
                     </option>
                   </select>
@@ -1791,14 +1637,8 @@ const rootClasses = computed(() => [
                     v-model="policy.target_node_key"
                     class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
                   >
-                    <option value="">
-                      选择目标节点
-                    </option>
-                    <option
-                      v-for="node in nodeOptions"
-                      :key="node.key"
-                      :value="node.key"
-                    >
+                    <option value="">选择目标节点</option>
+                    <option v-for="node in nodeOptions" :key="node.key" :value="node.key">
                       {{ node.label }}
                     </option>
                   </select>
@@ -1806,12 +1646,8 @@ const rootClasses = computed(() => [
                     v-model="policy.action"
                     class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
                   >
-                    <option value="allow">
-                      allow
-                    </option>
-                    <option value="deny">
-                      deny
-                    </option>
+                    <option value="allow">allow</option>
+                    <option value="deny">deny</option>
                   </select>
                   <button
                     type="button"
@@ -1880,12 +1716,8 @@ const rootClasses = computed(() => [
                     <ShieldBan class="h-5 w-5" />
                   </div>
                   <div class="topology-status-note__body">
-                    <div class="topology-status-note__eyebrow">
-                      运行时约束
-                    </div>
-                    <div class="topology-status-note__title">
-                      粗粒度
-                    </div>
+                    <div class="topology-status-note__eyebrow">运行时约束</div>
+                    <div class="topology-status-note__title">粗粒度</div>
                     <p class="topology-status-note__copy">
                       当前只支持节点级 allow/deny，不支持端口级 ACL。
                     </p>
@@ -1894,6 +1726,119 @@ const rootClasses = computed(() => [
               </section>
 
               <div class="topology-side-stack space-y-6">
+                <SectionCard
+                  title="题包来源"
+                  subtitle="当前拓扑是否来自题包导入，以及是否已经偏离基线。"
+                >
+                  <div class="space-y-3">
+                    <div class="rounded-2xl border border-border bg-elevated px-4 py-4">
+                      <div class="text-xs uppercase tracking-[0.18em] text-text-muted">
+                        当前状态
+                      </div>
+                      <div class="mt-2 text-base font-semibold text-text-primary">
+                        {{ packageSourceSummary.title }}
+                      </div>
+                      <p class="mt-2 text-sm leading-6 text-text-secondary">
+                        {{ packageSourceSummary.subtitle }}
+                      </p>
+                    </div>
+
+                    <div v-if="packageBaselineSummary" class="grid gap-3 sm:grid-cols-2">
+                      <div class="rounded-2xl border border-border bg-surface px-4 py-3">
+                        <div class="text-xs uppercase tracking-[0.18em] text-text-muted">
+                          基线入口
+                        </div>
+                        <div class="mt-2 text-sm font-semibold text-text-primary">
+                          {{ packageBaselineSummary.entryNodeKey }}
+                        </div>
+                      </div>
+                      <div class="rounded-2xl border border-border bg-surface px-4 py-3">
+                        <div class="text-xs uppercase tracking-[0.18em] text-text-muted">
+                          基线规模
+                        </div>
+                        <div class="mt-2 text-sm font-semibold text-text-primary">
+                          {{ packageBaselineSummary.nodeCount }} 节点 /
+                          {{ packageBaselineSummary.networkCount }} 网络
+                        </div>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      class="ui-btn ui-btn--ghost topology-action-btn"
+                      :disabled="exporting || !packageSourceSummary.canExport"
+                      @click="void handleExportPackage()"
+                    >
+                      <GitBranch class="h-4 w-4" />
+                      {{ exporting ? '正在生成导出包...' : '导出并下载完整题目包' }}
+                    </button>
+                  </div>
+                </SectionCard>
+
+                <SectionCard
+                  title="题包文件"
+                  subtitle="当前基线修订中保留下来的源码、Dockerfile 和拓扑描述文件。"
+                >
+                  <div v-if="packageFiles.length" class="space-y-2">
+                    <div
+                      v-for="file in packageFiles.slice(0, 10)"
+                      :key="file.path"
+                      class="rounded-2xl border border-border bg-elevated px-4 py-3"
+                    >
+                      <div class="text-sm font-medium text-text-primary">
+                        {{ file.path }}
+                      </div>
+                      <div class="mt-1 text-xs text-text-muted">
+                        {{ formatFileSize(file.size) }}
+                      </div>
+                    </div>
+                    <div v-if="packageFiles.length > 10" class="text-xs text-text-muted">
+                      其余 {{ packageFiles.length - 10 }} 个文件已省略，导出包会完整保留。
+                    </div>
+                  </div>
+                  <div
+                    v-else
+                    class="rounded-2xl border border-dashed border-border px-4 py-6 text-sm text-text-muted"
+                  >
+                    当前题目还没有可展示的题包文件清单。
+                  </div>
+                </SectionCard>
+
+                <SectionCard
+                  title="修订历史"
+                  subtitle="导入和导出都会生成题包修订，导出后会把当前拓扑设为新的干净基线。"
+                >
+                  <div v-if="packageRevisionHistory.length" class="space-y-2">
+                    <div
+                      v-for="revision in packageRevisionHistory.slice(0, 6)"
+                      :key="revision.id"
+                      class="rounded-2xl border border-border bg-elevated px-4 py-3"
+                    >
+                      <div class="flex items-center justify-between gap-3">
+                        <div class="text-sm font-medium text-text-primary">
+                          r{{ revision.revision_no }} ·
+                          {{ revision.source_type === 'exported' ? '导出' : '导入' }}
+                        </div>
+                        <div class="text-xs text-text-muted">
+                          {{ revision.created_at }}
+                        </div>
+                      </div>
+                      <div class="mt-2 text-xs leading-6 text-text-secondary">
+                        {{ revision.package_slug || '未记录 slug' }}
+                        <span v-if="revision.topology_source_path">
+                          · {{ revision.topology_source_path }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div
+                    v-else
+                    class="rounded-2xl border border-dashed border-border px-4 py-6 text-sm text-text-muted"
+                  >
+                    当前题目还没有题包修订历史。
+                  </div>
+                </SectionCard>
+
                 <SectionCard
                   title="模板库"
                   :subtitle="
@@ -1950,7 +1895,7 @@ const rootClasses = computed(() => [
                         type="text"
                         class="w-full rounded-xl border border-border bg-elevated px-3 py-3 text-sm text-text-primary outline-none transition focus:border-primary"
                         placeholder="按模板名称搜索"
-                      >
+                      />
                       <button
                         type="button"
                         class="ui-btn ui-btn--secondary"
@@ -1981,17 +1926,17 @@ const rootClasses = computed(() => [
                         :class="
                           isTemplateLibraryMode
                             ? [
-                              'template-library-item',
-                              selectedTemplateId === template.id
-                                ? 'template-library-item--active'
-                                : 'template-library-item--idle',
-                            ]
+                                'template-library-item',
+                                selectedTemplateId === template.id
+                                  ? 'template-library-item--active'
+                                  : 'template-library-item--idle',
+                              ]
                             : [
-                              'rounded-2xl border p-4 transition',
-                              selectedTemplateId === template.id
-                                ? 'border-primary bg-primary/8'
-                                : 'border-border bg-elevated',
-                            ]
+                                'rounded-2xl border p-4 transition',
+                                selectedTemplateId === template.id
+                                  ? 'border-primary bg-primary/8'
+                                  : 'border-border bg-elevated',
+                              ]
                         "
                       >
                         <div class="min-w-0">
@@ -2080,7 +2025,7 @@ const rootClasses = computed(() => [
                         type="text"
                         class="w-full rounded-xl border border-border bg-elevated px-3 py-3 text-sm text-text-primary outline-none transition focus:border-primary"
                         placeholder="例如 双节点 Web + DB"
-                      >
+                      />
                     </label>
 
                     <label class="space-y-2">
@@ -2135,10 +2080,7 @@ const rootClasses = computed(() => [
                   </div>
                 </SectionCard>
 
-                <SectionCard
-                  title="当前边界"
-                  subtitle="避免把未生效能力继续暴露成可用配置。"
-                >
+                <SectionCard title="当前边界" subtitle="避免把未生效能力继续暴露成可用配置。">
                   <div :class="isTemplateLibraryMode ? 'template-boundary-list' : 'space-y-4'">
                     <AppCard
                       variant="action"
@@ -2284,24 +2226,41 @@ const rootClasses = computed(() => [
 
 .topology-page--challenge .topology-action-btn {
   --ui-btn-secondary-border: var(--journal-border);
-  --ui-btn-secondary-background: color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base));
+  --ui-btn-secondary-background: color-mix(
+    in srgb,
+    var(--journal-surface) 94%,
+    var(--color-bg-base)
+  );
   --ui-btn-secondary-color: var(--journal-ink);
   --ui-btn-secondary-hover-border: color-mix(in srgb, var(--journal-accent) 28%, transparent);
-  --ui-btn-secondary-hover-background: color-mix(in srgb, var(--journal-accent) 4%, var(--journal-surface));
+  --ui-btn-secondary-hover-background: color-mix(
+    in srgb,
+    var(--journal-accent) 4%,
+    var(--journal-surface)
+  );
   --ui-btn-secondary-hover-color: var(--journal-accent);
   --ui-btn-ghost-color: var(--journal-ink);
   --ui-btn-ghost-hover-color: var(--journal-accent);
-  --ui-btn-ghost-hover-background: color-mix(in srgb, var(--journal-accent) 4%, var(--journal-surface));
+  --ui-btn-ghost-hover-background: color-mix(
+    in srgb,
+    var(--journal-accent) 4%,
+    var(--journal-surface)
+  );
   --ui-btn-primary-border: transparent;
   --ui-btn-primary-background: var(--journal-accent);
   --ui-btn-primary-color: var(--color-bg-base);
   --ui-btn-primary-hover-background: color-mix(in srgb, var(--journal-accent) 88%, black);
-  --ui-btn-primary-hover-shadow: 0 12px 28px color-mix(in srgb, var(--journal-accent) 16%, transparent);
+  --ui-btn-primary-hover-shadow: 0 12px 28px
+    color-mix(in srgb, var(--journal-accent) 16%, transparent);
   --ui-btn-danger-border: color-mix(in srgb, var(--color-danger) 28%, transparent);
   --ui-btn-danger-background: color-mix(in srgb, var(--color-danger) 10%, var(--journal-surface));
   --ui-btn-danger-color: color-mix(in srgb, var(--color-danger) 88%, var(--journal-ink));
   --ui-btn-danger-hover-border: color-mix(in srgb, var(--color-danger) 34%, transparent);
-  --ui-btn-danger-hover-background: color-mix(in srgb, var(--color-danger) 14%, var(--journal-surface));
+  --ui-btn-danger-hover-background: color-mix(
+    in srgb,
+    var(--color-danger) 14%,
+    var(--journal-surface)
+  );
   --ui-btn-focus-ring: color-mix(in srgb, var(--journal-accent) 18%, transparent);
 }
 
@@ -2720,14 +2679,26 @@ const rootClasses = computed(() => [
 .topology-page--template-library .topology-action-btn {
   --ui-btn-font-size: var(--font-size-0-82);
   --ui-btn-secondary-border: var(--journal-border);
-  --ui-btn-secondary-background: color-mix(in srgb, var(--journal-surface) 92%, var(--color-bg-base));
+  --ui-btn-secondary-background: color-mix(
+    in srgb,
+    var(--journal-surface) 92%,
+    var(--color-bg-base)
+  );
   --ui-btn-secondary-color: var(--journal-ink);
   --ui-btn-secondary-hover-border: color-mix(in srgb, var(--journal-accent) 28%, transparent);
-  --ui-btn-secondary-hover-background: color-mix(in srgb, var(--journal-accent) 4%, var(--journal-surface));
+  --ui-btn-secondary-hover-background: color-mix(
+    in srgb,
+    var(--journal-accent) 4%,
+    var(--journal-surface)
+  );
   --ui-btn-secondary-hover-color: var(--journal-accent);
   --ui-btn-ghost-color: var(--journal-ink);
   --ui-btn-ghost-hover-color: var(--journal-accent);
-  --ui-btn-ghost-hover-background: color-mix(in srgb, var(--journal-accent) 4%, var(--journal-surface));
+  --ui-btn-ghost-hover-background: color-mix(
+    in srgb,
+    var(--journal-accent) 4%,
+    var(--journal-surface)
+  );
   --ui-btn-primary-border: transparent;
   --ui-btn-primary-background: var(--journal-accent);
   --ui-btn-primary-hover-background: color-mix(in srgb, var(--journal-accent) 88%, black);
@@ -2737,7 +2708,11 @@ const rootClasses = computed(() => [
   --ui-btn-danger-background: color-mix(in srgb, var(--color-danger) 10%, var(--journal-surface));
   --ui-btn-danger-color: color-mix(in srgb, var(--color-danger) 88%, var(--journal-ink));
   --ui-btn-danger-hover-border: color-mix(in srgb, var(--color-danger) 34%, transparent);
-  --ui-btn-danger-hover-background: color-mix(in srgb, var(--color-danger) 14%, var(--journal-surface));
+  --ui-btn-danger-hover-background: color-mix(
+    in srgb,
+    var(--color-danger) 14%,
+    var(--journal-surface)
+  );
 }
 
 .topology-page--template-library :deep(.page-header__eyebrow) {

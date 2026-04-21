@@ -229,6 +229,19 @@ func registerTeacherAuthoringRoutes(adminAuthoring *gin.RouterGroup, deps adminR
 		}),
 		deps.challenge.TopologyHandler.SaveChallengeTopology,
 	)
+	adminAuthoring.POST("/challenges/:id/package-export",
+		ownerGuard,
+		audit(middleware.AuditOptions{
+			Action:          model.AuditActionCreate,
+			ResourceType:    "challenge_package_export",
+			ResourceIDParam: "id",
+		}),
+		deps.challenge.Handler.ExportChallengePackage,
+	)
+	adminAuthoring.GET("/challenges/:id/package-export/download",
+		ownerGuard,
+		deps.challenge.Handler.DownloadChallengePackageExport,
+	)
 	adminAuthoring.DELETE("/challenges/:id/topology",
 		ownerGuard,
 		audit(middleware.AuditOptions{
