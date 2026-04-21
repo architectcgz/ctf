@@ -1,68 +1,138 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   Server,
   Activity,
   AlertTriangle,
-  ExternalLink,
   Trash2,
   RefreshCw,
 } from 'lucide-vue-next'
 
-import type { AdminInstanceListItem } from '@/api/contracts'
-import { getAdminInstances, deleteAdminInstance } from '@/api/admin'
+import type { TeacherInstanceItem } from '@/api/contracts'
+import { destroyTeacherInstance, getTeacherInstances } from '@/api/teacher'
 import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
 import WorkspaceDirectoryPagination from '@/components/common/WorkspaceDirectoryPagination.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
-import { useAdminDestructiveConfirm } from '@/composables/useAdminDestructiveConfirm'
+import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
 
 const router = useRouter()
-const list = ref<AdminInstanceListItem[]>([])
-const total = ref(0)
+const list = ref<TeacherInstanceItem[]>([])
 const page = ref(1)
 const pageSize = ref(15)
 const loading = ref(false)
+const destroyingId = ref('')
+const error = ref<string | null>(null)
 
-const { confirmDestruction } = useAdminDestructiveConfirm()
+const total = computed(() => list.value.length)
+const totalPages = computed(() => Math.max(1, Math.ceil(total.value / pageSize.value)))
+const pageRows = computed(() => {
+  const start = (page.value - 1) * pageSize.value
+  return list.value.slice(start, start + pageSize.value).map((item) => ({
+    id: item.id,
+    challenge: item.challenge_title,
+    user: item.student_name || item.student_username,
+    user_meta: `${item.student_username} · ${item.class_name}`,
+    ip_address: item.access_url || '暂未分配',
+    status: item.status,
+    status_label: formatStatus(item.status),
+    created_at: formatDateTime(item.created_at),
+    actions: '销毁',
+  }))
+})
+const runningCount = computed(() => list.value.filter((item) => item.status === 'running').length)
+const warningCount = computed(
+  () => list.value.filter((item) => item.status !== 'running' || item.remaining_time <= 600).length
+)
+
+function formatStatus(status: string): string {
+  switch (status) {
+    case 'running':
+      return '运行中'
+    case 'creating':
+      return '创建中'
+    case 'expired':
+      return '已过期'
+    case 'failed':
+      return '异常'
+    default:
+      return status
+  }
+}
+
+function formatDateTime(value: string): string {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) {
+    return '--'
+  }
+
+  return new Intl.DateTimeFormat('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date)
+}
 
 async function loadInstances(): Promise<void> {
   loading.value = true
+  error.value = null
   try {
-    const data = await getAdminInstances({
-      page: page.value,
-      pageSize: pageSize.value,
+    list.value = await getTeacherInstances({
+      class_name: undefined,
+      keyword: undefined,
+      student_no: undefined,
     })
-    list.value = data.items
-    total.value = data.total
+    if (page.value > totalPages.value) {
+      page.value = totalPages.value
+    }
   } catch (err) {
     console.error('加载实例列表失败:', err)
+    error.value = '加载实例列表失败，请稍后重试'
+    list.value = []
   } finally {
     loading.value = false
   }
 }
 
-async function handleDestroyInstance(instance: AdminInstanceListItem): Promise<void> {
-  const confirmed = await confirmDestruction({
+async function handleDestroyInstance(instance: TeacherInstanceItem): Promise<void> {
+  const confirmed = await confirmDestructiveAction({
     title: '强制销毁实例',
     message: `您确定要强制销毁实例 ${instance.id} 吗？此操作不可逆，用户当前的运行状态将丢失。`,
     confirmButtonText: '强制销毁',
+    cancelButtonText: '取消',
   })
 
   if (!confirmed) return
 
   try {
-    await deleteAdminInstance(instance.id)
-    await loadInstances()
+    destroyingId.value = instance.id
+    await destroyTeacherInstance(instance.id)
+    list.value = list.value.filter((item) => item.id !== instance.id)
+    if (page.value > totalPages.value) {
+      page.value = totalPages.value
+    }
   } catch (err) {
     console.error('销毁实例失败:', err)
+    error.value = '销毁实例失败，请稍后重试'
+  } finally {
+    destroyingId.value = ''
   }
+}
+
+function requestDestroyById(id: string): void {
+  const instance = list.value.find((item) => item.id === id)
+  if (!instance) {
+    return
+  }
+
+  void handleDestroyInstance(instance)
 }
 
 function handlePageChange(p: number): void {
   page.value = p
-  void loadInstances()
 }
 
 onMounted(() => {
@@ -126,7 +196,7 @@ const columns = [
                 <Activity class="h-4 w-4" />
               </div>
               <div class="metric-panel-value">
-                {{ list.filter(i => i.status === 'running').length.toString().padStart(2, '0') }}
+                {{ runningCount.toString().padStart(2, '0') }}
               </div>
               <div class="metric-panel-helper">
                 当前活跃实例
@@ -152,7 +222,7 @@ const columns = [
                 <AlertTriangle class="h-4 w-4" />
               </div>
               <div class="metric-panel-value">
-                00
+                {{ warningCount.toString().padStart(2, '0') }}
               </div>
               <div class="metric-panel-helper">
                 即将过期或异常
@@ -192,18 +262,26 @@ const columns = [
                 v-else
                 class="workspace-directory-list"
                 :columns="columns"
-                :rows="list"
+                :rows="pageRows"
                 row-key="id"
               >
                 <template #cell-id="{ row }">
-                  <span class="font-mono text-xs">{{ (row as AdminInstanceListItem).id }}</span>
+                  <span class="font-mono text-xs">{{ (row as { id: string }).id }}</span>
+                </template>
+                <template #cell-user="{ row }">
+                  <div class="flex flex-col items-start gap-1">
+                    <span>{{ (row as { user: string }).user }}</span>
+                    <span class="font-mono text-[11px] text-[var(--journal-muted)]">
+                      {{ (row as { user_meta: string }).user_meta }}
+                    </span>
+                  </div>
                 </template>
                 <template #cell-status="{ row }">
                   <span
                     class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase"
-                    :class="(row as AdminInstanceListItem).status === 'running' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'"
+                    :class="(row as { status: string }).status === 'running' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'"
                   >
-                    {{ (row as AdminInstanceListItem).status }}
+                    {{ (row as { status_label: string }).status_label }}
                   </span>
                 </template>
                 <template #cell-actions="{ row }">
@@ -211,10 +289,11 @@ const columns = [
                     <button
                       type="button"
                       class="ui-btn ui-btn--ghost ui-btn--xs"
-                      @click="handleDestroyInstance(row as AdminInstanceListItem)"
+                      :disabled="destroyingId === (row as { id: string }).id"
+                      @click="requestDestroyById((row as { id: string }).id)"
                     >
                       <Trash2 class="h-3 w-3 mr-1" />
-                      销毁
+                      {{ destroyingId === (row as { id: string }).id ? '销毁中' : '销毁' }}
                     </button>
                   </div>
                 </template>
@@ -223,7 +302,7 @@ const columns = [
               <div class="mt-6">
                 <WorkspaceDirectoryPagination
                   :page="page"
-                  :total-pages="Math.max(1, Math.ceil(total / pageSize))"
+                  :total-pages="totalPages"
                   :total="total"
                   total-label="个实例"
                   @change-page="handlePageChange"
@@ -231,6 +310,13 @@ const columns = [
               </div>
             </template>
           </section>
+
+          <div
+            v-if="error"
+            class="teacher-surface-error"
+          >
+            {{ error }}
+          </div>
         </div>
       </main>
     </div>
