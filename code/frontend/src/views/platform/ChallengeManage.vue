@@ -202,353 +202,369 @@ function getChallengeRow(row: unknown): PlatformChallengeListRow {
 </script>
 
 <template>
-  <div
-    class="workspace-shell challenge-manage-shell journal-shell journal-shell-admin journal-notes-card journal-hero flex min-h-full flex-col"
-  >
-    <header class="admin-workbench-header">
-      <div class="admin-workbench-header__top">
-        <div class="admin-workbench-header__identity">
-          <div class="workspace-overline">
-            Challenge Workspace
+  <div class="workspace-shell">
+    <div class="workspace-grid">
+      <main class="content-pane">
+        <section class="workspace-hero">
+          <div class="workspace-tab-heading__main">
+            <div class="workspace-overline">
+              Challenge Workspace
+            </div>
+            <h1 class="hero-title">
+              题目资源管理
+            </h1>
+            <p class="hero-summary">
+              集中查看题目目录、发布状态与题库变更。
+            </p>
           </div>
-          <h1 class="admin-workbench-header__title">
-            题目资源管理中心
-          </h1>
-          <p class="admin-workbench-header__description">
-            集中查看题目目录、发布状态与题库变更。
-          </p>
-        </div>
-
-        <div class="admin-workbench-header__actions">
-          <button
-            type="button"
-            class="ui-btn ui-btn--primary ui-btn--sm"
-            @click="openImportWorkspace"
-          >
-            <Plus class="h-4 w-4" />
-            导入资源包
-          </button>
-        </div>
-      </div>
-    </header>
-
-    <main class="admin-workbench-content flex-1 p-[2rem_3rem]">
-      <section class="challenge-manage-panel space-y-6">
-        <div class="metric-panel-grid metric-panel-grid--premium cols-4 manage-summary-grid">
-          <article class="metric-panel-card metric-panel-card--premium">
-            <div class="metric-panel-label">
-              <span>题目总量</span>
-              <Book class="h-4 w-4" />
-            </div>
-            <div class="metric-panel-value">
-              {{ total.toString().padStart(2, '0') }}
-            </div>
-            <div class="metric-panel-helper">
-              题目资源总计
-            </div>
-          </article>
-
-          <article class="metric-panel-card metric-panel-card--premium">
-            <div class="metric-panel-label">
-              <span>已发布</span>
-              <CheckCircle class="h-4 w-4" />
-            </div>
-            <div class="metric-panel-value">
-              {{ publishedCount.toString().padStart(2, '0') }}
-            </div>
-            <div class="metric-panel-helper">
-              线上公开题目
-            </div>
-          </article>
-
-          <article class="metric-panel-card metric-panel-card--premium">
-            <div class="metric-panel-label">
-              <span>草稿存量</span>
-              <Edit3 class="h-4 w-4" />
-            </div>
-            <div class="metric-panel-value">
-              {{ draftCount.toString().padStart(2, '0') }}
-            </div>
-            <div class="metric-panel-helper">
-              导入后仍待发布
-            </div>
-          </article>
-
-          <article class="metric-panel-card metric-panel-card--premium">
-            <div class="metric-panel-label">
-              <span>已归档</span>
-              <Calendar class="h-4 w-4" />
-            </div>
-            <div class="metric-panel-value">
-              {{ archivedCount.toString().padStart(2, '0') }}
-            </div>
-            <div class="metric-panel-helper">
-              只读保留题目
-            </div>
-          </article>
-        </div>
-
-        <section class="workspace-directory-section challenge-manage-directory">
-          <header class="list-heading">
-            <div>
-              <div class="workspace-overline">
-                Challenge Directory
-              </div>
-              <h2 class="list-heading__title">
-                题目目录
-              </h2>
-            </div>
-          </header>
-
-          <WorkspaceDirectoryToolbar
-            v-model="keyword"
-            :total="total"
-            :selected-sort-label="sortConfig.label"
-            :sort-options="sortOptions"
-            search-placeholder="检索题目名称..."
-            :reset-disabled="!hasActiveFilters"
-            @select-sort="setSort"
-            @reset-filters="clearFilters"
-          >
-            <template #filter-panel>
-              <div class="challenge-filter-grid">
-                <label class="challenge-filter-field">
-                  <span class="challenge-filter-label">题目分类</span>
-                  <select
-                    v-model="categoryFilter"
-                    class="challenge-filter-select"
-                  >
-                    <option value="">全部分类</option>
-                    <option value="web">Web</option>
-                    <option value="pwn">Pwn</option>
-                    <option value="reverse">逆向</option>
-                    <option value="crypto">密码</option>
-                    <option value="misc">杂项</option>
-                    <option value="forensics">取证</option>
-                  </select>
-                </label>
-
-                <label class="challenge-filter-field">
-                  <span class="challenge-filter-label">难度等级</span>
-                  <select
-                    v-model="difficultyFilter"
-                    class="challenge-filter-select"
-                  >
-                    <option value="">全部难度</option>
-                    <option value="beginner">入门</option>
-                    <option value="easy">简单</option>
-                    <option value="medium">中等</option>
-                    <option value="hard">困难</option>
-                    <option value="insane">地狱</option>
-                  </select>
-                </label>
-
-                <label class="challenge-filter-field">
-                  <span class="challenge-filter-label">发布状态</span>
-                  <select
-                    v-model="statusFilter"
-                    class="challenge-filter-select"
-                  >
-                    <option value="">全部状态</option>
-                    <option value="draft">草稿</option>
-                    <option value="published">已发布</option>
-                    <option value="archived">已归档</option>
-                  </select>
-                </label>
-              </div>
-            </template>
-          </WorkspaceDirectoryToolbar>
-
-          <div
-            v-if="loading"
-            class="workspace-directory-loading"
-          >
-            正在同步题目目录...
-          </div>
-          <AppEmpty
-            v-else-if="hasLoadError"
-            class="workspace-directory-empty"
-            icon="AlertTriangle"
-            title="题目目录加载失败"
-            :description="loadErrorMessage"
-          >
-            <template #action>
+          <div class="awd-library-hero-actions">
+            <div class="quick-actions">
               <button
                 type="button"
-                class="ui-btn ui-btn--secondary"
-                @click="void refresh()"
+                class="ui-btn ui-btn--primary"
+                @click="openImportWorkspace"
               >
-                重新加载
+                <Plus class="h-4 w-4" />
+                导入资源包
               </button>
-            </template>
-          </AppEmpty>
-          <AppEmpty
-            v-else-if="list.length === 0"
-            class="workspace-directory-empty"
-            icon="BookOpen"
-            :title="manageEmptyTitle"
-            :description="manageEmptyMessage"
-          />
-          <WorkspaceDataTable
-            v-else
-            class="challenge-list workspace-directory-list"
-            :columns="challengeTableColumns"
-            :rows="sortedChallenges"
-            row-key="id"
-            row-class="challenge-table-row group"
-          >
-            <template #cell-title="{ row }">
-              <div
-                class="challenge-table-title"
-                :title="getChallengeRow(row).title"
-              >
-                {{ getChallengeRow(row).title }}
+            </div>
+          </div>
+        </section>
+
+        <div class="challenge-manage-body mt-10 space-y-10">
+          <div class="metric-panel-grid metric-panel-grid--premium cols-4 manage-summary-grid">
+            <article class="metric-panel-card metric-panel-card--premium">
+              <div class="metric-panel-label">
+                <span>题目总量</span>
+                <Book class="h-4 w-4" />
               </div>
-            </template>
-
-            <template #cell-category="{ row }">
-              <span class="challenge-table-pill challenge-table-pill--category">
-                {{ resolveChallengeCategoryLabel(getChallengeRow(row).category) }}
-              </span>
-            </template>
-
-            <template #cell-difficulty="{ row }">
-              <span class="challenge-table-difficulty">
-                {{ resolveChallengeDifficultyLabel(getChallengeRow(row).difficulty) }}
-              </span>
-            </template>
-
-            <template #cell-points="{ row }">
-              <span class="challenge-table-points">{{ getChallengeRow(row).points }}</span>
-            </template>
-
-            <template #cell-status="{ row }">
-              <div class="challenge-table-status">
-                <div
-                  class="challenge-table-status__dot"
-                  :class="
-                    getChallengeRow(row).status === 'published'
-                      ? 'challenge-table-status__dot--published'
-                      : 'challenge-table-status__dot--idle'
-                  "
-                />
-                <span class="challenge-table-status__label">
-                  {{
-                    getChallengeRow(row).status === 'published'
-                      ? '已发布'
-                      : getChallengeRow(row).status === 'archived'
-                        ? '已归档'
-                        : '草稿'
-                  }}
-                </span>
+              <div class="metric-panel-value">
+                {{ total.toString().padStart(2, '0') }}
               </div>
-            </template>
+              <div class="metric-panel-helper">
+                题目资源总计
+              </div>
+            </article>
 
-            <template #cell-actions="{ row }">
-              <div class="challenge-table-actions">
+            <article class="metric-panel-card metric-panel-card--premium">
+              <div class="metric-panel-label">
+                <span>已发布</span>
+                <CheckCircle class="h-4 w-4" />
+              </div>
+              <div class="metric-panel-value">
+                {{ publishedCount.toString().padStart(2, '0') }}
+              </div>
+              <div class="metric-panel-helper">
+                线上公开题目
+              </div>
+            </article>
+
+            <article class="metric-panel-card metric-panel-card--premium">
+              <div class="metric-panel-label">
+                <span>草稿存量</span>
+                <Edit3 class="h-4 w-4" />
+              </div>
+              <div class="metric-panel-value">
+                {{ draftCount.toString().padStart(2, '0') }}
+              </div>
+              <div class="metric-panel-helper">
+                导入后仍待发布
+              </div>
+            </article>
+
+            <article class="metric-panel-card metric-panel-card--premium">
+              <div class="metric-panel-label">
+                <span>已归档</span>
+                <Calendar class="h-4 w-4" />
+              </div>
+              <div class="metric-panel-value">
+                {{ archivedCount.toString().padStart(2, '0') }}
+              </div>
+              <div class="metric-panel-helper">
+                只读保留题目
+              </div>
+            </article>
+          </div>
+
+          <section class="workspace-directory-section challenge-manage-directory">
+            <header class="list-heading">
+              <div>
+                <div class="workspace-overline">
+                  Challenge Directory
+                </div>
+                <h2 class="list-heading__title">
+                  题目目录
+                </h2>
+              </div>
+            </header>
+
+            <WorkspaceDirectoryToolbar
+              v-model="keyword"
+              :total="total"
+              :selected-sort-label="sortConfig.label"
+              :sort-options="sortOptions"
+              search-placeholder="检索题目名称..."
+              :reset-disabled="!hasActiveFilters"
+              @select-sort="setSort"
+              @reset-filters="clearFilters"
+            >
+              <template #filter-panel>
+                <div class="challenge-filter-grid">
+                  <label class="challenge-filter-field">
+                    <span class="challenge-filter-label">题目分类</span>
+                    <select
+                      v-model="categoryFilter"
+                      class="challenge-filter-select"
+                    >
+                      <option value="">全部分类</option>
+                      <option value="web">Web</option>
+                      <option value="pwn">Pwn</option>
+                      <option value="reverse">逆向</option>
+                      <option value="crypto">密码</option>
+                      <option value="misc">杂项</option>
+                      <option value="forensics">取证</option>
+                    </select>
+                  </label>
+
+                  <label class="challenge-filter-field">
+                    <span class="challenge-filter-label">难度等级</span>
+                    <select
+                      v-model="difficultyFilter"
+                      class="challenge-filter-select"
+                    >
+                      <option value="">全部难度</option>
+                      <option value="beginner">入门</option>
+                      <option value="easy">简单</option>
+                      <option value="medium">中等</option>
+                      <option value="hard">困难</option>
+                      <option value="insane">地狱</option>
+                    </select>
+                  </label>
+
+                  <label class="challenge-filter-field">
+                    <span class="challenge-filter-label">发布状态</span>
+                    <select
+                      v-model="statusFilter"
+                      class="challenge-filter-select"
+                    >
+                      <option value="">全部状态</option>
+                      <option value="draft">草稿</option>
+                      <option value="published">已发布</option>
+                      <option value="archived">已归档</option>
+                    </select>
+                  </label>
+                </div>
+              </template>
+            </WorkspaceDirectoryToolbar>
+
+            <div
+              v-if="loading"
+              class="workspace-directory-loading"
+            >
+              正在同步题目目录...
+            </div>
+            <AppEmpty
+              v-else-if="hasLoadError"
+              class="workspace-directory-empty"
+              icon="AlertTriangle"
+              title="题目目录加载失败"
+              :description="loadErrorMessage"
+            >
+              <template #action>
                 <button
                   type="button"
-                  class="challenge-row-action"
-                  @click="openChallengeDetail(getChallengeRow(row).id)"
+                  class="ui-btn ui-btn--secondary"
+                  @click="void refresh()"
                 >
-                  <Eye class="h-3 w-3" />
-                  查看
+                  重新加载
                 </button>
-
-                <CActionMenu
-                  :open="openActionMenuId === getChallengeRow(row).id"
-                  title="Management"
-                  menu-label="题目更多操作"
-                  @update:open="setActionMenuOpen(getChallengeRow(row).id, $event)"
+              </template>
+            </AppEmpty>
+            <AppEmpty
+              v-else-if="list.length === 0"
+              class="workspace-directory-empty"
+              icon="BookOpen"
+              :title="manageEmptyTitle"
+              :description="manageEmptyMessage"
+            />
+            <WorkspaceDataTable
+              v-else
+              class="challenge-list workspace-directory-list"
+              :columns="challengeTableColumns"
+              :rows="sortedChallenges"
+              row-key="id"
+              row-class="challenge-table-row group"
+            >
+              <template #cell-title="{ row }">
+                <div
+                  class="challenge-table-title"
+                  :title="getChallengeRow(row).title"
                 >
-                  <template #trigger="{ open, toggle, setTriggerRef }">
-                    <button
-                      :ref="setTriggerRef"
-                      type="button"
-                      class="c-action-menu__trigger c-action-menu__trigger--icon"
-                      :aria-expanded="open ? 'true' : 'false'"
-                      aria-haspopup="menu"
-                      aria-label="题目更多操作"
-                      @click.stop="toggle"
-                    >
-                      <MoreHorizontal class="h-3.5 w-3.5" />
-                    </button>
-                  </template>
+                  {{ getChallengeRow(row).title }}
+                </div>
+              </template>
 
-                  <template #default>
-                    <button
-                      type="button"
-                      class="c-action-menu__item"
-                      @click="openChallengeTopology(getChallengeRow(row).id)"
-                    >
-                      <FileSearch class="h-3 w-3" />
-                      编排拓扑
-                    </button>
-                    <button
-                      type="button"
-                      class="c-action-menu__item"
-                      @click="openChallengeWriteup(getChallengeRow(row).id)"
-                    >
-                      <Book class="h-3 w-3" />
-                      题解与提示
-                    </button>
-                    <button
-                      v-if="getChallengeRow(row).status !== 'published'"
-                      type="button"
-                      class="c-action-menu__item c-action-menu__item--success"
-                      @click="submitPublishCheck(getChallengeRow(row))"
-                    >
-                      <CheckCircle class="h-3 w-3" />
-                      提交发布检查
-                    </button>
-                    <button
-                      type="button"
-                      class="c-action-menu__item c-action-menu__item--danger"
-                      @click="removeChallenge(getChallengeRow(row).id)"
-                    >
-                      <Trash2 class="h-3 w-3" />
-                      永久删除
-                    </button>
-                  </template>
-                </CActionMenu>
-              </div>
-            </template>
-          </WorkspaceDataTable>
+              <template #cell-category="{ row }">
+                <span class="challenge-table-pill challenge-table-pill--category">
+                  {{ resolveChallengeCategoryLabel(getChallengeRow(row).category) }}
+                </span>
+              </template>
 
-          <WorkspaceDirectoryPagination
-            :page="page"
-            :total-pages="Math.max(1, Math.ceil(total / pageSize))"
-            :total="total"
-            :total-label="`共 ${total} 道题目`"
-            @change-page="changePage"
-          />
-        </section>
-      </section>
-    </main>
+              <template #cell-difficulty="{ row }">
+                <span class="challenge-table-difficulty">
+                  {{ resolveChallengeDifficultyLabel(getChallengeRow(row).difficulty) }}
+                </span>
+              </template>
+
+              <template #cell-points="{ row }">
+                <span class="challenge-table-points">{{ getChallengeRow(row).points }}</span>
+              </template>
+
+              <template #cell-status="{ row }">
+                <div class="challenge-table-status">
+                  <div
+                    class="challenge-table-status__dot"
+                    :class="
+                      getChallengeRow(row).status === 'published'
+                        ? 'challenge-table-status__dot--published'
+                        : 'challenge-table-status__dot--idle'
+                    "
+                  />
+                  <span class="challenge-table-status__label">
+                    {{
+                      getChallengeRow(row).status === 'published'
+                        ? '已发布'
+                        : getChallengeRow(row).status === 'archived'
+                          ? '已归档'
+                          : '草稿'
+                    }}
+                  </span>
+                </div>
+              </template>
+
+              <template #cell-actions="{ row }">
+                <div class="challenge-table-actions">
+                  <button
+                    type="button"
+                    class="challenge-row-action"
+                    @click="openChallengeDetail(getChallengeRow(row).id)"
+                  >
+                    <Eye class="h-3 w-3" />
+                    查看
+                  </button>
+
+                  <CActionMenu
+                    :open="openActionMenuId === getChallengeRow(row).id"
+                    title="Management"
+                    menu-label="题目更多操作"
+                    @update:open="setActionMenuOpen(getChallengeRow(row).id, $event)"
+                  >
+                    <template #trigger="{ open, toggle, setTriggerRef }">
+                      <button
+                        :ref="setTriggerRef"
+                        type="button"
+                        class="c-action-menu__trigger c-action-menu__trigger--icon"
+                        :aria-expanded="open ? 'true' : 'false'"
+                        aria-haspopup="menu"
+                        aria-label="题目更多操作"
+                        @click.stop="toggle"
+                      >
+                        <MoreHorizontal class="h-3.5 w-3.5" />
+                      </button>
+                    </template>
+
+                    <template #default>
+                      <button
+                        type="button"
+                        class="c-action-menu__item"
+                        @click="openChallengeTopology(getChallengeRow(row).id)"
+                      >
+                        <FileSearch class="h-3 w-3" />
+                        编排拓扑
+                      </button>
+                      <button
+                        type="button"
+                        class="c-action-menu__item"
+                        @click="openChallengeWriteup(getChallengeRow(row).id)"
+                      >
+                        <Book class="h-3 w-3" />
+                        题解与提示
+                      </button>
+                      <button
+                        v-if="getChallengeRow(row).status !== 'published'"
+                        type="button"
+                        class="c-action-menu__item c-action-menu__item--success"
+                        @click="submitPublishCheck(getChallengeRow(row))"
+                      >
+                        <CheckCircle class="h-3 w-3" />
+                        提交发布检查
+                      </button>
+                      <button
+                        type="button"
+                        class="c-action-menu__item c-action-menu__item--danger"
+                        @click="removeChallenge(getChallengeRow(row).id)"
+                      >
+                        <Trash2 class="h-3 w-3" />
+                        永久删除
+                      </button>
+                    </template>
+                  </CActionMenu>
+                </div>
+              </template>
+            </WorkspaceDataTable>
+
+            <WorkspaceDirectoryPagination
+              :page="page"
+              :total-pages="Math.max(1, Math.ceil(total / pageSize))"
+              :total="total"
+              :total-label="`共 ${total} 道题目`"
+              @change-page="changePage"
+            />
+          </section>
+        </div>
+      </main>
+    </div>
   </div>
 </template>
 
 <style scoped>
-.challenge-manage-shell {
-  --workspace-side-padding: 2rem;
-  --workspace-content-padding: 2rem;
-  background-color: var(--color-bg-base);
+.workspace-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-7);
+  padding-bottom: var(--space-6);
+  border-bottom: 1px solid var(--workspace-line-soft);
 }
 
-.challenge-manage-content {
-  display: grid;
-  gap: var(--space-6);
-  background: transparent;
+.hero-title {
+  margin: 0.5rem 0 0;
+  font-size: var(--workspace-page-title-font-size);
+  line-height: var(--workspace-page-title-line-height);
+  letter-spacing: var(--workspace-page-title-letter-spacing);
+  color: var(--journal-ink);
 }
 
-.challenge-manage-panel {
-  display: grid;
-  gap: var(--space-section-gap-compact, var(--space-4));
+.hero-summary {
+  max-width: 760px;
+  margin-top: var(--space-3-5);
+  font-size: var(--font-size-15);
+  line-height: 1.9;
+  color: var(--journal-muted);
+}
+
+.awd-library-hero-actions {
+  display: flex;
+  align-items: flex-end;
+  padding-bottom: 0.5rem;
+}
+
+.quick-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.challenge-manage-body {
   min-width: 0;
-}
-
-.challenge-manage-shell .manage-summary-grid {
-  width: 100%;
 }
 
 .challenge-filter-grid {
@@ -566,7 +582,7 @@ function getChallengeRow(row: unknown): PlatformChallengeListRow {
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--color-text-muted);
+  color: var(--journal-muted);
 }
 
 .challenge-filter-select {
@@ -580,9 +596,7 @@ function getChallengeRow(row: unknown): PlatformChallengeListRow {
   background: var(--color-bg-surface);
   color: var(--color-text-primary);
   outline: none;
-  transition:
-    border-color 150ms ease,
-    box-shadow 150ms ease;
+  transition: all 150ms ease;
 }
 
 .challenge-filter-select:focus {
@@ -590,21 +604,8 @@ function getChallengeRow(row: unknown): PlatformChallengeListRow {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 12%, transparent);
 }
 
-.challenge-manage-directory {
-  display: grid;
-  gap: var(--space-4);
-}
-
-.challenge-manage-directory :deep(.workspace-directory-toolbar) {
-  margin-bottom: 0.5rem;
-}
-
 .challenge-list {
   --workspace-directory-shell-border: var(--color-border-default);
-}
-
-.challenge-table-row {
-  position: relative;
 }
 
 .challenge-table-pill {
@@ -616,7 +617,6 @@ function getChallengeRow(row: unknown): PlatformChallengeListRow {
   border-radius: 4px;
   font-size: 11px;
   font-weight: 800;
-  letter-spacing: 0.02em;
   text-transform: uppercase;
 }
 
@@ -626,16 +626,6 @@ function getChallengeRow(row: unknown): PlatformChallengeListRow {
   border: 1px solid color-mix(in srgb, var(--color-primary) 18%, transparent);
 }
 
-.challenge-table__title-cell {
-  min-width: 0;
-}
-
-.challenge-table__compact-cell,
-.challenge-table__points-cell,
-.challenge-table__actions-cell {
-  font-size: 13px;
-}
-
 .challenge-table-title {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -643,7 +633,6 @@ function getChallengeRow(row: unknown): PlatformChallengeListRow {
   font-size: 15px;
   font-weight: 700;
   color: var(--color-text-primary);
-  transition: color 0.2s ease;
 }
 
 .group:hover .challenge-table-title {
@@ -661,7 +650,6 @@ function getChallengeRow(row: unknown): PlatformChallengeListRow {
   font-family: var(--font-family-mono);
   font-size: 15px;
   font-weight: 900;
-  letter-spacing: -0.03em;
   color: var(--color-text-primary);
 }
 
@@ -679,7 +667,6 @@ function getChallengeRow(row: unknown): PlatformChallengeListRow {
 
 .challenge-table-status__dot--published {
   background: var(--color-success);
-  animation: challengeStatusPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 .challenge-table-status__dot--idle {
@@ -694,7 +681,6 @@ function getChallengeRow(row: unknown): PlatformChallengeListRow {
 }
 
 .challenge-table-actions {
-  position: relative;
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -720,16 +706,5 @@ function getChallengeRow(row: unknown): PlatformChallengeListRow {
   border-color: var(--color-primary);
   background: var(--color-primary-soft);
   color: var(--color-primary);
-}
-
-@keyframes challengeStatusPulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-
-  50% {
-    opacity: 0.45;
-  }
 }
 </style>

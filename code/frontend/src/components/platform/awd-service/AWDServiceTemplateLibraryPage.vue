@@ -209,397 +209,475 @@ function selectTab(tab: LibraryTab) {
 </script>
 
 <template>
-  <section class="journal-shell journal-shell-admin journal-notes-card journal-hero workspace-shell flex min-h-full flex-1 flex-col">
-    <header class="admin-workbench-header">
-      <div class="admin-workbench-header__top">
-        <div class="admin-workbench-header__identity">
-          <div class="workspace-overline">
-            AWD Service Authoring
-          </div>
-          <h1 class="admin-workbench-header__title">
-            AWD 服务模板
-          </h1>
-          <p class="admin-workbench-header__description">
-            这里单独维护 AWD 题目的服务模板，不再和解题赛题目混在同一资源目录。
-          </p>
-        </div>
-
-        <div class="admin-workbench-header__actions">
-          <button
-            type="button"
-            class="ui-btn ui-btn--ghost ui-btn--sm"
-            @click="emit('refresh')"
-          >
-            <RefreshCw class="h-3.5 w-3.5" />
-            刷新列表
-          </button>
-          <button
-            id="awd-template-open-create"
-            type="button"
-            class="ui-btn ui-btn--primary ui-btn--sm"
-            @click="emit('openCreateDialog')"
-          >
-            <Plus class="h-3.5 w-3.5" />
-            创建模板
-          </button>
-        </div>
-      </div>
-
-      <nav class="admin-workbench-header__nav">
-        <button
-          class="admin-workbench-nav-item"
-          :class="{ 'is-active': activeTab === 'library' }"
-          @click="selectTab('library')"
-        >
-          全部模板
-        </button>
-        <button
-          class="admin-workbench-nav-item"
-          :class="{ 'is-active': activeTab === 'import' }"
-          @click="selectTab('import')"
-        >
-          题目包导入
-          <span
-            v-if="importQueueCount > 0"
-            class="admin-workbench-nav-badge"
-          >{{ importQueueCount }}</span>
-        </button>
-      </nav>
-    </header>
-
-    <main class="awd-library-content flex-1">
-      <!-- Tab A: Library -->
-      <div
-        v-if="activeTab === 'library'"
-        class="awd-library-pane space-y-6"
-      >
-        <div class="metric-panel-grid metric-panel-grid--premium cols-4">
-          <article class="metric-panel-card metric-panel-card--premium">
-            <div class="metric-panel-label">
-              <span>模板总量</span>
-              <Box class="h-4 w-4" />
+  <div class="workspace-shell">
+    <div class="workspace-grid">
+      <main class="content-pane">
+        <section class="workspace-hero">
+          <div class="workspace-tab-heading__main">
+            <div class="workspace-overline">
+              AWD Service Authoring
             </div>
-            <div class="metric-panel-value">
-              {{ total.toString().padStart(2, '0') }}
-            </div>
-          </article>
+            <h1 class="hero-title">
+              AWD 服务模板
+            </h1>
+            <p class="hero-summary">
+              这里单独维护 AWD 题目的服务模板，不再和解题赛题目混在同一资源目录。
+            </p>
 
-          <article class="metric-panel-card metric-panel-card--premium">
-            <div class="metric-panel-label">
-              <span>已发布</span>
-              <CheckCircle class="h-4 w-4" />
-            </div>
-            <div class="metric-panel-value">
-              {{ publishedCount.toString().padStart(2, '0') }}
-            </div>
-          </article>
-
-          <article class="metric-panel-card metric-panel-card--premium">
-            <div class="metric-panel-label">
-              <span>Web HTTP</span>
-              <Activity class="h-4 w-4" />
-            </div>
-            <div class="metric-panel-value">
-              {{ webHttpCount.toString().padStart(2, '0') }}
-            </div>
-          </article>
-
-          <article class="metric-panel-card metric-panel-card--premium">
-            <div class="metric-panel-label">
-              <span>待验证</span>
-              <Clock class="h-4 w-4" />
-            </div>
-            <div class="metric-panel-value">
-              {{ pendingReadinessCount.toString().padStart(2, '0') }}
-            </div>
-          </article>
-        </div>
-
-        <section class="workspace-directory-section">
-          <WorkspaceDirectoryToolbar
-            :model-value="keyword"
-            :total="total"
-            selected-sort-label=""
-            :sort-options="[]"
-            search-placeholder="检索模板名称、Slug 或描述..."
-            filter-panel-title="AWD 模板筛选"
-            total-suffix="个模板"
-            reset-label="重置筛选"
-            :reset-disabled="!hasActiveFilters"
-            @update:model-value="emit('updateKeyword', $event)"
-            @reset-filters="resetFilters"
-          >
-            <template #filter-panel>
-              <div class="awd-template-library__filter-grid">
-                <label class="awd-template-library__filter-field">
-                  <span class="awd-template-library__filter-label">服务类型</span>
-                  <select
-                    :value="serviceTypeFilter"
-                    class="awd-filter-control"
-                    @change="handleServiceTypeFilterChange"
-                  >
-                    <option value="">全部类型</option>
-                    <option value="web_http">Web HTTP</option>
-                    <option value="binary_tcp">Binary TCP</option>
-                    <option value="multi_container">Multi Container</option>
-                  </select>
-                </label>
-
-                <label class="awd-template-library__filter-field">
-                  <span class="awd-template-library__filter-label">发布状态</span>
-                  <select
-                    :value="statusFilter"
-                    class="awd-filter-control"
-                    @change="handleStatusFilterChange"
-                  >
-                    <option value="">全部状态</option>
-                    <option value="draft">草稿</option>
-                    <option value="published">已发布</option>
-                    <option value="archived">已归档</option>
-                  </select>
-                </label>
-              </div>
-            </template>
-          </WorkspaceDirectoryToolbar>
-
-          <div
-            v-if="loading && list.length === 0"
-            class="flex justify-center py-12"
-          >
-            <AppLoading>正在同步模板数据...</AppLoading>
-          </div>
-
-          <template v-else>
-            <AppEmpty
-              v-if="list.length === 0"
-              class="awd-template-library__empty"
-              icon="Box"
-              title="暂无服务模板"
-              :description="hasActiveFilters ? '当前筛选条件下没有匹配模板。' : '还没有 AWD 模板，请先点击右上角创建。'"
-            />
-
-            <WorkspaceDataTable
-              v-else
-              class="awd-template-list workspace-directory-list"
-              :columns="templateTableColumns"
-              :rows="list"
-              row-key="id"
-              row-class="awd-template-table-row group"
-            >
-              <template #cell-name="{ row }">
-                <div class="awd-template-table__name">
-                  <div class="awd-template-table__title">
-                    {{ (row as AdminAwdServiceTemplateData).name }}
-                  </div>
-                  <div class="awd-template-table__slug">
-                    @{{ (row as AdminAwdServiceTemplateData).slug }}
-                  </div>
-                </div>
-              </template>
-
-              <template #cell-service_type="{ row }">
-                <span class="awd-template-table__mono">{{ getServiceTypeLabel((row as AdminAwdServiceTemplateData).service_type) }}</span>
-              </template>
-
-              <template #cell-deployment_mode="{ row }">
-                <span class="awd-template-table__compact-text">{{ getDeploymentModeLabel((row as AdminAwdServiceTemplateData).deployment_mode) }}</span>
-              </template>
-
-              <template #cell-difficulty="{ row }">
-                <span class="awd-template-table__difficulty">{{ getDifficultyLabel((row as AdminAwdServiceTemplateData).difficulty) }}</span>
-              </template>
-
-              <template #cell-readiness_status="{ row }">
-                <span
-                  class="awd-status-pill"
-                  :class="getReadinessClass((row as AdminAwdServiceTemplateData).readiness_status)"
-                >
-                  {{ getReadinessLabel((row as AdminAwdServiceTemplateData).readiness_status) }}
-                </span>
-              </template>
-
-              <template #cell-status="{ row }">
-                <span
-                  class="awd-status-pill"
-                  :class="getStatusClass((row as AdminAwdServiceTemplateData).status)"
-                >
-                  {{ getStatusLabel((row as AdminAwdServiceTemplateData).status) }}
-                </span>
-              </template>
-
-              <template #cell-actions="{ row }">
-                <div class="awd-template-table__actions">
-                  <button
-                    type="button"
-                    class="awd-row-btn"
-                    @click="emit('openEditDialog', row as AdminAwdServiceTemplateData)"
-                  >
-                    编辑
-                  </button>
-                  <button
-                    type="button"
-                    class="awd-row-btn awd-row-btn--danger"
-                    @click="emit('deleteTemplate', row as AdminAwdServiceTemplateData)"
-                  >
-                    删除
-                  </button>
-                </div>
-              </template>
-            </WorkspaceDataTable>
-
-            <div
-              v-if="total > 0"
-              class="admin-pagination workspace-directory-pagination mt-6"
-            >
-              <WorkspaceDirectoryPagination
-                :page="page"
-                :total-pages="totalPages"
-                :total="total"
-                :disabled="loading"
-                total-label="个模板"
-                @change-page="emit('changePage', $event)"
-              />
-            </div>
-          </template>
-        </section>
-      </div>
-
-      <!-- Tab B: Import -->
-      <div
-        v-if="activeTab === 'import'"
-        class="awd-import-pane space-y-8"
-      >
-        <section class="awd-import-tool-section">
-          <header class="list-heading awd-template-import__head">
-            <div>
-              <div class="workspace-overline">
-                Ingestion
-              </div>
-              <h2 class="list-heading__title">
-                导入 AWD 题目包
-              </h2>
-              <p class="workspace-page-copy awd-template-import__copy">
-                教师按统一题目包规范写好 `challenge.yml` 后，从这里导入完整模板。
-              </p>
-            </div>
-            <div class="awd-template-import__head-actions">
-              <a
-                class="ui-btn ui-btn--ghost"
-                href="/downloads/awd-service-template-package-sample-v1.zip"
-                download="awd-service-template-package-sample-v1.zip"
+            <nav class="awd-library-tabs mt-10">
+              <button
+                class="awd-tab-item"
+                :class="{ active: activeTab === 'library' }"
+                @click="selectTab('library')"
               >
-                下载示例题包
-              </a>
+                全部模板
+              </button>
+              <button
+                class="awd-tab-item"
+                :class="{ active: activeTab === 'import' }"
+                @click="selectTab('import')"
+              >
+                题目包导入
+                <span
+                  v-if="importQueueCount > 0"
+                  class="awd-tab-badge"
+                >{{ importQueueCount }}</span>
+              </button>
+            </nav>
+          </div>
+
+          <div class="awd-library-hero-actions">
+            <div class="quick-actions">
               <button
                 type="button"
                 class="ui-btn ui-btn--ghost"
-                @click="emit('refreshImportQueue')"
+                @click="emit('refresh')"
               >
                 <RefreshCw class="h-4 w-4" />
-                刷新队列
+                刷新列表
+              </button>
+              <button
+                id="awd-template-open-create"
+                type="button"
+                class="ui-btn ui-btn--primary"
+                @click="emit('openCreateDialog')"
+              >
+                <Plus class="h-4 w-4" />
+                创建模板
               </button>
             </div>
-          </header>
-
-          <ChallengePackageImportEntry
-            :hide-header="true"
-            :uploading="uploading"
-            :selected-file-name="selectedFileName"
-            @select="handleSelectImportPackages"
-          />
-
-          <div
-            v-if="uploadResults.length > 0"
-            class="awd-template-import__uploads"
-          >
-            <article
-              v-for="item in uploadResults"
-              :key="item.id"
-              class="awd-template-import__upload"
-              :class="item.status === 'success' ? 'is-success' : 'is-error'"
-            >
-              <div class="awd-template-import__upload-head">
-                <strong>{{ item.fileName }}</strong>
-                <span>{{ item.status === 'success' ? '成功' : '失败' }}</span>
-              </div>
-              <p>{{ item.message }}</p>
-            </article>
           </div>
         </section>
 
-        <section class="awd-import-queue-section">
-          <div class="awd-template-import__queue-head">
-            <div class="workspace-overline">
-              Review Queue
+        <div class="awd-library-body mt-10">
+          <!-- Tab A: Library -->
+          <div
+            v-if="activeTab === 'library'"
+            class="awd-library-pane space-y-10"
+          >
+            <div class="metric-panel-grid metric-panel-grid--premium cols-4">
+              <article class="metric-panel-card metric-panel-card--premium">
+                <div class="metric-panel-label">
+                  <span>模板总量</span>
+                  <Box class="h-4 w-4" />
+                </div>
+                <div class="metric-panel-value">
+                  {{ total.toString().padStart(2, '0') }}
+                </div>
+              </article>
+
+              <article class="metric-panel-card metric-panel-card--premium">
+                <div class="metric-panel-label">
+                  <span>已发布</span>
+                  <CheckCircle class="h-4 w-4" />
+                </div>
+                <div class="metric-panel-value">
+                  {{ publishedCount.toString().padStart(2, '0') }}
+                </div>
+              </article>
+
+              <article class="metric-panel-card metric-panel-card--premium">
+                <div class="metric-panel-label">
+                  <span>Web HTTP</span>
+                  <Activity class="h-4 w-4" />
+                </div>
+                <div class="metric-panel-value">
+                  {{ webHttpCount.toString().padStart(2, '0') }}
+                </div>
+              </article>
+
+              <article class="metric-panel-card metric-panel-card--premium">
+                <div class="metric-panel-label">
+                  <span>待验证</span>
+                  <Clock class="h-4 w-4" />
+                </div>
+                <div class="metric-panel-value">
+                  {{ pendingReadinessCount.toString().padStart(2, '0') }}
+                </div>
+              </article>
             </div>
-            <span class="awd-template-import__queue-count">共 {{ importQueueCount }} 个待确认包</span>
+
+            <section class="workspace-directory-section">
+              <WorkspaceDirectoryToolbar
+                :model-value="keyword"
+                :total="total"
+                selected-sort-label=""
+                :sort-options="[]"
+                search-placeholder="检索模板名称、Slug 或描述..."
+                filter-panel-title="AWD 模板筛选"
+                total-suffix="个模板"
+                reset-label="重置筛选"
+                :reset-disabled="!hasActiveFilters"
+                @update:model-value="emit('updateKeyword', $event)"
+                @reset-filters="resetFilters"
+              >
+                <template #filter-panel>
+                  <div class="awd-template-library__filter-grid">
+                    <label class="awd-template-library__filter-field">
+                      <span class="awd-template-library__filter-label">服务类型</span>
+                      <select
+                        :value="serviceTypeFilter"
+                        class="awd-filter-control"
+                        @change="handleServiceTypeFilterChange"
+                      >
+                        <option value="">全部类型</option>
+                        <option value="web_http">Web HTTP</option>
+                        <option value="binary_tcp">Binary TCP</option>
+                        <option value="multi_container">Multi Container</option>
+                      </select>
+                    </label>
+
+                    <label class="awd-template-library__filter-field">
+                      <span class="awd-template-library__filter-label">发布状态</span>
+                      <select
+                        :value="statusFilter"
+                        class="awd-filter-control"
+                        @change="handleStatusFilterChange"
+                      >
+                        <option value="">全部状态</option>
+                        <option value="draft">草稿</option>
+                        <option value="published">已发布</option>
+                        <option value="archived">已归档</option>
+                      </select>
+                    </label>
+                  </div>
+                </template>
+              </WorkspaceDirectoryToolbar>
+
+              <div
+                v-if="loading && list.length === 0"
+                class="flex justify-center py-12"
+              >
+                <AppLoading>正在同步模板数据...</AppLoading>
+              </div>
+
+              <template v-else>
+                <AppEmpty
+                  v-if="list.length === 0"
+                  class="awd-template-library__empty"
+                  icon="Box"
+                  title="暂无服务模板"
+                  :description="hasActiveFilters ? '当前筛选条件下没有匹配模板。' : '还没有 AWD 模板，请先点击右上角创建。'"
+                />
+
+                <WorkspaceDataTable
+                  v-else
+                  class="awd-template-list workspace-directory-list"
+                  :columns="templateTableColumns"
+                  :rows="list"
+                  row-key="id"
+                  row-class="awd-template-table-row group"
+                >
+                  <template #cell-name="{ row }">
+                    <div class="awd-template-table__name">
+                      <div class="awd-template-table__title">
+                        {{ (row as AdminAwdServiceTemplateData).name }}
+                      </div>
+                      <div class="awd-template-table__slug">
+                        @{{ (row as AdminAwdServiceTemplateData).slug }}
+                      </div>
+                    </div>
+                  </template>
+
+                  <template #cell-service_type="{ row }">
+                    <span class="awd-template-table__mono">{{ getServiceTypeLabel((row as AdminAwdServiceTemplateData).service_type) }}</span>
+                  </template>
+
+                  <template #cell-deployment_mode="{ row }">
+                    <span class="awd-template-table__compact-text">{{ getDeploymentModeLabel((row as AdminAwdServiceTemplateData).deployment_mode) }}</span>
+                  </template>
+
+                  <template #cell-difficulty="{ row }">
+                    <span class="awd-template-table__difficulty">{{ getDifficultyLabel((row as AdminAwdServiceTemplateData).difficulty) }}</span>
+                  </template>
+
+                  <template #cell-readiness_status="{ row }">
+                    <span
+                      class="awd-status-pill"
+                      :class="getReadinessClass((row as AdminAwdServiceTemplateData).readiness_status)"
+                    >
+                      {{ getReadinessLabel((row as AdminAwdServiceTemplateData).readiness_status) }}
+                    </span>
+                  </template>
+
+                  <template #cell-status="{ row }">
+                    <span
+                      class="awd-status-pill"
+                      :class="getStatusClass((row as AdminAwdServiceTemplateData).status)"
+                    >
+                      {{ getStatusLabel((row as AdminAwdServiceTemplateData).status) }}
+                    </span>
+                  </template>
+
+                  <template #cell-actions="{ row }">
+                    <div class="awd-template-table__actions">
+                      <button
+                        type="button"
+                        class="awd-row-btn"
+                        @click="emit('openEditDialog', row as AdminAwdServiceTemplateData)"
+                      >
+                        编辑
+                      </button>
+                      <button
+                        type="button"
+                        class="awd-row-btn awd-row-btn--danger"
+                        @click="emit('deleteTemplate', row as AdminAwdServiceTemplateData)"
+                      >
+                        删除
+                      </button>
+                    </div>
+                  </template>
+                </WorkspaceDataTable>
+
+                <div
+                  v-if="total > 0"
+                  class="admin-pagination workspace-directory-pagination mt-6"
+                >
+                  <WorkspaceDirectoryPagination
+                    :page="page"
+                    :total-pages="totalPages"
+                    :total="total"
+                    :disabled="loading"
+                    total-label="个模板"
+                    @change-page="emit('changePage', $event)"
+                  />
+                </div>
+              </template>
+            </section>
           </div>
 
+          <!-- Tab B: Import -->
           <div
-            v-if="queueLoading"
-            class="awd-template-import__state"
+            v-if="activeTab === 'import'"
+            class="awd-import-pane space-y-12"
           >
-            正在同步导入队列...
-          </div>
-          <AppEmpty
-            v-else-if="importQueue.length === 0"
-            class="awd-template-import__empty"
-            icon="Box"
-            title="队列为空"
-            description="上传题目包后，待确认的项将出现在此处。"
-          />
-          <div
-            v-else
-            class="awd-template-import__queue"
-          >
-            <article
-              v-for="item in importQueue"
-              :key="item.id"
-              class="awd-template-import__card"
-            >
-              <div class="awd-template-import__card-head">
+            <section class="awd-import-tool-section">
+              <header class="list-heading awd-template-import__head">
                 <div>
-                  <h3 class="awd-template-import__card-title">
-                    {{ item.title }}
-                  </h3>
-                  <p class="awd-template-import__card-file">
-                    {{ item.file_name }}
+                  <div class="workspace-overline">
+                    Ingestion
+                  </div>
+                  <h2 class="list-heading__title">
+                    导入 AWD 题目包
+                  </h2>
+                  <p class="hero-summary awd-template-import__copy">
+                    教师按统一题目包规范写好 `challenge.yml` 后，从这里导入完整模板。
                   </p>
                 </div>
-                <button
-                  type="button"
-                  class="ui-btn ui-btn--primary"
-                  @click="emit('commitImport', item)"
+                <div class="awd-template-import__head-actions">
+                  <div class="quick-actions">
+                    <a
+                      class="ui-btn ui-btn--ghost"
+                      href="/downloads/awd-service-template-package-sample-v1.zip"
+                      download="awd-service-template-package-sample-v1.zip"
+                    >
+                      下载示例题包
+                    </a>
+                    <button
+                      type="button"
+                      class="ui-btn ui-btn--ghost"
+                      @click="emit('refreshImportQueue')"
+                    >
+                      <RefreshCw class="h-4 w-4" />
+                      刷新队列
+                    </button>
+                  </div>
+                </div>
+              </header>
+
+              <div class="mt-8">
+                <ChallengePackageImportEntry
+                  :hide-header="true"
+                  :uploading="uploading"
+                  :selected-file-name="selectedFileName"
+                  @select="handleSelectImportPackages"
+                />
+              </div>
+
+              <div
+                v-if="uploadResults.length > 0"
+                class="awd-template-import__uploads"
+              >
+                <article
+                  v-for="item in uploadResults"
+                  :key="item.id"
+                  class="awd-template-import__upload"
+                  :class="item.status === 'success' ? 'is-success' : 'is-error'"
                 >
-                  确认导入
-                </button>
+                  <div class="awd-template-import__upload-head">
+                    <strong>{{ item.fileName }}</strong>
+                    <span>{{ item.status === 'success' ? '成功' : '失败' }}</span>
+                  </div>
+                  <p>{{ item.message }}</p>
+                </article>
+              </div>
+            </section>
+
+            <section class="awd-import-queue-section">
+              <div class="awd-template-import__queue-head">
+                <div class="workspace-overline">
+                  Review Queue
+                </div>
+                <span class="awd-template-import__queue-count">共 {{ importQueueCount }} 个待确认包</span>
               </div>
 
-              <div class="awd-template-import__chips">
-                <span class="awd-status-pill awd-status-pill--primary">{{ item.service_type }}</span>
-                <span class="awd-status-pill awd-status-pill--warning">{{ item.deployment_mode }}</span>
-                <span class="awd-status-pill awd-status-pill--muted">{{ item.flag_mode || '未定义 flag_mode' }}</span>
-                <span class="awd-status-pill awd-status-pill--success">{{ item.defense_entry_mode || '未定义入口' }}</span>
+              <div
+                v-if="queueLoading"
+                class="awd-template-import__state"
+              >
+                正在同步导入队列...
               </div>
+              <AppEmpty
+                v-else-if="importQueue.length === 0"
+                class="awd-template-import__empty"
+                icon="Box"
+                title="队列为空"
+                description="上传题目包后，待确认的项将出现在此处。"
+              />
+              <div
+                v-else
+                class="awd-template-import__queue"
+              >
+                <article
+                  v-for="item in importQueue"
+                  :key="item.id"
+                  class="awd-template-import__card"
+                >
+                  <div class="awd-template-import__card-head">
+                    <div>
+                      <h3 class="awd-template-import__card-title">
+                        {{ item.title }}
+                      </h3>
+                      <p class="awd-template-import__card-file">
+                        {{ item.file_name }}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      class="ui-btn ui-btn--primary"
+                      @click="emit('commitImport', item)"
+                    >
+                      确认导入
+                    </button>
+                  </div>
 
-              <div class="awd-template-import__grid">
-                <pre class="awd-template-import__json">{{ formatStructuredJSON(item.access_config) }}</pre>
-                <pre class="awd-template-import__json">{{ formatStructuredJSON(item.runtime_config) }}</pre>
+                  <div class="awd-template-import__chips">
+                    <span class="awd-status-pill awd-status-pill--primary">{{ item.service_type }}</span>
+                    <span class="awd-status-pill awd-status-pill--warning">{{ item.deployment_mode }}</span>
+                    <span class="awd-status-pill awd-status-pill--muted">{{ item.flag_mode || '未定义 flag_mode' }}</span>
+                    <span class="awd-status-pill awd-status-pill--success">{{ item.defense_entry_mode || '未定义入口' }}</span>
+                  </div>
+
+                  <div class="awd-template-import__grid">
+                    <pre class="awd-template-import__json">{{ formatStructuredJSON(item.access_config) }}</pre>
+                    <pre class="awd-template-import__json">{{ formatStructuredJSON(item.runtime_config) }}</pre>
+                  </div>
+                </article>
               </div>
-            </article>
+            </section>
           </div>
-        </section>
-      </div>
-    </main>
-  </section>
+        </div>
+      </main>
+    </div>
+  </div>
 </template>
 
 <style scoped>
-.awd-library-content {
-  padding: 2rem 3rem;
+.workspace-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-7);
+  padding-bottom: var(--space-6);
+  border-bottom: 1px solid var(--workspace-line-soft);
 }
 
-.awd-template-import__copy { margin: 0.5rem 0 0; max-width: 48rem; }
+.hero-title {
+  margin: 0.5rem 0 0;
+  font-size: var(--workspace-page-title-font-size);
+  line-height: var(--workspace-page-title-line-height);
+  letter-spacing: var(--workspace-page-title-letter-spacing);
+  color: var(--journal-ink);
+}
+
+.hero-summary {
+  max-width: 760px;
+  margin-top: var(--space-3-5);
+  font-size: var(--font-size-15);
+  line-height: 1.9;
+  color: var(--journal-muted);
+}
+
+.awd-library-hero-actions {
+  display: flex;
+  align-items: flex-end;
+  padding-bottom: 0.5rem;
+}
+
+.quick-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.awd-library-tabs {
+  display: flex;
+  gap: 2.5rem;
+}
+
+.awd-tab-item {
+  padding: 0.75rem 0 1rem;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--color-text-secondary);
+  border: none;
+  border-bottom: 3px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.22s ease;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.awd-tab-item:hover { color: var(--color-text-primary); }
+.awd-tab-item.active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+}
+
+.awd-tab-badge {
+  background: var(--color-primary);
+  color: white;
+  font-size: 10px;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 99px;
+  font-family: var(--font-family-mono);
+}
+
 .awd-template-import__uploads { display: grid; gap: 0.75rem; margin-top: 1.5rem; }
 .awd-template-import__upload { padding: 1.1rem; border-radius: 1rem; border: 1px solid var(--color-border-default); background: var(--color-bg-surface); }
 .awd-template-import__upload.is-success { border-color: color-mix(in srgb, var(--color-success) 24%, transparent); }
@@ -642,5 +720,6 @@ function selectTab(tab: LibraryTab) {
 @media (max-width: 1024px) {
   .awd-template-import__grid { grid-template-columns: 1fr; }
   .awd-template-table__actions { flex-direction: column; align-items: stretch; }
+  .workspace-hero { grid-template-columns: 1fr; }
 }
 </style>
