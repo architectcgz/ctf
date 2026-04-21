@@ -454,42 +454,42 @@ function getServiceCheckPresentationResult(service: AWDTeamServiceData): Record<
 
 .awd-stats-hud {
   display: flex; align-items: center; padding: 1.5rem 0;
-  background: transparent; border-bottom: 1px solid color-mix(in srgb, var(--workspace-line-soft) 60%, transparent);
+  background: transparent; border-bottom: 1px solid var(--color-border-default);
 }
 .stat-unit { flex: 1; display: flex; flex-direction: column; gap: 0.25rem; }
-.unit-label { font-size: 9px; font-weight: 800; text-transform: uppercase; color: #94a3b8; letter-spacing: 0.1em; }
-.unit-value { font-size: 1.15rem; font-weight: 900; color: #0f172a; line-height: 1; }
+.unit-label { font-size: 9px; font-weight: 800; text-transform: uppercase; color: var(--color-text-muted); letter-spacing: 0.1em; }
+.unit-value { font-size: 1.15rem; font-weight: 900; color: var(--color-text-primary); line-height: 1; }
 .unit-value small { font-size: 10px; opacity: 0.5; margin-left: 2px; }
-.unit-helper { font-size: 11px; font-weight: 600; color: #64748b; }
-.unit-divider { width: 1px; height: 2.5rem; background: #e2e8f0; margin: 0 2rem; }
+.unit-helper { font-size: 11px; font-weight: 600; color: var(--color-text-secondary); }
+.unit-divider { width: 1px; height: 2.5rem; background: var(--color-border-default); margin: 0 2rem; }
 
 .awd-detail-canvas { flex: 1; display: flex; flex-direction: column; background: transparent; min-height: 0; }
 .canvas-tabs-header {
-  height: 3.5rem; padding: 0; border-bottom: 1px solid color-mix(in srgb, var(--workspace-line-soft) 80%, transparent);
+  height: 3.5rem; padding: 0; border-bottom: 1px solid var(--color-border-default);
   display: flex; justify-content: space-between; align-items: center; background: transparent;
 }
 .sub-tabs { display: flex; gap: 2rem; height: 100%; }
 .sub-tab {
   display: flex; align-items: center; gap: 0.5rem; padding: 0 0.25rem;
-  font-size: 13px; font-weight: 800; color: #64748b;
+  font-size: 13px; font-weight: 800; color: var(--color-text-secondary);
   border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.2s ease;
 }
-.sub-tab:hover { color: #0f172a; }
-.sub-tab.active { color: #2563eb; border-bottom-color: #2563eb; }
+.sub-tab:hover { color: var(--color-text-primary); }
+.sub-tab.active { color: var(--color-primary); border-bottom-color: var(--color-primary); }
 
 .canvas-content { flex: 1; overflow-y: auto; padding: 2rem 0; position: relative; }
-.canvas-loading-overlay { position: absolute; inset: 0; background: rgba(255,255,255,0.7); display: flex; align-items: center; justify-content: center; z-index: 10; }
+.canvas-loading-overlay { position: absolute; inset: 0; background: color-mix(in srgb, var(--color-bg-base) 70%, transparent); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 10; }
 
-.alert-banner { display: flex; align-items: center; gap: 1.5rem; padding: 0.75rem 1.25rem; background: #fff7ed; border: 1px solid #ffedd5; border-radius: 0.75rem; }
-.banner-tag { font-size: 10px; font-weight: 800; color: #c2410c; text-transform: uppercase; }
+.alert-banner { display: flex; align-items: center; gap: 1.5rem; padding: 0.75rem 1.25rem; background: color-mix(in srgb, var(--color-warning) 10%, var(--color-bg-surface)); border: 1px solid color-mix(in srgb, var(--color-warning) 20%, transparent); border-radius: 0.75rem; }
+.banner-tag { font-size: 10px; font-weight: 800; color: var(--color-warning); text-transform: uppercase; }
 .alert-pills { display: flex; gap: 0.5rem; }
-.alert-pill { padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; border: 1px solid rgba(194, 65, 12, 0.2); color: #9a3412; transition: all 0.2s ease; }
-.alert-pill:hover { background: white; }
-.alert-pill.is-active { background: #f97316; color: white; border-color: #f97316; }
+.alert-pill { padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; border: 1px solid color-mix(in srgb, var(--color-warning) 30%, transparent); color: var(--color-warning); transition: all 0.2s ease; }
+.alert-pill:hover { background: var(--color-bg-elevated); }
+.alert-pill.is-active { background: var(--color-warning); color: white; border-color: var(--color-warning); }
 
 .ops-btn {
   display: inline-flex; align-items: center; justify-content: center;
   height: 2.25rem; padding: 0 1rem; border-radius: 0.75rem;
-  font-size: 12px; font-weight: 700; background: white; border: 1px solid #e2e8f0; color: #475569; cursor: pointer;
+  font-size: 12px; font-weight: 700; background: var(--color-bg-surface); border: 1px solid var(--color-border-default); color: var(--color-text-secondary); cursor: pointer;
 }
 </style>

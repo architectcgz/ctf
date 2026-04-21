@@ -702,9 +702,9 @@ onMounted(() => {
   cursor: pointer;
 }
 .studio-back-btn:hover {
-  background: #f8fafc;
-  color: #0f172a;
-  border-color: #cbd5e1;
+  background: var(--color-bg-elevated);
+  color: var(--color-text-primary);
+  border-color: var(--color-border-default);
 }
 
 .studio-save-btn {
@@ -738,7 +738,7 @@ onMounted(() => {
   font-size: 1rem;
   font-weight: 900;
   letter-spacing: -0.01em;
-  color: var(--journal-ink);
+  color: var(--color-text-primary);
   margin: 0;
   max-width: 24rem;
   overflow: hidden;
