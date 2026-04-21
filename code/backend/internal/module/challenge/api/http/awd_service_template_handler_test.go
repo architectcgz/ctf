@@ -3,6 +3,7 @@ package http
 import (
 	"bytes"
 	"context"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -60,6 +61,22 @@ func (stubAWDServiceTemplateCommandService) UpdateTemplate(ctx context.Context, 
 
 func (stubAWDServiceTemplateCommandService) DeleteTemplate(ctx context.Context, id int64) error {
 	return nil
+}
+
+func (stubAWDServiceTemplateCommandService) PreviewImport(ctx context.Context, actorUserID int64, fileName string, reader io.Reader) (*dto.AWDServiceTemplateImportPreviewResp, error) {
+	return nil, nil
+}
+
+func (stubAWDServiceTemplateCommandService) ListImports(actorUserID int64) ([]dto.AWDServiceTemplateImportPreviewResp, error) {
+	return nil, nil
+}
+
+func (stubAWDServiceTemplateCommandService) GetImport(actorUserID int64, id string) (*dto.AWDServiceTemplateImportPreviewResp, error) {
+	return nil, nil
+}
+
+func (stubAWDServiceTemplateCommandService) CommitImport(ctx context.Context, actorUserID int64, id string) (*dto.AWDServiceTemplateResp, error) {
+	return nil, nil
 }
 
 type stubAWDServiceTemplateQueryService struct {

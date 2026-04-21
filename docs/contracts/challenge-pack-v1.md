@@ -2,9 +2,9 @@
 
 > 适用范围：CTF 靶场平台题目制作、审计、归档、导入与发布前校验
 > 文档目的：定义“题目源包（Zip）”的结构与 `challenge.yml` 规范，并明确当前平台如何导入、校验与发布题目。
-> 版本：v1.3 | 日期：2026-04-01
+> 版本：v1.4 | 日期：2026-04-21
 
-> 说明：截至 2026-04-01，仓库内已有题目、镜像、Hint、拓扑、Writeup 等后端能力，且已新增后台 `challenge.yml` 题目包上传预览、确认导入、同步自检与发布自检队列接口，以及复用同一解析核心的 CLI 导入脚本。
+> 说明：截至 2026-04-21，仓库内已有题目、镜像、Hint、拓扑、Writeup 与 AWD 服务模板等后端能力，且已新增后台 `challenge.yml` 题目包上传预览、确认导入、同步自检与发布自检队列接口，以及 AWD 服务模板包预览/确认导入接口与复用同一解析核心的 CLI 导入脚本。
 > 因此本规范既是“作者侧源包规范”，也是当前实现中的导入契约；文中会显式标注哪些扩展字段仍处于保留状态。
 
 ---
@@ -46,7 +46,7 @@
 
 ## 4. 当前平台能力边界
 
-截至 2026-04-01，当前仓库内与题目包最相关的后端事实如下：
+截至 2026-04-21，当前仓库内与题目包最相关的后端事实如下：
 
 - 题目基础字段已支持：`title`、`description`、`category`、`difficulty`、`points`、`image_id`、`attachment_url`、`hints`
 - 题目发布已支持：`draft` -> `published`
@@ -66,6 +66,9 @@
 - `POST /api/v1/authoring/challenge-imports`
 - `GET /api/v1/authoring/challenge-imports/:id`
 - `POST /api/v1/authoring/challenge-imports/:id/commit`
+- `POST /api/v1/authoring/awd-service-template-imports`
+- `GET /api/v1/authoring/awd-service-template-imports/:id`
+- `POST /api/v1/authoring/awd-service-template-imports/:id/commit`
 - `POST /api/v1/authoring/challenges/:id/self-check`
 - `POST /api/v1/authoring/challenges/:id/publish-requests`
 - `GET /api/v1/authoring/challenges/:id/publish-requests/latest`
@@ -78,6 +81,12 @@
 - 通过题目包直接在线构建 Dockerfile
 - 通过题目包直接导入镜像 tar
 - 多附件自动映射到题目详情页
+
+同时约定：
+
+- **Jeopardy / 解题赛题目包**：继续使用默认 `kind: challenge`，并省略 `meta.mode` 或显式写为 `jeopardy`
+- **AWD 服务模板包**：仍复用 `challenge-pack-v1` 外壳，但必须额外声明 `meta.mode: awd`，并在 `extensions.awd` 内提供攻防运行定义
+- 普通题目导入入口会拒绝 `meta.mode: awd` 的题目包，防止把 AWD 包误导入成 Jeopardy 题
 
 ---
 
@@ -302,6 +311,123 @@ runtime:
 - `runtime.build.*` 是复现材料
 - 当前平台运行时只需要 `runtime.image.ref`，不会直接消费 `runtime.build.*`
 
+### 6.6 AWD 扩展
+
+AWD 不应另起一套完全独立的包格式；但也不能直接拿 Jeopardy 的最小字段原样复用。推荐做法是：
+
+- 继续复用 `challenge-pack-v1` 的根目录结构、`challenge.yml` 外壳与 `statement.md`
+- 通过 `meta.mode: awd` 明确声明“这是 AWD 服务模板包”
+- 通过 `extensions.awd` 补齐服务类型、Checker、Flag 策略、防守入口、访问端口与运行参数
+
+最小可用示例：
+
+```yaml
+api_version: v1
+kind: challenge
+
+meta:
+  mode: awd
+  slug: awd-bank-portal-01
+  title: "AWD Web-01 Bank Portal"
+  category: web
+  difficulty: hard
+  points: 500
+
+content:
+  statement: statement.md
+
+flag:
+  type: dynamic
+  prefix: awd
+
+runtime:
+  type: container
+  image:
+    ref: "registry.example.edu/ctf/awd-bank-portal:v1"
+
+extensions:
+  awd:
+    service_type: web_http
+    deployment_mode: single_container
+    version: "v2026.04"
+    checker:
+      type: http_standard
+      config:
+        put_flag:
+          method: PUT
+          path: /api/flag
+          expected_status: 200
+          body_template: "{{FLAG}}"
+        get_flag:
+          method: GET
+          path: /api/flag
+          expected_status: 200
+          expected_substring: "{{FLAG}}"
+        havoc:
+          method: GET
+          path: /healthz
+          expected_status: 200
+    flag_policy:
+      mode: dynamic_team
+      config:
+        flag_prefix: awd
+        rotate_interval_sec: 120
+    defense_entry:
+      mode: http
+    access_config:
+      public_base_url: "http://{{TEAM_HOST}}:8080"
+      service_port: 8080
+      exposed_ports:
+        - port: 8080
+          protocol: tcp
+          purpose: http
+    runtime_config:
+      instance_sharing: per_team
+      service_port: 8080
+```
+
+字段约定：
+
+- `meta.mode`
+  - 必填，AWD 固定为 `awd`
+- `extensions.awd.service_type`
+  - 必填，对应 `awd_service_templates.service_type`
+  - 当前枚举：`web_http` `binary_tcp` `multi_container`
+- `extensions.awd.deployment_mode`
+  - 必填，对应 `awd_service_templates.deployment_mode`
+  - 当前枚举：`single_container` `topology`
+- `extensions.awd.version`
+  - 可选，对应模板版本字符串；未填写时平台默认回落到 `v1`
+- `extensions.awd.checker.type`
+  - 必填，对应 `checker_type`
+  - 当前枚举：`legacy_probe` `http_standard`
+- `extensions.awd.checker.config`
+  - 建议必填，对应 `checker_config`
+  - 对 `http_standard`，建议至少显式提供 `put_flag / get_flag / havoc`
+- `extensions.awd.flag_policy.mode`
+  - 必填，对应 `flag_mode`
+  - 例如 `dynamic_team`
+- `extensions.awd.flag_policy.config`
+  - 可选，对应 `flag_config`
+  - 可放 `flag_prefix`、轮转周期等模板级 Flag 策略
+- `extensions.awd.defense_entry.mode`
+  - 必填，对应 `defense_entry_mode`
+  - 例如 `http`
+- `extensions.awd.access_config`
+  - 必填，对应 `access_config`
+  - 建议至少包含 `service_port`
+  - 建议把 `public_base_url`、`exposed_ports` 等攻防展示信息统一放在这里
+- `extensions.awd.runtime_config`
+  - 可选，对应 `runtime_config`
+  - 建议写 `instance_sharing`、`service_port`、拓扑或运行时参数
+  - 平台导入时会额外把 `runtime.image.ref` 解析成 `image_ref` 与 `image_id` 并补进模板运行配置
+
+边界说明：
+
+- `meta.points` 在 AWD 包中只作为**建议分值**保留，当前不会直接写入 AWD 模板；真正比赛分值仍在管理员配置比赛时设置
+- AWD 模板导入成功后，平台会直接生成 `published` 状态模板，便于管理员在比赛题池里立即选题
+- 比赛里的 Checker 覆盖、分值、顺序、可见性仍然属于**比赛级配置**，不应反向写回题库模板
+
 ---
 
 ## 7. 字段映射矩阵
@@ -326,6 +452,24 @@ runtime:
 | `flag.type=manual` | 不支持 | 当前仅 static / dynamic |
 | `runtime.build.source=dockerfile` | 未公开导入支持 | 可作为审计材料保留 |
 | `runtime.build.source=tar` | 未公开导入支持 | 不应写成当前能力 |
+
+### 7.1 AWD 扩展字段映射
+
+| AWD 包字段 | 当前平台状态 | 说明 |
+|---|---|---|
+| `meta.mode=awd` | 已支持 | 作为 AWD 包入口识别条件 |
+| `extensions.awd.service_type` | 已支持 | 映射到 `awd_service_templates.service_type` |
+| `extensions.awd.deployment_mode` | 已支持 | 映射到 `awd_service_templates.deployment_mode` |
+| `extensions.awd.version` | 已支持 | 映射到模板 `version` |
+| `extensions.awd.checker.type` | 已支持 | 映射到 `checker_type` |
+| `extensions.awd.checker.config` | 已支持 | 映射到 `checker_config` |
+| `extensions.awd.flag_policy.mode` | 已支持 | 映射到 `flag_mode` |
+| `extensions.awd.flag_policy.config` | 已支持 | 映射到 `flag_config` |
+| `extensions.awd.defense_entry.mode` | 已支持 | 映射到 `defense_entry_mode` |
+| `extensions.awd.access_config` | 已支持 | 映射到 `access_config`，建议承载可攻击端口与展示入口 |
+| `extensions.awd.runtime_config` | 已支持 | 映射到 `runtime_config`，导入时会额外补齐 `image_ref/image_id` |
+| `runtime.image.ref` | 已支持 | 导入 AWD 模板时会自动关联或创建镜像记录 |
+| `meta.points` | 部分支持 | 当前只作为建议分值，不直接落 AWD 模板 |
 
 ---
 

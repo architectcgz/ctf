@@ -2,7 +2,10 @@ package http
 
 import (
 	"context"
+	"io"
+	nethttp "net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 
@@ -20,6 +23,10 @@ type awdServiceTemplateCommandService interface {
 	CreateTemplate(ctx context.Context, actorUserID int64, req *dto.CreateAWDServiceTemplateReq) (*dto.AWDServiceTemplateResp, error)
 	UpdateTemplate(ctx context.Context, id int64, req *dto.UpdateAWDServiceTemplateReq) (*dto.AWDServiceTemplateResp, error)
 	DeleteTemplate(ctx context.Context, id int64) error
+	PreviewImport(ctx context.Context, actorUserID int64, fileName string, reader io.Reader) (*dto.AWDServiceTemplateImportPreviewResp, error)
+	ListImports(actorUserID int64) ([]dto.AWDServiceTemplateImportPreviewResp, error)
+	GetImport(actorUserID int64, id string) (*dto.AWDServiceTemplateImportPreviewResp, error)
+	CommitImport(ctx context.Context, actorUserID int64, id string) (*dto.AWDServiceTemplateResp, error)
 }
 
 type awdServiceTemplateQueryService interface {
@@ -103,4 +110,64 @@ func (h *AWDServiceTemplateHandler) DeleteTemplate(c *gin.Context) {
 		return
 	}
 	response.Success(c, nil)
+}
+
+func (h *AWDServiceTemplateHandler) PreviewImport(c *gin.Context) {
+	fileHeader, err := c.FormFile("file")
+	if err != nil {
+		response.InvalidParams(c, "缺少 AWD 题目包文件")
+		return
+	}
+
+	file, err := fileHeader.Open()
+	if err != nil {
+		response.InvalidParams(c, "无法读取 AWD 题目包文件")
+		return
+	}
+	defer file.Close()
+
+	resp, err := h.commands.PreviewImport(
+		c.Request.Context(),
+		authctx.MustCurrentUser(c).UserID,
+		fileHeader.Filename,
+		file,
+	)
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+	response.SuccessWithStatus(c, nethttp.StatusCreated, resp)
+}
+
+func (h *AWDServiceTemplateHandler) ListImports(c *gin.Context) {
+	resp, err := h.commands.ListImports(authctx.MustCurrentUser(c).UserID)
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+	response.Success(c, resp)
+}
+
+func (h *AWDServiceTemplateHandler) GetImport(c *gin.Context) {
+	resp, err := h.commands.GetImport(authctx.MustCurrentUser(c).UserID, strings.TrimSpace(c.Param("id")))
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+	response.Success(c, resp)
+}
+
+func (h *AWDServiceTemplateHandler) CommitImport(c *gin.Context) {
+	id := strings.TrimSpace(c.Param("id"))
+	if id == "" {
+		response.InvalidParams(c, "无效的导入 ID")
+		return
+	}
+
+	resp, err := h.commands.CommitImport(c.Request.Context(), authctx.MustCurrentUser(c).UserID, id)
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+	response.Success(c, &dto.AWDServiceTemplateImportCommitResp{Template: resp})
 }

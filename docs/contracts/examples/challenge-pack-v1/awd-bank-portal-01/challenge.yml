@@ -1,0 +1,68 @@
+api_version: v1
+kind: challenge
+
+meta:
+  mode: awd
+  slug: awd-bank-portal-01
+  title: "AWD Web-01 Bank Portal"
+  category: web
+  difficulty: hard
+  points: 500
+  tags:
+    - mode:awd
+    - vuln:debug-export
+    - stack:python
+    - stack:flask
+
+content:
+  statement: statement.md
+  attachments: []
+
+flag:
+  type: dynamic
+  prefix: awd
+
+runtime:
+  type: container
+  image:
+    ref: "registry.example.edu/ctf/awd-bank-portal:v1"
+
+extensions:
+  awd:
+    service_type: web_http
+    deployment_mode: single_container
+    version: "v2026.04"
+    checker:
+      type: http_standard
+      config:
+        put_flag:
+          method: PUT
+          path: /api/flag
+          expected_status: 200
+          body_template: "{{FLAG}}"
+        get_flag:
+          method: GET
+          path: /api/flag
+          expected_status: 200
+          expected_substring: "{{FLAG}}"
+        havoc:
+          method: GET
+          path: /healthz
+          expected_status: 200
+    flag_policy:
+      mode: dynamic_team
+      config:
+        flag_prefix: awd
+        rotate_interval_sec: 120
+    defense_entry:
+      mode: http
+    access_config:
+      public_base_url: "http://{{TEAM_HOST}}:8080"
+      service_port: 8080
+      exposed_ports:
+        - port: 8080
+          protocol: tcp
+          purpose: http
+    runtime_config:
+      instance_sharing: per_team
+      service_port: 8080

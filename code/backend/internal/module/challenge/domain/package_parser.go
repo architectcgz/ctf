@@ -38,6 +38,9 @@ func buildParsedChallengePackage(rootDir string, manifest *ChallengePackageManif
 	if strings.TrimSpace(manifest.Kind) != "challenge" {
 		return nil, errcode.ErrInvalidParams.WithCause(errors.New("challenge.yml kind 必须为 challenge"))
 	}
+	if strings.EqualFold(strings.TrimSpace(manifest.Meta.Mode), "awd") {
+		return nil, errcode.ErrInvalidParams.WithCause(errors.New("AWD 题目包请使用 AWD 服务模板导入入口"))
+	}
 
 	slug := strings.TrimSpace(manifest.Meta.Slug)
 	if slug == "" {

@@ -23,6 +23,7 @@ import {
   createChallengePublishRequest,
   createContest,
   createContestAWDRound,
+  commitAdminAwdServiceTemplateImport,
   configureChallengeFlag,
   createContestAWDService,
   deleteAdminAwdServiceTemplate,
@@ -46,6 +47,7 @@ import {
   getEnvironmentTemplates,
   getImages,
   getUsers,
+  listAdminAwdServiceTemplateImports,
   listAdminAwdServiceTemplates,
   listChallengeImports,
   listAdminContestChallenges,
@@ -63,6 +65,7 @@ import {
   updateAdminAwdServiceTemplate,
   updateContestAWDService,
   updateContest,
+  previewAdminAwdServiceTemplateImport,
 } from '@/api/admin'
 import * as adminApi from '@/api/admin'
 
@@ -2330,6 +2333,121 @@ describe('admin contest api contract', () => {
       method: 'DELETE',
       url: '/authoring/awd-service-templates/5',
       suppressErrorToast: true,
+    })
+  })
+
+  it('应该把 AWD 题目包导入预览与确认接口转换成后台格式', async () => {
+    const file = new File(['zip'], 'awd-bank-portal-01.zip', { type: 'application/zip' })
+
+    requestMock.mockResolvedValueOnce({
+      id: 'imp-1',
+      file_name: 'awd-bank-portal-01.zip',
+      slug: 'awd-bank-portal-01',
+      title: 'Bank Portal AWD',
+      category: 'web',
+      difficulty: 'hard',
+      description: 'multi-step banking target',
+      service_type: 'web_http',
+      deployment_mode: 'single_container',
+      version: 'v2026.04',
+      checker_type: 'http_standard',
+      checker_config: {
+        put_flag: { method: 'PUT', path: '/api/flag' },
+      },
+      flag_mode: 'dynamic_team',
+      flag_config: { flag_prefix: 'awd' },
+      defense_entry_mode: 'http',
+      access_config: { service_port: 8080 },
+      runtime_config: { image_ref: 'registry.example.edu/ctf/awd-bank-portal:v1' },
+      warnings: ['meta.points 仅作为建议分值，不会直接写入模板。'],
+      created_at: '2026-04-21T08:00:00.000Z',
+    })
+
+    const preview = await previewAdminAwdServiceTemplateImport(file)
+
+    expect(requestMock).toHaveBeenNthCalledWith(1, {
+      method: 'POST',
+      url: '/authoring/awd-service-template-imports',
+      data: expect.any(FormData),
+    })
+    expect(preview).toEqual({
+      id: 'imp-1',
+      file_name: 'awd-bank-portal-01.zip',
+      slug: 'awd-bank-portal-01',
+      title: 'Bank Portal AWD',
+      category: 'web',
+      difficulty: 'hard',
+      description: 'multi-step banking target',
+      service_type: 'web_http',
+      deployment_mode: 'single_container',
+      version: 'v2026.04',
+      checker_type: 'http_standard',
+      checker_config: {
+        put_flag: { method: 'PUT', path: '/api/flag' },
+      },
+      flag_mode: 'dynamic_team',
+      flag_config: { flag_prefix: 'awd' },
+      defense_entry_mode: 'http',
+      access_config: { service_port: 8080 },
+      runtime_config: { image_ref: 'registry.example.edu/ctf/awd-bank-portal:v1' },
+      warnings: ['meta.points 仅作为建议分值，不会直接写入模板。'],
+      created_at: '2026-04-21T08:00:00.000Z',
+    })
+
+    requestMock.mockResolvedValueOnce([
+      {
+        id: 'imp-1',
+        file_name: 'awd-bank-portal-01.zip',
+        slug: 'awd-bank-portal-01',
+        title: 'Bank Portal AWD',
+        category: 'web',
+        difficulty: 'hard',
+        description: 'multi-step banking target',
+        service_type: 'web_http',
+        deployment_mode: 'single_container',
+        version: 'v2026.04',
+        checker_type: 'http_standard',
+        checker_config: {},
+        flag_mode: 'dynamic_team',
+        flag_config: {},
+        defense_entry_mode: 'http',
+        access_config: {},
+        runtime_config: {},
+        warnings: [],
+        created_at: '2026-04-21T08:00:00.000Z',
+      },
+    ])
+
+    await listAdminAwdServiceTemplateImports()
+
+    expect(requestMock).toHaveBeenNthCalledWith(2, {
+      method: 'GET',
+      url: '/authoring/awd-service-template-imports',
+    })
+
+    requestMock.mockResolvedValueOnce({
+      template: {
+        id: 5,
+        name: 'Bank Portal AWD',
+        slug: 'awd-bank-portal-01',
+        category: 'web',
+        difficulty: 'hard',
+        description: 'multi-step banking target',
+        service_type: 'web_http',
+        deployment_mode: 'single_container',
+        version: 'v2026.04',
+        status: 'published',
+        readiness_status: 'pending',
+        created_at: '2026-04-21T08:00:00.000Z',
+        updated_at: '2026-04-21T08:05:00.000Z',
+      },
+    })
+
+    await commitAdminAwdServiceTemplateImport('imp-1')
+
+    expect(requestMock).toHaveBeenNthCalledWith(3, {
+      method: 'POST',
+      url: '/authoring/awd-service-template-imports/imp-1/commit',
     })
   })
 })

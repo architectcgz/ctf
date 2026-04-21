@@ -15,6 +15,7 @@ import (
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	opscmd "ctf-platform/internal/module/ops/application/commands"
 	opsinfra "ctf-platform/internal/module/ops/infrastructure"
+	"gorm.io/gorm"
 )
 
 type asyncTaskCloser interface {
@@ -62,7 +63,7 @@ func BuildChallengeModule(root *Root, runtime *RuntimeModule, ops *OpsModule) (*
 	if err != nil {
 		return nil, err
 	}
-	awdServiceTemplateHandler := buildChallengeAWDServiceTemplateHandler(deps)
+	awdServiceTemplateHandler := buildChallengeAWDServiceTemplateHandler(root.DB(), deps)
 	topologyHandler := buildChallengeTopologyHandler(deps)
 	writeupHandler := buildChallengeWriteupHandler(deps)
 	if root.Config().Challenge.PublishCheck.Enabled {
@@ -84,8 +85,8 @@ func BuildChallengeModule(root *Root, runtime *RuntimeModule, ops *OpsModule) (*
 	}, nil
 }
 
-func buildChallengeAWDServiceTemplateHandler(deps challengeModuleDeps) *challengehttp.AWDServiceTemplateHandler {
-	commandService := challengecmd.NewAWDServiceTemplateService(deps.awdServiceTemplateCommandRepo)
+func buildChallengeAWDServiceTemplateHandler(db *gorm.DB, deps challengeModuleDeps) *challengehttp.AWDServiceTemplateHandler {
+	commandService := challengecmd.NewAWDServiceTemplateCommandFacade(db, deps.awdServiceTemplateCommandRepo)
 	queryService := challengeqry.NewAWDServiceTemplateQueryService(deps.awdServiceTemplateQueryRepo)
 	return challengehttp.NewAWDServiceTemplateHandler(commandService, queryService)
 }

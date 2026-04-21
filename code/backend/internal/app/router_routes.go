@@ -265,6 +265,23 @@ func registerTeacherAuthoringRoutes(adminAuthoring *gin.RouterGroup, deps adminR
 	)
 
 	adminAuthoring.GET("/awd-service-templates", deps.challenge.AWDServiceTemplateHandler.ListTemplates)
+	adminAuthoring.POST("/awd-service-template-imports",
+		audit(middleware.AuditOptions{
+			Action:       model.AuditActionCreate,
+			ResourceType: "awd_service_template_import",
+		}),
+		deps.challenge.AWDServiceTemplateHandler.PreviewImport,
+	)
+	adminAuthoring.GET("/awd-service-template-imports", deps.challenge.AWDServiceTemplateHandler.ListImports)
+	adminAuthoring.GET("/awd-service-template-imports/:id", deps.challenge.AWDServiceTemplateHandler.GetImport)
+	adminAuthoring.POST("/awd-service-template-imports/:id/commit",
+		audit(middleware.AuditOptions{
+			Action:          model.AuditActionCreate,
+			ResourceType:    "awd_service_template_import_commit",
+			ResourceIDParam: "id",
+		}),
+		deps.challenge.AWDServiceTemplateHandler.CommitImport,
+	)
 	adminAuthoring.POST("/awd-service-templates",
 		audit(middleware.AuditOptions{
 			Action:       model.AuditActionCreate,

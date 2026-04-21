@@ -51,6 +51,25 @@ function mountDialog(props?: Record<string, unknown>) {
           version: '1.0.0',
           status: 'published',
           readiness_status: 'passed',
+          checker_type: 'http_standard',
+          checker_config: {
+            put_flag: { path: '/api/flag' },
+            get_flag: { path: '/api/flag' },
+          },
+          flag_mode: 'dynamic_team',
+          flag_config: {
+            flag_prefix: 'awd',
+            rotate_interval_sec: 120,
+          },
+          defense_entry_mode: 'http',
+          access_config: {
+            public_base_url: 'http://bank.internal',
+            service_port: 8080,
+          },
+          runtime_config: {
+            image_id: 9901,
+            service_port: 8080,
+          },
           created_by: '9',
           last_verified_at: '2026-03-20T09:00:00.000Z',
           created_at: '2026-03-20T09:00:00.000Z',
@@ -66,7 +85,7 @@ function mountDialog(props?: Record<string, unknown>) {
     },
     global: {
       stubs: {
-        AdminSurfaceModal: {
+        SlideOverDrawer: {
           props: ['open', 'title'],
           template:
             '<div v-if="open"><div>{{ title }}</div><slot /><slot name="footer" /></div>',
@@ -79,6 +98,18 @@ function mountDialog(props?: Record<string, unknown>) {
 describe('AWDChallengeConfigDialog', () => {
   beforeEach(() => {
     previewMock.mockReset()
+  })
+
+  it('应该在创建时展示来自 AWD 题库模板的继承配置，并隐藏独立题目选择', async () => {
+    const wrapper = mountDialog()
+
+    expect(wrapper.find('#awd-challenge-config-challenge').exists()).toBe(false)
+    expect(wrapper.text()).toContain('题库模板快照')
+    expect(wrapper.text()).toContain('Bank Portal')
+    expect(wrapper.text()).toContain('public_base_url')
+    expect(wrapper.text()).toContain('service_port')
+    expect(wrapper.text()).toContain('flag_prefix')
+    expect(wrapper.text()).toContain('rotate_interval_sec')
   })
 
   it('应该在编辑 http_standard 配置时回填结构化字段和 JSON 预览', async () => {
@@ -136,7 +167,6 @@ describe('AWDChallengeConfigDialog', () => {
     await wrapper.find('#awd-challenge-config-submit').trigger('click')
 
     expect(wrapper.emitted('save')?.[0]?.[0]).toEqual({
-      challenge_id: 101,
       template_id: 501,
       points: 120,
       order: 1,
@@ -177,7 +207,6 @@ describe('AWDChallengeConfigDialog', () => {
     await wrapper.get('#awd-challenge-config-submit').trigger('click')
 
     expect(wrapper.emitted('save')?.[0]?.[0]).toEqual({
-      challenge_id: 101,
       template_id: 501,
       points: 100,
       order: 0,
@@ -215,7 +244,6 @@ describe('AWDChallengeConfigDialog', () => {
     await wrapper.get('#awd-challenge-config-submit').trigger('click')
 
     expect(wrapper.emitted('save')?.[0]?.[0]).toEqual({
-      challenge_id: 101,
       template_id: 501,
       points: 100,
       order: 0,
@@ -287,7 +315,7 @@ describe('AWDChallengeConfigDialog', () => {
     await flushPromises()
 
     expect(previewMock).toHaveBeenCalledWith('awd-1', {
-      challenge_id: 101,
+      challenge_id: 501,
       checker_type: 'http_standard',
       checker_config: {
         put_flag: {
@@ -320,7 +348,6 @@ describe('AWDChallengeConfigDialog', () => {
     await wrapper.get('#awd-challenge-config-submit').trigger('click')
 
     expect(wrapper.emitted('save')?.[0]?.[0]).toEqual({
-      challenge_id: 101,
       template_id: 501,
       points: 100,
       order: 0,
@@ -382,7 +409,6 @@ describe('AWDChallengeConfigDialog', () => {
     await wrapper.get('#awd-challenge-config-submit').trigger('click')
 
     expect(wrapper.emitted('save')?.[0]?.[0]).toEqual({
-      challenge_id: 101,
       template_id: 501,
       points: 100,
       order: 0,

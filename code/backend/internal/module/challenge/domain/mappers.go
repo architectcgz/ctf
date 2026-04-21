@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"encoding/json"
 	"errors"
 	"sort"
 	"strconv"
@@ -75,22 +76,43 @@ func AWDServiceTemplateRespFromModel(template *model.AWDServiceTemplate) *dto.AW
 		return nil
 	}
 	return &dto.AWDServiceTemplateResp{
-		ID:              template.ID,
-		Name:            template.Name,
-		Slug:            template.Slug,
-		Category:        template.Category,
-		Difficulty:      template.Difficulty,
-		Description:     template.Description,
-		ServiceType:     string(template.ServiceType),
-		DeploymentMode:  string(template.DeploymentMode),
-		Version:         template.Version,
-		Status:          string(template.Status),
-		ReadinessStatus: string(template.ReadinessStatus),
-		CreatedBy:       template.CreatedBy,
-		LastVerifiedAt:  template.LastVerifiedAt,
-		UpdatedAt:       template.UpdatedAt,
-		CreatedAt:       template.CreatedAt,
+		ID:               template.ID,
+		Name:             template.Name,
+		Slug:             template.Slug,
+		Category:         template.Category,
+		Difficulty:       template.Difficulty,
+		Description:      template.Description,
+		ServiceType:      string(template.ServiceType),
+		DeploymentMode:   string(template.DeploymentMode),
+		Version:          template.Version,
+		Status:           string(template.Status),
+		ReadinessStatus:  string(template.ReadinessStatus),
+		CheckerType:      string(template.CheckerType),
+		CheckerConfig:    parseTemplateConfigMap(template.CheckerConfig),
+		FlagMode:         strings.TrimSpace(template.FlagMode),
+		FlagConfig:       parseTemplateConfigMap(template.FlagConfig),
+		DefenseEntryMode: strings.TrimSpace(template.DefenseEntryMode),
+		AccessConfig:     parseTemplateConfigMap(template.AccessConfig),
+		RuntimeConfig:    parseTemplateConfigMap(template.RuntimeConfig),
+		CreatedBy:        template.CreatedBy,
+		LastVerifiedAt:   template.LastVerifiedAt,
+		UpdatedAt:        template.UpdatedAt,
+		CreatedAt:        template.CreatedAt,
 	}
+}
+
+func parseTemplateConfigMap(raw string) map[string]any {
+	if strings.TrimSpace(raw) == "" {
+		return nil
+	}
+	result := make(map[string]any)
+	if err := json.Unmarshal([]byte(raw), &result); err != nil {
+		return nil
+	}
+	if len(result) == 0 {
+		return nil
+	}
+	return result
 }
 
 func ImageRespFromModel(image *model.Image) *dto.ImageResp {

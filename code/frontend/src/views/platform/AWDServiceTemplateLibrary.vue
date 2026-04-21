@@ -19,16 +19,25 @@ const {
   dialogOpen,
   dialogMode,
   saving,
+  uploading,
+  queueLoading,
+  importQueue,
+  uploadResults,
+  selectedImportFileName,
   formDraft,
   openCreateDialog,
   openEditDialog,
   closeDialog,
+  refreshImportQueue,
+  selectImportPackages,
+  commitImportPreview,
   saveTemplate,
   removeTemplate,
 } = usePlatformAwdServiceTemplates()
 
 onMounted(() => {
   void refresh()
+  void refreshImportQueue()
 })
 
 function updateKeyword(value: string) {
@@ -61,10 +70,18 @@ function handleDialogOpenChange(value: boolean) {
       :keyword="keyword"
       :service-type-filter="serviceTypeFilter"
       :status-filter="statusFilter"
+      :uploading="uploading"
+      :queue-loading="queueLoading"
+      :import-queue="importQueue"
+      :upload-results="uploadResults"
+      :selected-file-name="selectedImportFileName"
       @refresh="refresh"
       @update-keyword="updateKeyword"
       @update-service-type-filter="updateServiceTypeFilter"
       @update-status-filter="updateStatusFilter"
+      @refresh-import-queue="refreshImportQueue"
+      @select-import-packages="selectImportPackages"
+      @commit-import="commitImportPreview"
       @open-create-dialog="openCreateDialog"
       @open-edit-dialog="openEditDialog"
       @delete-template="removeTemplate"

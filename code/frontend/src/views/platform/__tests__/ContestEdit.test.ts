@@ -431,7 +431,7 @@ const AWDChallengeConfigDialogStub = defineComponent({
   },
   template: `
     <div v-if="open">
-      <div>{{ mode === 'create' ? '新增 AWD 题目' : '编辑 AWD 题目配置' }}</div>
+      <div>{{ mode === 'create' ? '新增 AWD 题库题目' : '编辑 AWD 题目配置' }}</div>
       <div v-if="mode === 'edit'">{{ draft?.title }}</div>
       <select
         id="awd-challenge-config-template"
@@ -1487,7 +1487,7 @@ describe('ContestEdit', () => {
     await flushPromises()
 
     expect(toastMocks.error).toHaveBeenCalledWith('catalog failed')
-    expect(wrapper.text()).toContain('新增 AWD 题目')
+    expect(wrapper.text()).toContain('新增 AWD 题库题目')
   })
 
   it('应该在 AWD 辅助数据仍在加载时显示阶段级加载提示而不是空态', async () => {
@@ -1853,7 +1853,7 @@ describe('ContestEdit', () => {
     await flushPromises()
 
     expect(toastMocks.error).toHaveBeenCalledWith('save failed')
-    expect(wrapper.text()).toContain('新增 AWD 题目')
+    expect(wrapper.text()).toContain('新增 AWD 题库题目')
   })
 
   it('应该在 AWD 赛事的题目池阶段展示摘要列与筛选入口', async () => {

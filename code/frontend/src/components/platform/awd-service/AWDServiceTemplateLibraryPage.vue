@@ -5,17 +5,21 @@ import {
   Box,
   CheckCircle,
   Clock,
-  LayoutGrid,
   Plus,
   RefreshCw,
 } from 'lucide-vue-next'
 
-import type { AdminAwdServiceTemplateData } from '@/api/contracts'
+import type {
+  AdminAwdServiceTemplateData,
+  AdminAwdServiceTemplateImportPreview,
+} from '@/api/contracts'
+import ChallengePackageImportEntry from '@/components/platform/challenge/ChallengePackageImportEntry.vue'
 import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
 import WorkspaceDirectoryPagination from '@/components/common/WorkspaceDirectoryPagination.vue'
 import WorkspaceDirectoryToolbar from '@/components/common/WorkspaceDirectoryToolbar.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
+import type { PlatformAwdServiceTemplateImportUploadResult } from '@/composables/usePlatformAwdServiceTemplates'
 
 type AwdServiceTypeFilter = AdminAwdServiceTemplateData['service_type'] | ''
 type AwdServiceStatusFilter = AdminAwdServiceTemplateData['status'] | ''
@@ -29,13 +33,21 @@ const props = defineProps<{
   keyword: string
   serviceTypeFilter: AwdServiceTypeFilter
   statusFilter: AwdServiceStatusFilter
+  uploading: boolean
+  queueLoading: boolean
+  importQueue: AdminAwdServiceTemplateImportPreview[]
+  uploadResults: PlatformAwdServiceTemplateImportUploadResult[]
+  selectedFileName?: string
 }>()
 
 const emit = defineEmits<{
   refresh: []
+  refreshImportQueue: []
   updateKeyword: [value: string]
   updateServiceTypeFilter: [value: AwdServiceTypeFilter]
   updateStatusFilter: [value: AwdServiceStatusFilter]
+  selectImportPackages: [files: File[]]
+  commitImport: [preview: AdminAwdServiceTemplateImportPreview]
   openCreateDialog: []
   openEditDialog: [template: AdminAwdServiceTemplateData]
   deleteTemplate: [template: AdminAwdServiceTemplateData]
@@ -48,6 +60,7 @@ const webHttpCount = computed(() => props.list.filter((item) => item.service_typ
 const pendingReadinessCount = computed(
   () => props.list.filter((item) => item.readiness_status === 'pending').length
 )
+const importQueueCount = computed(() => props.importQueue.length)
 const hasActiveFilters = computed(() =>
   Boolean(props.keyword.trim() || props.serviceTypeFilter || props.statusFilter)
 )
@@ -184,6 +197,17 @@ function handleStatusFilterChange(event: Event): void {
   const target = event.target
   emit('updateStatusFilter', target instanceof HTMLSelectElement ? target.value as AwdServiceStatusFilter : '')
 }
+
+function handleSelectImportPackages(files: File[]) {
+  emit('selectImportPackages', files)
+}
+
+function formatStructuredJSON(value?: Record<string, unknown>): string {
+  if (!value || Object.keys(value).length === 0) {
+    return '{}'
+  }
+  return JSON.stringify(value, null, 2)
+}
 </script>
 
 <template>
@@ -221,6 +245,137 @@ function handleStatusFilterChange(event: Event): void {
         </button>
       </div>
     </header>
+
+    <section class="workspace-directory-section awd-template-import__section">
+      <header class="list-heading awd-template-import__head">
+        <div>
+          <div class="workspace-overline">
+            AWD Package Import
+          </div>
+          <h2 class="list-heading__title">
+            导入 AWD 题目包
+          </h2>
+          <p class="workspace-page-copy awd-template-import__copy">
+            教师按统一题目包规范写好 `challenge.yml`、题面和服务定义后，从这里导入完整模板；比赛里只再做分值和 Checker 试跑配置。
+          </p>
+        </div>
+        <div class="awd-template-import__head-actions">
+          <a
+            class="ui-btn ui-btn--ghost"
+            href="/downloads/awd-service-template-package-sample-v1.zip"
+            download="awd-service-template-package-sample-v1.zip"
+          >
+            下载示例题包
+          </a>
+          <button
+            type="button"
+            class="ui-btn ui-btn--ghost"
+            @click="emit('refreshImportQueue')"
+          >
+            <RefreshCw class="h-4 w-4" />
+            刷新导入队列
+          </button>
+        </div>
+      </header>
+
+      <ChallengePackageImportEntry
+        :hide-header="true"
+        :uploading="uploading"
+        :selected-file-name="selectedFileName"
+        @select="handleSelectImportPackages"
+      />
+
+      <div
+        v-if="uploadResults.length > 0"
+        class="awd-template-import__uploads"
+      >
+        <article
+          v-for="item in uploadResults"
+          :key="item.id"
+          class="awd-template-import__upload"
+          :class="item.status === 'success' ? 'is-success' : 'is-error'"
+        >
+          <div class="awd-template-import__upload-head">
+            <strong>{{ item.fileName }}</strong>
+            <span>{{ item.status === 'success' ? '成功' : '失败' }}</span>
+          </div>
+          <p>{{ item.message }}</p>
+        </article>
+      </div>
+
+      <div class="awd-template-import__queue-head">
+        <div class="workspace-overline">
+          Pending Imports
+        </div>
+        <span class="awd-template-import__queue-count">共 {{ importQueueCount }} 个待确认包</span>
+      </div>
+
+      <div
+        v-if="queueLoading"
+        class="awd-template-import__state"
+      >
+        正在同步导入队列...
+      </div>
+      <AppEmpty
+        v-else-if="importQueue.length === 0"
+        class="awd-template-import__empty"
+        icon="Box"
+        title="当前没有待确认的 AWD 题目包"
+        description="上传后会先进入这里，确认无误再落入 AWD 模板库。"
+      />
+      <div
+        v-else
+        class="awd-template-import__queue"
+      >
+        <article
+          v-for="item in importQueue"
+          :key="item.id"
+          class="awd-template-import__card"
+        >
+          <div class="awd-template-import__card-head">
+            <div>
+              <h3 class="awd-template-import__card-title">
+                {{ item.title }}
+              </h3>
+              <p class="awd-template-import__card-file">
+                {{ item.file_name }}
+              </p>
+            </div>
+            <button
+              type="button"
+              class="ui-btn ui-btn--primary"
+              @click="emit('commitImport', item)"
+            >
+              确认导入
+            </button>
+          </div>
+
+          <div class="awd-template-import__chips">
+            <span class="awd-status-pill awd-status-pill--primary">{{ item.service_type }}</span>
+            <span class="awd-status-pill awd-status-pill--warning">{{ item.deployment_mode }}</span>
+            <span class="awd-status-pill awd-status-pill--muted">{{ item.flag_mode || '未定义 flag_mode' }}</span>
+            <span class="awd-status-pill awd-status-pill--success">{{ item.defense_entry_mode || '未定义入口' }}</span>
+          </div>
+
+          <div class="awd-template-import__grid">
+            <pre class="awd-template-import__json">{{ formatStructuredJSON(item.access_config) }}</pre>
+            <pre class="awd-template-import__json">{{ formatStructuredJSON(item.runtime_config) }}</pre>
+          </div>
+
+          <ul
+            v-if="item.warnings?.length"
+            class="awd-template-import__warnings"
+          >
+            <li
+              v-for="warning in item.warnings"
+              :key="warning"
+            >
+              {{ warning }}
+            </li>
+          </ul>
+        </article>
+      </div>
+    </section>
 
     <div class="metric-panel-grid--premium cols-4 mb-6">
       <article class="metric-panel-card--premium">
@@ -440,6 +595,28 @@ function handleStatusFilterChange(event: Event): void {
 <style scoped>
 .awd-template-library__header { margin-bottom: var(--space-6); }
 .awd-template-library__actions { display: flex; align-items: center; gap: var(--space-3); }
+.awd-template-import__section { margin-bottom: var(--space-6); }
+.awd-template-import__head { align-items: flex-start; }
+.awd-template-import__head-actions { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
+.awd-template-import__copy { margin: var(--space-2) 0 0; max-width: 48rem; }
+.awd-template-import__uploads { display: grid; gap: var(--space-3); margin-top: var(--space-4); }
+.awd-template-import__upload { padding: var(--space-3); border-radius: 0.9rem; border: 1px solid var(--color-border-default); background: var(--color-bg-surface); }
+.awd-template-import__upload.is-success { border-color: color-mix(in srgb, var(--color-success) 22%, transparent); }
+.awd-template-import__upload.is-error { border-color: color-mix(in srgb, var(--color-danger) 22%, transparent); }
+.awd-template-import__upload-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-2); }
+.awd-template-import__upload p { margin: 0; color: var(--journal-muted); }
+.awd-template-import__queue-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin-top: var(--space-5); }
+.awd-template-import__queue-count { color: var(--journal-muted); font-size: var(--font-size-0-875); }
+.awd-template-import__state { padding: var(--space-4) 0; color: var(--journal-muted); }
+.awd-template-import__queue { display: grid; gap: var(--space-4); margin-top: var(--space-4); }
+.awd-template-import__card { display: grid; gap: var(--space-4); padding: var(--space-4); border: 1px solid color-mix(in srgb, var(--journal-border) 76%, transparent); border-radius: 1rem; background: color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base)); }
+.awd-template-import__card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-4); }
+.awd-template-import__card-title { margin: 0; font-size: var(--font-size-1-05); font-weight: 700; color: var(--journal-ink); }
+.awd-template-import__card-file { margin: var(--space-1) 0 0; color: var(--journal-muted); font-family: var(--font-family-mono); font-size: var(--font-size-0-8); }
+.awd-template-import__chips { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.awd-template-import__grid { display: grid; gap: var(--space-3); grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.awd-template-import__json { margin: 0; min-height: 6rem; padding: var(--space-3); border-radius: 0.85rem; background: var(--color-bg-surface); border: 1px solid color-mix(in srgb, var(--journal-border) 72%, transparent); color: var(--journal-muted); font-family: var(--font-family-mono); font-size: 12px; line-height: 1.6; white-space: pre-wrap; word-break: break-word; }
+.awd-template-import__warnings { display: grid; gap: var(--space-2); margin: 0; padding-left: 1.1rem; color: var(--journal-muted); }
 .awd-template-library__filter-grid { display: grid; gap: var(--space-4); }
 .awd-template-library__filter-field { display: grid; gap: var(--space-2); }
 .awd-template-library__filter-label { font-size: var(--font-size-0-72); font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--journal-muted); }
@@ -462,5 +639,8 @@ function handleStatusFilterChange(event: Event): void {
 .awd-row-btn { display: inline-flex; align-items: center; justify-content: center; min-height: 1.85rem; padding: 0 0.85rem; border: 1px solid color-mix(in srgb, var(--journal-border) 72%, transparent); border-radius: 8px; background: color-mix(in srgb, var(--journal-surface) 94%, transparent); font-size: 12px; font-weight: 800; color: var(--journal-muted); transition: all 0.2s ease; }
 .awd-row-btn:hover { border-color: var(--color-primary); background: color-mix(in srgb, var(--color-primary) 8%, var(--journal-surface)); color: var(--color-primary); transform: translateY(-1px); }
 .awd-row-btn--danger:hover { border-color: var(--color-danger); background: color-mix(in srgb, var(--color-danger) 8%, var(--journal-surface)); color: var(--color-danger); }
-@media (max-width: 1024px) { .awd-template-table__actions { flex-direction: column; align-items: stretch; } }
+@media (max-width: 1024px) {
+  .awd-template-import__grid { grid-template-columns: 1fr; }
+  .awd-template-table__actions { flex-direction: column; align-items: stretch; }
+}
 </style>
