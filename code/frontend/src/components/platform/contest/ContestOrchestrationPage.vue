@@ -135,8 +135,8 @@ function openContestWorkbench(contest: ContestDetailData) {
           </div>
         </header>
 
-        <div class="metric-panel-grid--premium">
-          <div class="metric-panel-card--premium">
+        <div class="metric-panel-grid metric-panel-grid--premium">
+          <div class="metric-panel-card metric-panel-card--premium">
             <div class="metric-panel-label">
               <span>赛事总量</span>
               <Trophy class="h-4 w-4" />
@@ -149,7 +149,7 @@ function openContestWorkbench(contest: ContestDetailData) {
             </div>
           </div>
 
-          <div class="metric-panel-card--premium">
+          <div class="metric-panel-card metric-panel-card--premium">
             <div class="metric-panel-label">
               <span>报名中</span>
               <Users class="h-4 w-4" />
@@ -162,7 +162,7 @@ function openContestWorkbench(contest: ContestDetailData) {
             </div>
           </div>
 
-          <div class="metric-panel-card--premium">
+          <div class="metric-panel-card metric-panel-card--premium">
             <div class="metric-panel-label">
               <span>进行中</span>
               <Activity class="h-4 w-4" />
@@ -175,7 +175,7 @@ function openContestWorkbench(contest: ContestDetailData) {
             </div>
           </div>
 
-          <div class="metric-panel-card--premium">
+          <div class="metric-panel-card metric-panel-card--premium">
             <div class="metric-panel-label">
               <span>AWD 模式</span>
               <Layers class="h-4 w-4" />

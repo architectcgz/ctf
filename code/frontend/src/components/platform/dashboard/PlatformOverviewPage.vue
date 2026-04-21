@@ -67,11 +67,11 @@ const {
               </span>
             </div>
 
-            <div class="metric-panel-grid--premium cols-4 mb-14">
+            <div class="metric-panel-grid metric-panel-grid--premium cols-4 mb-14">
               <article
                 v-for="item in overviewMetrics"
                 :key="item.key"
-                class="metric-panel-card--premium"
+                class="metric-panel-card metric-panel-card--premium"
               >
                 <div class="metric-panel-label">
                   <span>{{ item.label }}</span>
@@ -161,12 +161,12 @@ const {
 
             <div
               v-else-if="loading"
-              class="metric-panel-grid--premium cols-4 mb-10"
+              class="metric-panel-grid metric-panel-grid--premium cols-4 mb-10"
             >
               <div
                 v-for="index in 4"
                 :key="index"
-                class="metric-panel-card--premium animate-pulse"
+                class="metric-panel-card metric-panel-card--premium animate-pulse"
               >
                 <div class="h-24 bg-white/5 rounded-2xl" />
               </div>

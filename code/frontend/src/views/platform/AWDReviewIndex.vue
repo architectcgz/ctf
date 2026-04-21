@@ -136,8 +136,8 @@ function resetFilters(): void {
         </div>
       </header>
 
-      <div class="metric-panel-grid--premium cols-3">
-        <article class="metric-panel-card--premium">
+      <div class="metric-panel-grid metric-panel-grid--premium cols-3">
+        <article class="metric-panel-card metric-panel-card--premium">
           <div class="metric-panel-label">
             <span>赛事数量</span>
             <FolderKanban class="h-4 w-4" />
@@ -150,7 +150,7 @@ function resetFilters(): void {
           </div>
         </article>
 
-        <article class="metric-panel-card--premium">
+        <article class="metric-panel-card metric-panel-card--premium">
           <div class="metric-panel-label">
             <span>进行中</span>
             <ScanEye class="h-4 w-4" />
@@ -163,7 +163,7 @@ function resetFilters(): void {
           </div>
         </article>
 
-        <article class="metric-panel-card--premium">
+        <article class="metric-panel-card metric-panel-card--premium">
           <div class="metric-panel-label">
             <span>可导出报告</span>
             <Waypoints class="h-4 w-4" />

@@ -232,8 +232,8 @@ function getChallengeRow(row: unknown): PlatformChallengeListRow {
             </div>
           </div>
 
-          <div class="metric-panel-grid--premium cols-4 manage-summary-grid">
-            <article class="metric-panel-card--premium">
+          <div class="metric-panel-grid metric-panel-grid--premium cols-4 manage-summary-grid">
+            <article class="metric-panel-card metric-panel-card--premium">
               <div class="metric-panel-label">
                 <span>题目总量</span>
                 <Book class="h-4 w-4" />
@@ -246,7 +246,7 @@ function getChallengeRow(row: unknown): PlatformChallengeListRow {
               </div>
             </article>
 
-            <article class="metric-panel-card--premium">
+            <article class="metric-panel-card metric-panel-card--premium">
               <div class="metric-panel-label">
                 <span>已发布</span>
                 <CheckCircle class="h-4 w-4" />
@@ -259,7 +259,7 @@ function getChallengeRow(row: unknown): PlatformChallengeListRow {
               </div>
             </article>
 
-            <article class="metric-panel-card--premium">
+            <article class="metric-panel-card metric-panel-card--premium">
               <div class="metric-panel-label">
                 <span>草稿存量</span>
                 <Edit3 class="h-4 w-4" />
@@ -272,7 +272,7 @@ function getChallengeRow(row: unknown): PlatformChallengeListRow {
               </div>
             </article>
 
-            <article class="metric-panel-card--premium">
+            <article class="metric-panel-card metric-panel-card--premium">
               <div class="metric-panel-label">
                 <span>已归档</span>
                 <Calendar class="h-4 w-4" />

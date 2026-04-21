@@ -301,8 +301,8 @@ onMounted(() => {
         </div>
       </header>
 
-      <div class="metric-panel-grid--premium cols-3">
-        <article class="metric-panel-card--premium">
+      <div class="metric-panel-grid metric-panel-grid--premium cols-3">
+        <article class="metric-panel-card metric-panel-card--premium">
           <div class="metric-panel-label">
             <span>当前可见</span>
             <Server class="h-4 w-4" />
@@ -315,7 +315,7 @@ onMounted(() => {
           </div>
         </article>
 
-        <article class="metric-panel-card--premium">
+        <article class="metric-panel-card metric-panel-card--premium">
           <div class="metric-panel-label">
             <span>运行中</span>
             <Activity class="h-4 w-4" />
@@ -328,7 +328,7 @@ onMounted(() => {
           </div>
         </article>
 
-        <article class="metric-panel-card--premium">
+        <article class="metric-panel-card metric-panel-card--premium">
           <div class="metric-panel-label">
             <span>即将到期</span>
             <AlertTriangle class="h-4 w-4" />

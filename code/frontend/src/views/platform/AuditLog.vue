@@ -336,8 +336,8 @@ watch(
           </h1>
         </div>
 
-        <div class="metric-panel-grid--premium cols-3">
-          <article class="metric-panel-card--premium">
+        <div class="metric-panel-grid metric-panel-grid--premium cols-3">
+          <article class="metric-panel-card metric-panel-card--premium">
             <div class="metric-panel-label">
               <span>当前页加载</span>
               <Activity class="h-4 w-4" />
@@ -350,7 +350,7 @@ watch(
             </div>
           </article>
           
-          <article class="metric-panel-card--premium">
+          <article class="metric-panel-card metric-panel-card--premium">
             <div class="metric-panel-label">
               <span>全站总记录</span>
               <Trophy class="h-4 w-4" />
@@ -363,7 +363,7 @@ watch(
             </div>
           </article>
 
-          <article class="metric-panel-card--premium">
+          <article class="metric-panel-card metric-panel-card--premium">
             <div class="metric-panel-label">
               <span>总分页范围</span>
               <Layers class="h-4 w-4" />

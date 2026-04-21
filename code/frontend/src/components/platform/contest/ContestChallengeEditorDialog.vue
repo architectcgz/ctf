@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, reactive, watch } from 'vue'
 
-import AdminSurfaceModal from '@/components/common/modal-templates/AdminSurfaceModal.vue'
+import SlideOverDrawer from '@/components/common/modal-templates/SlideOverDrawer.vue'
 import type {
   AdminAwdServiceTemplateData,
   AdminChallengeListItem,
@@ -186,7 +186,7 @@ function submit() {
 </script>
 
 <template>
-  <AdminSurfaceModal
+  <SlideOverDrawer
     :open="open"
     :title="dialogTitle"
     :subtitle="
@@ -195,7 +195,7 @@ function submit() {
         : '维护赛事题目的关联关系、顺序、分值和可见性。'
     "
     eyebrow="Contest Orchestration"
-    width="40rem"
+    width="42rem"
     @close="closeDialog"
     @update:open="emit('update:open', $event)"
   >
@@ -443,7 +443,7 @@ function submit() {
         </button>
       </div>
     </template>
-  </AdminSurfaceModal>
+  </SlideOverDrawer>
 </template>
 
 <style scoped>

@@ -255,8 +255,8 @@ function handleImportChange(event: Event): void {
           </div>
         </header>
 
-        <div class="metric-panel-grid--premium cols-4">
-          <div class="metric-panel-card--premium">
+        <div class="metric-panel-grid metric-panel-grid--premium cols-4">
+          <div class="metric-panel-card metric-panel-card--premium">
             <div class="metric-panel-label">
               <span>用户总量</span>
               <Users class="h-4 w-4" />
@@ -269,7 +269,7 @@ function handleImportChange(event: Event): void {
             </div>
           </div>
 
-          <div class="metric-panel-card--premium">
+          <div class="metric-panel-card metric-panel-card--premium">
             <div class="metric-panel-label">
               <span>活跃账号</span>
               <UserPlus class="h-4 w-4" />
@@ -282,7 +282,7 @@ function handleImportChange(event: Event): void {
             </div>
           </div>
 
-          <div class="metric-panel-card--premium">
+          <div class="metric-panel-card metric-panel-card--premium">
             <div class="metric-panel-label">
               <span>教师角色</span>
               <GraduationCap class="h-4 w-4" />
@@ -295,7 +295,7 @@ function handleImportChange(event: Event): void {
             </div>
           </div>
 
-          <div class="metric-panel-card--premium">
+          <div class="metric-panel-card metric-panel-card--premium">
             <div class="metric-panel-label">
               <span>导入回执</span>
               <FileUp class="h-4 w-4" />
