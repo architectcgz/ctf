@@ -2066,6 +2066,17 @@ func TestFullRouter_AWDServiceTemplateAuthoringStateMatrix(t *testing.T) {
 	}, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
+	invalidCategoryResp := performFullRouterRequest(t, env.router, http.MethodPost, "/api/v1/authoring/awd-service-templates", map[string]any{
+		"name":            "Invalid Category AWD",
+		"slug":            "invalid-category-awd",
+		"category":        "mobile",
+		"difficulty":      model.ChallengeDifficultyHard,
+		"description":     "invalid category",
+		"service_type":    "web_http",
+		"deployment_mode": "single_container",
+	}, adminHeaders)
+	assertFullRouterStatus(t, invalidCategoryResp, http.StatusBadRequest)
+
 	var createdTemplate dto.AWDServiceTemplateResp
 	decodeFullRouterData(t, resp, &createdTemplate)
 	if createdTemplate.ID == 0 || createdTemplate.Slug != "bank-portal-awd" {

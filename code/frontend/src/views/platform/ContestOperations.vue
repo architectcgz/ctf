@@ -53,25 +53,42 @@ onMounted(() => {
 
 <template>
   <div class="contest-ops-shell">
-    <div v-if="loading" class="ops-loading-overlay">
+    <div
+      v-if="loading"
+      class="ops-loading-overlay"
+    >
       <AppLoading>正在建立指挥链路...</AppLoading>
     </div>
 
     <main class="ops-content">
-      <header v-if="contest" class="ops-topbar">
+      <header
+        v-if="contest"
+        class="ops-topbar"
+      >
         <div class="topbar-left">
-          <button class="icon-btn" title="退出" @click="exitToList">
+          <button
+            class="icon-btn"
+            title="退出"
+            @click="exitToList"
+          >
             <ChevronLeft class="h-5 w-5" />
           </button>
-          <div class="divider"></div>
+          <div class="divider" />
           <div class="brand">
-            <div class="brand-overline">Command Center</div>
-            <h1 class="brand-title">{{ contest.title }}</h1>
+            <div class="brand-overline">
+              Command Center
+            </div>
+            <h1 class="brand-title">
+              {{ contest.title }}
+            </h1>
           </div>
         </div>
 
         <div class="topbar-right">
-          <button class="studio-link-btn" @click="goToStudio">
+          <button
+            class="studio-link-btn"
+            @click="goToStudio"
+          >
             <Settings class="h-4 w-4" />
             <span>进入竞赛工作室</span>
           </button>

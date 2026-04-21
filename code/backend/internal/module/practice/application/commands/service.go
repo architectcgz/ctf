@@ -2,6 +2,7 @@ package commands
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -134,18 +135,17 @@ func (s *Service) startPersonalChallenge(ctx context.Context, userID, challengeI
 }
 
 func (s *Service) startChallengeWithScope(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) (*dto.InstanceResp, error) {
-	chal, err := s.challengeRepo.FindByID(challengeID)
+	chal, topology, err := s.loadRuntimeSubjectWithScope(ctx, scope, challengeID)
 	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return nil, errcode.ErrChallengeNotFound
-		}
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, err
 	}
 	if chal.Status != model.ChallengeStatusPublished {
 		return nil, errcode.ErrChallengeNotPublish
 	}
 	if chal.ImageID == 0 {
-		return nil, errcode.ErrInvalidParams.WithCause(errors.New(errMsgChallengeNoTarget))
+		if topology == nil {
+			return nil, errcode.ErrInvalidParams.WithCause(errors.New(errMsgChallengeNoTarget))
+		}
 	}
 	scope = resolveEffectiveInstanceScope(chal, scope)
 
@@ -240,7 +240,7 @@ func (s *Service) startChallengeWithScope(ctx context.Context, userID, challenge
 		return domain.InstanceRespFromModel(instance), nil
 	}
 
-	if err := s.provisionInstance(ctx, instance, chal, flag); err != nil {
+	if err := s.provisionInstance(ctx, instance, chal, topology, flag); err != nil {
 		return nil, err
 	}
 	return domain.InstanceRespFromModel(instance), nil
@@ -362,7 +362,7 @@ func (s *Service) processPendingInstance(ctx context.Context, instanceID int64) 
 		return
 	}
 
-	chal, err := s.challengeRepo.FindByID(instance.ChallengeID)
+	chal, topology, err := s.loadRuntimeSubjectForInstance(ctx, instance)
 	if err != nil {
 		s.logger.Error("读取题目失败", zap.Int64("instance_id", instanceID), zap.Int64("challenge_id", instance.ChallengeID), zap.Error(err))
 		s.markInstanceFailed(instance)
@@ -376,16 +376,16 @@ func (s *Service) processPendingInstance(ctx context.Context, instanceID int64) 
 		return
 	}
 
-	if err := s.provisionInstance(ctx, instance, chal, flag); err != nil {
+	if err := s.provisionInstance(ctx, instance, chal, topology, flag); err != nil {
 		s.logger.Warn("实例异步启动失败", zap.Int64("instance_id", instanceID), zap.Error(err))
 	}
 }
 
-func (s *Service) provisionInstance(ctx context.Context, instance *model.Instance, chal *model.Challenge, flag string) error {
+func (s *Service) provisionInstance(ctx context.Context, instance *model.Instance, chal *model.Challenge, topology *model.ChallengeTopology, flag string) error {
 	createCtx, cancel := context.WithTimeout(ctx, s.config.Container.CreateTimeout)
 	defer cancel()
 
-	if err := s.createContainer(createCtx, instance, chal, flag); err != nil {
+	if err := s.createContainer(createCtx, instance, chal, topology, flag); err != nil {
 		s.logger.Error("容器创建失败", zap.Error(err), zap.Int64("instance_id", instance.ID))
 		s.markInstanceFailed(instance)
 		return err
@@ -1013,6 +1013,52 @@ func (s *Service) resolveContestAWDServiceInstanceScope(ctx context.Context, use
 	return service.ChallengeID, scope, nil
 }
 
+func (s *Service) loadRuntimeSubjectWithScope(ctx context.Context, scope practiceports.InstanceScope, challengeID int64) (*model.Challenge, *model.ChallengeTopology, error) {
+	if scope.ServiceID != nil && scope.ContestID != nil {
+		return s.loadContestAWDServiceRuntimeSubject(ctx, *scope.ContestID, *scope.ServiceID)
+	}
+
+	chal, err := s.challengeRepo.FindByID(challengeID)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, nil, errcode.ErrChallengeNotFound
+		}
+		return nil, nil, errcode.ErrInternal.WithCause(err)
+	}
+	topology, err := s.challengeRepo.FindChallengeTopologyByChallengeID(chal.ID)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil, errcode.ErrContainerCreateFailed.WithCause(err)
+	}
+	return chal, topology, nil
+}
+
+func (s *Service) loadRuntimeSubjectForInstance(ctx context.Context, instance *model.Instance) (*model.Challenge, *model.ChallengeTopology, error) {
+	if instance != nil && instance.ServiceID != nil && instance.ContestID != nil {
+		return s.loadContestAWDServiceRuntimeSubject(ctx, *instance.ContestID, *instance.ServiceID)
+	}
+	return s.loadRuntimeSubjectWithScope(ctx, practiceports.InstanceScope{}, instance.ChallengeID)
+}
+
+func (s *Service) loadContestAWDServiceRuntimeSubject(ctx context.Context, contestID, serviceID int64) (*model.Challenge, *model.ChallengeTopology, error) {
+	service, err := s.repo.FindContestAWDServiceWithContext(ctx, contestID, serviceID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil, errcode.ErrChallengeNotInContest
+		}
+		return nil, nil, errcode.ErrInternal.WithCause(err)
+	}
+	snapshot, err := model.DecodeContestAWDServiceSnapshot(service.ServiceSnapshot)
+	if err != nil {
+		return nil, nil, errcode.ErrInternal.WithCause(err)
+	}
+	chal := buildContestAWDServiceVirtualChallenge(service, snapshot)
+	topology, err := buildContestAWDServiceVirtualTopology(service, snapshot)
+	if err != nil {
+		return nil, nil, errcode.ErrInternal.WithCause(err)
+	}
+	return chal, topology, nil
+}
+
 func (s *Service) resolveContestBaseInstanceScope(ctx context.Context, userID, contestID int64) (practiceports.InstanceScope, error) {
 	if s.repo == nil {
 		return practiceports.InstanceScope{}, errcode.ErrInternal.WithCause(fmt.Errorf("practice repository is nil"))
@@ -1092,6 +1138,141 @@ func resolveEffectiveInstanceScope(chal *model.Challenge, scope practiceports.In
 	return effective
 }
 
+func buildContestAWDServiceVirtualChallenge(service *model.ContestAWDService, snapshot model.ContestAWDServiceSnapshot) *model.Challenge {
+	chal := &model.Challenge{
+		ID:              service.ChallengeID,
+		Title:           firstRuntimeValue(service.DisplayName, snapshot.Name),
+		Category:        snapshot.Category,
+		Difficulty:      snapshot.Difficulty,
+		Points:          parseContestAWDServiceSnapshotPoints(service.ScoreConfig),
+		Status:          model.ChallengeStatusPublished,
+		ImageID:         parseContestAWDServiceSnapshotImageID(snapshot.RuntimeConfig),
+		FlagType:        parseContestAWDServiceSnapshotFlagType(snapshot.FlagConfig),
+		FlagPrefix:      parseContestAWDServiceSnapshotFlagPrefix(snapshot.FlagConfig),
+		InstanceSharing: parseContestAWDServiceSnapshotInstanceSharing(snapshot.RuntimeConfig),
+	}
+	if chal.FlagPrefix == "" {
+		chal.FlagPrefix = "flag"
+	}
+	return chal
+}
+
+func buildContestAWDServiceVirtualTopology(service *model.ContestAWDService, snapshot model.ContestAWDServiceSnapshot) (*model.ChallengeTopology, error) {
+	topologyPayload, ok := snapshot.RuntimeConfig["topology"]
+	if !ok {
+		return nil, nil
+	}
+	topologyMap, ok := topologyPayload.(map[string]any)
+	if !ok {
+		return nil, nil
+	}
+	entryNodeKey, _ := topologyMap["entry_node_key"].(string)
+	specPayload, ok := topologyMap["spec"]
+	if !ok {
+		return nil, nil
+	}
+	specRaw, err := json.Marshal(specPayload)
+	if err != nil {
+		return nil, err
+	}
+	return &model.ChallengeTopology{
+		ChallengeID:  service.ChallengeID,
+		EntryNodeKey: strings.TrimSpace(entryNodeKey),
+		Spec:         string(specRaw),
+	}, nil
+}
+
+func parseContestAWDServiceSnapshotPoints(scoreConfig string) int {
+	if scoreConfig == "" {
+		return 0
+	}
+	var payload map[string]any
+	if err := json.Unmarshal([]byte(scoreConfig), &payload); err != nil {
+		return 0
+	}
+	return parseContestAWDServiceSnapshotInt(payload["points"])
+}
+
+func parseContestAWDServiceSnapshotImageID(runtimeConfig map[string]any) int64 {
+	if runtimeConfig == nil {
+		return 0
+	}
+	value := parseContestAWDServiceSnapshotInt(runtimeConfig["image_id"])
+	if value <= 0 {
+		return 0
+	}
+	return int64(value)
+}
+
+func parseContestAWDServiceSnapshotInstanceSharing(runtimeConfig map[string]any) model.InstanceSharing {
+	if runtimeConfig == nil {
+		return model.InstanceSharingPerTeam
+	}
+	value, _ := runtimeConfig["instance_sharing"].(string)
+	switch model.InstanceSharing(value) {
+	case model.InstanceSharingShared:
+		return model.InstanceSharingShared
+	case model.InstanceSharingPerUser:
+		return model.InstanceSharingPerUser
+	case model.InstanceSharingPerTeam:
+		return model.InstanceSharingPerTeam
+	default:
+		return model.InstanceSharingPerTeam
+	}
+}
+
+func parseContestAWDServiceSnapshotFlagType(flagConfig map[string]any) string {
+	if flagConfig == nil {
+		return model.FlagTypeDynamic
+	}
+	value, _ := flagConfig["flag_type"].(string)
+	if strings.TrimSpace(value) == "" {
+		return model.FlagTypeDynamic
+	}
+	return value
+}
+
+func parseContestAWDServiceSnapshotFlagPrefix(flagConfig map[string]any) string {
+	if flagConfig == nil {
+		return "flag"
+	}
+	value, _ := flagConfig["flag_prefix"].(string)
+	if strings.TrimSpace(value) == "" {
+		return "flag"
+	}
+	return value
+}
+
+func parseContestAWDServiceSnapshotInt(value any) int {
+	switch typed := value.(type) {
+	case int:
+		return typed
+	case int32:
+		return int(typed)
+	case int64:
+		return int(typed)
+	case float64:
+		return int(typed)
+	case json.Number:
+		next, err := typed.Int64()
+		if err != nil {
+			return 0
+		}
+		return int(next)
+	default:
+		return 0
+	}
+}
+
+func firstRuntimeValue(values ...string) string {
+	for _, value := range values {
+		if strings.TrimSpace(value) != "" {
+			return strings.TrimSpace(value)
+		}
+	}
+	return ""
+}
+
 func (s *Service) buildInstanceFlag(subjectID, challengeID int64, chal *model.Challenge) (string, string, error) {
 	switch chal.FlagType {
 	case model.FlagTypeDynamic:
@@ -1140,12 +1321,7 @@ func (s *Service) validateSubmittedFlag(userID int64, challengeItem *model.Chall
 	return crypto.ValidateFlag(flag, expectedFlag), nil
 }
 
-func (s *Service) createContainer(ctx context.Context, instance *model.Instance, chal *model.Challenge, flag string) error {
-	topology, err := s.challengeRepo.FindChallengeTopologyByChallengeID(chal.ID)
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return errcode.ErrContainerCreateFailed.WithCause(err)
-	}
-
+func (s *Service) createContainer(ctx context.Context, instance *model.Instance, chal *model.Challenge, topology *model.ChallengeTopology, flag string) error {
 	if topology == nil {
 		return s.createSingleContainer(ctx, instance, chal, flag)
 	}

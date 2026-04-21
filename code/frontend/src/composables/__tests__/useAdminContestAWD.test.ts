@@ -226,7 +226,7 @@ describe('usePlatformContestAwd', () => {
       list: [],
       total: 0,
       page: 1,
-      page_size: 200,
+      page_size: 100,
     })
     adminApiMocks.createContestAWDAttackLog.mockResolvedValue(undefined)
     adminApiMocks.createContestAWDServiceCheck.mockResolvedValue(undefined)
@@ -237,25 +237,14 @@ describe('usePlatformContestAwd', () => {
   })
 
   it('初次加载时应从 AWD service 列表合并 checker 与验证信息', async () => {
-    adminApiMocks.listAdminContestChallenges.mockResolvedValue([
-      {
-        id: 'link-1',
-        contest_id: 'awd-1',
-        challenge_id: 'challenge-1',
-        title: 'Web Checker',
-        category: 'web',
-        difficulty: 'medium',
-        points: 120,
-        order: 9,
-        is_visible: false,
-        created_at: '2026-04-12T07:50:00.000Z',
-      },
-    ])
     adminApiMocks.listContestAWDServices.mockResolvedValue([
       buildContestAWDService({
         challenge_id: 'challenge-1',
         template_id: 'template-9',
         order: 2,
+        title: 'Web Checker',
+        category: 'web',
+        difficulty: 'medium',
       }),
     ])
 
@@ -269,6 +258,8 @@ describe('usePlatformContestAwd', () => {
     })
 
     const wrapper = mount(Harness)
+    await flushPromises()
+    await composable.loadChallengeCatalog()
     await flushPromises()
 
     expect(adminApiMocks.listContestAWDServices).toHaveBeenCalledWith('awd-1')
@@ -646,8 +637,8 @@ describe('usePlatformContestAwd', () => {
     await flushPromises()
 
     expect(adminApiMocks.createContestAWDService).toHaveBeenCalledWith('awd-1', {
-      challenge_id: 101,
       template_id: 5,
+      points: 120,
       order: 2,
       is_visible: true,
       checker_type: 'http_standard',
@@ -656,9 +647,7 @@ describe('usePlatformContestAwd', () => {
       awd_defense_score: 30,
       awd_checker_preview_token: 'preview-token',
     })
-    expect(adminApiMocks.updateAdminContestChallenge).toHaveBeenCalledWith('awd-1', '101', {
-      points: 120,
-    })
+    expect(adminApiMocks.updateAdminContestChallenge).not.toHaveBeenCalled()
 
     wrapper.unmount()
   })
@@ -666,33 +655,13 @@ describe('usePlatformContestAwd', () => {
   it('更新 AWD 配置时应优先更新显式 service，关系层只更新分值', async () => {
     let composable!: ReturnType<typeof usePlatformContestAwd>
     const selectedContest = ref<ContestDetailData | null>(buildContest())
-    adminApiMocks.listAdminContestChallenges.mockResolvedValueOnce([
-      {
-        id: 'link-1',
-        contest_id: 'awd-1',
-        challenge_id: '101',
-        awd_service_id: 'service-1',
-        awd_template_id: '4',
-        title: 'Web Checker',
-        category: 'web',
-        difficulty: 'medium',
-        points: 100,
-        order: 1,
-        is_visible: true,
-        awd_checker_type: 'legacy_probe',
-        awd_checker_config: {},
-        awd_sla_score: 0,
-        awd_defense_score: 0,
-        awd_checker_validation_state: 'pending',
-        awd_checker_last_preview_at: undefined,
-        awd_checker_last_preview_result: undefined,
-        created_at: '2026-04-12T08:00:00.000Z',
-      },
-    ])
     adminApiMocks.listContestAWDServices.mockResolvedValueOnce([
       buildContestAWDService({
         challenge_id: '101',
         template_id: '4',
+        title: 'Web Checker',
+        category: 'web',
+        difficulty: 'medium',
       }),
     ])
 
@@ -721,6 +690,7 @@ describe('usePlatformContestAwd', () => {
 
     expect(adminApiMocks.updateContestAWDService).toHaveBeenCalledWith('awd-1', 'service-1', {
       template_id: 6,
+      points: 150,
       order: 3,
       is_visible: false,
       checker_type: 'http_standard',
@@ -729,9 +699,7 @@ describe('usePlatformContestAwd', () => {
       awd_defense_score: 35,
       awd_checker_preview_token: 'preview-token-2',
     })
-    expect(adminApiMocks.updateAdminContestChallenge).toHaveBeenCalledWith('awd-1', '101', {
-      points: 150,
-    })
+    expect(adminApiMocks.updateAdminContestChallenge).not.toHaveBeenCalled()
 
     wrapper.unmount()
   })

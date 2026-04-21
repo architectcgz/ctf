@@ -84,19 +84,14 @@ describe('backofficeNavigation', () => {
 
   it('maps admin event operations routes back to 赛事运维 and marks the matched secondary item active', () => {
     expect(getBackofficeModuleByPath('/platform/contest-ops/contests')?.key).toBe('contestOps')
-    expect(getBackofficeModuleByPath('/platform/contest-ops/environment')?.key).toBe('contestOps')
+    expect(getBackofficeModuleByPath('/platform/contests/contest-1/manage')?.key).toBe('contestOps')
 
-    const items = getVisibleBackofficeSecondaryItems('/platform/contest-ops/traffic', 'admin')
+    const items = getVisibleBackofficeSecondaryItems('/platform/contest-ops/contests', 'admin')
 
-    expect(items.map((item) => item.label)).toEqual([
-      '环境管理',
-      '流量监控',
-      '大屏投射',
-      '排行榜',
-    ])
-    expect(items.find((item) => item.active)?.routeName).toBe('PlatformContestOpsTraffic')
+    expect(items.map((item) => item.label)).toEqual(['竞赛列表'])
+    expect(items.find((item) => item.active)?.routeName).toBe('PlatformContestOpsIndex')
 
-    const contestItems = getVisibleBackofficeSecondaryItems('/platform/contest-ops/contests', 'admin')
-    expect(contestItems.find((item) => item.active)?.routeName).toBe('PlatformContestOpsEnvironment')
+    const manageItems = getVisibleBackofficeSecondaryItems('/platform/contests/contest-1/manage', 'admin')
+    expect(manageItems.find((item) => item.active)?.routeName).toBe('PlatformContestOpsIndex')
   })
 })

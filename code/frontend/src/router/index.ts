@@ -682,51 +682,30 @@ const routes: RouteRecordRaw[] = [
       },
       {
         path: 'platform/contest-ops/environment',
-        redirect: { name: 'PlatformContestOpsEnvironment' },
+        redirect: { name: 'PlatformContestOpsIndex' },
       },
       {
         path: 'platform/contest-ops/contests',
-        name: 'PlatformContestOpsEnvironment',
+        name: 'PlatformContestOpsIndex',
         component: () => import('@/views/platform/ContestOperationsHub.vue'),
         meta: {
           requiresAuth: true,
           roles: ['admin'],
-          title: '环境管理',
+          title: '竞赛列表',
           contentLayout: 'bleed',
         },
       },
       {
         path: 'platform/contest-ops/traffic',
-        name: 'PlatformContestOpsTraffic',
-        component: () => import('@/views/platform/ContestOperationsHub.vue'),
-        meta: {
-          requiresAuth: true,
-          roles: ['admin'],
-          title: '流量监控',
-          contentLayout: 'bleed',
-        },
+        redirect: { name: 'PlatformContestOpsIndex' },
       },
       {
         path: 'platform/contest-ops/projector',
-        name: 'PlatformContestOpsProjector',
-        component: () => import('@/views/platform/ContestOperationsHub.vue'),
-        meta: {
-          requiresAuth: true,
-          roles: ['admin'],
-          title: '大屏投射',
-          contentLayout: 'bleed',
-        },
+        redirect: { name: 'PlatformContestOpsIndex' },
       },
       {
         path: 'platform/contest-ops/scoreboard',
-        name: 'PlatformContestOpsScoreboard',
-        component: () => import('@/views/platform/ContestOperationsHub.vue'),
-        meta: {
-          requiresAuth: true,
-          roles: ['admin'],
-          title: '排行榜',
-          contentLayout: 'bleed',
-        },
+        redirect: { name: 'PlatformContestOpsIndex' },
       },
       {
         path: 'platform/users',

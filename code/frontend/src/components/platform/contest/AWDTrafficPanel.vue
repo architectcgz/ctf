@@ -48,40 +48,70 @@ function getTrafficStatusGroupLabel(statusGroup: AWDTrafficStatusGroup): string 
 <template>
   <div class="studio-traffic-analysis">
     <!-- 1. Integrated Stats Band -->
-    <div v-if="trafficSummary" class="studio-metric-band">
-      <div v-for="item in trafficSummaryStats" :key="item.key" class="metric-pill">
+    <div
+      v-if="trafficSummary"
+      class="studio-metric-band"
+    >
+      <div
+        v-for="item in trafficSummaryStats"
+        :key="item.key"
+        class="metric-pill"
+      >
         <span class="metric-pill__label">{{ item.label }}</span>
         <span class="metric-pill__value">{{ item.value }}</span>
       </div>
     </div>
 
     <!-- 2. Intelligence Grid -->
-    <div v-if="trafficSummary" class="intelligence-grid">
+    <div
+      v-if="trafficSummary"
+      class="intelligence-grid"
+    >
       <div class="intel-column">
-        <header class="intel-header">热点实体分析</header>
+        <header class="intel-header">
+          热点实体分析
+        </header>
         <div class="intel-cards">
           <div class="intel-sub-card">
-            <div class="sub-card-label">主力攻击队</div>
+            <div class="sub-card-label">
+              主力攻击队
+            </div>
             <div class="sub-card-list">
-              <div v-for="item in trafficSummary.top_attackers.slice(0, 3)" :key="item.team_id" class="list-row">
+              <div
+                v-for="item in trafficSummary.top_attackers.slice(0, 3)"
+                :key="item.team_id"
+                class="list-row"
+              >
                 <span class="row-name">{{ item.team_name }}</span>
                 <span class="row-count font-mono">{{ item.request_count }}</span>
               </div>
             </div>
           </div>
           <div class="intel-sub-card">
-            <div class="sub-card-label">高频受害队</div>
+            <div class="sub-card-label">
+              高频受害队
+            </div>
             <div class="sub-card-list">
-              <div v-for="item in trafficSummary.top_victims.slice(0, 3)" :key="item.team_id" class="list-row">
+              <div
+                v-for="item in trafficSummary.top_victims.slice(0, 3)"
+                :key="item.team_id"
+                class="list-row"
+              >
                 <span class="row-name">{{ item.team_name }}</span>
                 <span class="row-count font-mono">{{ item.request_count }}</span>
               </div>
             </div>
           </div>
           <div class="intel-sub-card">
-            <div class="sub-card-label">异常交互路径</div>
+            <div class="sub-card-label">
+              异常交互路径
+            </div>
             <div class="sub-card-list">
-              <div v-for="item in trafficSummary.top_error_paths.slice(0, 3)" :key="item.path" class="list-row">
+              <div
+                v-for="item in trafficSummary.top_error_paths.slice(0, 3)"
+                :key="item.path"
+                class="list-row"
+              >
                 <span class="row-name truncate font-mono text-[10px]">{{ item.path }}</span>
                 <span class="row-count text-red-500 font-mono">{{ item.error_count }}</span>
               </div>
@@ -91,18 +121,32 @@ function getTrafficStatusGroupLabel(statusGroup: AWDTrafficStatusGroup): string 
       </div>
 
       <div class="intel-column">
-        <header class="intel-header">流量趋势 (12-Bucket Trend)</header>
+        <header class="intel-header">
+          流量趋势 (12-Bucket Trend)
+        </header>
         <div class="trend-canvas">
-          <div v-for="bucket in trafficTrendRows" :key="bucket.bucket_start_at" class="trend-unit">
+          <div
+            v-for="bucket in trafficTrendRows"
+            :key="bucket.bucket_start_at"
+            class="trend-unit"
+          >
             <div class="trend-meta">
               <span class="trend-label">{{ bucket.label }}</span>
               <span class="trend-data">{{ bucket.request_count }} REQS</span>
             </div>
             <div class="trend-bar-track">
-              <div class="trend-bar-fill" :style="{ width: `${bucket.ratio}%` }"></div>
+              <div
+                class="trend-bar-fill"
+                :style="{ width: `${bucket.ratio}%` }"
+              />
             </div>
           </div>
-          <p v-if="trafficTrendRows.length === 0" class="text-[11px] text-slate-400 py-4">等待数据注入趋势桶...</p>
+          <p
+            v-if="trafficTrendRows.length === 0"
+            class="text-[11px] text-slate-400 py-4"
+          >
+            等待数据注入趋势桶...
+          </p>
         </div>
       </div>
     </div>
@@ -111,20 +155,44 @@ function getTrafficStatusGroupLabel(statusGroup: AWDTrafficStatusGroup): string 
     <div class="drill-down-area">
       <header class="drill-down-toolbar">
         <div class="toolbar-left">
-          <h3 class="toolbar-title">流量审计明细</h3>
-          <p class="toolbar-hint">最后同步：{{ formatDateTime(updatedAt) }}</p>
+          <h3 class="toolbar-title">
+            流量审计明细
+          </h3>
+          <p class="toolbar-hint">
+            最后同步：{{ formatDateTime(updatedAt) }}
+          </p>
         </div>
         
         <div class="toolbar-right">
           <div class="filter-row">
-            <select :value="trafficFilters.status_group" class="log-select" @change="handleTrafficStatusGroupChange(($event.target as HTMLSelectElement).value)">
-              <option v-for="item in trafficStatusGroupOptions" :key="item.value" :value="item.value">{{ item.label }}</option>
+            <select
+              :value="trafficFilters.status_group"
+              class="log-select"
+              @change="handleTrafficStatusGroupChange(($event.target as HTMLSelectElement).value)"
+            >
+              <option
+                v-for="item in trafficStatusGroupOptions"
+                :key="item.value"
+                :value="item.value"
+              >
+                {{ item.label }}
+              </option>
             </select>
             <div class="search-input-wrap">
               <Search class="h-3 w-3 search-icon" />
-              <input v-model="trafficPathKeywordInput" class="log-input" placeholder="过滤路径..." @keydown.enter.prevent="applyTrafficKeywordFilter" />
+              <input
+                v-model="trafficPathKeywordInput"
+                class="log-input"
+                placeholder="过滤路径..."
+                @keydown.enter.prevent="applyTrafficKeywordFilter"
+              >
             </div>
-            <button class="ops-btn ops-btn--neutral" @click="emit('resetTrafficFilters')">重置</button>
+            <button
+              class="ops-btn ops-btn--neutral"
+              @click="emit('resetTrafficFilters')"
+            >
+              重置
+            </button>
           </div>
         </div>
       </header>
@@ -133,16 +201,26 @@ function getTrafficStatusGroupLabel(statusGroup: AWDTrafficStatusGroup): string 
         <table class="studio-table">
           <thead>
             <tr>
-              <th class="w-32">捕获时间</th>
+              <th class="w-32">
+                捕获时间
+              </th>
               <th>交互矢量</th>
               <th>关联靶题</th>
               <th>请求方法 & 路径</th>
-              <th class="text-right">响应状态</th>
+              <th class="text-right">
+                响应状态
+              </th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="event in trafficEvents" :key="event.occurred_at" class="studio-row">
-              <td class="font-mono text-[11px] text-slate-400">{{ formatDateTime(event.occurred_at).split(' ')[1] }}</td>
+            <tr
+              v-for="event in trafficEvents"
+              :key="event.occurred_at"
+              class="studio-row"
+            >
+              <td class="font-mono text-[11px] text-slate-400">
+                {{ formatDateTime(event.occurred_at).split(' ')[1] }}
+              </td>
               <td>
                 <div class="vector-cell">
                   <span class="team-label">{{ getTrafficTeamName(event.attacker_team_id, event.attacker_team_name) }}</span>
@@ -153,7 +231,10 @@ function getTrafficStatusGroupLabel(statusGroup: AWDTrafficStatusGroup): string 
               <td>
                 <div class="challenge-cell">
                   <span class="challenge-name">{{ getTrafficChallengeTitle(event.challenge_id, event.challenge_title) }}</span>
-                  <span v-if="event.service_id" class="source-tag font-mono">#{{ event.service_id }}</span>
+                  <span
+                    v-if="event.service_id"
+                    class="source-tag font-mono"
+                  >#{{ event.service_id }}</span>
                 </div>
               </td>
               <td>
@@ -163,13 +244,21 @@ function getTrafficStatusGroupLabel(statusGroup: AWDTrafficStatusGroup): string 
                 </div>
               </td>
               <td class="text-right">
-                <span class="status-badge" :class="getTrafficStatusGroupClass(event.status_group)">
+                <span
+                  class="status-badge"
+                  :class="getTrafficStatusGroupClass(event.status_group)"
+                >
                   {{ event.status_code }} · {{ getTrafficStatusGroupLabel(event.status_group) }}
                 </span>
               </td>
             </tr>
             <tr v-if="!loadingTrafficEvents && trafficEvents.length === 0">
-              <td colspan="5" class="py-20 text-center text-slate-400 font-medium">满足当前过滤条件的流量记录为空</td>
+              <td
+                colspan="5"
+                class="py-20 text-center text-slate-400 font-medium"
+              >
+                满足当前过滤条件的流量记录为空
+              </td>
             </tr>
           </tbody>
         </table>

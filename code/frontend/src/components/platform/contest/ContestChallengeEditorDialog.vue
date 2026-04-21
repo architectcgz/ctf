@@ -28,7 +28,7 @@ const emit = defineEmits<{
   'update:open': [value: boolean]
   save: [
     value: {
-      challenge_id: number
+      challenge_id?: number
       template_id?: number
       points: number
       order: number
@@ -72,6 +72,8 @@ watch(
     form.challenge_id =
       props.mode === 'edit'
         ? props.draft?.challenge_id || ''
+        : isAwdContest.value
+          ? selectableTemplates.value[0]?.id || ''
         : selectableChallenges.value[0]?.id || ''
     form.template_id = isAwdContest.value
       ? props.draft?.awd_template_id || selectableTemplates.value[0]?.id || ''
@@ -98,7 +100,7 @@ function closeDialog() {
 function submit() {
   clearErrors()
 
-  if (!form.challenge_id.trim()) {
+  if (!isAwdContest.value && !form.challenge_id.trim()) {
     fieldErrors.challenge_id = '请选择题目'
   }
   if (isAwdContest.value && !form.template_id.trim()) {
@@ -125,7 +127,7 @@ function submit() {
   }
 
   emit('save', {
-    challenge_id: Number(form.challenge_id),
+    challenge_id: isAwdContest.value ? undefined : Number(form.challenge_id),
     template_id: isAwdContest.value ? Number(form.template_id) : undefined,
     points,
     order,
@@ -160,6 +162,7 @@ function submit() {
       </p>
 
       <label
+        v-if="!isAwdContest"
         class="ui-field contest-challenge-dialog__field"
         for="contest-challenge-select"
       >

@@ -14,7 +14,7 @@ describe('Sidebar desktop layout', () => {
 
   it('stretches the desktop nav to align its bottom edge with the content area', () => {
     expect(sidebarSource).toMatch(
-      /<aside[\s\S]*class="[^"]*backoffice-sidebar[^"]*backoffice-sidebar--desktop[^"]*relative[^"]*z-\[60\][^"]*hidden[^"]*h-screen[^"]*shrink-0[^"]*flex-col[^"]*md:flex"/s
+      /<aside[\s\S]*class="[^"]*backoffice-sidebar[^"]*backoffice-sidebar--desktop[^"]*sticky[^"]*top-0[^"]*z-\[60\][^"]*hidden[^"]*min-h-screen[^"]*shrink-0[^"]*flex-col[^"]*md:flex"/s
     )
     expect(sidebarSource).toContain(":class=\"collapsed ? 'w-20' : 'backoffice-sidebar--expanded'\"")
     expect(sidebarSource).toContain('.backoffice-sidebar--expanded')
@@ -48,7 +48,7 @@ describe('Sidebar desktop layout', () => {
     expect(sidebarSource).toContain("route.path.startsWith('/academy/')")
     expect(sidebarSource).toContain("route.path.startsWith('/platform/')")
     expect(sidebarSource).not.toContain("route.path.startsWith('/admin/')")
-    expect(sidebarSource).toContain('sidebar-shell--admin')
+    expect(sidebarSource).toContain("const brandKicker = computed(() => (isBackofficeRoute.value ? 'ChallengeOps' : 'Student Space'))")
     expect(sidebarSource).toContain('ChallengeOps')
     expect(sidebarSource).not.toContain('Academic Ops')
   })
@@ -121,9 +121,7 @@ describe('Sidebar desktop layout', () => {
       routes: [
         { path: '/platform/overview', component: { template: '<div>admin</div>' } },
         { path: '/platform/contest-ops/contests', component: { template: '<div>contest management</div>' } },
-        { path: '/platform/contest-ops/traffic', component: { template: '<div>traffic</div>' } },
-        { path: '/platform/contest-ops/projector', component: { template: '<div>projector</div>' } },
-        { path: '/platform/contest-ops/scoreboard', component: { template: '<div>scoreboard</div>' } },
+        { path: '/platform/contests/:id/manage', component: { template: '<div>manage</div>' } },
       ],
     })
 
@@ -152,10 +150,56 @@ describe('Sidebar desktop layout', () => {
     })
 
     expect(wrapper.text()).toContain('赛事运维')
-    expect(wrapper.text()).toContain('环境管理')
-    expect(wrapper.text()).toContain('流量监控')
-    expect(wrapper.text()).toContain('大屏投射')
-    expect(wrapper.text()).toContain('排行榜')
+    expect(wrapper.text()).toContain('竞赛列表')
+    expect(wrapper.text()).not.toContain('环境管理')
+    expect(wrapper.text()).not.toContain('流量监控')
+    expect(wrapper.text()).not.toContain('大屏投射')
+    expect(wrapper.text()).not.toContain('排行榜')
+
+    wrapper.unmount()
+  })
+
+  it('keeps contest manage pages highlighted under 赛事运维 instead of 系统治理', async () => {
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        { path: '/platform/overview', component: { template: '<div>admin</div>' } },
+        { path: '/platform/contest-ops/contests', component: { template: '<div>contest management</div>' } },
+        { path: '/platform/contests/:id/manage', component: { template: '<div>manage</div>' } },
+        { path: '/platform/contests', component: { template: '<div>contests</div>' } },
+      ],
+    })
+
+    const authStore = useAuthStore()
+    authStore.setAuth(
+      {
+        id: 'admin-1',
+        username: 'admin',
+        role: 'admin',
+        name: 'Admin',
+      },
+      'token'
+    )
+
+    await router.push('/platform/contests/contest-1/manage')
+    await router.isReady()
+
+    const wrapper = mount(Sidebar, {
+      props: {
+        collapsed: false,
+        mobileOpen: false,
+      },
+      global: {
+        plugins: [router],
+      },
+    })
+
+    const activeChildren = wrapper
+      .findAll('.backoffice-sidebar__child--active')
+      .map((node) => node.text().trim())
+
+    expect(activeChildren).toContain('竞赛列表')
+    expect(activeChildren).not.toContain('竞赛目录')
 
     wrapper.unmount()
   })

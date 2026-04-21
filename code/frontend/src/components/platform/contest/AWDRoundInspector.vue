@@ -211,29 +211,56 @@ function getServiceCheckPresentationResult(service: AWDTeamServiceData): Record<
     />
 
     <!-- 2. Integrated Metric HUD (Borderless) -->
-    <div v-if="selectedRound" class="awd-stats-hud">
+    <div
+      v-if="selectedRound"
+      class="awd-stats-hud"
+    >
       <div class="stat-unit">
-        <div class="unit-label">Infrastructure</div>
-        <div class="unit-value font-mono">{{ totalServiceCount }} <small>SRV</small></div>
-        <div class="unit-helper">ONLINE: {{ upCount }} · OFF: {{ downCount }}</div>
+        <div class="unit-label">
+          Infrastructure
+        </div>
+        <div class="unit-value font-mono">
+          {{ totalServiceCount }} <small>SRV</small>
+        </div>
+        <div class="unit-helper">
+          ONLINE: {{ upCount }} · OFF: {{ downCount }}
+        </div>
       </div>
-      <div class="unit-divider"></div>
+      <div class="unit-divider" />
       <div class="stat-unit">
-        <div class="unit-label">Battle Traffic</div>
-        <div class="unit-value font-mono">{{ totalAttackCount }} <small>HITS</small></div>
-        <div class="unit-helper text-emerald-600">SUCCESS: {{ successfulAttackCount }}</div>
+        <div class="unit-label">
+          Battle Traffic
+        </div>
+        <div class="unit-value font-mono">
+          {{ totalAttackCount }} <small>HITS</small>
+        </div>
+        <div class="unit-helper text-emerald-600">
+          SUCCESS: {{ successfulAttackCount }}
+        </div>
       </div>
-      <div class="unit-divider"></div>
+      <div class="unit-divider" />
       <div class="stat-unit">
-        <div class="unit-label">Compromised</div>
-        <div class="unit-value font-mono text-orange-500">{{ compromisedCount }} <small>EXP</small></div>
-        <div class="unit-helper">AFFECTED: {{ attackedServiceCount }} TEAMS</div>
+        <div class="unit-label">
+          Compromised
+        </div>
+        <div class="unit-value font-mono text-orange-500">
+          {{ compromisedCount }} <small>EXP</small>
+        </div>
+        <div class="unit-helper">
+          AFFECTED: {{ attackedServiceCount }} TEAMS
+        </div>
       </div>
-      <div class="unit-divider"></div>
+      <div class="unit-divider" />
       <div class="stat-unit">
-        <div class="unit-label">Composition</div>
-        <div class="unit-value">{{ getSourceOverviewLabel() }}</div>
-        <div class="unit-helper">{{ getSourceOverviewDescription() }}</div>
+        <div class="unit-label">
+          Composition
+        </div>
+        <div class="unit-value">
+          {{ getSourceOverviewLabel() }}
+        </div>
+        <div class="unit-helper">
+          {{ getSourceOverviewDescription() }}
+        </div>
       </div>
     </div>
 
@@ -241,29 +268,52 @@ function getServiceCheckPresentationResult(service: AWDTeamServiceData): Record<
     <div class="awd-detail-canvas">
       <header class="canvas-tabs-header">
         <nav class="sub-tabs">
-          <button class="sub-tab" :class="{ active: activeSubTab === 'matrix' }" @click="activeSubTab = 'matrix'">
+          <button
+            class="sub-tab"
+            :class="{ active: activeSubTab === 'matrix' }"
+            @click="activeSubTab = 'matrix'"
+          >
             <LayoutGrid class="h-3.5 w-3.5" /> 运行矩阵
           </button>
-          <button class="sub-tab" :class="{ active: activeSubTab === 'scoreboard' }" @click="activeSubTab = 'scoreboard'">
+          <button
+            class="sub-tab"
+            :class="{ active: activeSubTab === 'scoreboard' }"
+            @click="activeSubTab = 'scoreboard'"
+          >
             <BarChart3 class="h-3.5 w-3.5" /> 排行榜单
           </button>
-          <button class="sub-tab" :class="{ active: activeSubTab === 'attacks' }" @click="activeSubTab = 'attacks'">
+          <button
+            class="sub-tab"
+            :class="{ active: activeSubTab === 'attacks' }"
+            @click="activeSubTab = 'attacks'"
+          >
             <Sword class="h-3.5 w-3.5" /> 攻击流水
           </button>
-          <button class="sub-tab" :class="{ active: activeSubTab === 'traffic' }" @click="activeSubTab = 'traffic'">
+          <button
+            class="sub-tab"
+            :class="{ active: activeSubTab === 'traffic' }"
+            @click="activeSubTab = 'traffic'"
+          >
             <Zap class="h-3.5 w-3.5" /> 流量分析
           </button>
         </nav>
 
         <div class="canvas-actions">
-          <button type="button" class="ops-btn ops-btn--neutral" @click="exportReviewPackage">
+          <button
+            type="button"
+            class="ops-btn ops-btn--neutral"
+            @click="exportReviewPackage"
+          >
             <Download class="h-3.5 w-3.5 mr-2" /> 导出复盘包
           </button>
         </div>
       </header>
 
       <div class="canvas-content custom-scrollbar">
-        <div v-if="loadingRoundDetail" class="canvas-loading-overlay">
+        <div
+          v-if="loadingRoundDetail"
+          class="canvas-loading-overlay"
+        >
           <AppLoading>同步态势中...</AppLoading>
         </div>
 
@@ -275,9 +325,18 @@ function getServiceCheckPresentationResult(service: AWDTeamServiceData): Record<
           class="py-24"
         />
 
-        <div v-else class="pane-wrap">
-          <div v-show="activeSubTab === 'matrix'" class="pane-matrix">
-            <div v-if="serviceAlerts.length > 0" class="alert-banner mb-8">
+        <div
+          v-else
+          class="pane-wrap"
+        >
+          <div
+            v-show="activeSubTab === 'matrix'"
+            class="pane-matrix"
+          >
+            <div
+              v-if="serviceAlerts.length > 0"
+              class="alert-banner mb-8"
+            >
               <span class="banner-tag">重点异常告警</span>
               <div class="alert-pills">
                 <button
@@ -322,7 +381,10 @@ function getServiceCheckPresentationResult(service: AWDTeamServiceData): Record<
             />
           </div>
 
-          <div v-show="activeSubTab === 'scoreboard'" class="pane-scoreboard">
+          <div
+            v-show="activeSubTab === 'scoreboard'"
+            class="pane-scoreboard"
+          >
             <AWDScoreboardSummaryPanel
               :scoreboard-rows="scoreboardRows"
               :scoreboard-frozen="scoreboardFrozen"
@@ -332,7 +394,10 @@ function getServiceCheckPresentationResult(service: AWDTeamServiceData): Record<
             />
           </div>
 
-          <div v-show="activeSubTab === 'attacks'" class="pane-attacks">
+          <div
+            v-show="activeSubTab === 'attacks'"
+            class="pane-attacks"
+          >
             <AWDAttackLogPanel
               :attacks="attacks"
               :filtered-attacks="filteredAttacks"
@@ -352,7 +417,10 @@ function getServiceCheckPresentationResult(service: AWDTeamServiceData): Record<
             />
           </div>
 
-          <div v-show="activeSubTab === 'traffic'" class="pane-traffic">
+          <div
+            v-show="activeSubTab === 'traffic'"
+            class="pane-traffic"
+          >
             <AWDTrafficPanel
               :updated-at="selectedRound.updated_at"
               :challenge-links="challengeLinks"

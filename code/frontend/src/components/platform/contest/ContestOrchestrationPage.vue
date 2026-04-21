@@ -87,9 +87,8 @@ function openEditContest(contest: ContestDetailData) {
 
 function openContestWorkbench(contest: ContestDetailData) {
   void router.push({
-    name: 'ContestEdit',
+    name: 'ContestOperations',
     params: { id: contest.id },
-    query: { panel: 'operations', opsPanel: 'inspector' },
   })
 }
 </script>

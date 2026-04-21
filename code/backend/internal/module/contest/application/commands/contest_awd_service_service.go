@@ -51,14 +51,6 @@ func (s *ContestAWDServiceService) CreateContestAWDService(ctx context.Context, 
 		return nil, err
 	}
 
-	challenge, err := s.challengeRepo.FindByID(req.ChallengeID)
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errcode.ErrChallengeNotFound
-		}
-		return nil, errcode.ErrInternal.WithCause(err)
-	}
-
 	template, err := s.templateRepo.FindAWDServiceTemplateByID(req.TemplateID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -94,7 +86,7 @@ func (s *ContestAWDServiceService) CreateContestAWDService(ctx context.Context, 
 		s.redis,
 		contestID,
 		0,
-		req.ChallengeID,
+		template.ID,
 		checkerType,
 		checkerConfig,
 		previewToken,
@@ -104,30 +96,24 @@ func (s *ContestAWDServiceService) CreateContestAWDService(ctx context.Context, 
 	}
 	record := &model.ContestAWDService{
 		ContestID:         contestID,
-		ChallengeID:       req.ChallengeID,
+		ChallengeID:       template.ID,
 		TemplateID:        &req.TemplateID,
-		DisplayName:       firstNonEmpty(req.DisplayName, template.Name, challenge.Title),
+		DisplayName:       firstNonEmpty(req.DisplayName, template.Name),
+		ServiceSnapshot:   buildContestAWDServiceSnapshot(template),
 		Order:             req.Order,
 		IsVisible:         isVisible,
-		ScoreConfig:       buildContestAWDServiceScoreConfig(challenge.Points, slaScore, defenseScore),
+		ScoreConfig:       buildContestAWDServiceScoreConfig(req.Points, slaScore, defenseScore),
 		ValidationState:   validationState,
 		LastPreviewAt:     lastPreviewAt,
 		LastPreviewResult: lastPreviewResult,
 		RuntimeConfig: buildContestAWDServiceRuntimeConfig(
-			req.ChallengeID,
+			template.ID,
 			checkerType,
 			checkerConfig,
 			template.RuntimeConfig,
 		),
 	}
-	relationAdded, err := s.ensureContestChallengeRelation(ctx, contestID, req.ChallengeID, challenge.Points, req.Order, isVisible)
-	if err != nil {
-		return nil, err
-	}
 	if err := s.repo.CreateContestAWDService(ctx, record); err != nil {
-		if relationAdded && s.contestChallengeRepo != nil {
-			_ = s.contestChallengeRepo.RemoveChallenge(ctx, contestID, req.ChallengeID)
-		}
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
@@ -171,14 +157,7 @@ func (s *ContestAWDServiceService) UpdateContestAWDService(ctx context.Context, 
 	extraRuntimeConfig := parseContestAWDServiceTemplateRuntimeConfig(stored.RuntimeConfig)
 	currentPoints, ok := parseContestAWDServiceScore(stored.ScoreConfig, "points")
 	if !ok {
-		challenge, err := s.challengeRepo.FindByID(stored.ChallengeID)
-		if err != nil {
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				return errcode.ErrChallengeNotFound
-			}
-			return errcode.ErrInternal.WithCause(err)
-		}
-		currentPoints = challenge.Points
+		currentPoints = 0
 	}
 	currentSLAScore, _ := parseContestAWDServiceScore(stored.ScoreConfig, "awd_sla_score")
 	currentDefenseScore, _ := parseContestAWDServiceScore(stored.ScoreConfig, "awd_defense_score")
@@ -192,18 +171,13 @@ func (s *ContestAWDServiceService) UpdateContestAWDService(ctx context.Context, 
 			return errcode.ErrInternal.WithCause(err)
 		}
 		updates["template_id"] = *req.TemplateID
+		updates["challenge_id"] = template.ID
+		updates["service_snapshot"] = buildContestAWDServiceSnapshot(template)
 		defaultCheckerType = template.CheckerType
 		defaultCheckerConfig = template.CheckerConfig
 		extraRuntimeConfig = template.RuntimeConfig
 		if req.DisplayName == nil || strings.TrimSpace(displayName) == "" {
-			challenge, err := s.challengeRepo.FindByID(stored.ChallengeID)
-			if err != nil {
-				if errors.Is(err, gorm.ErrRecordNotFound) {
-					return errcode.ErrChallengeNotFound
-				}
-				return errcode.ErrInternal.WithCause(err)
-			}
-			updates["display_name"] = firstNonEmpty(template.Name, challenge.Title)
+			updates["display_name"] = firstNonEmpty(template.Name)
 		}
 	}
 
@@ -229,7 +203,10 @@ func (s *ContestAWDServiceService) UpdateContestAWDService(ctx context.Context, 
 			extraRuntimeConfig,
 		)
 	}
-	if req.AWDSLAScore != nil || req.AWDDefenseScore != nil {
+	if req.Points != nil || req.AWDSLAScore != nil || req.AWDDefenseScore != nil {
+		if req.Points != nil {
+			currentPoints = *req.Points
+		}
 		updates["score_config"] = buildContestAWDServiceScoreConfig(currentPoints, slaScore, defenseScore)
 	}
 	previewToken := ""
@@ -257,9 +234,6 @@ func (s *ContestAWDServiceService) UpdateContestAWDService(ctx context.Context, 
 	if err := s.repo.UpdateContestAWDServiceByContestAndID(ctx, contestID, serviceID, updates); err != nil {
 		return errcode.ErrInternal.WithCause(err)
 	}
-	if err := s.syncContestChallengeRelation(ctx, contest, stored.ChallengeID, order, isVisible); err != nil {
-		return err
-	}
 	return nil
 }
 
@@ -269,7 +243,7 @@ func (s *ContestAWDServiceService) DeleteContestAWDService(ctx context.Context, 
 		return err
 	}
 
-	stored, err := s.repo.FindContestAWDServiceByContestAndID(ctx, contestID, serviceID)
+	_, err = s.repo.FindContestAWDServiceByContestAndID(ctx, contestID, serviceID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return errcode.ErrNotFound
@@ -279,11 +253,6 @@ func (s *ContestAWDServiceService) DeleteContestAWDService(ctx context.Context, 
 
 	if err := s.repo.DeleteContestAWDServiceByContestAndID(ctx, contestID, serviceID); err != nil {
 		return errcode.ErrInternal.WithCause(err)
-	}
-	if s.contestChallengeRepo != nil {
-		if err := s.contestChallengeRepo.RemoveChallenge(ctx, contestID, stored.ChallengeID); err != nil {
-			return errcode.ErrInternal.WithCause(err)
-		}
 	}
 	return nil
 }

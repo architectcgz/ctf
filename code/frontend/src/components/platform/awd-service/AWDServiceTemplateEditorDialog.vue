@@ -3,6 +3,16 @@ import { reactive, watch } from 'vue'
 
 import AdminSurfaceModal from '@/components/common/modal-templates/AdminSurfaceModal.vue'
 import type { PlatformAwdServiceTemplateFormDraft } from '@/composables/usePlatformAwdServiceTemplates'
+import type { ChallengeCategory } from '@/api/contracts'
+
+const categoryOptions: Array<{ value: ChallengeCategory; label: string }> = [
+  { value: 'web', label: 'Web' },
+  { value: 'pwn', label: 'Pwn' },
+  { value: 'reverse', label: 'Reverse' },
+  { value: 'crypto', label: 'Crypto' },
+  { value: 'misc', label: 'Misc' },
+  { value: 'forensics', label: 'Forensics' },
+]
 
 const props = defineProps<{
   open: boolean
@@ -167,13 +177,19 @@ function handleSubmit() {
             class="ui-control-wrap"
             :class="{ 'is-error': !!fieldErrors.category }"
           >
-            <input
+            <select
               id="awd-template-category"
               v-model="localDraft.category"
-              type="text"
               class="ui-control"
-              placeholder="例如：web"
             >
+              <option
+                v-for="option in categoryOptions"
+                :key="option.value"
+                :value="option.value"
+              >
+                {{ option.label }}
+              </option>
+            </select>
           </span>
           <p
             v-if="fieldErrors.category"

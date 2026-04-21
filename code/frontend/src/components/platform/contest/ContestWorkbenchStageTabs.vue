@@ -38,8 +38,8 @@ function handleStageSelect(stage: ContestWorkbenchStage): void {
     <div class="studio-tabs-list">
       <button
         v-for="stage in stages"
-        :key="stage.key"
         :id="`contest-workbench-stage-tab-${stage.key}`"
+        :key="stage.key"
         type="button"
         class="studio-tab-item"
         role="tab"
@@ -58,7 +58,10 @@ function handleStageSelect(stage: ContestWorkbenchStage): void {
           class="tab-icon"
         />
         <span class="tab-label">{{ stage.label }}</span>
-        <div v-if="activeStage === stage.key" class="tab-active-indicator" />
+        <div
+          v-if="activeStage === stage.key"
+          class="tab-active-indicator"
+        />
       </button>
     </div>
   </nav>

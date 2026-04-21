@@ -90,24 +90,49 @@ function handleSubmit() {
 </script>
 
 <template>
-  <form class="studio-settings-layout" @submit.prevent="handleSubmit">
+  <form
+    class="studio-settings-layout"
+    @submit.prevent="handleSubmit"
+  >
     <!-- Section: Identity -->
     <section class="settings-group">
       <div class="settings-group__info">
-        <div class="info-icon"><FileText class="h-4 w-4" /></div>
-        <h3 class="info-title">核心标识</h3>
-        <p class="info-desc">定义竞赛在平台展示的基础信息与访问权限。</p>
+        <div class="info-icon">
+          <FileText class="h-4 w-4" />
+        </div>
+        <h3 class="info-title">
+          核心标识
+        </h3>
+        <p class="info-desc">
+          定义竞赛在平台展示的基础信息与访问权限。
+        </p>
       </div>
       
       <div class="settings-group__content">
         <div class="settings-row">
           <label class="row-label">竞赛标题</label>
           <div class="row-control">
-            <div class="control-wrap" :class="{ 'is-error': !!fieldErrors.title }">
-              <input v-model="localDraft.title" type="text" class="studio-input" placeholder="输入竞赛标题..." />
+            <div
+              class="control-wrap"
+              :class="{ 'is-error': !!fieldErrors.title }"
+            >
+              <input
+                id="contest-title"
+                v-model="localDraft.title"
+                type="text"
+                class="studio-input"
+                placeholder="输入竞赛标题..."
+              >
             </div>
-            <p v-if="fieldErrors.title" class="field-error">{{ fieldErrors.title }}</p>
-            <p class="field-hint">请控制在 40 个字以内，建议包含年份与赛季信息。</p>
+            <p
+              v-if="fieldErrors.title"
+              class="field-error"
+            >
+              {{ fieldErrors.title }}
+            </p>
+            <p class="field-hint">
+              请控制在 40 个字以内，建议包含年份与赛季信息。
+            </p>
           </div>
         </div>
 
@@ -115,9 +140,17 @@ function handleSubmit() {
           <label class="row-label">竞赛描述</label>
           <div class="row-control">
             <div class="control-wrap">
-              <textarea v-model="localDraft.description" rows="4" class="studio-textarea" placeholder="描述竞赛的背景、赛制及对参赛者的要求..." />
+              <textarea
+                id="contest-description"
+                v-model="localDraft.description"
+                rows="4"
+                class="studio-textarea"
+                placeholder="描述竞赛的背景、赛制及对参赛者的要求..."
+              />
             </div>
-            <p class="field-hint">支持 Markdown 语法，将展示在竞赛详情页。</p>
+            <p class="field-hint">
+              支持 Markdown 语法，将展示在竞赛详情页。
+            </p>
           </div>
         </div>
       </div>
@@ -126,9 +159,15 @@ function handleSubmit() {
     <!-- Section: Configuration -->
     <section class="settings-group">
       <div class="settings-group__info">
-        <div class="info-icon"><Settings class="h-4 w-4" /></div>
-        <h3 class="info-title">赛制与状态</h3>
-        <p class="info-desc">控制竞赛的底层逻辑模式与全平台生命周期。</p>
+        <div class="info-icon">
+          <Settings class="h-4 w-4" />
+        </div>
+        <h3 class="info-title">
+          赛制与状态
+        </h3>
+        <p class="info-desc">
+          控制竞赛的底层逻辑模式与全平台生命周期。
+        </p>
       </div>
       
       <div class="settings-group__content">
@@ -157,23 +196,39 @@ function handleSubmit() {
                 <span class="mode-desc">实时攻防对抗赛</span>
               </button>
             </div>
-            <p v-if="fieldLocks.mode" class="field-hint text-orange-500 mt-3 font-bold">
+            <p
+              v-if="fieldLocks.mode"
+              class="field-hint text-orange-500 mt-3 font-bold"
+            >
               竞赛已生效，模式锁定不可更改。
             </p>
           </div>
         </div>
 
-        <div v-if="mode === 'edit'" class="settings-row">
+        <div
+          v-if="mode === 'edit'"
+          class="settings-row"
+        >
           <label class="row-label">运行阶段</label>
           <div class="row-control">
             <div class="control-wrap">
-              <select v-model="localDraft.status" class="studio-select">
-                <option v-for="option in statusOptions" :key="option.value" :value="option.value">
+              <select
+                id="contest-status"
+                v-model="localDraft.status"
+                class="studio-select"
+              >
+                <option
+                  v-for="option in statusOptions"
+                  :key="option.value"
+                  :value="option.value"
+                >
                   {{ getStatusLabel(option.value) }}
                 </option>
               </select>
             </div>
-            <p class="field-hint">手动控制竞赛在前端的可见性与交互状态。</p>
+            <p class="field-hint">
+              手动控制竞赛在前端的可见性与交互状态。
+            </p>
           </div>
         </div>
       </div>
@@ -182,9 +237,15 @@ function handleSubmit() {
     <!-- Section: Timeline -->
     <section class="settings-group">
       <div class="settings-group__info">
-        <div class="info-icon"><Clock class="h-4 w-4" /></div>
-        <h3 class="info-title">时间窗口</h3>
-        <p class="info-desc">精确配置比赛的启停节点，系统将按此时钟自动调度。</p>
+        <div class="info-icon">
+          <Clock class="h-4 w-4" />
+        </div>
+        <h3 class="info-title">
+          时间窗口
+        </h3>
+        <p class="info-desc">
+          精确配置比赛的启停节点，系统将按此时钟自动调度。
+        </p>
       </div>
       
       <div class="settings-group__content">
@@ -193,26 +254,71 @@ function handleSubmit() {
           <div class="row-control">
             <div class="flex items-center gap-4">
               <div class="flex-1">
-                <div class="control-wrap" :class="{ 'is-disabled': fieldLocks.starts_at }">
-                  <input v-model="localDraft.starts_at" type="datetime-local" class="studio-input" :disabled="fieldLocks.starts_at" />
+                <div
+                  class="control-wrap"
+                  :class="{ 'is-disabled': fieldLocks.starts_at }"
+                >
+                  <input
+                    id="contest-starts-at"
+                    v-model="localDraft.starts_at"
+                    type="datetime-local"
+                    class="studio-input"
+                    :disabled="fieldLocks.starts_at"
+                  >
                 </div>
-                <p class="field-hint mt-1">开始时间</p>
+                <p class="field-hint mt-1">
+                  开始时间
+                </p>
               </div>
-              <div class="text-slate-300">——</div>
+              <div class="text-slate-300">
+                ——
+              </div>
               <div class="flex-1">
-                <div class="control-wrap" :class="{ 'is-disabled': fieldLocks.ends_at }">
-                  <input v-model="localDraft.ends_at" type="datetime-local" class="studio-input" :disabled="fieldLocks.ends_at" />
+                <div
+                  class="control-wrap"
+                  :class="{ 'is-disabled': fieldLocks.ends_at }"
+                >
+                  <input
+                    id="contest-ends-at"
+                    v-model="localDraft.ends_at"
+                    type="datetime-local"
+                    class="studio-input"
+                    :disabled="fieldLocks.ends_at"
+                  >
                 </div>
-                <p class="field-hint mt-1">结束时间</p>
+                <p class="field-hint mt-1">
+                  结束时间
+                </p>
               </div>
             </div>
-            <p v-if="fieldErrors.starts_at || fieldErrors.ends_at" class="field-error mt-2">
+            <p
+              v-if="fieldErrors.starts_at || fieldErrors.ends_at"
+              class="field-error mt-2"
+            >
               {{ fieldErrors.starts_at || fieldErrors.ends_at }}
             </p>
           </div>
         </div>
       </div>
     </section>
+
+    <div class="contest-form-actions">
+      <button
+        v-if="showCancel"
+        type="button"
+        class="ui-btn ui-btn--ghost contest-form-button contest-form-button--secondary"
+        @click="emit('cancel')"
+      >
+        取消
+      </button>
+      <button
+        type="submit"
+        class="ui-btn ui-btn--primary contest-form-button contest-form-button--primary"
+        :disabled="saving"
+      >
+        {{ saving ? '保存中...' : mode === 'create' ? '创建竞赛' : '保存变更' }}
+      </button>
+    </div>
   </form>
 </template>
 
@@ -280,6 +386,13 @@ function handleSubmit() {
 
 .field-hint { font-size: 12px; color: #94a3b8; margin-top: 0.45rem; font-weight: 500; }
 .field-error { font-size: 12px; color: #ef4444; font-weight: 700; }
+
+.contest-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: -1rem;
+}
 
 /* Mode Cards */
 .mode-card {

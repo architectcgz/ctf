@@ -7,8 +7,8 @@ import (
 )
 
 type CreateContestAWDServiceReq struct {
-	ChallengeID            int64          `json:"challenge_id" binding:"required,min=1"`
 	TemplateID             int64          `json:"template_id" binding:"required,min=1"`
+	Points                 int            `json:"points" binding:"required,min=1"`
 	DisplayName            string         `json:"display_name" binding:"omitempty,max=128"`
 	Order                  int            `json:"order" binding:"omitempty,min=0"`
 	IsVisible              *bool          `json:"is_visible"`
@@ -21,6 +21,7 @@ type CreateContestAWDServiceReq struct {
 
 type UpdateContestAWDServiceReq struct {
 	TemplateID             *int64         `json:"template_id" binding:"omitempty,min=1"`
+	Points                 *int           `json:"points" binding:"omitempty,min=1"`
 	DisplayName            *string        `json:"display_name" binding:"omitempty,max=128"`
 	Order                  *int           `json:"order" binding:"omitempty,min=0"`
 	IsVisible              *bool          `json:"is_visible"`
@@ -36,6 +37,9 @@ type ContestAWDServiceResp struct {
 	ContestID         int64                           `json:"contest_id"`
 	ChallengeID       int64                           `json:"challenge_id"`
 	TemplateID        *int64                          `json:"template_id,omitempty"`
+	Title             string                          `json:"title,omitempty"`
+	Category          string                          `json:"category,omitempty"`
+	Difficulty        string                          `json:"difficulty,omitempty"`
 	DisplayName       string                          `json:"display_name"`
 	Order             int                             `json:"order"`
 	IsVisible         bool                            `json:"is_visible"`

@@ -133,7 +133,7 @@ function handleExport(contest: ContestDetailData): void {
             @click="emit('workbench', contest)"
           >
             <Swords class="h-3.5 w-3.5" />
-            进入 AWD 赛区
+            进入运维台
           </button>
           <CActionMenu
             :open="openActionMenuId === contest.id"

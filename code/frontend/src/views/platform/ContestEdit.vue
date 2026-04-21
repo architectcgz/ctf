@@ -5,19 +5,15 @@ import { useRoute, useRouter } from 'vue-router'
 
 import {
   createContestAWDService,
-  getChallenges,
   getContest,
   getContestAWDReadiness,
   listAdminAwdServiceTemplates,
-  listAdminContestChallenges,
   listContestAWDServices,
   updateContestAWDService,
-  updateAdminContestChallenge,
   updateContest,
 } from '@/api/admin'
 import type {
   AdminAwdServiceTemplateData,
-  AdminChallengeListItem,
   AdminContestChallengeViewData,
   AWDReadinessData,
   ContestDetailData,
@@ -52,7 +48,7 @@ import {
 import { ApiError } from '@/api/request'
 import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'
 import { useToast } from '@/composables/useToast'
-import { mergePlatformContestChallengesWithAwdServices } from '@/utils/platformContestAwdChallengeLinks'
+import { mapPlatformContestAwdServicesToChallengeLinks } from '@/utils/platformContestAwdChallengeLinks'
 
 interface AWDStartOverrideDialogState {
   open: boolean
@@ -63,7 +59,6 @@ interface AWDStartOverrideDialogState {
 }
 
 const ERR_AWD_READINESS_BLOCKED = 14025
-
 const route = useRoute()
 const router = useRouter()
 const toast = useToast()
@@ -73,7 +68,6 @@ const loading = ref(true)
 const loadError = ref('')
 const saving = ref(false)
 const loadingAwdStageData = ref(false)
-const loadingChallengeCatalog = ref(false)
 const savingChallengeConfig = ref(false)
 const contest = ref<ContestDetailData | null>(null)
 const editingBaseStatus = ref<PlatformContestStatus | null>(null)
@@ -83,7 +77,6 @@ const awdPreflightLoadError = ref('')
 const awdChallengeLinks = ref<AdminContestChallengeViewData[]>([])
 const awdChallengeLinksLoaded = ref(false)
 const awdReadiness = ref<AWDReadinessData | null>(null)
-const awdChallengeCatalog = ref<AdminChallengeListItem[]>([])
 const awdServiceTemplateCatalog = ref<AdminAwdServiceTemplateData[]>([])
 const awdChallengeConfigDialogOpen = ref(false)
 const awdChallengeConfigMode = ref<'create' | 'edit'>('create')
@@ -169,7 +162,6 @@ function resetAwdWorkbenchState() {
   awdChallengeLinks.value = []
   awdChallengeLinksLoaded.value = false
   awdReadiness.value = null
-  awdChallengeCatalog.value = []
   awdServiceTemplateCatalog.value = []
   awdChallengeConfigDialogOpen.value = false
 }
@@ -183,32 +175,30 @@ async function refreshAwdWorkbenchData(nextContestId = contestId.value): Promise
   try {
     awdConfigLoadError.value = ''
     awdPreflightLoadError.value = ''
-    const [challengeLinksResult, awdServicesResult, readinessResult] = await Promise.allSettled([
-      listAdminContestChallenges(nextContestId),
+    const [awdServicesResult, readinessResult] = await Promise.allSettled([
       listContestAWDServices(nextContestId),
       getContestAWDReadiness(nextContestId),
     ])
-    if (challengeLinksResult.status === 'fulfilled' && awdServicesResult.status === 'fulfilled') {
-      awdChallengeLinks.value = mergePlatformContestChallengesWithAwdServices(
-        challengeLinksResult.value,
+    if (awdServicesResult.status === 'fulfilled') {
+      awdChallengeLinks.value = mapPlatformContestAwdServicesToChallengeLinks(
         awdServicesResult.value
       )
       awdChallengeLinksLoaded.value = true
+    } else {
+      awdConfigLoadError.value = humanizeRequestError(awdServicesResult.reason, 'AWD 配置同步失败')
+      toast.error(awdConfigLoadError.value)
     }
-    if (readinessResult.status === 'fulfilled') awdReadiness.value = readinessResult.value
+    if (readinessResult.status === 'fulfilled') {
+      awdReadiness.value = readinessResult.value
+    } else {
+      awdPreflightLoadError.value = humanizeRequestError(
+        readinessResult.reason,
+        '赛前检查同步失败'
+      )
+      toast.error(awdPreflightLoadError.value)
+    }
   } finally {
     loadingAwdStageData.value = false
-  }
-}
-
-async function loadAwdChallengeCatalog(): Promise<void> {
-  if (loadingChallengeCatalog.value || awdChallengeCatalog.value.length > 0) return
-  loadingChallengeCatalog.value = true
-  try {
-    const result = await getChallenges({ page: 1, page_size: 200, status: 'published' })
-    awdChallengeCatalog.value = result.list
-  } finally {
-    loadingChallengeCatalog.value = false
   }
 }
 
@@ -218,6 +208,8 @@ async function loadAwdServiceTemplateCatalog(): Promise<void> {
   try {
     const result = await listAdminAwdServiceTemplates({ page: 1, page_size: 100, status: 'published' })
     awdServiceTemplateCatalog.value = result.list
+  } catch (error) {
+    toast.error(humanizeRequestError(error, '服务模板加载失败'))
   } finally {
     loadingAwdServiceTemplateCatalog.value = false
   }
@@ -243,7 +235,6 @@ function openAwdChallengeCreateDialog() {
   awdChallengeConfigMode.value = 'create'
   editingAwdChallengeLink.value = null
   awdChallengeConfigDialogOpen.value = true
-  void loadAwdChallengeCatalog()
   void loadAwdServiceTemplateCatalog()
 }
 
@@ -261,10 +252,8 @@ async function handleSaveAwdChallengeConfig(payload: any) {
   try {
     if (awdChallengeConfigMode.value === 'create') {
       await createContestAWDService(contest.value.id, payload)
-      await updateAdminContestChallenge(contest.value.id, String(payload.challenge_id), { points: payload.points })
     } else if (editingAwdChallengeLink.value) {
       await updateContestAWDService(contest.value.id, editingAwdChallengeLink.value.awd_service_id!, payload)
-      await updateAdminContestChallenge(contest.value.id, editingAwdChallengeLink.value.challenge_id, { points: payload.points })
     }
     awdChallengeConfigDialogOpen.value = false
     await refreshAwdWorkbenchData(contest.value.id)
@@ -292,14 +281,33 @@ function handleNavigateAwdChallengeFromOperations(challengeId: string) {
 }
 
 async function openPreflightOverrideDialog() {
-  if (!contest.value) return
-  const readiness = await getContestAWDReadiness(contest.value.id)
-  awdStartOverrideDialogState.value = {
-    open: true,
-    title: '强制启动赛事',
-    readiness,
-    confirmLoading: false,
-    pendingPayload: null
+  if (!contest.value || !formDraft.value) return
+  const payload = buildContestUpdatePayload(
+    {
+      ...formDraft.value,
+      status: 'running',
+    },
+    fieldLocks.value
+  )
+  await openAWDStartOverrideDialog(payload)
+}
+
+async function openAWDStartOverrideDialog(payload: AdminContestUpdatePayload) {
+  if (!contest.value) {
+    return
+  }
+
+  try {
+    const readiness = await getContestAWDReadiness(contest.value.id)
+    awdStartOverrideDialogState.value = {
+      open: true,
+      title: '启动赛事',
+      readiness,
+      confirmLoading: false,
+      pendingPayload: payload,
+    }
+  } catch (error) {
+    toast.error(humanizeRequestError(error, '读取开赛校验失败'))
   }
 }
 
@@ -329,7 +337,28 @@ async function handleSave(draft: ContestFormDraft): Promise<void> {
   saving.value = true
   try {
     const payload = buildContestUpdatePayload(draft, fieldLocks.value)
-    await updateContest(contestId.value, payload)
+
+    if (shouldConfirmContestTermination(editingBaseStatus.value, draft.status)) {
+      const confirmed = await confirmContestTermination(draft.title.trim())
+      if (!confirmed) {
+        return
+      }
+    }
+
+    if (shouldGateAWDContestStart(draft.mode, draft.status)) {
+      try {
+        await updateContest(contestId.value, payload, { suppressErrorToast: true })
+      } catch (error) {
+        if (isAWDReadinessBlockedError(error)) {
+          await openAWDStartOverrideDialog(payload)
+          return
+        }
+        throw error
+      }
+    } else {
+      await updateContest(contestId.value, payload)
+    }
+
     toast.success('竞赛已更新')
     goBackToContestList()
   } catch (error) {
@@ -344,7 +373,48 @@ function handleAwdStartOverrideDialogOpenChange(value: boolean) {
 }
 
 async function confirmAWDStartOverride(reason: string) {
-  // Logic simplified
+  if (!contest.value) {
+    return
+  }
+
+  const payload = awdStartOverrideDialogState.value.pendingPayload
+  const normalizedReason = reason.trim()
+  if (!payload || !normalizedReason) {
+    return
+  }
+
+  awdStartOverrideDialogState.value = {
+    ...awdStartOverrideDialogState.value,
+    confirmLoading: true,
+  }
+
+  try {
+    await updateContest(
+      contest.value.id,
+      {
+        ...payload,
+        force_override: true,
+        override_reason: normalizedReason,
+      },
+      { suppressErrorToast: true }
+    )
+    toast.success('竞赛已更新')
+    awdStartOverrideDialogState.value = createDefaultAWDStartOverrideDialogState()
+    goBackToContestList()
+  } catch (error) {
+    if (isAWDReadinessBlockedError(error)) {
+      await openAWDStartOverrideDialog(payload)
+      return
+    }
+    toast.error(humanizeRequestError(error, '竞赛更新失败'))
+  } finally {
+    if (awdStartOverrideDialogState.value.open) {
+      awdStartOverrideDialogState.value = {
+        ...awdStartOverrideDialogState.value,
+        confirmLoading: false,
+      }
+    }
+  }
 }
 
 function getModeLabel(mode: string): string {
@@ -561,11 +631,11 @@ onMounted(() => {
       :contest-id="contest.id"
       :open="awdChallengeConfigDialogOpen"
       :mode="awdChallengeConfigMode"
-      :challenge-options="awdChallengeCatalog"
+      :challenge-options="[]"
       :template-options="awdServiceTemplateCatalog"
       :existing-challenge-ids="existingAwdChallengeIds"
       :draft="editingAwdChallengeLink"
-      :loading-challenge-catalog="loadingChallengeCatalog"
+      :loading-challenge-catalog="false"
       :loading-template-catalog="loadingAwdServiceTemplateCatalog"
       :saving="savingChallengeConfig"
       @update:open="awdChallengeConfigDialogOpen = $event"

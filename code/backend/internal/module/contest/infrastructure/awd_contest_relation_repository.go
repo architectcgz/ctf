@@ -14,14 +14,13 @@ import (
 type awdContestServiceRuntimeRow struct {
 	ServiceID         int64                           `gorm:"column:service_id"`
 	ChallengeID       int64                           `gorm:"column:challenge_id"`
-	FlagPrefix        string                          `gorm:"column:flag_prefix"`
 	DisplayName       string                          `gorm:"column:display_name"`
+	ServiceSnapshot   string                          `gorm:"column:service_snapshot"`
 	RuntimeConfig     string                          `gorm:"column:runtime_config"`
 	ScoreConfig       string                          `gorm:"column:score_config"`
 	ValidationState   model.AWDCheckerValidationState `gorm:"column:validation_state"`
 	LastPreviewAt     *time.Time                      `gorm:"column:last_preview_at"`
 	LastPreviewResult string                          `gorm:"column:last_preview_result"`
-	ChallengeTitle    string                          `gorm:"column:challenge_title"`
 }
 
 func (r *AWDRepository) ListSchedulableAWDContests(ctx context.Context, now, recentCutoff time.Time, limit int) ([]model.Contest, error) {
@@ -47,15 +46,27 @@ func (r *AWDRepository) ListSchedulableAWDContests(ctx context.Context, now, rec
 }
 
 func (r *AWDRepository) ListChallengesByContest(ctx context.Context, contestID int64) ([]model.Challenge, error) {
-	var challenges []model.Challenge
-	if err := r.dbWithContext(ctx).
-		Table("challenges AS c").
-		Select("c.*").
-		Joins("JOIN contest_challenges AS cc ON cc.challenge_id = c.id").
-		Where("cc.contest_id = ?", contestID).
-		Order("c.id ASC").
-		Scan(&challenges).Error; err != nil {
+	rows, err := r.listContestAWDServiceRuntimeRows(ctx, contestID)
+	if err != nil {
 		return nil, err
+	}
+
+	challenges := make([]model.Challenge, 0, len(rows))
+	for _, row := range rows {
+		snapshot, decodeErr := model.DecodeContestAWDServiceSnapshot(row.ServiceSnapshot)
+		if decodeErr != nil {
+			return nil, decodeErr
+		}
+		challenges = append(challenges, model.Challenge{
+			ID:         row.ChallengeID,
+			Title:      resolveContestAWDServiceTitle(snapshot, row.DisplayName),
+			Category:   snapshot.Category,
+			Difficulty: snapshot.Difficulty,
+			FlagType:   resolveContestAWDServiceFlagType(snapshot),
+			FlagPrefix: resolveContestAWDServiceFlagPrefix(snapshot),
+			Points:     resolveContestAWDServiceScore(contestdomain.ParseAWDCheckerConfig(row.ScoreConfig), "points"),
+			Status:     model.ChallengeStatusPublished,
+		})
 	}
 	return challenges, nil
 }
@@ -68,12 +79,16 @@ func (r *AWDRepository) ListServiceDefinitionsByContest(ctx context.Context, con
 
 	definitions := make([]contestports.AWDServiceDefinition, 0, len(rows))
 	for _, row := range rows {
+		snapshot, decodeErr := model.DecodeContestAWDServiceSnapshot(row.ServiceSnapshot)
+		if decodeErr != nil {
+			return nil, decodeErr
+		}
 		runtimeConfig := contestdomain.ParseAWDCheckerConfig(row.RuntimeConfig)
 		scoreConfig := contestdomain.ParseAWDCheckerConfig(row.ScoreConfig)
 		definitions = append(definitions, contestports.AWDServiceDefinition{
 			ServiceID:     row.ServiceID,
 			ChallengeID:   row.ChallengeID,
-			FlagPrefix:    row.FlagPrefix,
+			FlagPrefix:    resolveContestAWDServiceFlagPrefix(snapshot),
 			CheckerType:   resolveContestAWDServiceCheckerType(runtimeConfig),
 			CheckerConfig: resolveContestAWDServiceCheckerConfig(runtimeConfig),
 			SLAScore:      resolveContestAWDServiceScore(scoreConfig, "awd_sla_score"),
@@ -91,15 +106,15 @@ func (r *AWDRepository) ListReadinessChallengesByContest(ctx context.Context, co
 
 	records := make([]contestports.AWDReadinessChallengeRecord, 0, len(rows))
 	for _, row := range rows {
-		runtimeConfig := contestdomain.ParseAWDCheckerConfig(row.RuntimeConfig)
-		title := strings.TrimSpace(row.DisplayName)
-		if title == "" {
-			title = row.ChallengeTitle
+		snapshot, decodeErr := model.DecodeContestAWDServiceSnapshot(row.ServiceSnapshot)
+		if decodeErr != nil {
+			return nil, decodeErr
 		}
+		runtimeConfig := contestdomain.ParseAWDCheckerConfig(row.RuntimeConfig)
 		records = append(records, contestports.AWDReadinessChallengeRecord{
 			ServiceID:         row.ServiceID,
 			ChallengeID:       row.ChallengeID,
-			Title:             title,
+			Title:             resolveContestAWDServiceTitle(snapshot, row.DisplayName),
 			CheckerType:       resolveContestAWDServiceCheckerType(runtimeConfig),
 			CheckerConfig:     resolveContestAWDServiceCheckerConfig(runtimeConfig),
 			ValidationState:   row.ValidationState,
@@ -117,16 +132,14 @@ func (r *AWDRepository) listContestAWDServiceRuntimeRows(ctx context.Context, co
 		Select(`
 			cas.id AS service_id,
 			cas.challenge_id AS challenge_id,
-			c.flag_prefix AS flag_prefix,
 			cas.display_name AS display_name,
+			cas.service_snapshot AS service_snapshot,
 			cas.runtime_config AS runtime_config,
 			cas.score_config AS score_config,
 			cas.awd_checker_validation_state AS validation_state,
 			cas.awd_checker_last_preview_at AS last_preview_at,
-			cas.awd_checker_last_preview_result AS last_preview_result,
-			c.title AS challenge_title
+			cas.awd_checker_last_preview_result AS last_preview_result
 		`).
-		Joins("JOIN challenges AS c ON c.id = cas.challenge_id").
 		Where("cas.contest_id = ?", contestID).
 		Where("cas.deleted_at IS NULL").
 		Order("cas.\"order\" ASC, cas.id ASC").
@@ -147,6 +160,35 @@ func resolveContestAWDServiceCheckerType(runtimeConfig map[string]any) model.AWD
 		}
 	}
 	return ""
+}
+
+func resolveContestAWDServiceTitle(snapshot model.ContestAWDServiceSnapshot, displayName string) string {
+	if title := strings.TrimSpace(displayName); title != "" {
+		return title
+	}
+	return strings.TrimSpace(snapshot.Name)
+}
+
+func resolveContestAWDServiceFlagPrefix(snapshot model.ContestAWDServiceSnapshot) string {
+	if snapshot.FlagConfig != nil {
+		if value, ok := snapshot.FlagConfig["flag_prefix"].(string); ok {
+			if trimmed := strings.TrimSpace(value); trimmed != "" {
+				return trimmed
+			}
+		}
+	}
+	return "flag"
+}
+
+func resolveContestAWDServiceFlagType(snapshot model.ContestAWDServiceSnapshot) string {
+	if snapshot.FlagConfig != nil {
+		if value, ok := snapshot.FlagConfig["flag_type"].(string); ok {
+			if trimmed := strings.TrimSpace(value); trimmed != "" {
+				return trimmed
+			}
+		}
+	}
+	return model.FlagTypeDynamic
 }
 
 func resolveContestAWDServiceCheckerConfig(runtimeConfig map[string]any) string {

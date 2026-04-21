@@ -6,11 +6,11 @@ import {
   createContestAWDService,
   createAdminContestChallenge,
   listAdminAwdServiceTemplates,
+  listAdminContestChallenges,
   listContestAWDServices,
   deleteContestAWDService,
   deleteAdminContestChallenge,
   getChallenges,
-  listAdminContestChallenges,
   updateContestAWDService,
   updateAdminContestChallenge,
 } from '@/api/admin'
@@ -28,7 +28,7 @@ import { useAwdCheckResultPresentation } from '@/composables/useAwdCheckResultPr
 import { useContestChallengePool } from '@/composables/useContestChallengePool'
 import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
 import { useToast } from '@/composables/useToast'
-import { mergePlatformContestChallengesWithAwdServices } from '@/utils/platformContestAwdChallengeLinks'
+import { mapPlatformContestAwdServicesToChallengeLinks } from '@/utils/platformContestAwdChallengeLinks'
 
 import ContestChallengeEditorDialog from './ContestChallengeEditorDialog.vue'
 
@@ -93,7 +93,17 @@ const emptyState = computed(() =>
       }
 )
 
-const existingChallengeIds = computed(() => currentChallengeLinks.value.map((item) => item.challenge_id))
+const existingChallengeIdSet = computed(
+  () => new Set(currentChallengeLinks.value.map((item) => String(item.challenge_id)))
+)
+const existingChallengeIds = computed(() => Array.from(existingChallengeIdSet.value))
+const dialogChallengeOptions = computed(() =>
+  isAwdContest.value
+    ? []
+    : dialogMode.value === 'edit'
+    ? challengeCatalog.value
+    : challengeCatalog.value.filter((item) => !existingChallengeIdSet.value.has(String(item.id)))
+)
 
 function formatDateTime(value?: string): string {
   if (!value) return '未记录'
@@ -138,9 +148,12 @@ async function refresh() {
   }
   loading.value = true
   try {
-    const nextChallengeLinks = await listAdminContestChallenges(props.contestId)
-    const nextAwdServices = props.contestMode === 'awd' ? await listContestAWDServices(props.contestId) : []
-    localChallengeLinks.value = mergePlatformContestChallengesWithAwdServices(nextChallengeLinks, nextAwdServices)
+    if (props.contestMode === 'awd') {
+      const nextAwdServices = await listContestAWDServices(props.contestId)
+      localChallengeLinks.value = mapPlatformContestAwdServicesToChallengeLinks(nextAwdServices)
+    } else {
+      localChallengeLinks.value = await listAdminContestChallenges(props.contestId)
+    }
     localLoadError.value = ''
   } catch (error) {
     localLoadError.value = humanizeRequestError(error, '加载失败')
@@ -154,8 +167,14 @@ async function ensureChallengeCatalogLoaded() {
   if (loadingChallengeCatalog.value || challengeCatalog.value.length > 0) return
   loadingChallengeCatalog.value = true
   try {
-    const result = await getChallenges({ page: 1, page_size: 200, status: 'published' })
+    const result = await getChallenges({
+      page: 1,
+      page_size: CHALLENGE_CATALOG_PAGE_SIZE,
+      status: 'published',
+    })
     challengeCatalog.value = result.list
+  } catch (error) {
+    toast.error(humanizeRequestError(error, '题库加载失败'))
   } finally {
     loadingChallengeCatalog.value = false
   }
@@ -176,7 +195,9 @@ function openCreateDialog() {
   dialogMode.value = 'create'
   editingChallenge.value = null
   dialogOpen.value = true
-  void ensureChallengeCatalogLoaded()
+  if (!isAwdContest.value) {
+    void ensureChallengeCatalogLoaded()
+  }
   if (isAwdContest.value) void ensureTemplateCatalogLoaded()
 }
 
@@ -202,19 +223,22 @@ async function handleSave(payload: any) {
     if (isAwdContest.value) {
       if (dialogMode.value === 'create') {
         await createContestAWDService(props.contestId, payload)
-        await updateAdminContestChallenge(props.contestId, String(payload.challenge_id), { points: payload.points })
       } else if (editingChallenge.value) {
-        if (editingChallenge.value.awd_service_id) {
-          await updateContestAWDService(props.contestId, editingChallenge.value.awd_service_id, payload)
-        } else {
-          await createContestAWDService(props.contestId, { ...payload, challenge_id: Number(editingChallenge.value.challenge_id) })
-        }
-        await updateAdminContestChallenge(props.contestId, editingChallenge.value.challenge_id, { points: payload.points })
+        await updateContestAWDService(props.contestId, editingChallenge.value.awd_service_id!, payload)
       }
     } else if (dialogMode.value === 'create') {
-      await createAdminContestChallenge(props.contestId, payload)
+      await createAdminContestChallenge(props.contestId, {
+        challenge_id: payload.challenge_id,
+        points: payload.points,
+        order: payload.order,
+        is_visible: payload.is_visible,
+      })
     } else if (editingChallenge.value) {
-      await updateAdminContestChallenge(props.contestId, editingChallenge.value.challenge_id, payload)
+      await updateAdminContestChallenge(props.contestId, editingChallenge.value.challenge_id, {
+        points: payload.points,
+        order: payload.order,
+        is_visible: payload.is_visible,
+      })
     }
     toast.success('题目已保存')
     closeDialog()
@@ -235,8 +259,8 @@ async function handleRemove(challenge: AdminContestChallengeViewData) {
   if (!confirmed) return
   removingChallengeId.value = challenge.id
   try {
-    if (props.contestMode === 'awd' && challenge.awd_service_id) {
-      await deleteContestAWDService(props.contestId, challenge.awd_service_id)
+    if (props.contestMode === 'awd') {
+      await deleteContestAWDService(props.contestId, challenge.awd_service_id!)
     } else {
       await deleteAdminContestChallenge(props.contestId, challenge.challenge_id)
     }
@@ -271,86 +295,227 @@ onMounted(() => {
   <section class="studio-orchestration">
     <header class="studio-pane-header">
       <div class="header-main">
-        <h1 class="pane-title">题目编排</h1>
-        <p class="pane-description">{{ panelCopy }}</p>
+        <h1 class="pane-title">
+          题目编排
+        </h1>
+        <p class="pane-description">
+          {{ panelCopy }}
+        </p>
       </div>
       <div class="header-actions">
-        <button type="button" class="ops-btn ops-btn--neutral" @click="refresh">
-          <RefreshCw class="h-3.5 w-3.5" :class="{ 'animate-spin': panelLoading }" />
+        <button
+          type="button"
+          class="ops-btn ops-btn--neutral"
+          @click="refresh"
+        >
+          <RefreshCw
+            class="h-3.5 w-3.5"
+            :class="{ 'animate-spin': panelLoading }"
+          />
           <span>同步数据</span>
         </button>
-        <button type="button" class="ops-btn ops-btn--primary" @click="openCreateDialog">
+        <button
+          id="contest-challenge-add"
+          type="button"
+          class="ops-btn ops-btn--primary"
+          @click="openCreateDialog"
+        >
           <Plus class="h-3.5 w-3.5" />
-          <span>关联新题目</span>
+          <span>{{ isAwdContest ? '新增服务' : '关联新题目' }}</span>
         </button>
       </div>
     </header>
 
-    <div v-if="summaryItems.length > 0" class="studio-metric-band">
-      <div v-for="item in summaryItems" :key="item.key" class="metric-pill">
+    <div
+      v-if="summaryItems.length > 0"
+      class="studio-metric-band"
+    >
+      <div
+        v-for="item in summaryItems"
+        :key="item.key"
+        class="metric-pill"
+      >
         <span class="metric-pill__label">{{ item.label }}</span>
         <span class="metric-pill__value">{{ item.value }}</span>
       </div>
     </div>
 
     <div class="studio-directory-canvas">
-      <AppEmpty v-if="panelLoadError && currentChallengeLinks.length === 0" title="同步中断" :description="panelLoadError" icon="AlertTriangle" class="py-20">
-        <template #action><button type="button" class="ops-btn ops-btn--neutral" @click="refresh">重试</button></template>
+      <AppEmpty
+        v-if="panelLoadError && currentChallengeLinks.length === 0"
+        title="同步中断"
+        :description="panelLoadError"
+        icon="AlertTriangle"
+        class="py-20"
+      >
+        <template #action>
+          <button
+            type="button"
+            class="ops-btn ops-btn--neutral"
+            @click="refresh"
+          >
+            重试
+          </button>
+        </template>
       </AppEmpty>
 
       <template v-else>
-        <nav v-if="isAwdContest && filterItems.length > 0" class="studio-quick-nav">
-          <button v-for="filter in filterItems" :key="filter.key" class="nav-pill" :class="{ active: activeFilter === filter.key }" @click="setFilter(filter.key)">
+        <nav
+          v-if="isAwdContest && filterItems.length > 0"
+          class="studio-quick-nav"
+        >
+          <button
+            v-for="filter in filterItems"
+            :key="filter.key"
+            class="nav-pill"
+            :class="{ active: activeFilter === filter.key }"
+            @click="setFilter(filter.key)"
+          >
             <span class="nav-pill__label">{{ filter.label }}</span>
             <span class="nav-pill__count">{{ filter.count }}</span>
           </button>
         </nav>
 
-        <div v-if="panelLoading" class="flex justify-center py-24"><AppLoading>同步中...</AppLoading></div>
-        <AppEmpty v-else-if="visibleItems.length === 0" :title="emptyState.title" :description="emptyState.description" icon="Boxes" class="py-20" />
+        <div
+          v-if="panelLoading"
+          class="flex justify-center py-24"
+        >
+          <AppLoading>同步中...</AppLoading>
+        </div>
+        <AppEmpty
+          v-else-if="visibleItems.length === 0"
+          :title="emptyState.title"
+          :description="emptyState.description"
+          icon="Boxes"
+          class="py-20"
+        />
 
-        <div v-else class="studio-table-wrap custom-scrollbar">
+        <div
+          v-else
+          class="studio-table-wrap custom-scrollbar"
+        >
           <table class="studio-table">
             <thead>
               <tr>
-                <th class="col-identity">题目资源</th>
-                <th class="col-meta">可见性</th>
-                <th class="col-meta">分值</th>
-                <th class="col-meta">权重</th>
+                <th class="col-identity">
+                  题目资源
+                </th>
+                <th class="col-meta">
+                  可见性
+                </th>
+                <th class="col-meta">
+                  分值
+                </th>
+                <th class="col-meta">
+                  权重
+                </th>
                 <template v-if="isAwdContest">
-                  <th class="col-awd">裁判引擎</th>
-                  <th class="col-awd">就绪校验</th>
-                  <th class="col-awd">A/D 权重</th>
-                  <th class="col-awd">最后活动</th>
+                  <th class="col-awd">
+                    裁判引擎
+                  </th>
+                  <th class="col-awd">
+                    就绪校验
+                  </th>
+                  <th class="col-awd">
+                    A/D 权重
+                  </th>
+                  <th class="col-awd">
+                    最后活动
+                  </th>
                 </template>
-                <th class="col-actions">管理</th>
+                <th class="col-actions">
+                  管理
+                </th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="challenge in visibleItems" :key="challenge.id" class="studio-row">
+              <tr
+                v-for="challenge in visibleItems"
+                :key="challenge.id"
+                class="studio-row"
+              >
                 <td class="col-identity">
                   <div class="challenge-identity">
-                    <div class="challenge-title">{{ getChallengeTitle(challenge) }}</div>
-                    <div class="challenge-subtitle">{{ challenge.category || '通用' }} · {{ challenge.difficulty || '常规' }}</div>
+                    <div class="challenge-title">
+                      {{ getChallengeTitle(challenge) }}
+                    </div>
+                    <div class="challenge-subtitle">
+                      {{ challenge.category || '通用' }} · {{ challenge.difficulty || '常规' }}
+                    </div>
                   </div>
                 </td>
-                <td class="col-meta"><span class="status-badge" :class="challenge.is_visible ? 'is-visible' : 'is-hidden'">{{ challenge.is_visible ? '公开' : '隐藏' }}</span></td>
-                <td class="col-meta font-mono font-black text-slate-700">{{ challenge.points }} <small>PTS</small></td>
-                <td class="col-meta"><div class="order-chip">RANK {{ challenge.order }}</div></td>
+                <td class="col-meta">
+                  <span
+                    class="status-badge"
+                    :class="challenge.is_visible ? 'is-visible' : 'is-hidden'"
+                  >{{ challenge.is_visible ? '公开' : '隐藏' }}</span>
+                </td>
+                <td class="col-meta font-mono font-black text-slate-700">
+                  {{ challenge.points }} <small>PTS</small>
+                </td>
+                <td class="col-meta">
+                  <div class="order-chip">
+                    RANK {{ challenge.order }}
+                  </div>
+                </td>
                 <template v-if="isAwdContest">
-                  <td class="col-awd"><div class="engine-tag">{{ getCheckerLabel(challenge) }}</div></td>
-                  <td class="col-awd"><span class="validation-status" :class="challenge.awd_checker_validation_state">{{ getValidationSummary(challenge) }}</span></td>
-                  <td class="col-awd font-mono text-[10px] text-slate-500">{{ getAwdScoreSummary(challenge) }}</td>
-                  <td class="col-awd text-[10px] text-slate-400">{{ getPreviewSummary(challenge) }}</td>
+                  <td class="col-awd">
+                    <div class="engine-tag">
+                      {{ getCheckerLabel(challenge) }}
+                    </div>
+                  </td>
+                  <td class="col-awd">
+                    <span
+                      class="validation-status"
+                      :class="challenge.awd_checker_validation_state"
+                    >{{ getValidationSummary(challenge) }}</span>
+                  </td>
+                  <td class="col-awd font-mono text-[10px] text-slate-500">
+                    {{ getAwdScoreSummary(challenge) }}
+                  </td>
+                  <td class="col-awd text-[10px] text-slate-400">
+                    {{ getPreviewSummary(challenge) }}
+                  </td>
                 </template>
                 <td class="col-actions">
-                  <CActionMenu :open="openActionMenuId === challenge.id" @update:open="setActionMenuOpen(challenge.id, $event)">
-                    <template #trigger="{ open, toggle, setTriggerRef }"><button :ref="setTriggerRef" class="action-trigger" @click.stop="toggle"><MoreHorizontal class="h-4 w-4" /></button></template>
+                  <CActionMenu
+                    :open="openActionMenuId === challenge.id"
+                    @update:open="setActionMenuOpen(challenge.id, $event)"
+                  >
+                    <template #trigger="{ open, toggle, setTriggerRef }">
+                      <button
+                        :id="`contest-challenge-actions-${challenge.challenge_id}`"
+                        :ref="setTriggerRef"
+                        class="action-trigger"
+                        @click.stop="toggle"
+                      >
+                        <MoreHorizontal class="h-4 w-4" />
+                      </button>
+                    </template>
                     <template #default="{ close }">
-                      <button v-if="isAwdContest" class="menu-item" @click="handleOpenAwdConfig(challenge, close)"><Zap class="h-3.5 w-3.5 mr-2" /> 补 AWD 配置</button>
-                      <button class="menu-item" @click="handleOpenEditDialog(challenge, close)"><Edit class="h-3.5 w-3.5 mr-2" /> 属性修改</button>
-                      <div class="menu-divider"></div>
-                      <button class="menu-item danger" @click="handleRemoveFromMenu(challenge, close)"><Trash class="h-3.5 w-3.5 mr-2" /> 移除题目</button>
+                      <button
+                        v-if="isAwdContest"
+                        :id="`contest-challenge-open-awd-config-${challenge.challenge_id}`"
+                        class="menu-item"
+                        @click="handleOpenAwdConfig(challenge, close)"
+                      >
+                        <Zap class="h-3.5 w-3.5 mr-2" /> 补 AWD 配置
+                      </button>
+                      <button
+                        :id="`contest-challenge-edit-${challenge.challenge_id}`"
+                        class="menu-item"
+                        @click="handleOpenEditDialog(challenge, close)"
+                      >
+                        <Edit class="h-3.5 w-3.5 mr-2" /> 属性修改
+                      </button>
+                      <div class="menu-divider" />
+                      <button
+                        :id="`contest-challenge-remove-${challenge.challenge_id}`"
+                        class="menu-item danger"
+                        @click="handleRemoveFromMenu(challenge, close)"
+                      >
+                        <Trash class="h-3.5 w-3.5 mr-2" /> 移除题目
+                      </button>
                     </template>
                   </CActionMenu>
                 </td>
@@ -362,11 +527,19 @@ onMounted(() => {
     </div>
 
     <ContestChallengeEditorDialog
-      :open="dialogOpen" :mode="dialogMode" :contest-mode="contestMode"
-      :challenge-options="challengeCatalog" :template-options="templateCatalog"
-      :existing-challenge-ids="existingChallengeIds" :draft="editingChallenge"
-      :loading-challenge-catalog="loadingChallengeCatalog" :loading-template-catalog="loadingTemplateCatalog"
-      :saving="saving" @update:open="dialogOpen = $event" @save="handleSave"
+      :key="`${dialogMode}:${existingChallengeIds.join(',')}`"
+      :open="dialogOpen"
+      :mode="dialogMode"
+      :contest-mode="contestMode"
+      :challenge-options="dialogChallengeOptions"
+      :template-options="templateCatalog"
+      :existing-challenge-ids="existingChallengeIds"
+      :draft="editingChallenge"
+      :loading-challenge-catalog="loadingChallengeCatalog"
+      :loading-template-catalog="loadingTemplateCatalog"
+      :saving="saving"
+      @update:open="dialogOpen = $event"
+      @save="handleSave"
     />
   </section>
 </template>

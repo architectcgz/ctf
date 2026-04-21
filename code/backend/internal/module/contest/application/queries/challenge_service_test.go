@@ -120,8 +120,8 @@ func TestChallengeServiceListAdminChallengesReturnsRelationFieldsOnly(t *testing
 	}
 }
 
-func TestChallengeServiceGetContestChallengesIncludesAWDServiceID(t *testing.T) {
-	service, challengeRepo, contestRepo, challengeRelationRepo, awdRepo := newContestChallengeQueryService(t)
+func TestChallengeServiceGetContestChallengesReadsAWDServicesFromServiceSnapshot(t *testing.T) {
+	service, _, contestRepo, _, awdRepo := newContestChallengeQueryService(t)
 
 	now := time.Now()
 	if err := contestRepo.Create(context.Background(), &model.Contest{
@@ -136,40 +136,17 @@ func TestChallengeServiceGetContestChallengesIncludesAWDServiceID(t *testing.T) 
 	}); err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := challengeRepo.Create(&model.Challenge{
-		ID:         9111,
-		Title:      "awd-visible-query-challenge",
-		Category:   "web",
-		Difficulty: model.ChallengeDifficultyMedium,
-		Points:     100,
-		Status:     model.ChallengeStatusPublished,
-		FlagType:   model.FlagTypeStatic,
-		CreatedAt:  now,
-		UpdatedAt:  now,
-	}); err != nil {
-		t.Fatalf("create challenge: %v", err)
-	}
-	if err := challengeRelationRepo.AddChallenge(context.Background(), &model.ContestChallenge{
-		ContestID:   611,
-		ChallengeID: 9111,
-		Points:      100,
-		IsVisible:   true,
-		CreatedAt:   now,
-		UpdatedAt:   now,
-	}); err != nil {
-		t.Fatalf("add challenge: %v", err)
-	}
 	if err := awdRepo.CreateContestAWDService(context.Background(), &model.ContestAWDService{
-		ID:            7201,
-		ContestID:     611,
-		ChallengeID:   9111,
-		DisplayName:   "Bank Portal",
-		Order:         0,
-		IsVisible:     true,
-		ScoreConfig:   `{"points":100}`,
-		RuntimeConfig: `{"challenge_id":9111}`,
-		CreatedAt:     now,
-		UpdatedAt:     now,
+		ID:              7201,
+		ContestID:       611,
+		ChallengeID:     9111,
+		DisplayName:     "Bank Portal",
+		Order:           0,
+		IsVisible:       true,
+		ScoreConfig:     `{"points":100}`,
+		ServiceSnapshot: `{"name":"Bank Portal","category":"web","difficulty":"medium","flag_config":{"flag_type":"static","flag_prefix":"awd"}}`,
+		CreatedAt:       now,
+		UpdatedAt:       now,
 	}); err != nil {
 		t.Fatalf("create contest awd service: %v", err)
 	}
@@ -183,5 +160,8 @@ func TestChallengeServiceGetContestChallengesIncludesAWDServiceID(t *testing.T) 
 	}
 	if resp[0].AWDServiceID == nil || *resp[0].AWDServiceID != 7201 {
 		t.Fatalf("expected awd service id 7201, got %+v", resp[0])
+	}
+	if resp[0].ChallengeID != 9111 || resp[0].Title != "Bank Portal" || resp[0].Category != "web" || resp[0].Difficulty != model.ChallengeDifficultyMedium {
+		t.Fatalf("expected awd challenge info from service snapshot, got %+v", resp[0])
 	}
 }

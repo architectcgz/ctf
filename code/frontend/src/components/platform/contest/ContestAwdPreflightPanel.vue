@@ -30,16 +30,29 @@ function handleNavigateChallenge(challengeId: string) {
   <section class="studio-preflight">
     <header class="studio-pane-header">
       <div class="header-main">
-        <h1 class="pane-title">赛前就绪检查</h1>
-        <p class="pane-description">全自动审计所有 AWD 题目与服务的配置状态，确保比赛在裁判逻辑完整的前提下开启。</p>
+        <h1 class="pane-title">
+          赛前就绪检查
+        </h1>
+        <p class="pane-description">
+          全自动审计所有 AWD 题目与服务的配置状态，确保比赛在裁判逻辑完整的前提下开启。
+        </p>
       </div>
 
       <!-- Override Entry with a more balanced style -->
-      <div v-if="canForceStart" class="studio-override-card">
+      <div
+        v-if="canForceStart"
+        class="studio-override-card"
+      >
         <div class="override-content">
-          <div class="override-overline">Operational Bypass</div>
-          <h3 class="override-title">强制启动赛事</h3>
-          <p class="override-hint">针对紧急演练或特定场景，可跳过就绪校验。请保留操作备注。</p>
+          <div class="override-overline">
+            Operational Bypass
+          </div>
+          <h3 class="override-title">
+            强制启动赛事
+          </h3>
+          <p class="override-hint">
+            针对紧急演练或特定场景，可跳过就绪校验。请保留操作备注。
+          </p>
         </div>
         <button
           id="contest-awd-preflight-force-start"

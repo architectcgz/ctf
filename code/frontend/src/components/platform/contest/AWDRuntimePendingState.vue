@@ -5,8 +5,12 @@ import { Activity, Clock, ShieldAlert, Sword, TimerReset, ClipboardCheck } from 
 <template>
   <section class="studio-pending-shell">
     <div class="pending-identity">
-      <div class="pending-overline">Operational Lifecycle</div>
-      <h2 class="pending-title">尚未进入运行阶段</h2>
+      <div class="pending-overline">
+        Operational Lifecycle
+      </div>
+      <h2 class="pending-title">
+        尚未进入运行阶段
+      </h2>
       <p class="pending-description">
         当前赛事尚未开启轮次调度。请先确保所有题目在“赛前就绪检查”中校验通过，随后在“题目编排”或“基础信息”中将赛事切换为“进行中”状态。
       </p>
@@ -14,34 +18,58 @@ import { Activity, Clock, ShieldAlert, Sword, TimerReset, ClipboardCheck } from 
 
     <div class="pending-grid">
       <div class="pending-card">
-        <div class="pending-card__icon"><TimerReset class="h-5 w-5" /></div>
+        <div class="pending-card__icon">
+          <TimerReset class="h-5 w-5" />
+        </div>
         <div class="pending-card__body">
-          <div class="card-label">轮次调度</div>
-          <div class="card-status">等待开赛...</div>
+          <div class="card-label">
+            轮次调度
+          </div>
+          <div class="card-status">
+            等待开赛...
+          </div>
         </div>
       </div>
       <div class="pending-card">
-        <div class="pending-card__icon"><Sword class="h-5 w-5" /></div>
+        <div class="pending-card__icon">
+          <Sword class="h-5 w-5" />
+        </div>
         <div class="pending-card__body">
-          <div class="card-label">攻击流水</div>
-          <div class="card-status">链路关闭</div>
+          <div class="card-label">
+            攻击流水
+          </div>
+          <div class="card-status">
+            链路关闭
+          </div>
         </div>
       </div>
       <div class="pending-card">
-        <div class="pending-card__icon"><ShieldAlert class="h-5 w-5" /></div>
+        <div class="pending-card__icon">
+          <ShieldAlert class="h-5 w-5" />
+        </div>
         <div class="pending-card__body">
-          <div class="card-label">服务巡检</div>
-          <div class="card-status">尚未就绪</div>
+          <div class="card-label">
+            服务巡检
+          </div>
+          <div class="card-status">
+            尚未就绪
+          </div>
         </div>
       </div>
     </div>
 
     <div class="pending-actions">
       <div class="flex items-center gap-3">
-        <div class="ops-btn ops-btn--disabled"><TimerReset class="h-3.5 w-3.5" /> 立即同步轮次</div>
-        <div class="ops-btn ops-btn--disabled"><ShieldAlert class="h-3.5 w-3.5" /> 补录检查</div>
+        <div class="ops-btn ops-btn--disabled">
+          <TimerReset class="h-3.5 w-3.5" /> 立即同步轮次
+        </div>
+        <div class="ops-btn ops-btn--disabled">
+          <ShieldAlert class="h-3.5 w-3.5" /> 补录检查
+        </div>
       </div>
-      <p class="pending-footer-hint">需完成赛前准备并开赛后，本面板将自动切换至实时监控模式。</p>
+      <p class="pending-footer-hint">
+        需完成赛前准备并开赛后，本面板将自动切换至实时监控模式。
+      </p>
     </div>
   </section>
 </template>

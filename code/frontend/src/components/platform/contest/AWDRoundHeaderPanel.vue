@@ -55,7 +55,10 @@ function navigateRound(delta: number) {
           </h2>
           
           <!-- Integrated Round Switcher -->
-          <div v-if="rounds.length > 0" class="round-switcher">
+          <div
+            v-if="rounds.length > 0"
+            class="round-switcher"
+          >
             <button 
               class="round-nav-btn" 
               :disabled="!hasPrev" 
@@ -72,13 +75,20 @@ function navigateRound(delta: number) {
                 class="round-select-native"
                 @change="emit('update:selectedRoundId', ($event.target as HTMLSelectElement).value)"
               >
-                <option v-for="round in roundOptions" :key="round.id" :value="round.id">
+                <option
+                  v-for="round in roundOptions"
+                  :key="round.id"
+                  :value="round.id"
+                >
                   ROUND {{ String(round.round_number).padStart(2, '0') }} · {{ getRoundStatusLabel(round.status).toUpperCase() }}
                 </option>
               </select>
               <div class="round-select-display">
                 <span class="font-black">ROUND {{ selectedRound?.round_number || '--' }}</span>
-                <span class="status-dot" :class="selectedRound?.status"></span>
+                <span
+                  class="status-dot"
+                  :class="selectedRound?.status"
+                />
               </div>
             </div>
 
@@ -102,7 +112,10 @@ function navigateRound(delta: number) {
             :disabled="loadingRounds || loadingRoundDetail"
             @click="emit('refresh')"
           >
-            <RefreshCw class="h-3.5 w-3.5" :class="{ 'animate-spin': loadingRounds || loadingRoundDetail }" />
+            <RefreshCw
+              class="h-3.5 w-3.5"
+              :class="{ 'animate-spin': loadingRounds || loadingRoundDetail }"
+            />
             <span>同步态势</span>
           </button>
           
@@ -115,7 +128,7 @@ function navigateRound(delta: number) {
             <span>创建轮次</span>
           </button>
 
-          <div class="ops-divider"></div>
+          <div class="ops-divider" />
 
           <button
             type="button"
@@ -150,15 +163,27 @@ function navigateRound(delta: number) {
       </div>
     </div>
     
-    <div v-if="shouldAutoRefresh || serviceCheckHint || attackLogHint" class="awd-ops-header__bottom">
+    <div
+      v-if="shouldAutoRefresh || serviceCheckHint || attackLogHint"
+      class="awd-ops-header__bottom"
+    >
       <div class="flex items-center gap-4">
-        <span v-if="shouldAutoRefresh" class="hint-item hint-item--live">
-          <span class="pulse-dot"></span> 实时追踪模式 (15s)
+        <span
+          v-if="shouldAutoRefresh"
+          class="hint-item hint-item--live"
+        >
+          <span class="pulse-dot" /> 实时追踪模式 (15s)
         </span>
-        <span v-if="selectedRoundId && !canRecordServiceChecks && serviceCheckHint" class="hint-item">
+        <span
+          v-if="selectedRoundId && !canRecordServiceChecks && serviceCheckHint"
+          class="hint-item"
+        >
           {{ serviceCheckHint }}
         </span>
-        <span v-if="selectedRoundId && !canRecordAttackLogs && attackLogHint" class="hint-item">
+        <span
+          v-if="selectedRoundId && !canRecordAttackLogs && attackLogHint"
+          class="hint-item"
+        >
           {{ attackLogHint }}
         </span>
       </div>

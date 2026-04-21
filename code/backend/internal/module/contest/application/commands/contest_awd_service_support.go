@@ -12,6 +12,42 @@ import (
 	contestdomain "ctf-platform/internal/module/contest/domain"
 )
 
+func buildContestAWDServiceSnapshot(template *model.AWDServiceTemplate) string {
+	if template == nil {
+		return "{}"
+	}
+	snapshot := model.ContestAWDServiceSnapshot{
+		Name:             strings.TrimSpace(template.Name),
+		Category:         strings.TrimSpace(template.Category),
+		Difficulty:       strings.TrimSpace(template.Difficulty),
+		Description:      strings.TrimSpace(template.Description),
+		ServiceType:      template.ServiceType,
+		DeploymentMode:   template.DeploymentMode,
+		FlagMode:         strings.TrimSpace(template.FlagMode),
+		FlagConfig:       parseContestAWDServiceJSONMap(template.FlagConfig),
+		DefenseEntryMode: strings.TrimSpace(template.DefenseEntryMode),
+		AccessConfig:     parseContestAWDServiceJSONMap(template.AccessConfig),
+		RuntimeConfig:    parseContestAWDServiceJSONMap(template.RuntimeConfig),
+	}
+	raw, err := model.EncodeContestAWDServiceSnapshot(snapshot)
+	if err != nil {
+		return "{}"
+	}
+	return raw
+}
+
+func parseContestAWDServiceJSONMap(raw string) map[string]any {
+	value := strings.TrimSpace(raw)
+	if value == "" {
+		return map[string]any{}
+	}
+	var payload map[string]any
+	if err := json.Unmarshal([]byte(value), &payload); err != nil {
+		return map[string]any{}
+	}
+	return payload
+}
+
 func buildContestAWDServiceScoreConfig(points, slaScore, defenseScore int) string {
 	value := map[string]any{
 		"points":            points,
