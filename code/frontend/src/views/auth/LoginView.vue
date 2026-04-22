@@ -3,7 +3,22 @@
     panel-eyebrow="账户访问"
     panel-title="登录工作台"
     panel-description="验证凭据以进入安全实战系统。"
+    @hero-probe="handleHeroProbe"
   >
+    <!-- 
+      DEBUG NOTE [SEC-01]: 
+      Primary authentication vector is isolated. 
+      Rate-limiting is active (10req/sec per IP).
+      Stop looking here, the flag is not in the front-end. ;)
+      - Infrastructure Admin
+    -->
+    <div
+      v-if="probeMessage"
+      class="auth-probe-note"
+    >
+      {{ probeMessage }}
+    </div>
+
     <form
       class="auth-login-form"
       @submit.prevent="onSubmit"
@@ -26,7 +41,12 @@
       <div class="auth-field">
         <div class="auth-label-row">
           <label class="auth-label">安全密码</label>
-          <button type="button" class="auth-aux-link">忘记密码?</button>
+          <button
+            type="button"
+            class="auth-aux-link"
+          >
+            忘记密码?
+          </button>
         </div>
         <div class="ui-control-wrap">
           <input
@@ -61,37 +81,113 @@
     <template #footer>
       <div class="auth-footer-nav">
         <span>还没有平台账号？</span>
-        <p class="auth-contact-hint">请联系您的系统管理员进行账号分配与导入</p>
+        <p class="auth-contact-hint">
+          请联系您的系统管理员进行账号分配与导入
+        </p>
       </div>
     </template>
   </AuthEntryShell>
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, useTemplateRef } from 'vue'
+import { onBeforeUnmount, onMounted, reactive, ref, useTemplateRef } from 'vue'
 import { useRoute } from 'vue-router'
 
 import AuthEntryShell from '@/components/auth/AuthEntryShell.vue'
+import { useProbeEasterEggs } from '@/composables/useProbeEasterEggs'
 import { sanitizeRedirectPath } from '@/router/guards'
 import { useAuth } from '@/composables/useAuth'
 
 const { login } = useAuth()
+const { track } = useProbeEasterEggs()
 const route = useRoute()
 
 const loading = ref(false)
 const submitError = ref('')
+const probeMessage = ref('')
 const form = reactive({ username: '', password: '' })
 const usernameInput = useTemplateRef<HTMLInputElement>('usernameInput')
 const passwordInput = useTemplateRef<HTMLInputElement>('passwordInput')
+let probeMessageTimer: number | null = null
+
+function showProbeMessage(message: string) {
+  probeMessage.value = message
+  if (probeMessageTimer) {
+    window.clearTimeout(probeMessageTimer)
+  }
+  probeMessageTimer = window.setTimeout(() => {
+    probeMessage.value = ''
+    probeMessageTimer = null
+  }, 3000)
+}
+
+onMounted(() => {
+  // eslint-disable-next-line no-console
+  console.log(
+    '%c[CTF COMMAND CENTER] %cSystem online. Initializing monitoring...',
+    'color: #2f8f5b; font-weight: bold; font-size: 14px;',
+    'color: #9da7b3; font-style: italic;'
+  )
+  // eslint-disable-next-line no-console
+  console.log(
+    `%c
+      :::::::: ::::::::::: :::::::::: 
+    :+:    :+:    :+:     :+:         
+   +:+           +:+     +:+          
+  +#+           +#+     +#++:++#      
+ +#+           +#+     +#+            
+#+#    #+#    #+#     #+#             
+########     ###     ###              
+`,
+    'color: #2f8f5b; font-weight: bold;'
+  )
+  // eslint-disable-next-line no-console
+  console.log(
+    '%cWARNING: %cUnauthorized debugging may lead to "unexpected" results. Good luck, cadet.',
+    'color: #f85149; font-weight: bold;',
+    'color: #9da7b3;'
+  )
+  // eslint-disable-next-line no-console
+  console.log(
+    '%cAudit note: %ccuriosity detected. Keep it academic.',
+    'color: #2f8f5b; font-weight: bold;',
+    'color: #9da7b3;'
+  )
+  // eslint-disable-next-line no-console
+  console.log(
+    '%cMemo: %cIf this page were the weak point, we would all be having a worse day.',
+    'color: #f59e0b; font-weight: bold;',
+    'color: #9da7b3;'
+  )
+})
+
+onBeforeUnmount(() => {
+  if (probeMessageTimer) {
+    window.clearTimeout(probeMessageTimer)
+  }
+})
+
+function handleHeroProbe() {
+  const result = track('login-brand', 4)
+  if (!result.unlocked) {
+    return
+  }
+  showProbeMessage('隐藏入口排查完毕，结果让你失望了。')
+}
 
 async function onSubmit() {
-  if (loading.value || !form.username || !form.password) return
+  const username = form.username.trim() || usernameInput.value?.value?.trim() || ''
+  const password = form.password || passwordInput.value?.value || ''
+  if (loading.value || !username || !password) return
+
+  form.username = username
+  form.password = password
   loading.value = true
   submitError.value = ''
   try {
     const redirectTo = sanitizeRedirectPath(route.query.redirect)
     await login(
-      { username: form.username, password: form.password },
+      { username, password },
       redirectTo === '/' ? undefined : redirectTo
     )
   } catch (err) {
@@ -106,6 +202,18 @@ async function onSubmit() {
 .auth-login-form {
   display: grid;
   gap: var(--space-5);
+}
+
+.auth-probe-note {
+  margin-bottom: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 18%, transparent);
+  border-radius: var(--space-3);
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  font-size: var(--font-size-12);
+  font-weight: 700;
+  line-height: 1.6;
+  color: var(--color-text-secondary);
 }
 
 .auth-field {

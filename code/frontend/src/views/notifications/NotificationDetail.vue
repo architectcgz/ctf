@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { ArrowLeft, BellRing, CalendarClock, CircleCheckBig, Inbox } from 'lucide-vue-next'
 import { useRoute, useRouter } from 'vue-router'
 
 import { getNotifications, markAsRead } from '@/api/notification'
 import AppEmpty from '@/components/common/AppEmpty.vue'
+import { useProbeEasterEggs } from '@/composables/useProbeEasterEggs'
 import { useToast } from '@/composables/useToast'
 import { useNotificationStore } from '@/stores/notification'
 import { formatDate } from '@/utils/format'
@@ -22,10 +23,13 @@ const route = useRoute()
 const router = useRouter()
 const toast = useToast()
 const notificationStore = useNotificationStore()
+const { track } = useProbeEasterEggs()
 
 const loading = ref(false)
 const loadFailed = ref(false)
 const isMarkingRead = ref(false)
+const probeMessage = ref('')
+let probeMessageTimer: number | null = null
 
 const notificationId = computed(() => String(route.params.id ?? ''))
 const notification = computed(
@@ -100,6 +104,25 @@ function openRelatedLink() {
   void router.push(link)
 }
 
+function showProbeMessage(message: string) {
+  probeMessage.value = message
+  if (probeMessageTimer) {
+    window.clearTimeout(probeMessageTimer)
+  }
+  probeMessageTimer = window.setTimeout(() => {
+    probeMessage.value = ''
+    probeMessageTimer = null
+  }, 2200)
+}
+
+function handleIdProbe() {
+  const result = track('notification-id', 4)
+  if (!result.unlocked) {
+    return
+  }
+  showProbeMessage('值守备注：有人开始认真看编号了。')
+}
+
 watch(
   notificationId,
   async (id) => {
@@ -112,6 +135,12 @@ watch(
   },
   { immediate: true }
 )
+
+onBeforeUnmount(() => {
+  if (probeMessageTimer) {
+    window.clearTimeout(probeMessageTimer)
+  }
+})
 </script>
 
 <template>
@@ -168,9 +197,7 @@ watch(
                 返回通知列表
               </button>
 
-              <div class="workspace-overline">
-                Notification
-              </div>
+              <div class="workspace-overline">Notification</div>
               <h1 class="notification-detail-title workspace-page-title">
                 {{ notification.title }}
               </h1>
@@ -201,9 +228,7 @@ watch(
 
             <aside class="notification-detail-side">
               <div class="notification-detail-side-card">
-                <div class="workspace-overline">
-                  Meta
-                </div>
+                <div class="workspace-overline">Meta</div>
                 <div class="notification-detail-side-item">
                   <CalendarClock class="h-3.5 w-3.5" />
                   <span>{{ formatDate(notification.created_at) }}</span>
@@ -215,11 +240,12 @@ watch(
               </div>
 
               <div class="notification-detail-side-card">
-                <div class="workspace-overline">
-                  ID
-                </div>
-                <div class="notification-detail-side-value notification-detail-side-value--mono">
-                  {{ notification.id }}
+                <div class="workspace-overline">ID</div>
+                <div
+                  class="notification-detail-side-value notification-detail-side-value--mono"
+                  @click="handleIdProbe"
+                >
+                  {{ probeMessage || notification.id }}
                 </div>
               </div>
             </aside>
@@ -230,9 +256,7 @@ watch(
           <section class="notification-detail-content">
             <div class="notification-detail-content-head">
               <div>
-                <div class="workspace-overline">
-                  Message
-                </div>
+                <div class="workspace-overline">Message</div>
                 <h2 class="notification-section-title">
                   通知正文
                 </h2>

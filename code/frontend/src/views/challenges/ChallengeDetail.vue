@@ -88,7 +88,10 @@
                 </div>
               </div>
 
-              <aside class="score-rail">
+              <aside
+                class="score-rail"
+                @click="handleScoreRailProbe"
+              >
                 <div class="score-label">
                   分值
                 </div>
@@ -97,6 +100,12 @@
                 </div>
                 <div class="score-note">
                   {{ challenge.attachment_url ? '当前题目包含附件。' : '当前题目无附件。' }}
+                </div>
+                <div
+                  v-if="scoreRailProbeMessage"
+                  class="score-probe-note"
+                >
+                  {{ scoreRailProbeMessage }}
                 </div>
               </aside>
             </div>
@@ -619,7 +628,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import {
@@ -640,6 +649,7 @@ import {
   type ChallengeSolutionTab,
 } from '@/composables/useChallengeDetailPresentation'
 import { useChallengeInstance } from '@/composables/useChallengeInstance'
+import { useProbeEasterEggs } from '@/composables/useProbeEasterEggs'
 import { useSanitize } from '@/composables/useSanitize'
 import { useTabKeyboardNavigation } from '@/composables/useTabKeyboardNavigation'
 import { useToast } from '@/composables/useToast'
@@ -651,13 +661,16 @@ const route = useRoute()
 const router = useRouter()
 const toast = useToast()
 const { sanitizeHtml } = useSanitize()
+const { track } = useProbeEasterEggs()
 
 const challengeId = computed(() => String(route.params.id ?? ''))
 const challenge = ref<ChallengeDetailData | null>(null)
 const loading = ref(false)
+const scoreRailProbeMessage = ref('')
 const recommendedSolutions = ref<RecommendedChallengeSolutionData[]>([])
 const communitySolutions = ref<CommunityChallengeSolutionData[]>([])
 const selectedSolutionId = ref<string | null>(null)
+let scoreRailProbeTimer: number | null = null
 const {
   instance,
   loading: instanceLoading,
@@ -755,6 +768,31 @@ const {
   selectedSolutionId,
   submitResult,
   sanitizeHtml,
+})
+
+function showScoreRailProbe(message: string) {
+  scoreRailProbeMessage.value = message
+  if (scoreRailProbeTimer) {
+    window.clearTimeout(scoreRailProbeTimer)
+  }
+  scoreRailProbeTimer = window.setTimeout(() => {
+    scoreRailProbeMessage.value = ''
+    scoreRailProbeTimer = null
+  }, 2800)
+}
+
+function handleScoreRailProbe() {
+  const result = track('challenge-side-rail', 4)
+  if (!result.unlocked) {
+    return
+  }
+  showScoreRailProbe('这块区域的情报价值，低于你现在的期待。')
+}
+
+onBeforeUnmount(() => {
+  if (scoreRailProbeTimer) {
+    window.clearTimeout(scoreRailProbeTimer)
+  }
 })
 
 function selectSolutionTab(tab: ChallengeSolutionTab): void {
@@ -1140,6 +1178,14 @@ watch(
   font-size: var(--font-size-14);
   line-height: 1.75;
   color: var(--text-subtle);
+}
+
+.score-probe-note {
+  margin-top: var(--space-3);
+  font-size: var(--font-size-12);
+  font-weight: 700;
+  line-height: 1.7;
+  color: color-mix(in srgb, var(--journal-accent) 80%, var(--text-subtle));
 }
 
 .section {

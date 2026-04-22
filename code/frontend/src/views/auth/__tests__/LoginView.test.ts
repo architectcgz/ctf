@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 
 import LoginView from '@/views/auth/LoginView.vue'
@@ -22,9 +22,16 @@ vi.mock('vue-router', () => ({
 }))
 
 describe('LoginView', () => {
+  let consoleLogSpy: ReturnType<typeof vi.spyOn>
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
   beforeEach(() => {
     authMocks.login.mockReset()
     routeState.query.redirect = undefined
+    consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
   })
 
   function mountLoginView() {
@@ -36,7 +43,8 @@ describe('LoginView', () => {
 
     await flushPromises()
 
-    expect(wrapper.text()).toContain('教学平台入口')
+    expect(wrapper.text()).toContain('CTF Platform Infrastructure')
+    expect(wrapper.text()).toContain('登录工作台')
     expect(wrapper.text()).toContain('训练空间')
     expect(wrapper.text()).toContain('教学协同')
     expect(wrapper.text()).toContain('系统值守')
@@ -71,14 +79,14 @@ describe('LoginView', () => {
 
     await flushPromises()
 
-    expect(wrapper.get('button').attributes('type')).toBe('submit')
+    expect(wrapper.get('button[type="submit"]').attributes('type')).toBe('submit')
   })
 
   it('登录表单应切到共享控件原语而不是继续使用 Element Plus 表单', () => {
     expect(loginViewSource).toContain('class="ui-control-wrap"')
     expect(loginViewSource).toContain('class="ui-control"')
     expect(loginViewSource).toContain(
-      'class="ui-btn ui-btn--primary ui-btn--block auth-login-form__submit"'
+      'class="ui-btn ui-btn--primary ui-btn--block auth-submit-btn"'
     )
     expect(loginViewSource).not.toContain('<ElForm')
     expect(loginViewSource).not.toContain('<ElFormItem')
@@ -171,5 +179,56 @@ describe('LoginView', () => {
     )
     expect(wrapper.text()).toContain('用户名或密码错误')
     expect(wrapper.get('button').attributes('disabled')).toBeUndefined()
+  })
+
+  it('应继续输出基础控制台提示并追加审计口吻提示', async () => {
+    mountLoginView()
+
+    await flushPromises()
+
+    expect(consoleLogSpy).toHaveBeenCalledWith(
+      expect.stringContaining('[CTF COMMAND CENTER]'),
+      expect.any(String),
+      expect.any(String)
+    )
+    expect(consoleLogSpy).toHaveBeenCalledWith(
+      '%cAudit note: %ccuriosity detected. Keep it academic.',
+      expect.any(String),
+      expect.any(String)
+    )
+    expect(consoleLogSpy).toHaveBeenCalledWith(
+      '%cMemo: %cIf this page were the weak point, we would all be having a worse day.',
+      expect.any(String),
+      expect.any(String)
+    )
+  })
+
+  it('连续点击品牌区后应出现轻提示且不影响表单提交', async () => {
+    authMocks.login.mockResolvedValue(undefined)
+
+    const wrapper = mountLoginView()
+    await flushPromises()
+
+    expect(wrapper.text()).not.toContain('隐藏入口排查完毕，结果让你失望了。')
+
+    const hero = wrapper.get('.auth-entry-shell__hero')
+    await hero.trigger('click')
+    await hero.trigger('click')
+    await hero.trigger('click')
+    await hero.trigger('click')
+
+    expect(wrapper.text()).toContain('隐藏入口排查完毕，结果让你失望了。')
+
+    const usernameInput = wrapper.find('input[autocomplete="username"]')
+    const passwordInput = wrapper.find('input[autocomplete="current-password"]')
+    await usernameInput.setValue('alice')
+    await passwordInput.setValue('saved-password')
+    await wrapper.get('form').trigger('submit.prevent')
+
+    expect(authMocks.login).toHaveBeenCalledTimes(1)
+    expect(authMocks.login).toHaveBeenCalledWith(
+      { username: 'alice', password: 'saved-password' },
+      undefined
+    )
   })
 })
