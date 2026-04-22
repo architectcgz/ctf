@@ -16,6 +16,7 @@
             v-model="form.username"
             autocomplete="username"
             class="ui-control"
+            placeholder="输入用户名/学号"
             @input="submitError = ''"
             @keyup.enter="onSubmit"
           >
@@ -30,6 +31,7 @@
             type="password"
             autocomplete="current-password"
             class="ui-control"
+            placeholder="输入你的账号密码"
             @input="submitError = ''"
           >
         </div>
@@ -47,7 +49,7 @@
         type="submit"
         :disabled="loading"
       >
-        {{ loading ? '登录中…' : '登录' }}
+        {{ loading ? '正在验证身份...' : '立即登录' }}
       </button>
     </form>
 
@@ -106,30 +108,51 @@ async function onSubmit() {
 <style scoped>
 .auth-login-form {
   display: grid;
-  gap: 1rem;
+  gap: var(--space-6);
 }
 
 .auth-login-form__field {
   display: grid;
-  gap: 0.45rem;
+  gap: var(--space-2);
 }
 
 .auth-login-form__submit {
-  margin-top: 0.5rem;
+  margin-top: var(--space-2);
+  min-height: var(--ui-control-height-lg);
+  font-size: var(--font-size-15);
+  font-weight: 800;
+  border-radius: var(--ui-control-radius-lg);
 }
 
 .auth-login-form__error {
-  margin: -0.25rem 0 0;
+  margin: 0;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+  font-size: var(--font-size-13);
+  font-weight: 700;
+  border: 1px solid color-mix(in srgb, var(--color-danger) 20%, transparent);
 }
 
 .auth-login-form__footer {
   color: var(--color-text-secondary);
   line-height: 1.7;
-  font-size: var(--font-size-0-88);
+  font-size: var(--font-size-14);
+  font-weight: 500;
+  text-align: center;
 }
 
 .auth-login-form__link {
+  color: var(--color-primary);
+  font-weight: 800;
+  margin-left: 0.25rem;
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+  transition: color 0.2s ease;
+}
+
+.auth-login-form__link:hover {
   color: var(--color-primary-hover);
-  font-weight: 600;
 }
 </style>

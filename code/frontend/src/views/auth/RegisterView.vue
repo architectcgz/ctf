@@ -1,8 +1,8 @@
 <template>
   <AuthEntryShell
     panel-eyebrow="New Account"
-    panel-title="创建账号"
-    panel-description="填写基础信息后进入平台。"
+    panel-title="注册账号"
+    panel-description="填写必要的基础信息以完成平台注册。"
   >
     <form
       class="auth-register-form"
@@ -15,26 +15,29 @@
             v-model="form.username"
             autocomplete="username"
             class="ui-control"
+            placeholder="设置你的登录账号"
           >
         </div>
       </label>
       <label class="auth-register-form__field">
-        <span class="ui-field__label">密码</span>
+        <span class="ui-field__label">设置密码</span>
         <div class="ui-control-wrap">
           <input
             v-model="form.password"
             type="password"
             autocomplete="new-password"
             class="ui-control"
+            placeholder="建议使用 8 位以上字母数字组合"
           >
         </div>
       </label>
       <label class="auth-register-form__field">
-        <span class="ui-field__label">班级（可选）</span>
+        <span class="ui-field__label">班级邀请码（可选）</span>
         <div class="ui-control-wrap">
           <input
             v-model="form.class_name"
             class="ui-control"
+            placeholder="输入班级全称以自动加入"
           >
         </div>
       </label>
@@ -44,18 +47,18 @@
         type="submit"
         :disabled="loading"
       >
-        {{ loading ? '注册中…' : '注册' }}
+        {{ loading ? '正在提交注册...' : '立即创建账号' }}
       </button>
     </form>
 
     <template #footer>
       <div class="auth-register-form__footer">
-        已有账号，
+        已经有账号了？
         <RouterLink
           class="auth-register-form__link"
           to="/login"
         >
-          去登录
+          返回登录
         </RouterLink>
       </div>
     </template>
@@ -92,26 +95,39 @@ async function onSubmit() {
 <style scoped>
 .auth-register-form {
   display: grid;
-  gap: 1rem;
+  gap: var(--space-5);
 }
 
 .auth-register-form__field {
   display: grid;
-  gap: 0.45rem;
+  gap: var(--space-2);
 }
 
 .auth-register-form__submit {
-  margin-top: 0.5rem;
+  margin-top: var(--space-2);
+  min-height: var(--ui-control-height-lg);
+  font-size: var(--font-size-15);
+  font-weight: 800;
+  border-radius: var(--ui-control-radius-lg);
 }
 
 .auth-register-form__footer {
   color: var(--color-text-secondary);
-  font-size: var(--font-size-0-88);
+  font-size: var(--font-size-14);
   line-height: 1.7;
+  text-align: center;
 }
 
 .auth-register-form__link {
+  color: var(--color-primary);
+  font-weight: 800;
+  margin-left: 0.25rem;
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+  transition: color 0.2s ease;
+}
+
+.auth-register-form__link:hover {
   color: var(--color-primary-hover);
-  font-weight: 600;
 }
 </style>
