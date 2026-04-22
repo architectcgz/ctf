@@ -14,6 +14,7 @@
           <input
             v-model="form.username"
             autocomplete="username"
+            class="ui-control"
             placeholder="设置你的登录账号"
             @input="submitError = ''"
           >
@@ -27,6 +28,7 @@
             v-model="form.password"
             type="password"
             autocomplete="new-password"
+            class="ui-control"
             placeholder="建议使用 8 位以上字母数字组合"
             @input="submitError = ''"
           >
@@ -38,6 +40,7 @@
         <div class="ui-control-wrap">
           <input
             v-model="form.class_name"
+            class="ui-control"
             placeholder="输入班级全称以自动加入"
             @input="submitError = ''"
           >

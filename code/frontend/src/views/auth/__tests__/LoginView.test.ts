@@ -85,9 +85,7 @@ describe('LoginView', () => {
   it('登录表单应切到共享控件原语而不是继续使用 Element Plus 表单', () => {
     expect(loginViewSource).toContain('class="ui-control-wrap"')
     expect(loginViewSource).toContain('class="ui-control"')
-    expect(loginViewSource).toContain(
-      'class="ui-btn ui-btn--primary ui-btn--block auth-submit-btn"'
-    )
+    expect(loginViewSource).toContain('class="ui-btn ui-btn--primary ui-btn--block auth-submit-btn"')
     expect(loginViewSource).not.toContain('<ElForm')
     expect(loginViewSource).not.toContain('<ElFormItem')
     expect(loginViewSource).not.toContain('<ElInput')
@@ -178,7 +176,7 @@ describe('LoginView', () => {
       undefined
     )
     expect(wrapper.text()).toContain('用户名或密码错误')
-    expect(wrapper.get('button').attributes('disabled')).toBeUndefined()
+    expect(wrapper.get('button[type="submit"]').attributes('disabled')).toBeUndefined()
   })
 
   it('应继续输出基础控制台提示并追加审计口吻提示', async () => {
