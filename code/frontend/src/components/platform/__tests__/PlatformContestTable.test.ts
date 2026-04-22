@@ -52,7 +52,7 @@ describe('PlatformContestTable', () => {
       },
     })
 
-    expect(wrapper.text()).toContain('进入 AWD 赛区')
+    expect(wrapper.text()).toContain('进入运维台')
     expect(wrapper.findAll('.contest-action').length).toBe(1)
 
     await wrapper.get('#contest-row-more-awd-running').trigger('click')
@@ -79,6 +79,54 @@ describe('PlatformContestTable', () => {
     document.body.querySelector<HTMLButtonElement>('#contest-row-menu-export-awd-running')?.click()
     await flushPromises()
     expect(wrapper.emitted('export')?.[0]?.[0]).toMatchObject({ id: 'awd-running' })
+
+    wrapper.unmount()
+  })
+
+  it('未结束竞赛的更多菜单应提供发布通知入口并抛出 announce 事件', async () => {
+    const wrapper = mount(PlatformContestTable, {
+      attachTo: document.body,
+      props: {
+        contests: [buildContest()],
+        page: 1,
+        pageSize: 20,
+        total: 1,
+      },
+    })
+
+    await wrapper.get('#contest-row-more-awd-running').trigger('click')
+    await flushPromises()
+
+    const announceButton = document.body.querySelector<HTMLButtonElement>(
+      '#contest-row-menu-announce-awd-running'
+    )
+    expect(announceButton?.textContent).toContain('发布通知')
+
+    announceButton?.click()
+    await flushPromises()
+
+    expect(wrapper.emitted('announce')?.[0]?.[0]).toMatchObject({ id: 'awd-running' })
+
+    wrapper.unmount()
+  })
+
+  it('已结束竞赛的更多菜单不应提供发布通知入口', async () => {
+    const wrapper = mount(PlatformContestTable, {
+      attachTo: document.body,
+      props: {
+        contests: [buildContest({ id: 'contest-ended', status: 'ended' })],
+        page: 1,
+        pageSize: 20,
+        total: 1,
+      },
+    })
+
+    await wrapper.get('#contest-row-more-contest-ended').trigger('click')
+    await flushPromises()
+
+    expect(
+      document.body.querySelector('#contest-row-menu-announce-contest-ended')
+    ).toBeNull()
 
     wrapper.unmount()
   })

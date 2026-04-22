@@ -886,6 +886,18 @@ describe('ContestEdit', () => {
     destructiveConfirmMock.mockResolvedValue(true)
   })
 
+  it('顶部应提供公告入口并跳转到单场公告管理页', async () => {
+    const wrapper = mountContestEdit()
+
+    await flushPromises()
+    await wrapper.get('#contest-open-announcements').trigger('click')
+
+    expect(pushMock).toHaveBeenCalledWith({
+      name: 'ContestAnnouncements',
+      params: { id: 'contest-1' },
+    })
+  })
+
   it('应该在普通赛下只展示基础信息与题目池阶段', async () => {
     contestApiMocks.getContest.mockResolvedValue(buildContestDetail())
 

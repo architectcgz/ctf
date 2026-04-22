@@ -669,4 +669,53 @@ describe('ContestManage', () => {
 
     expect(wrapper.text()).toContain('暂无竞赛')
   })
+
+  it('接到 announce 事件后应打开公告抽屉并传入当前竞赛', async () => {
+    contestMocks.getContests.mockResolvedValue({
+      list: [
+        {
+          id: 'contest-1',
+          title: '2026 春季赛',
+          description: '公告运营',
+          mode: 'jeopardy',
+          status: 'running',
+          starts_at: '2026-04-12T09:00:00.000Z',
+          ends_at: '2026-04-12T18:00:00.000Z',
+        },
+      ],
+      total: 1,
+      page: 1,
+      page_size: 20,
+    })
+
+    const wrapper = mount(ContestManage, {
+      global: {
+        stubs: {
+          ContestOrchestrationPage: {
+            props: ['list'],
+            template:
+              '<button id="open-announce-drawer" type="button" @click="$emit(\'announce\', list[0])">发布通知</button>',
+          },
+          ContestAnnouncementManageDrawer: {
+            props: ['open', 'contest'],
+            template:
+              '<div id="contest-announcement-drawer">{{ open ? contest?.title : "closed" }}</div>',
+          },
+          PlatformContestFormDialog: true,
+          AWDReadinessOverrideDialog: true,
+          ElDialog: {
+            template: '<div><slot /><slot name="footer" /></div>',
+          },
+        },
+      },
+    })
+
+    await flushPromises()
+    expect(wrapper.get('#contest-announcement-drawer').text()).toBe('closed')
+
+    await wrapper.get('#open-announce-drawer').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.get('#contest-announcement-drawer').text()).toContain('2026 春季赛')
+  })
 })

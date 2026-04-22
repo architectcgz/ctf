@@ -16,6 +16,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   edit: [contest: ContestDetailData]
+  announce: [contest: ContestDetailData]
   export: [contest: ContestDetailData]
   workbench: [contest: ContestDetailData]
   changePage: [page: number]
@@ -59,6 +60,11 @@ function setActionMenuOpen(contestId: string, nextOpen: boolean): void {
 function handleEdit(contest: ContestDetailData): void {
   closeActionMenu()
   emit('edit', contest)
+}
+
+function handleAnnounce(contest: ContestDetailData): void {
+  closeActionMenu()
+  emit('announce', contest)
 }
 
 function handleExport(contest: ContestDetailData): void {
@@ -165,6 +171,16 @@ function handleExport(contest: ContestDetailData): void {
                 @click="handleEdit(contest)"
               >
                 编辑
+              </button>
+              <button
+                v-if="contest.status !== 'ended'"
+                :id="`contest-row-menu-announce-${contest.id}`"
+                type="button"
+                class="c-action-menu__item"
+                role="menuitem"
+                @click="handleAnnounce(contest)"
+              >
+                发布通知
               </button>
               <button
                 :id="`contest-row-menu-export-${contest.id}`"
