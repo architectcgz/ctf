@@ -14,6 +14,9 @@ docs/*
 !docs/contracts/
 !docs/refs/
 !docs/refs/*.md
+!docs/superpowers/
+!docs/superpowers/specs/
+!docs/superpowers/specs/*.md
 
 frontend/dist/
 frontend/node_modules/
