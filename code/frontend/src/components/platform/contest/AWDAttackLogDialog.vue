@@ -94,6 +94,10 @@ function closeDialog() {
 }
 
 function handleSubmit() {
+  if (props.saving) {
+    return
+  }
+
   clearErrors()
 
   if (!form.attacker_team_id) {

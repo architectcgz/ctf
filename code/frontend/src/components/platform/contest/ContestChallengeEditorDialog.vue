@@ -147,6 +147,10 @@ function formatTemplateJSON(value?: Record<string, unknown>): string {
 }
 
 function submit() {
+  if (props.saving) {
+    return
+  }
+
   clearErrors()
 
   if (!isAwdContest.value && !form.challenge_id.trim()) {
