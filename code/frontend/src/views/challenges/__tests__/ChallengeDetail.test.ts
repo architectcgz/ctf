@@ -202,12 +202,8 @@ describe('ChallengeDetail', () => {
     expect(challengeDetailSource).toMatch(/<div class="workspace-overline">\s*Statement\s*<\/div>/)
     expect(challengeDetailSource).toMatch(/<div class="workspace-overline">\s*Hints\s*<\/div>/)
     expect(challengeDetailSource).toMatch(/<div class="workspace-overline">\s*Solutions\s*<\/div>/)
-    expect(challengeDetailSource).toMatch(
-      /<div class="workspace-overline">\s*Submissions\s*<\/div>/
-    )
-    expect(challengeDetailSource).toMatch(
-      /<div class="workspace-overline">\s*My Writeup\s*<\/div>/
-    )
+    expect(challengeDetailSource).toMatch(/<div class="workspace-overline">\s*Submissions\s*<\/div>/)
+    expect(challengeDetailSource).toMatch(/<div class="workspace-overline">\s*My Writeup\s*<\/div>/)
     expect(challengeDetailSource).not.toContain('<div class="overline">Statement</div>')
     expect(challengeDetailSource).not.toContain('<div class="overline">Hints</div>')
     expect(challengeDetailSource).not.toContain('<div class="overline">Solutions</div>')
@@ -216,9 +212,7 @@ describe('ChallengeDetail', () => {
   })
 
   it('题目详情剩余局部 kicker 也应统一到 workspace overline 语义', () => {
-    expect(challengeDetailSource).toMatch(
-      /<div class="workspace-overline">\s*Primary Action\s*<\/div>/
-    )
+    expect(challengeDetailSource).toMatch(/<div class="workspace-overline">\s*Primary Action\s*<\/div>/)
     expect(challengeDetailSource).not.toContain('<div class="overline">Primary Action</div>')
     expect(challengeDetailSource).not.toMatch(/^\.overline\s*\{/m)
   })
