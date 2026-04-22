@@ -8,42 +8,41 @@
       class="auth-register-form"
       @submit.prevent="onSubmit"
     >
-      <label class="auth-register-form__field">
-        <span class="ui-field__label">用户名</span>
+      <div class="ui-field">
+        <label class="ui-field__label">用户名</label>
         <div class="ui-control-wrap">
           <input
             v-model="form.username"
             autocomplete="username"
-            class="ui-control"
             placeholder="设置你的登录账号"
           >
         </div>
-      </label>
-      <label class="auth-register-form__field">
-        <span class="ui-field__label">设置密码</span>
+      </div>
+
+      <div class="ui-field">
+        <label class="ui-field__label">设置密码</label>
         <div class="ui-control-wrap">
           <input
             v-model="form.password"
             type="password"
             autocomplete="new-password"
-            class="ui-control"
             placeholder="建议使用 8 位以上字母数字组合"
           >
         </div>
-      </label>
-      <label class="auth-register-form__field">
-        <span class="ui-field__label">班级邀请码（可选）</span>
+      </div>
+
+      <div class="ui-field">
+        <label class="ui-field__label">班级邀请码（可选）</label>
         <div class="ui-control-wrap">
           <input
             v-model="form.class_name"
-            class="ui-control"
             placeholder="输入班级全称以自动加入"
           >
         </div>
-      </label>
+      </div>
 
       <button
-        class="ui-btn ui-btn--primary ui-btn--block auth-register-form__submit"
+        class="ui-btn ui-btn--primary ui-btn--block auth-register-submit"
         type="submit"
         :disabled="loading"
       >
@@ -52,10 +51,10 @@
     </form>
 
     <template #footer>
-      <div class="auth-register-form__footer">
+      <div class="auth-register-footer">
         已经有账号了？
         <RouterLink
-          class="auth-register-form__link"
+          class="ui-btn ui-btn--link"
           to="/login"
         >
           返回登录
@@ -98,36 +97,23 @@ async function onSubmit() {
   gap: var(--space-5);
 }
 
-.auth-register-form__field {
-  display: grid;
-  gap: var(--space-2);
-}
-
-.auth-register-form__submit {
+.auth-register-submit {
   margin-top: var(--space-2);
   min-height: var(--ui-control-height-lg);
   font-size: var(--font-size-15);
   font-weight: 800;
-  border-radius: var(--ui-control-radius-lg);
 }
 
-.auth-register-form__footer {
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-14);
-  line-height: 1.7;
+.auth-register-footer {
   text-align: center;
+  font-size: var(--font-size-14);
+  font-weight: 500;
+  color: var(--color-text-secondary);
 }
 
-.auth-register-form__link {
-  color: var(--color-primary);
+.auth-register-footer .ui-btn--link {
   font-weight: 800;
-  margin-left: 0.25rem;
   text-decoration: underline;
-  text-underline-offset: 0.25em;
-  transition: color 0.2s ease;
-}
-
-.auth-register-form__link:hover {
-  color: var(--color-primary-hover);
+  text-underline-offset: 0.3em;
 }
 </style>

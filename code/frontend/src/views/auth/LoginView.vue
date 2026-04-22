@@ -8,44 +8,45 @@
       class="auth-login-form"
       @submit.prevent="onSubmit"
     >
-      <label class="auth-login-form__field">
-        <span class="ui-field__label">用户名</span>
+      <div class="ui-field">
+        <label class="ui-field__label">用户名</label>
         <div class="ui-control-wrap">
           <input
             ref="usernameInput"
             v-model="form.username"
             autocomplete="username"
-            class="ui-control"
             placeholder="输入用户名/学号"
             @input="submitError = ''"
             @keyup.enter="onSubmit"
           >
         </div>
-      </label>
-      <label class="auth-login-form__field">
-        <span class="ui-field__label">密码</span>
+      </div>
+
+      <div class="ui-field">
+        <div class="ui-field__head">
+          <label class="ui-field__label">密码</label>
+        </div>
         <div class="ui-control-wrap">
           <input
             ref="passwordInput"
             v-model="form.password"
             type="password"
             autocomplete="current-password"
-            class="ui-control"
             placeholder="输入你的账号密码"
             @input="submitError = ''"
           >
         </div>
-      </label>
+      </div>
 
-      <p
+      <div
         v-if="submitError"
-        class="ui-field__error auth-login-form__error"
+        class="ui-field__error auth-login-error"
       >
         {{ submitError }}
-      </p>
+      </div>
 
       <button
-        class="ui-btn ui-btn--primary ui-btn--block auth-login-form__submit"
+        class="ui-btn ui-btn--primary ui-btn--block auth-login-submit"
         type="submit"
         :disabled="loading"
       >
@@ -54,10 +55,10 @@
     </form>
 
     <template #footer>
-      <div class="auth-login-form__footer">
+      <div class="auth-login-footer">
         没有账号？
         <RouterLink
-          class="auth-login-form__link"
+          class="ui-btn ui-btn--link"
           to="/register"
         >
           创建新账号
@@ -108,51 +109,33 @@ async function onSubmit() {
 <style scoped>
 .auth-login-form {
   display: grid;
-  gap: var(--space-6);
+  gap: var(--space-5);
 }
 
-.auth-login-form__field {
-  display: grid;
-  gap: var(--space-2);
+.auth-login-error {
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-danger-soft);
+  border: 1px solid color-mix(in srgb, var(--color-danger) 20%, transparent);
+  border-radius: 0.75rem;
+  font-size: var(--font-size-13);
 }
 
-.auth-login-form__submit {
+.auth-login-submit {
   margin-top: var(--space-2);
   min-height: var(--ui-control-height-lg);
   font-size: var(--font-size-15);
   font-weight: 800;
-  border-radius: var(--ui-control-radius-lg);
 }
 
-.auth-login-form__error {
-  margin: 0;
-  padding: 0.75rem 1rem;
-  border-radius: 0.75rem;
-  background: var(--color-danger-soft);
-  color: var(--color-danger);
-  font-size: var(--font-size-13);
-  font-weight: 700;
-  border: 1px solid color-mix(in srgb, var(--color-danger) 20%, transparent);
-}
-
-.auth-login-form__footer {
-  color: var(--color-text-secondary);
-  line-height: 1.7;
+.auth-login-footer {
   font-size: var(--font-size-14);
   font-weight: 500;
-  text-align: center;
+  color: var(--color-text-secondary);
 }
 
-.auth-login-form__link {
-  color: var(--color-primary);
+.auth-login-footer .ui-btn--link {
   font-weight: 800;
-  margin-left: 0.25rem;
   text-decoration: underline;
-  text-underline-offset: 0.25em;
-  transition: color 0.2s ease;
-}
-
-.auth-login-form__link:hover {
-  color: var(--color-primary-hover);
+  text-underline-offset: 0.3em;
 }
 </style>
