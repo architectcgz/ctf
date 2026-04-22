@@ -6,6 +6,7 @@ import { exportContestArchive } from '@/api/admin'
 import type { ContestDetailData } from '@/api/contracts'
 import PlatformContestFormDialog from '@/components/platform/contest/PlatformContestFormDialog.vue'
 import AWDReadinessOverrideDialog from '@/components/platform/contest/AWDReadinessOverrideDialog.vue'
+import ContestAnnouncementManageDrawer from '@/components/platform/contest/ContestAnnouncementManageDrawer.vue'
 import ContestOrchestrationPage from '@/components/platform/contest/ContestOrchestrationPage.vue'
 import { useReportStatusPolling } from '@/composables/useReportStatusPolling'
 import { useToast } from '@/composables/useToast'
@@ -44,6 +45,8 @@ const downloadingContestReport = ref(false)
 const pendingContestReportId = ref<string | null>(null)
 const requestedPanel = ref<'overview' | 'list' | 'create' | null>(null)
 const requestedPanelVersion = ref(0)
+const announcementDrawerOpen = ref(false)
+const activeAnnouncementContest = ref<ContestDetailData | null>(null)
 
 onMounted(() => {
   void refresh()
@@ -68,6 +71,15 @@ function handleAwdStartOverrideDialogOpenChange(value: boolean) {
   if (!value) {
     closeAWDStartOverrideDialog()
   }
+}
+
+function openAnnouncementDrawer(contest: ContestDetailData): void {
+  activeAnnouncementContest.value = contest
+  announcementDrawerOpen.value = true
+}
+
+function closeAnnouncementDrawer(): void {
+  announcementDrawerOpen.value = false
 }
 
 async function downloadGeneratedReport(reportId: string): Promise<void> {
@@ -153,8 +165,15 @@ async function handleCreateContestSave(draft: Parameters<typeof saveContest>[0])
       @save-create-contest="handleCreateContestSave"
       @update-status-filter="updateStatusFilter"
       @open-edit-dialog="openEditDialog"
+      @announce="openAnnouncementDrawer"
       @export-contest="handleExportContest"
       @change-page="changePage"
+    />
+
+    <ContestAnnouncementManageDrawer
+      :open="announcementDrawerOpen"
+      :contest="activeAnnouncementContest"
+      @close="closeAnnouncementDrawer"
     />
 
     <PlatformContestFormDialog

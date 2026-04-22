@@ -17,6 +17,7 @@ vi.mock('@/api/request', () => ({
 
 import {
   createAdminAwdServiceTemplate,
+  createAdminContestAnnouncement,
   createAdminContestChallenge,
   createEnvironmentTemplate,
   createChallenge,
@@ -27,12 +28,14 @@ import {
   configureChallengeFlag,
   createContestAWDService,
   deleteAdminAwdServiceTemplate,
+  deleteAdminContestAnnouncement,
   deleteAdminContestChallenge,
   deleteContestAWDService,
   deleteChallengeTopology,
   deleteEnvironmentTemplate,
   deleteImage,
   deleteChallengeWriteup,
+  getAdminContestAnnouncements,
   getAdminContestLiveScoreboard,
   getChallengeTopology,
   getChallengeDetail,
@@ -170,6 +173,72 @@ describe('admin contest api contract', () => {
         ends_at: '2026-03-12T12:00:00.000Z',
         scoreboard_frozen: true,
       },
+    })
+  })
+
+  it('应该读取管理员竞赛公告列表并归一化公告 id', async () => {
+    requestMock.mockResolvedValue([
+      {
+        id: 12,
+        title: '报名提醒',
+        content: '请尽快完成组队。',
+        created_at: '2026-04-22T09:00:00.000Z',
+      },
+    ])
+
+    const result = await getAdminContestAnnouncements('7')
+
+    expect(requestMock).toHaveBeenCalledWith({
+      method: 'GET',
+      url: '/admin/contests/7/announcements',
+    })
+    expect(result).toEqual([
+      {
+        id: '12',
+        title: '报名提醒',
+        content: '请尽快完成组队。',
+        created_at: '2026-04-22T09:00:00.000Z',
+      },
+    ])
+  })
+
+  it('应该按后端契约创建管理员竞赛公告', async () => {
+    requestMock.mockResolvedValue({
+      id: 13,
+      title: '开赛通知',
+      content: '比赛将于十分钟后开始。',
+      created_at: '2026-04-22T09:10:00.000Z',
+    })
+
+    const result = await createAdminContestAnnouncement('7', {
+      title: '开赛通知',
+      content: '比赛将于十分钟后开始。',
+    })
+
+    expect(requestMock).toHaveBeenCalledWith({
+      method: 'POST',
+      url: '/admin/contests/7/announcements',
+      data: {
+        title: '开赛通知',
+        content: '比赛将于十分钟后开始。',
+      },
+    })
+    expect(result).toEqual({
+      id: '13',
+      title: '开赛通知',
+      content: '比赛将于十分钟后开始。',
+      created_at: '2026-04-22T09:10:00.000Z',
+    })
+  })
+
+  it('应该按后端契约删除管理员竞赛公告', async () => {
+    requestMock.mockResolvedValue(undefined)
+
+    await deleteAdminContestAnnouncement('7', '13')
+
+    expect(requestMock).toHaveBeenCalledWith({
+      method: 'DELETE',
+      url: '/admin/contests/7/announcements/13',
     })
   })
 

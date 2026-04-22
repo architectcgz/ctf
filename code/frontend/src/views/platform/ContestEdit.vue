@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import { ChevronLeft, Trophy, Save, ShieldCheck } from 'lucide-vue-next'
+import { Bell, ChevronLeft, Trophy, Save, ShieldCheck } from 'lucide-vue-next'
 import { useRoute, useRouter } from 'vue-router'
 
 import {
@@ -333,6 +333,10 @@ function goBackToContestList() {
   void router.push({ name: 'ContestManage', query: { panel: 'list' } })
 }
 
+function goToContestAnnouncements() {
+  void router.push({ name: 'ContestAnnouncements', params: { id: contestId.value } })
+}
+
 async function handleSave(draft: ContestFormDraft): Promise<void> {
   if (!contest.value) return
   saving.value = true
@@ -482,6 +486,15 @@ onMounted(() => {
         </div>
 
         <div class="studio-topbar-right">
+          <button
+            id="contest-open-announcements"
+            type="button"
+            class="studio-toolbar-btn"
+            @click="goToContestAnnouncements"
+          >
+            <Bell class="h-4 w-4" />
+            <span>公告</span>
+          </button>
           <button
             v-if="activeStage === 'basics'"
             type="button"
@@ -690,6 +703,12 @@ onMounted(() => {
   gap: 1.5rem;
 }
 
+.studio-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
 .studio-back-btn {
   width: 2.5rem;
   height: 2.5rem;
@@ -703,6 +722,27 @@ onMounted(() => {
   cursor: pointer;
 }
 .studio-back-btn:hover {
+  background: var(--color-bg-elevated);
+  color: var(--color-text-primary);
+  border-color: var(--color-border-default);
+}
+
+.studio-toolbar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  height: 2.4rem;
+  padding: 0 1rem;
+  border-radius: 0.85rem;
+  border: 1px solid var(--workspace-line-soft);
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-weight: 800;
+  transition: all 0.2s ease;
+}
+
+.studio-toolbar-btn:hover {
   background: var(--color-bg-elevated);
   color: var(--color-text-primary);
   border-color: var(--color-border-default);

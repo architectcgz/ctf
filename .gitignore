@@ -15,6 +15,8 @@ docs/*
 !docs/refs/
 !docs/refs/*.md
 !docs/superpowers/
+!docs/superpowers/plans/
+!docs/superpowers/plans/*.md
 !docs/superpowers/specs/
 !docs/superpowers/specs/*.md
 

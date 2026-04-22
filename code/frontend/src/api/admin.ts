@@ -50,6 +50,7 @@ import type {
   AuditLogItem,
   ChallengeCategory,
   ChallengeTopologyData,
+  ContestAnnouncement,
   ContestMode,
   ContestDetailData,
   ContestScoreboardData,
@@ -182,6 +183,13 @@ interface RawContestItem {
   status: 'draft' | 'registration' | 'running' | 'frozen' | 'ended'
   created_at: string
   updated_at: string
+}
+
+interface RawContestAnnouncement {
+  id: string | number
+  title: string
+  content?: string
+  created_at: string
 }
 
 interface RawAWDRoundItem {
@@ -747,6 +755,11 @@ export interface AdminContestUpdatePayload {
   override_reason?: string
 }
 
+export interface AdminContestAnnouncementCreatePayload {
+  title: string
+  content: string
+}
+
 export interface AdminAWDRoundCreatePayload {
   round_number: number
   status?: AWDRoundData['status']
@@ -879,6 +892,15 @@ function normalizeContest(item: RawContestItem): ContestDetailData {
     starts_at: item.start_time,
     ends_at: item.end_time,
     scoreboard_frozen: Boolean(item.freeze_time),
+  }
+}
+
+function normalizeContestAnnouncement(item: RawContestAnnouncement): ContestAnnouncement {
+  return {
+    id: String(item.id),
+    title: item.title,
+    content: item.content,
+    created_at: item.created_at,
   }
 }
 
@@ -2216,6 +2238,17 @@ export async function getContest(id: string): Promise<ContestDetailData> {
   return normalizeContest(contest)
 }
 
+export async function getAdminContestAnnouncements(
+  contestId: string
+): Promise<ContestAnnouncement[]> {
+  const response = await request<RawContestAnnouncement[]>({
+    method: 'GET',
+    url: `/admin/contests/${encodeURIComponent(contestId)}/announcements`,
+  })
+
+  return response.map(normalizeContestAnnouncement)
+}
+
 export async function createContest(
   data: AdminContestCreatePayload
 ): Promise<{ contest: ContestDetailData }> {
@@ -2226,6 +2259,22 @@ export async function createContest(
   })
 
   return { contest: normalizeContest(contest) }
+}
+
+export async function createAdminContestAnnouncement(
+  contestId: string,
+  data: AdminContestAnnouncementCreatePayload
+): Promise<ContestAnnouncement> {
+  const response = await request<RawContestAnnouncement>({
+    method: 'POST',
+    url: `/admin/contests/${encodeURIComponent(contestId)}/announcements`,
+    data: {
+      title: data.title,
+      content: data.content,
+    },
+  })
+
+  return normalizeContestAnnouncement(response)
 }
 
 export async function updateContest(
@@ -2331,6 +2380,16 @@ export async function deleteAdminContestChallenge(
   await request<void>({
     method: 'DELETE',
     url: `/admin/contests/${encodeURIComponent(contestId)}/challenges/${encodeURIComponent(challengeId)}`,
+  })
+}
+
+export async function deleteAdminContestAnnouncement(
+  contestId: string,
+  announcementId: string
+): Promise<void> {
+  await request<void>({
+    method: 'DELETE',
+    url: `/admin/contests/${encodeURIComponent(contestId)}/announcements/${encodeURIComponent(announcementId)}`,
   })
 }
 
