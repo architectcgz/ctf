@@ -149,7 +149,7 @@ export function useChallengeDetailInteractions({
 
   async function submitFlagHandler(): Promise<void> {
     const currentChallenge = challenge.value
-    if (!currentChallenge || !flagInput.value.trim()) return
+    if (submitting.value || !currentChallenge || !flagInput.value.trim()) return
 
     const answer = flagInput.value.trim()
     const alreadySolved = currentChallenge.is_solved

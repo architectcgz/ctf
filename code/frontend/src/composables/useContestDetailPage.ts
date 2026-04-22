@@ -222,6 +222,10 @@ export function useContestDetailPage(options: UseContestDetailPageOptions) {
   }
 
   async function submitFlagAction() {
+    if (submitting.value) {
+      return
+    }
+
     const flag = flagInput.value.trim()
     if (!flag) {
       toast.warning('请输入 Flag')

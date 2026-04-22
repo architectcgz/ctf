@@ -623,6 +623,33 @@ describe('ChallengeDetail', () => {
     expect(wrapper.text()).not.toContain('已完成 ✓')
   })
 
+  it('Flag 提交进行中遇到回车和点击重叠时只应提交一次', async () => {
+    challengeApiMocks.submitFlag.mockImplementation(() => new Promise(() => {}))
+
+    await router.push('/challenges/1')
+    await router.isReady()
+
+    const wrapper = mount(ChallengeDetail, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await wrapper.vm.$nextTick()
+    await new Promise((resolve) => setTimeout(resolve, 100))
+
+    const flagInput = wrapper.get('input[aria-label="Flag"]')
+    const submitButton = wrapper.findAll('button').find((node) => node.text().trim() === '提交')
+
+    await flagInput.setValue('flag{pending}')
+    flagInput.element.dispatchEvent(new KeyboardEvent('keyup', { key: 'Enter', bubbles: true }))
+    submitButton!.element.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    await wrapper.vm.$nextTick()
+
+    expect(challengeApiMocks.submitFlag).toHaveBeenCalledTimes(1)
+    expect(challengeApiMocks.submitFlag).toHaveBeenCalledWith('1', 'flag{pending}')
+  })
+
   it('正确提交后应提示实例将在 10 分钟后自动关闭', async () => {
     challengeApiMocks.submitFlag.mockResolvedValue({
       is_correct: true,
