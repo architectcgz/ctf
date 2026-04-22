@@ -74,6 +74,30 @@ describe('RegisterView', () => {
     expect(wrapper.get('button').attributes('type')).toBe('submit')
   })
 
+  it('注册失败时应停留在当前页并展示错误信息', async () => {
+    authMocks.register.mockRejectedValue(new Error('用户名已存在'))
+
+    const wrapper = mountRegisterView()
+    await flushPromises()
+
+    const usernameInput = wrapper.find('input[autocomplete="username"]')
+    const passwordInput = wrapper.find('input[autocomplete="new-password"]')
+
+    await usernameInput.setValue('alice')
+    await passwordInput.setValue('secure-pass')
+
+    await expect(wrapper.get('form').trigger('submit.prevent')).resolves.toBeUndefined()
+    await flushPromises()
+
+    expect(authMocks.register).toHaveBeenCalledWith({
+      username: 'alice',
+      password: 'secure-pass',
+      class_name: undefined,
+    })
+    expect(wrapper.text()).toContain('用户名已存在')
+    expect(wrapper.get('button').attributes('disabled')).toBeUndefined()
+  })
+
   it('注册表单应切到共享控件原语而不是继续使用 Element Plus 表单', () => {
     expect(registerViewSource).toContain('class="ui-control-wrap"')
     expect(registerViewSource).toContain('class="ui-control"')

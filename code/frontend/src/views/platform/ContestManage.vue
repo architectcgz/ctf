@@ -4,6 +4,7 @@ import { computed, onMounted, ref } from 'vue'
 import { downloadReport } from '@/api/assessment'
 import { exportContestArchive } from '@/api/admin'
 import type { ContestDetailData } from '@/api/contracts'
+import { ApiError } from '@/api/request'
 import PlatformContestFormDialog from '@/components/platform/contest/PlatformContestFormDialog.vue'
 import AWDReadinessOverrideDialog from '@/components/platform/contest/AWDReadinessOverrideDialog.vue'
 import ContestAnnouncementManageDrawer from '@/components/platform/contest/ContestAnnouncementManageDrawer.vue'
@@ -99,19 +100,38 @@ async function downloadGeneratedReport(reportId: string): Promise<void> {
   }
 }
 
+function notifyContestExportError(error: unknown, fallback: string): void {
+  console.error(fallback, error)
+  if (error instanceof ApiError) {
+    return
+  }
+  const message = error instanceof Error && error.message.trim() ? error.message : fallback
+  toast.error(message)
+}
+
+async function downloadContestReport(reportId: string, contestTitle: string): Promise<void> {
+  try {
+    await downloadGeneratedReport(reportId)
+    toast.success(`赛事结果已导出：${contestTitle}`)
+  } catch (error) {
+    notifyContestExportError(error, `赛事结果下载失败：${contestTitle}`)
+  }
+}
+
 async function handleExportContest(contest: ContestDetailData): Promise<void> {
   exportingContestId.value = contest.id
   try {
     const result = await exportContestArchive(contest.id, { format: 'json' })
 
     if (result.status === 'ready') {
+      pendingContestReportId.value = null
       stopPolling()
-      await downloadGeneratedReport(result.report_id)
-      toast.success(`赛事结果已导出：${contest.title}`)
+      await downloadContestReport(result.report_id, contest.title)
       return
     }
 
     if (result.status === 'failed') {
+      pendingContestReportId.value = null
       stopPolling()
       toast.error(result.error_message || '赛事结果导出失败')
       return
@@ -122,16 +142,24 @@ async function handleExportContest(contest: ContestDetailData): Promise<void> {
       if (next.report_id !== pendingContestReportId.value) return
       if (next.status === 'ready') {
         pendingContestReportId.value = null
-        void downloadGeneratedReport(next.report_id)
-        toast.success(`赛事结果已导出：${contest.title}`)
+        stopPolling()
+        void downloadContestReport(next.report_id, contest.title)
         return
       }
       if (next.status === 'failed') {
         pendingContestReportId.value = null
+        stopPolling()
         toast.error(next.error_message || '赛事结果导出失败')
       }
+    }, (error) => {
+      pendingContestReportId.value = null
+      notifyContestExportError(error, `赛事结果生成状态同步失败：${contest.title}`)
     })
     toast.info(`已开始导出赛事结果：${contest.title}`)
+  } catch (error) {
+    pendingContestReportId.value = null
+    stopPolling()
+    notifyContestExportError(error, `赛事结果导出失败：${contest.title}`)
   } finally {
     exportingContestId.value = null
   }

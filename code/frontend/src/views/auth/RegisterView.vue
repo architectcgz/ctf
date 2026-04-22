@@ -15,6 +15,7 @@
             v-model="form.username"
             autocomplete="username"
             placeholder="设置你的登录账号"
+            @input="submitError = ''"
           >
         </div>
       </div>
@@ -27,6 +28,7 @@
             type="password"
             autocomplete="new-password"
             placeholder="建议使用 8 位以上字母数字组合"
+            @input="submitError = ''"
           >
         </div>
       </div>
@@ -37,9 +39,17 @@
           <input
             v-model="form.class_name"
             placeholder="输入班级全称以自动加入"
+            @input="submitError = ''"
           >
         </div>
       </div>
+
+      <p
+        v-if="submitError"
+        class="ui-field__error auth-register-form__error"
+      >
+        {{ submitError }}
+      </p>
 
       <button
         class="ui-btn ui-btn--primary ui-btn--block auth-register-submit"
@@ -74,17 +84,21 @@ import { useAuth } from '@/composables/useAuth'
 const { register } = useAuth()
 
 const loading = ref(false)
+const submitError = ref('')
 const form = reactive({ username: '', password: '', class_name: '' })
 
 async function onSubmit() {
   if (!form.username || !form.password) return
   loading.value = true
+  submitError.value = ''
   try {
     await register({
       username: form.username,
       password: form.password,
       class_name: form.class_name.trim() || undefined,
     })
+  } catch (err) {
+    submitError.value = err instanceof Error && err.message.trim() ? err.message : '注册失败，请稍后重试'
   } finally {
     loading.value = false
   }
@@ -102,6 +116,17 @@ async function onSubmit() {
   min-height: var(--ui-control-height-lg);
   font-size: var(--font-size-15);
   font-weight: 800;
+}
+
+.auth-register-form__error {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+  font-size: var(--font-size-13);
+  font-weight: 700;
+  border: 1px solid color-mix(in srgb, var(--color-danger) 20%, transparent);
 }
 
 .auth-register-footer {
