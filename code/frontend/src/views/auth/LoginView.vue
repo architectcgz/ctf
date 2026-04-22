@@ -1,30 +1,32 @@
 <template>
   <AuthEntryShell
-    panel-eyebrow="Account Access"
-    panel-title="登录平台"
-    panel-description="使用你的训练账号进入工作台。"
+    panel-eyebrow="账户访问"
+    panel-title="登录工作台"
+    panel-description="验证凭据以进入安全实战系统。"
   >
     <form
       class="auth-login-form"
       @submit.prevent="onSubmit"
     >
-      <div class="ui-field">
-        <label class="ui-field__label">用户名</label>
+      <div class="auth-field">
+        <label class="auth-label">用户名 / 学号</label>
         <div class="ui-control-wrap">
           <input
             ref="usernameInput"
             v-model="form.username"
             autocomplete="username"
-            placeholder="输入用户名/学号"
+            class="ui-control"
+            placeholder="输入您的登录名"
             @input="submitError = ''"
             @keyup.enter="onSubmit"
           >
         </div>
       </div>
 
-      <div class="ui-field">
-        <div class="ui-field__head">
-          <label class="ui-field__label">密码</label>
+      <div class="auth-field">
+        <div class="auth-label-row">
+          <label class="auth-label">安全密码</label>
+          <button type="button" class="auth-aux-link">忘记密码?</button>
         </div>
         <div class="ui-control-wrap">
           <input
@@ -32,7 +34,8 @@
             v-model="form.password"
             type="password"
             autocomplete="current-password"
-            placeholder="输入你的账号密码"
+            class="ui-control"
+            placeholder="输入您的访问密码"
             @input="submitError = ''"
           >
         </div>
@@ -40,29 +43,25 @@
 
       <div
         v-if="submitError"
-        class="ui-field__error auth-login-error"
+        class="auth-error-block"
       >
         {{ submitError }}
       </div>
 
       <button
-        class="ui-btn ui-btn--primary ui-btn--block auth-login-submit"
+        class="ui-btn ui-btn--primary ui-btn--block auth-submit-btn"
         type="submit"
         :disabled="loading"
       >
-        {{ loading ? '正在验证身份...' : '立即登录' }}
+        <span v-if="loading">正在验证身份...</span>
+        <span v-else>立即登录系统</span>
       </button>
     </form>
 
     <template #footer>
-      <div class="auth-login-footer">
-        没有账号？
-        <RouterLink
-          class="ui-btn ui-btn--link"
-          to="/register"
-        >
-          创建新账号
-        </RouterLink>
+      <div class="auth-footer-nav">
+        <span>还没有平台账号？</span>
+        <p class="auth-contact-hint">请联系您的系统管理员进行账号分配与导入</p>
       </div>
     </template>
   </AuthEntryShell>
@@ -70,7 +69,7 @@
 
 <script setup lang="ts">
 import { reactive, ref, useTemplateRef } from 'vue'
-import { RouterLink, useRoute } from 'vue-router'
+import { useRoute } from 'vue-router'
 
 import AuthEntryShell from '@/components/auth/AuthEntryShell.vue'
 import { sanitizeRedirectPath } from '@/router/guards'
@@ -86,9 +85,6 @@ const usernameInput = useTemplateRef<HTMLInputElement>('usernameInput')
 const passwordInput = useTemplateRef<HTMLInputElement>('passwordInput')
 
 async function onSubmit() {
-  form.username = usernameInput.value?.value || form.username
-  form.password = passwordInput.value?.value || form.password
-
   if (!form.username || !form.password) return
   loading.value = true
   submitError.value = ''
@@ -99,7 +95,7 @@ async function onSubmit() {
       redirectTo === '/' ? undefined : redirectTo
     )
   } catch (err) {
-    submitError.value = err instanceof Error && err.message.trim() ? err.message : '登录失败，请稍后重试'
+    submitError.value = err instanceof Error && err.message.trim() ? err.message : '身份验证失败，请核对信息'
   } finally {
     loading.value = false
   }
@@ -112,30 +108,72 @@ async function onSubmit() {
   gap: var(--space-5);
 }
 
-.auth-login-error {
-  padding: var(--space-3) var(--space-4);
+.auth-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.auth-label {
+  font-size: var(--font-size-10, 10px);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--color-text-muted);
+}
+
+.auth-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.auth-aux-link {
+  font-size: var(--font-size-10, 10px);
+  font-weight: 700;
+  background: transparent;
+  border: none;
+  color: var(--color-primary);
+  cursor: pointer;
+  padding: 0;
+}
+
+.auth-error-block {
+  padding: var(--space-3-5) var(--space-4);
   background: var(--color-danger-soft);
-  border: 1px solid color-mix(in srgb, var(--color-danger) 20%, transparent);
-  border-radius: 0.75rem;
+  color: var(--color-danger);
+  border-radius: var(--space-3);
   font-size: var(--font-size-13);
+  font-weight: 700;
+  border: 1px solid color-mix(in srgb, var(--color-danger) 15%, transparent);
 }
 
-.auth-login-submit {
+.auth-submit-btn {
   margin-top: var(--space-2);
-  min-height: var(--ui-control-height-lg);
-  font-size: var(--font-size-15);
-  font-weight: 800;
+  min-height: var(--space-12);
+  font-size: var(--font-size-13);
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border-radius: var(--space-3-5);
+  box-shadow: 0 10px 24px -8px color-mix(in srgb, var(--color-primary) 25%, transparent);
 }
 
-.auth-login-footer {
-  font-size: var(--font-size-14);
-  font-weight: 500;
-  color: var(--color-text-secondary);
+.auth-footer-nav {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  align-items: center;
+  font-size: var(--font-size-10, 10px);
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: var(--color-text-muted);
 }
 
-.auth-login-footer .ui-btn--link {
-  font-weight: 800;
-  text-decoration: underline;
-  text-underline-offset: 0.3em;
+.auth-contact-hint {
+  margin: var(--space-1) 0 0;
+  color: var(--color-primary);
+  font-size: var(--font-size-11);
+  font-weight: 700;
 }
 </style>
