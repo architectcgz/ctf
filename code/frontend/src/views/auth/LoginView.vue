@@ -85,13 +85,18 @@ const usernameInput = useTemplateRef<HTMLInputElement>('usernameInput')
 const passwordInput = useTemplateRef<HTMLInputElement>('passwordInput')
 
 async function onSubmit() {
-  if (loading.value || !form.username || !form.password) return
+  const username = form.username.trim() || usernameInput.value?.value.trim() || ''
+  const password = form.password || passwordInput.value?.value || ''
+  if (loading.value || !username || !password) return
+
+  form.username = username
+  form.password = password
   loading.value = true
   submitError.value = ''
   try {
     const redirectTo = sanitizeRedirectPath(route.query.redirect)
     await login(
-      { username: form.username, password: form.password },
+      { username, password },
       redirectTo === '/' ? undefined : redirectTo
     )
   } catch (err) {

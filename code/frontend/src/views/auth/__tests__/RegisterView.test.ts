@@ -30,13 +30,13 @@ describe('RegisterView', () => {
 
     await flushPromises()
 
-    expect(wrapper.text()).toContain('教学平台入口')
+    expect(wrapper.text()).toContain('ZhiCore Infrastructure')
     expect(wrapper.text()).toContain('训练空间')
     expect(wrapper.text()).toContain('教学协同')
     expect(wrapper.text()).toContain('系统值守')
-    expect(wrapper.text()).toContain('创建账号')
-    expect(wrapper.text()).toContain('已有账号')
-    expect(wrapper.text()).toContain('去登录')
+    expect(wrapper.text()).toContain('注册账号')
+    expect(wrapper.text()).toContain('已经有账号了')
+    expect(wrapper.text()).toContain('返回登录')
     expect(wrapper.findAll('input')).toHaveLength(3)
   })
 
@@ -71,7 +71,7 @@ describe('RegisterView', () => {
 
     await flushPromises()
 
-    expect(wrapper.get('button').attributes('type')).toBe('submit')
+    expect(wrapper.get('button[type="submit"]').attributes('type')).toBe('submit')
   })
 
   it('注册失败时应停留在当前页并展示错误信息', async () => {
@@ -95,7 +95,7 @@ describe('RegisterView', () => {
       class_name: undefined,
     })
     expect(wrapper.text()).toContain('用户名已存在')
-    expect(wrapper.get('button').attributes('disabled')).toBeUndefined()
+    expect(wrapper.get('button[type="submit"]').attributes('disabled')).toBeUndefined()
   })
 
   it('注册进行中重复提交时只应发起一次请求', async () => {
@@ -124,9 +124,7 @@ describe('RegisterView', () => {
   it('注册表单应切到共享控件原语而不是继续使用 Element Plus 表单', () => {
     expect(registerViewSource).toContain('class="ui-control-wrap"')
     expect(registerViewSource).toContain('class="ui-control"')
-    expect(registerViewSource).toContain(
-      'class="ui-btn ui-btn--primary ui-btn--block auth-register-form__submit"'
-    )
+    expect(registerViewSource).toContain('class="ui-btn ui-btn--primary ui-btn--block auth-register-submit"')
     expect(registerViewSource).not.toContain('<ElForm')
     expect(registerViewSource).not.toContain('<ElFormItem')
     expect(registerViewSource).not.toContain('<ElInput')

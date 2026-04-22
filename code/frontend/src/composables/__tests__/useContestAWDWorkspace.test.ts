@@ -153,6 +153,84 @@ describe('useContestAWDWorkspace', () => {
     expect(toastMocks.success).toHaveBeenCalledWith('Bank Portal 攻击成功，+60 分')
   })
 
+  it('攻击提交进行中重复触发时只应发起一次请求', async () => {
+    let resolveAttack:
+      | ((value: {
+          id: string
+          round_id: string
+          attacker_team_id: string
+          attacker_team: string
+          victim_team_id: string
+          victim_team: string
+          service_id: string
+          challenge_id: string
+          attack_type: string
+          source: string
+          submitted_flag: string
+          is_success: boolean
+          score_gained: number
+          created_at: string
+        }) => void)
+      | null = null
+
+    contestApiMocks.submitContestAWDAttack.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveAttack = resolve
+        })
+    )
+
+    let submitAttack!: (serviceId: string, victimTeamId: number, flag: string) => Promise<unknown>
+
+    mount(
+      defineComponent({
+        setup() {
+          const workspace = useContestAWDWorkspace({
+            contestId: computed(() => '1'),
+            contestStatus: computed(() => 'running'),
+          } as any)
+          submitAttack = workspace.submitAttack
+          return () => null
+        },
+      })
+    )
+
+    await flushPromises()
+
+    const firstAttempt = submitAttack('7009', 14, 'flag{demo}')
+    const secondAttempt = submitAttack('7009', 14, 'flag{demo}')
+
+    expect(contestApiMocks.submitContestAWDAttack).toHaveBeenCalledTimes(1)
+    expect(contestApiMocks.submitContestAWDAttack).toHaveBeenCalledWith('1', '7009', {
+      victim_team_id: 14,
+      flag: 'flag{demo}',
+    })
+
+    resolveAttack?.({
+      id: '89',
+      round_id: '41',
+      attacker_team_id: '13',
+      attacker_team: 'Red',
+      victim_team_id: '14',
+      victim_team: 'Blue',
+      service_id: '7009',
+      challenge_id: 'legacy-101',
+      attack_type: 'flag_capture',
+      source: 'submission',
+      submitted_flag: 'flag{demo}',
+      is_success: true,
+      score_gained: 60,
+      created_at: '2026-04-12T08:04:00Z',
+    })
+
+    await expect(secondAttempt).resolves.toBeNull()
+    await expect(firstAttempt).resolves.toMatchObject({
+      service_id: '7009',
+      victim_team_id: '14',
+      submitted_flag: 'flag{demo}',
+    })
+  })
+
   it('启动 AWD 服务时应优先调用 service_id 实例接口', async () => {
     contestApiMocks.startContestAWDServiceInstance.mockResolvedValueOnce({
       id: '900',

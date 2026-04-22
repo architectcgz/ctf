@@ -36,7 +36,7 @@ describe('LoginView', () => {
 
     await flushPromises()
 
-    expect(wrapper.text()).toContain('教学平台入口')
+    expect(wrapper.text()).toContain('ZhiCore Infrastructure')
     expect(wrapper.text()).toContain('训练空间')
     expect(wrapper.text()).toContain('教学协同')
     expect(wrapper.text()).toContain('系统值守')
@@ -71,15 +71,13 @@ describe('LoginView', () => {
 
     await flushPromises()
 
-    expect(wrapper.get('button').attributes('type')).toBe('submit')
+    expect(wrapper.get('button[type="submit"]').attributes('type')).toBe('submit')
   })
 
   it('登录表单应切到共享控件原语而不是继续使用 Element Plus 表单', () => {
     expect(loginViewSource).toContain('class="ui-control-wrap"')
     expect(loginViewSource).toContain('class="ui-control"')
-    expect(loginViewSource).toContain(
-      'class="ui-btn ui-btn--primary ui-btn--block auth-login-form__submit"'
-    )
+    expect(loginViewSource).toContain('class="ui-btn ui-btn--primary ui-btn--block auth-submit-btn"')
     expect(loginViewSource).not.toContain('<ElForm')
     expect(loginViewSource).not.toContain('<ElFormItem')
     expect(loginViewSource).not.toContain('<ElInput')
@@ -170,6 +168,6 @@ describe('LoginView', () => {
       undefined
     )
     expect(wrapper.text()).toContain('用户名或密码错误')
-    expect(wrapper.get('button').attributes('disabled')).toBeUndefined()
+    expect(wrapper.get('button[type="submit"]').attributes('disabled')).toBeUndefined()
   })
 })
