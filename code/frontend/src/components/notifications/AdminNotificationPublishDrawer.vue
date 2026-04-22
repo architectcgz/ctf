@@ -61,6 +61,10 @@ function handleClose(): void {
 }
 
 async function handleSubmit(): Promise<void> {
+  if (publisher.submitting.value) {
+    return
+  }
+
   const result = await publisher.submit()
   if (result) {
     emit('published', result)

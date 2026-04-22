@@ -74,6 +74,10 @@ function validate(): boolean {
 }
 
 function handleSubmit() {
+  if (props.saving) {
+    return
+  }
+
   if (!validate()) {
     return
   }

@@ -207,6 +207,10 @@ function startPolling() {
 }
 
 async function handleCreate() {
+  if (creating.value) {
+    return
+  }
+
   if (!form.name || !form.tag) {
     toast.error('请填写完整信息')
     return
@@ -1092,7 +1096,6 @@ onUnmounted(() => {
   }
 }
 </style>
-
 
 
 
