@@ -85,7 +85,7 @@ const usernameInput = useTemplateRef<HTMLInputElement>('usernameInput')
 const passwordInput = useTemplateRef<HTMLInputElement>('passwordInput')
 
 async function onSubmit() {
-  if (!form.username || !form.password) return
+  if (loading.value || !form.username || !form.password) return
   loading.value = true
   submitError.value = ''
   try {

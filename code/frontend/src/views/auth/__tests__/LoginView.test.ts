@@ -128,6 +128,28 @@ describe('LoginView', () => {
     )
   })
 
+  it('回车触发表单提交重叠时只应登录一次', async () => {
+    authMocks.login.mockImplementation(() => new Promise(() => {}))
+
+    const wrapper = mountLoginView()
+    await flushPromises()
+
+    const usernameInput = wrapper.find('input[autocomplete="username"]')
+    const passwordInput = wrapper.find('input[autocomplete="current-password"]')
+
+    await usernameInput.setValue('alice')
+    await passwordInput.setValue('saved-password')
+
+    await usernameInput.trigger('keyup.enter')
+    await wrapper.get('form').trigger('submit.prevent')
+
+    expect(authMocks.login).toHaveBeenCalledTimes(1)
+    expect(authMocks.login).toHaveBeenCalledWith(
+      { username: 'alice', password: 'saved-password' },
+      undefined
+    )
+  })
+
   it('登录失败时应停留在当前页并展示错误信息', async () => {
     authMocks.login.mockRejectedValue(new Error('用户名或密码错误'))
 
