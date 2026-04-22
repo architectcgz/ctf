@@ -40,10 +40,10 @@ const signals: AuthSignalItem[] = [
         <div class="auth-entry-shell__kicker">
           Teaching Platform Access
         </div>
-        <h1 class="auth-entry-shell__title workspace-page-title">
+        <h1 class="auth-entry-shell__title">
           教学平台入口
         </h1>
-        <p class="auth-entry-shell__copy workspace-page-copy">
+        <p class="auth-entry-shell__copy">
           学生训练、教师教学和管理员值守共用同一套账号体系。登录后按角色进入对应工作台。
         </p>
 
@@ -99,197 +99,173 @@ const signals: AuthSignalItem[] = [
   align-items: center;
   overflow: hidden;
   padding: 1rem 0;
-  background: var(--color-bg-base);
+  background-color: var(--color-bg-base);
   color: var(--color-text-primary);
+  background-image: 
+    radial-gradient(circle at 0% 0%, color-mix(in srgb, var(--color-primary) 8%, transparent) 0%, transparent 50%),
+    radial-gradient(circle at 100% 100%, color-mix(in srgb, var(--color-primary) 5%, transparent) 0%, transparent 50%);
 }
 
 .auth-entry-shell__ambient {
   position: absolute;
   pointer-events: none;
   border-radius: 999px;
-  filter: blur(80px);
+  filter: blur(120px);
+  opacity: 0.6;
 }
 
 .auth-entry-shell__ambient--top {
-  top: -9rem;
-  right: -5rem;
-  width: 22rem;
-  height: 22rem;
-  background: color-mix(in srgb, var(--color-primary) 18%, transparent);
+  top: -12rem;
+  right: -8rem;
+  width: 32rem;
+  height: 32rem;
+  background: var(--color-primary);
 }
 
 .auth-entry-shell__ambient--side {
-  bottom: -8rem;
-  left: -6rem;
-  width: 20rem;
-  height: 20rem;
-  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  bottom: -10rem;
+  left: -10rem;
+  width: 28rem;
+  height: 28rem;
+  background: color-mix(in srgb, var(--color-primary) 40%, transparent);
 }
 
 .auth-entry-shell__frame {
   position: relative;
   z-index: 1;
   display: grid;
-  grid-template-columns: minmax(0, 1.02fr) minmax(0, 0.98fr);
-  gap: 0;
-  width: min(1040px, calc(100% - 2rem));
-  min-height: min(640px, calc(100vh - 2rem));
+  grid-template-columns: 1.1fr 0.9fr;
+  width: min(1120px, calc(100% - 3rem));
+  min-height: 680px;
   margin: 0 auto;
-  border: 1px solid color-mix(in srgb, var(--color-border-default) 78%, transparent);
-  border-radius: 1.5rem;
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base)),
-      color-mix(in srgb, var(--color-bg-surface) 86%, var(--color-bg-base))
-    ),
-    radial-gradient(
-      circle at top right,
-      color-mix(in srgb, var(--color-primary) 12%, transparent),
-      transparent 18rem
-    );
-  box-shadow: 0 22px 48px var(--color-shadow-strong);
+  border: 1px solid var(--color-border-default);
+  border-radius: 2rem;
+  background: var(--color-bg-surface);
+  box-shadow: 
+    0 40px 100px -20px color-mix(in srgb, var(--color-shadow-strong) 40%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--color-bg-surface) 80%, white);
   overflow: hidden;
 }
 
-.auth-entry-shell__overview,
-.auth-entry-shell__panel {
-  padding: 1.75rem;
-}
-
 .auth-entry-shell__overview {
-  border-right: 1px solid color-mix(in srgb, var(--color-border-default) 76%, transparent);
-}
-
-.auth-entry-shell__kicker,
-.auth-entry-shell__panel-eyebrow {
-  font-size: var(--font-size-0-70);
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
+  padding: 4.5rem;
+  background: linear-gradient(135deg, var(--color-bg-elevated), var(--color-bg-surface));
+  border-right: 1px solid var(--color-border-subtle);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .auth-entry-shell__kicker {
   display: inline-flex;
-  align-items: center;
-  min-height: 2rem;
-  padding: 0 0.8rem;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--color-primary) 28%, var(--color-border-default));
-  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
-  color: color-mix(in srgb, var(--color-primary-hover) 82%, white);
+  font-size: var(--font-size-11);
+  font-weight: 900;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--color-primary);
+  margin-bottom: 1.5rem;
 }
 
 .auth-entry-shell__title {
-  margin: 1.1rem 0 0.6rem;
-  font-weight: 700;
-}
-
-.auth-entry-shell__panel-copy,
-.auth-entry-shell__signal-copy {
-  color: var(--color-text-secondary);
-  line-height: 1.7;
+  margin: 0 0 1.25rem;
+  font-size: clamp(32px, 4vw, 48px);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 1.05;
+  color: var(--color-text-primary);
 }
 
 .auth-entry-shell__copy {
-  max-width: 34rem;
+  font-size: var(--font-size-16);
+  line-height: 1.75;
   color: var(--color-text-secondary);
+  max-width: 32rem;
 }
 
 .auth-entry-shell__signals {
   display: grid;
-  gap: 0.75rem;
-  margin-top: 1.4rem;
+  gap: 1.25rem;
+  margin-top: 3.5rem;
 }
 
 .auth-entry-shell__signal {
-  padding: 0.85rem 0.95rem 0.85rem 1rem;
-  border: 1px solid color-mix(in srgb, var(--color-border-default) 80%, transparent);
-  border-left: 3px solid color-mix(in srgb, var(--color-primary) 58%, transparent);
-  border-radius: 1rem;
-  background: color-mix(in srgb, var(--color-bg-elevated) 78%, transparent);
+  padding: 1.5rem;
+  border-radius: 1.25rem;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-default);
+  transition: all 0.3s ease;
+}
+
+.auth-entry-shell__signal:hover {
+  transform: translateX(8px);
+  border-color: var(--color-primary);
+  box-shadow: 0 10px 30px -10px color-mix(in srgb, var(--color-primary) 20%, transparent);
 }
 
 .auth-entry-shell__signal-title {
-  font-size: var(--font-size-0-95);
-  font-weight: 600;
+  font-size: var(--font-size-15);
+  font-weight: 900;
   color: var(--color-text-primary);
 }
 
 .auth-entry-shell__signal-copy {
-  margin-top: 0.35rem;
-  font-size: var(--font-size-0-80);
+  margin-top: 0.5rem;
+  font-size: var(--font-size-13);
+  color: var(--color-text-muted);
+  line-height: 1.6;
 }
 
 .auth-entry-shell__panel {
+  padding: 4.5rem;
   display: flex;
   flex-direction: column;
+  justify-content: center;
+  background: var(--color-bg-surface);
 }
 
 .auth-entry-shell__panel-header {
-  padding-bottom: 1rem;
-  border-bottom: 1px dashed color-mix(in srgb, var(--color-border-default) 76%, transparent);
+  margin-bottom: 2.5rem;
 }
 
 .auth-entry-shell__panel-eyebrow {
+  font-size: var(--font-size-11);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
   color: var(--color-text-muted);
 }
 
 .auth-entry-shell__panel-title {
-  margin: 0.6rem 0 0.3rem;
-  font-size: var(--font-size-1-60);
-  line-height: 1.15;
-  font-weight: 700;
+  margin: 0.75rem 0 0.5rem;
+  font-size: var(--font-size-28);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: var(--color-text-primary);
 }
 
 .auth-entry-shell__panel-copy {
-  font-size: var(--font-size-0-88);
-}
-
-.auth-entry-shell__panel-body {
-  margin-top: 1.2rem;
+  font-size: var(--font-size-14);
+  color: var(--color-text-secondary);
 }
 
 .auth-entry-shell__panel-footer {
-  margin-top: auto;
-  padding-top: 1rem;
-  border-top: 1px dashed color-mix(in srgb, var(--color-border-default) 76%, transparent);
+  margin-top: 2.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--color-border-subtle);
 }
 
-:global([data-theme='light']) .auth-entry-shell__frame {
-  box-shadow: 0 18px 40px var(--color-shadow-soft);
-}
-
-:global([data-theme='light']) .auth-entry-shell__signal,
-:global([data-theme='light']) .auth-entry-shell__frame {
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--color-bg-surface) 96%, white),
-      color-mix(in srgb, var(--color-bg-elevated) 94%, white)
-    ),
-    radial-gradient(
-      circle at top right,
-      color-mix(in srgb, var(--color-primary) 7%, transparent),
-      transparent 18rem
-    );
-}
-
-@media (max-width: 960px) {
+@media (max-width: 1024px) {
   .auth-entry-shell__frame {
     grid-template-columns: 1fr;
-    width: min(720px, calc(100% - 1rem));
     min-height: auto;
+    width: min(640px, calc(100% - 2rem));
   }
-
-  .auth-entry-shell__overview,
-  .auth-entry-shell__panel {
-    padding: 1.25rem;
+  .auth-entry-shell__overview, .auth-entry-shell__panel {
+    padding: 3rem 2.5rem;
   }
-
   .auth-entry-shell__overview {
     border-right: none;
-    border-bottom: 1px solid color-mix(in srgb, var(--color-border-default) 76%, transparent);
+    border-bottom: 1px solid var(--color-border-subtle);
   }
 }
 </style>
