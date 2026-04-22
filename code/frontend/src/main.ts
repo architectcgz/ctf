@@ -2,6 +2,7 @@ import { createPinia } from 'pinia'
 import { createApp } from 'vue'
 
 import App from './App.vue'
+import { ApiError } from './api/request'
 import router from './router'
 import { useAuthStore } from './stores/auth'
 import { redirectToErrorStatusPage } from './utils/errorStatusPage'
@@ -28,6 +29,9 @@ app.use(router)
 // 全局错误处理
 app.config.errorHandler = (err, instance, info) => {
   console.error('Vue error:', err, info)
+  if (err instanceof ApiError) {
+    return
+  }
   redirectToErrorStatusPage(500)
 }
 

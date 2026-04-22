@@ -339,4 +339,26 @@ describe('TeacherAWDReviewDetail', () => {
       '默认展示整场总览；切换到单轮后，可继续按队伍查看该轮服务、攻击和流量证据。'
     )
   })
+
+  it('导出归档失败时不应抛到全局错误页', async () => {
+    teacherApiMocks.exportTeacherAWDReviewArchive.mockRejectedValue(new Error('导出失败'))
+
+    const wrapper = mount(TeacherAWDReviewDetail)
+
+    await flushPromises()
+
+    const exportButton = wrapper
+      .findAll('button')
+      .find((button) => button.text().includes('归档导出'))
+
+    expect(exportButton).toBeTruthy()
+
+    await expect(exportButton!.trigger('click')).resolves.toBeUndefined()
+    await flushPromises()
+
+    expect(teacherApiMocks.exportTeacherAWDReviewArchive).toHaveBeenCalledWith(
+      'contest-1',
+      undefined
+    )
+  })
 })

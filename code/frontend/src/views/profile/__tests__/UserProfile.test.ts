@@ -167,6 +167,32 @@ describe('UserProfile', () => {
     expect(assessmentApiMocks.exportPersonalReport).not.toHaveBeenCalled()
   })
 
+  it('下载最近报告失败时应展示错误提示而不是抛出异常', async () => {
+    assessmentApiMocks.downloadReport.mockRejectedValue(new Error('下载失败'))
+
+    const wrapper = mount(UserProfile)
+    await flushPromises()
+
+    const createButton = wrapper
+      .findAll('button')
+      .find((button) => button.text().includes('生成个人报告'))
+    expect(createButton).toBeTruthy()
+
+    await createButton!.trigger('click')
+    await flushPromises()
+
+    const downloadButton = wrapper
+      .findAll('button')
+      .find((button) => button.text().includes('下载最近报告'))
+    expect(downloadButton).toBeTruthy()
+
+    await expect(downloadButton!.trigger('click')).resolves.toBeUndefined()
+    await flushPromises()
+
+    expect(assessmentApiMocks.downloadReport).toHaveBeenCalledWith('report-1')
+    expect(wrapper.text()).toContain('下载失败')
+  })
+
   it('应该移除个人资料页级 shell 上遗留的 journal-eyebrow-text 修饰类', () => {
     expect(userProfileSource).toContain(
       'class="workspace-shell journal-shell journal-shell-user journal-hero flex min-h-full flex-1 flex-col"'

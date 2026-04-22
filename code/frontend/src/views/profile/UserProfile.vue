@@ -151,13 +151,20 @@ async function createReport(): Promise<void> {
 
 async function handleDownload(): Promise<void> {
   if (!latestReport.value) return
-  const file = await downloadReport(latestReport.value.report_id)
-  const url = window.URL.createObjectURL(file.blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = file.filename
-  link.click()
-  window.URL.revokeObjectURL(url)
+  exportError.value = null
+  try {
+    const file = await downloadReport(latestReport.value.report_id)
+    const url = window.URL.createObjectURL(file.blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = file.filename
+    link.click()
+    window.URL.revokeObjectURL(url)
+  } catch (err) {
+    console.error('下载个人报告失败:', err)
+    exportError.value =
+      err instanceof Error && err.message.trim() ? err.message : '下载最近报告失败，请稍后重试'
+  }
 }
 
 onMounted(() => {

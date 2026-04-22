@@ -446,4 +446,45 @@ describe('UserManage', () => {
       '导入回执',
     ])
   })
+
+  it('删除用户失败时不应抛到全局错误页', async () => {
+    adminApiMocks.getUsers.mockResolvedValue({
+      list: [
+        {
+          id: '1',
+          username: 'alice',
+          email: 'alice@example.com',
+          class_name: 'Class A',
+          status: 'active',
+          roles: ['teacher'],
+          created_at: '2026-03-01T00:00:00.000Z',
+        },
+      ],
+      total: 1,
+      page: 1,
+      page_size: 20,
+    })
+    adminApiMocks.deleteUser.mockRejectedValue(new Error('删除失败'))
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
+
+    const wrapper = mount(UserManage, {
+      global: {
+        stubs: {
+          UserGovernancePage: {
+            props: ['list'],
+            template:
+              '<button id="delete-user" type="button" @click="$emit(\'deleteUser\', list[0].id)">删除用户</button>',
+          },
+          PlatformUserFormDialog: true,
+        },
+      },
+    })
+
+    await flushPromises()
+
+    await expect(wrapper.get('#delete-user').trigger('click')).resolves.toBeUndefined()
+    await flushPromises()
+
+    expect(adminApiMocks.deleteUser).toHaveBeenCalledWith('1')
+  })
 })
