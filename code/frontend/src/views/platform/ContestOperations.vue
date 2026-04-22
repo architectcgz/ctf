@@ -115,7 +115,7 @@ onMounted(() => {
   flex-direction: column;
   height: 100vh;
   width: 100%;
-  background: #fdfdfd;
+  background: var(--color-bg-base);
   overflow: hidden;
 }
 
@@ -127,34 +127,36 @@ onMounted(() => {
   align-items: center;
   justify-content: space-between;
   padding: 0 2rem;
-  background: white;
-  border-bottom: 1px solid #e2e8f0;
+  background: var(--color-bg-surface);
+  border-bottom: 1px solid var(--color-border-default);
   z-index: 50;
 }
 
 .topbar-left { display: flex; align-items: center; gap: 1.5rem; }
-.divider { width: 1px; height: 1.5rem; background: #e2e8f0; }
+.divider { width: 1px; height: 1.5rem; background: var(--color-border-default); }
 
-.brand-overline { font-size: 10px; font-weight: 800; text-transform: uppercase; color: #3b82f6; letter-spacing: 0.15em; }
-.brand-title { font-size: 1rem; font-weight: 900; color: #0f172a; margin: 0; }
+.brand-overline { font-size: 10px; font-weight: 800; text-transform: uppercase; color: var(--color-primary); letter-spacing: 0.15em; }
+.brand-title { font-size: 1rem; font-weight: 900; color: var(--color-text-primary); margin: 0; }
 
 .studio-link-btn {
   display: inline-flex; align-items: center; gap: 0.65rem; height: 2.5rem; padding: 0 1.25rem;
-  border-radius: 0.85rem; background: #f8fafc; border: 1px solid #e2e8f0;
-  font-size: 13px; font-weight: 700; color: #475569; cursor: pointer; transition: all 0.2s ease;
+  border-radius: 0.85rem; background: var(--color-bg-elevated); border: 1px solid var(--color-border-default);
+  font-size: 13px; font-weight: 700; color: var(--color-text-secondary); cursor: pointer; transition: all 0.2s ease;
 }
-.studio-link-btn:hover { background: white; border-color: #3b82f6; color: #2563eb; }
+.studio-link-btn:hover { background: var(--color-bg-surface); border-color: var(--color-primary); color: var(--color-primary); }
 
 .ops-canvas { flex: 1; overflow-y: auto; }
 
 .ops-loading-overlay {
   position: absolute; inset: 0; z-index: 100;
-  background: white; display: flex; align-items: center; justify-content: center;
+  background: var(--color-bg-base); display: flex; align-items: center; justify-content: center;
 }
 
 .icon-btn {
   width: 2.25rem; height: 2.25rem; display: flex; align-items: center; justify-content: center;
-  border-radius: 0.6rem; color: #94a3b8; cursor: pointer; transition: all 0.2s ease;
+  border-radius: 0.6rem; color: var(--color-text-muted); cursor: pointer; transition: all 0.2s ease;
+  background: transparent;
+  border: none;
 }
-.icon-btn:hover { background: #f1f5f9; color: #0f172a; }
+.icon-btn:hover { background: var(--color-bg-elevated); color: var(--color-text-primary); }
 </style>
