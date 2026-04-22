@@ -4,6 +4,10 @@ defineProps<{
   panelTitle: string
   panelDescription: string
 }>()
+
+const emit = defineEmits<{
+  heroProbe: []
+}>()
 </script>
 
 <template>
@@ -17,9 +21,12 @@ defineProps<{
 
     <div class="auth-entry-shell__container">
       <!-- 左侧：视觉锚点 -->
-      <section class="auth-entry-shell__hero">
+      <section
+        class="auth-entry-shell__hero"
+        @click="emit('heroProbe')"
+      >
         <header class="hero-branding">
-          <div class="branding-overline">ZhiCore Infrastructure</div>
+          <div class="branding-overline">CTF Platform Infrastructure</div>
           <h1 class="branding-title">
             SECURE<br />PLATFORM<br /><span>ACCESS</span>
           </h1>
