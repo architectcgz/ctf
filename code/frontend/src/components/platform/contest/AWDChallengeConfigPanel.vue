@@ -222,6 +222,14 @@ function isActiveChallenge(item: AdminContestChallengeViewData): boolean {
         </button>
       </header>
 
+      <div
+        v-if="activeChallenge"
+        class="active-edit-banner"
+      >
+        <span class="active-edit-banner__label">正在编辑</span>
+        <strong>{{ getChallengeTitle(activeChallenge) }}</strong>
+      </div>
+
       <AppEmpty
         v-if="sortedChallengeLinks.length === 0"
         title="暂无关联服务"
@@ -365,6 +373,26 @@ function isActiveChallenge(item: AdminContestChallengeViewData): boolean {
 /* Directory Header */
 .directory-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-5); }
 .directory-title { font-size: var(--font-size-16); font-weight: 900; color: var(--color-text-primary); text-transform: uppercase; letter-spacing: 0.1em; }
+
+.active-edit-banner {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: fit-content;
+  margin-bottom: var(--space-4);
+  padding: var(--space-2) var(--space-3);
+  border-radius: 999px;
+  border: 1px solid var(--color-border-default);
+  background: color-mix(in srgb, var(--color-primary-soft) 72%, var(--color-bg-surface));
+}
+
+.active-edit-banner__label {
+  font-size: var(--font-size-11);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-primary);
+}
 
 /* Table Styles */
 .studio-table-wrap { border: 1px solid var(--color-border-default); border-radius: 1rem; background: var(--color-bg-surface); overflow: hidden; }

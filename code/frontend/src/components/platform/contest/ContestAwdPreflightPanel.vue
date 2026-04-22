@@ -42,17 +42,22 @@ function handleNavigateChallenge(challengeId: string) {
 
       <div class="header-side">
         <AWDReadinessDecisionHUD :readiness="readiness" />
-        
+
         <!-- Override Entry - Compact -->
-        <button
+        <div
           v-if="canForceStart"
-          id="contest-awd-preflight-force-start"
-          type="button"
-          class="ops-btn ops-btn--primary"
-          @click="emit('open:override')"
+          class="preflight-override-entry"
         >
-          强制放行
-        </button>
+          <span class="preflight-override-entry__label">强制启动赛事</span>
+          <button
+            id="contest-awd-preflight-force-start"
+            type="button"
+            class="ops-btn ops-btn--primary"
+            @click="emit('open:override')"
+          >
+            强制放行
+          </button>
+        </div>
       </div>
     </header>
 
@@ -101,6 +106,20 @@ function handleNavigateChallenge(challengeId: string) {
   display: flex;
   align-items: center;
   gap: 1rem;
+}
+
+.preflight-override-entry {
+  display: grid;
+  gap: 0.4rem;
+  justify-items: end;
+}
+
+.preflight-override-entry__label {
+  font-size: var(--font-size-11);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
 }
 
 .ops-btn {
