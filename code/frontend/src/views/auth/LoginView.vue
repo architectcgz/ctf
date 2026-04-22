@@ -16,6 +16,7 @@
             v-model="form.username"
             autocomplete="username"
             class="ui-control"
+            @input="submitError = ''"
             @keyup.enter="onSubmit"
           >
         </div>
@@ -29,9 +30,17 @@
             type="password"
             autocomplete="current-password"
             class="ui-control"
+            @input="submitError = ''"
           >
         </div>
       </label>
+
+      <p
+        v-if="submitError"
+        class="ui-field__error auth-login-form__error"
+      >
+        {{ submitError }}
+      </p>
 
       <button
         class="ui-btn ui-btn--primary ui-btn--block auth-login-form__submit"
@@ -68,6 +77,7 @@ const { login } = useAuth()
 const route = useRoute()
 
 const loading = ref(false)
+const submitError = ref('')
 const form = reactive({ username: '', password: '' })
 const usernameInput = useTemplateRef<HTMLInputElement>('usernameInput')
 const passwordInput = useTemplateRef<HTMLInputElement>('passwordInput')
@@ -78,12 +88,15 @@ async function onSubmit() {
 
   if (!form.username || !form.password) return
   loading.value = true
+  submitError.value = ''
   try {
     const redirectTo = sanitizeRedirectPath(route.query.redirect)
     await login(
       { username: form.username, password: form.password },
       redirectTo === '/' ? undefined : redirectTo
     )
+  } catch (err) {
+    submitError.value = err instanceof Error && err.message.trim() ? err.message : '登录失败，请稍后重试'
   } finally {
     loading.value = false
   }
@@ -103,6 +116,10 @@ async function onSubmit() {
 
 .auth-login-form__submit {
   margin-top: 0.5rem;
+}
+
+.auth-login-form__error {
+  margin: -0.25rem 0 0;
 }
 
 .auth-login-form__footer {
