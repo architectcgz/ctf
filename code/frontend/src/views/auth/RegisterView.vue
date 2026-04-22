@@ -88,7 +88,7 @@ const submitError = ref('')
 const form = reactive({ username: '', password: '', class_name: '' })
 
 async function onSubmit() {
-  if (!form.username || !form.password) return
+  if (loading.value || !form.username || !form.password) return
   loading.value = true
   submitError.value = ''
   try {

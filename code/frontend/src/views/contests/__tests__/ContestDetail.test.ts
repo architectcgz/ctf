@@ -498,6 +498,52 @@ describe('ContestDetail', () => {
     expect(wrapper.text()).toContain('正确！+100 分')
   })
 
+  it('竞赛 Flag 提交进行中遇到回车和点击重叠时只应提交一次', async () => {
+    contestApiMocks.getContestChallenges.mockResolvedValueOnce([
+      {
+        id: '101',
+        challenge_id: '101',
+        title: 'Web 101',
+        category: 'web',
+        difficulty: 'easy',
+        points: 100,
+        solved_count: 0,
+        is_solved: false,
+      },
+    ])
+    contestApiMocks.submitContestFlag.mockImplementation(() => new Promise(() => {}))
+
+    const wrapper = mount(ContestDetail, {
+      global: {
+        plugins: [createPinia(), router],
+      },
+    })
+
+    await flushPromises()
+
+    const challengesTab = wrapper.findAll('button').find((node) => node.text().trim() === '题目')
+    expect(challengesTab).toBeTruthy()
+    await challengesTab!.trigger('click')
+    await flushPromises()
+
+    const challengeButton = wrapper.findAll('button').find((node) => node.text().includes('Web 101'))
+    expect(challengeButton).toBeTruthy()
+    await challengeButton!.trigger('click')
+    await flushPromises()
+
+    const flagInput = wrapper.get('#contest-flag-input')
+    const submitButton = wrapper.findAll('button').find((node) => node.text().trim() === '提交')
+    expect(submitButton).toBeTruthy()
+
+    await flagInput.setValue('flag{pending}')
+    flagInput.element.dispatchEvent(new KeyboardEvent('keyup', { key: 'Enter', bubbles: true }))
+    submitButton!.element.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    await wrapper.vm.$nextTick()
+
+    expect(contestApiMocks.submitContestFlag).toHaveBeenCalledTimes(1)
+    expect(contestApiMocks.submitContestFlag).toHaveBeenCalledWith('1', '101', 'flag{pending}')
+  })
+
   it('运行中的 AWD 战场应显示防守告警、自动刷新提示，并支持筛选目标', async () => {
     vi.useFakeTimers()
 
