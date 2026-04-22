@@ -206,7 +206,7 @@ function eventResultLabel(success: boolean): string {
 }
 
 function formatServiceRef(serviceId?: string): string {
-  return `SRV-${serviceId || '--'}`
+  return `Service #${serviceId || '--'}`
 }
 
 function getChallengeRuntimeKey(challenge: ContestChallengeItem | null | undefined): string {
@@ -394,13 +394,22 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
                 SQUAD SERVICES
               </div>
               <div
+                v-if="runtimeChallenges.length === 0"
+                class="panel-note"
+              >
+                NO DEPLOYABLE SERVICES IN CURRENT CONTEST.
+              </div>
+              <div
                 v-for="challenge in runtimeChallenges"
                 :key="challenge.id"
                 class="asset-item"
               >
                 <div class="asset-main">
                   <div class="flex items-center justify-between">
-                    <span class="asset-title">{{ challenge.title }}</span>
+                    <div class="asset-title-stack">
+                      <span class="asset-title">{{ challenge.title }}</span>
+                      <span class="asset-ref">{{ formatServiceRef(challenge.awd_service_id) }}</span>
+                    </div>
                     <span :class="getServiceStatusClass(getWorkspaceService(challenge)?.service_status)">
                       {{ getServiceStatusLabel(getWorkspaceService(challenge)?.service_status) }}
                     </span>
@@ -444,6 +453,7 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
             <div class="toolbar-field">
               <label>TARGET SECTOR</label>
               <select
+                id="awd-target-challenge"
                 v-model="activeChallengeKey"
                 class="war-room-select"
               >
@@ -459,6 +469,7 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
             <div class="toolbar-field">
               <label>SQUAD FILTER</label>
               <input
+                id="awd-target-search"
                 v-model="targetKeyword"
                 type="text"
                 placeholder="FILTER BY NAME..."
@@ -469,7 +480,13 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
 
           <div class="ops-panel__content custom-scrollbar">
             <div
-              v-if="!activeChallenge"
+              v-if="runtimeChallenges.length === 0"
+              class="panel-note"
+            >
+              NO DEPLOYABLE SERVICES IN CURRENT CONTEST.
+            </div>
+            <div
+              v-else-if="!activeChallenge"
               class="panel-note"
             >
               SELECT A TARGET SECTOR TO COMMENCE ATTACK.
@@ -492,6 +509,9 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
                 <div class="target-info">
                   <div class="target-team font-black text-cyan-400">
                     {{ target.team_name.toUpperCase() }}
+                  </div>
+                  <div class="target-ref">
+                    {{ formatServiceRef(target.active_service?.service_id) }}
                   </div>
                   <div class="target-url font-mono">
                     {{ target.active_service?.access_url || 'UNREACHABLE' }}
@@ -574,7 +594,11 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
                 <span>{{ formatTime(event.created_at) }}</span>
               </div>
               <div class="mt-1 text-xs">
-                {{ event.peer_team_name }} / {{ getChallengeTitleForEvent(event) }}
+                <span>{{ event.peer_team_name }} / </span>
+                <span data-testid="awd-feedback-challenge-title">{{ getChallengeTitleForEvent(event) }}</span>
+              </div>
+              <div class="feedback-ref">
+                {{ formatServiceRef(event.service_id) }}
               </div>
               <div class="mt-1 flex items-center justify-between font-mono text-[10px]">
                 <span :class="event.is_success ? 'text-emerald-400' : 'text-slate-500'">{{ eventResultLabel(event.is_success) }}</span>
@@ -778,7 +802,16 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
   align-items: center;
 }
 
+.asset-title-stack { display: flex; flex-direction: column; gap: 0.2rem; }
 .asset-title { font-size: 13px; font-weight: 800; color: var(--color-text-primary); }
+.asset-ref,
+.target-ref,
+.feedback-ref {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+}
 .asset-meta { color: var(--color-text-muted); margin-top: 0.35rem; }
 
 .status-badge {
@@ -845,6 +878,7 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
 
 .target-team { font-size: 14px; letter-spacing: 0.05em; color: var(--color-primary); }
 .target-url { font-size: 11px; color: var(--color-text-muted); }
+.target-ref { margin-top: 0.2rem; }
 
 .target-action {
   display: flex;
@@ -907,6 +941,7 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
 
 .feedback-item.attack_out { border-left-color: var(--color-danger); }
 .feedback-item.attack_in { border-left-color: var(--color-warning); }
+.feedback-ref { margin-top: 0.35rem; }
 
 .panel-note { font-size: 12px; font-weight: 700; color: var(--color-text-muted); text-align: center; padding: 3rem 0; }
 

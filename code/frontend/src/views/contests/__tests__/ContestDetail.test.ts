@@ -350,8 +350,9 @@ describe('ContestDetail', () => {
     await flushPromises()
 
     expect(wrapper.text()).toContain('战场')
-    expect(wrapper.text()).toContain('目标目录')
-    expect(wrapper.text()).toContain('Blue')
+    expect(wrapper.text()).toContain('ATTACK VECTOR')
+    expect(wrapper.text()).toContain('TARGET SECTOR')
+    expect(wrapper.text()).toContain('BLUE')
     expect(contestApiMocks.getContestAWDWorkspace).toHaveBeenCalledWith('1')
   })
 
@@ -391,7 +392,8 @@ describe('ContestDetail', () => {
 
     await flushPromises()
 
-    expect(wrapper.text()).toContain('先在队伍页创建或加入队伍')
+    expect(wrapper.text()).toContain('JOIN A SQUAD')
+    expect(wrapper.text()).toContain('You must be part of a team to access the AWD battlefield.')
     expect(wrapper.text()).toContain('战场')
   })
 
@@ -610,22 +612,21 @@ describe('ContestDetail', () => {
 
     await flushPromises()
 
-    expect(wrapper.text()).toContain('防守告警')
+    expect(wrapper.text()).toContain('DEFENSE MONITOR')
     expect(wrapper.text()).toContain('Service A')
-    expect(wrapper.text()).toContain('每 15 秒自动刷新')
-    expect(wrapper.text()).toContain('Blue')
-    expect(wrapper.text()).toContain('Green')
+    expect(wrapper.text()).toContain('BLUE')
+    expect(wrapper.text()).toContain('GREEN')
 
     await wrapper.get('#awd-target-search').setValue('Blue')
     await flushPromises()
 
-    expect(wrapper.text()).toContain('Blue')
-    expect(wrapper.text()).not.toContain('Green')
+    expect(wrapper.text()).toContain('BLUE')
+    expect(wrapper.text()).not.toContain('GREEN')
 
     await wrapper.get('#awd-target-search').setValue('Yellow')
     await flushPromises()
 
-    expect(wrapper.text()).toContain('没有匹配的目标队伍')
+    expect(wrapper.text()).toContain('NO MATCHING HOSTILES IN CURRENT SECTOR.')
 
     await vi.advanceTimersByTimeAsync(15_000)
     await flushPromises()
@@ -806,7 +807,7 @@ describe('ContestDetail', () => {
 
     expect(wrapper.text()).toContain('http://red.runtime.internal')
     expect(wrapper.text()).toContain('http://blue.runtime.internal')
-    expect(wrapper.text()).toContain('在线')
+    expect(wrapper.text()).toContain('STABLE')
   })
 
   it('学生 AWD 工作台应允许用 awd service 标识切换攻击题目', async () => {
@@ -1153,8 +1154,7 @@ describe('ContestDetail', () => {
     await flushPromises()
 
     expect(wrapper.text()).not.toContain('Legacy Gateway')
-    expect(wrapper.text()).toContain('当前赛事还没有发布可用服务')
-    expect(wrapper.text()).toContain('当前没有可选攻击题目。')
+    expect(wrapper.text()).toContain('NO DEPLOYABLE SERVICES IN CURRENT CONTEST.')
   })
 
   it('学生 AWD 提交结果提示应优先按 service 标识回填题目标题', async () => {
@@ -1266,28 +1266,26 @@ describe('ContestDetail', () => {
 
     await flushPromises()
 
-    await wrapper.find('input[placeholder="flag{...}"]').setValue('flag{demo}')
-    await wrapper.findAll('button').find((node) => node.text().trim() === '提交 stolen flag')?.trigger('click')
+    await wrapper.find('input[placeholder="ENTER STOLEN FLAG..."]').setValue('flag{demo}')
+    await wrapper.findAll('button').find((node) => node.text().trim() === 'SUBMIT')?.trigger('click')
     await flushPromises()
 
-    expect(wrapper.text()).toContain('Bank Portal 攻击成功，+60 分')
+    expect(wrapper.text()).toContain('BANK PORTAL: HIT SUCCESSFUL. +60 PTS')
   })
 
   it('竞赛详情 hero 应使用共享 workspace overline 语义', () => {
-    expect(contestDetailSource).toContain('<div class="workspace-overline">Contest</div>')
+    expect(contestDetailSource).toMatch(/<div class="workspace-overline">\s*Contest\s*<\/div>/)
     expect(contestDetailSource).not.toContain('<div class="contest-overline">Contest</div>')
   })
 
   it('竞赛详情 section heading 应切到共享 workspace overline 语义', () => {
-    expect(contestDetailSource).toContain('<div class="workspace-overline">Rules</div>')
-    expect(contestDetailSource).toContain('<div class="workspace-overline">Schedule</div>')
-    expect(contestDetailSource).toContain('<div class="workspace-overline">Announcements</div>')
-    expect(contestDetailSource).toContain(
-      `<div class="workspace-overline">
-                  {{ contest.mode === 'awd' ? 'Battle' : 'Challenges' }}
-                </div>`
+    expect(contestDetailSource).toMatch(/<div class="workspace-overline">\s*Rules\s*<\/div>/)
+    expect(contestDetailSource).toMatch(/<div class="workspace-overline">\s*Schedule\s*<\/div>/)
+    expect(contestDetailSource).toMatch(/<div class="workspace-overline">\s*Announcements\s*<\/div>/)
+    expect(contestDetailSource).toMatch(
+      /<div class="workspace-overline">\s*\{\{ contest\.mode === 'awd' \? 'Battle' : 'Challenges' \}\}\s*<\/div>/
     )
-    expect(contestDetailSource).toContain('<div class="workspace-overline">Team</div>')
+    expect(contestDetailSource).toMatch(/<div class="workspace-overline">\s*Team\s*<\/div>/)
     expect(contestDetailSource).not.toContain('<div class="contest-overline">Rules</div>')
     expect(contestDetailSource).not.toContain('<div class="contest-overline">Schedule</div>')
     expect(contestDetailSource).not.toContain('<div class="contest-overline">Announcements</div>')
@@ -1295,9 +1293,9 @@ describe('ContestDetail', () => {
   })
 
   it('竞赛详情剩余局部 kicker 也应统一到 workspace overline 语义', () => {
-    expect(contestDetailSource).toContain('<div class="workspace-overline">Selected</div>')
-    expect(contestDetailSource).toContain('<div class="workspace-overline">Primary Action</div>')
-    expect(contestDetailSource).toContain('<div class="workspace-overline">Current Team</div>')
+    expect(contestDetailSource).toMatch(/<div class="workspace-overline">\s*Selected\s*<\/div>/)
+    expect(contestDetailSource).toMatch(/<div class="workspace-overline">\s*Primary Action\s*<\/div>/)
+    expect(contestDetailSource).toMatch(/<div class="workspace-overline">\s*Current Team\s*<\/div>/)
     expect(contestDetailSource).not.toContain('<div class="contest-overline">Selected</div>')
     expect(contestDetailSource).not.toContain('<div class="contest-overline">Primary Action</div>')
     expect(contestDetailSource).not.toContain('<div class="contest-overline">Current Team</div>')
