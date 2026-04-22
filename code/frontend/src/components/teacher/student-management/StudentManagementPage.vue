@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowRight, Search } from 'lucide-vue-next'
+import { ArrowRight, Search, Activity } from 'lucide-vue-next'
 
 import type { TeacherClassItem, TeacherStudentItem } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
@@ -52,17 +52,17 @@ const emit = defineEmits<{
           <div class="teacher-actions">
             <button
               type="button"
-              class="teacher-btn teacher-btn--primary"
+              class="ui-btn ui-btn--secondary"
               @click="emit('openClassManagement')"
             >
               班级管理
             </button>
             <button
               type="button"
-              class="teacher-btn teacher-btn--ghost"
+              class="ui-btn ui-btn--secondary"
               @click="emit('openReportExport')"
             >
-              导出班级报告
+              导出报告
             </button>
           </div>
         </header>
@@ -133,21 +133,23 @@ const emit = defineEmits<{
             <div class="teacher-filter-grid">
               <label class="teacher-field">
                 <span class="teacher-field-label">班级</span>
-                <select
-                  :value="selectedClassName"
-                  class="teacher-field-control"
-                  :disabled="loadingClasses"
-                  @change="emit('selectClass', ($event.target as HTMLSelectElement).value)"
-                >
-                  <option value="">全部班级</option>
-                  <option
-                    v-for="item in classes"
-                    :key="item.name"
-                    :value="item.name"
+                <div class="teacher-field-control teacher-filter-control teacher-filter-control--select">
+                  <select
+                    :value="selectedClassName"
+                    class="teacher-input teacher-select"
+                    :disabled="loadingClasses"
+                    @change="emit('selectClass', ($event.target as HTMLSelectElement).value)"
                   >
-                    {{ item.name }} · {{ item.student_count || 0 }}
-                  </option>
-                </select>
+                    <option value="">全部班级</option>
+                    <option
+                      v-for="item in classes"
+                      :key="item.name"
+                      :value="item.name"
+                    >
+                      {{ item.name }} · {{ item.student_count || 0 }}
+                    </option>
+                  </select>
+                </div>
               </label>
 
               <label class="teacher-field">
@@ -187,7 +189,7 @@ const emit = defineEmits<{
             <div
               v-for="index in 6"
               :key="index"
-              class="h-14 animate-pulse rounded-2xl bg-[var(--journal-surface-subtle)]"
+              class="h-14 animate-pulse rounded-2xl bg-[var(--color-bg-elevated)]"
             />
           </div>
 
@@ -223,12 +225,12 @@ const emit = defineEmits<{
               v-for="student in filteredStudents"
               :key="student.id"
               type="button"
-              class="teacher-directory-row"
+              class="teacher-directory-row group"
               :aria-label="`${student.name || student.username}，${student.solved_count ?? 0} 题，${student.total_score ?? 0} 分，查看学员分析`"
               @click="emit('openStudent', student.id)"
             >
               <div class="teacher-directory-cell teacher-directory-cell-student-no">
-                {{ student.student_no || '未设置学号' }}
+                {{ student.student_no || '未设置' }}
               </div>
 
               <div class="teacher-directory-cell teacher-directory-cell-name">
@@ -264,7 +266,7 @@ const emit = defineEmits<{
               </div>
 
               <div class="teacher-directory-row-cta">
-                <span>查看学员分析</span>
+                <span>学员分析</span>
                 <ArrowRight class="h-4 w-4" />
               </div>
             </button>
@@ -303,16 +305,10 @@ const emit = defineEmits<{
 
 <style scoped>
 .teacher-management-shell {
-  --teacher-management-accent: var(--color-primary);
-  --teacher-management-accent-strong: color-mix(
-    in srgb,
-    var(--color-primary-hover) 82%,
-    var(--journal-ink)
-  );
   --teacher-directory-columns: var(--teacher-student-directory-columns);
   --teacher-student-directory-columns: minmax(7.5rem, 0.7fr) minmax(10rem, 1fr) minmax(10rem, 0.9fr)
     minmax(12rem, 0.95fr) minmax(6rem, 0.55fr) minmax(6rem, 0.55fr) minmax(8.5rem, 0.85fr);
-  --teacher-management-font: var(--font-family-sans);
+  font-family: var(--font-family-sans);
 }
 
 .teacher-page {
@@ -320,10 +316,6 @@ const emit = defineEmits<{
   min-height: 100%;
   flex: 1 1 auto;
   flex-direction: column;
-}
-
-.teacher-badge-card {
-  border: 1px solid var(--teacher-card-border);
 }
 
 .teacher-directory-section {
@@ -341,8 +333,8 @@ const emit = defineEmits<{
 .list-heading__title {
   margin: var(--space-1) 0 0;
   font-size: var(--font-size-1-20);
-  font-weight: 700;
-  color: var(--journal-ink);
+  font-weight: 900;
+  color: var(--color-text-primary);
 }
 
 .teacher-directory-filters {
@@ -357,9 +349,8 @@ const emit = defineEmits<{
   grid-template-columns: 220px minmax(0, 1fr) minmax(0, 1fr);
 }
 
-.teacher-summary-grid.progress-strip {
-  margin-top: var(--space-4-5);
-}
+.teacher-filter-control--select { justify-content: flex-start; }
+.teacher-select { min-height: 1.75rem; border: 0; appearance: none; cursor: pointer; background: transparent; width: 100%; outline: none; }
 
 .teacher-skeleton-list {
   display: grid;
@@ -377,21 +368,19 @@ const emit = defineEmits<{
   gap: var(--space-4);
   align-items: center;
   width: 100%;
-  padding: var(--space-4-5) 0;
+  padding: var(--space-5) 0;
   border: 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+  border-bottom: 1px solid var(--color-border-subtle);
   background: transparent;
   text-align: left;
   cursor: pointer;
-  transition:
-    background 160ms ease,
-    border-color 160ms ease;
+  transition: all 0.2s ease;
 }
 
 .teacher-directory-row:hover,
 .teacher-directory-row:focus-visible {
-  background: color-mix(in srgb, var(--journal-accent) 5%, transparent);
-  box-shadow: inset 2px 0 0 color-mix(in srgb, var(--journal-accent) 62%, transparent);
+  background: var(--color-primary-soft);
+  box-shadow: inset 3px 0 0 var(--color-primary);
   outline: none;
 }
 
@@ -411,54 +400,32 @@ const emit = defineEmits<{
 
 .teacher-directory-cell-student-no {
   font-size: var(--font-size-0-76);
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: 0.02em;
-  color: var(--journal-muted);
-  font-family: var(--font-family-sans);
+  color: var(--color-text-muted);
   font-variant-numeric: tabular-nums;
 }
 
 .teacher-directory-row-title {
   margin: 0;
   min-width: 0;
-  font-size: var(--font-size-0-90);
-  font-weight: 400;
+  font-size: var(--font-size-0-98);
+  font-weight: 800;
   line-height: 1.35;
-  color: var(--journal-ink);
+  color: var(--color-text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.teacher-directory-head-cell-student-no,
-.teacher-directory-head-cell-name,
-.teacher-directory-head-cell-alias,
-.teacher-directory-cell-student-no,
-.teacher-directory-cell-name,
-.teacher-directory-cell-alias {
-  justify-self: start;
-  width: 100%;
+.group:hover .teacher-directory-row-title {
+  color: var(--color-primary);
 }
 
 .teacher-directory-row-points {
   font-size: var(--font-size-0-80);
-  font-weight: 400;
-  color: var(--journal-muted);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.teacher-directory-row-copy {
-  font-size: var(--font-size-0-84);
-  line-height: 1.6;
-  color: color-mix(in srgb, var(--journal-muted) 92%, transparent);
-}
-
-.teacher-directory-row-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
+  font-weight: 800;
+  color: var(--color-text-secondary);
 }
 
 .teacher-directory-chip {
@@ -467,31 +434,35 @@ const emit = defineEmits<{
   min-height: 1.65rem;
   padding: 0 var(--space-2-5);
   border-radius: 0.5rem;
-  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
+  background: var(--color-bg-elevated);
   font-size: var(--font-size-0-75);
-  font-weight: 600;
-  color: var(--journal-accent-strong);
-}
-
-.teacher-directory-chip-muted {
-  background: color-mix(in srgb, var(--journal-muted) 10%, transparent);
-  color: var(--journal-muted);
+  font-weight: 800;
+  color: var(--color-text-secondary);
 }
 
 .teacher-directory-row-solved,
 .teacher-directory-row-score {
+  font-family: var(--font-family-mono);
   font-size: var(--font-size-0-81);
-  line-height: 1.5;
-  color: var(--journal-muted);
+  font-weight: 800;
+  color: var(--color-text-primary);
 }
 
 .teacher-directory-row-cta {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-1-5);
+  gap: var(--space-2);
   font-size: var(--font-size-0-82);
-  font-weight: 700;
-  color: var(--journal-accent-strong);
+  font-weight: 800;
+  color: var(--color-primary);
+  opacity: 0;
+  transform: translateX(-10px);
+  transition: all 0.2s ease;
+}
+
+.teacher-directory-row:hover .teacher-directory-row-cta {
+  opacity: 1;
+  transform: translateX(0);
 }
 
 @media (max-width: 1080px) {
@@ -514,6 +485,11 @@ const emit = defineEmits<{
     grid-template-columns: 1fr;
     gap: var(--space-3);
     padding: var(--space-4) 0;
+  }
+  
+  .teacher-directory-row-cta {
+    opacity: 1;
+    transform: none;
   }
 }
 </style>

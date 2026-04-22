@@ -67,14 +67,14 @@ const currentPageStudentCount = computed(() =>
           <div class="teacher-actions">
             <button
               type="button"
-              class="teacher-btn teacher-btn--primary"
+              class="ui-btn ui-btn--primary"
               @click="emit('openDashboard')"
             >
               教学概览
             </button>
             <button
               type="button"
-              class="teacher-btn teacher-btn--ghost"
+              class="ui-btn ui-btn--secondary"
               @click="emit('openReportExport')"
             >
               导出班级报告
@@ -119,7 +119,7 @@ const currentPageStudentCount = computed(() =>
         >
           <header class="list-heading">
             <div>
-              <div class="journal-note-label">
+              <div class="workspace-overline">
                 Class Directory
               </div>
               <h3 class="list-heading__title">
@@ -159,7 +159,7 @@ const currentPageStudentCount = computed(() =>
             <div
               v-for="index in 5"
               :key="index"
-              class="h-14 animate-pulse rounded-2xl bg-[var(--journal-surface-subtle)]"
+              class="h-14 animate-pulse rounded-2xl bg-[var(--color-bg-elevated)]"
             />
           </div>
 
@@ -208,7 +208,7 @@ const currentPageStudentCount = computed(() =>
                 v-for="{ item, code } in filteredClassEntries"
                 :key="item.name"
                 type="button"
-                class="teacher-directory-row"
+                class="teacher-directory-row group"
                 :aria-label="`${item.name}，${item.student_count || 0} 名学生，进入班级`"
                 @click="emit('openClass', item.name)"
               >
@@ -285,14 +285,6 @@ const currentPageStudentCount = computed(() =>
 
 <style scoped>
 .teacher-management-shell {
-  --teacher-management-accent: color-mix(in srgb, var(--color-primary) 86%, var(--journal-ink));
-  --teacher-management-accent-strong: color-mix(
-    in srgb,
-    var(--color-primary) 74%,
-    var(--journal-ink)
-  );
-  --page-top-tabs-gap: var(--space-7);
-  --page-top-tab-active-border: color-mix(in srgb, var(--journal-accent) 86%, var(--journal-ink));
   --teacher-directory-columns: var(--teacher-class-directory-columns);
   --teacher-class-directory-columns: minmax(7rem, 0.7fr) minmax(11rem, 1.15fr) minmax(7rem, 0.7fr)
     minmax(7rem, 0.7fr) minmax(7rem, 0.75fr);
@@ -306,14 +298,6 @@ const currentPageStudentCount = computed(() =>
   flex-direction: column;
 }
 
-.teacher-badge-card {
-  border: 1px solid var(--teacher-card-border);
-}
-
-.teacher-tip-block {
-  border-top: 1px dashed var(--teacher-divider);
-}
-
 .teacher-directory-section {
   margin-top: var(--space-6);
 }
@@ -324,13 +308,14 @@ const currentPageStudentCount = computed(() =>
   align-items: flex-end;
   justify-content: space-between;
   gap: var(--space-3);
+  margin-bottom: var(--space-4);
 }
 
 .list-heading__title {
   margin: var(--space-1) 0 0;
   font-size: var(--font-size-1-20);
-  font-weight: 700;
-  color: var(--journal-ink);
+  font-weight: 900;
+  color: var(--color-text-primary);
 }
 
 .teacher-directory-filters {
@@ -365,21 +350,19 @@ const currentPageStudentCount = computed(() =>
   gap: var(--space-4);
   align-items: center;
   width: 100%;
-  padding: var(--space-4-5) 0;
+  padding: var(--space-5) 0;
   border: 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+  border-bottom: 1px solid var(--color-border-subtle);
   background: transparent;
   text-align: left;
   cursor: pointer;
-  transition:
-    background 160ms ease,
-    border-color 160ms ease;
+  transition: all 0.2s ease;
 }
 
 .teacher-directory-row:hover,
 .teacher-directory-row:focus-visible {
-  background: color-mix(in srgb, var(--journal-accent) 5%, transparent);
-  box-shadow: inset 2px 0 0 color-mix(in srgb, var(--journal-accent) 62%, transparent);
+  background: var(--color-primary-soft);
+  box-shadow: inset 3px 0 0 var(--color-primary);
   outline: none;
 }
 
@@ -399,28 +382,32 @@ const currentPageStudentCount = computed(() =>
 
 .teacher-directory-cell-class-code {
   font-size: var(--font-size-0-76);
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: 0.08em;
-  color: var(--journal-muted);
+  color: var(--color-text-muted);
 }
 
 .teacher-directory-row-title {
   margin: 0;
   min-width: 0;
-  font-family: var(--font-family-mono);
+  font-family: var(--font-family-sans);
   font-size: var(--font-size-1-08);
-  font-weight: 700;
+  font-weight: 800;
   line-height: 1.35;
-  color: var(--journal-ink);
+  color: var(--color-text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+.group:hover .teacher-directory-row-title {
+  color: var(--color-primary);
+}
+
 .teacher-directory-row-points {
   font-size: var(--font-size-1-00);
-  font-weight: 700;
-  color: var(--journal-accent-strong);
+  font-weight: 900;
+  color: var(--color-text-primary);
 }
 
 .teacher-directory-head-cell-class-code,
@@ -433,75 +420,41 @@ const currentPageStudentCount = computed(() =>
   width: 100%;
 }
 
-.teacher-directory-row-copy {
-  font-size: var(--font-size-0-84);
-  line-height: 1.6;
-  color: color-mix(in srgb, var(--journal-muted) 92%, transparent);
-}
-
-.teacher-directory-row-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-}
-
-.teacher-directory-chip {
-  display: inline-flex;
-  align-items: center;
-  min-height: 1.65rem;
-  padding: 0 var(--space-2-5);
-  border-radius: 0.5rem;
-  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
-  font-size: var(--font-size-0-75);
-  font-weight: 600;
-  color: var(--journal-accent-strong);
-}
-
-.teacher-directory-chip-muted {
-  background: color-mix(in srgb, var(--journal-muted) 10%, transparent);
-  color: var(--journal-muted);
-}
-
-.teacher-directory-row-status {
-  display: flex;
-  justify-content: flex-start;
-}
-
 .teacher-directory-state-chip {
   display: inline-flex;
   align-items: center;
   min-height: 1.75rem;
-  padding: 0 var(--space-2-5);
+  padding: 0 var(--space-3);
   border-radius: 0.5rem;
   font-size: var(--font-size-0-75);
-  font-weight: 600;
+  font-weight: 800;
 }
 
 .teacher-directory-state-chip-ready {
-  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
-  color: var(--journal-accent-strong);
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
 }
 
 .teacher-directory-state-chip-empty {
-  background: color-mix(in srgb, var(--journal-muted) 10%, transparent);
-  color: var(--journal-muted);
-}
-
-.teacher-directory-row-metrics {
-  display: grid;
-  gap: var(--space-1);
-  font-size: var(--font-size-0-81);
-  line-height: 1.5;
-  color: var(--journal-muted);
+  background: var(--color-bg-elevated);
+  color: var(--color-text-muted);
 }
 
 .teacher-directory-row-cta {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-1-5);
+  gap: var(--space-2);
   font-size: var(--font-size-0-82);
-  font-weight: 700;
-  color: var(--journal-accent-strong);
+  font-weight: 800;
+  color: var(--color-primary);
+  opacity: 0;
+  transform: translateX(-10px);
+  transition: all 0.2s ease;
+}
+
+.teacher-directory-row:hover .teacher-directory-row-cta {
+  opacity: 1;
+  transform: translateX(0);
 }
 
 @media (max-width: 960px) {
@@ -509,10 +462,6 @@ const currentPageStudentCount = computed(() =>
   .list-heading {
     align-items: flex-start;
     flex-direction: column;
-  }
-
-  .teacher-summary-grid {
-    grid-template-columns: 1fr;
   }
 
   .teacher-directory-head {
@@ -523,6 +472,11 @@ const currentPageStudentCount = computed(() =>
     grid-template-columns: 1fr;
     gap: var(--space-3);
     padding: var(--space-4) 0;
+  }
+  
+  .teacher-directory-row-cta {
+    opacity: 1;
+    transform: none;
   }
 }
 </style>

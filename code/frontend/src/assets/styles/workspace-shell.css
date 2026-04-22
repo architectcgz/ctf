@@ -241,8 +241,8 @@
   --ui-btn-border: var(--ui-btn-secondary-border, color-mix(in srgb, var(--color-border-default) 84%, transparent));
   --ui-btn-background: var(--ui-btn-secondary-background, var(--color-bg-surface));
   --ui-btn-color: var(--ui-btn-secondary-color, var(--color-text-secondary));
-  --ui-btn-hover-background: var(--ui-btn-secondary-hover-background, color-mix(in srgb, var(--color-bg-surface) 88%, white));
-  --ui-btn-hover-border: var(--ui-btn-secondary-hover-border, color-mix(in srgb, var(--color-border-default) 96%, transparent));
+  --ui-btn-hover-background: var(--ui-btn-secondary-hover-background, var(--color-bg-elevated));
+  --ui-btn-hover-border: var(--ui-btn-secondary-hover-border, var(--color-border-default));
   --ui-btn-hover-color: var(--ui-btn-secondary-hover-color, var(--color-text-primary));
 }
 
@@ -250,7 +250,7 @@
   --ui-btn-border: transparent;
   --ui-btn-background: transparent;
   --ui-btn-color: var(--ui-btn-ghost-color, var(--color-text-secondary));
-  --ui-btn-hover-background: var(--ui-btn-ghost-hover-background, color-mix(in srgb, var(--color-border-default) 7%, transparent));
+  --ui-btn-hover-background: var(--ui-btn-ghost-hover-background, color-mix(in srgb, var(--color-text-primary) 5%, transparent));
   --ui-btn-hover-color: var(--ui-btn-ghost-hover-color, var(--color-text-primary));
 }
 
