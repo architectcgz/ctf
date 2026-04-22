@@ -127,4 +127,27 @@ describe('LoginView', () => {
       '/teacher/dashboard'
     )
   })
+
+  it('登录失败时应停留在当前页并展示错误信息', async () => {
+    authMocks.login.mockRejectedValue(new Error('用户名或密码错误'))
+
+    const wrapper = mountLoginView()
+    await flushPromises()
+
+    const usernameInput = wrapper.find('input[autocomplete="username"]')
+    const passwordInput = wrapper.find('input[autocomplete="current-password"]')
+
+    await usernameInput.setValue('alice')
+    await passwordInput.setValue('wrong-password')
+
+    await expect(wrapper.get('form').trigger('submit.prevent')).resolves.toBeUndefined()
+    await flushPromises()
+
+    expect(authMocks.login).toHaveBeenCalledWith(
+      { username: 'alice', password: 'wrong-password' },
+      undefined
+    )
+    expect(wrapper.text()).toContain('用户名或密码错误')
+    expect(wrapper.get('button').attributes('disabled')).toBeUndefined()
+  })
 })
