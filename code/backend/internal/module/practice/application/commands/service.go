@@ -16,6 +16,7 @@ import (
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 
+	"ctf-platform/internal/auditlog"
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/constants"
 	"ctf-platform/internal/dto"
@@ -604,6 +605,14 @@ func (s *Service) SubmitFlagWithContext(ctx context.Context, userID, challengeID
 		submission.IsCorrect = isCorrect
 		if isCorrect {
 			status = dto.SubmissionStatusCorrect
+			if alreadySolved {
+				auditlog.MarkSkip(ctx)
+				return &dto.SubmissionResp{
+					IsCorrect:   true,
+					Status:      status,
+					SubmittedAt: submission.SubmittedAt,
+				}, nil
+			}
 		}
 	}
 

@@ -66,3 +66,32 @@ func TestLoadRejectsTooShortContainerFlagSecret(t *testing.T) {
 		t.Fatalf("expected short-secret validation error, got %v", err)
 	}
 }
+
+func TestLoadRejectsCredentialedCORSWithoutAllowOrigins(t *testing.T) {
+	_, file, _, ok := runtime.Caller(0)
+	if !ok {
+		t.Fatal("runtime.Caller() failed")
+	}
+
+	backendRoot := filepath.Clean(filepath.Join(filepath.Dir(file), "..", ".."))
+	currentDir, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("Getwd() error = %v", err)
+	}
+	if err := os.Chdir(backendRoot); err != nil {
+		t.Fatalf("Chdir() error = %v", err)
+	}
+	t.Cleanup(func() {
+		_ = os.Chdir(currentDir)
+	})
+
+	t.Setenv("CTF_CONTAINER_FLAG_GLOBAL_SECRET", "integration-secret-123456789012345")
+
+	_, err = Load("prod")
+	if err == nil {
+		t.Fatal("expected Load() to fail for credentialed CORS without allow_origins, got nil")
+	}
+	if !strings.Contains(err.Error(), "cors.allow_origins must not be empty") {
+		t.Fatalf("expected credentialed CORS validation error, got %v", err)
+	}
+}

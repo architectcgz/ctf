@@ -7,8 +7,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"ctf-platform/internal/auditlog"
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
+	"ctf-platform/internal/middleware"
 	"ctf-platform/pkg/errcode"
 	"ctf-platform/pkg/response"
 )
@@ -120,10 +122,16 @@ func (h *Handler) SubmitFlag(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.service.SubmitFlagWithContext(c.Request.Context(), userID, challengeID, req.Flag)
+	auditControl := &auditlog.Control{}
+	ctx := auditlog.WithControl(c.Request.Context(), auditControl)
+
+	resp, err := h.service.SubmitFlagWithContext(ctx, userID, challengeID, req.Flag)
 	if err != nil {
 		response.FromError(c, err)
 		return
+	}
+	if auditControl.Skip {
+		middleware.SetSkipAudit(c)
 	}
 
 	response.Success(c, resp)

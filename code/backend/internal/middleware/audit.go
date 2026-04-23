@@ -18,6 +18,23 @@ type AuditOptions struct {
 	DetailBuilder   func(*gin.Context) map[string]any
 }
 
+const SkipAuditKey = "skip_audit"
+
+func SetSkipAudit(c *gin.Context) {
+	if c != nil {
+		c.Set(SkipAuditKey, true)
+	}
+}
+
+func ShouldSkipAudit(c *gin.Context) bool {
+	if c == nil {
+		return false
+	}
+	skip, _ := c.Get(SkipAuditKey)
+	shouldSkip, _ := skip.(bool)
+	return shouldSkip
+}
+
 func Audit(recorder auditlog.Recorder, options AuditOptions, log *zap.Logger) gin.HandlerFunc {
 	if log == nil {
 		log = zap.NewNop()
@@ -26,7 +43,7 @@ func Audit(recorder auditlog.Recorder, options AuditOptions, log *zap.Logger) gi
 	return func(c *gin.Context) {
 		c.Next()
 
-		if recorder == nil || c.Writer.Status() < 200 || c.Writer.Status() >= 300 {
+		if recorder == nil || c.Writer.Status() < 200 || c.Writer.Status() >= 300 || ShouldSkipAudit(c) {
 			return
 		}
 

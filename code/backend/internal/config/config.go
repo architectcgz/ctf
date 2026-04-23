@@ -296,6 +296,14 @@ func Load(env string) (*Config, error) {
 }
 
 func (c *Config) Validate() error {
+	if c.CORS.AllowCredentials && len(c.CORS.AllowOrigins) == 0 {
+		return fmt.Errorf("cors.allow_origins must not be empty when cors.allow_credentials is true")
+	}
+	for _, origin := range c.CORS.AllowOrigins {
+		if strings.TrimSpace(origin) == "" {
+			return fmt.Errorf("cors.allow_origins must not contain empty origin")
+		}
+	}
 	if c.Container.DefaultCPUQuota <= 0 || c.Container.DefaultCPUQuota > 16 {
 		return fmt.Errorf("container.default_cpu_quota must be between 0 and 16 cores")
 	}
