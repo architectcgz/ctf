@@ -27,6 +27,7 @@ type topologyQueryService interface {
 	GetChallengeTopology(challengeID int64) (*dto.ChallengeTopologyResp, error)
 	GetChallengeTopologyWithContext(ctx context.Context, challengeID int64) (*dto.ChallengeTopologyResp, error)
 	GetTemplate(id int64) (*dto.EnvironmentTemplateResp, error)
+	GetTemplateWithContext(ctx context.Context, id int64) (*dto.EnvironmentTemplateResp, error)
 	ListTemplates(keyword string) ([]*dto.EnvironmentTemplateResp, error)
 }
 
@@ -119,7 +120,7 @@ func (h *TopologyHandler) GetTemplate(c *gin.Context) {
 		response.InvalidParams(c, "无效的 template id")
 		return
 	}
-	resp, err := h.queries.GetTemplate(id)
+	resp, err := h.queries.GetTemplateWithContext(c.Request.Context(), id)
 	if err != nil {
 		response.FromError(c, err)
 		return

@@ -131,6 +131,7 @@ type EnvironmentTemplateRepository interface {
 	Update(template *model.EnvironmentTemplate) error
 	Delete(id int64) error
 	FindByID(id int64) (*model.EnvironmentTemplate, error)
+	FindByIDWithContext(ctx context.Context, id int64) (*model.EnvironmentTemplate, error)
 	List(keyword string) ([]*model.EnvironmentTemplate, error)
 	IncrementUsage(id int64) error
 }

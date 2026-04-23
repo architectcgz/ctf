@@ -495,8 +495,15 @@ func (r *TemplateRepository) Delete(id int64) error {
 }
 
 func (r *TemplateRepository) FindByID(id int64) (*model.EnvironmentTemplate, error) {
+	return r.FindByIDWithContext(context.Background(), id)
+}
+
+func (r *TemplateRepository) FindByIDWithContext(ctx context.Context, id int64) (*model.EnvironmentTemplate, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
 	var template model.EnvironmentTemplate
-	err := r.db.Where("id = ?", id).First(&template).Error
+	err := r.db.WithContext(ctx).Where("id = ?", id).First(&template).Error
 	if err != nil {
 		return nil, err
 	}
