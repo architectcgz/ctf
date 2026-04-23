@@ -21,10 +21,11 @@
   - 前端改为上传预览 + 确认导入双阶段流程
   - 旧手工创建/编辑对话框从主页面移除
 - 当前如果继续联调，重点已经从“补接口缺口”转向“按业务流实际验证”。
-- 2026-04-22 前端专项审查的后续修复已继续推进到第二十轮：
+- 2026-04-23 前端专项审查的后续修复已继续推进到第二十一轮：
   - AWD 编排与运维组件簇的契约漂移已收口
   - 教师端 `workspace / tabs / surface` 漂移已收口
   - shared pagination review 基线已对齐到抽层后的真实 owner
+  - 登录态 token 已迁出 `localStorage`，改为“内存 access token + HttpOnly refresh cookie + 静默恢复”
   - 这部分进展以 [ctf-frontend-audit-20260422.md](/home/azhi/workspace/projects/ctf/.worktrees/fix-frontend-audit-pass1/docs/reviews/frontend/ctf-frontend-audit-20260422.md) 为准
 
 ## 已完成任务
