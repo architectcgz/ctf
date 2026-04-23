@@ -46,7 +46,17 @@ func (s *ScoreboardService) getScoreboard(ctx context.Context, contestID int64, 
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 	results, teamIDs := filterScoreboardResults(s.logger, contestID, results)
-	total := int64(len(results))
+
+	teams, err := s.repo.FindTeamsByIDs(ctx, teamIDs)
+	if err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+	statsMap, err := s.repo.FindScoreboardTeamStats(ctx, contestID, contest.Mode, teamIDs)
+	if err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+	allItems := buildScoreboardItems(s.logger, contestID, 0, results, teamIDs, teams, statsMap)
+	total := int64(len(allItems))
 
 	start, stop := scoreboardPageBounds(page, pageSize)
 	if start >= total {
@@ -70,18 +80,7 @@ func (s *ScoreboardService) getScoreboard(ctx context.Context, contestID int64, 
 	if stop >= total {
 		stop = total - 1
 	}
-	results = results[start : stop+1]
-	teamIDs = teamIDs[start : stop+1]
-
-	teams, err := s.repo.FindTeamsByIDs(ctx, teamIDs)
-	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
-	}
-	statsMap, err := s.repo.FindScoreboardTeamStats(ctx, contestID, contest.Mode, teamIDs)
-	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
-	}
-	items := buildScoreboardItems(s.logger, contestID, start, results, teamIDs, teams, statsMap)
+	items := allItems[start : stop+1]
 
 	return &dto.ScoreboardResp{
 		Contest: &dto.ScoreboardContestInfo{
