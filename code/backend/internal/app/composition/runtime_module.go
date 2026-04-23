@@ -3,7 +3,6 @@ package composition
 import (
 	"context"
 	"ctf-platform/internal/model"
-	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	contestports "ctf-platform/internal/module/contest/ports"
 	opsports "ctf-platform/internal/module/ops/ports"
 	practiceports "ctf-platform/internal/module/practice/ports"
@@ -152,7 +151,7 @@ func buildRuntimeModuleDeps(root *Root, engine runtimeEngine) runtimeModuleDeps 
 		maintenanceService:    maintenanceService,
 		provisioningService:   provisioningService,
 		containerStatsService: containerStatsService,
-		proxyTrafficRecorder:  contestinfra.NewAWDRepository(root.DB()),
+		proxyTrafficRecorder:  runtimeinfra.NewProxyTrafficEventRecorder(root.DB()),
 		imageRuntime:          runtimeapp.NewImageRuntimeService(engine),
 		containerFiles:        runtimeapp.NewContainerFileService(engine, log.Named("runtime_container_file_service")),
 		containerPublicHost:   cfg.Container.PublicHost,
