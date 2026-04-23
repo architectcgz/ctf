@@ -316,6 +316,13 @@ func (c *Config) Validate() error {
 	if c.Container.DefaultExposedPort <= 0 || c.Container.DefaultExposedPort > 65535 {
 		return fmt.Errorf("container.default_exposed_port must be between 1 and 65535")
 	}
+	if c.Container.PortRangeStart <= 0 || c.Container.PortRangeStart > 65535 ||
+		c.Container.PortRangeEnd <= 0 || c.Container.PortRangeEnd > 65535 {
+		return fmt.Errorf("container.port_range_start and container.port_range_end must be between 1 and 65535")
+	}
+	if c.Container.PortRangeStart >= c.Container.PortRangeEnd {
+		return fmt.Errorf("container.port_range_start must be less than container.port_range_end")
+	}
 	if c.Container.OrphanGracePeriod <= 0 {
 		return fmt.Errorf("container.orphan_grace_period must be greater than 0")
 	}
