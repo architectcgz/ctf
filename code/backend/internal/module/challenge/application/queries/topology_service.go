@@ -50,7 +50,14 @@ func (s *TopologyService) GetChallengeTopologyWithContext(ctx context.Context, c
 }
 
 func (s *TopologyService) GetTemplate(id int64) (*dto.EnvironmentTemplateResp, error) {
-	item, err := s.templateRepo.FindByID(id)
+	return s.GetTemplateWithContext(context.Background(), id)
+}
+
+func (s *TopologyService) GetTemplateWithContext(ctx context.Context, id int64) (*dto.EnvironmentTemplateResp, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	item, err := s.templateRepo.FindByIDWithContext(ctx, id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrNotFound
