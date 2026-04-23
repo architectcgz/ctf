@@ -8,7 +8,7 @@
 | 审查范围 | `code/frontend/src` 路由、关键视图、composables、stores、共享样式与验证门禁 |
 | 审查日期 | 2026-04-22 |
 | 审查方式 | 静态代码审查 + 最小验证基线检查 |
-| 审查状态 | 已记录，已完成十五轮最小高收益修复 |
+| 审查状态 | 已记录，已完成十六轮最小高收益修复 |
 
 ## 当前结论
 
@@ -426,6 +426,25 @@
 
 - 已执行：
   - `npm run test:run -- src/views/platform/__tests__/challengeDetailPanelExtraction.test.ts src/views/platform/__tests__/ChallengeDetail.test.ts`
+  - `npm run typecheck`
+
+## 第十六轮修复进展
+
+- 已完成：
+  - `P2-5` `ImageManage.vue` 继续减重，镜像目录工作区已抽到独立 `components/platform/images/ImageDirectoryPanel.vue`，路由页不再直接承载目录头、筛选排序、空错态、表格与分页模板。
+  - 这轮拆分保持了状态 ownership 不变：轮询、创建、删除、详情弹窗、状态整理和排序结果仍由 `ImageManage.vue` 持有，新组件只通过 props 和 emits 承载目录展示与交互。
+  - `ImageManage` 的源码护栏已同步更新为目录工作区通过独立平台组件接线，目录标题、共享工具栏、共享表格和长文本省略样式都改为面向组合源码检查。
+  - `ImageManage.vue` 本体行数已从 `873` 行降到 `545` 行，页面本体现在主要只剩头部状态条、轮询 owner、创建/删除流程和两个弹窗装配。
+- 本轮涉及文件：
+  - `code/frontend/src/views/platform/ImageManage.vue`
+  - `code/frontend/src/components/platform/images/ImageDirectoryPanel.vue`
+  - `code/frontend/src/views/platform/__tests__/ImageManage.test.ts`
+  - `code/frontend/src/views/platform/__tests__/imageManageWorkspaceExtraction.test.ts`
+
+## 第十六轮验证
+
+- 已执行：
+  - `npm run test:run -- src/views/platform/__tests__/imageManageWorkspaceExtraction.test.ts src/views/platform/__tests__/imageManageModalExtraction.test.ts src/views/platform/__tests__/ImageManage.test.ts`
   - `npm run typecheck`
 
 ## 备注
