@@ -2586,6 +2586,86 @@ func TestReviewManualReviewSubmissionWithContextRejectsInvalidReviewStatus(t *te
 	}
 }
 
+func TestReviewManualReviewSubmissionWithContextRejectsApprovalAfterChallengeAlreadySolved(t *testing.T) {
+	t.Parallel()
+
+	now := time.Now()
+	repo := &stubPracticeRepository{
+		getTeacherManualReviewSubmissionByIDWithContextFn: func(ctx context.Context, id int64) (*practiceports.TeacherManualReviewSubmissionRecord, error) {
+			return &practiceports.TeacherManualReviewSubmissionRecord{
+				Submission: model.Submission{
+					ID:           id,
+					UserID:       88,
+					ChallengeID:  11,
+					Flag:         "answer",
+					ReviewStatus: model.SubmissionReviewStatusPending,
+					SubmittedAt:  now,
+					UpdatedAt:    now,
+				},
+				StudentUsername: "student88",
+				StudentName:     "Student 88",
+				ClassName:       "Class A",
+				ChallengeTitle:  "manual challenge",
+			}, nil
+		},
+		findUserByIDWithContextFn: func(ctx context.Context, userID int64) (*model.User, error) {
+			return &model.User{ID: userID, Role: model.RoleTeacher, ClassName: "Class A"}, nil
+		},
+		findCorrectSubmissionWithContextFn: func(ctx context.Context, userID, challengeID int64) (*model.Submission, error) {
+			return &model.Submission{
+				ID:           99,
+				UserID:       userID,
+				ChallengeID:  challengeID,
+				IsCorrect:    true,
+				ReviewStatus: model.SubmissionReviewStatusApproved,
+				SubmittedAt:  now.Add(-time.Minute),
+				UpdatedAt:    now.Add(-time.Minute),
+			}, nil
+		},
+		updateSubmissionWithContextFn: func(ctx context.Context, submission *model.Submission) error {
+			t.Fatal("did not expect submission update when challenge already solved")
+			return nil
+		},
+	}
+	service := NewService(
+		repo,
+		&stubPracticeChallengeContract{
+			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+				return &model.Challenge{
+					ID:       id,
+					Category: model.DimensionWeb,
+					Points:   120,
+					Status:   model.ChallengeStatusPublished,
+					FlagType: model.FlagTypeManualReview,
+				}, nil
+			},
+		},
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		&config.Config{},
+		nil,
+	)
+
+	_, err := service.ReviewManualReviewSubmissionWithContext(
+		context.Background(),
+		91,
+		1001,
+		model.RoleTeacher,
+		&dto.ReviewManualReviewSubmissionReq{ReviewStatus: model.SubmissionReviewStatusApproved},
+	)
+	if err == nil {
+		t.Fatal("expected already solved approval to be rejected")
+	}
+	var appErr *errcode.AppError
+	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrAlreadySolved.Code {
+		t.Fatalf("expected already solved error, got %v", err)
+	}
+}
+
 func TestListMyChallengeSubmissionsWithContextPropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
