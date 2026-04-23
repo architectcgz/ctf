@@ -319,7 +319,6 @@ func TestServiceDestroyInstanceAllowsContestTeamMember(t *testing.T) {
 		ContestID:   &contestID,
 		TeamID:      &teamID,
 		ChallengeID: 101,
-		ContainerID: "contest-shared",
 		Status:      model.InstanceStatusRunning,
 		ExpiresAt:   now.Add(time.Hour),
 	})
@@ -1069,8 +1068,8 @@ func TestServiceDestroyTeacherInstanceHonorsClassScope(t *testing.T) {
 	seedUser(t, repo.db, &model.User{ID: 2, Username: "alice", Role: model.RoleStudent, ClassName: "Class A", Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now})
 	seedUser(t, repo.db, &model.User{ID: 3, Username: "bob", Role: model.RoleStudent, ClassName: "Class B", Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now})
 	seedChallenge(t, repo.db, &model.Challenge{ID: 11, Title: "web-101", Status: model.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now})
-	seedInstance(t, repo.db, &model.Instance{ID: 201, UserID: 2, ChallengeID: 11, ContainerID: "inst-a", Status: model.InstanceStatusRunning, ExpiresAt: now.Add(time.Hour), CreatedAt: now, UpdatedAt: now})
-	seedInstance(t, repo.db, &model.Instance{ID: 202, UserID: 3, ChallengeID: 11, ContainerID: "inst-b", Status: model.InstanceStatusRunning, ExpiresAt: now.Add(time.Hour), CreatedAt: now, UpdatedAt: now})
+	seedInstance(t, repo.db, &model.Instance{ID: 201, UserID: 2, ChallengeID: 11, Status: model.InstanceStatusRunning, ExpiresAt: now.Add(time.Hour), CreatedAt: now, UpdatedAt: now})
+	seedInstance(t, repo.db, &model.Instance{ID: 202, UserID: 3, ChallengeID: 11, Status: model.InstanceStatusRunning, ExpiresAt: now.Add(time.Hour), CreatedAt: now, UpdatedAt: now})
 
 	if err := service.DestroyTeacherInstance(context.Background(), 202, 1, model.RoleTeacher); err == nil || err.Error() != errcode.ErrForbidden.Error() {
 		t.Fatalf("expected forbidden destroy, got %v", err)
