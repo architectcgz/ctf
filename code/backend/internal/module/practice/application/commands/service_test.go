@@ -210,13 +210,9 @@ func (s *stubPracticeImageStore) FindByIDWithContext(ctx context.Context, id int
 
 type stubPracticeInstanceStore struct {
 	findByIDWithContextFn                   func(ctx context.Context, id int64) (*model.Instance, error)
-	updateRuntimeFn                         func(instance *model.Instance) error
 	updateRuntimeWithContextFn              func(ctx context.Context, instance *model.Instance) error
-	refreshInstanceExpiryFn                 func(instanceID int64, expiresAt time.Time) error
 	refreshInstanceExpiryWithContextFn      func(ctx context.Context, instanceID int64, expiresAt time.Time) error
-	updateStatusAndReleasePortFn            func(id int64, status string) error
 	updateStatusAndReleasePortWithContextFn func(ctx context.Context, id int64, status string) error
-	findByUserAndChallengeFn                func(userID, challengeID int64) (*model.Instance, error)
 	findByUserAndChallengeWithContextFn     func(ctx context.Context, userID, challengeID int64) (*model.Instance, error)
 }
 
@@ -227,23 +223,9 @@ func (s *stubPracticeInstanceStore) FindByIDWithContext(ctx context.Context, id 
 	return nil, nil
 }
 
-func (s *stubPracticeInstanceStore) UpdateRuntime(instance *model.Instance) error {
-	if s.updateRuntimeFn != nil {
-		return s.updateRuntimeFn(instance)
-	}
-	return nil
-}
-
 func (s *stubPracticeInstanceStore) UpdateRuntimeWithContext(ctx context.Context, instance *model.Instance) error {
 	if s.updateRuntimeWithContextFn != nil {
 		return s.updateRuntimeWithContextFn(ctx, instance)
-	}
-	return s.UpdateRuntime(instance)
-}
-
-func (s *stubPracticeInstanceStore) RefreshInstanceExpiry(instanceID int64, expiresAt time.Time) error {
-	if s.refreshInstanceExpiryFn != nil {
-		return s.refreshInstanceExpiryFn(instanceID, expiresAt)
 	}
 	return nil
 }
@@ -252,13 +234,6 @@ func (s *stubPracticeInstanceStore) RefreshInstanceExpiryWithContext(ctx context
 	if s.refreshInstanceExpiryWithContextFn != nil {
 		return s.refreshInstanceExpiryWithContextFn(ctx, instanceID, expiresAt)
 	}
-	return s.RefreshInstanceExpiry(instanceID, expiresAt)
-}
-
-func (s *stubPracticeInstanceStore) UpdateStatusAndReleasePort(id int64, status string) error {
-	if s.updateStatusAndReleasePortFn != nil {
-		return s.updateStatusAndReleasePortFn(id, status)
-	}
 	return nil
 }
 
@@ -266,21 +241,14 @@ func (s *stubPracticeInstanceStore) UpdateStatusAndReleasePortWithContext(ctx co
 	if s.updateStatusAndReleasePortWithContextFn != nil {
 		return s.updateStatusAndReleasePortWithContextFn(ctx, id, status)
 	}
-	return s.UpdateStatusAndReleasePort(id, status)
-}
-
-func (s *stubPracticeInstanceStore) FindByUserAndChallenge(userID, challengeID int64) (*model.Instance, error) {
-	if s.findByUserAndChallengeFn != nil {
-		return s.findByUserAndChallengeFn(userID, challengeID)
-	}
-	return nil, nil
+	return nil
 }
 
 func (s *stubPracticeInstanceStore) FindByUserAndChallengeWithContext(ctx context.Context, userID, challengeID int64) (*model.Instance, error) {
 	if s.findByUserAndChallengeWithContextFn != nil {
 		return s.findByUserAndChallengeWithContextFn(ctx, userID, challengeID)
 	}
-	return s.FindByUserAndChallenge(userID, challengeID)
+	return nil, nil
 }
 
 func (s *stubPracticeInstanceStore) ListPendingInstancesWithContext(ctx context.Context, limit int) ([]*model.Instance, error) {
@@ -1660,10 +1628,6 @@ func TestProvisionInstancePropagatesContextToUpdateRuntime(t *testing.T) {
 	ctxKey := practiceServiceContextKey("update-runtime")
 	expectedCtxValue := "ctx-update-runtime"
 	instanceStore := &stubPracticeInstanceStore{
-		updateRuntimeFn: func(instance *model.Instance) error {
-			t.Fatalf("expected context-aware update runtime, got legacy call for instance %d", instance.ID)
-			return nil
-		},
 		updateRuntimeWithContextFn: func(ctx context.Context, instance *model.Instance) error {
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected update runtime ctx value %v, got %v", expectedCtxValue, got)
@@ -1741,10 +1705,6 @@ func TestProvisionInstanceMarksInstanceFailedWithContext(t *testing.T) {
 		nil,
 		challengeinfra.NewImageRepository(db),
 		&stubPracticeInstanceStore{
-			updateStatusAndReleasePortFn: func(id int64, status string) error {
-				t.Fatalf("expected context-aware failed status update, got legacy call id=%d status=%s", id, status)
-				return nil
-			},
 			updateStatusAndReleasePortWithContextFn: func(ctx context.Context, id int64, status string) error {
 				markedFailed.Add(1)
 				if got := ctx.Value(ctxKey); got != expectedCtxValue {
