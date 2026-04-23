@@ -44,11 +44,23 @@ type storedChallengeImportPreview struct {
 }
 
 func (s *ChallengeService) PreviewChallengeImport(
+	actorUserID int64,
+	fileName string,
+	reader io.Reader,
+) (*dto.ChallengeImportPreviewResp, error) {
+	return s.PreviewChallengeImportWithContext(context.Background(), actorUserID, fileName, reader)
+}
+
+func (s *ChallengeService) PreviewChallengeImportWithContext(
 	ctx context.Context,
 	actorUserID int64,
 	fileName string,
 	reader io.Reader,
 ) (*dto.ChallengeImportPreviewResp, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	_ = ctx
 	if strings.TrimSpace(fileName) == "" {
 		fileName = "challenge-package.zip"
 	}
@@ -95,6 +107,14 @@ func (s *ChallengeService) PreviewChallengeImport(
 }
 
 func (s *ChallengeService) GetChallengeImport(actorUserID int64, id string) (*dto.ChallengeImportPreviewResp, error) {
+	return s.GetChallengeImportWithContext(context.Background(), actorUserID, id)
+}
+
+func (s *ChallengeService) GetChallengeImportWithContext(ctx context.Context, actorUserID int64, id string) (*dto.ChallengeImportPreviewResp, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	_ = ctx
 	record, err := loadChallengeImportPreviewRecord(id)
 	if err != nil {
 		return nil, err
@@ -107,6 +127,14 @@ func (s *ChallengeService) GetChallengeImport(actorUserID int64, id string) (*dt
 }
 
 func (s *ChallengeService) ListChallengeImports(actorUserID int64) ([]dto.ChallengeImportPreviewResp, error) {
+	return s.ListChallengeImportsWithContext(context.Background(), actorUserID)
+}
+
+func (s *ChallengeService) ListChallengeImportsWithContext(ctx context.Context, actorUserID int64) ([]dto.ChallengeImportPreviewResp, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	_ = ctx
 	records, err := loadChallengeImportPreviewRecords()
 	if err != nil {
 		return nil, err
@@ -126,6 +154,13 @@ func (s *ChallengeService) ListChallengeImports(actorUserID int64) ([]dto.Challe
 }
 
 func (s *ChallengeService) CommitChallengeImport(
+	actorUserID int64,
+	id string,
+) (*dto.ChallengeResp, error) {
+	return s.CommitChallengeImportWithContext(context.Background(), actorUserID, id)
+}
+
+func (s *ChallengeService) CommitChallengeImportWithContext(
 	ctx context.Context,
 	actorUserID int64,
 	id string,

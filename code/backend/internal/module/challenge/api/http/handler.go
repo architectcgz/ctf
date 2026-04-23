@@ -35,10 +35,14 @@ type challengeCommandService interface {
 	GetLatestPublishCheckWithContext(ctx context.Context, id int64) (*dto.ChallengePublishCheckJobResp, error)
 	SelfCheckChallenge(id int64) (*dto.ChallengeSelfCheckResp, error)
 	SelfCheckChallengeWithContext(ctx context.Context, id int64) (*dto.ChallengeSelfCheckResp, error)
-	PreviewChallengeImport(ctx context.Context, actorUserID int64, fileName string, reader io.Reader) (*dto.ChallengeImportPreviewResp, error)
+	PreviewChallengeImport(actorUserID int64, fileName string, reader io.Reader) (*dto.ChallengeImportPreviewResp, error)
+	PreviewChallengeImportWithContext(ctx context.Context, actorUserID int64, fileName string, reader io.Reader) (*dto.ChallengeImportPreviewResp, error)
 	ListChallengeImports(actorUserID int64) ([]dto.ChallengeImportPreviewResp, error)
+	ListChallengeImportsWithContext(ctx context.Context, actorUserID int64) ([]dto.ChallengeImportPreviewResp, error)
 	GetChallengeImport(actorUserID int64, id string) (*dto.ChallengeImportPreviewResp, error)
-	CommitChallengeImport(ctx context.Context, actorUserID int64, id string) (*dto.ChallengeResp, error)
+	GetChallengeImportWithContext(ctx context.Context, actorUserID int64, id string) (*dto.ChallengeImportPreviewResp, error)
+	CommitChallengeImport(actorUserID int64, id string) (*dto.ChallengeResp, error)
+	CommitChallengeImportWithContext(ctx context.Context, actorUserID int64, id string) (*dto.ChallengeResp, error)
 }
 
 type challengeQueryService interface {
@@ -154,7 +158,7 @@ func (h *Handler) PreviewChallengeImport(c *gin.Context) {
 	}
 	defer file.Close()
 
-	resp, err := h.commands.PreviewChallengeImport(
+	resp, err := h.commands.PreviewChallengeImportWithContext(
 		c.Request.Context(),
 		authctx.MustCurrentUser(c).UserID,
 		fileHeader.Filename,
@@ -169,7 +173,7 @@ func (h *Handler) PreviewChallengeImport(c *gin.Context) {
 }
 
 func (h *Handler) ListChallengeImports(c *gin.Context) {
-	resp, err := h.commands.ListChallengeImports(authctx.MustCurrentUser(c).UserID)
+	resp, err := h.commands.ListChallengeImportsWithContext(c.Request.Context(), authctx.MustCurrentUser(c).UserID)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -178,7 +182,7 @@ func (h *Handler) ListChallengeImports(c *gin.Context) {
 }
 
 func (h *Handler) GetChallengeImport(c *gin.Context) {
-	resp, err := h.commands.GetChallengeImport(authctx.MustCurrentUser(c).UserID, strings.TrimSpace(c.Param("id")))
+	resp, err := h.commands.GetChallengeImportWithContext(c.Request.Context(), authctx.MustCurrentUser(c).UserID, strings.TrimSpace(c.Param("id")))
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -193,7 +197,7 @@ func (h *Handler) CommitChallengeImport(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.commands.CommitChallengeImport(c.Request.Context(), authctx.MustCurrentUser(c).UserID, id)
+	resp, err := h.commands.CommitChallengeImportWithContext(c.Request.Context(), authctx.MustCurrentUser(c).UserID, id)
 	if err != nil {
 		response.FromError(c, err)
 		return
