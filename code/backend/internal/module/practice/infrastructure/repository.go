@@ -81,19 +81,23 @@ func (r *Repository) FindContestRegistrationWithContext(ctx context.Context, con
 }
 
 func (r *Repository) LockInstanceScope(userID, challengeID int64, scope practiceports.InstanceScope) error {
+	return r.LockInstanceScopeWithContext(context.Background(), userID, challengeID, scope)
+}
+
+func (r *Repository) LockInstanceScopeWithContext(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) error {
 	if scope.ServiceID != nil {
-		return r.db.Clauses(clause.Locking{Strength: "UPDATE"}).
+		return r.dbWithContext(ctx).Clauses(clause.Locking{Strength: "UPDATE"}).
 			Where("id = ?", *scope.ServiceID).
 			First(&model.ContestAWDService{}).Error
 	}
 	switch scope.ShareScope {
 	case model.InstanceSharingShared:
-		return r.db.Clauses(clause.Locking{Strength: "UPDATE"}).
+		return r.dbWithContext(ctx).Clauses(clause.Locking{Strength: "UPDATE"}).
 			Where("id = ?", challengeID).
 			First(&model.Challenge{}).Error
 	case model.InstanceSharingPerTeam:
 		if scope.TeamID != nil {
-			return r.db.Clauses(clause.Locking{Strength: "UPDATE"}).
+			return r.dbWithContext(ctx).Clauses(clause.Locking{Strength: "UPDATE"}).
 				Where("id = ?", *scope.TeamID).
 				First(&model.Team{}).Error
 		}
@@ -109,8 +113,12 @@ func (r *Repository) LockInstanceScope(userID, challengeID int64, scope practice
 }
 
 func (r *Repository) FindScopedExistingInstance(userID, challengeID int64, scope practiceports.InstanceScope) (*model.Instance, error) {
+	return r.FindScopedExistingInstanceWithContext(context.Background(), userID, challengeID, scope)
+}
+
+func (r *Repository) FindScopedExistingInstanceWithContext(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) (*model.Instance, error) {
 	now := time.Now()
-	query := r.db.Model(&model.Instance{}).
+	query := r.dbWithContext(ctx).Model(&model.Instance{}).
 		Where("share_scope = ?", scope.ShareScope).
 		Where(
 			"(status IN ? OR (status = ? AND expires_at > ?))",
@@ -148,8 +156,12 @@ func (r *Repository) FindScopedExistingInstance(userID, challengeID int64, scope
 }
 
 func (r *Repository) CountScopedRunningInstances(userID int64, scope practiceports.InstanceScope) (int, error) {
+	return r.CountScopedRunningInstancesWithContext(context.Background(), userID, scope)
+}
+
+func (r *Repository) CountScopedRunningInstancesWithContext(ctx context.Context, userID int64, scope practiceports.InstanceScope) (int, error) {
 	now := time.Now()
-	query := r.db.Model(&model.Instance{}).
+	query := r.dbWithContext(ctx).Model(&model.Instance{}).
 		Where("share_scope = ?", scope.ShareScope).
 		Where(
 			"(status IN ? OR (status = ? AND expires_at > ?))",
@@ -192,12 +204,20 @@ func (r *Repository) RefreshInstanceExpiryWithContext(ctx context.Context, insta
 }
 
 func (r *Repository) CreateInstance(instance *model.Instance) error {
-	return r.db.Create(instance).Error
+	return r.CreateInstanceWithContext(context.Background(), instance)
+}
+
+func (r *Repository) CreateInstanceWithContext(ctx context.Context, instance *model.Instance) error {
+	return r.dbWithContext(ctx).Create(instance).Error
 }
 
 func (r *Repository) ReserveAvailablePort(start, end int) (int, error) {
+	return r.ReserveAvailablePortWithContext(context.Background(), start, end)
+}
+
+func (r *Repository) ReserveAvailablePortWithContext(ctx context.Context, start, end int) (int, error) {
 	for port := start; port < end; port++ {
-		if err := r.db.Create(&model.PortAllocation{Port: port}).Error; err != nil {
+		if err := r.dbWithContext(ctx).Create(&model.PortAllocation{Port: port}).Error; err != nil {
 			if isPracticePortAllocationConflict(err) {
 				continue
 			}
@@ -209,7 +229,11 @@ func (r *Repository) ReserveAvailablePort(start, end int) (int, error) {
 }
 
 func (r *Repository) BindReservedPort(port int, instanceID int64) error {
-	return r.db.Model(&model.PortAllocation{}).
+	return r.BindReservedPortWithContext(context.Background(), port, instanceID)
+}
+
+func (r *Repository) BindReservedPortWithContext(ctx context.Context, port int, instanceID int64) error {
+	return r.dbWithContext(ctx).Model(&model.PortAllocation{}).
 		Where("port = ?", port).
 		Updates(map[string]any{
 			"instance_id": instanceID,

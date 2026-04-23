@@ -48,12 +48,19 @@ type TopologyCreateResult struct {
 
 type PracticeCommandTxRepository interface {
 	LockInstanceScope(userID, challengeID int64, scope InstanceScope) error
+	LockInstanceScopeWithContext(ctx context.Context, userID, challengeID int64, scope InstanceScope) error
 	FindScopedExistingInstance(userID, challengeID int64, scope InstanceScope) (*model.Instance, error)
+	FindScopedExistingInstanceWithContext(ctx context.Context, userID, challengeID int64, scope InstanceScope) (*model.Instance, error)
 	CountScopedRunningInstances(userID int64, scope InstanceScope) (int, error)
+	CountScopedRunningInstancesWithContext(ctx context.Context, userID int64, scope InstanceScope) (int, error)
 	RefreshInstanceExpiry(instanceID int64, expiresAt time.Time) error
+	RefreshInstanceExpiryWithContext(ctx context.Context, instanceID int64, expiresAt time.Time) error
 	CreateInstance(instance *model.Instance) error
+	CreateInstanceWithContext(ctx context.Context, instance *model.Instance) error
 	ReserveAvailablePort(start, end int) (int, error)
+	ReserveAvailablePortWithContext(ctx context.Context, start, end int) (int, error)
 	BindReservedPort(port int, instanceID int64) error
+	BindReservedPortWithContext(ctx context.Context, port int, instanceID int64) error
 	CreateSubmission(submission *model.Submission) error
 }
 
