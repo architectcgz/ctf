@@ -342,195 +342,33 @@
             </section>
           </section>
 
-          <section
+          <ChallengeSubmissionRecordsPanel
             v-else-if="activeWorkspaceTab === 'records'"
-            id="challenge-workspace-panel-records"
-            class="workspace-panel panel"
-            role="tabpanel"
-            aria-labelledby="challenge-workspace-tab-records"
-          >
-            <section class="section section--flat">
-              <div class="section-head workspace-tab-heading">
-                <div class="workspace-tab-heading__main">
-                  <div class="workspace-overline">
-                    Submissions
-                  </div>
-                  <h2 class="section-title workspace-tab-heading__title">
-                    提交记录
-                  </h2>
-                </div>
-                <div class="section-hint">
-                  最近提交
-                </div>
-              </div>
+            :submission-records="submissionRecords"
+            :paginated-submission-records="paginatedSubmissionRecords"
+            :submission-record-page="submissionRecordPage"
+            :submission-record-total="submissionRecordTotal"
+            :submission-record-total-pages="submissionRecordTotalPages"
+            :format-submission-time="formatSubmissionTime"
+            :submission-record-message="submissionRecordMessage"
+            :submission-status-text="submissionStatusText"
+            @change-page="changeSubmissionRecordPage"
+          />
 
-              <div
-                v-if="submissionRecords.length === 0"
-                class="inline-note"
-              >
-                还没有提交记录。你在右侧提交 Flag 后，新的提交结果会出现在这里。
-              </div>
-
-              <div
-                v-else
-                class="submission-records record-list"
-              >
-                <div
-                  v-for="item in paginatedSubmissionRecords"
-                  :key="item.id"
-                  class="submission-record-item record-item"
-                >
-                  <div class="submission-record-time record-time">
-                    {{ formatSubmissionTime(item.submittedAt) }}
-                  </div>
-                  <div class="submission-record-answer record-answer">
-                    {{ item.answer || submissionRecordMessage(item.status) }}
-                  </div>
-                  <div
-                    class="submission-record-status status-chip"
-                    :class="`submission-record-status--${item.status}`"
-                  >
-                    {{ submissionStatusText(item.status) }}
-                  </div>
-                </div>
-              </div>
-
-              <div
-                v-if="submissionRecordTotal > 0"
-                class="submission-pagination workspace-directory-pagination"
-              >
-                <PagePaginationControls
-                  :page="submissionRecordPage"
-                  :total-pages="submissionRecordTotalPages"
-                  :total="submissionRecordTotal"
-                  :total-label="`共 ${submissionRecordTotal} 条提交`"
-                  @change-page="changeSubmissionRecordPage"
-                />
-              </div>
-            </section>
-          </section>
-
-          <section
+          <ChallengeWriteupPanel
             v-else
-            id="challenge-workspace-panel-writeup"
-            class="workspace-panel panel"
-            role="tabpanel"
-            aria-labelledby="challenge-workspace-tab-writeup"
-          >
-            <section class="section section--flat">
-              <div class="section-head workspace-tab-heading">
-                <div class="workspace-tab-heading__main">
-                  <div class="workspace-overline">
-                    My Writeup
-                  </div>
-                  <h2 class="section-title workspace-tab-heading__title">
-                    编写题解
-                  </h2>
-                </div>
-                <div class="section-hint">
-                  解题过程复盘 · {{ challenge?.is_solved ? '可发布到社区' : '仅可保存草稿' }}
-                </div>
-              </div>
-
-              <div
-                v-if="myWriteup?.visibility_status === 'hidden'"
-                class="inline-note inline-note--warning"
-              >
-                当前题解已被教师或管理员隐藏，仅你自己可见。
-              </div>
-
-              <div class="meta-strip meta-strip--compact">
-                <span class="writeup-status-pill writeup-status-pill--primary">
-                  {{ submissionStatusLabel(myWriteup?.submission_status) }}
-                </span>
-                <span
-                  v-if="myWriteup?.visibility_status === 'hidden'"
-                  class="writeup-status-pill writeup-status-pill--warning"
-                >
-                  已隐藏
-                </span>
-                <span
-                  v-else-if="
-                    myWriteup?.submission_status === 'published' ||
-                      myWriteup?.submission_status === 'submitted'
-                  "
-                  class="writeup-status-pill writeup-status-pill--success"
-                >
-                  社区可见
-                </span>
-                <span
-                  v-if="myWriteup?.is_recommended"
-                  class="writeup-status-pill writeup-status-pill--primary"
-                >
-                  推荐题解
-                </span>
-              </div>
-
-              <form
-                class="writeup-form"
-                @submit.prevent
-              >
-                <div class="field">
-                  <label for="challenge-writeup-title">标题</label>
-                  <div class="ui-control-wrap">
-                    <input
-                      id="challenge-writeup-title"
-                      v-model="writeupTitle"
-                      type="text"
-                      maxlength="256"
-                      placeholder="例如：从回显异常到拿到 flag 的完整链路"
-                      class="ui-control challenge-input"
-                    >
-                  </div>
-                </div>
-
-                <div class="field">
-                  <label for="challenge-writeup-content">正文</label>
-                  <div class="ui-control-wrap writeup-textarea-wrap">
-                    <textarea
-                      id="challenge-writeup-content"
-                      v-model="writeupContent"
-                      rows="10"
-                      placeholder="建议按『题目理解 → 利用过程 → 核心 payload / 证据 → 踩坑点』组织。"
-                      class="ui-control challenge-input writeup-textarea"
-                    />
-                  </div>
-                </div>
-
-                <div class="writeup-foot">
-                  <div class="writeup-footnote">
-                    {{
-                      submissionLoading
-                        ? '正在同步你的题解...'
-                        : myWriteup?.updated_at
-                          ? `最近更新：${formatWriteupTime(myWriteup.updated_at)}`
-                          : '还没有提交记录，可以先保存草稿。'
-                    }}
-                  </div>
-                  <div class="writeup-actions">
-                    <button
-                      type="button"
-                      :disabled="submissionLoading || submissionSaving !== null"
-                      class="ui-btn ui-btn--secondary disabled:cursor-not-allowed disabled:opacity-50"
-                      @click="saveWriteup('draft')"
-                    >
-                      {{ submissionSaving === 'draft' ? '保存中...' : '保存草稿' }}
-                    </button>
-                    <button
-                      type="button"
-                      :disabled="
-                        submissionLoading || submissionSaving !== null || !challenge?.is_solved
-                      "
-                      class="ui-btn ui-btn--primary disabled:cursor-not-allowed disabled:opacity-50"
-                      @click="saveWriteup('published')"
-                    >
-                      {{ submissionSaving === 'published' ? '发布中...' : '发布题解' }}
-                    </button>
-                  </div>
-                </div>
-              </form>
-            </section>
-          </section>
+            :challenge-solved="Boolean(challenge?.is_solved)"
+            :my-writeup="myWriteup"
+            :submission-loading="submissionLoading"
+            :submission-saving="submissionSaving"
+            :writeup-title="writeupTitle"
+            :writeup-content="writeupContent"
+            :format-writeup-time="formatWriteupTime"
+            :submission-status-label="submissionStatusLabel"
+            @update:writeup-title="writeupTitle = $event"
+            @update:writeup-content="writeupContent = $event"
+            @save="saveWriteup"
+          />
         </main>
 
         <aside
@@ -641,8 +479,9 @@ import type {
   CommunityChallengeSolutionData,
   RecommendedChallengeSolutionData,
 } from '@/api/contracts'
-import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
 import ChallengeInstanceCard from '@/components/challenge/ChallengeInstanceCard.vue'
+import ChallengeSubmissionRecordsPanel from '@/components/challenge/ChallengeSubmissionRecordsPanel.vue'
+import ChallengeWriteupPanel from '@/components/challenge/ChallengeWriteupPanel.vue'
 import { useChallengeDetailInteractions } from '@/composables/useChallengeDetailInteractions'
 import {
   useChallengeDetailPresentation,
@@ -754,7 +593,6 @@ const {
   submissionStatusLabel,
   submissionStatusText,
   submissionRecordMessage,
-  visibilityStatusLabel,
   formatWriteupTime,
   formatSubmissionTime,
   getCategoryLabel,
@@ -1031,8 +869,7 @@ watch(
 
 .top-note,
 .section-hint,
-.tool-copy,
-.writeup-footnote {
+.tool-copy {
   font-size: var(--font-size-13);
   line-height: 1.75;
   color: var(--text-faint);
@@ -1138,10 +975,6 @@ watch(
   margin-top: var(--space-4);
 }
 
-.meta-strip--compact {
-  margin-top: 0;
-  margin-bottom: var(--space-4);
-}
 
 .meta-pill,
 .writeup-status-pill,
@@ -1380,60 +1213,19 @@ watch(
   color: var(--journal-warning-ink);
 }
 
-.record-list,
-.submission-records {
-  display: grid;
-  gap: 0;
-  border-top: 1px solid var(--line-soft);
-}
 
-.record-item,
-.submission-record-item {
-  display: grid;
-  grid-template-columns: 120px minmax(0, 1fr) auto;
-  gap: var(--space-4-5);
-  align-items: center;
-  padding: var(--space-4-5) 0;
-  border-bottom: 1px solid var(--line-soft);
-}
 
-.record-time,
-.submission-record-time {
-  color: var(--text-faint);
-  font: 500 13px/1.6 var(--font-mono);
-}
 
-.record-answer,
-.submission-record-answer {
-  min-width: 0;
-  font-family: var(--font-mono);
-  font-size: var(--font-size-13);
-  color: var(--text-subtle);
-  word-break: break-all;
-}
 
-.submission-record-status--correct {
-  background: var(--journal-success-soft);
-  color: var(--journal-success-ink);
-}
 
-.submission-record-status--incorrect,
-.submission-record-status--error {
-  background: var(--journal-danger-soft);
-  color: var(--journal-danger-ink);
-}
 
-.submission-record-status--pending_review {
-  background: var(--journal-warning-soft);
-  color: var(--journal-warning-ink);
-}
 
-.writeup-form {
-  display: grid;
-  gap: var(--space-4);
-}
 
-.field label,
+
+
+
+
+
 .flag-label {
   display: block;
   margin-bottom: var(--space-2);
@@ -1444,43 +1236,17 @@ watch(
   color: var(--text-faint);
 }
 
-.field .ui-control-wrap,
 .flag-input-wrap {
   border-color: var(--line-strong);
   background: var(--bg-panel);
-}
-
-.field .ui-control-wrap:not(.writeup-textarea-wrap),
-.flag-input-wrap {
   --ui-control-height: 3.125rem;
-}
-
-.field .ui-control-wrap > input,
-.writeup-textarea-wrap > textarea {
-  font: 500 14px/1.6 var(--font-sans);
-}
-
-.writeup-textarea-wrap > textarea {
-  min-height: 260px;
-  resize: vertical;
 }
 
 .flag-input-wrap > input {
   font: 500 15px/1 var(--font-mono);
 }
 
-.writeup-foot {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-4);
-}
 
-.writeup-actions {
-  display: flex;
-  gap: var(--space-3);
-  justify-content: flex-end;
-}
 
 .flag-row {
   display: grid;
@@ -1640,10 +1406,7 @@ watch(
   }
 
   .solution-layout,
-  .flag-row,
-  .record-item,
-  .submission-record-item,
-  .writeup-foot {
+  .flag-row {
     grid-template-columns: minmax(0, 1fr);
   }
 
@@ -1652,14 +1415,6 @@ watch(
     border-right: 0;
   }
 
-  .record-item,
-  .submission-record-item {
-    gap: var(--space-2-5);
-  }
-
-  .writeup-actions {
-    flex-direction: column;
-  }
 }
 
 @media (max-width: 767px) {

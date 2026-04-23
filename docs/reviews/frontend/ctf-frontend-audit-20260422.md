@@ -8,7 +8,7 @@
 | 审查范围 | `code/frontend/src` 路由、关键视图、composables、stores、共享样式与验证门禁 |
 | 审查日期 | 2026-04-22 |
 | 审查方式 | 静态代码审查 + 最小验证基线检查 |
-| 审查状态 | 已记录，已完成七轮最小高收益修复 |
+| 审查状态 | 已记录，已完成八轮最小高收益修复 |
 
 ## 当前结论
 
@@ -275,6 +275,25 @@
 
 - 已执行：
   - `npm run test:run -- src/views/platform/__tests__/imageManageModalExtraction.test.ts src/views/platform/__tests__/ImageManage.test.ts`
+  - `npm run typecheck`
+
+## 第八轮修复进展
+
+- 已完成：
+  - `P2-5` `ChallengeDetail.vue` 继续减重，提交记录面板和个人题解面板已抽到独立 `components/challenge` 组件，路由页继续只保留数据装配、分页状态、tab 切换和核心交互。
+  - 与源码结构相关的护栏已改成面向组合源码，避免既有测试继续把 `workspace overline` 语义和面板实现细节硬绑定在单一路由文件上。
+  - `ChallengeDetail.vue` 本体行数已从 `1686` 行降到 `1441` 行，后续再拆 `solution` 面板时切面会更稳定。
+- 本轮涉及文件：
+  - `code/frontend/src/views/challenges/ChallengeDetail.vue`
+  - `code/frontend/src/components/challenge/ChallengeSubmissionRecordsPanel.vue`
+  - `code/frontend/src/components/challenge/ChallengeWriteupPanel.vue`
+  - `code/frontend/src/views/challenges/__tests__/challengeDetailPanelExtraction.test.ts`
+  - `code/frontend/src/views/challenges/__tests__/ChallengeDetail.test.ts`
+
+## 第八轮验证
+
+- 已执行：
+  - `npm run test:run -- src/views/challenges/__tests__/challengeDetailPanelExtraction.test.ts src/views/challenges/__tests__/ChallengeDetail.test.ts`
   - `npm run typecheck`
 
 ## 备注
