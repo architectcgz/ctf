@@ -4,8 +4,8 @@ import (
 	"context"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
-	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	"ctf-platform/internal/module/challenge/domain"
+	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/internal/module/challenge/testsupport"
 	flagcrypto "ctf-platform/pkg/crypto"
@@ -55,13 +55,13 @@ func TestServiceCreateChallengeSuccess(t *testing.T) {
 	service := newTestService(repo, imageRepo)
 
 	resp, err := service.CreateChallenge(1001, &dto.CreateChallengeReq{
-		Title:            "Test Challenge",
-		Description:      "Test",
-		Category:         "web",
-		Difficulty:       "easy",
-		Points:           100,
-		ImageID:          1,
-		InstanceSharing:  model.InstanceSharingPerUser,
+		Title:           "Test Challenge",
+		Description:     "Test",
+		Category:        "web",
+		Difficulty:      "easy",
+		Points:          100,
+		ImageID:         1,
+		InstanceSharing: model.InstanceSharingPerUser,
 	})
 
 	if err != nil {
@@ -289,9 +289,9 @@ func TestServiceDispatchPublishCheckJobsPublishesChallengeAndNotifiesRequester(t
 		PublishCheckBatchSize: 1,
 	}, zap.NewNop(), notifier)
 
-	job, err := service.RequestPublishCheck(context.Background(), teacher.ID, challenge.ID)
+	job, err := service.RequestPublishCheckWithContext(context.Background(), teacher.ID, challenge.ID)
 	if err != nil {
-		t.Fatalf("RequestPublishCheck() error = %v", err)
+		t.Fatalf("RequestPublishCheckWithContext() error = %v", err)
 	}
 	if job.Status != "queued" || !job.Active {
 		t.Fatalf("unexpected requested job status: %s", job.Status)
@@ -307,9 +307,9 @@ func TestServiceDispatchPublishCheckJobsPublishesChallengeAndNotifiesRequester(t
 		t.Fatalf("expected published challenge status, got %s", published.Status)
 	}
 
-	latest, err := service.GetLatestPublishCheck(context.Background(), challenge.ID)
+	latest, err := service.GetLatestPublishCheckWithContext(context.Background(), challenge.ID)
 	if err != nil {
-		t.Fatalf("GetLatestPublishCheck() error = %v", err)
+		t.Fatalf("GetLatestPublishCheckWithContext() error = %v", err)
 	}
 	if latest.Status != "succeeded" || latest.Active {
 		t.Fatalf("expected passed publish check job, got %+v", latest)
@@ -362,8 +362,8 @@ func TestServiceDispatchPublishCheckJobsKeepsDraftOnFailureAndNotifiesRequester(
 		PublishCheckBatchSize: 1,
 	}, zap.NewNop(), notifier)
 
-	if _, err := service.RequestPublishCheck(context.Background(), teacher.ID, challenge.ID); err != nil {
-		t.Fatalf("RequestPublishCheck() error = %v", err)
+	if _, err := service.RequestPublishCheckWithContext(context.Background(), teacher.ID, challenge.ID); err != nil {
+		t.Fatalf("RequestPublishCheckWithContext() error = %v", err)
 	}
 
 	service.dispatchPublishCheckJobs(context.Background())
@@ -376,9 +376,9 @@ func TestServiceDispatchPublishCheckJobsKeepsDraftOnFailureAndNotifiesRequester(
 		t.Fatalf("expected challenge to stay draft, got %s", stored.Status)
 	}
 
-	latest, err := service.GetLatestPublishCheck(context.Background(), challenge.ID)
+	latest, err := service.GetLatestPublishCheckWithContext(context.Background(), challenge.ID)
 	if err != nil {
-		t.Fatalf("GetLatestPublishCheck() error = %v", err)
+		t.Fatalf("GetLatestPublishCheckWithContext() error = %v", err)
 	}
 	if latest.Status != model.ChallengePublishCheckStatusFailed || latest.Active {
 		t.Fatalf("expected failed publish check job, got %+v", latest)
@@ -433,8 +433,8 @@ func TestServiceDispatchPublishCheckJobsPublishesAttachmentOnlyChallenge(t *test
 		PublishCheckBatchSize: 1,
 	}, zap.NewNop(), notifier)
 
-	if _, err := service.RequestPublishCheck(context.Background(), teacher.ID, challenge.ID); err != nil {
-		t.Fatalf("RequestPublishCheck() error = %v", err)
+	if _, err := service.RequestPublishCheckWithContext(context.Background(), teacher.ID, challenge.ID); err != nil {
+		t.Fatalf("RequestPublishCheckWithContext() error = %v", err)
 	}
 
 	service.dispatchPublishCheckJobs(context.Background())
@@ -450,9 +450,9 @@ func TestServiceDispatchPublishCheckJobsPublishesAttachmentOnlyChallenge(t *test
 		t.Fatalf("attachment-only challenge publish check should skip runtime startup")
 	}
 
-	latest, err := service.GetLatestPublishCheck(context.Background(), challenge.ID)
+	latest, err := service.GetLatestPublishCheckWithContext(context.Background(), challenge.ID)
 	if err != nil {
-		t.Fatalf("GetLatestPublishCheck() error = %v", err)
+		t.Fatalf("GetLatestPublishCheckWithContext() error = %v", err)
 	}
 	if latest.Status != "succeeded" || latest.Active {
 		t.Fatalf("expected passed publish check job, got %+v", latest)
@@ -506,7 +506,7 @@ func TestGetLatestPublishCheckIgnoresStaleJobsAfterChallengeUpdate(t *testing.T)
 	imageRepo := challengeinfra.NewImageRepository(db)
 	service := NewChallengeService(db, repo, imageRepo, repo, nil, SelfCheckConfig{}, zap.NewNop())
 
-	latest, err := service.GetLatestPublishCheck(context.Background(), challenge.ID)
+	latest, err := service.GetLatestPublishCheckWithContext(context.Background(), challenge.ID)
 	if err == nil || err.Error() != errcode.ErrNotFound.Error() {
 		t.Fatalf("expected not found for stale publish check job, got latest=%+v err=%v", latest, err)
 	}

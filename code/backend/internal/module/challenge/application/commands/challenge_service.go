@@ -282,7 +282,11 @@ func (s *ChallengeService) PublishChallengeWithContext(ctx context.Context, id i
 	return s.repo.UpdateWithContext(ctx, challenge)
 }
 
-func (s *ChallengeService) RequestPublishCheck(ctx context.Context, actorUserID, id int64) (*dto.ChallengePublishCheckJobResp, error) {
+func (s *ChallengeService) RequestPublishCheck(actorUserID, id int64) (*dto.ChallengePublishCheckJobResp, error) {
+	return s.RequestPublishCheckWithContext(context.Background(), actorUserID, id)
+}
+
+func (s *ChallengeService) RequestPublishCheckWithContext(ctx context.Context, actorUserID, id int64) (*dto.ChallengePublishCheckJobResp, error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -321,7 +325,11 @@ func (s *ChallengeService) RequestPublishCheck(ctx context.Context, actorUserID,
 	return s.buildPublishCheckJobResp(job), nil
 }
 
-func (s *ChallengeService) GetLatestPublishCheck(ctx context.Context, id int64) (*dto.ChallengePublishCheckJobResp, error) {
+func (s *ChallengeService) GetLatestPublishCheck(id int64) (*dto.ChallengePublishCheckJobResp, error) {
+	return s.GetLatestPublishCheckWithContext(context.Background(), id)
+}
+
+func (s *ChallengeService) GetLatestPublishCheckWithContext(ctx context.Context, id int64) (*dto.ChallengePublishCheckJobResp, error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -400,7 +408,7 @@ func (s *ChallengeService) processPublishCheckJob(ctx context.Context, jobID int
 		return
 	}
 
-	resp, err := s.SelfCheckChallenge(ctx, challenge.ID)
+	resp, err := s.SelfCheckChallengeWithContext(ctx, challenge.ID)
 	if err != nil {
 		s.finishPublishCheckJob(ctx, job, nil, false, fmt.Sprintf("执行自检失败: %v", err), challenge)
 		return
@@ -536,7 +544,11 @@ type challengeSelfCheckRuntimeInput struct {
 	skipRuntime     bool
 }
 
-func (s *ChallengeService) SelfCheckChallenge(ctx context.Context, id int64) (*dto.ChallengeSelfCheckResp, error) {
+func (s *ChallengeService) SelfCheckChallenge(id int64) (*dto.ChallengeSelfCheckResp, error) {
+	return s.SelfCheckChallengeWithContext(context.Background(), id)
+}
+
+func (s *ChallengeService) SelfCheckChallengeWithContext(ctx context.Context, id int64) (*dto.ChallengeSelfCheckResp, error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}

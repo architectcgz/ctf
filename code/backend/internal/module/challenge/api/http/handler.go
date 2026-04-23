@@ -29,9 +29,12 @@ type challengeCommandService interface {
 	UpdateChallengeWithContext(ctx context.Context, id int64, req *dto.UpdateChallengeReq) error
 	DeleteChallenge(id int64) error
 	DeleteChallengeWithContext(ctx context.Context, id int64) error
-	RequestPublishCheck(ctx context.Context, actorUserID, id int64) (*dto.ChallengePublishCheckJobResp, error)
-	GetLatestPublishCheck(ctx context.Context, id int64) (*dto.ChallengePublishCheckJobResp, error)
-	SelfCheckChallenge(ctx context.Context, id int64) (*dto.ChallengeSelfCheckResp, error)
+	RequestPublishCheck(actorUserID, id int64) (*dto.ChallengePublishCheckJobResp, error)
+	RequestPublishCheckWithContext(ctx context.Context, actorUserID, id int64) (*dto.ChallengePublishCheckJobResp, error)
+	GetLatestPublishCheck(id int64) (*dto.ChallengePublishCheckJobResp, error)
+	GetLatestPublishCheckWithContext(ctx context.Context, id int64) (*dto.ChallengePublishCheckJobResp, error)
+	SelfCheckChallenge(id int64) (*dto.ChallengeSelfCheckResp, error)
+	SelfCheckChallengeWithContext(ctx context.Context, id int64) (*dto.ChallengeSelfCheckResp, error)
 	PreviewChallengeImport(ctx context.Context, actorUserID int64, fileName string, reader io.Reader) (*dto.ChallengeImportPreviewResp, error)
 	ListChallengeImports(actorUserID int64) ([]dto.ChallengeImportPreviewResp, error)
 	GetChallengeImport(actorUserID int64, id string) (*dto.ChallengeImportPreviewResp, error)
@@ -205,7 +208,7 @@ func (h *Handler) SelfCheckChallenge(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.commands.SelfCheckChallenge(c.Request.Context(), id)
+	resp, err := h.commands.SelfCheckChallengeWithContext(c.Request.Context(), id)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -221,7 +224,7 @@ func (h *Handler) RequestPublishCheck(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.commands.RequestPublishCheck(c.Request.Context(), authctx.MustCurrentUser(c).UserID, id)
+	resp, err := h.commands.RequestPublishCheckWithContext(c.Request.Context(), authctx.MustCurrentUser(c).UserID, id)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -236,7 +239,7 @@ func (h *Handler) GetLatestPublishCheck(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.commands.GetLatestPublishCheck(c.Request.Context(), id)
+	resp, err := h.commands.GetLatestPublishCheckWithContext(c.Request.Context(), id)
 	if err != nil {
 		response.FromError(c, err)
 		return

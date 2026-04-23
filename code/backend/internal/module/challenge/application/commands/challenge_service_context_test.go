@@ -472,9 +472,9 @@ func TestChallengeServiceRequestPublishCheckPropagatesContextToRepositories(t *t
 	service := NewChallengeService(nil, repo, &challengeCommandImageRepoStub{}, &challengeCommandTopologyRepoStub{}, nil, SelfCheckConfig{}, zap.NewNop())
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.RequestPublishCheck(ctx, 1001, 9)
+	resp, err := service.RequestPublishCheckWithContext(ctx, 1001, 9)
 	if err != nil {
-		t.Fatalf("RequestPublishCheck() error = %v", err)
+		t.Fatalf("RequestPublishCheckWithContext() error = %v", err)
 	}
 	if !findCalled || !activeCalled || !createCalled {
 		t.Fatalf("expected repository calls, got find=%v active=%v create=%v", findCalled, activeCalled, createCalled)
@@ -516,9 +516,9 @@ func TestChallengeServiceGetLatestPublishCheckPropagatesContextToRepositories(t 
 	service := NewChallengeService(nil, repo, &challengeCommandImageRepoStub{}, &challengeCommandTopologyRepoStub{}, nil, SelfCheckConfig{}, zap.NewNop())
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.GetLatestPublishCheck(ctx, 9)
+	resp, err := service.GetLatestPublishCheckWithContext(ctx, 9)
 	if err != nil {
-		t.Fatalf("GetLatestPublishCheck() error = %v", err)
+		t.Fatalf("GetLatestPublishCheckWithContext() error = %v", err)
 	}
 	if !findCalled || !latestCalled {
 		t.Fatalf("expected repository calls, got find=%v latest=%v", findCalled, latestCalled)
@@ -597,9 +597,9 @@ func TestChallengeServiceSelfCheckChallengePropagatesContextToRepositories(t *te
 	service := NewChallengeService(nil, repo, imageRepo, topologyRepo, probe, SelfCheckConfig{RuntimeCreateTimeout: time.Second}, zap.NewNop())
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.SelfCheckChallenge(ctx, 9)
+	resp, err := service.SelfCheckChallengeWithContext(ctx, 9)
 	if err != nil {
-		t.Fatalf("SelfCheckChallenge() error = %v", err)
+		t.Fatalf("SelfCheckChallengeWithContext() error = %v", err)
 	}
 	if !findCalled || !imageCalled || !topologyCalled || !createCalled || !cleanupCalled {
 		t.Fatalf("expected calls, got find=%v image=%v topology=%v create=%v cleanup=%v", findCalled, imageCalled, topologyCalled, createCalled, cleanupCalled)
