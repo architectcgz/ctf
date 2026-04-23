@@ -9,7 +9,9 @@ import (
 )
 
 func (s *SubmissionService) handleIncorrectSubmission(ctx context.Context, submission *model.Submission, rateLimitKey string) (*dto.SubmissionResp, error) {
-	_ = s.redis.Set(ctx, rateLimitKey, "1", s.cfg.Contest.SubmissionRateLimitTTL).Err()
+	if err := s.redis.Set(ctx, rateLimitKey, "1", s.cfg.Contest.SubmissionRateLimitTTL).Err(); err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
 	if err := s.repo.CreateSubmission(ctx, submission); err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
