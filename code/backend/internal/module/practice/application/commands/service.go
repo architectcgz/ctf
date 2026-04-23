@@ -1006,6 +1006,9 @@ func ensureManualReviewQuery(query *dto.TeacherManualReviewSubmissionQuery) erro
 	if query == nil {
 		return nil
 	}
+	if query.Size > 100 {
+		return errcode.ErrInvalidParams.WithCause(errors.New("page_size 不能超过 100"))
+	}
 	if query.ReviewStatus == "" ||
 		query.ReviewStatus == model.SubmissionReviewStatusPending ||
 		query.ReviewStatus == model.SubmissionReviewStatusApproved ||
