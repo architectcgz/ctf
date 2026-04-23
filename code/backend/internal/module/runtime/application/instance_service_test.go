@@ -17,6 +17,7 @@ import (
 	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
 	runtimeqry "ctf-platform/internal/module/runtime/application/queries"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
+	runtimeports "ctf-platform/internal/module/runtime/ports"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -24,6 +25,65 @@ type noopRuntimeCleaner struct{}
 
 func (noopRuntimeCleaner) CleanupRuntimeWithContext(context.Context, *model.Instance) error {
 	return nil
+}
+
+type runtimeInstanceContextRepo struct {
+	findByIDWithContextFn                   func(ctx context.Context, id int64) (*model.Instance, error)
+	findByIDFn                              func(id int64) (*model.Instance, error)
+	findUserByIDFn                          func(ctx context.Context, userID int64) (*model.User, error)
+	updateStatusAndReleasePortWithContextFn func(ctx context.Context, id int64, status string) error
+	updateStatusAndReleasePortFn            func(id int64, status string) error
+}
+
+func (r *runtimeInstanceContextRepo) FindByID(id int64) (*model.Instance, error) {
+	if r.findByIDFn != nil {
+		return r.findByIDFn(id)
+	}
+	return nil, nil
+}
+
+func (r *runtimeInstanceContextRepo) FindByIDWithContext(ctx context.Context, id int64) (*model.Instance, error) {
+	if r.findByIDWithContextFn != nil {
+		return r.findByIDWithContextFn(ctx, id)
+	}
+	return r.FindByID(id)
+}
+
+func (r *runtimeInstanceContextRepo) FindUserByID(ctx context.Context, userID int64) (*model.User, error) {
+	if r.findUserByIDFn != nil {
+		return r.findUserByIDFn(ctx, userID)
+	}
+	return nil, nil
+}
+
+func (r *runtimeInstanceContextRepo) FindAccessibleByIDForUser(ctx context.Context, instanceID, userID int64) (*model.Instance, error) {
+	return nil, nil
+}
+
+func (r *runtimeInstanceContextRepo) ListVisibleByUser(ctx context.Context, userID int64) ([]runtimeports.UserVisibleInstanceRow, error) {
+	return nil, nil
+}
+
+func (r *runtimeInstanceContextRepo) ListTeacherInstances(ctx context.Context, filter runtimeports.TeacherInstanceFilter) ([]runtimeports.TeacherInstanceRow, error) {
+	return nil, nil
+}
+
+func (r *runtimeInstanceContextRepo) AtomicExtendByIDWithContext(ctx context.Context, id int64, maxExtends int, duration time.Duration) error {
+	return nil
+}
+
+func (r *runtimeInstanceContextRepo) UpdateStatusAndReleasePort(id int64, status string) error {
+	if r.updateStatusAndReleasePortFn != nil {
+		return r.updateStatusAndReleasePortFn(id, status)
+	}
+	return nil
+}
+
+func (r *runtimeInstanceContextRepo) UpdateStatusAndReleasePortWithContext(ctx context.Context, id int64, status string) error {
+	if r.updateStatusAndReleasePortWithContextFn != nil {
+		return r.updateStatusAndReleasePortWithContextFn(ctx, id, status)
+	}
+	return r.UpdateStatusAndReleasePort(id, status)
 }
 
 func TestInstanceServiceGetUserInstancesShowsContestSharedInstanceToTeamMember(t *testing.T) {
@@ -670,5 +730,57 @@ func seedInstanceServiceInstance(t *testing.T, db *gorm.DB, instance *model.Inst
 	t.Helper()
 	if err := db.Create(instance).Error; err != nil {
 		t.Fatalf("create instance: %v", err)
+	}
+}
+
+type runtimeInstanceContextKey string
+
+func TestInstanceServiceDestroyTeacherInstancePropagatesContextToRepository(t *testing.T) {
+	t.Parallel()
+
+	ctxKey := runtimeInstanceContextKey("destroy-teacher")
+	expectedCtxValue := "ctx-destroy-teacher"
+	findByIDCalled := false
+	findRequesterCalled := false
+	findOwnerCalled := false
+	updateCalled := false
+	repo := &runtimeInstanceContextRepo{
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Instance, error) {
+			findByIDCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected find-by-id ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return &model.Instance{ID: id, UserID: 2, Status: model.InstanceStatusRunning}, nil
+		},
+		findUserByIDFn: func(ctx context.Context, userID int64) (*model.User, error) {
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected find-user ctx value %v, got %v", expectedCtxValue, got)
+			}
+			if userID == 1001 {
+				findRequesterCalled = true
+				return &model.User{ID: userID, Role: model.RoleTeacher, ClassName: "Class A"}, nil
+			}
+			findOwnerCalled = true
+			return &model.User{ID: userID, Role: model.RoleStudent, ClassName: "Class A"}, nil
+		},
+		updateStatusAndReleasePortWithContextFn: func(ctx context.Context, id int64, status string) error {
+			updateCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected update ctx value %v, got %v", expectedCtxValue, got)
+			}
+			if id != 201 || status != model.InstanceStatusStopped {
+				t.Fatalf("unexpected update args: id=%d status=%s", id, status)
+			}
+			return nil
+		},
+	}
+	service := runtimecmd.NewInstanceService(repo, noopRuntimeCleaner{}, &config.ContainerConfig{}, nil)
+
+	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
+	if err := service.DestroyTeacherInstance(ctx, 201, 1001, model.RoleTeacher); err != nil {
+		t.Fatalf("DestroyTeacherInstance() error = %v", err)
+	}
+	if !findByIDCalled || !findRequesterCalled || !findOwnerCalled || !updateCalled {
+		t.Fatalf("expected all repository calls to happen, got findByID=%v requester=%v owner=%v update=%v", findByIDCalled, findRequesterCalled, findOwnerCalled, updateCalled)
 	}
 }
