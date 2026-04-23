@@ -18,7 +18,9 @@ type WriteupHandler struct {
 
 type writeupCommandService interface {
 	Upsert(challengeID, actorUserID int64, req *dto.UpsertChallengeWriteupReq) (*dto.AdminChallengeWriteupResp, error)
+	UpsertWithContext(ctx context.Context, challengeID, actorUserID int64, req *dto.UpsertChallengeWriteupReq) (*dto.AdminChallengeWriteupResp, error)
 	UpsertSubmission(challengeID, actorUserID int64, req *dto.UpsertSubmissionWriteupReq) (*dto.SubmissionWriteupResp, error)
+	UpsertSubmissionWithContext(ctx context.Context, challengeID, actorUserID int64, req *dto.UpsertSubmissionWriteupReq) (*dto.SubmissionWriteupResp, error)
 	RecommendOfficial(challengeID, actorUserID int64) (*dto.AdminChallengeWriteupResp, error)
 	UnrecommendOfficial(challengeID, actorUserID int64) (*dto.AdminChallengeWriteupResp, error)
 	RecommendCommunity(submissionID, requesterID int64, requesterRole string) (*dto.SubmissionWriteupResp, error)
@@ -26,6 +28,7 @@ type writeupCommandService interface {
 	HideCommunity(submissionID, requesterID int64, requesterRole string) (*dto.SubmissionWriteupResp, error)
 	RestoreCommunity(submissionID, requesterID int64, requesterRole string) (*dto.SubmissionWriteupResp, error)
 	Delete(challengeID int64) error
+	DeleteWithContext(ctx context.Context, challengeID int64) error
 }
 
 type writeupQueryService interface {
@@ -60,7 +63,7 @@ func (h *WriteupHandler) Upsert(c *gin.Context) {
 		response.ValidationError(c, err)
 		return
 	}
-	resp, err := h.commands.Upsert(challengeID, authctx.MustCurrentUser(c).UserID, &req)
+	resp, err := h.commands.UpsertWithContext(c.Request.Context(), challengeID, authctx.MustCurrentUser(c).UserID, &req)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -88,7 +91,7 @@ func (h *WriteupHandler) Delete(c *gin.Context) {
 		response.InvalidParams(c, "无效的 challenge id")
 		return
 	}
-	if err := h.commands.Delete(challengeID); err != nil {
+	if err := h.commands.DeleteWithContext(c.Request.Context(), challengeID); err != nil {
 		response.FromError(c, err)
 		return
 	}
@@ -148,7 +151,7 @@ func (h *WriteupHandler) UpsertSubmission(c *gin.Context) {
 		response.ValidationError(c, err)
 		return
 	}
-	resp, err := h.commands.UpsertSubmission(challengeID, authctx.MustCurrentUser(c).UserID, &req)
+	resp, err := h.commands.UpsertSubmissionWithContext(c.Request.Context(), challengeID, authctx.MustCurrentUser(c).UserID, &req)
 	if err != nil {
 		response.FromError(c, err)
 		return

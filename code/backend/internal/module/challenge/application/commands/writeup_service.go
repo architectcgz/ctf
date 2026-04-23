@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"context"
 	"errors"
 	"strings"
 	"time"
@@ -23,14 +24,21 @@ func NewWriteupService(repo challengeports.ChallengeWriteupRepository) *WriteupS
 }
 
 func (s *WriteupService) Upsert(challengeID, actorUserID int64, req *dto.UpsertChallengeWriteupReq) (*dto.AdminChallengeWriteupResp, error) {
-	if _, err := s.repo.FindByID(challengeID); err != nil {
+	return s.UpsertWithContext(context.Background(), challengeID, actorUserID, req)
+}
+
+func (s *WriteupService) UpsertWithContext(ctx context.Context, challengeID, actorUserID int64, req *dto.UpsertChallengeWriteupReq) (*dto.AdminChallengeWriteupResp, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	if _, err := s.repo.FindByIDWithContext(ctx, challengeID); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrChallengeNotFound
 		}
 		return nil, err
 	}
 
-	existing, err := s.repo.FindWriteupByChallengeID(challengeID)
+	existing, err := s.repo.FindWriteupByChallengeIDWithContext(ctx, challengeID)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, err
 	}
@@ -50,10 +58,10 @@ func (s *WriteupService) Upsert(challengeID, actorUserID int64, req *dto.UpsertC
 		writeup.RecommendedAt = existing.RecommendedAt
 		writeup.RecommendedBy = existing.RecommendedBy
 	}
-	if err := s.repo.UpsertWriteup(writeup); err != nil {
+	if err := s.repo.UpsertWriteupWithContext(ctx, writeup); err != nil {
 		return nil, err
 	}
-	item, err := s.repo.FindWriteupByChallengeID(challengeID)
+	item, err := s.repo.FindWriteupByChallengeIDWithContext(ctx, challengeID)
 	if err != nil {
 		return nil, err
 	}
@@ -61,17 +69,31 @@ func (s *WriteupService) Upsert(challengeID, actorUserID int64, req *dto.UpsertC
 }
 
 func (s *WriteupService) Delete(challengeID int64) error {
-	if _, err := s.repo.FindByID(challengeID); err != nil {
+	return s.DeleteWithContext(context.Background(), challengeID)
+}
+
+func (s *WriteupService) DeleteWithContext(ctx context.Context, challengeID int64) error {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	if _, err := s.repo.FindByIDWithContext(ctx, challengeID); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return errcode.ErrChallengeNotFound
 		}
 		return err
 	}
-	return s.repo.DeleteWriteupByChallengeID(challengeID)
+	return s.repo.DeleteWriteupByChallengeIDWithContext(ctx, challengeID)
 }
 
 func (s *WriteupService) UpsertSubmission(challengeID, actorUserID int64, req *dto.UpsertSubmissionWriteupReq) (*dto.SubmissionWriteupResp, error) {
-	challengeItem, err := s.repo.FindByID(challengeID)
+	return s.UpsertSubmissionWithContext(context.Background(), challengeID, actorUserID, req)
+}
+
+func (s *WriteupService) UpsertSubmissionWithContext(ctx context.Context, challengeID, actorUserID int64, req *dto.UpsertSubmissionWriteupReq) (*dto.SubmissionWriteupResp, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	challengeItem, err := s.repo.FindByIDWithContext(ctx, challengeID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrChallengeNotFound
@@ -86,12 +108,12 @@ func (s *WriteupService) UpsertSubmission(challengeID, actorUserID int64, req *d
 	submissionStatus := req.SubmissionStatus
 	var publishedAt *time.Time
 
-	existing, err := s.repo.FindSubmissionWriteupByUserChallenge(actorUserID, challengeID)
+	existing, err := s.repo.FindSubmissionWriteupByUserChallengeWithContext(ctx, actorUserID, challengeID)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, err
 	}
 	if submissionStatus == model.SubmissionWriteupStatusPublished {
-		isSolved, solveErr := s.repo.GetSolvedStatus(actorUserID, challengeID)
+		isSolved, solveErr := s.repo.GetSolvedStatusWithContext(ctx, actorUserID, challengeID)
 		if solveErr != nil {
 			return nil, solveErr
 		}
@@ -128,10 +150,10 @@ func (s *WriteupService) UpsertSubmission(challengeID, actorUserID int64, req *d
 		writeup.PublishedAt = nil
 	}
 
-	if err := s.repo.UpsertSubmissionWriteup(writeup); err != nil {
+	if err := s.repo.UpsertSubmissionWriteupWithContext(ctx, writeup); err != nil {
 		return nil, err
 	}
-	item, err := s.repo.FindSubmissionWriteupByUserChallenge(actorUserID, challengeID)
+	item, err := s.repo.FindSubmissionWriteupByUserChallengeWithContext(ctx, actorUserID, challengeID)
 	if err != nil {
 		return nil, err
 	}
