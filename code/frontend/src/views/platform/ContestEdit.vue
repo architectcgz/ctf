@@ -476,7 +476,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="contest-studio-shell">
+  <div class="workspace-shell journal-shell journal-shell-admin journal-notes-card journal-hero contest-studio-shell">
     <div
       v-if="loading"
       class="studio-loading-overlay"
@@ -485,26 +485,31 @@ onMounted(() => {
     </div>
 
     <main class="studio-content">
-      <header
-        v-if="contest"
-        class="studio-topbar"
-      >
-        <div class="studio-topbar-left">
+      <div class="workspace-topbar">
+        <header
+          v-if="contest"
+          class="studio-topbar"
+        >
+          <div class="studio-topbar-left">
           <button
-            class="studio-back-btn"
-            title="退出工作室"
+            type="button"
+            class="ui-btn ui-btn--ghost studio-back-btn"
+            title="返回竞赛目录"
             @click="goBackToContestList"
           >
             <ChevronLeft class="h-5 w-5" />
+            返回竞赛目录
           </button>
-          
-          <div class="studio-title-group">
-            <h1
-              class="studio-contest-title"
+
+          <div class="workspace-topbar__main studio-title-group">
+            <div class="workspace-overline">Contest Editor</div>
+            <h1 class="workspace-page-title">编辑竞赛</h1>
+            <p
+              class="workspace-page-copy studio-contest-title"
               :title="pageTitle"
             >
               {{ pageTitle }}
-            </h1>
+            </p>
             <div class="studio-contest-meta">
               <span
                 class="meta-tag"
@@ -523,7 +528,7 @@ onMounted(() => {
           <button
             id="contest-open-announcements"
             type="button"
-            class="studio-toolbar-btn"
+            class="ui-btn ui-btn--ghost studio-toolbar-btn"
             @click="goToContestAnnouncements"
           >
             <Bell class="h-4 w-4" />
@@ -532,15 +537,16 @@ onMounted(() => {
           <button
             v-if="activeStage === 'basics'"
             type="button"
-            class="studio-save-btn"
+            class="ui-btn ui-btn--primary studio-save-btn"
             :disabled="saving"
             @click="() => (formDraft && handleSave(formDraft))"
           >
             <Save class="h-4 w-4" />
             <span>{{ saving ? '正在保存...' : '保存变更' }}</span>
           </button>
-        </div>
-      </header>
+          </div>
+        </header>
+      </div>
 
       <!-- Horizontal Stage Navigation -->
       <ContestWorkbenchStageTabs
@@ -571,23 +577,25 @@ onMounted(() => {
 
           <template v-else-if="formDraft && contest">
             <!-- 基础配置 -->
-            <div
-              v-if="activeStage === 'basics'"
-              class="studio-pane studio-pane--full fade-in"
-            >
-              <div class="studio-form-canvas">
-                <PlatformContestFormPanel
-                  :mode="'edit'"
-                  :draft="formDraft"
-                  :saving="saving"
-                  :status-options="statusOptions"
-                  :field-locks="fieldLocks"
-                  :show-cancel="false"
-                  @update:draft="handleDraftChange"
-                  @save="handleSave"
-                />
+            <section class="workspace-directory-section contest-edit-section">
+              <div
+                v-if="activeStage === 'basics'"
+                class="studio-pane studio-pane--full fade-in"
+              >
+                <div class="studio-form-canvas">
+                  <PlatformContestFormPanel
+                    :mode="'edit'"
+                    :draft="formDraft"
+                    :saving="saving"
+                    :status-options="statusOptions"
+                    :field-locks="fieldLocks"
+                    :show-cancel="false"
+                    @update:draft="handleDraftChange"
+                    @save="handleSave"
+                  />
+                </div>
               </div>
-            </div>
+            </section>
 
             <!-- 题目编排 -->
             <div

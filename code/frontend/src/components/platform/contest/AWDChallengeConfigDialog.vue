@@ -10,7 +10,7 @@ import type {
   AWDCheckerType,
   AWDTeamServiceData,
 } from '@/api/contracts'
-import SlideOverDrawer from '@/components/common/modal-templates/SlideOverDrawer.vue'
+import AdminSurfaceModal from '@/components/common/modal-templates/AdminSurfaceModal.vue'
 import {
   extractAwdRuntimeImageRef,
   formatAwdPreviewRuntimeError,
@@ -836,7 +836,7 @@ function handleSubmit() {
 </script>
 
 <template>
-  <SlideOverDrawer
+  <AdminSurfaceModal
     :open="open"
     :title="dialogTitle"
     :subtitle="
@@ -1678,7 +1678,7 @@ function handleSubmit() {
         </button>
       </div>
     </template>
-  </SlideOverDrawer>
+  </AdminSurfaceModal>
 </template>
 
 <style scoped>

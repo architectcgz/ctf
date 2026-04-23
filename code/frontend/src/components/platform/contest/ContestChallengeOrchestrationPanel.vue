@@ -33,6 +33,7 @@ import { useToast } from '@/composables/useToast'
 import { mapPlatformContestAwdServicesToChallengeLinks } from '@/utils/platformContestAwdChallengeLinks'
 
 import ContestChallengeEditorDialog from './ContestChallengeEditorDialog.vue'
+import ContestChallengeSummaryStrip from './ContestChallengeSummaryStrip.vue'
 
 const props = defineProps<{
   contestId: string
@@ -346,7 +347,7 @@ onMounted(() => {
       <div class="header-actions">
         <button
           type="button"
-          class="ops-btn ops-btn--neutral"
+          class="ui-btn ui-btn--ghost"
           @click="refresh"
         >
           <RefreshCw
@@ -358,7 +359,7 @@ onMounted(() => {
         <button
           id="contest-challenge-add"
           type="button"
-          class="ops-btn ops-btn--primary"
+          class="ui-btn ui-btn--primary"
           @click="openCreateDialog"
         >
           <Plus class="h-3.5 w-3.5" />
@@ -367,19 +368,10 @@ onMounted(() => {
       </div>
     </header>
 
-    <div
+    <ContestChallengeSummaryStrip
       v-if="summaryItems.length > 0"
-      class="studio-metric-band"
-    >
-      <div
-        v-for="item in summaryItems"
-        :key="item.key"
-        class="metric-pill"
-      >
-        <span class="metric-pill__label">{{ item.label }}</span>
-        <span class="metric-pill__value">{{ item.value }}</span>
-      </div>
-    </div>
+      :summary-items="summaryItems"
+    />
 
     <div class="studio-directory-canvas">
       <AppEmpty
@@ -392,7 +384,7 @@ onMounted(() => {
         <template #action>
           <button
             type="button"
-            class="ops-btn ops-btn--neutral"
+            class="ui-btn ui-btn--ghost"
             @click="refresh"
           >
             重试
@@ -519,7 +511,8 @@ onMounted(() => {
                   </td>
                 </template>
                 <td class="col-actions">
-                  <CActionMenu
+                  <div class="ui-row-actions contest-challenge-row__actions">
+                    <CActionMenu
                     :open="openActionMenuId === challenge.id"
                     @update:open="setActionMenuOpen(challenge.id, $event)"
                   >
@@ -527,7 +520,7 @@ onMounted(() => {
                       <button
                         :id="`contest-challenge-actions-${challenge.challenge_id}`"
                         :ref="setTriggerRef"
-                        class="action-trigger"
+                        class="c-action-menu__trigger c-action-menu__trigger--icon"
                         @click.stop="toggle"
                       >
                         <MoreHorizontal class="h-4 w-4" />
@@ -537,14 +530,14 @@ onMounted(() => {
                       <button
                         v-if="isAwdContest"
                         :id="`contest-challenge-open-awd-config-${challenge.challenge_id}`"
-                        class="menu-item"
+                        class="c-action-menu__item"
                         @click="handleOpenAwdConfig(challenge, close)"
                       >
                         <Zap class="h-3.5 w-3.5 mr-2" /> 补 AWD 配置
                       </button>
                       <button
                         :id="`contest-challenge-edit-${challenge.challenge_id}`"
-                        class="menu-item"
+                        class="c-action-menu__item"
                         @click="handleOpenEditDialog(challenge, close)"
                       >
                         <Edit class="h-3.5 w-3.5 mr-2" /> 属性修改
@@ -552,13 +545,14 @@ onMounted(() => {
                       <div class="menu-divider" />
                       <button
                         :id="`contest-challenge-remove-${challenge.challenge_id}`"
-                        class="menu-item danger"
+                        class="c-action-menu__item c-action-menu__item--danger"
                         @click="handleRemoveFromMenu(challenge, close)"
                       >
                         <Trash class="h-3.5 w-3.5 mr-2" /> 移除题目
                       </button>
                     </template>
-                  </CActionMenu>
+                    </CActionMenu>
+                  </div>
                 </td>
               </tr>
             </tbody>

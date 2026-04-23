@@ -80,19 +80,26 @@ function formatDateTime(value?: string): string {
 
 <template>
   <div class="studio-readiness-flow">
-    <!-- 1. Global Metric Band -->
+    <header class="list-heading readiness-decision__head">
+      <div>
+        <div class="workspace-overline">AWD Readiness</div>
+        <h2 class="list-heading__title">就绪决策</h2>
+      </div>
+    </header>
+
     <div
       v-if="readiness"
-      class="studio-metric-band"
+      class="progress-strip metric-panel-grid metric-panel-default-surface readiness-summary-grid"
     >
-      <div
+      <article
         v-for="item in summaryItems"
         :key="item.key"
-        class="metric-pill"
+        class="journal-note progress-card metric-panel-card"
       >
-        <span class="metric-pill__label">{{ item.label }}</span>
-        <span class="metric-pill__value">{{ item.value }}</span>
-      </div>
+        <div class="journal-note-label progress-card-label metric-panel-label">{{ item.label }}</div>
+        <div class="journal-note-value progress-card-value metric-panel-value">{{ item.value }}</div>
+        <div class="journal-note-helper progress-card-hint metric-panel-helper">题目就绪统计概览</div>
+      </article>
     </div>
 
     <!-- 2. Global Blockers -->
@@ -100,10 +107,11 @@ function formatDateTime(value?: string): string {
       v-if="hasGlobalBlockingReasons"
       class="global-blockers"
     >
-      <header class="section-header">
-        <h3 class="section-title">
-          系统级阻塞项
-        </h3>
+      <header class="list-heading">
+        <div>
+          <div class="journal-note-label">Global Blocking</div>
+          <h3 class="list-heading__title">系统级阻塞</h3>
+        </div>
       </header>
       <div class="blocker-list">
         <div
@@ -119,10 +127,11 @@ function formatDateTime(value?: string): string {
 
     <!-- 3. Challenge Blockers Directory -->
     <section class="challenge-blockers">
-      <header class="directory-header">
-        <h3 class="directory-title">
-          题目级就绪明细
-        </h3>
+      <header class="list-heading">
+        <div>
+          <div class="journal-note-label">Blocking Shortlist</div>
+          <h3 class="list-heading__title">阻塞短名单</h3>
+        </div>
         <div class="directory-meta">
           发现 {{ readiness?.blocking_count ?? 0 }} 个阻塞点
         </div>
@@ -178,7 +187,7 @@ function formatDateTime(value?: string): string {
               </td>
               <td class="col-status">
                 <span
-                  class="status-pill"
+                  class="ui-badge readiness-status-chip"
                   :class="item.validation_state"
                 >{{ getValidationStateLabel(item) }}</span>
               </td>
@@ -191,13 +200,15 @@ function formatDateTime(value?: string): string {
                 {{ formatDateTime(item.last_preview_at) }}
               </td>
               <td class="col-actions">
-                <button
+                <div class="ui-row-actions readiness-row__actions">
+                  <button
                   :id="`awd-readiness-edit-${item.challenge_id}`"
-                  class="action-btn"
+                  class="ui-btn ui-btn--sm ui-btn--secondary"
                   @click="emit('editConfig', item.challenge_id)"
                 >
                   {{ props.actionLabel }}
-                </button>
+                  </button>
+                </div>
               </td>
             </tr>
           </tbody>

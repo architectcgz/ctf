@@ -187,6 +187,7 @@ function isActiveChallenge(item: AdminContestChallengeViewData): boolean {
     <!-- 1. Header with Global Metrics -->
     <header class="studio-pane-header">
       <div class="header-main">
+        <div class="workspace-overline">AWD Service Config</div>
         <h1 class="pane-title">
           AWD 服务配置
         </h1>
@@ -195,40 +196,56 @@ function isActiveChallenge(item: AdminContestChallengeViewData): boolean {
         </p>
       </div>
 
-      <div class="studio-metric-band">
-        <div
+      <div class="progress-strip metric-panel-grid metric-panel-default-surface">
+        <article
           v-for="item in summaryItems"
           :key="item.key"
-          class="metric-pill"
+          class="journal-note progress-card metric-panel-card"
         >
-          <span class="metric-pill__label">{{ item.label }}</span>
-          <span class="metric-pill__value">{{ item.value }}</span>
-        </div>
+          <div class="journal-note-label progress-card-label metric-panel-label">{{ item.label }}</div>
+          <div class="journal-note-value progress-card-value metric-panel-value">{{ item.value }}</div>
+          <div class="journal-note-helper progress-card-hint metric-panel-helper">{{ item.hint }}</div>
+        </article>
       </div>
     </header>
 
     <!-- 3. Challenge Asset Directory -->
-    <section class="studio-asset-directory">
-      <header class="directory-header">
-        <h3 class="directory-title">
-          服务资源清单
-        </h3>
+    <section class="workspace-directory-section">
+      <header class="list-heading">
+        <div>
+          <div class="journal-note-label">Challenge Directory</div>
+          <h3 class="list-heading__title">题目目录</h3>
+        </div>
         <button
           id="awd-challenge-config-create"
-          class="ops-btn ops-btn--primary"
+          class="ui-btn ui-btn--primary"
           @click="emit('create')"
         >
           <Plus class="h-3.5 w-3.5" /> 关联新资源
         </button>
       </header>
 
-      <div
+      <section
         v-if="activeChallenge"
-        class="active-edit-banner"
+        class="config-focus-card"
       >
-        <span class="active-edit-banner__label">正在编辑</span>
-        <strong>{{ getChallengeTitle(activeChallenge) }}</strong>
-      </div>
+        <header class="list-heading config-focus-card__head">
+          <div>
+            <div class="journal-note-label">Current Focus</div>
+            <h3 class="list-heading__title">当前焦点题目</h3>
+          </div>
+          <div class="ui-row-actions config-row__actions">
+            <button type="button" class="ui-btn ui-btn--secondary" :disabled="!canNavigatePrevious" @click="emit('previous')">上一题</button>
+            <button type="button" class="ui-btn ui-btn--secondary" :disabled="!canNavigateNext" @click="emit('next')">下一题</button>
+            <button type="button" class="ui-btn ui-btn--primary" @click="emit('edit', activeChallenge)">编辑配置</button>
+          </div>
+        </header>
+        <div class="config-focus-card__body">
+          <span class="active-edit-banner__label">正在编辑</span>
+          <strong>{{ getChallengeTitle(activeChallenge) }}</strong>
+          <span class="config-focus-card__hint">{{ getValidationHint(activeChallenge) }}</span>
+        </div>
+      </section>
 
       <AppEmpty
         v-if="sortedChallengeLinks.length === 0"
