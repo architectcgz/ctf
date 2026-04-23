@@ -10,11 +10,16 @@ import (
 
 type ChallengeCommandRepository interface {
 	CreateWithHints(challenge *model.Challenge, hints []*model.ChallengeHint) error
+	CreateWithHintsWithContext(ctx context.Context, challenge *model.Challenge, hints []*model.ChallengeHint) error
 	FindByID(id int64) (*model.Challenge, error)
+	FindByIDWithContext(ctx context.Context, id int64) (*model.Challenge, error)
 	Update(challenge *model.Challenge) error
 	UpdateWithHints(challenge *model.Challenge, hints []*model.ChallengeHint, replaceHints bool) error
+	UpdateWithHintsWithContext(ctx context.Context, challenge *model.Challenge, hints []*model.ChallengeHint, replaceHints bool) error
 	Delete(id int64) error
+	DeleteWithContext(ctx context.Context, id int64) error
 	HasRunningInstances(challengeID int64) (bool, error)
+	HasRunningInstancesWithContext(ctx context.Context, challengeID int64) (bool, error)
 	CreatePublishCheckJob(ctx context.Context, job *model.ChallengePublishCheckJob) error
 	FindPublishCheckJobByID(ctx context.Context, id int64) (*model.ChallengePublishCheckJob, error)
 	FindActivePublishCheckJobByChallengeID(ctx context.Context, challengeID int64) (*model.ChallengePublishCheckJob, error)

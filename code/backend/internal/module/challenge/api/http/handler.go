@@ -24,8 +24,11 @@ type Handler struct {
 
 type challengeCommandService interface {
 	CreateChallenge(actorUserID int64, req *dto.CreateChallengeReq) (*dto.ChallengeResp, error)
+	CreateChallengeWithContext(ctx context.Context, actorUserID int64, req *dto.CreateChallengeReq) (*dto.ChallengeResp, error)
 	UpdateChallenge(id int64, req *dto.UpdateChallengeReq) error
+	UpdateChallengeWithContext(ctx context.Context, id int64, req *dto.UpdateChallengeReq) error
 	DeleteChallenge(id int64) error
+	DeleteChallengeWithContext(ctx context.Context, id int64) error
 	RequestPublishCheck(ctx context.Context, actorUserID, id int64) (*dto.ChallengePublishCheckJobResp, error)
 	GetLatestPublishCheck(ctx context.Context, id int64) (*dto.ChallengePublishCheckJobResp, error)
 	SelfCheckChallenge(ctx context.Context, id int64) (*dto.ChallengeSelfCheckResp, error)
@@ -53,7 +56,7 @@ func (h *Handler) CreateChallenge(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.commands.CreateChallenge(authctx.MustCurrentUser(c).UserID, &req)
+	resp, err := h.commands.CreateChallengeWithContext(c.Request.Context(), authctx.MustCurrentUser(c).UserID, &req)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -75,7 +78,7 @@ func (h *Handler) UpdateChallenge(c *gin.Context) {
 		return
 	}
 
-	if err := h.commands.UpdateChallenge(id, &req); err != nil {
+	if err := h.commands.UpdateChallengeWithContext(c.Request.Context(), id, &req); err != nil {
 		response.FromError(c, err)
 		return
 	}
@@ -90,7 +93,7 @@ func (h *Handler) DeleteChallenge(c *gin.Context) {
 		return
 	}
 
-	if err := h.commands.DeleteChallenge(id); err != nil {
+	if err := h.commands.DeleteChallengeWithContext(c.Request.Context(), id); err != nil {
 		response.FromError(c, err)
 		return
 	}

@@ -41,7 +41,11 @@ func (r *Repository) Create(challenge *model.Challenge) error {
 }
 
 func (r *Repository) CreateWithHints(challenge *model.Challenge, hints []*model.ChallengeHint) error {
-	return r.db.Transaction(func(tx *gorm.DB) error {
+	return r.CreateWithHintsWithContext(context.Background(), challenge, hints)
+}
+
+func (r *Repository) CreateWithHintsWithContext(ctx context.Context, challenge *model.Challenge, hints []*model.ChallengeHint) error {
+	return r.dbWithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		if err := tx.Create(challenge).Error; err != nil {
 			return err
 		}
@@ -74,7 +78,11 @@ func (r *Repository) UpdateWithContext(ctx context.Context, challenge *model.Cha
 }
 
 func (r *Repository) UpdateWithHints(challenge *model.Challenge, hints []*model.ChallengeHint, replaceHints bool) error {
-	return r.db.Transaction(func(tx *gorm.DB) error {
+	return r.UpdateWithHintsWithContext(context.Background(), challenge, hints, replaceHints)
+}
+
+func (r *Repository) UpdateWithHintsWithContext(ctx context.Context, challenge *model.Challenge, hints []*model.ChallengeHint, replaceHints bool) error {
+	return r.dbWithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		if err := tx.Save(challenge).Error; err != nil {
 			return err
 		}
@@ -95,7 +103,11 @@ func (r *Repository) UpdateWithHints(challenge *model.Challenge, hints []*model.
 }
 
 func (r *Repository) Delete(id int64) error {
-	return r.db.Delete(&model.Challenge{}, id).Error
+	return r.DeleteWithContext(context.Background(), id)
+}
+
+func (r *Repository) DeleteWithContext(ctx context.Context, id int64) error {
+	return r.dbWithContext(ctx).Delete(&model.Challenge{}, id).Error
 }
 
 func (r *Repository) CreateAWDServiceTemplate(template *model.AWDServiceTemplate) error {
@@ -198,8 +210,12 @@ func (r *Repository) ListWithContext(ctx context.Context, query *dto.ChallengeQu
 }
 
 func (r *Repository) HasRunningInstances(challengeID int64) (bool, error) {
+	return r.HasRunningInstancesWithContext(context.Background(), challengeID)
+}
+
+func (r *Repository) HasRunningInstancesWithContext(ctx context.Context, challengeID int64) (bool, error) {
 	var count int64
-	err := r.db.Model(&model.Instance{}).
+	err := r.dbWithContext(ctx).Model(&model.Instance{}).
 		Where("challenge_id = ? AND status IN (?)", challengeID, []string{"creating", "running"}).
 		Count(&count).Error
 	return count > 0, err
