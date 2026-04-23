@@ -5,6 +5,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import ContestDetail from '../ContestDetail.vue'
 import contestDetailSource from '../ContestDetail.vue?raw'
 import contestOverviewPanelSource from '@/components/contests/ContestOverviewPanel.vue?raw'
+import contestChallengeWorkspacePanelSource from '@/components/contests/ContestChallengeWorkspacePanel.vue?raw'
 import { useAuthStore } from '@/stores/auth'
 
 const contestApiMocks = vi.hoisted(() => ({
@@ -1394,11 +1395,13 @@ describe('ContestDetail', () => {
   })
 
   it('竞赛详情剩余局部 kicker 也应统一到 workspace overline 语义', () => {
-    expect(contestDetailSource).toMatch(/<div class="workspace-overline">\s*Selected\s*<\/div>/)
-    expect(contestDetailSource).toMatch(/<div class="workspace-overline">\s*Primary Action\s*<\/div>/)
+    const combinedSource = [contestDetailSource, contestChallengeWorkspacePanelSource].join('\n')
+
+    expect(combinedSource).toMatch(/<div class="workspace-overline">\s*Selected\s*<\/div>/)
+    expect(combinedSource).toMatch(/<div class="workspace-overline">\s*Primary Action\s*<\/div>/)
     expect(contestDetailSource).toMatch(/<div class="workspace-overline">\s*Current Team\s*<\/div>/)
-    expect(contestDetailSource).not.toContain('<div class="contest-overline">Selected</div>')
-    expect(contestDetailSource).not.toContain('<div class="contest-overline">Primary Action</div>')
+    expect(combinedSource).not.toContain('<div class="contest-overline">Selected</div>')
+    expect(combinedSource).not.toContain('<div class="contest-overline">Primary Action</div>')
     expect(contestDetailSource).not.toContain('<div class="contest-overline">Current Team</div>')
     expect(contestDetailSource).not.toMatch(/^\.contest-overline\s*\{/m)
   })
