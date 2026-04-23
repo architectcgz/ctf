@@ -23,7 +23,7 @@ postgres:
   port: 5432
   database: ctf
   username: postgres
-  password: postgres123456
+  password: "" # 通过 CTF_POSTGRES_PASSWORD 注入
   ssl_mode: disable
   max_open_conns: 20
   max_idle_conns: 10
@@ -31,7 +31,7 @@ postgres:
 
 redis:
   addr: 127.0.0.1:6379
-  password: redis123456
+  password: "" # 通过 CTF_REDIS_PASSWORD 注入
   db: 2
   dial_timeout: 5s
   read_timeout: 3s
