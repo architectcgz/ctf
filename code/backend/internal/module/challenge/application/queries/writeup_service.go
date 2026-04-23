@@ -47,7 +47,14 @@ func (s *WriteupService) GetAdminWithContext(ctx context.Context, challengeID in
 }
 
 func (s *WriteupService) GetPublished(userID, challengeID int64) (*dto.ChallengeWriteupResp, error) {
-	challengeItem, err := s.repo.FindByID(challengeID)
+	return s.GetPublishedWithContext(context.Background(), userID, challengeID)
+}
+
+func (s *WriteupService) GetPublishedWithContext(ctx context.Context, userID, challengeID int64) (*dto.ChallengeWriteupResp, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	challengeItem, err := s.repo.FindByIDWithContext(ctx, challengeID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrChallengeNotFound
@@ -58,7 +65,7 @@ func (s *WriteupService) GetPublished(userID, challengeID int64) (*dto.Challenge
 		return nil, errcode.ErrChallengeNotPublish
 	}
 
-	item, err := s.repo.FindReleasedWriteupByChallengeID(challengeID, time.Now())
+	item, err := s.repo.FindReleasedWriteupByChallengeIDWithContext(ctx, challengeID, time.Now())
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrNotFound
@@ -66,7 +73,7 @@ func (s *WriteupService) GetPublished(userID, challengeID int64) (*dto.Challenge
 		return nil, err
 	}
 
-	isSolved, err := s.repo.GetSolvedStatus(userID, challengeID)
+	isSolved, err := s.repo.GetSolvedStatusWithContext(ctx, userID, challengeID)
 	if err != nil {
 		isSolved = false
 	}

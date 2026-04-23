@@ -19,7 +19,9 @@ type stubChallengeWriteupRepository struct {
 	upsertWriteupFn                                   func(writeup *model.ChallengeWriteup) error
 	deleteWriteupByChallengeIDFn                      func(challengeID int64) error
 	findReleasedWriteupByChallengeIDFn                func(challengeID int64, now time.Time) (*model.ChallengeWriteup, error)
+	findReleasedWriteupByChallengeIDWithContextFn     func(ctx context.Context, challengeID int64, now time.Time) (*model.ChallengeWriteup, error)
 	getSolvedStatusFn                                 func(userID, challengeID int64) (bool, error)
+	getSolvedStatusWithContextFn                      func(ctx context.Context, userID, challengeID int64) (bool, error)
 	findSubmissionWriteupByUserChallengeFn            func(userID, challengeID int64) (*model.SubmissionWriteup, error)
 	findSubmissionWriteupByUserChallengeWithContextFn func(ctx context.Context, userID, challengeID int64) (*model.SubmissionWriteup, error)
 	findSubmissionWriteupByIDFn                       func(id int64) (*model.SubmissionWriteup, error)
@@ -86,11 +88,25 @@ func (s *stubChallengeWriteupRepository) FindReleasedWriteupByChallengeID(challe
 	return nil, nil
 }
 
+func (s *stubChallengeWriteupRepository) FindReleasedWriteupByChallengeIDWithContext(ctx context.Context, challengeID int64, now time.Time) (*model.ChallengeWriteup, error) {
+	if s.findReleasedWriteupByChallengeIDWithContextFn != nil {
+		return s.findReleasedWriteupByChallengeIDWithContextFn(ctx, challengeID, now)
+	}
+	return s.FindReleasedWriteupByChallengeID(challengeID, now)
+}
+
 func (s *stubChallengeWriteupRepository) GetSolvedStatus(userID, challengeID int64) (bool, error) {
 	if s.getSolvedStatusFn != nil {
 		return s.getSolvedStatusFn(userID, challengeID)
 	}
 	return false, nil
+}
+
+func (s *stubChallengeWriteupRepository) GetSolvedStatusWithContext(ctx context.Context, userID, challengeID int64) (bool, error) {
+	if s.getSolvedStatusWithContextFn != nil {
+		return s.getSolvedStatusWithContextFn(ctx, userID, challengeID)
+	}
+	return s.GetSolvedStatus(userID, challengeID)
 }
 
 func (s *stubChallengeWriteupRepository) FindSubmissionWriteupByUserChallenge(userID, challengeID int64) (*model.SubmissionWriteup, error) {
@@ -224,5 +240,54 @@ func TestWriteupServiceGetMySubmissionWithContextPropagatesContextToRepository(t
 	}
 	if resp == nil || resp.ID != 201 || resp.UserID != 7 || resp.ChallengeID != 11 {
 		t.Fatalf("unexpected submission resp: %+v", resp)
+	}
+}
+
+func TestWriteupServiceGetPublishedWithContextPropagatesContextToRepository(t *testing.T) {
+	t.Parallel()
+
+	ctxKey := challengeWriteupContextKey("writeup-published")
+	expectedCtxValue := "ctx-writeup-published"
+	findChallengeCalled := false
+	findReleasedCalled := false
+	getSolvedCalled := false
+	repo := &stubChallengeWriteupRepository{
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+			findChallengeCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected find-challenge ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return &model.Challenge{ID: id, Status: model.ChallengeStatusPublished}, nil
+		},
+		findReleasedWriteupByChallengeIDWithContextFn: func(ctx context.Context, challengeID int64, now time.Time) (*model.ChallengeWriteup, error) {
+			findReleasedCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected find-released ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return &model.ChallengeWriteup{ID: 301, ChallengeID: challengeID, Title: "Published", Content: "walkthrough", Visibility: model.WriteupVisibilityPublic}, nil
+		},
+		getSolvedStatusWithContextFn: func(ctx context.Context, userID, challengeID int64) (bool, error) {
+			getSolvedCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected get-solved ctx value %v, got %v", expectedCtxValue, got)
+			}
+			if userID != 7 || challengeID != 11 {
+				t.Fatalf("unexpected get solved args: user=%d challenge=%d", userID, challengeID)
+			}
+			return true, nil
+		},
+	}
+	service := NewWriteupService(repo)
+
+	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
+	resp, err := service.GetPublishedWithContext(ctx, 7, 11)
+	if err != nil {
+		t.Fatalf("GetPublishedWithContext() error = %v", err)
+	}
+	if !findChallengeCalled || !findReleasedCalled || !getSolvedCalled {
+		t.Fatalf("expected repository calls, got challenge=%v released=%v solved=%v", findChallengeCalled, findReleasedCalled, getSolvedCalled)
+	}
+	if resp == nil || resp.ID != 301 || resp.ChallengeID != 11 || resp.Title != "Published" || resp.RequiresSpoilerWarning {
+		t.Fatalf("unexpected published resp: %+v", resp)
 	}
 }
