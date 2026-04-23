@@ -7,7 +7,7 @@ log:
   format: console
 
 redis:
-  password: redis123456
+  password: "" # 开发环境通过 CTF_REDIS_PASSWORD 注入
   db: 2
 
 auth:

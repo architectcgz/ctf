@@ -95,3 +95,36 @@ func TestLoadRejectsCredentialedCORSWithoutAllowOrigins(t *testing.T) {
 		t.Fatalf("expected credentialed CORS validation error, got %v", err)
 	}
 }
+
+
+func TestLoadDevConfigDoesNotShipDefaultPasswords(t *testing.T) {
+	_, file, _, ok := runtime.Caller(0)
+	if !ok {
+		t.Fatal("runtime.Caller() failed")
+	}
+
+	backendRoot := filepath.Clean(filepath.Join(filepath.Dir(file), "..", ".."))
+	currentDir, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("Getwd() error = %v", err)
+	}
+	if err := os.Chdir(backendRoot); err != nil {
+		t.Fatalf("Chdir() error = %v", err)
+	}
+	t.Cleanup(func() {
+		_ = os.Chdir(currentDir)
+	})
+
+	t.Setenv("CTF_CONTAINER_FLAG_GLOBAL_SECRET", "integration-secret-123456789012345")
+
+	cfg, err := Load("dev")
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+	if cfg.Postgres.Password != "" {
+		t.Fatalf("expected empty postgres password in dev baseline config, got %q", cfg.Postgres.Password)
+	}
+	if cfg.Redis.Password != "" {
+		t.Fatalf("expected empty redis password in dev baseline config, got %q", cfg.Redis.Password)
+	}
+}
