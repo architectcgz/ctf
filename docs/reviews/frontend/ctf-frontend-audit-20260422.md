@@ -8,7 +8,7 @@
 | 审查范围 | `code/frontend/src` 路由、关键视图、composables、stores、共享样式与验证门禁 |
 | 审查日期 | 2026-04-22 |
 | 审查方式 | 静态代码审查 + 最小验证基线检查 |
-| 审查状态 | 已记录，已完成九轮最小高收益修复 |
+| 审查状态 | 已记录，已完成十轮最小高收益修复 |
 
 ## 当前结论
 
@@ -310,6 +310,24 @@
   - `code/frontend/src/views/challenges/__tests__/ChallengeDetail.test.ts`
 
 ## 第九轮验证
+
+- 已执行：
+  - `npm run test:run -- src/views/challenges/__tests__/challengeDetailPanelExtraction.test.ts src/views/challenges/__tests__/ChallengeDetail.test.ts`
+  - `npm run typecheck`
+
+## 第十轮修复进展
+
+- 已完成：
+  - `P2-5` `ChallengeDetail.vue` 继续减重，题目面板已抽到独立 `components/challenge/ChallengeQuestionPanel.vue`，题面、附件入口、提示展开和分值侧栏都已从路由页移出。
+  - `ChallengeDetail` 的源码护栏已同步更新为四块内容面板都通过子组件装配，`Question / Statement / Hints` 的共享 `workspace overline` 语义也已切到组合源码检查。
+  - `ChallengeDetail.vue` 本体行数已从 `1213` 行继续降到 `913` 行，目前路由页主要只剩页级装配和右侧工具区。
+- 本轮涉及文件：
+  - `code/frontend/src/views/challenges/ChallengeDetail.vue`
+  - `code/frontend/src/components/challenge/ChallengeQuestionPanel.vue`
+  - `code/frontend/src/views/challenges/__tests__/challengeDetailPanelExtraction.test.ts`
+  - `code/frontend/src/views/challenges/__tests__/ChallengeDetail.test.ts`
+
+## 第十轮验证
 
 - 已执行：
   - `npm run test:run -- src/views/challenges/__tests__/challengeDetailPanelExtraction.test.ts src/views/challenges/__tests__/ChallengeDetail.test.ts`

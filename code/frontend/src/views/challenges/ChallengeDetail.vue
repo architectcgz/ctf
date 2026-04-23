@@ -42,148 +42,21 @@
         :class="{ 'workspace-grid--single': activeWorkspaceTab !== 'question' }"
       >
         <main class="detail-main content-pane">
-          <section
+          <ChallengeQuestionPanel
             v-if="activeWorkspaceTab === 'question'"
-            id="challenge-workspace-panel-question"
-            class="workspace-panel panel panel--question"
-            role="tabpanel"
-            aria-labelledby="challenge-workspace-tab-question"
-          >
-            <div class="question-hero">
-              <div class="question-hero-main">
-                <div class="workspace-overline">
-                  Question
-                </div>
-                <h1 class="question-title workspace-page-title">
-                  {{ challenge.title }}
-                </h1>
-                <div class="meta-strip">
-                  <span
-                    class="meta-pill meta-pill--brand"
-                    :style="buildMetaPillStyle(getCategoryColor(challenge.category))"
-                  >
-                    {{ getCategoryLabel(challenge.category) }}
-                  </span>
-                  <span
-                    class="meta-pill"
-                    :style="buildMetaPillStyle(getDifficultyColor(challenge.difficulty))"
-                  >
-                    {{ getDifficultyLabel(challenge.difficulty) }}
-                  </span>
-                  <span
-                    v-if="challenge?.is_solved"
-                    class="meta-pill"
-                  > 已解出 </span>
-                  <span
-                    v-if="challenge.attachment_url"
-                    class="meta-pill"
-                  > 附件可下载 </span>
-                  <span
-                    v-for="tag in challenge.tags"
-                    :key="tag"
-                    class="meta-pill"
-                  >
-                    {{ tag }}
-                  </span>
-                </div>
-              </div>
-
-              <aside
-                class="score-rail"
-                @click="handleScoreRailProbe"
-              >
-                <div class="score-label">
-                  分值
-                </div>
-                <div class="score-value">
-                  {{ challenge.points }} <small>pts</small>
-                </div>
-                <div class="score-note">
-                  {{ challenge.attachment_url ? '当前题目包含附件。' : '当前题目无附件。' }}
-                </div>
-                <div
-                  v-if="scoreRailProbeMessage"
-                  class="score-probe-note"
-                >
-                  {{ scoreRailProbeMessage }}
-                </div>
-              </aside>
-            </div>
-
-            <section class="section">
-              <div class="section-head workspace-tab-heading">
-                <div class="workspace-tab-heading__main">
-                  <div class="workspace-overline">
-                    Statement
-                  </div>
-                  <h2 class="section-title workspace-tab-heading__title">
-                    题目描述
-                  </h2>
-                </div>
-                <button
-                  v-if="challenge.attachment_url"
-                  type="button"
-                  class="ui-btn ui-btn--secondary"
-                  @click="downloadAttachment"
-                >
-                  下载附件
-                </button>
-              </div>
-              <!-- eslint-disable-next-line vue/no-v-html -->
-              <div
-                class="prose challenge-prose description max-w-none"
-                v-html="sanitizedDescription"
-              />
-            </section>
-
-            <section
-              v-if="challenge.hints.length > 0"
-              class="section"
-            >
-              <div class="section-head workspace-tab-heading">
-                <div class="workspace-tab-heading__main">
-                  <div class="workspace-overline">
-                    Hints
-                  </div>
-                  <h2 class="section-title workspace-tab-heading__title">
-                    提示
-                  </h2>
-                </div>
-                <div class="section-hint">
-                  共 {{ challenge.hints.length }} 条
-                </div>
-              </div>
-              <div class="hint-list">
-                <div
-                  v-for="hint in challenge.hints"
-                  :key="hint.id"
-                  class="hint-line"
-                >
-                  <div>
-                    <div class="hint-label">
-                      提示 {{ hint.level }}{{ hint.title ? ` · ${hint.title}` : '' }}
-                    </div>
-                    <div
-                      v-if="isHintExpanded(hint.level)"
-                      :id="`challenge-hint-panel-${hint.id}`"
-                      class="hint-copy"
-                    >
-                      {{ hint.content || '暂无提示内容' }}
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    class="ui-btn ui-btn--sm ui-btn--ghost hint-toggle"
-                    :aria-expanded="isHintExpanded(hint.level)"
-                    :aria-controls="`challenge-hint-panel-${hint.id}`"
-                    @click="toggleHint(hint.level)"
-                  >
-                    {{ isHintExpanded(hint.level) ? '收起提示' : '展开提示' }}
-                  </button>
-                </div>
-              </div>
-            </section>
-          </section>
+            :challenge="challenge"
+            :sanitized-description="sanitizedDescription"
+            :score-rail-probe-message="scoreRailProbeMessage"
+            :build-meta-pill-style="buildMetaPillStyle"
+            :get-category-label="getCategoryLabel"
+            :get-category-color="getCategoryColor"
+            :get-difficulty-label="getDifficultyLabel"
+            :get-difficulty-color="getDifficultyColor"
+            :is-hint-expanded="isHintExpanded"
+            @download-attachment="downloadAttachment"
+            @toggle-hint="toggleHint"
+            @score-rail-probe="handleScoreRailProbe"
+          />
 
           <ChallengeSolutionsPanel
             v-else-if="activeWorkspaceTab === 'solution'"
@@ -339,6 +212,7 @@ import type {
   RecommendedChallengeSolutionData,
 } from '@/api/contracts'
 import ChallengeInstanceCard from '@/components/challenge/ChallengeInstanceCard.vue'
+import ChallengeQuestionPanel from '@/components/challenge/ChallengeQuestionPanel.vue'
 import ChallengeSolutionsPanel from '@/components/challenge/ChallengeSolutionsPanel.vue'
 import ChallengeSubmissionRecordsPanel from '@/components/challenge/ChallengeSubmissionRecordsPanel.vue'
 import ChallengeWriteupPanel from '@/components/challenge/ChallengeWriteupPanel.vue'
@@ -712,10 +586,6 @@ watch(
 .workspace-shell code,
 .workspace-shell pre,
 .workspace-shell .flag-input,
-.workspace-shell .record-time,
-.workspace-shell .record-answer,
-.workspace-shell .submission-record-time,
-.workspace-shell .submission-record-answer,
 .workspace-shell .score-value {
   font-family: var(--font-mono) !important;
 }
@@ -728,7 +598,6 @@ watch(
 }
 
 .top-note,
-.section-hint,
 .tool-copy {
   font-size: var(--font-size-13);
   line-height: 1.75;
@@ -794,114 +663,22 @@ watch(
   animation: rise 280ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.question-hero {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 200px;
-  gap: var(--space-6);
-  padding-bottom: var(--space-6);
-  border-bottom: 1px solid var(--line-soft);
-}
-
-.question-hero-main {
-  min-width: 0;
-}
-
-.question-title {
-  margin: var(--space-3) 0 0;
-  color: var(--text-main);
-}
-
-.meta-strip {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2-5);
-  margin-top: var(--space-4);
-}
 
 
-.meta-pill,
-.writeup-status-pill,
-.status-chip {
-  display: inline-flex;
-  align-items: center;
-  min-height: 34px;
-  padding: 0 var(--space-3-5);
-  border: 1px solid var(--line-soft);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--bg-panel) 72%, transparent);
-  font-size: var(--font-size-13);
-  font-weight: 600;
-  color: var(--text-subtle);
-}
 
-.meta-pill--brand {
-  border-color: color-mix(in srgb, var(--brand) 20%, transparent);
-  background: var(--brand-soft);
-  color: var(--brand-ink);
-}
 
-.score-rail {
-  padding-left: var(--space-5-5);
-  border-left: 1px solid var(--line-soft);
-}
 
-.score-label {
-  font-size: var(--font-size-11);
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--text-faint);
-}
 
-.score-value {
-  margin-top: var(--space-2);
-  color: var(--text-main);
-  font: 700 34px/1 var(--font-mono);
-}
 
-.score-value small {
-  font-size: var(--font-size-16);
-  color: var(--text-faint);
-}
 
-.score-note {
-  margin-top: var(--space-4);
-  padding-top: var(--space-4);
-  border-top: 1px solid var(--line-soft);
-  font-size: var(--font-size-14);
-  line-height: 1.75;
-  color: var(--text-subtle);
-}
 
-.score-probe-note {
-  margin-top: var(--space-3);
-  font-size: var(--font-size-12);
-  font-weight: 700;
-  line-height: 1.7;
-  color: color-mix(in srgb, var(--journal-accent) 80%, var(--text-subtle));
-}
 
-.section {
-  padding-top: var(--space-6);
-  border-top: 1px solid var(--line-soft);
-}
 
-.section--flat,
-.section:first-child {
-  padding-top: 0;
-  border-top: 0;
-}
 
-.panel--question > .section:first-of-type {
-  border-top: 0;
-}
 
-.section-head {
-  display: flex;
-  align-items: end;
-  justify-content: space-between;
-  gap: var(--space-4);
-  margin-bottom: var(--space-4);
-}
+
+
+
 
 .section-title:not(.workspace-tab-heading__title) {
   margin: var(--space-2-5) 0 0;
@@ -910,72 +687,10 @@ watch(
   color: var(--text-main);
 }
 
-.description,
 .tool-copy {
   color: var(--journal-muted);
 }
 
-.description {
-  font-size: var(--font-size-15);
-  line-height: 1.92;
-  color: var(--text-subtle);
-}
-
-.challenge-prose :deep(p),
-.challenge-prose :deep(ul),
-.challenge-prose :deep(ol) {
-  margin-bottom: var(--space-4);
-}
-
-.challenge-prose :deep(pre) {
-  overflow: auto;
-  margin: var(--space-5) 0;
-  padding: var(--space-4-5) var(--space-5);
-  border: 1px solid var(--line-soft);
-  border-radius: 14px;
-  background: color-mix(in srgb, var(--bg-panel) 72%, var(--color-bg-base));
-  color: var(--text-main);
-  font: 13px/1.7 var(--font-mono);
-}
-
-.challenge-prose :deep(h1),
-.challenge-prose :deep(h2),
-.challenge-prose :deep(h3),
-.challenge-prose :deep(strong),
-.challenge-prose :deep(code) {
-  color: var(--journal-ink);
-}
-
-.hint-list {
-  display: flex;
-  flex-direction: column;
-}
-
-.hint-line {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: var(--space-3-5);
-  padding: var(--space-4) 0;
-  border-top: 1px dashed var(--line-soft);
-}
-
-.hint-line:first-of-type {
-  padding-top: 0;
-  border-top: 0;
-}
-
-.hint-label {
-  font-size: var(--font-size-14);
-  font-weight: 600;
-  color: var(--text-main);
-}
-
-.hint-copy {
-  margin-top: var(--space-2-5);
-  font-size: var(--font-size-14);
-  line-height: 1.8;
-  color: var(--text-subtle);
-}
 
 
 
@@ -987,18 +702,15 @@ watch(
 
 
 
-.inline-note {
-  padding-left: var(--space-4);
-  border-left: 2px solid var(--line-soft);
-  font-size: var(--font-size-0-90);
-  line-height: 1.8;
-  color: var(--text-subtle);
-}
 
-.inline-note--warning {
-  border-left-color: color-mix(in srgb, var(--color-warning) 34%, transparent);
-  color: var(--journal-warning-ink);
-}
+
+
+
+
+
+
+
+
 
 
 
@@ -1066,9 +778,6 @@ watch(
   color: var(--text-subtle);
 }
 
-.hint-toggle {
-  --ui-btn-height: 2.5rem;
-}
 
 .status-inline {
   display: flex;
@@ -1110,22 +819,23 @@ watch(
   background: var(--color-danger);
 }
 
-.writeup-status-pill--primary {
-  border-color: color-mix(in srgb, var(--journal-accent) 18%, transparent);
-  background: var(--journal-accent-soft);
-  color: var(--journal-accent-strong);
+.writeup-status-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 var(--space-3-5);
+  border: 1px solid var(--line-soft);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--bg-panel) 72%, transparent);
+  font-size: var(--font-size-13);
+  font-weight: 600;
+  color: var(--text-subtle);
 }
 
 .writeup-status-pill--success {
   border-color: color-mix(in srgb, var(--color-success) 18%, transparent);
   background: var(--journal-success-soft);
   color: var(--journal-success-ink);
-}
-
-.writeup-status-pill--warning {
-  border-color: color-mix(in srgb, var(--color-warning) 18%, transparent);
-  background: var(--journal-warning-soft);
-  color: var(--journal-warning-ink);
 }
 
 
@@ -1159,16 +869,6 @@ watch(
     position: static;
   }
 
-  .question-hero {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .score-rail {
-    padding-left: 0;
-    padding-top: var(--space-4-5);
-    border-left: 0;
-    border-top: 1px solid var(--line-soft);
-  }
 }
 
 @media (max-width: 760px) {
