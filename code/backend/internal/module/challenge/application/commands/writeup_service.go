@@ -282,7 +282,14 @@ func (s *WriteupService) UnrecommendCommunityWithContext(ctx context.Context, su
 }
 
 func (s *WriteupService) HideCommunity(submissionID, requesterID int64, requesterRole string) (*dto.SubmissionWriteupResp, error) {
-	record, err := s.loadCommunityWriteupForModeration(submissionID, requesterID, requesterRole)
+	return s.HideCommunityWithContext(context.Background(), submissionID, requesterID, requesterRole)
+}
+
+func (s *WriteupService) HideCommunityWithContext(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*dto.SubmissionWriteupResp, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	record, err := s.loadCommunityWriteupForModerationWithContext(ctx, submissionID, requesterID, requesterRole)
 	if err != nil {
 		return nil, err
 	}
@@ -293,11 +300,11 @@ func (s *WriteupService) HideCommunity(submissionID, requesterID int64, requeste
 	record.RecommendedBy = nil
 	record.UpdatedAt = time.Now()
 
-	if err := s.repo.UpsertSubmissionWriteup(record); err != nil {
+	if err := s.repo.UpsertSubmissionWriteupWithContext(ctx, record); err != nil {
 		return nil, err
 	}
 
-	updated, err := s.repo.FindSubmissionWriteupByID(submissionID)
+	updated, err := s.repo.FindSubmissionWriteupByIDWithContext(ctx, submissionID)
 	if err != nil {
 		return nil, err
 	}
@@ -305,7 +312,14 @@ func (s *WriteupService) HideCommunity(submissionID, requesterID int64, requeste
 }
 
 func (s *WriteupService) RestoreCommunity(submissionID, requesterID int64, requesterRole string) (*dto.SubmissionWriteupResp, error) {
-	record, err := s.loadCommunityWriteupForModeration(submissionID, requesterID, requesterRole)
+	return s.RestoreCommunityWithContext(context.Background(), submissionID, requesterID, requesterRole)
+}
+
+func (s *WriteupService) RestoreCommunityWithContext(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*dto.SubmissionWriteupResp, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	record, err := s.loadCommunityWriteupForModerationWithContext(ctx, submissionID, requesterID, requesterRole)
 	if err != nil {
 		return nil, err
 	}
@@ -313,11 +327,11 @@ func (s *WriteupService) RestoreCommunity(submissionID, requesterID int64, reque
 	record.VisibilityStatus = model.SubmissionWriteupVisibilityVisible
 	record.UpdatedAt = time.Now()
 
-	if err := s.repo.UpsertSubmissionWriteup(record); err != nil {
+	if err := s.repo.UpsertSubmissionWriteupWithContext(ctx, record); err != nil {
 		return nil, err
 	}
 
-	updated, err := s.repo.FindSubmissionWriteupByID(submissionID)
+	updated, err := s.repo.FindSubmissionWriteupByIDWithContext(ctx, submissionID)
 	if err != nil {
 		return nil, err
 	}

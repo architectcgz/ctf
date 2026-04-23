@@ -610,3 +610,129 @@ func TestWriteupServiceUnrecommendCommunityWithContextPropagatesContextToReposit
 		t.Fatalf("unexpected unrecommend community resp: %+v", resp)
 	}
 }
+
+func TestWriteupServiceHideCommunityWithContextPropagatesContextToRepository(t *testing.T) {
+	t.Parallel()
+
+	ctxKey := writeupCommandContextKey("writeup-hide-community")
+	expectedCtxValue := "ctx-writeup-hide-community"
+	getTeacherRecordCalled := false
+	findRequesterCalled := false
+	findSubmissionCalled := false
+	upsertCalled := false
+	findUpdatedCalled := false
+	repo := &writeupCommandContextStub{
+		getTeacherSubmissionWriteupByIDWithContextFn: func(ctx context.Context, id int64) (*challengeports.TeacherSubmissionWriteupRecord, error) {
+			getTeacherRecordCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected get-teacher-record ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return &challengeports.TeacherSubmissionWriteupRecord{
+				Submission:      model.SubmissionWriteup{ID: id, UserID: 88, ChallengeID: 11, VisibilityStatus: model.SubmissionWriteupVisibilityVisible, IsRecommended: true},
+				StudentUsername: "student88",
+				ClassName:       "Class A",
+			}, nil
+		},
+		findUserByIDWithContextFn: func(ctx context.Context, userID int64) (*model.User, error) {
+			findRequesterCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected find-user ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return &model.User{ID: userID, Role: model.RoleTeacher, ClassName: "Class A"}, nil
+		},
+		findSubmissionWriteupByIDWithContextFn: func(ctx context.Context, id int64) (*model.SubmissionWriteup, error) {
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected find-submission ctx value %v, got %v", expectedCtxValue, got)
+			}
+			if !upsertCalled {
+				findSubmissionCalled = true
+				return &model.SubmissionWriteup{ID: id, UserID: 88, ChallengeID: 11, VisibilityStatus: model.SubmissionWriteupVisibilityVisible, IsRecommended: true}, nil
+			}
+			findUpdatedCalled = true
+			return &model.SubmissionWriteup{ID: id, UserID: 88, ChallengeID: 11, VisibilityStatus: model.SubmissionWriteupVisibilityHidden, IsRecommended: false}, nil
+		},
+		upsertSubmissionWriteupWithContextFn: func(ctx context.Context, writeup *model.SubmissionWriteup) error {
+			upsertCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected upsert-submission ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return nil
+		},
+	}
+	service := NewWriteupService(repo)
+
+	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
+	resp, err := service.HideCommunityWithContext(ctx, 31, 1001, model.RoleTeacher)
+	if err != nil {
+		t.Fatalf("HideCommunityWithContext() error = %v", err)
+	}
+	if !getTeacherRecordCalled || !findRequesterCalled || !findSubmissionCalled || !upsertCalled || !findUpdatedCalled {
+		t.Fatalf("expected repository calls, got record=%v requester=%v submission=%v upsert=%v updated=%v", getTeacherRecordCalled, findRequesterCalled, findSubmissionCalled, upsertCalled, findUpdatedCalled)
+	}
+	if resp == nil || resp.VisibilityStatus != model.SubmissionWriteupVisibilityHidden || resp.IsRecommended {
+		t.Fatalf("unexpected hide community resp: %+v", resp)
+	}
+}
+
+func TestWriteupServiceRestoreCommunityWithContextPropagatesContextToRepository(t *testing.T) {
+	t.Parallel()
+
+	ctxKey := writeupCommandContextKey("writeup-restore-community")
+	expectedCtxValue := "ctx-writeup-restore-community"
+	getTeacherRecordCalled := false
+	findRequesterCalled := false
+	findSubmissionCalled := false
+	upsertCalled := false
+	findUpdatedCalled := false
+	repo := &writeupCommandContextStub{
+		getTeacherSubmissionWriteupByIDWithContextFn: func(ctx context.Context, id int64) (*challengeports.TeacherSubmissionWriteupRecord, error) {
+			getTeacherRecordCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected get-teacher-record ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return &challengeports.TeacherSubmissionWriteupRecord{
+				Submission:      model.SubmissionWriteup{ID: id, UserID: 88, ChallengeID: 11, VisibilityStatus: model.SubmissionWriteupVisibilityHidden},
+				StudentUsername: "student88",
+				ClassName:       "Class A",
+			}, nil
+		},
+		findUserByIDWithContextFn: func(ctx context.Context, userID int64) (*model.User, error) {
+			findRequesterCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected find-user ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return &model.User{ID: userID, Role: model.RoleTeacher, ClassName: "Class A"}, nil
+		},
+		findSubmissionWriteupByIDWithContextFn: func(ctx context.Context, id int64) (*model.SubmissionWriteup, error) {
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected find-submission ctx value %v, got %v", expectedCtxValue, got)
+			}
+			if !upsertCalled {
+				findSubmissionCalled = true
+				return &model.SubmissionWriteup{ID: id, UserID: 88, ChallengeID: 11, VisibilityStatus: model.SubmissionWriteupVisibilityHidden}, nil
+			}
+			findUpdatedCalled = true
+			return &model.SubmissionWriteup{ID: id, UserID: 88, ChallengeID: 11, VisibilityStatus: model.SubmissionWriteupVisibilityVisible}, nil
+		},
+		upsertSubmissionWriteupWithContextFn: func(ctx context.Context, writeup *model.SubmissionWriteup) error {
+			upsertCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected upsert-submission ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return nil
+		},
+	}
+	service := NewWriteupService(repo)
+
+	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
+	resp, err := service.RestoreCommunityWithContext(ctx, 31, 1001, model.RoleTeacher)
+	if err != nil {
+		t.Fatalf("RestoreCommunityWithContext() error = %v", err)
+	}
+	if !getTeacherRecordCalled || !findRequesterCalled || !findSubmissionCalled || !upsertCalled || !findUpdatedCalled {
+		t.Fatalf("expected repository calls, got record=%v requester=%v submission=%v upsert=%v updated=%v", getTeacherRecordCalled, findRequesterCalled, findSubmissionCalled, upsertCalled, findUpdatedCalled)
+	}
+	if resp == nil || resp.VisibilityStatus != model.SubmissionWriteupVisibilityVisible {
+		t.Fatalf("unexpected restore community resp: %+v", resp)
+	}
+}

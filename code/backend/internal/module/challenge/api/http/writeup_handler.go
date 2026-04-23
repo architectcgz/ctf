@@ -30,7 +30,9 @@ type writeupCommandService interface {
 	UnrecommendCommunity(submissionID, requesterID int64, requesterRole string) (*dto.SubmissionWriteupResp, error)
 	UnrecommendCommunityWithContext(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*dto.SubmissionWriteupResp, error)
 	HideCommunity(submissionID, requesterID int64, requesterRole string) (*dto.SubmissionWriteupResp, error)
+	HideCommunityWithContext(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*dto.SubmissionWriteupResp, error)
 	RestoreCommunity(submissionID, requesterID int64, requesterRole string) (*dto.SubmissionWriteupResp, error)
+	RestoreCommunityWithContext(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*dto.SubmissionWriteupResp, error)
 	Delete(challengeID int64) error
 	DeleteWithContext(ctx context.Context, challengeID int64) error
 }
@@ -254,13 +256,13 @@ func (h *WriteupHandler) UnrecommendCommunity(c *gin.Context) {
 
 func (h *WriteupHandler) HideCommunity(c *gin.Context) {
 	h.respondCommunityModeration(c, func(submissionID int64, currentUser authctx.CurrentUser) (*dto.SubmissionWriteupResp, error) {
-		return h.commands.HideCommunity(submissionID, currentUser.UserID, currentUser.Role)
+		return h.commands.HideCommunityWithContext(c.Request.Context(), submissionID, currentUser.UserID, currentUser.Role)
 	})
 }
 
 func (h *WriteupHandler) RestoreCommunity(c *gin.Context) {
 	h.respondCommunityModeration(c, func(submissionID int64, currentUser authctx.CurrentUser) (*dto.SubmissionWriteupResp, error) {
-		return h.commands.RestoreCommunity(submissionID, currentUser.UserID, currentUser.Role)
+		return h.commands.RestoreCommunityWithContext(c.Request.Context(), submissionID, currentUser.UserID, currentUser.Role)
 	})
 }
 
