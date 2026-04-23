@@ -55,7 +55,7 @@ func (s *ImageService) CreateImageWithContext(ctx context.Context, req *dto.Crea
 		ctx = context.Background()
 	}
 
-	existing, err := s.repo.FindByNameTag(req.Name, req.Tag)
+	existing, err := s.repo.FindByNameTagWithContext(ctx, req.Name, req.Tag)
 	if err == nil && existing != nil {
 		return nil, errcode.ErrImageAlreadyExists
 	}
@@ -79,7 +79,7 @@ func (s *ImageService) CreateImageWithContext(ctx context.Context, req *dto.Crea
 		Size:        size,
 		Status:      model.ImageStatusAvailable,
 	}
-	if err := s.repo.Create(image); err != nil {
+	if err := s.repo.CreateWithContext(ctx, image); err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
@@ -97,7 +97,15 @@ func (s *ImageService) CreateImageWithContext(ctx context.Context, req *dto.Crea
 }
 
 func (s *ImageService) UpdateImage(id int64, req *dto.UpdateImageReq) error {
-	image, err := s.repo.FindByID(id)
+	return s.UpdateImageWithContext(context.Background(), id, req)
+}
+
+func (s *ImageService) UpdateImageWithContext(ctx context.Context, id int64, req *dto.UpdateImageReq) error {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	image, err := s.repo.FindByIDWithContext(ctx, id)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return errcode.ErrImageNotFound
@@ -111,7 +119,7 @@ func (s *ImageService) UpdateImage(id int64, req *dto.UpdateImageReq) error {
 	if req.Status != "" {
 		image.Status = req.Status
 	}
-	if err := s.repo.Update(image); err != nil {
+	if err := s.repo.UpdateWithContext(ctx, image); err != nil {
 		return errcode.ErrInternal.WithCause(err)
 	}
 
@@ -120,7 +128,15 @@ func (s *ImageService) UpdateImage(id int64, req *dto.UpdateImageReq) error {
 }
 
 func (s *ImageService) DeleteImage(id int64) error {
-	image, err := s.repo.FindByID(id)
+	return s.DeleteImageWithContext(context.Background(), id)
+}
+
+func (s *ImageService) DeleteImageWithContext(ctx context.Context, id int64) error {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	image, err := s.repo.FindByIDWithContext(ctx, id)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return errcode.ErrImageNotFound
@@ -128,14 +144,14 @@ func (s *ImageService) DeleteImage(id int64) error {
 		return errcode.ErrInternal.WithCause(err)
 	}
 
-	count, err := s.challengeRepo.CountByImageID(id)
+	count, err := s.challengeRepo.CountByImageIDWithContext(ctx, id)
 	if err != nil {
 		return errcode.ErrInternal.WithCause(err)
 	}
 	if count > 0 {
 		return errcode.ErrImageInUse
 	}
-	if err := s.repo.Delete(id); err != nil {
+	if err := s.repo.DeleteWithContext(ctx, id); err != nil {
 		return errcode.ErrInternal.WithCause(err)
 	}
 

@@ -16,8 +16,19 @@ func NewImageRepository(db *gorm.DB) *ImageRepository {
 	return &ImageRepository{db: db}
 }
 
+func (r *ImageRepository) dbWithContext(ctx context.Context) *gorm.DB {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	return r.db.WithContext(ctx)
+}
+
 func (r *ImageRepository) Create(image *model.Image) error {
-	return r.db.Create(image).Error
+	return r.CreateWithContext(context.Background(), image)
+}
+
+func (r *ImageRepository) CreateWithContext(ctx context.Context, image *model.Image) error {
+	return r.dbWithContext(ctx).Create(image).Error
 }
 
 func (r *ImageRepository) FindByID(id int64) (*model.Image, error) {
@@ -25,11 +36,8 @@ func (r *ImageRepository) FindByID(id int64) (*model.Image, error) {
 }
 
 func (r *ImageRepository) FindByIDWithContext(ctx context.Context, id int64) (*model.Image, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
 	var image model.Image
-	err := r.db.WithContext(ctx).Where("id = ?", id).First(&image).Error
+	err := r.dbWithContext(ctx).Where("id = ?", id).First(&image).Error
 	if err != nil {
 		return nil, err
 	}
@@ -37,8 +45,12 @@ func (r *ImageRepository) FindByIDWithContext(ctx context.Context, id int64) (*m
 }
 
 func (r *ImageRepository) FindByNameTag(name, tag string) (*model.Image, error) {
+	return r.FindByNameTagWithContext(context.Background(), name, tag)
+}
+
+func (r *ImageRepository) FindByNameTagWithContext(ctx context.Context, name, tag string) (*model.Image, error) {
 	var image model.Image
-	err := r.db.Where("name = ? AND tag = ?", name, tag).First(&image).Error
+	err := r.dbWithContext(ctx).Where("name = ? AND tag = ?", name, tag).First(&image).Error
 	if err != nil {
 		return nil, err
 	}
@@ -46,10 +58,14 @@ func (r *ImageRepository) FindByNameTag(name, tag string) (*model.Image, error) 
 }
 
 func (r *ImageRepository) List(name, status string, offset, limit int) ([]*model.Image, int64, error) {
+	return r.ListWithContext(context.Background(), name, status, offset, limit)
+}
+
+func (r *ImageRepository) ListWithContext(ctx context.Context, name, status string, offset, limit int) ([]*model.Image, int64, error) {
 	var images []*model.Image
 	var total int64
 
-	query := r.db.Model(&model.Image{})
+	query := r.dbWithContext(ctx).Model(&model.Image{})
 	if name != "" {
 		query = query.Where("name LIKE ?", "%"+name+"%")
 	}
@@ -66,9 +82,17 @@ func (r *ImageRepository) List(name, status string, offset, limit int) ([]*model
 }
 
 func (r *ImageRepository) Update(image *model.Image) error {
-	return r.db.Save(image).Error
+	return r.UpdateWithContext(context.Background(), image)
+}
+
+func (r *ImageRepository) UpdateWithContext(ctx context.Context, image *model.Image) error {
+	return r.dbWithContext(ctx).Save(image).Error
 }
 
 func (r *ImageRepository) Delete(id int64) error {
-	return r.db.Delete(&model.Image{}, id).Error
+	return r.DeleteWithContext(context.Background(), id)
+}
+
+func (r *ImageRepository) DeleteWithContext(ctx context.Context, id int64) error {
+	return r.dbWithContext(ctx).Delete(&model.Image{}, id).Error
 }

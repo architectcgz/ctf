@@ -43,6 +43,14 @@ func (s *ImageService) GetImageWithContext(ctx context.Context, id int64) (*dto.
 }
 
 func (s *ImageService) ListImages(query *dto.ImageQuery) (*dto.PageResult, error) {
+	return s.ListImagesWithContext(context.Background(), query)
+}
+
+func (s *ImageService) ListImagesWithContext(ctx context.Context, query *dto.ImageQuery) (*dto.PageResult, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
 	page := query.Page
 	if page < 1 {
 		page = 1
@@ -56,7 +64,7 @@ func (s *ImageService) ListImages(query *dto.ImageQuery) (*dto.PageResult, error
 	}
 
 	offset := (page - 1) * size
-	images, total, err := s.repo.List(query.Name, query.Status, offset, size)
+	images, total, err := s.repo.ListWithContext(ctx, query.Name, query.Status, offset, size)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
