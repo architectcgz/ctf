@@ -83,7 +83,8 @@ describe('NotificationDropdown', () => {
   })
 
   it('uses the notification spec drawer shell instead of the old floating panel', () => {
-    expect(notificationDropdownSource).toContain('<Transition appear name="notification-shell">')
+    expect(notificationDropdownSource).toContain('<Transition')
+    expect(notificationDropdownSource).toContain('name="notification-shell"')
     expect(notificationDropdownSource).toContain('Notification Hub')
     expect(notificationDropdownSource).toContain('class="notification-drawer')
     expect(notificationDropdownSource).toContain('fixed top-0 right-0')

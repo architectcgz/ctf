@@ -824,7 +824,7 @@ const routes: RouteRecordRaw[] = [
     path: '/ui-lab',
     name: 'UILab',
     component: () => import('@/views/UILab.vue'),
-    meta: { title: 'UI 设计实验室' },
+    meta: { requiresAuth: true, roles: ['admin'], title: 'UI 设计实验室' },
   },
 ]
 

@@ -47,6 +47,8 @@ export function useChallengeDetailInteractions({
     message: string
   } | null>(null)
   const submissionRecords = ref<SubmissionRecordItem[]>([])
+  let latestWriteupRequestId = 0
+  let latestSubmissionRecordsRequestId = 0
 
   function hydrateSubmissionForm(item: SubmissionWriteupData | null): void {
     writeupTitle.value = item?.title ?? ''
@@ -67,24 +69,43 @@ export function useChallengeDetailInteractions({
   }
 
   async function loadMyWriteupSubmission(): Promise<void> {
-    if (!challengeId.value) return
+    const currentChallengeId = challengeId.value
+    if (!currentChallengeId) return
 
+    const requestId = ++latestWriteupRequestId
     submissionLoading.value = true
     try {
-      myWriteup.value = await getMyChallengeWriteupSubmission(challengeId.value)
+      const nextWriteup = await getMyChallengeWriteupSubmission(currentChallengeId)
+      if (requestId !== latestWriteupRequestId || currentChallengeId !== challengeId.value) {
+        return
+      }
+      myWriteup.value = nextWriteup
       hydrateSubmissionForm(myWriteup.value)
     } catch {
+      if (requestId !== latestWriteupRequestId || currentChallengeId !== challengeId.value) {
+        return
+      }
       toast.error('加载个人题解失败')
     } finally {
-      submissionLoading.value = false
+      if (requestId === latestWriteupRequestId && currentChallengeId === challengeId.value) {
+        submissionLoading.value = false
+      }
     }
   }
 
   async function loadSubmissionRecords(): Promise<void> {
-    if (!challengeId.value) return
+    const currentChallengeId = challengeId.value
+    if (!currentChallengeId) return
 
+    const requestId = ++latestSubmissionRecordsRequestId
     try {
-      const records = await getMyChallengeSubmissionRecords(challengeId.value)
+      const records = await getMyChallengeSubmissionRecords(currentChallengeId)
+      if (
+        requestId !== latestSubmissionRecordsRequestId ||
+        currentChallengeId !== challengeId.value
+      ) {
+        return
+      }
       submissionRecords.value = records.map((item) => ({
         id: item.id,
         answer: item.answer,
@@ -92,6 +113,12 @@ export function useChallengeDetailInteractions({
         submittedAt: item.submitted_at,
       }))
     } catch {
+      if (
+        requestId !== latestSubmissionRecordsRequestId ||
+        currentChallengeId !== challengeId.value
+      ) {
+        return
+      }
       toast.error('加载提交记录失败')
     }
   }

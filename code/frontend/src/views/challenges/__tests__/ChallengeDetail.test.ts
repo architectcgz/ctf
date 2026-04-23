@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { flushPromises, mount } from '@vue/test-utils'
 import { createRouter, createMemoryHistory } from 'vue-router'
 
 import ChallengeDetail from '../ChallengeDetail.vue'
@@ -25,6 +25,17 @@ const instanceApiMocks = vi.hoisted(() => ({
   extendInstance: vi.fn(),
   requestInstanceAccess: vi.fn(),
 }))
+
+function createDeferred<T>() {
+  let resolve!: (value: T) => void
+  let reject!: (reason?: unknown) => void
+  const promise = new Promise<T>((nextResolve, nextReject) => {
+    resolve = nextResolve
+    reject = nextReject
+  })
+
+  return { promise, resolve, reject }
+}
 
 vi.mock('@/api/challenge', () => challengeApiMocks)
 vi.mock('@/api/instance', () => instanceApiMocks)
@@ -240,6 +251,98 @@ describe('ChallengeDetail', () => {
     expect(wrapper.text()).not.toContain('精选官方题解')
     expect(challengeApiMocks.getRecommendedChallengeSolutions).not.toHaveBeenCalled()
     expect(challengeApiMocks.getCommunityChallengeSolutions).not.toHaveBeenCalled()
+  })
+
+  it('快速切换题目时不应被旧详情和旧提交记录回写', async () => {
+    const staleDetail = createDeferred<{
+      id: string
+      title: string
+      description: string
+      category: 'web'
+      difficulty: 'easy'
+      tags: string[]
+      points: number
+      need_target: boolean
+      is_solved: boolean
+      attachment_url?: string
+      hints: Array<{ id: string; level: number; title?: string; content?: string }>
+    }>()
+    const staleRecords = createDeferred<Array<{ id: string; answer?: string; status: 'correct'; submitted_at: string }>>()
+
+    challengeApiMocks.getChallengeDetail.mockImplementation((id: string) => {
+      if (id === '1') {
+        return staleDetail.promise
+      }
+
+      return Promise.resolve({
+        id: '2',
+        title: 'Fresh Challenge',
+        description: '<p>Fresh description</p>',
+        category: 'web',
+        difficulty: 'easy',
+        tags: ['fresh'],
+        points: 200,
+        need_target: true,
+        is_solved: false,
+        attachment_url: undefined,
+        hints: [],
+      })
+    })
+    challengeApiMocks.getMyChallengeSubmissionRecords.mockImplementation((id: string) => {
+      if (id === '1') {
+        return staleRecords.promise
+      }
+
+      return Promise.resolve([])
+    })
+
+    await router.push('/challenges/1')
+    await router.isReady()
+
+    const wrapper = mount(ChallengeDetail, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await router.push('/challenges/2')
+    await flushPromises()
+
+    staleDetail.resolve({
+      id: '1',
+      title: 'Stale Challenge',
+      description: '<p>Stale description</p>',
+      category: 'web',
+      difficulty: 'easy',
+      tags: ['stale'],
+      points: 100,
+      need_target: true,
+      is_solved: false,
+      attachment_url: undefined,
+      hints: [],
+    })
+    staleRecords.resolve([
+      {
+        id: 'record-1',
+        answer: 'flag{stale}',
+        status: 'correct',
+        submitted_at: '2026-04-22T08:00:00.000Z',
+      },
+    ])
+
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('Fresh Challenge')
+    expect(wrapper.text()).not.toContain('Stale Challenge')
+
+    const recordsTab = wrapper.findAll('button').find((node) => node.text().trim() === '提交记录')
+    expect(recordsTab).toBeTruthy()
+
+    await recordsTab!.trigger('click')
+    await flushPromises()
+
+    expect(wrapper.text()).not.toContain('flag{stale}')
+    expect(wrapper.text()).toContain('还没有提交记录')
   })
 
   it('已解题时应通过顶部标签切换到推荐题解、社区题解和编写题解', async () => {

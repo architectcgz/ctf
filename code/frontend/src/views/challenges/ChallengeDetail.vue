@@ -671,6 +671,7 @@ const recommendedSolutions = ref<RecommendedChallengeSolutionData[]>([])
 const communitySolutions = ref<CommunityChallengeSolutionData[]>([])
 const selectedSolutionId = ref<string | null>(null)
 let scoreRailProbeTimer: number | null = null
+let latestChallengeRequestId = 0
 const {
   instance,
   loading: instanceLoading,
@@ -809,15 +810,21 @@ const { setTabButtonRef: setSolutionTabButtonRef, handleTabKeydown: handleSoluti
     selectTab: selectSolutionTab,
   })
 
-async function loadSolutions(id: string): Promise<void> {
+async function loadSolutions(id: string, requestId = latestChallengeRequestId): Promise<void> {
   try {
     const [recommended, communityPage] = await Promise.all([
       getRecommendedChallengeSolutions(id),
       getCommunityChallengeSolutions(id),
     ])
+    if (requestId !== latestChallengeRequestId || id !== challengeId.value) {
+      return
+    }
     recommendedSolutions.value = recommended
     communitySolutions.value = communityPage.list
   } catch {
+    if (requestId !== latestChallengeRequestId || id !== challengeId.value) {
+      return
+    }
     clearSolutions()
     toast.error('加载题解失败')
   }
@@ -825,22 +832,31 @@ async function loadSolutions(id: string): Promise<void> {
 
 async function loadChallenge(): Promise<void> {
   const id = challengeId.value
+  const requestId = ++latestChallengeRequestId
   loading.value = true
 
   try {
     const detail = await getChallengeDetail(id)
+    if (requestId !== latestChallengeRequestId || id !== challengeId.value) {
+      return
+    }
     challenge.value = detail
 
     if (detail.is_solved) {
-      await loadSolutions(id)
+      await loadSolutions(id, requestId)
     } else {
       clearSolutions()
     }
   } catch {
+    if (requestId !== latestChallengeRequestId || id !== challengeId.value) {
+      return
+    }
     toast.error('加载题目详情失败')
     void router.push('/challenges')
   } finally {
-    loading.value = false
+    if (requestId === latestChallengeRequestId && id === challengeId.value) {
+      loading.value = false
+    }
   }
 }
 

@@ -1,9 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import { createRouter, createMemoryHistory } from 'vue-router'
-import { createPinia } from 'pinia'
+import { createPinia, setActivePinia } from 'pinia'
 import ContestDetail from '../ContestDetail.vue'
 import contestDetailSource from '../ContestDetail.vue?raw'
+import { useAuthStore } from '@/stores/auth'
 
 const contestApiMocks = vi.hoisted(() => ({
   getContestDetail: vi.fn(),
@@ -43,10 +44,14 @@ const webSocketMocks = vi.hoisted(() => {
     ),
   }
 })
+const destructiveConfirmMock = vi.hoisted(() => vi.fn())
 
 vi.mock('@/api/contest', () => contestApiMocks)
 vi.mock('@/composables/useWebSocket', () => ({
   useWebSocket: webSocketMocks.useWebSocket,
+}))
+vi.mock('@/composables/useDestructiveConfirm', () => ({
+  confirmDestructiveAction: destructiveConfirmMock,
 }))
 
 describe('ContestDetail', () => {
@@ -66,6 +71,8 @@ describe('ContestDetail', () => {
     contestApiMocks.startContestAWDServiceInstance.mockReset()
     contestApiMocks.submitContestAWDAttack.mockReset()
     contestApiMocks.submitContestFlag.mockReset()
+    destructiveConfirmMock.mockReset()
+    destructiveConfirmMock.mockResolvedValue(true)
     webSocketMocks.connect.mockClear()
     webSocketMocks.disconnect.mockClear()
     webSocketMocks.useWebSocket.mockClear()
@@ -1317,6 +1324,51 @@ describe('ContestDetail', () => {
     await flushPromises()
 
     expect(wrapper.text()).toContain('BANK PORTAL: HIT SUCCESSFUL. +60 PTS')
+  })
+
+  it('踢出队员前应走统一确认弹窗', async () => {
+    contestApiMocks.getMyTeam.mockResolvedValueOnce({
+      id: 'team-1',
+      name: 'Red',
+      captain_user_id: 'user-1',
+      invite_code: 'RED-CTF',
+      members: [
+        { user_id: 'user-1', username: 'alice' },
+        { user_id: 'user-2', username: 'bob' },
+      ],
+    })
+    contestApiMocks.kickTeamMember.mockResolvedValue(undefined)
+
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    useAuthStore().setAuth({ id: 'user-1', username: 'alice', role: 'student' }, 'token')
+
+    const wrapper = mount(ContestDetail, {
+      global: {
+        plugins: [pinia, router],
+      },
+    })
+
+    await router.push('/contests/1?panel=team')
+    await router.isReady()
+    await flushPromises()
+
+    const teamTab = wrapper.findAll('button').find((node) => node.text().trim() === '队伍')
+    expect(teamTab).toBeTruthy()
+    await teamTab!.trigger('click')
+    await flushPromises()
+
+    const kickButton = wrapper.findAll('button').find((node) => node.text().trim() === '踢出')
+    expect(kickButton).toBeTruthy()
+    await kickButton!.trigger('click')
+    await flushPromises()
+
+    expect(destructiveConfirmMock).toHaveBeenCalledWith({
+      title: '踢出成员',
+      message: '确定踢出该成员？',
+      confirmButtonText: '确认踢出',
+    })
+    expect(contestApiMocks.kickTeamMember).toHaveBeenCalledWith('1', 'team-1', 'user-2')
   })
 
   it('竞赛详情 hero 应使用共享 workspace overline 语义', () => {
