@@ -1,6 +1,8 @@
 package queries
 
 import (
+	"context"
+
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/module/challenge/domain"
 	challengeports "ctf-platform/internal/module/challenge/ports"
@@ -16,7 +18,14 @@ func NewTagService(repo challengeports.TagRepository) *TagService {
 }
 
 func (s *TagService) ListTags(tagType string) ([]*dto.TagResp, error) {
-	tags, err := s.repo.List(tagType)
+	return s.ListTagsWithContext(context.Background(), tagType)
+}
+
+func (s *TagService) ListTagsWithContext(ctx context.Context, tagType string) ([]*dto.TagResp, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	tags, err := s.repo.ListWithContext(ctx, tagType)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
