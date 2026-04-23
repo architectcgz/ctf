@@ -8,7 +8,7 @@
 | 审查范围 | `code/frontend/src` 路由、关键视图、composables、stores、共享样式与验证门禁 |
 | 审查日期 | 2026-04-22 |
 | 审查方式 | 静态代码审查 + 最小验证基线检查 |
-| 审查状态 | 已记录，已完成六轮最小高收益修复 |
+| 审查状态 | 已记录，已完成七轮最小高收益修复 |
 
 ## 当前结论
 
@@ -257,6 +257,24 @@
 
 - 已执行：
   - `npm run test:run -- src/views/contests/__tests__/contestDetailPanelExtraction.test.ts src/views/contests/__tests__/contestStudentActionPrimitives.test.ts src/views/contests/__tests__/ContestDetail.test.ts`
+  - `npm run typecheck`
+
+## 第七轮修复进展
+
+- 已完成：
+  - `P2-5` `ImageManage.vue` 继续减重，镜像详情弹窗和创建弹窗已抽到独立 `components/platform/images` 组件，页面本体只保留筛选、排序、轮询与增删流程。
+  - `ImageManage` 的源码护栏已改到新的真实承载组件上，同时补回目录头和工具栏的共享样式约束，避免测试继续被模板排版和旧边界绑死。
+- 本轮涉及文件：
+  - `code/frontend/src/views/platform/ImageManage.vue`
+  - `code/frontend/src/components/platform/images/ImageDetailModal.vue`
+  - `code/frontend/src/components/platform/images/ImageCreateModal.vue`
+  - `code/frontend/src/views/platform/__tests__/imageManageModalExtraction.test.ts`
+  - `code/frontend/src/views/platform/__tests__/ImageManage.test.ts`
+
+## 第七轮验证
+
+- 已执行：
+  - `npm run test:run -- src/views/platform/__tests__/imageManageModalExtraction.test.ts src/views/platform/__tests__/ImageManage.test.ts`
   - `npm run typecheck`
 
 ## 备注

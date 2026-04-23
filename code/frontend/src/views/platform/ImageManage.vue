@@ -1,27 +1,16 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
-import {
-  ArrowDownWideNarrow,
-  Calendar,
-  Clock,
-  Database,
-  FileText,
-  Fingerprint,
-  Info,
-  Maximize2,
-  RefreshCw,
-  SortAsc,
-  Tag,
-} from 'lucide-vue-next'
+import { ArrowDownWideNarrow, Calendar, RefreshCw, SortAsc } from 'lucide-vue-next'
 
 import { createImage, deleteImage, getImages, type AdminImagePayload } from '@/api/admin'
 import type { AdminImageListItem, ImageStatus } from '@/api/contracts'
 import PlatformPaginationControls from '@/components/platform/PlatformPaginationControls.vue'
+import ImageCreateModal from '@/components/platform/images/ImageCreateModal.vue'
+import ImageDetailModal from '@/components/platform/images/ImageDetailModal.vue'
 import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
 import WorkspaceDirectoryToolbar, {
   type WorkspaceDirectorySortOption,
 } from '@/components/common/WorkspaceDirectoryToolbar.vue'
-import AdminSurfaceModal from '@/components/common/modal-templates/AdminSurfaceModal.vue'
 import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
 import { usePagination } from '@/composables/usePagination'
 import { useToast } from '@/composables/useToast'
@@ -550,176 +539,28 @@ onUnmounted(() => {
       </section>
     </main>
 
-    <AdminSurfaceModal
-      class="image-detail-modal"
+    <ImageDetailModal
       :open="!!activeImage"
-      :frosted="true"
-      title="镜像详情"
-      eyebrow="Image Registry"
-      width="34rem"
+      :image="activeImage"
+      :format-size="formatSize"
+      :format-date-time="formatDateTime"
+      :get-status-label="getStatusLabel"
+      :get-status-style="getStatusStyle"
       @close="closeDetail"
       @update:open="!$event && closeDetail()"
-    >
-      <section
-        v-if="activeImage"
-        class="image-detail"
-      >
-        <div class="image-detail__grid">
-          <article class="image-detail__item">
-            <div class="image-detail__head">
-              <Database class="h-3.5 w-3.5" />
-              <span class="image-detail__label">镜像名称</span>
-            </div>
-            <strong class="image-detail__value">{{ activeImage.name }}</strong>
-          </article>
+    />
 
-          <article class="image-detail__item">
-            <div class="image-detail__head">
-              <Tag class="h-3.5 w-3.5" />
-              <span class="image-detail__label">标签版本</span>
-            </div>
-            <strong class="image-detail__value">{{ activeImage.tag }}</strong>
-          </article>
-
-          <article class="image-detail__item">
-            <div class="image-detail__head">
-              <Fingerprint class="h-3.5 w-3.5" />
-              <span class="image-detail__label">镜像 ID</span>
-            </div>
-            <strong class="image-detail__value image-detail__value--mono">
-              {{ activeImage.id }}
-            </strong>
-          </article>
-
-          <article class="image-detail__item">
-            <div class="image-detail__head">
-              <Info class="h-3.5 w-3.5" />
-              <span class="image-detail__label">状态</span>
-            </div>
-            <div class="image-detail__value">
-              <span
-                class="admin-status-chip"
-                :style="getStatusStyle(activeImage.status)"
-              >
-                {{ getStatusLabel(activeImage.status) }}
-              </span>
-            </div>
-          </article>
-
-          <article class="image-detail__item">
-            <div class="image-detail__head">
-              <Maximize2 class="h-3.5 w-3.5" />
-              <span class="image-detail__label">占用空间</span>
-            </div>
-            <strong class="image-detail__value">{{ formatSize(activeImage.size_bytes) }}</strong>
-          </article>
-
-          <article class="image-detail__item">
-            <div class="image-detail__head">
-              <Clock class="h-3.5 w-3.5" />
-              <span class="image-detail__label">最后更新</span>
-            </div>
-            <strong class="image-detail__value">
-              {{ formatDateTime(activeImage.updated_at || activeImage.created_at) }}
-            </strong>
-          </article>
-
-          <article class="image-detail__item image-detail__item--wide">
-            <div class="image-detail__head">
-              <FileText class="h-3.5 w-3.5" />
-              <span class="image-detail__label">描述信息</span>
-            </div>
-            <p class="image-detail__description">
-              {{ activeImage.description || '未提供详细描述' }}
-            </p>
-          </article>
-        </div>
-      </section>
-    </AdminSurfaceModal>
-
-    <AdminSurfaceModal
-      class="image-create-modal"
+    <ImageCreateModal
       :open="dialogVisible"
-      :frosted="true"
-      title="创建镜像"
-      subtitle="填写镜像名称、标签和说明，提交后会进入镜像目录并参与构建状态跟踪。"
-      eyebrow="Image Registry"
-      width="31.25rem"
+      :creating="creating"
+      :form="form"
       @close="dialogVisible = false"
       @update:open="dialogVisible = $event"
-    >
-      <form
-        class="image-create-form"
-        @submit.prevent="handleCreate"
-      >
-        <label class="ui-field image-create-field">
-          <span class="ui-field__label">
-            镜像名称
-            <span
-              class="ui-field__required"
-              aria-hidden="true"
-            >*</span>
-          </span>
-          <span class="ui-control-wrap">
-            <input
-              v-model="form.name"
-              type="text"
-              class="ui-control"
-              placeholder="例如：ubuntu"
-            >
-          </span>
-        </label>
-
-        <label class="ui-field image-create-field">
-          <span class="ui-field__label">
-            标签
-            <span
-              class="ui-field__required"
-              aria-hidden="true"
-            >*</span>
-          </span>
-          <span class="ui-control-wrap">
-            <input
-              v-model="form.tag"
-              type="text"
-              class="ui-control"
-              placeholder="例如：22.04"
-            >
-          </span>
-        </label>
-
-        <label class="ui-field image-create-field">
-          <span class="ui-field__label">描述</span>
-          <span class="ui-control-wrap image-create-field__textarea">
-            <textarea
-              v-model="form.description"
-              class="ui-control"
-              rows="3"
-              placeholder="镜像说明（可选）"
-            />
-          </span>
-        </label>
-      </form>
-      <template #footer>
-        <div class="image-create-dialog__footer">
-          <button
-            type="button"
-            class="ui-btn ui-btn--secondary"
-            @click="dialogVisible = false"
-          >
-            取消
-          </button>
-          <button
-            type="button"
-            :disabled="creating"
-            class="ui-btn ui-btn--primary"
-            @click="handleCreate"
-          >
-            {{ creating ? '创建中...' : '创建' }}
-          </button>
-        </div>
-      </template>
-    </AdminSurfaceModal>
+      @update:name="form.name = $event"
+      @update:tag="form.tag = $event"
+      @update:description="form.description = $event"
+      @submit="handleCreate"
+    />
   </section>
 </template>
 
@@ -790,31 +631,6 @@ onUnmounted(() => {
   padding: var(--space-4) 0 0;
   font-size: var(--font-size-0-875);
   color: var(--journal-muted);
-}
-
-.image-create-form {
-  display: grid;
-  gap: var(--space-4);
-}
-
-.image-create-field {
-  --ui-field-gap: var(--space-2);
-}
-
-.image-create-field__textarea {
-  align-items: stretch;
-}
-
-.image-create-field__textarea .ui-control {
-  min-height: 6.25rem;
-  resize: vertical;
-}
-
-.image-create-dialog__footer {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: var(--space-2);
 }
 
 .image-header {
@@ -908,6 +724,18 @@ onUnmounted(() => {
   display: grid;
   gap: var(--space-4);
   padding-top: var(--space-1);
+}
+
+.image-board__head {
+  margin-bottom: 0;
+}
+
+.list-heading__title {
+  font-size: clamp(1.2rem, 1rem + 0.5vw, 1.45rem);
+}
+
+.image-board :deep(.workspace-directory-toolbar) {
+  margin-bottom: 0;
 }
 
 .image-section-title,
@@ -1023,55 +851,6 @@ onUnmounted(() => {
   gap: 0.5rem;
 }
 
-.image-detail__grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1.75rem 2rem;
-  padding: 0.25rem;
-}
-
-.image-detail__item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.image-detail__item--wide {
-  grid-column: 1 / -1;
-}
-
-.image-detail__head {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: var(--journal-muted);
-}
-
-.image-detail__label {
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.image-detail__value {
-  font-size: 16px;
-  font-weight: 800;
-  line-height: 1.2;
-  color: var(--journal-ink);
-}
-
-.image-detail__value--mono {
-  font-family: var(--font-family-mono);
-}
-
-.image-detail__description {
-  margin: 0;
-  font-size: 14px;
-  line-height: 1.7;
-  color: var(--journal-muted);
-}
-
 @media (max-width: 1040px) {
   .image-list {
     min-width: 56rem;
@@ -1087,13 +866,6 @@ onUnmounted(() => {
     width: 100%;
   }
 
-  .image-create-dialog__footer {
-    flex-direction: column-reverse;
-  }
-
-  .image-create-dialog__footer > .ui-btn {
-    width: 100%;
-  }
 }
 </style>
 
