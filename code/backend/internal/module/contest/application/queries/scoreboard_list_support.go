@@ -61,6 +61,8 @@ func filterScoreboardResults(logger *zap.Logger, contestID int64, results []redi
 }
 
 func buildScoreboardItems(
+	logger *zap.Logger,
+	contestID int64,
 	start int64,
 	results []redislib.Z,
 	teamIDs []int64,
@@ -76,9 +78,17 @@ func buildScoreboardItems(
 	for idx, item := range results {
 		teamID := teamIDs[idx]
 		team := teamMap[teamID]
+		if team == nil {
+			if logger != nil {
+				logger.Warn("跳过缺失的排行榜队伍",
+					zap.Int64("contest_id", contestID),
+					zap.Int64("team_id", teamID))
+			}
+			continue
+		}
 		stats := statsMap[teamID]
 		items = append(items, &dto.ScoreboardItem{
-			Rank:             int(start) + idx + 1,
+			Rank:             int(start) + len(items) + 1,
 			TeamID:           teamID,
 			Score:            item.Score,
 			TeamName:         teamName(team),

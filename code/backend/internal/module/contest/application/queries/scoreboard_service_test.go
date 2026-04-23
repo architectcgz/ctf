@@ -138,3 +138,60 @@ func TestScoreboardServiceGetScoreboardSkipsInvalidRedisMembers(t *testing.T) {
 		t.Fatalf("expected scoreboard total to exclude invalid redis member, got %d", resp.Scoreboard.Total)
 	}
 }
+
+func TestScoreboardServiceGetScoreboardSkipsMissingTeams(t *testing.T) {
+	t.Parallel()
+
+	mini, err := miniredis.Run()
+	if err != nil {
+		t.Fatalf("start miniredis: %v", err)
+	}
+	defer mini.Close()
+
+	redisClient := redislib.NewClient(&redislib.Options{Addr: mini.Addr()})
+	defer func() {
+		_ = redisClient.Close()
+	}()
+
+	now := time.Now()
+	contestID := int64(78)
+	key := rediskeys.RankContestTeamKey(contestID)
+	if err := redisClient.ZAdd(context.Background(), key,
+		redislib.Z{Score: 500, Member: contestdomain.TeamIDToMember(11)},
+		redislib.Z{Score: 450, Member: contestdomain.TeamIDToMember(12)},
+	).Err(); err != nil {
+		t.Fatalf("seed redis scoreboard: %v", err)
+	}
+
+	service := NewScoreboardService(&scoreboardQueryRepoStub{
+		contest: &model.Contest{
+			ID:        contestID,
+			Title:     "scoreboard",
+			Mode:      model.ContestModeJeopardy,
+			StartTime: now.Add(-time.Hour),
+			EndTime:   now.Add(time.Hour),
+			Status:    model.ContestStatusRunning,
+		},
+		teams: map[int64]*model.Team{
+			11: {ID: 11, Name: "Alpha"},
+		},
+		statsMap: map[int64]contestports.ScoreboardTeamStats{
+			11: {SolvedCount: 5},
+			12: {SolvedCount: 4},
+		},
+	}, redisClient, &config.ContestConfig{}, zap.NewNop())
+
+	resp, err := service.GetScoreboard(context.Background(), contestID, 1, 10)
+	if err != nil {
+		t.Fatalf("GetScoreboard() error = %v", err)
+	}
+	if resp.Scoreboard == nil {
+		t.Fatalf("expected scoreboard payload, got %+v", resp)
+	}
+	if len(resp.Scoreboard.List) != 1 {
+		t.Fatalf("expected missing team to be skipped, got %+v", resp.Scoreboard.List)
+	}
+	if resp.Scoreboard.List[0].TeamID != 11 || resp.Scoreboard.List[0].TeamName != "Alpha" {
+		t.Fatalf("unexpected scoreboard item: %+v", resp.Scoreboard.List[0])
+	}
+}
