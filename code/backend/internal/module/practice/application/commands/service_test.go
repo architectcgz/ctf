@@ -1670,3 +1670,247 @@ func TestRunProvisioningLoopLeavesOverflowPendingWhenGlobalCapacityReached(t *te
 
 	close(release)
 }
+
+type practiceServiceContextKey string
+
+func TestSubmitFlagWithContextPropagatesContextToRepository(t *testing.T) {
+	t.Parallel()
+
+	ctxKey := practiceServiceContextKey("submit")
+	expectedCtxValue := "ctx-submit-flag"
+	redisServer := miniredis.RunT(t)
+	redisClient := redis.NewClient(&redis.Options{Addr: redisServer.Addr()})
+	defer redisClient.Close()
+	flagSalt := "context-submit-salt"
+
+	findCorrectCalled := false
+	createSubmissionCalled := false
+	repo := &stubPracticeRepository{
+		findCorrectSubmissionWithContextFn: func(ctx context.Context, userID, challengeID int64) (*model.Submission, error) {
+			findCorrectCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected find-correct ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return nil, gorm.ErrRecordNotFound
+		},
+		createSubmissionWithContextFn: func(ctx context.Context, submission *model.Submission) error {
+			createSubmissionCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected create-submission ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return nil
+		},
+	}
+	service := NewService(
+		repo,
+		&stubPracticeChallengeContract{
+			findByIDFn: func(id int64) (*model.Challenge, error) {
+				return &model.Challenge{
+					ID:       id,
+					Category: model.DimensionWeb,
+					Points:   100,
+					Status:   model.ChallengeStatusPublished,
+					FlagType: model.FlagTypeStatic,
+					FlagSalt: flagSalt,
+					FlagHash: flagcrypto.HashStaticFlag("flag{ctx-submit}", flagSalt),
+				}, nil
+			},
+		},
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		redisClient,
+		&config.Config{
+			RateLimit: config.RateLimitConfig{
+				RedisKeyPrefix: "practice:test",
+				FlagSubmit: config.RateLimitPolicyConfig{
+					Limit:  5,
+					Window: time.Minute,
+				},
+			},
+		},
+		nil,
+	)
+
+	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
+	if _, err := service.SubmitFlagWithContext(ctx, 7, 11, "flag{ctx-submit}"); err != nil {
+		t.Fatalf("SubmitFlagWithContext() error = %v", err)
+	}
+	if !findCorrectCalled {
+		t.Fatal("expected find correct submission repository to be called")
+	}
+	if !createSubmissionCalled {
+		t.Fatal("expected create submission repository to be called")
+	}
+}
+
+func TestReviewManualReviewSubmissionWithContextPropagatesContextToRepository(t *testing.T) {
+	t.Parallel()
+
+	ctxKey := practiceServiceContextKey("review")
+	expectedCtxValue := "ctx-review-manual"
+	now := time.Now()
+	updatedCalled := false
+	findRequesterCalled := false
+	findRecordCalled := false
+	repo := &stubPracticeRepository{
+		getTeacherManualReviewSubmissionByIDWithContextFn: func(ctx context.Context, id int64) (*practiceports.TeacherManualReviewSubmissionRecord, error) {
+			findRecordCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected get-review-record ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return &practiceports.TeacherManualReviewSubmissionRecord{
+				Submission: model.Submission{
+					ID:           id,
+					UserID:       88,
+					ChallengeID:  11,
+					Flag:         "answer",
+					ReviewStatus: model.SubmissionReviewStatusPending,
+					SubmittedAt:  now,
+					UpdatedAt:    now,
+				},
+				StudentUsername: "student88",
+				StudentName:     "Student 88",
+				ClassName:       "Class A",
+				ChallengeTitle:  "manual challenge",
+			}, nil
+		},
+		findUserByIDWithContextFn: func(ctx context.Context, userID int64) (*model.User, error) {
+			findRequesterCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected find-user ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return &model.User{ID: userID, Role: model.RoleTeacher, ClassName: "Class A"}, nil
+		},
+		updateSubmissionWithContextFn: func(ctx context.Context, submission *model.Submission) error {
+			updatedCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected update-submission ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return nil
+		},
+	}
+	service := NewService(
+		repo,
+		&stubPracticeChallengeContract{
+			findByIDFn: func(id int64) (*model.Challenge, error) {
+				return &model.Challenge{
+					ID:       id,
+					Category: model.DimensionWeb,
+					Points:   120,
+					Status:   model.ChallengeStatusPublished,
+					FlagType: model.FlagTypeManualReview,
+				}, nil
+			},
+		},
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		&config.Config{},
+		nil,
+	)
+
+	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
+	if _, err := service.ReviewManualReviewSubmissionWithContext(
+		ctx,
+		91,
+		1001,
+		model.RoleTeacher,
+		&dto.ReviewManualReviewSubmissionReq{ReviewStatus: model.SubmissionReviewStatusApproved},
+	); err != nil {
+		t.Fatalf("ReviewManualReviewSubmissionWithContext() error = %v", err)
+	}
+	if !findRecordCalled {
+		t.Fatal("expected review record repository to be called")
+	}
+	if !findRequesterCalled {
+		t.Fatal("expected requester repository to be called")
+	}
+	if !updatedCalled {
+		t.Fatal("expected update submission repository to be called")
+	}
+}
+
+func TestListTeacherManualReviewSubmissionsWithContextPropagatesContextToRepository(t *testing.T) {
+	t.Parallel()
+
+	ctxKey := practiceServiceContextKey("list-review")
+	expectedCtxValue := "ctx-list-review"
+	listCalled := false
+	repo := &stubPracticeRepository{
+		findUserByIDWithContextFn: func(ctx context.Context, userID int64) (*model.User, error) {
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected find-user ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return &model.User{ID: userID, Role: model.RoleTeacher, ClassName: "Class A"}, nil
+		},
+		listTeacherManualReviewSubmissionsWithContextFn: func(ctx context.Context, query *dto.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error) {
+			listCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected list-review ctx value %v, got %v", expectedCtxValue, got)
+			}
+			if query.ClassName != "Class A" {
+				t.Fatalf("expected normalized class name, got %+v", query)
+			}
+			return []practiceports.TeacherManualReviewSubmissionRecord{}, 0, nil
+		},
+	}
+	service := NewService(repo, nil, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
+
+	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
+	if _, err := service.ListTeacherManualReviewSubmissionsWithContext(ctx, 1001, model.RoleTeacher, &dto.TeacherManualReviewSubmissionQuery{}); err != nil {
+		t.Fatalf("ListTeacherManualReviewSubmissionsWithContext() error = %v", err)
+	}
+	if !listCalled {
+		t.Fatal("expected list manual review repository to be called")
+	}
+}
+
+func TestGetTeacherManualReviewSubmissionWithContextPropagatesContextToRepository(t *testing.T) {
+	t.Parallel()
+
+	ctxKey := practiceServiceContextKey("get-review")
+	expectedCtxValue := "ctx-get-review"
+	now := time.Now()
+	getCalled := false
+	findRequesterCalled := false
+	repo := &stubPracticeRepository{
+		getTeacherManualReviewSubmissionByIDWithContextFn: func(ctx context.Context, id int64) (*practiceports.TeacherManualReviewSubmissionRecord, error) {
+			getCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected get-review ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return &practiceports.TeacherManualReviewSubmissionRecord{
+				Submission:      model.Submission{ID: id, UserID: 88, ChallengeID: 11, ReviewStatus: model.SubmissionReviewStatusPending, SubmittedAt: now, UpdatedAt: now},
+				StudentUsername: "student88",
+				StudentName:     "Student 88",
+				ClassName:       "Class A",
+				ChallengeTitle:  "manual challenge",
+			}, nil
+		},
+		findUserByIDWithContextFn: func(ctx context.Context, userID int64) (*model.User, error) {
+			findRequesterCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected find-user ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return &model.User{ID: userID, Role: model.RoleTeacher, ClassName: "Class A"}, nil
+		},
+	}
+	service := NewService(repo, nil, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
+
+	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
+	if _, err := service.GetTeacherManualReviewSubmissionWithContext(ctx, 91, 1001, model.RoleTeacher); err != nil {
+		t.Fatalf("GetTeacherManualReviewSubmissionWithContext() error = %v", err)
+	}
+	if !getCalled {
+		t.Fatal("expected get manual review repository to be called")
+	}
+	if !findRequesterCalled {
+		t.Fatal("expected requester repository to be called")
+	}
+}

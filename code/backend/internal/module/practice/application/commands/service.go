@@ -559,7 +559,7 @@ func (s *Service) SubmitFlagWithContext(ctx context.Context, userID, challengeID
 	}
 
 	alreadySolved := false
-	if _, err := s.repo.FindCorrectSubmission(userID, challengeID); err == nil {
+	if _, err := s.repo.FindCorrectSubmissionWithContext(ctx, userID, challengeID); err == nil {
 		alreadySolved = true
 	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, errcode.ErrInternal.WithCause(err)
@@ -617,7 +617,7 @@ func (s *Service) SubmitFlagWithContext(ctx context.Context, userID, challengeID
 	}
 
 	if !submissionPersisted {
-		if err := s.repo.CreateSubmission(submission); err != nil {
+		if err := s.repo.CreateSubmissionWithContext(ctx, submission); err != nil {
 			if submission.IsCorrect && s.repo.IsUniqueViolation(err) {
 				return nil, errcode.ErrAlreadySolved
 			}
@@ -719,14 +719,14 @@ func (s *Service) ReviewManualReviewSubmissionWithContext(
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	record, err := s.repo.GetTeacherManualReviewSubmissionByID(submissionID)
+	record, err := s.repo.GetTeacherManualReviewSubmissionByIDWithContext(ctx, submissionID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrNotFound
 		}
 		return nil, err
 	}
-	if err := ensureTeacherCanAccessManualReviewSubmission(s.repo, reviewerID, reviewerRole, record); err != nil {
+	if err := ensureTeacherCanAccessManualReviewSubmission(ctx, s.repo, reviewerID, reviewerRole, record); err != nil {
 		return nil, err
 	}
 	if record.Submission.ReviewStatus != model.SubmissionReviewStatusPending {
@@ -759,7 +759,7 @@ func (s *Service) ReviewManualReviewSubmissionWithContext(
 		item.Score = 0
 	}
 
-	if err := s.repo.UpdateSubmission(&item); err != nil {
+	if err := s.repo.UpdateSubmissionWithContext(ctx, &item); err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 	if item.IsCorrect {
@@ -791,15 +791,27 @@ func (s *Service) ListTeacherManualReviewSubmissions(
 	requesterRole string,
 	query *dto.TeacherManualReviewSubmissionQuery,
 ) (*dto.PageResult, error) {
+	return s.ListTeacherManualReviewSubmissionsWithContext(context.Background(), requesterID, requesterRole, query)
+}
+
+func (s *Service) ListTeacherManualReviewSubmissionsWithContext(
+	ctx context.Context,
+	requesterID int64,
+	requesterRole string,
+	query *dto.TeacherManualReviewSubmissionQuery,
+) (*dto.PageResult, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
 	if query == nil {
 		query = &dto.TeacherManualReviewSubmissionQuery{}
 	}
-	normalized, err := normalizeTeacherManualReviewQuery(s.repo, requesterID, requesterRole, query)
+	normalized, err := normalizeTeacherManualReviewQueryWithContext(ctx, s.repo, requesterID, requesterRole, query)
 	if err != nil {
 		return nil, err
 	}
 
-	items, total, err := s.repo.ListTeacherManualReviewSubmissions(normalized)
+	items, total, err := s.repo.ListTeacherManualReviewSubmissionsWithContext(ctx, normalized)
 	if err != nil {
 		return nil, err
 	}
@@ -821,14 +833,25 @@ func (s *Service) GetTeacherManualReviewSubmission(
 	submissionID, requesterID int64,
 	requesterRole string,
 ) (*dto.TeacherManualReviewSubmissionDetailResp, error) {
-	record, err := s.repo.GetTeacherManualReviewSubmissionByID(submissionID)
+	return s.GetTeacherManualReviewSubmissionWithContext(context.Background(), submissionID, requesterID, requesterRole)
+}
+
+func (s *Service) GetTeacherManualReviewSubmissionWithContext(
+	ctx context.Context,
+	submissionID, requesterID int64,
+	requesterRole string,
+) (*dto.TeacherManualReviewSubmissionDetailResp, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	record, err := s.repo.GetTeacherManualReviewSubmissionByIDWithContext(ctx, submissionID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrNotFound
 		}
 		return nil, err
 	}
-	if err := ensureTeacherCanAccessManualReviewSubmission(s.repo, requesterID, requesterRole, record); err != nil {
+	if err := ensureTeacherCanAccessManualReviewSubmission(ctx, s.repo, requesterID, requesterRole, record); err != nil {
 		return nil, err
 	}
 	return manualReviewDetailRespFromRecord(*record, record.Submission), nil
@@ -859,6 +882,7 @@ func (s *Service) ListMyChallengeSubmissions(userID, challengeID int64) ([]*dto.
 }
 
 func ensureTeacherCanAccessManualReviewSubmission(
+	ctx context.Context,
 	repo practiceports.PracticeCommandRepository,
 	requesterID int64,
 	requesterRole string,
@@ -867,7 +891,7 @@ func ensureTeacherCanAccessManualReviewSubmission(
 	if requesterRole == model.RoleAdmin {
 		return nil
 	}
-	requester, err := repo.FindUserByID(requesterID)
+	requester, err := repo.FindUserByIDWithContext(ctx, requesterID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return errcode.ErrUnauthorized
@@ -886,6 +910,16 @@ func normalizeTeacherManualReviewQuery(
 	requesterRole string,
 	query *dto.TeacherManualReviewSubmissionQuery,
 ) (*dto.TeacherManualReviewSubmissionQuery, error) {
+	return normalizeTeacherManualReviewQueryWithContext(context.Background(), repo, requesterID, requesterRole, query)
+}
+
+func normalizeTeacherManualReviewQueryWithContext(
+	ctx context.Context,
+	repo practiceports.PracticeCommandRepository,
+	requesterID int64,
+	requesterRole string,
+	query *dto.TeacherManualReviewSubmissionQuery,
+) (*dto.TeacherManualReviewSubmissionQuery, error) {
 	normalized := *query
 	if normalized.Page <= 0 {
 		normalized.Page = 1
@@ -897,7 +931,7 @@ func normalizeTeacherManualReviewQuery(
 		return &normalized, nil
 	}
 
-	requester, err := repo.FindUserByID(requesterID)
+	requester, err := repo.FindUserByIDWithContext(ctx, requesterID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrUnauthorized

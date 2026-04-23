@@ -215,13 +215,21 @@ func (r *Repository) BindReservedPort(port int, instanceID int64) error {
 
 // CreateSubmission 创建提交记录
 func (r *Repository) CreateSubmission(submission *model.Submission) error {
-	return r.db.Create(submission).Error
+	return r.CreateSubmissionWithContext(context.Background(), submission)
+}
+
+func (r *Repository) CreateSubmissionWithContext(ctx context.Context, submission *model.Submission) error {
+	return r.dbWithContext(ctx).Create(submission).Error
 }
 
 // FindCorrectSubmission 查找用户是否已正确提交过该题
 func (r *Repository) FindCorrectSubmission(userID, challengeID int64) (*model.Submission, error) {
+	return r.FindCorrectSubmissionWithContext(context.Background(), userID, challengeID)
+}
+
+func (r *Repository) FindCorrectSubmissionWithContext(ctx context.Context, userID, challengeID int64) (*model.Submission, error) {
 	var submission model.Submission
-	err := r.db.Where("user_id = ? AND challenge_id = ? AND is_correct = ?", userID, challengeID, true).
+	err := r.dbWithContext(ctx).Where("user_id = ? AND challenge_id = ? AND is_correct = ?", userID, challengeID, true).
 		First(&submission).Error
 	return &submission, err
 }
@@ -241,12 +249,20 @@ func (r *Repository) ListChallengeSubmissions(userID, challengeID int64, limit i
 }
 
 func (r *Repository) UpdateSubmission(submission *model.Submission) error {
-	return r.db.Save(submission).Error
+	return r.UpdateSubmissionWithContext(context.Background(), submission)
+}
+
+func (r *Repository) UpdateSubmissionWithContext(ctx context.Context, submission *model.Submission) error {
+	return r.dbWithContext(ctx).Save(submission).Error
 }
 
 func (r *Repository) FindUserByID(userID int64) (*model.User, error) {
+	return r.FindUserByIDWithContext(context.Background(), userID)
+}
+
+func (r *Repository) FindUserByIDWithContext(ctx context.Context, userID int64) (*model.User, error) {
 	var user model.User
-	if err := r.db.Where("id = ?", userID).First(&user).Error; err != nil {
+	if err := r.dbWithContext(ctx).Where("id = ?", userID).First(&user).Error; err != nil {
 		return nil, err
 	}
 	return &user, nil
@@ -299,7 +315,11 @@ func (r teacherManualReviewSubmissionRow) toRecord() practiceports.TeacherManual
 }
 
 func (r *Repository) GetTeacherManualReviewSubmissionByID(id int64) (*practiceports.TeacherManualReviewSubmissionRecord, error) {
-	rows, _, err := r.listTeacherManualReviewSubmissions(&dto.TeacherManualReviewSubmissionQuery{
+	return r.GetTeacherManualReviewSubmissionByIDWithContext(context.Background(), id)
+}
+
+func (r *Repository) GetTeacherManualReviewSubmissionByIDWithContext(ctx context.Context, id int64) (*practiceports.TeacherManualReviewSubmissionRecord, error) {
+	rows, _, err := r.listTeacherManualReviewSubmissions(ctx, &dto.TeacherManualReviewSubmissionQuery{
 		Page: 1,
 		Size: 1,
 	}, func(db *gorm.DB) *gorm.DB {
@@ -316,14 +336,19 @@ func (r *Repository) GetTeacherManualReviewSubmissionByID(id int64) (*practicepo
 }
 
 func (r *Repository) ListTeacherManualReviewSubmissions(query *dto.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error) {
-	return r.listTeacherManualReviewSubmissions(query, nil)
+	return r.ListTeacherManualReviewSubmissionsWithContext(context.Background(), query)
+}
+
+func (r *Repository) ListTeacherManualReviewSubmissionsWithContext(ctx context.Context, query *dto.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error) {
+	return r.listTeacherManualReviewSubmissions(ctx, query, nil)
 }
 
 func (r *Repository) listTeacherManualReviewSubmissions(
+	ctx context.Context,
 	query *dto.TeacherManualReviewSubmissionQuery,
 	extra func(db *gorm.DB) *gorm.DB,
 ) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error) {
-	base := r.db.Table("submissions AS s").
+	base := r.dbWithContext(ctx).Table("submissions AS s").
 		Select(strings.TrimSpace(`
 			s.id,
 			s.user_id,
