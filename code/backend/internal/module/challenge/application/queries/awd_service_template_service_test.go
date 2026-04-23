@@ -15,7 +15,7 @@ func TestAWDServiceTemplateQueryServiceListTemplates(t *testing.T) {
 	repo := challengeinfra.NewRepository(db)
 	service := NewAWDServiceTemplateQueryService(repo)
 
-	if err := repo.CreateAWDServiceTemplate(&model.AWDServiceTemplate{
+	if err := repo.CreateAWDServiceTemplateWithContext(context.Background(), &model.AWDServiceTemplate{
 		Name:           "Bank Portal AWD",
 		Slug:           "bank-portal-awd",
 		Category:       "web",
@@ -24,12 +24,12 @@ func TestAWDServiceTemplateQueryServiceListTemplates(t *testing.T) {
 		DeploymentMode: model.AWDDeploymentModeSingleContainer,
 		Status:         model.AWDServiceTemplateStatusDraft,
 	}); err != nil {
-		t.Fatalf("CreateAWDServiceTemplate() error = %v", err)
+		t.Fatalf("CreateAWDServiceTemplateWithContext() error = %v", err)
 	}
 
-	page, err := service.ListTemplates(context.Background(), &dto.AWDServiceTemplateQuery{Page: 1, Size: 10})
+	page, err := service.ListTemplatesWithContext(context.Background(), &dto.AWDServiceTemplateQuery{Page: 1, Size: 10})
 	if err != nil {
-		t.Fatalf("ListTemplates() error = %v", err)
+		t.Fatalf("ListTemplatesWithContext() error = %v", err)
 	}
 	if page.Total != 1 || len(page.Items) != 1 {
 		t.Fatalf("unexpected page: %+v", page)
@@ -44,7 +44,7 @@ func TestAWDServiceTemplateQueryServiceGetTemplateIncludesInheritedRuntimeFields
 	repo := challengeinfra.NewRepository(db)
 	service := NewAWDServiceTemplateQueryService(repo)
 
-	if err := repo.CreateAWDServiceTemplate(&model.AWDServiceTemplate{
+	if err := repo.CreateAWDServiceTemplateWithContext(context.Background(), &model.AWDServiceTemplate{
 		ID:               2401,
 		Name:             "Bank Portal AWD",
 		Slug:             "bank-portal-awd",
@@ -63,12 +63,12 @@ func TestAWDServiceTemplateQueryServiceGetTemplateIncludesInheritedRuntimeFields
 		RuntimeConfig:    `{"image_id":9901,"service_port":8080}`,
 		ReadinessStatus:  model.AWDReadinessStatusPassed,
 	}); err != nil {
-		t.Fatalf("CreateAWDServiceTemplate() error = %v", err)
+		t.Fatalf("CreateAWDServiceTemplateWithContext() error = %v", err)
 	}
 
-	item, err := service.GetTemplate(context.Background(), 2401)
+	item, err := service.GetTemplateWithContext(context.Background(), 2401)
 	if err != nil {
-		t.Fatalf("GetTemplate() error = %v", err)
+		t.Fatalf("GetTemplateWithContext() error = %v", err)
 	}
 
 	if item.CheckerType != string(model.AWDCheckerTypeHTTPStandard) {

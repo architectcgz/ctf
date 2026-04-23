@@ -111,24 +111,44 @@ func (r *Repository) DeleteWithContext(ctx context.Context, id int64) error {
 }
 
 func (r *Repository) CreateAWDServiceTemplate(template *model.AWDServiceTemplate) error {
-	return r.db.Create(template).Error
+	return r.CreateAWDServiceTemplateWithContext(context.Background(), template)
+}
+
+func (r *Repository) CreateAWDServiceTemplateWithContext(ctx context.Context, template *model.AWDServiceTemplate) error {
+	return r.dbWithContext(ctx).Create(template).Error
 }
 
 func (r *Repository) FindAWDServiceTemplateByID(id int64) (*model.AWDServiceTemplate, error) {
+	return r.FindAWDServiceTemplateByIDWithContext(context.Background(), id)
+}
+
+func (r *Repository) FindAWDServiceTemplateByIDWithContext(ctx context.Context, id int64) (*model.AWDServiceTemplate, error) {
 	var template model.AWDServiceTemplate
-	err := r.db.Where("id = ?", id).First(&template).Error
+	err := r.dbWithContext(ctx).Where("id = ?", id).First(&template).Error
 	return &template, err
 }
 
 func (r *Repository) UpdateAWDServiceTemplate(template *model.AWDServiceTemplate) error {
-	return r.db.Save(template).Error
+	return r.UpdateAWDServiceTemplateWithContext(context.Background(), template)
+}
+
+func (r *Repository) UpdateAWDServiceTemplateWithContext(ctx context.Context, template *model.AWDServiceTemplate) error {
+	return r.dbWithContext(ctx).Save(template).Error
 }
 
 func (r *Repository) DeleteAWDServiceTemplate(id int64) error {
-	return r.db.Delete(&model.AWDServiceTemplate{}, id).Error
+	return r.DeleteAWDServiceTemplateWithContext(context.Background(), id)
 }
 
-func (r *Repository) ListAWDServiceTemplates(ctx context.Context, query *dto.AWDServiceTemplateQuery) ([]*model.AWDServiceTemplate, int64, error) {
+func (r *Repository) DeleteAWDServiceTemplateWithContext(ctx context.Context, id int64) error {
+	return r.dbWithContext(ctx).Delete(&model.AWDServiceTemplate{}, id).Error
+}
+
+func (r *Repository) ListAWDServiceTemplates(query *dto.AWDServiceTemplateQuery) ([]*model.AWDServiceTemplate, int64, error) {
+	return r.ListAWDServiceTemplatesWithContext(context.Background(), query)
+}
+
+func (r *Repository) ListAWDServiceTemplatesWithContext(ctx context.Context, query *dto.AWDServiceTemplateQuery) ([]*model.AWDServiceTemplate, int64, error) {
 	var templates []*model.AWDServiceTemplate
 	var total int64
 
