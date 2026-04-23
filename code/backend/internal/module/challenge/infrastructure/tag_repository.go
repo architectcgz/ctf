@@ -1,6 +1,8 @@
 package infrastructure
 
 import (
+	"context"
+
 	"ctf-platform/internal/model"
 
 	"gorm.io/gorm"
@@ -14,8 +16,19 @@ func NewTagRepository(db *gorm.DB) *TagRepository {
 	return &TagRepository{db: db}
 }
 
+func (r *TagRepository) dbWithContext(ctx context.Context) *gorm.DB {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	return r.db.WithContext(ctx)
+}
+
 func (r *TagRepository) Create(tag *model.Tag) error {
-	return r.db.Create(tag).Error
+	return r.CreateWithContext(context.Background(), tag)
+}
+
+func (r *TagRepository) CreateWithContext(ctx context.Context, tag *model.Tag) error {
+	return r.dbWithContext(ctx).Create(tag).Error
 }
 
 func (r *TagRepository) FindByID(id int64) (*model.Tag, error) {
@@ -28,8 +41,12 @@ func (r *TagRepository) FindByID(id int64) (*model.Tag, error) {
 }
 
 func (r *TagRepository) List(tagType string) ([]*model.Tag, error) {
+	return r.ListWithContext(context.Background(), tagType)
+}
+
+func (r *TagRepository) ListWithContext(ctx context.Context, tagType string) ([]*model.Tag, error) {
 	var tags []*model.Tag
-	query := r.db.Model(&model.Tag{})
+	query := r.dbWithContext(ctx).Model(&model.Tag{})
 	if tagType != "" {
 		query = query.Where("type = ?", tagType)
 	}
@@ -38,8 +55,12 @@ func (r *TagRepository) List(tagType string) ([]*model.Tag, error) {
 }
 
 func (r *TagRepository) FindByIDs(ids []int64) ([]*model.Tag, error) {
+	return r.FindByIDsWithContext(context.Background(), ids)
+}
+
+func (r *TagRepository) FindByIDsWithContext(ctx context.Context, ids []int64) ([]*model.Tag, error) {
 	var tags []*model.Tag
-	err := r.db.Where("id IN ?", ids).Find(&tags).Error
+	err := r.dbWithContext(ctx).Where("id IN ?", ids).Find(&tags).Error
 	return tags, err
 }
 
@@ -52,7 +73,11 @@ func (r *TagRepository) AttachToChallenge(challengeID, tagID int64) error {
 }
 
 func (r *TagRepository) DetachFromChallenge(challengeID, tagID int64) error {
-	return r.db.Where("challenge_id = ? AND tag_id = ?", challengeID, tagID).
+	return r.DetachFromChallengeWithContext(context.Background(), challengeID, tagID)
+}
+
+func (r *TagRepository) DetachFromChallengeWithContext(ctx context.Context, challengeID, tagID int64) error {
+	return r.dbWithContext(ctx).Where("challenge_id = ? AND tag_id = ?", challengeID, tagID).
 		Delete(&model.ChallengeTag{}).Error
 }
 
@@ -67,7 +92,11 @@ func (r *TagRepository) FindByChallengeID(challengeID int64) ([]*model.Tag, erro
 }
 
 func (r *TagRepository) AttachTagsInTx(challengeID int64, tagIDs []int64) error {
-	return r.db.Transaction(func(tx *gorm.DB) error {
+	return r.AttachTagsInTxWithContext(context.Background(), challengeID, tagIDs)
+}
+
+func (r *TagRepository) AttachTagsInTxWithContext(ctx context.Context, challengeID int64, tagIDs []int64) error {
+	return r.dbWithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		for _, tid := range tagIDs {
 			ct := &model.ChallengeTag{
 				ChallengeID: challengeID,
