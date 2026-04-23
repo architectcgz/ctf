@@ -4,6 +4,7 @@ import { createRouter, createMemoryHistory } from 'vue-router'
 
 import ChallengeDetail from '../ChallengeDetail.vue'
 import challengeDetailSource from '../ChallengeDetail.vue?raw'
+import challengeQuestionPanelSource from '@/components/challenge/ChallengeQuestionPanel.vue?raw'
 import challengeSolutionsPanelSource from '@/components/challenge/ChallengeSolutionsPanel.vue?raw'
 import challengeSubmissionRecordsPanelSource from '@/components/challenge/ChallengeSubmissionRecordsPanel.vue?raw'
 import challengeWriteupPanelSource from '@/components/challenge/ChallengeWriteupPanel.vue?raw'
@@ -208,13 +209,14 @@ describe('ChallengeDetail', () => {
   })
 
   it('题目详情 hero 应使用共享 workspace overline 语义', () => {
-    expect(challengeDetailSource).toMatch(/<div class="workspace-overline">\s*Question\s*<\/div>/)
-    expect(challengeDetailSource).not.toContain('<div class="overline">Question</div>')
+    expect(challengeQuestionPanelSource).toMatch(/<div class="workspace-overline">\s*Question\s*<\/div>/)
+    expect(challengeQuestionPanelSource).not.toContain('<div class="overline">Question</div>')
   })
 
   it('题目详情 section heading 应切到共享 workspace overline 语义', () => {
     const combinedSource = [
       challengeDetailSource,
+      challengeQuestionPanelSource,
       challengeSolutionsPanelSource,
       challengeSubmissionRecordsPanelSource,
       challengeWriteupPanelSource,
