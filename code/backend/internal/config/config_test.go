@@ -157,6 +157,19 @@ func TestValidateRejectsInvalidContainerPortRangeBounds(t *testing.T) {
 	}
 }
 
+func TestValidateRejectsNonPositiveContestSubmissionRateLimitTTL(t *testing.T) {
+	cfg := validConfigForValidationTests()
+	cfg.Contest.SubmissionRateLimitTTL = 0
+
+	err := cfg.Validate()
+	if err == nil {
+		t.Fatal("expected Validate() to reject non-positive contest submission rate limit ttl, got nil")
+	}
+	if !strings.Contains(err.Error(), "contest.submission_rate_limit_ttl must be greater than 0") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
 func validConfigForValidationTests() *Config {
 	return &Config{
 		CORS: CORSConfig{
@@ -202,9 +215,10 @@ func validConfigForValidationTests() *Config {
 			RetryMaxDelay:     2 * time.Second,
 		},
 		Contest: ContestConfig{
-			StatusUpdateInterval:  time.Minute,
-			StatusUpdateBatchSize: 1,
-			StatusUpdateLockTTL:   time.Minute,
+			StatusUpdateInterval:   time.Minute,
+			StatusUpdateBatchSize:  1,
+			StatusUpdateLockTTL:    time.Minute,
+			SubmissionRateLimitTTL: 5 * time.Second,
 			AWD: ContestAWDConfig{
 				SchedulerInterval:  time.Minute,
 				SchedulerLockTTL:   time.Minute,
