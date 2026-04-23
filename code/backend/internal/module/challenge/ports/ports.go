@@ -163,8 +163,11 @@ type TagRepository interface {
 	DetachFromChallenge(challengeID, tagID int64) error
 	DetachFromChallengeWithContext(ctx context.Context, challengeID, tagID int64) error
 	FindByChallengeID(challengeID int64) ([]*model.Tag, error)
+	FindByChallengeIDWithContext(ctx context.Context, challengeID int64) ([]*model.Tag, error)
 	Delete(id int64) error
+	DeleteWithContext(ctx context.Context, id int64) error
 	CountChallengesByTagID(tagID int64) (int64, error)
+	CountChallengesByTagIDWithContext(ctx context.Context, tagID int64) (int64, error)
 }
 
 type ImageRuntime interface {

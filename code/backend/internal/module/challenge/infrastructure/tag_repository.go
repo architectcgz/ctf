@@ -82,8 +82,12 @@ func (r *TagRepository) DetachFromChallengeWithContext(ctx context.Context, chal
 }
 
 func (r *TagRepository) FindByChallengeID(challengeID int64) ([]*model.Tag, error) {
+	return r.FindByChallengeIDWithContext(context.Background(), challengeID)
+}
+
+func (r *TagRepository) FindByChallengeIDWithContext(ctx context.Context, challengeID int64) ([]*model.Tag, error) {
 	var tags []*model.Tag
-	err := r.db.Table("tags").
+	err := r.dbWithContext(ctx).Table("tags").
 		Joins("JOIN challenge_tags ON tags.id = challenge_tags.tag_id").
 		Where("challenge_tags.challenge_id = ?", challengeID).
 		Order("tags.type, tags.name").
@@ -111,11 +115,19 @@ func (r *TagRepository) AttachTagsInTxWithContext(ctx context.Context, challenge
 }
 
 func (r *TagRepository) Delete(id int64) error {
-	return r.db.Delete(&model.Tag{}, id).Error
+	return r.DeleteWithContext(context.Background(), id)
+}
+
+func (r *TagRepository) DeleteWithContext(ctx context.Context, id int64) error {
+	return r.dbWithContext(ctx).Delete(&model.Tag{}, id).Error
 }
 
 func (r *TagRepository) CountChallengesByTagID(tagID int64) (int64, error) {
+	return r.CountChallengesByTagIDWithContext(context.Background(), tagID)
+}
+
+func (r *TagRepository) CountChallengesByTagIDWithContext(ctx context.Context, tagID int64) (int64, error) {
 	var count int64
-	err := r.db.Model(&model.ChallengeTag{}).Where("tag_id = ?", tagID).Count(&count).Error
+	err := r.dbWithContext(ctx).Model(&model.ChallengeTag{}).Where("tag_id = ?", tagID).Count(&count).Error
 	return count, err
 }

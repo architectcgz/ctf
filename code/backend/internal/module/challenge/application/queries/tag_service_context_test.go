@@ -8,9 +8,10 @@ import (
 )
 
 type tagQueryContextStub struct {
-	listFn              func(tagType string) ([]*model.Tag, error)
-	listWithContextFn   func(ctx context.Context, tagType string) ([]*model.Tag, error)
-	findByChallengeIDFn func(challengeID int64) ([]*model.Tag, error)
+	listFn                         func(tagType string) ([]*model.Tag, error)
+	listWithContextFn              func(ctx context.Context, tagType string) ([]*model.Tag, error)
+	findByChallengeIDFn            func(challengeID int64) ([]*model.Tag, error)
+	findByChallengeIDWithContextFn func(ctx context.Context, challengeID int64) ([]*model.Tag, error)
 }
 
 func (s *tagQueryContextStub) Create(tag *model.Tag) error { return nil }
@@ -47,8 +48,18 @@ func (s *tagQueryContextStub) FindByChallengeID(challengeID int64) ([]*model.Tag
 	}
 	return nil, nil
 }
-func (s *tagQueryContextStub) Delete(id int64) error                             { return nil }
-func (s *tagQueryContextStub) CountChallengesByTagID(tagID int64) (int64, error) { return 0, nil }
+func (s *tagQueryContextStub) FindByChallengeIDWithContext(ctx context.Context, challengeID int64) ([]*model.Tag, error) {
+	if s.findByChallengeIDWithContextFn != nil {
+		return s.findByChallengeIDWithContextFn(ctx, challengeID)
+	}
+	return s.FindByChallengeID(challengeID)
+}
+func (s *tagQueryContextStub) Delete(id int64) error                                 { return nil }
+func (s *tagQueryContextStub) DeleteWithContext(ctx context.Context, id int64) error { return nil }
+func (s *tagQueryContextStub) CountChallengesByTagID(tagID int64) (int64, error)     { return 0, nil }
+func (s *tagQueryContextStub) CountChallengesByTagIDWithContext(ctx context.Context, tagID int64) (int64, error) {
+	return 0, nil
+}
 
 type tagQueryContextKey string
 
@@ -82,5 +93,35 @@ func TestTagServiceListTagsWithContextPropagatesContextToRepository(t *testing.T
 	}
 	if len(resp) != 1 || resp[0].ID != 1 {
 		t.Fatalf("unexpected tag list resp: %+v", resp)
+	}
+}
+
+func TestTagServiceGetChallengeTagIDsWithContextPropagatesContextToRepository(t *testing.T) {
+	t.Parallel()
+
+	ctxKey := tagQueryContextKey("tag-ids")
+	expectedCtxValue := "ctx-tag-ids"
+	findCalled := false
+	repo := &tagQueryContextStub{
+		findByChallengeIDWithContextFn: func(ctx context.Context, challengeID int64) ([]*model.Tag, error) {
+			findCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected find-by-challenge ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return []*model.Tag{{ID: 2}, {ID: 5}}, nil
+		},
+	}
+	service := NewTagService(repo)
+
+	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
+	resp, err := service.GetChallengeTagIDsWithContext(ctx, 99)
+	if err != nil {
+		t.Fatalf("GetChallengeTagIDsWithContext() error = %v", err)
+	}
+	if !findCalled {
+		t.Fatal("expected find-by-challenge repository to be called")
+	}
+	if len(resp) != 2 || resp[0] != 2 || resp[1] != 5 {
+		t.Fatalf("unexpected tag ids resp: %+v", resp)
 	}
 }

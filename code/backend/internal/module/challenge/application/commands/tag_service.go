@@ -38,14 +38,21 @@ func (s *TagService) CreateTagWithContext(ctx context.Context, req *dto.CreateTa
 }
 
 func (s *TagService) DeleteTag(id int64) error {
-	count, err := s.repo.CountChallengesByTagID(id)
+	return s.DeleteTagWithContext(context.Background(), id)
+}
+
+func (s *TagService) DeleteTagWithContext(ctx context.Context, id int64) error {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	count, err := s.repo.CountChallengesByTagIDWithContext(ctx, id)
 	if err != nil {
 		return errcode.ErrInternal.WithCause(err)
 	}
 	if count > 0 {
 		return errcode.ErrConflict.WithCause(nil)
 	}
-	return s.repo.Delete(id)
+	return s.repo.DeleteWithContext(ctx, id)
 }
 
 func (s *TagService) AttachTags(challengeID int64, tagIDs []int64) error {
