@@ -2,6 +2,7 @@ package commands
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
@@ -78,8 +79,11 @@ func (s *RuntimeCleanupService) CleanupRuntimeWithContext(ctx context.Context, i
 }
 
 func (s *RuntimeCleanupService) removeACLRulesWithContext(ctx context.Context, rules []model.InstanceRuntimeACLRule) error {
-	if len(rules) == 0 || s == nil || s.engine == nil {
+	if len(rules) == 0 {
 		return nil
+	}
+	if s == nil || s.engine == nil {
+		return errRuntimeEngineUnavailable()
 	}
 
 	timeoutCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
@@ -92,10 +96,7 @@ func (s *RuntimeCleanupService) removeContainerWithContext(ctx context.Context, 
 		return nil
 	}
 	if s == nil || s.engine == nil {
-		if s != nil && s.logger != nil {
-			s.logger.Info("删除容器（降级模拟）", zap.String("container_id", containerID))
-		}
-		return nil
+		return errRuntimeEngineUnavailable()
 	}
 
 	timeoutCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
@@ -117,10 +118,7 @@ func (s *RuntimeCleanupService) removeNetworkWithContext(ctx context.Context, ne
 		return nil
 	}
 	if s == nil || s.engine == nil {
-		if s != nil && s.logger != nil {
-			s.logger.Info("删除网络（降级跳过）", zap.String("network_id", networkID))
-		}
-		return nil
+		return errRuntimeEngineUnavailable()
 	}
 
 	timeoutCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
@@ -137,4 +135,8 @@ func isMissingContainerError(err error) bool {
 		return false
 	}
 	return strings.Contains(strings.ToLower(err.Error()), "no such container")
+}
+
+func errRuntimeEngineUnavailable() error {
+	return fmt.Errorf("runtime engine is not configured")
 }

@@ -217,6 +217,20 @@ func TestServiceCreateContainerRemovesNetworkWhenStartFails(t *testing.T) {
 	}
 }
 
+func TestServiceRemoveContainerWithContextFailsWhenRuntimeEngineUnavailable(t *testing.T) {
+	t.Parallel()
+
+	cleanupService := runtimecmd.NewRuntimeCleanupService(nil, nil)
+
+	err := cleanupService.RemoveContainerWithContext(context.Background(), "ctr-missing-engine")
+	if err == nil {
+		t.Fatal("expected RemoveContainerWithContext() to fail when runtime engine is unavailable")
+	}
+	if !strings.Contains(err.Error(), "runtime engine is not configured") {
+		t.Fatalf("expected runtime engine unavailable error, got %v", err)
+	}
+}
+
 func TestServiceRemoveContainerWithContextHonorsCancellation(t *testing.T) {
 	t.Parallel()
 
@@ -236,6 +250,25 @@ func TestServiceRemoveContainerWithContextHonorsCancellation(t *testing.T) {
 
 	if err := cleanupService.RemoveContainerWithContext(ctx, "ctr-ctx"); !errors.Is(err, context.Canceled) {
 		t.Fatalf("expected context canceled, got %v", err)
+	}
+}
+
+func TestServiceCleanupRuntimeWithContextFailsWhenRuntimeEngineUnavailable(t *testing.T) {
+	t.Parallel()
+
+	cleanupService := runtimecmd.NewRuntimeCleanupService(nil, nil)
+	instance := &model.Instance{
+		ID:          3002,
+		ContainerID: "ctr-missing-engine",
+		NetworkID:   "net-missing-engine",
+	}
+
+	err := cleanupService.CleanupRuntimeWithContext(context.Background(), instance)
+	if err == nil {
+		t.Fatal("expected CleanupRuntimeWithContext() to fail when runtime engine is unavailable")
+	}
+	if !strings.Contains(err.Error(), "runtime engine is not configured") {
+		t.Fatalf("expected runtime engine unavailable error, got %v", err)
 	}
 }
 
