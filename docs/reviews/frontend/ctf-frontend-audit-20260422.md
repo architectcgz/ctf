@@ -8,16 +8,18 @@
 | 审查范围 | `code/frontend/src` 路由、关键视图、composables、stores、共享样式与验证门禁 |
 | 审查日期 | 2026-04-22 |
 | 审查方式 | 静态代码审查 + 最小验证基线检查 |
-| 审查状态 | 已记录，已完成十九轮最小高收益修复 |
+| 审查状态 | 已记录，已完成二十轮最小高收益修复 |
 
 ## 当前结论
 
-- 当前前端不是“局部页面粗糙”，而是已经出现工程漂移：
-  - 静态门禁失效，当前分支 `typecheck` 不能通过。
-  - 关键数据页的异步边界处理不一致，存在真实竞态风险。
-  - 部分状态面板只更新本地派生值，不再与服务端状态保持同步。
-  - 主题系统和视觉 token 已经建立，但生产代码仍频繁绕过共享变量直接写死颜色。
-  - 正式路由中混入设计实验页，产品边界不够干净。
+- 本轮专项审查起手时暴露出的高收益问题，已经有大半完成收口：
+  - `typecheck` 基线已恢复，当前专项修复工作树可稳定作为静态门禁。
+  - 题目详情竞态、实例页状态同步、`/ui-lab` 正式路由暴露、认证表单基础可访问性、`window.confirm` 混用等问题已完成修复。
+  - 本轮继续收口了平台 AWD 编排组件簇、教师端 `workspace / tabs / surface` 漂移，以及 shared pagination 的 review 基线漂移。
+- 当前仍未整体关闭专项审查，剩余问题主要集中在：
+  - `P1-4` 登录态令牌仍保存在 `localStorage`
+  - `P2-1` 主题硬编码清理仍未全量收口
+  - `P2-5` 仍有部分大页面和管理端 surface 漂移未完成系统性减重
 
 ## 优先级结论
 
@@ -511,6 +513,60 @@
   - `npm run typecheck`
 - 额外检查：
   - `npm run test:run -- src/views/platform/__tests__/platformManagementSurfaceAlignment.test.ts` 仍存在仓内既有失败，当前失败面主要落在 `UserGovernancePage`、`ContestOrchestrationPage`、共享 `journal-notes.css` 等非本轮 AWD 变更文件，本次提交未扩大处理范围。
+
+## 第二十轮修复进展
+
+- 已完成：
+  - 平台 AWD 组件簇的 review 漂移已收口：
+    - `AWDReadinessSummary` 补回 readiness 决策文案、零题目空态和可开赛 / 强制开赛 / 不可开赛语义
+    - `ContestChallengeOrchestrationPanel` 修正 AWD create/edit 的 payload 边界，本地刷新改为合并题目关系与 service 数据，恢复筛选 / 菜单 / 配置入口契约
+    - `ContestChallengeEditorDialog` 对齐 `AdminSurfaceModal`，避免继续挂在旧 drawer 壳层
+    - `AWDOperationsPanel`、`AWDRoundHeaderPanel`、`AWDRoundSelectionPanel`、`AWDScoreboardSummaryPanel`、`AWDTrafficPanel`、`AWDServiceStatusPanel`、`AWDAttackLogPanel` 的测试依赖语义与页面文案已回到一致状态
+  - 教师端 `workspace / tabs / surface` 漂移已收口：
+    - `TeacherAWDReviewIndex.vue`、`TeacherAWDReviewDetail.vue` 去掉手写 `rounded-[30px]` 根壳，回到共享 `workspace-shell + teacher-management-shell`
+    - `ClassManagementPage.vue`、`ClassStudentsPage.vue`、`StudentManagementPage.vue`、`TeacherDashboardPage.vue` 补齐 soft-border token / 共享壳层契约
+    - 班级 workspace tab 的 review 基线改到真实 owner `ClassStudentsPage.vue`，不再把目录页误判为 tab 同步实现页
+  - shared pagination review 基线已对齐到抽层后的真实 owner：
+    - `ChallengeList.vue` 的分页检查转移到 `ChallengeDirectoryPanel.vue`
+    - 避免继续盯住已完成抽层的 view 层 raw 源码，减少假失败
+- 本轮涉及文件：
+  - `code/frontend/src/components/platform/contest/AWDReadinessSummary.vue`
+  - `code/frontend/src/components/platform/contest/AWDOperationsPanel.vue`
+  - `code/frontend/src/components/platform/contest/AWDRoundHeaderPanel.vue`
+  - `code/frontend/src/components/platform/contest/AWDRoundSelectionPanel.vue`
+  - `code/frontend/src/components/platform/contest/AWDScoreboardSummaryPanel.vue`
+  - `code/frontend/src/components/platform/contest/AWDTrafficPanel.vue`
+  - `code/frontend/src/components/platform/contest/AWDServiceStatusPanel.vue`
+  - `code/frontend/src/components/platform/contest/AWDAttackLogPanel.vue`
+  - `code/frontend/src/components/platform/contest/ContestChallengeEditorDialog.vue`
+  - `code/frontend/src/components/platform/contest/ContestChallengeOrchestrationPanel.vue`
+  - `code/frontend/src/views/teacher/TeacherAWDReviewIndex.vue`
+  - `code/frontend/src/views/teacher/TeacherAWDReviewDetail.vue`
+  - `code/frontend/src/components/teacher/class-management/ClassManagementPage.vue`
+  - `code/frontend/src/components/teacher/class-management/ClassStudentsPage.vue`
+  - `code/frontend/src/components/teacher/dashboard/TeacherDashboardPage.vue`
+  - `code/frontend/src/components/teacher/student-management/StudentManagementPage.vue`
+  - `code/frontend/src/views/__tests__/sharedPaginationControls.test.ts`
+  - `code/frontend/src/views/teacher/__tests__/classManagementTabsAdoption.test.ts`
+
+## 第二十轮验证
+
+- 已执行：
+  - `npm run test:run -- src/components/platform/__tests__/AWDChallengeConfigDialog.test.ts src/components/platform/__tests__/ContestChallengeOrchestrationPanel.test.ts src/components/platform/__tests__/AWDOperationsPanel.test.ts src/components/platform/__tests__/AWDRoundInspector.test.ts src/components/platform/__tests__/AWDRoundInspectorExtraction.test.ts src/components/platform/__tests__/AWDReadinessSummary.test.ts src/views/teacher/__tests__/teacherBaseSurfaceAlignment.test.ts src/views/teacher/__tests__/teacherDarkSurfaceAlignment.test.ts src/views/teacher/__tests__/teacherDetailSurfaceAlignment.test.ts src/views/teacher/__tests__/teacherEyebrowSharedStyles.test.ts src/views/teacher/__tests__/teacherPanelShellAdoption.test.ts src/views/teacher/__tests__/teacherRootShellCleanup.test.ts src/views/teacher/__tests__/teacherSharedDirectoryStyles.test.ts src/views/teacher/__tests__/teacherSurface.test.ts src/views/teacher/__tests__/teacherWorkspaceSubpanelAdoption.test.ts src/views/teacher/__tests__/classManagementTabsAdoption.test.ts src/router/__tests__/sharedRoutes.test.ts src/views/__tests__/sharedPaginationControls.test.ts src/views/__tests__/sharedThemeTokenAdoption.test.ts src/views/__tests__/surfaceBackground.test.ts src/components/layout/__tests__/NotificationDropdown.test.ts`
+  - 结果：`21` 个测试文件、`104` 条测试通过
+  - `npm run typecheck`
+
+## 当前剩余未收口项
+
+- `P1-4` 仍未处理：
+  - 登录态 token 仍保存在 `localStorage`
+  - 这是高风险设计问题，不应因为页面层收口而误判为专项完成
+- `P2-1` 仍未全量处理：
+  - 这轮只进一步收口了 AWD / 教师端 / 通知 / shared pagination 周边的主题与基线漂移
+  - 生产代码里仍可能存在其他绕过共享 token 的硬编码样式
+- `P2-5` 仍未全量处理：
+  - 本轮修的是 AWD 和教师端 review 漂移，不是对剩余超重页面做完系统性减重
+  - 仍需结合管理端剩余页面和共享 surface 基线继续推进
 
 ## 备注
 
