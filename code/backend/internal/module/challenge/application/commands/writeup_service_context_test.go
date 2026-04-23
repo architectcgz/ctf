@@ -374,3 +374,105 @@ func TestWriteupServiceUpsertSubmissionWithContextPropagatesContextToRepository(
 		t.Fatalf("unexpected submission resp: %+v", resp)
 	}
 }
+
+func TestWriteupServiceRecommendOfficialWithContextPropagatesContextToRepository(t *testing.T) {
+	t.Parallel()
+
+	ctxKey := writeupCommandContextKey("writeup-recommend-official")
+	expectedCtxValue := "ctx-writeup-recommend-official"
+	findChallengeCalled := false
+	findWriteupCalled := false
+	upsertCalled := false
+	findUpdatedCalled := false
+	repo := &writeupCommandContextStub{
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+			findChallengeCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected find-challenge ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return &model.Challenge{ID: id}, nil
+		},
+		findWriteupByChallengeIDWithContextFn: func(ctx context.Context, challengeID int64) (*model.ChallengeWriteup, error) {
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected find-writeup ctx value %v, got %v", expectedCtxValue, got)
+			}
+			if !upsertCalled {
+				findWriteupCalled = true
+				return &model.ChallengeWriteup{ID: 41, ChallengeID: challengeID, Title: "Official", Content: "Walkthrough", Visibility: model.WriteupVisibilityPublic}, nil
+			}
+			findUpdatedCalled = true
+			return &model.ChallengeWriteup{ID: 41, ChallengeID: challengeID, Title: "Official", Content: "Walkthrough", Visibility: model.WriteupVisibilityPublic, IsRecommended: true}, nil
+		},
+		upsertWriteupWithContextFn: func(ctx context.Context, writeup *model.ChallengeWriteup) error {
+			upsertCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected upsert-writeup ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return nil
+		},
+	}
+	service := NewWriteupService(repo)
+
+	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
+	resp, err := service.RecommendOfficialWithContext(ctx, 11, 7)
+	if err != nil {
+		t.Fatalf("RecommendOfficialWithContext() error = %v", err)
+	}
+	if !findChallengeCalled || !findWriteupCalled || !upsertCalled || !findUpdatedCalled {
+		t.Fatalf("expected repository calls, got challenge=%v writeup=%v upsert=%v updated=%v", findChallengeCalled, findWriteupCalled, upsertCalled, findUpdatedCalled)
+	}
+	if resp == nil || !resp.IsRecommended || resp.ID != 41 {
+		t.Fatalf("unexpected recommend official resp: %+v", resp)
+	}
+}
+
+func TestWriteupServiceUnrecommendOfficialWithContextPropagatesContextToRepository(t *testing.T) {
+	t.Parallel()
+
+	ctxKey := writeupCommandContextKey("writeup-unrecommend-official")
+	expectedCtxValue := "ctx-writeup-unrecommend-official"
+	findChallengeCalled := false
+	findWriteupCalled := false
+	upsertCalled := false
+	findUpdatedCalled := false
+	repo := &writeupCommandContextStub{
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+			findChallengeCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected find-challenge ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return &model.Challenge{ID: id}, nil
+		},
+		findWriteupByChallengeIDWithContextFn: func(ctx context.Context, challengeID int64) (*model.ChallengeWriteup, error) {
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected find-writeup ctx value %v, got %v", expectedCtxValue, got)
+			}
+			if !upsertCalled {
+				findWriteupCalled = true
+				return &model.ChallengeWriteup{ID: 42, ChallengeID: challengeID, Title: "Official", Content: "Walkthrough", Visibility: model.WriteupVisibilityPublic, IsRecommended: true}, nil
+			}
+			findUpdatedCalled = true
+			return &model.ChallengeWriteup{ID: 42, ChallengeID: challengeID, Title: "Official", Content: "Walkthrough", Visibility: model.WriteupVisibilityPublic, IsRecommended: false}, nil
+		},
+		upsertWriteupWithContextFn: func(ctx context.Context, writeup *model.ChallengeWriteup) error {
+			upsertCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected upsert-writeup ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return nil
+		},
+	}
+	service := NewWriteupService(repo)
+
+	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
+	resp, err := service.UnrecommendOfficialWithContext(ctx, 11, 7)
+	if err != nil {
+		t.Fatalf("UnrecommendOfficialWithContext() error = %v", err)
+	}
+	if !findChallengeCalled || !findWriteupCalled || !upsertCalled || !findUpdatedCalled {
+		t.Fatalf("expected repository calls, got challenge=%v writeup=%v upsert=%v updated=%v", findChallengeCalled, findWriteupCalled, upsertCalled, findUpdatedCalled)
+	}
+	if resp == nil || resp.IsRecommended || resp.ID != 42 {
+		t.Fatalf("unexpected unrecommend official resp: %+v", resp)
+	}
+}
