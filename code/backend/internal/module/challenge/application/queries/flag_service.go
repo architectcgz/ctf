@@ -1,6 +1,7 @@
 package queries
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"regexp"
@@ -72,7 +73,11 @@ func (s *FlagService) ValidateFlag(userID, challengeID int64, input string, nonc
 }
 
 func (s *FlagService) GetFlagConfig(challengeID int64) (*dto.FlagResp, error) {
-	challenge, err := s.loadChallenge(challengeID)
+	return s.GetFlagConfigWithContext(context.Background(), challengeID)
+}
+
+func (s *FlagService) GetFlagConfigWithContext(ctx context.Context, challengeID int64) (*dto.FlagResp, error) {
+	challenge, err := s.loadChallengeWithContext(ctx, challengeID)
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +102,11 @@ func (s *FlagService) GetFlagConfig(challengeID int64) (*dto.FlagResp, error) {
 }
 
 func (s *FlagService) loadChallenge(challengeID int64) (*model.Challenge, error) {
-	challenge, err := s.repo.FindByID(challengeID)
+	return s.loadChallengeWithContext(context.Background(), challengeID)
+}
+
+func (s *FlagService) loadChallengeWithContext(ctx context.Context, challengeID int64) (*model.Challenge, error) {
+	challenge, err := s.repo.FindByIDWithContext(ctx, challengeID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrNotFound
