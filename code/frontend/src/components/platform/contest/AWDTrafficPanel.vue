@@ -13,6 +13,23 @@ import { useAwdTrafficPanel } from '@/composables/useAwdTrafficPanel'
 const props = defineProps<AWDTrafficPanelProps>()
 const emit = defineEmits<AWDTrafficPanelEmits>()
 
+const serviceOptions = computed(() => {
+  const seen = new Set<string>()
+  return props.challengeLinks
+    .filter((item) => {
+      const serviceId = item.awd_service_id?.trim()
+      if (!serviceId || seen.has(serviceId)) {
+        return false
+      }
+      seen.add(serviceId)
+      return true
+    })
+    .map((item) => ({
+      serviceId: item.awd_service_id!,
+      title: item.title,
+    }))
+})
+
 const {
   trafficPathKeywordInput,
   trafficTotalPages,
@@ -55,7 +72,7 @@ function getTrafficStatusGroupLabel(statusGroup: AWDTrafficStatusGroup): string 
       <div
         v-for="item in trafficSummaryStats"
         :key="item.key"
-        class="metric-pill"
+        class="metric-pill awd-traffic-summary-card"
       >
         <span class="metric-pill__label">{{ item.label }}</span>
         <span class="metric-pill__value">{{ item.value }}</span>
@@ -166,9 +183,76 @@ function getTrafficStatusGroupLabel(statusGroup: AWDTrafficStatusGroup): string 
         <div class="toolbar-right">
           <div class="filter-row">
             <label class="ui-field awd-round-filter-field">
+              <span class="ui-field__label">攻击队</span>
+              <span class="ui-control-wrap awd-round-filter-control">
+                <select
+                  id="awd-traffic-filter-attacker"
+                  :value="trafficFilters.attacker_team_id"
+                  class="ui-control"
+                  @change="applyTrafficFilterPatch({ attacker_team_id: ($event.target as HTMLSelectElement).value })"
+                >
+                  <option value="">
+                    全部攻击队
+                  </option>
+                  <option
+                    v-for="team in trafficTeamOptions"
+                    :key="`attacker-${team.id}`"
+                    :value="team.id"
+                  >
+                    {{ team.name }}
+                  </option>
+                </select>
+              </span>
+            </label>
+            <label class="ui-field awd-round-filter-field">
+              <span class="ui-field__label">受害队</span>
+              <span class="ui-control-wrap awd-round-filter-control">
+                <select
+                  id="awd-traffic-filter-victim"
+                  :value="trafficFilters.victim_team_id"
+                  class="ui-control"
+                  @change="applyTrafficFilterPatch({ victim_team_id: ($event.target as HTMLSelectElement).value })"
+                >
+                  <option value="">
+                    全部受害队
+                  </option>
+                  <option
+                    v-for="team in trafficTeamOptions"
+                    :key="`victim-${team.id}`"
+                    :value="team.id"
+                  >
+                    {{ team.name }}
+                  </option>
+                </select>
+              </span>
+            </label>
+            <label class="ui-field awd-round-filter-field">
+              <span class="ui-field__label">服务引用</span>
+              <span class="ui-control-wrap awd-round-filter-control">
+                <select
+                  id="awd-traffic-filter-service"
+                  :value="trafficFilters.service_id"
+                  class="ui-control"
+                  @change="applyTrafficFilterPatch({ service_id: ($event.target as HTMLSelectElement).value })"
+                >
+                  <option value="">
+                    所有服务
+                  </option>
+                  <option
+                    v-for="item in serviceOptions"
+                    :key="item.serviceId"
+                    :value="item.serviceId"
+                  >
+                    {{ item.title }} · Service #{{ item.serviceId }}
+                  </option>
+                </select>
+              </span>
+            </label>
+            <label class="ui-field awd-round-filter-field">
               <span class="ui-field__label">状态分桶</span>
               <span class="ui-control-wrap awd-round-filter-control">
                 <select
+                  id="awd-traffic-filter-status-group"
                   :value="trafficFilters.status_group"
                   class="ui-control"
                   @change="handleTrafficStatusGroupChange(($event.target as HTMLSelectElement).value)"
@@ -251,7 +335,7 @@ function getTrafficStatusGroupLabel(statusGroup: AWDTrafficStatusGroup): string 
                   <span
                     v-if="event.service_id"
                     class="source-tag font-mono"
-                  >#{{ event.service_id }}</span>
+                  >Service #{{ event.service_id }}</span>
                 </div>
               </td>
               <td>

@@ -291,6 +291,14 @@ const currentPageStudentCount = computed(() =>
   font-family: var(--font-family-sans);
 }
 
+.teacher-badge-card {
+  border: 1px solid var(--teacher-card-border);
+}
+
+.teacher-tip-block {
+  border-top: 1px dashed var(--teacher-divider);
+}
+
 .teacher-page {
   display: flex;
   min-height: 100%;

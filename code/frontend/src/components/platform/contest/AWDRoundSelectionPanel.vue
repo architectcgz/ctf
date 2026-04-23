@@ -29,15 +29,18 @@ function navigateRound(delta: number): void {
 </script>
 
 <template>
-  <section v-if="rounds.length > 0" class="awd-round-selection-panel">
-    <label class="ui-field awd-round-filter-field">
+  <section class="awd-round-selection-panel">
+    <label
+      v-if="rounds.length > 0"
+      class="ui-field awd-round-filter-field"
+    >
       <span class="ui-field__label">Round Filter</span>
       <span class="ui-control-wrap awd-round-filter-control">
         <button type="button" class="ui-btn ui-btn--secondary awd-round-nav-button" :disabled="!hasPrev" @click="navigateRound(-1)">
           <ChevronLeft class="h-4 w-4" />
         </button>
         <History class="h-3.5 w-3.5 awd-round-filter-icon" />
-        <select class="ui-control" :value="selectedRoundId ?? ''" @change="emit('update:selectedRoundId', ($event.target as HTMLSelectElement).value)">
+        <select id="awd-round-selector" class="ui-control" :value="selectedRoundId ?? ''" @change="emit('update:selectedRoundId', ($event.target as HTMLSelectElement).value)">
           <option v-for="round in roundOptions" :key="round.id" :value="round.id">
             ROUND {{ String(round.round_number).padStart(2, '0') }} · {{ getRoundStatusLabel(round.status).toUpperCase() }}
           </option>
@@ -47,6 +50,12 @@ function navigateRound(delta: number): void {
         </button>
       </span>
     </label>
+    <div
+      v-else
+      class="awd-round-selection-empty"
+    >
+      当前赛事还没有 AWD 轮次
+    </div>
   </section>
 </template>
 
@@ -55,6 +64,12 @@ function navigateRound(delta: number): void {
   display: flex;
   justify-content: flex-end;
   margin-top: var(--space-4);
+}
+
+.awd-round-selection-empty {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-12);
+  font-weight: 600;
 }
 
 .awd-round-filter-field {

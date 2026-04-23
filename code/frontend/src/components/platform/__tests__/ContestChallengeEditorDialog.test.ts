@@ -47,7 +47,7 @@ function mountDialog(props?: Record<string, unknown>) {
     },
     global: {
       stubs: {
-        SlideOverDrawer: {
+        AdminSurfaceModal: {
           props: ['open', 'title'],
           template:
             '<div v-if="open"><div>{{ title }}</div><slot /><slot name="footer" /></div>',

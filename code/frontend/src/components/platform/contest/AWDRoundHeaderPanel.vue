@@ -116,7 +116,7 @@ function navigateRound(delta: number) {
               class="h-3.5 w-3.5"
               :class="{ 'animate-spin': loadingRounds || loadingRoundDetail }"
             />
-            <span>同步态势</span>
+            <span>刷新 AWD 数据</span>
           </button>
           
           <button
@@ -172,7 +172,7 @@ function navigateRound(delta: number) {
           v-if="shouldAutoRefresh"
           class="hint-item hint-item--live"
         >
-          <span class="pulse-dot" /> 实时追踪模式 (15s)
+          <span class="pulse-dot" /> 当前正在跟随 live 轮次，每 15 秒自动刷新一次
         </span>
         <span
           v-if="selectedRoundId && !canRecordServiceChecks && serviceCheckHint"
@@ -359,4 +359,3 @@ function navigateRound(delta: number) {
   .awd-ops-header__actions { width: 100%; overflow-x: auto; padding-bottom: 0.5rem; }
 }
 </style>
-

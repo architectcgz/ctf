@@ -60,15 +60,15 @@ import { Activity, Clock, ShieldAlert, Sword, TimerReset, ClipboardCheck } from 
 
     <div class="pending-actions">
       <div class="flex items-center gap-3">
-        <button type="button" class="ui-btn ui-btn--secondary" disabled>
+        <button id="awd-runtime-shell-create-round" type="button" class="ui-btn ui-btn--secondary" disabled>
           <TimerReset class="h-3.5 w-3.5" /> 立即同步轮次
         </button>
-        <button type="button" class="ui-btn ui-btn--primary" disabled>
+        <button id="awd-runtime-shell-run-check" type="button" class="ui-btn ui-btn--primary" disabled>
           <ShieldAlert class="h-3.5 w-3.5" /> 补录检查
         </button>
       </div>
       <p class="pending-footer-hint">
-        需完成赛前准备并开赛后，本面板将自动切换至实时监控模式。
+        需先通过赛前检查并开赛，本面板才会切换到实时监控模式。
       </p>
     </div>
   </section>
