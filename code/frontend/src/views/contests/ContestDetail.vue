@@ -5,8 +5,10 @@ import { RouterLink, useRoute } from 'vue-router'
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import CFocusedInputDialog from '@/components/common/modal-templates/CFocusedInputDialog.vue'
+import ContestAnnouncementsPanel from '@/components/contests/ContestAnnouncementsPanel.vue'
 import ContestAWDWorkspacePanel from '@/components/contests/ContestAWDWorkspacePanel.vue'
 import ContestAnnouncementRealtimeBridge from '@/components/contests/ContestAnnouncementRealtimeBridge.vue'
+import ContestTeamPanel from '@/components/contests/ContestTeamPanel.vue'
 import { useContestDetailPage } from '@/composables/useContestDetailPage'
 import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'
 import { useAuthStore } from '@/stores/auth'
@@ -336,48 +338,11 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
                 </div>
               </div>
 
-              <div
-                v-if="announcementsError"
-                class="contest-alert contest-alert--warning"
-              >
-                {{ announcementsError }}
-              </div>
-
-              <div
-                v-else-if="announcements.length === 0"
-                class="contest-inline-note"
-              >
-                当前竞赛暂无新的公告通知。
-              </div>
-
-              <div
-                v-else
-                class="announcement-list"
-              >
-                <article
-                  v-for="announcement in announcements"
-                  :key="announcement.id"
-                  class="announcement-item"
-                >
-                  <div class="announcement-item__head">
-                    <h3 class="announcement-item__title">
-                      {{ announcement.title }}
-                    </h3>
-                    <time
-                      class="announcement-item__time"
-                      :datetime="announcement.created_at"
-                    >
-                      {{ formatTime(announcement.created_at) }}
-                    </time>
-                  </div>
-                  <p
-                    v-if="announcement.content"
-                    class="announcement-item__content"
-                  >
-                    {{ announcement.content }}
-                  </p>
-                </article>
-              </div>
+              <ContestAnnouncementsPanel
+                :announcements="announcements"
+                :announcements-error="announcementsError"
+                empty-variant="inline"
+              />
             </section>
           </section>
 
@@ -403,52 +368,10 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
                 </div>
               </div>
 
-              <div
-                v-if="announcementsError"
-                class="contest-alert contest-alert--warning"
-              >
-                {{ announcementsError }}
-              </div>
-
-              <div
-                v-else-if="announcements.length === 0"
-                class="contest-empty-state"
-              >
-                <AppEmpty
-                  icon="Bell"
-                  title="暂无公告"
-                  description="当前竞赛暂无新的公告通知。"
-                />
-              </div>
-
-              <div
-                v-else
-                class="announcement-list"
-              >
-                <article
-                  v-for="announcement in announcements"
-                  :key="announcement.id"
-                  class="announcement-item"
-                >
-                  <div class="announcement-item__head">
-                    <h3 class="announcement-item__title">
-                      {{ announcement.title }}
-                    </h3>
-                    <time
-                      class="announcement-item__time"
-                      :datetime="announcement.created_at"
-                    >
-                      {{ formatTime(announcement.created_at) }}
-                    </time>
-                  </div>
-                  <p
-                    v-if="announcement.content"
-                    class="announcement-item__content"
-                  >
-                    {{ announcement.content }}
-                  </p>
-                </article>
-              </div>
+              <ContestAnnouncementsPanel
+                :announcements="announcements"
+                :announcements-error="announcementsError"
+              />
             </section>
           </section>
 
@@ -640,30 +563,12 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
                 </div>
               </div>
 
-              <div
+              <ContestTeamPanel
                 v-if="!team"
-                class="team-empty"
-              >
-                <div class="contest-inline-note">
-                  当前账号尚未加入队伍。
-                </div>
-                <div class="team-actions">
-                  <button
-                    type="button"
-                    class="ui-btn ui-btn--primary"
-                    @click="openCreateTeam"
-                  >
-                    创建队伍
-                  </button>
-                  <button
-                    type="button"
-                    class="ui-btn ui-btn--ghost"
-                    @click="openJoinTeam"
-                  >
-                    加入队伍
-                  </button>
-                </div>
-              </div>
+                :team="null"
+                @create-team="openCreateTeam"
+                @join-team="openJoinTeam"
+              />
 
               <div
                 v-else
@@ -684,31 +589,11 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
                   >邀请码: {{ team.invite_code }}</span>
                 </div>
 
-                <div class="team-member-list">
-                  <div
-                    v-for="member in team.members"
-                    :key="member.user_id"
-                    class="team-member"
-                  >
-                    <span class="team-member__name">{{ member.username }}</span>
-                    <div class="team-member__actions">
-                      <span
-                        v-if="member.user_id === team.captain_user_id"
-                        class="team-member__captain"
-                      >
-                        队长
-                      </span>
-                      <button
-                        v-if="isCaptain && member.user_id !== team.captain_user_id"
-                        type="button"
-                        class="team-member__kick"
-                        @click="kickMember(member.user_id)"
-                      >
-                        踢出
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                <ContestTeamPanel
+                  :team="team"
+                  :is-captain="isCaptain"
+                  @kick-member="kickMember"
+                />
               </div>
             </section>
           </section>
@@ -1105,44 +990,6 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
   margin-top: 1rem;
 }
 
-.announcement-list {
-  margin-top: 1rem;
-  display: grid;
-  gap: 0.9rem;
-}
-
-.announcement-item {
-  border-bottom: 1px solid color-mix(in srgb, var(--color-border-default) 82%, transparent);
-  padding-bottom: 0.9rem;
-}
-
-.announcement-item__head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 0.45rem 1rem;
-}
-
-.announcement-item__title {
-  font-size: var(--font-size-0-96);
-  font-weight: 700;
-  color: var(--color-text-primary);
-}
-
-.announcement-item__time {
-  font-size: var(--font-size-0-76);
-  color: var(--color-text-secondary);
-}
-
-.announcement-item__content {
-  margin-top: 0.55rem;
-  white-space: pre-wrap;
-  font-size: var(--font-size-0-88);
-  line-height: 1.75;
-  color: var(--color-text-secondary);
-}
-
 .contest-challenge-workspace {
   margin-top: 1rem;
   display: grid;
@@ -1301,18 +1148,6 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
   color: var(--color-text-secondary);
 }
 
-.team-empty {
-  margin-top: 1rem;
-  display: grid;
-  gap: 0.9rem;
-}
-
-.team-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem;
-}
-
 .team-board {
   margin-top: 1rem;
 }
@@ -1336,57 +1171,6 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
   font-family: var(--font-family-mono);
   font-size: var(--font-size-0-78);
   color: var(--color-text-secondary);
-}
-
-.team-member-list {
-  margin-top: 1rem;
-  display: grid;
-  gap: 0.55rem;
-}
-
-.team-member {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.45rem 1rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--color-border-default) 82%, transparent);
-  padding-bottom: 0.75rem;
-}
-
-.team-member__name {
-  font-size: var(--font-size-0-90);
-  color: var(--color-text-primary);
-}
-
-.team-member__actions {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.team-member__captain {
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--contest-accent) 28%, transparent);
-  background: color-mix(in srgb, var(--contest-accent) 10%, transparent);
-  padding: 0.2rem 0.55rem;
-  font-size: var(--font-size-0-72);
-  font-weight: 700;
-  color: color-mix(in srgb, var(--contest-accent) 84%, var(--color-text-primary));
-}
-
-.team-member__kick {
-  border: 0;
-  background: transparent;
-  padding: 0;
-  font-size: var(--font-size-0-78);
-  color: color-mix(in srgb, var(--color-danger) 88%, var(--color-text-primary));
-}
-
-.team-member__kick:hover,
-.team-member__kick:focus-visible {
-  text-decoration: underline;
-  outline: none;
 }
 
 .contest-not-found {

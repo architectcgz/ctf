@@ -8,7 +8,7 @@
 | 审查范围 | `code/frontend/src` 路由、关键视图、composables、stores、共享样式与验证门禁 |
 | 审查日期 | 2026-04-22 |
 | 审查方式 | 静态代码审查 + 最小验证基线检查 |
-| 审查状态 | 已记录，已完成五轮最小高收益修复 |
+| 审查状态 | 已记录，已完成六轮最小高收益修复 |
 
 ## 当前结论
 
@@ -239,6 +239,24 @@
 
 - 已执行：
   - `npm run test:run -- src/router/__tests__/routeModuleExtraction.test.ts src/router/__tests__/sharedRoutes.test.ts src/router/__tests__/guards.test.ts src/router/__tests__/errorRoutes.test.ts`
+  - `npm run typecheck`
+
+## 第六轮修复进展
+
+- 已完成：
+  - `P2-5` `ContestDetail.vue` 继续减重，公告内容区和队伍内容区已抽到独立 `components/contests` 组件，路由页保留状态装配、tab 切换和核心交互。
+  - 队伍按钮原语和公告列表结构的 source 护栏已跟随抽取边界更新，避免继续把实现细节绑死在单一路由页源码上。
+- 本轮涉及文件：
+  - `code/frontend/src/views/contests/ContestDetail.vue`
+  - `code/frontend/src/components/contests/ContestAnnouncementsPanel.vue`
+  - `code/frontend/src/components/contests/ContestTeamPanel.vue`
+  - `code/frontend/src/views/contests/__tests__/contestDetailPanelExtraction.test.ts`
+  - `code/frontend/src/views/contests/__tests__/contestStudentActionPrimitives.test.ts`
+
+## 第六轮验证
+
+- 已执行：
+  - `npm run test:run -- src/views/contests/__tests__/contestDetailPanelExtraction.test.ts src/views/contests/__tests__/contestStudentActionPrimitives.test.ts src/views/contests/__tests__/ContestDetail.test.ts`
   - `npm run typecheck`
 
 ## 备注

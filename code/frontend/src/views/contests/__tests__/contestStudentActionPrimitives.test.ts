@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import awdWorkspaceSource from '@/components/contests/ContestAWDWorkspacePanel.vue?raw'
+import contestTeamPanelSource from '@/components/contests/ContestTeamPanel.vue?raw'
 import contestDetailSource from '@/views/contests/ContestDetail.vue?raw'
 
 describe('contest student action primitives', () => {
@@ -8,7 +9,8 @@ describe('contest student action primitives', () => {
     expect(contestDetailSource).toMatch(/class="ui-control-wrap(?:\s+[^\"]+)?"/)
     expect(contestDetailSource).toContain('class="ui-control"')
     expect(contestDetailSource).toContain('class="ui-btn ui-btn--primary"')
-    expect(contestDetailSource).toContain('class="ui-btn ui-btn--ghost"')
+    expect(contestTeamPanelSource).toContain('class="ui-btn ui-btn--primary"')
+    expect(contestTeamPanelSource).toContain('class="ui-btn ui-btn--ghost"')
     expect(contestDetailSource).not.toMatch(/^\.contest-btn\s*\{/m)
     expect(contestDetailSource).not.toMatch(/^\.contest-btn--primary\s*\{/m)
     expect(contestDetailSource).not.toMatch(/^\.contest-btn--ghost\s*\{/m)
