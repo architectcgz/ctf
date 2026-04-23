@@ -4,6 +4,8 @@ import { createRouter, createMemoryHistory } from 'vue-router'
 
 import ChallengeDetail from '../ChallengeDetail.vue'
 import challengeDetailSource from '../ChallengeDetail.vue?raw'
+import challengeSubmissionRecordsPanelSource from '@/components/challenge/ChallengeSubmissionRecordsPanel.vue?raw'
+import challengeWriteupPanelSource from '@/components/challenge/ChallengeWriteupPanel.vue?raw'
 
 const challengeApiMocks = vi.hoisted(() => ({
   getChallengeDetail: vi.fn(),
@@ -210,16 +212,22 @@ describe('ChallengeDetail', () => {
   })
 
   it('题目详情 section heading 应切到共享 workspace overline 语义', () => {
-    expect(challengeDetailSource).toMatch(/<div class="workspace-overline">\s*Statement\s*<\/div>/)
-    expect(challengeDetailSource).toMatch(/<div class="workspace-overline">\s*Hints\s*<\/div>/)
-    expect(challengeDetailSource).toMatch(/<div class="workspace-overline">\s*Solutions\s*<\/div>/)
-    expect(challengeDetailSource).toMatch(/<div class="workspace-overline">\s*Submissions\s*<\/div>/)
-    expect(challengeDetailSource).toMatch(/<div class="workspace-overline">\s*My Writeup\s*<\/div>/)
-    expect(challengeDetailSource).not.toContain('<div class="overline">Statement</div>')
-    expect(challengeDetailSource).not.toContain('<div class="overline">Hints</div>')
-    expect(challengeDetailSource).not.toContain('<div class="overline">Solutions</div>')
-    expect(challengeDetailSource).not.toContain('<div class="overline">Submissions</div>')
-    expect(challengeDetailSource).not.toContain('<div class="overline">My Writeup</div>')
+    const combinedSource = [
+      challengeDetailSource,
+      challengeSubmissionRecordsPanelSource,
+      challengeWriteupPanelSource,
+    ].join('\n')
+
+    expect(combinedSource).toMatch(/<div class="workspace-overline">\s*Statement\s*<\/div>/)
+    expect(combinedSource).toMatch(/<div class="workspace-overline">\s*Hints\s*<\/div>/)
+    expect(combinedSource).toMatch(/<div class="workspace-overline">\s*Solutions\s*<\/div>/)
+    expect(combinedSource).toMatch(/<div class="workspace-overline">\s*Submissions\s*<\/div>/)
+    expect(combinedSource).toMatch(/<div class="workspace-overline">\s*My Writeup\s*<\/div>/)
+    expect(combinedSource).not.toContain('<div class="overline">Statement</div>')
+    expect(combinedSource).not.toContain('<div class="overline">Hints</div>')
+    expect(combinedSource).not.toContain('<div class="overline">Solutions</div>')
+    expect(combinedSource).not.toContain('<div class="overline">Submissions</div>')
+    expect(combinedSource).not.toContain('<div class="overline">My Writeup</div>')
   })
 
   it('题目详情剩余局部 kicker 也应统一到 workspace overline 语义', () => {
