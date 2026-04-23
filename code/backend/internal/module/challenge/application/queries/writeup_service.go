@@ -180,15 +180,22 @@ func (s *WriteupService) ListCommunitySolutions(userID, challengeID int64, query
 }
 
 func (s *WriteupService) ListTeacherSubmissions(requesterID int64, requesterRole string, query *dto.TeacherSubmissionWriteupQuery) (*dto.PageResult, error) {
+	return s.ListTeacherSubmissionsWithContext(context.Background(), requesterID, requesterRole, query)
+}
+
+func (s *WriteupService) ListTeacherSubmissionsWithContext(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherSubmissionWriteupQuery) (*dto.PageResult, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
 	if query == nil {
 		query = &dto.TeacherSubmissionWriteupQuery{}
 	}
-	normalized, err := normalizeTeacherSubmissionQuery(s.repo, requesterID, requesterRole, query)
+	normalized, err := normalizeTeacherSubmissionQueryWithContext(ctx, s.repo, requesterID, requesterRole, query)
 	if err != nil {
 		return nil, err
 	}
 
-	items, total, err := s.repo.ListTeacherSubmissionWriteups(normalized)
+	items, total, err := s.repo.ListTeacherSubmissionWriteupsWithContext(ctx, normalized)
 	if err != nil {
 		return nil, err
 	}
@@ -207,20 +214,37 @@ func (s *WriteupService) ListTeacherSubmissions(requesterID int64, requesterRole
 }
 
 func (s *WriteupService) GetTeacherSubmission(submissionID, requesterID int64, requesterRole string) (*dto.TeacherSubmissionWriteupDetailResp, error) {
-	record, err := s.repo.GetTeacherSubmissionWriteupByID(submissionID)
+	return s.GetTeacherSubmissionWithContext(context.Background(), submissionID, requesterID, requesterRole)
+}
+
+func (s *WriteupService) GetTeacherSubmissionWithContext(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*dto.TeacherSubmissionWriteupDetailResp, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	record, err := s.repo.GetTeacherSubmissionWriteupByIDWithContext(ctx, submissionID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrNotFound
 		}
 		return nil, err
 	}
-	if err := ensureTeacherCanAccessQueryRecord(s.repo, requesterID, requesterRole, record); err != nil {
+	if err := ensureTeacherCanAccessQueryRecordWithContext(ctx, s.repo, requesterID, requesterRole, record); err != nil {
 		return nil, err
 	}
 	return domain.TeacherSubmissionWriteupDetailRespFromRecord(*record), nil
 }
 
 func normalizeTeacherSubmissionQuery(
+	repo challengeports.ChallengeWriteupRepository,
+	requesterID int64,
+	requesterRole string,
+	query *dto.TeacherSubmissionWriteupQuery,
+) (*dto.TeacherSubmissionWriteupQuery, error) {
+	return normalizeTeacherSubmissionQueryWithContext(context.Background(), repo, requesterID, requesterRole, query)
+}
+
+func normalizeTeacherSubmissionQueryWithContext(
+	ctx context.Context,
 	repo challengeports.ChallengeWriteupRepository,
 	requesterID int64,
 	requesterRole string,
@@ -237,7 +261,7 @@ func normalizeTeacherSubmissionQuery(
 		return &normalized, nil
 	}
 
-	requester, err := repo.FindUserByID(requesterID)
+	requester, err := repo.FindUserByIDWithContext(ctx, requesterID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrUnauthorized
@@ -260,10 +284,20 @@ func ensureTeacherCanAccessQueryRecord(
 	requesterRole string,
 	record *challengeports.TeacherSubmissionWriteupRecord,
 ) error {
+	return ensureTeacherCanAccessQueryRecordWithContext(context.Background(), repo, requesterID, requesterRole, record)
+}
+
+func ensureTeacherCanAccessQueryRecordWithContext(
+	ctx context.Context,
+	repo challengeports.ChallengeWriteupRepository,
+	requesterID int64,
+	requesterRole string,
+	record *challengeports.TeacherSubmissionWriteupRecord,
+) error {
 	if requesterRole == model.RoleAdmin {
 		return nil
 	}
-	requester, err := repo.FindUserByID(requesterID)
+	requester, err := repo.FindUserByIDWithContext(ctx, requesterID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return errcode.ErrUnauthorized

@@ -66,6 +66,7 @@ type ChallengeWriteupRepository interface {
 	FindByID(id int64) (*model.Challenge, error)
 	FindByIDWithContext(ctx context.Context, id int64) (*model.Challenge, error)
 	FindUserByID(userID int64) (*model.User, error)
+	FindUserByIDWithContext(ctx context.Context, userID int64) (*model.User, error)
 	FindWriteupByChallengeID(challengeID int64) (*model.ChallengeWriteup, error)
 	FindWriteupByChallengeIDWithContext(ctx context.Context, challengeID int64) (*model.ChallengeWriteup, error)
 	UpsertWriteup(writeup *model.ChallengeWriteup) error
@@ -79,7 +80,9 @@ type ChallengeWriteupRepository interface {
 	FindSubmissionWriteupByID(id int64) (*model.SubmissionWriteup, error)
 	UpsertSubmissionWriteup(writeup *model.SubmissionWriteup) error
 	GetTeacherSubmissionWriteupByID(id int64) (*TeacherSubmissionWriteupRecord, error)
+	GetTeacherSubmissionWriteupByIDWithContext(ctx context.Context, id int64) (*TeacherSubmissionWriteupRecord, error)
 	ListTeacherSubmissionWriteups(query *dto.TeacherSubmissionWriteupQuery) ([]TeacherSubmissionWriteupRecord, int64, error)
+	ListTeacherSubmissionWriteupsWithContext(ctx context.Context, query *dto.TeacherSubmissionWriteupQuery) ([]TeacherSubmissionWriteupRecord, int64, error)
 	ListRecommendedSolutionsByChallengeID(challengeID int64, now time.Time) ([]RecommendedSolutionRecord, error)
 	ListCommunitySolutionsByChallengeID(challengeID int64, query *dto.CommunityChallengeSolutionQuery) ([]CommunitySolutionRecord, int64, error)
 }
