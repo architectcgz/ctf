@@ -1,6 +1,7 @@
 package http
 
 import (
+	"context"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -24,6 +25,7 @@ type topologyCommandService interface {
 
 type topologyQueryService interface {
 	GetChallengeTopology(challengeID int64) (*dto.ChallengeTopologyResp, error)
+	GetChallengeTopologyWithContext(ctx context.Context, challengeID int64) (*dto.ChallengeTopologyResp, error)
 	GetTemplate(id int64) (*dto.EnvironmentTemplateResp, error)
 	ListTemplates(keyword string) ([]*dto.EnvironmentTemplateResp, error)
 }
@@ -57,7 +59,7 @@ func (h *TopologyHandler) GetChallengeTopology(c *gin.Context) {
 		response.InvalidParams(c, "无效的 challenge id")
 		return
 	}
-	resp, err := h.queries.GetChallengeTopology(challengeID)
+	resp, err := h.queries.GetChallengeTopologyWithContext(c.Request.Context(), challengeID)
 	if err != nil {
 		response.FromError(c, err)
 		return
