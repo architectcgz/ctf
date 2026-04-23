@@ -19,7 +19,7 @@ func TestAWDServiceTemplateHandlerListTemplates(t *testing.T) {
 	handler := NewAWDServiceTemplateHandler(
 		stubAWDServiceTemplateCommandService{},
 		stubAWDServiceTemplateQueryService{
-			listFunc: func(ctx context.Context, req *dto.AWDServiceTemplateQuery) (*dto.AWDServiceTemplatePageResp, error) {
+			listWithContextFunc: func(ctx context.Context, req *dto.AWDServiceTemplateQuery) (*dto.AWDServiceTemplatePageResp, error) {
 				return &dto.AWDServiceTemplatePageResp{
 					Items: []*dto.AWDServiceTemplateResp{
 						{ID: 1, Name: "Bank Portal AWD", Slug: "bank-portal-awd"},
@@ -51,15 +51,27 @@ func newJSONTestContext(t *testing.T, method, target, body string) (*gin.Context
 
 type stubAWDServiceTemplateCommandService struct{}
 
-func (stubAWDServiceTemplateCommandService) CreateTemplate(ctx context.Context, actorUserID int64, req *dto.CreateAWDServiceTemplateReq) (*dto.AWDServiceTemplateResp, error) {
+func (stubAWDServiceTemplateCommandService) CreateTemplate(actorUserID int64, req *dto.CreateAWDServiceTemplateReq) (*dto.AWDServiceTemplateResp, error) {
 	return nil, nil
 }
 
-func (stubAWDServiceTemplateCommandService) UpdateTemplate(ctx context.Context, id int64, req *dto.UpdateAWDServiceTemplateReq) (*dto.AWDServiceTemplateResp, error) {
+func (stubAWDServiceTemplateCommandService) CreateTemplateWithContext(ctx context.Context, actorUserID int64, req *dto.CreateAWDServiceTemplateReq) (*dto.AWDServiceTemplateResp, error) {
 	return nil, nil
 }
 
-func (stubAWDServiceTemplateCommandService) DeleteTemplate(ctx context.Context, id int64) error {
+func (stubAWDServiceTemplateCommandService) UpdateTemplate(id int64, req *dto.UpdateAWDServiceTemplateReq) (*dto.AWDServiceTemplateResp, error) {
+	return nil, nil
+}
+
+func (stubAWDServiceTemplateCommandService) UpdateTemplateWithContext(ctx context.Context, id int64, req *dto.UpdateAWDServiceTemplateReq) (*dto.AWDServiceTemplateResp, error) {
+	return nil, nil
+}
+
+func (stubAWDServiceTemplateCommandService) DeleteTemplate(id int64) error {
+	return nil
+}
+
+func (stubAWDServiceTemplateCommandService) DeleteTemplateWithContext(ctx context.Context, id int64) error {
 	return nil
 }
 
@@ -80,16 +92,24 @@ func (stubAWDServiceTemplateCommandService) CommitImport(ctx context.Context, ac
 }
 
 type stubAWDServiceTemplateQueryService struct {
-	listFunc func(ctx context.Context, req *dto.AWDServiceTemplateQuery) (*dto.AWDServiceTemplatePageResp, error)
+	listWithContextFunc func(ctx context.Context, req *dto.AWDServiceTemplateQuery) (*dto.AWDServiceTemplatePageResp, error)
 }
 
-func (s stubAWDServiceTemplateQueryService) GetTemplate(ctx context.Context, id int64) (*dto.AWDServiceTemplateResp, error) {
+func (s stubAWDServiceTemplateQueryService) GetTemplate(id int64) (*dto.AWDServiceTemplateResp, error) {
 	return nil, nil
 }
 
-func (s stubAWDServiceTemplateQueryService) ListTemplates(ctx context.Context, req *dto.AWDServiceTemplateQuery) (*dto.AWDServiceTemplatePageResp, error) {
-	if s.listFunc != nil {
-		return s.listFunc(ctx, req)
+func (s stubAWDServiceTemplateQueryService) GetTemplateWithContext(ctx context.Context, id int64) (*dto.AWDServiceTemplateResp, error) {
+	return nil, nil
+}
+
+func (s stubAWDServiceTemplateQueryService) ListTemplates(req *dto.AWDServiceTemplateQuery) (*dto.AWDServiceTemplatePageResp, error) {
+	return &dto.AWDServiceTemplatePageResp{}, nil
+}
+
+func (s stubAWDServiceTemplateQueryService) ListTemplatesWithContext(ctx context.Context, req *dto.AWDServiceTemplateQuery) (*dto.AWDServiceTemplatePageResp, error) {
+	if s.listWithContextFunc != nil {
+		return s.listWithContextFunc(ctx, req)
 	}
 	return &dto.AWDServiceTemplatePageResp{}, nil
 }

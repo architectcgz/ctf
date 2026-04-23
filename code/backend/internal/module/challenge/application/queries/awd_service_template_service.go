@@ -20,8 +20,16 @@ func NewAWDServiceTemplateQueryService(repo challengeports.AWDServiceTemplateQue
 	return &AWDServiceTemplateQueryService{repo: repo}
 }
 
-func (s *AWDServiceTemplateQueryService) GetTemplate(_ context.Context, id int64) (*dto.AWDServiceTemplateResp, error) {
-	item, err := s.repo.FindAWDServiceTemplateByID(id)
+func (s *AWDServiceTemplateQueryService) GetTemplate(id int64) (*dto.AWDServiceTemplateResp, error) {
+	return s.GetTemplateWithContext(context.Background(), id)
+}
+
+func (s *AWDServiceTemplateQueryService) GetTemplateWithContext(ctx context.Context, id int64) (*dto.AWDServiceTemplateResp, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	item, err := s.repo.FindAWDServiceTemplateByIDWithContext(ctx, id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrNotFound
@@ -31,8 +39,16 @@ func (s *AWDServiceTemplateQueryService) GetTemplate(_ context.Context, id int64
 	return domain.AWDServiceTemplateRespFromModel(item), nil
 }
 
-func (s *AWDServiceTemplateQueryService) ListTemplates(ctx context.Context, req *dto.AWDServiceTemplateQuery) (*dto.AWDServiceTemplatePageResp, error) {
-	items, total, err := s.repo.ListAWDServiceTemplates(ctx, req)
+func (s *AWDServiceTemplateQueryService) ListTemplates(req *dto.AWDServiceTemplateQuery) (*dto.AWDServiceTemplatePageResp, error) {
+	return s.ListTemplatesWithContext(context.Background(), req)
+}
+
+func (s *AWDServiceTemplateQueryService) ListTemplatesWithContext(ctx context.Context, req *dto.AWDServiceTemplateQuery) (*dto.AWDServiceTemplatePageResp, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	items, total, err := s.repo.ListAWDServiceTemplatesWithContext(ctx, req)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}

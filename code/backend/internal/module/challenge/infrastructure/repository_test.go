@@ -186,12 +186,12 @@ func TestRepositoryCreateAndListAWDServiceTemplates(t *testing.T) {
 		t.Fatal("template ID should be set")
 	}
 
-	items, total, err := repo.ListAWDServiceTemplates(context.Background(), &dto.AWDServiceTemplateQuery{
+	items, total, err := repo.ListAWDServiceTemplatesWithContext(context.Background(), &dto.AWDServiceTemplateQuery{
 		Page: 1,
 		Size: 10,
 	})
 	if err != nil {
-		t.Fatalf("ListAWDServiceTemplates() error = %v", err)
+		t.Fatalf("ListAWDServiceTemplatesWithContext() error = %v", err)
 	}
 	if total != 1 {
 		t.Fatalf("unexpected total: %d", total)
