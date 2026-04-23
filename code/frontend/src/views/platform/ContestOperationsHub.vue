@@ -258,7 +258,7 @@ onMounted(() => {
             <span>结束：{{ formatDateTime(contest.ends_at) }}</span>
           </div>
 
-          <div class="contest-ops-card__actions">
+          <div class="contest-ops-actions">
             <button
               :id="`contest-ops-enter-${contest.id}`"
               type="button"
@@ -304,7 +304,7 @@ onMounted(() => {
 }
 
 .contest-ops-hero__actions,
-.contest-ops-card__actions {
+.contest-ops-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;

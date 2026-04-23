@@ -50,8 +50,8 @@ async function navigate(path: string): Promise<void> {
   gap: 2rem;
   overflow-x: auto;
   padding: 0 2rem;
-  border-bottom: 1px solid #e2e8f0;
-  background: white;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border-default) 84%, transparent);
+  background: color-mix(in srgb, var(--color-bg-surface) 96%, var(--color-bg-base));
 }
 
 .backoffice-subnav__item {
@@ -62,7 +62,7 @@ async function navigate(path: string): Promise<void> {
   padding: 0 0 0.875rem;
   border: none;
   background: transparent;
-  color: #64748b;
+  color: var(--color-text-secondary);
   font-size: 0.875rem;
   font-weight: 700;
   white-space: nowrap;
@@ -81,14 +81,14 @@ async function navigate(path: string): Promise<void> {
 }
 
 .backoffice-subnav__item:hover {
-  color: #0f172a;
+  color: var(--color-text-primary);
 }
 
 .backoffice-subnav__item--active {
-  color: #2563eb;
+  color: var(--color-primary);
 }
 
 .backoffice-subnav__item--active::after {
-  background: #2563eb;
+  background: var(--color-primary);
 }
 </style>

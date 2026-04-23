@@ -3,14 +3,13 @@ import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   AlertCircle,
+  ArrowRight,
   Fingerprint,
   RefreshCw,
   SearchCheck,
   ShieldAlert,
-  Users,
   ShieldQuestion,
-  History,
-  ArrowRight,
+  Users,
 } from 'lucide-vue-next'
 
 import { getCheatDetection } from '@/api/admin'
@@ -27,11 +26,13 @@ const quickActions = [
   {
     title: '查看提交记录',
     description: '直接打开审计日志中的 submit 动作，复核高频提交账号。',
+    actionLabel: '提交审计',
     query: { action: 'submit' },
   },
   {
     title: '查看登录记录',
     description: '回看 login 日志，继续确认共享 IP 或短时集中登录。',
+    actionLabel: '登录审计',
     query: { action: 'login' },
   },
 ] as const
@@ -63,24 +64,20 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="workspace-shell">
+  <div class="workspace-shell journal-shell journal-shell-admin journal-hero cheat-shell">
     <div class="workspace-grid">
       <main class="content-pane">
         <section class="workspace-hero">
-          <div class="workspace-tab-heading__main">
-            <div class="workspace-overline">
-              Integrity Workspace
+          <header class="workspace-tab-heading cheat-workbench-head">
+            <div class="workspace-tab-heading__main">
+              <div class="workspace-overline">Integrity Workspace</div>
+              <h1 class="hero-title">作弊检测</h1>
+              <p class="hero-summary">
+                基于提交爆发、IP 共享及行为指纹的多维度线索，快速定位需要继续审计复核的账号与行为。
+              </p>
             </div>
-            <h1 class="hero-title">
-              作弊检测
-            </h1>
-            <p class="hero-summary">
-              基于提交爆发、IP 共享及行为指纹的多维度合规分析，维护靶场竞技公平性。
-            </p>
-          </div>
 
-          <div class="awd-library-hero-actions">
-            <div class="quick-actions">
+            <div class="cheat-hero-actions">
               <div
                 v-if="riskData"
                 class="hero-meta-badge"
@@ -105,207 +102,175 @@ onMounted(() => {
                 刷新线索
               </button>
             </div>
-          </div>
+          </header>
         </section>
 
-        <div
+        <div class="journal-divider" />
+
+        <AppLoading
           v-if="loading && !riskData"
-          class="flex justify-center py-20"
+          class="cheat-loading"
         >
-          <AppLoading>正在扫描合规风险...</AppLoading>
-        </div>
+          正在扫描合规风险...
+        </AppLoading>
 
         <div
           v-else-if="riskData"
-          class="cheat-detection-body mt-10 space-y-10"
+          class="cheat-workbench"
         >
-          <div class="metric-panel-grid metric-panel-grid--premium cols-3">
-            <article class="metric-panel-card metric-panel-card--premium">
-              <div class="metric-panel-label">
+          <div class="admin-summary-grid cheat-kpi-summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface">
+            <article class="journal-note progress-card metric-panel-card">
+              <div class="journal-note-label progress-card-label metric-panel-label">
                 <span>提交风险账号</span>
                 <ShieldAlert class="h-4 w-4" />
               </div>
-              <div class="metric-panel-value">
+              <div class="journal-note-value progress-card-value metric-panel-value">
                 {{ riskData.summary.submit_burst_users.toString().padStart(2, '0') }}
               </div>
-              <div class="metric-panel-helper">
-                检出高频提交爆发
+              <div class="journal-note-helper progress-card-hint metric-panel-helper">
+                超过高频阈值的账号数量
               </div>
             </article>
 
-            <article class="metric-panel-card metric-panel-card--premium">
-              <div class="metric-panel-label">
-                <span>多账号共享 IP</span>
+            <article class="journal-note progress-card metric-panel-card">
+              <div class="journal-note-label progress-card-label metric-panel-label">
+                <span>共享 IP 线索</span>
                 <Fingerprint class="h-4 w-4" />
               </div>
-              <div class="metric-panel-value">
+              <div class="journal-note-value progress-card-value metric-panel-value">
                 {{ riskData.summary.shared_ip_groups.toString().padStart(2, '0') }}
               </div>
-              <div class="metric-panel-helper">
-                疑似团队线下协作
+              <div class="journal-note-helper progress-card-hint metric-panel-helper">
+                最近窗口内出现的共享公网地址分组
               </div>
             </article>
 
-            <article class="metric-panel-card metric-panel-card--premium">
-              <div class="metric-panel-label">
+            <article class="journal-note progress-card metric-panel-card">
+              <div class="journal-note-label progress-card-label metric-panel-label">
                 <span>涉及用户总数</span>
                 <Users class="h-4 w-4" />
               </div>
-              <div class="metric-panel-value">
+              <div class="journal-note-value progress-card-value metric-panel-value">
                 {{ riskData.summary.affected_users.toString().padStart(2, '0') }}
               </div>
-              <div class="metric-panel-helper">
-                全站风险波及范围
+              <div class="journal-note-helper progress-card-hint metric-panel-helper">
+                当前所有线索累计覆盖的账号规模
               </div>
             </article>
           </div>
 
-          <!-- Burst Accounts -->
-          <section class="workspace-directory-section">
+          <section class="workspace-directory-section cheat-directory-section">
             <header class="list-heading">
               <div>
-                <div class="workspace-overline">
-                  Compliance Risk / Burst
-                </div>
-                <h2 class="list-heading__title">
-                  高频提交风险线索
-                </h2>
+                <div class="workspace-overline">Compliance Risk / Burst</div>
+                <h2 class="list-heading__title">高频提交账号</h2>
               </div>
             </header>
 
             <AppEmpty
               v-if="!riskData.suspects.length"
+              class="cheat-empty-state"
               icon="ShieldCheck"
-              title="当前无爆发性提交风险"
+              title="当前没有超过阈值的高频提交账号"
               description="说明最近统计窗口内还没有明显的提交样本超过安全阈值。"
-              class="py-12"
             />
 
             <div
               v-else
-              class="cheat-list"
+              class="cheat-directory-list"
             >
               <button
                 v-for="suspect in riskData.suspects"
                 :key="suspect.user_id"
-                class="cheat-row group"
-                @click="openAudit({ action: 'submit', actor_user_id: suspect.user_id.toString() })"
+                type="button"
+                class="cheat-directory-row"
+                @click="openAudit({ action: 'submit', actor_user_id: String(suspect.user_id) })"
               >
-                <div class="cheat-row__main">
-                  <div class="cheat-row__title">
-                    {{ suspect.username }}
-                  </div>
-                  <div class="cheat-row__reason">
-                    {{ suspect.reason }}
-                  </div>
+                <div class="cheat-directory-row-main">
+                  <div class="cheat-directory-row-title">{{ suspect.username }}</div>
+                  <div class="cheat-directory-row-copy">{{ suspect.reason }}</div>
                 </div>
-                <div class="cheat-row__meta">
-                  <div class="cheat-badge cheat-badge--warning">
-                    {{ suspect.submit_count }} 提交
-                  </div>
-                  <div class="cheat-time">
-                    最近出现 {{ formatDateTime(suspect.last_seen_at) }}
-                  </div>
-                  <div class="cheat-action">
-                    <span>审计复核</span>
+                <div class="cheat-directory-row-meta">
+                  <span class="cheat-badge cheat-badge--warning">{{ suspect.submit_count }} 次提交</span>
+                  <span class="cheat-meta-text">最近出现 {{ formatDateTime(suspect.last_seen_at) }}</span>
+                  <span class="cheat-link-hint">
+                    审计复核
                     <ArrowRight class="h-3 w-3" />
-                  </div>
+                  </span>
                 </div>
               </button>
             </div>
           </section>
 
-          <!-- Shared IP -->
-          <section class="workspace-directory-section">
+          <section class="workspace-directory-section cheat-directory-section">
             <header class="list-heading">
               <div>
-                <div class="workspace-overline">
-                  Compliance Risk / Network
-                </div>
-                <h2 class="list-heading__title">
-                  共享 IP 复用线索
-                </h2>
+                <div class="workspace-overline">Compliance Risk / Network</div>
+                <h2 class="list-heading__title">共享 IP 线索</h2>
               </div>
             </header>
 
             <AppEmpty
               v-if="!riskData.shared_ips.length"
+              class="cheat-empty-state"
               icon="ShieldCheck"
-              title="未发现 IP 共享行为"
+              title="当前没有共享 IP 线索"
               description="最近 24 小时内未监测到不同账号从同一公网地址密集登录。"
-              class="py-12"
             />
 
             <div
               v-else
-              class="cheat-list"
+              class="cheat-directory-list"
             >
               <button
                 v-for="group in riskData.shared_ips"
                 :key="group.ip"
-                class="cheat-row group"
+                type="button"
+                class="cheat-directory-row"
                 @click="openAudit({ action: 'login' })"
               >
-                <div class="cheat-row__main">
-                  <div class="cheat-row__title font-mono">
-                    {{ group.ip }}
-                  </div>
-                  <div class="cheat-row__reason">
-                    涉及账号: {{ group.usernames.join('、') }}
-                  </div>
+                <div class="cheat-directory-row-main">
+                  <div class="cheat-directory-row-title cheat-directory-row-title--mono">{{ group.ip }}</div>
+                  <div class="cheat-directory-row-copy">涉及账号：{{ group.usernames.join('、') }}</div>
                 </div>
-                <div class="cheat-row__meta">
-                  <div class="cheat-badge">
-                    {{ group.user_count }} 账号
-                  </div>
-                  <div class="cheat-time">
-                    多见于短时集中登录行为
-                  </div>
-                  <div class="cheat-action">
-                    <span>追踪登录</span>
+                <div class="cheat-directory-row-meta">
+                  <span class="cheat-badge">{{ group.user_count }} 个账号</span>
+                  <span class="cheat-meta-text">多见于短时集中登录行为</span>
+                  <span class="cheat-link-hint">
+                    追踪登录
                     <ArrowRight class="h-3 w-3" />
-                  </div>
+                  </span>
                 </div>
               </button>
             </div>
           </section>
 
-          <!-- Quick Actions -->
-          <section class="workspace-directory-section">
+          <section class="workspace-directory-section cheat-directory-section">
             <header class="list-heading">
               <div>
-                <div class="workspace-overline">
-                  Analysis Shortcuts
-                </div>
-                <h2 class="list-heading__title">
-                  常用审计联动
-                </h2>
+                <div class="workspace-overline">Analysis Shortcuts</div>
+                <h2 class="list-heading__title">审计联动</h2>
               </div>
             </header>
 
-            <div class="cheat-list">
+            <div class="quick-action-directory">
               <button
                 v-for="action in quickActions"
                 :key="action.title"
-                class="cheat-row group"
+                type="button"
+                class="quick-action-row"
                 @click="openAudit(action.query)"
               >
-                <div class="cheat-row__main">
-                  <div class="cheat-row__title">
-                    {{ action.title }}
-                  </div>
-                  <div class="cheat-row__reason">
-                    {{ action.description }}
-                  </div>
+                <div class="cheat-directory-row-main">
+                  <div class="cheat-directory-row-title">{{ action.title }}</div>
+                  <div class="cheat-directory-row-copy">{{ action.description }}</div>
                 </div>
-                <div class="cheat-row__meta">
-                  <div class="cheat-badge cheat-badge--muted">
-                    跳转入口
-                  </div>
-                  <div class="cheat-action">
-                    <span>打开详情</span>
+                <div class="cheat-directory-row-meta">
+                  <span class="cheat-badge cheat-badge--muted">{{ action.actionLabel }}</span>
+                  <span class="cheat-link-hint">
+                    打开详情
                     <ArrowRight class="h-3 w-3" />
-                  </div>
+                  </span>
                 </div>
               </button>
             </div>
@@ -315,18 +280,25 @@ onMounted(() => {
         <div
           v-else-if="error"
           class="cheat-error-box"
+          role="alert"
         >
           <AlertCircle class="h-4 w-4" />
           <span>{{ error }}</span>
-          <button @click="loadRiskData" class="underline ml-2">重试</button>
+          <button
+            type="button"
+            class="ui-btn ui-btn--ghost ui-btn--sm"
+            @click="loadRiskData"
+          >
+            重试
+          </button>
         </div>
 
         <div
           v-else
-          class="py-20 flex flex-col items-center gap-4 opacity-30"
+          class="cheat-empty-shell"
         >
           <ShieldQuestion class="h-12 w-12" />
-          <p class="font-bold">当前没有任何风险检出</p>
+          <p>当前没有任何风险检出</p>
         </div>
       </main>
     </div>
@@ -334,185 +306,267 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.workspace-hero {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: var(--space-7);
-  padding-bottom: var(--space-6);
-  border-bottom: 1px solid var(--color-border-subtle);
+.cheat-shell {
+  --journal-shell-dark-accent: var(--color-primary-hover);
+  --cheat-card-border: color-mix(in srgb, var(--journal-border) 74%, transparent);
+  --cheat-divider: color-mix(in srgb, var(--journal-border) 68%, transparent);
+  --journal-divider-border: 1px dashed var(--cheat-divider);
+  --page-top-tabs-gap: 28px;
+  --page-top-tab-font-size: var(--font-size-15);
+  --page-top-tab-active-border: color-mix(in srgb, var(--journal-accent) 84%, var(--journal-ink));
+  --workspace-brand: var(--journal-accent);
+  --workspace-brand-ink: color-mix(in srgb, var(--journal-accent) 74%, var(--journal-ink));
+  --workspace-panel: color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-bg-base));
+  --workspace-panel-soft: color-mix(in srgb, var(--color-bg-surface) 82%, var(--color-bg-base));
+  --workspace-line-soft: color-mix(in srgb, var(--color-text-primary) 10%, transparent);
+}
+
+.cheat-workbench-head {
+  align-items: flex-start;
 }
 
 .hero-title {
-  margin: 0.5rem 0 0;
-  font-size: var(--workspace-page-title-font-size);
-  line-height: var(--workspace-page-title-line-height);
-  letter-spacing: var(--workspace-page-title-letter-spacing);
-  color: var(--color-text-primary);
+  margin: var(--space-1-5) 0 0;
 }
 
 .hero-summary {
-  max-width: 760px;
-  margin-top: var(--space-3-5);
-  font-size: var(--font-size-15);
-  line-height: 1.9;
-  color: var(--color-text-secondary);
+  max-width: 56rem;
+  margin-top: var(--space-3);
+  color: var(--journal-muted);
+}
+
+.cheat-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3);
+}
+
+.cheat-hero-actions > .ui-btn {
+  --ui-btn-height: 2.75rem;
+  --ui-btn-radius: 1rem;
+  --ui-btn-padding: var(--space-2-5) var(--space-4);
+  --ui-btn-font-size: var(--font-size-0-875);
+  --ui-btn-font-weight: 600;
+  --ui-btn-focus-ring: color-mix(in srgb, var(--journal-accent) 16%, transparent);
+}
+
+.cheat-hero-actions > .ui-btn.ui-btn--primary {
+  --ui-btn-primary-border: color-mix(in srgb, var(--journal-accent) 46%, var(--journal-border));
+  --ui-btn-primary-background: var(--journal-accent);
+  --ui-btn-primary-hover-background: var(--color-primary-hover);
+}
+
+.cheat-hero-actions > .ui-btn.ui-btn--ghost {
+  --ui-btn-border: var(--journal-border);
+  --ui-btn-background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
+  --ui-btn-color: var(--journal-ink);
+  --ui-btn-hover-border: color-mix(in srgb, var(--journal-accent) 28%, transparent);
+  --ui-btn-hover-background: color-mix(in srgb, var(--journal-accent) 4%, var(--journal-surface));
+  --ui-btn-hover-color: var(--journal-accent);
 }
 
 .hero-meta-badge {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
+  display: grid;
   gap: var(--space-1);
+  justify-items: end;
 }
 
 .hero-meta-badge__label {
-  font-size: var(--font-size-10);
-  font-weight: 800;
+  font-size: var(--font-size-11);
+  font-weight: 700;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--color-text-muted);
-  letter-spacing: 0.1em;
+  color: var(--journal-muted);
 }
 
 .hero-meta-badge__value {
   font-size: var(--font-size-13);
-  font-weight: 700;
-  color: var(--color-text-primary);
+  font-weight: 600;
+  color: var(--journal-ink);
 }
 
-.awd-library-hero-actions {
-  display: flex;
-  align-items: flex-end;
-  padding-bottom: 0.5rem;
+.cheat-loading {
+  padding-block: var(--space-7);
 }
 
-.quick-actions {
-  display: flex;
-  gap: var(--space-5);
-  align-items: center;
+.cheat-workbench {
+  display: grid;
+  gap: var(--space-4);
 }
 
-.cheat-list {
-  display: flex;
-  flex-direction: column;
-  border: 1px solid var(--color-border-default);
-  border-radius: 1.25rem;
-  background: var(--color-bg-surface);
-  overflow: hidden;
+.cheat-kpi-summary {
+  --metric-panel-columns: repeat(3, minmax(0, 1fr));
 }
 
-.cheat-row {
+.cheat-kpi-summary .metric-panel-label {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-6);
-  padding: 1.5rem 2rem;
-  background: transparent;
-  border: none;
-  border-bottom: 1px solid var(--color-border-subtle);
+  gap: var(--space-2);
+}
+
+.cheat-directory-section {
+  display: grid;
+  gap: var(--space-4);
+  padding: 0;
+}
+
+.cheat-directory-list,
+.quick-action-directory {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.cheat-directory-row,
+.quick-action-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-4);
   width: 100%;
+  border: 1px solid var(--cheat-card-border);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--workspace-panel) 88%, transparent);
+  padding: var(--space-4);
   text-align: left;
-  transition: all 0.2s ease;
-  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    color 160ms ease;
 }
 
-.cheat-row:last-child {
-  border-bottom: none;
+.cheat-directory-row:hover,
+.quick-action-row:hover,
+.cheat-directory-row:focus-visible,
+.quick-action-row:focus-visible {
+  border-color: color-mix(in srgb, var(--journal-accent) 24%, var(--cheat-card-border));
+  background: color-mix(in srgb, var(--workspace-panel-soft) 92%, transparent);
+  outline: none;
 }
 
-.cheat-row:hover {
-  background: var(--color-bg-elevated);
-}
-
-.cheat-row__main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
+.cheat-directory-row-main {
+  display: grid;
+  gap: var(--space-1-5);
   min-width: 0;
 }
 
-.cheat-row__title {
+.cheat-directory-row-title {
   font-size: var(--font-size-15);
-  font-weight: 800;
-  color: var(--color-text-primary);
-  transition: color 0.2s ease;
+  font-weight: 700;
+  color: var(--journal-ink);
 }
 
-.group:hover .cheat-row__title {
-  color: var(--color-primary);
+.cheat-directory-row-title--mono {
+  font-family: var(--font-family-mono);
 }
 
-.cheat-row__reason {
+.cheat-directory-row-copy {
   font-size: var(--font-size-13);
-  color: var(--color-text-secondary);
-  line-height: 1.6;
+  line-height: 1.7;
+  color: var(--journal-muted);
 }
 
-.cheat-row__meta {
+.cheat-directory-row-meta {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-6);
+  justify-content: flex-end;
+  gap: var(--space-3);
 }
 
 .cheat-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.9rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--journal-border) 76%, transparent);
+  background: color-mix(in srgb, var(--workspace-panel-soft) 84%, transparent);
+  padding: 0 var(--space-3);
   font-size: var(--font-size-11);
-  font-weight: 800;
-  padding: 0.25rem 0.75rem;
-  border-radius: 99px;
-  background: var(--color-bg-elevated);
-  color: var(--color-text-secondary);
+  font-weight: 700;
+  color: var(--journal-muted);
   white-space: nowrap;
 }
 
 .cheat-badge--warning {
-  background: var(--color-warning-soft);
-  color: var(--color-warning);
+  border-color: color-mix(in srgb, var(--color-warning) 28%, transparent);
+  background: color-mix(in srgb, var(--color-warning) 10%, transparent);
+  color: color-mix(in srgb, var(--color-warning) 86%, var(--journal-ink));
 }
 
 .cheat-badge--muted {
-  opacity: 0.6;
+  border-color: color-mix(in srgb, var(--journal-border) 68%, transparent);
 }
 
-.cheat-time {
+.cheat-meta-text {
   font-size: var(--font-size-12);
-  color: var(--color-text-muted);
+  color: var(--journal-muted);
   white-space: nowrap;
 }
 
-.cheat-action {
-  display: flex;
+.cheat-link-hint {
+  display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-1-5);
   font-size: var(--font-size-12);
   font-weight: 700;
-  color: var(--color-primary);
-  opacity: 0;
-  transform: translateX(-10px);
-  transition: all 0.2s ease;
+  color: var(--workspace-brand-ink);
+  white-space: nowrap;
 }
 
-.group:hover .cheat-action {
-  opacity: 1;
-  transform: translateX(0);
+.admin-empty {
+  border: 1px dashed color-mix(in srgb, var(--journal-border) 72%, transparent);
+}
+
+.cheat-empty-state {
+  border-top-color: var(--cheat-divider);
+  border-bottom-color: var(--cheat-divider);
 }
 
 .cheat-error-box {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 0.75rem;
-  padding: 1rem 1.25rem;
-  background: var(--color-danger-soft);
-  color: var(--color-danger);
+  gap: var(--space-3);
+  border: 1px solid color-mix(in srgb, var(--color-danger) 22%, var(--cheat-card-border));
   border-radius: 1rem;
-  font-size: var(--font-size-13);
-  font-weight: 600;
+  background: color-mix(in srgb, var(--color-danger) 8%, transparent);
+  padding: var(--space-4);
+  color: color-mix(in srgb, var(--color-danger) 84%, var(--journal-ink));
 }
 
-@media (max-width: 1024px) {
-  .workspace-hero { grid-template-columns: 1fr; }
-  .awd-library-hero-actions { padding: 0; }
-  .cheat-row { flex-direction: column; align-items: flex-start; gap: var(--space-4); }
-  .cheat-row__meta { width: 100%; justify-content: space-between; }
-  .cheat-action { opacity: 1; transform: none; }
+.cheat-empty-shell {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-3);
+  padding-block: var(--space-8);
+  color: var(--journal-muted);
+}
+
+@media (max-width: 1100px) {
+  .cheat-kpi-summary {
+    --metric-panel-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .cheat-directory-row,
+  .quick-action-row {
+    grid-template-columns: 1fr;
+  }
+
+  .cheat-directory-row-meta {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 720px) {
+  .cheat-kpi-summary {
+    --metric-panel-columns: 1fr;
+  }
+
+  .cheat-hero-actions {
+    justify-content: flex-start;
+  }
 }
 </style>

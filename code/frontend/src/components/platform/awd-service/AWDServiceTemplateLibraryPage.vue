@@ -218,7 +218,7 @@ function selectTab(tab: LibraryTab) {
               AWD Service Authoring
             </div>
             <h1 class="hero-title">
-              AWD 服务模板
+              AWD 服务模板库
             </h1>
             <p class="hero-summary">
               这里单独维护 AWD 题目的服务模板，不再和解题赛题目混在同一资源目录。
@@ -237,7 +237,7 @@ function selectTab(tab: LibraryTab) {
                 :class="{ active: activeTab === 'import' }"
                 @click="selectTab('import')"
               >
-                题目包导入
+                导入 AWD 题目包
                 <span
                   v-if="importQueueCount > 0"
                   class="awd-tab-badge"

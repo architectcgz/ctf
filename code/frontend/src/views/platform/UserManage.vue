@@ -3,6 +3,7 @@ import { onMounted } from 'vue'
 
 import PlatformUserFormDialog from '@/components/platform/user/PlatformUserFormDialog.vue'
 import UserGovernancePage from '@/components/platform/user/UserGovernancePage.vue'
+import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
 import { usePlatformUsers } from '@/composables/usePlatformUsers'
 
 const {
@@ -57,7 +58,16 @@ function updateStatusFilter(value: typeof statusFilter.value) {
 
 async function handleDelete(userId: string) {
   const user = list.value.find((item) => item.id === userId)
-  if (!user || !window.confirm(`确定删除用户 ${user.username} 吗？`)) {
+  if (!user) {
+    return
+  }
+
+  const confirmed = await confirmDestructiveAction({
+    title: '删除用户',
+    message: `确定删除用户 ${user.username} 吗？`,
+    confirmButtonText: '确认删除',
+  })
+  if (!confirmed) {
     return
   }
   await removeUser(user)

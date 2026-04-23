@@ -14,6 +14,9 @@ docs/*
 !docs/contracts/
 !docs/refs/
 !docs/refs/*.md
+!docs/reviews/
+!docs/reviews/frontend/
+!docs/reviews/frontend/*.md
 !docs/superpowers/
 !docs/superpowers/plans/
 !docs/superpowers/plans/*.md

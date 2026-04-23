@@ -250,14 +250,14 @@ function handleOverrideDialogOpenChange(value: boolean) {
     <AppEmpty
       v-if="contests.length === 0"
       title="暂无 AWD 赛事"
-      description="当前列表没有可操作的攻防赛事。"
+      description="当前页没有 AWD 赛事，可先创建或切换到包含 AWD 赛事的页码。"
       icon="Flag"
       class="py-20"
     />
 
     <AppEmpty
       v-else-if="!selectedContest"
-      title="未选择赛事"
+      title="暂无 AWD 赛事"
       description="请先选择一个 AWD 赛事以进入运维面板。"
       icon="Flag"
       class="py-20"
@@ -274,12 +274,13 @@ function handleOverrideDialogOpenChange(value: boolean) {
       >
         <header class="section-header mb-6">
           <h2 class="section-title">
-            运维就绪审计
+            轮次态势
           </h2>
           <p class="section-hint">
-            开赛前必须修正以下阻塞项，以确保裁判引擎正常运行。
+            需先通过赛前检查并开赛，运行面板才会切换到实时监控。
           </p>
         </header>
+        <AWDRuntimePendingState />
         <AWDReadinessSummary
           :readiness="readiness"
           :loading="loadingReadiness"
@@ -363,6 +364,14 @@ function handleOverrideDialogOpenChange(value: boolean) {
           />
         </div>
       </section>
+    </div>
+
+    <div
+      v-if="overrideDialogState.open"
+      class="sr-only"
+      aria-live="assertive"
+    >
+      {{ overrideDialogState.title }} 强制继续
     </div>
 
     <AWDRoundCreateDialog

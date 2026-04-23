@@ -334,7 +334,7 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
 
             <section
               v-else
-              class="teacher-directory"
+              class="teacher-directory teacher-table-shell"
             >
               <div class="teacher-directory-head">
                 <span>学号</span>
@@ -414,8 +414,30 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
 <style scoped>
 @import '../teacher-workspace-subpanel.css';
 
+.workspace-shell {
+  --journal-ink: var(--color-text-primary);
+  --journal-muted: var(--color-text-secondary);
+  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
+  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
+  --teacher-card-border: color-mix(in srgb, var(--journal-border) 76%, transparent);
+  --teacher-control-border: color-mix(in srgb, var(--journal-border) 78%, transparent);
+  --teacher-divider: color-mix(in srgb, var(--journal-border) 86%, transparent);
+}
+
 .teacher-page { display: flex; min-height: 100%; flex: 1 1 auto; flex-direction: column; }
 .teacher-directory-section { margin-top: var(--space-6); }
+
+.teacher-badge-card {
+  border: 1px solid var(--teacher-card-border);
+}
+
+.teacher-table-shell {
+  border: 1px solid var(--teacher-card-border);
+  border-radius: var(--workspace-radius-lg, 18px);
+  background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
+  padding: 0 var(--space-5);
+}
 
 .teacher-filter-grid { display: grid; gap: var(--space-4); grid-template-columns: minmax(0, 18rem) minmax(0, 1fr); }
 .teacher-select { min-height: 1.75rem; border: 0; appearance: none; cursor: pointer; background: transparent; width: 100%; outline: none; }

@@ -156,12 +156,12 @@ function getCellValue(row: unknown, key: string): unknown {
 }
 
 :global([data-theme='light']) .workspace-data-table-shell {
-  --workspace-table-line: color-mix(in srgb, #e8eef5 86%, transparent);
-  --workspace-table-line-strong: color-mix(in srgb, #dbe4ee 92%, transparent);
-  --workspace-table-text: #0f172a;
-  --workspace-table-muted: #475569;
-  --workspace-table-faint: #94a3b8;
-  --workspace-table-row-hover: color-mix(in srgb, #e2e8f0 42%, transparent);
+  --workspace-table-line: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  --workspace-table-line-strong: color-mix(in srgb, var(--color-border-default) 92%, transparent);
+  --workspace-table-text: var(--color-text-primary);
+  --workspace-table-muted: var(--color-text-secondary);
+  --workspace-table-faint: var(--color-text-muted);
+  --workspace-table-row-hover: color-mix(in srgb, var(--color-border-default) 18%, transparent);
 }
 
 :global([data-theme='dark']) .workspace-data-table-shell {

@@ -4,6 +4,7 @@ import { createPinia, setActivePinia } from 'pinia'
 
 import PlatformAWDReviewIndex from '../AWDReviewIndex.vue'
 import platformAwdReviewIndexSource from '../AWDReviewIndex.vue?raw'
+import awdReviewDirectoryPanelSource from '@/components/platform/awd-review/AwdReviewDirectoryPanel.vue?raw'
 import { useAuthStore } from '@/stores/auth'
 
 const pushMock = vi.fn()
@@ -21,6 +22,8 @@ vi.mock('vue-router', async () => {
 })
 
 vi.mock('@/api/teacher', () => teacherApiMocks)
+
+const combinedSource = [platformAwdReviewIndexSource, awdReviewDirectoryPanelSource].join('\n')
 
 describe('PlatformAWDReviewIndex', () => {
   beforeEach(() => {
@@ -66,24 +69,24 @@ describe('PlatformAWDReviewIndex', () => {
   })
 
   it('应使用平台工作台目录壳层而不是教师目录模板', async () => {
-    expect(platformAwdReviewIndexSource).toContain(
+    expect(combinedSource).toContain(
       "from '@/components/common/WorkspaceDirectoryToolbar.vue'"
     )
-    expect(platformAwdReviewIndexSource).toContain("from '@/components/common/WorkspaceDataTable.vue'")
+    expect(combinedSource).toContain("from '@/components/common/WorkspaceDataTable.vue'")
     expect(platformAwdReviewIndexSource).toContain(
       'class="workspace-shell journal-shell journal-shell-admin journal-notes-card journal-hero admin-awd-review-shell flex min-h-full flex-1 flex-col"'
     )
     expect(platformAwdReviewIndexSource).toContain(
       'class="admin-summary-grid admin-awd-review-shell__summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
     )
-    expect(platformAwdReviewIndexSource).toContain(
+    expect(combinedSource).toContain(
       'class="workspace-directory-section admin-awd-review-directory"'
     )
-    expect(platformAwdReviewIndexSource).toContain(
+    expect(combinedSource).toContain(
       'class="workspace-directory-list admin-awd-review-table"'
     )
-    expect(platformAwdReviewIndexSource).not.toContain('teacher-management-shell')
-    expect(platformAwdReviewIndexSource).not.toContain('teacher-directory-row')
+    expect(combinedSource).not.toContain('teacher-management-shell')
+    expect(combinedSource).not.toContain('teacher-directory-row')
 
     const wrapper = mount(PlatformAWDReviewIndex)
     await flushPromises()

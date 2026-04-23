@@ -1,9 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import { createRouter, createMemoryHistory } from 'vue-router'
-import { createPinia } from 'pinia'
+import { createPinia, setActivePinia } from 'pinia'
 import ContestDetail from '../ContestDetail.vue'
 import contestDetailSource from '../ContestDetail.vue?raw'
+import contestOverviewPanelSource from '@/components/contests/ContestOverviewPanel.vue?raw'
+import contestChallengeWorkspacePanelSource from '@/components/contests/ContestChallengeWorkspacePanel.vue?raw'
+import { useAuthStore } from '@/stores/auth'
 
 const contestApiMocks = vi.hoisted(() => ({
   getContestDetail: vi.fn(),
@@ -43,10 +46,14 @@ const webSocketMocks = vi.hoisted(() => {
     ),
   }
 })
+const destructiveConfirmMock = vi.hoisted(() => vi.fn())
 
 vi.mock('@/api/contest', () => contestApiMocks)
 vi.mock('@/composables/useWebSocket', () => ({
   useWebSocket: webSocketMocks.useWebSocket,
+}))
+vi.mock('@/composables/useDestructiveConfirm', () => ({
+  confirmDestructiveAction: destructiveConfirmMock,
 }))
 
 describe('ContestDetail', () => {
@@ -66,6 +73,8 @@ describe('ContestDetail', () => {
     contestApiMocks.startContestAWDServiceInstance.mockReset()
     contestApiMocks.submitContestAWDAttack.mockReset()
     contestApiMocks.submitContestFlag.mockReset()
+    destructiveConfirmMock.mockReset()
+    destructiveConfirmMock.mockResolvedValue(true)
     webSocketMocks.connect.mockClear()
     webSocketMocks.disconnect.mockClear()
     webSocketMocks.useWebSocket.mockClear()
@@ -1319,31 +1328,80 @@ describe('ContestDetail', () => {
     expect(wrapper.text()).toContain('BANK PORTAL: HIT SUCCESSFUL. +60 PTS')
   })
 
+  it('踢出队员前应走统一确认弹窗', async () => {
+    contestApiMocks.getMyTeam.mockResolvedValueOnce({
+      id: 'team-1',
+      name: 'Red',
+      captain_user_id: 'user-1',
+      invite_code: 'RED-CTF',
+      members: [
+        { user_id: 'user-1', username: 'alice' },
+        { user_id: 'user-2', username: 'bob' },
+      ],
+    })
+    contestApiMocks.kickTeamMember.mockResolvedValue(undefined)
+
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    useAuthStore().setAuth({ id: 'user-1', username: 'alice', role: 'student' }, 'token')
+
+    const wrapper = mount(ContestDetail, {
+      global: {
+        plugins: [pinia, router],
+      },
+    })
+
+    await router.push('/contests/1?panel=team')
+    await router.isReady()
+    await flushPromises()
+
+    const teamTab = wrapper.findAll('button').find((node) => node.text().trim() === '队伍')
+    expect(teamTab).toBeTruthy()
+    await teamTab!.trigger('click')
+    await flushPromises()
+
+    const kickButton = wrapper.findAll('button').find((node) => node.text().trim() === '踢出')
+    expect(kickButton).toBeTruthy()
+    await kickButton!.trigger('click')
+    await flushPromises()
+
+    expect(destructiveConfirmMock).toHaveBeenCalledWith({
+      title: '踢出成员',
+      message: '确定踢出该成员？',
+      confirmButtonText: '确认踢出',
+    })
+    expect(contestApiMocks.kickTeamMember).toHaveBeenCalledWith('1', 'team-1', 'user-2')
+  })
+
   it('竞赛详情 hero 应使用共享 workspace overline 语义', () => {
-    expect(contestDetailSource).toMatch(/<div class="workspace-overline">\s*Contest\s*<\/div>/)
-    expect(contestDetailSource).not.toContain('<div class="contest-overline">Contest</div>')
+    expect(contestOverviewPanelSource).toMatch(/<div class="workspace-overline">\s*Contest\s*<\/div>/)
+    expect(contestOverviewPanelSource).not.toContain('<div class="contest-overline">Contest</div>')
   })
 
   it('竞赛详情 section heading 应切到共享 workspace overline 语义', () => {
-    expect(contestDetailSource).toMatch(/<div class="workspace-overline">\s*Rules\s*<\/div>/)
-    expect(contestDetailSource).toMatch(/<div class="workspace-overline">\s*Schedule\s*<\/div>/)
-    expect(contestDetailSource).toMatch(/<div class="workspace-overline">\s*Announcements\s*<\/div>/)
-    expect(contestDetailSource).toMatch(
+    const combinedSource = [contestDetailSource, contestOverviewPanelSource].join('\n')
+
+    expect(combinedSource).toMatch(/<div class="workspace-overline">\s*Rules\s*<\/div>/)
+    expect(combinedSource).toMatch(/<div class="workspace-overline">\s*Schedule\s*<\/div>/)
+    expect(combinedSource).toMatch(/<div class="workspace-overline">\s*Announcements\s*<\/div>/)
+    expect(combinedSource).toMatch(
       /<div class="workspace-overline">\s*\{\{ contest\.mode === 'awd' \? 'Battle' : 'Challenges' \}\}\s*<\/div>/
     )
-    expect(contestDetailSource).toMatch(/<div class="workspace-overline">\s*Team\s*<\/div>/)
-    expect(contestDetailSource).not.toContain('<div class="contest-overline">Rules</div>')
-    expect(contestDetailSource).not.toContain('<div class="contest-overline">Schedule</div>')
-    expect(contestDetailSource).not.toContain('<div class="contest-overline">Announcements</div>')
-    expect(contestDetailSource).not.toContain('<div class="contest-overline">Team</div>')
+    expect(combinedSource).toMatch(/<div class="workspace-overline">\s*Team\s*<\/div>/)
+    expect(combinedSource).not.toContain('<div class="contest-overline">Rules</div>')
+    expect(combinedSource).not.toContain('<div class="contest-overline">Schedule</div>')
+    expect(combinedSource).not.toContain('<div class="contest-overline">Announcements</div>')
+    expect(combinedSource).not.toContain('<div class="contest-overline">Team</div>')
   })
 
   it('竞赛详情剩余局部 kicker 也应统一到 workspace overline 语义', () => {
-    expect(contestDetailSource).toMatch(/<div class="workspace-overline">\s*Selected\s*<\/div>/)
-    expect(contestDetailSource).toMatch(/<div class="workspace-overline">\s*Primary Action\s*<\/div>/)
+    const combinedSource = [contestDetailSource, contestChallengeWorkspacePanelSource].join('\n')
+
+    expect(combinedSource).toMatch(/<div class="workspace-overline">\s*Selected\s*<\/div>/)
+    expect(combinedSource).toMatch(/<div class="workspace-overline">\s*Primary Action\s*<\/div>/)
     expect(contestDetailSource).toMatch(/<div class="workspace-overline">\s*Current Team\s*<\/div>/)
-    expect(contestDetailSource).not.toContain('<div class="contest-overline">Selected</div>')
-    expect(contestDetailSource).not.toContain('<div class="contest-overline">Primary Action</div>')
+    expect(combinedSource).not.toContain('<div class="contest-overline">Selected</div>')
+    expect(combinedSource).not.toContain('<div class="contest-overline">Primary Action</div>')
     expect(contestDetailSource).not.toContain('<div class="contest-overline">Current Team</div>')
     expect(contestDetailSource).not.toMatch(/^\.contest-overline\s*\{/m)
   })

@@ -3,6 +3,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import ChallengeManage from '../ChallengeManage.vue'
 import challengeManageSource from '../ChallengeManage.vue?raw'
+import challengeManageDirectoryPanelSource from '@/components/platform/challenge/ChallengeManageDirectoryPanel.vue?raw'
 
 const pushMock = vi.fn()
 const replaceMock = vi.fn()
@@ -36,6 +37,8 @@ vi.mock('vue-router', async () => {
 })
 
 vi.mock('@/api/admin', () => adminApiMocks)
+
+const combinedSource = [challengeManageSource, challengeManageDirectoryPanelSource].join('\n')
 
 describe('ChallengeManage', () => {
   beforeEach(() => {
@@ -120,7 +123,7 @@ describe('ChallengeManage', () => {
     )
     expect(challengeManageSource).not.toContain('Inventory / Challenge Management')
     expect(challengeManageSource).toContain('Plus,')
-    expect(challengeManageSource).toContain(
+    expect(combinedSource).toContain(
       'class="workspace-directory-section challenge-manage-directory"'
     )
     expect(challengeManageSource).not.toContain(
@@ -147,12 +150,12 @@ describe('ChallengeManage', () => {
     expect(challengeManageSource).toContain('--workspace-shell-bg')
     expect(challengeManageSource).toContain('var(--journal-surface)')
     expect(challengeManageSource).toContain('var(--journal-surface-subtle)')
-    expect(challengeManageSource).toContain("from '@/components/common/menus/CActionMenu.vue'")
-    expect(challengeManageSource).not.toContain('--challenge-action-surface')
-    expect(challengeManageSource).not.toContain(":global([data-theme='light']) .challenge-manage-shell")
-    expect(challengeManageSource).not.toContain(":global([data-theme='dark']) .challenge-manage-shell")
-    expect(challengeManageSource).not.toContain('<Teleport to="body">')
-    expect(challengeManageSource).not.toContain('.challenge-row-menu')
+    expect(combinedSource).toContain("from '@/components/common/menus/CActionMenu.vue'")
+    expect(combinedSource).not.toContain('--challenge-action-surface')
+    expect(combinedSource).not.toContain(":global([data-theme='light']) .challenge-manage-shell")
+    expect(combinedSource).not.toContain(":global([data-theme='dark']) .challenge-manage-shell")
+    expect(combinedSource).not.toContain('<Teleport to="body">')
+    expect(combinedSource).not.toContain('.challenge-row-menu')
   })
 
   it('最外层 workspace shell 应保留共享边框，而不是自行抹掉 shell 边界', () => {
@@ -161,10 +164,10 @@ describe('ChallengeManage', () => {
   })
 
   it('题目管理列表应改用共享列表组件，并且不再显示题目 ID 列', async () => {
-    expect(challengeManageSource).toContain("from '@/components/common/WorkspaceDataTable.vue'")
-    expect(challengeManageSource).toContain('<WorkspaceDataTable')
-    expect(challengeManageSource).not.toContain('>题目 ID<')
-    expect(challengeManageSource).not.toContain('检索题目 ID 或名称...')
+    expect(combinedSource).toContain("from '@/components/common/WorkspaceDataTable.vue'")
+    expect(combinedSource).toContain('<WorkspaceDataTable')
+    expect(combinedSource).not.toContain('>题目 ID<')
+    expect(combinedSource).not.toContain('检索题目 ID 或名称...')
 
     const wrapper = mount(ChallengeManage)
     await flushPromises()
@@ -175,24 +178,24 @@ describe('ChallengeManage', () => {
   })
 
   it('筛选排序工具栏和分页应接入共享组件，而不是继续内联实现', () => {
-    expect(challengeManageSource).toContain(
+    expect(combinedSource).toContain(
       "from '@/components/common/WorkspaceDirectoryToolbar.vue'"
     )
-    expect(challengeManageSource).toContain(
+    expect(combinedSource).toContain(
       "from '@/components/common/WorkspaceDirectoryPagination.vue'"
     )
-    expect(challengeManageSource).toContain('<WorkspaceDirectoryToolbar')
-    expect(challengeManageSource).toContain('<WorkspaceDirectoryPagination')
-    expect(challengeManageSource).not.toContain('<PlatformPaginationControls')
-    expect(challengeManageSource).not.toContain('<div class="challenge-filter-bar">')
+    expect(combinedSource).toContain('<WorkspaceDirectoryToolbar')
+    expect(combinedSource).toContain('<WorkspaceDirectoryPagination')
+    expect(combinedSource).not.toContain('<PlatformPaginationControls')
+    expect(combinedSource).not.toContain('<div class="challenge-filter-bar">')
   })
 
   it('题目管理目录区应直接使用目录 section，而不是额外包一层自定义容器', () => {
-    expect(challengeManageSource).toContain(
+    expect(combinedSource).toContain(
       '<section class="workspace-directory-section challenge-manage-directory">'
     )
-    expect(challengeManageSource).toContain('<h2 class="list-heading__title">题目目录</h2>')
-    expect(challengeManageSource).not.toContain('<div class="challenge-manage-directory">')
+    expect(combinedSource).toContain('<h2 class="list-heading__title">题目目录</h2>')
+    expect(combinedSource).not.toContain('<div class="challenge-manage-directory">')
   })
 
   it('题目管理页应复用共享 spacing token，而不是给 summary strip 叠加额外上下 margin', () => {
@@ -201,12 +204,12 @@ describe('ChallengeManage', () => {
     )?.[0]
 
     expect(challengeManageSource).toMatch(
-      /\.challenge-manage-content\s*\{[\s\S]*gap:\s*var\(--space-6\);/s
+      /\.challenge-manage-content\s*\{[\s\S]*gap:\s*var\(--workspace-directory-page-block-gap\);/s
     )
     expect(challengeManageSource).toMatch(
       /\.challenge-manage-panel\s*\{[\s\S]*gap:\s*var\(--space-section-gap-compact,\s*var\(--space-4\)\);/s
     )
-    expect(challengeManageSource).toMatch(
+    expect(combinedSource).toMatch(
       /\.challenge-manage-directory\s*\{[\s\S]*gap:\s*var\(--space-4\);/s
     )
     expect(summaryGridStyleBlock).toBeTruthy()

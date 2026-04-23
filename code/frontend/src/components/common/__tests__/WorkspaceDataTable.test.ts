@@ -39,4 +39,17 @@ describe('WorkspaceDataTable', () => {
     expect(workspaceDataTableSource).not.toContain('border-bottom: 1px solid #f1f5f9;')
     expect(workspaceDataTableSource).not.toContain('border-bottom: 1px solid #e2e8f0;')
   })
+
+
+  it('浅色主题回退也应继续复用共享 token，而不是写死 slate 色板', () => {
+    expect(workspaceDataTableSource).toContain('var(--color-border-default)')
+    expect(workspaceDataTableSource).toContain('var(--color-text-primary)')
+    expect(workspaceDataTableSource).toContain('var(--color-text-secondary)')
+    expect(workspaceDataTableSource).toContain('var(--color-text-muted)')
+    expect(workspaceDataTableSource).not.toContain('#e8eef5')
+    expect(workspaceDataTableSource).not.toContain('#dbe4ee')
+    expect(workspaceDataTableSource).not.toContain('#0f172a')
+    expect(workspaceDataTableSource).not.toContain('#475569')
+    expect(workspaceDataTableSource).not.toContain('#94a3b8')
+  })
 })

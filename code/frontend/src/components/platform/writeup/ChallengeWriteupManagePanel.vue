@@ -74,7 +74,7 @@ const directoryRows = computed<WriteupDirectoryRow[]>(() => {
       title: item.title,
       preview: item.content_preview,
       authorPrimary: resolveAuthorName(item),
-      authorSecondary: `@${item.student_username}`,
+      authorSecondary: item.student_username,
       authorTertiary: resolveClassName(item),
       studentNo: resolveStudentNo(item),
       statusPrimary: submissionStatusLabel(item.submission_status),
@@ -237,12 +237,8 @@ onMounted(() => {
     <div class="writeup-manage-header">
       <div class="list-heading writeup-manage-heading">
         <div>
-          <div class="workspace-overline">
-            Writeup Directory
-          </div>
-          <h1 class="workspace-page-title">
-            题解管理
-          </h1>
+          <div class="workspace-overline">Writeup Directory</div>
+          <h1 class="workspace-page-title">题解管理</h1>
         </div>
 
         <div class="writeup-manage-actions">
@@ -262,23 +258,13 @@ onMounted(() => {
         class="admin-summary-grid writeup-summary-grid progress-strip metric-panel-grid metric-panel-default-surface"
       >
         <article class="journal-note progress-card metric-panel-card">
-          <div class="journal-note-label progress-card-label metric-panel-label">
-            官方题解
-          </div>
-          <div class="journal-note-value progress-card-value metric-panel-value">
-            {{ officialWriteupCount }}
-          </div>
+          <div class="journal-note-label progress-card-label metric-panel-label">官方题解</div><div class="journal-note-value progress-card-value metric-panel-value">{{ officialWriteupCount }}</div>
           <div class="journal-note-helper progress-card-hint metric-panel-helper">
             当前题目已创建的官方题解数量
           </div>
         </article>
         <article class="journal-note progress-card metric-panel-card">
-          <div class="journal-note-label progress-card-label metric-panel-label">
-            学员题解
-          </div>
-          <div class="journal-note-value progress-card-value metric-panel-value">
-            {{ submissionTotal }}
-          </div>
+          <div class="journal-note-label progress-card-label metric-panel-label">学员题解</div><div class="journal-note-value progress-card-value metric-panel-value">{{ submissionTotal }}</div>
           <div class="journal-note-helper progress-card-hint metric-panel-helper">
             当前题目收到的学员题解投稿数量
           </div>
@@ -297,12 +283,8 @@ onMounted(() => {
       <section class="writeup-manage-section">
         <header class="list-heading writeup-manage-section__head">
           <div class="writeup-manage-section__intro">
-            <div class="journal-note-label">
-              Writeup Directory
-            </div>
-            <h2 class="list-heading__title">
-              题解目录
-            </h2>
+            <div class="workspace-overline">Writeup Directory</div>
+            <h2 class="list-heading__title">题解目录</h2>
           </div>
           <div class="writeup-manage-section__meta">
             共 {{ officialWriteupCount + submissionTotal }} 篇题解

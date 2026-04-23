@@ -82,6 +82,19 @@ describe('LoginView', () => {
     expect(wrapper.get('button[type="submit"]').attributes('type')).toBe('submit')
   })
 
+  it('登录表单标签应与输入框建立明确关联', async () => {
+    const wrapper = mountLoginView()
+
+    await flushPromises()
+
+    expect(wrapper.get('label[for="login-username"]').text()).toContain('用户名 / 学号')
+    expect(wrapper.get('input#login-username').attributes('autocomplete')).toBe('username')
+    expect(wrapper.get('label[for="login-password"]').text()).toContain('安全密码')
+    expect(wrapper.get('input#login-password').attributes('autocomplete')).toBe(
+      'current-password'
+    )
+  })
+
   it('登录表单应切到共享控件原语而不是继续使用 Element Plus 表单', () => {
     expect(loginViewSource).toContain('class="ui-control-wrap"')
     expect(loginViewSource).toContain('class="ui-control"')

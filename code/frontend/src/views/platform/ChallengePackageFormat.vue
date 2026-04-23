@@ -85,9 +85,7 @@ const statementGuide = `statement.md 写法建议
 
     <main class="content-pane">
       <div class="hero-copy">
-        <div class="workspace-overline">
-          Uploader Guide
-        </div>
+        <div class="workspace-overline">Uploader Guide</div>
         <h1 class="hero-title">
           题目包示例
         </h1>

@@ -21,63 +21,33 @@ interface StatusMeta {
   accentColor: string
 }
 
+function createNotificationTypeMeta(
+  icon: Component,
+  label: string,
+  accentColor: string,
+  softBackgroundColor = `color-mix(in srgb, ${accentColor} 12%, transparent)`
+): NotificationTypeMeta {
+  return {
+    icon,
+    label,
+    accentColor,
+    iconWrapStyle: {
+      backgroundColor: softBackgroundColor,
+      borderColor: `color-mix(in srgb, ${accentColor} 26%, transparent)`,
+    },
+    badgeStyle: {
+      color: accentColor,
+      borderColor: `color-mix(in srgb, ${accentColor} 22%, transparent)`,
+      backgroundColor: `color-mix(in srgb, ${accentColor} 10%, transparent)`,
+    },
+  }
+}
+
 const typeMap: Record<string, NotificationTypeMeta> = {
-  system: {
-    icon: Info,
-    label: '系统',
-    accentColor: 'var(--color-primary)',
-    iconWrapStyle: {
-      backgroundColor: 'var(--color-primary-soft)',
-      borderColor: 'color-mix(in srgb, var(--color-primary) 28%, transparent)',
-    },
-    badgeStyle: {
-      color: 'var(--color-primary)',
-      borderColor: 'color-mix(in srgb, var(--color-primary) 22%, transparent)',
-      backgroundColor: 'color-mix(in srgb, var(--color-primary) 10%, transparent)',
-    },
-  },
-  contest: {
-    icon: Trophy,
-    label: '竞赛',
-    accentColor: 'var(--color-warning)',
-    iconWrapStyle: {
-      backgroundColor: 'rgba(210, 153, 34, 0.12)',
-      borderColor: 'rgba(210, 153, 34, 0.26)',
-    },
-    badgeStyle: {
-      color: 'var(--color-warning)',
-      borderColor: 'rgba(210, 153, 34, 0.22)',
-      backgroundColor: 'rgba(210, 153, 34, 0.1)',
-    },
-  },
-  challenge: {
-    icon: Flag,
-    label: '训练',
-    accentColor: 'var(--color-success)',
-    iconWrapStyle: {
-      backgroundColor: 'rgba(63, 185, 80, 0.12)',
-      borderColor: 'rgba(63, 185, 80, 0.26)',
-    },
-    badgeStyle: {
-      color: 'var(--color-success)',
-      borderColor: 'rgba(63, 185, 80, 0.22)',
-      backgroundColor: 'rgba(63, 185, 80, 0.1)',
-    },
-  },
-  team: {
-    icon: GraduationCap,
-    label: '团队',
-    accentColor: '#8b5cf6',
-    iconWrapStyle: {
-      backgroundColor: 'rgba(139, 92, 246, 0.12)',
-      borderColor: 'rgba(139, 92, 246, 0.26)',
-    },
-    badgeStyle: {
-      color: '#a78bfa',
-      borderColor: 'rgba(139, 92, 246, 0.22)',
-      backgroundColor: 'rgba(139, 92, 246, 0.1)',
-    },
-  },
+  system: createNotificationTypeMeta(Info, '系统', 'var(--color-primary)', 'var(--color-primary-soft)'),
+  contest: createNotificationTypeMeta(Trophy, '竞赛', 'var(--color-warning)'),
+  challenge: createNotificationTypeMeta(Flag, '训练', 'var(--color-success)'),
+  team: createNotificationTypeMeta(GraduationCap, '团队', 'var(--color-brand-swatch-blue)'),
 }
 
 const fallbackTypeMeta: NotificationTypeMeta = typeMap.system
