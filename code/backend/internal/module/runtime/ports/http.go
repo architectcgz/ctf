@@ -8,7 +8,7 @@ import (
 )
 
 type CountRunningRepository interface {
-	CountRunning() (int64, error)
+	CountRunningWithContext(ctx context.Context) (int64, error)
 }
 
 type InstanceRepository interface {

@@ -13,6 +13,8 @@ import (
 	"ctf-platform/internal/model"
 )
 
+type runtimeRepositoryCountRunningContextKey string
+
 func TestUpdateStatusAndReleasePortWithContextSetsDestroyedAtForStoppedInstance(t *testing.T) {
 	t.Parallel()
 
@@ -67,6 +69,54 @@ func TestUpdateStatusAndReleasePortWithContextSetsDestroyedAtForStoppedInstance(
 	}
 	if remaining != 0 {
 		t.Fatalf("expected port allocations to be released, got %d", remaining)
+	}
+}
+
+func TestCountRunningWithContextPropagatesContextToGorm(t *testing.T) {
+	t.Parallel()
+
+	db := newRuntimeRepositoryDestroyedAtTestDB(t)
+	repo := NewRepository(db)
+	ctxKey := runtimeRepositoryCountRunningContextKey("count-running")
+	expectedCtxValue := "ctx-runtime-count-running"
+	var callbackCalled bool
+
+	callbackName := fmt.Sprintf("runtime-count-running-context-%s", strings.ReplaceAll(t.Name(), "/", "-"))
+	if err := db.Callback().Query().Before("gorm:query").Register(callbackName, func(tx *gorm.DB) {
+		if tx.Statement == nil || tx.Statement.Table != "instances" {
+			return
+		}
+		callbackCalled = true
+		if got := tx.Statement.Context.Value(ctxKey); got != expectedCtxValue {
+			t.Fatalf("expected query ctx value %v, got %v", expectedCtxValue, got)
+		}
+	}); err != nil {
+		t.Fatalf("register query callback: %v", err)
+	}
+	t.Cleanup(func() {
+		_ = db.Callback().Query().Remove(callbackName)
+	})
+
+	if err := db.Create(&model.Instance{
+		ID:          101,
+		UserID:      9,
+		ChallengeID: 21,
+		Status:      model.InstanceStatusRunning,
+		ExpiresAt:   time.Now().Add(time.Hour),
+	}).Error; err != nil {
+		t.Fatalf("seed running instance: %v", err)
+	}
+
+	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
+	count, err := repo.CountRunningWithContext(ctx)
+	if err != nil {
+		t.Fatalf("CountRunningWithContext() error = %v", err)
+	}
+	if !callbackCalled {
+		t.Fatal("expected gorm query callback to observe context-aware count running query")
+	}
+	if count != 1 {
+		t.Fatalf("CountRunningWithContext() count = %d, want 1", count)
 	}
 }
 

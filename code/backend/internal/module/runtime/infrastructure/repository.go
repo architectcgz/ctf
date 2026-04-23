@@ -537,9 +537,12 @@ func (r *Repository) AtomicExtendByIDWithContext(ctx context.Context, id int64, 
 	return nil
 }
 
-func (r *Repository) CountRunning() (int64, error) {
+func (r *Repository) CountRunningWithContext(ctx context.Context) (int64, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
 	var count int64
-	err := r.db.Model(&model.Instance{}).
+	err := r.db.WithContext(ctx).Model(&model.Instance{}).
 		Where("status = ?", model.InstanceStatusRunning).
 		Count(&count).Error
 	return count, err
