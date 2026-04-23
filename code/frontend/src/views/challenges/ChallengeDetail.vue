@@ -185,162 +185,21 @@
             </section>
           </section>
 
-          <section
+          <ChallengeSolutionsPanel
             v-else-if="activeWorkspaceTab === 'solution'"
-            id="challenge-workspace-panel-solution"
-            class="workspace-panel panel"
-            role="tabpanel"
-            aria-labelledby="challenge-workspace-tab-solution"
-          >
-            <section class="section section--flat">
-              <div class="section-head workspace-tab-heading">
-                <div class="workspace-tab-heading__main">
-                  <div class="workspace-overline">
-                    Solutions
-                  </div>
-                  <h2 class="section-title workspace-tab-heading__title">
-                    题解区
-                  </h2>
-                </div>
-                <div class="section-hint">
-                  推荐 {{ recommendedSolutions.length }} · 社区 {{ communitySolutions.length }}
-                </div>
-              </div>
-
-              <div class="space-y-5">
-                <div
-                  v-if="!challenge?.is_solved"
-                  class="inline-note inline-note--warning"
-                >
-                  解出题目后可查看推荐题解与社区题解。
-                </div>
-
-                <template v-else>
-                  <div class="solution-layout">
-                    <div class="solution-nav">
-                      <div
-                        class="solution-tabbar top-tabs challenge-subtabs"
-                        role="tablist"
-                        aria-label="题解分类"
-                      >
-                        <button
-                          id="challenge-solutions-tab-recommended"
-                          :ref="
-                            (element) =>
-                              setSolutionTabButtonRef(
-                                'recommended',
-                                element as HTMLButtonElement | null
-                              )
-                          "
-                          type="button"
-                          role="tab"
-                          class="solution-tab top-tab challenge-subtab"
-                          :class="{ active: activeSolutionTab === 'recommended' }"
-                          :aria-selected="activeSolutionTab === 'recommended'"
-                          aria-controls="challenge-solutions-panel-recommended"
-                          :tabindex="activeSolutionTab === 'recommended' ? 0 : -1"
-                          @click="selectSolutionTab('recommended')"
-                          @keydown="handleSolutionTabKeydown($event, 0)"
-                        >
-                          推荐题解
-                        </button>
-                        <button
-                          id="challenge-solutions-tab-community"
-                          :ref="
-                            (element) =>
-                              setSolutionTabButtonRef(
-                                'community',
-                                element as HTMLButtonElement | null
-                              )
-                          "
-                          type="button"
-                          role="tab"
-                          class="solution-tab top-tab challenge-subtab"
-                          :class="{ active: activeSolutionTab === 'community' }"
-                          :aria-selected="activeSolutionTab === 'community'"
-                          aria-controls="challenge-solutions-panel-community"
-                          :tabindex="activeSolutionTab === 'community' ? 0 : -1"
-                          @click="selectSolutionTab('community')"
-                          @keydown="handleSolutionTabKeydown($event, 1)"
-                        >
-                          社区题解
-                        </button>
-                      </div>
-
-                      <div
-                        v-if="displayedSolutionCards.length === 0"
-                        class="inline-note"
-                      >
-                        {{
-                          activeSolutionTab === 'recommended'
-                            ? '还没有推荐题解。'
-                            : '还没有公开的社区题解。'
-                        }}
-                      </div>
-
-                      <button
-                        v-for="item in displayedSolutionCards"
-                        :key="item.id"
-                        type="button"
-                        class="solution-list-item solution-item"
-                        :class="{
-                          'solution-list-item--active active': item.id === activeSolution?.id,
-                        }"
-                        @click="selectedSolutionId = item.id"
-                      >
-                        <strong>{{ item.title }}</strong>
-                        <span>{{ item.authorName }} · {{ formatWriteupTime(item.updatedAt) }}</span>
-                      </button>
-                    </div>
-
-                    <article
-                      :id="`challenge-solutions-panel-${activeSolutionTab}`"
-                      class="solution-preview"
-                      role="tabpanel"
-                      :aria-labelledby="`challenge-solutions-tab-${activeSolutionTab}`"
-                    >
-                      <template v-if="activeSolution">
-                        <div class="flex flex-wrap items-start justify-between gap-3">
-                          <div>
-                            <h3 class="text-lg font-semibold text-[var(--journal-ink)]">
-                              {{ activeSolution.title }}
-                            </h3>
-                            <div class="mt-2 text-sm text-[var(--journal-muted)]">
-                              {{ activeSolution.authorName }} · {{ activeSolution.sourceLabel }}
-                            </div>
-                          </div>
-                          <div class="flex flex-wrap gap-2">
-                            <span
-                              v-if="activeSolution.badge"
-                              class="writeup-status-pill"
-                              :class="activeSolution.badgeClass"
-                            >
-                              {{ activeSolution.badge }}
-                            </span>
-                            <span class="writeup-status-pill writeup-status-pill--muted">
-                              {{ formatWriteupTime(activeSolution.updatedAt) }}
-                            </span>
-                          </div>
-                        </div>
-                        <!-- eslint-disable-next-line vue/no-v-html -->
-                        <div
-                          class="prose challenge-prose solution-preview__content mt-6 max-w-none"
-                          v-html="sanitizedActiveSolutionContent"
-                        />
-                      </template>
-
-                      <div
-                        v-else
-                        class="inline-note"
-                      >
-                        当前分组还没有可展示的题解。
-                      </div>
-                    </article>
-                  </div>
-                </template>
-              </div>
-            </section>
-          </section>
+            :challenge-solved="Boolean(challenge?.is_solved)"
+            :recommended-solution-count="recommendedSolutions.length"
+            :community-solution-count="communitySolutions.length"
+            :active-solution-tab="activeSolutionTab"
+            :displayed-solution-cards="displayedSolutionCards"
+            :active-solution="activeSolution"
+            :sanitized-active-solution-content="sanitizedActiveSolutionContent"
+            :format-writeup-time="formatWriteupTime"
+            :set-solution-tab-button-ref="setSolutionTabButtonRef"
+            :handle-solution-tab-keydown="handleSolutionTabKeydown"
+            @select-tab="selectSolutionTab"
+            @select-solution="selectedSolutionId = $event"
+          />
 
           <ChallengeSubmissionRecordsPanel
             v-else-if="activeWorkspaceTab === 'records'"
@@ -480,6 +339,7 @@ import type {
   RecommendedChallengeSolutionData,
 } from '@/api/contracts'
 import ChallengeInstanceCard from '@/components/challenge/ChallengeInstanceCard.vue'
+import ChallengeSolutionsPanel from '@/components/challenge/ChallengeSolutionsPanel.vue'
 import ChallengeSubmissionRecordsPanel from '@/components/challenge/ChallengeSubmissionRecordsPanel.vue'
 import ChallengeWriteupPanel from '@/components/challenge/ChallengeWriteupPanel.vue'
 import { useChallengeDetailInteractions } from '@/composables/useChallengeDetailInteractions'
@@ -875,24 +735,7 @@ watch(
   color: var(--text-faint);
 }
 
-.challenge-subtabs {
-  --page-top-tabs-gap: var(--space-4-5);
-  --page-top-tabs-margin: 0;
-  --page-top-tabs-padding: 0 0 var(--space-2-5);
-  --page-top-tabs-border: var(--line-soft);
-  --page-top-tab-min-height: 3rem;
-  --page-top-tab-padding: 0 0 var(--space-2);
-  --page-top-tab-font-size: var(--font-size-14);
-  --page-top-tab-font-weight: 600;
-  --page-top-tab-color: var(--text-faint);
-  --page-top-tab-active-color: var(--journal-accent-strong);
-  --page-top-tab-active-border: var(--journal-accent);
-  scrollbar-width: none;
-}
 
-.challenge-subtab {
-  min-width: fit-content;
-}
 
 .detail-grid,
 .workspace-grid {
@@ -1068,7 +911,6 @@ watch(
 }
 
 .description,
-.solution-preview,
 .tool-copy {
   color: var(--journal-muted);
 }
@@ -1135,70 +977,15 @@ watch(
   color: var(--text-subtle);
 }
 
-.solution-layout {
-  display: grid;
-  grid-template-columns: minmax(240px, 0.54fr) minmax(0, 1fr);
-  gap: var(--space-6);
-}
 
-.solution-nav {
-  padding-right: var(--space-5);
-  border-right: 1px solid var(--line-soft);
-}
 
-.solution-tab {
-  min-width: fit-content;
-}
 
-.solution-item,
-.solution-list-item {
-  width: 100%;
-  text-align: left;
-  padding: var(--space-3-5) 0 var(--space-4) var(--space-3-5);
-  border: 0;
-  border-left: 2px solid transparent;
-  border-bottom: 1px solid var(--line-soft);
-  background: transparent;
-}
 
-.solution-item strong,
-.solution-list-item strong {
-  display: block;
-  font-size: var(--font-size-14);
-  color: var(--text-main);
-}
 
-.solution-item span,
-.solution-list-item span {
-  display: block;
-  margin-top: var(--space-1-5);
-  font-size: var(--font-size-12);
-  color: var(--text-faint);
-}
 
-.solution-item.active,
-.solution-list-item--active,
-.solution-list-item:hover {
-  border-left-color: color-mix(in srgb, var(--journal-accent) 40%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 4%, transparent);
-}
 
-.solution-preview {
-  min-height: 22rem;
-  font-size: var(--font-size-14);
-  line-height: 1.9;
-  color: var(--text-subtle);
-}
 
-.solution-preview__content {
-  min-height: 15rem;
-}
 
-.solution-preview__content :deep(h1),
-.solution-preview__content :deep(h2),
-.solution-preview__content :deep(h3) {
-  margin-top: var(--space-5);
-}
 
 .inline-note {
   padding-left: var(--space-4);
@@ -1341,16 +1128,7 @@ watch(
   color: var(--journal-warning-ink);
 }
 
-.writeup-status-pill--muted {
-  border-color: var(--line-soft);
-  background: var(--bg-muted);
-  color: var(--text-subtle);
-}
 
-.solution-list-item:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--brand) 44%, var(--color-bg-base));
-  outline-offset: 3px;
-}
 
 @keyframes rise {
   from {
@@ -1405,14 +1183,8 @@ watch(
     gap: var(--space-5-5);
   }
 
-  .solution-layout,
   .flag-row {
     grid-template-columns: minmax(0, 1fr);
-  }
-
-  .solution-nav {
-    padding-right: 0;
-    border-right: 0;
   }
 
 }
