@@ -68,6 +68,13 @@ func (r *Repository) WithDB(db *gorm.DB) *Repository {
 	return &Repository{db: db}
 }
 
+func (r *Repository) dbWithContext(ctx context.Context) *gorm.DB {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	return r.db.WithContext(ctx)
+}
+
 func (r *Repository) FindByID(id int64) (*model.Instance, error) {
 	var instance model.Instance
 	err := r.db.Where("id = ?", id).First(&instance).Error
@@ -182,11 +189,15 @@ func (r *Repository) RefreshInstanceExpiry(instanceID int64, expiresAt time.Time
 }
 
 func (r *Repository) UpdateStatusAndReleasePort(id int64, status string) error {
+	return r.UpdateStatusAndReleasePortWithContext(context.Background(), id, status)
+}
+
+func (r *Repository) UpdateStatusAndReleasePortWithContext(ctx context.Context, id int64, status string) error {
 	if id <= 0 {
 		return nil
 	}
 
-	return r.db.Transaction(func(tx *gorm.DB) error {
+	return r.dbWithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		var instance model.Instance
 		if err := tx.Select("id", "host_port").Where("id = ?", id).First(&instance).Error; err != nil {
 			return err

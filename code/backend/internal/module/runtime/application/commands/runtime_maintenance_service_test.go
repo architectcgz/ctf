@@ -11,14 +11,30 @@ import (
 )
 
 type maintenanceTestRepository struct {
-	activeContainerIDs []string
+	activeContainerIDs                      []string
+	findExpiredFn                           func() ([]*model.Instance, error)
+	updateStatusAndReleasePortFn            func(id int64, status string) error
+	updateStatusAndReleasePortWithContextFn func(ctx context.Context, id int64, status string) error
 }
 
 func (r *maintenanceTestRepository) UpdateStatusAndReleasePort(int64, string) error {
+	if r.updateStatusAndReleasePortFn != nil {
+		return r.updateStatusAndReleasePortFn(int64(0), "")
+	}
+	return nil
+}
+
+func (r *maintenanceTestRepository) UpdateStatusAndReleasePortWithContext(ctx context.Context, id int64, status string) error {
+	if r.updateStatusAndReleasePortWithContextFn != nil {
+		return r.updateStatusAndReleasePortWithContextFn(ctx, id, status)
+	}
 	return nil
 }
 
 func (r *maintenanceTestRepository) FindExpired() ([]*model.Instance, error) {
+	if r.findExpiredFn != nil {
+		return r.findExpiredFn()
+	}
 	return nil, nil
 }
 
@@ -111,5 +127,39 @@ func TestNewRuntimeMaintenanceServiceTreatsTypedNilEngineAsNil(t *testing.T) {
 	service := NewRuntimeMaintenanceService(&maintenanceTestRepository{}, typedNil, nil, &config.ContainerConfig{}, nil)
 	if service.engine != nil {
 		t.Fatalf("expected typed nil engine to be normalized to nil, got %#v", service.engine)
+	}
+}
+
+type runtimeMaintenanceContextKey string
+
+func TestRuntimeMaintenanceServiceCleanExpiredInstancesPropagatesContextToRepository(t *testing.T) {
+	t.Parallel()
+
+	ctxKey := runtimeMaintenanceContextKey("maintenance")
+	expectedCtxValue := "ctx-runtime-maintenance"
+	updateCalled := false
+	repo := &maintenanceTestRepository{
+		findExpiredFn: func() ([]*model.Instance, error) {
+			return []*model.Instance{{ID: 41, HostPort: 30041}}, nil
+		},
+		updateStatusAndReleasePortWithContextFn: func(ctx context.Context, id int64, status string) error {
+			updateCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected update-status ctx value %v, got %v", expectedCtxValue, got)
+			}
+			if id != 41 || status != model.InstanceStatusExpired {
+				t.Fatalf("unexpected update args: id=%d status=%s", id, status)
+			}
+			return nil
+		},
+	}
+	service := NewRuntimeMaintenanceService(repo, nil, &maintenanceTestCleaner{}, &config.ContainerConfig{}, nil)
+
+	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
+	if err := service.CleanExpiredInstances(ctx); err != nil {
+		t.Fatalf("CleanExpiredInstances() error = %v", err)
+	}
+	if !updateCalled {
+		t.Fatal("expected update status repository to be called")
 	}
 }

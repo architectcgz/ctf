@@ -33,7 +33,8 @@ func (s *stubProxyTicketStore) FindProxyTicket(ctx context.Context, ticket strin
 }
 
 type stubProxyTicketInstanceReader struct {
-	findByIDFn func(id int64) (*model.Instance, error)
+	findByIDFn            func(id int64) (*model.Instance, error)
+	findByIDWithContextFn func(ctx context.Context, id int64) (*model.Instance, error)
 }
 
 func (s *stubProxyTicketInstanceReader) FindByID(id int64) (*model.Instance, error) {
@@ -41,6 +42,13 @@ func (s *stubProxyTicketInstanceReader) FindByID(id int64) (*model.Instance, err
 		return nil, nil
 	}
 	return s.findByIDFn(id)
+}
+
+func (s *stubProxyTicketInstanceReader) FindByIDWithContext(ctx context.Context, id int64) (*model.Instance, error) {
+	if s.findByIDWithContextFn != nil {
+		return s.findByIDWithContextFn(ctx, id)
+	}
+	return s.FindByID(id)
 }
 
 func TestProxyTicketServiceIssueTicketPersistsClaimsWithTTL(t *testing.T) {
@@ -130,5 +138,33 @@ func TestProxyTicketServiceResolveTicketRejectsInvalidClaims(t *testing.T) {
 	_, err := service.ResolveTicket(context.Background(), "ticket-1")
 	if err == nil || err.Error() != errcode.ErrProxyTicketInvalid.Error() {
 		t.Fatalf("expected invalid ticket error, got %v", err)
+	}
+}
+
+type proxyTicketContextKey string
+
+func TestProxyTicketServiceIssueTicketPropagatesContextToInstanceReader(t *testing.T) {
+	t.Parallel()
+
+	ctxKey := proxyTicketContextKey("proxy-ticket")
+	expectedCtxValue := "ctx-proxy-ticket"
+	store := &stubProxyTicketStore{}
+	readerCalled := false
+	service := runtimeqry.NewProxyTicketService(store, &stubProxyTicketInstanceReader{
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Instance, error) {
+			readerCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected instance reader ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return &model.Instance{ID: id, ShareScope: model.InstanceSharingPerUser}, nil
+		},
+	}, 15*time.Minute)
+
+	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
+	if _, _, err := service.IssueTicket(ctx, authctx.CurrentUser{UserID: 1001, Username: "alice", Role: model.RoleStudent}, 2001); err != nil {
+		t.Fatalf("IssueTicket() error = %v", err)
+	}
+	if !readerCalled {
+		t.Fatal("expected instance reader to be called")
 	}
 }
