@@ -725,6 +725,9 @@ func (s *Service) ReviewManualReviewSubmissionWithContext(
 	if err := ensureManualReviewRequesterRole(reviewerRole); err != nil {
 		return nil, err
 	}
+	if err := ensureManualReviewDecisionStatus(req); err != nil {
+		return nil, err
+	}
 	record, err := s.repo.GetTeacherManualReviewSubmissionByIDWithContext(ctx, submissionID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -979,6 +982,16 @@ func ensureManualReviewRequesterRole(role string) error {
 		return nil
 	}
 	return errcode.ErrForbidden
+}
+
+func ensureManualReviewDecisionStatus(req *dto.ReviewManualReviewSubmissionReq) error {
+	if req == nil {
+		return errcode.ErrInvalidParams.WithCause(errors.New("评阅请求不能为空"))
+	}
+	if req.ReviewStatus == model.SubmissionReviewStatusApproved || req.ReviewStatus == model.SubmissionReviewStatusRejected {
+		return nil
+	}
+	return errcode.ErrInvalidParams.WithCause(errors.New("review_status 仅支持 approved 或 rejected"))
 }
 
 func manualReviewDetailRespFromRecord(
