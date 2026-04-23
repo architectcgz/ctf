@@ -13,6 +13,7 @@ import (
 
 type runtimeMaintenanceRepository interface {
 	UpdateStatusAndReleasePort(id int64, status string) error
+	UpdateStatusAndReleasePortWithContext(ctx context.Context, id int64, status string) error
 	FindExpired() ([]*model.Instance, error)
 	ListActiveContainerIDs() ([]string, error)
 }
@@ -77,7 +78,7 @@ func (s *RuntimeMaintenanceService) CleanExpiredInstances(ctx context.Context) e
 				continue
 			}
 		}
-		if err := s.repo.UpdateStatusAndReleasePort(instance.ID, model.InstanceStatusExpired); err != nil {
+		if err := s.repo.UpdateStatusAndReleasePortWithContext(normalizeContext(ctx), instance.ID, model.InstanceStatusExpired); err != nil {
 			s.logger.Warn("更新过期实例状态并释放端口失败", zap.Int64("instance_id", instance.ID), zap.Int("host_port", instance.HostPort), zap.Error(err))
 		}
 	}

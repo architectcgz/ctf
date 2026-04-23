@@ -81,6 +81,7 @@ type ProxyTicketStore interface {
 
 type ProxyTicketInstanceReader interface {
 	FindByID(id int64) (*model.Instance, error)
+	FindByIDWithContext(ctx context.Context, id int64) (*model.Instance, error)
 }
 
 type ProxyTrafficEventRecorder interface {
