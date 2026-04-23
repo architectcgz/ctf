@@ -3,6 +3,7 @@ package commands_test
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 	"time"
 
@@ -336,7 +337,7 @@ func TestSubmissionServiceSubmitFlagInContestUsesConfiguredIncorrectSubmissionRa
 		t.Fatalf("expected incorrect response, got %+v", resp)
 	}
 
-	keys, err := redisClient.Keys(context.Background(), "contest:submit:rate:*").Result()
+	keys, err := redisClient.Keys(context.Background(), "*").Result()
 	if err != nil {
 		t.Fatalf("list rate limit keys: %v", err)
 	}
@@ -350,6 +351,48 @@ func TestSubmissionServiceSubmitFlagInContestUsesConfiguredIncorrectSubmissionRa
 	}
 	if ttl != cfg.Contest.SubmissionRateLimitTTL {
 		t.Fatalf("expected rate limit ttl %v, got %v", cfg.Contest.SubmissionRateLimitTTL, ttl)
+	}
+}
+
+func TestSubmissionServiceSubmitFlagInContestUsesConfiguredRateLimitRedisPrefix(t *testing.T) {
+	cfg := &config.Config{
+		RateLimit: config.RateLimitConfig{
+			RedisKeyPrefix: "contest:test",
+		},
+		Contest: config.ContestConfig{
+			BaseScore:              1000,
+			MinScore:               100,
+			Decay:                  0.9,
+			FirstBloodBonus:        0.1,
+			SubmissionRateLimitTTL: 9 * time.Second,
+		},
+	}
+	service, redisClient, db := newContestSubmissionTestServiceWithConfig(t, cfg)
+
+	now := time.Now()
+	contestID := int64(19)
+	challengeID := int64(119)
+	teamID := int64(191)
+	userID := int64(1901)
+
+	createContestSubmissionFixture(t, db, contestID, challengeID, now)
+	testsupport.CreateContestTeamRegistration(t, db, contestID, teamID, userID, "Prefix", now)
+
+	resp, err := service.SubmitFlagInContest(context.Background(), userID, contestID, challengeID, "flag{wrong}")
+	if err != nil {
+		t.Fatalf("SubmitFlagInContest() error = %v", err)
+	}
+	if resp.IsCorrect {
+		t.Fatalf("expected incorrect response, got %+v", resp)
+	}
+
+	expectedKey := fmt.Sprintf("%s:contest:submit:rate:%d:%d:%d", cfg.RateLimit.RedisKeyPrefix, userID, contestID, challengeID)
+	exists, err := redisClient.Exists(context.Background(), expectedKey).Result()
+	if err != nil {
+		t.Fatalf("check configured rate limit key: %v", err)
+	}
+	if exists != 1 {
+		t.Fatalf("expected configured rate limit key %q to exist", expectedKey)
 	}
 }
 

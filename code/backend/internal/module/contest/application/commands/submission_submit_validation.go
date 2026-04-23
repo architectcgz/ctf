@@ -54,7 +54,7 @@ func (s *SubmissionService) validateContestSubmission(ctx context.Context, userI
 		return nil, errcode.ErrInvalidParams.WithCause(errors.New("人工审核题暂不支持竞赛提交"))
 	}
 
-	rateLimitKey := contestSubmissionRateLimitKey(userID, contestID, challengeID)
+	rateLimitKey := contestSubmissionRateLimitKey(s.cfg.RateLimit.RedisKeyPrefix, userID, contestID, challengeID)
 	exists, err := s.redis.Exists(ctx, rateLimitKey).Result()
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
