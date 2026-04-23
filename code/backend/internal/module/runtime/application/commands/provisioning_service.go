@@ -141,47 +141,6 @@ func (s *ProvisioningService) CreateTopology(ctx context.Context, req *runtimepo
 		}
 	}
 
-	if s.engine == nil {
-		select {
-		case <-ctx.Done():
-			return nil, ctx.Err()
-		case <-time.After(100 * time.Millisecond):
-		}
-
-		details := model.InstanceRuntimeDetails{
-			Networks:   make([]model.InstanceRuntimeNetwork, 0, len(networks)),
-			Containers: make([]model.InstanceRuntimeContainer, 0, len(req.Nodes)),
-		}
-		for _, network := range networks {
-			details.Networks = append(details.Networks, model.InstanceRuntimeNetwork{
-				Key:       network.Key,
-				Name:      network.Key,
-				NetworkID: fmt.Sprintf("net-%d-%s", time.Now().UnixNano(), network.Key),
-				Internal:  network.Internal,
-			})
-		}
-		for idx, node := range req.Nodes {
-			containerID := fmt.Sprintf("ctf-%d-%d", time.Now().UnixNano(), idx)
-			item := model.InstanceRuntimeContainer{
-				NodeKey:      node.Key,
-				ContainerID:  containerID,
-				ServicePort:  node.ServicePort,
-				IsEntryPoint: node.IsEntryPoint,
-				NetworkKeys:  append([]string(nil), normalizedNodeNetworkKeys(node.NetworkKeys, networks)...),
-			}
-			if node.IsEntryPoint {
-				item.HostPort = hostPort
-			}
-			details.Containers = append(details.Containers, item)
-		}
-		return &runtimeports.TopologyCreateResult{
-			PrimaryContainerID: details.Containers[entryNodeIndex].ContainerID,
-			NetworkID:          details.Networks[0].NetworkID,
-			AccessURL:          fmt.Sprintf("http://%s:%d", s.config.PublicHost, hostPort),
-			RuntimeDetails:     details,
-		}, nil
-	}
-
 	createdNetworks := make([]createdTopologyNetwork, 0, len(networks))
 	networkByKey := make(map[string]createdTopologyNetwork, len(networks))
 	for _, network := range networks {
