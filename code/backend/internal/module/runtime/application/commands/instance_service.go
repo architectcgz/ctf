@@ -96,7 +96,7 @@ func (s *InstanceService) ExtendInstanceWithContext(ctx context.Context, instanc
 func (s *InstanceService) DestroyTeacherInstance(ctx context.Context, instanceID, requesterID int64, requesterRole string) error {
 	ctx = normalizeContext(ctx)
 
-	instance, err := s.repo.FindByID(instanceID)
+	instance, err := s.repo.FindByIDWithContext(ctx, instanceID)
 	if err != nil {
 		return errcode.ErrInstanceNotFound
 	}
@@ -133,7 +133,7 @@ func (s *InstanceService) destroyManagedInstanceWithContext(ctx context.Context,
 			return errcode.ErrInternal.WithCause(err)
 		}
 	}
-	if err := s.repo.UpdateStatusAndReleasePort(instance.ID, model.InstanceStatusStopped); err != nil {
+	if err := s.repo.UpdateStatusAndReleasePortWithContext(ctx, instance.ID, model.InstanceStatusStopped); err != nil {
 		return errcode.ErrInternal.WithCause(err)
 	}
 	return nil
