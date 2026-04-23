@@ -36,7 +36,9 @@ type writeupQueryService interface {
 	GetMySubmission(userID, challengeID int64) (*dto.SubmissionWriteupResp, error)
 	GetMySubmissionWithContext(ctx context.Context, userID, challengeID int64) (*dto.SubmissionWriteupResp, error)
 	ListRecommendedSolutions(userID, challengeID int64) (*dto.PageResult, error)
+	ListRecommendedSolutionsWithContext(ctx context.Context, userID, challengeID int64) (*dto.PageResult, error)
 	ListCommunitySolutions(userID, challengeID int64, query *dto.CommunityChallengeSolutionQuery) (*dto.PageResult, error)
+	ListCommunitySolutionsWithContext(ctx context.Context, userID, challengeID int64, query *dto.CommunityChallengeSolutionQuery) (*dto.PageResult, error)
 	ListTeacherSubmissions(requesterID int64, requesterRole string, query *dto.TeacherSubmissionWriteupQuery) (*dto.PageResult, error)
 	ListTeacherSubmissionsWithContext(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherSubmissionWriteupQuery) (*dto.PageResult, error)
 	GetTeacherSubmission(submissionID, requesterID int64, requesterRole string) (*dto.TeacherSubmissionWriteupDetailResp, error)
@@ -174,7 +176,7 @@ func (h *WriteupHandler) ListRecommendedSolutions(c *gin.Context) {
 		response.InvalidParams(c, "无效的 challenge id")
 		return
 	}
-	resp, err := h.queries.ListRecommendedSolutions(authctx.MustCurrentUser(c).UserID, challengeID)
+	resp, err := h.queries.ListRecommendedSolutionsWithContext(c.Request.Context(), authctx.MustCurrentUser(c).UserID, challengeID)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -193,7 +195,7 @@ func (h *WriteupHandler) ListCommunitySolutions(c *gin.Context) {
 		response.ValidationError(c, err)
 		return
 	}
-	resp, err := h.queries.ListCommunitySolutions(authctx.MustCurrentUser(c).UserID, challengeID, &query)
+	resp, err := h.queries.ListCommunitySolutionsWithContext(c.Request.Context(), authctx.MustCurrentUser(c).UserID, challengeID, &query)
 	if err != nil {
 		response.FromError(c, err)
 		return

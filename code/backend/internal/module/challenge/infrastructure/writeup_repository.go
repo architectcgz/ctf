@@ -220,10 +220,14 @@ func (r recommendedSolutionRow) toRecord() challengeports.RecommendedSolutionRec
 }
 
 func (r *Repository) ListRecommendedSolutionsByChallengeID(challengeID int64, now time.Time) ([]challengeports.RecommendedSolutionRecord, error) {
+	return r.ListRecommendedSolutionsByChallengeIDWithContext(context.Background(), challengeID, now)
+}
+
+func (r *Repository) ListRecommendedSolutionsByChallengeIDWithContext(ctx context.Context, challengeID int64, now time.Time) ([]challengeports.RecommendedSolutionRecord, error) {
 	rows := make([]recommendedSolutionRow, 0)
 
 	var officialRows []recommendedSolutionRow
-	if err := r.db.Table("challenge_writeups AS cw").
+	if err := r.dbWithContext(ctx).Table("challenge_writeups AS cw").
 		Select(strings.TrimSpace(`
 			'official' AS source_type,
 			cw.id AS source_id,
@@ -245,7 +249,7 @@ func (r *Repository) ListRecommendedSolutionsByChallengeID(challengeID int64, no
 	rows = append(rows, officialRows...)
 
 	var communityRows []recommendedSolutionRow
-	if err := r.db.Table("submission_writeups AS sw").
+	if err := r.dbWithContext(ctx).Table("submission_writeups AS sw").
 		Select(strings.TrimSpace(`
 			'community' AS source_type,
 			sw.id AS source_id,
@@ -333,7 +337,11 @@ func (r communitySolutionRow) toRecord() challengeports.CommunitySolutionRecord 
 }
 
 func (r *Repository) ListCommunitySolutionsByChallengeID(challengeID int64, query *dto.CommunityChallengeSolutionQuery) ([]challengeports.CommunitySolutionRecord, int64, error) {
-	base := r.db.Table("submission_writeups AS sw").
+	return r.ListCommunitySolutionsByChallengeIDWithContext(context.Background(), challengeID, query)
+}
+
+func (r *Repository) ListCommunitySolutionsByChallengeIDWithContext(ctx context.Context, challengeID int64, query *dto.CommunityChallengeSolutionQuery) ([]challengeports.CommunitySolutionRecord, int64, error) {
+	base := r.dbWithContext(ctx).Table("submission_writeups AS sw").
 		Select(strings.TrimSpace(`
 			sw.id,
 			sw.user_id,

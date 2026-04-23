@@ -84,7 +84,9 @@ type ChallengeWriteupRepository interface {
 	ListTeacherSubmissionWriteups(query *dto.TeacherSubmissionWriteupQuery) ([]TeacherSubmissionWriteupRecord, int64, error)
 	ListTeacherSubmissionWriteupsWithContext(ctx context.Context, query *dto.TeacherSubmissionWriteupQuery) ([]TeacherSubmissionWriteupRecord, int64, error)
 	ListRecommendedSolutionsByChallengeID(challengeID int64, now time.Time) ([]RecommendedSolutionRecord, error)
+	ListRecommendedSolutionsByChallengeIDWithContext(ctx context.Context, challengeID int64, now time.Time) ([]RecommendedSolutionRecord, error)
 	ListCommunitySolutionsByChallengeID(challengeID int64, query *dto.CommunityChallengeSolutionQuery) ([]CommunitySolutionRecord, int64, error)
+	ListCommunitySolutionsByChallengeIDWithContext(ctx context.Context, challengeID int64, query *dto.CommunityChallengeSolutionQuery) ([]CommunitySolutionRecord, int64, error)
 }
 
 type TeacherSubmissionWriteupRecord struct {

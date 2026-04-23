@@ -122,11 +122,18 @@ func (s *WriteupService) GetMySubmissionWithContext(ctx context.Context, userID,
 }
 
 func (s *WriteupService) ListRecommendedSolutions(userID, challengeID int64) (*dto.PageResult, error) {
-	if err := s.ensureSolvedChallengeVisible(userID, challengeID); err != nil {
+	return s.ListRecommendedSolutionsWithContext(context.Background(), userID, challengeID)
+}
+
+func (s *WriteupService) ListRecommendedSolutionsWithContext(ctx context.Context, userID, challengeID int64) (*dto.PageResult, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	if err := s.ensureSolvedChallengeVisibleWithContext(ctx, userID, challengeID); err != nil {
 		return nil, err
 	}
 
-	items, err := s.repo.ListRecommendedSolutionsByChallengeID(challengeID, time.Now())
+	items, err := s.repo.ListRecommendedSolutionsByChallengeIDWithContext(ctx, challengeID, time.Now())
 	if err != nil {
 		return nil, err
 	}
@@ -143,7 +150,14 @@ func (s *WriteupService) ListRecommendedSolutions(userID, challengeID int64) (*d
 }
 
 func (s *WriteupService) ListCommunitySolutions(userID, challengeID int64, query *dto.CommunityChallengeSolutionQuery) (*dto.PageResult, error) {
-	if err := s.ensureSolvedChallengeVisible(userID, challengeID); err != nil {
+	return s.ListCommunitySolutionsWithContext(context.Background(), userID, challengeID, query)
+}
+
+func (s *WriteupService) ListCommunitySolutionsWithContext(ctx context.Context, userID, challengeID int64, query *dto.CommunityChallengeSolutionQuery) (*dto.PageResult, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	if err := s.ensureSolvedChallengeVisibleWithContext(ctx, userID, challengeID); err != nil {
 		return nil, err
 	}
 
@@ -163,7 +177,7 @@ func (s *WriteupService) ListCommunitySolutions(userID, challengeID int64, query
 		}
 	}
 
-	items, total, err := s.repo.ListCommunitySolutionsByChallengeID(challengeID, normalized)
+	items, total, err := s.repo.ListCommunitySolutionsByChallengeIDWithContext(ctx, challengeID, normalized)
 	if err != nil {
 		return nil, err
 	}
@@ -311,7 +325,14 @@ func ensureTeacherCanAccessQueryRecordWithContext(
 }
 
 func (s *WriteupService) ensureSolvedChallengeVisible(userID, challengeID int64) error {
-	challengeItem, err := s.repo.FindByID(challengeID)
+	return s.ensureSolvedChallengeVisibleWithContext(context.Background(), userID, challengeID)
+}
+
+func (s *WriteupService) ensureSolvedChallengeVisibleWithContext(ctx context.Context, userID, challengeID int64) error {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	challengeItem, err := s.repo.FindByIDWithContext(ctx, challengeID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return errcode.ErrChallengeNotFound
@@ -321,7 +342,7 @@ func (s *WriteupService) ensureSolvedChallengeVisible(userID, challengeID int64)
 	if challengeItem.Status != model.ChallengeStatusPublished {
 		return errcode.ErrChallengeNotPublish
 	}
-	isSolved, err := s.repo.GetSolvedStatus(userID, challengeID)
+	isSolved, err := s.repo.GetSolvedStatusWithContext(ctx, userID, challengeID)
 	if err != nil {
 		return err
 	}
