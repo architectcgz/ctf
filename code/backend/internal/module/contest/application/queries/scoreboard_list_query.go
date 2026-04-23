@@ -81,7 +81,7 @@ func (s *ScoreboardService) getScoreboard(ctx context.Context, contestID int64, 
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	items := buildScoreboardItems(start, results, teamIDs, teams, statsMap)
+	items := buildScoreboardItems(s.logger, contestID, start, results, teamIDs, teams, statsMap)
 
 	return &dto.ScoreboardResp{
 		Contest: &dto.ScoreboardContestInfo{
