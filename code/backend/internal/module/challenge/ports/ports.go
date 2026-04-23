@@ -128,7 +128,9 @@ type ChallengeTopologyRepository interface {
 	FindChallengeTopologyByChallengeID(challengeID int64) (*model.ChallengeTopology, error)
 	FindChallengeTopologyByChallengeIDWithContext(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error)
 	UpsertChallengeTopology(topology *model.ChallengeTopology) error
+	UpsertChallengeTopologyWithContext(ctx context.Context, topology *model.ChallengeTopology) error
 	DeleteChallengeTopologyByChallengeID(challengeID int64) error
+	DeleteChallengeTopologyByChallengeIDWithContext(ctx context.Context, challengeID int64) error
 }
 
 type ImageRepository interface {
@@ -148,13 +150,17 @@ type ImageRepository interface {
 
 type EnvironmentTemplateRepository interface {
 	Create(template *model.EnvironmentTemplate) error
+	CreateWithContext(ctx context.Context, template *model.EnvironmentTemplate) error
 	Update(template *model.EnvironmentTemplate) error
+	UpdateWithContext(ctx context.Context, template *model.EnvironmentTemplate) error
 	Delete(id int64) error
+	DeleteWithContext(ctx context.Context, id int64) error
 	FindByID(id int64) (*model.EnvironmentTemplate, error)
 	FindByIDWithContext(ctx context.Context, id int64) (*model.EnvironmentTemplate, error)
 	List(keyword string) ([]*model.EnvironmentTemplate, error)
 	ListWithContext(ctx context.Context, keyword string) ([]*model.EnvironmentTemplate, error)
 	IncrementUsage(id int64) error
+	IncrementUsageWithContext(ctx context.Context, id int64) error
 }
 
 type TagRepository interface {
