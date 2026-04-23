@@ -8,7 +8,7 @@
 | 审查范围 | `code/frontend/src` 路由、关键视图、composables、stores、共享样式与验证门禁 |
 | 审查日期 | 2026-04-22 |
 | 审查方式 | 静态代码审查 + 最小验证基线检查 |
-| 审查状态 | 已记录，已完成十四轮最小高收益修复 |
+| 审查状态 | 已记录，已完成十五轮最小高收益修复 |
 
 ## 当前结论
 
@@ -104,6 +104,7 @@
     - `code/frontend/src/views/challenges/ChallengeDetail.vue`
     - `code/frontend/src/views/challenges/ChallengeList.vue`
     - `code/frontend/src/views/contests/ContestDetail.vue`
+    - `code/frontend/src/views/platform/ChallengeDetail.vue`
     - `code/frontend/src/views/platform/ImageManage.vue`
   - 影响：
     - 阅读和回归成本高，局部修复也更容易带出连锁问题。
@@ -406,6 +407,25 @@
 
 - 已执行：
   - `npm run test:run -- src/views/challenges/__tests__/challengeListPanelExtraction.test.ts src/views/challenges/__tests__/ChallengeList.test.ts`
+  - `npm run typecheck`
+
+## 第十五轮修复进展
+
+- 已完成：
+  - `P2-5` `platform/ChallengeDetail.vue` 继续减重，题目详情 tab 已抽到独立 `components/platform/challenge/AdminChallengeProfilePanel.vue`，路由页不再直接承载详情头、基础信息、提示区和判题模式配置模板。
+  - 这轮拆分保持了状态 ownership 不变：路由页继续持有加载、下载、Flag 草稿、保存动作与 query tabs，新组件只通过 props 和 emits 承载详情 tab 展示与输入。
+  - `Admin ChallengeDetail` 的源码护栏已补到 detail tab 抽离层，现有行为测试仍覆盖拓扑入口、query tab 切换、共享实例提示、附件下载和 Flag 保存边界。
+  - `ChallengeDetail.vue` 本体行数已从 `969` 行降到 `402` 行，路由页现在主要只剩顶层导航、tab 装配和远端交互 owner。
+- 本轮涉及文件：
+  - `code/frontend/src/views/platform/ChallengeDetail.vue`
+  - `code/frontend/src/components/platform/challenge/AdminChallengeProfilePanel.vue`
+  - `code/frontend/src/views/platform/__tests__/challengeDetailPanelExtraction.test.ts`
+  - `code/frontend/src/views/platform/__tests__/ChallengeDetail.test.ts`
+
+## 第十五轮验证
+
+- 已执行：
+  - `npm run test:run -- src/views/platform/__tests__/challengeDetailPanelExtraction.test.ts src/views/platform/__tests__/ChallengeDetail.test.ts`
   - `npm run typecheck`
 
 ## 备注
