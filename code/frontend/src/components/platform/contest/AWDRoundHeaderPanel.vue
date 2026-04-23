@@ -108,7 +108,7 @@ function navigateRound(delta: number) {
         <div class="flex items-center gap-2">
           <button
             type="button"
-            class="ops-btn ops-btn--neutral"
+            class="ui-btn ui-btn--secondary awd-round-toolbar__button"
             :disabled="loadingRounds || loadingRoundDetail"
             @click="emit('refresh')"
           >
@@ -121,7 +121,7 @@ function navigateRound(delta: number) {
           
           <button
             type="button"
-            class="ops-btn ops-btn--neutral"
+            class="ui-btn ui-btn--secondary awd-round-toolbar__button"
             @click="emit('openCreateRoundDialog')"
           >
             <PlusCircle class="h-3.5 w-3.5" />
@@ -132,7 +132,7 @@ function navigateRound(delta: number) {
 
           <button
             type="button"
-            class="ops-btn ops-btn--neutral"
+            class="ui-btn ui-btn--secondary awd-round-toolbar__button"
             :disabled="!selectedRoundId || !canRecordServiceChecks"
             @click="emit('openServiceCheckDialog')"
           >
@@ -142,7 +142,7 @@ function navigateRound(delta: number) {
           
           <button
             type="button"
-            class="ops-btn ops-btn--neutral"
+            class="ui-btn ui-btn--secondary awd-round-toolbar__button"
             :disabled="!selectedRoundId || !canRecordAttackLogs"
             @click="emit('openAttackLogDialog')"
           >
@@ -152,7 +152,7 @@ function navigateRound(delta: number) {
 
           <button
             type="button"
-            class="ops-btn ops-btn--primary"
+            class="ui-btn ui-btn--primary awd-round-toolbar__button"
             :disabled="checking || !selectedRoundId"
             @click="emit('runSelectedRoundCheck')"
           >

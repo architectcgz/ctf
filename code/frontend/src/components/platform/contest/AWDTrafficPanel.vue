@@ -165,30 +165,47 @@ function getTrafficStatusGroupLabel(statusGroup: AWDTrafficStatusGroup): string 
         
         <div class="toolbar-right">
           <div class="filter-row">
-            <select
-              :value="trafficFilters.status_group"
-              class="log-select"
-              @change="handleTrafficStatusGroupChange(($event.target as HTMLSelectElement).value)"
-            >
-              <option
-                v-for="item in trafficStatusGroupOptions"
-                :key="item.value"
-                :value="item.value"
-              >
-                {{ item.label }}
-              </option>
-            </select>
-            <div class="search-input-wrap">
-              <Search class="h-3 w-3 search-icon" />
-              <input
-                v-model="trafficPathKeywordInput"
-                class="log-input"
-                placeholder="过滤路径..."
-                @keydown.enter.prevent="applyTrafficKeywordFilter"
-              >
-            </div>
+            <label class="ui-field awd-round-filter-field">
+              <span class="ui-field__label">状态分桶</span>
+              <span class="ui-control-wrap awd-round-filter-control">
+                <select
+                  :value="trafficFilters.status_group"
+                  class="ui-control"
+                  @change="handleTrafficStatusGroupChange(($event.target as HTMLSelectElement).value)"
+                >
+                  <option
+                    v-for="item in trafficStatusGroupOptions"
+                    :key="item.value"
+                    :value="item.value"
+                  >
+                    {{ item.label }}
+                  </option>
+                </select>
+              </span>
+            </label>
+            <label class="ui-field awd-round-filter-field">
+              <span class="ui-field__label">路径搜索</span>
+              <span class="ui-control-wrap awd-round-filter-control">
+                <Search class="h-3 w-3 search-icon" />
+                <input
+                  v-model="trafficPathKeywordInput"
+                  class="ui-control"
+                  placeholder="过滤路径..."
+                  @keydown.enter.prevent="applyTrafficKeywordFilter"
+                >
+              </span>
+            </label>
             <button
-              class="ops-btn ops-btn--neutral"
+              type="button"
+              class="ui-btn ui-btn--ghost awd-round-filter-search"
+              @click="applyTrafficKeywordFilter"
+            >
+              搜索
+            </button>
+            <button
+              id="awd-traffic-reset-filters"
+              type="button"
+              class="ui-btn ui-btn--ghost"
               @click="emit('resetTrafficFilters')"
             >
               重置

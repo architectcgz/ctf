@@ -280,6 +280,7 @@ function handleOverrideDialogOpenChange(value: boolean) {
             开赛前必须修正以下阻塞项，以确保裁判引擎正常运行。
           </p>
         </header>
+        <AWDRuntimePendingState />
         <AWDReadinessSummary
           :readiness="readiness"
           :loading="loadingReadiness"
