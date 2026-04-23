@@ -48,6 +48,12 @@ async function ensureProfileLoaded(): Promise<void> {
   authStore.setAuth(profile, authStore.accessToken)
 }
 
+async function ensureSessionRestored(): Promise<void> {
+  const authStore = useAuthStore()
+  if (authStore.accessToken || authStore.sessionRestored) return
+  await authStore.restore()
+}
+
 function updatePageTitle(to: RouteLocationNormalized): void {
   const routeTitle = resolveRouteTitle(to)
   const title = routeTitle ? `${APP_TITLE_PREFIX} - ${routeTitle}` : APP_TITLE_PREFIX
@@ -63,6 +69,9 @@ export function setupRouterGuards(router: Router): void {
 
     try {
       if (isPublicRoute(to)) {
+        if (isAuthLandingRoute(to)) {
+          await ensureSessionRestored()
+        }
         if (isAuthLandingRoute(to) && authStore.isLoggedIn) {
           await ensureProfileLoaded()
           const redirectTo = sanitizeRedirectPath(to.query.redirect)
@@ -71,6 +80,10 @@ export function setupRouterGuards(router: Router): void {
         }
         next()
         return
+      }
+
+      if (to.meta?.requiresAuth && !authStore.isLoggedIn) {
+        await ensureSessionRestored()
       }
 
       if (to.meta?.requiresAuth && !authStore.isLoggedIn) {

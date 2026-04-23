@@ -6,10 +6,11 @@ import { setupRouterGuards, sanitizeRedirectPath, hasRequiredRole } from '@/rout
 import { useAuthStore } from '@/stores/auth'
 import type { AuthUser } from '@/stores/auth'
 
-const { errorMock, getProfileMock, warningMock } = vi.hoisted(() => ({
+const { errorMock, getProfileMock, refreshTokenMock, warningMock } = vi.hoisted(() => ({
   warningMock: vi.fn(),
   errorMock: vi.fn(),
   getProfileMock: vi.fn(),
+  refreshTokenMock: vi.fn(),
 }))
 
 vi.mock('nprogress', () => ({
@@ -22,6 +23,7 @@ vi.mock('nprogress', () => ({
 
 vi.mock('@/api/auth', () => ({
   getProfile: getProfileMock,
+  refreshToken: refreshTokenMock,
 }))
 
 vi.mock('@/composables/useToast', () => ({
@@ -103,6 +105,7 @@ describe('router guards', () => {
     warningMock.mockReset()
     errorMock.mockReset()
     getProfileMock.mockReset()
+    refreshTokenMock.mockReset()
   })
 
   it('应该阻止未登录用户访问受保护路由', async () => {
@@ -172,6 +175,25 @@ describe('router guards', () => {
 
     expect(getProfileMock).toHaveBeenCalledTimes(1)
     expect(authStore.user?.role).toBe('teacher')
+    expect(next).toHaveBeenCalledWith()
+  })
+
+  it('应该在内存无 token 但 refresh cookie 可用时静默恢复会话后放行', async () => {
+    refreshTokenMock.mockResolvedValue({ access_token: 'restored-token' })
+    getProfileMock.mockResolvedValue(buildUser('teacher'))
+
+    const { runBeforeEach } = createRouterMock()
+    const next = await runBeforeEach(
+      createRoute({
+        path: '/academy/awd-reviews',
+        fullPath: '/academy/awd-reviews',
+        meta: { requiresAuth: true, roles: ['teacher', 'admin'] },
+      })
+    )
+
+    expect(refreshTokenMock).toHaveBeenCalledWith({ suppressErrorToast: true })
+    expect(getProfileMock).toHaveBeenCalledTimes(1)
+    expect(useAuthStore().accessToken).toBe('restored-token')
     expect(next).toHaveBeenCalledWith()
   })
 
