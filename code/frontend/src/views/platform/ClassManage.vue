@@ -124,49 +124,49 @@ const columns = [
           </div>
         </section>
 
-        <div class="class-manage-body mt-10 space-y-10">
-          <div class="metric-panel-grid metric-panel-grid--premium cols-3">
-            <article class="metric-panel-card metric-panel-card--premium">
-              <div class="metric-panel-label">
+        <div class="admin-class-manage-shell__content">
+          <div class="admin-summary-grid admin-class-manage-shell__summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface">
+            <article class="journal-note progress-card metric-panel-card">
+              <div class="journal-note-label progress-card-label metric-panel-label">
                 <span>班级总量</span>
                 <FolderKanban class="h-4 w-4" />
               </div>
-              <div class="metric-panel-value">
+              <div class="journal-note-value progress-card-value metric-panel-value">
                 {{ total.toString().padStart(2, '0') }}
               </div>
-              <div class="metric-panel-helper">
+              <div class="journal-note-helper progress-card-hint metric-panel-helper">
                 平台已接入班级
               </div>
             </article>
 
-            <article class="metric-panel-card metric-panel-card--premium">
-              <div class="metric-panel-label">
+            <article class="journal-note progress-card metric-panel-card">
+              <div class="journal-note-label progress-card-label metric-panel-label">
                 <span>总人数</span>
                 <Users class="h-4 w-4" />
               </div>
-              <div class="metric-panel-value">
+              <div class="journal-note-value progress-card-value metric-panel-value">
                 {{ totalStudents.toString().padStart(2, '0') }}
               </div>
-              <div class="metric-panel-helper">
+              <div class="journal-note-helper progress-card-hint metric-panel-helper">
                 全平台在籍学生
               </div>
             </article>
 
-            <article class="metric-panel-card metric-panel-card--premium">
-              <div class="metric-panel-label">
+            <article class="journal-note progress-card metric-panel-card">
+              <div class="journal-note-label progress-card-label metric-panel-label">
                 <span>教学周期</span>
                 <Calendar class="h-4 w-4" />
               </div>
-              <div class="metric-panel-value">
+              <div class="journal-note-value progress-card-value metric-panel-value">
                 --
               </div>
-              <div class="metric-panel-helper">
+              <div class="journal-note-helper progress-card-hint metric-panel-helper">
                 本学期教学活跃度
               </div>
             </article>
           </div>
 
-          <section class="workspace-directory-section">
+          <section class="workspace-directory-section admin-class-manage-directory">
             <header class="list-heading">
               <div>
                 <div class="workspace-overline">
@@ -196,7 +196,7 @@ const columns = [
 
               <WorkspaceDataTable
                 v-else
-                class="workspace-directory-list"
+                class="workspace-directory-list admin-class-manage-table"
                 :columns="columns"
                 :rows="rows"
                 row-key="id"
@@ -212,7 +212,7 @@ const columns = [
                 </template>
               </WorkspaceDataTable>
 
-              <div class="mt-6">
+              <div class="workspace-directory-pagination">
                 <WorkspaceDirectoryPagination
                   :page="page"
                   :total-pages="Math.max(1, Math.ceil(total / pageSize))"
@@ -237,6 +237,13 @@ const columns = [
 </template>
 
 <style scoped>
+.admin-class-manage-shell__content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--workspace-directory-page-block-gap);
+  margin-top: var(--space-10);
+}
+
 .workspace-hero {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
