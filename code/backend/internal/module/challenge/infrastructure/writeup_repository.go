@@ -15,8 +15,15 @@ import (
 )
 
 func (r *Repository) FindWriteupByChallengeID(challengeID int64) (*model.ChallengeWriteup, error) {
+	return r.FindWriteupByChallengeIDWithContext(context.Background(), challengeID)
+}
+
+func (r *Repository) FindWriteupByChallengeIDWithContext(ctx context.Context, challengeID int64) (*model.ChallengeWriteup, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
 	var writeup model.ChallengeWriteup
-	err := r.db.Where("challenge_id = ?", challengeID).First(&writeup).Error
+	err := r.db.WithContext(ctx).Where("challenge_id = ?", challengeID).First(&writeup).Error
 	if err != nil {
 		return nil, err
 	}

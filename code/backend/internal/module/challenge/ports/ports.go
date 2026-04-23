@@ -64,8 +64,10 @@ type ChallengeImageUsageRepository interface {
 
 type ChallengeWriteupRepository interface {
 	FindByID(id int64) (*model.Challenge, error)
+	FindByIDWithContext(ctx context.Context, id int64) (*model.Challenge, error)
 	FindUserByID(userID int64) (*model.User, error)
 	FindWriteupByChallengeID(challengeID int64) (*model.ChallengeWriteup, error)
+	FindWriteupByChallengeIDWithContext(ctx context.Context, challengeID int64) (*model.ChallengeWriteup, error)
 	UpsertWriteup(writeup *model.ChallengeWriteup) error
 	DeleteWriteupByChallengeID(challengeID int64) error
 	FindReleasedWriteupByChallengeID(challengeID int64, now time.Time) (*model.ChallengeWriteup, error)
