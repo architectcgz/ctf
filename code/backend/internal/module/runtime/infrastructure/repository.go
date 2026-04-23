@@ -211,12 +211,16 @@ func (r *Repository) UpdateStatusAndReleasePortWithContext(ctx context.Context, 
 			return err
 		}
 
+		updates := map[string]any{
+			"status":     status,
+			"updated_at": time.Now(),
+		}
+		if status == model.InstanceStatusStopped || status == model.InstanceStatusExpired {
+			updates["destroyed_at"] = time.Now()
+		}
 		if err := tx.Model(&model.Instance{}).
 			Where("id = ?", id).
-			Updates(map[string]any{
-				"status":     status,
-				"updated_at": time.Now(),
-			}).Error; err != nil {
+			Updates(updates).Error; err != nil {
 			return err
 		}
 
