@@ -7,6 +7,7 @@ import auditLogSource from '../AuditLog.vue?raw'
 import auditLogDirectoryPanelSource from '@/components/platform/audit/AuditLogDirectoryPanel.vue?raw'
 import awdReviewIndexSource from '../AWDReviewIndex.vue?raw'
 import challengeManageSource from '../ChallengeManage.vue?raw'
+import challengeManageDirectoryPanelSource from '@/components/platform/challenge/ChallengeManageDirectoryPanel.vue?raw'
 import classManageSource from '../ClassManage.vue?raw'
 import instanceManageSource from '../InstanceManage.vue?raw'
 import challengeDetailSource from '../ChallengeDetail.vue?raw'
@@ -34,6 +35,7 @@ const journalNotesSource = readFileSync(
   'utf8'
 )
 const auditLogCombinedSource = [auditLogSource, auditLogDirectoryPanelSource].join('\n')
+const challengeManageCombinedSource = [challengeManageSource, challengeManageDirectoryPanelSource].join('\n')
 
 describe('admin management surface alignment', () => {
   it('audit log should soften table and empty-state borders on dark surfaces', () => {
@@ -343,13 +345,13 @@ describe('admin management surface alignment', () => {
     expect(auditLogCombinedSource).toContain('class="audit-list workspace-directory-list"')
     expect(auditLogCombinedSource).toContain('class="admin-pagination workspace-directory-pagination"')
 
-    expect(challengeManageSource).toContain(
+    expect(challengeManageCombinedSource).toContain(
       'class="workspace-directory-section challenge-manage-directory"'
     )
-    expect(challengeManageSource).toContain('class="challenge-list workspace-directory-list"')
-    expect(challengeManageSource).toContain('class="workspace-directory-loading"')
-    expect(challengeManageSource).toContain('class="workspace-directory-empty"')
-    expect(challengeManageSource).toContain('<WorkspaceDirectoryPagination')
+    expect(challengeManageCombinedSource).toContain('class="challenge-list workspace-directory-list"')
+    expect(challengeManageCombinedSource).toContain('class="workspace-directory-loading"')
+    expect(challengeManageCombinedSource).toContain('class="workspace-directory-empty"')
+    expect(challengeManageCombinedSource).toContain('<WorkspaceDirectoryPagination')
 
     expect(adminContestTableSource).toContain('class="contest-directory workspace-directory-list"')
     expect(adminContestTableSource).toContain(
@@ -433,7 +435,7 @@ describe('admin management surface alignment', () => {
     expect(userGovernanceSource).toContain('PlatformPaginationControls')
     expect(imageManageSource).toContain('PlatformPaginationControls')
     expect(auditLogCombinedSource).toContain('PlatformPaginationControls')
-    expect(challengeManageSource).toContain('WorkspaceDirectoryPagination')
+    expect(challengeManageCombinedSource).toContain('WorkspaceDirectoryPagination')
     expect(adminContestTableSource).toContain('PlatformPaginationControls')
     expect(awdRoundInspectorSource).toContain('<AWDTrafficPanel')
     expect(awdTrafficPanelSource).toContain('PlatformPaginationControls')

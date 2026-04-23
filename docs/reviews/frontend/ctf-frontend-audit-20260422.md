@@ -8,7 +8,7 @@
 | 审查范围 | `code/frontend/src` 路由、关键视图、composables、stores、共享样式与验证门禁 |
 | 审查日期 | 2026-04-22 |
 | 审查方式 | 静态代码审查 + 最小验证基线检查 |
-| 审查状态 | 已记录，已完成十七轮最小高收益修复 |
+| 审查状态 | 已记录，已完成十八轮最小高收益修复 |
 
 ## 当前结论
 
@@ -107,6 +107,7 @@
     - `code/frontend/src/views/platform/ChallengeDetail.vue`
     - `code/frontend/src/views/platform/ImageManage.vue`
     - `code/frontend/src/views/platform/AuditLog.vue`
+    - `code/frontend/src/views/platform/ChallengeManage.vue`
   - 影响：
     - 阅读和回归成本高，局部修复也更容易带出连锁问题。
 
@@ -466,6 +467,26 @@
 
 - 已执行：
   - `npm run test:run -- src/views/platform/__tests__/auditLogWorkspaceExtraction.test.ts src/views/platform/__tests__/AuditLog.test.ts`
+  - `npm run typecheck`
+
+## 第十八轮修复进展
+
+- 已完成：
+  - `P2-5` `ChallengeManage.vue` 继续减重，题目目录工作区已抽到独立 `components/platform/challenge/ChallengeManageDirectoryPanel.vue`，路由页不再直接承载筛选区、空错态、表格动作菜单与分页模板。
+  - 这轮拆分保持了状态 ownership 不变：题目列表加载、排序状态、发布检查、删除确认、路由跳转和 action menu open state 仍由 `ChallengeManage.vue` 持有，新组件只通过 props 和 emits 承载目录展示与交互。
+  - 同页顺手把管理端 shell 和摘要区收回统一工作区原语，`ChallengeManage` 的源码护栏也同步更新为父子组合源码检查。
+  - `ChallengeManage.vue` 本体行数已从 `709` 行降到 `339` 行，页面本体现在主要只剩 workspace shell、摘要区、目录状态装配和动作 owner。
+- 本轮涉及文件：
+  - `code/frontend/src/views/platform/ChallengeManage.vue`
+  - `code/frontend/src/components/platform/challenge/ChallengeManageDirectoryPanel.vue`
+  - `code/frontend/src/views/platform/__tests__/ChallengeManage.test.ts`
+  - `code/frontend/src/views/platform/__tests__/challengeManageDirectoryExtraction.test.ts`
+  - `code/frontend/src/views/platform/__tests__/platformManagementSurfaceAlignment.test.ts`
+
+## 第十八轮验证
+
+- 已执行：
+  - `npm run test:run -- src/views/platform/__tests__/challengeManageDirectoryExtraction.test.ts src/views/platform/__tests__/ChallengeManage.test.ts`
   - `npm run typecheck`
 
 ## 备注
