@@ -109,7 +109,9 @@ type CommunitySolutionRecord struct {
 
 type ChallengeTopologyRepository interface {
 	FindByID(id int64) (*model.Challenge, error)
+	FindByIDWithContext(ctx context.Context, id int64) (*model.Challenge, error)
 	FindChallengeTopologyByChallengeID(challengeID int64) (*model.ChallengeTopology, error)
+	FindChallengeTopologyByChallengeIDWithContext(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error)
 	UpsertChallengeTopology(topology *model.ChallengeTopology) error
 	DeleteChallengeTopologyByChallengeID(challengeID int64) error
 }

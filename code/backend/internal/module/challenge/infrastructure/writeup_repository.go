@@ -1,6 +1,7 @@
 package infrastructure
 
 import (
+	"context"
 	"sort"
 	"strings"
 	"time"
@@ -447,8 +448,15 @@ func (r *Repository) listTeacherSubmissionWriteups(
 }
 
 func (r *Repository) FindChallengeTopologyByChallengeID(challengeID int64) (*model.ChallengeTopology, error) {
+	return r.FindChallengeTopologyByChallengeIDWithContext(context.Background(), challengeID)
+}
+
+func (r *Repository) FindChallengeTopologyByChallengeIDWithContext(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
 	var topology model.ChallengeTopology
-	err := r.db.Where("challenge_id = ?", challengeID).First(&topology).Error
+	err := r.db.WithContext(ctx).Where("challenge_id = ?", challengeID).First(&topology).Error
 	if err != nil {
 		return nil, err
 	}
