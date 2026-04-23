@@ -5,6 +5,7 @@ import (
 	"time"
 
 	redislib "github.com/redis/go-redis/v9"
+	"go.uber.org/zap"
 
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
@@ -40,12 +41,23 @@ func scoreboardPageBounds(page, pageSize int) (int64, int64) {
 	return start, stop
 }
 
-func scoreboardTeamIDs(results []redislib.Z) []int64 {
+func filterScoreboardResults(logger *zap.Logger, contestID int64, results []redislib.Z) ([]redislib.Z, []int64) {
+	filtered := make([]redislib.Z, 0, len(results))
 	teamIDs := make([]int64, 0, len(results))
 	for _, item := range results {
-		teamIDs = append(teamIDs, contestdomain.MemberToTeamID(item.Member))
+		teamID, ok := contestdomain.ParseMemberToTeamID(item.Member)
+		if !ok {
+			if logger != nil {
+				logger.Warn("跳过非法榜单成员",
+					zap.Int64("contest_id", contestID),
+					zap.Any("member", item.Member))
+			}
+			continue
+		}
+		filtered = append(filtered, item)
+		teamIDs = append(teamIDs, teamID)
 	}
-	return teamIDs
+	return filtered, teamIDs
 }
 
 func buildScoreboardItems(

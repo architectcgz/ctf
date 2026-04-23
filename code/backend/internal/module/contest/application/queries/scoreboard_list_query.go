@@ -41,18 +41,37 @@ func (s *ScoreboardService) getScoreboard(ctx context.Context, contestID int64, 
 		return nil, err
 	}
 
-	total, err := s.redis.ZCard(ctx, key).Result()
+	results, err := s.redis.ZRevRangeWithScores(ctx, key, 0, -1).Result()
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
+	results, teamIDs := filterScoreboardResults(s.logger, contestID, results)
+	total := int64(len(results))
 
 	start, stop := scoreboardPageBounds(page, pageSize)
-	results, err := s.redis.ZRevRangeWithScores(ctx, key, start, stop).Result()
-	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+	if start >= total {
+		return &dto.ScoreboardResp{
+			Contest: &dto.ScoreboardContestInfo{
+				ID:        contest.ID,
+				Title:     contest.Title,
+				Status:    contest.Status,
+				StartedAt: contest.StartTime,
+				EndsAt:    contest.EndTime,
+			},
+			Scoreboard: &dto.ScoreboardPage{
+				List:     []*dto.ScoreboardItem{},
+				Total:    total,
+				Page:     page,
+				PageSize: pageSize,
+			},
+			Frozen: frozen,
+		}, nil
 	}
-
-	teamIDs := scoreboardTeamIDs(results)
+	if stop >= total {
+		stop = total - 1
+	}
+	results = results[start : stop+1]
+	teamIDs = teamIDs[start : stop+1]
 
 	teams, err := s.repo.FindTeamsByIDs(ctx, teamIDs)
 	if err != nil {
