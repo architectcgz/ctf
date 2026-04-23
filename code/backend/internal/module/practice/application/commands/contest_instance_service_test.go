@@ -20,9 +20,8 @@ import (
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	practicecmd "ctf-platform/internal/module/practice/application/commands"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
-	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
+	practiceports "ctf-platform/internal/module/practice/ports"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
-	runtimeadapters "ctf-platform/internal/testutil/runtimeadapters"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -318,6 +317,36 @@ func ensureContestInstanceServiceIDColumn(db *gorm.DB) error {
 	return db.Exec("ALTER TABLE instances ADD COLUMN service_id integer").Error
 }
 
+type contestInstanceTestRuntimeService struct{}
+
+func (contestInstanceTestRuntimeService) CleanupRuntime(instance *model.Instance) error {
+	return nil
+}
+
+func (contestInstanceTestRuntimeService) CreateTopology(_ context.Context, req *practiceports.TopologyCreateRequest) (*practiceports.TopologyCreateResult, error) {
+	if req == nil {
+		return nil, nil
+	}
+	return &practiceports.TopologyCreateResult{
+		PrimaryContainerID: fmt.Sprintf("contest-topology-%d", req.ReservedHostPort),
+		NetworkID:          fmt.Sprintf("contest-network-%d", req.ReservedHostPort),
+		AccessURL:          fmt.Sprintf("http://127.0.0.1:%d", req.ReservedHostPort),
+		RuntimeDetails: model.InstanceRuntimeDetails{
+			Containers: []model.InstanceRuntimeContainer{{
+				NodeKey:      "entry",
+				ContainerID:  fmt.Sprintf("contest-topology-%d", req.ReservedHostPort),
+				HostPort:     req.ReservedHostPort,
+				ServicePort:  8080,
+				IsEntryPoint: true,
+			}},
+		},
+	}, nil
+}
+
+func (contestInstanceTestRuntimeService) CreateContainer(_ context.Context, _ string, _ map[string]string, reservedHostPort int) (string, string, int, int, error) {
+	return fmt.Sprintf("contest-container-%d", reservedHostPort), fmt.Sprintf("contest-network-%d", reservedHostPort), reservedHostPort, 8080, nil
+}
+
 func newContestInstanceTestService(t *testing.T, db *gorm.DB) *practicecmd.Service {
 	t.Helper()
 
@@ -336,23 +365,12 @@ func newContestInstanceTestService(t *testing.T, db *gorm.DB) *practicecmd.Servi
 	challengeRepo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
 	instanceRepo := runtimeinfrarepo.NewRepository(db)
-	runtimeCleanupService := runtimecmd.NewRuntimeCleanupService(nil, nil)
-	runtimeProvisioningService := runtimecmd.NewProvisioningService(instanceRepo, nil, &config.ContainerConfig{
-		PortRangeStart:       30000,
-		PortRangeEnd:         30010,
-		DefaultExposedPort:   8080,
-		PublicHost:           "127.0.0.1",
-		DefaultTTL:           time.Hour,
-		MaxConcurrentPerUser: 3,
-		MaxExtends:           2,
-		CreateTimeout:        time.Second,
-	}, nil)
 	return practicecmd.NewService(
 		practiceinfra.NewRepository(db),
 		challengeRepo,
 		imageRepo,
 		instanceRepo,
-		runtimeadapters.NewPracticeRuntimeService(runtimeCleanupService, runtimeProvisioningService),
+		contestInstanceTestRuntimeService{},
 		nil,
 		nil,
 		nil,
