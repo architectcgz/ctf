@@ -21,14 +21,14 @@ func TestAWDServiceTemplateImportFlowPreviewAndCommit(t *testing.T) {
 	previewDir := filepath.Join(t.TempDir(), "awd-imports")
 	t.Setenv("AWD_SERVICE_TEMPLATE_IMPORT_PREVIEW_DIR", previewDir)
 
-	preview, err := service.PreviewImport(
+	preview, err := service.PreviewImportWithContext(
 		context.Background(),
 		2001,
 		"awd-bank-portal-01.zip",
 		bytes.NewReader(buildAWDServiceTemplateImportArchive(t)),
 	)
 	if err != nil {
-		t.Fatalf("PreviewImport() error = %v", err)
+		t.Fatalf("PreviewImportWithContext() error = %v", err)
 	}
 
 	if preview.ID == "" || preview.Slug != "awd-bank-portal-01" {
@@ -41,9 +41,9 @@ func TestAWDServiceTemplateImportFlowPreviewAndCommit(t *testing.T) {
 		t.Fatalf("unexpected preview imported strategy: %+v", preview)
 	}
 
-	committed, err := service.CommitImport(context.Background(), 2001, preview.ID)
+	committed, err := service.CommitImportWithContext(context.Background(), 2001, preview.ID)
 	if err != nil {
-		t.Fatalf("CommitImport() error = %v", err)
+		t.Fatalf("CommitImportWithContext() error = %v", err)
 	}
 
 	if committed.ID == 0 || committed.Slug != "awd-bank-portal-01" {
