@@ -8,7 +8,7 @@
 | 审查范围 | `code/frontend/src` 路由、关键视图、composables、stores、共享样式与验证门禁 |
 | 审查日期 | 2026-04-22 |
 | 审查方式 | 静态代码审查 + 最小验证基线检查 |
-| 审查状态 | 已记录，已完成三轮最小高收益修复 |
+| 审查状态 | 已记录，已完成五轮最小高收益修复 |
 
 ## 当前结论
 
@@ -215,6 +215,30 @@
 - 已执行：
   - `npm run test:run -- src/views/teacher/__tests__/TeacherAWDReviewDetail.test.ts`
   - `npm run test:run -- src/views/teacher/__tests__/teacherDarkSurfaceAlignment.test.ts src/views/teacher/__tests__/teacherSurface.test.ts`
+  - `npm run typecheck`
+
+## 第五轮修复进展
+
+- 已完成：
+  - `P2-5` 路由装配层开始减重，`router/index.ts` 已从单文件明细声明改为只负责装配认证路由、应用壳路由、错误路由和杂项路由。
+  - 学生、教师、平台三组子路由已拆到独立模块，原有 canonical path、redirect 和 meta 字段保持不变，后续继续做大页面收口时可以按分组单独演进。
+  - 新增源码级回归测试，防止后续再把三套路由明细重新堆回 `router/index.ts`。
+- 本轮涉及文件：
+  - `code/frontend/src/router/index.ts`
+  - `code/frontend/src/router/routes/authRoutes.ts`
+  - `code/frontend/src/router/routes/appShellRoute.ts`
+  - `code/frontend/src/router/routes/studentRoutes.ts`
+  - `code/frontend/src/router/routes/teacherRoutes.ts`
+  - `code/frontend/src/router/routes/platformRoutes.ts`
+  - `code/frontend/src/router/routes/errorRoutes.ts`
+  - `code/frontend/src/router/routes/utilityRoutes.ts`
+  - `code/frontend/src/router/routes/route-helpers.ts`
+  - `code/frontend/src/router/__tests__/routeModuleExtraction.test.ts`
+
+## 第五轮验证
+
+- 已执行：
+  - `npm run test:run -- src/router/__tests__/routeModuleExtraction.test.ts src/router/__tests__/sharedRoutes.test.ts src/router/__tests__/guards.test.ts src/router/__tests__/errorRoutes.test.ts`
   - `npm run typecheck`
 
 ## 备注
