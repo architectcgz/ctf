@@ -996,6 +996,9 @@ func ensureManualReviewDecisionStatus(req *dto.ReviewManualReviewSubmissionReq) 
 	if req == nil {
 		return errcode.ErrInvalidParams.WithCause(errors.New("评阅请求不能为空"))
 	}
+	if len([]rune(strings.TrimSpace(req.ReviewComment))) > 4000 {
+		return errcode.ErrInvalidParams.WithCause(errors.New("review_comment 不能超过 4000 个字符"))
+	}
 	if req.ReviewStatus == model.SubmissionReviewStatusApproved || req.ReviewStatus == model.SubmissionReviewStatusRejected {
 		return nil
 	}
