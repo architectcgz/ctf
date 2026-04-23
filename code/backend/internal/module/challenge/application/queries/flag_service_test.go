@@ -8,38 +8,22 @@ import (
 )
 
 type stubChallengeFlagRepository struct {
-	findByIDFn            func(id int64) (*model.Challenge, error)
 	findByIDWithContextFn func(ctx context.Context, id int64) (*model.Challenge, error)
-	updateFn              func(challenge *model.Challenge) error
 	updateWithContextFn   func(ctx context.Context, challenge *model.Challenge) error
-}
-
-func (s *stubChallengeFlagRepository) FindByID(id int64) (*model.Challenge, error) {
-	if s.findByIDFn != nil {
-		return s.findByIDFn(id)
-	}
-	return nil, nil
 }
 
 func (s *stubChallengeFlagRepository) FindByIDWithContext(ctx context.Context, id int64) (*model.Challenge, error) {
 	if s.findByIDWithContextFn != nil {
 		return s.findByIDWithContextFn(ctx, id)
 	}
-	return s.FindByID(id)
-}
-
-func (s *stubChallengeFlagRepository) Update(challenge *model.Challenge) error {
-	if s.updateFn != nil {
-		return s.updateFn(challenge)
-	}
-	return nil
+	return nil, nil
 }
 
 func (s *stubChallengeFlagRepository) UpdateWithContext(ctx context.Context, challenge *model.Challenge) error {
 	if s.updateWithContextFn != nil {
 		return s.updateWithContextFn(ctx, challenge)
 	}
-	return s.Update(challenge)
+	return nil
 }
 
 type challengeFlagContextKey string

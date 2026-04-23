@@ -31,9 +31,7 @@ type ChallengeCommandRepository interface {
 }
 
 type ChallengeFlagRepository interface {
-	FindByID(id int64) (*model.Challenge, error)
 	FindByIDWithContext(ctx context.Context, id int64) (*model.Challenge, error)
-	Update(challenge *model.Challenge) error
 	UpdateWithContext(ctx context.Context, challenge *model.Challenge) error
 }
 
