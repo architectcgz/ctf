@@ -6,23 +6,29 @@ import (
 	"time"
 
 	"go.uber.org/zap"
+	"gorm.io/gorm"
 
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	challengeports "ctf-platform/internal/module/challenge/ports"
 )
 
 type challengeCommandContextRepoStub struct {
-	createWithHintsFn            func(challenge *model.Challenge, hints []*model.ChallengeHint) error
-	createWithHintsWithContextFn func(ctx context.Context, challenge *model.Challenge, hints []*model.ChallengeHint) error
-	findByIDFn                   func(id int64) (*model.Challenge, error)
-	findByIDWithContextFn        func(ctx context.Context, id int64) (*model.Challenge, error)
-	updateFn                     func(challenge *model.Challenge) error
-	updateWithHintsFn            func(challenge *model.Challenge, hints []*model.ChallengeHint, replaceHints bool) error
-	updateWithHintsWithContextFn func(ctx context.Context, challenge *model.Challenge, hints []*model.ChallengeHint, replaceHints bool) error
-	deleteFn                     func(id int64) error
-	deleteWithContextFn          func(ctx context.Context, id int64) error
-	hasRunningInstancesFn        func(challengeID int64) (bool, error)
-	hasRunningInstancesWithCtxFn func(ctx context.Context, challengeID int64) (bool, error)
+	createWithHintsFn               func(challenge *model.Challenge, hints []*model.ChallengeHint) error
+	createWithHintsWithContextFn    func(ctx context.Context, challenge *model.Challenge, hints []*model.ChallengeHint) error
+	findByIDFn                      func(id int64) (*model.Challenge, error)
+	findByIDWithContextFn           func(ctx context.Context, id int64) (*model.Challenge, error)
+	updateFn                        func(challenge *model.Challenge) error
+	updateWithHintsFn               func(challenge *model.Challenge, hints []*model.ChallengeHint, replaceHints bool) error
+	updateWithHintsWithContextFn    func(ctx context.Context, challenge *model.Challenge, hints []*model.ChallengeHint, replaceHints bool) error
+	deleteFn                        func(id int64) error
+	deleteWithContextFn             func(ctx context.Context, id int64) error
+	hasRunningInstancesFn           func(challengeID int64) (bool, error)
+	hasRunningInstancesWithCtxFn    func(ctx context.Context, challengeID int64) (bool, error)
+	createPublishCheckJobFn         func(ctx context.Context, job *model.ChallengePublishCheckJob) error
+	findActivePublishCheckJobByIDFn func(ctx context.Context, challengeID int64) (*model.ChallengePublishCheckJob, error)
+	findLatestPublishCheckJobByIDFn func(ctx context.Context, challengeID int64) (*model.ChallengePublishCheckJob, error)
+	findPublishCheckJobByIDFn       func(ctx context.Context, id int64) (*model.ChallengePublishCheckJob, error)
 }
 
 func (s *challengeCommandContextRepoStub) CreateWithHints(challenge *model.Challenge, hints []*model.ChallengeHint) error {
@@ -103,18 +109,30 @@ func (s *challengeCommandContextRepoStub) HasRunningInstancesWithContext(ctx con
 }
 
 func (s *challengeCommandContextRepoStub) CreatePublishCheckJob(ctx context.Context, job *model.ChallengePublishCheckJob) error {
+	if s.createPublishCheckJobFn != nil {
+		return s.createPublishCheckJobFn(ctx, job)
+	}
 	return nil
 }
 
 func (s *challengeCommandContextRepoStub) FindPublishCheckJobByID(ctx context.Context, id int64) (*model.ChallengePublishCheckJob, error) {
+	if s.findPublishCheckJobByIDFn != nil {
+		return s.findPublishCheckJobByIDFn(ctx, id)
+	}
 	return nil, nil
 }
 
 func (s *challengeCommandContextRepoStub) FindActivePublishCheckJobByChallengeID(ctx context.Context, challengeID int64) (*model.ChallengePublishCheckJob, error) {
+	if s.findActivePublishCheckJobByIDFn != nil {
+		return s.findActivePublishCheckJobByIDFn(ctx, challengeID)
+	}
 	return nil, nil
 }
 
 func (s *challengeCommandContextRepoStub) FindLatestPublishCheckJobByChallengeID(ctx context.Context, challengeID int64) (*model.ChallengePublishCheckJob, error) {
+	if s.findLatestPublishCheckJobByIDFn != nil {
+		return s.findLatestPublishCheckJobByIDFn(ctx, challengeID)
+	}
 	return nil, nil
 }
 
@@ -372,5 +390,209 @@ func TestChallengeServiceDeleteChallengeWithContextPropagatesContextToRepository
 	}
 	if !findCalled || !hasRunningCalled || !deleteCalled {
 		t.Fatalf("expected repository calls, got find=%v hasRunning=%v delete=%v", findCalled, hasRunningCalled, deleteCalled)
+	}
+}
+
+type challengeCommandRuntimeProbeStub struct {
+	createContainerFn func(ctx context.Context, imageName string, env map[string]string) (string, model.InstanceRuntimeDetails, error)
+	createTopologyFn  func(ctx context.Context, req *challengeports.RuntimeTopologyCreateRequest) (*challengeports.RuntimeTopologyCreateResult, error)
+	cleanupFn         func(ctx context.Context, details model.InstanceRuntimeDetails) error
+}
+
+func (s *challengeCommandRuntimeProbeStub) CreateTopology(ctx context.Context, req *challengeports.RuntimeTopologyCreateRequest) (*challengeports.RuntimeTopologyCreateResult, error) {
+	if s.createTopologyFn != nil {
+		return s.createTopologyFn(ctx, req)
+	}
+	return nil, nil
+}
+
+func (s *challengeCommandRuntimeProbeStub) CreateContainer(ctx context.Context, imageName string, env map[string]string) (string, model.InstanceRuntimeDetails, error) {
+	if s.createContainerFn != nil {
+		return s.createContainerFn(ctx, imageName, env)
+	}
+	return "", model.InstanceRuntimeDetails{}, nil
+}
+
+func (s *challengeCommandRuntimeProbeStub) CleanupRuntimeDetails(ctx context.Context, details model.InstanceRuntimeDetails) error {
+	if s.cleanupFn != nil {
+		return s.cleanupFn(ctx, details)
+	}
+	return nil
+}
+
+func TestChallengeServiceRequestPublishCheckPropagatesContextToRepositories(t *testing.T) {
+	t.Parallel()
+
+	ctxKey := challengeCommandContextKey("request-publish-check")
+	expectedCtxValue := "ctx-request-publish-check"
+	findCalled := false
+	activeCalled := false
+	createCalled := false
+
+	repo := &challengeCommandContextRepoStub{
+		findByIDFn: func(id int64) (*model.Challenge, error) {
+			t.Fatal("unexpected legacy find-by-id without context")
+			return nil, nil
+		},
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+			findCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected find challenge ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return &model.Challenge{ID: id, Title: "Publish Me", Status: model.ChallengeStatusDraft}, nil
+		},
+		findActivePublishCheckJobByIDFn: func(ctx context.Context, challengeID int64) (*model.ChallengePublishCheckJob, error) {
+			activeCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected find active job ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return nil, gorm.ErrRecordNotFound
+		},
+		createPublishCheckJobFn: func(ctx context.Context, job *model.ChallengePublishCheckJob) error {
+			createCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected create job ctx value %v, got %v", expectedCtxValue, got)
+			}
+			job.ID = 101
+			return nil
+		},
+	}
+	service := NewChallengeService(nil, repo, &challengeCommandImageRepoStub{}, &challengeCommandTopologyRepoStub{}, nil, SelfCheckConfig{}, zap.NewNop())
+
+	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
+	resp, err := service.RequestPublishCheck(ctx, 1001, 9)
+	if err != nil {
+		t.Fatalf("RequestPublishCheck() error = %v", err)
+	}
+	if !findCalled || !activeCalled || !createCalled {
+		t.Fatalf("expected repository calls, got find=%v active=%v create=%v", findCalled, activeCalled, createCalled)
+	}
+	if resp == nil || resp.ID != 101 || resp.Status != "queued" || !resp.Active {
+		t.Fatalf("unexpected publish check resp: %+v", resp)
+	}
+}
+
+func TestChallengeServiceGetLatestPublishCheckPropagatesContextToRepositories(t *testing.T) {
+	t.Parallel()
+
+	ctxKey := challengeCommandContextKey("latest-publish-check")
+	expectedCtxValue := "ctx-latest-publish-check"
+	findCalled := false
+	latestCalled := false
+	now := time.Now()
+
+	repo := &challengeCommandContextRepoStub{
+		findByIDFn: func(id int64) (*model.Challenge, error) {
+			t.Fatal("unexpected legacy find-by-id without context")
+			return nil, nil
+		},
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+			findCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected find challenge ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return &model.Challenge{ID: id, Title: "Publish Me", UpdatedAt: now}, nil
+		},
+		findLatestPublishCheckJobByIDFn: func(ctx context.Context, challengeID int64) (*model.ChallengePublishCheckJob, error) {
+			latestCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected find latest job ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return &model.ChallengePublishCheckJob{ID: 21, ChallengeID: challengeID, Status: model.ChallengePublishCheckStatusPassed, UpdatedAt: now}, nil
+		},
+	}
+	service := NewChallengeService(nil, repo, &challengeCommandImageRepoStub{}, &challengeCommandTopologyRepoStub{}, nil, SelfCheckConfig{}, zap.NewNop())
+
+	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
+	resp, err := service.GetLatestPublishCheck(ctx, 9)
+	if err != nil {
+		t.Fatalf("GetLatestPublishCheck() error = %v", err)
+	}
+	if !findCalled || !latestCalled {
+		t.Fatalf("expected repository calls, got find=%v latest=%v", findCalled, latestCalled)
+	}
+	if resp == nil || resp.ID != 21 || resp.Status != "succeeded" {
+		t.Fatalf("unexpected latest publish check resp: %+v", resp)
+	}
+}
+
+func TestChallengeServiceSelfCheckChallengePropagatesContextToRepositories(t *testing.T) {
+	t.Parallel()
+
+	ctxKey := challengeCommandContextKey("self-check")
+	expectedCtxValue := "ctx-self-check"
+	findCalled := false
+	imageCalled := false
+	topologyCalled := false
+	createCalled := false
+	cleanupCalled := false
+
+	repo := &challengeCommandContextRepoStub{
+		findByIDFn: func(id int64) (*model.Challenge, error) {
+			t.Fatal("unexpected legacy find-by-id without context")
+			return nil, nil
+		},
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+			findCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected find challenge ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return &model.Challenge{ID: id, Title: "Self Check", ImageID: 7, FlagType: model.FlagTypeStatic, FlagHash: "flag{ok}", FlagSalt: "salt"}, nil
+		},
+	}
+	imageRepo := &challengeCommandImageRepoStub{
+		findByIDFn: func(id int64) (*model.Image, error) {
+			t.Fatal("unexpected legacy image find without context")
+			return nil, nil
+		},
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Image, error) {
+			imageCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected image find ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return &model.Image{ID: id, Name: "ctf/web", Tag: "latest", Status: model.ImageStatusAvailable}, nil
+		},
+	}
+	topologyRepo := &challengeCommandTopologyRepoStub{
+		findChallengeTopologyByChallengeIDFn: func(challengeID int64) (*model.ChallengeTopology, error) {
+			t.Fatal("unexpected legacy topology find without context")
+			return nil, nil
+		},
+		findChallengeTopologyByChallengeIDCtxFn: func(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error) {
+			topologyCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected topology find ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return nil, gorm.ErrRecordNotFound
+		},
+	}
+	probe := &challengeCommandRuntimeProbeStub{
+		createContainerFn: func(ctx context.Context, imageName string, env map[string]string) (string, model.InstanceRuntimeDetails, error) {
+			createCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected runtime create ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return "http://127.0.0.1:30001", model.InstanceRuntimeDetails{Containers: []model.InstanceRuntimeContainer{{ContainerID: "ctr-1"}}, Networks: []model.InstanceRuntimeNetwork{{NetworkID: "net-1"}}}, nil
+		},
+		cleanupFn: func(ctx context.Context, details model.InstanceRuntimeDetails) error {
+			cleanupCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected runtime cleanup ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return nil
+		},
+	}
+	service := NewChallengeService(nil, repo, imageRepo, topologyRepo, probe, SelfCheckConfig{RuntimeCreateTimeout: time.Second}, zap.NewNop())
+
+	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
+	resp, err := service.SelfCheckChallenge(ctx, 9)
+	if err != nil {
+		t.Fatalf("SelfCheckChallenge() error = %v", err)
+	}
+	if !findCalled || !imageCalled || !topologyCalled || !createCalled || !cleanupCalled {
+		t.Fatalf("expected calls, got find=%v image=%v topology=%v create=%v cleanup=%v", findCalled, imageCalled, topologyCalled, createCalled, cleanupCalled)
+	}
+	if resp == nil || !resp.Precheck.Passed || !resp.Runtime.Passed {
+		t.Fatalf("unexpected self-check resp: %+v", resp)
 	}
 }

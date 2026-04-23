@@ -276,7 +276,10 @@ func (s *ChallengeService) PublishChallenge(id int64) error {
 }
 
 func (s *ChallengeService) RequestPublishCheck(ctx context.Context, actorUserID, id int64) (*dto.ChallengePublishCheckJobResp, error) {
-	challenge, err := s.repo.FindByID(id)
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	challenge, err := s.repo.FindByIDWithContext(ctx, id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrChallengeNotFound
@@ -285,9 +288,6 @@ func (s *ChallengeService) RequestPublishCheck(ctx context.Context, actorUserID,
 	}
 	if challenge.Status == model.ChallengeStatusPublished {
 		return nil, errcode.ErrConflict.WithCause(errors.New("题目已发布，无需重复提交发布检查"))
-	}
-	if ctx == nil {
-		ctx = context.Background()
 	}
 
 	active, err := s.repo.FindActivePublishCheckJobByChallengeID(ctx, id)
@@ -318,7 +318,7 @@ func (s *ChallengeService) GetLatestPublishCheck(ctx context.Context, id int64) 
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	challenge, err := s.repo.FindByID(id)
+	challenge, err := s.repo.FindByIDWithContext(ctx, id)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, errcode.ErrChallengeNotFound
 	}
@@ -530,7 +530,10 @@ type challengeSelfCheckRuntimeInput struct {
 }
 
 func (s *ChallengeService) SelfCheckChallenge(ctx context.Context, id int64) (*dto.ChallengeSelfCheckResp, error) {
-	challenge, err := s.repo.FindByID(id)
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	challenge, err := s.repo.FindByIDWithContext(ctx, id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrChallengeNotFound
@@ -543,7 +546,7 @@ func (s *ChallengeService) SelfCheckChallenge(ctx context.Context, id int64) (*d
 	}
 
 	resp.Precheck.StartedAt = time.Now()
-	input, precheckPassed, err := s.runPrecheck(challenge, &resp.Precheck.Steps)
+	input, precheckPassed, err := s.runPrecheckWithContext(ctx, challenge, &resp.Precheck.Steps)
 	resp.Precheck.EndedAt = time.Now()
 	if err != nil {
 		return nil, err
@@ -580,9 +583,6 @@ func (s *ChallengeService) SelfCheckChallenge(ctx context.Context, id int64) (*d
 		return resp, nil
 	}
 
-	if ctx == nil {
-		ctx = context.Background()
-	}
 	createCtx, cancel := context.WithTimeout(ctx, s.selfCheckCfg.RuntimeCreateTimeout)
 	defer cancel()
 
@@ -685,6 +685,13 @@ func (s *ChallengeService) SelfCheckChallenge(ctx context.Context, id int64) (*d
 }
 
 func (s *ChallengeService) runPrecheck(challenge *model.Challenge, steps *[]dto.ChallengeSelfCheckStepResp) (challengeSelfCheckRuntimeInput, bool, error) {
+	return s.runPrecheckWithContext(context.Background(), challenge, steps)
+}
+
+func (s *ChallengeService) runPrecheckWithContext(ctx context.Context, challenge *model.Challenge, steps *[]dto.ChallengeSelfCheckStepResp) (challengeSelfCheckRuntimeInput, bool, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
 	input := challengeSelfCheckRuntimeInput{
 		nodeImageRefs: make(map[int64]string),
 	}
@@ -701,7 +708,7 @@ func (s *ChallengeService) runPrecheck(challenge *model.Challenge, steps *[]dto.
 	}
 
 	if challenge.ImageID > 0 {
-		imageRef, err := s.resolveAvailableImageRef(challenge.ImageID)
+		imageRef, err := s.resolveAvailableImageRefWithContext(ctx, challenge.ImageID)
 		if err != nil {
 			passed = false
 			*steps = append(*steps, dto.ChallengeSelfCheckStepResp{
@@ -728,7 +735,7 @@ func (s *ChallengeService) runPrecheck(challenge *model.Challenge, steps *[]dto.
 	if s.topologyRepo == nil {
 		return input, false, errcode.ErrInternal.WithCause(errors.New("challenge topology repository is not configured"))
 	}
-	topology, err := s.topologyRepo.FindChallengeTopologyByChallengeID(challenge.ID)
+	topology, err := s.topologyRepo.FindChallengeTopologyByChallengeIDWithContext(ctx, challenge.ID)
 	if err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			return input, false, err
@@ -794,7 +801,7 @@ func (s *ChallengeService) runPrecheck(challenge *model.Challenge, steps *[]dto.
 		if _, exists := input.nodeImageRefs[node.ImageID]; exists {
 			continue
 		}
-		nodeImageRef, resolveErr := s.resolveAvailableImageRef(node.ImageID)
+		nodeImageRef, resolveErr := s.resolveAvailableImageRefWithContext(ctx, node.ImageID)
 		if resolveErr != nil {
 			passed = false
 			*steps = append(*steps, dto.ChallengeSelfCheckStepResp{
@@ -965,10 +972,17 @@ func (s *ChallengeService) buildTopologyRuntimeRequest(
 }
 
 func (s *ChallengeService) resolveAvailableImageRef(imageID int64) (string, error) {
+	return s.resolveAvailableImageRefWithContext(context.Background(), imageID)
+}
+
+func (s *ChallengeService) resolveAvailableImageRefWithContext(ctx context.Context, imageID int64) (string, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
 	if imageID <= 0 {
 		return "", fmt.Errorf("invalid image id")
 	}
-	imageItem, err := s.imageRepo.FindByID(imageID)
+	imageItem, err := s.imageRepo.FindByIDWithContext(ctx, imageID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return "", errcode.ErrNotFound.WithCause(errors.New(domain.ErrMsgImageNotFound))
