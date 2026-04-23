@@ -522,14 +522,22 @@ func (r *Repository) FindChallengeTopologyByChallengeIDWithContext(ctx context.C
 }
 
 func (r *Repository) UpsertChallengeTopology(topology *model.ChallengeTopology) error {
-	return r.db.Clauses(clause.OnConflict{
+	return r.UpsertChallengeTopologyWithContext(context.Background(), topology)
+}
+
+func (r *Repository) UpsertChallengeTopologyWithContext(ctx context.Context, topology *model.ChallengeTopology) error {
+	return r.dbWithContext(ctx).Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "challenge_id"}},
 		DoUpdates: clause.AssignmentColumns([]string{"template_id", "entry_node_key", "spec", "updated_at", "deleted_at"}),
 	}).Create(topology).Error
 }
 
 func (r *Repository) DeleteChallengeTopologyByChallengeID(challengeID int64) error {
-	return r.db.Where("challenge_id = ?", challengeID).Delete(&model.ChallengeTopology{}).Error
+	return r.DeleteChallengeTopologyByChallengeIDWithContext(context.Background(), challengeID)
+}
+
+func (r *Repository) DeleteChallengeTopologyByChallengeIDWithContext(ctx context.Context, challengeID int64) error {
+	return r.dbWithContext(ctx).Where("challenge_id = ?", challengeID).Delete(&model.ChallengeTopology{}).Error
 }
 
 type TemplateRepository struct {
@@ -540,16 +548,35 @@ func NewTemplateRepository(db *gorm.DB) *TemplateRepository {
 	return &TemplateRepository{db: db}
 }
 
+func (r *TemplateRepository) dbWithContext(ctx context.Context) *gorm.DB {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	return r.db.WithContext(ctx)
+}
+
 func (r *TemplateRepository) Create(template *model.EnvironmentTemplate) error {
-	return r.db.Create(template).Error
+	return r.CreateWithContext(context.Background(), template)
+}
+
+func (r *TemplateRepository) CreateWithContext(ctx context.Context, template *model.EnvironmentTemplate) error {
+	return r.dbWithContext(ctx).Create(template).Error
 }
 
 func (r *TemplateRepository) Update(template *model.EnvironmentTemplate) error {
-	return r.db.Save(template).Error
+	return r.UpdateWithContext(context.Background(), template)
+}
+
+func (r *TemplateRepository) UpdateWithContext(ctx context.Context, template *model.EnvironmentTemplate) error {
+	return r.dbWithContext(ctx).Save(template).Error
 }
 
 func (r *TemplateRepository) Delete(id int64) error {
-	return r.db.Delete(&model.EnvironmentTemplate{}, id).Error
+	return r.DeleteWithContext(context.Background(), id)
+}
+
+func (r *TemplateRepository) DeleteWithContext(ctx context.Context, id int64) error {
+	return r.dbWithContext(ctx).Delete(&model.EnvironmentTemplate{}, id).Error
 }
 
 func (r *TemplateRepository) FindByID(id int64) (*model.EnvironmentTemplate, error) {
@@ -557,11 +584,8 @@ func (r *TemplateRepository) FindByID(id int64) (*model.EnvironmentTemplate, err
 }
 
 func (r *TemplateRepository) FindByIDWithContext(ctx context.Context, id int64) (*model.EnvironmentTemplate, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
 	var template model.EnvironmentTemplate
-	err := r.db.WithContext(ctx).Where("id = ?", id).First(&template).Error
+	err := r.dbWithContext(ctx).Where("id = ?", id).First(&template).Error
 	if err != nil {
 		return nil, err
 	}
@@ -573,11 +597,8 @@ func (r *TemplateRepository) List(keyword string) ([]*model.EnvironmentTemplate,
 }
 
 func (r *TemplateRepository) ListWithContext(ctx context.Context, keyword string) ([]*model.EnvironmentTemplate, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
 	var templates []*model.EnvironmentTemplate
-	db := r.db.WithContext(ctx).Model(&model.EnvironmentTemplate{})
+	db := r.dbWithContext(ctx).Model(&model.EnvironmentTemplate{})
 	if keyword != "" {
 		pattern := "%" + keyword + "%"
 		db = db.Where("name LIKE ? OR description LIKE ?", pattern, pattern)
@@ -587,7 +608,11 @@ func (r *TemplateRepository) ListWithContext(ctx context.Context, keyword string
 }
 
 func (r *TemplateRepository) IncrementUsage(id int64) error {
-	return r.db.Model(&model.EnvironmentTemplate{}).
+	return r.IncrementUsageWithContext(context.Background(), id)
+}
+
+func (r *TemplateRepository) IncrementUsageWithContext(ctx context.Context, id int64) error {
+	return r.dbWithContext(ctx).Model(&model.EnvironmentTemplate{}).
 		Where("id = ?", id).
 		UpdateColumn("usage_count", gorm.Expr("usage_count + 1")).Error
 }

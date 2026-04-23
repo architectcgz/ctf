@@ -9,12 +9,14 @@ import (
 )
 
 type stubChallengeTopologyRepository struct {
-	findByIDFn                              func(id int64) (*model.Challenge, error)
-	findByIDWithContextFn                   func(ctx context.Context, id int64) (*model.Challenge, error)
-	findChallengeTopologyByChallengeIDFn    func(challengeID int64) (*model.ChallengeTopology, error)
-	findChallengeTopologyByChallengeIDCtxFn func(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error)
-	upsertChallengeTopologyFn               func(topology *model.ChallengeTopology) error
-	deleteChallengeTopologyByChallengeIDFn  func(challengeID int64) error
+	findByIDFn                                    func(id int64) (*model.Challenge, error)
+	findByIDWithContextFn                         func(ctx context.Context, id int64) (*model.Challenge, error)
+	findChallengeTopologyByChallengeIDFn          func(challengeID int64) (*model.ChallengeTopology, error)
+	findChallengeTopologyByChallengeIDCtxFn       func(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error)
+	upsertChallengeTopologyFn                     func(topology *model.ChallengeTopology) error
+	upsertChallengeTopologyWithContextFn          func(ctx context.Context, topology *model.ChallengeTopology) error
+	deleteChallengeTopologyByChallengeIDFn        func(challengeID int64) error
+	deleteChallengeTopologyByChallengeIDWithCtxFn func(ctx context.Context, challengeID int64) error
 }
 
 func (s *stubChallengeTopologyRepository) FindByID(id int64) (*model.Challenge, error) {
@@ -52,6 +54,13 @@ func (s *stubChallengeTopologyRepository) UpsertChallengeTopology(topology *mode
 	return nil
 }
 
+func (s *stubChallengeTopologyRepository) UpsertChallengeTopologyWithContext(ctx context.Context, topology *model.ChallengeTopology) error {
+	if s.upsertChallengeTopologyWithContextFn != nil {
+		return s.upsertChallengeTopologyWithContextFn(ctx, topology)
+	}
+	return s.UpsertChallengeTopology(topology)
+}
+
 func (s *stubChallengeTopologyRepository) DeleteChallengeTopologyByChallengeID(challengeID int64) error {
 	if s.deleteChallengeTopologyByChallengeIDFn != nil {
 		return s.deleteChallengeTopologyByChallengeIDFn(challengeID)
@@ -59,15 +68,26 @@ func (s *stubChallengeTopologyRepository) DeleteChallengeTopologyByChallengeID(c
 	return nil
 }
 
+func (s *stubChallengeTopologyRepository) DeleteChallengeTopologyByChallengeIDWithContext(ctx context.Context, challengeID int64) error {
+	if s.deleteChallengeTopologyByChallengeIDWithCtxFn != nil {
+		return s.deleteChallengeTopologyByChallengeIDWithCtxFn(ctx, challengeID)
+	}
+	return s.DeleteChallengeTopologyByChallengeID(challengeID)
+}
+
 type stubEnvironmentTemplateRepository struct {
-	createFn          func(template *model.EnvironmentTemplate) error
-	updateFn          func(template *model.EnvironmentTemplate) error
-	deleteFn          func(id int64) error
-	findByIDFn        func(id int64) (*model.EnvironmentTemplate, error)
-	findByIDWithCtxFn func(ctx context.Context, id int64) (*model.EnvironmentTemplate, error)
-	listFn            func(keyword string) ([]*model.EnvironmentTemplate, error)
-	listWithCtxFn     func(ctx context.Context, keyword string) ([]*model.EnvironmentTemplate, error)
-	incrementUsageFn  func(id int64) error
+	createFn                func(template *model.EnvironmentTemplate) error
+	createWithContextFn     func(ctx context.Context, template *model.EnvironmentTemplate) error
+	updateFn                func(template *model.EnvironmentTemplate) error
+	updateWithContextFn     func(ctx context.Context, template *model.EnvironmentTemplate) error
+	deleteFn                func(id int64) error
+	deleteWithContextFn     func(ctx context.Context, id int64) error
+	findByIDFn              func(id int64) (*model.EnvironmentTemplate, error)
+	findByIDWithCtxFn       func(ctx context.Context, id int64) (*model.EnvironmentTemplate, error)
+	listFn                  func(keyword string) ([]*model.EnvironmentTemplate, error)
+	listWithCtxFn           func(ctx context.Context, keyword string) ([]*model.EnvironmentTemplate, error)
+	incrementUsageFn        func(id int64) error
+	incrementUsageWithCtxFn func(ctx context.Context, id int64) error
 }
 
 func (s *stubEnvironmentTemplateRepository) Create(template *model.EnvironmentTemplate) error {
@@ -77,6 +97,13 @@ func (s *stubEnvironmentTemplateRepository) Create(template *model.EnvironmentTe
 	return nil
 }
 
+func (s *stubEnvironmentTemplateRepository) CreateWithContext(ctx context.Context, template *model.EnvironmentTemplate) error {
+	if s.createWithContextFn != nil {
+		return s.createWithContextFn(ctx, template)
+	}
+	return s.Create(template)
+}
+
 func (s *stubEnvironmentTemplateRepository) Update(template *model.EnvironmentTemplate) error {
 	if s.updateFn != nil {
 		return s.updateFn(template)
@@ -84,11 +111,25 @@ func (s *stubEnvironmentTemplateRepository) Update(template *model.EnvironmentTe
 	return nil
 }
 
+func (s *stubEnvironmentTemplateRepository) UpdateWithContext(ctx context.Context, template *model.EnvironmentTemplate) error {
+	if s.updateWithContextFn != nil {
+		return s.updateWithContextFn(ctx, template)
+	}
+	return s.Update(template)
+}
+
 func (s *stubEnvironmentTemplateRepository) Delete(id int64) error {
 	if s.deleteFn != nil {
 		return s.deleteFn(id)
 	}
 	return nil
+}
+
+func (s *stubEnvironmentTemplateRepository) DeleteWithContext(ctx context.Context, id int64) error {
+	if s.deleteWithContextFn != nil {
+		return s.deleteWithContextFn(ctx, id)
+	}
+	return s.Delete(id)
 }
 
 func (s *stubEnvironmentTemplateRepository) FindByID(id int64) (*model.EnvironmentTemplate, error) {
@@ -124,6 +165,13 @@ func (s *stubEnvironmentTemplateRepository) IncrementUsage(id int64) error {
 		return s.incrementUsageFn(id)
 	}
 	return nil
+}
+
+func (s *stubEnvironmentTemplateRepository) IncrementUsageWithContext(ctx context.Context, id int64) error {
+	if s.incrementUsageWithCtxFn != nil {
+		return s.incrementUsageWithCtxFn(ctx, id)
+	}
+	return s.IncrementUsage(id)
 }
 
 type challengeTopologyContextKey string
