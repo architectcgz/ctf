@@ -2569,6 +2569,36 @@ func TestListTeacherManualReviewSubmissionsWithContextRejectsNonPositiveChalleng
 	}
 }
 
+func TestListTeacherManualReviewSubmissionsWithContextRejectsOversizedClassName(t *testing.T) {
+	t.Parallel()
+
+	repo := &stubPracticeRepository{
+		findUserByIDWithContextFn: func(ctx context.Context, userID int64) (*model.User, error) {
+			t.Fatal("did not expect requester lookup for oversized class name")
+			return nil, nil
+		},
+		listTeacherManualReviewSubmissionsWithContextFn: func(ctx context.Context, query *dto.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error) {
+			t.Fatal("did not expect list repository call for oversized class name")
+			return nil, 0, nil
+		},
+	}
+	service := NewService(repo, nil, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
+
+	_, err := service.ListTeacherManualReviewSubmissionsWithContext(
+		context.Background(),
+		1001,
+		model.RoleAdmin,
+		&dto.TeacherManualReviewSubmissionQuery{ClassName: strings.Repeat("A", 129)},
+	)
+	if err == nil {
+		t.Fatal("expected oversized class name to be rejected")
+	}
+	var appErr *errcode.AppError
+	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrInvalidParams.Code {
+		t.Fatalf("expected invalid params error, got %v", err)
+	}
+}
+
 func TestGetTeacherManualReviewSubmissionWithContextPropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
