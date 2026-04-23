@@ -23,6 +23,7 @@ type imageCommandService interface {
 
 type imageQueryService interface {
 	GetImage(id int64) (*dto.ImageResp, error)
+	GetImageWithContext(ctx context.Context, id int64) (*dto.ImageResp, error)
 	ListImages(query *dto.ImageQuery) (*dto.PageResult, error)
 }
 
@@ -53,7 +54,7 @@ func (h *ImageHandler) GetImage(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.queries.GetImage(id)
+	resp, err := h.queries.GetImageWithContext(c.Request.Context(), id)
 	if err != nil {
 		response.FromError(c, err)
 		return

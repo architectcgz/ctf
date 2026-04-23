@@ -1,6 +1,8 @@
 package infrastructure
 
 import (
+	"context"
+
 	"ctf-platform/internal/model"
 
 	"gorm.io/gorm"
@@ -19,8 +21,15 @@ func (r *ImageRepository) Create(image *model.Image) error {
 }
 
 func (r *ImageRepository) FindByID(id int64) (*model.Image, error) {
+	return r.FindByIDWithContext(context.Background(), id)
+}
+
+func (r *ImageRepository) FindByIDWithContext(ctx context.Context, id int64) (*model.Image, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
 	var image model.Image
-	err := r.db.Where("id = ?", id).First(&image).Error
+	err := r.db.WithContext(ctx).Where("id = ?", id).First(&image).Error
 	if err != nil {
 		return nil, err
 	}

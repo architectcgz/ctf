@@ -117,6 +117,7 @@ type ChallengeTopologyRepository interface {
 type ImageRepository interface {
 	Create(image *model.Image) error
 	FindByID(id int64) (*model.Image, error)
+	FindByIDWithContext(ctx context.Context, id int64) (*model.Image, error)
 	FindByNameTag(name, tag string) (*model.Image, error)
 	List(name, status string, offset, limit int) ([]*model.Image, int64, error)
 	Update(image *model.Image) error
