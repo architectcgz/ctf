@@ -276,6 +276,36 @@ func TestSubmissionServiceSubmitFlagInContestAcceptsSharedStaticFlagChallenge(t 
 	}
 }
 
+func TestSubmissionServiceSubmitFlagInContestDoesNotPersistSubmittedFlag(t *testing.T) {
+	service, _, db := newContestSubmissionTestService(t)
+
+	now := time.Now()
+	contestID := int64(15)
+	challengeID := int64(115)
+	teamID := int64(151)
+	userID := int64(1501)
+	inputFlag := "flag{contest-dynamic}"
+
+	createContestSubmissionFixture(t, db, contestID, challengeID, now)
+	testsupport.CreateContestTeamRegistration(t, db, contestID, teamID, userID, "Red", now)
+
+	resp, err := service.SubmitFlagInContest(context.Background(), userID, contestID, challengeID, inputFlag)
+	if err != nil {
+		t.Fatalf("SubmitFlagInContest() error = %v", err)
+	}
+	if !resp.IsCorrect {
+		t.Fatalf("expected correct response, got %+v", resp)
+	}
+
+	var submission model.Submission
+	if err := db.Where("contest_id = ? AND user_id = ? AND challenge_id = ?", contestID, userID, challengeID).First(&submission).Error; err != nil {
+		t.Fatalf("load submission: %v", err)
+	}
+	if submission.Flag != "" {
+		t.Fatalf("expected contest submission flag to be redacted, got %q", submission.Flag)
+	}
+}
+
 func TestScoreboardServiceRebuildScoreboardUsesTeamTotals(t *testing.T) {
 	db := testsupport.SetupContestTestDB(t)
 
