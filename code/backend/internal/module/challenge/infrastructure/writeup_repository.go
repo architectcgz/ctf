@@ -42,8 +42,15 @@ func (r *Repository) DeleteWriteupByChallengeID(challengeID int64) error {
 }
 
 func (r *Repository) FindReleasedWriteupByChallengeID(challengeID int64, now time.Time) (*model.ChallengeWriteup, error) {
+	return r.FindReleasedWriteupByChallengeIDWithContext(context.Background(), challengeID, now)
+}
+
+func (r *Repository) FindReleasedWriteupByChallengeIDWithContext(ctx context.Context, challengeID int64, now time.Time) (*model.ChallengeWriteup, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
 	var writeup model.ChallengeWriteup
-	err := r.db.
+	err := r.db.WithContext(ctx).
 		Where("challenge_id = ?", challengeID).
 		Where("visibility = ?", model.WriteupVisibilityPublic).
 		First(&writeup).Error

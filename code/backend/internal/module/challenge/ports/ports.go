@@ -71,7 +71,9 @@ type ChallengeWriteupRepository interface {
 	UpsertWriteup(writeup *model.ChallengeWriteup) error
 	DeleteWriteupByChallengeID(challengeID int64) error
 	FindReleasedWriteupByChallengeID(challengeID int64, now time.Time) (*model.ChallengeWriteup, error)
+	FindReleasedWriteupByChallengeIDWithContext(ctx context.Context, challengeID int64, now time.Time) (*model.ChallengeWriteup, error)
 	GetSolvedStatus(userID, challengeID int64) (bool, error)
+	GetSolvedStatusWithContext(ctx context.Context, userID, challengeID int64) (bool, error)
 	FindSubmissionWriteupByUserChallenge(userID, challengeID int64) (*model.SubmissionWriteup, error)
 	FindSubmissionWriteupByUserChallengeWithContext(ctx context.Context, userID, challengeID int64) (*model.SubmissionWriteup, error)
 	FindSubmissionWriteupByID(id int64) (*model.SubmissionWriteup, error)

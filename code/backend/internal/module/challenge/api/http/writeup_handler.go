@@ -32,6 +32,7 @@ type writeupQueryService interface {
 	GetAdmin(challengeID int64) (*dto.AdminChallengeWriteupResp, error)
 	GetAdminWithContext(ctx context.Context, challengeID int64) (*dto.AdminChallengeWriteupResp, error)
 	GetPublished(userID, challengeID int64) (*dto.ChallengeWriteupResp, error)
+	GetPublishedWithContext(ctx context.Context, userID, challengeID int64) (*dto.ChallengeWriteupResp, error)
 	GetMySubmission(userID, challengeID int64) (*dto.SubmissionWriteupResp, error)
 	GetMySubmissionWithContext(ctx context.Context, userID, challengeID int64) (*dto.SubmissionWriteupResp, error)
 	ListRecommendedSolutions(userID, challengeID int64) (*dto.PageResult, error)
@@ -124,7 +125,7 @@ func (h *WriteupHandler) GetPublished(c *gin.Context) {
 		response.InvalidParams(c, "无效的 challenge id")
 		return
 	}
-	resp, err := h.queries.GetPublished(authctx.MustCurrentUser(c).UserID, challengeID)
+	resp, err := h.queries.GetPublishedWithContext(c.Request.Context(), authctx.MustCurrentUser(c).UserID, challengeID)
 	if err != nil {
 		response.FromError(c, err)
 		return
