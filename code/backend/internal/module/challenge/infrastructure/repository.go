@@ -66,7 +66,11 @@ func (r *Repository) FindByIDWithContext(ctx context.Context, id int64) (*model.
 }
 
 func (r *Repository) Update(challenge *model.Challenge) error {
-	return r.db.Save(challenge).Error
+	return r.UpdateWithContext(context.Background(), challenge)
+}
+
+func (r *Repository) UpdateWithContext(ctx context.Context, challenge *model.Challenge) error {
+	return r.dbWithContext(ctx).Save(challenge).Error
 }
 
 func (r *Repository) UpdateWithHints(challenge *model.Challenge, hints []*model.ChallengeHint, replaceHints bool) error {

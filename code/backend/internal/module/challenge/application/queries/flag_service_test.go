@@ -11,6 +11,7 @@ type stubChallengeFlagRepository struct {
 	findByIDFn            func(id int64) (*model.Challenge, error)
 	findByIDWithContextFn func(ctx context.Context, id int64) (*model.Challenge, error)
 	updateFn              func(challenge *model.Challenge) error
+	updateWithContextFn   func(ctx context.Context, challenge *model.Challenge) error
 }
 
 func (s *stubChallengeFlagRepository) FindByID(id int64) (*model.Challenge, error) {
@@ -32,6 +33,13 @@ func (s *stubChallengeFlagRepository) Update(challenge *model.Challenge) error {
 		return s.updateFn(challenge)
 	}
 	return nil
+}
+
+func (s *stubChallengeFlagRepository) UpdateWithContext(ctx context.Context, challenge *model.Challenge) error {
+	if s.updateWithContextFn != nil {
+		return s.updateWithContextFn(ctx, challenge)
+	}
+	return s.Update(challenge)
 }
 
 type challengeFlagContextKey string
