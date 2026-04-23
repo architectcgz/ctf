@@ -761,6 +761,11 @@ func (s *Service) ReviewManualReviewSubmissionWithContext(
 	item.ReviewedAt = &now
 	item.UpdatedAt = now
 	if req.ReviewStatus == model.SubmissionReviewStatusApproved {
+		if _, err := s.repo.FindCorrectSubmissionWithContext(ctx, item.UserID, item.ChallengeID); err == nil {
+			return nil, errcode.ErrAlreadySolved
+		} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errcode.ErrInternal.WithCause(err)
+		}
 		item.IsCorrect = true
 		item.Score = challengeItem.Points
 	} else {
