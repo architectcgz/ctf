@@ -170,12 +170,13 @@ func (s *stubPracticeChallengeContract) FindChallengeTopologyByChallengeID(chall
 }
 
 type stubPracticeInstanceStore struct {
-	findByIDWithContextFn               func(ctx context.Context, id int64) (*model.Instance, error)
-	refreshInstanceExpiryFn             func(instanceID int64, expiresAt time.Time) error
-	refreshInstanceExpiryWithContextFn  func(ctx context.Context, instanceID int64, expiresAt time.Time) error
-	updateStatusAndReleasePortFn        func(id int64, status string) error
-	findByUserAndChallengeFn            func(userID, challengeID int64) (*model.Instance, error)
-	findByUserAndChallengeWithContextFn func(ctx context.Context, userID, challengeID int64) (*model.Instance, error)
+	findByIDWithContextFn                   func(ctx context.Context, id int64) (*model.Instance, error)
+	refreshInstanceExpiryFn                 func(instanceID int64, expiresAt time.Time) error
+	refreshInstanceExpiryWithContextFn      func(ctx context.Context, instanceID int64, expiresAt time.Time) error
+	updateStatusAndReleasePortFn            func(id int64, status string) error
+	updateStatusAndReleasePortWithContextFn func(ctx context.Context, id int64, status string) error
+	findByUserAndChallengeFn                func(userID, challengeID int64) (*model.Instance, error)
+	findByUserAndChallengeWithContextFn     func(ctx context.Context, userID, challengeID int64) (*model.Instance, error)
 }
 
 func (s *stubPracticeInstanceStore) FindByIDWithContext(ctx context.Context, id int64) (*model.Instance, error) {
@@ -208,6 +209,13 @@ func (s *stubPracticeInstanceStore) UpdateStatusAndReleasePort(id int64, status 
 		return s.updateStatusAndReleasePortFn(id, status)
 	}
 	return nil
+}
+
+func (s *stubPracticeInstanceStore) UpdateStatusAndReleasePortWithContext(ctx context.Context, id int64, status string) error {
+	if s.updateStatusAndReleasePortWithContextFn != nil {
+		return s.updateStatusAndReleasePortWithContextFn(ctx, id, status)
+	}
+	return s.UpdateStatusAndReleasePort(id, status)
 }
 
 func (s *stubPracticeInstanceStore) FindByUserAndChallenge(userID, challengeID int64) (*model.Instance, error) {
@@ -1592,6 +1600,85 @@ func TestProvisionInstanceMarksInstanceFailedWhenAccessURLIsNotReady(t *testing.
 	}
 	if cleanupCalls.Load() != 1 {
 		t.Fatalf("expected cleanup to be called once, got %d", cleanupCalls.Load())
+	}
+}
+
+func TestProvisionInstanceMarksInstanceFailedWithContext(t *testing.T) {
+	t.Parallel()
+
+	db := newPracticeCommandTestDB(t)
+	now := time.Now()
+	if err := db.Create(&model.Image{
+		ID:        105,
+		Name:      "ctf/web",
+		Tag:       "v1",
+		Status:    model.ImageStatusAvailable,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}).Error; err != nil {
+		t.Fatalf("create image: %v", err)
+	}
+
+	ctxKey := practiceServiceContextKey("mark-failed")
+	const expectedCtxValue = "practice-provision-failure"
+
+	var markedFailed atomic.Int32
+	service := NewService(
+		nil,
+		nil,
+		challengeinfra.NewImageRepository(db),
+		&stubPracticeInstanceStore{
+			updateStatusAndReleasePortFn: func(id int64, status string) error {
+				t.Fatalf("expected context-aware failed status update, got legacy call id=%d status=%s", id, status)
+				return nil
+			},
+			updateStatusAndReleasePortWithContextFn: func(ctx context.Context, id int64, status string) error {
+				markedFailed.Add(1)
+				if got := ctx.Value(ctxKey); got != expectedCtxValue {
+					t.Fatalf("expected failed status update ctx value %v, got %v", expectedCtxValue, got)
+				}
+				if id != 611 {
+					t.Fatalf("expected failed instance id 611, got %d", id)
+				}
+				if status != model.InstanceStatusFailed {
+					t.Fatalf("expected failed instance status %s, got %s", model.InstanceStatusFailed, status)
+				}
+				return nil
+			},
+		},
+		&stubPracticeRuntimeService{
+			createContainerFn: func(ctx context.Context, imageName string, env map[string]string, reservedHostPort int) (string, string, int, int, error) {
+				if got := ctx.Value(ctxKey); got != expectedCtxValue {
+					t.Fatalf("expected create container ctx value %v, got %v", expectedCtxValue, got)
+				}
+				return "ctr-ctx", "net-ctx", reservedHostPort, 8080, nil
+			},
+		},
+		nil,
+		nil,
+		nil,
+		&config.Config{
+			Container: config.ContainerConfig{
+				PublicHost:         "127.0.0.1",
+				CreateTimeout:      time.Second,
+				StartProbeTimeout:  20 * time.Millisecond,
+				StartProbeInterval: 10 * time.Millisecond,
+				StartProbeAttempts: 1,
+			},
+		},
+		nil,
+	)
+
+	instance := &model.Instance{ID: 611, ChallengeID: 711, HostPort: reserveClosedLoopbackPort(t), Status: model.InstanceStatusCreating}
+	challenge := &model.Challenge{ID: 711, ImageID: 105, Status: model.ChallengeStatusPublished}
+	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
+
+	err := service.provisionInstance(ctx, instance, challenge, nil, "flag{ctx}")
+	if err == nil || err.Error() != errcode.ErrContainerStartFailed.Error() {
+		t.Fatalf("expected container start failed error, got %v", err)
+	}
+	if markedFailed.Load() != 1 {
+		t.Fatalf("expected failed status update once, got %d", markedFailed.Load())
 	}
 }
 

@@ -247,14 +247,17 @@ func (s *Service) startChallengeWithScope(ctx context.Context, userID, challenge
 	return domain.InstanceRespFromModel(instance), nil
 }
 
-func (s *Service) markInstanceFailed(instance *model.Instance) {
+func (s *Service) markInstanceFailed(ctx context.Context, instance *model.Instance) {
 	if instance == nil {
 		return
 	}
 	if err := s.runtimeService.CleanupRuntime(instance); err != nil {
 		s.logger.Warn("清理失败实例运行时资源失败", zap.Int64("instance_id", instance.ID), zap.Error(err))
 	}
-	if err := s.instanceRepo.UpdateStatusAndReleasePort(instance.ID, model.InstanceStatusFailed); err != nil {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	if err := s.instanceRepo.UpdateStatusAndReleasePortWithContext(ctx, instance.ID, model.InstanceStatusFailed); err != nil {
 		s.logger.Warn("更新失败实例状态并释放端口失败", zap.Int64("instance_id", instance.ID), zap.Int("host_port", instance.HostPort), zap.Error(err))
 	}
 }
@@ -366,14 +369,14 @@ func (s *Service) processPendingInstance(ctx context.Context, instanceID int64) 
 	chal, topology, err := s.loadRuntimeSubjectForInstance(ctx, instance)
 	if err != nil {
 		s.logger.Error("读取题目失败", zap.Int64("instance_id", instanceID), zap.Int64("challenge_id", instance.ChallengeID), zap.Error(err))
-		s.markInstanceFailed(instance)
+		s.markInstanceFailed(ctx, instance)
 		return
 	}
 
 	flag, err := s.buildProvisioningFlag(instance, chal)
 	if err != nil {
 		s.logger.Error("生成实例 Flag 失败", zap.Int64("instance_id", instanceID), zap.Error(err))
-		s.markInstanceFailed(instance)
+		s.markInstanceFailed(ctx, instance)
 		return
 	}
 
@@ -388,19 +391,19 @@ func (s *Service) provisionInstance(ctx context.Context, instance *model.Instanc
 
 	if err := s.createContainer(createCtx, instance, chal, topology, flag); err != nil {
 		s.logger.Error("容器创建失败", zap.Error(err), zap.Int64("instance_id", instance.ID))
-		s.markInstanceFailed(instance)
+		s.markInstanceFailed(ctx, instance)
 		return err
 	}
 	if err := s.waitForInstanceReadiness(createCtx, instance.AccessURL); err != nil {
 		s.logger.Error("实例访问地址未就绪", zap.Error(err), zap.Int64("instance_id", instance.ID), zap.String("access_url", instance.AccessURL))
-		s.markInstanceFailed(instance)
+		s.markInstanceFailed(ctx, instance)
 		return errcode.ErrContainerStartFailed.WithCause(err)
 	}
 
 	instance.Status = model.InstanceStatusRunning
 	if err := s.instanceRepo.UpdateRuntime(instance); err != nil {
 		s.logger.Error("更新实例状态失败", zap.Error(err), zap.Int64("instance_id", instance.ID))
-		s.markInstanceFailed(instance)
+		s.markInstanceFailed(ctx, instance)
 		return errcode.ErrInternal.WithCause(err)
 	}
 

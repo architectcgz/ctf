@@ -107,6 +107,7 @@ type InstanceRepository interface {
 	RefreshInstanceExpiry(instanceID int64, expiresAt time.Time) error
 	RefreshInstanceExpiryWithContext(ctx context.Context, instanceID int64, expiresAt time.Time) error
 	UpdateStatusAndReleasePort(id int64, status string) error
+	UpdateStatusAndReleasePortWithContext(ctx context.Context, id int64, status string) error
 	FindByUserAndChallenge(userID, challengeID int64) (*model.Instance, error)
 	FindByUserAndChallengeWithContext(ctx context.Context, userID, challengeID int64) (*model.Instance, error)
 	ListPendingInstancesWithContext(ctx context.Context, limit int) ([]*model.Instance, error)
