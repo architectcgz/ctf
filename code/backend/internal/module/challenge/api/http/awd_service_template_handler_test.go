@@ -10,6 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
 )
 
@@ -49,7 +50,10 @@ func newJSONTestContext(t *testing.T, method, target, body string) (*gin.Context
 	return ctx, recorder
 }
 
-type stubAWDServiceTemplateCommandService struct{}
+type stubAWDServiceTemplateCommandService struct {
+	listImportsWithContextFunc func(ctx context.Context, actorUserID int64) ([]dto.AWDServiceTemplateImportPreviewResp, error)
+	getImportWithContextFunc   func(ctx context.Context, actorUserID int64, id string) (*dto.AWDServiceTemplateImportPreviewResp, error)
+}
 
 func (stubAWDServiceTemplateCommandService) CreateTemplate(actorUserID int64, req *dto.CreateAWDServiceTemplateReq) (*dto.AWDServiceTemplateResp, error) {
 	return nil, nil
@@ -75,19 +79,41 @@ func (stubAWDServiceTemplateCommandService) DeleteTemplateWithContext(ctx contex
 	return nil
 }
 
-func (stubAWDServiceTemplateCommandService) PreviewImport(ctx context.Context, actorUserID int64, fileName string, reader io.Reader) (*dto.AWDServiceTemplateImportPreviewResp, error) {
+func (stubAWDServiceTemplateCommandService) PreviewImport(actorUserID int64, fileName string, reader io.Reader) (*dto.AWDServiceTemplateImportPreviewResp, error) {
 	return nil, nil
 }
 
-func (stubAWDServiceTemplateCommandService) ListImports(actorUserID int64) ([]dto.AWDServiceTemplateImportPreviewResp, error) {
+func (stubAWDServiceTemplateCommandService) PreviewImportWithContext(ctx context.Context, actorUserID int64, fileName string, reader io.Reader) (*dto.AWDServiceTemplateImportPreviewResp, error) {
 	return nil, nil
 }
 
-func (stubAWDServiceTemplateCommandService) GetImport(actorUserID int64, id string) (*dto.AWDServiceTemplateImportPreviewResp, error) {
+func (s stubAWDServiceTemplateCommandService) ListImports(actorUserID int64) ([]dto.AWDServiceTemplateImportPreviewResp, error) {
 	return nil, nil
 }
 
-func (stubAWDServiceTemplateCommandService) CommitImport(ctx context.Context, actorUserID int64, id string) (*dto.AWDServiceTemplateResp, error) {
+func (s stubAWDServiceTemplateCommandService) ListImportsWithContext(ctx context.Context, actorUserID int64) ([]dto.AWDServiceTemplateImportPreviewResp, error) {
+	if s.listImportsWithContextFunc != nil {
+		return s.listImportsWithContextFunc(ctx, actorUserID)
+	}
+	return s.ListImports(actorUserID)
+}
+
+func (s stubAWDServiceTemplateCommandService) GetImport(actorUserID int64, id string) (*dto.AWDServiceTemplateImportPreviewResp, error) {
+	return nil, nil
+}
+
+func (s stubAWDServiceTemplateCommandService) GetImportWithContext(ctx context.Context, actorUserID int64, id string) (*dto.AWDServiceTemplateImportPreviewResp, error) {
+	if s.getImportWithContextFunc != nil {
+		return s.getImportWithContextFunc(ctx, actorUserID, id)
+	}
+	return s.GetImport(actorUserID, id)
+}
+
+func (stubAWDServiceTemplateCommandService) CommitImport(actorUserID int64, id string) (*dto.AWDServiceTemplateResp, error) {
+	return nil, nil
+}
+
+func (stubAWDServiceTemplateCommandService) CommitImportWithContext(ctx context.Context, actorUserID int64, id string) (*dto.AWDServiceTemplateResp, error) {
 	return nil, nil
 }
 
@@ -112,4 +138,82 @@ func (s stubAWDServiceTemplateQueryService) ListTemplatesWithContext(ctx context
 		return s.listWithContextFunc(ctx, req)
 	}
 	return &dto.AWDServiceTemplatePageResp{}, nil
+}
+
+type awdServiceTemplateHandlerContextKey string
+
+func TestAWDServiceTemplateHandlerListImportsPropagatesRequestContextToCommandService(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	ctxKey := awdServiceTemplateHandlerContextKey("list-imports")
+	expectedCtxValue := "ctx-list-imports"
+	called := false
+	handler := NewAWDServiceTemplateHandler(
+		stubAWDServiceTemplateCommandService{
+			listImportsWithContextFunc: func(ctx context.Context, actorUserID int64) ([]dto.AWDServiceTemplateImportPreviewResp, error) {
+				called = true
+				if got := ctx.Value(ctxKey); got != expectedCtxValue {
+					t.Fatalf("expected list-imports ctx value %v, got %v", expectedCtxValue, got)
+				}
+				if actorUserID != 2001 {
+					t.Fatalf("unexpected actor user id: %d", actorUserID)
+				}
+				return []dto.AWDServiceTemplateImportPreviewResp{{ID: "preview-1", Slug: "awd-bank-portal-01"}}, nil
+			},
+		},
+		stubAWDServiceTemplateQueryService{},
+	)
+
+	ctx, recorder := newJSONTestContext(t, http.MethodGet, "/admin/awd-service-template-imports", "")
+	authctx.SetCurrentUser(ctx, authctx.CurrentUser{UserID: 2001})
+	ctx.Request = ctx.Request.WithContext(context.WithValue(ctx.Request.Context(), ctxKey, expectedCtxValue))
+
+	handler.ListImports(ctx)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", recorder.Code)
+	}
+	if !called {
+		t.Fatal("expected list-imports command to be called")
+	}
+}
+
+func TestAWDServiceTemplateHandlerGetImportPropagatesRequestContextToCommandService(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	ctxKey := awdServiceTemplateHandlerContextKey("get-import")
+	expectedCtxValue := "ctx-get-import"
+	called := false
+	handler := NewAWDServiceTemplateHandler(
+		stubAWDServiceTemplateCommandService{
+			getImportWithContextFunc: func(ctx context.Context, actorUserID int64, id string) (*dto.AWDServiceTemplateImportPreviewResp, error) {
+				called = true
+				if got := ctx.Value(ctxKey); got != expectedCtxValue {
+					t.Fatalf("expected get-import ctx value %v, got %v", expectedCtxValue, got)
+				}
+				if actorUserID != 2001 {
+					t.Fatalf("unexpected actor user id: %d", actorUserID)
+				}
+				if id != "preview-1" {
+					t.Fatalf("unexpected import id: %s", id)
+				}
+				return &dto.AWDServiceTemplateImportPreviewResp{ID: id, Slug: "awd-bank-portal-01"}, nil
+			},
+		},
+		stubAWDServiceTemplateQueryService{},
+	)
+
+	ctx, recorder := newJSONTestContext(t, http.MethodGet, "/admin/awd-service-template-imports/preview-1", "")
+	ctx.Params = gin.Params{{Key: "id", Value: "preview-1"}}
+	authctx.SetCurrentUser(ctx, authctx.CurrentUser{UserID: 2001})
+	ctx.Request = ctx.Request.WithContext(context.WithValue(ctx.Request.Context(), ctxKey, expectedCtxValue))
+
+	handler.GetImport(ctx)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", recorder.Code)
+	}
+	if !called {
+		t.Fatal("expected get-import command to be called")
+	}
 }

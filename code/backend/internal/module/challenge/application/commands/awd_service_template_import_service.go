@@ -45,11 +45,22 @@ func NewAWDServiceTemplateImportService(
 }
 
 func (s *AWDServiceTemplateImportService) PreviewImport(
+	actorUserID int64,
+	fileName string,
+	reader io.Reader,
+) (*dto.AWDServiceTemplateImportPreviewResp, error) {
+	return s.PreviewImportWithContext(context.Background(), actorUserID, fileName, reader)
+}
+
+func (s *AWDServiceTemplateImportService) PreviewImportWithContext(
 	ctx context.Context,
 	actorUserID int64,
 	fileName string,
 	reader io.Reader,
 ) (*dto.AWDServiceTemplateImportPreviewResp, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
 	if strings.TrimSpace(fileName) == "" {
 		fileName = "awd-service-template-package.zip"
 	}
@@ -96,6 +107,14 @@ func (s *AWDServiceTemplateImportService) PreviewImport(
 }
 
 func (s *AWDServiceTemplateImportService) ListImports(actorUserID int64) ([]dto.AWDServiceTemplateImportPreviewResp, error) {
+	return s.ListImportsWithContext(context.Background(), actorUserID)
+}
+
+func (s *AWDServiceTemplateImportService) ListImportsWithContext(ctx context.Context, actorUserID int64) ([]dto.AWDServiceTemplateImportPreviewResp, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	_ = ctx
 	records, err := loadAWDServiceTemplateImportPreviewRecords()
 	if err != nil {
 		return nil, err
@@ -118,6 +137,18 @@ func (s *AWDServiceTemplateImportService) GetImport(
 	actorUserID int64,
 	id string,
 ) (*dto.AWDServiceTemplateImportPreviewResp, error) {
+	return s.GetImportWithContext(context.Background(), actorUserID, id)
+}
+
+func (s *AWDServiceTemplateImportService) GetImportWithContext(
+	ctx context.Context,
+	actorUserID int64,
+	id string,
+) (*dto.AWDServiceTemplateImportPreviewResp, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	_ = ctx
 	record, err := loadAWDServiceTemplateImportPreviewRecord(id)
 	if err != nil {
 		return nil, err
@@ -130,6 +161,13 @@ func (s *AWDServiceTemplateImportService) GetImport(
 }
 
 func (s *AWDServiceTemplateImportService) CommitImport(
+	actorUserID int64,
+	id string,
+) (*dto.AWDServiceTemplateResp, error) {
+	return s.CommitImportWithContext(context.Background(), actorUserID, id)
+}
+
+func (s *AWDServiceTemplateImportService) CommitImportWithContext(
 	ctx context.Context,
 	actorUserID int64,
 	id string,
