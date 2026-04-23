@@ -1009,6 +1009,12 @@ func ensureManualReviewQuery(query *dto.TeacherManualReviewSubmissionQuery) erro
 	if query == nil {
 		return nil
 	}
+	if query.StudentID != nil && *query.StudentID <= 0 {
+		return errcode.ErrInvalidParams.WithCause(errors.New("student_id 必须大于 0"))
+	}
+	if query.ChallengeID != nil && *query.ChallengeID <= 0 {
+		return errcode.ErrInvalidParams.WithCause(errors.New("challenge_id 必须大于 0"))
+	}
 	if query.Size > 100 {
 		return errcode.ErrInvalidParams.WithCause(errors.New("page_size 不能超过 100"))
 	}
