@@ -8,7 +8,7 @@
 | 审查范围 | `code/frontend/src` 路由、关键视图、composables、stores、共享样式与验证门禁 |
 | 审查日期 | 2026-04-22 |
 | 审查方式 | 静态代码审查 + 最小验证基线检查 |
-| 审查状态 | 已记录，已完成十二轮最小高收益修复 |
+| 审查状态 | 已记录，已完成十三轮最小高收益修复 |
 
 ## 当前结论
 
@@ -364,6 +364,25 @@
   - `code/frontend/src/views/contests/__tests__/ContestDetail.test.ts`
 
 ## 第十二轮验证
+
+- 已执行：
+  - `npm run test:run -- src/views/contests/__tests__/contestDetailPanelExtraction.test.ts src/views/contests/__tests__/ContestDetail.test.ts`
+  - `npm run typecheck`
+
+## 第十三轮修复进展
+
+- 已完成：
+  - `P2-5` `ContestDetail.vue` 继续减重，普通竞赛题目工作区已抽到独立 `components/contests/ContestChallengeWorkspacePanel.vue`，路由页不再直接承载题目列表、题目聚焦区和 Flag 提交表单模板。
+  - 这轮拆分保持了状态 ownership 不变：选题、Flag 输入、提交动作和提交结果仍由 `useContestDetailPage` 与路由页持有，新组件只通过 props 和 emits 装配普通竞赛交互。
+  - `ContestDetail` 的源码护栏已同步更新为概览、题目工作区、公告和队伍四块区域都通过子组件接线，`Selected / Primary Action` 的 `workspace overline` 语义也已切到组合源码检查。
+  - `ContestDetail.vue` 本体行数已从 `948` 行继续降到 `671` 行，普通竞赛内容区的主要模板负担已经移出，后续若继续收口可优先看对话框和少量页级样式。
+- 本轮涉及文件：
+  - `code/frontend/src/views/contests/ContestDetail.vue`
+  - `code/frontend/src/components/contests/ContestChallengeWorkspacePanel.vue`
+  - `code/frontend/src/views/contests/__tests__/contestDetailPanelExtraction.test.ts`
+  - `code/frontend/src/views/contests/__tests__/ContestDetail.test.ts`
+
+## 第十三轮验证
 
 - 已执行：
   - `npm run test:run -- src/views/contests/__tests__/contestDetailPanelExtraction.test.ts src/views/contests/__tests__/ContestDetail.test.ts`
