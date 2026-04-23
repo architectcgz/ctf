@@ -71,9 +71,9 @@ func TestServiceListChallengeImportsSortsAndFiltersByActor(t *testing.T) {
 
 	service := &ChallengeService{}
 
-	previews, err := service.ListChallengeImports(1001)
+	previews, err := service.ListChallengeImportsWithContext(context.Background(), 1001)
 	if err != nil {
-		t.Fatalf("ListChallengeImports() error = %v", err)
+		t.Fatalf("ListChallengeImportsWithContext() error = %v", err)
 	}
 
 	if len(previews) != 2 {
@@ -93,9 +93,9 @@ func TestServiceListChallengeImportsReturnsEmptyWhenPreviewRootMissing(t *testin
 
 	service := &ChallengeService{}
 
-	previews, err := service.ListChallengeImports(1001)
+	previews, err := service.ListChallengeImportsWithContext(context.Background(), 1001)
 	if err != nil {
-		t.Fatalf("ListChallengeImports() error = %v", err)
+		t.Fatalf("ListChallengeImportsWithContext() error = %v", err)
 	}
 	if len(previews) != 0 {
 		t.Fatalf("expected no previews, got %d", len(previews))
@@ -176,8 +176,8 @@ flag:
 		},
 	})
 
-	if _, err := service.CommitChallengeImport(context.Background(), 4, "restore-soft-deleted"); err != nil {
-		t.Fatalf("CommitChallengeImport() error = %v", err)
+	if _, err := service.CommitChallengeImportWithContext(context.Background(), 4, "restore-soft-deleted"); err != nil {
+		t.Fatalf("CommitChallengeImportWithContext() error = %v", err)
 	}
 
 	var restored model.Challenge
@@ -280,8 +280,8 @@ flag:
 		},
 	})
 
-	if _, err := service.CommitChallengeImport(context.Background(), 4, "clear-legacy-publish-check-jobs"); err != nil {
-		t.Fatalf("CommitChallengeImport() error = %v", err)
+	if _, err := service.CommitChallengeImportWithContext(context.Background(), 4, "clear-legacy-publish-check-jobs"); err != nil {
+		t.Fatalf("CommitChallengeImportWithContext() error = %v", err)
 	}
 
 	var count int64
