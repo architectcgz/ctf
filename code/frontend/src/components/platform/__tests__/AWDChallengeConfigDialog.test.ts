@@ -483,7 +483,13 @@ describe('AWDChallengeConfigDialog', () => {
     expect(wrapper.get('#awd-challenge-preview-progress-status').text()).toContain('第 2 轮试跑')
     expect(wrapper.get('#awd-challenge-preview-progress').text()).toContain('第 2 / 3 轮')
 
-    resolvePreview?.({
+    if (!resolvePreview) {
+      throw new Error('preview promise resolver was not captured')
+    }
+
+    const finishPreview = resolvePreview as (value: Record<string, unknown>) => void
+
+    finishPreview({
       checker_type: 'http_standard',
       service_status: 'up',
       check_result: {

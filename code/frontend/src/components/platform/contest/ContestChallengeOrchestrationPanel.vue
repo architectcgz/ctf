@@ -13,6 +13,8 @@ import {
   getChallenges,
   updateContestAWDService,
   updateAdminContestChallenge,
+  type AdminContestAWDServiceCreatePayload,
+  type AdminContestAWDServiceUpdatePayload,
 } from '@/api/admin'
 import type {
   AdminAwdServiceTemplateData,
@@ -223,16 +225,47 @@ interface ContestOrchestrationSavePayload {
   points: number
   order: number
   is_visible: boolean
+  awd_checker_type?: AdminContestChallengeViewData['awd_checker_type']
+  awd_checker_config?: Record<string, unknown>
+  awd_sla_score?: number
+  awd_defense_score?: number
+  awd_checker_preview_token?: string
+}
+
+function buildAwdServicePayload(
+  payload: ContestOrchestrationSavePayload,
+  templateId: number
+): AdminContestAWDServiceCreatePayload {
+  return {
+    template_id: templateId,
+    points: payload.points,
+    order: payload.order,
+    is_visible: payload.is_visible,
+    checker_type: payload.awd_checker_type ?? undefined,
+    checker_config: payload.awd_checker_config,
+    awd_sla_score: payload.awd_sla_score,
+    awd_defense_score: payload.awd_defense_score,
+    awd_checker_preview_token: payload.awd_checker_preview_token,
+  }
 }
 
 async function handleSave(payload: ContestOrchestrationSavePayload) {
   saving.value = true
   try {
     if (isAwdContest.value) {
+      if (!payload.template_id) {
+        toast.error('请选择服务模板')
+        return
+      }
+      const awdServicePayload = buildAwdServicePayload(payload, payload.template_id)
       if (dialogMode.value === 'create') {
-        await createContestAWDService(props.contestId, payload)
+        await createContestAWDService(props.contestId, awdServicePayload)
       } else if (editingChallenge.value) {
-        await updateContestAWDService(props.contestId, editingChallenge.value.awd_service_id!, payload)
+        await updateContestAWDService(
+          props.contestId,
+          editingChallenge.value.awd_service_id!,
+          awdServicePayload
+        )
       }
     } else if (dialogMode.value === 'create') {
       await createAdminContestChallenge(props.contestId, {

@@ -11,10 +11,10 @@ import {
   listContestAWDServices,
   updateContestAWDService,
   updateContest,
+  type AdminContestAWDServiceCreatePayload,
 } from '@/api/admin'
 import type {
   AdminAwdServiceTemplateData,
-  AdminContestAWDServiceSavePayload,
   AdminContestChallengeViewData,
   AWDReadinessData,
   ContestDetailData,
@@ -57,6 +57,19 @@ interface AWDStartOverrideDialogState {
   readiness: AWDReadinessData | null
   confirmLoading: boolean
   pendingPayload: AdminContestUpdatePayload | null
+}
+
+interface ContestAwdChallengeConfigPayload {
+  challenge_id?: number
+  template_id: number
+  points: number
+  order: number
+  is_visible: boolean
+  awd_checker_type: AdminContestChallengeViewData['awd_checker_type']
+  awd_checker_config: Record<string, unknown>
+  awd_sla_score: number
+  awd_defense_score: number
+  awd_checker_preview_token?: string
 }
 
 const ERR_AWD_READINESS_BLOCKED = 14025
@@ -225,6 +238,22 @@ function setActiveAwdChallenge(challengeId: string | null, source: 'pool' | 'pre
   awdConfigFocusSource.value = challengeId ? source : null
 }
 
+function buildAwdServicePayload(
+  payload: ContestAwdChallengeConfigPayload
+): AdminContestAWDServiceCreatePayload {
+  return {
+    template_id: payload.template_id,
+    points: payload.points,
+    order: payload.order,
+    is_visible: payload.is_visible,
+    checker_type: payload.awd_checker_type ?? undefined,
+    checker_config: payload.awd_checker_config,
+    awd_sla_score: payload.awd_sla_score,
+    awd_defense_score: payload.awd_defense_score,
+    awd_checker_preview_token: payload.awd_checker_preview_token,
+  }
+}
+
 function focusAwdChallengeByOffset(offset: -1 | 1) {
   if (activeAwdChallengeIndex.value < 0) return
   const nextChallenge = sortedAwdChallengeLinks.value[activeAwdChallengeIndex.value + offset]
@@ -247,14 +276,19 @@ function openAwdChallengeEditDialog(challenge: AdminContestChallengeViewData) {
   void loadAwdServiceTemplateCatalog()
 }
 
-async function handleSaveAwdChallengeConfig(payload: AdminContestAWDServiceSavePayload) {
+async function handleSaveAwdChallengeConfig(payload: ContestAwdChallengeConfigPayload) {
   if (!contest.value) return
   savingChallengeConfig.value = true
   try {
+    const servicePayload = buildAwdServicePayload(payload)
     if (awdChallengeConfigMode.value === 'create') {
-      await createContestAWDService(contest.value.id, payload)
+      await createContestAWDService(contest.value.id, servicePayload)
     } else if (editingAwdChallengeLink.value) {
-      await updateContestAWDService(contest.value.id, editingAwdChallengeLink.value.awd_service_id!, payload)
+      await updateContestAWDService(
+        contest.value.id,
+        editingAwdChallengeLink.value.awd_service_id!,
+        servicePayload
+      )
     }
     awdChallengeConfigDialogOpen.value = false
     await refreshAwdWorkbenchData(contest.value.id)

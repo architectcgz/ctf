@@ -14,7 +14,7 @@ import { getRoleDashboardPath } from '@/utils/roleRoutes'
 NProgress.configure({ showSpinner: false })
 
 function isPublicRoute(to: RouteLocationNormalized): boolean {
-  return to.path === '/login' || to.path === '/register' || to.path === '/ui-lab'
+  return to.path === '/login' || to.path === '/register'
 }
 
 function isAuthLandingRoute(to: RouteLocationNormalized): boolean {

@@ -122,6 +122,23 @@ describe('router guards', () => {
     })
   })
 
+  it('不应继续将 ui-lab 作为匿名可访问页面放行', async () => {
+    const { runBeforeEach } = createRouterMock()
+
+    const next = await runBeforeEach(
+      createRoute({
+        path: '/ui-lab',
+        fullPath: '/ui-lab',
+        meta: { requiresAuth: true, roles: ['admin'] },
+      })
+    )
+
+    expect(next).toHaveBeenCalledWith({
+      path: '/login',
+      query: { redirect: '/ui-lab' },
+    })
+  })
+
   it('应该阻止无权限用户访问受限路由', async () => {
     const authStore = useAuthStore()
     authStore.setAuth(buildUser('student'), 'token')

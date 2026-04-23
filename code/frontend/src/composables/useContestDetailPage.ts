@@ -18,6 +18,7 @@ import type {
   TeamData,
 } from '@/api/contracts'
 import { useToast } from '@/composables/useToast'
+import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
 import { formatDuration } from '@/utils/format'
 
 interface UseContestDetailPageOptions {
@@ -339,7 +340,16 @@ export function useContestDetailPage(options: UseContestDetailPageOptions) {
   }
 
   async function kickMember(userId: string) {
-    if (!contest.value || !team.value || !window.confirm('确定踢出该成员？')) {
+    if (!contest.value || !team.value) {
+      return
+    }
+
+    const confirmed = await confirmDestructiveAction({
+      title: '踢出成员',
+      message: '确定踢出该成员？',
+      confirmButtonText: '确认踢出',
+    })
+    if (!confirmed) {
       return
     }
 

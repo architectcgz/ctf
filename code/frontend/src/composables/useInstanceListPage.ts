@@ -14,6 +14,7 @@ import { useToast } from '@/composables/useToast'
 export const MAX_INSTANCES = 3
 export const WARNING_THRESHOLD_SECONDS = 300
 export const EXTEND_DURATION_SECONDS = 1800
+export const INSTANCE_STATUS_REFRESH_INTERVAL_MS = 5000
 
 export interface InstanceViewModel extends InstanceListItem {
   remaining: number
@@ -120,6 +121,8 @@ export function useInstanceListPage() {
   const warnedInstances = new Set<string>()
 
   let timer: number | null = null
+  let statusRefreshTimer: number | null = null
+  let refreshInFlight = false
 
   const maxInstances = MAX_INSTANCES
   const runningCount = computed(
@@ -132,20 +135,58 @@ export function useInstanceListPage() {
       ).length
   )
 
+  function hasPendingRemoteStatus(instance: InstanceViewModel): boolean {
+    return instance.status === 'pending' || instance.status === 'creating'
+  }
+
+  function stopStatusRefresh() {
+    if (statusRefreshTimer !== null) {
+      window.clearInterval(statusRefreshTimer)
+      statusRefreshTimer = null
+    }
+  }
+
+  function syncStatusRefresh() {
+    const shouldPoll = instances.value.some(hasPendingRemoteStatus)
+    if (!shouldPoll) {
+      stopStatusRefresh()
+      return
+    }
+    if (statusRefreshTimer !== null) {
+      return
+    }
+    statusRefreshTimer = window.setInterval(() => {
+      void refresh({ silent: true })
+    }, INSTANCE_STATUS_REFRESH_INTERVAL_MS)
+  }
+
   async function loadInstances() {
     const data = await getMyInstances()
     instances.value = data.map(toViewModel)
   }
 
-  async function refresh() {
-    loading.value = true
+  async function refresh(options?: { silent?: boolean }) {
+    if (refreshInFlight) {
+      return
+    }
+
+    refreshInFlight = true
+    if (!options?.silent) {
+      loading.value = true
+    }
     try {
       await loadInstances()
     } catch (error) {
-      console.error('加载实例失败:', error)
-      toast.error('加载实例失败，请刷新重试')
+      if (!options?.silent) {
+        console.error('加载实例失败:', error)
+        toast.error('加载实例失败，请刷新重试')
+      }
     } finally {
-      loading.value = false
+      refreshInFlight = false
+      syncStatusRefresh()
+      if (!options?.silent) {
+        loading.value = false
+      }
     }
   }
 
@@ -285,6 +326,7 @@ export function useInstanceListPage() {
       window.clearInterval(timer)
       timer = null
     }
+    stopStatusRefresh()
     window.removeEventListener('keydown', handleEscKey)
   })
 
