@@ -33,6 +33,7 @@ type ChallengeQueryRepository interface {
 	FindByID(id int64) (*model.Challenge, error)
 	FindByIDWithContext(ctx context.Context, id int64) (*model.Challenge, error)
 	List(query *dto.ChallengeQuery) ([]*model.Challenge, int64, error)
+	ListWithContext(ctx context.Context, query *dto.ChallengeQuery) ([]*model.Challenge, int64, error)
 	ListHintsByChallengeID(challengeID int64) ([]*model.ChallengeHint, error)
 	ListHintsByChallengeIDWithContext(ctx context.Context, challengeID int64) ([]*model.ChallengeHint, error)
 	GetSolvedStatusWithContext(ctx context.Context, userID, challengeID int64) (bool, error)

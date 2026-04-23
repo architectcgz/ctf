@@ -37,14 +37,21 @@ func NewChallengeService(repo challengeports.ChallengeQueryRepository, redis *re
 }
 
 func (s *ChallengeService) GetChallenge(id int64) (*dto.ChallengeResp, error) {
-	challenge, err := s.repo.FindByID(id)
+	return s.GetChallengeWithContext(context.Background(), id)
+}
+
+func (s *ChallengeService) GetChallengeWithContext(ctx context.Context, id int64) (*dto.ChallengeResp, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	challenge, err := s.repo.FindByIDWithContext(ctx, id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrChallengeNotFound
 		}
 		return nil, err
 	}
-	hints, err := s.repo.ListHintsByChallengeID(id)
+	hints, err := s.repo.ListHintsByChallengeIDWithContext(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +59,14 @@ func (s *ChallengeService) GetChallenge(id int64) (*dto.ChallengeResp, error) {
 }
 
 func (s *ChallengeService) ListChallenges(query *dto.ChallengeQuery) (*dto.PageResult, error) {
-	challenges, total, err := s.repo.List(query)
+	return s.ListChallengesWithContext(context.Background(), query)
+}
+
+func (s *ChallengeService) ListChallengesWithContext(ctx context.Context, query *dto.ChallengeQuery) (*dto.PageResult, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	challenges, total, err := s.repo.ListWithContext(ctx, query)
 	if err != nil {
 		return nil, err
 	}

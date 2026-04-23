@@ -27,11 +27,11 @@ import (
 
 type challengeImportQueryStub struct{}
 
-func (challengeImportQueryStub) GetChallenge(id int64) (*dto.ChallengeResp, error) {
+func (challengeImportQueryStub) GetChallengeWithContext(ctx context.Context, id int64) (*dto.ChallengeResp, error) {
 	panic("unexpected call")
 }
 
-func (challengeImportQueryStub) ListChallenges(query *dto.ChallengeQuery) (*dto.PageResult, error) {
+func (challengeImportQueryStub) ListChallengesWithContext(ctx context.Context, query *dto.ChallengeQuery) (*dto.PageResult, error) {
 	panic("unexpected call")
 }
 
