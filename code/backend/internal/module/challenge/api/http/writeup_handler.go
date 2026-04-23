@@ -1,6 +1,7 @@
 package http
 
 import (
+	"context"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -29,6 +30,7 @@ type writeupCommandService interface {
 
 type writeupQueryService interface {
 	GetAdmin(challengeID int64) (*dto.AdminChallengeWriteupResp, error)
+	GetAdminWithContext(ctx context.Context, challengeID int64) (*dto.AdminChallengeWriteupResp, error)
 	GetPublished(userID, challengeID int64) (*dto.ChallengeWriteupResp, error)
 	GetMySubmission(userID, challengeID int64) (*dto.SubmissionWriteupResp, error)
 	ListRecommendedSolutions(userID, challengeID int64) (*dto.PageResult, error)
@@ -66,7 +68,7 @@ func (h *WriteupHandler) GetAdmin(c *gin.Context) {
 		response.InvalidParams(c, "无效的 challenge id")
 		return
 	}
-	resp, err := h.queries.GetAdmin(challengeID)
+	resp, err := h.queries.GetAdminWithContext(c.Request.Context(), challengeID)
 	if err != nil {
 		response.FromError(c, err)
 		return

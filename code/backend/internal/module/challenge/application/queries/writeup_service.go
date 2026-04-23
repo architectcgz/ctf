@@ -1,6 +1,7 @@
 package queries
 
 import (
+	"context"
 	"errors"
 	"time"
 
@@ -22,13 +23,20 @@ func NewWriteupService(repo challengeports.ChallengeWriteupRepository) *WriteupS
 }
 
 func (s *WriteupService) GetAdmin(challengeID int64) (*dto.AdminChallengeWriteupResp, error) {
-	if _, err := s.repo.FindByID(challengeID); err != nil {
+	return s.GetAdminWithContext(context.Background(), challengeID)
+}
+
+func (s *WriteupService) GetAdminWithContext(ctx context.Context, challengeID int64) (*dto.AdminChallengeWriteupResp, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	if _, err := s.repo.FindByIDWithContext(ctx, challengeID); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrChallengeNotFound
 		}
 		return nil, err
 	}
-	item, err := s.repo.FindWriteupByChallengeID(challengeID)
+	item, err := s.repo.FindWriteupByChallengeIDWithContext(ctx, challengeID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrNotFound
