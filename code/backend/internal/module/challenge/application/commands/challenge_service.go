@@ -84,8 +84,15 @@ func firstChallengeNotificationSender(senders []ChallengeNotificationSender) Cha
 }
 
 func (s *ChallengeService) CreateChallenge(actorUserID int64, req *dto.CreateChallengeReq) (*dto.ChallengeResp, error) {
+	return s.CreateChallengeWithContext(context.Background(), actorUserID, req)
+}
+
+func (s *ChallengeService) CreateChallengeWithContext(ctx context.Context, actorUserID int64, req *dto.CreateChallengeReq) (*dto.ChallengeResp, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
 	if req.ImageID > 0 {
-		if _, err := s.imageRepo.FindByID(req.ImageID); err != nil {
+		if _, err := s.imageRepo.FindByIDWithContext(ctx, req.ImageID); err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				return nil, errcode.ErrNotFound.WithCause(errors.New(domain.ErrMsgImageNotFound))
 			}
@@ -110,17 +117,24 @@ func (s *ChallengeService) CreateChallenge(actorUserID int64, req *dto.CreateCha
 	if err != nil {
 		return nil, err
 	}
-	if err := s.validateInstanceSharingConfig(challenge); err != nil {
+	if err := s.validateInstanceSharingConfigWithContext(ctx, challenge); err != nil {
 		return nil, err
 	}
-	if err := s.repo.CreateWithHints(challenge, hints); err != nil {
+	if err := s.repo.CreateWithHintsWithContext(ctx, challenge, hints); err != nil {
 		return nil, err
 	}
 	return domain.ChallengeRespFromModel(challenge, hints), nil
 }
 
 func (s *ChallengeService) UpdateChallenge(id int64, req *dto.UpdateChallengeReq) error {
-	challenge, err := s.repo.FindByID(id)
+	return s.UpdateChallengeWithContext(context.Background(), id, req)
+}
+
+func (s *ChallengeService) UpdateChallengeWithContext(ctx context.Context, id int64, req *dto.UpdateChallengeReq) error {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	challenge, err := s.repo.FindByIDWithContext(ctx, id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return errcode.ErrChallengeNotFound
@@ -145,7 +159,7 @@ func (s *ChallengeService) UpdateChallenge(id int64, req *dto.UpdateChallengeReq
 	}
 	if req.ImageID != nil {
 		if *req.ImageID > 0 {
-			if _, err := s.imageRepo.FindByID(*req.ImageID); err != nil {
+			if _, err := s.imageRepo.FindByIDWithContext(ctx, *req.ImageID); err != nil {
 				if errors.Is(err, gorm.ErrRecordNotFound) {
 					return errcode.ErrNotFound.WithCause(errors.New(domain.ErrMsgImageNotFound))
 				}
@@ -166,11 +180,11 @@ func (s *ChallengeService) UpdateChallenge(id int64, req *dto.UpdateChallengeReq
 	if err != nil {
 		return err
 	}
-	if err := s.validateInstanceSharingConfig(challenge); err != nil {
+	if err := s.validateInstanceSharingConfigWithContext(ctx, challenge); err != nil {
 		return err
 	}
 
-	return s.repo.UpdateWithHints(challenge, hints, replaceHints)
+	return s.repo.UpdateWithHintsWithContext(ctx, challenge, hints, replaceHints)
 }
 
 func normalizeInstanceSharing(value model.InstanceSharing) model.InstanceSharing {
@@ -185,6 +199,13 @@ func normalizeInstanceSharing(value model.InstanceSharing) model.InstanceSharing
 }
 
 func (s *ChallengeService) validateInstanceSharingConfig(challenge *model.Challenge) error {
+	return s.validateInstanceSharingConfigWithContext(context.Background(), challenge)
+}
+
+func (s *ChallengeService) validateInstanceSharingConfigWithContext(ctx context.Context, challenge *model.Challenge) error {
+	if ctx == nil {
+		ctx = context.Background()
+	}
 	if challenge == nil || challenge.InstanceSharing != model.InstanceSharingShared {
 		return nil
 	}
@@ -194,7 +215,7 @@ func (s *ChallengeService) validateInstanceSharingConfig(challenge *model.Challe
 	if s.topologyRepo == nil || challenge.ID <= 0 {
 		return nil
 	}
-	topology, err := s.topologyRepo.FindChallengeTopologyByChallengeID(challenge.ID)
+	topology, err := s.topologyRepo.FindChallengeTopologyByChallengeIDWithContext(ctx, challenge.ID)
 	switch {
 	case err == nil:
 	case errors.Is(err, gorm.ErrRecordNotFound):
@@ -216,14 +237,21 @@ func (s *ChallengeService) validateInstanceSharingConfig(challenge *model.Challe
 }
 
 func (s *ChallengeService) DeleteChallenge(id int64) error {
-	if _, err := s.repo.FindByID(id); err != nil {
+	return s.DeleteChallengeWithContext(context.Background(), id)
+}
+
+func (s *ChallengeService) DeleteChallengeWithContext(ctx context.Context, id int64) error {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	if _, err := s.repo.FindByIDWithContext(ctx, id); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return errcode.ErrChallengeNotFound
 		}
 		return err
 	}
 
-	hasInstances, err := s.repo.HasRunningInstances(id)
+	hasInstances, err := s.repo.HasRunningInstancesWithContext(ctx, id)
 	if err != nil {
 		return err
 	}
@@ -231,7 +259,7 @@ func (s *ChallengeService) DeleteChallenge(id int64) error {
 		return errcode.New(errcode.ErrConflict.Code, domain.ErrMsgHasRunningStudents, errcode.ErrConflict.HTTPStatus).
 			WithCause(errors.New(domain.ErrMsgHasRunningInstances))
 	}
-	return s.repo.Delete(id)
+	return s.repo.DeleteWithContext(ctx, id)
 }
 
 func (s *ChallengeService) PublishChallenge(id int64) error {
