@@ -28,6 +28,7 @@ type stubChallengeWriteupRepository struct {
 	findSubmissionWriteupByUserChallengeFn             func(userID, challengeID int64) (*model.SubmissionWriteup, error)
 	findSubmissionWriteupByUserChallengeWithContextFn  func(ctx context.Context, userID, challengeID int64) (*model.SubmissionWriteup, error)
 	findSubmissionWriteupByIDFn                        func(id int64) (*model.SubmissionWriteup, error)
+	findSubmissionWriteupByIDWithContextFn             func(ctx context.Context, id int64) (*model.SubmissionWriteup, error)
 	upsertSubmissionWriteupFn                          func(writeup *model.SubmissionWriteup) error
 	upsertSubmissionWriteupWithContextFn               func(ctx context.Context, writeup *model.SubmissionWriteup) error
 	getTeacherSubmissionWriteupByIDFn                  func(id int64) (*challengeports.TeacherSubmissionWriteupRecord, error)
@@ -157,6 +158,13 @@ func (s *stubChallengeWriteupRepository) FindSubmissionWriteupByID(id int64) (*m
 		return s.findSubmissionWriteupByIDFn(id)
 	}
 	return nil, nil
+}
+
+func (s *stubChallengeWriteupRepository) FindSubmissionWriteupByIDWithContext(ctx context.Context, id int64) (*model.SubmissionWriteup, error) {
+	if s.findSubmissionWriteupByIDWithContextFn != nil {
+		return s.findSubmissionWriteupByIDWithContextFn(ctx, id)
+	}
+	return s.FindSubmissionWriteupByID(id)
 }
 
 func (s *stubChallengeWriteupRepository) UpsertSubmissionWriteup(writeup *model.SubmissionWriteup) error {

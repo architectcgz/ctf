@@ -220,7 +220,14 @@ func (s *WriteupService) UnrecommendOfficialWithContext(ctx context.Context, cha
 }
 
 func (s *WriteupService) RecommendCommunity(submissionID, requesterID int64, requesterRole string) (*dto.SubmissionWriteupResp, error) {
-	record, err := s.loadCommunityWriteupForModeration(submissionID, requesterID, requesterRole)
+	return s.RecommendCommunityWithContext(context.Background(), submissionID, requesterID, requesterRole)
+}
+
+func (s *WriteupService) RecommendCommunityWithContext(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*dto.SubmissionWriteupResp, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	record, err := s.loadCommunityWriteupForModerationWithContext(ctx, submissionID, requesterID, requesterRole)
 	if err != nil {
 		return nil, err
 	}
@@ -234,11 +241,11 @@ func (s *WriteupService) RecommendCommunity(submissionID, requesterID int64, req
 	record.RecommendedBy = &requesterID
 	record.UpdatedAt = now
 
-	if err := s.repo.UpsertSubmissionWriteup(record); err != nil {
+	if err := s.repo.UpsertSubmissionWriteupWithContext(ctx, record); err != nil {
 		return nil, err
 	}
 
-	updated, err := s.repo.FindSubmissionWriteupByID(submissionID)
+	updated, err := s.repo.FindSubmissionWriteupByIDWithContext(ctx, submissionID)
 	if err != nil {
 		return nil, err
 	}
@@ -246,7 +253,14 @@ func (s *WriteupService) RecommendCommunity(submissionID, requesterID int64, req
 }
 
 func (s *WriteupService) UnrecommendCommunity(submissionID, requesterID int64, requesterRole string) (*dto.SubmissionWriteupResp, error) {
-	record, err := s.loadCommunityWriteupForModeration(submissionID, requesterID, requesterRole)
+	return s.UnrecommendCommunityWithContext(context.Background(), submissionID, requesterID, requesterRole)
+}
+
+func (s *WriteupService) UnrecommendCommunityWithContext(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*dto.SubmissionWriteupResp, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	record, err := s.loadCommunityWriteupForModerationWithContext(ctx, submissionID, requesterID, requesterRole)
 	if err != nil {
 		return nil, err
 	}
@@ -256,11 +270,11 @@ func (s *WriteupService) UnrecommendCommunity(submissionID, requesterID int64, r
 	record.RecommendedBy = nil
 	record.UpdatedAt = time.Now()
 
-	if err := s.repo.UpsertSubmissionWriteup(record); err != nil {
+	if err := s.repo.UpsertSubmissionWriteupWithContext(ctx, record); err != nil {
 		return nil, err
 	}
 
-	updated, err := s.repo.FindSubmissionWriteupByID(submissionID)
+	updated, err := s.repo.FindSubmissionWriteupByIDWithContext(ctx, submissionID)
 	if err != nil {
 		return nil, err
 	}
@@ -335,18 +349,25 @@ func (s *WriteupService) loadOfficialWriteupForModerationWithContext(ctx context
 }
 
 func (s *WriteupService) loadCommunityWriteupForModeration(submissionID, requesterID int64, requesterRole string) (*model.SubmissionWriteup, error) {
-	record, err := s.repo.GetTeacherSubmissionWriteupByID(submissionID)
+	return s.loadCommunityWriteupForModerationWithContext(context.Background(), submissionID, requesterID, requesterRole)
+}
+
+func (s *WriteupService) loadCommunityWriteupForModerationWithContext(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*model.SubmissionWriteup, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	record, err := s.repo.GetTeacherSubmissionWriteupByIDWithContext(ctx, submissionID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrNotFound
 		}
 		return nil, err
 	}
-	if err := ensureTeacherCanModerateCommunityWriteup(s.repo, requesterID, requesterRole, record); err != nil {
+	if err := ensureTeacherCanModerateCommunityWriteupWithContext(ctx, s.repo, requesterID, requesterRole, record); err != nil {
 		return nil, err
 	}
 
-	item, err := s.repo.FindSubmissionWriteupByID(submissionID)
+	item, err := s.repo.FindSubmissionWriteupByIDWithContext(ctx, submissionID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrNotFound
@@ -362,10 +383,20 @@ func ensureTeacherCanModerateCommunityWriteup(
 	requesterRole string,
 	record *challengeports.TeacherSubmissionWriteupRecord,
 ) error {
+	return ensureTeacherCanModerateCommunityWriteupWithContext(context.Background(), repo, requesterID, requesterRole, record)
+}
+
+func ensureTeacherCanModerateCommunityWriteupWithContext(
+	ctx context.Context,
+	repo challengeports.ChallengeWriteupRepository,
+	requesterID int64,
+	requesterRole string,
+	record *challengeports.TeacherSubmissionWriteupRecord,
+) error {
 	if requesterRole == model.RoleAdmin {
 		return nil
 	}
-	requester, err := repo.FindUserByID(requesterID)
+	requester, err := repo.FindUserByIDWithContext(ctx, requesterID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return errcode.ErrUnauthorized
