@@ -38,7 +38,14 @@ func (s *TagService) ListTagsWithContext(ctx context.Context, tagType string) ([
 }
 
 func (s *TagService) GetChallengeTagIDs(challengeID int64) ([]int64, error) {
-	tags, err := s.repo.FindByChallengeID(challengeID)
+	return s.GetChallengeTagIDsWithContext(context.Background(), challengeID)
+}
+
+func (s *TagService) GetChallengeTagIDsWithContext(ctx context.Context, challengeID int64) ([]int64, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	tags, err := s.repo.FindByChallengeIDWithContext(ctx, challengeID)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
