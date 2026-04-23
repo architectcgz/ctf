@@ -120,8 +120,12 @@ func (r *Repository) FindChallengeByID(challengeID int64) (*model.Challenge, err
 }
 
 func (r *Repository) FindByUserAndChallenge(userID, challengeID int64) (*model.Instance, error) {
+	return r.FindByUserAndChallengeWithContext(context.Background(), userID, challengeID)
+}
+
+func (r *Repository) FindByUserAndChallengeWithContext(ctx context.Context, userID, challengeID int64) (*model.Instance, error) {
 	var instance model.Instance
-	err := r.db.Where("user_id = ? AND contest_id IS NULL AND team_id IS NULL AND challenge_id = ? AND status IN ?", userID, challengeID,
+	err := r.dbWithContext(ctx).Where("user_id = ? AND contest_id IS NULL AND team_id IS NULL AND challenge_id = ? AND status IN ?", userID, challengeID,
 		[]string{model.InstanceStatusPending, model.InstanceStatusCreating, model.InstanceStatusRunning}).
 		First(&instance).Error
 	if err != nil {
@@ -180,7 +184,11 @@ func (r *Repository) FindByContestTeamAndChallenge(contestID, teamID, challengeI
 }
 
 func (r *Repository) RefreshInstanceExpiry(instanceID int64, expiresAt time.Time) error {
-	return r.db.Model(&model.Instance{}).
+	return r.RefreshInstanceExpiryWithContext(context.Background(), instanceID, expiresAt)
+}
+
+func (r *Repository) RefreshInstanceExpiryWithContext(ctx context.Context, instanceID int64, expiresAt time.Time) error {
+	return r.dbWithContext(ctx).Model(&model.Instance{}).
 		Where("id = ?", instanceID).
 		Updates(map[string]any{
 			"expires_at": expiresAt,

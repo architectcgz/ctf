@@ -598,7 +598,7 @@ func (s *Service) SubmitFlagWithContext(ctx context.Context, userID, challengeID
 		submission.ReviewStatus = model.SubmissionReviewStatusPending
 		status = dto.SubmissionStatusPendingReview
 	} else {
-		isCorrect, err := s.validateSubmittedFlag(userID, challengeItem, flag)
+		isCorrect, err := s.validateSubmittedFlag(ctx, userID, challengeItem, flag)
 		if err != nil {
 			return nil, err
 		}
@@ -673,7 +673,7 @@ func (s *Service) applySolveGracePeriod(ctx context.Context, userID int64, chall
 		return nil
 	}
 
-	instance, err := s.instanceRepo.FindByUserAndChallenge(userID, challengeItem.ID)
+	instance, err := s.instanceRepo.FindByUserAndChallengeWithContext(ctx, userID, challengeItem.ID)
 	if err != nil {
 		s.logger.Warn("查询解题后实例失败", zap.Int64("user_id", userID), zap.Int64("challenge_id", challengeItem.ID), zap.Error(err))
 		return nil
@@ -686,7 +686,7 @@ func (s *Service) applySolveGracePeriod(ctx context.Context, userID int64, chall
 	graceExpiry := solvedAt.Add(gracePeriod)
 	if shutdownAt.After(graceExpiry) {
 		shutdownAt = graceExpiry
-		if err := s.instanceRepo.RefreshInstanceExpiry(instance.ID, shutdownAt); err != nil {
+		if err := s.instanceRepo.RefreshInstanceExpiryWithContext(ctx, instance.ID, shutdownAt); err != nil {
 			s.logger.Warn("收缩解题后实例生命周期失败", zap.Int64("instance_id", instance.ID), zap.Error(err))
 			return nil
 		}
@@ -1335,7 +1335,7 @@ func (s *Service) buildInstanceFlag(subjectID, challengeID int64, chal *model.Ch
 	}
 }
 
-func (s *Service) validateSubmittedFlag(userID int64, challengeItem *model.Challenge, flag string) (bool, error) {
+func (s *Service) validateSubmittedFlag(ctx context.Context, userID int64, challengeItem *model.Challenge, flag string) (bool, error) {
 	switch challengeItem.FlagType {
 	case model.FlagTypeStatic:
 		inputHash := crypto.HashStaticFlag(flag, challengeItem.FlagSalt)
@@ -1349,7 +1349,7 @@ func (s *Service) validateSubmittedFlag(userID int64, challengeItem *model.Chall
 		return false, errcode.ErrInvalidParams.WithCause(fmt.Errorf("unsupported flag type %s", challengeItem.FlagType))
 	}
 
-	instance, err := s.instanceRepo.FindByUserAndChallenge(userID, challengeItem.ID)
+	instance, err := s.instanceRepo.FindByUserAndChallengeWithContext(ctx, userID, challengeItem.ID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return false, nil
