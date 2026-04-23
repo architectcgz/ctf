@@ -1,14 +1,13 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
-import { ArrowDownWideNarrow, Calendar, RefreshCw, SortAsc } from 'lucide-vue-next'
+import { ArrowDownWideNarrow, Calendar, SortAsc } from 'lucide-vue-next'
 
 import { createImage, deleteImage, getImages, type AdminImagePayload } from '@/api/admin'
 import type { AdminImageListItem, ImageStatus } from '@/api/contracts'
-import PlatformPaginationControls from '@/components/platform/PlatformPaginationControls.vue'
 import ImageCreateModal from '@/components/platform/images/ImageCreateModal.vue'
 import ImageDetailModal from '@/components/platform/images/ImageDetailModal.vue'
-import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
-import WorkspaceDirectoryToolbar, {
+import ImageDirectoryPanel from '@/components/platform/images/ImageDirectoryPanel.vue'
+import {
   type WorkspaceDirectorySortOption,
 } from '@/components/common/WorkspaceDirectoryToolbar.vue'
 import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
@@ -41,46 +40,6 @@ const sortOptions: ImageSortOption[] = [
   { key: 'tag', order: 'asc', label: '标签顺序', icon: ArrowDownWideNarrow },
 ]
 const sortConfig = ref<ImageSortOption>(sortOptions[0]!)
-const imageTableColumns = [
-  {
-    key: 'name',
-    label: '镜像名称',
-    widthClass: 'w-[18%] min-w-[10rem]',
-    cellClass: 'image-table__name-cell',
-  },
-  {
-    key: 'tag',
-    label: '标签',
-    widthClass: 'w-[14%] min-w-[7rem]',
-    cellClass: 'image-table__tag-cell',
-  },
-  {
-    key: 'description',
-    label: '描述',
-    widthClass: 'w-[28%] min-w-[14rem]',
-    cellClass: 'image-table__description-cell',
-  },
-  {
-    key: 'status',
-    label: '状态',
-    align: 'center' as const,
-    widthClass: 'w-[12%] min-w-[7rem]',
-    cellClass: 'image-table__status-cell',
-  },
-  {
-    key: 'created_at',
-    label: '创建时间',
-    widthClass: 'w-[18%] min-w-[10rem]',
-    cellClass: 'image-table__time-cell',
-  },
-  {
-    key: 'actions',
-    label: '操作',
-    align: 'right' as const,
-    widthClass: 'w-[10rem]',
-    cellClass: 'image-table__actions-cell',
-  },
-]
 
 let pollTimer: number | null = null
 
@@ -123,6 +82,7 @@ const filteredRows = computed<AdminImageListItem[]>(() => {
   return sortedRows
 })
 const filteredTotal = computed(() => filteredRows.value.length)
+const totalPages = computed(() => Math.max(1, Math.ceil(total.value / pageSize.value)))
 
 const refreshHint = computed(() =>
   hasActiveImages.value ? '构建中镜像会每 10 秒自动刷新' : '当前无进行中镜像，可手动刷新'
@@ -387,156 +347,30 @@ onUnmounted(() => {
         </div>
       </header>
 
-      <section class="image-board workspace-directory-section">
-        <header class="list-heading image-board__head">
-          <div>
-            <div class="workspace-overline">
-              Images
-            </div>
-            <h2 class="list-heading__title image-section-title">
-              镜像列表
-            </h2>
-          </div>
-        </header>
-
-        <WorkspaceDirectoryToolbar
-          v-model="keyword"
-          :total="filteredTotal"
-          :selected-sort-label="sortConfig.label"
-          :sort-options="sortOptions"
-          search-placeholder="检索镜像名称、标签或说明..."
-          total-suffix="个镜像"
-          :reset-disabled="!hasActiveFilters"
-          @select-sort="setSort"
-          @reset-filters="resetFilters"
-        >
-          <template #filter-panel>
-            <div class="image-filter-grid">
-              <label class="image-filter-field">
-                <span class="image-filter-label">构建状态</span>
-                <select
-                  v-model="statusFilter"
-                  class="image-filter-select"
-                >
-                  <option value="">全部状态</option>
-                  <option value="available">可用</option>
-                  <option value="building">构建中</option>
-                  <option value="pending">等待中</option>
-                  <option value="failed">失败</option>
-                </select>
-              </label>
-            </div>
-          </template>
-        </WorkspaceDirectoryToolbar>
-
-        <div
-          v-if="loading"
-          class="workspace-directory-loading flex items-center justify-center py-12"
-        >
-          <div
-            class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--journal-border)] border-t-[var(--journal-accent)]"
-          />
-        </div>
-
-        <template v-else>
-          <div
-            v-if="list.length === 0"
-            class="admin-empty workspace-directory-empty"
-          >
-            当前还没有镜像。
-          </div>
-
-          <div
-            v-else-if="filteredRows.length === 0"
-            class="admin-empty workspace-directory-empty"
-          >
-            当前筛选条件下没有匹配镜像。
-          </div>
-
-          <WorkspaceDataTable
-            v-else
-            class="image-list workspace-directory-list"
-            :columns="imageTableColumns"
-            :rows="filteredRows"
-            row-key="id"
-            row-class="image-row"
-          >
-            <template #cell-name="{ row }">
-              <span
-                class="image-row__name"
-                :title="(row as AdminImageListItem).name"
-              >
-                {{ (row as AdminImageListItem).name }}
-              </span>
-            </template>
-
-            <template #cell-tag="{ row }">
-              <span
-                class="image-row__tag"
-                :title="(row as AdminImageListItem).tag"
-              >
-                {{ (row as AdminImageListItem).tag }}
-              </span>
-            </template>
-
-            <template #cell-description="{ row }">
-              <p
-                class="image-row__description"
-                :title="(row as AdminImageListItem).description || '未填写镜像说明'"
-              >
-                {{ (row as AdminImageListItem).description || '未填写镜像说明' }}
-              </p>
-            </template>
-
-            <template #cell-status="{ row }">
-              <div class="image-row__status">
-                <span
-                  class="admin-status-chip"
-                  :style="getStatusStyle((row as AdminImageListItem).status)"
-                >
-                  {{ getStatusLabel((row as AdminImageListItem).status) }}
-                </span>
-              </div>
-            </template>
-
-            <template #cell-created_at="{ row }">
-              <span class="image-row__time">
-                {{ formatDateTime((row as AdminImageListItem).created_at) }}
-              </span>
-            </template>
-
-            <template #cell-actions="{ row }">
-              <div class="image-row__actions">
-                <button
-                  class="ui-btn ui-btn--sm ui-btn--ghost"
-                  @click="openDetail(row as AdminImageListItem)"
-                >
-                  详情
-                </button>
-                <button
-                  class="ui-btn ui-btn--sm ui-btn--danger"
-                  @click="handleDelete((row as AdminImageListItem).id)"
-                >
-                  删除
-                </button>
-              </div>
-            </template>
-          </WorkspaceDataTable>
-
-          <div
-            v-if="total > 0"
-            class="admin-pagination workspace-directory-pagination"
-          >
-            <PlatformPaginationControls
-              :page="page"
-              :total-pages="Math.max(1, Math.ceil(total / pageSize))"
-              :total="total"
-              :total-label="`共 ${total} 条`"
-              @change-page="void changePage($event)"
-            />
-          </div>
-        </template>
-      </section>
+      <ImageDirectoryPanel
+        :list="list"
+        :rows="filteredRows"
+        :total="total"
+        :filtered-total="filteredTotal"
+        :page="page"
+        :total-pages="totalPages"
+        :loading="loading"
+        :keyword="keyword"
+        :status-filter="statusFilter"
+        :has-active-filters="hasActiveFilters"
+        :sort-options="sortOptions"
+        :selected-sort-label="sortConfig.label"
+        :get-status-label="getStatusLabel"
+        :get-status-style="getStatusStyle"
+        :format-date-time="formatDateTime"
+        @update:keyword="keyword = $event"
+        @update:status-filter="statusFilter = $event"
+        @select-sort="setSort"
+        @reset-filters="resetFilters"
+        @open-detail="openDetail"
+        @delete-image="handleDelete"
+        @change-page="void changePage($event)"
+      />
     </main>
 
     <ImageDetailModal
@@ -598,8 +432,7 @@ onUnmounted(() => {
   );
 }
 
-.image-header__actions > .ui-btn,
-.image-row__actions .ui-btn {
+.image-header__actions > .ui-btn {
   --ui-btn-height: 2.45rem;
   --ui-btn-radius: 0.75rem;
   --ui-btn-padding: var(--space-2) var(--space-4);
@@ -611,26 +444,6 @@ onUnmounted(() => {
   --ui-btn-ghost-color: var(--journal-ink);
   --ui-btn-ghost-hover-color: var(--journal-accent);
   --ui-btn-ghost-hover-background: color-mix(in srgb, var(--journal-accent) 4%, var(--journal-surface));
-  --ui-btn-danger-border: color-mix(in srgb, var(--color-danger) 28%, transparent);
-  --ui-btn-danger-background: color-mix(in srgb, var(--color-danger) 10%, var(--journal-surface));
-  --ui-btn-danger-color: color-mix(in srgb, var(--color-danger) 88%, var(--journal-ink));
-  --ui-btn-danger-hover-border: color-mix(in srgb, var(--color-danger) 34%, transparent);
-  --ui-btn-danger-hover-background: color-mix(in srgb, var(--color-danger) 14%, var(--journal-surface));
-}
-
-.admin-status-chip {
-  display: inline-flex;
-  align-items: center;
-  border-radius: 0.5rem;
-  padding: var(--space-1) var(--space-2-5);
-  font-size: var(--font-size-0-72);
-  font-weight: 600;
-}
-
-.admin-empty {
-  padding: var(--space-4) 0 0;
-  font-size: var(--font-size-0-875);
-  color: var(--journal-muted);
 }
 
 .image-header {
@@ -720,143 +533,6 @@ onUnmounted(() => {
   color: var(--journal-muted);
 }
 
-.image-board {
-  display: grid;
-  gap: var(--space-4);
-  padding-top: var(--space-1);
-}
-
-.image-board__head {
-  margin-bottom: 0;
-}
-
-.list-heading__title {
-  font-size: clamp(1.2rem, 1rem + 0.5vw, 1.45rem);
-}
-
-.image-board :deep(.workspace-directory-toolbar) {
-  margin-bottom: 0;
-}
-
-.image-section-title,
-.image-row__time {
-  color: var(--journal-ink);
-}
-
-.image-row__time {
-  font-size: var(--font-size-0-82);
-  line-height: 1.6;
-  color: var(--journal-muted);
-}
-
-.image-filter-grid {
-  display: grid;
-  gap: var(--space-4);
-}
-
-.image-filter-field {
-  display: grid;
-  gap: var(--space-2);
-}
-
-.image-filter-label {
-  font-size: var(--font-size-0-72);
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--journal-muted);
-}
-
-.image-filter-select {
-  width: 100%;
-  min-height: 2.5rem;
-  padding: 0 var(--space-3);
-  border: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-  border-radius: 0.75rem;
-  background: color-mix(in srgb, var(--journal-surface) 92%, var(--color-bg-base));
-  font-size: var(--font-size-0-875);
-  color: var(--journal-ink);
-}
-
-.image-list {
-  border: 1px solid color-mix(in srgb, var(--journal-border) 82%, transparent);
-  border-radius: 1.35rem;
-  background: color-mix(in srgb, var(--journal-surface) 98%, var(--color-bg-base));
-  padding: 0.25rem 0.9rem 0.4rem;
-}
-
-.image-list :deep(.workspace-data-table__head-cell) {
-  border-bottom-color: color-mix(in srgb, var(--journal-border) 82%, transparent);
-}
-
-.image-list :deep(.workspace-data-table__row) {
-  border-bottom-color: color-mix(in srgb, var(--journal-border) 82%, transparent);
-}
-
-.image-list :deep(.workspace-data-table__body tr:last-child) {
-  border-bottom-color: transparent;
-}
-
-.image-list :deep(.workspace-data-table__body-cell) {
-  vertical-align: top;
-}
-
-.image-row__name,
-.image-row__tag {
-  display: block;
-  min-width: 0;
-  font-family: var(--font-family-mono);
-}
-
-.image-row__name {
-  font-size: var(--font-size-1-00);
-  font-weight: 700;
-  color: var(--journal-ink);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.image-row__tag {
-  color: var(--journal-muted);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.image-row__description {
-  display: -webkit-box;
-  margin: 0;
-  min-width: 0;
-  font-size: var(--font-size-0-88);
-  line-height: 1.65;
-  color: var(--journal-muted);
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.image-row__status {
-  display: flex;
-  justify-content: center;
-}
-
-.image-row__time {
-  display: block;
-}
-
-.image-row__actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.5rem;
-}
-
-@media (max-width: 1040px) {
-  .image-list {
-    min-width: 56rem;
-  }
-}
-
 @media (max-width: 720px) {
   .image-status-strip {
     align-items: flex-start;
@@ -865,9 +541,5 @@ onUnmounted(() => {
   .image-status-strip__note {
     width: 100%;
   }
-
 }
 </style>
-
-
-
