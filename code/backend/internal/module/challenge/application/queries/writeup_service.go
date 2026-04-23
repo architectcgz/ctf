@@ -87,7 +87,14 @@ func (s *WriteupService) GetPublished(userID, challengeID int64) (*dto.Challenge
 }
 
 func (s *WriteupService) GetMySubmission(userID, challengeID int64) (*dto.SubmissionWriteupResp, error) {
-	challengeItem, err := s.repo.FindByID(challengeID)
+	return s.GetMySubmissionWithContext(context.Background(), userID, challengeID)
+}
+
+func (s *WriteupService) GetMySubmissionWithContext(ctx context.Context, userID, challengeID int64) (*dto.SubmissionWriteupResp, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	challengeItem, err := s.repo.FindByIDWithContext(ctx, challengeID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrChallengeNotFound
@@ -97,7 +104,7 @@ func (s *WriteupService) GetMySubmission(userID, challengeID int64) (*dto.Submis
 	if challengeItem.Status != model.ChallengeStatusPublished {
 		return nil, errcode.ErrChallengeNotPublish
 	}
-	item, err := s.repo.FindSubmissionWriteupByUserChallenge(userID, challengeID)
+	item, err := s.repo.FindSubmissionWriteupByUserChallengeWithContext(ctx, userID, challengeID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil

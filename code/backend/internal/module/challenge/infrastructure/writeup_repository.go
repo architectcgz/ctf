@@ -63,8 +63,15 @@ func (r *Repository) FindUserByID(userID int64) (*model.User, error) {
 }
 
 func (r *Repository) FindSubmissionWriteupByUserChallenge(userID, challengeID int64) (*model.SubmissionWriteup, error) {
+	return r.FindSubmissionWriteupByUserChallengeWithContext(context.Background(), userID, challengeID)
+}
+
+func (r *Repository) FindSubmissionWriteupByUserChallengeWithContext(ctx context.Context, userID, challengeID int64) (*model.SubmissionWriteup, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
 	var writeup model.SubmissionWriteup
-	err := r.db.Where("user_id = ? AND challenge_id = ?", userID, challengeID).First(&writeup).Error
+	err := r.db.WithContext(ctx).Where("user_id = ? AND challenge_id = ?", userID, challengeID).First(&writeup).Error
 	if err != nil {
 		return nil, err
 	}
