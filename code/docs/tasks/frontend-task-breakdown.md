@@ -5,7 +5,7 @@
 - 范围：`/home/azhi/workspace/projects/ctf/code/frontend`
 - 目标：记录前端任务拆分、当前完成状态、剩余待办与后续执行顺序
 - 流水线：`leader -> requirements-analyst（按需） -> frontend-engineer -> code-reviewer -> test-engineer`
-- 最后更新：2026-03-31
+- 最后更新：2026-04-23
 
 ## 当前判断
 
@@ -21,6 +21,11 @@
   - 前端改为上传预览 + 确认导入双阶段流程
   - 旧手工创建/编辑对话框从主页面移除
 - 当前如果继续联调，重点已经从“补接口缺口”转向“按业务流实际验证”。
+- 2026-04-22 前端专项审查的后续修复已继续推进到第二十轮：
+  - AWD 编排与运维组件簇的契约漂移已收口
+  - 教师端 `workspace / tabs / surface` 漂移已收口
+  - shared pagination review 基线已对齐到抽层后的真实 owner
+  - 这部分进展以 [ctf-frontend-audit-20260422.md](/home/azhi/workspace/projects/ctf/.worktrees/fix-frontend-audit-pass1/docs/reviews/frontend/ctf-frontend-audit-20260422.md) 为准
 
 ## 已完成任务
 
@@ -119,10 +124,10 @@
 1. `ContestManage` 仍有一个显式边界：后端未提供删除竞赛接口，所以前端继续隐藏删除能力。
 2. 公开竞赛 API 的历史枚举差异已经在客户端做了归一化；如果后续继续扩展竞赛域，建议抽成共享 mapper，避免多处维护。
 3. 管理员通知发布当前前端只开放单一目标范围选择；后端契约已支持 union 规则模型，后续若要做混合投递，需要再补交互设计。
-<<<<<<< HEAD
 4. 本轮“联调缺口补齐”已单独补 review 文档，后续继续扩展时沿用相同留档方式。
 5. 实例等待态展示当前依赖后端返回 `queue_position`、`eta_seconds`、`progress` 等可选字段；字段缺失时前端会降级为“排队信息同步中 / 预计时间计算中”，不会阻塞轮询或后续打开目标。
 6. `ChallengeManage` 新的导入流依赖后台 `challenge-imports` 接口；当前工作树已完成 `vitest`、`vue-tsc` 和 `vite build` 验证，但后续继续改该页时仍应优先回归这三类校验。
+7. 2026-04-22 前端专项审查并未整体关闭；剩余是否完成，应以专项审查文档中仍未收口的 `P1-4 / P2-1 / P2-5` 判断，而不是只看本任务拆解文档。
 
 ## 建议执行顺序
 
