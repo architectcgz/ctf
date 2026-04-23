@@ -197,6 +197,26 @@
   - `npm run test:run -- src/components/layout/__tests__/NotificationDropdown.test.ts`
   - `npm run typecheck`
 
+## 第四轮修复进展
+
+- 已完成：
+  - `P2-1` 教师端 AWD 复盘详情页已切回共享深色 surface 体系，移除亮色硬编码、`text-slate-*` 工具类和局部状态色，页面标题与赛事标题语义已拆开。
+  - 教师端共享 surface 回归里暴露的旧漂移一并收口：班级管理页按钮体系改回 `teacher-btn`，列表状态列改回共享目录标签结构；`ClassStudentsPage` 补齐教师端 surface token 形态；`TeacherAWDReviewIndex` 根壳补齐 `workspace-shell`；共享 `teacher-surface-hero` 改为直角版本。
+- 本轮涉及文件：
+  - `code/frontend/src/views/teacher/TeacherAWDReviewDetail.vue`
+  - `code/frontend/src/views/teacher/__tests__/TeacherAWDReviewDetail.test.ts`
+  - `code/frontend/src/views/teacher/TeacherAWDReviewIndex.vue`
+  - `code/frontend/src/components/teacher/class-management/ClassManagementPage.vue`
+  - `code/frontend/src/components/teacher/class-management/ClassStudentsPage.vue`
+  - `code/frontend/src/assets/styles/teacher-surface.css`
+
+## 第四轮验证
+
+- 已执行：
+  - `npm run test:run -- src/views/teacher/__tests__/TeacherAWDReviewDetail.test.ts`
+  - `npm run test:run -- src/views/teacher/__tests__/teacherDarkSurfaceAlignment.test.ts src/views/teacher/__tests__/teacherSurface.test.ts`
+  - `npm run typecheck`
+
 ## 备注
 
 - 本文件用于记录本轮前端专项审查结论与修复顺序。

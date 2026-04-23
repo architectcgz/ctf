@@ -1,18 +1,18 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { 
-  ArrowLeft, 
-  Download, 
-  FileDown, 
-  Shield, 
-  Waypoints, 
-  Clock, 
-  Target, 
-  Zap, 
+import { computed } from 'vue'
+import {
   Activity,
+  ArrowLeft,
   ChevronRight,
+  Clock,
+  Download,
+  FileDown,
+  Shield,
+  Target,
   TrendingUp,
-  Award
+  Trophy,
+  Waypoints,
+  Zap,
 } from 'lucide-vue-next'
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
@@ -42,7 +42,7 @@ const {
   exportReport,
 } = useTeacherAwdReviewDetail()
 
-const activeTitle = computed(() => review.value?.contest.title || 'AWD复盘')
+const activeContestTitle = computed(() => review.value?.contest.title || '--')
 const activeSummaryTitle = computed(() =>
   selectedRoundNumber.value ? `第 ${selectedRoundNumber.value} 轮` : '整场总览'
 )
@@ -67,800 +67,698 @@ const summaryStats = computed(() => {
   }
 })
 
+const timelineRounds = computed(() => review.value?.rounds || [])
+
 function contestStatusLabel(status: string): string {
   switch (status) {
-    case 'running': return '进行中'
-    case 'ended': return '已结束'
-    case 'frozen': return '冻结中'
-    default: return status || '未开始'
+    case 'running':
+      return '进行中'
+    case 'ended':
+      return '已结束'
+    case 'frozen':
+      return '冻结中'
+    default:
+      return status || '未开始'
   }
 }
 
-const timelineRounds = computed(() => review.value?.rounds || [])
+function formatServiceRef(serviceId?: string): string {
+  return `Service #${serviceId || '--'}`
+}
 </script>
 
 <template>
-  <div class="teacher-review-workspace">
-    <!-- 1. Academy Header -->
-    <header class="academy-header">
-      <div class="academy-header__identity">
-        <div class="academy-overline">
-          AWD Instructional Review / Academy Workspace
-        </div>
-        <div class="flex items-center gap-4">
-          <h1 class="academy-title">
-            {{ activeTitle }}
-          </h1>
-          <div
-            class="academy-badge"
-            :class="review?.contest.status"
-          >
-            {{ contestStatusLabel(review?.contest.status || '') }}
-          </div>
-        </div>
-        <p class="academy-description">
-          多维复盘攻防实战过程。通过轮次下钻与流量回溯，协助教师评估学生的防御加固能力与漏洞挖掘表现。
-        </p>
-      </div>
-
-      <div class="academy-header__actions">
-        <button
-          type="button"
-          class="academy-btn academy-btn--neutral"
-          @click="router.push({ name: 'TeacherAWDReviewIndex' })"
-        >
-          <ArrowLeft class="h-3.5 w-3.5" />
-          <span>返回列表</span>
-        </button>
-        <button
-          type="button"
-          class="academy-btn academy-btn--neutral"
-          :disabled="loading || !review || exporting === 'archive'"
-          @click="exportArchive"
-        >
-          <Download class="h-3.5 w-3.5" />
-          <span>归档导出</span>
-        </button>
-        <button
-          type="button"
-          class="academy-btn academy-btn--primary"
-          :disabled="loading || !review || exporting === 'report' || !canExportReport"
-          @click="exportReport"
-        >
-          <FileDown class="h-3.5 w-3.5" />
-          <span>生成评估报告</span>
-        </button>
-      </div>
-    </header>
-
-    <!-- 2. Insight Strip -->
-    <section class="academy-insight-strip">
-      <div class="insight-card">
-        <div class="insight-icon insight-icon--blue">
-          <TrendingUp class="h-4 w-4" />
-        </div>
-        <div class="insight-body">
-          <div class="insight-label">
-            视图焦点
-          </div>
-          <div class="insight-value">
-            {{ activeSummaryTitle }}
-          </div>
-        </div>
-      </div>
-      <div class="insight-card">
-        <div class="insight-icon insight-icon--emerald">
-          <Award class="h-4 w-4" />
-        </div>
-        <div class="insight-body">
-          <div class="insight-label">
-            参与规模
-          </div>
-          <div class="insight-value">
-            {{ summaryStats.teamCount }} <small>TEAMS</small> / {{ summaryStats.roundCount }} <small>ROUNDS</small>
-          </div>
-        </div>
-      </div>
-      <div class="insight-card">
-        <div class="insight-icon insight-icon--purple">
-          <Zap class="h-4 w-4" />
-        </div>
-        <div class="insight-body">
-          <div class="insight-label">
-            证据总量 (SRV/ATK/TRF)
-          </div>
-          <div class="insight-value">
-            {{ summaryStats.serviceCount }} / {{ summaryStats.attackCount }} / {{ summaryStats.trafficCount }}
-          </div>
-        </div>
-      </div>
-      <div class="insight-card">
-        <div class="insight-icon insight-icon--slate">
-          <Clock class="h-4 w-4" />
-        </div>
-        <div class="insight-body">
-          <div class="insight-label">
-            导出状态
-          </div>
-          <div class="insight-value text-slate-500">
-            {{ polling ? '后台处理中...' : '链路就绪' }}
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 3. Timeline Scroller -->
-    <nav class="academy-timeline">
-      <button 
-        class="timeline-node" 
-        :class="{ active: !selectedRoundNumber }"
-        @click="setRound(undefined)"
-      >
-        <div class="node-circle" />
-        <div class="node-label">
-          整场总览
-        </div>
-      </button>
-      <div class="timeline-line" />
-      <div class="timeline-nodes custom-scrollbar">
-        <button 
-          v-for="round in timelineRounds" 
-          :key="round.id"
-          class="timeline-node"
-          :class="{ active: selectedRoundNumber === round.round_number }"
-          @click="setRound(round.round_number)"
-        >
-          <div class="node-circle" />
-          <div class="node-label">
-            R{{ round.round_number }}
-          </div>
-        </button>
-      </div>
-    </nav>
-
-    <!-- 4. Main Canvas -->
-    <div
-      v-if="loading"
-      class="academy-loading-canvas"
+  <div class="teacher-management-shell teacher-surface workspace-shell flex min-h-full flex-1 flex-col">
+    <section
+      class="teacher-hero teacher-surface-hero teacher-review-workspace flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
     >
-      <div class="academy-spinner" />
-      <p>正在载入复盘分析数据...</p>
-    </div>
+      <div class="teacher-page">
+        <header class="teacher-topbar workspace-tab-heading awd-review-detail-header">
+          <div class="teacher-heading workspace-tab-heading__main">
+            <div class="workspace-overline awd-review-detail-overline">
+              AWD Review
+            </div>
+            <h1 class="teacher-title workspace-page-title">
+              AWD复盘
+            </h1>
+            <p class="teacher-copy workspace-page-copy">
+              <span class="awd-review-detail-contest-title">{{ activeContestTitle }}</span>
+              <span> · </span>
+              多维复盘攻防实战过程。通过轮次下钻与流量回溯，协助教师评估学生的防御加固能力与漏洞挖掘表现。
+            </p>
+          </div>
 
-    <AppEmpty
-      v-else-if="error"
-      title="复盘详情加载失败"
-      :description="error"
-      icon="AlertCircle"
-      class="academy-empty"
-    >
-      <template #action>
-        <button
-          type="button"
-          class="academy-btn academy-btn--primary"
-          @click="loadReview"
-        >
-          重新加载
-        </button>
-      </template>
-    </AppEmpty>
-
-    <div
-      v-else-if="review"
-      class="academy-canvas"
-    >
-      <!-- Round Overview / Team Analysis -->
-      <section class="academy-section">
-        <header class="section-header">
-          <h3 class="section-title">
-            {{ activeSummaryTitle }} 表现分析
-          </h3>
-          <div class="section-meta">
-            共 {{ summaryStats.teamCount }} 支参与队伍
+          <div class="teacher-actions">
+            <button
+              type="button"
+              class="teacher-btn teacher-btn--ghost"
+              @click="router.push({ name: 'TeacherAWDReviewIndex' })"
+            >
+              <ArrowLeft class="h-4 w-4" />
+              返回列表
+            </button>
+            <button
+              data-testid="awd-review-export-archive"
+              type="button"
+              class="teacher-btn teacher-btn--ghost"
+              :disabled="loading || !review || exporting === 'archive'"
+              @click="exportArchive"
+            >
+              <Download class="h-4 w-4" />
+              归档导出
+            </button>
+            <button
+              data-testid="awd-review-export-report"
+              type="button"
+              class="teacher-btn teacher-btn--primary"
+              :disabled="loading || !review || exporting === 'report' || !canExportReport"
+              @click="exportReport"
+            >
+              <FileDown class="h-4 w-4" />
+              生成评估报告
+            </button>
           </div>
         </header>
 
-        <div
-          v-if="!selectedRound"
-          class="round-card-grid"
-        >
-          <article
-            v-for="round in review.rounds"
-            :key="round.id"
-            class="round-summary-card"
-          >
-            <div class="round-summary-card__header">
-              <div class="round-number">
-                ROUND {{ round.round_number }}
+        <section class="teacher-summary teacher-summary--flat metric-panel-default-surface awd-review-summary">
+          <div class="teacher-summary-title">
+            <Trophy class="h-4 w-4" />
+            <span>{{ activeSummaryTitle }}</span>
+            <span
+              v-if="review"
+              class="awd-review-status-chip"
+              :class="`awd-review-status-chip--${review.contest.status || 'idle'}`"
+            >
+              {{ contestStatusLabel(review.contest.status || '') }}
+            </span>
+          </div>
+
+          <div class="teacher-summary-grid progress-strip metric-panel-grid">
+            <article class="progress-card metric-panel-card">
+              <div class="progress-card-label metric-panel-label">
+                轮次范围
               </div>
-              <button
-                type="button"
-                class="academy-btn academy-btn--ghost academy-btn--xs"
-                @click="setRound(round.round_number)"
-              >
-                下钻分析 <ChevronRight class="h-3 w-3" />
-              </button>
+              <div class="progress-card-value metric-panel-value">
+                {{ summaryStats.roundCount }}
+              </div>
+              <div class="progress-card-hint metric-panel-helper">
+                当前视图覆盖的轮次数量
+              </div>
+            </article>
+            <article class="progress-card metric-panel-card">
+              <div class="progress-card-label metric-panel-label">
+                参与队伍
+              </div>
+              <div class="progress-card-value metric-panel-value">
+                {{ summaryStats.teamCount }}
+              </div>
+              <div class="progress-card-hint metric-panel-helper">
+                当前视图包含的队伍数量
+              </div>
+            </article>
+            <article class="progress-card metric-panel-card">
+              <div class="progress-card-label metric-panel-label">
+                服务 / 攻击 / 流量
+              </div>
+              <div class="progress-card-value metric-panel-value">
+                {{ summaryStats.serviceCount }} / {{ summaryStats.attackCount }} / {{ summaryStats.trafficCount }}
+              </div>
+              <div class="progress-card-hint metric-panel-helper">
+                证据总量与服务运行信号
+              </div>
+            </article>
+            <article class="progress-card metric-panel-card">
+              <div class="progress-card-label metric-panel-label">
+                导出状态
+              </div>
+              <div class="progress-card-value metric-panel-value awd-review-status-text">
+                {{ polling ? '后台处理中...' : '链路就绪' }}
+              </div>
+              <div class="progress-card-hint metric-panel-helper">
+                归档与教师报告导出链路状态
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="workspace-directory-section teacher-directory-section awd-review-round-section">
+          <header class="list-heading">
+            <div>
+              <div class="journal-note-label">
+                Review Scope
+              </div>
+              <h3 class="list-heading__title">
+                轮次切换
+              </h3>
             </div>
-            <div class="round-summary-card__metrics">
-              <div class="metric-item">
-                <div class="metric-label">
-                  服务
-                </div>
-                <div class="metric-value">
-                  {{ round.service_count }}
-                </div>
-              </div>
-              <div class="metric-item">
-                <div class="metric-label">
-                  攻击
-                </div>
-                <div class="metric-value">
-                  {{ round.attack_count }}
-                </div>
-              </div>
-              <div class="metric-item">
-                <div class="metric-label">
-                  流量
-                </div>
-                <div class="metric-value">
-                  {{ round.traffic_count }}
-                </div>
-              </div>
+            <div class="teacher-directory-meta">
+              默认展示整场总览；可切到单轮查看本轮服务、攻击和流量证据。
             </div>
-            <div class="round-summary-card__footer">
-              {{ round.started_at ? formatDate(round.started_at) : '未开始' }}
-            </div>
-          </article>
-        </div>
+          </header>
+
+          <div class="awd-review-round-list custom-scrollbar">
+            <button
+              type="button"
+              class="teacher-directory-chip awd-review-round-chip"
+              :class="{ 'awd-review-round-chip--active': !selectedRoundNumber }"
+              @click="setRound(undefined)"
+            >
+              整场总览
+            </button>
+            <button
+              v-for="round in timelineRounds"
+              :key="round.id"
+              type="button"
+              class="teacher-directory-chip awd-review-round-chip"
+              :class="{ 'awd-review-round-chip--active': selectedRoundNumber === round.round_number }"
+              @click="setRound(round.round_number)"
+            >
+              R{{ round.round_number }}
+            </button>
+          </div>
+        </section>
 
         <div
-          v-else
-          class="academy-team-grid"
+          v-if="loading"
+          class="teacher-empty-state workspace-directory-empty awd-review-loading"
         >
-          <table class="academy-table">
-            <thead>
-              <tr>
-                <th>队伍</th>
-                <th>得分表现</th>
-                <th>命中记录</th>
-                <th>成员结构</th>
-                <th class="text-right">
-                  操作
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="team in selectedRound.teams"
-                :key="team.team_id"
-                class="group"
+          <div class="academy-spinner" />
+          <p>正在载入复盘分析数据...</p>
+        </div>
+
+        <AppEmpty
+          v-else-if="error"
+          title="复盘详情加载失败"
+          :description="error"
+          icon="AlertCircle"
+          class="teacher-empty-state workspace-directory-empty"
+        >
+          <template #action>
+            <button
+              type="button"
+              class="teacher-btn teacher-btn--primary"
+              @click="loadReview"
+            >
+              重新加载
+            </button>
+          </template>
+        </AppEmpty>
+
+        <template v-else-if="review">
+          <section class="workspace-directory-section teacher-directory-section awd-review-analysis-section">
+            <header class="list-heading">
+              <div>
+                <div class="journal-note-label">
+                  Performance Analysis
+                </div>
+                <h3 class="list-heading__title">
+                  {{ activeSummaryTitle }} 表现分析
+                </h3>
+              </div>
+              <div class="teacher-directory-meta">
+                共 {{ summaryStats.teamCount }} 支参与队伍
+              </div>
+            </header>
+
+            <div
+              v-if="!selectedRound"
+              class="awd-review-round-grid"
+            >
+              <article
+                v-for="round in review.rounds"
+                :key="round.id"
+                class="metric-panel-card awd-review-round-card"
               >
-                <td class="font-bold text-slate-900">
-                  <div class="flex items-center gap-3">
-                    <div class="h-2 w-2 rounded-full bg-emerald-400" />
-                    {{ team.team_name }}
+                <div class="awd-review-round-card__head">
+                  <div>
+                    <div class="journal-note-label">
+                      Round {{ round.round_number }}
+                    </div>
+                    <strong class="awd-review-round-card__title">第 {{ round.round_number }} 轮</strong>
                   </div>
-                </td>
-                <td class="font-mono text-emerald-600 font-bold">
-                  {{ team.total_score }} <small class="text-slate-400 font-sans ml-1">pts</small>
-                </td>
-                <td class="text-xs text-slate-500">
-                  {{ team.last_solve_at ? formatDate(team.last_solve_at) : '暂无命中' }}
-                </td>
-                <td class="text-xs text-slate-500">
-                  {{ team.member_count }} 成员 (UID: {{ team.captain_id }})
-                </td>
-                <td class="text-right">
                   <button
                     type="button"
-                    class="academy-btn academy-btn--ghost academy-btn--xs"
-                    @click="openTeam(team)"
+                    class="teacher-btn teacher-btn--ghost teacher-btn--compact"
+                    @click="setRound(round.round_number)"
                   >
-                    调阅细节
+                    下钻分析
+                    <ChevronRight class="h-3.5 w-3.5" />
                   </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- Evidence Grid -->
-      <section
-        v-if="selectedRound"
-        class="academy-evidence-grid"
-      >
-        <article class="evidence-panel">
-          <header class="panel-header">
-            <Activity class="h-4 w-4 text-emerald-600" />
-            <span>服务运行</span>
-          </header>
-          <div class="evidence-list custom-scrollbar">
-            <div
-              v-for="service in selectedRound.services"
-              :key="service.id"
-              class="evidence-item"
-            >
-              <div class="evidence-item__title">
-                {{ service.team_name }} · {{ service.challenge_title }}
-              </div>
-              <div class="evidence-item__meta">
-                Status: {{ service.service_status }} · SLA: {{ service.sla_score }}
-              </div>
+                </div>
+                <div class="awd-review-round-card__metrics">
+                  <span>服务 {{ round.service_count }}</span>
+                  <span>攻击 {{ round.attack_count }}</span>
+                  <span>流量 {{ round.traffic_count }}</span>
+                </div>
+              </article>
             </div>
-            <AppEmpty
-              v-if="selectedRound.services.length === 0"
-              icon="Shield"
-              title="无服务数据"
-              class="compact-empty"
-            />
-          </div>
-        </article>
 
-        <article class="evidence-panel">
-          <header class="panel-header">
-            <Sword class="h-4 w-4 text-red-600" />
-            <span>攻击记录</span>
-          </header>
-          <div class="evidence-list custom-scrollbar">
-            <div
-              v-for="attack in selectedRound.attacks"
-              :key="attack.id"
-              class="evidence-item"
+            <AppEmpty
+              v-else-if="selectedRound.teams.length === 0"
+              class="teacher-empty-state workspace-directory-empty"
+              icon="Users"
+              title="当前轮次暂无队伍数据"
+              description="该轮次还没有可展示的队伍表现。"
+            />
+
+            <section
+              v-else
+              class="teacher-directory"
             >
-              <div class="evidence-item__title">
-                {{ attack.attacker_team_name }} → {{ attack.victim_team_name }}
+              <div class="teacher-directory-head">
+                <span class="teacher-directory-head-cell teacher-directory-head-cell-name">队伍</span>
+                <span>得分表现</span>
+                <span>命中记录</span>
+                <span>成员结构</span>
+                <span>操作</span>
               </div>
-              <div class="evidence-item__meta">
-                {{ attack.challenge_title }} · {{ attack.attack_type }}
-              </div>
-            </div>
-            <AppEmpty
-              v-if="selectedRound.attacks.length === 0"
-              icon="Target"
-              title="无攻击记录"
-              class="compact-empty"
-            />
-          </div>
-        </article>
 
-        <article class="evidence-panel">
-          <header class="panel-header">
-            <Waypoints class="h-4 w-4 text-blue-600" />
-            <span>流量审计</span>
-          </header>
-          <div class="evidence-list custom-scrollbar">
-            <div
-              v-for="event in selectedRound.traffic"
-              :key="event.id"
-              class="evidence-item"
-            >
-              <div class="evidence-item__title">
-                {{ event.method }} {{ event.path }}
-              </div>
-              <div class="evidence-item__meta">
-                {{ event.attacker_team_name }} → {{ event.victim_team_name }} · {{ event.status_code }}
-              </div>
-            </div>
-            <AppEmpty
-              v-if="selectedRound.traffic.length === 0"
-              icon="Activity"
-              title="无流量证据"
-              class="compact-empty"
-            />
-          </div>
-        </article>
-      </section>
-    </div>
+              <button
+                v-for="team in selectedRound.teams"
+                :key="team.team_id"
+                type="button"
+                class="teacher-directory-row"
+                @click="openTeam(team)"
+              >
+                <div class="teacher-directory-cell teacher-directory-cell-name">
+                  <div class="awd-review-team-name">
+                    <span class="awd-review-team-dot" />
+                    <strong>{{ team.team_name }}</strong>
+                  </div>
+                </div>
+                <div class="teacher-directory-row-metrics awd-review-team-score">
+                  <strong>{{ team.total_score }}</strong>
+                  <span class="awd-review-team-score-suffix">pts</span>
+                </div>
+                <div class="teacher-directory-row-metrics">
+                  <span>{{ team.last_solve_at ? formatDate(team.last_solve_at) : '暂无命中' }}</span>
+                </div>
+                <div class="teacher-directory-row-metrics">
+                  <span>{{ team.member_count }} 成员</span>
+                  <span>UID: {{ team.captain_id }}</span>
+                </div>
+                <div class="teacher-directory-row-cta">
+                  <span class="teacher-directory-chip">调阅细节</span>
+                </div>
+              </button>
+            </section>
+          </section>
 
-    <TeacherAWDReviewTeamDrawer
-      :visible="Boolean(selectedTeam)"
-      :team="selectedTeam"
-      :services="selectedTeamServices"
-      :attacks="selectedTeamAttacks"
-      :traffic="selectedTeamTraffic"
-      @close="closeTeam"
-    />
+          <section
+            v-if="selectedRound"
+            class="awd-review-evidence-grid"
+          >
+            <article class="workspace-directory-section teacher-directory-section awd-review-evidence-panel">
+              <header class="list-heading awd-review-evidence-head">
+                <div>
+                  <div class="journal-note-label">
+                    Service Evidence
+                  </div>
+                  <h3 class="list-heading__title">
+                    服务运行
+                  </h3>
+                </div>
+                <Activity class="awd-review-evidence-icon awd-review-evidence-icon--service h-4 w-4" />
+              </header>
+              <div class="awd-review-evidence-list custom-scrollbar">
+                <AppEmpty
+                  v-if="selectedRound.services.length === 0"
+                  icon="Shield"
+                  title="无服务数据"
+                  class="teacher-empty-state workspace-directory-empty awd-review-compact-empty"
+                />
+                <article
+                  v-for="service in selectedRound.services"
+                  v-else
+                  :key="service.id"
+                  class="awd-review-evidence-item"
+                >
+                  <div class="awd-review-evidence-item__head">
+                    <strong>{{ service.team_name }} · {{ service.challenge_title }}</strong>
+                    <span
+                      v-if="service.service_id"
+                      data-testid="awd-review-service-id"
+                      class="teacher-directory-chip awd-review-service-chip"
+                    >
+                      {{ formatServiceRef(service.service_id) }}
+                    </span>
+                  </div>
+                  <p>{{ service.service_status }} · SLA {{ service.sla_score }}</p>
+                </article>
+              </div>
+            </article>
+
+            <article class="workspace-directory-section teacher-directory-section awd-review-evidence-panel">
+              <header class="list-heading awd-review-evidence-head">
+                <div>
+                  <div class="journal-note-label">
+                    Attack Evidence
+                  </div>
+                  <h3 class="list-heading__title">
+                    攻击记录
+                  </h3>
+                </div>
+                <Target class="awd-review-evidence-icon awd-review-evidence-icon--attack h-4 w-4" />
+              </header>
+              <div class="awd-review-evidence-list custom-scrollbar">
+                <AppEmpty
+                  v-if="selectedRound.attacks.length === 0"
+                  icon="Target"
+                  title="无攻击记录"
+                  class="teacher-empty-state workspace-directory-empty awd-review-compact-empty"
+                />
+                <article
+                  v-for="attack in selectedRound.attacks"
+                  v-else
+                  :key="attack.id"
+                  class="awd-review-evidence-item"
+                >
+                  <div class="awd-review-evidence-item__head">
+                    <strong>{{ attack.attacker_team_name }} → {{ attack.victim_team_name }}</strong>
+                    <span
+                      v-if="attack.service_id"
+                      data-testid="awd-review-attack-service-id"
+                      class="teacher-directory-chip awd-review-service-chip"
+                    >
+                      {{ formatServiceRef(attack.service_id) }}
+                    </span>
+                  </div>
+                  <p>{{ attack.challenge_title }} · {{ attack.attack_type }}</p>
+                </article>
+              </div>
+            </article>
+
+            <article class="workspace-directory-section teacher-directory-section awd-review-evidence-panel">
+              <header class="list-heading awd-review-evidence-head">
+                <div>
+                  <div class="journal-note-label">
+                    Traffic Evidence
+                  </div>
+                  <h3 class="list-heading__title">
+                    流量审计
+                  </h3>
+                </div>
+                <Waypoints class="awd-review-evidence-icon awd-review-evidence-icon--traffic h-4 w-4" />
+              </header>
+              <div class="awd-review-evidence-list custom-scrollbar">
+                <AppEmpty
+                  v-if="selectedRound.traffic.length === 0"
+                  icon="Activity"
+                  title="无流量证据"
+                  class="teacher-empty-state workspace-directory-empty awd-review-compact-empty"
+                />
+                <article
+                  v-for="event in selectedRound.traffic"
+                  v-else
+                  :key="event.id"
+                  class="awd-review-evidence-item"
+                >
+                  <div class="awd-review-evidence-item__head">
+                    <strong>{{ event.method }} {{ event.path }}</strong>
+                    <span
+                      v-if="event.service_id"
+                      data-testid="awd-review-traffic-service-id"
+                      class="teacher-directory-chip awd-review-service-chip"
+                    >
+                      {{ formatServiceRef(event.service_id) }}
+                    </span>
+                  </div>
+                  <p>{{ event.attacker_team_name }} → {{ event.victim_team_name }} · {{ event.status_code }}</p>
+                </article>
+              </div>
+            </article>
+          </section>
+        </template>
+      </div>
+
+      <TeacherAWDReviewTeamDrawer
+        :visible="Boolean(selectedTeam)"
+        :team="selectedTeam"
+        :services="selectedTeamServices"
+        :attacks="selectedTeamAttacks"
+        :traffic="selectedTeamTraffic"
+        @close="closeTeam"
+      />
+    </section>
   </div>
 </template>
 
 <style scoped>
 .teacher-review-workspace {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  padding: 2rem;
-  background: #fdfdfd;
-  min-height: 100%;
+  --awd-review-surface: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 96%, var(--color-bg-base));
+  --awd-review-surface-subtle: color-mix(in srgb, var(--journal-surface-subtle, var(--color-bg-elevated)) 92%, var(--color-bg-base));
+  --awd-review-line: color-mix(in srgb, var(--journal-border, var(--color-border-default)) 74%, transparent);
+  --awd-review-line-strong: color-mix(in srgb, var(--journal-border, var(--color-border-default)) 84%, transparent);
+  --awd-review-text: var(--journal-ink, var(--color-text-primary));
+  --awd-review-muted: var(--journal-muted, var(--color-text-secondary));
+  --awd-review-faint: color-mix(in srgb, var(--color-text-muted) 88%, var(--awd-review-muted));
+  --awd-review-primary: var(--journal-accent, var(--color-primary));
+  --awd-review-primary-strong: var(--journal-accent-strong, var(--color-primary-hover));
+  --awd-review-success: var(--color-success);
+  --awd-review-warning: var(--color-warning);
+  --awd-review-danger: var(--color-danger);
+  --awd-review-blue: var(--color-brand-swatch-blue);
+  gap: var(--space-6);
 }
 
-.academy-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  padding-bottom: 1.5rem;
-  border-bottom: 1px solid #edf2f7;
+.awd-review-detail-header {
+  gap: var(--space-4);
 }
 
-.academy-overline {
-  font-size: 10px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.15em;
-  color: #a0aec0;
-  margin-bottom: 0.5rem;
+.awd-review-summary {
+  --metric-panel-border: color-mix(in srgb, var(--awd-review-primary) 14%, var(--awd-review-line));
+  --metric-panel-background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--awd-review-surface) 98%, var(--color-bg-base)),
+    color-mix(in srgb, var(--awd-review-surface-subtle) 94%, var(--color-bg-base))
+  );
 }
 
-.academy-title {
-  font-size: 1.75rem;
-  font-weight: 900;
-  color: #2d3748;
-  margin: 0;
-}
-
-.academy-badge {
-  padding: 0.25rem 0.75rem;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 800;
-  background: #edf2f7;
-  color: #4a5568;
-}
-
-.academy-badge.running { background: #ebf8ff; color: #2b6cb0; }
-.academy-badge.ended { background: #f7fafc; color: #718096; }
-
-.academy-description {
-  margin: 0.75rem 0 0;
-  font-size: 14px;
-  color: #718096;
-  max-width: 45rem;
-  line-height: 1.6;
-}
-
-.academy-header__actions {
-  display: flex;
-  gap: 0.75rem;
-}
-
-.academy-btn {
+.awd-review-status-chip {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  height: 2.5rem;
-  padding: 0 1.25rem;
-  border-radius: 0.75rem;
-  font-size: 13px;
+  min-height: 1.8rem;
+  padding: 0 var(--space-3);
+  border-radius: 999px;
+  border: 1px solid var(--awd-review-line);
+  background: color-mix(in srgb, var(--awd-review-line) 14%, var(--awd-review-surface));
+  color: var(--awd-review-muted);
+  font-size: var(--font-size-0-74);
   font-weight: 700;
-  transition: all 0.2s ease;
-  cursor: pointer;
 }
 
-.academy-btn--neutral {
-  background: white;
-  border: 1px solid #e2e8f0;
-  color: #4a5568;
+.awd-review-status-chip--running {
+  border-color: color-mix(in srgb, var(--awd-review-primary) 24%, transparent);
+  background: color-mix(in srgb, var(--awd-review-primary) 10%, transparent);
+  color: var(--awd-review-primary-strong);
 }
 
-.academy-btn--neutral:hover {
-  background: #f7fafc;
-  border-color: #cbd5e0;
+.awd-review-status-chip--ended,
+.awd-review-status-chip--frozen {
+  border-color: color-mix(in srgb, var(--awd-review-line-strong) 86%, transparent);
+  background: color-mix(in srgb, var(--awd-review-line) 18%, var(--awd-review-surface-subtle));
+  color: var(--awd-review-muted);
 }
 
-.academy-btn--primary {
-  background: #3182ce;
-  color: white;
-  border: none;
+.awd-review-status-text {
+  color: var(--awd-review-muted);
 }
 
-.academy-btn--primary:hover {
-  background: #2b6cb0;
-  transform: translateY(-1px);
-}
-
-.academy-btn--ghost {
-  background: transparent;
-  color: #3182ce;
-  border: none;
-}
-
-.academy-btn--xs {
-  height: 1.75rem;
-  padding: 0 0.75rem;
-  font-size: 11px;
-}
-
-.academy-insight-strip {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1.25rem;
-}
-
-.insight-card {
-  background: white;
-  border: 1px solid #edf2f7;
-  border-radius: 1rem;
-  padding: 1.25rem;
+.awd-review-round-list {
   display: flex;
-  align-items: center;
-  gap: 1.25rem;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
-}
-
-.insight-icon {
-  width: 2.75rem;
-  height: 2.75rem;
-  border-radius: 0.75rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.insight-icon--blue { background: #ebf8ff; color: #3182ce; }
-.insight-icon--emerald { background: #f0fff4; color: #38a169; }
-.insight-icon--purple { background: #faf5ff; color: #805ad5; }
-.insight-icon--slate { background: #f7fafc; color: #718096; }
-
-.insight-label {
-  font-size: 10px;
-  font-weight: 800;
-  text-transform: uppercase;
-  color: #a0aec0;
-}
-
-.insight-value {
-  font-size: 1.15rem;
-  font-weight: 900;
-  color: #2d3748;
-}
-
-.insight-value small {
-  font-size: 10px;
-  color: #a0aec0;
-}
-
-.academy-timeline {
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-  background: white;
-  padding: 1rem 1.5rem;
-  border: 1px solid #edf2f7;
-  border-radius: 1rem;
-}
-
-.timeline-node {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  min-width: 4rem;
-}
-
-.node-circle {
-  width: 0.75rem;
-  height: 0.75rem;
-  border-radius: 50%;
-  border: 2px solid #e2e8f0;
-  background: white;
-  transition: all 0.2s ease;
-}
-
-.node-label {
-  font-size: 11px;
-  font-weight: 700;
-  color: #718096;
-}
-
-.timeline-node.active .node-circle {
-  border-color: #3182ce;
-  background: #3182ce;
-  transform: scale(1.2);
-}
-
-.timeline-node.active .node-label {
-  color: #2b6cb0;
-}
-
-.timeline-line {
-  width: 2rem;
-  height: 2px;
-  background: #edf2f7;
-}
-
-.timeline-nodes {
-  flex: 1;
-  display: flex;
-  gap: 1.5rem;
+  flex-wrap: nowrap;
+  gap: var(--space-3);
   overflow-x: auto;
-  padding: 0.25rem 0;
 }
 
-.academy-section {
-  background: white;
-  border: 1px solid #edf2f7;
-  border-radius: 1rem;
-  padding: 1.5rem;
+.awd-review-round-chip {
+  border: 1px solid var(--awd-review-line);
+  background: color-mix(in srgb, var(--awd-review-surface-subtle) 92%, transparent);
+  color: var(--awd-review-muted);
 }
 
-.section-header {
-  margin-bottom: 1.5rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.awd-review-round-chip--active {
+  border-color: color-mix(in srgb, var(--awd-review-primary) 28%, transparent);
+  background: color-mix(in srgb, var(--awd-review-primary) 12%, transparent);
+  color: var(--awd-review-primary-strong);
 }
 
-.section-title {
-  font-size: 1.15rem;
-  font-weight: 900;
-  color: #2d3748;
-}
-
-.section-meta {
-  font-size: 12px;
-  color: #a0aec0;
-}
-
-.round-card-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
-  gap: 1.25rem;
-}
-
-.round-summary-card {
-  border: 1px solid #edf2f7;
-  border-radius: 1rem;
-  padding: 1.25rem;
-  transition: all 0.2s ease;
-}
-
-.round-summary-card:hover {
-  border-color: #3182ce;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
-}
-
-.round-summary-card__header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-}
-
-.round-number {
-  font-size: 13px;
-  font-weight: 900;
-  color: #4a5568;
-}
-
-.round-summary-card__metrics {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.75rem;
-  margin-bottom: 1rem;
-}
-
-.metric-label {
-  font-size: 10px;
-  color: #a0aec0;
-  text-transform: uppercase;
-}
-
-.metric-value {
-  font-size: 1rem;
-  font-weight: 800;
-  color: #2d3748;
-}
-
-.round-summary-card__footer {
-  font-size: 11px;
-  color: #cbd5e0;
-}
-
-.academy-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.academy-table th {
-  text-align: left;
-  padding: 0.75rem 1rem;
-  font-size: 10px;
-  font-weight: 800;
-  text-transform: uppercase;
-  color: #a0aec0;
-  border-bottom: 2px solid #edf2f7;
-}
-
-.academy-table td {
-  padding: 1rem;
-  border-bottom: 1px solid #f7fafc;
-}
-
-.academy-evidence-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.5rem;
-}
-
-.evidence-panel {
-  background: white;
-  border: 1px solid #edf2f7;
-  border-radius: 1rem;
-  padding: 1.25rem;
-  display: flex;
-  flex-direction: column;
-  height: 30rem;
-}
-
-.panel-header {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid #f7fafc;
-  margin-bottom: 1rem;
-  font-size: 14px;
-  font-weight: 900;
-  color: #2d3748;
-}
-
-.evidence-list {
-  flex: 1;
-  overflow-y: auto;
-}
-
-.evidence-item {
-  padding: 0.85rem;
-  border-radius: 0.75rem;
-  border: 1px solid transparent;
-  transition: all 0.2s ease;
-}
-
-.evidence-item:hover {
-  background: #f7fafc;
-  border-color: #edf2f7;
-}
-
-.evidence-item__title {
-  font-size: 13px;
-  font-weight: 700;
-  color: #2d3748;
-}
-
-.evidence-item__meta {
-  font-size: 11px;
-  color: #718096;
-  margin-top: 0.25rem;
-}
-
-.compact-empty :deep(.empty-icon) {
-  width: 2rem;
-  height: 2rem;
-}
-
-.academy-loading-canvas {
-  flex: 1;
+.awd-review-loading {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 1rem;
-  color: #718096;
+  gap: var(--space-4);
+  min-height: 14rem;
+  color: var(--awd-review-muted);
 }
 
 .academy-spinner {
   width: 2.5rem;
   height: 2.5rem;
-  border: 3px solid #edf2f7;
-  border-top-color: #3182ce;
+  border: 3px solid color-mix(in srgb, var(--awd-review-line) 88%, transparent);
+  border-top-color: var(--awd-review-primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
 
+.awd-review-analysis-section,
+.awd-review-evidence-panel {
+  background: color-mix(in srgb, var(--awd-review-surface) 98%, var(--color-bg-base));
+}
+
+.awd-review-round-grid,
+.awd-review-evidence-grid {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.awd-review-round-grid {
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+}
+
+.awd-review-evidence-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.awd-review-round-card {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.awd-review-round-card__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.awd-review-round-card__title {
+  color: var(--awd-review-text);
+}
+
+.awd-review-round-card__metrics {
+  display: grid;
+  gap: var(--space-2);
+  color: var(--awd-review-muted);
+}
+
+.awd-review-team-name {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  color: var(--awd-review-text);
+}
+
+.awd-review-team-dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--awd-review-success) 88%, var(--awd-review-primary));
+  flex-shrink: 0;
+}
+
+.awd-review-team-score {
+  color: color-mix(in srgb, var(--awd-review-success) 90%, var(--awd-review-text));
+}
+
+.awd-review-team-score-suffix {
+  color: var(--awd-review-faint);
+  font-family: var(--font-family-sans);
+}
+
+.awd-review-evidence-head {
+  align-items: center;
+}
+
+.awd-review-evidence-icon {
+  color: var(--awd-review-muted);
+}
+
+.awd-review-evidence-icon--service {
+  color: color-mix(in srgb, var(--awd-review-success) 88%, var(--awd-review-text));
+}
+
+.awd-review-evidence-icon--attack {
+  color: color-mix(in srgb, var(--awd-review-danger) 88%, var(--awd-review-text));
+}
+
+.awd-review-evidence-icon--traffic {
+  color: color-mix(in srgb, var(--awd-review-blue) 88%, var(--awd-review-text));
+}
+
+.awd-review-evidence-list {
+  display: grid;
+  gap: var(--space-3);
+  min-height: 14rem;
+  max-height: 26rem;
+  overflow-y: auto;
+}
+
+.awd-review-evidence-item {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border: 1px solid var(--awd-review-line);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--awd-review-surface-subtle) 82%, transparent);
+}
+
+.awd-review-evidence-item__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.awd-review-evidence-item__head strong {
+  color: var(--awd-review-text);
+}
+
+.awd-review-evidence-item p {
+  margin: 0;
+  color: var(--awd-review-muted);
+  line-height: 1.6;
+}
+
+.awd-review-service-chip {
+  flex-shrink: 0;
+}
+
+.awd-review-compact-empty {
+  min-height: 100%;
+}
+
+.teacher-directory :deep(.teacher-directory-row),
+.teacher-directory :deep(.teacher-directory-head) {
+  border-color: var(--awd-review-line);
+}
+
+.teacher-directory :deep(.teacher-directory-row) {
+  background: color-mix(in srgb, var(--awd-review-surface) 98%, var(--color-bg-base));
+}
+
+.teacher-directory :deep(.teacher-directory-row:hover),
+.teacher-directory :deep(.teacher-directory-row:focus-visible) {
+  background: color-mix(in srgb, var(--awd-review-primary) 8%, transparent);
+}
+
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 1024px) {
+  .awd-review-evidence-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .awd-review-round-card__head,
+  .awd-review-evidence-item__head {
+    flex-direction: column;
+  }
 }
 </style>
-
