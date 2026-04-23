@@ -167,6 +167,29 @@ func TestServiceCreateContainerCreatesIsolatedNetwork(t *testing.T) {
 	}
 }
 
+func TestServiceCreateContainerFailsWhenRuntimeEngineUnavailable(t *testing.T) {
+	t.Parallel()
+
+	repo := newTestRepository(t)
+	service := runtimecmd.NewProvisioningService(repo, nil, &config.ContainerConfig{
+		PortRangeStart:     30000,
+		PortRangeEnd:       30010,
+		DefaultExposedPort: 8080,
+		PublicHost:         "127.0.0.1",
+	}, nil)
+
+	containerID, networkID, hostPort, servicePort, err := service.CreateContainer(context.Background(), "ctf/web:v1", nil, 0)
+	if err == nil {
+		t.Fatal("expected CreateContainer() to fail when runtime engine is unavailable")
+	}
+	if !strings.Contains(err.Error(), "runtime engine is not configured") {
+		t.Fatalf("expected runtime engine unavailable error, got %v", err)
+	}
+	if containerID != "" || networkID != "" || hostPort != 0 || servicePort != 0 {
+		t.Fatalf("expected zero runtime result on failure, got container=%q network=%q hostPort=%d servicePort=%d", containerID, networkID, hostPort, servicePort)
+	}
+}
+
 func TestServiceCreateContainerRemovesNetworkWhenStartFails(t *testing.T) {
 	t.Parallel()
 

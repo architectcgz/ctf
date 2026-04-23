@@ -116,6 +116,9 @@ func (s *ProvisioningService) CreateTopology(ctx context.Context, req *runtimepo
 	if req == nil || len(req.Nodes) == 0 {
 		return nil, fmt.Errorf("topology nodes are required")
 	}
+	if s.engine == nil {
+		return nil, fmt.Errorf("runtime engine is not configured")
+	}
 
 	networks := normalizedCreateNetworks(req.Networks)
 	entryNodeIndex := -1
