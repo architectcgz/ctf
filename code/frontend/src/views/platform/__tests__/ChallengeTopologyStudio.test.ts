@@ -162,8 +162,6 @@ describe('ChallengeTopologyStudioPage', () => {
     expect(challengeTopologyStudioPageSource).toContain('class="ui-btn ui-btn--primary topology-action-btn')
     expect(challengeTopologyStudioPageSource).toContain('class="ui-btn ui-btn--secondary topology-action-btn')
     expect(challengeTopologyStudioPageSource).toContain('class="ui-btn ui-btn--danger topology-action-btn')
-    expect(challengeTopologyStudioPageSource).not.toContain('topology-toolbar-btn')
-    expect(challengeTopologyStudioPageSource).not.toContain('template-action-btn')
   })
 
   it('删除拓扑失败时应优先展示接口返回消息', async () => {

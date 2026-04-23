@@ -142,7 +142,7 @@ const rootClasses = computed(() => [
     >
       <button
         type="button"
-        class="ui-btn ui-btn--ghost topology-action-btn"
+        class="topology-toolbar-btn topology-toolbar-btn--primary"
         @click="handleResetTemplateEditor"
       >
         <Plus class="h-4 w-4" />
@@ -150,7 +150,7 @@ const rootClasses = computed(() => [
       </button>
       <button
         type="button"
-        class="ui-btn ui-btn--ghost topology-action-btn"
+        class="topology-toolbar-btn topology-toolbar-btn--ghost"
         @click="void reloadAll()"
       >
         <RefreshCw class="h-4 w-4" />
@@ -686,7 +686,7 @@ const rootClasses = computed(() => [
                 <template #footer>
                   <button
                     type="button"
-                    class="ui-btn ui-btn--ghost topology-action-btn"
+                    class="topology-toolbar-btn topology-toolbar-btn--ghost"
                     @click="addNode"
                   >
                     <Plus class="h-4 w-4" />
@@ -752,7 +752,7 @@ const rootClasses = computed(() => [
                 <template #footer>
                   <button
                     type="button"
-                    class="ui-btn ui-btn--ghost topology-action-btn"
+                    class="topology-toolbar-btn topology-toolbar-btn--ghost"
                     @click="addNetwork"
                   >
                     <Plus class="h-4 w-4" />
@@ -828,7 +828,7 @@ const rootClasses = computed(() => [
                 <template #footer>
                   <button
                     type="button"
-                    class="ui-btn ui-btn--ghost topology-action-btn"
+                    class="topology-toolbar-btn topology-toolbar-btn--ghost"
                     @click="addLink"
                   >
                     <Link2 class="h-4 w-4" />
@@ -912,7 +912,7 @@ const rootClasses = computed(() => [
                 <template #footer>
                   <button
                     type="button"
-                    class="ui-btn ui-btn--ghost topology-action-btn"
+                    class="topology-toolbar-btn topology-toolbar-btn--ghost"
                     @click="addPolicy"
                   >
                     <ShieldBan class="h-4 w-4" />
@@ -2014,7 +2014,7 @@ const rootClasses = computed(() => [
                             type="button"
                             :class="
                               isTemplateLibraryMode
-                                ? 'ui-btn ui-btn--secondary topology-action-btn'
+                                ? 'template-action-btn'
                                 : 'ui-btn ui-btn--sm ui-btn--secondary'
                             "
                             @click="loadTemplateIntoDraft(template)"
@@ -2026,7 +2026,7 @@ const rootClasses = computed(() => [
                             type="button"
                             :class="
                               isTemplateLibraryMode
-                                ? 'ui-btn ui-btn--secondary topology-action-btn'
+                                ? 'template-action-btn'
                                 : 'ui-btn ui-btn--sm ui-btn--secondary'
                             "
                             @click="resetTemplateForm(template)"
@@ -2038,7 +2038,7 @@ const rootClasses = computed(() => [
                             type="button"
                             :class="
                               isTemplateLibraryMode
-                                ? 'ui-btn ui-btn--primary topology-action-btn'
+                                ? 'template-action-btn template-action-btn--primary'
                                 : 'ui-btn ui-btn--sm ui-btn--primary'
                             "
                             :disabled="templateBusy"
@@ -2050,7 +2050,7 @@ const rootClasses = computed(() => [
                             type="button"
                             :class="
                               isTemplateLibraryMode
-                                ? 'ui-btn ui-btn--danger topology-action-btn'
+                                ? 'template-action-btn template-action-btn--danger'
                                 : 'ui-btn ui-btn--sm ui-btn--danger'
                             "
                             :disabled="templateBusy"
@@ -2099,7 +2099,7 @@ const rootClasses = computed(() => [
                         type="button"
                         :class="
                           isTemplateLibraryMode
-                            ? 'ui-btn ui-btn--secondary topology-action-btn'
+                            ? 'template-action-btn'
                             : 'ui-btn ui-btn--ghost topology-action-btn'
                         "
                         @click="handleResetTemplateEditor"
@@ -2110,7 +2110,7 @@ const rootClasses = computed(() => [
                         type="button"
                         :class="
                           isTemplateLibraryMode
-                            ? 'ui-btn ui-btn--primary topology-action-btn'
+                            ? 'template-action-btn template-action-btn--primary'
                             : 'ui-btn ui-btn--primary topology-action-btn'
                         "
                         :disabled="templateBusy"
@@ -2123,7 +2123,7 @@ const rootClasses = computed(() => [
                         type="button"
                         :class="
                           isTemplateLibraryMode
-                            ? 'ui-btn ui-btn--secondary topology-action-btn'
+                            ? 'template-action-btn'
                             : 'ui-btn ui-btn--ghost topology-action-btn'
                         "
                         :disabled="templateBusy || !selectedTemplateId"
@@ -2314,6 +2314,60 @@ const rootClasses = computed(() => [
 .topology-action-btn--icon {
   min-width: 2.75rem;
   padding-inline: var(--space-3);
+}
+
+.topology-toolbar-btn,
+.template-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 2.45rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--journal-border);
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--font-size-0-84);
+  font-weight: 600;
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease,
+    color 150ms ease;
+}
+
+.topology-toolbar-btn--ghost,
+.template-action-btn {
+  background: color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base));
+  color: var(--journal-ink);
+}
+
+.topology-toolbar-btn--ghost:hover,
+.template-action-btn:hover {
+  border-color: color-mix(in srgb, var(--journal-accent) 28%, transparent);
+  background: color-mix(in srgb, var(--journal-accent) 4%, var(--journal-surface));
+  color: var(--journal-accent);
+}
+
+.topology-toolbar-btn--primary,
+.template-action-btn--primary {
+  border-color: transparent;
+  background: var(--journal-accent);
+  color: var(--color-bg-base);
+}
+
+.topology-toolbar-btn--primary:hover,
+.template-action-btn--primary:hover {
+  background: color-mix(in srgb, var(--journal-accent) 88%, black);
+}
+
+.template-action-btn--danger {
+  border-color: color-mix(in srgb, var(--color-danger) 28%, transparent);
+  background: color-mix(in srgb, var(--color-danger) 10%, var(--journal-surface));
+  color: color-mix(in srgb, var(--color-danger) 88%, var(--journal-ink));
+}
+
+.template-action-btn--danger:hover {
+  border-color: color-mix(in srgb, var(--color-danger) 34%, transparent);
+  background: color-mix(in srgb, var(--color-danger) 14%, var(--journal-surface));
 }
 
 .topology-page--challenge .topology-page-heading {
