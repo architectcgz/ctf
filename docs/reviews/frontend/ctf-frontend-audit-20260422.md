@@ -8,7 +8,7 @@
 | 审查范围 | `code/frontend/src` 路由、关键视图、composables、stores、共享样式与验证门禁 |
 | 审查日期 | 2026-04-22 |
 | 审查方式 | 静态代码审查 + 最小验证基线检查 |
-| 审查状态 | 已记录，已完成十三轮最小高收益修复 |
+| 审查状态 | 已记录，已完成十四轮最小高收益修复 |
 
 ## 当前结论
 
@@ -102,6 +102,7 @@
   - 已确认位置：
     - `code/frontend/src/router/index.ts`
     - `code/frontend/src/views/challenges/ChallengeDetail.vue`
+    - `code/frontend/src/views/challenges/ChallengeList.vue`
     - `code/frontend/src/views/contests/ContestDetail.vue`
     - `code/frontend/src/views/platform/ImageManage.vue`
   - 影响：
@@ -386,6 +387,25 @@
 
 - 已执行：
   - `npm run test:run -- src/views/contests/__tests__/contestDetailPanelExtraction.test.ts src/views/contests/__tests__/ContestDetail.test.ts`
+  - `npm run typecheck`
+
+## 第十四轮修复进展
+
+- 已完成：
+  - `P2-5` `ChallengeList.vue` 继续减重，题目目录工作区已抽到独立 `components/challenge/ChallengeDirectoryPanel.vue`，路由页不再直接承载筛选区、空错态和题目目录表格模板。
+  - 这轮拆分保持了状态 ownership 不变：路由 query 同步、分页、搜索刷新和跳转动作仍由 `ChallengeList.vue` 持有，新组件只通过 props 和 emits 装配目录交互。
+  - `ChallengeList` 的源码护栏已同步更新为题目目录工作区通过独立组件接线，原有目录式结构、共享 UI 原语和标题溢出约束都改为面向组合源码检查。
+  - `ChallengeList.vue` 本体行数已从 `946` 行降到 `318` 行，页面本体现在基本只剩路由同步、分页装配、概况区和导航动作。
+- 本轮涉及文件：
+  - `code/frontend/src/views/challenges/ChallengeList.vue`
+  - `code/frontend/src/components/challenge/ChallengeDirectoryPanel.vue`
+  - `code/frontend/src/views/challenges/__tests__/ChallengeList.test.ts`
+  - `code/frontend/src/views/challenges/__tests__/challengeListPanelExtraction.test.ts`
+
+## 第十四轮验证
+
+- 已执行：
+  - `npm run test:run -- src/views/challenges/__tests__/challengeListPanelExtraction.test.ts src/views/challenges/__tests__/ChallengeList.test.ts`
   - `npm run typecheck`
 
 ## 备注

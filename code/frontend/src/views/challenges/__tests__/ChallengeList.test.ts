@@ -4,6 +4,7 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 
 import ChallengeList from '../ChallengeList.vue'
 import challengeListSource from '../ChallengeList.vue?raw'
+import challengeDirectoryPanelSource from '@/components/challenge/ChallengeDirectoryPanel.vue?raw'
 import { getChallenges } from '@/api/challenge'
 
 vi.mock('@/api/challenge', () => ({
@@ -52,6 +53,8 @@ async function mountPage(initialPath = '/challenges') {
   return wrapper
 }
 
+const combinedSource = [challengeListSource, challengeDirectoryPanelSource].join('\n')
+
 describe('ChallengeList', () => {
   beforeEach(() => {
     mockedGetChallenges.mockReset()
@@ -92,9 +95,9 @@ describe('ChallengeList', () => {
   })
 
   it('页头标题与说明应接入共享工作区排版类', () => {
-    expect(challengeListSource).toContain('<div class="workspace-overline">Challenges</div>')
-    expect(challengeListSource).toContain(
-      '<h1 class="workspace-page-title challenge-title">靶场训练</h1>'
+    expect(challengeListSource).toMatch(/<div class="workspace-overline">\s*Challenges\s*<\/div>/)
+    expect(challengeListSource).toMatch(
+      /<h1 class="workspace-page-title challenge-title">\s*靶场训练\s*<\/h1>/
     )
     expect(challengeListSource).not.toContain('<div class="journal-eyebrow">Challenges</div>')
     expect(challengeListSource).not.toContain('journal-eyebrow-text')
@@ -140,14 +143,14 @@ describe('ChallengeList', () => {
   it('题目列表页操作与筛选控件应接入共享 ui 原语', () => {
     expect(challengeListSource).toContain('class="ui-btn ui-btn--primary"')
     expect(challengeListSource).toContain('class="ui-btn ui-btn--ghost"')
-    expect(challengeListSource).toContain('class="ui-btn ui-btn--secondary"')
-    expect(challengeListSource).toMatch(/class="ui-control-wrap(?:\s+[^\"]+)?"/)
-    expect(challengeListSource).toContain('class="ui-control"')
-    expect(challengeListSource).toContain('class="ui-control-prefix"')
-    expect(challengeListSource).not.toMatch(/^\.challenge-input,\s*$/m)
-    expect(challengeListSource).not.toMatch(/^\.challenge-select\s*\{/m)
-    expect(challengeListSource).not.toMatch(/^\.challenge-input:focus,\s*$/m)
-    expect(challengeListSource).not.toMatch(/^\.challenge-btn-ghost\s*\{/m)
+    expect(combinedSource).toContain('class="ui-btn ui-btn--secondary"')
+    expect(combinedSource).toMatch(/class="ui-control-wrap(?:\s+[^\"]+)?"/)
+    expect(combinedSource).toContain('class="ui-control"')
+    expect(combinedSource).toContain('class="ui-control-prefix"')
+    expect(combinedSource).not.toMatch(/^\.challenge-input,\s*$/m)
+    expect(combinedSource).not.toMatch(/^\.challenge-select\s*\{/m)
+    expect(combinedSource).not.toMatch(/^\.challenge-input:focus,\s*$/m)
+    expect(combinedSource).not.toMatch(/^\.challenge-btn-ghost\s*\{/m)
   })
 
   it('搜索时应通过 keyword 参数请求真实筛选', async () => {
@@ -402,41 +405,41 @@ describe('ChallengeList', () => {
   })
 
   it('应采用平铺目录式题目列表而不是卡片网格', () => {
-    expect(challengeListSource).toContain(
+    expect(combinedSource).toContain(
       'class="workspace-directory-section challenge-directory-section"'
     )
-    expect(challengeListSource).toContain('class="list-heading"')
-    expect(challengeListSource).not.toContain('challenge-controls-title')
-    expect(challengeListSource).not.toContain('challenge-controls-copy')
-    expect(challengeListSource).not.toContain('challenge-filter-pill')
-    expect(challengeListSource).not.toContain('激活筛选')
-    expect(challengeListSource).toContain('challenge-directory')
-    expect(challengeListSource).toContain('challenge-row')
-    expect(challengeListSource).not.toContain(
+    expect(combinedSource).toContain('class="list-heading"')
+    expect(combinedSource).not.toContain('challenge-controls-title')
+    expect(combinedSource).not.toContain('challenge-controls-copy')
+    expect(combinedSource).not.toContain('challenge-filter-pill')
+    expect(combinedSource).not.toContain('激活筛选')
+    expect(combinedSource).toContain('challenge-directory')
+    expect(combinedSource).toContain('challenge-row')
+    expect(combinedSource).not.toContain(
       '</section>\n\n        <div v-if="total > 0" class="challenge-pagination">'
     )
-    expect(challengeListSource).toContain('题目列表')
-    expect(challengeListSource).toContain('challenge-search-input')
-    expect(challengeListSource).toContain('搜索题目标题或描述')
-    expect(challengeListSource).not.toContain('challenge-row-index')
-    expect(challengeListSource).not.toContain('CH-{{ challengeIndex(index) }}')
-    expect(challengeListSource).toContain('<span>分类</span>')
-    expect(challengeListSource).toContain('<span>难度</span>')
-    expect(challengeListSource).toContain('<span>解出</span>')
-    expect(challengeListSource).toContain('<span>尝试</span>')
-    expect(challengeListSource).toContain('class="challenge-row-category"')
-    expect(challengeListSource).toContain('class="challenge-row-difficulty"')
-    expect(challengeListSource).toContain('class="challenge-row-solved"')
-    expect(challengeListSource).toContain('class="challenge-row-attempts"')
-    expect(challengeListSource).toMatch(
+    expect(combinedSource).toContain('题目列表')
+    expect(combinedSource).toContain('challenge-search-input')
+    expect(combinedSource).toContain('搜索题目标题或描述')
+    expect(combinedSource).not.toContain('challenge-row-index')
+    expect(combinedSource).not.toContain('CH-{{ challengeIndex(index) }}')
+    expect(combinedSource).toContain('<span>分类</span>')
+    expect(combinedSource).toContain('<span>难度</span>')
+    expect(combinedSource).toContain('<span>解出</span>')
+    expect(combinedSource).toContain('<span>尝试</span>')
+    expect(combinedSource).toContain('class="challenge-row-category"')
+    expect(combinedSource).toContain('class="challenge-row-difficulty"')
+    expect(combinedSource).toContain('class="challenge-row-solved"')
+    expect(combinedSource).toContain('class="challenge-row-attempts"')
+    expect(combinedSource).toMatch(
       /class="challenge-row-title"[\s\S]*:title="challenge\.title"/s
     )
-    expect(challengeListSource).toMatch(
+    expect(combinedSource).toMatch(
       /\.challenge-row-title\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s
     )
-    expect(challengeListSource).not.toContain('class="challenge-card')
-    expect(challengeListSource).not.toContain('Training Range')
-    expect(challengeListSource).not.toContain('Challenge Filters')
+    expect(combinedSource).not.toContain('class="challenge-card')
+    expect(combinedSource).not.toContain('Training Range')
+    expect(combinedSource).not.toContain('Challenge Filters')
   })
 
   it('单页结果时也应显式显示分页状态', async () => {
