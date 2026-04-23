@@ -2,7 +2,6 @@ package commands
 
 import (
 	"context"
-	"time"
 
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
@@ -10,7 +9,7 @@ import (
 )
 
 func (s *SubmissionService) handleIncorrectSubmission(ctx context.Context, submission *model.Submission, rateLimitKey string) (*dto.SubmissionResp, error) {
-	_ = s.redis.Set(ctx, rateLimitKey, "1", 5*time.Second).Err()
+	_ = s.redis.Set(ctx, rateLimitKey, "1", s.cfg.Contest.SubmissionRateLimitTTL).Err()
 	if err := s.repo.CreateSubmission(ctx, submission); err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}

@@ -306,6 +306,52 @@ func TestSubmissionServiceSubmitFlagInContestDoesNotPersistSubmittedFlag(t *test
 	}
 }
 
+func TestSubmissionServiceSubmitFlagInContestUsesConfiguredIncorrectSubmissionRateLimitTTL(t *testing.T) {
+	cfg := &config.Config{
+		Contest: config.ContestConfig{
+			BaseScore:              1000,
+			MinScore:               100,
+			Decay:                  0.9,
+			FirstBloodBonus:        0.1,
+			SubmissionRateLimitTTL: 9 * time.Second,
+		},
+	}
+	service, redisClient, db := newContestSubmissionTestServiceWithConfig(t, cfg)
+
+	now := time.Now()
+	contestID := int64(16)
+	challengeID := int64(116)
+	teamID := int64(161)
+	userID := int64(1601)
+
+	createContestSubmissionFixture(t, db, contestID, challengeID, now)
+	testsupport.CreateContestTeamRegistration(t, db, contestID, teamID, userID, "Limiter", now)
+
+	resp, err := service.SubmitFlagInContest(context.Background(), userID, contestID, challengeID, "flag{wrong}")
+	if err != nil {
+		t.Fatalf("SubmitFlagInContest() error = %v", err)
+	}
+	if resp.IsCorrect {
+		t.Fatalf("expected incorrect response, got %+v", resp)
+	}
+
+	keys, err := redisClient.Keys(context.Background(), "contest:submit:rate:*").Result()
+	if err != nil {
+		t.Fatalf("list rate limit keys: %v", err)
+	}
+	if len(keys) != 1 {
+		t.Fatalf("expected one rate limit key, got %v", keys)
+	}
+
+	ttl, err := redisClient.TTL(context.Background(), keys[0]).Result()
+	if err != nil {
+		t.Fatalf("load rate limit ttl: %v", err)
+	}
+	if ttl != cfg.Contest.SubmissionRateLimitTTL {
+		t.Fatalf("expected rate limit ttl %v, got %v", cfg.Contest.SubmissionRateLimitTTL, ttl)
+	}
+}
+
 func TestScoreboardServiceRebuildScoreboardUsesTeamTotals(t *testing.T) {
 	db := testsupport.SetupContestTestDB(t)
 
@@ -635,6 +681,10 @@ func TestSubmissionServiceUsesChallengeFlagValidator(t *testing.T) {
 }
 
 func newContestSubmissionTestService(t *testing.T) (*contestcmd.SubmissionService, *redis.Client, *gorm.DB) {
+	return newContestSubmissionTestServiceWithConfig(t, nil)
+}
+
+func newContestSubmissionTestServiceWithConfig(t *testing.T, cfg *config.Config) (*contestcmd.SubmissionService, *redis.Client, *gorm.DB) {
 	t.Helper()
 
 	db := testsupport.SetupContestTestDB(t)
@@ -655,13 +705,16 @@ func newContestSubmissionTestService(t *testing.T) (*contestcmd.SubmissionServic
 		t.Fatalf("new flag service: %v", err)
 	}
 
-	cfg := &config.Config{
-		Contest: config.ContestConfig{
-			BaseScore:       1000,
-			MinScore:        100,
-			Decay:           0.9,
-			FirstBloodBonus: 0.1,
-		},
+	if cfg == nil {
+		cfg = &config.Config{
+			Contest: config.ContestConfig{
+				BaseScore:              1000,
+				MinScore:               100,
+				Decay:                  0.9,
+				FirstBloodBonus:        0.1,
+				SubmissionRateLimitTTL: 5 * time.Second,
+			},
+		}
 	}
 	contestRepo := contestinfra.NewRepository(db)
 	scoreboardService := contestcmd.NewScoreboardAdminService(contestRepo, redisClient, &cfg.Contest)
