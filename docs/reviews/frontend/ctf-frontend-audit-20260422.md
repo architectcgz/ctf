@@ -8,7 +8,7 @@
 | 审查范围 | `code/frontend/src` 路由、关键视图、composables、stores、共享样式与验证门禁 |
 | 审查日期 | 2026-04-22 |
 | 审查方式 | 静态代码审查 + 最小验证基线检查 |
-| 审查状态 | 已记录，已完成十八轮最小高收益修复 |
+| 审查状态 | 已记录，已完成十九轮最小高收益修复 |
 
 ## 当前结论
 
@@ -108,6 +108,7 @@
     - `code/frontend/src/views/platform/ImageManage.vue`
     - `code/frontend/src/views/platform/AuditLog.vue`
     - `code/frontend/src/views/platform/ChallengeManage.vue`
+    - `code/frontend/src/views/platform/AWDReviewIndex.vue`
   - 影响：
     - 阅读和回归成本高，局部修复也更容易带出连锁问题。
 
@@ -488,6 +489,28 @@
 - 已执行：
   - `npm run test:run -- src/views/platform/__tests__/challengeManageDirectoryExtraction.test.ts src/views/platform/__tests__/ChallengeManage.test.ts`
   - `npm run typecheck`
+
+## 第十九轮修复进展
+
+- 已完成：
+  - `P2-5` `AWDReviewIndex.vue` 继续减重，复盘赛事目录工作区已抽到独立 `components/platform/awd-review/AwdReviewDirectoryPanel.vue`，路由页不再直接承载目录头、筛选区、空错态与表格模板。
+  - 这轮拆分保持了状态 ownership 不变：赛事列表加载、自动筛选、路由跳转、刷新和摘要统计仍由 `AWDReviewIndex.vue` 持有，新组件只通过 props 和 emits 承载目录展示与交互。
+  - 同页摘要区已切回统一 `admin-summary-grid + progress-strip + metric-panel-*` 原语，`AWDReviewIndex` 的源码护栏也同步更新为父子组合源码检查。
+  - `AWDReviewIndex.vue` 本体行数已从 `535` 行降到 `217` 行，页面本体现在主要只剩 workspace shell、摘要区、目录状态装配和动作 owner。
+- 本轮涉及文件：
+  - `code/frontend/src/views/platform/AWDReviewIndex.vue`
+  - `code/frontend/src/components/platform/awd-review/AwdReviewDirectoryPanel.vue`
+  - `code/frontend/src/views/platform/__tests__/AWDReviewIndex.test.ts`
+  - `code/frontend/src/views/platform/__tests__/awdReviewDirectoryExtraction.test.ts`
+  - `code/frontend/src/views/platform/__tests__/platformManagementSurfaceAlignment.test.ts`
+
+## 第十九轮验证
+
+- 已执行：
+  - `npm run test:run -- src/views/platform/__tests__/awdReviewDirectoryExtraction.test.ts src/views/platform/__tests__/AWDReviewIndex.test.ts`
+  - `npm run typecheck`
+- 额外检查：
+  - `npm run test:run -- src/views/platform/__tests__/platformManagementSurfaceAlignment.test.ts` 仍存在仓内既有失败，当前失败面主要落在 `UserGovernancePage`、`ContestOrchestrationPage`、共享 `journal-notes.css` 等非本轮 AWD 变更文件，本次提交未扩大处理范围。
 
 ## 备注
 
