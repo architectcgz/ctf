@@ -61,8 +61,12 @@ func (r *Repository) FindReleasedWriteupByChallengeIDWithContext(ctx context.Con
 }
 
 func (r *Repository) FindUserByID(userID int64) (*model.User, error) {
+	return r.FindUserByIDWithContext(context.Background(), userID)
+}
+
+func (r *Repository) FindUserByIDWithContext(ctx context.Context, userID int64) (*model.User, error) {
 	var user model.User
-	err := r.db.Where("id = ?", userID).First(&user).Error
+	err := r.dbWithContext(ctx).Where("id = ?", userID).First(&user).Error
 	if err != nil {
 		return nil, err
 	}
@@ -161,7 +165,11 @@ func (r teacherSubmissionWriteupRow) toRecord() challengeports.TeacherSubmission
 }
 
 func (r *Repository) GetTeacherSubmissionWriteupByID(id int64) (*challengeports.TeacherSubmissionWriteupRecord, error) {
-	rows, _, err := r.listTeacherSubmissionWriteups(&dto.TeacherSubmissionWriteupQuery{
+	return r.GetTeacherSubmissionWriteupByIDWithContext(context.Background(), id)
+}
+
+func (r *Repository) GetTeacherSubmissionWriteupByIDWithContext(ctx context.Context, id int64) (*challengeports.TeacherSubmissionWriteupRecord, error) {
+	rows, _, err := r.listTeacherSubmissionWriteups(ctx, &dto.TeacherSubmissionWriteupQuery{
 		Page: 1,
 		Size: 1,
 	}, func(db *gorm.DB) *gorm.DB {
@@ -178,7 +186,11 @@ func (r *Repository) GetTeacherSubmissionWriteupByID(id int64) (*challengeports.
 }
 
 func (r *Repository) ListTeacherSubmissionWriteups(query *dto.TeacherSubmissionWriteupQuery) ([]challengeports.TeacherSubmissionWriteupRecord, int64, error) {
-	return r.listTeacherSubmissionWriteups(query, nil)
+	return r.ListTeacherSubmissionWriteupsWithContext(context.Background(), query)
+}
+
+func (r *Repository) ListTeacherSubmissionWriteupsWithContext(ctx context.Context, query *dto.TeacherSubmissionWriteupQuery) ([]challengeports.TeacherSubmissionWriteupRecord, int64, error) {
+	return r.listTeacherSubmissionWriteups(ctx, query, nil)
 }
 
 type recommendedSolutionRow struct {
@@ -390,10 +402,11 @@ func (r *Repository) ListCommunitySolutionsByChallengeID(challengeID int64, quer
 }
 
 func (r *Repository) listTeacherSubmissionWriteups(
+	ctx context.Context,
 	query *dto.TeacherSubmissionWriteupQuery,
 	extra func(db *gorm.DB) *gorm.DB,
 ) ([]challengeports.TeacherSubmissionWriteupRecord, int64, error) {
-	base := r.db.Table("submission_writeups AS sw").
+	base := r.dbWithContext(ctx).Table("submission_writeups AS sw").
 		Select(strings.TrimSpace(`
 			sw.id,
 			sw.user_id,

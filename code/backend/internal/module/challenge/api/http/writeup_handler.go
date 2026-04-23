@@ -38,7 +38,9 @@ type writeupQueryService interface {
 	ListRecommendedSolutions(userID, challengeID int64) (*dto.PageResult, error)
 	ListCommunitySolutions(userID, challengeID int64, query *dto.CommunityChallengeSolutionQuery) (*dto.PageResult, error)
 	ListTeacherSubmissions(requesterID int64, requesterRole string, query *dto.TeacherSubmissionWriteupQuery) (*dto.PageResult, error)
+	ListTeacherSubmissionsWithContext(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherSubmissionWriteupQuery) (*dto.PageResult, error)
 	GetTeacherSubmission(submissionID, requesterID int64, requesterRole string) (*dto.TeacherSubmissionWriteupDetailResp, error)
+	GetTeacherSubmissionWithContext(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*dto.TeacherSubmissionWriteupDetailResp, error)
 }
 
 func NewWriteupHandler(commands writeupCommandService, queries writeupQueryService) *WriteupHandler {
@@ -206,7 +208,7 @@ func (h *WriteupHandler) ListTeacherSubmissions(c *gin.Context) {
 		response.ValidationError(c, err)
 		return
 	}
-	resp, err := h.queries.ListTeacherSubmissions(currentUser.UserID, currentUser.Role, &query)
+	resp, err := h.queries.ListTeacherSubmissionsWithContext(c.Request.Context(), currentUser.UserID, currentUser.Role, &query)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -221,7 +223,7 @@ func (h *WriteupHandler) GetTeacherSubmission(c *gin.Context) {
 		response.InvalidParams(c, "无效的 submission id")
 		return
 	}
-	resp, err := h.queries.GetTeacherSubmission(submissionID, currentUser.UserID, currentUser.Role)
+	resp, err := h.queries.GetTeacherSubmissionWithContext(c.Request.Context(), submissionID, currentUser.UserID, currentUser.Role)
 	if err != nil {
 		response.FromError(c, err)
 		return
