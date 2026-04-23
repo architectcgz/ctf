@@ -107,12 +107,8 @@ function openContestWorkbench(contest: ContestDetailData) {
       >
         <header class="list-heading contest-overview-head">
           <div class="workspace-tab-heading__main">
-            <div class="workspace-overline">
-              Contest Workspace
-            </div>
-            <h1 class="workspace-page-title">
-              竞赛目录
-            </h1>
+            <div class="workspace-overline">Contest Workspace</div>
+            <h1 class="workspace-page-title">竞赛目录</h1>
           </div>
 
           <div class="ui-toolbar-actions contest-panel-actions">
@@ -136,58 +132,58 @@ function openContestWorkbench(contest: ContestDetailData) {
           </div>
         </header>
 
-        <div class="metric-panel-grid metric-panel-grid--premium">
-          <div class="metric-panel-card metric-panel-card--premium">
-            <div class="metric-panel-label">
+        <div class="admin-summary-grid contest-overview-summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface">
+          <article class="journal-note progress-card metric-panel-card">
+            <div class="journal-note-label progress-card-label metric-panel-label">
               <span>赛事总量</span>
               <Trophy class="h-4 w-4" />
             </div>
-            <div class="metric-panel-value">
+            <div class="journal-note-value progress-card-value metric-panel-value">
               {{ total.toString().padStart(2, '0') }}
             </div>
-            <div class="metric-panel-helper">
+            <div class="journal-note-helper progress-card-hint metric-panel-helper">
               当前条件下的赛事总数
             </div>
-          </div>
+          </article>
 
-          <div class="metric-panel-card metric-panel-card--premium">
-            <div class="metric-panel-label">
+          <article class="journal-note progress-card metric-panel-card">
+            <div class="journal-note-label progress-card-label metric-panel-label">
               <span>报名中</span>
               <Users class="h-4 w-4" />
             </div>
-            <div class="metric-panel-value">
+            <div class="journal-note-value progress-card-value metric-panel-value">
               {{ registeringCount.toString().padStart(2, '0') }}
             </div>
-            <div class="metric-panel-helper">
+            <div class="journal-note-helper progress-card-hint metric-panel-helper">
               当前页开放报名的赛事
             </div>
-          </div>
+          </article>
 
-          <div class="metric-panel-card metric-panel-card--premium">
-            <div class="metric-panel-label">
+          <article class="journal-note progress-card metric-panel-card">
+            <div class="journal-note-label progress-card-label metric-panel-label">
               <span>进行中</span>
               <Activity class="h-4 w-4" />
             </div>
-            <div class="metric-panel-value">
+            <div class="journal-note-value progress-card-value metric-panel-value">
               {{ runningCount.toString().padStart(2, '0') }}
             </div>
-            <div class="metric-panel-helper">
+            <div class="journal-note-helper progress-card-hint metric-panel-helper">
               当前页正在进行的赛事
             </div>
-          </div>
+          </article>
 
-          <div class="metric-panel-card metric-panel-card--premium">
-            <div class="metric-panel-label">
+          <article class="journal-note progress-card metric-panel-card">
+            <div class="journal-note-label progress-card-label metric-panel-label">
               <span>AWD 模式</span>
               <Layers class="h-4 w-4" />
             </div>
-            <div class="metric-panel-value">
+            <div class="journal-note-value progress-card-value metric-panel-value">
               {{ awdCount.toString().padStart(2, '0') }}
             </div>
-            <div class="metric-panel-helper">
+            <div class="journal-note-helper progress-card-hint metric-panel-helper">
               已接入运维链路的赛事
             </div>
-          </div>
+          </article>
         </div>
 
         <section class="workspace-directory-section contest-directory-section">
@@ -196,9 +192,7 @@ function openContestWorkbench(contest: ContestDetailData) {
               <div class="journal-note-label">
                 Contest Directory
               </div>
-              <h2 class="list-heading__title">
-                竞赛列表
-              </h2>
+              <h2 class="list-heading__title">竞赛列表</h2>
             </div>
           </header>
           <WorkspaceDirectoryToolbar
@@ -290,12 +284,8 @@ function openContestWorkbench(contest: ContestDetailData) {
         <section class="workspace-directory-section contest-create-panel">
           <header class="list-heading contest-create-head">
             <div class="workspace-tab-heading__main">
-              <div class="workspace-overline">
-                Contest Setup
-              </div>
-              <h2 class="workspace-page-title">
-                创建竞赛
-              </h2>
+              <div class="workspace-overline">Contest Setup</div>
+              <h2 class="workspace-page-title">创建竞赛</h2>
               <p class="workspace-page-copy">
                 在当前工作区里补齐竞赛基础信息和时间窗口，保存后直接回到赛事工作台继续编排。
               </p>
@@ -375,13 +365,25 @@ function openContestWorkbench(contest: ContestDetailData) {
 
 .contest-directory-section,
 .contest-create-panel {
-  --workspace-directory-section-padding: var(--space-2) 0;
+  --workspace-directory-section-padding: var(--space-5) var(--space-5-5);
   background: transparent;
   border: none;
 }
 
-.contest-directory-section :deep(.workspace-directory-toolbar) {
-  margin-bottom: 0.5rem;
+.contest-overview-summary.metric-panel-default-surface.metric-panel-workspace-surface {
+  --metric-panel-columns: 4;
+  --metric-panel-border: color-mix(in srgb, var(--workspace-brand) 16%, var(--workspace-line-soft));
+  --metric-panel-background:
+    radial-gradient(
+      circle at top left,
+      color-mix(in srgb, var(--workspace-brand) 16%, transparent),
+      transparent 60%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--journal-surface) 97%, transparent),
+      color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base))
+    );
 }
 
 .contest-create-head {

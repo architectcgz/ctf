@@ -13,6 +13,7 @@ const adminApiMocks = vi.hoisted(() => ({
 }))
 const pushMock = vi.fn()
 const replaceMock = vi.fn()
+const destructiveConfirmMock = vi.hoisted(() => vi.fn())
 const routeState = vi.hoisted(() => ({
   query: {} as Record<string, string>,
 }))
@@ -36,11 +37,16 @@ vi.mock('vue-router', async () => {
     useRouter: () => ({ push: pushMock, replace: replaceMock }),
   }
 })
+vi.mock('@/composables/useDestructiveConfirm', () => ({
+  confirmDestructiveAction: destructiveConfirmMock,
+}))
 
 describe('UserManage', () => {
   beforeEach(() => {
     vi.useFakeTimers()
     Object.values(adminApiMocks).forEach((mock) => mock.mockReset())
+    destructiveConfirmMock.mockReset()
+    destructiveConfirmMock.mockResolvedValue(true)
     pushMock.mockReset()
     replaceMock.mockReset()
     routeState.query = {}
@@ -371,7 +377,7 @@ describe('UserManage', () => {
     expect(importPanelStart).toBeGreaterThan(-1)
     expect(userGovernanceSource).toContain('<div class="workspace-overline">User Import</div>')
     expect(userGovernanceSource).toContain('<h2 class="workspace-page-title">导入用户</h2>')
-    expect(userGovernanceSource).toMatch(
+    expect(userGovernanceSource).not.toMatch(
       /\.user-directory-section :deep\(\.workspace-directory-toolbar\)\s*\{[\s\S]*margin-bottom:\s*0;/s
     )
   })
@@ -465,7 +471,6 @@ describe('UserManage', () => {
       page_size: 20,
     })
     adminApiMocks.deleteUser.mockRejectedValue(new Error('删除失败'))
-    vi.spyOn(window, 'confirm').mockReturnValue(true)
 
     const wrapper = mount(UserManage, {
       global: {
@@ -485,6 +490,11 @@ describe('UserManage', () => {
     await expect(wrapper.get('#delete-user').trigger('click')).resolves.toBeUndefined()
     await flushPromises()
 
+    expect(destructiveConfirmMock).toHaveBeenCalledWith({
+      title: '删除用户',
+      message: '确定删除用户 alice 吗？',
+      confirmButtonText: '确认删除',
+    })
     expect(adminApiMocks.deleteUser).toHaveBeenCalledWith('1')
   })
 })

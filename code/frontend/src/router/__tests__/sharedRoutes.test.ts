@@ -12,6 +12,14 @@ function findChild(path: string) {
 }
 
 describe('shared route canonical paths', () => {
+  it('收拢 ui-lab 为受保护的内部页面', () => {
+    const uiLabRoute = routes.find((route) => route.path === '/ui-lab')
+
+    expect(uiLabRoute?.name).toBe('UILab')
+    expect(uiLabRoute?.meta?.requiresAuth).toBe(true)
+    expect(uiLabRoute?.meta?.roles).toEqual(['admin'])
+  })
+
   it('uses role-neutral paths as the canonical location for shared profile pages', () => {
     expect(findChild('profile')?.name).toBe('Profile')
     expect(findChild('settings/security')?.name).toBe('SecuritySettings')

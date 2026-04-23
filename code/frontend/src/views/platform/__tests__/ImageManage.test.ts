@@ -2,6 +2,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import ImageManage from '../ImageManage.vue'
 import imageManageSource from '../ImageManage.vue?raw'
+import imageCreateModalSource from '@/components/platform/images/ImageCreateModal.vue?raw'
+import imageDetailModalSource from '@/components/platform/images/ImageDetailModal.vue?raw'
+import imageDirectoryPanelSource from '@/components/platform/images/ImageDirectoryPanel.vue?raw'
 import { ApiError } from '@/api/request'
 
 const { getImagesMock, createImageMock, deleteImageMock } = vi.hoisted(() => ({
@@ -68,6 +71,8 @@ function mountPage() {
   })
 }
 
+const combinedSource = [imageManageSource, imageDirectoryPanelSource].join('\n')
+
 describe('ImageManage', () => {
   beforeEach(() => {
     vi.useFakeTimers()
@@ -101,10 +106,12 @@ describe('ImageManage', () => {
   it('应在头部展示轻量状态条而不是总量卡片', () => {
     expect(imageManageSource).toContain('class="image-status-strip"')
     expect(imageManageSource).toContain('data-testid="image-status-pill"')
-    expect(imageManageSource).toContain(
-      '<div class="image-status-strip__note">{{ refreshHint }}</div>'
+    expect(imageManageSource).toMatch(
+      /<div class="image-status-strip__note">\s*\{\{ refreshHint \}\}\s*<\/div>/
     )
-    expect(imageManageSource).toContain('<div class="workspace-overline">Image Registry</div>')
+    expect(imageManageSource).toMatch(
+      /<div class="workspace-overline">\s*Image Registry\s*<\/div>/
+    )
     expect(imageManageSource).not.toContain('<div class="journal-eyebrow">Image Registry</div>')
     expect(imageManageSource).not.toContain('镜像总量')
     expect(imageManageSource).not.toContain('当前查询结果的镜像总数')
@@ -112,22 +119,32 @@ describe('ImageManage', () => {
   })
 
   it('创建镜像弹窗应改用后台表单原语而不是 Element Plus 表单', () => {
-    expect(imageManageSource).toContain("from '@/components/common/modal-templates/AdminSurfaceModal.vue'")
-    expect(imageManageSource).toContain('<AdminSurfaceModal')
-    expect(imageManageSource).not.toContain('<ElForm')
-    expect(imageManageSource).not.toContain('<ElFormItem')
-    expect(imageManageSource).not.toContain('<ElInput')
-    expect(imageManageSource).toContain('class="ui-field')
-    expect(imageManageSource).toContain('class="ui-control-wrap')
-    expect(imageManageSource).toContain('class="ui-control')
-    expect(imageManageSource).toContain('class="ui-btn ui-btn--secondary')
-    expect(imageManageSource).toContain('class="ui-btn ui-btn--primary')
+    expect(imageManageSource).toContain("import ImageCreateModal from '@/components/platform/images/ImageCreateModal.vue'")
+    expect(imageManageSource).toContain('<ImageCreateModal')
+    expect(imageCreateModalSource).toContain("from '@/components/common/modal-templates/AdminSurfaceModal.vue'")
+    expect(imageCreateModalSource).toContain('<AdminSurfaceModal')
+    expect(imageCreateModalSource).not.toContain('<ElForm')
+    expect(imageCreateModalSource).not.toContain('<ElFormItem')
+    expect(imageCreateModalSource).not.toContain('<ElInput')
+    expect(imageCreateModalSource).toContain('class="ui-field')
+    expect(imageCreateModalSource).toContain('class="ui-control-wrap')
+    expect(imageCreateModalSource).toContain('class="ui-control')
+    expect(imageCreateModalSource).toContain('class="ui-btn ui-btn--secondary')
+    expect(imageCreateModalSource).toContain('class="ui-btn ui-btn--primary')
+  })
+
+  it('镜像详情弹窗应抽到独立平台组件并保留后台 surface modal', () => {
+    expect(imageManageSource).toContain("import ImageDetailModal from '@/components/platform/images/ImageDetailModal.vue'")
+    expect(imageManageSource).toContain('<ImageDetailModal')
+    expect(imageDetailModalSource).toContain("from '@/components/common/modal-templates/AdminSurfaceModal.vue'")
+    expect(imageDetailModalSource).toContain('<AdminSurfaceModal')
+    expect(imageDetailModalSource).toContain('class="image-detail__grid"')
   })
 
   it('应改用共享 ui-btn 原语而不是页面私有 admin-btn 按钮族', () => {
     expect(imageManageSource).toContain('class="ui-btn ui-btn--ghost"')
     expect(imageManageSource).toContain('class="ui-btn ui-btn--primary"')
-    expect(imageManageSource).toContain('class="ui-btn ui-btn--sm ui-btn--danger"')
+    expect(combinedSource).toContain('class="ui-btn ui-btn--sm ui-btn--danger"')
     expect(imageManageSource).not.toContain('admin-btn admin-btn-ghost')
     expect(imageManageSource).not.toContain('admin-btn admin-btn-primary')
     expect(imageManageSource).not.toContain('admin-btn admin-btn-danger')
@@ -181,14 +198,14 @@ describe('ImageManage', () => {
       page_size: 20,
     })
 
-    expect(imageManageSource).toContain("from '@/components/common/WorkspaceDirectoryToolbar.vue'")
-    expect(imageManageSource).toContain("from '@/components/common/WorkspaceDataTable.vue'")
-    expect(imageManageSource).toContain('<WorkspaceDirectoryToolbar')
-    expect(imageManageSource).toContain('<WorkspaceDataTable')
-    expect(imageManageSource).toMatch(
+    expect(combinedSource).toContain("from '@/components/common/WorkspaceDirectoryToolbar.vue'")
+    expect(combinedSource).toContain("from '@/components/common/WorkspaceDataTable.vue'")
+    expect(combinedSource).toContain('<WorkspaceDirectoryToolbar')
+    expect(combinedSource).toContain('<WorkspaceDataTable')
+    expect(combinedSource).toMatch(
       /\.image-board\s*\{[\s\S]*display:\s*grid;[\s\S]*gap:\s*var\(--space-4\);/s
     )
-    expect(imageManageSource).toMatch(
+    expect(combinedSource).toMatch(
       /\.image-board :deep\(\.workspace-directory-toolbar\)\s*\{[\s\S]*margin-bottom:\s*0;/s
     )
 
@@ -217,34 +234,36 @@ describe('ImageManage', () => {
   })
 
   it('镜像目录头部应只保留左侧标题组并恢复目录标题样式', () => {
-    expect(imageManageSource).toContain('<header class="list-heading image-board__head">')
-    expect(imageManageSource).toContain('<h2 class="list-heading__title image-section-title">镜像列表</h2>')
-    expect(imageManageSource).not.toContain('image-board__hint')
-    expect(imageManageSource).toMatch(
+    expect(combinedSource).toContain('<header class="list-heading image-board__head">')
+    expect(combinedSource).toMatch(
+      /<h2 class="list-heading__title image-section-title">\s*镜像列表\s*<\/h2>/
+    )
+    expect(combinedSource).not.toContain('image-board__hint')
+    expect(combinedSource).toMatch(
       /\.image-board__head\s*\{[\s\S]*margin-bottom:\s*0;/s
     )
-    expect(imageManageSource).toMatch(
+    expect(combinedSource).toMatch(
       /\.list-heading__title\s*\{[\s\S]*font-size:\s*clamp\(1\.2rem,\s*1rem\s*\+\s*0\.5vw,\s*1\.45rem\);/s
     )
   })
 
   it('应该为镜像列表长文本保留省略样式和完整悬浮提示', () => {
-    expect(imageManageSource).toMatch(
+    expect(combinedSource).toMatch(
       /class="image-row__name"[\s\S]*:title="\(row as AdminImageListItem\)\.name"/s
     )
-    expect(imageManageSource).toMatch(
+    expect(combinedSource).toMatch(
       /class="image-row__tag"[\s\S]*:title="\(row as AdminImageListItem\)\.tag"/s
     )
-    expect(imageManageSource).toMatch(
+    expect(combinedSource).toMatch(
       /class="image-row__description"[\s\S]*:title="\(row as AdminImageListItem\)\.description \|\| '未填写镜像说明'"/s
     )
-    expect(imageManageSource).toMatch(
+    expect(combinedSource).toMatch(
       /\.image-row__name\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s
     )
-    expect(imageManageSource).toMatch(
+    expect(combinedSource).toMatch(
       /\.image-row__tag\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s
     )
-    expect(imageManageSource).toMatch(
+    expect(combinedSource).toMatch(
       /\.image-row__description\s*\{[^}]*display:\s*-webkit-box;[^}]*-webkit-line-clamp:\s*2;[^}]*overflow:\s*hidden;/s
     )
   })
@@ -328,8 +347,11 @@ describe('ImageManage', () => {
     const wrapper = mountPage()
     await flushPromises()
 
-    const deleteButton = wrapper.find('.image-row__actions button')
-    await deleteButton.trigger('click')
+    const deleteButton = wrapper
+      .findAll('.image-row__actions button')
+      .find((button) => button.text().trim() === '删除')
+    expect(deleteButton).toBeTruthy()
+    await deleteButton!.trigger('click')
     await flushPromises()
 
     expect(toastMocks.error).toHaveBeenCalledWith('镜像仍被题目使用，暂时不能删除')

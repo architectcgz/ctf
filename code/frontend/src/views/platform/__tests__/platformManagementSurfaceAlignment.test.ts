@@ -4,8 +4,11 @@ import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 import auditLogSource from '../AuditLog.vue?raw'
+import auditLogDirectoryPanelSource from '@/components/platform/audit/AuditLogDirectoryPanel.vue?raw'
 import awdReviewIndexSource from '../AWDReviewIndex.vue?raw'
+import awdReviewDirectoryPanelSource from '@/components/platform/awd-review/AwdReviewDirectoryPanel.vue?raw'
 import challengeManageSource from '../ChallengeManage.vue?raw'
+import challengeManageDirectoryPanelSource from '@/components/platform/challenge/ChallengeManageDirectoryPanel.vue?raw'
 import classManageSource from '../ClassManage.vue?raw'
 import instanceManageSource from '../InstanceManage.vue?raw'
 import challengeDetailSource from '../ChallengeDetail.vue?raw'
@@ -32,21 +35,24 @@ const journalNotesSource = readFileSync(
   resolve(process.cwd(), 'src/assets/styles/journal-notes.css'),
   'utf8'
 )
+const auditLogCombinedSource = [auditLogSource, auditLogDirectoryPanelSource].join('\n')
+const challengeManageCombinedSource = [challengeManageSource, challengeManageDirectoryPanelSource].join('\n')
+const awdReviewCombinedSource = [awdReviewIndexSource, awdReviewDirectoryPanelSource].join('\n')
 
 describe('admin management surface alignment', () => {
   it('audit log should soften table and empty-state borders on dark surfaces', () => {
-    expect(auditLogSource).toMatch(
+    expect(auditLogCombinedSource).toMatch(
       /--audit-table-border:\s*color-mix\(in srgb,\s*var\(--journal-border\) 74%, transparent\);/
     )
-    expect(auditLogSource).toMatch(
+    expect(auditLogCombinedSource).toMatch(
       /--audit-row-divider:\s*color-mix\(in srgb,\s*var\(--journal-border\) 62%, transparent\);/
     )
-    expect(auditLogSource).toMatch(/class="audit-empty-state[^"]*"/)
-    expect(auditLogSource).toContain('class="audit-list workspace-directory-list"')
-    expect(auditLogSource).toMatch(
+    expect(auditLogCombinedSource).toMatch(/class="audit-empty-state[^"]*"/)
+    expect(auditLogCombinedSource).toContain('class="audit-list workspace-directory-list"')
+    expect(auditLogCombinedSource).toMatch(
       /\.audit-list\s*\{[\s\S]*border:\s*1px solid var\(--audit-table-border\);/s
     )
-    expect(auditLogSource).toMatch(
+    expect(auditLogCombinedSource).toMatch(
       /\.audit-list :deep\(\.workspace-data-table__row\)\s*\{[\s\S]*border-bottom-color:\s*var\(--audit-row-divider\);/s
     )
   })
@@ -337,17 +343,17 @@ describe('admin management surface alignment', () => {
     expect(imageManageSource).toContain('class="image-list workspace-directory-list"')
     expect(imageManageSource).toContain('class="admin-pagination workspace-directory-pagination"')
 
-    expect(auditLogSource).toContain('class="admin-board workspace-directory-section"')
-    expect(auditLogSource).toContain('class="audit-list workspace-directory-list"')
-    expect(auditLogSource).toContain('class="admin-pagination workspace-directory-pagination"')
+    expect(auditLogCombinedSource).toContain('class="admin-board workspace-directory-section"')
+    expect(auditLogCombinedSource).toContain('class="audit-list workspace-directory-list"')
+    expect(auditLogCombinedSource).toContain('class="admin-pagination workspace-directory-pagination"')
 
-    expect(challengeManageSource).toContain(
+    expect(challengeManageCombinedSource).toContain(
       'class="workspace-directory-section challenge-manage-directory"'
     )
-    expect(challengeManageSource).toContain('class="challenge-list workspace-directory-list"')
-    expect(challengeManageSource).toContain('class="workspace-directory-loading"')
-    expect(challengeManageSource).toContain('class="workspace-directory-empty"')
-    expect(challengeManageSource).toContain('<WorkspaceDirectoryPagination')
+    expect(challengeManageCombinedSource).toContain('class="challenge-list workspace-directory-list"')
+    expect(challengeManageCombinedSource).toContain('class="workspace-directory-loading"')
+    expect(challengeManageCombinedSource).toContain('class="workspace-directory-empty"')
+    expect(challengeManageCombinedSource).toContain('<WorkspaceDirectoryPagination')
 
     expect(adminContestTableSource).toContain('class="contest-directory workspace-directory-list"')
     expect(adminContestTableSource).toContain(
@@ -383,14 +389,14 @@ describe('admin management surface alignment', () => {
       /\.admin-instance-manage-shell__content\s*\{[\s\S]*gap:\s*var\(--workspace-directory-page-block-gap\);/s
     )
 
-    expect(awdReviewIndexSource).toContain(
+    expect(awdReviewCombinedSource).toContain(
       'class="workspace-directory-section admin-awd-review-directory"'
     )
-    expect(awdReviewIndexSource).toContain(
+    expect(awdReviewCombinedSource).toContain(
       'class="workspace-directory-list admin-awd-review-table"'
     )
-    expect(awdReviewIndexSource).toContain('class="workspace-directory-loading"')
-    expect(awdReviewIndexSource).toContain('class="workspace-directory-empty"')
+    expect(awdReviewCombinedSource).toContain('class="workspace-directory-loading"')
+    expect(awdReviewCombinedSource).toContain('class="workspace-directory-empty"')
     expect(awdReviewIndexSource).toMatch(
       /\.admin-awd-review-shell__content\s*\{[\s\S]*gap:\s*var\(--workspace-directory-page-block-gap\);/s
     )
@@ -430,8 +436,8 @@ describe('admin management surface alignment', () => {
   it('admin paginations should expose a shared jump-page control instead of prev-next only', () => {
     expect(userGovernanceSource).toContain('PlatformPaginationControls')
     expect(imageManageSource).toContain('PlatformPaginationControls')
-    expect(auditLogSource).toContain('PlatformPaginationControls')
-    expect(challengeManageSource).toContain('WorkspaceDirectoryPagination')
+    expect(auditLogCombinedSource).toContain('PlatformPaginationControls')
+    expect(challengeManageCombinedSource).toContain('WorkspaceDirectoryPagination')
     expect(adminContestTableSource).toContain('PlatformPaginationControls')
     expect(awdRoundInspectorSource).toContain('<AWDTrafficPanel')
     expect(awdTrafficPanelSource).toContain('PlatformPaginationControls')

@@ -100,27 +100,25 @@ function handleSubmit() {
         <div class="info-icon">
           <FileText class="h-4 w-4" />
         </div>
-        <h3 class="info-title">
-          核心标识
-        </h3>
+        <h3 class="list-heading__title">基础信息</h3>
         <p class="info-desc">
           定义竞赛在平台展示的基础信息与访问权限。
         </p>
       </div>
       
       <div class="settings-group__content">
-        <div class="settings-row">
+        <div class="ui-field contest-form-field settings-row">
           <label class="row-label">竞赛标题</label>
           <div class="row-control">
             <div
-              class="control-wrap"
+              class="ui-control-wrap control-wrap"
               :class="{ 'is-error': !!fieldErrors.title }"
             >
               <input
                 id="contest-title"
                 v-model="localDraft.title"
                 type="text"
-                class="studio-input"
+                class="ui-control"
                 placeholder="输入竞赛标题..."
               >
             </div>
@@ -136,15 +134,15 @@ function handleSubmit() {
           </div>
         </div>
 
-        <div class="settings-row">
+        <div class="ui-field contest-form-field settings-row">
           <label class="row-label">竞赛描述</label>
           <div class="row-control">
-            <div class="control-wrap">
+            <div class="ui-control-wrap control-wrap">
               <textarea
                 id="contest-description"
                 v-model="localDraft.description"
                 rows="4"
-                class="studio-textarea"
+                class="ui-control studio-textarea"
                 placeholder="描述竞赛的背景、赛制及对参赛者的要求..."
               />
             </div>
@@ -171,7 +169,7 @@ function handleSubmit() {
       </div>
       
       <div class="settings-group__content">
-        <div class="settings-row">
+        <div class="ui-field contest-form-field settings-row">
           <label class="row-label">竞技模式</label>
           <div class="row-control">
             <div class="flex gap-4">
@@ -207,15 +205,15 @@ function handleSubmit() {
 
         <div
           v-if="mode === 'edit'"
-          class="settings-row"
+          class="ui-field contest-form-field settings-row"
         >
           <label class="row-label">运行阶段</label>
           <div class="row-control">
-            <div class="control-wrap">
+            <div class="ui-control-wrap control-wrap">
               <select
                 id="contest-status"
                 v-model="localDraft.status"
-                class="studio-select"
+                class="ui-control studio-select"
               >
                 <option
                   v-for="option in statusOptions"
@@ -240,9 +238,7 @@ function handleSubmit() {
         <div class="info-icon">
           <Clock class="h-4 w-4" />
         </div>
-        <h3 class="info-title">
-          时间窗口
-        </h3>
+        <h3 class="list-heading__title">赛制与时间</h3>
         <p class="info-desc">
           精确配置比赛的启停节点，系统将按此时钟自动调度。
         </p>
@@ -255,14 +251,14 @@ function handleSubmit() {
             <div class="flex items-center gap-4">
               <div class="flex-1">
                 <div
-                  class="control-wrap"
+                  class="ui-control-wrap control-wrap"
                   :class="{ 'is-disabled': fieldLocks.starts_at }"
                 >
                   <input
                     id="contest-starts-at"
                     v-model="localDraft.starts_at"
                     type="datetime-local"
-                    class="studio-input"
+                    class="ui-control studio-input"
                     :disabled="fieldLocks.starts_at"
                   >
                 </div>
@@ -275,14 +271,14 @@ function handleSubmit() {
               </div>
               <div class="flex-1">
                 <div
-                  class="control-wrap"
+                  class="ui-control-wrap control-wrap"
                   :class="{ 'is-disabled': fieldLocks.ends_at }"
                 >
                   <input
                     id="contest-ends-at"
                     v-model="localDraft.ends_at"
                     type="datetime-local"
-                    class="studio-input"
+                    class="ui-control studio-input"
                     :disabled="fieldLocks.ends_at"
                   >
                 </div>
@@ -306,7 +302,7 @@ function handleSubmit() {
       <button
         v-if="showCancel"
         type="button"
-        class="ui-btn ui-btn--ghost contest-form-button contest-form-button--secondary"
+        class="ui-btn ui-btn--secondary contest-form-button contest-form-button--secondary"
         @click="emit('cancel')"
       >
         取消
@@ -378,7 +374,7 @@ function handleSubmit() {
 .control-wrap.is-error { border-color: var(--color-danger); }
 .control-wrap.is-disabled { background: var(--color-bg-elevated); opacity: 0.7; cursor: not-allowed; }
 
-.studio-input, .studio-select, .studio-textarea {
+.ui-control, .studio-input, .studio-select, .studio-textarea {
   width: 100%; border: none; background: transparent; padding: 0.65rem 0.85rem;
   font-size: var(--font-size-14); font-weight: 600; color: var(--color-text-primary); outline: none;
 }

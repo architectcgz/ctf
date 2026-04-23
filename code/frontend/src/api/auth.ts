@@ -1,4 +1,4 @@
-import { request } from './request'
+import { request, type RequestConfig } from './request'
 
 import type { AuthUser } from '@/stores/auth'
 import type { WsTicketData } from '@/api/contracts'
@@ -33,8 +33,13 @@ export async function register(data: RegisterRequest): Promise<LoginResponse> {
   return request<LoginResponse>({ method: 'POST', url: '/auth/register', data })
 }
 
-export async function refreshToken(): Promise<AuthTokens> {
-  return request<AuthTokens>({ method: 'POST', url: '/auth/refresh', data: {} })
+export async function refreshToken(config?: Pick<RequestConfig, 'suppressErrorToast'>): Promise<AuthTokens> {
+  return request<AuthTokens>({
+    method: 'POST',
+    url: '/auth/refresh',
+    data: {},
+    suppressErrorToast: config?.suppressErrorToast,
+  })
 }
 
 export async function logout(): Promise<void> {

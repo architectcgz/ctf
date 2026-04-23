@@ -56,7 +56,7 @@ const {
               在这里查看平台状态、异常和当前资源热点。
             </p>
 
-            <div class="meta-strip mb-10">
+            <div class="meta-strip">
               <span
                 v-for="(pill, index) in metaPills"
                 :key="pill"
@@ -67,7 +67,7 @@ const {
               </span>
             </div>
 
-            <div class="metric-panel-grid metric-panel-grid--premium cols-4 mb-14">
+            <div class="metric-panel-grid progress-strip metric-panel-grid--premium cols-4 mb-14">
               <article
                 v-for="item in overviewMetrics"
                 :key="item.key"
@@ -196,9 +196,7 @@ const {
               <div class="section-kicker">
                 Alert Stack
               </div>
-              <h2 class="section-title list-heading__title">
-                当前告警
-              </h2>
+              <h2 class="section-title list-heading__title">当前告警</h2>
             </div>
             <div
               class="status-pill"
@@ -258,9 +256,7 @@ const {
               <div class="section-kicker">
                 Resource Hotspots
               </div>
-              <h2 class="section-title list-heading__title">
-                资源热点
-              </h2>
+              <h2 class="section-title list-heading__title">资源热点</h2>
             </div>
           </div>
 

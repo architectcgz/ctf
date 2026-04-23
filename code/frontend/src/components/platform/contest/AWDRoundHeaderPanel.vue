@@ -108,7 +108,7 @@ function navigateRound(delta: number) {
         <div class="flex items-center gap-2">
           <button
             type="button"
-            class="ops-btn ops-btn--neutral"
+            class="ui-btn ui-btn--secondary awd-round-toolbar__button"
             :disabled="loadingRounds || loadingRoundDetail"
             @click="emit('refresh')"
           >
@@ -116,12 +116,12 @@ function navigateRound(delta: number) {
               class="h-3.5 w-3.5"
               :class="{ 'animate-spin': loadingRounds || loadingRoundDetail }"
             />
-            <span>同步态势</span>
+            <span>刷新 AWD 数据</span>
           </button>
           
           <button
             type="button"
-            class="ops-btn ops-btn--neutral"
+            class="ui-btn ui-btn--secondary awd-round-toolbar__button"
             @click="emit('openCreateRoundDialog')"
           >
             <PlusCircle class="h-3.5 w-3.5" />
@@ -132,7 +132,7 @@ function navigateRound(delta: number) {
 
           <button
             type="button"
-            class="ops-btn ops-btn--neutral"
+            class="ui-btn ui-btn--secondary awd-round-toolbar__button"
             :disabled="!selectedRoundId || !canRecordServiceChecks"
             @click="emit('openServiceCheckDialog')"
           >
@@ -142,7 +142,7 @@ function navigateRound(delta: number) {
           
           <button
             type="button"
-            class="ops-btn ops-btn--neutral"
+            class="ui-btn ui-btn--secondary awd-round-toolbar__button"
             :disabled="!selectedRoundId || !canRecordAttackLogs"
             @click="emit('openAttackLogDialog')"
           >
@@ -152,7 +152,7 @@ function navigateRound(delta: number) {
 
           <button
             type="button"
-            class="ops-btn ops-btn--primary"
+            class="ui-btn ui-btn--primary awd-round-toolbar__button"
             :disabled="checking || !selectedRoundId"
             @click="emit('runSelectedRoundCheck')"
           >
@@ -172,7 +172,7 @@ function navigateRound(delta: number) {
           v-if="shouldAutoRefresh"
           class="hint-item hint-item--live"
         >
-          <span class="pulse-dot" /> 实时追踪模式 (15s)
+          <span class="pulse-dot" /> 当前正在跟随 live 轮次，每 15 秒自动刷新一次
         </span>
         <span
           v-if="selectedRoundId && !canRecordServiceChecks && serviceCheckHint"
@@ -359,4 +359,3 @@ function navigateRound(delta: number) {
   .awd-ops-header__actions { width: 100%; overflow-x: auto; padding-bottom: 0.5rem; }
 }
 </style>
-

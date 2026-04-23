@@ -206,7 +206,28 @@ describe('useContestAWDWorkspace', () => {
       flag: 'flag{demo}',
     })
 
-    resolveAttack?.({
+    if (!resolveAttack) {
+      throw new Error('attack promise resolver was not captured')
+    }
+
+    const finishAttack = resolveAttack as (value: {
+      id: string
+      round_id: string
+      attacker_team_id: string
+      attacker_team: string
+      victim_team_id: string
+      victim_team: string
+      service_id: string
+      challenge_id: string
+      attack_type: string
+      source: string
+      submitted_flag: string
+      is_success: boolean
+      score_gained: number
+      created_at: string
+    }) => void
+
+    finishAttack({
       id: '89',
       round_id: '41',
       attacker_team_id: '13',

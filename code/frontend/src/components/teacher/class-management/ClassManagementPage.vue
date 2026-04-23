@@ -67,14 +67,14 @@ const currentPageStudentCount = computed(() =>
           <div class="teacher-actions">
             <button
               type="button"
-              class="ui-btn ui-btn--primary"
+              class="teacher-btn teacher-btn--primary"
               @click="emit('openDashboard')"
             >
               教学概览
             </button>
             <button
               type="button"
-              class="ui-btn ui-btn--secondary"
+              class="teacher-btn teacher-btn--ghost"
               @click="emit('openReportExport')"
             >
               导出班级报告
@@ -231,7 +231,7 @@ const currentPageStudentCount = computed(() =>
                   </div>
                 </div>
 
-                <div class="teacher-directory-row-status">
+                <div class="teacher-directory-row-tags">
                   <span
                     class="teacher-directory-state-chip"
                     :class="
@@ -289,6 +289,14 @@ const currentPageStudentCount = computed(() =>
   --teacher-class-directory-columns: minmax(7rem, 0.7fr) minmax(11rem, 1.15fr) minmax(7rem, 0.7fr)
     minmax(7rem, 0.7fr) minmax(7rem, 0.75fr);
   font-family: var(--font-family-sans);
+}
+
+.teacher-badge-card {
+  border: 1px solid var(--teacher-card-border);
+}
+
+.teacher-tip-block {
+  border-top: 1px dashed var(--teacher-divider);
 }
 
 .teacher-page {

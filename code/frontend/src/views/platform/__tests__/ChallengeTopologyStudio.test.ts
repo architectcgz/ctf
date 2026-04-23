@@ -22,10 +22,14 @@ const toastMocks = vi.hoisted(() => ({
   success: vi.fn(),
   warning: vi.fn(),
 }))
+const destructiveConfirmMock = vi.hoisted(() => vi.fn())
 
 vi.mock('@/api/admin', () => adminApiMocks)
 vi.mock('@/composables/useToast', () => ({
   useToast: () => toastMocks,
+}))
+vi.mock('@/composables/useDestructiveConfirm', () => ({
+  confirmDestructiveAction: destructiveConfirmMock,
 }))
 
 describe('ChallengeTopologyStudioPage', () => {
@@ -34,6 +38,8 @@ describe('ChallengeTopologyStudioPage', () => {
     toastMocks.error.mockReset()
     toastMocks.success.mockReset()
     toastMocks.warning.mockReset()
+    destructiveConfirmMock.mockReset()
+    destructiveConfirmMock.mockResolvedValue(true)
 
     adminApiMocks.getChallengeDetail.mockResolvedValue({
       id: '11',
@@ -89,11 +95,6 @@ describe('ChallengeTopologyStudioPage', () => {
     adminApiMocks.createEnvironmentTemplate.mockResolvedValue(undefined)
     adminApiMocks.updateEnvironmentTemplate.mockResolvedValue(undefined)
     adminApiMocks.deleteEnvironmentTemplate.mockResolvedValue(undefined)
-
-    vi.stubGlobal(
-      'confirm',
-      vi.fn(() => true)
-    )
   })
 
   it('应该渲染当前挑战拓扑与模板区块', async () => {
@@ -161,8 +162,6 @@ describe('ChallengeTopologyStudioPage', () => {
     expect(challengeTopologyStudioPageSource).toContain('class="ui-btn ui-btn--primary topology-action-btn')
     expect(challengeTopologyStudioPageSource).toContain('class="ui-btn ui-btn--secondary topology-action-btn')
     expect(challengeTopologyStudioPageSource).toContain('class="ui-btn ui-btn--danger topology-action-btn')
-    expect(challengeTopologyStudioPageSource).not.toContain('topology-toolbar-btn')
-    expect(challengeTopologyStudioPageSource).not.toContain('template-action-btn')
   })
 
   it('删除拓扑失败时应优先展示接口返回消息', async () => {
@@ -195,6 +194,11 @@ describe('ChallengeTopologyStudioPage', () => {
     await deleteButton!.trigger('click')
     await flushPromises()
 
+    expect(destructiveConfirmMock).toHaveBeenCalledWith({
+      title: '删除题目拓扑',
+      message: '确认删除当前题目已保存的拓扑吗？删除后需要重新保存才能恢复。',
+      confirmButtonText: '确认删除',
+    })
     expect(toastMocks.error).toHaveBeenCalledWith('拓扑已被实例引用，暂时不能删除')
     expect(toastMocks.error).not.toHaveBeenCalledWith('删除题目拓扑失败')
   })

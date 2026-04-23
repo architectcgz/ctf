@@ -21,7 +21,7 @@ interface SubmitResultState {
   message: string
 }
 
-interface SolutionCard {
+export interface ChallengeSolutionCard {
   id: string
   title: string
   content: string
@@ -74,7 +74,7 @@ export function useChallengeDetailPresentation({
 
   const sanitizedDescription = computed(() => renderRichContent(challenge.value?.description))
 
-  const recommendedSolutionCards = computed<SolutionCard[]>(() =>
+  const recommendedSolutionCards = computed<ChallengeSolutionCard[]>(() =>
     recommendedSolutions.value.map((item) => ({
       id: item.id,
       title: item.title,
@@ -88,7 +88,7 @@ export function useChallengeDetailPresentation({
     }))
   )
 
-  const communitySolutionCards = computed<SolutionCard[]>(() =>
+  const communitySolutionCards = computed<ChallengeSolutionCard[]>(() =>
     communitySolutions.value.map((item) => ({
       id: item.id,
       title: item.title,

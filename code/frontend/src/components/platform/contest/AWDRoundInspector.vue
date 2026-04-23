@@ -14,6 +14,7 @@ import {
 import type { AWDTeamServiceData } from '@/api/contracts'
 import AWDAttackLogPanel from '@/components/platform/contest/AWDAttackLogPanel.vue'
 import AWDRoundHeaderPanel from '@/components/platform/contest/AWDRoundHeaderPanel.vue'
+import AWDRoundSelectionPanel from '@/components/platform/contest/AWDRoundSelectionPanel.vue'
 import AWDScoreboardSummaryPanel from '@/components/platform/contest/AWDScoreboardSummaryPanel.vue'
 import AWDServiceStatusPanel from '@/components/platform/contest/AWDServiceStatusPanel.vue'
 import AWDTrafficPanel from '@/components/platform/contest/AWDTrafficPanel.vue'
@@ -207,6 +208,14 @@ function getServiceCheckPresentationResult(service: AWDTeamServiceData): Record<
       @open-service-check-dialog="emit('openServiceCheckDialog')"
       @open-attack-log-dialog="emit('openAttackLogDialog')"
       @run-selected-round-check="emit('runSelectedRoundCheck')"
+      @update:selected-round-id="emit('update:selectedRoundId', $event)"
+    />
+
+    <AWDRoundSelectionPanel
+      :rounds="rounds"
+      :selected-round="selectedRound"
+      :selected-round-id="selectedRoundId"
+      :get-round-status-label="getRoundStatusLabel"
       @update:selected-round-id="emit('update:selectedRoundId', $event)"
     />
 

@@ -9,9 +9,13 @@
       @submit.prevent="onSubmit"
     >
       <div class="ui-field">
-        <label class="ui-field__label">用户名</label>
+        <label
+          class="ui-field__label"
+          for="register-username"
+        >用户名</label>
         <div class="ui-control-wrap">
           <input
+            id="register-username"
             v-model="form.username"
             autocomplete="username"
             class="ui-control"
@@ -22,9 +26,13 @@
       </div>
 
       <div class="ui-field">
-        <label class="ui-field__label">设置密码</label>
+        <label
+          class="ui-field__label"
+          for="register-password"
+        >设置密码</label>
         <div class="ui-control-wrap">
           <input
+            id="register-password"
             v-model="form.password"
             type="password"
             autocomplete="new-password"
@@ -36,9 +44,13 @@
       </div>
 
       <div class="ui-field">
-        <label class="ui-field__label">班级邀请码（可选）</label>
+        <label
+          class="ui-field__label"
+          for="register-class-name"
+        >班级邀请码（可选）</label>
         <div class="ui-control-wrap">
           <input
+            id="register-class-name"
             v-model="form.class_name"
             class="ui-control"
             placeholder="输入班级全称以自动加入"

@@ -48,6 +48,7 @@ function updateAttackSourceFilter(value: string): void {
         <div class="filter-actions-group">
           <div class="filter-pills">
             <select
+              id="awd-attack-filter-team"
               :value="attackTeamFilter"
               class="log-select"
               @change="emit('updateAttackTeamFilter', ($event.target as HTMLSelectElement).value)"
@@ -64,6 +65,7 @@ function updateAttackSourceFilter(value: string): void {
               </option>
             </select>
             <select
+              id="awd-attack-filter-result"
               :value="attackResultFilter"
               class="log-select"
               @change="updateAttackResultFilter(($event.target as HTMLSelectElement).value)"
@@ -78,8 +80,26 @@ function updateAttackSourceFilter(value: string): void {
                 尝试失败 (DROP)
               </option>
             </select>
+            <select
+              id="awd-attack-filter-source"
+              :value="attackSourceFilter"
+              class="log-select"
+              @change="updateAttackSourceFilter(($event.target as HTMLSelectElement).value)"
+            >
+              <option value="all">
+                所有来源
+              </option>
+              <option
+                v-for="source in attackSourceOptions"
+                :key="source"
+                :value="source"
+              >
+                {{ getAttackSourceLabel(source) }}
+              </option>
+            </select>
           </div>
           <button
+            id="awd-export-attacks"
             type="button"
             class="ops-btn ops-btn--neutral"
             :disabled="filteredAttacks.length === 0"

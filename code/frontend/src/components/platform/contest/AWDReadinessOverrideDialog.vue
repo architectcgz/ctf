@@ -171,9 +171,7 @@ function handleSubmit() {
             <div class="journal-note-label">
               Global Blocking
             </div>
-            <h3 class="list-heading__title">
-              系统级阻塞
-            </h3>
+<h3 class="list-heading__title">系统级阻塞</h3>
           </div>
         </header>
         <ul class="readiness-override-list">
@@ -192,9 +190,7 @@ function handleSubmit() {
             <div class="journal-note-label">
               Blocking Items
             </div>
-            <h3 class="list-heading__title">
-              阻塞题目
-            </h3>
+<h3 class="list-heading__title">阻塞题目</h3>
           </div>
         </header>
 
@@ -237,9 +233,7 @@ function handleSubmit() {
             <div class="journal-note-label">
               Override Reason
             </div>
-            <h3 class="list-heading__title">
-              填写本次放行原因
-            </h3>
+<h3 class="list-heading__title">填写本次放行原因</h3>
           </div>
         </header>
 

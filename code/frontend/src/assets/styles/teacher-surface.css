@@ -42,7 +42,7 @@
 
 .teacher-surface-hero {
   border: 1px solid var(--journal-border);
-  border-radius: 16px;
+  border-radius: 0 !important;
   box-shadow: 0 18px 40px var(--color-shadow-soft);
 }
 

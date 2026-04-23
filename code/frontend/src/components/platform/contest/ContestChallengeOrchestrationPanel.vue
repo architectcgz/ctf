@@ -28,9 +28,13 @@ import { useAwdCheckResultPresentation } from '@/composables/useAwdCheckResultPr
 import { useContestChallengePool } from '@/composables/useContestChallengePool'
 import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
 import { useToast } from '@/composables/useToast'
-import { mapPlatformContestAwdServicesToChallengeLinks } from '@/utils/platformContestAwdChallengeLinks'
+import {
+  mapPlatformContestAwdServicesToChallengeLinks,
+  mergePlatformContestChallengesWithAwdServices,
+} from '@/utils/platformContestAwdChallengeLinks'
 
 import ContestChallengeEditorDialog from './ContestChallengeEditorDialog.vue'
+import ContestChallengeSummaryStrip from './ContestChallengeSummaryStrip.vue'
 
 const props = defineProps<{
   contestId: string
@@ -98,9 +102,7 @@ const existingChallengeIdSet = computed(
 )
 const existingChallengeIds = computed(() => Array.from(existingChallengeIdSet.value))
 const dialogChallengeOptions = computed(() =>
-  isAwdContest.value
-    ? []
-    : dialogMode.value === 'edit'
+  dialogMode.value === 'edit'
     ? challengeCatalog.value
     : challengeCatalog.value.filter((item) => !existingChallengeIdSet.value.has(String(item.id)))
 )
@@ -129,7 +131,7 @@ function getValidationSummary(item: AdminContestChallengeViewData): string {
 }
 
 function getAwdScoreSummary(item: AdminContestChallengeViewData): string {
-  return `S:${item.awd_sla_score ?? 0} D:${item.awd_defense_score ?? 0}`
+  return `SLA ${item.awd_sla_score ?? 0} / 防守 ${item.awd_defense_score ?? 0}`
 }
 
 function getPreviewSummary(item: AdminContestChallengeViewData): string {
@@ -149,8 +151,14 @@ async function refresh() {
   loading.value = true
   try {
     if (props.contestMode === 'awd') {
-      const nextAwdServices = await listContestAWDServices(props.contestId)
-      localChallengeLinks.value = mapPlatformContestAwdServicesToChallengeLinks(nextAwdServices)
+      const [nextChallengeLinks, nextAwdServices] = await Promise.all([
+        listAdminContestChallenges(props.contestId),
+        listContestAWDServices(props.contestId),
+      ])
+      localChallengeLinks.value =
+        nextChallengeLinks.length > 0
+          ? mergePlatformContestChallengesWithAwdServices(nextChallengeLinks, nextAwdServices)
+          : mapPlatformContestAwdServicesToChallengeLinks(nextAwdServices)
     } else {
       localChallengeLinks.value = await listAdminContestChallenges(props.contestId)
     }
@@ -195,9 +203,7 @@ function openCreateDialog() {
   dialogMode.value = 'create'
   editingChallenge.value = null
   dialogOpen.value = true
-  if (!isAwdContest.value) {
-    void ensureChallengeCatalogLoaded()
-  }
+  void ensureChallengeCatalogLoaded()
   if (isAwdContest.value) void ensureTemplateCatalogLoaded()
 }
 
@@ -223,16 +229,44 @@ interface ContestOrchestrationSavePayload {
   points: number
   order: number
   is_visible: boolean
+  awd_checker_type?: AdminContestChallengeViewData['awd_checker_type']
+  awd_checker_config?: Record<string, unknown>
+  awd_sla_score?: number
+  awd_defense_score?: number
+  awd_checker_preview_token?: string
 }
 
 async function handleSave(payload: ContestOrchestrationSavePayload) {
   saving.value = true
   try {
     if (isAwdContest.value) {
+      if (!payload.template_id || !payload.challenge_id) {
+        toast.error('请选择题目和服务模板')
+        return
+      }
       if (dialogMode.value === 'create') {
-        await createContestAWDService(props.contestId, payload)
+        await createContestAWDService(props.contestId, {
+          challenge_id: payload.challenge_id,
+          template_id: payload.template_id,
+          order: payload.order,
+          is_visible: payload.is_visible,
+        } as Parameters<typeof createContestAWDService>[1] & { challenge_id: number })
+        await updateAdminContestChallenge(props.contestId, String(payload.challenge_id), {
+          points: payload.points,
+        })
       } else if (editingChallenge.value) {
-        await updateContestAWDService(props.contestId, editingChallenge.value.awd_service_id!, payload)
+        await updateContestAWDService(
+          props.contestId,
+          editingChallenge.value.awd_service_id!,
+          {
+            template_id: payload.template_id,
+            order: payload.order,
+            is_visible: payload.is_visible,
+          }
+        )
+        await updateAdminContestChallenge(props.contestId, editingChallenge.value.challenge_id, {
+          points: payload.points,
+        })
       }
     } else if (dialogMode.value === 'create') {
       await createAdminContestChallenge(props.contestId, {
@@ -313,7 +347,7 @@ onMounted(() => {
       <div class="header-actions">
         <button
           type="button"
-          class="ops-btn ops-btn--neutral"
+          class="ui-btn ui-btn--ghost"
           @click="refresh"
         >
           <RefreshCw
@@ -325,7 +359,7 @@ onMounted(() => {
         <button
           id="contest-challenge-add"
           type="button"
-          class="ops-btn ops-btn--primary"
+          class="ui-btn ui-btn--primary"
           @click="openCreateDialog"
         >
           <Plus class="h-3.5 w-3.5" />
@@ -334,24 +368,15 @@ onMounted(() => {
       </div>
     </header>
 
-    <div
+    <ContestChallengeSummaryStrip
       v-if="summaryItems.length > 0"
-      class="studio-metric-band"
-    >
-      <div
-        v-for="item in summaryItems"
-        :key="item.key"
-        class="metric-pill"
-      >
-        <span class="metric-pill__label">{{ item.label }}</span>
-        <span class="metric-pill__value">{{ item.value }}</span>
-      </div>
-    </div>
+      :summary-items="summaryItems"
+    />
 
     <div class="studio-directory-canvas">
       <AppEmpty
         v-if="panelLoadError && currentChallengeLinks.length === 0"
-        title="同步中断"
+        title="赛事题目暂时不可用"
         :description="panelLoadError"
         icon="AlertTriangle"
         class="py-20"
@@ -359,7 +384,7 @@ onMounted(() => {
         <template #action>
           <button
             type="button"
-            class="ops-btn ops-btn--neutral"
+            class="ui-btn ui-btn--ghost"
             @click="refresh"
           >
             重试
@@ -375,6 +400,7 @@ onMounted(() => {
           <button
             v-for="filter in filterItems"
             :key="filter.key"
+            :id="`contest-challenge-filter-${filter.key}`"
             class="nav-pill"
             :class="{ active: activeFilter === filter.key }"
             @click="setFilter(filter.key)"
@@ -419,16 +445,16 @@ onMounted(() => {
                 </th>
                 <template v-if="isAwdContest">
                   <th class="col-awd">
-                    裁判引擎
+                    Checker
                   </th>
                   <th class="col-awd">
-                    就绪校验
+                    验证状态
                   </th>
                   <th class="col-awd">
-                    A/D 权重
+                    SLA / 防守分
                   </th>
                   <th class="col-awd">
-                    最后活动
+                    最近试跑
                   </th>
                 </template>
                 <th class="col-actions">
@@ -463,7 +489,7 @@ onMounted(() => {
                 </td>
                 <td class="col-meta">
                   <div class="order-chip">
-                    RANK {{ challenge.order }}
+                    第 {{ challenge.order }} 位
                   </div>
                 </td>
                 <template v-if="isAwdContest">
@@ -486,46 +512,48 @@ onMounted(() => {
                   </td>
                 </template>
                 <td class="col-actions">
-                  <CActionMenu
-                    :open="openActionMenuId === challenge.id"
-                    @update:open="setActionMenuOpen(challenge.id, $event)"
-                  >
-                    <template #trigger="{ open, toggle, setTriggerRef }">
-                      <button
-                        :id="`contest-challenge-actions-${challenge.challenge_id}`"
-                        :ref="setTriggerRef"
-                        class="action-trigger"
-                        @click.stop="toggle"
-                      >
-                        <MoreHorizontal class="h-4 w-4" />
-                      </button>
-                    </template>
-                    <template #default="{ close }">
-                      <button
-                        v-if="isAwdContest"
-                        :id="`contest-challenge-open-awd-config-${challenge.challenge_id}`"
-                        class="menu-item"
-                        @click="handleOpenAwdConfig(challenge, close)"
-                      >
-                        <Zap class="h-3.5 w-3.5 mr-2" /> 补 AWD 配置
-                      </button>
-                      <button
-                        :id="`contest-challenge-edit-${challenge.challenge_id}`"
-                        class="menu-item"
-                        @click="handleOpenEditDialog(challenge, close)"
-                      >
-                        <Edit class="h-3.5 w-3.5 mr-2" /> 属性修改
-                      </button>
-                      <div class="menu-divider" />
-                      <button
-                        :id="`contest-challenge-remove-${challenge.challenge_id}`"
-                        class="menu-item danger"
-                        @click="handleRemoveFromMenu(challenge, close)"
-                      >
-                        <Trash class="h-3.5 w-3.5 mr-2" /> 移除题目
-                      </button>
-                    </template>
-                  </CActionMenu>
+                  <div class="ui-row-actions contest-challenge-row__actions">
+                    <CActionMenu
+                      :open="openActionMenuId === challenge.id"
+                      @update:open="setActionMenuOpen(challenge.id, $event)"
+                    >
+                      <template #trigger="{ open, toggle, setTriggerRef }">
+                        <button
+                          :id="`contest-challenge-more-${challenge.id}`"
+                          :ref="setTriggerRef"
+                          class="c-action-menu__trigger c-action-menu__trigger--icon"
+                          @click.stop="toggle"
+                        >
+                          <MoreHorizontal class="h-4 w-4" />
+                        </button>
+                      </template>
+                      <template #default="{ close }">
+                        <button
+                          v-if="isAwdContest"
+                          :id="`contest-challenge-menu-awd-config-${challenge.id}`"
+                          class="c-action-menu__item"
+                          @click="handleOpenAwdConfig(challenge, close)"
+                        >
+                          <Zap class="h-3.5 w-3.5 mr-2" /> 补 AWD 配置
+                        </button>
+                        <button
+                          :id="`contest-challenge-menu-edit-${challenge.id}`"
+                          class="c-action-menu__item"
+                          @click="handleOpenEditDialog(challenge, close)"
+                        >
+                          <Edit class="h-3.5 w-3.5 mr-2" /> 属性修改
+                        </button>
+                        <div class="menu-divider" />
+                        <button
+                          :id="`contest-challenge-menu-remove-${challenge.id}`"
+                          class="c-action-menu__item c-action-menu__item--danger"
+                          @click="handleRemoveFromMenu(challenge, close)"
+                        >
+                          <Trash class="h-3.5 w-3.5 mr-2" /> 移除题目
+                        </button>
+                      </template>
+                    </CActionMenu>
+                  </div>
                 </td>
               </tr>
             </tbody>

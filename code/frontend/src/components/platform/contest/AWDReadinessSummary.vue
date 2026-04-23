@@ -23,6 +23,36 @@ const emit = defineEmits<{
   editConfig: [challengeId: string]
 }>()
 
+const readinessDecision = computed(() => {
+  const readiness = props.readiness
+  const hasGlobalBlockers = (readiness?.global_blocking_reasons?.length ?? 0) > 0
+  const hasChallengeBlockers = (readiness?.blocking_count ?? 0) > 0 || (readiness?.items?.length ?? 0) > 0
+
+  if (readiness?.ready) {
+    return {
+      label: '可开赛',
+      helper: '题目侧 checker 与系统级门禁均已满足开赛要求。',
+      tone: 'ready',
+    }
+  }
+
+  if (!hasGlobalBlockers && (readiness?.total_challenges ?? 0) > 0 && hasChallengeBlockers) {
+    return {
+      label: '可强制开赛',
+      helper: '当前没有系统级门禁，但题目侧仍有阻塞，需确认风险后强制继续。',
+      tone: 'force',
+    }
+  }
+
+  return {
+    label: '不可开赛',
+    helper: hasGlobalBlockers
+      ? '系统级阻塞仍会拦截开赛关键动作。'
+      : '当前仍有未完成的赛前条件，暂不建议开赛。',
+    tone: 'blocked',
+  }
+})
+
 const summaryItems = computed(() => {
   const readiness = props.readiness
   return [
@@ -38,7 +68,28 @@ const hasGlobalBlockingReasons = computed(() => (props.readiness?.global_blockin
 const globalBlockingReasons = computed(() => props.readiness?.global_blocking_reasons || [])
 
 const blockingItems = computed(() => props.readiness?.items || [])
-const blockingEmptyDescription = computed(() => props.readiness?.ready ? '所有题目均已通过自动审计。' : '题目级别暂无直接阻塞，请检查系统级配置。')
+const blockingEmptyState = computed(() => {
+  const readiness = props.readiness
+
+  if ((readiness?.total_challenges ?? 0) === 0 || hasGlobalBlockingReasons.value) {
+    return {
+      title: '题目侧暂无可审计阻塞',
+      description: '系统级阻塞仍会拦截开赛关键动作。',
+    }
+  }
+
+  if (readiness?.ready) {
+    return {
+      title: '题目校验通过',
+      description: '题目侧的 checker 校验已经满足开赛关键动作要求。',
+    }
+  }
+
+  return {
+    title: '题目级别暂无直接阻塞',
+    description: '题目级别暂无直接阻塞，请检查系统级配置。',
+  }
+})
 
 function getGlobalReasonCopy(reason: string): string {
   switch (reason) {
@@ -80,19 +131,36 @@ function formatDateTime(value?: string): string {
 
 <template>
   <div class="studio-readiness-flow">
-    <!-- 1. Global Metric Band -->
+    <header class="list-heading readiness-decision__head">
+      <div>
+        <div class="workspace-overline">AWD Readiness</div>
+        <h2 class="list-heading__title">开赛就绪摘要</h2>
+      </div>
+    </header>
+
+    <section
+      v-if="readiness"
+      class="workspace-directory-section readiness-decision-card"
+      :class="`readiness-decision-card--${readinessDecision.tone}`"
+    >
+      <div class="journal-note-label readiness-decision-card__label">就绪决策</div>
+      <div class="readiness-decision-card__value">{{ readinessDecision.label }}</div>
+      <p class="readiness-decision-card__helper">{{ readinessDecision.helper }}</p>
+    </section>
+
     <div
       v-if="readiness"
-      class="studio-metric-band"
+      class="progress-strip metric-panel-grid metric-panel-default-surface readiness-summary-grid"
     >
-      <div
+      <article
         v-for="item in summaryItems"
         :key="item.key"
-        class="metric-pill"
+        class="journal-note progress-card metric-panel-card"
       >
-        <span class="metric-pill__label">{{ item.label }}</span>
-        <span class="metric-pill__value">{{ item.value }}</span>
-      </div>
+        <div class="journal-note-label progress-card-label metric-panel-label">{{ item.label }}</div>
+        <div class="journal-note-value progress-card-value metric-panel-value">{{ item.value }}</div>
+        <div class="journal-note-helper progress-card-hint metric-panel-helper">题目就绪统计概览</div>
+      </article>
     </div>
 
     <!-- 2. Global Blockers -->
@@ -100,10 +168,11 @@ function formatDateTime(value?: string): string {
       v-if="hasGlobalBlockingReasons"
       class="global-blockers"
     >
-      <header class="section-header">
-        <h3 class="section-title">
-          系统级阻塞项
-        </h3>
+      <header class="list-heading">
+        <div>
+          <div class="journal-note-label">Global Blocking</div>
+          <h3 class="list-heading__title">系统级阻塞</h3>
+        </div>
       </header>
       <div class="blocker-list">
         <div
@@ -119,10 +188,11 @@ function formatDateTime(value?: string): string {
 
     <!-- 3. Challenge Blockers Directory -->
     <section class="challenge-blockers">
-      <header class="directory-header">
-        <h3 class="directory-title">
-          题目级就绪明细
-        </h3>
+      <header class="list-heading">
+        <div>
+          <div class="journal-note-label">Blocking Shortlist</div>
+          <h3 class="list-heading__title">阻塞短名单</h3>
+        </div>
         <div class="directory-meta">
           发现 {{ readiness?.blocking_count ?? 0 }} 个阻塞点
         </div>
@@ -130,8 +200,8 @@ function formatDateTime(value?: string): string {
 
       <AppEmpty
         v-if="blockingItems.length === 0"
-        title="题目校验通过"
-        :description="blockingEmptyDescription"
+        :title="blockingEmptyState.title"
+        :description="blockingEmptyState.description"
         icon="ShieldCheck"
         class="py-12"
       />
@@ -178,7 +248,7 @@ function formatDateTime(value?: string): string {
               </td>
               <td class="col-status">
                 <span
-                  class="status-pill"
+                  class="ui-badge readiness-status-chip"
                   :class="item.validation_state"
                 >{{ getValidationStateLabel(item) }}</span>
               </td>
@@ -191,13 +261,15 @@ function formatDateTime(value?: string): string {
                 {{ formatDateTime(item.last_preview_at) }}
               </td>
               <td class="col-actions">
-                <button
+                <div class="ui-row-actions readiness-row__actions">
+                  <button
                   :id="`awd-readiness-edit-${item.challenge_id}`"
-                  class="action-btn"
+                  class="ui-btn ui-btn--sm ui-btn--secondary"
                   @click="emit('editConfig', item.challenge_id)"
                 >
                   {{ props.actionLabel }}
-                </button>
+                  </button>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -209,6 +281,40 @@ function formatDateTime(value?: string): string {
 
 <style scoped>
 .studio-readiness-flow { display: flex; flex-direction: column; gap: 2rem; }
+
+.readiness-decision-card {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-6);
+}
+
+.readiness-decision-card--ready {
+  border-color: color-mix(in srgb, var(--color-success) 22%, var(--journal-border));
+}
+
+.readiness-decision-card--force {
+  border-color: color-mix(in srgb, var(--color-warning) 24%, var(--journal-border));
+}
+
+.readiness-decision-card--blocked {
+  border-color: color-mix(in srgb, var(--color-danger) 24%, var(--journal-border));
+}
+
+.readiness-decision-card__label {
+  color: var(--journal-muted);
+}
+
+.readiness-decision-card__value {
+  font-size: var(--font-size-1-45);
+  font-weight: 900;
+  color: var(--journal-ink);
+}
+
+.readiness-decision-card__helper {
+  margin: 0;
+  color: var(--journal-muted);
+  line-height: 1.7;
+}
 
 /* Metric Band */
 .studio-metric-band { display: flex; gap: 0.5rem; background: var(--color-bg-elevated); padding: 1rem; border-radius: 1rem; border: 1px solid var(--color-border-default); }

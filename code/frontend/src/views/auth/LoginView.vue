@@ -24,9 +24,13 @@
       @submit.prevent="onSubmit"
     >
       <div class="auth-field">
-        <label class="auth-label">用户名 / 学号</label>
+        <label
+          class="auth-label"
+          for="login-username"
+        >用户名 / 学号</label>
         <div class="ui-control-wrap">
           <input
+            id="login-username"
             ref="usernameInput"
             v-model="form.username"
             autocomplete="username"
@@ -40,7 +44,10 @@
 
       <div class="auth-field">
         <div class="auth-label-row">
-          <label class="auth-label">安全密码</label>
+          <label
+            class="auth-label"
+            for="login-password"
+          >安全密码</label>
           <button
             type="button"
             class="auth-aux-link"
@@ -50,6 +57,7 @@
         </div>
         <div class="ui-control-wrap">
           <input
+            id="login-password"
             ref="passwordInput"
             v-model="form.password"
             type="password"

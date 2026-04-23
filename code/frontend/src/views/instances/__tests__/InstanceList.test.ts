@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { flushPromises, mount } from '@vue/test-utils'
 import { readFileSync } from 'node:fs'
 import InstanceList from '../InstanceList.vue'
 import instanceListSource from '../InstanceList.vue?raw'
@@ -117,8 +117,10 @@ describe('InstanceList', () => {
   })
 
   it('实例页概况卡片应使用统一 metric-panel 样式类', () => {
-    expect(instanceListSource).toContain('<div class="workspace-overline">Instances</div>')
-    expect(instanceListSource).toContain('<h1 class="instance-title workspace-page-title">我的实例</h1>')
+    expect(instanceListSource).toMatch(/<div class="workspace-overline">\s*Instances\s*<\/div>/)
+    expect(instanceListSource).toMatch(
+      /<h1 class="instance-title workspace-page-title">\s*我的实例\s*<\/h1>/
+    )
     expect(instanceListSource).not.toContain('<div class="journal-eyebrow">Instances</div>')
     expect(instanceListSource).not.toContain('journal-eyebrow-text')
     expect(instanceListSource).toContain('class="instance-summary-grid metric-panel-grid"')
@@ -147,5 +149,67 @@ describe('InstanceList', () => {
     expect(instanceListSource).toContain('class="ui-btn ui-btn--secondary"')
     expect(instanceListSource).not.toMatch(/^\.instance-link-btn\s*\{/m)
     expect(instanceListSource).not.toMatch(/^\.instance-btn-danger\s*\{/m)
+  })
+
+  it('等待创建中的实例应定时重新同步服务端状态', async () => {
+    vi.useFakeTimers()
+    instanceApiMocks.getMyInstances
+      .mockResolvedValueOnce([
+        {
+          id: 'inst-2',
+          challenge_id: 'chal-2',
+          challenge_title: '反序列化迷宫',
+          category: 'web',
+          difficulty: 'medium',
+          status: 'pending',
+          access_url: '',
+          flag_type: 'dynamic',
+          share_scope: 'per_user',
+          expires_at: '2099-01-01T00:00:00Z',
+          remaining_extends: 1,
+          created_at: '2026-03-05T00:00:00Z',
+          queue_position: 2,
+          eta_seconds: 90,
+          progress: 35,
+        },
+      ])
+      .mockResolvedValueOnce([
+        {
+          id: 'inst-2',
+          challenge_id: 'chal-2',
+          challenge_title: '反序列化迷宫',
+          category: 'web',
+          difficulty: 'medium',
+          status: 'running',
+          access_url: 'http://instance.ready.test',
+          flag_type: 'dynamic',
+          share_scope: 'per_user',
+          expires_at: '2099-01-01T00:00:00Z',
+          remaining_extends: 1,
+          created_at: '2026-03-05T00:00:00Z',
+        },
+      ])
+
+    const wrapper = mount(InstanceList, {
+      global: {
+        stubs: {
+          RouterLink: {
+            template: '<a><slot /></a>',
+          },
+        },
+      },
+    })
+
+    await flushPromises()
+    expect(wrapper.text()).toContain('等待创建')
+
+    vi.advanceTimersByTime(5000)
+    await flushPromises()
+
+    expect(instanceApiMocks.getMyInstances.mock.calls.length).toBeGreaterThanOrEqual(2)
+    expect(wrapper.text()).toContain('运行中')
+    expect(wrapper.text()).toContain('http://instance.ready.test')
+
+    vi.useRealTimers()
   })
 })

@@ -214,12 +214,8 @@ function handleImportChange(event: Event): void {
       >
         <header class="workspace-tab-heading user-overview-head">
           <div class="workspace-tab-heading__main">
-            <div class="workspace-overline">
-              User Workspace
-            </div>
-            <h1 class="workspace-page-title">
-              用户治理台
-            </h1>
+            <div class="workspace-overline">User Workspace</div>
+            <h1 class="workspace-page-title">用户治理台</h1>
             <p class="workspace-page-copy">
               上面直接查看用户规模和导入回执，下面围绕具体账号完成搜索、筛选、编辑与治理操作。
             </p>
@@ -255,58 +251,58 @@ function handleImportChange(event: Event): void {
           </div>
         </header>
 
-        <div class="metric-panel-grid metric-panel-grid--premium cols-4">
-          <div class="metric-panel-card metric-panel-card--premium">
-            <div class="metric-panel-label">
+        <div class="admin-summary-grid user-overview-grid progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface">
+          <article class="journal-note user-overview-stat progress-card metric-panel-card">
+            <div class="journal-note-label progress-card-label metric-panel-label">
               <span>用户总量</span>
               <Users class="h-4 w-4" />
             </div>
-            <div class="metric-panel-value">
+            <div class="journal-note-value progress-card-value metric-panel-value">
               {{ total.toString().padStart(2, '0') }}
             </div>
-            <div class="metric-panel-helper">
+            <div class="journal-note-helper progress-card-hint metric-panel-helper">
               当前条件下的用户总数
             </div>
-          </div>
+          </article>
 
-          <div class="metric-panel-card metric-panel-card--premium">
-            <div class="metric-panel-label">
+          <article class="journal-note user-overview-stat progress-card metric-panel-card">
+            <div class="journal-note-label progress-card-label metric-panel-label">
               <span>活跃账号</span>
               <UserPlus class="h-4 w-4" />
             </div>
-            <div class="metric-panel-value">
+            <div class="journal-note-value progress-card-value metric-panel-value">
               {{ activeCount.toString().padStart(2, '0') }}
             </div>
-            <div class="metric-panel-helper">
+            <div class="journal-note-helper progress-card-hint metric-panel-helper">
               当前活跃状态的账号
             </div>
-          </div>
+          </article>
 
-          <div class="metric-panel-card metric-panel-card--premium">
-            <div class="metric-panel-label">
+          <article class="journal-note user-overview-stat progress-card metric-panel-card">
+            <div class="journal-note-label progress-card-label metric-panel-label">
               <span>教师角色</span>
               <GraduationCap class="h-4 w-4" />
             </div>
-            <div class="metric-panel-value">
+            <div class="journal-note-value progress-card-value metric-panel-value">
               {{ teacherCount.toString().padStart(2, '0') }}
             </div>
-            <div class="metric-panel-helper">
+            <div class="journal-note-helper progress-card-hint metric-panel-helper">
               当前页教师账号数量
             </div>
-          </div>
+          </article>
 
-          <div class="metric-panel-card metric-panel-card--premium">
-            <div class="metric-panel-label">
+          <article class="journal-note user-overview-stat progress-card metric-panel-card">
+            <div class="journal-note-label progress-card-label metric-panel-label">
               <span>导入回执</span>
               <FileUp class="h-4 w-4" />
             </div>
-            <div class="metric-panel-value">
+            <div class="journal-note-value progress-card-value metric-panel-value">
               {{ props.importResult ? (props.importResult.created + props.importResult.updated).toString().padStart(2, '0') : '00' }}
             </div>
-            <div class="metric-panel-helper">
+            <div class="journal-note-helper progress-card-hint metric-panel-helper">
               {{ importSummary }}
             </div>
-          </div>
+          </article>
         </div>
 
         <section class="workspace-directory-section user-directory-section">
@@ -315,9 +311,7 @@ function handleImportChange(event: Event): void {
               <div class="journal-note-label">
                 User Directory
               </div>
-              <h2 class="list-heading__title">
-                全部用户
-              </h2>
+              <h2 class="list-heading__title">全部用户</h2>
             </div>
             <div class="user-directory-meta">
               当前页 {{ listCount }} 个用户
@@ -516,12 +510,8 @@ function handleImportChange(event: Event): void {
         <section class="workspace-directory-section user-import-panel">
           <header class="workspace-tab-heading user-import-head">
             <div class="workspace-tab-heading__main">
-              <div class="workspace-overline">
-                User Import
-              </div>
-              <h2 class="workspace-page-title">
-                导入用户
-              </h2>
+              <div class="workspace-overline">User Import</div>
+              <h2 class="workspace-page-title">导入用户</h2>
               <p class="workspace-page-copy">
                 统一导入账号、角色与班级归属，导入完成后可回到工作台继续筛选和治理具体用户。
               </p>
@@ -562,9 +552,7 @@ function handleImportChange(event: Event): void {
                 <div class="journal-note-label">
                   Import Receipt
                 </div>
-                <h2 class="list-heading__title">
-                  导入回执
-                </h2>
+                <h2 class="list-heading__title">导入回执</h2>
               </div>
             </header>
 

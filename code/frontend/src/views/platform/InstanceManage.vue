@@ -188,49 +188,49 @@ const columns = [
           </div>
         </section>
 
-        <div class="instance-manage-body mt-10 space-y-10">
-          <div class="metric-panel-grid metric-panel-grid--premium cols-3">
-            <article class="metric-panel-card metric-panel-card--premium">
-              <div class="metric-panel-label">
+        <div class="admin-instance-manage-shell__content">
+          <div class="admin-summary-grid admin-instance-manage-shell__summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface">
+            <article class="journal-note progress-card metric-panel-card">
+              <div class="journal-note-label progress-card-label metric-panel-label">
                 <span>运行中</span>
                 <Activity class="h-4 w-4" />
               </div>
-              <div class="metric-panel-value">
+              <div class="journal-note-value progress-card-value metric-panel-value">
                 {{ runningCount.toString().padStart(2, '0') }}
               </div>
-              <div class="metric-panel-helper">
+              <div class="journal-note-helper progress-card-hint metric-panel-helper">
                 当前活跃实例
               </div>
             </article>
 
-            <article class="metric-panel-card metric-panel-card--premium">
-              <div class="metric-panel-label">
+            <article class="journal-note progress-card metric-panel-card">
+              <div class="journal-note-label progress-card-label metric-panel-label">
                 <span>总实例数</span>
                 <Server class="h-4 w-4" />
               </div>
-              <div class="metric-panel-value">
+              <div class="journal-note-value progress-card-value metric-panel-value">
                 {{ total.toString().padStart(2, '0') }}
               </div>
-              <div class="metric-panel-helper">
+              <div class="journal-note-helper progress-card-hint metric-panel-helper">
                 系统托管总计
               </div>
             </article>
 
-            <article class="metric-panel-card metric-panel-card--premium">
-              <div class="metric-panel-label">
+            <article class="journal-note progress-card metric-panel-card">
+              <div class="journal-note-label progress-card-label metric-panel-label">
                 <span>预警项</span>
                 <AlertTriangle class="h-4 w-4" />
               </div>
-              <div class="metric-panel-value">
+              <div class="journal-note-value progress-card-value metric-panel-value">
                 {{ warningCount.toString().padStart(2, '0') }}
               </div>
-              <div class="metric-panel-helper">
+              <div class="journal-note-helper progress-card-hint metric-panel-helper">
                 即将过期或异常
               </div>
             </article>
           </div>
 
-          <section class="workspace-directory-section">
+          <section class="workspace-directory-section admin-instance-manage-directory">
             <header class="list-heading">
               <div>
                 <div class="workspace-overline">
@@ -260,7 +260,7 @@ const columns = [
 
               <WorkspaceDataTable
                 v-else
-                class="workspace-directory-list"
+                class="workspace-directory-list admin-instance-manage-table"
                 :columns="columns"
                 :rows="pageRows"
                 row-key="id"
@@ -299,7 +299,7 @@ const columns = [
                 </template>
               </WorkspaceDataTable>
 
-              <div class="mt-6">
+              <div class="workspace-directory-pagination">
                 <WorkspaceDirectoryPagination
                   :page="page"
                   :total-pages="totalPages"
@@ -324,6 +324,13 @@ const columns = [
 </template>
 
 <style scoped>
+.admin-instance-manage-shell__content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--workspace-directory-page-block-gap);
+  margin-top: var(--space-10);
+}
+
 .workspace-hero {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;

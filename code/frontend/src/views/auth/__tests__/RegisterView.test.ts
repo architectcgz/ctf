@@ -74,6 +74,19 @@ describe('RegisterView', () => {
     expect(wrapper.get('button[type="submit"]').attributes('type')).toBe('submit')
   })
 
+  it('注册表单标签应与输入框建立明确关联', async () => {
+    const wrapper = mountRegisterView()
+
+    await flushPromises()
+
+    expect(wrapper.get('label[for="register-username"]').text()).toContain('用户名')
+    expect(wrapper.get('input#register-username').attributes('autocomplete')).toBe('username')
+    expect(wrapper.get('label[for="register-password"]').text()).toContain('设置密码')
+    expect(wrapper.get('input#register-password').attributes('autocomplete')).toBe('new-password')
+    expect(wrapper.get('label[for="register-class-name"]').text()).toContain('班级邀请码')
+    expect(wrapper.find('input#register-class-name').exists()).toBe(true)
+  })
+
   it('注册失败时应停留在当前页并展示错误信息', async () => {
     authMocks.register.mockRejectedValue(new Error('用户名已存在'))
 

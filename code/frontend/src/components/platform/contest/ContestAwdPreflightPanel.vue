@@ -48,11 +48,16 @@ function handleNavigateChallenge(challengeId: string) {
           v-if="canForceStart"
           class="preflight-override-entry"
         >
-          <span class="preflight-override-entry__label">强制启动赛事</span>
+          <header class="list-heading contest-awd-preflight-panel__override-head">
+            <div>
+              <div class="journal-note-label">Override Entry</div>
+              <h3 class="list-heading__title">强制启动赛事</h3>
+            </div>
+          </header>
           <button
             id="contest-awd-preflight-force-start"
             type="button"
-            class="ops-btn ops-btn--primary"
+            class="ui-btn ui-btn--primary"
             @click="emit('open:override')"
           >
             强制放行
