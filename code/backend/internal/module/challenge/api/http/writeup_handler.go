@@ -22,7 +22,9 @@ type writeupCommandService interface {
 	UpsertSubmission(challengeID, actorUserID int64, req *dto.UpsertSubmissionWriteupReq) (*dto.SubmissionWriteupResp, error)
 	UpsertSubmissionWithContext(ctx context.Context, challengeID, actorUserID int64, req *dto.UpsertSubmissionWriteupReq) (*dto.SubmissionWriteupResp, error)
 	RecommendOfficial(challengeID, actorUserID int64) (*dto.AdminChallengeWriteupResp, error)
+	RecommendOfficialWithContext(ctx context.Context, challengeID, actorUserID int64) (*dto.AdminChallengeWriteupResp, error)
 	UnrecommendOfficial(challengeID, actorUserID int64) (*dto.AdminChallengeWriteupResp, error)
+	UnrecommendOfficialWithContext(ctx context.Context, challengeID, actorUserID int64) (*dto.AdminChallengeWriteupResp, error)
 	RecommendCommunity(submissionID, requesterID int64, requesterRole string) (*dto.SubmissionWriteupResp, error)
 	UnrecommendCommunity(submissionID, requesterID int64, requesterRole string) (*dto.SubmissionWriteupResp, error)
 	HideCommunity(submissionID, requesterID int64, requesterRole string) (*dto.SubmissionWriteupResp, error)
@@ -104,7 +106,7 @@ func (h *WriteupHandler) RecommendOfficial(c *gin.Context) {
 		response.InvalidParams(c, "无效的 challenge id")
 		return
 	}
-	resp, err := h.commands.RecommendOfficial(challengeID, authctx.MustCurrentUser(c).UserID)
+	resp, err := h.commands.RecommendOfficialWithContext(c.Request.Context(), challengeID, authctx.MustCurrentUser(c).UserID)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -118,7 +120,7 @@ func (h *WriteupHandler) UnrecommendOfficial(c *gin.Context) {
 		response.InvalidParams(c, "无效的 challenge id")
 		return
 	}
-	resp, err := h.commands.UnrecommendOfficial(challengeID, authctx.MustCurrentUser(c).UserID)
+	resp, err := h.commands.UnrecommendOfficialWithContext(c.Request.Context(), challengeID, authctx.MustCurrentUser(c).UserID)
 	if err != nil {
 		response.FromError(c, err)
 		return
