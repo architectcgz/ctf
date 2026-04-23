@@ -8,16 +8,15 @@
 | 审查范围 | `code/frontend/src` 路由、关键视图、composables、stores、共享样式与验证门禁 |
 | 审查日期 | 2026-04-22 |
 | 审查方式 | 静态代码审查 + 最小验证基线检查 |
-| 审查状态 | 已记录，已完成二十轮最小高收益修复 |
+| 审查状态 | 已记录，已完成二十一轮最小高收益修复 |
 
 ## 当前结论
 
 - 本轮专项审查起手时暴露出的高收益问题，已经有大半完成收口：
   - `typecheck` 基线已恢复，当前专项修复工作树可稳定作为静态门禁。
-  - 题目详情竞态、实例页状态同步、`/ui-lab` 正式路由暴露、认证表单基础可访问性、`window.confirm` 混用等问题已完成修复。
+  - 题目详情竞态、实例页状态同步、`/ui-lab` 正式路由暴露、认证表单基础可访问性、`window.confirm` 混用、登录态 token 本地持久化等问题已完成修复。
   - 本轮继续收口了平台 AWD 编排组件簇、教师端 `workspace / tabs / surface` 漂移，以及 shared pagination 的 review 基线漂移。
 - 当前仍未整体关闭专项审查，剩余问题主要集中在：
-  - `P1-4` 登录态令牌仍保存在 `localStorage`
   - `P2-1` 主题硬编码清理仍未全量收口
   - `P2-5` 仍有部分大页面和管理端 surface 漂移未完成系统性减重
 
@@ -558,15 +557,36 @@
 
 ## 当前剩余未收口项
 
-- `P1-4` 仍未处理：
-  - 登录态 token 仍保存在 `localStorage`
-  - 这是高风险设计问题，不应因为页面层收口而误判为专项完成
 - `P2-1` 仍未全量处理：
   - 这轮只进一步收口了 AWD / 教师端 / 通知 / shared pagination 周边的主题与基线漂移
   - 生产代码里仍可能存在其他绕过共享 token 的硬编码样式
 - `P2-5` 仍未全量处理：
   - 本轮修的是 AWD 和教师端 review 漂移，不是对剩余超重页面做完系统性减重
   - 仍需结合管理端剩余页面和共享 surface 基线继续推进
+
+## 第二十一轮修复进展
+
+- 已完成：
+  - `P1-4` 登录态 token 已从 `localStorage` 迁出，Access Token 现在只保存在内存态。
+  - 刷新后的登录恢复改为依赖服务端 `HttpOnly refresh cookie`：
+    - 启动阶段会静默尝试 `/auth/refresh`
+    - 受保护路由在内存里没有 token 时，会先等待同一条 restore promise，再决定是否跳去登录页
+    - `/login`、`/register` 在已有有效 refresh cookie 时，也会先恢复会话再跳转回角色工作台
+  - 旧的 `ctf_access_token / ctf_refresh_token` 只保留清理逻辑，不再作为运行时持久化来源。
+- 本轮涉及文件：
+  - `code/frontend/src/api/auth.ts`
+  - `code/frontend/src/stores/auth.ts`
+  - `code/frontend/src/router/guards.ts`
+  - `code/frontend/src/main.ts`
+  - `code/frontend/src/stores/__tests__/auth.test.ts`
+  - `code/frontend/src/router/__tests__/guards.test.ts`
+
+## 第二十一轮验证
+
+- 已执行：
+  - `npm run test:run -- src/stores/__tests__/auth.test.ts src/router/__tests__/guards.test.ts`
+  - 结果：`2` 个测试文件、`12` 条测试通过
+  - `npm run typecheck`
 
 ## 备注
 
