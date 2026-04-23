@@ -4,6 +4,7 @@ import { createRouter, createMemoryHistory } from 'vue-router'
 
 import ChallengeDetail from '../ChallengeDetail.vue'
 import challengeDetailSource from '../ChallengeDetail.vue?raw'
+import challengeSolutionsPanelSource from '@/components/challenge/ChallengeSolutionsPanel.vue?raw'
 import challengeSubmissionRecordsPanelSource from '@/components/challenge/ChallengeSubmissionRecordsPanel.vue?raw'
 import challengeWriteupPanelSource from '@/components/challenge/ChallengeWriteupPanel.vue?raw'
 
@@ -214,6 +215,7 @@ describe('ChallengeDetail', () => {
   it('题目详情 section heading 应切到共享 workspace overline 语义', () => {
     const combinedSource = [
       challengeDetailSource,
+      challengeSolutionsPanelSource,
       challengeSubmissionRecordsPanelSource,
       challengeWriteupPanelSource,
     ].join('\n')
