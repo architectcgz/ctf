@@ -263,7 +263,14 @@ func (s *ChallengeService) DeleteChallengeWithContext(ctx context.Context, id in
 }
 
 func (s *ChallengeService) PublishChallenge(id int64) error {
-	challenge, err := s.repo.FindByID(id)
+	return s.PublishChallengeWithContext(context.Background(), id)
+}
+
+func (s *ChallengeService) PublishChallengeWithContext(ctx context.Context, id int64) error {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	challenge, err := s.repo.FindByIDWithContext(ctx, id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return errcode.ErrChallengeNotFound
@@ -272,7 +279,7 @@ func (s *ChallengeService) PublishChallenge(id int64) error {
 	}
 
 	challenge.Status = model.ChallengeStatusPublished
-	return s.repo.Update(challenge)
+	return s.repo.UpdateWithContext(ctx, challenge)
 }
 
 func (s *ChallengeService) RequestPublishCheck(ctx context.Context, actorUserID, id int64) (*dto.ChallengePublishCheckJobResp, error) {
@@ -384,7 +391,7 @@ func (s *ChallengeService) processPublishCheckJob(ctx context.Context, jobID int
 		s.logger.Warn("load publish check job failed", zap.Int64("job_id", jobID), zap.Error(err))
 		return
 	}
-	challenge, err := s.repo.FindByID(job.ChallengeID)
+	challenge, err := s.repo.FindByIDWithContext(ctx, job.ChallengeID)
 	if err != nil {
 		s.finishPublishCheckJob(ctx, job, nil, false, fmt.Sprintf("读取题目失败: %v", err), &model.Challenge{
 			ID:    job.ChallengeID,
@@ -407,7 +414,7 @@ func (s *ChallengeService) processPublishCheckJob(ctx context.Context, jobID int
 
 	var publishedAt *time.Time
 	if passed {
-		if err := s.PublishChallenge(challenge.ID); err != nil {
+		if err := s.PublishChallengeWithContext(ctx, challenge.ID); err != nil {
 			passed = false
 			failureSummary = fmt.Sprintf("自动发布失败: %v", err)
 		} else {
