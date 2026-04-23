@@ -66,6 +66,7 @@ type stubEnvironmentTemplateRepository struct {
 	findByIDFn        func(id int64) (*model.EnvironmentTemplate, error)
 	findByIDWithCtxFn func(ctx context.Context, id int64) (*model.EnvironmentTemplate, error)
 	listFn            func(keyword string) ([]*model.EnvironmentTemplate, error)
+	listWithCtxFn     func(ctx context.Context, keyword string) ([]*model.EnvironmentTemplate, error)
 	incrementUsageFn  func(id int64) error
 }
 
@@ -109,6 +110,13 @@ func (s *stubEnvironmentTemplateRepository) List(keyword string) ([]*model.Envir
 		return s.listFn(keyword)
 	}
 	return nil, nil
+}
+
+func (s *stubEnvironmentTemplateRepository) ListWithContext(ctx context.Context, keyword string) ([]*model.EnvironmentTemplate, error) {
+	if s.listWithCtxFn != nil {
+		return s.listWithCtxFn(ctx, keyword)
+	}
+	return s.List(keyword)
 }
 
 func (s *stubEnvironmentTemplateRepository) IncrementUsage(id int64) error {
@@ -191,5 +199,38 @@ func TestTopologyServiceGetTemplateWithContextPropagatesContextToRepository(t *t
 	}
 	if resp == nil || resp.ID != 21 || resp.Name != "Base Web" || resp.EntryNodeKey != "web" {
 		t.Fatalf("unexpected template resp: %+v", resp)
+	}
+}
+
+func TestTopologyServiceListTemplatesWithContextPropagatesContextToRepository(t *testing.T) {
+	t.Parallel()
+
+	ctxKey := challengeTopologyContextKey("template-list")
+	expectedCtxValue := "ctx-template-list"
+	listCalled := false
+	templateRepo := &stubEnvironmentTemplateRepository{
+		listWithCtxFn: func(ctx context.Context, keyword string) ([]*model.EnvironmentTemplate, error) {
+			listCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected list-templates ctx value %v, got %v", expectedCtxValue, got)
+			}
+			if keyword != "web" {
+				t.Fatalf("unexpected keyword: %q", keyword)
+			}
+			return []*model.EnvironmentTemplate{{ID: 1, Name: "Base Web", EntryNodeKey: "web"}}, nil
+		},
+	}
+	service := NewTopologyService(nil, templateRepo)
+
+	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
+	resp, err := service.ListTemplatesWithContext(ctx, " web ")
+	if err != nil {
+		t.Fatalf("ListTemplatesWithContext() error = %v", err)
+	}
+	if !listCalled {
+		t.Fatal("expected template repository list to be called")
+	}
+	if len(resp) != 1 || resp[0].ID != 1 || resp[0].Name != "Base Web" {
+		t.Fatalf("unexpected template list resp: %+v", resp)
 	}
 }

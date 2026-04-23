@@ -68,7 +68,14 @@ func (s *TopologyService) GetTemplateWithContext(ctx context.Context, id int64) 
 }
 
 func (s *TopologyService) ListTemplates(keyword string) ([]*dto.EnvironmentTemplateResp, error) {
-	items, err := s.templateRepo.List(strings.TrimSpace(keyword))
+	return s.ListTemplatesWithContext(context.Background(), keyword)
+}
+
+func (s *TopologyService) ListTemplatesWithContext(ctx context.Context, keyword string) ([]*dto.EnvironmentTemplateResp, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	items, err := s.templateRepo.ListWithContext(ctx, strings.TrimSpace(keyword))
 	if err != nil {
 		return nil, err
 	}
