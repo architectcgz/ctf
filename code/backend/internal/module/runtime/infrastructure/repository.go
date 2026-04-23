@@ -232,7 +232,11 @@ func (r *Repository) UpdateStatusAndReleasePortWithContext(ctx context.Context, 
 }
 
 func (r *Repository) UpdateRuntime(instance *model.Instance) error {
-	return r.db.Model(&model.Instance{}).
+	return r.UpdateRuntimeWithContext(context.Background(), instance)
+}
+
+func (r *Repository) UpdateRuntimeWithContext(ctx context.Context, instance *model.Instance) error {
+	return r.dbWithContext(ctx).Model(&model.Instance{}).
 		Where("id = ?", instance.ID).
 		Updates(map[string]any{
 			"contest_id":      instance.ContestID,
