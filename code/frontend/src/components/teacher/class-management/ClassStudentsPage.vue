@@ -414,6 +414,14 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
 <style scoped>
 @import '../teacher-workspace-subpanel.css';
 
+.workspace-shell {
+  --journal-ink: var(--color-text-primary);
+  --journal-muted: var(--color-text-secondary);
+  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
+  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
+}
+
 .teacher-page { display: flex; min-height: 100%; flex: 1 1 auto; flex-direction: column; }
 .teacher-directory-section { margin-top: var(--space-6); }
 

@@ -120,6 +120,18 @@ describe('TeacherAWDReviewDetail', () => {
     })
   })
 
+  it('不应继续保留亮色硬编码 surface、状态色或 text-slate 工具类', () => {
+    expect(awdReviewDetailSource).not.toContain('#fdfdfd')
+    expect(awdReviewDetailSource).not.toContain('#3182ce')
+    expect(awdReviewDetailSource).not.toContain('rgba(0,0,0,0.02)')
+    expect(awdReviewDetailSource).not.toContain('text-slate-500')
+    expect(awdReviewDetailSource).not.toContain('text-slate-900')
+    expect(awdReviewDetailSource).not.toContain('text-emerald-600')
+    expect(awdReviewDetailSource).not.toContain('text-red-600')
+    expect(awdReviewDetailSource).not.toContain('text-blue-600')
+    expect(awdReviewDetailSource).not.toContain('bg-emerald-400')
+  })
+
   it('默认显示整场总览，并在进行中赛事上禁用教师报告导出', async () => {
     const wrapper = mount(TeacherAWDReviewDetail)
 
