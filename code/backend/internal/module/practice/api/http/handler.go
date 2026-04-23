@@ -26,8 +26,8 @@ type practiceService interface {
 	StartContestAWDService(ctx context.Context, userID, contestID, serviceID int64) (*dto.InstanceResp, error)
 	SubmitFlagWithContext(ctx context.Context, userID, challengeID int64, flag string) (*dto.SubmissionResp, error)
 	ListMyChallengeSubmissions(userID, challengeID int64) ([]*dto.ChallengeSubmissionRecordResp, error)
-	ListTeacherManualReviewSubmissions(requesterID int64, requesterRole string, query *dto.TeacherManualReviewSubmissionQuery) (*dto.PageResult, error)
-	GetTeacherManualReviewSubmission(submissionID, requesterID int64, requesterRole string) (*dto.TeacherManualReviewSubmissionDetailResp, error)
+	ListTeacherManualReviewSubmissionsWithContext(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherManualReviewSubmissionQuery) (*dto.PageResult, error)
+	GetTeacherManualReviewSubmissionWithContext(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*dto.TeacherManualReviewSubmissionDetailResp, error)
 	ReviewManualReviewSubmissionWithContext(ctx context.Context, submissionID, reviewerID int64, reviewerRole string, req *dto.ReviewManualReviewSubmissionReq) (*dto.TeacherManualReviewSubmissionDetailResp, error)
 }
 
@@ -181,7 +181,7 @@ func (h *Handler) ListTeacherManualReviewSubmissions(c *gin.Context) {
 		response.ValidationError(c, err)
 		return
 	}
-	resp, err := h.service.ListTeacherManualReviewSubmissions(currentUser.UserID, currentUser.Role, &query)
+	resp, err := h.service.ListTeacherManualReviewSubmissionsWithContext(c.Request.Context(), currentUser.UserID, currentUser.Role, &query)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -196,7 +196,7 @@ func (h *Handler) GetTeacherManualReviewSubmission(c *gin.Context) {
 		response.InvalidParams(c, "无效的 submission id")
 		return
 	}
-	resp, err := h.service.GetTeacherManualReviewSubmission(submissionID, currentUser.UserID, currentUser.Role)
+	resp, err := h.service.GetTeacherManualReviewSubmissionWithContext(c.Request.Context(), submissionID, currentUser.UserID, currentUser.Role)
 	if err != nil {
 		response.FromError(c, err)
 		return
