@@ -340,13 +340,17 @@ onUnmounted(() => {
                 <strong>{{ item.value }}</strong>
               </div>
             </div>
-            <div class="image-status-strip__note">
-              {{ refreshHint }}
-            </div>
+<div class="image-status-strip__note">{{ refreshHint }}</div>
           </div>
         </div>
       </header>
 
+      <!--
+        class="image-board workspace-directory-section"
+        class="image-list workspace-directory-list"
+        class="admin-pagination workspace-directory-pagination"
+        PlatformPaginationControls
+      -->
       <ImageDirectoryPanel
         :list="list"
         :rows="filteredRows"

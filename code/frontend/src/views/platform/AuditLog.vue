@@ -274,7 +274,7 @@ watch(
 </script>
 
 <template>
-  <div class="workspace-shell">
+  <div class="workspace-shell journal-shell journal-shell-admin journal-hero">
     <div class="workspace-grid">
       <main class="content-pane">
         <section class="workspace-hero">

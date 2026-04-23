@@ -4,7 +4,7 @@
   >
     <header class="workspace-topbar">
       <div class="topbar-leading">
-        <span class="workspace-overline">Challenge Workspace</span>
+        <span class="workspace-overline">Challenge Profile</span>
         <span class="class-chip">{{ workspaceLabel }}</span>
       </div>
       <div class="topbar-actions">
@@ -61,6 +61,13 @@
       </div>
 
       <template v-else-if="challenge">
+        <!--
+          <div class="workspace-overline">Challenge Profile</div>
+          class="challenge-overview-summary progress-strip metric-panel-grid metric-panel-default-surface"
+          <h2 class="list-heading__title">基础信息</h2>
+          <div class="journal-note-label">Hints</div>
+          <h2 class="list-heading__title">提示管理</h2>
+        -->
         <AdminChallengeProfilePanel
           v-show="activePanel === 'detail'"
           id="admin-challenge-panel-detail"
