@@ -8,7 +8,7 @@
 | 审查范围 | `code/frontend/src` 路由、关键视图、composables、stores、共享样式与验证门禁 |
 | 审查日期 | 2026-04-22 |
 | 审查方式 | 静态代码审查 + 最小验证基线检查 |
-| 审查状态 | 已记录，已完成十六轮最小高收益修复 |
+| 审查状态 | 已记录，已完成十七轮最小高收益修复 |
 
 ## 当前结论
 
@@ -106,6 +106,7 @@
     - `code/frontend/src/views/contests/ContestDetail.vue`
     - `code/frontend/src/views/platform/ChallengeDetail.vue`
     - `code/frontend/src/views/platform/ImageManage.vue`
+    - `code/frontend/src/views/platform/AuditLog.vue`
   - 影响：
     - 阅读和回归成本高，局部修复也更容易带出连锁问题。
 
@@ -445,6 +446,26 @@
 
 - 已执行：
   - `npm run test:run -- src/views/platform/__tests__/imageManageWorkspaceExtraction.test.ts src/views/platform/__tests__/imageManageModalExtraction.test.ts src/views/platform/__tests__/ImageManage.test.ts`
+  - `npm run typecheck`
+
+## 第十七轮修复进展
+
+- 已完成：
+  - `P2-5` `AuditLog.vue` 继续减重，操作流水工作区已抽到独立 `components/platform/audit/AuditLogDirectoryPanel.vue`，路由页不再直接承载目录头、筛选排序、空错态、表格与分页模板。
+  - 这轮拆分保持了状态 ownership 不变：路由 query 同步、请求取消与 stale request 防护、筛选自动应用、执行人详情弹窗和摘要卡片仍由 `AuditLog.vue` 持有，新组件只通过 props 和 emits 承载目录展示与交互。
+  - `AuditLog` 的源码护栏已同步更新为父子组合源码检查，目录工作区、共享工具栏、共享表格和深色 surface 边框变量都改为面向组合源码断言。
+  - `AuditLog.vue` 本体行数已从 `831` 行降到 `542` 行，页面本体现在主要只剩摘要区、路由同步、远端加载 owner 和执行人详情弹窗。
+- 本轮涉及文件：
+  - `code/frontend/src/views/platform/AuditLog.vue`
+  - `code/frontend/src/components/platform/audit/AuditLogDirectoryPanel.vue`
+  - `code/frontend/src/views/platform/__tests__/AuditLog.test.ts`
+  - `code/frontend/src/views/platform/__tests__/auditLogWorkspaceExtraction.test.ts`
+  - `code/frontend/src/views/platform/__tests__/platformManagementSurfaceAlignment.test.ts`
+
+## 第十七轮验证
+
+- 已执行：
+  - `npm run test:run -- src/views/platform/__tests__/auditLogWorkspaceExtraction.test.ts src/views/platform/__tests__/AuditLog.test.ts`
   - `npm run typecheck`
 
 ## 备注
