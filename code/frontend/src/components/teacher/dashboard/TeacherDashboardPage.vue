@@ -281,8 +281,23 @@ const {
 @import '../teacher-workspace-subpanel.css';
 
 .workspace-shell {
+  --teacher-card-border: color-mix(in srgb, var(--color-border-default) 76%, transparent);
+  --teacher-control-border: color-mix(in srgb, var(--color-border-default) 78%, transparent);
+  --teacher-divider: color-mix(in srgb, var(--color-border-default) 86%, transparent);
   --workspace-line-soft: var(--color-border-subtle);
   --workspace-panel: var(--color-bg-surface);
+}
+
+.teacher-btn {
+  border: 1px solid var(--teacher-control-border);
+}
+
+.teacher-badge-card {
+  border: 1px solid var(--teacher-card-border);
+}
+
+.teacher-tip-block {
+  border-top: 1px dashed var(--teacher-divider);
 }
 
 .hero-summary {

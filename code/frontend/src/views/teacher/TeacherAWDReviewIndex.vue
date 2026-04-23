@@ -34,7 +34,7 @@ function contestStatusLabel(status: string): string {
 <template>
   <div class="teacher-management-shell teacher-surface workspace-shell flex min-h-full flex-1 flex-col">
     <section
-      class="teacher-hero teacher-surface-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
+      class="teacher-hero teacher-surface-hero flex min-h-full flex-1 flex-col border px-6 py-6 md:px-8"
     >
       <div class="teacher-page">
         <header class="teacher-topbar workspace-tab-heading awd-review-index-header">

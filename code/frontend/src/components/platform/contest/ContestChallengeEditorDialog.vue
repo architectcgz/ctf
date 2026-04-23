@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, reactive, watch } from 'vue'
 
-import SlideOverDrawer from '@/components/common/modal-templates/SlideOverDrawer.vue'
+import AdminSurfaceModal from '@/components/common/modal-templates/AdminSurfaceModal.vue'
 import type {
   AdminAwdServiceTemplateData,
   AdminChallengeListItem,
@@ -114,8 +114,6 @@ watch(
     form.challenge_id =
       props.mode === 'edit'
         ? props.draft?.challenge_id || ''
-        : isAwdContest.value
-          ? selectableTemplates.value[0]?.id || ''
         : selectableChallenges.value[0]?.id || ''
     form.template_id = isAwdContest.value
       ? props.draft?.awd_template_id || selectableTemplates.value[0]?.id || ''
@@ -153,7 +151,7 @@ function submit() {
 
   clearErrors()
 
-  if (!isAwdContest.value && !form.challenge_id.trim()) {
+  if (!form.challenge_id.trim()) {
     fieldErrors.challenge_id = '请选择题目'
   }
   if (isAwdContest.value && !form.template_id.trim()) {
@@ -180,7 +178,7 @@ function submit() {
   }
 
   emit('save', {
-    challenge_id: isAwdContest.value ? undefined : Number(form.challenge_id),
+    challenge_id: form.challenge_id ? Number(form.challenge_id) : undefined,
     template_id: isAwdContest.value ? Number(form.template_id) : undefined,
     points,
     order,
@@ -190,7 +188,7 @@ function submit() {
 </script>
 
 <template>
-  <SlideOverDrawer
+  <AdminSurfaceModal
     :open="open"
     :title="dialogTitle"
     :subtitle="
@@ -215,7 +213,6 @@ function submit() {
       </p>
 
       <label
-        v-if="!isAwdContest"
         class="ui-field contest-challenge-dialog__field"
         for="contest-challenge-select"
       >
@@ -447,7 +444,7 @@ function submit() {
         </button>
       </div>
     </template>
-  </SlideOverDrawer>
+  </AdminSurfaceModal>
 </template>
 
 <style scoped>

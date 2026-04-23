@@ -7,6 +7,20 @@ defineProps<AWDScoreboardSummaryPanelProps>()
 
 <template>
   <div class="studio-scoreboard-stack">
+    <header class="scoreboard-header">
+      <div>
+        <div class="scoreboard-eyebrow">实时排行榜</div>
+        <h3 class="scoreboard-title">本轮汇总</h3>
+      </div>
+      <div
+        v-if="summary?.metrics"
+        class="scoreboard-summary"
+      >
+        <span>总攻击 {{ summary.metrics.total_attack_count }}</span>
+        <span>在线服务 {{ summary.metrics.service_up_count }}</span>
+      </div>
+    </header>
+
     <!-- 1. Rank Context HUD (Subtle) -->
     <div class="rank-context">
       <div class="context-item">
@@ -99,6 +113,36 @@ defineProps<AWDScoreboardSummaryPanelProps>()
 
 <style scoped>
 .studio-scoreboard-stack { display: flex; flex-direction: column; gap: var(--space-6); }
+
+.scoreboard-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.scoreboard-eyebrow {
+  font-size: var(--font-size-10);
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.scoreboard-title {
+  margin: var(--space-2) 0 0;
+  font-size: var(--font-size-1-20);
+  font-weight: 900;
+  color: var(--color-text-primary);
+}
+
+.scoreboard-summary {
+  display: flex;
+  gap: var(--space-4);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-11);
+  font-weight: 700;
+}
 
 /* Rank HUD */
 .rank-context { display: flex; align-items: center; gap: var(--space-6); padding: var(--space-2) 0; }

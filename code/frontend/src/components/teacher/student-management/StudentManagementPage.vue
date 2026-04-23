@@ -311,6 +311,10 @@ const emit = defineEmits<{
   font-family: var(--font-family-sans);
 }
 
+.teacher-badge-card {
+  border: 1px solid var(--teacher-card-border);
+}
+
 .teacher-page {
   display: flex;
   min-height: 100%;

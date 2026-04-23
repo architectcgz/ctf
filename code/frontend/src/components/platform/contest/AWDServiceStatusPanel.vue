@@ -70,6 +70,24 @@ function getServiceCheckTargets(checkResult: Record<string, unknown>) {
       <div class="toolbar-right">
         <div class="matrix-filters">
           <select
+            id="awd-service-filter-team"
+            :value="serviceTeamFilter"
+            class="matrix-select"
+            @change="emit('updateServiceTeamFilter', ($event.target as HTMLSelectElement).value)"
+          >
+            <option value="">
+              所有队伍
+            </option>
+            <option
+              v-for="team in serviceTeamOptions"
+              :key="team.team_id"
+              :value="team.team_id"
+            >
+              {{ team.team_name }}
+            </option>
+          </select>
+          <select
+            id="awd-service-filter-status"
             :value="serviceStatusFilter"
             class="matrix-select"
             @change="updateServiceStatusFilter(($event.target as HTMLSelectElement).value)"
@@ -88,6 +106,7 @@ function getServiceCheckTargets(checkResult: Record<string, unknown>) {
             </option>
           </select>
           <select
+            id="awd-service-filter-source"
             :value="serviceCheckSourceFilter"
             class="matrix-select"
             @change="emit('updateServiceCheckSourceFilter', ($event.target as HTMLSelectElement).value)"
@@ -103,8 +122,26 @@ function getServiceCheckTargets(checkResult: Record<string, unknown>) {
               {{ getCheckSourceLabel(source) }}
             </option>
           </select>
+          <select
+            id="awd-service-filter-alert"
+            :value="serviceAlertReasonFilter"
+            class="matrix-select"
+            @change="emit('updateServiceAlertReasonFilter', ($event.target as HTMLSelectElement).value)"
+          >
+            <option value="">
+              所有告警
+            </option>
+            <option
+              v-for="alert in serviceAlerts"
+              :key="alert.key"
+              :value="alert.key"
+            >
+              {{ alert.label }}
+            </option>
+          </select>
         </div>
         <button
+          id="awd-export-services"
           type="button"
           class="ops-btn ops-btn--neutral"
           @click="emit('exportServices')"
