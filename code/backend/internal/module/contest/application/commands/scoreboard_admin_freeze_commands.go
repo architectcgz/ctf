@@ -2,6 +2,7 @@ package commands
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	redislib "github.com/redis/go-redis/v9"
@@ -30,14 +31,21 @@ func (s *ScoreboardAdminService) FreezeScoreboard(ctx context.Context, contestID
 
 	freezeTime := contest.EndTime.Add(-time.Duration(minutesBeforeEnd) * time.Minute)
 	contest.FreezeTime = &freezeTime
+	snapshotCreated := false
 	if !now.Before(freezeTime) {
 		contest.Status = model.ContestStatusFrozen
 		if err := s.createSnapshotFromLive(ctx, contestID); err != nil {
 			return err
 		}
+		snapshotCreated = true
 	}
 
 	if err := s.repo.Update(ctx, contest); err != nil {
+		if snapshotCreated {
+			if rollbackErr := s.redis.Del(ctx, rediskeys.RankContestFrozenKey(contestID)).Err(); rollbackErr != nil {
+				return errcode.ErrInternal.WithCause(fmt.Errorf("update contest freeze state: %w; rollback frozen snapshot: %v", err, rollbackErr))
+			}
+		}
 		return err
 	}
 
