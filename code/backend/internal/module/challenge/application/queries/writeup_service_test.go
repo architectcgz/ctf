@@ -11,28 +11,30 @@ import (
 )
 
 type stubChallengeWriteupRepository struct {
-	findByIDFn                                        func(id int64) (*model.Challenge, error)
-	findByIDWithContextFn                             func(ctx context.Context, id int64) (*model.Challenge, error)
-	findUserByIDFn                                    func(userID int64) (*model.User, error)
-	findUserByIDWithContextFn                         func(ctx context.Context, userID int64) (*model.User, error)
-	findWriteupByChallengeIDFn                        func(challengeID int64) (*model.ChallengeWriteup, error)
-	findWriteupByChallengeIDWithContextFn             func(ctx context.Context, challengeID int64) (*model.ChallengeWriteup, error)
-	upsertWriteupFn                                   func(writeup *model.ChallengeWriteup) error
-	deleteWriteupByChallengeIDFn                      func(challengeID int64) error
-	findReleasedWriteupByChallengeIDFn                func(challengeID int64, now time.Time) (*model.ChallengeWriteup, error)
-	findReleasedWriteupByChallengeIDWithContextFn     func(ctx context.Context, challengeID int64, now time.Time) (*model.ChallengeWriteup, error)
-	getSolvedStatusFn                                 func(userID, challengeID int64) (bool, error)
-	getSolvedStatusWithContextFn                      func(ctx context.Context, userID, challengeID int64) (bool, error)
-	findSubmissionWriteupByUserChallengeFn            func(userID, challengeID int64) (*model.SubmissionWriteup, error)
-	findSubmissionWriteupByUserChallengeWithContextFn func(ctx context.Context, userID, challengeID int64) (*model.SubmissionWriteup, error)
-	findSubmissionWriteupByIDFn                       func(id int64) (*model.SubmissionWriteup, error)
-	upsertSubmissionWriteupFn                         func(writeup *model.SubmissionWriteup) error
-	getTeacherSubmissionWriteupByIDFn                 func(id int64) (*challengeports.TeacherSubmissionWriteupRecord, error)
-	getTeacherSubmissionWriteupByIDWithContextFn      func(ctx context.Context, id int64) (*challengeports.TeacherSubmissionWriteupRecord, error)
-	listTeacherSubmissionWriteupsFn                   func(query *dto.TeacherSubmissionWriteupQuery) ([]challengeports.TeacherSubmissionWriteupRecord, int64, error)
-	listTeacherSubmissionWriteupsWithContextFn        func(ctx context.Context, query *dto.TeacherSubmissionWriteupQuery) ([]challengeports.TeacherSubmissionWriteupRecord, int64, error)
-	listRecommendedSolutionsByChallengeIDFn           func(challengeID int64, now time.Time) ([]challengeports.RecommendedSolutionRecord, error)
-	listCommunitySolutionsByChallengeIDFn             func(challengeID int64, query *dto.CommunityChallengeSolutionQuery) ([]challengeports.CommunitySolutionRecord, int64, error)
+	findByIDFn                                         func(id int64) (*model.Challenge, error)
+	findByIDWithContextFn                              func(ctx context.Context, id int64) (*model.Challenge, error)
+	findUserByIDFn                                     func(userID int64) (*model.User, error)
+	findUserByIDWithContextFn                          func(ctx context.Context, userID int64) (*model.User, error)
+	findWriteupByChallengeIDFn                         func(challengeID int64) (*model.ChallengeWriteup, error)
+	findWriteupByChallengeIDWithContextFn              func(ctx context.Context, challengeID int64) (*model.ChallengeWriteup, error)
+	upsertWriteupFn                                    func(writeup *model.ChallengeWriteup) error
+	deleteWriteupByChallengeIDFn                       func(challengeID int64) error
+	findReleasedWriteupByChallengeIDFn                 func(challengeID int64, now time.Time) (*model.ChallengeWriteup, error)
+	findReleasedWriteupByChallengeIDWithContextFn      func(ctx context.Context, challengeID int64, now time.Time) (*model.ChallengeWriteup, error)
+	getSolvedStatusFn                                  func(userID, challengeID int64) (bool, error)
+	getSolvedStatusWithContextFn                       func(ctx context.Context, userID, challengeID int64) (bool, error)
+	findSubmissionWriteupByUserChallengeFn             func(userID, challengeID int64) (*model.SubmissionWriteup, error)
+	findSubmissionWriteupByUserChallengeWithContextFn  func(ctx context.Context, userID, challengeID int64) (*model.SubmissionWriteup, error)
+	findSubmissionWriteupByIDFn                        func(id int64) (*model.SubmissionWriteup, error)
+	upsertSubmissionWriteupFn                          func(writeup *model.SubmissionWriteup) error
+	getTeacherSubmissionWriteupByIDFn                  func(id int64) (*challengeports.TeacherSubmissionWriteupRecord, error)
+	getTeacherSubmissionWriteupByIDWithContextFn       func(ctx context.Context, id int64) (*challengeports.TeacherSubmissionWriteupRecord, error)
+	listTeacherSubmissionWriteupsFn                    func(query *dto.TeacherSubmissionWriteupQuery) ([]challengeports.TeacherSubmissionWriteupRecord, int64, error)
+	listTeacherSubmissionWriteupsWithContextFn         func(ctx context.Context, query *dto.TeacherSubmissionWriteupQuery) ([]challengeports.TeacherSubmissionWriteupRecord, int64, error)
+	listRecommendedSolutionsByChallengeIDFn            func(challengeID int64, now time.Time) ([]challengeports.RecommendedSolutionRecord, error)
+	listRecommendedSolutionsByChallengeIDWithContextFn func(ctx context.Context, challengeID int64, now time.Time) ([]challengeports.RecommendedSolutionRecord, error)
+	listCommunitySolutionsByChallengeIDFn              func(challengeID int64, query *dto.CommunityChallengeSolutionQuery) ([]challengeports.CommunitySolutionRecord, int64, error)
+	listCommunitySolutionsByChallengeIDWithContextFn   func(ctx context.Context, challengeID int64, query *dto.CommunityChallengeSolutionQuery) ([]challengeports.CommunitySolutionRecord, int64, error)
 }
 
 func (s *stubChallengeWriteupRepository) FindByID(id int64) (*model.Challenge, error) {
@@ -182,11 +184,25 @@ func (s *stubChallengeWriteupRepository) ListRecommendedSolutionsByChallengeID(c
 	return nil, nil
 }
 
+func (s *stubChallengeWriteupRepository) ListRecommendedSolutionsByChallengeIDWithContext(ctx context.Context, challengeID int64, now time.Time) ([]challengeports.RecommendedSolutionRecord, error) {
+	if s.listRecommendedSolutionsByChallengeIDWithContextFn != nil {
+		return s.listRecommendedSolutionsByChallengeIDWithContextFn(ctx, challengeID, now)
+	}
+	return s.ListRecommendedSolutionsByChallengeID(challengeID, now)
+}
+
 func (s *stubChallengeWriteupRepository) ListCommunitySolutionsByChallengeID(challengeID int64, query *dto.CommunityChallengeSolutionQuery) ([]challengeports.CommunitySolutionRecord, int64, error) {
 	if s.listCommunitySolutionsByChallengeIDFn != nil {
 		return s.listCommunitySolutionsByChallengeIDFn(challengeID, query)
 	}
 	return nil, 0, nil
+}
+
+func (s *stubChallengeWriteupRepository) ListCommunitySolutionsByChallengeIDWithContext(ctx context.Context, challengeID int64, query *dto.CommunityChallengeSolutionQuery) ([]challengeports.CommunitySolutionRecord, int64, error) {
+	if s.listCommunitySolutionsByChallengeIDWithContextFn != nil {
+		return s.listCommunitySolutionsByChallengeIDWithContextFn(ctx, challengeID, query)
+	}
+	return s.ListCommunitySolutionsByChallengeID(challengeID, query)
 }
 
 type challengeWriteupContextKey string
@@ -392,5 +408,100 @@ func TestWriteupServiceGetTeacherSubmissionWithContextPropagatesContextToReposit
 	}
 	if !findRequesterCalled {
 		t.Fatal("expected requester repository to be called")
+	}
+}
+
+func TestWriteupServiceListRecommendedSolutionsWithContextPropagatesContextToRepository(t *testing.T) {
+	t.Parallel()
+
+	ctxKey := challengeWriteupContextKey("writeup-list-recommended")
+	expectedCtxValue := "ctx-writeup-list-recommended"
+	findChallengeCalled := false
+	getSolvedCalled := false
+	listRecommendedCalled := false
+	repo := &stubChallengeWriteupRepository{
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+			findChallengeCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected find-challenge ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return &model.Challenge{ID: id, Status: model.ChallengeStatusPublished}, nil
+		},
+		getSolvedStatusWithContextFn: func(ctx context.Context, userID, challengeID int64) (bool, error) {
+			getSolvedCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected get-solved ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return true, nil
+		},
+		listRecommendedSolutionsByChallengeIDWithContextFn: func(ctx context.Context, challengeID int64, now time.Time) ([]challengeports.RecommendedSolutionRecord, error) {
+			listRecommendedCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected list-recommended ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return []challengeports.RecommendedSolutionRecord{{SourceType: "official", SourceID: 1, ChallengeID: challengeID, Title: "Recommended", Content: "walkthrough", AuthorName: "teacher"}}, nil
+		},
+	}
+	service := NewWriteupService(repo)
+
+	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
+	resp, err := service.ListRecommendedSolutionsWithContext(ctx, 7, 11)
+	if err != nil {
+		t.Fatalf("ListRecommendedSolutionsWithContext() error = %v", err)
+	}
+	if !findChallengeCalled || !getSolvedCalled || !listRecommendedCalled {
+		t.Fatalf("expected repository calls, got challenge=%v solved=%v recommended=%v", findChallengeCalled, getSolvedCalled, listRecommendedCalled)
+	}
+	if resp == nil || resp.Total != 1 || resp.Size != 1 {
+		t.Fatalf("unexpected recommended resp: %+v", resp)
+	}
+}
+
+func TestWriteupServiceListCommunitySolutionsWithContextPropagatesContextToRepository(t *testing.T) {
+	t.Parallel()
+
+	ctxKey := challengeWriteupContextKey("writeup-list-community")
+	expectedCtxValue := "ctx-writeup-list-community"
+	findChallengeCalled := false
+	getSolvedCalled := false
+	listCommunityCalled := false
+	repo := &stubChallengeWriteupRepository{
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+			findChallengeCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected find-challenge ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return &model.Challenge{ID: id, Status: model.ChallengeStatusPublished}, nil
+		},
+		getSolvedStatusWithContextFn: func(ctx context.Context, userID, challengeID int64) (bool, error) {
+			getSolvedCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected get-solved ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return true, nil
+		},
+		listCommunitySolutionsByChallengeIDWithContextFn: func(ctx context.Context, challengeID int64, query *dto.CommunityChallengeSolutionQuery) ([]challengeports.CommunitySolutionRecord, int64, error) {
+			listCommunityCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected list-community ctx value %v, got %v", expectedCtxValue, got)
+			}
+			if query.Page != 1 || query.Size != 20 {
+				t.Fatalf("expected normalized query, got %+v", query)
+			}
+			return []challengeports.CommunitySolutionRecord{{Submission: model.SubmissionWriteup{ID: 5, UserID: 9, ChallengeID: challengeID, Title: "Community", Content: "notes"}, AuthorName: "student", ChallengeID: challengeID, ChallengeTitle: "challenge"}}, 1, nil
+		},
+	}
+	service := NewWriteupService(repo)
+
+	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
+	resp, err := service.ListCommunitySolutionsWithContext(ctx, 7, 11, &dto.CommunityChallengeSolutionQuery{})
+	if err != nil {
+		t.Fatalf("ListCommunitySolutionsWithContext() error = %v", err)
+	}
+	if !findChallengeCalled || !getSolvedCalled || !listCommunityCalled {
+		t.Fatalf("expected repository calls, got challenge=%v solved=%v community=%v", findChallengeCalled, getSolvedCalled, listCommunityCalled)
+	}
+	if resp == nil || resp.Total != 1 || resp.Page != 1 || resp.Size != 20 {
+		t.Fatalf("unexpected community resp: %+v", resp)
 	}
 }
