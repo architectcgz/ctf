@@ -258,12 +258,16 @@ func (r *Repository) FindByUserAndChallengeWithContext(ctx context.Context, user
 }
 
 func (r *Repository) ListChallengeSubmissions(userID, challengeID int64, limit int) ([]model.Submission, error) {
+	return r.ListChallengeSubmissionsWithContext(context.Background(), userID, challengeID, limit)
+}
+
+func (r *Repository) ListChallengeSubmissionsWithContext(ctx context.Context, userID, challengeID int64, limit int) ([]model.Submission, error) {
 	if limit <= 0 {
 		limit = 20
 	}
 
 	var submissions []model.Submission
-	err := r.db.
+	err := r.dbWithContext(ctx).
 		Where("user_id = ? AND challenge_id = ? AND contest_id IS NULL", userID, challengeID).
 		Order("submitted_at DESC, id DESC").
 		Limit(limit).

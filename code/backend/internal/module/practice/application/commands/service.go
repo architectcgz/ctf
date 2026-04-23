@@ -548,7 +548,7 @@ func (s *Service) SubmitFlagWithContext(ctx context.Context, userID, challengeID
 		ctx = context.Background()
 	}
 
-	challengeItem, err := s.challengeRepo.FindByID(challengeID)
+	challengeItem, err := s.challengeRepo.FindByIDWithContext(ctx, challengeID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, errcode.ErrChallengeNotFound
@@ -736,7 +736,7 @@ func (s *Service) ReviewManualReviewSubmissionWithContext(
 		return nil, errcode.ErrInvalidParams.WithCause(errors.New("仅待审核提交可执行评阅"))
 	}
 
-	challengeItem, err := s.challengeRepo.FindByID(record.Submission.ChallengeID)
+	challengeItem, err := s.challengeRepo.FindByIDWithContext(ctx, record.Submission.ChallengeID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrChallengeNotFound
@@ -861,7 +861,15 @@ func (s *Service) GetTeacherManualReviewSubmissionWithContext(
 }
 
 func (s *Service) ListMyChallengeSubmissions(userID, challengeID int64) ([]*dto.ChallengeSubmissionRecordResp, error) {
-	challengeItem, err := s.challengeRepo.FindByID(challengeID)
+	return s.ListMyChallengeSubmissionsWithContext(context.Background(), userID, challengeID)
+}
+
+func (s *Service) ListMyChallengeSubmissionsWithContext(ctx context.Context, userID, challengeID int64) ([]*dto.ChallengeSubmissionRecordResp, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	challengeItem, err := s.challengeRepo.FindByIDWithContext(ctx, challengeID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrChallengeNotFound
@@ -872,7 +880,7 @@ func (s *Service) ListMyChallengeSubmissions(userID, challengeID int64) ([]*dto.
 		return nil, errcode.ErrChallengeNotPublish
 	}
 
-	items, err := s.repo.ListChallengeSubmissions(userID, challengeID, 20)
+	items, err := s.repo.ListChallengeSubmissionsWithContext(ctx, userID, challengeID, 20)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
@@ -1064,14 +1072,14 @@ func (s *Service) loadRuntimeSubjectWithScope(ctx context.Context, scope practic
 		return s.loadContestAWDServiceRuntimeSubject(ctx, *scope.ContestID, *scope.ServiceID)
 	}
 
-	chal, err := s.challengeRepo.FindByID(challengeID)
+	chal, err := s.challengeRepo.FindByIDWithContext(ctx, challengeID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, nil, errcode.ErrChallengeNotFound
 		}
 		return nil, nil, errcode.ErrInternal.WithCause(err)
 	}
-	topology, err := s.challengeRepo.FindChallengeTopologyByChallengeID(chal.ID)
+	topology, err := s.challengeRepo.FindChallengeTopologyByChallengeIDWithContext(ctx, chal.ID)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, nil, errcode.ErrContainerCreateFailed.WithCause(err)
 	}
@@ -1377,7 +1385,7 @@ func (s *Service) createContainer(ctx context.Context, instance *model.Instance,
 		return errcode.ErrContainerCreateFailed.WithCause(err)
 	}
 
-	request, err := s.buildTopologyCreateRequest(instance.HostPort, chal, topology.EntryNodeKey, spec, flag)
+	request, err := s.buildTopologyCreateRequest(ctx, instance.HostPort, chal, topology.EntryNodeKey, spec, flag)
 	if err != nil {
 		return err
 	}
@@ -1397,7 +1405,7 @@ func (s *Service) createContainer(ctx context.Context, instance *model.Instance,
 }
 
 func (s *Service) createSingleContainer(ctx context.Context, instance *model.Instance, chal *model.Challenge, flag string) error {
-	imageItem, err := s.imageRepo.FindByID(chal.ImageID)
+	imageItem, err := s.imageRepo.FindByIDWithContext(ctx, chal.ImageID)
 	if err != nil {
 		return errcode.ErrContainerCreateFailed.WithCause(err)
 	}
@@ -1438,6 +1446,7 @@ func (s *Service) createSingleContainer(ctx context.Context, instance *model.Ins
 }
 
 func (s *Service) buildTopologyCreateRequest(
+	ctx context.Context,
 	reservedHostPort int,
 	chal *model.Challenge,
 	entryNodeKey string,
@@ -1455,7 +1464,7 @@ func (s *Service) buildTopologyCreateRequest(
 		}
 	}
 
-	defaultImageRef, err := s.resolveAvailableImageRef(chal.ImageID)
+	defaultImageRef, err := s.resolveAvailableImageRef(ctx, chal.ImageID)
 	if err != nil {
 		return nil, err
 	}
@@ -1471,7 +1480,7 @@ func (s *Service) buildTopologyCreateRequest(
 	for _, node := range spec.Nodes {
 		imageRef := defaultImageRef
 		if node.ImageID > 0 {
-			imageRef, err = s.resolveAvailableImageRef(node.ImageID)
+			imageRef, err = s.resolveAvailableImageRef(ctx, node.ImageID)
 			if err != nil {
 				return nil, err
 			}
@@ -1508,8 +1517,8 @@ func (s *Service) buildTopologyCreateRequest(
 	return request, nil
 }
 
-func (s *Service) resolveAvailableImageRef(imageID int64) (string, error) {
-	imageItem, err := s.imageRepo.FindByID(imageID)
+func (s *Service) resolveAvailableImageRef(ctx context.Context, imageID int64) (string, error) {
+	imageItem, err := s.imageRepo.FindByIDWithContext(ctx, imageID)
 	if err != nil {
 		return "", errcode.ErrContainerCreateFailed.WithCause(err)
 	}

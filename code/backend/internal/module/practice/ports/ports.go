@@ -68,6 +68,7 @@ type PracticeCommandRepository interface {
 	FindCorrectSubmission(userID, challengeID int64) (*model.Submission, error)
 	FindCorrectSubmissionWithContext(ctx context.Context, userID, challengeID int64) (*model.Submission, error)
 	ListChallengeSubmissions(userID, challengeID int64, limit int) ([]model.Submission, error)
+	ListChallengeSubmissionsWithContext(ctx context.Context, userID, challengeID int64, limit int) ([]model.Submission, error)
 	UpdateSubmission(submission *model.Submission) error
 	UpdateSubmissionWithContext(ctx context.Context, submission *model.Submission) error
 	FindUserByID(userID int64) (*model.User, error)

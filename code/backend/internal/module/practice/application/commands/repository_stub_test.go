@@ -29,6 +29,7 @@ type stubPracticeRepository struct {
 	findCorrectSubmissionFn                           func(userID, challengeID int64) (*model.Submission, error)
 	findCorrectSubmissionWithContextFn                func(ctx context.Context, userID, challengeID int64) (*model.Submission, error)
 	listChallengeSubmissionsFn                        func(userID, challengeID int64, limit int) ([]model.Submission, error)
+	listChallengeSubmissionsWithContextFn             func(ctx context.Context, userID, challengeID int64, limit int) ([]model.Submission, error)
 	updateSubmissionFn                                func(submission *model.Submission) error
 	updateSubmissionWithContextFn                     func(ctx context.Context, submission *model.Submission) error
 	findUserByIDFn                                    func(userID int64) (*model.User, error)
@@ -157,6 +158,13 @@ func (s *stubPracticeRepository) ListChallengeSubmissions(userID, challengeID in
 		return s.listChallengeSubmissionsFn(userID, challengeID, limit)
 	}
 	return nil, nil
+}
+
+func (s *stubPracticeRepository) ListChallengeSubmissionsWithContext(ctx context.Context, userID, challengeID int64, limit int) ([]model.Submission, error) {
+	if s.listChallengeSubmissionsWithContextFn != nil {
+		return s.listChallengeSubmissionsWithContextFn(ctx, userID, challengeID, limit)
+	}
+	return s.ListChallengeSubmissions(userID, challengeID, limit)
 }
 
 func (s *stubPracticeRepository) UpdateSubmission(submission *model.Submission) error {
