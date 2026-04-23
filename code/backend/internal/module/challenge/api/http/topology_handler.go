@@ -29,6 +29,7 @@ type topologyQueryService interface {
 	GetTemplate(id int64) (*dto.EnvironmentTemplateResp, error)
 	GetTemplateWithContext(ctx context.Context, id int64) (*dto.EnvironmentTemplateResp, error)
 	ListTemplates(keyword string) ([]*dto.EnvironmentTemplateResp, error)
+	ListTemplatesWithContext(ctx context.Context, keyword string) ([]*dto.EnvironmentTemplateResp, error)
 }
 
 func NewTopologyHandler(commands topologyCommandService, queries topologyQueryService) *TopologyHandler {
@@ -129,7 +130,7 @@ func (h *TopologyHandler) GetTemplate(c *gin.Context) {
 }
 
 func (h *TopologyHandler) ListTemplates(c *gin.Context) {
-	resp, err := h.queries.ListTemplates(c.Query("keyword"))
+	resp, err := h.queries.ListTemplatesWithContext(c.Request.Context(), c.Query("keyword"))
 	if err != nil {
 		response.FromError(c, err)
 		return

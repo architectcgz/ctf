@@ -511,8 +511,15 @@ func (r *TemplateRepository) FindByIDWithContext(ctx context.Context, id int64) 
 }
 
 func (r *TemplateRepository) List(keyword string) ([]*model.EnvironmentTemplate, error) {
+	return r.ListWithContext(context.Background(), keyword)
+}
+
+func (r *TemplateRepository) ListWithContext(ctx context.Context, keyword string) ([]*model.EnvironmentTemplate, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
 	var templates []*model.EnvironmentTemplate
-	db := r.db.Model(&model.EnvironmentTemplate{})
+	db := r.db.WithContext(ctx).Model(&model.EnvironmentTemplate{})
 	if keyword != "" {
 		pattern := "%" + keyword + "%"
 		db = db.Where("name LIKE ? OR description LIKE ?", pattern, pattern)
