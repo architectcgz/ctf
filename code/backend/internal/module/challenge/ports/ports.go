@@ -14,6 +14,7 @@ type ChallengeCommandRepository interface {
 	FindByID(id int64) (*model.Challenge, error)
 	FindByIDWithContext(ctx context.Context, id int64) (*model.Challenge, error)
 	Update(challenge *model.Challenge) error
+	UpdateWithContext(ctx context.Context, challenge *model.Challenge) error
 	UpdateWithHints(challenge *model.Challenge, hints []*model.ChallengeHint, replaceHints bool) error
 	UpdateWithHintsWithContext(ctx context.Context, challenge *model.Challenge, hints []*model.ChallengeHint, replaceHints bool) error
 	Delete(id int64) error
