@@ -21,7 +21,7 @@ func buildContestSubmission(userID, contestID, challengeID int64, flag string, t
 		ChallengeID: challengeID,
 		ContestID:   &contestID,
 		TeamID:      teamID,
-		Flag:        flag,
+		Flag:        "",
 		IsCorrect:   false,
 		Score:       0,
 		SubmittedAt: submittedAt,
