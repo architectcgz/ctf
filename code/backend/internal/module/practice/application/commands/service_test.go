@@ -2422,6 +2422,31 @@ func TestListTeacherManualReviewSubmissionsWithContextPropagatesContextToReposit
 	}
 }
 
+func TestListTeacherManualReviewSubmissionsWithContextRejectsStudentRole(t *testing.T) {
+	t.Parallel()
+
+	repo := &stubPracticeRepository{
+		findUserByIDWithContextFn: func(ctx context.Context, userID int64) (*model.User, error) {
+			t.Fatal("did not expect requester lookup for student role")
+			return nil, nil
+		},
+		listTeacherManualReviewSubmissionsWithContextFn: func(ctx context.Context, query *dto.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error) {
+			t.Fatal("did not expect list repository call for student role")
+			return nil, 0, nil
+		},
+	}
+	service := NewService(repo, nil, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
+
+	_, err := service.ListTeacherManualReviewSubmissionsWithContext(context.Background(), 1001, model.RoleStudent, &dto.TeacherManualReviewSubmissionQuery{})
+	if err == nil {
+		t.Fatal("expected student role to be rejected")
+	}
+	var appErr *errcode.AppError
+	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrForbidden.Code {
+		t.Fatalf("expected forbidden error, got %v", err)
+	}
+}
+
 func TestGetTeacherManualReviewSubmissionWithContextPropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
@@ -2463,6 +2488,66 @@ func TestGetTeacherManualReviewSubmissionWithContextPropagatesContextToRepositor
 	}
 	if !findRequesterCalled {
 		t.Fatal("expected requester repository to be called")
+	}
+}
+
+func TestGetTeacherManualReviewSubmissionWithContextRejectsStudentRole(t *testing.T) {
+	t.Parallel()
+
+	repo := &stubPracticeRepository{
+		getTeacherManualReviewSubmissionByIDWithContextFn: func(ctx context.Context, id int64) (*practiceports.TeacherManualReviewSubmissionRecord, error) {
+			t.Fatal("did not expect get repository call for student role")
+			return nil, nil
+		},
+		findUserByIDWithContextFn: func(ctx context.Context, userID int64) (*model.User, error) {
+			t.Fatal("did not expect requester lookup for student role")
+			return nil, nil
+		},
+	}
+	service := NewService(repo, nil, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
+
+	_, err := service.GetTeacherManualReviewSubmissionWithContext(context.Background(), 91, 1001, model.RoleStudent)
+	if err == nil {
+		t.Fatal("expected student role to be rejected")
+	}
+	var appErr *errcode.AppError
+	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrForbidden.Code {
+		t.Fatalf("expected forbidden error, got %v", err)
+	}
+}
+
+func TestReviewManualReviewSubmissionWithContextRejectsStudentRole(t *testing.T) {
+	t.Parallel()
+
+	repo := &stubPracticeRepository{
+		getTeacherManualReviewSubmissionByIDWithContextFn: func(ctx context.Context, id int64) (*practiceports.TeacherManualReviewSubmissionRecord, error) {
+			t.Fatal("did not expect review record lookup for student role")
+			return nil, nil
+		},
+		findUserByIDWithContextFn: func(ctx context.Context, userID int64) (*model.User, error) {
+			t.Fatal("did not expect requester lookup for student role")
+			return nil, nil
+		},
+		updateSubmissionWithContextFn: func(ctx context.Context, submission *model.Submission) error {
+			t.Fatal("did not expect submission update for student role")
+			return nil
+		},
+	}
+	service := NewService(repo, nil, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
+
+	_, err := service.ReviewManualReviewSubmissionWithContext(
+		context.Background(),
+		91,
+		1001,
+		model.RoleStudent,
+		&dto.ReviewManualReviewSubmissionReq{ReviewStatus: model.SubmissionReviewStatusApproved},
+	)
+	if err == nil {
+		t.Fatal("expected student role to be rejected")
+	}
+	var appErr *errcode.AppError
+	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrForbidden.Code {
+		t.Fatalf("expected forbidden error, got %v", err)
 	}
 }
 
