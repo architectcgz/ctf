@@ -8,6 +8,7 @@ import challengeQuestionPanelSource from '@/components/challenge/ChallengeQuesti
 import challengeSolutionsPanelSource from '@/components/challenge/ChallengeSolutionsPanel.vue?raw'
 import challengeSubmissionRecordsPanelSource from '@/components/challenge/ChallengeSubmissionRecordsPanel.vue?raw'
 import challengeWriteupPanelSource from '@/components/challenge/ChallengeWriteupPanel.vue?raw'
+import challengeActionAsideSource from '@/components/challenge/ChallengeActionAside.vue?raw'
 
 const challengeApiMocks = vi.hoisted(() => ({
   getChallengeDetail: vi.fn(),
@@ -235,8 +236,8 @@ describe('ChallengeDetail', () => {
   })
 
   it('题目详情剩余局部 kicker 也应统一到 workspace overline 语义', () => {
-    expect(challengeDetailSource).toMatch(/<div class="workspace-overline">\s*Primary Action\s*<\/div>/)
-    expect(challengeDetailSource).not.toContain('<div class="overline">Primary Action</div>')
+    expect(challengeActionAsideSource).toMatch(/<div class="workspace-overline">\s*Primary Action\s*<\/div>/)
+    expect(challengeActionAsideSource).not.toContain('<div class="overline">Primary Action</div>')
     expect(challengeDetailSource).not.toMatch(/^\.overline\s*\{/m)
   })
 

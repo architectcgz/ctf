@@ -8,7 +8,7 @@
 | 审查范围 | `code/frontend/src` 路由、关键视图、composables、stores、共享样式与验证门禁 |
 | 审查日期 | 2026-04-22 |
 | 审查方式 | 静态代码审查 + 最小验证基线检查 |
-| 审查状态 | 已记录，已完成十轮最小高收益修复 |
+| 审查状态 | 已记录，已完成十一轮最小高收益修复 |
 
 ## 当前结论
 
@@ -328,6 +328,24 @@
   - `code/frontend/src/views/challenges/__tests__/ChallengeDetail.test.ts`
 
 ## 第十轮验证
+
+- 已执行：
+  - `npm run test:run -- src/views/challenges/__tests__/challengeDetailPanelExtraction.test.ts src/views/challenges/__tests__/ChallengeDetail.test.ts`
+  - `npm run typecheck`
+
+## 第十一轮修复进展
+
+- 已完成：
+  - `P2-5` `ChallengeDetail.vue` 继续减重，右侧工具区已抽到独立 `components/challenge/ChallengeActionAside.vue`，Flag 提交区和实例操作区都已从路由页移出。
+  - `ChallengeDetail` 的源码护栏已同步更新为五块主要装配区都通过子组件接线，`Primary Action` 的 `workspace overline` 语义检查也已切到新侧栏组件。
+  - `ChallengeDetail.vue` 本体行数已从 `913` 行继续降到 `732` 行，页面本体现在基本只剩页级状态、布局装配和样式变量层。
+- 本轮涉及文件：
+  - `code/frontend/src/views/challenges/ChallengeDetail.vue`
+  - `code/frontend/src/components/challenge/ChallengeActionAside.vue`
+  - `code/frontend/src/views/challenges/__tests__/challengeDetailPanelExtraction.test.ts`
+  - `code/frontend/src/views/challenges/__tests__/ChallengeDetail.test.ts`
+
+## 第十一轮验证
 
 - 已执行：
   - `npm run test:run -- src/views/challenges/__tests__/challengeDetailPanelExtraction.test.ts src/views/challenges/__tests__/ChallengeDetail.test.ts`
