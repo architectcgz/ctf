@@ -954,6 +954,9 @@ func normalizeTeacherManualReviewQueryWithContext(
 	if err := ensureManualReviewRequesterRole(requesterRole); err != nil {
 		return nil, err
 	}
+	if err := ensureManualReviewQuery(query); err != nil {
+		return nil, err
+	}
 	normalized := *query
 	if normalized.Page <= 0 {
 		normalized.Page = 1
@@ -997,6 +1000,19 @@ func ensureManualReviewDecisionStatus(req *dto.ReviewManualReviewSubmissionReq) 
 		return nil
 	}
 	return errcode.ErrInvalidParams.WithCause(errors.New("review_status 仅支持 approved 或 rejected"))
+}
+
+func ensureManualReviewQuery(query *dto.TeacherManualReviewSubmissionQuery) error {
+	if query == nil {
+		return nil
+	}
+	if query.ReviewStatus == "" ||
+		query.ReviewStatus == model.SubmissionReviewStatusPending ||
+		query.ReviewStatus == model.SubmissionReviewStatusApproved ||
+		query.ReviewStatus == model.SubmissionReviewStatusRejected {
+		return nil
+	}
+	return errcode.ErrInvalidParams.WithCause(errors.New("review_status 仅支持 pending、approved 或 rejected"))
 }
 
 func manualReviewDetailRespFromRecord(
