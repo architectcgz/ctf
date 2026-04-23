@@ -70,7 +70,9 @@ type ChallengeWriteupRepository interface {
 	FindWriteupByChallengeID(challengeID int64) (*model.ChallengeWriteup, error)
 	FindWriteupByChallengeIDWithContext(ctx context.Context, challengeID int64) (*model.ChallengeWriteup, error)
 	UpsertWriteup(writeup *model.ChallengeWriteup) error
+	UpsertWriteupWithContext(ctx context.Context, writeup *model.ChallengeWriteup) error
 	DeleteWriteupByChallengeID(challengeID int64) error
+	DeleteWriteupByChallengeIDWithContext(ctx context.Context, challengeID int64) error
 	FindReleasedWriteupByChallengeID(challengeID int64, now time.Time) (*model.ChallengeWriteup, error)
 	FindReleasedWriteupByChallengeIDWithContext(ctx context.Context, challengeID int64, now time.Time) (*model.ChallengeWriteup, error)
 	GetSolvedStatus(userID, challengeID int64) (bool, error)
@@ -79,6 +81,7 @@ type ChallengeWriteupRepository interface {
 	FindSubmissionWriteupByUserChallengeWithContext(ctx context.Context, userID, challengeID int64) (*model.SubmissionWriteup, error)
 	FindSubmissionWriteupByID(id int64) (*model.SubmissionWriteup, error)
 	UpsertSubmissionWriteup(writeup *model.SubmissionWriteup) error
+	UpsertSubmissionWriteupWithContext(ctx context.Context, writeup *model.SubmissionWriteup) error
 	GetTeacherSubmissionWriteupByID(id int64) (*TeacherSubmissionWriteupRecord, error)
 	GetTeacherSubmissionWriteupByIDWithContext(ctx context.Context, id int64) (*TeacherSubmissionWriteupRecord, error)
 	ListTeacherSubmissionWriteups(query *dto.TeacherSubmissionWriteupQuery) ([]TeacherSubmissionWriteupRecord, int64, error)

@@ -31,14 +31,22 @@ func (r *Repository) FindWriteupByChallengeIDWithContext(ctx context.Context, ch
 }
 
 func (r *Repository) UpsertWriteup(writeup *model.ChallengeWriteup) error {
-	return r.db.Clauses(clause.OnConflict{
+	return r.UpsertWriteupWithContext(context.Background(), writeup)
+}
+
+func (r *Repository) UpsertWriteupWithContext(ctx context.Context, writeup *model.ChallengeWriteup) error {
+	return r.dbWithContext(ctx).Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "challenge_id"}},
 		DoUpdates: clause.AssignmentColumns([]string{"title", "content", "visibility", "created_by", "is_recommended", "recommended_at", "recommended_by", "updated_at"}),
 	}).Create(writeup).Error
 }
 
 func (r *Repository) DeleteWriteupByChallengeID(challengeID int64) error {
-	return r.db.Where("challenge_id = ?", challengeID).Delete(&model.ChallengeWriteup{}).Error
+	return r.DeleteWriteupByChallengeIDWithContext(context.Background(), challengeID)
+}
+
+func (r *Repository) DeleteWriteupByChallengeIDWithContext(ctx context.Context, challengeID int64) error {
+	return r.dbWithContext(ctx).Where("challenge_id = ?", challengeID).Delete(&model.ChallengeWriteup{}).Error
 }
 
 func (r *Repository) FindReleasedWriteupByChallengeID(challengeID int64, now time.Time) (*model.ChallengeWriteup, error) {
@@ -99,7 +107,11 @@ func (r *Repository) FindSubmissionWriteupByID(id int64) (*model.SubmissionWrite
 }
 
 func (r *Repository) UpsertSubmissionWriteup(writeup *model.SubmissionWriteup) error {
-	return r.db.Clauses(clause.OnConflict{
+	return r.UpsertSubmissionWriteupWithContext(context.Background(), writeup)
+}
+
+func (r *Repository) UpsertSubmissionWriteupWithContext(ctx context.Context, writeup *model.SubmissionWriteup) error {
+	return r.dbWithContext(ctx).Clauses(clause.OnConflict{
 		Columns: []clause.Column{{Name: "user_id"}, {Name: "challenge_id"}},
 		DoUpdates: clause.AssignmentColumns([]string{
 			"contest_id",

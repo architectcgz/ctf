@@ -18,7 +18,9 @@ type stubChallengeWriteupRepository struct {
 	findWriteupByChallengeIDFn                         func(challengeID int64) (*model.ChallengeWriteup, error)
 	findWriteupByChallengeIDWithContextFn              func(ctx context.Context, challengeID int64) (*model.ChallengeWriteup, error)
 	upsertWriteupFn                                    func(writeup *model.ChallengeWriteup) error
+	upsertWriteupWithContextFn                         func(ctx context.Context, writeup *model.ChallengeWriteup) error
 	deleteWriteupByChallengeIDFn                       func(challengeID int64) error
+	deleteWriteupByChallengeIDWithContextFn            func(ctx context.Context, challengeID int64) error
 	findReleasedWriteupByChallengeIDFn                 func(challengeID int64, now time.Time) (*model.ChallengeWriteup, error)
 	findReleasedWriteupByChallengeIDWithContextFn      func(ctx context.Context, challengeID int64, now time.Time) (*model.ChallengeWriteup, error)
 	getSolvedStatusFn                                  func(userID, challengeID int64) (bool, error)
@@ -27,6 +29,7 @@ type stubChallengeWriteupRepository struct {
 	findSubmissionWriteupByUserChallengeWithContextFn  func(ctx context.Context, userID, challengeID int64) (*model.SubmissionWriteup, error)
 	findSubmissionWriteupByIDFn                        func(id int64) (*model.SubmissionWriteup, error)
 	upsertSubmissionWriteupFn                          func(writeup *model.SubmissionWriteup) error
+	upsertSubmissionWriteupWithContextFn               func(ctx context.Context, writeup *model.SubmissionWriteup) error
 	getTeacherSubmissionWriteupByIDFn                  func(id int64) (*challengeports.TeacherSubmissionWriteupRecord, error)
 	getTeacherSubmissionWriteupByIDWithContextFn       func(ctx context.Context, id int64) (*challengeports.TeacherSubmissionWriteupRecord, error)
 	listTeacherSubmissionWriteupsFn                    func(query *dto.TeacherSubmissionWriteupQuery) ([]challengeports.TeacherSubmissionWriteupRecord, int64, error)
@@ -86,11 +89,25 @@ func (s *stubChallengeWriteupRepository) UpsertWriteup(writeup *model.ChallengeW
 	return nil
 }
 
+func (s *stubChallengeWriteupRepository) UpsertWriteupWithContext(ctx context.Context, writeup *model.ChallengeWriteup) error {
+	if s.upsertWriteupWithContextFn != nil {
+		return s.upsertWriteupWithContextFn(ctx, writeup)
+	}
+	return s.UpsertWriteup(writeup)
+}
+
 func (s *stubChallengeWriteupRepository) DeleteWriteupByChallengeID(challengeID int64) error {
 	if s.deleteWriteupByChallengeIDFn != nil {
 		return s.deleteWriteupByChallengeIDFn(challengeID)
 	}
 	return nil
+}
+
+func (s *stubChallengeWriteupRepository) DeleteWriteupByChallengeIDWithContext(ctx context.Context, challengeID int64) error {
+	if s.deleteWriteupByChallengeIDWithContextFn != nil {
+		return s.deleteWriteupByChallengeIDWithContextFn(ctx, challengeID)
+	}
+	return s.DeleteWriteupByChallengeID(challengeID)
 }
 
 func (s *stubChallengeWriteupRepository) FindReleasedWriteupByChallengeID(challengeID int64, now time.Time) (*model.ChallengeWriteup, error) {
@@ -147,6 +164,13 @@ func (s *stubChallengeWriteupRepository) UpsertSubmissionWriteup(writeup *model.
 		return s.upsertSubmissionWriteupFn(writeup)
 	}
 	return nil
+}
+
+func (s *stubChallengeWriteupRepository) UpsertSubmissionWriteupWithContext(ctx context.Context, writeup *model.SubmissionWriteup) error {
+	if s.upsertSubmissionWriteupWithContextFn != nil {
+		return s.upsertSubmissionWriteupWithContextFn(ctx, writeup)
+	}
+	return s.UpsertSubmissionWriteup(writeup)
 }
 
 func (s *stubChallengeWriteupRepository) GetTeacherSubmissionWriteupByID(id int64) (*challengeports.TeacherSubmissionWriteupRecord, error) {
