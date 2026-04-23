@@ -2646,6 +2646,44 @@ func TestReviewManualReviewSubmissionWithContextRejectsInvalidReviewStatus(t *te
 	}
 }
 
+func TestReviewManualReviewSubmissionWithContextRejectsOversizedReviewComment(t *testing.T) {
+	t.Parallel()
+
+	repo := &stubPracticeRepository{
+		getTeacherManualReviewSubmissionByIDWithContextFn: func(ctx context.Context, id int64) (*practiceports.TeacherManualReviewSubmissionRecord, error) {
+			t.Fatal("did not expect review record lookup for oversized review comment")
+			return nil, nil
+		},
+		findUserByIDWithContextFn: func(ctx context.Context, userID int64) (*model.User, error) {
+			t.Fatal("did not expect requester lookup for oversized review comment")
+			return nil, nil
+		},
+		updateSubmissionWithContextFn: func(ctx context.Context, submission *model.Submission) error {
+			t.Fatal("did not expect submission update for oversized review comment")
+			return nil
+		},
+	}
+	service := NewService(repo, nil, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
+
+	_, err := service.ReviewManualReviewSubmissionWithContext(
+		context.Background(),
+		91,
+		1001,
+		model.RoleTeacher,
+		&dto.ReviewManualReviewSubmissionReq{
+			ReviewStatus:  model.SubmissionReviewStatusApproved,
+			ReviewComment: strings.Repeat("a", 4001),
+		},
+	)
+	if err == nil {
+		t.Fatal("expected oversized review comment to be rejected")
+	}
+	var appErr *errcode.AppError
+	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrInvalidParams.Code {
+		t.Fatalf("expected invalid params error, got %v", err)
+	}
+}
+
 func TestReviewManualReviewSubmissionWithContextRejectsApprovalAfterChallengeAlreadySolved(t *testing.T) {
 	t.Parallel()
 
