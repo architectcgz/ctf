@@ -2507,6 +2507,68 @@ func TestListTeacherManualReviewSubmissionsWithContextRejectsOversizedPageSize(t
 	}
 }
 
+func TestListTeacherManualReviewSubmissionsWithContextRejectsNonPositiveStudentID(t *testing.T) {
+	t.Parallel()
+
+	repo := &stubPracticeRepository{
+		findUserByIDWithContextFn: func(ctx context.Context, userID int64) (*model.User, error) {
+			t.Fatal("did not expect requester lookup for non-positive student id")
+			return nil, nil
+		},
+		listTeacherManualReviewSubmissionsWithContextFn: func(ctx context.Context, query *dto.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error) {
+			t.Fatal("did not expect list repository call for non-positive student id")
+			return nil, 0, nil
+		},
+	}
+	service := NewService(repo, nil, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
+	studentID := int64(0)
+
+	_, err := service.ListTeacherManualReviewSubmissionsWithContext(
+		context.Background(),
+		1001,
+		model.RoleTeacher,
+		&dto.TeacherManualReviewSubmissionQuery{StudentID: &studentID},
+	)
+	if err == nil {
+		t.Fatal("expected non-positive student id to be rejected")
+	}
+	var appErr *errcode.AppError
+	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrInvalidParams.Code {
+		t.Fatalf("expected invalid params error, got %v", err)
+	}
+}
+
+func TestListTeacherManualReviewSubmissionsWithContextRejectsNonPositiveChallengeID(t *testing.T) {
+	t.Parallel()
+
+	repo := &stubPracticeRepository{
+		findUserByIDWithContextFn: func(ctx context.Context, userID int64) (*model.User, error) {
+			t.Fatal("did not expect requester lookup for non-positive challenge id")
+			return nil, nil
+		},
+		listTeacherManualReviewSubmissionsWithContextFn: func(ctx context.Context, query *dto.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error) {
+			t.Fatal("did not expect list repository call for non-positive challenge id")
+			return nil, 0, nil
+		},
+	}
+	service := NewService(repo, nil, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
+	challengeID := int64(0)
+
+	_, err := service.ListTeacherManualReviewSubmissionsWithContext(
+		context.Background(),
+		1001,
+		model.RoleTeacher,
+		&dto.TeacherManualReviewSubmissionQuery{ChallengeID: &challengeID},
+	)
+	if err == nil {
+		t.Fatal("expected non-positive challenge id to be rejected")
+	}
+	var appErr *errcode.AppError
+	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrInvalidParams.Code {
+		t.Fatalf("expected invalid params error, got %v", err)
+	}
+}
+
 func TestGetTeacherManualReviewSubmissionWithContextPropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
