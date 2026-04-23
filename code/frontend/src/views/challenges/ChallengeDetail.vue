@@ -103,95 +103,32 @@
           />
         </main>
 
-        <aside
+        <ChallengeActionAside
           v-if="activeWorkspaceTab === 'question'"
-          class="detail-aside tool-pane"
-        >
-          <div class="tool-pane-inner">
-            <section class="tool-group">
-              <div>
-                <div class="workspace-overline">
-                  Primary Action
-                </div>
-                <h2 class="tool-title">
-                  {{ submitPanelTitle }}
-                </h2>
-                <p class="tool-copy">
-                  {{ submitPanelCopy }}
-                </p>
-              </div>
-              <span
-                v-if="challenge?.is_solved"
-                class="writeup-status-pill writeup-status-pill--success"
-              >
-                已通过
-              </span>
-              <div class="flag-field">
-                <label
-                  for="challenge-flag-input"
-                  class="flag-label"
-                >
-                  {{ submitFieldLabel }}
-                </label>
-                <div class="flag-row">
-                  <div
-                    class="ui-control-wrap flag-input-wrap"
-                    :class="[submitInputClass, { 'is-disabled': submitting }]"
-                  >
-                    <input
-                      id="challenge-flag-input"
-                      v-model="flagInput"
-                      type="text"
-                      aria-label="Flag"
-                      :placeholder="submitPlaceholder"
-                      class="ui-control challenge-input flag-input disabled:cursor-not-allowed disabled:opacity-50"
-                      :disabled="submitting"
-                      @keyup.enter="submitFlagHandler"
-                    >
-                  </div>
-                  <button
-                    type="button"
-                    :disabled="submitting"
-                    class="ui-btn ui-btn--primary disabled:cursor-not-allowed disabled:opacity-50"
-                    @click="submitFlagHandler"
-                  >
-                    {{ submitting ? '提交中...' : '提交' }}
-                  </button>
-                </div>
-              </div>
-              <div
-                v-if="submitResult"
-                class="status-inline"
-                :class="`status-inline--${submitResult.variant}`"
-              >
-                <span class="status-dot" />
-                {{ submitResult.message }}
-              </div>
-            </section>
-
-            <ChallengeInstanceCard
-              v-if="needTarget"
-              :instance="instance"
-              :instance-sharing="challenge.instance_sharing"
-              :loading="instanceLoading"
-              :creating="instanceCreating"
-              :opening="instanceOpening"
-              :extending="instanceExtending"
-              :destroying="instanceDestroying"
-              :challenge-solved="Boolean(challenge?.is_solved)"
-              @start="startInstance"
-              @open="openInstance"
-              @extend="extendChallengeInstance"
-              @destroy="destroyChallengeInstance"
-            />
-            <section
-              v-else
-              class="tool-group detail-aside-empty text-sm text-[var(--color-success)]"
-            >
-              该题目不需要靶机，可直接分析题面并提交 Flag。
-            </section>
-          </div>
-        </aside>
+          :need-target="needTarget"
+          :challenge-solved="Boolean(challenge?.is_solved)"
+          :submit-panel-title="submitPanelTitle"
+          :submit-panel-copy="submitPanelCopy"
+          :submit-field-label="submitFieldLabel"
+          :submit-input-class="submitInputClass"
+          :submit-placeholder="submitPlaceholder"
+          :submitting="submitting"
+          :flag-input="flagInput"
+          :submit-result="submitResult"
+          :instance="instance"
+          :instance-sharing="challenge.instance_sharing ?? 'per_user'"
+          :instance-loading="instanceLoading"
+          :instance-creating="instanceCreating"
+          :instance-opening="instanceOpening"
+          :instance-extending="instanceExtending"
+          :instance-destroying="instanceDestroying"
+          @update:flag-input="flagInput = $event"
+          @submit-flag="submitFlagHandler"
+          @start-instance="startInstance"
+          @open-instance="openInstance"
+          @extend-instance="extendChallengeInstance"
+          @destroy-instance="destroyChallengeInstance"
+        />
       </div>
     </div>
   </section>
@@ -211,7 +148,7 @@ import type {
   CommunityChallengeSolutionData,
   RecommendedChallengeSolutionData,
 } from '@/api/contracts'
-import ChallengeInstanceCard from '@/components/challenge/ChallengeInstanceCard.vue'
+import ChallengeActionAside from '@/components/challenge/ChallengeActionAside.vue'
 import ChallengeQuestionPanel from '@/components/challenge/ChallengeQuestionPanel.vue'
 import ChallengeSolutionsPanel from '@/components/challenge/ChallengeSolutionsPanel.vue'
 import ChallengeSubmissionRecordsPanel from '@/components/challenge/ChallengeSubmissionRecordsPanel.vue'
@@ -597,12 +534,6 @@ watch(
   min-height: 0;
 }
 
-.top-note,
-.tool-copy {
-  font-size: var(--font-size-13);
-  line-height: 1.75;
-  color: var(--text-faint);
-}
 
 
 
@@ -647,14 +578,6 @@ watch(
   );
 }
 
-.tool-pane-inner {
-  display: flex;
-  flex: 1 1 auto;
-  flex-direction: column;
-  min-height: 100%;
-  position: sticky;
-  top: var(--space-7);
-}
 
 .workspace-panel,
 .panel {
@@ -687,9 +610,6 @@ watch(
   color: var(--text-main);
 }
 
-.tool-copy {
-  color: var(--journal-muted);
-}
 
 
 
@@ -725,118 +645,25 @@ watch(
 
 
 
-.flag-label {
-  display: block;
-  margin-bottom: var(--space-2);
-  font-size: var(--font-size-12);
-  font-weight: 600;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--text-faint);
-}
-
-.flag-input-wrap {
-  border-color: var(--line-strong);
-  background: var(--bg-panel);
-  --ui-control-height: 3.125rem;
-}
-
-.flag-input-wrap > input {
-  font: 500 15px/1 var(--font-mono);
-}
 
 
 
-.flag-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: var(--space-3);
-}
-
-.tool-group + .tool-group,
-:deep(.instance-shell) {
-  margin-top: var(--space-6);
-}
-
-.tool-group + .tool-group {
-  margin-top: var(--space-6);
-  padding-top: var(--space-6);
-  border-top: 1px solid var(--line-soft);
-}
-
-.tool-title {
-  margin: var(--space-2-5) 0 0;
-  font-size: var(--font-size-18);
-  line-height: 1.25;
-  color: var(--text-main);
-}
-
-.tool-copy {
-  margin-top: var(--space-2);
-  font-size: var(--font-size-14);
-  line-height: 1.75;
-  color: var(--text-subtle);
-}
 
 
-.status-inline {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  margin-top: var(--space-3);
-  font-size: var(--font-size-14);
-  color: var(--text-subtle);
-}
 
-.status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 999px;
-  background: var(--warning);
-}
 
-.status-inline--success {
-  color: var(--journal-success-ink);
-}
 
-.status-inline--success .status-dot {
-  background: var(--color-success);
-}
 
-.status-inline--pending {
-  color: var(--journal-warning-ink);
-}
 
-.status-inline--pending .status-dot {
-  background: var(--color-warning);
-}
 
-.status-inline--error {
-  color: var(--journal-danger-ink);
-}
 
-.status-inline--error .status-dot {
-  background: var(--color-danger);
-}
 
-.writeup-status-pill {
-  display: inline-flex;
-  align-items: center;
-  min-height: 34px;
-  padding: 0 var(--space-3-5);
-  border: 1px solid var(--line-soft);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--bg-panel) 72%, transparent);
-  font-size: var(--font-size-13);
-  font-weight: 600;
-  color: var(--text-subtle);
-}
 
-.writeup-status-pill--success {
-  border-color: color-mix(in srgb, var(--color-success) 18%, transparent);
-  background: var(--journal-success-soft);
-  color: var(--journal-success-ink);
-}
+
+
+
+
+
 
 
 
@@ -864,11 +691,6 @@ watch(
     border-top: 1px solid var(--journal-line-soft);
   }
 
-  .tool-pane-inner {
-    min-height: 0;
-    position: static;
-  }
-
 }
 
 @media (max-width: 760px) {
@@ -883,9 +705,6 @@ watch(
     gap: var(--space-5-5);
   }
 
-  .flag-row {
-    grid-template-columns: minmax(0, 1fr);
-  }
 
 }
 
