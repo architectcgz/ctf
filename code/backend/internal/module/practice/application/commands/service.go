@@ -722,6 +722,9 @@ func (s *Service) ReviewManualReviewSubmissionWithContext(
 	if ctx == nil {
 		ctx = context.Background()
 	}
+	if err := ensureManualReviewRequesterRole(reviewerRole); err != nil {
+		return nil, err
+	}
 	record, err := s.repo.GetTeacherManualReviewSubmissionByIDWithContext(ctx, submissionID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -806,6 +809,9 @@ func (s *Service) ListTeacherManualReviewSubmissionsWithContext(
 	if ctx == nil {
 		ctx = context.Background()
 	}
+	if err := ensureManualReviewRequesterRole(requesterRole); err != nil {
+		return nil, err
+	}
 	if query == nil {
 		query = &dto.TeacherManualReviewSubmissionQuery{}
 	}
@@ -846,6 +852,9 @@ func (s *Service) GetTeacherManualReviewSubmissionWithContext(
 ) (*dto.TeacherManualReviewSubmissionDetailResp, error) {
 	if ctx == nil {
 		ctx = context.Background()
+	}
+	if err := ensureManualReviewRequesterRole(requesterRole); err != nil {
+		return nil, err
 	}
 	record, err := s.repo.GetTeacherManualReviewSubmissionByIDWithContext(ctx, submissionID)
 	if err != nil {
@@ -899,6 +908,9 @@ func ensureTeacherCanAccessManualReviewSubmission(
 	requesterRole string,
 	record *practiceports.TeacherManualReviewSubmissionRecord,
 ) error {
+	if err := ensureManualReviewRequesterRole(requesterRole); err != nil {
+		return err
+	}
 	if requesterRole == model.RoleAdmin {
 		return nil
 	}
@@ -931,6 +943,9 @@ func normalizeTeacherManualReviewQueryWithContext(
 	requesterRole string,
 	query *dto.TeacherManualReviewSubmissionQuery,
 ) (*dto.TeacherManualReviewSubmissionQuery, error) {
+	if err := ensureManualReviewRequesterRole(requesterRole); err != nil {
+		return nil, err
+	}
 	normalized := *query
 	if normalized.Page <= 0 {
 		normalized.Page = 1
@@ -957,6 +972,13 @@ func normalizeTeacherManualReviewQueryWithContext(
 	}
 	normalized.ClassName = requester.ClassName
 	return &normalized, nil
+}
+
+func ensureManualReviewRequesterRole(role string) error {
+	if role == model.RoleAdmin || role == model.RoleTeacher {
+		return nil
+	}
+	return errcode.ErrForbidden
 }
 
 func manualReviewDetailRespFromRecord(
