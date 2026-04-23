@@ -25,6 +25,7 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
+	"ctf-platform/internal/app/composition"
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/middleware"
@@ -838,8 +839,12 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 
 	practiceRepo := practiceinfra.NewRepository(db)
 	instanceRepo := runtimeinfrarepo.NewRepository(db)
+	root, err := composition.BuildRoot(cfg, logger, db, cache)
+	if err != nil {
+		t.Fatalf("build composition root: %v", err)
+	}
+	runtimeModule := composition.BuildRuntimeModule(root)
 	runtimeCleanupService := runtimecmd.NewRuntimeCleanupService(nil, logger)
-	runtimeProvisioningService := runtimecmd.NewProvisioningService(instanceRepo, nil, &cfg.Container, logger)
 	runtimeInstanceCommands := runtimecmd.NewInstanceService(instanceRepo, runtimeCleanupService, &cfg.Container, logger)
 	runtimeInstanceQueries := runtimeqry.NewInstanceService(instanceRepo)
 	runtimeProxyTicketService := runtimeqry.NewProxyTicketService(runtimeinfrarepo.NewProxyTicketStore(cache), instanceRepo, cfg.Container.ProxyTicketTTL)
@@ -853,8 +858,8 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 		practiceRepo,
 		challengeRepo,
 		imageRepo,
-		instanceRepo,
-		runtimeadapters.NewPracticeRuntimeService(runtimeCleanupService, runtimeProvisioningService),
+		runtimeModule.PracticeInstanceRepository,
+		runtimeModule.PracticeRuntimeService,
 		nil,
 		nil,
 		cache,

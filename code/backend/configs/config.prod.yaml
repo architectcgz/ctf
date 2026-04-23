@@ -19,6 +19,7 @@ redis:
   db: 0
 
 cors:
+  # 生产环境必须显式配置前端 Origin；空数组会在启动校验阶段被拒绝。
   allow_origins: []
 
 auth:

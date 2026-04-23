@@ -23,6 +23,25 @@ import (
 	"go.uber.org/zap"
 )
 
+type runtimeEngine interface {
+	CreateNetwork(ctx context.Context, name string, labels map[string]string, internal bool) (string, error)
+	CreateContainer(ctx context.Context, cfg *model.ContainerConfig) (string, error)
+	ResolveServicePort(ctx context.Context, imageRef string, preferredPort int) (int, error)
+	ConnectContainerToNetwork(ctx context.Context, containerID, networkName string) error
+	InspectContainerNetworkIPs(ctx context.Context, containerID string) (map[string]string, error)
+	StartContainer(ctx context.Context, containerID string) error
+	StopContainer(ctx context.Context, containerID string, timeout time.Duration) error
+	RemoveContainer(ctx context.Context, containerID string, force bool) error
+	RemoveNetwork(ctx context.Context, networkID string) error
+	ApplyACLRules(ctx context.Context, rules []model.InstanceRuntimeACLRule) error
+	RemoveACLRules(ctx context.Context, rules []model.InstanceRuntimeACLRule) error
+	WriteFileToContainer(ctx context.Context, containerID, filePath string, content []byte) error
+	InspectImageSize(ctx context.Context, imageRef string) (int64, error)
+	RemoveImage(ctx context.Context, imageRef string) error
+	ListManagedContainers(ctx context.Context) ([]runtimeports.ManagedContainer, error)
+	ListManagedContainerStats(ctx context.Context) ([]runtimeports.ManagedContainerStat, error)
+}
+
 type RuntimeModule struct {
 	Handler *runtimehttp.Handler
 
@@ -108,7 +127,7 @@ func BuildRuntimeModule(root *Root) *RuntimeModule {
 	}
 }
 
-func buildRuntimeModuleDeps(root *Root, engine *runtimeinfra.Engine) runtimeModuleDeps {
+func buildRuntimeModuleDeps(root *Root, engine runtimeEngine) runtimeModuleDeps {
 	cfg := root.Config()
 	log := root.Logger()
 	repo := runtimeinfra.NewRepository(root.DB())
@@ -224,7 +243,7 @@ func (p *runtimeOpsStatsProviderAdapter) ListManagedContainerStats(ctx context.C
 	return result, nil
 }
 
-func buildRuntimeEngine(root *Root) *runtimeinfra.Engine {
+func buildRuntimeEngine(root *Root) runtimeEngine {
 	if root == nil {
 		return nil
 	}
@@ -236,9 +255,9 @@ func buildRuntimeEngine(root *Root) *runtimeinfra.Engine {
 	}
 	if cfg.App.Env == "test" {
 		if log != nil {
-			log.Info("runtime_engine_disabled_in_test_env_for_router")
+			log.Info("runtime_engine_enabled_with_test_adapter_for_router")
 		}
-		return nil
+		return newTestRuntimeEngine(log.Named("runtime_test_engine"))
 	}
 
 	engine, err := runtimeinfra.NewEngine(&cfg.Container)

@@ -823,6 +823,16 @@ func TestSubmitFlagWithContextAllowsRepeatCorrectSubmissionWithoutExtraPoints(t 
 	if repeat.Points != 0 {
 		t.Fatalf("expected repeated correct submission not to award points, got %+v", repeat)
 	}
+
+	var count int64
+	if err := db.Model(&model.Submission{}).
+		Where("user_id = ? AND challenge_id = ?", 71, 11).
+		Count(&count).Error; err != nil {
+		t.Fatalf("count submissions: %v", err)
+	}
+	if count != 1 {
+		t.Fatalf("expected repeated correct submission not to create extra record, got %d", count)
+	}
 }
 
 func TestSubmitFlagWithContextShrinksOwnedInstanceExpiryAfterSolve(t *testing.T) {
