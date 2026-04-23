@@ -210,6 +210,8 @@ func (s *stubPracticeImageStore) FindByIDWithContext(ctx context.Context, id int
 
 type stubPracticeInstanceStore struct {
 	findByIDWithContextFn                   func(ctx context.Context, id int64) (*model.Instance, error)
+	updateRuntimeFn                         func(instance *model.Instance) error
+	updateRuntimeWithContextFn              func(ctx context.Context, instance *model.Instance) error
 	refreshInstanceExpiryFn                 func(instanceID int64, expiresAt time.Time) error
 	refreshInstanceExpiryWithContextFn      func(ctx context.Context, instanceID int64, expiresAt time.Time) error
 	updateStatusAndReleasePortFn            func(id int64, status string) error
@@ -226,7 +228,17 @@ func (s *stubPracticeInstanceStore) FindByIDWithContext(ctx context.Context, id 
 }
 
 func (s *stubPracticeInstanceStore) UpdateRuntime(instance *model.Instance) error {
+	if s.updateRuntimeFn != nil {
+		return s.updateRuntimeFn(instance)
+	}
 	return nil
+}
+
+func (s *stubPracticeInstanceStore) UpdateRuntimeWithContext(ctx context.Context, instance *model.Instance) error {
+	if s.updateRuntimeWithContextFn != nil {
+		return s.updateRuntimeWithContextFn(ctx, instance)
+	}
+	return s.UpdateRuntime(instance)
 }
 
 func (s *stubPracticeInstanceStore) RefreshInstanceExpiry(instanceID int64, expiresAt time.Time) error {
@@ -1639,6 +1651,68 @@ func TestProvisionInstanceMarksInstanceFailedWhenAccessURLIsNotReady(t *testing.
 	}
 	if cleanupCalls.Load() != 1 {
 		t.Fatalf("expected cleanup to be called once, got %d", cleanupCalls.Load())
+	}
+}
+
+func TestProvisionInstancePropagatesContextToUpdateRuntime(t *testing.T) {
+	t.Parallel()
+
+	ctxKey := practiceServiceContextKey("update-runtime")
+	expectedCtxValue := "ctx-update-runtime"
+	instanceStore := &stubPracticeInstanceStore{
+		updateRuntimeFn: func(instance *model.Instance) error {
+			t.Fatalf("expected context-aware update runtime, got legacy call for instance %d", instance.ID)
+			return nil
+		},
+		updateRuntimeWithContextFn: func(ctx context.Context, instance *model.Instance) error {
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected update runtime ctx value %v, got %v", expectedCtxValue, got)
+			}
+			if instance.Status != model.InstanceStatusRunning {
+				t.Fatalf("expected running status before persistence, got %+v", instance)
+			}
+			return nil
+		},
+	}
+	service := NewService(
+		nil,
+		nil,
+		&stubPracticeImageStore{
+			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Image, error) {
+				if got := ctx.Value(ctxKey); got != expectedCtxValue {
+					t.Fatalf("expected image lookup ctx value %v, got %v", expectedCtxValue, got)
+				}
+				return &model.Image{ID: id, Name: "ctf/web", Tag: "v1", Status: model.ImageStatusAvailable}, nil
+			},
+		},
+		instanceStore,
+		&stubPracticeRuntimeService{
+			createContainerFn: func(ctx context.Context, imageName string, env map[string]string, reservedHostPort int) (string, string, int, int, error) {
+				if got := ctx.Value(ctxKey); got != expectedCtxValue {
+					t.Fatalf("expected runtime create ctx value %v, got %v", expectedCtxValue, got)
+				}
+				return "ctr-running", "net-running", reservedHostPort, 8080, nil
+			},
+		},
+		nil,
+		nil,
+		nil,
+		&config.Config{Container: config.ContainerConfig{PublicHost: "127.0.0.1", CreateTimeout: time.Second, StartProbeTimeout: 50 * time.Millisecond, StartProbeInterval: 10 * time.Millisecond, StartProbeAttempts: 1}},
+		nil,
+	)
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer server.Close()
+	host, port := parseHTTPServerEndpoint(t, server.URL)
+	instance := &model.Instance{ID: 951, ChallengeID: 2051, HostPort: port, Status: model.InstanceStatusCreating}
+	challenge := &model.Challenge{ID: 2051, ImageID: 301, Status: model.ChallengeStatusPublished, FlagType: model.FlagTypeStatic, FlagHash: "flag{ok}"}
+	service.config.Container.PublicHost = host
+	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
+
+	if err := service.provisionInstance(ctx, instance, challenge, nil, "flag{ok}"); err != nil {
+		t.Fatalf("provisionInstance() error = %v", err)
 	}
 }
 
