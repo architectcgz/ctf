@@ -4,6 +4,7 @@ import { createRouter, createMemoryHistory } from 'vue-router'
 import { createPinia, setActivePinia } from 'pinia'
 import ContestDetail from '../ContestDetail.vue'
 import contestDetailSource from '../ContestDetail.vue?raw'
+import contestOverviewPanelSource from '@/components/contests/ContestOverviewPanel.vue?raw'
 import { useAuthStore } from '@/stores/auth'
 
 const contestApiMocks = vi.hoisted(() => ({
@@ -1372,22 +1373,24 @@ describe('ContestDetail', () => {
   })
 
   it('竞赛详情 hero 应使用共享 workspace overline 语义', () => {
-    expect(contestDetailSource).toMatch(/<div class="workspace-overline">\s*Contest\s*<\/div>/)
-    expect(contestDetailSource).not.toContain('<div class="contest-overline">Contest</div>')
+    expect(contestOverviewPanelSource).toMatch(/<div class="workspace-overline">\s*Contest\s*<\/div>/)
+    expect(contestOverviewPanelSource).not.toContain('<div class="contest-overline">Contest</div>')
   })
 
   it('竞赛详情 section heading 应切到共享 workspace overline 语义', () => {
-    expect(contestDetailSource).toMatch(/<div class="workspace-overline">\s*Rules\s*<\/div>/)
-    expect(contestDetailSource).toMatch(/<div class="workspace-overline">\s*Schedule\s*<\/div>/)
-    expect(contestDetailSource).toMatch(/<div class="workspace-overline">\s*Announcements\s*<\/div>/)
-    expect(contestDetailSource).toMatch(
+    const combinedSource = [contestDetailSource, contestOverviewPanelSource].join('\n')
+
+    expect(combinedSource).toMatch(/<div class="workspace-overline">\s*Rules\s*<\/div>/)
+    expect(combinedSource).toMatch(/<div class="workspace-overline">\s*Schedule\s*<\/div>/)
+    expect(combinedSource).toMatch(/<div class="workspace-overline">\s*Announcements\s*<\/div>/)
+    expect(combinedSource).toMatch(
       /<div class="workspace-overline">\s*\{\{ contest\.mode === 'awd' \? 'Battle' : 'Challenges' \}\}\s*<\/div>/
     )
-    expect(contestDetailSource).toMatch(/<div class="workspace-overline">\s*Team\s*<\/div>/)
-    expect(contestDetailSource).not.toContain('<div class="contest-overline">Rules</div>')
-    expect(contestDetailSource).not.toContain('<div class="contest-overline">Schedule</div>')
-    expect(contestDetailSource).not.toContain('<div class="contest-overline">Announcements</div>')
-    expect(contestDetailSource).not.toContain('<div class="contest-overline">Team</div>')
+    expect(combinedSource).toMatch(/<div class="workspace-overline">\s*Team\s*<\/div>/)
+    expect(combinedSource).not.toContain('<div class="contest-overline">Rules</div>')
+    expect(combinedSource).not.toContain('<div class="contest-overline">Schedule</div>')
+    expect(combinedSource).not.toContain('<div class="contest-overline">Announcements</div>')
+    expect(combinedSource).not.toContain('<div class="contest-overline">Team</div>')
   })
 
   it('竞赛详情剩余局部 kicker 也应统一到 workspace overline 语义', () => {

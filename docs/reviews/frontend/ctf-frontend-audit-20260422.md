@@ -8,7 +8,7 @@
 | 审查范围 | `code/frontend/src` 路由、关键视图、composables、stores、共享样式与验证门禁 |
 | 审查日期 | 2026-04-22 |
 | 审查方式 | 静态代码审查 + 最小验证基线检查 |
-| 审查状态 | 已记录，已完成十一轮最小高收益修复 |
+| 审查状态 | 已记录，已完成十二轮最小高收益修复 |
 
 ## 当前结论
 
@@ -349,6 +349,24 @@
 
 - 已执行：
   - `npm run test:run -- src/views/challenges/__tests__/challengeDetailPanelExtraction.test.ts src/views/challenges/__tests__/ChallengeDetail.test.ts`
+  - `npm run typecheck`
+
+## 第十二轮修复进展
+
+- 已完成：
+  - `P2-5` `ContestDetail.vue` 继续减重，概览面板已抽到独立 `components/contests/ContestOverviewPanel.vue`，路由页不再直接承载 hero、统计卡、赛程信息和公告预览模板。
+  - `ContestDetail` 的源码护栏已同步更新为概览、公告、队伍三区都通过子组件装配，`Contest / Rules / Schedule / Announcements` 的 `workspace overline` 语义改为面向组合源码检查。
+  - `ContestDetail.vue` 本体行数已从 `1231` 行降到 `948` 行，后续继续拆普通题目工作区时边界会更清晰。
+- 本轮涉及文件：
+  - `code/frontend/src/views/contests/ContestDetail.vue`
+  - `code/frontend/src/components/contests/ContestOverviewPanel.vue`
+  - `code/frontend/src/views/contests/__tests__/contestDetailPanelExtraction.test.ts`
+  - `code/frontend/src/views/contests/__tests__/ContestDetail.test.ts`
+
+## 第十二轮验证
+
+- 已执行：
+  - `npm run test:run -- src/views/contests/__tests__/contestDetailPanelExtraction.test.ts src/views/contests/__tests__/ContestDetail.test.ts`
   - `npm run typecheck`
 
 ## 备注
