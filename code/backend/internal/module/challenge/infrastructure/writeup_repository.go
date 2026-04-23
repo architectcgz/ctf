@@ -98,8 +98,12 @@ func (r *Repository) FindSubmissionWriteupByUserChallengeWithContext(ctx context
 }
 
 func (r *Repository) FindSubmissionWriteupByID(id int64) (*model.SubmissionWriteup, error) {
+	return r.FindSubmissionWriteupByIDWithContext(context.Background(), id)
+}
+
+func (r *Repository) FindSubmissionWriteupByIDWithContext(ctx context.Context, id int64) (*model.SubmissionWriteup, error) {
 	var writeup model.SubmissionWriteup
-	err := r.db.Where("id = ?", id).First(&writeup).Error
+	err := r.dbWithContext(ctx).Where("id = ?", id).First(&writeup).Error
 	if err != nil {
 		return nil, err
 	}
