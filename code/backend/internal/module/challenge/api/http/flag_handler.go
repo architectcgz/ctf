@@ -1,6 +1,7 @@
 package http
 
 import (
+	"context"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	"ctf-platform/pkg/errcode"
@@ -24,6 +25,7 @@ type flagCommandService interface {
 
 type flagQueryService interface {
 	GetFlagConfig(challengeID int64) (*dto.FlagResp, error)
+	GetFlagConfigWithContext(ctx context.Context, challengeID int64) (*dto.FlagResp, error)
 }
 
 func NewFlagHandler(commands flagCommandService, queries flagQueryService) *FlagHandler {
@@ -72,7 +74,7 @@ func (h *FlagHandler) GetFlagConfig(c *gin.Context) {
 		return
 	}
 
-	flagResp, err := h.queries.GetFlagConfig(challengeID)
+	flagResp, err := h.queries.GetFlagConfigWithContext(c.Request.Context(), challengeID)
 	if err != nil {
 		response.FromError(c, err)
 		return
