@@ -170,9 +170,18 @@ func (s *stubPracticeChallengeContract) FindChallengeTopologyByChallengeID(chall
 }
 
 type stubPracticeInstanceStore struct {
+	findByIDWithContextFn               func(ctx context.Context, id int64) (*model.Instance, error)
+	refreshInstanceExpiryFn             func(instanceID int64, expiresAt time.Time) error
+	refreshInstanceExpiryWithContextFn  func(ctx context.Context, instanceID int64, expiresAt time.Time) error
+	updateStatusAndReleasePortFn        func(id int64, status string) error
+	findByUserAndChallengeFn            func(userID, challengeID int64) (*model.Instance, error)
+	findByUserAndChallengeWithContextFn func(ctx context.Context, userID, challengeID int64) (*model.Instance, error)
 }
 
 func (s *stubPracticeInstanceStore) FindByIDWithContext(ctx context.Context, id int64) (*model.Instance, error) {
+	if s.findByIDWithContextFn != nil {
+		return s.findByIDWithContextFn(ctx, id)
+	}
 	return nil, nil
 }
 
@@ -181,15 +190,38 @@ func (s *stubPracticeInstanceStore) UpdateRuntime(instance *model.Instance) erro
 }
 
 func (s *stubPracticeInstanceStore) RefreshInstanceExpiry(instanceID int64, expiresAt time.Time) error {
+	if s.refreshInstanceExpiryFn != nil {
+		return s.refreshInstanceExpiryFn(instanceID, expiresAt)
+	}
 	return nil
 }
 
+func (s *stubPracticeInstanceStore) RefreshInstanceExpiryWithContext(ctx context.Context, instanceID int64, expiresAt time.Time) error {
+	if s.refreshInstanceExpiryWithContextFn != nil {
+		return s.refreshInstanceExpiryWithContextFn(ctx, instanceID, expiresAt)
+	}
+	return s.RefreshInstanceExpiry(instanceID, expiresAt)
+}
+
 func (s *stubPracticeInstanceStore) UpdateStatusAndReleasePort(id int64, status string) error {
+	if s.updateStatusAndReleasePortFn != nil {
+		return s.updateStatusAndReleasePortFn(id, status)
+	}
 	return nil
 }
 
 func (s *stubPracticeInstanceStore) FindByUserAndChallenge(userID, challengeID int64) (*model.Instance, error) {
+	if s.findByUserAndChallengeFn != nil {
+		return s.findByUserAndChallengeFn(userID, challengeID)
+	}
 	return nil, nil
+}
+
+func (s *stubPracticeInstanceStore) FindByUserAndChallengeWithContext(ctx context.Context, userID, challengeID int64) (*model.Instance, error) {
+	if s.findByUserAndChallengeWithContextFn != nil {
+		return s.findByUserAndChallengeWithContextFn(ctx, userID, challengeID)
+	}
+	return s.FindByUserAndChallenge(userID, challengeID)
 }
 
 func (s *stubPracticeInstanceStore) ListPendingInstancesWithContext(ctx context.Context, limit int) ([]*model.Instance, error) {
@@ -266,7 +298,14 @@ func TestPracticeServiceCloseCancelsAssessmentUpdate(t *testing.T) {
 	startedCh := make(chan struct{})
 	var calls atomic.Int32
 	service := NewService(
-		nil,
+		&stubPracticeRepository{
+			findCorrectSubmissionWithContextFn: func(ctx context.Context, userID, challengeID int64) (*model.Submission, error) {
+				return nil, gorm.ErrRecordNotFound
+			},
+			createSubmissionWithContextFn: func(ctx context.Context, submission *model.Submission) error {
+				return nil
+			},
+		},
 		nil,
 		nil,
 		nil,
@@ -320,7 +359,14 @@ func TestPracticeServiceCloseCancelsAsyncScoreUpdate(t *testing.T) {
 	startedCh := make(chan struct{})
 	var calls atomic.Int32
 	service := NewService(
-		nil,
+		&stubPracticeRepository{
+			findCorrectSubmissionWithContextFn: func(ctx context.Context, userID, challengeID int64) (*model.Submission, error) {
+				return nil, gorm.ErrRecordNotFound
+			},
+			createSubmissionWithContextFn: func(ctx context.Context, submission *model.Submission) error {
+				return nil
+			},
+		},
 		nil,
 		nil,
 		nil,
@@ -1912,5 +1958,151 @@ func TestGetTeacherManualReviewSubmissionWithContextPropagatesContextToRepositor
 	}
 	if !findRequesterCalled {
 		t.Fatal("expected requester repository to be called")
+	}
+}
+
+func TestSubmitFlagWithContextPropagatesContextToDynamicFlagInstanceLookup(t *testing.T) {
+	t.Parallel()
+
+	ctxKey := practiceServiceContextKey("dynamic-flag")
+	expectedCtxValue := "ctx-dynamic-flag"
+	redisServer := miniredis.RunT(t)
+	redisClient := redis.NewClient(&redis.Options{Addr: redisServer.Addr()})
+	defer redisClient.Close()
+	instanceLookupCalled := false
+	instanceStore := &stubPracticeInstanceStore{
+		findByUserAndChallengeWithContextFn: func(ctx context.Context, userID, challengeID int64) (*model.Instance, error) {
+			instanceLookupCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected dynamic flag instance lookup ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return &model.Instance{ID: 301, UserID: userID, ChallengeID: challengeID, Nonce: "nonce-301"}, nil
+		},
+	}
+	service := NewService(
+		&stubPracticeRepository{
+			findCorrectSubmissionWithContextFn: func(context.Context, int64, int64) (*model.Submission, error) {
+				return nil, gorm.ErrRecordNotFound
+			},
+			createSubmissionWithContextFn: func(context.Context, *model.Submission) error {
+				return nil
+			},
+		},
+		&stubPracticeChallengeContract{
+			findByIDFn: func(id int64) (*model.Challenge, error) {
+				return &model.Challenge{
+					ID:         id,
+					Category:   model.DimensionWeb,
+					Points:     100,
+					Status:     model.ChallengeStatusPublished,
+					FlagType:   model.FlagTypeDynamic,
+					FlagPrefix: "flag",
+				}, nil
+			},
+		},
+		nil,
+		instanceStore,
+		nil,
+		nil,
+		nil,
+		redisClient,
+		&config.Config{
+			RateLimit: config.RateLimitConfig{
+				RedisKeyPrefix: "practice:test",
+				FlagSubmit:     config.RateLimitPolicyConfig{Limit: 5, Window: time.Minute},
+			},
+			Container: config.ContainerConfig{FlagGlobalSecret: "12345678901234567890123456789012"},
+		},
+		nil,
+	)
+
+	flag := flagcrypto.GenerateDynamicFlag(7, 11, "12345678901234567890123456789012", "nonce-301", "flag")
+	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
+	if _, err := service.SubmitFlagWithContext(ctx, 7, 11, flag); err != nil {
+		t.Fatalf("SubmitFlagWithContext() error = %v", err)
+	}
+	if !instanceLookupCalled {
+		t.Fatal("expected dynamic flag instance lookup to be called")
+	}
+}
+
+func TestSubmitFlagWithContextPropagatesContextToSolveGraceInstanceUpdates(t *testing.T) {
+	t.Parallel()
+
+	ctxKey := practiceServiceContextKey("solve-grace")
+	expectedCtxValue := "ctx-solve-grace"
+	redisServer := miniredis.RunT(t)
+	redisClient := redis.NewClient(&redis.Options{Addr: redisServer.Addr()})
+	defer redisClient.Close()
+	lookupCalled := false
+	refreshCalled := false
+	instanceStore := &stubPracticeInstanceStore{
+		findByUserAndChallengeWithContextFn: func(ctx context.Context, userID, challengeID int64) (*model.Instance, error) {
+			lookupCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected solve grace lookup ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return &model.Instance{ID: 401, UserID: userID, ChallengeID: challengeID, ShareScope: model.InstanceSharingPerUser, ExpiresAt: time.Now().Add(2 * time.Hour)}, nil
+		},
+		refreshInstanceExpiryWithContextFn: func(ctx context.Context, instanceID int64, expiresAt time.Time) error {
+			refreshCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected solve grace refresh ctx value %v, got %v", expectedCtxValue, got)
+			}
+			if instanceID != 401 {
+				t.Fatalf("unexpected instance id: %d", instanceID)
+			}
+			return nil
+		},
+	}
+	flagSalt := "solve-grace-ctx"
+	service := NewService(
+		&stubPracticeRepository{
+			findCorrectSubmissionWithContextFn: func(context.Context, int64, int64) (*model.Submission, error) {
+				return nil, gorm.ErrRecordNotFound
+			},
+			createSubmissionWithContextFn: func(context.Context, *model.Submission) error {
+				return nil
+			},
+		},
+		&stubPracticeChallengeContract{
+			findByIDFn: func(id int64) (*model.Challenge, error) {
+				return &model.Challenge{
+					ID:              id,
+					Category:        model.DimensionWeb,
+					Points:          100,
+					Status:          model.ChallengeStatusPublished,
+					FlagType:        model.FlagTypeStatic,
+					FlagSalt:        flagSalt,
+					FlagHash:        flagcrypto.HashStaticFlag("flag{solve-grace-ctx}", flagSalt),
+					InstanceSharing: model.InstanceSharingPerUser,
+				}, nil
+			},
+		},
+		nil,
+		instanceStore,
+		nil,
+		nil,
+		nil,
+		redisClient,
+		&config.Config{
+			RateLimit: config.RateLimitConfig{
+				RedisKeyPrefix: "practice:test",
+				FlagSubmit:     config.RateLimitPolicyConfig{Limit: 5, Window: time.Minute},
+			},
+			Container: config.ContainerConfig{SolveGracePeriod: 10 * time.Minute},
+		},
+		nil,
+	)
+
+	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
+	if _, err := service.SubmitFlagWithContext(ctx, 7, 11, "flag{solve-grace-ctx}"); err != nil {
+		t.Fatalf("SubmitFlagWithContext() error = %v", err)
+	}
+	if !lookupCalled {
+		t.Fatal("expected solve grace instance lookup to be called")
+	}
+	if !refreshCalled {
+		t.Fatal("expected solve grace refresh to be called")
 	}
 }

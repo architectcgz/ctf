@@ -179,7 +179,11 @@ func (r *Repository) CountScopedRunningInstances(userID int64, scope practicepor
 }
 
 func (r *Repository) RefreshInstanceExpiry(instanceID int64, expiresAt time.Time) error {
-	return r.db.Model(&model.Instance{}).
+	return r.RefreshInstanceExpiryWithContext(context.Background(), instanceID, expiresAt)
+}
+
+func (r *Repository) RefreshInstanceExpiryWithContext(ctx context.Context, instanceID int64, expiresAt time.Time) error {
+	return r.dbWithContext(ctx).Model(&model.Instance{}).
 		Where("id = ?", instanceID).
 		Updates(map[string]any{
 			"expires_at": expiresAt,
@@ -232,6 +236,25 @@ func (r *Repository) FindCorrectSubmissionWithContext(ctx context.Context, userI
 	err := r.dbWithContext(ctx).Where("user_id = ? AND challenge_id = ? AND is_correct = ?", userID, challengeID, true).
 		First(&submission).Error
 	return &submission, err
+}
+
+func (r *Repository) FindByUserAndChallenge(userID, challengeID int64) (*model.Instance, error) {
+	return r.FindByUserAndChallengeWithContext(context.Background(), userID, challengeID)
+}
+
+func (r *Repository) FindByUserAndChallengeWithContext(ctx context.Context, userID, challengeID int64) (*model.Instance, error) {
+	var instance model.Instance
+	err := r.dbWithContext(ctx).
+		Where("user_id = ? AND contest_id IS NULL AND team_id IS NULL AND challenge_id = ? AND status IN ?", userID, challengeID,
+			[]string{model.InstanceStatusPending, model.InstanceStatusCreating, model.InstanceStatusRunning}).
+		First(&instance).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &instance, nil
 }
 
 func (r *Repository) ListChallengeSubmissions(userID, challengeID int64, limit int) ([]model.Submission, error) {
