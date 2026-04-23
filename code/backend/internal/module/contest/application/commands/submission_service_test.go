@@ -15,6 +15,7 @@ import (
 	"ctf-platform/internal/model"
 	challengecmd "ctf-platform/internal/module/challenge/application/commands"
 	challengeqry "ctf-platform/internal/module/challenge/application/queries"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	contestcmd "ctf-platform/internal/module/contest/application/commands"
 	contestqry "ctf-platform/internal/module/contest/application/queries"
@@ -352,6 +353,90 @@ func TestSubmissionServiceSubmitFlagInContestUsesConfiguredIncorrectSubmissionRa
 	}
 }
 
+func TestSubmissionServiceSubmitFlagInContestFailsWhenRateLimitLookupUnavailable(t *testing.T) {
+	service, redisClient, db := newContestSubmissionTestService(t)
+
+	now := time.Now()
+	contestID := int64(17)
+	challengeID := int64(117)
+	teamID := int64(171)
+	userID := int64(1701)
+
+	createContestSubmissionFixture(t, db, contestID, challengeID, now)
+	testsupport.CreateContestTeamRegistration(t, db, contestID, teamID, userID, "Lookup", now)
+
+	if err := redisClient.Close(); err != nil {
+		t.Fatalf("close redis client: %v", err)
+	}
+
+	_, err := service.SubmitFlagInContest(context.Background(), userID, contestID, challengeID, "flag{wrong}")
+	if err == nil {
+		t.Fatal("expected rate limit lookup failure to abort submission")
+	}
+	var appErr *errcode.AppError
+	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrInternal.Code {
+		t.Fatalf("expected internal error, got %v", err)
+	}
+
+	var count int64
+	if err := db.Model(&model.Submission{}).Where("contest_id = ? AND user_id = ? AND challenge_id = ?", contestID, userID, challengeID).Count(&count).Error; err != nil {
+		t.Fatalf("count submissions: %v", err)
+	}
+	if count != 0 {
+		t.Fatalf("expected no submission persisted when rate limit lookup fails, got %d", count)
+	}
+}
+
+func TestSubmissionServiceSubmitFlagInContestFailsWhenIncorrectRateLimitWriteUnavailable(t *testing.T) {
+	db := testsupport.SetupContestTestDB(t)
+
+	mini, err := miniredis.Run()
+	if err != nil {
+		t.Fatalf("start miniredis: %v", err)
+	}
+	t.Cleanup(mini.Close)
+
+	redisClient := redis.NewClient(&redis.Options{Addr: mini.Addr()})
+	t.Cleanup(func() {
+		_ = redisClient.Close()
+	})
+
+	now := time.Now()
+	contestID := int64(18)
+	challengeID := int64(118)
+	teamID := int64(181)
+	userID := int64(1801)
+
+	createContestSubmissionFixture(t, db, contestID, challengeID, now)
+	testsupport.CreateContestTeamRegistration(t, db, contestID, teamID, userID, "Write", now)
+
+	service := newContestSubmissionServiceForTest(t, db, redisClient, nil, &stubContestFlagValidator{
+		validateFlagFn: func(gotUserID, gotChallengeID int64, input string, nonce string) (bool, error) {
+			if err := redisClient.Close(); err != nil {
+				t.Fatalf("close redis client in validator: %v", err)
+			}
+			return false, nil
+		},
+	})
+
+	_, err = service.SubmitFlagInContest(context.Background(), userID, contestID, challengeID, "flag{wrong}")
+	if err == nil {
+		t.Fatal("expected incorrect submission rate limit write failure to abort submission")
+	}
+	var appErr *errcode.AppError
+	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrInternal.Code {
+		t.Fatalf("expected internal error, got %v", err)
+	}
+
+	var count int64
+	if err := db.Model(&model.Submission{}).Where("contest_id = ? AND user_id = ? AND challenge_id = ?", contestID, userID, challengeID).Count(&count).Error; err != nil {
+		t.Fatalf("count submissions: %v", err)
+	}
+	if count != 0 {
+		t.Fatalf("expected no submission persisted when rate limit write fails, got %d", count)
+	}
+}
+
 func TestScoreboardServiceRebuildScoreboardUsesTeamTotals(t *testing.T) {
 	db := testsupport.SetupContestTestDB(t)
 
@@ -637,36 +722,21 @@ func TestSubmissionServiceUsesChallengeFlagValidator(t *testing.T) {
 	testsupport.CreateContestTeamRegistration(t, db, contestID, teamID, userID, "Validator", now)
 
 	called := false
-	service := contestcmd.NewSubmissionService(
-		contestinfra.NewRepository(db),
-		contestinfra.NewSubmissionRepository(db),
-		redisClient,
-		&stubContestFlagValidator{
-			validateFlagFn: func(gotUserID, gotChallengeID int64, input string, nonce string) (bool, error) {
-				called = true
-				if gotUserID != userID || gotChallengeID != challengeID {
-					t.Fatalf("unexpected validator args: user=%d challenge=%d", gotUserID, gotChallengeID)
-				}
-				if input != "flag{through-contract}" {
-					t.Fatalf("unexpected validator input: %s", input)
-				}
-				if nonce != "" {
-					t.Fatalf("unexpected validator nonce: %s", nonce)
-				}
-				return true, nil
-			},
+	service := newContestSubmissionServiceForTest(t, db, redisClient, nil, &stubContestFlagValidator{
+		validateFlagFn: func(gotUserID, gotChallengeID int64, input string, nonce string) (bool, error) {
+			called = true
+			if gotUserID != userID || gotChallengeID != challengeID {
+				t.Fatalf("unexpected validator args: user=%d challenge=%d", gotUserID, gotChallengeID)
+			}
+			if input != "flag{through-contract}" {
+				t.Fatalf("unexpected validator input: %s", input)
+			}
+			if nonce != "" {
+				t.Fatalf("unexpected validator nonce: %s", nonce)
+			}
+			return true, nil
 		},
-		contestinfra.NewTeamRepository(db),
-		nil,
-		&config.Config{
-			Contest: config.ContestConfig{
-				BaseScore:       1000,
-				MinScore:        100,
-				Decay:           0.9,
-				FirstBloodBonus: 0.1,
-			},
-		},
-	)
+	})
 
 	resp, err := service.SubmitFlagInContest(context.Background(), userID, contestID, challengeID, "flag{through-contract}")
 	if err != nil {
@@ -678,6 +748,41 @@ func TestSubmissionServiceUsesChallengeFlagValidator(t *testing.T) {
 	if !resp.IsCorrect {
 		t.Fatalf("expected correct submission via contract validator, got %+v", resp)
 	}
+}
+
+func newContestSubmissionServiceForTest(t *testing.T, db *gorm.DB, redisClient *redis.Client, cfg *config.Config, flagValidator challengecontracts.FlagValidator) *contestcmd.SubmissionService {
+	t.Helper()
+
+	if cfg == nil {
+		cfg = &config.Config{
+			Contest: config.ContestConfig{
+				BaseScore:              1000,
+				MinScore:               100,
+				Decay:                  0.9,
+				FirstBloodBonus:        0.1,
+				SubmissionRateLimitTTL: 5 * time.Second,
+			},
+		}
+	}
+	if flagValidator == nil {
+		var err error
+		flagValidator, err = challengeqry.NewFlagService(challengeinfra.NewRepository(db), "0123456789abcdef0123456789abcdef")
+		if err != nil {
+			t.Fatalf("new flag service: %v", err)
+		}
+	}
+
+	contestRepo := contestinfra.NewRepository(db)
+	scoreboardService := contestcmd.NewScoreboardAdminService(contestRepo, redisClient, &cfg.Contest)
+	return contestcmd.NewSubmissionService(
+		contestRepo,
+		contestinfra.NewSubmissionRepository(db),
+		redisClient,
+		flagValidator,
+		contestinfra.NewTeamRepository(db),
+		scoreboardService,
+		cfg,
+	)
 }
 
 func newContestSubmissionTestService(t *testing.T) (*contestcmd.SubmissionService, *redis.Client, *gorm.DB) {
@@ -700,25 +805,7 @@ func newContestSubmissionTestServiceWithConfig(t *testing.T, cfg *config.Config)
 		_ = redisClient.Close()
 	})
 
-	flagService, err := challengeqry.NewFlagService(challengeinfra.NewRepository(db), "0123456789abcdef0123456789abcdef")
-	if err != nil {
-		t.Fatalf("new flag service: %v", err)
-	}
-
-	if cfg == nil {
-		cfg = &config.Config{
-			Contest: config.ContestConfig{
-				BaseScore:              1000,
-				MinScore:               100,
-				Decay:                  0.9,
-				FirstBloodBonus:        0.1,
-				SubmissionRateLimitTTL: 5 * time.Second,
-			},
-		}
-	}
-	contestRepo := contestinfra.NewRepository(db)
-	scoreboardService := contestcmd.NewScoreboardAdminService(contestRepo, redisClient, &cfg.Contest)
-	service := contestcmd.NewSubmissionService(contestRepo, contestinfra.NewSubmissionRepository(db), redisClient, flagService, contestinfra.NewTeamRepository(db), scoreboardService, cfg)
+	service := newContestSubmissionServiceForTest(t, db, redisClient, cfg, nil)
 	return service, redisClient, db
 }
 

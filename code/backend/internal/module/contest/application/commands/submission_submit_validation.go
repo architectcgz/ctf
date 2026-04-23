@@ -56,7 +56,10 @@ func (s *SubmissionService) validateContestSubmission(ctx context.Context, userI
 
 	rateLimitKey := contestSubmissionRateLimitKey(userID, contestID, challengeID)
 	exists, err := s.redis.Exists(ctx, rateLimitKey).Result()
-	if err == nil && exists > 0 {
+	if err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+	if exists > 0 {
 		return nil, errcode.ErrSubmitTooFrequent
 	}
 
