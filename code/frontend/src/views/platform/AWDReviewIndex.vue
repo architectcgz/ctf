@@ -2,11 +2,8 @@
 import { computed } from 'vue'
 import { FolderKanban, RefreshCcw, ScanEye, Waypoints } from 'lucide-vue-next'
 
-import AppEmpty from '@/components/common/AppEmpty.vue'
-import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
-import WorkspaceDirectoryToolbar from '@/components/common/WorkspaceDirectoryToolbar.vue'
+import AwdReviewDirectoryPanel from '@/components/platform/awd-review/AwdReviewDirectoryPanel.vue'
 import { useTeacherAwdReviewIndex } from '@/composables/useTeacherAwdReviewIndex'
-import { formatDate } from '@/utils/format'
 
 interface PlatformAwdReviewRow {
   id: string
@@ -33,65 +30,6 @@ const reviewRows = computed<PlatformAwdReviewRow[]>(() =>
     contestCode: `AWD-${contest.id}`,
   }))
 )
-
-const reviewTableColumns = [
-  {
-    key: 'contestCode',
-    label: '代号',
-    widthClass: 'w-[16%] min-w-[8rem]',
-    cellClass: 'admin-awd-review-table__mono',
-  },
-  {
-    key: 'title',
-    label: '赛事',
-    widthClass: 'w-[33%] min-w-[16rem]',
-    cellClass: 'admin-awd-review-table__title',
-  },
-  {
-    key: 'rounds',
-    label: '轮次',
-    widthClass: 'w-[14%] min-w-[7rem]',
-    cellClass: 'admin-awd-review-table__meta',
-  },
-  {
-    key: 'teams',
-    label: '队伍',
-    widthClass: 'w-[13%] min-w-[7rem]',
-    cellClass: 'admin-awd-review-table__meta',
-  },
-  {
-    key: 'status',
-    label: '状态',
-    widthClass: 'w-[14%] min-w-[7rem]',
-    cellClass: 'admin-awd-review-table__status',
-  },
-  {
-    key: 'actions',
-    label: '操作',
-    align: 'right' as const,
-    widthClass: 'w-[10rem]',
-    cellClass: 'admin-awd-review-table__actions',
-  },
-]
-
-function contestStatusLabel(status: string): string {
-  switch (status) {
-    case 'running':
-      return '进行中'
-    case 'ended':
-      return '已结束'
-    case 'frozen':
-      return '冻结中'
-    case 'published':
-      return '已发布'
-    default:
-      return status || '未开始'
-  }
-}
-
-function formatEvidenceAt(value?: string | null): string {
-  return value ? formatDate(value) : '暂无'
-}
 
 function resetFilters(): void {
   filters.value.status = ''
@@ -136,197 +74,64 @@ function resetFilters(): void {
         </div>
       </header>
 
-      <div class="metric-panel-grid metric-panel-grid--premium cols-3">
-        <article class="metric-panel-card metric-panel-card--premium">
-          <div class="metric-panel-label">
+      <div
+        class="admin-summary-grid admin-awd-review-shell__summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"
+      >
+        <article class="journal-note progress-card metric-panel-card">
+          <div class="journal-note-label progress-card-label metric-panel-label">
             <span>赛事数量</span>
             <FolderKanban class="h-4 w-4" />
           </div>
-          <div class="metric-panel-value">
+          <div class="journal-note-value progress-card-value metric-panel-value">
             {{ contests.length.toString().padStart(2, '0') }}
           </div>
-          <div class="metric-panel-helper">
+          <div class="journal-note-helper progress-card-hint metric-panel-helper">
             当前可进入复盘的 AWD 赛事
           </div>
         </article>
 
-        <article class="metric-panel-card metric-panel-card--premium">
-          <div class="metric-panel-label">
+        <article class="journal-note progress-card metric-panel-card">
+          <div class="journal-note-label progress-card-label metric-panel-label">
             <span>进行中</span>
             <ScanEye class="h-4 w-4" />
           </div>
-          <div class="metric-panel-value">
+          <div class="journal-note-value progress-card-value metric-panel-value">
             {{ runningCount.toString().padStart(2, '0') }}
           </div>
-          <div class="metric-panel-helper">
+          <div class="journal-note-helper progress-card-hint metric-panel-helper">
             仍在持续产出攻防信号的赛事
           </div>
         </article>
 
-        <article class="metric-panel-card metric-panel-card--premium">
-          <div class="metric-panel-label">
+        <article class="journal-note progress-card metric-panel-card">
+          <div class="journal-note-label progress-card-label metric-panel-label">
             <span>可导出报告</span>
             <Waypoints class="h-4 w-4" />
           </div>
-          <div class="metric-panel-value">
+          <div class="journal-note-value progress-card-value metric-panel-value">
             {{ exportReadyCount.toString().padStart(2, '0') }}
           </div>
-          <div class="metric-panel-helper">
+          <div class="journal-note-helper progress-card-hint metric-panel-helper">
             已允许导出教师复盘报告的赛事
           </div>
         </article>
       </div>
 
-      <section class="workspace-directory-section admin-awd-review-directory">
-        <header class="list-heading">
-          <div>
-            <div class="workspace-overline">
-              Review Directory
-            </div>
-            <h2 class="list-heading__title">
-              赛事目录
-            </h2>
-          </div>
-          <div class="admin-awd-review-directory__meta">
-            共 {{ contests.length }} 场赛事
-          </div>
-        </header>
-
-        <WorkspaceDirectoryToolbar
-          v-model="filters.keyword"
-          :total="contests.length"
-          selected-sort-label=""
-          :sort-options="[]"
-          search-placeholder="搜索赛事标题"
-          filter-panel-title="赛事筛选"
-          total-suffix="场赛事"
-          :reset-disabled="!hasActiveFilters"
-          @reset-filters="resetFilters"
-        >
-          <template #filter-panel>
-            <div class="admin-awd-review-filter-grid">
-              <label class="admin-awd-review-filter-field">
-                <span class="admin-awd-review-filter-field__label">赛事状态</span>
-                <select
-                  v-model="filters.status"
-                  class="admin-awd-review-filter-field__control"
-                >
-                  <option value="">全部状态</option>
-                  <option value="running">进行中</option>
-                  <option value="ended">已结束</option>
-                  <option value="frozen">冻结中</option>
-                </select>
-              </label>
-            </div>
-          </template>
-        </WorkspaceDirectoryToolbar>
-
-        <div
-          v-if="loading"
-          class="workspace-directory-loading"
-        >
-          正在同步 AWD 复盘目录...
-        </div>
-
-        <AppEmpty
-          v-else-if="error"
-          class="workspace-directory-empty"
-          icon="AlertTriangle"
-          title="AWD复盘目录加载失败"
-          :description="error"
-        >
-          <template #action>
-            <button
-              type="button"
-              class="ui-btn ui-btn--primary"
-              @click="loadContests"
-            >
-              重新加载
-            </button>
-          </template>
-        </AppEmpty>
-
-        <AppEmpty
-          v-else-if="!hasContests"
-          class="workspace-directory-empty"
-          icon="BookOpen"
-          title="暂无 AWD 赛事"
-          description="当前筛选条件下没有可进入平台复盘的 AWD 赛事。"
-        />
-
-        <WorkspaceDataTable
-          v-else
-          class="workspace-directory-list admin-awd-review-table"
-          :columns="reviewTableColumns"
-          :rows="reviewRows"
-          row-key="id"
-          row-class="admin-awd-review-table__row"
-        >
-          <template #cell-contestCode="{ row }">
-            <span class="admin-awd-review-table__code">
-              {{ (row as PlatformAwdReviewRow).contestCode }}
-            </span>
-          </template>
-
-          <template #cell-title="{ row }">
-            <div class="admin-awd-review-table__title-wrap">
-              <span
-                class="admin-awd-review-table__title-text"
-                :title="(row as PlatformAwdReviewRow).title"
-              >
-                {{ (row as PlatformAwdReviewRow).title }}
-              </span>
-              <span class="admin-awd-review-table__hint">
-                最近信号
-                {{ formatEvidenceAt((row as PlatformAwdReviewRow).latest_evidence_at) }}
-              </span>
-            </div>
-          </template>
-
-          <template #cell-rounds="{ row }">
-            <div class="admin-awd-review-table__meta-block">
-              <span>
-                {{
-                  (row as PlatformAwdReviewRow).current_round
-                    ? `第 ${(row as PlatformAwdReviewRow).current_round} 轮`
-                    : '未开始'
-                }}
-              </span>
-              <span>共 {{ (row as PlatformAwdReviewRow).round_count }} 轮</span>
-            </div>
-          </template>
-
-          <template #cell-teams="{ row }">
-            <div class="admin-awd-review-table__meta-block">
-              <span>{{ (row as PlatformAwdReviewRow).team_count }} 支队伍</span>
-              <span>{{ (row as PlatformAwdReviewRow).mode.toUpperCase() }}</span>
-            </div>
-          </template>
-
-          <template #cell-status="{ row }">
-            <div class="admin-awd-review-table__status-wrap">
-              <span class="admin-awd-review-table__status-pill">
-                {{ contestStatusLabel((row as PlatformAwdReviewRow).status) }}
-              </span>
-              <span
-                class="admin-awd-review-table__status-pill admin-awd-review-table__status-pill--muted"
-              >
-                {{ (row as PlatformAwdReviewRow).export_ready ? '可导出' : '实时复盘' }}
-              </span>
-            </div>
-          </template>
-
-          <template #cell-actions="{ row }">
-            <button
-              type="button"
-              class="admin-awd-review-table__action"
-              @click="openContest((row as PlatformAwdReviewRow).id)"
-            >
-              进入复盘
-            </button>
-          </template>
-        </WorkspaceDataTable>
-      </section>
+      <AwdReviewDirectoryPanel
+        :loading="loading"
+        :error="error"
+        :rows="reviewRows"
+        :total="contests.length"
+        :has-contests="hasContests"
+        :keyword="filters.keyword"
+        :status-filter="filters.status"
+        :has-active-filters="hasActiveFilters"
+        @update:keyword="filters.keyword = $event"
+        @update:status-filter="filters.status = $event"
+        @reset-filters="resetFilters"
+        @retry="loadContests"
+        @open-contest="openContest"
+      />
     </main>
   </section>
 </template>
@@ -375,8 +180,7 @@ function resetFilters(): void {
   gap: var(--space-3);
 }
 
-.admin-awd-review-shell__hero-actions > .ui-btn,
-.workspace-directory-empty .ui-btn {
+.admin-awd-review-shell__hero-actions > .ui-btn {
   --ui-btn-height: 2.75rem;
   --ui-btn-radius: 1rem;
   --ui-btn-padding: var(--space-2-5) var(--space-4);
@@ -389,142 +193,20 @@ function resetFilters(): void {
   --ui-btn-color: var(--journal-ink);
 }
 
-.admin-awd-review-shell__metric-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  color: var(--journal-ink);
-}
-
-.admin-awd-review-directory__meta {
-  font-size: var(--font-size-0-82);
-  color: var(--journal-muted);
-}
-
-.admin-awd-review-filter-grid {
-  display: grid;
-  gap: var(--space-4);
-}
-
-.admin-awd-review-filter-field {
-  display: grid;
-  gap: var(--space-2);
-}
-
-.admin-awd-review-filter-field__label {
-  font-size: var(--font-size-0-72);
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--journal-muted);
-}
-
-.admin-awd-review-filter-field__control {
-  min-height: 2.75rem;
-  border: 1px solid var(--admin-control-border);
-  border-radius: 0.95rem;
-  background: color-mix(in srgb, var(--journal-surface) 92%, var(--color-bg-base));
-  padding: 0 var(--space-4);
-  font-size: var(--font-size-0-875);
-  color: var(--journal-ink);
-  outline: none;
-  transition:
-    border-color 150ms ease,
-    box-shadow 150ms ease;
-}
-
-.admin-awd-review-filter-field__control:focus {
-  border-color: color-mix(in srgb, var(--journal-accent) 44%, transparent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--journal-accent) 12%, transparent);
-}
-
-.admin-awd-review-table {
-  --workspace-directory-shell-border: var(--awd-review-directory-border);
-  --workspace-directory-head-divider: var(--awd-review-directory-border);
-  --workspace-directory-row-divider: var(--awd-review-directory-row-divider);
-}
-
-.admin-awd-review-table :deep(.workspace-data-table__row:hover) {
-  background: color-mix(in srgb, var(--color-primary) 5%, transparent);
-}
-
-.admin-awd-review-table__code,
-.admin-awd-review-table :deep(.admin-awd-review-table__mono) {
-  font-family: var(--font-family-mono);
-  font-size: var(--font-size-0-82);
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--journal-muted);
-}
-
-.admin-awd-review-table__title-wrap,
-.admin-awd-review-table__meta-block {
-  display: grid;
-  gap: var(--space-1);
-}
-
-.admin-awd-review-table__title-text {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 0.98rem;
-  font-weight: 700;
-  color: var(--journal-ink);
-}
-
-.admin-awd-review-table__hint,
-.admin-awd-review-table__meta-block {
-  font-size: var(--font-size-0-84);
-  color: var(--journal-muted);
-}
-
-.admin-awd-review-table__status-wrap {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-}
-
-.admin-awd-review-table__status-pill {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 2rem;
-  border: 1px solid color-mix(in srgb, var(--color-primary) 18%, transparent);
-  border-radius: 999px;
-  padding: 0 var(--space-3);
-  font-size: var(--font-size-0-75);
-  font-weight: 700;
-  color: var(--color-primary);
-}
-
-.admin-awd-review-table__status-pill--muted {
-  border-color: color-mix(in srgb, var(--journal-border) 72%, transparent);
-  background: color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base));
-  color: var(--journal-muted);
-}
-
-.admin-awd-review-table__action {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 2.4rem;
-  border: 1px solid color-mix(in srgb, var(--color-primary) 18%, var(--journal-border));
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--color-primary) 8%, var(--journal-surface));
-  padding: 0 0.95rem;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--color-primary);
-  transition:
-    border-color 0.2s ease,
-    background-color 0.2s ease;
-}
-
-.admin-awd-review-table__action:hover {
-  border-color: color-mix(in srgb, var(--color-primary) 32%, var(--journal-border));
-  background: color-mix(in srgb, var(--color-primary) 12%, var(--journal-surface));
+.admin-awd-review-shell__summary {
+  --metric-panel-columns: 3;
+  --metric-panel-border: color-mix(in srgb, var(--workspace-brand) 16%, var(--workspace-line-soft));
+  --metric-panel-background:
+    radial-gradient(
+      circle at top left,
+      color-mix(in srgb, var(--workspace-brand) 16%, transparent),
+      transparent 60%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--journal-surface) 97%, transparent),
+      color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base))
+    );
 }
 
 @media (max-width: 900px) {

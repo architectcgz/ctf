@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest'
 import auditLogSource from '../AuditLog.vue?raw'
 import auditLogDirectoryPanelSource from '@/components/platform/audit/AuditLogDirectoryPanel.vue?raw'
 import awdReviewIndexSource from '../AWDReviewIndex.vue?raw'
+import awdReviewDirectoryPanelSource from '@/components/platform/awd-review/AwdReviewDirectoryPanel.vue?raw'
 import challengeManageSource from '../ChallengeManage.vue?raw'
 import challengeManageDirectoryPanelSource from '@/components/platform/challenge/ChallengeManageDirectoryPanel.vue?raw'
 import classManageSource from '../ClassManage.vue?raw'
@@ -36,6 +37,7 @@ const journalNotesSource = readFileSync(
 )
 const auditLogCombinedSource = [auditLogSource, auditLogDirectoryPanelSource].join('\n')
 const challengeManageCombinedSource = [challengeManageSource, challengeManageDirectoryPanelSource].join('\n')
+const awdReviewCombinedSource = [awdReviewIndexSource, awdReviewDirectoryPanelSource].join('\n')
 
 describe('admin management surface alignment', () => {
   it('audit log should soften table and empty-state borders on dark surfaces', () => {
@@ -387,14 +389,14 @@ describe('admin management surface alignment', () => {
       /\.admin-instance-manage-shell__content\s*\{[\s\S]*gap:\s*var\(--workspace-directory-page-block-gap\);/s
     )
 
-    expect(awdReviewIndexSource).toContain(
+    expect(awdReviewCombinedSource).toContain(
       'class="workspace-directory-section admin-awd-review-directory"'
     )
-    expect(awdReviewIndexSource).toContain(
+    expect(awdReviewCombinedSource).toContain(
       'class="workspace-directory-list admin-awd-review-table"'
     )
-    expect(awdReviewIndexSource).toContain('class="workspace-directory-loading"')
-    expect(awdReviewIndexSource).toContain('class="workspace-directory-empty"')
+    expect(awdReviewCombinedSource).toContain('class="workspace-directory-loading"')
+    expect(awdReviewCombinedSource).toContain('class="workspace-directory-empty"')
     expect(awdReviewIndexSource).toMatch(
       /\.admin-awd-review-shell__content\s*\{[\s\S]*gap:\s*var\(--workspace-directory-page-block-gap\);/s
     )
