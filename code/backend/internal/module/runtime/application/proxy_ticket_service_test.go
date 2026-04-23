@@ -33,22 +33,14 @@ func (s *stubProxyTicketStore) FindProxyTicket(ctx context.Context, ticket strin
 }
 
 type stubProxyTicketInstanceReader struct {
-	findByIDFn            func(id int64) (*model.Instance, error)
 	findByIDWithContextFn func(ctx context.Context, id int64) (*model.Instance, error)
-}
-
-func (s *stubProxyTicketInstanceReader) FindByID(id int64) (*model.Instance, error) {
-	if s.findByIDFn == nil {
-		return nil, nil
-	}
-	return s.findByIDFn(id)
 }
 
 func (s *stubProxyTicketInstanceReader) FindByIDWithContext(ctx context.Context, id int64) (*model.Instance, error) {
 	if s.findByIDWithContextFn != nil {
 		return s.findByIDWithContextFn(ctx, id)
 	}
-	return s.FindByID(id)
+	return nil, nil
 }
 
 func TestProxyTicketServiceIssueTicketPersistsClaimsWithTTL(t *testing.T) {
@@ -56,7 +48,7 @@ func TestProxyTicketServiceIssueTicketPersistsClaimsWithTTL(t *testing.T) {
 
 	store := &stubProxyTicketStore{}
 	service := runtimeqry.NewProxyTicketService(store, &stubProxyTicketInstanceReader{
-		findByIDFn: func(id int64) (*model.Instance, error) {
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Instance, error) {
 			contestID := int64(3001)
 			return &model.Instance{
 				ID:          id,

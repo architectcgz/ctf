@@ -29,24 +29,15 @@ func (noopRuntimeCleaner) CleanupRuntimeWithContext(context.Context, *model.Inst
 
 type runtimeInstanceContextRepo struct {
 	findByIDWithContextFn                   func(ctx context.Context, id int64) (*model.Instance, error)
-	findByIDFn                              func(id int64) (*model.Instance, error)
 	findUserByIDFn                          func(ctx context.Context, userID int64) (*model.User, error)
 	updateStatusAndReleasePortWithContextFn func(ctx context.Context, id int64, status string) error
-	updateStatusAndReleasePortFn            func(id int64, status string) error
-}
-
-func (r *runtimeInstanceContextRepo) FindByID(id int64) (*model.Instance, error) {
-	if r.findByIDFn != nil {
-		return r.findByIDFn(id)
-	}
-	return nil, nil
 }
 
 func (r *runtimeInstanceContextRepo) FindByIDWithContext(ctx context.Context, id int64) (*model.Instance, error) {
 	if r.findByIDWithContextFn != nil {
 		return r.findByIDWithContextFn(ctx, id)
 	}
-	return r.FindByID(id)
+	return nil, nil
 }
 
 func (r *runtimeInstanceContextRepo) FindUserByID(ctx context.Context, userID int64) (*model.User, error) {
@@ -72,18 +63,11 @@ func (r *runtimeInstanceContextRepo) AtomicExtendByIDWithContext(ctx context.Con
 	return nil
 }
 
-func (r *runtimeInstanceContextRepo) UpdateStatusAndReleasePort(id int64, status string) error {
-	if r.updateStatusAndReleasePortFn != nil {
-		return r.updateStatusAndReleasePortFn(id, status)
-	}
-	return nil
-}
-
 func (r *runtimeInstanceContextRepo) UpdateStatusAndReleasePortWithContext(ctx context.Context, id int64, status string) error {
 	if r.updateStatusAndReleasePortWithContextFn != nil {
 		return r.updateStatusAndReleasePortWithContextFn(ctx, id, status)
 	}
-	return r.UpdateStatusAndReleasePort(id, status)
+	return nil
 }
 
 func TestInstanceServiceGetUserInstancesShowsContestSharedInstanceToTeamMember(t *testing.T) {
