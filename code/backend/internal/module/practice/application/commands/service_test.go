@@ -155,7 +155,10 @@ func (s *stubScoreUpdater) lockTimeout() time.Duration {
 }
 
 type stubPracticeChallengeContract struct {
-	findByIDFn func(id int64) (*model.Challenge, error)
+	findByIDFn                              func(id int64) (*model.Challenge, error)
+	findByIDWithContextFn                   func(ctx context.Context, id int64) (*model.Challenge, error)
+	findChallengeTopologyByChallengeIDFn    func(challengeID int64) (*model.ChallengeTopology, error)
+	findChallengeTopologyByChallengeIDCtxFn func(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error)
 }
 
 func (s *stubPracticeChallengeContract) FindByID(id int64) (*model.Challenge, error) {
@@ -165,8 +168,44 @@ func (s *stubPracticeChallengeContract) FindByID(id int64) (*model.Challenge, er
 	return s.findByIDFn(id)
 }
 
+func (s *stubPracticeChallengeContract) FindByIDWithContext(ctx context.Context, id int64) (*model.Challenge, error) {
+	if s.findByIDWithContextFn != nil {
+		return s.findByIDWithContextFn(ctx, id)
+	}
+	return s.FindByID(id)
+}
+
 func (s *stubPracticeChallengeContract) FindChallengeTopologyByChallengeID(challengeID int64) (*model.ChallengeTopology, error) {
+	if s.findChallengeTopologyByChallengeIDFn != nil {
+		return s.findChallengeTopologyByChallengeIDFn(challengeID)
+	}
 	return nil, nil
+}
+
+func (s *stubPracticeChallengeContract) FindChallengeTopologyByChallengeIDWithContext(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error) {
+	if s.findChallengeTopologyByChallengeIDCtxFn != nil {
+		return s.findChallengeTopologyByChallengeIDCtxFn(ctx, challengeID)
+	}
+	return s.FindChallengeTopologyByChallengeID(challengeID)
+}
+
+type stubPracticeImageStore struct {
+	findByIDFn            func(id int64) (*model.Image, error)
+	findByIDWithContextFn func(ctx context.Context, id int64) (*model.Image, error)
+}
+
+func (s *stubPracticeImageStore) FindByID(id int64) (*model.Image, error) {
+	if s.findByIDFn == nil {
+		return nil, nil
+	}
+	return s.findByIDFn(id)
+}
+
+func (s *stubPracticeImageStore) FindByIDWithContext(ctx context.Context, id int64) (*model.Image, error) {
+	if s.findByIDWithContextFn != nil {
+		return s.findByIDWithContextFn(ctx, id)
+	}
+	return s.FindByID(id)
 }
 
 type stubPracticeInstanceStore struct {
@@ -256,7 +295,7 @@ func TestBuildTopologyCreateRequestKeepsFineGrainedPolicies(t *testing.T) {
 		config:    &config.Config{},
 	}
 
-	request, err := service.buildTopologyCreateRequest(30001, &model.Challenge{ImageID: 1}, "web", model.TopologySpec{
+	request, err := service.buildTopologyCreateRequest(context.Background(), 30001, &model.Challenge{ImageID: 1}, "web", model.TopologySpec{
 		Nodes: []model.TopologyNode{
 			{Key: "web", ServicePort: 8080, InjectFlag: true},
 		},
@@ -287,7 +326,7 @@ func TestBuildTopologyCreateRequestRejectsSharedChallengeFlagInjection(t *testin
 		config:    &config.Config{},
 	}
 
-	_, err := service.buildTopologyCreateRequest(30002, &model.Challenge{
+	_, err := service.buildTopologyCreateRequest(context.Background(), 30002, &model.Challenge{
 		ImageID:         2,
 		InstanceSharing: model.InstanceSharingShared,
 	}, "web", model.TopologySpec{
@@ -1806,6 +1845,109 @@ func TestRunProvisioningLoopLeavesOverflowPendingWhenGlobalCapacityReached(t *te
 
 type practiceServiceContextKey string
 
+func TestLoadRuntimeSubjectWithScopePropagatesContextToChallengeContract(t *testing.T) {
+	t.Parallel()
+
+	ctxKey := practiceServiceContextKey("runtime-subject")
+	expectedCtxValue := "ctx-runtime-subject"
+	challengeLookupCalled := false
+	topologyLookupCalled := false
+	service := NewService(
+		nil,
+		&stubPracticeChallengeContract{
+			findByIDFn: func(id int64) (*model.Challenge, error) {
+				t.Fatalf("expected context-aware challenge lookup, got legacy call for %d", id)
+				return nil, nil
+			},
+			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+				challengeLookupCalled = true
+				if got := ctx.Value(ctxKey); got != expectedCtxValue {
+					t.Fatalf("expected challenge lookup ctx value %v, got %v", expectedCtxValue, got)
+				}
+				return &model.Challenge{ID: id, Status: model.ChallengeStatusPublished}, nil
+			},
+			findChallengeTopologyByChallengeIDFn: func(challengeID int64) (*model.ChallengeTopology, error) {
+				t.Fatalf("expected context-aware topology lookup, got legacy call for %d", challengeID)
+				return nil, nil
+			},
+			findChallengeTopologyByChallengeIDCtxFn: func(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error) {
+				topologyLookupCalled = true
+				if got := ctx.Value(ctxKey); got != expectedCtxValue {
+					t.Fatalf("expected topology lookup ctx value %v, got %v", expectedCtxValue, got)
+				}
+				return nil, nil
+			},
+		},
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		&config.Config{},
+		nil,
+	)
+
+	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
+	challenge, topology, err := service.loadRuntimeSubjectWithScope(ctx, practiceports.InstanceScope{}, 42)
+	if err != nil {
+		t.Fatalf("loadRuntimeSubjectWithScope() error = %v", err)
+	}
+	if challenge == nil || challenge.ID != 42 {
+		t.Fatalf("expected challenge 42, got %+v", challenge)
+	}
+	if topology != nil {
+		t.Fatalf("expected nil topology, got %+v", topology)
+	}
+	if !challengeLookupCalled {
+		t.Fatal("expected challenge lookup to be called")
+	}
+	if !topologyLookupCalled {
+		t.Fatal("expected topology lookup to be called")
+	}
+}
+
+func TestBuildTopologyCreateRequestPropagatesContextToImageRepository(t *testing.T) {
+	t.Parallel()
+
+	ctxKey := practiceServiceContextKey("topology-image")
+	expectedCtxValue := "ctx-topology-image"
+	lookups := make([]int64, 0, 2)
+	service := &Service{
+		imageRepo: &stubPracticeImageStore{
+			findByIDFn: func(id int64) (*model.Image, error) {
+				t.Fatalf("expected context-aware image lookup, got legacy call for %d", id)
+				return nil, nil
+			},
+			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Image, error) {
+				if got := ctx.Value(ctxKey); got != expectedCtxValue {
+					t.Fatalf("expected image lookup ctx value %v, got %v", expectedCtxValue, got)
+				}
+				lookups = append(lookups, id)
+				return &model.Image{ID: id, Name: fmt.Sprintf("repo/%d", id), Tag: "latest", Status: model.ImageStatusAvailable}, nil
+			},
+		},
+		config: &config.Config{},
+	}
+
+	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
+	request, err := service.buildTopologyCreateRequest(ctx, 30001, &model.Challenge{ImageID: 1}, "web", model.TopologySpec{
+		Nodes: []model.TopologyNode{
+			{Key: "web", Name: "Web", ServicePort: 8080},
+			{Key: "worker", Name: "Worker", ImageID: 2, ServicePort: 9000},
+		},
+	}, "flag{ctx-image}")
+	if err != nil {
+		t.Fatalf("buildTopologyCreateRequest() error = %v", err)
+	}
+	if len(request.Nodes) != 2 {
+		t.Fatalf("expected 2 nodes, got %+v", request.Nodes)
+	}
+	if len(lookups) != 2 || lookups[0] != 1 || lookups[1] != 2 {
+		t.Fatalf("expected image lookups [1 2], got %v", lookups)
+	}
+}
+
 func TestSubmitFlagWithContextPropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
@@ -1818,6 +1960,7 @@ func TestSubmitFlagWithContextPropagatesContextToRepository(t *testing.T) {
 
 	findCorrectCalled := false
 	createSubmissionCalled := false
+	challengeLookupCalled := false
 	repo := &stubPracticeRepository{
 		findCorrectSubmissionWithContextFn: func(ctx context.Context, userID, challengeID int64) (*model.Submission, error) {
 			findCorrectCalled = true
@@ -1838,6 +1981,14 @@ func TestSubmitFlagWithContextPropagatesContextToRepository(t *testing.T) {
 		repo,
 		&stubPracticeChallengeContract{
 			findByIDFn: func(id int64) (*model.Challenge, error) {
+				t.Fatalf("expected context-aware challenge lookup, got legacy call for %d", id)
+				return nil, nil
+			},
+			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+				challengeLookupCalled = true
+				if got := ctx.Value(ctxKey); got != expectedCtxValue {
+					t.Fatalf("expected challenge lookup ctx value %v, got %v", expectedCtxValue, got)
+				}
 				return &model.Challenge{
 					ID:       id,
 					Category: model.DimensionWeb,
@@ -1871,6 +2022,9 @@ func TestSubmitFlagWithContextPropagatesContextToRepository(t *testing.T) {
 	if _, err := service.SubmitFlagWithContext(ctx, 7, 11, "flag{ctx-submit}"); err != nil {
 		t.Fatalf("SubmitFlagWithContext() error = %v", err)
 	}
+	if !challengeLookupCalled {
+		t.Fatal("expected challenge lookup to be called")
+	}
 	if !findCorrectCalled {
 		t.Fatal("expected find correct submission repository to be called")
 	}
@@ -1888,6 +2042,7 @@ func TestReviewManualReviewSubmissionWithContextPropagatesContextToRepository(t 
 	updatedCalled := false
 	findRequesterCalled := false
 	findRecordCalled := false
+	challengeLookupCalled := false
 	repo := &stubPracticeRepository{
 		getTeacherManualReviewSubmissionByIDWithContextFn: func(ctx context.Context, id int64) (*practiceports.TeacherManualReviewSubmissionRecord, error) {
 			findRecordCalled = true
@@ -1929,6 +2084,14 @@ func TestReviewManualReviewSubmissionWithContextPropagatesContextToRepository(t 
 		repo,
 		&stubPracticeChallengeContract{
 			findByIDFn: func(id int64) (*model.Challenge, error) {
+				t.Fatalf("expected context-aware challenge lookup, got legacy call for %d", id)
+				return nil, nil
+			},
+			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+				challengeLookupCalled = true
+				if got := ctx.Value(ctxKey); got != expectedCtxValue {
+					t.Fatalf("expected challenge lookup ctx value %v, got %v", expectedCtxValue, got)
+				}
 				return &model.Challenge{
 					ID:       id,
 					Category: model.DimensionWeb,
@@ -1963,6 +2126,9 @@ func TestReviewManualReviewSubmissionWithContextPropagatesContextToRepository(t 
 	}
 	if !findRequesterCalled {
 		t.Fatal("expected requester repository to be called")
+	}
+	if !challengeLookupCalled {
+		t.Fatal("expected challenge lookup to be called")
 	}
 	if !updatedCalled {
 		t.Fatal("expected update submission repository to be called")
@@ -2045,6 +2211,66 @@ func TestGetTeacherManualReviewSubmissionWithContextPropagatesContextToRepositor
 	}
 	if !findRequesterCalled {
 		t.Fatal("expected requester repository to be called")
+	}
+}
+
+func TestListMyChallengeSubmissionsWithContextPropagatesContextToRepository(t *testing.T) {
+	t.Parallel()
+
+	ctxKey := practiceServiceContextKey("list-submissions")
+	expectedCtxValue := "ctx-list-submissions"
+	challengeLookupCalled := false
+	listCalled := false
+	service := NewService(
+		&stubPracticeRepository{
+			listChallengeSubmissionsFn: func(userID, challengeID int64, limit int) ([]model.Submission, error) {
+				t.Fatalf("expected context-aware submission listing, got legacy call user=%d challenge=%d limit=%d", userID, challengeID, limit)
+				return nil, nil
+			},
+			listChallengeSubmissionsWithContextFn: func(ctx context.Context, userID, challengeID int64, limit int) ([]model.Submission, error) {
+				listCalled = true
+				if got := ctx.Value(ctxKey); got != expectedCtxValue {
+					t.Fatalf("expected submission listing ctx value %v, got %v", expectedCtxValue, got)
+				}
+				return []model.Submission{{ID: 1, UserID: userID, ChallengeID: challengeID, SubmittedAt: time.Now()}}, nil
+			},
+		},
+		&stubPracticeChallengeContract{
+			findByIDFn: func(id int64) (*model.Challenge, error) {
+				t.Fatalf("expected context-aware challenge lookup, got legacy call for %d", id)
+				return nil, nil
+			},
+			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+				challengeLookupCalled = true
+				if got := ctx.Value(ctxKey); got != expectedCtxValue {
+					t.Fatalf("expected challenge lookup ctx value %v, got %v", expectedCtxValue, got)
+				}
+				return &model.Challenge{ID: id, Status: model.ChallengeStatusPublished}, nil
+			},
+		},
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		&config.Config{},
+		nil,
+	)
+
+	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
+	items, err := service.ListMyChallengeSubmissionsWithContext(ctx, 7, 11)
+	if err != nil {
+		t.Fatalf("ListMyChallengeSubmissionsWithContext() error = %v", err)
+	}
+	if len(items) != 1 {
+		t.Fatalf("expected one submission item, got %+v", items)
+	}
+	if !challengeLookupCalled {
+		t.Fatal("expected challenge lookup to be called")
+	}
+	if !listCalled {
+		t.Fatal("expected submission listing to be called")
 	}
 }
 
