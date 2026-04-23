@@ -70,12 +70,12 @@ func (r *Repository) GetUserTimeline(ctx context.Context, userID int64, limit, o
 			SELECT
 				'instance_destroy' AS type,
 				i.challenge_id,
-				i.updated_at AS timestamp,
+				i.destroyed_at AS timestamp,
 				NULL AS is_correct,
 				NULL AS points,
 				'结束练习实例' AS detail
 			FROM instances i
-			WHERE i.user_id = ? AND i.status IN ('stopped', 'expired')
+			WHERE i.user_id = ? AND i.status IN ('stopped', 'expired') AND i.destroyed_at IS NOT NULL
 		) events
 		LEFT JOIN challenges c ON events.challenge_id = c.id
 		ORDER BY events.timestamp DESC
