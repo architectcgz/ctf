@@ -36,8 +36,8 @@ type challengeCommandService interface {
 }
 
 type challengeQueryService interface {
-	GetChallenge(id int64) (*dto.ChallengeResp, error)
-	ListChallenges(query *dto.ChallengeQuery) (*dto.PageResult, error)
+	GetChallengeWithContext(ctx context.Context, id int64) (*dto.ChallengeResp, error)
+	ListChallengesWithContext(ctx context.Context, query *dto.ChallengeQuery) (*dto.PageResult, error)
 	ListPublishedChallengesWithContext(ctx context.Context, userID int64, query *dto.ChallengeQuery) (*dto.PageResult, error)
 	GetPublishedChallengeWithContext(ctx context.Context, userID, challengeID int64) (*dto.ChallengeDetailResp, error)
 }
@@ -105,7 +105,7 @@ func (h *Handler) GetChallenge(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.queries.GetChallenge(id)
+	resp, err := h.queries.GetChallengeWithContext(c.Request.Context(), id)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -125,7 +125,7 @@ func (h *Handler) ListChallenges(c *gin.Context) {
 		query.CreatedBy = &currentUser.UserID
 	}
 
-	result, err := h.queries.ListChallenges(&query)
+	result, err := h.queries.ListChallengesWithContext(c.Request.Context(), &query)
 	if err != nil {
 		response.FromError(c, err)
 		return

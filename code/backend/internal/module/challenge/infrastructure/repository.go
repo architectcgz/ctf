@@ -153,10 +153,14 @@ func (r *Repository) ListAWDServiceTemplates(ctx context.Context, query *dto.AWD
 }
 
 func (r *Repository) List(query *dto.ChallengeQuery) ([]*model.Challenge, int64, error) {
+	return r.ListWithContext(context.Background(), query)
+}
+
+func (r *Repository) ListWithContext(ctx context.Context, query *dto.ChallengeQuery) ([]*model.Challenge, int64, error) {
 	var challenges []*model.Challenge
 	var total int64
 
-	db := r.db.Model(&model.Challenge{})
+	db := r.dbWithContext(ctx).Model(&model.Challenge{})
 
 	if query.Category != "" {
 		db = db.Where("category = ?", query.Category)
