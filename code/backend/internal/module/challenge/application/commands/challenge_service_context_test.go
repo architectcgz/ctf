@@ -134,7 +134,7 @@ func (s *challengeCommandImageRepoStub) List(ctx context.Context, name, status s
 func (s *challengeCommandImageRepoStub) Update(ctx context.Context, image *model.Image) error {
 	return nil
 }
-func (s *challengeCommandImageRepoStub) DeleteWithContext(ctx context.Context, id int64) error {
+func (s *challengeCommandImageRepoStub) Delete(ctx context.Context, id int64) error {
 	return nil
 }
 

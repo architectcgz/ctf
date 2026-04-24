@@ -66,6 +66,6 @@ func (r *ImageRepository) Update(ctx context.Context, image *model.Image) error 
 	return r.dbWithContext(ctx).Save(image).Error
 }
 
-func (r *ImageRepository) DeleteWithContext(ctx context.Context, id int64) error {
+func (r *ImageRepository) Delete(ctx context.Context, id int64) error {
 	return r.dbWithContext(ctx).Delete(&model.Image{}, id).Error
 }

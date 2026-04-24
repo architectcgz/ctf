@@ -16,7 +16,7 @@ type imageCommandContextRepoStub struct {
 	findByNameTagFn     func(ctx context.Context, name, tag string) (*model.Image, error)
 	listFn              func(ctx context.Context, name, status string, offset, limit int) ([]*model.Image, int64, error)
 	updateFn            func(ctx context.Context, image *model.Image) error
-	deleteWithContextFn func(ctx context.Context, id int64) error
+	deleteFn            func(ctx context.Context, id int64) error
 }
 
 func (s *imageCommandContextRepoStub) Create(ctx context.Context, image *model.Image) error {
@@ -54,9 +54,9 @@ func (s *imageCommandContextRepoStub) Update(ctx context.Context, image *model.I
 	return nil
 }
 
-func (s *imageCommandContextRepoStub) DeleteWithContext(ctx context.Context, id int64) error {
-	if s.deleteWithContextFn != nil {
-		return s.deleteWithContextFn(ctx, id)
+func (s *imageCommandContextRepoStub) Delete(ctx context.Context, id int64) error {
+	if s.deleteFn != nil {
+		return s.deleteFn(ctx, id)
 	}
 	return nil
 }
@@ -127,7 +127,7 @@ func TestImageServiceDeleteImagePropagatesContextToRepository(t *testing.T) {
 			}
 			return &model.Image{ID: id, Name: "ctf/web", Tag: "v1", Status: model.ImageStatusAvailable}, nil
 		},
-		deleteWithContextFn: func(ctx context.Context, id int64) error {
+		deleteFn: func(ctx context.Context, id int64) error {
 			deleteCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected delete-image ctx value %v, got %v", expectedCtxValue, got)

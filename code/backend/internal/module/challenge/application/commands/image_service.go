@@ -127,7 +127,7 @@ func (s *ImageService) DeleteImage(ctx context.Context, id int64) error {
 	if count > 0 {
 		return errcode.ErrImageInUse
 	}
-	if err := s.repo.DeleteWithContext(ctx, id); err != nil {
+	if err := s.repo.Delete(ctx, id); err != nil {
 		return errcode.ErrInternal.WithCause(err)
 	}
 

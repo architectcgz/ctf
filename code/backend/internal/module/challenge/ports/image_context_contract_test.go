@@ -29,7 +29,7 @@ func (ctxOnlyImageRepository) Update(context.Context, *model.Image) error {
 	return nil
 }
 
-func (ctxOnlyImageRepository) DeleteWithContext(context.Context, int64) error {
+func (ctxOnlyImageRepository) Delete(context.Context, int64) error {
 	return nil
 }
 
