@@ -37,7 +37,7 @@ func NewInstanceService(repo runtimeports.InstanceRepository, cleaner runtimepor
 	}
 }
 
-func (s *InstanceService) DestroyInstanceWithContext(ctx context.Context, instanceID, userID int64) error {
+func (s *InstanceService) DestroyInstance(ctx context.Context, instanceID, userID int64) error {
 	ctx = normalizeContext(ctx)
 
 	instance, err := s.repo.FindAccessibleByIDForUser(ctx, instanceID, userID)
@@ -56,7 +56,7 @@ func (s *InstanceService) DestroyInstanceWithContext(ctx context.Context, instan
 	return s.destroyManagedInstanceWithContext(ctx, instance)
 }
 
-func (s *InstanceService) ExtendInstanceWithContext(ctx context.Context, instanceID, userID int64) (*dto.InstanceResp, error) {
+func (s *InstanceService) ExtendInstance(ctx context.Context, instanceID, userID int64) (*dto.InstanceResp, error) {
 	ctx = normalizeContext(ctx)
 
 	instance, err := s.repo.FindAccessibleByIDForUser(ctx, instanceID, userID)

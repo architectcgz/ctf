@@ -10,8 +10,8 @@ import (
 )
 
 type httpInstanceCommandService interface {
-	DestroyInstanceWithContext(ctx context.Context, instanceID, userID int64) error
-	ExtendInstanceWithContext(ctx context.Context, instanceID, userID int64) (*dto.InstanceResp, error)
+	DestroyInstance(ctx context.Context, instanceID, userID int64) error
+	ExtendInstance(ctx context.Context, instanceID, userID int64) (*dto.InstanceResp, error)
 	DestroyTeacherInstance(ctx context.Context, instanceID, requesterID int64, requesterRole string) error
 }
 
@@ -45,12 +45,12 @@ func NewHTTPService(commandService httpInstanceCommandService, queryService http
 	}
 }
 
-func (a *HTTPService) DestroyInstanceWithContext(ctx context.Context, instanceID, userID int64) error {
-	return a.commandService.DestroyInstanceWithContext(ctx, instanceID, userID)
+func (a *HTTPService) DestroyInstance(ctx context.Context, instanceID, userID int64) error {
+	return a.commandService.DestroyInstance(ctx, instanceID, userID)
 }
 
-func (a *HTTPService) ExtendInstanceWithContext(ctx context.Context, instanceID, userID int64) (*dto.InstanceResp, error) {
-	return a.commandService.ExtendInstanceWithContext(ctx, instanceID, userID)
+func (a *HTTPService) ExtendInstance(ctx context.Context, instanceID, userID int64) (*dto.InstanceResp, error) {
+	return a.commandService.ExtendInstance(ctx, instanceID, userID)
 }
 
 func (a *HTTPService) GetAccessURL(ctx context.Context, instanceID, userID int64) (string, error) {

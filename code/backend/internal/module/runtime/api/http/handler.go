@@ -30,8 +30,8 @@ type CookieConfig struct {
 }
 
 type runtimeService interface {
-	DestroyInstanceWithContext(ctx context.Context, instanceID, userID int64) error
-	ExtendInstanceWithContext(ctx context.Context, instanceID, userID int64) (*dto.InstanceResp, error)
+	DestroyInstance(ctx context.Context, instanceID, userID int64) error
+	ExtendInstance(ctx context.Context, instanceID, userID int64) (*dto.InstanceResp, error)
 	GetAccessURL(ctx context.Context, instanceID, userID int64) (string, error)
 	GetUserInstances(ctx context.Context, userID int64) ([]*dto.InstanceInfo, error)
 	ListTeacherInstances(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherInstanceQuery) ([]dto.TeacherInstanceItem, error)
@@ -75,7 +75,7 @@ func (h *Handler) DestroyInstance(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.DestroyInstanceWithContext(c.Request.Context(), instanceID, userID); err != nil {
+	if err := h.service.DestroyInstance(c.Request.Context(), instanceID, userID); err != nil {
 		response.FromError(c, err)
 		return
 	}
@@ -91,7 +91,7 @@ func (h *Handler) ExtendInstance(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.service.ExtendInstanceWithContext(c.Request.Context(), instanceID, userID)
+	resp, err := h.service.ExtendInstance(c.Request.Context(), instanceID, userID)
 	if err != nil {
 		response.FromError(c, err)
 		return

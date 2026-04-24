@@ -287,8 +287,8 @@ func (m *RuntimeModule) BuildHandler(root *Root, ops *OpsModule) {
 }
 
 type runtimeHTTPService interface {
-	DestroyInstanceWithContext(ctx context.Context, instanceID, userID int64) error
-	ExtendInstanceWithContext(ctx context.Context, instanceID, userID int64) (*dto.InstanceResp, error)
+	DestroyInstance(ctx context.Context, instanceID, userID int64) error
+	ExtendInstance(ctx context.Context, instanceID, userID int64) (*dto.InstanceResp, error)
 	GetAccessURL(ctx context.Context, instanceID, userID int64) (string, error)
 	GetUserInstances(ctx context.Context, userID int64) ([]*dto.InstanceInfo, error)
 	ListTeacherInstances(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherInstanceQuery) ([]dto.TeacherInstanceItem, error)
@@ -300,8 +300,8 @@ type runtimeHTTPService interface {
 }
 
 type runtimeHTTPCommandService interface {
-	DestroyInstanceWithContext(ctx context.Context, instanceID, userID int64) error
-	ExtendInstanceWithContext(ctx context.Context, instanceID, userID int64) (*dto.InstanceResp, error)
+	DestroyInstance(ctx context.Context, instanceID, userID int64) error
+	ExtendInstance(ctx context.Context, instanceID, userID int64) (*dto.InstanceResp, error)
 	DestroyTeacherInstance(ctx context.Context, instanceID, requesterID int64, requesterRole string) error
 }
 
@@ -333,18 +333,18 @@ func newRuntimeHTTPServiceAdapter(commandService runtimeHTTPCommandService, quer
 	}
 }
 
-func (a *runtimeHTTPServiceAdapter) DestroyInstanceWithContext(ctx context.Context, instanceID, userID int64) error {
+func (a *runtimeHTTPServiceAdapter) DestroyInstance(ctx context.Context, instanceID, userID int64) error {
 	if a == nil || a.commandService == nil {
 		return errRuntimeHTTPInstanceServiceUnavailable()
 	}
-	return a.commandService.DestroyInstanceWithContext(ctx, instanceID, userID)
+	return a.commandService.DestroyInstance(ctx, instanceID, userID)
 }
 
-func (a *runtimeHTTPServiceAdapter) ExtendInstanceWithContext(ctx context.Context, instanceID, userID int64) (*dto.InstanceResp, error) {
+func (a *runtimeHTTPServiceAdapter) ExtendInstance(ctx context.Context, instanceID, userID int64) (*dto.InstanceResp, error) {
 	if a == nil || a.commandService == nil {
 		return nil, errRuntimeHTTPInstanceServiceUnavailable()
 	}
-	return a.commandService.ExtendInstanceWithContext(ctx, instanceID, userID)
+	return a.commandService.ExtendInstance(ctx, instanceID, userID)
 }
 
 func (a *runtimeHTTPServiceAdapter) GetAccessURL(ctx context.Context, instanceID, userID int64) (string, error) {
