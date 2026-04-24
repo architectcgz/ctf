@@ -165,7 +165,7 @@ func (s *ChallengeService) GetPublishedChallenge(ctx context.Context, userID, ch
 		solvedCount = 0
 	}
 
-	attempts, err := s.repo.GetTotalAttemptsWithContext(ctx, challengeID)
+	attempts, err := s.repo.GetTotalAttempts(ctx, challengeID)
 	if err != nil {
 		s.log.Error("failed to get total attempts", zap.Int64("challenge_id", challengeID), zap.Error(err))
 		attempts = 0
@@ -208,7 +208,7 @@ func (s *ChallengeService) GetPublishedChallenge(ctx context.Context, userID, ch
 
 func (s *ChallengeService) getSolvedCountCached(ctx context.Context, challengeID int64) (int64, error) {
 	if s.redis == nil {
-		return s.repo.GetSolvedCountWithContext(ctx, challengeID)
+		return s.repo.GetSolvedCount(ctx, challengeID)
 	}
 
 	cacheKey := cache.ChallengeSolvedCountKey(challengeID)
@@ -222,7 +222,7 @@ func (s *ChallengeService) getSolvedCountCached(ctx context.Context, challengeID
 		s.log.Error("redis get failed, fallback to db", zap.String("key", cacheKey), zap.Error(err))
 	}
 
-	count, err := s.repo.GetSolvedCountWithContext(ctx, challengeID)
+	count, err := s.repo.GetSolvedCount(ctx, challengeID)
 	if err != nil {
 		return 0, err
 	}
