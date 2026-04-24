@@ -698,15 +698,12 @@ func formatSolveGracePeriod(delay time.Duration) string {
 	return fmt.Sprintf("%d 分钟", minutes)
 }
 
-func (s *Service) ReviewManualReviewSubmissionWithContext(
+func (s *Service) ReviewManualReviewSubmission(
 	ctx context.Context,
 	submissionID, reviewerID int64,
 	reviewerRole string,
 	req *dto.ReviewManualReviewSubmissionReq,
 ) (*dto.TeacherManualReviewSubmissionDetailResp, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
 	if err := ensureManualReviewRequesterRole(reviewerRole); err != nil {
 		return nil, err
 	}
