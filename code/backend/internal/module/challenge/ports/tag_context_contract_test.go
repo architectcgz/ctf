@@ -9,27 +9,27 @@ import (
 
 type ctxOnlyTagRepository struct{}
 
-func (ctxOnlyTagRepository) CreateWithContext(context.Context, *model.Tag) error {
+func (ctxOnlyTagRepository) Create(context.Context, *model.Tag) error {
 	return nil
 }
 
-func (ctxOnlyTagRepository) ListWithContext(context.Context, string) ([]*model.Tag, error) {
+func (ctxOnlyTagRepository) List(context.Context, string) ([]*model.Tag, error) {
 	return nil, nil
 }
 
-func (ctxOnlyTagRepository) FindByIDsWithContext(context.Context, []int64) ([]*model.Tag, error) {
+func (ctxOnlyTagRepository) FindByIDs(context.Context, []int64) ([]*model.Tag, error) {
 	return nil, nil
 }
 
-func (ctxOnlyTagRepository) AttachTagsInTxWithContext(context.Context, int64, []int64) error {
+func (ctxOnlyTagRepository) AttachTagsInTx(context.Context, int64, []int64) error {
 	return nil
 }
 
-func (ctxOnlyTagRepository) DetachFromChallengeWithContext(context.Context, int64, int64) error {
+func (ctxOnlyTagRepository) DetachFromChallenge(context.Context, int64, int64) error {
 	return nil
 }
 
-func (ctxOnlyTagRepository) FindByChallengeIDWithContext(context.Context, int64) ([]*model.Tag, error) {
+func (ctxOnlyTagRepository) FindByChallengeID(context.Context, int64) ([]*model.Tag, error) {
 	return nil, nil
 }
 
@@ -37,7 +37,7 @@ func (ctxOnlyTagRepository) DeleteWithContext(context.Context, int64) error {
 	return nil
 }
 
-func (ctxOnlyTagRepository) CountChallengesByTagIDWithContext(context.Context, int64) (int64, error) {
+func (ctxOnlyTagRepository) CountChallengesByTagID(context.Context, int64) (int64, error) {
 	return 0, nil
 }
 
