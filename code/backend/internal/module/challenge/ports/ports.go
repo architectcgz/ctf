@@ -67,7 +67,6 @@ type AWDServiceTemplateQueryRepository interface {
 }
 
 type ChallengeImageUsageRepository interface {
-	CountByImageID(imageID int64) (int64, error)
 	CountByImageIDWithContext(ctx context.Context, imageID int64) (int64, error)
 }
 

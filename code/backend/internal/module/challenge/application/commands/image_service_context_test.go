@@ -62,22 +62,14 @@ func (s *imageCommandContextRepoStub) DeleteWithContext(ctx context.Context, id 
 }
 
 type imageUsageContextStub struct {
-	countByImageIDFn            func(imageID int64) (int64, error)
 	countByImageIDWithContextFn func(ctx context.Context, imageID int64) (int64, error)
-}
-
-func (s *imageUsageContextStub) CountByImageID(imageID int64) (int64, error) {
-	if s.countByImageIDFn != nil {
-		return s.countByImageIDFn(imageID)
-	}
-	return 0, nil
 }
 
 func (s *imageUsageContextStub) CountByImageIDWithContext(ctx context.Context, imageID int64) (int64, error) {
 	if s.countByImageIDWithContextFn != nil {
 		return s.countByImageIDWithContextFn(ctx, imageID)
 	}
-	return s.CountByImageID(imageID)
+	return 0, nil
 }
 
 type imageCommandContextKey string
