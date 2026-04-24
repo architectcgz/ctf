@@ -53,7 +53,7 @@ func (s *InstanceService) DestroyInstance(ctx context.Context, instanceID, userI
 
 	s.logger.Info("销毁实例", zap.Int64("instance_id", instanceID), zap.Int64("user_id", userID))
 
-	return s.destroyManagedInstanceWithContext(ctx, instance)
+	return s.destroyManagedInstance(ctx, instance)
 }
 
 func (s *InstanceService) ExtendInstance(ctx context.Context, instanceID, userID int64) (*dto.InstanceResp, error) {
@@ -124,10 +124,10 @@ func (s *InstanceService) DestroyTeacherInstance(ctx context.Context, instanceID
 		zap.Int64("requester_id", requesterID),
 		zap.String("requester_role", requesterRole))
 
-	return s.destroyManagedInstanceWithContext(ctx, instance)
+	return s.destroyManagedInstance(ctx, instance)
 }
 
-func (s *InstanceService) destroyManagedInstanceWithContext(ctx context.Context, instance *model.Instance) error {
+func (s *InstanceService) destroyManagedInstance(ctx context.Context, instance *model.Instance) error {
 	if s.cleaner != nil {
 		if err := s.cleaner.CleanupRuntime(ctx, instance); err != nil {
 			return errcode.ErrInternal.WithCause(err)

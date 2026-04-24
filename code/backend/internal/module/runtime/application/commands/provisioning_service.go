@@ -307,14 +307,14 @@ func (s *ProvisioningService) allocatePort() (int, error) {
 
 func (s *ProvisioningService) cleanupTopologyResources(ctx context.Context, containerIDs []string, networkIDs []string) {
 	for idx := len(containerIDs) - 1; idx >= 0; idx-- {
-		_ = s.removeContainerWithContext(ctx, containerIDs[idx])
+		_ = s.removeContainer(ctx, containerIDs[idx])
 	}
 	for idx := len(networkIDs) - 1; idx >= 0; idx-- {
-		_ = s.removeNetworkWithContext(ctx, networkIDs[idx])
+		_ = s.removeNetwork(ctx, networkIDs[idx])
 	}
 }
 
-func (s *ProvisioningService) removeContainerWithContext(ctx context.Context, containerID string) error {
+func (s *ProvisioningService) removeContainer(ctx context.Context, containerID string) error {
 	if containerID == "" {
 		return nil
 	}
@@ -334,7 +334,7 @@ func (s *ProvisioningService) removeContainerWithContext(ctx context.Context, co
 	return nil
 }
 
-func (s *ProvisioningService) removeNetworkWithContext(ctx context.Context, networkID string) error {
+func (s *ProvisioningService) removeNetwork(ctx context.Context, networkID string) error {
 	if networkID == "" {
 		return nil
 	}
