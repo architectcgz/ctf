@@ -36,7 +36,7 @@ func (s *AWDService) prepareCheckerPreviewAccessURL(
 		return "", nil, errcode.ErrInvalidParams.WithCause(errors.New("当前模板无法自动拉起试跑实例，请手动填写目标访问地址"))
 	}
 
-	deploymentMode, runtimeConfig, err := s.loadPreviewRuntimeDefinition(previewService, previewChallengeID)
+	deploymentMode, runtimeConfig, err := s.loadPreviewRuntimeDefinition(ctx, previewService, previewChallengeID)
 	if err != nil {
 		return "", nil, err
 	}
@@ -62,6 +62,7 @@ func (s *AWDService) prepareCheckerPreviewAccessURL(
 }
 
 func (s *AWDService) loadPreviewRuntimeDefinition(
+	ctx context.Context,
 	previewService *model.ContestAWDService,
 	previewChallengeID int64,
 ) (model.AWDDeploymentMode, map[string]any, error) {
@@ -78,7 +79,7 @@ func (s *AWDService) loadPreviewRuntimeDefinition(
 		return "", nil, errcode.ErrInvalidParams.WithCause(errors.New("当前模板缺少可用的运行配置，请手动填写目标访问地址"))
 	}
 
-	template, err := s.templateRepo.FindAWDServiceTemplateByID(previewChallengeID)
+	template, err := s.templateRepo.FindAWDServiceTemplateByIDWithContext(ctx, previewChallengeID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return "", nil, errcode.ErrNotFound

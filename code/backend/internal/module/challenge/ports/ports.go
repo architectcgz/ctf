@@ -60,9 +60,7 @@ type AWDServiceTemplateCommandRepository interface {
 }
 
 type AWDServiceTemplateQueryRepository interface {
-	FindAWDServiceTemplateByID(id int64) (*model.AWDServiceTemplate, error)
 	FindAWDServiceTemplateByIDWithContext(ctx context.Context, id int64) (*model.AWDServiceTemplate, error)
-	ListAWDServiceTemplates(query *dto.AWDServiceTemplateQuery) ([]*model.AWDServiceTemplate, int64, error)
 	ListAWDServiceTemplatesWithContext(ctx context.Context, query *dto.AWDServiceTemplateQuery) ([]*model.AWDServiceTemplate, int64, error)
 }
 
