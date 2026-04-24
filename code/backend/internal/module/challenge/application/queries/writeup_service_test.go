@@ -141,7 +141,7 @@ func (s *stubChallengeWriteupRepository) ListCommunitySolutionsByChallengeIDWith
 
 type challengeWriteupContextKey string
 
-func TestWriteupServiceGetAdminWithContextPropagatesContextToRepository(t *testing.T) {
+func TestWriteupServiceGetAdminPropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := challengeWriteupContextKey("writeup-admin")
@@ -167,9 +167,9 @@ func TestWriteupServiceGetAdminWithContextPropagatesContextToRepository(t *testi
 	service := NewWriteupService(repo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.GetAdminWithContext(ctx, 11)
+	resp, err := service.GetAdmin(ctx, 11)
 	if err != nil {
-		t.Fatalf("GetAdminWithContext() error = %v", err)
+		t.Fatalf("GetAdmin() error = %v", err)
 	}
 	if !findChallengeCalled || !findWriteupCalled {
 		t.Fatalf("expected repository calls, got challenge=%v writeup=%v", findChallengeCalled, findWriteupCalled)
@@ -179,7 +179,7 @@ func TestWriteupServiceGetAdminWithContextPropagatesContextToRepository(t *testi
 	}
 }
 
-func TestWriteupServiceGetMySubmissionWithContextPropagatesContextToRepository(t *testing.T) {
+func TestWriteupServiceGetMySubmissionPropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := challengeWriteupContextKey("writeup-my-submission")
@@ -205,9 +205,9 @@ func TestWriteupServiceGetMySubmissionWithContextPropagatesContextToRepository(t
 	service := NewWriteupService(repo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.GetMySubmissionWithContext(ctx, 7, 11)
+	resp, err := service.GetMySubmission(ctx, 7, 11)
 	if err != nil {
-		t.Fatalf("GetMySubmissionWithContext() error = %v", err)
+		t.Fatalf("GetMySubmission() error = %v", err)
 	}
 	if !findChallengeCalled || !findSubmissionCalled {
 		t.Fatalf("expected repository calls, got challenge=%v submission=%v", findChallengeCalled, findSubmissionCalled)
@@ -217,7 +217,7 @@ func TestWriteupServiceGetMySubmissionWithContextPropagatesContextToRepository(t
 	}
 }
 
-func TestWriteupServiceGetPublishedWithContextPropagatesContextToRepository(t *testing.T) {
+func TestWriteupServiceGetPublishedPropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := challengeWriteupContextKey("writeup-published")
@@ -254,9 +254,9 @@ func TestWriteupServiceGetPublishedWithContextPropagatesContextToRepository(t *t
 	service := NewWriteupService(repo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.GetPublishedWithContext(ctx, 7, 11)
+	resp, err := service.GetPublished(ctx, 7, 11)
 	if err != nil {
-		t.Fatalf("GetPublishedWithContext() error = %v", err)
+		t.Fatalf("GetPublished() error = %v", err)
 	}
 	if !findChallengeCalled || !findReleasedCalled || !getSolvedCalled {
 		t.Fatalf("expected repository calls, got challenge=%v released=%v solved=%v", findChallengeCalled, findReleasedCalled, getSolvedCalled)
@@ -266,7 +266,7 @@ func TestWriteupServiceGetPublishedWithContextPropagatesContextToRepository(t *t
 	}
 }
 
-func TestWriteupServiceListTeacherSubmissionsWithContextPropagatesContextToRepository(t *testing.T) {
+func TestWriteupServiceListTeacherSubmissionsPropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := challengeWriteupContextKey("writeup-list-teacher-submissions")
@@ -293,15 +293,15 @@ func TestWriteupServiceListTeacherSubmissionsWithContextPropagatesContextToRepos
 	service := NewWriteupService(repo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	if _, err := service.ListTeacherSubmissionsWithContext(ctx, 1001, model.RoleTeacher, &dto.TeacherSubmissionWriteupQuery{}); err != nil {
-		t.Fatalf("ListTeacherSubmissionsWithContext() error = %v", err)
+	if _, err := service.ListTeacherSubmissions(ctx, 1001, model.RoleTeacher, &dto.TeacherSubmissionWriteupQuery{}); err != nil {
+		t.Fatalf("ListTeacherSubmissions() error = %v", err)
 	}
 	if !listCalled {
 		t.Fatal("expected list teacher submissions repository to be called")
 	}
 }
 
-func TestWriteupServiceGetTeacherSubmissionWithContextPropagatesContextToRepository(t *testing.T) {
+func TestWriteupServiceGetTeacherSubmissionPropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := challengeWriteupContextKey("writeup-get-teacher-submission")
@@ -334,8 +334,8 @@ func TestWriteupServiceGetTeacherSubmissionWithContextPropagatesContextToReposit
 	service := NewWriteupService(repo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	if _, err := service.GetTeacherSubmissionWithContext(ctx, 91, 1001, model.RoleTeacher); err != nil {
-		t.Fatalf("GetTeacherSubmissionWithContext() error = %v", err)
+	if _, err := service.GetTeacherSubmission(ctx, 91, 1001, model.RoleTeacher); err != nil {
+		t.Fatalf("GetTeacherSubmission() error = %v", err)
 	}
 	if !getCalled {
 		t.Fatal("expected get teacher submission repository to be called")
@@ -345,7 +345,7 @@ func TestWriteupServiceGetTeacherSubmissionWithContextPropagatesContextToReposit
 	}
 }
 
-func TestWriteupServiceListRecommendedSolutionsWithContextPropagatesContextToRepository(t *testing.T) {
+func TestWriteupServiceListRecommendedSolutionsPropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := challengeWriteupContextKey("writeup-list-recommended")
@@ -379,9 +379,9 @@ func TestWriteupServiceListRecommendedSolutionsWithContextPropagatesContextToRep
 	service := NewWriteupService(repo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.ListRecommendedSolutionsWithContext(ctx, 7, 11)
+	resp, err := service.ListRecommendedSolutions(ctx, 7, 11)
 	if err != nil {
-		t.Fatalf("ListRecommendedSolutionsWithContext() error = %v", err)
+		t.Fatalf("ListRecommendedSolutions() error = %v", err)
 	}
 	if !findChallengeCalled || !getSolvedCalled || !listRecommendedCalled {
 		t.Fatalf("expected repository calls, got challenge=%v solved=%v recommended=%v", findChallengeCalled, getSolvedCalled, listRecommendedCalled)
@@ -391,7 +391,7 @@ func TestWriteupServiceListRecommendedSolutionsWithContextPropagatesContextToRep
 	}
 }
 
-func TestWriteupServiceListCommunitySolutionsWithContextPropagatesContextToRepository(t *testing.T) {
+func TestWriteupServiceListCommunitySolutionsPropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := challengeWriteupContextKey("writeup-list-community")
@@ -428,9 +428,9 @@ func TestWriteupServiceListCommunitySolutionsWithContextPropagatesContextToRepos
 	service := NewWriteupService(repo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.ListCommunitySolutionsWithContext(ctx, 7, 11, &dto.CommunityChallengeSolutionQuery{})
+	resp, err := service.ListCommunitySolutions(ctx, 7, 11, &dto.CommunityChallengeSolutionQuery{})
 	if err != nil {
-		t.Fatalf("ListCommunitySolutionsWithContext() error = %v", err)
+		t.Fatalf("ListCommunitySolutions() error = %v", err)
 	}
 	if !findChallengeCalled || !getSolvedCalled || !listCommunityCalled {
 		t.Fatalf("expected repository calls, got challenge=%v solved=%v community=%v", findChallengeCalled, getSolvedCalled, listCommunityCalled)

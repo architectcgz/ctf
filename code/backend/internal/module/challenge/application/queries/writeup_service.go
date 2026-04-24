@@ -22,11 +22,7 @@ func NewWriteupService(repo challengeports.ChallengeWriteupRepository) *WriteupS
 	return &WriteupService{repo: repo}
 }
 
-func (s *WriteupService) GetAdmin(challengeID int64) (*dto.AdminChallengeWriteupResp, error) {
-	return s.GetAdminWithContext(context.Background(), challengeID)
-}
-
-func (s *WriteupService) GetAdminWithContext(ctx context.Context, challengeID int64) (*dto.AdminChallengeWriteupResp, error) {
+func (s *WriteupService) GetAdmin(ctx context.Context, challengeID int64) (*dto.AdminChallengeWriteupResp, error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -46,11 +42,7 @@ func (s *WriteupService) GetAdminWithContext(ctx context.Context, challengeID in
 	return domain.AdminWriteupRespFromModel(item), nil
 }
 
-func (s *WriteupService) GetPublished(userID, challengeID int64) (*dto.ChallengeWriteupResp, error) {
-	return s.GetPublishedWithContext(context.Background(), userID, challengeID)
-}
-
-func (s *WriteupService) GetPublishedWithContext(ctx context.Context, userID, challengeID int64) (*dto.ChallengeWriteupResp, error) {
+func (s *WriteupService) GetPublished(ctx context.Context, userID, challengeID int64) (*dto.ChallengeWriteupResp, error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -93,11 +85,7 @@ func (s *WriteupService) GetPublishedWithContext(ctx context.Context, userID, ch
 	}, nil
 }
 
-func (s *WriteupService) GetMySubmission(userID, challengeID int64) (*dto.SubmissionWriteupResp, error) {
-	return s.GetMySubmissionWithContext(context.Background(), userID, challengeID)
-}
-
-func (s *WriteupService) GetMySubmissionWithContext(ctx context.Context, userID, challengeID int64) (*dto.SubmissionWriteupResp, error) {
+func (s *WriteupService) GetMySubmission(ctx context.Context, userID, challengeID int64) (*dto.SubmissionWriteupResp, error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -121,15 +109,11 @@ func (s *WriteupService) GetMySubmissionWithContext(ctx context.Context, userID,
 	return domain.SubmissionWriteupRespFromModel(item), nil
 }
 
-func (s *WriteupService) ListRecommendedSolutions(userID, challengeID int64) (*dto.PageResult, error) {
-	return s.ListRecommendedSolutionsWithContext(context.Background(), userID, challengeID)
-}
-
-func (s *WriteupService) ListRecommendedSolutionsWithContext(ctx context.Context, userID, challengeID int64) (*dto.PageResult, error) {
+func (s *WriteupService) ListRecommendedSolutions(ctx context.Context, userID, challengeID int64) (*dto.PageResult, error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	if err := s.ensureSolvedChallengeVisibleWithContext(ctx, userID, challengeID); err != nil {
+	if err := s.ensureSolvedChallengeVisible(ctx, userID, challengeID); err != nil {
 		return nil, err
 	}
 
@@ -149,15 +133,11 @@ func (s *WriteupService) ListRecommendedSolutionsWithContext(ctx context.Context
 	}, nil
 }
 
-func (s *WriteupService) ListCommunitySolutions(userID, challengeID int64, query *dto.CommunityChallengeSolutionQuery) (*dto.PageResult, error) {
-	return s.ListCommunitySolutionsWithContext(context.Background(), userID, challengeID, query)
-}
-
-func (s *WriteupService) ListCommunitySolutionsWithContext(ctx context.Context, userID, challengeID int64, query *dto.CommunityChallengeSolutionQuery) (*dto.PageResult, error) {
+func (s *WriteupService) ListCommunitySolutions(ctx context.Context, userID, challengeID int64, query *dto.CommunityChallengeSolutionQuery) (*dto.PageResult, error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	if err := s.ensureSolvedChallengeVisibleWithContext(ctx, userID, challengeID); err != nil {
+	if err := s.ensureSolvedChallengeVisible(ctx, userID, challengeID); err != nil {
 		return nil, err
 	}
 
@@ -193,18 +173,14 @@ func (s *WriteupService) ListCommunitySolutionsWithContext(ctx context.Context, 
 	}, nil
 }
 
-func (s *WriteupService) ListTeacherSubmissions(requesterID int64, requesterRole string, query *dto.TeacherSubmissionWriteupQuery) (*dto.PageResult, error) {
-	return s.ListTeacherSubmissionsWithContext(context.Background(), requesterID, requesterRole, query)
-}
-
-func (s *WriteupService) ListTeacherSubmissionsWithContext(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherSubmissionWriteupQuery) (*dto.PageResult, error) {
+func (s *WriteupService) ListTeacherSubmissions(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherSubmissionWriteupQuery) (*dto.PageResult, error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
 	if query == nil {
 		query = &dto.TeacherSubmissionWriteupQuery{}
 	}
-	normalized, err := normalizeTeacherSubmissionQueryWithContext(ctx, s.repo, requesterID, requesterRole, query)
+	normalized, err := normalizeTeacherSubmissionQuery(ctx, s.repo, requesterID, requesterRole, query)
 	if err != nil {
 		return nil, err
 	}
@@ -227,11 +203,7 @@ func (s *WriteupService) ListTeacherSubmissionsWithContext(ctx context.Context, 
 	}, nil
 }
 
-func (s *WriteupService) GetTeacherSubmission(submissionID, requesterID int64, requesterRole string) (*dto.TeacherSubmissionWriteupDetailResp, error) {
-	return s.GetTeacherSubmissionWithContext(context.Background(), submissionID, requesterID, requesterRole)
-}
-
-func (s *WriteupService) GetTeacherSubmissionWithContext(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*dto.TeacherSubmissionWriteupDetailResp, error) {
+func (s *WriteupService) GetTeacherSubmission(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*dto.TeacherSubmissionWriteupDetailResp, error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -242,22 +214,13 @@ func (s *WriteupService) GetTeacherSubmissionWithContext(ctx context.Context, su
 		}
 		return nil, err
 	}
-	if err := ensureTeacherCanAccessQueryRecordWithContext(ctx, s.repo, requesterID, requesterRole, record); err != nil {
+	if err := ensureTeacherCanAccessQueryRecord(ctx, s.repo, requesterID, requesterRole, record); err != nil {
 		return nil, err
 	}
 	return domain.TeacherSubmissionWriteupDetailRespFromRecord(*record), nil
 }
 
 func normalizeTeacherSubmissionQuery(
-	repo challengeports.ChallengeWriteupRepository,
-	requesterID int64,
-	requesterRole string,
-	query *dto.TeacherSubmissionWriteupQuery,
-) (*dto.TeacherSubmissionWriteupQuery, error) {
-	return normalizeTeacherSubmissionQueryWithContext(context.Background(), repo, requesterID, requesterRole, query)
-}
-
-func normalizeTeacherSubmissionQueryWithContext(
 	ctx context.Context,
 	repo challengeports.ChallengeWriteupRepository,
 	requesterID int64,
@@ -293,15 +256,6 @@ func normalizeTeacherSubmissionQueryWithContext(
 }
 
 func ensureTeacherCanAccessQueryRecord(
-	repo challengeports.ChallengeWriteupRepository,
-	requesterID int64,
-	requesterRole string,
-	record *challengeports.TeacherSubmissionWriteupRecord,
-) error {
-	return ensureTeacherCanAccessQueryRecordWithContext(context.Background(), repo, requesterID, requesterRole, record)
-}
-
-func ensureTeacherCanAccessQueryRecordWithContext(
 	ctx context.Context,
 	repo challengeports.ChallengeWriteupRepository,
 	requesterID int64,
@@ -324,11 +278,7 @@ func ensureTeacherCanAccessQueryRecordWithContext(
 	return nil
 }
 
-func (s *WriteupService) ensureSolvedChallengeVisible(userID, challengeID int64) error {
-	return s.ensureSolvedChallengeVisibleWithContext(context.Background(), userID, challengeID)
-}
-
-func (s *WriteupService) ensureSolvedChallengeVisibleWithContext(ctx context.Context, userID, challengeID int64) error {
+func (s *WriteupService) ensureSolvedChallengeVisible(ctx context.Context, userID, challengeID int64) error {
 	if ctx == nil {
 		ctx = context.Background()
 	}
