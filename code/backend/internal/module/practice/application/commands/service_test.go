@@ -2303,7 +2303,7 @@ func TestReviewManualReviewSubmissionWithContextPropagatesContextToRepository(t 
 	}
 }
 
-func TestListTeacherManualReviewSubmissionsWithContextPropagatesContextToRepository(t *testing.T) {
+func TestListTeacherManualReviewSubmissionsPropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := practiceServiceContextKey("list-review")
@@ -2330,15 +2330,15 @@ func TestListTeacherManualReviewSubmissionsWithContextPropagatesContextToReposit
 	service := NewService(repo, nil, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	if _, err := service.ListTeacherManualReviewSubmissionsWithContext(ctx, 1001, model.RoleTeacher, &dto.TeacherManualReviewSubmissionQuery{}); err != nil {
-		t.Fatalf("ListTeacherManualReviewSubmissionsWithContext() error = %v", err)
+	if _, err := service.ListTeacherManualReviewSubmissions(ctx, 1001, model.RoleTeacher, &dto.TeacherManualReviewSubmissionQuery{}); err != nil {
+		t.Fatalf("ListTeacherManualReviewSubmissions() error = %v", err)
 	}
 	if !listCalled {
 		t.Fatal("expected list manual review repository to be called")
 	}
 }
 
-func TestListTeacherManualReviewSubmissionsWithContextRejectsStudentRole(t *testing.T) {
+func TestListTeacherManualReviewSubmissionsRejectsStudentRole(t *testing.T) {
 	t.Parallel()
 
 	repo := &stubPracticeRepository{
@@ -2353,7 +2353,7 @@ func TestListTeacherManualReviewSubmissionsWithContextRejectsStudentRole(t *test
 	}
 	service := NewService(repo, nil, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
 
-	_, err := service.ListTeacherManualReviewSubmissionsWithContext(context.Background(), 1001, model.RoleStudent, &dto.TeacherManualReviewSubmissionQuery{})
+	_, err := service.ListTeacherManualReviewSubmissions(context.Background(), 1001, model.RoleStudent, &dto.TeacherManualReviewSubmissionQuery{})
 	if err == nil {
 		t.Fatal("expected student role to be rejected")
 	}
@@ -2363,7 +2363,7 @@ func TestListTeacherManualReviewSubmissionsWithContextRejectsStudentRole(t *test
 	}
 }
 
-func TestListTeacherManualReviewSubmissionsWithContextRejectsInvalidReviewStatus(t *testing.T) {
+func TestListTeacherManualReviewSubmissionsRejectsInvalidReviewStatus(t *testing.T) {
 	t.Parallel()
 
 	repo := &stubPracticeRepository{
@@ -2378,7 +2378,7 @@ func TestListTeacherManualReviewSubmissionsWithContextRejectsInvalidReviewStatus
 	}
 	service := NewService(repo, nil, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
 
-	_, err := service.ListTeacherManualReviewSubmissionsWithContext(
+	_, err := service.ListTeacherManualReviewSubmissions(
 		context.Background(),
 		1001,
 		model.RoleTeacher,
@@ -2393,7 +2393,7 @@ func TestListTeacherManualReviewSubmissionsWithContextRejectsInvalidReviewStatus
 	}
 }
 
-func TestListTeacherManualReviewSubmissionsWithContextRejectsOversizedPageSize(t *testing.T) {
+func TestListTeacherManualReviewSubmissionsRejectsOversizedPageSize(t *testing.T) {
 	t.Parallel()
 
 	repo := &stubPracticeRepository{
@@ -2408,7 +2408,7 @@ func TestListTeacherManualReviewSubmissionsWithContextRejectsOversizedPageSize(t
 	}
 	service := NewService(repo, nil, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
 
-	_, err := service.ListTeacherManualReviewSubmissionsWithContext(
+	_, err := service.ListTeacherManualReviewSubmissions(
 		context.Background(),
 		1001,
 		model.RoleTeacher,
@@ -2423,7 +2423,7 @@ func TestListTeacherManualReviewSubmissionsWithContextRejectsOversizedPageSize(t
 	}
 }
 
-func TestListTeacherManualReviewSubmissionsWithContextRejectsNonPositiveStudentID(t *testing.T) {
+func TestListTeacherManualReviewSubmissionsRejectsNonPositiveStudentID(t *testing.T) {
 	t.Parallel()
 
 	repo := &stubPracticeRepository{
@@ -2439,7 +2439,7 @@ func TestListTeacherManualReviewSubmissionsWithContextRejectsNonPositiveStudentI
 	service := NewService(repo, nil, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
 	studentID := int64(0)
 
-	_, err := service.ListTeacherManualReviewSubmissionsWithContext(
+	_, err := service.ListTeacherManualReviewSubmissions(
 		context.Background(),
 		1001,
 		model.RoleTeacher,
@@ -2454,7 +2454,7 @@ func TestListTeacherManualReviewSubmissionsWithContextRejectsNonPositiveStudentI
 	}
 }
 
-func TestListTeacherManualReviewSubmissionsWithContextRejectsNonPositiveChallengeID(t *testing.T) {
+func TestListTeacherManualReviewSubmissionsRejectsNonPositiveChallengeID(t *testing.T) {
 	t.Parallel()
 
 	repo := &stubPracticeRepository{
@@ -2470,7 +2470,7 @@ func TestListTeacherManualReviewSubmissionsWithContextRejectsNonPositiveChalleng
 	service := NewService(repo, nil, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
 	challengeID := int64(0)
 
-	_, err := service.ListTeacherManualReviewSubmissionsWithContext(
+	_, err := service.ListTeacherManualReviewSubmissions(
 		context.Background(),
 		1001,
 		model.RoleTeacher,
@@ -2485,7 +2485,7 @@ func TestListTeacherManualReviewSubmissionsWithContextRejectsNonPositiveChalleng
 	}
 }
 
-func TestListTeacherManualReviewSubmissionsWithContextRejectsOversizedClassName(t *testing.T) {
+func TestListTeacherManualReviewSubmissionsRejectsOversizedClassName(t *testing.T) {
 	t.Parallel()
 
 	repo := &stubPracticeRepository{
@@ -2500,7 +2500,7 @@ func TestListTeacherManualReviewSubmissionsWithContextRejectsOversizedClassName(
 	}
 	service := NewService(repo, nil, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
 
-	_, err := service.ListTeacherManualReviewSubmissionsWithContext(
+	_, err := service.ListTeacherManualReviewSubmissions(
 		context.Background(),
 		1001,
 		model.RoleAdmin,
