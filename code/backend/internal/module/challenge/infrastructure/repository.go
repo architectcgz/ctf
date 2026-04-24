@@ -408,7 +408,7 @@ func (r *Repository) BatchGetTotalAttempts(ctx context.Context, challengeIDs []i
 	return countMap, err
 }
 
-func (r *Repository) FindPublishedForRecommendationWithContext(ctx context.Context, limit int, dimensions []string, excludeSolved []int64) ([]*model.Challenge, error) {
+func (r *Repository) FindPublishedForRecommendation(ctx context.Context, limit int, dimensions []string, excludeSolved []int64) ([]*model.Challenge, error) {
 	if len(dimensions) == 0 || limit <= 0 {
 		return []*model.Challenge{}, nil
 	}

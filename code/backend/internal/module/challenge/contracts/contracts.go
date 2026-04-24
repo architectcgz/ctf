@@ -28,5 +28,5 @@ type PracticeChallengeContract interface {
 type ChallengeContract interface {
 	ContestChallengeContract
 	PracticeChallengeContract
-	FindPublishedForRecommendationWithContext(ctx context.Context, limit int, dimensions []string, excludeSolved []int64) ([]*model.Challenge, error)
+	FindPublishedForRecommendation(ctx context.Context, limit int, dimensions []string, excludeSolved []int64) ([]*model.Challenge, error)
 }
