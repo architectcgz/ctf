@@ -148,10 +148,6 @@ func (r teacherSubmissionWriteupRow) toRecord() challengeports.TeacherSubmission
 	}
 }
 
-func (r *Repository) GetTeacherSubmissionWriteupByID(id int64) (*challengeports.TeacherSubmissionWriteupRecord, error) {
-	return r.GetTeacherSubmissionWriteupByIDWithContext(context.Background(), id)
-}
-
 func (r *Repository) GetTeacherSubmissionWriteupByIDWithContext(ctx context.Context, id int64) (*challengeports.TeacherSubmissionWriteupRecord, error) {
 	rows, _, err := r.listTeacherSubmissionWriteups(ctx, &dto.TeacherSubmissionWriteupQuery{
 		Page: 1,
@@ -167,10 +163,6 @@ func (r *Repository) GetTeacherSubmissionWriteupByIDWithContext(ctx context.Cont
 	}
 	record := rows[0]
 	return &record, nil
-}
-
-func (r *Repository) ListTeacherSubmissionWriteups(query *dto.TeacherSubmissionWriteupQuery) ([]challengeports.TeacherSubmissionWriteupRecord, int64, error) {
-	return r.ListTeacherSubmissionWriteupsWithContext(context.Background(), query)
 }
 
 func (r *Repository) ListTeacherSubmissionWriteupsWithContext(ctx context.Context, query *dto.TeacherSubmissionWriteupQuery) ([]challengeports.TeacherSubmissionWriteupRecord, int64, error) {
@@ -201,10 +193,6 @@ func (r recommendedSolutionRow) toRecord() challengeports.RecommendedSolutionRec
 		RecommendedAt: r.RecommendedAt,
 		UpdatedAt:     r.UpdatedAt,
 	}
-}
-
-func (r *Repository) ListRecommendedSolutionsByChallengeID(challengeID int64, now time.Time) ([]challengeports.RecommendedSolutionRecord, error) {
-	return r.ListRecommendedSolutionsByChallengeIDWithContext(context.Background(), challengeID, now)
 }
 
 func (r *Repository) ListRecommendedSolutionsByChallengeIDWithContext(ctx context.Context, challengeID int64, now time.Time) ([]challengeports.RecommendedSolutionRecord, error) {
@@ -318,10 +306,6 @@ func (r communitySolutionRow) toRecord() challengeports.CommunitySolutionRecord 
 		ChallengeID:    r.ChallengeID,
 		ChallengeTitle: r.ChallengeTitle,
 	}
-}
-
-func (r *Repository) ListCommunitySolutionsByChallengeID(challengeID int64, query *dto.CommunityChallengeSolutionQuery) ([]challengeports.CommunitySolutionRecord, int64, error) {
-	return r.ListCommunitySolutionsByChallengeIDWithContext(context.Background(), challengeID, query)
 }
 
 func (r *Repository) ListCommunitySolutionsByChallengeIDWithContext(ctx context.Context, challengeID int64, query *dto.CommunityChallengeSolutionQuery) ([]challengeports.CommunitySolutionRecord, int64, error) {
