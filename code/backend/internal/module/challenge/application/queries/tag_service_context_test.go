@@ -43,7 +43,7 @@ func (s *tagQueryContextStub) CountChallengesByTagIDWithContext(ctx context.Cont
 
 type tagQueryContextKey string
 
-func TestTagServiceListTagsWithContextPropagatesContextToRepository(t *testing.T) {
+func TestTagServiceListTagsPropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := tagQueryContextKey("tag-list")
@@ -64,9 +64,9 @@ func TestTagServiceListTagsWithContextPropagatesContextToRepository(t *testing.T
 	service := NewTagService(repo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.ListTagsWithContext(ctx, model.TagTypeVulnerability)
+	resp, err := service.ListTags(ctx, model.TagTypeVulnerability)
 	if err != nil {
-		t.Fatalf("ListTagsWithContext() error = %v", err)
+		t.Fatalf("ListTags() error = %v", err)
 	}
 	if !listCalled {
 		t.Fatal("expected list repository to be called")
@@ -76,7 +76,7 @@ func TestTagServiceListTagsWithContextPropagatesContextToRepository(t *testing.T
 	}
 }
 
-func TestTagServiceGetChallengeTagIDsWithContextPropagatesContextToRepository(t *testing.T) {
+func TestTagServiceGetChallengeTagIDsPropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := tagQueryContextKey("tag-ids")
@@ -94,9 +94,9 @@ func TestTagServiceGetChallengeTagIDsWithContextPropagatesContextToRepository(t 
 	service := NewTagService(repo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.GetChallengeTagIDsWithContext(ctx, 99)
+	resp, err := service.GetChallengeTagIDs(ctx, 99)
 	if err != nil {
-		t.Fatalf("GetChallengeTagIDsWithContext() error = %v", err)
+		t.Fatalf("GetChallengeTagIDs() error = %v", err)
 	}
 	if !findCalled {
 		t.Fatal("expected find-by-challenge repository to be called")

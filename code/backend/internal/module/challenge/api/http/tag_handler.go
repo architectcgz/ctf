@@ -25,7 +25,7 @@ type tagCommandService interface {
 }
 
 type tagQueryService interface {
-	ListTagsWithContext(ctx context.Context, tagType string) ([]*dto.TagResp, error)
+	ListTags(ctx context.Context, tagType string) ([]*dto.TagResp, error)
 }
 
 func NewTagHandler(commands tagCommandService, queries tagQueryService) *TagHandler {
@@ -55,7 +55,7 @@ func (h *TagHandler) ListTags(c *gin.Context) {
 		return
 	}
 
-	result, err := h.queries.ListTagsWithContext(c.Request.Context(), query.Type)
+	result, err := h.queries.ListTags(c.Request.Context(), query.Type)
 	if err != nil {
 		response.FromError(c, err)
 		return
