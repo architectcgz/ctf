@@ -31,10 +31,6 @@ type stubChallengeRecommendationRepo struct {
 	lastSolved []int64
 }
 
-func (s *stubChallengeRecommendationRepo) FindPublishedForRecommendation(limit int, dimensions []string, excludeSolved []int64) ([]*model.Challenge, error) {
-	return s.FindPublishedForRecommendationWithContext(context.Background(), limit, dimensions, excludeSolved)
-}
-
 func (s *stubChallengeRecommendationRepo) FindPublishedForRecommendationWithContext(_ context.Context, limit int, dimensions []string, excludeSolved []int64) ([]*model.Challenge, error) {
 	s.calls++
 	s.lastLimit = limit
