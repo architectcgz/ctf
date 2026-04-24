@@ -54,7 +54,7 @@ func TestServiceCreateChallengeSuccess(t *testing.T) {
 	imageRepo := challengeinfra.NewImageRepository(db)
 	service := newTestService(repo, imageRepo)
 
-	resp, err := service.CreateChallenge(1001, &dto.CreateChallengeReq{
+	resp, err := service.CreateChallenge(context.Background(), 1001, &dto.CreateChallengeReq{
 		Title:           "Test Challenge",
 		Description:     "Test",
 		Category:        "web",
@@ -85,7 +85,7 @@ func TestServiceCreateChallengeImageNotFound(t *testing.T) {
 	imageRepo := challengeinfra.NewImageRepository(db)
 	service := newTestService(repo, imageRepo)
 
-	_, err := service.CreateChallenge(1001, &dto.CreateChallengeReq{
+	_, err := service.CreateChallenge(context.Background(), 1001, &dto.CreateChallengeReq{
 		ImageID: 999,
 	})
 	if err == nil || err.Error() != errcode.ErrNotFound.Error() {
@@ -100,7 +100,7 @@ func TestServiceCreateChallengeWithoutImageSuccess(t *testing.T) {
 	imageRepo := challengeinfra.NewImageRepository(db)
 	service := newTestService(repo, imageRepo)
 
-	resp, err := service.CreateChallenge(1001, &dto.CreateChallengeReq{
+	resp, err := service.CreateChallenge(context.Background(), 1001, &dto.CreateChallengeReq{
 		Title:       "No Target Challenge",
 		Description: "No target required",
 		Category:    "misc",
@@ -144,7 +144,7 @@ func TestServiceUpdateChallengeRejectsSharedDynamicFlagCombination(t *testing.T)
 	imageRepo := challengeinfra.NewImageRepository(db)
 	service := newTestService(repo, imageRepo)
 
-	err = service.UpdateChallenge(challenge.ID, &dto.UpdateChallengeReq{
+	err = service.UpdateChallenge(context.Background(), challenge.ID, &dto.UpdateChallengeReq{
 		InstanceSharing: model.InstanceSharingShared,
 	})
 	if err == nil || err.Error() != errcode.ErrInvalidParams.Error() {
@@ -189,7 +189,7 @@ func TestServiceUpdateChallengeRejectsSharedInjectFlagTopologyCombination(t *tes
 	imageRepo := challengeinfra.NewImageRepository(db)
 	service := NewChallengeService(nil, repo, imageRepo, repo, nil, SelfCheckConfig{}, zap.NewNop())
 
-	err = service.UpdateChallenge(challenge.ID, &dto.UpdateChallengeReq{
+	err = service.UpdateChallenge(context.Background(), challenge.ID, &dto.UpdateChallengeReq{
 		InstanceSharing: model.InstanceSharingShared,
 	})
 	if err == nil || err.Error() != errcode.ErrInvalidParams.Error() {
@@ -208,7 +208,7 @@ func TestServiceDeleteChallengeWithRunningInstances(t *testing.T) {
 	repo := challengeinfra.NewRepository(db)
 	service := newTestService(repo, nil)
 
-	err := service.DeleteChallenge(challenge.ID)
+	err := service.DeleteChallenge(context.Background(), challenge.ID)
 	if err == nil {
 		t.Fatal("expected running instances error, got nil")
 	}
@@ -230,7 +230,7 @@ func TestServicePublishChallengeNoImage(t *testing.T) {
 	repo := challengeinfra.NewRepository(db)
 	service := newTestService(repo, nil)
 
-	err := service.PublishChallenge(challenge.ID)
+	err := service.PublishChallenge(context.Background(), challenge.ID)
 	if err != nil {
 		t.Fatalf("PublishChallenge() error = %v", err)
 	}
@@ -289,9 +289,9 @@ func TestServiceDispatchPublishCheckJobsPublishesChallengeAndNotifiesRequester(t
 		PublishCheckBatchSize: 1,
 	}, zap.NewNop(), notifier)
 
-	job, err := service.RequestPublishCheckWithContext(context.Background(), teacher.ID, challenge.ID)
+	job, err := service.RequestPublishCheck(context.Background(), teacher.ID, challenge.ID)
 	if err != nil {
-		t.Fatalf("RequestPublishCheckWithContext() error = %v", err)
+		t.Fatalf("RequestPublishCheck() error = %v", err)
 	}
 	if job.Status != "queued" || !job.Active {
 		t.Fatalf("unexpected requested job status: %s", job.Status)
@@ -307,9 +307,9 @@ func TestServiceDispatchPublishCheckJobsPublishesChallengeAndNotifiesRequester(t
 		t.Fatalf("expected published challenge status, got %s", published.Status)
 	}
 
-	latest, err := service.GetLatestPublishCheckWithContext(context.Background(), challenge.ID)
+	latest, err := service.GetLatestPublishCheck(context.Background(), challenge.ID)
 	if err != nil {
-		t.Fatalf("GetLatestPublishCheckWithContext() error = %v", err)
+		t.Fatalf("GetLatestPublishCheck() error = %v", err)
 	}
 	if latest.Status != "succeeded" || latest.Active {
 		t.Fatalf("expected passed publish check job, got %+v", latest)
@@ -362,8 +362,8 @@ func TestServiceDispatchPublishCheckJobsKeepsDraftOnFailureAndNotifiesRequester(
 		PublishCheckBatchSize: 1,
 	}, zap.NewNop(), notifier)
 
-	if _, err := service.RequestPublishCheckWithContext(context.Background(), teacher.ID, challenge.ID); err != nil {
-		t.Fatalf("RequestPublishCheckWithContext() error = %v", err)
+	if _, err := service.RequestPublishCheck(context.Background(), teacher.ID, challenge.ID); err != nil {
+		t.Fatalf("RequestPublishCheck() error = %v", err)
 	}
 
 	service.dispatchPublishCheckJobs(context.Background())
@@ -376,9 +376,9 @@ func TestServiceDispatchPublishCheckJobsKeepsDraftOnFailureAndNotifiesRequester(
 		t.Fatalf("expected challenge to stay draft, got %s", stored.Status)
 	}
 
-	latest, err := service.GetLatestPublishCheckWithContext(context.Background(), challenge.ID)
+	latest, err := service.GetLatestPublishCheck(context.Background(), challenge.ID)
 	if err != nil {
-		t.Fatalf("GetLatestPublishCheckWithContext() error = %v", err)
+		t.Fatalf("GetLatestPublishCheck() error = %v", err)
 	}
 	if latest.Status != model.ChallengePublishCheckStatusFailed || latest.Active {
 		t.Fatalf("expected failed publish check job, got %+v", latest)
@@ -433,8 +433,8 @@ func TestServiceDispatchPublishCheckJobsPublishesAttachmentOnlyChallenge(t *test
 		PublishCheckBatchSize: 1,
 	}, zap.NewNop(), notifier)
 
-	if _, err := service.RequestPublishCheckWithContext(context.Background(), teacher.ID, challenge.ID); err != nil {
-		t.Fatalf("RequestPublishCheckWithContext() error = %v", err)
+	if _, err := service.RequestPublishCheck(context.Background(), teacher.ID, challenge.ID); err != nil {
+		t.Fatalf("RequestPublishCheck() error = %v", err)
 	}
 
 	service.dispatchPublishCheckJobs(context.Background())
@@ -450,9 +450,9 @@ func TestServiceDispatchPublishCheckJobsPublishesAttachmentOnlyChallenge(t *test
 		t.Fatalf("attachment-only challenge publish check should skip runtime startup")
 	}
 
-	latest, err := service.GetLatestPublishCheckWithContext(context.Background(), challenge.ID)
+	latest, err := service.GetLatestPublishCheck(context.Background(), challenge.ID)
 	if err != nil {
-		t.Fatalf("GetLatestPublishCheckWithContext() error = %v", err)
+		t.Fatalf("GetLatestPublishCheck() error = %v", err)
 	}
 	if latest.Status != "succeeded" || latest.Active {
 		t.Fatalf("expected passed publish check job, got %+v", latest)
@@ -506,7 +506,7 @@ func TestGetLatestPublishCheckIgnoresStaleJobsAfterChallengeUpdate(t *testing.T)
 	imageRepo := challengeinfra.NewImageRepository(db)
 	service := NewChallengeService(db, repo, imageRepo, repo, nil, SelfCheckConfig{}, zap.NewNop())
 
-	latest, err := service.GetLatestPublishCheckWithContext(context.Background(), challenge.ID)
+	latest, err := service.GetLatestPublishCheck(context.Background(), challenge.ID)
 	if err == nil || err.Error() != errcode.ErrNotFound.Error() {
 		t.Fatalf("expected not found for stale publish check job, got latest=%+v err=%v", latest, err)
 	}

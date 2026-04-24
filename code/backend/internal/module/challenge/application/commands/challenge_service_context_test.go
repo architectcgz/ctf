@@ -184,7 +184,7 @@ func (s *challengeCommandTopologyRepoStub) DeleteChallengeTopologyByChallengeIDW
 
 type challengeCommandContextKey string
 
-func TestChallengeServiceCreateChallengeWithContextPropagatesContextToRepositories(t *testing.T) {
+func TestChallengeServiceCreateChallengePropagatesContextToRepositories(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := challengeCommandContextKey("create")
@@ -216,7 +216,7 @@ func TestChallengeServiceCreateChallengeWithContextPropagatesContextToRepositori
 	service := NewChallengeService(nil, repo, imageRepo, &challengeCommandTopologyRepoStub{}, nil, SelfCheckConfig{}, zap.NewNop())
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.CreateChallengeWithContext(ctx, 1001, &dto.CreateChallengeReq{
+	resp, err := service.CreateChallenge(ctx, 1001, &dto.CreateChallengeReq{
 		Title:       "Test Challenge",
 		Description: "desc",
 		Category:    "web",
@@ -225,7 +225,7 @@ func TestChallengeServiceCreateChallengeWithContextPropagatesContextToRepositori
 		ImageID:     7,
 	})
 	if err != nil {
-		t.Fatalf("CreateChallengeWithContext() error = %v", err)
+		t.Fatalf("CreateChallenge() error = %v", err)
 	}
 	if !imageCalled || !createCalled {
 		t.Fatalf("expected repository calls, got image=%v create=%v", imageCalled, createCalled)
@@ -235,7 +235,7 @@ func TestChallengeServiceCreateChallengeWithContextPropagatesContextToRepositori
 	}
 }
 
-func TestChallengeServiceUpdateChallengeWithContextPropagatesContextToRepositories(t *testing.T) {
+func TestChallengeServiceUpdateChallengePropagatesContextToRepositories(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := challengeCommandContextKey("update")
@@ -290,15 +290,15 @@ func TestChallengeServiceUpdateChallengeWithContextPropagatesContextToRepositori
 
 	imageID := int64(7)
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	if err := service.UpdateChallengeWithContext(ctx, 9, &dto.UpdateChallengeReq{ImageID: &imageID, InstanceSharing: model.InstanceSharingShared}); err != nil {
-		t.Fatalf("UpdateChallengeWithContext() error = %v", err)
+	if err := service.UpdateChallenge(ctx, 9, &dto.UpdateChallengeReq{ImageID: &imageID, InstanceSharing: model.InstanceSharingShared}); err != nil {
+		t.Fatalf("UpdateChallenge() error = %v", err)
 	}
 	if !findCalled || !imageCalled || !topologyCalled || !updateCalled {
 		t.Fatalf("expected repository calls, got find=%v image=%v topology=%v update=%v", findCalled, imageCalled, topologyCalled, updateCalled)
 	}
 }
 
-func TestChallengeServiceDeleteChallengeWithContextPropagatesContextToRepository(t *testing.T) {
+func TestChallengeServiceDeleteChallengePropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := challengeCommandContextKey("delete")
@@ -333,8 +333,8 @@ func TestChallengeServiceDeleteChallengeWithContextPropagatesContextToRepository
 	service := NewChallengeService(nil, repo, &challengeCommandImageRepoStub{}, &challengeCommandTopologyRepoStub{}, nil, SelfCheckConfig{}, zap.NewNop())
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	if err := service.DeleteChallengeWithContext(ctx, 12); err != nil {
-		t.Fatalf("DeleteChallengeWithContext() error = %v", err)
+	if err := service.DeleteChallenge(ctx, 12); err != nil {
+		t.Fatalf("DeleteChallenge() error = %v", err)
 	}
 	if !findCalled || !hasRunningCalled || !deleteCalled {
 		t.Fatalf("expected repository calls, got find=%v hasRunning=%v delete=%v", findCalled, hasRunningCalled, deleteCalled)
@@ -377,9 +377,9 @@ func TestChallengeServiceRequestPublishCheckPropagatesContextToRepositories(t *t
 	activeCalled := false
 	createCalled := false
 
-		repo := &challengeCommandContextRepoStub{
-			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
-				findCalled = true
+	repo := &challengeCommandContextRepoStub{
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+			findCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find challenge ctx value %v, got %v", expectedCtxValue, got)
 			}
@@ -404,9 +404,9 @@ func TestChallengeServiceRequestPublishCheckPropagatesContextToRepositories(t *t
 	service := NewChallengeService(nil, repo, &challengeCommandImageRepoStub{}, &challengeCommandTopologyRepoStub{}, nil, SelfCheckConfig{}, zap.NewNop())
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.RequestPublishCheckWithContext(ctx, 1001, 9)
+	resp, err := service.RequestPublishCheck(ctx, 1001, 9)
 	if err != nil {
-		t.Fatalf("RequestPublishCheckWithContext() error = %v", err)
+		t.Fatalf("RequestPublishCheck() error = %v", err)
 	}
 	if !findCalled || !activeCalled || !createCalled {
 		t.Fatalf("expected repository calls, got find=%v active=%v create=%v", findCalled, activeCalled, createCalled)
@@ -425,9 +425,9 @@ func TestChallengeServiceGetLatestPublishCheckPropagatesContextToRepositories(t 
 	latestCalled := false
 	now := time.Now()
 
-		repo := &challengeCommandContextRepoStub{
-			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
-				findCalled = true
+	repo := &challengeCommandContextRepoStub{
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+			findCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find challenge ctx value %v, got %v", expectedCtxValue, got)
 			}
@@ -444,9 +444,9 @@ func TestChallengeServiceGetLatestPublishCheckPropagatesContextToRepositories(t 
 	service := NewChallengeService(nil, repo, &challengeCommandImageRepoStub{}, &challengeCommandTopologyRepoStub{}, nil, SelfCheckConfig{}, zap.NewNop())
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.GetLatestPublishCheckWithContext(ctx, 9)
+	resp, err := service.GetLatestPublishCheck(ctx, 9)
 	if err != nil {
-		t.Fatalf("GetLatestPublishCheckWithContext() error = %v", err)
+		t.Fatalf("GetLatestPublishCheck() error = %v", err)
 	}
 	if !findCalled || !latestCalled {
 		t.Fatalf("expected repository calls, got find=%v latest=%v", findCalled, latestCalled)
@@ -467,9 +467,9 @@ func TestChallengeServiceSelfCheckChallengePropagatesContextToRepositories(t *te
 	createCalled := false
 	cleanupCalled := false
 
-		repo := &challengeCommandContextRepoStub{
-			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
-				findCalled = true
+	repo := &challengeCommandContextRepoStub{
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+			findCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find challenge ctx value %v, got %v", expectedCtxValue, got)
 			}
@@ -517,9 +517,9 @@ func TestChallengeServiceSelfCheckChallengePropagatesContextToRepositories(t *te
 	service := NewChallengeService(nil, repo, imageRepo, topologyRepo, probe, SelfCheckConfig{RuntimeCreateTimeout: time.Second}, zap.NewNop())
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.SelfCheckChallengeWithContext(ctx, 9)
+	resp, err := service.SelfCheckChallenge(ctx, 9)
 	if err != nil {
-		t.Fatalf("SelfCheckChallengeWithContext() error = %v", err)
+		t.Fatalf("SelfCheckChallenge() error = %v", err)
 	}
 	if !findCalled || !imageCalled || !topologyCalled || !createCalled || !cleanupCalled {
 		t.Fatalf("expected calls, got find=%v image=%v topology=%v create=%v cleanup=%v", findCalled, imageCalled, topologyCalled, createCalled, cleanupCalled)
@@ -529,7 +529,7 @@ func TestChallengeServiceSelfCheckChallengePropagatesContextToRepositories(t *te
 	}
 }
 
-func TestChallengeServicePublishChallengeWithContextPropagatesContextToRepository(t *testing.T) {
+func TestChallengeServicePublishChallengePropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := challengeCommandContextKey("publish")
@@ -537,9 +537,9 @@ func TestChallengeServicePublishChallengeWithContextPropagatesContextToRepositor
 	findCalled := false
 	updateCalled := false
 
-		repo := &challengeCommandContextRepoStub{
-			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
-				findCalled = true
+	repo := &challengeCommandContextRepoStub{
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+			findCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find challenge ctx value %v, got %v", expectedCtxValue, got)
 			}
@@ -559,8 +559,8 @@ func TestChallengeServicePublishChallengeWithContextPropagatesContextToRepositor
 	service := NewChallengeService(nil, repo, &challengeCommandImageRepoStub{}, &challengeCommandTopologyRepoStub{}, nil, SelfCheckConfig{}, zap.NewNop())
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	if err := service.PublishChallengeWithContext(ctx, 15); err != nil {
-		t.Fatalf("PublishChallengeWithContext() error = %v", err)
+	if err := service.PublishChallenge(ctx, 15); err != nil {
+		t.Fatalf("PublishChallenge() error = %v", err)
 	}
 	if !findCalled || !updateCalled {
 		t.Fatalf("expected repository calls, got find=%v update=%v", findCalled, updateCalled)
@@ -577,16 +577,16 @@ func TestChallengeServiceProcessPublishCheckJobPropagatesContextToRepositories(t
 	publishUpdateCalled := false
 	updateJobCalled := 0
 
-		repo := &challengeCommandContextRepoStub{
-			findPublishCheckJobByIDFn: func(ctx context.Context, id int64) (*model.ChallengePublishCheckJob, error) {
+	repo := &challengeCommandContextRepoStub{
+		findPublishCheckJobByIDFn: func(ctx context.Context, id int64) (*model.ChallengePublishCheckJob, error) {
 			loadJobCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected load job ctx value %v, got %v", expectedCtxValue, got)
 			}
 			return &model.ChallengePublishCheckJob{ID: id, ChallengeID: 21, RequestedBy: 1001, Status: model.ChallengePublishCheckStatusRunning}, nil
 		},
-			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
-				findChallengeCalled = true
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+			findChallengeCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find challenge ctx value %v, got %v", expectedCtxValue, got)
 			}

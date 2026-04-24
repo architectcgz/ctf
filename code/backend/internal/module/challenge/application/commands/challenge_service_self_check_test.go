@@ -75,9 +75,9 @@ func TestChallengeSelfCheckSkipsRuntimeWhenPrecheckFails(t *testing.T) {
 	probe := &fakeChallengeRuntimeProbe{}
 	service := NewChallengeService(nil, repo, imageRepo, repo, probe, SelfCheckConfig{}, zap.NewNop())
 
-	resp, err := service.SelfCheckChallengeWithContext(context.Background(), challenge.ID)
+	resp, err := service.SelfCheckChallenge(context.Background(), challenge.ID)
 	if err != nil {
-		t.Fatalf("SelfCheckChallengeWithContext() error = %v", err)
+		t.Fatalf("SelfCheckChallenge() error = %v", err)
 	}
 	if resp.Precheck.Passed {
 		t.Fatalf("expected precheck failed, got %+v", resp.Precheck)
@@ -116,9 +116,9 @@ func TestChallengeSelfCheckAttachmentOnlyChallengeSkipsRuntimeStartup(t *testing
 	probe := &fakeChallengeRuntimeProbe{}
 	service := NewChallengeService(nil, repo, imageRepo, repo, probe, SelfCheckConfig{}, zap.NewNop())
 
-	resp, err := service.SelfCheckChallengeWithContext(context.Background(), challenge.ID)
+	resp, err := service.SelfCheckChallenge(context.Background(), challenge.ID)
 	if err != nil {
-		t.Fatalf("SelfCheckChallengeWithContext() error = %v", err)
+		t.Fatalf("SelfCheckChallenge() error = %v", err)
 	}
 	if !resp.Precheck.Passed {
 		t.Fatalf("expected attachment-only challenge precheck passed, got %+v", resp.Precheck)
@@ -175,9 +175,9 @@ func TestChallengeSelfCheckSingleContainerSuccess(t *testing.T) {
 	}
 	service := NewChallengeService(nil, repo, imageRepo, repo, probe, SelfCheckConfig{}, zap.NewNop())
 
-	resp, err := service.SelfCheckChallengeWithContext(context.Background(), challenge.ID)
+	resp, err := service.SelfCheckChallenge(context.Background(), challenge.ID)
 	if err != nil {
-		t.Fatalf("SelfCheckChallengeWithContext() error = %v", err)
+		t.Fatalf("SelfCheckChallenge() error = %v", err)
 	}
 	if !resp.Precheck.Passed {
 		t.Fatalf("expected precheck passed, got %+v", resp.Precheck)
@@ -230,9 +230,9 @@ func TestChallengeSelfCheckRuntimeStartupFailure(t *testing.T) {
 	}
 	service := NewChallengeService(nil, repo, imageRepo, repo, probe, SelfCheckConfig{}, zap.NewNop())
 
-	resp, err := service.SelfCheckChallengeWithContext(context.Background(), challenge.ID)
+	resp, err := service.SelfCheckChallenge(context.Background(), challenge.ID)
 	if err != nil {
-		t.Fatalf("SelfCheckChallengeWithContext() error = %v", err)
+		t.Fatalf("SelfCheckChallenge() error = %v", err)
 	}
 	if !resp.Precheck.Passed {
 		t.Fatalf("expected precheck passed, got %+v", resp.Precheck)
@@ -264,9 +264,9 @@ func TestChallengeSelfCheckFailsOnInvalidRegexFlag(t *testing.T) {
 	imageRepo := challengeinfra.NewImageRepository(db)
 	service := NewChallengeService(nil, repo, imageRepo, repo, &fakeChallengeRuntimeProbe{}, SelfCheckConfig{}, zap.NewNop())
 
-	resp, err := service.SelfCheckChallengeWithContext(context.Background(), challenge.ID)
+	resp, err := service.SelfCheckChallenge(context.Background(), challenge.ID)
 	if err != nil {
-		t.Fatalf("SelfCheckChallengeWithContext() error = %v", err)
+		t.Fatalf("SelfCheckChallenge() error = %v", err)
 	}
 	if resp.Precheck.Passed {
 		t.Fatalf("expected precheck failed for invalid regex, got %+v", resp.Precheck)
@@ -311,9 +311,9 @@ func TestChallengeSelfCheckManualReviewSkipsFlagValidationFailure(t *testing.T) 
 	}
 	service := NewChallengeService(nil, repo, imageRepo, repo, probe, SelfCheckConfig{}, zap.NewNop())
 
-	resp, err := service.SelfCheckChallengeWithContext(context.Background(), challenge.ID)
+	resp, err := service.SelfCheckChallenge(context.Background(), challenge.ID)
 	if err != nil {
-		t.Fatalf("SelfCheckChallengeWithContext() error = %v", err)
+		t.Fatalf("SelfCheckChallenge() error = %v", err)
 	}
 	if !resp.Precheck.Passed {
 		t.Fatalf("expected manual review challenge precheck passed, got %+v", resp.Precheck)

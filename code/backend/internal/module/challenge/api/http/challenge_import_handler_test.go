@@ -17,51 +17,27 @@ type challengeImportHandlerCommandStub struct {
 	getChallengeImportFn   func(ctx context.Context, actorUserID int64, id string) (*dto.ChallengeImportPreviewResp, error)
 }
 
-func (s challengeImportHandlerCommandStub) CreateChallenge(actorUserID int64, req *dto.CreateChallengeReq) (*dto.ChallengeResp, error) {
+func (s challengeImportHandlerCommandStub) CreateChallenge(ctx context.Context, actorUserID int64, req *dto.CreateChallengeReq) (*dto.ChallengeResp, error) {
 	return nil, nil
 }
 
-func (s challengeImportHandlerCommandStub) CreateChallengeWithContext(ctx context.Context, actorUserID int64, req *dto.CreateChallengeReq) (*dto.ChallengeResp, error) {
-	return nil, nil
-}
-
-func (s challengeImportHandlerCommandStub) UpdateChallenge(id int64, req *dto.UpdateChallengeReq) error {
+func (s challengeImportHandlerCommandStub) UpdateChallenge(ctx context.Context, id int64, req *dto.UpdateChallengeReq) error {
 	return nil
 }
 
-func (s challengeImportHandlerCommandStub) UpdateChallengeWithContext(ctx context.Context, id int64, req *dto.UpdateChallengeReq) error {
+func (s challengeImportHandlerCommandStub) DeleteChallenge(ctx context.Context, id int64) error {
 	return nil
 }
 
-func (s challengeImportHandlerCommandStub) DeleteChallenge(id int64) error {
-	return nil
-}
-
-func (s challengeImportHandlerCommandStub) DeleteChallengeWithContext(ctx context.Context, id int64) error {
-	return nil
-}
-
-func (s challengeImportHandlerCommandStub) RequestPublishCheck(actorUserID, id int64) (*dto.ChallengePublishCheckJobResp, error) {
+func (s challengeImportHandlerCommandStub) RequestPublishCheck(ctx context.Context, actorUserID, id int64) (*dto.ChallengePublishCheckJobResp, error) {
 	return nil, nil
 }
 
-func (s challengeImportHandlerCommandStub) RequestPublishCheckWithContext(ctx context.Context, actorUserID, id int64) (*dto.ChallengePublishCheckJobResp, error) {
+func (s challengeImportHandlerCommandStub) GetLatestPublishCheck(ctx context.Context, id int64) (*dto.ChallengePublishCheckJobResp, error) {
 	return nil, nil
 }
 
-func (s challengeImportHandlerCommandStub) GetLatestPublishCheck(id int64) (*dto.ChallengePublishCheckJobResp, error) {
-	return nil, nil
-}
-
-func (s challengeImportHandlerCommandStub) GetLatestPublishCheckWithContext(ctx context.Context, id int64) (*dto.ChallengePublishCheckJobResp, error) {
-	return nil, nil
-}
-
-func (s challengeImportHandlerCommandStub) SelfCheckChallenge(id int64) (*dto.ChallengeSelfCheckResp, error) {
-	return nil, nil
-}
-
-func (s challengeImportHandlerCommandStub) SelfCheckChallengeWithContext(ctx context.Context, id int64) (*dto.ChallengeSelfCheckResp, error) {
+func (s challengeImportHandlerCommandStub) SelfCheckChallenge(ctx context.Context, id int64) (*dto.ChallengeSelfCheckResp, error) {
 	return nil, nil
 }
 
