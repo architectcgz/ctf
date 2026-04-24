@@ -101,14 +101,7 @@ func NewService(
 	}
 }
 
-func (s *Service) StartChallenge(userID, challengeID int64) (*dto.InstanceResp, error) {
-	return s.StartChallengeWithContext(context.Background(), userID, challengeID)
-}
-
-func (s *Service) StartChallengeWithContext(ctx context.Context, userID, challengeID int64) (*dto.InstanceResp, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
+func (s *Service) StartChallenge(ctx context.Context, userID, challengeID int64) (*dto.InstanceResp, error) {
 	return s.startPersonalChallenge(ctx, userID, challengeID)
 }
 

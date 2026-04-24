@@ -160,13 +160,13 @@ func TestServiceStartChallengeSharedReusesPracticeInstance(t *testing.T) {
 
 	service := newContestInstanceTestService(t, db)
 
-	first, err := service.StartChallengeWithContext(context.Background(), 5101, 2101)
+	first, err := service.StartChallenge(context.Background(), 5101, 2101)
 	if err != nil {
-		t.Fatalf("StartChallengeWithContext() first error = %v", err)
+		t.Fatalf("StartChallenge() first error = %v", err)
 	}
-	second, err := service.StartChallengeWithContext(context.Background(), 5102, 2101)
+	second, err := service.StartChallenge(context.Background(), 5102, 2101)
 	if err != nil {
-		t.Fatalf("StartChallengeWithContext() second error = %v", err)
+		t.Fatalf("StartChallenge() second error = %v", err)
 	}
 	if first.ID != second.ID {
 		t.Fatalf("expected shared practice instance reuse, got first=%d second=%d", first.ID, second.ID)
@@ -203,9 +203,9 @@ func TestServiceStartChallengeSharedReusesPracticeInstanceAndRefreshesExpiry(t *
 	}
 
 	service := newContestInstanceTestService(t, db)
-	resp, err := service.StartChallengeWithContext(context.Background(), 5202, 2201)
+	resp, err := service.StartChallenge(context.Background(), 5202, 2201)
 	if err != nil {
-		t.Fatalf("StartChallengeWithContext() error = %v", err)
+		t.Fatalf("StartChallenge() error = %v", err)
 	}
 	if resp.ID != 9201 {
 		t.Fatalf("expected shared instance reuse, got %+v", resp)
@@ -274,7 +274,7 @@ func TestServiceStartChallengeRejectsNoTargetChallenge(t *testing.T) {
 	}
 
 	service := newContestInstanceTestService(t, db)
-	_, err := service.StartChallengeWithContext(context.Background(), 5001, 2201)
+	_, err := service.StartChallenge(context.Background(), 5001, 2201)
 	if err == nil || err.Error() != errcode.ErrInvalidParams.Error() {
 		t.Fatalf("expected invalid params for no-target challenge, got %v", err)
 	}
