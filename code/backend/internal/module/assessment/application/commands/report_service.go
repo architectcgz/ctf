@@ -620,7 +620,7 @@ func (s *ReportService) buildPersonalReportData(ctx context.Context, userID int6
 		return nil, errcode.ErrUnauthorized
 	}
 
-	skillProfileResp, err := s.assessmentService.GetSkillProfileWithContext(ctx, userID)
+	skillProfileResp, err := s.assessmentService.GetSkillProfile(ctx, userID)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
@@ -742,7 +742,7 @@ func (s *ReportService) buildStudentReviewArchiveData(ctx context.Context, stude
 
 	var skillProfile []*dto.SkillDimension
 	if s.assessmentService != nil {
-		skillProfileResp, skillErr := s.assessmentService.GetSkillProfileWithContext(ctx, studentID)
+		skillProfileResp, skillErr := s.assessmentService.GetSkillProfile(ctx, studentID)
 		if skillErr != nil {
 			return nil, errcode.ErrInternal.WithCause(skillErr)
 		}

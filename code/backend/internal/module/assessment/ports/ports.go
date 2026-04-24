@@ -53,5 +53,5 @@ type ReportRepository interface {
 }
 
 type AssessmentProfileReader interface {
-	GetSkillProfileWithContext(ctx context.Context, userID int64) (*dto.SkillProfileResp, error)
+	GetSkillProfile(ctx context.Context, userID int64) (*dto.SkillProfileResp, error)
 }
