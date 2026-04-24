@@ -20,11 +20,7 @@ func NewProfileService(repo assessmentports.ProfileRepository) *ProfileService {
 	return &ProfileService{repo: repo}
 }
 
-func (s *ProfileService) GetSkillProfile(userID int64) (*dto.SkillProfileResp, error) {
-	return s.GetSkillProfileWithContext(context.Background(), userID)
-}
-
-func (s *ProfileService) GetSkillProfileWithContext(ctx context.Context, userID int64) (*dto.SkillProfileResp, error) {
+func (s *ProfileService) GetSkillProfile(ctx context.Context, userID int64) (*dto.SkillProfileResp, error) {
 	profiles, err := s.repo.FindByUserIDWithContext(ctx, userID)
 	if err != nil {
 		return nil, err
@@ -79,5 +75,5 @@ func (s *ProfileService) GetStudentSkillProfile(ctx context.Context, requesterID
 		}
 	}
 
-	return s.GetSkillProfileWithContext(ctx, studentID)
+	return s.GetSkillProfile(ctx, studentID)
 }

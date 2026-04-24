@@ -168,7 +168,7 @@ type testAssessmentProfileReader struct {
 	resp *dto.SkillProfileResp
 }
 
-func (r *testAssessmentProfileReader) GetSkillProfileWithContext(context.Context, int64) (*dto.SkillProfileResp, error) {
+func (r *testAssessmentProfileReader) GetSkillProfile(context.Context, int64) (*dto.SkillProfileResp, error) {
 	if r == nil || r.resp == nil {
 		return &dto.SkillProfileResp{}, nil
 	}
