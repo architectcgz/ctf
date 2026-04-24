@@ -38,7 +38,7 @@ func (s *TagService) DeleteTag(ctx context.Context, id int64) error {
 	if count > 0 {
 		return errcode.ErrConflict.WithCause(nil)
 	}
-	return s.repo.DeleteWithContext(ctx, id)
+	return s.repo.Delete(ctx, id)
 }
 
 func (s *TagService) AttachTags(ctx context.Context, challengeID int64, tagIDs []int64) error {

@@ -36,7 +36,7 @@ func (s *tagQueryContextStub) FindByChallengeID(ctx context.Context, challengeID
 	}
 	return nil, nil
 }
-func (s *tagQueryContextStub) DeleteWithContext(ctx context.Context, id int64) error { return nil }
+func (s *tagQueryContextStub) Delete(ctx context.Context, id int64) error { return nil }
 func (s *tagQueryContextStub) CountChallengesByTagID(ctx context.Context, tagID int64) (int64, error) {
 	return 0, nil
 }

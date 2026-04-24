@@ -14,7 +14,7 @@ type tagCommandContextStub struct {
 	attachTagsInTxFn         func(ctx context.Context, challengeID int64, tagIDs []int64) error
 	detachFromChallengeFn    func(ctx context.Context, challengeID, tagID int64) error
 	countChallengesByTagIDFn func(ctx context.Context, tagID int64) (int64, error)
-	deleteWithContextFn      func(ctx context.Context, id int64) error
+	deleteFn                 func(ctx context.Context, id int64) error
 }
 
 func (s *tagCommandContextStub) Create(ctx context.Context, tag *model.Tag) error {
@@ -53,9 +53,9 @@ func (s *tagCommandContextStub) FindByChallengeID(ctx context.Context, challenge
 	return nil, nil
 }
 
-func (s *tagCommandContextStub) DeleteWithContext(ctx context.Context, id int64) error {
-	if s.deleteWithContextFn != nil {
-		return s.deleteWithContextFn(ctx, id)
+func (s *tagCommandContextStub) Delete(ctx context.Context, id int64) error {
+	if s.deleteFn != nil {
+		return s.deleteFn(ctx, id)
 	}
 	return nil
 }
@@ -189,7 +189,7 @@ func TestTagServiceDeleteTagPropagatesContextToRepository(t *testing.T) {
 			}
 			return 0, nil
 		},
-		deleteWithContextFn: func(ctx context.Context, id int64) error {
+		deleteFn: func(ctx context.Context, id int64) error {
 			deleteCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected delete ctx value %v, got %v", expectedCtxValue, got)

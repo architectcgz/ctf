@@ -33,7 +33,7 @@ func (ctxOnlyTagRepository) FindByChallengeID(context.Context, int64) ([]*model.
 	return nil, nil
 }
 
-func (ctxOnlyTagRepository) DeleteWithContext(context.Context, int64) error {
+func (ctxOnlyTagRepository) Delete(context.Context, int64) error {
 	return nil
 }
 
