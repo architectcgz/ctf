@@ -488,7 +488,7 @@ func (r *TemplateRepository) Update(ctx context.Context, template *model.Environ
 	return r.dbWithContext(ctx).Save(template).Error
 }
 
-func (r *TemplateRepository) DeleteWithContext(ctx context.Context, id int64) error {
+func (r *TemplateRepository) Delete(ctx context.Context, id int64) error {
 	return r.dbWithContext(ctx).Delete(&model.EnvironmentTemplate{}, id).Error
 }
 

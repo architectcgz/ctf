@@ -150,7 +150,7 @@ func (s *TopologyService) DeleteTemplate(ctx context.Context, id int64) error {
 		}
 		return err
 	}
-	return s.templateRepo.DeleteWithContext(ctx, id)
+	return s.templateRepo.Delete(ctx, id)
 }
 
 func (s *TopologyService) resolveTopologyPayload(ctx context.Context, req *dto.SaveChallengeTopologyReq) (rawSpec, entryNodeKey string, templateID *int64, err error) {

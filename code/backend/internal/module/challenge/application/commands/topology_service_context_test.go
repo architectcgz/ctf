@@ -47,7 +47,7 @@ func (s *topologyCommandRepoStub) DeleteChallengeTopologyByChallengeID(ctx conte
 type topologyTemplateRepoStub struct {
 	createFn            func(ctx context.Context, template *model.EnvironmentTemplate) error
 	updateFn            func(ctx context.Context, template *model.EnvironmentTemplate) error
-	deleteWithContextFn func(ctx context.Context, id int64) error
+	deleteFn            func(ctx context.Context, id int64) error
 	findByIDFn          func(ctx context.Context, id int64) (*model.EnvironmentTemplate, error)
 	listFn              func(ctx context.Context, keyword string) ([]*model.EnvironmentTemplate, error)
 	incrementUsageFn    func(ctx context.Context, id int64) error
@@ -67,9 +67,9 @@ func (s *topologyTemplateRepoStub) Update(ctx context.Context, template *model.E
 	return nil
 }
 
-func (s *topologyTemplateRepoStub) DeleteWithContext(ctx context.Context, id int64) error {
-	if s.deleteWithContextFn != nil {
-		return s.deleteWithContextFn(ctx, id)
+func (s *topologyTemplateRepoStub) Delete(ctx context.Context, id int64) error {
+	if s.deleteFn != nil {
+		return s.deleteFn(ctx, id)
 	}
 	return nil
 }
@@ -376,7 +376,7 @@ func TestTopologyServiceDeleteTemplatePropagatesContextToRepository(t *testing.T
 			}
 			return &model.EnvironmentTemplate{ID: id, Name: "Base Web"}, nil
 		},
-		deleteWithContextFn: func(ctx context.Context, id int64) error {
+		deleteFn: func(ctx context.Context, id int64) error {
 			deleteCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected delete-template ctx value %v, got %v", expectedCtxValue, got)
