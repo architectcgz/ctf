@@ -24,9 +24,7 @@ type imageCommandService interface {
 }
 
 type imageQueryService interface {
-	GetImage(id int64) (*dto.ImageResp, error)
 	GetImageWithContext(ctx context.Context, id int64) (*dto.ImageResp, error)
-	ListImages(query *dto.ImageQuery) (*dto.PageResult, error)
 	ListImagesWithContext(ctx context.Context, query *dto.ImageQuery) (*dto.PageResult, error)
 }
 

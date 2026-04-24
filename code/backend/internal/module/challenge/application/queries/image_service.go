@@ -24,10 +24,6 @@ func NewImageService(repo challengeports.ImageRepository, config *config.Config)
 	}
 }
 
-func (s *ImageService) GetImage(id int64) (*dto.ImageResp, error) {
-	return s.GetImageWithContext(context.Background(), id)
-}
-
 func (s *ImageService) GetImageWithContext(ctx context.Context, id int64) (*dto.ImageResp, error) {
 	if ctx == nil {
 		ctx = context.Background()
@@ -40,10 +36,6 @@ func (s *ImageService) GetImageWithContext(ctx context.Context, id int64) (*dto.
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 	return domain.ImageRespFromModel(image), nil
-}
-
-func (s *ImageService) ListImages(query *dto.ImageQuery) (*dto.PageResult, error) {
-	return s.ListImagesWithContext(context.Background(), query)
 }
 
 func (s *ImageService) ListImagesWithContext(ctx context.Context, query *dto.ImageQuery) (*dto.PageResult, error) {
