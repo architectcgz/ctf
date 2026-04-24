@@ -74,7 +74,7 @@ func (s *imageUsageContextStub) CountByImageIDWithContext(ctx context.Context, i
 
 type imageCommandContextKey string
 
-func TestImageServiceUpdateImageWithContextPropagatesContextToRepository(t *testing.T) {
+func TestImageServiceUpdateImagePropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := imageCommandContextKey("image-update")
@@ -103,15 +103,15 @@ func TestImageServiceUpdateImageWithContextPropagatesContextToRepository(t *test
 	service := NewImageService(repo, &imageUsageContextStub{}, nil, zap.NewNop())
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	if err := service.UpdateImageWithContext(ctx, 9, &dto.UpdateImageReq{Description: "new"}); err != nil {
-		t.Fatalf("UpdateImageWithContext() error = %v", err)
+	if err := service.UpdateImage(ctx, 9, &dto.UpdateImageReq{Description: "new"}); err != nil {
+		t.Fatalf("UpdateImage() error = %v", err)
 	}
 	if !findCalled || !updateCalled {
 		t.Fatalf("expected repository calls, got find=%v update=%v", findCalled, updateCalled)
 	}
 }
 
-func TestImageServiceDeleteImageWithContextPropagatesContextToRepository(t *testing.T) {
+func TestImageServiceDeleteImagePropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := imageCommandContextKey("image-delete")
@@ -147,8 +147,8 @@ func TestImageServiceDeleteImageWithContextPropagatesContextToRepository(t *test
 	service := NewImageService(repo, usageRepo, nil, zap.NewNop())
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	if err := service.DeleteImageWithContext(ctx, 9); err != nil {
-		t.Fatalf("DeleteImageWithContext() error = %v", err)
+	if err := service.DeleteImage(ctx, 9); err != nil {
+		t.Fatalf("DeleteImage() error = %v", err)
 	}
 	if !findCalled || !countCalled || !deleteCalled {
 		t.Fatalf("expected repository calls, got find=%v count=%v delete=%v", findCalled, countCalled, deleteCalled)

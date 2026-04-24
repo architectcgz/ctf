@@ -46,15 +46,7 @@ func NewImageService(
 	}
 }
 
-func (s *ImageService) CreateImage(req *dto.CreateImageReq) (*dto.ImageResp, error) {
-	return s.CreateImageWithContext(context.Background(), req)
-}
-
-func (s *ImageService) CreateImageWithContext(ctx context.Context, req *dto.CreateImageReq) (*dto.ImageResp, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
+func (s *ImageService) CreateImage(ctx context.Context, req *dto.CreateImageReq) (*dto.ImageResp, error) {
 	existing, err := s.repo.FindByNameTagWithContext(ctx, req.Name, req.Tag)
 	if err == nil && existing != nil {
 		return nil, errcode.ErrImageAlreadyExists
@@ -96,15 +88,7 @@ func (s *ImageService) CreateImageWithContext(ctx context.Context, req *dto.Crea
 	}, nil
 }
 
-func (s *ImageService) UpdateImage(id int64, req *dto.UpdateImageReq) error {
-	return s.UpdateImageWithContext(context.Background(), id, req)
-}
-
-func (s *ImageService) UpdateImageWithContext(ctx context.Context, id int64, req *dto.UpdateImageReq) error {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
+func (s *ImageService) UpdateImage(ctx context.Context, id int64, req *dto.UpdateImageReq) error {
 	image, err := s.repo.FindByIDWithContext(ctx, id)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -127,15 +111,7 @@ func (s *ImageService) UpdateImageWithContext(ctx context.Context, id int64, req
 	return nil
 }
 
-func (s *ImageService) DeleteImage(id int64) error {
-	return s.DeleteImageWithContext(context.Background(), id)
-}
-
-func (s *ImageService) DeleteImageWithContext(ctx context.Context, id int64) error {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
+func (s *ImageService) DeleteImage(ctx context.Context, id int64) error {
 	image, err := s.repo.FindByIDWithContext(ctx, id)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {

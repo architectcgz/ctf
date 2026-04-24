@@ -16,11 +16,9 @@ type ImageHandler struct {
 }
 
 type imageCommandService interface {
-	CreateImageWithContext(ctx context.Context, req *dto.CreateImageReq) (*dto.ImageResp, error)
-	UpdateImage(id int64, req *dto.UpdateImageReq) error
-	UpdateImageWithContext(ctx context.Context, id int64, req *dto.UpdateImageReq) error
-	DeleteImage(id int64) error
-	DeleteImageWithContext(ctx context.Context, id int64) error
+	CreateImage(ctx context.Context, req *dto.CreateImageReq) (*dto.ImageResp, error)
+	UpdateImage(ctx context.Context, id int64, req *dto.UpdateImageReq) error
+	DeleteImage(ctx context.Context, id int64) error
 }
 
 type imageQueryService interface {
@@ -39,7 +37,7 @@ func (h *ImageHandler) CreateImage(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.commands.CreateImageWithContext(c.Request.Context(), &req)
+	resp, err := h.commands.CreateImage(c.Request.Context(), &req)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -93,7 +91,7 @@ func (h *ImageHandler) UpdateImage(c *gin.Context) {
 		return
 	}
 
-	if err := h.commands.UpdateImageWithContext(c.Request.Context(), id, &req); err != nil {
+	if err := h.commands.UpdateImage(c.Request.Context(), id, &req); err != nil {
 		response.FromError(c, err)
 		return
 	}
@@ -108,7 +106,7 @@ func (h *ImageHandler) DeleteImage(c *gin.Context) {
 		return
 	}
 
-	if err := h.commands.DeleteImageWithContext(c.Request.Context(), id); err != nil {
+	if err := h.commands.DeleteImage(c.Request.Context(), id); err != nil {
 		response.FromError(c, err)
 		return
 	}
