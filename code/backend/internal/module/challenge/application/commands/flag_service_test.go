@@ -31,7 +31,7 @@ func TestFlagServiceConfigureStaticFlagAndValidate(t *testing.T) {
 		t.Fatalf("NewFlagService() error = %v", err)
 	}
 
-	if err := service.ConfigureStaticFlag(1, "flag{demo_static}", "flag"); err != nil {
+	if err := service.ConfigureStaticFlag(context.Background(), 1, "flag{demo_static}", "flag"); err != nil {
 		t.Fatalf("ConfigureStaticFlag() error = %v", err)
 	}
 
@@ -75,7 +75,7 @@ func TestFlagServiceConfigureDynamicFlagAndGenerate(t *testing.T) {
 		t.Fatalf("NewFlagService() error = %v", err)
 	}
 
-	if err := service.ConfigureDynamicFlag(2, "ctf"); err != nil {
+	if err := service.ConfigureDynamicFlag(context.Background(), 2, "ctf"); err != nil {
 		t.Fatalf("ConfigureDynamicFlag() error = %v", err)
 	}
 
@@ -120,7 +120,7 @@ func TestFlagServiceConfigureDynamicFlagRejectsSharedChallenge(t *testing.T) {
 		t.Fatalf("NewFlagService() error = %v", err)
 	}
 
-	err = service.ConfigureDynamicFlag(22, "flag")
+	err = service.ConfigureDynamicFlag(context.Background(), 22, "flag")
 	if err == nil || err.Error() != errcode.ErrInvalidParams.Error() {
 		t.Fatalf("expected invalid params for shared dynamic flag, got %v", err)
 	}
@@ -144,7 +144,7 @@ func TestFlagServiceConfigureRegexFlagAndValidate(t *testing.T) {
 		t.Fatalf("NewFlagService() error = %v", err)
 	}
 
-	if err := service.ConfigureRegexFlag(3, `^flag\{user-[0-9]{3}\}$`, "flag"); err != nil {
+	if err := service.ConfigureRegexFlag(context.Background(), 3, `^flag\{user-[0-9]{3}\}$`, "flag"); err != nil {
 		t.Fatalf("ConfigureRegexFlag() error = %v", err)
 	}
 
@@ -188,7 +188,7 @@ func TestFlagServiceConfigureManualReviewFlag(t *testing.T) {
 		t.Fatalf("NewFlagService() error = %v", err)
 	}
 
-	if err := service.ConfigureManualReviewFlag(4); err != nil {
+	if err := service.ConfigureManualReviewFlag(context.Background(), 4); err != nil {
 		t.Fatalf("ConfigureManualReviewFlag() error = %v", err)
 	}
 

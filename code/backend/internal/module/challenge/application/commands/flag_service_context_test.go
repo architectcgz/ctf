@@ -40,7 +40,7 @@ func TestFlagServiceConfigureWithContextPropagatesContextToRepository(t *testing
 		{
 			name: "static",
 			call: func(service *FlagService, ctx context.Context) error {
-				return service.ConfigureStaticFlagWithContext(ctx, 1, "flag{demo_static}", "flag")
+				return service.ConfigureStaticFlag(ctx, 1, "flag{demo_static}", "flag")
 			},
 			assertChallenge: func(t *testing.T, challenge *model.Challenge) {
 				t.Helper()
@@ -52,7 +52,7 @@ func TestFlagServiceConfigureWithContextPropagatesContextToRepository(t *testing
 		{
 			name: "dynamic",
 			call: func(service *FlagService, ctx context.Context) error {
-				return service.ConfigureDynamicFlagWithContext(ctx, 1, "ctf")
+				return service.ConfigureDynamicFlag(ctx, 1, "ctf")
 			},
 			assertChallenge: func(t *testing.T, challenge *model.Challenge) {
 				t.Helper()
@@ -64,7 +64,7 @@ func TestFlagServiceConfigureWithContextPropagatesContextToRepository(t *testing
 		{
 			name: "regex",
 			call: func(service *FlagService, ctx context.Context) error {
-				return service.ConfigureRegexFlagWithContext(ctx, 1, `^flag\{user-[0-9]{3}\}$`, "flag")
+				return service.ConfigureRegexFlag(ctx, 1, `^flag\{user-[0-9]{3}\}$`, "flag")
 			},
 			assertChallenge: func(t *testing.T, challenge *model.Challenge) {
 				t.Helper()
@@ -76,7 +76,7 @@ func TestFlagServiceConfigureWithContextPropagatesContextToRepository(t *testing
 		{
 			name: "manual-review",
 			call: func(service *FlagService, ctx context.Context) error {
-				return service.ConfigureManualReviewFlagWithContext(ctx, 1)
+				return service.ConfigureManualReviewFlag(ctx, 1)
 			},
 			assertChallenge: func(t *testing.T, challenge *model.Challenge) {
 				t.Helper()
