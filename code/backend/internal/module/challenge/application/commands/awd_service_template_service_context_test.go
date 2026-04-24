@@ -9,61 +9,29 @@ import (
 )
 
 type awdServiceTemplateCommandContextRepoStub struct {
-	createFn              func(template *model.AWDServiceTemplate) error
 	createWithContextFn   func(ctx context.Context, template *model.AWDServiceTemplate) error
-	findByIDFn            func(id int64) (*model.AWDServiceTemplate, error)
 	findByIDWithContextFn func(ctx context.Context, id int64) (*model.AWDServiceTemplate, error)
-	updateFn              func(template *model.AWDServiceTemplate) error
 	updateWithContextFn   func(ctx context.Context, template *model.AWDServiceTemplate) error
-	deleteFn              func(id int64) error
 	deleteWithContextFn   func(ctx context.Context, id int64) error
-}
-
-func (s *awdServiceTemplateCommandContextRepoStub) CreateAWDServiceTemplate(template *model.AWDServiceTemplate) error {
-	if s.createFn != nil {
-		return s.createFn(template)
-	}
-	return nil
 }
 
 func (s *awdServiceTemplateCommandContextRepoStub) CreateAWDServiceTemplateWithContext(ctx context.Context, template *model.AWDServiceTemplate) error {
 	if s.createWithContextFn != nil {
 		return s.createWithContextFn(ctx, template)
 	}
-	return s.CreateAWDServiceTemplate(template)
-}
-
-func (s *awdServiceTemplateCommandContextRepoStub) FindAWDServiceTemplateByID(id int64) (*model.AWDServiceTemplate, error) {
-	if s.findByIDFn != nil {
-		return s.findByIDFn(id)
-	}
-	return nil, nil
+	return nil
 }
 
 func (s *awdServiceTemplateCommandContextRepoStub) FindAWDServiceTemplateByIDWithContext(ctx context.Context, id int64) (*model.AWDServiceTemplate, error) {
 	if s.findByIDWithContextFn != nil {
 		return s.findByIDWithContextFn(ctx, id)
 	}
-	return s.FindAWDServiceTemplateByID(id)
-}
-
-func (s *awdServiceTemplateCommandContextRepoStub) UpdateAWDServiceTemplate(template *model.AWDServiceTemplate) error {
-	if s.updateFn != nil {
-		return s.updateFn(template)
-	}
-	return nil
+	return nil, nil
 }
 
 func (s *awdServiceTemplateCommandContextRepoStub) UpdateAWDServiceTemplateWithContext(ctx context.Context, template *model.AWDServiceTemplate) error {
 	if s.updateWithContextFn != nil {
 		return s.updateWithContextFn(ctx, template)
-	}
-	return s.UpdateAWDServiceTemplate(template)
-}
-
-func (s *awdServiceTemplateCommandContextRepoStub) DeleteAWDServiceTemplate(id int64) error {
-	if s.deleteFn != nil {
-		return s.deleteFn(id)
 	}
 	return nil
 }
@@ -72,7 +40,7 @@ func (s *awdServiceTemplateCommandContextRepoStub) DeleteAWDServiceTemplateWithC
 	if s.deleteWithContextFn != nil {
 		return s.deleteWithContextFn(ctx, id)
 	}
-	return s.DeleteAWDServiceTemplate(id)
+	return nil
 }
 
 type awdServiceTemplateCommandContextKey string
