@@ -116,7 +116,7 @@ type ImageRepository interface {
 	FindByNameTag(ctx context.Context, name, tag string) (*model.Image, error)
 	List(ctx context.Context, name, status string, offset, limit int) ([]*model.Image, int64, error)
 	Update(ctx context.Context, image *model.Image) error
-	DeleteWithContext(ctx context.Context, id int64) error
+	Delete(ctx context.Context, id int64) error
 }
 
 type EnvironmentTemplateRepository interface {

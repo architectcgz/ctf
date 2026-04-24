@@ -15,7 +15,7 @@ type stubChallengeImageRepository struct {
 	findByNameTagFn     func(ctx context.Context, name, tag string) (*model.Image, error)
 	listFn              func(ctx context.Context, name, status string, offset, limit int) ([]*model.Image, int64, error)
 	updateFn            func(ctx context.Context, image *model.Image) error
-	deleteWithContextFn func(ctx context.Context, id int64) error
+	deleteFn            func(ctx context.Context, id int64) error
 }
 
 func (s *stubChallengeImageRepository) Create(ctx context.Context, image *model.Image) error {
@@ -53,9 +53,9 @@ func (s *stubChallengeImageRepository) Update(ctx context.Context, image *model.
 	return nil
 }
 
-func (s *stubChallengeImageRepository) DeleteWithContext(ctx context.Context, id int64) error {
-	if s.deleteWithContextFn != nil {
-		return s.deleteWithContextFn(ctx, id)
+func (s *stubChallengeImageRepository) Delete(ctx context.Context, id int64) error {
+	if s.deleteFn != nil {
+		return s.deleteFn(ctx, id)
 	}
 	return nil
 }

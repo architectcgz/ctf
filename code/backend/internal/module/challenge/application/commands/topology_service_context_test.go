@@ -139,7 +139,7 @@ func (s *topologyImageRepoStub) Update(ctx context.Context, image *model.Image) 
 	return nil
 }
 
-func (s *topologyImageRepoStub) DeleteWithContext(ctx context.Context, id int64) error {
+func (s *topologyImageRepoStub) Delete(ctx context.Context, id int64) error {
 	if s.deleteWithContextFn != nil {
 		return s.deleteWithContextFn(ctx, id)
 	}
