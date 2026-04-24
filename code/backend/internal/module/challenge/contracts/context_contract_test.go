@@ -55,7 +55,7 @@ func (ctxOnlyChallengeContract) FindChallengeTopologyByChallengeID(context.Conte
 	return nil, nil
 }
 
-func (ctxOnlyChallengeContract) FindPublishedForRecommendationWithContext(context.Context, int, []string, []int64) ([]*model.Challenge, error) {
+func (ctxOnlyChallengeContract) FindPublishedForRecommendation(context.Context, int, []string, []int64) ([]*model.Challenge, error) {
 	return nil, nil
 }
 
