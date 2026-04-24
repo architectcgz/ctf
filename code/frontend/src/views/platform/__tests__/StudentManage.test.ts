@@ -3,6 +3,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import PlatformStudentManagement from '../StudentManage.vue'
 import adminStudentManageSource from '../StudentManage.vue?raw'
+import studentManageHeroPanelSource from '@/components/platform/student/StudentManageHeroPanel.vue?raw'
 
 const pushMock = vi.fn()
 
@@ -96,10 +97,18 @@ describe('PlatformStudentManagement', () => {
     )
     expect(adminStudentManageSource).toContain("from '@/api/teacher'")
     expect(adminStudentManageSource).toContain("from '@/composables/useStudentDirectoryQuery'")
+    expect(adminStudentManageSource).toContain(
+      "import StudentManageHeroPanel from '@/components/platform/student/StudentManageHeroPanel.vue'"
+    )
     expect(adminStudentManageSource).not.toContain("from '@/composables/usePlatformStudentDirectory'")
+    expect(adminStudentManageSource).toContain('<StudentManageHeroPanel')
     expect(adminStudentManageSource).toContain('<WorkspaceDirectoryToolbar')
     expect(adminStudentManageSource).toContain('<WorkspaceDataTable')
     expect(adminStudentManageSource).toContain('<WorkspaceDirectoryPagination')
+    expect(studentManageHeroPanelSource).toContain('刷新目录')
+    expect(studentManageHeroPanelSource).toContain(
+      'class="admin-summary-grid admin-student-manage-shell__summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
+    )
 
     const wrapper = mount(PlatformStudentManagement)
     await flushPromises()

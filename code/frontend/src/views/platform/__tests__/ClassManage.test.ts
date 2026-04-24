@@ -3,6 +3,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import PlatformClassManagement from '../ClassManage.vue'
 import adminClassManageSource from '../ClassManage.vue?raw'
+import classManageHeroPanelSource from '@/components/platform/class/ClassManageHeroPanel.vue?raw'
 
 const pushMock = vi.fn()
 
@@ -43,9 +44,17 @@ describe('PlatformClassManagement', () => {
     expect(adminClassManageSource).toContain("from '@/api/teacher'")
     expect(adminClassManageSource).not.toContain("from '@/api/admin'")
     expect(adminClassManageSource).not.toContain('getAdminClasses')
+    expect(adminClassManageSource).toContain(
+      "import ClassManageHeroPanel from '@/components/platform/class/ClassManageHeroPanel.vue'"
+    )
     expect(adminClassManageSource).toContain("from '@/components/common/WorkspaceDataTable.vue'")
+    expect(adminClassManageSource).toContain('<ClassManageHeroPanel')
     expect(adminClassManageSource).toContain('<WorkspaceDataTable')
     expect(adminClassManageSource).toContain('<WorkspaceDirectoryPagination')
+    expect(classManageHeroPanelSource).toContain('刷新目录')
+    expect(classManageHeroPanelSource).toContain(
+      'class="admin-summary-grid admin-class-manage-shell__summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
+    )
     expect(adminClassManageSource).not.toContain('teacher-management-shell')
     expect(adminClassManageSource).not.toContain('teacher-directory-row')
 

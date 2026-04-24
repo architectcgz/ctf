@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 
 import ContestAnnouncements from '../ContestAnnouncements.vue'
+import contestAnnouncementsTopbarPanelSource from '@/components/platform/contest/ContestAnnouncementsTopbarPanel.vue?raw'
 import routerSource from '@/router/index.ts?raw'
 
 const pushMock = vi.fn()
@@ -93,6 +94,9 @@ describe('ContestAnnouncements', () => {
   })
 
   it('页面应加载竞赛详情和公告列表', async () => {
+    expect(contestAnnouncementsTopbarPanelSource).toContain('Contest Announcements')
+    expect(contestAnnouncementsTopbarPanelSource).toContain('class="contest-announcement-status"')
+
     const wrapper = mount(ContestAnnouncements)
 
     await flushPromises()
