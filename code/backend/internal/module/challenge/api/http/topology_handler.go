@@ -29,11 +29,8 @@ type topologyCommandService interface {
 }
 
 type topologyQueryService interface {
-	GetChallengeTopology(challengeID int64) (*dto.ChallengeTopologyResp, error)
 	GetChallengeTopologyWithContext(ctx context.Context, challengeID int64) (*dto.ChallengeTopologyResp, error)
-	GetTemplate(id int64) (*dto.EnvironmentTemplateResp, error)
 	GetTemplateWithContext(ctx context.Context, id int64) (*dto.EnvironmentTemplateResp, error)
-	ListTemplates(keyword string) ([]*dto.EnvironmentTemplateResp, error)
 	ListTemplatesWithContext(ctx context.Context, keyword string) ([]*dto.EnvironmentTemplateResp, error)
 }
 
