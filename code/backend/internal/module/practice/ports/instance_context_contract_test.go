@@ -10,7 +10,7 @@ import (
 
 type ctxOnlyInstanceRepository struct{}
 
-func (ctxOnlyInstanceRepository) FindByIDWithContext(context.Context, int64) (*model.Instance, error) {
+func (ctxOnlyInstanceRepository) FindByID(context.Context, int64) (*model.Instance, error) {
 	return nil, nil
 }
 

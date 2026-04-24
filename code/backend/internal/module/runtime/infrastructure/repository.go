@@ -75,22 +75,9 @@ func (r *Repository) dbWithContext(ctx context.Context) *gorm.DB {
 	return r.db.WithContext(ctx)
 }
 
-func (r *Repository) FindByID(id int64) (*model.Instance, error) {
+func (r *Repository) FindByID(ctx context.Context, id int64) (*model.Instance, error) {
 	var instance model.Instance
-	err := r.db.Where("id = ?", id).First(&instance).Error
-	if err != nil {
-		return nil, err
-	}
-	return &instance, nil
-}
-
-func (r *Repository) FindByIDWithContext(ctx context.Context, id int64) (*model.Instance, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
-	var instance model.Instance
-	err := r.db.WithContext(ctx).Where("id = ?", id).First(&instance).Error
+	err := r.dbWithContext(ctx).Where("id = ?", id).First(&instance).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil

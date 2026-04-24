@@ -96,7 +96,7 @@ func (s *InstanceService) ExtendInstanceWithContext(ctx context.Context, instanc
 func (s *InstanceService) DestroyTeacherInstance(ctx context.Context, instanceID, requesterID int64, requesterRole string) error {
 	ctx = normalizeContext(ctx)
 
-	instance, err := s.repo.FindByIDWithContext(ctx, instanceID)
+	instance, err := s.repo.FindByID(ctx, instanceID)
 	if err != nil {
 		return errcode.ErrInstanceNotFound
 	}

@@ -108,7 +108,7 @@ func TestRepositoryUpdateStatusAndReleasePortRemovesAllocation(t *testing.T) {
 		t.Fatalf("UpdateStatusAndReleasePort() error = %v", err)
 	}
 
-	updated, err := repo.FindByID(instance.ID)
+	updated, err := repo.FindByID(context.Background(), instance.ID)
 	if err != nil {
 		t.Fatalf("FindByID() error = %v", err)
 	}
@@ -327,7 +327,7 @@ func TestServiceDestroyInstanceAllowsContestTeamMember(t *testing.T) {
 		t.Fatalf("DestroyInstanceWithContext() error = %v", err)
 	}
 
-	instance, err := repo.FindByID(901)
+	instance, err := repo.FindByID(context.Background(), 901)
 	if err != nil {
 		t.Fatalf("FindByID() error = %v", err)
 	}
@@ -374,7 +374,7 @@ func TestServiceExtendInstanceAllowsContestTeamMember(t *testing.T) {
 		t.Fatalf("expected remaining extends 1, got %d", resp.RemainingExtends)
 	}
 
-	instance, err := repo.FindByID(902)
+	instance, err := repo.FindByID(context.Background(), 902)
 	if err != nil {
 		t.Fatalf("FindByID() error = %v", err)
 	}
@@ -712,7 +712,7 @@ func TestServiceDestroyManagedInstanceRemovesAllRuntimeContainers(t *testing.T) 
 		t.Fatalf("expected acl rules to be removed, got %+v", engine.removedACLRules)
 	}
 
-	updated, err := repo.FindByID(instance.ID)
+	updated, err := repo.FindByID(context.Background(), instance.ID)
 	if err != nil {
 		t.Fatalf("FindByID() error = %v", err)
 	}
@@ -768,7 +768,7 @@ func TestServiceCleanExpiredInstancesKeepsRunningStateWhenRuntimeCleanupFails(t 
 		t.Fatalf("CleanExpiredInstances() error = %v", err)
 	}
 
-	updated, err := repo.FindByID(instance.ID)
+	updated, err := repo.FindByID(context.Background(), instance.ID)
 	if err != nil {
 		t.Fatalf("FindByID() error = %v", err)
 	}
@@ -826,7 +826,7 @@ func TestServiceCleanExpiredInstancesMarksExpiredWhenContainerAlreadyRemoved(t *
 		t.Fatalf("CleanExpiredInstances() error = %v", err)
 	}
 
-	updated, err := repo.FindByID(instance.ID)
+	updated, err := repo.FindByID(context.Background(), instance.ID)
 	if err != nil {
 		t.Fatalf("FindByID() error = %v", err)
 	}
@@ -1079,7 +1079,7 @@ func TestServiceDestroyTeacherInstanceHonorsClassScope(t *testing.T) {
 		t.Fatalf("DestroyTeacherInstance() error = %v", err)
 	}
 
-	instance, err := repo.FindByID(201)
+	instance, err := repo.FindByID(context.Background(), 201)
 	if err != nil {
 		t.Fatalf("FindByID() error = %v", err)
 	}
