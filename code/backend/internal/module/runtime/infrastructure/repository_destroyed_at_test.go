@@ -15,7 +15,7 @@ import (
 
 type runtimeRepositoryCountRunningContextKey string
 
-func TestUpdateStatusAndReleasePortWithContextSetsDestroyedAtForStoppedInstance(t *testing.T) {
+func TestUpdateStatusAndReleasePortSetsDestroyedAtForStoppedInstance(t *testing.T) {
 	t.Parallel()
 
 	db := newRuntimeRepositoryDestroyedAtTestDB(t)
@@ -41,8 +41,8 @@ func TestUpdateStatusAndReleasePortWithContextSetsDestroyedAtForStoppedInstance(
 	}
 
 	before := time.Now()
-	if err := repo.UpdateStatusAndReleasePortWithContext(context.Background(), instance.ID, model.InstanceStatusStopped); err != nil {
-		t.Fatalf("UpdateStatusAndReleasePortWithContext() error = %v", err)
+	if err := repo.UpdateStatusAndReleasePort(context.Background(), instance.ID, model.InstanceStatusStopped); err != nil {
+		t.Fatalf("UpdateStatusAndReleasePort() error = %v", err)
 	}
 	after := time.Now()
 
@@ -120,7 +120,7 @@ func TestCountRunningPropagatesContextToGorm(t *testing.T) {
 	}
 }
 
-func TestUpdateStatusAndReleasePortWithContextDoesNotSetDestroyedAtForFailedInstance(t *testing.T) {
+func TestUpdateStatusAndReleasePortDoesNotSetDestroyedAtForFailedInstance(t *testing.T) {
 	t.Parallel()
 
 	db := newRuntimeRepositoryDestroyedAtTestDB(t)
@@ -141,8 +141,8 @@ func TestUpdateStatusAndReleasePortWithContextDoesNotSetDestroyedAtForFailedInst
 		t.Fatalf("seed instance: %v", err)
 	}
 
-	if err := repo.UpdateStatusAndReleasePortWithContext(context.Background(), instance.ID, model.InstanceStatusFailed); err != nil {
-		t.Fatalf("UpdateStatusAndReleasePortWithContext() error = %v", err)
+	if err := repo.UpdateStatusAndReleasePort(context.Background(), instance.ID, model.InstanceStatusFailed); err != nil {
+		t.Fatalf("UpdateStatusAndReleasePort() error = %v", err)
 	}
 
 	var row struct {

@@ -183,11 +183,7 @@ func (r *Repository) RefreshInstanceExpiryWithContext(ctx context.Context, insta
 		}).Error
 }
 
-func (r *Repository) UpdateStatusAndReleasePort(id int64, status string) error {
-	return r.UpdateStatusAndReleasePortWithContext(context.Background(), id, status)
-}
-
-func (r *Repository) UpdateStatusAndReleasePortWithContext(ctx context.Context, id int64, status string) error {
+func (r *Repository) UpdateStatusAndReleasePort(ctx context.Context, id int64, status string) error {
 	if id <= 0 {
 		return nil
 	}
@@ -499,15 +495,7 @@ func (r *Repository) AtomicExtend(id int64, userID int64, maxExtends int, durati
 	return nil
 }
 
-func (r *Repository) AtomicExtendByID(id int64, maxExtends int, duration time.Duration) error {
-	return r.AtomicExtendByIDWithContext(context.Background(), id, maxExtends, duration)
-}
-
-func (r *Repository) AtomicExtendByIDWithContext(ctx context.Context, id int64, maxExtends int, duration time.Duration) error {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
+func (r *Repository) AtomicExtendByID(ctx context.Context, id int64, maxExtends int, duration time.Duration) error {
 	result := r.db.WithContext(ctx).Model(&model.Instance{}).
 		Where("id = ? AND status = ? AND extend_count < ?",
 			id, model.InstanceStatusRunning, maxExtends).

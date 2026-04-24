@@ -73,7 +73,7 @@ func (s *InstanceService) ExtendInstance(ctx context.Context, instanceID, userID
 		return nil, errcode.ErrInstanceExpired
 	}
 
-	if err := s.repo.AtomicExtendByIDWithContext(ctx, instanceID, s.config.MaxExtends, s.config.ExtendDuration); err != nil {
+	if err := s.repo.AtomicExtendByID(ctx, instanceID, s.config.MaxExtends, s.config.ExtendDuration); err != nil {
 		return nil, err
 	}
 
@@ -133,7 +133,7 @@ func (s *InstanceService) destroyManagedInstanceWithContext(ctx context.Context,
 			return errcode.ErrInternal.WithCause(err)
 		}
 	}
-	if err := s.repo.UpdateStatusAndReleasePortWithContext(ctx, instance.ID, model.InstanceStatusStopped); err != nil {
+	if err := s.repo.UpdateStatusAndReleasePort(ctx, instance.ID, model.InstanceStatusStopped); err != nil {
 		return errcode.ErrInternal.WithCause(err)
 	}
 	return nil

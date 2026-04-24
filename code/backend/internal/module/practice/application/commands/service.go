@@ -250,7 +250,7 @@ func (s *Service) markInstanceFailed(ctx context.Context, instance *model.Instan
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	if err := s.instanceRepo.UpdateStatusAndReleasePortWithContext(ctx, instance.ID, model.InstanceStatusFailed); err != nil {
+	if err := s.instanceRepo.UpdateStatusAndReleasePort(ctx, instance.ID, model.InstanceStatusFailed); err != nil {
 		s.logger.Warn("更新失败实例状态并释放端口失败", zap.Int64("instance_id", instance.ID), zap.Int("host_port", instance.HostPort), zap.Error(err))
 	}
 }

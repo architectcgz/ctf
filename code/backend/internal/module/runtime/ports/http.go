@@ -17,8 +17,8 @@ type InstanceRepository interface {
 	FindAccessibleByIDForUser(ctx context.Context, instanceID, userID int64) (*model.Instance, error)
 	ListVisibleByUser(ctx context.Context, userID int64) ([]UserVisibleInstanceRow, error)
 	ListTeacherInstances(ctx context.Context, filter TeacherInstanceFilter) ([]TeacherInstanceRow, error)
-	AtomicExtendByIDWithContext(ctx context.Context, id int64, maxExtends int, duration time.Duration) error
-	UpdateStatusAndReleasePortWithContext(ctx context.Context, id int64, status string) error
+	AtomicExtendByID(ctx context.Context, id int64, maxExtends int, duration time.Duration) error
+	UpdateStatusAndReleasePort(ctx context.Context, id int64, status string) error
 }
 
 type RuntimeCleaner interface {

@@ -213,7 +213,7 @@ func (s *stubPracticeInstanceStore) RefreshInstanceExpiryWithContext(ctx context
 	return nil
 }
 
-func (s *stubPracticeInstanceStore) UpdateStatusAndReleasePortWithContext(ctx context.Context, id int64, status string) error {
+func (s *stubPracticeInstanceStore) UpdateStatusAndReleasePort(ctx context.Context, id int64, status string) error {
 	if s.updateStatusAndReleasePortWithContextFn != nil {
 		return s.updateStatusAndReleasePortWithContextFn(ctx, id, status)
 	}
