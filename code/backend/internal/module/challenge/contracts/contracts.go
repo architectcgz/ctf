@@ -15,13 +15,13 @@ type ImageStore interface {
 }
 
 type ContestChallengeContract interface {
-	FindByIDWithContext(ctx context.Context, id int64) (*model.Challenge, error)
+	FindByID(ctx context.Context, id int64) (*model.Challenge, error)
 	BatchGetSolvedStatus(ctx context.Context, userID int64, challengeIDs []int64) (map[int64]bool, error)
 	BatchGetSolvedCount(ctx context.Context, challengeIDs []int64) (map[int64]int64, error)
 }
 
 type PracticeChallengeContract interface {
-	FindByIDWithContext(ctx context.Context, id int64) (*model.Challenge, error)
+	FindByID(ctx context.Context, id int64) (*model.Challenge, error)
 	FindChallengeTopologyByChallengeID(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error)
 }
 

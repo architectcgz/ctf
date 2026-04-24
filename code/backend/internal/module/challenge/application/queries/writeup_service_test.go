@@ -41,7 +41,7 @@ type stubChallengeWriteupRepository struct {
 	listCommunitySolutionsByChallengeIDWithContextFn   func(ctx context.Context, challengeID int64, query *dto.CommunityChallengeSolutionQuery) ([]challengeports.CommunitySolutionRecord, int64, error)
 }
 
-func (s *stubChallengeWriteupRepository) FindByIDWithContext(ctx context.Context, id int64) (*model.Challenge, error) {
+func (s *stubChallengeWriteupRepository) FindByID(ctx context.Context, id int64) (*model.Challenge, error) {
 	if s.findByIDWithContextFn != nil {
 		return s.findByIDWithContextFn(ctx, id)
 	}

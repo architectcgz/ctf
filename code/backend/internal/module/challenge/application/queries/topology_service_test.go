@@ -15,7 +15,7 @@ type stubChallengeTopologyRepository struct {
 	deleteChallengeTopologyByChallengeIDFn func(ctx context.Context, challengeID int64) error
 }
 
-func (s *stubChallengeTopologyRepository) FindByIDWithContext(ctx context.Context, id int64) (*model.Challenge, error) {
+func (s *stubChallengeTopologyRepository) FindByID(ctx context.Context, id int64) (*model.Challenge, error) {
 	if s.findByIDWithContextFn != nil {
 		return s.findByIDWithContextFn(ctx, id)
 	}

@@ -42,7 +42,7 @@ type userRouteDeps struct {
 }
 
 type challengeLookup interface {
-	FindByIDWithContext(ctx context.Context, id int64) (*model.Challenge, error)
+	FindByID(ctx context.Context, id int64) (*model.Challenge, error)
 }
 
 func routeAudit(recorder auditlog.Recorder, logger *zap.Logger, options middleware.AuditOptions) gin.HandlerFunc {
@@ -64,7 +64,7 @@ func challengeOwnerGuard(catalog challengeLookup) gin.HandlerFunc {
 			return
 		}
 
-		challenge, err := catalog.FindByIDWithContext(c.Request.Context(), challengeID)
+		challenge, err := catalog.FindByID(c.Request.Context(), challengeID)
 		if err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				response.Error(c, errcode.ErrChallengeNotFound)

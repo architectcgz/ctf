@@ -30,9 +30,9 @@ func TestRepositoryFindByID(t *testing.T) {
 	challenge := &model.Challenge{Title: "Test"}
 	db.Create(challenge)
 
-	found, err := repo.FindByIDWithContext(context.Background(), challenge.ID)
+	found, err := repo.FindByID(context.Background(), challenge.ID)
 	if err != nil {
-		t.Fatalf("FindByIDWithContext() error = %v", err)
+		t.Fatalf("FindByID() error = %v", err)
 	}
 	if found.Title != "Test" {
 		t.Fatalf("unexpected title: %s", found.Title)

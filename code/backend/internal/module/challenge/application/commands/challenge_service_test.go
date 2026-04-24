@@ -235,9 +235,9 @@ func TestServicePublishChallengeNoImage(t *testing.T) {
 		t.Fatalf("PublishChallenge() error = %v", err)
 	}
 
-	published, findErr := repo.FindByIDWithContext(context.Background(), challenge.ID)
+	published, findErr := repo.FindByID(context.Background(), challenge.ID)
 	if findErr != nil {
-		t.Fatalf("FindByIDWithContext() error = %v", findErr)
+		t.Fatalf("FindByID() error = %v", findErr)
 	}
 	if published.Status != model.ChallengeStatusPublished {
 		t.Fatalf("expected published status, got %s", published.Status)
@@ -299,9 +299,9 @@ func TestServiceDispatchPublishCheckJobsPublishesChallengeAndNotifiesRequester(t
 
 	service.dispatchPublishCheckJobs(context.Background())
 
-	published, err := repo.FindByIDWithContext(context.Background(), challenge.ID)
+	published, err := repo.FindByID(context.Background(), challenge.ID)
 	if err != nil {
-		t.Fatalf("FindByIDWithContext() error = %v", err)
+		t.Fatalf("FindByID() error = %v", err)
 	}
 	if published.Status != model.ChallengeStatusPublished {
 		t.Fatalf("expected published challenge status, got %s", published.Status)
@@ -368,9 +368,9 @@ func TestServiceDispatchPublishCheckJobsKeepsDraftOnFailureAndNotifiesRequester(
 
 	service.dispatchPublishCheckJobs(context.Background())
 
-	stored, err := repo.FindByIDWithContext(context.Background(), challenge.ID)
+	stored, err := repo.FindByID(context.Background(), challenge.ID)
 	if err != nil {
-		t.Fatalf("FindByIDWithContext() error = %v", err)
+		t.Fatalf("FindByID() error = %v", err)
 	}
 	if stored.Status != model.ChallengeStatusDraft {
 		t.Fatalf("expected challenge to stay draft, got %s", stored.Status)
@@ -439,9 +439,9 @@ func TestServiceDispatchPublishCheckJobsPublishesAttachmentOnlyChallenge(t *test
 
 	service.dispatchPublishCheckJobs(context.Background())
 
-	published, err := repo.FindByIDWithContext(context.Background(), challenge.ID)
+	published, err := repo.FindByID(context.Background(), challenge.ID)
 	if err != nil {
-		t.Fatalf("FindByIDWithContext() error = %v", err)
+		t.Fatalf("FindByID() error = %v", err)
 	}
 	if published.Status != model.ChallengeStatusPublished {
 		t.Fatalf("expected attachment-only challenge to publish, got %s", published.Status)

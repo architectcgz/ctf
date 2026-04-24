@@ -123,7 +123,7 @@ func (s *FlagService) resetNonDynamicFlagFields(challenge *model.Challenge) {
 }
 
 func (s *FlagService) loadChallenge(ctx context.Context, challengeID int64) (*model.Challenge, error) {
-	challenge, err := s.repo.FindByIDWithContext(ctx, challengeID)
+	challenge, err := s.repo.FindByID(ctx, challengeID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrNotFound

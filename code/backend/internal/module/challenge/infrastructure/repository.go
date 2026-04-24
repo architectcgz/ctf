@@ -52,7 +52,7 @@ func (r *Repository) CreateWithHintsWithContext(ctx context.Context, challenge *
 	})
 }
 
-func (r *Repository) FindByIDWithContext(ctx context.Context, id int64) (*model.Challenge, error) {
+func (r *Repository) FindByID(ctx context.Context, id int64) (*model.Challenge, error) {
 	var challenge model.Challenge
 	err := r.dbWithContext(ctx).Where("id = ?", id).First(&challenge).Error
 	return &challenge, err

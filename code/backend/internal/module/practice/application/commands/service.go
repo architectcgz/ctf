@@ -548,7 +548,7 @@ func (s *Service) SubmitFlagWithContext(ctx context.Context, userID, challengeID
 		ctx = context.Background()
 	}
 
-	challengeItem, err := s.challengeRepo.FindByIDWithContext(ctx, challengeID)
+	challengeItem, err := s.challengeRepo.FindByID(ctx, challengeID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, errcode.ErrChallengeNotFound
@@ -742,7 +742,7 @@ func (s *Service) ReviewManualReviewSubmissionWithContext(
 		return nil, errcode.ErrInvalidParams.WithCause(errors.New("仅待审核提交可执行评阅"))
 	}
 
-	challengeItem, err := s.challengeRepo.FindByIDWithContext(ctx, record.Submission.ChallengeID)
+	challengeItem, err := s.challengeRepo.FindByID(ctx, record.Submission.ChallengeID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrChallengeNotFound
@@ -886,7 +886,7 @@ func (s *Service) ListMyChallengeSubmissionsWithContext(ctx context.Context, use
 		ctx = context.Background()
 	}
 
-	challengeItem, err := s.challengeRepo.FindByIDWithContext(ctx, challengeID)
+	challengeItem, err := s.challengeRepo.FindByID(ctx, challengeID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrChallengeNotFound
@@ -1143,7 +1143,7 @@ func (s *Service) loadRuntimeSubjectWithScope(ctx context.Context, scope practic
 		return s.loadContestAWDServiceRuntimeSubject(ctx, *scope.ContestID, *scope.ServiceID)
 	}
 
-	chal, err := s.challengeRepo.FindByIDWithContext(ctx, challengeID)
+	chal, err := s.challengeRepo.FindByID(ctx, challengeID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, nil, errcode.ErrChallengeNotFound

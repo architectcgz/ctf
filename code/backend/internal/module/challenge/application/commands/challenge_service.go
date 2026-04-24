@@ -120,7 +120,7 @@ func (s *ChallengeService) CreateChallenge(ctx context.Context, actorUserID int6
 }
 
 func (s *ChallengeService) UpdateChallenge(ctx context.Context, id int64, req *dto.UpdateChallengeReq) error {
-	challenge, err := s.repo.FindByIDWithContext(ctx, id)
+	challenge, err := s.repo.FindByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return errcode.ErrChallengeNotFound
@@ -216,7 +216,7 @@ func (s *ChallengeService) validateInstanceSharingConfig(ctx context.Context, ch
 }
 
 func (s *ChallengeService) DeleteChallenge(ctx context.Context, id int64) error {
-	if _, err := s.repo.FindByIDWithContext(ctx, id); err != nil {
+	if _, err := s.repo.FindByID(ctx, id); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return errcode.ErrChallengeNotFound
 		}
@@ -235,7 +235,7 @@ func (s *ChallengeService) DeleteChallenge(ctx context.Context, id int64) error 
 }
 
 func (s *ChallengeService) PublishChallenge(ctx context.Context, id int64) error {
-	challenge, err := s.repo.FindByIDWithContext(ctx, id)
+	challenge, err := s.repo.FindByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return errcode.ErrChallengeNotFound
@@ -248,7 +248,7 @@ func (s *ChallengeService) PublishChallenge(ctx context.Context, id int64) error
 }
 
 func (s *ChallengeService) RequestPublishCheck(ctx context.Context, actorUserID, id int64) (*dto.ChallengePublishCheckJobResp, error) {
-	challenge, err := s.repo.FindByIDWithContext(ctx, id)
+	challenge, err := s.repo.FindByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrChallengeNotFound
@@ -284,7 +284,7 @@ func (s *ChallengeService) RequestPublishCheck(ctx context.Context, actorUserID,
 }
 
 func (s *ChallengeService) GetLatestPublishCheck(ctx context.Context, id int64) (*dto.ChallengePublishCheckJobResp, error) {
-	challenge, err := s.repo.FindByIDWithContext(ctx, id)
+	challenge, err := s.repo.FindByID(ctx, id)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, errcode.ErrChallengeNotFound
 	}
@@ -347,7 +347,7 @@ func (s *ChallengeService) processPublishCheckJob(ctx context.Context, jobID int
 		s.logger.Warn("load publish check job failed", zap.Int64("job_id", jobID), zap.Error(err))
 		return
 	}
-	challenge, err := s.repo.FindByIDWithContext(ctx, job.ChallengeID)
+	challenge, err := s.repo.FindByID(ctx, job.ChallengeID)
 	if err != nil {
 		s.finishPublishCheckJob(ctx, job, nil, false, fmt.Sprintf("读取题目失败: %v", err), &model.Challenge{
 			ID:    job.ChallengeID,
@@ -493,7 +493,7 @@ type challengeSelfCheckRuntimeInput struct {
 }
 
 func (s *ChallengeService) SelfCheckChallenge(ctx context.Context, id int64) (*dto.ChallengeSelfCheckResp, error) {
-	challenge, err := s.repo.FindByIDWithContext(ctx, id)
+	challenge, err := s.repo.FindByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrChallengeNotFound

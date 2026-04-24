@@ -53,7 +53,7 @@ type routerChallengeLookupContextStub struct {
 	findByIDWithContextFn func(ctx context.Context, id int64) (*model.Challenge, error)
 }
 
-func (s *routerChallengeLookupContextStub) FindByIDWithContext(ctx context.Context, id int64) (*model.Challenge, error) {
+func (s *routerChallengeLookupContextStub) FindByID(ctx context.Context, id int64) (*model.Challenge, error) {
 	if s.findByIDWithContextFn != nil {
 		return s.findByIDWithContextFn(ctx, id)
 	}

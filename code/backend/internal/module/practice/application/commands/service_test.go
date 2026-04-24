@@ -159,7 +159,7 @@ type stubPracticeChallengeContract struct {
 	findChallengeTopologyByChallengeIDFn func(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error)
 }
 
-func (s *stubPracticeChallengeContract) FindByIDWithContext(ctx context.Context, id int64) (*model.Challenge, error) {
+func (s *stubPracticeChallengeContract) FindByID(ctx context.Context, id int64) (*model.Challenge, error) {
 	if s.findByIDWithContextFn != nil {
 		return s.findByIDWithContextFn(ctx, id)
 	}

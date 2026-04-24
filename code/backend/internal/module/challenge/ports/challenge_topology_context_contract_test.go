@@ -9,7 +9,7 @@ import (
 
 type ctxOnlyChallengeTopologyRepository struct{}
 
-func (ctxOnlyChallengeTopologyRepository) FindByIDWithContext(context.Context, int64) (*model.Challenge, error) {
+func (ctxOnlyChallengeTopologyRepository) FindByID(context.Context, int64) (*model.Challenge, error) {
 	return nil, nil
 }
 

@@ -13,7 +13,7 @@ type flagCommandContextRepoStub struct {
 	updateWithContextFn   func(ctx context.Context, challenge *model.Challenge) error
 }
 
-func (s *flagCommandContextRepoStub) FindByIDWithContext(ctx context.Context, id int64) (*model.Challenge, error) {
+func (s *flagCommandContextRepoStub) FindByID(ctx context.Context, id int64) (*model.Challenge, error) {
 	if s.findByIDWithContextFn != nil {
 		return s.findByIDWithContextFn(ctx, id)
 	}
