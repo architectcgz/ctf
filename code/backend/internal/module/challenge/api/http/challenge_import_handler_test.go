@@ -105,19 +105,19 @@ func (s challengeImportHandlerCommandStub) CommitChallengeImportWithContext(ctx 
 
 type challengeImportHandlerQueryStub struct{}
 
-func (challengeImportHandlerQueryStub) GetChallengeWithContext(ctx context.Context, id int64) (*dto.ChallengeResp, error) {
+func (challengeImportHandlerQueryStub) GetChallenge(ctx context.Context, id int64) (*dto.ChallengeResp, error) {
 	return nil, nil
 }
 
-func (challengeImportHandlerQueryStub) ListChallengesWithContext(ctx context.Context, query *dto.ChallengeQuery) (*dto.PageResult, error) {
+func (challengeImportHandlerQueryStub) ListChallenges(ctx context.Context, query *dto.ChallengeQuery) (*dto.PageResult, error) {
 	return nil, nil
 }
 
-func (challengeImportHandlerQueryStub) ListPublishedChallengesWithContext(ctx context.Context, userID int64, query *dto.ChallengeQuery) (*dto.PageResult, error) {
+func (challengeImportHandlerQueryStub) ListPublishedChallenges(ctx context.Context, userID int64, query *dto.ChallengeQuery) (*dto.PageResult, error) {
 	return nil, nil
 }
 
-func (challengeImportHandlerQueryStub) GetPublishedChallengeWithContext(ctx context.Context, userID, challengeID int64) (*dto.ChallengeDetailResp, error) {
+func (challengeImportHandlerQueryStub) GetPublishedChallenge(ctx context.Context, userID, challengeID int64) (*dto.ChallengeDetailResp, error) {
 	return nil, nil
 }
 
