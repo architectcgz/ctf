@@ -867,6 +867,122 @@
   - `npm run test:run -- src/views/__tests__/sharedThemeTokenAdoption.test.ts`
   - `npm run typecheck`
 
+## 第三十二轮修复进展
+
+- 已完成：
+  - `P2-5` `AuditLog.vue` 中剩余内联的“执行人详情”弹窗已抽到独立组件 `AuditActorDetailModal.vue`，页面本体继续只保留路由 query、筛选、分页和数据装配。
+  - `auditLogWorkspaceExtraction.test.ts` 已补对新弹窗组件边界的源码护栏，防止后续再把 `AdminSurfaceModal` 和详情结构塞回路由页。
+  - `AuditLog.test.ts` 已改为同时校验 `AuditLogDirectoryPanel` 与 `AuditActorDetailModal` 的边界职责，运行行为保持不变。
+- 本轮涉及文件：
+  - `code/frontend/src/components/platform/audit/AuditActorDetailModal.vue`
+  - `code/frontend/src/views/platform/AuditLog.vue`
+  - `code/frontend/src/views/platform/__tests__/auditLogWorkspaceExtraction.test.ts`
+  - `code/frontend/src/views/platform/__tests__/AuditLog.test.ts`
+
+## 第三十二轮验证
+
+- 已执行：
+  - `npm run test:run -- src/views/platform/__tests__/AuditLog.test.ts src/views/platform/__tests__/auditLogWorkspaceExtraction.test.ts`
+  - `npm run typecheck`
+
+## 第三十三轮修复进展
+
+- 已完成：
+  - `P2-5` `AuditLog.vue` 的 hero 区和审计摘要卡已继续抽到独立组件 `AuditLogHeroPanel.vue`，路由页进一步收敛到查询同步、加载、排序、分页和目录/弹窗装配。
+  - `auditLogWorkspaceExtraction.test.ts` 已补对 `AuditLogHeroPanel` 的源码边界断言，避免后续再把头部说明和进度卡堆回路由页。
+  - `AuditLog.test.ts` 已切换为检查 `AuditLogHeroPanel` 的共享壳层和摘要卡契约，现有运行行为保持不变。
+- 本轮涉及文件：
+  - `code/frontend/src/components/platform/audit/AuditLogHeroPanel.vue`
+  - `code/frontend/src/views/platform/AuditLog.vue`
+  - `code/frontend/src/views/platform/__tests__/auditLogWorkspaceExtraction.test.ts`
+  - `code/frontend/src/views/platform/__tests__/AuditLog.test.ts`
+
+## 第三十三轮验证
+
+- 已执行：
+  - `npm run test:run -- src/views/platform/__tests__/AuditLog.test.ts src/views/platform/__tests__/auditLogWorkspaceExtraction.test.ts`
+  - `npm run typecheck`
+
+## 第三十四轮修复进展
+
+- 已完成：
+  - `P2-5` `ImageManage.vue` 的头部说明、操作按钮和状态条已抽到独立组件 `ImageManageHeroPanel.vue`，路由页继续收敛到轮询、筛选、分页和弹窗状态装配。
+  - `imageManageWorkspaceExtraction.test.ts` 已补对 `ImageManageHeroPanel` 的源码边界断言，避免后续再把头部摘要塞回路由页。
+  - `ImageManage.test.ts` 已改为检查 `ImageManageHeroPanel` 的头部状态条、按钮原语和分隔线契约，现有运行行为保持不变。
+  - 本轮中途暴露的 `statusSummary` `tone` 类型放宽问题已改成显式联合类型 `ImageStatusSummaryItem`，`typecheck` 基线已恢复。
+- 本轮涉及文件：
+  - `code/frontend/src/components/platform/images/ImageManageHeroPanel.vue`
+  - `code/frontend/src/views/platform/ImageManage.vue`
+  - `code/frontend/src/views/platform/__tests__/imageManageWorkspaceExtraction.test.ts`
+  - `code/frontend/src/views/platform/__tests__/ImageManage.test.ts`
+
+## 第三十四轮验证
+
+- 已执行：
+  - `npm run test:run -- src/views/platform/__tests__/ImageManage.test.ts src/views/platform/__tests__/imageManageWorkspaceExtraction.test.ts`
+  - `npm run typecheck`
+
+## 第三十五轮修复进展
+
+- 已完成：
+  - `P2-5` `ChallengeManage.vue` 的头部说明、导入入口和四张摘要卡已抽到独立组件 `ChallengeManageHeroPanel.vue`，路由页继续收敛到筛选、排序、分页和目录动作装配。
+  - `challengeManageDirectoryExtraction.test.ts` 已补对 `ChallengeManageHeroPanel` 的源码边界断言，避免后续再把头部摘要堆回路由页。
+  - `ChallengeManage.test.ts` 已改为检查 `ChallengeManageHeroPanel` 的 workspace 头部和摘要卡契约，现有交互保持不变。
+  - 本轮中途暴露的 `Calendar` 导入缺失已补回，`ChallengeManage` 挂载和 `typecheck` 基线已恢复。
+- 本轮涉及文件：
+  - `code/frontend/src/components/platform/challenge/ChallengeManageHeroPanel.vue`
+  - `code/frontend/src/views/platform/ChallengeManage.vue`
+  - `code/frontend/src/views/platform/__tests__/challengeManageDirectoryExtraction.test.ts`
+  - `code/frontend/src/views/platform/__tests__/ChallengeManage.test.ts`
+
+## 第三十五轮验证
+
+- 已执行：
+  - `npm run test:run -- src/views/platform/__tests__/ChallengeManage.test.ts src/views/platform/__tests__/challengeManageDirectoryExtraction.test.ts`
+  - `npm run typecheck`
+
+## 第三十六轮修复进展
+
+- 已完成：
+  - `P2-5` `platform/ChallengeDetail.vue` 的顶栏壳层已抽到独立组件 `AdminChallengeTopbarPanel.vue`，路由页继续收敛到 query tabs、详情/题解装配与远端交互 owner。
+  - `challengeDetailPanelExtraction.test.ts` 已补对 `AdminChallengeTopbarPanel` 的源码边界断言，避免后续再把 workspace 顶栏和导航按钮塞回路由页。
+  - `ChallengeDetail.test.ts` 已改为检查新顶栏组件的按钮原语契约，`platformManagementSurfaceAlignment.test.ts` 也已同步切到组合源码检查，现有行为保持不变。
+  - `ChallengeDetail.vue` 本体行数已从 `402` 行进一步降到 `372` 行，页面本体现在主要只剩顶层导航装配、tab 切换与详情远端动作。
+- 本轮涉及文件：
+  - `code/frontend/src/components/platform/challenge/AdminChallengeTopbarPanel.vue`
+  - `code/frontend/src/views/platform/ChallengeDetail.vue`
+  - `code/frontend/src/views/platform/__tests__/challengeDetailPanelExtraction.test.ts`
+  - `code/frontend/src/views/platform/__tests__/ChallengeDetail.test.ts`
+  - `code/frontend/src/views/platform/__tests__/platformManagementSurfaceAlignment.test.ts`
+
+## 第三十六轮验证
+
+- 已执行：
+  - `npm run test:run -- src/views/platform/__tests__/ChallengeDetail.test.ts src/views/platform/__tests__/challengeDetailPanelExtraction.test.ts src/views/platform/__tests__/platformManagementSurfaceAlignment.test.ts`
+  - `npm run typecheck`
+
+## 第三十七轮修复进展
+
+- 已完成：
+  - `P2-5` `CheatDetection.vue` 的 hero 顶栏和摘要卡已分别抽到独立组件 `CheatDetectionHeroPanel.vue`、`CheatDetectionSummaryPanel.vue`，路由页继续只持有风控数据加载、审计跳转、空错态与目录工作区装配。
+  - 新增并补强 `cheatDetectionPanelExtraction.test.ts`，对 `CheatDetectionHeroPanel` 和 `CheatDetectionSummaryPanel` 都加上源码边界断言，避免后续再把工作区头部说明、刷新按钮和 KPI 模板塞回路由页。
+  - `cheatDetectionSurfaceAlignment.test.ts` 与 `platformManagementSurfaceAlignment.test.ts` 已同步切到组合源码检查，抽取后深色 surface 与目录护栏保持不变。
+  - `CheatDetection.vue` 本体行数已从 `572` 行降到 `409` 行，页面本体现在主要只剩风险目录、错误态与跳转 owner。
+- 本轮涉及文件：
+  - `code/frontend/src/components/platform/cheat/CheatDetectionHeroPanel.vue`
+  - `code/frontend/src/components/platform/cheat/CheatDetectionSummaryPanel.vue`
+  - `code/frontend/src/views/platform/CheatDetection.vue`
+  - `code/frontend/src/views/platform/__tests__/cheatDetectionPanelExtraction.test.ts`
+  - `code/frontend/src/views/platform/__tests__/cheatDetectionSurfaceAlignment.test.ts`
+  - `code/frontend/src/views/platform/__tests__/platformManagementSurfaceAlignment.test.ts`
+  - `code/frontend/src/views/platform/__tests__/CheatDetection.test.ts`
+
+## 第三十七轮验证
+
+- 已执行：
+  - `npm run test:run -- src/views/platform/__tests__/CheatDetection.test.ts src/views/platform/__tests__/cheatDetectionPanelExtraction.test.ts src/views/platform/__tests__/cheatDetectionSurfaceAlignment.test.ts src/views/platform/__tests__/platformManagementSurfaceAlignment.test.ts`
+  - `npm run typecheck`
+
 ## 备注
 
 - 本文件用于记录本轮前端专项审查结论与修复顺序。

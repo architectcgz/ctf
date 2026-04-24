@@ -4,18 +4,15 @@ import { useRouter } from 'vue-router'
 import {
   AlertCircle,
   ArrowRight,
-  Fingerprint,
-  RefreshCw,
-  SearchCheck,
-  ShieldAlert,
   ShieldQuestion,
-  Users,
 } from 'lucide-vue-next'
 
 import { getCheatDetection } from '@/api/admin'
 import type { AdminCheatDetectionData } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
+import CheatDetectionHeroPanel from '@/components/platform/cheat/CheatDetectionHeroPanel.vue'
+import CheatDetectionSummaryPanel from '@/components/platform/cheat/CheatDetectionSummaryPanel.vue'
 
 const router = useRouter()
 const loading = ref(false)
@@ -67,43 +64,12 @@ onMounted(() => {
   <div class="workspace-shell journal-shell journal-shell-admin journal-hero cheat-shell">
     <div class="workspace-grid">
       <main class="content-pane">
-        <section class="workspace-hero">
-          <header class="workspace-tab-heading cheat-workbench-head">
-            <div class="workspace-tab-heading__main">
-              <div class="workspace-overline">Integrity Workspace</div>
-              <h1 class="hero-title">作弊检测</h1>
-              <p class="hero-summary">
-                基于提交爆发、IP 共享及行为指纹的多维度线索，快速定位需要继续审计复核的账号与行为。
-              </p>
-            </div>
-
-            <div class="cheat-hero-actions">
-              <div
-                v-if="riskData"
-                class="hero-meta-badge"
-              >
-                <span class="hero-meta-badge__label">最近生成</span>
-                <span class="hero-meta-badge__value">{{ formatDateTime(riskData.generated_at) }}</span>
-              </div>
-              <button
-                type="button"
-                class="ui-btn ui-btn--ghost"
-                @click="openAudit({})"
-              >
-                <SearchCheck class="h-4 w-4" />
-                打开审计日志
-              </button>
-              <button
-                type="button"
-                class="ui-btn ui-btn--primary"
-                @click="loadRiskData"
-              >
-                <RefreshCw class="h-4 w-4" :class="{ 'animate-spin': loading }" />
-                刷新线索
-              </button>
-            </div>
-          </header>
-        </section>
+        <CheatDetectionHeroPanel
+          :generated-at-label="riskData ? formatDateTime(riskData.generated_at) : null"
+          :loading="loading"
+          @open-audit="void openAudit({})"
+          @refresh="void loadRiskData()"
+        />
 
         <div class="journal-divider" />
 
@@ -118,46 +84,7 @@ onMounted(() => {
           v-else-if="riskData"
           class="cheat-workbench"
         >
-          <div class="admin-summary-grid cheat-kpi-summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface">
-            <article class="journal-note progress-card metric-panel-card">
-              <div class="journal-note-label progress-card-label metric-panel-label">
-                <span>提交风险账号</span>
-                <ShieldAlert class="h-4 w-4" />
-              </div>
-              <div class="journal-note-value progress-card-value metric-panel-value">
-                {{ riskData.summary.submit_burst_users.toString().padStart(2, '0') }}
-              </div>
-              <div class="journal-note-helper progress-card-hint metric-panel-helper">
-                超过高频阈值的账号数量
-              </div>
-            </article>
-
-            <article class="journal-note progress-card metric-panel-card">
-              <div class="journal-note-label progress-card-label metric-panel-label">
-                <span>共享 IP 线索</span>
-                <Fingerprint class="h-4 w-4" />
-              </div>
-              <div class="journal-note-value progress-card-value metric-panel-value">
-                {{ riskData.summary.shared_ip_groups.toString().padStart(2, '0') }}
-              </div>
-              <div class="journal-note-helper progress-card-hint metric-panel-helper">
-                最近窗口内出现的共享公网地址分组
-              </div>
-            </article>
-
-            <article class="journal-note progress-card metric-panel-card">
-              <div class="journal-note-label progress-card-label metric-panel-label">
-                <span>涉及用户总数</span>
-                <Users class="h-4 w-4" />
-              </div>
-              <div class="journal-note-value progress-card-value metric-panel-value">
-                {{ riskData.summary.affected_users.toString().padStart(2, '0') }}
-              </div>
-              <div class="journal-note-helper progress-card-hint metric-panel-helper">
-                当前所有线索累计覆盖的账号规模
-              </div>
-            </article>
-          </div>
+          <CheatDetectionSummaryPanel :summary="riskData.summary" />
 
           <section class="workspace-directory-section cheat-directory-section">
             <header class="list-heading">
@@ -321,72 +248,6 @@ onMounted(() => {
   --workspace-line-soft: color-mix(in srgb, var(--color-text-primary) 10%, transparent);
 }
 
-.cheat-workbench-head {
-  align-items: flex-start;
-}
-
-.hero-title {
-  margin: var(--space-1-5) 0 0;
-}
-
-.hero-summary {
-  max-width: 56rem;
-  margin-top: var(--space-3);
-  color: var(--journal-muted);
-}
-
-.cheat-hero-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: flex-end;
-  gap: var(--space-3);
-}
-
-.cheat-hero-actions > .ui-btn {
-  --ui-btn-height: 2.75rem;
-  --ui-btn-radius: 1rem;
-  --ui-btn-padding: var(--space-2-5) var(--space-4);
-  --ui-btn-font-size: var(--font-size-0-875);
-  --ui-btn-font-weight: 600;
-  --ui-btn-focus-ring: color-mix(in srgb, var(--journal-accent) 16%, transparent);
-}
-
-.cheat-hero-actions > .ui-btn.ui-btn--primary {
-  --ui-btn-primary-border: color-mix(in srgb, var(--journal-accent) 46%, var(--journal-border));
-  --ui-btn-primary-background: var(--journal-accent);
-  --ui-btn-primary-hover-background: var(--color-primary-hover);
-}
-
-.cheat-hero-actions > .ui-btn.ui-btn--ghost {
-  --ui-btn-border: var(--journal-border);
-  --ui-btn-background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
-  --ui-btn-color: var(--journal-ink);
-  --ui-btn-hover-border: color-mix(in srgb, var(--journal-accent) 28%, transparent);
-  --ui-btn-hover-background: color-mix(in srgb, var(--journal-accent) 4%, var(--journal-surface));
-  --ui-btn-hover-color: var(--journal-accent);
-}
-
-.hero-meta-badge {
-  display: grid;
-  gap: var(--space-1);
-  justify-items: end;
-}
-
-.hero-meta-badge__label {
-  font-size: var(--font-size-11);
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--journal-muted);
-}
-
-.hero-meta-badge__value {
-  font-size: var(--font-size-13);
-  font-weight: 600;
-  color: var(--journal-ink);
-}
-
 .cheat-loading {
   padding-block: var(--space-7);
 }
@@ -394,17 +255,6 @@ onMounted(() => {
 .cheat-workbench {
   display: grid;
   gap: var(--space-4);
-}
-
-.cheat-kpi-summary {
-  --metric-panel-columns: repeat(3, minmax(0, 1fr));
-}
-
-.cheat-kpi-summary .metric-panel-label {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-2);
 }
 
 .cheat-directory-section {
@@ -546,10 +396,6 @@ onMounted(() => {
 }
 
 @media (max-width: 1100px) {
-  .cheat-kpi-summary {
-    --metric-panel-columns: repeat(2, minmax(0, 1fr));
-  }
-
   .cheat-directory-row,
   .quick-action-row {
     grid-template-columns: 1fr;
@@ -560,13 +406,4 @@ onMounted(() => {
   }
 }
 
-@media (max-width: 720px) {
-  .cheat-kpi-summary {
-    --metric-panel-columns: 1fr;
-  }
-
-  .cheat-hero-actions {
-    justify-content: flex-start;
-  }
-}
 </style>

@@ -5,6 +5,7 @@ import imageManageSource from '../ImageManage.vue?raw'
 import imageCreateModalSource from '@/components/platform/images/ImageCreateModal.vue?raw'
 import imageDetailModalSource from '@/components/platform/images/ImageDetailModal.vue?raw'
 import imageDirectoryPanelSource from '@/components/platform/images/ImageDirectoryPanel.vue?raw'
+import imageManageHeroPanelSource from '@/components/platform/images/ImageManageHeroPanel.vue?raw'
 import { ApiError } from '@/api/request'
 
 const { getImagesMock, createImageMock, deleteImageMock } = vi.hoisted(() => ({
@@ -71,7 +72,7 @@ function mountPage() {
   })
 }
 
-const combinedSource = [imageManageSource, imageDirectoryPanelSource].join('\n')
+const combinedSource = [imageManageSource, imageDirectoryPanelSource, imageManageHeroPanelSource].join('\n')
 
 describe('ImageManage', () => {
   beforeEach(() => {
@@ -104,18 +105,22 @@ describe('ImageManage', () => {
   })
 
   it('应在头部展示轻量状态条而不是总量卡片', () => {
-    expect(imageManageSource).toContain('class="image-status-strip"')
-    expect(imageManageSource).toContain('data-testid="image-status-pill"')
-    expect(imageManageSource).toMatch(
+    expect(imageManageSource).toContain(
+      "import ImageManageHeroPanel from '@/components/platform/images/ImageManageHeroPanel.vue'"
+    )
+    expect(imageManageSource).toContain('<ImageManageHeroPanel')
+    expect(imageManageHeroPanelSource).toContain('class="image-status-strip"')
+    expect(imageManageHeroPanelSource).toContain('data-testid="image-status-pill"')
+    expect(imageManageHeroPanelSource).toMatch(
       /<div class="image-status-strip__note">\s*\{\{ refreshHint \}\}\s*<\/div>/
     )
-    expect(imageManageSource).toMatch(
+    expect(imageManageHeroPanelSource).toMatch(
       /<div class="workspace-overline">\s*Image Registry\s*<\/div>/
     )
-    expect(imageManageSource).not.toContain('<div class="journal-eyebrow">Image Registry</div>')
-    expect(imageManageSource).not.toContain('镜像总量')
-    expect(imageManageSource).not.toContain('当前查询结果的镜像总数')
-    expect(imageManageSource).not.toContain('这一页已加载的镜像数量')
+    expect(imageManageHeroPanelSource).not.toContain('<div class="journal-eyebrow">Image Registry</div>')
+    expect(imageManageHeroPanelSource).not.toContain('镜像总量')
+    expect(imageManageHeroPanelSource).not.toContain('当前查询结果的镜像总数')
+    expect(imageManageHeroPanelSource).not.toContain('这一页已加载的镜像数量')
   })
 
   it('创建镜像弹窗应改用后台表单原语而不是 Element Plus 表单', () => {
@@ -142,8 +147,8 @@ describe('ImageManage', () => {
   })
 
   it('应改用共享 ui-btn 原语而不是页面私有 admin-btn 按钮族', () => {
-    expect(imageManageSource).toContain('class="ui-btn ui-btn--ghost"')
-    expect(imageManageSource).toContain('class="ui-btn ui-btn--primary"')
+    expect(imageManageHeroPanelSource).toContain('class="ui-btn ui-btn--ghost"')
+    expect(imageManageHeroPanelSource).toContain('class="ui-btn ui-btn--primary"')
     expect(combinedSource).toContain('class="ui-btn ui-btn--sm ui-btn--danger"')
     expect(imageManageSource).not.toContain('admin-btn admin-btn-ghost')
     expect(imageManageSource).not.toContain('admin-btn admin-btn-primary')
@@ -151,7 +156,7 @@ describe('ImageManage', () => {
   })
 
   it('不应在头部摘要和镜像列表之间重复渲染分割线', () => {
-    expect(imageManageSource).toMatch(
+    expect(imageManageHeroPanelSource).toMatch(
       /\.image-header\s*\{[\s\S]*border-bottom:\s*1px solid color-mix\(in srgb, var\(--journal-border\) 88%, transparent\);/s
     )
     expect(imageManageSource).not.toContain('<div class="journal-divider image-divider" />')
