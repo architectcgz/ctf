@@ -25,6 +25,7 @@ describe('contest ui primitive adoption', () => {
     expect(adminContestFormPanelSource).toContain('class="ui-control"')
     expect(adminContestFormPanelSource).toContain('class="ui-btn ui-btn--secondary')
     expect(adminContestFormPanelSource).toContain('class="ui-btn ui-btn--primary')
+    expect(adminContestFormPanelSource).not.toContain('text-slate-300')
   })
 
   it('contest directory rows should consume shared badge and row action primitives', () => {

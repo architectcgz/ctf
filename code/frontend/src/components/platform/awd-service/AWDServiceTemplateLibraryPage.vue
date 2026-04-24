@@ -667,7 +667,7 @@ function selectTab(tab: LibraryTab) {
 
 .awd-tab-badge {
   background: var(--color-primary);
-  color: white;
+  color: var(--color-text-inverse);
   font-size: 10px;
   min-width: 1.25rem;
   height: 1.25rem;

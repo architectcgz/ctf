@@ -101,7 +101,7 @@ function formatDateTime(value: string): string {
             <div class="challenge-import-hero-actions">
               <button
                 type="button"
-                class="challenge-import-action"
+                class="ui-btn ui-btn--secondary challenge-import-action"
                 @click="backToChallenges"
               >
                 <ArrowLeft class="mr-1.5 h-3.5 w-3.5" />
@@ -109,14 +109,14 @@ function formatDateTime(value: string): string {
               </button>
               <button
                 type="button"
-                class="challenge-import-action"
+                class="ui-btn ui-btn--secondary challenge-import-action"
                 @click="openPackageFormatGuide"
               >
                 <FileSearch class="mr-1.5 h-3.5 w-3.5" />
                 题目包规范
               </button>
               <a
-                class="challenge-import-action challenge-import-action--primary"
+                class="ui-btn ui-btn--primary challenge-import-action challenge-import-action--primary"
                 href="/downloads/challenge-package-sample-v1.zip"
                 download="challenge-package-sample-v1.zip"
               >
@@ -296,7 +296,7 @@ function formatDateTime(value: string): string {
                   </div>
                   <button
                     type="button"
-                    class="challenge-import-action challenge-import-action--primary"
+                    class="ui-btn ui-btn--primary challenge-import-action challenge-import-action--primary"
                     @click="inspectImportTask(item.id)"
                   >
                     继续查看预览
@@ -313,8 +313,8 @@ function formatDateTime(value: string): string {
 
 <style scoped>
 .challenge-import-shell {
-  --workspace-brand: #2563eb;
-  --workspace-brand-ink: #1e40af;
+  --workspace-brand: var(--journal-accent);
+  --workspace-brand-ink: color-mix(in srgb, var(--journal-accent) 74%, var(--journal-ink));
   --challenge-page-bg: color-mix(in srgb, var(--journal-surface-subtle) 90%, var(--color-bg-base));
   --challenge-page-surface: color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-surface));
   --challenge-page-surface-subtle: color-mix(
@@ -387,44 +387,25 @@ function formatDateTime(value: string): string {
 }
 
 .challenge-import-action {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 2.5rem;
-  padding: 0 1.25rem;
-  border: 1px solid var(--challenge-page-line);
-  border-radius: 12px;
-  background: var(--challenge-page-surface);
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--challenge-page-muted);
-  transition:
-    border-color 0.2s ease,
-    background-color 0.2s ease,
-    color 0.2s ease,
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
+  --ui-btn-height: 2.5rem;
+  --ui-btn-padding: 0 1.25rem;
+  --ui-btn-radius: 12px;
+  --ui-btn-font-size: var(--font-size-12);
+  --ui-btn-font-weight: 700;
+  --ui-btn-hover-transform: translateY(-1px);
   box-shadow: 0 1px 2px color-mix(in srgb, var(--color-shadow-soft) 42%, transparent);
 }
 
-.challenge-import-action:hover {
-  border-color: var(--challenge-page-line-strong);
-  background: var(--challenge-page-surface-elevated);
-  color: var(--challenge-page-text);
-  transform: translateY(-1px);
-}
-
 .challenge-import-action--primary {
-  border-color: color-mix(in srgb, var(--workspace-brand) 42%, transparent);
-  background: color-mix(in srgb, var(--workspace-brand) 88%, var(--challenge-page-text));
-  color: white;
-  box-shadow: 0 10px 24px color-mix(in srgb, var(--workspace-brand) 18%, transparent);
-}
-
-.challenge-import-action--primary:hover {
-  color: white;
-  background: color-mix(in srgb, var(--workspace-brand-ink) 92%, var(--challenge-page-text));
-  border-color: color-mix(in srgb, var(--workspace-brand-ink) 62%, transparent);
+  --ui-btn-primary-border: color-mix(in srgb, var(--workspace-brand) 42%, transparent);
+  --ui-btn-primary-background: color-mix(in srgb, var(--workspace-brand) 88%, var(--challenge-page-text));
+  --ui-btn-primary-hover-background: color-mix(
+    in srgb,
+    var(--workspace-brand-ink) 92%,
+    var(--challenge-page-text)
+  );
+  --ui-btn-primary-hover-border: color-mix(in srgb, var(--workspace-brand-ink) 62%, transparent);
+  --ui-btn-primary-hover-shadow: 0 10px 24px color-mix(in srgb, var(--workspace-brand) 18%, transparent);
 }
 
 .challenge-directory-state,
@@ -560,29 +541,5 @@ function formatDateTime(value: string): string {
   gap: 1rem;
   font-size: 0.65rem;
   font-weight: 600;
-}
-
-:global([data-theme='light']) .challenge-import-shell {
-  --challenge-page-bg: #f8fafc;
-  --challenge-page-surface: white;
-  --challenge-page-surface-subtle: #f8fafc;
-  --challenge-page-surface-elevated: white;
-  --challenge-page-line: color-mix(in srgb, #e2e8f0 90%, transparent);
-  --challenge-page-line-strong: color-mix(in srgb, #d4dde8 94%, transparent);
-  --challenge-page-text: #0f172a;
-  --challenge-page-muted: #64748b;
-  --challenge-page-faint: #94a3b8;
-}
-
-:global([data-theme='dark']) .challenge-import-shell {
-  --challenge-page-bg: color-mix(in srgb, var(--color-bg-base) 92%, var(--color-bg-surface));
-  --challenge-page-surface: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
-  --challenge-page-surface-subtle: color-mix(in srgb, var(--color-bg-elevated) 84%, var(--color-bg-surface));
-  --challenge-page-surface-elevated: color-mix(in srgb, var(--color-bg-elevated) 92%, var(--color-bg-surface));
-  --challenge-page-line: color-mix(in srgb, var(--color-border-default) 88%, transparent);
-  --challenge-page-line-strong: color-mix(in srgb, var(--color-border-default) 94%, transparent);
-  --challenge-page-text: color-mix(in srgb, var(--color-text-primary) 94%, transparent);
-  --challenge-page-muted: color-mix(in srgb, var(--color-text-secondary) 90%, transparent);
-  --challenge-page-faint: color-mix(in srgb, var(--color-text-muted) 90%, transparent);
 }
 </style>

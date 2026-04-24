@@ -296,42 +296,6 @@ function navigateRound(delta: number) {
 }
 .status-dot.running { background: var(--color-success); box-shadow: 0 0 10px color-mix(in srgb, var(--color-success) 40%, transparent); }
 
-.ops-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  height: var(--ui-control-height-md);
-  padding: 0 var(--space-5);
-  border-radius: 0.85rem;
-  font-size: var(--font-size-13);
-  font-weight: 700;
-  transition: all 0.2s ease;
-  cursor: pointer;
-}
-
-.ops-btn--neutral {
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border-default);
-  color: var(--color-text-secondary);
-}
-
-.ops-btn--neutral:hover:not(:disabled) {
-  border-color: var(--color-primary);
-  color: var(--color-text-primary);
-}
-
-.ops-btn--primary {
-  background: var(--color-primary);
-  color: white;
-  border: none;
-  box-shadow: 0 8px 20px color-mix(in srgb, var(--color-primary) 15%, transparent);
-}
-
-.ops-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
 .ops-divider {
   width: 1px;
   height: 1.5rem;

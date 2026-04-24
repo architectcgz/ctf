@@ -278,8 +278,8 @@ const columns = [
                 </template>
                 <template #cell-status="{ row }">
                   <span
-                    class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase"
-                    :class="(row as { status: string }).status === 'running' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'"
+                    class="instance-status-pill"
+                    :class="(row as { status: string }).status === 'running' ? 'instance-status-pill--running' : 'instance-status-pill--inactive'"
                   >
                     {{ (row as { status_label: string }).status_label }}
                   </span>
@@ -364,5 +364,30 @@ const columns = [
 .quick-actions {
   display: flex;
   gap: 0.75rem;
+}
+
+.instance-status-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 1.4rem;
+  padding: 0 0.5rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: var(--font-size-10);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.instance-status-pill--running {
+  background: color-mix(in srgb, var(--color-success) 10%, transparent);
+  border-color: color-mix(in srgb, var(--color-success) 24%, transparent);
+  color: color-mix(in srgb, var(--color-success) 82%, var(--color-text-primary));
+}
+
+.instance-status-pill--inactive {
+  background: color-mix(in srgb, var(--color-text-muted) 10%, transparent);
+  border-color: color-mix(in srgb, var(--color-border-default) 92%, transparent);
+  color: var(--color-text-secondary);
 }
 </style>

@@ -24,12 +24,12 @@ defineProps<AWDScoreboardSummaryPanelProps>()
     <!-- 1. Rank Context HUD (Subtle) -->
     <div class="rank-context">
       <div class="context-item">
-        <Trophy class="h-4 w-4 text-amber-500" />
+        <Trophy class="context-icon context-icon--rank h-4 w-4" />
         <span>全场总分排名</span>
       </div>
       <div class="context-divider" />
       <div class="context-item">
-        <Users class="h-4 w-4 text-slate-400" />
+        <Users class="context-icon context-icon--neutral h-4 w-4" />
         <span>活跃参赛队伍: {{ scoreboardRows.length }}</span>
       </div>
       <div class="context-divider" />
@@ -38,7 +38,7 @@ defineProps<AWDScoreboardSummaryPanelProps>()
         class="context-item"
       >
         <div class="frozen-dot" />
-        <span class="text-orange-500 font-bold">排行榜已冻结</span>
+        <span class="context-frozen-label">排行榜已冻结</span>
       </div>
     </div>
 
@@ -82,13 +82,13 @@ defineProps<AWDScoreboardSummaryPanelProps>()
                 <span class="team-id">ID: {{ item.team_id }}</span>
               </div>
             </td>
-            <td class="text-right font-mono font-black text-blue-600 text-lg">
+            <td class="text-right scoreboard-score-cell">
               {{ formatScore(item.score) }}
             </td>
-            <td class="text-right font-mono text-slate-500">
-              <span class="font-bold text-slate-900">{{ item.solved_count }}</span> <small>SOLVED</small>
+            <td class="text-right scoreboard-progress-cell">
+              <span class="scoreboard-progress-count">{{ item.solved_count }}</span> <small>SOLVED</small>
             </td>
-            <td class="text-right text-[11px] text-slate-400">
+            <td class="text-right scoreboard-time-cell">
               {{ formatDateTime(item.last_submission_at).split(' ')[1] || '--' }}
             </td>
           </tr>
@@ -148,6 +148,12 @@ defineProps<AWDScoreboardSummaryPanelProps>()
 .rank-context { display: flex; align-items: center; gap: var(--space-6); padding: var(--space-2) 0; }
 .context-item { display: flex; align-items: center; gap: var(--space-2-5); font-size: var(--font-size-12); font-weight: 700; color: var(--color-text-secondary); }
 .context-divider { width: 1px; height: 1rem; background: var(--color-border-default); }
+.context-icon--rank { color: var(--color-warning); }
+.context-icon--neutral { color: color-mix(in srgb, var(--color-text-muted) 92%, var(--color-text-secondary)); }
+.context-frozen-label {
+  color: var(--color-warning);
+  font-weight: 700;
+}
 
 .frozen-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--color-warning); animation: blink 1.5s infinite; }
 @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
@@ -168,6 +174,24 @@ defineProps<AWDScoreboardSummaryPanelProps>()
 .team-cell { display: flex; flex-direction: column; gap: 0.15rem; }
 .team-name { font-size: var(--font-size-14); font-weight: 800; color: var(--color-text-primary); }
 .team-id { font-size: var(--font-size-10); color: var(--color-text-muted); font-weight: 600; }
+.scoreboard-score-cell {
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-18);
+  font-weight: 900;
+  color: var(--color-brand-swatch-blue);
+}
+.scoreboard-progress-cell {
+  font-family: var(--font-family-mono);
+  color: var(--color-text-muted);
+}
+.scoreboard-progress-count {
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+.scoreboard-time-cell {
+  font-size: var(--font-size-11);
+  color: color-mix(in srgb, var(--color-text-muted) 90%, var(--color-text-secondary));
+}
 
 .text-right { text-align: right; }
 .w-24 { width: 6rem; }
