@@ -95,11 +95,6 @@ func (s *Service) handleAWDAttackAcceptedEvent(ctx context.Context, evt platform
 	return s.UpdateSkillProfileForDimension(updateCtx, payload.UserID, payload.Dimension)
 }
 
-// CalculateSkillProfile 计算用户能力画像
-func (s *Service) CalculateSkillProfile(userID int64) ([]*dto.SkillDimension, error) {
-	return s.CalculateSkillProfileWithContext(context.Background(), userID)
-}
-
 // UpdateSkillProfileForDimension 增量更新指定维度的能力画像
 func (s *Service) UpdateSkillProfileForDimension(ctx context.Context, userID int64, dimension string) error {
 	// 校验维度合法性
@@ -146,8 +141,8 @@ func (s *Service) UpdateSkillProfileForDimension(ctx context.Context, userID int
 	return s.repo.UpsertWithContext(ctx, profile)
 }
 
-// CalculateSkillProfileWithContext 带超时控制的画像计算
-func (s *Service) CalculateSkillProfileWithContext(ctx context.Context, userID int64) ([]*dto.SkillDimension, error) {
+// CalculateSkillProfile 带超时控制的画像计算
+func (s *Service) CalculateSkillProfile(ctx context.Context, userID int64) ([]*dto.SkillDimension, error) {
 	start := time.Now()
 	defer func() {
 		s.logger.Info("画像计算完成", zap.Int64("userID", userID), zap.Duration("duration", time.Since(start)))
@@ -162,11 +157,11 @@ func (s *Service) CalculateSkillProfileWithContext(ctx context.Context, userID i
 		}
 		// Redis 故障时返回已有画像，避免进入临界区
 		s.logger.Warn("获取分布式锁失败，返回已有画像", zap.Int64("userID", userID), zap.Error(err))
-		return s.getExistingProfileWithContext(ctx, userID)
+		return s.getExistingProfile(ctx, userID)
 	}
 	if !locked {
 		s.logger.Debug("画像正在计算中，跳过", zap.Int64("userID", userID))
-		return s.getExistingProfileWithContext(ctx, userID)
+		return s.getExistingProfile(ctx, userID)
 	}
 	defer s.unlock(ctx, lockKey)
 
@@ -224,7 +219,7 @@ func (s *Service) RebuildAllSkillProfiles(ctx context.Context) error {
 		if err := ctx.Err(); err != nil {
 			return err
 		}
-		if _, err := s.CalculateSkillProfileWithContext(ctx, userID); err != nil {
+		if _, err := s.CalculateSkillProfile(ctx, userID); err != nil {
 			s.logger.Error("重建能力画像失败", zap.Int64("user_id", userID), zap.Error(err))
 		}
 	}
@@ -233,11 +228,7 @@ func (s *Service) RebuildAllSkillProfiles(ctx context.Context) error {
 }
 
 // getExistingProfile 获取已有画像
-func (s *Service) getExistingProfile(userID int64) ([]*dto.SkillDimension, error) {
-	return s.getExistingProfileWithContext(context.Background(), userID)
-}
-
-func (s *Service) getExistingProfileWithContext(ctx context.Context, userID int64) ([]*dto.SkillDimension, error) {
+func (s *Service) getExistingProfile(ctx context.Context, userID int64) ([]*dto.SkillDimension, error) {
 	profiles, err := s.repo.FindByUserIDWithContext(ctx, userID)
 	if err != nil {
 		return nil, err
@@ -254,11 +245,7 @@ func (s *Service) getExistingProfileWithContext(ctx context.Context, userID int6
 }
 
 // GetSkillProfile 获取用户能力画像
-func (s *Service) GetSkillProfile(userID int64) (*dto.SkillProfileResp, error) {
-	return s.GetSkillProfileWithContext(context.Background(), userID)
-}
-
-func (s *Service) GetSkillProfileWithContext(ctx context.Context, userID int64) (*dto.SkillProfileResp, error) {
+func (s *Service) GetSkillProfile(ctx context.Context, userID int64) (*dto.SkillProfileResp, error) {
 	profiles, err := s.repo.FindByUserIDWithContext(ctx, userID)
 	if err != nil {
 		return nil, err
@@ -316,7 +303,7 @@ func (s *Service) GetStudentSkillProfile(ctx context.Context, requesterID int64,
 		}
 	}
 
-	return s.GetSkillProfileWithContext(ctx, studentID)
+	return s.GetSkillProfile(ctx, studentID)
 }
 
 func (s *Service) tryLock(ctx context.Context, key string) (bool, error) {
