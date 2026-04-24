@@ -139,9 +139,6 @@ func (s *ImageService) DeleteImage(ctx context.Context, id int64) error {
 }
 
 func (s *ImageService) Close(ctx context.Context) error {
-	if ctx == nil {
-		ctx = context.Background()
-	}
 	if s.cancel != nil {
 		s.cancel()
 	}
@@ -161,9 +158,6 @@ func (s *ImageService) Close(ctx context.Context) error {
 }
 
 func (s *ImageService) verifyDockerImage(ctx context.Context, imageRef string) (int64, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	return s.runtime.InspectImageSize(ctx, imageRef)
@@ -173,13 +167,13 @@ func (s *ImageService) removeImageAsync(imageRef string) {
 	s.tasks.Add(1)
 	go func() {
 		defer s.tasks.Done()
-		if err := s.removeImageWithContext(imageRef); err != nil && !errors.Is(err, context.Canceled) {
+		if err := s.removeImage(imageRef); err != nil && !errors.Is(err, context.Canceled) {
 			s.logger.Warn("删除 Docker 镜像失败", zap.String("image", imageRef), zap.Error(err))
 		}
 	}()
 }
 
-func (s *ImageService) removeImageWithContext(imageRef string) error {
+func (s *ImageService) removeImage(imageRef string) error {
 	if s.baseCtx == nil {
 		return context.Canceled
 	}
