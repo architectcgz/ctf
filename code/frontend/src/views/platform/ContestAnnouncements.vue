@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { Bell, ChevronLeft } from 'lucide-vue-next'
 import { useRoute, useRouter } from 'vue-router'
 
 import { getContest } from '@/api/admin'
 import type { ContestDetailData } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
+import ContestAnnouncementsTopbarPanel from '@/components/platform/contest/ContestAnnouncementsTopbarPanel.vue'
 import { useContestAnnouncementManagement } from '@/composables/useContestAnnouncementManagement'
 import { useToast } from '@/composables/useToast'
 import { ApiError } from '@/api/request'
@@ -92,31 +92,12 @@ onMounted(() => {
       v-else
       class="contest-announcement-content"
     >
-      <header
+      <ContestAnnouncementsTopbarPanel
         v-if="contest"
-        class="contest-announcement-topbar"
-      >
-        <div class="contest-announcement-topbar__left">
-          <button
-            type="button"
-            class="contest-announcement-back"
-            @click="goBackToStudio"
-          >
-            <ChevronLeft class="h-5 w-5" />
-          </button>
-          <div class="contest-announcement-title-group">
-            <div class="contest-announcement-overline">
-              Contest Announcements
-            </div>
-            <h1>{{ contest.title }}</h1>
-          </div>
-        </div>
-
-        <div class="contest-announcement-status">
-          <Bell class="h-4 w-4" />
-          <span>{{ contest.status }}</span>
-        </div>
-      </header>
+        :contest-title="contest.title"
+        :contest-status="contest.status"
+        @back="goBackToStudio"
+      />
 
       <AppEmpty
         v-if="loadError"
@@ -296,7 +277,6 @@ onMounted(() => {
   padding: var(--space-6);
 }
 
-.contest-announcement-topbar,
 .contest-announcement-panel__head,
 .contest-announcement-item__head,
 .contest-announcement-actions {
@@ -305,30 +285,6 @@ onMounted(() => {
   justify-content: space-between;
   gap: var(--space-3);
 }
-
-.contest-announcement-topbar {
-  flex-wrap: wrap;
-}
-
-.contest-announcement-topbar__left {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-}
-
-.contest-announcement-back {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: 0.75rem;
-  border: 1px solid color-mix(in srgb, var(--journal-border) 84%, transparent);
-  color: var(--color-text-secondary);
-  background: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
-}
-
-.contest-announcement-title-group,
 .contest-announcement-form,
 .contest-announcement-field,
 .contest-announcement-list {
@@ -336,27 +292,18 @@ onMounted(() => {
   gap: var(--space-3);
 }
 
-.contest-announcement-overline,
 .contest-announcement-panel__overline,
 .contest-announcement-item__head p,
 .contest-announcement-inline-error,
-.contest-announcement-status,
 .contest-announcement-error {
   color: var(--color-text-muted);
   font-size: var(--font-size-0-875);
 }
 
-.contest-announcement-title-group h1,
 .contest-announcement-panel h2,
 .contest-announcement-item h3,
 .contest-announcement-item__content {
   margin: 0;
-}
-
-.contest-announcement-status {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
 }
 
 .contest-announcement-panel {

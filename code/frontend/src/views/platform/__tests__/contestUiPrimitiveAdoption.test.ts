@@ -1,15 +1,21 @@
 import { describe, expect, it } from 'vitest'
 
 import contestOperationsHubSource from '../ContestOperationsHub.vue?raw'
+import contestOperationsHubHeroPanelSource from '@/components/platform/contest/ContestOperationsHubHeroPanel.vue?raw'
 import contestOrchestrationSource from '@/components/platform/contest/ContestOrchestrationPage.vue?raw'
 import adminContestFormPanelSource from '@/components/platform/contest/PlatformContestFormPanel.vue?raw'
 import adminContestTableSource from '@/components/platform/contest/PlatformContestTable.vue?raw'
 
+const contestOperationsHubCombinedSource = [
+  contestOperationsHubSource,
+  contestOperationsHubHeroPanelSource,
+].join('\n')
+
 describe('contest ui primitive adoption', () => {
   it('contest workspace pages should consume shared ui button and control primitives', () => {
-    expect(contestOperationsHubSource).toContain('class="ui-btn ui-btn--ghost"')
-    expect(contestOperationsHubSource).toContain('class="ui-btn ui-btn--primary"')
-    expect(contestOperationsHubSource).toContain('class="contest-ops-hero__actions"')
+    expect(contestOperationsHubCombinedSource).toContain('class="ui-btn ui-btn--ghost"')
+    expect(contestOperationsHubCombinedSource).toContain('class="ui-btn ui-btn--primary"')
+    expect(contestOperationsHubCombinedSource).toContain('class="contest-ops-hero__actions"')
     expect(contestOperationsHubSource).toContain('class="contest-ops-actions"')
 
     expect(contestOrchestrationSource).toContain('class="ui-btn ui-btn--ghost"')

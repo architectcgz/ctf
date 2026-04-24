@@ -3,6 +3,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import PlatformInstanceManagement from '../InstanceManage.vue'
 import adminInstanceManageSource from '../InstanceManage.vue?raw'
+import instanceManageHeroPanelSource from '@/components/platform/instance/InstanceManageHeroPanel.vue?raw'
 
 const pushMock = vi.fn()
 
@@ -86,9 +87,19 @@ describe('PlatformInstanceManagement', () => {
     expect(adminInstanceManageSource).toContain(
       "from '@/components/common/WorkspaceDirectoryPagination.vue'"
     )
+    expect(adminInstanceManageSource).toContain(
+      "import InstanceManageHeroPanel from '@/components/platform/instance/InstanceManageHeroPanel.vue'"
+    )
     expect(adminInstanceManageSource).toContain('<WorkspaceDataTable')
     expect(adminInstanceManageSource).toContain('<WorkspaceDirectoryPagination')
+    expect(adminInstanceManageSource).toContain('<InstanceManageHeroPanel')
     expect(adminInstanceManageSource).toContain('class="instance-status-pill"')
+    expect(instanceManageHeroPanelSource).toContain('返回概览')
+    expect(instanceManageHeroPanelSource).toContain('刷新列表')
+    expect(instanceManageHeroPanelSource).toContain('class="ui-btn ui-btn--primary"')
+    expect(instanceManageHeroPanelSource).toContain(
+      'class="admin-summary-grid admin-instance-manage-shell__summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
+    )
     expect(adminInstanceManageSource).not.toContain('bg-green-100 text-green-700')
     expect(adminInstanceManageSource).not.toContain('bg-slate-100 text-slate-600')
 

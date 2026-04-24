@@ -3,6 +3,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import ContestOperationsHub from '../ContestOperationsHub.vue'
 import contestOperationsHubSource from '../ContestOperationsHub.vue?raw'
+import contestOperationsHubHeroPanelSource from '@/components/platform/contest/ContestOperationsHubHeroPanel.vue?raw'
 
 const pushMock = vi.fn()
 const routeState = vi.hoisted(() => ({
@@ -120,10 +121,10 @@ describe('ContestOperationsHub', () => {
   })
 
   it('uses shared directory heading and metric primitives for the ops index shell', () => {
-    expect(contestOperationsHubSource).toContain(
+    expect(contestOperationsHubHeroPanelSource).toContain(
       '<header class="list-heading contest-ops-hero workspace-directory-section">'
     )
-    expect(contestOperationsHubSource).toContain(
+    expect(contestOperationsHubHeroPanelSource).toContain(
       'class="progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface contest-ops-summary"'
     )
     expect(contestOperationsHubSource).toContain('contest-ops-directory')

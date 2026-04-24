@@ -983,6 +983,126 @@
   - `npm run test:run -- src/views/platform/__tests__/CheatDetection.test.ts src/views/platform/__tests__/cheatDetectionPanelExtraction.test.ts src/views/platform/__tests__/cheatDetectionSurfaceAlignment.test.ts src/views/platform/__tests__/platformManagementSurfaceAlignment.test.ts`
   - `npm run typecheck`
 
+## 第三十八轮修复进展
+
+- 已完成：
+  - `P2-5` `InstanceManage.vue` 的头部说明、返回/刷新动作和实例摘要卡已抽到独立组件 `InstanceManageHeroPanel.vue`，路由页继续只持有 teacher 实例列表加载、销毁流程、分页与状态列装配。
+  - 新增 `instanceManagePanelExtraction.test.ts`，补对 `InstanceManageHeroPanel` 的源码边界断言，避免后续再把 hero 与摘要卡堆回路由页。
+  - `InstanceManage.test.ts` 与 `platformManagementSurfaceAlignment.test.ts` 已同步切到组合源码检查，现有行为与深色管理页护栏保持不变。
+  - `InstanceManage.vue` 本体行数已从 `393` 行降到 `288` 行，页面本体现在主要只剩实例目录、销毁动作和分页 owner。
+- 本轮涉及文件：
+  - `code/frontend/src/components/platform/instance/InstanceManageHeroPanel.vue`
+  - `code/frontend/src/views/platform/InstanceManage.vue`
+  - `code/frontend/src/views/platform/__tests__/InstanceManage.test.ts`
+  - `code/frontend/src/views/platform/__tests__/instanceManagePanelExtraction.test.ts`
+  - `code/frontend/src/views/platform/__tests__/platformManagementSurfaceAlignment.test.ts`
+
+## 第三十八轮验证
+
+- 已执行：
+  - `npm run test:run -- src/views/platform/__tests__/InstanceManage.test.ts src/views/platform/__tests__/instanceManagePanelExtraction.test.ts src/views/platform/__tests__/platformManagementSurfaceAlignment.test.ts`
+  - `npm run typecheck`
+
+## 第三十九轮修复进展
+
+- 已完成：
+  - `P2-5` `StudentManage.vue` 的头部说明、刷新动作和学生摘要卡已抽到独立组件 `StudentManageHeroPanel.vue`，路由页继续只持有筛选、分页、teacher 学生目录请求与学员跳转 owner。
+  - 新增 `studentManagePanelExtraction.test.ts`，补对 `StudentManageHeroPanel` 的源码边界断言，避免后续再把 hero 与摘要卡回塞父页。
+  - `StudentManage.test.ts` 与 `platformManagementSurfaceAlignment.test.ts` 已同步切到组合源码检查，现有目录交互保持不变。
+  - `StudentManage.vue` 本体行数已从 `373` 行降到 `273` 行，页面本体现在主要只剩学生目录筛选、分页和跳转 owner。
+- 本轮涉及文件：
+  - `code/frontend/src/components/platform/student/StudentManageHeroPanel.vue`
+  - `code/frontend/src/views/platform/StudentManage.vue`
+  - `code/frontend/src/views/platform/__tests__/StudentManage.test.ts`
+  - `code/frontend/src/views/platform/__tests__/studentManagePanelExtraction.test.ts`
+  - `code/frontend/src/views/platform/__tests__/platformManagementSurfaceAlignment.test.ts`
+
+## 第三十九轮验证
+
+- 已执行：
+  - `npm run test:run -- src/views/platform/__tests__/StudentManage.test.ts src/views/platform/__tests__/studentManagePanelExtraction.test.ts src/views/platform/__tests__/platformManagementSurfaceAlignment.test.ts`
+  - `npm run typecheck`
+
+## 第四十轮修复进展
+
+- 已完成：
+  - `P2-5` `ClassManage.vue` 的头部说明、刷新动作和班级摘要卡已抽到独立组件 `ClassManageHeroPanel.vue`，路由页继续只持有班级目录加载、分页和班级详情跳转 owner。
+  - 新增 `classManagePanelExtraction.test.ts`，补对 `ClassManageHeroPanel` 的源码边界断言，避免后续再把 hero 与摘要卡塞回父页。
+  - `ClassManage.test.ts` 与 `platformManagementSurfaceAlignment.test.ts` 已同步切到组合源码检查，管理页摘要卡护栏保持不变。
+  - `ClassManage.vue` 本体行数已从 `281` 行降到 `180` 行，页面本体现在主要只剩班级目录与分页装配。
+- 本轮涉及文件：
+  - `code/frontend/src/components/platform/class/ClassManageHeroPanel.vue`
+  - `code/frontend/src/views/platform/ClassManage.vue`
+  - `code/frontend/src/views/platform/__tests__/ClassManage.test.ts`
+  - `code/frontend/src/views/platform/__tests__/classManagePanelExtraction.test.ts`
+  - `code/frontend/src/views/platform/__tests__/platformManagementSurfaceAlignment.test.ts`
+
+## 第四十轮验证
+
+- 已执行：
+  - `npm run test:run -- src/views/platform/__tests__/ClassManage.test.ts src/views/platform/__tests__/classManagePanelExtraction.test.ts src/views/platform/__tests__/platformManagementSurfaceAlignment.test.ts`
+  - `npm run typecheck`
+
+## 第四十一轮修复进展
+
+- 已完成：
+  - `P2-5` `ContestOperationsHub.vue` 的运维目录 hero 与摘要卡已抽到独立组件 `ContestOperationsHubHeroPanel.vue`，路由页继续只持有赛事列表加载、状态筛选、空态与跳转 owner。
+  - 新增 `contestOperationsHubPanelExtraction.test.ts`，补对 `ContestOperationsHubHeroPanel` 的源码边界断言，避免后续再把运维头部与摘要卡塞回父页。
+  - `ContestOperationsHub.test.ts` 与 `contestUiPrimitiveAdoption.test.ts` 已同步切到组合源码检查，现有运维目录交互与 primitive 护栏保持不变。
+  - `ContestOperationsHub.vue` 本体行数已从 `403` 行降到 `339` 行，页面本体现在主要只剩目录列表、空态和跳转 owner。
+- 本轮涉及文件：
+  - `code/frontend/src/components/platform/contest/ContestOperationsHubHeroPanel.vue`
+  - `code/frontend/src/views/platform/ContestOperationsHub.vue`
+  - `code/frontend/src/views/platform/__tests__/ContestOperationsHub.test.ts`
+  - `code/frontend/src/views/platform/__tests__/contestOperationsHubPanelExtraction.test.ts`
+  - `code/frontend/src/views/platform/__tests__/contestUiPrimitiveAdoption.test.ts`
+  - `code/frontend/src/views/platform/__tests__/contestUiPrimitiveAdoptionPhase27.test.ts`
+
+## 第四十一轮验证
+
+- 已执行：
+  - `npm run test:run -- src/views/platform/__tests__/ContestOperationsHub.test.ts src/views/platform/__tests__/contestOperationsHubPanelExtraction.test.ts src/views/platform/__tests__/contestUiPrimitiveAdoption.test.ts src/views/platform/__tests__/contestUiPrimitiveAdoptionPhase27.test.ts`
+  - `npm run typecheck`
+
+## 第四十二轮修复进展
+
+- 已完成：
+  - `P2-5` `ContestAnnouncements.vue` 的竞赛公告顶栏已抽到独立组件 `ContestAnnouncementsTopbarPanel.vue`，路由页继续只持有公告加载、发布、删除、只读分支和列表 owner。
+  - 新增 `contestAnnouncementsPanelExtraction.test.ts`，补对 `ContestAnnouncementsTopbarPanel` 的源码边界断言，避免后续再把返回入口和状态条塞回父页。
+  - `ContestAnnouncements.test.ts` 已同步校验新顶栏组件的结构契约，页面行为保持不变。
+  - `ContestAnnouncements.vue` 本体行数已从 `403` 行降到 `350` 行，页面本体现在主要只剩表单、列表和权限分支 owner。
+- 本轮涉及文件：
+  - `code/frontend/src/components/platform/contest/ContestAnnouncementsTopbarPanel.vue`
+  - `code/frontend/src/views/platform/ContestAnnouncements.vue`
+  - `code/frontend/src/views/platform/__tests__/ContestAnnouncements.test.ts`
+  - `code/frontend/src/views/platform/__tests__/contestAnnouncementsPanelExtraction.test.ts`
+
+## 第四十二轮验证
+
+- 已执行：
+  - `npm run test:run -- src/views/platform/__tests__/ContestAnnouncements.test.ts src/views/platform/__tests__/contestAnnouncementsPanelExtraction.test.ts`
+  - `npm run typecheck`
+
+## 第四十三轮修复进展
+
+- 已完成：
+  - `P2-5` `ChallengeImportManage.vue` 的导入页头部和三颗动作按钮已抽到独立组件 `ChallengeImportHeroPanel.vue`，路由页继续只持有上传、回执、导入队列与预览跳转 owner。
+  - 新增 `challengeImportManagePanelExtraction.test.ts`，补对 `ChallengeImportHeroPanel` 的源码边界断言，避免后续再把导入页 hero 与动作按钮塞回父页。
+  - `ChallengeImportManage.test.ts` 已同步校验新 hero 组件的结构契约，`journalPlatformShellStyles.test.ts` 基线保持不变。
+  - `ChallengeImportManage.vue` 本体行数已从 `545` 行降到 `478` 行，页面本体现在主要只剩上传工作区、最近上传结果与待确认导入目录。
+- 本轮涉及文件：
+  - `code/frontend/src/components/platform/challenge/ChallengeImportHeroPanel.vue`
+  - `code/frontend/src/views/platform/ChallengeImportManage.vue`
+  - `code/frontend/src/views/platform/__tests__/ChallengeImportManage.test.ts`
+  - `code/frontend/src/views/platform/__tests__/challengeImportManagePanelExtraction.test.ts`
+  - `code/frontend/src/views/platform/__tests__/journalPlatformShellStyles.test.ts`
+
+## 第四十三轮验证
+
+- 已执行：
+  - `npm run test:run -- src/views/platform/__tests__/ChallengeImportManage.test.ts src/views/platform/__tests__/challengeImportManagePanelExtraction.test.ts src/views/platform/__tests__/journalPlatformShellStyles.test.ts`
+  - `npm run typecheck`
+
 ## 备注
 
 - 本文件用于记录本轮前端专项审查结论与修复顺序。

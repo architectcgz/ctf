@@ -13,13 +13,16 @@ import challengeManageDirectoryPanelSource from '@/components/platform/challenge
 import challengeManageHeroPanelSource from '@/components/platform/challenge/ChallengeManageHeroPanel.vue?raw'
 import cheatDetectionHeroPanelSource from '@/components/platform/cheat/CheatDetectionHeroPanel.vue?raw'
 import classManageSource from '../ClassManage.vue?raw'
+import classManageHeroPanelSource from '@/components/platform/class/ClassManageHeroPanel.vue?raw'
 import instanceManageSource from '../InstanceManage.vue?raw'
+import instanceManageHeroPanelSource from '@/components/platform/instance/InstanceManageHeroPanel.vue?raw'
 import challengeDetailSource from '../ChallengeDetail.vue?raw'
 import adminChallengeTopbarPanelSource from '@/components/platform/challenge/AdminChallengeTopbarPanel.vue?raw'
 import contestEditSource from '../ContestEdit.vue?raw'
 import imageManageSource from '../ImageManage.vue?raw'
 import imageManageHeroPanelSource from '@/components/platform/images/ImageManageHeroPanel.vue?raw'
 import studentManageSource from '../StudentManage.vue?raw'
+import studentManageHeroPanelSource from '@/components/platform/student/StudentManageHeroPanel.vue?raw'
 import cheatDetectionSource from '../CheatDetection.vue?raw'
 import awdRoundInspectorSource from '@/components/platform/contest/AWDRoundInspector.vue?raw'
 import awdTrafficPanelSource from '@/components/platform/contest/AWDTrafficPanel.vue?raw'
@@ -50,9 +53,12 @@ const challengeManageCombinedSource = [
   challengeManageDirectoryPanelSource,
   challengeManageHeroPanelSource,
 ].join('\n')
+const classManageCombinedSource = [classManageSource, classManageHeroPanelSource].join('\n')
 const challengeDetailCombinedSource = [challengeDetailSource, adminChallengeTopbarPanelSource].join('\n')
 const cheatDetectionCombinedSource = [cheatDetectionSource, cheatDetectionHeroPanelSource].join('\n')
 const imageManageCombinedSource = [imageManageSource, imageManageHeroPanelSource].join('\n')
+const instanceManageCombinedSource = [instanceManageSource, instanceManageHeroPanelSource].join('\n')
+const studentManageCombinedSource = [studentManageSource, studentManageHeroPanelSource].join('\n')
 const awdReviewCombinedSource = [awdReviewIndexSource, awdReviewDirectoryPanelSource].join('\n')
 
 describe('admin management surface alignment', () => {
@@ -492,11 +498,13 @@ describe('admin management surface alignment', () => {
     expect(contestOrchestrationSource).toContain(
       'class="admin-summary-grid contest-overview-summary'
     )
-    expect(classManageSource).toContain('class="admin-summary-grid admin-class-manage-shell__summary')
-    expect(studentManageSource).toContain(
+    expect(classManageCombinedSource).toContain(
+      'class="admin-summary-grid admin-class-manage-shell__summary'
+    )
+    expect(studentManageCombinedSource).toContain(
       'class="admin-summary-grid admin-student-manage-shell__summary'
     )
-    expect(instanceManageSource).toContain(
+    expect(instanceManageCombinedSource).toContain(
       'class="admin-summary-grid admin-instance-manage-shell__summary'
     )
     expect(awdReviewIndexSource).toContain('class="admin-summary-grid admin-awd-review-shell__summary')
@@ -618,13 +626,13 @@ describe('admin management surface alignment', () => {
       'class="journal-note-helper progress-card-hint metric-panel-helper"'
     )
 
-    expect(classManageSource).toContain(
+    expect(classManageCombinedSource).toContain(
       'class="admin-summary-grid admin-class-manage-shell__summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
     )
-    expect(studentManageSource).toContain(
+    expect(studentManageCombinedSource).toContain(
       'class="admin-summary-grid admin-student-manage-shell__summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
     )
-    expect(instanceManageSource).toContain(
+    expect(instanceManageCombinedSource).toContain(
       'class="admin-summary-grid admin-instance-manage-shell__summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
     )
     expect(awdReviewIndexSource).toContain(
