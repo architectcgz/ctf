@@ -14,7 +14,7 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-func (r *Repository) FindWriteupByChallengeIDWithContext(ctx context.Context, challengeID int64) (*model.ChallengeWriteup, error) {
+func (r *Repository) FindWriteupByChallengeID(ctx context.Context, challengeID int64) (*model.ChallengeWriteup, error) {
 	var writeup model.ChallengeWriteup
 	err := r.dbWithContext(ctx).Where("challenge_id = ?", challengeID).First(&writeup).Error
 	if err != nil {
@@ -23,18 +23,18 @@ func (r *Repository) FindWriteupByChallengeIDWithContext(ctx context.Context, ch
 	return &writeup, nil
 }
 
-func (r *Repository) UpsertWriteupWithContext(ctx context.Context, writeup *model.ChallengeWriteup) error {
+func (r *Repository) UpsertWriteup(ctx context.Context, writeup *model.ChallengeWriteup) error {
 	return r.dbWithContext(ctx).Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "challenge_id"}},
 		DoUpdates: clause.AssignmentColumns([]string{"title", "content", "visibility", "created_by", "is_recommended", "recommended_at", "recommended_by", "updated_at"}),
 	}).Create(writeup).Error
 }
 
-func (r *Repository) DeleteWriteupByChallengeIDWithContext(ctx context.Context, challengeID int64) error {
+func (r *Repository) DeleteWriteupByChallengeID(ctx context.Context, challengeID int64) error {
 	return r.dbWithContext(ctx).Where("challenge_id = ?", challengeID).Delete(&model.ChallengeWriteup{}).Error
 }
 
-func (r *Repository) FindReleasedWriteupByChallengeIDWithContext(ctx context.Context, challengeID int64, now time.Time) (*model.ChallengeWriteup, error) {
+func (r *Repository) FindReleasedWriteupByChallengeID(ctx context.Context, challengeID int64, now time.Time) (*model.ChallengeWriteup, error) {
 	var writeup model.ChallengeWriteup
 	err := r.dbWithContext(ctx).
 		Where("challenge_id = ?", challengeID).
@@ -55,7 +55,7 @@ func (r *Repository) FindUserByIDWithContext(ctx context.Context, userID int64) 
 	return &user, nil
 }
 
-func (r *Repository) FindSubmissionWriteupByUserChallengeWithContext(ctx context.Context, userID, challengeID int64) (*model.SubmissionWriteup, error) {
+func (r *Repository) FindSubmissionWriteupByUserChallenge(ctx context.Context, userID, challengeID int64) (*model.SubmissionWriteup, error) {
 	var writeup model.SubmissionWriteup
 	err := r.dbWithContext(ctx).Where("user_id = ? AND challenge_id = ?", userID, challengeID).First(&writeup).Error
 	if err != nil {
@@ -64,7 +64,7 @@ func (r *Repository) FindSubmissionWriteupByUserChallengeWithContext(ctx context
 	return &writeup, nil
 }
 
-func (r *Repository) FindSubmissionWriteupByIDWithContext(ctx context.Context, id int64) (*model.SubmissionWriteup, error) {
+func (r *Repository) FindSubmissionWriteupByID(ctx context.Context, id int64) (*model.SubmissionWriteup, error) {
 	var writeup model.SubmissionWriteup
 	err := r.dbWithContext(ctx).Where("id = ?", id).First(&writeup).Error
 	if err != nil {
@@ -73,7 +73,7 @@ func (r *Repository) FindSubmissionWriteupByIDWithContext(ctx context.Context, i
 	return &writeup, nil
 }
 
-func (r *Repository) UpsertSubmissionWriteupWithContext(ctx context.Context, writeup *model.SubmissionWriteup) error {
+func (r *Repository) UpsertSubmissionWriteup(ctx context.Context, writeup *model.SubmissionWriteup) error {
 	return r.dbWithContext(ctx).Clauses(clause.OnConflict{
 		Columns: []clause.Column{{Name: "user_id"}, {Name: "challenge_id"}},
 		DoUpdates: clause.AssignmentColumns([]string{
@@ -139,7 +139,7 @@ func (r teacherSubmissionWriteupRow) toRecord() challengeports.TeacherSubmission
 	}
 }
 
-func (r *Repository) GetTeacherSubmissionWriteupByIDWithContext(ctx context.Context, id int64) (*challengeports.TeacherSubmissionWriteupRecord, error) {
+func (r *Repository) GetTeacherSubmissionWriteupByID(ctx context.Context, id int64) (*challengeports.TeacherSubmissionWriteupRecord, error) {
 	rows, _, err := r.listTeacherSubmissionWriteups(ctx, &dto.TeacherSubmissionWriteupQuery{
 		Page: 1,
 		Size: 1,
@@ -156,7 +156,7 @@ func (r *Repository) GetTeacherSubmissionWriteupByIDWithContext(ctx context.Cont
 	return &record, nil
 }
 
-func (r *Repository) ListTeacherSubmissionWriteupsWithContext(ctx context.Context, query *dto.TeacherSubmissionWriteupQuery) ([]challengeports.TeacherSubmissionWriteupRecord, int64, error) {
+func (r *Repository) ListTeacherSubmissionWriteups(ctx context.Context, query *dto.TeacherSubmissionWriteupQuery) ([]challengeports.TeacherSubmissionWriteupRecord, int64, error) {
 	return r.listTeacherSubmissionWriteups(ctx, query, nil)
 }
 
@@ -186,7 +186,7 @@ func (r recommendedSolutionRow) toRecord() challengeports.RecommendedSolutionRec
 	}
 }
 
-func (r *Repository) ListRecommendedSolutionsByChallengeIDWithContext(ctx context.Context, challengeID int64, now time.Time) ([]challengeports.RecommendedSolutionRecord, error) {
+func (r *Repository) ListRecommendedSolutionsByChallengeID(ctx context.Context, challengeID int64, now time.Time) ([]challengeports.RecommendedSolutionRecord, error) {
 	rows := make([]recommendedSolutionRow, 0)
 
 	var officialRows []recommendedSolutionRow
@@ -299,7 +299,7 @@ func (r communitySolutionRow) toRecord() challengeports.CommunitySolutionRecord 
 	}
 }
 
-func (r *Repository) ListCommunitySolutionsByChallengeIDWithContext(ctx context.Context, challengeID int64, query *dto.CommunityChallengeSolutionQuery) ([]challengeports.CommunitySolutionRecord, int64, error) {
+func (r *Repository) ListCommunitySolutionsByChallengeID(ctx context.Context, challengeID int64, query *dto.CommunityChallengeSolutionQuery) ([]challengeports.CommunitySolutionRecord, int64, error) {
 	base := r.dbWithContext(ctx).Table("submission_writeups AS sw").
 		Select(strings.TrimSpace(`
 			sw.id,
