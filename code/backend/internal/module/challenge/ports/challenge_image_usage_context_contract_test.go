@@ -8,7 +8,7 @@ import (
 
 type ctxOnlyChallengeImageUsageRepository struct{}
 
-func (ctxOnlyChallengeImageUsageRepository) CountByImageIDWithContext(context.Context, int64) (int64, error) {
+func (ctxOnlyChallengeImageUsageRepository) CountByImageID(context.Context, int64) (int64, error) {
 	return 0, nil
 }
 

@@ -62,12 +62,12 @@ func (s *imageCommandContextRepoStub) DeleteWithContext(ctx context.Context, id 
 }
 
 type imageUsageContextStub struct {
-	countByImageIDWithContextFn func(ctx context.Context, imageID int64) (int64, error)
+	countByImageIDFn func(ctx context.Context, imageID int64) (int64, error)
 }
 
-func (s *imageUsageContextStub) CountByImageIDWithContext(ctx context.Context, imageID int64) (int64, error) {
-	if s.countByImageIDWithContextFn != nil {
-		return s.countByImageIDWithContextFn(ctx, imageID)
+func (s *imageUsageContextStub) CountByImageID(ctx context.Context, imageID int64) (int64, error) {
+	if s.countByImageIDFn != nil {
+		return s.countByImageIDFn(ctx, imageID)
 	}
 	return 0, nil
 }
@@ -136,7 +136,7 @@ func TestImageServiceDeleteImagePropagatesContextToRepository(t *testing.T) {
 		},
 	}
 	usageRepo := &imageUsageContextStub{
-		countByImageIDWithContextFn: func(ctx context.Context, imageID int64) (int64, error) {
+		countByImageIDFn: func(ctx context.Context, imageID int64) (int64, error) {
 			countCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected count-usage ctx value %v, got %v", expectedCtxValue, got)

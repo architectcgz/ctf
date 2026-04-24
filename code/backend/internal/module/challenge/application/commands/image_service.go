@@ -120,7 +120,7 @@ func (s *ImageService) DeleteImage(ctx context.Context, id int64) error {
 		return errcode.ErrInternal.WithCause(err)
 	}
 
-	count, err := s.challengeRepo.CountByImageIDWithContext(ctx, id)
+	count, err := s.challengeRepo.CountByImageID(ctx, id)
 	if err != nil {
 		return errcode.ErrInternal.WithCause(err)
 	}
