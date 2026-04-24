@@ -77,37 +77,17 @@ func (s *topologyCommandRepoStub) DeleteChallengeTopologyByChallengeIDWithContex
 }
 
 type topologyTemplateRepoStub struct {
-	createFn                func(template *model.EnvironmentTemplate) error
 	createWithContextFn     func(ctx context.Context, template *model.EnvironmentTemplate) error
-	updateFn                func(template *model.EnvironmentTemplate) error
 	updateWithContextFn     func(ctx context.Context, template *model.EnvironmentTemplate) error
-	deleteFn                func(id int64) error
 	deleteWithContextFn     func(ctx context.Context, id int64) error
-	findByIDFn              func(id int64) (*model.EnvironmentTemplate, error)
 	findByIDWithContextFn   func(ctx context.Context, id int64) (*model.EnvironmentTemplate, error)
-	listFn                  func(keyword string) ([]*model.EnvironmentTemplate, error)
 	listWithContextFn       func(ctx context.Context, keyword string) ([]*model.EnvironmentTemplate, error)
-	incrementUsageFn        func(id int64) error
 	incrementUsageWithCtxFn func(ctx context.Context, id int64) error
-}
-
-func (s *topologyTemplateRepoStub) Create(template *model.EnvironmentTemplate) error {
-	if s.createFn != nil {
-		return s.createFn(template)
-	}
-	return nil
 }
 
 func (s *topologyTemplateRepoStub) CreateWithContext(ctx context.Context, template *model.EnvironmentTemplate) error {
 	if s.createWithContextFn != nil {
 		return s.createWithContextFn(ctx, template)
-	}
-	return s.Create(template)
-}
-
-func (s *topologyTemplateRepoStub) Update(template *model.EnvironmentTemplate) error {
-	if s.updateFn != nil {
-		return s.updateFn(template)
 	}
 	return nil
 }
@@ -116,13 +96,6 @@ func (s *topologyTemplateRepoStub) UpdateWithContext(ctx context.Context, templa
 	if s.updateWithContextFn != nil {
 		return s.updateWithContextFn(ctx, template)
 	}
-	return s.Update(template)
-}
-
-func (s *topologyTemplateRepoStub) Delete(id int64) error {
-	if s.deleteFn != nil {
-		return s.deleteFn(id)
-	}
 	return nil
 }
 
@@ -130,26 +103,12 @@ func (s *topologyTemplateRepoStub) DeleteWithContext(ctx context.Context, id int
 	if s.deleteWithContextFn != nil {
 		return s.deleteWithContextFn(ctx, id)
 	}
-	return s.Delete(id)
-}
-
-func (s *topologyTemplateRepoStub) FindByID(id int64) (*model.EnvironmentTemplate, error) {
-	if s.findByIDFn != nil {
-		return s.findByIDFn(id)
-	}
-	return nil, nil
+	return nil
 }
 
 func (s *topologyTemplateRepoStub) FindByIDWithContext(ctx context.Context, id int64) (*model.EnvironmentTemplate, error) {
 	if s.findByIDWithContextFn != nil {
 		return s.findByIDWithContextFn(ctx, id)
-	}
-	return s.FindByID(id)
-}
-
-func (s *topologyTemplateRepoStub) List(keyword string) ([]*model.EnvironmentTemplate, error) {
-	if s.listFn != nil {
-		return s.listFn(keyword)
 	}
 	return nil, nil
 }
@@ -158,21 +117,14 @@ func (s *topologyTemplateRepoStub) ListWithContext(ctx context.Context, keyword 
 	if s.listWithContextFn != nil {
 		return s.listWithContextFn(ctx, keyword)
 	}
-	return s.List(keyword)
-}
-
-func (s *topologyTemplateRepoStub) IncrementUsage(id int64) error {
-	if s.incrementUsageFn != nil {
-		return s.incrementUsageFn(id)
-	}
-	return nil
+	return nil, nil
 }
 
 func (s *topologyTemplateRepoStub) IncrementUsageWithContext(ctx context.Context, id int64) error {
 	if s.incrementUsageWithCtxFn != nil {
 		return s.incrementUsageWithCtxFn(ctx, id)
 	}
-	return s.IncrementUsage(id)
+	return nil
 }
 
 type topologyImageRepoStub struct {
