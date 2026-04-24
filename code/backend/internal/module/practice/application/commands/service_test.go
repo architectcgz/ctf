@@ -2515,7 +2515,7 @@ func TestListTeacherManualReviewSubmissionsRejectsOversizedClassName(t *testing.
 	}
 }
 
-func TestGetTeacherManualReviewSubmissionWithContextPropagatesContextToRepository(t *testing.T) {
+func TestGetTeacherManualReviewSubmissionPropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := practiceServiceContextKey("get-review")
@@ -2548,8 +2548,8 @@ func TestGetTeacherManualReviewSubmissionWithContextPropagatesContextToRepositor
 	service := NewService(repo, nil, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	if _, err := service.GetTeacherManualReviewSubmissionWithContext(ctx, 91, 1001, model.RoleTeacher); err != nil {
-		t.Fatalf("GetTeacherManualReviewSubmissionWithContext() error = %v", err)
+	if _, err := service.GetTeacherManualReviewSubmission(ctx, 91, 1001, model.RoleTeacher); err != nil {
+		t.Fatalf("GetTeacherManualReviewSubmission() error = %v", err)
 	}
 	if !getCalled {
 		t.Fatal("expected get manual review repository to be called")
@@ -2559,7 +2559,7 @@ func TestGetTeacherManualReviewSubmissionWithContextPropagatesContextToRepositor
 	}
 }
 
-func TestGetTeacherManualReviewSubmissionWithContextRejectsStudentRole(t *testing.T) {
+func TestGetTeacherManualReviewSubmissionRejectsStudentRole(t *testing.T) {
 	t.Parallel()
 
 	repo := &stubPracticeRepository{
@@ -2574,7 +2574,7 @@ func TestGetTeacherManualReviewSubmissionWithContextRejectsStudentRole(t *testin
 	}
 	service := NewService(repo, nil, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
 
-	_, err := service.GetTeacherManualReviewSubmissionWithContext(context.Background(), 91, 1001, model.RoleStudent)
+	_, err := service.GetTeacherManualReviewSubmission(context.Background(), 91, 1001, model.RoleStudent)
 	if err == nil {
 		t.Fatal("expected student role to be rejected")
 	}

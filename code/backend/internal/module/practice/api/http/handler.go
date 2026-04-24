@@ -27,7 +27,7 @@ type practiceService interface {
 	SubmitFlag(ctx context.Context, userID, challengeID int64, flag string) (*dto.SubmissionResp, error)
 	ListMyChallengeSubmissionsWithContext(ctx context.Context, userID, challengeID int64) ([]*dto.ChallengeSubmissionRecordResp, error)
 	ListTeacherManualReviewSubmissions(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherManualReviewSubmissionQuery) (*dto.PageResult, error)
-	GetTeacherManualReviewSubmissionWithContext(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*dto.TeacherManualReviewSubmissionDetailResp, error)
+	GetTeacherManualReviewSubmission(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*dto.TeacherManualReviewSubmissionDetailResp, error)
 	ReviewManualReviewSubmissionWithContext(ctx context.Context, submissionID, reviewerID int64, reviewerRole string, req *dto.ReviewManualReviewSubmissionReq) (*dto.TeacherManualReviewSubmissionDetailResp, error)
 }
 
@@ -196,7 +196,7 @@ func (h *Handler) GetTeacherManualReviewSubmission(c *gin.Context) {
 		response.InvalidParams(c, "无效的 submission id")
 		return
 	}
-	resp, err := h.service.GetTeacherManualReviewSubmissionWithContext(c.Request.Context(), submissionID, currentUser.UserID, currentUser.Role)
+	resp, err := h.service.GetTeacherManualReviewSubmission(c.Request.Context(), submissionID, currentUser.UserID, currentUser.Role)
 	if err != nil {
 		response.FromError(c, err)
 		return
