@@ -37,9 +37,7 @@ type awdServiceTemplateCommandService interface {
 }
 
 type awdServiceTemplateQueryService interface {
-	GetTemplate(id int64) (*dto.AWDServiceTemplateResp, error)
 	GetTemplateWithContext(ctx context.Context, id int64) (*dto.AWDServiceTemplateResp, error)
-	ListTemplates(req *dto.AWDServiceTemplateQuery) (*dto.AWDServiceTemplatePageResp, error)
 	ListTemplatesWithContext(ctx context.Context, req *dto.AWDServiceTemplateQuery) (*dto.AWDServiceTemplatePageResp, error)
 }
 

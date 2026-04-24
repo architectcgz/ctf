@@ -20,10 +20,6 @@ func NewAWDServiceTemplateQueryService(repo challengeports.AWDServiceTemplateQue
 	return &AWDServiceTemplateQueryService{repo: repo}
 }
 
-func (s *AWDServiceTemplateQueryService) GetTemplate(id int64) (*dto.AWDServiceTemplateResp, error) {
-	return s.GetTemplateWithContext(context.Background(), id)
-}
-
 func (s *AWDServiceTemplateQueryService) GetTemplateWithContext(ctx context.Context, id int64) (*dto.AWDServiceTemplateResp, error) {
 	if ctx == nil {
 		ctx = context.Background()
@@ -37,10 +33,6 @@ func (s *AWDServiceTemplateQueryService) GetTemplateWithContext(ctx context.Cont
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 	return domain.AWDServiceTemplateRespFromModel(item), nil
-}
-
-func (s *AWDServiceTemplateQueryService) ListTemplates(req *dto.AWDServiceTemplateQuery) (*dto.AWDServiceTemplatePageResp, error) {
-	return s.ListTemplatesWithContext(context.Background(), req)
 }
 
 func (s *AWDServiceTemplateQueryService) ListTemplatesWithContext(ctx context.Context, req *dto.AWDServiceTemplateQuery) (*dto.AWDServiceTemplatePageResp, error) {
