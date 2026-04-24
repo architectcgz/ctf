@@ -145,7 +145,7 @@ func (r *Repository) ListAWDServiceTemplates(ctx context.Context, query *dto.AWD
 	return templates, total, err
 }
 
-func (r *Repository) ListWithContext(ctx context.Context, query *dto.ChallengeQuery) ([]*model.Challenge, int64, error) {
+func (r *Repository) List(ctx context.Context, query *dto.ChallengeQuery) ([]*model.Challenge, int64, error) {
 	var challenges []*model.Challenge
 	var total int64
 
