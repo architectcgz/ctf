@@ -155,8 +155,8 @@ func (s *stubScoreUpdater) lockTimeout() time.Duration {
 }
 
 type stubPracticeChallengeContract struct {
-	findByIDWithContextFn                   func(ctx context.Context, id int64) (*model.Challenge, error)
-	findChallengeTopologyByChallengeIDCtxFn func(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error)
+	findByIDWithContextFn                func(ctx context.Context, id int64) (*model.Challenge, error)
+	findChallengeTopologyByChallengeIDFn func(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error)
 }
 
 func (s *stubPracticeChallengeContract) FindByIDWithContext(ctx context.Context, id int64) (*model.Challenge, error) {
@@ -166,20 +166,20 @@ func (s *stubPracticeChallengeContract) FindByIDWithContext(ctx context.Context,
 	return nil, nil
 }
 
-func (s *stubPracticeChallengeContract) FindChallengeTopologyByChallengeIDWithContext(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error) {
-	if s.findChallengeTopologyByChallengeIDCtxFn != nil {
-		return s.findChallengeTopologyByChallengeIDCtxFn(ctx, challengeID)
+func (s *stubPracticeChallengeContract) FindChallengeTopologyByChallengeID(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error) {
+	if s.findChallengeTopologyByChallengeIDFn != nil {
+		return s.findChallengeTopologyByChallengeIDFn(ctx, challengeID)
 	}
 	return nil, nil
 }
 
 type stubPracticeImageStore struct {
-	findByIDWithContextFn func(ctx context.Context, id int64) (*model.Image, error)
+	findByIDFn func(ctx context.Context, id int64) (*model.Image, error)
 }
 
-func (s *stubPracticeImageStore) FindByIDWithContext(ctx context.Context, id int64) (*model.Image, error) {
-	if s.findByIDWithContextFn != nil {
-		return s.findByIDWithContextFn(ctx, id)
+func (s *stubPracticeImageStore) FindByID(ctx context.Context, id int64) (*model.Image, error) {
+	if s.findByIDFn != nil {
+		return s.findByIDFn(ctx, id)
 	}
 	return nil, nil
 }
@@ -1618,7 +1618,7 @@ func TestProvisionInstancePropagatesContextToUpdateRuntime(t *testing.T) {
 		nil,
 		nil,
 		&stubPracticeImageStore{
-			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Image, error) {
+			findByIDFn: func(ctx context.Context, id int64) (*model.Image, error) {
 				if got := ctx.Value(ctxKey); got != expectedCtxValue {
 					t.Fatalf("expected image lookup ctx value %v, got %v", expectedCtxValue, got)
 				}
@@ -1903,7 +1903,7 @@ func TestStartChallengeWithContextPropagatesContextToTransactionalRepositoryWhen
 			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
 				return &model.Challenge{ID: id, ImageID: 1, Status: model.ChallengeStatusPublished, FlagType: model.FlagTypeStatic, FlagHash: "flag{shared}", InstanceSharing: model.InstanceSharingShared}, nil
 			},
-			findChallengeTopologyByChallengeIDCtxFn: func(context.Context, int64) (*model.ChallengeTopology, error) {
+			findChallengeTopologyByChallengeIDFn: func(context.Context, int64) (*model.ChallengeTopology, error) {
 				return nil, nil
 			},
 		},
@@ -2006,7 +2006,7 @@ func TestStartChallengeWithContextPropagatesContextToTransactionalRepositoryWhen
 			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
 				return &model.Challenge{ID: id, ImageID: 1, Status: model.ChallengeStatusPublished, FlagType: model.FlagTypeStatic, FlagHash: "flag{new}"}, nil
 			},
-			findChallengeTopologyByChallengeIDCtxFn: func(context.Context, int64) (*model.ChallengeTopology, error) {
+			findChallengeTopologyByChallengeIDFn: func(context.Context, int64) (*model.ChallengeTopology, error) {
 				return nil, nil
 			},
 		},
@@ -2050,7 +2050,7 @@ func TestLoadRuntimeSubjectWithScopePropagatesContextToChallengeContract(t *test
 				}
 				return &model.Challenge{ID: id, Status: model.ChallengeStatusPublished}, nil
 			},
-			findChallengeTopologyByChallengeIDCtxFn: func(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error) {
+			findChallengeTopologyByChallengeIDFn: func(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error) {
 				topologyLookupCalled = true
 				if got := ctx.Value(ctxKey); got != expectedCtxValue {
 					t.Fatalf("expected topology lookup ctx value %v, got %v", expectedCtxValue, got)
@@ -2095,7 +2095,7 @@ func TestBuildTopologyCreateRequestPropagatesContextToImageRepository(t *testing
 	lookups := make([]int64, 0, 2)
 	service := &Service{
 		imageRepo: &stubPracticeImageStore{
-			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Image, error) {
+			findByIDFn: func(ctx context.Context, id int64) (*model.Image, error) {
 				if got := ctx.Value(ctxKey); got != expectedCtxValue {
 					t.Fatalf("expected image lookup ctx value %v, got %v", expectedCtxValue, got)
 				}

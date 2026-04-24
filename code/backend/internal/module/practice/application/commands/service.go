@@ -1150,7 +1150,7 @@ func (s *Service) loadRuntimeSubjectWithScope(ctx context.Context, scope practic
 		}
 		return nil, nil, errcode.ErrInternal.WithCause(err)
 	}
-	topology, err := s.challengeRepo.FindChallengeTopologyByChallengeIDWithContext(ctx, chal.ID)
+	topology, err := s.challengeRepo.FindChallengeTopologyByChallengeID(ctx, chal.ID)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, nil, errcode.ErrContainerCreateFailed.WithCause(err)
 	}
@@ -1476,7 +1476,7 @@ func (s *Service) createContainer(ctx context.Context, instance *model.Instance,
 }
 
 func (s *Service) createSingleContainer(ctx context.Context, instance *model.Instance, chal *model.Challenge, flag string) error {
-	imageItem, err := s.imageRepo.FindByIDWithContext(ctx, chal.ImageID)
+	imageItem, err := s.imageRepo.FindByID(ctx, chal.ImageID)
 	if err != nil {
 		return errcode.ErrContainerCreateFailed.WithCause(err)
 	}
@@ -1589,7 +1589,7 @@ func (s *Service) buildTopologyCreateRequest(
 }
 
 func (s *Service) resolveAvailableImageRef(ctx context.Context, imageID int64) (string, error) {
-	imageItem, err := s.imageRepo.FindByIDWithContext(ctx, imageID)
+	imageItem, err := s.imageRepo.FindByID(ctx, imageID)
 	if err != nil {
 		return "", errcode.ErrContainerCreateFailed.WithCause(err)
 	}

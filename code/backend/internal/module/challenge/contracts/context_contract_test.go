@@ -3,13 +3,13 @@ package contracts_test
 import (
 	"context"
 
-	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 )
 
 type ctxOnlyImageStore struct{}
 
-func (ctxOnlyImageStore) FindByIDWithContext(context.Context, int64) (*model.Image, error) {
+func (ctxOnlyImageStore) FindByID(context.Context, int64) (*model.Image, error) {
 	return nil, nil
 }
 
@@ -19,7 +19,7 @@ func (ctxOnlyPracticeChallengeContract) FindByIDWithContext(context.Context, int
 	return nil, nil
 }
 
-func (ctxOnlyPracticeChallengeContract) FindChallengeTopologyByChallengeIDWithContext(context.Context, int64) (*model.ChallengeTopology, error) {
+func (ctxOnlyPracticeChallengeContract) FindChallengeTopologyByChallengeID(context.Context, int64) (*model.ChallengeTopology, error) {
 	return nil, nil
 }
 
@@ -51,7 +51,7 @@ func (ctxOnlyChallengeContract) BatchGetSolvedCountWithContext(context.Context, 
 	return nil, nil
 }
 
-func (ctxOnlyChallengeContract) FindChallengeTopologyByChallengeIDWithContext(context.Context, int64) (*model.ChallengeTopology, error) {
+func (ctxOnlyChallengeContract) FindChallengeTopologyByChallengeID(context.Context, int64) (*model.ChallengeTopology, error) {
 	return nil, nil
 }
 

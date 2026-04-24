@@ -56,7 +56,7 @@ func (s *TopologyService) SaveChallengeTopology(ctx context.Context, challengeID
 		Spec:         rawSpec,
 		UpdatedAt:    time.Now(),
 	}
-	if err := s.repo.UpsertChallengeTopologyWithContext(ctx, item); err != nil {
+	if err := s.repo.UpsertChallengeTopology(ctx, item); err != nil {
 		return nil, err
 	}
 	if templateID != nil {
@@ -64,7 +64,7 @@ func (s *TopologyService) SaveChallengeTopology(ctx context.Context, challengeID
 			return nil, err
 		}
 	}
-	saved, err := s.repo.FindChallengeTopologyByChallengeIDWithContext(ctx, challengeID)
+	saved, err := s.repo.FindChallengeTopologyByChallengeID(ctx, challengeID)
 	if err != nil {
 		return nil, err
 	}
@@ -94,7 +94,7 @@ func (s *TopologyService) DeleteChallengeTopology(ctx context.Context, challenge
 		}
 		return err
 	}
-	return s.repo.DeleteChallengeTopologyByChallengeIDWithContext(ctx, challengeID)
+	return s.repo.DeleteChallengeTopologyByChallengeID(ctx, challengeID)
 }
 
 func (s *TopologyService) CreateTemplate(ctx context.Context, req *dto.UpsertEnvironmentTemplateReq) (*dto.EnvironmentTemplateResp, error) {

@@ -139,46 +139,26 @@ func (s *challengeCommandImageRepoStub) DeleteWithContext(ctx context.Context, i
 }
 
 type challengeCommandTopologyRepoStub struct {
-	findByIDFn                              func(id int64) (*model.Challenge, error)
-	findByIDWithContextFn                   func(ctx context.Context, id int64) (*model.Challenge, error)
-	findChallengeTopologyByChallengeIDFn    func(challengeID int64) (*model.ChallengeTopology, error)
-	findChallengeTopologyByChallengeIDCtxFn func(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error)
+	findByIDWithContextFn                func(ctx context.Context, id int64) (*model.Challenge, error)
+	findChallengeTopologyByChallengeIDFn func(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error)
 }
 
-func (s *challengeCommandTopologyRepoStub) FindByID(id int64) (*model.Challenge, error) {
-	if s.findByIDFn != nil {
-		return s.findByIDFn(id)
-	}
-	return nil, nil
-}
 func (s *challengeCommandTopologyRepoStub) FindByIDWithContext(ctx context.Context, id int64) (*model.Challenge, error) {
 	if s.findByIDWithContextFn != nil {
 		return s.findByIDWithContextFn(ctx, id)
 	}
-	return s.FindByID(id)
+	return nil, nil
 }
-func (s *challengeCommandTopologyRepoStub) FindChallengeTopologyByChallengeID(challengeID int64) (*model.ChallengeTopology, error) {
+func (s *challengeCommandTopologyRepoStub) FindChallengeTopologyByChallengeID(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error) {
 	if s.findChallengeTopologyByChallengeIDFn != nil {
-		return s.findChallengeTopologyByChallengeIDFn(challengeID)
+		return s.findChallengeTopologyByChallengeIDFn(ctx, challengeID)
 	}
 	return nil, nil
 }
-func (s *challengeCommandTopologyRepoStub) FindChallengeTopologyByChallengeIDWithContext(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error) {
-	if s.findChallengeTopologyByChallengeIDCtxFn != nil {
-		return s.findChallengeTopologyByChallengeIDCtxFn(ctx, challengeID)
-	}
-	return s.FindChallengeTopologyByChallengeID(challengeID)
-}
-func (s *challengeCommandTopologyRepoStub) UpsertChallengeTopology(topology *model.ChallengeTopology) error {
+func (s *challengeCommandTopologyRepoStub) UpsertChallengeTopology(ctx context.Context, topology *model.ChallengeTopology) error {
 	return nil
 }
-func (s *challengeCommandTopologyRepoStub) UpsertChallengeTopologyWithContext(ctx context.Context, topology *model.ChallengeTopology) error {
-	return nil
-}
-func (s *challengeCommandTopologyRepoStub) DeleteChallengeTopologyByChallengeID(challengeID int64) error {
-	return nil
-}
-func (s *challengeCommandTopologyRepoStub) DeleteChallengeTopologyByChallengeIDWithContext(ctx context.Context, challengeID int64) error {
+func (s *challengeCommandTopologyRepoStub) DeleteChallengeTopologyByChallengeID(ctx context.Context, challengeID int64) error {
 	return nil
 }
 
@@ -278,7 +258,7 @@ func TestChallengeServiceUpdateChallengePropagatesContextToRepositories(t *testi
 		},
 	}
 	topologyRepo := &challengeCommandTopologyRepoStub{
-		findChallengeTopologyByChallengeIDCtxFn: func(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error) {
+		findChallengeTopologyByChallengeIDFn: func(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error) {
 			topologyCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected topology find ctx value %v, got %v", expectedCtxValue, got)
@@ -486,11 +466,7 @@ func TestChallengeServiceSelfCheckChallengePropagatesContextToRepositories(t *te
 		},
 	}
 	topologyRepo := &challengeCommandTopologyRepoStub{
-		findChallengeTopologyByChallengeIDFn: func(challengeID int64) (*model.ChallengeTopology, error) {
-			t.Fatal("unexpected legacy topology find without context")
-			return nil, nil
-		},
-		findChallengeTopologyByChallengeIDCtxFn: func(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error) {
+		findChallengeTopologyByChallengeIDFn: func(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error) {
 			topologyCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected topology find ctx value %v, got %v", expectedCtxValue, got)
@@ -611,11 +587,7 @@ func TestChallengeServiceProcessPublishCheckJobPropagatesContextToRepositories(t
 		},
 	}
 	topologyRepo := &challengeCommandTopologyRepoStub{
-		findChallengeTopologyByChallengeIDFn: func(challengeID int64) (*model.ChallengeTopology, error) {
-			t.Fatal("unexpected legacy topology find without context")
-			return nil, nil
-		},
-		findChallengeTopologyByChallengeIDCtxFn: func(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error) {
+		findChallengeTopologyByChallengeIDFn: func(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error) {
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected topology find ctx value %v, got %v", expectedCtxValue, got)
 			}

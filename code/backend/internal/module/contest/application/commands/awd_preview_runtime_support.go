@@ -114,7 +114,7 @@ func (s *AWDService) resolvePreviewImageRefByID(ctx context.Context, imageID int
 	if imageID <= 0 {
 		return "", errcode.ErrInvalidParams.WithCause(errors.New("invalid preview image id"))
 	}
-	imageItem, err := s.imageRepo.FindByIDWithContext(ctx, imageID)
+	imageItem, err := s.imageRepo.FindByID(ctx, imageID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return "", errcode.ErrNotFound

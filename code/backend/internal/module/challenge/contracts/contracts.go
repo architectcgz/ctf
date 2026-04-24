@@ -11,7 +11,7 @@ type FlagValidator interface {
 }
 
 type ImageStore interface {
-	FindByIDWithContext(ctx context.Context, id int64) (*model.Image, error)
+	FindByID(ctx context.Context, id int64) (*model.Image, error)
 }
 
 type ContestChallengeContract interface {
@@ -22,7 +22,7 @@ type ContestChallengeContract interface {
 
 type PracticeChallengeContract interface {
 	FindByIDWithContext(ctx context.Context, id int64) (*model.Challenge, error)
-	FindChallengeTopologyByChallengeIDWithContext(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error)
+	FindChallengeTopologyByChallengeID(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error)
 }
 
 type ChallengeContract interface {

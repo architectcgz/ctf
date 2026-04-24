@@ -32,7 +32,7 @@ func (s *TopologyService) GetChallengeTopology(ctx context.Context, challengeID 
 		}
 		return nil, err
 	}
-	item, err := s.repo.FindChallengeTopologyByChallengeIDWithContext(ctx, challengeID)
+	item, err := s.repo.FindChallengeTopologyByChallengeID(ctx, challengeID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrNotFound

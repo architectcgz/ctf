@@ -13,15 +13,15 @@ func (ctxOnlyChallengeTopologyRepository) FindByIDWithContext(context.Context, i
 	return nil, nil
 }
 
-func (ctxOnlyChallengeTopologyRepository) FindChallengeTopologyByChallengeIDWithContext(context.Context, int64) (*model.ChallengeTopology, error) {
+func (ctxOnlyChallengeTopologyRepository) FindChallengeTopologyByChallengeID(context.Context, int64) (*model.ChallengeTopology, error) {
 	return nil, nil
 }
 
-func (ctxOnlyChallengeTopologyRepository) UpsertChallengeTopologyWithContext(context.Context, *model.ChallengeTopology) error {
+func (ctxOnlyChallengeTopologyRepository) UpsertChallengeTopology(context.Context, *model.ChallengeTopology) error {
 	return nil
 }
 
-func (ctxOnlyChallengeTopologyRepository) DeleteChallengeTopologyByChallengeIDWithContext(context.Context, int64) error {
+func (ctxOnlyChallengeTopologyRepository) DeleteChallengeTopologyByChallengeID(context.Context, int64) error {
 	return nil
 }
 
