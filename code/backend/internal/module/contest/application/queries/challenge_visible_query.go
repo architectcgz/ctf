@@ -62,7 +62,7 @@ func (s *ChallengeService) GetContestChallenges(ctx context.Context, userID, con
 
 	result := make([]*dto.ContestChallengeInfo, 0, len(challenges))
 	for _, item := range challenges {
-		challenge, findErr := s.challengeRepo.FindByIDWithContext(ctx, item.ChallengeID)
+		challenge, findErr := s.challengeRepo.FindByID(ctx, item.ChallengeID)
 		if findErr != nil {
 			return nil, errcode.ErrInternal.WithCause(findErr)
 		}

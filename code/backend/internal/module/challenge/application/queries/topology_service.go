@@ -26,7 +26,7 @@ func NewTopologyService(repo challengeports.ChallengeTopologyRepository, templat
 }
 
 func (s *TopologyService) GetChallengeTopology(ctx context.Context, challengeID int64) (*dto.ChallengeTopologyResp, error) {
-	if _, err := s.repo.FindByIDWithContext(ctx, challengeID); err != nil {
+	if _, err := s.repo.FindByID(ctx, challengeID); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrChallengeNotFound
 		}

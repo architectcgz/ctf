@@ -37,7 +37,7 @@ func NewChallengeService(repo challengeports.ChallengeQueryRepository, redis *re
 }
 
 func (s *ChallengeService) GetChallenge(ctx context.Context, id int64) (*dto.ChallengeResp, error) {
-	challenge, err := s.repo.FindByIDWithContext(ctx, id)
+	challenge, err := s.repo.FindByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrChallengeNotFound
@@ -140,7 +140,7 @@ func (s *ChallengeService) ListPublishedChallenges(ctx context.Context, userID i
 }
 
 func (s *ChallengeService) GetPublishedChallenge(ctx context.Context, userID, challengeID int64) (*dto.ChallengeDetailResp, error) {
-	challenge, err := s.repo.FindByIDWithContext(ctx, challengeID)
+	challenge, err := s.repo.FindByID(ctx, challengeID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrNotFound

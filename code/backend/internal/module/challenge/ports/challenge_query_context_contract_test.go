@@ -10,7 +10,7 @@ import (
 
 type ctxOnlyChallengeQueryRepository struct{}
 
-func (ctxOnlyChallengeQueryRepository) FindByIDWithContext(context.Context, int64) (*model.Challenge, error) {
+func (ctxOnlyChallengeQueryRepository) FindByID(context.Context, int64) (*model.Challenge, error) {
 	return nil, nil
 }
 

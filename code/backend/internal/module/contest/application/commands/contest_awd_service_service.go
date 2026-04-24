@@ -317,7 +317,7 @@ func (s *ContestAWDServiceService) syncContestChallengeRelation(ctx context.Cont
 		return errcode.ErrInternal.WithCause(err)
 	}
 	if !exists {
-		challenge, err := s.challengeRepo.FindByIDWithContext(ctx, challengeID)
+		challenge, err := s.challengeRepo.FindByID(ctx, challengeID)
 		if err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				return errcode.ErrChallengeNotFound

@@ -10,7 +10,7 @@ import (
 
 type ChallengeCommandRepository interface {
 	CreateWithHintsWithContext(ctx context.Context, challenge *model.Challenge, hints []*model.ChallengeHint) error
-	FindByIDWithContext(ctx context.Context, id int64) (*model.Challenge, error)
+	FindByID(ctx context.Context, id int64) (*model.Challenge, error)
 	UpdateWithContext(ctx context.Context, challenge *model.Challenge) error
 	UpdateWithHintsWithContext(ctx context.Context, challenge *model.Challenge, hints []*model.ChallengeHint, replaceHints bool) error
 	DeleteWithContext(ctx context.Context, id int64) error
@@ -25,12 +25,12 @@ type ChallengeCommandRepository interface {
 }
 
 type ChallengeFlagRepository interface {
-	FindByIDWithContext(ctx context.Context, id int64) (*model.Challenge, error)
+	FindByID(ctx context.Context, id int64) (*model.Challenge, error)
 	UpdateWithContext(ctx context.Context, challenge *model.Challenge) error
 }
 
 type ChallengeQueryRepository interface {
-	FindByIDWithContext(ctx context.Context, id int64) (*model.Challenge, error)
+	FindByID(ctx context.Context, id int64) (*model.Challenge, error)
 	ListWithContext(ctx context.Context, query *dto.ChallengeQuery) ([]*model.Challenge, int64, error)
 	ListHintsByChallengeID(ctx context.Context, challengeID int64) ([]*model.ChallengeHint, error)
 	GetSolvedStatus(ctx context.Context, userID, challengeID int64) (bool, error)
@@ -59,7 +59,7 @@ type ChallengeImageUsageRepository interface {
 }
 
 type ChallengeWriteupRepository interface {
-	FindByIDWithContext(ctx context.Context, id int64) (*model.Challenge, error)
+	FindByID(ctx context.Context, id int64) (*model.Challenge, error)
 	FindUserByID(ctx context.Context, userID int64) (*model.User, error)
 	FindWriteupByChallengeID(ctx context.Context, challengeID int64) (*model.ChallengeWriteup, error)
 	UpsertWriteup(ctx context.Context, writeup *model.ChallengeWriteup) error
@@ -104,7 +104,7 @@ type CommunitySolutionRecord struct {
 }
 
 type ChallengeTopologyRepository interface {
-	FindByIDWithContext(ctx context.Context, id int64) (*model.Challenge, error)
+	FindByID(ctx context.Context, id int64) (*model.Challenge, error)
 	FindChallengeTopologyByChallengeID(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error)
 	UpsertChallengeTopology(ctx context.Context, topology *model.ChallengeTopology) error
 	DeleteChallengeTopologyByChallengeID(ctx context.Context, challengeID int64) error

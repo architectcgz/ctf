@@ -11,7 +11,7 @@ import (
 
 type ctxOnlyChallengeWriteupRepository struct{}
 
-func (ctxOnlyChallengeWriteupRepository) FindByIDWithContext(context.Context, int64) (*model.Challenge, error) {
+func (ctxOnlyChallengeWriteupRepository) FindByID(context.Context, int64) (*model.Challenge, error) {
 	return nil, nil
 }
 

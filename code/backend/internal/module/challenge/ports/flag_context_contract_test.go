@@ -9,7 +9,7 @@ import (
 
 type ctxOnlyChallengeFlagRepository struct{}
 
-func (ctxOnlyChallengeFlagRepository) FindByIDWithContext(context.Context, int64) (*model.Challenge, error) {
+func (ctxOnlyChallengeFlagRepository) FindByID(context.Context, int64) (*model.Challenge, error) {
 	return nil, nil
 }
 

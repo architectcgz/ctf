@@ -14,7 +14,7 @@ func (ctxOnlyChallengeCommandRepository) CreateWithHintsWithContext(context.Cont
 	return nil
 }
 
-func (ctxOnlyChallengeCommandRepository) FindByIDWithContext(context.Context, int64) (*model.Challenge, error) {
+func (ctxOnlyChallengeCommandRepository) FindByID(context.Context, int64) (*model.Challenge, error) {
 	return nil, nil
 }
 

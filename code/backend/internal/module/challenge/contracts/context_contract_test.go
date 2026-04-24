@@ -15,7 +15,7 @@ func (ctxOnlyImageStore) FindByID(context.Context, int64) (*model.Image, error) 
 
 type ctxOnlyPracticeChallengeContract struct{}
 
-func (ctxOnlyPracticeChallengeContract) FindByIDWithContext(context.Context, int64) (*model.Challenge, error) {
+func (ctxOnlyPracticeChallengeContract) FindByID(context.Context, int64) (*model.Challenge, error) {
 	return nil, nil
 }
 
@@ -25,7 +25,7 @@ func (ctxOnlyPracticeChallengeContract) FindChallengeTopologyByChallengeID(conte
 
 type ctxOnlyContestChallengeContract struct{}
 
-func (ctxOnlyContestChallengeContract) FindByIDWithContext(context.Context, int64) (*model.Challenge, error) {
+func (ctxOnlyContestChallengeContract) FindByID(context.Context, int64) (*model.Challenge, error) {
 	return nil, nil
 }
 
@@ -39,7 +39,7 @@ func (ctxOnlyContestChallengeContract) BatchGetSolvedCount(context.Context, []in
 
 type ctxOnlyChallengeContract struct{}
 
-func (ctxOnlyChallengeContract) FindByIDWithContext(context.Context, int64) (*model.Challenge, error) {
+func (ctxOnlyChallengeContract) FindByID(context.Context, int64) (*model.Challenge, error) {
 	return nil, nil
 }
 

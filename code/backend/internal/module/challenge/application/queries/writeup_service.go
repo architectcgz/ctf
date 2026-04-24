@@ -23,7 +23,7 @@ func NewWriteupService(repo challengeports.ChallengeWriteupRepository) *WriteupS
 }
 
 func (s *WriteupService) GetAdmin(ctx context.Context, challengeID int64) (*dto.AdminChallengeWriteupResp, error) {
-	if _, err := s.repo.FindByIDWithContext(ctx, challengeID); err != nil {
+	if _, err := s.repo.FindByID(ctx, challengeID); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrChallengeNotFound
 		}
@@ -40,7 +40,7 @@ func (s *WriteupService) GetAdmin(ctx context.Context, challengeID int64) (*dto.
 }
 
 func (s *WriteupService) GetPublished(ctx context.Context, userID, challengeID int64) (*dto.ChallengeWriteupResp, error) {
-	challengeItem, err := s.repo.FindByIDWithContext(ctx, challengeID)
+	challengeItem, err := s.repo.FindByID(ctx, challengeID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrChallengeNotFound
@@ -80,7 +80,7 @@ func (s *WriteupService) GetPublished(ctx context.Context, userID, challengeID i
 }
 
 func (s *WriteupService) GetMySubmission(ctx context.Context, userID, challengeID int64) (*dto.SubmissionWriteupResp, error) {
-	challengeItem, err := s.repo.FindByIDWithContext(ctx, challengeID)
+	challengeItem, err := s.repo.FindByID(ctx, challengeID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrChallengeNotFound
@@ -258,7 +258,7 @@ func ensureTeacherCanAccessQueryRecord(
 }
 
 func (s *WriteupService) ensureSolvedChallengeVisible(ctx context.Context, userID, challengeID int64) error {
-	challengeItem, err := s.repo.FindByIDWithContext(ctx, challengeID)
+	challengeItem, err := s.repo.FindByID(ctx, challengeID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return errcode.ErrChallengeNotFound

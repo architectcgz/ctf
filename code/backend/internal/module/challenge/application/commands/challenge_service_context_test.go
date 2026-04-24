@@ -34,7 +34,7 @@ func (s *challengeCommandContextRepoStub) CreateWithHintsWithContext(ctx context
 	return nil
 }
 
-func (s *challengeCommandContextRepoStub) FindByIDWithContext(ctx context.Context, id int64) (*model.Challenge, error) {
+func (s *challengeCommandContextRepoStub) FindByID(ctx context.Context, id int64) (*model.Challenge, error) {
 	if s.findByIDWithContextFn != nil {
 		return s.findByIDWithContextFn(ctx, id)
 	}
@@ -143,7 +143,7 @@ type challengeCommandTopologyRepoStub struct {
 	findChallengeTopologyByChallengeIDFn func(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error)
 }
 
-func (s *challengeCommandTopologyRepoStub) FindByIDWithContext(ctx context.Context, id int64) (*model.Challenge, error) {
+func (s *challengeCommandTopologyRepoStub) FindByID(ctx context.Context, id int64) (*model.Challenge, error) {
 	if s.findByIDWithContextFn != nil {
 		return s.findByIDWithContextFn(ctx, id)
 	}

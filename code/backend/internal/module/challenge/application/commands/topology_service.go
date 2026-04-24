@@ -30,7 +30,7 @@ func NewTopologyService(repo challengeports.ChallengeTopologyRepository, templat
 }
 
 func (s *TopologyService) SaveChallengeTopology(ctx context.Context, challengeID int64, req *dto.SaveChallengeTopologyReq) (*dto.ChallengeTopologyResp, error) {
-	challenge, err := s.repo.FindByIDWithContext(ctx, challengeID)
+	challenge, err := s.repo.FindByID(ctx, challengeID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrChallengeNotFound
@@ -88,7 +88,7 @@ func validateSharedTopologyConstraint(challenge *model.Challenge, rawSpec string
 }
 
 func (s *TopologyService) DeleteChallengeTopology(ctx context.Context, challengeID int64) error {
-	if _, err := s.repo.FindByIDWithContext(ctx, challengeID); err != nil {
+	if _, err := s.repo.FindByID(ctx, challengeID); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return errcode.ErrChallengeNotFound
 		}

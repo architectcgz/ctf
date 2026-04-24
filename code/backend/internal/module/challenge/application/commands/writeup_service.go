@@ -24,7 +24,7 @@ func NewWriteupService(repo challengeports.ChallengeWriteupRepository) *WriteupS
 }
 
 func (s *WriteupService) Upsert(ctx context.Context, challengeID, actorUserID int64, req *dto.UpsertChallengeWriteupReq) (*dto.AdminChallengeWriteupResp, error) {
-	if _, err := s.repo.FindByIDWithContext(ctx, challengeID); err != nil {
+	if _, err := s.repo.FindByID(ctx, challengeID); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrChallengeNotFound
 		}
@@ -62,7 +62,7 @@ func (s *WriteupService) Upsert(ctx context.Context, challengeID, actorUserID in
 }
 
 func (s *WriteupService) Delete(ctx context.Context, challengeID int64) error {
-	if _, err := s.repo.FindByIDWithContext(ctx, challengeID); err != nil {
+	if _, err := s.repo.FindByID(ctx, challengeID); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return errcode.ErrChallengeNotFound
 		}
@@ -72,7 +72,7 @@ func (s *WriteupService) Delete(ctx context.Context, challengeID int64) error {
 }
 
 func (s *WriteupService) UpsertSubmission(ctx context.Context, challengeID, actorUserID int64, req *dto.UpsertSubmissionWriteupReq) (*dto.SubmissionWriteupResp, error) {
-	challengeItem, err := s.repo.FindByIDWithContext(ctx, challengeID)
+	challengeItem, err := s.repo.FindByID(ctx, challengeID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrChallengeNotFound
@@ -276,7 +276,7 @@ func (s *WriteupService) RestoreCommunity(ctx context.Context, submissionID, req
 }
 
 func (s *WriteupService) loadOfficialWriteupForModeration(ctx context.Context, challengeID int64) (*model.ChallengeWriteup, error) {
-	if _, err := s.repo.FindByIDWithContext(ctx, challengeID); err != nil {
+	if _, err := s.repo.FindByID(ctx, challengeID); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrChallengeNotFound
 		}
