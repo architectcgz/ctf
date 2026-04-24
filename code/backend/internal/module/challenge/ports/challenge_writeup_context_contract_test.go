@@ -19,19 +19,19 @@ func (ctxOnlyChallengeWriteupRepository) FindUserByIDWithContext(context.Context
 	return nil, nil
 }
 
-func (ctxOnlyChallengeWriteupRepository) FindWriteupByChallengeIDWithContext(context.Context, int64) (*model.ChallengeWriteup, error) {
+func (ctxOnlyChallengeWriteupRepository) FindWriteupByChallengeID(context.Context, int64) (*model.ChallengeWriteup, error) {
 	return nil, nil
 }
 
-func (ctxOnlyChallengeWriteupRepository) UpsertWriteupWithContext(context.Context, *model.ChallengeWriteup) error {
+func (ctxOnlyChallengeWriteupRepository) UpsertWriteup(context.Context, *model.ChallengeWriteup) error {
 	return nil
 }
 
-func (ctxOnlyChallengeWriteupRepository) DeleteWriteupByChallengeIDWithContext(context.Context, int64) error {
+func (ctxOnlyChallengeWriteupRepository) DeleteWriteupByChallengeID(context.Context, int64) error {
 	return nil
 }
 
-func (ctxOnlyChallengeWriteupRepository) FindReleasedWriteupByChallengeIDWithContext(context.Context, int64, time.Time) (*model.ChallengeWriteup, error) {
+func (ctxOnlyChallengeWriteupRepository) FindReleasedWriteupByChallengeID(context.Context, int64, time.Time) (*model.ChallengeWriteup, error) {
 	return nil, nil
 }
 
@@ -39,31 +39,31 @@ func (ctxOnlyChallengeWriteupRepository) GetSolvedStatusWithContext(context.Cont
 	return false, nil
 }
 
-func (ctxOnlyChallengeWriteupRepository) FindSubmissionWriteupByUserChallengeWithContext(context.Context, int64, int64) (*model.SubmissionWriteup, error) {
+func (ctxOnlyChallengeWriteupRepository) FindSubmissionWriteupByUserChallenge(context.Context, int64, int64) (*model.SubmissionWriteup, error) {
 	return nil, nil
 }
 
-func (ctxOnlyChallengeWriteupRepository) FindSubmissionWriteupByIDWithContext(context.Context, int64) (*model.SubmissionWriteup, error) {
+func (ctxOnlyChallengeWriteupRepository) FindSubmissionWriteupByID(context.Context, int64) (*model.SubmissionWriteup, error) {
 	return nil, nil
 }
 
-func (ctxOnlyChallengeWriteupRepository) UpsertSubmissionWriteupWithContext(context.Context, *model.SubmissionWriteup) error {
+func (ctxOnlyChallengeWriteupRepository) UpsertSubmissionWriteup(context.Context, *model.SubmissionWriteup) error {
 	return nil
 }
 
-func (ctxOnlyChallengeWriteupRepository) GetTeacherSubmissionWriteupByIDWithContext(context.Context, int64) (*challengeports.TeacherSubmissionWriteupRecord, error) {
+func (ctxOnlyChallengeWriteupRepository) GetTeacherSubmissionWriteupByID(context.Context, int64) (*challengeports.TeacherSubmissionWriteupRecord, error) {
 	return nil, nil
 }
 
-func (ctxOnlyChallengeWriteupRepository) ListTeacherSubmissionWriteupsWithContext(context.Context, *dto.TeacherSubmissionWriteupQuery) ([]challengeports.TeacherSubmissionWriteupRecord, int64, error) {
+func (ctxOnlyChallengeWriteupRepository) ListTeacherSubmissionWriteups(context.Context, *dto.TeacherSubmissionWriteupQuery) ([]challengeports.TeacherSubmissionWriteupRecord, int64, error) {
 	return nil, 0, nil
 }
 
-func (ctxOnlyChallengeWriteupRepository) ListRecommendedSolutionsByChallengeIDWithContext(context.Context, int64, time.Time) ([]challengeports.RecommendedSolutionRecord, error) {
+func (ctxOnlyChallengeWriteupRepository) ListRecommendedSolutionsByChallengeID(context.Context, int64, time.Time) ([]challengeports.RecommendedSolutionRecord, error) {
 	return nil, nil
 }
 
-func (ctxOnlyChallengeWriteupRepository) ListCommunitySolutionsByChallengeIDWithContext(context.Context, int64, *dto.CommunityChallengeSolutionQuery) ([]challengeports.CommunitySolutionRecord, int64, error) {
+func (ctxOnlyChallengeWriteupRepository) ListCommunitySolutionsByChallengeID(context.Context, int64, *dto.CommunityChallengeSolutionQuery) ([]challengeports.CommunitySolutionRecord, int64, error) {
 	return nil, 0, nil
 }
 

@@ -29,7 +29,7 @@ func (s *WriteupService) GetAdmin(ctx context.Context, challengeID int64) (*dto.
 		}
 		return nil, err
 	}
-	item, err := s.repo.FindWriteupByChallengeIDWithContext(ctx, challengeID)
+	item, err := s.repo.FindWriteupByChallengeID(ctx, challengeID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrNotFound
@@ -51,7 +51,7 @@ func (s *WriteupService) GetPublished(ctx context.Context, userID, challengeID i
 		return nil, errcode.ErrChallengeNotPublish
 	}
 
-	item, err := s.repo.FindReleasedWriteupByChallengeIDWithContext(ctx, challengeID, time.Now())
+	item, err := s.repo.FindReleasedWriteupByChallengeID(ctx, challengeID, time.Now())
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrNotFound
@@ -90,7 +90,7 @@ func (s *WriteupService) GetMySubmission(ctx context.Context, userID, challengeI
 	if challengeItem.Status != model.ChallengeStatusPublished {
 		return nil, errcode.ErrChallengeNotPublish
 	}
-	item, err := s.repo.FindSubmissionWriteupByUserChallengeWithContext(ctx, userID, challengeID)
+	item, err := s.repo.FindSubmissionWriteupByUserChallenge(ctx, userID, challengeID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
@@ -105,7 +105,7 @@ func (s *WriteupService) ListRecommendedSolutions(ctx context.Context, userID, c
 		return nil, err
 	}
 
-	items, err := s.repo.ListRecommendedSolutionsByChallengeIDWithContext(ctx, challengeID, time.Now())
+	items, err := s.repo.ListRecommendedSolutionsByChallengeID(ctx, challengeID, time.Now())
 	if err != nil {
 		return nil, err
 	}
@@ -142,7 +142,7 @@ func (s *WriteupService) ListCommunitySolutions(ctx context.Context, userID, cha
 		}
 	}
 
-	items, total, err := s.repo.ListCommunitySolutionsByChallengeIDWithContext(ctx, challengeID, normalized)
+	items, total, err := s.repo.ListCommunitySolutionsByChallengeID(ctx, challengeID, normalized)
 	if err != nil {
 		return nil, err
 	}
@@ -167,7 +167,7 @@ func (s *WriteupService) ListTeacherSubmissions(ctx context.Context, requesterID
 		return nil, err
 	}
 
-	items, total, err := s.repo.ListTeacherSubmissionWriteupsWithContext(ctx, normalized)
+	items, total, err := s.repo.ListTeacherSubmissionWriteups(ctx, normalized)
 	if err != nil {
 		return nil, err
 	}
@@ -186,7 +186,7 @@ func (s *WriteupService) ListTeacherSubmissions(ctx context.Context, requesterID
 }
 
 func (s *WriteupService) GetTeacherSubmission(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*dto.TeacherSubmissionWriteupDetailResp, error) {
-	record, err := s.repo.GetTeacherSubmissionWriteupByIDWithContext(ctx, submissionID)
+	record, err := s.repo.GetTeacherSubmissionWriteupByID(ctx, submissionID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrNotFound

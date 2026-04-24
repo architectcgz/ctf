@@ -55,28 +55,28 @@ func (s *stubChallengeWriteupRepository) FindUserByIDWithContext(ctx context.Con
 	return nil, nil
 }
 
-func (s *stubChallengeWriteupRepository) FindWriteupByChallengeIDWithContext(ctx context.Context, challengeID int64) (*model.ChallengeWriteup, error) {
+func (s *stubChallengeWriteupRepository) FindWriteupByChallengeID(ctx context.Context, challengeID int64) (*model.ChallengeWriteup, error) {
 	if s.findWriteupByChallengeIDWithContextFn != nil {
 		return s.findWriteupByChallengeIDWithContextFn(ctx, challengeID)
 	}
 	return nil, nil
 }
 
-func (s *stubChallengeWriteupRepository) UpsertWriteupWithContext(ctx context.Context, writeup *model.ChallengeWriteup) error {
+func (s *stubChallengeWriteupRepository) UpsertWriteup(ctx context.Context, writeup *model.ChallengeWriteup) error {
 	if s.upsertWriteupWithContextFn != nil {
 		return s.upsertWriteupWithContextFn(ctx, writeup)
 	}
 	return nil
 }
 
-func (s *stubChallengeWriteupRepository) DeleteWriteupByChallengeIDWithContext(ctx context.Context, challengeID int64) error {
+func (s *stubChallengeWriteupRepository) DeleteWriteupByChallengeID(ctx context.Context, challengeID int64) error {
 	if s.deleteWriteupByChallengeIDWithContextFn != nil {
 		return s.deleteWriteupByChallengeIDWithContextFn(ctx, challengeID)
 	}
 	return nil
 }
 
-func (s *stubChallengeWriteupRepository) FindReleasedWriteupByChallengeIDWithContext(ctx context.Context, challengeID int64, now time.Time) (*model.ChallengeWriteup, error) {
+func (s *stubChallengeWriteupRepository) FindReleasedWriteupByChallengeID(ctx context.Context, challengeID int64, now time.Time) (*model.ChallengeWriteup, error) {
 	if s.findReleasedWriteupByChallengeIDWithContextFn != nil {
 		return s.findReleasedWriteupByChallengeIDWithContextFn(ctx, challengeID, now)
 	}
@@ -90,49 +90,49 @@ func (s *stubChallengeWriteupRepository) GetSolvedStatusWithContext(ctx context.
 	return false, nil
 }
 
-func (s *stubChallengeWriteupRepository) FindSubmissionWriteupByUserChallengeWithContext(ctx context.Context, userID, challengeID int64) (*model.SubmissionWriteup, error) {
+func (s *stubChallengeWriteupRepository) FindSubmissionWriteupByUserChallenge(ctx context.Context, userID, challengeID int64) (*model.SubmissionWriteup, error) {
 	if s.findSubmissionWriteupByUserChallengeWithContextFn != nil {
 		return s.findSubmissionWriteupByUserChallengeWithContextFn(ctx, userID, challengeID)
 	}
 	return nil, nil
 }
 
-func (s *stubChallengeWriteupRepository) FindSubmissionWriteupByIDWithContext(ctx context.Context, id int64) (*model.SubmissionWriteup, error) {
+func (s *stubChallengeWriteupRepository) FindSubmissionWriteupByID(ctx context.Context, id int64) (*model.SubmissionWriteup, error) {
 	if s.findSubmissionWriteupByIDWithContextFn != nil {
 		return s.findSubmissionWriteupByIDWithContextFn(ctx, id)
 	}
 	return nil, nil
 }
 
-func (s *stubChallengeWriteupRepository) UpsertSubmissionWriteupWithContext(ctx context.Context, writeup *model.SubmissionWriteup) error {
+func (s *stubChallengeWriteupRepository) UpsertSubmissionWriteup(ctx context.Context, writeup *model.SubmissionWriteup) error {
 	if s.upsertSubmissionWriteupWithContextFn != nil {
 		return s.upsertSubmissionWriteupWithContextFn(ctx, writeup)
 	}
 	return nil
 }
 
-func (s *stubChallengeWriteupRepository) GetTeacherSubmissionWriteupByIDWithContext(ctx context.Context, id int64) (*challengeports.TeacherSubmissionWriteupRecord, error) {
+func (s *stubChallengeWriteupRepository) GetTeacherSubmissionWriteupByID(ctx context.Context, id int64) (*challengeports.TeacherSubmissionWriteupRecord, error) {
 	if s.getTeacherSubmissionWriteupByIDWithContextFn != nil {
 		return s.getTeacherSubmissionWriteupByIDWithContextFn(ctx, id)
 	}
 	return nil, nil
 }
 
-func (s *stubChallengeWriteupRepository) ListTeacherSubmissionWriteupsWithContext(ctx context.Context, query *dto.TeacherSubmissionWriteupQuery) ([]challengeports.TeacherSubmissionWriteupRecord, int64, error) {
+func (s *stubChallengeWriteupRepository) ListTeacherSubmissionWriteups(ctx context.Context, query *dto.TeacherSubmissionWriteupQuery) ([]challengeports.TeacherSubmissionWriteupRecord, int64, error) {
 	if s.listTeacherSubmissionWriteupsWithContextFn != nil {
 		return s.listTeacherSubmissionWriteupsWithContextFn(ctx, query)
 	}
 	return nil, 0, nil
 }
 
-func (s *stubChallengeWriteupRepository) ListRecommendedSolutionsByChallengeIDWithContext(ctx context.Context, challengeID int64, now time.Time) ([]challengeports.RecommendedSolutionRecord, error) {
+func (s *stubChallengeWriteupRepository) ListRecommendedSolutionsByChallengeID(ctx context.Context, challengeID int64, now time.Time) ([]challengeports.RecommendedSolutionRecord, error) {
 	if s.listRecommendedSolutionsByChallengeIDWithContextFn != nil {
 		return s.listRecommendedSolutionsByChallengeIDWithContextFn(ctx, challengeID, now)
 	}
 	return nil, nil
 }
 
-func (s *stubChallengeWriteupRepository) ListCommunitySolutionsByChallengeIDWithContext(ctx context.Context, challengeID int64, query *dto.CommunityChallengeSolutionQuery) ([]challengeports.CommunitySolutionRecord, int64, error) {
+func (s *stubChallengeWriteupRepository) ListCommunitySolutionsByChallengeID(ctx context.Context, challengeID int64, query *dto.CommunityChallengeSolutionQuery) ([]challengeports.CommunitySolutionRecord, int64, error) {
 	if s.listCommunitySolutionsByChallengeIDWithContextFn != nil {
 		return s.listCommunitySolutionsByChallengeIDWithContextFn(ctx, challengeID, query)
 	}

@@ -61,18 +61,18 @@ type ChallengeImageUsageRepository interface {
 type ChallengeWriteupRepository interface {
 	FindByIDWithContext(ctx context.Context, id int64) (*model.Challenge, error)
 	FindUserByIDWithContext(ctx context.Context, userID int64) (*model.User, error)
-	FindWriteupByChallengeIDWithContext(ctx context.Context, challengeID int64) (*model.ChallengeWriteup, error)
-	UpsertWriteupWithContext(ctx context.Context, writeup *model.ChallengeWriteup) error
-	DeleteWriteupByChallengeIDWithContext(ctx context.Context, challengeID int64) error
-	FindReleasedWriteupByChallengeIDWithContext(ctx context.Context, challengeID int64, now time.Time) (*model.ChallengeWriteup, error)
+	FindWriteupByChallengeID(ctx context.Context, challengeID int64) (*model.ChallengeWriteup, error)
+	UpsertWriteup(ctx context.Context, writeup *model.ChallengeWriteup) error
+	DeleteWriteupByChallengeID(ctx context.Context, challengeID int64) error
+	FindReleasedWriteupByChallengeID(ctx context.Context, challengeID int64, now time.Time) (*model.ChallengeWriteup, error)
 	GetSolvedStatusWithContext(ctx context.Context, userID, challengeID int64) (bool, error)
-	FindSubmissionWriteupByUserChallengeWithContext(ctx context.Context, userID, challengeID int64) (*model.SubmissionWriteup, error)
-	FindSubmissionWriteupByIDWithContext(ctx context.Context, id int64) (*model.SubmissionWriteup, error)
-	UpsertSubmissionWriteupWithContext(ctx context.Context, writeup *model.SubmissionWriteup) error
-	GetTeacherSubmissionWriteupByIDWithContext(ctx context.Context, id int64) (*TeacherSubmissionWriteupRecord, error)
-	ListTeacherSubmissionWriteupsWithContext(ctx context.Context, query *dto.TeacherSubmissionWriteupQuery) ([]TeacherSubmissionWriteupRecord, int64, error)
-	ListRecommendedSolutionsByChallengeIDWithContext(ctx context.Context, challengeID int64, now time.Time) ([]RecommendedSolutionRecord, error)
-	ListCommunitySolutionsByChallengeIDWithContext(ctx context.Context, challengeID int64, query *dto.CommunityChallengeSolutionQuery) ([]CommunitySolutionRecord, int64, error)
+	FindSubmissionWriteupByUserChallenge(ctx context.Context, userID, challengeID int64) (*model.SubmissionWriteup, error)
+	FindSubmissionWriteupByID(ctx context.Context, id int64) (*model.SubmissionWriteup, error)
+	UpsertSubmissionWriteup(ctx context.Context, writeup *model.SubmissionWriteup) error
+	GetTeacherSubmissionWriteupByID(ctx context.Context, id int64) (*TeacherSubmissionWriteupRecord, error)
+	ListTeacherSubmissionWriteups(ctx context.Context, query *dto.TeacherSubmissionWriteupQuery) ([]TeacherSubmissionWriteupRecord, int64, error)
+	ListRecommendedSolutionsByChallengeID(ctx context.Context, challengeID int64, now time.Time) ([]RecommendedSolutionRecord, error)
+	ListCommunitySolutionsByChallengeID(ctx context.Context, challengeID int64, query *dto.CommunityChallengeSolutionQuery) ([]CommunitySolutionRecord, int64, error)
 }
 
 type TeacherSubmissionWriteupRecord struct {
