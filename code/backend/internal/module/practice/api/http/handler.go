@@ -25,7 +25,7 @@ type practiceService interface {
 	StartContestChallenge(ctx context.Context, userID, contestID, challengeID int64) (*dto.InstanceResp, error)
 	StartContestAWDService(ctx context.Context, userID, contestID, serviceID int64) (*dto.InstanceResp, error)
 	SubmitFlag(ctx context.Context, userID, challengeID int64, flag string) (*dto.SubmissionResp, error)
-	ListMyChallengeSubmissionsWithContext(ctx context.Context, userID, challengeID int64) ([]*dto.ChallengeSubmissionRecordResp, error)
+	ListMyChallengeSubmissions(ctx context.Context, userID, challengeID int64) ([]*dto.ChallengeSubmissionRecordResp, error)
 	ListTeacherManualReviewSubmissions(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherManualReviewSubmissionQuery) (*dto.PageResult, error)
 	GetTeacherManualReviewSubmission(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*dto.TeacherManualReviewSubmissionDetailResp, error)
 	ReviewManualReviewSubmission(ctx context.Context, submissionID, reviewerID int64, reviewerRole string, req *dto.ReviewManualReviewSubmissionReq) (*dto.TeacherManualReviewSubmissionDetailResp, error)
@@ -145,7 +145,7 @@ func (h *Handler) ListMyChallengeSubmissions(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.service.ListMyChallengeSubmissionsWithContext(c.Request.Context(), userID, challengeID)
+	resp, err := h.service.ListMyChallengeSubmissions(c.Request.Context(), userID, challengeID)
 	if err != nil {
 		response.FromError(c, err)
 		return

@@ -1051,7 +1051,7 @@ func TestListMyChallengeSubmissionsMapsStoredHistory(t *testing.T) {
 		nil,
 	)
 
-	items, err := service.ListMyChallengeSubmissions(7, 11)
+	items, err := service.ListMyChallengeSubmissions(context.Background(), 7, 11)
 	if err != nil {
 		t.Fatalf("ListMyChallengeSubmissions() error = %v", err)
 	}
@@ -2772,7 +2772,7 @@ func TestReviewManualReviewSubmissionRejectsApprovalAfterChallengeAlreadySolved(
 	}
 }
 
-func TestListMyChallengeSubmissionsWithContextPropagatesContextToRepository(t *testing.T) {
+func TestListMyChallengeSubmissionsPropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := practiceServiceContextKey("list-submissions")
@@ -2813,9 +2813,9 @@ func TestListMyChallengeSubmissionsWithContextPropagatesContextToRepository(t *t
 	)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	items, err := service.ListMyChallengeSubmissionsWithContext(ctx, 7, 11)
+	items, err := service.ListMyChallengeSubmissions(ctx, 7, 11)
 	if err != nil {
-		t.Fatalf("ListMyChallengeSubmissionsWithContext() error = %v", err)
+		t.Fatalf("ListMyChallengeSubmissions() error = %v", err)
 	}
 	if len(items) != 1 {
 		t.Fatalf("expected one submission item, got %+v", items)

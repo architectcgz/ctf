@@ -838,15 +838,7 @@ func (s *Service) GetTeacherManualReviewSubmission(
 	return manualReviewDetailRespFromRecord(*record, record.Submission), nil
 }
 
-func (s *Service) ListMyChallengeSubmissions(userID, challengeID int64) ([]*dto.ChallengeSubmissionRecordResp, error) {
-	return s.ListMyChallengeSubmissionsWithContext(context.Background(), userID, challengeID)
-}
-
-func (s *Service) ListMyChallengeSubmissionsWithContext(ctx context.Context, userID, challengeID int64) ([]*dto.ChallengeSubmissionRecordResp, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
+func (s *Service) ListMyChallengeSubmissions(ctx context.Context, userID, challengeID int64) ([]*dto.ChallengeSubmissionRecordResp, error) {
 	challengeItem, err := s.challengeRepo.FindByID(ctx, challengeID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
