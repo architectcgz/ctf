@@ -189,9 +189,7 @@ describe('TeacherStudentReviewArchive', () => {
         username: 'teacher',
         role: 'teacher',
         class_name: 'Class A',
-      },
-      'token'
-    )
+      })
   })
 
   it('应该渲染完整复盘页的核心区块', async () => {
@@ -227,9 +225,7 @@ describe('TeacherStudentReviewArchive', () => {
         username: 'admin',
         role: 'admin',
         class_name: 'Class A',
-      },
-      'token'
-    )
+      })
 
     const wrapper = mount(TeacherStudentReviewArchive)
 

@@ -11,7 +11,7 @@ redis:
   db: 2
 
 auth:
-  refresh_cookie_secure: false
+  session_cookie_secure: false
 
 container:
   # 开发环境默认经由宿主机本地端口访问实例，避免 localhost 解析到 IPv6 [::1]

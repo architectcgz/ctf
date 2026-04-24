@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 
-import { refreshToken } from '@/api/auth'
+import { getProfile } from '@/api/auth'
 import type { UserRole } from '@/utils/constants'
 
 export interface AuthUser {
@@ -18,11 +18,10 @@ const LEGACY_LS_REFRESH_TOKEN_KEY = 'ctf_refresh_token'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<AuthUser | null>(null)
-  const accessToken = ref<string>('')
   const sessionRestored = ref(false)
   let restorePromise: Promise<void> | null = null
 
-  const isLoggedIn = computed(() => !!accessToken.value)
+  const isLoggedIn = computed(() => !!user.value)
   const isAdmin = computed(() => user.value?.role === 'admin')
   const isTeacher = computed(() => user.value?.role === 'teacher')
   const isStudent = computed(() => user.value?.role === 'student')
@@ -33,31 +32,23 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.removeItem(LEGACY_LS_REFRESH_TOKEN_KEY)
   }
 
-  function setAuth(nextUser: AuthUser, nextAccessToken: string): void {
+  function setAuth(nextUser: AuthUser): void {
     user.value = nextUser
-    accessToken.value = nextAccessToken
-    sessionRestored.value = true
-    cleanupLegacyStorage()
-  }
-
-  function updateTokens(nextAccessToken: string): void {
-    accessToken.value = nextAccessToken
     sessionRestored.value = true
     cleanupLegacyStorage()
   }
 
   function logout(): void {
     user.value = null
-    accessToken.value = ''
     sessionRestored.value = true
     cleanupLegacyStorage()
   }
 
-  // Access Token stays in memory only. Refresh after reload relies on the HttpOnly refresh cookie.
+  // Session restoration relies on the HttpOnly session cookie; the frontend only keeps the user snapshot in memory.
   async function restore(): Promise<void> {
     cleanupLegacyStorage()
 
-    if (accessToken.value || sessionRestored.value) {
+    if (user.value || sessionRestored.value) {
       return
     }
     if (restorePromise) {
@@ -66,10 +57,9 @@ export const useAuthStore = defineStore('auth', () => {
 
     restorePromise = (async () => {
       try {
-        const tokens = await refreshToken({ suppressErrorToast: true })
-        accessToken.value = tokens.access_token
+        user.value = await getProfile({ suppressErrorToast: true })
       } catch {
-        accessToken.value = ''
+        user.value = null
       } finally {
         sessionRestored.value = true
         restorePromise = null
@@ -81,14 +71,12 @@ export const useAuthStore = defineStore('auth', () => {
 
   return {
     user,
-    accessToken,
     sessionRestored,
     isLoggedIn,
     isAdmin,
     isTeacher,
     isStudent,
     setAuth,
-    updateTokens,
     logout,
     restore,
   }

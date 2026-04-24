@@ -11,7 +11,6 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
 	opsports "ctf-platform/internal/module/ops/ports"
-	rediskeys "ctf-platform/internal/pkg/redis"
 )
 
 type DashboardService struct {
@@ -158,7 +157,11 @@ func (s *DashboardService) countOnlineUsers(ctx context.Context) (int64, error) 
 	if s.redis == nil {
 		return 0, nil
 	}
-	pattern := rediskeys.Namespace + ":token:*"
+	sessionPrefix := s.config.Auth.SessionKeyPrefix
+	if sessionPrefix == "" {
+		sessionPrefix = "ctf:auth:session"
+	}
+	pattern := sessionPrefix + ":*"
 	var cursor uint64
 	count := int64(0)
 	for {

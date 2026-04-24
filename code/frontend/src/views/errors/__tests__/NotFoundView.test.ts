@@ -39,9 +39,7 @@ describe('NotFoundView', () => {
         id: 'admin-1',
         username: 'root',
         role: 'admin',
-      },
-      'token'
-    )
+      })
 
     const wrapper = mount(NotFoundView, {
       global: {

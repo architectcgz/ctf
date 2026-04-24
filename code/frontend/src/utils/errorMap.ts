@@ -1,5 +1,5 @@
 export const AUTH_ERROR_CODES = {
-  ACCESS_TOKEN_EXPIRED: 11002,
+  SESSION_EXPIRED: 11002,
 } as const
 
 const ERROR_MAP: Record<number, string> = {
@@ -11,7 +11,7 @@ const ERROR_MAP: Record<number, string> = {
   // 认证错误码 (11xxx)
   11001: '用户名或密码错误',
   11002: '登录状态已过期，请重新登录',
-  11003: '账号已被锁定，请联系管理员',
+  11003: '登录状态已过期，请重新登录',
   11010: '登录失败次数过多，请稍后再试',
 
   // 实例错误码 (13xxx)

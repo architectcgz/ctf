@@ -6,12 +6,10 @@ import (
 
 	authcontracts "ctf-platform/internal/module/auth/contracts"
 	"ctf-platform/internal/model"
-	jwtpkg "ctf-platform/pkg/jwt"
 )
 
 type Authenticator interface {
 	authcontracts.TokenService
-	ParseAccessToken(token string) (*jwtpkg.Claims, error)
 }
 
 type UserListFilter struct {

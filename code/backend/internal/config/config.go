@@ -83,17 +83,13 @@ type CORSConfig struct {
 }
 
 type AuthConfig struct {
-	Issuer                string        `mapstructure:"issuer"`
-	AccessTokenTTL        time.Duration `mapstructure:"access_token_ttl"`
-	RefreshTokenTTL       time.Duration `mapstructure:"refresh_token_ttl"`
-	RefreshCookieName     string        `mapstructure:"refresh_cookie_name"`
-	RefreshCookiePath     string        `mapstructure:"refresh_cookie_path"`
-	RefreshCookieSecure   bool          `mapstructure:"refresh_cookie_secure"`
-	RefreshCookieHTTPOnly bool          `mapstructure:"refresh_cookie_http_only"`
-	RefreshCookieSameSite string        `mapstructure:"refresh_cookie_same_site"`
-	PrivateKeyPath        string        `mapstructure:"private_key_path"`
-	PublicKeyPath         string        `mapstructure:"public_key_path"`
-	TokenBlacklistPrefix  string        `mapstructure:"token_blacklist_prefix"`
+	SessionTTL            time.Duration `mapstructure:"session_ttl"`
+	SessionCookieName     string        `mapstructure:"session_cookie_name"`
+	SessionCookiePath     string        `mapstructure:"session_cookie_path"`
+	SessionCookieSecure   bool          `mapstructure:"session_cookie_secure"`
+	SessionCookieHTTPOnly bool          `mapstructure:"session_cookie_http_only"`
+	SessionCookieSameSite string        `mapstructure:"session_cookie_same_site"`
+	SessionKeyPrefix      string        `mapstructure:"session_key_prefix"`
 	CAS                   CASConfig     `mapstructure:"cas"`
 }
 
@@ -453,7 +449,7 @@ func (c PostgresConfig) DSN() string {
 }
 
 func (c AuthConfig) CookieSameSite() http.SameSite {
-	switch strings.ToLower(strings.TrimSpace(c.RefreshCookieSameSite)) {
+	switch strings.ToLower(strings.TrimSpace(c.SessionCookieSameSite)) {
 	case "strict":
 		return http.SameSiteStrictMode
 	case "none":
@@ -476,17 +472,15 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("redis.read_timeout", 3*time.Second)
 	v.SetDefault("redis.write_timeout", 3*time.Second)
 	v.SetDefault("cors.allow_methods", []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"})
-	v.SetDefault("cors.allow_headers", []string{"Authorization", "Content-Type", "X-Request-ID"})
+	v.SetDefault("cors.allow_headers", []string{"Content-Type", "X-Request-ID"})
 	v.SetDefault("cors.expose_headers", []string{"X-Request-ID", "X-RateLimit-Limit", "X-RateLimit-Remaining", "X-RateLimit-Reset", "Retry-After"})
 	v.SetDefault("cors.max_age", 12*time.Hour)
-	v.SetDefault("auth.issuer", "ctf-platform")
-	v.SetDefault("auth.access_token_ttl", 15*time.Minute)
-	v.SetDefault("auth.refresh_token_ttl", 7*24*time.Hour)
-	v.SetDefault("auth.refresh_cookie_name", "ctf_refresh_token")
-	v.SetDefault("auth.refresh_cookie_path", "/api/v1/auth")
-	v.SetDefault("auth.refresh_cookie_http_only", true)
-	v.SetDefault("auth.refresh_cookie_same_site", "lax")
-	v.SetDefault("auth.token_blacklist_prefix", "ctf:auth:blacklist")
+	v.SetDefault("auth.session_ttl", 7*24*time.Hour)
+	v.SetDefault("auth.session_cookie_name", "ctf_session")
+	v.SetDefault("auth.session_cookie_path", "/api/v1")
+	v.SetDefault("auth.session_cookie_http_only", true)
+	v.SetDefault("auth.session_cookie_same_site", "lax")
+	v.SetDefault("auth.session_key_prefix", "ctf:auth:session")
 	v.SetDefault("auth.cas.enabled", false)
 	v.SetDefault("auth.cas.login_path", "/login")
 	v.SetDefault("auth.cas.validate_path", "/serviceValidate")

@@ -30,7 +30,7 @@ const (
 )
 
 type CASService interface {
-	Authenticate(ctx context.Context, ticket string) (*dto.LoginResp, *authcontracts.TokenPair, error)
+	Authenticate(ctx context.Context, ticket string) (*dto.LoginResp, *authcontracts.Session, error)
 }
 
 type casService struct {
@@ -92,7 +92,7 @@ func NewCASService(cfg config.CASConfig, users identitycontracts.UserRepository,
 	}
 }
 
-func (s *casService) Authenticate(ctx context.Context, ticket string) (*dto.LoginResp, *authcontracts.TokenPair, error) {
+func (s *casService) Authenticate(ctx context.Context, ticket string) (*dto.LoginResp, *authcontracts.Session, error) {
 	if !s.config.Enabled {
 		return nil, nil, errcode.ErrCASDisabled
 	}
@@ -255,19 +255,16 @@ func (s *casService) mergePrincipal(user *model.User, principal *casPrincipal) b
 	return changed
 }
 
-func (s *casService) issueLoginResp(ctx context.Context, user *model.User) (*dto.LoginResp, *authcontracts.TokenPair, error) {
-	tokens, err := s.tokenService.IssueTokensWithContext(ctx, user.ID, user.Username, user.Role)
+func (s *casService) issueLoginResp(ctx context.Context, user *model.User) (*dto.LoginResp, *authcontracts.Session, error) {
+	session, err := s.tokenService.CreateSession(ctx, user.ID, user.Username, user.Role)
 	if err != nil {
-		s.log.Error("auth_cas_issue_token_failed", zap.String("username", user.Username), zap.Int64("user_id", user.ID), zap.Error(err))
+		s.log.Error("auth_cas_create_session_failed", zap.String("username", user.Username), zap.Int64("user_id", user.ID), zap.Error(err))
 		return nil, nil, errcode.ErrInternal.WithCause(err)
 	}
 
 	return &dto.LoginResp{
-		AccessToken: tokens.AccessToken,
-		TokenType:   "Bearer",
-		ExpiresIn:   int64(tokens.AccessTokenTTL.Seconds()),
-		User:        buildAuthUser(user),
-	}, tokens, nil
+		User: buildAuthUser(user),
+	}, session, nil
 }
 
 func (s *casService) mapUserSyncError(err error) error {

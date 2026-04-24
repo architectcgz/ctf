@@ -60,9 +60,7 @@ async function mountTopNav() {
       username: 'alice',
       name: 'Alice',
       role: 'student',
-    },
-    'token'
-  )
+    })
 
   const router = createTestRouter()
   await router.push('/student/dashboard')
@@ -98,9 +96,7 @@ async function mountBackofficeTopNav(path = '/platform/overview') {
       username: 'admin',
       name: 'Admin',
       role: 'admin',
-    },
-    'token'
-  )
+    })
 
   const router = createTestRouter()
   await router.push(path)

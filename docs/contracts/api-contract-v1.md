@@ -81,46 +81,31 @@ export interface AuthUser {
 }
 
 export interface LoginData {
-  access_token: string
-  token_type: 'Bearer'
-  expires_in: number        // 秒
   user: AuthUser
 }
 ```
 
-> 说明：账号在连续输错密码达到阈值后会被临时锁定；触发锁定的那次登录返回 `429`，锁定期内再次尝试返回 `403`。
+> 说明：
+> - 登录成功后，服务端会通过 `Set-Cookie` 写入 HttpOnly session cookie。
+> - 账号在连续输错密码达到阈值后会被临时锁定；触发锁定的那次登录返回 `429`，锁定期内再次尝试返回 `403`。
 
 ### 2.2 POST `/api/v1/auth/register`
 
 `data`：同 `LoginData`（注册成功即登录）。
 
-### 2.3 POST `/api/v1/auth/refresh`
-
-`data`：
-
-```ts
-export interface RefreshData {
-  access_token: string
-  token_type: 'Bearer'
-  expires_in: number
-}
-```
-
-> Refresh Token 由后端写入 HttpOnly Cookie；前端不落盘。
-
-### 2.4 POST `/api/v1/auth/logout`
+### 2.3 POST `/api/v1/auth/logout`
 
 `data`：`null`
 
-### 2.5 GET `/api/v1/auth/profile`
+### 2.4 GET `/api/v1/auth/profile`
 
 `data`：`AuthUser`
 
-### 2.6 PUT `/api/v1/auth/password`
+### 2.5 PUT `/api/v1/auth/password`
 
 `data`：`null`
 
-### 2.7 POST `/api/v1/auth/ws-ticket`
+### 2.6 POST `/api/v1/auth/ws-ticket`
 
 `data`：
 

@@ -1343,7 +1343,7 @@ describe('ContestDetail', () => {
 
     const pinia = createPinia()
     setActivePinia(pinia)
-    useAuthStore().setAuth({ id: 'user-1', username: 'alice', role: 'student' }, 'token')
+    useAuthStore().setAuth({ id: 'user-1', username: 'alice', role: 'student' })
 
     const wrapper = mount(ContestDetail, {
       global: {

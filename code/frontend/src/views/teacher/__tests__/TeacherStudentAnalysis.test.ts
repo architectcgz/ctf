@@ -299,9 +299,7 @@ describe('TeacherStudentAnalysis', () => {
         username: 'teacher',
         role: 'teacher',
         class_name: 'Class A',
-      },
-      'token'
-    )
+      })
   })
 
   it('应该展示当前学员分析内容', async () => {
@@ -506,9 +504,7 @@ describe('TeacherStudentAnalysis', () => {
         username: 'admin',
         role: 'admin',
         class_name: 'Class A',
-      },
-      'token'
-    )
+      })
 
     const wrapper = mount(TeacherStudentAnalysis, {
       global: {
@@ -534,9 +530,7 @@ describe('TeacherStudentAnalysis', () => {
         username: 'admin',
         role: 'admin',
         class_name: 'Class A',
-      },
-      'token'
-    )
+      })
 
     const wrapper = mount(TeacherStudentAnalysis, {
       global: {

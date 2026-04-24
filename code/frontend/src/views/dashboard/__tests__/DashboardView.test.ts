@@ -158,9 +158,7 @@ describe('DashboardView', () => {
         username: 'alice',
         role: 'student',
         class_name: 'Class A',
-      },
-      'token'
-    )
+      })
 
     const wrapper = mountDashboard()
 
@@ -182,9 +180,7 @@ describe('DashboardView', () => {
         username: 'alice',
         role: 'student',
         class_name: 'Class A',
-      },
-      'token'
-    )
+      })
 
     const wrapper = mountDashboard()
 
@@ -213,9 +209,7 @@ describe('DashboardView', () => {
         username: 'alice',
         role: 'student',
         class_name: 'Class A',
-      },
-      'token'
-    )
+      })
 
     const wrapper = mountDashboard()
 
@@ -241,9 +235,7 @@ describe('DashboardView', () => {
         username: 'alice',
         role: 'student',
         class_name: 'Class A',
-      },
-      'token'
-    )
+      })
 
     const wrapper = mountDashboard()
 
@@ -284,9 +276,7 @@ describe('DashboardView', () => {
         username: 'alice',
         role: 'student',
         class_name: 'Class A',
-      },
-      'token'
-    )
+      })
 
     const wrapper = mountDashboard()
 
@@ -315,9 +305,7 @@ describe('DashboardView', () => {
         username: 'alice',
         role: 'student',
         class_name: 'Class A',
-      },
-      'token'
-    )
+      })
 
     const wrapper = mountDashboard()
 
@@ -361,9 +349,7 @@ describe('DashboardView', () => {
         username: 'alice',
         role: 'student',
         class_name: 'Class A',
-      },
-      'token'
-    )
+      })
 
     const wrapper = mountDashboard()
 
@@ -397,9 +383,7 @@ describe('DashboardView', () => {
         username: 'alice',
         role: 'student',
         class_name: 'Class A',
-      },
-      'token'
-    )
+      })
 
     const wrapper = mountDashboard()
 
@@ -441,9 +425,7 @@ describe('DashboardView', () => {
         username: 'alice',
         role: 'student',
         class_name: 'Class A',
-      },
-      'token'
-    )
+      })
 
     const wrapper = mountDashboard()
 
@@ -487,9 +469,7 @@ describe('DashboardView', () => {
         username: 'alice',
         role: 'student',
         class_name: 'Class A',
-      },
-      'token'
-    )
+      })
 
     const wrapper = mountDashboard()
 
@@ -525,9 +505,7 @@ describe('DashboardView', () => {
         username: 'alice',
         role: 'student',
         class_name: 'Class A',
-      },
-      'token'
-    )
+      })
 
     const wrapper = mountDashboard()
 
@@ -546,9 +524,7 @@ describe('DashboardView', () => {
         username: 'alice',
         role: 'student',
         class_name: 'Class A',
-      },
-      'token'
-    )
+      })
 
     const wrapper = mountDashboard()
 
@@ -585,9 +561,7 @@ describe('DashboardView', () => {
         username: 'teacher',
         role: 'teacher',
         class_name: 'Class A',
-      },
-      'token'
-    )
+      })
 
     mountDashboard()
     await flushPromises()

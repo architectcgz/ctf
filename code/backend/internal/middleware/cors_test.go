@@ -17,7 +17,7 @@ func TestCORSEmptyAllowOriginsRejectsPreflight(t *testing.T) {
 	engine := gin.New()
 	engine.Use(CORS(config.CORSConfig{
 		AllowMethods:     []string{"GET", "POST", "OPTIONS"},
-		AllowHeaders:     []string{"Authorization", "Content-Type"},
+		AllowHeaders:     []string{"Content-Type"},
 		ExposeHeaders:    []string{"X-Request-ID"},
 		AllowCredentials: true,
 	}))
@@ -48,7 +48,7 @@ func TestCORSAllowsConfiguredOriginPreflight(t *testing.T) {
 	engine.Use(CORS(config.CORSConfig{
 		AllowOrigins:     []string{"https://academy.example.com"},
 		AllowMethods:     []string{"GET", "POST", "OPTIONS"},
-		AllowHeaders:     []string{"Authorization", "Content-Type"},
+		AllowHeaders:     []string{"Content-Type"},
 		ExposeHeaders:    []string{"X-Request-ID"},
 		AllowCredentials: true,
 	}))

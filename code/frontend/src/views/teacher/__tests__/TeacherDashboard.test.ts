@@ -145,9 +145,7 @@ describe('TeacherDashboard', () => {
         username: 'teacher',
         role: 'teacher',
         class_name: 'Class A',
-      },
-      'token'
-    )
+      })
   })
 
   it('应该展示教师概览且不加载学员详情接口', async () => {
@@ -270,9 +268,7 @@ describe('TeacherDashboard', () => {
         username: 'admin',
         role: 'admin',
         class_name: 'Class A',
-      },
-      'token'
-    )
+      })
 
     const wrapper = mount(TeacherDashboard, {
       global: {

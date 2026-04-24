@@ -567,11 +567,11 @@
 ## 第二十一轮修复进展
 
 - 已完成：
-  - `P1-4` 登录态 token 已从 `localStorage` 迁出，Access Token 现在只保存在内存态。
-  - 刷新后的登录恢复改为依赖服务端 `HttpOnly refresh cookie`：
-    - 启动阶段会静默尝试 `/auth/refresh`
-    - 受保护路由在内存里没有 token 时，会先等待同一条 restore promise，再决定是否跳去登录页
-    - `/login`、`/register` 在已有有效 refresh cookie 时，也会先恢复会话再跳转回角色工作台
+  - `P1-4` 登录态已经切到服务端 session，前端不再持有认证 token。
+  - 登录恢复改为依赖服务端 `HttpOnly session cookie`：
+    - 启动阶段直接请求 `/auth/profile`
+    - 受保护路由在内存里没有用户信息时，会先等待同一条 restore promise，再决定是否跳去登录页
+    - `/login`、`/register` 在已有有效 session cookie 时，也会先恢复会话再跳转回角色工作台
   - 旧的 `ctf_access_token / ctf_refresh_token` 只保留清理逻辑，不再作为运行时持久化来源。
 - 本轮涉及文件：
   - `code/frontend/src/api/auth.ts`

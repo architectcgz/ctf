@@ -13,7 +13,6 @@ import (
 	authcontracts "ctf-platform/internal/module/auth/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	"ctf-platform/pkg/errcode"
-	jwtpkg "ctf-platform/pkg/jwt"
 	"go.uber.org/zap"
 )
 
@@ -93,38 +92,22 @@ func (m *mockRepository) UpdateProfile(ctx context.Context, user *model.User) er
 }
 
 type mockTokenService struct {
-	issueFn func(userID int64, username, role string) (*authcontracts.TokenPair, error)
+	issueFn func(userID int64, username, role string) (*authcontracts.Session, error)
 }
 
-func (m *mockTokenService) IssueTokens(userID int64, username, role string) (*authcontracts.TokenPair, error) {
-	return m.IssueTokensWithContext(context.Background(), userID, username, role)
-}
-
-func (m *mockTokenService) IssueTokensWithContext(_ context.Context, userID int64, username, role string) (*authcontracts.TokenPair, error) {
+func (m *mockTokenService) CreateSession(_ context.Context, userID int64, username, role string) (*authcontracts.Session, error) {
 	if m.issueFn == nil {
 		return nil, errors.New("unexpected call")
 	}
 	return m.issueFn(userID, username, role)
 }
 
-func (m *mockTokenService) RefreshAccessToken(context.Context, string) (*authcontracts.RefreshAccessPayload, error) {
+func (m *mockTokenService) GetSession(context.Context, string) (*authcontracts.Session, error) {
 	return nil, nil
 }
 
-func (m *mockTokenService) RevokeToken(context.Context, string, time.Duration) error {
+func (m *mockTokenService) DeleteSession(context.Context, string) error {
 	return nil
-}
-
-func (m *mockTokenService) ClearRefreshSession(context.Context, int64, string) error {
-	return nil
-}
-
-func (m *mockTokenService) IsRevoked(context.Context, string) (bool, error) {
-	return false, nil
-}
-
-func (m *mockTokenService) ParseToken(string) (*jwtpkg.Claims, error) {
-	return nil, nil
 }
 
 func (m *mockTokenService) IssueWSTicket(context.Context, authctx.CurrentUser) (*authcontracts.WSTicket, error) {
@@ -151,15 +134,16 @@ func TestServiceRegisterSuccess(t *testing.T) {
 		},
 	}
 	tokenService := &mockTokenService{
-		issueFn: func(userID int64, username, role string) (*authcontracts.TokenPair, error) {
+		issueFn: func(userID int64, username, role string) (*authcontracts.Session, error) {
 			if userID != 101 {
 				t.Fatalf("unexpected user id: %d", userID)
 			}
-			return &authcontracts.TokenPair{
-				AccessToken:     "access-token",
-				RefreshToken:    "refresh-token",
-				AccessTokenTTL:  15 * time.Minute,
-				RefreshTokenTTL: 7 * 24 * time.Hour,
+			return &authcontracts.Session{
+				ID:        "session-1",
+				UserID:    userID,
+				Username:  username,
+				Role:      role,
+				ExpiresAt: time.Now().Add(7 * 24 * time.Hour),
 			}, nil
 		},
 	}
@@ -177,8 +161,8 @@ func TestServiceRegisterSuccess(t *testing.T) {
 	if resp.User.ID != 101 {
 		t.Fatalf("unexpected user id: %d", resp.User.ID)
 	}
-	if tokens.RefreshToken != "refresh-token" {
-		t.Fatalf("unexpected refresh token: %s", tokens.RefreshToken)
+	if tokens.ID != "session-1" {
+		t.Fatalf("unexpected session id: %s", tokens.ID)
 	}
 }
 
@@ -195,12 +179,13 @@ func TestServiceRegisterTrimsEmail(t *testing.T) {
 		},
 	}
 	tokenService := &mockTokenService{
-		issueFn: func(userID int64, username, role string) (*authcontracts.TokenPair, error) {
-			return &authcontracts.TokenPair{
-				AccessToken:     "access-token",
-				RefreshToken:    "refresh-token",
-				AccessTokenTTL:  15 * time.Minute,
-				RefreshTokenTTL: 7 * 24 * time.Hour,
+		issueFn: func(userID int64, username, role string) (*authcontracts.Session, error) {
+			return &authcontracts.Session{
+				ID:        "session-2",
+				UserID:    userID,
+				Username:  username,
+				Role:      role,
+				ExpiresAt: time.Now().Add(7 * 24 * time.Hour),
 			}, nil
 		},
 	}
@@ -225,7 +210,7 @@ func TestServiceRegisterRoleNotFound(t *testing.T) {
 			return identitycontracts.ErrRoleNotFound
 		},
 	}, &mockTokenService{
-		issueFn: func(int64, string, string) (*authcontracts.TokenPair, error) {
+		issueFn: func(int64, string, string) (*authcontracts.Session, error) {
 			return nil, errors.New("should not be called")
 		},
 	}, config.RateLimitPolicyConfig{}, zap.NewNop())
@@ -261,7 +246,7 @@ func TestServiceLoginInvalidPassword(t *testing.T) {
 			return nil
 		},
 	}, &mockTokenService{
-		issueFn: func(int64, string, string) (*authcontracts.TokenPair, error) {
+		issueFn: func(int64, string, string) (*authcontracts.Session, error) {
 			return nil, errors.New("should not be called")
 		},
 	}, config.RateLimitPolicyConfig{Limit: 3, Window: time.Minute, LockDuration: 15 * time.Minute}, zap.NewNop())
@@ -303,8 +288,8 @@ func TestServiceLoginLocksAccountAfterExceededAttempts(t *testing.T) {
 			return nil
 		},
 	}, &mockTokenService{
-		issueFn: func(int64, string, string) (*authcontracts.TokenPair, error) {
-			t.Fatal("IssueTokens() should not be called")
+		issueFn: func(int64, string, string) (*authcontracts.Session, error) {
+			t.Fatal("CreateSession() should not be called")
 			return nil, nil
 		},
 	}, config.RateLimitPolicyConfig{Limit: 3, Window: time.Minute, LockDuration: 15 * time.Minute}, zap.NewNop())
@@ -349,12 +334,13 @@ func TestServiceLoginUnlocksExpiredAccountAndSucceeds(t *testing.T) {
 			return nil
 		},
 	}, &mockTokenService{
-		issueFn: func(userID int64, username, role string) (*authcontracts.TokenPair, error) {
-			return &authcontracts.TokenPair{
-				AccessToken:     "access-token",
-				RefreshToken:    "refresh-token",
-				AccessTokenTTL:  15 * time.Minute,
-				RefreshTokenTTL: 24 * time.Hour,
+		issueFn: func(userID int64, username, role string) (*authcontracts.Session, error) {
+			return &authcontracts.Session{
+				ID:        "session-3",
+				UserID:    userID,
+				Username:  username,
+				Role:      role,
+				ExpiresAt: time.Now().Add(24 * time.Hour),
 			}, nil
 		},
 	}, config.RateLimitPolicyConfig{Limit: 3, Window: time.Minute, LockDuration: 15 * time.Minute}, zap.NewNop())
