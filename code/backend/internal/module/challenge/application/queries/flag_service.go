@@ -72,10 +72,6 @@ func (s *FlagService) ValidateFlag(userID, challengeID int64, input string, nonc
 	}
 }
 
-func (s *FlagService) GetFlagConfig(challengeID int64) (*dto.FlagResp, error) {
-	return s.GetFlagConfigWithContext(context.Background(), challengeID)
-}
-
 func (s *FlagService) GetFlagConfigWithContext(ctx context.Context, challengeID int64) (*dto.FlagResp, error) {
 	challenge, err := s.loadChallengeWithContext(ctx, challengeID)
 	if err != nil {

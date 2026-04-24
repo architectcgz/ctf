@@ -29,7 +29,6 @@ type flagCommandService interface {
 }
 
 type flagQueryService interface {
-	GetFlagConfig(challengeID int64) (*dto.FlagResp, error)
 	GetFlagConfigWithContext(ctx context.Context, challengeID int64) (*dto.FlagResp, error)
 }
 
