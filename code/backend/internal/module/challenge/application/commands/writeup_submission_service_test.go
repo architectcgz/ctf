@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -64,7 +65,7 @@ func TestWriteupServiceUpsertSubmissionCommunityLifecycle(t *testing.T) {
 	service := NewWriteupService(repo)
 	queryService := challengeqry.NewWriteupService(repo)
 
-	emptyMine, err := queryService.GetMySubmission(student.ID, challengeItem.ID)
+	emptyMine, err := queryService.GetMySubmission(context.Background(), student.ID, challengeItem.ID)
 	if err != nil {
 		t.Fatalf("GetMySubmission() before upsert error = %v", err)
 	}
@@ -123,7 +124,7 @@ func TestWriteupServiceUpsertSubmissionCommunityLifecycle(t *testing.T) {
 		t.Fatalf("unexpected published visibility status: %+v", published)
 	}
 
-	mine, err := queryService.GetMySubmission(student.ID, challengeItem.ID)
+	mine, err := queryService.GetMySubmission(context.Background(), student.ID, challengeItem.ID)
 	if err != nil {
 		t.Fatalf("GetMySubmission() error = %v", err)
 	}
@@ -131,7 +132,7 @@ func TestWriteupServiceUpsertSubmissionCommunityLifecycle(t *testing.T) {
 		t.Fatalf("unexpected my published submission payload: %+v", mine)
 	}
 
-	detail, err := queryService.GetTeacherSubmission(published.ID, teacher.ID, model.RoleTeacher)
+	detail, err := queryService.GetTeacherSubmission(context.Background(), published.ID, teacher.ID, model.RoleTeacher)
 	if err != nil {
 		t.Fatalf("GetTeacherSubmission() error = %v", err)
 	}

@@ -28,7 +28,7 @@ func (s *stubChallengeFlagRepository) UpdateWithContext(ctx context.Context, cha
 
 type challengeFlagContextKey string
 
-func TestFlagServiceGetFlagConfigWithContextPropagatesContextToRepository(t *testing.T) {
+func TestFlagServiceGetFlagConfigPropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := challengeFlagContextKey("flag-config")
@@ -53,9 +53,9 @@ func TestFlagServiceGetFlagConfigWithContextPropagatesContextToRepository(t *tes
 	}
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.GetFlagConfigWithContext(ctx, 42)
+	resp, err := service.GetFlagConfig(ctx, 42)
 	if err != nil {
-		t.Fatalf("GetFlagConfigWithContext() error = %v", err)
+		t.Fatalf("GetFlagConfig() error = %v", err)
 	}
 	if !findCalled {
 		t.Fatal("expected repository find to be called")
