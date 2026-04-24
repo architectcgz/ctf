@@ -786,22 +786,11 @@ func (s *Service) ReviewManualReviewSubmissionWithContext(
 }
 
 func (s *Service) ListTeacherManualReviewSubmissions(
-	requesterID int64,
-	requesterRole string,
-	query *dto.TeacherManualReviewSubmissionQuery,
-) (*dto.PageResult, error) {
-	return s.ListTeacherManualReviewSubmissionsWithContext(context.Background(), requesterID, requesterRole, query)
-}
-
-func (s *Service) ListTeacherManualReviewSubmissionsWithContext(
 	ctx context.Context,
 	requesterID int64,
 	requesterRole string,
 	query *dto.TeacherManualReviewSubmissionQuery,
 ) (*dto.PageResult, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
 	if err := ensureManualReviewRequesterRole(requesterRole); err != nil {
 		return nil, err
 	}
