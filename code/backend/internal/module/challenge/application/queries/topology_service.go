@@ -25,7 +25,7 @@ func NewTopologyService(repo challengeports.ChallengeTopologyRepository, templat
 	}
 }
 
-func (s *TopologyService) GetChallengeTopologyWithContext(ctx context.Context, challengeID int64) (*dto.ChallengeTopologyResp, error) {
+func (s *TopologyService) GetChallengeTopology(ctx context.Context, challengeID int64) (*dto.ChallengeTopologyResp, error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -45,7 +45,7 @@ func (s *TopologyService) GetChallengeTopologyWithContext(ctx context.Context, c
 	return domain.TopologyRespFromModel(item)
 }
 
-func (s *TopologyService) GetTemplateWithContext(ctx context.Context, id int64) (*dto.EnvironmentTemplateResp, error) {
+func (s *TopologyService) GetTemplate(ctx context.Context, id int64) (*dto.EnvironmentTemplateResp, error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -59,7 +59,7 @@ func (s *TopologyService) GetTemplateWithContext(ctx context.Context, id int64) 
 	return domain.TemplateRespFromModel(item)
 }
 
-func (s *TopologyService) ListTemplatesWithContext(ctx context.Context, keyword string) ([]*dto.EnvironmentTemplateResp, error) {
+func (s *TopologyService) ListTemplates(ctx context.Context, keyword string) ([]*dto.EnvironmentTemplateResp, error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
