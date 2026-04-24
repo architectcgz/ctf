@@ -13,7 +13,7 @@ func (ctxOnlyChallengeFlagRepository) FindByID(context.Context, int64) (*model.C
 	return nil, nil
 }
 
-func (ctxOnlyChallengeFlagRepository) UpdateWithContext(context.Context, *model.Challenge) error {
+func (ctxOnlyChallengeFlagRepository) Update(context.Context, *model.Challenge) error {
 	return nil
 }
 

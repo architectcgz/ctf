@@ -37,7 +37,7 @@ func (r *Repository) Create(challenge *model.Challenge) error {
 	return r.db.Create(challenge).Error
 }
 
-func (r *Repository) CreateWithHintsWithContext(ctx context.Context, challenge *model.Challenge, hints []*model.ChallengeHint) error {
+func (r *Repository) CreateWithHints(ctx context.Context, challenge *model.Challenge, hints []*model.ChallengeHint) error {
 	return r.dbWithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		if err := tx.Create(challenge).Error; err != nil {
 			return err
@@ -58,11 +58,11 @@ func (r *Repository) FindByID(ctx context.Context, id int64) (*model.Challenge, 
 	return &challenge, err
 }
 
-func (r *Repository) UpdateWithContext(ctx context.Context, challenge *model.Challenge) error {
+func (r *Repository) Update(ctx context.Context, challenge *model.Challenge) error {
 	return r.dbWithContext(ctx).Save(challenge).Error
 }
 
-func (r *Repository) UpdateWithHintsWithContext(ctx context.Context, challenge *model.Challenge, hints []*model.ChallengeHint, replaceHints bool) error {
+func (r *Repository) UpdateWithHints(ctx context.Context, challenge *model.Challenge, hints []*model.ChallengeHint, replaceHints bool) error {
 	return r.dbWithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		if err := tx.Save(challenge).Error; err != nil {
 			return err
@@ -83,7 +83,7 @@ func (r *Repository) UpdateWithHintsWithContext(ctx context.Context, challenge *
 	})
 }
 
-func (r *Repository) DeleteWithContext(ctx context.Context, id int64) error {
+func (r *Repository) Delete(ctx context.Context, id int64) error {
 	return r.dbWithContext(ctx).Delete(&model.Challenge{}, id).Error
 }
 
@@ -182,7 +182,7 @@ func (r *Repository) ListWithContext(ctx context.Context, query *dto.ChallengeQu
 	return challenges, total, err
 }
 
-func (r *Repository) HasRunningInstancesWithContext(ctx context.Context, challengeID int64) (bool, error) {
+func (r *Repository) HasRunningInstances(ctx context.Context, challengeID int64) (bool, error) {
 	var count int64
 	err := r.dbWithContext(ctx).Model(&model.Instance{}).
 		Where("challenge_id = ? AND status IN (?)", challengeID, []string{"creating", "running"}).

@@ -62,7 +62,7 @@ func (s *FlagService) ConfigureStaticFlag(ctx context.Context, challengeID int64
 	if flagPrefix != "" {
 		challenge.FlagPrefix = flagPrefix
 	}
-	return s.repo.UpdateWithContext(ctx, challenge)
+	return s.repo.Update(ctx, challenge)
 }
 
 func (s *FlagService) ConfigureDynamicFlag(ctx context.Context, challengeID int64, flagPrefix string) error {
@@ -79,7 +79,7 @@ func (s *FlagService) ConfigureDynamicFlag(ctx context.Context, challengeID int6
 	if flagPrefix != "" {
 		challenge.FlagPrefix = flagPrefix
 	}
-	return s.repo.UpdateWithContext(ctx, challenge)
+	return s.repo.Update(ctx, challenge)
 }
 
 func (s *FlagService) ConfigureRegexFlag(ctx context.Context, challengeID int64, flagRegex, flagPrefix string) error {
@@ -99,7 +99,7 @@ func (s *FlagService) ConfigureRegexFlag(ctx context.Context, challengeID int64,
 	if flagPrefix != "" {
 		challenge.FlagPrefix = flagPrefix
 	}
-	return s.repo.UpdateWithContext(ctx, challenge)
+	return s.repo.Update(ctx, challenge)
 }
 
 func (s *FlagService) ConfigureManualReviewFlag(ctx context.Context, challengeID int64) error {
@@ -110,7 +110,7 @@ func (s *FlagService) ConfigureManualReviewFlag(ctx context.Context, challengeID
 
 	s.resetNonDynamicFlagFields(challenge)
 	challenge.FlagType = model.FlagTypeManualReview
-	return s.repo.UpdateWithContext(ctx, challenge)
+	return s.repo.Update(ctx, challenge)
 }
 
 func (s *FlagService) resetNonDynamicFlagFields(challenge *model.Challenge) {

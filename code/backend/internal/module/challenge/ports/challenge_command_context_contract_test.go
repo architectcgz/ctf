@@ -10,7 +10,7 @@ import (
 
 type ctxOnlyChallengeCommandRepository struct{}
 
-func (ctxOnlyChallengeCommandRepository) CreateWithHintsWithContext(context.Context, *model.Challenge, []*model.ChallengeHint) error {
+func (ctxOnlyChallengeCommandRepository) CreateWithHints(context.Context, *model.Challenge, []*model.ChallengeHint) error {
 	return nil
 }
 
@@ -18,19 +18,19 @@ func (ctxOnlyChallengeCommandRepository) FindByID(context.Context, int64) (*mode
 	return nil, nil
 }
 
-func (ctxOnlyChallengeCommandRepository) UpdateWithContext(context.Context, *model.Challenge) error {
+func (ctxOnlyChallengeCommandRepository) Update(context.Context, *model.Challenge) error {
 	return nil
 }
 
-func (ctxOnlyChallengeCommandRepository) UpdateWithHintsWithContext(context.Context, *model.Challenge, []*model.ChallengeHint, bool) error {
+func (ctxOnlyChallengeCommandRepository) UpdateWithHints(context.Context, *model.Challenge, []*model.ChallengeHint, bool) error {
 	return nil
 }
 
-func (ctxOnlyChallengeCommandRepository) DeleteWithContext(context.Context, int64) error {
+func (ctxOnlyChallengeCommandRepository) Delete(context.Context, int64) error {
 	return nil
 }
 
-func (ctxOnlyChallengeCommandRepository) HasRunningInstancesWithContext(context.Context, int64) (bool, error) {
+func (ctxOnlyChallengeCommandRepository) HasRunningInstances(context.Context, int64) (bool, error) {
 	return false, nil
 }
 
