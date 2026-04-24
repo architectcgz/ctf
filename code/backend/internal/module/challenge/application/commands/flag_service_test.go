@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"context"
 	"strings"
 	"testing"
 	"time"
@@ -47,9 +48,9 @@ func TestFlagServiceConfigureStaticFlagAndValidate(t *testing.T) {
 		t.Fatal("expected static flag validation success")
 	}
 
-	cfg, err := queryService.GetFlagConfig(1)
+	cfg, err := queryService.GetFlagConfigWithContext(context.Background(), 1)
 	if err != nil {
-		t.Fatalf("GetFlagConfig() error = %v", err)
+		t.Fatalf("GetFlagConfigWithContext() error = %v", err)
 	}
 	if cfg.FlagType != model.FlagTypeStatic || cfg.FlagPrefix != "flag" || !cfg.Configured {
 		t.Fatalf("unexpected flag config: %+v", cfg)
@@ -160,9 +161,9 @@ func TestFlagServiceConfigureRegexFlagAndValidate(t *testing.T) {
 		t.Fatal("expected regex flag validation success")
 	}
 
-	cfg, err := queryService.GetFlagConfig(3)
+	cfg, err := queryService.GetFlagConfigWithContext(context.Background(), 3)
 	if err != nil {
-		t.Fatalf("GetFlagConfig() error = %v", err)
+		t.Fatalf("GetFlagConfigWithContext() error = %v", err)
 	}
 	if cfg.FlagType != model.FlagTypeRegex || cfg.FlagRegex != `^flag\{user-[0-9]{3}\}$` || !cfg.Configured {
 		t.Fatalf("unexpected regex flag config: %+v", cfg)
@@ -196,9 +197,9 @@ func TestFlagServiceConfigureManualReviewFlag(t *testing.T) {
 		t.Fatalf("NewFlagService(query) error = %v", err)
 	}
 
-	flagCfg, err := cfg.GetFlagConfig(4)
+	flagCfg, err := cfg.GetFlagConfigWithContext(context.Background(), 4)
 	if err != nil {
-		t.Fatalf("GetFlagConfig() error = %v", err)
+		t.Fatalf("GetFlagConfigWithContext() error = %v", err)
 	}
 	if flagCfg.FlagType != model.FlagTypeManualReview || !flagCfg.Configured {
 		t.Fatalf("unexpected manual review flag config: %+v", flagCfg)
