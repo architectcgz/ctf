@@ -15,7 +15,7 @@ func (ctxOnlyChallengeWriteupRepository) FindByIDWithContext(context.Context, in
 	return nil, nil
 }
 
-func (ctxOnlyChallengeWriteupRepository) FindUserByIDWithContext(context.Context, int64) (*model.User, error) {
+func (ctxOnlyChallengeWriteupRepository) FindUserByID(context.Context, int64) (*model.User, error) {
 	return nil, nil
 }
 

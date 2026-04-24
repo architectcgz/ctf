@@ -324,7 +324,7 @@ func ensureTeacherCanModerateCommunityWriteup(
 	if requesterRole == model.RoleAdmin {
 		return nil
 	}
-	requester, err := repo.FindUserByIDWithContext(ctx, requesterID)
+	requester, err := repo.FindUserByID(ctx, requesterID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return errcode.ErrUnauthorized
