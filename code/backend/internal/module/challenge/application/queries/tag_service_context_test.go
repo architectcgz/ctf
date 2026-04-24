@@ -8,55 +8,35 @@ import (
 )
 
 type tagQueryContextStub struct {
-	listFn                         func(tagType string) ([]*model.Tag, error)
 	listWithContextFn              func(ctx context.Context, tagType string) ([]*model.Tag, error)
-	findByChallengeIDFn            func(challengeID int64) ([]*model.Tag, error)
 	findByChallengeIDWithContextFn func(ctx context.Context, challengeID int64) ([]*model.Tag, error)
 }
 
-func (s *tagQueryContextStub) Create(tag *model.Tag) error { return nil }
 func (s *tagQueryContextStub) CreateWithContext(ctx context.Context, tag *model.Tag) error {
 	return nil
-}
-func (s *tagQueryContextStub) List(tagType string) ([]*model.Tag, error) {
-	if s.listFn != nil {
-		return s.listFn(tagType)
-	}
-	return nil, nil
 }
 func (s *tagQueryContextStub) ListWithContext(ctx context.Context, tagType string) ([]*model.Tag, error) {
 	if s.listWithContextFn != nil {
 		return s.listWithContextFn(ctx, tagType)
 	}
-	return s.List(tagType)
+	return nil, nil
 }
-func (s *tagQueryContextStub) FindByIDs(ids []int64) ([]*model.Tag, error) { return nil, nil }
 func (s *tagQueryContextStub) FindByIDsWithContext(ctx context.Context, ids []int64) ([]*model.Tag, error) {
 	return nil, nil
 }
-func (s *tagQueryContextStub) AttachTagsInTx(challengeID int64, tagIDs []int64) error { return nil }
 func (s *tagQueryContextStub) AttachTagsInTxWithContext(ctx context.Context, challengeID int64, tagIDs []int64) error {
 	return nil
 }
-func (s *tagQueryContextStub) DetachFromChallenge(challengeID, tagID int64) error { return nil }
 func (s *tagQueryContextStub) DetachFromChallengeWithContext(ctx context.Context, challengeID, tagID int64) error {
 	return nil
-}
-func (s *tagQueryContextStub) FindByChallengeID(challengeID int64) ([]*model.Tag, error) {
-	if s.findByChallengeIDFn != nil {
-		return s.findByChallengeIDFn(challengeID)
-	}
-	return nil, nil
 }
 func (s *tagQueryContextStub) FindByChallengeIDWithContext(ctx context.Context, challengeID int64) ([]*model.Tag, error) {
 	if s.findByChallengeIDWithContextFn != nil {
 		return s.findByChallengeIDWithContextFn(ctx, challengeID)
 	}
-	return s.FindByChallengeID(challengeID)
+	return nil, nil
 }
-func (s *tagQueryContextStub) Delete(id int64) error                                 { return nil }
 func (s *tagQueryContextStub) DeleteWithContext(ctx context.Context, id int64) error { return nil }
-func (s *tagQueryContextStub) CountChallengesByTagID(tagID int64) (int64, error)     { return 0, nil }
 func (s *tagQueryContextStub) CountChallengesByTagIDWithContext(ctx context.Context, tagID int64) (int64, error) {
 	return 0, nil
 }

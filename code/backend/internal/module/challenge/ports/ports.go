@@ -155,21 +155,13 @@ type EnvironmentTemplateRepository interface {
 }
 
 type TagRepository interface {
-	Create(tag *model.Tag) error
 	CreateWithContext(ctx context.Context, tag *model.Tag) error
-	List(tagType string) ([]*model.Tag, error)
 	ListWithContext(ctx context.Context, tagType string) ([]*model.Tag, error)
-	FindByIDs(ids []int64) ([]*model.Tag, error)
 	FindByIDsWithContext(ctx context.Context, ids []int64) ([]*model.Tag, error)
-	AttachTagsInTx(challengeID int64, tagIDs []int64) error
 	AttachTagsInTxWithContext(ctx context.Context, challengeID int64, tagIDs []int64) error
-	DetachFromChallenge(challengeID, tagID int64) error
 	DetachFromChallengeWithContext(ctx context.Context, challengeID, tagID int64) error
-	FindByChallengeID(challengeID int64) ([]*model.Tag, error)
 	FindByChallengeIDWithContext(ctx context.Context, challengeID int64) ([]*model.Tag, error)
-	Delete(id int64) error
 	DeleteWithContext(ctx context.Context, id int64) error
-	CountChallengesByTagID(tagID int64) (int64, error)
 	CountChallengesByTagIDWithContext(ctx context.Context, tagID int64) (int64, error)
 }
 
