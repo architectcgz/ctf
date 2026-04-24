@@ -45,22 +45,11 @@ func NewAWDServiceTemplateImportService(
 }
 
 func (s *AWDServiceTemplateImportService) PreviewImport(
-	actorUserID int64,
-	fileName string,
-	reader io.Reader,
-) (*dto.AWDServiceTemplateImportPreviewResp, error) {
-	return s.PreviewImportWithContext(context.Background(), actorUserID, fileName, reader)
-}
-
-func (s *AWDServiceTemplateImportService) PreviewImportWithContext(
 	ctx context.Context,
 	actorUserID int64,
 	fileName string,
 	reader io.Reader,
 ) (*dto.AWDServiceTemplateImportPreviewResp, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
 	if strings.TrimSpace(fileName) == "" {
 		fileName = "awd-service-template-package.zip"
 	}
@@ -106,14 +95,7 @@ func (s *AWDServiceTemplateImportService) PreviewImportWithContext(
 	return preview, nil
 }
 
-func (s *AWDServiceTemplateImportService) ListImports(actorUserID int64) ([]dto.AWDServiceTemplateImportPreviewResp, error) {
-	return s.ListImportsWithContext(context.Background(), actorUserID)
-}
-
-func (s *AWDServiceTemplateImportService) ListImportsWithContext(ctx context.Context, actorUserID int64) ([]dto.AWDServiceTemplateImportPreviewResp, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
+func (s *AWDServiceTemplateImportService) ListImports(ctx context.Context, actorUserID int64) ([]dto.AWDServiceTemplateImportPreviewResp, error) {
 	_ = ctx
 	records, err := loadAWDServiceTemplateImportPreviewRecords()
 	if err != nil {
@@ -134,20 +116,10 @@ func (s *AWDServiceTemplateImportService) ListImportsWithContext(ctx context.Con
 }
 
 func (s *AWDServiceTemplateImportService) GetImport(
-	actorUserID int64,
-	id string,
-) (*dto.AWDServiceTemplateImportPreviewResp, error) {
-	return s.GetImportWithContext(context.Background(), actorUserID, id)
-}
-
-func (s *AWDServiceTemplateImportService) GetImportWithContext(
 	ctx context.Context,
 	actorUserID int64,
 	id string,
 ) (*dto.AWDServiceTemplateImportPreviewResp, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
 	_ = ctx
 	record, err := loadAWDServiceTemplateImportPreviewRecord(id)
 	if err != nil {
@@ -161,13 +133,6 @@ func (s *AWDServiceTemplateImportService) GetImportWithContext(
 }
 
 func (s *AWDServiceTemplateImportService) CommitImport(
-	actorUserID int64,
-	id string,
-) (*dto.AWDServiceTemplateResp, error) {
-	return s.CommitImportWithContext(context.Background(), actorUserID, id)
-}
-
-func (s *AWDServiceTemplateImportService) CommitImportWithContext(
 	ctx context.Context,
 	actorUserID int64,
 	id string,
@@ -183,10 +148,6 @@ func (s *AWDServiceTemplateImportService) CommitImportWithContext(
 	parsed, err := domain.ParseAWDServiceTemplatePackageDir(record.SourceDir)
 	if err != nil {
 		return nil, err
-	}
-
-	if ctx == nil {
-		ctx = context.Background()
 	}
 
 	var template *model.AWDServiceTemplate

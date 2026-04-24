@@ -23,14 +23,10 @@ type awdServiceTemplateCommandService interface {
 	CreateTemplate(ctx context.Context, actorUserID int64, req *dto.CreateAWDServiceTemplateReq) (*dto.AWDServiceTemplateResp, error)
 	UpdateTemplate(ctx context.Context, id int64, req *dto.UpdateAWDServiceTemplateReq) (*dto.AWDServiceTemplateResp, error)
 	DeleteTemplate(ctx context.Context, id int64) error
-	PreviewImport(actorUserID int64, fileName string, reader io.Reader) (*dto.AWDServiceTemplateImportPreviewResp, error)
-	PreviewImportWithContext(ctx context.Context, actorUserID int64, fileName string, reader io.Reader) (*dto.AWDServiceTemplateImportPreviewResp, error)
-	ListImports(actorUserID int64) ([]dto.AWDServiceTemplateImportPreviewResp, error)
-	ListImportsWithContext(ctx context.Context, actorUserID int64) ([]dto.AWDServiceTemplateImportPreviewResp, error)
-	GetImport(actorUserID int64, id string) (*dto.AWDServiceTemplateImportPreviewResp, error)
-	GetImportWithContext(ctx context.Context, actorUserID int64, id string) (*dto.AWDServiceTemplateImportPreviewResp, error)
-	CommitImport(actorUserID int64, id string) (*dto.AWDServiceTemplateResp, error)
-	CommitImportWithContext(ctx context.Context, actorUserID int64, id string) (*dto.AWDServiceTemplateResp, error)
+	PreviewImport(ctx context.Context, actorUserID int64, fileName string, reader io.Reader) (*dto.AWDServiceTemplateImportPreviewResp, error)
+	ListImports(ctx context.Context, actorUserID int64) ([]dto.AWDServiceTemplateImportPreviewResp, error)
+	GetImport(ctx context.Context, actorUserID int64, id string) (*dto.AWDServiceTemplateImportPreviewResp, error)
+	CommitImport(ctx context.Context, actorUserID int64, id string) (*dto.AWDServiceTemplateResp, error)
 }
 
 type awdServiceTemplateQueryService interface {
@@ -130,7 +126,7 @@ func (h *AWDServiceTemplateHandler) PreviewImport(c *gin.Context) {
 	}
 	defer file.Close()
 
-	resp, err := h.commands.PreviewImportWithContext(
+	resp, err := h.commands.PreviewImport(
 		c.Request.Context(),
 		authctx.MustCurrentUser(c).UserID,
 		fileHeader.Filename,
@@ -144,7 +140,7 @@ func (h *AWDServiceTemplateHandler) PreviewImport(c *gin.Context) {
 }
 
 func (h *AWDServiceTemplateHandler) ListImports(c *gin.Context) {
-	resp, err := h.commands.ListImportsWithContext(c.Request.Context(), authctx.MustCurrentUser(c).UserID)
+	resp, err := h.commands.ListImports(c.Request.Context(), authctx.MustCurrentUser(c).UserID)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -153,7 +149,7 @@ func (h *AWDServiceTemplateHandler) ListImports(c *gin.Context) {
 }
 
 func (h *AWDServiceTemplateHandler) GetImport(c *gin.Context) {
-	resp, err := h.commands.GetImportWithContext(c.Request.Context(), authctx.MustCurrentUser(c).UserID, strings.TrimSpace(c.Param("id")))
+	resp, err := h.commands.GetImport(c.Request.Context(), authctx.MustCurrentUser(c).UserID, strings.TrimSpace(c.Param("id")))
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -168,7 +164,7 @@ func (h *AWDServiceTemplateHandler) CommitImport(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.commands.CommitImportWithContext(c.Request.Context(), authctx.MustCurrentUser(c).UserID, id)
+	resp, err := h.commands.CommitImport(c.Request.Context(), authctx.MustCurrentUser(c).UserID, id)
 	if err != nil {
 		response.FromError(c, err)
 		return
