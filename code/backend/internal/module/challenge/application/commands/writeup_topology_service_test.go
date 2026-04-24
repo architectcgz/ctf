@@ -37,7 +37,7 @@ func TestWriteupServiceUpsertAndGetPublished(t *testing.T) {
 	repo := challengeinfra.NewRepository(db)
 	service := NewWriteupService(repo)
 
-	saved, err := service.Upsert(challengeItem.ID, 99, &dto.UpsertChallengeWriteupReq{
+	saved, err := service.Upsert(context.Background(), challengeItem.ID, 99, &dto.UpsertChallengeWriteupReq{
 		Title:      "官方题解",
 		Content:    "## Step 1",
 		Visibility: model.WriteupVisibilityPublic,

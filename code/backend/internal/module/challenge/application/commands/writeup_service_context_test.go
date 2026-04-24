@@ -141,7 +141,7 @@ func (s *writeupCommandContextStub) ListCommunitySolutionsByChallengeIDWithConte
 
 type writeupCommandContextKey string
 
-func TestWriteupServiceUpsertWithContextPropagatesContextToRepository(t *testing.T) {
+func TestWriteupServiceUpsertPropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := writeupCommandContextKey("writeup-upsert")
@@ -180,9 +180,9 @@ func TestWriteupServiceUpsertWithContextPropagatesContextToRepository(t *testing
 	service := NewWriteupService(repo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.UpsertWithContext(ctx, 11, 7, &dto.UpsertChallengeWriteupReq{Title: "Official", Content: "Walkthrough", Visibility: model.WriteupVisibilityPublic})
+	resp, err := service.Upsert(ctx, 11, 7, &dto.UpsertChallengeWriteupReq{Title: "Official", Content: "Walkthrough", Visibility: model.WriteupVisibilityPublic})
 	if err != nil {
-		t.Fatalf("UpsertWithContext() error = %v", err)
+		t.Fatalf("Upsert() error = %v", err)
 	}
 	if !findChallengeCalled || !findExistingCalled || !upsertCalled || !findUpdatedCalled {
 		t.Fatalf("expected repository calls, got challenge=%v existing=%v upsert=%v updated=%v", findChallengeCalled, findExistingCalled, upsertCalled, findUpdatedCalled)
@@ -192,7 +192,7 @@ func TestWriteupServiceUpsertWithContextPropagatesContextToRepository(t *testing
 	}
 }
 
-func TestWriteupServiceDeleteWithContextPropagatesContextToRepository(t *testing.T) {
+func TestWriteupServiceDeletePropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := writeupCommandContextKey("writeup-delete")
@@ -218,15 +218,15 @@ func TestWriteupServiceDeleteWithContextPropagatesContextToRepository(t *testing
 	service := NewWriteupService(repo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	if err := service.DeleteWithContext(ctx, 11); err != nil {
-		t.Fatalf("DeleteWithContext() error = %v", err)
+	if err := service.Delete(ctx, 11); err != nil {
+		t.Fatalf("Delete() error = %v", err)
 	}
 	if !findChallengeCalled || !deleteCalled {
 		t.Fatalf("expected repository calls, got challenge=%v delete=%v", findChallengeCalled, deleteCalled)
 	}
 }
 
-func TestWriteupServiceUpsertSubmissionWithContextPropagatesContextToRepository(t *testing.T) {
+func TestWriteupServiceUpsertSubmissionPropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := writeupCommandContextKey("writeup-upsert-submission")
@@ -273,9 +273,9 @@ func TestWriteupServiceUpsertSubmissionWithContextPropagatesContextToRepository(
 	service := NewWriteupService(repo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.UpsertSubmissionWithContext(ctx, 11, 7, &dto.UpsertSubmissionWriteupReq{Title: "Published", Content: "Walkthrough", SubmissionStatus: model.SubmissionWriteupStatusPublished})
+	resp, err := service.UpsertSubmission(ctx, 11, 7, &dto.UpsertSubmissionWriteupReq{Title: "Published", Content: "Walkthrough", SubmissionStatus: model.SubmissionWriteupStatusPublished})
 	if err != nil {
-		t.Fatalf("UpsertSubmissionWithContext() error = %v", err)
+		t.Fatalf("UpsertSubmission() error = %v", err)
 	}
 	if !findChallengeCalled || !findExistingCalled || !getSolvedCalled || !upsertCalled || !findUpdatedCalled {
 		t.Fatalf("expected repository calls, got challenge=%v existing=%v solved=%v upsert=%v updated=%v", findChallengeCalled, findExistingCalled, getSolvedCalled, upsertCalled, findUpdatedCalled)
@@ -285,7 +285,7 @@ func TestWriteupServiceUpsertSubmissionWithContextPropagatesContextToRepository(
 	}
 }
 
-func TestWriteupServiceRecommendOfficialWithContextPropagatesContextToRepository(t *testing.T) {
+func TestWriteupServiceRecommendOfficialPropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := writeupCommandContextKey("writeup-recommend-official")
@@ -324,9 +324,9 @@ func TestWriteupServiceRecommendOfficialWithContextPropagatesContextToRepository
 	service := NewWriteupService(repo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.RecommendOfficialWithContext(ctx, 11, 7)
+	resp, err := service.RecommendOfficial(ctx, 11, 7)
 	if err != nil {
-		t.Fatalf("RecommendOfficialWithContext() error = %v", err)
+		t.Fatalf("RecommendOfficial() error = %v", err)
 	}
 	if !findChallengeCalled || !findWriteupCalled || !upsertCalled || !findUpdatedCalled {
 		t.Fatalf("expected repository calls, got challenge=%v writeup=%v upsert=%v updated=%v", findChallengeCalled, findWriteupCalled, upsertCalled, findUpdatedCalled)
@@ -336,7 +336,7 @@ func TestWriteupServiceRecommendOfficialWithContextPropagatesContextToRepository
 	}
 }
 
-func TestWriteupServiceUnrecommendOfficialWithContextPropagatesContextToRepository(t *testing.T) {
+func TestWriteupServiceUnrecommendOfficialPropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := writeupCommandContextKey("writeup-unrecommend-official")
@@ -375,9 +375,9 @@ func TestWriteupServiceUnrecommendOfficialWithContextPropagatesContextToReposito
 	service := NewWriteupService(repo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.UnrecommendOfficialWithContext(ctx, 11, 7)
+	resp, err := service.UnrecommendOfficial(ctx, 11, 7)
 	if err != nil {
-		t.Fatalf("UnrecommendOfficialWithContext() error = %v", err)
+		t.Fatalf("UnrecommendOfficial() error = %v", err)
 	}
 	if !findChallengeCalled || !findWriteupCalled || !upsertCalled || !findUpdatedCalled {
 		t.Fatalf("expected repository calls, got challenge=%v writeup=%v upsert=%v updated=%v", findChallengeCalled, findWriteupCalled, upsertCalled, findUpdatedCalled)
@@ -387,7 +387,7 @@ func TestWriteupServiceUnrecommendOfficialWithContextPropagatesContextToReposito
 	}
 }
 
-func TestWriteupServiceRecommendCommunityWithContextPropagatesContextToRepository(t *testing.T) {
+func TestWriteupServiceRecommendCommunityPropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := writeupCommandContextKey("writeup-recommend-community")
@@ -438,9 +438,9 @@ func TestWriteupServiceRecommendCommunityWithContextPropagatesContextToRepositor
 	service := NewWriteupService(repo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.RecommendCommunityWithContext(ctx, 31, 1001, model.RoleTeacher)
+	resp, err := service.RecommendCommunity(ctx, 31, 1001, model.RoleTeacher)
 	if err != nil {
-		t.Fatalf("RecommendCommunityWithContext() error = %v", err)
+		t.Fatalf("RecommendCommunity() error = %v", err)
 	}
 	if !getTeacherRecordCalled || !findRequesterCalled || !findSubmissionCalled || !upsertCalled || !findUpdatedCalled {
 		t.Fatalf("expected repository calls, got record=%v requester=%v submission=%v upsert=%v updated=%v", getTeacherRecordCalled, findRequesterCalled, findSubmissionCalled, upsertCalled, findUpdatedCalled)
@@ -450,7 +450,7 @@ func TestWriteupServiceRecommendCommunityWithContextPropagatesContextToRepositor
 	}
 }
 
-func TestWriteupServiceUnrecommendCommunityWithContextPropagatesContextToRepository(t *testing.T) {
+func TestWriteupServiceUnrecommendCommunityPropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := writeupCommandContextKey("writeup-unrecommend-community")
@@ -501,9 +501,9 @@ func TestWriteupServiceUnrecommendCommunityWithContextPropagatesContextToReposit
 	service := NewWriteupService(repo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.UnrecommendCommunityWithContext(ctx, 31, 1001, model.RoleTeacher)
+	resp, err := service.UnrecommendCommunity(ctx, 31, 1001, model.RoleTeacher)
 	if err != nil {
-		t.Fatalf("UnrecommendCommunityWithContext() error = %v", err)
+		t.Fatalf("UnrecommendCommunity() error = %v", err)
 	}
 	if !getTeacherRecordCalled || !findRequesterCalled || !findSubmissionCalled || !upsertCalled || !findUpdatedCalled {
 		t.Fatalf("expected repository calls, got record=%v requester=%v submission=%v upsert=%v updated=%v", getTeacherRecordCalled, findRequesterCalled, findSubmissionCalled, upsertCalled, findUpdatedCalled)
@@ -513,7 +513,7 @@ func TestWriteupServiceUnrecommendCommunityWithContextPropagatesContextToReposit
 	}
 }
 
-func TestWriteupServiceHideCommunityWithContextPropagatesContextToRepository(t *testing.T) {
+func TestWriteupServiceHideCommunityPropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := writeupCommandContextKey("writeup-hide-community")
@@ -564,9 +564,9 @@ func TestWriteupServiceHideCommunityWithContextPropagatesContextToRepository(t *
 	service := NewWriteupService(repo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.HideCommunityWithContext(ctx, 31, 1001, model.RoleTeacher)
+	resp, err := service.HideCommunity(ctx, 31, 1001, model.RoleTeacher)
 	if err != nil {
-		t.Fatalf("HideCommunityWithContext() error = %v", err)
+		t.Fatalf("HideCommunity() error = %v", err)
 	}
 	if !getTeacherRecordCalled || !findRequesterCalled || !findSubmissionCalled || !upsertCalled || !findUpdatedCalled {
 		t.Fatalf("expected repository calls, got record=%v requester=%v submission=%v upsert=%v updated=%v", getTeacherRecordCalled, findRequesterCalled, findSubmissionCalled, upsertCalled, findUpdatedCalled)
@@ -576,7 +576,7 @@ func TestWriteupServiceHideCommunityWithContextPropagatesContextToRepository(t *
 	}
 }
 
-func TestWriteupServiceRestoreCommunityWithContextPropagatesContextToRepository(t *testing.T) {
+func TestWriteupServiceRestoreCommunityPropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := writeupCommandContextKey("writeup-restore-community")
@@ -627,9 +627,9 @@ func TestWriteupServiceRestoreCommunityWithContextPropagatesContextToRepository(
 	service := NewWriteupService(repo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.RestoreCommunityWithContext(ctx, 31, 1001, model.RoleTeacher)
+	resp, err := service.RestoreCommunity(ctx, 31, 1001, model.RoleTeacher)
 	if err != nil {
-		t.Fatalf("RestoreCommunityWithContext() error = %v", err)
+		t.Fatalf("RestoreCommunity() error = %v", err)
 	}
 	if !getTeacherRecordCalled || !findRequesterCalled || !findSubmissionCalled || !upsertCalled || !findUpdatedCalled {
 		t.Fatalf("expected repository calls, got record=%v requester=%v submission=%v upsert=%v updated=%v", getTeacherRecordCalled, findRequesterCalled, findSubmissionCalled, upsertCalled, findUpdatedCalled)

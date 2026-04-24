@@ -17,24 +17,15 @@ type WriteupHandler struct {
 }
 
 type writeupCommandService interface {
-	Upsert(challengeID, actorUserID int64, req *dto.UpsertChallengeWriteupReq) (*dto.AdminChallengeWriteupResp, error)
-	UpsertWithContext(ctx context.Context, challengeID, actorUserID int64, req *dto.UpsertChallengeWriteupReq) (*dto.AdminChallengeWriteupResp, error)
-	UpsertSubmission(challengeID, actorUserID int64, req *dto.UpsertSubmissionWriteupReq) (*dto.SubmissionWriteupResp, error)
-	UpsertSubmissionWithContext(ctx context.Context, challengeID, actorUserID int64, req *dto.UpsertSubmissionWriteupReq) (*dto.SubmissionWriteupResp, error)
-	RecommendOfficial(challengeID, actorUserID int64) (*dto.AdminChallengeWriteupResp, error)
-	RecommendOfficialWithContext(ctx context.Context, challengeID, actorUserID int64) (*dto.AdminChallengeWriteupResp, error)
-	UnrecommendOfficial(challengeID, actorUserID int64) (*dto.AdminChallengeWriteupResp, error)
-	UnrecommendOfficialWithContext(ctx context.Context, challengeID, actorUserID int64) (*dto.AdminChallengeWriteupResp, error)
-	RecommendCommunity(submissionID, requesterID int64, requesterRole string) (*dto.SubmissionWriteupResp, error)
-	RecommendCommunityWithContext(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*dto.SubmissionWriteupResp, error)
-	UnrecommendCommunity(submissionID, requesterID int64, requesterRole string) (*dto.SubmissionWriteupResp, error)
-	UnrecommendCommunityWithContext(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*dto.SubmissionWriteupResp, error)
-	HideCommunity(submissionID, requesterID int64, requesterRole string) (*dto.SubmissionWriteupResp, error)
-	HideCommunityWithContext(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*dto.SubmissionWriteupResp, error)
-	RestoreCommunity(submissionID, requesterID int64, requesterRole string) (*dto.SubmissionWriteupResp, error)
-	RestoreCommunityWithContext(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*dto.SubmissionWriteupResp, error)
-	Delete(challengeID int64) error
-	DeleteWithContext(ctx context.Context, challengeID int64) error
+	Upsert(ctx context.Context, challengeID, actorUserID int64, req *dto.UpsertChallengeWriteupReq) (*dto.AdminChallengeWriteupResp, error)
+	UpsertSubmission(ctx context.Context, challengeID, actorUserID int64, req *dto.UpsertSubmissionWriteupReq) (*dto.SubmissionWriteupResp, error)
+	RecommendOfficial(ctx context.Context, challengeID, actorUserID int64) (*dto.AdminChallengeWriteupResp, error)
+	UnrecommendOfficial(ctx context.Context, challengeID, actorUserID int64) (*dto.AdminChallengeWriteupResp, error)
+	RecommendCommunity(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*dto.SubmissionWriteupResp, error)
+	UnrecommendCommunity(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*dto.SubmissionWriteupResp, error)
+	HideCommunity(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*dto.SubmissionWriteupResp, error)
+	RestoreCommunity(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*dto.SubmissionWriteupResp, error)
+	Delete(ctx context.Context, challengeID int64) error
 }
 
 type writeupQueryService interface {
@@ -62,7 +53,7 @@ func (h *WriteupHandler) Upsert(c *gin.Context) {
 		response.ValidationError(c, err)
 		return
 	}
-	resp, err := h.commands.UpsertWithContext(c.Request.Context(), challengeID, authctx.MustCurrentUser(c).UserID, &req)
+	resp, err := h.commands.Upsert(c.Request.Context(), challengeID, authctx.MustCurrentUser(c).UserID, &req)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -90,7 +81,7 @@ func (h *WriteupHandler) Delete(c *gin.Context) {
 		response.InvalidParams(c, "无效的 challenge id")
 		return
 	}
-	if err := h.commands.DeleteWithContext(c.Request.Context(), challengeID); err != nil {
+	if err := h.commands.Delete(c.Request.Context(), challengeID); err != nil {
 		response.FromError(c, err)
 		return
 	}
@@ -103,7 +94,7 @@ func (h *WriteupHandler) RecommendOfficial(c *gin.Context) {
 		response.InvalidParams(c, "无效的 challenge id")
 		return
 	}
-	resp, err := h.commands.RecommendOfficialWithContext(c.Request.Context(), challengeID, authctx.MustCurrentUser(c).UserID)
+	resp, err := h.commands.RecommendOfficial(c.Request.Context(), challengeID, authctx.MustCurrentUser(c).UserID)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -117,7 +108,7 @@ func (h *WriteupHandler) UnrecommendOfficial(c *gin.Context) {
 		response.InvalidParams(c, "无效的 challenge id")
 		return
 	}
-	resp, err := h.commands.UnrecommendOfficialWithContext(c.Request.Context(), challengeID, authctx.MustCurrentUser(c).UserID)
+	resp, err := h.commands.UnrecommendOfficial(c.Request.Context(), challengeID, authctx.MustCurrentUser(c).UserID)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -150,7 +141,7 @@ func (h *WriteupHandler) UpsertSubmission(c *gin.Context) {
 		response.ValidationError(c, err)
 		return
 	}
-	resp, err := h.commands.UpsertSubmissionWithContext(c.Request.Context(), challengeID, authctx.MustCurrentUser(c).UserID, &req)
+	resp, err := h.commands.UpsertSubmission(c.Request.Context(), challengeID, authctx.MustCurrentUser(c).UserID, &req)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -237,25 +228,25 @@ func (h *WriteupHandler) GetTeacherSubmission(c *gin.Context) {
 
 func (h *WriteupHandler) RecommendCommunity(c *gin.Context) {
 	h.respondCommunityModeration(c, func(submissionID int64, currentUser authctx.CurrentUser) (*dto.SubmissionWriteupResp, error) {
-		return h.commands.RecommendCommunityWithContext(c.Request.Context(), submissionID, currentUser.UserID, currentUser.Role)
+		return h.commands.RecommendCommunity(c.Request.Context(), submissionID, currentUser.UserID, currentUser.Role)
 	})
 }
 
 func (h *WriteupHandler) UnrecommendCommunity(c *gin.Context) {
 	h.respondCommunityModeration(c, func(submissionID int64, currentUser authctx.CurrentUser) (*dto.SubmissionWriteupResp, error) {
-		return h.commands.UnrecommendCommunityWithContext(c.Request.Context(), submissionID, currentUser.UserID, currentUser.Role)
+		return h.commands.UnrecommendCommunity(c.Request.Context(), submissionID, currentUser.UserID, currentUser.Role)
 	})
 }
 
 func (h *WriteupHandler) HideCommunity(c *gin.Context) {
 	h.respondCommunityModeration(c, func(submissionID int64, currentUser authctx.CurrentUser) (*dto.SubmissionWriteupResp, error) {
-		return h.commands.HideCommunityWithContext(c.Request.Context(), submissionID, currentUser.UserID, currentUser.Role)
+		return h.commands.HideCommunity(c.Request.Context(), submissionID, currentUser.UserID, currentUser.Role)
 	})
 }
 
 func (h *WriteupHandler) RestoreCommunity(c *gin.Context) {
 	h.respondCommunityModeration(c, func(submissionID int64, currentUser authctx.CurrentUser) (*dto.SubmissionWriteupResp, error) {
-		return h.commands.RestoreCommunityWithContext(c.Request.Context(), submissionID, currentUser.UserID, currentUser.Role)
+		return h.commands.RestoreCommunity(c.Request.Context(), submissionID, currentUser.UserID, currentUser.Role)
 	})
 }
 
