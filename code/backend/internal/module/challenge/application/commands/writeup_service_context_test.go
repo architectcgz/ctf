@@ -41,23 +41,9 @@ type writeupCommandContextStub struct {
 	listCommunitySolutionsByChallengeIDWithContextFn   func(ctx context.Context, challengeID int64, query *dto.CommunityChallengeSolutionQuery) ([]challengeports.CommunitySolutionRecord, int64, error)
 }
 
-func (s *writeupCommandContextStub) FindByID(id int64) (*model.Challenge, error) {
-	if s.findByIDFn != nil {
-		return s.findByIDFn(id)
-	}
-	return nil, nil
-}
-
 func (s *writeupCommandContextStub) FindByIDWithContext(ctx context.Context, id int64) (*model.Challenge, error) {
 	if s.findByIDWithContextFn != nil {
 		return s.findByIDWithContextFn(ctx, id)
-	}
-	return s.FindByID(id)
-}
-
-func (s *writeupCommandContextStub) FindUserByID(userID int64) (*model.User, error) {
-	if s.findUserByIDFn != nil {
-		return s.findUserByIDFn(userID)
 	}
 	return nil, nil
 }
@@ -66,13 +52,6 @@ func (s *writeupCommandContextStub) FindUserByIDWithContext(ctx context.Context,
 	if s.findUserByIDWithContextFn != nil {
 		return s.findUserByIDWithContextFn(ctx, userID)
 	}
-	return s.FindUserByID(userID)
-}
-
-func (s *writeupCommandContextStub) FindWriteupByChallengeID(challengeID int64) (*model.ChallengeWriteup, error) {
-	if s.findWriteupByChallengeIDFn != nil {
-		return s.findWriteupByChallengeIDFn(challengeID)
-	}
 	return nil, nil
 }
 
@@ -80,26 +59,12 @@ func (s *writeupCommandContextStub) FindWriteupByChallengeIDWithContext(ctx cont
 	if s.findWriteupByChallengeIDWithContextFn != nil {
 		return s.findWriteupByChallengeIDWithContextFn(ctx, challengeID)
 	}
-	return s.FindWriteupByChallengeID(challengeID)
-}
-
-func (s *writeupCommandContextStub) UpsertWriteup(writeup *model.ChallengeWriteup) error {
-	if s.upsertWriteupFn != nil {
-		return s.upsertWriteupFn(writeup)
-	}
-	return nil
+	return nil, nil
 }
 
 func (s *writeupCommandContextStub) UpsertWriteupWithContext(ctx context.Context, writeup *model.ChallengeWriteup) error {
 	if s.upsertWriteupWithContextFn != nil {
 		return s.upsertWriteupWithContextFn(ctx, writeup)
-	}
-	return s.UpsertWriteup(writeup)
-}
-
-func (s *writeupCommandContextStub) DeleteWriteupByChallengeID(challengeID int64) error {
-	if s.deleteWriteupByChallengeIDFn != nil {
-		return s.deleteWriteupByChallengeIDFn(challengeID)
 	}
 	return nil
 }
@@ -108,54 +73,26 @@ func (s *writeupCommandContextStub) DeleteWriteupByChallengeIDWithContext(ctx co
 	if s.deleteWriteupByChallengeIDWithContextFn != nil {
 		return s.deleteWriteupByChallengeIDWithContextFn(ctx, challengeID)
 	}
-	return s.DeleteWriteupByChallengeID(challengeID)
-}
-
-func (s *writeupCommandContextStub) FindReleasedWriteupByChallengeID(challengeID int64, now time.Time) (*model.ChallengeWriteup, error) {
-	if s.findReleasedWriteupByChallengeIDFn != nil {
-		return s.findReleasedWriteupByChallengeIDFn(challengeID, now)
-	}
-	return nil, nil
+	return nil
 }
 
 func (s *writeupCommandContextStub) FindReleasedWriteupByChallengeIDWithContext(ctx context.Context, challengeID int64, now time.Time) (*model.ChallengeWriteup, error) {
 	if s.findReleasedWriteupByChallengeIDWithContextFn != nil {
 		return s.findReleasedWriteupByChallengeIDWithContextFn(ctx, challengeID, now)
 	}
-	return s.FindReleasedWriteupByChallengeID(challengeID, now)
-}
-
-func (s *writeupCommandContextStub) GetSolvedStatus(userID, challengeID int64) (bool, error) {
-	if s.getSolvedStatusFn != nil {
-		return s.getSolvedStatusFn(userID, challengeID)
-	}
-	return false, nil
+	return nil, nil
 }
 
 func (s *writeupCommandContextStub) GetSolvedStatusWithContext(ctx context.Context, userID, challengeID int64) (bool, error) {
 	if s.getSolvedStatusWithContextFn != nil {
 		return s.getSolvedStatusWithContextFn(ctx, userID, challengeID)
 	}
-	return s.GetSolvedStatus(userID, challengeID)
-}
-
-func (s *writeupCommandContextStub) FindSubmissionWriteupByUserChallenge(userID, challengeID int64) (*model.SubmissionWriteup, error) {
-	if s.findSubmissionWriteupByUserChallengeFn != nil {
-		return s.findSubmissionWriteupByUserChallengeFn(userID, challengeID)
-	}
-	return nil, nil
+	return false, nil
 }
 
 func (s *writeupCommandContextStub) FindSubmissionWriteupByUserChallengeWithContext(ctx context.Context, userID, challengeID int64) (*model.SubmissionWriteup, error) {
 	if s.findSubmissionWriteupByUserChallengeWithContextFn != nil {
 		return s.findSubmissionWriteupByUserChallengeWithContextFn(ctx, userID, challengeID)
-	}
-	return s.FindSubmissionWriteupByUserChallenge(userID, challengeID)
-}
-
-func (s *writeupCommandContextStub) FindSubmissionWriteupByID(id int64) (*model.SubmissionWriteup, error) {
-	if s.findSubmissionWriteupByIDFn != nil {
-		return s.findSubmissionWriteupByIDFn(id)
 	}
 	return nil, nil
 }
@@ -164,77 +101,42 @@ func (s *writeupCommandContextStub) FindSubmissionWriteupByIDWithContext(ctx con
 	if s.findSubmissionWriteupByIDWithContextFn != nil {
 		return s.findSubmissionWriteupByIDWithContextFn(ctx, id)
 	}
-	return s.FindSubmissionWriteupByID(id)
-}
-
-func (s *writeupCommandContextStub) UpsertSubmissionWriteup(writeup *model.SubmissionWriteup) error {
-	if s.upsertSubmissionWriteupFn != nil {
-		return s.upsertSubmissionWriteupFn(writeup)
-	}
-	return nil
+	return nil, nil
 }
 
 func (s *writeupCommandContextStub) UpsertSubmissionWriteupWithContext(ctx context.Context, writeup *model.SubmissionWriteup) error {
 	if s.upsertSubmissionWriteupWithContextFn != nil {
 		return s.upsertSubmissionWriteupWithContextFn(ctx, writeup)
 	}
-	return s.UpsertSubmissionWriteup(writeup)
-}
-
-func (s *writeupCommandContextStub) GetTeacherSubmissionWriteupByID(id int64) (*challengeports.TeacherSubmissionWriteupRecord, error) {
-	if s.getTeacherSubmissionWriteupByIDFn != nil {
-		return s.getTeacherSubmissionWriteupByIDFn(id)
-	}
-	return nil, nil
+	return nil
 }
 
 func (s *writeupCommandContextStub) GetTeacherSubmissionWriteupByIDWithContext(ctx context.Context, id int64) (*challengeports.TeacherSubmissionWriteupRecord, error) {
 	if s.getTeacherSubmissionWriteupByIDWithContextFn != nil {
 		return s.getTeacherSubmissionWriteupByIDWithContextFn(ctx, id)
 	}
-	return s.GetTeacherSubmissionWriteupByID(id)
-}
-
-func (s *writeupCommandContextStub) ListTeacherSubmissionWriteups(query *dto.TeacherSubmissionWriteupQuery) ([]challengeports.TeacherSubmissionWriteupRecord, int64, error) {
-	if s.listTeacherSubmissionWriteupsFn != nil {
-		return s.listTeacherSubmissionWriteupsFn(query)
-	}
-	return nil, 0, nil
+	return nil, nil
 }
 
 func (s *writeupCommandContextStub) ListTeacherSubmissionWriteupsWithContext(ctx context.Context, query *dto.TeacherSubmissionWriteupQuery) ([]challengeports.TeacherSubmissionWriteupRecord, int64, error) {
 	if s.listTeacherSubmissionWriteupsWithContextFn != nil {
 		return s.listTeacherSubmissionWriteupsWithContextFn(ctx, query)
 	}
-	return s.ListTeacherSubmissionWriteups(query)
-}
-
-func (s *writeupCommandContextStub) ListRecommendedSolutionsByChallengeID(challengeID int64, now time.Time) ([]challengeports.RecommendedSolutionRecord, error) {
-	if s.listRecommendedSolutionsByChallengeIDFn != nil {
-		return s.listRecommendedSolutionsByChallengeIDFn(challengeID, now)
-	}
-	return nil, nil
+	return nil, 0, nil
 }
 
 func (s *writeupCommandContextStub) ListRecommendedSolutionsByChallengeIDWithContext(ctx context.Context, challengeID int64, now time.Time) ([]challengeports.RecommendedSolutionRecord, error) {
 	if s.listRecommendedSolutionsByChallengeIDWithContextFn != nil {
 		return s.listRecommendedSolutionsByChallengeIDWithContextFn(ctx, challengeID, now)
 	}
-	return s.ListRecommendedSolutionsByChallengeID(challengeID, now)
-}
-
-func (s *writeupCommandContextStub) ListCommunitySolutionsByChallengeID(challengeID int64, query *dto.CommunityChallengeSolutionQuery) ([]challengeports.CommunitySolutionRecord, int64, error) {
-	if s.listCommunitySolutionsByChallengeIDFn != nil {
-		return s.listCommunitySolutionsByChallengeIDFn(challengeID, query)
-	}
-	return nil, 0, nil
+	return nil, nil
 }
 
 func (s *writeupCommandContextStub) ListCommunitySolutionsByChallengeIDWithContext(ctx context.Context, challengeID int64, query *dto.CommunityChallengeSolutionQuery) ([]challengeports.CommunitySolutionRecord, int64, error) {
 	if s.listCommunitySolutionsByChallengeIDWithContextFn != nil {
 		return s.listCommunitySolutionsByChallengeIDWithContextFn(ctx, challengeID, query)
 	}
-	return s.ListCommunitySolutionsByChallengeID(challengeID, query)
+	return nil, 0, nil
 }
 
 type writeupCommandContextKey string
