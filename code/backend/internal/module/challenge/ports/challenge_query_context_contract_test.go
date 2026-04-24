@@ -26,11 +26,11 @@ func (ctxOnlyChallengeQueryRepository) GetSolvedStatus(context.Context, int64, i
 	return false, nil
 }
 
-func (ctxOnlyChallengeQueryRepository) GetSolvedCountWithContext(context.Context, int64) (int64, error) {
+func (ctxOnlyChallengeQueryRepository) GetSolvedCount(context.Context, int64) (int64, error) {
 	return 0, nil
 }
 
-func (ctxOnlyChallengeQueryRepository) GetTotalAttemptsWithContext(context.Context, int64) (int64, error) {
+func (ctxOnlyChallengeQueryRepository) GetTotalAttempts(context.Context, int64) (int64, error) {
 	return 0, nil
 }
 

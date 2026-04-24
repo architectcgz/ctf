@@ -327,7 +327,7 @@ func (r *Repository) GetSolvedStatus(ctx context.Context, userID, challengeID in
 	return count > 0, err
 }
 
-func (r *Repository) GetSolvedCountWithContext(ctx context.Context, challengeID int64) (int64, error) {
+func (r *Repository) GetSolvedCount(ctx context.Context, challengeID int64) (int64, error) {
 	var count int64
 	err := r.dbWithContext(ctx).Table("submissions").
 		Where("challenge_id = ? AND is_correct = ?", challengeID, true).
@@ -336,7 +336,7 @@ func (r *Repository) GetSolvedCountWithContext(ctx context.Context, challengeID 
 	return count, err
 }
 
-func (r *Repository) GetTotalAttemptsWithContext(ctx context.Context, challengeID int64) (int64, error) {
+func (r *Repository) GetTotalAttempts(ctx context.Context, challengeID int64) (int64, error) {
 	var count int64
 	err := r.dbWithContext(ctx).Table("submissions").
 		Where("challenge_id = ?", challengeID).
