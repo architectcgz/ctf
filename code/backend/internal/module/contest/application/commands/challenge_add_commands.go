@@ -17,7 +17,7 @@ func (s *ChallengeService) AddChallengeToContest(ctx context.Context, contestID 
 		return nil, err
 	}
 
-	challenge, err := s.challengeRepo.FindByID(req.ChallengeID)
+	challenge, err := s.challengeRepo.FindByIDWithContext(ctx, req.ChallengeID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrChallengeNotFound

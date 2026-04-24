@@ -23,5 +23,20 @@ func (ctxOnlyPracticeChallengeContract) FindChallengeTopologyByChallengeIDWithCo
 	return nil, nil
 }
 
+type ctxOnlyContestChallengeContract struct{}
+
+func (ctxOnlyContestChallengeContract) FindByIDWithContext(context.Context, int64) (*model.Challenge, error) {
+	return nil, nil
+}
+
+func (ctxOnlyContestChallengeContract) BatchGetSolvedStatusWithContext(context.Context, int64, []int64) (map[int64]bool, error) {
+	return nil, nil
+}
+
+func (ctxOnlyContestChallengeContract) BatchGetSolvedCountWithContext(context.Context, []int64) (map[int64]int64, error) {
+	return nil, nil
+}
+
 var _ challengecontracts.ImageStore = (*ctxOnlyImageStore)(nil)
+var _ challengecontracts.ContestChallengeContract = (*ctxOnlyContestChallengeContract)(nil)
 var _ challengecontracts.PracticeChallengeContract = (*ctxOnlyPracticeChallengeContract)(nil)
