@@ -21,7 +21,7 @@ func NewAWDServiceTemplateQueryService(repo challengeports.AWDServiceTemplateQue
 }
 
 func (s *AWDServiceTemplateQueryService) GetTemplate(ctx context.Context, id int64) (*dto.AWDServiceTemplateResp, error) {
-	item, err := s.repo.FindAWDServiceTemplateByIDWithContext(ctx, id)
+	item, err := s.repo.FindAWDServiceTemplateByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrNotFound
@@ -32,7 +32,7 @@ func (s *AWDServiceTemplateQueryService) GetTemplate(ctx context.Context, id int
 }
 
 func (s *AWDServiceTemplateQueryService) ListTemplates(ctx context.Context, req *dto.AWDServiceTemplateQuery) (*dto.AWDServiceTemplatePageResp, error) {
-	items, total, err := s.repo.ListAWDServiceTemplatesWithContext(ctx, req)
+	items, total, err := s.repo.ListAWDServiceTemplates(ctx, req)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}

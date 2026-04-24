@@ -9,36 +9,36 @@ import (
 )
 
 type awdServiceTemplateCommandContextRepoStub struct {
-	createWithContextFn   func(ctx context.Context, template *model.AWDServiceTemplate) error
-	findByIDWithContextFn func(ctx context.Context, id int64) (*model.AWDServiceTemplate, error)
-	updateWithContextFn   func(ctx context.Context, template *model.AWDServiceTemplate) error
-	deleteWithContextFn   func(ctx context.Context, id int64) error
+	createFn   func(ctx context.Context, template *model.AWDServiceTemplate) error
+	findByIDFn func(ctx context.Context, id int64) (*model.AWDServiceTemplate, error)
+	updateFn   func(ctx context.Context, template *model.AWDServiceTemplate) error
+	deleteFn   func(ctx context.Context, id int64) error
 }
 
-func (s *awdServiceTemplateCommandContextRepoStub) CreateAWDServiceTemplateWithContext(ctx context.Context, template *model.AWDServiceTemplate) error {
-	if s.createWithContextFn != nil {
-		return s.createWithContextFn(ctx, template)
+func (s *awdServiceTemplateCommandContextRepoStub) CreateAWDServiceTemplate(ctx context.Context, template *model.AWDServiceTemplate) error {
+	if s.createFn != nil {
+		return s.createFn(ctx, template)
 	}
 	return nil
 }
 
-func (s *awdServiceTemplateCommandContextRepoStub) FindAWDServiceTemplateByIDWithContext(ctx context.Context, id int64) (*model.AWDServiceTemplate, error) {
-	if s.findByIDWithContextFn != nil {
-		return s.findByIDWithContextFn(ctx, id)
+func (s *awdServiceTemplateCommandContextRepoStub) FindAWDServiceTemplateByID(ctx context.Context, id int64) (*model.AWDServiceTemplate, error) {
+	if s.findByIDFn != nil {
+		return s.findByIDFn(ctx, id)
 	}
 	return nil, nil
 }
 
-func (s *awdServiceTemplateCommandContextRepoStub) UpdateAWDServiceTemplateWithContext(ctx context.Context, template *model.AWDServiceTemplate) error {
-	if s.updateWithContextFn != nil {
-		return s.updateWithContextFn(ctx, template)
+func (s *awdServiceTemplateCommandContextRepoStub) UpdateAWDServiceTemplate(ctx context.Context, template *model.AWDServiceTemplate) error {
+	if s.updateFn != nil {
+		return s.updateFn(ctx, template)
 	}
 	return nil
 }
 
-func (s *awdServiceTemplateCommandContextRepoStub) DeleteAWDServiceTemplateWithContext(ctx context.Context, id int64) error {
-	if s.deleteWithContextFn != nil {
-		return s.deleteWithContextFn(ctx, id)
+func (s *awdServiceTemplateCommandContextRepoStub) DeleteAWDServiceTemplate(ctx context.Context, id int64) error {
+	if s.deleteFn != nil {
+		return s.deleteFn(ctx, id)
 	}
 	return nil
 }
@@ -52,7 +52,7 @@ func TestAWDServiceTemplateServiceCreateTemplatePropagatesContextToRepository(t 
 	expectedCtxValue := "ctx-create"
 	createCalled := false
 	repo := &awdServiceTemplateCommandContextRepoStub{
-		createWithContextFn: func(ctx context.Context, template *model.AWDServiceTemplate) error {
+		createFn: func(ctx context.Context, template *model.AWDServiceTemplate) error {
 			createCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected create ctx value %v, got %v", expectedCtxValue, got)
@@ -94,7 +94,7 @@ func TestAWDServiceTemplateServiceUpdateTemplatePropagatesContextToRepository(t 
 	findCalled := false
 	updateCalled := false
 	repo := &awdServiceTemplateCommandContextRepoStub{
-		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.AWDServiceTemplate, error) {
+		findByIDFn: func(ctx context.Context, id int64) (*model.AWDServiceTemplate, error) {
 			findCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find ctx value %v, got %v", expectedCtxValue, got)
@@ -110,7 +110,7 @@ func TestAWDServiceTemplateServiceUpdateTemplatePropagatesContextToRepository(t 
 				Status:         model.AWDServiceTemplateStatusDraft,
 			}, nil
 		},
-		updateWithContextFn: func(ctx context.Context, template *model.AWDServiceTemplate) error {
+		updateFn: func(ctx context.Context, template *model.AWDServiceTemplate) error {
 			updateCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected update ctx value %v, got %v", expectedCtxValue, got)
@@ -147,14 +147,14 @@ func TestAWDServiceTemplateServiceDeleteTemplatePropagatesContextToRepository(t 
 	findCalled := false
 	deleteCalled := false
 	repo := &awdServiceTemplateCommandContextRepoStub{
-		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.AWDServiceTemplate, error) {
+		findByIDFn: func(ctx context.Context, id int64) (*model.AWDServiceTemplate, error) {
 			findCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find ctx value %v, got %v", expectedCtxValue, got)
 			}
 			return &model.AWDServiceTemplate{ID: id, Name: "Legacy"}, nil
 		},
-		deleteWithContextFn: func(ctx context.Context, id int64) error {
+		deleteFn: func(ctx context.Context, id int64) error {
 			deleteCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected delete ctx value %v, got %v", expectedCtxValue, got)

@@ -79,7 +79,7 @@ func (s *AWDService) loadPreviewRuntimeDefinition(
 		return "", nil, errcode.ErrInvalidParams.WithCause(errors.New("当前模板缺少可用的运行配置，请手动填写目标访问地址"))
 	}
 
-	template, err := s.templateRepo.FindAWDServiceTemplateByIDWithContext(ctx, previewChallengeID)
+	template, err := s.templateRepo.FindAWDServiceTemplateByID(ctx, previewChallengeID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return "", nil, errcode.ErrNotFound

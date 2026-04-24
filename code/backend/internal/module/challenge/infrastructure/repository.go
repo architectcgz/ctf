@@ -87,25 +87,25 @@ func (r *Repository) DeleteWithContext(ctx context.Context, id int64) error {
 	return r.dbWithContext(ctx).Delete(&model.Challenge{}, id).Error
 }
 
-func (r *Repository) CreateAWDServiceTemplateWithContext(ctx context.Context, template *model.AWDServiceTemplate) error {
+func (r *Repository) CreateAWDServiceTemplate(ctx context.Context, template *model.AWDServiceTemplate) error {
 	return r.dbWithContext(ctx).Create(template).Error
 }
 
-func (r *Repository) FindAWDServiceTemplateByIDWithContext(ctx context.Context, id int64) (*model.AWDServiceTemplate, error) {
+func (r *Repository) FindAWDServiceTemplateByID(ctx context.Context, id int64) (*model.AWDServiceTemplate, error) {
 	var template model.AWDServiceTemplate
 	err := r.dbWithContext(ctx).Where("id = ?", id).First(&template).Error
 	return &template, err
 }
 
-func (r *Repository) UpdateAWDServiceTemplateWithContext(ctx context.Context, template *model.AWDServiceTemplate) error {
+func (r *Repository) UpdateAWDServiceTemplate(ctx context.Context, template *model.AWDServiceTemplate) error {
 	return r.dbWithContext(ctx).Save(template).Error
 }
 
-func (r *Repository) DeleteAWDServiceTemplateWithContext(ctx context.Context, id int64) error {
+func (r *Repository) DeleteAWDServiceTemplate(ctx context.Context, id int64) error {
 	return r.dbWithContext(ctx).Delete(&model.AWDServiceTemplate{}, id).Error
 }
 
-func (r *Repository) ListAWDServiceTemplatesWithContext(ctx context.Context, query *dto.AWDServiceTemplateQuery) ([]*model.AWDServiceTemplate, int64, error) {
+func (r *Repository) ListAWDServiceTemplates(ctx context.Context, query *dto.AWDServiceTemplateQuery) ([]*model.AWDServiceTemplate, int64, error) {
 	var templates []*model.AWDServiceTemplate
 	var total int64
 

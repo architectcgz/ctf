@@ -51,7 +51,7 @@ func (s *ContestAWDServiceService) CreateContestAWDService(ctx context.Context, 
 		return nil, err
 	}
 
-	template, err := s.templateRepo.FindAWDServiceTemplateByIDWithContext(ctx, req.TemplateID)
+	template, err := s.templateRepo.FindAWDServiceTemplateByID(ctx, req.TemplateID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrNotFound
@@ -170,7 +170,7 @@ func (s *ContestAWDServiceService) UpdateContestAWDService(ctx context.Context, 
 	currentDefenseScore, _ := parseContestAWDServiceScore(stored.ScoreConfig, "awd_defense_score")
 
 	if req.TemplateID != nil {
-		template, err := s.templateRepo.FindAWDServiceTemplateByIDWithContext(ctx, *req.TemplateID)
+		template, err := s.templateRepo.FindAWDServiceTemplateByID(ctx, *req.TemplateID)
 		if err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				return errcode.ErrNotFound
@@ -317,7 +317,7 @@ func (s *ContestAWDServiceService) syncContestChallengeRelation(ctx context.Cont
 		return errcode.ErrInternal.WithCause(err)
 	}
 	if !exists {
-			challenge, err := s.challengeRepo.FindByIDWithContext(ctx, challengeID)
+		challenge, err := s.challengeRepo.FindByIDWithContext(ctx, challengeID)
 		if err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				return errcode.ErrChallengeNotFound

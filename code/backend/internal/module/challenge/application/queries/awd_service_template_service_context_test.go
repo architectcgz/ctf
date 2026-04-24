@@ -9,20 +9,20 @@ import (
 )
 
 type awdServiceTemplateQueryContextRepoStub struct {
-	findByIDWithContextFn func(ctx context.Context, id int64) (*model.AWDServiceTemplate, error)
-	listWithContextFn     func(ctx context.Context, query *dto.AWDServiceTemplateQuery) ([]*model.AWDServiceTemplate, int64, error)
+	findByIDFn func(ctx context.Context, id int64) (*model.AWDServiceTemplate, error)
+	listFn     func(ctx context.Context, query *dto.AWDServiceTemplateQuery) ([]*model.AWDServiceTemplate, int64, error)
 }
 
-func (s *awdServiceTemplateQueryContextRepoStub) FindAWDServiceTemplateByIDWithContext(ctx context.Context, id int64) (*model.AWDServiceTemplate, error) {
-	if s.findByIDWithContextFn != nil {
-		return s.findByIDWithContextFn(ctx, id)
+func (s *awdServiceTemplateQueryContextRepoStub) FindAWDServiceTemplateByID(ctx context.Context, id int64) (*model.AWDServiceTemplate, error) {
+	if s.findByIDFn != nil {
+		return s.findByIDFn(ctx, id)
 	}
 	return nil, nil
 }
 
-func (s *awdServiceTemplateQueryContextRepoStub) ListAWDServiceTemplatesWithContext(ctx context.Context, query *dto.AWDServiceTemplateQuery) ([]*model.AWDServiceTemplate, int64, error) {
-	if s.listWithContextFn != nil {
-		return s.listWithContextFn(ctx, query)
+func (s *awdServiceTemplateQueryContextRepoStub) ListAWDServiceTemplates(ctx context.Context, query *dto.AWDServiceTemplateQuery) ([]*model.AWDServiceTemplate, int64, error) {
+	if s.listFn != nil {
+		return s.listFn(ctx, query)
 	}
 	return nil, 0, nil
 }
@@ -36,7 +36,7 @@ func TestAWDServiceTemplateQueryServiceGetTemplatePropagatesContextToRepository(
 	expectedCtxValue := "ctx-get"
 	findCalled := false
 	repo := &awdServiceTemplateQueryContextRepoStub{
-		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.AWDServiceTemplate, error) {
+		findByIDFn: func(ctx context.Context, id int64) (*model.AWDServiceTemplate, error) {
 			findCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find ctx value %v, got %v", expectedCtxValue, got)
@@ -66,7 +66,7 @@ func TestAWDServiceTemplateQueryServiceListTemplatesPropagatesContextToRepositor
 	expectedCtxValue := "ctx-list"
 	listCalled := false
 	repo := &awdServiceTemplateQueryContextRepoStub{
-		listWithContextFn: func(ctx context.Context, query *dto.AWDServiceTemplateQuery) ([]*model.AWDServiceTemplate, int64, error) {
+		listFn: func(ctx context.Context, query *dto.AWDServiceTemplateQuery) ([]*model.AWDServiceTemplate, int64, error) {
 			listCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected list ctx value %v, got %v", expectedCtxValue, got)

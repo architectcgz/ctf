@@ -36,14 +36,14 @@ func (s *AWDServiceTemplateService) CreateTemplate(ctx context.Context, actorUse
 		ReadinessStatus: model.AWDReadinessStatusPending,
 		CreatedBy:       &actorUserID,
 	}
-	if err := s.repo.CreateAWDServiceTemplateWithContext(ctx, template); err != nil {
+	if err := s.repo.CreateAWDServiceTemplate(ctx, template); err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 	return domain.AWDServiceTemplateRespFromModel(template), nil
 }
 
 func (s *AWDServiceTemplateService) UpdateTemplate(ctx context.Context, id int64, req *dto.UpdateAWDServiceTemplateReq) (*dto.AWDServiceTemplateResp, error) {
-	template, err := s.repo.FindAWDServiceTemplateByIDWithContext(ctx, id)
+	template, err := s.repo.FindAWDServiceTemplateByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrNotFound
@@ -76,20 +76,20 @@ func (s *AWDServiceTemplateService) UpdateTemplate(ctx context.Context, id int64
 		template.Status = model.AWDServiceTemplateStatus(strings.TrimSpace(req.Status))
 	}
 
-	if err := s.repo.UpdateAWDServiceTemplateWithContext(ctx, template); err != nil {
+	if err := s.repo.UpdateAWDServiceTemplate(ctx, template); err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 	return domain.AWDServiceTemplateRespFromModel(template), nil
 }
 
 func (s *AWDServiceTemplateService) DeleteTemplate(ctx context.Context, id int64) error {
-	if _, err := s.repo.FindAWDServiceTemplateByIDWithContext(ctx, id); err != nil {
+	if _, err := s.repo.FindAWDServiceTemplateByID(ctx, id); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return errcode.ErrNotFound
 		}
 		return errcode.ErrInternal.WithCause(err)
 	}
-	if err := s.repo.DeleteAWDServiceTemplateWithContext(ctx, id); err != nil {
+	if err := s.repo.DeleteAWDServiceTemplate(ctx, id); err != nil {
 		return errcode.ErrInternal.WithCause(err)
 	}
 	return nil
