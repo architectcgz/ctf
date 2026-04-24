@@ -199,7 +199,7 @@ func (s *stubPracticeInstanceStore) FindByID(ctx context.Context, id int64) (*mo
 	return nil, nil
 }
 
-func (s *stubPracticeInstanceStore) UpdateRuntimeWithContext(ctx context.Context, instance *model.Instance) error {
+func (s *stubPracticeInstanceStore) UpdateRuntime(ctx context.Context, instance *model.Instance) error {
 	if s.updateRuntimeWithContextFn != nil {
 		return s.updateRuntimeWithContextFn(ctx, instance)
 	}
