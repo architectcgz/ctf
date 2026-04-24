@@ -30,11 +30,11 @@ func (ctxOnlyInstanceRepository) ListTeacherInstances(context.Context, runtimepo
 	return nil, nil
 }
 
-func (ctxOnlyInstanceRepository) AtomicExtendByIDWithContext(context.Context, int64, int, time.Duration) error {
+func (ctxOnlyInstanceRepository) AtomicExtendByID(context.Context, int64, int, time.Duration) error {
 	return nil
 }
 
-func (ctxOnlyInstanceRepository) UpdateStatusAndReleasePortWithContext(context.Context, int64, string) error {
+func (ctxOnlyInstanceRepository) UpdateStatusAndReleasePort(context.Context, int64, string) error {
 	return nil
 }
 

@@ -22,7 +22,7 @@ func (ctxOnlyInstanceRepository) RefreshInstanceExpiryWithContext(context.Contex
 	return nil
 }
 
-func (ctxOnlyInstanceRepository) UpdateStatusAndReleasePortWithContext(context.Context, int64, string) error {
+func (ctxOnlyInstanceRepository) UpdateStatusAndReleasePort(context.Context, int64, string) error {
 	return nil
 }
 

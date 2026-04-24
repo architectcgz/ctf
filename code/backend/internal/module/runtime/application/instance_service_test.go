@@ -59,11 +59,11 @@ func (r *runtimeInstanceContextRepo) ListTeacherInstances(ctx context.Context, f
 	return nil, nil
 }
 
-func (r *runtimeInstanceContextRepo) AtomicExtendByIDWithContext(ctx context.Context, id int64, maxExtends int, duration time.Duration) error {
+func (r *runtimeInstanceContextRepo) AtomicExtendByID(ctx context.Context, id int64, maxExtends int, duration time.Duration) error {
 	return nil
 }
 
-func (r *runtimeInstanceContextRepo) UpdateStatusAndReleasePortWithContext(ctx context.Context, id int64, status string) error {
+func (r *runtimeInstanceContextRepo) UpdateStatusAndReleasePort(ctx context.Context, id int64, status string) error {
 	if r.updateStatusAndReleasePortWithContextFn != nil {
 		return r.updateStatusAndReleasePortWithContextFn(ctx, id, status)
 	}

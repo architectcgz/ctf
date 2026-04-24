@@ -104,7 +104,7 @@ func TestRepositoryUpdateStatusAndReleasePortRemovesAllocation(t *testing.T) {
 		t.Fatalf("create port allocation: %v", err)
 	}
 
-	if err := repo.UpdateStatusAndReleasePort(instance.ID, model.InstanceStatusFailed); err != nil {
+	if err := repo.UpdateStatusAndReleasePort(context.Background(), instance.ID, model.InstanceStatusFailed); err != nil {
 		t.Fatalf("UpdateStatusAndReleasePort() error = %v", err)
 	}
 
