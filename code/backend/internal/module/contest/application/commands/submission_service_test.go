@@ -28,14 +28,14 @@ import (
 )
 
 type stubContestFlagValidator struct {
-	validateFlagFn func(userID, challengeID int64, input string, nonce string) (bool, error)
+	validateFlagFn func(ctx context.Context, userID, challengeID int64, input string, nonce string) (bool, error)
 }
 
-func (s *stubContestFlagValidator) ValidateFlag(userID, challengeID int64, input string, nonce string) (bool, error) {
+func (s *stubContestFlagValidator) ValidateFlag(ctx context.Context, userID, challengeID int64, input string, nonce string) (bool, error) {
 	if s.validateFlagFn == nil {
 		return false, nil
 	}
-	return s.validateFlagFn(userID, challengeID, input, nonce)
+	return s.validateFlagFn(ctx, userID, challengeID, input, nonce)
 }
 
 func TestSubmissionServiceSubmitFlagInContestAppliesDynamicScoreAndFirstBlood(t *testing.T) {
@@ -454,7 +454,7 @@ func TestSubmissionServiceSubmitFlagInContestFailsWhenIncorrectRateLimitWriteUna
 	testsupport.CreateContestTeamRegistration(t, db, contestID, teamID, userID, "Write", now)
 
 	service := newContestSubmissionServiceForTest(t, db, redisClient, nil, &stubContestFlagValidator{
-		validateFlagFn: func(gotUserID, gotChallengeID int64, input string, nonce string) (bool, error) {
+		validateFlagFn: func(ctx context.Context, gotUserID, gotChallengeID int64, input string, nonce string) (bool, error) {
 			if err := redisClient.Close(); err != nil {
 				t.Fatalf("close redis client in validator: %v", err)
 			}
@@ -766,7 +766,7 @@ func TestSubmissionServiceUsesChallengeFlagValidator(t *testing.T) {
 
 	called := false
 	service := newContestSubmissionServiceForTest(t, db, redisClient, nil, &stubContestFlagValidator{
-		validateFlagFn: func(gotUserID, gotChallengeID int64, input string, nonce string) (bool, error) {
+		validateFlagFn: func(ctx context.Context, gotUserID, gotChallengeID int64, input string, nonce string) (bool, error) {
 			called = true
 			if gotUserID != userID || gotChallengeID != challengeID {
 				t.Fatalf("unexpected validator args: user=%d challenge=%d", gotUserID, gotChallengeID)

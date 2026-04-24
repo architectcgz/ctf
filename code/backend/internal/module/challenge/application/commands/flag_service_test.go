@@ -40,7 +40,7 @@ func TestFlagServiceConfigureStaticFlagAndValidate(t *testing.T) {
 		t.Fatalf("NewFlagService(query) error = %v", err)
 	}
 
-	ok, err := queryService.ValidateFlag(0, 1, "flag{demo_static}", "")
+	ok, err := queryService.ValidateFlag(context.Background(), 0, 1, "flag{demo_static}", "")
 	if err != nil {
 		t.Fatalf("ValidateFlag() error = %v", err)
 	}
@@ -84,7 +84,7 @@ func TestFlagServiceConfigureDynamicFlagAndGenerate(t *testing.T) {
 		t.Fatalf("NewFlagService(query) error = %v", err)
 	}
 
-	flag, err := queryService.GenerateDynamicFlag(10, 2, "nonce-1")
+	flag, err := queryService.GenerateDynamicFlag(context.Background(), 10, 2, "nonce-1")
 	if err != nil {
 		t.Fatalf("GenerateDynamicFlag() error = %v", err)
 	}
@@ -92,7 +92,7 @@ func TestFlagServiceConfigureDynamicFlagAndGenerate(t *testing.T) {
 		t.Fatalf("unexpected generated flag: %s", flag)
 	}
 
-	ok, err := queryService.ValidateFlag(10, 2, flag, "nonce-1")
+	ok, err := queryService.ValidateFlag(context.Background(), 10, 2, flag, "nonce-1")
 	if err != nil {
 		t.Fatalf("ValidateFlag() error = %v", err)
 	}
@@ -153,7 +153,7 @@ func TestFlagServiceConfigureRegexFlagAndValidate(t *testing.T) {
 		t.Fatalf("NewFlagService(query) error = %v", err)
 	}
 
-	ok, err := queryService.ValidateFlag(0, 3, "flag{user-123}", "")
+	ok, err := queryService.ValidateFlag(context.Background(), 0, 3, "flag{user-123}", "")
 	if err != nil {
 		t.Fatalf("ValidateFlag() error = %v", err)
 	}
@@ -225,7 +225,7 @@ func TestFlagServiceValidateFlagRejectsUnknownFlagType(t *testing.T) {
 		t.Fatalf("NewFlagService(query) error = %v", err)
 	}
 
-	_, err = queryService.ValidateFlag(10, 5, "flag{legacy}", "")
+	_, err = queryService.ValidateFlag(context.Background(), 10, 5, "flag{legacy}", "")
 	if err == nil || err.Error() != errcode.ErrInvalidParams.Error() {
 		t.Fatalf("expected invalid params for unknown flag type, got %v", err)
 	}

@@ -7,7 +7,7 @@ import (
 )
 
 type FlagValidator interface {
-	ValidateFlag(userID, challengeID int64, input string, nonce string) (bool, error)
+	ValidateFlag(ctx context.Context, userID, challengeID int64, input string, nonce string) (bool, error)
 }
 
 type ImageStore interface {

@@ -64,3 +64,40 @@ func TestFlagServiceGetFlagConfigPropagatesContextToRepository(t *testing.T) {
 		t.Fatalf("unexpected flag config response: %+v", resp)
 	}
 }
+
+func TestFlagServiceGenerateDynamicFlagPropagatesContextToRepository(t *testing.T) {
+	t.Parallel()
+
+	ctxKey := challengeFlagContextKey("flag-generate")
+	expectedCtxValue := "ctx-flag-generate"
+	findCalled := false
+	repo := &stubChallengeFlagRepository{
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+			findCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected find-by-id ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return &model.Challenge{
+				ID:         id,
+				FlagType:   model.FlagTypeDynamic,
+				FlagPrefix: "flag",
+			}, nil
+		},
+	}
+	service, err := NewFlagService(repo, "12345678901234567890123456789012")
+	if err != nil {
+		t.Fatalf("NewFlagService() error = %v", err)
+	}
+
+	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
+	flag, err := service.GenerateDynamicFlag(ctx, 7, 42, "nonce-1")
+	if err != nil {
+		t.Fatalf("GenerateDynamicFlag() error = %v", err)
+	}
+	if !findCalled {
+		t.Fatal("expected repository find to be called")
+	}
+	if flag == "" {
+		t.Fatal("expected generated flag")
+	}
+}
