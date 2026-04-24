@@ -26,9 +26,6 @@ func NewTopologyService(repo challengeports.ChallengeTopologyRepository, templat
 }
 
 func (s *TopologyService) GetChallengeTopology(ctx context.Context, challengeID int64) (*dto.ChallengeTopologyResp, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
 	if _, err := s.repo.FindByIDWithContext(ctx, challengeID); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrChallengeNotFound
@@ -46,9 +43,6 @@ func (s *TopologyService) GetChallengeTopology(ctx context.Context, challengeID 
 }
 
 func (s *TopologyService) GetTemplate(ctx context.Context, id int64) (*dto.EnvironmentTemplateResp, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
 	item, err := s.templateRepo.FindByIDWithContext(ctx, id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -60,9 +54,6 @@ func (s *TopologyService) GetTemplate(ctx context.Context, id int64) (*dto.Envir
 }
 
 func (s *TopologyService) ListTemplates(ctx context.Context, keyword string) ([]*dto.EnvironmentTemplateResp, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
 	items, err := s.templateRepo.ListWithContext(ctx, strings.TrimSpace(keyword))
 	if err != nil {
 		return nil, err

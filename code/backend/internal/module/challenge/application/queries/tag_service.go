@@ -18,9 +18,6 @@ func NewTagService(repo challengeports.TagRepository) *TagService {
 }
 
 func (s *TagService) ListTags(ctx context.Context, tagType string) ([]*dto.TagResp, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
 	tags, err := s.repo.ListWithContext(ctx, tagType)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
@@ -34,9 +31,6 @@ func (s *TagService) ListTags(ctx context.Context, tagType string) ([]*dto.TagRe
 }
 
 func (s *TagService) GetChallengeTagIDs(ctx context.Context, challengeID int64) ([]int64, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
 	tags, err := s.repo.FindByChallengeIDWithContext(ctx, challengeID)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
