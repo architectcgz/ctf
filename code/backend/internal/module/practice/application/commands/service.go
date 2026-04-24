@@ -661,7 +661,7 @@ func (s *Service) applySolveGracePeriod(ctx context.Context, userID int64, chall
 		return nil
 	}
 
-	instance, err := s.instanceRepo.FindByUserAndChallengeWithContext(ctx, userID, challengeItem.ID)
+	instance, err := s.instanceRepo.FindByUserAndChallenge(ctx, userID, challengeItem.ID)
 	if err != nil {
 		s.logger.Warn("查询解题后实例失败", zap.Int64("user_id", userID), zap.Int64("challenge_id", challengeItem.ID), zap.Error(err))
 		return nil
@@ -1384,7 +1384,7 @@ func (s *Service) validateSubmittedFlag(ctx context.Context, userID int64, chall
 		return false, errcode.ErrInvalidParams.WithCause(fmt.Errorf("unsupported flag type %s", challengeItem.FlagType))
 	}
 
-	instance, err := s.instanceRepo.FindByUserAndChallengeWithContext(ctx, userID, challengeItem.ID)
+	instance, err := s.instanceRepo.FindByUserAndChallenge(ctx, userID, challengeItem.ID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return false, nil

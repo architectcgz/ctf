@@ -113,7 +113,7 @@ type InstanceRepository interface {
 	UpdateRuntime(ctx context.Context, instance *model.Instance) error
 	RefreshInstanceExpiry(ctx context.Context, instanceID int64, expiresAt time.Time) error
 	UpdateStatusAndReleasePort(ctx context.Context, id int64, status string) error
-	FindByUserAndChallengeWithContext(ctx context.Context, userID, challengeID int64) (*model.Instance, error)
+	FindByUserAndChallenge(ctx context.Context, userID, challengeID int64) (*model.Instance, error)
 	ListPendingInstancesWithContext(ctx context.Context, limit int) ([]*model.Instance, error)
 	TryTransitionStatusWithContext(ctx context.Context, id int64, fromStatus, toStatus string) (bool, error)
 	CountInstancesByStatusWithContext(ctx context.Context, statuses []string) (int64, error)

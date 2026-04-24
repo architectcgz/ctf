@@ -220,7 +220,7 @@ func (s *stubPracticeInstanceStore) UpdateStatusAndReleasePort(ctx context.Conte
 	return nil
 }
 
-func (s *stubPracticeInstanceStore) FindByUserAndChallengeWithContext(ctx context.Context, userID, challengeID int64) (*model.Instance, error) {
+func (s *stubPracticeInstanceStore) FindByUserAndChallenge(ctx context.Context, userID, challengeID int64) (*model.Instance, error) {
 	if s.findByUserAndChallengeWithContextFn != nil {
 		return s.findByUserAndChallengeWithContextFn(ctx, userID, challengeID)
 	}
