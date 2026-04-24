@@ -46,7 +46,7 @@ func (r *Repository) FindReleasedWriteupByChallengeID(ctx context.Context, chall
 	return &writeup, nil
 }
 
-func (r *Repository) FindUserByIDWithContext(ctx context.Context, userID int64) (*model.User, error) {
+func (r *Repository) FindUserByID(ctx context.Context, userID int64) (*model.User, error) {
 	var user model.User
 	err := r.dbWithContext(ctx).Where("id = ?", userID).First(&user).Error
 	if err != nil {

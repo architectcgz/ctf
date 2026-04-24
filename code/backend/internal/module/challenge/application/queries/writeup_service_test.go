@@ -48,7 +48,7 @@ func (s *stubChallengeWriteupRepository) FindByIDWithContext(ctx context.Context
 	return nil, nil
 }
 
-func (s *stubChallengeWriteupRepository) FindUserByIDWithContext(ctx context.Context, userID int64) (*model.User, error) {
+func (s *stubChallengeWriteupRepository) FindUserByID(ctx context.Context, userID int64) (*model.User, error) {
 	if s.findUserByIDWithContextFn != nil {
 		return s.findUserByIDWithContextFn(ctx, userID)
 	}

@@ -48,7 +48,7 @@ func (s *writeupCommandContextStub) FindByIDWithContext(ctx context.Context, id 
 	return nil, nil
 }
 
-func (s *writeupCommandContextStub) FindUserByIDWithContext(ctx context.Context, userID int64) (*model.User, error) {
+func (s *writeupCommandContextStub) FindUserByID(ctx context.Context, userID int64) (*model.User, error) {
 	if s.findUserByIDWithContextFn != nil {
 		return s.findUserByIDWithContextFn(ctx, userID)
 	}
