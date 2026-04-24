@@ -25,7 +25,7 @@ type stubDashboardRuntimeQuery struct {
 	countRunningWithContextFn func(ctx context.Context) (int64, error)
 }
 
-func (s *stubDashboardRuntimeQuery) CountRunningWithContext(ctx context.Context) (int64, error) {
+func (s *stubDashboardRuntimeQuery) CountRunning(ctx context.Context) (int64, error) {
 	if s.countRunningWithContextFn == nil {
 		return 0, nil
 	}

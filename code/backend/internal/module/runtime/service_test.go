@@ -494,9 +494,9 @@ func TestServiceGetUserInstancesIncludesChallengeMetadata(t *testing.T) {
 		UpdatedAt:   now,
 	})
 
-	items, err := service.GetUserInstancesWithContext(context.Background(), 1)
+	items, err := service.GetUserInstances(context.Background(), 1)
 	if err != nil {
-		t.Fatalf("GetUserInstancesWithContext() error = %v", err)
+		t.Fatalf("GetUserInstances() error = %v", err)
 	}
 	if len(items) != 1 {
 		t.Fatalf("expected 1 instance, got %+v", items)
@@ -577,9 +577,9 @@ func TestServiceGetUserInstancesShowsContestSharedInstanceToTeamMember(t *testin
 		UpdatedAt:   now,
 	})
 
-	items, err := service.GetUserInstancesWithContext(context.Background(), 2)
+	items, err := service.GetUserInstances(context.Background(), 2)
 	if err != nil {
-		t.Fatalf("GetUserInstancesWithContext() error = %v", err)
+		t.Fatalf("GetUserInstances() error = %v", err)
 	}
 	if len(items) != 1 || items[0].ID != 1002 {
 		t.Fatalf("expected teammate visible shared instance, got %+v", items)
@@ -621,9 +621,9 @@ func TestServiceGetUserInstancesShowsPracticeSharedInstanceToAnyUser(t *testing.
 		UpdatedAt:   now,
 	})
 
-	items, err := service.GetUserInstancesWithContext(context.Background(), 2)
+	items, err := service.GetUserInstances(context.Background(), 2)
 	if err != nil {
-		t.Fatalf("GetUserInstancesWithContext() error = %v", err)
+		t.Fatalf("GetUserInstances() error = %v", err)
 	}
 	if len(items) != 1 || items[0].ID != 1003 {
 		t.Fatalf("expected global shared instance visible to another user, got %+v", items)
@@ -1131,12 +1131,12 @@ func (s *testRuntimeService) ExtendInstanceWithContext(ctx context.Context, inst
 	return s.commands.ExtendInstanceWithContext(ctx, instanceID, userID)
 }
 
-func (s *testRuntimeService) GetUserInstancesWithContext(ctx context.Context, userID int64) ([]*dto.InstanceInfo, error) {
-	return s.queries.GetUserInstancesWithContext(ctx, userID)
+func (s *testRuntimeService) GetUserInstances(ctx context.Context, userID int64) ([]*dto.InstanceInfo, error) {
+	return s.queries.GetUserInstances(ctx, userID)
 }
 
-func (s *testRuntimeService) GetAccessURLWithContext(ctx context.Context, instanceID, userID int64) (string, error) {
-	return s.queries.GetAccessURLWithContext(ctx, instanceID, userID)
+func (s *testRuntimeService) GetAccessURL(ctx context.Context, instanceID, userID int64) (string, error) {
+	return s.queries.GetAccessURL(ctx, instanceID, userID)
 }
 
 func (s *testRuntimeService) ListTeacherInstances(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherInstanceQuery) ([]dto.TeacherInstanceItem, error) {

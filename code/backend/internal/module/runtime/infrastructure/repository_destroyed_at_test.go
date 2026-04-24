@@ -72,7 +72,7 @@ func TestUpdateStatusAndReleasePortWithContextSetsDestroyedAtForStoppedInstance(
 	}
 }
 
-func TestCountRunningWithContextPropagatesContextToGorm(t *testing.T) {
+func TestCountRunningPropagatesContextToGorm(t *testing.T) {
 	t.Parallel()
 
 	db := newRuntimeRepositoryDestroyedAtTestDB(t)
@@ -108,15 +108,15 @@ func TestCountRunningWithContextPropagatesContextToGorm(t *testing.T) {
 	}
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	count, err := repo.CountRunningWithContext(ctx)
+	count, err := repo.CountRunning(ctx)
 	if err != nil {
-		t.Fatalf("CountRunningWithContext() error = %v", err)
+		t.Fatalf("CountRunning() error = %v", err)
 	}
 	if !callbackCalled {
 		t.Fatal("expected gorm query callback to observe context-aware count running query")
 	}
 	if count != 1 {
-		t.Fatalf("CountRunningWithContext() count = %d, want 1", count)
+		t.Fatalf("CountRunning() count = %d, want 1", count)
 	}
 }
 
