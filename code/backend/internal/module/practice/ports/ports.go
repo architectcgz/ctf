@@ -110,7 +110,7 @@ type PracticeRankingRepository interface {
 }
 
 type InstanceRepository interface {
-	FindByIDWithContext(ctx context.Context, id int64) (*model.Instance, error)
+	FindByID(ctx context.Context, id int64) (*model.Instance, error)
 	UpdateRuntimeWithContext(ctx context.Context, instance *model.Instance) error
 	RefreshInstanceExpiryWithContext(ctx context.Context, instanceID int64, expiresAt time.Time) error
 	UpdateStatusAndReleasePortWithContext(ctx context.Context, id int64, status string) error

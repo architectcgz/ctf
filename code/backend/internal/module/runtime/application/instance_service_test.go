@@ -33,7 +33,7 @@ type runtimeInstanceContextRepo struct {
 	updateStatusAndReleasePortWithContextFn func(ctx context.Context, id int64, status string) error
 }
 
-func (r *runtimeInstanceContextRepo) FindByIDWithContext(ctx context.Context, id int64) (*model.Instance, error) {
+func (r *runtimeInstanceContextRepo) FindByID(ctx context.Context, id int64) (*model.Instance, error) {
 	if r.findByIDWithContextFn != nil {
 		return r.findByIDWithContextFn(ctx, id)
 	}

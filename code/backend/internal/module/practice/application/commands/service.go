@@ -357,7 +357,7 @@ func (s *Service) availableProvisioningSlots(ctx context.Context) (int, error) {
 }
 
 func (s *Service) processPendingInstance(ctx context.Context, instanceID int64) {
-	instance, err := s.instanceRepo.FindByIDWithContext(ctx, instanceID)
+	instance, err := s.instanceRepo.FindByID(ctx, instanceID)
 	if err != nil {
 		s.logger.Error("读取待启动实例失败", zap.Int64("instance_id", instanceID), zap.Error(err))
 		return

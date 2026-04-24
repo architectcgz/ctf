@@ -12,7 +12,7 @@ type CountRunningRepository interface {
 }
 
 type InstanceRepository interface {
-	FindByIDWithContext(ctx context.Context, id int64) (*model.Instance, error)
+	FindByID(ctx context.Context, id int64) (*model.Instance, error)
 	FindUserByID(ctx context.Context, userID int64) (*model.User, error)
 	FindAccessibleByIDForUser(ctx context.Context, instanceID, userID int64) (*model.Instance, error)
 	ListVisibleByUser(ctx context.Context, userID int64) ([]UserVisibleInstanceRow, error)
@@ -80,7 +80,7 @@ type ProxyTicketStore interface {
 }
 
 type ProxyTicketInstanceReader interface {
-	FindByIDWithContext(ctx context.Context, id int64) (*model.Instance, error)
+	FindByID(ctx context.Context, id int64) (*model.Instance, error)
 }
 
 type ProxyTrafficEventRecorder interface {
