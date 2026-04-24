@@ -15,11 +15,8 @@ import (
 )
 
 func (r *Repository) FindWriteupByChallengeIDWithContext(ctx context.Context, challengeID int64) (*model.ChallengeWriteup, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
 	var writeup model.ChallengeWriteup
-	err := r.db.WithContext(ctx).Where("challenge_id = ?", challengeID).First(&writeup).Error
+	err := r.dbWithContext(ctx).Where("challenge_id = ?", challengeID).First(&writeup).Error
 	if err != nil {
 		return nil, err
 	}
@@ -38,11 +35,8 @@ func (r *Repository) DeleteWriteupByChallengeIDWithContext(ctx context.Context, 
 }
 
 func (r *Repository) FindReleasedWriteupByChallengeIDWithContext(ctx context.Context, challengeID int64, now time.Time) (*model.ChallengeWriteup, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
 	var writeup model.ChallengeWriteup
-	err := r.db.WithContext(ctx).
+	err := r.dbWithContext(ctx).
 		Where("challenge_id = ?", challengeID).
 		Where("visibility = ?", model.WriteupVisibilityPublic).
 		First(&writeup).Error
@@ -62,11 +56,8 @@ func (r *Repository) FindUserByIDWithContext(ctx context.Context, userID int64) 
 }
 
 func (r *Repository) FindSubmissionWriteupByUserChallengeWithContext(ctx context.Context, userID, challengeID int64) (*model.SubmissionWriteup, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
 	var writeup model.SubmissionWriteup
-	err := r.db.WithContext(ctx).Where("user_id = ? AND challenge_id = ?", userID, challengeID).First(&writeup).Error
+	err := r.dbWithContext(ctx).Where("user_id = ? AND challenge_id = ?", userID, challengeID).First(&writeup).Error
 	if err != nil {
 		return nil, err
 	}
@@ -458,11 +449,8 @@ func (r *Repository) listTeacherSubmissionWriteups(
 }
 
 func (r *Repository) FindChallengeTopologyByChallengeIDWithContext(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
 	var topology model.ChallengeTopology
-	err := r.db.WithContext(ctx).Where("challenge_id = ?", challengeID).First(&topology).Error
+	err := r.dbWithContext(ctx).Where("challenge_id = ?", challengeID).First(&topology).Error
 	if err != nil {
 		return nil, err
 	}
@@ -489,9 +477,6 @@ func NewTemplateRepository(db *gorm.DB) *TemplateRepository {
 }
 
 func (r *TemplateRepository) dbWithContext(ctx context.Context) *gorm.DB {
-	if ctx == nil {
-		ctx = context.Background()
-	}
 	return r.db.WithContext(ctx)
 }
 

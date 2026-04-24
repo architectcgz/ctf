@@ -17,9 +17,6 @@ func NewImageRepository(db *gorm.DB) *ImageRepository {
 }
 
 func (r *ImageRepository) dbWithContext(ctx context.Context) *gorm.DB {
-	if ctx == nil {
-		ctx = context.Background()
-	}
 	return r.db.WithContext(ctx)
 }
 
