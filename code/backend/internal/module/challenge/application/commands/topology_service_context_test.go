@@ -148,7 +148,7 @@ func (s *topologyImageRepoStub) DeleteWithContext(ctx context.Context, id int64)
 
 type topologyCommandContextKey string
 
-func TestTopologyServiceSaveChallengeTopologyWithContextPropagatesContextToRepositories(t *testing.T) {
+func TestTopologyServiceSaveChallengeTopologyPropagatesContextToRepositories(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := topologyCommandContextKey("save-topology")
@@ -213,9 +213,9 @@ func TestTopologyServiceSaveChallengeTopologyWithContextPropagatesContextToRepos
 	service := NewTopologyService(repo, templateRepo, &topologyImageRepoStub{})
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.SaveChallengeTopologyWithContext(ctx, 9, &dto.SaveChallengeTopologyReq{TemplateID: &templateID})
+	resp, err := service.SaveChallengeTopology(ctx, 9, &dto.SaveChallengeTopologyReq{TemplateID: &templateID})
 	if err != nil {
-		t.Fatalf("SaveChallengeTopologyWithContext() error = %v", err)
+		t.Fatalf("SaveChallengeTopology() error = %v", err)
 	}
 	if !findChallengeCalled || !findTemplateCalled || !upsertCalled || !incrementCalled || !findSavedCalled {
 		t.Fatalf("expected repository calls, got challenge=%v template=%v upsert=%v increment=%v saved=%v", findChallengeCalled, findTemplateCalled, upsertCalled, incrementCalled, findSavedCalled)
@@ -225,7 +225,7 @@ func TestTopologyServiceSaveChallengeTopologyWithContextPropagatesContextToRepos
 	}
 }
 
-func TestTopologyServiceDeleteChallengeTopologyWithContextPropagatesContextToRepository(t *testing.T) {
+func TestTopologyServiceDeleteChallengeTopologyPropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := topologyCommandContextKey("delete-topology")
@@ -251,15 +251,15 @@ func TestTopologyServiceDeleteChallengeTopologyWithContextPropagatesContextToRep
 	service := NewTopologyService(repo, &topologyTemplateRepoStub{}, &topologyImageRepoStub{})
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	if err := service.DeleteChallengeTopologyWithContext(ctx, 12); err != nil {
-		t.Fatalf("DeleteChallengeTopologyWithContext() error = %v", err)
+	if err := service.DeleteChallengeTopology(ctx, 12); err != nil {
+		t.Fatalf("DeleteChallengeTopology() error = %v", err)
 	}
 	if !findCalled || !deleteCalled {
 		t.Fatalf("expected repository calls, got find=%v delete=%v", findCalled, deleteCalled)
 	}
 }
 
-func TestTopologyServiceCreateTemplateWithContextPropagatesContextToRepositories(t *testing.T) {
+func TestTopologyServiceCreateTemplatePropagatesContextToRepositories(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := topologyCommandContextKey("create-template")
@@ -290,13 +290,13 @@ func TestTopologyServiceCreateTemplateWithContextPropagatesContextToRepositories
 	service := NewTopologyService(&topologyCommandRepoStub{}, templateRepo, imageRepo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.CreateTemplateWithContext(ctx, &dto.UpsertEnvironmentTemplateReq{
+	resp, err := service.CreateTemplate(ctx, &dto.UpsertEnvironmentTemplateReq{
 		Name:         "Base Web",
 		EntryNodeKey: "web",
 		Nodes:        []dto.TopologyNodeReq{{Key: "web", Name: "Web", ImageID: 7, ServicePort: 8080}},
 	})
 	if err != nil {
-		t.Fatalf("CreateTemplateWithContext() error = %v", err)
+		t.Fatalf("CreateTemplate() error = %v", err)
 	}
 	if !findImageCalled || !createCalled {
 		t.Fatalf("expected repository calls, got image=%v create=%v", findImageCalled, createCalled)
@@ -306,7 +306,7 @@ func TestTopologyServiceCreateTemplateWithContextPropagatesContextToRepositories
 	}
 }
 
-func TestTopologyServiceUpdateTemplateWithContextPropagatesContextToRepositories(t *testing.T) {
+func TestTopologyServiceUpdateTemplatePropagatesContextToRepositories(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := topologyCommandContextKey("update-template")
@@ -345,13 +345,13 @@ func TestTopologyServiceUpdateTemplateWithContextPropagatesContextToRepositories
 	service := NewTopologyService(&topologyCommandRepoStub{}, templateRepo, imageRepo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.UpdateTemplateWithContext(ctx, 8, &dto.UpsertEnvironmentTemplateReq{
+	resp, err := service.UpdateTemplate(ctx, 8, &dto.UpsertEnvironmentTemplateReq{
 		Name:         "New Web",
 		EntryNodeKey: "web",
 		Nodes:        []dto.TopologyNodeReq{{Key: "web", Name: "Web", ImageID: 7, ServicePort: 8080}},
 	})
 	if err != nil {
-		t.Fatalf("UpdateTemplateWithContext() error = %v", err)
+		t.Fatalf("UpdateTemplate() error = %v", err)
 	}
 	if !findTemplateCalled || !findImageCalled || !updateCalled {
 		t.Fatalf("expected repository calls, got template=%v image=%v update=%v", findTemplateCalled, findImageCalled, updateCalled)
@@ -361,7 +361,7 @@ func TestTopologyServiceUpdateTemplateWithContextPropagatesContextToRepositories
 	}
 }
 
-func TestTopologyServiceDeleteTemplateWithContextPropagatesContextToRepository(t *testing.T) {
+func TestTopologyServiceDeleteTemplatePropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := topologyCommandContextKey("delete-template")
@@ -387,8 +387,8 @@ func TestTopologyServiceDeleteTemplateWithContextPropagatesContextToRepository(t
 	service := NewTopologyService(&topologyCommandRepoStub{}, templateRepo, &topologyImageRepoStub{})
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	if err := service.DeleteTemplateWithContext(ctx, 3); err != nil {
-		t.Fatalf("DeleteTemplateWithContext() error = %v", err)
+	if err := service.DeleteTemplate(ctx, 3); err != nil {
+		t.Fatalf("DeleteTemplate() error = %v", err)
 	}
 	if !findCalled || !deleteCalled {
 		t.Fatalf("expected repository calls, got find=%v delete=%v", findCalled, deleteCalled)

@@ -16,16 +16,11 @@ type TopologyHandler struct {
 }
 
 type topologyCommandService interface {
-	SaveChallengeTopology(challengeID int64, req *dto.SaveChallengeTopologyReq) (*dto.ChallengeTopologyResp, error)
-	SaveChallengeTopologyWithContext(ctx context.Context, challengeID int64, req *dto.SaveChallengeTopologyReq) (*dto.ChallengeTopologyResp, error)
-	DeleteChallengeTopology(challengeID int64) error
-	DeleteChallengeTopologyWithContext(ctx context.Context, challengeID int64) error
-	CreateTemplate(req *dto.UpsertEnvironmentTemplateReq) (*dto.EnvironmentTemplateResp, error)
-	CreateTemplateWithContext(ctx context.Context, req *dto.UpsertEnvironmentTemplateReq) (*dto.EnvironmentTemplateResp, error)
-	UpdateTemplate(id int64, req *dto.UpsertEnvironmentTemplateReq) (*dto.EnvironmentTemplateResp, error)
-	UpdateTemplateWithContext(ctx context.Context, id int64, req *dto.UpsertEnvironmentTemplateReq) (*dto.EnvironmentTemplateResp, error)
-	DeleteTemplate(id int64) error
-	DeleteTemplateWithContext(ctx context.Context, id int64) error
+	SaveChallengeTopology(ctx context.Context, challengeID int64, req *dto.SaveChallengeTopologyReq) (*dto.ChallengeTopologyResp, error)
+	DeleteChallengeTopology(ctx context.Context, challengeID int64) error
+	CreateTemplate(ctx context.Context, req *dto.UpsertEnvironmentTemplateReq) (*dto.EnvironmentTemplateResp, error)
+	UpdateTemplate(ctx context.Context, id int64, req *dto.UpsertEnvironmentTemplateReq) (*dto.EnvironmentTemplateResp, error)
+	DeleteTemplate(ctx context.Context, id int64) error
 }
 
 type topologyQueryService interface {
@@ -49,7 +44,7 @@ func (h *TopologyHandler) SaveChallengeTopology(c *gin.Context) {
 		response.ValidationError(c, err)
 		return
 	}
-	resp, err := h.commands.SaveChallengeTopologyWithContext(c.Request.Context(), challengeID, &req)
+	resp, err := h.commands.SaveChallengeTopology(c.Request.Context(), challengeID, &req)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -77,7 +72,7 @@ func (h *TopologyHandler) DeleteChallengeTopology(c *gin.Context) {
 		response.InvalidParams(c, "无效的 challenge id")
 		return
 	}
-	if err := h.commands.DeleteChallengeTopologyWithContext(c.Request.Context(), challengeID); err != nil {
+	if err := h.commands.DeleteChallengeTopology(c.Request.Context(), challengeID); err != nil {
 		response.FromError(c, err)
 		return
 	}
@@ -90,7 +85,7 @@ func (h *TopologyHandler) CreateTemplate(c *gin.Context) {
 		response.ValidationError(c, err)
 		return
 	}
-	resp, err := h.commands.CreateTemplateWithContext(c.Request.Context(), &req)
+	resp, err := h.commands.CreateTemplate(c.Request.Context(), &req)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -109,7 +104,7 @@ func (h *TopologyHandler) UpdateTemplate(c *gin.Context) {
 		response.ValidationError(c, err)
 		return
 	}
-	resp, err := h.commands.UpdateTemplateWithContext(c.Request.Context(), id, &req)
+	resp, err := h.commands.UpdateTemplate(c.Request.Context(), id, &req)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -146,7 +141,7 @@ func (h *TopologyHandler) DeleteTemplate(c *gin.Context) {
 		response.InvalidParams(c, "无效的 template id")
 		return
 	}
-	if err := h.commands.DeleteTemplateWithContext(c.Request.Context(), id); err != nil {
+	if err := h.commands.DeleteTemplate(c.Request.Context(), id); err != nil {
 		response.FromError(c, err)
 		return
 	}

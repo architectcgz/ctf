@@ -88,7 +88,7 @@ func TestTopologyServiceSaveChallengeTopologyWithTemplate(t *testing.T) {
 	imageRepo := challengeinfra.NewImageRepository(db)
 	service := NewTopologyService(repo, templateRepo, imageRepo)
 
-	templateResp, err := service.CreateTemplate(&dto.UpsertEnvironmentTemplateReq{
+	templateResp, err := service.CreateTemplate(context.Background(), &dto.UpsertEnvironmentTemplateReq{
 		Name:         "双节点模板",
 		Description:  "web + db",
 		EntryNodeKey: "web",
@@ -112,7 +112,7 @@ func TestTopologyServiceSaveChallengeTopologyWithTemplate(t *testing.T) {
 		t.Fatalf("CreateTemplate() error = %v", err)
 	}
 
-	saved, err := service.SaveChallengeTopology(challengeItem.ID, &dto.SaveChallengeTopologyReq{
+	saved, err := service.SaveChallengeTopology(context.Background(), challengeItem.ID, &dto.SaveChallengeTopologyReq{
 		TemplateID: &templateResp.ID,
 	})
 	if err != nil {
@@ -166,7 +166,7 @@ func TestTopologyServiceRejectsUnknownNetworkReference(t *testing.T) {
 	}
 
 	service := NewTopologyService(challengeinfra.NewRepository(db), challengeinfra.NewTemplateRepository(db), challengeinfra.NewImageRepository(db))
-	_, err := service.SaveChallengeTopology(challengeItem.ID, &dto.SaveChallengeTopologyReq{
+	_, err := service.SaveChallengeTopology(context.Background(), challengeItem.ID, &dto.SaveChallengeTopologyReq{
 		EntryNodeKey: "web",
 		Networks: []dto.TopologyNetworkReq{
 			{Key: "public", Name: "Public"},
@@ -203,7 +203,7 @@ func TestTopologyServiceRejectsInjectFlagForSharedChallenge(t *testing.T) {
 	}
 
 	service := NewTopologyService(challengeinfra.NewRepository(db), challengeinfra.NewTemplateRepository(db), challengeinfra.NewImageRepository(db))
-	_, err := service.SaveChallengeTopology(challengeItem.ID, &dto.SaveChallengeTopologyReq{
+	_, err := service.SaveChallengeTopology(context.Background(), challengeItem.ID, &dto.SaveChallengeTopologyReq{
 		EntryNodeKey: "web",
 		Nodes: []dto.TopologyNodeReq{
 			{Key: "web", Name: "Web", ImageID: 1, ServicePort: 8080, InjectFlag: true},
@@ -225,7 +225,7 @@ func TestTopologyServiceAllowsFineGrainedPolicyOnTemplateCreate(t *testing.T) {
 	}
 
 	service := NewTopologyService(challengeinfra.NewRepository(db), challengeinfra.NewTemplateRepository(db), challengeinfra.NewImageRepository(db))
-	saved, err := service.CreateTemplate(&dto.UpsertEnvironmentTemplateReq{
+	saved, err := service.CreateTemplate(context.Background(), &dto.UpsertEnvironmentTemplateReq{
 		Name:         "细粒度策略模板",
 		EntryNodeKey: "web",
 		Nodes: []dto.TopologyNodeReq{
@@ -287,7 +287,7 @@ func TestTopologyServiceAllowsFineGrainedPolicyWhenBindingTemplate(t *testing.T)
 	}
 
 	service := NewTopologyService(challengeinfra.NewRepository(db), challengeinfra.NewTemplateRepository(db), challengeinfra.NewImageRepository(db))
-	saved, err := service.SaveChallengeTopology(challengeItem.ID, &dto.SaveChallengeTopologyReq{
+	saved, err := service.SaveChallengeTopology(context.Background(), challengeItem.ID, &dto.SaveChallengeTopologyReq{
 		TemplateID: &template.ID,
 	})
 	if err != nil {
