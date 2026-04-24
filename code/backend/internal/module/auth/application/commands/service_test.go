@@ -96,11 +96,7 @@ type mockTokenService struct {
 	issueFn func(userID int64, username, role string) (*authcontracts.TokenPair, error)
 }
 
-func (m *mockTokenService) IssueTokens(userID int64, username, role string) (*authcontracts.TokenPair, error) {
-	return m.IssueTokensWithContext(context.Background(), userID, username, role)
-}
-
-func (m *mockTokenService) IssueTokensWithContext(_ context.Context, userID int64, username, role string) (*authcontracts.TokenPair, error) {
+func (m *mockTokenService) IssueTokens(_ context.Context, userID int64, username, role string) (*authcontracts.TokenPair, error) {
 	if m.issueFn == nil {
 		return nil, errors.New("unexpected call")
 	}

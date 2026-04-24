@@ -753,11 +753,7 @@ func newMemoryTokenService(cfg config.AuthConfig, wsCfg config.WebSocketConfig, 
 	}
 }
 
-func (s *memoryTokenService) IssueTokens(userID int64, username, role string) (*authcontracts.TokenPair, error) {
-	return s.IssueTokensWithContext(context.Background(), userID, username, role)
-}
-
-func (s *memoryTokenService) IssueTokensWithContext(_ context.Context, userID int64, username, role string) (*authcontracts.TokenPair, error) {
+func (s *memoryTokenService) IssueTokens(_ context.Context, userID int64, username, role string) (*authcontracts.TokenPair, error) {
 	accessToken, _, err := s.manager.GenerateAccessToken(userID, username, role)
 	if err != nil {
 		return nil, fmt.Errorf("generate access token: %w", err)

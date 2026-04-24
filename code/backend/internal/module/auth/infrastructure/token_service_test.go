@@ -34,7 +34,7 @@ func TestTokenServiceTracksAndClearsRefreshSession(t *testing.T) {
 	}
 
 	service := authinfra.NewTokenService(cfg, testWebSocketConfig(), redisClient, manager)
-	tokens, err := service.IssueTokens(42, "alice", "student")
+	tokens, err := service.IssueTokens(context.Background(), 42, "alice", "student")
 	if err != nil {
 		t.Fatalf("IssueTokens() error = %v", err)
 	}
@@ -72,11 +72,11 @@ func TestTokenServiceClearRefreshSessionDoesNotRemoveNewerSession(t *testing.T) 
 	}
 
 	service := authinfra.NewTokenService(cfg, testWebSocketConfig(), redisClient, manager)
-	firstTokens, err := service.IssueTokens(52, "bob", "student")
+	firstTokens, err := service.IssueTokens(context.Background(), 52, "bob", "student")
 	if err != nil {
 		t.Fatalf("IssueTokens(first) error = %v", err)
 	}
-	secondTokens, err := service.IssueTokens(52, "bob", "student")
+	secondTokens, err := service.IssueTokens(context.Background(), 52, "bob", "student")
 	if err != nil {
 		t.Fatalf("IssueTokens(second) error = %v", err)
 	}
@@ -115,11 +115,11 @@ func TestTokenServiceRefreshAccessTokenRejectsStaleRefreshSession(t *testing.T) 
 	}
 
 	service := authinfra.NewTokenService(cfg, testWebSocketConfig(), redisClient, manager)
-	firstTokens, err := service.IssueTokens(77, "carol", "student")
+	firstTokens, err := service.IssueTokens(context.Background(), 77, "carol", "student")
 	if err != nil {
 		t.Fatalf("IssueTokens(first) error = %v", err)
 	}
-	secondTokens, err := service.IssueTokens(77, "carol", "student")
+	secondTokens, err := service.IssueTokens(context.Background(), 77, "carol", "student")
 	if err != nil {
 		t.Fatalf("IssueTokens(second) error = %v", err)
 	}
@@ -137,7 +137,7 @@ func TestTokenServiceRefreshAccessTokenRejectsStaleRefreshSession(t *testing.T) 
 	}
 }
 
-func TestTokenServiceIssueTokensWithContextHonorsCancellation(t *testing.T) {
+func TestTokenServiceIssueTokensHonorsCancellation(t *testing.T) {
 	mini := miniredis.RunT(t)
 	redisClient := redislib.NewClient(&redislib.Options{Addr: mini.Addr()})
 	t.Cleanup(func() { _ = redisClient.Close() })
@@ -153,7 +153,7 @@ func TestTokenServiceIssueTokensWithContextHonorsCancellation(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 
-	_, err = service.IssueTokensWithContext(ctx, 88, "dave", "student")
+	_, err = service.IssueTokens(ctx, 88, "dave", "student")
 	if err == nil || !errors.Is(err, context.Canceled) {
 		t.Fatalf("expected context canceled, got %v", err)
 	}

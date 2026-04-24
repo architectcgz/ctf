@@ -256,7 +256,7 @@ func (s *casService) mergePrincipal(user *model.User, principal *casPrincipal) b
 }
 
 func (s *casService) issueLoginResp(ctx context.Context, user *model.User) (*dto.LoginResp, *authcontracts.TokenPair, error) {
-	tokens, err := s.tokenService.IssueTokensWithContext(ctx, user.ID, user.Username, user.Role)
+	tokens, err := s.tokenService.IssueTokens(ctx, user.ID, user.Username, user.Role)
 	if err != nil {
 		s.log.Error("auth_cas_issue_token_failed", zap.String("username", user.Username), zap.Int64("user_id", user.ID), zap.Error(err))
 		return nil, nil, errcode.ErrInternal.WithCause(err)

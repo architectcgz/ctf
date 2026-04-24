@@ -42,15 +42,7 @@ func NewTokenService(cfg config.AuthConfig, wsConfig config.WebSocketConfig, cac
 	}
 }
 
-func (s *tokenService) IssueTokens(userID int64, username, role string) (*authcontracts.TokenPair, error) {
-	return s.IssueTokensWithContext(context.Background(), userID, username, role)
-}
-
-func (s *tokenService) IssueTokensWithContext(ctx context.Context, userID int64, username, role string) (*authcontracts.TokenPair, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
+func (s *tokenService) IssueTokens(ctx context.Context, userID int64, username, role string) (*authcontracts.TokenPair, error) {
 	accessToken, _, err := s.manager.GenerateAccessToken(userID, username, role)
 	if err != nil {
 		return nil, fmt.Errorf("generate access token: %w", err)
