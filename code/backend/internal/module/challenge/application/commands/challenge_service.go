@@ -85,7 +85,7 @@ func firstChallengeNotificationSender(senders []ChallengeNotificationSender) Cha
 
 func (s *ChallengeService) CreateChallenge(ctx context.Context, actorUserID int64, req *dto.CreateChallengeReq) (*dto.ChallengeResp, error) {
 	if req.ImageID > 0 {
-		if _, err := s.imageRepo.FindByIDWithContext(ctx, req.ImageID); err != nil {
+		if _, err := s.imageRepo.FindByID(ctx, req.ImageID); err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				return nil, errcode.ErrNotFound.WithCause(errors.New(domain.ErrMsgImageNotFound))
 			}
@@ -145,7 +145,7 @@ func (s *ChallengeService) UpdateChallenge(ctx context.Context, id int64, req *d
 	}
 	if req.ImageID != nil {
 		if *req.ImageID > 0 {
-			if _, err := s.imageRepo.FindByIDWithContext(ctx, *req.ImageID); err != nil {
+			if _, err := s.imageRepo.FindByID(ctx, *req.ImageID); err != nil {
 				if errors.Is(err, gorm.ErrRecordNotFound) {
 					return errcode.ErrNotFound.WithCause(errors.New(domain.ErrMsgImageNotFound))
 				}
@@ -928,7 +928,7 @@ func (s *ChallengeService) resolveAvailableImageRef(ctx context.Context, imageID
 	if imageID <= 0 {
 		return "", fmt.Errorf("invalid image id")
 	}
-	imageItem, err := s.imageRepo.FindByIDWithContext(ctx, imageID)
+	imageItem, err := s.imageRepo.FindByID(ctx, imageID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return "", errcode.ErrNotFound.WithCause(errors.New(domain.ErrMsgImageNotFound))

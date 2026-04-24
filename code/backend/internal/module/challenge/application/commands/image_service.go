@@ -47,7 +47,7 @@ func NewImageService(
 }
 
 func (s *ImageService) CreateImage(ctx context.Context, req *dto.CreateImageReq) (*dto.ImageResp, error) {
-	existing, err := s.repo.FindByNameTagWithContext(ctx, req.Name, req.Tag)
+	existing, err := s.repo.FindByNameTag(ctx, req.Name, req.Tag)
 	if err == nil && existing != nil {
 		return nil, errcode.ErrImageAlreadyExists
 	}
@@ -71,7 +71,7 @@ func (s *ImageService) CreateImage(ctx context.Context, req *dto.CreateImageReq)
 		Size:        size,
 		Status:      model.ImageStatusAvailable,
 	}
-	if err := s.repo.CreateWithContext(ctx, image); err != nil {
+	if err := s.repo.Create(ctx, image); err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
@@ -89,7 +89,7 @@ func (s *ImageService) CreateImage(ctx context.Context, req *dto.CreateImageReq)
 }
 
 func (s *ImageService) UpdateImage(ctx context.Context, id int64, req *dto.UpdateImageReq) error {
-	image, err := s.repo.FindByIDWithContext(ctx, id)
+	image, err := s.repo.FindByID(ctx, id)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return errcode.ErrImageNotFound
@@ -103,7 +103,7 @@ func (s *ImageService) UpdateImage(ctx context.Context, id int64, req *dto.Updat
 	if req.Status != "" {
 		image.Status = req.Status
 	}
-	if err := s.repo.UpdateWithContext(ctx, image); err != nil {
+	if err := s.repo.Update(ctx, image); err != nil {
 		return errcode.ErrInternal.WithCause(err)
 	}
 
@@ -112,7 +112,7 @@ func (s *ImageService) UpdateImage(ctx context.Context, id int64, req *dto.Updat
 }
 
 func (s *ImageService) DeleteImage(ctx context.Context, id int64) error {
-	image, err := s.repo.FindByIDWithContext(ctx, id)
+	image, err := s.repo.FindByID(ctx, id)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return errcode.ErrImageNotFound

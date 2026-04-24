@@ -25,7 +25,7 @@ func NewImageService(repo challengeports.ImageRepository, config *config.Config)
 }
 
 func (s *ImageService) GetImage(ctx context.Context, id int64) (*dto.ImageResp, error) {
-	image, err := s.repo.FindByIDWithContext(ctx, id)
+	image, err := s.repo.FindByID(ctx, id)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, errcode.ErrImageNotFound
@@ -49,7 +49,7 @@ func (s *ImageService) ListImages(ctx context.Context, query *dto.ImageQuery) (*
 	}
 
 	offset := (page - 1) * size
-	images, total, err := s.repo.ListWithContext(ctx, query.Name, query.Status, offset, size)
+	images, total, err := s.repo.List(ctx, query.Name, query.Status, offset, size)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}

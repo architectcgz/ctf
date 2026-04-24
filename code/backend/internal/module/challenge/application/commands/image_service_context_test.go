@@ -11,45 +11,45 @@ import (
 )
 
 type imageCommandContextRepoStub struct {
-	createWithContextFn        func(ctx context.Context, image *model.Image) error
-	findByIDWithContextFn      func(ctx context.Context, id int64) (*model.Image, error)
-	findByNameTagWithContextFn func(ctx context.Context, name, tag string) (*model.Image, error)
-	listWithContextFn          func(ctx context.Context, name, status string, offset, limit int) ([]*model.Image, int64, error)
-	updateWithContextFn        func(ctx context.Context, image *model.Image) error
-	deleteWithContextFn        func(ctx context.Context, id int64) error
+	createFn            func(ctx context.Context, image *model.Image) error
+	findByIDFn          func(ctx context.Context, id int64) (*model.Image, error)
+	findByNameTagFn     func(ctx context.Context, name, tag string) (*model.Image, error)
+	listFn              func(ctx context.Context, name, status string, offset, limit int) ([]*model.Image, int64, error)
+	updateFn            func(ctx context.Context, image *model.Image) error
+	deleteWithContextFn func(ctx context.Context, id int64) error
 }
 
-func (s *imageCommandContextRepoStub) CreateWithContext(ctx context.Context, image *model.Image) error {
-	if s.createWithContextFn != nil {
-		return s.createWithContextFn(ctx, image)
+func (s *imageCommandContextRepoStub) Create(ctx context.Context, image *model.Image) error {
+	if s.createFn != nil {
+		return s.createFn(ctx, image)
 	}
 	return nil
 }
 
-func (s *imageCommandContextRepoStub) FindByIDWithContext(ctx context.Context, id int64) (*model.Image, error) {
-	if s.findByIDWithContextFn != nil {
-		return s.findByIDWithContextFn(ctx, id)
+func (s *imageCommandContextRepoStub) FindByID(ctx context.Context, id int64) (*model.Image, error) {
+	if s.findByIDFn != nil {
+		return s.findByIDFn(ctx, id)
 	}
 	return nil, nil
 }
 
-func (s *imageCommandContextRepoStub) FindByNameTagWithContext(ctx context.Context, name, tag string) (*model.Image, error) {
-	if s.findByNameTagWithContextFn != nil {
-		return s.findByNameTagWithContextFn(ctx, name, tag)
+func (s *imageCommandContextRepoStub) FindByNameTag(ctx context.Context, name, tag string) (*model.Image, error) {
+	if s.findByNameTagFn != nil {
+		return s.findByNameTagFn(ctx, name, tag)
 	}
 	return nil, nil
 }
 
-func (s *imageCommandContextRepoStub) ListWithContext(ctx context.Context, name, status string, offset, limit int) ([]*model.Image, int64, error) {
-	if s.listWithContextFn != nil {
-		return s.listWithContextFn(ctx, name, status, offset, limit)
+func (s *imageCommandContextRepoStub) List(ctx context.Context, name, status string, offset, limit int) ([]*model.Image, int64, error) {
+	if s.listFn != nil {
+		return s.listFn(ctx, name, status, offset, limit)
 	}
 	return nil, 0, nil
 }
 
-func (s *imageCommandContextRepoStub) UpdateWithContext(ctx context.Context, image *model.Image) error {
-	if s.updateWithContextFn != nil {
-		return s.updateWithContextFn(ctx, image)
+func (s *imageCommandContextRepoStub) Update(ctx context.Context, image *model.Image) error {
+	if s.updateFn != nil {
+		return s.updateFn(ctx, image)
 	}
 	return nil
 }
@@ -82,14 +82,14 @@ func TestImageServiceUpdateImagePropagatesContextToRepository(t *testing.T) {
 	findCalled := false
 	updateCalled := false
 	repo := &imageCommandContextRepoStub{
-		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Image, error) {
+		findByIDFn: func(ctx context.Context, id int64) (*model.Image, error) {
 			findCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find-image ctx value %v, got %v", expectedCtxValue, got)
 			}
 			return &model.Image{ID: id, Name: "ctf/web", Tag: "v1", Description: "old", Status: model.ImageStatusAvailable}, nil
 		},
-		updateWithContextFn: func(ctx context.Context, image *model.Image) error {
+		updateFn: func(ctx context.Context, image *model.Image) error {
 			updateCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected update-image ctx value %v, got %v", expectedCtxValue, got)
@@ -120,7 +120,7 @@ func TestImageServiceDeleteImagePropagatesContextToRepository(t *testing.T) {
 	countCalled := false
 	deleteCalled := false
 	repo := &imageCommandContextRepoStub{
-		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Image, error) {
+		findByIDFn: func(ctx context.Context, id int64) (*model.Image, error) {
 			findCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find-image ctx value %v, got %v", expectedCtxValue, got)
