@@ -14,10 +14,6 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-func (r *Repository) FindWriteupByChallengeID(challengeID int64) (*model.ChallengeWriteup, error) {
-	return r.FindWriteupByChallengeIDWithContext(context.Background(), challengeID)
-}
-
 func (r *Repository) FindWriteupByChallengeIDWithContext(ctx context.Context, challengeID int64) (*model.ChallengeWriteup, error) {
 	if ctx == nil {
 		ctx = context.Background()
@@ -30,10 +26,6 @@ func (r *Repository) FindWriteupByChallengeIDWithContext(ctx context.Context, ch
 	return &writeup, nil
 }
 
-func (r *Repository) UpsertWriteup(writeup *model.ChallengeWriteup) error {
-	return r.UpsertWriteupWithContext(context.Background(), writeup)
-}
-
 func (r *Repository) UpsertWriteupWithContext(ctx context.Context, writeup *model.ChallengeWriteup) error {
 	return r.dbWithContext(ctx).Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "challenge_id"}},
@@ -41,16 +33,8 @@ func (r *Repository) UpsertWriteupWithContext(ctx context.Context, writeup *mode
 	}).Create(writeup).Error
 }
 
-func (r *Repository) DeleteWriteupByChallengeID(challengeID int64) error {
-	return r.DeleteWriteupByChallengeIDWithContext(context.Background(), challengeID)
-}
-
 func (r *Repository) DeleteWriteupByChallengeIDWithContext(ctx context.Context, challengeID int64) error {
 	return r.dbWithContext(ctx).Where("challenge_id = ?", challengeID).Delete(&model.ChallengeWriteup{}).Error
-}
-
-func (r *Repository) FindReleasedWriteupByChallengeID(challengeID int64, now time.Time) (*model.ChallengeWriteup, error) {
-	return r.FindReleasedWriteupByChallengeIDWithContext(context.Background(), challengeID, now)
 }
 
 func (r *Repository) FindReleasedWriteupByChallengeIDWithContext(ctx context.Context, challengeID int64, now time.Time) (*model.ChallengeWriteup, error) {
@@ -68,10 +52,6 @@ func (r *Repository) FindReleasedWriteupByChallengeIDWithContext(ctx context.Con
 	return &writeup, nil
 }
 
-func (r *Repository) FindUserByID(userID int64) (*model.User, error) {
-	return r.FindUserByIDWithContext(context.Background(), userID)
-}
-
 func (r *Repository) FindUserByIDWithContext(ctx context.Context, userID int64) (*model.User, error) {
 	var user model.User
 	err := r.dbWithContext(ctx).Where("id = ?", userID).First(&user).Error
@@ -79,10 +59,6 @@ func (r *Repository) FindUserByIDWithContext(ctx context.Context, userID int64) 
 		return nil, err
 	}
 	return &user, nil
-}
-
-func (r *Repository) FindSubmissionWriteupByUserChallenge(userID, challengeID int64) (*model.SubmissionWriteup, error) {
-	return r.FindSubmissionWriteupByUserChallengeWithContext(context.Background(), userID, challengeID)
 }
 
 func (r *Repository) FindSubmissionWriteupByUserChallengeWithContext(ctx context.Context, userID, challengeID int64) (*model.SubmissionWriteup, error) {
@@ -97,10 +73,6 @@ func (r *Repository) FindSubmissionWriteupByUserChallengeWithContext(ctx context
 	return &writeup, nil
 }
 
-func (r *Repository) FindSubmissionWriteupByID(id int64) (*model.SubmissionWriteup, error) {
-	return r.FindSubmissionWriteupByIDWithContext(context.Background(), id)
-}
-
 func (r *Repository) FindSubmissionWriteupByIDWithContext(ctx context.Context, id int64) (*model.SubmissionWriteup, error) {
 	var writeup model.SubmissionWriteup
 	err := r.dbWithContext(ctx).Where("id = ?", id).First(&writeup).Error
@@ -108,10 +80,6 @@ func (r *Repository) FindSubmissionWriteupByIDWithContext(ctx context.Context, i
 		return nil, err
 	}
 	return &writeup, nil
-}
-
-func (r *Repository) UpsertSubmissionWriteup(writeup *model.SubmissionWriteup) error {
-	return r.UpsertSubmissionWriteupWithContext(context.Background(), writeup)
 }
 
 func (r *Repository) UpsertSubmissionWriteupWithContext(ctx context.Context, writeup *model.SubmissionWriteup) error {
