@@ -18,7 +18,7 @@ func (ctxOnlyInstanceRepository) UpdateRuntime(context.Context, *model.Instance)
 	return nil
 }
 
-func (ctxOnlyInstanceRepository) RefreshInstanceExpiryWithContext(context.Context, int64, time.Time) error {
+func (ctxOnlyInstanceRepository) RefreshInstanceExpiry(context.Context, int64, time.Time) error {
 	return nil
 }
 

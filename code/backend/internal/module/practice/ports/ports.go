@@ -53,8 +53,7 @@ type PracticeCommandTxRepository interface {
 	FindScopedExistingInstanceWithContext(ctx context.Context, userID, challengeID int64, scope InstanceScope) (*model.Instance, error)
 	CountScopedRunningInstances(userID int64, scope InstanceScope) (int, error)
 	CountScopedRunningInstancesWithContext(ctx context.Context, userID int64, scope InstanceScope) (int, error)
-	RefreshInstanceExpiry(instanceID int64, expiresAt time.Time) error
-	RefreshInstanceExpiryWithContext(ctx context.Context, instanceID int64, expiresAt time.Time) error
+	RefreshInstanceExpiry(ctx context.Context, instanceID int64, expiresAt time.Time) error
 	CreateInstance(instance *model.Instance) error
 	CreateInstanceWithContext(ctx context.Context, instance *model.Instance) error
 	ReserveAvailablePort(start, end int) (int, error)
@@ -112,7 +111,7 @@ type PracticeRankingRepository interface {
 type InstanceRepository interface {
 	FindByID(ctx context.Context, id int64) (*model.Instance, error)
 	UpdateRuntime(ctx context.Context, instance *model.Instance) error
-	RefreshInstanceExpiryWithContext(ctx context.Context, instanceID int64, expiresAt time.Time) error
+	RefreshInstanceExpiry(ctx context.Context, instanceID int64, expiresAt time.Time) error
 	UpdateStatusAndReleasePort(ctx context.Context, id int64, status string) error
 	FindByUserAndChallengeWithContext(ctx context.Context, userID, challengeID int64) (*model.Instance, error)
 	ListPendingInstancesWithContext(ctx context.Context, limit int) ([]*model.Instance, error)

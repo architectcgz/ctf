@@ -170,11 +170,7 @@ func (r *Repository) FindByContestTeamAndChallenge(contestID, teamID, challengeI
 	return &instance, nil
 }
 
-func (r *Repository) RefreshInstanceExpiry(instanceID int64, expiresAt time.Time) error {
-	return r.RefreshInstanceExpiryWithContext(context.Background(), instanceID, expiresAt)
-}
-
-func (r *Repository) RefreshInstanceExpiryWithContext(ctx context.Context, instanceID int64, expiresAt time.Time) error {
+func (r *Repository) RefreshInstanceExpiry(ctx context.Context, instanceID int64, expiresAt time.Time) error {
 	return r.dbWithContext(ctx).Model(&model.Instance{}).
 		Where("id = ?", instanceID).
 		Updates(map[string]any{
