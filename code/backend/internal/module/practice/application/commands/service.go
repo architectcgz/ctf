@@ -37,7 +37,7 @@ type AssessmentService interface {
 }
 
 type ScoreUpdater interface {
-	UpdateUserScoreWithContext(ctx context.Context, userID int64) error
+	UpdateUserScore(ctx context.Context, userID int64) error
 	lockTimeout() time.Duration
 }
 
@@ -1614,7 +1614,7 @@ func (s *Service) triggerScoreUpdate(userID int64) {
 		}
 		defer cancel()
 
-		if err := s.scoreService.UpdateUserScoreWithContext(scoreCtx, userID); err != nil && !errors.Is(err, context.Canceled) {
+		if err := s.scoreService.UpdateUserScore(scoreCtx, userID); err != nil && !errors.Is(err, context.Canceled) {
 			s.logger.Error("更新用户得分失败", zap.Int64("user_id", userID), zap.Error(err))
 		}
 	})

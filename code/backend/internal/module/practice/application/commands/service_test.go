@@ -143,7 +143,7 @@ type stubScoreUpdater struct {
 	lockWait time.Duration
 }
 
-func (s *stubScoreUpdater) UpdateUserScoreWithContext(ctx context.Context, userID int64) error {
+func (s *stubScoreUpdater) UpdateUserScore(ctx context.Context, userID int64) error {
 	if s.updateFn == nil {
 		return nil
 	}
