@@ -122,7 +122,7 @@ type ImageRepository interface {
 type EnvironmentTemplateRepository interface {
 	Create(ctx context.Context, template *model.EnvironmentTemplate) error
 	Update(ctx context.Context, template *model.EnvironmentTemplate) error
-	DeleteWithContext(ctx context.Context, id int64) error
+	Delete(ctx context.Context, id int64) error
 	FindByID(ctx context.Context, id int64) (*model.EnvironmentTemplate, error)
 	List(ctx context.Context, keyword string) ([]*model.EnvironmentTemplate, error)
 	IncrementUsage(ctx context.Context, id int64) error

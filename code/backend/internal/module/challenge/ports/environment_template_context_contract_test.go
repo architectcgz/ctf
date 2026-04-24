@@ -17,7 +17,7 @@ func (ctxOnlyEnvironmentTemplateRepository) Update(context.Context, *model.Envir
 	return nil
 }
 
-func (ctxOnlyEnvironmentTemplateRepository) DeleteWithContext(context.Context, int64) error {
+func (ctxOnlyEnvironmentTemplateRepository) Delete(context.Context, int64) error {
 	return nil
 }
 
