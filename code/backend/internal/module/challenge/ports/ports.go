@@ -32,14 +32,14 @@ type ChallengeFlagRepository interface {
 type ChallengeQueryRepository interface {
 	FindByIDWithContext(ctx context.Context, id int64) (*model.Challenge, error)
 	ListWithContext(ctx context.Context, query *dto.ChallengeQuery) ([]*model.Challenge, int64, error)
-	ListHintsByChallengeIDWithContext(ctx context.Context, challengeID int64) ([]*model.ChallengeHint, error)
+	ListHintsByChallengeID(ctx context.Context, challengeID int64) ([]*model.ChallengeHint, error)
 	GetSolvedStatus(ctx context.Context, userID, challengeID int64) (bool, error)
 	GetSolvedCount(ctx context.Context, challengeID int64) (int64, error)
 	GetTotalAttempts(ctx context.Context, challengeID int64) (int64, error)
 	BatchGetSolvedStatus(ctx context.Context, userID int64, challengeIDs []int64) (map[int64]bool, error)
 	BatchGetSolvedCount(ctx context.Context, challengeIDs []int64) (map[int64]int64, error)
 	BatchGetTotalAttempts(ctx context.Context, challengeIDs []int64) (map[int64]int64, error)
-	ListPublishedWithContext(ctx context.Context, query *dto.ChallengeQuery) ([]*model.Challenge, int64, error)
+	ListPublished(ctx context.Context, query *dto.ChallengeQuery) ([]*model.Challenge, int64, error)
 }
 
 type AWDServiceTemplateCommandRepository interface {

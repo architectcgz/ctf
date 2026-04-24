@@ -44,7 +44,7 @@ func (s *ChallengeService) GetChallenge(ctx context.Context, id int64) (*dto.Cha
 		}
 		return nil, err
 	}
-	hints, err := s.repo.ListHintsByChallengeIDWithContext(ctx, id)
+	hints, err := s.repo.ListHintsByChallengeID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +80,7 @@ func (s *ChallengeService) ListChallenges(ctx context.Context, query *dto.Challe
 }
 
 func (s *ChallengeService) ListPublishedChallenges(ctx context.Context, userID int64, query *dto.ChallengeQuery) (*dto.PageResult, error) {
-	challenges, total, err := s.repo.ListPublishedWithContext(ctx, query)
+	challenges, total, err := s.repo.ListPublished(ctx, query)
 	if err != nil {
 		return nil, err
 	}
@@ -171,7 +171,7 @@ func (s *ChallengeService) GetPublishedChallenge(ctx context.Context, userID, ch
 		attempts = 0
 	}
 
-	hints, err := s.repo.ListHintsByChallengeIDWithContext(ctx, challengeID)
+	hints, err := s.repo.ListHintsByChallengeID(ctx, challengeID)
 	if err != nil {
 		return nil, err
 	}
