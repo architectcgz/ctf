@@ -51,8 +51,8 @@ func newJSONTestContext(t *testing.T, method, target, body string) (*gin.Context
 }
 
 type stubAWDServiceTemplateCommandService struct {
-	listImportsWithContextFunc func(ctx context.Context, actorUserID int64) ([]dto.AWDServiceTemplateImportPreviewResp, error)
-	getImportWithContextFunc   func(ctx context.Context, actorUserID int64, id string) (*dto.AWDServiceTemplateImportPreviewResp, error)
+	listImportsFunc func(ctx context.Context, actorUserID int64) ([]dto.AWDServiceTemplateImportPreviewResp, error)
+	getImportFunc   func(ctx context.Context, actorUserID int64, id string) (*dto.AWDServiceTemplateImportPreviewResp, error)
 }
 
 func (stubAWDServiceTemplateCommandService) CreateTemplate(ctx context.Context, actorUserID int64, req *dto.CreateAWDServiceTemplateReq) (*dto.AWDServiceTemplateResp, error) {
@@ -67,41 +67,25 @@ func (stubAWDServiceTemplateCommandService) DeleteTemplate(ctx context.Context, 
 	return nil
 }
 
-func (stubAWDServiceTemplateCommandService) PreviewImport(actorUserID int64, fileName string, reader io.Reader) (*dto.AWDServiceTemplateImportPreviewResp, error) {
+func (stubAWDServiceTemplateCommandService) PreviewImport(ctx context.Context, actorUserID int64, fileName string, reader io.Reader) (*dto.AWDServiceTemplateImportPreviewResp, error) {
 	return nil, nil
 }
 
-func (stubAWDServiceTemplateCommandService) PreviewImportWithContext(ctx context.Context, actorUserID int64, fileName string, reader io.Reader) (*dto.AWDServiceTemplateImportPreviewResp, error) {
-	return nil, nil
-}
-
-func (s stubAWDServiceTemplateCommandService) ListImports(actorUserID int64) ([]dto.AWDServiceTemplateImportPreviewResp, error) {
-	return nil, nil
-}
-
-func (s stubAWDServiceTemplateCommandService) ListImportsWithContext(ctx context.Context, actorUserID int64) ([]dto.AWDServiceTemplateImportPreviewResp, error) {
-	if s.listImportsWithContextFunc != nil {
-		return s.listImportsWithContextFunc(ctx, actorUserID)
+func (s stubAWDServiceTemplateCommandService) ListImports(ctx context.Context, actorUserID int64) ([]dto.AWDServiceTemplateImportPreviewResp, error) {
+	if s.listImportsFunc != nil {
+		return s.listImportsFunc(ctx, actorUserID)
 	}
-	return s.ListImports(actorUserID)
-}
-
-func (s stubAWDServiceTemplateCommandService) GetImport(actorUserID int64, id string) (*dto.AWDServiceTemplateImportPreviewResp, error) {
 	return nil, nil
 }
 
-func (s stubAWDServiceTemplateCommandService) GetImportWithContext(ctx context.Context, actorUserID int64, id string) (*dto.AWDServiceTemplateImportPreviewResp, error) {
-	if s.getImportWithContextFunc != nil {
-		return s.getImportWithContextFunc(ctx, actorUserID, id)
+func (s stubAWDServiceTemplateCommandService) GetImport(ctx context.Context, actorUserID int64, id string) (*dto.AWDServiceTemplateImportPreviewResp, error) {
+	if s.getImportFunc != nil {
+		return s.getImportFunc(ctx, actorUserID, id)
 	}
-	return s.GetImport(actorUserID, id)
-}
-
-func (stubAWDServiceTemplateCommandService) CommitImport(actorUserID int64, id string) (*dto.AWDServiceTemplateResp, error) {
 	return nil, nil
 }
 
-func (stubAWDServiceTemplateCommandService) CommitImportWithContext(ctx context.Context, actorUserID int64, id string) (*dto.AWDServiceTemplateResp, error) {
+func (stubAWDServiceTemplateCommandService) CommitImport(ctx context.Context, actorUserID int64, id string) (*dto.AWDServiceTemplateResp, error) {
 	return nil, nil
 }
 
@@ -130,7 +114,7 @@ func TestAWDServiceTemplateHandlerListImportsPropagatesRequestContextToCommandSe
 	called := false
 	handler := NewAWDServiceTemplateHandler(
 		stubAWDServiceTemplateCommandService{
-			listImportsWithContextFunc: func(ctx context.Context, actorUserID int64) ([]dto.AWDServiceTemplateImportPreviewResp, error) {
+			listImportsFunc: func(ctx context.Context, actorUserID int64) ([]dto.AWDServiceTemplateImportPreviewResp, error) {
 				called = true
 				if got := ctx.Value(ctxKey); got != expectedCtxValue {
 					t.Fatalf("expected list-imports ctx value %v, got %v", expectedCtxValue, got)
@@ -166,7 +150,7 @@ func TestAWDServiceTemplateHandlerGetImportPropagatesRequestContextToCommandServ
 	called := false
 	handler := NewAWDServiceTemplateHandler(
 		stubAWDServiceTemplateCommandService{
-			getImportWithContextFunc: func(ctx context.Context, actorUserID int64, id string) (*dto.AWDServiceTemplateImportPreviewResp, error) {
+			getImportFunc: func(ctx context.Context, actorUserID int64, id string) (*dto.AWDServiceTemplateImportPreviewResp, error) {
 				called = true
 				if got := ctx.Value(ctxKey); got != expectedCtxValue {
 					t.Fatalf("expected get-import ctx value %v, got %v", expectedCtxValue, got)

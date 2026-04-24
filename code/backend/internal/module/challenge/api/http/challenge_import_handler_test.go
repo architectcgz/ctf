@@ -13,8 +13,8 @@ import (
 )
 
 type challengeImportHandlerCommandStub struct {
-	listChallengeImportsWithContextFn func(ctx context.Context, actorUserID int64) ([]dto.ChallengeImportPreviewResp, error)
-	getChallengeImportWithContextFn   func(ctx context.Context, actorUserID int64, id string) (*dto.ChallengeImportPreviewResp, error)
+	listChallengeImportsFn func(ctx context.Context, actorUserID int64) ([]dto.ChallengeImportPreviewResp, error)
+	getChallengeImportFn   func(ctx context.Context, actorUserID int64, id string) (*dto.ChallengeImportPreviewResp, error)
 }
 
 func (s challengeImportHandlerCommandStub) CreateChallenge(actorUserID int64, req *dto.CreateChallengeReq) (*dto.ChallengeResp, error) {
@@ -65,41 +65,25 @@ func (s challengeImportHandlerCommandStub) SelfCheckChallengeWithContext(ctx con
 	return nil, nil
 }
 
-func (s challengeImportHandlerCommandStub) PreviewChallengeImport(actorUserID int64, fileName string, reader io.Reader) (*dto.ChallengeImportPreviewResp, error) {
+func (s challengeImportHandlerCommandStub) PreviewChallengeImport(ctx context.Context, actorUserID int64, fileName string, reader io.Reader) (*dto.ChallengeImportPreviewResp, error) {
 	return nil, nil
 }
 
-func (s challengeImportHandlerCommandStub) PreviewChallengeImportWithContext(ctx context.Context, actorUserID int64, fileName string, reader io.Reader) (*dto.ChallengeImportPreviewResp, error) {
-	return nil, nil
-}
-
-func (s challengeImportHandlerCommandStub) ListChallengeImports(actorUserID int64) ([]dto.ChallengeImportPreviewResp, error) {
-	return nil, nil
-}
-
-func (s challengeImportHandlerCommandStub) ListChallengeImportsWithContext(ctx context.Context, actorUserID int64) ([]dto.ChallengeImportPreviewResp, error) {
-	if s.listChallengeImportsWithContextFn != nil {
-		return s.listChallengeImportsWithContextFn(ctx, actorUserID)
+func (s challengeImportHandlerCommandStub) ListChallengeImports(ctx context.Context, actorUserID int64) ([]dto.ChallengeImportPreviewResp, error) {
+	if s.listChallengeImportsFn != nil {
+		return s.listChallengeImportsFn(ctx, actorUserID)
 	}
-	return s.ListChallengeImports(actorUserID)
-}
-
-func (s challengeImportHandlerCommandStub) GetChallengeImport(actorUserID int64, id string) (*dto.ChallengeImportPreviewResp, error) {
 	return nil, nil
 }
 
-func (s challengeImportHandlerCommandStub) GetChallengeImportWithContext(ctx context.Context, actorUserID int64, id string) (*dto.ChallengeImportPreviewResp, error) {
-	if s.getChallengeImportWithContextFn != nil {
-		return s.getChallengeImportWithContextFn(ctx, actorUserID, id)
+func (s challengeImportHandlerCommandStub) GetChallengeImport(ctx context.Context, actorUserID int64, id string) (*dto.ChallengeImportPreviewResp, error) {
+	if s.getChallengeImportFn != nil {
+		return s.getChallengeImportFn(ctx, actorUserID, id)
 	}
-	return s.GetChallengeImport(actorUserID, id)
-}
-
-func (s challengeImportHandlerCommandStub) CommitChallengeImport(actorUserID int64, id string) (*dto.ChallengeResp, error) {
 	return nil, nil
 }
 
-func (s challengeImportHandlerCommandStub) CommitChallengeImportWithContext(ctx context.Context, actorUserID int64, id string) (*dto.ChallengeResp, error) {
+func (s challengeImportHandlerCommandStub) CommitChallengeImport(ctx context.Context, actorUserID int64, id string) (*dto.ChallengeResp, error) {
 	return nil, nil
 }
 
@@ -131,7 +115,7 @@ func TestHandlerListChallengeImportsPropagatesRequestContextToCommandService(t *
 	called := false
 	handler := NewHandler(
 		challengeImportHandlerCommandStub{
-			listChallengeImportsWithContextFn: func(ctx context.Context, actorUserID int64) ([]dto.ChallengeImportPreviewResp, error) {
+			listChallengeImportsFn: func(ctx context.Context, actorUserID int64) ([]dto.ChallengeImportPreviewResp, error) {
 				called = true
 				if got := ctx.Value(ctxKey); got != expectedCtxValue {
 					t.Fatalf("expected list-imports ctx value %v, got %v", expectedCtxValue, got)
@@ -167,7 +151,7 @@ func TestHandlerGetChallengeImportPropagatesRequestContextToCommandService(t *te
 	called := false
 	handler := NewHandler(
 		challengeImportHandlerCommandStub{
-			getChallengeImportWithContextFn: func(ctx context.Context, actorUserID int64, id string) (*dto.ChallengeImportPreviewResp, error) {
+			getChallengeImportFn: func(ctx context.Context, actorUserID int64, id string) (*dto.ChallengeImportPreviewResp, error) {
 				called = true
 				if got := ctx.Value(ctxKey); got != expectedCtxValue {
 					t.Fatalf("expected get-import ctx value %v, got %v", expectedCtxValue, got)

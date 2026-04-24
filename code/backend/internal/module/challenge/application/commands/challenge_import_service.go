@@ -44,22 +44,11 @@ type storedChallengeImportPreview struct {
 }
 
 func (s *ChallengeService) PreviewChallengeImport(
-	actorUserID int64,
-	fileName string,
-	reader io.Reader,
-) (*dto.ChallengeImportPreviewResp, error) {
-	return s.PreviewChallengeImportWithContext(context.Background(), actorUserID, fileName, reader)
-}
-
-func (s *ChallengeService) PreviewChallengeImportWithContext(
 	ctx context.Context,
 	actorUserID int64,
 	fileName string,
 	reader io.Reader,
 ) (*dto.ChallengeImportPreviewResp, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
 	_ = ctx
 	if strings.TrimSpace(fileName) == "" {
 		fileName = "challenge-package.zip"
@@ -106,14 +95,7 @@ func (s *ChallengeService) PreviewChallengeImportWithContext(
 	return preview, nil
 }
 
-func (s *ChallengeService) GetChallengeImport(actorUserID int64, id string) (*dto.ChallengeImportPreviewResp, error) {
-	return s.GetChallengeImportWithContext(context.Background(), actorUserID, id)
-}
-
-func (s *ChallengeService) GetChallengeImportWithContext(ctx context.Context, actorUserID int64, id string) (*dto.ChallengeImportPreviewResp, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
+func (s *ChallengeService) GetChallengeImport(ctx context.Context, actorUserID int64, id string) (*dto.ChallengeImportPreviewResp, error) {
 	_ = ctx
 	record, err := loadChallengeImportPreviewRecord(id)
 	if err != nil {
@@ -126,14 +108,7 @@ func (s *ChallengeService) GetChallengeImportWithContext(ctx context.Context, ac
 	return &preview, nil
 }
 
-func (s *ChallengeService) ListChallengeImports(actorUserID int64) ([]dto.ChallengeImportPreviewResp, error) {
-	return s.ListChallengeImportsWithContext(context.Background(), actorUserID)
-}
-
-func (s *ChallengeService) ListChallengeImportsWithContext(ctx context.Context, actorUserID int64) ([]dto.ChallengeImportPreviewResp, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
+func (s *ChallengeService) ListChallengeImports(ctx context.Context, actorUserID int64) ([]dto.ChallengeImportPreviewResp, error) {
 	_ = ctx
 	records, err := loadChallengeImportPreviewRecords()
 	if err != nil {
@@ -154,13 +129,6 @@ func (s *ChallengeService) ListChallengeImportsWithContext(ctx context.Context, 
 }
 
 func (s *ChallengeService) CommitChallengeImport(
-	actorUserID int64,
-	id string,
-) (*dto.ChallengeResp, error) {
-	return s.CommitChallengeImportWithContext(context.Background(), actorUserID, id)
-}
-
-func (s *ChallengeService) CommitChallengeImportWithContext(
 	ctx context.Context,
 	actorUserID int64,
 	id string,
@@ -181,10 +149,6 @@ func (s *ChallengeService) CommitChallengeImportWithContext(
 	attachmentURL, err := persistImportedAttachmentBundle(parsed)
 	if err != nil {
 		return nil, err
-	}
-
-	if ctx == nil {
-		ctx = context.Background()
 	}
 
 	var challenge *model.Challenge
