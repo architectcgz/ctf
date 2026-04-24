@@ -44,7 +44,7 @@ func (s *AWDService) prepareCheckerPreviewAccessURL(
 		return "", nil, errcode.ErrInvalidParams.WithCause(errors.New("当前模板尚不支持自动拉起该部署模式的试跑实例，请手动填写目标访问地址"))
 	}
 
-	imageRef, err := s.resolvePreviewImageRef(runtimeConfig)
+	imageRef, err := s.resolvePreviewImageRef(ctx, runtimeConfig)
 	if err != nil {
 		return "", nil, err
 	}
@@ -88,10 +88,10 @@ func (s *AWDService) loadPreviewRuntimeDefinition(
 	return template.DeploymentMode, parseContestAWDServiceJSONMap(template.RuntimeConfig), nil
 }
 
-func (s *AWDService) resolvePreviewImageRef(runtimeConfig map[string]any) (string, error) {
+func (s *AWDService) resolvePreviewImageRef(ctx context.Context, runtimeConfig map[string]any) (string, error) {
 	if imageRef := strings.TrimSpace(readStringFromAny(runtimeConfig["image_ref"])); imageRef != "" {
 		if imageID := readInt64FromAny(runtimeConfig["image_id"]); imageID > 0 && s.imageRepo != nil {
-			if resolved, err := s.resolvePreviewImageRefByID(imageID); err == nil {
+			if resolved, err := s.resolvePreviewImageRefByID(ctx, imageID); err == nil {
 				return resolved, nil
 			}
 			return imageRef, nil
@@ -106,14 +106,14 @@ func (s *AWDService) resolvePreviewImageRef(runtimeConfig map[string]any) (strin
 	if s.imageRepo == nil {
 		return "", errcode.ErrInvalidParams.WithCause(errors.New("当前模板无法解析镜像配置，请手动填写目标访问地址"))
 	}
-	return s.resolvePreviewImageRefByID(imageID)
+	return s.resolvePreviewImageRefByID(ctx, imageID)
 }
 
-func (s *AWDService) resolvePreviewImageRefByID(imageID int64) (string, error) {
+func (s *AWDService) resolvePreviewImageRefByID(ctx context.Context, imageID int64) (string, error) {
 	if imageID <= 0 {
 		return "", errcode.ErrInvalidParams.WithCause(errors.New("invalid preview image id"))
 	}
-	imageItem, err := s.imageRepo.FindByID(imageID)
+	imageItem, err := s.imageRepo.FindByIDWithContext(ctx, imageID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return "", errcode.ErrNotFound

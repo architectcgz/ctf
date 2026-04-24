@@ -155,29 +155,13 @@ func (s *stubScoreUpdater) lockTimeout() time.Duration {
 }
 
 type stubPracticeChallengeContract struct {
-	findByIDFn                              func(id int64) (*model.Challenge, error)
 	findByIDWithContextFn                   func(ctx context.Context, id int64) (*model.Challenge, error)
-	findChallengeTopologyByChallengeIDFn    func(challengeID int64) (*model.ChallengeTopology, error)
 	findChallengeTopologyByChallengeIDCtxFn func(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error)
-}
-
-func (s *stubPracticeChallengeContract) FindByID(id int64) (*model.Challenge, error) {
-	if s.findByIDFn == nil {
-		return nil, nil
-	}
-	return s.findByIDFn(id)
 }
 
 func (s *stubPracticeChallengeContract) FindByIDWithContext(ctx context.Context, id int64) (*model.Challenge, error) {
 	if s.findByIDWithContextFn != nil {
 		return s.findByIDWithContextFn(ctx, id)
-	}
-	return s.FindByID(id)
-}
-
-func (s *stubPracticeChallengeContract) FindChallengeTopologyByChallengeID(challengeID int64) (*model.ChallengeTopology, error) {
-	if s.findChallengeTopologyByChallengeIDFn != nil {
-		return s.findChallengeTopologyByChallengeIDFn(challengeID)
 	}
 	return nil, nil
 }
@@ -186,26 +170,18 @@ func (s *stubPracticeChallengeContract) FindChallengeTopologyByChallengeIDWithCo
 	if s.findChallengeTopologyByChallengeIDCtxFn != nil {
 		return s.findChallengeTopologyByChallengeIDCtxFn(ctx, challengeID)
 	}
-	return s.FindChallengeTopologyByChallengeID(challengeID)
+	return nil, nil
 }
 
 type stubPracticeImageStore struct {
-	findByIDFn            func(id int64) (*model.Image, error)
 	findByIDWithContextFn func(ctx context.Context, id int64) (*model.Image, error)
-}
-
-func (s *stubPracticeImageStore) FindByID(id int64) (*model.Image, error) {
-	if s.findByIDFn == nil {
-		return nil, nil
-	}
-	return s.findByIDFn(id)
 }
 
 func (s *stubPracticeImageStore) FindByIDWithContext(ctx context.Context, id int64) (*model.Image, error) {
 	if s.findByIDWithContextFn != nil {
 		return s.findByIDWithContextFn(ctx, id)
 	}
-	return s.FindByID(id)
+	return nil, nil
 }
 
 type stubPracticeInstanceStore struct {
@@ -445,7 +421,7 @@ func TestSubmitFlagWithRegexChallengeMatchesPattern(t *testing.T) {
 	service := NewService(
 		repo,
 		&stubPracticeChallengeContract{
-			findByIDFn: func(id int64) (*model.Challenge, error) {
+			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
 				return &model.Challenge{
 					ID:        id,
 					Category:  model.DimensionWeb,
@@ -500,7 +476,7 @@ func TestSubmitFlagWithManualReviewChallengeCreatesPendingSubmission(t *testing.
 	service := NewService(
 		repo,
 		&stubPracticeChallengeContract{
-			findByIDFn: func(id int64) (*model.Challenge, error) {
+			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
 				return &model.Challenge{
 					ID:       id,
 					Category: model.DimensionWeb,
@@ -590,7 +566,7 @@ func TestReviewManualReviewSubmissionApprovesAndTriggersScoreUpdate(t *testing.T
 	service := NewService(
 		repo,
 		&stubPracticeChallengeContract{
-			findByIDFn: func(id int64) (*model.Challenge, error) {
+			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
 				return &model.Challenge{
 					ID:       id,
 					Category: model.DimensionWeb,
@@ -708,7 +684,7 @@ func TestPracticePublishesFlagAcceptedEvent(t *testing.T) {
 	service := NewService(
 		repo,
 		&stubPracticeChallengeContract{
-			findByIDFn: func(id int64) (*model.Challenge, error) {
+			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
 				return &model.Challenge{
 					ID:       id,
 					Category: model.DimensionWeb,
@@ -783,7 +759,7 @@ func TestSubmitFlagWithSharedStaticChallengeUsesRegularFlagValidation(t *testing
 	service := NewService(
 		practiceinfra.NewRepository(db),
 		&stubPracticeChallengeContract{
-			findByIDFn: func(id int64) (*model.Challenge, error) {
+			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
 				return &model.Challenge{
 					ID:              id,
 					Category:        model.DimensionWeb,
@@ -848,7 +824,7 @@ func TestSubmitFlagWithContextAllowsRepeatCorrectSubmissionWithoutExtraPoints(t 
 	service := NewService(
 		practiceinfra.NewRepository(db),
 		&stubPracticeChallengeContract{
-			findByIDFn: func(id int64) (*model.Challenge, error) {
+			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
 				return &model.Challenge{
 					ID:       id,
 					Category: model.DimensionWeb,
@@ -948,7 +924,7 @@ func TestSubmitFlagWithContextShrinksOwnedInstanceExpiryAfterSolve(t *testing.T)
 	service := NewService(
 		practiceinfra.NewRepository(db),
 		&stubPracticeChallengeContract{
-			findByIDFn: func(id int64) (*model.Challenge, error) {
+			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
 				return &model.Challenge{
 					ID:              id,
 					Category:        model.DimensionWeb,
@@ -1058,7 +1034,7 @@ func TestListMyChallengeSubmissionsMapsStoredHistory(t *testing.T) {
 			},
 		},
 		&stubPracticeChallengeContract{
-			findByIDFn: func(id int64) (*model.Challenge, error) {
+			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
 				return &model.Challenge{
 					ID:     id,
 					Status: model.ChallengeStatusPublished,
@@ -1108,7 +1084,7 @@ func TestSubmitFlagRejectsUnknownFlagType(t *testing.T) {
 	service := NewService(
 		practiceinfra.NewRepository(db),
 		&stubPracticeChallengeContract{
-			findByIDFn: func(id int64) (*model.Challenge, error) {
+			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
 				return &model.Challenge{
 					ID:       id,
 					Category: model.DimensionWeb,
@@ -1283,7 +1259,7 @@ func TestStartContestAWDServiceDoesNotRequireContestChallengeLookup(t *testing.T
 	service := NewService(
 		repo,
 		&stubPracticeChallengeContract{
-			findByIDFn: func(id int64) (*model.Challenge, error) {
+			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
 				if id != 2104 {
 					t.Fatalf("unexpected challenge lookup: %d", id)
 				}
@@ -2067,20 +2043,12 @@ func TestLoadRuntimeSubjectWithScopePropagatesContextToChallengeContract(t *test
 	service := NewService(
 		nil,
 		&stubPracticeChallengeContract{
-			findByIDFn: func(id int64) (*model.Challenge, error) {
-				t.Fatalf("expected context-aware challenge lookup, got legacy call for %d", id)
-				return nil, nil
-			},
 			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
 				challengeLookupCalled = true
 				if got := ctx.Value(ctxKey); got != expectedCtxValue {
 					t.Fatalf("expected challenge lookup ctx value %v, got %v", expectedCtxValue, got)
 				}
 				return &model.Challenge{ID: id, Status: model.ChallengeStatusPublished}, nil
-			},
-			findChallengeTopologyByChallengeIDFn: func(challengeID int64) (*model.ChallengeTopology, error) {
-				t.Fatalf("expected context-aware topology lookup, got legacy call for %d", challengeID)
-				return nil, nil
 			},
 			findChallengeTopologyByChallengeIDCtxFn: func(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error) {
 				topologyLookupCalled = true
@@ -2127,10 +2095,6 @@ func TestBuildTopologyCreateRequestPropagatesContextToImageRepository(t *testing
 	lookups := make([]int64, 0, 2)
 	service := &Service{
 		imageRepo: &stubPracticeImageStore{
-			findByIDFn: func(id int64) (*model.Image, error) {
-				t.Fatalf("expected context-aware image lookup, got legacy call for %d", id)
-				return nil, nil
-			},
 			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Image, error) {
 				if got := ctx.Value(ctxKey); got != expectedCtxValue {
 					t.Fatalf("expected image lookup ctx value %v, got %v", expectedCtxValue, got)
@@ -2192,10 +2156,6 @@ func TestSubmitFlagWithContextPropagatesContextToRepository(t *testing.T) {
 	service := NewService(
 		repo,
 		&stubPracticeChallengeContract{
-			findByIDFn: func(id int64) (*model.Challenge, error) {
-				t.Fatalf("expected context-aware challenge lookup, got legacy call for %d", id)
-				return nil, nil
-			},
 			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
 				challengeLookupCalled = true
 				if got := ctx.Value(ctxKey); got != expectedCtxValue {
@@ -2295,10 +2255,6 @@ func TestReviewManualReviewSubmissionWithContextPropagatesContextToRepository(t 
 	service := NewService(
 		repo,
 		&stubPracticeChallengeContract{
-			findByIDFn: func(id int64) (*model.Challenge, error) {
-				t.Fatalf("expected context-aware challenge lookup, got legacy call for %d", id)
-				return nil, nil
-			},
 			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
 				challengeLookupCalled = true
 				if got := ctx.Value(ctxKey); got != expectedCtxValue {
@@ -2838,10 +2794,6 @@ func TestListMyChallengeSubmissionsWithContextPropagatesContextToRepository(t *t
 			},
 		},
 		&stubPracticeChallengeContract{
-			findByIDFn: func(id int64) (*model.Challenge, error) {
-				t.Fatalf("expected context-aware challenge lookup, got legacy call for %d", id)
-				return nil, nil
-			},
 			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
 				challengeLookupCalled = true
 				if got := ctx.Value(ctxKey); got != expectedCtxValue {
@@ -2904,7 +2856,7 @@ func TestSubmitFlagWithContextPropagatesContextToDynamicFlagInstanceLookup(t *te
 			},
 		},
 		&stubPracticeChallengeContract{
-			findByIDFn: func(id int64) (*model.Challenge, error) {
+			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
 				return &model.Challenge{
 					ID:         id,
 					Category:   model.DimensionWeb,
@@ -2981,7 +2933,7 @@ func TestSubmitFlagWithContextPropagatesContextToSolveGraceInstanceUpdates(t *te
 			},
 		},
 		&stubPracticeChallengeContract{
-			findByIDFn: func(id int64) (*model.Challenge, error) {
+			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
 				return &model.Challenge{
 					ID:              id,
 					Category:        model.DimensionWeb,
