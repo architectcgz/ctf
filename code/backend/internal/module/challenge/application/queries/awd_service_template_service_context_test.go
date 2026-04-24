@@ -9,38 +9,22 @@ import (
 )
 
 type awdServiceTemplateQueryContextRepoStub struct {
-	findByIDFn            func(id int64) (*model.AWDServiceTemplate, error)
 	findByIDWithContextFn func(ctx context.Context, id int64) (*model.AWDServiceTemplate, error)
-	listFn                func(query *dto.AWDServiceTemplateQuery) ([]*model.AWDServiceTemplate, int64, error)
 	listWithContextFn     func(ctx context.Context, query *dto.AWDServiceTemplateQuery) ([]*model.AWDServiceTemplate, int64, error)
-}
-
-func (s *awdServiceTemplateQueryContextRepoStub) FindAWDServiceTemplateByID(id int64) (*model.AWDServiceTemplate, error) {
-	if s.findByIDFn != nil {
-		return s.findByIDFn(id)
-	}
-	return nil, nil
 }
 
 func (s *awdServiceTemplateQueryContextRepoStub) FindAWDServiceTemplateByIDWithContext(ctx context.Context, id int64) (*model.AWDServiceTemplate, error) {
 	if s.findByIDWithContextFn != nil {
 		return s.findByIDWithContextFn(ctx, id)
 	}
-	return s.FindAWDServiceTemplateByID(id)
-}
-
-func (s *awdServiceTemplateQueryContextRepoStub) ListAWDServiceTemplates(query *dto.AWDServiceTemplateQuery) ([]*model.AWDServiceTemplate, int64, error) {
-	if s.listFn != nil {
-		return s.listFn(query)
-	}
-	return nil, 0, nil
+	return nil, nil
 }
 
 func (s *awdServiceTemplateQueryContextRepoStub) ListAWDServiceTemplatesWithContext(ctx context.Context, query *dto.AWDServiceTemplateQuery) ([]*model.AWDServiceTemplate, int64, error) {
 	if s.listWithContextFn != nil {
 		return s.listWithContextFn(ctx, query)
 	}
-	return s.ListAWDServiceTemplates(query)
+	return nil, 0, nil
 }
 
 type awdServiceTemplateQueryContextKey string
