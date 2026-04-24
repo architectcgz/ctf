@@ -186,7 +186,7 @@ func (s *TopologyService) ensureTopologyImagesExist(ctx context.Context, rawSpec
 			continue
 		}
 		seen[node.ImageID] = struct{}{}
-		if _, findErr := s.imageRepo.FindByIDWithContext(ctx, node.ImageID); findErr != nil {
+		if _, findErr := s.imageRepo.FindByID(ctx, node.ImageID); findErr != nil {
 			if errors.Is(findErr, gorm.ErrRecordNotFound) {
 				return errcode.ErrInvalidParams.WithCause(errors.New("拓扑节点引用的镜像不存在"))
 			}
