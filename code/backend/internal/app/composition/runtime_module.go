@@ -428,11 +428,11 @@ func newRuntimePracticeServiceAdapter(cleaner *runtimecmd.RuntimeCleanupService,
 	}
 }
 
-func (a *runtimePracticeServiceAdapter) CleanupRuntime(instance *model.Instance) error {
+func (a *runtimePracticeServiceAdapter) CleanupRuntime(ctx context.Context, instance *model.Instance) error {
 	if a == nil || a.cleaner == nil {
 		return nil
 	}
-	return a.cleaner.CleanupRuntime(instance)
+	return a.cleaner.CleanupRuntime(ctx, instance)
 }
 
 func (a *runtimePracticeServiceAdapter) CreateTopology(ctx context.Context, req *practiceports.TopologyCreateRequest) (*practiceports.TopologyCreateResult, error) {
@@ -600,7 +600,7 @@ func (a *runtimeChallengeServiceAdapter) CleanupRuntimeDetails(ctx context.Conte
 	instance := &model.Instance{
 		RuntimeDetails: rawDetails,
 	}
-	return a.cleaner.CleanupRuntimeWithContext(ctx, instance)
+	return a.cleaner.CleanupRuntime(ctx, instance)
 }
 
 func toRuntimeChallengeTopologyCreateRequest(req *challengeports.RuntimeTopologyCreateRequest) *runtimeports.TopologyCreateRequest {

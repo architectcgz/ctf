@@ -22,7 +22,7 @@ type InstanceRepository interface {
 }
 
 type RuntimeCleaner interface {
-	CleanupRuntimeWithContext(ctx context.Context, instance *model.Instance) error
+	CleanupRuntime(ctx context.Context, instance *model.Instance) error
 }
 
 type TeacherInstanceFilter struct {

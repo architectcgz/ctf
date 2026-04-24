@@ -121,7 +121,7 @@ type InstanceRepository interface {
 }
 
 type RuntimeInstanceService interface {
-	CleanupRuntime(instance *model.Instance) error
+	CleanupRuntime(ctx context.Context, instance *model.Instance) error
 	CreateTopology(ctx context.Context, req *TopologyCreateRequest) (*TopologyCreateResult, error)
 	CreateContainer(ctx context.Context, imageName string, env map[string]string, reservedHostPort int) (containerID, networkID string, hostPort, servicePort int, err error)
 }

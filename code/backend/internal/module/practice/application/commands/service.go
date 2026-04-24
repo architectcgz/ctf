@@ -244,7 +244,7 @@ func (s *Service) markInstanceFailed(ctx context.Context, instance *model.Instan
 	if instance == nil {
 		return
 	}
-	if err := s.runtimeService.CleanupRuntime(instance); err != nil {
+	if err := s.runtimeService.CleanupRuntime(ctx, instance); err != nil {
 		s.logger.Warn("清理失败实例运行时资源失败", zap.Int64("instance_id", instance.ID), zap.Error(err))
 	}
 	if ctx == nil {
