@@ -256,7 +256,7 @@ func (r *Repository) UpdatePublishCheckJob(ctx context.Context, job *model.Chall
 	return r.dbWithContext(ctx).Save(job).Error
 }
 
-func (r *Repository) CountByImageIDWithContext(ctx context.Context, imageID int64) (int64, error) {
+func (r *Repository) CountByImageID(ctx context.Context, imageID int64) (int64, error) {
 	var count int64
 	err := r.dbWithContext(ctx).Model(&model.Challenge{}).
 		Where("image_id = ?", imageID).
