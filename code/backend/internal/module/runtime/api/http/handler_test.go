@@ -16,11 +16,11 @@ import (
 
 type stubRuntimeService struct{}
 
-func (stubRuntimeService) DestroyInstanceWithContext(context.Context, int64, int64) error {
+func (stubRuntimeService) DestroyInstance(context.Context, int64, int64) error {
 	return nil
 }
 
-func (stubRuntimeService) ExtendInstanceWithContext(context.Context, int64, int64) (*dto.InstanceResp, error) {
+func (stubRuntimeService) ExtendInstance(context.Context, int64, int64) (*dto.InstanceResp, error) {
 	return nil, nil
 }
 

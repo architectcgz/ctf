@@ -323,8 +323,8 @@ func TestServiceDestroyInstanceAllowsContestTeamMember(t *testing.T) {
 		ExpiresAt:   now.Add(time.Hour),
 	})
 
-	if err := service.DestroyInstanceWithContext(context.Background(), 901, 2); err != nil {
-		t.Fatalf("DestroyInstanceWithContext() error = %v", err)
+	if err := service.DestroyInstance(context.Background(), 901, 2); err != nil {
+		t.Fatalf("DestroyInstance() error = %v", err)
 	}
 
 	instance, err := repo.FindByID(context.Background(), 901)
@@ -363,9 +363,9 @@ func TestServiceExtendInstanceAllowsContestTeamMember(t *testing.T) {
 		ExpiresAt:   initialExpiry,
 	})
 
-	resp, err := service.ExtendInstanceWithContext(context.Background(), 902, 2)
+	resp, err := service.ExtendInstance(context.Background(), 902, 2)
 	if err != nil {
-		t.Fatalf("ExtendInstanceWithContext() error = %v", err)
+		t.Fatalf("ExtendInstance() error = %v", err)
 	}
 	if resp == nil {
 		t.Fatal("expected extend response")
@@ -417,7 +417,7 @@ func TestServiceDestroyInstanceRejectsSharedInstance(t *testing.T) {
 		ExpiresAt:   now.Add(time.Hour),
 	})
 
-	err := service.DestroyInstanceWithContext(context.Background(), 903, 2)
+	err := service.DestroyInstance(context.Background(), 903, 2)
 	if err == nil || err.Error() != errcode.ErrForbidden.Error() {
 		t.Fatalf("expected forbidden for shared destroy, got %v", err)
 	}
@@ -454,7 +454,7 @@ func TestServiceExtendInstanceRejectsSharedInstance(t *testing.T) {
 		ExpiresAt:   now.Add(time.Hour),
 	})
 
-	_, err := service.ExtendInstanceWithContext(context.Background(), 904, 2)
+	_, err := service.ExtendInstance(context.Background(), 904, 2)
 	if err == nil || err.Error() != errcode.ErrForbidden.Error() {
 		t.Fatalf("expected forbidden for shared extend, got %v", err)
 	}
@@ -699,8 +699,8 @@ func TestServiceDestroyManagedInstanceRemovesAllRuntimeContainers(t *testing.T) 
 		t.Fatalf("create port allocation: %v", err)
 	}
 
-	if err := service.DestroyInstanceWithContext(context.Background(), instance.ID, instance.UserID); err != nil {
-		t.Fatalf("DestroyInstanceWithContext() error = %v", err)
+	if err := service.DestroyInstance(context.Background(), instance.ID, instance.UserID); err != nil {
+		t.Fatalf("DestroyInstance() error = %v", err)
 	}
 	if len(engine.removedContainerIDs) != 2 {
 		t.Fatalf("expected 2 removed containers, got %v", engine.removedContainerIDs)
@@ -1123,12 +1123,12 @@ type testRuntimeService struct {
 	queries  *runtimeqry.InstanceService
 }
 
-func (s *testRuntimeService) DestroyInstanceWithContext(ctx context.Context, instanceID, userID int64) error {
-	return s.commands.DestroyInstanceWithContext(ctx, instanceID, userID)
+func (s *testRuntimeService) DestroyInstance(ctx context.Context, instanceID, userID int64) error {
+	return s.commands.DestroyInstance(ctx, instanceID, userID)
 }
 
-func (s *testRuntimeService) ExtendInstanceWithContext(ctx context.Context, instanceID, userID int64) (*dto.InstanceResp, error) {
-	return s.commands.ExtendInstanceWithContext(ctx, instanceID, userID)
+func (s *testRuntimeService) ExtendInstance(ctx context.Context, instanceID, userID int64) (*dto.InstanceResp, error) {
+	return s.commands.ExtendInstance(ctx, instanceID, userID)
 }
 
 func (s *testRuntimeService) GetUserInstances(ctx context.Context, userID int64) ([]*dto.InstanceInfo, error) {
