@@ -23,18 +23,12 @@ type Handler struct {
 }
 
 type challengeCommandService interface {
-	CreateChallenge(actorUserID int64, req *dto.CreateChallengeReq) (*dto.ChallengeResp, error)
-	CreateChallengeWithContext(ctx context.Context, actorUserID int64, req *dto.CreateChallengeReq) (*dto.ChallengeResp, error)
-	UpdateChallenge(id int64, req *dto.UpdateChallengeReq) error
-	UpdateChallengeWithContext(ctx context.Context, id int64, req *dto.UpdateChallengeReq) error
-	DeleteChallenge(id int64) error
-	DeleteChallengeWithContext(ctx context.Context, id int64) error
-	RequestPublishCheck(actorUserID, id int64) (*dto.ChallengePublishCheckJobResp, error)
-	RequestPublishCheckWithContext(ctx context.Context, actorUserID, id int64) (*dto.ChallengePublishCheckJobResp, error)
-	GetLatestPublishCheck(id int64) (*dto.ChallengePublishCheckJobResp, error)
-	GetLatestPublishCheckWithContext(ctx context.Context, id int64) (*dto.ChallengePublishCheckJobResp, error)
-	SelfCheckChallenge(id int64) (*dto.ChallengeSelfCheckResp, error)
-	SelfCheckChallengeWithContext(ctx context.Context, id int64) (*dto.ChallengeSelfCheckResp, error)
+	CreateChallenge(ctx context.Context, actorUserID int64, req *dto.CreateChallengeReq) (*dto.ChallengeResp, error)
+	UpdateChallenge(ctx context.Context, id int64, req *dto.UpdateChallengeReq) error
+	DeleteChallenge(ctx context.Context, id int64) error
+	RequestPublishCheck(ctx context.Context, actorUserID, id int64) (*dto.ChallengePublishCheckJobResp, error)
+	GetLatestPublishCheck(ctx context.Context, id int64) (*dto.ChallengePublishCheckJobResp, error)
+	SelfCheckChallenge(ctx context.Context, id int64) (*dto.ChallengeSelfCheckResp, error)
 	PreviewChallengeImport(ctx context.Context, actorUserID int64, fileName string, reader io.Reader) (*dto.ChallengeImportPreviewResp, error)
 	ListChallengeImports(ctx context.Context, actorUserID int64) ([]dto.ChallengeImportPreviewResp, error)
 	GetChallengeImport(ctx context.Context, actorUserID int64, id string) (*dto.ChallengeImportPreviewResp, error)
@@ -59,7 +53,7 @@ func (h *Handler) CreateChallenge(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.commands.CreateChallengeWithContext(c.Request.Context(), authctx.MustCurrentUser(c).UserID, &req)
+	resp, err := h.commands.CreateChallenge(c.Request.Context(), authctx.MustCurrentUser(c).UserID, &req)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -81,7 +75,7 @@ func (h *Handler) UpdateChallenge(c *gin.Context) {
 		return
 	}
 
-	if err := h.commands.UpdateChallengeWithContext(c.Request.Context(), id, &req); err != nil {
+	if err := h.commands.UpdateChallenge(c.Request.Context(), id, &req); err != nil {
 		response.FromError(c, err)
 		return
 	}
@@ -96,7 +90,7 @@ func (h *Handler) DeleteChallenge(c *gin.Context) {
 		return
 	}
 
-	if err := h.commands.DeleteChallengeWithContext(c.Request.Context(), id); err != nil {
+	if err := h.commands.DeleteChallenge(c.Request.Context(), id); err != nil {
 		response.FromError(c, err)
 		return
 	}
@@ -208,7 +202,7 @@ func (h *Handler) SelfCheckChallenge(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.commands.SelfCheckChallengeWithContext(c.Request.Context(), id)
+	resp, err := h.commands.SelfCheckChallenge(c.Request.Context(), id)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -224,7 +218,7 @@ func (h *Handler) RequestPublishCheck(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.commands.RequestPublishCheckWithContext(c.Request.Context(), authctx.MustCurrentUser(c).UserID, id)
+	resp, err := h.commands.RequestPublishCheck(c.Request.Context(), authctx.MustCurrentUser(c).UserID, id)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -239,7 +233,7 @@ func (h *Handler) GetLatestPublishCheck(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.commands.GetLatestPublishCheckWithContext(c.Request.Context(), id)
+	resp, err := h.commands.GetLatestPublishCheck(c.Request.Context(), id)
 	if err != nil {
 		response.FromError(c, err)
 		return
