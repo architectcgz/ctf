@@ -1188,9 +1188,9 @@ func TestStartChallengeQueuesProvisioningWithoutSynchronousContainerCreation(t *
 		nil,
 	)
 
-	resp, err := service.StartChallengeWithContext(context.Background(), 42, 201)
+	resp, err := service.StartChallenge(context.Background(), 42, 201)
 	if err != nil {
-		t.Fatalf("StartChallengeWithContext() error = %v", err)
+		t.Fatalf("StartChallenge() error = %v", err)
 	}
 	if resp.Status != model.InstanceStatusPending {
 		t.Fatalf("expected pending status, got %+v", resp)
@@ -1381,9 +1381,9 @@ func TestRunProvisioningLoopPromotesPendingInstanceToRunning(t *testing.T) {
 		nil,
 	)
 
-	resp, err := service.StartChallengeWithContext(context.Background(), 43, 202)
+	resp, err := service.StartChallenge(context.Background(), 43, 202)
 	if err != nil {
-		t.Fatalf("StartChallengeWithContext() error = %v", err)
+		t.Fatalf("StartChallenge() error = %v", err)
 	}
 	if resp.Status != model.InstanceStatusPending {
 		t.Fatalf("expected pending status, got %+v", resp)
@@ -1402,7 +1402,7 @@ func TestRunProvisioningLoopPromotesPendingInstanceToRunning(t *testing.T) {
 	})
 }
 
-func TestStartChallengeWithContextIgnoresExpiredRunningInstance(t *testing.T) {
+func TestStartChallengeIgnoresExpiredRunningInstance(t *testing.T) {
 	t.Parallel()
 
 	db := newPracticeCommandTestDB(t)
@@ -1481,9 +1481,9 @@ func TestStartChallengeWithContextIgnoresExpiredRunningInstance(t *testing.T) {
 		nil,
 	)
 
-	resp, err := service.StartChallengeWithContext(context.Background(), 46, 206)
+	resp, err := service.StartChallenge(context.Background(), 46, 206)
 	if err != nil {
-		t.Fatalf("StartChallengeWithContext() error = %v", err)
+		t.Fatalf("StartChallenge() error = %v", err)
 	}
 	if resp.ID == 9006 {
 		t.Fatalf("expected expired instance to be replaced, got reused instance %+v", resp)
@@ -1807,13 +1807,13 @@ func TestRunProvisioningLoopLeavesOverflowPendingWhenGlobalCapacityReached(t *te
 		nil,
 	)
 
-	first, err := service.StartChallengeWithContext(context.Background(), 51, 203)
+	first, err := service.StartChallenge(context.Background(), 51, 203)
 	if err != nil {
-		t.Fatalf("StartChallengeWithContext() first error = %v", err)
+		t.Fatalf("StartChallenge() first error = %v", err)
 	}
-	second, err := service.StartChallengeWithContext(context.Background(), 52, 204)
+	second, err := service.StartChallenge(context.Background(), 52, 204)
 	if err != nil {
-		t.Fatalf("StartChallengeWithContext() second error = %v", err)
+		t.Fatalf("StartChallenge() second error = %v", err)
 	}
 
 	runCtx, cancel := context.WithCancel(context.Background())
@@ -1855,7 +1855,7 @@ func TestRunProvisioningLoopLeavesOverflowPendingWhenGlobalCapacityReached(t *te
 
 type practiceServiceContextKey string
 
-func TestStartChallengeWithContextPropagatesContextToTransactionalRepositoryWhenReusingSharedInstance(t *testing.T) {
+func TestStartChallengePropagatesContextToTransactionalRepositoryWhenReusingSharedInstance(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := practiceServiceContextKey("tx-reuse")
@@ -1918,9 +1918,9 @@ func TestStartChallengeWithContextPropagatesContextToTransactionalRepositoryWhen
 	)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.StartChallengeWithContext(ctx, 7, 11)
+	resp, err := service.StartChallenge(ctx, 7, 11)
 	if err != nil {
-		t.Fatalf("StartChallengeWithContext() error = %v", err)
+		t.Fatalf("StartChallenge() error = %v", err)
 	}
 	if resp == nil || resp.ID != 901 {
 		t.Fatalf("expected reused instance 901, got %+v", resp)
@@ -1930,7 +1930,7 @@ func TestStartChallengeWithContextPropagatesContextToTransactionalRepositoryWhen
 	}
 }
 
-func TestStartChallengeWithContextPropagatesContextToTransactionalRepositoryWhenCreatingInstance(t *testing.T) {
+func TestStartChallengePropagatesContextToTransactionalRepositoryWhenCreatingInstance(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := practiceServiceContextKey("tx-create")
@@ -2021,9 +2021,9 @@ func TestStartChallengeWithContextPropagatesContextToTransactionalRepositoryWhen
 	)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.StartChallengeWithContext(ctx, 7, 11)
+	resp, err := service.StartChallenge(ctx, 7, 11)
 	if err != nil {
-		t.Fatalf("StartChallengeWithContext() error = %v", err)
+		t.Fatalf("StartChallenge() error = %v", err)
 	}
 	if resp == nil || resp.ID != 902 {
 		t.Fatalf("expected created instance 902, got %+v", resp)

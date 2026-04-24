@@ -21,7 +21,7 @@ type Handler struct {
 }
 
 type practiceService interface {
-	StartChallengeWithContext(ctx context.Context, userID, challengeID int64) (*dto.InstanceResp, error)
+	StartChallenge(ctx context.Context, userID, challengeID int64) (*dto.InstanceResp, error)
 	StartContestChallenge(ctx context.Context, userID, contestID, challengeID int64) (*dto.InstanceResp, error)
 	StartContestAWDService(ctx context.Context, userID, contestID, serviceID int64) (*dto.InstanceResp, error)
 	SubmitFlagWithContext(ctx context.Context, userID, challengeID int64, flag string) (*dto.SubmissionResp, error)
@@ -49,7 +49,7 @@ func (h *Handler) StartChallenge(c *gin.Context) {
 		return
 	}
 
-	instance, err := h.service.StartChallengeWithContext(c.Request.Context(), userID, challengeID)
+	instance, err := h.service.StartChallenge(c.Request.Context(), userID, challengeID)
 	if err != nil {
 		response.FromError(c, err)
 		return
