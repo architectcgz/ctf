@@ -55,27 +55,15 @@ type stubAWDServiceTemplateCommandService struct {
 	getImportWithContextFunc   func(ctx context.Context, actorUserID int64, id string) (*dto.AWDServiceTemplateImportPreviewResp, error)
 }
 
-func (stubAWDServiceTemplateCommandService) CreateTemplate(actorUserID int64, req *dto.CreateAWDServiceTemplateReq) (*dto.AWDServiceTemplateResp, error) {
+func (stubAWDServiceTemplateCommandService) CreateTemplate(ctx context.Context, actorUserID int64, req *dto.CreateAWDServiceTemplateReq) (*dto.AWDServiceTemplateResp, error) {
 	return nil, nil
 }
 
-func (stubAWDServiceTemplateCommandService) CreateTemplateWithContext(ctx context.Context, actorUserID int64, req *dto.CreateAWDServiceTemplateReq) (*dto.AWDServiceTemplateResp, error) {
+func (stubAWDServiceTemplateCommandService) UpdateTemplate(ctx context.Context, id int64, req *dto.UpdateAWDServiceTemplateReq) (*dto.AWDServiceTemplateResp, error) {
 	return nil, nil
 }
 
-func (stubAWDServiceTemplateCommandService) UpdateTemplate(id int64, req *dto.UpdateAWDServiceTemplateReq) (*dto.AWDServiceTemplateResp, error) {
-	return nil, nil
-}
-
-func (stubAWDServiceTemplateCommandService) UpdateTemplateWithContext(ctx context.Context, id int64, req *dto.UpdateAWDServiceTemplateReq) (*dto.AWDServiceTemplateResp, error) {
-	return nil, nil
-}
-
-func (stubAWDServiceTemplateCommandService) DeleteTemplate(id int64) error {
-	return nil
-}
-
-func (stubAWDServiceTemplateCommandService) DeleteTemplateWithContext(ctx context.Context, id int64) error {
+func (stubAWDServiceTemplateCommandService) DeleteTemplate(ctx context.Context, id int64) error {
 	return nil
 }
 

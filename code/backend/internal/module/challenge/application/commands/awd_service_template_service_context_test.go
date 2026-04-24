@@ -45,7 +45,7 @@ func (s *awdServiceTemplateCommandContextRepoStub) DeleteAWDServiceTemplateWithC
 
 type awdServiceTemplateCommandContextKey string
 
-func TestAWDServiceTemplateServiceCreateTemplateWithContextPropagatesContextToRepository(t *testing.T) {
+func TestAWDServiceTemplateServiceCreateTemplatePropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := awdServiceTemplateCommandContextKey("create")
@@ -66,7 +66,7 @@ func TestAWDServiceTemplateServiceCreateTemplateWithContextPropagatesContextToRe
 	service := NewAWDServiceTemplateService(repo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.CreateTemplateWithContext(ctx, 2001, &dto.CreateAWDServiceTemplateReq{
+	resp, err := service.CreateTemplate(ctx, 2001, &dto.CreateAWDServiceTemplateReq{
 		Name:           "Bank Portal AWD",
 		Slug:           "bank-portal-awd",
 		Category:       "web",
@@ -76,7 +76,7 @@ func TestAWDServiceTemplateServiceCreateTemplateWithContextPropagatesContextToRe
 		DeploymentMode: string(model.AWDDeploymentModeSingleContainer),
 	})
 	if err != nil {
-		t.Fatalf("CreateTemplateWithContext() error = %v", err)
+		t.Fatalf("CreateTemplate() error = %v", err)
 	}
 	if !createCalled {
 		t.Fatal("expected create repository to be called")
@@ -86,7 +86,7 @@ func TestAWDServiceTemplateServiceCreateTemplateWithContextPropagatesContextToRe
 	}
 }
 
-func TestAWDServiceTemplateServiceUpdateTemplateWithContextPropagatesContextToRepository(t *testing.T) {
+func TestAWDServiceTemplateServiceUpdateTemplatePropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := awdServiceTemplateCommandContextKey("update")
@@ -124,12 +124,12 @@ func TestAWDServiceTemplateServiceUpdateTemplateWithContextPropagatesContextToRe
 	service := NewAWDServiceTemplateService(repo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.UpdateTemplateWithContext(ctx, 99, &dto.UpdateAWDServiceTemplateReq{
+	resp, err := service.UpdateTemplate(ctx, 99, &dto.UpdateAWDServiceTemplateReq{
 		Name:   "Bank Portal AWD",
 		Status: string(model.AWDServiceTemplateStatusPublished),
 	})
 	if err != nil {
-		t.Fatalf("UpdateTemplateWithContext() error = %v", err)
+		t.Fatalf("UpdateTemplate() error = %v", err)
 	}
 	if !findCalled || !updateCalled {
 		t.Fatalf("expected repository calls, got find=%v update=%v", findCalled, updateCalled)
@@ -139,7 +139,7 @@ func TestAWDServiceTemplateServiceUpdateTemplateWithContextPropagatesContextToRe
 	}
 }
 
-func TestAWDServiceTemplateServiceDeleteTemplateWithContextPropagatesContextToRepository(t *testing.T) {
+func TestAWDServiceTemplateServiceDeleteTemplatePropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := awdServiceTemplateCommandContextKey("delete")
@@ -168,8 +168,8 @@ func TestAWDServiceTemplateServiceDeleteTemplateWithContextPropagatesContextToRe
 	service := NewAWDServiceTemplateService(repo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	if err := service.DeleteTemplateWithContext(ctx, 99); err != nil {
-		t.Fatalf("DeleteTemplateWithContext() error = %v", err)
+	if err := service.DeleteTemplate(ctx, 99); err != nil {
+		t.Fatalf("DeleteTemplate() error = %v", err)
 	}
 	if !findCalled || !deleteCalled {
 		t.Fatalf("expected repository calls, got find=%v delete=%v", findCalled, deleteCalled)
