@@ -138,17 +138,11 @@ type ChallengeTopologyRepository interface {
 }
 
 type ImageRepository interface {
-	Create(image *model.Image) error
 	CreateWithContext(ctx context.Context, image *model.Image) error
-	FindByID(id int64) (*model.Image, error)
 	FindByIDWithContext(ctx context.Context, id int64) (*model.Image, error)
-	FindByNameTag(name, tag string) (*model.Image, error)
 	FindByNameTagWithContext(ctx context.Context, name, tag string) (*model.Image, error)
-	List(name, status string, offset, limit int) ([]*model.Image, int64, error)
 	ListWithContext(ctx context.Context, name, status string, offset, limit int) ([]*model.Image, int64, error)
-	Update(image *model.Image) error
 	UpdateWithContext(ctx context.Context, image *model.Image) error
-	Delete(id int64) error
 	DeleteWithContext(ctx context.Context, id int64) error
 }
 
