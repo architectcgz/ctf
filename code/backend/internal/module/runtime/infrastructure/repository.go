@@ -524,7 +524,7 @@ func (r *Repository) AtomicExtendByIDWithContext(ctx context.Context, id int64, 
 	return nil
 }
 
-func (r *Repository) CountRunningWithContext(ctx context.Context) (int64, error) {
+func (r *Repository) CountRunning(ctx context.Context) (int64, error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}

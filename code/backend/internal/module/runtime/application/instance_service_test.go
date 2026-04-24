@@ -122,9 +122,9 @@ func TestInstanceServiceGetUserInstancesShowsContestSharedInstanceToTeamMember(t
 
 	service := runtimeqry.NewInstanceService(runtimeinfrarepo.NewRepository(db))
 
-	items, err := service.GetUserInstancesWithContext(context.Background(), 2)
+	items, err := service.GetUserInstances(context.Background(), 2)
 	if err != nil {
-		t.Fatalf("GetUserInstancesWithContext() error = %v", err)
+		t.Fatalf("GetUserInstances() error = %v", err)
 	}
 	if len(items) != 1 || items[0].ID != 1002 {
 		t.Fatalf("expected teammate visible shared instance, got %+v", items)
@@ -213,9 +213,9 @@ func TestInstanceServiceGetUserInstancesPrefersContestAWDServiceMetadata(t *test
 
 	service := runtimeqry.NewInstanceService(runtimeinfrarepo.NewRepository(db))
 
-	items, err := service.GetUserInstancesWithContext(context.Background(), 2)
+	items, err := service.GetUserInstances(context.Background(), 2)
 	if err != nil {
-		t.Fatalf("GetUserInstancesWithContext() error = %v", err)
+		t.Fatalf("GetUserInstances() error = %v", err)
 	}
 	if len(items) != 1 {
 		t.Fatalf("expected 1 visible awd instance, got %+v", items)
@@ -294,9 +294,9 @@ func TestInstanceServiceGetUserInstancesFiltersLegacyAWDInstanceWithoutServiceID
 
 	service := runtimeqry.NewInstanceService(runtimeinfrarepo.NewRepository(db))
 
-	items, err := service.GetUserInstancesWithContext(context.Background(), 2)
+	items, err := service.GetUserInstances(context.Background(), 2)
 	if err != nil {
-		t.Fatalf("GetUserInstancesWithContext() error = %v", err)
+		t.Fatalf("GetUserInstances() error = %v", err)
 	}
 	if len(items) != 0 {
 		t.Fatalf("expected legacy awd instance without service_id to be filtered out, got %+v", items)
@@ -333,9 +333,9 @@ func TestInstanceServiceGetUserInstancesIncludesPendingInstance(t *testing.T) {
 
 	service := runtimeqry.NewInstanceService(runtimeinfrarepo.NewRepository(db))
 
-	items, err := service.GetUserInstancesWithContext(context.Background(), 2)
+	items, err := service.GetUserInstances(context.Background(), 2)
 	if err != nil {
-		t.Fatalf("GetUserInstancesWithContext() error = %v", err)
+		t.Fatalf("GetUserInstances() error = %v", err)
 	}
 	if len(items) != 1 || items[0].ID != 1003 || items[0].Status != model.InstanceStatusPending {
 		t.Fatalf("expected pending instance to be visible, got %+v", items)
@@ -372,9 +372,9 @@ func TestInstanceServiceGetUserInstancesIncludesFailedInstance(t *testing.T) {
 
 	service := runtimeqry.NewInstanceService(runtimeinfrarepo.NewRepository(db))
 
-	items, err := service.GetUserInstancesWithContext(context.Background(), 2)
+	items, err := service.GetUserInstances(context.Background(), 2)
 	if err != nil {
-		t.Fatalf("GetUserInstancesWithContext() error = %v", err)
+		t.Fatalf("GetUserInstances() error = %v", err)
 	}
 	if len(items) != 1 || items[0].ID != 1004 || items[0].Status != model.InstanceStatusFailed {
 		t.Fatalf("expected failed instance to be visible, got %+v", items)
@@ -412,9 +412,9 @@ func TestInstanceServiceGetUserInstancesMarksExpiredRunningInstance(t *testing.T
 
 	service := runtimeqry.NewInstanceService(runtimeinfrarepo.NewRepository(db))
 
-	items, err := service.GetUserInstancesWithContext(context.Background(), 2)
+	items, err := service.GetUserInstances(context.Background(), 2)
 	if err != nil {
-		t.Fatalf("GetUserInstancesWithContext() error = %v", err)
+		t.Fatalf("GetUserInstances() error = %v", err)
 	}
 	if len(items) != 1 || items[0].ID != 1005 {
 		t.Fatalf("expected expired instance to remain visible, got %+v", items)
@@ -455,7 +455,7 @@ func TestInstanceServiceGetAccessURLRejectsExpiredRunningInstance(t *testing.T) 
 
 	service := runtimeqry.NewInstanceService(runtimeinfrarepo.NewRepository(db))
 
-	_, err := service.GetAccessURLWithContext(context.Background(), 1006, 2)
+	_, err := service.GetAccessURL(context.Background(), 1006, 2)
 	if err == nil || err.Error() != errcode.ErrInstanceExpired.Error() {
 		t.Fatalf("expected instance expired error, got %v", err)
 	}

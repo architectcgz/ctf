@@ -12,7 +12,7 @@ type ManagedContainerStat struct {
 }
 
 type RuntimeQuery interface {
-	CountRunningWithContext(ctx context.Context) (int64, error)
+	CountRunning(ctx context.Context) (int64, error)
 }
 
 type RuntimeStatsProvider interface {

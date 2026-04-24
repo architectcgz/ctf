@@ -12,12 +12,12 @@ func NewCountRunningService(repo runtimeports.CountRunningRepository) *CountRunn
 	return &CountRunningService{repo: repo}
 }
 
-func (s *CountRunningService) CountRunningWithContext(ctx context.Context) (int64, error) {
+func (s *CountRunningService) CountRunning(ctx context.Context) (int64, error) {
 	if s == nil || s.repo == nil {
 		return 0, nil
 	}
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	return s.repo.CountRunningWithContext(ctx)
+	return s.repo.CountRunning(ctx)
 }

@@ -11,14 +11,14 @@ type stubCountRunningRepository struct {
 	countRunningWithContextFn func(ctx context.Context) (int64, error)
 }
 
-func (s *stubCountRunningRepository) CountRunningWithContext(ctx context.Context) (int64, error) {
+func (s *stubCountRunningRepository) CountRunning(ctx context.Context) (int64, error) {
 	if s.countRunningWithContextFn != nil {
 		return s.countRunningWithContextFn(ctx)
 	}
 	return 0, nil
 }
 
-func TestCountRunningServiceCountRunningWithContextPropagatesContextToRepository(t *testing.T) {
+func TestCountRunningServiceCountRunningPropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := runtimeCountRunningContextKey("count-running")
@@ -35,14 +35,14 @@ func TestCountRunningServiceCountRunningWithContextPropagatesContextToRepository
 	})
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	count, err := service.CountRunningWithContext(ctx)
+	count, err := service.CountRunning(ctx)
 	if err != nil {
-		t.Fatalf("CountRunningWithContext() error = %v", err)
+		t.Fatalf("CountRunning() error = %v", err)
 	}
 	if !called {
 		t.Fatal("expected context-aware count running repository to be called")
 	}
 	if count != 7 {
-		t.Fatalf("CountRunningWithContext() count = %d, want 7", count)
+		t.Fatalf("CountRunning() count = %d, want 7", count)
 	}
 }
