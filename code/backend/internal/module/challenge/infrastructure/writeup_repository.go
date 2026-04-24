@@ -480,11 +480,11 @@ func (r *TemplateRepository) dbWithContext(ctx context.Context) *gorm.DB {
 	return r.db.WithContext(ctx)
 }
 
-func (r *TemplateRepository) CreateWithContext(ctx context.Context, template *model.EnvironmentTemplate) error {
+func (r *TemplateRepository) Create(ctx context.Context, template *model.EnvironmentTemplate) error {
 	return r.dbWithContext(ctx).Create(template).Error
 }
 
-func (r *TemplateRepository) UpdateWithContext(ctx context.Context, template *model.EnvironmentTemplate) error {
+func (r *TemplateRepository) Update(ctx context.Context, template *model.EnvironmentTemplate) error {
 	return r.dbWithContext(ctx).Save(template).Error
 }
 
@@ -492,7 +492,7 @@ func (r *TemplateRepository) DeleteWithContext(ctx context.Context, id int64) er
 	return r.dbWithContext(ctx).Delete(&model.EnvironmentTemplate{}, id).Error
 }
 
-func (r *TemplateRepository) FindByIDWithContext(ctx context.Context, id int64) (*model.EnvironmentTemplate, error) {
+func (r *TemplateRepository) FindByID(ctx context.Context, id int64) (*model.EnvironmentTemplate, error) {
 	var template model.EnvironmentTemplate
 	err := r.dbWithContext(ctx).Where("id = ?", id).First(&template).Error
 	if err != nil {
@@ -501,7 +501,7 @@ func (r *TemplateRepository) FindByIDWithContext(ctx context.Context, id int64) 
 	return &template, nil
 }
 
-func (r *TemplateRepository) ListWithContext(ctx context.Context, keyword string) ([]*model.EnvironmentTemplate, error) {
+func (r *TemplateRepository) List(ctx context.Context, keyword string) ([]*model.EnvironmentTemplate, error) {
 	var templates []*model.EnvironmentTemplate
 	db := r.dbWithContext(ctx).Model(&model.EnvironmentTemplate{})
 	if keyword != "" {
@@ -512,7 +512,7 @@ func (r *TemplateRepository) ListWithContext(ctx context.Context, keyword string
 	return templates, err
 }
 
-func (r *TemplateRepository) IncrementUsageWithContext(ctx context.Context, id int64) error {
+func (r *TemplateRepository) IncrementUsage(ctx context.Context, id int64) error {
 	return r.dbWithContext(ctx).Model(&model.EnvironmentTemplate{}).
 		Where("id = ?", id).
 		UpdateColumn("usage_count", gorm.Expr("usage_count + 1")).Error

@@ -120,12 +120,12 @@ type ImageRepository interface {
 }
 
 type EnvironmentTemplateRepository interface {
-	CreateWithContext(ctx context.Context, template *model.EnvironmentTemplate) error
-	UpdateWithContext(ctx context.Context, template *model.EnvironmentTemplate) error
+	Create(ctx context.Context, template *model.EnvironmentTemplate) error
+	Update(ctx context.Context, template *model.EnvironmentTemplate) error
 	DeleteWithContext(ctx context.Context, id int64) error
-	FindByIDWithContext(ctx context.Context, id int64) (*model.EnvironmentTemplate, error)
-	ListWithContext(ctx context.Context, keyword string) ([]*model.EnvironmentTemplate, error)
-	IncrementUsageWithContext(ctx context.Context, id int64) error
+	FindByID(ctx context.Context, id int64) (*model.EnvironmentTemplate, error)
+	List(ctx context.Context, keyword string) ([]*model.EnvironmentTemplate, error)
+	IncrementUsage(ctx context.Context, id int64) error
 }
 
 type TagRepository interface {

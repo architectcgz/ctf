@@ -43,7 +43,7 @@ func (s *TopologyService) GetChallengeTopology(ctx context.Context, challengeID 
 }
 
 func (s *TopologyService) GetTemplate(ctx context.Context, id int64) (*dto.EnvironmentTemplateResp, error) {
-	item, err := s.templateRepo.FindByIDWithContext(ctx, id)
+	item, err := s.templateRepo.FindByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrNotFound
@@ -54,7 +54,7 @@ func (s *TopologyService) GetTemplate(ctx context.Context, id int64) (*dto.Envir
 }
 
 func (s *TopologyService) ListTemplates(ctx context.Context, keyword string) ([]*dto.EnvironmentTemplateResp, error) {
-	items, err := s.templateRepo.ListWithContext(ctx, strings.TrimSpace(keyword))
+	items, err := s.templateRepo.List(ctx, strings.TrimSpace(keyword))
 	if err != nil {
 		return nil, err
 	}

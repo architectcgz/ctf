@@ -60,7 +60,7 @@ func (s *TopologyService) SaveChallengeTopology(ctx context.Context, challengeID
 		return nil, err
 	}
 	if templateID != nil {
-		if err := s.templateRepo.IncrementUsageWithContext(ctx, *templateID); err != nil {
+		if err := s.templateRepo.IncrementUsage(ctx, *templateID); err != nil {
 			return nil, err
 		}
 	}
@@ -111,14 +111,14 @@ func (s *TopologyService) CreateTemplate(ctx context.Context, req *dto.UpsertEnv
 		EntryNodeKey: entryNodeKey,
 		Spec:         rawSpec,
 	}
-	if err := s.templateRepo.CreateWithContext(ctx, item); err != nil {
+	if err := s.templateRepo.Create(ctx, item); err != nil {
 		return nil, err
 	}
 	return domain.TemplateRespFromModel(item)
 }
 
 func (s *TopologyService) UpdateTemplate(ctx context.Context, id int64, req *dto.UpsertEnvironmentTemplateReq) (*dto.EnvironmentTemplateResp, error) {
-	item, err := s.templateRepo.FindByIDWithContext(ctx, id)
+	item, err := s.templateRepo.FindByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrNotFound
@@ -137,14 +137,14 @@ func (s *TopologyService) UpdateTemplate(ctx context.Context, id int64, req *dto
 	item.EntryNodeKey = entryNodeKey
 	item.Spec = rawSpec
 	item.UpdatedAt = time.Now()
-	if err := s.templateRepo.UpdateWithContext(ctx, item); err != nil {
+	if err := s.templateRepo.Update(ctx, item); err != nil {
 		return nil, err
 	}
 	return domain.TemplateRespFromModel(item)
 }
 
 func (s *TopologyService) DeleteTemplate(ctx context.Context, id int64) error {
-	if _, err := s.templateRepo.FindByIDWithContext(ctx, id); err != nil {
+	if _, err := s.templateRepo.FindByID(ctx, id); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return errcode.ErrNotFound
 		}
@@ -155,7 +155,7 @@ func (s *TopologyService) DeleteTemplate(ctx context.Context, id int64) error {
 
 func (s *TopologyService) resolveTopologyPayload(ctx context.Context, req *dto.SaveChallengeTopologyReq) (rawSpec, entryNodeKey string, templateID *int64, err error) {
 	if req.TemplateID != nil {
-		item, findErr := s.templateRepo.FindByIDWithContext(ctx, *req.TemplateID)
+		item, findErr := s.templateRepo.FindByID(ctx, *req.TemplateID)
 		if findErr != nil {
 			if errors.Is(findErr, gorm.ErrRecordNotFound) {
 				return "", "", nil, errcode.ErrNotFound.WithCause(errors.New("环境模板不存在"))
