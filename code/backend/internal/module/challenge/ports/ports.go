@@ -33,7 +33,7 @@ type ChallengeQueryRepository interface {
 	FindByIDWithContext(ctx context.Context, id int64) (*model.Challenge, error)
 	ListWithContext(ctx context.Context, query *dto.ChallengeQuery) ([]*model.Challenge, int64, error)
 	ListHintsByChallengeIDWithContext(ctx context.Context, challengeID int64) ([]*model.ChallengeHint, error)
-	GetSolvedStatusWithContext(ctx context.Context, userID, challengeID int64) (bool, error)
+	GetSolvedStatus(ctx context.Context, userID, challengeID int64) (bool, error)
 	GetSolvedCountWithContext(ctx context.Context, challengeID int64) (int64, error)
 	GetTotalAttemptsWithContext(ctx context.Context, challengeID int64) (int64, error)
 	BatchGetSolvedStatusWithContext(ctx context.Context, userID int64, challengeIDs []int64) (map[int64]bool, error)
@@ -65,7 +65,7 @@ type ChallengeWriteupRepository interface {
 	UpsertWriteup(ctx context.Context, writeup *model.ChallengeWriteup) error
 	DeleteWriteupByChallengeID(ctx context.Context, challengeID int64) error
 	FindReleasedWriteupByChallengeID(ctx context.Context, challengeID int64, now time.Time) (*model.ChallengeWriteup, error)
-	GetSolvedStatusWithContext(ctx context.Context, userID, challengeID int64) (bool, error)
+	GetSolvedStatus(ctx context.Context, userID, challengeID int64) (bool, error)
 	FindSubmissionWriteupByUserChallenge(ctx context.Context, userID, challengeID int64) (*model.SubmissionWriteup, error)
 	FindSubmissionWriteupByID(ctx context.Context, id int64) (*model.SubmissionWriteup, error)
 	UpsertSubmissionWriteup(ctx context.Context, writeup *model.SubmissionWriteup) error

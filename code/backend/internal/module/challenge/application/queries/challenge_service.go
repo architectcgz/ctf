@@ -153,7 +153,7 @@ func (s *ChallengeService) GetPublishedChallenge(ctx context.Context, userID, ch
 
 	var isSolved bool
 	if userID > 0 {
-		isSolved, err = s.repo.GetSolvedStatusWithContext(ctx, userID, challengeID)
+		isSolved, err = s.repo.GetSolvedStatus(ctx, userID, challengeID)
 		if err != nil {
 			s.log.Error("failed to get solved status", zap.Int64("user_id", userID), zap.Int64("challenge_id", challengeID), zap.Error(err))
 		}

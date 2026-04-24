@@ -83,7 +83,7 @@ func (s *writeupCommandContextStub) FindReleasedWriteupByChallengeID(ctx context
 	return nil, nil
 }
 
-func (s *writeupCommandContextStub) GetSolvedStatusWithContext(ctx context.Context, userID, challengeID int64) (bool, error) {
+func (s *writeupCommandContextStub) GetSolvedStatus(ctx context.Context, userID, challengeID int64) (bool, error) {
 	if s.getSolvedStatusWithContextFn != nil {
 		return s.getSolvedStatusWithContextFn(ctx, userID, challengeID)
 	}
