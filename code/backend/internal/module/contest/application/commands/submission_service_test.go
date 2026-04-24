@@ -182,7 +182,7 @@ func TestSubmissionServiceSubmitFlagInContestRejectsManualReviewChallenges(t *te
 	if err != nil {
 		t.Fatalf("new flag service: %v", err)
 	}
-	if err := flagService.ConfigureManualReviewFlag(challengeID); err != nil {
+	if err := flagService.ConfigureManualReviewFlag(context.Background(), challengeID); err != nil {
 		t.Fatalf("configure manual review flag: %v", err)
 	}
 
@@ -265,7 +265,7 @@ func TestSubmissionServiceSubmitFlagInContestAcceptsSharedStaticFlagChallenge(t 
 		Update("instance_sharing", model.InstanceSharingShared).Error; err != nil {
 		t.Fatalf("set shared instance scope: %v", err)
 	}
-	if err := flagService.ConfigureStaticFlag(challengeID, "flag{contest-shared-static}", "flag"); err != nil {
+	if err := flagService.ConfigureStaticFlag(context.Background(), challengeID, "flag{contest-shared-static}", "flag"); err != nil {
 		t.Fatalf("configure shared static flag: %v", err)
 	}
 
@@ -895,7 +895,7 @@ func createContestSubmissionFixture(t *testing.T, db *gorm.DB, contestID, challe
 	if err != nil {
 		t.Fatalf("new flag service: %v", err)
 	}
-	if err := flagService.ConfigureStaticFlag(challengeID, "flag{contest-dynamic}", "flag"); err != nil {
+	if err := flagService.ConfigureStaticFlag(context.Background(), challengeID, "flag{contest-dynamic}", "flag"); err != nil {
 		t.Fatalf("configure static flag: %v", err)
 	}
 }

@@ -10,10 +10,10 @@ import (
 )
 
 type topologyCommandRepoStub struct {
-	findByIDWithContextFn                         func(ctx context.Context, id int64) (*model.Challenge, error)
-	findChallengeTopologyByChallengeIDWithCtxFn   func(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error)
-	upsertChallengeTopologyWithContextFn          func(ctx context.Context, topology *model.ChallengeTopology) error
-	deleteChallengeTopologyByChallengeIDWithCtxFn func(ctx context.Context, challengeID int64) error
+	findByIDWithContextFn                  func(ctx context.Context, id int64) (*model.Challenge, error)
+	findChallengeTopologyByChallengeIDFn   func(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error)
+	upsertChallengeTopologyFn              func(ctx context.Context, topology *model.ChallengeTopology) error
+	deleteChallengeTopologyByChallengeIDFn func(ctx context.Context, challengeID int64) error
 }
 
 func (s *topologyCommandRepoStub) FindByIDWithContext(ctx context.Context, id int64) (*model.Challenge, error) {
@@ -23,23 +23,23 @@ func (s *topologyCommandRepoStub) FindByIDWithContext(ctx context.Context, id in
 	return nil, nil
 }
 
-func (s *topologyCommandRepoStub) FindChallengeTopologyByChallengeIDWithContext(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error) {
-	if s.findChallengeTopologyByChallengeIDWithCtxFn != nil {
-		return s.findChallengeTopologyByChallengeIDWithCtxFn(ctx, challengeID)
+func (s *topologyCommandRepoStub) FindChallengeTopologyByChallengeID(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error) {
+	if s.findChallengeTopologyByChallengeIDFn != nil {
+		return s.findChallengeTopologyByChallengeIDFn(ctx, challengeID)
 	}
 	return nil, nil
 }
 
-func (s *topologyCommandRepoStub) UpsertChallengeTopologyWithContext(ctx context.Context, topology *model.ChallengeTopology) error {
-	if s.upsertChallengeTopologyWithContextFn != nil {
-		return s.upsertChallengeTopologyWithContextFn(ctx, topology)
+func (s *topologyCommandRepoStub) UpsertChallengeTopology(ctx context.Context, topology *model.ChallengeTopology) error {
+	if s.upsertChallengeTopologyFn != nil {
+		return s.upsertChallengeTopologyFn(ctx, topology)
 	}
 	return nil
 }
 
-func (s *topologyCommandRepoStub) DeleteChallengeTopologyByChallengeIDWithContext(ctx context.Context, challengeID int64) error {
-	if s.deleteChallengeTopologyByChallengeIDWithCtxFn != nil {
-		return s.deleteChallengeTopologyByChallengeIDWithCtxFn(ctx, challengeID)
+func (s *topologyCommandRepoStub) DeleteChallengeTopologyByChallengeID(ctx context.Context, challengeID int64) error {
+	if s.deleteChallengeTopologyByChallengeIDFn != nil {
+		return s.deleteChallengeTopologyByChallengeIDFn(ctx, challengeID)
 	}
 	return nil
 }
@@ -173,7 +173,7 @@ func TestTopologyServiceSaveChallengeTopologyPropagatesContextToRepositories(t *
 			}
 			return &model.Challenge{ID: id}, nil
 		},
-		upsertChallengeTopologyWithContextFn: func(ctx context.Context, topology *model.ChallengeTopology) error {
+		upsertChallengeTopologyFn: func(ctx context.Context, topology *model.ChallengeTopology) error {
 			upsertCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected upsert-topology ctx value %v, got %v", expectedCtxValue, got)
@@ -183,7 +183,7 @@ func TestTopologyServiceSaveChallengeTopologyPropagatesContextToRepositories(t *
 			}
 			return nil
 		},
-		findChallengeTopologyByChallengeIDWithCtxFn: func(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error) {
+		findChallengeTopologyByChallengeIDFn: func(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error) {
 			findSavedCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find-saved-topology ctx value %v, got %v", expectedCtxValue, got)
@@ -240,7 +240,7 @@ func TestTopologyServiceDeleteChallengeTopologyPropagatesContextToRepository(t *
 			}
 			return &model.Challenge{ID: id}, nil
 		},
-		deleteChallengeTopologyByChallengeIDWithCtxFn: func(ctx context.Context, challengeID int64) error {
+		deleteChallengeTopologyByChallengeIDFn: func(ctx context.Context, challengeID int64) error {
 			deleteCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected delete-topology ctx value %v, got %v", expectedCtxValue, got)

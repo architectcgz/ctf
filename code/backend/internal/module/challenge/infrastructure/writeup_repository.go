@@ -448,7 +448,7 @@ func (r *Repository) listTeacherSubmissionWriteups(
 	return items, total, nil
 }
 
-func (r *Repository) FindChallengeTopologyByChallengeIDWithContext(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error) {
+func (r *Repository) FindChallengeTopologyByChallengeID(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error) {
 	var topology model.ChallengeTopology
 	err := r.dbWithContext(ctx).Where("challenge_id = ?", challengeID).First(&topology).Error
 	if err != nil {
@@ -457,14 +457,14 @@ func (r *Repository) FindChallengeTopologyByChallengeIDWithContext(ctx context.C
 	return &topology, nil
 }
 
-func (r *Repository) UpsertChallengeTopologyWithContext(ctx context.Context, topology *model.ChallengeTopology) error {
+func (r *Repository) UpsertChallengeTopology(ctx context.Context, topology *model.ChallengeTopology) error {
 	return r.dbWithContext(ctx).Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "challenge_id"}},
 		DoUpdates: clause.AssignmentColumns([]string{"template_id", "entry_node_key", "spec", "updated_at", "deleted_at"}),
 	}).Create(topology).Error
 }
 
-func (r *Repository) DeleteChallengeTopologyByChallengeIDWithContext(ctx context.Context, challengeID int64) error {
+func (r *Repository) DeleteChallengeTopologyByChallengeID(ctx context.Context, challengeID int64) error {
 	return r.dbWithContext(ctx).Where("challenge_id = ?", challengeID).Delete(&model.ChallengeTopology{}).Error
 }
 

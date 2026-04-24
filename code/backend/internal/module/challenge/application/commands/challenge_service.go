@@ -194,7 +194,7 @@ func (s *ChallengeService) validateInstanceSharingConfig(ctx context.Context, ch
 	if s.topologyRepo == nil || challenge.ID <= 0 {
 		return nil
 	}
-	topology, err := s.topologyRepo.FindChallengeTopologyByChallengeIDWithContext(ctx, challenge.ID)
+	topology, err := s.topologyRepo.FindChallengeTopologyByChallengeID(ctx, challenge.ID)
 	switch {
 	case err == nil:
 	case errors.Is(err, gorm.ErrRecordNotFound):
@@ -688,7 +688,7 @@ func (s *ChallengeService) runPrecheck(ctx context.Context, challenge *model.Cha
 	if s.topologyRepo == nil {
 		return input, false, errcode.ErrInternal.WithCause(errors.New("challenge topology repository is not configured"))
 	}
-	topology, err := s.topologyRepo.FindChallengeTopologyByChallengeIDWithContext(ctx, challenge.ID)
+	topology, err := s.topologyRepo.FindChallengeTopologyByChallengeID(ctx, challenge.ID)
 	if err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			return input, false, err
