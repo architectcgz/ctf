@@ -344,7 +344,7 @@ func (r *Repository) GetTotalAttempts(ctx context.Context, challengeID int64) (i
 	return count, err
 }
 
-func (r *Repository) BatchGetSolvedStatusWithContext(ctx context.Context, userID int64, challengeIDs []int64) (map[int64]bool, error) {
+func (r *Repository) BatchGetSolvedStatus(ctx context.Context, userID int64, challengeIDs []int64) (map[int64]bool, error) {
 	if userID == 0 || len(challengeIDs) == 0 {
 		return make(map[int64]bool), nil
 	}
@@ -364,7 +364,7 @@ func (r *Repository) BatchGetSolvedStatusWithContext(ctx context.Context, userID
 	return statusMap, err
 }
 
-func (r *Repository) BatchGetSolvedCountWithContext(ctx context.Context, challengeIDs []int64) (map[int64]int64, error) {
+func (r *Repository) BatchGetSolvedCount(ctx context.Context, challengeIDs []int64) (map[int64]int64, error) {
 	if len(challengeIDs) == 0 {
 		return make(map[int64]int64), nil
 	}
@@ -386,7 +386,7 @@ func (r *Repository) BatchGetSolvedCountWithContext(ctx context.Context, challen
 	return countMap, err
 }
 
-func (r *Repository) BatchGetTotalAttemptsWithContext(ctx context.Context, challengeIDs []int64) (map[int64]int64, error) {
+func (r *Repository) BatchGetTotalAttempts(ctx context.Context, challengeIDs []int64) (map[int64]int64, error) {
 	if len(challengeIDs) == 0 {
 		return make(map[int64]int64), nil
 	}

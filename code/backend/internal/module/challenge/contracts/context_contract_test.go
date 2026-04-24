@@ -29,11 +29,11 @@ func (ctxOnlyContestChallengeContract) FindByIDWithContext(context.Context, int6
 	return nil, nil
 }
 
-func (ctxOnlyContestChallengeContract) BatchGetSolvedStatusWithContext(context.Context, int64, []int64) (map[int64]bool, error) {
+func (ctxOnlyContestChallengeContract) BatchGetSolvedStatus(context.Context, int64, []int64) (map[int64]bool, error) {
 	return nil, nil
 }
 
-func (ctxOnlyContestChallengeContract) BatchGetSolvedCountWithContext(context.Context, []int64) (map[int64]int64, error) {
+func (ctxOnlyContestChallengeContract) BatchGetSolvedCount(context.Context, []int64) (map[int64]int64, error) {
 	return nil, nil
 }
 
@@ -43,11 +43,11 @@ func (ctxOnlyChallengeContract) FindByIDWithContext(context.Context, int64) (*mo
 	return nil, nil
 }
 
-func (ctxOnlyChallengeContract) BatchGetSolvedStatusWithContext(context.Context, int64, []int64) (map[int64]bool, error) {
+func (ctxOnlyChallengeContract) BatchGetSolvedStatus(context.Context, int64, []int64) (map[int64]bool, error) {
 	return nil, nil
 }
 
-func (ctxOnlyChallengeContract) BatchGetSolvedCountWithContext(context.Context, []int64) (map[int64]int64, error) {
+func (ctxOnlyChallengeContract) BatchGetSolvedCount(context.Context, []int64) (map[int64]int64, error) {
 	return nil, nil
 }
 

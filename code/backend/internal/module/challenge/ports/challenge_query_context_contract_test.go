@@ -34,15 +34,15 @@ func (ctxOnlyChallengeQueryRepository) GetTotalAttempts(context.Context, int64) 
 	return 0, nil
 }
 
-func (ctxOnlyChallengeQueryRepository) BatchGetSolvedStatusWithContext(context.Context, int64, []int64) (map[int64]bool, error) {
+func (ctxOnlyChallengeQueryRepository) BatchGetSolvedStatus(context.Context, int64, []int64) (map[int64]bool, error) {
 	return nil, nil
 }
 
-func (ctxOnlyChallengeQueryRepository) BatchGetSolvedCountWithContext(context.Context, []int64) (map[int64]int64, error) {
+func (ctxOnlyChallengeQueryRepository) BatchGetSolvedCount(context.Context, []int64) (map[int64]int64, error) {
 	return nil, nil
 }
 
-func (ctxOnlyChallengeQueryRepository) BatchGetTotalAttemptsWithContext(context.Context, []int64) (map[int64]int64, error) {
+func (ctxOnlyChallengeQueryRepository) BatchGetTotalAttempts(context.Context, []int64) (map[int64]int64, error) {
 	return nil, nil
 }
 
