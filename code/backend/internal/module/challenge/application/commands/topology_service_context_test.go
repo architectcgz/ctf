@@ -10,33 +10,15 @@ import (
 )
 
 type topologyCommandRepoStub struct {
-	findByIDFn                                    func(id int64) (*model.Challenge, error)
 	findByIDWithContextFn                         func(ctx context.Context, id int64) (*model.Challenge, error)
-	findChallengeTopologyByChallengeIDFn          func(challengeID int64) (*model.ChallengeTopology, error)
 	findChallengeTopologyByChallengeIDWithCtxFn   func(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error)
-	upsertChallengeTopologyFn                     func(topology *model.ChallengeTopology) error
 	upsertChallengeTopologyWithContextFn          func(ctx context.Context, topology *model.ChallengeTopology) error
-	deleteChallengeTopologyByChallengeIDFn        func(challengeID int64) error
 	deleteChallengeTopologyByChallengeIDWithCtxFn func(ctx context.Context, challengeID int64) error
-}
-
-func (s *topologyCommandRepoStub) FindByID(id int64) (*model.Challenge, error) {
-	if s.findByIDFn != nil {
-		return s.findByIDFn(id)
-	}
-	return nil, nil
 }
 
 func (s *topologyCommandRepoStub) FindByIDWithContext(ctx context.Context, id int64) (*model.Challenge, error) {
 	if s.findByIDWithContextFn != nil {
 		return s.findByIDWithContextFn(ctx, id)
-	}
-	return s.FindByID(id)
-}
-
-func (s *topologyCommandRepoStub) FindChallengeTopologyByChallengeID(challengeID int64) (*model.ChallengeTopology, error) {
-	if s.findChallengeTopologyByChallengeIDFn != nil {
-		return s.findChallengeTopologyByChallengeIDFn(challengeID)
 	}
 	return nil, nil
 }
@@ -45,26 +27,12 @@ func (s *topologyCommandRepoStub) FindChallengeTopologyByChallengeIDWithContext(
 	if s.findChallengeTopologyByChallengeIDWithCtxFn != nil {
 		return s.findChallengeTopologyByChallengeIDWithCtxFn(ctx, challengeID)
 	}
-	return s.FindChallengeTopologyByChallengeID(challengeID)
-}
-
-func (s *topologyCommandRepoStub) UpsertChallengeTopology(topology *model.ChallengeTopology) error {
-	if s.upsertChallengeTopologyFn != nil {
-		return s.upsertChallengeTopologyFn(topology)
-	}
-	return nil
+	return nil, nil
 }
 
 func (s *topologyCommandRepoStub) UpsertChallengeTopologyWithContext(ctx context.Context, topology *model.ChallengeTopology) error {
 	if s.upsertChallengeTopologyWithContextFn != nil {
 		return s.upsertChallengeTopologyWithContextFn(ctx, topology)
-	}
-	return s.UpsertChallengeTopology(topology)
-}
-
-func (s *topologyCommandRepoStub) DeleteChallengeTopologyByChallengeID(challengeID int64) error {
-	if s.deleteChallengeTopologyByChallengeIDFn != nil {
-		return s.deleteChallengeTopologyByChallengeIDFn(challengeID)
 	}
 	return nil
 }
@@ -73,7 +41,7 @@ func (s *topologyCommandRepoStub) DeleteChallengeTopologyByChallengeIDWithContex
 	if s.deleteChallengeTopologyByChallengeIDWithCtxFn != nil {
 		return s.deleteChallengeTopologyByChallengeIDWithCtxFn(ctx, challengeID)
 	}
-	return s.DeleteChallengeTopologyByChallengeID(challengeID)
+	return nil
 }
 
 type topologyTemplateRepoStub struct {
