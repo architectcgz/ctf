@@ -605,7 +605,7 @@ func TestReviewManualReviewSubmissionApprovesAndTriggersScoreUpdate(t *testing.T
 		nil,
 	)
 
-	resp, err := service.ReviewManualReviewSubmissionWithContext(
+	resp, err := service.ReviewManualReviewSubmission(
 		context.Background(),
 		submissionID,
 		reviewerID,
@@ -616,7 +616,7 @@ func TestReviewManualReviewSubmissionApprovesAndTriggersScoreUpdate(t *testing.T
 		},
 	)
 	if err != nil {
-		t.Fatalf("ReviewManualReviewSubmissionWithContext() error = %v", err)
+		t.Fatalf("ReviewManualReviewSubmission() error = %v", err)
 	}
 	if resp.ReviewStatus != model.SubmissionReviewStatusApproved || !resp.IsCorrect || resp.Score != 120 {
 		t.Fatalf("unexpected review response: %+v", resp)
@@ -2205,7 +2205,7 @@ func TestSubmitFlagPropagatesContextToRepository(t *testing.T) {
 	}
 }
 
-func TestReviewManualReviewSubmissionWithContextPropagatesContextToRepository(t *testing.T) {
+func TestReviewManualReviewSubmissionPropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := practiceServiceContextKey("review")
@@ -2280,14 +2280,14 @@ func TestReviewManualReviewSubmissionWithContextPropagatesContextToRepository(t 
 	)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	if _, err := service.ReviewManualReviewSubmissionWithContext(
+	if _, err := service.ReviewManualReviewSubmission(
 		ctx,
 		91,
 		1001,
 		model.RoleTeacher,
 		&dto.ReviewManualReviewSubmissionReq{ReviewStatus: model.SubmissionReviewStatusApproved},
 	); err != nil {
-		t.Fatalf("ReviewManualReviewSubmissionWithContext() error = %v", err)
+		t.Fatalf("ReviewManualReviewSubmission() error = %v", err)
 	}
 	if !findRecordCalled {
 		t.Fatal("expected review record repository to be called")
@@ -2584,7 +2584,7 @@ func TestGetTeacherManualReviewSubmissionRejectsStudentRole(t *testing.T) {
 	}
 }
 
-func TestReviewManualReviewSubmissionWithContextRejectsStudentRole(t *testing.T) {
+func TestReviewManualReviewSubmissionRejectsStudentRole(t *testing.T) {
 	t.Parallel()
 
 	repo := &stubPracticeRepository{
@@ -2603,7 +2603,7 @@ func TestReviewManualReviewSubmissionWithContextRejectsStudentRole(t *testing.T)
 	}
 	service := NewService(repo, nil, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
 
-	_, err := service.ReviewManualReviewSubmissionWithContext(
+	_, err := service.ReviewManualReviewSubmission(
 		context.Background(),
 		91,
 		1001,
@@ -2619,7 +2619,7 @@ func TestReviewManualReviewSubmissionWithContextRejectsStudentRole(t *testing.T)
 	}
 }
 
-func TestReviewManualReviewSubmissionWithContextRejectsInvalidReviewStatus(t *testing.T) {
+func TestReviewManualReviewSubmissionRejectsInvalidReviewStatus(t *testing.T) {
 	t.Parallel()
 
 	repo := &stubPracticeRepository{
@@ -2638,7 +2638,7 @@ func TestReviewManualReviewSubmissionWithContextRejectsInvalidReviewStatus(t *te
 	}
 	service := NewService(repo, nil, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
 
-	_, err := service.ReviewManualReviewSubmissionWithContext(
+	_, err := service.ReviewManualReviewSubmission(
 		context.Background(),
 		91,
 		1001,
@@ -2654,7 +2654,7 @@ func TestReviewManualReviewSubmissionWithContextRejectsInvalidReviewStatus(t *te
 	}
 }
 
-func TestReviewManualReviewSubmissionWithContextRejectsOversizedReviewComment(t *testing.T) {
+func TestReviewManualReviewSubmissionRejectsOversizedReviewComment(t *testing.T) {
 	t.Parallel()
 
 	repo := &stubPracticeRepository{
@@ -2673,7 +2673,7 @@ func TestReviewManualReviewSubmissionWithContextRejectsOversizedReviewComment(t 
 	}
 	service := NewService(repo, nil, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
 
-	_, err := service.ReviewManualReviewSubmissionWithContext(
+	_, err := service.ReviewManualReviewSubmission(
 		context.Background(),
 		91,
 		1001,
@@ -2692,7 +2692,7 @@ func TestReviewManualReviewSubmissionWithContextRejectsOversizedReviewComment(t 
 	}
 }
 
-func TestReviewManualReviewSubmissionWithContextRejectsApprovalAfterChallengeAlreadySolved(t *testing.T) {
+func TestReviewManualReviewSubmissionRejectsApprovalAfterChallengeAlreadySolved(t *testing.T) {
 	t.Parallel()
 
 	now := time.Now()
@@ -2756,7 +2756,7 @@ func TestReviewManualReviewSubmissionWithContextRejectsApprovalAfterChallengeAlr
 		nil,
 	)
 
-	_, err := service.ReviewManualReviewSubmissionWithContext(
+	_, err := service.ReviewManualReviewSubmission(
 		context.Background(),
 		91,
 		1001,
