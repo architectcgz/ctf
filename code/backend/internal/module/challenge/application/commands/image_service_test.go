@@ -38,7 +38,7 @@ func TestImageServiceDeleteImageReturnsInUseWhenChallengeReferencesImage(t *test
 		nil,
 	)
 
-	err := service.DeleteImage(image.ID)
+	err := service.DeleteImage(context.Background(), image.ID)
 	if err == nil || err.Error() != errcode.ErrImageInUse.Error() {
 		t.Fatalf("expected image in use error, got %v", err)
 	}
@@ -60,7 +60,7 @@ func TestImageServiceDeleteImageRemovesUnreferencedImage(t *testing.T) {
 		nil,
 	)
 
-	if err := service.DeleteImage(image.ID); err != nil {
+	if err := service.DeleteImage(context.Background(), image.ID); err != nil {
 		t.Fatalf("DeleteImage() error = %v", err)
 	}
 
@@ -73,7 +73,7 @@ func TestImageServiceDeleteImageRemovesUnreferencedImage(t *testing.T) {
 	}
 }
 
-func TestImageServiceCreateImageWithContextHonorsCancellation(t *testing.T) {
+func TestImageServiceCreateImageHonorsCancellation(t *testing.T) {
 	t.Parallel()
 
 	db := testsupport.SetupTestDB(t)
@@ -93,7 +93,7 @@ func TestImageServiceCreateImageWithContextHonorsCancellation(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 
-	_, err := service.CreateImageWithContext(ctx, &dto.CreateImageReq{
+	_, err := service.CreateImage(ctx, &dto.CreateImageReq{
 		Name: "web",
 		Tag:  "latest",
 	})
@@ -128,7 +128,7 @@ func TestImageServiceCloseCancelsAsyncDelete(t *testing.T) {
 		nil,
 	)
 
-	if err := service.DeleteImage(image.ID); err != nil {
+	if err := service.DeleteImage(context.Background(), image.ID); err != nil {
 		t.Fatalf("DeleteImage() error = %v", err)
 	}
 
