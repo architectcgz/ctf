@@ -29,9 +29,9 @@ type topologyCommandService interface {
 }
 
 type topologyQueryService interface {
-	GetChallengeTopologyWithContext(ctx context.Context, challengeID int64) (*dto.ChallengeTopologyResp, error)
-	GetTemplateWithContext(ctx context.Context, id int64) (*dto.EnvironmentTemplateResp, error)
-	ListTemplatesWithContext(ctx context.Context, keyword string) ([]*dto.EnvironmentTemplateResp, error)
+	GetChallengeTopology(ctx context.Context, challengeID int64) (*dto.ChallengeTopologyResp, error)
+	GetTemplate(ctx context.Context, id int64) (*dto.EnvironmentTemplateResp, error)
+	ListTemplates(ctx context.Context, keyword string) ([]*dto.EnvironmentTemplateResp, error)
 }
 
 func NewTopologyHandler(commands topologyCommandService, queries topologyQueryService) *TopologyHandler {
@@ -63,7 +63,7 @@ func (h *TopologyHandler) GetChallengeTopology(c *gin.Context) {
 		response.InvalidParams(c, "无效的 challenge id")
 		return
 	}
-	resp, err := h.queries.GetChallengeTopologyWithContext(c.Request.Context(), challengeID)
+	resp, err := h.queries.GetChallengeTopology(c.Request.Context(), challengeID)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -123,7 +123,7 @@ func (h *TopologyHandler) GetTemplate(c *gin.Context) {
 		response.InvalidParams(c, "无效的 template id")
 		return
 	}
-	resp, err := h.queries.GetTemplateWithContext(c.Request.Context(), id)
+	resp, err := h.queries.GetTemplate(c.Request.Context(), id)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -132,7 +132,7 @@ func (h *TopologyHandler) GetTemplate(c *gin.Context) {
 }
 
 func (h *TopologyHandler) ListTemplates(c *gin.Context) {
-	resp, err := h.queries.ListTemplatesWithContext(c.Request.Context(), c.Query("keyword"))
+	resp, err := h.queries.ListTemplates(c.Request.Context(), c.Query("keyword"))
 	if err != nil {
 		response.FromError(c, err)
 		return

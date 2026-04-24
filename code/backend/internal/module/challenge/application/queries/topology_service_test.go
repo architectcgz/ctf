@@ -128,9 +128,9 @@ func TestTopologyServiceGetChallengeTopologyWithContextPropagatesContextToReposi
 	service := NewTopologyService(repo, nil)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.GetChallengeTopologyWithContext(ctx, 11)
+	resp, err := service.GetChallengeTopology(ctx, 11)
 	if err != nil {
-		t.Fatalf("GetChallengeTopologyWithContext() error = %v", err)
+		t.Fatalf("GetChallengeTopology() error = %v", err)
 	}
 	if !findChallengeCalled || !findTopologyCalled {
 		t.Fatalf("expected repository calls, got challenge=%v topology=%v", findChallengeCalled, findTopologyCalled)
@@ -158,9 +158,9 @@ func TestTopologyServiceGetTemplateWithContextPropagatesContextToRepository(t *t
 	service := NewTopologyService(nil, templateRepo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.GetTemplateWithContext(ctx, 21)
+	resp, err := service.GetTemplate(ctx, 21)
 	if err != nil {
-		t.Fatalf("GetTemplateWithContext() error = %v", err)
+		t.Fatalf("GetTemplate() error = %v", err)
 	}
 	if !findTemplateCalled {
 		t.Fatal("expected template repository find to be called")
@@ -191,9 +191,9 @@ func TestTopologyServiceListTemplatesWithContextPropagatesContextToRepository(t 
 	service := NewTopologyService(nil, templateRepo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.ListTemplatesWithContext(ctx, " web ")
+	resp, err := service.ListTemplates(ctx, " web ")
 	if err != nil {
-		t.Fatalf("ListTemplatesWithContext() error = %v", err)
+		t.Fatalf("ListTemplates() error = %v", err)
 	}
 	if !listCalled {
 		t.Fatal("expected template repository list to be called")
