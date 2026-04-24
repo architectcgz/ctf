@@ -41,7 +41,7 @@ func NewRuntimeCleanupService(engine runtimeCleanupEngine, logger *zap.Logger) *
 
 // RemoveContainer 删除单个容器。
 func (s *RuntimeCleanupService) RemoveContainer(ctx context.Context, containerID string) error {
-	return s.removeContainerWithContext(normalizeContext(ctx), containerID)
+	return s.removeContainer(normalizeContext(ctx), containerID)
 }
 
 // CleanupRuntime 清理实例对应的容器、网络和 ACL 规则。
@@ -52,7 +52,7 @@ func (s *RuntimeCleanupService) CleanupRuntime(ctx context.Context, instance *mo
 	}
 
 	resources := runtimedomain.ExtractManagedResources(instance)
-	if err := s.removeACLRulesWithContext(ctx, resources.ACLRules); err != nil {
+	if err := s.removeACLRules(ctx, resources.ACLRules); err != nil {
 		s.logger.Warn("删除实例 ACL 规则失败", zap.Int64("instance_id", instance.ID), zap.Error(err))
 	}
 	for _, containerID := range resources.ContainerIDs {
@@ -61,14 +61,14 @@ func (s *RuntimeCleanupService) CleanupRuntime(ctx context.Context, instance *mo
 		}
 	}
 	for _, networkID := range resources.NetworkIDs {
-		if err := s.removeNetworkWithContext(ctx, networkID); err != nil {
+		if err := s.removeNetwork(ctx, networkID); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (s *RuntimeCleanupService) removeACLRulesWithContext(ctx context.Context, rules []model.InstanceRuntimeACLRule) error {
+func (s *RuntimeCleanupService) removeACLRules(ctx context.Context, rules []model.InstanceRuntimeACLRule) error {
 	if len(rules) == 0 {
 		return nil
 	}
@@ -81,7 +81,7 @@ func (s *RuntimeCleanupService) removeACLRulesWithContext(ctx context.Context, r
 	return s.engine.RemoveACLRules(timeoutCtx, rules)
 }
 
-func (s *RuntimeCleanupService) removeContainerWithContext(ctx context.Context, containerID string) error {
+func (s *RuntimeCleanupService) removeContainer(ctx context.Context, containerID string) error {
 	if containerID == "" {
 		return nil
 	}
@@ -103,7 +103,7 @@ func (s *RuntimeCleanupService) removeContainerWithContext(ctx context.Context, 
 	return nil
 }
 
-func (s *RuntimeCleanupService) removeNetworkWithContext(ctx context.Context, networkID string) error {
+func (s *RuntimeCleanupService) removeNetwork(ctx context.Context, networkID string) error {
 	if networkID == "" {
 		return nil
 	}
