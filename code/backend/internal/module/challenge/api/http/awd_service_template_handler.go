@@ -20,12 +20,9 @@ type AWDServiceTemplateHandler struct {
 }
 
 type awdServiceTemplateCommandService interface {
-	CreateTemplate(actorUserID int64, req *dto.CreateAWDServiceTemplateReq) (*dto.AWDServiceTemplateResp, error)
-	CreateTemplateWithContext(ctx context.Context, actorUserID int64, req *dto.CreateAWDServiceTemplateReq) (*dto.AWDServiceTemplateResp, error)
-	UpdateTemplate(id int64, req *dto.UpdateAWDServiceTemplateReq) (*dto.AWDServiceTemplateResp, error)
-	UpdateTemplateWithContext(ctx context.Context, id int64, req *dto.UpdateAWDServiceTemplateReq) (*dto.AWDServiceTemplateResp, error)
-	DeleteTemplate(id int64) error
-	DeleteTemplateWithContext(ctx context.Context, id int64) error
+	CreateTemplate(ctx context.Context, actorUserID int64, req *dto.CreateAWDServiceTemplateReq) (*dto.AWDServiceTemplateResp, error)
+	UpdateTemplate(ctx context.Context, id int64, req *dto.UpdateAWDServiceTemplateReq) (*dto.AWDServiceTemplateResp, error)
+	DeleteTemplate(ctx context.Context, id int64) error
 	PreviewImport(actorUserID int64, fileName string, reader io.Reader) (*dto.AWDServiceTemplateImportPreviewResp, error)
 	PreviewImportWithContext(ctx context.Context, actorUserID int64, fileName string, reader io.Reader) (*dto.AWDServiceTemplateImportPreviewResp, error)
 	ListImports(actorUserID int64) ([]dto.AWDServiceTemplateImportPreviewResp, error)
@@ -51,7 +48,7 @@ func (h *AWDServiceTemplateHandler) CreateTemplate(c *gin.Context) {
 		response.ValidationError(c, err)
 		return
 	}
-	resp, err := h.commands.CreateTemplateWithContext(c.Request.Context(), authctx.MustCurrentUser(c).UserID, &req)
+	resp, err := h.commands.CreateTemplate(c.Request.Context(), authctx.MustCurrentUser(c).UserID, &req)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -98,7 +95,7 @@ func (h *AWDServiceTemplateHandler) UpdateTemplate(c *gin.Context) {
 		response.ValidationError(c, err)
 		return
 	}
-	resp, err := h.commands.UpdateTemplateWithContext(c.Request.Context(), id, &req)
+	resp, err := h.commands.UpdateTemplate(c.Request.Context(), id, &req)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -112,7 +109,7 @@ func (h *AWDServiceTemplateHandler) DeleteTemplate(c *gin.Context) {
 		response.InvalidParams(c, "无效的 AWD Service Template ID")
 		return
 	}
-	if err := h.commands.DeleteTemplateWithContext(c.Request.Context(), id); err != nil {
+	if err := h.commands.DeleteTemplate(c.Request.Context(), id); err != nil {
 		response.FromError(c, err)
 		return
 	}

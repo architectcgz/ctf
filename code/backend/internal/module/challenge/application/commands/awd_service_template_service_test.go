@@ -15,7 +15,7 @@ func TestAWDServiceTemplateServiceCreateTemplate(t *testing.T) {
 	repo := challengeinfra.NewRepository(db)
 	service := NewAWDServiceTemplateService(repo)
 
-	resp, err := service.CreateTemplateWithContext(context.Background(), 2001, &dto.CreateAWDServiceTemplateReq{
+	resp, err := service.CreateTemplate(context.Background(), 2001, &dto.CreateAWDServiceTemplateReq{
 		Name:           "Bank Portal AWD",
 		Slug:           "bank-portal-awd",
 		Category:       "web",
@@ -25,7 +25,7 @@ func TestAWDServiceTemplateServiceCreateTemplate(t *testing.T) {
 		DeploymentMode: string(model.AWDDeploymentModeSingleContainer),
 	})
 	if err != nil {
-		t.Fatalf("CreateTemplateWithContext() error = %v", err)
+		t.Fatalf("CreateTemplate() error = %v", err)
 	}
 	if resp.ID == 0 {
 		t.Fatal("expected created template id")
@@ -56,12 +56,12 @@ func TestAWDServiceTemplateServiceUpdateTemplate(t *testing.T) {
 		t.Fatalf("CreateAWDServiceTemplateWithContext() error = %v", err)
 	}
 
-	resp, err := service.UpdateTemplateWithContext(context.Background(), template.ID, &dto.UpdateAWDServiceTemplateReq{
+	resp, err := service.UpdateTemplate(context.Background(), template.ID, &dto.UpdateAWDServiceTemplateReq{
 		Name:   "Bank Portal AWD",
 		Status: string(model.AWDServiceTemplateStatusPublished),
 	})
 	if err != nil {
-		t.Fatalf("UpdateTemplateWithContext() error = %v", err)
+		t.Fatalf("UpdateTemplate() error = %v", err)
 	}
 	if resp.Name != "Bank Portal AWD" {
 		t.Fatalf("unexpected name: %s", resp.Name)

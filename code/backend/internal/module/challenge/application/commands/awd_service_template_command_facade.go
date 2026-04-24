@@ -26,41 +26,23 @@ func NewAWDServiceTemplateCommandFacade(
 }
 
 func (s *AWDServiceTemplateCommandFacade) CreateTemplate(
-	actorUserID int64,
-	req *dto.CreateAWDServiceTemplateReq,
-) (*dto.AWDServiceTemplateResp, error) {
-	return s.core.CreateTemplate(actorUserID, req)
-}
-
-func (s *AWDServiceTemplateCommandFacade) CreateTemplateWithContext(
 	ctx context.Context,
 	actorUserID int64,
 	req *dto.CreateAWDServiceTemplateReq,
 ) (*dto.AWDServiceTemplateResp, error) {
-	return s.core.CreateTemplateWithContext(ctx, actorUserID, req)
+	return s.core.CreateTemplate(ctx, actorUserID, req)
 }
 
 func (s *AWDServiceTemplateCommandFacade) UpdateTemplate(
-	id int64,
-	req *dto.UpdateAWDServiceTemplateReq,
-) (*dto.AWDServiceTemplateResp, error) {
-	return s.core.UpdateTemplate(id, req)
-}
-
-func (s *AWDServiceTemplateCommandFacade) UpdateTemplateWithContext(
 	ctx context.Context,
 	id int64,
 	req *dto.UpdateAWDServiceTemplateReq,
 ) (*dto.AWDServiceTemplateResp, error) {
-	return s.core.UpdateTemplateWithContext(ctx, id, req)
+	return s.core.UpdateTemplate(ctx, id, req)
 }
 
-func (s *AWDServiceTemplateCommandFacade) DeleteTemplate(id int64) error {
-	return s.core.DeleteTemplate(id)
-}
-
-func (s *AWDServiceTemplateCommandFacade) DeleteTemplateWithContext(ctx context.Context, id int64) error {
-	return s.core.DeleteTemplateWithContext(ctx, id)
+func (s *AWDServiceTemplateCommandFacade) DeleteTemplate(ctx context.Context, id int64) error {
+	return s.core.DeleteTemplate(ctx, id)
 }
 
 func (s *AWDServiceTemplateCommandFacade) PreviewImport(
