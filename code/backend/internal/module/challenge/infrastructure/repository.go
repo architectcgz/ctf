@@ -322,22 +322,12 @@ func (r *Repository) applyPagination(db *gorm.DB, page, size int) *gorm.DB {
 	return db.Offset(offset).Limit(size)
 }
 
-// GetSolvedStatus 获取用户是否已完成靶场
-func (r *Repository) GetSolvedStatus(userID, challengeID int64) (bool, error) {
-	return r.GetSolvedStatusWithContext(context.Background(), userID, challengeID)
-}
-
 func (r *Repository) GetSolvedStatusWithContext(ctx context.Context, userID, challengeID int64) (bool, error) {
 	var count int64
 	err := r.dbWithContext(ctx).Table("submissions").
 		Where("user_id = ? AND challenge_id = ? AND is_correct = ?", userID, challengeID, true).
 		Count(&count).Error
 	return count > 0, err
-}
-
-// GetSolvedCount 获取靶场完成人数
-func (r *Repository) GetSolvedCount(challengeID int64) (int64, error) {
-	return r.GetSolvedCountWithContext(context.Background(), challengeID)
 }
 
 func (r *Repository) GetSolvedCountWithContext(ctx context.Context, challengeID int64) (int64, error) {
@@ -349,22 +339,12 @@ func (r *Repository) GetSolvedCountWithContext(ctx context.Context, challengeID 
 	return count, err
 }
 
-// GetTotalAttempts 获取靶场总尝试次数
-func (r *Repository) GetTotalAttempts(challengeID int64) (int64, error) {
-	return r.GetTotalAttemptsWithContext(context.Background(), challengeID)
-}
-
 func (r *Repository) GetTotalAttemptsWithContext(ctx context.Context, challengeID int64) (int64, error) {
 	var count int64
 	err := r.dbWithContext(ctx).Table("submissions").
 		Where("challenge_id = ?", challengeID).
 		Count(&count).Error
 	return count, err
-}
-
-// BatchGetSolvedStatus 批量获取用户完成状态
-func (r *Repository) BatchGetSolvedStatus(userID int64, challengeIDs []int64) (map[int64]bool, error) {
-	return r.BatchGetSolvedStatusWithContext(context.Background(), userID, challengeIDs)
 }
 
 func (r *Repository) BatchGetSolvedStatusWithContext(ctx context.Context, userID int64, challengeIDs []int64) (map[int64]bool, error) {
@@ -385,11 +365,6 @@ func (r *Repository) BatchGetSolvedStatusWithContext(ctx context.Context, userID
 		statusMap[r.ChallengeID] = true
 	}
 	return statusMap, err
-}
-
-// BatchGetSolvedCount 批量获取靶场完成人数
-func (r *Repository) BatchGetSolvedCount(challengeIDs []int64) (map[int64]int64, error) {
-	return r.BatchGetSolvedCountWithContext(context.Background(), challengeIDs)
 }
 
 func (r *Repository) BatchGetSolvedCountWithContext(ctx context.Context, challengeIDs []int64) (map[int64]int64, error) {
@@ -414,11 +389,6 @@ func (r *Repository) BatchGetSolvedCountWithContext(ctx context.Context, challen
 	return countMap, err
 }
 
-// BatchGetTotalAttempts 批量获取靶场尝试次数
-func (r *Repository) BatchGetTotalAttempts(challengeIDs []int64) (map[int64]int64, error) {
-	return r.BatchGetTotalAttemptsWithContext(context.Background(), challengeIDs)
-}
-
 func (r *Repository) BatchGetTotalAttemptsWithContext(ctx context.Context, challengeIDs []int64) (map[int64]int64, error) {
 	if len(challengeIDs) == 0 {
 		return make(map[int64]int64), nil
@@ -439,10 +409,6 @@ func (r *Repository) BatchGetTotalAttemptsWithContext(ctx context.Context, chall
 		countMap[r.ChallengeID] = r.Count
 	}
 	return countMap, err
-}
-
-func (r *Repository) FindPublishedForRecommendation(limit int, dimensions []string, excludeSolved []int64) ([]*model.Challenge, error) {
-	return r.FindPublishedForRecommendationWithContext(context.Background(), limit, dimensions, excludeSolved)
 }
 
 func (r *Repository) FindPublishedForRecommendationWithContext(ctx context.Context, limit int, dimensions []string, excludeSolved []int64) ([]*model.Challenge, error) {
