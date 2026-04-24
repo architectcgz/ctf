@@ -135,7 +135,7 @@ type TagRepository interface {
 	AttachTagsInTx(ctx context.Context, challengeID int64, tagIDs []int64) error
 	DetachFromChallenge(ctx context.Context, challengeID, tagID int64) error
 	FindByChallengeID(ctx context.Context, challengeID int64) ([]*model.Tag, error)
-	DeleteWithContext(ctx context.Context, id int64) error
+	Delete(ctx context.Context, id int64) error
 	CountChallengesByTagID(ctx context.Context, tagID int64) (int64, error)
 }
 

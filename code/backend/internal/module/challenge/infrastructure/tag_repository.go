@@ -70,7 +70,7 @@ func (r *TagRepository) AttachTagsInTx(ctx context.Context, challengeID int64, t
 	})
 }
 
-func (r *TagRepository) DeleteWithContext(ctx context.Context, id int64) error {
+func (r *TagRepository) Delete(ctx context.Context, id int64) error {
 	return r.dbWithContext(ctx).Delete(&model.Tag{}, id).Error
 }
 
