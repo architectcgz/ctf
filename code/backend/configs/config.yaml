@@ -49,7 +49,6 @@ cors:
     - DELETE
     - OPTIONS
   allow_headers:
-    - Authorization
     - Content-Type
     - X-Request-ID
   expose_headers:
@@ -62,17 +61,13 @@ cors:
   max_age: 12h
 
 auth:
-  issuer: ctf-platform
-  access_token_ttl: 15m
-  refresh_token_ttl: 168h
-  refresh_cookie_name: ctf_refresh_token
-  refresh_cookie_path: /api/v1/auth
-  refresh_cookie_secure: false
-  refresh_cookie_http_only: true
-  refresh_cookie_same_site: lax
-  private_key_path: configs/keys/dev_private.pem
-  public_key_path: configs/keys/dev_public.pem
-  token_blacklist_prefix: ctf:auth:blacklist
+  session_ttl: 168h
+  session_cookie_name: ctf_session
+  session_cookie_path: /api/v1
+  session_cookie_secure: false
+  session_cookie_http_only: true
+  session_cookie_same_site: lax
+  session_key_prefix: ctf:auth:session
   cas:
     enabled: false
     base_url: ""

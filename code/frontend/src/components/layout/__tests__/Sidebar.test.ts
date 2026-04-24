@@ -89,9 +89,7 @@ describe('Sidebar desktop layout', () => {
         username: 'admin',
         role: 'admin',
         name: 'Admin',
-      },
-      'token'
-    )
+      })
 
     await router.push('/platform/overview')
     await router.isReady()
@@ -132,9 +130,7 @@ describe('Sidebar desktop layout', () => {
         username: 'admin',
         role: 'admin',
         name: 'Admin',
-      },
-      'token'
-    )
+      })
 
     await router.push('/platform/contest-ops/contests')
     await router.isReady()
@@ -177,9 +173,7 @@ describe('Sidebar desktop layout', () => {
         username: 'admin',
         role: 'admin',
         name: 'Admin',
-      },
-      'token'
-    )
+      })
 
     await router.push('/platform/contests/contest-1/manage')
     await router.isReady()
@@ -223,9 +217,7 @@ describe('Sidebar desktop layout', () => {
         username: 'admin',
         role: 'admin',
         name: 'Admin',
-      },
-      'token'
-    )
+      })
 
     await router.push('/platform/overview')
     await router.isReady()
@@ -272,9 +264,7 @@ describe('Sidebar desktop layout', () => {
         username: 'teacher',
         role: 'teacher',
         name: 'Teacher',
-      },
-      'token'
-    )
+      })
 
     await router.push('/academy/classes')
     await router.isReady()
@@ -319,9 +309,7 @@ describe('Sidebar desktop layout', () => {
         username: 'teacher',
         role: 'teacher',
         name: 'Teacher',
-      },
-      'token'
-    )
+      })
 
     await router.push('/academy/classes')
     await router.isReady()
@@ -375,9 +363,7 @@ describe('Sidebar desktop layout', () => {
         username: 'teacher',
         role: 'teacher',
         name: 'Teacher',
-      },
-      'token'
-    )
+      })
 
     await router.push('/academy/classes')
     await router.isReady()
@@ -435,9 +421,7 @@ describe('Sidebar desktop layout', () => {
         username: 'teacher',
         role: 'teacher',
         name: 'Teacher',
-      },
-      'token'
-    )
+      })
 
     await router.push('/academy/overview')
     await router.isReady()

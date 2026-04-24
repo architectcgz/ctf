@@ -73,7 +73,7 @@ export function useWebSocket(endpoint, handlers) {
 // - login(username, password) → 调用 API + 写入 store + 跳转
 // - register(data) → 调用 API + 自动登录
 // - logout() → 调用 API + 清除 store + 跳转 /login
-// - restoreSession() → 从 localStorage 恢复 access token（如有） + 拉取 profile；需要时触发 refresh
+// - restoreSession() → 依赖浏览器自动携带 session cookie 拉取 profile
 ```
 
 ### 2.2 useToast

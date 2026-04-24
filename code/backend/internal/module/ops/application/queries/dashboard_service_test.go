@@ -18,7 +18,6 @@ import (
 	opsports "ctf-platform/internal/module/ops/ports"
 	runtimeqry "ctf-platform/internal/module/runtime/application/queries"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
-	rediskeys "ctf-platform/internal/pkg/redis"
 )
 
 type stubDashboardRuntimeQuery struct {
@@ -64,6 +63,9 @@ func newDashboardTestService(t *testing.T, db *gorm.DB, redis *redislib.Client) 
 		nil,
 		redis,
 		&config.Config{
+			Auth: config.AuthConfig{
+				SessionKeyPrefix: "ctf:auth:session",
+			},
 			Dashboard: config.DashboardConfig{
 				CacheTTL:       time.Minute,
 				AlertThreshold: 80,
@@ -129,11 +131,11 @@ func TestDashboardServiceGetDashboardStatsComputesAndCachesSummary(t *testing.T)
 	mr := miniredis.RunT(t)
 	redis := redislib.NewClient(&redislib.Options{Addr: mr.Addr()})
 	t.Cleanup(func() { _ = redis.Close() })
-	if err := redis.Set(context.Background(), rediskeys.TokenKey(101), "token-1", time.Hour).Err(); err != nil {
-		t.Fatalf("seed token 1: %v", err)
+	if err := redis.Set(context.Background(), "ctf:auth:session:101", "session-1", time.Hour).Err(); err != nil {
+		t.Fatalf("seed session 1: %v", err)
 	}
-	if err := redis.Set(context.Background(), rediskeys.TokenKey(102), "token-2", time.Hour).Err(); err != nil {
-		t.Fatalf("seed token 2: %v", err)
+	if err := redis.Set(context.Background(), "ctf:auth:session:102", "session-2", time.Hour).Err(); err != nil {
+		t.Fatalf("seed session 2: %v", err)
 	}
 
 	service := newDashboardTestService(t, db, redis)

@@ -23,9 +23,7 @@ cors:
   allow_origins: []
 
 auth:
-  refresh_cookie_secure: true
-  private_key_path: /etc/ctf/keys/private.pem
-  public_key_path: /etc/ctf/keys/public.pem
+  session_cookie_secure: true
 
 container:
   # 生产部署时应显式配置可从浏览器访问的主机名或域名，不要依赖默认 localhost

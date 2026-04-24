@@ -73,9 +73,7 @@ describe('SkillProfile', () => {
         username: 'alice',
         role: 'student',
         class_name: 'Class A',
-      },
-      'token'
-    )
+      })
 
     const wrapper = mount(SkillProfile, {
       global: {

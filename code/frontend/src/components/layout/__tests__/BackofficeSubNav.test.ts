@@ -17,9 +17,7 @@ async function mountWithRoute(path: string, role: 'teacher' | 'admin') {
       username: role,
       role,
       name: role,
-    },
-    'token'
-  )
+    })
 
   const router = createRouter({
     history: createMemoryHistory(),

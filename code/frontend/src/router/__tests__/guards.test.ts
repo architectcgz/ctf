@@ -6,11 +6,10 @@ import { setupRouterGuards, sanitizeRedirectPath, hasRequiredRole } from '@/rout
 import { useAuthStore } from '@/stores/auth'
 import type { AuthUser } from '@/stores/auth'
 
-const { errorMock, getProfileMock, refreshTokenMock, warningMock } = vi.hoisted(() => ({
+const { errorMock, getProfileMock, warningMock } = vi.hoisted(() => ({
   warningMock: vi.fn(),
   errorMock: vi.fn(),
   getProfileMock: vi.fn(),
-  refreshTokenMock: vi.fn(),
 }))
 
 vi.mock('nprogress', () => ({
@@ -23,7 +22,6 @@ vi.mock('nprogress', () => ({
 
 vi.mock('@/api/auth', () => ({
   getProfile: getProfileMock,
-  refreshToken: refreshTokenMock,
 }))
 
 vi.mock('@/composables/useToast', () => ({
@@ -105,7 +103,6 @@ describe('router guards', () => {
     warningMock.mockReset()
     errorMock.mockReset()
     getProfileMock.mockReset()
-    refreshTokenMock.mockReset()
   })
 
   it('应该阻止未登录用户访问受保护路由', async () => {
@@ -144,7 +141,7 @@ describe('router guards', () => {
 
   it('应该阻止无权限用户访问受限路由', async () => {
     const authStore = useAuthStore()
-    authStore.setAuth(buildUser('student'), 'token')
+    authStore.setAuth(buildUser('student'))
 
     const { runBeforeEach } = createRouterMock()
     const next = await runBeforeEach(
@@ -159,9 +156,7 @@ describe('router guards', () => {
     expect(next).toHaveBeenCalledWith('/403')
   })
 
-  it('应该在仅有 token 时自动拉取用户资料并放行 AWD 复盘入口', async () => {
-    const authStore = useAuthStore()
-    authStore.updateTokens('token')
+  it('应该在 session cookie 有效时静默恢复资料并放行 AWD 复盘入口', async () => {
     getProfileMock.mockResolvedValue(buildUser('teacher'))
 
     const { runBeforeEach } = createRouterMock()
@@ -174,13 +169,12 @@ describe('router guards', () => {
     )
 
     expect(getProfileMock).toHaveBeenCalledTimes(1)
-    expect(authStore.user?.role).toBe('teacher')
+    expect(useAuthStore().user?.role).toBe('teacher')
     expect(next).toHaveBeenCalledWith()
   })
 
-  it('应该在内存无 token 但 refresh cookie 可用时静默恢复会话后放行', async () => {
-    refreshTokenMock.mockResolvedValue({ access_token: 'restored-token' })
-    getProfileMock.mockResolvedValue(buildUser('teacher'))
+  it('应该在 session cookie 无效时跳回登录页', async () => {
+    getProfileMock.mockRejectedValue(new Error('unauthorized'))
 
     const { runBeforeEach } = createRouterMock()
     const next = await runBeforeEach(
@@ -191,15 +185,16 @@ describe('router guards', () => {
       })
     )
 
-    expect(refreshTokenMock).toHaveBeenCalledWith({ suppressErrorToast: true })
-    expect(getProfileMock).toHaveBeenCalledTimes(1)
-    expect(useAuthStore().accessToken).toBe('restored-token')
-    expect(next).toHaveBeenCalledWith()
+    expect(next).toHaveBeenCalledWith({
+      path: '/login',
+      query: { redirect: '/academy/awd-reviews' },
+    })
   })
 
   it('已登录用户访问登录页且没有 redirect 时应返回角色工作台', async () => {
     const authStore = useAuthStore()
-    authStore.setAuth(buildUser('teacher'), 'token')
+    authStore.setAuth(buildUser('teacher'))
+    authStore.sessionRestored = true
 
     const { runBeforeEach } = createRouterMock()
     const next = await runBeforeEach(
@@ -209,6 +204,21 @@ describe('router guards', () => {
       })
     )
 
+    expect(next).toHaveBeenCalledWith('/academy/overview')
+  })
+
+  it('访问登录页时应先尝试通过 session cookie 恢复会话', async () => {
+    getProfileMock.mockResolvedValue(buildUser('teacher'))
+
+    const { runBeforeEach } = createRouterMock()
+    const next = await runBeforeEach(
+      createRoute({
+        path: '/login',
+        fullPath: '/login',
+      })
+    )
+
+    expect(getProfileMock).toHaveBeenCalledTimes(1)
     expect(next).toHaveBeenCalledWith('/academy/overview')
   })
 })

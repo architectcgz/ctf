@@ -43,7 +43,6 @@ async function mountPage(role: 'student' | 'teacher' | 'admin' = 'student') {
     username: 'tester',
     role,
   }
-  authStore.accessToken = 'token'
 
   const wrapper = mount(NotificationList, {
     global: {

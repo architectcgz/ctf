@@ -8,13 +8,7 @@ export interface LoginRequest {
   password: string
 }
 
-export interface AuthTokens {
-  access_token: string
-  token_type: 'Bearer'
-  expires_in: number
-}
-
-export interface LoginResponse extends AuthTokens {
+export interface LoginResponse {
   user: AuthUser
 }
 
@@ -33,23 +27,15 @@ export async function register(data: RegisterRequest): Promise<LoginResponse> {
   return request<LoginResponse>({ method: 'POST', url: '/auth/register', data })
 }
 
-export async function refreshToken(config?: Pick<RequestConfig, 'suppressErrorToast'>): Promise<AuthTokens> {
-  return request<AuthTokens>({
-    method: 'POST',
-    url: '/auth/refresh',
-    data: {},
-    suppressErrorToast: config?.suppressErrorToast,
-  })
-}
-
 export async function logout(): Promise<void> {
   await request<void>({ method: 'POST', url: '/auth/logout' })
 }
 
-export async function getProfile(): Promise<AuthUser> {
+export async function getProfile(config?: Pick<RequestConfig, 'suppressErrorToast'>): Promise<AuthUser> {
   const payload = await request<Omit<AuthUser, 'id'> & { id: string | number }>({
     method: 'GET',
     url: '/auth/profile',
+    suppressErrorToast: config?.suppressErrorToast,
   })
   return {
     ...payload,

@@ -5,7 +5,6 @@ import 'nprogress/nprogress.css'
 import { useAuthStore } from '@/stores/auth'
 import { APP_TITLE_PREFIX } from '@/utils/constants'
 import { useToast } from '@/composables/useToast'
-import { getProfile } from '@/api/auth'
 import type { UserRole } from '@/utils/constants'
 import { resolveRouteTitle } from '@/utils/routeTitle'
 import { redirectToErrorStatusPage } from '@/utils/errorStatusPage'
@@ -39,18 +38,9 @@ export function hasRequiredRole(
   return requiredRoles.includes(currentRole)
 }
 
-async function ensureProfileLoaded(): Promise<void> {
-  const authStore = useAuthStore()
-  if (!authStore.accessToken) return
-  if (authStore.user) return
-
-  const profile = await getProfile()
-  authStore.setAuth(profile, authStore.accessToken)
-}
-
 async function ensureSessionRestored(): Promise<void> {
   const authStore = useAuthStore()
-  if (authStore.accessToken || authStore.sessionRestored) return
+  if (authStore.user || authStore.sessionRestored) return
   await authStore.restore()
 }
 
@@ -73,7 +63,6 @@ export function setupRouterGuards(router: Router): void {
           await ensureSessionRestored()
         }
         if (isAuthLandingRoute(to) && authStore.isLoggedIn) {
-          await ensureProfileLoaded()
           const redirectTo = sanitizeRedirectPath(to.query.redirect)
           next(redirectTo === '/' ? getRoleDashboardPath(authStore.user?.role) : redirectTo)
           return
@@ -89,10 +78,6 @@ export function setupRouterGuards(router: Router): void {
       if (to.meta?.requiresAuth && !authStore.isLoggedIn) {
         next({ path: '/login', query: { redirect: to.fullPath } })
         return
-      }
-
-      if (to.meta?.requiresAuth) {
-        await ensureProfileLoaded()
       }
 
       const userRole = authStore.user?.role

@@ -2238,8 +2238,8 @@ func TestFullRouter_AdminOpsAndNotificationStateMatrix(t *testing.T) {
 	resp = performFullRouterRequest(t, env.router, http.MethodDelete, fmt.Sprintf("/api/v1/admin/users/%d", createdUser.ID), nil, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	if err := env.cache.Set(context.Background(), rediskeys.TokenKey(env.student.ID), "online", time.Hour).Err(); err != nil {
-		t.Fatalf("seed token key: %v", err)
+	if err := env.cache.Set(context.Background(), "ctf:auth:session:manual-online", "online", time.Hour).Err(); err != nil {
+		t.Fatalf("seed session key: %v", err)
 	}
 	resp = performFullRouterRequest(t, env.router, http.MethodGet, "/api/v1/admin/dashboard", nil, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)

@@ -279,7 +279,7 @@ func (m *RuntimeModule) BuildHandler(root *Root, ops *OpsModule) {
 		m.http.service,
 		ops.AuditService,
 		runtimehttp.CookieConfig{
-			Secure:   cfg.Auth.RefreshCookieSecure,
+			Secure:   cfg.Auth.SessionCookieSecure,
 			SameSite: cfg.Auth.CookieSameSite(),
 		},
 		m.http.proxyTrafficRecorder,

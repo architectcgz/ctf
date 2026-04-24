@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"errors"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 
@@ -10,52 +9,34 @@ import (
 	authcontracts "ctf-platform/internal/module/auth/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	"ctf-platform/pkg/errcode"
-	jwtpkg "ctf-platform/pkg/jwt"
 	"ctf-platform/pkg/response"
 )
 
-func Auth(tokenService authcontracts.TokenService, users ...identitycontracts.UserRepository) gin.HandlerFunc {
+func Auth(tokenService authcontracts.TokenService, cookieName string, users ...identitycontracts.UserRepository) gin.HandlerFunc {
 	var userRepo identitycontracts.UserRepository
 	if len(users) > 0 {
 		userRepo = users[0]
 	}
 
 	return func(c *gin.Context) {
-		tokenString := extractBearerToken(c.GetHeader("Authorization"))
-		if tokenString == "" {
+		sessionID, err := c.Cookie(cookieName)
+		if err != nil || sessionID == "" {
 			response.Error(c, errcode.ErrUnauthorized)
 			c.Abort()
 			return
 		}
 
-		claims, err := tokenService.ParseToken(tokenString)
+		session, err := tokenService.GetSession(c.Request.Context(), sessionID)
 		if err != nil {
-			response.FromError(c, mapAuthError(err))
-			c.Abort()
-			return
-		}
-		if claims.TokenType != jwtpkg.TokenTypeAccess {
-			response.Error(c, errcode.ErrTokenInvalid)
+			response.FromError(c, errcode.ErrUnauthorized)
 			c.Abort()
 			return
 		}
 
-		revoked, err := tokenService.IsRevoked(c.Request.Context(), claims.ID)
-		if err != nil {
-			response.FromError(c, errcode.ErrInternal.WithCause(err))
-			c.Abort()
-			return
-		}
-		if revoked {
-			response.Error(c, errcode.ErrTokenRevoked)
-			c.Abort()
-			return
-		}
-
-		username := claims.Username
-		role := claims.Role
+		username := session.Username
+		role := session.Role
 		if userRepo != nil {
-			user, err := userRepo.FindByID(c.Request.Context(), claims.UserID)
+			user, err := userRepo.FindByID(c.Request.Context(), session.UserID)
 			if err != nil {
 				if errors.Is(err, identitycontracts.ErrUserNotFound) {
 					response.Error(c, errcode.ErrUnauthorized)
@@ -70,11 +51,11 @@ func Auth(tokenService authcontracts.TokenService, users ...identitycontracts.Us
 		}
 
 		authctx.SetCurrentUser(c, authctx.CurrentUser{
-			UserID:    claims.UserID,
+			UserID:    session.UserID,
 			Username:  username,
 			Role:      role,
-			JTI:       claims.ID,
-			ExpiresAt: claims.ExpiresAt.Time,
+			SessionID: session.ID,
+			ExpiresAt: session.ExpiresAt,
 		})
 		c.Next()
 	}
@@ -82,23 +63,4 @@ func Auth(tokenService authcontracts.TokenService, users ...identitycontracts.Us
 
 func MustCurrentUser(c *gin.Context) authctx.CurrentUser {
 	return authctx.MustCurrentUser(c)
-}
-
-func extractBearerToken(header string) string {
-	parts := strings.SplitN(header, " ", 2)
-	if len(parts) != 2 || !strings.EqualFold(parts[0], "Bearer") {
-		return ""
-	}
-	return strings.TrimSpace(parts[1])
-}
-
-func mapAuthError(err error) error {
-	switch {
-	case errors.Is(err, jwtpkg.ErrExpiredToken):
-		return errcode.ErrAccessTokenExpired
-	case errors.Is(err, jwtpkg.ErrInvalidToken):
-		return errcode.ErrTokenInvalid
-	default:
-		return errcode.ErrUnauthorized
-	}
 }

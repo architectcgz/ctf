@@ -83,9 +83,7 @@ describe('TeacherStudentManagement', () => {
         username: 'teacher',
         role: 'teacher',
         class_name: 'Class A',
-      },
-      'token'
-    )
+      })
   })
 
   afterEach(() => {
@@ -215,9 +213,7 @@ describe('TeacherStudentManagement', () => {
         username: 'admin',
         role: 'admin',
         class_name: 'Class A',
-      },
-      'token'
-    )
+      })
 
     const wrapper = mount(TeacherStudentManagement, {
       global: {
@@ -247,9 +243,7 @@ describe('TeacherStudentManagement', () => {
         username: 'admin',
         role: 'admin',
         class_name: 'Class A',
-      },
-      'token'
-    )
+      })
 
     const wrapper = mount(TeacherStudentManagement, {
       global: {
@@ -565,9 +559,7 @@ describe('TeacherStudentManagement', () => {
         username: 'teacher',
         role: 'teacher',
         class_name: 'Missing Class',
-      },
-      'token'
-    )
+      })
 
     const wrapper = mount(TeacherStudentManagement, {
       global: {

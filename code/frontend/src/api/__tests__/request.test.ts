@@ -10,8 +10,6 @@ const toastMocks = vi.hoisted(() => ({
 }))
 
 const authStoreMock = vi.hoisted(() => ({
-  accessToken: '',
-  updateTokens: vi.fn(),
   logout: vi.fn(),
 }))
 
@@ -49,7 +47,6 @@ describe('request cancel handling', () => {
     toastMocks.warning.mockReset()
     toastMocks.info.mockReset()
     toastMocks.dismiss.mockReset()
-    authStoreMock.updateTokens.mockReset()
     authStoreMock.logout.mockReset()
     redirectMocks.redirectToErrorStatusPage.mockReset()
     redirectMocks.shouldRedirectToErrorStatusPage.mockReset()

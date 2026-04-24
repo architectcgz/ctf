@@ -35,7 +35,7 @@ app.config.errorHandler = (err, instance, info) => {
   redirectToErrorStatusPage(500)
 }
 
-// Kick off silent session restore early. Access Token stays in memory; router guards await the same promise when needed.
+// Kick off silent session restore early. Router guards await the same restore promise when needed.
 void useAuthStore(pinia).restore()
 
 app.mount('#app')

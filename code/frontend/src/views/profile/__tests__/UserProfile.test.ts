@@ -59,9 +59,7 @@ describe('UserProfile', () => {
         role: 'student',
         class_name: 'Class A',
         name: 'Alice',
-      },
-      'token'
-    )
+      })
 
     vi.stubGlobal('URL', {
       createObjectURL: vi.fn(() => 'blob:demo'),
@@ -144,9 +142,7 @@ describe('UserProfile', () => {
         username: 'admin',
         role: 'admin',
         name: 'Admin',
-      },
-      'token'
-    )
+      })
 
     const wrapper = mount(UserProfile)
     await flushPromises()

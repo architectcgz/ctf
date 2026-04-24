@@ -12,7 +12,7 @@ type CurrentUser struct {
 	UserID    int64
 	Username  string
 	Role      string
-	JTI       string
+	SessionID string
 	ExpiresAt time.Time
 }
 

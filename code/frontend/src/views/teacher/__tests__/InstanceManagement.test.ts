@@ -69,9 +69,7 @@ describe('InstanceManagement', () => {
         username: 'teacher',
         role: 'teacher',
         class_name: 'Class A',
-      },
-      'token'
-    )
+      })
   })
 
   afterEach(() => {
@@ -186,9 +184,7 @@ describe('InstanceManagement', () => {
         username: 'admin',
         role: 'admin',
         class_name: 'Class A',
-      },
-      'token'
-    )
+      })
 
     const wrapper = mount(InstanceManagement, {
       global: {

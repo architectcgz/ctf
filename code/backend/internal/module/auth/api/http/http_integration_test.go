@@ -4,19 +4,13 @@ import (
 	"bytes"
 	"context"
 	"crypto/rand"
-	"crypto/rsa"
-	"crypto/x509"
 	"encoding/hex"
 	"encoding/json"
-	"encoding/pem"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"path/filepath"
 	"strconv"
-	"strings"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -43,7 +37,6 @@ import (
 	opsinfra "ctf-platform/internal/module/ops/infrastructure"
 	"ctf-platform/internal/validation"
 	"ctf-platform/pkg/errcode"
-	jwtpkg "ctf-platform/pkg/jwt"
 	"ctf-platform/pkg/response"
 )
 
@@ -54,10 +47,7 @@ type testEnvelope struct {
 }
 
 type testLoginResponse struct {
-	AccessToken string `json:"access_token"`
-	TokenType   string `json:"token_type"`
-	ExpiresIn   int64  `json:"expires_in"`
-	User        struct {
+	User struct {
 		ID        int64   `json:"id"`
 		Username  string  `json:"username"`
 		Role      string  `json:"role"`
@@ -111,11 +101,10 @@ type integrationTestEnv struct {
 type memoryTokenService struct {
 	config   config.AuthConfig
 	wsConfig config.WebSocketConfig
-	manager  *jwtpkg.Manager
 
-	mu      sync.Mutex
-	revoked map[string]time.Time
-	tickets map[string]authctx.CurrentUser
+	mu       sync.Mutex
+	sessions map[string]authcontracts.Session
+	tickets  map[string]authctx.CurrentUser
 }
 
 var fallbackRequestIDCounter atomic.Uint64
@@ -148,8 +137,8 @@ func TestHTTP_RegisterLoginAndProfileFlow(t *testing.T) {
 	if registerData.User.Role != model.RoleStudent {
 		t.Fatalf("expected student role, got %q", registerData.User.Role)
 	}
-	if cookieValue(registerResp.Result().Cookies(), "refresh_token") == "" {
-		t.Fatalf("expected refresh token cookie to be set")
+	if cookieValue(registerResp.Result().Cookies(), "ctf_session") == "" {
+		t.Fatalf("expected session cookie to be set")
 	}
 
 	loginResp := performJSONRequest(
@@ -169,8 +158,8 @@ func TestHTTP_RegisterLoginAndProfileFlow(t *testing.T) {
 	}
 	loginBody := decodeEnvelope(t, loginResp)
 	loginData := decodeJSON[testLoginResponse](t, loginBody.Data)
-	if loginData.AccessToken == "" {
-		t.Fatalf("expected access token in login response")
+	if cookieValue(loginResp.Result().Cookies(), "ctf_session") == "" {
+		t.Fatalf("expected session cookie in login response")
 	}
 
 	profileResp := performJSONRequest(
@@ -179,10 +168,8 @@ func TestHTTP_RegisterLoginAndProfileFlow(t *testing.T) {
 		http.MethodGet,
 		"/api/v1/auth/profile",
 		nil,
-		map[string]string{
-			"Authorization": "Bearer " + loginData.AccessToken,
-		},
 		nil,
+		[]*http.Cookie{cloneCookie(loginResp.Result().Cookies(), "ctf_session")},
 	)
 	if profileResp.Code != http.StatusOK {
 		t.Fatalf("unexpected profile status: %d body=%s", profileResp.Code, profileResp.Body.String())
@@ -197,6 +184,37 @@ func TestHTTP_RegisterLoginAndProfileFlow(t *testing.T) {
 	}
 	if profileData.Role != model.RoleStudent {
 		t.Fatalf("expected profile role student, got %q", profileData.Role)
+	}
+}
+
+func TestHTTP_LoginResponseDoesNotExposeAccessToken(t *testing.T) {
+	env := newIntegrationTestEnv(t)
+
+	createUser(t, env.db, "session_login_user", "Password123", model.RoleStudent, "")
+
+	loginResp := performJSONRequest(
+		t,
+		env.router,
+		http.MethodPost,
+		"/api/v1/auth/login",
+		map[string]any{
+			"username": "session_login_user",
+			"password": "Password123",
+		},
+		nil,
+		nil,
+	)
+	if loginResp.Code != http.StatusOK {
+		t.Fatalf("unexpected login status: %d body=%s", loginResp.Code, loginResp.Body.String())
+	}
+
+	loginBody := decodeEnvelope(t, loginResp)
+	var payload map[string]any
+	if err := json.Unmarshal(loginBody.Data, &payload); err != nil {
+		t.Fatalf("decode login payload: %v body=%s", err, string(loginBody.Data))
+	}
+	if _, exists := payload["access_token"]; exists {
+		t.Fatalf("expected login payload to omit access_token, got %s", string(loginBody.Data))
 	}
 }
 
@@ -218,8 +236,10 @@ func TestHTTP_ChangePasswordFlow(t *testing.T) {
 	if registerResp.Code != http.StatusOK {
 		t.Fatalf("unexpected register status: %d body=%s", registerResp.Code, registerResp.Body.String())
 	}
-	registerBody := decodeEnvelope(t, registerResp)
-	registerData := decodeJSON[testLoginResponse](t, registerBody.Data)
+	sessionCookie := cloneCookie(registerResp.Result().Cookies(), "ctf_session")
+	if sessionCookie == nil {
+		t.Fatalf("expected session cookie from register response")
+	}
 
 	changeResp := performJSONRequest(
 		t,
@@ -230,10 +250,8 @@ func TestHTTP_ChangePasswordFlow(t *testing.T) {
 			"old_password": "Password123",
 			"new_password": "Password456",
 		},
-		map[string]string{
-			"Authorization": "Bearer " + registerData.AccessToken,
-		},
 		nil,
+		[]*http.Cookie{sessionCookie},
 	)
 	if changeResp.Code != http.StatusOK {
 		t.Fatalf("unexpected change password status: %d body=%s", changeResp.Code, changeResp.Body.String())
@@ -278,14 +296,12 @@ func TestHTTP_ChangePasswordFlow(t *testing.T) {
 	if newLoginResp.Code != http.StatusOK {
 		t.Fatalf("expected new password login to succeed, got %d body=%s", newLoginResp.Code, newLoginResp.Body.String())
 	}
-	newLoginBody := decodeEnvelope(t, newLoginResp)
-	newLoginData := decodeJSON[testLoginResponse](t, newLoginBody.Data)
-	if newLoginData.AccessToken == "" {
-		t.Fatalf("expected new access token after password change")
+	if cookieValue(newLoginResp.Result().Cookies(), "ctf_session") == "" {
+		t.Fatalf("expected new session cookie after password change")
 	}
 }
 
-func TestHTTP_LogoutRevokesAccessTokenAndAdminCanQueryAuditLogs(t *testing.T) {
+func TestHTTP_LogoutRevokesSessionAndAdminCanQueryAuditLogs(t *testing.T) {
 	env := newIntegrationTestEnv(t)
 
 	createUser(t, env.db, "audit_admin", "Password123", model.RoleAdmin, "")
@@ -304,9 +320,9 @@ func TestHTTP_LogoutRevokesAccessTokenAndAdminCanQueryAuditLogs(t *testing.T) {
 	)
 	registerBody := decodeEnvelope(t, registerResp)
 	registerData := decodeJSON[testLoginResponse](t, registerBody.Data)
-	refreshCookie := cloneCookie(registerResp.Result().Cookies(), "refresh_token")
-	if refreshCookie == nil {
-		t.Fatalf("expected refresh token cookie for logout flow")
+	sessionCookie := cloneCookie(registerResp.Result().Cookies(), "ctf_session")
+	if sessionCookie == nil {
+		t.Fatalf("expected session cookie for logout flow")
 	}
 
 	logoutResp := performJSONRequest(
@@ -315,10 +331,8 @@ func TestHTTP_LogoutRevokesAccessTokenAndAdminCanQueryAuditLogs(t *testing.T) {
 		http.MethodPost,
 		"/api/v1/auth/logout",
 		nil,
-		map[string]string{
-			"Authorization": "Bearer " + registerData.AccessToken,
-		},
-		[]*http.Cookie{refreshCookie},
+		nil,
+		[]*http.Cookie{sessionCookie},
 	)
 	if logoutResp.Code != http.StatusOK {
 		t.Fatalf("unexpected logout status: %d body=%s", logoutResp.Code, logoutResp.Body.String())
@@ -330,17 +344,15 @@ func TestHTTP_LogoutRevokesAccessTokenAndAdminCanQueryAuditLogs(t *testing.T) {
 		http.MethodGet,
 		"/api/v1/auth/profile",
 		nil,
-		map[string]string{
-			"Authorization": "Bearer " + registerData.AccessToken,
-		},
 		nil,
+		[]*http.Cookie{sessionCookie},
 	)
 	if revokedResp.Code != http.StatusUnauthorized {
-		t.Fatalf("expected revoked token to return 401, got %d body=%s", revokedResp.Code, revokedResp.Body.String())
+		t.Fatalf("expected revoked session to return 401, got %d body=%s", revokedResp.Code, revokedResp.Body.String())
 	}
 	revokedBody := decodeEnvelope(t, revokedResp)
-	if revokedBody.Code != errcode.ErrTokenRevoked.Code {
-		t.Fatalf("expected revoked token code %d, got %d", errcode.ErrTokenRevoked.Code, revokedBody.Code)
+	if revokedBody.Code != errcode.ErrUnauthorized.Code {
+		t.Fatalf("expected unauthorized code %d, got %d", errcode.ErrUnauthorized.Code, revokedBody.Code)
 	}
 
 	adminLoginResp := performJSONRequest(
@@ -356,7 +368,11 @@ func TestHTTP_LogoutRevokesAccessTokenAndAdminCanQueryAuditLogs(t *testing.T) {
 		nil,
 	)
 	adminLoginBody := decodeEnvelope(t, adminLoginResp)
-	adminLoginData := decodeJSON[testLoginResponse](t, adminLoginBody.Data)
+	_ = decodeJSON[testLoginResponse](t, adminLoginBody.Data)
+	adminSessionCookie := cloneCookie(adminLoginResp.Result().Cookies(), "ctf_session")
+	if adminSessionCookie == nil {
+		t.Fatalf("expected admin session cookie")
+	}
 
 	auditResp := performJSONRequest(
 		t,
@@ -364,10 +380,8 @@ func TestHTTP_LogoutRevokesAccessTokenAndAdminCanQueryAuditLogs(t *testing.T) {
 		http.MethodGet,
 		"/api/v1/admin/audit-logs?action=logout&user_id="+strconv.FormatInt(registerData.User.ID, 10),
 		nil,
-		map[string]string{
-			"Authorization": "Bearer " + adminLoginData.AccessToken,
-		},
 		nil,
+		[]*http.Cookie{adminSessionCookie},
 	)
 	if auditResp.Code != http.StatusOK {
 		t.Fatalf("unexpected audit status: %d body=%s", auditResp.Code, auditResp.Body.String())
@@ -423,7 +437,11 @@ func TestHTTP_FailedLoginIsRecordedInAuditLog(t *testing.T) {
 		nil,
 	)
 	adminLoginBody := decodeEnvelope(t, adminLoginResp)
-	adminLoginData := decodeJSON[testLoginResponse](t, adminLoginBody.Data)
+	_ = decodeJSON[testLoginResponse](t, adminLoginBody.Data)
+	adminSessionCookie := cloneCookie(adminLoginResp.Result().Cookies(), "ctf_session")
+	if adminSessionCookie == nil {
+		t.Fatalf("expected admin session cookie")
+	}
 
 	auditResp := performJSONRequest(
 		t,
@@ -431,10 +449,8 @@ func TestHTTP_FailedLoginIsRecordedInAuditLog(t *testing.T) {
 		http.MethodGet,
 		"/api/v1/admin/audit-logs?action=login&resource_type=auth",
 		nil,
-		map[string]string{
-			"Authorization": "Bearer " + adminLoginData.AccessToken,
-		},
 		nil,
+		[]*http.Cookie{adminSessionCookie},
 	)
 	if auditResp.Code != http.StatusOK {
 		t.Fatalf("unexpected audit status: %d body=%s", auditResp.Code, auditResp.Body.String())
@@ -588,8 +604,8 @@ func TestHTTP_CASCallbackAutoProvisionsUserAndIssuesCookie(t *testing.T) {
 	if data.User.Username != "cas_http_user" || data.User.Role != model.RoleStudent {
 		t.Fatalf("unexpected cas callback user: %+v", data.User)
 	}
-	if cookieValue(resp.Result().Cookies(), "refresh_token") == "" {
-		t.Fatalf("expected refresh token cookie to be set")
+	if cookieValue(resp.Result().Cookies(), "ctf_session") == "" {
+		t.Fatalf("expected session cookie to be set")
 	}
 
 	var user model.User
@@ -657,14 +673,10 @@ func newIntegrationTestEnvWithAuthConfig(t *testing.T, mutate func(*config.AuthC
 	if mutate != nil {
 		mutate(&authCfg)
 	}
-	jwtManager, err := jwtpkg.NewManager(authCfg, "ctf-platform-test")
-	if err != nil {
-		t.Fatalf("create jwt manager: %v", err)
-	}
 	tokenService := newMemoryTokenService(authCfg, config.WebSocketConfig{
 		TicketTTL:       30 * time.Second,
 		TicketKeyPrefix: "test:ws:ticket",
-	}, jwtManager)
+	})
 	authRepo := identityinfra.NewRepository(db)
 	authService := authcmd.NewService(authRepo, tokenService, config.RateLimitPolicyConfig{
 		Enabled:      true,
@@ -683,11 +695,11 @@ func newIntegrationTestEnvWithAuthConfig(t *testing.T, mutate func(*config.AuthC
 		MaxPageSize:     100,
 	}, zap.NewNop())
 	authHandler := authhttp.NewHandler(authService, profileCommandService, profileQueryService, tokenService, casCommandService, casQueryService, authhttp.CookieConfig{
-		Name:     authCfg.RefreshCookieName,
-		Path:     authCfg.RefreshCookiePath,
-		HTTPOnly: authCfg.RefreshCookieHTTPOnly,
+		Name:     authCfg.SessionCookieName,
+		Path:     authCfg.SessionCookiePath,
+		HTTPOnly: authCfg.SessionCookieHTTPOnly,
 		SameSite: http.SameSiteLaxMode,
-		MaxAge:   authCfg.RefreshTokenTTL,
+		MaxAge:   authCfg.SessionTTL,
 	}, zap.NewNop(), auditCommandService)
 	auditHandler := opshttp.NewAuditHandler(auditQueryService)
 
@@ -698,13 +710,12 @@ func newIntegrationTestEnvWithAuthConfig(t *testing.T, mutate func(*config.AuthC
 	authGroup := apiV1.Group("/auth")
 	authGroup.POST("/register", authHandler.Register)
 	authGroup.POST("/login", authHandler.Login)
-	authGroup.POST("/refresh", authHandler.Refresh)
 	authGroup.GET("/cas/status", authHandler.CASStatus)
 	authGroup.GET("/cas/login", authHandler.CASLogin)
 	authGroup.GET("/cas/callback", authHandler.CASCallback)
 
 	protected := apiV1.Group("")
-	protected.Use(testAuthMiddleware(tokenService))
+	protected.Use(testAuthMiddleware(tokenService, authCfg.SessionCookieName))
 	protected.POST("/auth/logout", authHandler.Logout)
 	protected.GET("/auth/profile", authHandler.Profile)
 	protected.PUT("/auth/password", authHandler.ChangePassword)
@@ -728,119 +739,60 @@ func newIntegrationTestEnvWithAuthConfig(t *testing.T, mutate func(*config.AuthC
 func newTestAuthConfig(t *testing.T) config.AuthConfig {
 	t.Helper()
 
-	privateKeyPath, publicKeyPath := writeTestKeyPair(t)
 	return config.AuthConfig{
-		Issuer:                "ctf-platform-test",
-		AccessTokenTTL:        15 * time.Minute,
-		RefreshTokenTTL:       24 * time.Hour,
-		RefreshCookieName:     "refresh_token",
-		RefreshCookiePath:     "/",
-		RefreshCookieHTTPOnly: true,
-		RefreshCookieSameSite: "lax",
-		PrivateKeyPath:        privateKeyPath,
-		PublicKeyPath:         publicKeyPath,
-		TokenBlacklistPrefix:  "test:blacklist",
+		SessionTTL:            24 * time.Hour,
+		SessionCookieName:     "ctf_session",
+		SessionCookiePath:     "/",
+		SessionCookieHTTPOnly: true,
+		SessionCookieSameSite: "lax",
+		SessionKeyPrefix:      "test:session",
 	}
 }
 
-func newMemoryTokenService(cfg config.AuthConfig, wsCfg config.WebSocketConfig, manager *jwtpkg.Manager) authcontracts.TokenService {
+func newMemoryTokenService(cfg config.AuthConfig, wsCfg config.WebSocketConfig) authcontracts.TokenService {
 	return &memoryTokenService{
 		config:   cfg,
 		wsConfig: wsCfg,
-		manager:  manager,
-		revoked:  make(map[string]time.Time),
+		sessions: make(map[string]authcontracts.Session),
 		tickets:  make(map[string]authctx.CurrentUser),
 	}
 }
 
-func (s *memoryTokenService) IssueTokens(userID int64, username, role string) (*authcontracts.TokenPair, error) {
-	return s.IssueTokensWithContext(context.Background(), userID, username, role)
-}
-
-func (s *memoryTokenService) IssueTokensWithContext(_ context.Context, userID int64, username, role string) (*authcontracts.TokenPair, error) {
-	accessToken, _, err := s.manager.GenerateAccessToken(userID, username, role)
+func (s *memoryTokenService) CreateSession(_ context.Context, userID int64, username, role string) (*authcontracts.Session, error) {
+	sessionID, err := generateRandomHex(16)
 	if err != nil {
-		return nil, fmt.Errorf("generate access token: %w", err)
+		return nil, err
 	}
-
-	refreshToken, _, err := s.manager.GenerateRefreshToken(userID, username, role)
-	if err != nil {
-		return nil, fmt.Errorf("generate refresh token: %w", err)
-	}
-
-	return &authcontracts.TokenPair{
-		AccessToken:     accessToken,
-		RefreshToken:    refreshToken,
-		AccessTokenTTL:  s.manager.AccessTokenTTL(),
-		RefreshTokenTTL: s.manager.RefreshTokenTTL(),
-	}, nil
-}
-
-func (s *memoryTokenService) RefreshAccessToken(ctx context.Context, refreshToken string) (*authcontracts.RefreshAccessPayload, error) {
-	claims, err := s.manager.ParseToken(refreshToken)
-	if err != nil {
-		return nil, mapTestJWTError(err, true)
-	}
-	if claims.TokenType != jwtpkg.TokenTypeRefresh {
-		return nil, errcode.ErrTokenInvalid
-	}
-
-	revoked, err := s.IsRevoked(ctx, claims.ID)
-	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
-	}
-	if revoked {
-		return nil, errcode.ErrTokenRevoked
-	}
-
-	accessToken, accessClaims, err := s.manager.GenerateAccessToken(claims.UserID, claims.Username, claims.Role)
-	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
-	}
-
-	return &authcontracts.RefreshAccessPayload{
-		AccessToken: accessToken,
-		ExpiresIn:   accessClaims.ExpiresAt.Time.Unix() - time.Now().Unix(),
-	}, nil
-}
-
-func (s *memoryTokenService) RevokeToken(ctx context.Context, jti string, ttl time.Duration) error {
-	if jti == "" {
-		return nil
+	session := authcontracts.Session{
+		ID:        sessionID,
+		UserID:    userID,
+		Username:  username,
+		Role:      role,
+		ExpiresAt: time.Now().Add(s.config.SessionTTL),
 	}
 
 	s.mu.Lock()
 	defer s.mu.Unlock()
-
-	s.revoked[jti] = time.Now().Add(ttl)
-	return nil
+	s.sessions[sessionID] = session
+	return &session, nil
 }
 
-func (s *memoryTokenService) ClearRefreshSession(ctx context.Context, userID int64, refreshJTI string) error {
-	return nil
-}
-
-func (s *memoryTokenService) IsRevoked(ctx context.Context, jti string) (bool, error) {
-	if jti == "" {
-		return false, nil
-	}
-
+func (s *memoryTokenService) GetSession(_ context.Context, sessionID string) (*authcontracts.Session, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	expiresAt, exists := s.revoked[jti]
-	if !exists {
-		return false, nil
+	session, ok := s.sessions[sessionID]
+	if !ok {
+		return nil, errcode.ErrUnauthorized
 	}
-	if time.Now().After(expiresAt) {
-		delete(s.revoked, jti)
-		return false, nil
-	}
-	return true, nil
+	return &session, nil
 }
 
-func (s *memoryTokenService) ParseToken(tokenString string) (*jwtpkg.Claims, error) {
-	return s.manager.ParseToken(tokenString)
+func (s *memoryTokenService) DeleteSession(_ context.Context, sessionID string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	delete(s.sessions, sessionID)
+	return nil
 }
 
 func (s *memoryTokenService) IssueWSTicket(ctx context.Context, user authctx.CurrentUser) (*authcontracts.WSTicket, error) {
@@ -984,6 +936,14 @@ func cloneCookie(cookies []*http.Cookie, name string) *http.Cookie {
 	return nil
 }
 
+func generateRandomHex(size int) (string, error) {
+	buffer := make([]byte, size)
+	if _, err := rand.Read(buffer); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(buffer), nil
+}
+
 func testRequestID() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		requestID := c.GetHeader("X-Request-ID")
@@ -998,45 +958,28 @@ func testRequestID() gin.HandlerFunc {
 	}
 }
 
-func testAuthMiddleware(tokenService authcontracts.TokenService) gin.HandlerFunc {
+func testAuthMiddleware(tokenService authcontracts.TokenService, cookieName string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		tokenString := extractBearerToken(c.GetHeader("Authorization"))
-		if tokenString == "" {
+		sessionID, err := c.Cookie(cookieName)
+		if err != nil || sessionID == "" {
 			response.Error(c, errcode.ErrUnauthorized)
 			c.Abort()
 			return
 		}
 
-		claims, err := tokenService.ParseToken(tokenString)
+		session, err := tokenService.GetSession(c.Request.Context(), sessionID)
 		if err != nil {
-			response.FromError(c, mapTestAuthError(err))
-			c.Abort()
-			return
-		}
-		if claims.TokenType != jwtpkg.TokenTypeAccess {
-			response.Error(c, errcode.ErrTokenInvalid)
-			c.Abort()
-			return
-		}
-
-		revoked, err := tokenService.IsRevoked(c.Request.Context(), claims.ID)
-		if err != nil {
-			response.FromError(c, errcode.ErrInternal.WithCause(err))
-			c.Abort()
-			return
-		}
-		if revoked {
-			response.Error(c, errcode.ErrTokenRevoked)
+			response.Error(c, errcode.ErrUnauthorized)
 			c.Abort()
 			return
 		}
 
 		authctx.SetCurrentUser(c, authctx.CurrentUser{
-			UserID:    claims.UserID,
-			Username:  claims.Username,
-			Role:      claims.Role,
-			JTI:       claims.ID,
-			ExpiresAt: claims.ExpiresAt.Time,
+			UserID:    session.UserID,
+			Username:  session.Username,
+			Role:      session.Role,
+			SessionID: session.ID,
+			ExpiresAt: session.ExpiresAt,
 		})
 		c.Next()
 	}
@@ -1060,14 +1003,6 @@ func testRequireRole(minRole string) gin.HandlerFunc {
 	}
 }
 
-func extractBearerToken(header string) string {
-	parts := strings.SplitN(header, " ", 2)
-	if len(parts) != 2 || !strings.EqualFold(parts[0], "Bearer") {
-		return ""
-	}
-	return strings.TrimSpace(parts[1])
-}
-
 func newTestRequestID() string {
 	buffer := make([]byte, 8)
 	if _, err := rand.Read(buffer); err != nil {
@@ -1082,62 +1017,4 @@ func randomHex(size int) string {
 		return fmt.Sprintf("fallback_%d", fallbackRequestIDCounter.Add(1))
 	}
 	return hex.EncodeToString(buffer)
-}
-
-func mapTestAuthError(err error) error {
-	switch err {
-	case jwtpkg.ErrExpiredToken:
-		return errcode.ErrAccessTokenExpired
-	case jwtpkg.ErrInvalidToken:
-		return errcode.ErrTokenInvalid
-	default:
-		return errcode.ErrUnauthorized
-	}
-}
-
-func mapTestJWTError(err error, isRefresh bool) error {
-	switch {
-	case errors.Is(err, jwtpkg.ErrExpiredToken) && isRefresh:
-		return errcode.ErrRefreshTokenExpired
-	case errors.Is(err, jwtpkg.ErrExpiredToken):
-		return errcode.ErrAccessTokenExpired
-	case errors.Is(err, jwtpkg.ErrInvalidToken):
-		return errcode.ErrTokenInvalid
-	default:
-		return err
-	}
-}
-
-func writeTestKeyPair(t *testing.T) (string, string) {
-	t.Helper()
-
-	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
-	if err != nil {
-		t.Fatalf("generate rsa key: %v", err)
-	}
-
-	privatePEM := pem.EncodeToMemory(&pem.Block{
-		Type:  "RSA PRIVATE KEY",
-		Bytes: x509.MarshalPKCS1PrivateKey(privateKey),
-	})
-	publicDER, err := x509.MarshalPKIXPublicKey(&privateKey.PublicKey)
-	if err != nil {
-		t.Fatalf("marshal public key: %v", err)
-	}
-	publicPEM := pem.EncodeToMemory(&pem.Block{
-		Type:  "PUBLIC KEY",
-		Bytes: publicDER,
-	})
-
-	keyDir := t.TempDir()
-	privatePath := filepath.Join(keyDir, "test_private.pem")
-	publicPath := filepath.Join(keyDir, "test_public.pem")
-	if err := os.WriteFile(privatePath, privatePEM, 0o600); err != nil {
-		t.Fatalf("write private key: %v", err)
-	}
-	if err := os.WriteFile(publicPath, publicPEM, 0o644); err != nil {
-		t.Fatalf("write public key: %v", err)
-	}
-
-	return privatePath, publicPath
 }
