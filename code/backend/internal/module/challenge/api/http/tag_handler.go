@@ -25,7 +25,6 @@ type tagCommandService interface {
 }
 
 type tagQueryService interface {
-	ListTags(tagType string) ([]*dto.TagResp, error)
 	ListTagsWithContext(ctx context.Context, tagType string) ([]*dto.TagResp, error)
 }
 
