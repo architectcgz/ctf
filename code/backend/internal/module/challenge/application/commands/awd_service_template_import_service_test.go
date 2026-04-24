@@ -56,9 +56,9 @@ func TestAWDServiceTemplateImportFlowPreviewAndCommit(t *testing.T) {
 		t.Fatalf("expected runtime_config.image_id in committed template, got %+v", committed.RuntimeConfig)
 	}
 
-	stored, err := repo.FindAWDServiceTemplateByID(committed.ID)
+	stored, err := repo.FindAWDServiceTemplateByIDWithContext(context.Background(), committed.ID)
 	if err != nil {
-		t.Fatalf("FindAWDServiceTemplateByID() error = %v", err)
+		t.Fatalf("FindAWDServiceTemplateByIDWithContext() error = %v", err)
 	}
 	if string(stored.Status) != "published" {
 		t.Fatalf("unexpected stored status: %+v", stored)

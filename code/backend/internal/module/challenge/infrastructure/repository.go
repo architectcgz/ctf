@@ -90,16 +90,8 @@ func (r *Repository) DeleteWithContext(ctx context.Context, id int64) error {
 	return r.dbWithContext(ctx).Delete(&model.Challenge{}, id).Error
 }
 
-func (r *Repository) CreateAWDServiceTemplate(template *model.AWDServiceTemplate) error {
-	return r.CreateAWDServiceTemplateWithContext(context.Background(), template)
-}
-
 func (r *Repository) CreateAWDServiceTemplateWithContext(ctx context.Context, template *model.AWDServiceTemplate) error {
 	return r.dbWithContext(ctx).Create(template).Error
-}
-
-func (r *Repository) FindAWDServiceTemplateByID(id int64) (*model.AWDServiceTemplate, error) {
-	return r.FindAWDServiceTemplateByIDWithContext(context.Background(), id)
 }
 
 func (r *Repository) FindAWDServiceTemplateByIDWithContext(ctx context.Context, id int64) (*model.AWDServiceTemplate, error) {
@@ -108,24 +100,12 @@ func (r *Repository) FindAWDServiceTemplateByIDWithContext(ctx context.Context, 
 	return &template, err
 }
 
-func (r *Repository) UpdateAWDServiceTemplate(template *model.AWDServiceTemplate) error {
-	return r.UpdateAWDServiceTemplateWithContext(context.Background(), template)
-}
-
 func (r *Repository) UpdateAWDServiceTemplateWithContext(ctx context.Context, template *model.AWDServiceTemplate) error {
 	return r.dbWithContext(ctx).Save(template).Error
 }
 
-func (r *Repository) DeleteAWDServiceTemplate(id int64) error {
-	return r.DeleteAWDServiceTemplateWithContext(context.Background(), id)
-}
-
 func (r *Repository) DeleteAWDServiceTemplateWithContext(ctx context.Context, id int64) error {
 	return r.dbWithContext(ctx).Delete(&model.AWDServiceTemplate{}, id).Error
-}
-
-func (r *Repository) ListAWDServiceTemplates(query *dto.AWDServiceTemplateQuery) ([]*model.AWDServiceTemplate, int64, error) {
-	return r.ListAWDServiceTemplatesWithContext(context.Background(), query)
 }
 
 func (r *Repository) ListAWDServiceTemplatesWithContext(ctx context.Context, query *dto.AWDServiceTemplateQuery) ([]*model.AWDServiceTemplate, int64, error) {

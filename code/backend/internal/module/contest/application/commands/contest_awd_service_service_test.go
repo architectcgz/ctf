@@ -66,7 +66,7 @@ func TestContestAWDServiceServiceCreateFromTemplate(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
-	if err := challengeRepo.CreateAWDServiceTemplate(&model.AWDServiceTemplate{
+	if err := challengeRepo.CreateAWDServiceTemplateWithContext(context.Background(), &model.AWDServiceTemplate{
 		ID:             1001,
 		Name:           "Bank Portal",
 		Slug:           "bank-portal",
@@ -147,7 +147,7 @@ func TestContestAWDServiceServiceUpdateMaintainsSnapshotOnly(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
-	if err := challengeRepo.CreateAWDServiceTemplate(&model.AWDServiceTemplate{
+	if err := challengeRepo.CreateAWDServiceTemplateWithContext(context.Background(), &model.AWDServiceTemplate{
 		ID:             1002,
 		Name:           "Billing API",
 		Slug:           "billing-api",
@@ -229,7 +229,7 @@ func TestContestAWDServiceServiceCreateDoesNotPersistLegacyChallengeIDInRuntimeC
 	}); err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
-	if err := challengeRepo.CreateAWDServiceTemplate(&model.AWDServiceTemplate{
+	if err := challengeRepo.CreateAWDServiceTemplateWithContext(context.Background(), &model.AWDServiceTemplate{
 		ID:             1004,
 		Name:           "Orders API",
 		Slug:           "orders-api",
@@ -325,7 +325,7 @@ func TestContestAWDServiceServiceUpdateDoesNotPersistLegacyChallengeIDInRuntimeC
 	}); err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
-	if err := challengeRepo.CreateAWDServiceTemplate(&model.AWDServiceTemplate{
+	if err := challengeRepo.CreateAWDServiceTemplateWithContext(context.Background(), &model.AWDServiceTemplate{
 		ID:             1005,
 		Name:           "Inventory API",
 		Slug:           "inventory-api",
@@ -427,7 +427,7 @@ func TestContestAWDServiceServiceCreateConsumesCheckerPreviewToken(t *testing.T)
 	}); err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
-	if err := challengeRepo.CreateAWDServiceTemplate(&model.AWDServiceTemplate{
+	if err := challengeRepo.CreateAWDServiceTemplateWithContext(context.Background(), &model.AWDServiceTemplate{
 		ID:             1006,
 		Name:           "Preview Service",
 		Slug:           "preview-service",
@@ -547,7 +547,7 @@ func TestContestAWDServiceServiceCreateRejectsMissingCheckerPreviewToken(t *test
 	}); err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
-	if err := challengeRepo.CreateAWDServiceTemplate(&model.AWDServiceTemplate{
+	if err := challengeRepo.CreateAWDServiceTemplateWithContext(context.Background(), &model.AWDServiceTemplate{
 		ID:             1106,
 		Name:           "Preview Service Missing Token",
 		Slug:           "preview-service-missing-token",
@@ -622,7 +622,7 @@ func TestContestAWDServiceServiceUpdateConsumesCheckerPreviewTokenByServiceID(t 
 	}); err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
-	if err := challengeRepo.CreateAWDServiceTemplate(&model.AWDServiceTemplate{
+	if err := challengeRepo.CreateAWDServiceTemplateWithContext(context.Background(), &model.AWDServiceTemplate{
 		ID:             1007,
 		Name:           "Preview Update Service",
 		Slug:           "preview-update-service",
@@ -746,7 +746,7 @@ func TestContestAWDServiceServiceUpdateRejectsMissingCheckerPreviewToken(t *test
 	}); err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
-	if err := challengeRepo.CreateAWDServiceTemplate(&model.AWDServiceTemplate{
+	if err := challengeRepo.CreateAWDServiceTemplateWithContext(context.Background(), &model.AWDServiceTemplate{
 		ID:             1107,
 		Name:           "Preview Update Missing Token",
 		Slug:           "preview-update-missing-token",
@@ -814,7 +814,7 @@ func TestContestAWDServiceServiceDeleteRemovesOnlyServiceRecord(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
-	if err := challengeRepo.CreateAWDServiceTemplate(&model.AWDServiceTemplate{
+	if err := challengeRepo.CreateAWDServiceTemplateWithContext(context.Background(), &model.AWDServiceTemplate{
 		ID:             1003,
 		Name:           "User Center",
 		Slug:           "user-center",
