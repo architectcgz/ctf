@@ -394,7 +394,7 @@ func (s *Service) provisionInstance(ctx context.Context, instance *model.Instanc
 	}
 
 	instance.Status = model.InstanceStatusRunning
-	if err := s.instanceRepo.UpdateRuntimeWithContext(ctx, instance); err != nil {
+	if err := s.instanceRepo.UpdateRuntime(ctx, instance); err != nil {
 		s.logger.Error("更新实例状态失败", zap.Error(err), zap.Int64("instance_id", instance.ID))
 		s.markInstanceFailed(ctx, instance)
 		return errcode.ErrInternal.WithCause(err)

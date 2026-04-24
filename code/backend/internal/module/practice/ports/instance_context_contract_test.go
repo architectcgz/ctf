@@ -14,7 +14,7 @@ func (ctxOnlyInstanceRepository) FindByID(context.Context, int64) (*model.Instan
 	return nil, nil
 }
 
-func (ctxOnlyInstanceRepository) UpdateRuntimeWithContext(context.Context, *model.Instance) error {
+func (ctxOnlyInstanceRepository) UpdateRuntime(context.Context, *model.Instance) error {
 	return nil
 }
 
