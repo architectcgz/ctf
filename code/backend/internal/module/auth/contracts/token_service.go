@@ -26,8 +26,7 @@ type RefreshAccessPayload struct {
 }
 
 type TokenService interface {
-	IssueTokens(userID int64, username, role string) (*TokenPair, error)
-	IssueTokensWithContext(ctx context.Context, userID int64, username, role string) (*TokenPair, error)
+	IssueTokens(ctx context.Context, userID int64, username, role string) (*TokenPair, error)
 	RefreshAccessToken(ctx context.Context, refreshToken string) (*RefreshAccessPayload, error)
 	RevokeToken(ctx context.Context, jti string, ttl time.Duration) error
 	ClearRefreshSession(ctx context.Context, userID int64, refreshJTI string) error
