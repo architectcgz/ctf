@@ -46,10 +46,10 @@ type challengeCommandService interface {
 }
 
 type challengeQueryService interface {
-	GetChallengeWithContext(ctx context.Context, id int64) (*dto.ChallengeResp, error)
-	ListChallengesWithContext(ctx context.Context, query *dto.ChallengeQuery) (*dto.PageResult, error)
-	ListPublishedChallengesWithContext(ctx context.Context, userID int64, query *dto.ChallengeQuery) (*dto.PageResult, error)
-	GetPublishedChallengeWithContext(ctx context.Context, userID, challengeID int64) (*dto.ChallengeDetailResp, error)
+	GetChallenge(ctx context.Context, id int64) (*dto.ChallengeResp, error)
+	ListChallenges(ctx context.Context, query *dto.ChallengeQuery) (*dto.PageResult, error)
+	ListPublishedChallenges(ctx context.Context, userID int64, query *dto.ChallengeQuery) (*dto.PageResult, error)
+	GetPublishedChallenge(ctx context.Context, userID, challengeID int64) (*dto.ChallengeDetailResp, error)
 }
 
 func NewHandler(commands challengeCommandService, queries challengeQueryService) *Handler {
@@ -115,7 +115,7 @@ func (h *Handler) GetChallenge(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.queries.GetChallengeWithContext(c.Request.Context(), id)
+	resp, err := h.queries.GetChallenge(c.Request.Context(), id)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -135,7 +135,7 @@ func (h *Handler) ListChallenges(c *gin.Context) {
 		query.CreatedBy = &currentUser.UserID
 	}
 
-	result, err := h.queries.ListChallengesWithContext(c.Request.Context(), &query)
+	result, err := h.queries.ListChallenges(c.Request.Context(), &query)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -259,7 +259,7 @@ func (h *Handler) ListPublishedChallenges(c *gin.Context) {
 		return
 	}
 
-	result, err := h.queries.ListPublishedChallengesWithContext(c.Request.Context(), authctx.MustCurrentUser(c).UserID, &query)
+	result, err := h.queries.ListPublishedChallenges(c.Request.Context(), authctx.MustCurrentUser(c).UserID, &query)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -276,7 +276,7 @@ func (h *Handler) GetPublishedChallenge(c *gin.Context) {
 		return
 	}
 
-	detail, err := h.queries.GetPublishedChallengeWithContext(c.Request.Context(), authctx.MustCurrentUser(c).UserID, id)
+	detail, err := h.queries.GetPublishedChallenge(c.Request.Context(), authctx.MustCurrentUser(c).UserID, id)
 	if err != nil {
 		response.FromError(c, err)
 		return

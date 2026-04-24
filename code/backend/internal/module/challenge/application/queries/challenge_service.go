@@ -36,10 +36,7 @@ func NewChallengeService(repo challengeports.ChallengeQueryRepository, redis *re
 	}
 }
 
-func (s *ChallengeService) GetChallengeWithContext(ctx context.Context, id int64) (*dto.ChallengeResp, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
+func (s *ChallengeService) GetChallenge(ctx context.Context, id int64) (*dto.ChallengeResp, error) {
 	challenge, err := s.repo.FindByIDWithContext(ctx, id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -54,10 +51,7 @@ func (s *ChallengeService) GetChallengeWithContext(ctx context.Context, id int64
 	return domain.ChallengeRespFromModel(challenge, hints), nil
 }
 
-func (s *ChallengeService) ListChallengesWithContext(ctx context.Context, query *dto.ChallengeQuery) (*dto.PageResult, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
+func (s *ChallengeService) ListChallenges(ctx context.Context, query *dto.ChallengeQuery) (*dto.PageResult, error) {
 	challenges, total, err := s.repo.ListWithContext(ctx, query)
 	if err != nil {
 		return nil, err
@@ -85,11 +79,7 @@ func (s *ChallengeService) ListChallengesWithContext(ctx context.Context, query 
 	}, nil
 }
 
-func (s *ChallengeService) ListPublishedChallengesWithContext(ctx context.Context, userID int64, query *dto.ChallengeQuery) (*dto.PageResult, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
+func (s *ChallengeService) ListPublishedChallenges(ctx context.Context, userID int64, query *dto.ChallengeQuery) (*dto.PageResult, error) {
 	challenges, total, err := s.repo.ListPublishedWithContext(ctx, query)
 	if err != nil {
 		return nil, err
@@ -149,11 +139,7 @@ func (s *ChallengeService) ListPublishedChallengesWithContext(ctx context.Contex
 	}, nil
 }
 
-func (s *ChallengeService) GetPublishedChallengeWithContext(ctx context.Context, userID, challengeID int64) (*dto.ChallengeDetailResp, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
+func (s *ChallengeService) GetPublishedChallenge(ctx context.Context, userID, challengeID int64) (*dto.ChallengeDetailResp, error) {
 	challenge, err := s.repo.FindByIDWithContext(ctx, challengeID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -221,10 +207,6 @@ func (s *ChallengeService) GetPublishedChallengeWithContext(ctx context.Context,
 }
 
 func (s *ChallengeService) getSolvedCountCached(ctx context.Context, challengeID int64) (int64, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
 	if s.redis == nil {
 		return s.repo.GetSolvedCountWithContext(ctx, challengeID)
 	}
