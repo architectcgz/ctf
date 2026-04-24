@@ -83,7 +83,7 @@ func (s *stubChallengeWriteupRepository) FindReleasedWriteupByChallengeID(ctx co
 	return nil, nil
 }
 
-func (s *stubChallengeWriteupRepository) GetSolvedStatusWithContext(ctx context.Context, userID, challengeID int64) (bool, error) {
+func (s *stubChallengeWriteupRepository) GetSolvedStatus(ctx context.Context, userID, challengeID int64) (bool, error) {
 	if s.getSolvedStatusWithContextFn != nil {
 		return s.getSolvedStatusWithContextFn(ctx, userID, challengeID)
 	}

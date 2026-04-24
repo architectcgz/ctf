@@ -319,7 +319,7 @@ func (r *Repository) applyPagination(db *gorm.DB, page, size int) *gorm.DB {
 	return db.Offset(offset).Limit(size)
 }
 
-func (r *Repository) GetSolvedStatusWithContext(ctx context.Context, userID, challengeID int64) (bool, error) {
+func (r *Repository) GetSolvedStatus(ctx context.Context, userID, challengeID int64) (bool, error) {
 	var count int64
 	err := r.dbWithContext(ctx).Table("submissions").
 		Where("user_id = ? AND challenge_id = ? AND is_correct = ?", userID, challengeID, true).

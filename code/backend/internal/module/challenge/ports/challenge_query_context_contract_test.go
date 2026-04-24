@@ -22,7 +22,7 @@ func (ctxOnlyChallengeQueryRepository) ListHintsByChallengeIDWithContext(context
 	return nil, nil
 }
 
-func (ctxOnlyChallengeQueryRepository) GetSolvedStatusWithContext(context.Context, int64, int64) (bool, error) {
+func (ctxOnlyChallengeQueryRepository) GetSolvedStatus(context.Context, int64, int64) (bool, error) {
 	return false, nil
 }
 

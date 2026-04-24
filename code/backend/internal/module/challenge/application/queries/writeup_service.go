@@ -59,7 +59,7 @@ func (s *WriteupService) GetPublished(ctx context.Context, userID, challengeID i
 		return nil, err
 	}
 
-	isSolved, err := s.repo.GetSolvedStatusWithContext(ctx, userID, challengeID)
+	isSolved, err := s.repo.GetSolvedStatus(ctx, userID, challengeID)
 	if err != nil {
 		isSolved = false
 	}
@@ -268,7 +268,7 @@ func (s *WriteupService) ensureSolvedChallengeVisible(ctx context.Context, userI
 	if challengeItem.Status != model.ChallengeStatusPublished {
 		return errcode.ErrChallengeNotPublish
 	}
-	isSolved, err := s.repo.GetSolvedStatusWithContext(ctx, userID, challengeID)
+	isSolved, err := s.repo.GetSolvedStatus(ctx, userID, challengeID)
 	if err != nil {
 		return err
 	}

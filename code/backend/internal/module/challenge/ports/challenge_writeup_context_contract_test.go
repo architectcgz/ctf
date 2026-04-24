@@ -35,7 +35,7 @@ func (ctxOnlyChallengeWriteupRepository) FindReleasedWriteupByChallengeID(contex
 	return nil, nil
 }
 
-func (ctxOnlyChallengeWriteupRepository) GetSolvedStatusWithContext(context.Context, int64, int64) (bool, error) {
+func (ctxOnlyChallengeWriteupRepository) GetSolvedStatus(context.Context, int64, int64) (bool, error) {
 	return false, nil
 }
 

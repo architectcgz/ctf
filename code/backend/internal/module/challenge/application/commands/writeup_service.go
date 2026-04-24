@@ -92,7 +92,7 @@ func (s *WriteupService) UpsertSubmission(ctx context.Context, challengeID, acto
 		return nil, err
 	}
 	if submissionStatus == model.SubmissionWriteupStatusPublished {
-		isSolved, solveErr := s.repo.GetSolvedStatusWithContext(ctx, actorUserID, challengeID)
+		isSolved, solveErr := s.repo.GetSolvedStatus(ctx, actorUserID, challengeID)
 		if solveErr != nil {
 			return nil, solveErr
 		}
