@@ -179,8 +179,8 @@ func TestRepositoryCreateAndListAWDServiceTemplates(t *testing.T) {
 		Status:         model.AWDServiceTemplateStatusDraft,
 	}
 
-	if err := repo.CreateAWDServiceTemplate(template); err != nil {
-		t.Fatalf("CreateAWDServiceTemplate() error = %v", err)
+	if err := repo.CreateAWDServiceTemplateWithContext(context.Background(), template); err != nil {
+		t.Fatalf("CreateAWDServiceTemplateWithContext() error = %v", err)
 	}
 	if template.ID == 0 {
 		t.Fatal("template ID should be set")
