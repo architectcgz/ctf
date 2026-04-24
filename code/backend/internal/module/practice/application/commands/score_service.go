@@ -37,15 +37,7 @@ func NewScoreService(repo practiceports.PracticeScoreRepository, redis *redis.Cl
 	}
 }
 
-func (s *ScoreService) CalculateScore(challengeID int64) int {
-	return s.CalculateScoreWithContext(context.Background(), challengeID)
-}
-
-func (s *ScoreService) CalculateScoreWithContext(ctx context.Context, challengeID int64) int {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
+func (s *ScoreService) CalculateScore(ctx context.Context, challengeID int64) int {
 	challenge, err := s.repo.FindChallengeScoreWithContext(ctx, challengeID)
 	if err != nil {
 		s.logger.Error("查询题目失败", zap.Int64("challengeID", challengeID), zap.Error(err))
@@ -55,15 +47,7 @@ func (s *ScoreService) CalculateScoreWithContext(ctx context.Context, challengeI
 	return domain.CalculateChallengeScore(challenge)
 }
 
-func (s *ScoreService) UpdateUserScore(userID int64) error {
-	return s.UpdateUserScoreWithContext(context.Background(), userID)
-}
-
-func (s *ScoreService) UpdateUserScoreWithContext(ctx context.Context, userID int64) error {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
+func (s *ScoreService) UpdateUserScore(ctx context.Context, userID int64) error {
 	lockKey := cache.ScoreLockKey(userID)
 	lockToken := uuid.New().String()
 	lock, err := s.redis.SetNX(ctx, lockKey, lockToken, s.config.LockTimeout).Result()
