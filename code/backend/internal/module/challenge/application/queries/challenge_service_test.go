@@ -25,7 +25,7 @@ func TestServiceGetPublishedChallengeNotPublished(t *testing.T) {
 	repo := challengeinfra.NewRepository(db)
 	service := NewChallengeService(repo, nil, &Config{SolvedCountCacheTTL: time.Minute}, nil)
 
-	_, err := service.GetPublishedChallenge(1, challenge.ID)
+	_, err := service.GetPublishedChallengeWithContext(context.Background(), 1, challenge.ID)
 	if err == nil || err.Error() != errcode.ErrForbidden.Error() {
 		t.Fatalf("expected not published error, got %v", err)
 	}
@@ -59,9 +59,9 @@ func TestServiceGetChallengeIncludesHintsAndAttachment(t *testing.T) {
 	repo := challengeinfra.NewRepository(db)
 	service := NewChallengeService(repo, nil, &Config{SolvedCountCacheTTL: time.Minute}, nil)
 
-	resp, err := service.GetChallenge(challenge.ID)
+	resp, err := service.GetChallengeWithContext(context.Background(), challenge.ID)
 	if err != nil {
-		t.Fatalf("GetChallenge() error = %v", err)
+		t.Fatalf("GetChallengeWithContext() error = %v", err)
 	}
 	if resp.AttachmentURL != challenge.AttachmentURL {
 		t.Fatalf("unexpected attachment url: %s", resp.AttachmentURL)

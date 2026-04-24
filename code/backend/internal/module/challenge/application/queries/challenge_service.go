@@ -36,10 +36,6 @@ func NewChallengeService(repo challengeports.ChallengeQueryRepository, redis *re
 	}
 }
 
-func (s *ChallengeService) GetChallenge(id int64) (*dto.ChallengeResp, error) {
-	return s.GetChallengeWithContext(context.Background(), id)
-}
-
 func (s *ChallengeService) GetChallengeWithContext(ctx context.Context, id int64) (*dto.ChallengeResp, error) {
 	if ctx == nil {
 		ctx = context.Background()
@@ -56,10 +52,6 @@ func (s *ChallengeService) GetChallengeWithContext(ctx context.Context, id int64
 		return nil, err
 	}
 	return domain.ChallengeRespFromModel(challenge, hints), nil
-}
-
-func (s *ChallengeService) ListChallenges(query *dto.ChallengeQuery) (*dto.PageResult, error) {
-	return s.ListChallengesWithContext(context.Background(), query)
 }
 
 func (s *ChallengeService) ListChallengesWithContext(ctx context.Context, query *dto.ChallengeQuery) (*dto.PageResult, error) {
@@ -91,10 +83,6 @@ func (s *ChallengeService) ListChallengesWithContext(ctx context.Context, query 
 		Page:  page,
 		Size:  size,
 	}, nil
-}
-
-func (s *ChallengeService) ListPublishedChallenges(userID int64, query *dto.ChallengeQuery) (*dto.PageResult, error) {
-	return s.ListPublishedChallengesWithContext(context.Background(), userID, query)
 }
 
 func (s *ChallengeService) ListPublishedChallengesWithContext(ctx context.Context, userID int64, query *dto.ChallengeQuery) (*dto.PageResult, error) {
@@ -159,10 +147,6 @@ func (s *ChallengeService) ListPublishedChallengesWithContext(ctx context.Contex
 		Page:  query.Page,
 		Size:  query.Size,
 	}, nil
-}
-
-func (s *ChallengeService) GetPublishedChallenge(userID, challengeID int64) (*dto.ChallengeDetailResp, error) {
-	return s.GetPublishedChallengeWithContext(context.Background(), userID, challengeID)
 }
 
 func (s *ChallengeService) GetPublishedChallengeWithContext(ctx context.Context, userID, challengeID int64) (*dto.ChallengeDetailResp, error) {
