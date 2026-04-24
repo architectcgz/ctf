@@ -14,17 +14,11 @@ import (
 )
 
 type challengeCommandContextRepoStub struct {
-	createWithHintsFn               func(challenge *model.Challenge, hints []*model.ChallengeHint) error
 	createWithHintsWithContextFn    func(ctx context.Context, challenge *model.Challenge, hints []*model.ChallengeHint) error
-	findByIDFn                      func(id int64) (*model.Challenge, error)
 	findByIDWithContextFn           func(ctx context.Context, id int64) (*model.Challenge, error)
-	updateFn                        func(challenge *model.Challenge) error
 	updateWithContextFn             func(ctx context.Context, challenge *model.Challenge) error
-	updateWithHintsFn               func(challenge *model.Challenge, hints []*model.ChallengeHint, replaceHints bool) error
 	updateWithHintsWithContextFn    func(ctx context.Context, challenge *model.Challenge, hints []*model.ChallengeHint, replaceHints bool) error
-	deleteFn                        func(id int64) error
 	deleteWithContextFn             func(ctx context.Context, id int64) error
-	hasRunningInstancesFn           func(challengeID int64) (bool, error)
 	hasRunningInstancesWithCtxFn    func(ctx context.Context, challengeID int64) (bool, error)
 	createPublishCheckJobFn         func(ctx context.Context, job *model.ChallengePublishCheckJob) error
 	findActivePublishCheckJobByIDFn func(ctx context.Context, challengeID int64) (*model.ChallengePublishCheckJob, error)
@@ -33,51 +27,23 @@ type challengeCommandContextRepoStub struct {
 	updatePublishCheckJobFn         func(ctx context.Context, job *model.ChallengePublishCheckJob) error
 }
 
-func (s *challengeCommandContextRepoStub) CreateWithHints(challenge *model.Challenge, hints []*model.ChallengeHint) error {
-	if s.createWithHintsFn != nil {
-		return s.createWithHintsFn(challenge, hints)
-	}
-	return nil
-}
-
 func (s *challengeCommandContextRepoStub) CreateWithHintsWithContext(ctx context.Context, challenge *model.Challenge, hints []*model.ChallengeHint) error {
 	if s.createWithHintsWithContextFn != nil {
 		return s.createWithHintsWithContextFn(ctx, challenge, hints)
 	}
-	return s.CreateWithHints(challenge, hints)
-}
-
-func (s *challengeCommandContextRepoStub) FindByID(id int64) (*model.Challenge, error) {
-	if s.findByIDFn != nil {
-		return s.findByIDFn(id)
-	}
-	return nil, nil
+	return nil
 }
 
 func (s *challengeCommandContextRepoStub) FindByIDWithContext(ctx context.Context, id int64) (*model.Challenge, error) {
 	if s.findByIDWithContextFn != nil {
 		return s.findByIDWithContextFn(ctx, id)
 	}
-	return s.FindByID(id)
-}
-
-func (s *challengeCommandContextRepoStub) Update(challenge *model.Challenge) error {
-	if s.updateFn != nil {
-		return s.updateFn(challenge)
-	}
-	return nil
+	return nil, nil
 }
 
 func (s *challengeCommandContextRepoStub) UpdateWithContext(ctx context.Context, challenge *model.Challenge) error {
 	if s.updateWithContextFn != nil {
 		return s.updateWithContextFn(ctx, challenge)
-	}
-	return s.Update(challenge)
-}
-
-func (s *challengeCommandContextRepoStub) UpdateWithHints(challenge *model.Challenge, hints []*model.ChallengeHint, replaceHints bool) error {
-	if s.updateWithHintsFn != nil {
-		return s.updateWithHintsFn(challenge, hints, replaceHints)
 	}
 	return nil
 }
@@ -86,13 +52,6 @@ func (s *challengeCommandContextRepoStub) UpdateWithHintsWithContext(ctx context
 	if s.updateWithHintsWithContextFn != nil {
 		return s.updateWithHintsWithContextFn(ctx, challenge, hints, replaceHints)
 	}
-	return s.UpdateWithHints(challenge, hints, replaceHints)
-}
-
-func (s *challengeCommandContextRepoStub) Delete(id int64) error {
-	if s.deleteFn != nil {
-		return s.deleteFn(id)
-	}
 	return nil
 }
 
@@ -100,21 +59,14 @@ func (s *challengeCommandContextRepoStub) DeleteWithContext(ctx context.Context,
 	if s.deleteWithContextFn != nil {
 		return s.deleteWithContextFn(ctx, id)
 	}
-	return s.Delete(id)
-}
-
-func (s *challengeCommandContextRepoStub) HasRunningInstances(challengeID int64) (bool, error) {
-	if s.hasRunningInstancesFn != nil {
-		return s.hasRunningInstancesFn(challengeID)
-	}
-	return false, nil
+	return nil
 }
 
 func (s *challengeCommandContextRepoStub) HasRunningInstancesWithContext(ctx context.Context, challengeID int64) (bool, error) {
 	if s.hasRunningInstancesWithCtxFn != nil {
 		return s.hasRunningInstancesWithCtxFn(ctx, challengeID)
 	}
-	return s.HasRunningInstances(challengeID)
+	return false, nil
 }
 
 func (s *challengeCommandContextRepoStub) CreatePublishCheckJob(ctx context.Context, job *model.ChallengePublishCheckJob) error {
@@ -425,13 +377,9 @@ func TestChallengeServiceRequestPublishCheckPropagatesContextToRepositories(t *t
 	activeCalled := false
 	createCalled := false
 
-	repo := &challengeCommandContextRepoStub{
-		findByIDFn: func(id int64) (*model.Challenge, error) {
-			t.Fatal("unexpected legacy find-by-id without context")
-			return nil, nil
-		},
-		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
-			findCalled = true
+		repo := &challengeCommandContextRepoStub{
+			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+				findCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find challenge ctx value %v, got %v", expectedCtxValue, got)
 			}
@@ -477,13 +425,9 @@ func TestChallengeServiceGetLatestPublishCheckPropagatesContextToRepositories(t 
 	latestCalled := false
 	now := time.Now()
 
-	repo := &challengeCommandContextRepoStub{
-		findByIDFn: func(id int64) (*model.Challenge, error) {
-			t.Fatal("unexpected legacy find-by-id without context")
-			return nil, nil
-		},
-		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
-			findCalled = true
+		repo := &challengeCommandContextRepoStub{
+			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+				findCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find challenge ctx value %v, got %v", expectedCtxValue, got)
 			}
@@ -523,13 +467,9 @@ func TestChallengeServiceSelfCheckChallengePropagatesContextToRepositories(t *te
 	createCalled := false
 	cleanupCalled := false
 
-	repo := &challengeCommandContextRepoStub{
-		findByIDFn: func(id int64) (*model.Challenge, error) {
-			t.Fatal("unexpected legacy find-by-id without context")
-			return nil, nil
-		},
-		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
-			findCalled = true
+		repo := &challengeCommandContextRepoStub{
+			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+				findCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find challenge ctx value %v, got %v", expectedCtxValue, got)
 			}
@@ -597,13 +537,9 @@ func TestChallengeServicePublishChallengeWithContextPropagatesContextToRepositor
 	findCalled := false
 	updateCalled := false
 
-	repo := &challengeCommandContextRepoStub{
-		findByIDFn: func(id int64) (*model.Challenge, error) {
-			t.Fatal("unexpected legacy find-by-id without context")
-			return nil, nil
-		},
-		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
-			findCalled = true
+		repo := &challengeCommandContextRepoStub{
+			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+				findCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find challenge ctx value %v, got %v", expectedCtxValue, got)
 			}
@@ -641,20 +577,16 @@ func TestChallengeServiceProcessPublishCheckJobPropagatesContextToRepositories(t
 	publishUpdateCalled := false
 	updateJobCalled := 0
 
-	repo := &challengeCommandContextRepoStub{
-		findPublishCheckJobByIDFn: func(ctx context.Context, id int64) (*model.ChallengePublishCheckJob, error) {
+		repo := &challengeCommandContextRepoStub{
+			findPublishCheckJobByIDFn: func(ctx context.Context, id int64) (*model.ChallengePublishCheckJob, error) {
 			loadJobCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected load job ctx value %v, got %v", expectedCtxValue, got)
 			}
 			return &model.ChallengePublishCheckJob{ID: id, ChallengeID: 21, RequestedBy: 1001, Status: model.ChallengePublishCheckStatusRunning}, nil
 		},
-		findByIDFn: func(id int64) (*model.Challenge, error) {
-			t.Fatal("unexpected legacy find-by-id without context")
-			return nil, nil
-		},
-		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
-			findChallengeCalled = true
+			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+				findChallengeCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find challenge ctx value %v, got %v", expectedCtxValue, got)
 			}
