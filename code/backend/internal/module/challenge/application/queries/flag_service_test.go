@@ -9,7 +9,7 @@ import (
 
 type stubChallengeFlagRepository struct {
 	findByIDWithContextFn func(ctx context.Context, id int64) (*model.Challenge, error)
-	updateWithContextFn   func(ctx context.Context, challenge *model.Challenge) error
+	updateFn              func(ctx context.Context, challenge *model.Challenge) error
 }
 
 func (s *stubChallengeFlagRepository) FindByID(ctx context.Context, id int64) (*model.Challenge, error) {
@@ -19,9 +19,9 @@ func (s *stubChallengeFlagRepository) FindByID(ctx context.Context, id int64) (*
 	return nil, nil
 }
 
-func (s *stubChallengeFlagRepository) UpdateWithContext(ctx context.Context, challenge *model.Challenge) error {
-	if s.updateWithContextFn != nil {
-		return s.updateWithContextFn(ctx, challenge)
+func (s *stubChallengeFlagRepository) Update(ctx context.Context, challenge *model.Challenge) error {
+	if s.updateFn != nil {
+		return s.updateFn(ctx, challenge)
 	}
 	return nil
 }

@@ -9,12 +9,12 @@ import (
 )
 
 type ChallengeCommandRepository interface {
-	CreateWithHintsWithContext(ctx context.Context, challenge *model.Challenge, hints []*model.ChallengeHint) error
+	CreateWithHints(ctx context.Context, challenge *model.Challenge, hints []*model.ChallengeHint) error
 	FindByID(ctx context.Context, id int64) (*model.Challenge, error)
-	UpdateWithContext(ctx context.Context, challenge *model.Challenge) error
-	UpdateWithHintsWithContext(ctx context.Context, challenge *model.Challenge, hints []*model.ChallengeHint, replaceHints bool) error
-	DeleteWithContext(ctx context.Context, id int64) error
-	HasRunningInstancesWithContext(ctx context.Context, challengeID int64) (bool, error)
+	Update(ctx context.Context, challenge *model.Challenge) error
+	UpdateWithHints(ctx context.Context, challenge *model.Challenge, hints []*model.ChallengeHint, replaceHints bool) error
+	Delete(ctx context.Context, id int64) error
+	HasRunningInstances(ctx context.Context, challengeID int64) (bool, error)
 	CreatePublishCheckJob(ctx context.Context, job *model.ChallengePublishCheckJob) error
 	FindPublishCheckJobByID(ctx context.Context, id int64) (*model.ChallengePublishCheckJob, error)
 	FindActivePublishCheckJobByChallengeID(ctx context.Context, challengeID int64) (*model.ChallengePublishCheckJob, error)
@@ -26,7 +26,7 @@ type ChallengeCommandRepository interface {
 
 type ChallengeFlagRepository interface {
 	FindByID(ctx context.Context, id int64) (*model.Challenge, error)
-	UpdateWithContext(ctx context.Context, challenge *model.Challenge) error
+	Update(ctx context.Context, challenge *model.Challenge) error
 }
 
 type ChallengeQueryRepository interface {

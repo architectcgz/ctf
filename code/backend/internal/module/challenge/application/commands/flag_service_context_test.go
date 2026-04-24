@@ -10,7 +10,7 @@ import (
 
 type flagCommandContextRepoStub struct {
 	findByIDWithContextFn func(ctx context.Context, id int64) (*model.Challenge, error)
-	updateWithContextFn   func(ctx context.Context, challenge *model.Challenge) error
+	updateFn              func(ctx context.Context, challenge *model.Challenge) error
 }
 
 func (s *flagCommandContextRepoStub) FindByID(ctx context.Context, id int64) (*model.Challenge, error) {
@@ -20,9 +20,9 @@ func (s *flagCommandContextRepoStub) FindByID(ctx context.Context, id int64) (*m
 	return nil, nil
 }
 
-func (s *flagCommandContextRepoStub) UpdateWithContext(ctx context.Context, challenge *model.Challenge) error {
-	if s.updateWithContextFn != nil {
-		return s.updateWithContextFn(ctx, challenge)
+func (s *flagCommandContextRepoStub) Update(ctx context.Context, challenge *model.Challenge) error {
+	if s.updateFn != nil {
+		return s.updateFn(ctx, challenge)
 	}
 	return nil
 }
@@ -104,7 +104,7 @@ func TestFlagServiceConfigureWithContextPropagatesContextToRepository(t *testing
 					}
 					return &model.Challenge{ID: id, Title: tt.name, FlagPrefix: "legacy", FlagHash: "legacy-hash", FlagSalt: "legacy-salt", FlagRegex: "legacy-regex"}, nil
 				},
-				updateWithContextFn: func(ctx context.Context, challenge *model.Challenge) error {
+				updateFn: func(ctx context.Context, challenge *model.Challenge) error {
 					updateCalled = true
 					if got := ctx.Value(ctxKey); got != expectedCtxValue {
 						t.Fatalf("expected update-challenge ctx value %v, got %v", expectedCtxValue, got)

@@ -66,9 +66,9 @@ func TestRepositoryHasRunningInstances(t *testing.T) {
 	db.Create(challenge)
 	db.Create(&model.Instance{ChallengeID: challenge.ID, Status: "running"})
 
-	has, err := repo.HasRunningInstancesWithContext(context.Background(), challenge.ID)
+	has, err := repo.HasRunningInstances(context.Background(), challenge.ID)
 	if err != nil {
-		t.Fatalf("HasRunningInstancesWithContext() error = %v", err)
+		t.Fatalf("HasRunningInstances() error = %v", err)
 	}
 	if !has {
 		t.Fatal("should have running instances")

@@ -113,7 +113,7 @@ func (s *ChallengeService) CreateChallenge(ctx context.Context, actorUserID int6
 	if err := s.validateInstanceSharingConfig(ctx, challenge); err != nil {
 		return nil, err
 	}
-	if err := s.repo.CreateWithHintsWithContext(ctx, challenge, hints); err != nil {
+	if err := s.repo.CreateWithHints(ctx, challenge, hints); err != nil {
 		return nil, err
 	}
 	return domain.ChallengeRespFromModel(challenge, hints), nil
@@ -170,7 +170,7 @@ func (s *ChallengeService) UpdateChallenge(ctx context.Context, id int64, req *d
 		return err
 	}
 
-	return s.repo.UpdateWithHintsWithContext(ctx, challenge, hints, replaceHints)
+	return s.repo.UpdateWithHints(ctx, challenge, hints, replaceHints)
 }
 
 func normalizeInstanceSharing(value model.InstanceSharing) model.InstanceSharing {
@@ -223,7 +223,7 @@ func (s *ChallengeService) DeleteChallenge(ctx context.Context, id int64) error 
 		return err
 	}
 
-	hasInstances, err := s.repo.HasRunningInstancesWithContext(ctx, id)
+	hasInstances, err := s.repo.HasRunningInstances(ctx, id)
 	if err != nil {
 		return err
 	}
@@ -231,7 +231,7 @@ func (s *ChallengeService) DeleteChallenge(ctx context.Context, id int64) error 
 		return errcode.New(errcode.ErrConflict.Code, domain.ErrMsgHasRunningStudents, errcode.ErrConflict.HTTPStatus).
 			WithCause(errors.New(domain.ErrMsgHasRunningInstances))
 	}
-	return s.repo.DeleteWithContext(ctx, id)
+	return s.repo.Delete(ctx, id)
 }
 
 func (s *ChallengeService) PublishChallenge(ctx context.Context, id int64) error {
@@ -244,7 +244,7 @@ func (s *ChallengeService) PublishChallenge(ctx context.Context, id int64) error
 	}
 
 	challenge.Status = model.ChallengeStatusPublished
-	return s.repo.UpdateWithContext(ctx, challenge)
+	return s.repo.Update(ctx, challenge)
 }
 
 func (s *ChallengeService) RequestPublishCheck(ctx context.Context, actorUserID, id int64) (*dto.ChallengePublishCheckJobResp, error) {
