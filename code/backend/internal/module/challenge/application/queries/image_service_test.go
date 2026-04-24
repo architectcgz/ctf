@@ -62,7 +62,7 @@ func (s *stubChallengeImageRepository) DeleteWithContext(ctx context.Context, id
 
 type challengeImageContextKey string
 
-func TestImageServiceGetImageWithContextPropagatesContextToRepository(t *testing.T) {
+func TestImageServiceGetImagePropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := challengeImageContextKey("image-query")
@@ -80,9 +80,9 @@ func TestImageServiceGetImageWithContextPropagatesContextToRepository(t *testing
 	service := NewImageService(repo, &config.Config{Pagination: config.PaginationConfig{DefaultPageSize: 20, MaxPageSize: 100}})
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.GetImageWithContext(ctx, 42)
+	resp, err := service.GetImage(ctx, 42)
 	if err != nil {
-		t.Fatalf("GetImageWithContext() error = %v", err)
+		t.Fatalf("GetImage() error = %v", err)
 	}
 	if !findCalled {
 		t.Fatal("expected repository find to be called")
@@ -92,7 +92,7 @@ func TestImageServiceGetImageWithContextPropagatesContextToRepository(t *testing
 	}
 }
 
-func TestImageServiceListImagesWithContextPropagatesContextToRepository(t *testing.T) {
+func TestImageServiceListImagesPropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := challengeImageContextKey("image-list")
@@ -113,9 +113,9 @@ func TestImageServiceListImagesWithContextPropagatesContextToRepository(t *testi
 	service := NewImageService(repo, &config.Config{Pagination: config.PaginationConfig{DefaultPageSize: 20, MaxPageSize: 100}})
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.ListImagesWithContext(ctx, &dto.ImageQuery{Name: "web", Status: model.ImageStatusAvailable})
+	resp, err := service.ListImages(ctx, &dto.ImageQuery{Name: "web", Status: model.ImageStatusAvailable})
 	if err != nil {
-		t.Fatalf("ListImagesWithContext() error = %v", err)
+		t.Fatalf("ListImages() error = %v", err)
 	}
 	if !listCalled {
 		t.Fatal("expected repository list to be called")

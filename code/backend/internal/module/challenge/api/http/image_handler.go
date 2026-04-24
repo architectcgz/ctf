@@ -24,8 +24,8 @@ type imageCommandService interface {
 }
 
 type imageQueryService interface {
-	GetImageWithContext(ctx context.Context, id int64) (*dto.ImageResp, error)
-	ListImagesWithContext(ctx context.Context, query *dto.ImageQuery) (*dto.PageResult, error)
+	GetImage(ctx context.Context, id int64) (*dto.ImageResp, error)
+	ListImages(ctx context.Context, query *dto.ImageQuery) (*dto.PageResult, error)
 }
 
 func NewImageHandler(commands imageCommandService, queries imageQueryService) *ImageHandler {
@@ -55,7 +55,7 @@ func (h *ImageHandler) GetImage(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.queries.GetImageWithContext(c.Request.Context(), id)
+	resp, err := h.queries.GetImage(c.Request.Context(), id)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -71,7 +71,7 @@ func (h *ImageHandler) ListImages(c *gin.Context) {
 		return
 	}
 
-	result, err := h.queries.ListImagesWithContext(c.Request.Context(), &query)
+	result, err := h.queries.ListImages(c.Request.Context(), &query)
 	if err != nil {
 		response.FromError(c, err)
 		return
