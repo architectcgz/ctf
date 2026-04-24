@@ -50,7 +50,7 @@ func TestWriteupServiceUpsertAndGetPublished(t *testing.T) {
 	}
 
 	queryService := challengeqry.NewWriteupService(repo)
-	published, err := queryService.GetPublished(1001, challengeItem.ID)
+	published, err := queryService.GetPublished(context.Background(), 1001, challengeItem.ID)
 	if err != nil {
 		t.Fatalf("GetPublished() error = %v", err)
 	}

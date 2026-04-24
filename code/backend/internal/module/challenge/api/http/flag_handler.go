@@ -29,7 +29,7 @@ type flagCommandService interface {
 }
 
 type flagQueryService interface {
-	GetFlagConfigWithContext(ctx context.Context, challengeID int64) (*dto.FlagResp, error)
+	GetFlagConfig(ctx context.Context, challengeID int64) (*dto.FlagResp, error)
 }
 
 func NewFlagHandler(commands flagCommandService, queries flagQueryService) *FlagHandler {
@@ -78,7 +78,7 @@ func (h *FlagHandler) GetFlagConfig(c *gin.Context) {
 		return
 	}
 
-	flagResp, err := h.queries.GetFlagConfigWithContext(c.Request.Context(), challengeID)
+	flagResp, err := h.queries.GetFlagConfig(c.Request.Context(), challengeID)
 	if err != nil {
 		response.FromError(c, err)
 		return

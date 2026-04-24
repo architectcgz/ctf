@@ -40,7 +40,7 @@ func (s *FlagService) GenerateDynamicFlag(userID, challengeID int64, nonce strin
 		return "", errcode.ErrInvalidParams
 	}
 
-	challenge, err := s.loadChallenge(challengeID)
+	challenge, err := s.loadChallenge(context.Background(), challengeID)
 	if err != nil {
 		return "", err
 	}
@@ -48,7 +48,7 @@ func (s *FlagService) GenerateDynamicFlag(userID, challengeID int64, nonce strin
 }
 
 func (s *FlagService) ValidateFlag(userID, challengeID int64, input string, nonce string) (bool, error) {
-	challenge, err := s.loadChallenge(challengeID)
+	challenge, err := s.loadChallenge(context.Background(), challengeID)
 	if err != nil {
 		return false, err
 	}
@@ -72,8 +72,8 @@ func (s *FlagService) ValidateFlag(userID, challengeID int64, input string, nonc
 	}
 }
 
-func (s *FlagService) GetFlagConfigWithContext(ctx context.Context, challengeID int64) (*dto.FlagResp, error) {
-	challenge, err := s.loadChallengeWithContext(ctx, challengeID)
+func (s *FlagService) GetFlagConfig(ctx context.Context, challengeID int64) (*dto.FlagResp, error) {
+	challenge, err := s.loadChallenge(ctx, challengeID)
 	if err != nil {
 		return nil, err
 	}
@@ -97,11 +97,10 @@ func (s *FlagService) GetFlagConfigWithContext(ctx context.Context, challengeID 
 	}, nil
 }
 
-func (s *FlagService) loadChallenge(challengeID int64) (*model.Challenge, error) {
-	return s.loadChallengeWithContext(context.Background(), challengeID)
-}
-
-func (s *FlagService) loadChallengeWithContext(ctx context.Context, challengeID int64) (*model.Challenge, error) {
+func (s *FlagService) loadChallenge(ctx context.Context, challengeID int64) (*model.Challenge, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
 	challenge, err := s.repo.FindByIDWithContext(ctx, challengeID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
