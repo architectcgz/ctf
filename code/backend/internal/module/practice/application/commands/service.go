@@ -821,20 +821,10 @@ func (s *Service) ListTeacherManualReviewSubmissions(
 }
 
 func (s *Service) GetTeacherManualReviewSubmission(
-	submissionID, requesterID int64,
-	requesterRole string,
-) (*dto.TeacherManualReviewSubmissionDetailResp, error) {
-	return s.GetTeacherManualReviewSubmissionWithContext(context.Background(), submissionID, requesterID, requesterRole)
-}
-
-func (s *Service) GetTeacherManualReviewSubmissionWithContext(
 	ctx context.Context,
 	submissionID, requesterID int64,
 	requesterRole string,
 ) (*dto.TeacherManualReviewSubmissionDetailResp, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
 	if err := ensureManualReviewRequesterRole(requesterRole); err != nil {
 		return nil, err
 	}
