@@ -40,10 +40,6 @@ func (r *Repository) Create(challenge *model.Challenge) error {
 	return r.db.Create(challenge).Error
 }
 
-func (r *Repository) CreateWithHints(challenge *model.Challenge, hints []*model.ChallengeHint) error {
-	return r.CreateWithHintsWithContext(context.Background(), challenge, hints)
-}
-
 func (r *Repository) CreateWithHintsWithContext(ctx context.Context, challenge *model.Challenge, hints []*model.ChallengeHint) error {
 	return r.dbWithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		if err := tx.Create(challenge).Error; err != nil {
@@ -59,26 +55,14 @@ func (r *Repository) CreateWithHintsWithContext(ctx context.Context, challenge *
 	})
 }
 
-func (r *Repository) FindByID(id int64) (*model.Challenge, error) {
-	return r.FindByIDWithContext(context.Background(), id)
-}
-
 func (r *Repository) FindByIDWithContext(ctx context.Context, id int64) (*model.Challenge, error) {
 	var challenge model.Challenge
 	err := r.dbWithContext(ctx).Where("id = ?", id).First(&challenge).Error
 	return &challenge, err
 }
 
-func (r *Repository) Update(challenge *model.Challenge) error {
-	return r.UpdateWithContext(context.Background(), challenge)
-}
-
 func (r *Repository) UpdateWithContext(ctx context.Context, challenge *model.Challenge) error {
 	return r.dbWithContext(ctx).Save(challenge).Error
-}
-
-func (r *Repository) UpdateWithHints(challenge *model.Challenge, hints []*model.ChallengeHint, replaceHints bool) error {
-	return r.UpdateWithHintsWithContext(context.Background(), challenge, hints, replaceHints)
 }
 
 func (r *Repository) UpdateWithHintsWithContext(ctx context.Context, challenge *model.Challenge, hints []*model.ChallengeHint, replaceHints bool) error {
@@ -100,10 +84,6 @@ func (r *Repository) UpdateWithHintsWithContext(ctx context.Context, challenge *
 		}
 		return tx.Create(&hints).Error
 	})
-}
-
-func (r *Repository) Delete(id int64) error {
-	return r.DeleteWithContext(context.Background(), id)
 }
 
 func (r *Repository) DeleteWithContext(ctx context.Context, id int64) error {
@@ -227,10 +207,6 @@ func (r *Repository) ListWithContext(ctx context.Context, query *dto.ChallengeQu
 	offset := (page - 1) * size
 	err := db.Offset(offset).Limit(size).Order("created_at DESC").Find(&challenges).Error
 	return challenges, total, err
-}
-
-func (r *Repository) HasRunningInstances(challengeID int64) (bool, error) {
-	return r.HasRunningInstancesWithContext(context.Background(), challengeID)
 }
 
 func (r *Repository) HasRunningInstancesWithContext(ctx context.Context, challengeID int64) (bool, error) {

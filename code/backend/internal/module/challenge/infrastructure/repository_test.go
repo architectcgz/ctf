@@ -30,9 +30,9 @@ func TestRepositoryFindByID(t *testing.T) {
 	challenge := &model.Challenge{Title: "Test"}
 	db.Create(challenge)
 
-	found, err := repo.FindByID(challenge.ID)
+	found, err := repo.FindByIDWithContext(context.Background(), challenge.ID)
 	if err != nil {
-		t.Fatalf("FindByID() error = %v", err)
+		t.Fatalf("FindByIDWithContext() error = %v", err)
 	}
 	if found.Title != "Test" {
 		t.Fatalf("unexpected title: %s", found.Title)
@@ -66,9 +66,9 @@ func TestRepositoryHasRunningInstances(t *testing.T) {
 	db.Create(challenge)
 	db.Create(&model.Instance{ChallengeID: challenge.ID, Status: "running"})
 
-	has, err := repo.HasRunningInstances(challenge.ID)
+	has, err := repo.HasRunningInstancesWithContext(context.Background(), challenge.ID)
 	if err != nil {
-		t.Fatalf("HasRunningInstances() error = %v", err)
+		t.Fatalf("HasRunningInstancesWithContext() error = %v", err)
 	}
 	if !has {
 		t.Fatal("should have running instances")
