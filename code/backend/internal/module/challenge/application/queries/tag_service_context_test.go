@@ -8,36 +8,36 @@ import (
 )
 
 type tagQueryContextStub struct {
-	listWithContextFn              func(ctx context.Context, tagType string) ([]*model.Tag, error)
-	findByChallengeIDWithContextFn func(ctx context.Context, challengeID int64) ([]*model.Tag, error)
+	listFn              func(ctx context.Context, tagType string) ([]*model.Tag, error)
+	findByChallengeIDFn func(ctx context.Context, challengeID int64) ([]*model.Tag, error)
 }
 
-func (s *tagQueryContextStub) CreateWithContext(ctx context.Context, tag *model.Tag) error {
+func (s *tagQueryContextStub) Create(ctx context.Context, tag *model.Tag) error {
 	return nil
 }
-func (s *tagQueryContextStub) ListWithContext(ctx context.Context, tagType string) ([]*model.Tag, error) {
-	if s.listWithContextFn != nil {
-		return s.listWithContextFn(ctx, tagType)
+func (s *tagQueryContextStub) List(ctx context.Context, tagType string) ([]*model.Tag, error) {
+	if s.listFn != nil {
+		return s.listFn(ctx, tagType)
 	}
 	return nil, nil
 }
-func (s *tagQueryContextStub) FindByIDsWithContext(ctx context.Context, ids []int64) ([]*model.Tag, error) {
+func (s *tagQueryContextStub) FindByIDs(ctx context.Context, ids []int64) ([]*model.Tag, error) {
 	return nil, nil
 }
-func (s *tagQueryContextStub) AttachTagsInTxWithContext(ctx context.Context, challengeID int64, tagIDs []int64) error {
+func (s *tagQueryContextStub) AttachTagsInTx(ctx context.Context, challengeID int64, tagIDs []int64) error {
 	return nil
 }
-func (s *tagQueryContextStub) DetachFromChallengeWithContext(ctx context.Context, challengeID, tagID int64) error {
+func (s *tagQueryContextStub) DetachFromChallenge(ctx context.Context, challengeID, tagID int64) error {
 	return nil
 }
-func (s *tagQueryContextStub) FindByChallengeIDWithContext(ctx context.Context, challengeID int64) ([]*model.Tag, error) {
-	if s.findByChallengeIDWithContextFn != nil {
-		return s.findByChallengeIDWithContextFn(ctx, challengeID)
+func (s *tagQueryContextStub) FindByChallengeID(ctx context.Context, challengeID int64) ([]*model.Tag, error) {
+	if s.findByChallengeIDFn != nil {
+		return s.findByChallengeIDFn(ctx, challengeID)
 	}
 	return nil, nil
 }
 func (s *tagQueryContextStub) DeleteWithContext(ctx context.Context, id int64) error { return nil }
-func (s *tagQueryContextStub) CountChallengesByTagIDWithContext(ctx context.Context, tagID int64) (int64, error) {
+func (s *tagQueryContextStub) CountChallengesByTagID(ctx context.Context, tagID int64) (int64, error) {
 	return 0, nil
 }
 
@@ -50,7 +50,7 @@ func TestTagServiceListTagsPropagatesContextToRepository(t *testing.T) {
 	expectedCtxValue := "ctx-tag-list"
 	listCalled := false
 	repo := &tagQueryContextStub{
-		listWithContextFn: func(ctx context.Context, tagType string) ([]*model.Tag, error) {
+		listFn: func(ctx context.Context, tagType string) ([]*model.Tag, error) {
 			listCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected list ctx value %v, got %v", expectedCtxValue, got)
@@ -83,7 +83,7 @@ func TestTagServiceGetChallengeTagIDsPropagatesContextToRepository(t *testing.T)
 	expectedCtxValue := "ctx-tag-ids"
 	findCalled := false
 	repo := &tagQueryContextStub{
-		findByChallengeIDWithContextFn: func(ctx context.Context, challengeID int64) ([]*model.Tag, error) {
+		findByChallengeIDFn: func(ctx context.Context, challengeID int64) ([]*model.Tag, error) {
 			findCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find-by-challenge ctx value %v, got %v", expectedCtxValue, got)

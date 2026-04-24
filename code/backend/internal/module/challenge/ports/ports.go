@@ -129,14 +129,14 @@ type EnvironmentTemplateRepository interface {
 }
 
 type TagRepository interface {
-	CreateWithContext(ctx context.Context, tag *model.Tag) error
-	ListWithContext(ctx context.Context, tagType string) ([]*model.Tag, error)
-	FindByIDsWithContext(ctx context.Context, ids []int64) ([]*model.Tag, error)
-	AttachTagsInTxWithContext(ctx context.Context, challengeID int64, tagIDs []int64) error
-	DetachFromChallengeWithContext(ctx context.Context, challengeID, tagID int64) error
-	FindByChallengeIDWithContext(ctx context.Context, challengeID int64) ([]*model.Tag, error)
+	Create(ctx context.Context, tag *model.Tag) error
+	List(ctx context.Context, tagType string) ([]*model.Tag, error)
+	FindByIDs(ctx context.Context, ids []int64) ([]*model.Tag, error)
+	AttachTagsInTx(ctx context.Context, challengeID int64, tagIDs []int64) error
+	DetachFromChallenge(ctx context.Context, challengeID, tagID int64) error
+	FindByChallengeID(ctx context.Context, challengeID int64) ([]*model.Tag, error)
 	DeleteWithContext(ctx context.Context, id int64) error
-	CountChallengesByTagIDWithContext(ctx context.Context, tagID int64) (int64, error)
+	CountChallengesByTagID(ctx context.Context, tagID int64) (int64, error)
 }
 
 type ImageRuntime interface {
