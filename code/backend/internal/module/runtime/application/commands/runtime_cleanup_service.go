@@ -39,23 +39,13 @@ func NewRuntimeCleanupService(engine runtimeCleanupEngine, logger *zap.Logger) *
 	}
 }
 
-// CleanupRuntime 在后台上下文中清理实例对应的容器、网络和 ACL 规则。
-func (s *RuntimeCleanupService) CleanupRuntime(instance *model.Instance) error {
-	return s.CleanupRuntimeWithContext(context.Background(), instance)
-}
-
-// RemoveContainer 在后台上下文中删除单个容器。
-func (s *RuntimeCleanupService) RemoveContainer(containerID string) error {
-	return s.RemoveContainerWithContext(context.Background(), containerID)
-}
-
-// RemoveContainerWithContext 删除单个容器。
-func (s *RuntimeCleanupService) RemoveContainerWithContext(ctx context.Context, containerID string) error {
+// RemoveContainer 删除单个容器。
+func (s *RuntimeCleanupService) RemoveContainer(ctx context.Context, containerID string) error {
 	return s.removeContainerWithContext(normalizeContext(ctx), containerID)
 }
 
-// CleanupRuntimeWithContext 清理实例对应的容器、网络和 ACL 规则。
-func (s *RuntimeCleanupService) CleanupRuntimeWithContext(ctx context.Context, instance *model.Instance) error {
+// CleanupRuntime 清理实例对应的容器、网络和 ACL 规则。
+func (s *RuntimeCleanupService) CleanupRuntime(ctx context.Context, instance *model.Instance) error {
 	ctx = normalizeContext(ctx)
 	if instance == nil {
 		return nil
@@ -66,7 +56,7 @@ func (s *RuntimeCleanupService) CleanupRuntimeWithContext(ctx context.Context, i
 		s.logger.Warn("删除实例 ACL 规则失败", zap.Int64("instance_id", instance.ID), zap.Error(err))
 	}
 	for _, containerID := range resources.ContainerIDs {
-		if err := s.RemoveContainerWithContext(ctx, containerID); err != nil {
+		if err := s.RemoveContainer(ctx, containerID); err != nil {
 			return err
 		}
 	}

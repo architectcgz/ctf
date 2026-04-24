@@ -34,16 +34,16 @@ import (
 )
 
 type stubPracticeRuntimeService struct {
-	cleanupRuntimeFn  func(instance *model.Instance) error
+	cleanupRuntimeFn  func(ctx context.Context, instance *model.Instance) error
 	createTopologyFn  func(ctx context.Context, req *practiceports.TopologyCreateRequest) (*practiceports.TopologyCreateResult, error)
 	createContainerFn func(ctx context.Context, imageName string, env map[string]string, reservedHostPort int) (containerID, networkID string, hostPort, servicePort int, err error)
 }
 
-func (s *stubPracticeRuntimeService) CleanupRuntime(instance *model.Instance) error {
+func (s *stubPracticeRuntimeService) CleanupRuntime(ctx context.Context, instance *model.Instance) error {
 	if s.cleanupRuntimeFn == nil {
 		return nil
 	}
-	return s.cleanupRuntimeFn(instance)
+	return s.cleanupRuntimeFn(ctx, instance)
 }
 
 func (s *stubPracticeRuntimeService) CreateTopology(ctx context.Context, req *practiceports.TopologyCreateRequest) (*practiceports.TopologyCreateResult, error) {
@@ -1555,7 +1555,7 @@ func TestProvisionInstanceMarksInstanceFailedWhenAccessURLIsNotReady(t *testing.
 		challengeinfra.NewImageRepository(db),
 		runtimeinfrarepo.NewRepository(db),
 		&stubPracticeRuntimeService{
-			cleanupRuntimeFn: func(instance *model.Instance) error {
+			cleanupRuntimeFn: func(context.Context, *model.Instance) error {
 				cleanupCalls.Add(1)
 				return nil
 			},

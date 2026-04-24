@@ -24,7 +24,7 @@ type runtimeMaintenanceEngine interface {
 
 type runtimeMaintenanceCleaner interface {
 	runtimeports.RuntimeCleaner
-	RemoveContainerWithContext(ctx context.Context, containerID string) error
+	RemoveContainer(ctx context.Context, containerID string) error
 }
 
 // RuntimeMaintenanceService 收口后台定时任务驱动的运行时维护能力。
@@ -73,7 +73,7 @@ func (s *RuntimeMaintenanceService) CleanExpiredInstances(ctx context.Context) e
 		s.logger.Info("清理过期实例", zap.Int64("instance_id", instance.ID))
 
 		if s.cleaner != nil {
-			if err := s.cleaner.CleanupRuntimeWithContext(normalizeContext(ctx), instance); err != nil {
+			if err := s.cleaner.CleanupRuntime(normalizeContext(ctx), instance); err != nil {
 				s.logger.Warn("清理过期实例运行时失败", zap.Int64("instance_id", instance.ID), zap.Error(err))
 				continue
 			}
@@ -112,7 +112,7 @@ func (s *RuntimeMaintenanceService) CleanupOrphans(ctx context.Context) error {
 	}
 
 	for _, orphan := range selectOrphanContainers(managedContainers, activeSet, s.config.OrphanGracePeriod) {
-		if err := s.cleaner.RemoveContainerWithContext(ctx, orphan.ID); err != nil {
+		if err := s.cleaner.RemoveContainer(ctx, orphan.ID); err != nil {
 			s.logger.Warn("删除孤儿容器失败",
 				zap.String("container_id", orphan.ID),
 				zap.String("container_name", orphan.Name),

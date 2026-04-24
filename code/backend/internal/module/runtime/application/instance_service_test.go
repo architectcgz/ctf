@@ -23,7 +23,7 @@ import (
 
 type noopRuntimeCleaner struct{}
 
-func (noopRuntimeCleaner) CleanupRuntimeWithContext(context.Context, *model.Instance) error {
+func (noopRuntimeCleaner) CleanupRuntime(context.Context, *model.Instance) error {
 	return nil
 }
 

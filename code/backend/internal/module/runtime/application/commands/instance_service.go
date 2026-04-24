@@ -129,7 +129,7 @@ func (s *InstanceService) DestroyTeacherInstance(ctx context.Context, instanceID
 
 func (s *InstanceService) destroyManagedInstanceWithContext(ctx context.Context, instance *model.Instance) error {
 	if s.cleaner != nil {
-		if err := s.cleaner.CleanupRuntimeWithContext(ctx, instance); err != nil {
+		if err := s.cleaner.CleanupRuntime(ctx, instance); err != nil {
 			return errcode.ErrInternal.WithCause(err)
 		}
 	}

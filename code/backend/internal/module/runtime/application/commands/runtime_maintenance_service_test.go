@@ -54,11 +54,11 @@ type maintenanceTestCleaner struct {
 	removedContainerIDs []string
 }
 
-func (c *maintenanceTestCleaner) CleanupRuntimeWithContext(context.Context, *model.Instance) error {
+func (c *maintenanceTestCleaner) CleanupRuntime(context.Context, *model.Instance) error {
 	return nil
 }
 
-func (c *maintenanceTestCleaner) RemoveContainerWithContext(_ context.Context, containerID string) error {
+func (c *maintenanceTestCleaner) RemoveContainer(_ context.Context, containerID string) error {
 	c.removedContainerIDs = append(c.removedContainerIDs, containerID)
 	return nil
 }

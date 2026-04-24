@@ -319,7 +319,7 @@ func ensureContestInstanceServiceIDColumn(db *gorm.DB) error {
 
 type contestInstanceTestRuntimeService struct{}
 
-func (contestInstanceTestRuntimeService) CleanupRuntime(instance *model.Instance) error {
+func (contestInstanceTestRuntimeService) CleanupRuntime(context.Context, *model.Instance) error {
 	return nil
 }
 
