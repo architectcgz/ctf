@@ -1,0 +1,28 @@
+package ports_test
+
+import (
+	"context"
+
+	"ctf-platform/internal/model"
+	challengeports "ctf-platform/internal/module/challenge/ports"
+)
+
+type ctxOnlyChallengeTopologyRepository struct{}
+
+func (ctxOnlyChallengeTopologyRepository) FindByIDWithContext(context.Context, int64) (*model.Challenge, error) {
+	return nil, nil
+}
+
+func (ctxOnlyChallengeTopologyRepository) FindChallengeTopologyByChallengeIDWithContext(context.Context, int64) (*model.ChallengeTopology, error) {
+	return nil, nil
+}
+
+func (ctxOnlyChallengeTopologyRepository) UpsertChallengeTopologyWithContext(context.Context, *model.ChallengeTopology) error {
+	return nil
+}
+
+func (ctxOnlyChallengeTopologyRepository) DeleteChallengeTopologyByChallengeIDWithContext(context.Context, int64) error {
+	return nil
+}
+
+var _ challengeports.ChallengeTopologyRepository = (*ctxOnlyChallengeTopologyRepository)(nil)
