@@ -127,31 +127,6 @@ function handleNavigateChallenge(challengeId: string) {
   color: var(--color-text-muted);
 }
 
-.ops-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: 2.25rem;
-  padding: 0 1.25rem;
-  border-radius: 0.75rem;
-  font-size: 12px;
-  font-weight: 800;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.ops-btn--primary {
-  background: var(--color-warning);
-  color: white;
-  border: none;
-  box-shadow: 0 4px 12px color-mix(in srgb, var(--color-warning) 20%, transparent);
-}
-
-.ops-btn--primary:hover {
-  background: color-mix(in srgb, var(--color-warning) 90%, black);
-  transform: translateY(-1px);
-}
-
 @media (max-width: 1280px) {
   .studio-pane-header { flex-direction: column; align-items: flex-start; gap: 1.5rem; }
   .header-side { width: 100%; justify-content: space-between; }

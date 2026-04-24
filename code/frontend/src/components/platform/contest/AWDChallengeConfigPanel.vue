@@ -151,6 +151,20 @@ function getValidationStateText(item: AdminContestChallengeViewData): string {
   return getValidationStateLabel(item.awd_checker_validation_state) || '未验证'
 }
 
+function getValidationStateBadgeClass(value?: string): string {
+  switch (value) {
+    case 'passed':
+      return 'validation-pill--passed'
+    case 'failed':
+      return 'validation-pill--failed'
+    case 'pending':
+    case 'stale':
+      return 'validation-pill--warning'
+    default:
+      return 'validation-pill--neutral'
+  }
+}
+
 function getValidationHint(item: AdminContestChallengeViewData): string {
   const previewAccessURL = getPrimaryAccessURL(buildPresentationResult(item))
   const entries = [
@@ -321,8 +335,8 @@ function isActiveChallenge(item: AdminContestChallengeViewData): boolean {
               <td class="col-status">
                 <div class="validation-block">
                   <span
-                    class="validation-pill"
-                    :class="item.awd_checker_validation_state"
+                    class="ui-badge ui-badge--pill ui-badge--soft validation-pill"
+                    :class="getValidationStateBadgeClass(item.awd_checker_validation_state)"
                   >
                     {{ getValidationStateText(item) }}
                   </span>
@@ -432,16 +446,18 @@ function isActiveChallenge(item: AdminContestChallengeViewData): boolean {
 .rules-summary { font-size: var(--font-size-13); color: var(--color-text-secondary); max-width: 14rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 .validation-block { display: flex; flex-direction: column; gap: var(--space-1-5); }
-.validation-pill { font-size: var(--font-size-11); font-weight: 800; padding: 0.2rem var(--space-2-5); border-radius: 99px; width: fit-content; }
-.validation-pill.passed { background: var(--color-success); color: white; }
-.validation-pill.failed { background: var(--color-danger); color: white; }
-.validation-pill.pending, .validation-pill.stale { background: var(--color-warning); color: white; }
+.validation-pill {
+  width: fit-content;
+  --ui-badge-padding: 0.2rem var(--space-2-5);
+  --ui-badge-size: var(--font-size-11);
+  font-weight: 800;
+}
+.validation-pill--passed { --ui-badge-tone: var(--color-success); }
+.validation-pill--failed { --ui-badge-tone: var(--color-danger); }
+.validation-pill--warning { --ui-badge-tone: var(--color-warning); }
+.validation-pill--neutral { --ui-badge-tone: var(--color-text-muted); }
 .validation-time { font-size: var(--font-size-12); color: var(--color-text-muted); }
 
 .action-btn { width: var(--ui-control-height-sm); height: var(--ui-control-height-sm); border-radius: 0.75rem; border: 1px solid var(--color-border-default); display: flex; align-items: center; justify-content: center; color: var(--color-text-secondary); cursor: pointer; transition: all 0.2s ease; background: var(--color-bg-surface); }
 .action-btn:hover { background: var(--color-bg-elevated); color: var(--color-primary); border-color: var(--color-primary); }
-
-.ops-btn { display: inline-flex; align-items: center; gap: var(--space-2); height: var(--ui-control-height-md); padding: 0 var(--space-6); border-radius: 0.85rem; font-size: var(--font-size-14); font-weight: 700; cursor: pointer; transition: all 0.2s ease; }
-.ops-btn--neutral { background: var(--color-bg-surface); border: 1px solid var(--color-border-default); color: var(--color-text-secondary); }
-.ops-btn--primary { background: var(--color-primary); color: white; border: none; }
 </style>

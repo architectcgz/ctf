@@ -11,7 +11,7 @@
       <Bell class="h-4 w-4" />
       <span
         v-if="unreadCount > 0"
-        class="notification-trigger-badge absolute -right-1 -top-1 inline-flex min-w-4 items-center justify-center rounded-full px-1 text-white"
+        class="notification-trigger-badge absolute -right-1 -top-1 inline-flex min-w-4 items-center justify-center rounded-full px-1"
       >
         {{ unreadCount > 99 ? '99+' : unreadCount }}
       </span>
@@ -364,6 +364,7 @@ const {
   font-size: var(--font-size-10);
   line-height: 1rem;
   background: color-mix(in srgb, var(--color-danger) 88%, var(--color-text-primary));
+  color: color-mix(in srgb, var(--color-text-primary) 92%, var(--color-bg-surface));
   box-shadow: 0 0 0 2px var(--notification-surface, var(--color-bg-surface));
 }
 
@@ -385,7 +386,11 @@ const {
 
 .notification-mini-button:focus-visible,
 .notification-trigger:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--color-primary) 44%, white);
+  outline: 2px solid color-mix(
+    in srgb,
+    var(--color-primary) 44%,
+    var(--notification-surface-elevated, var(--color-bg-surface))
+  );
   outline-offset: 2px;
 }
 
@@ -445,14 +450,34 @@ const {
 }
 
 :global([data-theme='light']) .notification-drawer {
-  --notification-surface: white;
-  --notification-surface-subtle: #f8fafc;
-  --notification-surface-elevated: white;
-  --notification-line: color-mix(in srgb, #e2e8f0 88%, transparent);
-  --notification-line-strong: color-mix(in srgb, #d9e1ec 94%, transparent);
-  --notification-text: #0f172a;
-  --notification-muted: #64748b;
-  --notification-faint: #94a3b8;
+  --notification-surface: color-mix(
+    in srgb,
+    var(--journal-surface, var(--color-bg-surface)) 98%,
+    var(--color-bg-base)
+  );
+  --notification-surface-subtle: color-mix(
+    in srgb,
+    var(--journal-surface-subtle, var(--color-bg-elevated)) 96%,
+    var(--color-bg-base)
+  );
+  --notification-surface-elevated: color-mix(
+    in srgb,
+    var(--journal-surface, var(--color-bg-surface)) 99%,
+    var(--color-bg-base)
+  );
+  --notification-line: color-mix(
+    in srgb,
+    var(--journal-border, var(--color-border-default)) 88%,
+    transparent
+  );
+  --notification-line-strong: color-mix(
+    in srgb,
+    var(--journal-border, var(--color-border-default)) 96%,
+    transparent
+  );
+  --notification-text: var(--journal-ink, var(--color-text-primary));
+  --notification-muted: var(--journal-muted, var(--color-text-secondary));
+  --notification-faint: color-mix(in srgb, var(--color-text-muted) 90%, var(--notification-muted));
 }
 
 :global([data-theme='dark']) .notification-drawer {

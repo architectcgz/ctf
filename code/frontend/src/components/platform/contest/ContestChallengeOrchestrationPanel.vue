@@ -122,6 +122,10 @@ function getChallengeTitle(item: AdminContestChallengeViewData): string {
   return item.title?.trim() || `Challenge #${item.challenge_id}`
 }
 
+function getChallengeActionKey(item: AdminContestChallengeViewData): string {
+  return item.challenge_id
+}
+
 function getCheckerLabel(item: AdminContestChallengeViewData): string {
   return getCheckerTypeLabel(item.awd_checker_type) || '未配置'
 }
@@ -484,7 +488,7 @@ onMounted(() => {
                     :class="challenge.is_visible ? 'is-visible' : 'is-hidden'"
                   >{{ challenge.is_visible ? '公开' : '隐藏' }}</span>
                 </td>
-                <td class="col-meta font-mono font-black text-slate-700">
+                <td class="col-meta contest-points-cell">
                   {{ challenge.points }} <small>PTS</small>
                 </td>
                 <td class="col-meta">
@@ -504,22 +508,22 @@ onMounted(() => {
                       :class="challenge.awd_checker_validation_state"
                     >{{ getValidationSummary(challenge) }}</span>
                   </td>
-                  <td class="col-awd font-mono text-[10px] text-slate-500">
+                  <td class="col-awd contest-awd-score">
                     {{ getAwdScoreSummary(challenge) }}
                   </td>
-                  <td class="col-awd text-[10px] text-slate-400">
+                  <td class="col-awd contest-awd-preview">
                     {{ getPreviewSummary(challenge) }}
                   </td>
                 </template>
                 <td class="col-actions">
                   <div class="ui-row-actions contest-challenge-row__actions">
                     <CActionMenu
-                      :open="openActionMenuId === challenge.id"
-                      @update:open="setActionMenuOpen(challenge.id, $event)"
+                      :open="openActionMenuId === getChallengeActionKey(challenge)"
+                      @update:open="setActionMenuOpen(getChallengeActionKey(challenge), $event)"
                     >
                       <template #trigger="{ open, toggle, setTriggerRef }">
                         <button
-                          :id="`contest-challenge-more-${challenge.id}`"
+                          :id="`contest-challenge-actions-${getChallengeActionKey(challenge)}`"
                           :ref="setTriggerRef"
                           class="c-action-menu__trigger c-action-menu__trigger--icon"
                           @click.stop="toggle"
@@ -530,14 +534,14 @@ onMounted(() => {
                       <template #default="{ close }">
                         <button
                           v-if="isAwdContest"
-                          :id="`contest-challenge-menu-awd-config-${challenge.id}`"
+                          :id="`contest-challenge-open-awd-config-${getChallengeActionKey(challenge)}`"
                           class="c-action-menu__item"
                           @click="handleOpenAwdConfig(challenge, close)"
                         >
                           <Zap class="h-3.5 w-3.5 mr-2" /> 补 AWD 配置
                         </button>
                         <button
-                          :id="`contest-challenge-menu-edit-${challenge.id}`"
+                          :id="`contest-challenge-edit-${getChallengeActionKey(challenge)}`"
                           class="c-action-menu__item"
                           @click="handleOpenEditDialog(challenge, close)"
                         >
@@ -545,7 +549,7 @@ onMounted(() => {
                         </button>
                         <div class="menu-divider" />
                         <button
-                          :id="`contest-challenge-menu-remove-${challenge.id}`"
+                          :id="`contest-challenge-remove-${getChallengeActionKey(challenge)}`"
                           class="c-action-menu__item c-action-menu__item--danger"
                           @click="handleRemoveFromMenu(challenge, close)"
                         >
@@ -586,9 +590,6 @@ onMounted(() => {
 .pane-title { font-size: 1.25rem; font-weight: 900; color: var(--color-text-primary); margin: 0; }
 .pane-description { font-size: 13px; color: var(--color-text-secondary); margin: 0.5rem 0 0; max-width: 40rem; }
 .header-actions { display: flex; gap: 0.75rem; }
-.ops-btn { display: inline-flex; align-items: center; gap: 0.5rem; height: 2.25rem; padding: 0 1rem; border-radius: 0.75rem; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s ease; }
-.ops-btn--neutral { background: var(--color-bg-surface); border: 1px solid var(--color-border-default); color: var(--color-text-secondary); }
-.ops-btn--primary { background: var(--color-primary); color: white; border: none; box-shadow: 0 4px 12px color-mix(in srgb, var(--color-primary) 15%, transparent); }
 /* Metric Band - Flattened and Scaled Up */
 .studio-metric-band {
   display: flex;
@@ -626,7 +627,12 @@ onMounted(() => {
 .studio-quick-nav { display: flex; gap: 0.5rem; margin-bottom: 0.5rem; }
 .nav-pill { padding: 0.45rem 1rem; border-radius: 999px; background: var(--color-bg-surface); border: 1px solid var(--color-border-default); font-size: 12px; font-weight: 700; color: var(--color-text-secondary); cursor: pointer; display: flex; align-items: center; gap: 0.5rem; }
 .nav-pill.active { background: var(--color-primary-soft); border-color: var(--color-primary); color: var(--color-primary); }
-.nav-pill__count { background: rgba(0,0,0,0.05); padding: 0 0.35rem; border-radius: 4px; font-size: 10px; }
+.nav-pill__count {
+  background: color-mix(in srgb, var(--journal-ink) 5%, transparent);
+  padding: 0 0.35rem;
+  border-radius: 4px;
+  font-size: 10px;
+}
 .studio-table-wrap { border: none; border-radius: 0; background: transparent; overflow-x: auto; }
 .studio-table { width: 100%; border-collapse: collapse; background: var(--color-bg-surface); }
 .studio-table th { background: var(--color-bg-elevated); padding: 0.75rem 1rem; text-align: left; font-size: 10px; font-weight: 800; text-transform: uppercase; color: var(--color-text-muted); border-bottom: 1px solid var(--color-border-default); border-top: 1px solid var(--color-border-default); }
@@ -634,6 +640,20 @@ onMounted(() => {
 .studio-row:hover { background: var(--color-bg-elevated); }
 .challenge-title { font-size: 14px; font-weight: 800; color: var(--color-text-primary); }
 .challenge-subtitle { font-size: 11px; color: var(--color-text-muted); margin-top: 0.15rem; }
+.contest-points-cell {
+  font-family: var(--font-family-mono);
+  font-weight: 900;
+  color: color-mix(in srgb, var(--journal-ink) 82%, var(--journal-muted));
+}
+.contest-awd-score {
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-11);
+  color: var(--journal-muted);
+}
+.contest-awd-preview {
+  font-size: var(--font-size-11);
+  color: color-mix(in srgb, var(--journal-muted) 84%, var(--journal-ink));
+}
 .status-badge { padding: 0.15rem 0.5rem; border-radius: 6px; font-size: 10px; font-weight: 800; }
 .is-visible { background: var(--color-success-soft); color: var(--color-success); }
 .is-hidden { background: var(--color-bg-elevated); color: var(--color-text-secondary); }

@@ -310,7 +310,7 @@ function getServiceCheckPresentationResult(service: AWDTeamServiceData): Record<
         <div class="canvas-actions">
           <button
             type="button"
-            class="ops-btn ops-btn--neutral"
+            class="ui-btn ui-btn--secondary awd-inspector-canvas-action"
             @click="exportReviewPackage"
           >
             <Download class="h-3.5 w-3.5 mr-2" /> 导出复盘包
@@ -494,11 +494,17 @@ function getServiceCheckPresentationResult(service: AWDTeamServiceData): Record<
 .alert-pills { display: flex; gap: 0.5rem; }
 .alert-pill { padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; border: 1px solid color-mix(in srgb, var(--color-warning) 30%, transparent); color: var(--color-warning); transition: all 0.2s ease; }
 .alert-pill:hover { background: var(--color-bg-elevated); }
-.alert-pill.is-active { background: var(--color-warning); color: white; border-color: var(--color-warning); }
+.alert-pill.is-active {
+  background: var(--color-warning);
+  color: var(--color-text-inverse);
+  border-color: var(--color-warning);
+}
 
-.ops-btn {
-  display: inline-flex; align-items: center; justify-content: center;
-  height: 2.25rem; padding: 0 1rem; border-radius: 0.75rem;
-  font-size: 12px; font-weight: 700; background: var(--color-bg-surface); border: 1px solid var(--color-border-default); color: var(--color-text-secondary); cursor: pointer;
+.awd-inspector-canvas-action {
+  --ui-btn-height: 2.25rem;
+  --ui-btn-padding: 0 1rem;
+  --ui-btn-radius: 0.75rem;
+  --ui-btn-font-size: var(--font-size-12);
+  --ui-btn-font-weight: 700;
 }
 </style>
