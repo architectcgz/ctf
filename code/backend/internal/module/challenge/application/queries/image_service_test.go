@@ -10,51 +10,24 @@ import (
 )
 
 type stubChallengeImageRepository struct {
-	createFn                   func(image *model.Image) error
 	createWithContextFn        func(ctx context.Context, image *model.Image) error
-	findByIDFn                 func(id int64) (*model.Image, error)
 	findByIDWithContextFn      func(ctx context.Context, id int64) (*model.Image, error)
-	findByNameTagFn            func(name, tag string) (*model.Image, error)
 	findByNameTagWithContextFn func(ctx context.Context, name, tag string) (*model.Image, error)
-	listFn                     func(name, status string, offset, limit int) ([]*model.Image, int64, error)
 	listWithContextFn          func(ctx context.Context, name, status string, offset, limit int) ([]*model.Image, int64, error)
-	updateFn                   func(image *model.Image) error
 	updateWithContextFn        func(ctx context.Context, image *model.Image) error
-	deleteFn                   func(id int64) error
 	deleteWithContextFn        func(ctx context.Context, id int64) error
-}
-
-func (s *stubChallengeImageRepository) Create(image *model.Image) error {
-	if s.createFn != nil {
-		return s.createFn(image)
-	}
-	return nil
 }
 
 func (s *stubChallengeImageRepository) CreateWithContext(ctx context.Context, image *model.Image) error {
 	if s.createWithContextFn != nil {
 		return s.createWithContextFn(ctx, image)
 	}
-	return s.Create(image)
-}
-
-func (s *stubChallengeImageRepository) FindByID(id int64) (*model.Image, error) {
-	if s.findByIDFn != nil {
-		return s.findByIDFn(id)
-	}
-	return nil, nil
+	return nil
 }
 
 func (s *stubChallengeImageRepository) FindByIDWithContext(ctx context.Context, id int64) (*model.Image, error) {
 	if s.findByIDWithContextFn != nil {
 		return s.findByIDWithContextFn(ctx, id)
-	}
-	return s.FindByID(id)
-}
-
-func (s *stubChallengeImageRepository) FindByNameTag(name, tag string) (*model.Image, error) {
-	if s.findByNameTagFn != nil {
-		return s.findByNameTagFn(name, tag)
 	}
 	return nil, nil
 }
@@ -63,40 +36,19 @@ func (s *stubChallengeImageRepository) FindByNameTagWithContext(ctx context.Cont
 	if s.findByNameTagWithContextFn != nil {
 		return s.findByNameTagWithContextFn(ctx, name, tag)
 	}
-	return s.FindByNameTag(name, tag)
-}
-
-func (s *stubChallengeImageRepository) List(name, status string, offset, limit int) ([]*model.Image, int64, error) {
-	if s.listFn != nil {
-		return s.listFn(name, status, offset, limit)
-	}
-	return nil, 0, nil
+	return nil, nil
 }
 
 func (s *stubChallengeImageRepository) ListWithContext(ctx context.Context, name, status string, offset, limit int) ([]*model.Image, int64, error) {
 	if s.listWithContextFn != nil {
 		return s.listWithContextFn(ctx, name, status, offset, limit)
 	}
-	return s.List(name, status, offset, limit)
-}
-
-func (s *stubChallengeImageRepository) Update(image *model.Image) error {
-	if s.updateFn != nil {
-		return s.updateFn(image)
-	}
-	return nil
+	return nil, 0, nil
 }
 
 func (s *stubChallengeImageRepository) UpdateWithContext(ctx context.Context, image *model.Image) error {
 	if s.updateWithContextFn != nil {
 		return s.updateWithContextFn(ctx, image)
-	}
-	return s.Update(image)
-}
-
-func (s *stubChallengeImageRepository) Delete(id int64) error {
-	if s.deleteFn != nil {
-		return s.deleteFn(id)
 	}
 	return nil
 }
@@ -105,7 +57,7 @@ func (s *stubChallengeImageRepository) DeleteWithContext(ctx context.Context, id
 	if s.deleteWithContextFn != nil {
 		return s.deleteWithContextFn(ctx, id)
 	}
-	return s.Delete(id)
+	return nil
 }
 
 type challengeImageContextKey string

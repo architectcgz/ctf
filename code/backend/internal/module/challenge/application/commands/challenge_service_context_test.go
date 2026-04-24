@@ -161,43 +161,27 @@ func (s *challengeCommandContextRepoStub) UpdatePublishCheckJob(ctx context.Cont
 }
 
 type challengeCommandImageRepoStub struct {
-	findByIDFn            func(id int64) (*model.Image, error)
 	findByIDWithContextFn func(ctx context.Context, id int64) (*model.Image, error)
 }
 
-func (s *challengeCommandImageRepoStub) Create(image *model.Image) error { return nil }
 func (s *challengeCommandImageRepoStub) CreateWithContext(ctx context.Context, image *model.Image) error {
 	return nil
-}
-func (s *challengeCommandImageRepoStub) FindByID(id int64) (*model.Image, error) {
-	if s.findByIDFn != nil {
-		return s.findByIDFn(id)
-	}
-	return nil, nil
 }
 func (s *challengeCommandImageRepoStub) FindByIDWithContext(ctx context.Context, id int64) (*model.Image, error) {
 	if s.findByIDWithContextFn != nil {
 		return s.findByIDWithContextFn(ctx, id)
 	}
-	return s.FindByID(id)
-}
-func (s *challengeCommandImageRepoStub) FindByNameTag(name, tag string) (*model.Image, error) {
 	return nil, nil
 }
 func (s *challengeCommandImageRepoStub) FindByNameTagWithContext(ctx context.Context, name, tag string) (*model.Image, error) {
 	return nil, nil
 }
-func (s *challengeCommandImageRepoStub) List(name, status string, offset, limit int) ([]*model.Image, int64, error) {
-	return nil, 0, nil
-}
 func (s *challengeCommandImageRepoStub) ListWithContext(ctx context.Context, name, status string, offset, limit int) ([]*model.Image, int64, error) {
 	return nil, 0, nil
 }
-func (s *challengeCommandImageRepoStub) Update(image *model.Image) error { return nil }
 func (s *challengeCommandImageRepoStub) UpdateWithContext(ctx context.Context, image *model.Image) error {
 	return nil
 }
-func (s *challengeCommandImageRepoStub) Delete(id int64) error { return nil }
 func (s *challengeCommandImageRepoStub) DeleteWithContext(ctx context.Context, id int64) error {
 	return nil
 }
@@ -553,10 +537,6 @@ func TestChallengeServiceSelfCheckChallengePropagatesContextToRepositories(t *te
 		},
 	}
 	imageRepo := &challengeCommandImageRepoStub{
-		findByIDFn: func(id int64) (*model.Image, error) {
-			t.Fatal("unexpected legacy image find without context")
-			return nil, nil
-		},
 		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Image, error) {
 			imageCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
