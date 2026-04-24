@@ -23,9 +23,6 @@ func NewWriteupService(repo challengeports.ChallengeWriteupRepository) *WriteupS
 }
 
 func (s *WriteupService) GetAdmin(ctx context.Context, challengeID int64) (*dto.AdminChallengeWriteupResp, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
 	if _, err := s.repo.FindByIDWithContext(ctx, challengeID); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrChallengeNotFound
@@ -43,9 +40,6 @@ func (s *WriteupService) GetAdmin(ctx context.Context, challengeID int64) (*dto.
 }
 
 func (s *WriteupService) GetPublished(ctx context.Context, userID, challengeID int64) (*dto.ChallengeWriteupResp, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
 	challengeItem, err := s.repo.FindByIDWithContext(ctx, challengeID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -86,9 +80,6 @@ func (s *WriteupService) GetPublished(ctx context.Context, userID, challengeID i
 }
 
 func (s *WriteupService) GetMySubmission(ctx context.Context, userID, challengeID int64) (*dto.SubmissionWriteupResp, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
 	challengeItem, err := s.repo.FindByIDWithContext(ctx, challengeID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -110,9 +101,6 @@ func (s *WriteupService) GetMySubmission(ctx context.Context, userID, challengeI
 }
 
 func (s *WriteupService) ListRecommendedSolutions(ctx context.Context, userID, challengeID int64) (*dto.PageResult, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
 	if err := s.ensureSolvedChallengeVisible(ctx, userID, challengeID); err != nil {
 		return nil, err
 	}
@@ -134,9 +122,6 @@ func (s *WriteupService) ListRecommendedSolutions(ctx context.Context, userID, c
 }
 
 func (s *WriteupService) ListCommunitySolutions(ctx context.Context, userID, challengeID int64, query *dto.CommunityChallengeSolutionQuery) (*dto.PageResult, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
 	if err := s.ensureSolvedChallengeVisible(ctx, userID, challengeID); err != nil {
 		return nil, err
 	}
@@ -174,9 +159,6 @@ func (s *WriteupService) ListCommunitySolutions(ctx context.Context, userID, cha
 }
 
 func (s *WriteupService) ListTeacherSubmissions(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherSubmissionWriteupQuery) (*dto.PageResult, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
 	if query == nil {
 		query = &dto.TeacherSubmissionWriteupQuery{}
 	}
@@ -204,9 +186,6 @@ func (s *WriteupService) ListTeacherSubmissions(ctx context.Context, requesterID
 }
 
 func (s *WriteupService) GetTeacherSubmission(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*dto.TeacherSubmissionWriteupDetailResp, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
 	record, err := s.repo.GetTeacherSubmissionWriteupByIDWithContext(ctx, submissionID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -279,9 +258,6 @@ func ensureTeacherCanAccessQueryRecord(
 }
 
 func (s *WriteupService) ensureSolvedChallengeVisible(ctx context.Context, userID, challengeID int64) error {
-	if ctx == nil {
-		ctx = context.Background()
-	}
 	challengeItem, err := s.repo.FindByIDWithContext(ctx, challengeID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
