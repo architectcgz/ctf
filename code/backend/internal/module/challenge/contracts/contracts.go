@@ -16,8 +16,8 @@ type ImageStore interface {
 
 type ContestChallengeContract interface {
 	FindByIDWithContext(ctx context.Context, id int64) (*model.Challenge, error)
-	BatchGetSolvedStatusWithContext(ctx context.Context, userID int64, challengeIDs []int64) (map[int64]bool, error)
-	BatchGetSolvedCountWithContext(ctx context.Context, challengeIDs []int64) (map[int64]int64, error)
+	BatchGetSolvedStatus(ctx context.Context, userID int64, challengeIDs []int64) (map[int64]bool, error)
+	BatchGetSolvedCount(ctx context.Context, challengeIDs []int64) (map[int64]int64, error)
 }
 
 type PracticeChallengeContract interface {

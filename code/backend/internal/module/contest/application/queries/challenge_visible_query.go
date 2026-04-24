@@ -51,11 +51,11 @@ func (s *ChallengeService) GetContestChallenges(ctx context.Context, userID, con
 		challengeIDs = append(challengeIDs, item.ChallengeID)
 	}
 
-	solvedMap, err := s.challengeRepo.BatchGetSolvedStatusWithContext(ctx, userID, challengeIDs)
+	solvedMap, err := s.challengeRepo.BatchGetSolvedStatus(ctx, userID, challengeIDs)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	solvedCountMap, err := s.challengeRepo.BatchGetSolvedCountWithContext(ctx, challengeIDs)
+	solvedCountMap, err := s.challengeRepo.BatchGetSolvedCount(ctx, challengeIDs)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
@@ -107,11 +107,11 @@ func (s *ChallengeService) getAWDContestChallenges(ctx context.Context, userID, 
 		return []*dto.ContestChallengeInfo{}, nil
 	}
 
-	solvedMap, err := s.challengeRepo.BatchGetSolvedStatusWithContext(ctx, userID, challengeIDs)
+	solvedMap, err := s.challengeRepo.BatchGetSolvedStatus(ctx, userID, challengeIDs)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	solvedCountMap, err := s.challengeRepo.BatchGetSolvedCountWithContext(ctx, challengeIDs)
+	solvedCountMap, err := s.challengeRepo.BatchGetSolvedCount(ctx, challengeIDs)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}

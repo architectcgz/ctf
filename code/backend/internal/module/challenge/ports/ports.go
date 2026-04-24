@@ -36,9 +36,9 @@ type ChallengeQueryRepository interface {
 	GetSolvedStatus(ctx context.Context, userID, challengeID int64) (bool, error)
 	GetSolvedCount(ctx context.Context, challengeID int64) (int64, error)
 	GetTotalAttempts(ctx context.Context, challengeID int64) (int64, error)
-	BatchGetSolvedStatusWithContext(ctx context.Context, userID int64, challengeIDs []int64) (map[int64]bool, error)
-	BatchGetSolvedCountWithContext(ctx context.Context, challengeIDs []int64) (map[int64]int64, error)
-	BatchGetTotalAttemptsWithContext(ctx context.Context, challengeIDs []int64) (map[int64]int64, error)
+	BatchGetSolvedStatus(ctx context.Context, userID int64, challengeIDs []int64) (map[int64]bool, error)
+	BatchGetSolvedCount(ctx context.Context, challengeIDs []int64) (map[int64]int64, error)
+	BatchGetTotalAttempts(ctx context.Context, challengeIDs []int64) (map[int64]int64, error)
 	ListPublishedWithContext(ctx context.Context, query *dto.ChallengeQuery) ([]*model.Challenge, int64, error)
 }
 

@@ -100,18 +100,18 @@ func (s *ChallengeService) ListPublishedChallenges(ctx context.Context, userID i
 
 	solvedMap := make(map[int64]bool)
 	if userID > 0 {
-		solvedMap, err = s.repo.BatchGetSolvedStatusWithContext(ctx, userID, challengeIDs)
+		solvedMap, err = s.repo.BatchGetSolvedStatus(ctx, userID, challengeIDs)
 		if err != nil {
 			s.log.Error("failed to batch get solved status", zap.Error(err))
 		}
 	}
 
-	solvedCountMap, err := s.repo.BatchGetSolvedCountWithContext(ctx, challengeIDs)
+	solvedCountMap, err := s.repo.BatchGetSolvedCount(ctx, challengeIDs)
 	if err != nil {
 		s.log.Error("failed to batch get solved count", zap.Error(err))
 	}
 
-	attemptsMap, err := s.repo.BatchGetTotalAttemptsWithContext(ctx, challengeIDs)
+	attemptsMap, err := s.repo.BatchGetTotalAttempts(ctx, challengeIDs)
 	if err != nil {
 		s.log.Error("failed to batch get total attempts", zap.Error(err))
 	}
