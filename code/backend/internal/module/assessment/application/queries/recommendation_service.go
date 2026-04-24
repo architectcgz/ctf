@@ -90,15 +90,7 @@ func (s *RecommendationService) handleContestCacheRefreshEvent(ctx context.Conte
 	return s.redis.Del(ctx, rediskeys.RecommendationKey(payload.UserID)).Err()
 }
 
-func (s *RecommendationService) GetWeakDimensions(userID int64) ([]string, error) {
-	return s.GetWeakDimensionsWithContext(context.Background(), userID)
-}
-
-func (s *RecommendationService) GetWeakDimensionsWithContext(ctx context.Context, userID int64) ([]string, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
+func (s *RecommendationService) GetWeakDimensions(ctx context.Context, userID int64) ([]string, error) {
 	profiles, err := s.repo.FindByUserIDWithContext(ctx, userID)
 	if err != nil {
 		s.logger.Error("查询能力画像失败", zap.Int64("user_id", userID), zap.Error(err))
@@ -115,17 +107,13 @@ func (s *RecommendationService) GetWeakDimensionsWithContext(ctx context.Context
 	return weakDimensions, nil
 }
 
-func (s *RecommendationService) Recommend(userID int64, limit int) (*dto.RecommendationResp, error) {
-	return s.RecommendWithContext(context.Background(), userID, limit)
-}
-
-func (s *RecommendationService) RecommendWithContext(ctx context.Context, userID int64, limit int) (*dto.RecommendationResp, error) {
-	weakDimensions, err := s.GetWeakDimensionsWithContext(ctx, userID)
+func (s *RecommendationService) Recommend(ctx context.Context, userID int64, limit int) (*dto.RecommendationResp, error) {
+	weakDimensions, err := s.GetWeakDimensions(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
 
-	recommendations, err := s.RecommendChallengesWithContext(ctx, userID, limit)
+	recommendations, err := s.RecommendChallenges(ctx, userID, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -136,15 +124,7 @@ func (s *RecommendationService) RecommendWithContext(ctx context.Context, userID
 	}, nil
 }
 
-func (s *RecommendationService) RecommendChallenges(userID int64, limit int) ([]*dto.ChallengeRecommendation, error) {
-	return s.RecommendChallengesWithContext(context.Background(), userID, limit)
-}
-
-func (s *RecommendationService) RecommendChallengesWithContext(ctx context.Context, userID int64, limit int) ([]*dto.ChallengeRecommendation, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
+func (s *RecommendationService) RecommendChallenges(ctx context.Context, userID int64, limit int) ([]*dto.ChallengeRecommendation, error) {
 	if limit <= 0 {
 		limit = s.config.DefaultLimit
 	}
@@ -165,7 +145,7 @@ func (s *RecommendationService) RecommendChallengesWithContext(ctx context.Conte
 		}
 	}
 
-	weakDimensions, err := s.GetWeakDimensionsWithContext(ctx, userID)
+	weakDimensions, err := s.GetWeakDimensions(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -211,9 +191,6 @@ func (s *RecommendationService) RecommendChallengesWithContext(ctx context.Conte
 }
 
 func (s *RecommendationService) getSolvedChallengeIDs(ctx context.Context, userID int64) ([]int64, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
 	return s.repo.ListSolvedChallengeIDsWithContext(ctx, userID)
 }
 

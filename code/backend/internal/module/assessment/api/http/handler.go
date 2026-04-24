@@ -18,7 +18,7 @@ type skillProfileService interface {
 }
 
 type recommendationProvider interface {
-	RecommendWithContext(ctx context.Context, userID int64, limit int) (*dto.RecommendationResp, error)
+	Recommend(ctx context.Context, userID int64, limit int) (*dto.RecommendationResp, error)
 }
 
 type Handler struct {
@@ -73,7 +73,7 @@ func (h *Handler) GetRecommendations(c *gin.Context) {
 		return
 	}
 
-	result, err := h.recommendationService.RecommendWithContext(c.Request.Context(), userID, req.Limit)
+	result, err := h.recommendationService.Recommend(c.Request.Context(), userID, req.Limit)
 	if err != nil {
 		response.FromError(c, err)
 		return
