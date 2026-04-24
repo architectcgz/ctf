@@ -9,11 +9,11 @@ import (
 
 type ctxOnlyEnvironmentTemplateRepository struct{}
 
-func (ctxOnlyEnvironmentTemplateRepository) CreateWithContext(context.Context, *model.EnvironmentTemplate) error {
+func (ctxOnlyEnvironmentTemplateRepository) Create(context.Context, *model.EnvironmentTemplate) error {
 	return nil
 }
 
-func (ctxOnlyEnvironmentTemplateRepository) UpdateWithContext(context.Context, *model.EnvironmentTemplate) error {
+func (ctxOnlyEnvironmentTemplateRepository) Update(context.Context, *model.EnvironmentTemplate) error {
 	return nil
 }
 
@@ -21,15 +21,15 @@ func (ctxOnlyEnvironmentTemplateRepository) DeleteWithContext(context.Context, i
 	return nil
 }
 
-func (ctxOnlyEnvironmentTemplateRepository) FindByIDWithContext(context.Context, int64) (*model.EnvironmentTemplate, error) {
+func (ctxOnlyEnvironmentTemplateRepository) FindByID(context.Context, int64) (*model.EnvironmentTemplate, error) {
 	return nil, nil
 }
 
-func (ctxOnlyEnvironmentTemplateRepository) ListWithContext(context.Context, string) ([]*model.EnvironmentTemplate, error) {
+func (ctxOnlyEnvironmentTemplateRepository) List(context.Context, string) ([]*model.EnvironmentTemplate, error) {
 	return nil, nil
 }
 
-func (ctxOnlyEnvironmentTemplateRepository) IncrementUsageWithContext(context.Context, int64) error {
+func (ctxOnlyEnvironmentTemplateRepository) IncrementUsage(context.Context, int64) error {
 	return nil
 }
 

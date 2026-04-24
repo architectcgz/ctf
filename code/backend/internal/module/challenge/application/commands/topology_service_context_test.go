@@ -45,24 +45,24 @@ func (s *topologyCommandRepoStub) DeleteChallengeTopologyByChallengeIDWithContex
 }
 
 type topologyTemplateRepoStub struct {
-	createWithContextFn     func(ctx context.Context, template *model.EnvironmentTemplate) error
-	updateWithContextFn     func(ctx context.Context, template *model.EnvironmentTemplate) error
-	deleteWithContextFn     func(ctx context.Context, id int64) error
-	findByIDWithContextFn   func(ctx context.Context, id int64) (*model.EnvironmentTemplate, error)
-	listWithContextFn       func(ctx context.Context, keyword string) ([]*model.EnvironmentTemplate, error)
-	incrementUsageWithCtxFn func(ctx context.Context, id int64) error
+	createFn            func(ctx context.Context, template *model.EnvironmentTemplate) error
+	updateFn            func(ctx context.Context, template *model.EnvironmentTemplate) error
+	deleteWithContextFn func(ctx context.Context, id int64) error
+	findByIDFn          func(ctx context.Context, id int64) (*model.EnvironmentTemplate, error)
+	listFn              func(ctx context.Context, keyword string) ([]*model.EnvironmentTemplate, error)
+	incrementUsageFn    func(ctx context.Context, id int64) error
 }
 
-func (s *topologyTemplateRepoStub) CreateWithContext(ctx context.Context, template *model.EnvironmentTemplate) error {
-	if s.createWithContextFn != nil {
-		return s.createWithContextFn(ctx, template)
+func (s *topologyTemplateRepoStub) Create(ctx context.Context, template *model.EnvironmentTemplate) error {
+	if s.createFn != nil {
+		return s.createFn(ctx, template)
 	}
 	return nil
 }
 
-func (s *topologyTemplateRepoStub) UpdateWithContext(ctx context.Context, template *model.EnvironmentTemplate) error {
-	if s.updateWithContextFn != nil {
-		return s.updateWithContextFn(ctx, template)
+func (s *topologyTemplateRepoStub) Update(ctx context.Context, template *model.EnvironmentTemplate) error {
+	if s.updateFn != nil {
+		return s.updateFn(ctx, template)
 	}
 	return nil
 }
@@ -74,23 +74,23 @@ func (s *topologyTemplateRepoStub) DeleteWithContext(ctx context.Context, id int
 	return nil
 }
 
-func (s *topologyTemplateRepoStub) FindByIDWithContext(ctx context.Context, id int64) (*model.EnvironmentTemplate, error) {
-	if s.findByIDWithContextFn != nil {
-		return s.findByIDWithContextFn(ctx, id)
+func (s *topologyTemplateRepoStub) FindByID(ctx context.Context, id int64) (*model.EnvironmentTemplate, error) {
+	if s.findByIDFn != nil {
+		return s.findByIDFn(ctx, id)
 	}
 	return nil, nil
 }
 
-func (s *topologyTemplateRepoStub) ListWithContext(ctx context.Context, keyword string) ([]*model.EnvironmentTemplate, error) {
-	if s.listWithContextFn != nil {
-		return s.listWithContextFn(ctx, keyword)
+func (s *topologyTemplateRepoStub) List(ctx context.Context, keyword string) ([]*model.EnvironmentTemplate, error) {
+	if s.listFn != nil {
+		return s.listFn(ctx, keyword)
 	}
 	return nil, nil
 }
 
-func (s *topologyTemplateRepoStub) IncrementUsageWithContext(ctx context.Context, id int64) error {
-	if s.incrementUsageWithCtxFn != nil {
-		return s.incrementUsageWithCtxFn(ctx, id)
+func (s *topologyTemplateRepoStub) IncrementUsage(ctx context.Context, id int64) error {
+	if s.incrementUsageFn != nil {
+		return s.incrementUsageFn(ctx, id)
 	}
 	return nil
 }
@@ -192,14 +192,14 @@ func TestTopologyServiceSaveChallengeTopologyPropagatesContextToRepositories(t *
 		},
 	}
 	templateRepo := &topologyTemplateRepoStub{
-		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.EnvironmentTemplate, error) {
+		findByIDFn: func(ctx context.Context, id int64) (*model.EnvironmentTemplate, error) {
 			findTemplateCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find-template ctx value %v, got %v", expectedCtxValue, got)
 			}
 			return &model.EnvironmentTemplate{ID: id, EntryNodeKey: "web", Spec: string(spec)}, nil
 		},
-		incrementUsageWithCtxFn: func(ctx context.Context, id int64) error {
+		incrementUsageFn: func(ctx context.Context, id int64) error {
 			incrementCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected increment-usage ctx value %v, got %v", expectedCtxValue, got)
@@ -276,7 +276,7 @@ func TestTopologyServiceCreateTemplatePropagatesContextToRepositories(t *testing
 		},
 	}
 	templateRepo := &topologyTemplateRepoStub{
-		createWithContextFn: func(ctx context.Context, template *model.EnvironmentTemplate) error {
+		createFn: func(ctx context.Context, template *model.EnvironmentTemplate) error {
 			createCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected create-template ctx value %v, got %v", expectedCtxValue, got)
@@ -315,14 +315,14 @@ func TestTopologyServiceUpdateTemplatePropagatesContextToRepositories(t *testing
 	findImageCalled := false
 	updateCalled := false
 	templateRepo := &topologyTemplateRepoStub{
-		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.EnvironmentTemplate, error) {
+		findByIDFn: func(ctx context.Context, id int64) (*model.EnvironmentTemplate, error) {
 			findTemplateCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find-template ctx value %v, got %v", expectedCtxValue, got)
 			}
 			return &model.EnvironmentTemplate{ID: id, Name: "Old", EntryNodeKey: "old"}, nil
 		},
-		updateWithContextFn: func(ctx context.Context, template *model.EnvironmentTemplate) error {
+		updateFn: func(ctx context.Context, template *model.EnvironmentTemplate) error {
 			updateCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected update-template ctx value %v, got %v", expectedCtxValue, got)
@@ -369,7 +369,7 @@ func TestTopologyServiceDeleteTemplatePropagatesContextToRepository(t *testing.T
 	findCalled := false
 	deleteCalled := false
 	templateRepo := &topologyTemplateRepoStub{
-		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.EnvironmentTemplate, error) {
+		findByIDFn: func(ctx context.Context, id int64) (*model.EnvironmentTemplate, error) {
 			findCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find-template ctx value %v, got %v", expectedCtxValue, got)
