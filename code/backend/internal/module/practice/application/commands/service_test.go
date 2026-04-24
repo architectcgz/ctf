@@ -450,9 +450,9 @@ func TestSubmitFlagWithRegexChallengeMatchesPattern(t *testing.T) {
 		nil,
 	)
 
-	resp, err := service.SubmitFlagWithContext(context.Background(), 9, 19, "flag{regex-42}")
+	resp, err := service.SubmitFlag(context.Background(), 9, 19, "flag{regex-42}")
 	if err != nil {
-		t.Fatalf("SubmitFlagWithContext() error = %v", err)
+		t.Fatalf("SubmitFlag() error = %v", err)
 	}
 	if !resp.IsCorrect || resp.Status != dto.SubmissionStatusCorrect {
 		t.Fatalf("expected regex submission success, got %+v", resp)
@@ -504,9 +504,9 @@ func TestSubmitFlagWithManualReviewChallengeCreatesPendingSubmission(t *testing.
 		nil,
 	)
 
-	resp, err := service.SubmitFlagWithContext(context.Background(), 8, 18, "answer with reasoning")
+	resp, err := service.SubmitFlag(context.Background(), 8, 18, "answer with reasoning")
 	if err != nil {
-		t.Fatalf("SubmitFlagWithContext() error = %v", err)
+		t.Fatalf("SubmitFlag() error = %v", err)
 	}
 	if resp.IsCorrect || resp.Status != dto.SubmissionStatusPendingReview {
 		t.Fatalf("expected pending-review response, got %+v", resp)
@@ -728,9 +728,9 @@ func TestPracticePublishesFlagAcceptedEvent(t *testing.T) {
 		return nil
 	})
 
-	resp, err := service.SubmitFlagWithContext(context.Background(), 7, 11, "flag{correct}")
+	resp, err := service.SubmitFlag(context.Background(), 7, 11, "flag{correct}")
 	if err != nil {
-		t.Fatalf("SubmitFlagWithContext() error = %v", err)
+		t.Fatalf("SubmitFlag() error = %v", err)
 	}
 	if !resp.IsCorrect {
 		t.Fatalf("expected correct submission response, got %+v", resp)
@@ -790,16 +790,16 @@ func TestSubmitFlagWithSharedStaticChallengeUsesRegularFlagValidation(t *testing
 		nil,
 	)
 
-	resp, err := service.SubmitFlagWithContext(context.Background(), 7, 11, "flag{shared-static}")
+	resp, err := service.SubmitFlag(context.Background(), 7, 11, "flag{shared-static}")
 	if err != nil {
-		t.Fatalf("SubmitFlagWithContext() error = %v", err)
+		t.Fatalf("SubmitFlag() error = %v", err)
 	}
 	if !resp.IsCorrect || resp.Status != dto.SubmissionStatusCorrect {
 		t.Fatalf("expected shared static submission success, got %+v", resp)
 	}
 }
 
-func TestSubmitFlagWithContextAllowsRepeatCorrectSubmissionWithoutExtraPoints(t *testing.T) {
+func TestSubmitFlagAllowsRepeatCorrectSubmissionWithoutExtraPoints(t *testing.T) {
 	t.Parallel()
 
 	db := newPracticeCommandTestDB(t)
@@ -854,17 +854,17 @@ func TestSubmitFlagWithContextAllowsRepeatCorrectSubmissionWithoutExtraPoints(t 
 		nil,
 	)
 
-	first, err := service.SubmitFlagWithContext(context.Background(), 71, 11, "flag{repeatable}")
+	first, err := service.SubmitFlag(context.Background(), 71, 11, "flag{repeatable}")
 	if err != nil {
-		t.Fatalf("SubmitFlagWithContext() first error = %v", err)
+		t.Fatalf("SubmitFlag() first error = %v", err)
 	}
 	if !first.IsCorrect || first.Points != 100 {
 		t.Fatalf("expected first correct submission to score once, got %+v", first)
 	}
 
-	repeat, err := service.SubmitFlagWithContext(context.Background(), 71, 11, "flag{repeatable}")
+	repeat, err := service.SubmitFlag(context.Background(), 71, 11, "flag{repeatable}")
 	if err != nil {
-		t.Fatalf("SubmitFlagWithContext() repeat error = %v", err)
+		t.Fatalf("SubmitFlag() repeat error = %v", err)
 	}
 	if !repeat.IsCorrect || repeat.Status != dto.SubmissionStatusCorrect {
 		t.Fatalf("expected repeated correct submission to stay correct, got %+v", repeat)
@@ -884,7 +884,7 @@ func TestSubmitFlagWithContextAllowsRepeatCorrectSubmissionWithoutExtraPoints(t 
 	}
 }
 
-func TestSubmitFlagWithContextShrinksOwnedInstanceExpiryAfterSolve(t *testing.T) {
+func TestSubmitFlagShrinksOwnedInstanceExpiryAfterSolve(t *testing.T) {
 	t.Parallel()
 
 	db := newPracticeCommandTestDB(t)
@@ -959,9 +959,9 @@ func TestSubmitFlagWithContextShrinksOwnedInstanceExpiryAfterSolve(t *testing.T)
 	)
 
 	beforeSubmit := time.Now()
-	resp, err := service.SubmitFlagWithContext(context.Background(), 7, 11, "flag{correct}")
+	resp, err := service.SubmitFlag(context.Background(), 7, 11, "flag{correct}")
 	if err != nil {
-		t.Fatalf("SubmitFlagWithContext() error = %v", err)
+		t.Fatalf("SubmitFlag() error = %v", err)
 	}
 	if !resp.IsCorrect {
 		t.Fatalf("expected correct submission response, got %+v", resp)
@@ -1112,7 +1112,7 @@ func TestSubmitFlagRejectsUnknownFlagType(t *testing.T) {
 		nil,
 	)
 
-	_, err := service.SubmitFlagWithContext(context.Background(), 7, 11, "flag{legacy}")
+	_, err := service.SubmitFlag(context.Background(), 7, 11, "flag{legacy}")
 	if err == nil || err.Error() != errcode.ErrInvalidParams.Error() {
 		t.Fatalf("expected invalid params for unknown flag type, got %v", err)
 	}
@@ -2124,7 +2124,7 @@ func TestBuildTopologyCreateRequestPropagatesContextToImageRepository(t *testing
 	}
 }
 
-func TestSubmitFlagWithContextPropagatesContextToRepository(t *testing.T) {
+func TestSubmitFlagPropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := practiceServiceContextKey("submit")
@@ -2191,8 +2191,8 @@ func TestSubmitFlagWithContextPropagatesContextToRepository(t *testing.T) {
 	)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	if _, err := service.SubmitFlagWithContext(ctx, 7, 11, "flag{ctx-submit}"); err != nil {
-		t.Fatalf("SubmitFlagWithContext() error = %v", err)
+	if _, err := service.SubmitFlag(ctx, 7, 11, "flag{ctx-submit}"); err != nil {
+		t.Fatalf("SubmitFlag() error = %v", err)
 	}
 	if !challengeLookupCalled {
 		t.Fatal("expected challenge lookup to be called")
@@ -2828,7 +2828,7 @@ func TestListMyChallengeSubmissionsWithContextPropagatesContextToRepository(t *t
 	}
 }
 
-func TestSubmitFlagWithContextPropagatesContextToDynamicFlagInstanceLookup(t *testing.T) {
+func TestSubmitFlagPropagatesContextToDynamicFlagInstanceLookup(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := practiceServiceContextKey("dynamic-flag")
@@ -2885,15 +2885,15 @@ func TestSubmitFlagWithContextPropagatesContextToDynamicFlagInstanceLookup(t *te
 
 	flag := flagcrypto.GenerateDynamicFlag(7, 11, "12345678901234567890123456789012", "nonce-301", "flag")
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	if _, err := service.SubmitFlagWithContext(ctx, 7, 11, flag); err != nil {
-		t.Fatalf("SubmitFlagWithContext() error = %v", err)
+	if _, err := service.SubmitFlag(ctx, 7, 11, flag); err != nil {
+		t.Fatalf("SubmitFlag() error = %v", err)
 	}
 	if !instanceLookupCalled {
 		t.Fatal("expected dynamic flag instance lookup to be called")
 	}
 }
 
-func TestSubmitFlagWithContextPropagatesContextToSolveGraceInstanceUpdates(t *testing.T) {
+func TestSubmitFlagPropagatesContextToSolveGraceInstanceUpdates(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := practiceServiceContextKey("solve-grace")
@@ -2963,8 +2963,8 @@ func TestSubmitFlagWithContextPropagatesContextToSolveGraceInstanceUpdates(t *te
 	)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	if _, err := service.SubmitFlagWithContext(ctx, 7, 11, "flag{solve-grace-ctx}"); err != nil {
-		t.Fatalf("SubmitFlagWithContext() error = %v", err)
+	if _, err := service.SubmitFlag(ctx, 7, 11, "flag{solve-grace-ctx}"); err != nil {
+		t.Fatalf("SubmitFlag() error = %v", err)
 	}
 	if !lookupCalled {
 		t.Fatal("expected solve grace instance lookup to be called")
