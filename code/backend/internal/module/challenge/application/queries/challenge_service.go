@@ -52,7 +52,7 @@ func (s *ChallengeService) GetChallenge(ctx context.Context, id int64) (*dto.Cha
 }
 
 func (s *ChallengeService) ListChallenges(ctx context.Context, query *dto.ChallengeQuery) (*dto.PageResult, error) {
-	challenges, total, err := s.repo.ListWithContext(ctx, query)
+	challenges, total, err := s.repo.List(ctx, query)
 	if err != nil {
 		return nil, err
 	}

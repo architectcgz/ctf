@@ -46,9 +46,9 @@ func TestRepositoryList(t *testing.T) {
 	db.Create(&model.Challenge{Title: "C1", Category: "web"})
 	db.Create(&model.Challenge{Title: "C2", Category: "pwn"})
 
-	challenges, total, err := repo.ListWithContext(context.Background(), &dto.ChallengeQuery{Page: 1, Size: 10})
+	challenges, total, err := repo.List(context.Background(), &dto.ChallengeQuery{Page: 1, Size: 10})
 	if err != nil {
-		t.Fatalf("ListWithContext() error = %v", err)
+		t.Fatalf("List() error = %v", err)
 	}
 	if total != 2 {
 		t.Fatalf("unexpected total: %d", total)

@@ -14,7 +14,7 @@ func (ctxOnlyChallengeQueryRepository) FindByID(context.Context, int64) (*model.
 	return nil, nil
 }
 
-func (ctxOnlyChallengeQueryRepository) ListWithContext(context.Context, *dto.ChallengeQuery) ([]*model.Challenge, int64, error) {
+func (ctxOnlyChallengeQueryRepository) List(context.Context, *dto.ChallengeQuery) ([]*model.Challenge, int64, error) {
 	return nil, 0, nil
 }
 

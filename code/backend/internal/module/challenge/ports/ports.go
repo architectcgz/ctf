@@ -31,7 +31,7 @@ type ChallengeFlagRepository interface {
 
 type ChallengeQueryRepository interface {
 	FindByID(ctx context.Context, id int64) (*model.Challenge, error)
-	ListWithContext(ctx context.Context, query *dto.ChallengeQuery) ([]*model.Challenge, int64, error)
+	List(ctx context.Context, query *dto.ChallengeQuery) ([]*model.Challenge, int64, error)
 	ListHintsByChallengeID(ctx context.Context, challengeID int64) ([]*model.ChallengeHint, error)
 	GetSolvedStatus(ctx context.Context, userID, challengeID int64) (bool, error)
 	GetSolvedCount(ctx context.Context, challengeID int64) (int64, error)
