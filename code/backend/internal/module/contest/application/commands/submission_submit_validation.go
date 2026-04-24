@@ -67,7 +67,7 @@ func (s *SubmissionService) validateContestSubmission(ctx context.Context, userI
 	if s.flagValidator == nil {
 		return nil, errcode.ErrInternal.WithCause(fmt.Errorf("challenge flag validator is nil"))
 	}
-	isCorrect, err = s.flagValidator.ValidateFlag(userID, challengeID, flag, "")
+	isCorrect, err = s.flagValidator.ValidateFlag(ctx, userID, challengeID, flag, "")
 	if err != nil {
 		return nil, err
 	}
