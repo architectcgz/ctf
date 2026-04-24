@@ -24,7 +24,7 @@ func newTestScoreQueryService(db *gorm.DB, redisClient *redis.Client) *practiceq
 	})
 }
 
-func TestScoreServiceGetUserScoreWithContextHonorsCancellation(t *testing.T) {
+func TestScoreServiceGetUserScoreHonorsCancellation(t *testing.T) {
 	db := testsupport.SetupScoreServiceTestDB(t)
 	mr := miniredis.RunT(t)
 	redisClient := redis.NewClient(&redis.Options{Addr: mr.Addr()})
@@ -35,7 +35,24 @@ func TestScoreServiceGetUserScoreWithContextHonorsCancellation(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 
-	_, err := service.GetUserScoreWithContext(ctx, 1)
+	_, err := service.GetUserScore(ctx, 1)
+	if err != context.Canceled {
+		t.Fatalf("expected context canceled, got %v", err)
+	}
+}
+
+func TestScoreServiceGetRankingHonorsCancellation(t *testing.T) {
+	db := testsupport.SetupScoreServiceTestDB(t)
+	mr := miniredis.RunT(t)
+	redisClient := redis.NewClient(&redis.Options{Addr: mr.Addr()})
+	t.Cleanup(func() { _ = redisClient.Close() })
+
+	service := newTestScoreQueryService(db, redisClient)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	_, err := service.GetRanking(ctx, 10)
 	if err != context.Canceled {
 		t.Fatalf("expected context canceled, got %v", err)
 	}

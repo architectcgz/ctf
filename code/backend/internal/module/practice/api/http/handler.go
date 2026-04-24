@@ -32,7 +32,7 @@ type practiceService interface {
 }
 
 type practiceRankingService interface {
-	GetRankingWithContext(ctx context.Context, limit int) ([]*dto.RankingItem, error)
+	GetRanking(ctx context.Context, limit int) ([]*dto.RankingItem, error)
 }
 
 func NewHandler(service practiceService, rankingService practiceRankingService) *Handler {
@@ -165,7 +165,7 @@ func (h *Handler) GetRanking(c *gin.Context) {
 		limit = parsed
 	}
 
-	resp, err := h.rankingService.GetRankingWithContext(c.Request.Context(), limit)
+	resp, err := h.rankingService.GetRanking(c.Request.Context(), limit)
 	if err != nil {
 		response.FromError(c, err)
 		return
