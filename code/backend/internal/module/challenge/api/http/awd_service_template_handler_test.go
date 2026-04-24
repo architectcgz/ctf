@@ -121,11 +121,11 @@ type stubAWDServiceTemplateQueryService struct {
 	listWithContextFunc func(ctx context.Context, req *dto.AWDServiceTemplateQuery) (*dto.AWDServiceTemplatePageResp, error)
 }
 
-func (s stubAWDServiceTemplateQueryService) GetTemplateWithContext(ctx context.Context, id int64) (*dto.AWDServiceTemplateResp, error) {
+func (s stubAWDServiceTemplateQueryService) GetTemplate(ctx context.Context, id int64) (*dto.AWDServiceTemplateResp, error) {
 	return nil, nil
 }
 
-func (s stubAWDServiceTemplateQueryService) ListTemplatesWithContext(ctx context.Context, req *dto.AWDServiceTemplateQuery) (*dto.AWDServiceTemplatePageResp, error) {
+func (s stubAWDServiceTemplateQueryService) ListTemplates(ctx context.Context, req *dto.AWDServiceTemplateQuery) (*dto.AWDServiceTemplatePageResp, error) {
 	if s.listWithContextFunc != nil {
 		return s.listWithContextFunc(ctx, req)
 	}

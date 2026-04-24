@@ -29,7 +29,7 @@ func (s *awdServiceTemplateQueryContextRepoStub) ListAWDServiceTemplatesWithCont
 
 type awdServiceTemplateQueryContextKey string
 
-func TestAWDServiceTemplateQueryServiceGetTemplateWithContextPropagatesContextToRepository(t *testing.T) {
+func TestAWDServiceTemplateQueryServiceGetTemplatePropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := awdServiceTemplateQueryContextKey("get")
@@ -47,9 +47,9 @@ func TestAWDServiceTemplateQueryServiceGetTemplateWithContextPropagatesContextTo
 	service := NewAWDServiceTemplateQueryService(repo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.GetTemplateWithContext(ctx, 77)
+	resp, err := service.GetTemplate(ctx, 77)
 	if err != nil {
-		t.Fatalf("GetTemplateWithContext() error = %v", err)
+		t.Fatalf("GetTemplate() error = %v", err)
 	}
 	if !findCalled {
 		t.Fatal("expected find repository to be called")
@@ -59,7 +59,7 @@ func TestAWDServiceTemplateQueryServiceGetTemplateWithContextPropagatesContextTo
 	}
 }
 
-func TestAWDServiceTemplateQueryServiceListTemplatesWithContextPropagatesContextToRepository(t *testing.T) {
+func TestAWDServiceTemplateQueryServiceListTemplatesPropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := awdServiceTemplateQueryContextKey("list")
@@ -82,9 +82,9 @@ func TestAWDServiceTemplateQueryServiceListTemplatesWithContextPropagatesContext
 	service := NewAWDServiceTemplateQueryService(repo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.ListTemplatesWithContext(ctx, &dto.AWDServiceTemplateQuery{Page: 1, Size: 10})
+	resp, err := service.ListTemplates(ctx, &dto.AWDServiceTemplateQuery{Page: 1, Size: 10})
 	if err != nil {
-		t.Fatalf("ListTemplatesWithContext() error = %v", err)
+		t.Fatalf("ListTemplates() error = %v", err)
 	}
 	if !listCalled {
 		t.Fatal("expected list repository to be called")

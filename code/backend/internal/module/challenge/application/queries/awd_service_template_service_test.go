@@ -27,9 +27,9 @@ func TestAWDServiceTemplateQueryServiceListTemplates(t *testing.T) {
 		t.Fatalf("CreateAWDServiceTemplateWithContext() error = %v", err)
 	}
 
-	page, err := service.ListTemplatesWithContext(context.Background(), &dto.AWDServiceTemplateQuery{Page: 1, Size: 10})
+	page, err := service.ListTemplates(context.Background(), &dto.AWDServiceTemplateQuery{Page: 1, Size: 10})
 	if err != nil {
-		t.Fatalf("ListTemplatesWithContext() error = %v", err)
+		t.Fatalf("ListTemplates() error = %v", err)
 	}
 	if page.Total != 1 || len(page.Items) != 1 {
 		t.Fatalf("unexpected page: %+v", page)
@@ -66,9 +66,9 @@ func TestAWDServiceTemplateQueryServiceGetTemplateIncludesInheritedRuntimeFields
 		t.Fatalf("CreateAWDServiceTemplateWithContext() error = %v", err)
 	}
 
-	item, err := service.GetTemplateWithContext(context.Background(), 2401)
+	item, err := service.GetTemplate(context.Background(), 2401)
 	if err != nil {
-		t.Fatalf("GetTemplateWithContext() error = %v", err)
+		t.Fatalf("GetTemplate() error = %v", err)
 	}
 
 	if item.CheckerType != string(model.AWDCheckerTypeHTTPStandard) {
