@@ -69,7 +69,7 @@ func (s *tagCommandContextStub) CountChallengesByTagIDWithContext(ctx context.Co
 
 type tagCommandContextKey string
 
-func TestTagServiceCreateTagWithContextPropagatesContextToRepository(t *testing.T) {
+func TestTagServiceCreateTagPropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := tagCommandContextKey("tag-create")
@@ -88,9 +88,9 @@ func TestTagServiceCreateTagWithContextPropagatesContextToRepository(t *testing.
 	service := NewTagService(repo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.CreateTagWithContext(ctx, &dto.CreateTagReq{Name: "SQL注入", Type: model.TagTypeVulnerability, Description: "desc"})
+	resp, err := service.CreateTag(ctx, &dto.CreateTagReq{Name: "SQL注入", Type: model.TagTypeVulnerability, Description: "desc"})
 	if err != nil {
-		t.Fatalf("CreateTagWithContext() error = %v", err)
+		t.Fatalf("CreateTag() error = %v", err)
 	}
 	if !createCalled {
 		t.Fatal("expected create repository to be called")
@@ -100,7 +100,7 @@ func TestTagServiceCreateTagWithContextPropagatesContextToRepository(t *testing.
 	}
 }
 
-func TestTagServiceAttachTagsWithContextPropagatesContextToRepository(t *testing.T) {
+func TestTagServiceAttachTagsPropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := tagCommandContextKey("tag-attach")
@@ -129,15 +129,15 @@ func TestTagServiceAttachTagsWithContextPropagatesContextToRepository(t *testing
 	service := NewTagService(repo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	if err := service.AttachTagsWithContext(ctx, 99, []int64{1, 2}); err != nil {
-		t.Fatalf("AttachTagsWithContext() error = %v", err)
+	if err := service.AttachTags(ctx, 99, []int64{1, 2}); err != nil {
+		t.Fatalf("AttachTags() error = %v", err)
 	}
 	if !findByIDsCalled || !attachCalled {
 		t.Fatalf("expected repository calls, got find=%v attach=%v", findByIDsCalled, attachCalled)
 	}
 }
 
-func TestTagServiceDetachTagsWithContextPropagatesContextToRepository(t *testing.T) {
+func TestTagServiceDetachTagsPropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := tagCommandContextKey("tag-detach")
@@ -166,15 +166,15 @@ func TestTagServiceDetachTagsWithContextPropagatesContextToRepository(t *testing
 	service := NewTagService(repo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	if err := service.DetachTagsWithContext(ctx, 99, []int64{1, 2}); err != nil {
-		t.Fatalf("DetachTagsWithContext() error = %v", err)
+	if err := service.DetachTags(ctx, 99, []int64{1, 2}); err != nil {
+		t.Fatalf("DetachTags() error = %v", err)
 	}
 	if !findByIDsCalled || detachCalls != 2 {
 		t.Fatalf("expected repository calls, got find=%v detachCalls=%d", findByIDsCalled, detachCalls)
 	}
 }
 
-func TestTagServiceDeleteTagWithContextPropagatesContextToRepository(t *testing.T) {
+func TestTagServiceDeleteTagPropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := tagCommandContextKey("tag-delete")
@@ -200,8 +200,8 @@ func TestTagServiceDeleteTagWithContextPropagatesContextToRepository(t *testing.
 	service := NewTagService(repo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	if err := service.DeleteTagWithContext(ctx, 11); err != nil {
-		t.Fatalf("DeleteTagWithContext() error = %v", err)
+	if err := service.DeleteTag(ctx, 11); err != nil {
+		t.Fatalf("DeleteTag() error = %v", err)
 	}
 	if !countCalled || !deleteCalled {
 		t.Fatalf("expected repository calls, got count=%v delete=%v", countCalled, deleteCalled)
