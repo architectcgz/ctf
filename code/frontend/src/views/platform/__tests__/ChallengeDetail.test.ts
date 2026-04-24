@@ -3,6 +3,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import ChallengeDetail from '../ChallengeDetail.vue'
 import challengeDetailSource from '../ChallengeDetail.vue?raw'
+import adminChallengeTopbarPanelSource from '@/components/platform/challenge/AdminChallengeTopbarPanel.vue?raw'
 
 const pushMock = vi.fn()
 const replaceMock = vi.fn()
@@ -115,8 +116,12 @@ describe('Admin ChallengeDetail', () => {
   })
 
   it('应改用共享 ui-btn 原语而不是页面私有 admin-btn 按钮族', () => {
-    expect(challengeDetailSource).toContain('class="ui-btn ui-btn--primary"')
-    expect(challengeDetailSource).toContain('class="ui-btn ui-btn--ghost"')
+    expect(challengeDetailSource).toContain(
+      "import AdminChallengeTopbarPanel from '@/components/platform/challenge/AdminChallengeTopbarPanel.vue'"
+    )
+    expect(challengeDetailSource).toContain('<AdminChallengeTopbarPanel')
+    expect(adminChallengeTopbarPanelSource).toContain('class="ui-btn ui-btn--primary"')
+    expect(adminChallengeTopbarPanelSource).toContain('class="ui-btn ui-btn--ghost"')
     expect(challengeDetailSource).not.toContain('admin-btn admin-btn-primary')
     expect(challengeDetailSource).not.toContain('admin-btn admin-btn-ghost')
   })
