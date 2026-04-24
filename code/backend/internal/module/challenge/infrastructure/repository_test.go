@@ -179,19 +179,19 @@ func TestRepositoryCreateAndListAWDServiceTemplates(t *testing.T) {
 		Status:         model.AWDServiceTemplateStatusDraft,
 	}
 
-	if err := repo.CreateAWDServiceTemplateWithContext(context.Background(), template); err != nil {
-		t.Fatalf("CreateAWDServiceTemplateWithContext() error = %v", err)
+	if err := repo.CreateAWDServiceTemplate(context.Background(), template); err != nil {
+		t.Fatalf("Create() error = %v", err)
 	}
 	if template.ID == 0 {
 		t.Fatal("template ID should be set")
 	}
 
-	items, total, err := repo.ListAWDServiceTemplatesWithContext(context.Background(), &dto.AWDServiceTemplateQuery{
+	items, total, err := repo.ListAWDServiceTemplates(context.Background(), &dto.AWDServiceTemplateQuery{
 		Page: 1,
 		Size: 10,
 	})
 	if err != nil {
-		t.Fatalf("ListAWDServiceTemplatesWithContext() error = %v", err)
+		t.Fatalf("List() error = %v", err)
 	}
 	if total != 1 {
 		t.Fatalf("unexpected total: %d", total)

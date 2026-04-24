@@ -9,19 +9,19 @@ import (
 
 type ctxOnlyAWDServiceTemplateCommandRepository struct{}
 
-func (ctxOnlyAWDServiceTemplateCommandRepository) CreateAWDServiceTemplateWithContext(context.Context, *model.AWDServiceTemplate) error {
+func (ctxOnlyAWDServiceTemplateCommandRepository) CreateAWDServiceTemplate(context.Context, *model.AWDServiceTemplate) error {
 	return nil
 }
 
-func (ctxOnlyAWDServiceTemplateCommandRepository) FindAWDServiceTemplateByIDWithContext(context.Context, int64) (*model.AWDServiceTemplate, error) {
+func (ctxOnlyAWDServiceTemplateCommandRepository) FindAWDServiceTemplateByID(context.Context, int64) (*model.AWDServiceTemplate, error) {
 	return nil, nil
 }
 
-func (ctxOnlyAWDServiceTemplateCommandRepository) UpdateAWDServiceTemplateWithContext(context.Context, *model.AWDServiceTemplate) error {
+func (ctxOnlyAWDServiceTemplateCommandRepository) UpdateAWDServiceTemplate(context.Context, *model.AWDServiceTemplate) error {
 	return nil
 }
 
-func (ctxOnlyAWDServiceTemplateCommandRepository) DeleteAWDServiceTemplateWithContext(context.Context, int64) error {
+func (ctxOnlyAWDServiceTemplateCommandRepository) DeleteAWDServiceTemplate(context.Context, int64) error {
 	return nil
 }
 

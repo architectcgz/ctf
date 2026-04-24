@@ -10,11 +10,11 @@ import (
 
 type ctxOnlyAWDServiceTemplateQueryRepository struct{}
 
-func (ctxOnlyAWDServiceTemplateQueryRepository) FindAWDServiceTemplateByIDWithContext(context.Context, int64) (*model.AWDServiceTemplate, error) {
+func (ctxOnlyAWDServiceTemplateQueryRepository) FindAWDServiceTemplateByID(context.Context, int64) (*model.AWDServiceTemplate, error) {
 	return nil, nil
 }
 
-func (ctxOnlyAWDServiceTemplateQueryRepository) ListAWDServiceTemplatesWithContext(context.Context, *dto.AWDServiceTemplateQuery) ([]*model.AWDServiceTemplate, int64, error) {
+func (ctxOnlyAWDServiceTemplateQueryRepository) ListAWDServiceTemplates(context.Context, *dto.AWDServiceTemplateQuery) ([]*model.AWDServiceTemplate, int64, error) {
 	return nil, 0, nil
 }
 
