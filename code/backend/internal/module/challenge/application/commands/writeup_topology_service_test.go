@@ -132,9 +132,9 @@ func TestTopologyServiceSaveChallengeTopologyWithTemplate(t *testing.T) {
 	}
 
 	queryService := challengeqry.NewTopologyService(repo, templateRepo)
-	loadedTemplate, err := queryService.GetTemplateWithContext(context.Background(), templateResp.ID)
+	loadedTemplate, err := queryService.GetTemplate(context.Background(), templateResp.ID)
 	if err != nil {
-		t.Fatalf("GetTemplateWithContext() error = %v", err)
+		t.Fatalf("GetTemplate() error = %v", err)
 	}
 	if loadedTemplate.UsageCount != 1 {
 		t.Fatalf("expected usage_count=1, got %d", loadedTemplate.UsageCount)

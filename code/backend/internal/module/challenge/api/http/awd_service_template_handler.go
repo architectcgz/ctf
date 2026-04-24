@@ -37,8 +37,8 @@ type awdServiceTemplateCommandService interface {
 }
 
 type awdServiceTemplateQueryService interface {
-	GetTemplateWithContext(ctx context.Context, id int64) (*dto.AWDServiceTemplateResp, error)
-	ListTemplatesWithContext(ctx context.Context, req *dto.AWDServiceTemplateQuery) (*dto.AWDServiceTemplatePageResp, error)
+	GetTemplate(ctx context.Context, id int64) (*dto.AWDServiceTemplateResp, error)
+	ListTemplates(ctx context.Context, req *dto.AWDServiceTemplateQuery) (*dto.AWDServiceTemplatePageResp, error)
 }
 
 func NewAWDServiceTemplateHandler(commands awdServiceTemplateCommandService, queries awdServiceTemplateQueryService) *AWDServiceTemplateHandler {
@@ -65,7 +65,7 @@ func (h *AWDServiceTemplateHandler) GetTemplate(c *gin.Context) {
 		response.InvalidParams(c, "无效的 AWD Service Template ID")
 		return
 	}
-	resp, err := h.queries.GetTemplateWithContext(c.Request.Context(), id)
+	resp, err := h.queries.GetTemplate(c.Request.Context(), id)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -79,7 +79,7 @@ func (h *AWDServiceTemplateHandler) ListTemplates(c *gin.Context) {
 		response.ValidationError(c, err)
 		return
 	}
-	resp, err := h.queries.ListTemplatesWithContext(c.Request.Context(), &req)
+	resp, err := h.queries.ListTemplates(c.Request.Context(), &req)
 	if err != nil {
 		response.FromError(c, err)
 		return
