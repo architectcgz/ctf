@@ -125,18 +125,11 @@ func (s *stubPracticeRepository) CountScopedRunningInstancesWithContext(ctx cont
 	return s.CountScopedRunningInstances(userID, scope)
 }
 
-func (s *stubPracticeRepository) RefreshInstanceExpiry(instanceID int64, expiresAt time.Time) error {
-	if s.refreshInstanceExpiryFn != nil {
-		return s.refreshInstanceExpiryFn(instanceID, expiresAt)
-	}
-	return nil
-}
-
-func (s *stubPracticeRepository) RefreshInstanceExpiryWithContext(ctx context.Context, instanceID int64, expiresAt time.Time) error {
+func (s *stubPracticeRepository) RefreshInstanceExpiry(ctx context.Context, instanceID int64, expiresAt time.Time) error {
 	if s.refreshInstanceExpiryWithContextFn != nil {
 		return s.refreshInstanceExpiryWithContextFn(ctx, instanceID, expiresAt)
 	}
-	return s.RefreshInstanceExpiry(instanceID, expiresAt)
+	return nil
 }
 
 func (s *stubPracticeRepository) CreateInstance(instance *model.Instance) error {

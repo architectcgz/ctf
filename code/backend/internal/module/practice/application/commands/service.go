@@ -172,7 +172,7 @@ func (s *Service) startChallengeWithScope(ctx context.Context, userID, challenge
 				if candidateExpiry.After(refreshedExpiry) {
 					refreshedExpiry = candidateExpiry
 				}
-				if err := txRepo.RefreshInstanceExpiryWithContext(ctx, existingInstance.ID, refreshedExpiry); err != nil {
+				if err := txRepo.RefreshInstanceExpiry(ctx, existingInstance.ID, refreshedExpiry); err != nil {
 					return errcode.ErrInternal.WithCause(err)
 				}
 				existingInstance.ExpiresAt = refreshedExpiry
@@ -674,7 +674,7 @@ func (s *Service) applySolveGracePeriod(ctx context.Context, userID int64, chall
 	graceExpiry := solvedAt.Add(gracePeriod)
 	if shutdownAt.After(graceExpiry) {
 		shutdownAt = graceExpiry
-		if err := s.instanceRepo.RefreshInstanceExpiryWithContext(ctx, instance.ID, shutdownAt); err != nil {
+		if err := s.instanceRepo.RefreshInstanceExpiry(ctx, instance.ID, shutdownAt); err != nil {
 			s.logger.Warn("收缩解题后实例生命周期失败", zap.Int64("instance_id", instance.ID), zap.Error(err))
 			return nil
 		}

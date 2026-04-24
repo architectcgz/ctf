@@ -206,7 +206,7 @@ func (s *stubPracticeInstanceStore) UpdateRuntime(ctx context.Context, instance 
 	return nil
 }
 
-func (s *stubPracticeInstanceStore) RefreshInstanceExpiryWithContext(ctx context.Context, instanceID int64, expiresAt time.Time) error {
+func (s *stubPracticeInstanceStore) RefreshInstanceExpiry(ctx context.Context, instanceID int64, expiresAt time.Time) error {
 	if s.refreshInstanceExpiryWithContextFn != nil {
 		return s.refreshInstanceExpiryWithContextFn(ctx, instanceID, expiresAt)
 	}
