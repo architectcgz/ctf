@@ -26,7 +26,7 @@ func (ctxOnlyInstanceRepository) UpdateStatusAndReleasePort(context.Context, int
 	return nil
 }
 
-func (ctxOnlyInstanceRepository) FindByUserAndChallengeWithContext(context.Context, int64, int64) (*model.Instance, error) {
+func (ctxOnlyInstanceRepository) FindByUserAndChallenge(context.Context, int64, int64) (*model.Instance, error) {
 	return nil, nil
 }
 

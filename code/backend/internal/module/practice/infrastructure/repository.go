@@ -258,11 +258,7 @@ func (r *Repository) FindCorrectSubmissionWithContext(ctx context.Context, userI
 	return &submission, err
 }
 
-func (r *Repository) FindByUserAndChallenge(userID, challengeID int64) (*model.Instance, error) {
-	return r.FindByUserAndChallengeWithContext(context.Background(), userID, challengeID)
-}
-
-func (r *Repository) FindByUserAndChallengeWithContext(ctx context.Context, userID, challengeID int64) (*model.Instance, error) {
+func (r *Repository) FindByUserAndChallenge(ctx context.Context, userID, challengeID int64) (*model.Instance, error) {
 	var instance model.Instance
 	err := r.dbWithContext(ctx).
 		Where("user_id = ? AND contest_id IS NULL AND team_id IS NULL AND challenge_id = ? AND status IN ?", userID, challengeID,
