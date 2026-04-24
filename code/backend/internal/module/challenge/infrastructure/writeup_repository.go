@@ -555,32 +555,16 @@ func (r *TemplateRepository) dbWithContext(ctx context.Context) *gorm.DB {
 	return r.db.WithContext(ctx)
 }
 
-func (r *TemplateRepository) Create(template *model.EnvironmentTemplate) error {
-	return r.CreateWithContext(context.Background(), template)
-}
-
 func (r *TemplateRepository) CreateWithContext(ctx context.Context, template *model.EnvironmentTemplate) error {
 	return r.dbWithContext(ctx).Create(template).Error
-}
-
-func (r *TemplateRepository) Update(template *model.EnvironmentTemplate) error {
-	return r.UpdateWithContext(context.Background(), template)
 }
 
 func (r *TemplateRepository) UpdateWithContext(ctx context.Context, template *model.EnvironmentTemplate) error {
 	return r.dbWithContext(ctx).Save(template).Error
 }
 
-func (r *TemplateRepository) Delete(id int64) error {
-	return r.DeleteWithContext(context.Background(), id)
-}
-
 func (r *TemplateRepository) DeleteWithContext(ctx context.Context, id int64) error {
 	return r.dbWithContext(ctx).Delete(&model.EnvironmentTemplate{}, id).Error
-}
-
-func (r *TemplateRepository) FindByID(id int64) (*model.EnvironmentTemplate, error) {
-	return r.FindByIDWithContext(context.Background(), id)
 }
 
 func (r *TemplateRepository) FindByIDWithContext(ctx context.Context, id int64) (*model.EnvironmentTemplate, error) {
@@ -592,10 +576,6 @@ func (r *TemplateRepository) FindByIDWithContext(ctx context.Context, id int64) 
 	return &template, nil
 }
 
-func (r *TemplateRepository) List(keyword string) ([]*model.EnvironmentTemplate, error) {
-	return r.ListWithContext(context.Background(), keyword)
-}
-
 func (r *TemplateRepository) ListWithContext(ctx context.Context, keyword string) ([]*model.EnvironmentTemplate, error) {
 	var templates []*model.EnvironmentTemplate
 	db := r.dbWithContext(ctx).Model(&model.EnvironmentTemplate{})
@@ -605,10 +585,6 @@ func (r *TemplateRepository) ListWithContext(ctx context.Context, keyword string
 	}
 	err := db.Order("updated_at DESC").Find(&templates).Error
 	return templates, err
-}
-
-func (r *TemplateRepository) IncrementUsage(id int64) error {
-	return r.IncrementUsageWithContext(context.Background(), id)
 }
 
 func (r *TemplateRepository) IncrementUsageWithContext(ctx context.Context, id int64) error {
