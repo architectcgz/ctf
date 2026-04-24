@@ -532,15 +532,7 @@ func (s *Service) startProbeAttempts() int {
 	return s.config.Container.StartProbeAttempts
 }
 
-func (s *Service) SubmitFlag(userID, challengeID int64, flag string) (*dto.SubmissionResp, error) {
-	return s.SubmitFlagWithContext(context.Background(), userID, challengeID, flag)
-}
-
-func (s *Service) SubmitFlagWithContext(ctx context.Context, userID, challengeID int64, flag string) (*dto.SubmissionResp, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
+func (s *Service) SubmitFlag(ctx context.Context, userID, challengeID int64, flag string) (*dto.SubmissionResp, error) {
 	challengeItem, err := s.challengeRepo.FindByID(ctx, challengeID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
