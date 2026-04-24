@@ -148,10 +148,6 @@ func (r *Repository) ListAWDServiceTemplatesWithContext(ctx context.Context, que
 	return templates, total, err
 }
 
-func (r *Repository) List(query *dto.ChallengeQuery) ([]*model.Challenge, int64, error) {
-	return r.ListWithContext(context.Background(), query)
-}
-
 func (r *Repository) ListWithContext(ctx context.Context, query *dto.ChallengeQuery) ([]*model.Challenge, int64, error) {
 	var challenges []*model.Challenge
 	var total int64
@@ -263,20 +259,12 @@ func (r *Repository) UpdatePublishCheckJob(ctx context.Context, job *model.Chall
 	return r.dbWithContext(ctx).Save(job).Error
 }
 
-func (r *Repository) CountByImageID(imageID int64) (int64, error) {
-	return r.CountByImageIDWithContext(context.Background(), imageID)
-}
-
 func (r *Repository) CountByImageIDWithContext(ctx context.Context, imageID int64) (int64, error) {
 	var count int64
 	err := r.dbWithContext(ctx).Model(&model.Challenge{}).
 		Where("image_id = ?", imageID).
 		Count(&count).Error
 	return count, err
-}
-
-func (r *Repository) ListHintsByChallengeID(challengeID int64) ([]*model.ChallengeHint, error) {
-	return r.ListHintsByChallengeIDWithContext(context.Background(), challengeID)
 }
 
 func (r *Repository) ListHintsByChallengeIDWithContext(ctx context.Context, challengeID int64) ([]*model.ChallengeHint, error) {
@@ -286,10 +274,6 @@ func (r *Repository) ListHintsByChallengeIDWithContext(ctx context.Context, chal
 }
 
 // ListPublished 查询已发布的靶场列表（学员视图）
-func (r *Repository) ListPublished(query *dto.ChallengeQuery) ([]*model.Challenge, int64, error) {
-	return r.ListPublishedWithContext(context.Background(), query)
-}
-
 func (r *Repository) ListPublishedWithContext(ctx context.Context, query *dto.ChallengeQuery) ([]*model.Challenge, int64, error) {
 	var challenges []*model.Challenge
 	var total int64
