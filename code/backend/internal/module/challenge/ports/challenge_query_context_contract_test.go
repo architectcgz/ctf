@@ -18,7 +18,7 @@ func (ctxOnlyChallengeQueryRepository) ListWithContext(context.Context, *dto.Cha
 	return nil, 0, nil
 }
 
-func (ctxOnlyChallengeQueryRepository) ListHintsByChallengeIDWithContext(context.Context, int64) ([]*model.ChallengeHint, error) {
+func (ctxOnlyChallengeQueryRepository) ListHintsByChallengeID(context.Context, int64) ([]*model.ChallengeHint, error) {
 	return nil, nil
 }
 
@@ -46,7 +46,7 @@ func (ctxOnlyChallengeQueryRepository) BatchGetTotalAttempts(context.Context, []
 	return nil, nil
 }
 
-func (ctxOnlyChallengeQueryRepository) ListPublishedWithContext(context.Context, *dto.ChallengeQuery) ([]*model.Challenge, int64, error) {
+func (ctxOnlyChallengeQueryRepository) ListPublished(context.Context, *dto.ChallengeQuery) ([]*model.Challenge, int64, error) {
 	return nil, 0, nil
 }
 

@@ -264,14 +264,14 @@ func (r *Repository) CountByImageID(ctx context.Context, imageID int64) (int64, 
 	return count, err
 }
 
-func (r *Repository) ListHintsByChallengeIDWithContext(ctx context.Context, challengeID int64) ([]*model.ChallengeHint, error) {
+func (r *Repository) ListHintsByChallengeID(ctx context.Context, challengeID int64) ([]*model.ChallengeHint, error) {
 	var hints []*model.ChallengeHint
 	err := r.dbWithContext(ctx).Where("challenge_id = ?", challengeID).Order("level ASC, id ASC").Find(&hints).Error
 	return hints, err
 }
 
 // ListPublished 查询已发布的靶场列表（学员视图）
-func (r *Repository) ListPublishedWithContext(ctx context.Context, query *dto.ChallengeQuery) ([]*model.Challenge, int64, error) {
+func (r *Repository) ListPublished(ctx context.Context, query *dto.ChallengeQuery) ([]*model.Challenge, int64, error) {
 	var challenges []*model.Challenge
 	var total int64
 
