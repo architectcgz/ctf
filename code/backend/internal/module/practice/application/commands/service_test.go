@@ -536,7 +536,7 @@ func TestReviewManualReviewSubmissionApprovesAndTriggersScoreUpdate(t *testing.T
 	var updatedSubmission *model.Submission
 	var scoreUpdateCalls atomic.Int32
 	repo := &stubPracticeRepository{
-		getTeacherManualReviewSubmissionByIDFn: func(id int64) (*practiceports.TeacherManualReviewSubmissionRecord, error) {
+		getTeacherManualReviewSubmissionByIDFn: func(ctx context.Context, id int64) (*practiceports.TeacherManualReviewSubmissionRecord, error) {
 			if id != submissionID {
 				t.Fatalf("unexpected submission id: %d", id)
 			}
@@ -559,7 +559,7 @@ func TestReviewManualReviewSubmissionApprovesAndTriggersScoreUpdate(t *testing.T
 			updatedSubmission = submission
 			return nil
 		},
-		findUserByIDFn: func(userID int64) (*model.User, error) {
+		findUserByIDFn: func(ctx context.Context, userID int64) (*model.User, error) {
 			return &model.User{ID: userID, Username: "teacher", Role: model.RoleTeacher, ClassName: "Class 1"}, nil
 		},
 	}
@@ -2192,7 +2192,7 @@ func TestReviewManualReviewSubmissionPropagatesContextToRepository(t *testing.T)
 	findRecordCalled := false
 	challengeLookupCalled := false
 	repo := &stubPracticeRepository{
-		getTeacherManualReviewSubmissionByIDWithContextFn: func(ctx context.Context, id int64) (*practiceports.TeacherManualReviewSubmissionRecord, error) {
+		getTeacherManualReviewSubmissionByIDFn: func(ctx context.Context, id int64) (*practiceports.TeacherManualReviewSubmissionRecord, error) {
 			findRecordCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected get-review-record ctx value %v, got %v", expectedCtxValue, got)
@@ -2213,7 +2213,7 @@ func TestReviewManualReviewSubmissionPropagatesContextToRepository(t *testing.T)
 				ChallengeTitle:  "manual challenge",
 			}, nil
 		},
-		findUserByIDWithContextFn: func(ctx context.Context, userID int64) (*model.User, error) {
+		findUserByIDFn: func(ctx context.Context, userID int64) (*model.User, error) {
 			findRequesterCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find-user ctx value %v, got %v", expectedCtxValue, got)
@@ -2286,13 +2286,13 @@ func TestListTeacherManualReviewSubmissionsPropagatesContextToRepository(t *test
 	expectedCtxValue := "ctx-list-review"
 	listCalled := false
 	repo := &stubPracticeRepository{
-		findUserByIDWithContextFn: func(ctx context.Context, userID int64) (*model.User, error) {
+		findUserByIDFn: func(ctx context.Context, userID int64) (*model.User, error) {
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find-user ctx value %v, got %v", expectedCtxValue, got)
 			}
 			return &model.User{ID: userID, Role: model.RoleTeacher, ClassName: "Class A"}, nil
 		},
-		listTeacherManualReviewSubmissionsWithContextFn: func(ctx context.Context, query *dto.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error) {
+		listTeacherManualReviewSubmissionsFn: func(ctx context.Context, query *dto.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error) {
 			listCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected list-review ctx value %v, got %v", expectedCtxValue, got)
@@ -2318,11 +2318,11 @@ func TestListTeacherManualReviewSubmissionsRejectsStudentRole(t *testing.T) {
 	t.Parallel()
 
 	repo := &stubPracticeRepository{
-		findUserByIDWithContextFn: func(ctx context.Context, userID int64) (*model.User, error) {
+		findUserByIDFn: func(ctx context.Context, userID int64) (*model.User, error) {
 			t.Fatal("did not expect requester lookup for student role")
 			return nil, nil
 		},
-		listTeacherManualReviewSubmissionsWithContextFn: func(ctx context.Context, query *dto.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error) {
+		listTeacherManualReviewSubmissionsFn: func(ctx context.Context, query *dto.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error) {
 			t.Fatal("did not expect list repository call for student role")
 			return nil, 0, nil
 		},
@@ -2343,11 +2343,11 @@ func TestListTeacherManualReviewSubmissionsRejectsInvalidReviewStatus(t *testing
 	t.Parallel()
 
 	repo := &stubPracticeRepository{
-		findUserByIDWithContextFn: func(ctx context.Context, userID int64) (*model.User, error) {
+		findUserByIDFn: func(ctx context.Context, userID int64) (*model.User, error) {
 			t.Fatal("did not expect requester lookup for invalid review status")
 			return nil, nil
 		},
-		listTeacherManualReviewSubmissionsWithContextFn: func(ctx context.Context, query *dto.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error) {
+		listTeacherManualReviewSubmissionsFn: func(ctx context.Context, query *dto.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error) {
 			t.Fatal("did not expect list repository call for invalid review status")
 			return nil, 0, nil
 		},
@@ -2373,11 +2373,11 @@ func TestListTeacherManualReviewSubmissionsRejectsOversizedPageSize(t *testing.T
 	t.Parallel()
 
 	repo := &stubPracticeRepository{
-		findUserByIDWithContextFn: func(ctx context.Context, userID int64) (*model.User, error) {
+		findUserByIDFn: func(ctx context.Context, userID int64) (*model.User, error) {
 			t.Fatal("did not expect requester lookup for oversized page size")
 			return nil, nil
 		},
-		listTeacherManualReviewSubmissionsWithContextFn: func(ctx context.Context, query *dto.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error) {
+		listTeacherManualReviewSubmissionsFn: func(ctx context.Context, query *dto.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error) {
 			t.Fatal("did not expect list repository call for oversized page size")
 			return nil, 0, nil
 		},
@@ -2403,11 +2403,11 @@ func TestListTeacherManualReviewSubmissionsRejectsNonPositiveStudentID(t *testin
 	t.Parallel()
 
 	repo := &stubPracticeRepository{
-		findUserByIDWithContextFn: func(ctx context.Context, userID int64) (*model.User, error) {
+		findUserByIDFn: func(ctx context.Context, userID int64) (*model.User, error) {
 			t.Fatal("did not expect requester lookup for non-positive student id")
 			return nil, nil
 		},
-		listTeacherManualReviewSubmissionsWithContextFn: func(ctx context.Context, query *dto.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error) {
+		listTeacherManualReviewSubmissionsFn: func(ctx context.Context, query *dto.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error) {
 			t.Fatal("did not expect list repository call for non-positive student id")
 			return nil, 0, nil
 		},
@@ -2434,11 +2434,11 @@ func TestListTeacherManualReviewSubmissionsRejectsNonPositiveChallengeID(t *test
 	t.Parallel()
 
 	repo := &stubPracticeRepository{
-		findUserByIDWithContextFn: func(ctx context.Context, userID int64) (*model.User, error) {
+		findUserByIDFn: func(ctx context.Context, userID int64) (*model.User, error) {
 			t.Fatal("did not expect requester lookup for non-positive challenge id")
 			return nil, nil
 		},
-		listTeacherManualReviewSubmissionsWithContextFn: func(ctx context.Context, query *dto.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error) {
+		listTeacherManualReviewSubmissionsFn: func(ctx context.Context, query *dto.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error) {
 			t.Fatal("did not expect list repository call for non-positive challenge id")
 			return nil, 0, nil
 		},
@@ -2465,11 +2465,11 @@ func TestListTeacherManualReviewSubmissionsRejectsOversizedClassName(t *testing.
 	t.Parallel()
 
 	repo := &stubPracticeRepository{
-		findUserByIDWithContextFn: func(ctx context.Context, userID int64) (*model.User, error) {
+		findUserByIDFn: func(ctx context.Context, userID int64) (*model.User, error) {
 			t.Fatal("did not expect requester lookup for oversized class name")
 			return nil, nil
 		},
-		listTeacherManualReviewSubmissionsWithContextFn: func(ctx context.Context, query *dto.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error) {
+		listTeacherManualReviewSubmissionsFn: func(ctx context.Context, query *dto.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error) {
 			t.Fatal("did not expect list repository call for oversized class name")
 			return nil, 0, nil
 		},
@@ -2500,7 +2500,7 @@ func TestGetTeacherManualReviewSubmissionPropagatesContextToRepository(t *testin
 	getCalled := false
 	findRequesterCalled := false
 	repo := &stubPracticeRepository{
-		getTeacherManualReviewSubmissionByIDWithContextFn: func(ctx context.Context, id int64) (*practiceports.TeacherManualReviewSubmissionRecord, error) {
+		getTeacherManualReviewSubmissionByIDFn: func(ctx context.Context, id int64) (*practiceports.TeacherManualReviewSubmissionRecord, error) {
 			getCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected get-review ctx value %v, got %v", expectedCtxValue, got)
@@ -2513,7 +2513,7 @@ func TestGetTeacherManualReviewSubmissionPropagatesContextToRepository(t *testin
 				ChallengeTitle:  "manual challenge",
 			}, nil
 		},
-		findUserByIDWithContextFn: func(ctx context.Context, userID int64) (*model.User, error) {
+		findUserByIDFn: func(ctx context.Context, userID int64) (*model.User, error) {
 			findRequesterCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find-user ctx value %v, got %v", expectedCtxValue, got)
@@ -2539,11 +2539,11 @@ func TestGetTeacherManualReviewSubmissionRejectsStudentRole(t *testing.T) {
 	t.Parallel()
 
 	repo := &stubPracticeRepository{
-		getTeacherManualReviewSubmissionByIDWithContextFn: func(ctx context.Context, id int64) (*practiceports.TeacherManualReviewSubmissionRecord, error) {
+		getTeacherManualReviewSubmissionByIDFn: func(ctx context.Context, id int64) (*practiceports.TeacherManualReviewSubmissionRecord, error) {
 			t.Fatal("did not expect get repository call for student role")
 			return nil, nil
 		},
-		findUserByIDWithContextFn: func(ctx context.Context, userID int64) (*model.User, error) {
+		findUserByIDFn: func(ctx context.Context, userID int64) (*model.User, error) {
 			t.Fatal("did not expect requester lookup for student role")
 			return nil, nil
 		},
@@ -2564,11 +2564,11 @@ func TestReviewManualReviewSubmissionRejectsStudentRole(t *testing.T) {
 	t.Parallel()
 
 	repo := &stubPracticeRepository{
-		getTeacherManualReviewSubmissionByIDWithContextFn: func(ctx context.Context, id int64) (*practiceports.TeacherManualReviewSubmissionRecord, error) {
+		getTeacherManualReviewSubmissionByIDFn: func(ctx context.Context, id int64) (*practiceports.TeacherManualReviewSubmissionRecord, error) {
 			t.Fatal("did not expect review record lookup for student role")
 			return nil, nil
 		},
-		findUserByIDWithContextFn: func(ctx context.Context, userID int64) (*model.User, error) {
+		findUserByIDFn: func(ctx context.Context, userID int64) (*model.User, error) {
 			t.Fatal("did not expect requester lookup for student role")
 			return nil, nil
 		},
@@ -2599,11 +2599,11 @@ func TestReviewManualReviewSubmissionRejectsInvalidReviewStatus(t *testing.T) {
 	t.Parallel()
 
 	repo := &stubPracticeRepository{
-		getTeacherManualReviewSubmissionByIDWithContextFn: func(ctx context.Context, id int64) (*practiceports.TeacherManualReviewSubmissionRecord, error) {
+		getTeacherManualReviewSubmissionByIDFn: func(ctx context.Context, id int64) (*practiceports.TeacherManualReviewSubmissionRecord, error) {
 			t.Fatal("did not expect review record lookup for invalid review status")
 			return nil, nil
 		},
-		findUserByIDWithContextFn: func(ctx context.Context, userID int64) (*model.User, error) {
+		findUserByIDFn: func(ctx context.Context, userID int64) (*model.User, error) {
 			t.Fatal("did not expect requester lookup for invalid review status")
 			return nil, nil
 		},
@@ -2634,11 +2634,11 @@ func TestReviewManualReviewSubmissionRejectsOversizedReviewComment(t *testing.T)
 	t.Parallel()
 
 	repo := &stubPracticeRepository{
-		getTeacherManualReviewSubmissionByIDWithContextFn: func(ctx context.Context, id int64) (*practiceports.TeacherManualReviewSubmissionRecord, error) {
+		getTeacherManualReviewSubmissionByIDFn: func(ctx context.Context, id int64) (*practiceports.TeacherManualReviewSubmissionRecord, error) {
 			t.Fatal("did not expect review record lookup for oversized review comment")
 			return nil, nil
 		},
-		findUserByIDWithContextFn: func(ctx context.Context, userID int64) (*model.User, error) {
+		findUserByIDFn: func(ctx context.Context, userID int64) (*model.User, error) {
 			t.Fatal("did not expect requester lookup for oversized review comment")
 			return nil, nil
 		},
@@ -2673,7 +2673,7 @@ func TestReviewManualReviewSubmissionRejectsApprovalAfterChallengeAlreadySolved(
 
 	now := time.Now()
 	repo := &stubPracticeRepository{
-		getTeacherManualReviewSubmissionByIDWithContextFn: func(ctx context.Context, id int64) (*practiceports.TeacherManualReviewSubmissionRecord, error) {
+		getTeacherManualReviewSubmissionByIDFn: func(ctx context.Context, id int64) (*practiceports.TeacherManualReviewSubmissionRecord, error) {
 			return &practiceports.TeacherManualReviewSubmissionRecord{
 				Submission: model.Submission{
 					ID:           id,
@@ -2690,7 +2690,7 @@ func TestReviewManualReviewSubmissionRejectsApprovalAfterChallengeAlreadySolved(
 				ChallengeTitle:  "manual challenge",
 			}, nil
 		},
-		findUserByIDWithContextFn: func(ctx context.Context, userID int64) (*model.User, error) {
+		findUserByIDFn: func(ctx context.Context, userID int64) (*model.User, error) {
 			return &model.User{ID: userID, Role: model.RoleTeacher, ClassName: "Class A"}, nil
 		},
 		findCorrectSubmissionFn: func(ctx context.Context, userID, challengeID int64) (*model.Submission, error) {
