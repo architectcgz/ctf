@@ -91,7 +91,7 @@ func (s *RecommendationService) handleContestCacheRefreshEvent(ctx context.Conte
 }
 
 func (s *RecommendationService) GetWeakDimensions(ctx context.Context, userID int64) ([]string, error) {
-	profiles, err := s.repo.FindByUserIDWithContext(ctx, userID)
+	profiles, err := s.repo.FindByUserID(ctx, userID)
 	if err != nil {
 		s.logger.Error("查询能力画像失败", zap.Int64("user_id", userID), zap.Error(err))
 		return nil, err
@@ -191,7 +191,7 @@ func (s *RecommendationService) RecommendChallenges(ctx context.Context, userID 
 }
 
 func (s *RecommendationService) getSolvedChallengeIDs(ctx context.Context, userID int64) ([]int64, error) {
-	return s.repo.ListSolvedChallengeIDsWithContext(ctx, userID)
+	return s.repo.ListSolvedChallengeIDs(ctx, userID)
 }
 
 type RecommendationQuery struct {

@@ -10,19 +10,19 @@ import (
 )
 
 type ProfileRepository interface {
-	FindUserByIDWithContext(ctx context.Context, userID int64) (*model.User, error)
-	UpsertWithContext(ctx context.Context, profile *model.SkillProfile) error
-	FindByUserIDWithContext(ctx context.Context, userID int64) ([]*model.SkillProfile, error)
-	ListSolvedChallengeIDsWithContext(ctx context.Context, userID int64) ([]int64, error)
-	BatchUpsertWithContext(ctx context.Context, profiles []*model.SkillProfile) error
-	ListStudentIDsWithContext(ctx context.Context) ([]int64, error)
-	GetDimensionScoresWithContext(ctx context.Context, userID int64) ([]assessmentdomain.DimensionScore, error)
-	GetDimensionScoreWithContext(ctx context.Context, userID int64, dimension string) (*assessmentdomain.DimensionScore, error)
+	FindUserByID(ctx context.Context, userID int64) (*model.User, error)
+	Upsert(ctx context.Context, profile *model.SkillProfile) error
+	FindByUserID(ctx context.Context, userID int64) ([]*model.SkillProfile, error)
+	ListSolvedChallengeIDs(ctx context.Context, userID int64) ([]int64, error)
+	BatchUpsert(ctx context.Context, profiles []*model.SkillProfile) error
+	ListStudentIDs(ctx context.Context) ([]int64, error)
+	GetDimensionScores(ctx context.Context, userID int64) ([]assessmentdomain.DimensionScore, error)
+	GetDimensionScore(ctx context.Context, userID int64, dimension string) (*assessmentdomain.DimensionScore, error)
 }
 
 type RecommendationRepository interface {
-	FindByUserIDWithContext(ctx context.Context, userID int64) ([]*model.SkillProfile, error)
-	ListSolvedChallengeIDsWithContext(ctx context.Context, userID int64) ([]int64, error)
+	FindByUserID(ctx context.Context, userID int64) ([]*model.SkillProfile, error)
+	ListSolvedChallengeIDs(ctx context.Context, userID int64) ([]int64, error)
 }
 
 type ChallengeRepository interface {
