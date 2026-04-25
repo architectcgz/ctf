@@ -4,6 +4,8 @@ import (
 	"archive/tar"
 	"bytes"
 	"context"
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"io"
 	"path"
@@ -13,9 +15,10 @@ import (
 	"time"
 
 	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/api/types/filters"
+	"github.com/docker/docker/api/types/image"
 	networktypes "github.com/docker/docker/api/types/network"
+	"github.com/docker/docker/api/types/registry"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/errdefs"
 	"github.com/docker/go-connections/nat"
@@ -290,13 +293,64 @@ func (e *Engine) ensureImagePresent(ctx context.Context, imageRef string) error 
 }
 
 func (e *Engine) pullImage(ctx context.Context, imageRef string) error {
-	reader, err := e.cli.ImagePull(ctx, imageRef, image.PullOptions{})
+	options := image.PullOptions{}
+	if e != nil && e.containerCfg != nil {
+		options.RegistryAuth = buildImagePullRegistryAuth(imageRef, e.containerCfg.Registry)
+	}
+	reader, err := e.cli.ImagePull(ctx, imageRef, options)
 	if err != nil {
 		return err
 	}
 	defer reader.Close()
 	_, _ = io.Copy(io.Discard, reader)
 	return nil
+}
+
+func buildImagePullRegistryAuth(imageRef string, cfg config.ContainerRegistryConfig) string {
+	if !cfg.Enabled {
+		return ""
+	}
+
+	configuredServer := normalizeRegistryServer(cfg.Server)
+	if configuredServer == "" || imageRegistryServer(imageRef) != configuredServer {
+		return ""
+	}
+
+	authConfig := registry.AuthConfig{
+		Username:      strings.TrimSpace(cfg.Username),
+		Password:      strings.TrimSpace(cfg.Password),
+		IdentityToken: strings.TrimSpace(cfg.IdentityToken),
+		ServerAddress: configuredServer,
+	}
+	payload, err := json.Marshal(authConfig)
+	if err != nil {
+		return ""
+	}
+	return base64.URLEncoding.EncodeToString(payload)
+}
+
+func normalizeRegistryServer(server string) string {
+	normalized := strings.TrimSpace(server)
+	normalized = strings.TrimPrefix(normalized, "https://")
+	normalized = strings.TrimPrefix(normalized, "http://")
+	normalized = strings.Trim(normalized, "/")
+	if slash := strings.Index(normalized, "/"); slash >= 0 {
+		normalized = normalized[:slash]
+	}
+	return normalized
+}
+
+func imageRegistryServer(imageRef string) string {
+	ref := strings.TrimSpace(imageRef)
+	firstSlash := strings.Index(ref, "/")
+	if firstSlash < 0 {
+		return "docker.io"
+	}
+	firstPart := ref[:firstSlash]
+	if strings.Contains(firstPart, ".") || strings.Contains(firstPart, ":") || firstPart == "localhost" {
+		return firstPart
+	}
+	return "docker.io"
 }
 
 func isImageNotFoundError(err error) bool {

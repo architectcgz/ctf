@@ -39,6 +39,78 @@ func TestLoadReadsContainerFlagSecretFromEnv(t *testing.T) {
 	}
 }
 
+func TestLoadReadsContainerRegistryCredentialsFromEnv(t *testing.T) {
+	_, file, _, ok := runtime.Caller(0)
+	if !ok {
+		t.Fatal("runtime.Caller() failed")
+	}
+
+	backendRoot := filepath.Clean(filepath.Join(filepath.Dir(file), "..", ".."))
+	currentDir, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("Getwd() error = %v", err)
+	}
+	if err := os.Chdir(backendRoot); err != nil {
+		t.Fatalf("Chdir() error = %v", err)
+	}
+	t.Cleanup(func() {
+		_ = os.Chdir(currentDir)
+	})
+
+	t.Setenv("CTF_CONTAINER_FLAG_GLOBAL_SECRET", "integration-secret-123456789012345")
+	t.Setenv("CTF_CONTAINER_REGISTRY_ENABLED", "true")
+	t.Setenv("CTF_CONTAINER_REGISTRY_SERVER", "registry.example.edu")
+	t.Setenv("CTF_CONTAINER_REGISTRY_USERNAME", "ctf")
+	t.Setenv("CTF_CONTAINER_REGISTRY_PASSWORD", "registry-token")
+
+	cfg, err := Load("dev")
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+
+	if !cfg.Container.Registry.Enabled {
+		t.Fatal("expected container registry to be enabled from env")
+	}
+	if cfg.Container.Registry.Server != "registry.example.edu" {
+		t.Fatalf("registry server = %q, want registry.example.edu", cfg.Container.Registry.Server)
+	}
+	if cfg.Container.Registry.Username != "ctf" {
+		t.Fatalf("registry username = %q, want ctf", cfg.Container.Registry.Username)
+	}
+	if cfg.Container.Registry.Password != "registry-token" {
+		t.Fatalf("registry password = %q, want registry-token", cfg.Container.Registry.Password)
+	}
+}
+
+func TestValidateRejectsEnabledRegistryWithoutServer(t *testing.T) {
+	cfg := validConfigForValidationTests()
+	cfg.Container.Registry.Enabled = true
+	cfg.Container.Registry.Username = "ctf"
+	cfg.Container.Registry.Password = "registry-token"
+
+	err := cfg.Validate()
+	if err == nil {
+		t.Fatal("expected Validate() to reject enabled registry without server, got nil")
+	}
+	if !strings.Contains(err.Error(), "container.registry.server must not be empty") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestValidateRejectsEnabledRegistryWithoutCredentials(t *testing.T) {
+	cfg := validConfigForValidationTests()
+	cfg.Container.Registry.Enabled = true
+	cfg.Container.Registry.Server = "registry.example.edu"
+
+	err := cfg.Validate()
+	if err == nil {
+		t.Fatal("expected Validate() to reject enabled registry without credentials, got nil")
+	}
+	if !strings.Contains(err.Error(), "container.registry requires username/password or identity_token") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
 func TestLoadRejectsTooShortContainerFlagSecret(t *testing.T) {
 	_, file, _, ok := runtime.Caller(0)
 	if !ok {
