@@ -130,6 +130,12 @@ container:
   public_host: localhost
   proxy_ticket_ttl: 15m
   proxy_body_preview_size: 1024
+  registry:
+    enabled: false
+    server: "" # 例如 registry.example.edu 或 registry.local:5000
+    username: "" # 建议通过 CTF_CONTAINER_REGISTRY_USERNAME 注入
+    password: "" # 建议通过 CTF_CONTAINER_REGISTRY_PASSWORD 注入
+    identity_token: "" # 可选，使用 token 认证时通过 CTF_CONTAINER_REGISTRY_IDENTITY_TOKEN 注入
   scheduler:
     enabled: true
     poll_interval: 1s

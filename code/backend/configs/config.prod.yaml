@@ -32,6 +32,12 @@ container:
   start_probe_timeout: 800ms
   start_probe_interval: 300ms
   start_probe_attempts: 5
+  registry:
+    enabled: false
+    server: "" # 生产环境如需私有仓库，使用 CTF_CONTAINER_REGISTRY_SERVER 注入
+    username: "" # 使用 CTF_CONTAINER_REGISTRY_USERNAME 注入
+    password: "" # 使用 CTF_CONTAINER_REGISTRY_PASSWORD 注入
+    identity_token: "" # 可选，使用 CTF_CONTAINER_REGISTRY_IDENTITY_TOKEN 注入
   scheduler:
     enabled: true
     poll_interval: 1s

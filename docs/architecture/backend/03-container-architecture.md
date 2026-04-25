@@ -1362,6 +1362,19 @@ docker tag challenge-web:v1 registry.ctf.local:5000/challenge-web:v1
 docker push registry.ctf.local:5000/challenge-web:v1
 ```
 
+平台运行节点拉取私有镜像时，可以在后端配置中启用 `container.registry`。该配置只负责运行时 `docker pull` 的认证，不负责构建镜像或管理 registry 生命周期。
+
+```yaml
+container:
+  registry:
+    enabled: true
+    server: registry.ctf.local:5000
+    username: ctf
+    password: ${CTF_CONTAINER_REGISTRY_PASSWORD}
+```
+
+当前实现会按镜像引用中的 registry 域名匹配 `container.registry.server`，只有匹配时才向 Docker Engine 传递认证信息。例如 `registry.ctf.local:5000/challenge-web:v1` 会使用上述凭据，`nginx:latest` 不会使用该凭据。
+
 ---
 
 ## 附录 A：容器创建完整流程

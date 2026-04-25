@@ -46,7 +46,7 @@
 
 ## 4. 当前平台能力边界
 
-截至 2026-04-21，当前仓库内与题目包最相关的后端事实如下：
+截至 2026-04-25，当前仓库内与题目包最相关的后端事实如下：
 
 - 题目基础字段已支持：`title`、`description`、`category`、`difficulty`、`points`、`image_id`、`attachment_url`、`hints`
 - 题目发布已支持：`draft` -> `published`
@@ -56,7 +56,7 @@
   - 查询最近一次发布自检：`GET /api/v1/authoring/challenges/:id/publish-requests/latest`
 - Flag 已支持：`static` / `dynamic`
 - 动态 Flag 注入已支持：实例启动时通过环境变量 `FLAG` 注入容器；拓扑节点可按 `inject_flag` 控制是否注入
-- 镜像已支持：平台当前通过“已注册镜像”运行题目，不支持公开的在线 Dockerfile 构建导入
+- 镜像已支持：平台当前通过“已注册镜像”运行题目；运行时可按 `container.registry` 配置为匹配的私有 registry 拉取镜像，但不支持公开的在线 Dockerfile 构建导入
 - 拓扑已支持：挑战拓扑、环境模板、多节点网络与 ACL 已有独立 API
 - Writeup 已支持：挑战 Writeup 已有独立 API
 - 标签已支持：通过独立 Tag API 和 `challenge_tags` 关系维护，不在当前创建题目 API 内直接写入
@@ -496,7 +496,7 @@ extensions:
 
 即使未来实现导入器，也必须先满足：
 
-- `runtime.image.ref` 已可被平台所在 Docker/registry 环境访问
+- `runtime.image.ref` 已可被平台所在 Docker/registry 环境访问；若使用私有 registry，需要在后端 `container.registry` 配置匹配的 `server` 与凭据
 - 若要自动创建题目，导入器必须把 `runtime.image.ref` 先映射为平台 `images` 记录
 - 若要自动导入拓扑，导入器必须单独调用挑战拓扑落库流程
 - 若要自动导入 Writeup，导入器必须单独调用 Writeup 落库流程
@@ -538,7 +538,7 @@ extensions:
 1. 本地制作题目源码、题面、Hint、附件与可选拓扑定义
 2. 本地构建并验证镜像
 3. 本地完成最小可用验证
-4. 推送镜像或确保镜像在平台运行节点可见
+4. 推送镜像或确保镜像在平台运行节点可见；私有 registry 镜像需要平台后端配置 `container.registry`
 5. 生成 challenge pack 作为归档与审计材料
 6. 在平台中分别创建：
    - 镜像
