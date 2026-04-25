@@ -22,7 +22,7 @@
 
 ### Docs
 
-- Create: `docs/superpowers/specs/2026-04-13-awd-phase13-student-review-archive-structured-ui-design.md`
+- Create: `docs/architecture/features/2026-04-13-awd-phase13-student-review-archive-structured-ui-design.md`
 - Create: `docs/superpowers/plans/2026-04-13-awd-phase13-student-review-archive-structured-ui-implementation.md`
 
 ### Frontend
@@ -177,7 +177,7 @@ git add code/frontend/src/components/teacher/review-archive/ReviewArchiveEvidenc
   code/frontend/src/components/teacher/review-archive/reviewArchiveCases.ts \
   code/frontend/src/components/teacher/review-archive/__tests__/ReviewArchiveEvidencePanel.test.ts \
   code/frontend/src/views/teacher/__tests__/TeacherStudentReviewArchive.test.ts
-git add -f docs/superpowers/specs/2026-04-13-awd-phase13-student-review-archive-structured-ui-design.md \
+git add -f docs/architecture/features/2026-04-13-awd-phase13-student-review-archive-structured-ui-design.md \
   docs/superpowers/plans/2026-04-13-awd-phase13-student-review-archive-structured-ui-implementation.md
 git commit -m "feat(teacher): 重构学生复盘结构化视图"
 ```
