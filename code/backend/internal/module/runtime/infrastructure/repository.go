@@ -69,28 +69,12 @@ func (r *Repository) WithDB(db *gorm.DB) *Repository {
 }
 
 func (r *Repository) dbWithContext(ctx context.Context) *gorm.DB {
-	if ctx == nil {
-		ctx = context.Background()
-	}
 	return r.db.WithContext(ctx)
 }
 
-func (r *Repository) FindByID(id int64) (*model.Instance, error) {
+func (r *Repository) FindByID(ctx context.Context, id int64) (*model.Instance, error) {
 	var instance model.Instance
-	err := r.db.Where("id = ?", id).First(&instance).Error
-	if err != nil {
-		return nil, err
-	}
-	return &instance, nil
-}
-
-func (r *Repository) FindByIDWithContext(ctx context.Context, id int64) (*model.Instance, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
-	var instance model.Instance
-	err := r.db.WithContext(ctx).Where("id = ?", id).First(&instance).Error
+	err := r.dbWithContext(ctx).Where("id = ?", id).First(&instance).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
@@ -119,11 +103,7 @@ func (r *Repository) FindChallengeByID(challengeID int64) (*model.Challenge, err
 	return &challenge, nil
 }
 
-func (r *Repository) FindByUserAndChallenge(userID, challengeID int64) (*model.Instance, error) {
-	return r.FindByUserAndChallengeWithContext(context.Background(), userID, challengeID)
-}
-
-func (r *Repository) FindByUserAndChallengeWithContext(ctx context.Context, userID, challengeID int64) (*model.Instance, error) {
+func (r *Repository) FindByUserAndChallenge(ctx context.Context, userID, challengeID int64) (*model.Instance, error) {
 	var instance model.Instance
 	err := r.dbWithContext(ctx).Where("user_id = ? AND contest_id IS NULL AND team_id IS NULL AND challenge_id = ? AND status IN ?", userID, challengeID,
 		[]string{model.InstanceStatusPending, model.InstanceStatusCreating, model.InstanceStatusRunning}).
@@ -183,11 +163,7 @@ func (r *Repository) FindByContestTeamAndChallenge(contestID, teamID, challengeI
 	return &instance, nil
 }
 
-func (r *Repository) RefreshInstanceExpiry(instanceID int64, expiresAt time.Time) error {
-	return r.RefreshInstanceExpiryWithContext(context.Background(), instanceID, expiresAt)
-}
-
-func (r *Repository) RefreshInstanceExpiryWithContext(ctx context.Context, instanceID int64, expiresAt time.Time) error {
+func (r *Repository) RefreshInstanceExpiry(ctx context.Context, instanceID int64, expiresAt time.Time) error {
 	return r.dbWithContext(ctx).Model(&model.Instance{}).
 		Where("id = ?", instanceID).
 		Updates(map[string]any{
@@ -196,11 +172,7 @@ func (r *Repository) RefreshInstanceExpiryWithContext(ctx context.Context, insta
 		}).Error
 }
 
-func (r *Repository) UpdateStatusAndReleasePort(id int64, status string) error {
-	return r.UpdateStatusAndReleasePortWithContext(context.Background(), id, status)
-}
-
-func (r *Repository) UpdateStatusAndReleasePortWithContext(ctx context.Context, id int64, status string) error {
+func (r *Repository) UpdateStatusAndReleasePort(ctx context.Context, id int64, status string) error {
 	if id <= 0 {
 		return nil
 	}
@@ -211,12 +183,16 @@ func (r *Repository) UpdateStatusAndReleasePortWithContext(ctx context.Context, 
 			return err
 		}
 
+		updates := map[string]any{
+			"status":     status,
+			"updated_at": time.Now(),
+		}
+		if status == model.InstanceStatusStopped || status == model.InstanceStatusExpired {
+			updates["destroyed_at"] = time.Now()
+		}
 		if err := tx.Model(&model.Instance{}).
 			Where("id = ?", id).
-			Updates(map[string]any{
-				"status":     status,
-				"updated_at": time.Now(),
-			}).Error; err != nil {
+			Updates(updates).Error; err != nil {
 			return err
 		}
 
@@ -231,8 +207,8 @@ func (r *Repository) UpdateStatusAndReleasePortWithContext(ctx context.Context, 
 	})
 }
 
-func (r *Repository) UpdateRuntime(instance *model.Instance) error {
-	return r.db.Model(&model.Instance{}).
+func (r *Repository) UpdateRuntime(ctx context.Context, instance *model.Instance) error {
+	return r.dbWithContext(ctx).Model(&model.Instance{}).
 		Where("id = ?", instance.ID).
 		Updates(map[string]any{
 			"contest_id":      instance.ContestID,
@@ -504,15 +480,7 @@ func (r *Repository) AtomicExtend(id int64, userID int64, maxExtends int, durati
 	return nil
 }
 
-func (r *Repository) AtomicExtendByID(id int64, maxExtends int, duration time.Duration) error {
-	return r.AtomicExtendByIDWithContext(context.Background(), id, maxExtends, duration)
-}
-
-func (r *Repository) AtomicExtendByIDWithContext(ctx context.Context, id int64, maxExtends int, duration time.Duration) error {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
+func (r *Repository) AtomicExtendByID(ctx context.Context, id int64, maxExtends int, duration time.Duration) error {
 	result := r.db.WithContext(ctx).Model(&model.Instance{}).
 		Where("id = ? AND status = ? AND extend_count < ?",
 			id, model.InstanceStatusRunning, maxExtends).
@@ -529,18 +497,15 @@ func (r *Repository) AtomicExtendByIDWithContext(ctx context.Context, id int64, 
 	return nil
 }
 
-func (r *Repository) CountRunning() (int64, error) {
+func (r *Repository) CountRunning(ctx context.Context) (int64, error) {
 	var count int64
-	err := r.db.Model(&model.Instance{}).
+	err := r.db.WithContext(ctx).Model(&model.Instance{}).
 		Where("status = ?", model.InstanceStatusRunning).
 		Count(&count).Error
 	return count, err
 }
 
-func (r *Repository) ListPendingInstancesWithContext(ctx context.Context, limit int) ([]*model.Instance, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
+func (r *Repository) ListPendingInstances(ctx context.Context, limit int) ([]*model.Instance, error) {
 	if limit <= 0 {
 		return []*model.Instance{}, nil
 	}
@@ -557,11 +522,7 @@ func (r *Repository) ListPendingInstancesWithContext(ctx context.Context, limit 
 	return instances, nil
 }
 
-func (r *Repository) TryTransitionStatusWithContext(ctx context.Context, id int64, fromStatus, toStatus string) (bool, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
+func (r *Repository) TryTransitionStatus(ctx context.Context, id int64, fromStatus, toStatus string) (bool, error) {
 	result := r.db.WithContext(ctx).Model(&model.Instance{}).
 		Where("id = ? AND status = ?", id, fromStatus).
 		Updates(map[string]any{
@@ -574,10 +535,7 @@ func (r *Repository) TryTransitionStatusWithContext(ctx context.Context, id int6
 	return result.RowsAffected > 0, nil
 }
 
-func (r *Repository) CountInstancesByStatusWithContext(ctx context.Context, statuses []string) (int64, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
+func (r *Repository) CountInstancesByStatus(ctx context.Context, statuses []string) (int64, error) {
 	if len(statuses) == 0 {
 		return 0, nil
 	}

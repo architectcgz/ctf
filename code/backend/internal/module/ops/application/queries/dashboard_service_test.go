@@ -21,14 +21,14 @@ import (
 )
 
 type stubDashboardRuntimeQuery struct {
-	countRunningFn func() (int64, error)
+	countRunningWithContextFn func(ctx context.Context) (int64, error)
 }
 
-func (s *stubDashboardRuntimeQuery) CountRunning() (int64, error) {
-	if s.countRunningFn == nil {
+func (s *stubDashboardRuntimeQuery) CountRunning(ctx context.Context) (int64, error) {
+	if s.countRunningWithContextFn == nil {
 		return 0, nil
 	}
-	return s.countRunningFn()
+	return s.countRunningWithContextFn(ctx)
 }
 
 type stubDashboardRuntimeStatsProvider struct {
@@ -191,7 +191,7 @@ func TestDashboardServiceUsesRuntimeStatsProvider(t *testing.T) {
 
 	service := newDashboardService(
 		&stubDashboardRuntimeQuery{
-			countRunningFn: func() (int64, error) {
+			countRunningWithContextFn: func(ctx context.Context) (int64, error) {
 				return 3, nil
 			},
 		},
@@ -229,5 +229,48 @@ func TestDashboardServiceUsesRuntimeStatsProvider(t *testing.T) {
 	}
 	if len(got.ContainerStats) != 1 || got.ContainerStats[0].ContainerID != "runtime-1" {
 		t.Fatalf("expected runtime stats provider output, got %+v", got.ContainerStats)
+	}
+}
+
+func TestDashboardServicePropagatesContextToRuntimeQuery(t *testing.T) {
+	type ctxKey string
+
+	var newDashboardService func(opsports.RuntimeQuery, opsports.RuntimeStatsProvider, *redislib.Client, *config.Config, *zap.Logger) *DashboardService = NewDashboardService
+	expectedKey := ctxKey("runtime-query")
+	expectedValue := "ctx-dashboard-runtime-query"
+	called := false
+
+	service := newDashboardService(
+		&stubDashboardRuntimeQuery{
+			countRunningWithContextFn: func(ctx context.Context) (int64, error) {
+				called = true
+				if got := ctx.Value(expectedKey); got != expectedValue {
+					t.Fatalf("expected runtime query ctx value %v, got %v", expectedValue, got)
+				}
+				return 2, nil
+			},
+		},
+		nil,
+		nil,
+		&config.Config{
+			Dashboard: config.DashboardConfig{
+				CacheTTL:       time.Minute,
+				AlertThreshold: 80,
+				RedisKeyPrefix: "dashboard:test",
+			},
+		},
+		zap.NewNop(),
+	)
+
+	ctx := context.WithValue(context.Background(), expectedKey, expectedValue)
+	got, err := service.GetDashboardStats(ctx)
+	if err != nil {
+		t.Fatalf("GetDashboardStats() error = %v", err)
+	}
+	if !called {
+		t.Fatal("expected runtime query to be called")
+	}
+	if got.ActiveContainers != 2 {
+		t.Fatalf("expected active containers from context-aware runtime query, got %+v", got)
 	}
 }

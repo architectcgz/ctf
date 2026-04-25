@@ -20,12 +20,8 @@ func NewProfileService(repo assessmentports.ProfileRepository) *ProfileService {
 	return &ProfileService{repo: repo}
 }
 
-func (s *ProfileService) GetSkillProfile(userID int64) (*dto.SkillProfileResp, error) {
-	return s.GetSkillProfileWithContext(context.Background(), userID)
-}
-
-func (s *ProfileService) GetSkillProfileWithContext(ctx context.Context, userID int64) (*dto.SkillProfileResp, error) {
-	profiles, err := s.repo.FindByUserIDWithContext(ctx, userID)
+func (s *ProfileService) GetSkillProfile(ctx context.Context, userID int64) (*dto.SkillProfileResp, error) {
+	profiles, err := s.repo.FindByUserID(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +54,7 @@ func (s *ProfileService) GetSkillProfileWithContext(ctx context.Context, userID 
 }
 
 func (s *ProfileService) GetStudentSkillProfile(ctx context.Context, requesterID int64, requesterRole string, studentID int64) (*dto.SkillProfileResp, error) {
-	student, err := s.repo.FindUserByIDWithContext(ctx, studentID)
+	student, err := s.repo.FindUserByID(ctx, studentID)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
@@ -67,7 +63,7 @@ func (s *ProfileService) GetStudentSkillProfile(ctx context.Context, requesterID
 	}
 
 	if requesterRole != model.RoleAdmin {
-		requester, findErr := s.repo.FindUserByIDWithContext(ctx, requesterID)
+		requester, findErr := s.repo.FindUserByID(ctx, requesterID)
 		if findErr != nil {
 			return nil, errcode.ErrInternal.WithCause(findErr)
 		}
@@ -79,5 +75,5 @@ func (s *ProfileService) GetStudentSkillProfile(ctx context.Context, requesterID
 		}
 	}
 
-	return s.GetSkillProfileWithContext(ctx, studentID)
+	return s.GetSkillProfile(ctx, studentID)
 }

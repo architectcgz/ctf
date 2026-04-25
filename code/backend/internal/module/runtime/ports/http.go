@@ -8,23 +8,21 @@ import (
 )
 
 type CountRunningRepository interface {
-	CountRunning() (int64, error)
+	CountRunning(ctx context.Context) (int64, error)
 }
 
 type InstanceRepository interface {
-	FindByID(id int64) (*model.Instance, error)
-	FindByIDWithContext(ctx context.Context, id int64) (*model.Instance, error)
+	FindByID(ctx context.Context, id int64) (*model.Instance, error)
 	FindUserByID(ctx context.Context, userID int64) (*model.User, error)
 	FindAccessibleByIDForUser(ctx context.Context, instanceID, userID int64) (*model.Instance, error)
 	ListVisibleByUser(ctx context.Context, userID int64) ([]UserVisibleInstanceRow, error)
 	ListTeacherInstances(ctx context.Context, filter TeacherInstanceFilter) ([]TeacherInstanceRow, error)
-	AtomicExtendByIDWithContext(ctx context.Context, id int64, maxExtends int, duration time.Duration) error
-	UpdateStatusAndReleasePort(id int64, status string) error
-	UpdateStatusAndReleasePortWithContext(ctx context.Context, id int64, status string) error
+	AtomicExtendByID(ctx context.Context, id int64, maxExtends int, duration time.Duration) error
+	UpdateStatusAndReleasePort(ctx context.Context, id int64, status string) error
 }
 
 type RuntimeCleaner interface {
-	CleanupRuntimeWithContext(ctx context.Context, instance *model.Instance) error
+	CleanupRuntime(ctx context.Context, instance *model.Instance) error
 }
 
 type TeacherInstanceFilter struct {
@@ -82,8 +80,7 @@ type ProxyTicketStore interface {
 }
 
 type ProxyTicketInstanceReader interface {
-	FindByID(id int64) (*model.Instance, error)
-	FindByIDWithContext(ctx context.Context, id int64) (*model.Instance, error)
+	FindByID(ctx context.Context, id int64) (*model.Instance, error)
 }
 
 type ProxyTrafficEventRecorder interface {

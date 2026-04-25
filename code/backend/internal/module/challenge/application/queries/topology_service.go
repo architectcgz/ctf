@@ -25,21 +25,14 @@ func NewTopologyService(repo challengeports.ChallengeTopologyRepository, templat
 	}
 }
 
-func (s *TopologyService) GetChallengeTopology(challengeID int64) (*dto.ChallengeTopologyResp, error) {
-	return s.GetChallengeTopologyWithContext(context.Background(), challengeID)
-}
-
-func (s *TopologyService) GetChallengeTopologyWithContext(ctx context.Context, challengeID int64) (*dto.ChallengeTopologyResp, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-	if _, err := s.repo.FindByIDWithContext(ctx, challengeID); err != nil {
+func (s *TopologyService) GetChallengeTopology(ctx context.Context, challengeID int64) (*dto.ChallengeTopologyResp, error) {
+	if _, err := s.repo.FindByID(ctx, challengeID); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrChallengeNotFound
 		}
 		return nil, err
 	}
-	item, err := s.repo.FindChallengeTopologyByChallengeIDWithContext(ctx, challengeID)
+	item, err := s.repo.FindChallengeTopologyByChallengeID(ctx, challengeID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrNotFound
@@ -49,15 +42,8 @@ func (s *TopologyService) GetChallengeTopologyWithContext(ctx context.Context, c
 	return domain.TopologyRespFromModel(item)
 }
 
-func (s *TopologyService) GetTemplate(id int64) (*dto.EnvironmentTemplateResp, error) {
-	return s.GetTemplateWithContext(context.Background(), id)
-}
-
-func (s *TopologyService) GetTemplateWithContext(ctx context.Context, id int64) (*dto.EnvironmentTemplateResp, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-	item, err := s.templateRepo.FindByIDWithContext(ctx, id)
+func (s *TopologyService) GetTemplate(ctx context.Context, id int64) (*dto.EnvironmentTemplateResp, error) {
+	item, err := s.templateRepo.FindByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrNotFound
@@ -67,15 +53,8 @@ func (s *TopologyService) GetTemplateWithContext(ctx context.Context, id int64) 
 	return domain.TemplateRespFromModel(item)
 }
 
-func (s *TopologyService) ListTemplates(keyword string) ([]*dto.EnvironmentTemplateResp, error) {
-	return s.ListTemplatesWithContext(context.Background(), keyword)
-}
-
-func (s *TopologyService) ListTemplatesWithContext(ctx context.Context, keyword string) ([]*dto.EnvironmentTemplateResp, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-	items, err := s.templateRepo.ListWithContext(ctx, strings.TrimSpace(keyword))
+func (s *TopologyService) ListTemplates(ctx context.Context, keyword string) ([]*dto.EnvironmentTemplateResp, error) {
+	items, err := s.templateRepo.List(ctx, strings.TrimSpace(keyword))
 	if err != nil {
 		return nil, err
 	}

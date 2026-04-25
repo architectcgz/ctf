@@ -31,12 +31,12 @@ type practiceModuleExternalDeps struct {
 }
 
 type practiceRuntimeChallengeContract interface {
-	FindByID(id int64) (*model.Challenge, error)
-	FindChallengeTopologyByChallengeID(challengeID int64) (*model.ChallengeTopology, error)
+	FindByID(ctx context.Context, id int64) (*model.Challenge, error)
+	FindChallengeTopologyByChallengeID(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error)
 }
 
 type practiceRuntimeImageStore interface {
-	FindByID(id int64) (*model.Image, error)
+	FindByID(ctx context.Context, id int64) (*model.Image, error)
 }
 
 type practiceRuntimeAssessmentService interface {

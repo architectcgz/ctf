@@ -20,7 +20,7 @@ func NewInstanceService(repo runtimeports.InstanceRepository) *InstanceService {
 	return &InstanceService{repo: repo}
 }
 
-func (s *InstanceService) GetAccessURLWithContext(ctx context.Context, instanceID, userID int64) (string, error) {
+func (s *InstanceService) GetAccessURL(ctx context.Context, instanceID, userID int64) (string, error) {
 	ctx = normalizeContext(ctx)
 
 	instance, err := s.repo.FindAccessibleByIDForUser(ctx, instanceID, userID)
@@ -37,7 +37,7 @@ func (s *InstanceService) GetAccessURLWithContext(ctx context.Context, instanceI
 	return instance.AccessURL, nil
 }
 
-func (s *InstanceService) GetUserInstancesWithContext(ctx context.Context, userID int64) ([]*dto.InstanceInfo, error) {
+func (s *InstanceService) GetUserInstances(ctx context.Context, userID int64) ([]*dto.InstanceInfo, error) {
 	ctx = normalizeContext(ctx)
 
 	instances, err := s.repo.ListVisibleByUser(ctx, userID)
@@ -140,8 +140,5 @@ func visibleInstanceStatus(status string, expiresAt, now time.Time) string {
 }
 
 func normalizeContext(ctx context.Context) context.Context {
-	if ctx == nil {
-		return context.Background()
-	}
 	return ctx
 }

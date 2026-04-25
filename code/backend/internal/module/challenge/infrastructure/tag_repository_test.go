@@ -1,6 +1,7 @@
 package infrastructure
 
 import (
+	"context"
 	"ctf-platform/internal/model"
 	"ctf-platform/internal/module/challenge/testsupport"
 	"testing"
@@ -11,7 +12,7 @@ func TestTagRepositoryCreate(t *testing.T) {
 	repo := NewTagRepository(db)
 
 	tag := &model.Tag{Name: "SQL注入", Type: model.TagTypeVulnerability}
-	err := repo.Create(tag)
+	err := repo.Create(context.Background(), tag)
 	if err != nil {
 		t.Fatalf("Create() error = %v", err)
 	}
@@ -27,7 +28,7 @@ func TestTagRepositoryList(t *testing.T) {
 	db.Create(&model.Tag{Name: "SQL注入", Type: model.TagTypeVulnerability})
 	db.Create(&model.Tag{Name: "XSS", Type: model.TagTypeVulnerability})
 
-	tags, err := repo.List(model.TagTypeVulnerability)
+	tags, err := repo.List(context.Background(), model.TagTypeVulnerability)
 	if err != nil {
 		t.Fatalf("List() error = %v", err)
 	}
@@ -43,8 +44,8 @@ func TestTagRepositoryAttachToChallenge(t *testing.T) {
 	db.Create(&model.Challenge{ID: 1, Title: "test", Status: model.ChallengeStatusDraft})
 	db.Create(&model.Tag{ID: 1, Name: "SQL注入", Type: model.TagTypeVulnerability})
 
-	err := repo.AttachToChallenge(1, 1)
+	err := repo.AttachTagsInTx(context.Background(), 1, []int64{1})
 	if err != nil {
-		t.Fatalf("AttachToChallenge() error = %v", err)
+		t.Fatalf("AttachTagsInTx() error = %v", err)
 	}
 }

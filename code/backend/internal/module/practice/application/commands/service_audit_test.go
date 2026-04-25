@@ -16,7 +16,7 @@ import (
 	flagcrypto "ctf-platform/pkg/crypto"
 )
 
-func TestSubmitFlagWithContextRequestsAuditSkipForRepeatCorrectSubmission(t *testing.T) {
+func TestSubmitFlagRequestsAuditSkipForRepeatCorrectSubmission(t *testing.T) {
 	t.Parallel()
 
 	db := newPracticeCommandTestDB(t)
@@ -74,15 +74,15 @@ func TestSubmitFlagWithContextRequestsAuditSkipForRepeatCorrectSubmission(t *tes
 		nil,
 	)
 
-	if _, err := service.SubmitFlagWithContext(context.Background(), 71, 11, "flag{repeatable}"); err != nil {
-		t.Fatalf("SubmitFlagWithContext() first error = %v", err)
+	if _, err := service.SubmitFlag(context.Background(), 71, 11, "flag{repeatable}"); err != nil {
+		t.Fatalf("SubmitFlag() first error = %v", err)
 	}
 
 	control := &auditlog.Control{}
 	ctx := auditlog.WithControl(context.Background(), control)
 
-	if _, err := service.SubmitFlagWithContext(ctx, 71, 11, "flag{repeatable}"); err != nil {
-		t.Fatalf("SubmitFlagWithContext() repeat error = %v", err)
+	if _, err := service.SubmitFlag(ctx, 71, 11, "flag{repeatable}"); err != nil {
+		t.Fatalf("SubmitFlag() repeat error = %v", err)
 	}
 	if !control.Skip {
 		t.Fatal("expected repeat correct submission to request audit skip")

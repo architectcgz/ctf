@@ -30,10 +30,10 @@ type CookieConfig struct {
 }
 
 type runtimeService interface {
-	DestroyInstanceWithContext(ctx context.Context, instanceID, userID int64) error
-	ExtendInstanceWithContext(ctx context.Context, instanceID, userID int64) (*dto.InstanceResp, error)
-	GetAccessURLWithContext(ctx context.Context, instanceID, userID int64) (string, error)
-	GetUserInstancesWithContext(ctx context.Context, userID int64) ([]*dto.InstanceInfo, error)
+	DestroyInstance(ctx context.Context, instanceID, userID int64) error
+	ExtendInstance(ctx context.Context, instanceID, userID int64) (*dto.InstanceResp, error)
+	GetAccessURL(ctx context.Context, instanceID, userID int64) (string, error)
+	GetUserInstances(ctx context.Context, userID int64) ([]*dto.InstanceInfo, error)
 	ListTeacherInstances(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherInstanceQuery) ([]dto.TeacherInstanceItem, error)
 	DestroyTeacherInstance(ctx context.Context, instanceID, requesterID int64, requesterRole string) error
 	IssueProxyTicket(ctx context.Context, user authctx.CurrentUser, instanceID int64) (string, error)
@@ -75,7 +75,7 @@ func (h *Handler) DestroyInstance(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.DestroyInstanceWithContext(c.Request.Context(), instanceID, userID); err != nil {
+	if err := h.service.DestroyInstance(c.Request.Context(), instanceID, userID); err != nil {
 		response.FromError(c, err)
 		return
 	}
@@ -91,7 +91,7 @@ func (h *Handler) ExtendInstance(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.service.ExtendInstanceWithContext(c.Request.Context(), instanceID, userID)
+	resp, err := h.service.ExtendInstance(c.Request.Context(), instanceID, userID)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -108,7 +108,7 @@ func (h *Handler) AccessInstance(c *gin.Context) {
 		return
 	}
 
-	_, err = h.service.GetAccessURLWithContext(c.Request.Context(), instanceID, currentUser.UserID)
+	_, err = h.service.GetAccessURL(c.Request.Context(), instanceID, currentUser.UserID)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -160,7 +160,7 @@ func (h *Handler) ProxyInstance(c *gin.Context) {
 		return
 	}
 
-	targetURL, err := h.service.GetAccessURLWithContext(c.Request.Context(), instanceID, claims.UserID)
+	targetURL, err := h.service.GetAccessURL(c.Request.Context(), instanceID, claims.UserID)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -215,7 +215,7 @@ func (h *Handler) ProxyInstance(c *gin.Context) {
 func (h *Handler) ListInstances(c *gin.Context) {
 	userID := authctx.MustCurrentUser(c).UserID
 
-	instances, err := h.service.GetUserInstancesWithContext(c.Request.Context(), userID)
+	instances, err := h.service.GetUserInstances(c.Request.Context(), userID)
 	if err != nil {
 		response.FromError(c, err)
 		return

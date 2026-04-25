@@ -36,37 +36,23 @@ func NewChallengeService(repo challengeports.ChallengeQueryRepository, redis *re
 	}
 }
 
-func (s *ChallengeService) GetChallenge(id int64) (*dto.ChallengeResp, error) {
-	return s.GetChallengeWithContext(context.Background(), id)
-}
-
-func (s *ChallengeService) GetChallengeWithContext(ctx context.Context, id int64) (*dto.ChallengeResp, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-	challenge, err := s.repo.FindByIDWithContext(ctx, id)
+func (s *ChallengeService) GetChallenge(ctx context.Context, id int64) (*dto.ChallengeResp, error) {
+	challenge, err := s.repo.FindByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrChallengeNotFound
 		}
 		return nil, err
 	}
-	hints, err := s.repo.ListHintsByChallengeIDWithContext(ctx, id)
+	hints, err := s.repo.ListHintsByChallengeID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 	return domain.ChallengeRespFromModel(challenge, hints), nil
 }
 
-func (s *ChallengeService) ListChallenges(query *dto.ChallengeQuery) (*dto.PageResult, error) {
-	return s.ListChallengesWithContext(context.Background(), query)
-}
-
-func (s *ChallengeService) ListChallengesWithContext(ctx context.Context, query *dto.ChallengeQuery) (*dto.PageResult, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-	challenges, total, err := s.repo.ListWithContext(ctx, query)
+func (s *ChallengeService) ListChallenges(ctx context.Context, query *dto.ChallengeQuery) (*dto.PageResult, error) {
+	challenges, total, err := s.repo.List(ctx, query)
 	if err != nil {
 		return nil, err
 	}
@@ -93,16 +79,8 @@ func (s *ChallengeService) ListChallengesWithContext(ctx context.Context, query 
 	}, nil
 }
 
-func (s *ChallengeService) ListPublishedChallenges(userID int64, query *dto.ChallengeQuery) (*dto.PageResult, error) {
-	return s.ListPublishedChallengesWithContext(context.Background(), userID, query)
-}
-
-func (s *ChallengeService) ListPublishedChallengesWithContext(ctx context.Context, userID int64, query *dto.ChallengeQuery) (*dto.PageResult, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
-	challenges, total, err := s.repo.ListPublishedWithContext(ctx, query)
+func (s *ChallengeService) ListPublishedChallenges(ctx context.Context, userID int64, query *dto.ChallengeQuery) (*dto.PageResult, error) {
+	challenges, total, err := s.repo.ListPublished(ctx, query)
 	if err != nil {
 		return nil, err
 	}
@@ -122,18 +100,18 @@ func (s *ChallengeService) ListPublishedChallengesWithContext(ctx context.Contex
 
 	solvedMap := make(map[int64]bool)
 	if userID > 0 {
-		solvedMap, err = s.repo.BatchGetSolvedStatusWithContext(ctx, userID, challengeIDs)
+		solvedMap, err = s.repo.BatchGetSolvedStatus(ctx, userID, challengeIDs)
 		if err != nil {
 			s.log.Error("failed to batch get solved status", zap.Error(err))
 		}
 	}
 
-	solvedCountMap, err := s.repo.BatchGetSolvedCountWithContext(ctx, challengeIDs)
+	solvedCountMap, err := s.repo.BatchGetSolvedCount(ctx, challengeIDs)
 	if err != nil {
 		s.log.Error("failed to batch get solved count", zap.Error(err))
 	}
 
-	attemptsMap, err := s.repo.BatchGetTotalAttemptsWithContext(ctx, challengeIDs)
+	attemptsMap, err := s.repo.BatchGetTotalAttempts(ctx, challengeIDs)
 	if err != nil {
 		s.log.Error("failed to batch get total attempts", zap.Error(err))
 	}
@@ -161,16 +139,8 @@ func (s *ChallengeService) ListPublishedChallengesWithContext(ctx context.Contex
 	}, nil
 }
 
-func (s *ChallengeService) GetPublishedChallenge(userID, challengeID int64) (*dto.ChallengeDetailResp, error) {
-	return s.GetPublishedChallengeWithContext(context.Background(), userID, challengeID)
-}
-
-func (s *ChallengeService) GetPublishedChallengeWithContext(ctx context.Context, userID, challengeID int64) (*dto.ChallengeDetailResp, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
-	challenge, err := s.repo.FindByIDWithContext(ctx, challengeID)
+func (s *ChallengeService) GetPublishedChallenge(ctx context.Context, userID, challengeID int64) (*dto.ChallengeDetailResp, error) {
+	challenge, err := s.repo.FindByID(ctx, challengeID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrNotFound
@@ -183,7 +153,7 @@ func (s *ChallengeService) GetPublishedChallengeWithContext(ctx context.Context,
 
 	var isSolved bool
 	if userID > 0 {
-		isSolved, err = s.repo.GetSolvedStatusWithContext(ctx, userID, challengeID)
+		isSolved, err = s.repo.GetSolvedStatus(ctx, userID, challengeID)
 		if err != nil {
 			s.log.Error("failed to get solved status", zap.Int64("user_id", userID), zap.Int64("challenge_id", challengeID), zap.Error(err))
 		}
@@ -195,13 +165,13 @@ func (s *ChallengeService) GetPublishedChallengeWithContext(ctx context.Context,
 		solvedCount = 0
 	}
 
-	attempts, err := s.repo.GetTotalAttemptsWithContext(ctx, challengeID)
+	attempts, err := s.repo.GetTotalAttempts(ctx, challengeID)
 	if err != nil {
 		s.log.Error("failed to get total attempts", zap.Int64("challenge_id", challengeID), zap.Error(err))
 		attempts = 0
 	}
 
-	hints, err := s.repo.ListHintsByChallengeIDWithContext(ctx, challengeID)
+	hints, err := s.repo.ListHintsByChallengeID(ctx, challengeID)
 	if err != nil {
 		return nil, err
 	}
@@ -237,12 +207,8 @@ func (s *ChallengeService) GetPublishedChallengeWithContext(ctx context.Context,
 }
 
 func (s *ChallengeService) getSolvedCountCached(ctx context.Context, challengeID int64) (int64, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
 	if s.redis == nil {
-		return s.repo.GetSolvedCountWithContext(ctx, challengeID)
+		return s.repo.GetSolvedCount(ctx, challengeID)
 	}
 
 	cacheKey := cache.ChallengeSolvedCountKey(challengeID)
@@ -256,7 +222,7 @@ func (s *ChallengeService) getSolvedCountCached(ctx context.Context, challengeID
 		s.log.Error("redis get failed, fallback to db", zap.String("key", cacheKey), zap.Error(err))
 	}
 
-	count, err := s.repo.GetSolvedCountWithContext(ctx, challengeID)
+	count, err := s.repo.GetSolvedCount(ctx, challengeID)
 	if err != nil {
 		return 0, err
 	}

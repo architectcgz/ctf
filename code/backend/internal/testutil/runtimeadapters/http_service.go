@@ -10,14 +10,14 @@ import (
 )
 
 type httpInstanceCommandService interface {
-	DestroyInstanceWithContext(ctx context.Context, instanceID, userID int64) error
-	ExtendInstanceWithContext(ctx context.Context, instanceID, userID int64) (*dto.InstanceResp, error)
+	DestroyInstance(ctx context.Context, instanceID, userID int64) error
+	ExtendInstance(ctx context.Context, instanceID, userID int64) (*dto.InstanceResp, error)
 	DestroyTeacherInstance(ctx context.Context, instanceID, requesterID int64, requesterRole string) error
 }
 
 type httpInstanceQueryService interface {
-	GetAccessURLWithContext(ctx context.Context, instanceID, userID int64) (string, error)
-	GetUserInstancesWithContext(ctx context.Context, userID int64) ([]*dto.InstanceInfo, error)
+	GetAccessURL(ctx context.Context, instanceID, userID int64) (string, error)
+	GetUserInstances(ctx context.Context, userID int64) ([]*dto.InstanceInfo, error)
 	ListTeacherInstances(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherInstanceQuery) ([]dto.TeacherInstanceItem, error)
 }
 
@@ -45,20 +45,20 @@ func NewHTTPService(commandService httpInstanceCommandService, queryService http
 	}
 }
 
-func (a *HTTPService) DestroyInstanceWithContext(ctx context.Context, instanceID, userID int64) error {
-	return a.commandService.DestroyInstanceWithContext(ctx, instanceID, userID)
+func (a *HTTPService) DestroyInstance(ctx context.Context, instanceID, userID int64) error {
+	return a.commandService.DestroyInstance(ctx, instanceID, userID)
 }
 
-func (a *HTTPService) ExtendInstanceWithContext(ctx context.Context, instanceID, userID int64) (*dto.InstanceResp, error) {
-	return a.commandService.ExtendInstanceWithContext(ctx, instanceID, userID)
+func (a *HTTPService) ExtendInstance(ctx context.Context, instanceID, userID int64) (*dto.InstanceResp, error) {
+	return a.commandService.ExtendInstance(ctx, instanceID, userID)
 }
 
-func (a *HTTPService) GetAccessURLWithContext(ctx context.Context, instanceID, userID int64) (string, error) {
-	return a.queryService.GetAccessURLWithContext(ctx, instanceID, userID)
+func (a *HTTPService) GetAccessURL(ctx context.Context, instanceID, userID int64) (string, error) {
+	return a.queryService.GetAccessURL(ctx, instanceID, userID)
 }
 
-func (a *HTTPService) GetUserInstancesWithContext(ctx context.Context, userID int64) ([]*dto.InstanceInfo, error) {
-	return a.queryService.GetUserInstancesWithContext(ctx, userID)
+func (a *HTTPService) GetUserInstances(ctx context.Context, userID int64) ([]*dto.InstanceInfo, error) {
+	return a.queryService.GetUserInstances(ctx, userID)
 }
 
 func (a *HTTPService) ListTeacherInstances(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherInstanceQuery) ([]dto.TeacherInstanceItem, error) {

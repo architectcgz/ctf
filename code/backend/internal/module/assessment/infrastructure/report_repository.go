@@ -465,12 +465,12 @@ func (r *ReportRepository) GetStudentTimeline(ctx context.Context, userID int64,
 			SELECT
 				'instance_destroy' AS type,
 				i.challenge_id,
-				i.updated_at AS timestamp,
+				i.destroyed_at AS timestamp,
 				NULL AS is_correct,
 				NULL AS points,
 				'结束练习实例' AS detail
 			FROM instances i
-			WHERE i.user_id = ? AND i.status IN ('stopped', 'expired', 'destroyed')
+			WHERE i.user_id = ? AND i.status IN ('stopped', 'expired', 'destroyed') AND i.destroyed_at IS NOT NULL
 			UNION ALL
 			SELECT
 				'awd_attack_submit' AS type,

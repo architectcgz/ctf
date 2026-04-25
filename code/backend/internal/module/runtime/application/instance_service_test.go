@@ -23,30 +23,22 @@ import (
 
 type noopRuntimeCleaner struct{}
 
-func (noopRuntimeCleaner) CleanupRuntimeWithContext(context.Context, *model.Instance) error {
+func (noopRuntimeCleaner) CleanupRuntime(context.Context, *model.Instance) error {
 	return nil
 }
 
 type runtimeInstanceContextRepo struct {
 	findByIDWithContextFn                   func(ctx context.Context, id int64) (*model.Instance, error)
-	findByIDFn                              func(id int64) (*model.Instance, error)
 	findUserByIDFn                          func(ctx context.Context, userID int64) (*model.User, error)
+	listVisibleByUserFn                     func(ctx context.Context, userID int64) ([]runtimeports.UserVisibleInstanceRow, error)
 	updateStatusAndReleasePortWithContextFn func(ctx context.Context, id int64, status string) error
-	updateStatusAndReleasePortFn            func(id int64, status string) error
 }
 
-func (r *runtimeInstanceContextRepo) FindByID(id int64) (*model.Instance, error) {
-	if r.findByIDFn != nil {
-		return r.findByIDFn(id)
-	}
-	return nil, nil
-}
-
-func (r *runtimeInstanceContextRepo) FindByIDWithContext(ctx context.Context, id int64) (*model.Instance, error) {
+func (r *runtimeInstanceContextRepo) FindByID(ctx context.Context, id int64) (*model.Instance, error) {
 	if r.findByIDWithContextFn != nil {
 		return r.findByIDWithContextFn(ctx, id)
 	}
-	return r.FindByID(id)
+	return nil, nil
 }
 
 func (r *runtimeInstanceContextRepo) FindUserByID(ctx context.Context, userID int64) (*model.User, error) {
@@ -61,6 +53,9 @@ func (r *runtimeInstanceContextRepo) FindAccessibleByIDForUser(ctx context.Conte
 }
 
 func (r *runtimeInstanceContextRepo) ListVisibleByUser(ctx context.Context, userID int64) ([]runtimeports.UserVisibleInstanceRow, error) {
+	if r.listVisibleByUserFn != nil {
+		return r.listVisibleByUserFn(ctx, userID)
+	}
 	return nil, nil
 }
 
@@ -68,22 +63,15 @@ func (r *runtimeInstanceContextRepo) ListTeacherInstances(ctx context.Context, f
 	return nil, nil
 }
 
-func (r *runtimeInstanceContextRepo) AtomicExtendByIDWithContext(ctx context.Context, id int64, maxExtends int, duration time.Duration) error {
+func (r *runtimeInstanceContextRepo) AtomicExtendByID(ctx context.Context, id int64, maxExtends int, duration time.Duration) error {
 	return nil
 }
 
-func (r *runtimeInstanceContextRepo) UpdateStatusAndReleasePort(id int64, status string) error {
-	if r.updateStatusAndReleasePortFn != nil {
-		return r.updateStatusAndReleasePortFn(id, status)
-	}
-	return nil
-}
-
-func (r *runtimeInstanceContextRepo) UpdateStatusAndReleasePortWithContext(ctx context.Context, id int64, status string) error {
+func (r *runtimeInstanceContextRepo) UpdateStatusAndReleasePort(ctx context.Context, id int64, status string) error {
 	if r.updateStatusAndReleasePortWithContextFn != nil {
 		return r.updateStatusAndReleasePortWithContextFn(ctx, id, status)
 	}
-	return r.UpdateStatusAndReleasePort(id, status)
+	return nil
 }
 
 func TestInstanceServiceGetUserInstancesShowsContestSharedInstanceToTeamMember(t *testing.T) {
@@ -138,9 +126,9 @@ func TestInstanceServiceGetUserInstancesShowsContestSharedInstanceToTeamMember(t
 
 	service := runtimeqry.NewInstanceService(runtimeinfrarepo.NewRepository(db))
 
-	items, err := service.GetUserInstancesWithContext(context.Background(), 2)
+	items, err := service.GetUserInstances(context.Background(), 2)
 	if err != nil {
-		t.Fatalf("GetUserInstancesWithContext() error = %v", err)
+		t.Fatalf("GetUserInstances() error = %v", err)
 	}
 	if len(items) != 1 || items[0].ID != 1002 {
 		t.Fatalf("expected teammate visible shared instance, got %+v", items)
@@ -229,9 +217,9 @@ func TestInstanceServiceGetUserInstancesPrefersContestAWDServiceMetadata(t *test
 
 	service := runtimeqry.NewInstanceService(runtimeinfrarepo.NewRepository(db))
 
-	items, err := service.GetUserInstancesWithContext(context.Background(), 2)
+	items, err := service.GetUserInstances(context.Background(), 2)
 	if err != nil {
-		t.Fatalf("GetUserInstancesWithContext() error = %v", err)
+		t.Fatalf("GetUserInstances() error = %v", err)
 	}
 	if len(items) != 1 {
 		t.Fatalf("expected 1 visible awd instance, got %+v", items)
@@ -310,9 +298,9 @@ func TestInstanceServiceGetUserInstancesFiltersLegacyAWDInstanceWithoutServiceID
 
 	service := runtimeqry.NewInstanceService(runtimeinfrarepo.NewRepository(db))
 
-	items, err := service.GetUserInstancesWithContext(context.Background(), 2)
+	items, err := service.GetUserInstances(context.Background(), 2)
 	if err != nil {
-		t.Fatalf("GetUserInstancesWithContext() error = %v", err)
+		t.Fatalf("GetUserInstances() error = %v", err)
 	}
 	if len(items) != 0 {
 		t.Fatalf("expected legacy awd instance without service_id to be filtered out, got %+v", items)
@@ -349,9 +337,9 @@ func TestInstanceServiceGetUserInstancesIncludesPendingInstance(t *testing.T) {
 
 	service := runtimeqry.NewInstanceService(runtimeinfrarepo.NewRepository(db))
 
-	items, err := service.GetUserInstancesWithContext(context.Background(), 2)
+	items, err := service.GetUserInstances(context.Background(), 2)
 	if err != nil {
-		t.Fatalf("GetUserInstancesWithContext() error = %v", err)
+		t.Fatalf("GetUserInstances() error = %v", err)
 	}
 	if len(items) != 1 || items[0].ID != 1003 || items[0].Status != model.InstanceStatusPending {
 		t.Fatalf("expected pending instance to be visible, got %+v", items)
@@ -388,9 +376,9 @@ func TestInstanceServiceGetUserInstancesIncludesFailedInstance(t *testing.T) {
 
 	service := runtimeqry.NewInstanceService(runtimeinfrarepo.NewRepository(db))
 
-	items, err := service.GetUserInstancesWithContext(context.Background(), 2)
+	items, err := service.GetUserInstances(context.Background(), 2)
 	if err != nil {
-		t.Fatalf("GetUserInstancesWithContext() error = %v", err)
+		t.Fatalf("GetUserInstances() error = %v", err)
 	}
 	if len(items) != 1 || items[0].ID != 1004 || items[0].Status != model.InstanceStatusFailed {
 		t.Fatalf("expected failed instance to be visible, got %+v", items)
@@ -428,9 +416,9 @@ func TestInstanceServiceGetUserInstancesMarksExpiredRunningInstance(t *testing.T
 
 	service := runtimeqry.NewInstanceService(runtimeinfrarepo.NewRepository(db))
 
-	items, err := service.GetUserInstancesWithContext(context.Background(), 2)
+	items, err := service.GetUserInstances(context.Background(), 2)
 	if err != nil {
-		t.Fatalf("GetUserInstancesWithContext() error = %v", err)
+		t.Fatalf("GetUserInstances() error = %v", err)
 	}
 	if len(items) != 1 || items[0].ID != 1005 {
 		t.Fatalf("expected expired instance to remain visible, got %+v", items)
@@ -471,7 +459,7 @@ func TestInstanceServiceGetAccessURLRejectsExpiredRunningInstance(t *testing.T) 
 
 	service := runtimeqry.NewInstanceService(runtimeinfrarepo.NewRepository(db))
 
-	_, err := service.GetAccessURLWithContext(context.Background(), 1006, 2)
+	_, err := service.GetAccessURL(context.Background(), 1006, 2)
 	if err == nil || err.Error() != errcode.ErrInstanceExpired.Error() {
 		t.Fatalf("expected instance expired error, got %v", err)
 	}
@@ -782,5 +770,47 @@ func TestInstanceServiceDestroyTeacherInstancePropagatesContextToRepository(t *t
 	}
 	if !findByIDCalled || !findRequesterCalled || !findOwnerCalled || !updateCalled {
 		t.Fatalf("expected all repository calls to happen, got findByID=%v requester=%v owner=%v update=%v", findByIDCalled, findRequesterCalled, findOwnerCalled, updateCalled)
+	}
+}
+
+func TestInstanceServiceDestroyTeacherInstanceDoesNotCreateBackgroundContext(t *testing.T) {
+	t.Parallel()
+
+	repo := &runtimeInstanceContextRepo{
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Instance, error) {
+			if ctx != nil {
+				t.Fatalf("expected find-by-id ctx to stay nil, got %v", ctx)
+			}
+			return &model.Instance{ID: id, UserID: 2, Status: model.InstanceStatusRunning}, nil
+		},
+		updateStatusAndReleasePortWithContextFn: func(ctx context.Context, id int64, status string) error {
+			if ctx != nil {
+				t.Fatalf("expected update ctx to stay nil, got %v", ctx)
+			}
+			return nil
+		},
+	}
+	service := runtimecmd.NewInstanceService(repo, noopRuntimeCleaner{}, &config.ContainerConfig{}, nil)
+
+	if err := service.DestroyTeacherInstance(nil, 201, 1001, model.RoleAdmin); err != nil {
+		t.Fatalf("DestroyTeacherInstance() error = %v", err)
+	}
+}
+
+func TestInstanceQueryServiceDoesNotCreateBackgroundContext(t *testing.T) {
+	t.Parallel()
+
+	repo := &runtimeInstanceContextRepo{
+		listVisibleByUserFn: func(ctx context.Context, userID int64) ([]runtimeports.UserVisibleInstanceRow, error) {
+			if ctx != nil {
+				t.Fatalf("expected list-visible ctx to stay nil, got %v", ctx)
+			}
+			return []runtimeports.UserVisibleInstanceRow{}, nil
+		},
+	}
+	service := runtimeqry.NewInstanceService(repo)
+
+	if _, err := service.GetUserInstances(nil, 2); err != nil {
+		t.Fatalf("GetUserInstances() error = %v", err)
 	}
 }

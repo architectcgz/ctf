@@ -112,7 +112,7 @@ func (c *Cleaner) runOnce() {
 
 func (c *Cleaner) Stop(ctx context.Context) error {
 	if ctx == nil {
-		ctx = context.Background()
+		return errors.New("runtime cleaner stop requires context")
 	}
 	c.cancel()
 	stopped := c.cron.Stop()

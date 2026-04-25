@@ -54,15 +54,16 @@ func (s *AWDServiceTemplateCommandFacade) PreviewImport(
 	return s.imports.PreviewImport(ctx, actorUserID, fileName, reader)
 }
 
-func (s *AWDServiceTemplateCommandFacade) ListImports(actorUserID int64) ([]dto.AWDServiceTemplateImportPreviewResp, error) {
-	return s.imports.ListImports(actorUserID)
+func (s *AWDServiceTemplateCommandFacade) ListImports(ctx context.Context, actorUserID int64) ([]dto.AWDServiceTemplateImportPreviewResp, error) {
+	return s.imports.ListImports(ctx, actorUserID)
 }
 
 func (s *AWDServiceTemplateCommandFacade) GetImport(
+	ctx context.Context,
 	actorUserID int64,
 	id string,
 ) (*dto.AWDServiceTemplateImportPreviewResp, error) {
-	return s.imports.GetImport(actorUserID, id)
+	return s.imports.GetImport(ctx, actorUserID, id)
 }
 
 func (s *AWDServiceTemplateCommandFacade) CommitImport(

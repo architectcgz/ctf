@@ -41,205 +41,107 @@ type writeupCommandContextStub struct {
 	listCommunitySolutionsByChallengeIDWithContextFn   func(ctx context.Context, challengeID int64, query *dto.CommunityChallengeSolutionQuery) ([]challengeports.CommunitySolutionRecord, int64, error)
 }
 
-func (s *writeupCommandContextStub) FindByID(id int64) (*model.Challenge, error) {
-	if s.findByIDFn != nil {
-		return s.findByIDFn(id)
-	}
-	return nil, nil
-}
-
-func (s *writeupCommandContextStub) FindByIDWithContext(ctx context.Context, id int64) (*model.Challenge, error) {
+func (s *writeupCommandContextStub) FindByID(ctx context.Context, id int64) (*model.Challenge, error) {
 	if s.findByIDWithContextFn != nil {
 		return s.findByIDWithContextFn(ctx, id)
 	}
-	return s.FindByID(id)
-}
-
-func (s *writeupCommandContextStub) FindUserByID(userID int64) (*model.User, error) {
-	if s.findUserByIDFn != nil {
-		return s.findUserByIDFn(userID)
-	}
 	return nil, nil
 }
 
-func (s *writeupCommandContextStub) FindUserByIDWithContext(ctx context.Context, userID int64) (*model.User, error) {
+func (s *writeupCommandContextStub) FindUserByID(ctx context.Context, userID int64) (*model.User, error) {
 	if s.findUserByIDWithContextFn != nil {
 		return s.findUserByIDWithContextFn(ctx, userID)
 	}
-	return s.FindUserByID(userID)
-}
-
-func (s *writeupCommandContextStub) FindWriteupByChallengeID(challengeID int64) (*model.ChallengeWriteup, error) {
-	if s.findWriteupByChallengeIDFn != nil {
-		return s.findWriteupByChallengeIDFn(challengeID)
-	}
 	return nil, nil
 }
 
-func (s *writeupCommandContextStub) FindWriteupByChallengeIDWithContext(ctx context.Context, challengeID int64) (*model.ChallengeWriteup, error) {
+func (s *writeupCommandContextStub) FindWriteupByChallengeID(ctx context.Context, challengeID int64) (*model.ChallengeWriteup, error) {
 	if s.findWriteupByChallengeIDWithContextFn != nil {
 		return s.findWriteupByChallengeIDWithContextFn(ctx, challengeID)
 	}
-	return s.FindWriteupByChallengeID(challengeID)
+	return nil, nil
 }
 
-func (s *writeupCommandContextStub) UpsertWriteup(writeup *model.ChallengeWriteup) error {
-	if s.upsertWriteupFn != nil {
-		return s.upsertWriteupFn(writeup)
-	}
-	return nil
-}
-
-func (s *writeupCommandContextStub) UpsertWriteupWithContext(ctx context.Context, writeup *model.ChallengeWriteup) error {
+func (s *writeupCommandContextStub) UpsertWriteup(ctx context.Context, writeup *model.ChallengeWriteup) error {
 	if s.upsertWriteupWithContextFn != nil {
 		return s.upsertWriteupWithContextFn(ctx, writeup)
 	}
-	return s.UpsertWriteup(writeup)
+	return nil
 }
 
-func (s *writeupCommandContextStub) DeleteWriteupByChallengeID(challengeID int64) error {
-	if s.deleteWriteupByChallengeIDFn != nil {
-		return s.deleteWriteupByChallengeIDFn(challengeID)
+func (s *writeupCommandContextStub) DeleteWriteupByChallengeID(ctx context.Context, challengeID int64) error {
+	if s.deleteWriteupByChallengeIDWithContextFn != nil {
+		return s.deleteWriteupByChallengeIDWithContextFn(ctx, challengeID)
 	}
 	return nil
 }
 
-func (s *writeupCommandContextStub) DeleteWriteupByChallengeIDWithContext(ctx context.Context, challengeID int64) error {
-	if s.deleteWriteupByChallengeIDWithContextFn != nil {
-		return s.deleteWriteupByChallengeIDWithContextFn(ctx, challengeID)
-	}
-	return s.DeleteWriteupByChallengeID(challengeID)
-}
-
-func (s *writeupCommandContextStub) FindReleasedWriteupByChallengeID(challengeID int64, now time.Time) (*model.ChallengeWriteup, error) {
-	if s.findReleasedWriteupByChallengeIDFn != nil {
-		return s.findReleasedWriteupByChallengeIDFn(challengeID, now)
+func (s *writeupCommandContextStub) FindReleasedWriteupByChallengeID(ctx context.Context, challengeID int64, now time.Time) (*model.ChallengeWriteup, error) {
+	if s.findReleasedWriteupByChallengeIDWithContextFn != nil {
+		return s.findReleasedWriteupByChallengeIDWithContextFn(ctx, challengeID, now)
 	}
 	return nil, nil
 }
 
-func (s *writeupCommandContextStub) FindReleasedWriteupByChallengeIDWithContext(ctx context.Context, challengeID int64, now time.Time) (*model.ChallengeWriteup, error) {
-	if s.findReleasedWriteupByChallengeIDWithContextFn != nil {
-		return s.findReleasedWriteupByChallengeIDWithContextFn(ctx, challengeID, now)
-	}
-	return s.FindReleasedWriteupByChallengeID(challengeID, now)
-}
-
-func (s *writeupCommandContextStub) GetSolvedStatus(userID, challengeID int64) (bool, error) {
-	if s.getSolvedStatusFn != nil {
-		return s.getSolvedStatusFn(userID, challengeID)
+func (s *writeupCommandContextStub) GetSolvedStatus(ctx context.Context, userID, challengeID int64) (bool, error) {
+	if s.getSolvedStatusWithContextFn != nil {
+		return s.getSolvedStatusWithContextFn(ctx, userID, challengeID)
 	}
 	return false, nil
 }
 
-func (s *writeupCommandContextStub) GetSolvedStatusWithContext(ctx context.Context, userID, challengeID int64) (bool, error) {
-	if s.getSolvedStatusWithContextFn != nil {
-		return s.getSolvedStatusWithContextFn(ctx, userID, challengeID)
-	}
-	return s.GetSolvedStatus(userID, challengeID)
-}
-
-func (s *writeupCommandContextStub) FindSubmissionWriteupByUserChallenge(userID, challengeID int64) (*model.SubmissionWriteup, error) {
-	if s.findSubmissionWriteupByUserChallengeFn != nil {
-		return s.findSubmissionWriteupByUserChallengeFn(userID, challengeID)
-	}
-	return nil, nil
-}
-
-func (s *writeupCommandContextStub) FindSubmissionWriteupByUserChallengeWithContext(ctx context.Context, userID, challengeID int64) (*model.SubmissionWriteup, error) {
+func (s *writeupCommandContextStub) FindSubmissionWriteupByUserChallenge(ctx context.Context, userID, challengeID int64) (*model.SubmissionWriteup, error) {
 	if s.findSubmissionWriteupByUserChallengeWithContextFn != nil {
 		return s.findSubmissionWriteupByUserChallengeWithContextFn(ctx, userID, challengeID)
 	}
-	return s.FindSubmissionWriteupByUserChallenge(userID, challengeID)
+	return nil, nil
 }
 
-func (s *writeupCommandContextStub) FindSubmissionWriteupByID(id int64) (*model.SubmissionWriteup, error) {
-	if s.findSubmissionWriteupByIDFn != nil {
-		return s.findSubmissionWriteupByIDFn(id)
+func (s *writeupCommandContextStub) FindSubmissionWriteupByID(ctx context.Context, id int64) (*model.SubmissionWriteup, error) {
+	if s.findSubmissionWriteupByIDWithContextFn != nil {
+		return s.findSubmissionWriteupByIDWithContextFn(ctx, id)
 	}
 	return nil, nil
 }
 
-func (s *writeupCommandContextStub) FindSubmissionWriteupByIDWithContext(ctx context.Context, id int64) (*model.SubmissionWriteup, error) {
-	if s.findSubmissionWriteupByIDWithContextFn != nil {
-		return s.findSubmissionWriteupByIDWithContextFn(ctx, id)
-	}
-	return s.FindSubmissionWriteupByID(id)
-}
-
-func (s *writeupCommandContextStub) UpsertSubmissionWriteup(writeup *model.SubmissionWriteup) error {
-	if s.upsertSubmissionWriteupFn != nil {
-		return s.upsertSubmissionWriteupFn(writeup)
+func (s *writeupCommandContextStub) UpsertSubmissionWriteup(ctx context.Context, writeup *model.SubmissionWriteup) error {
+	if s.upsertSubmissionWriteupWithContextFn != nil {
+		return s.upsertSubmissionWriteupWithContextFn(ctx, writeup)
 	}
 	return nil
 }
 
-func (s *writeupCommandContextStub) UpsertSubmissionWriteupWithContext(ctx context.Context, writeup *model.SubmissionWriteup) error {
-	if s.upsertSubmissionWriteupWithContextFn != nil {
-		return s.upsertSubmissionWriteupWithContextFn(ctx, writeup)
-	}
-	return s.UpsertSubmissionWriteup(writeup)
-}
-
-func (s *writeupCommandContextStub) GetTeacherSubmissionWriteupByID(id int64) (*challengeports.TeacherSubmissionWriteupRecord, error) {
-	if s.getTeacherSubmissionWriteupByIDFn != nil {
-		return s.getTeacherSubmissionWriteupByIDFn(id)
-	}
-	return nil, nil
-}
-
-func (s *writeupCommandContextStub) GetTeacherSubmissionWriteupByIDWithContext(ctx context.Context, id int64) (*challengeports.TeacherSubmissionWriteupRecord, error) {
+func (s *writeupCommandContextStub) GetTeacherSubmissionWriteupByID(ctx context.Context, id int64) (*challengeports.TeacherSubmissionWriteupRecord, error) {
 	if s.getTeacherSubmissionWriteupByIDWithContextFn != nil {
 		return s.getTeacherSubmissionWriteupByIDWithContextFn(ctx, id)
 	}
-	return s.GetTeacherSubmissionWriteupByID(id)
+	return nil, nil
 }
 
-func (s *writeupCommandContextStub) ListTeacherSubmissionWriteups(query *dto.TeacherSubmissionWriteupQuery) ([]challengeports.TeacherSubmissionWriteupRecord, int64, error) {
-	if s.listTeacherSubmissionWriteupsFn != nil {
-		return s.listTeacherSubmissionWriteupsFn(query)
+func (s *writeupCommandContextStub) ListTeacherSubmissionWriteups(ctx context.Context, query *dto.TeacherSubmissionWriteupQuery) ([]challengeports.TeacherSubmissionWriteupRecord, int64, error) {
+	if s.listTeacherSubmissionWriteupsWithContextFn != nil {
+		return s.listTeacherSubmissionWriteupsWithContextFn(ctx, query)
 	}
 	return nil, 0, nil
 }
 
-func (s *writeupCommandContextStub) ListTeacherSubmissionWriteupsWithContext(ctx context.Context, query *dto.TeacherSubmissionWriteupQuery) ([]challengeports.TeacherSubmissionWriteupRecord, int64, error) {
-	if s.listTeacherSubmissionWriteupsWithContextFn != nil {
-		return s.listTeacherSubmissionWriteupsWithContextFn(ctx, query)
-	}
-	return s.ListTeacherSubmissionWriteups(query)
-}
-
-func (s *writeupCommandContextStub) ListRecommendedSolutionsByChallengeID(challengeID int64, now time.Time) ([]challengeports.RecommendedSolutionRecord, error) {
-	if s.listRecommendedSolutionsByChallengeIDFn != nil {
-		return s.listRecommendedSolutionsByChallengeIDFn(challengeID, now)
+func (s *writeupCommandContextStub) ListRecommendedSolutionsByChallengeID(ctx context.Context, challengeID int64, now time.Time) ([]challengeports.RecommendedSolutionRecord, error) {
+	if s.listRecommendedSolutionsByChallengeIDWithContextFn != nil {
+		return s.listRecommendedSolutionsByChallengeIDWithContextFn(ctx, challengeID, now)
 	}
 	return nil, nil
 }
 
-func (s *writeupCommandContextStub) ListRecommendedSolutionsByChallengeIDWithContext(ctx context.Context, challengeID int64, now time.Time) ([]challengeports.RecommendedSolutionRecord, error) {
-	if s.listRecommendedSolutionsByChallengeIDWithContextFn != nil {
-		return s.listRecommendedSolutionsByChallengeIDWithContextFn(ctx, challengeID, now)
-	}
-	return s.ListRecommendedSolutionsByChallengeID(challengeID, now)
-}
-
-func (s *writeupCommandContextStub) ListCommunitySolutionsByChallengeID(challengeID int64, query *dto.CommunityChallengeSolutionQuery) ([]challengeports.CommunitySolutionRecord, int64, error) {
-	if s.listCommunitySolutionsByChallengeIDFn != nil {
-		return s.listCommunitySolutionsByChallengeIDFn(challengeID, query)
-	}
-	return nil, 0, nil
-}
-
-func (s *writeupCommandContextStub) ListCommunitySolutionsByChallengeIDWithContext(ctx context.Context, challengeID int64, query *dto.CommunityChallengeSolutionQuery) ([]challengeports.CommunitySolutionRecord, int64, error) {
+func (s *writeupCommandContextStub) ListCommunitySolutionsByChallengeID(ctx context.Context, challengeID int64, query *dto.CommunityChallengeSolutionQuery) ([]challengeports.CommunitySolutionRecord, int64, error) {
 	if s.listCommunitySolutionsByChallengeIDWithContextFn != nil {
 		return s.listCommunitySolutionsByChallengeIDWithContextFn(ctx, challengeID, query)
 	}
-	return s.ListCommunitySolutionsByChallengeID(challengeID, query)
+	return nil, 0, nil
 }
 
 type writeupCommandContextKey string
 
-func TestWriteupServiceUpsertWithContextPropagatesContextToRepository(t *testing.T) {
+func TestWriteupServiceUpsertPropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := writeupCommandContextKey("writeup-upsert")
@@ -278,9 +180,9 @@ func TestWriteupServiceUpsertWithContextPropagatesContextToRepository(t *testing
 	service := NewWriteupService(repo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.UpsertWithContext(ctx, 11, 7, &dto.UpsertChallengeWriteupReq{Title: "Official", Content: "Walkthrough", Visibility: model.WriteupVisibilityPublic})
+	resp, err := service.Upsert(ctx, 11, 7, &dto.UpsertChallengeWriteupReq{Title: "Official", Content: "Walkthrough", Visibility: model.WriteupVisibilityPublic})
 	if err != nil {
-		t.Fatalf("UpsertWithContext() error = %v", err)
+		t.Fatalf("Upsert() error = %v", err)
 	}
 	if !findChallengeCalled || !findExistingCalled || !upsertCalled || !findUpdatedCalled {
 		t.Fatalf("expected repository calls, got challenge=%v existing=%v upsert=%v updated=%v", findChallengeCalled, findExistingCalled, upsertCalled, findUpdatedCalled)
@@ -290,7 +192,7 @@ func TestWriteupServiceUpsertWithContextPropagatesContextToRepository(t *testing
 	}
 }
 
-func TestWriteupServiceDeleteWithContextPropagatesContextToRepository(t *testing.T) {
+func TestWriteupServiceDeletePropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := writeupCommandContextKey("writeup-delete")
@@ -316,15 +218,15 @@ func TestWriteupServiceDeleteWithContextPropagatesContextToRepository(t *testing
 	service := NewWriteupService(repo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	if err := service.DeleteWithContext(ctx, 11); err != nil {
-		t.Fatalf("DeleteWithContext() error = %v", err)
+	if err := service.Delete(ctx, 11); err != nil {
+		t.Fatalf("Delete() error = %v", err)
 	}
 	if !findChallengeCalled || !deleteCalled {
 		t.Fatalf("expected repository calls, got challenge=%v delete=%v", findChallengeCalled, deleteCalled)
 	}
 }
 
-func TestWriteupServiceUpsertSubmissionWithContextPropagatesContextToRepository(t *testing.T) {
+func TestWriteupServiceUpsertSubmissionPropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := writeupCommandContextKey("writeup-upsert-submission")
@@ -371,9 +273,9 @@ func TestWriteupServiceUpsertSubmissionWithContextPropagatesContextToRepository(
 	service := NewWriteupService(repo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.UpsertSubmissionWithContext(ctx, 11, 7, &dto.UpsertSubmissionWriteupReq{Title: "Published", Content: "Walkthrough", SubmissionStatus: model.SubmissionWriteupStatusPublished})
+	resp, err := service.UpsertSubmission(ctx, 11, 7, &dto.UpsertSubmissionWriteupReq{Title: "Published", Content: "Walkthrough", SubmissionStatus: model.SubmissionWriteupStatusPublished})
 	if err != nil {
-		t.Fatalf("UpsertSubmissionWithContext() error = %v", err)
+		t.Fatalf("UpsertSubmission() error = %v", err)
 	}
 	if !findChallengeCalled || !findExistingCalled || !getSolvedCalled || !upsertCalled || !findUpdatedCalled {
 		t.Fatalf("expected repository calls, got challenge=%v existing=%v solved=%v upsert=%v updated=%v", findChallengeCalled, findExistingCalled, getSolvedCalled, upsertCalled, findUpdatedCalled)
@@ -383,7 +285,7 @@ func TestWriteupServiceUpsertSubmissionWithContextPropagatesContextToRepository(
 	}
 }
 
-func TestWriteupServiceRecommendOfficialWithContextPropagatesContextToRepository(t *testing.T) {
+func TestWriteupServiceRecommendOfficialPropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := writeupCommandContextKey("writeup-recommend-official")
@@ -422,9 +324,9 @@ func TestWriteupServiceRecommendOfficialWithContextPropagatesContextToRepository
 	service := NewWriteupService(repo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.RecommendOfficialWithContext(ctx, 11, 7)
+	resp, err := service.RecommendOfficial(ctx, 11, 7)
 	if err != nil {
-		t.Fatalf("RecommendOfficialWithContext() error = %v", err)
+		t.Fatalf("RecommendOfficial() error = %v", err)
 	}
 	if !findChallengeCalled || !findWriteupCalled || !upsertCalled || !findUpdatedCalled {
 		t.Fatalf("expected repository calls, got challenge=%v writeup=%v upsert=%v updated=%v", findChallengeCalled, findWriteupCalled, upsertCalled, findUpdatedCalled)
@@ -434,7 +336,7 @@ func TestWriteupServiceRecommendOfficialWithContextPropagatesContextToRepository
 	}
 }
 
-func TestWriteupServiceUnrecommendOfficialWithContextPropagatesContextToRepository(t *testing.T) {
+func TestWriteupServiceUnrecommendOfficialPropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := writeupCommandContextKey("writeup-unrecommend-official")
@@ -473,9 +375,9 @@ func TestWriteupServiceUnrecommendOfficialWithContextPropagatesContextToReposito
 	service := NewWriteupService(repo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.UnrecommendOfficialWithContext(ctx, 11, 7)
+	resp, err := service.UnrecommendOfficial(ctx, 11, 7)
 	if err != nil {
-		t.Fatalf("UnrecommendOfficialWithContext() error = %v", err)
+		t.Fatalf("UnrecommendOfficial() error = %v", err)
 	}
 	if !findChallengeCalled || !findWriteupCalled || !upsertCalled || !findUpdatedCalled {
 		t.Fatalf("expected repository calls, got challenge=%v writeup=%v upsert=%v updated=%v", findChallengeCalled, findWriteupCalled, upsertCalled, findUpdatedCalled)
@@ -485,7 +387,7 @@ func TestWriteupServiceUnrecommendOfficialWithContextPropagatesContextToReposito
 	}
 }
 
-func TestWriteupServiceRecommendCommunityWithContextPropagatesContextToRepository(t *testing.T) {
+func TestWriteupServiceRecommendCommunityPropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := writeupCommandContextKey("writeup-recommend-community")
@@ -536,9 +438,9 @@ func TestWriteupServiceRecommendCommunityWithContextPropagatesContextToRepositor
 	service := NewWriteupService(repo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.RecommendCommunityWithContext(ctx, 31, 1001, model.RoleTeacher)
+	resp, err := service.RecommendCommunity(ctx, 31, 1001, model.RoleTeacher)
 	if err != nil {
-		t.Fatalf("RecommendCommunityWithContext() error = %v", err)
+		t.Fatalf("RecommendCommunity() error = %v", err)
 	}
 	if !getTeacherRecordCalled || !findRequesterCalled || !findSubmissionCalled || !upsertCalled || !findUpdatedCalled {
 		t.Fatalf("expected repository calls, got record=%v requester=%v submission=%v upsert=%v updated=%v", getTeacherRecordCalled, findRequesterCalled, findSubmissionCalled, upsertCalled, findUpdatedCalled)
@@ -548,7 +450,7 @@ func TestWriteupServiceRecommendCommunityWithContextPropagatesContextToRepositor
 	}
 }
 
-func TestWriteupServiceUnrecommendCommunityWithContextPropagatesContextToRepository(t *testing.T) {
+func TestWriteupServiceUnrecommendCommunityPropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := writeupCommandContextKey("writeup-unrecommend-community")
@@ -599,9 +501,9 @@ func TestWriteupServiceUnrecommendCommunityWithContextPropagatesContextToReposit
 	service := NewWriteupService(repo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.UnrecommendCommunityWithContext(ctx, 31, 1001, model.RoleTeacher)
+	resp, err := service.UnrecommendCommunity(ctx, 31, 1001, model.RoleTeacher)
 	if err != nil {
-		t.Fatalf("UnrecommendCommunityWithContext() error = %v", err)
+		t.Fatalf("UnrecommendCommunity() error = %v", err)
 	}
 	if !getTeacherRecordCalled || !findRequesterCalled || !findSubmissionCalled || !upsertCalled || !findUpdatedCalled {
 		t.Fatalf("expected repository calls, got record=%v requester=%v submission=%v upsert=%v updated=%v", getTeacherRecordCalled, findRequesterCalled, findSubmissionCalled, upsertCalled, findUpdatedCalled)
@@ -611,7 +513,7 @@ func TestWriteupServiceUnrecommendCommunityWithContextPropagatesContextToReposit
 	}
 }
 
-func TestWriteupServiceHideCommunityWithContextPropagatesContextToRepository(t *testing.T) {
+func TestWriteupServiceHideCommunityPropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := writeupCommandContextKey("writeup-hide-community")
@@ -662,9 +564,9 @@ func TestWriteupServiceHideCommunityWithContextPropagatesContextToRepository(t *
 	service := NewWriteupService(repo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.HideCommunityWithContext(ctx, 31, 1001, model.RoleTeacher)
+	resp, err := service.HideCommunity(ctx, 31, 1001, model.RoleTeacher)
 	if err != nil {
-		t.Fatalf("HideCommunityWithContext() error = %v", err)
+		t.Fatalf("HideCommunity() error = %v", err)
 	}
 	if !getTeacherRecordCalled || !findRequesterCalled || !findSubmissionCalled || !upsertCalled || !findUpdatedCalled {
 		t.Fatalf("expected repository calls, got record=%v requester=%v submission=%v upsert=%v updated=%v", getTeacherRecordCalled, findRequesterCalled, findSubmissionCalled, upsertCalled, findUpdatedCalled)
@@ -674,7 +576,7 @@ func TestWriteupServiceHideCommunityWithContextPropagatesContextToRepository(t *
 	}
 }
 
-func TestWriteupServiceRestoreCommunityWithContextPropagatesContextToRepository(t *testing.T) {
+func TestWriteupServiceRestoreCommunityPropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := writeupCommandContextKey("writeup-restore-community")
@@ -725,9 +627,9 @@ func TestWriteupServiceRestoreCommunityWithContextPropagatesContextToRepository(
 	service := NewWriteupService(repo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.RestoreCommunityWithContext(ctx, 31, 1001, model.RoleTeacher)
+	resp, err := service.RestoreCommunity(ctx, 31, 1001, model.RoleTeacher)
 	if err != nil {
-		t.Fatalf("RestoreCommunityWithContext() error = %v", err)
+		t.Fatalf("RestoreCommunity() error = %v", err)
 	}
 	if !getTeacherRecordCalled || !findRequesterCalled || !findSubmissionCalled || !upsertCalled || !findUpdatedCalled {
 		t.Fatalf("expected repository calls, got record=%v requester=%v submission=%v upsert=%v updated=%v", getTeacherRecordCalled, findRequesterCalled, findSubmissionCalled, upsertCalled, findUpdatedCalled)

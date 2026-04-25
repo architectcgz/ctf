@@ -14,7 +14,7 @@ type awdPreviewRequesterContextKey struct{}
 
 func WithAWDPreviewRequester(ctx context.Context, userID int64) context.Context {
 	if ctx == nil {
-		ctx = context.Background()
+		return nil
 	}
 	if userID <= 0 {
 		return ctx

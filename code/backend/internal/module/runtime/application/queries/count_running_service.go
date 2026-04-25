@@ -1,5 +1,7 @@
 package queries
 
+import "context"
+
 import runtimeports "ctf-platform/internal/module/runtime/ports"
 
 type CountRunningService struct {
@@ -10,9 +12,9 @@ func NewCountRunningService(repo runtimeports.CountRunningRepository) *CountRunn
 	return &CountRunningService{repo: repo}
 }
 
-func (s *CountRunningService) CountRunning() (int64, error) {
+func (s *CountRunningService) CountRunning(ctx context.Context) (int64, error) {
 	if s == nil || s.repo == nil {
 		return 0, nil
 	}
-	return s.repo.CountRunning()
+	return s.repo.CountRunning(ctx)
 }

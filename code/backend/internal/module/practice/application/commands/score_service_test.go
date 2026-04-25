@@ -27,7 +27,7 @@ func newTestScoreCommandService(db *gorm.DB, redisClient *redis.Client) *practic
 	})
 }
 
-func TestScoreServiceUpdateUserScoreWithContextHonorsCancellation(t *testing.T) {
+func TestScoreServiceUpdateUserScoreHonorsCancellation(t *testing.T) {
 	db := testsupport.SetupScoreServiceTestDB(t)
 	mr := miniredis.RunT(t)
 	redisClient := redis.NewClient(&redis.Options{Addr: mr.Addr()})
@@ -59,13 +59,13 @@ func TestScoreServiceUpdateUserScoreWithContextHonorsCancellation(t *testing.T) 
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 
-	err := service.UpdateUserScoreWithContext(ctx, 7)
+	err := service.UpdateUserScore(ctx, 7)
 	if err == nil || !errors.Is(err, context.Canceled) {
 		t.Fatalf("expected context canceled, got %v", err)
 	}
 }
 
-func TestScoreServiceCalculateScoreWithContextUsesChallengePointsDirectly(t *testing.T) {
+func TestScoreServiceCalculateScoreUsesChallengePointsDirectly(t *testing.T) {
 	db := testsupport.SetupScoreServiceTestDB(t)
 	mr := miniredis.RunT(t)
 	redisClient := redis.NewClient(&redis.Options{Addr: mr.Addr()})
@@ -86,13 +86,13 @@ func TestScoreServiceCalculateScoreWithContextUsesChallengePointsDirectly(t *tes
 
 	service := newTestScoreCommandService(db, redisClient)
 
-	score := service.CalculateScoreWithContext(context.Background(), 11)
+	score := service.CalculateScore(context.Background(), 11)
 	if score != 100 {
 		t.Fatalf("expected direct challenge points 100, got %d", score)
 	}
 }
 
-func TestScoreServiceUpdateUserScoreWithContextUsesSolvedChallengePointsSum(t *testing.T) {
+func TestScoreServiceUpdateUserScoreUsesSolvedChallengePointsSum(t *testing.T) {
 	db := testsupport.SetupScoreServiceTestDB(t)
 	mr := miniredis.RunT(t)
 	redisClient := redis.NewClient(&redis.Options{Addr: mr.Addr()})
@@ -135,8 +135,8 @@ func TestScoreServiceUpdateUserScoreWithContextUsesSolvedChallengePointsSum(t *t
 
 	service := newTestScoreCommandService(db, redisClient)
 
-	if err := service.UpdateUserScoreWithContext(context.Background(), 9); err != nil {
-		t.Fatalf("UpdateUserScoreWithContext() error = %v", err)
+	if err := service.UpdateUserScore(context.Background(), 9); err != nil {
+		t.Fatalf("UpdateUserScore() error = %v", err)
 	}
 
 	var userScore model.UserScore

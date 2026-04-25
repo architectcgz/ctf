@@ -11,6 +11,5 @@ type ProfileService interface {
 }
 
 type RecommendationProvider interface {
-	Recommend(userID int64, limit int) (*dto.RecommendationResp, error)
-	RecommendWithContext(ctx context.Context, userID int64, limit int) (*dto.RecommendationResp, error)
+	Recommend(ctx context.Context, userID int64, limit int) (*dto.RecommendationResp, error)
 }

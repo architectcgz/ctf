@@ -104,11 +104,11 @@ func TestRepositoryUpdateStatusAndReleasePortRemovesAllocation(t *testing.T) {
 		t.Fatalf("create port allocation: %v", err)
 	}
 
-	if err := repo.UpdateStatusAndReleasePort(instance.ID, model.InstanceStatusFailed); err != nil {
+	if err := repo.UpdateStatusAndReleasePort(context.Background(), instance.ID, model.InstanceStatusFailed); err != nil {
 		t.Fatalf("UpdateStatusAndReleasePort() error = %v", err)
 	}
 
-	updated, err := repo.FindByID(instance.ID)
+	updated, err := repo.FindByID(context.Background(), instance.ID)
 	if err != nil {
 		t.Fatalf("FindByID() error = %v", err)
 	}
@@ -167,6 +167,29 @@ func TestServiceCreateContainerCreatesIsolatedNetwork(t *testing.T) {
 	}
 }
 
+func TestServiceCreateContainerFailsWhenRuntimeEngineUnavailable(t *testing.T) {
+	t.Parallel()
+
+	repo := newTestRepository(t)
+	service := runtimecmd.NewProvisioningService(repo, nil, &config.ContainerConfig{
+		PortRangeStart:     30000,
+		PortRangeEnd:       30010,
+		DefaultExposedPort: 8080,
+		PublicHost:         "127.0.0.1",
+	}, nil)
+
+	containerID, networkID, hostPort, servicePort, err := service.CreateContainer(context.Background(), "ctf/web:v1", nil, 0)
+	if err == nil {
+		t.Fatal("expected CreateContainer() to fail when runtime engine is unavailable")
+	}
+	if !strings.Contains(err.Error(), "runtime engine is not configured") {
+		t.Fatalf("expected runtime engine unavailable error, got %v", err)
+	}
+	if containerID != "" || networkID != "" || hostPort != 0 || servicePort != 0 {
+		t.Fatalf("expected zero runtime result on failure, got container=%q network=%q hostPort=%d servicePort=%d", containerID, networkID, hostPort, servicePort)
+	}
+}
+
 func TestServiceCreateContainerRemovesNetworkWhenStartFails(t *testing.T) {
 	t.Parallel()
 
@@ -194,7 +217,21 @@ func TestServiceCreateContainerRemovesNetworkWhenStartFails(t *testing.T) {
 	}
 }
 
-func TestServiceRemoveContainerWithContextHonorsCancellation(t *testing.T) {
+func TestServiceRemoveContainerFailsWhenRuntimeEngineUnavailable(t *testing.T) {
+	t.Parallel()
+
+	cleanupService := runtimecmd.NewRuntimeCleanupService(nil, nil)
+
+	err := cleanupService.RemoveContainer(context.Background(), "ctr-missing-engine")
+	if err == nil {
+		t.Fatal("expected RemoveContainer() to fail when runtime engine is unavailable")
+	}
+	if !strings.Contains(err.Error(), "runtime engine is not configured") {
+		t.Fatalf("expected runtime engine unavailable error, got %v", err)
+	}
+}
+
+func TestServiceRemoveContainerHonorsCancellation(t *testing.T) {
 	t.Parallel()
 
 	engine := &fakeRuntimeEngine{
@@ -211,12 +248,31 @@ func TestServiceRemoveContainerWithContextHonorsCancellation(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 
-	if err := cleanupService.RemoveContainerWithContext(ctx, "ctr-ctx"); !errors.Is(err, context.Canceled) {
+	if err := cleanupService.RemoveContainer(ctx, "ctr-ctx"); !errors.Is(err, context.Canceled) {
 		t.Fatalf("expected context canceled, got %v", err)
 	}
 }
 
-func TestServiceCleanupRuntimeWithContextHonorsCancellation(t *testing.T) {
+func TestServiceCleanupRuntimeFailsWhenRuntimeEngineUnavailable(t *testing.T) {
+	t.Parallel()
+
+	cleanupService := runtimecmd.NewRuntimeCleanupService(nil, nil)
+	instance := &model.Instance{
+		ID:          3002,
+		ContainerID: "ctr-missing-engine",
+		NetworkID:   "net-missing-engine",
+	}
+
+	err := cleanupService.CleanupRuntime(context.Background(), instance)
+	if err == nil {
+		t.Fatal("expected CleanupRuntime() to fail when runtime engine is unavailable")
+	}
+	if !strings.Contains(err.Error(), "runtime engine is not configured") {
+		t.Fatalf("expected runtime engine unavailable error, got %v", err)
+	}
+}
+
+func TestServiceCleanupRuntimeHonorsCancellation(t *testing.T) {
 	t.Parallel()
 
 	engine := &fakeRuntimeEngine{
@@ -237,7 +293,7 @@ func TestServiceCleanupRuntimeWithContextHonorsCancellation(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 
-	if err := cleanupService.CleanupRuntimeWithContext(ctx, instance); !errors.Is(err, context.Canceled) {
+	if err := cleanupService.CleanupRuntime(ctx, instance); !errors.Is(err, context.Canceled) {
 		t.Fatalf("expected context canceled, got %v", err)
 	}
 }
@@ -263,16 +319,15 @@ func TestServiceDestroyInstanceAllowsContestTeamMember(t *testing.T) {
 		ContestID:   &contestID,
 		TeamID:      &teamID,
 		ChallengeID: 101,
-		ContainerID: "contest-shared",
 		Status:      model.InstanceStatusRunning,
 		ExpiresAt:   now.Add(time.Hour),
 	})
 
-	if err := service.DestroyInstanceWithContext(context.Background(), 901, 2); err != nil {
-		t.Fatalf("DestroyInstanceWithContext() error = %v", err)
+	if err := service.DestroyInstance(context.Background(), 901, 2); err != nil {
+		t.Fatalf("DestroyInstance() error = %v", err)
 	}
 
-	instance, err := repo.FindByID(901)
+	instance, err := repo.FindByID(context.Background(), 901)
 	if err != nil {
 		t.Fatalf("FindByID() error = %v", err)
 	}
@@ -308,9 +363,9 @@ func TestServiceExtendInstanceAllowsContestTeamMember(t *testing.T) {
 		ExpiresAt:   initialExpiry,
 	})
 
-	resp, err := service.ExtendInstanceWithContext(context.Background(), 902, 2)
+	resp, err := service.ExtendInstance(context.Background(), 902, 2)
 	if err != nil {
-		t.Fatalf("ExtendInstanceWithContext() error = %v", err)
+		t.Fatalf("ExtendInstance() error = %v", err)
 	}
 	if resp == nil {
 		t.Fatal("expected extend response")
@@ -319,7 +374,7 @@ func TestServiceExtendInstanceAllowsContestTeamMember(t *testing.T) {
 		t.Fatalf("expected remaining extends 1, got %d", resp.RemainingExtends)
 	}
 
-	instance, err := repo.FindByID(902)
+	instance, err := repo.FindByID(context.Background(), 902)
 	if err != nil {
 		t.Fatalf("FindByID() error = %v", err)
 	}
@@ -362,7 +417,7 @@ func TestServiceDestroyInstanceRejectsSharedInstance(t *testing.T) {
 		ExpiresAt:   now.Add(time.Hour),
 	})
 
-	err := service.DestroyInstanceWithContext(context.Background(), 903, 2)
+	err := service.DestroyInstance(context.Background(), 903, 2)
 	if err == nil || err.Error() != errcode.ErrForbidden.Error() {
 		t.Fatalf("expected forbidden for shared destroy, got %v", err)
 	}
@@ -399,7 +454,7 @@ func TestServiceExtendInstanceRejectsSharedInstance(t *testing.T) {
 		ExpiresAt:   now.Add(time.Hour),
 	})
 
-	_, err := service.ExtendInstanceWithContext(context.Background(), 904, 2)
+	_, err := service.ExtendInstance(context.Background(), 904, 2)
 	if err == nil || err.Error() != errcode.ErrForbidden.Error() {
 		t.Fatalf("expected forbidden for shared extend, got %v", err)
 	}
@@ -439,9 +494,9 @@ func TestServiceGetUserInstancesIncludesChallengeMetadata(t *testing.T) {
 		UpdatedAt:   now,
 	})
 
-	items, err := service.GetUserInstancesWithContext(context.Background(), 1)
+	items, err := service.GetUserInstances(context.Background(), 1)
 	if err != nil {
-		t.Fatalf("GetUserInstancesWithContext() error = %v", err)
+		t.Fatalf("GetUserInstances() error = %v", err)
 	}
 	if len(items) != 1 {
 		t.Fatalf("expected 1 instance, got %+v", items)
@@ -522,9 +577,9 @@ func TestServiceGetUserInstancesShowsContestSharedInstanceToTeamMember(t *testin
 		UpdatedAt:   now,
 	})
 
-	items, err := service.GetUserInstancesWithContext(context.Background(), 2)
+	items, err := service.GetUserInstances(context.Background(), 2)
 	if err != nil {
-		t.Fatalf("GetUserInstancesWithContext() error = %v", err)
+		t.Fatalf("GetUserInstances() error = %v", err)
 	}
 	if len(items) != 1 || items[0].ID != 1002 {
 		t.Fatalf("expected teammate visible shared instance, got %+v", items)
@@ -566,9 +621,9 @@ func TestServiceGetUserInstancesShowsPracticeSharedInstanceToAnyUser(t *testing.
 		UpdatedAt:   now,
 	})
 
-	items, err := service.GetUserInstancesWithContext(context.Background(), 2)
+	items, err := service.GetUserInstances(context.Background(), 2)
 	if err != nil {
-		t.Fatalf("GetUserInstancesWithContext() error = %v", err)
+		t.Fatalf("GetUserInstances() error = %v", err)
 	}
 	if len(items) != 1 || items[0].ID != 1003 {
 		t.Fatalf("expected global shared instance visible to another user, got %+v", items)
@@ -644,8 +699,8 @@ func TestServiceDestroyManagedInstanceRemovesAllRuntimeContainers(t *testing.T) 
 		t.Fatalf("create port allocation: %v", err)
 	}
 
-	if err := service.DestroyInstanceWithContext(context.Background(), instance.ID, instance.UserID); err != nil {
-		t.Fatalf("DestroyInstanceWithContext() error = %v", err)
+	if err := service.DestroyInstance(context.Background(), instance.ID, instance.UserID); err != nil {
+		t.Fatalf("DestroyInstance() error = %v", err)
 	}
 	if len(engine.removedContainerIDs) != 2 {
 		t.Fatalf("expected 2 removed containers, got %v", engine.removedContainerIDs)
@@ -657,7 +712,7 @@ func TestServiceDestroyManagedInstanceRemovesAllRuntimeContainers(t *testing.T) 
 		t.Fatalf("expected acl rules to be removed, got %+v", engine.removedACLRules)
 	}
 
-	updated, err := repo.FindByID(instance.ID)
+	updated, err := repo.FindByID(context.Background(), instance.ID)
 	if err != nil {
 		t.Fatalf("FindByID() error = %v", err)
 	}
@@ -713,7 +768,7 @@ func TestServiceCleanExpiredInstancesKeepsRunningStateWhenRuntimeCleanupFails(t 
 		t.Fatalf("CleanExpiredInstances() error = %v", err)
 	}
 
-	updated, err := repo.FindByID(instance.ID)
+	updated, err := repo.FindByID(context.Background(), instance.ID)
 	if err != nil {
 		t.Fatalf("FindByID() error = %v", err)
 	}
@@ -771,7 +826,7 @@ func TestServiceCleanExpiredInstancesMarksExpiredWhenContainerAlreadyRemoved(t *
 		t.Fatalf("CleanExpiredInstances() error = %v", err)
 	}
 
-	updated, err := repo.FindByID(instance.ID)
+	updated, err := repo.FindByID(context.Background(), instance.ID)
 	if err != nil {
 		t.Fatalf("FindByID() error = %v", err)
 	}
@@ -1013,8 +1068,8 @@ func TestServiceDestroyTeacherInstanceHonorsClassScope(t *testing.T) {
 	seedUser(t, repo.db, &model.User{ID: 2, Username: "alice", Role: model.RoleStudent, ClassName: "Class A", Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now})
 	seedUser(t, repo.db, &model.User{ID: 3, Username: "bob", Role: model.RoleStudent, ClassName: "Class B", Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now})
 	seedChallenge(t, repo.db, &model.Challenge{ID: 11, Title: "web-101", Status: model.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now})
-	seedInstance(t, repo.db, &model.Instance{ID: 201, UserID: 2, ChallengeID: 11, ContainerID: "inst-a", Status: model.InstanceStatusRunning, ExpiresAt: now.Add(time.Hour), CreatedAt: now, UpdatedAt: now})
-	seedInstance(t, repo.db, &model.Instance{ID: 202, UserID: 3, ChallengeID: 11, ContainerID: "inst-b", Status: model.InstanceStatusRunning, ExpiresAt: now.Add(time.Hour), CreatedAt: now, UpdatedAt: now})
+	seedInstance(t, repo.db, &model.Instance{ID: 201, UserID: 2, ChallengeID: 11, Status: model.InstanceStatusRunning, ExpiresAt: now.Add(time.Hour), CreatedAt: now, UpdatedAt: now})
+	seedInstance(t, repo.db, &model.Instance{ID: 202, UserID: 3, ChallengeID: 11, Status: model.InstanceStatusRunning, ExpiresAt: now.Add(time.Hour), CreatedAt: now, UpdatedAt: now})
 
 	if err := service.DestroyTeacherInstance(context.Background(), 202, 1, model.RoleTeacher); err == nil || err.Error() != errcode.ErrForbidden.Error() {
 		t.Fatalf("expected forbidden destroy, got %v", err)
@@ -1024,7 +1079,7 @@ func TestServiceDestroyTeacherInstanceHonorsClassScope(t *testing.T) {
 		t.Fatalf("DestroyTeacherInstance() error = %v", err)
 	}
 
-	instance, err := repo.FindByID(201)
+	instance, err := repo.FindByID(context.Background(), 201)
 	if err != nil {
 		t.Fatalf("FindByID() error = %v", err)
 	}
@@ -1068,20 +1123,20 @@ type testRuntimeService struct {
 	queries  *runtimeqry.InstanceService
 }
 
-func (s *testRuntimeService) DestroyInstanceWithContext(ctx context.Context, instanceID, userID int64) error {
-	return s.commands.DestroyInstanceWithContext(ctx, instanceID, userID)
+func (s *testRuntimeService) DestroyInstance(ctx context.Context, instanceID, userID int64) error {
+	return s.commands.DestroyInstance(ctx, instanceID, userID)
 }
 
-func (s *testRuntimeService) ExtendInstanceWithContext(ctx context.Context, instanceID, userID int64) (*dto.InstanceResp, error) {
-	return s.commands.ExtendInstanceWithContext(ctx, instanceID, userID)
+func (s *testRuntimeService) ExtendInstance(ctx context.Context, instanceID, userID int64) (*dto.InstanceResp, error) {
+	return s.commands.ExtendInstance(ctx, instanceID, userID)
 }
 
-func (s *testRuntimeService) GetUserInstancesWithContext(ctx context.Context, userID int64) ([]*dto.InstanceInfo, error) {
-	return s.queries.GetUserInstancesWithContext(ctx, userID)
+func (s *testRuntimeService) GetUserInstances(ctx context.Context, userID int64) ([]*dto.InstanceInfo, error) {
+	return s.queries.GetUserInstances(ctx, userID)
 }
 
-func (s *testRuntimeService) GetAccessURLWithContext(ctx context.Context, instanceID, userID int64) (string, error) {
-	return s.queries.GetAccessURLWithContext(ctx, instanceID, userID)
+func (s *testRuntimeService) GetAccessURL(ctx context.Context, instanceID, userID int64) (string, error) {
+	return s.queries.GetAccessURL(ctx, instanceID, userID)
 }
 
 func (s *testRuntimeService) ListTeacherInstances(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherInstanceQuery) ([]dto.TeacherInstanceItem, error) {

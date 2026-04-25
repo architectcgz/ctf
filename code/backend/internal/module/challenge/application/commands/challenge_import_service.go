@@ -49,6 +49,7 @@ func (s *ChallengeService) PreviewChallengeImport(
 	fileName string,
 	reader io.Reader,
 ) (*dto.ChallengeImportPreviewResp, error) {
+	_ = ctx
 	if strings.TrimSpace(fileName) == "" {
 		fileName = "challenge-package.zip"
 	}
@@ -94,7 +95,8 @@ func (s *ChallengeService) PreviewChallengeImport(
 	return preview, nil
 }
 
-func (s *ChallengeService) GetChallengeImport(actorUserID int64, id string) (*dto.ChallengeImportPreviewResp, error) {
+func (s *ChallengeService) GetChallengeImport(ctx context.Context, actorUserID int64, id string) (*dto.ChallengeImportPreviewResp, error) {
+	_ = ctx
 	record, err := loadChallengeImportPreviewRecord(id)
 	if err != nil {
 		return nil, err
@@ -106,7 +108,8 @@ func (s *ChallengeService) GetChallengeImport(actorUserID int64, id string) (*dt
 	return &preview, nil
 }
 
-func (s *ChallengeService) ListChallengeImports(actorUserID int64) ([]dto.ChallengeImportPreviewResp, error) {
+func (s *ChallengeService) ListChallengeImports(ctx context.Context, actorUserID int64) ([]dto.ChallengeImportPreviewResp, error) {
+	_ = ctx
 	records, err := loadChallengeImportPreviewRecords()
 	if err != nil {
 		return nil, err
@@ -146,10 +149,6 @@ func (s *ChallengeService) CommitChallengeImport(
 	attachmentURL, err := persistImportedAttachmentBundle(parsed)
 	if err != nil {
 		return nil, err
-	}
-
-	if ctx == nil {
-		ctx = context.Background()
 	}
 
 	var challenge *model.Challenge

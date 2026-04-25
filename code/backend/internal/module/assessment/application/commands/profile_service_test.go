@@ -52,7 +52,7 @@ func newAssessmentTestService(db *gorm.DB, redisClient *redis.Client) *assessmen
 	)
 }
 
-func TestCalculateSkillProfileWithContextPersistsComputedScores(t *testing.T) {
+func TestCalculateSkillProfilePersistsComputedScores(t *testing.T) {
 	db := setupAssessmentTestDB(t)
 	service := newAssessmentTestService(db, nil)
 	now := time.Now()
@@ -93,9 +93,9 @@ func TestCalculateSkillProfileWithContextPersistsComputedScores(t *testing.T) {
 		}
 	}
 
-	dimensions, err := service.CalculateSkillProfileWithContext(context.Background(), student.ID)
+	dimensions, err := service.CalculateSkillProfile(context.Background(), student.ID)
 	if err != nil {
-		t.Fatalf("CalculateSkillProfileWithContext() error = %v", err)
+		t.Fatalf("CalculateSkillProfile() error = %v", err)
 	}
 	if len(dimensions) != 2 {
 		t.Fatalf("expected 2 computed dimensions, got %+v", dimensions)
@@ -121,7 +121,7 @@ func TestCalculateSkillProfileWithContextPersistsComputedScores(t *testing.T) {
 	}
 }
 
-func TestCalculateSkillProfileWithContextCountsSuccessfulAWDAttacks(t *testing.T) {
+func TestCalculateSkillProfileCountsSuccessfulAWDAttacks(t *testing.T) {
 	db := setupAssessmentTestDB(t)
 	service := newAssessmentTestService(db, nil)
 	now := time.Now()
@@ -193,9 +193,9 @@ func TestCalculateSkillProfileWithContextCountsSuccessfulAWDAttacks(t *testing.T
 		}
 	}
 
-	dimensions, err := service.CalculateSkillProfileWithContext(context.Background(), student.ID)
+	dimensions, err := service.CalculateSkillProfile(context.Background(), student.ID)
 	if err != nil {
-		t.Fatalf("CalculateSkillProfileWithContext() error = %v", err)
+		t.Fatalf("CalculateSkillProfile() error = %v", err)
 	}
 
 	scoreByDimension := make(map[string]float64, len(dimensions))
@@ -210,7 +210,7 @@ func TestCalculateSkillProfileWithContextCountsSuccessfulAWDAttacks(t *testing.T
 	}
 }
 
-func TestCalculateSkillProfileWithContextReturnsExistingProfileWhenLocked(t *testing.T) {
+func TestCalculateSkillProfileReturnsExistingProfileWhenLocked(t *testing.T) {
 	db := setupAssessmentTestDB(t)
 	now := time.Now()
 
@@ -232,9 +232,9 @@ func TestCalculateSkillProfileWithContextReturnsExistingProfileWhenLocked(t *tes
 	}
 
 	service := newAssessmentTestService(db, redisClient)
-	dimensions, err := service.CalculateSkillProfileWithContext(context.Background(), 2)
+	dimensions, err := service.CalculateSkillProfile(context.Background(), 2)
 	if err != nil {
-		t.Fatalf("CalculateSkillProfileWithContext() error = %v", err)
+		t.Fatalf("CalculateSkillProfile() error = %v", err)
 	}
 	if len(dimensions) != 2 {
 		t.Fatalf("expected existing profile dimensions, got %+v", dimensions)
@@ -252,7 +252,7 @@ func TestCalculateSkillProfileWithContextReturnsExistingProfileWhenLocked(t *tes
 func TestGetSkillProfileReturnsEmptyDimensionsWhenProfileMissing(t *testing.T) {
 	service := newAssessmentTestService(setupAssessmentTestDB(t), nil)
 
-	profile, err := service.GetSkillProfile(42)
+	profile, err := service.GetSkillProfile(context.Background(), 42)
 	if err != nil {
 		t.Fatalf("GetSkillProfile() error = %v", err)
 	}
@@ -300,27 +300,27 @@ func TestGetStudentSkillProfileRejectsTeacherFromOtherClass(t *testing.T) {
 	}
 }
 
-func TestCalculateSkillProfileWithContextHonorsCancellation(t *testing.T) {
+func TestCalculateSkillProfileHonorsCancellation(t *testing.T) {
 	db := setupAssessmentTestDB(t)
 	service := newAssessmentTestService(db, nil)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 
-	_, err := service.CalculateSkillProfileWithContext(ctx, 1)
+	_, err := service.CalculateSkillProfile(ctx, 1)
 	if err == nil || !errors.Is(err, context.Canceled) {
 		t.Fatalf("expected context canceled, got %v", err)
 	}
 }
 
-func TestGetSkillProfileWithContextHonorsCancellation(t *testing.T) {
+func TestGetSkillProfileHonorsCancellation(t *testing.T) {
 	db := setupAssessmentTestDB(t)
 	service := newAssessmentTestService(db, nil)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 
-	_, err := service.GetSkillProfileWithContext(ctx, 1)
+	_, err := service.GetSkillProfile(ctx, 1)
 	if err == nil || !errors.Is(err, context.Canceled) {
 		t.Fatalf("expected context canceled, got %v", err)
 	}

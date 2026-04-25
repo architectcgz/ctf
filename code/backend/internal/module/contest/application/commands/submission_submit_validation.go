@@ -54,9 +54,12 @@ func (s *SubmissionService) validateContestSubmission(ctx context.Context, userI
 		return nil, errcode.ErrInvalidParams.WithCause(errors.New("人工审核题暂不支持竞赛提交"))
 	}
 
-	rateLimitKey := contestSubmissionRateLimitKey(userID, contestID, challengeID)
+	rateLimitKey := contestSubmissionRateLimitKey(s.cfg.RateLimit.RedisKeyPrefix, userID, contestID, challengeID)
 	exists, err := s.redis.Exists(ctx, rateLimitKey).Result()
-	if err == nil && exists > 0 {
+	if err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+	if exists > 0 {
 		return nil, errcode.ErrSubmitTooFrequent
 	}
 
@@ -64,7 +67,7 @@ func (s *SubmissionService) validateContestSubmission(ctx context.Context, userI
 	if s.flagValidator == nil {
 		return nil, errcode.ErrInternal.WithCause(fmt.Errorf("challenge flag validator is nil"))
 	}
-	isCorrect, err = s.flagValidator.ValidateFlag(userID, challengeID, flag, "")
+	isCorrect, err = s.flagValidator.ValidateFlag(ctx, userID, challengeID, flag, "")
 	if err != nil {
 		return nil, err
 	}

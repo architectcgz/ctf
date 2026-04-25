@@ -16,15 +16,20 @@ func TeamIDToMember(teamID int64) string {
 }
 
 func MemberToTeamID(member any) int64 {
+	id, _ := ParseMemberToTeamID(member)
+	return id
+}
+
+func ParseMemberToTeamID(member any) (int64, bool) {
 	switch value := member.(type) {
 	case string:
-		id, _ := strconv.ParseInt(value, 10, 64)
-		return id
+		id, err := strconv.ParseInt(value, 10, 64)
+		return id, err == nil && id > 0
 	case []byte:
-		id, _ := strconv.ParseInt(string(value), 10, 64)
-		return id
+		id, err := strconv.ParseInt(string(value), 10, 64)
+		return id, err == nil && id > 0
 	default:
-		id, _ := strconv.ParseInt(fmt.Sprint(value), 10, 64)
-		return id
+		id, err := strconv.ParseInt(fmt.Sprint(value), 10, 64)
+		return id, err == nil && id > 0
 	}
 }

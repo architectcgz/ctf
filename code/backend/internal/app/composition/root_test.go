@@ -31,6 +31,46 @@ func TestRootProvidesEventsBus(t *testing.T) {
 	}
 }
 
+func TestBackgroundJobStartDoesNotCreateBackgroundContext(t *testing.T) {
+	t.Parallel()
+
+	called := false
+	job := NewBackgroundJob("ctx-check", func(ctx context.Context) error {
+		called = true
+		if ctx != nil {
+			t.Fatalf("expected start ctx to stay nil, got %v", ctx)
+		}
+		return nil
+	}, nil)
+
+	if err := job.Start(nil); err != nil {
+		t.Fatalf("Start() error = %v", err)
+	}
+	if !called {
+		t.Fatal("expected start function to be called")
+	}
+}
+
+func TestBackgroundJobStopDoesNotCreateBackgroundContext(t *testing.T) {
+	t.Parallel()
+
+	called := false
+	job := NewBackgroundJob("ctx-check", nil, func(ctx context.Context) error {
+		called = true
+		if ctx != nil {
+			t.Fatalf("expected stop ctx to stay nil, got %v", ctx)
+		}
+		return nil
+	})
+
+	if err := job.Stop(nil); err != nil {
+		t.Fatalf("Stop() error = %v", err)
+	}
+	if !called {
+		t.Fatal("expected stop function to be called")
+	}
+}
+
 func newRootTestDependencies(t *testing.T) (*config.Config, *gorm.DB, *redislib.Client) {
 	t.Helper()
 

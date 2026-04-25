@@ -52,8 +52,8 @@ func TestAWDServiceTemplateServiceUpdateTemplate(t *testing.T) {
 		DeploymentMode: model.AWDDeploymentModeSingleContainer,
 		Status:         model.AWDServiceTemplateStatusDraft,
 	}
-	if err := repo.CreateAWDServiceTemplate(template); err != nil {
-		t.Fatalf("CreateAWDServiceTemplate() error = %v", err)
+	if err := repo.CreateAWDServiceTemplate(context.Background(), template); err != nil {
+		t.Fatalf("Create() error = %v", err)
 	}
 
 	resp, err := service.UpdateTemplate(context.Background(), template.ID, &dto.UpdateAWDServiceTemplateReq{
