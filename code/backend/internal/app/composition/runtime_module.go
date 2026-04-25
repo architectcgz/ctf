@@ -130,7 +130,7 @@ func buildRuntimeModuleDeps(root *Root, engine runtimeEngine) runtimeModuleDeps 
 	cfg := root.Config()
 	log := root.Logger()
 	repo := runtimeinfra.NewRepository(root.DB())
-	cleanupService := runtimecmd.NewRuntimeCleanupService(engine, log.Named("runtime_cleanup_service"))
+	cleanupService := runtimecmd.NewRuntimeCleanupService(engine, repo, log.Named("runtime_cleanup_service"))
 	maintenanceService := runtimecmd.NewRuntimeMaintenanceService(repo, engine, cleanupService, &cfg.Container, log.Named("runtime_maintenance_service"))
 	provisioningService := runtimecmd.NewProvisioningService(repo, engine, &cfg.Container, log.Named("runtime_provisioning_service"))
 	var containerStatsService *runtimeapp.ContainerStatsService

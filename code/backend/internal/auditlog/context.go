@@ -10,7 +10,7 @@ type controlKey struct{}
 
 func WithControl(ctx context.Context, control *Control) context.Context {
 	if ctx == nil {
-		ctx = context.Background()
+		return nil
 	}
 	return context.WithValue(ctx, controlKey{}, control)
 }

@@ -47,8 +47,8 @@ func NewTokenService(cfg config.AuthConfig, wsConfig config.WebSocketConfig, cac
 }
 
 func (s *tokenService) CreateSession(ctx context.Context, userID int64, username, role string) (*authcontracts.Session, error) {
-	if ctx == nil {
-		ctx = context.Background()
+	if err := requireContext(ctx); err != nil {
+		return nil, err
 	}
 
 	sessionID, err := generateOpaqueToken(32)
@@ -82,6 +82,9 @@ func (s *tokenService) CreateSession(ctx context.Context, userID int64, username
 }
 
 func (s *tokenService) GetSession(ctx context.Context, sessionID string) (*authcontracts.Session, error) {
+	if err := requireContext(ctx); err != nil {
+		return nil, err
+	}
 	if sessionID == "" {
 		return nil, errcode.ErrUnauthorized
 	}
@@ -112,6 +115,9 @@ func (s *tokenService) GetSession(ctx context.Context, sessionID string) (*authc
 }
 
 func (s *tokenService) DeleteSession(ctx context.Context, sessionID string) error {
+	if err := requireContext(ctx); err != nil {
+		return err
+	}
 	if sessionID == "" {
 		return nil
 	}
@@ -122,6 +128,9 @@ func (s *tokenService) DeleteSession(ctx context.Context, sessionID string) erro
 }
 
 func (s *tokenService) IssueWSTicket(ctx context.Context, user authctx.CurrentUser) (*authcontracts.WSTicket, error) {
+	if err := requireContext(ctx); err != nil {
+		return nil, err
+	}
 	ticket, err := generateOpaqueToken(32)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
@@ -149,6 +158,9 @@ func (s *tokenService) IssueWSTicket(ctx context.Context, user authctx.CurrentUs
 }
 
 func (s *tokenService) ConsumeWSTicket(ctx context.Context, ticket string) (*authctx.CurrentUser, error) {
+	if err := requireContext(ctx); err != nil {
+		return nil, err
+	}
 	if ticket == "" {
 		return nil, errcode.ErrWSTicketInvalid
 	}
@@ -178,6 +190,13 @@ func (s *tokenService) ConsumeWSTicket(ctx context.Context, ticket string) (*aut
 
 func (s *tokenService) sessionKey(sessionID string) string {
 	return fmt.Sprintf("%s:%s", s.config.SessionKeyPrefix, sessionID)
+}
+
+func requireContext(ctx context.Context) error {
+	if ctx == nil {
+		return errcode.ErrInternal.WithCause(fmt.Errorf("context is required"))
+	}
+	return nil
 }
 
 func (s *tokenService) wsTicketKey(ticket string) string {
