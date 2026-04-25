@@ -7,6 +7,7 @@ import type { ContestDetailData } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
 import ContestAnnouncementsTopbarPanel from '@/components/platform/contest/ContestAnnouncementsTopbarPanel.vue'
+import ContestAnnouncementsWorkspacePanel from '@/components/platform/contest/ContestAnnouncementsWorkspacePanel.vue'
 import { useContestAnnouncementManagement } from '@/composables/useContestAnnouncementManagement'
 import { useToast } from '@/composables/useToast'
 import { ApiError } from '@/api/request'
@@ -116,142 +117,24 @@ onMounted(() => {
         </template>
       </AppEmpty>
 
-      <template v-else-if="contest">
-        <section
-          v-if="management.canManageAnnouncements.value"
-          class="contest-announcement-panel"
-        >
-          <header class="contest-announcement-panel__head">
-            <div>
-              <div class="contest-announcement-panel__overline">
-                Publish
-              </div>
-              <h2>发布公告</h2>
-            </div>
-          </header>
-
-          <form
-            class="contest-announcement-form"
-            @submit.prevent="handleSubmit"
-          >
-            <label class="ui-field contest-announcement-field">
-              <span class="ui-field__label">标题</span>
-              <span class="ui-control-wrap">
-                <input
-                  v-model="management.form.title"
-                  type="text"
-                  class="ui-control"
-                  placeholder="例如：开赛通知"
-                >
-              </span>
-              <span
-                v-if="management.errors.title"
-                class="contest-announcement-error"
-              >{{ management.errors.title }}</span>
-            </label>
-
-            <label class="ui-field contest-announcement-field">
-              <span class="ui-field__label">内容</span>
-              <span class="ui-control-wrap">
-                <textarea
-                  v-model="management.form.content"
-                  rows="6"
-                  class="ui-control contest-announcement-textarea"
-                  placeholder="输入面向参赛者展示的公告内容。"
-                />
-              </span>
-              <span
-                v-if="management.errors.content"
-                class="contest-announcement-error"
-              >{{ management.errors.content }}</span>
-            </label>
-
-            <div class="contest-announcement-actions">
-              <button
-                id="contest-announcement-submit"
-                type="submit"
-                class="ui-btn ui-btn--primary"
-                :disabled="management.publishing.value"
-              >
-                {{ management.publishing.value ? '发布中...' : '发布公告' }}
-              </button>
-            </div>
-          </form>
-        </section>
-
-        <section
-          v-else
-          class="contest-announcement-panel contest-announcement-panel--readonly"
-        >
-          <div class="contest-announcement-panel__overline">
-            Read Only
-          </div>
-          <h2>赛事已结束，公告区仅保留查看能力。</h2>
-        </section>
-
-        <section class="contest-announcement-panel">
-          <header class="contest-announcement-panel__head">
-            <div>
-              <div class="contest-announcement-panel__overline">
-                History
-              </div>
-              <h2>历史公告</h2>
-            </div>
-            <span>{{ management.announcements.value.length }} 条</span>
-          </header>
-
-          <AppLoading v-if="management.loading.value">
-            正在读取公告列表...
-          </AppLoading>
-
-          <div
-            v-else-if="management.loadError.value"
-            class="contest-announcement-inline-error"
-          >
-            {{ management.loadError.value }}
-          </div>
-
-          <AppEmpty
-            v-else-if="management.announcements.value.length === 0"
-            icon="Bell"
-            title="暂无公告"
-            description="当前竞赛还没有发布公告。"
-          />
-
-          <div
-            v-else
-            class="contest-announcement-list"
-          >
-            <article
-              v-for="announcement in management.announcements.value"
-              :key="announcement.id"
-              class="contest-announcement-item"
-            >
-              <div class="contest-announcement-item__head">
-                <div>
-                  <h3>{{ announcement.title }}</h3>
-                  <p>{{ formatTime(announcement.created_at) }}</p>
-                </div>
-                <button
-                  v-if="management.canManageAnnouncements.value"
-                  :id="`contest-announcement-delete-${announcement.id}`"
-                  type="button"
-                  class="ui-btn ui-btn--ghost ui-btn--sm"
-                  :disabled="management.deletingAnnouncementId.value === announcement.id"
-                  @click="handleDelete(announcement.id)"
-                >
-                  {{
-                    management.deletingAnnouncementId.value === announcement.id ? '删除中...' : '删除'
-                  }}
-                </button>
-              </div>
-              <p class="contest-announcement-item__content">
-                {{ announcement.content || '暂无正文。' }}
-              </p>
-            </article>
-          </div>
-        </section>
-      </template>
+      <ContestAnnouncementsWorkspacePanel
+        v-else-if="contest"
+        :can-manage-announcements="management.canManageAnnouncements.value"
+        :title="management.form.title"
+        :content="management.form.content"
+        :title-error="management.errors.title"
+        :content-error="management.errors.content"
+        :publishing="management.publishing.value"
+        :announcements="management.announcements.value"
+        :loading="management.loading.value"
+        :load-error="management.loadError.value"
+        :deleting-announcement-id="management.deletingAnnouncementId.value"
+        :format-time="formatTime"
+        @submit="void handleSubmit()"
+        @delete="void handleDelete($event)"
+        @update:title="management.form.title = $event"
+        @update:content="management.form.content = $event"
+      />
     </main>
   </div>
 </template>
@@ -275,76 +158,5 @@ onMounted(() => {
   display: grid;
   gap: var(--space-6);
   padding: var(--space-6);
-}
-
-.contest-announcement-panel__head,
-.contest-announcement-item__head,
-.contest-announcement-actions {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-}
-.contest-announcement-form,
-.contest-announcement-field,
-.contest-announcement-list {
-  display: grid;
-  gap: var(--space-3);
-}
-
-.contest-announcement-panel__overline,
-.contest-announcement-item__head p,
-.contest-announcement-inline-error,
-.contest-announcement-error {
-  color: var(--color-text-muted);
-  font-size: var(--font-size-0-875);
-}
-
-.contest-announcement-panel h2,
-.contest-announcement-item h3,
-.contest-announcement-item__content {
-  margin: 0;
-}
-
-.contest-announcement-panel {
-  display: grid;
-  gap: var(--space-4);
-  border-radius: 1.25rem;
-  border: 1px solid color-mix(in srgb, var(--journal-border) 84%, transparent);
-  background: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
-  padding: var(--space-5);
-}
-
-.contest-announcement-panel--readonly,
-.contest-announcement-inline-error {
-  white-space: pre-wrap;
-}
-
-.contest-announcement-textarea {
-  min-height: 9rem;
-  resize: vertical;
-}
-
-.contest-announcement-item {
-  display: grid;
-  gap: var(--space-3);
-  border-radius: 1rem;
-  border: 1px solid color-mix(in srgb, var(--journal-border) 84%, transparent);
-  background: color-mix(in srgb, var(--color-bg-surface) 84%, var(--color-bg-base));
-  padding: var(--space-4);
-}
-
-.contest-announcement-item__head {
-  align-items: flex-start;
-}
-
-.contest-announcement-item__head > div {
-  display: grid;
-  gap: var(--space-1);
-}
-
-.contest-announcement-item__content {
-  white-space: pre-wrap;
-  line-height: 1.65;
 }
 </style>

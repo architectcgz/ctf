@@ -4,6 +4,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import ContestOperationsHub from '../ContestOperationsHub.vue'
 import contestOperationsHubSource from '../ContestOperationsHub.vue?raw'
 import contestOperationsHubHeroPanelSource from '@/components/platform/contest/ContestOperationsHubHeroPanel.vue?raw'
+import contestOperationsHubWorkspacePanelSource from '@/components/platform/contest/ContestOperationsHubWorkspacePanel.vue?raw'
 
 const pushMock = vi.fn()
 const routeState = vi.hoisted(() => ({
@@ -127,7 +128,8 @@ describe('ContestOperationsHub', () => {
     expect(contestOperationsHubHeroPanelSource).toContain(
       'class="progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface contest-ops-summary"'
     )
-    expect(contestOperationsHubSource).toContain('contest-ops-directory')
+    expect(contestOperationsHubSource).toContain('<ContestOperationsHubWorkspacePanel')
+    expect(contestOperationsHubWorkspacePanelSource).toContain('contest-ops-directory')
     expect(contestOperationsHubSource).not.toContain('PlatformContestOpsTraffic')
     expect(contestOperationsHubSource).not.toContain('PlatformContestOpsProjector')
     expect(contestOperationsHubSource).not.toContain('PlatformContestOpsScoreboard')

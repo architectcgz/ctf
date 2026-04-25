@@ -7,6 +7,7 @@ import auditLogSource from '../AuditLog.vue?raw'
 import auditLogDirectoryPanelSource from '@/components/platform/audit/AuditLogDirectoryPanel.vue?raw'
 import auditLogHeroPanelSource from '@/components/platform/audit/AuditLogHeroPanel.vue?raw'
 import awdReviewIndexSource from '../AWDReviewIndex.vue?raw'
+import awdReviewHeroPanelSource from '@/components/platform/awd-review/AwdReviewHeroPanel.vue?raw'
 import awdReviewDirectoryPanelSource from '@/components/platform/awd-review/AwdReviewDirectoryPanel.vue?raw'
 import challengeManageSource from '../ChallengeManage.vue?raw'
 import challengeManageDirectoryPanelSource from '@/components/platform/challenge/ChallengeManageDirectoryPanel.vue?raw'
@@ -14,16 +15,26 @@ import challengeManageHeroPanelSource from '@/components/platform/challenge/Chal
 import cheatDetectionHeroPanelSource from '@/components/platform/cheat/CheatDetectionHeroPanel.vue?raw'
 import classManageSource from '../ClassManage.vue?raw'
 import classManageHeroPanelSource from '@/components/platform/class/ClassManageHeroPanel.vue?raw'
+import classManageWorkspacePanelSource from '@/components/platform/class/ClassManageWorkspacePanel.vue?raw'
 import instanceManageSource from '../InstanceManage.vue?raw'
 import instanceManageHeroPanelSource from '@/components/platform/instance/InstanceManageHeroPanel.vue?raw'
+import instanceManageWorkspacePanelSource from '@/components/platform/instance/InstanceManageWorkspacePanel.vue?raw'
 import challengeDetailSource from '../ChallengeDetail.vue?raw'
+import adminChallengeProfilePanelSource from '@/components/platform/challenge/AdminChallengeProfilePanel.vue?raw'
 import adminChallengeTopbarPanelSource from '@/components/platform/challenge/AdminChallengeTopbarPanel.vue?raw'
+import adminChallengeWorkspaceTabsSource from '@/components/platform/challenge/AdminChallengeWorkspaceTabs.vue?raw'
 import contestEditSource from '../ContestEdit.vue?raw'
+import contestEditTopbarPanelSource from '@/components/platform/contest/ContestEditTopbarPanel.vue?raw'
+import contestEditWorkspacePanelSource from '@/components/platform/contest/ContestEditWorkspacePanel.vue?raw'
 import imageManageSource from '../ImageManage.vue?raw'
 import imageManageHeroPanelSource from '@/components/platform/images/ImageManageHeroPanel.vue?raw'
 import studentManageSource from '../StudentManage.vue?raw'
 import studentManageHeroPanelSource from '@/components/platform/student/StudentManageHeroPanel.vue?raw'
+import studentManageWorkspacePanelSource from '@/components/platform/student/StudentManageWorkspacePanel.vue?raw'
 import cheatDetectionSource from '../CheatDetection.vue?raw'
+import cheatDetectionReviewPanelsSource from '@/components/platform/cheat/CheatDetectionReviewPanels.vue?raw'
+import cheatDetectionSummaryPanelSource from '@/components/platform/cheat/CheatDetectionSummaryPanel.vue?raw'
+import cheatDetectionWorkspacePanelSource from '@/components/platform/cheat/CheatDetectionWorkspacePanel.vue?raw'
 import awdRoundInspectorSource from '@/components/platform/contest/AWDRoundInspector.vue?raw'
 import awdTrafficPanelSource from '@/components/platform/contest/AWDTrafficPanel.vue?raw'
 import awdChallengeConfigPanelSource from '@/components/platform/contest/AWDChallengeConfigPanel.vue?raw'
@@ -53,13 +64,45 @@ const challengeManageCombinedSource = [
   challengeManageDirectoryPanelSource,
   challengeManageHeroPanelSource,
 ].join('\n')
-const classManageCombinedSource = [classManageSource, classManageHeroPanelSource].join('\n')
-const challengeDetailCombinedSource = [challengeDetailSource, adminChallengeTopbarPanelSource].join('\n')
-const cheatDetectionCombinedSource = [cheatDetectionSource, cheatDetectionHeroPanelSource].join('\n')
+const classManageCombinedSource = [
+  classManageSource,
+  classManageHeroPanelSource,
+  classManageWorkspacePanelSource,
+].join('\n')
+const challengeDetailCombinedSource = [
+  challengeDetailSource,
+  adminChallengeTopbarPanelSource,
+  adminChallengeProfilePanelSource,
+  adminChallengeWorkspaceTabsSource,
+].join('\n')
+const cheatDetectionCombinedSource = [
+  cheatDetectionSource,
+  cheatDetectionWorkspacePanelSource,
+  cheatDetectionHeroPanelSource,
+  cheatDetectionReviewPanelsSource,
+  cheatDetectionSummaryPanelSource,
+].join('\n')
 const imageManageCombinedSource = [imageManageSource, imageManageHeroPanelSource].join('\n')
-const instanceManageCombinedSource = [instanceManageSource, instanceManageHeroPanelSource].join('\n')
-const studentManageCombinedSource = [studentManageSource, studentManageHeroPanelSource].join('\n')
-const awdReviewCombinedSource = [awdReviewIndexSource, awdReviewDirectoryPanelSource].join('\n')
+const instanceManageCombinedSource = [
+  instanceManageSource,
+  instanceManageHeroPanelSource,
+  instanceManageWorkspacePanelSource,
+].join('\n')
+const studentManageCombinedSource = [
+  studentManageSource,
+  studentManageHeroPanelSource,
+  studentManageWorkspacePanelSource,
+].join('\n')
+const awdReviewCombinedSource = [
+  awdReviewIndexSource,
+  awdReviewHeroPanelSource,
+  awdReviewDirectoryPanelSource,
+].join('\n')
+const contestEditCombinedSource = [
+  contestEditSource,
+  contestEditTopbarPanelSource,
+  contestEditWorkspacePanelSource,
+].join('\n')
 
 describe('admin management surface alignment', () => {
   it('audit log should soften table and empty-state borders on dark surfaces', () => {
@@ -216,11 +259,11 @@ describe('admin management surface alignment', () => {
   })
 
   it('contest edit page should use the admin workspace shell and a dedicated back action', () => {
-    expect(contestEditSource).toContain('class="workspace-topbar"')
-    expect(contestEditSource).toContain('<h1 class="workspace-page-title">编辑竞赛</h1>')
-    expect(contestEditSource).toContain('返回竞赛目录')
-    expect(contestEditSource).toContain('Contest Editor')
-    expect(contestEditSource).toContain('class="workspace-directory-section contest-edit-section"')
+    expect(contestEditCombinedSource).toContain('class="workspace-topbar"')
+    expect(contestEditCombinedSource).toContain('<h1 class="workspace-page-title">编辑竞赛</h1>')
+    expect(contestEditCombinedSource).toContain('返回竞赛目录')
+    expect(contestEditCombinedSource).toContain('Contest Editor')
+    expect(contestEditCombinedSource).toContain('class="workspace-directory-section contest-edit-section"')
   })
 
   it('awd round inspector traffic filters should stay flattened into the table section instead of using a split intro bar', () => {
@@ -285,19 +328,25 @@ describe('admin management surface alignment', () => {
   })
 
   it('challenge detail hint section should use list-heading for the hint directory header', () => {
-    expect(challengeDetailCombinedSource).toContain(
-      '<div class="workspace-overline">Challenge Profile</div>'
+    expect(adminChallengeProfilePanelSource).toMatch(
+      /<div class="workspace-overline">\s*Challenge Profile\s*<\/div>/
     )
-    expect(challengeDetailSource).toContain(
+    expect(adminChallengeProfilePanelSource).toContain(
       'class="challenge-overview-summary progress-strip metric-panel-grid metric-panel-default-surface"'
     )
-    expect(challengeDetailSource).toContain('<h2 class="list-heading__title">基础信息</h2>')
-    expect(challengeDetailSource).not.toContain(
+    expect(adminChallengeProfilePanelSource).toMatch(
+      /<h2 class="list-heading__title">\s*基础信息\s*<\/h2>/
+    )
+    expect(adminChallengeProfilePanelSource).not.toContain(
       '<div class="journal-note-label">Question Ops</div>'
     )
-    expect(challengeDetailSource).toContain('<div class="journal-note-label">Hints</div>')
-    expect(challengeDetailSource).toContain('<h2 class="list-heading__title">提示管理</h2>')
-    expect(challengeDetailSource).not.toContain('workspace-tab-heading__title">提示管理</h2>')
+    expect(adminChallengeProfilePanelSource).toMatch(
+      /<div class="journal-note-label">\s*Hints\s*<\/div>/
+    )
+    expect(adminChallengeProfilePanelSource).toMatch(
+      /<h2 class="list-heading__title">\s*提示管理\s*<\/h2>/
+    )
+    expect(adminChallengeProfilePanelSource).not.toContain('workspace-tab-heading__title">提示管理</h2>')
   })
 
   it('cheat detection sections should use list-heading for directory headers', () => {
@@ -392,32 +441,32 @@ describe('admin management surface alignment', () => {
       'class="admin-pagination workspace-directory-pagination'
     )
 
-    expect(classManageSource).toContain('class="workspace-directory-section admin-class-manage-directory"')
-    expect(classManageSource).toContain('class="workspace-directory-list admin-class-manage-table"')
-    expect(classManageSource).toContain('<WorkspaceDirectoryPagination')
-    expect(classManageSource).toMatch(
+    expect(classManageCombinedSource).toContain('class="workspace-directory-section admin-class-manage-directory"')
+    expect(classManageCombinedSource).toContain('class="workspace-directory-list admin-class-manage-table"')
+    expect(classManageCombinedSource).toContain('<WorkspaceDirectoryPagination')
+    expect(classManageCombinedSource).toMatch(
       /\.admin-class-manage-shell__content\s*\{[\s\S]*gap:\s*var\(--workspace-directory-page-block-gap\);/s
     )
 
-    expect(studentManageSource).toContain(
+    expect(studentManageCombinedSource).toContain(
       'class="workspace-directory-section admin-student-manage-directory"'
     )
-    expect(studentManageSource).toContain(
+    expect(studentManageCombinedSource).toContain(
       'class="workspace-directory-list admin-student-manage-table"'
     )
-    expect(studentManageSource).toContain('<WorkspaceDirectoryPagination')
-    expect(studentManageSource).toMatch(
+    expect(studentManageCombinedSource).toContain('<WorkspaceDirectoryPagination')
+    expect(studentManageCombinedSource).toMatch(
       /\.admin-student-manage-shell__content\s*\{[\s\S]*gap:\s*var\(--workspace-directory-page-block-gap\);/s
     )
 
-    expect(instanceManageSource).toContain(
+    expect(instanceManageCombinedSource).toContain(
       'class="workspace-directory-section admin-instance-manage-directory"'
     )
-    expect(instanceManageSource).toContain(
+    expect(instanceManageCombinedSource).toContain(
       'class="workspace-directory-list admin-instance-manage-table"'
     )
-    expect(instanceManageSource).toContain('<WorkspaceDirectoryPagination')
-    expect(instanceManageSource).toMatch(
+    expect(instanceManageCombinedSource).toContain('<WorkspaceDirectoryPagination')
+    expect(instanceManageCombinedSource).toMatch(
       /\.admin-instance-manage-shell__content\s*\{[\s\S]*gap:\s*var\(--workspace-directory-page-block-gap\);/s
     )
 
@@ -454,13 +503,13 @@ describe('admin management surface alignment', () => {
     expect(challengeManageSource).not.toMatch(
       /\.challenge-manage-directory :deep\(\.workspace-directory-toolbar\)\s*\{[\s\S]*margin-bottom:/s
     )
-    expect(classManageSource).not.toMatch(
+    expect(classManageCombinedSource).not.toMatch(
       /\.admin-class-manage-directory :deep\(\.workspace-directory-toolbar\)\s*\{[\s\S]*margin-bottom:\s*0;/s
     )
-    expect(studentManageSource).not.toMatch(
+    expect(studentManageCombinedSource).not.toMatch(
       /\.admin-student-manage-directory :deep\(\.workspace-directory-toolbar\)\s*\{[\s\S]*margin-bottom:\s*0;/s
     )
-    expect(instanceManageSource).not.toMatch(
+    expect(instanceManageCombinedSource).not.toMatch(
       /\.admin-instance-manage-directory :deep\(\.workspace-directory-toolbar\)\s*\{[\s\S]*margin-bottom:\s*0;/s
     )
   })
@@ -507,7 +556,7 @@ describe('admin management surface alignment', () => {
     expect(instanceManageCombinedSource).toContain(
       'class="admin-summary-grid admin-instance-manage-shell__summary'
     )
-    expect(awdReviewIndexSource).toContain('class="admin-summary-grid admin-awd-review-shell__summary')
+    expect(awdReviewCombinedSource).toContain('class="admin-summary-grid admin-awd-review-shell__summary')
   })
 
   it('admin summary cards should explicitly adopt metric-panel utility classes', () => {
@@ -635,7 +684,7 @@ describe('admin management surface alignment', () => {
     expect(instanceManageCombinedSource).toContain(
       'class="admin-summary-grid admin-instance-manage-shell__summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
     )
-    expect(awdReviewIndexSource).toContain(
+    expect(awdReviewCombinedSource).toContain(
       'class="admin-summary-grid admin-awd-review-shell__summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
     )
   })

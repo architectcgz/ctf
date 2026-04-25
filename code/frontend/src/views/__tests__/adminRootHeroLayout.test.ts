@@ -5,7 +5,7 @@ import challengeDetailSource from '../platform/ChallengeDetail.vue?raw'
 import challengeManageSource from '../platform/ChallengeManage.vue?raw'
 import challengeImportManageSource from '../platform/ChallengeImportManage.vue?raw'
 import challengePackageFormatSource from '../platform/ChallengePackageFormat.vue?raw'
-import cheatDetectionSource from '../platform/CheatDetection.vue?raw'
+import cheatDetectionWorkspaceSource from '../../components/platform/cheat/CheatDetectionWorkspacePanel.vue?raw'
 import imageManageSource from '../platform/ImageManage.vue?raw'
 import adminDashboardSource from '../../components/platform/dashboard/PlatformOverviewPage.vue?raw'
 import contestOrchestrationSource from '../../components/platform/contest/ContestOrchestrationPage.vue?raw'
@@ -19,7 +19,7 @@ describe('admin full-bleed hero roots', () => {
       challengeManageSource,
       challengeImportManageSource,
       challengePackageFormatSource,
-      cheatDetectionSource,
+      cheatDetectionWorkspaceSource,
       imageManageSource,
       adminDashboardSource,
       contestOrchestrationSource,
@@ -29,7 +29,10 @@ describe('admin full-bleed hero roots', () => {
     for (const source of sources) {
       expect(source).not.toMatch(/<div class="journal-shell/)
       const hasSectionHeroRoot =
-        /<section[\s\S]*?class="[^"]*journal-shell[^"]*journal-hero[^"]*min-h-full[^"]*flex-1[^"]*"/s.test(
+        /<section[\s\S]*?class="[^"]*workspace-shell[^"]*journal-shell[^"]*journal-hero[^"]*"/s.test(
+          source
+        ) ||
+        /<section[\s\S]*?class="[^"]*journal-shell[^"]*journal-hero[^"]*workspace-shell[^"]*"/s.test(
           source
         )
       const hasWorkspaceShellRoot = /<div[\s\S]*?class="[^"]*workspace-shell[^"]*"/s.test(source)

@@ -1103,6 +1103,455 @@
   - `npm run test:run -- src/views/platform/__tests__/ChallengeImportManage.test.ts src/views/platform/__tests__/challengeImportManagePanelExtraction.test.ts src/views/platform/__tests__/journalPlatformShellStyles.test.ts`
   - `npm run typecheck`
 
+## 第四十四轮修复进展
+
+- 已完成：
+  - `P2-5` `ChallengeImportManage.vue` 的最近上传结果工作区已抽到独立组件 `ChallengeImportUploadResultsPanel.vue`，路由页继续只持有上传回执数据和时间格式化 owner。
+  - 新增 `challengeImportUploadResultsExtraction.test.ts`，补对 `ChallengeImportUploadResultsPanel` 的源码边界断言，避免后续再把上传回执卡片回塞父页。
+  - `ChallengeImportManage.test.ts` 已继续覆盖上传后回执显示与预览跳转，`journalPlatformShellStyles.test.ts` 基线保持不变。
+- 本轮涉及文件：
+  - `code/frontend/src/components/platform/challenge/ChallengeImportUploadResultsPanel.vue`
+  - `code/frontend/src/views/platform/ChallengeImportManage.vue`
+  - `code/frontend/src/views/platform/__tests__/ChallengeImportManage.test.ts`
+  - `code/frontend/src/views/platform/__tests__/challengeImportUploadResultsExtraction.test.ts`
+  - `code/frontend/src/views/platform/__tests__/journalPlatformShellStyles.test.ts`
+
+## 第四十四轮验证
+
+- 已执行：
+  - `npm run test:run -- src/views/platform/__tests__/ChallengeImportManage.test.ts src/views/platform/__tests__/challengeImportManagePanelExtraction.test.ts src/views/platform/__tests__/challengeImportUploadResultsExtraction.test.ts src/views/platform/__tests__/journalPlatformShellStyles.test.ts`
+  - `npm run typecheck`
+
+## 第四十五轮修复进展
+
+- 已完成：
+  - `P2-5` `ChallengeImportManage.vue` 的待确认导入队列工作区已抽到独立组件 `ChallengeImportQueuePanel.vue`，路由页继续只持有队列加载、标签映射和预览跳转 owner。
+  - 新增 `challengeImportQueueExtraction.test.ts`，补对 `ChallengeImportQueuePanel` 的源码边界断言，并把“继续查看预览”按钮样式 ownership 一并移入子组件，修复 hero 抽离后按钮类名失去样式的问题。
+  - `ChallengeImportManage.vue` 本体行数已从第四十三轮的 `478` 行降到 `210` 行，页面本体现在主要只剩上传入口、上传结果与队列组件装配。
+- 本轮涉及文件：
+  - `code/frontend/src/components/platform/challenge/ChallengeImportQueuePanel.vue`
+  - `code/frontend/src/views/platform/ChallengeImportManage.vue`
+  - `code/frontend/src/views/platform/__tests__/challengeImportQueueExtraction.test.ts`
+  - `code/frontend/src/views/platform/__tests__/ChallengeImportManage.test.ts`
+  - `code/frontend/src/components.d.ts`
+
+## 第四十五轮验证
+
+- 已执行：
+  - `npm run test:run -- src/views/platform/__tests__/ChallengeImportManage.test.ts src/views/platform/__tests__/challengeImportManagePanelExtraction.test.ts src/views/platform/__tests__/challengeImportUploadResultsExtraction.test.ts src/views/platform/__tests__/challengeImportQueueExtraction.test.ts src/views/platform/__tests__/journalPlatformShellStyles.test.ts`
+  - `npm run typecheck`
+
+## 第四十六轮修复进展
+
+- 已完成：
+  - `P2-5` `CheatDetection.vue` 的三段风险目录工作区已继续抽到独立组件 `CheatDetectionReviewPanels.vue`，路由页继续只持有风控数据加载、审计跳转、空错态与兜底空态 owner。
+  - 新增 `cheatDetectionReviewPanelsExtraction.test.ts`，补对 `CheatDetectionReviewPanels` 的源码边界断言，避免后续再把高频提交、共享 IP 和审计联动模板塞回父页。
+  - `cheatDetectionSurfaceAlignment.test.ts` 已同步切到组合源码检查，新组件接手目录行、badge 和空态边框样式后，现有深色 surface 护栏保持不变。
+  - `CheatDetection.vue` 本体行数已从第三十七轮的 `409` 行降到 `172` 行，页面本体现在主要只剩加载、错误态和跳转装配。
+- 本轮涉及文件：
+  - `code/frontend/src/components/platform/cheat/CheatDetectionReviewPanels.vue`
+  - `code/frontend/src/views/platform/CheatDetection.vue`
+  - `code/frontend/src/views/platform/__tests__/cheatDetectionReviewPanelsExtraction.test.ts`
+  - `code/frontend/src/views/platform/__tests__/cheatDetectionSurfaceAlignment.test.ts`
+  - `code/frontend/src/views/platform/__tests__/CheatDetection.test.ts`
+
+## 第四十六轮验证
+
+- 已执行：
+  - `npm run test:run -- src/views/platform/__tests__/cheatDetectionReviewPanelsExtraction.test.ts src/views/platform/__tests__/CheatDetection.test.ts src/views/platform/__tests__/cheatDetectionPanelExtraction.test.ts src/views/platform/__tests__/cheatDetectionSurfaceAlignment.test.ts`
+  - `npm run typecheck`
+
+## 第四十七轮修复进展
+
+- 已完成：
+  - `P2-5` `ContestAnnouncements.vue` 的公告发布区、只读提示和历史公告列表已抽到独立组件 `ContestAnnouncementsWorkspacePanel.vue`，路由页继续只持有竞赛加载、公告 management owner 和返回工作台跳转。
+  - 新增 `contestAnnouncementsWorkspaceExtraction.test.ts`，补对 `ContestAnnouncementsWorkspacePanel` 的源码边界断言，避免后续再把发布表单和历史公告模板塞回父页。
+  - `ContestAnnouncements.test.ts` 保持行为验证不变，发布入口、只读态和历史列表都继续走现有断言。
+  - `ContestAnnouncements.vue` 本体行数已从第四十二轮的 `350` 行降到 `162` 行，页面本体现在主要只剩加载失败态、顶栏和工作区装配。
+- 本轮涉及文件：
+  - `code/frontend/src/components/platform/contest/ContestAnnouncementsWorkspacePanel.vue`
+  - `code/frontend/src/views/platform/ContestAnnouncements.vue`
+  - `code/frontend/src/views/platform/__tests__/contestAnnouncementsWorkspaceExtraction.test.ts`
+  - `code/frontend/src/views/platform/__tests__/ContestAnnouncements.test.ts`
+  - `code/frontend/src/components.d.ts`
+
+## 第四十七轮验证
+
+- 已执行：
+  - `npm run test:run -- src/views/platform/__tests__/contestAnnouncementsWorkspaceExtraction.test.ts src/views/platform/__tests__/contestAnnouncementsPanelExtraction.test.ts src/views/platform/__tests__/ContestAnnouncements.test.ts`
+  - `npm run typecheck`
+
+## 第四十八轮修复进展
+
+- 已完成：
+  - `P2-5` `ContestEdit.vue` 的顶部工作台 header 已抽到独立组件 `ContestEditTopbarPanel.vue`，路由页继续只持有竞赛详情加载、阶段切换、AWD 工作台 owner 和保存/跳转动作。
+  - 新增 `contestEditTopbarExtraction.test.ts`，补对 `ContestEditTopbarPanel` 的源码边界断言，避免后续再把返回入口、公告入口和保存按钮模板塞回父页。
+  - `ContestEdit.test.ts` 保持现有行为验证不变，抽取后公告入口、顶部保存按钮和其余 AWD 工作台交互基线都保持不变。
+  - `ContestEdit.vue` 本体行数已从 `903` 行降到 `732` 行，页面本体进一步收敛到 stage 内容装配与 AWD 相关 owner。
+- 本轮涉及文件：
+  - `code/frontend/src/components/platform/contest/ContestEditTopbarPanel.vue`
+  - `code/frontend/src/views/platform/ContestEdit.vue`
+  - `code/frontend/src/views/platform/__tests__/contestEditTopbarExtraction.test.ts`
+  - `code/frontend/src/views/platform/__tests__/ContestEdit.test.ts`
+  - `code/frontend/src/components.d.ts`
+
+## 第四十八轮验证
+
+- 已执行：
+  - `npm run test:run -- src/views/platform/__tests__/contestEditTopbarExtraction.test.ts src/views/platform/__tests__/ContestEdit.test.ts`
+  - `npm run typecheck`
+
+## 第四十九轮修复进展
+
+- 已完成：
+  - `P2-5` `platform/ChallengeDetail.vue` 的 tab rail、loading 态和题目管理/题解两个 workspace 壳层已抽到独立组件 `AdminChallengeWorkspaceTabs.vue`，路由页继续只持有 query tab owner、详情加载、附件下载和 Flag 配置保存。
+  - 新增 `challengeDetailWorkspaceExtraction.test.ts`，补对 `AdminChallengeWorkspaceTabs` 的源码边界断言，避免后续再把 tab rail 与题解工作区模板塞回父页。
+  - `challengeDetailPanelExtraction.test.ts` 已同步切到新的 workspace 组件源码边界，`ChallengeDetail.test.ts` 的 tab 切换、题解页 query、附件下载与共享实例 Flag 护栏行为保持不变。
+  - `ChallengeDetail.vue` 本体行数已从 `372` 行降到 `292` 行，页面本体进一步收敛到顶栏、数据 owner 与路由同步。
+- 本轮涉及文件：
+  - `code/frontend/src/components/platform/challenge/AdminChallengeWorkspaceTabs.vue`
+  - `code/frontend/src/views/platform/ChallengeDetail.vue`
+  - `code/frontend/src/views/platform/__tests__/challengeDetailWorkspaceExtraction.test.ts`
+  - `code/frontend/src/views/platform/__tests__/challengeDetailPanelExtraction.test.ts`
+  - `code/frontend/src/views/platform/__tests__/ChallengeDetail.test.ts`
+  - `code/frontend/src/components.d.ts`
+
+## 第四十九轮验证
+
+- 已执行：
+  - `npm run test:run -- src/views/platform/__tests__/challengeDetailWorkspaceExtraction.test.ts src/views/platform/__tests__/challengeDetailPanelExtraction.test.ts src/views/platform/__tests__/ChallengeDetail.test.ts`
+  - `npm run typecheck`
+
+## 第五十轮修复进展
+
+- 已完成：
+  - `P2-5` `ChallengePackageFormat.vue` 的 hero 文案、目录结构示例和 `challenge.yml` 示例已抽到独立组件 `ChallengePackageFormatGuidePanel.vue`，路由页继续只持有返回导入页导航和页面壳。
+  - 新增 `challengePackageFormatGuideExtraction.test.ts`，补对 `ChallengePackageFormatGuidePanel` 的源码边界断言，避免后续再把整块示例文档模板塞回父页。
+  - `ChallengePackageFormat.test.ts` 已同步切到新的 guide 组件源码边界，现有文档内容展示与 overline 护栏保持不变。
+  - `ChallengePackageFormat.vue` 本体行数已从 `220` 行降到 `61` 行，页面本体现在主要只剩导航与展示组件装配。
+- 本轮涉及文件：
+  - `code/frontend/src/components/platform/challenge/ChallengePackageFormatGuidePanel.vue`
+  - `code/frontend/src/views/platform/ChallengePackageFormat.vue`
+  - `code/frontend/src/views/platform/__tests__/challengePackageFormatGuideExtraction.test.ts`
+  - `code/frontend/src/views/platform/__tests__/ChallengePackageFormat.test.ts`
+  - `code/frontend/src/components.d.ts`
+
+## 第五十轮验证
+
+- 已执行：
+  - `npm run test:run -- src/views/platform/__tests__/challengePackageFormatGuideExtraction.test.ts src/views/platform/__tests__/ChallengePackageFormat.test.ts`
+  - `npm run typecheck`
+
+## 第五十一轮修复进展
+
+- 已完成：
+  - `P2-5` `ContestManage.vue` 的赛事结果导出、报表轮询和下载链路已抽到独立 composable `useContestExportFlow.ts`，页面继续只持有赛事目录加载、创建/编辑弹窗、公告抽屉和工作区装配。
+  - 新增 `contestManageExportFlowExtraction.test.ts`，补对 `useContestExportFlow` 抽取边界的源码断言，避免后续再把导出状态机和报表下载逻辑塞回父页。
+  - `ContestManage.test.ts` 保持现有行为验证不变，导出失败不抛全局错误页、竞赛目录筛选和 AWD 启动 gate 相关交互基线都保持不变。
+  - `ContestManage.vue` 本体行数已从 `218` 行降到 `137` 行，页面本体进一步收敛到目录 owner、弹窗开关和子组件事件编排。
+- 本轮涉及文件：
+  - `code/frontend/src/composables/useContestExportFlow.ts`
+  - `code/frontend/src/views/platform/ContestManage.vue`
+  - `code/frontend/src/views/platform/__tests__/contestManageExportFlowExtraction.test.ts`
+  - `code/frontend/src/views/platform/__tests__/ContestManage.test.ts`
+
+## 第五十一轮验证
+
+- 已执行：
+  - `npm run test:run -- src/views/platform/__tests__/contestManageExportFlowExtraction.test.ts src/views/platform/__tests__/ContestManage.test.ts`
+  - `npm run typecheck`
+
+## 第五十二轮修复进展
+
+- 已完成：
+  - `P2-5` `ImageManage.vue` 的页面 owner 状态已抽到独立 composable `useImageManagePage.ts`，把镜像筛选、排序、轮询刷新、创建/删除和格式化辅助从路由页移出，页面继续只持有工作区、详情弹窗和创建弹窗装配。
+  - 新增 `imageManagePageStateExtraction.test.ts`，补对 `useImageManagePage` 抽取边界的源码断言，避免后续再把页面级状态机、轮询和创建删除逻辑塞回父页。
+  - `ImageManage.test.ts`、`imageManageWorkspaceExtraction.test.ts` 和 `imageManageModalExtraction.test.ts` 保持行为验证不变，镜像列表筛选排序、自动轮询、创建删除与 modal 装配基线都保持不变。
+  - `ImageManage.vue` 本体行数已从 `396` 行降到 `145` 行，页面本体进一步收敛到布局、组件绑定和样式壳层。
+- 本轮涉及文件：
+  - `code/frontend/src/composables/useImageManagePage.ts`
+  - `code/frontend/src/views/platform/ImageManage.vue`
+  - `code/frontend/src/views/platform/__tests__/imageManagePageStateExtraction.test.ts`
+  - `code/frontend/src/views/platform/__tests__/ImageManage.test.ts`
+  - `code/frontend/src/views/platform/__tests__/imageManageWorkspaceExtraction.test.ts`
+  - `code/frontend/src/views/platform/__tests__/imageManageModalExtraction.test.ts`
+
+## 第五十二轮验证
+
+- 已执行：
+  - `npm run test:run -- src/views/platform/__tests__/imageManagePageStateExtraction.test.ts src/views/platform/__tests__/ImageManage.test.ts src/views/platform/__tests__/imageManageWorkspaceExtraction.test.ts src/views/platform/__tests__/imageManageModalExtraction.test.ts`
+  - `npm run typecheck`
+
+## 第五十三轮修复进展
+
+- 已完成：
+  - `P2-5` `AuditLog.vue` 的页面 owner 状态已抽到独立 composable `useAuditLogPage.ts`，把路由 query 同步、筛选节流、请求代次控制、排序与执行人详情弹窗状态从路由页移出，页面继续只持有工作区与 modal 装配。
+  - 新增 `auditLogPageStateExtraction.test.ts`，补对 `useAuditLogPage` 抽取边界的源码断言，避免后续再把页面级状态机和 query 同步逻辑塞回父页。
+  - `AuditLog.test.ts` 与 `auditLogWorkspaceExtraction.test.ts` 保持行为验证不变，预置 query 加载、筛选同步、执行人详情弹窗与目录工作区基线都保持不变。
+  - `AuditLog.vue` 本体行数已从 `323` 行降到 `89` 行，页面本体进一步收敛到布局、组件绑定和样式壳层。
+- 本轮涉及文件：
+  - `code/frontend/src/composables/useAuditLogPage.ts`
+  - `code/frontend/src/views/platform/AuditLog.vue`
+  - `code/frontend/src/views/platform/__tests__/auditLogPageStateExtraction.test.ts`
+  - `code/frontend/src/views/platform/__tests__/AuditLog.test.ts`
+  - `code/frontend/src/views/platform/__tests__/auditLogWorkspaceExtraction.test.ts`
+
+## 第五十三轮验证
+
+- 已执行：
+  - `npm run test:run -- src/views/platform/__tests__/auditLogPageStateExtraction.test.ts src/views/platform/__tests__/AuditLog.test.ts src/views/platform/__tests__/auditLogWorkspaceExtraction.test.ts`
+  - `npm run typecheck`
+
+## 第五十四轮修复进展
+
+- 已完成：
+  - `P2-5` `ChallengeManage.vue` 的页面 owner 状态已抽到独立 composable `useChallengeManagePage.ts`，把题目排序、空态/错态文案、筛选状态和路由跳转交互从路由页移出，页面继续只持有 hero 与目录组件装配。
+  - 新增 `challengeManagePageStateExtraction.test.ts`，补对 `useChallengeManagePage` 抽取边界的源码断言，避免后续再把页面级状态与交互 owner 塞回父页。
+  - `ChallengeManage.test.ts` 与 `challengeManageDirectoryExtraction.test.ts` 保持行为验证不变，排序切换、错误态、action menu、目录工具栏与 hero 工作区基线都保持不变。
+  - `ChallengeManage.vue` 本体行数已从 `220` 行降到 `115` 行，页面本体进一步收敛到布局、组件绑定和样式壳层。
+- 本轮涉及文件：
+  - `code/frontend/src/composables/useChallengeManagePage.ts`
+  - `code/frontend/src/views/platform/ChallengeManage.vue`
+  - `code/frontend/src/views/platform/__tests__/challengeManagePageStateExtraction.test.ts`
+  - `code/frontend/src/views/platform/__tests__/ChallengeManage.test.ts`
+  - `code/frontend/src/views/platform/__tests__/challengeManageDirectoryExtraction.test.ts`
+
+## 第五十四轮验证
+
+- 已执行：
+  - `npm run test:run -- src/views/platform/__tests__/challengeManagePageStateExtraction.test.ts src/views/platform/__tests__/ChallengeManage.test.ts src/views/platform/__tests__/challengeManageDirectoryExtraction.test.ts`
+  - `npm run typecheck`
+
+## 第五十五轮修复进展
+
+- 已完成：
+  - `P2-5` 相关的管理端 surface 回归基线已补齐，`platformManagementSurfaceAlignment.test.ts` 不再继续盯着旧页面文件，而是跟随当前抽取边界校验 `ContestEditTopbarPanel`、`AdminChallengeProfilePanel`、`AdminChallengeWorkspaceTabs` 与 `CheatDetectionReviewPanels`。
+  - `ChallengeDetail` 相关断言已从脆弱的单行源码匹配改成对当前组件源码的稳定匹配，避免仅因模板换行或抽取组件导致假失败。
+  - 本轮只修验证护栏，不改业务实现；目标是让现有的页面减重结果能继续被这条回归测试正确保护。
+- 本轮涉及文件：
+  - `code/frontend/src/views/platform/__tests__/platformManagementSurfaceAlignment.test.ts`
+
+## 第五十五轮验证
+
+- 已执行：
+  - `npm run test:run -- src/views/platform/__tests__/platformManagementSurfaceAlignment.test.ts`
+  - `npm run typecheck`
+
+## 第五十六轮修复进展
+
+- 已完成：
+  - `P2-5` `ContestEdit.vue` 的 stage 工作区模板已抽到独立组件 `ContestEditWorkspacePanel.vue`，把 `basics / pool / awd-config / preflight / operations` 五段工作区渲染和对应滚动/过渡样式从路由页移出，页面继续只持有竞赛详情加载、AWD 数据 owner、保存流程与对话框状态。
+  - 新增 `contestEditWorkspaceExtraction.test.ts`，补对 `ContestEditWorkspacePanel` 抽取边界的源码断言，避免后续再把 stage 工作区模板回塞父页。
+  - `contestUiPrimitiveAdoptionPhase2.test.ts`、`platformManagementSurfaceAlignment.test.ts` 已同步切到新的工作区组件源码边界，抽取后共享按钮、滚动容器和管理端 surface 护栏都保持不变。
+  - `ContestEdit.vue` 本体行数已从 `732` 行降到 `599` 行，路由页进一步收敛到顶部导航、工作区状态 owner 与 AWD 配置保存链路。
+- 本轮涉及文件：
+  - `code/frontend/src/components/platform/contest/ContestEditWorkspacePanel.vue`
+  - `code/frontend/src/views/platform/ContestEdit.vue`
+  - `code/frontend/src/views/platform/__tests__/contestEditWorkspaceExtraction.test.ts`
+  - `code/frontend/src/views/platform/__tests__/ContestEdit.test.ts`
+  - `code/frontend/src/views/platform/__tests__/contestUiPrimitiveAdoptionPhase2.test.ts`
+  - `code/frontend/src/views/platform/__tests__/platformManagementSurfaceAlignment.test.ts`
+  - `code/frontend/src/views/platform/__tests__/platformRootShellCleanup.test.ts`
+
+## 第五十六轮验证
+
+- 已执行：
+  - `npm run test:run -- src/views/platform/__tests__/contestEditWorkspaceExtraction.test.ts src/views/platform/__tests__/contestEditTopbarExtraction.test.ts src/views/platform/__tests__/ContestEdit.test.ts src/views/platform/__tests__/contestUiPrimitiveAdoptionPhase2.test.ts src/views/platform/__tests__/platformManagementSurfaceAlignment.test.ts src/views/platform/__tests__/platformRootShellCleanup.test.ts`
+  - `npm run typecheck`
+
+## 第五十七轮修复进展
+
+- 已完成：
+  - `P2-5` `ContestEdit.vue` 的 AWD 工作区 owner 状态已抽到独立 composable `useContestEditAwdWorkspace.ts`，把 AWD 配置列表同步、赛前检查同步、题目聚焦导航、服务模板目录加载和配置保存链路从路由页移出，页面继续只持有竞赛详情加载、stage 选择和开赛 gate。
+  - 新增 `contestEditAwdWorkspaceExtraction.test.ts`，补对 `useContestEditAwdWorkspace` 抽取边界的源码断言，避免后续再把 AWD 工作区状态机和动作回塞父页。
+  - `ContestEdit.test.ts` 与管理端 surface 护栏保持行为验证不变，题目池跳转 AWD 配置、赛前检查回跳、模板目录加载、AWD 配置保存和阶段级 loading/error 基线都保持不变。
+  - `ContestEdit.vue` 本体行数已从 `599` 行降到 `437` 行，路由页进一步收敛到赛事详情 owner、保存流程与 AWD 启动 override 对话框。
+- 本轮涉及文件：
+  - `code/frontend/src/composables/useContestEditAwdWorkspace.ts`
+  - `code/frontend/src/views/platform/ContestEdit.vue`
+  - `code/frontend/src/views/platform/__tests__/contestEditAwdWorkspaceExtraction.test.ts`
+  - `code/frontend/src/views/platform/__tests__/ContestEdit.test.ts`
+  - `code/frontend/src/views/platform/__tests__/contestEditWorkspaceExtraction.test.ts`
+  - `code/frontend/src/views/platform/__tests__/contestEditTopbarExtraction.test.ts`
+  - `code/frontend/src/views/platform/__tests__/contestUiPrimitiveAdoptionPhase2.test.ts`
+  - `code/frontend/src/views/platform/__tests__/platformManagementSurfaceAlignment.test.ts`
+  - `code/frontend/src/views/platform/__tests__/platformRootShellCleanup.test.ts`
+
+## 第五十七轮验证
+
+- 已执行：
+  - `npm run test:run -- src/views/platform/__tests__/contestEditAwdWorkspaceExtraction.test.ts src/views/platform/__tests__/contestEditWorkspaceExtraction.test.ts src/views/platform/__tests__/contestEditTopbarExtraction.test.ts src/views/platform/__tests__/ContestEdit.test.ts src/views/platform/__tests__/contestUiPrimitiveAdoptionPhase2.test.ts src/views/platform/__tests__/platformManagementSurfaceAlignment.test.ts src/views/platform/__tests__/platformRootShellCleanup.test.ts`
+  - `npm run typecheck`
+
+## 第五十八轮修复进展
+
+- 已完成：
+  - `P2-5` `InstanceManage.vue` 的实例目录工作区已抽到独立组件 `InstanceManageWorkspacePanel.vue`，把实例表格、空态、分页、错误态和状态 pill 样式从路由页移出，页面继续只持有 teacher 实例列表加载、销毁动作与返回概览跳转。
+  - 新增 `instanceManageWorkspaceExtraction.test.ts`，补对 `InstanceManageWorkspacePanel` 抽取边界的源码断言，避免后续再把目录模板和行内状态样式回塞父页。
+  - `InstanceManage.test.ts` 与 `platformManagementSurfaceAlignment.test.ts` 已同步切到新的工作区组件源码边界，实例页的 teacher API 接口复用、销毁流程、目录 spacing 和 dark surface 护栏都保持不变。
+  - `InstanceManage.vue` 本体行数已从 `288` 行降到 `176` 行，路由页进一步收敛到实例数据 owner、分页状态和销毁交互。
+- 本轮涉及文件：
+  - `code/frontend/src/components/platform/instance/InstanceManageWorkspacePanel.vue`
+  - `code/frontend/src/views/platform/InstanceManage.vue`
+  - `code/frontend/src/views/platform/__tests__/InstanceManage.test.ts`
+  - `code/frontend/src/views/platform/__tests__/instanceManageWorkspaceExtraction.test.ts`
+  - `code/frontend/src/views/platform/__tests__/instanceManagePanelExtraction.test.ts`
+  - `code/frontend/src/views/platform/__tests__/platformManagementSurfaceAlignment.test.ts`
+
+## 第五十八轮验证
+
+- 已执行：
+  - `npm run test:run -- src/views/platform/__tests__/instanceManageWorkspaceExtraction.test.ts src/views/platform/__tests__/instanceManagePanelExtraction.test.ts src/views/platform/__tests__/InstanceManage.test.ts src/views/platform/__tests__/platformManagementSurfaceAlignment.test.ts`
+  - `npm run typecheck`
+
+## 第五十九轮修复进展
+
+- 已完成：
+  - `P2-5` `ContestOperationsHub.vue` 的赛事运维目录工作区已抽到独立组件 `ContestOperationsHubWorkspacePanel.vue`，把 loading/error/empty 三段状态、运维赛事目录卡片、进入运维台与返回编辑按钮模板从路由页移出，页面继续只持有赛事列表加载和路由跳转 owner。
+  - 新增 `contestOperationsHubWorkspaceExtraction.test.ts`，补对 `ContestOperationsHubWorkspacePanel` 抽取边界的源码断言，避免后续再把运维目录工作区模板回塞父页。
+  - `ContestOperationsHub.test.ts`、`contestUiPrimitiveAdoption.test.ts` 和 `contestUiPrimitiveAdoptionPhase27.test.ts` 已同步切到新的工作区组件源码边界，现有共享按钮原语、目录文案和运维入口跳转基线都保持不变。
+  - `ContestOperationsHub.vue` 本体行数已从 `339` 行降到 `129` 行，路由页进一步收敛到 AWD 赛事筛选、推荐赛事计算和进入具体工作区的导航动作。
+- 本轮涉及文件：
+  - `code/frontend/src/components/platform/contest/ContestOperationsHubWorkspacePanel.vue`
+  - `code/frontend/src/views/platform/ContestOperationsHub.vue`
+  - `code/frontend/src/views/platform/__tests__/ContestOperationsHub.test.ts`
+  - `code/frontend/src/views/platform/__tests__/contestOperationsHubWorkspaceExtraction.test.ts`
+  - `code/frontend/src/views/platform/__tests__/contestOperationsHubPanelExtraction.test.ts`
+  - `code/frontend/src/views/platform/__tests__/contestUiPrimitiveAdoption.test.ts`
+  - `code/frontend/src/views/platform/__tests__/contestUiPrimitiveAdoptionPhase27.test.ts`
+
+## 第五十九轮验证
+
+- 已执行：
+  - `npm run test:run -- src/views/platform/__tests__/contestOperationsHubWorkspaceExtraction.test.ts src/views/platform/__tests__/contestOperationsHubPanelExtraction.test.ts src/views/platform/__tests__/ContestOperationsHub.test.ts src/views/platform/__tests__/contestUiPrimitiveAdoption.test.ts src/views/platform/__tests__/contestUiPrimitiveAdoptionPhase27.test.ts`
+  - `npm run typecheck`
+
+## 第六十轮修复进展
+
+- 已完成：
+  - `P2-5` `StudentManage.vue` 的学生目录工作区已抽到独立组件 `StudentManageWorkspacePanel.vue`，把搜索栏、班级筛选、表格、空态、分页和错误态从路由页移出，页面继续只持有 teacher 学员目录 query owner、班级列表加载和学员分析跳转。
+  - 新增 `studentManageWorkspaceExtraction.test.ts`，补对 `StudentManageWorkspacePanel` 抽取边界的源码断言，避免后续再把学生目录工作区模板回塞父页。
+  - `StudentManage.test.ts` 与 `platformManagementSurfaceAlignment.test.ts` 已同步切到新的工作区组件源码边界，学员目录检索、班级筛选、学员分析跳转和 dark surface spacing 护栏都保持不变。
+  - `StudentManage.vue` 本体行数已从 `273` 行降到 `180` 行，路由页进一步收敛到筛选参数 owner、目录请求调度和路由跳转。
+- 本轮涉及文件：
+  - `code/frontend/src/components/platform/student/StudentManageWorkspacePanel.vue`
+  - `code/frontend/src/views/platform/StudentManage.vue`
+  - `code/frontend/src/views/platform/__tests__/StudentManage.test.ts`
+  - `code/frontend/src/views/platform/__tests__/studentManageWorkspaceExtraction.test.ts`
+  - `code/frontend/src/views/platform/__tests__/studentManagePanelExtraction.test.ts`
+  - `code/frontend/src/views/platform/__tests__/platformManagementSurfaceAlignment.test.ts`
+
+## 第六十轮验证
+
+- 已执行：
+  - `npm run test:run -- src/views/platform/__tests__/studentManageWorkspaceExtraction.test.ts src/views/platform/__tests__/studentManagePanelExtraction.test.ts src/views/platform/__tests__/StudentManage.test.ts src/views/platform/__tests__/platformManagementSurfaceAlignment.test.ts`
+  - `npm run typecheck`
+
+## 第六十一轮修复进展
+
+- 已完成：
+  - `P2-5` `ClassManage.vue` 的班级目录工作区已抽到独立组件 `ClassManageWorkspacePanel.vue`，把目录标题、表格、空态、分页和错误态从路由页移出，页面继续只持有班级列表加载、分页状态、班级详情跳转和总学生数汇总。
+  - 新增 `classManageWorkspaceExtraction.test.ts`，补对 `ClassManageWorkspacePanel` 抽取边界的源码断言，避免后续再把班级目录工作区模板回塞父页。
+  - `ClassManage.test.ts` 与 `platformManagementSurfaceAlignment.test.ts` 已同步切到新的工作区组件源码边界，班级目录 teacher API 复用、班级详情跳转和 dark surface spacing 护栏都保持不变。
+  - `ClassManage.vue` 本体行数已从 `180` 行降到 `107` 行，路由页进一步收敛到列表 owner、分页调度和跳转动作。
+- 本轮涉及文件：
+  - `code/frontend/src/components/platform/class/ClassManageWorkspacePanel.vue`
+  - `code/frontend/src/views/platform/ClassManage.vue`
+  - `code/frontend/src/views/platform/__tests__/ClassManage.test.ts`
+  - `code/frontend/src/views/platform/__tests__/classManageWorkspaceExtraction.test.ts`
+  - `code/frontend/src/views/platform/__tests__/classManagePanelExtraction.test.ts`
+  - `code/frontend/src/views/platform/__tests__/platformManagementSurfaceAlignment.test.ts`
+
+## 第六十一轮验证
+
+- 已执行：
+  - `npm run test:run -- src/views/platform/__tests__/classManageWorkspaceExtraction.test.ts src/views/platform/__tests__/classManagePanelExtraction.test.ts src/views/platform/__tests__/ClassManage.test.ts src/views/platform/__tests__/platformManagementSurfaceAlignment.test.ts`
+  - `npm run typecheck`
+
+## 第六十二轮修复进展
+
+- 已完成：
+  - `P2-5` `AWDReviewIndex.vue` 的复盘页头部与摘要卡已抽到独立组件 `AwdReviewHeroPanel.vue`，把返回概览、刷新目录和三张 summary 卡的展示模板从路由页移出，页面继续只持有 `useTeacherAwdReviewIndex` 返回的目录 owner、筛选重置和复盘详情跳转。
+  - 新增 `awdReviewHeroExtraction.test.ts`，补对 `AwdReviewHeroPanel` 抽取边界的源码断言，避免后续再把 hero 和 summary 模板回塞父页。
+  - `AWDReviewIndex.test.ts` 与 `platformManagementSurfaceAlignment.test.ts` 已同步切到新的组合源码边界，返回概览、刷新目录、目录工作区渲染和管理端 summary panel 护栏都保持不变。
+  - `AWDReviewIndex.vue` 本体行数已从 `217` 行降到 `97` 行，路由页进一步收敛到筛选状态、目录数据映射和目录组件装配。
+- 本轮涉及文件：
+  - `code/frontend/src/components/platform/awd-review/AwdReviewHeroPanel.vue`
+  - `code/frontend/src/views/platform/AWDReviewIndex.vue`
+  - `code/frontend/src/views/platform/__tests__/AWDReviewIndex.test.ts`
+  - `code/frontend/src/views/platform/__tests__/awdReviewHeroExtraction.test.ts`
+  - `code/frontend/src/views/platform/__tests__/awdReviewDirectoryExtraction.test.ts`
+  - `code/frontend/src/views/platform/__tests__/platformManagementSurfaceAlignment.test.ts`
+
+## 第六十二轮验证
+
+- 已执行：
+  - `npm run test:run -- src/views/platform/__tests__/awdReviewHeroExtraction.test.ts src/views/platform/__tests__/awdReviewDirectoryExtraction.test.ts src/views/platform/__tests__/AWDReviewIndex.test.ts src/views/platform/__tests__/platformManagementSurfaceAlignment.test.ts`
+  - `npm run typecheck`
+
+## 第六十三轮修复进展
+
+- 已完成：
+  - `P2-5` `ContestOperations.vue` 的赛事运维工作区顶部壳层已抽到独立组件 `ContestOperationsTopbarPanel.vue`，把返回目录、赛事标题和进入竞赛工作室按钮的展示模板从路由页移出，页面继续只持有 `contestId`、`activeTab`、`route.query.activeTab` 同步、赛事详情加载和主路由动作。
+  - 父页新增 `activeTab` 归一化逻辑，非法 `query.activeTab` 会统一回退到 `matrix`，避免路由层把任意字符串继续透传给 `AWDOperationsPanel`。
+  - 新增 `ContestOperations.test.ts`，补对父页 owner 边界的行为断言，覆盖合法 tab 透传、非法 tab 回退，以及顶栏子组件事件触发后的返回目录和进入编辑页跳转。
+  - `contestOperationsTopbarExtraction.test.ts` 已作为源码护栏固定 `ContestOperationsTopbarPanel` 抽取边界，避免后续再把顶部壳层塞回父页。
+- 本轮涉及文件：
+  - `code/frontend/src/components/platform/contest/ContestOperationsTopbarPanel.vue`
+  - `code/frontend/src/views/platform/ContestOperations.vue`
+  - `code/frontend/src/views/platform/__tests__/ContestOperations.test.ts`
+  - `code/frontend/src/views/platform/__tests__/contestOperationsTopbarExtraction.test.ts`
+
+## 第六十三轮验证
+
+- 已执行：
+  - `npm run test:run -- src/views/platform/__tests__/ContestOperations.test.ts src/views/platform/__tests__/contestOperationsTopbarExtraction.test.ts`
+  - `npm run typecheck`
+
+## 第六十四轮修复进展
+
+- 已完成：
+  - `P2-5` `ChallengeImportPreview.vue` 的导入预览工作区壳层已抽到独立组件 `ChallengeImportPreviewWorkspacePanel.vue`，把顶部返回区、页面说明、loading/empty 状态和预览展示壳从路由页移出，页面继续只持有 `importId` 路由同步、预览加载/重置、确认导入和返回导航动作。
+  - `ChallengeImportPreview.test.ts` 已补对父页 owner 边界的行为断言，覆盖工作区子组件触发返回导入页、返回待确认队列和确认导入三条主动作时，路由页仍负责导航与提交链路。
+  - 新增 `challengeImportPreviewWorkspaceExtraction.test.ts`，补对 `ChallengeImportPreviewWorkspacePanel` 抽取边界的源码断言，避免后续再把预览壳层和空态模板回塞父页。
+  - `platformRootShellCleanup.test.ts` 已同步切到新的工作区组件源码边界，继续约束导入预览页沿用共享管理员根壳，不因抽取而丢失 surface 护栏。
+- 本轮涉及文件：
+  - `code/frontend/src/components/platform/challenge/ChallengeImportPreviewWorkspacePanel.vue`
+  - `code/frontend/src/views/platform/ChallengeImportPreview.vue`
+  - `code/frontend/src/views/platform/__tests__/ChallengeImportPreview.test.ts`
+  - `code/frontend/src/views/platform/__tests__/challengeImportPreviewWorkspaceExtraction.test.ts`
+  - `code/frontend/src/views/platform/__tests__/platformRootShellCleanup.test.ts`
+
+## 第六十四轮验证
+
+- 已执行：
+  - `npm run test:run -- src/views/platform/__tests__/ChallengeImportPreview.test.ts src/views/platform/__tests__/challengeImportPreviewWorkspaceExtraction.test.ts src/views/platform/__tests__/platformRootShellCleanup.test.ts`
+  - `npm run typecheck`
+
+## 第六十五轮修复进展
+
+- 已完成：
+  - `P2-5` `CheatDetection.vue` 的作弊检测工作区壳层已抽到独立组件 `CheatDetectionWorkspacePanel.vue`，把 hero、loading、summary、风险目录、错误态和空态展示从路由页移出，页面继续只持有风险数据加载、刷新、错误状态、时间格式化和审计日志跳转。
+  - 新增 `cheatDetectionWorkspaceExtraction.test.ts`，补对 `CheatDetectionWorkspacePanel` 抽取边界的源码断言，避免后续再把工作区壳层模板回塞父页。
+  - `CheatDetection.test.ts` 已补对父页 owner 边界的行为断言，覆盖工作区子组件触发刷新和审计跳转时，路由页仍负责请求与导航链路。
+  - `cheatDetectionPanelExtraction.test.ts`、`cheatDetectionReviewPanelsExtraction.test.ts`、`cheatDetectionSurfaceAlignment.test.ts`、`platformManagementSurfaceAlignment.test.ts` 与 `platformRootShellCleanup.test.ts` 已同步切到新的工作区组件源码边界，surface、summary、目录和根壳护栏保持不变。
+- 本轮涉及文件：
+  - `code/frontend/src/components/platform/cheat/CheatDetectionWorkspacePanel.vue`
+  - `code/frontend/src/views/platform/CheatDetection.vue`
+  - `code/frontend/src/views/platform/__tests__/CheatDetection.test.ts`
+  - `code/frontend/src/views/platform/__tests__/cheatDetectionWorkspaceExtraction.test.ts`
+  - `code/frontend/src/views/platform/__tests__/cheatDetectionPanelExtraction.test.ts`
+  - `code/frontend/src/views/platform/__tests__/cheatDetectionReviewPanelsExtraction.test.ts`
+  - `code/frontend/src/views/platform/__tests__/cheatDetectionSurfaceAlignment.test.ts`
+  - `code/frontend/src/views/platform/__tests__/platformManagementSurfaceAlignment.test.ts`
+  - `code/frontend/src/views/platform/__tests__/platformRootShellCleanup.test.ts`
+
+## 第六十五轮验证
+
+- 已执行：
+  - `npm run test:run -- src/views/platform/__tests__/CheatDetection.test.ts src/views/platform/__tests__/cheatDetectionWorkspaceExtraction.test.ts src/views/platform/__tests__/cheatDetectionPanelExtraction.test.ts src/views/platform/__tests__/cheatDetectionReviewPanelsExtraction.test.ts src/views/platform/__tests__/cheatDetectionSurfaceAlignment.test.ts src/views/platform/__tests__/platformManagementSurfaceAlignment.test.ts src/views/platform/__tests__/platformRootShellCleanup.test.ts`
+  - `npm run typecheck`
+
 ## 备注
 
 - 本文件用于记录本轮前端专项审查结论与修复顺序。

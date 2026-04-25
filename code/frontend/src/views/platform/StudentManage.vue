@@ -4,12 +4,8 @@ import { useRouter } from 'vue-router'
 
 import { getClasses, getStudentsDirectory } from '@/api/teacher'
 import type { TeacherClassItem } from '@/api/contracts'
-import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
-import WorkspaceDirectoryPagination from '@/components/common/WorkspaceDirectoryPagination.vue'
-import WorkspaceDirectoryToolbar from '@/components/common/WorkspaceDirectoryToolbar.vue'
-import AppLoading from '@/components/common/AppLoading.vue'
-import AppEmpty from '@/components/common/AppEmpty.vue'
 import StudentManageHeroPanel from '@/components/platform/student/StudentManageHeroPanel.vue'
+import StudentManageWorkspacePanel from '@/components/platform/student/StudentManageWorkspacePanel.vue'
 import { useStudentDirectoryQuery } from '@/composables/useStudentDirectoryQuery'
 import { DEFAULT_PAGE_SIZE } from '@/utils/constants'
 
@@ -144,15 +140,6 @@ function openStudent(studentId: string): void {
 onMounted(() => {
   void initialize()
 })
-
-const columns = [
-  { key: 'name', label: '学生姓名', widthClass: 'w-[20%] min-w-[12rem]' },
-  { key: 'username', label: '用户名', widthClass: 'w-[18%] min-w-[10rem]' },
-  { key: 'student_no', label: '学号', widthClass: 'w-[18%] min-w-[10rem]' },
-  { key: 'class_name', label: '班级', widthClass: 'w-[18%] min-w-[10rem]' },
-  { key: 'total_score', label: '得分', widthClass: 'w-[12%] min-w-[8rem]', align: 'center' as const },
-  { key: 'actions', label: '操作', widthClass: 'w-[12%] min-w-[8rem]', align: 'right' as const },
-]
 </script>
 
 <template>
@@ -166,108 +153,28 @@ const columns = [
           @refresh="void initialize()"
         />
 
-        <div class="admin-student-manage-shell__content">
-          <section class="workspace-directory-section admin-student-manage-directory">
-            <WorkspaceDirectoryToolbar
-              :model-value="keyword"
-              :total="total"
-              selected-sort-label=""
-              :sort-options="[]"
-              search-placeholder="检索姓名、用户名或学号..."
-              filter-panel-title="学生筛选"
-              total-suffix="名学生"
-              reset-label="清空筛选"
-              :reset-disabled="!hasActiveFilters"
-              @update:model-value="handleKeywordChange"
-              @reset-filters="resetFilters"
-            >
-              <template #filter-panel>
-                <label class="workspace-student-filter-field">
-                  <span class="workspace-overline">班级范围</span>
-                  <select
-                    :value="classFilter"
-                    class="admin-input workspace-student-filter-control"
-                    @change="handleClassFilterChange(($event.target as HTMLSelectElement).value)"
-                  >
-                    <option value="">
-                      全部班级
-                    </option>
-                    <option
-                      v-for="item in classes"
-                      :key="item.name"
-                      :value="item.name"
-                    >
-                      {{ item.name }}
-                    </option>
-                  </select>
-                </label>
-              </template>
-            </WorkspaceDirectoryToolbar>
-
-            <div
-              v-if="(loading || loadingClasses) && list.length === 0"
-              class="py-12 flex justify-center"
-            >
-              <AppLoading>同步学员目录...</AppLoading>
-            </div>
-
-            <template v-else>
-              <AppEmpty
-                v-if="list.length === 0"
-                class="workspace-directory-empty"
-                icon="Users"
-                title="暂无学生数据"
-                description="当前平台上没有任何学生账号。"
-              />
-
-              <WorkspaceDataTable
-                v-else
-                class="workspace-directory-list admin-student-manage-table"
-                :columns="columns"
-                :rows="rows"
-                row-key="id"
-              >
-                <template #cell-actions="{ row }">
-                  <button
-                    type="button"
-                    class="ui-btn ui-btn--ghost"
-                    @click="openStudent(String((row as { id: string }).id))"
-                  >
-                    查看学员
-                  </button>
-                </template>
-              </WorkspaceDataTable>
-
-              <div class="workspace-directory-pagination">
-                <WorkspaceDirectoryPagination
-                  :page="page"
-                  :total-pages="totalPages"
-                  :total="total"
-                  total-label="名学生"
-                  @change-page="handlePageChange"
-                />
-              </div>
-            </template>
-          </section>
-
-          <div
-            v-if="error"
-            class="teacher-surface-error"
-          >
-            {{ error }}
-          </div>
-        </div>
+        <StudentManageWorkspacePanel
+          :classes="classes"
+          :loading="loading"
+          :loading-classes="loadingClasses"
+          :error="error"
+          :keyword="keyword"
+          :class-filter="classFilter"
+          :total="total"
+          :has-active-filters="hasActiveFilters"
+          :rows="rows"
+          :page="page"
+          :total-pages="totalPages"
+          @update:keyword="handleKeywordChange"
+          @change:class-filter="handleClassFilterChange"
+          @reset-filters="resetFilters"
+          @change-page="handlePageChange"
+          @open-student="openStudent"
+        />
       </main>
     </div>
   </div>
 </template>
 
 <style scoped>
-.admin-student-manage-shell__content {
-  display: flex;
-  flex-direction: column;
-  gap: var(--workspace-directory-page-block-gap);
-  margin-top: var(--space-10);
-}
-
 </style>
