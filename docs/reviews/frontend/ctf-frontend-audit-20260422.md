@@ -8,13 +8,13 @@
 | 审查范围 | `code/frontend/src` 路由、关键视图、composables、stores、共享样式与验证门禁 |
 | 审查日期 | 2026-04-22 |
 | 审查方式 | 静态代码审查 + 最小验证基线检查 |
-| 审查状态 | 已记录，已完成二十一轮最小高收益修复 |
+| 审查状态 | 已记录，已推进至第六十五轮最小高收益修复 |
 
 ## 当前结论
 
 - 本轮专项审查起手时暴露出的高收益问题，已经有大半完成收口：
   - `typecheck` 基线已恢复，当前专项修复工作树可稳定作为静态门禁。
-  - 题目详情竞态、实例页状态同步、`/ui-lab` 正式路由暴露、认证表单基础可访问性、`window.confirm` 混用、登录态 token 本地持久化等问题已完成修复。
+  - 题目详情竞态、实例页状态同步、`/ui-lab` 正式路由暴露、认证表单基础可访问性、`window.confirm` 混用、登录态 token 本地持久化等问题已完成修复，其中登录态已切到服务端 session 与 `HttpOnly` cookie。
   - 本轮继续收口了平台 AWD 编排组件簇、教师端 `workspace / tabs / surface` 漂移，以及 shared pagination 的 review 基线漂移。
 - 当前仍未整体关闭专项审查，剩余问题主要集中在：
   - `P2-1` 主题硬编码清理仍未全量收口
@@ -63,8 +63,8 @@
     - `code/frontend/src/stores/auth.ts`
     - `code/frontend/src/api/request.ts`
     - `code/frontend/src/views/challenges/ChallengeDetail.vue`
-  - 处理策略：
-    - 本轮先记录为高风险设计问题，不在本次最小修复里直接重构认证方案。
+  - 处理状态：
+    - 已在第二十一轮切到服务端 session 与 `HttpOnly` cookie，前端不再持有认证 token；旧 `ctf_access_token / ctf_refresh_token` 仅保留清理逻辑。
 
 ### P2
 
