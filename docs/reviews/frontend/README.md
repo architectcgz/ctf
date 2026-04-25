@@ -35,7 +35,7 @@
 
 ## 已完成的技术债
 
-- `TD-2` 主题 token 与任意值尾项：第七十五轮已完成真实产品路径收口；`mock / reference / UI lab / ThemePreview / refs / SVG / 主题 token 定义文件` 不作为当前未完成项。
+- `TD-2` 主题 token 与任意值尾项：第七十五轮已完成真实产品路径收口；`mock / reference / UI lab / ThemePreview / refs / SVG / 主题 token 定义文件` 不作为当前未完成项。后续用 `npm run check:theme-tail` 复核真实产品路径，该脚本不会把 Vue `#default` 插槽误判为十六进制色值。
 
 ## 维护约定
 
