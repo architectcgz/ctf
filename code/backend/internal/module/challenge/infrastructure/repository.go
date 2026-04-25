@@ -33,8 +33,8 @@ func (r *Repository) WithinTransaction(ctx context.Context, fn func(txRepo *Repo
 	})
 }
 
-func (r *Repository) Create(challenge *model.Challenge) error {
-	return r.db.Create(challenge).Error
+func (r *Repository) Create(ctx context.Context, challenge *model.Challenge) error {
+	return r.dbWithContext(ctx).Create(challenge).Error
 }
 
 func (r *Repository) CreateWithHints(ctx context.Context, challenge *model.Challenge, hints []*model.ChallengeHint) error {

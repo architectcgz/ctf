@@ -14,7 +14,7 @@ func TestRepositoryCreate(t *testing.T) {
 	repo := NewRepository(db)
 
 	challenge := &model.Challenge{Title: "Test", Status: "draft"}
-	err := repo.Create(challenge)
+	err := repo.Create(context.Background(), challenge)
 	if err != nil {
 		t.Fatalf("Create() error = %v", err)
 	}

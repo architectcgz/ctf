@@ -9,8 +9,8 @@ import (
 	"ctf-platform/pkg/errcode"
 )
 
-func (s *TeamService) LeaveTeam(_ context.Context, contestID, userID, teamID int64) error {
-	team, err := s.teamRepo.FindByID(teamID)
+func (s *TeamService) LeaveTeam(ctx context.Context, contestID, userID, teamID int64) error {
+	team, err := s.teamRepo.FindByID(ctx, teamID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return errcode.ErrTeamNotFound
@@ -24,7 +24,7 @@ func (s *TeamService) LeaveTeam(_ context.Context, contestID, userID, teamID int
 		return errcode.ErrCaptainCannotLeave
 	}
 
-	members, err := s.teamRepo.GetMembers(teamID)
+	members, err := s.teamRepo.GetMembers(ctx, teamID)
 	if err != nil {
 		return err
 	}
@@ -32,5 +32,5 @@ func (s *TeamService) LeaveTeam(_ context.Context, contestID, userID, teamID int
 		return errcode.ErrNotInTeam
 	}
 
-	return s.teamRepo.RemoveMember(teamID, userID)
+	return s.teamRepo.RemoveMember(ctx, teamID, userID)
 }

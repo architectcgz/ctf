@@ -12,16 +12,16 @@ func (s *TeamService) CreateTeam(ctx context.Context, contestID, captainID int64
 	if err := s.ensureTeamJoinableContest(ctx, contestID); err != nil {
 		return nil, err
 	}
-	if err := s.ensureApprovedRegistration(contestID, captainID); err != nil {
+	if err := s.ensureApprovedRegistration(ctx, contestID, captainID); err != nil {
 		return nil, err
 	}
 
-	existingTeam, err := s.teamRepo.FindUserTeamInContest(captainID, contestID)
+	existingTeam, err := s.teamRepo.FindUserTeamInContest(ctx, captainID, contestID)
 	if err == nil && existingTeam.ID > 0 {
 		return nil, errcode.ErrAlreadyInTeam
 	}
 
-	team, err := s.createTeamWithInviteRetries(contestID, captainID, req.Name, resolveCreateTeamMaxMembers(req))
+	team, err := s.createTeamWithInviteRetries(ctx, contestID, captainID, req.Name, resolveCreateTeamMaxMembers(req))
 	if err != nil {
 		return nil, err
 	}

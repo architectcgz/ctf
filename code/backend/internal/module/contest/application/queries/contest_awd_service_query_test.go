@@ -40,7 +40,7 @@ func TestContestAWDServiceQueryServiceListContestAWDServicesIncludesValidationSt
 	}); err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := challengeRepo.Create(&model.Challenge{
+	if err := challengeRepo.Create(context.Background(), &model.Challenge{
 		ID:         9801,
 		Title:      "service-query-challenge",
 		Category:   "web",
