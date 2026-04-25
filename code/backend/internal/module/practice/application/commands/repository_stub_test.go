@@ -17,20 +17,14 @@ type stubPracticeRepository struct {
 	findContestChallengeWithContextFn                 func(ctx context.Context, contestID, challengeID int64) (*model.ContestChallenge, error)
 	findContestAWDServiceWithContextFn                func(ctx context.Context, contestID, serviceID int64) (*model.ContestAWDService, error)
 	findContestRegistrationWithContextFn              func(ctx context.Context, contestID, userID int64) (*model.ContestRegistration, error)
-	lockInstanceScopeFn                               func(userID, challengeID int64, scope practiceports.InstanceScope) error
-	lockInstanceScopeWithContextFn                    func(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) error
-	findScopedExistingInstanceFn                      func(userID, challengeID int64, scope practiceports.InstanceScope) (*model.Instance, error)
-	findScopedExistingInstanceWithContextFn           func(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) (*model.Instance, error)
-	countScopedRunningInstancesFn                     func(userID int64, scope practiceports.InstanceScope) (int, error)
-	countScopedRunningInstancesWithContextFn          func(ctx context.Context, userID int64, scope practiceports.InstanceScope) (int, error)
+	lockInstanceScopeFn                               func(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) error
+	findScopedExistingInstanceFn                      func(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) (*model.Instance, error)
+	countScopedRunningInstancesFn                     func(ctx context.Context, userID int64, scope practiceports.InstanceScope) (int, error)
 	refreshInstanceExpiryFn                           func(instanceID int64, expiresAt time.Time) error
 	refreshInstanceExpiryWithContextFn                func(ctx context.Context, instanceID int64, expiresAt time.Time) error
-	createInstanceFn                                  func(instance *model.Instance) error
-	createInstanceWithContextFn                       func(ctx context.Context, instance *model.Instance) error
-	reserveAvailablePortFn                            func(start, end int) (int, error)
-	reserveAvailablePortWithContextFn                 func(ctx context.Context, start, end int) (int, error)
-	bindReservedPortFn                                func(port int, instanceID int64) error
-	bindReservedPortWithContextFn                     func(ctx context.Context, port int, instanceID int64) error
+	createInstanceFn                                  func(ctx context.Context, instance *model.Instance) error
+	reserveAvailablePortFn                            func(ctx context.Context, start, end int) (int, error)
+	bindReservedPortFn                                func(ctx context.Context, port int, instanceID int64) error
 	createSubmissionFn                                func(submission *model.Submission) error
 	createSubmissionWithContextFn                     func(ctx context.Context, submission *model.Submission) error
 	findCorrectSubmissionFn                           func(userID, challengeID int64) (*model.Submission, error)
@@ -83,46 +77,25 @@ func (s *stubPracticeRepository) FindContestRegistrationWithContext(ctx context.
 	return nil, gorm.ErrRecordNotFound
 }
 
-func (s *stubPracticeRepository) LockInstanceScope(userID, challengeID int64, scope practiceports.InstanceScope) error {
+func (s *stubPracticeRepository) LockInstanceScope(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) error {
 	if s.lockInstanceScopeFn != nil {
-		return s.lockInstanceScopeFn(userID, challengeID, scope)
+		return s.lockInstanceScopeFn(ctx, userID, challengeID, scope)
 	}
 	return nil
 }
 
-func (s *stubPracticeRepository) LockInstanceScopeWithContext(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) error {
-	if s.lockInstanceScopeWithContextFn != nil {
-		return s.lockInstanceScopeWithContextFn(ctx, userID, challengeID, scope)
-	}
-	return s.LockInstanceScope(userID, challengeID, scope)
-}
-
-func (s *stubPracticeRepository) FindScopedExistingInstance(userID, challengeID int64, scope practiceports.InstanceScope) (*model.Instance, error) {
+func (s *stubPracticeRepository) FindScopedExistingInstance(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) (*model.Instance, error) {
 	if s.findScopedExistingInstanceFn != nil {
-		return s.findScopedExistingInstanceFn(userID, challengeID, scope)
+		return s.findScopedExistingInstanceFn(ctx, userID, challengeID, scope)
 	}
 	return nil, nil
 }
 
-func (s *stubPracticeRepository) FindScopedExistingInstanceWithContext(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) (*model.Instance, error) {
-	if s.findScopedExistingInstanceWithContextFn != nil {
-		return s.findScopedExistingInstanceWithContextFn(ctx, userID, challengeID, scope)
-	}
-	return s.FindScopedExistingInstance(userID, challengeID, scope)
-}
-
-func (s *stubPracticeRepository) CountScopedRunningInstances(userID int64, scope practiceports.InstanceScope) (int, error) {
+func (s *stubPracticeRepository) CountScopedRunningInstances(ctx context.Context, userID int64, scope practiceports.InstanceScope) (int, error) {
 	if s.countScopedRunningInstancesFn != nil {
-		return s.countScopedRunningInstancesFn(userID, scope)
+		return s.countScopedRunningInstancesFn(ctx, userID, scope)
 	}
 	return 0, nil
-}
-
-func (s *stubPracticeRepository) CountScopedRunningInstancesWithContext(ctx context.Context, userID int64, scope practiceports.InstanceScope) (int, error) {
-	if s.countScopedRunningInstancesWithContextFn != nil {
-		return s.countScopedRunningInstancesWithContextFn(ctx, userID, scope)
-	}
-	return s.CountScopedRunningInstances(userID, scope)
 }
 
 func (s *stubPracticeRepository) RefreshInstanceExpiry(ctx context.Context, instanceID int64, expiresAt time.Time) error {
@@ -132,46 +105,25 @@ func (s *stubPracticeRepository) RefreshInstanceExpiry(ctx context.Context, inst
 	return nil
 }
 
-func (s *stubPracticeRepository) CreateInstance(instance *model.Instance) error {
+func (s *stubPracticeRepository) CreateInstance(ctx context.Context, instance *model.Instance) error {
 	if s.createInstanceFn != nil {
-		return s.createInstanceFn(instance)
+		return s.createInstanceFn(ctx, instance)
 	}
 	return nil
 }
 
-func (s *stubPracticeRepository) CreateInstanceWithContext(ctx context.Context, instance *model.Instance) error {
-	if s.createInstanceWithContextFn != nil {
-		return s.createInstanceWithContextFn(ctx, instance)
-	}
-	return s.CreateInstance(instance)
-}
-
-func (s *stubPracticeRepository) ReserveAvailablePort(start, end int) (int, error) {
+func (s *stubPracticeRepository) ReserveAvailablePort(ctx context.Context, start, end int) (int, error) {
 	if s.reserveAvailablePortFn != nil {
-		return s.reserveAvailablePortFn(start, end)
+		return s.reserveAvailablePortFn(ctx, start, end)
 	}
 	return start, nil
 }
 
-func (s *stubPracticeRepository) ReserveAvailablePortWithContext(ctx context.Context, start, end int) (int, error) {
-	if s.reserveAvailablePortWithContextFn != nil {
-		return s.reserveAvailablePortWithContextFn(ctx, start, end)
-	}
-	return s.ReserveAvailablePort(start, end)
-}
-
-func (s *stubPracticeRepository) BindReservedPort(port int, instanceID int64) error {
+func (s *stubPracticeRepository) BindReservedPort(ctx context.Context, port int, instanceID int64) error {
 	if s.bindReservedPortFn != nil {
-		return s.bindReservedPortFn(port, instanceID)
+		return s.bindReservedPortFn(ctx, port, instanceID)
 	}
 	return nil
-}
-
-func (s *stubPracticeRepository) BindReservedPortWithContext(ctx context.Context, port int, instanceID int64) error {
-	if s.bindReservedPortWithContextFn != nil {
-		return s.bindReservedPortWithContextFn(ctx, port, instanceID)
-	}
-	return s.BindReservedPort(port, instanceID)
 }
 
 func (s *stubPracticeRepository) CreateSubmission(submission *model.Submission) error {

@@ -157,11 +157,11 @@ func (s *Service) startChallengeWithScope(ctx context.Context, userID, challenge
 		initialStatus = model.InstanceStatusPending
 	}
 	if err := s.repo.WithinTransaction(ctx, func(txRepo practiceports.PracticeCommandTxRepository) error {
-		if err := txRepo.LockInstanceScopeWithContext(ctx, userID, challengeID, scope); err != nil {
+		if err := txRepo.LockInstanceScope(ctx, userID, challengeID, scope); err != nil {
 			return err
 		}
 
-		existingInstance, err := txRepo.FindScopedExistingInstanceWithContext(ctx, userID, challengeID, scope)
+		existingInstance, err := txRepo.FindScopedExistingInstance(ctx, userID, challengeID, scope)
 		if err != nil {
 			return errcode.ErrInternal.WithCause(err)
 		}
@@ -182,7 +182,7 @@ func (s *Service) startChallengeWithScope(ctx context.Context, userID, challenge
 			return nil
 		}
 
-		runningCount, err := txRepo.CountScopedRunningInstancesWithContext(ctx, userID, scope)
+		runningCount, err := txRepo.CountScopedRunningInstances(ctx, userID, scope)
 		if err != nil {
 			return errcode.ErrInternal.WithCause(err)
 		}
@@ -195,7 +195,7 @@ func (s *Service) startChallengeWithScope(ctx context.Context, userID, challenge
 			return errcode.ErrInstanceLimitExceeded
 		}
 
-		hostPort, err := txRepo.ReserveAvailablePortWithContext(ctx, s.config.Container.PortRangeStart, s.config.Container.PortRangeEnd)
+		hostPort, err := txRepo.ReserveAvailablePort(ctx, s.config.Container.PortRangeStart, s.config.Container.PortRangeEnd)
 		if err != nil {
 			return errcode.ErrInternal.WithCause(err)
 		}
@@ -213,10 +213,10 @@ func (s *Service) startChallengeWithScope(ctx context.Context, userID, challenge
 			ExpiresAt:   time.Now().Add(s.config.Container.DefaultTTL),
 			MaxExtends:  s.config.Container.MaxExtends,
 		}
-		if err := txRepo.CreateInstanceWithContext(ctx, instance); err != nil {
+		if err := txRepo.CreateInstance(ctx, instance); err != nil {
 			return errcode.ErrInternal.WithCause(err)
 		}
-		if err := txRepo.BindReservedPortWithContext(ctx, hostPort, instance.ID); err != nil {
+		if err := txRepo.BindReservedPort(ctx, hostPort, instance.ID); err != nil {
 			return errcode.ErrInternal.WithCause(err)
 		}
 		return nil

@@ -43,3 +43,35 @@ func (ctxOnlyInstanceRepository) CountInstancesByStatus(context.Context, []strin
 }
 
 var _ practiceports.InstanceRepository = (*ctxOnlyInstanceRepository)(nil)
+
+type ctxOnlyPracticeCommandTxRepository struct{}
+
+func (ctxOnlyPracticeCommandTxRepository) LockInstanceScope(context.Context, int64, int64, practiceports.InstanceScope) error {
+	return nil
+}
+
+func (ctxOnlyPracticeCommandTxRepository) FindScopedExistingInstance(context.Context, int64, int64, practiceports.InstanceScope) (*model.Instance, error) {
+	return nil, nil
+}
+
+func (ctxOnlyPracticeCommandTxRepository) CountScopedRunningInstances(context.Context, int64, practiceports.InstanceScope) (int, error) {
+	return 0, nil
+}
+
+func (ctxOnlyPracticeCommandTxRepository) RefreshInstanceExpiry(context.Context, int64, time.Time) error {
+	return nil
+}
+
+func (ctxOnlyPracticeCommandTxRepository) CreateInstance(context.Context, *model.Instance) error {
+	return nil
+}
+
+func (ctxOnlyPracticeCommandTxRepository) ReserveAvailablePort(context.Context, int, int) (int, error) {
+	return 0, nil
+}
+
+func (ctxOnlyPracticeCommandTxRepository) BindReservedPort(context.Context, int, int64) error {
+	return nil
+}
+
+var _ practiceports.PracticeCommandTxRepository = (*ctxOnlyPracticeCommandTxRepository)(nil)
