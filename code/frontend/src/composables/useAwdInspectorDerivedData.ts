@@ -264,13 +264,13 @@ export function useAwdInspectorDerivedData({
     switch (alertKey) {
       case 'invalid_access_url':
       case 'service_compromised':
-        return 'border-[var(--color-danger)]/20 bg-[var(--color-danger)]/10 text-[var(--color-danger)]'
+        return 'awd-service-alert--danger'
       case 'unexpected_http_status':
       case 'http_request_failed':
       case 'all_probes_failed':
-        return 'border-[var(--color-warning)]/20 bg-[var(--color-warning)]/10 text-[var(--color-warning)]'
+        return 'awd-service-alert--warning'
       default:
-        return 'border-[var(--color-text-muted)]/20 bg-[var(--color-text-muted)]/10 text-[var(--color-text-primary)]'
+        return 'awd-service-alert--neutral'
     }
   }
 

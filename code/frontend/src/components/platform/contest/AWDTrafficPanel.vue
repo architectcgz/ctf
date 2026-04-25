@@ -429,10 +429,12 @@ function getTrafficStatusGroupLabel(statusGroup: AWDTrafficStatusGroup): string 
 .method-tag { color: var(--color-primary); font-weight: 900; }
 .path-text { color: var(--color-text-secondary); }
 
-.status-badge { font-size: var(--font-size-10); font-weight: 900; padding: 0.15rem 0.6rem; border-radius: 99px; }
-.status-badge.status-group-success { background: var(--color-success-soft); color: var(--color-success); }
-.status-badge.status-group-client-error { background: color-mix(in srgb, var(--color-warning) 10%, var(--color-bg-surface)); color: var(--color-warning); }
-.status-badge.status-group-server-error { background: var(--color-danger-soft); color: var(--color-danger); }
+.status-badge { font-size: var(--font-size-10); font-weight: 900; padding: 0.15rem 0.6rem; border-radius: 99px; border: 1px solid var(--awd-status-pill-border, transparent); background: var(--awd-status-pill-bg, var(--color-bg-elevated)); color: var(--awd-status-pill-color, var(--color-text-secondary)); }
+.awd-status-pill--success { --awd-status-pill-bg: var(--color-success-soft); --awd-status-pill-border: color-mix(in srgb, var(--color-success) 20%, transparent); --awd-status-pill-color: var(--color-success); }
+.awd-status-pill--primary { --awd-status-pill-bg: color-mix(in srgb, var(--color-primary) 10%, var(--color-bg-surface)); --awd-status-pill-border: color-mix(in srgb, var(--color-primary) 20%, transparent); --awd-status-pill-color: var(--color-primary); }
+.awd-status-pill--warning { --awd-status-pill-bg: color-mix(in srgb, var(--color-warning) 10%, var(--color-bg-surface)); --awd-status-pill-border: color-mix(in srgb, var(--color-warning) 20%, transparent); --awd-status-pill-color: var(--color-warning); }
+.awd-status-pill--danger { --awd-status-pill-bg: var(--color-danger-soft); --awd-status-pill-border: color-mix(in srgb, var(--color-danger) 20%, transparent); --awd-status-pill-color: var(--color-danger); }
+.awd-status-pill--muted { --awd-status-pill-bg: color-mix(in srgb, var(--color-text-muted) 10%, var(--color-bg-surface)); --awd-status-pill-border: color-mix(in srgb, var(--color-text-muted) 20%, transparent); --awd-status-pill-color: var(--color-text-secondary); }
 
 .pagination-footer { padding: 1rem 0; border-top: 1px solid var(--color-border-default); }
 .ops-btn { display: inline-flex; align-items: center; justify-content: center; height: 2rem; padding: 0 0.85rem; border-radius: 0.6rem; font-size: var(--font-size-11); font-weight: 700; background: var(--color-bg-surface); border: 1px solid var(--color-border-default); color: var(--color-text-secondary); cursor: pointer; }
