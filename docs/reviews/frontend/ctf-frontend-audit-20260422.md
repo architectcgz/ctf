@@ -1699,6 +1699,24 @@
   - `npm run test:run -- src/components/common/__tests__/InstancePanel.test.ts src/views/challenges/__tests__/challengeDetailSharedShell.test.ts src/views/teacher/__tests__/InstanceManagement.test.ts`（3 个测试文件，16 个测试）
   - `npm run typecheck`
 
+## 第七十二轮修复进展
+
+- 已完成：
+  - `TD-2` 中题目详情提交态 presentation 尾项已收口：`useChallengeDetailPresentation` 的提交输入框状态不再返回 `border-[var(...)] / bg-[var(...)]` 任意主题类，改为 `flag-input-wrap--*` 语义类。
+  - `useChallengeDetailInteractions` 中未被 UI 消费的 `submitResult.className` 已删除，提交成功、待审核、失败状态统一只保留业务语义 `variant + message`。
+  - `ChallengeActionAside` 承接提交输入框状态样式与无需靶机空态颜色，避免可见组件模板继续混入 `text-[var(--color-success)]`。
+- 本轮涉及文件：
+  - `code/frontend/src/composables/useChallengeDetailPresentation.ts`
+  - `code/frontend/src/composables/useChallengeDetailInteractions.ts`
+  - `code/frontend/src/components/challenge/ChallengeActionAside.vue`
+  - `code/frontend/src/views/challenges/__tests__/challengeDetailSolutionTabsExtraction.test.ts`
+
+## 第七十二轮验证
+
+- 已执行：
+  - `npm run test:run -- src/views/challenges/__tests__/challengeDetailSolutionTabsExtraction.test.ts src/views/challenges/__tests__/challengeDetailSharedShell.test.ts`（2 个测试文件，9 个测试）
+  - `npm run typecheck`
+
 ## 后续技术债 Backlog
 
 - `TD-1` 超大组件专题拆分：
@@ -1708,7 +1726,7 @@
 - `TD-2` Tailwind 任意值与主题 token 尾项：
   - 仍可继续扫描并收口 `bg-[var(...)]`、`text-[var(...)]`、`border-[var(...)]`、裸十六进制色值和布局任意值。
   - 处理时需要区分 token bridge 与真正裸魔法值，避免把合法的主题变量透传和样式债混在一次提交里。
-  - AWD inspector 相关格式化 helper 已在第七十轮收口，实例状态样式尾项已在第七十一轮收口；当前残留主要集中在题目详情 presentation、部分 mock/reference 页面和少量布局组件。
+  - AWD inspector 相关格式化 helper 已在第七十轮收口，实例状态样式尾项已在第七十一轮收口，题目详情提交态 presentation 已在第七十二轮收口；当前残留主要集中在部分 mock/reference 页面、平台概览水位色和少量布局组件。
 - `TD-3` 性能监控接入：
   - 当前未接入 `web-vitals`、`PerformanceObserver` 或项目自定义性能埋点。
   - 该项需要先明确采集指标、上报端点、隐私边界和生产开关，不能只加依赖或空埋点。
