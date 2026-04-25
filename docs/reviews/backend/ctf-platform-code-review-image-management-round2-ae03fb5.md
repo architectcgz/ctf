@@ -14,6 +14,7 @@
 
 ## 2026-04-25 补充修复状态
 
+- 本节是当前事实源。下方“问题清单”“未修复”等内容保留第 2 轮原始审查文本，用于追溯历史问题，不再代表当前待办状态。
 - [H1] 已在后续代码中修复：`configs/config.yaml` 已包含 `pagination.default_page_size` 与 `pagination.max_page_size`。
 - [M1] 已修复：`UpdateImageReq.Description` 改为指针字段，更新镜像时可以区分“未传 description”和“传入空字符串”，允许清空描述。
 - [M2] 已修复：镜像创建请求已通过 `ctf_image_name` 与 `ctf_image_tag` 校验限制镜像名和标签格式，非法字符不会进入命令服务。
