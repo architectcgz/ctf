@@ -1250,7 +1250,7 @@ func TestStartContestAWDServiceDoesNotRequireContestChallengeLookup(t *testing.T
 				Status:    model.ContestRegistrationStatusApproved,
 			}, nil
 		},
-		createInstanceFn: func(instance *model.Instance) error {
+		createInstanceFn: func(ctx context.Context, instance *model.Instance) error {
 			instance.ID = 9104
 			return nil
 		},
@@ -1865,22 +1865,14 @@ func TestStartChallengePropagatesContextToTransactionalRepositoryWhenReusingShar
 	refreshCalled := false
 	service := NewService(
 		&stubPracticeRepository{
-			lockInstanceScopeFn: func(userID, challengeID int64, scope practiceports.InstanceScope) error {
-				t.Fatalf("expected context-aware lock, got legacy call")
-				return nil
-			},
-			lockInstanceScopeWithContextFn: func(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) error {
+			lockInstanceScopeFn: func(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) error {
 				lockCalled = true
 				if got := ctx.Value(ctxKey); got != expectedCtxValue {
 					t.Fatalf("expected lock ctx value %v, got %v", expectedCtxValue, got)
 				}
 				return nil
 			},
-			findScopedExistingInstanceFn: func(userID, challengeID int64, scope practiceports.InstanceScope) (*model.Instance, error) {
-				t.Fatalf("expected context-aware existing-instance lookup, got legacy call")
-				return nil, nil
-			},
-			findScopedExistingInstanceWithContextFn: func(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) (*model.Instance, error) {
+			findScopedExistingInstanceFn: func(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) (*model.Instance, error) {
 				findExistingCalled = true
 				if got := ctx.Value(ctxKey); got != expectedCtxValue {
 					t.Fatalf("expected find-existing ctx value %v, got %v", expectedCtxValue, got)
@@ -1941,45 +1933,33 @@ func TestStartChallengePropagatesContextToTransactionalRepositoryWhenCreatingIns
 	bindCalled := false
 	service := NewService(
 		&stubPracticeRepository{
-			lockInstanceScopeWithContextFn: func(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) error {
+			lockInstanceScopeFn: func(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) error {
 				if got := ctx.Value(ctxKey); got != expectedCtxValue {
 					t.Fatalf("expected lock ctx value %v, got %v", expectedCtxValue, got)
 				}
 				return nil
 			},
-			findScopedExistingInstanceWithContextFn: func(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) (*model.Instance, error) {
+			findScopedExistingInstanceFn: func(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) (*model.Instance, error) {
 				if got := ctx.Value(ctxKey); got != expectedCtxValue {
 					t.Fatalf("expected find-existing ctx value %v, got %v", expectedCtxValue, got)
 				}
 				return nil, nil
 			},
-			countScopedRunningInstancesFn: func(userID int64, scope practiceports.InstanceScope) (int, error) {
-				t.Fatalf("expected context-aware running count, got legacy call")
-				return 0, nil
-			},
-			countScopedRunningInstancesWithContextFn: func(ctx context.Context, userID int64, scope practiceports.InstanceScope) (int, error) {
+			countScopedRunningInstancesFn: func(ctx context.Context, userID int64, scope practiceports.InstanceScope) (int, error) {
 				countCalled = true
 				if got := ctx.Value(ctxKey); got != expectedCtxValue {
 					t.Fatalf("expected count ctx value %v, got %v", expectedCtxValue, got)
 				}
 				return 0, nil
 			},
-			reserveAvailablePortFn: func(start, end int) (int, error) {
-				t.Fatalf("expected context-aware port reservation, got legacy call")
-				return 0, nil
-			},
-			reserveAvailablePortWithContextFn: func(ctx context.Context, start, end int) (int, error) {
+			reserveAvailablePortFn: func(ctx context.Context, start, end int) (int, error) {
 				reserveCalled = true
 				if got := ctx.Value(ctxKey); got != expectedCtxValue {
 					t.Fatalf("expected reserve-port ctx value %v, got %v", expectedCtxValue, got)
 				}
 				return 30007, nil
 			},
-			createInstanceFn: func(instance *model.Instance) error {
-				t.Fatalf("expected context-aware instance creation, got legacy call")
-				return nil
-			},
-			createInstanceWithContextFn: func(ctx context.Context, instance *model.Instance) error {
+			createInstanceFn: func(ctx context.Context, instance *model.Instance) error {
 				createCalled = true
 				if got := ctx.Value(ctxKey); got != expectedCtxValue {
 					t.Fatalf("expected create-instance ctx value %v, got %v", expectedCtxValue, got)
@@ -1987,11 +1967,7 @@ func TestStartChallengePropagatesContextToTransactionalRepositoryWhenCreatingIns
 				instance.ID = 902
 				return nil
 			},
-			bindReservedPortFn: func(port int, instanceID int64) error {
-				t.Fatalf("expected context-aware port bind, got legacy call")
-				return nil
-			},
-			bindReservedPortWithContextFn: func(ctx context.Context, port int, instanceID int64) error {
+			bindReservedPortFn: func(ctx context.Context, port int, instanceID int64) error {
 				bindCalled = true
 				if got := ctx.Value(ctxKey); got != expectedCtxValue {
 					t.Fatalf("expected bind-port ctx value %v, got %v", expectedCtxValue, got)
