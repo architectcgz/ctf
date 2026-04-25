@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"context"
 	"errors"
 
 	"gorm.io/gorm"
@@ -18,7 +19,7 @@ func resolveCreateTeamMaxMembers(req *dto.CreateTeamReq) int {
 	return maxMembers
 }
 
-func (s *TeamService) createTeamWithInviteRetries(contestID, captainID int64, teamName string, maxMembers int) (*model.Team, error) {
+func (s *TeamService) createTeamWithInviteRetries(ctx context.Context, contestID, captainID int64, teamName string, maxMembers int) (*model.Team, error) {
 	const maxRetries = 3
 	var team *model.Team
 	for i := 0; i < maxRetries; i++ {
@@ -34,7 +35,7 @@ func (s *TeamService) createTeamWithInviteRetries(contestID, captainID int64, te
 			InviteCode: inviteCode,
 			MaxMembers: maxMembers,
 		}
-		err = s.teamRepo.CreateWithMember(team, captainID)
+		err = s.teamRepo.CreateWithMember(ctx, team, captainID)
 		if err == nil {
 			return team, nil
 		}

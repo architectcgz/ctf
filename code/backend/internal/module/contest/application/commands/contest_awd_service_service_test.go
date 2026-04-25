@@ -53,7 +53,7 @@ func TestContestAWDServiceServiceCreateFromTemplate(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := challengeRepo.Create(&model.Challenge{
+	if err := challengeRepo.Create(context.Background(), &model.Challenge{
 		ID:         9801,
 		Title:      "bank-portal",
 		Category:   "web",
@@ -134,7 +134,7 @@ func TestContestAWDServiceServiceUpdateMaintainsSnapshotOnly(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := challengeRepo.Create(&model.Challenge{
+	if err := challengeRepo.Create(context.Background(), &model.Challenge{
 		ID:         9802,
 		Title:      "billing-api",
 		Category:   "web",
@@ -216,7 +216,7 @@ func TestContestAWDServiceServiceCreateDoesNotPersistLegacyChallengeIDInRuntimeC
 	}); err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := challengeRepo.Create(&model.Challenge{
+	if err := challengeRepo.Create(context.Background(), &model.Challenge{
 		ID:         9804,
 		Title:      "orders-api",
 		Category:   "web",
@@ -312,7 +312,7 @@ func TestContestAWDServiceServiceUpdateDoesNotPersistLegacyChallengeIDInRuntimeC
 	}); err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := challengeRepo.Create(&model.Challenge{
+	if err := challengeRepo.Create(context.Background(), &model.Challenge{
 		ID:         9805,
 		Title:      "inventory-api",
 		Category:   "web",
@@ -414,7 +414,7 @@ func TestContestAWDServiceServiceCreateConsumesCheckerPreviewToken(t *testing.T)
 	}); err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := challengeRepo.Create(&model.Challenge{
+	if err := challengeRepo.Create(context.Background(), &model.Challenge{
 		ID:         9806,
 		Title:      "preview-service",
 		Category:   "web",
@@ -534,7 +534,7 @@ func TestContestAWDServiceServiceCreateRejectsMissingCheckerPreviewToken(t *test
 	}); err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := challengeRepo.Create(&model.Challenge{
+	if err := challengeRepo.Create(context.Background(), &model.Challenge{
 		ID:         19806,
 		Title:      "preview-service-missing-token",
 		Category:   "web",
@@ -609,7 +609,7 @@ func TestContestAWDServiceServiceUpdateConsumesCheckerPreviewTokenByServiceID(t 
 	}); err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := challengeRepo.Create(&model.Challenge{
+	if err := challengeRepo.Create(context.Background(), &model.Challenge{
 		ID:         9807,
 		Title:      "preview-update-service",
 		Category:   "web",
@@ -733,7 +733,7 @@ func TestContestAWDServiceServiceUpdateRejectsMissingCheckerPreviewToken(t *test
 	}); err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := challengeRepo.Create(&model.Challenge{
+	if err := challengeRepo.Create(context.Background(), &model.Challenge{
 		ID:         19807,
 		Title:      "preview-update-missing-token",
 		Category:   "web",
@@ -801,7 +801,7 @@ func TestContestAWDServiceServiceDeleteRemovesOnlyServiceRecord(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := challengeRepo.Create(&model.Challenge{
+	if err := challengeRepo.Create(context.Background(), &model.Challenge{
 		ID:         9803,
 		Title:      "user-center",
 		Category:   "web",

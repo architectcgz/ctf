@@ -410,9 +410,9 @@ func (r *Repository) listTeacherManualReviewSubmissions(
 }
 
 // CountRecentSubmissions 统计时间窗口内的提交次数
-func (r *Repository) CountRecentSubmissions(userID, challengeID int64, since time.Time) (int64, error) {
+func (r *Repository) CountRecentSubmissions(ctx context.Context, userID, challengeID int64, since time.Time) (int64, error) {
 	var count int64
-	err := r.db.Model(&model.Submission{}).
+	err := r.dbWithContext(ctx).Model(&model.Submission{}).
 		Where("user_id = ? AND challenge_id = ? AND submitted_at >= ?", userID, challengeID, since).
 		Count(&count).Error
 	return count, err
