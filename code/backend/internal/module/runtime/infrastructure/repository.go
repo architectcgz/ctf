@@ -69,9 +69,6 @@ func (r *Repository) WithDB(db *gorm.DB) *Repository {
 }
 
 func (r *Repository) dbWithContext(ctx context.Context) *gorm.DB {
-	if ctx == nil {
-		ctx = context.Background()
-	}
 	return r.db.WithContext(ctx)
 }
 
@@ -501,9 +498,6 @@ func (r *Repository) AtomicExtendByID(ctx context.Context, id int64, maxExtends 
 }
 
 func (r *Repository) CountRunning(ctx context.Context) (int64, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
 	var count int64
 	err := r.db.WithContext(ctx).Model(&model.Instance{}).
 		Where("status = ?", model.InstanceStatusRunning).
