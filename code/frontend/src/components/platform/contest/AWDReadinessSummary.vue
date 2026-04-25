@@ -110,18 +110,6 @@ function getValidationStateLabel(item: AWDReadinessItemData): string {
   }
 }
 
-function getValidationStateBadgeClass(value: AWDReadinessItemData['validation_state']): string {
-  switch (value) {
-    case 'passed': return 'readiness-status-chip--passed'
-    case 'failed': return 'readiness-status-chip--failed'
-    case 'pending':
-    case 'stale':
-      return 'readiness-status-chip--warning'
-    default:
-      return 'readiness-status-chip--neutral'
-  }
-}
-
 function getBlockingReasonLabel(item: AWDReadinessItemData): string {
   switch (item.blocking_reason) {
     case 'missing_checker': return '未配置 Checker'
@@ -192,7 +180,7 @@ function formatDateTime(value?: string): string {
           :key="reason"
           class="blocker-item"
         >
-          <AlertCircle class="readiness-blocker-icon" />
+          <AlertCircle class="h-4 w-4 text-red-500" />
           <span>{{ getGlobalReasonCopy(reason) }}</span>
         </div>
       </div>
@@ -260,8 +248,8 @@ function formatDateTime(value?: string): string {
               </td>
               <td class="col-status">
                 <span
-                  class="ui-badge readiness-status-chip ui-badge--pill ui-badge--soft"
-                  :class="getValidationStateBadgeClass(item.validation_state)"
+                  class="ui-badge readiness-status-chip"
+                  :class="item.validation_state"
                 >{{ getValidationStateLabel(item) }}</span>
               </td>
               <td class="col-reason">
@@ -269,7 +257,7 @@ function formatDateTime(value?: string): string {
                   {{ getBlockingReasonLabel(item) }}
                 </div>
               </td>
-              <td class="col-meta readiness-meta">
+              <td class="col-meta text-[11px] text-slate-500">
                 {{ formatDateTime(item.last_preview_at) }}
               </td>
               <td class="col-actions">
@@ -344,7 +332,6 @@ function formatDateTime(value?: string): string {
 .section-title { font-size: var(--font-size-13); font-weight: 900; color: var(--color-danger); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1rem; }
 .blocker-list { display: flex; flex-direction: column; gap: 0.75rem; }
 .blocker-item { display: flex; align-items: center; gap: 0.75rem; font-size: var(--font-size-13); font-weight: 700; color: var(--color-danger); }
-.readiness-blocker-icon { width: 1rem; height: 1rem; flex: none; color: var(--color-danger); }
 
 /* Directory */
 .directory-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1.25rem; }
@@ -360,20 +347,10 @@ function formatDateTime(value?: string): string {
 .challenge-title { font-size: var(--font-size-14); font-weight: 800; color: var(--color-text-primary); }
 .challenge-subtitle { font-size: var(--font-size-12); color: var(--color-text-muted); margin-top: 0.25rem; }
 
-.readiness-status-chip {
-  --ui-badge-padding: 0.2rem 0.6rem;
-  --ui-badge-size: var(--font-size-11);
-  font-weight: 800;
-}
-.readiness-status-chip--passed { --ui-badge-tone: var(--color-success); }
-.readiness-status-chip--failed { --ui-badge-tone: var(--color-danger); }
-.readiness-status-chip--warning { --ui-badge-tone: var(--color-warning); }
-.readiness-status-chip--neutral { --ui-badge-tone: var(--color-text-muted); }
-
-.readiness-meta {
-  font-size: var(--font-size-11);
-  color: var(--color-text-muted);
-}
+.status-pill { font-size: var(--font-size-11); font-weight: 800; padding: 0.2rem 0.6rem; border-radius: 99px; }
+.status-pill.passed { background: var(--color-success); color: white; }
+.status-pill.failed { background: var(--color-danger); color: white; }
+.status-pill.pending, .status-pill.stale { background: var(--color-warning); color: white; }
 
 .reason-text { font-size: var(--font-size-13); font-weight: 700; color: var(--color-text-secondary); }
 

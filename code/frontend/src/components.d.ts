@@ -82,6 +82,7 @@ declare module 'vue' {
     ContestOrchestrationPage: typeof import('./components/platform/contest/ContestOrchestrationPage.vue')['default']
     ContestOverviewPanel: typeof import('./components/contests/ContestOverviewPanel.vue')['default']
     ContestTeamPanel: typeof import('./components/contests/ContestTeamPanel.vue')['default']
+    ContestWorkbenchStageRail: typeof import('./components/platform/contest/ContestWorkbenchStageRail.vue')['default']
     ContestWorkbenchStageTabs: typeof import('./components/platform/contest/ContestWorkbenchStageTabs.vue')['default']
     ContestWorkbenchSummaryStrip: typeof import('./components/platform/contest/ContestWorkbenchSummaryStrip.vue')['default']
     ErrorStatusShell: typeof import('./components/errors/ErrorStatusShell.vue')['default']

@@ -76,17 +76,9 @@ import { Activity, Clock, ShieldAlert, Sword, TimerReset, ClipboardCheck } from 
 
 <style scoped>
 .studio-pending-shell {
-  --pending-shell-surface: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
-  --pending-shell-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 84%, var(--color-bg-base));
-  --pending-shell-border: color-mix(in srgb, var(--color-border-default) 84%, transparent);
-  --pending-shell-border-strong: color-mix(in srgb, var(--color-border-default) 92%, transparent);
-  --pending-shell-text: var(--color-text-primary);
-  --pending-shell-muted: var(--color-text-secondary);
-  --pending-shell-faint: var(--color-text-muted);
-  --pending-shell-accent: color-mix(in srgb, var(--color-primary) 82%, var(--color-text-primary));
   padding: 4rem 3rem;
-  background: var(--pending-shell-surface);
-  border: 1px solid var(--pending-shell-border);
+  background: white;
+  border: 1px solid #e2e8f0;
   border-radius: 1.5rem;
   display: flex;
   flex-direction: column;
@@ -95,9 +87,9 @@ import { Activity, Clock, ShieldAlert, Sword, TimerReset, ClipboardCheck } from 
   gap: 3rem;
 }
 
-.pending-overline { font-size: 10px; font-weight: 800; text-transform: uppercase; color: var(--pending-shell-accent); letter-spacing: 0.2em; margin-bottom: 0.75rem; }
-.pending-title { font-size: 2rem; font-weight: 900; color: var(--pending-shell-text); margin: 0; }
-.pending-description { font-size: 14px; color: var(--pending-shell-muted); max-width: 36rem; line-height: 1.7; margin: 1rem auto 0; }
+.pending-overline { font-size: 10px; font-weight: 800; text-transform: uppercase; color: #3b82f6; letter-spacing: 0.2em; margin-bottom: 0.75rem; }
+.pending-title { font-size: 2rem; font-weight: 900; color: #0f172a; margin: 0; }
+.pending-description { font-size: 14px; color: #64748b; max-width: 36rem; line-height: 1.7; margin: 1rem auto 0; }
 
 .pending-grid {
   display: grid;
@@ -108,8 +100,8 @@ import { Activity, Clock, ShieldAlert, Sword, TimerReset, ClipboardCheck } from 
 }
 
 .pending-card {
-  background: var(--pending-shell-surface-subtle);
-  border: 1px solid var(--pending-shell-border);
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
   border-radius: 1rem;
   padding: 1.5rem;
   display: flex;
@@ -122,17 +114,31 @@ import { Activity, Clock, ShieldAlert, Sword, TimerReset, ClipboardCheck } from 
   width: 3rem;
   height: 3rem;
   border-radius: 0.75rem;
-  background: var(--pending-shell-surface);
+  background: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--pending-shell-faint);
-  border: 1px solid var(--pending-shell-border-strong);
+  color: #94a3b8;
+  border: 1px solid #e2e8f0;
 }
 
-.card-label { font-size: 10px; font-weight: 800; text-transform: uppercase; color: var(--pending-shell-faint); letter-spacing: 0.05em; }
-.card-status { font-size: 14px; font-weight: 800; color: var(--pending-shell-muted); }
+.card-label { font-size: 10px; font-weight: 800; text-transform: uppercase; color: #94a3b8; letter-spacing: 0.05em; }
+.card-status { font-size: 14px; font-weight: 800; color: #475569; }
 
 .pending-actions { display: flex; flex-direction: column; align-items: center; gap: 1rem; }
-.pending-footer-hint { font-size: 12px; font-weight: 600; color: var(--pending-shell-faint); }
+
+.ops-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 2.5rem;
+  padding: 0 1.25rem;
+  border-radius: 0.85rem;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.ops-btn--disabled { background: #f1f5f9; color: #cbd5e1; cursor: not-allowed; border: 1px solid #e2e8f0; }
+
+.pending-footer-hint { font-size: 12px; font-weight: 600; color: #94a3b8; }
 </style>

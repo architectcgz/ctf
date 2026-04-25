@@ -308,7 +308,7 @@ const ContestChallengeEditorDialogStub = defineComponent({
 
     function submit() {
       emit('save', {
-        challenge_id: challengeId.value ? Number(challengeId.value) : undefined,
+        challenge_id: isAwdContest.value ? undefined : Number(challengeId.value),
         template_id: isAwdContest.value ? Number(templateId.value) : undefined,
         points: Number(points.value),
         order: Number(order.value),
@@ -321,7 +321,7 @@ const ContestChallengeEditorDialogStub = defineComponent({
   template: `
     <div v-if="open">
       <select
-        v-if="mode === 'create'"
+        v-if="mode === 'create' && !isAwdContest"
         id="contest-challenge-select"
         v-model="challengeId"
         :disabled="loadingChallengeCatalog"
@@ -1072,8 +1072,8 @@ describe('ContestEdit', () => {
     await wrapper.get('#contest-workbench-stage-tab-operations').trigger('click')
     await flushPromises()
 
-    expect(wrapper.text()).toContain('尚未进入运行阶段')
-    expect(wrapper.text()).toContain('需先通过赛前检查并开赛，本面板才会切换到实时监控模式。')
+    expect(wrapper.text()).toContain('运维就绪审计')
+    expect(wrapper.text()).toContain('开赛前必须修正以下阻塞项')
   })
 
   it('应该在 AWD 赛事已结束时进入运行段而不是显示赛前降级壳', async () => {
@@ -1674,8 +1674,8 @@ describe('ContestEdit', () => {
     })
     contestApiMocks.createContestAWDService.mockImplementation(async (_contestId, payload) => {
       expect(payload).toEqual({
-        challenge_id: 102,
         template_id: 11,
+        points: 160,
         order: 3,
         is_visible: true,
       })
@@ -1691,7 +1691,7 @@ describe('ContestEdit', () => {
         order: 3,
         is_visible: true,
         score_config: {
-          points: 160,
+          points: payload.points,
           awd_sla_score: 0,
           awd_defense_score: 0,
         },
@@ -1716,7 +1716,6 @@ describe('ContestEdit', () => {
     await flushPromises()
     await wrapper.get('#contest-challenge-add').trigger('click')
     await flushPromises()
-    await wrapper.get('#contest-challenge-select').setValue('102')
     await wrapper.get('#contest-challenge-template').setValue('11')
     await wrapper.get('#contest-challenge-points').setValue('160')
     await wrapper.get('#contest-challenge-order').setValue('3')
@@ -1847,7 +1846,7 @@ describe('ContestEdit', () => {
 
     await wrapper.get('#contest-challenge-add').trigger('click')
     await flushPromises()
-    expect(wrapper.find('#contest-challenge-select').exists()).toBe(true)
+    expect(wrapper.find('#contest-challenge-select').exists()).toBe(false)
     expect(wrapper.find('#contest-challenge-template').exists()).toBe(true)
   })
 
@@ -1948,7 +1947,7 @@ describe('ContestEdit', () => {
     expect(wrapper.text()).toContain('未配置 AWD')
     expect(wrapper.text()).toContain('预检失败')
     expect(wrapper.text()).toContain('Checker')
-    expect(wrapper.text()).toContain('SLA 18 / 防守 28')
+    expect(wrapper.text()).toContain('S:18 D:28')
     expect(wrapper.text()).toContain('待重新验证')
   })
 })

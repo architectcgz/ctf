@@ -35,14 +35,14 @@ const metadata = computed(() => [
       </div>
       <div class="import-review__actions">
         <button
-          class="ui-btn ui-btn--secondary import-review__ghost"
+          class="import-review__ghost"
           type="button"
           @click="emit('reset')"
         >
           重新选择
         </button>
         <button
-          class="ui-btn ui-btn--primary import-review__primary"
+          class="import-review__primary"
           type="button"
           :disabled="committing"
           @click="emit('confirm')"
@@ -202,21 +202,21 @@ const metadata = computed(() => [
 
 .import-review__primary,
 .import-review__ghost {
-  --ui-btn-height: 2.75rem;
-  --ui-btn-padding: var(--space-2-5) var(--space-4);
-  --ui-btn-radius: 999px;
-  --ui-btn-font-size: var(--font-size-0-90);
-  --ui-btn-font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: var(--space-2-5) var(--space-4);
+  border-radius: 999px;
+  font-size: var(--font-size-0-90);
+  font-weight: 700;
+  transition: all 150ms ease;
 }
 
 .import-review__primary {
-  --ui-btn-primary-border: color-mix(in srgb, var(--journal-accent) 18%, transparent);
-  --ui-btn-primary-background: var(--journal-accent);
-  --ui-btn-primary-hover-background: color-mix(
-    in srgb,
-    var(--journal-accent) 82%,
-    var(--journal-ink)
-  );
+  border: 1px solid color-mix(in srgb, var(--journal-accent) 18%, transparent);
+  background: var(--journal-accent);
+  color: #fff;
 }
 
 .import-review__primary:disabled {
@@ -225,23 +225,13 @@ const metadata = computed(() => [
 }
 
 .import-review__ghost {
-  --ui-btn-secondary-border: var(--journal-border);
-  --ui-btn-secondary-background: color-mix(
+  border: 1px solid var(--journal-border);
+  background: color-mix(
     in srgb,
     var(--journal-surface, var(--color-bg-surface)) 92%,
     var(--color-bg-base)
   );
-  --ui-btn-secondary-color: var(--journal-ink);
-  --ui-btn-secondary-hover-background: color-mix(
-    in srgb,
-    var(--journal-surface-subtle, var(--color-bg-elevated)) 92%,
-    var(--color-bg-base)
-  );
-  --ui-btn-secondary-hover-border: color-mix(
-    in srgb,
-    var(--journal-border) 92%,
-    transparent
-  );
+  color: var(--journal-ink);
 }
 
 .import-review__grid {

@@ -28,6 +28,12 @@ export function getModeLabel(mode: ContestMode): string {
   return labels[mode] || mode
 }
 
+export function getStatusBadgeClass(status: ContestStatus): string {
+  if (status === 'running') return 'bg-[var(--color-primary)]/10 text-[#06b6d4]'
+  if (status === 'registering') return 'bg-[#f59e0b]/10 text-[#f59e0b]'
+  return 'bg-[#30363d] text-[var(--color-text-secondary)]'
+}
+
 export function getContestAccentColor(status: ContestStatus): string {
   if (status === 'running') return 'var(--color-primary)'
   if (status === 'registering') return 'var(--color-warning)'

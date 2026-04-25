@@ -143,7 +143,7 @@ function getServiceCheckTargets(checkResult: Record<string, unknown>) {
         <button
           id="awd-export-services"
           type="button"
-          class="ui-btn ui-btn--secondary awd-matrix-export-button"
+          class="ops-btn ops-btn--neutral"
           @click="emit('exportServices')"
         >
           <FileDown class="h-3.5 w-3.5 mr-2" /> 导出报告
@@ -196,25 +196,25 @@ function getServiceCheckTargets(checkResult: Record<string, unknown>) {
               :key="item.team_id"
               class="studio-row"
             >
-              <td class="performance-team-cell">
+              <td class="font-bold text-slate-900">
                 {{ item.team_name }}
               </td>
-              <td class="text-right performance-total-score">
+              <td class="text-right font-mono font-black text-emerald-600">
                 {{ item.total_score }}
               </td>
-              <td class="text-right performance-score-breakdown">
+              <td class="text-right font-mono text-[11px] text-slate-500">
                 {{ item.sla_score ?? 0 }} / {{ item.attack_score }} / {{ item.defense_score }}
               </td>
               <td class="text-right">
                 <div class="health-stack">
-                  <span class="health-count health-count--up">{{ item.service_up_count }} UP</span>
-                  <span class="health-divider">/</span>
-                  <span class="health-count health-count--down">{{ item.service_down_count }} OFF</span>
-                  <span class="health-divider">/</span>
-                  <span class="health-count health-count--compromised">{{ item.service_compromised_count }} EXP</span>
+                  <span class="text-emerald-500">{{ item.service_up_count }} UP</span>
+                  <span class="text-slate-300">/</span>
+                  <span class="text-red-500">{{ item.service_down_count }} OFF</span>
+                  <span class="text-slate-300">/</span>
+                  <span class="text-orange-500">{{ item.service_compromised_count }} EXP</span>
                 </div>
               </td>
-              <td class="text-right performance-breach-summary">
+              <td class="text-right text-[11px] text-slate-500">
                 攻破 {{ item.successful_breach_count }} 次 · {{ item.unique_attackers_against }} 攻击方
               </td>
             </tr>
@@ -288,34 +288,12 @@ function getServiceCheckTargets(checkResult: Record<string, unknown>) {
 .studio-table { width: 100%; border-collapse: collapse; background: var(--color-bg-surface); }
 .studio-table th { background: var(--color-bg-elevated); padding: 0.75rem 1rem; text-align: left; font-size: 10px; font-weight: 800; text-transform: uppercase; color: var(--color-text-muted); border-top: 1px solid var(--color-border-default); border-bottom: 1px solid var(--color-border-default); }
 .studio-table td { padding: 0.85rem 1rem; border-bottom: 1px solid var(--color-border-subtle); }
-.performance-team-cell {
-  font-weight: 700;
-  color: var(--color-text-primary);
-}
-.performance-total-score {
-  font-family: var(--font-family-mono);
-  font-weight: 900;
-  color: var(--color-success);
-}
-.performance-score-breakdown {
-  font-family: var(--font-family-mono);
-  font-size: var(--font-size-11);
-  color: var(--color-text-muted);
-}
-.health-count--up { color: var(--color-success); }
-.health-count--down { color: var(--color-danger); }
-.health-count--compromised { color: var(--color-warning); }
-.health-divider { color: color-mix(in srgb, var(--color-text-muted) 88%, var(--color-border-default)); }
-.performance-breach-summary {
-  font-size: var(--font-size-11);
-  color: var(--color-text-muted);
-}
 
-.awd-matrix-export-button {
-  --ui-btn-height: 2rem;
-  --ui-btn-padding: 0 0.85rem;
-  --ui-btn-radius: 0.65rem;
-  --ui-btn-font-size: var(--font-size-12);
-  --ui-btn-font-weight: 700;
+.ops-btn {
+  display: inline-flex; align-items: center; gap: 0.5rem; height: 2rem; padding: 0 0.85rem;
+  border-radius: 0.65rem; font-size: 12px; font-weight: 700;
+  background: var(--color-bg-surface); border: 1px solid var(--color-border-default);
+  color: var(--color-text-secondary); cursor: pointer;
 }
+.ops-btn:hover:not(:disabled) { background: var(--color-bg-elevated); color: var(--color-text-primary); }
 </style>
