@@ -3,6 +3,7 @@ package domain
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"sort"
 	"strconv"
 	"strings"
@@ -117,15 +118,34 @@ func parseTemplateConfigMap(raw string) map[string]any {
 
 func ImageRespFromModel(image *model.Image) *dto.ImageResp {
 	return &dto.ImageResp{
-		ID:          image.ID,
-		Name:        image.Name,
-		Tag:         image.Tag,
-		Description: image.Description,
-		Size:        image.Size,
-		Status:      image.Status,
-		CreatedAt:   image.CreatedAt,
-		UpdatedAt:   image.UpdatedAt,
+		ID:            image.ID,
+		Name:          image.Name,
+		Tag:           image.Tag,
+		Description:   image.Description,
+		Size:          image.Size,
+		SizeFormatted: FormatImageSize(image.Size),
+		Status:        image.Status,
+		CreatedAt:     image.CreatedAt,
+		UpdatedAt:     image.UpdatedAt,
 	}
+}
+
+func FormatImageSize(size int64) string {
+	if size <= 0 {
+		return "0 B"
+	}
+
+	value := float64(size)
+	units := []string{"B", "KB", "MB", "GB", "TB"}
+	unitIndex := 0
+	for value >= 1024 && unitIndex < len(units)-1 {
+		value = value / 1024
+		unitIndex++
+	}
+	if value == float64(int64(value)) {
+		return fmt.Sprintf("%.0f %s", value, units[unitIndex])
+	}
+	return fmt.Sprintf("%.1f %s", value, units[unitIndex])
 }
 
 func TagRespFromModel(tag *model.Tag) *dto.TagResp {

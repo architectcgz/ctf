@@ -1114,20 +1114,21 @@ export interface AdminChallengePublishRequestData {
 
 ### 8.9 GET `/api/v1/authoring/images`（分页）
 
-`data`（缺少示例，需确认）：
+`data`：
 
 ```ts
-export type ImageSourceType = 'registry' | 'dockerfile' | 'upload'
-export type ImageStatus = 'pending' | 'building' | 'ready' | 'failed' | 'deprecated'
+export type ImageStatus = 'pending' | 'building' | 'available' | 'failed'
 
 export interface AdminImageListItem {
   id: ID
   name: string
   tag: string
-  source_type: ImageSourceType
+  description: string
+  size: number
+  size_formatted: string
   status: ImageStatus
-  size_bytes?: number
   created_at: ISODateTime
+  updated_at: ISODateTime
 }
 
 export type AdminImageListData = PageResult<AdminImageListItem>
@@ -1135,13 +1136,15 @@ export type AdminImageListData = PageResult<AdminImageListItem>
 
 ### 8.10 POST `/api/v1/authoring/images`
 
-`data`（缺少示例，需确认）：
+`data`：
 
 ```ts
-export interface AdminImageCreateData {
-  image: AdminImageListItem
-}
+export type AdminImageCreateData = AdminImageListItem
 ```
+
+### 8.10.1 PUT `/api/v1/authoring/images/:id`
+
+`data`：`null`
 
 ### 8.11 DELETE `/api/v1/authoring/images/:id`
 

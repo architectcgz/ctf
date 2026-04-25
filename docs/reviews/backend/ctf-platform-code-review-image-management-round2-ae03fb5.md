@@ -19,14 +19,15 @@
 - [M2] 已修复：镜像创建请求已通过 `ctf_image_name` 与 `ctf_image_tag` 校验限制镜像名和标签格式，非法字符不会进入命令服务。
 - [M3] 已修复：更新日志记录状态和描述的变更前后值，删除日志记录镜像 name、tag 与 size。
 - [L3] 已修复：镜像列表查询显式追加 `deleted_at IS NULL`，不只依赖 GORM 隐式软删除 scope。
-- [M4] 暂未在本轮处理：新增数据库索引属于结构变更，需要单独迁移和上线评估。
+- [M4] 已修复：新增 `000003_add_images_deleted_at_index` 迁移，为 `images(deleted_at)` 补充索引，并同步数据库设计文档。
 - [L2] 已修复：镜像 handler 的无效 ID 文案已提取为单一常量，并补源码护栏避免重复字面量回流。
-- [L1]、[L4] 暂未处理：分别属于响应泛型化和展示增强，不影响本轮修复的行为缺陷。
+- [L1] 已修复：`dto.PageResult` 改为泛型 `PageResult[T]`，分页返回的 `list` 在服务层保持具体元素类型。
+- [L4] 已修复：镜像响应新增 `size_formatted`，后端统一生成镜像大小展示文本，API 契约同步更新。
 - 验证命令：
 
 ```bash
-cd /home/azhi/workspace/projects/ctf/.worktrees/fix-image-management-review-tail/code/backend
-timeout 180s go test ./internal/module/challenge/... -count=1
+cd /home/azhi/workspace/projects/ctf/.worktrees/fix-image-management-review-complete/code/backend
+timeout 300s go test ./... -count=1
 ```
 
 - 结果：通过。

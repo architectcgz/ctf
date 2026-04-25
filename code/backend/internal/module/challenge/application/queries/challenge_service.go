@@ -51,7 +51,7 @@ func (s *ChallengeService) GetChallenge(ctx context.Context, id int64) (*dto.Cha
 	return domain.ChallengeRespFromModel(challenge, hints), nil
 }
 
-func (s *ChallengeService) ListChallenges(ctx context.Context, query *dto.ChallengeQuery) (*dto.PageResult, error) {
+func (s *ChallengeService) ListChallenges(ctx context.Context, query *dto.ChallengeQuery) (*dto.PageResult[*dto.ChallengeResp], error) {
 	challenges, total, err := s.repo.List(ctx, query)
 	if err != nil {
 		return nil, err
@@ -71,7 +71,7 @@ func (s *ChallengeService) ListChallenges(ctx context.Context, query *dto.Challe
 		size = 20
 	}
 
-	return &dto.PageResult{
+	return &dto.PageResult[*dto.ChallengeResp]{
 		List:  list,
 		Total: total,
 		Page:  page,
@@ -79,13 +79,13 @@ func (s *ChallengeService) ListChallenges(ctx context.Context, query *dto.Challe
 	}, nil
 }
 
-func (s *ChallengeService) ListPublishedChallenges(ctx context.Context, userID int64, query *dto.ChallengeQuery) (*dto.PageResult, error) {
+func (s *ChallengeService) ListPublishedChallenges(ctx context.Context, userID int64, query *dto.ChallengeQuery) (*dto.PageResult[*dto.ChallengeListItem], error) {
 	challenges, total, err := s.repo.ListPublished(ctx, query)
 	if err != nil {
 		return nil, err
 	}
 	if len(challenges) == 0 {
-		return &dto.PageResult{
+		return &dto.PageResult[*dto.ChallengeListItem]{
 			List:  []*dto.ChallengeListItem{},
 			Total: total,
 			Page:  query.Page,
@@ -131,7 +131,7 @@ func (s *ChallengeService) ListPublishedChallenges(ctx context.Context, userID i
 		})
 	}
 
-	return &dto.PageResult{
+	return &dto.PageResult[*dto.ChallengeListItem]{
 		List:  list,
 		Total: total,
 		Page:  query.Page,

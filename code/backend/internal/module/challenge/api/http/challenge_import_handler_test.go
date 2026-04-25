@@ -69,11 +69,11 @@ func (challengeImportHandlerQueryStub) GetChallenge(ctx context.Context, id int6
 	return nil, nil
 }
 
-func (challengeImportHandlerQueryStub) ListChallenges(ctx context.Context, query *dto.ChallengeQuery) (*dto.PageResult, error) {
+func (challengeImportHandlerQueryStub) ListChallenges(ctx context.Context, query *dto.ChallengeQuery) (*dto.PageResult[*dto.ChallengeResp], error) {
 	return nil, nil
 }
 
-func (challengeImportHandlerQueryStub) ListPublishedChallenges(ctx context.Context, userID int64, query *dto.ChallengeQuery) (*dto.PageResult, error) {
+func (challengeImportHandlerQueryStub) ListPublishedChallenges(ctx context.Context, userID int64, query *dto.ChallengeQuery) (*dto.PageResult[*dto.ChallengeListItem], error) {
 	return nil, nil
 }
 

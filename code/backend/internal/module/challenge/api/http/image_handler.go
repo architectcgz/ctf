@@ -25,7 +25,7 @@ type imageCommandService interface {
 
 type imageQueryService interface {
 	GetImage(ctx context.Context, id int64) (*dto.ImageResp, error)
-	ListImages(ctx context.Context, query *dto.ImageQuery) (*dto.PageResult, error)
+	ListImages(ctx context.Context, query *dto.ImageQuery) (*dto.PageResult[*dto.ImageResp], error)
 }
 
 func NewImageHandler(commands imageCommandService, queries imageQueryService) *ImageHandler {

@@ -35,7 +35,7 @@ func (s *ImageService) GetImage(ctx context.Context, id int64) (*dto.ImageResp, 
 	return domain.ImageRespFromModel(image), nil
 }
 
-func (s *ImageService) ListImages(ctx context.Context, query *dto.ImageQuery) (*dto.PageResult, error) {
+func (s *ImageService) ListImages(ctx context.Context, query *dto.ImageQuery) (*dto.PageResult[*dto.ImageResp], error) {
 	page := query.Page
 	if page < 1 {
 		page = 1
@@ -54,12 +54,12 @@ func (s *ImageService) ListImages(ctx context.Context, query *dto.ImageQuery) (*
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	items := make([]interface{}, len(images))
+	items := make([]*dto.ImageResp, len(images))
 	for index, image := range images {
 		items[index] = domain.ImageRespFromModel(image)
 	}
 
-	return &dto.PageResult{
+	return &dto.PageResult[*dto.ImageResp]{
 		List:  items,
 		Total: total,
 		Page:  page,
