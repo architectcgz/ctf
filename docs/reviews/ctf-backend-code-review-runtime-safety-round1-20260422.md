@@ -86,6 +86,25 @@ timeout 300s go test ./... -count=1
 - 结果：
   - 通过。
 
+## 第 3 轮机械防线
+
+- 2026-04-25 继续补充防回归规则：
+  - 新增后端架构测试，统一禁止 ports/contracts 与 infrastructure repository 的公开操作边界遗漏 `ctx context.Context`。
+  - 新增后端架构测试，统一禁止新增公开 `FooWithContext(...)` 命名，后端默认使用 `Foo(ctx, ...)`。
+  - 新增后端架构测试，统一限制 `context.Background()` / `context.TODO()` 只能出现在明确的 root、基础设施初始化入口、后台任务 root 或 testsupport 中。
+- 第 3 轮修复状态：
+  - 已将 contest team ports、application service、infrastructure repository 的 team 查询、成员变更、创建/解散链路全部改为显式 ctx。
+  - 已同步 challenge infrastructure 旧 `Create` 方法与 practice infrastructure 旧 `CountRecentSubmissions` 方法的 ctx 签名，避免保留无 ctx 可误用边界。
+- 第 3 轮验证：
+
+```bash
+cd /home/azhi/workspace/projects/ctf/.worktrees/backend-context-architecture-guards/code/backend
+timeout 300s go test ./... -count=1
+```
+
+- 结果：
+  - 通过。
+
 ## 问题清单
 
 ### 🔴 高优先级

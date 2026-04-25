@@ -9,8 +9,8 @@ import (
 	"ctf-platform/pkg/errcode"
 )
 
-func (s *TeamService) DismissTeam(_ context.Context, contestID, captainID, teamID int64) error {
-	team, err := s.teamRepo.FindByID(teamID)
+func (s *TeamService) DismissTeam(ctx context.Context, contestID, captainID, teamID int64) error {
+	team, err := s.teamRepo.FindByID(ctx, teamID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return errcode.ErrTeamNotFound
@@ -23,11 +23,11 @@ func (s *TeamService) DismissTeam(_ context.Context, contestID, captainID, teamI
 	if team.CaptainID != captainID {
 		return errcode.ErrNotCaptain
 	}
-	return s.teamRepo.DeleteWithMembers(teamID)
+	return s.teamRepo.DeleteWithMembers(ctx, teamID)
 }
 
-func (s *TeamService) KickMember(_ context.Context, contestID, captainID, teamID, memberUserID int64) error {
-	team, err := s.teamRepo.FindByID(teamID)
+func (s *TeamService) KickMember(ctx context.Context, contestID, captainID, teamID, memberUserID int64) error {
+	team, err := s.teamRepo.FindByID(ctx, teamID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return errcode.ErrTeamNotFound
@@ -44,14 +44,14 @@ func (s *TeamService) KickMember(_ context.Context, contestID, captainID, teamID
 		return errcode.ErrCaptainCannotLeave
 	}
 
-	members, err := s.teamRepo.GetMembers(teamID)
+	members, err := s.teamRepo.GetMembers(ctx, teamID)
 	if err != nil {
 		return errcode.ErrInternal.WithCause(err)
 	}
 	if !teamHasMember(members, memberUserID) {
 		return errcode.ErrNotInTeam
 	}
-	if err := s.teamRepo.RemoveMember(teamID, memberUserID); err != nil {
+	if err := s.teamRepo.RemoveMember(ctx, teamID, memberUserID); err != nil {
 		return errcode.ErrInternal.WithCause(err)
 	}
 	return nil

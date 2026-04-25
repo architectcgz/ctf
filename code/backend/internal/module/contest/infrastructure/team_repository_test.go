@@ -1,6 +1,7 @@
 package infrastructure_test
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -34,7 +35,7 @@ func TestTeamRepositoryCreateWithMemberSyncsContestRegistration(t *testing.T) {
 		UpdatedAt:  now,
 	}
 
-	if err := repo.CreateWithMember(team, 2001); err != nil {
+	if err := repo.CreateWithMember(context.Background(), team, 2001); err != nil {
 		t.Fatalf("CreateWithMember() error = %v", err)
 	}
 

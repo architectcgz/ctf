@@ -16,7 +16,7 @@ func (h *TeamHandler) GetTeamInfo(c *gin.Context) {
 		return
 	}
 
-	teamResp, members, err := h.queries.GetTeamInfo(teamID)
+	teamResp, members, err := h.queries.GetTeamInfo(c.Request.Context(), teamID)
 	if err != nil {
 		response.FromError(c, err)
 		return
