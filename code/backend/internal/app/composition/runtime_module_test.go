@@ -55,7 +55,7 @@ func TestBuildRuntimeEngineProvidesReachableRuntimeInTestEnv(t *testing.T) {
 		t.Fatalf("expected runtime probe status 200, got %d", resp.StatusCode)
 	}
 
-	cleanup := runtimecmd.NewRuntimeCleanupService(engine, zap.NewNop())
+	cleanup := runtimecmd.NewRuntimeCleanupService(engine, nil, zap.NewNop())
 	if err := cleanup.RemoveContainer(context.Background(), containerID); err != nil {
 		t.Fatalf("RemoveContainer() error = %v", err)
 	}

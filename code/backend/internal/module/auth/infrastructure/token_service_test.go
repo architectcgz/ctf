@@ -57,6 +57,18 @@ func TestTokenServiceGetSessionRejectsMissingSession(t *testing.T) {
 	}
 }
 
+func TestTokenServiceCreateSessionRejectsNilContext(t *testing.T) {
+	mini := miniredis.RunT(t)
+	redisClient := redislib.NewClient(&redislib.Options{Addr: mini.Addr()})
+	t.Cleanup(func() { _ = redisClient.Close() })
+
+	service := authinfra.NewTokenService(newTestAuthConfig(), testWebSocketConfig(), redisClient)
+
+	if _, err := service.CreateSession(nil, 42, "alice", "student"); err == nil {
+		t.Fatal("expected CreateSession() to reject nil context")
+	}
+}
+
 func testWebSocketConfig() config.WebSocketConfig {
 	return config.WebSocketConfig{
 		TicketTTL:       time.Minute,
