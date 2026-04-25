@@ -1348,6 +1348,23 @@ func (s *Scheduler) SelectNode(ctx context.Context,
 
 **私有 Registry 部署（多机必备）：**
 
+仓库提供了带 Basic Auth 的部署脚本，单机演示或小规模内网部署可以直接使用：
+
+```bash
+REGISTRY_PORT=5000 \
+REGISTRY_SERVER=127.0.0.1:5000 \
+REGISTRY_PASSWORD='change-this-password' \
+scripts/deploy-private-registry.sh
+```
+
+脚本会启动 `registry:2` 容器，生成 htpasswd 认证文件，并在认证目录写入后端可加载的 `ctf-platform-registry.env`：
+
+```bash
+source /data/ctf-registry-auth/ctf-platform-registry.env
+```
+
+如果需要手工部署，等价流程如下：
+
 ```bash
 # 使用 Docker Registry 搭建私有镜像仓库
 docker run -d \
