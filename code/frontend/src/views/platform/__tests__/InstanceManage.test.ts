@@ -92,6 +92,9 @@ describe('PlatformInstanceManagement', () => {
     )
     expect(adminInstanceManageSource).toContain('<InstanceManageHeroPanel')
     expect(adminInstanceManageSource).toContain('<InstanceManageWorkspacePanel')
+    expect(adminInstanceManageSource).toContain(
+      'class="workspace-shell journal-shell journal-shell-admin journal-hero admin-instance-manage-shell"'
+    )
     expect(instanceManageHeroPanelSource).toContain('返回概览')
     expect(instanceManageHeroPanelSource).toContain('刷新列表')
     expect(instanceManageHeroPanelSource).toContain('class="ui-btn ui-btn--primary"')
