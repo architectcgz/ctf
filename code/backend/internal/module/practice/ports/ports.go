@@ -58,10 +58,10 @@ type PracticeCommandTxRepository interface {
 
 type PracticeCommandRepository interface {
 	WithinTransaction(ctx context.Context, fn func(txRepo PracticeCommandTxRepository) error) error
-	FindContestByIDWithContext(ctx context.Context, contestID int64) (*model.Contest, error)
-	FindContestChallengeWithContext(ctx context.Context, contestID, challengeID int64) (*model.ContestChallenge, error)
-	FindContestAWDServiceWithContext(ctx context.Context, contestID, serviceID int64) (*model.ContestAWDService, error)
-	FindContestRegistrationWithContext(ctx context.Context, contestID, userID int64) (*model.ContestRegistration, error)
+	FindContestByID(ctx context.Context, contestID int64) (*model.Contest, error)
+	FindContestChallenge(ctx context.Context, contestID, challengeID int64) (*model.ContestChallenge, error)
+	FindContestAWDService(ctx context.Context, contestID, serviceID int64) (*model.ContestAWDService, error)
+	FindContestRegistration(ctx context.Context, contestID, userID int64) (*model.ContestRegistration, error)
 	CreateSubmission(submission *model.Submission) error
 	CreateSubmissionWithContext(ctx context.Context, submission *model.Submission) error
 	FindCorrectSubmission(userID, challengeID int64) (*model.Submission, error)

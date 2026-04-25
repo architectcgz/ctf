@@ -41,7 +41,7 @@ func (r *Repository) WithinTransaction(ctx context.Context, fn func(txRepo pract
 	})
 }
 
-func (r *Repository) FindContestByIDWithContext(ctx context.Context, contestID int64) (*model.Contest, error) {
+func (r *Repository) FindContestByID(ctx context.Context, contestID int64) (*model.Contest, error) {
 	var contest model.Contest
 	if err := r.dbWithContext(ctx).Where("id = ?", contestID).First(&contest).Error; err != nil {
 		return nil, err
@@ -49,7 +49,7 @@ func (r *Repository) FindContestByIDWithContext(ctx context.Context, contestID i
 	return &contest, nil
 }
 
-func (r *Repository) FindContestChallengeWithContext(ctx context.Context, contestID, challengeID int64) (*model.ContestChallenge, error) {
+func (r *Repository) FindContestChallenge(ctx context.Context, contestID, challengeID int64) (*model.ContestChallenge, error) {
 	var contestChallenge model.ContestChallenge
 	if err := r.dbWithContext(ctx).
 		Where("contest_id = ? AND challenge_id = ?", contestID, challengeID).
@@ -59,7 +59,7 @@ func (r *Repository) FindContestChallengeWithContext(ctx context.Context, contes
 	return &contestChallenge, nil
 }
 
-func (r *Repository) FindContestAWDServiceWithContext(ctx context.Context, contestID, serviceID int64) (*model.ContestAWDService, error) {
+func (r *Repository) FindContestAWDService(ctx context.Context, contestID, serviceID int64) (*model.ContestAWDService, error) {
 	var service model.ContestAWDService
 	if err := r.dbWithContext(ctx).
 		Where("contest_id = ? AND id = ?", contestID, serviceID).
@@ -70,7 +70,7 @@ func (r *Repository) FindContestAWDServiceWithContext(ctx context.Context, conte
 	return &service, nil
 }
 
-func (r *Repository) FindContestRegistrationWithContext(ctx context.Context, contestID, userID int64) (*model.ContestRegistration, error) {
+func (r *Repository) FindContestRegistration(ctx context.Context, contestID, userID int64) (*model.ContestRegistration, error) {
 	var registration model.ContestRegistration
 	if err := r.dbWithContext(ctx).
 		Where("contest_id = ? AND user_id = ?", contestID, userID).

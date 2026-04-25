@@ -1058,7 +1058,7 @@ func (s *Service) resolveContestChallengeInstanceScope(ctx context.Context, user
 			errors.New("awd 赛事实例启动必须使用 service_id 入口"),
 		)
 	}
-	contestChallenge, err := s.repo.FindContestChallengeWithContext(ctx, contestID, challengeID)
+	contestChallenge, err := s.repo.FindContestChallenge(ctx, contestID, challengeID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return practiceports.InstanceScope{}, errcode.ErrChallengeNotInContest
@@ -1076,7 +1076,7 @@ func (s *Service) resolveContestAWDServiceInstanceScope(ctx context.Context, use
 	if err != nil {
 		return 0, practiceports.InstanceScope{}, err
 	}
-	service, err := s.repo.FindContestAWDServiceWithContext(ctx, contestID, serviceID)
+	service, err := s.repo.FindContestAWDService(ctx, contestID, serviceID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return 0, practiceports.InstanceScope{}, errcode.ErrChallengeNotInContest
@@ -1118,7 +1118,7 @@ func (s *Service) loadRuntimeSubjectForInstance(ctx context.Context, instance *m
 }
 
 func (s *Service) loadContestAWDServiceRuntimeSubject(ctx context.Context, contestID, serviceID int64) (*model.Challenge, *model.ChallengeTopology, error) {
-	service, err := s.repo.FindContestAWDServiceWithContext(ctx, contestID, serviceID)
+	service, err := s.repo.FindContestAWDService(ctx, contestID, serviceID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil, errcode.ErrChallengeNotInContest
@@ -1142,7 +1142,7 @@ func (s *Service) resolveContestBaseInstanceScope(ctx context.Context, userID, c
 		return practiceports.InstanceScope{}, errcode.ErrInternal.WithCause(fmt.Errorf("practice repository is nil"))
 	}
 
-	contest, err := s.repo.FindContestByIDWithContext(ctx, contestID)
+	contest, err := s.repo.FindContestByID(ctx, contestID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return practiceports.InstanceScope{}, errcode.ErrContestNotFound
@@ -1158,7 +1158,7 @@ func (s *Service) resolveContestBaseInstanceScope(ctx context.Context, userID, c
 		return practiceports.InstanceScope{}, errcode.ErrContestNotRunning
 	}
 
-	registration, err := s.repo.FindContestRegistrationWithContext(ctx, contestID, userID)
+	registration, err := s.repo.FindContestRegistration(ctx, contestID, userID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return practiceports.InstanceScope{}, errcode.ErrNotRegistered
