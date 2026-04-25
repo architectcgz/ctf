@@ -5,6 +5,7 @@ import ChallengeTopologyStudioPage from '@/components/platform/topology/Challeng
 import challengeTopologyStudioPageSource from '@/components/platform/topology/ChallengeTopologyStudioPage.vue?raw'
 import topologyConnectivitySectionsSource from '@/components/platform/topology/TopologyConnectivitySections.vue?raw'
 import topologyNetworkSectionSource from '@/components/platform/topology/TopologyNetworkSection.vue?raw'
+import topologyNodeSectionSource from '@/components/platform/topology/TopologyNodeSection.vue?raw'
 import topologyTemplateSidePanelSource from '@/components/platform/topology/TopologyTemplateSidePanel.vue?raw'
 import { ApiError } from '@/api/request'
 
@@ -161,7 +162,7 @@ describe('ChallengeTopologyStudioPage', () => {
   })
 
   it('应使用共享 ui-btn 原语而不是拓扑页私有按钮族', () => {
-    const topologySource = `${challengeTopologyStudioPageSource}\n${topologyTemplateSidePanelSource}\n${topologyNetworkSectionSource}\n${topologyConnectivitySectionsSource}`
+    const topologySource = `${challengeTopologyStudioPageSource}\n${topologyTemplateSidePanelSource}\n${topologyNetworkSectionSource}\n${topologyConnectivitySectionsSource}\n${topologyNodeSectionSource}`
 
     expect(challengeTopologyStudioPageSource).toContain(
       'class="ui-btn ui-btn--ghost topology-action-btn'

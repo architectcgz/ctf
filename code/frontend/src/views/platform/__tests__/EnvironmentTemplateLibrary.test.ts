@@ -7,6 +7,7 @@ import challengeTopologyStudioPageSource from '@/components/platform/topology/Ch
 import topologyConnectivitySectionsSource from '@/components/platform/topology/TopologyConnectivitySections.vue?raw'
 import topologyNetworkSectionSource from '@/components/platform/topology/TopologyNetworkSection.vue?raw'
 import topologyNodeEditorSource from '@/components/platform/topology/TopologyNodeEditor.vue?raw'
+import topologyNodeSectionSource from '@/components/platform/topology/TopologyNodeSection.vue?raw'
 import topologySummaryGridSource from '@/components/platform/topology/TopologySummaryGrid.vue?raw'
 import topologyTemplateSidePanelSource from '@/components/platform/topology/TopologyTemplateSidePanel.vue?raw'
 
@@ -141,10 +142,10 @@ describe('EnvironmentTemplateLibrary', () => {
   })
 
   it('工作台分区底部新增按钮应复用统一工具栏按钮原语', () => {
-    const topologySource = `${challengeTopologyStudioPageSource}\n${topologyNetworkSectionSource}\n${topologyConnectivitySectionsSource}`
+    const topologySource = `${challengeTopologyStudioPageSource}\n${topologyNetworkSectionSource}\n${topologyConnectivitySectionsSource}\n${topologyNodeSectionSource}`
 
-    expect(challengeTopologyStudioPageSource).toMatch(
-      /class="topology-toolbar-btn topology-toolbar-btn--ghost"\s+@click="addNode"[\s\S]*添加节点/
+    expect(topologySource).toMatch(
+      /add-button-class="topology-toolbar-btn topology-toolbar-btn--ghost"[\s\S]*@click="emit\('addNode'\)"[\s\S]*添加节点/
     )
     expect(topologySource).toMatch(
       /add-button-class="topology-toolbar-btn topology-toolbar-btn--ghost"[\s\S]*@click="emit\('addNetwork'\)"[\s\S]*添加网络/
