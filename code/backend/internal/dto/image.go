@@ -3,14 +3,14 @@ package dto
 import "time"
 
 type CreateImageReq struct {
-	Name        string `json:"name" binding:"required"`
-	Tag         string `json:"tag" binding:"required"`
+	Name        string `json:"name" binding:"required,ctf_image_name"`
+	Tag         string `json:"tag" binding:"required,ctf_image_tag"`
 	Description string `json:"description"`
 }
 
 type UpdateImageReq struct {
-	Description string `json:"description"`
-	Status      string `json:"status" binding:"omitempty,oneof=pending building available failed"`
+	Description *string `json:"description"`
+	Status      string  `json:"status" binding:"omitempty,oneof=pending building available failed"`
 }
 
 type ImageResp struct {

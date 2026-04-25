@@ -73,6 +73,36 @@ func TestImageServiceDeleteImageRemovesUnreferencedImage(t *testing.T) {
 	}
 }
 
+func TestImageServiceUpdateImageAllowsClearingDescription(t *testing.T) {
+	t.Parallel()
+
+	db := testsupport.SetupTestDB(t)
+	image := &model.Image{Name: "web", Tag: "latest", Description: "old description", Status: model.ImageStatusAvailable}
+	if err := db.Create(image).Error; err != nil {
+		t.Fatalf("create image: %v", err)
+	}
+
+	service := NewImageService(
+		challengeinfra.NewImageRepository(db),
+		challengeinfra.NewRepository(db),
+		nil,
+		nil,
+	)
+
+	emptyDescription := ""
+	if err := service.UpdateImage(context.Background(), image.ID, &dto.UpdateImageReq{Description: &emptyDescription}); err != nil {
+		t.Fatalf("UpdateImage() error = %v", err)
+	}
+
+	var updated model.Image
+	if err := db.First(&updated, image.ID).Error; err != nil {
+		t.Fatalf("load image: %v", err)
+	}
+	if updated.Description != "" {
+		t.Fatalf("expected description to be cleared, got %q", updated.Description)
+	}
+}
+
 func TestImageServiceCreateImageHonorsCancellation(t *testing.T) {
 	t.Parallel()
 

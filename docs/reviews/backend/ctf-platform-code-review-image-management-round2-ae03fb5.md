@@ -12,6 +12,24 @@
 | 审查日期 | 2026-03-05 |
 | 上轮问题数 | 14 项（4 高 / 6 中 / 4 低） |
 
+## 2026-04-25 补充修复状态
+
+- [H1] 已在后续代码中修复：`configs/config.yaml` 已包含 `pagination.default_page_size` 与 `pagination.max_page_size`。
+- [M1] 已修复：`UpdateImageReq.Description` 改为指针字段，更新镜像时可以区分“未传 description”和“传入空字符串”，允许清空描述。
+- [M2] 已修复：镜像创建请求已通过 `ctf_image_name` 与 `ctf_image_tag` 校验限制镜像名和标签格式，非法字符不会进入命令服务。
+- [M3] 已修复：更新日志记录状态和描述的变更前后值，删除日志记录镜像 name、tag 与 size。
+- [L3] 已修复：镜像列表查询显式追加 `deleted_at IS NULL`，不只依赖 GORM 隐式软删除 scope。
+- [M4] 暂未在本轮处理：新增数据库索引属于结构变更，需要单独迁移和上线评估。
+- [L1]、[L2]、[L4] 暂未处理：分别属于响应泛型化、错误文案常量化和展示增强，不影响本轮修复的行为缺陷。
+- 验证命令：
+
+```bash
+cd /home/azhi/workspace/projects/ctf/.worktrees/fix-image-management-review-tail/code/backend
+timeout 180s go test ./internal/module/challenge/... -count=1
+```
+
+- 结果：通过。
+
 ## 问题清单
 
 ### 🔴 高优先级

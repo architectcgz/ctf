@@ -11,12 +11,12 @@ import (
 )
 
 type imageCommandContextRepoStub struct {
-	createFn            func(ctx context.Context, image *model.Image) error
-	findByIDFn          func(ctx context.Context, id int64) (*model.Image, error)
-	findByNameTagFn     func(ctx context.Context, name, tag string) (*model.Image, error)
-	listFn              func(ctx context.Context, name, status string, offset, limit int) ([]*model.Image, int64, error)
-	updateFn            func(ctx context.Context, image *model.Image) error
-	deleteFn            func(ctx context.Context, id int64) error
+	createFn        func(ctx context.Context, image *model.Image) error
+	findByIDFn      func(ctx context.Context, id int64) (*model.Image, error)
+	findByNameTagFn func(ctx context.Context, name, tag string) (*model.Image, error)
+	listFn          func(ctx context.Context, name, status string, offset, limit int) ([]*model.Image, int64, error)
+	updateFn        func(ctx context.Context, image *model.Image) error
+	deleteFn        func(ctx context.Context, id int64) error
 }
 
 func (s *imageCommandContextRepoStub) Create(ctx context.Context, image *model.Image) error {
@@ -103,7 +103,8 @@ func TestImageServiceUpdateImagePropagatesContextToRepository(t *testing.T) {
 	service := NewImageService(repo, &imageUsageContextStub{}, nil, zap.NewNop())
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	if err := service.UpdateImage(ctx, 9, &dto.UpdateImageReq{Description: "new"}); err != nil {
+	newDescription := "new"
+	if err := service.UpdateImage(ctx, 9, &dto.UpdateImageReq{Description: &newDescription}); err != nil {
 		t.Fatalf("UpdateImage() error = %v", err)
 	}
 	if !findCalled || !updateCalled {
