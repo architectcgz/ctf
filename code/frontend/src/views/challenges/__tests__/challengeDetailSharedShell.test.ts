@@ -81,6 +81,10 @@ describe('challenge detail shared shell alignment', () => {
     expect(challengeInstanceCardSource).not.toContain('class="instance-btn')
     expect(challengeInstanceCardSource).not.toMatch(/\.primary-action\s*,/s)
     expect(challengeInstanceCardSource).not.toMatch(/\.subtle-action\s*\{/s)
+    expect(challengeInstanceCardSource).toContain('instance-status-text--success')
+    expect(challengeInstanceCardSource).not.toContain('text-[var(--color-success)]')
+    expect(challengeInstanceCardSource).not.toContain('text-[var(--color-warning)]')
+    expect(challengeInstanceCardSource).not.toContain('text-[var(--color-danger)]')
   })
 
   it('题目头部主信息块与右侧提交按钮应从统一主题主色链取色', () => {

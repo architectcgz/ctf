@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, watch } from 'vue'
 import { BellRing, CalendarRange, Clock3, Flag, Swords, Trophy, UsersRound } from 'lucide-vue-next'
-import { RouterLink, useRoute } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import CFocusedInputDialog from '@/components/common/modal-templates/CFocusedInputDialog.vue'
@@ -19,9 +19,11 @@ import { getContestAccentColor, isStudentVisibleContestStatus } from '@/utils/co
 type ContestWorkspaceTab = 'overview' | 'announcements' | 'challenges' | 'team'
 
 const route = useRoute()
+const router = useRouter()
 const authStore = useAuthStore()
 const contestId = computed(() => String(route.params.id ?? ''))
 const currentUserId = computed(() => authStore.user?.id)
+const selectedChallengeId = computed(() => route.query.challenge)
 const workspaceTabOrder: ContestWorkspaceTab[] = ['overview', 'announcements', 'challenges', 'team']
 const {
   activeTab: activeWorkspaceTab,
@@ -32,6 +34,18 @@ const {
   orderedTabs: workspaceTabOrder,
   defaultTab: 'overview',
 })
+
+function syncSelectedChallengeQuery(challengeId: string | null): void {
+  const query = { ...route.query }
+  if (challengeId) {
+    query.challenge = challengeId
+    query.panel = 'challenges'
+  } else {
+    delete query.challenge
+  }
+
+  void router.replace({ query })
+}
 
 const {
   contest,
@@ -65,6 +79,8 @@ const {
 } = useContestDetailPage({
   contestId,
   currentUserId,
+  selectedChallengeId,
+  onSelectedChallengeChange: syncSelectedChallengeQuery,
 })
 
 const isAWDContest = computed(() => contest.value?.mode === 'awd')

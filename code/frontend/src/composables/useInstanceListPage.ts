@@ -52,17 +52,17 @@ export function getInstanceStatusLabel(status: InstanceStatus): string {
 
 export function getInstanceStatusClass(status: InstanceStatus): string {
   const classes: Record<InstanceStatus, string> = {
-    pending: 'text-[#f59e0b]',
-    creating: 'text-[#f59e0b]',
-    running: 'text-[#22c55e]',
-    expired: 'text-[var(--color-text-muted)]',
-    destroying: 'text-[#f59e0b]',
-    destroyed: 'text-[var(--color-text-muted)]',
-    failed: 'text-[#ef4444]',
-    crashed: 'text-[#ef4444]',
+    pending: 'instance-status-dot--warning',
+    creating: 'instance-status-dot--warning',
+    running: 'instance-status-dot--success',
+    expired: 'instance-status-dot--muted',
+    destroying: 'instance-status-dot--warning',
+    destroyed: 'instance-status-dot--muted',
+    failed: 'instance-status-dot--danger',
+    crashed: 'instance-status-dot--danger',
   }
 
-  return classes[status] || 'text-[var(--color-text-muted)]'
+  return classes[status] || 'instance-status-dot--muted'
 }
 
 export function formatRemainingTime(seconds: number): string {

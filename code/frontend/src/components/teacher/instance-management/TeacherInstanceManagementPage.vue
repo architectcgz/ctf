@@ -58,29 +58,25 @@ function statusMeta(status: string): { label: string; chipClass: string } {
     case 'running':
       return {
         label: '运行中',
-        chipClass:
-          'border-[var(--color-success)]/25 bg-[var(--color-success)]/10 text-[var(--color-success)]',
+        chipClass: 'teacher-directory-state-chip--success',
       }
     case 'creating':
       return {
         label: '创建中',
-        chipClass:
-          'border-[var(--color-primary)]/25 bg-[var(--color-primary)]/10 text-[var(--color-primary)]',
+        chipClass: 'teacher-directory-state-chip--primary',
       }
     case 'expired':
       return {
         label: '已过期',
-        chipClass:
-          'border-[var(--color-warning)]/25 bg-[var(--color-warning)]/10 text-[var(--color-warning)]',
+        chipClass: 'teacher-directory-state-chip--warning',
       }
     case 'failed':
       return {
         label: '异常',
-        chipClass:
-          'border-[var(--color-danger)]/25 bg-[var(--color-danger)]/10 text-[var(--color-danger)]',
+        chipClass: 'teacher-directory-state-chip--danger',
       }
     default:
-      return { label: status, chipClass: 'border-border bg-elevated/70 text-text-secondary' }
+      return { label: status, chipClass: 'teacher-directory-state-chip--neutral' }
   }
 }
 </script>
@@ -302,7 +298,7 @@ function statusMeta(status: string): { label: string; chipClass: string } {
 
               <div class="teacher-directory-row-status">
                 <span
-                  class="teacher-directory-state-chip border"
+                  class="teacher-directory-state-chip"
                   :class="statusMeta(item.status).chipClass"
                 >
                   {{ statusMeta(item.status).label }}
@@ -549,8 +545,41 @@ function statusMeta(status: string): { label: string; chipClass: string } {
   min-height: 1.75rem;
   padding: 0 var(--space-2-5);
   border-radius: 0.5rem;
+  border: 1px solid var(--teacher-instance-chip-border, var(--teacher-card-border));
+  background: var(--teacher-instance-chip-bg, color-mix(in srgb, var(--journal-muted) 10%, transparent));
   font-size: var(--font-size-0-75);
   font-weight: 600;
+  color: var(--teacher-instance-chip-color, var(--journal-muted));
+}
+
+.teacher-directory-state-chip--success {
+  --teacher-instance-chip-border: color-mix(in srgb, var(--color-success) 25%, transparent);
+  --teacher-instance-chip-bg: color-mix(in srgb, var(--color-success) 10%, transparent);
+  --teacher-instance-chip-color: var(--color-success);
+}
+
+.teacher-directory-state-chip--primary {
+  --teacher-instance-chip-border: color-mix(in srgb, var(--color-primary) 25%, transparent);
+  --teacher-instance-chip-bg: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  --teacher-instance-chip-color: var(--color-primary);
+}
+
+.teacher-directory-state-chip--warning {
+  --teacher-instance-chip-border: color-mix(in srgb, var(--color-warning) 25%, transparent);
+  --teacher-instance-chip-bg: color-mix(in srgb, var(--color-warning) 10%, transparent);
+  --teacher-instance-chip-color: var(--color-warning);
+}
+
+.teacher-directory-state-chip--danger {
+  --teacher-instance-chip-border: color-mix(in srgb, var(--color-danger) 25%, transparent);
+  --teacher-instance-chip-bg: color-mix(in srgb, var(--color-danger) 10%, transparent);
+  --teacher-instance-chip-color: var(--color-danger);
+}
+
+.teacher-directory-state-chip--neutral {
+  --teacher-instance-chip-border: var(--teacher-card-border);
+  --teacher-instance-chip-bg: color-mix(in srgb, var(--journal-muted) 10%, transparent);
+  --teacher-instance-chip-color: var(--journal-muted);
 }
 
 .teacher-directory-row-created,

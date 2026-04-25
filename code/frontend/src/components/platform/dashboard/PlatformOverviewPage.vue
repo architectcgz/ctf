@@ -796,15 +796,15 @@ const {
   border-radius: 999px;
 }
 
-.bg-\[var\(--color-danger\)\] {
+.usage-bar--danger {
   background: var(--color-danger);
 }
 
-.bg-\[var\(--color-warning\)\] {
+.usage-bar--warning {
   background: var(--color-warning);
 }
 
-.bg-\[var\(--color-primary\)\] {
+.usage-bar--primary {
   background: var(--color-primary);
 }
 

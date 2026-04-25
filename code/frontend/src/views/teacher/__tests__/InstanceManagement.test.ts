@@ -312,6 +312,13 @@ describe('InstanceManagement', () => {
       'class="teacher-directory-chip teacher-directory-chip-muted"'
     )
     expect(instanceManagementSource).not.toContain('class="teacher-directory-row-metrics"')
+    expect(instanceManagementSource).toContain('teacher-directory-state-chip--success')
+    expect(instanceManagementSource).not.toContain('border-[var(--color-success)]')
+    expect(instanceManagementSource).not.toContain('bg-[var(--color-success)]')
+    expect(instanceManagementSource).not.toContain('text-[var(--color-success)]')
+    expect(instanceManagementSource).not.toContain('border-[var(--color-primary)]')
+    expect(instanceManagementSource).not.toContain('bg-[var(--color-primary)]')
+    expect(instanceManagementSource).not.toContain('text-[var(--color-primary)]')
     expect(instanceManagementSource).toMatch(
       /class="teacher-directory-row-title"[\s\S]*:title="item\.student_name \|\| item\.student_username"/s
     )
