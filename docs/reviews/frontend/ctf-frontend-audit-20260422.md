@@ -1679,6 +1679,26 @@
   - `npm run test:run -- src/composables/__tests__/useAwdInspectorPresentationClasses.test.ts src/composables/__tests__/useAwdInspectorDerivedData.test.ts src/components/platform/__tests__/AWDRoundInspector.test.ts src/components/platform/__tests__/AWDRoundInspectorExtraction.test.ts`（4 个测试文件，11 个测试）
   - `npm run typecheck`
 
+## 第七十一轮修复进展
+
+- 已完成：
+  - `TD-2` 中实例状态样式尾项继续收口：`ChallengeInstanceCard`、`InstancePanel`、`TeacherInstanceManagementPage` 不再从函数返回 `text-[var(--color...)]`、`bg-[var(--color...)]`、`border-[var(--color...)]` 这类任意主题类。
+  - 学生题目实例状态、通用实例倒计时颜色、教师实例目录状态 chip 均改为语义类，由组件 scoped CSS 使用主题 token 映射具体颜色。
+  - 对应源码护栏已补到实例面板、题目详情共享壳层和教师实例管理测试中，避免后续状态样式重新回到函数拼 class。
+- 本轮涉及文件：
+  - `code/frontend/src/components/challenge/ChallengeInstanceCard.vue`
+  - `code/frontend/src/components/common/InstancePanel.vue`
+  - `code/frontend/src/components/teacher/instance-management/TeacherInstanceManagementPage.vue`
+  - `code/frontend/src/components/common/__tests__/InstancePanel.test.ts`
+  - `code/frontend/src/views/challenges/__tests__/challengeDetailSharedShell.test.ts`
+  - `code/frontend/src/views/teacher/__tests__/InstanceManagement.test.ts`
+
+## 第七十一轮验证
+
+- 已执行：
+  - `npm run test:run -- src/components/common/__tests__/InstancePanel.test.ts src/views/challenges/__tests__/challengeDetailSharedShell.test.ts src/views/teacher/__tests__/InstanceManagement.test.ts`（3 个测试文件，16 个测试）
+  - `npm run typecheck`
+
 ## 后续技术债 Backlog
 
 - `TD-1` 超大组件专题拆分：
@@ -1688,7 +1708,7 @@
 - `TD-2` Tailwind 任意值与主题 token 尾项：
   - 仍可继续扫描并收口 `bg-[var(...)]`、`text-[var(...)]`、`border-[var(...)]`、裸十六进制色值和布局任意值。
   - 处理时需要区分 token bridge 与真正裸魔法值，避免把合法的主题变量透传和样式债混在一次提交里。
-  - AWD inspector 相关格式化 helper 已在第七十轮收口；当前残留主要集中在题目详情 presentation、部分 mock/reference 页面、教师端实例管理和少量布局组件。
+  - AWD inspector 相关格式化 helper 已在第七十轮收口，实例状态样式尾项已在第七十一轮收口；当前残留主要集中在题目详情 presentation、部分 mock/reference 页面和少量布局组件。
 - `TD-3` 性能监控接入：
   - 当前未接入 `web-vitals`、`PerformanceObserver` 或项目自定义性能埋点。
   - 该项需要先明确采集指标、上报端点、隐私边界和生产开关，不能只加依赖或空埋点。
