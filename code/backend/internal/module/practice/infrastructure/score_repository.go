@@ -8,7 +8,7 @@ import (
 	"ctf-platform/internal/model"
 )
 
-func (r *Repository) FindChallengeScoreWithContext(ctx context.Context, challengeID int64) (*model.Challenge, error) {
+func (r *Repository) FindChallengeScore(ctx context.Context, challengeID int64) (*model.Challenge, error) {
 	var challenge model.Challenge
 	if err := r.dbWithContext(ctx).
 		Select("id, points, difficulty").
@@ -19,7 +19,7 @@ func (r *Repository) FindChallengeScoreWithContext(ctx context.Context, challeng
 	return &challenge, nil
 }
 
-func (r *Repository) FindChallengesScoresWithContext(ctx context.Context, challengeIDs []int64) ([]model.Challenge, error) {
+func (r *Repository) FindChallengesScores(ctx context.Context, challengeIDs []int64) ([]model.Challenge, error) {
 	if len(challengeIDs) == 0 {
 		return []model.Challenge{}, nil
 	}
@@ -32,7 +32,7 @@ func (r *Repository) FindChallengesScoresWithContext(ctx context.Context, challe
 	return challenges, err
 }
 
-func (r *Repository) ListSolvedChallengeIDsWithContext(ctx context.Context, userID int64) ([]int64, error) {
+func (r *Repository) ListSolvedChallengeIDs(ctx context.Context, userID int64) ([]int64, error) {
 	var challengeIDs []int64
 	err := r.dbWithContext(ctx).
 		Model(&model.Submission{}).
@@ -42,7 +42,7 @@ func (r *Repository) ListSolvedChallengeIDsWithContext(ctx context.Context, user
 	return challengeIDs, err
 }
 
-func (r *Repository) UpsertUserScoreWithContext(ctx context.Context, userScore *model.UserScore) error {
+func (r *Repository) UpsertUserScore(ctx context.Context, userScore *model.UserScore) error {
 	return r.dbWithContext(ctx).Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "user_id"}},
 		DoUpdates: clause.AssignmentColumns([]string{"total_score", "solved_count", "updated_at"}),

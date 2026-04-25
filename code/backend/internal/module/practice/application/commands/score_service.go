@@ -38,7 +38,7 @@ func NewScoreService(repo practiceports.PracticeScoreRepository, redis *redis.Cl
 }
 
 func (s *ScoreService) CalculateScore(ctx context.Context, challengeID int64) int {
-	challenge, err := s.repo.FindChallengeScoreWithContext(ctx, challengeID)
+	challenge, err := s.repo.FindChallengeScore(ctx, challengeID)
 	if err != nil {
 		s.logger.Error("查询题目失败", zap.Int64("challengeID", challengeID), zap.Error(err))
 		return 0
@@ -81,12 +81,12 @@ func (s *ScoreService) UpdateUserScore(ctx context.Context, userID int64) error 
 		}
 	}()
 
-	challengeIDs, err := s.repo.ListSolvedChallengeIDsWithContext(ctx, userID)
+	challengeIDs, err := s.repo.ListSolvedChallengeIDs(ctx, userID)
 	if err != nil {
 		return err
 	}
 
-	challenges, err := s.repo.FindChallengesScoresWithContext(ctx, challengeIDs)
+	challenges, err := s.repo.FindChallengesScores(ctx, challengeIDs)
 	if err != nil {
 		return err
 	}
@@ -96,7 +96,7 @@ func (s *ScoreService) UpdateUserScore(ctx context.Context, userID int64) error 
 		totalScore += domain.CalculateChallengeScore(&challenge)
 	}
 
-	err = s.repo.UpsertUserScoreWithContext(ctx, &model.UserScore{
+	err = s.repo.UpsertUserScore(ctx, &model.UserScore{
 		UserID:      userID,
 		TotalScore:  totalScore,
 		SolvedCount: len(challengeIDs),

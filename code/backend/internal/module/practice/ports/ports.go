@@ -89,10 +89,10 @@ type TeacherManualReviewSubmissionRecord struct {
 }
 
 type PracticeScoreRepository interface {
-	FindChallengeScoreWithContext(ctx context.Context, challengeID int64) (*model.Challenge, error)
-	FindChallengesScoresWithContext(ctx context.Context, challengeIDs []int64) ([]model.Challenge, error)
-	ListSolvedChallengeIDsWithContext(ctx context.Context, userID int64) ([]int64, error)
-	UpsertUserScoreWithContext(ctx context.Context, userScore *model.UserScore) error
+	FindChallengeScore(ctx context.Context, challengeID int64) (*model.Challenge, error)
+	FindChallengesScores(ctx context.Context, challengeIDs []int64) ([]model.Challenge, error)
+	ListSolvedChallengeIDs(ctx context.Context, userID int64) ([]int64, error)
+	UpsertUserScore(ctx context.Context, userScore *model.UserScore) error
 }
 
 type PracticeRankingRepository interface {
