@@ -1351,10 +1351,15 @@ func (s *Scheduler) SelectNode(ctx context.Context,
 仓库提供了带 Basic Auth 的部署脚本，单机演示或小规模内网部署可以直接使用：
 
 ```bash
-REGISTRY_PORT=5000 \
-REGISTRY_SERVER=127.0.0.1:5000 \
-REGISTRY_PASSWORD='change-this-password' \
+cp scripts/deploy-private-registry.conf.example scripts/deploy-private-registry.conf
+vim scripts/deploy-private-registry.conf
 scripts/deploy-private-registry.sh
+```
+
+`scripts/deploy-private-registry.conf` 是本机部署配置文件，已被 `.gitignore` 忽略，不应提交到仓库。也可以通过 `--config` 指定其他配置文件：
+
+```bash
+scripts/deploy-private-registry.sh --config /etc/ctf/private-registry.conf
 ```
 
 脚本会启动 `registry:2` 容器，生成 htpasswd 认证文件，并在认证目录写入后端可加载的 `ctf-platform-registry.env`：
