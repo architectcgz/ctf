@@ -16,7 +16,7 @@
   - `typecheck` 基线已恢复，当前专项修复工作树可稳定作为静态门禁。
   - 题目详情竞态、实例页状态同步、`/ui-lab` 正式路由暴露、认证表单基础可访问性、`window.confirm` 混用、登录态 token 本地持久化等问题已完成修复，其中登录态已切到服务端 session 与 `HttpOnly` cookie。
   - 本轮继续收口了平台 AWD 编排组件簇、教师端 `workspace / tabs / surface` 漂移、shared pagination 的 review 基线漂移，以及前端全量测试暴露出的最后一批共享壳层护栏漂移。
-  - `TD-2` 真实产品路径中的主题 token 与 Tailwind 色值尾项已在第七十五轮完成收口；后续扫描若命中 `#default` 插槽或 `white-space` 等非主题语义，应按误命中处理。
+  - `TD-2` 真实产品路径中的主题 token 与 Tailwind 色值尾项已在第七十五轮完成收口；硬编码尾项扫描已沉淀为 `npm run check:theme-tail`，不会再把 Vue `#default` 插槽当作十六进制色值。
 - 当前 `code/frontend` 已通过：
   - `npm run typecheck`
   - `npm run test:run`（245 个测试文件，1012 个测试）
@@ -1764,7 +1764,8 @@
 - 已完成：
   - `TD-2` 真实产品路径中的尾项已完成收口：后台导航壳层、通知抽屉、平台概览骨架、AWD 竞赛工作区、AWD inspector 子面板、赛前检查、拓扑页状态提示、题目管理 presentation helper、能力画像 helper、登录页控制台样式和若干平台 action button 不再保留裸十六进制色值、`rgba(...)` 旧阴影、旧 Tailwind 色类或 `bg/text/border-[var(--color...)]` 主题任意类。
   - `sharedThemeTokenAdoption.test.ts` 补充覆盖这些真实产品路径，防止后续把 `text-slate-*`、`text-cyan-*`、`text-red-*`、`bg-white`、`color: white`、`%, black`、裸色值和旧 `rgba(...)` 带回。
-  - 保留不处理范围：`UILab.vue`、`ThemePreview.vue`、`refs` 示例、主题 token 定义文件、SVG，以及扫描误命中的 `#default` 插槽和 `white-space`。
+  - 新增 `npm run check:theme-tail`，使用精确 `3 / 6 / 8` 位十六进制色值匹配并排除后接标识符字符的情况，避免继续把 Vue `#default` 插槽误判为 `#defa` 色值。
+  - 保留不处理范围：`UILab.vue`、`ThemePreview.vue`、`refs` 示例、主题 token 定义文件和 SVG。
 - 本轮涉及范围：
   - `code/frontend/src/components/layout/*`
   - `code/frontend/src/components/platform/contest/*`
@@ -1774,12 +1775,13 @@
   - `code/frontend/src/composables/useChallengeManagePresentation.ts`
   - `code/frontend/src/utils/challenge.ts`
   - `code/frontend/src/utils/skillProfile.ts`
+  - `code/frontend/scripts/check-theme-tail.mjs`
   - `code/frontend/src/views/__tests__/sharedThemeTokenAdoption.test.ts`
 
 ## 第七十五轮验证
 
 - 已执行：
-  - `rg -n "<hardcoded theme color pattern>" code/frontend/src/components code/frontend/src/views code/frontend/src/composables code/frontend/src/utils --glob '!**/*.test.*' --glob '!**/__tests__/**' --glob '!code/frontend/src/views/UILab.vue' --glob '!code/frontend/src/views/platform/ThemePreview.vue' --glob '!code/frontend/src/refs/**'`（仅剩 `#default` 插槽误命中）
+  - `npm run check:theme-tail`
   - `npm run test:run -- src/views/__tests__/sharedThemeTokenAdoption.test.ts`（1 个测试文件，7 个测试）
   - `npm run typecheck`
   - `npm run test:run`（245 个测试文件，1012 个测试）
@@ -1793,7 +1795,7 @@
   - 建议顺序：先选一个组件做一个可评审切片，补源码边界测试和行为测试，再继续下一块。
 - `TD-2` Tailwind 任意值与主题 token 尾项：
   - 已在第七十五轮完成真实产品路径收口。
-  - 后续不再把 `UILab`、`ThemePreview`、`refs` 示例、主题 token 定义文件、SVG 或 `#default / white-space` 误命中作为当前 TD-2 未完成项。
+  - 后续不再把 `UILab`、`ThemePreview`、`refs` 示例、主题 token 定义文件或 SVG 作为当前 TD-2 未完成项；真实产品路径硬编码尾项以 `npm run check:theme-tail` 为准。
 - `TD-3` 性能监控接入：
   - 当前未接入 `web-vitals`、`PerformanceObserver` 或项目自定义性能埋点。
   - 该项需要先明确采集指标、上报端点、隐私边界和生产开关，不能只加依赖或空埋点。
