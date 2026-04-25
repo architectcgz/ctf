@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest'
 import EnvironmentTemplateLibrary from '../EnvironmentTemplateLibrary.vue'
 import ChallengeTopologyStudioPage from '@/components/platform/topology/ChallengeTopologyStudioPage.vue'
 import challengeTopologyStudioPageSource from '@/components/platform/topology/ChallengeTopologyStudioPage.vue?raw'
+import topologyNetworkSectionSource from '@/components/platform/topology/TopologyNetworkSection.vue?raw'
 import topologyNodeEditorSource from '@/components/platform/topology/TopologyNodeEditor.vue?raw'
 import topologySummaryGridSource from '@/components/platform/topology/TopologySummaryGrid.vue?raw'
 import topologyTemplateSidePanelSource from '@/components/platform/topology/TopologyTemplateSidePanel.vue?raw'
@@ -105,7 +106,9 @@ describe('EnvironmentTemplateLibrary', () => {
     expect(topologySource).toContain('topology-summary-tile')
     expect(topologySource).toContain('progress-card')
     expect(topologySource).toContain('metric-panel-card')
-    expect(topologySource).toContain('topology-summary-helper progress-card-hint metric-panel-helper')
+    expect(topologySource).toContain(
+      'topology-summary-helper progress-card-hint metric-panel-helper'
+    )
     expect(topologySource).toContain('当前模板草稿中的网络数量')
     expect(topologySource).toContain('当前模板草稿中的节点数量')
     expect(topologySource).toContain('当前模板草稿中的连线数量')
@@ -137,11 +140,13 @@ describe('EnvironmentTemplateLibrary', () => {
   })
 
   it('工作台分区底部新增按钮应复用统一工具栏按钮原语', () => {
+    const topologySource = `${challengeTopologyStudioPageSource}\n${topologyNetworkSectionSource}`
+
     expect(challengeTopologyStudioPageSource).toMatch(
       /class="topology-toolbar-btn topology-toolbar-btn--ghost"\s+@click="addNode"[\s\S]*添加节点/
     )
-    expect(challengeTopologyStudioPageSource).toMatch(
-      /class="topology-toolbar-btn topology-toolbar-btn--ghost"\s+@click="addNetwork"[\s\S]*添加网络/
+    expect(topologySource).toMatch(
+      /add-button-class="topology-toolbar-btn topology-toolbar-btn--ghost"[\s\S]*@click="emit\('addNetwork'\)"[\s\S]*添加网络/
     )
     expect(challengeTopologyStudioPageSource).toMatch(
       /class="topology-toolbar-btn topology-toolbar-btn--ghost"\s+@click="addLink"[\s\S]*添加连线/
