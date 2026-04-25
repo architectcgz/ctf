@@ -129,6 +129,21 @@ func TestLoadDevConfigDoesNotShipDefaultPasswords(t *testing.T) {
 	}
 }
 
+func TestValidateRejectsProductionPlaceholderSecrets(t *testing.T) {
+	cfg := validConfigForValidationTests()
+	cfg.App.Env = "prod"
+	cfg.Postgres.Password = "change_me"
+	cfg.Redis.Password = "change_me"
+
+	err := cfg.Validate()
+	if err == nil {
+		t.Fatal("expected Validate() to reject production placeholder secrets, got nil")
+	}
+	if !strings.Contains(err.Error(), "postgres.password must be provided from a non-placeholder secret in prod") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
 func TestValidateRejectsInvalidContainerPortRangeOrder(t *testing.T) {
 	cfg := validConfigForValidationTests()
 	cfg.Container.PortRangeStart = 40000

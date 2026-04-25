@@ -21,7 +21,8 @@ const (
 )
 
 type provisioningRepository interface {
-	ListAllocatedPorts() ([]int, error)
+	ReserveAvailablePort(ctx context.Context, start, end int) (int, error)
+	ReleasePort(ctx context.Context, port int) error
 }
 
 type provisioningEngine interface {
@@ -133,13 +134,21 @@ func (s *ProvisioningService) CreateTopology(ctx context.Context, req *runtimepo
 	}
 
 	hostPort := req.ReservedHostPort
+	allocatedHostPort := 0
+	success := false
 	if hostPort <= 0 {
 		var err error
-		hostPort, err = s.allocatePort()
+		hostPort, err = s.allocatePort(ctx)
 		if err != nil {
 			return nil, err
 		}
+		allocatedHostPort = hostPort
 	}
+	defer func() {
+		if !success && allocatedHostPort > 0 {
+			_ = s.repo.ReleasePort(ctx, allocatedHostPort)
+		}
+	}()
 
 	createdNetworks := make([]createdTopologyNetwork, 0, len(networks))
 	networkByKey := make(map[string]createdTopologyNetwork, len(networks))
@@ -237,6 +246,7 @@ func (s *ProvisioningService) CreateTopology(ctx context.Context, req *runtimepo
 		details.ACLRules = resolvedACLRules
 	}
 
+	success = true
 	return &runtimeports.TopologyCreateResult{
 		PrimaryContainerID: details.Containers[entryNodeIndex].ContainerID,
 		NetworkID:          details.Networks[0].NetworkID,
@@ -281,28 +291,12 @@ func (s *ProvisioningService) resolveTopologyACLRules(ctx context.Context, req *
 	return runtimedomain.ResolveTopologyACLRules(req.Policies, details, ipsByContainerID)
 }
 
-func (s *ProvisioningService) allocatePort() (int, error) {
+func (s *ProvisioningService) allocatePort(ctx context.Context) (int, error) {
 	if s.repo == nil {
 		return 0, fmt.Errorf("runtime provisioning repository is not configured")
 	}
 
-	usedPorts, err := s.repo.ListAllocatedPorts()
-	if err != nil {
-		return 0, err
-	}
-
-	used := make(map[int]struct{}, len(usedPorts))
-	for _, port := range usedPorts {
-		used[port] = struct{}{}
-	}
-
-	for port := s.config.PortRangeStart; port < s.config.PortRangeEnd; port++ {
-		if _, exists := used[port]; exists {
-			continue
-		}
-		return port, nil
-	}
-	return 0, fmt.Errorf("no available port in range %d-%d", s.config.PortRangeStart, s.config.PortRangeEnd)
+	return s.repo.ReserveAvailablePort(ctx, s.config.PortRangeStart, s.config.PortRangeEnd)
 }
 
 func (s *ProvisioningService) cleanupTopologyResources(ctx context.Context, containerIDs []string, networkIDs []string) {

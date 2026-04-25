@@ -833,7 +833,7 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 		t.Fatalf("build composition root: %v", err)
 	}
 	runtimeModule := composition.BuildRuntimeModule(root)
-	runtimeCleanupService := runtimecmd.NewRuntimeCleanupService(nil, logger)
+	runtimeCleanupService := runtimecmd.NewRuntimeCleanupService(nil, nil, logger)
 	runtimeInstanceCommands := runtimecmd.NewInstanceService(instanceRepo, runtimeCleanupService, &cfg.Container, logger)
 	runtimeInstanceQueries := runtimeqry.NewInstanceService(instanceRepo)
 	runtimeProxyTicketService := runtimeqry.NewProxyTicketService(runtimeinfrarepo.NewProxyTicketStore(cache), instanceRepo, cfg.Container.ProxyTicketTTL)

@@ -10,6 +10,7 @@ import (
 type ManagedResources struct {
 	ContainerIDs []string
 	NetworkIDs   []string
+	HostPorts    []int
 	ACLRules     []model.InstanceRuntimeACLRule
 }
 
@@ -24,12 +25,14 @@ func ExtractManagedResources(instance *model.Instance) ManagedResources {
 		return ManagedResources{
 			ContainerIDs: fallbackIDs(instance.ContainerID),
 			NetworkIDs:   fallbackIDs(instance.NetworkID),
+			HostPorts:    fallbackPorts(instance.HostPort),
 		}
 	}
 
 	return ManagedResources{
 		ContainerIDs: uniqueContainerIDs(details, instance.ContainerID),
 		NetworkIDs:   uniqueNetworkIDs(details, instance.NetworkID),
+		HostPorts:    uniqueHostPorts(details, instance.HostPort),
 		ACLRules:     append([]model.InstanceRuntimeACLRule(nil), details.ACLRules...),
 	}
 }
@@ -95,4 +98,32 @@ func fallbackIDs(id string) []string {
 		return nil
 	}
 	return []string{id}
+}
+
+func uniqueHostPorts(details model.InstanceRuntimeDetails, fallback int) []int {
+	result := make([]int, 0, len(details.Containers)+1)
+	seen := make(map[int]struct{}, len(details.Containers)+1)
+	for _, item := range details.Containers {
+		if item.HostPort <= 0 {
+			continue
+		}
+		if _, exists := seen[item.HostPort]; exists {
+			continue
+		}
+		seen[item.HostPort] = struct{}{}
+		result = append(result, item.HostPort)
+	}
+	if fallback > 0 {
+		if _, exists := seen[fallback]; !exists {
+			result = append(result, fallback)
+		}
+	}
+	return result
+}
+
+func fallbackPorts(port int) []int {
+	if port <= 0 {
+		return nil
+	}
+	return []int{port}
 }
