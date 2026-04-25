@@ -240,7 +240,10 @@ describe('TeacherDashboard', () => {
       /\.teacher-dashboard-hero\s*\{[\s\S]*grid-template-columns:\s*minmax\(0,\s*1fr\)\s*minmax\(17rem,\s*0\.34fr\);/s
     )
     expect(teacherDashboardPageSource).toMatch(
-      /\.hero-rail\s*\{[\s\S]*radial-gradient\([\s\S]*var\(--journal-accent\)\s*16%,\s*transparent/s
+      /\.hero-rail\s*\{[\s\S]*background:\s*color-mix\(in srgb,\s*var\(--journal-surface\) 88%, transparent\);/s
+    )
+    expect(teacherDashboardPageSource).not.toMatch(
+      /\.hero-rail\s*\{[\s\S]*radial-gradient\(/s
     )
 
     const wrapper = mount(TeacherDashboard, {
