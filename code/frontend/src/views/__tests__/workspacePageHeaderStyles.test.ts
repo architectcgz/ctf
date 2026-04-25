@@ -224,13 +224,28 @@ describe('workspace page header styles', () => {
         exclude: '<h1 class="hero-title workspace-tab-heading__title">教学介入台</h1>',
       },
       {
+        source: classManagementPageSource,
+        include: '<h1 class="teacher-title workspace-page-title">班级管理</h1>',
+        exclude: '<h1 class="teacher-title workspace-tab-heading__title">班级管理</h1>',
+      },
+      {
+        source: studentManagementPageSource,
+        include: /<h1 class="teacher-title workspace-page-title">\s*学生管理\s*<\/h1>/,
+        exclude: /<h1 class="teacher-title workspace-tab-heading__title">\s*学生管理\s*<\/h1>/,
+      },
+      {
+        source: teacherInstanceManagementPageSource,
+        include: /<h1 class="teacher-title workspace-page-title">\s*实例管理\s*<\/h1>/,
+        exclude: /<h1 class="teacher-title workspace-tab-heading__title">\s*实例管理\s*<\/h1>/,
+      },
+      {
         source: studentAnalysisPageSource,
         include: /<h1 class="teacher-title">[\s\S]*?<\/h1>/,
         exclude: /<h1 class="teacher-title workspace-tab-heading__title">[\s\S]*?<\/h1>/,
       },
       {
         source: adminDashboardSource,
-        include: /<h1 class="hero-title">\s*系统值守台\s*<\/h1>/,
+        include: /<h1 class="hero-title workspace-page-title">\s*系统值守台\s*<\/h1>/,
         exclude: '<h1 class="hero-title workspace-tab-heading__title">系统值守台</h1>',
       },
       {
@@ -380,6 +395,21 @@ describe('workspace page header styles', () => {
         source: userGovernanceSource,
         include: '<p class="workspace-page-copy">',
         exclude: '<p class="workspace-tab-copy">',
+      },
+      {
+        source: classManagementPageSource,
+        include: '<p class="teacher-copy workspace-page-copy">',
+        exclude: '<p class="teacher-copy workspace-tab-copy">',
+      },
+      {
+        source: studentManagementPageSource,
+        include: '<p class="teacher-copy workspace-page-copy">',
+        exclude: '<p class="teacher-copy workspace-tab-copy">',
+      },
+      {
+        source: teacherInstanceManagementPageSource,
+        include: '<p class="teacher-copy workspace-page-copy">',
+        exclude: '<p class="teacher-copy workspace-tab-copy">',
       },
       {
         source: challengeManageWorkspaceSource,

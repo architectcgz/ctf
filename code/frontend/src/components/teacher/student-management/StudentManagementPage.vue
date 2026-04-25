@@ -37,14 +37,14 @@ const emit = defineEmits<{
     <main class="content-pane">
       <div class="teacher-page">
         <header class="teacher-topbar">
-          <div class="teacher-heading">
-            <div class="teacher-surface-eyebrow journal-eyebrow">
+          <div class="teacher-heading workspace-tab-heading__main">
+            <div class="workspace-overline">
               Student Directory
             </div>
-            <h1 class="teacher-title">
+            <h1 class="teacher-title workspace-page-title">
               学生管理
             </h1>
-            <p class="teacher-copy">
+            <p class="teacher-copy workspace-page-copy">
               按班级筛选、搜索并进入学员分析。
             </p>
           </div>

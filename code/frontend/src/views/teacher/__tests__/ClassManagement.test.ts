@@ -242,16 +242,18 @@ describe('ClassManagement', () => {
     expect(classManagementSource).not.toContain('已就绪')
   })
 
-  it('班级管理概览头部应与学生管理页使用同一套 teacher header 结构', () => {
+  it('班级管理概览头部应接入通用 workspace 页头模板', () => {
     expect(classManagementSource).toContain('<header class="teacher-topbar">')
-    expect(classManagementSource).toContain('<div class="teacher-heading">')
-    expect(classManagementSource).toContain('<h1 class="teacher-title">班级管理</h1>')
-    expect(classManagementSource).not.toContain(
+    expect(classManagementSource).toContain(
       '<div class="teacher-heading workspace-tab-heading__main">'
     )
-    expect(classManagementSource).not.toContain(
-      '<h1 class="teacher-title workspace-tab-heading__title">班级管理</h1>'
+    expect(classManagementSource).toContain('<div class="workspace-overline">')
+    expect(classManagementSource).toContain(
+      '<h1 class="teacher-title workspace-page-title">班级管理</h1>'
     )
+    expect(classManagementSource).toContain('<p class="teacher-copy workspace-page-copy">')
+    expect(classManagementSource).not.toContain('teacher-surface-eyebrow journal-eyebrow')
+    expect(classManagementSource).not.toContain('workspace-tab-heading__title')
   })
 
   it('点击导出班级报告时应打开上下文对话框', async () => {
