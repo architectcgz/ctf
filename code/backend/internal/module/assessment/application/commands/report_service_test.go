@@ -1020,6 +1020,45 @@ func TestReportServiceCloseCancelsAsyncTasks(t *testing.T) {
 	}
 }
 
+func TestReportServiceCloseRejectsNilContext(t *testing.T) {
+	t.Parallel()
+
+	service := NewReportService(
+		nil,
+		nil,
+		config.ReportConfig{
+			StorageDir:    t.TempDir(),
+			DefaultFormat: model.ReportFormatPDF,
+			MaxWorkers:    1,
+		},
+		nil,
+	)
+
+	if err := service.Close(nil); err == nil {
+		t.Fatal("expected Close(nil) to reject missing context")
+	}
+}
+
+func TestCreatePersonalReportRejectsNilContext(t *testing.T) {
+	t.Parallel()
+
+	service := NewReportService(
+		&testReportRepository{},
+		nil,
+		config.ReportConfig{
+			StorageDir:    t.TempDir(),
+			DefaultFormat: model.ReportFormatPDF,
+			MaxWorkers:    1,
+		},
+		nil,
+	)
+
+	_, err := service.CreatePersonalReport(nil, 1, &dto.CreatePersonalReportReq{Format: model.ReportFormatPDF})
+	if err == nil {
+		t.Fatal("expected CreatePersonalReport(nil) to reject missing context")
+	}
+}
+
 func TestReportServiceWithPersonalTimeoutUsesConfiguredDeadline(t *testing.T) {
 	t.Parallel()
 
