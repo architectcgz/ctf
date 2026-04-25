@@ -16,8 +16,5 @@ func (s *CountRunningService) CountRunning(ctx context.Context) (int64, error) {
 	if s == nil || s.repo == nil {
 		return 0, nil
 	}
-	if ctx == nil {
-		ctx = context.Background()
-	}
 	return s.repo.CountRunning(ctx)
 }
