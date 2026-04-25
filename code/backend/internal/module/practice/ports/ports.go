@@ -96,9 +96,9 @@ type PracticeScoreRepository interface {
 }
 
 type PracticeRankingRepository interface {
-	FindUserScoreWithContext(ctx context.Context, userID int64) (*model.UserScore, error)
-	ListTopUserScoresWithContext(ctx context.Context, limit int) ([]model.UserScore, error)
-	FindUsersByIDsWithContext(ctx context.Context, userIDs []int64) ([]model.User, error)
+	FindUserScore(ctx context.Context, userID int64) (*model.UserScore, error)
+	ListTopUserScores(ctx context.Context, limit int) ([]model.UserScore, error)
+	FindUsersByIDs(ctx context.Context, userIDs []int64) ([]model.User, error)
 }
 
 type InstanceRepository interface {
