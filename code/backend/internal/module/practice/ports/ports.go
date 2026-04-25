@@ -116,7 +116,7 @@ type InstanceRepository interface {
 	FindByUserAndChallenge(ctx context.Context, userID, challengeID int64) (*model.Instance, error)
 	ListPendingInstancesWithContext(ctx context.Context, limit int) ([]*model.Instance, error)
 	TryTransitionStatusWithContext(ctx context.Context, id int64, fromStatus, toStatus string) (bool, error)
-	CountInstancesByStatusWithContext(ctx context.Context, statuses []string) (int64, error)
+	CountInstancesByStatus(ctx context.Context, statuses []string) (int64, error)
 }
 
 type RuntimeInstanceService interface {

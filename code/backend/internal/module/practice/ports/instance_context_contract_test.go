@@ -38,7 +38,7 @@ func (ctxOnlyInstanceRepository) TryTransitionStatusWithContext(context.Context,
 	return false, nil
 }
 
-func (ctxOnlyInstanceRepository) CountInstancesByStatusWithContext(context.Context, []string) (int64, error) {
+func (ctxOnlyInstanceRepository) CountInstancesByStatus(context.Context, []string) (int64, error) {
 	return 0, nil
 }
 
