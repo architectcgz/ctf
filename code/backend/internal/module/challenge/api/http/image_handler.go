@@ -10,6 +10,8 @@ import (
 	"ctf-platform/pkg/response"
 )
 
+const errMsgInvalidImageID = "无效的镜像 ID"
+
 type ImageHandler struct {
 	commands imageCommandService
 	queries  imageQueryService
@@ -49,7 +51,7 @@ func (h *ImageHandler) CreateImage(c *gin.Context) {
 func (h *ImageHandler) GetImage(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		response.InvalidParams(c, "无效的镜像 ID")
+		response.InvalidParams(c, errMsgInvalidImageID)
 		return
 	}
 
@@ -81,7 +83,7 @@ func (h *ImageHandler) ListImages(c *gin.Context) {
 func (h *ImageHandler) UpdateImage(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		response.InvalidParams(c, "无效的镜像 ID")
+		response.InvalidParams(c, errMsgInvalidImageID)
 		return
 	}
 
@@ -102,7 +104,7 @@ func (h *ImageHandler) UpdateImage(c *gin.Context) {
 func (h *ImageHandler) DeleteImage(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		response.InvalidParams(c, "无效的镜像 ID")
+		response.InvalidParams(c, errMsgInvalidImageID)
 		return
 	}
 
