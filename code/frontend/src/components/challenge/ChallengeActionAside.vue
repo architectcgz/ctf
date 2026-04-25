@@ -80,7 +80,7 @@
       />
       <section
         v-else
-        class="tool-group detail-aside-empty text-sm text-[var(--color-success)]"
+        class="tool-group detail-aside-empty detail-aside-empty--success"
       >
         该题目不需要靶机，可直接分析题面并提交 Flag。
       </section>
@@ -159,6 +159,25 @@ function updateFlagInput(event: Event): void {
   --ui-control-height: 3.125rem;
 }
 
+.flag-input-wrap--idle {
+  border-color: var(--journal-accent);
+}
+
+.flag-input-wrap--success {
+  border-color: color-mix(in srgb, var(--color-success) 72%, transparent);
+  background: color-mix(in srgb, var(--color-success) 5%, var(--bg-panel));
+}
+
+.flag-input-wrap--pending {
+  border-color: color-mix(in srgb, var(--color-warning) 72%, transparent);
+  background: color-mix(in srgb, var(--color-warning) 8%, var(--bg-panel));
+}
+
+.flag-input-wrap--error {
+  border-color: color-mix(in srgb, var(--color-danger) 72%, transparent);
+  background: color-mix(in srgb, var(--color-danger) 5%, var(--bg-panel));
+}
+
 .flag-input-wrap > input {
   font: 500 15px/1 var(--font-mono);
 }
@@ -232,6 +251,10 @@ function updateFlagInput(event: Event): void {
 
 .status-inline--error .status-dot {
   background: var(--color-danger);
+}
+
+.detail-aside-empty--success {
+  color: var(--color-success);
 }
 
 .writeup-status-pill {

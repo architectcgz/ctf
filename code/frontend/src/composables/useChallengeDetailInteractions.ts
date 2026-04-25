@@ -43,7 +43,6 @@ export function useChallengeDetailInteractions({
   const expandedHintLevels = ref<number[]>([])
   const submitResult = ref<{
     variant: 'success' | 'error' | 'pending'
-    className: string
     message: string
   } | null>(null)
   const submissionRecords = ref<SubmissionRecordItem[]>([])
@@ -198,7 +197,6 @@ export function useChallengeDetailInteractions({
         case 'correct':
           submitResult.value = {
             variant: 'success',
-            className: 'text-[var(--color-success)]',
             message: submitMessage,
           }
           toast.success(submitMessage)
@@ -210,7 +208,6 @@ export function useChallengeDetailInteractions({
         case 'pending_review':
           submitResult.value = {
             variant: 'pending',
-            className: 'text-[var(--color-warning)]',
             message: submitMessage,
           }
           toast.info(submitMessage)
@@ -218,7 +215,6 @@ export function useChallengeDetailInteractions({
         default:
           submitResult.value = {
             variant: 'error',
-            className: 'text-[var(--color-danger)]',
             message: submitMessage,
           }
           break
@@ -235,7 +231,6 @@ export function useChallengeDetailInteractions({
       ]
       submitResult.value = {
         variant: 'error',
-        className: 'text-[var(--color-danger)]',
         message: '提交失败，请重试',
       }
     } finally {
