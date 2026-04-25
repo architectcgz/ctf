@@ -200,9 +200,12 @@ describe('TeacherDashboard', () => {
 
   it('教师概览应采用 workspace tabs 结构而不是单一仪表盘堆叠', () => {
     expect(teacherDashboardPageSource).toContain(
-      'class="workspace-shell teacher-management-shell teacher-surface"'
+      'class="workspace-shell teacher-management-shell teacher-surface teacher-dashboard-shell flex min-h-full flex-1 flex-col"'
     )
     expect(teacherDashboardPageSource).not.toContain('class="workspace-topbar"')
+    expect(teacherDashboardPageSource).toContain(
+      'class="workspace-tabbar top-tabs teacher-dashboard-tabs"'
+    )
     expect(teacherDashboardPageSource).toContain('role="tablist"')
     expect(teacherDashboardPageSource).toContain('top-tab-overview')
     expect(teacherDashboardPageSource).toContain('top-tab-portrait')
@@ -211,6 +214,53 @@ describe('TeacherDashboard', () => {
     expect(teacherDashboardPageSource).toContain('top-tab-advice')
     expect(teacherDashboardPageSource).toContain('top-tab-action')
     expect(teacherDashboardPageSource).not.toContain('overview-pulse-panel')
+  })
+
+  it('教师概览首屏应使用共享 metric 渐变卡片和明确的工作台布局', async () => {
+    expect(teacherDashboardPageSource).toContain(
+      'class="content-pane teacher-dashboard-content"'
+    )
+    expect(teacherDashboardPageSource).toContain(
+      'class="workspace-hero teacher-dashboard-hero tab-panel active"'
+    )
+    expect(teacherDashboardPageSource).toContain(
+      'class="teacher-overview-summary progress-strip metric-panel-grid metric-panel-default-surface"'
+    )
+    expect(teacherDashboardPageSource).toContain(
+      'class="teacher-overview-card progress-card metric-panel-card"'
+    )
+    expect(teacherDashboardPageSource).toContain('class="hero-rail workspace-subpanel"')
+    expect(teacherDashboardPageSource).toContain('--workspace-brand: var(--journal-accent);')
+    expect(teacherDashboardPageSource).toContain('--page-top-tabs-gap: var(--space-7);')
+    expect(teacherDashboardPageSource).toContain('--metric-panel-columns: repeat(4, minmax(0, 1fr));')
+    expect(teacherDashboardPageSource).toMatch(
+      /\.summary-grid\s*\{[\s\S]*--metric-panel-columns:\s*repeat\(3,\s*minmax\(0,\s*1fr\)\);/s
+    )
+    expect(teacherDashboardPageSource).toMatch(
+      /\.teacher-dashboard-hero\s*\{[\s\S]*grid-template-columns:\s*minmax\(0,\s*1fr\)\s*minmax\(17rem,\s*0\.34fr\);/s
+    )
+    expect(teacherDashboardPageSource).toMatch(
+      /\.hero-rail\s*\{[\s\S]*radial-gradient\([\s\S]*var\(--journal-accent\)\s*16%,\s*transparent/s
+    )
+
+    const wrapper = mount(TeacherDashboard, {
+      global: {
+        stubs: {
+          LineChart: true,
+          SkillRadar: true,
+        },
+      },
+    })
+
+    await flushPromises()
+    await flushPromises()
+
+    const summary = wrapper.get('#overview .teacher-overview-summary')
+    expect(summary.classes()).toContain('progress-strip')
+    expect(summary.classes()).toContain('metric-panel-grid')
+    expect(summary.classes()).toContain('metric-panel-default-surface')
+    expect(summary.findAll('.teacher-overview-card.progress-card.metric-panel-card')).toHaveLength(4)
+    expect(wrapper.find('#overview .hero-rail.workspace-subpanel').exists()).toBe(true)
   })
 
   it('教师概览画像页的摘要卡片应采用统一 metric-panel 样式栈', async () => {
