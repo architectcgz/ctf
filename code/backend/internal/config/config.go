@@ -223,14 +223,15 @@ type WebSocketConfig struct {
 }
 
 type ContestConfig struct {
-	StatusUpdateInterval  time.Duration    `mapstructure:"status_update_interval"`
-	StatusUpdateBatchSize int              `mapstructure:"status_update_batch_size"`
-	StatusUpdateLockTTL   time.Duration    `mapstructure:"status_update_lock_ttl"`
-	BaseScore             float64          `mapstructure:"base_score"`
-	MinScore              float64          `mapstructure:"min_score"`
-	Decay                 float64          `mapstructure:"decay"`
-	FirstBloodBonus       float64          `mapstructure:"first_blood_bonus"`
-	AWD                   ContestAWDConfig `mapstructure:"awd"`
+	StatusUpdateInterval   time.Duration    `mapstructure:"status_update_interval"`
+	StatusUpdateBatchSize  int              `mapstructure:"status_update_batch_size"`
+	StatusUpdateLockTTL    time.Duration    `mapstructure:"status_update_lock_ttl"`
+	SubmissionRateLimitTTL time.Duration    `mapstructure:"submission_rate_limit_ttl"`
+	BaseScore              float64          `mapstructure:"base_score"`
+	MinScore               float64          `mapstructure:"min_score"`
+	Decay                  float64          `mapstructure:"decay"`
+	FirstBloodBonus        float64          `mapstructure:"first_blood_bonus"`
+	AWD                    ContestAWDConfig `mapstructure:"awd"`
 }
 
 type ContestAWDConfig struct {
@@ -311,6 +312,13 @@ func (c *Config) Validate() error {
 	}
 	if c.Container.DefaultExposedPort <= 0 || c.Container.DefaultExposedPort > 65535 {
 		return fmt.Errorf("container.default_exposed_port must be between 1 and 65535")
+	}
+	if c.Container.PortRangeStart <= 0 || c.Container.PortRangeStart > 65535 ||
+		c.Container.PortRangeEnd <= 0 || c.Container.PortRangeEnd > 65535 {
+		return fmt.Errorf("container.port_range_start and container.port_range_end must be between 1 and 65535")
+	}
+	if c.Container.PortRangeStart >= c.Container.PortRangeEnd {
+		return fmt.Errorf("container.port_range_start must be less than container.port_range_end")
 	}
 	if c.Container.OrphanGracePeriod <= 0 {
 		return fmt.Errorf("container.orphan_grace_period must be greater than 0")
@@ -403,6 +411,9 @@ func (c *Config) Validate() error {
 	}
 	if c.Contest.StatusUpdateLockTTL <= 0 {
 		return fmt.Errorf("contest.status_update_lock_ttl must be greater than 0")
+	}
+	if c.Contest.SubmissionRateLimitTTL <= 0 {
+		return fmt.Errorf("contest.submission_rate_limit_ttl must be greater than 0")
 	}
 	if c.Contest.AWD.SchedulerInterval <= 0 {
 		return fmt.Errorf("contest.awd.scheduler_interval must be greater than 0")
@@ -570,6 +581,7 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("contest.status_update_interval", 1*time.Minute)
 	v.SetDefault("contest.status_update_batch_size", 1000)
 	v.SetDefault("contest.status_update_lock_ttl", 30*time.Second)
+	v.SetDefault("contest.submission_rate_limit_ttl", 5*time.Second)
 	v.SetDefault("contest.base_score", 1000.0)
 	v.SetDefault("contest.min_score", 100.0)
 	v.SetDefault("contest.decay", 0.9)

@@ -25,7 +25,7 @@ func TestServiceGetPublishedChallengeNotPublished(t *testing.T) {
 	repo := challengeinfra.NewRepository(db)
 	service := NewChallengeService(repo, nil, &Config{SolvedCountCacheTTL: time.Minute}, nil)
 
-	_, err := service.GetPublishedChallenge(1, challenge.ID)
+	_, err := service.GetPublishedChallenge(context.Background(), 1, challenge.ID)
 	if err == nil || err.Error() != errcode.ErrForbidden.Error() {
 		t.Fatalf("expected not published error, got %v", err)
 	}
@@ -59,7 +59,7 @@ func TestServiceGetChallengeIncludesHintsAndAttachment(t *testing.T) {
 	repo := challengeinfra.NewRepository(db)
 	service := NewChallengeService(repo, nil, &Config{SolvedCountCacheTTL: time.Minute}, nil)
 
-	resp, err := service.GetChallenge(challenge.ID)
+	resp, err := service.GetChallenge(context.Background(), challenge.ID)
 	if err != nil {
 		t.Fatalf("GetChallenge() error = %v", err)
 	}
@@ -106,7 +106,7 @@ func TestServiceGetSolvedCountCachedHonorsContextCancellation(t *testing.T) {
 	}
 }
 
-func TestServiceGetChallengeWithContextHonorsCancellation(t *testing.T) {
+func TestServiceGetChallengeHonorsCancellation(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 
 	challenge := &model.Challenge{Title: "ctx get", Status: model.ChallengeStatusDraft}
@@ -118,13 +118,13 @@ func TestServiceGetChallengeWithContextHonorsCancellation(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 
-	_, err := service.GetChallengeWithContext(ctx, challenge.ID)
+	_, err := service.GetChallenge(ctx, challenge.ID)
 	if err == nil || err != context.Canceled {
 		t.Fatalf("expected context canceled, got %v", err)
 	}
 }
 
-func TestServiceListChallengesWithContextHonorsCancellation(t *testing.T) {
+func TestServiceListChallengesHonorsCancellation(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 
 	challenge := &model.Challenge{Title: "ctx list", Status: model.ChallengeStatusDraft}
@@ -136,7 +136,7 @@ func TestServiceListChallengesWithContextHonorsCancellation(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 
-	_, err := service.ListChallengesWithContext(ctx, &dto.ChallengeQuery{})
+	_, err := service.ListChallenges(ctx, &dto.ChallengeQuery{})
 	if err == nil || err != context.Canceled {
 		t.Fatalf("expected context canceled, got %v", err)
 	}

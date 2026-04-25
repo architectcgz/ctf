@@ -20,9 +20,6 @@ func (r *SubmissionRepository) WithDB(db *gorm.DB) *SubmissionRepository {
 }
 
 func (r *SubmissionRepository) dbWithContext(ctx context.Context) *gorm.DB {
-	if ctx == nil {
-		ctx = context.Background()
-	}
 	return r.db.WithContext(ctx)
 }
 

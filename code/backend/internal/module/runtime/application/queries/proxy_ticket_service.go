@@ -36,7 +36,7 @@ func (s *ProxyTicketService) IssueTicket(ctx context.Context, user authctx.Curre
 		return "", time.Time{}, errcode.ErrInternal.WithCause(err)
 	}
 
-	instance, err := s.instanceReader.FindByIDWithContext(ctx, instanceID)
+	instance, err := s.instanceReader.FindByID(ctx, instanceID)
 	if err != nil {
 		return "", time.Time{}, errcode.ErrInternal.WithCause(err)
 	}

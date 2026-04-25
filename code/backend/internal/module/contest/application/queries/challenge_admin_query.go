@@ -24,7 +24,7 @@ func (s *ChallengeService) ListAdminChallenges(ctx context.Context, contestID in
 
 	result := make([]*dto.ContestChallengeResp, len(challenges))
 	for i, item := range challenges {
-		challenge, findErr := s.challengeRepo.FindByID(item.ChallengeID)
+		challenge, findErr := s.challengeRepo.FindByID(ctx, item.ChallengeID)
 		if findErr != nil {
 			return nil, errcode.ErrInternal.WithCause(findErr)
 		}

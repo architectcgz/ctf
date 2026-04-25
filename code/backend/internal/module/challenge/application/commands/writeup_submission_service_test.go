@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -64,7 +65,7 @@ func TestWriteupServiceUpsertSubmissionCommunityLifecycle(t *testing.T) {
 	service := NewWriteupService(repo)
 	queryService := challengeqry.NewWriteupService(repo)
 
-	emptyMine, err := queryService.GetMySubmission(student.ID, challengeItem.ID)
+	emptyMine, err := queryService.GetMySubmission(context.Background(), student.ID, challengeItem.ID)
 	if err != nil {
 		t.Fatalf("GetMySubmission() before upsert error = %v", err)
 	}
@@ -72,7 +73,7 @@ func TestWriteupServiceUpsertSubmissionCommunityLifecycle(t *testing.T) {
 		t.Fatalf("expected nil submission before upsert, got %+v", emptyMine)
 	}
 
-	draft, err := service.UpsertSubmission(challengeItem.ID, student.ID, &dto.UpsertSubmissionWriteupReq{
+	draft, err := service.UpsertSubmission(context.Background(), challengeItem.ID, student.ID, &dto.UpsertSubmissionWriteupReq{
 		Title:            "草稿版解题记录",
 		Content:          "先枚举路由，再找注入点",
 		SubmissionStatus: model.SubmissionWriteupStatusDraft,
@@ -87,7 +88,7 @@ func TestWriteupServiceUpsertSubmissionCommunityLifecycle(t *testing.T) {
 		t.Fatalf("unexpected draft visibility status: %+v", draft)
 	}
 
-	if _, err := service.UpsertSubmission(challengeItem.ID, student.ID, &dto.UpsertSubmissionWriteupReq{
+	if _, err := service.UpsertSubmission(context.Background(), challengeItem.ID, student.ID, &dto.UpsertSubmissionWriteupReq{
 		Title:            "未解题直接发布",
 		Content:          "这一步应该被拦住",
 		SubmissionStatus: model.SubmissionWriteupStatusPublished,
@@ -108,7 +109,7 @@ func TestWriteupServiceUpsertSubmissionCommunityLifecycle(t *testing.T) {
 		t.Fatalf("create solved submission: %v", err)
 	}
 
-	published, err := service.UpsertSubmission(challengeItem.ID, student.ID, &dto.UpsertSubmissionWriteupReq{
+	published, err := service.UpsertSubmission(context.Background(), challengeItem.ID, student.ID, &dto.UpsertSubmissionWriteupReq{
 		Title:            "正式版解题记录",
 		Content:          "1. 枚举接口\n2. 找到注入点\n3. 读取 flag",
 		SubmissionStatus: model.SubmissionWriteupStatusPublished,
@@ -123,7 +124,7 @@ func TestWriteupServiceUpsertSubmissionCommunityLifecycle(t *testing.T) {
 		t.Fatalf("unexpected published visibility status: %+v", published)
 	}
 
-	mine, err := queryService.GetMySubmission(student.ID, challengeItem.ID)
+	mine, err := queryService.GetMySubmission(context.Background(), student.ID, challengeItem.ID)
 	if err != nil {
 		t.Fatalf("GetMySubmission() error = %v", err)
 	}
@@ -131,7 +132,7 @@ func TestWriteupServiceUpsertSubmissionCommunityLifecycle(t *testing.T) {
 		t.Fatalf("unexpected my published submission payload: %+v", mine)
 	}
 
-	detail, err := queryService.GetTeacherSubmission(published.ID, teacher.ID, model.RoleTeacher)
+	detail, err := queryService.GetTeacherSubmission(context.Background(), published.ID, teacher.ID, model.RoleTeacher)
 	if err != nil {
 		t.Fatalf("GetTeacherSubmission() error = %v", err)
 	}
@@ -200,7 +201,7 @@ func TestWriteupServiceCommunityModerationAndOfficialRecommendation(t *testing.T
 	repo := challengeinfra.NewRepository(db)
 	service := NewWriteupService(repo)
 
-	if _, err := service.Upsert(challengeItem.ID, admin.ID, &dto.UpsertChallengeWriteupReq{
+	if _, err := service.Upsert(context.Background(), challengeItem.ID, admin.ID, &dto.UpsertChallengeWriteupReq{
 		Title:      "Official",
 		Content:    "official content",
 		Visibility: model.WriteupVisibilityPublic,
@@ -220,7 +221,7 @@ func TestWriteupServiceCommunityModerationAndOfficialRecommendation(t *testing.T
 		t.Fatalf("create solved submission: %v", err)
 	}
 
-	published, err := service.UpsertSubmission(challengeItem.ID, student.ID, &dto.UpsertSubmissionWriteupReq{
+	published, err := service.UpsertSubmission(context.Background(), challengeItem.ID, student.ID, &dto.UpsertSubmissionWriteupReq{
 		Title:            "社区题解",
 		Content:          "community content",
 		SubmissionStatus: model.SubmissionWriteupStatusPublished,
@@ -229,7 +230,7 @@ func TestWriteupServiceCommunityModerationAndOfficialRecommendation(t *testing.T
 		t.Fatalf("UpsertSubmission published error = %v", err)
 	}
 
-	official, err := service.RecommendOfficial(challengeItem.ID, admin.ID)
+	official, err := service.RecommendOfficial(context.Background(), challengeItem.ID, admin.ID)
 	if err != nil {
 		t.Fatalf("RecommendOfficial() error = %v", err)
 	}
@@ -237,7 +238,7 @@ func TestWriteupServiceCommunityModerationAndOfficialRecommendation(t *testing.T
 		t.Fatalf("expected official writeup to be recommended, got %+v", official)
 	}
 
-	community, err := service.RecommendCommunity(published.ID, teacher.ID, model.RoleTeacher)
+	community, err := service.RecommendCommunity(context.Background(), published.ID, teacher.ID, model.RoleTeacher)
 	if err != nil {
 		t.Fatalf("RecommendCommunity() error = %v", err)
 	}
@@ -245,11 +246,11 @@ func TestWriteupServiceCommunityModerationAndOfficialRecommendation(t *testing.T
 		t.Fatalf("expected community writeup to be recommended, got %+v", community)
 	}
 
-	if _, err := service.HideCommunity(published.ID, otherTeacher.ID, model.RoleTeacher); err == nil {
+	if _, err := service.HideCommunity(context.Background(), published.ID, otherTeacher.ID, model.RoleTeacher); err == nil {
 		t.Fatalf("expected teacher from another class to be forbidden")
 	}
 
-	hidden, err := service.HideCommunity(published.ID, teacher.ID, model.RoleTeacher)
+	hidden, err := service.HideCommunity(context.Background(), published.ID, teacher.ID, model.RoleTeacher)
 	if err != nil {
 		t.Fatalf("HideCommunity() error = %v", err)
 	}
@@ -257,7 +258,7 @@ func TestWriteupServiceCommunityModerationAndOfficialRecommendation(t *testing.T
 		t.Fatalf("expected hidden community writeup, got %+v", hidden)
 	}
 
-	restored, err := service.RestoreCommunity(published.ID, teacher.ID, model.RoleTeacher)
+	restored, err := service.RestoreCommunity(context.Background(), published.ID, teacher.ID, model.RoleTeacher)
 	if err != nil {
 		t.Fatalf("RestoreCommunity() error = %v", err)
 	}
@@ -265,7 +266,7 @@ func TestWriteupServiceCommunityModerationAndOfficialRecommendation(t *testing.T
 		t.Fatalf("expected restored community writeup, got %+v", restored)
 	}
 
-	unrecommendedCommunity, err := service.UnrecommendCommunity(published.ID, teacher.ID, model.RoleTeacher)
+	unrecommendedCommunity, err := service.UnrecommendCommunity(context.Background(), published.ID, teacher.ID, model.RoleTeacher)
 	if err != nil {
 		t.Fatalf("UnrecommendCommunity() error = %v", err)
 	}
@@ -273,7 +274,7 @@ func TestWriteupServiceCommunityModerationAndOfficialRecommendation(t *testing.T
 		t.Fatalf("expected community writeup recommendation to be cleared, got %+v", unrecommendedCommunity)
 	}
 
-	unrecommendedOfficial, err := service.UnrecommendOfficial(challengeItem.ID, admin.ID)
+	unrecommendedOfficial, err := service.UnrecommendOfficial(context.Background(), challengeItem.ID, admin.ID)
 	if err != nil {
 		t.Fatalf("UnrecommendOfficial() error = %v", err)
 	}

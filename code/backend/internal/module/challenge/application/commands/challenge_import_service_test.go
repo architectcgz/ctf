@@ -71,7 +71,7 @@ func TestServiceListChallengeImportsSortsAndFiltersByActor(t *testing.T) {
 
 	service := &ChallengeService{}
 
-	previews, err := service.ListChallengeImports(1001)
+	previews, err := service.ListChallengeImports(context.Background(), 1001)
 	if err != nil {
 		t.Fatalf("ListChallengeImports() error = %v", err)
 	}
@@ -93,7 +93,7 @@ func TestServiceListChallengeImportsReturnsEmptyWhenPreviewRootMissing(t *testin
 
 	service := &ChallengeService{}
 
-	previews, err := service.ListChallengeImports(1001)
+	previews, err := service.ListChallengeImports(context.Background(), 1001)
 	if err != nil {
 		t.Fatalf("ListChallengeImports() error = %v", err)
 	}

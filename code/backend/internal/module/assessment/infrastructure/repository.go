@@ -20,17 +20,10 @@ func NewRepository(db *gorm.DB) *Repository {
 }
 
 func (r *Repository) dbWithContext(ctx context.Context) *gorm.DB {
-	if ctx == nil {
-		ctx = context.Background()
-	}
 	return r.db.WithContext(ctx)
 }
 
-func (r *Repository) FindUserByID(userID int64) (*model.User, error) {
-	return r.FindUserByIDWithContext(context.Background(), userID)
-}
-
-func (r *Repository) FindUserByIDWithContext(ctx context.Context, userID int64) (*model.User, error) {
+func (r *Repository) FindUserByID(ctx context.Context, userID int64) (*model.User, error) {
 	var user model.User
 	if err := r.dbWithContext(ctx).Where("id = ? AND deleted_at IS NULL", userID).First(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -42,11 +35,7 @@ func (r *Repository) FindUserByIDWithContext(ctx context.Context, userID int64) 
 }
 
 // Upsert 插入或更新能力画像
-func (r *Repository) Upsert(profile *model.SkillProfile) error {
-	return r.UpsertWithContext(context.Background(), profile)
-}
-
-func (r *Repository) UpsertWithContext(ctx context.Context, profile *model.SkillProfile) error {
+func (r *Repository) Upsert(ctx context.Context, profile *model.SkillProfile) error {
 	return r.dbWithContext(ctx).Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "user_id"}, {Name: "dimension"}},
 		DoUpdates: clause.AssignmentColumns([]string{"score", "updated_at"}),
@@ -54,17 +43,13 @@ func (r *Repository) UpsertWithContext(ctx context.Context, profile *model.Skill
 }
 
 // FindByUserID 查询用户所有维度画像
-func (r *Repository) FindByUserID(userID int64) ([]*model.SkillProfile, error) {
-	return r.FindByUserIDWithContext(context.Background(), userID)
-}
-
-func (r *Repository) FindByUserIDWithContext(ctx context.Context, userID int64) ([]*model.SkillProfile, error) {
+func (r *Repository) FindByUserID(ctx context.Context, userID int64) ([]*model.SkillProfile, error) {
 	var profiles []*model.SkillProfile
 	err := r.dbWithContext(ctx).Where("user_id = ?", userID).Find(&profiles).Error
 	return profiles, err
 }
 
-func (r *Repository) ListSolvedChallengeIDsWithContext(ctx context.Context, userID int64) ([]int64, error) {
+func (r *Repository) ListSolvedChallengeIDs(ctx context.Context, userID int64) ([]int64, error) {
 	var ids []int64
 	err := r.dbWithContext(ctx).Raw(`
 		SELECT challenge_id
@@ -88,11 +73,7 @@ func (r *Repository) ListSolvedChallengeIDsWithContext(ctx context.Context, user
 }
 
 // BatchUpsert 批量插入或更新
-func (r *Repository) BatchUpsert(profiles []*model.SkillProfile) error {
-	return r.BatchUpsertWithContext(context.Background(), profiles)
-}
-
-func (r *Repository) BatchUpsertWithContext(ctx context.Context, profiles []*model.SkillProfile) error {
+func (r *Repository) BatchUpsert(ctx context.Context, profiles []*model.SkillProfile) error {
 	if len(profiles) == 0 {
 		return nil
 	}
@@ -102,11 +83,7 @@ func (r *Repository) BatchUpsertWithContext(ctx context.Context, profiles []*mod
 	}).Create(profiles).Error
 }
 
-func (r *Repository) ListStudentIDs() ([]int64, error) {
-	return r.ListStudentIDsWithContext(context.Background())
-}
-
-func (r *Repository) ListStudentIDsWithContext(ctx context.Context) ([]int64, error) {
+func (r *Repository) ListStudentIDs(ctx context.Context) ([]int64, error) {
 	var ids []int64
 	err := r.dbWithContext(ctx).Model(&model.User{}).
 		Where("role = ? AND deleted_at IS NULL", model.RoleStudent).
@@ -115,11 +92,7 @@ func (r *Repository) ListStudentIDsWithContext(ctx context.Context) ([]int64, er
 }
 
 // GetDimensionScores 查询用户各维度得分统计
-func (r *Repository) GetDimensionScores(userID int64) ([]assessmentdomain.DimensionScore, error) {
-	return r.GetDimensionScoresWithContext(context.Background(), userID)
-}
-
-func (r *Repository) GetDimensionScoresWithContext(ctx context.Context, userID int64) ([]assessmentdomain.DimensionScore, error) {
+func (r *Repository) GetDimensionScores(ctx context.Context, userID int64) ([]assessmentdomain.DimensionScore, error) {
 	var scores []assessmentdomain.DimensionScore
 	err := r.dbWithContext(ctx).Raw(`
 		SELECT
@@ -152,11 +125,7 @@ func (r *Repository) GetDimensionScoresWithContext(ctx context.Context, userID i
 }
 
 // GetDimensionScore 查询用户单个维度得分统计（增量更新用）
-func (r *Repository) GetDimensionScore(userID int64, dimension string) (*assessmentdomain.DimensionScore, error) {
-	return r.GetDimensionScoreWithContext(context.Background(), userID, dimension)
-}
-
-func (r *Repository) GetDimensionScoreWithContext(ctx context.Context, userID int64, dimension string) (*assessmentdomain.DimensionScore, error) {
+func (r *Repository) GetDimensionScore(ctx context.Context, userID int64, dimension string) (*assessmentdomain.DimensionScore, error) {
 	var score assessmentdomain.DimensionScore
 	err := r.dbWithContext(ctx).Raw(`
 		SELECT

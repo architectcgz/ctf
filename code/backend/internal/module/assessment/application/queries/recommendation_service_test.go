@@ -31,11 +31,7 @@ type stubChallengeRecommendationRepo struct {
 	lastSolved []int64
 }
 
-func (s *stubChallengeRecommendationRepo) FindPublishedForRecommendation(limit int, dimensions []string, excludeSolved []int64) ([]*model.Challenge, error) {
-	return s.FindPublishedForRecommendationWithContext(context.Background(), limit, dimensions, excludeSolved)
-}
-
-func (s *stubChallengeRecommendationRepo) FindPublishedForRecommendationWithContext(_ context.Context, limit int, dimensions []string, excludeSolved []int64) ([]*model.Challenge, error) {
+func (s *stubChallengeRecommendationRepo) FindPublishedForRecommendation(_ context.Context, limit int, dimensions []string, excludeSolved []int64) ([]*model.Challenge, error) {
 	s.calls++
 	s.lastLimit = limit
 	s.lastDims = append([]string(nil), dimensions...)
@@ -91,7 +87,7 @@ func TestRecommendationServiceRecommendChallengesUsesCacheForDefaultLimit(t *tes
 	}
 
 	service := newRecommendationTestService(db, stubRepo, redisClient)
-	items, err := service.RecommendChallenges(1, 0)
+	items, err := service.RecommendChallenges(context.Background(), 1, 0)
 	if err != nil {
 		t.Fatalf("RecommendChallenges() error = %v", err)
 	}
@@ -151,7 +147,7 @@ func TestRecommendationServiceRecommendChallengesUsesWeakDimensionsAndSolvedFilt
 	}
 	service := newRecommendationTestService(db, stubRepo, nil)
 
-	items, err := service.RecommendChallenges(7, 99)
+	items, err := service.RecommendChallenges(context.Background(), 7, 99)
 	if err != nil {
 		t.Fatalf("RecommendChallenges() error = %v", err)
 	}
@@ -190,7 +186,7 @@ func TestRecommendationServiceRecommendReturnsEmptyWhenNoWeakDimension(t *testin
 	stubRepo := &stubChallengeRecommendationRepo{}
 	service := newRecommendationTestService(db, stubRepo, nil)
 
-	resp, err := service.Recommend(9, 0)
+	resp, err := service.Recommend(context.Background(), 9, 0)
 	if err != nil {
 		t.Fatalf("Recommend() error = %v", err)
 	}
@@ -202,7 +198,7 @@ func TestRecommendationServiceRecommendReturnsEmptyWhenNoWeakDimension(t *testin
 	}
 }
 
-func TestRecommendationServiceRecommendChallengesWithContextHonorsCancellation(t *testing.T) {
+func TestRecommendationServiceRecommendChallengesHonorsCancellation(t *testing.T) {
 	db := setupRecommendationTestDB(t)
 	now := time.Now()
 	if err := db.Create(&model.SkillProfile{
@@ -219,7 +215,7 @@ func TestRecommendationServiceRecommendChallengesWithContextHonorsCancellation(t
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 
-	_, err := service.RecommendChallengesWithContext(ctx, 11, 0)
+	_, err := service.RecommendChallenges(ctx, 11, 0)
 	if err == nil || err != context.Canceled {
 		t.Fatalf("expected context canceled, got %v", err)
 	}

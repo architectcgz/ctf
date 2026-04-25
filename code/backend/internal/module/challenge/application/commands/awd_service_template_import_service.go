@@ -95,7 +95,8 @@ func (s *AWDServiceTemplateImportService) PreviewImport(
 	return preview, nil
 }
 
-func (s *AWDServiceTemplateImportService) ListImports(actorUserID int64) ([]dto.AWDServiceTemplateImportPreviewResp, error) {
+func (s *AWDServiceTemplateImportService) ListImports(ctx context.Context, actorUserID int64) ([]dto.AWDServiceTemplateImportPreviewResp, error) {
+	_ = ctx
 	records, err := loadAWDServiceTemplateImportPreviewRecords()
 	if err != nil {
 		return nil, err
@@ -115,9 +116,11 @@ func (s *AWDServiceTemplateImportService) ListImports(actorUserID int64) ([]dto.
 }
 
 func (s *AWDServiceTemplateImportService) GetImport(
+	ctx context.Context,
 	actorUserID int64,
 	id string,
 ) (*dto.AWDServiceTemplateImportPreviewResp, error) {
+	_ = ctx
 	record, err := loadAWDServiceTemplateImportPreviewRecord(id)
 	if err != nil {
 		return nil, err
@@ -145,10 +148,6 @@ func (s *AWDServiceTemplateImportService) CommitImport(
 	parsed, err := domain.ParseAWDServiceTemplatePackageDir(record.SourceDir)
 	if err != nil {
 		return nil, err
-	}
-
-	if ctx == nil {
-		ctx = context.Background()
 	}
 
 	var template *model.AWDServiceTemplate

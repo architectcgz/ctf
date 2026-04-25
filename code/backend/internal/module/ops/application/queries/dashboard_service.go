@@ -67,7 +67,7 @@ func (s *DashboardService) GetDashboardStats(ctx context.Context) (*dto.Dashboar
 
 	activeContainers := int64(0)
 	if s.runtimeQuery != nil {
-		activeContainers, err = s.runtimeQuery.CountRunning()
+		activeContainers, err = s.runtimeQuery.CountRunning(ctx)
 		if err != nil {
 			return nil, fmt.Errorf("统计活跃容器失败: %w", err)
 		}

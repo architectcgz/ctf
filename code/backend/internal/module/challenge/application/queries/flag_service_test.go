@@ -8,43 +8,27 @@ import (
 )
 
 type stubChallengeFlagRepository struct {
-	findByIDFn            func(id int64) (*model.Challenge, error)
 	findByIDWithContextFn func(ctx context.Context, id int64) (*model.Challenge, error)
-	updateFn              func(challenge *model.Challenge) error
-	updateWithContextFn   func(ctx context.Context, challenge *model.Challenge) error
+	updateFn              func(ctx context.Context, challenge *model.Challenge) error
 }
 
-func (s *stubChallengeFlagRepository) FindByID(id int64) (*model.Challenge, error) {
-	if s.findByIDFn != nil {
-		return s.findByIDFn(id)
+func (s *stubChallengeFlagRepository) FindByID(ctx context.Context, id int64) (*model.Challenge, error) {
+	if s.findByIDWithContextFn != nil {
+		return s.findByIDWithContextFn(ctx, id)
 	}
 	return nil, nil
 }
 
-func (s *stubChallengeFlagRepository) FindByIDWithContext(ctx context.Context, id int64) (*model.Challenge, error) {
-	if s.findByIDWithContextFn != nil {
-		return s.findByIDWithContextFn(ctx, id)
-	}
-	return s.FindByID(id)
-}
-
-func (s *stubChallengeFlagRepository) Update(challenge *model.Challenge) error {
+func (s *stubChallengeFlagRepository) Update(ctx context.Context, challenge *model.Challenge) error {
 	if s.updateFn != nil {
-		return s.updateFn(challenge)
+		return s.updateFn(ctx, challenge)
 	}
 	return nil
 }
 
-func (s *stubChallengeFlagRepository) UpdateWithContext(ctx context.Context, challenge *model.Challenge) error {
-	if s.updateWithContextFn != nil {
-		return s.updateWithContextFn(ctx, challenge)
-	}
-	return s.Update(challenge)
-}
-
 type challengeFlagContextKey string
 
-func TestFlagServiceGetFlagConfigWithContextPropagatesContextToRepository(t *testing.T) {
+func TestFlagServiceGetFlagConfigPropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := challengeFlagContextKey("flag-config")
@@ -69,14 +53,51 @@ func TestFlagServiceGetFlagConfigWithContextPropagatesContextToRepository(t *tes
 	}
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.GetFlagConfigWithContext(ctx, 42)
+	resp, err := service.GetFlagConfig(ctx, 42)
 	if err != nil {
-		t.Fatalf("GetFlagConfigWithContext() error = %v", err)
+		t.Fatalf("GetFlagConfig() error = %v", err)
 	}
 	if !findCalled {
 		t.Fatal("expected repository find to be called")
 	}
 	if resp == nil || resp.FlagType != model.FlagTypeDynamic || resp.FlagPrefix != "flag" || !resp.Configured {
 		t.Fatalf("unexpected flag config response: %+v", resp)
+	}
+}
+
+func TestFlagServiceGenerateDynamicFlagPropagatesContextToRepository(t *testing.T) {
+	t.Parallel()
+
+	ctxKey := challengeFlagContextKey("flag-generate")
+	expectedCtxValue := "ctx-flag-generate"
+	findCalled := false
+	repo := &stubChallengeFlagRepository{
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+			findCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected find-by-id ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return &model.Challenge{
+				ID:         id,
+				FlagType:   model.FlagTypeDynamic,
+				FlagPrefix: "flag",
+			}, nil
+		},
+	}
+	service, err := NewFlagService(repo, "12345678901234567890123456789012")
+	if err != nil {
+		t.Fatalf("NewFlagService() error = %v", err)
+	}
+
+	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
+	flag, err := service.GenerateDynamicFlag(ctx, 7, 42, "nonce-1")
+	if err != nil {
+		t.Fatalf("GenerateDynamicFlag() error = %v", err)
+	}
+	if !findCalled {
+		t.Fatal("expected repository find to be called")
+	}
+	if flag == "" {
+		t.Fatal("expected generated flag")
 	}
 }

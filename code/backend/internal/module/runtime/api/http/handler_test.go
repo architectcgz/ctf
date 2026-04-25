@@ -16,19 +16,19 @@ import (
 
 type stubRuntimeService struct{}
 
-func (stubRuntimeService) DestroyInstanceWithContext(context.Context, int64, int64) error {
+func (stubRuntimeService) DestroyInstance(context.Context, int64, int64) error {
 	return nil
 }
 
-func (stubRuntimeService) ExtendInstanceWithContext(context.Context, int64, int64) (*dto.InstanceResp, error) {
+func (stubRuntimeService) ExtendInstance(context.Context, int64, int64) (*dto.InstanceResp, error) {
 	return nil, nil
 }
 
-func (stubRuntimeService) GetAccessURLWithContext(context.Context, int64, int64) (string, error) {
+func (stubRuntimeService) GetAccessURL(context.Context, int64, int64) (string, error) {
 	return "", nil
 }
 
-func (stubRuntimeService) GetUserInstancesWithContext(context.Context, int64) ([]*dto.InstanceInfo, error) {
+func (stubRuntimeService) GetUserInstances(context.Context, int64) ([]*dto.InstanceInfo, error) {
 	return nil, nil
 }
 
@@ -67,7 +67,7 @@ type stubProxyRuntimeService struct {
 	claims    *runtimeports.ProxyTicketClaims
 }
 
-func (s stubProxyRuntimeService) GetAccessURLWithContext(context.Context, int64, int64) (string, error) {
+func (s stubProxyRuntimeService) GetAccessURL(context.Context, int64, int64) (string, error) {
 	return s.targetURL, nil
 }
 

@@ -287,10 +287,10 @@ func (m *RuntimeModule) BuildHandler(root *Root, ops *OpsModule) {
 }
 
 type runtimeHTTPService interface {
-	DestroyInstanceWithContext(ctx context.Context, instanceID, userID int64) error
-	ExtendInstanceWithContext(ctx context.Context, instanceID, userID int64) (*dto.InstanceResp, error)
-	GetAccessURLWithContext(ctx context.Context, instanceID, userID int64) (string, error)
-	GetUserInstancesWithContext(ctx context.Context, userID int64) ([]*dto.InstanceInfo, error)
+	DestroyInstance(ctx context.Context, instanceID, userID int64) error
+	ExtendInstance(ctx context.Context, instanceID, userID int64) (*dto.InstanceResp, error)
+	GetAccessURL(ctx context.Context, instanceID, userID int64) (string, error)
+	GetUserInstances(ctx context.Context, userID int64) ([]*dto.InstanceInfo, error)
 	ListTeacherInstances(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherInstanceQuery) ([]dto.TeacherInstanceItem, error)
 	DestroyTeacherInstance(ctx context.Context, instanceID, requesterID int64, requesterRole string) error
 	IssueProxyTicket(ctx context.Context, user authctx.CurrentUser, instanceID int64) (string, error)
@@ -300,14 +300,14 @@ type runtimeHTTPService interface {
 }
 
 type runtimeHTTPCommandService interface {
-	DestroyInstanceWithContext(ctx context.Context, instanceID, userID int64) error
-	ExtendInstanceWithContext(ctx context.Context, instanceID, userID int64) (*dto.InstanceResp, error)
+	DestroyInstance(ctx context.Context, instanceID, userID int64) error
+	ExtendInstance(ctx context.Context, instanceID, userID int64) (*dto.InstanceResp, error)
 	DestroyTeacherInstance(ctx context.Context, instanceID, requesterID int64, requesterRole string) error
 }
 
 type runtimeHTTPQueryService interface {
-	GetAccessURLWithContext(ctx context.Context, instanceID, userID int64) (string, error)
-	GetUserInstancesWithContext(ctx context.Context, userID int64) ([]*dto.InstanceInfo, error)
+	GetAccessURL(ctx context.Context, instanceID, userID int64) (string, error)
+	GetUserInstances(ctx context.Context, userID int64) ([]*dto.InstanceInfo, error)
 	ListTeacherInstances(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherInstanceQuery) ([]dto.TeacherInstanceItem, error)
 }
 
@@ -333,32 +333,32 @@ func newRuntimeHTTPServiceAdapter(commandService runtimeHTTPCommandService, quer
 	}
 }
 
-func (a *runtimeHTTPServiceAdapter) DestroyInstanceWithContext(ctx context.Context, instanceID, userID int64) error {
+func (a *runtimeHTTPServiceAdapter) DestroyInstance(ctx context.Context, instanceID, userID int64) error {
 	if a == nil || a.commandService == nil {
 		return errRuntimeHTTPInstanceServiceUnavailable()
 	}
-	return a.commandService.DestroyInstanceWithContext(ctx, instanceID, userID)
+	return a.commandService.DestroyInstance(ctx, instanceID, userID)
 }
 
-func (a *runtimeHTTPServiceAdapter) ExtendInstanceWithContext(ctx context.Context, instanceID, userID int64) (*dto.InstanceResp, error) {
+func (a *runtimeHTTPServiceAdapter) ExtendInstance(ctx context.Context, instanceID, userID int64) (*dto.InstanceResp, error) {
 	if a == nil || a.commandService == nil {
 		return nil, errRuntimeHTTPInstanceServiceUnavailable()
 	}
-	return a.commandService.ExtendInstanceWithContext(ctx, instanceID, userID)
+	return a.commandService.ExtendInstance(ctx, instanceID, userID)
 }
 
-func (a *runtimeHTTPServiceAdapter) GetAccessURLWithContext(ctx context.Context, instanceID, userID int64) (string, error) {
+func (a *runtimeHTTPServiceAdapter) GetAccessURL(ctx context.Context, instanceID, userID int64) (string, error) {
 	if a == nil || a.queryService == nil {
 		return "", errRuntimeHTTPInstanceServiceUnavailable()
 	}
-	return a.queryService.GetAccessURLWithContext(ctx, instanceID, userID)
+	return a.queryService.GetAccessURL(ctx, instanceID, userID)
 }
 
-func (a *runtimeHTTPServiceAdapter) GetUserInstancesWithContext(ctx context.Context, userID int64) ([]*dto.InstanceInfo, error) {
+func (a *runtimeHTTPServiceAdapter) GetUserInstances(ctx context.Context, userID int64) ([]*dto.InstanceInfo, error) {
 	if a == nil || a.queryService == nil {
 		return nil, errRuntimeHTTPInstanceServiceUnavailable()
 	}
-	return a.queryService.GetUserInstancesWithContext(ctx, userID)
+	return a.queryService.GetUserInstances(ctx, userID)
 }
 
 func (a *runtimeHTTPServiceAdapter) ListTeacherInstances(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherInstanceQuery) ([]dto.TeacherInstanceItem, error) {
@@ -428,11 +428,11 @@ func newRuntimePracticeServiceAdapter(cleaner *runtimecmd.RuntimeCleanupService,
 	}
 }
 
-func (a *runtimePracticeServiceAdapter) CleanupRuntime(instance *model.Instance) error {
+func (a *runtimePracticeServiceAdapter) CleanupRuntime(ctx context.Context, instance *model.Instance) error {
 	if a == nil || a.cleaner == nil {
 		return nil
 	}
-	return a.cleaner.CleanupRuntime(instance)
+	return a.cleaner.CleanupRuntime(ctx, instance)
 }
 
 func (a *runtimePracticeServiceAdapter) CreateTopology(ctx context.Context, req *practiceports.TopologyCreateRequest) (*practiceports.TopologyCreateResult, error) {
@@ -600,7 +600,7 @@ func (a *runtimeChallengeServiceAdapter) CleanupRuntimeDetails(ctx context.Conte
 	instance := &model.Instance{
 		RuntimeDetails: rawDetails,
 	}
-	return a.cleaner.CleanupRuntimeWithContext(ctx, instance)
+	return a.cleaner.CleanupRuntime(ctx, instance)
 }
 
 func toRuntimeChallengeTopologyCreateRequest(req *challengeports.RuntimeTopologyCreateRequest) *runtimeports.TopologyCreateRequest {

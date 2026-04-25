@@ -8,69 +8,49 @@ import (
 )
 
 type tagQueryContextStub struct {
-	listFn                         func(tagType string) ([]*model.Tag, error)
-	listWithContextFn              func(ctx context.Context, tagType string) ([]*model.Tag, error)
-	findByChallengeIDFn            func(challengeID int64) ([]*model.Tag, error)
-	findByChallengeIDWithContextFn func(ctx context.Context, challengeID int64) ([]*model.Tag, error)
+	listFn              func(ctx context.Context, tagType string) ([]*model.Tag, error)
+	findByChallengeIDFn func(ctx context.Context, challengeID int64) ([]*model.Tag, error)
 }
 
-func (s *tagQueryContextStub) Create(tag *model.Tag) error { return nil }
-func (s *tagQueryContextStub) CreateWithContext(ctx context.Context, tag *model.Tag) error {
+func (s *tagQueryContextStub) Create(ctx context.Context, tag *model.Tag) error {
 	return nil
 }
-func (s *tagQueryContextStub) List(tagType string) ([]*model.Tag, error) {
+func (s *tagQueryContextStub) List(ctx context.Context, tagType string) ([]*model.Tag, error) {
 	if s.listFn != nil {
-		return s.listFn(tagType)
+		return s.listFn(ctx, tagType)
 	}
 	return nil, nil
 }
-func (s *tagQueryContextStub) ListWithContext(ctx context.Context, tagType string) ([]*model.Tag, error) {
-	if s.listWithContextFn != nil {
-		return s.listWithContextFn(ctx, tagType)
-	}
-	return s.List(tagType)
-}
-func (s *tagQueryContextStub) FindByIDs(ids []int64) ([]*model.Tag, error) { return nil, nil }
-func (s *tagQueryContextStub) FindByIDsWithContext(ctx context.Context, ids []int64) ([]*model.Tag, error) {
+func (s *tagQueryContextStub) FindByIDs(ctx context.Context, ids []int64) ([]*model.Tag, error) {
 	return nil, nil
 }
-func (s *tagQueryContextStub) AttachTagsInTx(challengeID int64, tagIDs []int64) error { return nil }
-func (s *tagQueryContextStub) AttachTagsInTxWithContext(ctx context.Context, challengeID int64, tagIDs []int64) error {
+func (s *tagQueryContextStub) AttachTagsInTx(ctx context.Context, challengeID int64, tagIDs []int64) error {
 	return nil
 }
-func (s *tagQueryContextStub) DetachFromChallenge(challengeID, tagID int64) error { return nil }
-func (s *tagQueryContextStub) DetachFromChallengeWithContext(ctx context.Context, challengeID, tagID int64) error {
+func (s *tagQueryContextStub) DetachFromChallenge(ctx context.Context, challengeID, tagID int64) error {
 	return nil
 }
-func (s *tagQueryContextStub) FindByChallengeID(challengeID int64) ([]*model.Tag, error) {
+func (s *tagQueryContextStub) FindByChallengeID(ctx context.Context, challengeID int64) ([]*model.Tag, error) {
 	if s.findByChallengeIDFn != nil {
-		return s.findByChallengeIDFn(challengeID)
+		return s.findByChallengeIDFn(ctx, challengeID)
 	}
 	return nil, nil
 }
-func (s *tagQueryContextStub) FindByChallengeIDWithContext(ctx context.Context, challengeID int64) ([]*model.Tag, error) {
-	if s.findByChallengeIDWithContextFn != nil {
-		return s.findByChallengeIDWithContextFn(ctx, challengeID)
-	}
-	return s.FindByChallengeID(challengeID)
-}
-func (s *tagQueryContextStub) Delete(id int64) error                                 { return nil }
-func (s *tagQueryContextStub) DeleteWithContext(ctx context.Context, id int64) error { return nil }
-func (s *tagQueryContextStub) CountChallengesByTagID(tagID int64) (int64, error)     { return 0, nil }
-func (s *tagQueryContextStub) CountChallengesByTagIDWithContext(ctx context.Context, tagID int64) (int64, error) {
+func (s *tagQueryContextStub) Delete(ctx context.Context, id int64) error { return nil }
+func (s *tagQueryContextStub) CountChallengesByTagID(ctx context.Context, tagID int64) (int64, error) {
 	return 0, nil
 }
 
 type tagQueryContextKey string
 
-func TestTagServiceListTagsWithContextPropagatesContextToRepository(t *testing.T) {
+func TestTagServiceListTagsPropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := tagQueryContextKey("tag-list")
 	expectedCtxValue := "ctx-tag-list"
 	listCalled := false
 	repo := &tagQueryContextStub{
-		listWithContextFn: func(ctx context.Context, tagType string) ([]*model.Tag, error) {
+		listFn: func(ctx context.Context, tagType string) ([]*model.Tag, error) {
 			listCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected list ctx value %v, got %v", expectedCtxValue, got)
@@ -84,9 +64,9 @@ func TestTagServiceListTagsWithContextPropagatesContextToRepository(t *testing.T
 	service := NewTagService(repo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.ListTagsWithContext(ctx, model.TagTypeVulnerability)
+	resp, err := service.ListTags(ctx, model.TagTypeVulnerability)
 	if err != nil {
-		t.Fatalf("ListTagsWithContext() error = %v", err)
+		t.Fatalf("ListTags() error = %v", err)
 	}
 	if !listCalled {
 		t.Fatal("expected list repository to be called")
@@ -96,14 +76,14 @@ func TestTagServiceListTagsWithContextPropagatesContextToRepository(t *testing.T
 	}
 }
 
-func TestTagServiceGetChallengeTagIDsWithContextPropagatesContextToRepository(t *testing.T) {
+func TestTagServiceGetChallengeTagIDsPropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := tagQueryContextKey("tag-ids")
 	expectedCtxValue := "ctx-tag-ids"
 	findCalled := false
 	repo := &tagQueryContextStub{
-		findByChallengeIDWithContextFn: func(ctx context.Context, challengeID int64) ([]*model.Tag, error) {
+		findByChallengeIDFn: func(ctx context.Context, challengeID int64) ([]*model.Tag, error) {
 			findCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find-by-challenge ctx value %v, got %v", expectedCtxValue, got)
@@ -114,9 +94,9 @@ func TestTagServiceGetChallengeTagIDsWithContextPropagatesContextToRepository(t 
 	service := NewTagService(repo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.GetChallengeTagIDsWithContext(ctx, 99)
+	resp, err := service.GetChallengeTagIDs(ctx, 99)
 	if err != nil {
-		t.Fatalf("GetChallengeTagIDsWithContext() error = %v", err)
+		t.Fatalf("GetChallengeTagIDs() error = %v", err)
 	}
 	if !findCalled {
 		t.Fatal("expected find-by-challenge repository to be called")

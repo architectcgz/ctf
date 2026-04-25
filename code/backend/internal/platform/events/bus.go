@@ -41,10 +41,6 @@ func (b *inMemoryBus) Subscribe(name string, fn Handler) {
 }
 
 func (b *inMemoryBus) Publish(ctx context.Context, evt Event) error {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
 	b.mu.RLock()
 	handlers := append([]Handler(nil), b.subscribers[evt.Name]...)
 	b.mu.RUnlock()

@@ -30,7 +30,7 @@ func TestRepositoryFindByID(t *testing.T) {
 	challenge := &model.Challenge{Title: "Test"}
 	db.Create(challenge)
 
-	found, err := repo.FindByID(challenge.ID)
+	found, err := repo.FindByID(context.Background(), challenge.ID)
 	if err != nil {
 		t.Fatalf("FindByID() error = %v", err)
 	}
@@ -46,7 +46,7 @@ func TestRepositoryList(t *testing.T) {
 	db.Create(&model.Challenge{Title: "C1", Category: "web"})
 	db.Create(&model.Challenge{Title: "C2", Category: "pwn"})
 
-	challenges, total, err := repo.List(&dto.ChallengeQuery{Page: 1, Size: 10})
+	challenges, total, err := repo.List(context.Background(), &dto.ChallengeQuery{Page: 1, Size: 10})
 	if err != nil {
 		t.Fatalf("List() error = %v", err)
 	}
@@ -66,7 +66,7 @@ func TestRepositoryHasRunningInstances(t *testing.T) {
 	db.Create(challenge)
 	db.Create(&model.Instance{ChallengeID: challenge.ID, Status: "running"})
 
-	has, err := repo.HasRunningInstances(challenge.ID)
+	has, err := repo.HasRunningInstances(context.Background(), challenge.ID)
 	if err != nil {
 		t.Fatalf("HasRunningInstances() error = %v", err)
 	}
@@ -179,8 +179,8 @@ func TestRepositoryCreateAndListAWDServiceTemplates(t *testing.T) {
 		Status:         model.AWDServiceTemplateStatusDraft,
 	}
 
-	if err := repo.CreateAWDServiceTemplate(template); err != nil {
-		t.Fatalf("CreateAWDServiceTemplate() error = %v", err)
+	if err := repo.CreateAWDServiceTemplate(context.Background(), template); err != nil {
+		t.Fatalf("Create() error = %v", err)
 	}
 	if template.ID == 0 {
 		t.Fatal("template ID should be set")
@@ -191,7 +191,7 @@ func TestRepositoryCreateAndListAWDServiceTemplates(t *testing.T) {
 		Size: 10,
 	})
 	if err != nil {
-		t.Fatalf("ListAWDServiceTemplates() error = %v", err)
+		t.Fatalf("List() error = %v", err)
 	}
 	if total != 1 {
 		t.Fatalf("unexpected total: %d", total)

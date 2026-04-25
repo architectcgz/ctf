@@ -17,14 +17,7 @@ type maintenanceTestRepository struct {
 	updateStatusAndReleasePortWithContextFn func(ctx context.Context, id int64, status string) error
 }
 
-func (r *maintenanceTestRepository) UpdateStatusAndReleasePort(int64, string) error {
-	if r.updateStatusAndReleasePortFn != nil {
-		return r.updateStatusAndReleasePortFn(int64(0), "")
-	}
-	return nil
-}
-
-func (r *maintenanceTestRepository) UpdateStatusAndReleasePortWithContext(ctx context.Context, id int64, status string) error {
+func (r *maintenanceTestRepository) UpdateStatusAndReleasePort(ctx context.Context, id int64, status string) error {
 	if r.updateStatusAndReleasePortWithContextFn != nil {
 		return r.updateStatusAndReleasePortWithContextFn(ctx, id, status)
 	}
@@ -54,11 +47,11 @@ type maintenanceTestCleaner struct {
 	removedContainerIDs []string
 }
 
-func (c *maintenanceTestCleaner) CleanupRuntimeWithContext(context.Context, *model.Instance) error {
+func (c *maintenanceTestCleaner) CleanupRuntime(context.Context, *model.Instance) error {
 	return nil
 }
 
-func (c *maintenanceTestCleaner) RemoveContainerWithContext(_ context.Context, containerID string) error {
+func (c *maintenanceTestCleaner) RemoveContainer(_ context.Context, containerID string) error {
 	c.removedContainerIDs = append(c.removedContainerIDs, containerID)
 	return nil
 }

@@ -17,15 +17,8 @@ func NewTagService(repo challengeports.TagRepository) *TagService {
 	return &TagService{repo: repo}
 }
 
-func (s *TagService) ListTags(tagType string) ([]*dto.TagResp, error) {
-	return s.ListTagsWithContext(context.Background(), tagType)
-}
-
-func (s *TagService) ListTagsWithContext(ctx context.Context, tagType string) ([]*dto.TagResp, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-	tags, err := s.repo.ListWithContext(ctx, tagType)
+func (s *TagService) ListTags(ctx context.Context, tagType string) ([]*dto.TagResp, error) {
+	tags, err := s.repo.List(ctx, tagType)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
@@ -37,15 +30,8 @@ func (s *TagService) ListTagsWithContext(ctx context.Context, tagType string) ([
 	return result, nil
 }
 
-func (s *TagService) GetChallengeTagIDs(challengeID int64) ([]int64, error) {
-	return s.GetChallengeTagIDsWithContext(context.Background(), challengeID)
-}
-
-func (s *TagService) GetChallengeTagIDsWithContext(ctx context.Context, challengeID int64) ([]int64, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-	tags, err := s.repo.FindByChallengeIDWithContext(ctx, challengeID)
+func (s *TagService) GetChallengeTagIDs(ctx context.Context, challengeID int64) ([]int64, error) {
+	tags, err := s.repo.FindByChallengeID(ctx, challengeID)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}

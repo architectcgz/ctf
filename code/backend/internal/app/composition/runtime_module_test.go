@@ -56,7 +56,7 @@ func TestBuildRuntimeEngineProvidesReachableRuntimeInTestEnv(t *testing.T) {
 	}
 
 	cleanup := runtimecmd.NewRuntimeCleanupService(engine, zap.NewNop())
-	if err := cleanup.RemoveContainer(containerID); err != nil {
+	if err := cleanup.RemoveContainer(context.Background(), containerID); err != nil {
 		t.Fatalf("RemoveContainer() error = %v", err)
 	}
 	if engine != nil && networkID != "" {

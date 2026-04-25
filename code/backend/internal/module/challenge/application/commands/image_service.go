@@ -46,16 +46,8 @@ func NewImageService(
 	}
 }
 
-func (s *ImageService) CreateImage(req *dto.CreateImageReq) (*dto.ImageResp, error) {
-	return s.CreateImageWithContext(context.Background(), req)
-}
-
-func (s *ImageService) CreateImageWithContext(ctx context.Context, req *dto.CreateImageReq) (*dto.ImageResp, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
-	existing, err := s.repo.FindByNameTagWithContext(ctx, req.Name, req.Tag)
+func (s *ImageService) CreateImage(ctx context.Context, req *dto.CreateImageReq) (*dto.ImageResp, error) {
+	existing, err := s.repo.FindByNameTag(ctx, req.Name, req.Tag)
 	if err == nil && existing != nil {
 		return nil, errcode.ErrImageAlreadyExists
 	}
@@ -79,7 +71,7 @@ func (s *ImageService) CreateImageWithContext(ctx context.Context, req *dto.Crea
 		Size:        size,
 		Status:      model.ImageStatusAvailable,
 	}
-	if err := s.repo.CreateWithContext(ctx, image); err != nil {
+	if err := s.repo.Create(ctx, image); err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
@@ -96,16 +88,8 @@ func (s *ImageService) CreateImageWithContext(ctx context.Context, req *dto.Crea
 	}, nil
 }
 
-func (s *ImageService) UpdateImage(id int64, req *dto.UpdateImageReq) error {
-	return s.UpdateImageWithContext(context.Background(), id, req)
-}
-
-func (s *ImageService) UpdateImageWithContext(ctx context.Context, id int64, req *dto.UpdateImageReq) error {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
-	image, err := s.repo.FindByIDWithContext(ctx, id)
+func (s *ImageService) UpdateImage(ctx context.Context, id int64, req *dto.UpdateImageReq) error {
+	image, err := s.repo.FindByID(ctx, id)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return errcode.ErrImageNotFound
@@ -119,7 +103,7 @@ func (s *ImageService) UpdateImageWithContext(ctx context.Context, id int64, req
 	if req.Status != "" {
 		image.Status = req.Status
 	}
-	if err := s.repo.UpdateWithContext(ctx, image); err != nil {
+	if err := s.repo.Update(ctx, image); err != nil {
 		return errcode.ErrInternal.WithCause(err)
 	}
 
@@ -127,16 +111,8 @@ func (s *ImageService) UpdateImageWithContext(ctx context.Context, id int64, req
 	return nil
 }
 
-func (s *ImageService) DeleteImage(id int64) error {
-	return s.DeleteImageWithContext(context.Background(), id)
-}
-
-func (s *ImageService) DeleteImageWithContext(ctx context.Context, id int64) error {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
-	image, err := s.repo.FindByIDWithContext(ctx, id)
+func (s *ImageService) DeleteImage(ctx context.Context, id int64) error {
+	image, err := s.repo.FindByID(ctx, id)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return errcode.ErrImageNotFound
@@ -144,14 +120,14 @@ func (s *ImageService) DeleteImageWithContext(ctx context.Context, id int64) err
 		return errcode.ErrInternal.WithCause(err)
 	}
 
-	count, err := s.challengeRepo.CountByImageIDWithContext(ctx, id)
+	count, err := s.challengeRepo.CountByImageID(ctx, id)
 	if err != nil {
 		return errcode.ErrInternal.WithCause(err)
 	}
 	if count > 0 {
 		return errcode.ErrImageInUse
 	}
-	if err := s.repo.DeleteWithContext(ctx, id); err != nil {
+	if err := s.repo.Delete(ctx, id); err != nil {
 		return errcode.ErrInternal.WithCause(err)
 	}
 
@@ -163,9 +139,6 @@ func (s *ImageService) DeleteImageWithContext(ctx context.Context, id int64) err
 }
 
 func (s *ImageService) Close(ctx context.Context) error {
-	if ctx == nil {
-		ctx = context.Background()
-	}
 	if s.cancel != nil {
 		s.cancel()
 	}
@@ -185,9 +158,6 @@ func (s *ImageService) Close(ctx context.Context) error {
 }
 
 func (s *ImageService) verifyDockerImage(ctx context.Context, imageRef string) (int64, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	return s.runtime.InspectImageSize(ctx, imageRef)
@@ -197,13 +167,13 @@ func (s *ImageService) removeImageAsync(imageRef string) {
 	s.tasks.Add(1)
 	go func() {
 		defer s.tasks.Done()
-		if err := s.removeImageWithContext(imageRef); err != nil && !errors.Is(err, context.Canceled) {
+		if err := s.removeImage(imageRef); err != nil && !errors.Is(err, context.Canceled) {
 			s.logger.Warn("删除 Docker 镜像失败", zap.String("image", imageRef), zap.Error(err))
 		}
 	}()
 }
 
-func (s *ImageService) removeImageWithContext(imageRef string) error {
+func (s *ImageService) removeImage(imageRef string) error {
 	if s.baseCtx == nil {
 		return context.Canceled
 	}

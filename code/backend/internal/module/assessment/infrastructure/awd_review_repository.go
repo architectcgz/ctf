@@ -43,9 +43,6 @@ func NewTeacherAWDReviewRepository(db *gorm.DB) *TeacherAWDReviewRepository {
 }
 
 func (r *TeacherAWDReviewRepository) dbWithContext(ctx context.Context) *gorm.DB {
-	if ctx == nil {
-		ctx = context.Background()
-	}
 	return r.db.WithContext(ctx)
 }
 

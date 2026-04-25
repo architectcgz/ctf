@@ -20,8 +20,8 @@ func NewAWDServiceTemplateQueryService(repo challengeports.AWDServiceTemplateQue
 	return &AWDServiceTemplateQueryService{repo: repo}
 }
 
-func (s *AWDServiceTemplateQueryService) GetTemplate(_ context.Context, id int64) (*dto.AWDServiceTemplateResp, error) {
-	item, err := s.repo.FindAWDServiceTemplateByID(id)
+func (s *AWDServiceTemplateQueryService) GetTemplate(ctx context.Context, id int64) (*dto.AWDServiceTemplateResp, error) {
+	item, err := s.repo.FindAWDServiceTemplateByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrNotFound

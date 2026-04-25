@@ -24,15 +24,8 @@ func NewImageService(repo challengeports.ImageRepository, config *config.Config)
 	}
 }
 
-func (s *ImageService) GetImage(id int64) (*dto.ImageResp, error) {
-	return s.GetImageWithContext(context.Background(), id)
-}
-
-func (s *ImageService) GetImageWithContext(ctx context.Context, id int64) (*dto.ImageResp, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-	image, err := s.repo.FindByIDWithContext(ctx, id)
+func (s *ImageService) GetImage(ctx context.Context, id int64) (*dto.ImageResp, error) {
+	image, err := s.repo.FindByID(ctx, id)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, errcode.ErrImageNotFound
@@ -42,15 +35,7 @@ func (s *ImageService) GetImageWithContext(ctx context.Context, id int64) (*dto.
 	return domain.ImageRespFromModel(image), nil
 }
 
-func (s *ImageService) ListImages(query *dto.ImageQuery) (*dto.PageResult, error) {
-	return s.ListImagesWithContext(context.Background(), query)
-}
-
-func (s *ImageService) ListImagesWithContext(ctx context.Context, query *dto.ImageQuery) (*dto.PageResult, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
+func (s *ImageService) ListImages(ctx context.Context, query *dto.ImageQuery) (*dto.PageResult, error) {
 	page := query.Page
 	if page < 1 {
 		page = 1
@@ -64,7 +49,7 @@ func (s *ImageService) ListImagesWithContext(ctx context.Context, query *dto.Ima
 	}
 
 	offset := (page - 1) * size
-	images, total, err := s.repo.ListWithContext(ctx, query.Name, query.Status, offset, size)
+	images, total, err := s.repo.List(ctx, query.Name, query.Status, offset, size)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}

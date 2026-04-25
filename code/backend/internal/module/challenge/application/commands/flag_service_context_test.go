@@ -9,38 +9,22 @@ import (
 )
 
 type flagCommandContextRepoStub struct {
-	findByIDFn            func(id int64) (*model.Challenge, error)
 	findByIDWithContextFn func(ctx context.Context, id int64) (*model.Challenge, error)
-	updateFn              func(challenge *model.Challenge) error
-	updateWithContextFn   func(ctx context.Context, challenge *model.Challenge) error
+	updateFn              func(ctx context.Context, challenge *model.Challenge) error
 }
 
-func (s *flagCommandContextRepoStub) FindByID(id int64) (*model.Challenge, error) {
-	if s.findByIDFn != nil {
-		return s.findByIDFn(id)
+func (s *flagCommandContextRepoStub) FindByID(ctx context.Context, id int64) (*model.Challenge, error) {
+	if s.findByIDWithContextFn != nil {
+		return s.findByIDWithContextFn(ctx, id)
 	}
 	return nil, nil
 }
 
-func (s *flagCommandContextRepoStub) FindByIDWithContext(ctx context.Context, id int64) (*model.Challenge, error) {
-	if s.findByIDWithContextFn != nil {
-		return s.findByIDWithContextFn(ctx, id)
-	}
-	return s.FindByID(id)
-}
-
-func (s *flagCommandContextRepoStub) Update(challenge *model.Challenge) error {
+func (s *flagCommandContextRepoStub) Update(ctx context.Context, challenge *model.Challenge) error {
 	if s.updateFn != nil {
-		return s.updateFn(challenge)
+		return s.updateFn(ctx, challenge)
 	}
 	return nil
-}
-
-func (s *flagCommandContextRepoStub) UpdateWithContext(ctx context.Context, challenge *model.Challenge) error {
-	if s.updateWithContextFn != nil {
-		return s.updateWithContextFn(ctx, challenge)
-	}
-	return s.Update(challenge)
 }
 
 type flagCommandContextKey string
@@ -56,7 +40,7 @@ func TestFlagServiceConfigureWithContextPropagatesContextToRepository(t *testing
 		{
 			name: "static",
 			call: func(service *FlagService, ctx context.Context) error {
-				return service.ConfigureStaticFlagWithContext(ctx, 1, "flag{demo_static}", "flag")
+				return service.ConfigureStaticFlag(ctx, 1, "flag{demo_static}", "flag")
 			},
 			assertChallenge: func(t *testing.T, challenge *model.Challenge) {
 				t.Helper()
@@ -68,7 +52,7 @@ func TestFlagServiceConfigureWithContextPropagatesContextToRepository(t *testing
 		{
 			name: "dynamic",
 			call: func(service *FlagService, ctx context.Context) error {
-				return service.ConfigureDynamicFlagWithContext(ctx, 1, "ctf")
+				return service.ConfigureDynamicFlag(ctx, 1, "ctf")
 			},
 			assertChallenge: func(t *testing.T, challenge *model.Challenge) {
 				t.Helper()
@@ -80,7 +64,7 @@ func TestFlagServiceConfigureWithContextPropagatesContextToRepository(t *testing
 		{
 			name: "regex",
 			call: func(service *FlagService, ctx context.Context) error {
-				return service.ConfigureRegexFlagWithContext(ctx, 1, `^flag\{user-[0-9]{3}\}$`, "flag")
+				return service.ConfigureRegexFlag(ctx, 1, `^flag\{user-[0-9]{3}\}$`, "flag")
 			},
 			assertChallenge: func(t *testing.T, challenge *model.Challenge) {
 				t.Helper()
@@ -92,7 +76,7 @@ func TestFlagServiceConfigureWithContextPropagatesContextToRepository(t *testing
 		{
 			name: "manual-review",
 			call: func(service *FlagService, ctx context.Context) error {
-				return service.ConfigureManualReviewFlagWithContext(ctx, 1)
+				return service.ConfigureManualReviewFlag(ctx, 1)
 			},
 			assertChallenge: func(t *testing.T, challenge *model.Challenge) {
 				t.Helper()
@@ -120,7 +104,7 @@ func TestFlagServiceConfigureWithContextPropagatesContextToRepository(t *testing
 					}
 					return &model.Challenge{ID: id, Title: tt.name, FlagPrefix: "legacy", FlagHash: "legacy-hash", FlagSalt: "legacy-salt", FlagRegex: "legacy-regex"}, nil
 				},
-				updateWithContextFn: func(ctx context.Context, challenge *model.Challenge) error {
+				updateFn: func(ctx context.Context, challenge *model.Challenge) error {
 					updateCalled = true
 					if got := ctx.Value(ctxKey); got != expectedCtxValue {
 						t.Fatalf("expected update-challenge ctx value %v, got %v", expectedCtxValue, got)

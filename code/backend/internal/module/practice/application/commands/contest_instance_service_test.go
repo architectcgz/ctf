@@ -20,9 +20,8 @@ import (
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	practicecmd "ctf-platform/internal/module/practice/application/commands"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
-	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
+	practiceports "ctf-platform/internal/module/practice/ports"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
-	runtimeadapters "ctf-platform/internal/testutil/runtimeadapters"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -161,13 +160,13 @@ func TestServiceStartChallengeSharedReusesPracticeInstance(t *testing.T) {
 
 	service := newContestInstanceTestService(t, db)
 
-	first, err := service.StartChallengeWithContext(context.Background(), 5101, 2101)
+	first, err := service.StartChallenge(context.Background(), 5101, 2101)
 	if err != nil {
-		t.Fatalf("StartChallengeWithContext() first error = %v", err)
+		t.Fatalf("StartChallenge() first error = %v", err)
 	}
-	second, err := service.StartChallengeWithContext(context.Background(), 5102, 2101)
+	second, err := service.StartChallenge(context.Background(), 5102, 2101)
 	if err != nil {
-		t.Fatalf("StartChallengeWithContext() second error = %v", err)
+		t.Fatalf("StartChallenge() second error = %v", err)
 	}
 	if first.ID != second.ID {
 		t.Fatalf("expected shared practice instance reuse, got first=%d second=%d", first.ID, second.ID)
@@ -204,9 +203,9 @@ func TestServiceStartChallengeSharedReusesPracticeInstanceAndRefreshesExpiry(t *
 	}
 
 	service := newContestInstanceTestService(t, db)
-	resp, err := service.StartChallengeWithContext(context.Background(), 5202, 2201)
+	resp, err := service.StartChallenge(context.Background(), 5202, 2201)
 	if err != nil {
-		t.Fatalf("StartChallengeWithContext() error = %v", err)
+		t.Fatalf("StartChallenge() error = %v", err)
 	}
 	if resp.ID != 9201 {
 		t.Fatalf("expected shared instance reuse, got %+v", resp)
@@ -275,7 +274,7 @@ func TestServiceStartChallengeRejectsNoTargetChallenge(t *testing.T) {
 	}
 
 	service := newContestInstanceTestService(t, db)
-	_, err := service.StartChallengeWithContext(context.Background(), 5001, 2201)
+	_, err := service.StartChallenge(context.Background(), 5001, 2201)
 	if err == nil || err.Error() != errcode.ErrInvalidParams.Error() {
 		t.Fatalf("expected invalid params for no-target challenge, got %v", err)
 	}
@@ -318,6 +317,36 @@ func ensureContestInstanceServiceIDColumn(db *gorm.DB) error {
 	return db.Exec("ALTER TABLE instances ADD COLUMN service_id integer").Error
 }
 
+type contestInstanceTestRuntimeService struct{}
+
+func (contestInstanceTestRuntimeService) CleanupRuntime(context.Context, *model.Instance) error {
+	return nil
+}
+
+func (contestInstanceTestRuntimeService) CreateTopology(_ context.Context, req *practiceports.TopologyCreateRequest) (*practiceports.TopologyCreateResult, error) {
+	if req == nil {
+		return nil, nil
+	}
+	return &practiceports.TopologyCreateResult{
+		PrimaryContainerID: fmt.Sprintf("contest-topology-%d", req.ReservedHostPort),
+		NetworkID:          fmt.Sprintf("contest-network-%d", req.ReservedHostPort),
+		AccessURL:          fmt.Sprintf("http://127.0.0.1:%d", req.ReservedHostPort),
+		RuntimeDetails: model.InstanceRuntimeDetails{
+			Containers: []model.InstanceRuntimeContainer{{
+				NodeKey:      "entry",
+				ContainerID:  fmt.Sprintf("contest-topology-%d", req.ReservedHostPort),
+				HostPort:     req.ReservedHostPort,
+				ServicePort:  8080,
+				IsEntryPoint: true,
+			}},
+		},
+	}, nil
+}
+
+func (contestInstanceTestRuntimeService) CreateContainer(_ context.Context, _ string, _ map[string]string, reservedHostPort int) (string, string, int, int, error) {
+	return fmt.Sprintf("contest-container-%d", reservedHostPort), fmt.Sprintf("contest-network-%d", reservedHostPort), reservedHostPort, 8080, nil
+}
+
 func newContestInstanceTestService(t *testing.T, db *gorm.DB) *practicecmd.Service {
 	t.Helper()
 
@@ -336,23 +365,12 @@ func newContestInstanceTestService(t *testing.T, db *gorm.DB) *practicecmd.Servi
 	challengeRepo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
 	instanceRepo := runtimeinfrarepo.NewRepository(db)
-	runtimeCleanupService := runtimecmd.NewRuntimeCleanupService(nil, nil)
-	runtimeProvisioningService := runtimecmd.NewProvisioningService(instanceRepo, nil, &config.ContainerConfig{
-		PortRangeStart:       30000,
-		PortRangeEnd:         30010,
-		DefaultExposedPort:   8080,
-		PublicHost:           "127.0.0.1",
-		DefaultTTL:           time.Hour,
-		MaxConcurrentPerUser: 3,
-		MaxExtends:           2,
-		CreateTimeout:        time.Second,
-	}, nil)
 	return practicecmd.NewService(
 		practiceinfra.NewRepository(db),
 		challengeRepo,
 		imageRepo,
 		instanceRepo,
-		runtimeadapters.NewPracticeRuntimeService(runtimeCleanupService, runtimeProvisioningService),
+		contestInstanceTestRuntimeService{},
 		nil,
 		nil,
 		nil,

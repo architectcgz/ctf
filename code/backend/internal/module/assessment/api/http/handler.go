@@ -13,12 +13,12 @@ import (
 )
 
 type skillProfileService interface {
-	GetSkillProfileWithContext(ctx context.Context, userID int64) (*dto.SkillProfileResp, error)
+	GetSkillProfile(ctx context.Context, userID int64) (*dto.SkillProfileResp, error)
 	GetStudentSkillProfile(ctx context.Context, requesterID int64, requesterRole string, studentID int64) (*dto.SkillProfileResp, error)
 }
 
 type recommendationProvider interface {
-	RecommendWithContext(ctx context.Context, userID int64, limit int) (*dto.RecommendationResp, error)
+	Recommend(ctx context.Context, userID int64, limit int) (*dto.RecommendationResp, error)
 }
 
 type Handler struct {
@@ -37,7 +37,7 @@ func NewHandler(service skillProfileService, recommendationService recommendatio
 func (h *Handler) GetMySkillProfile(c *gin.Context) {
 	userID := authctx.MustCurrentUser(c).UserID
 
-	profile, err := h.service.GetSkillProfileWithContext(c.Request.Context(), userID)
+	profile, err := h.service.GetSkillProfile(c.Request.Context(), userID)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -73,7 +73,7 @@ func (h *Handler) GetRecommendations(c *gin.Context) {
 		return
 	}
 
-	result, err := h.recommendationService.RecommendWithContext(c.Request.Context(), userID, req.Limit)
+	result, err := h.recommendationService.Recommend(c.Request.Context(), userID, req.Limit)
 	if err != nil {
 		response.FromError(c, err)
 		return

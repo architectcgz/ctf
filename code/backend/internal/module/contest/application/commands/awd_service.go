@@ -77,9 +77,6 @@ func (s *AWDService) publishWeakEvent(ctx context.Context, evt platformevents.Ev
 	if s == nil || s.eventBus == nil {
 		return
 	}
-	if ctx == nil {
-		ctx = context.Background()
-	}
 	if err := s.eventBus.Publish(ctx, evt); err != nil {
 		s.log.Warn("publish_contest_event_failed", zap.String("event", evt.Name), zap.Error(err))
 	}

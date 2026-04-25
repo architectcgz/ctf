@@ -21,18 +21,18 @@ type Handler struct {
 }
 
 type practiceService interface {
-	StartChallengeWithContext(ctx context.Context, userID, challengeID int64) (*dto.InstanceResp, error)
+	StartChallenge(ctx context.Context, userID, challengeID int64) (*dto.InstanceResp, error)
 	StartContestChallenge(ctx context.Context, userID, contestID, challengeID int64) (*dto.InstanceResp, error)
 	StartContestAWDService(ctx context.Context, userID, contestID, serviceID int64) (*dto.InstanceResp, error)
-	SubmitFlagWithContext(ctx context.Context, userID, challengeID int64, flag string) (*dto.SubmissionResp, error)
-	ListMyChallengeSubmissions(userID, challengeID int64) ([]*dto.ChallengeSubmissionRecordResp, error)
-	ListTeacherManualReviewSubmissionsWithContext(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherManualReviewSubmissionQuery) (*dto.PageResult, error)
-	GetTeacherManualReviewSubmissionWithContext(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*dto.TeacherManualReviewSubmissionDetailResp, error)
-	ReviewManualReviewSubmissionWithContext(ctx context.Context, submissionID, reviewerID int64, reviewerRole string, req *dto.ReviewManualReviewSubmissionReq) (*dto.TeacherManualReviewSubmissionDetailResp, error)
+	SubmitFlag(ctx context.Context, userID, challengeID int64, flag string) (*dto.SubmissionResp, error)
+	ListMyChallengeSubmissions(ctx context.Context, userID, challengeID int64) ([]*dto.ChallengeSubmissionRecordResp, error)
+	ListTeacherManualReviewSubmissions(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherManualReviewSubmissionQuery) (*dto.PageResult, error)
+	GetTeacherManualReviewSubmission(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*dto.TeacherManualReviewSubmissionDetailResp, error)
+	ReviewManualReviewSubmission(ctx context.Context, submissionID, reviewerID int64, reviewerRole string, req *dto.ReviewManualReviewSubmissionReq) (*dto.TeacherManualReviewSubmissionDetailResp, error)
 }
 
 type practiceRankingService interface {
-	GetRankingWithContext(ctx context.Context, limit int) ([]*dto.RankingItem, error)
+	GetRanking(ctx context.Context, limit int) ([]*dto.RankingItem, error)
 }
 
 func NewHandler(service practiceService, rankingService practiceRankingService) *Handler {
@@ -49,7 +49,7 @@ func (h *Handler) StartChallenge(c *gin.Context) {
 		return
 	}
 
-	instance, err := h.service.StartChallengeWithContext(c.Request.Context(), userID, challengeID)
+	instance, err := h.service.StartChallenge(c.Request.Context(), userID, challengeID)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -125,7 +125,7 @@ func (h *Handler) SubmitFlag(c *gin.Context) {
 	auditControl := &auditlog.Control{}
 	ctx := auditlog.WithControl(c.Request.Context(), auditControl)
 
-	resp, err := h.service.SubmitFlagWithContext(ctx, userID, challengeID, req.Flag)
+	resp, err := h.service.SubmitFlag(ctx, userID, challengeID, req.Flag)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -145,7 +145,7 @@ func (h *Handler) ListMyChallengeSubmissions(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.service.ListMyChallengeSubmissions(userID, challengeID)
+	resp, err := h.service.ListMyChallengeSubmissions(c.Request.Context(), userID, challengeID)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -165,7 +165,7 @@ func (h *Handler) GetRanking(c *gin.Context) {
 		limit = parsed
 	}
 
-	resp, err := h.rankingService.GetRankingWithContext(c.Request.Context(), limit)
+	resp, err := h.rankingService.GetRanking(c.Request.Context(), limit)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -181,7 +181,7 @@ func (h *Handler) ListTeacherManualReviewSubmissions(c *gin.Context) {
 		response.ValidationError(c, err)
 		return
 	}
-	resp, err := h.service.ListTeacherManualReviewSubmissionsWithContext(c.Request.Context(), currentUser.UserID, currentUser.Role, &query)
+	resp, err := h.service.ListTeacherManualReviewSubmissions(c.Request.Context(), currentUser.UserID, currentUser.Role, &query)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -196,7 +196,7 @@ func (h *Handler) GetTeacherManualReviewSubmission(c *gin.Context) {
 		response.InvalidParams(c, "无效的 submission id")
 		return
 	}
-	resp, err := h.service.GetTeacherManualReviewSubmissionWithContext(c.Request.Context(), submissionID, currentUser.UserID, currentUser.Role)
+	resp, err := h.service.GetTeacherManualReviewSubmission(c.Request.Context(), submissionID, currentUser.UserID, currentUser.Role)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -216,7 +216,7 @@ func (h *Handler) ReviewManualReviewSubmission(c *gin.Context) {
 		response.ValidationError(c, err)
 		return
 	}
-	resp, err := h.service.ReviewManualReviewSubmissionWithContext(c.Request.Context(), submissionID, currentUser.UserID, currentUser.Role, &req)
+	resp, err := h.service.ReviewManualReviewSubmission(c.Request.Context(), submissionID, currentUser.UserID, currentUser.Role, &req)
 	if err != nil {
 		response.FromError(c, err)
 		return

@@ -83,16 +83,9 @@ func firstChallengeNotificationSender(senders []ChallengeNotificationSender) Cha
 	return senders[0]
 }
 
-func (s *ChallengeService) CreateChallenge(actorUserID int64, req *dto.CreateChallengeReq) (*dto.ChallengeResp, error) {
-	return s.CreateChallengeWithContext(context.Background(), actorUserID, req)
-}
-
-func (s *ChallengeService) CreateChallengeWithContext(ctx context.Context, actorUserID int64, req *dto.CreateChallengeReq) (*dto.ChallengeResp, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
+func (s *ChallengeService) CreateChallenge(ctx context.Context, actorUserID int64, req *dto.CreateChallengeReq) (*dto.ChallengeResp, error) {
 	if req.ImageID > 0 {
-		if _, err := s.imageRepo.FindByIDWithContext(ctx, req.ImageID); err != nil {
+		if _, err := s.imageRepo.FindByID(ctx, req.ImageID); err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				return nil, errcode.ErrNotFound.WithCause(errors.New(domain.ErrMsgImageNotFound))
 			}
@@ -117,24 +110,17 @@ func (s *ChallengeService) CreateChallengeWithContext(ctx context.Context, actor
 	if err != nil {
 		return nil, err
 	}
-	if err := s.validateInstanceSharingConfigWithContext(ctx, challenge); err != nil {
+	if err := s.validateInstanceSharingConfig(ctx, challenge); err != nil {
 		return nil, err
 	}
-	if err := s.repo.CreateWithHintsWithContext(ctx, challenge, hints); err != nil {
+	if err := s.repo.CreateWithHints(ctx, challenge, hints); err != nil {
 		return nil, err
 	}
 	return domain.ChallengeRespFromModel(challenge, hints), nil
 }
 
-func (s *ChallengeService) UpdateChallenge(id int64, req *dto.UpdateChallengeReq) error {
-	return s.UpdateChallengeWithContext(context.Background(), id, req)
-}
-
-func (s *ChallengeService) UpdateChallengeWithContext(ctx context.Context, id int64, req *dto.UpdateChallengeReq) error {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-	challenge, err := s.repo.FindByIDWithContext(ctx, id)
+func (s *ChallengeService) UpdateChallenge(ctx context.Context, id int64, req *dto.UpdateChallengeReq) error {
+	challenge, err := s.repo.FindByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return errcode.ErrChallengeNotFound
@@ -159,7 +145,7 @@ func (s *ChallengeService) UpdateChallengeWithContext(ctx context.Context, id in
 	}
 	if req.ImageID != nil {
 		if *req.ImageID > 0 {
-			if _, err := s.imageRepo.FindByIDWithContext(ctx, *req.ImageID); err != nil {
+			if _, err := s.imageRepo.FindByID(ctx, *req.ImageID); err != nil {
 				if errors.Is(err, gorm.ErrRecordNotFound) {
 					return errcode.ErrNotFound.WithCause(errors.New(domain.ErrMsgImageNotFound))
 				}
@@ -180,11 +166,11 @@ func (s *ChallengeService) UpdateChallengeWithContext(ctx context.Context, id in
 	if err != nil {
 		return err
 	}
-	if err := s.validateInstanceSharingConfigWithContext(ctx, challenge); err != nil {
+	if err := s.validateInstanceSharingConfig(ctx, challenge); err != nil {
 		return err
 	}
 
-	return s.repo.UpdateWithHintsWithContext(ctx, challenge, hints, replaceHints)
+	return s.repo.UpdateWithHints(ctx, challenge, hints, replaceHints)
 }
 
 func normalizeInstanceSharing(value model.InstanceSharing) model.InstanceSharing {
@@ -198,14 +184,7 @@ func normalizeInstanceSharing(value model.InstanceSharing) model.InstanceSharing
 	}
 }
 
-func (s *ChallengeService) validateInstanceSharingConfig(challenge *model.Challenge) error {
-	return s.validateInstanceSharingConfigWithContext(context.Background(), challenge)
-}
-
-func (s *ChallengeService) validateInstanceSharingConfigWithContext(ctx context.Context, challenge *model.Challenge) error {
-	if ctx == nil {
-		ctx = context.Background()
-	}
+func (s *ChallengeService) validateInstanceSharingConfig(ctx context.Context, challenge *model.Challenge) error {
 	if challenge == nil || challenge.InstanceSharing != model.InstanceSharingShared {
 		return nil
 	}
@@ -215,7 +194,7 @@ func (s *ChallengeService) validateInstanceSharingConfigWithContext(ctx context.
 	if s.topologyRepo == nil || challenge.ID <= 0 {
 		return nil
 	}
-	topology, err := s.topologyRepo.FindChallengeTopologyByChallengeIDWithContext(ctx, challenge.ID)
+	topology, err := s.topologyRepo.FindChallengeTopologyByChallengeID(ctx, challenge.ID)
 	switch {
 	case err == nil:
 	case errors.Is(err, gorm.ErrRecordNotFound):
@@ -236,22 +215,15 @@ func (s *ChallengeService) validateInstanceSharingConfigWithContext(ctx context.
 	return nil
 }
 
-func (s *ChallengeService) DeleteChallenge(id int64) error {
-	return s.DeleteChallengeWithContext(context.Background(), id)
-}
-
-func (s *ChallengeService) DeleteChallengeWithContext(ctx context.Context, id int64) error {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-	if _, err := s.repo.FindByIDWithContext(ctx, id); err != nil {
+func (s *ChallengeService) DeleteChallenge(ctx context.Context, id int64) error {
+	if _, err := s.repo.FindByID(ctx, id); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return errcode.ErrChallengeNotFound
 		}
 		return err
 	}
 
-	hasInstances, err := s.repo.HasRunningInstancesWithContext(ctx, id)
+	hasInstances, err := s.repo.HasRunningInstances(ctx, id)
 	if err != nil {
 		return err
 	}
@@ -259,18 +231,11 @@ func (s *ChallengeService) DeleteChallengeWithContext(ctx context.Context, id in
 		return errcode.New(errcode.ErrConflict.Code, domain.ErrMsgHasRunningStudents, errcode.ErrConflict.HTTPStatus).
 			WithCause(errors.New(domain.ErrMsgHasRunningInstances))
 	}
-	return s.repo.DeleteWithContext(ctx, id)
+	return s.repo.Delete(ctx, id)
 }
 
-func (s *ChallengeService) PublishChallenge(id int64) error {
-	return s.PublishChallengeWithContext(context.Background(), id)
-}
-
-func (s *ChallengeService) PublishChallengeWithContext(ctx context.Context, id int64) error {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-	challenge, err := s.repo.FindByIDWithContext(ctx, id)
+func (s *ChallengeService) PublishChallenge(ctx context.Context, id int64) error {
+	challenge, err := s.repo.FindByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return errcode.ErrChallengeNotFound
@@ -279,14 +244,11 @@ func (s *ChallengeService) PublishChallengeWithContext(ctx context.Context, id i
 	}
 
 	challenge.Status = model.ChallengeStatusPublished
-	return s.repo.UpdateWithContext(ctx, challenge)
+	return s.repo.Update(ctx, challenge)
 }
 
 func (s *ChallengeService) RequestPublishCheck(ctx context.Context, actorUserID, id int64) (*dto.ChallengePublishCheckJobResp, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-	challenge, err := s.repo.FindByIDWithContext(ctx, id)
+	challenge, err := s.repo.FindByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrChallengeNotFound
@@ -322,10 +284,7 @@ func (s *ChallengeService) RequestPublishCheck(ctx context.Context, actorUserID,
 }
 
 func (s *ChallengeService) GetLatestPublishCheck(ctx context.Context, id int64) (*dto.ChallengePublishCheckJobResp, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-	challenge, err := s.repo.FindByIDWithContext(ctx, id)
+	challenge, err := s.repo.FindByID(ctx, id)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, errcode.ErrChallengeNotFound
 	}
@@ -346,9 +305,6 @@ func (s *ChallengeService) GetLatestPublishCheck(ctx context.Context, id int64) 
 }
 
 func (s *ChallengeService) RunPublishCheckLoop(ctx context.Context) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
 	ticker := time.NewTicker(s.selfCheckCfg.PublishCheckPollInterval)
 	defer ticker.Stop()
 
@@ -391,7 +347,7 @@ func (s *ChallengeService) processPublishCheckJob(ctx context.Context, jobID int
 		s.logger.Warn("load publish check job failed", zap.Int64("job_id", jobID), zap.Error(err))
 		return
 	}
-	challenge, err := s.repo.FindByIDWithContext(ctx, job.ChallengeID)
+	challenge, err := s.repo.FindByID(ctx, job.ChallengeID)
 	if err != nil {
 		s.finishPublishCheckJob(ctx, job, nil, false, fmt.Sprintf("读取题目失败: %v", err), &model.Challenge{
 			ID:    job.ChallengeID,
@@ -414,7 +370,7 @@ func (s *ChallengeService) processPublishCheckJob(ctx context.Context, jobID int
 
 	var publishedAt *time.Time
 	if passed {
-		if err := s.PublishChallengeWithContext(ctx, challenge.ID); err != nil {
+		if err := s.PublishChallenge(ctx, challenge.ID); err != nil {
 			passed = false
 			failureSummary = fmt.Sprintf("自动发布失败: %v", err)
 		} else {
@@ -537,10 +493,7 @@ type challengeSelfCheckRuntimeInput struct {
 }
 
 func (s *ChallengeService) SelfCheckChallenge(ctx context.Context, id int64) (*dto.ChallengeSelfCheckResp, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-	challenge, err := s.repo.FindByIDWithContext(ctx, id)
+	challenge, err := s.repo.FindByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrChallengeNotFound
@@ -553,7 +506,7 @@ func (s *ChallengeService) SelfCheckChallenge(ctx context.Context, id int64) (*d
 	}
 
 	resp.Precheck.StartedAt = time.Now()
-	input, precheckPassed, err := s.runPrecheckWithContext(ctx, challenge, &resp.Precheck.Steps)
+	input, precheckPassed, err := s.runPrecheck(ctx, challenge, &resp.Precheck.Steps)
 	resp.Precheck.EndedAt = time.Now()
 	if err != nil {
 		return nil, err
@@ -691,14 +644,7 @@ func (s *ChallengeService) SelfCheckChallenge(ctx context.Context, id int64) (*d
 	return resp, nil
 }
 
-func (s *ChallengeService) runPrecheck(challenge *model.Challenge, steps *[]dto.ChallengeSelfCheckStepResp) (challengeSelfCheckRuntimeInput, bool, error) {
-	return s.runPrecheckWithContext(context.Background(), challenge, steps)
-}
-
-func (s *ChallengeService) runPrecheckWithContext(ctx context.Context, challenge *model.Challenge, steps *[]dto.ChallengeSelfCheckStepResp) (challengeSelfCheckRuntimeInput, bool, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
+func (s *ChallengeService) runPrecheck(ctx context.Context, challenge *model.Challenge, steps *[]dto.ChallengeSelfCheckStepResp) (challengeSelfCheckRuntimeInput, bool, error) {
 	input := challengeSelfCheckRuntimeInput{
 		nodeImageRefs: make(map[int64]string),
 	}
@@ -715,7 +661,7 @@ func (s *ChallengeService) runPrecheckWithContext(ctx context.Context, challenge
 	}
 
 	if challenge.ImageID > 0 {
-		imageRef, err := s.resolveAvailableImageRefWithContext(ctx, challenge.ImageID)
+		imageRef, err := s.resolveAvailableImageRef(ctx, challenge.ImageID)
 		if err != nil {
 			passed = false
 			*steps = append(*steps, dto.ChallengeSelfCheckStepResp{
@@ -742,7 +688,7 @@ func (s *ChallengeService) runPrecheckWithContext(ctx context.Context, challenge
 	if s.topologyRepo == nil {
 		return input, false, errcode.ErrInternal.WithCause(errors.New("challenge topology repository is not configured"))
 	}
-	topology, err := s.topologyRepo.FindChallengeTopologyByChallengeIDWithContext(ctx, challenge.ID)
+	topology, err := s.topologyRepo.FindChallengeTopologyByChallengeID(ctx, challenge.ID)
 	if err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			return input, false, err
@@ -808,7 +754,7 @@ func (s *ChallengeService) runPrecheckWithContext(ctx context.Context, challenge
 		if _, exists := input.nodeImageRefs[node.ImageID]; exists {
 			continue
 		}
-		nodeImageRef, resolveErr := s.resolveAvailableImageRefWithContext(ctx, node.ImageID)
+		nodeImageRef, resolveErr := s.resolveAvailableImageRef(ctx, node.ImageID)
 		if resolveErr != nil {
 			passed = false
 			*steps = append(*steps, dto.ChallengeSelfCheckStepResp{
@@ -978,18 +924,11 @@ func (s *ChallengeService) buildTopologyRuntimeRequest(
 	return req, nil
 }
 
-func (s *ChallengeService) resolveAvailableImageRef(imageID int64) (string, error) {
-	return s.resolveAvailableImageRefWithContext(context.Background(), imageID)
-}
-
-func (s *ChallengeService) resolveAvailableImageRefWithContext(ctx context.Context, imageID int64) (string, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
+func (s *ChallengeService) resolveAvailableImageRef(ctx context.Context, imageID int64) (string, error) {
 	if imageID <= 0 {
 		return "", fmt.Errorf("invalid image id")
 	}
-	imageItem, err := s.imageRepo.FindByIDWithContext(ctx, imageID)
+	imageItem, err := s.imageRepo.FindByID(ctx, imageID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return "", errcode.ErrNotFound.WithCause(errors.New(domain.ErrMsgImageNotFound))
