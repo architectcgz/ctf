@@ -11,7 +11,7 @@ type AWDReadinessGateTrace struct {
 
 func WithAWDReadinessGateTrace(ctx context.Context) (context.Context, *AWDReadinessGateTrace) {
 	if ctx == nil {
-		ctx = context.Background()
+		return nil, nil
 	}
 	if trace := AWDReadinessGateTraceFromContext(ctx); trace != nil {
 		return ctx, trace

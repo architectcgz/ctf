@@ -39,3 +39,23 @@ func TestAWDServicePublishWeakEventDoesNotCreateBackgroundContext(t *testing.T) 
 		t.Fatal("expected event to be published")
 	}
 }
+
+func TestWithAWDPreviewRequesterDoesNotCreateBackgroundContext(t *testing.T) {
+	t.Parallel()
+
+	if ctx := WithAWDPreviewRequester(nil, 42); ctx != nil {
+		t.Fatalf("expected nil context to stay nil, got %v", ctx)
+	}
+}
+
+func TestWithAWDReadinessGateTraceDoesNotCreateBackgroundContext(t *testing.T) {
+	t.Parallel()
+
+	ctx, trace := WithAWDReadinessGateTrace(nil)
+	if ctx != nil {
+		t.Fatalf("expected nil context to stay nil, got %v", ctx)
+	}
+	if trace != nil {
+		t.Fatalf("expected nil trace without context, got %+v", trace)
+	}
+}
