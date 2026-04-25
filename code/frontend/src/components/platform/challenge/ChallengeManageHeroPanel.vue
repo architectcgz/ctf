@@ -27,21 +27,25 @@ function handleImport(): void {
   <div class="challenge-manage-hero-panel">
     <section class="workspace-hero">
       <div class="workspace-tab-heading__main">
-        <div class="workspace-overline">Challenge Workspace</div>
+        <div class="workspace-overline">
+          Challenge Workspace
+        </div>
         <h1 class="workspace-page-title">
           题目资源管理中心
         </h1>
-        <p class="workspace-page-copy">集中查看题目目录、发布状态与题库变更。</p>
+        <p class="workspace-page-copy">
+          集中查看题目目录、发布状态与题库变更。
+        </p>
       </div>
-      <div class="awd-library-hero-actions">
-        <div class="quick-actions">
+      <div class="challenge-manage-hero-actions">
+        <div class="challenge-manage-actions">
           <button
             type="button"
-            class="ui-btn ui-btn--primary"
+            class="ui-btn ui-btn--primary challenge-manage-import-button"
             @click="handleImport"
           >
             <Plus class="h-4 w-4" />
-            导入资源包
+            导入题目
           </button>
         </div>
       </div>
@@ -122,7 +126,7 @@ function handleImport(): void {
 <style scoped>
 .challenge-manage-hero-panel {
   display: grid;
-  gap: var(--space-section-gap-compact, var(--space-4));
+  gap: 0;
 }
 
 .manage-summary-grid {
@@ -146,14 +150,29 @@ function handleImport(): void {
   border-bottom: 1px solid var(--workspace-line-soft);
 }
 
-.awd-library-hero-actions {
+.challenge-manage-hero-actions {
   display: flex;
   align-items: flex-end;
-  padding-bottom: 0.5rem;
+  padding-bottom: var(--space-2);
 }
 
-.quick-actions {
+.challenge-manage-actions {
   display: flex;
-  gap: 0.75rem;
+  gap: var(--space-3);
+}
+
+.challenge-manage-import-button {
+  --ui-btn-border: color-mix(in srgb, var(--journal-accent) 34%, var(--journal-border));
+  --ui-btn-background: color-mix(in srgb, var(--journal-accent) 12%, var(--journal-surface));
+  --ui-btn-color: var(--journal-accent-strong);
+  --ui-btn-hover-background: color-mix(
+    in srgb,
+    var(--journal-accent) 18%,
+    var(--journal-surface)
+  );
+  --ui-btn-hover-border: color-mix(in srgb, var(--journal-accent-strong) 46%, var(--journal-border));
+  --ui-btn-hover-color: var(--journal-accent-strong);
+  --ui-btn-hover-shadow: 0 0.75rem 1.5rem color-mix(in srgb, var(--journal-accent) 18%, transparent);
+  --ui-btn-focus-ring: color-mix(in srgb, var(--journal-accent) 28%, transparent);
 }
 </style>

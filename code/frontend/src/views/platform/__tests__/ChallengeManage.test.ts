@@ -123,9 +123,11 @@ describe('ChallengeManage', () => {
     )
     expect(challengeManageSource).not.toContain('<header class="workspace-topbar">')
     expect(challengeManageSource).toContain('<ChallengeManageHeroPanel')
-    expect(challengeManageHeroPanelSource).toContain('<div class="workspace-overline">Challenge Workspace</div>')
-    expect(challengeManageHeroPanelSource).toContain(
-      '<p class="workspace-page-copy">集中查看题目目录、发布状态与题库变更。</p>'
+    expect(challengeManageHeroPanelSource).toMatch(
+      /<div class="workspace-overline">\s*Challenge Workspace\s*<\/div>/
+    )
+    expect(challengeManageHeroPanelSource).toMatch(
+      /<p class="workspace-page-copy">\s*集中查看题目目录、发布状态与题库变更。\s*<\/p>/
     )
     expect(challengeManageSource).not.toContain('Inventory / Challenge Management')
     expect(challengeManageHeroPanelSource).toContain('Plus,')
@@ -145,10 +147,27 @@ describe('ChallengeManage', () => {
     await flushPromises()
 
     expect(wrapper.text()).toContain('题目资源管理中心')
-    expect(wrapper.text()).toContain('导入资源包')
+    expect(wrapper.text()).toContain('导入题目')
     expect(wrapper.text()).toContain('Test Challenge')
+    expect(wrapper.text()).not.toContain('导入资源包')
     expect(wrapper.text()).not.toContain('导入题目包')
     expect(wrapper.text()).not.toContain('待确认导入')
+  })
+
+  it('题目导入入口按钮应使用题目管理页自己的主题变量样式', () => {
+    expect(challengeManageHeroPanelSource).toContain('class="challenge-manage-hero-actions"')
+    expect(challengeManageHeroPanelSource).toContain(
+      'class="ui-btn ui-btn--primary challenge-manage-import-button"'
+    )
+    expect(challengeManageHeroPanelSource).toContain('导入题目')
+    expect(challengeManageHeroPanelSource).not.toContain('awd-library-hero-actions')
+    expect(challengeManageHeroPanelSource).not.toContain('导入资源包')
+    expect(challengeManageHeroPanelSource).toMatch(
+      /\.challenge-manage-import-button\s*\{[\s\S]*--ui-btn-border:\s*color-mix\(in srgb,\s*var\(--journal-accent\) 34%, var\(--journal-border\)\);[\s\S]*--ui-btn-background:\s*color-mix\(in srgb,\s*var\(--journal-accent\) 12%, var\(--journal-surface\)\);[\s\S]*--ui-btn-color:\s*var\(--journal-accent-strong\);/s
+    )
+    expect(challengeManageHeroPanelSource).toMatch(
+      /\.challenge-manage-import-button\s*\{[\s\S]*--ui-btn-focus-ring:\s*color-mix\(in srgb,\s*var\(--journal-accent\) 28%, transparent\);/s
+    )
   })
 
   it('页面壳层应继续复用 journal surface token，而题目更多菜单则应改用共享 action menu primitive', () => {
@@ -210,14 +229,15 @@ describe('ChallengeManage', () => {
     )?.[0]
 
     expect(challengeManageSource).toMatch(
-      /\.challenge-manage-content\s*\{[\s\S]*gap:\s*var\(--workspace-directory-page-block-gap\);/s
+      /\.challenge-manage-content\s*\{[\s\S]*gap:\s*var\(--workspace-directory-page-block-gap,\s*var\(--space-5\)\);/s
     )
     expect(challengeManageSource).toMatch(
-      /\.challenge-manage-panel\s*\{[\s\S]*gap:\s*var\(--space-section-gap-compact,\s*var\(--space-4\)\);/s
+      /\.challenge-manage-panel\s*\{[\s\S]*gap:\s*var\(--workspace-directory-page-block-gap,\s*var\(--space-5\)\);/s
     )
-    expect(combinedSource).toMatch(
-      /\.challenge-manage-directory\s*\{[\s\S]*gap:\s*var\(--space-4\);/s
+    expect(challengeManageHeroPanelSource).toMatch(
+      /\.challenge-manage-hero-panel\s*\{[\s\S]*gap:\s*0;/s
     )
+    expect(challengeManageDirectoryPanelSource).not.toContain('.challenge-manage-directory {')
     expect(summaryGridStyleBlock).toBeTruthy()
     expect(summaryGridStyleBlock).not.toContain('margin-top')
     expect(summaryGridStyleBlock).not.toContain('margin-bottom')

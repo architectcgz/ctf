@@ -16,8 +16,10 @@ describe('ChallengeManage directory extraction', () => {
       "import ChallengeManageHeroPanel from '@/components/platform/challenge/ChallengeManageHeroPanel.vue'"
     )
     expect(challengeManageSource).toContain('<ChallengeManageHeroPanel')
-    expect(challengeManageHeroPanelSource).toContain('<div class="workspace-overline">Challenge Workspace</div>')
-    expect(challengeManageHeroPanelSource).toContain('导入资源包')
+    expect(challengeManageHeroPanelSource).toMatch(
+      /<div class="workspace-overline">\s*Challenge Workspace\s*<\/div>/
+    )
+    expect(challengeManageHeroPanelSource).toContain('导入题目')
     expect(challengeManageHeroPanelSource).toContain('题目总量')
   })
 })
