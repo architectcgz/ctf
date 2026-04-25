@@ -507,6 +507,57 @@ describe('ContestDetail', () => {
     expect(wrapper.text()).toContain('正确！+100 分')
   })
 
+  it('普通竞赛题目选中状态应从 URL 恢复并在切换时写回 query', async () => {
+    await router.push('/contests/1?panel=challenges&challenge=102')
+    await router.isReady()
+    contestApiMocks.getContestChallenges.mockResolvedValueOnce([
+      {
+        id: '101',
+        challenge_id: '101',
+        title: 'Web 101',
+        category: 'web',
+        difficulty: 'easy',
+        points: 100,
+        solved_count: 0,
+        is_solved: false,
+      },
+      {
+        id: '102',
+        challenge_id: '102',
+        title: 'Crypto 102',
+        category: 'crypto',
+        difficulty: 'medium',
+        points: 200,
+        solved_count: 2,
+        is_solved: false,
+      },
+    ])
+
+    const wrapper = mount(ContestDetail, {
+      global: {
+        plugins: [createPinia(), router],
+      },
+    })
+
+    await flushPromises()
+
+    const challengesTab = wrapper.findAll('button').find((node) => node.text().trim() === '题目')
+    expect(challengesTab).toBeTruthy()
+    await challengesTab!.trigger('click')
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('Crypto 102')
+    expect(wrapper.text()).toContain('crypto · 200 pts')
+
+    const webChallengeButton = wrapper.findAll('button').find((node) => node.text().includes('Web 101'))
+    expect(webChallengeButton).toBeTruthy()
+    await webChallengeButton!.trigger('click')
+    await flushPromises()
+
+    expect(router.currentRoute.value.query.challenge).toBe('101')
+    expect(router.currentRoute.value.query.panel).toBe('challenges')
+  })
+
   it('竞赛 Flag 提交进行中遇到回车和点击重叠时只应提交一次', async () => {
     contestApiMocks.getContestChallenges.mockResolvedValueOnce([
       {

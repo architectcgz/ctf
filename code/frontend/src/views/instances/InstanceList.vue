@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { nextTick, ref, watch } from 'vue'
+
 import {
   EXTEND_DURATION_SECONDS,
   WARNING_THRESHOLD_SECONDS,
@@ -24,6 +26,22 @@ const {
   extendFromWarning,
   closeWarning,
 } = useInstanceListPage()
+
+const warningCloseButton = ref<HTMLButtonElement | null>(null)
+let previouslyFocusedElement: HTMLElement | null = null
+
+watch(showWarning, async (visible) => {
+  if (visible) {
+    previouslyFocusedElement =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null
+    await nextTick()
+    warningCloseButton.value?.focus()
+    return
+  }
+
+  previouslyFocusedElement?.focus()
+  previouslyFocusedElement = null
+})
 </script>
 
 <template>
@@ -255,17 +273,41 @@ const {
 
     <div
       v-if="showWarning"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+      class="instance-warning-overlay"
+      role="presentation"
       @click.self="closeWarning"
     >
-      <div class="warning-dialog w-full max-w-md rounded-[24px] border px-6 py-6 shadow-xl">
-        <h3 class="text-lg font-semibold text-[var(--journal-ink)]">
-          实例即将过期
-        </h3>
-        <p class="mt-2 text-sm leading-6 text-[var(--journal-muted)]">
+      <div
+        class="warning-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="instance-warning-title"
+        aria-describedby="instance-warning-description"
+      >
+        <div class="warning-dialog__header">
+          <h3
+            id="instance-warning-title"
+            class="warning-dialog__title"
+          >
+            实例即将过期
+          </h3>
+          <button
+            ref="warningCloseButton"
+            type="button"
+            class="ui-btn ui-btn--sm ui-btn--secondary"
+            aria-label="关闭实例过期提醒"
+            @click="closeWarning"
+          >
+            关闭
+          </button>
+        </div>
+        <p
+          id="instance-warning-description"
+          class="warning-dialog__description"
+        >
           实例 "{{ warningInstance?.challenge_title }}" 剩余时间不足 5 分钟，是否延长？
         </p>
-        <div class="mt-6 flex justify-end gap-3">
+        <div class="warning-dialog__actions">
           <button
             class="ui-btn ui-btn--secondary"
             @click="closeWarning"
@@ -455,15 +497,76 @@ const {
   color: var(--journal-accent);
 }
 
+.instance-status-dot--warning {
+  color: var(--color-warning);
+}
+
+.instance-status-dot--success {
+  color: var(--color-success);
+}
+
+.instance-status-dot--danger {
+  color: var(--color-danger);
+}
+
+.instance-status-dot--muted {
+  color: var(--color-text-muted);
+}
+
 .instance-row-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
 
+.instance-warning-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  background: color-mix(in srgb, var(--color-bg-base) 64%, transparent);
+}
+
 .warning-dialog {
+  width: min(100%, 28rem);
+  max-height: min(32rem, calc(100vh - var(--space-12)));
+  overflow: auto;
+  padding: var(--space-6);
+  border: 1px solid var(--journal-border);
+  border-radius: var(--ui-dialog-radius-wide);
   border-color: var(--journal-border);
   background: color-mix(in srgb, var(--journal-surface) 98%, var(--color-bg-base));
+  box-shadow: var(--ui-dialog-shadow);
+}
+
+.warning-dialog__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.warning-dialog__title {
+  font-size: var(--font-size-18);
+  font-weight: 700;
+  color: var(--journal-ink);
+}
+
+.warning-dialog__description {
+  margin-top: var(--space-2);
+  font-size: var(--font-size-14);
+  line-height: 1.7;
+  color: var(--journal-muted);
+}
+
+.warning-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
 }
 
 @keyframes instanceSpin {
