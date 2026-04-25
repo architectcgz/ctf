@@ -60,6 +60,19 @@ func (s *stubPracticeRuntimeService) CreateContainer(ctx context.Context, imageN
 	return s.createContainerFn(ctx, imageName, env, reservedHostPort)
 }
 
+type stubPracticeEventBus struct {
+	publishFn func(ctx context.Context, evt events.Event) error
+}
+
+func (s *stubPracticeEventBus) Subscribe(string, events.Handler) {}
+
+func (s *stubPracticeEventBus) Publish(ctx context.Context, evt events.Event) error {
+	if s.publishFn != nil {
+		return s.publishFn(ctx, evt)
+	}
+	return nil
+}
+
 func requireEventually(t *testing.T, timeout time.Duration, check func() bool) {
 	t.Helper()
 
@@ -456,6 +469,60 @@ func TestSubmitFlagWithRegexChallengeMatchesPattern(t *testing.T) {
 	}
 	if !resp.IsCorrect || resp.Status != dto.SubmissionStatusCorrect {
 		t.Fatalf("expected regex submission success, got %+v", resp)
+	}
+}
+
+func TestMarkInstanceFailedDoesNotCreateBackgroundContext(t *testing.T) {
+	t.Parallel()
+
+	service := NewService(
+		nil,
+		nil,
+		nil,
+		&stubPracticeInstanceStore{
+			updateStatusAndReleasePortWithContextFn: func(ctx context.Context, id int64, status string) error {
+				if ctx != nil {
+					t.Fatalf("expected update status ctx to stay nil, got %v", ctx)
+				}
+				return nil
+			},
+		},
+		&stubPracticeRuntimeService{
+			cleanupRuntimeFn: func(ctx context.Context, instance *model.Instance) error {
+				if ctx != nil {
+					t.Fatalf("expected cleanup ctx to stay nil, got %v", ctx)
+				}
+				return nil
+			},
+		},
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+
+	service.markInstanceFailed(nil, &model.Instance{ID: 42})
+}
+
+func TestPublishWeakEventDoesNotCreateBackgroundContext(t *testing.T) {
+	t.Parallel()
+
+	publishCalled := false
+	service := NewService(nil, nil, nil, nil, nil, nil, nil, nil, nil, nil).
+		SetEventBus(&stubPracticeEventBus{
+			publishFn: func(ctx context.Context, evt events.Event) error {
+				publishCalled = true
+				if ctx != nil {
+					t.Fatalf("expected publish ctx to stay nil, got %v", ctx)
+				}
+				return nil
+			},
+		})
+
+	service.publishWeakEvent(nil, events.Event{Name: "practice.test"})
+	if !publishCalled {
+		t.Fatal("expected event to be published")
 	}
 }
 
