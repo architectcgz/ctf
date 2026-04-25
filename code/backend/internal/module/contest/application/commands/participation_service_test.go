@@ -290,10 +290,7 @@ func TestParticipationServiceListAndReviewRegistrations(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ListRegistrations() error = %v", err)
 	}
-	items, ok := page.List.([]*dto.ContestRegistrationResp)
-	if !ok {
-		t.Fatalf("unexpected list type: %T", page.List)
-	}
+	items := page.List
 	if len(items) != 1 || items[0].Username != "alice" || items[0].Status != model.ContestRegistrationStatusPending {
 		t.Fatalf("unexpected registrations: %+v", items)
 	}

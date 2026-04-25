@@ -26,7 +26,7 @@ type practiceService interface {
 	StartContestAWDService(ctx context.Context, userID, contestID, serviceID int64) (*dto.InstanceResp, error)
 	SubmitFlag(ctx context.Context, userID, challengeID int64, flag string) (*dto.SubmissionResp, error)
 	ListMyChallengeSubmissions(ctx context.Context, userID, challengeID int64) ([]*dto.ChallengeSubmissionRecordResp, error)
-	ListTeacherManualReviewSubmissions(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherManualReviewSubmissionQuery) (*dto.PageResult, error)
+	ListTeacherManualReviewSubmissions(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherManualReviewSubmissionQuery) (*dto.PageResult[*dto.TeacherManualReviewSubmissionItemResp], error)
 	GetTeacherManualReviewSubmission(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*dto.TeacherManualReviewSubmissionDetailResp, error)
 	ReviewManualReviewSubmission(ctx context.Context, submissionID, reviewerID int64, reviewerRole string, req *dto.ReviewManualReviewSubmissionReq) (*dto.TeacherManualReviewSubmissionDetailResp, error)
 }

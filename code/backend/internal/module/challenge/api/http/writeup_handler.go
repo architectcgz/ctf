@@ -32,9 +32,9 @@ type writeupQueryService interface {
 	GetAdmin(ctx context.Context, challengeID int64) (*dto.AdminChallengeWriteupResp, error)
 	GetPublished(ctx context.Context, userID, challengeID int64) (*dto.ChallengeWriteupResp, error)
 	GetMySubmission(ctx context.Context, userID, challengeID int64) (*dto.SubmissionWriteupResp, error)
-	ListRecommendedSolutions(ctx context.Context, userID, challengeID int64) (*dto.PageResult, error)
-	ListCommunitySolutions(ctx context.Context, userID, challengeID int64, query *dto.CommunityChallengeSolutionQuery) (*dto.PageResult, error)
-	ListTeacherSubmissions(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherSubmissionWriteupQuery) (*dto.PageResult, error)
+	ListRecommendedSolutions(ctx context.Context, userID, challengeID int64) (*dto.PageResult[*dto.RecommendedChallengeSolutionResp], error)
+	ListCommunitySolutions(ctx context.Context, userID, challengeID int64, query *dto.CommunityChallengeSolutionQuery) (*dto.PageResult[*dto.CommunityChallengeSolutionResp], error)
+	ListTeacherSubmissions(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherSubmissionWriteupQuery) (*dto.PageResult[*dto.TeacherSubmissionWriteupItemResp], error)
 	GetTeacherSubmission(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*dto.TeacherSubmissionWriteupDetailResp, error)
 }
 

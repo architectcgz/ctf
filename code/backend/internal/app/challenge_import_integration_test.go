@@ -31,11 +31,11 @@ func (challengeImportQueryStub) GetChallenge(ctx context.Context, id int64) (*dt
 	panic("unexpected call")
 }
 
-func (challengeImportQueryStub) ListChallenges(ctx context.Context, query *dto.ChallengeQuery) (*dto.PageResult, error) {
+func (challengeImportQueryStub) ListChallenges(ctx context.Context, query *dto.ChallengeQuery) (*dto.PageResult[*dto.ChallengeResp], error) {
 	panic("unexpected call")
 }
 
-func (challengeImportQueryStub) ListPublishedChallenges(ctx context.Context, userID int64, query *dto.ChallengeQuery) (*dto.PageResult, error) {
+func (challengeImportQueryStub) ListPublishedChallenges(ctx context.Context, userID int64, query *dto.ChallengeQuery) (*dto.PageResult[*dto.ChallengeListItem], error) {
 	panic("unexpected call")
 }
 
