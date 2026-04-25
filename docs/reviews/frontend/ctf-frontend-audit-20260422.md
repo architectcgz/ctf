@@ -8,7 +8,7 @@
 | 审查范围 | `code/frontend/src` 路由、关键视图、composables、stores、共享样式与验证门禁 |
 | 审查日期 | 2026-04-22 |
 | 审查方式 | 静态代码审查 + 最小验证基线检查 |
-| 审查状态 | 已记录，已推进至第六十八轮；当前前端全量测试门禁已通过 |
+| 审查状态 | 已记录，已推进至第七十四轮；当前前端全量测试门禁已通过 |
 
 ## 当前结论
 
@@ -18,8 +18,15 @@
   - 本轮继续收口了平台 AWD 编排组件簇、教师端 `workspace / tabs / surface` 漂移、shared pagination 的 review 基线漂移，以及前端全量测试暴露出的最后一批共享壳层护栏漂移。
 - 当前 `code/frontend` 已通过：
   - `npm run typecheck`
-  - `npm run test:run`（244 个测试文件，1009 个测试）
+  - `npm run test:run`（245 个测试文件，1012 个测试）
 - 后续如继续推进专项，应从新的人工审查或产品体验审查重新列项，而不是继续沿用已清零的失败测试清单。
+
+## Review 文档事实源说明
+
+- 本文件是当前前端专项审查的主索引；本目录下历史 `ctf-frontend-code-review-*` 文件只代表对应审查日期和 commit 范围内的快照。
+- 若历史 review 中仍写着“未修复”，但本文件后续轮次已经记录修复进展与验证命令，应以本文件为当前事实源。
+- 历史快照的统一读取规则见 `docs/reviews/frontend/README.md`；后续新增 review 应先判断是更新主索引，还是保留为单次审查快照。
+- 已明确过期的历史结论包括：页面组件大量占位未实现、缺少单元测试、竞赛详情题目选中状态未持久化、实例即将过期弹窗缺少对话框语义、实例延时时长常量未使用、实例状态硬编码色值等。
 
 ## 优先级结论
 
@@ -1734,6 +1741,23 @@
   - `npm run test:run -- src/views/__tests__/sharedThemeTokenAdoption.test.ts`（1 个测试文件，7 个测试）
   - `npm run typecheck`
 
+## 第七十四轮文档治理
+
+- 已完成：
+  - `TD-5` 历史 review 文档清理已收口为索引治理：新增 `docs/reviews/frontend/README.md`，明确当前事实源、历史快照读取规则、已知过期结论和仍保留的 Backlog。
+  - 本主索引补充 `Review 文档事实源说明`，避免后续继续把旧 review 中已经过期的“未修复”结论重新纳入待办。
+  - 更新当前测试门禁数量为合并后主线状态：`245` 个测试文件、`1012` 个测试。
+- 本轮涉及文件：
+  - `docs/reviews/frontend/README.md`
+  - `docs/reviews/frontend/ctf-frontend-audit-20260422.md`
+
+## 第七十四轮验证
+
+- 已执行：
+  - `rg -n "页面组件大量占位未实现|题目选中状态未持久化|实例即将过期|245|1012" docs/reviews/frontend/README.md docs/reviews/frontend/ctf-frontend-audit-20260422.md`
+  - `rg -n "TD-5|历史快照|当前事实源|第七十四轮" docs/reviews/frontend/README.md docs/reviews/frontend/ctf-frontend-audit-20260422.md`
+  - `git diff --check`
+
 ## 后续技术债 Backlog
 
 - `TD-1` 超大组件专题拆分：
@@ -1751,8 +1775,8 @@
   - 当前未接入 `vue-i18n`，产品文案仍以中文硬编码为主。
   - 是否推进取决于产品是否需要多语言；若推进，应先从路由标题、表单错误、导航与关键空态开始，不建议一次性机械搬迁所有文案。
 - `TD-5` 历史 review 文档清理：
-  - 部分旧文档仍保留已经过期的未修复语境，例如学生得分卡片、实例超时提醒、能力画像难度映射重复和雷达图 tooltip `any`。
-  - 后续如果继续做文档治理，应以本文件为主索引，把旧文档标记为历史快照或补交叉引用，避免重复把已修项重新纳入待办。
+  - 已在第七十四轮完成主索引与历史快照规则治理。
+  - 后续若继续处理旧文档，只补充交叉引用或新增索引说明，不直接改写历史 review 原文中的当时结论。
 
 ## 备注
 
