@@ -125,17 +125,6 @@ const emit = defineEmits<{
 .admin-awd-review-shell__summary {
   --metric-panel-columns: 3;
   --metric-panel-border: color-mix(in srgb, var(--workspace-brand) 16%, var(--workspace-line-soft));
-  --metric-panel-background:
-    radial-gradient(
-      circle at top left,
-      color-mix(in srgb, var(--workspace-brand) 16%, transparent),
-      transparent 60%
-    ),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--journal-surface) 97%, transparent),
-      color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base))
-    );
 }
 
 @media (max-width: 900px) {

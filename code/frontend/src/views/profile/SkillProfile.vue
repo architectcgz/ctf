@@ -111,9 +111,7 @@ const skillRadarHeightClass = 'skill-radar-height'
         class="flex flex-1 flex-col"
       >
         <div>
-          <div class="workspace-overline">
-            Skill Profile
-          </div>
+          <div class="workspace-overline">Skill Profile</div>
 
           <nav
             class="top-tabs"
@@ -144,9 +142,7 @@ const skillRadarHeightClass = 'skill-radar-height'
           v-if="isTeacher"
           class="skill-teacher-panel"
         >
-          <div class="skill-section-kicker">
-            Teacher View
-          </div>
+          <div class="skill-section-kicker">Teacher View</div>
           <h3 class="workspace-tab-heading__title">
             查看学员能力画像
           </h3>
@@ -214,9 +210,7 @@ const skillRadarHeightClass = 'skill-radar-height'
                   </div>
                 </div>
 
-                <div class="skill-section-kicker">
-                  Radar Analysis
-                </div>
+                <div class="skill-section-kicker">Radar Analysis</div>
                 <h3 class="workspace-tab-heading__title">
                   能力维度分析
                 </h3>
@@ -279,9 +273,7 @@ const skillRadarHeightClass = 'skill-radar-height'
             :aria-hidden="activeTab === 'weakness' ? 'false' : 'true'"
           >
             <div class="skill-weak-wrap">
-              <div class="skill-section-kicker">
-                Weak Points
-              </div>
+              <div class="skill-section-kicker">Weak Points</div>
               <div class="skill-weak-title mt-3 flex items-center gap-3 text-base font-semibold">
                 <Flame class="skill-weak-title__icon h-5 w-5" />
                 薄弱项提示
@@ -327,9 +319,7 @@ const skillRadarHeightClass = 'skill-radar-height'
             aria-labelledby="skill-profile-tab-recommendations"
             :aria-hidden="activeTab === 'recommendations' ? 'false' : 'true'"
           >
-            <div class="skill-section-kicker">
-              Recommendations
-            </div>
+            <div class="skill-section-kicker">Recommendations</div>
             <h3 class="workspace-tab-heading__title">
               推荐靶场
             </h3>
@@ -472,7 +462,9 @@ const skillRadarHeightClass = 'skill-radar-height'
 }
 
 .journal-hero {
+  border-radius: 16px !important;
   border-color: var(--journal-shell-border);
+  overflow: hidden;
 }
 
 .skill-error-icon,

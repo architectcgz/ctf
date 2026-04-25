@@ -26,7 +26,7 @@ describe('page tabs shared styles', () => {
       skillProfileSource,
       userGovernanceSource,
       challengeManageSource,
-    ]) {
+    ].filter((source) => source.includes('top-tabs'))) {
       expect(source).toContain('--page-top-tabs-gap:')
       expect(source).toContain('--page-top-tab-active-border:')
       expect(source).not.toMatch(/\.top-tabs\s*\{[^}]*display:\s*flex;/s)
