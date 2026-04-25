@@ -437,11 +437,10 @@ describe('UserManage', () => {
     await flushPromises()
 
     const summary = wrapper.get('#user-panel-overview')
-    const summaryCards = summary.findAll('.user-overview-stat')
+    const summaryCards = summary.findAll('.progress-card.metric-panel-card')
 
     expect(summaryCards).toHaveLength(4)
     expect(summary.find('.user-overview-grid').exists()).toBe(true)
-    expect(summary.findAll('.user-overview-stat.progress-card.metric-panel-card')).toHaveLength(4)
     expect(summary.findAll('.progress-card-label.metric-panel-label')).toHaveLength(4)
     expect(summary.findAll('.progress-card-value.metric-panel-value')).toHaveLength(4)
     expect(summary.findAll('.progress-card-hint.metric-panel-helper')).toHaveLength(4)

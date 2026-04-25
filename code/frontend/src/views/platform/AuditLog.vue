@@ -35,7 +35,7 @@ const {
   <div class="workspace-shell journal-shell journal-shell-admin journal-hero">
     <div class="workspace-grid">
       <main class="content-pane">
-        <div class="audit-log-body mt-10 space-y-10">
+        <div class="audit-log-body">
           <AuditLogHeroPanel
             :current-count="list.length"
             :total="total"
@@ -87,3 +87,11 @@ const {
     />
   </div>
 </template>
+
+<style scoped>
+.audit-log-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--workspace-directory-page-block-gap, var(--space-5));
+}
+</style>

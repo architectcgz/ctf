@@ -122,8 +122,14 @@
   --metric-panel-grid-gap: var(--space-3);
 }
 
+.workspace-hero + :where(.progress-strip, .admin-summary-grid, .manage-summary-grid),
+.contest-ops-hero + .contest-ops-summary {
+  margin-top: var(--workspace-hero-summary-gap, var(--space-5));
+}
+
 .progress-card {
   --metric-panel-padding: var(--space-3-5) var(--space-4) var(--space-3-5);
+  position: relative;
 }
 
 .progress-card--skeleton {
@@ -139,6 +145,18 @@
     var(--journal-muted, var(--color-text-secondary)) 88%,
     var(--color-bg-base)
   );
+  display: block;
+  min-height: 1rem;
+  padding-inline-end: var(--space-7);
+}
+
+.progress-card.metric-panel-card .metric-panel-label > :is(svg, .lucide) {
+  position: absolute;
+  top: var(--space-3-5);
+  right: var(--space-4);
+  width: 1rem;
+  height: 1rem;
+  pointer-events: none;
 }
 
 .progress-card-value {

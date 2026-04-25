@@ -81,49 +81,34 @@ onMounted(() => {
   <section
     class="journal-shell journal-shell-admin journal-notes-card journal-hero workspace-shell flex min-h-full flex-1 flex-col"
   >
-    <ContestOperationsHubHeroPanel
-      :operable-contest-count="operableContests.length"
-      :running-contest-count="runningContestCount"
-      :frozen-contest-count="frozenContestCount"
-      :preferred-contest-title="preferredContest ? preferredContest.title : '暂无'"
-      @back="void handleBackToContestDirectory()"
-    />
+    <div class="workspace-grid">
+      <main class="content-pane contest-ops-content">
+        <ContestOperationsHubHeroPanel
+          :operable-contest-count="operableContests.length"
+          :running-contest-count="runningContestCount"
+          :frozen-contest-count="frozenContestCount"
+          :preferred-contest-title="preferredContest ? preferredContest.title : '暂无'"
+          @back="void handleBackToContestDirectory()"
+        />
 
-    <ContestOperationsHubWorkspacePanel
-      :loading="loading"
-      :load-error="loadError"
-      :operable-contests="operableContests"
-      @retry="void loadContests()"
-      @back="void handleBackToContestDirectory()"
-      @enter-operations="void handleEnterOperations($event)"
-      @open-studio="void handleOpenStudio($event)"
-    />
+        <ContestOperationsHubWorkspacePanel
+          :loading="loading"
+          :load-error="loadError"
+          :operable-contests="operableContests"
+          @retry="void loadContests()"
+          @back="void handleBackToContestDirectory()"
+          @enter-operations="void handleEnterOperations($event)"
+          @open-studio="void handleOpenStudio($event)"
+        />
+      </main>
+    </div>
   </section>
 </template>
 
 <style scoped>
-.contest-ops-hero {
+.contest-ops-content {
   display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.contest-ops-hero__main {
-  display: grid;
-  gap: 0.75rem;
-  max-width: 52rem;
-}
-
-.contest-ops-hero__actions,
-.contest-ops-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-}
-
-.contest-ops-summary {
-  margin-top: 1.5rem;
+  flex-direction: column;
+  gap: var(--workspace-directory-page-block-gap, var(--space-5));
 }
 </style>

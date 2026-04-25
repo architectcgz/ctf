@@ -91,28 +91,42 @@ describe('PlatformOverview', () => {
   })
 
   it('应改用共享 ui-btn 原语而不是页面私有 admin-btn 按钮族', () => {
-    expect(adminDashboardPageSource).toContain('class="quick-action ui-btn ui-btn--primary"')
-    expect(adminDashboardPageSource).toContain('class="quick-action ui-btn ui-btn--ghost"')
+    expect(adminDashboardPageSource).toContain('class="ui-btn ui-btn--primary overview-action-main"')
+    expect(adminDashboardPageSource).toContain('class="ui-btn ui-btn--ghost"')
+    expect(adminDashboardPageSource).toContain('class="ui-btn ui-btn--ghost overview-anchor-btn"')
     expect(adminDashboardPageSource).not.toContain('admin-btn admin-btn-primary')
     expect(adminDashboardPageSource).not.toContain('admin-btn admin-btn-ghost')
   })
 
   it('应该采用与 teacher dashboard 一致的 workspace 骨架，并去掉页面内重复顶栏', () => {
-    expect(adminDashboardPageSource).toContain('class="workspace-shell"')
+    expect(adminDashboardPageSource).toContain('class="workspace-shell journal-shell journal-shell-admin journal-hero overview-shell"')
     expect(adminDashboardPageSource).not.toContain('class="workspace-topbar"')
-    expect(adminDashboardPageSource).toContain('class="content-pane"')
+    expect(adminDashboardPageSource).toContain('class="content-pane overview-content"')
     expect(adminDashboardPageSource).toContain('class="workspace-hero"')
     expect(adminDashboardPageSource).not.toContain('tab-panel')
-    expect(adminDashboardPageSource).toMatch(/class="[^"]*\bhero-title\b[^"]*"/)
+    expect(adminDashboardPageSource).toContain('class="hero-title workspace-page-title"')
     expect(adminDashboardPageSource).toContain('系统值守台')
-    expect(adminDashboardPageSource).toContain('class="hero-summary"')
+    expect(adminDashboardPageSource).toContain('class="hero-summary workspace-page-copy"')
     expect(adminDashboardPageSource).toContain('class="meta-strip"')
-    expect(adminDashboardPageSource).toMatch(/class="[^"]*\bprogress-strip\b[^"]*"/)
-    expect(adminDashboardPageSource).toContain('class="hero-rail"')
+    expect(adminDashboardPageSource).toContain(
+      'class="admin-summary-grid overview-summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
+    )
+    expect(adminDashboardPageSource).toContain('class="journal-note progress-card metric-panel-card"')
+    expect(adminDashboardPageSource).toContain('class="overview-hero-actions"')
+    expect(adminDashboardPageSource).toContain('class="overview-action-grid"')
   })
 
-  it('总览面板不应再保留额外的 pulse article 区块', () => {
+  it('总览面板应将系统脉搏收进 hero 右侧操作轨道，而不是单独的 rail 区块', () => {
     expect(adminDashboardPageSource).not.toContain('overview-pulse-panel')
-    expect(adminDashboardPageSource).not.toContain('运行脉搏')
+    expect(adminDashboardPageSource).not.toContain('class="hero-rail"')
+    expect(adminDashboardPageSource).toContain('class="hero-meta-badge"')
+    expect(adminDashboardPageSource).toContain('System Pulse')
+  })
+
+  it('总览 premium 指标条应使用数字列数变量，避免四个指标退化成单列', () => {
+    expect(adminDashboardPageSource).toContain('--metric-panel-columns: 4;')
+    expect(adminDashboardPageSource).not.toContain(
+      '--metric-panel-columns: repeat(4, minmax(0, 1fr));'
+    )
   })
 })

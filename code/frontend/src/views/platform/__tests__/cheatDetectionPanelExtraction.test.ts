@@ -24,10 +24,12 @@ describe('CheatDetection panel extraction', () => {
   })
 
   it('应将作弊检测摘要卡抽到独立 platform cheat 组件', () => {
-    expect(cheatDetectionWorkspacePanelSource).toContain(
+    expect(cheatDetectionHeroPanelSource).toContain(
       "import CheatDetectionSummaryPanel from '@/components/platform/cheat/CheatDetectionSummaryPanel.vue'"
     )
-    expect(cheatDetectionWorkspacePanelSource).toContain('<CheatDetectionSummaryPanel :summary="riskData.summary" />')
+    expect(cheatDetectionHeroPanelSource).toContain('<CheatDetectionSummaryPanel')
+    expect(cheatDetectionHeroPanelSource).toContain(':summary="summary"')
+    expect(cheatDetectionWorkspacePanelSource).toContain(':summary="riskData?.summary ?? null"')
     expect(cheatDetectionSummaryPanelSource).toContain(
       'class="admin-summary-grid cheat-kpi-summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
     )

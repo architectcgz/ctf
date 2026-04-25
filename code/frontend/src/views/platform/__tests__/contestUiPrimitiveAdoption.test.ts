@@ -19,6 +19,23 @@ describe('contest ui primitive adoption', () => {
     expect(contestOperationsHubCombinedSource).toContain('class="ui-btn ui-btn--primary"')
     expect(contestOperationsHubCombinedSource).toContain('class="contest-ops-hero__actions"')
     expect(contestOperationsHubCombinedSource).toContain('class="contest-ops-actions"')
+    expect(contestOperationsHubHeroPanelSource).toContain(
+      '--metric-panel-columns: repeat(4, minmax(0, 1fr));'
+    )
+    expect(contestOperationsHubHeroPanelSource).not.toContain('--metric-panel-columns: 4;')
+    expect(contestOperationsHubHeroPanelSource).toContain('<Trophy class="h-4 w-4" />')
+    expect(contestOperationsHubCombinedSource).toContain(
+      'class="workspace-directory-list contest-ops-directory__list"'
+    )
+    expect(contestOperationsHubCombinedSource).toContain('class="contest-ops-row"')
+    expect(contestOperationsHubCombinedSource).not.toContain('contest-ops-card')
+    expect(contestOperationsHubSource).toContain('class="content-pane contest-ops-content"')
+    expect(contestOperationsHubCombinedSource).toContain(
+      'gap: var(--workspace-directory-page-block-gap, var(--space-5));'
+    )
+    expect(contestOperationsHubCombinedSource).toContain('padding: 0;')
+    expect(contestOperationsHubCombinedSource).not.toContain('padding: 1.5rem;')
+    expect(contestOperationsHubCombinedSource).not.toContain('gap: 1rem;')
 
     expect(contestOrchestrationSource).toContain('class="ui-btn ui-btn--ghost"')
     expect(contestOrchestrationSource).toContain('class="ui-btn ui-btn--primary"')

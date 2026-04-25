@@ -128,8 +128,32 @@ describe('ContestOperationsHub', () => {
     expect(contestOperationsHubHeroPanelSource).toContain(
       'class="progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface contest-ops-summary"'
     )
+    expect(contestOperationsHubHeroPanelSource).toContain(
+      '--metric-panel-columns: repeat(4, minmax(0, 1fr));'
+    )
+    expect(contestOperationsHubHeroPanelSource).toContain(
+      '--metric-panel-columns: repeat(2, minmax(0, 1fr));'
+    )
+    expect(contestOperationsHubHeroPanelSource).not.toContain('--metric-panel-columns: 4;')
+    expect(contestOperationsHubHeroPanelSource).toContain('<Trophy class="h-4 w-4" />')
+    expect(contestOperationsHubHeroPanelSource).toContain('<Activity class="h-4 w-4" />')
+    expect(contestOperationsHubHeroPanelSource).toContain('<PauseCircle class="h-4 w-4" />')
+    expect(contestOperationsHubHeroPanelSource).toContain('<Star class="h-4 w-4" />')
+    expect(contestOperationsHubSource).toContain('class="content-pane contest-ops-content"')
+    expect(contestOperationsHubSource).toContain(
+      'gap: var(--workspace-directory-page-block-gap, var(--space-5));'
+    )
     expect(contestOperationsHubSource).toContain('<ContestOperationsHubWorkspacePanel')
     expect(contestOperationsHubWorkspacePanelSource).toContain('contest-ops-directory')
+    expect(contestOperationsHubWorkspacePanelSource).toContain(
+      'class="workspace-directory-list contest-ops-directory__list"'
+    )
+    expect(contestOperationsHubWorkspacePanelSource).toContain('class="contest-ops-row"')
+    expect(contestOperationsHubWorkspacePanelSource).not.toContain('class="contest-ops-card"')
+    expect(contestOperationsHubHeroPanelSource).not.toContain('margin-top: var(--space-5);')
+    expect(contestOperationsHubWorkspacePanelSource).toContain('padding: 0;')
+    expect(contestOperationsHubWorkspacePanelSource).toContain('gap: var(--space-4);')
+    expect(contestOperationsHubWorkspacePanelSource).toContain('border-bottom: 1px solid var(--workspace-directory-row-divider);')
     expect(contestOperationsHubSource).not.toContain('PlatformContestOpsTraffic')
     expect(contestOperationsHubSource).not.toContain('PlatformContestOpsProjector')
     expect(contestOperationsHubSource).not.toContain('PlatformContestOpsScoreboard')

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { Activity, PauseCircle, Star, Trophy } from 'lucide-vue-next'
+
 defineProps<{
   operableContestCount: number
   runningContestCount: number
@@ -45,7 +47,8 @@ function handleBack(): void {
   >
     <article class="journal-note progress-card metric-panel-card">
       <div class="journal-note-label progress-card-label metric-panel-label">
-        可运维赛事
+        <span>可运维赛事</span>
+        <Trophy class="h-4 w-4" />
       </div>
       <div class="journal-note-value progress-card-value metric-panel-value">
         {{ operableContestCount }}
@@ -56,7 +59,8 @@ function handleBack(): void {
     </article>
     <article class="journal-note progress-card metric-panel-card">
       <div class="journal-note-label progress-card-label metric-panel-label">
-        进行中
+        <span>进行中</span>
+        <Activity class="h-4 w-4" />
       </div>
       <div class="journal-note-value progress-card-value metric-panel-value">
         {{ runningContestCount }}
@@ -67,7 +71,8 @@ function handleBack(): void {
     </article>
     <article class="journal-note progress-card metric-panel-card">
       <div class="journal-note-label progress-card-label metric-panel-label">
-        已冻结
+        <span>已冻结</span>
+        <PauseCircle class="h-4 w-4" />
       </div>
       <div class="journal-note-value progress-card-value metric-panel-value">
         {{ frozenContestCount }}
@@ -78,7 +83,8 @@ function handleBack(): void {
     </article>
     <article class="journal-note progress-card metric-panel-card">
       <div class="journal-note-label progress-card-label metric-panel-label">
-        推荐赛事
+        <span>推荐赛事</span>
+        <Star class="h-4 w-4" />
       </div>
       <div class="journal-note-value progress-card-value metric-panel-value">
         {{ preferredContestTitle }}
@@ -89,3 +95,58 @@ function handleBack(): void {
     </article>
   </div>
 </template>
+
+<style scoped>
+.contest-ops-hero {
+  align-items: flex-start;
+  padding-bottom: var(--space-5);
+  border-bottom: 1px solid var(--workspace-line-soft, color-mix(in srgb, var(--journal-border) 76%, transparent));
+}
+
+.contest-ops-hero__main {
+  display: grid;
+  gap: var(--space-3);
+  max-width: 52rem;
+}
+
+.contest-ops-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  padding-top: var(--space-1);
+}
+
+.contest-ops-hero__actions > .ui-btn {
+  --ui-btn-height: 2.75rem;
+  --ui-btn-radius: 1rem;
+  --ui-btn-padding: var(--space-2-5) var(--space-4);
+  --ui-btn-font-size: var(--font-size-0-875);
+  --ui-btn-font-weight: 600;
+}
+
+.contest-ops-summary {
+  --metric-panel-columns: repeat(4, minmax(0, 1fr));
+}
+
+@media (max-width: 860px) {
+  .contest-ops-summary {
+    --metric-panel-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .contest-ops-hero {
+    align-items: flex-start;
+  }
+
+  .contest-ops-hero__actions {
+    justify-content: flex-start;
+    width: 100%;
+  }
+
+  .contest-ops-summary {
+    --metric-panel-columns: 1;
+  }
+}
+</style>

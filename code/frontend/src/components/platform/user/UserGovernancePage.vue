@@ -252,7 +252,7 @@ function handleImportChange(event: Event): void {
         </header>
 
         <div class="admin-summary-grid user-overview-grid progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface">
-          <article class="journal-note user-overview-stat progress-card metric-panel-card">
+          <article class="journal-note progress-card metric-panel-card">
             <div class="journal-note-label progress-card-label metric-panel-label">
               <span>用户总量</span>
               <Users class="h-4 w-4" />
@@ -265,7 +265,7 @@ function handleImportChange(event: Event): void {
             </div>
           </article>
 
-          <article class="journal-note user-overview-stat progress-card metric-panel-card">
+          <article class="journal-note progress-card metric-panel-card">
             <div class="journal-note-label progress-card-label metric-panel-label">
               <span>活跃账号</span>
               <UserPlus class="h-4 w-4" />
@@ -278,7 +278,7 @@ function handleImportChange(event: Event): void {
             </div>
           </article>
 
-          <article class="journal-note user-overview-stat progress-card metric-panel-card">
+          <article class="journal-note progress-card metric-panel-card">
             <div class="journal-note-label progress-card-label metric-panel-label">
               <span>教师角色</span>
               <GraduationCap class="h-4 w-4" />
@@ -291,7 +291,7 @@ function handleImportChange(event: Event): void {
             </div>
           </article>
 
-          <article class="journal-note user-overview-stat progress-card metric-panel-card">
+          <article class="journal-note progress-card metric-panel-card">
             <div class="journal-note-label progress-card-label metric-panel-label">
               <span>导入回执</span>
               <FileUp class="h-4 w-4" />
@@ -629,13 +629,6 @@ function handleImportChange(event: Event): void {
 .user-overview-grid {
   --admin-summary-grid-gap: var(--space-3-5);
   --admin-summary-grid-columns: repeat(4, minmax(0, 1fr));
-}
-
-.user-overview-stat {
-  display: flex;
-  min-height: 140px;
-  flex-direction: column;
-  justify-content: space-between;
 }
 
 .user-directory-head {

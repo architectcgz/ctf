@@ -1,9 +1,16 @@
 <script setup lang="ts">
 import { RefreshCw, SearchCheck } from 'lucide-vue-next'
 
+import CheatDetectionSummaryPanel from '@/components/platform/cheat/CheatDetectionSummaryPanel.vue'
+
 defineProps<{
   generatedAtLabel: string | null
   loading: boolean
+  summary: {
+    submit_burst_users: number
+    shared_ip_groups: number
+    affected_users: number
+  } | null
 }>()
 
 const emit = defineEmits<{
@@ -22,68 +29,82 @@ function handleRefresh(): void {
 
 <template>
   <section class="workspace-hero">
-    <header class="workspace-tab-heading cheat-workbench-head">
-      <div class="workspace-tab-heading__main">
-        <div class="workspace-overline">Integrity Workspace</div>
-        <h1 class="hero-title">作弊检测</h1>
-        <p class="hero-summary">
-          基于提交爆发、IP 共享及行为指纹的多维度线索，快速定位需要继续审计复核的账号与行为。
-        </p>
-      </div>
+    <div class="workspace-tab-heading__main">
+      <div class="workspace-overline">Integrity Workspace</div>
+      <h1 class="hero-title">作弊检测</h1>
+      <p class="hero-summary">
+        基于提交爆发、IP 共享及行为指纹的多维度线索，快速定位需要继续审计复核的账号与行为。
+      </p>
+    </div>
 
-      <div class="cheat-hero-actions">
-        <div
-          v-if="generatedAtLabel"
-          class="hero-meta-badge"
-        >
-          <span class="hero-meta-badge__label">最近生成</span>
-          <span class="hero-meta-badge__value">{{ generatedAtLabel }}</span>
-        </div>
-        <button
-          type="button"
-          class="ui-btn ui-btn--ghost"
-          @click="handleOpenAudit"
-        >
-          <SearchCheck class="h-4 w-4" />
-          打开审计日志
-        </button>
-        <button
-          type="button"
-          class="ui-btn ui-btn--primary"
-          @click="handleRefresh"
-        >
-          <RefreshCw
-            class="h-4 w-4"
-            :class="{ 'animate-spin': loading }"
-          />
-          刷新线索
-        </button>
+    <div class="cheat-hero-actions">
+      <div
+        v-if="generatedAtLabel"
+        class="hero-meta-badge"
+      >
+        <span class="hero-meta-badge__label">最近生成</span>
+        <span class="hero-meta-badge__value">{{ generatedAtLabel }}</span>
       </div>
-    </header>
+      <button
+        type="button"
+        class="ui-btn ui-btn--ghost"
+        @click="handleOpenAudit"
+      >
+        <SearchCheck class="h-4 w-4" />
+        打开审计日志
+      </button>
+      <button
+        type="button"
+        class="ui-btn ui-btn--primary"
+        @click="handleRefresh"
+      >
+        <RefreshCw
+          class="h-4 w-4"
+          :class="{ 'animate-spin': loading }"
+        />
+        刷新线索
+      </button>
+    </div>
   </section>
+
+  <CheatDetectionSummaryPanel
+    v-if="summary"
+    :summary="summary"
+  />
 </template>
 
 <style scoped>
-.cheat-workbench-head {
-  align-items: flex-start;
+.workspace-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-7);
+  padding-bottom: var(--space-6);
+  border-bottom: 1px solid var(--workspace-line-soft);
 }
 
 .hero-title {
-  margin: var(--space-1-5) 0 0;
+  margin: 0.5rem 0 0;
+  font-size: var(--workspace-page-title-font-size);
+  line-height: var(--workspace-page-title-line-height);
+  letter-spacing: var(--workspace-page-title-letter-spacing);
+  color: var(--journal-ink);
 }
 
 .hero-summary {
   max-width: 56rem;
-  margin-top: var(--space-3);
+  margin-top: var(--space-3-5);
+  font-size: var(--font-size-15);
+  line-height: 1.9;
   color: var(--journal-muted);
 }
 
 .cheat-hero-actions {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: flex-end;
   justify-content: flex-end;
   gap: var(--space-3);
+  padding-bottom: 0.5rem;
 }
 
 .cheat-hero-actions > .ui-btn {

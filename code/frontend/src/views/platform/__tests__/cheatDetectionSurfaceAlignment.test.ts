@@ -95,6 +95,8 @@ describe('cheat detection surface alignment', () => {
       '.journal-shell-admin :is(.admin-summary-grid, .manage-summary-grid, .image-summary-grid)'
     )
     expect(cheatDetectionCombinedSource).toContain('class="workspace-shell')
+    expect(cheatDetectionHeroPanelSource).toContain('<section class="workspace-hero">')
+    expect(cheatDetectionHeroPanelSource).toContain('<CheatDetectionSummaryPanel')
     expect(cheatDetectionCombinedSource).toContain(
       'class="admin-summary-grid cheat-kpi-summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
     )
@@ -128,6 +130,10 @@ describe('cheat detection surface alignment', () => {
     )
     expect(journalNotesSource).toContain('--workspace-panel-soft,')
     expect(journalNotesSource).toContain('--metric-panel-label-color: color-mix(')
+    expect(journalNotesSource).toContain('.progress-card.metric-panel-card .metric-panel-label > :is(svg, .lucide) {')
+    expect(journalNotesSource).toContain('padding-inline-end: var(--space-7);')
+    expect(journalNotesSource).toContain('top: var(--space-3-5);')
+    expect(journalNotesSource).toContain('right: var(--space-4);')
     expect(cheatDetectionCombinedSource).not.toMatch(
       /\.cheat-kpi-summary\.metric-panel-default-surface\.metric-panel-workspace-surface\s*\{/s
     )
