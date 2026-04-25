@@ -1,0 +1,136 @@
+# CTF 后端代码 Review（运行时安全性与模块边界专项 第 1 轮）
+
+## Review 信息
+
+| 字段 | 说明 |
+|------|------|
+| 变更主题 | 后端 runtime 失败语义、模块边界、配置安全与端口契约 |
+| 轮次 | 第 1 轮 |
+| 审查范围 | `code/backend/internal/app`、`code/backend/internal/module/*`、`code/backend/configs/*` |
+| 审查日期 | 2026-04-22 |
+| 审查方式 | 静态代码审查 + 定向测试验证 |
+| 审查状态 | 已形成首轮问题清单，准备按优先级逐步修复 |
+
+## 当前结论
+
+- 已确认问题主要集中在 4 类：
+  - runtime 初始化失败或被关闭时，没有 `fail fast`，而是进入“伪创建成功”的降级路径。
+  - CORS 在生产配置下存在“空白名单即允许任意 Origin”的危险语义。
+  - ports 层 `context` 语义不一致，调用方无法稳定推导取消、超时和后台任务边界。
+  - composition 层仍有反向跨模块依赖，目录分层与真实依赖边界不完全一致。
+- 当前最紧急的问题是 runtime 链路，因为它已经在集成测试中表现为真实失败，而不是纯架构味道。
+
+## 已验证证据
+
+- 已执行：
+
+```bash
+cd /home/azhi/workspace/projects/ctf/code/backend
+timeout 180s go test ./internal/module/runtime/... ./internal/app/...
+```
+
+- 结果：
+  - `./internal/module/runtime/...` 通过。
+  - `./internal/app/...` 失败。
+  - 直接失败点集中在实例启动路径，返回 `code=12006`、`message="容器启动失败"`。
+
+- 2026-04-23 补充验证：
+  - `TestPracticeFlow_AdminPublishesChallengeStudentSolvesChallenge` 在 isolated 运行时可稳定复现 `容器启动失败`。
+  - 根因不是业务层新回归，而是 `practice_flow_integration_test` 手工装配了 `runtimeProvisioningService(..., nil, ...)`，绕开了 composition 中已修复的 test runtime engine。
+  - 该测试在与其他 app 集成测试同跑时可能被共享端口上的残留监听“偶然救活”，属于测试装配缺陷。
+
+- 失败测试：
+  - `TestFullRouter_AuthorizedSmokeMatrix`
+  - `TestFullRouter_ContestChallengeAndScoreboardStateMatrix`
+  - `TestPracticeFlow_AdminPublishesChallengeStudentSolvesChallenge`
+
+## 问题清单
+
+### 🔴 高优先级
+
+- [H1] runtime 在不可用时走“伪成功降级”，把基础设施故障扩散成业务 500
+  - 文件：
+    - `code/backend/internal/app/composition/runtime_module.go`
+    - `code/backend/internal/module/runtime/application/commands/provisioning_service.go`
+    - `code/backend/internal/module/runtime/application/commands/runtime_cleanup_service.go`
+    - `code/backend/internal/module/practice/application/commands/service.go`
+  - 问题描述：
+    - `test` 环境会直接禁用 runtime engine。
+    - `ProvisioningService` 在 engine 为 `nil` 时仍生成假的 `container_id`、`network_id`、`access_url` 并返回成功。
+    - 上层再继续走访问地址探活，最终以“容器启动失败”结束。
+  - 影响范围/风险：
+    - 实例创建链路出现非确定性失败。
+    - 运行时资源清理也会被降级成“记录日志但什么都不做”。
+    - 真正的 runtime 初始化故障不会在启动期暴露，而会延后到业务路径上爆炸。
+  - 当前结论：
+    - 这是已验证故障，不只是架构味道。
+
+- [H2] CORS 在生产配置下存在高风险默认行为
+  - 文件：
+    - `code/backend/internal/middleware/cors.go`
+    - `code/backend/configs/config.yaml`
+    - `code/backend/configs/config.prod.yaml`
+    - `code/backend/internal/config/config.go`
+  - 问题描述：
+    - 中间件把 `allow_origins=[]` 解释成允许任意 Origin。
+    - 基线配置同时打开了 `allow_credentials=true`。
+    - 生产覆盖配置正好把 `allow_origins` 设为空数组。
+  - 影响范围/风险：
+    - 生产环境跨站访问面被放大。
+    - 配置语义与“白名单为空应拒绝”这一常见预期相反，容易误配。
+  - 当前结论：
+    - 应收紧为显式白名单，或至少在 `allow_credentials=true` 时禁止空白名单。
+
+### 🟡 中优先级
+
+- [M1] ports 层 `context` 语义不一致，超时与取消只在部分路径生效
+  - 文件：
+    - `code/backend/internal/module/practice/ports/ports.go`
+    - `code/backend/internal/module/challenge/ports/ports.go`
+    - `code/backend/internal/module/runtime/ports/http.go`
+  - 问题描述：
+    - 同一仓储接口中混用带 `ctx` 和不带 `ctx` 的方法。
+    - HTTP 层和后台任务层即使传入了取消上下文，也不能保证真正传到 DB/缓存边界。
+  - 影响范围/风险：
+    - 长查询、后台任务和异步关闭链路的可控性差。
+    - 后续统一超时策略会越来越难。
+
+- [M2] composition 层仍有反向跨模块依赖
+  - 文件：
+    - `code/backend/internal/app/composition/runtime_module.go`
+  - 问题描述：
+    - `runtime` 通过 `contestinfra.NewAWDRepository(root.DB())` 记录代理流量事件。
+    - 这让 runtime 的 HTTP 代理能力直接依赖 contest 的基础设施实现。
+  - 影响范围/风险：
+    - 模块边界继续漂移。
+    - 后续若拆分 contest 持久化模型，runtime 也会被迫联动。
+  - 2026-04-23 修复进展：
+    - 已将 runtime 代理流量事件记录迁移到 `runtime/infrastructure`，composition 不再直接依赖 `contestinfra`。
+
+### 🟢 低优先级
+
+- [L1] 仓库默认配置仍保留明文开发口令
+  - 文件：
+    - `code/backend/configs/config.yaml`
+  - 问题描述：
+    - PostgreSQL、Redis 默认密码直接提交在仓库里。
+  - 影响范围/风险：
+    - 即使只面向开发环境，也会弱化配置卫生与安全基线。
+
+## 修复顺序建议
+
+1. 先修 [H1]
+   - 目标：让 `test` 环境具备可用的 runtime 测试实现，停止走“伪创建成功 + 探活失败”的坏路径。
+   - 同时收敛 runtime 缺失时的失败语义，为后续 `fail fast` 做铺垫。
+2. 再修 [H2]
+   - 目标：明确 CORS 空白名单语义，避免生产误配。
+3. 然后处理 [M1]
+   - 目标：统一关键 write/read path 的 `context` 契约。
+4. 最后处理 [M2]、[L1]
+   - 目标：继续收窄跨模块耦合，并整理默认配置卫生。
+
+## 本轮实施约定
+
+- 本轮先开始处理 [H1]。
+- 每次提交只覆盖一个可闭环问题，不混入顺手重构。
+- 每次修复都补对应回归测试，再跑最小充分验证。
