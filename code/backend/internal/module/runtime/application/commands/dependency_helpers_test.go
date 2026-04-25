@@ -72,7 +72,7 @@ func TestNewRuntimeCleanupServiceTreatsTypedNilEngineAsNil(t *testing.T) {
 	t.Parallel()
 
 	var typedNil *typedNilCleanupEngine
-	service := NewRuntimeCleanupService(typedNil, nil)
+	service := NewRuntimeCleanupService(typedNil, nil, nil)
 	if service.engine != nil {
 		t.Fatalf("expected typed nil engine to be normalized to nil, got %#v", service.engine)
 	}

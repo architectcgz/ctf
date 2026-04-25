@@ -64,6 +64,28 @@ timeout 300s go test ./... -count=1
 - [M2] 已修复。runtime 代理流量事件记录迁移到 runtime infrastructure，composition 不再直接依赖 contest infrastructure。
 - [L1] 已修复。开发基线配置中的 PostgreSQL、Redis 默认密码改为空值，并通过环境变量注入；生产配置中的 `change_me` 仍是部署占位值，部署时必须覆盖。
 
+## 第 2 轮补充复核
+
+- 2026-04-25 复核时发现首轮 review 仍遗漏了 4 个边界问题：
+  - `runtime` 内部 provisioning、maintenance、repository 仍有部分 DB 查询和端口操作没有接收 `ctx`。
+  - challenge self-check 和 AWD preview 通过 runtime provisioner 自动分配端口时，只读取已占用端口，没有原子写入 `port_allocations`，并发时存在端口碰撞风险。
+  - `prod` 配置仍允许 PostgreSQL、Redis 密码保持 `change_me` 或空值，只依赖部署人员手工覆盖。
+  - auth token service 与 auditlog context helper 仍有非入口层 `context.Background()` 兜底。
+- 第 2 轮修复状态：
+  - 已将 runtime provisioning、maintenance、repository 的相关操作改为显式 `ctx` 契约，并让 DB 查询走 `WithContext(ctx)`。
+  - 已将未预留端口的 runtime 创建路径改为通过 `ReserveAvailablePort(ctx, ...)` 原子预留，并在创建失败或 cleanup 时释放端口。
+  - 已在生产环境配置校验中拒绝空密码和 `change_me` 占位密码。
+  - 已移除 auth/auditlog 的静默后台上下文兜底；nil ctx 现在会显式失败或保持 nil。
+- 第 2 轮验证：
+
+```bash
+cd /home/azhi/workspace/projects/ctf/.worktrees/backend-runtime-review-round2/code/backend
+timeout 300s go test ./... -count=1
+```
+
+- 结果：
+  - 通过。
+
 ## 问题清单
 
 ### 🔴 高优先级

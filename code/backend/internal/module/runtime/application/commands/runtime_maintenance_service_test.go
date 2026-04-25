@@ -12,7 +12,8 @@ import (
 
 type maintenanceTestRepository struct {
 	activeContainerIDs                      []string
-	findExpiredFn                           func() ([]*model.Instance, error)
+	findExpiredFn                           func(ctx context.Context) ([]*model.Instance, error)
+	listActiveContainerIDsFn                func(ctx context.Context) ([]string, error)
 	updateStatusAndReleasePortFn            func(id int64, status string) error
 	updateStatusAndReleasePortWithContextFn func(ctx context.Context, id int64, status string) error
 }
@@ -24,14 +25,17 @@ func (r *maintenanceTestRepository) UpdateStatusAndReleasePort(ctx context.Conte
 	return nil
 }
 
-func (r *maintenanceTestRepository) FindExpired() ([]*model.Instance, error) {
+func (r *maintenanceTestRepository) FindExpired(ctx context.Context) ([]*model.Instance, error) {
 	if r.findExpiredFn != nil {
-		return r.findExpiredFn()
+		return r.findExpiredFn(ctx)
 	}
 	return nil, nil
 }
 
-func (r *maintenanceTestRepository) ListActiveContainerIDs() ([]string, error) {
+func (r *maintenanceTestRepository) ListActiveContainerIDs(ctx context.Context) ([]string, error) {
+	if r.listActiveContainerIDsFn != nil {
+		return r.listActiveContainerIDsFn(ctx)
+	}
 	return append([]string(nil), r.activeContainerIDs...), nil
 }
 
@@ -132,7 +136,10 @@ func TestRuntimeMaintenanceServiceCleanExpiredInstancesPropagatesContextToReposi
 	expectedCtxValue := "ctx-runtime-maintenance"
 	updateCalled := false
 	repo := &maintenanceTestRepository{
-		findExpiredFn: func() ([]*model.Instance, error) {
+		findExpiredFn: func(ctx context.Context) ([]*model.Instance, error) {
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected find-expired ctx value %v, got %v", expectedCtxValue, got)
+			}
 			return []*model.Instance{{ID: 41, HostPort: 30041}}, nil
 		},
 		updateStatusAndReleasePortWithContextFn: func(ctx context.Context, id int64, status string) error {
@@ -154,5 +161,33 @@ func TestRuntimeMaintenanceServiceCleanExpiredInstancesPropagatesContextToReposi
 	}
 	if !updateCalled {
 		t.Fatal("expected update status repository to be called")
+	}
+}
+
+func TestRuntimeMaintenanceServiceCleanupOrphansPropagatesContextToRepository(t *testing.T) {
+	t.Parallel()
+
+	ctxKey := runtimeMaintenanceContextKey("orphan-maintenance")
+	expectedCtxValue := "ctx-orphan-maintenance"
+	repo := &maintenanceTestRepository{
+		listActiveContainerIDsFn: func(ctx context.Context) ([]string, error) {
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected list-active ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return []string{"active"}, nil
+		},
+	}
+	engine := &maintenanceTestEngine{
+		managedContainers: []runtimeports.ManagedContainer{
+			{ID: "active", Name: "ctf-instance-active", CreatedAt: time.Now().Add(-10 * time.Minute)},
+		},
+	}
+	service := NewRuntimeMaintenanceService(repo, engine, &maintenanceTestCleaner{}, &config.ContainerConfig{
+		OrphanGracePeriod: 5 * time.Minute,
+	}, nil)
+
+	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
+	if err := service.CleanupOrphans(ctx); err != nil {
+		t.Fatalf("CleanupOrphans() error = %v", err)
 	}
 }

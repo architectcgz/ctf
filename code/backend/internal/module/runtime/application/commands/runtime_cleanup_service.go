@@ -19,22 +19,31 @@ type runtimeCleanupEngine interface {
 	RemoveACLRules(ctx context.Context, rules []model.InstanceRuntimeACLRule) error
 }
 
+type runtimeCleanupRepository interface {
+	ReleasePort(ctx context.Context, port int) error
+}
+
 // RuntimeCleanupService 收口实例运行时资源清理能力。
 type RuntimeCleanupService struct {
 	engine runtimeCleanupEngine
+	repo   runtimeCleanupRepository
 	logger *zap.Logger
 }
 
 // NewRuntimeCleanupService 创建运行时资源清理服务。
-func NewRuntimeCleanupService(engine runtimeCleanupEngine, logger *zap.Logger) *RuntimeCleanupService {
+func NewRuntimeCleanupService(engine runtimeCleanupEngine, repo runtimeCleanupRepository, logger *zap.Logger) *RuntimeCleanupService {
 	if logger == nil {
 		logger = zap.NewNop()
 	}
 	if isNilCommandDependency(engine) {
 		engine = nil
 	}
+	if isNilCommandDependency(repo) {
+		repo = nil
+	}
 	return &RuntimeCleanupService{
 		engine: engine,
+		repo:   repo,
 		logger: logger,
 	}
 }
@@ -62,6 +71,11 @@ func (s *RuntimeCleanupService) CleanupRuntime(ctx context.Context, instance *mo
 	}
 	for _, networkID := range resources.NetworkIDs {
 		if err := s.removeNetwork(ctx, networkID); err != nil {
+			return err
+		}
+	}
+	for _, hostPort := range resources.HostPorts {
+		if err := s.releasePort(ctx, hostPort); err != nil {
 			return err
 		}
 	}
@@ -117,6 +131,17 @@ func (s *RuntimeCleanupService) removeNetwork(ctx context.Context, networkID str
 		return err
 	}
 	s.logger.Info("删除网络", zap.String("network_id", networkID))
+	return nil
+}
+
+func (s *RuntimeCleanupService) releasePort(ctx context.Context, port int) error {
+	if port <= 0 || s == nil || s.repo == nil {
+		return nil
+	}
+	if err := s.repo.ReleasePort(ctx, port); err != nil {
+		return err
+	}
+	s.logger.Info("释放实例端口占用", zap.Int("host_port", port))
 	return nil
 }
 

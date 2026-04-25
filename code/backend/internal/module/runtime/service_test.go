@@ -56,7 +56,7 @@ func TestRepositoryListActiveContainerIDs(t *testing.T) {
 		ExpiresAt:   time.Now().Add(time.Hour),
 	})
 
-	containerIDs, err := repo.ListActiveContainerIDs()
+	containerIDs, err := repo.ListActiveContainerIDs(context.Background())
 	if err != nil {
 		t.Fatalf("ListActiveContainerIDs() error = %v", err)
 	}
@@ -167,6 +167,75 @@ func TestServiceCreateContainerCreatesIsolatedNetwork(t *testing.T) {
 	}
 }
 
+func TestServiceCreateContainerReservesAllocatedHostPort(t *testing.T) {
+	t.Parallel()
+
+	repo := newTestRepository(t)
+	engine := &fakeRuntimeEngine{
+		networkID:           "net-reserve",
+		containerID:         "ctr-reserve",
+		resolvedServicePort: 80,
+	}
+	service := runtimecmd.NewProvisioningService(repo, engine, &config.ContainerConfig{
+		PortRangeStart:     30000,
+		PortRangeEnd:       30010,
+		DefaultExposedPort: 8080,
+	}, nil)
+
+	_, _, hostPort, _, err := service.CreateContainer(context.Background(), "ctf/web:v1", nil, 0)
+	if err != nil {
+		t.Fatalf("CreateContainer() error = %v", err)
+	}
+
+	var count int64
+	if err := repo.db.Model(&model.PortAllocation{}).Where("port = ?", hostPort).Count(&count).Error; err != nil {
+		t.Fatalf("count reserved port allocation: %v", err)
+	}
+	if count != 1 {
+		t.Fatalf("expected host port %d to be reserved once, count=%d", hostPort, count)
+	}
+}
+
+func TestRuntimeCleanupServiceReleasesRuntimeDetailHostPort(t *testing.T) {
+	t.Parallel()
+
+	repo := newTestRepository(t)
+	engine := &fakeRuntimeEngine{}
+	service := runtimecmd.NewRuntimeCleanupService(engine, repo, nil)
+	now := time.Now()
+	if err := repo.db.Create(&model.PortAllocation{
+		Port:      30001,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}).Error; err != nil {
+		t.Fatalf("create port allocation: %v", err)
+	}
+	runtimeDetails, err := model.EncodeInstanceRuntimeDetails(model.InstanceRuntimeDetails{
+		Containers: []model.InstanceRuntimeContainer{
+			{
+				ContainerID:  "ctr-cleanup",
+				HostPort:     30001,
+				IsEntryPoint: true,
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("encode runtime details: %v", err)
+	}
+
+	if err := service.CleanupRuntime(context.Background(), &model.Instance{RuntimeDetails: runtimeDetails}); err != nil {
+		t.Fatalf("CleanupRuntime() error = %v", err)
+	}
+
+	var count int64
+	if err := repo.db.Model(&model.PortAllocation{}).Where("port = ?", 30001).Count(&count).Error; err != nil {
+		t.Fatalf("count port allocations: %v", err)
+	}
+	if count != 0 {
+		t.Fatalf("expected runtime detail host port to be released, count=%d", count)
+	}
+}
+
 func TestServiceCreateContainerFailsWhenRuntimeEngineUnavailable(t *testing.T) {
 	t.Parallel()
 
@@ -220,7 +289,7 @@ func TestServiceCreateContainerRemovesNetworkWhenStartFails(t *testing.T) {
 func TestServiceRemoveContainerFailsWhenRuntimeEngineUnavailable(t *testing.T) {
 	t.Parallel()
 
-	cleanupService := runtimecmd.NewRuntimeCleanupService(nil, nil)
+	cleanupService := runtimecmd.NewRuntimeCleanupService(nil, nil, nil)
 
 	err := cleanupService.RemoveContainer(context.Background(), "ctr-missing-engine")
 	if err == nil {
@@ -243,7 +312,7 @@ func TestServiceRemoveContainerHonorsCancellation(t *testing.T) {
 			return ctx.Err()
 		},
 	}
-	cleanupService := runtimecmd.NewRuntimeCleanupService(engine, nil)
+	cleanupService := runtimecmd.NewRuntimeCleanupService(engine, nil, nil)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
@@ -256,7 +325,7 @@ func TestServiceRemoveContainerHonorsCancellation(t *testing.T) {
 func TestServiceCleanupRuntimeFailsWhenRuntimeEngineUnavailable(t *testing.T) {
 	t.Parallel()
 
-	cleanupService := runtimecmd.NewRuntimeCleanupService(nil, nil)
+	cleanupService := runtimecmd.NewRuntimeCleanupService(nil, nil, nil)
 	instance := &model.Instance{
 		ID:          3002,
 		ContainerID: "ctr-missing-engine",
@@ -284,7 +353,7 @@ func TestServiceCleanupRuntimeHonorsCancellation(t *testing.T) {
 			return ctx.Err()
 		},
 	}
-	cleanupService := runtimecmd.NewRuntimeCleanupService(engine, nil)
+	cleanupService := runtimecmd.NewRuntimeCleanupService(engine, nil, nil)
 
 	instance := &model.Instance{
 		ID:          3001,
@@ -757,7 +826,7 @@ func TestServiceCleanExpiredInstancesKeepsRunningStateWhenRuntimeCleanupFails(t 
 	}
 
 	engine := &fakeRuntimeEngine{removeContainerErr: errors.New("remove failed")}
-	cleanupService := runtimecmd.NewRuntimeCleanupService(engine, nil)
+	cleanupService := runtimecmd.NewRuntimeCleanupService(engine, nil, nil)
 	service := runtimecmd.NewRuntimeMaintenanceService(repo, nil, cleanupService, &config.ContainerConfig{
 		MaxExtends:        2,
 		ExtendDuration:    30 * time.Minute,
@@ -815,7 +884,7 @@ func TestServiceCleanExpiredInstancesMarksExpiredWhenContainerAlreadyRemoved(t *
 	engine := &fakeRuntimeEngine{
 		removeContainerErr: errors.New("Error response from daemon: No such container: missing-ctr"),
 	}
-	cleanupService := runtimecmd.NewRuntimeCleanupService(engine, nil)
+	cleanupService := runtimecmd.NewRuntimeCleanupService(engine, nil, nil)
 	service := runtimecmd.NewRuntimeMaintenanceService(repo, nil, cleanupService, &config.ContainerConfig{
 		MaxExtends:        2,
 		ExtendDuration:    30 * time.Minute,
@@ -1153,7 +1222,7 @@ func newTestRuntimeModule(repo *runtimeTestRepository, engine *fakeRuntimeEngine
 		ExtendDuration:    30 * time.Minute,
 		OrphanGracePeriod: 5 * time.Minute,
 	}
-	cleanupService := runtimecmd.NewRuntimeCleanupService(engine, nil)
+	cleanupService := runtimecmd.NewRuntimeCleanupService(engine, repo, nil)
 	return &testRuntimeService{
 		commands: runtimecmd.NewInstanceService(repo, cleanupService, cfg, nil),
 		queries:  runtimeqry.NewInstanceService(repo),

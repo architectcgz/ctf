@@ -403,6 +403,14 @@ func (c *Config) Validate() error {
 	if c.WebSocket.RetryMaxDelay < c.WebSocket.RetryInitialDelay {
 		return fmt.Errorf("websocket.retry_max_delay must be greater than or equal to retry_initial_delay")
 	}
+	if isProductionEnv(c.App.Env) {
+		if isPlaceholderSecret(c.Postgres.Password) {
+			return fmt.Errorf("postgres.password must be provided from a non-placeholder secret in prod")
+		}
+		if isPlaceholderSecret(c.Redis.Password) {
+			return fmt.Errorf("redis.password must be provided from a non-placeholder secret in prod")
+		}
+	}
 	if c.Contest.StatusUpdateInterval <= 0 {
 		return fmt.Errorf("contest.status_update_interval must be greater than 0")
 	}
@@ -445,6 +453,20 @@ func (c *Config) Validate() error {
 		}
 	}
 	return nil
+}
+
+func isProductionEnv(env string) bool {
+	switch strings.ToLower(strings.TrimSpace(env)) {
+	case "prod", "production":
+		return true
+	default:
+		return false
+	}
+}
+
+func isPlaceholderSecret(value string) bool {
+	normalized := strings.TrimSpace(value)
+	return normalized == "" || normalized == "change_me"
 }
 
 func (c PostgresConfig) DSN() string {
