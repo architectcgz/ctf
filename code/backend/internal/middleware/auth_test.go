@@ -23,12 +23,8 @@ type stubTokenService struct {
 	revoked bool
 }
 
-func (s *stubTokenService) IssueTokens(int64, string, string) (*authcontracts.TokenPair, error) {
+func (s *stubTokenService) IssueTokens(context.Context, int64, string, string) (*authcontracts.TokenPair, error) {
 	panic("unexpected call to IssueTokens")
-}
-
-func (s *stubTokenService) IssueTokensWithContext(context.Context, int64, string, string) (*authcontracts.TokenPair, error) {
-	panic("unexpected call to IssueTokensWithContext")
 }
 
 func (s *stubTokenService) RefreshAccessToken(context.Context, string) (*authcontracts.RefreshAccessPayload, error) {

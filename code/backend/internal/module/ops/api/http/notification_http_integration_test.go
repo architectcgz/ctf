@@ -82,7 +82,7 @@ func TestHTTP_NotificationsSupportTicketListReadAndWebSocketPush(t *testing.T) {
 	defer server.Close()
 
 	user := createNotificationUser(t, env.db, "notify_user", model.RoleStudent)
-	tokens, err := env.tokenService.IssueTokens(user.ID, user.Username, user.Role)
+	tokens, err := env.tokenService.IssueTokens(context.Background(), user.ID, user.Username, user.Role)
 	if err != nil {
 		t.Fatalf("issue tokens: %v", err)
 	}
@@ -203,11 +203,11 @@ func TestHTTP_AdminNotificationPublishRequiresAdminAndValidPayload(t *testing.T)
 
 	admin := createNotificationUser(t, env.db, "admin_notify", model.RoleAdmin)
 	student := createNotificationUser(t, env.db, "student_notify", model.RoleStudent)
-	adminTokens, err := env.tokenService.IssueTokens(admin.ID, admin.Username, admin.Role)
+	adminTokens, err := env.tokenService.IssueTokens(context.Background(), admin.ID, admin.Username, admin.Role)
 	if err != nil {
 		t.Fatalf("issue admin tokens: %v", err)
 	}
-	studentTokens, err := env.tokenService.IssueTokens(student.ID, student.Username, student.Role)
+	studentTokens, err := env.tokenService.IssueTokens(context.Background(), student.ID, student.Username, student.Role)
 	if err != nil {
 		t.Fatalf("issue student tokens: %v", err)
 	}
