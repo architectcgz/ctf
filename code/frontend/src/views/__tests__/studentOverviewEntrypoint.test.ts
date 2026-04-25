@@ -11,7 +11,7 @@ describe('student overview entrypoint', () => {
     expect(dashboardViewSource).not.toContain(
       "import StudentOverviewStyleEditorial from '@/components/dashboard/student/StudentOverviewStyleEditorial.vue'"
     )
-    expect(dashboardViewSource).toContain('<StudentOverviewPage')
+    expect(dashboardViewSource).toContain('return StudentOverviewPage')
   })
 
   it('StudentOverviewPage 应退化为对当前实现的轻量包装，而不是继续保留旧版完整模板', () => {

@@ -3,6 +3,8 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import AuditLog from '../AuditLog.vue'
 import auditLogSource from '../AuditLog.vue?raw'
+import auditActorDetailModalSource from '@/components/platform/audit/AuditActorDetailModal.vue?raw'
+import auditLogHeroPanelSource from '@/components/platform/audit/AuditLogHeroPanel.vue?raw'
 import auditLogDirectoryPanelSource from '@/components/platform/audit/AuditLogDirectoryPanel.vue?raw'
 
 const replaceMock = vi.fn()
@@ -31,7 +33,12 @@ vi.mock('vue-router', async () => {
 
 vi.mock('@/api/admin', () => adminApiMocks)
 
-const combinedSource = [auditLogSource, auditLogDirectoryPanelSource].join('\n')
+const combinedSource = [
+  auditLogSource,
+  auditLogDirectoryPanelSource,
+  auditActorDetailModalSource,
+  auditLogHeroPanelSource,
+].join('\n')
 
 describe('AuditLog', () => {
   beforeEach(() => {
@@ -154,11 +161,12 @@ describe('AuditLog', () => {
     expect(combinedSource).toContain("from '@/components/common/WorkspaceDirectoryToolbar.vue'")
     expect(combinedSource).toContain("from '@/components/common/WorkspaceDataTable.vue'")
     expect(auditLogSource).toContain(
-      "from '@/components/common/modal-templates/AdminSurfaceModal.vue'"
+      "import AuditActorDetailModal from '@/components/platform/audit/AuditActorDetailModal.vue'"
     )
     expect(combinedSource).toContain('<WorkspaceDirectoryToolbar')
     expect(combinedSource).toContain('<WorkspaceDataTable')
-    expect(auditLogSource).toContain('<AdminSurfaceModal')
+    expect(auditLogSource).toContain('<AuditActorDetailModal')
+    expect(auditActorDetailModalSource).toContain('<AdminSurfaceModal')
     expect(combinedSource).not.toContain('<section class="audit-filter-strip"')
     expect(combinedSource).not.toContain('<table class="min-w-full text-sm">')
     expect(combinedSource).toContain('search-placeholder="检索动作、资源类型、执行人..."')
@@ -166,7 +174,7 @@ describe('AuditLog', () => {
     expect(combinedSource).toContain('class="audit-list workspace-directory-list"')
     expect(combinedSource).toContain('class="audit-row__actor-link"')
     expect(combinedSource).not.toContain('class="audit-row__actor-id"')
-    expect(auditLogSource).toContain('class="audit-actor-modal"')
+    expect(auditActorDetailModalSource).toContain('class="audit-actor-modal"')
     expect(combinedSource).not.toContain('audit-row__actor-hint')
     expect(combinedSource).toMatch(
       /\.admin-board\s*\{[\s\S]*display:\s*grid;[\s\S]*gap:\s*var\(--space-4\);/s
@@ -177,18 +185,22 @@ describe('AuditLog', () => {
   })
 
   it('应使用统一进度卡片样式展示审计摘要', () => {
-    expect(auditLogSource).toContain('<div class="workspace-overline">Audit Log</div>')
-    expect(auditLogSource).not.toContain('<div class="journal-eyebrow">Audit Log</div>')
     expect(auditLogSource).toContain(
+      "import AuditLogHeroPanel from '@/components/platform/audit/AuditLogHeroPanel.vue'"
+    )
+    expect(auditLogSource).toContain('<AuditLogHeroPanel')
+    expect(auditLogHeroPanelSource).toContain('<div class="workspace-overline">Audit Log</div>')
+    expect(auditLogHeroPanelSource).not.toContain('<div class="journal-eyebrow">Audit Log</div>')
+    expect(auditLogHeroPanelSource).toContain(
       'class="admin-summary-grid progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
     )
-    expect(auditLogSource).toContain('class="journal-note progress-card metric-panel-card"')
-    expect(auditLogSource).toContain(
+    expect(auditLogHeroPanelSource).toContain('class="journal-note progress-card metric-panel-card"')
+    expect(auditLogHeroPanelSource).toContain(
       'class="journal-note-value progress-card-value metric-panel-value"'
     )
-    expect(auditLogSource).toContain(
+    expect(auditLogHeroPanelSource).toContain(
       'class="journal-note-helper progress-card-hint metric-panel-helper"'
     )
-    expect(auditLogSource).toContain('本页已加载的日志条数')
+    expect(auditLogHeroPanelSource).toContain('本页已加载的日志条数')
   })
 })

@@ -125,6 +125,11 @@ function forwardClose(): void {
   --modal-template-drawer-line: var(--color-border-subtle);
 }
 
+:deep(.modal-template-panel--drawer) {
+  width: var(--modal-template-drawer-width);
+  max-width: 100%;
+}
+
 .modal-template-drawer {
   display: flex;
   flex-direction: column;

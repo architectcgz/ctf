@@ -3,6 +3,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import ChallengeManage from '../ChallengeManage.vue'
 import challengeManageSource from '../ChallengeManage.vue?raw'
+import challengeManageHeroPanelSource from '@/components/platform/challenge/ChallengeManageHeroPanel.vue?raw'
 import challengeManageDirectoryPanelSource from '@/components/platform/challenge/ChallengeManageDirectoryPanel.vue?raw'
 
 const pushMock = vi.fn()
@@ -38,7 +39,11 @@ vi.mock('vue-router', async () => {
 
 vi.mock('@/api/admin', () => adminApiMocks)
 
-const combinedSource = [challengeManageSource, challengeManageDirectoryPanelSource].join('\n')
+const combinedSource = [
+  challengeManageSource,
+  challengeManageHeroPanelSource,
+  challengeManageDirectoryPanelSource,
+].join('\n')
 
 describe('ChallengeManage', () => {
   beforeEach(() => {
@@ -117,12 +122,13 @@ describe('ChallengeManage', () => {
       'class="workspace-shell challenge-manage-shell journal-shell journal-shell-admin journal-notes-card journal-hero"'
     )
     expect(challengeManageSource).not.toContain('<header class="workspace-topbar">')
-    expect(challengeManageSource).toContain('<div class="workspace-overline">Challenge Workspace</div>')
-    expect(challengeManageSource).toContain(
+    expect(challengeManageSource).toContain('<ChallengeManageHeroPanel')
+    expect(challengeManageHeroPanelSource).toContain('<div class="workspace-overline">Challenge Workspace</div>')
+    expect(challengeManageHeroPanelSource).toContain(
       '<p class="workspace-page-copy">集中查看题目目录、发布状态与题库变更。</p>'
     )
     expect(challengeManageSource).not.toContain('Inventory / Challenge Management')
-    expect(challengeManageSource).toContain('Plus,')
+    expect(challengeManageHeroPanelSource).toContain('Plus,')
     expect(combinedSource).toContain(
       'class="workspace-directory-section challenge-manage-directory"'
     )
@@ -199,8 +205,8 @@ describe('ChallengeManage', () => {
   })
 
   it('题目管理页应复用共享 spacing token，而不是给 summary strip 叠加额外上下 margin', () => {
-    const summaryGridStyleBlock = challengeManageSource.match(
-      /\.challenge-manage-shell \.manage-summary-grid\s*\{[^}]*\}/s
+    const summaryGridStyleBlock = challengeManageHeroPanelSource.match(
+      /\.manage-summary-grid\s*\{[^}]*\}/s
     )?.[0]
 
     expect(challengeManageSource).toMatch(

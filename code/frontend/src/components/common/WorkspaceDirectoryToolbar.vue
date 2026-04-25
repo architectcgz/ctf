@@ -277,6 +277,16 @@ onUnmounted(() => {
   margin-bottom: var(--workspace-directory-toolbar-gap-bottom, 1.5rem);
 }
 
+:global([data-theme='dark']) .workspace-directory-toolbar {
+  --workspace-toolbar-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
+  --workspace-toolbar-surface-subtle: color-mix(in srgb, var(--color-bg-elevated) 84%, var(--color-bg-base));
+  --workspace-toolbar-control-border: color-mix(in srgb, var(--color-border-default) 72%, transparent);
+  --workspace-toolbar-control-border-strong: color-mix(in srgb, var(--color-primary) 32%, var(--color-border-default));
+  --workspace-toolbar-control-background: var(--workspace-toolbar-surface);
+  --workspace-toolbar-menu-surface: var(--workspace-toolbar-surface-subtle);
+  --workspace-toolbar-menu-border: color-mix(in srgb, var(--color-border-default) 76%, transparent);
+}
+
 .workspace-directory-toolbar__main,
 .workspace-directory-toolbar__meta {
   display: flex;

@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 import contestOrchestrationSource from '@/components/platform/contest/ContestOrchestrationPage.vue?raw'
 import userGovernanceSource from '@/components/platform/user/UserGovernancePage.vue?raw'
 import auditLogSource from '@/views/platform/AuditLog.vue?raw'
-import cheatDetectionSource from '@/views/platform/CheatDetection.vue?raw'
+import cheatDetectionWorkspaceSource from '@/components/platform/cheat/CheatDetectionWorkspacePanel.vue?raw'
 import challengeDetailSource from '@/views/platform/ChallengeDetail.vue?raw'
 import challengeManageSource from '@/views/platform/ChallengeManage.vue?raw'
 import challengeImportManageSource from '@/views/platform/ChallengeImportManage.vue?raw'
@@ -56,7 +56,7 @@ describe('admin journal shell shared styles', () => {
       challengeManageSource,
       challengeImportManageSource,
       imageManageSource,
-      cheatDetectionSource,
+      cheatDetectionWorkspaceSource,
       challengeDetailSource,
       challengePackageFormatSource,
     ]) {
@@ -72,7 +72,7 @@ describe('admin journal shell shared styles', () => {
       challengeManageSource,
       challengeImportManageSource,
       imageManageSource,
-      cheatDetectionSource,
+      cheatDetectionWorkspaceSource,
       challengeDetailSource,
       challengePackageFormatSource,
     ]) {

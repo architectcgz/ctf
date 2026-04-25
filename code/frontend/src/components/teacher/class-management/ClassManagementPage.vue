@@ -56,9 +56,7 @@ const currentPageStudentCount = computed(() =>
             <div class="teacher-surface-eyebrow journal-eyebrow">
               Class Directory
             </div>
-            <h1 class="teacher-title">
-              班级管理
-            </h1>
+            <h1 class="teacher-title">班级管理</h1>
             <p class="teacher-copy">
               查看当前可管理班级，并进入对应班级继续查看学生和训练表现。
             </p>
@@ -231,7 +229,7 @@ const currentPageStudentCount = computed(() =>
                   </div>
                 </div>
 
-                <div class="teacher-directory-row-tags">
+                <div class="teacher-directory-state">
                   <span
                     class="teacher-directory-state-chip"
                     :class="

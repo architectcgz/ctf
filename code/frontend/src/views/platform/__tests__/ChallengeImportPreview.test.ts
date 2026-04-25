@@ -87,4 +87,37 @@ describe('ChallengeImportPreview', () => {
     expect(adminApiMocks.commitChallengeImport).toHaveBeenCalledWith('import-1')
     expect(pushMock).toHaveBeenCalledWith({ name: 'ChallengeManage' })
   })
+
+  it('父页应保留导入预览的返回导航和确认导入 owner', async () => {
+    const wrapper = mount(ChallengeImportPreview, {
+      global: {
+        stubs: {
+          ChallengeImportPreviewWorkspacePanel: {
+            props: ['preview'],
+            emits: ['back', 'back-queue', 'confirm'],
+            template:
+              '<div><div data-testid="preview-title">{{ preview?.title }}</div><button id="import-preview-back" type="button" @click="$emit(\'back\')">返回导入页</button><button id="import-preview-back-queue" type="button" @click="$emit(\'back-queue\')">返回队列</button><button id="import-preview-confirm" type="button" @click="$emit(\'confirm\')">确认导入</button></div>',
+          },
+        },
+      },
+    })
+    await flushPromises()
+
+    expect(wrapper.get('[data-testid="preview-title"]').text()).toBe('Demo Challenge')
+
+    await wrapper.get('#import-preview-back').trigger('click')
+    expect(pushMock).toHaveBeenLastCalledWith({ name: 'PlatformChallengeImportManage' })
+
+    await wrapper.get('#import-preview-back-queue').trigger('click')
+    expect(pushMock).toHaveBeenLastCalledWith({
+      name: 'PlatformChallengeImportManage',
+      hash: '#challenge-queue-workspace',
+    })
+
+    await wrapper.get('#import-preview-confirm').trigger('click')
+    await flushPromises()
+
+    expect(adminApiMocks.commitChallengeImport).toHaveBeenCalledWith('import-1')
+    expect(pushMock).toHaveBeenLastCalledWith({ name: 'ChallengeManage' })
+  })
 })

@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 
 import ChallengeImportManage from '../ChallengeImportManage.vue'
+import challengeImportHeroPanelSource from '@/components/platform/challenge/ChallengeImportHeroPanel.vue?raw'
 
 const pushMock = vi.fn()
 const adminApiMocks = vi.hoisted(() => ({
@@ -60,6 +61,11 @@ describe('ChallengeImportManage', () => {
   })
 
   it('应将题目包规范、上传入口和待确认导入统一放进独立导入页', async () => {
+    expect(challengeImportHeroPanelSource).toContain('Challenge Import')
+    expect(challengeImportHeroPanelSource).toContain('返回题目目录')
+    expect(challengeImportHeroPanelSource).toContain('题目包规范')
+    expect(challengeImportHeroPanelSource).toContain('下载示例题目包')
+
     const wrapper = mount(ChallengeImportManage)
     await flushPromises()
 

@@ -243,19 +243,20 @@ const {
                 </article>
               </div>
 
-              <div
-                class="summary-grid progress-strip metric-panel-grid"
-              >
+              <div class="summary-grid progress-strip metric-panel-grid metric-panel-default-surface">
                 <article
                   v-for="item in portraitSummaryNotes"
                   :key="item.key"
-                  class="progress-card metric-panel-card"
+                  class="summary-note progress-card metric-panel-card"
                 >
-                  <div class="metric-panel-label">
+                  <div class="summary-note-label progress-card-label metric-panel-label">
                     {{ item.label }}
                   </div>
-                  <div class="metric-panel-value">
+                  <div class="summary-note-value progress-card-value metric-panel-value">
                     {{ item.value }}
+                  </div>
+                  <div class="summary-note-copy progress-card-hint metric-panel-helper">
+                    当前画像摘要
                   </div>
                 </article>
               </div>
@@ -271,7 +272,95 @@ const {
           </div>
         </section>
 
-        <!-- Other tabs handled by subpanels similarly... -->
+        <section
+          v-show="activeTab === 'trend'"
+          id="trend"
+          class="section tab-panel active"
+          role="tabpanel"
+        >
+          <div class="workspace-subpanel">
+            <header class="workspace-tab-heading">
+              <div class="workspace-overline">
+                Trend Review
+              </div>
+              <h2 class="workspace-tab-heading__title">
+                趋势复盘
+              </h2>
+            </header>
+            <TeacherClassTrendPanel
+              :trend="trend"
+              title="班级近 7 天训练趋势"
+              bare
+            />
+          </div>
+        </section>
+
+        <section
+          v-show="activeTab === 'insight'"
+          id="insight"
+          class="section tab-panel active"
+          role="tabpanel"
+        >
+          <div class="workspace-subpanel">
+            <header class="workspace-tab-heading">
+              <div class="workspace-overline">
+                Student Insight
+              </div>
+              <h2 class="workspace-tab-heading__title">
+                学生洞察
+              </h2>
+            </header>
+            <TeacherClassInsightsPanel
+              :students="students"
+              :class-name="selectedClassName"
+              split-cards
+            />
+          </div>
+        </section>
+
+        <section
+          v-show="activeTab === 'advice'"
+          id="advice"
+          class="section tab-panel active"
+          role="tabpanel"
+        >
+          <div class="workspace-subpanel">
+            <header class="workspace-tab-heading">
+              <div class="workspace-overline">
+                Teaching Advice
+              </div>
+              <h2 class="workspace-tab-heading__title">
+                今日教学建议
+              </h2>
+            </header>
+            <TeacherClassReviewPanel
+              :review="review"
+              :class-name="selectedClassName"
+            />
+          </div>
+        </section>
+
+        <section
+          v-show="activeTab === 'action'"
+          id="action"
+          class="section tab-panel active"
+          role="tabpanel"
+        >
+          <div class="workspace-subpanel">
+            <header class="workspace-tab-heading">
+              <div class="workspace-overline">
+                Intervention
+              </div>
+              <h2 class="workspace-tab-heading__title">
+                介入建议
+              </h2>
+            </header>
+            <TeacherInterventionPanel
+              :students="students"
+              :class-name="selectedClassName"
+            />
+          </div>
+        </section>
       </main>
     </div>
   </div>
@@ -281,6 +370,8 @@ const {
 @import '../teacher-workspace-subpanel.css';
 
 .workspace-shell {
+  --journal-ink: var(--color-text-primary);
+  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
   --teacher-card-border: color-mix(in srgb, var(--color-border-default) 76%, transparent);
   --teacher-control-border: color-mix(in srgb, var(--color-border-default) 78%, transparent);
   --teacher-divider: color-mix(in srgb, var(--color-border-default) 86%, transparent);

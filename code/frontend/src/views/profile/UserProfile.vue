@@ -276,9 +276,7 @@ onUnmounted(() => {
           <section class="profile-section">
             <div class="profile-section-head">
               <div>
-                <div class="profile-section-kicker">
-                  Account
-                </div>
+                <div class="profile-section-kicker">Account</div>
                 <h2 class="profile-section-title">
                   <UserCircle2 class="profile-accent-icon h-5 w-5" />
                   账号信息
@@ -318,9 +316,7 @@ onUnmounted(() => {
           >
             <div class="profile-section-head">
               <div>
-                <div class="profile-section-kicker">
-                  Report
-                </div>
+                <div class="profile-section-kicker">Report</div>
                 <h2 class="profile-section-title">
                   个人报告
                 </h2>

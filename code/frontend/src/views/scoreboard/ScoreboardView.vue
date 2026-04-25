@@ -169,9 +169,7 @@ function getCardDescription(
           aria-labelledby="scoreboard-tab-contest"
           :aria-hidden="activeTab === 'contest' ? 'false' : 'true'"
         >
-          <div class="workspace-overline scoreboard-panel-overline">
-            Contest Scoreboard
-          </div>
+          <div class="workspace-overline scoreboard-panel-overline">Contest Scoreboard</div>
 
           <section class="scoreboard-summary">
             <div class="scoreboard-summary-title">
@@ -390,9 +388,7 @@ function getCardDescription(
           aria-labelledby="scoreboard-tab-points"
           :aria-hidden="activeTab === 'points' ? 'false' : 'true'"
         >
-          <div class="workspace-overline scoreboard-panel-overline">
-            Points Scoreboard
-          </div>
+          <div class="workspace-overline scoreboard-panel-overline">Points Scoreboard</div>
 
           <div
             v-if="rankingLoading"

@@ -446,9 +446,9 @@ describe('ContestChallengeOrchestrationPanel', () => {
     })
 
     await flushPromises()
-    await wrapper.get('#contest-challenge-more-link-1').trigger('click')
+    await wrapper.get('#contest-challenge-actions-101').trigger('click')
     await flushPromises()
-    await wrapper.get('#contest-challenge-menu-edit-link-1').trigger('click')
+    await wrapper.get('#contest-challenge-edit-101').trigger('click')
     await flushPromises()
 
     await wrapper.get('#contest-challenge-template').setValue('12')

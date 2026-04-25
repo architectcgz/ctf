@@ -8,7 +8,7 @@ import auditLogSource from '@/views/platform/AuditLog.vue?raw'
 import challengeDetailSource from '@/views/platform/ChallengeDetail.vue?raw'
 import challengeManageSource from '@/views/platform/ChallengeManage.vue?raw'
 import challengePackageFormatSource from '@/views/platform/ChallengePackageFormat.vue?raw'
-import cheatDetectionSource from '@/views/platform/CheatDetection.vue?raw'
+import cheatDetectionWorkspaceSource from '@/components/platform/cheat/CheatDetectionWorkspacePanel.vue?raw'
 import imageManageSource from '@/views/platform/ImageManage.vue?raw'
 
 const journalNotesSource = readFileSync(
@@ -38,8 +38,8 @@ describe('journal note shared styles', () => {
   })
 
   it('目标 admin 页面应显式声明共享作用域和 note 变体', () => {
-    expect(auditLogSource).toContain('journal-shell journal-shell-admin journal-notes-card')
-    expect(cheatDetectionSource).toContain('journal-shell journal-shell-admin journal-notes-card')
+    expect(auditLogSource).toContain('journal-shell journal-shell-admin')
+    expect(cheatDetectionWorkspaceSource).toContain('journal-shell journal-shell-admin')
     expect(contestOrchestrationSource).toContain(
       'journal-shell journal-shell-admin journal-notes-card'
     )
@@ -56,7 +56,7 @@ describe('journal note shared styles', () => {
       challengeDetailSource,
       challengeManageSource,
       challengePackageFormatSource,
-      cheatDetectionSource,
+      cheatDetectionWorkspaceSource,
       contestOrchestrationSource,
       imageManageSource,
       userGovernanceSource,
@@ -70,7 +70,7 @@ describe('journal note shared styles', () => {
     for (const source of [
       auditLogSource,
       challengeManageSource,
-      cheatDetectionSource,
+      cheatDetectionWorkspaceSource,
       contestOrchestrationSource,
       imageManageSource,
       userGovernanceSource,

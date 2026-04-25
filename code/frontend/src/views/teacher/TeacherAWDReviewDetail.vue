@@ -527,11 +527,6 @@ function formatServiceRef(serviceId?: string): string {
 
 .awd-review-summary {
   --metric-panel-border: color-mix(in srgb, var(--awd-review-primary) 14%, var(--awd-review-line));
-  --metric-panel-background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--awd-review-surface) 98%, var(--color-bg-base)),
-    color-mix(in srgb, var(--awd-review-surface-subtle) 94%, var(--color-bg-base))
-  );
 }
 
 .awd-review-status-chip {

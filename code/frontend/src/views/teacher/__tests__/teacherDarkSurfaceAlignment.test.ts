@@ -15,6 +15,8 @@ const teacherSurfaceSource = readFileSync(
 
 const teacherDirectoryPattern =
   /teacher-directory-head[\s\S]*teacher-directory-row[\s\S]*(teacher-directory-row-main|teacher-directory-cell)[\s\S]*teacher-directory-row-tags/s
+const teacherClassDirectoryPattern =
+  /teacher-directory-head[\s\S]*teacher-directory-row[\s\S]*teacher-directory-cell[\s\S]*teacher-directory-state/s
 
 describe('teacher dark surface alignment', () => {
   it('teacher management pages should use shared teacher surface classes', () => {
@@ -72,7 +74,7 @@ describe('teacher dark surface alignment', () => {
   })
 
   it('teacher management list pages should render shared directory shells for rows and empty states', () => {
-    expect(classManagementSource).toMatch(teacherDirectoryPattern)
+    expect(classManagementSource).toMatch(teacherClassDirectoryPattern)
     expect(studentManagementSource).toMatch(teacherDirectoryPattern)
     expect(instanceManagementSource).toMatch(teacherDirectoryPattern)
     expect(classManagementSource).toContain('teacher-empty-state')
