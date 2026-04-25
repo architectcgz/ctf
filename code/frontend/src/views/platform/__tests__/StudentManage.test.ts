@@ -100,6 +100,9 @@ describe('PlatformStudentManagement', () => {
     expect(adminStudentManageSource).not.toContain("from '@/composables/usePlatformStudentDirectory'")
     expect(adminStudentManageSource).toContain('<StudentManageHeroPanel')
     expect(adminStudentManageSource).toContain('<StudentManageWorkspacePanel')
+    expect(adminStudentManageSource).toContain(
+      'class="workspace-shell journal-shell journal-shell-admin journal-hero admin-student-manage-shell"'
+    )
     expect(studentManageHeroPanelSource).toContain('刷新目录')
     expect(studentManageHeroPanelSource).toContain(
       'class="admin-summary-grid admin-student-manage-shell__summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'

@@ -549,11 +549,20 @@ describe('admin management surface alignment', () => {
     expect(classManageCombinedSource).toContain(
       'class="admin-summary-grid admin-class-manage-shell__summary'
     )
+    expect(classManageSource).toContain(
+      'class="workspace-shell journal-shell journal-shell-admin journal-hero admin-class-manage-shell"'
+    )
     expect(studentManageCombinedSource).toContain(
       'class="admin-summary-grid admin-student-manage-shell__summary'
     )
+    expect(studentManageSource).toContain(
+      'class="workspace-shell journal-shell journal-shell-admin journal-hero admin-student-manage-shell"'
+    )
     expect(instanceManageCombinedSource).toContain(
       'class="admin-summary-grid admin-instance-manage-shell__summary'
+    )
+    expect(instanceManageSource).toContain(
+      'class="workspace-shell journal-shell journal-shell-admin journal-hero admin-instance-manage-shell"'
     )
     expect(awdReviewCombinedSource).toContain('class="admin-summary-grid admin-awd-review-shell__summary')
   })

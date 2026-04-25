@@ -49,6 +49,9 @@ describe('PlatformClassManagement', () => {
     )
     expect(adminClassManageSource).toContain('<ClassManageHeroPanel')
     expect(adminClassManageSource).toContain('<ClassManageWorkspacePanel')
+    expect(adminClassManageSource).toContain(
+      'class="workspace-shell journal-shell journal-shell-admin journal-hero admin-class-manage-shell"'
+    )
     expect(classManageHeroPanelSource).toContain('刷新目录')
     expect(classManageHeroPanelSource).toContain(
       'class="admin-summary-grid admin-class-manage-shell__summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
