@@ -5,6 +5,7 @@ import EnvironmentTemplateLibrary from '../EnvironmentTemplateLibrary.vue'
 import ChallengeTopologyStudioPage from '@/components/platform/topology/ChallengeTopologyStudioPage.vue'
 import challengeTopologyStudioPageSource from '@/components/platform/topology/ChallengeTopologyStudioPage.vue?raw'
 import topologyNodeEditorSource from '@/components/platform/topology/TopologyNodeEditor.vue?raw'
+import topologySummaryGridSource from '@/components/platform/topology/TopologySummaryGrid.vue?raw'
 import topologyTemplateSidePanelSource from '@/components/platform/topology/TopologyTemplateSidePanel.vue?raw'
 
 vi.mock('@/api/admin', () => ({
@@ -91,23 +92,24 @@ describe('EnvironmentTemplateLibrary', () => {
   })
 
   it('模板库概览卡片应补齐统一的说明文案', () => {
+    const topologySource = `${challengeTopologyStudioPageSource}\n${topologySummaryGridSource}`
+
     expect(challengeTopologyStudioPageSource).not.toContain('rounded-[30px]')
-    expect(challengeTopologyStudioPageSource).toContain(
-      'class="topology-summary-grid progress-strip metric-panel-grid metric-panel-default-surface"'
-    )
+    expect(topologySource).toContain('topology-summary-grid')
+    expect(topologySource).toContain('progress-strip')
+    expect(topologySource).toContain('metric-panel-grid')
+    expect(topologySource).toContain('metric-panel-default-surface')
     expect(challengeTopologyStudioPageSource).toMatch(
       /\.topology-page--template-library \.template-library-main,\s*\.topology-page--template-library :deep\(\.page-header\)\s*\{[\s\S]*border-radius:\s*0;/s
     )
-    expect(challengeTopologyStudioPageSource).toContain(
-      'class="topology-summary-tile progress-card metric-panel-card"'
-    )
-    expect(challengeTopologyStudioPageSource).toContain(
-      'class="topology-summary-helper progress-card-hint metric-panel-helper"'
-    )
-    expect(challengeTopologyStudioPageSource).toContain('当前模板草稿中的网络数量')
-    expect(challengeTopologyStudioPageSource).toContain('当前模板草稿中的节点数量')
-    expect(challengeTopologyStudioPageSource).toContain('当前模板草稿中的连线数量')
-    expect(challengeTopologyStudioPageSource).toContain('当前模板草稿中的策略数量')
+    expect(topologySource).toContain('topology-summary-tile')
+    expect(topologySource).toContain('progress-card')
+    expect(topologySource).toContain('metric-panel-card')
+    expect(topologySource).toContain('topology-summary-helper progress-card-hint metric-panel-helper')
+    expect(topologySource).toContain('当前模板草稿中的网络数量')
+    expect(topologySource).toContain('当前模板草稿中的节点数量')
+    expect(topologySource).toContain('当前模板草稿中的连线数量')
+    expect(topologySource).toContain('当前模板草稿中的策略数量')
   })
 
   it('节点编辑器应改用后台共享字段与按钮原语', () => {

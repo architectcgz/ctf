@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { computed, defineAsyncComponent, ref } from 'vue'
 import {
-  Blocks,
-  GitBranch,
   Link2,
   Plus,
   RefreshCw,
@@ -23,6 +21,8 @@ import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
 import SectionCard from '@/components/common/SectionCard.vue'
+import TopologyStatusNotes from './TopologyStatusNotes.vue'
+import TopologySummaryGrid from './TopologySummaryGrid.vue'
 import TopologyTemplateSidePanel from './TopologyTemplateSidePanel.vue'
 
 import type { CanvasInteractionMode } from './TopologyCanvasBoard.vue'
@@ -219,93 +219,14 @@ const rootClasses = computed(() => [
               {{ heroDescription }}
             </p>
 
-            <div
-              class="topology-summary-grid progress-strip metric-panel-grid metric-panel-default-surface"
-            >
-              <div class="topology-summary-tile progress-card metric-panel-card">
-                <div class="topology-summary-label progress-card-label metric-panel-label">
-                  网络
-                </div>
-                <div class="topology-summary-value progress-card-value metric-panel-value">
-                  {{ topologySummary.networks }}
-                </div>
-                <div class="topology-summary-helper progress-card-hint metric-panel-helper">
-                  当前模板草稿中的网络数量
-                </div>
-              </div>
-              <div class="topology-summary-tile progress-card metric-panel-card">
-                <div class="topology-summary-label progress-card-label metric-panel-label">
-                  节点
-                </div>
-                <div class="topology-summary-value progress-card-value metric-panel-value">
-                  {{ topologySummary.nodes }}
-                </div>
-                <div class="topology-summary-helper progress-card-hint metric-panel-helper">
-                  当前模板草稿中的节点数量
-                </div>
-              </div>
-              <div class="topology-summary-tile progress-card metric-panel-card">
-                <div class="topology-summary-label progress-card-label metric-panel-label">
-                  连线
-                </div>
-                <div class="topology-summary-value progress-card-value metric-panel-value">
-                  {{ topologySummary.links }}
-                </div>
-                <div class="topology-summary-helper progress-card-hint metric-panel-helper">
-                  当前模板草稿中的连线数量
-                </div>
-              </div>
-              <div class="topology-summary-tile progress-card metric-panel-card">
-                <div class="topology-summary-label progress-card-label metric-panel-label">
-                  策略
-                </div>
-                <div class="topology-summary-value progress-card-value metric-panel-value">
-                  {{ topologySummary.policies }}
-                </div>
-                <div class="topology-summary-helper progress-card-hint metric-panel-helper">
-                  当前模板草稿中的策略数量
-                </div>
-              </div>
-            </div>
+            <TopologySummaryGrid :summary="topologySummary" mode="template-library" />
           </div>
 
-          <div
-            class="topology-hero-aside topology-hero-aside--library grid gap-3 md:grid-cols-3 xl:grid-cols-1"
-          >
-            <section class="template-hero-note template-hero-note--primary">
-              <div class="template-metric-icon template-metric-icon--primary">
-                <Blocks class="h-5 w-5" />
-              </div>
-              <div class="template-hero-note__body">
-                <div class="template-hero-note__label">
-                  {{ statusCard.eyebrow }}
-                </div>
-                <div class="template-hero-note__value">
-                  {{ statusCard.title }}
-                </div>
-                <p class="template-hero-note__copy">
-                  {{ statusCard.subtitle }}
-                </p>
-              </div>
-            </section>
-
-            <section class="template-hero-note template-hero-note--warning">
-              <div class="template-metric-icon template-metric-icon--warning">
-                <GitBranch class="h-5 w-5" />
-              </div>
-              <div class="template-hero-note__body">
-                <div class="template-hero-note__label">
-                  {{ secondaryCard.eyebrow }}
-                </div>
-                <div class="template-hero-note__value">
-                  {{ secondaryCard.title }}
-                </div>
-                <p class="template-hero-note__copy">
-                  {{ secondaryCard.subtitle }}
-                </p>
-              </div>
-            </section>
-          </div>
+          <TopologyStatusNotes
+            mode="template-library"
+            :status-card="statusCard"
+            :secondary-card="secondaryCard"
+          />
         </section>
 
         <div class="template-library-divider" />
@@ -870,32 +791,7 @@ const rootClasses = computed(() => [
             {{ heroDescription }}
           </p>
 
-          <div class="topology-summary-grid topology-summary-grid--challenge metric-panel-grid">
-            <article class="topology-summary-card metric-panel-card">
-              <div class="topology-summary-label metric-panel-label">网络</div>
-              <div class="topology-summary-value metric-panel-value">
-                {{ topologySummary.networks }}
-              </div>
-            </article>
-            <article class="topology-summary-card metric-panel-card">
-              <div class="topology-summary-label metric-panel-label">节点</div>
-              <div class="topology-summary-value metric-panel-value">
-                {{ topologySummary.nodes }}
-              </div>
-            </article>
-            <article class="topology-summary-card metric-panel-card">
-              <div class="topology-summary-label metric-panel-label">连线</div>
-              <div class="topology-summary-value metric-panel-value">
-                {{ topologySummary.links }}
-              </div>
-            </article>
-            <article class="topology-summary-card metric-panel-card">
-              <div class="topology-summary-label metric-panel-label">策略</div>
-              <div class="topology-summary-value metric-panel-value">
-                {{ topologySummary.policies }}
-              </div>
-            </article>
-          </div>
+          <TopologySummaryGrid :summary="topologySummary" mode="challenge" />
         </section>
 
         <div class="journal-divider" />
@@ -1461,54 +1357,11 @@ const rootClasses = computed(() => [
 
           <aside class="context-rail topology-context-rail">
             <div class="topology-context-stack">
-              <section class="topology-status-list">
-                <article class="topology-status-note topology-status-note--primary">
-                  <div class="topology-status-note__icon">
-                    <Blocks class="h-5 w-5" />
-                  </div>
-                  <div class="topology-status-note__body">
-                    <div class="topology-status-note__eyebrow">
-                      {{ statusCard.eyebrow }}
-                    </div>
-                    <div class="topology-status-note__title">
-                      {{ statusCard.title }}
-                    </div>
-                    <p class="topology-status-note__copy">
-                      {{ statusCard.subtitle }}
-                    </p>
-                  </div>
-                </article>
-
-                <article class="topology-status-note topology-status-note--warning">
-                  <div class="topology-status-note__icon">
-                    <GitBranch class="h-5 w-5" />
-                  </div>
-                  <div class="topology-status-note__body">
-                    <div class="topology-status-note__eyebrow">
-                      {{ secondaryCard.eyebrow }}
-                    </div>
-                    <div class="topology-status-note__title">
-                      {{ secondaryCard.title }}
-                    </div>
-                    <p class="topology-status-note__copy">
-                      {{ secondaryCard.subtitle }}
-                    </p>
-                  </div>
-                </article>
-
-                <article class="topology-status-note topology-status-note--danger">
-                  <div class="topology-status-note__icon">
-                    <ShieldBan class="h-5 w-5" />
-                  </div>
-                  <div class="topology-status-note__body">
-                    <div class="topology-status-note__eyebrow">运行时约束</div>
-                    <div class="topology-status-note__title">粗粒度</div>
-                    <p class="topology-status-note__copy">
-                      当前只支持节点级 allow/deny，不支持端口级 ACL。
-                    </p>
-                  </div>
-                </article>
-              </section>
+              <TopologyStatusNotes
+                mode="challenge"
+                :status-card="statusCard"
+                :secondary-card="secondaryCard"
+              />
 
               <TopologyTemplateSidePanel
                 v-model:template-keyword="templateKeyword"
@@ -1778,22 +1631,6 @@ const rootClasses = computed(() => [
   max-width: 48rem;
 }
 
-.topology-page--challenge .topology-summary-grid--challenge {
-  margin-top: var(--space-2);
-  --metric-panel-grid-gap: var(--space-3);
-  --metric-panel-columns: repeat(4, minmax(0, 1fr));
-}
-
-.topology-page--challenge .topology-summary-card {
-  border: 1px solid var(--journal-border);
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--topology-panel) 98%, var(--color-bg-base)),
-    color-mix(in srgb, var(--topology-panel-subtle) 96%, var(--color-bg-base))
-  );
-  box-shadow: 0 10px 24px var(--color-shadow-soft);
-}
-
 .topology-page--challenge .content-pane.topology-workspace {
   display: grid;
   gap: var(--space-7);
@@ -1819,75 +1656,6 @@ const rootClasses = computed(() => [
 .topology-page--challenge .topology-context-stack {
   position: sticky;
   top: var(--space-6);
-}
-
-.topology-page--challenge .topology-status-list {
-  display: grid;
-  gap: var(--space-3);
-}
-
-.topology-page--challenge .topology-status-note {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: var(--space-3);
-  padding: var(--space-4);
-  border: 1px solid var(--journal-border);
-  border-radius: 18px;
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--topology-panel) 98%, var(--color-bg-base)),
-    color-mix(in srgb, var(--topology-panel-subtle) 96%, var(--color-bg-base))
-  );
-  box-shadow: 0 12px 28px var(--color-shadow-soft);
-}
-
-.topology-page--challenge .topology-status-note__icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.75rem;
-  height: 2.75rem;
-  border-radius: 0.9rem;
-}
-
-.topology-page--challenge .topology-status-note--primary .topology-status-note__icon {
-  border: 1px solid color-mix(in srgb, var(--journal-accent) 22%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
-  color: var(--journal-accent);
-}
-
-.topology-page--challenge .topology-status-note--warning .topology-status-note__icon {
-  border: 1px solid color-mix(in srgb, var(--color-warning) 24%, transparent);
-  background: color-mix(in srgb, var(--color-warning) 10%, transparent);
-  color: var(--color-warning);
-}
-
-.topology-page--challenge .topology-status-note--danger .topology-status-note__icon {
-  border: 1px solid color-mix(in srgb, var(--color-danger) 24%, transparent);
-  background: color-mix(in srgb, var(--color-danger) 10%, transparent);
-  color: color-mix(in srgb, var(--color-danger) 88%, var(--journal-ink));
-}
-
-.topology-page--challenge .topology-status-note__eyebrow {
-  font-size: var(--font-size-0-72);
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--journal-muted);
-}
-
-.topology-page--challenge .topology-status-note__title {
-  margin-top: var(--space-1);
-  font-size: var(--font-size-1-10);
-  font-weight: 700;
-  color: var(--journal-ink);
-}
-
-.topology-page--challenge .topology-status-note__copy {
-  margin-top: var(--space-1-5);
-  font-size: var(--font-size-0-86);
-  line-height: 1.65;
-  color: var(--journal-muted);
 }
 
 .topology-page--challenge :deep(.section-card) {
@@ -2025,79 +1793,6 @@ const rootClasses = computed(() => [
 
 .topology-page--template-library .topology-hero-description {
   max-width: 46rem;
-}
-
-.topology-page--template-library .topology-summary-grid {
-  margin-top: var(--space-6);
-  --metric-panel-grid-gap: var(--space-3);
-  --metric-panel-columns: repeat(4, minmax(0, 1fr));
-}
-
-.topology-page--template-library .topology-hero-aside--library {
-  align-self: start;
-  border-left: 0;
-  padding-left: 0;
-}
-
-.topology-page--template-library .template-hero-note {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: var(--space-3);
-  padding: 0 0 0 var(--space-4);
-  border-left: 2px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-}
-
-.topology-page--template-library .template-hero-note__body {
-  min-width: 0;
-}
-
-.topology-page--template-library .template-hero-note__label {
-  font-size: var(--font-size-0-72);
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--journal-muted);
-}
-
-.topology-page--template-library .template-hero-note__value {
-  margin-top: var(--space-1-5);
-  font-size: var(--font-size-1-10);
-  font-weight: 700;
-  color: var(--journal-ink);
-}
-
-.topology-page--template-library .template-hero-note__copy {
-  margin-top: var(--space-1-5);
-  font-size: var(--font-size-0-86);
-  line-height: 1.6;
-  color: var(--journal-muted);
-}
-
-.topology-page--template-library .template-metric-icon {
-  display: flex;
-  height: 2.75rem;
-  width: 2.75rem;
-  align-items: center;
-  justify-content: center;
-  border-radius: 0.9rem;
-}
-
-.topology-page--template-library .template-metric-icon--primary {
-  border: 1px solid color-mix(in srgb, var(--journal-accent) 22%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
-  color: var(--journal-accent);
-}
-
-.topology-page--template-library .template-metric-icon--warning {
-  border: 1px solid color-mix(in srgb, var(--color-warning) 24%, transparent);
-  background: color-mix(in srgb, var(--color-warning) 10%, transparent);
-  color: var(--color-warning);
-}
-
-.topology-page--template-library .template-metric-icon--danger {
-  border: 1px solid color-mix(in srgb, var(--color-danger) 24%, transparent);
-  background: color-mix(in srgb, var(--color-danger) 10%, transparent);
-  color: var(--color-danger);
 }
 
 .topology-page--template-library .template-toolbar-tabs {
@@ -2334,10 +2029,6 @@ const rootClasses = computed(() => [
 }
 
 @media (max-width: 1023px) {
-  .topology-page--challenge .topology-summary-grid--challenge {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   .topology-page--challenge .content-pane.topology-workspace {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -2352,20 +2043,6 @@ const rootClasses = computed(() => [
   .topology-page--challenge .topology-context-stack {
     position: static;
   }
-
-  .topology-page--template-library .topology-summary-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .topology-page--template-library .topology-hero-aside--library {
-    border-left: 0;
-    padding-left: 0;
-  }
-
-  .topology-page--template-library :deep(.topology-hero-aside--library > section) {
-    padding-left: 0;
-    background: transparent;
-  }
 }
 
 @media (max-width: 767px) {
@@ -2376,14 +2053,6 @@ const rootClasses = computed(() => [
   .topology-page--challenge .workspace-topbar {
     align-items: flex-start;
     padding-bottom: var(--space-5);
-  }
-
-  .topology-page--challenge .topology-summary-grid--challenge {
-    grid-template-columns: 1fr;
-  }
-
-  .topology-page--template-library .topology-summary-grid {
-    grid-template-columns: 1fr;
   }
 
   .topology-page--template-library .template-toolbar-tabs {

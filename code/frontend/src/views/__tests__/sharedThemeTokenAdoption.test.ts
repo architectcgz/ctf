@@ -46,6 +46,8 @@ import contestAwdWorkspacePanelSource from '@/components/contests/ContestAWDWork
 import contestOrchestrationSource from '@/components/platform/contest/ContestOrchestrationPage.vue?raw'
 import topologyCanvasBoardSource from '@/components/platform/topology/TopologyCanvasBoard.vue?raw'
 import topologyStudioSource from '@/components/platform/topology/ChallengeTopologyStudioPage.vue?raw'
+import topologyStatusNotesSource from '@/components/platform/topology/TopologyStatusNotes.vue?raw'
+import topologySummaryGridSource from '@/components/platform/topology/TopologySummaryGrid.vue?raw'
 import topologyTemplateSidePanelSource from '@/components/platform/topology/TopologyTemplateSidePanel.vue?raw'
 import adminNotificationPublishDrawerSource from '@/components/notifications/AdminNotificationPublishDrawer.vue?raw'
 import skillProfileSource from '@/views/profile/SkillProfile.vue?raw'
@@ -436,6 +438,28 @@ describe('shared theme token adoption', () => {
       'var(--color-warning) 90%, #f8fafc',
     ])
     expectNoHardcodedThemeTokens(topologyStudioSource, 'ChallengeTopologyStudioPage', [
+      'rgba(15, 23, 42, 0.96)',
+      'rgba(15, 23, 42, 0.9)',
+      'border-[var(--color-success)]',
+      'bg-[var(--color-success)]/10',
+      'text-[var(--color-success)]',
+      'border-[var(--color-warning)]/20',
+      'bg-[var(--color-warning)]/10',
+      'text-[var(--color-warning)]',
+      'var(--journal-accent) 88%, black',
+    ])
+    expectNoHardcodedThemeTokens(topologySummaryGridSource, 'TopologySummaryGrid', [
+      'rgba(15, 23, 42, 0.96)',
+      'rgba(15, 23, 42, 0.9)',
+      'border-[var(--color-success)]',
+      'bg-[var(--color-success)]/10',
+      'text-[var(--color-success)]',
+      'border-[var(--color-warning)]/20',
+      'bg-[var(--color-warning)]/10',
+      'text-[var(--color-warning)]',
+      'var(--journal-accent) 88%, black',
+    ])
+    expectNoHardcodedThemeTokens(topologyStatusNotesSource, 'TopologyStatusNotes', [
       'rgba(15, 23, 42, 0.96)',
       'rgba(15, 23, 42, 0.9)',
       'border-[var(--color-success)]',
