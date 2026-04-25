@@ -15,11 +15,11 @@ func (s *TeamService) JoinTeam(ctx context.Context, contestID, userID, teamID in
 	if err := s.ensureTeamJoinableContest(ctx, contestID); err != nil {
 		return nil, err
 	}
-	if err := s.ensureApprovedRegistration(contestID, userID); err != nil {
+	if err := s.ensureApprovedRegistration(ctx, contestID, userID); err != nil {
 		return nil, err
 	}
 
-	team, err := s.teamRepo.FindByID(teamID)
+	team, err := s.teamRepo.FindByID(ctx, teamID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrTeamNotFound
@@ -30,12 +30,12 @@ func (s *TeamService) JoinTeam(ctx context.Context, contestID, userID, teamID in
 		return nil, errcode.ErrTeamNotFound
 	}
 
-	existingTeam, err := s.teamRepo.FindUserTeamInContest(userID, team.ContestID)
+	existingTeam, err := s.teamRepo.FindUserTeamInContest(ctx, userID, team.ContestID)
 	if err == nil && existingTeam.ID > 0 {
 		return nil, errcode.ErrAlreadyInTeam
 	}
 
-	err = s.teamRepo.AddMemberWithLock(contestID, team.ID, userID)
+	err = s.teamRepo.AddMemberWithLock(ctx, contestID, team.ID, userID)
 	if err != nil {
 		if errors.Is(err, contestdomain.ErrTeamFull) {
 			return nil, errcode.ErrTeamFull
@@ -52,6 +52,6 @@ func (s *TeamService) JoinTeam(ctx context.Context, contestID, userID, teamID in
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	count, _ := s.teamRepo.GetMemberCount(team.ID)
+	count, _ := s.teamRepo.GetMemberCount(ctx, team.ID)
 	return contestdomain.TeamRespFromModel(team, int(count)), nil
 }

@@ -1,6 +1,7 @@
 package infrastructure
 
 import (
+	"context"
 	"time"
 
 	"gorm.io/gorm"
@@ -8,8 +9,8 @@ import (
 	"ctf-platform/internal/model"
 )
 
-func (r *TeamRepository) CreateWithMember(team *model.Team, captainID int64) error {
-	return r.db.Transaction(func(tx *gorm.DB) error {
+func (r *TeamRepository) CreateWithMember(ctx context.Context, team *model.Team, captainID int64) error {
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		if err := tx.Create(team).Error; err != nil {
 			return err
 		}
@@ -26,8 +27,8 @@ func (r *TeamRepository) CreateWithMember(team *model.Team, captainID int64) err
 	})
 }
 
-func (r *TeamRepository) DeleteWithMembers(id int64) error {
-	return r.db.Transaction(func(tx *gorm.DB) error {
+func (r *TeamRepository) DeleteWithMembers(ctx context.Context, id int64) error {
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		var team model.Team
 		if err := tx.Where("id = ?", id).First(&team).Error; err != nil {
 			return err
