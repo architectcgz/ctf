@@ -8,7 +8,7 @@
 | 审查范围 | `code/frontend/src` 路由、关键视图、composables、stores、共享样式与验证门禁 |
 | 审查日期 | 2026-04-22 |
 | 审查方式 | 静态代码审查 + 最小验证基线检查 |
-| 审查状态 | 已记录，已推进至第六十六轮最小高收益修复 |
+| 审查状态 | 已记录，已推进至第六十七轮最小高收益修复 |
 
 ## 当前结论
 
@@ -1571,6 +1571,28 @@
 
 - 已执行：
   - `npm run test:run -- src/components/common/__tests__/WorkspaceDirectoryToolbar.test.ts src/components/common/__tests__/BackofficeDialogAdoption.test.ts src/components/common/__tests__/ModalTemplates.test.ts src/components/platform/awd-service/__tests__/AWDServiceTemplateLibraryPage.test.ts src/components/platform/awd-service/__tests__/AWDServiceTemplateEditorDialog.test.ts src/views/platform/__tests__/AWDServiceTemplateLibrary.test.ts src/components/platform/__tests__/contestChallengeOrchestrationExtraction.test.ts src/components/platform/__tests__/ContestChallengeOrchestrationPanel.test.ts`
+  - `npm run typecheck`
+
+## 第六十七轮修复进展
+
+- 已完成：
+  - `P2-1 / P2-5` 教师端整组目录与工作区 surface 继续收口，`ClassManagementPage.vue`、`StudentManagementPage.vue`、`ClassStudentsPage.vue`、`StudentAnalysisPage.vue`、`TeacherDashboardPage.vue` 与 `TeacherAWDReviewIndex.vue` 对齐当前 workspace tabs、metric panel、目录表格和导出弹窗契约。
+  - `TeacherDashboardPage.vue` 恢复 `trend / insight / advice / action` 四个 tab 的真实工作区内容，避免只保留 overview/portrait 后导致趋势空态、复盘结论和介入建议不可达。
+  - 教师端学生/班级目录继续去掉旧标签列和旧状态文案，补齐姓名/昵称单行省略、原始用户名标题、学号缺省文案、班级报告导出按钮与学号筛选清空交互。
+  - `TeacherClassStudents.test.ts` 中用户名标题源码护栏已从装饰性 `@username` 改为原始 `username`，与前端展示规则保持一致。
+- 本轮涉及文件：
+  - `code/frontend/src/components/teacher/class-management/ClassManagementPage.vue`
+  - `code/frontend/src/components/teacher/class-management/ClassStudentsPage.vue`
+  - `code/frontend/src/components/teacher/class-management/StudentAnalysisPage.vue`
+  - `code/frontend/src/components/teacher/dashboard/TeacherDashboardPage.vue`
+  - `code/frontend/src/components/teacher/student-management/StudentManagementPage.vue`
+  - `code/frontend/src/views/teacher/TeacherAWDReviewIndex.vue`
+  - `code/frontend/src/views/teacher/__tests__/TeacherClassStudents.test.ts`
+
+## 第六十七轮验证
+
+- 已执行：
+  - `npm run test:run -- src/views/teacher/__tests__/TeacherDashboard.test.ts src/views/teacher/__tests__/ClassManagement.test.ts src/views/teacher/__tests__/TeacherStudentManagement.test.ts src/views/teacher/__tests__/TeacherClassStudents.test.ts src/views/teacher/__tests__/TeacherStudentAnalysis.test.ts src/views/teacher/__tests__/TeacherAWDReviewIndex.test.ts`
   - `npm run typecheck`
 
 ## 备注

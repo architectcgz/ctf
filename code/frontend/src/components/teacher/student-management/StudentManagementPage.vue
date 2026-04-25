@@ -62,7 +62,7 @@ const emit = defineEmits<{
               class="ui-btn ui-btn--secondary"
               @click="emit('openReportExport')"
             >
-              导出报告
+              导出班级报告
             </button>
           </div>
         </header>
@@ -230,7 +230,7 @@ const emit = defineEmits<{
               @click="emit('openStudent', student.id)"
             >
               <div class="teacher-directory-cell teacher-directory-cell-student-no">
-                {{ student.student_no || '未设置' }}
+                {{ student.student_no || '未设置学号' }}
               </div>
 
               <div class="teacher-directory-cell teacher-directory-cell-name">
@@ -430,6 +430,9 @@ const emit = defineEmits<{
   font-size: var(--font-size-0-80);
   font-weight: 800;
   color: var(--color-text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .teacher-directory-chip {

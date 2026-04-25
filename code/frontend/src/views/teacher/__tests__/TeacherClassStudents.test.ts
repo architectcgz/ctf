@@ -204,7 +204,7 @@ describe('TeacherClassStudents', () => {
     expect(wrapper.find('.teacher-directory-head').text()).toContain('学生名称')
     expect(wrapper.find('.teacher-directory-head').text()).toContain('昵称')
     expect(wrapper.find('.teacher-directory-row-title').attributes('title')).toBe('Alice Zhang')
-    expect(wrapper.find('.teacher-directory-row-points').attributes('title')).toBe('@alice')
+    expect(wrapper.find('.teacher-directory-row-points').attributes('title')).toBe('alice')
     expect(teacherApiMocks.getClassReview).toHaveBeenCalledWith('Class A')
     expect(teacherApiMocks.getStudentRecommendations).toHaveBeenCalledWith('stu-1')
 
@@ -229,7 +229,7 @@ describe('TeacherClassStudents', () => {
       /class="teacher-directory-row-title"[\s\S]*:title="student\.name \|\| '未设置姓名'"/s
     )
     expect(classStudentsPageSource).toMatch(
-      /class="teacher-directory-row-points"[\s\S]*:title="`@\$\{student\.username\}`"/s
+      /class="teacher-directory-row-points"[\s\S]*:title="student\.username"/s
     )
     expect(classStudentsPageSource).toMatch(
       /\.teacher-directory-row-title\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s
