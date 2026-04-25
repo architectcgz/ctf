@@ -62,14 +62,10 @@ type PracticeCommandRepository interface {
 	FindContestChallenge(ctx context.Context, contestID, challengeID int64) (*model.ContestChallenge, error)
 	FindContestAWDService(ctx context.Context, contestID, serviceID int64) (*model.ContestAWDService, error)
 	FindContestRegistration(ctx context.Context, contestID, userID int64) (*model.ContestRegistration, error)
-	CreateSubmission(submission *model.Submission) error
-	CreateSubmissionWithContext(ctx context.Context, submission *model.Submission) error
-	FindCorrectSubmission(userID, challengeID int64) (*model.Submission, error)
-	FindCorrectSubmissionWithContext(ctx context.Context, userID, challengeID int64) (*model.Submission, error)
-	ListChallengeSubmissions(userID, challengeID int64, limit int) ([]model.Submission, error)
-	ListChallengeSubmissionsWithContext(ctx context.Context, userID, challengeID int64, limit int) ([]model.Submission, error)
-	UpdateSubmission(submission *model.Submission) error
-	UpdateSubmissionWithContext(ctx context.Context, submission *model.Submission) error
+	CreateSubmission(ctx context.Context, submission *model.Submission) error
+	FindCorrectSubmission(ctx context.Context, userID, challengeID int64) (*model.Submission, error)
+	ListChallengeSubmissions(ctx context.Context, userID, challengeID int64, limit int) ([]model.Submission, error)
+	UpdateSubmission(ctx context.Context, submission *model.Submission) error
 	FindUserByID(userID int64) (*model.User, error)
 	FindUserByIDWithContext(ctx context.Context, userID int64) (*model.User, error)
 	ListTeacherManualReviewSubmissions(query *dto.TeacherManualReviewSubmissionQuery) ([]TeacherManualReviewSubmissionRecord, int64, error)

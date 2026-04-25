@@ -25,14 +25,10 @@ type stubPracticeRepository struct {
 	createInstanceFn                                  func(ctx context.Context, instance *model.Instance) error
 	reserveAvailablePortFn                            func(ctx context.Context, start, end int) (int, error)
 	bindReservedPortFn                                func(ctx context.Context, port int, instanceID int64) error
-	createSubmissionFn                                func(submission *model.Submission) error
-	createSubmissionWithContextFn                     func(ctx context.Context, submission *model.Submission) error
-	findCorrectSubmissionFn                           func(userID, challengeID int64) (*model.Submission, error)
-	findCorrectSubmissionWithContextFn                func(ctx context.Context, userID, challengeID int64) (*model.Submission, error)
-	listChallengeSubmissionsFn                        func(userID, challengeID int64, limit int) ([]model.Submission, error)
-	listChallengeSubmissionsWithContextFn             func(ctx context.Context, userID, challengeID int64, limit int) ([]model.Submission, error)
-	updateSubmissionFn                                func(submission *model.Submission) error
-	updateSubmissionWithContextFn                     func(ctx context.Context, submission *model.Submission) error
+	createSubmissionFn                                func(ctx context.Context, submission *model.Submission) error
+	findCorrectSubmissionFn                           func(ctx context.Context, userID, challengeID int64) (*model.Submission, error)
+	listChallengeSubmissionsFn                        func(ctx context.Context, userID, challengeID int64, limit int) ([]model.Submission, error)
+	updateSubmissionFn                                func(ctx context.Context, submission *model.Submission) error
 	findUserByIDFn                                    func(userID int64) (*model.User, error)
 	findUserByIDWithContextFn                         func(ctx context.Context, userID int64) (*model.User, error)
 	listTeacherManualReviewSubmissionsFn              func(query *dto.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error)
@@ -126,60 +122,32 @@ func (s *stubPracticeRepository) BindReservedPort(ctx context.Context, port int,
 	return nil
 }
 
-func (s *stubPracticeRepository) CreateSubmission(submission *model.Submission) error {
+func (s *stubPracticeRepository) CreateSubmission(ctx context.Context, submission *model.Submission) error {
 	if s.createSubmissionFn != nil {
-		return s.createSubmissionFn(submission)
+		return s.createSubmissionFn(ctx, submission)
 	}
 	return nil
 }
 
-func (s *stubPracticeRepository) CreateSubmissionWithContext(ctx context.Context, submission *model.Submission) error {
-	if s.createSubmissionWithContextFn != nil {
-		return s.createSubmissionWithContextFn(ctx, submission)
-	}
-	return s.CreateSubmission(submission)
-}
-
-func (s *stubPracticeRepository) FindCorrectSubmission(userID, challengeID int64) (*model.Submission, error) {
+func (s *stubPracticeRepository) FindCorrectSubmission(ctx context.Context, userID, challengeID int64) (*model.Submission, error) {
 	if s.findCorrectSubmissionFn != nil {
-		return s.findCorrectSubmissionFn(userID, challengeID)
+		return s.findCorrectSubmissionFn(ctx, userID, challengeID)
 	}
 	return nil, gorm.ErrRecordNotFound
 }
 
-func (s *stubPracticeRepository) FindCorrectSubmissionWithContext(ctx context.Context, userID, challengeID int64) (*model.Submission, error) {
-	if s.findCorrectSubmissionWithContextFn != nil {
-		return s.findCorrectSubmissionWithContextFn(ctx, userID, challengeID)
-	}
-	return s.FindCorrectSubmission(userID, challengeID)
-}
-
-func (s *stubPracticeRepository) ListChallengeSubmissions(userID, challengeID int64, limit int) ([]model.Submission, error) {
+func (s *stubPracticeRepository) ListChallengeSubmissions(ctx context.Context, userID, challengeID int64, limit int) ([]model.Submission, error) {
 	if s.listChallengeSubmissionsFn != nil {
-		return s.listChallengeSubmissionsFn(userID, challengeID, limit)
+		return s.listChallengeSubmissionsFn(ctx, userID, challengeID, limit)
 	}
 	return nil, nil
 }
 
-func (s *stubPracticeRepository) ListChallengeSubmissionsWithContext(ctx context.Context, userID, challengeID int64, limit int) ([]model.Submission, error) {
-	if s.listChallengeSubmissionsWithContextFn != nil {
-		return s.listChallengeSubmissionsWithContextFn(ctx, userID, challengeID, limit)
-	}
-	return s.ListChallengeSubmissions(userID, challengeID, limit)
-}
-
-func (s *stubPracticeRepository) UpdateSubmission(submission *model.Submission) error {
+func (s *stubPracticeRepository) UpdateSubmission(ctx context.Context, submission *model.Submission) error {
 	if s.updateSubmissionFn != nil {
-		return s.updateSubmissionFn(submission)
+		return s.updateSubmissionFn(ctx, submission)
 	}
 	return nil
-}
-
-func (s *stubPracticeRepository) UpdateSubmissionWithContext(ctx context.Context, submission *model.Submission) error {
-	if s.updateSubmissionWithContextFn != nil {
-		return s.updateSubmissionWithContextFn(ctx, submission)
-	}
-	return s.UpdateSubmission(submission)
 }
 
 func (s *stubPracticeRepository) FindUserByID(userID int64) (*model.User, error) {

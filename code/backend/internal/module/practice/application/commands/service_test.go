@@ -302,10 +302,10 @@ func TestPracticeServiceCloseCancelsAssessmentUpdate(t *testing.T) {
 	var calls atomic.Int32
 	service := NewService(
 		&stubPracticeRepository{
-			findCorrectSubmissionWithContextFn: func(ctx context.Context, userID, challengeID int64) (*model.Submission, error) {
+			findCorrectSubmissionFn: func(ctx context.Context, userID, challengeID int64) (*model.Submission, error) {
 				return nil, gorm.ErrRecordNotFound
 			},
-			createSubmissionWithContextFn: func(ctx context.Context, submission *model.Submission) error {
+			createSubmissionFn: func(ctx context.Context, submission *model.Submission) error {
 				return nil
 			},
 		},
@@ -363,10 +363,10 @@ func TestPracticeServiceCloseCancelsAsyncScoreUpdate(t *testing.T) {
 	var calls atomic.Int32
 	service := NewService(
 		&stubPracticeRepository{
-			findCorrectSubmissionWithContextFn: func(ctx context.Context, userID, challengeID int64) (*model.Submission, error) {
+			findCorrectSubmissionFn: func(ctx context.Context, userID, challengeID int64) (*model.Submission, error) {
 				return nil, gorm.ErrRecordNotFound
 			},
-			createSubmissionWithContextFn: func(ctx context.Context, submission *model.Submission) error {
+			createSubmissionFn: func(ctx context.Context, submission *model.Submission) error {
 				return nil
 			},
 		},
@@ -468,7 +468,7 @@ func TestSubmitFlagWithManualReviewChallengeCreatesPendingSubmission(t *testing.
 
 	var createdSubmission *model.Submission
 	repo := &stubPracticeRepository{
-		createSubmissionFn: func(submission *model.Submission) error {
+		createSubmissionFn: func(ctx context.Context, submission *model.Submission) error {
 			createdSubmission = submission
 			return nil
 		},
@@ -555,7 +555,7 @@ func TestReviewManualReviewSubmissionApprovesAndTriggersScoreUpdate(t *testing.T
 				ChallengeTitle:  "manual challenge",
 			}, nil
 		},
-		updateSubmissionFn: func(submission *model.Submission) error {
+		updateSubmissionFn: func(ctx context.Context, submission *model.Submission) error {
 			updatedSubmission = submission
 			return nil
 		},
@@ -674,10 +674,10 @@ func TestPracticePublishesFlagAcceptedEvent(t *testing.T) {
 
 	bus := events.NewBus()
 	repo := &stubPracticeRepository{
-		findCorrectSubmissionFn: func(userID, challengeID int64) (*model.Submission, error) {
+		findCorrectSubmissionFn: func(ctx context.Context, userID, challengeID int64) (*model.Submission, error) {
 			return nil, gorm.ErrRecordNotFound
 		},
-		createSubmissionFn: func(submission *model.Submission) error {
+		createSubmissionFn: func(ctx context.Context, submission *model.Submission) error {
 			return db.Create(submission).Error
 		},
 	}
@@ -997,7 +997,7 @@ func TestListMyChallengeSubmissionsMapsStoredHistory(t *testing.T) {
 	now := time.Now()
 	service := NewService(
 		&stubPracticeRepository{
-			listChallengeSubmissionsFn: func(userID, challengeID int64, limit int) ([]model.Submission, error) {
+			listChallengeSubmissionsFn: func(ctx context.Context, userID, challengeID int64, limit int) ([]model.Submission, error) {
 				if userID != 7 || challengeID != 11 {
 					t.Fatalf("unexpected query: user=%d challenge=%d", userID, challengeID)
 				}
@@ -2114,14 +2114,14 @@ func TestSubmitFlagPropagatesContextToRepository(t *testing.T) {
 	createSubmissionCalled := false
 	challengeLookupCalled := false
 	repo := &stubPracticeRepository{
-		findCorrectSubmissionWithContextFn: func(ctx context.Context, userID, challengeID int64) (*model.Submission, error) {
+		findCorrectSubmissionFn: func(ctx context.Context, userID, challengeID int64) (*model.Submission, error) {
 			findCorrectCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find-correct ctx value %v, got %v", expectedCtxValue, got)
 			}
 			return nil, gorm.ErrRecordNotFound
 		},
-		createSubmissionWithContextFn: func(ctx context.Context, submission *model.Submission) error {
+		createSubmissionFn: func(ctx context.Context, submission *model.Submission) error {
 			createSubmissionCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected create-submission ctx value %v, got %v", expectedCtxValue, got)
@@ -2220,7 +2220,7 @@ func TestReviewManualReviewSubmissionPropagatesContextToRepository(t *testing.T)
 			}
 			return &model.User{ID: userID, Role: model.RoleTeacher, ClassName: "Class A"}, nil
 		},
-		updateSubmissionWithContextFn: func(ctx context.Context, submission *model.Submission) error {
+		updateSubmissionFn: func(ctx context.Context, submission *model.Submission) error {
 			updatedCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected update-submission ctx value %v, got %v", expectedCtxValue, got)
@@ -2572,7 +2572,7 @@ func TestReviewManualReviewSubmissionRejectsStudentRole(t *testing.T) {
 			t.Fatal("did not expect requester lookup for student role")
 			return nil, nil
 		},
-		updateSubmissionWithContextFn: func(ctx context.Context, submission *model.Submission) error {
+		updateSubmissionFn: func(ctx context.Context, submission *model.Submission) error {
 			t.Fatal("did not expect submission update for student role")
 			return nil
 		},
@@ -2607,7 +2607,7 @@ func TestReviewManualReviewSubmissionRejectsInvalidReviewStatus(t *testing.T) {
 			t.Fatal("did not expect requester lookup for invalid review status")
 			return nil, nil
 		},
-		updateSubmissionWithContextFn: func(ctx context.Context, submission *model.Submission) error {
+		updateSubmissionFn: func(ctx context.Context, submission *model.Submission) error {
 			t.Fatal("did not expect submission update for invalid review status")
 			return nil
 		},
@@ -2642,7 +2642,7 @@ func TestReviewManualReviewSubmissionRejectsOversizedReviewComment(t *testing.T)
 			t.Fatal("did not expect requester lookup for oversized review comment")
 			return nil, nil
 		},
-		updateSubmissionWithContextFn: func(ctx context.Context, submission *model.Submission) error {
+		updateSubmissionFn: func(ctx context.Context, submission *model.Submission) error {
 			t.Fatal("did not expect submission update for oversized review comment")
 			return nil
 		},
@@ -2693,7 +2693,7 @@ func TestReviewManualReviewSubmissionRejectsApprovalAfterChallengeAlreadySolved(
 		findUserByIDWithContextFn: func(ctx context.Context, userID int64) (*model.User, error) {
 			return &model.User{ID: userID, Role: model.RoleTeacher, ClassName: "Class A"}, nil
 		},
-		findCorrectSubmissionWithContextFn: func(ctx context.Context, userID, challengeID int64) (*model.Submission, error) {
+		findCorrectSubmissionFn: func(ctx context.Context, userID, challengeID int64) (*model.Submission, error) {
 			return &model.Submission{
 				ID:           99,
 				UserID:       userID,
@@ -2704,7 +2704,7 @@ func TestReviewManualReviewSubmissionRejectsApprovalAfterChallengeAlreadySolved(
 				UpdatedAt:    now.Add(-time.Minute),
 			}, nil
 		},
-		updateSubmissionWithContextFn: func(ctx context.Context, submission *model.Submission) error {
+		updateSubmissionFn: func(ctx context.Context, submission *model.Submission) error {
 			t.Fatal("did not expect submission update when challenge already solved")
 			return nil
 		},
@@ -2757,11 +2757,7 @@ func TestListMyChallengeSubmissionsPropagatesContextToRepository(t *testing.T) {
 	listCalled := false
 	service := NewService(
 		&stubPracticeRepository{
-			listChallengeSubmissionsFn: func(userID, challengeID int64, limit int) ([]model.Submission, error) {
-				t.Fatalf("expected context-aware submission listing, got legacy call user=%d challenge=%d limit=%d", userID, challengeID, limit)
-				return nil, nil
-			},
-			listChallengeSubmissionsWithContextFn: func(ctx context.Context, userID, challengeID int64, limit int) ([]model.Submission, error) {
+			listChallengeSubmissionsFn: func(ctx context.Context, userID, challengeID int64, limit int) ([]model.Submission, error) {
 				listCalled = true
 				if got := ctx.Value(ctxKey); got != expectedCtxValue {
 					t.Fatalf("expected submission listing ctx value %v, got %v", expectedCtxValue, got)
@@ -2824,10 +2820,10 @@ func TestSubmitFlagPropagatesContextToDynamicFlagInstanceLookup(t *testing.T) {
 	}
 	service := NewService(
 		&stubPracticeRepository{
-			findCorrectSubmissionWithContextFn: func(context.Context, int64, int64) (*model.Submission, error) {
+			findCorrectSubmissionFn: func(context.Context, int64, int64) (*model.Submission, error) {
 				return nil, gorm.ErrRecordNotFound
 			},
-			createSubmissionWithContextFn: func(context.Context, *model.Submission) error {
+			createSubmissionFn: func(context.Context, *model.Submission) error {
 				return nil
 			},
 		},
@@ -2901,10 +2897,10 @@ func TestSubmitFlagPropagatesContextToSolveGraceInstanceUpdates(t *testing.T) {
 	flagSalt := "solve-grace-ctx"
 	service := NewService(
 		&stubPracticeRepository{
-			findCorrectSubmissionWithContextFn: func(context.Context, int64, int64) (*model.Submission, error) {
+			findCorrectSubmissionFn: func(context.Context, int64, int64) (*model.Submission, error) {
 				return nil, gorm.ErrRecordNotFound
 			},
-			createSubmissionWithContextFn: func(context.Context, *model.Submission) error {
+			createSubmissionFn: func(context.Context, *model.Submission) error {
 				return nil
 			},
 		},
