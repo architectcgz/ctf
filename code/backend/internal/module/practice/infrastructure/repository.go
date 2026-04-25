@@ -259,11 +259,7 @@ func (r *Repository) UpdateSubmission(ctx context.Context, submission *model.Sub
 	return r.dbWithContext(ctx).Save(submission).Error
 }
 
-func (r *Repository) FindUserByID(userID int64) (*model.User, error) {
-	return r.FindUserByIDWithContext(context.Background(), userID)
-}
-
-func (r *Repository) FindUserByIDWithContext(ctx context.Context, userID int64) (*model.User, error) {
+func (r *Repository) FindUserByID(ctx context.Context, userID int64) (*model.User, error) {
 	var user model.User
 	if err := r.dbWithContext(ctx).Where("id = ?", userID).First(&user).Error; err != nil {
 		return nil, err
@@ -317,11 +313,7 @@ func (r teacherManualReviewSubmissionRow) toRecord() practiceports.TeacherManual
 	}
 }
 
-func (r *Repository) GetTeacherManualReviewSubmissionByID(id int64) (*practiceports.TeacherManualReviewSubmissionRecord, error) {
-	return r.GetTeacherManualReviewSubmissionByIDWithContext(context.Background(), id)
-}
-
-func (r *Repository) GetTeacherManualReviewSubmissionByIDWithContext(ctx context.Context, id int64) (*practiceports.TeacherManualReviewSubmissionRecord, error) {
+func (r *Repository) GetTeacherManualReviewSubmissionByID(ctx context.Context, id int64) (*practiceports.TeacherManualReviewSubmissionRecord, error) {
 	rows, _, err := r.listTeacherManualReviewSubmissions(ctx, &dto.TeacherManualReviewSubmissionQuery{
 		Page: 1,
 		Size: 1,
@@ -338,11 +330,7 @@ func (r *Repository) GetTeacherManualReviewSubmissionByIDWithContext(ctx context
 	return &record, nil
 }
 
-func (r *Repository) ListTeacherManualReviewSubmissions(query *dto.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error) {
-	return r.ListTeacherManualReviewSubmissionsWithContext(context.Background(), query)
-}
-
-func (r *Repository) ListTeacherManualReviewSubmissionsWithContext(ctx context.Context, query *dto.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error) {
+func (r *Repository) ListTeacherManualReviewSubmissions(ctx context.Context, query *dto.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error) {
 	return r.listTeacherManualReviewSubmissions(ctx, query, nil)
 }
 

@@ -12,30 +12,27 @@ import (
 )
 
 type stubPracticeRepository struct {
-	withinTransactionFn                               func(ctx context.Context, fn func(txRepo practiceports.PracticeCommandTxRepository) error) error
-	findContestByIDFn                                 func(ctx context.Context, contestID int64) (*model.Contest, error)
-	findContestChallengeFn                            func(ctx context.Context, contestID, challengeID int64) (*model.ContestChallenge, error)
-	findContestAWDServiceFn                           func(ctx context.Context, contestID, serviceID int64) (*model.ContestAWDService, error)
-	findContestRegistrationFn                         func(ctx context.Context, contestID, userID int64) (*model.ContestRegistration, error)
-	lockInstanceScopeFn                               func(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) error
-	findScopedExistingInstanceFn                      func(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) (*model.Instance, error)
-	countScopedRunningInstancesFn                     func(ctx context.Context, userID int64, scope practiceports.InstanceScope) (int, error)
-	refreshInstanceExpiryFn                           func(instanceID int64, expiresAt time.Time) error
-	refreshInstanceExpiryWithContextFn                func(ctx context.Context, instanceID int64, expiresAt time.Time) error
-	createInstanceFn                                  func(ctx context.Context, instance *model.Instance) error
-	reserveAvailablePortFn                            func(ctx context.Context, start, end int) (int, error)
-	bindReservedPortFn                                func(ctx context.Context, port int, instanceID int64) error
-	createSubmissionFn                                func(ctx context.Context, submission *model.Submission) error
-	findCorrectSubmissionFn                           func(ctx context.Context, userID, challengeID int64) (*model.Submission, error)
-	listChallengeSubmissionsFn                        func(ctx context.Context, userID, challengeID int64, limit int) ([]model.Submission, error)
-	updateSubmissionFn                                func(ctx context.Context, submission *model.Submission) error
-	findUserByIDFn                                    func(userID int64) (*model.User, error)
-	findUserByIDWithContextFn                         func(ctx context.Context, userID int64) (*model.User, error)
-	listTeacherManualReviewSubmissionsFn              func(query *dto.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error)
-	listTeacherManualReviewSubmissionsWithContextFn   func(ctx context.Context, query *dto.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error)
-	getTeacherManualReviewSubmissionByIDFn            func(id int64) (*practiceports.TeacherManualReviewSubmissionRecord, error)
-	getTeacherManualReviewSubmissionByIDWithContextFn func(ctx context.Context, id int64) (*practiceports.TeacherManualReviewSubmissionRecord, error)
-	isUniqueViolationFn                               func(err error) bool
+	withinTransactionFn                    func(ctx context.Context, fn func(txRepo practiceports.PracticeCommandTxRepository) error) error
+	findContestByIDFn                      func(ctx context.Context, contestID int64) (*model.Contest, error)
+	findContestChallengeFn                 func(ctx context.Context, contestID, challengeID int64) (*model.ContestChallenge, error)
+	findContestAWDServiceFn                func(ctx context.Context, contestID, serviceID int64) (*model.ContestAWDService, error)
+	findContestRegistrationFn              func(ctx context.Context, contestID, userID int64) (*model.ContestRegistration, error)
+	lockInstanceScopeFn                    func(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) error
+	findScopedExistingInstanceFn           func(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) (*model.Instance, error)
+	countScopedRunningInstancesFn          func(ctx context.Context, userID int64, scope practiceports.InstanceScope) (int, error)
+	refreshInstanceExpiryFn                func(instanceID int64, expiresAt time.Time) error
+	refreshInstanceExpiryWithContextFn     func(ctx context.Context, instanceID int64, expiresAt time.Time) error
+	createInstanceFn                       func(ctx context.Context, instance *model.Instance) error
+	reserveAvailablePortFn                 func(ctx context.Context, start, end int) (int, error)
+	bindReservedPortFn                     func(ctx context.Context, port int, instanceID int64) error
+	createSubmissionFn                     func(ctx context.Context, submission *model.Submission) error
+	findCorrectSubmissionFn                func(ctx context.Context, userID, challengeID int64) (*model.Submission, error)
+	listChallengeSubmissionsFn             func(ctx context.Context, userID, challengeID int64, limit int) ([]model.Submission, error)
+	updateSubmissionFn                     func(ctx context.Context, submission *model.Submission) error
+	findUserByIDFn                         func(ctx context.Context, userID int64) (*model.User, error)
+	listTeacherManualReviewSubmissionsFn   func(ctx context.Context, query *dto.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error)
+	getTeacherManualReviewSubmissionByIDFn func(ctx context.Context, id int64) (*practiceports.TeacherManualReviewSubmissionRecord, error)
+	isUniqueViolationFn                    func(err error) bool
 }
 
 func (s *stubPracticeRepository) WithinTransaction(ctx context.Context, fn func(txRepo practiceports.PracticeCommandTxRepository) error) error {
@@ -150,46 +147,25 @@ func (s *stubPracticeRepository) UpdateSubmission(ctx context.Context, submissio
 	return nil
 }
 
-func (s *stubPracticeRepository) FindUserByID(userID int64) (*model.User, error) {
+func (s *stubPracticeRepository) FindUserByID(ctx context.Context, userID int64) (*model.User, error) {
 	if s.findUserByIDFn != nil {
-		return s.findUserByIDFn(userID)
+		return s.findUserByIDFn(ctx, userID)
 	}
 	return nil, gorm.ErrRecordNotFound
 }
 
-func (s *stubPracticeRepository) FindUserByIDWithContext(ctx context.Context, userID int64) (*model.User, error) {
-	if s.findUserByIDWithContextFn != nil {
-		return s.findUserByIDWithContextFn(ctx, userID)
-	}
-	return s.FindUserByID(userID)
-}
-
-func (s *stubPracticeRepository) ListTeacherManualReviewSubmissions(query *dto.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error) {
+func (s *stubPracticeRepository) ListTeacherManualReviewSubmissions(ctx context.Context, query *dto.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error) {
 	if s.listTeacherManualReviewSubmissionsFn != nil {
-		return s.listTeacherManualReviewSubmissionsFn(query)
+		return s.listTeacherManualReviewSubmissionsFn(ctx, query)
 	}
 	return nil, 0, nil
 }
 
-func (s *stubPracticeRepository) ListTeacherManualReviewSubmissionsWithContext(ctx context.Context, query *dto.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error) {
-	if s.listTeacherManualReviewSubmissionsWithContextFn != nil {
-		return s.listTeacherManualReviewSubmissionsWithContextFn(ctx, query)
-	}
-	return s.ListTeacherManualReviewSubmissions(query)
-}
-
-func (s *stubPracticeRepository) GetTeacherManualReviewSubmissionByID(id int64) (*practiceports.TeacherManualReviewSubmissionRecord, error) {
+func (s *stubPracticeRepository) GetTeacherManualReviewSubmissionByID(ctx context.Context, id int64) (*practiceports.TeacherManualReviewSubmissionRecord, error) {
 	if s.getTeacherManualReviewSubmissionByIDFn != nil {
-		return s.getTeacherManualReviewSubmissionByIDFn(id)
+		return s.getTeacherManualReviewSubmissionByIDFn(ctx, id)
 	}
 	return nil, gorm.ErrRecordNotFound
-}
-
-func (s *stubPracticeRepository) GetTeacherManualReviewSubmissionByIDWithContext(ctx context.Context, id int64) (*practiceports.TeacherManualReviewSubmissionRecord, error) {
-	if s.getTeacherManualReviewSubmissionByIDWithContextFn != nil {
-		return s.getTeacherManualReviewSubmissionByIDWithContextFn(ctx, id)
-	}
-	return s.GetTeacherManualReviewSubmissionByID(id)
 }
 
 func (s *stubPracticeRepository) IsUniqueViolation(err error) bool {

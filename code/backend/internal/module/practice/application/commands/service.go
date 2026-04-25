@@ -710,7 +710,7 @@ func (s *Service) ReviewManualReviewSubmission(
 	if err := ensureManualReviewDecisionStatus(req); err != nil {
 		return nil, err
 	}
-	record, err := s.repo.GetTeacherManualReviewSubmissionByIDWithContext(ctx, submissionID)
+	record, err := s.repo.GetTeacherManualReviewSubmissionByID(ctx, submissionID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrNotFound
@@ -794,12 +794,12 @@ func (s *Service) ListTeacherManualReviewSubmissions(
 	if query == nil {
 		query = &dto.TeacherManualReviewSubmissionQuery{}
 	}
-	normalized, err := normalizeTeacherManualReviewQueryWithContext(ctx, s.repo, requesterID, requesterRole, query)
+	normalized, err := normalizeTeacherManualReviewQuery(ctx, s.repo, requesterID, requesterRole, query)
 	if err != nil {
 		return nil, err
 	}
 
-	items, total, err := s.repo.ListTeacherManualReviewSubmissionsWithContext(ctx, normalized)
+	items, total, err := s.repo.ListTeacherManualReviewSubmissions(ctx, normalized)
 	if err != nil {
 		return nil, err
 	}
@@ -825,7 +825,7 @@ func (s *Service) GetTeacherManualReviewSubmission(
 	if err := ensureManualReviewRequesterRole(requesterRole); err != nil {
 		return nil, err
 	}
-	record, err := s.repo.GetTeacherManualReviewSubmissionByIDWithContext(ctx, submissionID)
+	record, err := s.repo.GetTeacherManualReviewSubmissionByID(ctx, submissionID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrNotFound
@@ -875,7 +875,7 @@ func ensureTeacherCanAccessManualReviewSubmission(
 	if requesterRole == model.RoleAdmin {
 		return nil
 	}
-	requester, err := repo.FindUserByIDWithContext(ctx, requesterID)
+	requester, err := repo.FindUserByID(ctx, requesterID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return errcode.ErrUnauthorized
@@ -889,15 +889,6 @@ func ensureTeacherCanAccessManualReviewSubmission(
 }
 
 func normalizeTeacherManualReviewQuery(
-	repo practiceports.PracticeCommandRepository,
-	requesterID int64,
-	requesterRole string,
-	query *dto.TeacherManualReviewSubmissionQuery,
-) (*dto.TeacherManualReviewSubmissionQuery, error) {
-	return normalizeTeacherManualReviewQueryWithContext(context.Background(), repo, requesterID, requesterRole, query)
-}
-
-func normalizeTeacherManualReviewQueryWithContext(
 	ctx context.Context,
 	repo practiceports.PracticeCommandRepository,
 	requesterID int64,
@@ -921,7 +912,7 @@ func normalizeTeacherManualReviewQueryWithContext(
 		return &normalized, nil
 	}
 
-	requester, err := repo.FindUserByIDWithContext(ctx, requesterID)
+	requester, err := repo.FindUserByID(ctx, requesterID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrUnauthorized

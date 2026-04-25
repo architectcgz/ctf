@@ -66,12 +66,9 @@ type PracticeCommandRepository interface {
 	FindCorrectSubmission(ctx context.Context, userID, challengeID int64) (*model.Submission, error)
 	ListChallengeSubmissions(ctx context.Context, userID, challengeID int64, limit int) ([]model.Submission, error)
 	UpdateSubmission(ctx context.Context, submission *model.Submission) error
-	FindUserByID(userID int64) (*model.User, error)
-	FindUserByIDWithContext(ctx context.Context, userID int64) (*model.User, error)
-	ListTeacherManualReviewSubmissions(query *dto.TeacherManualReviewSubmissionQuery) ([]TeacherManualReviewSubmissionRecord, int64, error)
-	ListTeacherManualReviewSubmissionsWithContext(ctx context.Context, query *dto.TeacherManualReviewSubmissionQuery) ([]TeacherManualReviewSubmissionRecord, int64, error)
-	GetTeacherManualReviewSubmissionByID(id int64) (*TeacherManualReviewSubmissionRecord, error)
-	GetTeacherManualReviewSubmissionByIDWithContext(ctx context.Context, id int64) (*TeacherManualReviewSubmissionRecord, error)
+	FindUserByID(ctx context.Context, userID int64) (*model.User, error)
+	ListTeacherManualReviewSubmissions(ctx context.Context, query *dto.TeacherManualReviewSubmissionQuery) ([]TeacherManualReviewSubmissionRecord, int64, error)
+	GetTeacherManualReviewSubmissionByID(ctx context.Context, id int64) (*TeacherManualReviewSubmissionRecord, error)
 	IsUniqueViolation(err error) bool
 }
 
