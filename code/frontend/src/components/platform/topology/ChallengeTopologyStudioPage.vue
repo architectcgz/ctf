@@ -21,11 +21,13 @@ import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
 import SectionCard from '@/components/common/SectionCard.vue'
+import TopologyNetworkSection from './TopologyNetworkSection.vue'
 import TopologyStatusNotes from './TopologyStatusNotes.vue'
 import TopologySummaryGrid from './TopologySummaryGrid.vue'
 import TopologyTemplateSidePanel from './TopologyTemplateSidePanel.vue'
 
 import type { CanvasInteractionMode } from './TopologyCanvasBoard.vue'
+import type { TopologyNetworkDraft } from './topologyDraft'
 
 const TopologyCanvasBoard = defineAsyncComponent(() => import('./TopologyCanvasBoard.vue'))
 const TopologyNodeEditor = defineAsyncComponent(() => import('./TopologyNodeEditor.vue'))
@@ -129,6 +131,15 @@ const rootClasses = computed(() => [
   isTemplateLibraryMode.value ? 'topology-page--template-library' : 'topology-page--challenge',
   'workspace-shell journal-shell journal-shell-admin journal-notes-card journal-hero flex min-h-full flex-1 flex-col',
 ])
+
+function updateNetworkDraft(payload: {
+  uid: string
+  patch: Partial<Pick<TopologyNetworkDraft, 'key' | 'name' | 'cidr' | 'internal'>>
+}) {
+  const network = draft.value.networks.find((item) => item.uid === payload.uid)
+  if (!network) return
+  Object.assign(network, payload.patch)
+}
 </script>
 
 <template>
@@ -569,66 +580,13 @@ const rootClasses = computed(() => [
             </div>
 
             <div v-else-if="activeWorkbenchTab === 'network'" class="space-y-6">
-              <SectionCard
-                title="网络分段"
-                subtitle="一个节点可以挂多个网络，运行时会创建多个 Docker Network。"
-              >
-                <div class="space-y-3">
-                  <div
-                    v-for="network in draft.networks"
-                    :key="network.uid"
-                    class="grid gap-3 rounded-2xl border border-border bg-elevated p-4 md:grid-cols-[0.9fr_1fr_0.9fr_auto_auto]"
-                  >
-                    <input
-                      v-model="network.key"
-                      type="text"
-                      class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
-                      placeholder="network key"
-                    />
-                    <input
-                      v-model="network.name"
-                      type="text"
-                      class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
-                      placeholder="网络名称"
-                    />
-                    <input
-                      v-model="network.cidr"
-                      type="text"
-                      class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
-                      placeholder="CIDR（可选）"
-                    />
-                    <label
-                      class="flex items-center gap-3 rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary"
-                    >
-                      <input
-                        v-model="network.internal"
-                        type="checkbox"
-                        class="h-4 w-4 rounded border-border bg-transparent"
-                      />
-                      internal
-                    </label>
-                    <button
-                      type="button"
-                      class="ui-btn ui-btn--danger topology-action-btn topology-action-btn--icon"
-                      :disabled="draft.networks.length <= 1"
-                      @click="removeNetwork(network.uid)"
-                    >
-                      <Trash2 class="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-
-                <template #footer>
-                  <button
-                    type="button"
-                    class="topology-toolbar-btn topology-toolbar-btn--ghost"
-                    @click="addNetwork"
-                  >
-                    <Plus class="h-4 w-4" />
-                    添加网络
-                  </button>
-                </template>
-              </SectionCard>
+              <TopologyNetworkSection
+                :networks="draft.networks"
+                add-button-class="topology-toolbar-btn topology-toolbar-btn--ghost"
+                @add-network="addNetwork"
+                @remove-network="removeNetwork"
+                @update-network="updateNetworkDraft"
+              />
             </div>
 
             <div v-else-if="activeWorkbenchTab === 'policy'" class="space-y-6">
@@ -1143,66 +1101,13 @@ const rootClasses = computed(() => [
               </div>
             </SectionCard>
 
-            <SectionCard
-              title="网络分段"
-              subtitle="一个节点可以挂多个网络，运行时会创建多个 Docker Network。"
-            >
-              <div class="space-y-3">
-                <div
-                  v-for="network in draft.networks"
-                  :key="network.uid"
-                  class="grid gap-3 rounded-2xl border border-border bg-elevated p-4 md:grid-cols-[0.9fr_1fr_0.9fr_auto_auto]"
-                >
-                  <input
-                    v-model="network.key"
-                    type="text"
-                    class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
-                    placeholder="network key"
-                  />
-                  <input
-                    v-model="network.name"
-                    type="text"
-                    class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
-                    placeholder="网络名称"
-                  />
-                  <input
-                    v-model="network.cidr"
-                    type="text"
-                    class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
-                    placeholder="CIDR（可选）"
-                  />
-                  <label
-                    class="flex items-center gap-3 rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary"
-                  >
-                    <input
-                      v-model="network.internal"
-                      type="checkbox"
-                      class="h-4 w-4 rounded border-border bg-transparent"
-                    />
-                    internal
-                  </label>
-                  <button
-                    type="button"
-                    class="ui-btn ui-btn--danger topology-action-btn topology-action-btn--icon"
-                    :disabled="draft.networks.length <= 1"
-                    @click="removeNetwork(network.uid)"
-                  >
-                    <Trash2 class="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
-
-              <template #footer>
-                <button
-                  type="button"
-                  class="ui-btn ui-btn--ghost topology-action-btn"
-                  @click="addNetwork"
-                >
-                  <Plus class="h-4 w-4" />
-                  添加网络
-                </button>
-              </template>
-            </SectionCard>
+            <TopologyNetworkSection
+              :networks="draft.networks"
+              add-button-class="ui-btn ui-btn--ghost topology-action-btn"
+              @add-network="addNetwork"
+              @remove-network="removeNetwork"
+              @update-network="updateNetworkDraft"
+            />
 
             <SectionCard
               title="节点编排"
