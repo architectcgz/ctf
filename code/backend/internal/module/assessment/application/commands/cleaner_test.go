@@ -49,3 +49,16 @@ func TestCleanerStopCancelsRunningRebuild(t *testing.T) {
 		t.Fatal("rebuild task did not stop after cancellation")
 	}
 }
+
+func TestCleanerStopRejectsNilContext(t *testing.T) {
+	t.Parallel()
+
+	cleaner := NewCleaner(&blockingRebuildService{
+		started: make(chan struct{}),
+		done:    make(chan struct{}),
+	}, zap.NewNop())
+
+	if err := cleaner.Stop(nil); err == nil {
+		t.Fatal("expected Stop(nil) to reject missing context")
+	}
+}

@@ -117,7 +117,7 @@ func (s *ReportService) SetAWDReviewExportBuilder(builder AWDReviewExportBuilder
 
 func (s *ReportService) CreatePersonalReport(ctx context.Context, userID int64, req *dto.CreatePersonalReportReq) (*dto.ReportExportData, error) {
 	if ctx == nil {
-		ctx = context.Background()
+		return nil, errors.New("create personal report requires context")
 	}
 
 	format := s.normalizeFormat(req.Format)
@@ -136,7 +136,7 @@ func (s *ReportService) CreatePersonalReport(ctx context.Context, userID int64, 
 
 	filePath, expiresAt, err := s.generatePersonalReport(reportCtx, report.ID, userID, format)
 	if err != nil {
-		s.markFailed(report.ID, err)
+		s.markFailed(reportCtx, report.ID, err)
 		return nil, err
 	}
 	if err := s.repo.MarkReady(reportCtx, report.ID, filePath, expiresAt); err != nil {
@@ -147,9 +147,6 @@ func (s *ReportService) CreatePersonalReport(ctx context.Context, userID int64, 
 }
 
 func (s *ReportService) withPersonalTimeout(ctx context.Context) (context.Context, context.CancelFunc) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
 	if s.config.PersonalTimeout <= 0 {
 		return context.WithCancel(ctx)
 	}
@@ -479,32 +476,34 @@ func (s *ReportService) runAsyncReport(reportID int64, fn func(context.Context) 
 	s.tasks.Add(1)
 	go func() {
 		defer s.tasks.Done()
+		taskCtx := s.baseCtx
 
 		select {
 		case s.workerPool <- struct{}{}:
 		case <-s.baseCtx.Done():
-			s.markFailed(reportID, s.baseCtx.Err())
+			s.markFailed(taskCtx, reportID, s.baseCtx.Err())
 			return
 		}
 		defer func() {
 			<-s.workerPool
 			if recovered := recover(); recovered != nil {
-				s.markFailed(reportID, fmt.Errorf("报告任务崩溃: %v", recovered))
+				s.markFailed(taskCtx, reportID, fmt.Errorf("报告任务崩溃: %v", recovered))
 			}
 		}()
 
 		ctx, cancel := context.WithTimeout(s.baseCtx, s.config.ClassTimeout)
+		taskCtx = ctx
 		defer cancel()
 
 		if err := fn(ctx); err != nil {
-			s.markFailed(reportID, err)
+			s.markFailed(ctx, reportID, err)
 		}
 	}()
 }
 
 func (s *ReportService) Close(ctx context.Context) error {
 	if ctx == nil {
-		ctx = context.Background()
+		return errors.New("report service close requires context")
 	}
 	if s.cancel != nil {
 		s.cancel()
@@ -1087,8 +1086,12 @@ func reportContentType(format string) string {
 	return mime.TypeByExtension("." + reportFileExtension(format))
 }
 
-func (s *ReportService) markFailed(reportID int64, err error) {
+func (s *ReportService) markFailed(ctx context.Context, reportID int64, err error) {
 	if s.repo == nil {
+		return
+	}
+	if ctx == nil {
+		s.logger.Error("report_mark_failed_missing_context", zap.Int64("report_id", reportID))
 		return
 	}
 
@@ -1096,7 +1099,7 @@ func (s *ReportService) markFailed(reportID int64, err error) {
 	if err != nil {
 		message = err.Error()
 	}
-	markCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	markCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	if updateErr := s.repo.MarkFailed(markCtx, reportID, message); updateErr != nil {
 		s.logger.Error("report_mark_failed_error", zap.Int64("report_id", reportID), zap.Error(updateErr))
