@@ -288,7 +288,7 @@ func (s *Service) dispatchPendingInstances(ctx context.Context) error {
 		return nil
 	}
 
-	instances, err := s.instanceRepo.ListPendingInstancesWithContext(ctx, limit)
+	instances, err := s.instanceRepo.ListPendingInstances(ctx, limit)
 	if err != nil {
 		return err
 	}
@@ -296,7 +296,7 @@ func (s *Service) dispatchPendingInstances(ctx context.Context) error {
 		if instance == nil {
 			continue
 		}
-		claimed, err := s.instanceRepo.TryTransitionStatusWithContext(ctx, instance.ID, model.InstanceStatusPending, model.InstanceStatusCreating)
+		claimed, err := s.instanceRepo.TryTransitionStatus(ctx, instance.ID, model.InstanceStatusPending, model.InstanceStatusCreating)
 		if err != nil {
 			return err
 		}

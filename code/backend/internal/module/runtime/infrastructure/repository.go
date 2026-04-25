@@ -511,10 +511,7 @@ func (r *Repository) CountRunning(ctx context.Context) (int64, error) {
 	return count, err
 }
 
-func (r *Repository) ListPendingInstancesWithContext(ctx context.Context, limit int) ([]*model.Instance, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
+func (r *Repository) ListPendingInstances(ctx context.Context, limit int) ([]*model.Instance, error) {
 	if limit <= 0 {
 		return []*model.Instance{}, nil
 	}
@@ -531,11 +528,7 @@ func (r *Repository) ListPendingInstancesWithContext(ctx context.Context, limit 
 	return instances, nil
 }
 
-func (r *Repository) TryTransitionStatusWithContext(ctx context.Context, id int64, fromStatus, toStatus string) (bool, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
+func (r *Repository) TryTransitionStatus(ctx context.Context, id int64, fromStatus, toStatus string) (bool, error) {
 	result := r.db.WithContext(ctx).Model(&model.Instance{}).
 		Where("id = ? AND status = ?", id, fromStatus).
 		Updates(map[string]any{

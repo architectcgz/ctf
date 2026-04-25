@@ -227,11 +227,11 @@ func (s *stubPracticeInstanceStore) FindByUserAndChallenge(ctx context.Context, 
 	return nil, nil
 }
 
-func (s *stubPracticeInstanceStore) ListPendingInstancesWithContext(ctx context.Context, limit int) ([]*model.Instance, error) {
+func (s *stubPracticeInstanceStore) ListPendingInstances(ctx context.Context, limit int) ([]*model.Instance, error) {
 	return []*model.Instance{}, nil
 }
 
-func (s *stubPracticeInstanceStore) TryTransitionStatusWithContext(ctx context.Context, id int64, fromStatus, toStatus string) (bool, error) {
+func (s *stubPracticeInstanceStore) TryTransitionStatus(ctx context.Context, id int64, fromStatus, toStatus string) (bool, error) {
 	return false, nil
 }
 
