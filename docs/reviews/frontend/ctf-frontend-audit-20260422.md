@@ -18,7 +18,7 @@
   - 本轮继续收口了平台 AWD 编排组件簇、教师端 `workspace / tabs / surface` 漂移、shared pagination 的 review 基线漂移，以及前端全量测试暴露出的最后一批共享壳层护栏漂移。
 - 当前 `code/frontend` 已通过：
   - `npm run typecheck`
-  - `npm run test:run`（244 个测试文件，1008 个测试）
+  - `npm run test:run`（244 个测试文件，1009 个测试）
 - 后续如继续推进专项，应从新的人工审查或产品体验审查重新列项，而不是继续沿用已清零的失败测试清单。
 
 ## 优先级结论
@@ -1625,6 +1625,40 @@
   - `npm run test:run -- src/views/__tests__/studentOverviewEntrypoint.test.ts src/components/layout/__tests__/AppLayout.test.ts src/views/platform/__tests__/platformManagementSurfaceAlignment.test.ts`
   - `npm run typecheck`
   - `npm run test:run`（244 个测试文件，1008 个测试）
+
+## 第六十九轮复核计划
+
+- 本轮复核历史 review 文档后，确认主专项的 `P1` 问题已经收口，剩余适合继续直接处理的是几类可闭环的交互与样式尾项：
+  - 实例即将过期弹窗已存在，但还缺少对话框语义、ESC 关闭、明确关闭按钮和 focus 归位。
+  - 竞赛详情页题目选中状态仍只存在内存中，刷新或分享链接后无法恢复，应同步到 URL query。
+  - 竞赛状态 badge 与实例状态色仍有少量硬编码色值，应继续回到主题 token 或语义类。
+  - 文档中提到的学生端超时提醒、个人总分/解题数/排名卡片、能力画像难度映射重复和雷达图 tooltip `any`，当前代码已覆盖或旧结论已过期，不再作为待修项。
+- 不在本轮混入的专题债：
+  - `ChallengeTopologyStudioPage.vue`、`AWDChallengeConfigDialog.vue`、`StudentInsightPanel.vue`、`ContestAWDWorkspacePanel.vue` 等超大组件仍需要继续拆分，但应按父页面 owner 边界单独立项，不能只为了减少行数而牺牲路由同步、数据加载和主业务动作的清晰所有权。
+  - 性能监控和 i18n 预留仍属于上线前或产品策略项，当前没有明确接入目标，暂不混入交互尾项修复。
+
+## 第六十九轮修复进展
+
+- 已完成：
+  - 实例即将过期弹窗补齐 `role="dialog"`、`aria-modal`、标题/说明关联、明确关闭按钮、ESC 关闭和 focus 归位；弹窗壳层改为语义类和共享 dialog token，不再在模板中保留 `rounded-[24px]`、`text-[var(...)]` 等低信息度任意值。
+  - 实例状态点从硬编码 Tailwind 十六进制色值改为 `instance-status-dot--*` 语义类，并通过主题 token 映射 warning / success / danger / muted。
+  - 竞赛详情普通题目选中状态接入 `challenge` query，页面加载时可从 URL 恢复选中题目，用户切换题目时会写回 `?panel=challenges&challenge=...`。
+  - 竞赛状态 badge 工具函数不再返回硬编码色值工具类，改为返回语义类名称。
+- 本轮涉及文件：
+  - `code/frontend/src/views/instances/InstanceList.vue`
+  - `code/frontend/src/composables/useInstanceListPage.ts`
+  - `code/frontend/src/views/contests/ContestDetail.vue`
+  - `code/frontend/src/composables/useContestDetailPage.ts`
+  - `code/frontend/src/utils/contest.ts`
+  - `code/frontend/src/views/instances/__tests__/InstanceList.test.ts`
+  - `code/frontend/src/views/contests/__tests__/ContestDetail.test.ts`
+
+## 第六十九轮验证
+
+- 已执行：
+  - `npm run test:run -- src/views/instances/__tests__/InstanceList.test.ts src/views/contests/__tests__/ContestDetail.test.ts`（2 个测试文件，27 个测试）
+  - `npm run typecheck`
+  - `npm run test:run`（244 个测试文件，1009 个测试）
 
 ## 备注
 
