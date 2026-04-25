@@ -463,13 +463,7 @@ const {
   min-height: 100%;
   padding: var(--space-5);
   border-color: color-mix(in srgb, var(--journal-accent) 18%, var(--teacher-card-border));
-  background:
-    radial-gradient(
-      circle at top right,
-      color-mix(in srgb, var(--journal-accent) 16%, transparent),
-      transparent 48%
-    ),
-    color-mix(in srgb, var(--journal-surface) 88%, transparent);
+  background: color-mix(in srgb, var(--journal-surface) 88%, transparent);
 }
 
 .rail-label {
