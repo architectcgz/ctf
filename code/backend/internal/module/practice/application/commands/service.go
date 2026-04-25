@@ -257,7 +257,8 @@ func (s *Service) RunProvisioningLoop(ctx context.Context) {
 		return
 	}
 	if ctx == nil {
-		ctx = context.Background()
+		s.logger.Warn("实例启动调度循环缺少上下文")
+		return
 	}
 
 	ticker := time.NewTicker(s.schedulerPollInterval())
@@ -1569,7 +1570,7 @@ func (s *Service) triggerAssessmentUpdate(userID int64, dimension string) {
 
 func (s *Service) Close(ctx context.Context) error {
 	if ctx == nil {
-		ctx = context.Background()
+		return errors.New("practice service close requires context")
 	}
 	if s.cancel != nil {
 		s.cancel()

@@ -721,6 +721,35 @@ func TestPracticeServiceRunAsyncTaskReturnsWhenClosed(t *testing.T) {
 	}
 }
 
+func TestRunProvisioningLoopReturnsWhenContextMissing(t *testing.T) {
+	t.Parallel()
+
+	service := NewService(nil, nil, nil, nil, nil, nil, nil, nil, &config.Config{
+		Container: config.ContainerConfig{
+			Scheduler: config.ContainerSchedulerConfig{
+				Enabled: true,
+			},
+		},
+	}, nil)
+
+	defer func() {
+		if recovered := recover(); recovered != nil {
+			t.Fatalf("RunProvisioningLoop(nil) should return without panic, got %v", recovered)
+		}
+	}()
+	service.RunProvisioningLoop(nil)
+}
+
+func TestPracticeServiceCloseRejectsNilContext(t *testing.T) {
+	t.Parallel()
+
+	service := NewService(nil, nil, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
+
+	if err := service.Close(nil); err == nil {
+		t.Fatal("expected Close(nil) to reject missing context")
+	}
+}
+
 func TestPracticePublishesFlagAcceptedEvent(t *testing.T) {
 	t.Parallel()
 
