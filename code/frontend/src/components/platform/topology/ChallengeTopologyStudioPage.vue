@@ -19,11 +19,11 @@ import {
   useChallengeTopologyStudioPage,
   type TopologyStudioMode,
 } from '@/composables/useChallengeTopologyStudioPage'
-import AppCard from '@/components/common/AppCard.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
 import SectionCard from '@/components/common/SectionCard.vue'
+import TopologyTemplateSidePanel from './TopologyTemplateSidePanel.vue'
 
 import type { CanvasInteractionMode } from './TopologyCanvasBoard.vue'
 
@@ -158,10 +158,7 @@ const rootClasses = computed(() => [
       </button>
     </PageHeader>
 
-    <header
-      v-else
-      class="workspace-topbar topology-workspace-topbar"
-    >
+    <header v-else class="workspace-topbar topology-workspace-topbar">
       <div class="topology-topbar-leading">
         <span class="workspace-overline">Challenge Workspace</span>
         <span class="topology-topbar-chip">{{ pageHeader.eyebrow }}</span>
@@ -194,10 +191,7 @@ const rootClasses = computed(() => [
       </div>
     </header>
 
-    <div
-      v-if="loading && !isTemplateLibraryMode"
-      class="content-pane topology-loading-pane"
-    >
+    <div v-if="loading && !isTemplateLibraryMode" class="content-pane topology-loading-pane">
       <AppLoading>{{ loadingText }}</AppLoading>
     </div>
 
@@ -211,10 +205,7 @@ const rootClasses = computed(() => [
     </section>
 
     <template v-else>
-      <section
-        v-if="isTemplateLibraryMode"
-        class="content-pane template-library-main"
-      >
+      <section v-if="isTemplateLibraryMode" class="content-pane template-library-main">
         <section class="topology-hero-grid grid gap-4 xl:grid-cols-[1.04fr_0.96fr]">
           <div class="topology-hero-lead topology-hero-lead--library">
             <div class="topology-hero-kicker">
@@ -340,10 +331,7 @@ const rootClasses = computed(() => [
                   "
                   @click="activeWorkbenchTab = tab.id as any"
                 >
-                  <component
-                    :is="tab.icon"
-                    class="h-4 w-4"
-                  />
+                  <component :is="tab.icon" class="h-4 w-4" />
                   <span class="hidden sm:inline">{{ tab.label }}</span>
                 </button>
               </div>
@@ -357,10 +345,7 @@ const rootClasses = computed(() => [
               </button>
             </div>
 
-            <div
-              v-if="activeWorkbenchTab === 'visual'"
-              class="space-y-6"
-            >
+            <div v-if="activeWorkbenchTab === 'visual'" class="space-y-6">
               <SectionCard
                 title="图形画布"
                 subtitle="拖拽节点调整视图布局，点击节点可快速跳到对应节点编辑卡片。"
@@ -468,14 +453,8 @@ const rootClasses = computed(() => [
                   <div class="font-medium">
                     {{ draftValidationIssues.length === 0 ? '基础校验已通过' : '基础校验发现问题' }}
                   </div>
-                  <ul
-                    v-if="draftValidationIssues.length > 0"
-                    class="mt-2 space-y-1 text-xs"
-                  >
-                    <li
-                      v-for="issue in draftValidationIssues"
-                      :key="issue"
-                    >
+                  <ul v-if="draftValidationIssues.length > 0" class="mt-2 space-y-1 text-xs">
+                    <li v-for="issue in draftValidationIssues" :key="issue">
                       {{ issue }}
                     </li>
                   </ul>
@@ -499,9 +478,7 @@ const rootClasses = computed(() => [
                   <div
                     class="template-quick-editor rounded-2xl border border-border bg-elevated p-4"
                   >
-                    <div class="text-sm font-semibold text-text-primary">
-                      画布快速编辑
-                    </div>
+                    <div class="text-sm font-semibold text-text-primary">画布快速编辑</div>
 
                     <div
                       v-if="!selectedNodeDraft && !selectedEdgeMeta"
@@ -510,10 +487,7 @@ const rootClasses = computed(() => [
                       请在画布中选择一个节点或连线进行快速配置
                     </div>
 
-                    <div
-                      v-else-if="selectedNodeDraft"
-                      class="mt-3 space-y-4"
-                    >
+                    <div v-else-if="selectedNodeDraft" class="mt-3 space-y-4">
                       <div class="grid gap-3 md:grid-cols-2">
                         <label class="space-y-2">
                           <span class="text-sm text-text-secondary">节点名称</span>
@@ -521,7 +495,7 @@ const rootClasses = computed(() => [
                             v-model="selectedNodeDraft.name"
                             type="text"
                             class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
-                          >
+                          />
                         </label>
                         <label class="space-y-2">
                           <span class="text-sm text-text-secondary">服务端口</span>
@@ -538,14 +512,12 @@ const rootClasses = computed(() => [
                                 selectedNodeDraft
                               )
                             "
-                          >
+                          />
                         </label>
                       </div>
 
                       <div class="space-y-2">
-                        <div class="text-sm text-text-secondary">
-                          所属网络
-                        </div>
+                        <div class="text-sm text-text-secondary">所属网络</div>
                         <div class="flex flex-wrap gap-2">
                           <label
                             v-for="network in draft.networks"
@@ -562,17 +534,14 @@ const rootClasses = computed(() => [
                                   ($event.target as HTMLInputElement).checked
                                 )
                               "
-                            >
+                            />
                             <span>{{ network.name || network.key }}</span>
                           </label>
                         </div>
                       </div>
                     </div>
 
-                    <div
-                      v-else-if="selectedEdgeMeta"
-                      class="mt-3 space-y-4"
-                    >
+                    <div v-else-if="selectedEdgeMeta" class="mt-3 space-y-4">
                       <div class="grid gap-3 md:grid-cols-2">
                         <label class="space-y-2">
                           <span class="text-sm text-text-secondary">源节点</span>
@@ -585,11 +554,7 @@ const rootClasses = computed(() => [
                               )
                             "
                           >
-                            <option
-                              v-for="node in nodeOptions"
-                              :key="node.key"
-                              :value="node.key"
-                            >
+                            <option v-for="node in nodeOptions" :key="node.key" :value="node.key">
                               {{ node.label }}
                             </option>
                           </select>
@@ -605,11 +570,7 @@ const rootClasses = computed(() => [
                               )
                             "
                           >
-                            <option
-                              v-for="node in nodeOptions"
-                              :key="node.key"
-                              :value="node.key"
-                            >
+                            <option v-for="node in nodeOptions" :key="node.key" :value="node.key">
                               {{ node.label }}
                             </option>
                           </select>
@@ -636,14 +597,8 @@ const rootClasses = computed(() => [
               </SectionCard>
             </div>
 
-            <div
-              v-else-if="activeWorkbenchTab === 'compute'"
-              class="space-y-6"
-            >
-              <SectionCard
-                title="入口节点"
-                subtitle="实例访问入口和当前草稿的保存范围。"
-              >
+            <div v-else-if="activeWorkbenchTab === 'compute'" class="space-y-6">
+              <SectionCard title="入口节点" subtitle="实例访问入口和当前草稿的保存范围。">
                 <div class="grid gap-4">
                   <label class="space-y-2">
                     <span class="text-sm text-text-secondary">入口节点</span>
@@ -651,11 +606,7 @@ const rootClasses = computed(() => [
                       v-model="draft.entry_node_key"
                       class="w-full rounded-xl border border-border bg-elevated px-3 py-3 text-sm text-text-primary outline-none transition focus:border-primary"
                     >
-                      <option
-                        v-for="node in nodeOptions"
-                        :key="node.key"
-                        :value="node.key"
-                      >
+                      <option v-for="node in nodeOptions" :key="node.key" :value="node.key">
                         {{ node.label }} ({{ node.key }})
                       </option>
                     </select>
@@ -696,10 +647,7 @@ const rootClasses = computed(() => [
               </SectionCard>
             </div>
 
-            <div
-              v-else-if="activeWorkbenchTab === 'network'"
-              class="space-y-6"
-            >
+            <div v-else-if="activeWorkbenchTab === 'network'" class="space-y-6">
               <SectionCard
                 title="网络分段"
                 subtitle="一个节点可以挂多个网络，运行时会创建多个 Docker Network。"
@@ -715,19 +663,19 @@ const rootClasses = computed(() => [
                       type="text"
                       class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
                       placeholder="network key"
-                    >
+                    />
                     <input
                       v-model="network.name"
                       type="text"
                       class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
                       placeholder="网络名称"
-                    >
+                    />
                     <input
                       v-model="network.cidr"
                       type="text"
                       class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
                       placeholder="CIDR（可选）"
-                    >
+                    />
                     <label
                       class="flex items-center gap-3 rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary"
                     >
@@ -735,7 +683,7 @@ const rootClasses = computed(() => [
                         v-model="network.internal"
                         type="checkbox"
                         class="h-4 w-4 rounded border-border bg-transparent"
-                      >
+                      />
                       internal
                     </label>
                     <button
@@ -762,10 +710,7 @@ const rootClasses = computed(() => [
               </SectionCard>
             </div>
 
-            <div
-              v-else-if="activeWorkbenchTab === 'policy'"
-              class="space-y-6"
-            >
+            <div v-else-if="activeWorkbenchTab === 'policy'" class="space-y-6">
               <SectionCard
                 title="拓扑连线"
                 subtitle="用于表达逻辑依赖关系，不直接等同于运行时 ACL。"
@@ -776,10 +721,7 @@ const rootClasses = computed(() => [
                 >
                   暂无逻辑连线
                 </div>
-                <div
-                  v-else
-                  class="space-y-3"
-                >
+                <div v-else class="space-y-3">
                   <div
                     v-for="link in draft.links"
                     :key="link.uid"
@@ -789,14 +731,8 @@ const rootClasses = computed(() => [
                       v-model="link.from_node_key"
                       class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
                     >
-                      <option value="">
-                        选择源节点
-                      </option>
-                      <option
-                        v-for="node in nodeOptions"
-                        :key="node.key"
-                        :value="node.key"
-                      >
+                      <option value="">选择源节点</option>
+                      <option v-for="node in nodeOptions" :key="node.key" :value="node.key">
                         {{ node.label }}
                       </option>
                     </select>
@@ -804,14 +740,8 @@ const rootClasses = computed(() => [
                       v-model="link.to_node_key"
                       class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
                     >
-                      <option value="">
-                        选择目标节点
-                      </option>
-                      <option
-                        v-for="node in nodeOptions"
-                        :key="node.key"
-                        :value="node.key"
-                      >
+                      <option value="">选择目标节点</option>
+                      <option v-for="node in nodeOptions" :key="node.key" :value="node.key">
                         {{ node.label }}
                       </option>
                     </select>
@@ -847,10 +777,7 @@ const rootClasses = computed(() => [
                 >
                   暂无链路策略
                 </div>
-                <div
-                  v-else
-                  class="space-y-3"
-                >
+                <div v-else class="space-y-3">
                   <div
                     v-for="policy in draft.policies"
                     :key="policy.uid"
@@ -860,14 +787,8 @@ const rootClasses = computed(() => [
                       v-model="policy.source_node_key"
                       class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
                     >
-                      <option value="">
-                        选择源节点
-                      </option>
-                      <option
-                        v-for="node in nodeOptions"
-                        :key="node.key"
-                        :value="node.key"
-                      >
+                      <option value="">选择源节点</option>
+                      <option v-for="node in nodeOptions" :key="node.key" :value="node.key">
                         {{ node.label }}
                       </option>
                     </select>
@@ -875,14 +796,8 @@ const rootClasses = computed(() => [
                       v-model="policy.target_node_key"
                       class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
                     >
-                      <option value="">
-                        选择目标节点
-                      </option>
-                      <option
-                        v-for="node in nodeOptions"
-                        :key="node.key"
-                        :value="node.key"
-                      >
+                      <option value="">选择目标节点</option>
+                      <option v-for="node in nodeOptions" :key="node.key" :value="node.key">
                         {{ node.label }}
                       </option>
                     </select>
@@ -890,12 +805,8 @@ const rootClasses = computed(() => [
                       v-model="policy.action"
                       class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
                     >
-                      <option value="allow">
-                        allow
-                      </option>
-                      <option value="deny">
-                        deny
-                      </option>
+                      <option value="allow">allow</option>
+                      <option value="deny">deny</option>
                     </select>
                     <button
                       type="button"
@@ -923,233 +834,25 @@ const rootClasses = computed(() => [
             </div>
           </div>
 
-          <div class="topology-side-stack topology-side-stack--library">
-            <SectionCard
-              title="模板库"
-              :subtitle="
-                isTemplateLibraryMode
-                  ? '从模板库载入后可直接编辑并覆盖模板，或另存为新模板。'
-                  : '可按模板快速回填编辑器，或直接应用到题目。'
-              "
-            >
-              <div class="space-y-3">
-                <div class="template-focus-card">
-                  <div class="text-xs font-semibold uppercase tracking-[0.22em] text-text-muted">
-                    当前模板
-                  </div>
-                  <div class="mt-2 text-sm text-text-primary">
-                    {{ selectedTemplateSummary }}
-                  </div>
-                  <div class="mt-3 flex flex-wrap gap-2">
-                    <button
-                      v-if="selectedTemplate"
-                      type="button"
-                      class="ui-btn ui-btn--secondary topology-action-btn"
-                      @click="loadTemplateIntoDraft(selectedTemplate)"
-                    >
-                      重新载入当前模板
-                    </button>
-                    <button
-                      v-if="selectedTemplate"
-                      type="button"
-                      class="ui-btn ui-btn--secondary topology-action-btn"
-                      @click="clearTemplateSelection"
-                    >
-                      清空模板选择
-                    </button>
-                  </div>
-                </div>
-
-                <div class="template-search-row">
-                  <input
-                    v-model="templateKeyword"
-                    type="text"
-                    class="w-full rounded-xl border border-border bg-elevated px-3 py-3 text-sm text-text-primary outline-none transition focus:border-primary"
-                    placeholder="按模板名称搜索"
-                  >
-                  <button
-                    type="button"
-                    class="ui-btn ui-btn--secondary topology-action-btn"
-                    @click="void loadTemplates()"
-                  >
-                    搜索
-                  </button>
-                </div>
-
-                <div
-                  v-if="templates.length === 0"
-                  class="template-empty-state"
-                >
-                  当前没有模板数据
-                </div>
-
-                <div
-                  v-else
-                  class="template-library-list"
-                >
-                  <div
-                    class="template-directory-head"
-                    aria-hidden="true"
-                  >
-                    <span>模板</span>
-                    <span>概况</span>
-                    <span>操作</span>
-                  </div>
-
-                  <article
-                    v-for="template in templates"
-                    :key="template.id"
-                    :class="[
-                      'template-library-item',
-                      selectedTemplateId === template.id
-                        ? 'template-library-item--active'
-                        : 'template-library-item--idle',
-                    ]"
-                  >
-                    <div class="template-library-item__main">
-                      <div class="truncate text-base font-bold text-text-primary">
-                        {{ template.name }}
-                      </div>
-                      <div class="mt-1 line-clamp-2 text-xs leading-relaxed text-text-secondary">
-                        {{ template.description || '无描述' }}
-                      </div>
-                      <div
-                        class="mt-3 flex flex-wrap gap-x-3 gap-y-1.5 text-[10px] font-bold uppercase tracking-wider text-text-muted"
-                      >
-                        <span class="flex items-center gap-1">
-                          <Layout class="h-3 w-3" />
-                          {{ template.entry_node_key }}
-                        </span>
-                        <span class="flex items-center gap-1">
-                          <Server class="h-3 w-3" />
-                          {{ template.nodes.length }}
-                        </span>
-                        <span class="flex items-center gap-1">
-                          <Network class="h-3 w-3" />
-                          {{ template.networks?.length || 0 }}
-                        </span>
-                        <span class="flex items-center gap-1">
-                          <RefreshCw class="h-3 w-3" />
-                          {{ template.usage_count }}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div class="template-library-item__meta">
-                      <span>入口 {{ template.entry_node_key }}</span>
-                      <span>{{ template.nodes.length }} 节点</span>
-                      <span>{{ template.networks?.length || 0 }} 网络</span>
-                      <span>使用 {{ template.usage_count }}</span>
-                    </div>
-
-                    <div class="template-library-item__actions">
-                      <button
-                        type="button"
-                        class="ui-btn ui-btn--secondary topology-action-btn"
-                        @click="loadTemplateIntoDraft(template)"
-                      >
-                        载入编辑
-                      </button>
-                      <button
-                        type="button"
-                        class="ui-btn ui-btn--danger topology-action-btn"
-                        :disabled="templateBusy"
-                        @click="void handleDeleteTemplate(template.id)"
-                      >
-                        <Trash2 class="h-3 w-3" />
-                      </button>
-                    </div>
-                  </article>
-                </div>
-              </div>
-            </SectionCard>
-
-            <SectionCard
-              title="模板写回"
-              subtitle="在独立模板库中可新建空白草稿、载入现有模板后覆盖，或另存为新模板。"
-            >
-              <div class="template-writeback-form">
-                <label class="space-y-2">
-                  <span class="text-sm text-text-secondary">模板名称</span>
-                  <input
-                    v-model="templateName"
-                    type="text"
-                    class="w-full rounded-xl border border-border bg-elevated px-3 py-3 text-sm text-text-primary outline-none transition focus:border-primary"
-                    placeholder="例如 双节点 Web + DB"
-                  >
-                </label>
-
-                <label class="space-y-2">
-                  <span class="text-sm text-text-secondary">模板描述</span>
-                  <textarea
-                    v-model="templateDescription"
-                    rows="4"
-                    class="w-full rounded-xl border border-border bg-elevated px-3 py-3 text-sm text-text-primary outline-none transition focus:border-primary"
-                    placeholder="说明这个模板的适用场景"
-                  />
-                </label>
-
-                <div class="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    class="ui-btn ui-btn--secondary topology-action-btn flex-1"
-                    @click="handleResetTemplateEditor"
-                  >
-                    新建空白模板
-                  </button>
-                  <button
-                    type="button"
-                    class="ui-btn ui-btn--primary topology-action-btn flex-1"
-                    :disabled="templateBusy"
-                    @click="void handleCreateTemplate()"
-                  >
-                    <Plus class="h-4 w-4" />
-                    另存为
-                  </button>
-                  <button
-                    type="button"
-                    class="ui-btn ui-btn--secondary topology-action-btn flex-1"
-                    :disabled="templateBusy || !selectedTemplateId"
-                    @click="void handleUpdateTemplate()"
-                  >
-                    覆盖
-                  </button>
-                </div>
-              </div>
-            </SectionCard>
-
-            <SectionCard
-              title="当前边界"
-              subtitle="避免把未生效能力继续暴露成可用配置。"
-            >
-              <div class="template-boundary-list">
-                <article class="template-boundary-item template-boundary-item--warning">
-                  <div class="template-boundary-item__label">
-                    已开放
-                  </div>
-                  <div class="template-boundary-item__copy">
-                    多网络、节点、逻辑连线、粗粒度 allow/deny 策略、模板复用。
-                  </div>
-                </article>
-                <article class="template-boundary-item template-boundary-item--danger">
-                  <div class="template-boundary-item__label">
-                    暂未开放
-                  </div>
-                  <div class="template-boundary-item__copy">
-                    protocol / ports 级细粒度 ACL 前端字段、模板版本化与批量比对能力。
-                  </div>
-                </article>
-                <article class="template-boundary-item template-boundary-item--neutral">
-                  <div class="template-boundary-item__label">
-                    建议
-                  </div>
-                  <div class="template-boundary-item__copy">
-                    继续开放高级能力前，先补参数校验、可视化提示和误操作保护。
-                  </div>
-                </article>
-              </div>
-            </SectionCard>
-          </div>
+          <TopologyTemplateSidePanel
+            v-model:template-keyword="templateKeyword"
+            v-model:template-name="templateName"
+            v-model:template-description="templateDescription"
+            :is-template-library-mode="isTemplateLibraryMode"
+            :selected-template-summary="selectedTemplateSummary"
+            :selected-template-id="selectedTemplateId"
+            :templates="templates"
+            :template-busy="templateBusy"
+            @load-template="loadTemplateIntoDraft"
+            @clear-template-selection="clearTemplateSelection"
+            @search-templates="void loadTemplates()"
+            @reset-template-form="resetTemplateForm"
+            @apply-template="(template) => void handleApplyTemplate(template)"
+            @delete-template="(templateId) => void handleDeleteTemplate(templateId)"
+            @reset-template-editor="handleResetTemplateEditor"
+            @create-template="void handleCreateTemplate()"
+            @update-template="void handleUpdateTemplate()"
+          />
         </section>
       </section>
 
@@ -1169,33 +872,25 @@ const rootClasses = computed(() => [
 
           <div class="topology-summary-grid topology-summary-grid--challenge metric-panel-grid">
             <article class="topology-summary-card metric-panel-card">
-              <div class="topology-summary-label metric-panel-label">
-                网络
-              </div>
+              <div class="topology-summary-label metric-panel-label">网络</div>
               <div class="topology-summary-value metric-panel-value">
                 {{ topologySummary.networks }}
               </div>
             </article>
             <article class="topology-summary-card metric-panel-card">
-              <div class="topology-summary-label metric-panel-label">
-                节点
-              </div>
+              <div class="topology-summary-label metric-panel-label">节点</div>
               <div class="topology-summary-value metric-panel-value">
                 {{ topologySummary.nodes }}
               </div>
             </article>
             <article class="topology-summary-card metric-panel-card">
-              <div class="topology-summary-label metric-panel-label">
-                连线
-              </div>
+              <div class="topology-summary-label metric-panel-label">连线</div>
               <div class="topology-summary-value metric-panel-value">
                 {{ topologySummary.links }}
               </div>
             </article>
             <article class="topology-summary-card metric-panel-card">
-              <div class="topology-summary-label metric-panel-label">
-                策略
-              </div>
+              <div class="topology-summary-label metric-panel-label">策略</div>
               <div class="topology-summary-value metric-panel-value">
                 {{ topologySummary.policies }}
               </div>
@@ -1320,14 +1015,8 @@ const rootClasses = computed(() => [
                 >
                   当前草稿的入口、节点、网络和链路引用关系正常。
                 </div>
-                <ul
-                  v-else
-                  class="mt-2 space-y-1 text-xs"
-                >
-                  <li
-                    v-for="issue in draftValidationIssues"
-                    :key="issue"
-                  >
+                <ul v-else class="mt-2 space-y-1 text-xs">
+                  <li v-for="issue in draftValidationIssues" :key="issue">
                     {{ issue }}
                   </li>
                 </ul>
@@ -1349,9 +1038,7 @@ const rootClasses = computed(() => [
 
               <div class="mt-4 grid gap-4 xl:grid-cols-[1.08fr_0.92fr]">
                 <div class="rounded-2xl border border-border bg-elevated p-4">
-                  <div class="text-sm font-semibold text-text-primary">
-                    画布快速编辑
-                  </div>
+                  <div class="text-sm font-semibold text-text-primary">画布快速编辑</div>
 
                   <div
                     v-if="!selectedNodeDraft && !selectedEdgeMeta"
@@ -1360,10 +1047,7 @@ const rootClasses = computed(() => [
                     请选择一个节点或一条边
                   </div>
 
-                  <div
-                    v-else-if="selectedNodeDraft"
-                    class="mt-3 space-y-4"
-                  >
+                  <div v-else-if="selectedNodeDraft" class="mt-3 space-y-4">
                     <div class="grid gap-3 md:grid-cols-2">
                       <label class="space-y-2">
                         <span class="text-sm text-text-secondary">节点名称</span>
@@ -1371,7 +1055,7 @@ const rootClasses = computed(() => [
                           v-model="selectedNodeDraft.name"
                           type="text"
                           class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
-                        >
+                        />
                       </label>
                       <label class="space-y-2">
                         <span class="text-sm text-text-secondary">镜像</span>
@@ -1380,11 +1064,7 @@ const rootClasses = computed(() => [
                           class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
                         >
                           <option value="">复用题目主镜像</option>
-                          <option
-                            v-for="image in images"
-                            :key="image.id"
-                            :value="image.id"
-                          >
+                          <option v-for="image in images" :key="image.id" :value="image.id">
                             {{ image.name }}:{{ image.tag }}
                           </option>
                         </select>
@@ -1415,7 +1095,7 @@ const rootClasses = computed(() => [
                               selectedNodeDraft
                             )
                           "
-                        >
+                        />
                       </label>
                     </div>
 
@@ -1426,14 +1106,12 @@ const rootClasses = computed(() => [
                         v-model="selectedNodeDraft.inject_flag"
                         type="checkbox"
                         class="h-4 w-4 rounded border-border bg-transparent"
-                      >
+                      />
                       启用 Flag 注入
                     </label>
 
                     <div class="space-y-2">
-                      <div class="text-sm text-text-secondary">
-                        所属网络
-                      </div>
+                      <div class="text-sm text-text-secondary">所属网络</div>
                       <div class="grid gap-2 md:grid-cols-2">
                         <label
                           v-for="network in draft.networks"
@@ -1450,17 +1128,14 @@ const rootClasses = computed(() => [
                                 ($event.target as HTMLInputElement).checked
                               )
                             "
-                          >
+                          />
                           <span>{{ network.name || network.key }}</span>
                         </label>
                       </div>
                     </div>
                   </div>
 
-                  <div
-                    v-else-if="selectedEdgeMeta"
-                    class="mt-3 space-y-4"
-                  >
+                  <div v-else-if="selectedEdgeMeta" class="mt-3 space-y-4">
                     <div class="grid gap-3 md:grid-cols-2">
                       <label class="space-y-2">
                         <span class="text-sm text-text-secondary">源节点</span>
@@ -1471,11 +1146,7 @@ const rootClasses = computed(() => [
                             updateSelectedEdgeSourceKey(($event.target as HTMLSelectElement).value)
                           "
                         >
-                          <option
-                            v-for="node in nodeOptions"
-                            :key="node.key"
-                            :value="node.key"
-                          >
+                          <option v-for="node in nodeOptions" :key="node.key" :value="node.key">
                             {{ node.label }}
                           </option>
                         </select>
@@ -1489,11 +1160,7 @@ const rootClasses = computed(() => [
                             updateSelectedEdgeTargetKey(($event.target as HTMLSelectElement).value)
                           "
                         >
-                          <option
-                            v-for="node in nodeOptions"
-                            :key="node.key"
-                            :value="node.key"
-                          >
+                          <option v-for="node in nodeOptions" :key="node.key" :value="node.key">
                             {{ node.label }}
                           </option>
                         </select>
@@ -1518,9 +1185,7 @@ const rootClasses = computed(() => [
                 </div>
 
                 <div class="rounded-2xl border border-border bg-elevated p-4">
-                  <div class="text-sm font-semibold text-text-primary">
-                    网络快速编辑
-                  </div>
+                  <div class="text-sm font-semibold text-text-primary">网络快速编辑</div>
                   <div class="mt-3 space-y-3">
                     <div
                       v-for="network in draft.networks"
@@ -1532,13 +1197,13 @@ const rootClasses = computed(() => [
                         type="text"
                         class="w-full rounded-xl border border-border bg-elevated px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
                         placeholder="network key"
-                      >
+                      />
                       <input
                         v-model="network.name"
                         type="text"
                         class="w-full rounded-xl border border-border bg-elevated px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
                         placeholder="网络名称"
-                      >
+                      />
                       <label
                         class="flex items-center gap-2 rounded-xl border border-border bg-elevated px-3 py-2.5 text-sm text-text-primary"
                       >
@@ -1546,7 +1211,7 @@ const rootClasses = computed(() => [
                           v-model="network.internal"
                           type="checkbox"
                           class="h-4 w-4 rounded border-border bg-transparent"
-                        >
+                        />
                         internal
                       </label>
                     </div>
@@ -1555,10 +1220,7 @@ const rootClasses = computed(() => [
               </div>
             </SectionCard>
 
-            <SectionCard
-              title="入口节点"
-              subtitle="实例访问入口和当前草稿的保存范围。"
-            >
+            <SectionCard title="入口节点" subtitle="实例访问入口和当前草稿的保存范围。">
               <div class="grid gap-4 md:grid-cols-[1fr_auto]">
                 <label class="space-y-2">
                   <span class="text-sm text-text-secondary">入口节点</span>
@@ -1566,11 +1228,7 @@ const rootClasses = computed(() => [
                     v-model="draft.entry_node_key"
                     class="w-full rounded-xl border border-border bg-elevated px-3 py-3 text-sm text-text-primary outline-none transition focus:border-primary"
                   >
-                    <option
-                      v-for="node in nodeOptions"
-                      :key="node.key"
-                      :value="node.key"
-                    >
+                    <option v-for="node in nodeOptions" :key="node.key" :value="node.key">
                       {{ node.label }} ({{ node.key }})
                     </option>
                   </select>
@@ -1604,19 +1262,19 @@ const rootClasses = computed(() => [
                     type="text"
                     class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
                     placeholder="network key"
-                  >
+                  />
                   <input
                     v-model="network.name"
                     type="text"
                     class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
                     placeholder="网络名称"
-                  >
+                  />
                   <input
                     v-model="network.cidr"
                     type="text"
                     class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
                     placeholder="CIDR（可选）"
-                  >
+                  />
                   <label
                     class="flex items-center gap-3 rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary"
                   >
@@ -1624,7 +1282,7 @@ const rootClasses = computed(() => [
                       v-model="network.internal"
                       type="checkbox"
                       class="h-4 w-4 rounded border-border bg-transparent"
-                    >
+                    />
                     internal
                   </label>
                   <button
@@ -1682,20 +1340,14 @@ const rootClasses = computed(() => [
               </template>
             </SectionCard>
 
-            <SectionCard
-              title="拓扑连线"
-              subtitle="用于表达逻辑依赖关系，不直接等同于运行时 ACL。"
-            >
+            <SectionCard title="拓扑连线" subtitle="用于表达逻辑依赖关系，不直接等同于运行时 ACL。">
               <div
                 v-if="draft.links.length === 0"
                 class="rounded-xl border border-dashed border-border px-4 py-6 text-sm text-text-muted"
               >
                 暂无逻辑连线
               </div>
-              <div
-                v-else
-                class="space-y-3"
-              >
+              <div v-else class="space-y-3">
                 <div
                   v-for="link in draft.links"
                   :key="link.uid"
@@ -1705,14 +1357,8 @@ const rootClasses = computed(() => [
                     v-model="link.from_node_key"
                     class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
                   >
-                    <option value="">
-                      选择源节点
-                    </option>
-                    <option
-                      v-for="node in nodeOptions"
-                      :key="node.key"
-                      :value="node.key"
-                    >
+                    <option value="">选择源节点</option>
+                    <option v-for="node in nodeOptions" :key="node.key" :value="node.key">
                       {{ node.label }}
                     </option>
                   </select>
@@ -1720,14 +1366,8 @@ const rootClasses = computed(() => [
                     v-model="link.to_node_key"
                     class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
                   >
-                    <option value="">
-                      选择目标节点
-                    </option>
-                    <option
-                      v-for="node in nodeOptions"
-                      :key="node.key"
-                      :value="node.key"
-                    >
+                    <option value="">选择目标节点</option>
+                    <option v-for="node in nodeOptions" :key="node.key" :value="node.key">
                       {{ node.label }}
                     </option>
                   </select>
@@ -1763,10 +1403,7 @@ const rootClasses = computed(() => [
               >
                 暂无链路策略
               </div>
-              <div
-                v-else
-                class="space-y-3"
-              >
+              <div v-else class="space-y-3">
                 <div
                   v-for="policy in draft.policies"
                   :key="policy.uid"
@@ -1776,14 +1413,8 @@ const rootClasses = computed(() => [
                     v-model="policy.source_node_key"
                     class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
                   >
-                    <option value="">
-                      选择源节点
-                    </option>
-                    <option
-                      v-for="node in nodeOptions"
-                      :key="node.key"
-                      :value="node.key"
-                    >
+                    <option value="">选择源节点</option>
+                    <option v-for="node in nodeOptions" :key="node.key" :value="node.key">
                       {{ node.label }}
                     </option>
                   </select>
@@ -1791,14 +1422,8 @@ const rootClasses = computed(() => [
                     v-model="policy.target_node_key"
                     class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
                   >
-                    <option value="">
-                      选择目标节点
-                    </option>
-                    <option
-                      v-for="node in nodeOptions"
-                      :key="node.key"
-                      :value="node.key"
-                    >
+                    <option value="">选择目标节点</option>
+                    <option v-for="node in nodeOptions" :key="node.key" :value="node.key">
                       {{ node.label }}
                     </option>
                   </select>
@@ -1806,12 +1431,8 @@ const rootClasses = computed(() => [
                     v-model="policy.action"
                     class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
                   >
-                    <option value="allow">
-                      allow
-                    </option>
-                    <option value="deny">
-                      deny
-                    </option>
+                    <option value="allow">allow</option>
+                    <option value="deny">deny</option>
                   </select>
                   <button
                     type="button"
@@ -1880,12 +1501,8 @@ const rootClasses = computed(() => [
                     <ShieldBan class="h-5 w-5" />
                   </div>
                   <div class="topology-status-note__body">
-                    <div class="topology-status-note__eyebrow">
-                      运行时约束
-                    </div>
-                    <div class="topology-status-note__title">
-                      粗粒度
-                    </div>
+                    <div class="topology-status-note__eyebrow">运行时约束</div>
+                    <div class="topology-status-note__title">粗粒度</div>
                     <p class="topology-status-note__copy">
                       当前只支持节点级 allow/deny，不支持端口级 ACL。
                     </p>
@@ -1893,280 +1510,25 @@ const rootClasses = computed(() => [
                 </article>
               </section>
 
-              <div class="topology-side-stack space-y-6">
-                <SectionCard
-                  title="模板库"
-                  :subtitle="
-                    isTemplateLibraryMode
-                      ? '从模板库载入后可直接编辑并覆盖模板，或另存为新模板。'
-                      : '可按模板快速回填编辑器，或直接应用到题目。'
-                  "
-                >
-                  <div class="space-y-3">
-                    <div
-                      :class="
-                        isTemplateLibraryMode
-                          ? 'template-focus-card'
-                          : 'rounded-2xl border border-border bg-elevated px-4 py-4'
-                      "
-                    >
-                      <div
-                        class="text-xs font-semibold uppercase tracking-[0.22em] text-text-muted"
-                      >
-                        当前模板
-                      </div>
-                      <div class="mt-2 text-sm text-text-primary">
-                        {{ selectedTemplateSummary }}
-                      </div>
-                      <div class="mt-3 flex flex-wrap gap-2">
-                        <button
-                          v-if="selectedTemplate"
-                          type="button"
-                          class="ui-btn ui-btn--sm ui-btn--secondary"
-                          @click="loadTemplateIntoDraft(selectedTemplate)"
-                        >
-                          重新载入当前模板
-                        </button>
-                        <button
-                          v-if="selectedTemplate"
-                          type="button"
-                          class="ui-btn ui-btn--sm ui-btn--secondary"
-                          @click="clearTemplateSelection"
-                        >
-                          清空模板选择
-                        </button>
-                      </div>
-                    </div>
-
-                    <div
-                      :class="
-                        isTemplateLibraryMode
-                          ? 'template-search-row'
-                          : 'grid gap-3 md:grid-cols-[1fr_auto]'
-                      "
-                    >
-                      <input
-                        v-model="templateKeyword"
-                        type="text"
-                        class="w-full rounded-xl border border-border bg-elevated px-3 py-3 text-sm text-text-primary outline-none transition focus:border-primary"
-                        placeholder="按模板名称搜索"
-                      >
-                      <button
-                        type="button"
-                        class="ui-btn ui-btn--secondary"
-                        @click="void loadTemplates()"
-                      >
-                        搜索
-                      </button>
-                    </div>
-
-                    <div
-                      v-if="templates.length === 0"
-                      :class="
-                        isTemplateLibraryMode
-                          ? 'template-empty-state'
-                          : 'rounded-xl border border-dashed border-border px-4 py-6 text-sm text-text-muted'
-                      "
-                    >
-                      当前没有模板数据
-                    </div>
-
-                    <div
-                      v-else
-                      :class="isTemplateLibraryMode ? 'template-library-list' : 'space-y-3'"
-                    >
-                      <article
-                        v-for="template in templates"
-                        :key="template.id"
-                        :class="
-                          isTemplateLibraryMode
-                            ? [
-                              'template-library-item',
-                              selectedTemplateId === template.id
-                                ? 'template-library-item--active'
-                                : 'template-library-item--idle',
-                            ]
-                            : [
-                              'rounded-2xl border p-4 transition',
-                              selectedTemplateId === template.id
-                                ? 'border-primary bg-primary/8'
-                                : 'border-border bg-elevated',
-                            ]
-                        "
-                      >
-                        <div class="min-w-0">
-                          <div class="truncate text-base font-semibold text-text-primary">
-                            {{ template.name }}
-                          </div>
-                          <div class="mt-1 text-sm text-text-secondary">
-                            {{ template.description || '无描述' }}
-                          </div>
-                          <div class="mt-2 flex flex-wrap gap-2 text-xs text-text-muted">
-                            <span>入口：{{ template.entry_node_key }}</span>
-                            <span>节点：{{ template.nodes.length }}</span>
-                            <span>网络：{{ template.networks?.length || 0 }}</span>
-                            <span>使用：{{ template.usage_count }}</span>
-                          </div>
-                        </div>
-
-                        <div class="mt-4 flex flex-wrap gap-2">
-                          <button
-                            type="button"
-                            :class="
-                              isTemplateLibraryMode
-                                ? 'template-action-btn'
-                                : 'ui-btn ui-btn--sm ui-btn--secondary'
-                            "
-                            @click="loadTemplateIntoDraft(template)"
-                          >
-                            {{ isTemplateLibraryMode ? '载入编辑' : '载入草稿' }}
-                          </button>
-                          <button
-                            v-if="!isTemplateLibraryMode"
-                            type="button"
-                            :class="
-                              isTemplateLibraryMode
-                                ? 'template-action-btn'
-                                : 'ui-btn ui-btn--sm ui-btn--secondary'
-                            "
-                            @click="resetTemplateForm(template)"
-                          >
-                            选中
-                          </button>
-                          <button
-                            v-if="!isTemplateLibraryMode"
-                            type="button"
-                            :class="
-                              isTemplateLibraryMode
-                                ? 'template-action-btn template-action-btn--primary'
-                                : 'ui-btn ui-btn--sm ui-btn--primary'
-                            "
-                            :disabled="templateBusy"
-                            @click="void handleApplyTemplate(template)"
-                          >
-                            应用到题目
-                          </button>
-                          <button
-                            type="button"
-                            :class="
-                              isTemplateLibraryMode
-                                ? 'template-action-btn template-action-btn--danger'
-                                : 'ui-btn ui-btn--sm ui-btn--danger'
-                            "
-                            :disabled="templateBusy"
-                            @click="void handleDeleteTemplate(template.id)"
-                          >
-                            删除模板
-                          </button>
-                        </div>
-                      </article>
-                    </div>
-                  </div>
-                </SectionCard>
-
-                <SectionCard
-                  title="模板写回"
-                  :subtitle="
-                    isTemplateLibraryMode
-                      ? '在独立模板库中可新建空白草稿、载入现有模板后覆盖，或另存为新模板。'
-                      : '把当前编辑器草稿保存为新模板，或覆盖已选中的模板。'
-                  "
-                >
-                  <div :class="isTemplateLibraryMode ? 'template-writeback-form' : 'space-y-4'">
-                    <label class="space-y-2">
-                      <span class="text-sm text-text-secondary">模板名称</span>
-                      <input
-                        v-model="templateName"
-                        type="text"
-                        class="w-full rounded-xl border border-border bg-elevated px-3 py-3 text-sm text-text-primary outline-none transition focus:border-primary"
-                        placeholder="例如 双节点 Web + DB"
-                      >
-                    </label>
-
-                    <label class="space-y-2">
-                      <span class="text-sm text-text-secondary">模板描述</span>
-                      <textarea
-                        v-model="templateDescription"
-                        rows="4"
-                        class="w-full rounded-xl border border-border bg-elevated px-3 py-3 text-sm text-text-primary outline-none transition focus:border-primary"
-                        placeholder="说明这个模板的适用场景"
-                      />
-                    </label>
-
-                    <div class="flex flex-wrap gap-2">
-                      <button
-                        v-if="isTemplateLibraryMode"
-                        type="button"
-                        :class="
-                          isTemplateLibraryMode
-                            ? 'template-action-btn'
-                            : 'ui-btn ui-btn--ghost topology-action-btn'
-                        "
-                        @click="handleResetTemplateEditor"
-                      >
-                        新建空白草稿
-                      </button>
-                      <button
-                        type="button"
-                        :class="
-                          isTemplateLibraryMode
-                            ? 'template-action-btn template-action-btn--primary'
-                            : 'ui-btn ui-btn--primary topology-action-btn'
-                        "
-                        :disabled="templateBusy"
-                        @click="void handleCreateTemplate()"
-                      >
-                        <Plus class="h-4 w-4" />
-                        保存为新模板
-                      </button>
-                      <button
-                        type="button"
-                        :class="
-                          isTemplateLibraryMode
-                            ? 'template-action-btn'
-                            : 'ui-btn ui-btn--ghost topology-action-btn'
-                        "
-                        :disabled="templateBusy || !selectedTemplateId"
-                        @click="void handleUpdateTemplate()"
-                      >
-                        覆盖已选模板
-                      </button>
-                    </div>
-                  </div>
-                </SectionCard>
-
-                <SectionCard
-                  title="当前边界"
-                  subtitle="避免把未生效能力继续暴露成可用配置。"
-                >
-                  <div :class="isTemplateLibraryMode ? 'template-boundary-list' : 'space-y-4'">
-                    <AppCard
-                      variant="action"
-                      accent="warning"
-                      eyebrow="已开放"
-                      subtitle="多网络、节点、逻辑连线、粗粒度 allow/deny 策略、模板复用。"
-                    >
-                      <template #default />
-                    </AppCard>
-                    <AppCard
-                      variant="action"
-                      accent="danger"
-                      eyebrow="暂未开放"
-                      subtitle="protocol / ports 级细粒度 ACL 前端字段、模板版本化与批量比对能力。"
-                    >
-                      <template #default />
-                    </AppCard>
-                    <AppCard
-                      variant="action"
-                      accent="neutral"
-                      eyebrow="建议"
-                      subtitle="继续开放高级能力前，先补参数校验、可视化提示和误操作保护。"
-                    >
-                      <template #default />
-                    </AppCard>
-                  </div>
-                </SectionCard>
-              </div>
+              <TopologyTemplateSidePanel
+                v-model:template-keyword="templateKeyword"
+                v-model:template-name="templateName"
+                v-model:template-description="templateDescription"
+                :is-template-library-mode="isTemplateLibraryMode"
+                :selected-template-summary="selectedTemplateSummary"
+                :selected-template-id="selectedTemplateId"
+                :templates="templates"
+                :template-busy="templateBusy"
+                @load-template="loadTemplateIntoDraft"
+                @clear-template-selection="clearTemplateSelection"
+                @search-templates="void loadTemplates()"
+                @reset-template-form="resetTemplateForm"
+                @apply-template="(template) => void handleApplyTemplate(template)"
+                @delete-template="(templateId) => void handleDeleteTemplate(templateId)"
+                @reset-template-editor="handleResetTemplateEditor"
+                @create-template="void handleCreateTemplate()"
+                @update-template="void handleUpdateTemplate()"
+              />
             </div>
           </aside>
         </main>
@@ -2284,24 +1646,45 @@ const rootClasses = computed(() => [
 
 .topology-page--challenge .topology-action-btn {
   --ui-btn-secondary-border: var(--journal-border);
-  --ui-btn-secondary-background: color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base));
+  --ui-btn-secondary-background: color-mix(
+    in srgb,
+    var(--journal-surface) 94%,
+    var(--color-bg-base)
+  );
   --ui-btn-secondary-color: var(--journal-ink);
   --ui-btn-secondary-hover-border: color-mix(in srgb, var(--journal-accent) 28%, transparent);
-  --ui-btn-secondary-hover-background: color-mix(in srgb, var(--journal-accent) 4%, var(--journal-surface));
+  --ui-btn-secondary-hover-background: color-mix(
+    in srgb,
+    var(--journal-accent) 4%,
+    var(--journal-surface)
+  );
   --ui-btn-secondary-hover-color: var(--journal-accent);
   --ui-btn-ghost-color: var(--journal-ink);
   --ui-btn-ghost-hover-color: var(--journal-accent);
-  --ui-btn-ghost-hover-background: color-mix(in srgb, var(--journal-accent) 4%, var(--journal-surface));
+  --ui-btn-ghost-hover-background: color-mix(
+    in srgb,
+    var(--journal-accent) 4%,
+    var(--journal-surface)
+  );
   --ui-btn-primary-border: transparent;
   --ui-btn-primary-background: var(--journal-accent);
   --ui-btn-primary-color: var(--color-bg-base);
-  --ui-btn-primary-hover-background: color-mix(in srgb, var(--journal-accent) 88%, var(--color-bg-base));
-  --ui-btn-primary-hover-shadow: 0 12px 28px color-mix(in srgb, var(--journal-accent) 16%, transparent);
+  --ui-btn-primary-hover-background: color-mix(
+    in srgb,
+    var(--journal-accent) 88%,
+    var(--color-bg-base)
+  );
+  --ui-btn-primary-hover-shadow: 0 12px 28px
+    color-mix(in srgb, var(--journal-accent) 16%, transparent);
   --ui-btn-danger-border: color-mix(in srgb, var(--color-danger) 28%, transparent);
   --ui-btn-danger-background: color-mix(in srgb, var(--color-danger) 10%, var(--journal-surface));
   --ui-btn-danger-color: color-mix(in srgb, var(--color-danger) 88%, var(--journal-ink));
   --ui-btn-danger-hover-border: color-mix(in srgb, var(--color-danger) 34%, transparent);
-  --ui-btn-danger-hover-background: color-mix(in srgb, var(--color-danger) 14%, var(--journal-surface));
+  --ui-btn-danger-hover-background: color-mix(
+    in srgb,
+    var(--color-danger) 14%,
+    var(--journal-surface)
+  );
   --ui-btn-focus-ring: color-mix(in srgb, var(--journal-accent) 18%, transparent);
 }
 
@@ -2316,8 +1699,7 @@ const rootClasses = computed(() => [
   padding-inline: var(--space-3);
 }
 
-.topology-toolbar-btn,
-.template-action-btn {
+.topology-toolbar-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -2334,28 +1716,24 @@ const rootClasses = computed(() => [
     color 150ms ease;
 }
 
-.topology-toolbar-btn--ghost,
-.template-action-btn {
+.topology-toolbar-btn--ghost {
   background: color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base));
   color: var(--journal-ink);
 }
 
-.topology-toolbar-btn--ghost:hover,
-.template-action-btn:hover {
+.topology-toolbar-btn--ghost:hover {
   border-color: color-mix(in srgb, var(--journal-accent) 28%, transparent);
   background: color-mix(in srgb, var(--journal-accent) 4%, var(--journal-surface));
   color: var(--journal-accent);
 }
 
-.topology-toolbar-btn--primary,
-.template-action-btn--primary {
+.topology-toolbar-btn--primary {
   border-color: transparent;
   background: var(--journal-accent);
   color: var(--color-bg-base);
 }
 
-.topology-toolbar-btn--primary:hover,
-.template-action-btn--primary:hover {
+.topology-toolbar-btn--primary:hover {
   background: color-mix(in srgb, var(--journal-accent) 88%, var(--color-bg-base));
 }
 
@@ -2388,17 +1766,6 @@ const rootClasses = computed(() => [
 
 .topology-validation-hint--success {
   color: color-mix(in srgb, var(--color-success) 80%, transparent);
-}
-
-.template-action-btn--danger {
-  border-color: color-mix(in srgb, var(--color-danger) 28%, transparent);
-  background: color-mix(in srgb, var(--color-danger) 10%, var(--journal-surface));
-  color: color-mix(in srgb, var(--color-danger) 88%, var(--journal-ink));
-}
-
-.template-action-btn--danger:hover {
-  border-color: color-mix(in srgb, var(--color-danger) 34%, transparent);
-  background: color-mix(in srgb, var(--color-danger) 14%, var(--journal-surface));
 }
 
 .topology-page--challenge .topology-page-heading {
@@ -2666,16 +2033,6 @@ const rootClasses = computed(() => [
   --metric-panel-columns: repeat(4, minmax(0, 1fr));
 }
 
-.topology-page--template-library .template-focus-card,
-.topology-page--template-library .template-empty-state {
-  padding: 0 0 0 var(--space-4);
-  border: 0;
-  border-left: 2px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-}
-
 .topology-page--template-library .topology-hero-aside--library {
   align-self: start;
   border-left: 0;
@@ -2805,24 +2162,44 @@ const rootClasses = computed(() => [
 .topology-page--template-library .topology-action-btn {
   --ui-btn-font-size: var(--font-size-0-82);
   --ui-btn-secondary-border: var(--journal-border);
-  --ui-btn-secondary-background: color-mix(in srgb, var(--journal-surface) 92%, var(--color-bg-base));
+  --ui-btn-secondary-background: color-mix(
+    in srgb,
+    var(--journal-surface) 92%,
+    var(--color-bg-base)
+  );
   --ui-btn-secondary-color: var(--journal-ink);
   --ui-btn-secondary-hover-border: color-mix(in srgb, var(--journal-accent) 28%, transparent);
-  --ui-btn-secondary-hover-background: color-mix(in srgb, var(--journal-accent) 4%, var(--journal-surface));
+  --ui-btn-secondary-hover-background: color-mix(
+    in srgb,
+    var(--journal-accent) 4%,
+    var(--journal-surface)
+  );
   --ui-btn-secondary-hover-color: var(--journal-accent);
   --ui-btn-ghost-color: var(--journal-ink);
   --ui-btn-ghost-hover-color: var(--journal-accent);
-  --ui-btn-ghost-hover-background: color-mix(in srgb, var(--journal-accent) 4%, var(--journal-surface));
+  --ui-btn-ghost-hover-background: color-mix(
+    in srgb,
+    var(--journal-accent) 4%,
+    var(--journal-surface)
+  );
   --ui-btn-primary-border: transparent;
   --ui-btn-primary-background: var(--journal-accent);
-  --ui-btn-primary-hover-background: color-mix(in srgb, var(--journal-accent) 88%, var(--color-bg-base));
+  --ui-btn-primary-hover-background: color-mix(
+    in srgb,
+    var(--journal-accent) 88%,
+    var(--color-bg-base)
+  );
   --ui-btn-primary-hover-color: var(--color-bg-base);
   --ui-btn-primary-color: var(--color-bg-base);
   --ui-btn-danger-border: color-mix(in srgb, var(--color-danger) 28%, transparent);
   --ui-btn-danger-background: color-mix(in srgb, var(--color-danger) 10%, var(--journal-surface));
   --ui-btn-danger-color: color-mix(in srgb, var(--color-danger) 88%, var(--journal-ink));
   --ui-btn-danger-hover-border: color-mix(in srgb, var(--color-danger) 34%, transparent);
-  --ui-btn-danger-hover-background: color-mix(in srgb, var(--color-danger) 14%, var(--journal-surface));
+  --ui-btn-danger-hover-background: color-mix(
+    in srgb,
+    var(--color-danger) 14%,
+    var(--journal-surface)
+  );
 }
 
 .topology-page--template-library :deep(.page-header__eyebrow) {
@@ -2917,133 +2294,11 @@ const rootClasses = computed(() => [
   gap: var(--space-5);
 }
 
-.topology-page--template-library .topology-side-stack--library {
-  border: 0;
-  background: transparent;
-  box-shadow: none;
-  padding: 0;
-}
-
-.topology-page--template-library .topology-side-stack--library :deep(.section-card:first-child) {
-  padding-top: 0;
-  border-top: 0;
-}
-
-.topology-page--template-library .template-search-row {
-  display: grid;
-  gap: var(--space-3);
-  grid-template-columns: minmax(0, 1fr) auto;
-}
-
-.topology-page--template-library .template-library-list,
-.topology-page--template-library .template-writeback-form,
-.topology-page--template-library .template-boundary-list {
-  display: grid;
-  gap: 0;
-}
-
-.topology-page--template-library .template-directory-head {
-  display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.95fr) auto;
-  gap: var(--space-4);
-  padding: 0 0 var(--space-3);
-  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-  font-size: var(--font-size-0-72);
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--journal-muted);
-}
-
 .topology-page--template-library .template-toolbar-tabs,
 .topology-page--template-library .template-canvas-mode-banner,
 .topology-page--template-library .template-quick-editor {
   border: 0;
   box-shadow: none;
-}
-
-.topology-page--template-library .template-library-item {
-  display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.95fr) auto;
-  align-items: start;
-  gap: var(--space-4);
-  border-radius: 0;
-  padding: var(--space-4) 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-  box-shadow: none;
-  transition:
-    border-color 150ms ease,
-    background 150ms ease,
-    color 150ms ease;
-}
-
-.topology-page--template-library .template-library-item--idle {
-  border-left: 0;
-  background: transparent;
-}
-
-.topology-page--template-library .template-library-item--idle:hover {
-  background: color-mix(in srgb, var(--journal-accent) 4%, transparent);
-}
-
-.topology-page--template-library .template-library-item--active {
-  border-left: 2px solid color-mix(in srgb, var(--journal-accent) 58%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 6%, transparent);
-}
-
-.topology-page--template-library .template-library-item__main {
-  min-width: 0;
-}
-
-.topology-page--template-library .template-library-item__meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2) var(--space-3);
-  align-content: start;
-  padding-top: var(--space-0-5);
-  font-size: var(--font-size-0-76);
-  line-height: 1.6;
-  color: var(--journal-muted);
-}
-
-.topology-page--template-library .template-library-item__actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: var(--space-2);
-}
-
-.topology-page--template-library .template-boundary-item {
-  display: grid;
-  gap: var(--space-1-5);
-  padding: var(--space-4) 0 var(--space-4) var(--space-4);
-  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-  border-left: 2px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-}
-
-.topology-page--template-library .template-boundary-item__label {
-  font-size: var(--font-size-0-72);
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-}
-
-.topology-page--template-library .template-boundary-item__copy {
-  font-size: var(--font-size-0-88);
-  line-height: 1.65;
-  color: var(--journal-muted);
-}
-
-.topology-page--template-library .template-boundary-item--warning .template-boundary-item__label {
-  color: var(--color-warning);
-}
-
-.topology-page--template-library .template-boundary-item--danger .template-boundary-item__label {
-  color: var(--color-danger);
-}
-
-.topology-page--template-library .template-boundary-item--neutral .template-boundary-item__label {
-  color: var(--journal-accent);
 }
 
 :global([data-theme='dark']) .topology-page--template-library {
@@ -3102,18 +2357,6 @@ const rootClasses = computed(() => [
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .topology-page--template-library .template-directory-head {
-    display: none;
-  }
-
-  .topology-page--template-library .template-library-item {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .topology-page--template-library .template-library-item__actions {
-    justify-content: flex-start;
-  }
-
   .topology-page--template-library .topology-hero-aside--library {
     border-left: 0;
     padding-left: 0;
@@ -3146,10 +2389,6 @@ const rootClasses = computed(() => [
   .topology-page--template-library .template-toolbar-tabs {
     gap: var(--space-3);
     overflow-x: auto;
-  }
-
-  .topology-page--template-library .template-search-row {
-    grid-template-columns: 1fr;
   }
 
   .topology-page--template-library .topology-hero-lead--library {

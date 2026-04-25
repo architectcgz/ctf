@@ -46,6 +46,7 @@ import contestAwdWorkspacePanelSource from '@/components/contests/ContestAWDWork
 import contestOrchestrationSource from '@/components/platform/contest/ContestOrchestrationPage.vue?raw'
 import topologyCanvasBoardSource from '@/components/platform/topology/TopologyCanvasBoard.vue?raw'
 import topologyStudioSource from '@/components/platform/topology/ChallengeTopologyStudioPage.vue?raw'
+import topologyTemplateSidePanelSource from '@/components/platform/topology/TopologyTemplateSidePanel.vue?raw'
 import adminNotificationPublishDrawerSource from '@/components/notifications/AdminNotificationPublishDrawer.vue?raw'
 import skillProfileSource from '@/views/profile/SkillProfile.vue?raw'
 import userProfileSource from '@/views/profile/UserProfile.vue?raw'
@@ -415,9 +416,7 @@ describe('shared theme token adoption', () => {
     expectNoHardcodedThemeTokens(platformContestTableSource, 'PlatformContestTable', [
       '--ui-btn-primary-color: white',
     ])
-    expectNoHardcodedThemeTokens(awdRoundHeaderPanelSource, 'AWDRoundHeaderPanel', [
-      'color: white',
-    ])
+    expectNoHardcodedThemeTokens(awdRoundHeaderPanelSource, 'AWDRoundHeaderPanel', ['color: white'])
     expectNoHardcodedThemeTokens(contestAwdWorkspacePanelSource, 'ContestAWDWorkspacePanel', [
       'text-cyan-400',
       'text-cyan-500',
@@ -447,18 +446,33 @@ describe('shared theme token adoption', () => {
       'text-[var(--color-warning)]',
       'var(--journal-accent) 88%, black',
     ])
-    expectNoHardcodedThemeTokens(challengeManagePresentationSource, 'useChallengeManagePresentation', [
-      '#2563eb',
-      '#dc2626',
-      '#7c3aed',
-      '#d97706',
-      '#0f766e',
-      '#0891b2',
-      '#16a34a',
-      '#64748b',
-      '#059669',
-      '#6b7280',
+    expectNoHardcodedThemeTokens(topologyTemplateSidePanelSource, 'TopologyTemplateSidePanel', [
+      'rgba(15, 23, 42, 0.96)',
+      'rgba(15, 23, 42, 0.9)',
+      'border-[var(--color-success)]',
+      'bg-[var(--color-success)]/10',
+      'text-[var(--color-success)]',
+      'border-[var(--color-warning)]/20',
+      'bg-[var(--color-warning)]/10',
+      'text-[var(--color-warning)]',
+      'var(--journal-accent) 88%, black',
     ])
+    expectNoHardcodedThemeTokens(
+      challengeManagePresentationSource,
+      'useChallengeManagePresentation',
+      [
+        '#2563eb',
+        '#dc2626',
+        '#7c3aed',
+        '#d97706',
+        '#0f766e',
+        '#0891b2',
+        '#16a34a',
+        '#64748b',
+        '#059669',
+        '#6b7280',
+      ]
+    )
     expectNoHardcodedThemeTokens(skillProfileUtilsSource, 'skillProfile utils', [
       '#3b82f6',
       '#ef4444',

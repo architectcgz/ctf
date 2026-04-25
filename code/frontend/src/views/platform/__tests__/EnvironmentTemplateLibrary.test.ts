@@ -5,6 +5,7 @@ import EnvironmentTemplateLibrary from '../EnvironmentTemplateLibrary.vue'
 import ChallengeTopologyStudioPage from '@/components/platform/topology/ChallengeTopologyStudioPage.vue'
 import challengeTopologyStudioPageSource from '@/components/platform/topology/ChallengeTopologyStudioPage.vue?raw'
 import topologyNodeEditorSource from '@/components/platform/topology/TopologyNodeEditor.vue?raw'
+import topologyTemplateSidePanelSource from '@/components/platform/topology/TopologyTemplateSidePanel.vue?raw'
 
 vi.mock('@/api/admin', () => ({
   getChallengeDetail: vi.fn(),
@@ -119,8 +120,12 @@ describe('EnvironmentTemplateLibrary', () => {
   })
 
   it('模板库页头操作不应保留挑战模式按钮样式分支', () => {
-    expect(challengeTopologyStudioPageSource).toContain('class="topology-toolbar-btn topology-toolbar-btn--ghost"')
-    expect(challengeTopologyStudioPageSource).toContain('class="topology-toolbar-btn topology-toolbar-btn--primary"')
+    expect(challengeTopologyStudioPageSource).toContain(
+      'class="topology-toolbar-btn topology-toolbar-btn--ghost"'
+    )
+    expect(challengeTopologyStudioPageSource).toContain(
+      'class="topology-toolbar-btn topology-toolbar-btn--primary"'
+    )
     expect(challengeTopologyStudioPageSource).not.toContain(
       "isTemplateLibraryMode\n            ? 'topology-toolbar-btn topology-toolbar-btn--ghost'\n            : 'inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-medium text-text-primary transition hover:border-primary'"
     )
@@ -166,26 +171,19 @@ describe('EnvironmentTemplateLibrary', () => {
   })
 
   it('模板目录操作应复用共享小尺寸按钮原语', () => {
-    expect(challengeTopologyStudioPageSource).toContain(
-      'class="ui-btn ui-btn--sm ui-btn--secondary"'
+    expect(challengeTopologyStudioPageSource).toContain('<TopologyTemplateSidePanel')
+    expect(topologyTemplateSidePanelSource).toContain('ui-btn--sm')
+    expect(topologyTemplateSidePanelSource).toContain('templateActionClass()')
+    expect(topologyTemplateSidePanelSource).toContain("templateActionClass('primary')")
+    expect(topologyTemplateSidePanelSource).toContain("templateActionClass('danger')")
+    expect(topologyTemplateSidePanelSource).not.toContain(
+      'rounded-xl border border-border px-3 py-2 text-xs font-medium text-text-primary transition hover:border-primary'
     )
-    expect(challengeTopologyStudioPageSource).toContain(
-      "isTemplateLibraryMode\n                                ? 'template-action-btn'\n                                : 'ui-btn ui-btn--sm ui-btn--secondary'"
+    expect(topologyTemplateSidePanelSource).not.toContain(
+      'rounded-xl bg-primary px-3 py-2 text-xs font-medium text-white transition hover:opacity-90'
     )
-    expect(challengeTopologyStudioPageSource).toContain(
-      "isTemplateLibraryMode\n                                ? 'template-action-btn template-action-btn--primary'\n                                : 'ui-btn ui-btn--sm ui-btn--primary'"
-    )
-    expect(challengeTopologyStudioPageSource).toContain(
-      "isTemplateLibraryMode\n                                ? 'template-action-btn template-action-btn--danger'\n                                : 'ui-btn ui-btn--sm ui-btn--danger'"
-    )
-    expect(challengeTopologyStudioPageSource).not.toContain(
-      "rounded-xl border border-border px-3 py-2 text-xs font-medium text-text-primary transition hover:border-primary"
-    )
-    expect(challengeTopologyStudioPageSource).not.toContain(
-      "rounded-xl bg-primary px-3 py-2 text-xs font-medium text-white transition hover:opacity-90"
-    )
-    expect(challengeTopologyStudioPageSource).not.toContain(
-      "rounded-xl border border-danger/30 bg-danger/10 px-3 py-2 text-xs font-medium text-danger transition hover:bg-danger/15"
+    expect(topologyTemplateSidePanelSource).not.toContain(
+      'rounded-xl border border-danger/30 bg-danger/10 px-3 py-2 text-xs font-medium text-danger transition hover:bg-danger/15'
     )
   })
 })

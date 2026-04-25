@@ -1787,10 +1787,33 @@
   - `npm run test:run`（245 个测试文件，1012 个测试）
   - `git diff --check`
 
+## 第七十六轮修复进展
+
+- 已完成：
+  - `TD-1` 超大组件专题拆分开始处理 `ChallengeTopologyStudioPage.vue`：模板库、模板写回和当前边界说明已抽到独立组件 `TopologyTemplateSidePanel.vue`。
+  - 父组件继续保留 `useChallengeTopologyStudioPage`、页面模式、草稿 owner、保存/删除拓扑、应用/删除/写回模板等主业务动作；新组件只通过 props 和 emits 承接展示、输入和动作触发，不直接拥有远端请求或拓扑草稿序列化。
+  - 相关源码护栏已调整为同时检查父页和 `TopologyTemplateSidePanel`，避免后续为了通过 raw source 断言而把已合理抽取的模板侧栏回塞父页。
+- 本轮涉及文件：
+  - `code/frontend/src/components/platform/topology/ChallengeTopologyStudioPage.vue`
+  - `code/frontend/src/components/platform/topology/TopologyTemplateSidePanel.vue`
+  - `code/frontend/src/views/platform/__tests__/ChallengeTopologyStudio.test.ts`
+  - `code/frontend/src/views/platform/__tests__/EnvironmentTemplateLibrary.test.ts`
+  - `code/frontend/src/views/__tests__/sharedThemeTokenAdoption.test.ts`
+  - `docs/reviews/frontend/README.md`
+  - `docs/reviews/frontend/ctf-frontend-audit-20260422.md`
+
+## 第七十六轮验证
+
+- 已执行：
+  - `npm run check:theme-tail`
+  - `npm run test:run -- src/views/platform/__tests__/ChallengeTopologyStudio.test.ts src/views/platform/__tests__/EnvironmentTemplateLibrary.test.ts src/views/__tests__/workspacePageHeaderStyles.test.ts src/views/__tests__/sharedThemeTokenAdoption.test.ts`（4 个测试文件，31 个测试）
+  - `npm run typecheck`
+  - `git diff --check`
+
 ## 后续技术债 Backlog
 
 - `TD-1` 超大组件专题拆分：
-  - 当前仍需继续拆分的高复杂度组件包括 `ChallengeTopologyStudioPage.vue`、`AWDChallengeConfigDialog.vue`、`StudentInsightPanel.vue`、`ContestAWDWorkspacePanel.vue`。
+  - `ChallengeTopologyStudioPage.vue` 已完成第一轮模板侧栏抽取；当前仍需继续拆分的高复杂度组件包括 `ChallengeTopologyStudioPage.vue` 的画布快速编辑/节点网络策略区、`AWDChallengeConfigDialog.vue`、`StudentInsightPanel.vue`、`ContestAWDWorkspacePanel.vue`。
   - 拆分原则：父页面保留 route/query 同步、页面级数据加载、跨区块协调、错误策略和主业务动作；子组件只承接明确展示区块或局部表单，不允许只为了减少行数而把 owner 边界拆散。
   - 建议顺序：先选一个组件做一个可评审切片，补源码边界测试和行为测试，再继续下一块。
 - `TD-2` Tailwind 任意值与主题 token 尾项：
