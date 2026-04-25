@@ -8,17 +8,18 @@
 | 审查范围 | `code/frontend/src` 路由、关键视图、composables、stores、共享样式与验证门禁 |
 | 审查日期 | 2026-04-22 |
 | 审查方式 | 静态代码审查 + 最小验证基线检查 |
-| 审查状态 | 已记录，已推进至第六十七轮最小高收益修复 |
+| 审查状态 | 已记录，已推进至第六十八轮；当前前端全量测试门禁已通过 |
 
 ## 当前结论
 
-- 本轮专项审查起手时暴露出的高收益问题，已经有大半完成收口：
+- 本轮专项审查起手时暴露出的高收益问题，已经完成当前测试门禁层面的收口：
   - `typecheck` 基线已恢复，当前专项修复工作树可稳定作为静态门禁。
   - 题目详情竞态、实例页状态同步、`/ui-lab` 正式路由暴露、认证表单基础可访问性、`window.confirm` 混用、登录态 token 本地持久化等问题已完成修复，其中登录态已切到服务端 session 与 `HttpOnly` cookie。
-  - 本轮继续收口了平台 AWD 编排组件簇、教师端 `workspace / tabs / surface` 漂移，以及 shared pagination 的 review 基线漂移。
-- 当前仍未整体关闭专项审查，剩余问题主要集中在：
-  - `P2-1` 主题硬编码清理仍未全量收口
-  - `P2-5` 仍有部分大页面和管理端 surface 漂移未完成系统性减重
+  - 本轮继续收口了平台 AWD 编排组件簇、教师端 `workspace / tabs / surface` 漂移、shared pagination 的 review 基线漂移，以及前端全量测试暴露出的最后一批共享壳层护栏漂移。
+- 当前 `code/frontend` 已通过：
+  - `npm run typecheck`
+  - `npm run test:run`（244 个测试文件，1008 个测试）
+- 后续如继续推进专项，应从新的人工审查或产品体验审查重新列项，而不是继续沿用已清零的失败测试清单。
 
 ## 优先级结论
 
@@ -1594,6 +1595,36 @@
 - 已执行：
   - `npm run test:run -- src/views/teacher/__tests__/TeacherDashboard.test.ts src/views/teacher/__tests__/ClassManagement.test.ts src/views/teacher/__tests__/TeacherStudentManagement.test.ts src/views/teacher/__tests__/TeacherClassStudents.test.ts src/views/teacher/__tests__/TeacherStudentAnalysis.test.ts src/views/teacher/__tests__/TeacherAWDReviewIndex.test.ts`
   - `npm run typecheck`
+
+## 第六十八轮修复进展
+
+- 已完成：
+  - 将上一轮全量测试暴露的 14 个失败文件收口为 0 个失败文件，重点覆盖 `journal eyebrow`、`journal user shell`、`metric panel surface ownership`、`page tabs`、`workspace page header`、题目详情共享壳层、竞赛列表、竞赛详情学生操作原语、个人资料、能力画像、排行榜和教师端暗色 surface 护栏。
+  - 产品代码侧去掉学生页、平台 AWD 复盘、竞赛编排和教师 AWD 详情中对 `metric-panel-default-surface` 的本地背景变量覆写，只保留共享 metric panel owner 允许的时间线特殊桥接。
+  - `ContestList.vue` 概况区补齐 `metric-panel-default-surface`，`ChallengeInstanceCard.vue` 暗色模式补齐 `color-scheme: dark` 和主色链，`PageHeader`、profile、scoreboard 等源码护栏目标统一到当前共享页头语义。
+  - 源码护栏测试已同步当前组件抽取边界：父页面仍保留 route/query 同步、页面级加载和主业务动作，视觉壳层断言改为检查父页与已抽出的展示组件组合源码，避免为了通过测试而把已合理抽取的模板回塞父页。
+- 本轮涉及文件：
+  - `code/frontend/src/components/challenge/ChallengeInstanceCard.vue`
+  - `code/frontend/src/components/common/PageHeader.vue`
+  - `code/frontend/src/components/dashboard/student/StudentCategoryProgressPage.vue`
+  - `code/frontend/src/components/dashboard/student/StudentDifficultyPage.vue`
+  - `code/frontend/src/components/dashboard/student/StudentRecommendationPage.vue`
+  - `code/frontend/src/components/platform/awd-review/AwdReviewHeroPanel.vue`
+  - `code/frontend/src/components/platform/contest/ContestOrchestrationPage.vue`
+  - `code/frontend/src/views/contests/ContestList.vue`
+  - `code/frontend/src/views/profile/SkillProfile.vue`
+  - `code/frontend/src/views/profile/UserProfile.vue`
+  - `code/frontend/src/views/scoreboard/ScoreboardView.vue`
+  - `code/frontend/src/views/teacher/TeacherAWDReviewDetail.vue`
+  - `code/frontend/src/**/*.__tests__.*` 中对应共享壳层源码护栏测试
+
+## 第六十八轮验证
+
+- 已执行：
+  - `npm run test:run -- src/views/__tests__/journalEyebrowStyles.test.ts src/views/__tests__/journalUserShellStyles.test.ts src/views/__tests__/metricPanelSurfaceOwnership.test.ts src/views/__tests__/pageTabsStyles.test.ts src/views/__tests__/workspacePageHeaderStyles.test.ts src/views/challenges/__tests__/challengeDetailSharedShell.test.ts src/views/contests/__tests__/ContestList.test.ts src/views/contests/__tests__/contestStudentActionPrimitives.test.ts src/views/profile/__tests__/UserProfile.test.ts src/views/profile/__tests__/SkillProfile.test.ts src/views/scoreboard/__tests__/ScoreboardView.test.ts src/views/teacher/__tests__/teacherDarkSurfaceAlignment.test.ts`
+  - `npm run test:run -- src/views/__tests__/studentOverviewEntrypoint.test.ts src/components/layout/__tests__/AppLayout.test.ts src/views/platform/__tests__/platformManagementSurfaceAlignment.test.ts`
+  - `npm run typecheck`
+  - `npm run test:run`（244 个测试文件，1008 个测试）
 
 ## 备注
 

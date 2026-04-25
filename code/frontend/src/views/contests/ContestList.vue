@@ -128,19 +128,15 @@ function contestAccentStyle(status: ContestStatus): Record<string, string> {
       <div class="contest-page">
         <header class="contest-topbar">
           <div class="contest-heading">
-            <div class="workspace-overline">
-              Contests
-            </div>
-            <h1 class="contest-title workspace-page-title">
-              竞赛中心
-            </h1>
+            <div class="workspace-overline">Contests</div>
+            <h1 class="contest-title workspace-page-title">竞赛中心</h1>
             <p class="contest-subtitle">
               查看当前可参加和已结束的竞赛，直接进入竞赛工作区。
             </p>
           </div>
         </header>
 
-        <section class="contest-summary">
+        <section class="contest-summary metric-panel-default-surface">
           <div class="contest-summary-title">
             <Trophy class="h-4 w-4" />
             <span>当前竞赛概况</span>

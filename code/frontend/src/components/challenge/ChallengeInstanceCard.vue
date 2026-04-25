@@ -365,6 +365,11 @@ const startButtonLabel = computed(() => {
   font-family: var(--font-sans);
 }
 
+:global([data-theme='dark']) .instance-shell {
+  color-scheme: dark;
+  --brand: color-mix(in srgb, var(--color-primary) 88%, var(--color-text-primary));
+}
+
 .instance-shell,
 .instance-shell button {
   font-family: var(--font-sans);
