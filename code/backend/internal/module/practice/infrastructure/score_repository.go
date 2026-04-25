@@ -49,7 +49,7 @@ func (r *Repository) UpsertUserScore(ctx context.Context, userScore *model.UserS
 	}).Create(userScore).Error
 }
 
-func (r *Repository) FindUserScoreWithContext(ctx context.Context, userID int64) (*model.UserScore, error) {
+func (r *Repository) FindUserScore(ctx context.Context, userID int64) (*model.UserScore, error) {
 	var userScore model.UserScore
 	if err := r.dbWithContext(ctx).
 		Where("user_id = ?", userID).
@@ -59,7 +59,7 @@ func (r *Repository) FindUserScoreWithContext(ctx context.Context, userID int64)
 	return &userScore, nil
 }
 
-func (r *Repository) ListTopUserScoresWithContext(ctx context.Context, limit int) ([]model.UserScore, error) {
+func (r *Repository) ListTopUserScores(ctx context.Context, limit int) ([]model.UserScore, error) {
 	var scores []model.UserScore
 	err := r.dbWithContext(ctx).
 		Order("total_score DESC, updated_at ASC").
@@ -68,7 +68,7 @@ func (r *Repository) ListTopUserScoresWithContext(ctx context.Context, limit int
 	return scores, err
 }
 
-func (r *Repository) FindUsersByIDsWithContext(ctx context.Context, userIDs []int64) ([]model.User, error) {
+func (r *Repository) FindUsersByIDs(ctx context.Context, userIDs []int64) ([]model.User, error) {
 	if len(userIDs) == 0 {
 		return []model.User{}, nil
 	}

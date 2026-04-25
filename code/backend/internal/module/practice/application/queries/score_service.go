@@ -50,7 +50,7 @@ func (s *ScoreService) GetUserScore(ctx context.Context, userID int64) (*dto.Use
 		}
 	}
 
-	userScore, err := s.repo.FindUserScoreWithContext(ctx, userID)
+	userScore, err := s.repo.FindUserScore(ctx, userID)
 	if err == gorm.ErrRecordNotFound {
 		return &dto.UserScoreInfo{
 			UserID:      userID,
@@ -86,7 +86,7 @@ func (s *ScoreService) GetRanking(ctx context.Context, limit int) ([]*dto.Rankin
 	if limit <= 0 || limit > s.config.MaxRankingLimit {
 		limit = s.config.MaxRankingLimit
 	}
-	scores, err := s.repo.ListTopUserScoresWithContext(ctx, limit)
+	scores, err := s.repo.ListTopUserScores(ctx, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -125,7 +125,7 @@ func (s *ScoreService) getUserProfiles(ctx context.Context, userIDs []int64) (ma
 		return make(map[int64]userProfile), nil
 	}
 
-	users, err := s.repo.FindUsersByIDsWithContext(ctx, userIDs)
+	users, err := s.repo.FindUsersByIDs(ctx, userIDs)
 	if err != nil {
 		return nil, err
 	}
