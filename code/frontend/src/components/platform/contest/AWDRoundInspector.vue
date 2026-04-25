@@ -492,9 +492,30 @@ function getServiceCheckPresentationResult(service: AWDTeamServiceData): Record<
 .alert-banner { display: flex; align-items: center; gap: 1.5rem; padding: 0.75rem 1.25rem; background: color-mix(in srgb, var(--color-warning) 10%, var(--color-bg-surface)); border: 1px solid color-mix(in srgb, var(--color-warning) 20%, transparent); border-radius: 0.75rem; }
 .banner-tag { font-size: 10px; font-weight: 800; color: var(--color-warning); text-transform: uppercase; }
 .alert-pills { display: flex; gap: 0.5rem; }
-.alert-pill { padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; border: 1px solid color-mix(in srgb, var(--color-warning) 30%, transparent); color: var(--color-warning); transition: all 0.2s ease; }
+.alert-pill { padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; border: 1px solid var(--awd-service-alert-border, color-mix(in srgb, var(--color-warning) 30%, transparent)); background: var(--awd-service-alert-bg, transparent); color: var(--awd-service-alert-color, var(--color-warning)); transition: all 0.2s ease; }
 .alert-pill:hover { background: var(--color-bg-elevated); }
-.alert-pill.is-active { background: var(--color-warning); color: white; border-color: var(--color-warning); }
+.alert-pill.is-active { background: var(--awd-service-alert-active-bg, var(--color-warning)); color: var(--color-text-inverse); border-color: var(--awd-service-alert-active-bg, var(--color-warning)); }
+
+.awd-service-alert--danger {
+  --awd-service-alert-bg: color-mix(in srgb, var(--color-danger) 10%, var(--color-bg-surface));
+  --awd-service-alert-border: color-mix(in srgb, var(--color-danger) 20%, transparent);
+  --awd-service-alert-color: var(--color-danger);
+  --awd-service-alert-active-bg: var(--color-danger);
+}
+
+.awd-service-alert--warning {
+  --awd-service-alert-bg: color-mix(in srgb, var(--color-warning) 10%, var(--color-bg-surface));
+  --awd-service-alert-border: color-mix(in srgb, var(--color-warning) 20%, transparent);
+  --awd-service-alert-color: var(--color-warning);
+  --awd-service-alert-active-bg: var(--color-warning);
+}
+
+.awd-service-alert--neutral {
+  --awd-service-alert-bg: color-mix(in srgb, var(--color-text-muted) 10%, var(--color-bg-surface));
+  --awd-service-alert-border: color-mix(in srgb, var(--color-text-muted) 20%, transparent);
+  --awd-service-alert-color: var(--color-text-primary);
+  --awd-service-alert-active-bg: var(--color-text-secondary);
+}
 
 .ops-btn {
   display: inline-flex; align-items: center; justify-content: center;

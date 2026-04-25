@@ -50,12 +50,9 @@ export function useAwdInspectorFormatting({
 
   function getRoundStatusClass(status: AWDRoundData['status']): string {
     const classes: Record<AWDRoundData['status'], string> = {
-      pending:
-        'bg-[var(--color-warning)]/10 text-[var(--color-warning)] border border-[var(--color-warning)]/20',
-      running:
-        'bg-[var(--color-success)]/10 text-[var(--color-success)] border border-[var(--color-success)]/20',
-      finished:
-        'bg-[var(--color-text-muted)]/10 text-[var(--color-text-secondary)] border border-[var(--color-text-muted)]/20',
+      pending: 'awd-status-pill awd-status-pill--warning',
+      running: 'awd-status-pill awd-status-pill--success',
+      finished: 'awd-status-pill awd-status-pill--muted',
     }
     return classes[status]
   }
@@ -71,10 +68,9 @@ export function useAwdInspectorFormatting({
 
   function getServiceStatusClass(status: AWDTeamServiceData['service_status']): string {
     const classes: Record<AWDTeamServiceData['service_status'], string> = {
-      up: 'bg-[var(--color-success)]/10 text-[var(--color-success)] border border-[var(--color-success)]/20',
-      down: 'bg-[var(--color-warning)]/10 text-[var(--color-warning)] border border-[var(--color-warning)]/20',
-      compromised:
-        'bg-[var(--color-danger)]/10 text-[var(--color-danger)] border border-[var(--color-danger)]/20',
+      up: 'awd-status-pill awd-status-pill--success',
+      down: 'awd-status-pill awd-status-pill--warning',
+      compromised: 'awd-status-pill awd-status-pill--danger',
     }
     return classes[status]
   }
@@ -112,15 +108,15 @@ export function useAwdInspectorFormatting({
   function getTrafficStatusGroupClass(statusGroup: AWDTrafficStatusGroup): string {
     switch (statusGroup) {
       case 'success':
-        return 'bg-[var(--color-success)]/10 text-[var(--color-success)] border border-[var(--color-success)]/20'
+        return 'awd-status-pill awd-status-pill--success'
       case 'redirect':
-        return 'bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-[var(--color-primary)]/20'
+        return 'awd-status-pill awd-status-pill--primary'
       case 'client_error':
-        return 'bg-[var(--color-warning)]/10 text-[var(--color-warning)] border border-[var(--color-warning)]/20'
+        return 'awd-status-pill awd-status-pill--warning'
       case 'server_error':
-        return 'bg-[var(--color-danger)]/10 text-[var(--color-danger)] border border-[var(--color-danger)]/20'
+        return 'awd-status-pill awd-status-pill--danger'
     }
-    return 'bg-[var(--color-text-muted)]/10 text-[var(--color-text-secondary)] border border-[var(--color-text-muted)]/20'
+    return 'awd-status-pill awd-status-pill--muted'
   }
 
   function getChallengeTitle(challengeId: string): string {

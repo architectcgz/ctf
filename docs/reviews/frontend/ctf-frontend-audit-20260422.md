@@ -18,7 +18,7 @@
   - 本轮继续收口了平台 AWD 编排组件簇、教师端 `workspace / tabs / surface` 漂移、shared pagination 的 review 基线漂移，以及前端全量测试暴露出的最后一批共享壳层护栏漂移。
 - 当前 `code/frontend` 已通过：
   - `npm run typecheck`
-  - `npm run test:run`（244 个测试文件，1008 个测试）
+  - `npm run test:run`（244 个测试文件，1009 个测试）
 - 后续如继续推进专项，应从新的人工审查或产品体验审查重新列项，而不是继续沿用已清零的失败测试清单。
 
 ## 优先级结论
@@ -1625,6 +1625,134 @@
   - `npm run test:run -- src/views/__tests__/studentOverviewEntrypoint.test.ts src/components/layout/__tests__/AppLayout.test.ts src/views/platform/__tests__/platformManagementSurfaceAlignment.test.ts`
   - `npm run typecheck`
   - `npm run test:run`（244 个测试文件，1008 个测试）
+
+## 第六十九轮复核计划
+
+- 本轮复核历史 review 文档后，确认主专项的 `P1` 问题已经收口，剩余适合继续直接处理的是几类可闭环的交互与样式尾项：
+  - 实例即将过期弹窗已存在，但还缺少对话框语义、ESC 关闭、明确关闭按钮和 focus 归位。
+  - 竞赛详情页题目选中状态仍只存在内存中，刷新或分享链接后无法恢复，应同步到 URL query。
+  - 竞赛状态 badge 与实例状态色仍有少量硬编码色值，应继续回到主题 token 或语义类。
+  - 文档中提到的学生端超时提醒、个人总分/解题数/排名卡片、能力画像难度映射重复和雷达图 tooltip `any`，当前代码已覆盖或旧结论已过期，不再作为待修项。
+- 不在本轮混入的专题债：
+  - `ChallengeTopologyStudioPage.vue`、`AWDChallengeConfigDialog.vue`、`StudentInsightPanel.vue`、`ContestAWDWorkspacePanel.vue` 等超大组件仍需要继续拆分，但应按父页面 owner 边界单独立项，不能只为了减少行数而牺牲路由同步、数据加载和主业务动作的清晰所有权。
+  - 性能监控和 i18n 预留仍属于上线前或产品策略项，当前没有明确接入目标，暂不混入交互尾项修复。
+
+## 第六十九轮修复进展
+
+- 已完成：
+  - 实例即将过期弹窗补齐 `role="dialog"`、`aria-modal`、标题/说明关联、明确关闭按钮、ESC 关闭和 focus 归位；弹窗壳层改为语义类和共享 dialog token，不再在模板中保留 `rounded-[24px]`、`text-[var(...)]` 等低信息度任意值。
+  - 实例状态点从硬编码 Tailwind 十六进制色值改为 `instance-status-dot--*` 语义类，并通过主题 token 映射 warning / success / danger / muted。
+  - 竞赛详情普通题目选中状态接入 `challenge` query，页面加载时可从 URL 恢复选中题目，用户切换题目时会写回 `?panel=challenges&challenge=...`。
+  - 竞赛状态 badge 工具函数不再返回硬编码色值工具类，改为返回语义类名称。
+- 本轮涉及文件：
+  - `code/frontend/src/views/instances/InstanceList.vue`
+  - `code/frontend/src/composables/useInstanceListPage.ts`
+  - `code/frontend/src/views/contests/ContestDetail.vue`
+  - `code/frontend/src/composables/useContestDetailPage.ts`
+  - `code/frontend/src/utils/contest.ts`
+  - `code/frontend/src/views/instances/__tests__/InstanceList.test.ts`
+  - `code/frontend/src/views/contests/__tests__/ContestDetail.test.ts`
+
+## 第六十九轮验证
+
+- 已执行：
+  - `npm run test:run -- src/views/instances/__tests__/InstanceList.test.ts src/views/contests/__tests__/ContestDetail.test.ts`（2 个测试文件，27 个测试）
+  - `npm run typecheck`
+  - `npm run test:run`（244 个测试文件，1009 个测试）
+
+## 第七十轮修复进展
+
+- 已完成：
+  - `TD-2` 中 AWD inspector 相关格式化 helper 的状态样式尾项已收口：`useAwdInspectorFormatting` 和 `useAwdInspectorDerivedData` 不再返回 `bg-[var(...)]`、`text-[var(...)]`、`border-[var(...)]` 这类 Tailwind 任意主题类，改为返回 `awd-status-pill--*`、`awd-service-alert--*` 语义类。
+  - 告警 pill 与流量状态 badge 的颜色、边框和透明度回到组件 scoped CSS 中，由主题 token 与 `color-mix` 承接，避免把展示样式继续泄漏到 composable。
+  - 新增源码护栏 `useAwdInspectorPresentationClasses.test.ts`，防止 AWD inspector helper 后续再次拼接任意主题类。
+- 本轮涉及文件：
+  - `code/frontend/src/composables/useAwdInspectorFormatting.ts`
+  - `code/frontend/src/composables/useAwdInspectorDerivedData.ts`
+  - `code/frontend/src/components/platform/contest/AWDRoundInspector.vue`
+  - `code/frontend/src/components/platform/contest/AWDTrafficPanel.vue`
+  - `code/frontend/src/composables/__tests__/useAwdInspectorPresentationClasses.test.ts`
+
+## 第七十轮验证
+
+- 已执行：
+  - `npm run test:run -- src/composables/__tests__/useAwdInspectorPresentationClasses.test.ts src/composables/__tests__/useAwdInspectorDerivedData.test.ts src/components/platform/__tests__/AWDRoundInspector.test.ts src/components/platform/__tests__/AWDRoundInspectorExtraction.test.ts`（4 个测试文件，11 个测试）
+  - `npm run typecheck`
+
+## 第七十一轮修复进展
+
+- 已完成：
+  - `TD-2` 中实例状态样式尾项继续收口：`ChallengeInstanceCard`、`InstancePanel`、`TeacherInstanceManagementPage` 不再从函数返回 `text-[var(--color...)]`、`bg-[var(--color...)]`、`border-[var(--color...)]` 这类任意主题类。
+  - 学生题目实例状态、通用实例倒计时颜色、教师实例目录状态 chip 均改为语义类，由组件 scoped CSS 使用主题 token 映射具体颜色。
+  - 对应源码护栏已补到实例面板、题目详情共享壳层和教师实例管理测试中，避免后续状态样式重新回到函数拼 class。
+- 本轮涉及文件：
+  - `code/frontend/src/components/challenge/ChallengeInstanceCard.vue`
+  - `code/frontend/src/components/common/InstancePanel.vue`
+  - `code/frontend/src/components/teacher/instance-management/TeacherInstanceManagementPage.vue`
+  - `code/frontend/src/components/common/__tests__/InstancePanel.test.ts`
+  - `code/frontend/src/views/challenges/__tests__/challengeDetailSharedShell.test.ts`
+  - `code/frontend/src/views/teacher/__tests__/InstanceManagement.test.ts`
+
+## 第七十一轮验证
+
+- 已执行：
+  - `npm run test:run -- src/components/common/__tests__/InstancePanel.test.ts src/views/challenges/__tests__/challengeDetailSharedShell.test.ts src/views/teacher/__tests__/InstanceManagement.test.ts`（3 个测试文件，16 个测试）
+  - `npm run typecheck`
+
+## 第七十二轮修复进展
+
+- 已完成：
+  - `TD-2` 中题目详情提交态 presentation 尾项已收口：`useChallengeDetailPresentation` 的提交输入框状态不再返回 `border-[var(...)] / bg-[var(...)]` 任意主题类，改为 `flag-input-wrap--*` 语义类。
+  - `useChallengeDetailInteractions` 中未被 UI 消费的 `submitResult.className` 已删除，提交成功、待审核、失败状态统一只保留业务语义 `variant + message`。
+  - `ChallengeActionAside` 承接提交输入框状态样式与无需靶机空态颜色，避免可见组件模板继续混入 `text-[var(--color-success)]`。
+- 本轮涉及文件：
+  - `code/frontend/src/composables/useChallengeDetailPresentation.ts`
+  - `code/frontend/src/composables/useChallengeDetailInteractions.ts`
+  - `code/frontend/src/components/challenge/ChallengeActionAside.vue`
+  - `code/frontend/src/views/challenges/__tests__/challengeDetailSolutionTabsExtraction.test.ts`
+
+## 第七十二轮验证
+
+- 已执行：
+  - `npm run test:run -- src/views/challenges/__tests__/challengeDetailSolutionTabsExtraction.test.ts src/views/challenges/__tests__/challengeDetailSharedShell.test.ts`（2 个测试文件，9 个测试）
+  - `npm run typecheck`
+
+## 第七十三轮修复进展
+
+- 已完成：
+  - `TD-2` 中平台概览资源水位条样式尾项已收口：`usePlatformOverviewWorkspace` 不再返回 `bg-[var(--color-...)]`，改为 `usage-bar--danger / warning / primary` 语义类。
+  - `PlatformOverviewPage` 删除旧的转义 Tailwind 任意类选择器，水位条颜色由组件 scoped CSS 通过主题 token 承接。
+  - `sharedThemeTokenAdoption.test.ts` 补充平台概览 composable 与组件的回归断言。
+- 本轮涉及文件：
+  - `code/frontend/src/composables/usePlatformOverviewWorkspace.ts`
+  - `code/frontend/src/components/platform/dashboard/PlatformOverviewPage.vue`
+  - `code/frontend/src/views/__tests__/sharedThemeTokenAdoption.test.ts`
+
+## 第七十三轮验证
+
+- 已执行：
+  - `npm run test:run -- src/views/__tests__/sharedThemeTokenAdoption.test.ts`（1 个测试文件，7 个测试）
+  - `npm run typecheck`
+
+## 后续技术债 Backlog
+
+- `TD-1` 超大组件专题拆分：
+  - 当前仍需继续拆分的高复杂度组件包括 `ChallengeTopologyStudioPage.vue`、`AWDChallengeConfigDialog.vue`、`StudentInsightPanel.vue`、`ContestAWDWorkspacePanel.vue`。
+  - 拆分原则：父页面保留 route/query 同步、页面级数据加载、跨区块协调、错误策略和主业务动作；子组件只承接明确展示区块或局部表单，不允许只为了减少行数而把 owner 边界拆散。
+  - 建议顺序：先选一个组件做一个可评审切片，补源码边界测试和行为测试，再继续下一块。
+- `TD-2` Tailwind 任意值与主题 token 尾项：
+  - 仍可继续扫描并收口 `bg-[var(...)]`、`text-[var(...)]`、`border-[var(...)]`、裸十六进制色值和布局任意值。
+  - 处理时需要区分 token bridge 与真正裸魔法值，避免把合法的主题变量透传和样式债混在一次提交里。
+  - AWD inspector 相关格式化 helper 已在第七十轮收口，实例状态样式尾项已在第七十一轮收口，题目详情提交态 presentation 已在第七十二轮收口，平台概览水位色已在第七十三轮收口；当前残留主要集中在部分 mock/reference 页面和少量布局组件。
+- `TD-3` 性能监控接入：
+  - 当前未接入 `web-vitals`、`PerformanceObserver` 或项目自定义性能埋点。
+  - 该项需要先明确采集指标、上报端点、隐私边界和生产开关，不能只加依赖或空埋点。
+- `TD-4` i18n 预留：
+  - 当前未接入 `vue-i18n`，产品文案仍以中文硬编码为主。
+  - 是否推进取决于产品是否需要多语言；若推进，应先从路由标题、表单错误、导航与关键空态开始，不建议一次性机械搬迁所有文案。
+- `TD-5` 历史 review 文档清理：
+  - 部分旧文档仍保留已经过期的未修复语境，例如学生得分卡片、实例超时提醒、能力画像难度映射重复和雷达图 tooltip `any`。
+  - 后续如果继续做文档治理，应以本文件为主索引，把旧文档标记为历史快照或补交叉引用，避免重复把已修项重新纳入待办。
 
 ## 备注
 

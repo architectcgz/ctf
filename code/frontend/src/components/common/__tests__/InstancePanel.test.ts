@@ -38,4 +38,12 @@ describe('InstancePanel', () => {
     expect(instancePanelSource).not.toContain('<ElButton')
     expect(instancePanelSource).not.toContain('<ElTag')
   })
+
+  it('倒计时状态颜色应通过语义类承接，而不是从函数返回 Tailwind 任意主题类', () => {
+    expect(instancePanelSource).toContain('instance-countdown--danger')
+    expect(instancePanelSource).not.toContain('text-[var(--color-danger)]')
+    expect(instancePanelSource).not.toContain('text-[var(--color-warning)]')
+    expect(instancePanelSource).not.toContain('text-[var(--color-success)]')
+    expect(instancePanelSource).not.toContain('text-[var(--color-text-muted)]')
+  })
 })

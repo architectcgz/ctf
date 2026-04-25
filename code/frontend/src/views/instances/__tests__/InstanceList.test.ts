@@ -151,6 +151,58 @@ describe('InstanceList', () => {
     expect(instanceListSource).not.toMatch(/^\.instance-btn-danger\s*\{/m)
   })
 
+  it('即将过期提醒应具备对话框语义、关闭按钮和 ESC 关闭能力', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-03-05T00:00:00Z'))
+    instanceApiMocks.getMyInstances.mockResolvedValueOnce([
+      {
+        id: 'inst-expiring',
+        challenge_id: 'chal-expiring',
+        challenge_title: '即将过期靶机',
+        category: 'web',
+        difficulty: 'easy',
+        status: 'running',
+        access_url: 'http://example.test',
+        flag_type: 'dynamic',
+        share_scope: 'per_user',
+        expires_at: '2026-03-05T00:04:00Z',
+        remaining_extends: 1,
+        created_at: '2026-03-05T00:00:00Z',
+      },
+    ])
+
+    const wrapper = mount(InstanceList, {
+      attachTo: document.body,
+      global: {
+        stubs: {
+          RouterLink: {
+            template: '<a><slot /></a>',
+          },
+        },
+      },
+    })
+
+    await flushPromises()
+    vi.advanceTimersByTime(1000)
+    await flushPromises()
+
+    const dialog = wrapper.get('[role="dialog"]')
+    expect(dialog.attributes('aria-modal')).toBe('true')
+    expect(dialog.attributes('aria-labelledby')).toBe('instance-warning-title')
+    expect(dialog.attributes('aria-describedby')).toBe('instance-warning-description')
+    expect(wrapper.text()).toContain('实例即将过期')
+    expect(wrapper.get('button[aria-label="关闭实例过期提醒"]').element).toBe(
+      document.activeElement
+    )
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.find('[role="dialog"]').exists()).toBe(false)
+    wrapper.unmount()
+    vi.useRealTimers()
+  })
+
   it('等待创建中的实例应定时重新同步服务端状态', async () => {
     vi.useFakeTimers()
     instanceApiMocks.getMyInstances

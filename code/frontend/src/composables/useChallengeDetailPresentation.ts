@@ -17,7 +17,6 @@ export type ChallengeSubmissionRecordStatus = 'correct' | 'incorrect' | 'pending
 
 interface SubmitResultState {
   variant: 'success' | 'error' | 'pending'
-  className: string
   message: string
 }
 
@@ -150,13 +149,13 @@ export function useChallengeDetailPresentation({
   const submitInputClass = computed(() => {
     switch (submitResult.value?.variant) {
       case 'success':
-        return 'border-[var(--color-success)] bg-[var(--color-success)]/5'
+        return 'flag-input-wrap--success'
       case 'pending':
-        return 'border-[var(--color-warning)] bg-[var(--color-warning)]/8'
+        return 'flag-input-wrap--pending'
       case 'error':
-        return 'border-[var(--color-danger)] bg-[var(--color-danger)]/5'
+        return 'flag-input-wrap--error'
       default:
-        return 'border-[var(--journal-accent)]'
+        return 'flag-input-wrap--idle'
     }
   })
 

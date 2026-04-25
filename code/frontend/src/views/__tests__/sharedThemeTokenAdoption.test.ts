@@ -27,6 +27,7 @@ import cFocusedInputDialogSource from '@/components/common/modal-templates/CFocu
 import cImmersiveConfirmDialogSource from '@/components/common/modal-templates/CImmersiveConfirmDialog.vue?raw'
 import challengePackageImportEntrySource from '@/components/platform/challenge/ChallengePackageImportEntry.vue?raw'
 import adminDashboardSource from '@/components/platform/dashboard/PlatformOverviewPage.vue?raw'
+import platformOverviewWorkspaceSource from '@/composables/usePlatformOverviewWorkspace.ts?raw'
 import writeupManageSource from '@/components/platform/writeup/ChallengeWriteupManagePanel.vue?raw'
 import awdRoundInspectorSource from '@/components/platform/contest/AWDRoundInspector.vue?raw'
 import contestOrchestrationSource from '@/components/platform/contest/ContestOrchestrationPage.vue?raw'
@@ -284,6 +285,14 @@ describe('shared theme token adoption', () => {
     expectNoHardcodedThemeTokens(adminDashboardSource, 'PlatformOverviewPage', [
       'background: #1d4ed8;',
       'border-color: rgba(37, 99, 235, 0.28);',
+      '.bg-\\[var\\(--color-danger\\)\\]',
+      '.bg-\\[var\\(--color-warning\\)\\]',
+      '.bg-\\[var\\(--color-primary\\)\\]',
+    ])
+    expectNoHardcodedThemeTokens(platformOverviewWorkspaceSource, 'usePlatformOverviewWorkspace', [
+      'bg-[var(--color-danger)]',
+      'bg-[var(--color-warning)]',
+      'bg-[var(--color-primary)]',
     ])
     expectNoHardcodedThemeTokens(writeupManageSource, 'ChallengeWriteupManagePanel', [
       '#38bdf8',
