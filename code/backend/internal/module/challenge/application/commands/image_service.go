@@ -97,8 +97,11 @@ func (s *ImageService) UpdateImage(ctx context.Context, id int64, req *dto.Updat
 		return errcode.ErrInternal.WithCause(err)
 	}
 
-	if req.Description != "" {
-		image.Description = req.Description
+	oldDescription := image.Description
+	oldStatus := image.Status
+
+	if req.Description != nil {
+		image.Description = *req.Description
 	}
 	if req.Status != "" {
 		image.Status = req.Status
@@ -107,7 +110,13 @@ func (s *ImageService) UpdateImage(ctx context.Context, id int64, req *dto.Updat
 		return errcode.ErrInternal.WithCause(err)
 	}
 
-	s.logger.Info("更新镜像", zap.Int64("id", id))
+	s.logger.Info("更新镜像",
+		zap.Int64("id", id),
+		zap.String("old_status", oldStatus),
+		zap.String("new_status", image.Status),
+		zap.String("old_description", oldDescription),
+		zap.String("new_description", image.Description),
+	)
 	return nil
 }
 
@@ -134,7 +143,12 @@ func (s *ImageService) DeleteImage(ctx context.Context, id int64) error {
 	if s.runtime != nil {
 		s.removeImageAsync(fmt.Sprintf("%s:%s", image.Name, image.Tag))
 	}
-	s.logger.Info("删除镜像", zap.Int64("id", id), zap.String("name", image.Name))
+	s.logger.Info("删除镜像",
+		zap.Int64("id", id),
+		zap.String("name", image.Name),
+		zap.String("tag", image.Tag),
+		zap.Int64("size", image.Size),
+	)
 	return nil
 }
 

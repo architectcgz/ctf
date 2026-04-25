@@ -46,7 +46,7 @@ func (r *ImageRepository) List(ctx context.Context, name, status string, offset,
 	var images []*model.Image
 	var total int64
 
-	query := r.dbWithContext(ctx).Model(&model.Image{})
+	query := r.dbWithContext(ctx).Model(&model.Image{}).Where("deleted_at IS NULL")
 	if name != "" {
 		query = query.Where("name LIKE ?", "%"+name+"%")
 	}
