@@ -12,10 +12,6 @@ import (
 )
 
 func (s *QueryService) GetProgress(ctx context.Context, userID int64) (*dto.ProgressResp, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
 	cacheKey := constants.UserProgressKey(userID)
 	if s.cache != nil {
 		cached, err := s.cache.Get(ctx, cacheKey).Result()

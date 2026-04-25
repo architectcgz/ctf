@@ -3,6 +3,7 @@ package infrastructure
 import (
 	"context"
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -70,6 +71,18 @@ func TestGetUserTimelineUsesDestroyedAtForInstanceDestroyEvent(t *testing.T) {
 	}
 
 	t.Fatalf("expected instance_destroy event, got %+v", events)
+}
+
+func TestRepositoryDoesNotCreateBackgroundContext(t *testing.T) {
+	t.Parallel()
+
+	source, err := os.ReadFile("repository.go")
+	if err != nil {
+		t.Fatalf("read repository.go: %v", err)
+	}
+	if strings.Contains(string(source), "context.Background()") {
+		t.Fatal("repository should not create context.Background()")
+	}
 }
 
 func newPracticeTimelineRepositoryTestDB(t *testing.T) *gorm.DB {
