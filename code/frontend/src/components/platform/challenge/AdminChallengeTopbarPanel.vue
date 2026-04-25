@@ -59,7 +59,7 @@ function handleOpenChallengeList(): void {
   --ui-btn-font-weight: 600;
   --ui-btn-primary-border: color-mix(in srgb, var(--journal-accent) 18%, transparent);
   --ui-btn-primary-background: var(--journal-accent);
-  --ui-btn-primary-hover-background: color-mix(in srgb, var(--journal-accent) 88%, black);
+  --ui-btn-primary-hover-background: color-mix(in srgb, var(--journal-accent) 88%, var(--color-bg-base));
   --ui-btn-ghost-color: var(--journal-ink);
   --ui-btn-ghost-hover-color: var(--journal-accent);
   --ui-btn-ghost-hover-background: color-mix(in srgb, var(--journal-accent) 4%, var(--journal-surface));

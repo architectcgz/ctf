@@ -91,7 +91,7 @@ function handleCreate(): void {
   --ui-btn-font-size: var(--font-size-0-875);
   --ui-btn-font-weight: 600;
   --ui-btn-primary-background: var(--journal-accent);
-  --ui-btn-primary-hover-background: color-mix(in srgb, var(--journal-accent) 88%, black);
+  --ui-btn-primary-hover-background: color-mix(in srgb, var(--journal-accent) 88%, var(--color-bg-base));
   --ui-btn-primary-hover-shadow: 0 10px 24px color-mix(in srgb, var(--journal-accent) 18%, transparent);
   --ui-btn-ghost-color: var(--journal-ink);
   --ui-btn-ghost-hover-color: var(--journal-accent);

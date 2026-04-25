@@ -77,8 +77,8 @@ import { Activity, Clock, ShieldAlert, Sword, TimerReset, ClipboardCheck } from 
 <style scoped>
 .studio-pending-shell {
   padding: 4rem 3rem;
-  background: white;
-  border: 1px solid #e2e8f0;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-default);
   border-radius: 1.5rem;
   display: flex;
   flex-direction: column;
@@ -87,9 +87,9 @@ import { Activity, Clock, ShieldAlert, Sword, TimerReset, ClipboardCheck } from 
   gap: 3rem;
 }
 
-.pending-overline { font-size: 10px; font-weight: 800; text-transform: uppercase; color: #3b82f6; letter-spacing: 0.2em; margin-bottom: 0.75rem; }
-.pending-title { font-size: 2rem; font-weight: 900; color: #0f172a; margin: 0; }
-.pending-description { font-size: 14px; color: #64748b; max-width: 36rem; line-height: 1.7; margin: 1rem auto 0; }
+.pending-overline { font-size: 10px; font-weight: 800; text-transform: uppercase; color: var(--color-primary); letter-spacing: 0.2em; margin-bottom: 0.75rem; }
+.pending-title { font-size: 2rem; font-weight: 900; color: var(--color-text-primary); margin: 0; }
+.pending-description { font-size: 14px; color: var(--color-text-secondary); max-width: 36rem; line-height: 1.7; margin: 1rem auto 0; }
 
 .pending-grid {
   display: grid;
@@ -100,8 +100,8 @@ import { Activity, Clock, ShieldAlert, Sword, TimerReset, ClipboardCheck } from 
 }
 
 .pending-card {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-default);
   border-radius: 1rem;
   padding: 1.5rem;
   display: flex;
@@ -114,16 +114,16 @@ import { Activity, Clock, ShieldAlert, Sword, TimerReset, ClipboardCheck } from 
   width: 3rem;
   height: 3rem;
   border-radius: 0.75rem;
-  background: white;
+  background: var(--color-bg-surface);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #94a3b8;
-  border: 1px solid #e2e8f0;
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border-default);
 }
 
-.card-label { font-size: 10px; font-weight: 800; text-transform: uppercase; color: #94a3b8; letter-spacing: 0.05em; }
-.card-status { font-size: 14px; font-weight: 800; color: #475569; }
+.card-label { font-size: 10px; font-weight: 800; text-transform: uppercase; color: var(--color-text-muted); letter-spacing: 0.05em; }
+.card-status { font-size: 14px; font-weight: 800; color: var(--color-text-secondary); }
 
 .pending-actions { display: flex; flex-direction: column; align-items: center; gap: 1rem; }
 
@@ -138,7 +138,7 @@ import { Activity, Clock, ShieldAlert, Sword, TimerReset, ClipboardCheck } from 
   font-weight: 700;
 }
 
-.ops-btn--disabled { background: #f1f5f9; color: #cbd5e1; cursor: not-allowed; border: 1px solid #e2e8f0; }
+.ops-btn--disabled { background: var(--color-bg-elevated); color: var(--color-text-muted); cursor: not-allowed; border: 1px solid var(--color-border-default); }
 
-.pending-footer-hint { font-size: 12px; font-weight: 600; color: #94a3b8; }
+.pending-footer-hint { font-size: 12px; font-weight: 600; color: var(--color-text-muted); }
 </style>

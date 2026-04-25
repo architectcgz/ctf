@@ -407,8 +407,8 @@ const rootClasses = computed(() => [
                     class="rounded-xl border px-3 py-2 text-sm font-medium transition"
                     :class="
                       interactionMode === 'allow'
-                        ? 'border-[var(--color-success)] bg-[var(--color-success)]/10 text-[var(--color-success)]'
-                        : 'border-border text-text-primary hover:border-[var(--color-success)]/60'
+                        ? 'topology-mode-btn--allow-active'
+                        : 'topology-mode-btn--allow-idle'
                     "
                     @click="setInteractionMode('allow')"
                   >
@@ -461,8 +461,8 @@ const rootClasses = computed(() => [
                   class="mb-4 rounded-2xl border px-4 py-3 text-sm"
                   :class="
                     draftValidationIssues.length === 0
-                      ? 'border-[var(--color-success)]/20 bg-[var(--color-success)]/10 text-[var(--color-success)]'
-                      : 'border-[var(--color-warning)]/20 bg-[var(--color-warning)]/10 text-[var(--color-warning)]'
+                      ? 'topology-validation-banner--ok'
+                      : 'topology-validation-banner--warn'
                   "
                 >
                   <div class="font-medium">
@@ -1253,8 +1253,8 @@ const rootClasses = computed(() => [
                   class="rounded-xl border px-3 py-2 text-sm font-medium transition"
                   :class="
                     interactionMode === 'allow'
-                      ? 'border-[var(--color-success)] bg-[var(--color-success)]/10 text-[var(--color-success)]'
-                      : 'border-border text-text-primary hover:border-[var(--color-success)]/60'
+                      ? 'topology-mode-btn--allow-active'
+                      : 'topology-mode-btn--allow-idle'
                   "
                   @click="setInteractionMode('allow')"
                 >
@@ -1307,8 +1307,8 @@ const rootClasses = computed(() => [
                 class="mb-4 rounded-2xl border px-4 py-3 text-sm"
                 :class="
                   draftValidationIssues.length === 0
-                    ? 'border-[var(--color-success)]/20 bg-[var(--color-success)]/10 text-[var(--color-success)]'
-                    : 'border-[var(--color-warning)]/20 bg-[var(--color-warning)]/10 text-[var(--color-warning)]'
+                    ? 'topology-validation-banner--ok'
+                    : 'topology-validation-banner--warn'
                 "
               >
                 <div class="font-medium">
@@ -1316,7 +1316,7 @@ const rootClasses = computed(() => [
                 </div>
                 <div
                   v-if="draftValidationIssues.length === 0"
-                  class="mt-1 text-xs text-[var(--color-success)]/80"
+                  class="topology-validation-hint topology-validation-hint--success mt-1 text-xs"
                 >
                   当前草稿的入口、节点、网络和链路引用关系正常。
                 </div>
@@ -2295,7 +2295,7 @@ const rootClasses = computed(() => [
   --ui-btn-primary-border: transparent;
   --ui-btn-primary-background: var(--journal-accent);
   --ui-btn-primary-color: var(--color-bg-base);
-  --ui-btn-primary-hover-background: color-mix(in srgb, var(--journal-accent) 88%, black);
+  --ui-btn-primary-hover-background: color-mix(in srgb, var(--journal-accent) 88%, var(--color-bg-base));
   --ui-btn-primary-hover-shadow: 0 12px 28px color-mix(in srgb, var(--journal-accent) 16%, transparent);
   --ui-btn-danger-border: color-mix(in srgb, var(--color-danger) 28%, transparent);
   --ui-btn-danger-background: color-mix(in srgb, var(--color-danger) 10%, var(--journal-surface));
@@ -2356,7 +2356,38 @@ const rootClasses = computed(() => [
 
 .topology-toolbar-btn--primary:hover,
 .template-action-btn--primary:hover {
-  background: color-mix(in srgb, var(--journal-accent) 88%, black);
+  background: color-mix(in srgb, var(--journal-accent) 88%, var(--color-bg-base));
+}
+
+.topology-mode-btn--allow-active {
+  border-color: var(--color-success);
+  background: color-mix(in srgb, var(--color-success) 10%, transparent);
+  color: var(--color-success);
+}
+
+.topology-mode-btn--allow-idle {
+  border-color: var(--color-border-default);
+  color: var(--color-text-primary);
+}
+
+.topology-mode-btn--allow-idle:hover {
+  border-color: color-mix(in srgb, var(--color-success) 60%, var(--color-border-default));
+}
+
+.topology-validation-banner--ok {
+  border-color: color-mix(in srgb, var(--color-success) 20%, var(--color-border-default));
+  background: color-mix(in srgb, var(--color-success) 10%, transparent);
+  color: var(--color-success);
+}
+
+.topology-validation-banner--warn {
+  border-color: color-mix(in srgb, var(--color-warning) 20%, var(--color-border-default));
+  background: color-mix(in srgb, var(--color-warning) 10%, transparent);
+  color: var(--color-warning);
+}
+
+.topology-validation-hint--success {
+  color: color-mix(in srgb, var(--color-success) 80%, transparent);
 }
 
 .template-action-btn--danger {
@@ -2784,9 +2815,9 @@ const rootClasses = computed(() => [
   --ui-btn-ghost-hover-background: color-mix(in srgb, var(--journal-accent) 4%, var(--journal-surface));
   --ui-btn-primary-border: transparent;
   --ui-btn-primary-background: var(--journal-accent);
-  --ui-btn-primary-hover-background: color-mix(in srgb, var(--journal-accent) 88%, black);
-  --ui-btn-primary-hover-color: #fff;
-  --ui-btn-primary-color: #fff;
+  --ui-btn-primary-hover-background: color-mix(in srgb, var(--journal-accent) 88%, var(--color-bg-base));
+  --ui-btn-primary-hover-color: var(--color-bg-base);
+  --ui-btn-primary-color: var(--color-bg-base);
   --ui-btn-danger-border: color-mix(in srgb, var(--color-danger) 28%, transparent);
   --ui-btn-danger-background: color-mix(in srgb, var(--color-danger) 10%, var(--journal-surface));
   --ui-btn-danger-color: color-mix(in srgb, var(--color-danger) 88%, var(--journal-ink));

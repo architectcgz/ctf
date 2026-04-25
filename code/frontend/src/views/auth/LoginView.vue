@@ -133,8 +133,8 @@ onMounted(() => {
   // eslint-disable-next-line no-console
   console.log(
     '%c[CTF COMMAND CENTER] %cSystem online. Initializing monitoring...',
-    'color: #2f8f5b; font-weight: bold; font-size: 14px;',
-    'color: #9da7b3; font-style: italic;'
+    'font-weight: bold; font-size: 14px;',
+    'font-style: italic;'
   )
   // eslint-disable-next-line no-console
   console.log(
@@ -147,25 +147,25 @@ onMounted(() => {
 #+#    #+#    #+#     #+#             
 ########     ###     ###              
 `,
-    'color: #2f8f5b; font-weight: bold;'
+    'font-weight: bold;'
   )
   // eslint-disable-next-line no-console
   console.log(
     '%cWARNING: %cUnauthorized debugging may lead to "unexpected" results. Good luck, cadet.',
-    'color: #f85149; font-weight: bold;',
-    'color: #9da7b3;'
+    'font-weight: bold;',
+    ''
   )
   // eslint-disable-next-line no-console
   console.log(
     '%cAudit note: %ccuriosity detected. Keep it academic.',
-    'color: #2f8f5b; font-weight: bold;',
-    'color: #9da7b3;'
+    'font-weight: bold;',
+    ''
   )
   // eslint-disable-next-line no-console
   console.log(
     '%cMemo: %cIf this page were the weak point, we would all be having a worse day.',
-    'color: #f59e0b; font-weight: bold;',
-    'color: #9da7b3;'
+    'font-weight: bold;',
+    ''
   )
 })
 

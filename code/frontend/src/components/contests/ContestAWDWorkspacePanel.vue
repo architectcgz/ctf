@@ -311,7 +311,7 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
         <div class="hud-label">
           APEX SCORE
         </div>
-        <div class="hud-value font-mono text-cyan-400">
+        <div class="hud-value hud-value--accent font-mono">
           {{ topScore }}
         </div>
         <div class="hud-helper">
@@ -357,7 +357,7 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
       <aside class="war-room-col column-defense">
         <section class="ops-panel">
           <header class="ops-panel__header">
-            <ShieldAlert class="h-4 w-4 text-orange-500" />
+            <ShieldAlert class="ops-panel__icon ops-panel__icon--warning h-4 w-4" />
             <h3 class="ops-panel__title">
               DEFENSE MONITOR
             </h3>
@@ -443,7 +443,7 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
       <main class="war-room-col column-attack">
         <section class="ops-panel">
           <header class="ops-panel__header">
-            <Sword class="h-4 w-4 text-red-500" />
+            <Sword class="ops-panel__icon ops-panel__icon--danger h-4 w-4" />
             <h3 class="ops-panel__title">
               ATTACK VECTOR
             </h3>
@@ -507,7 +507,7 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
                 class="target-card"
               >
                 <div class="target-info">
-                  <div class="target-team font-black text-cyan-400">
+                  <div class="target-team font-black">
                     {{ target.team_name.toUpperCase() }}
                   </div>
                   <div class="target-ref">
@@ -556,7 +556,7 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
       <aside class="war-room-col column-intel">
         <section class="ops-panel h-1/2 mb-4">
           <header class="ops-panel__header">
-            <BarChart3 class="h-4 w-4 text-cyan-500" />
+            <BarChart3 class="ops-panel__icon ops-panel__icon--accent h-4 w-4" />
             <h3 class="ops-panel__title">
               FIELD INTEL
             </h3>
@@ -601,8 +601,8 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
                 {{ formatServiceRef(event.service_id) }}
               </div>
               <div class="mt-1 flex items-center justify-between font-mono text-[10px]">
-                <span :class="event.is_success ? 'text-emerald-400' : 'text-slate-500'">{{ eventResultLabel(event.is_success) }}</span>
-                <span class="text-cyan-400">+{{ event.score_gained }}</span>
+                <span :class="event.is_success ? 'feedback-result--success' : 'feedback-result--muted'">{{ eventResultLabel(event.is_success) }}</span>
+                <span class="feedback-score-gain">+{{ event.score_gained }}</span>
               </div>
             </div>
             <div
@@ -656,6 +656,19 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
   font-weight: 900;
   color: var(--color-text-primary);
   margin: 0.25rem 0;
+}
+
+.hud-value--accent,
+.ops-panel__icon--accent {
+  color: var(--color-primary);
+}
+
+.ops-panel__icon--warning {
+  color: var(--color-warning);
+}
+
+.ops-panel__icon--danger {
+  color: var(--color-danger);
 }
 
 .hud-helper {
@@ -856,7 +869,7 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
 
 .asset-btn--primary:hover {
   background: var(--color-primary);
-  color: white;
+  color: var(--color-bg-base);
 }
 
 /* Attack Components */
@@ -901,7 +914,7 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
 
 .submit-btn {
   background: var(--color-danger);
-  color: white;
+  color: var(--color-bg-base);
   border: none;
   padding: 0 1.25rem;
   border-radius: 0.5rem;
@@ -911,9 +924,18 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
   transition: all 0.2s ease;
 }
 .submit-btn:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--color-danger) 80%, black);
+  background: color-mix(in srgb, var(--color-danger) 80%, var(--color-bg-base));
 }
 .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.feedback-result--success,
+.feedback-score-gain {
+  color: var(--color-success);
+}
+
+.feedback-result--muted {
+  color: var(--color-text-muted);
+}
 
 /* Intel Components */
 .intel-row {
