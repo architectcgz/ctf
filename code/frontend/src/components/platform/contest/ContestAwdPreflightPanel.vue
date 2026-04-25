@@ -142,13 +142,13 @@ function handleNavigateChallenge(challengeId: string) {
 
 .ops-btn--primary {
   background: var(--color-warning);
-  color: white;
+  color: var(--color-bg-base);
   border: none;
   box-shadow: 0 4px 12px color-mix(in srgb, var(--color-warning) 20%, transparent);
 }
 
 .ops-btn--primary:hover {
-  background: color-mix(in srgb, var(--color-warning) 90%, black);
+  background: color-mix(in srgb, var(--color-warning) 90%, var(--color-bg-base));
   transform: translateY(-1px);
 }
 

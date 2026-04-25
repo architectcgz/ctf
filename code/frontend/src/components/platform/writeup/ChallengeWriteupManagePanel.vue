@@ -706,7 +706,7 @@ onMounted(() => {
 .writeup-manage-actions > .ui-btn,
 .writeup-manage-section :deep(.app-empty__actions .ui-btn) {
   --ui-btn-primary-background: var(--journal-accent);
-  --ui-btn-primary-hover-background: color-mix(in srgb, var(--journal-accent) 88%, black);
+  --ui-btn-primary-hover-background: color-mix(in srgb, var(--journal-accent) 88%, var(--color-bg-base));
   --ui-btn-primary-border: color-mix(in srgb, var(--journal-accent) 18%, transparent);
 }
 

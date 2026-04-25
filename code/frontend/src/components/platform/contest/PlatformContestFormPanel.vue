@@ -196,7 +196,7 @@ function handleSubmit() {
             </div>
             <p
               v-if="fieldLocks.mode"
-              class="field-hint text-orange-500 mt-3 font-bold"
+              class="field-hint field-hint--warning mt-3 font-bold"
             >
               竞赛已生效，模式锁定不可更改。
             </p>
@@ -266,7 +266,7 @@ function handleSubmit() {
                   开始时间
                 </p>
               </div>
-              <div class="text-slate-300">
+              <div class="timeline-divider">
                 ——
               </div>
               <div class="flex-1">
@@ -381,6 +381,8 @@ function handleSubmit() {
 .studio-textarea { min-height: 7rem; resize: vertical; line-height: 1.6; }
 
 .field-hint { font-size: var(--font-size-12); color: var(--color-text-muted); margin-top: 0.45rem; font-weight: 500; }
+.field-hint--warning,
+.timeline-divider { color: var(--color-warning); }
 .field-error { font-size: var(--font-size-12); color: var(--color-danger); font-weight: 700; }
 
 .contest-form-actions {

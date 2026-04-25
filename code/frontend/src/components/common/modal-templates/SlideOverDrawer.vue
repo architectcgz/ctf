@@ -34,7 +34,7 @@ const overlayClass = 'modal-template-shell--drawer'
 const panelStyle = computed<Record<string, string>>(() => ({
   '--modal-template-drawer-width': props.width,
   '--drawer-overlay-blur': '12px',
-  '--drawer-overlay-bg': 'rgba(15, 23, 42, 0.45)',
+  '--drawer-overlay-bg': 'color-mix(in srgb, var(--color-bg-base) 45%, transparent)',
 }))
 
 function forwardOpen(value: boolean): void {

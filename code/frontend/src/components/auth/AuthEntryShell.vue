@@ -102,7 +102,7 @@ const emit = defineEmits<{
     linear-gradient(90deg, var(--color-border-subtle) 1px, transparent 1px);
   background-size: var(--space-16, 4rem) var(--space-16, 4rem);
   opacity: 0.15;
-  mask-image: radial-gradient(circle at 50% 50%, black, transparent 80%);
+  mask-image: radial-gradient(circle at 50% 50%, var(--color-bg-base), transparent 80%);
 }
 
 .ambient-glow {

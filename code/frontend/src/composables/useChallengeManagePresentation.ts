@@ -37,12 +37,12 @@ export function useChallengeManagePresentation({
 
   function getCategoryColor(category: ChallengeCategory): string {
     return {
-      web: '#2563eb',
-      pwn: '#dc2626',
-      reverse: '#7c3aed',
-      crypto: '#d97706',
-      misc: '#0f766e',
-      forensics: '#0891b2',
+      web: 'var(--color-cat-web)',
+      pwn: 'var(--color-cat-pwn)',
+      reverse: 'var(--color-cat-reverse)',
+      crypto: 'var(--color-cat-crypto)',
+      misc: 'var(--color-cat-misc)',
+      forensics: 'var(--color-cat-forensics)',
     }[category]
   }
 
@@ -59,11 +59,11 @@ export function useChallengeManagePresentation({
 
   function getDifficultyColor(difficulty: ChallengeDifficulty): string {
     return {
-      beginner: '#16a34a',
-      easy: '#2563eb',
-      medium: '#d97706',
-      hard: '#dc2626',
-      insane: '#6d28d9',
+      beginner: 'var(--color-diff-beginner)',
+      easy: 'var(--color-diff-easy)',
+      medium: 'var(--color-diff-medium)',
+      hard: 'var(--color-diff-hard)',
+      insane: 'var(--color-diff-insane)',
     }[difficulty]
   }
 
@@ -72,7 +72,11 @@ export function useChallengeManagePresentation({
   }
 
   function getStatusColor(status: ChallengeStatus): string {
-    return { draft: '#64748b', published: '#059669', archived: '#6b7280' }[status]
+    return {
+      draft: 'var(--color-text-muted)',
+      published: 'var(--color-success)',
+      archived: 'var(--color-text-secondary)',
+    }[status]
   }
 
   function getPublishRequestLabel(request: AdminChallengePublishRequestData | null): string {
@@ -87,13 +91,13 @@ export function useChallengeManagePresentation({
   }
 
   function getPublishRequestColor(request: AdminChallengePublishRequestData | null): string {
-    if (!request) return '#64748b'
+    if (!request) return 'var(--color-text-muted)'
 
     return {
-      queued: '#d97706',
-      running: '#2563eb',
-      succeeded: '#059669',
-      failed: '#dc2626',
+      queued: 'var(--color-warning)',
+      running: 'var(--color-primary)',
+      succeeded: 'var(--color-success)',
+      failed: 'var(--color-danger)',
     }[request.status]
   }
 

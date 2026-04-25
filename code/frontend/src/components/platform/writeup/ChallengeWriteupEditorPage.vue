@@ -386,7 +386,7 @@ const {
 .writeup-editor-actions > .ui-btn.ui-btn--primary {
   --ui-btn-primary-border: color-mix(in srgb, var(--journal-accent) 18%, transparent);
   --ui-btn-primary-background: var(--journal-accent);
-  --ui-btn-primary-hover-background: color-mix(in srgb, var(--journal-accent) 88%, black);
+  --ui-btn-primary-hover-background: color-mix(in srgb, var(--journal-accent) 88%, var(--color-bg-base));
 }
 
 .writeup-editor-actions > .ui-btn.ui-btn--secondary {

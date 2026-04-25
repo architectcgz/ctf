@@ -27,13 +27,13 @@
 
         <div
           v-if="isBackofficeRoute"
-          class="flex min-w-0 items-center text-sm font-bold text-slate-500"
+          class="topnav-breadcrumb flex min-w-0 items-center text-sm font-bold"
         >
-          <span class="text-slate-400 whitespace-nowrap">Workspace</span>
-          <span class="mx-2 text-slate-300">/</span>
+          <span class="topnav-breadcrumb__root whitespace-nowrap">Workspace</span>
+          <span class="topnav-breadcrumb__divider mx-2">/</span>
           <span class="whitespace-nowrap">{{ backofficeBreadcrumb.moduleLabel }}</span>
-          <span class="mx-2 text-slate-300">/</span>
-          <span class="truncate text-slate-900 font-black">
+          <span class="topnav-breadcrumb__divider mx-2">/</span>
+          <span class="topnav-breadcrumb__current truncate font-black">
             {{ backofficeBreadcrumb.secondaryLabel }}
           </span>
         </div>
@@ -351,7 +351,7 @@ onUnmounted(() => {
   border: none;
   padding: 0;
   background: var(--brand-dot-color);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-bg-surface) 20%, transparent);
   transition: all 0.2s ease;
 }
 
@@ -422,19 +422,19 @@ onUnmounted(() => {
   width: 2rem;
 }
 
-.text-slate-500 {
+.topnav-breadcrumb {
   color: var(--topnav-muted);
 }
 
-.text-slate-400 {
+.topnav-breadcrumb__root {
   color: var(--topnav-faint);
 }
 
-.text-slate-300 {
+.topnav-breadcrumb__divider {
   color: color-mix(in srgb, var(--topnav-line-strong) 92%, transparent);
 }
 
-.text-slate-900 {
+.topnav-breadcrumb__current {
   color: var(--topnav-text);
 }
 
@@ -525,14 +525,14 @@ onUnmounted(() => {
 }
 
 :global([data-theme='light']) .topnav-shell {
-  --topnav-surface: color-mix(in srgb, white 96%, var(--color-bg-surface));
-  --topnav-surface-subtle: color-mix(in srgb, #f8fafc 92%, var(--color-bg-surface));
-  --topnav-surface-elevated: white;
-  --topnav-line: color-mix(in srgb, #e2e8f0 90%, transparent);
-  --topnav-line-strong: color-mix(in srgb, #d9e1ec 94%, transparent);
-  --topnav-text: #0f172a;
-  --topnav-muted: #64748b;
-  --topnav-faint: #94a3b8;
+  --topnav-surface: color-mix(in srgb, var(--color-bg-surface) 96%, var(--color-bg-base));
+  --topnav-surface-subtle: color-mix(in srgb, var(--color-bg-elevated) 92%, var(--color-bg-surface));
+  --topnav-surface-elevated: var(--color-bg-surface);
+  --topnav-line: color-mix(in srgb, var(--color-border-default) 90%, transparent);
+  --topnav-line-strong: color-mix(in srgb, var(--color-border-default) 94%, transparent);
+  --topnav-text: var(--color-text-primary);
+  --topnav-muted: var(--color-text-secondary);
+  --topnav-faint: var(--color-text-muted);
   background:
     linear-gradient(
       180deg,
@@ -570,12 +570,12 @@ onUnmounted(() => {
 }
 
 .topnav-icon-button:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--color-primary) 44%, white);
+  outline: 2px solid color-mix(in srgb, var(--color-primary) 44%, var(--color-bg-surface));
   outline-offset: 3px;
 }
 
 .topnav-brand-dot:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--color-primary) 44%, white);
+  outline: 2px solid color-mix(in srgb, var(--color-primary) 44%, var(--color-bg-surface));
   outline-offset: 3px;
 }
 

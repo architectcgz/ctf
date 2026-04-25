@@ -34,12 +34,12 @@ const dimensionLabels: Record<ChallengeCategory, string> = {
 }
 
 const dimensionColors: Record<ChallengeCategory, string> = {
-  web: '#3b82f6',
-  pwn: '#ef4444',
-  reverse: '#8b5cf6',
-  crypto: '#f59e0b',
-  misc: '#10b981',
-  forensics: '#06b6d4',
+  web: 'var(--color-cat-web)',
+  pwn: 'var(--color-cat-pwn)',
+  reverse: 'var(--color-cat-reverse)',
+  crypto: 'var(--color-cat-crypto)',
+  misc: 'var(--color-cat-misc)',
+  forensics: 'var(--color-cat-forensics)',
 }
 
 export function normalizeSkillProfile(raw: RawSkillProfileResponse): SkillProfileData {
@@ -68,7 +68,7 @@ export function toRadarScores(profile: SkillProfileData | null) {
   return profile.dimensions.map((item) => ({
     name: item.name,
     value: item.value,
-    color: dimensionColors[item.key as ChallengeCategory] || '#0891b2',
+    color: dimensionColors[item.key as ChallengeCategory] || 'var(--color-primary)',
   }))
 }
 

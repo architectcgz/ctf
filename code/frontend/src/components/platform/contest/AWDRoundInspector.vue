@@ -243,7 +243,7 @@ function getServiceCheckPresentationResult(service: AWDTeamServiceData): Record<
         <div class="unit-value font-mono">
           {{ totalAttackCount }} <small>HITS</small>
         </div>
-        <div class="unit-helper text-emerald-600">
+        <div class="unit-helper unit-helper--success">
           SUCCESS: {{ successfulAttackCount }}
         </div>
       </div>
@@ -252,7 +252,7 @@ function getServiceCheckPresentationResult(service: AWDTeamServiceData): Record<
         <div class="unit-label">
           Compromised
         </div>
-        <div class="unit-value font-mono text-orange-500">
+        <div class="unit-value unit-value--warning font-mono">
           {{ compromisedCount }} <small>EXP</small>
         </div>
         <div class="unit-helper">
@@ -470,6 +470,8 @@ function getServiceCheckPresentationResult(service: AWDTeamServiceData): Record<
 .unit-value { font-size: 1.15rem; font-weight: 900; color: var(--color-text-primary); line-height: 1; }
 .unit-value small { font-size: 10px; opacity: 0.5; margin-left: 2px; }
 .unit-helper { font-size: 11px; font-weight: 600; color: var(--color-text-secondary); }
+.unit-helper--success { color: var(--color-success); }
+.unit-value--warning { color: var(--color-warning); }
 .unit-divider { width: 1px; height: 2.5rem; background: var(--color-border-default); margin: 0 2rem; }
 
 .awd-detail-canvas { flex: 1; display: flex; flex-direction: column; background: transparent; min-height: 0; }

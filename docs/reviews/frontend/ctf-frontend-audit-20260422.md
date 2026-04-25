@@ -8,7 +8,7 @@
 | 审查范围 | `code/frontend/src` 路由、关键视图、composables、stores、共享样式与验证门禁 |
 | 审查日期 | 2026-04-22 |
 | 审查方式 | 静态代码审查 + 最小验证基线检查 |
-| 审查状态 | 已记录，已推进至第七十四轮；当前前端全量测试门禁已通过 |
+| 审查状态 | 已记录，已推进至第七十五轮；当前前端全量测试门禁已通过 |
 
 ## 当前结论
 
@@ -16,6 +16,7 @@
   - `typecheck` 基线已恢复，当前专项修复工作树可稳定作为静态门禁。
   - 题目详情竞态、实例页状态同步、`/ui-lab` 正式路由暴露、认证表单基础可访问性、`window.confirm` 混用、登录态 token 本地持久化等问题已完成修复，其中登录态已切到服务端 session 与 `HttpOnly` cookie。
   - 本轮继续收口了平台 AWD 编排组件簇、教师端 `workspace / tabs / surface` 漂移、shared pagination 的 review 基线漂移，以及前端全量测试暴露出的最后一批共享壳层护栏漂移。
+  - `TD-2` 真实产品路径中的主题 token 与 Tailwind 色值尾项已在第七十五轮完成收口；后续扫描若命中 `#default` 插槽或 `white-space` 等非主题语义，应按误命中处理。
 - 当前 `code/frontend` 已通过：
   - `npm run typecheck`
   - `npm run test:run`（245 个测试文件，1012 个测试）
@@ -1758,6 +1759,32 @@
   - `rg -n "TD-5|历史快照|当前事实源|第七十四轮" docs/reviews/frontend/README.md docs/reviews/frontend/ctf-frontend-audit-20260422.md`
   - `git diff --check`
 
+## 第七十五轮修复进展
+
+- 已完成：
+  - `TD-2` 真实产品路径中的尾项已完成收口：后台导航壳层、通知抽屉、平台概览骨架、AWD 竞赛工作区、AWD inspector 子面板、赛前检查、拓扑页状态提示、题目管理 presentation helper、能力画像 helper、登录页控制台样式和若干平台 action button 不再保留裸十六进制色值、`rgba(...)` 旧阴影、旧 Tailwind 色类或 `bg/text/border-[var(--color...)]` 主题任意类。
+  - `sharedThemeTokenAdoption.test.ts` 补充覆盖这些真实产品路径，防止后续把 `text-slate-*`、`text-cyan-*`、`text-red-*`、`bg-white`、`color: white`、`%, black`、裸色值和旧 `rgba(...)` 带回。
+  - 保留不处理范围：`UILab.vue`、`ThemePreview.vue`、`refs` 示例、主题 token 定义文件、SVG，以及扫描误命中的 `#default` 插槽和 `white-space`。
+- 本轮涉及范围：
+  - `code/frontend/src/components/layout/*`
+  - `code/frontend/src/components/platform/contest/*`
+  - `code/frontend/src/components/contests/ContestAWDWorkspacePanel.vue`
+  - `code/frontend/src/components/platform/topology/ChallengeTopologyStudioPage.vue`
+  - `code/frontend/src/components/platform/dashboard/PlatformOverviewPage.vue`
+  - `code/frontend/src/composables/useChallengeManagePresentation.ts`
+  - `code/frontend/src/utils/challenge.ts`
+  - `code/frontend/src/utils/skillProfile.ts`
+  - `code/frontend/src/views/__tests__/sharedThemeTokenAdoption.test.ts`
+
+## 第七十五轮验证
+
+- 已执行：
+  - `rg -n "<hardcoded theme color pattern>" code/frontend/src/components code/frontend/src/views code/frontend/src/composables code/frontend/src/utils --glob '!**/*.test.*' --glob '!**/__tests__/**' --glob '!code/frontend/src/views/UILab.vue' --glob '!code/frontend/src/views/platform/ThemePreview.vue' --glob '!code/frontend/src/refs/**'`（仅剩 `#default` 插槽误命中）
+  - `npm run test:run -- src/views/__tests__/sharedThemeTokenAdoption.test.ts`（1 个测试文件，7 个测试）
+  - `npm run typecheck`
+  - `npm run test:run`（245 个测试文件，1012 个测试）
+  - `git diff --check`
+
 ## 后续技术债 Backlog
 
 - `TD-1` 超大组件专题拆分：
@@ -1765,9 +1792,8 @@
   - 拆分原则：父页面保留 route/query 同步、页面级数据加载、跨区块协调、错误策略和主业务动作；子组件只承接明确展示区块或局部表单，不允许只为了减少行数而把 owner 边界拆散。
   - 建议顺序：先选一个组件做一个可评审切片，补源码边界测试和行为测试，再继续下一块。
 - `TD-2` Tailwind 任意值与主题 token 尾项：
-  - 仍可继续扫描并收口 `bg-[var(...)]`、`text-[var(...)]`、`border-[var(...)]`、裸十六进制色值和布局任意值。
-  - 处理时需要区分 token bridge 与真正裸魔法值，避免把合法的主题变量透传和样式债混在一次提交里。
-  - AWD inspector 相关格式化 helper 已在第七十轮收口，实例状态样式尾项已在第七十一轮收口，题目详情提交态 presentation 已在第七十二轮收口，平台概览水位色已在第七十三轮收口；当前残留主要集中在部分 mock/reference 页面和少量布局组件。
+  - 已在第七十五轮完成真实产品路径收口。
+  - 后续不再把 `UILab`、`ThemePreview`、`refs` 示例、主题 token 定义文件、SVG 或 `#default / white-space` 误命中作为当前 TD-2 未完成项。
 - `TD-3` 性能监控接入：
   - 当前未接入 `web-vitals`、`PerformanceObserver` 或项目自定义性能埋点。
   - 该项需要先明确采集指标、上报端点、隐私边界和生产开关，不能只加依赖或空埋点。
