@@ -30,6 +30,7 @@ func (noopRuntimeCleaner) CleanupRuntime(context.Context, *model.Instance) error
 type runtimeInstanceContextRepo struct {
 	findByIDWithContextFn                   func(ctx context.Context, id int64) (*model.Instance, error)
 	findUserByIDFn                          func(ctx context.Context, userID int64) (*model.User, error)
+	listVisibleByUserFn                     func(ctx context.Context, userID int64) ([]runtimeports.UserVisibleInstanceRow, error)
 	updateStatusAndReleasePortWithContextFn func(ctx context.Context, id int64, status string) error
 }
 
@@ -52,6 +53,9 @@ func (r *runtimeInstanceContextRepo) FindAccessibleByIDForUser(ctx context.Conte
 }
 
 func (r *runtimeInstanceContextRepo) ListVisibleByUser(ctx context.Context, userID int64) ([]runtimeports.UserVisibleInstanceRow, error) {
+	if r.listVisibleByUserFn != nil {
+		return r.listVisibleByUserFn(ctx, userID)
+	}
 	return nil, nil
 }
 
@@ -790,5 +794,23 @@ func TestInstanceServiceDestroyTeacherInstanceDoesNotCreateBackgroundContext(t *
 
 	if err := service.DestroyTeacherInstance(nil, 201, 1001, model.RoleAdmin); err != nil {
 		t.Fatalf("DestroyTeacherInstance() error = %v", err)
+	}
+}
+
+func TestInstanceQueryServiceDoesNotCreateBackgroundContext(t *testing.T) {
+	t.Parallel()
+
+	repo := &runtimeInstanceContextRepo{
+		listVisibleByUserFn: func(ctx context.Context, userID int64) ([]runtimeports.UserVisibleInstanceRow, error) {
+			if ctx != nil {
+				t.Fatalf("expected list-visible ctx to stay nil, got %v", ctx)
+			}
+			return []runtimeports.UserVisibleInstanceRow{}, nil
+		},
+	}
+	service := runtimeqry.NewInstanceService(repo)
+
+	if _, err := service.GetUserInstances(nil, 2); err != nil {
+		t.Fatalf("GetUserInstances() error = %v", err)
 	}
 }

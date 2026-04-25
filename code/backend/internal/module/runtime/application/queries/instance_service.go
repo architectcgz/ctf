@@ -140,8 +140,5 @@ func visibleInstanceStatus(status string, expiresAt, now time.Time) string {
 }
 
 func normalizeContext(ctx context.Context) context.Context {
-	if ctx == nil {
-		return context.Background()
-	}
 	return ctx
 }
