@@ -39,12 +39,8 @@ function contestStatusLabel(status: string): string {
       <div class="teacher-page">
         <header class="teacher-topbar workspace-tab-heading awd-review-index-header">
           <div class="teacher-heading workspace-tab-heading__main">
-            <div class="workspace-overline awd-review-index-overline">
-              AWD Review
-            </div>
-            <h1 class="teacher-title workspace-page-title">
-              AWD复盘
-            </h1>
+            <div class="workspace-overline awd-review-index-overline">AWD Review</div>
+            <h1 class="teacher-title workspace-page-title">AWD复盘</h1>
             <p class="teacher-copy workspace-page-copy">
               集中查看赛事轮次、状态与导出就绪度，从统一入口进入整场或单轮复盘。
             </p>

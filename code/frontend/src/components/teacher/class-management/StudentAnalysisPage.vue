@@ -129,8 +129,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
 
 <template>
   <div class="workspace-shell journal-eyebrow-text">
-    <nav
-      class="top-tabs"
+    <nav class="top-tabs"
       role="tablist"
       aria-label="学员分析标签页"
     >

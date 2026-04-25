@@ -129,8 +129,7 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
 
 <template>
   <div class="workspace-shell teacher-management-shell teacher-surface">
-    <nav
-      class="top-tabs"
+    <nav class="top-tabs"
       role="tablist"
       aria-label="班级详情标签页"
     >
@@ -219,7 +218,7 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
                 class="ui-btn ui-btn--primary"
                 @click="emit('openReportExport')"
               >
-                报告
+                导出班级报告
               </button>
             </div>
           </header>
@@ -283,6 +282,7 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
                   <div class="teacher-field-control teacher-filter-control teacher-filter-control--select">
                     <select
                       :value="selectedClassName"
+                      aria-label="选择班级"
                       class="teacher-input teacher-select"
                       @change="emit('selectClass', ($event.target as HTMLSelectElement).value)"
                     >
@@ -304,12 +304,20 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
                     <input
                       :value="studentNoQuery"
                       type="text"
-                      placeholder="搜索学号"
+                      placeholder="输入学号精确查询"
                       class="teacher-input"
                       @input="emit('updateStudentNoQuery', ($event.target as HTMLInputElement).value)"
                     >
                   </div>
                 </label>
+                <button
+                  v-if="studentNoQuery"
+                  type="button"
+                  class="teacher-filter-reset teacher-filter-clear"
+                  @click="emit('updateStudentNoQuery', '')"
+                >
+                  清空学号
+                </button>
               </div>
             </section>
 
@@ -338,10 +346,10 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
             >
               <div class="teacher-directory-head">
                 <span>学号</span>
-                <span>名称</span>
+                <span>学生名称</span>
                 <span>昵称</span>
-                <span>状态</span>
-                <span>数据</span>
+                <span>薄弱项</span>
+                <span>做题数 / 得分数</span>
                 <span>操作</span>
               </div>
 
@@ -353,27 +361,30 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
                 @click="emit('openStudent', student.id)"
               >
                 <div class="teacher-directory-cell">
-                  {{ student.student_no || '未设置' }}
+                  {{ student.student_no || '未设置学号' }}
                 </div>
 
                 <div class="teacher-directory-cell">
-                  <h4 class="teacher-directory-row-title">
-                    {{ student.name || '未设置' }}
+                  <h4
+                    class="teacher-directory-row-title"
+                    :title="student.name || '未设置姓名'"
+                  >
+                    {{ student.name || '未设置姓名' }}
                   </h4>
                 </div>
 
                 <div class="teacher-directory-cell">
-                  <div class="teacher-directory-row-points">
+                  <div
+                    class="teacher-directory-row-points"
+                    :title="student.username"
+                  >
                     {{ student.username }}
                   </div>
                 </div>
 
-                <div class="teacher-directory-row-status">
-                  <span
-                    class="teacher-directory-state-chip"
-                    :class="(student.solved_count ?? 0) > 0 ? 'teacher-directory-state-chip-ready' : 'teacher-directory-state-chip-empty'"
-                  >
-                    {{ (student.solved_count ?? 0) > 0 ? '活跃' : '不活跃' }}
+                <div class="teacher-directory-row-tags">
+                  <span class="teacher-directory-state-chip teacher-directory-state-chip-empty">
+                    {{ student.weak_dimension || '暂无薄弱项' }}
                   </span>
                 </div>
 
@@ -466,9 +477,34 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
 }
 
 .teacher-directory-row-title {
-  margin: 0; font-size: var(--font-size-0-98); font-weight: 800; color: var(--color-text-primary);
+  margin: 0;
+  min-width: 0;
+  font-size: var(--font-size-0-98);
+  font-weight: 800;
+  color: var(--color-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .group:hover .teacher-directory-row-title { color: var(--color-primary); }
+
+.teacher-directory-row-points {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.teacher-filter-reset {
+  align-self: end;
+  min-height: var(--ui-control-height-md);
+  padding: 0 var(--space-4);
+  border: 1px solid var(--teacher-control-border);
+  border-radius: var(--ui-control-radius-md);
+  background: transparent;
+  color: var(--color-primary);
+  font-size: var(--font-size-12);
+  font-weight: 800;
+}
 
 .teacher-directory-state-chip-ready { background: var(--color-primary-soft); color: var(--color-primary); }
 .teacher-directory-state-chip-empty { background: var(--color-bg-elevated); color: var(--color-text-muted); }
