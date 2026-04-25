@@ -23,9 +23,6 @@ func (r *AWDRepository) WithDB(db *gorm.DB) *AWDRepository {
 }
 
 func (r *AWDRepository) dbWithContext(ctx context.Context) *gorm.DB {
-	if ctx == nil {
-		ctx = context.Background()
-	}
 	return r.db.WithContext(ctx)
 }
 
