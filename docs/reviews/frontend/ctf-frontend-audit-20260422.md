@@ -1660,6 +1660,26 @@
   - `npm run typecheck`
   - `npm run test:run`（244 个测试文件，1009 个测试）
 
+## 后续技术债 Backlog
+
+- `TD-1` 超大组件专题拆分：
+  - 当前仍需继续拆分的高复杂度组件包括 `ChallengeTopologyStudioPage.vue`、`AWDChallengeConfigDialog.vue`、`StudentInsightPanel.vue`、`ContestAWDWorkspacePanel.vue`。
+  - 拆分原则：父页面保留 route/query 同步、页面级数据加载、跨区块协调、错误策略和主业务动作；子组件只承接明确展示区块或局部表单，不允许只为了减少行数而把 owner 边界拆散。
+  - 建议顺序：先选一个组件做一个可评审切片，补源码边界测试和行为测试，再继续下一块。
+- `TD-2` Tailwind 任意值与主题 token 尾项：
+  - 仍可继续扫描并收口 `bg-[var(...)]`、`text-[var(...)]`、`border-[var(...)]`、裸十六进制色值和布局任意值。
+  - 处理时需要区分 token bridge 与真正裸魔法值，避免把合法的主题变量透传和样式债混在一次提交里。
+  - 当前残留主要集中在 AWD inspector 相关格式化 helper、题目详情 presentation、部分 mock/reference 页面和少量布局组件。
+- `TD-3` 性能监控接入：
+  - 当前未接入 `web-vitals`、`PerformanceObserver` 或项目自定义性能埋点。
+  - 该项需要先明确采集指标、上报端点、隐私边界和生产开关，不能只加依赖或空埋点。
+- `TD-4` i18n 预留：
+  - 当前未接入 `vue-i18n`，产品文案仍以中文硬编码为主。
+  - 是否推进取决于产品是否需要多语言；若推进，应先从路由标题、表单错误、导航与关键空态开始，不建议一次性机械搬迁所有文案。
+- `TD-5` 历史 review 文档清理：
+  - 部分旧文档仍保留已经过期的未修复语境，例如学生得分卡片、实例超时提醒、能力画像难度映射重复和雷达图 tooltip `any`。
+  - 后续如果继续做文档治理，应以本文件为主索引，把旧文档标记为历史快照或补交叉引用，避免重复把已修项重新纳入待办。
+
 ## 备注
 
 - 本文件用于记录本轮前端专项审查结论与修复顺序。
