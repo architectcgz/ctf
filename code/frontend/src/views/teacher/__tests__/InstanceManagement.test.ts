@@ -259,7 +259,7 @@ describe('InstanceManagement', () => {
       'class="teacher-summary metric-panel-default-surface"'
     )
     expect(instanceManagementSource).toContain(
-      'class="teacher-summary-grid progress-strip metric-panel-grid"'
+      'class="teacher-summary-grid progress-strip metric-panel-grid metric-panel-default-surface"'
     )
     expect(instanceManagementSource).toContain('class="progress-card metric-panel-card"')
     expect(instanceManagementSource).not.toContain(

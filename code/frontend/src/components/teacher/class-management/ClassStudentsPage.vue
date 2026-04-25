@@ -169,7 +169,7 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
                 <div class="teacher-summary-title">
                   <span>Class Snapshot</span>
                 </div>
-                <div class="teacher-summary-grid progress-strip metric-panel-grid">
+                <div class="teacher-summary-grid progress-strip metric-panel-grid metric-panel-default-surface">
                   <div class="progress-card metric-panel-card">
                     <div class="progress-card-label metric-panel-label">
                       班级人数
@@ -437,7 +437,9 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
 }
 
 .teacher-page { display: flex; min-height: 100%; flex: 1 1 auto; flex-direction: column; }
-.teacher-directory-section { margin-top: var(--space-6); }
+.teacher-directory-section {
+  margin-top: var(--workspace-directory-page-block-gap, var(--space-5));
+}
 
 .teacher-badge-card {
   border: 1px solid var(--teacher-card-border);

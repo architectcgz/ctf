@@ -153,7 +153,7 @@ function formatServiceRef(serviceId?: string): string {
             </span>
           </div>
 
-          <div class="teacher-summary-grid progress-strip metric-panel-grid">
+          <div class="teacher-summary-grid progress-strip metric-panel-grid metric-panel-default-surface">
             <article class="progress-card metric-panel-card">
               <div class="progress-card-label metric-panel-label">
                 轮次范围

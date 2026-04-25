@@ -185,7 +185,7 @@ describe('TeacherStudentManagement', () => {
       'class="teacher-summary metric-panel-default-surface"'
     )
     expect(studentManagementSource).toContain(
-      'class="teacher-summary-grid progress-strip metric-panel-grid"'
+      'class="teacher-summary-grid progress-strip metric-panel-grid metric-panel-default-surface"'
     )
     expect(studentManagementSource).toContain('class="progress-card metric-panel-card"')
     expect(studentManagementSource).not.toContain(

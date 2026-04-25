@@ -70,7 +70,7 @@ function contestStatusLabel(status: string): string {
             <FolderKanban class="h-4 w-4" />
             <span>Review Snapshot</span>
           </div>
-          <div class="teacher-summary-grid progress-strip metric-panel-grid">
+          <div class="teacher-summary-grid progress-strip metric-panel-grid metric-panel-default-surface">
             <article class="progress-card metric-panel-card">
               <div class="progress-card-label metric-panel-label">
                 赛事数量
@@ -288,15 +288,7 @@ function contestStatusLabel(status: string): string {
 }
 
 .teacher-directory-section {
-  margin-top: var(--space-6);
-}
-
-.list-heading {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: var(--space-3);
+  margin-top: var(--workspace-directory-page-block-gap, var(--space-5));
 }
 
 .list-heading__title {
@@ -309,7 +301,7 @@ function contestStatusLabel(status: string): string {
 .teacher-directory-filters {
   display: grid;
   gap: var(--space-4);
-  padding: var(--space-5) 0;
+  padding: var(--workspace-directory-gap-top) 0 var(--space-4);
 }
 
 .awd-review-filter-grid {

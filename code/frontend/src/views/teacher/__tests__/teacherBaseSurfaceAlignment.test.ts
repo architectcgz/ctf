@@ -73,7 +73,7 @@ describe('teacher base surface alignment', () => {
   it('teacher summary cards should explicitly adopt metric-panel classes and rely on shared variables', () => {
     expect(classManagementSource).toContain('class="teacher-summary metric-panel-default-surface"')
     expect(classManagementSource).toContain(
-      'class="teacher-summary-grid progress-strip metric-panel-grid"'
+      'class="teacher-summary-grid progress-strip metric-panel-grid metric-panel-default-surface"'
     )
     expect(classManagementSource).toContain('class="progress-card metric-panel-card"')
     expect(classManagementSource).not.toContain(
@@ -96,7 +96,7 @@ describe('teacher base surface alignment', () => {
       'class="teacher-summary metric-panel-default-surface"'
     )
     expect(studentManagementSource).toContain(
-      'class="teacher-summary-grid progress-strip metric-panel-grid"'
+      'class="teacher-summary-grid progress-strip metric-panel-grid metric-panel-default-surface"'
     )
     expect(studentManagementSource).toContain('class="progress-card metric-panel-card"')
     expect(studentManagementSource).not.toContain(
@@ -119,7 +119,7 @@ describe('teacher base surface alignment', () => {
       'class="teacher-summary metric-panel-default-surface"'
     )
     expect(instanceManagementSource).toContain(
-      'class="teacher-summary-grid progress-strip metric-panel-grid"'
+      'class="teacher-summary-grid progress-strip metric-panel-grid metric-panel-default-surface"'
     )
     expect(instanceManagementSource).toContain('class="progress-card metric-panel-card"')
     expect(instanceManagementSource).not.toContain(
