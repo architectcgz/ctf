@@ -8,6 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "typecheck": "vue-tsc --noEmit",
+    "check:theme-tail": "node scripts/check-theme-tail.mjs",
     "lint": "eslint . --ext .vue,.js,.ts,.jsx,.tsx",
     "format": "prettier --write \"src/**/*.{vue,js,ts,jsx,tsx,json,css}\"",
     "test": "vitest",

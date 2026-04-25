@@ -168,7 +168,7 @@ const {
                 :key="index"
                 class="metric-panel-card metric-panel-card--premium animate-pulse"
               >
-                <div class="h-24 bg-white/5 rounded-2xl" />
+                <div class="overview-skeleton-block h-24 rounded-2xl" />
               </div>
             </div>
           </div>
@@ -392,6 +392,10 @@ const {
   font-size: var(--font-size-15);
   line-height: 1.9;
   color: var(--journal-muted);
+}
+
+.overview-skeleton-block {
+  background: color-mix(in srgb, var(--color-bg-surface) 5%, transparent);
 }
 
 .meta-strip {

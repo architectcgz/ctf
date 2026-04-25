@@ -433,9 +433,9 @@ function isActiveChallenge(item: AdminContestChallengeViewData): boolean {
 
 .validation-block { display: flex; flex-direction: column; gap: var(--space-1-5); }
 .validation-pill { font-size: var(--font-size-11); font-weight: 800; padding: 0.2rem var(--space-2-5); border-radius: 99px; width: fit-content; }
-.validation-pill.passed { background: var(--color-success); color: white; }
-.validation-pill.failed { background: var(--color-danger); color: white; }
-.validation-pill.pending, .validation-pill.stale { background: var(--color-warning); color: white; }
+.validation-pill.passed { background: var(--color-success); color: var(--color-bg-base); }
+.validation-pill.failed { background: var(--color-danger); color: var(--color-bg-base); }
+.validation-pill.pending, .validation-pill.stale { background: var(--color-warning); color: var(--color-bg-base); }
 .validation-time { font-size: var(--font-size-12); color: var(--color-text-muted); }
 
 .action-btn { width: var(--ui-control-height-sm); height: var(--ui-control-height-sm); border-radius: 0.75rem; border: 1px solid var(--color-border-default); display: flex; align-items: center; justify-content: center; color: var(--color-text-secondary); cursor: pointer; transition: all 0.2s ease; background: var(--color-bg-surface); }
@@ -443,5 +443,5 @@ function isActiveChallenge(item: AdminContestChallengeViewData): boolean {
 
 .ops-btn { display: inline-flex; align-items: center; gap: var(--space-2); height: var(--ui-control-height-md); padding: 0 var(--space-6); border-radius: 0.85rem; font-size: var(--font-size-14); font-weight: 700; cursor: pointer; transition: all 0.2s ease; }
 .ops-btn--neutral { background: var(--color-bg-surface); border: 1px solid var(--color-border-default); color: var(--color-text-secondary); }
-.ops-btn--primary { background: var(--color-primary); color: white; border: none; }
+.ops-btn--primary { background: var(--color-primary); color: var(--color-bg-base); border: none; }
 </style>

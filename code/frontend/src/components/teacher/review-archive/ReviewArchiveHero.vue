@@ -129,7 +129,11 @@ const statItems = [
       transparent 1px
     );
   background-size: 28px 28px;
-  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.8), transparent);
+  mask-image: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-bg-base) 80%, transparent),
+    transparent
+  );
 }
 
 .archive-hero__content {

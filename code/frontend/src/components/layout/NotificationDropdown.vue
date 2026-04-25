@@ -11,7 +11,7 @@
       <Bell class="h-4 w-4" />
       <span
         v-if="unreadCount > 0"
-        class="notification-trigger-badge absolute -right-1 -top-1 inline-flex min-w-4 items-center justify-center rounded-full px-1 text-white"
+        class="notification-trigger-badge absolute -right-1 -top-1 inline-flex min-w-4 items-center justify-center rounded-full px-1"
       >
         {{ unreadCount > 99 ? '99+' : unreadCount }}
       </span>
@@ -364,6 +364,7 @@ const {
   font-size: var(--font-size-10);
   line-height: 1rem;
   background: color-mix(in srgb, var(--color-danger) 88%, var(--color-text-primary));
+  color: var(--color-bg-base);
   box-shadow: 0 0 0 2px var(--notification-surface, var(--color-bg-surface));
 }
 
@@ -445,14 +446,14 @@ const {
 }
 
 :global([data-theme='light']) .notification-drawer {
-  --notification-surface: white;
-  --notification-surface-subtle: #f8fafc;
-  --notification-surface-elevated: white;
-  --notification-line: color-mix(in srgb, #e2e8f0 88%, transparent);
-  --notification-line-strong: color-mix(in srgb, #d9e1ec 94%, transparent);
-  --notification-text: #0f172a;
-  --notification-muted: #64748b;
-  --notification-faint: #94a3b8;
+  --notification-surface: var(--color-bg-surface);
+  --notification-surface-subtle: var(--color-bg-elevated);
+  --notification-surface-elevated: var(--color-bg-surface);
+  --notification-line: color-mix(in srgb, var(--color-border-default) 88%, transparent);
+  --notification-line-strong: color-mix(in srgb, var(--color-border-default) 94%, transparent);
+  --notification-text: var(--color-text-primary);
+  --notification-muted: var(--color-text-secondary);
+  --notification-faint: var(--color-text-muted);
 }
 
 :global([data-theme='dark']) .notification-drawer {

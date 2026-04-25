@@ -667,6 +667,48 @@
   color: var(--color-danger);
 }
 
+.difficulty-chip {
+  border: 1px solid var(--difficulty-chip-border, var(--color-border-default));
+  background: var(--difficulty-chip-bg, var(--color-bg-elevated));
+  color: var(--difficulty-chip-color, var(--color-text-secondary));
+}
+
+.difficulty-chip--beginner {
+  --difficulty-chip-border: color-mix(in srgb, var(--color-diff-beginner) 22%, transparent);
+  --difficulty-chip-bg: color-mix(in srgb, var(--color-diff-beginner) 10%, transparent);
+  --difficulty-chip-color: var(--color-diff-beginner);
+}
+
+.difficulty-chip--easy {
+  --difficulty-chip-border: color-mix(in srgb, var(--color-diff-easy) 22%, transparent);
+  --difficulty-chip-bg: color-mix(in srgb, var(--color-diff-easy) 10%, transparent);
+  --difficulty-chip-color: var(--color-diff-easy);
+}
+
+.difficulty-chip--medium {
+  --difficulty-chip-border: color-mix(in srgb, var(--color-diff-medium) 22%, transparent);
+  --difficulty-chip-bg: color-mix(in srgb, var(--color-diff-medium) 10%, transparent);
+  --difficulty-chip-color: var(--color-diff-medium);
+}
+
+.difficulty-chip--hard {
+  --difficulty-chip-border: color-mix(in srgb, var(--color-diff-hard) 22%, transparent);
+  --difficulty-chip-bg: color-mix(in srgb, var(--color-diff-hard) 10%, transparent);
+  --difficulty-chip-color: var(--color-diff-hard);
+}
+
+.difficulty-chip--insane {
+  --difficulty-chip-border: color-mix(in srgb, var(--color-diff-insane) 22%, transparent);
+  --difficulty-chip-bg: color-mix(in srgb, var(--color-diff-insane) 10%, transparent);
+  --difficulty-chip-color: var(--color-diff-insane);
+}
+
+.difficulty-chip--unknown {
+  --difficulty-chip-border: color-mix(in srgb, var(--color-text-muted) 22%, transparent);
+  --difficulty-chip-bg: color-mix(in srgb, var(--color-text-muted) 10%, transparent);
+  --difficulty-chip-color: var(--color-text-secondary);
+}
+
 @media (max-width: 960px) {
   .ui-workbench-modal {
     grid-template-columns: 1fr;

@@ -130,7 +130,7 @@ function getTrafficStatusGroupLabel(statusGroup: AWDTrafficStatusGroup): string 
                 class="list-row"
               >
                 <span class="row-name truncate font-mono text-[10px]">{{ item.path }}</span>
-                <span class="row-count text-red-500 font-mono">{{ item.error_count }}</span>
+                <span class="row-count row-count--danger font-mono">{{ item.error_count }}</span>
               </div>
             </div>
           </div>
@@ -160,7 +160,7 @@ function getTrafficStatusGroupLabel(statusGroup: AWDTrafficStatusGroup): string 
           </div>
           <p
             v-if="trafficTrendRows.length === 0"
-            class="text-[11px] text-slate-400 py-4"
+            class="traffic-empty-hint py-4"
           >
             等待数据注入趋势桶...
           </p>
@@ -319,13 +319,13 @@ function getTrafficStatusGroupLabel(statusGroup: AWDTrafficStatusGroup): string 
               :key="event.occurred_at"
               class="studio-row"
             >
-              <td class="font-mono text-[11px] text-slate-400">
+              <td class="traffic-time-cell font-mono">
                 {{ formatDateTime(event.occurred_at).split(' ')[1] }}
               </td>
               <td>
                 <div class="vector-cell">
                   <span class="team-label">{{ getTrafficTeamName(event.attacker_team_id, event.attacker_team_name) }}</span>
-                  <span class="text-slate-300">→</span>
+                  <span class="traffic-vector-separator">→</span>
                   <span class="team-label">{{ getTrafficTeamName(event.victim_team_id, event.victim_team_name) }}</span>
                 </div>
               </td>
@@ -356,7 +356,7 @@ function getTrafficStatusGroupLabel(statusGroup: AWDTrafficStatusGroup): string 
             <tr v-if="!loadingTrafficEvents && trafficEvents.length === 0">
               <td
                 colspan="5"
-                class="py-20 text-center text-slate-400 font-medium"
+                class="traffic-empty-cell py-20 text-center font-medium"
               >
                 满足当前过滤条件的流量记录为空
               </td>
@@ -396,12 +396,19 @@ function getTrafficStatusGroupLabel(statusGroup: AWDTrafficStatusGroup): string 
 .list-row { display: flex; justify-content: space-between; align-items: center; padding: 0.45rem 0; border-bottom: 1px solid var(--color-border-subtle); }
 .row-name { font-size: var(--font-size-12); font-weight: 700; color: var(--color-text-primary); }
 .row-count { font-size: var(--font-size-12); font-weight: 800; color: var(--color-primary); }
+.row-count--danger { color: var(--color-danger); }
 
 .trend-canvas { background: var(--color-bg-elevated); border: 1px solid var(--color-border-default); border-radius: 1rem; padding: 1.25rem; display: flex; flex-direction: column; gap: 0.75rem; }
 .trend-unit { display: flex; flex-direction: column; gap: 0.25rem; }
 .trend-meta { display: flex; justify-content: space-between; font-size: var(--font-size-10); font-weight: 800; color: var(--color-text-muted); }
 .trend-bar-track { height: 4px; background: var(--color-border-default); border-radius: 2px; overflow: hidden; }
 .trend-bar-fill { height: 100%; background: var(--color-primary); border-radius: 2px; }
+.traffic-empty-hint,
+.traffic-time-cell,
+.traffic-empty-cell {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-11);
+}
 
 /* Drill-down area */
 .drill-down-toolbar { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1.5rem; }
@@ -421,6 +428,7 @@ function getTrafficStatusGroupLabel(statusGroup: AWDTrafficStatusGroup): string 
 .studio-row:hover { background: var(--color-bg-elevated); }
 
 .team-label { font-size: var(--font-size-12); font-weight: 800; color: var(--color-text-primary); }
+.traffic-vector-separator { color: var(--color-text-muted); }
 .challenge-cell { display: flex; flex-direction: column; }
 .challenge-name { font-size: var(--font-size-12); font-weight: 700; color: var(--color-text-primary); }
 .source-tag { font-size: var(--font-size-10); font-weight: 800; color: var(--color-text-muted); }
