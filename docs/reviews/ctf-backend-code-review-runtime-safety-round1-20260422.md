@@ -9,16 +9,17 @@
 | 审查范围 | `code/backend/internal/app`、`code/backend/internal/module/*`、`code/backend/configs/*` |
 | 审查日期 | 2026-04-22 |
 | 审查方式 | 静态代码审查 + 定向测试验证 |
-| 审查状态 | 已形成首轮问题清单，准备按优先级逐步修复 |
+| 审查状态 | 本轮问题已完成代码修复，并已合并到 `main` |
 
 ## 当前结论
 
+- 2026-04-25 复核结论：本轮记录的 H1、H2、M1、M2、L1 均已有对应代码修复。
 - 已确认问题主要集中在 4 类：
   - runtime 初始化失败或被关闭时，没有 `fail fast`，而是进入“伪创建成功”的降级路径。
   - CORS 在生产配置下存在“空白名单即允许任意 Origin”的危险语义。
   - ports 层 `context` 语义不一致，调用方无法稳定推导取消、超时和后台任务边界。
   - composition 层仍有反向跨模块依赖，目录分层与真实依赖边界不完全一致。
-- 当前最紧急的问题是 runtime 链路，因为它已经在集成测试中表现为真实失败，而不是纯架构味道。
+- 当前文档作为历史 review 归档保留，下面的问题描述仍记录首轮发现时的状态；每项的当前状态以“修复状态”为准。
 
 ## 已验证证据
 
@@ -43,6 +44,25 @@ timeout 180s go test ./internal/module/runtime/... ./internal/app/...
   - `TestFullRouter_AuthorizedSmokeMatrix`
   - `TestFullRouter_ContestChallengeAndScoreboardStateMatrix`
   - `TestPracticeFlow_AdminPublishesChallengeStudentSolvesChallenge`
+
+- 2026-04-25 合并后验证：
+
+```bash
+cd /home/azhi/workspace/projects/ctf/code/backend
+timeout 300s go test ./... -count=1
+```
+
+- 结果：
+  - 通过。
+  - 本轮修复已通过 merge commit `1f526a31` 合并到 `main`。
+
+## 修复状态
+
+- [H1] 已修复。runtime engine 不可用时不再伪造成功结果；测试环境通过 composition 的 test runtime engine 装配稳定运行，清理链路也改为显式失败语义。
+- [H2] 已修复。CORS 空白名单不再允许任意 Origin；`allow_credentials=true` 且 `allow_origins=[]` 会在配置校验阶段失败。
+- [M1] 已修复。相关 ports、service、repo 边界默认显式传入 `ctx context.Context`，公开契约不再用 `FooWithContext` 作为规范命名，也不保留无 ctx 兼容包装。
+- [M2] 已修复。runtime 代理流量事件记录迁移到 runtime infrastructure，composition 不再直接依赖 contest infrastructure。
+- [L1] 已修复。开发基线配置中的 PostgreSQL、Redis 默认密码改为空值，并通过环境变量注入；生产配置中的 `change_me` 仍是部署占位值，部署时必须覆盖。
 
 ## 问题清单
 
