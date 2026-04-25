@@ -318,7 +318,7 @@ func (s *Service) availableProvisioningSlots(ctx context.Context) (int, error) {
 		return 0, nil
 	}
 
-	creatingCount, err := s.instanceRepo.CountInstancesByStatusWithContext(ctx, []string{model.InstanceStatusCreating})
+	creatingCount, err := s.instanceRepo.CountInstancesByStatus(ctx, []string{model.InstanceStatusCreating})
 	if err != nil {
 		return 0, err
 	}
@@ -329,7 +329,7 @@ func (s *Service) availableProvisioningSlots(ctx context.Context) (int, error) {
 
 	maxActive := s.schedulerMaxActiveInstances()
 	if maxActive > 0 {
-		activeCount, err := s.instanceRepo.CountInstancesByStatusWithContext(ctx, []string{model.InstanceStatusCreating, model.InstanceStatusRunning})
+		activeCount, err := s.instanceRepo.CountInstancesByStatus(ctx, []string{model.InstanceStatusCreating, model.InstanceStatusRunning})
 		if err != nil {
 			return 0, err
 		}

@@ -548,10 +548,7 @@ func (r *Repository) TryTransitionStatusWithContext(ctx context.Context, id int6
 	return result.RowsAffected > 0, nil
 }
 
-func (r *Repository) CountInstancesByStatusWithContext(ctx context.Context, statuses []string) (int64, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
+func (r *Repository) CountInstancesByStatus(ctx context.Context, statuses []string) (int64, error) {
 	if len(statuses) == 0 {
 		return 0, nil
 	}

@@ -235,7 +235,7 @@ func (s *stubPracticeInstanceStore) TryTransitionStatusWithContext(ctx context.C
 	return false, nil
 }
 
-func (s *stubPracticeInstanceStore) CountInstancesByStatusWithContext(ctx context.Context, statuses []string) (int64, error) {
+func (s *stubPracticeInstanceStore) CountInstancesByStatus(ctx context.Context, statuses []string) (int64, error) {
 	return 0, nil
 }
 
