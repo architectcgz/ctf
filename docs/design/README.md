@@ -9,9 +9,8 @@
 3. `docs/contracts/`、`docs/architecture/backend/`、`docs/architecture/frontend/`：接口契约、架构边界、运行时事实。
 4. `docs/architecture/frontend/design-system/` 与 `docs/architecture/frontend/pages/`：UI 风格和页面结构设计。
 5. `docs/architecture/features/`：专题最终设计。
-6. `docs/superpowers/specs/`：阶段性专题草稿，只用于追溯设计演进。
-7. `docs/superpowers/plans/`：执行计划和实施记录，只作为当时实现上下文。
-6. `docs/reviews/`：历史评审快照，不作为当前设计事实源。
+6. `docs/superpowers/plans/`：执行计划和实施记录，只作为当时实现上下文。
+7. `docs/reviews/`：历史评审快照，不作为当前设计事实源。
 
 ## 当前事实源
 
@@ -34,10 +33,11 @@
 - 如果新设计文档明确写了“替代 / 不再 / 已由”，旧文档应移除或在索引中标记为历史。
 - 如果只有 review 提到旧问题，不能直接把它当成当前设计；必须回到当前代码、当前事实源和最近索引复核。
 - 如果 `docs/architecture/frontend/pages/` 中的页面稿与当前代码明显冲突，先判断页面稿是否仍是目标设计；确认仍有效时改代码，确认已过期时更新或移除页面稿。
-- `docs/superpowers/specs/` 只代表阶段草稿，不能直接覆盖 `docs/architecture/features/` 的最终设计。
 - `docs/superpowers/plans/` 里的命令、文件清单和阶段状态只代表当时实施计划，不能覆盖后续代码事实。
 
 ## 已移除的旧设计
 
 - `docs/superpowers/specs/2026-04-01-contestant-writeup-workflow-design.md`
   - 移除原因：其中“教师评阅学生 writeup”的部分已由 `2026-04-04-community-writeup-and-recommended-solutions-design.md` 替代，当前产品方向改为“社区题解 + 推荐题解”，教师/管理员角色从批改者变为内容运营者。
+- `docs/superpowers/specs/*.md`
+  - 迁移原因：仍有效的专题设计已经统一迁入 `docs/architecture/features/`，`docs/superpowers` 不再保存最终设计副本。

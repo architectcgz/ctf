@@ -75,7 +75,7 @@
 **Files:**
 - Modify: `docs/contracts/api-contract-v1.md`
 - Modify: `docs/requirements/platform-gap-must-do-2026-04-01.md`
-- Modify: `docs/superpowers/specs/2026-04-01-attack-evidence-review-design.md`
+- Modify: `docs/architecture/features/2026-04-01-attack-evidence-review-design.md`
 
 - [ ] Step 1: Update docs if implementation diverges from spec.
 - [ ] Step 2: Run targeted backend and frontend checks together.

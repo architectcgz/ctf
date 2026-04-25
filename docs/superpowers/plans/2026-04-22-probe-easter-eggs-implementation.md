@@ -26,7 +26,7 @@
 ### Docs
 
 - Create: `docs/superpowers/plans/2026-04-22-probe-easter-eggs-implementation.md`
-- Reference: `docs/superpowers/specs/2026-04-22-probe-easter-eggs-design.md`
+- Reference: `docs/architecture/features/2026-04-22-probe-easter-eggs-design.md`
 
 ### Frontend
 
