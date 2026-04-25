@@ -7,7 +7,6 @@ import classManagementSource from '@/components/teacher/class-management/ClassMa
 import challengeDetailSource from '@/views/challenges/ChallengeDetail.vue?raw'
 import contestDetailSource from '@/views/contests/ContestDetail.vue?raw'
 import challengeManageSource from '@/views/platform/ChallengeManage.vue?raw'
-import cheatDetectionSource from '@/views/platform/CheatDetection.vue?raw'
 import skillProfileSource from '@/views/profile/SkillProfile.vue?raw'
 
 const pageTabsSource = readFileSync(`${process.cwd()}/src/assets/styles/page-tabs.css`, 'utf-8')
@@ -27,7 +26,6 @@ describe('page tabs shared styles', () => {
       skillProfileSource,
       userGovernanceSource,
       challengeManageSource,
-      cheatDetectionSource,
     ]) {
       expect(source).toContain('--page-top-tabs-gap:')
       expect(source).toContain('--page-top-tab-active-border:')

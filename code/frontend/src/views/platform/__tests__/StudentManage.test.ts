@@ -4,6 +4,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import PlatformStudentManagement from '../StudentManage.vue'
 import adminStudentManageSource from '../StudentManage.vue?raw'
 import studentManageHeroPanelSource from '@/components/platform/student/StudentManageHeroPanel.vue?raw'
+import studentManageWorkspacePanelSource from '@/components/platform/student/StudentManageWorkspacePanel.vue?raw'
 
 const pushMock = vi.fn()
 
@@ -89,11 +90,7 @@ describe('PlatformStudentManagement', () => {
 
   it('应复用后台工作台目录组件和 teacher 学生目录接口', async () => {
     expect(adminStudentManageSource).toContain(
-      "from '@/components/common/WorkspaceDirectoryToolbar.vue'"
-    )
-    expect(adminStudentManageSource).toContain("from '@/components/common/WorkspaceDataTable.vue'")
-    expect(adminStudentManageSource).toContain(
-      "from '@/components/common/WorkspaceDirectoryPagination.vue'"
+      "import StudentManageWorkspacePanel from '@/components/platform/student/StudentManageWorkspacePanel.vue'"
     )
     expect(adminStudentManageSource).toContain("from '@/api/teacher'")
     expect(adminStudentManageSource).toContain("from '@/composables/useStudentDirectoryQuery'")
@@ -102,13 +99,23 @@ describe('PlatformStudentManagement', () => {
     )
     expect(adminStudentManageSource).not.toContain("from '@/composables/usePlatformStudentDirectory'")
     expect(adminStudentManageSource).toContain('<StudentManageHeroPanel')
-    expect(adminStudentManageSource).toContain('<WorkspaceDirectoryToolbar')
-    expect(adminStudentManageSource).toContain('<WorkspaceDataTable')
-    expect(adminStudentManageSource).toContain('<WorkspaceDirectoryPagination')
+    expect(adminStudentManageSource).toContain('<StudentManageWorkspacePanel')
     expect(studentManageHeroPanelSource).toContain('刷新目录')
     expect(studentManageHeroPanelSource).toContain(
       'class="admin-summary-grid admin-student-manage-shell__summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
     )
+    expect(studentManageWorkspacePanelSource).toContain(
+      "from '@/components/common/WorkspaceDirectoryToolbar.vue'"
+    )
+    expect(studentManageWorkspacePanelSource).toContain(
+      "from '@/components/common/WorkspaceDataTable.vue'"
+    )
+    expect(studentManageWorkspacePanelSource).toContain(
+      "from '@/components/common/WorkspaceDirectoryPagination.vue'"
+    )
+    expect(studentManageWorkspacePanelSource).toContain('<WorkspaceDirectoryToolbar')
+    expect(studentManageWorkspacePanelSource).toContain('<WorkspaceDataTable')
+    expect(studentManageWorkspacePanelSource).toContain('<WorkspaceDirectoryPagination')
 
     const wrapper = mount(PlatformStudentManagement)
     await flushPromises()

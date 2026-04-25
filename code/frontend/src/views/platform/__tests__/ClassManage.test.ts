@@ -4,6 +4,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import PlatformClassManagement from '../ClassManage.vue'
 import adminClassManageSource from '../ClassManage.vue?raw'
 import classManageHeroPanelSource from '@/components/platform/class/ClassManageHeroPanel.vue?raw'
+import classManageWorkspacePanelSource from '@/components/platform/class/ClassManageWorkspacePanel.vue?raw'
 
 const pushMock = vi.fn()
 
@@ -37,24 +38,27 @@ describe('PlatformClassManagement', () => {
   })
 
   it('应使用后台工作台目录组件而不是教师端班级目录壳层', async () => {
-    expect(adminClassManageSource).toContain("from '@/components/common/WorkspaceDataTable.vue'")
-    expect(adminClassManageSource).toContain(
-      "from '@/components/common/WorkspaceDirectoryPagination.vue'"
-    )
     expect(adminClassManageSource).toContain("from '@/api/teacher'")
     expect(adminClassManageSource).not.toContain("from '@/api/admin'")
     expect(adminClassManageSource).not.toContain('getAdminClasses')
     expect(adminClassManageSource).toContain(
       "import ClassManageHeroPanel from '@/components/platform/class/ClassManageHeroPanel.vue'"
     )
-    expect(adminClassManageSource).toContain("from '@/components/common/WorkspaceDataTable.vue'")
+    expect(adminClassManageSource).toContain(
+      "import ClassManageWorkspacePanel from '@/components/platform/class/ClassManageWorkspacePanel.vue'"
+    )
     expect(adminClassManageSource).toContain('<ClassManageHeroPanel')
-    expect(adminClassManageSource).toContain('<WorkspaceDataTable')
-    expect(adminClassManageSource).toContain('<WorkspaceDirectoryPagination')
+    expect(adminClassManageSource).toContain('<ClassManageWorkspacePanel')
     expect(classManageHeroPanelSource).toContain('刷新目录')
     expect(classManageHeroPanelSource).toContain(
       'class="admin-summary-grid admin-class-manage-shell__summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
     )
+    expect(classManageWorkspacePanelSource).toContain("from '@/components/common/WorkspaceDataTable.vue'")
+    expect(classManageWorkspacePanelSource).toContain(
+      "from '@/components/common/WorkspaceDirectoryPagination.vue'"
+    )
+    expect(classManageWorkspacePanelSource).toContain('<WorkspaceDataTable')
+    expect(classManageWorkspacePanelSource).toContain('<WorkspaceDirectoryPagination')
     expect(adminClassManageSource).not.toContain('teacher-management-shell')
     expect(adminClassManageSource).not.toContain('teacher-directory-row')
 

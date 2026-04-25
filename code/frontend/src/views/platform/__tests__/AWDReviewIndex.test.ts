@@ -4,6 +4,7 @@ import { createPinia, setActivePinia } from 'pinia'
 
 import PlatformAWDReviewIndex from '../AWDReviewIndex.vue'
 import platformAwdReviewIndexSource from '../AWDReviewIndex.vue?raw'
+import awdReviewHeroPanelSource from '@/components/platform/awd-review/AwdReviewHeroPanel.vue?raw'
 import awdReviewDirectoryPanelSource from '@/components/platform/awd-review/AwdReviewDirectoryPanel.vue?raw'
 import { useAuthStore } from '@/stores/auth'
 
@@ -23,7 +24,11 @@ vi.mock('vue-router', async () => {
 
 vi.mock('@/api/teacher', () => teacherApiMocks)
 
-const combinedSource = [platformAwdReviewIndexSource, awdReviewDirectoryPanelSource].join('\n')
+const combinedSource = [
+  platformAwdReviewIndexSource,
+  awdReviewHeroPanelSource,
+  awdReviewDirectoryPanelSource,
+].join('\n')
 
 describe('PlatformAWDReviewIndex', () => {
   beforeEach(() => {
@@ -76,7 +81,7 @@ describe('PlatformAWDReviewIndex', () => {
     expect(platformAwdReviewIndexSource).toContain(
       'class="workspace-shell journal-shell journal-shell-admin journal-notes-card journal-hero admin-awd-review-shell flex min-h-full flex-1 flex-col"'
     )
-    expect(platformAwdReviewIndexSource).toContain(
+    expect(awdReviewHeroPanelSource).toContain(
       'class="admin-summary-grid admin-awd-review-shell__summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
     )
     expect(combinedSource).toContain(

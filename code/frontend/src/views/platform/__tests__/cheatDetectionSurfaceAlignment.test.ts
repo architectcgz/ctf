@@ -4,7 +4,9 @@ import { describe, expect, it } from 'vitest'
 
 import cheatDetectionSource from '../CheatDetection.vue?raw'
 import cheatDetectionHeroPanelSource from '@/components/platform/cheat/CheatDetectionHeroPanel.vue?raw'
+import cheatDetectionReviewPanelsSource from '@/components/platform/cheat/CheatDetectionReviewPanels.vue?raw'
 import cheatDetectionSummaryPanelSource from '@/components/platform/cheat/CheatDetectionSummaryPanel.vue?raw'
+import cheatDetectionWorkspacePanelSource from '@/components/platform/cheat/CheatDetectionWorkspacePanel.vue?raw'
 
 const journalNotesSource = readFileSync(
   `${process.cwd()}/src/assets/styles/journal-notes.css`,
@@ -13,7 +15,9 @@ const journalNotesSource = readFileSync(
 const pageTabsSource = readFileSync(`${process.cwd()}/src/assets/styles/page-tabs.css`, 'utf-8')
 const cheatDetectionCombinedSource = [
   cheatDetectionSource,
+  cheatDetectionWorkspacePanelSource,
   cheatDetectionHeroPanelSource,
+  cheatDetectionReviewPanelsSource,
   cheatDetectionSummaryPanelSource,
 ].join('\n')
 
@@ -77,7 +81,7 @@ describe('cheat detection surface alignment', () => {
     expect(pageTabsSource).toMatch(
       /\.top-tab:hover,\s*\.top-tab.active,\s*\.top-tab:focus-visible\s*\{[\s\S]*border-bottom-color:\s*var\(/s
     )
-    expect(cheatDetectionCombinedSource).toContain('--page-top-tabs-gap: 28px;')
+    expect(cheatDetectionCombinedSource).toContain('--page-top-tabs-gap: var(--space-7);')
     expect(cheatDetectionCombinedSource).toContain('--page-top-tab-font-size: var(--font-size-15);')
     expect(cheatDetectionCombinedSource).toContain('--page-top-tab-active-border:')
     expect(cheatDetectionCombinedSource).not.toMatch(/\.top-tabs\s*\{[^}]*display:\s*flex;/s)

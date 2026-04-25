@@ -1,22 +1,25 @@
 import { describe, expect, it } from 'vitest'
 
 import contestEditSource from '../ContestEdit.vue?raw'
+import contestEditWorkspacePanelSource from '@/components/platform/contest/ContestEditWorkspacePanel.vue?raw'
 import awdChallengeConfigDialogSource from '@/components/platform/contest/AWDChallengeConfigDialog.vue?raw'
 import awdReadinessOverrideDialogSource from '@/components/platform/contest/AWDReadinessOverrideDialog.vue?raw'
 import awdReadinessSummarySource from '@/components/platform/contest/AWDReadinessSummary.vue?raw'
 import contestChallengeOrchestrationPanelSource from '@/components/platform/contest/ContestChallengeOrchestrationPanel.vue?raw'
 
 describe('contest ui primitive adoption phase 2', () => {
+  const contestEditCombinedSource = [contestEditSource, contestEditWorkspacePanelSource].join('\n')
+
   it('contest edit workspace should consume shared ui buttons for back and retry actions', () => {
-    expect(contestEditSource).toContain('class="ui-btn ui-btn--ghost"')
-    expect(contestEditSource).not.toContain('class="admin-btn admin-btn-ghost"')
+    expect(contestEditCombinedSource).toContain('class="ui-btn ui-btn--ghost"')
+    expect(contestEditCombinedSource).not.toContain('class="admin-btn admin-btn-ghost"')
   })
 
   it('contest edit workspace should keep the inner scroll container shrinkable so basics panel can scroll', () => {
     expect(contestEditSource).toMatch(
       /\.studio-content\s*\{[^}]*min-height:\s*0;[^}]*\}/
     )
-    expect(contestEditSource).toMatch(
+    expect(contestEditWorkspacePanelSource).toMatch(
       /\.studio-scroll-area\s*\{[^}]*overflow-y:\s*auto;[^}]*\}/
     )
   })
