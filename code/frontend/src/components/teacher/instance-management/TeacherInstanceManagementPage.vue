@@ -86,14 +86,14 @@ function statusMeta(status: string): { label: string; chipClass: string } {
     <main class="content-pane">
       <div class="teacher-page">
         <header class="teacher-topbar">
-          <div class="teacher-heading">
-            <div class="teacher-surface-eyebrow journal-eyebrow">
+          <div class="teacher-heading workspace-tab-heading__main">
+            <div class="workspace-overline">
               Teacher Instance Ops
             </div>
-            <h1 class="teacher-title">
+            <h1 class="teacher-title workspace-page-title">
               实例管理
             </h1>
-            <p class="teacher-copy">
+            <p class="teacher-copy workspace-page-copy">
               先筛班级与学员，再快速定位异常或即将到期的训练实例。
             </p>
           </div>

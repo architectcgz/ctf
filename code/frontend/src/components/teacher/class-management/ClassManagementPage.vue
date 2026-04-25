@@ -52,12 +52,12 @@ const currentPageStudentCount = computed(() =>
     <main class="content-pane">
       <div class="teacher-page">
         <header class="teacher-topbar">
-          <div class="teacher-heading">
-            <div class="teacher-surface-eyebrow journal-eyebrow">
+          <div class="teacher-heading workspace-tab-heading__main">
+            <div class="workspace-overline">
               Class Directory
             </div>
-            <h1 class="teacher-title">班级管理</h1>
-            <p class="teacher-copy">
+            <h1 class="teacher-title workspace-page-title">班级管理</h1>
+            <p class="teacher-copy workspace-page-copy">
               查看当前可管理班级，并进入对应班级继续查看学生和训练表现。
             </p>
           </div>
