@@ -1,19 +1,11 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import {
-  FolderKanban,
-  Users,
-  Calendar,
-  RefreshCw,
-} from 'lucide-vue-next'
 
 import { getClasses } from '@/api/teacher'
 import type { TeacherClassItem } from '@/api/contracts'
-import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
-import WorkspaceDirectoryPagination from '@/components/common/WorkspaceDirectoryPagination.vue'
-import AppLoading from '@/components/common/AppLoading.vue'
-import AppEmpty from '@/components/common/AppEmpty.vue'
+import ClassManageHeroPanel from '@/components/platform/class/ClassManageHeroPanel.vue'
+import ClassManageWorkspacePanel from '@/components/platform/class/ClassManageWorkspacePanel.vue'
 import { DEFAULT_PAGE_SIZE } from '@/utils/constants'
 
 const router = useRouter()
@@ -83,199 +75,33 @@ const rows = computed(() =>
 onMounted(() => {
   void loadClasses()
 })
-
-const columns = [
-  { key: 'name', label: '班级名称', widthClass: 'w-[30%] min-w-[12rem]' },
-  { key: 'student_count', label: '学生人数', widthClass: 'w-[15%] min-w-[8rem]', align: 'center' as const },
-  { key: 'teacher_name', label: '负责教师', widthClass: 'w-[15%] min-w-[10rem]' },
-  { key: 'created_at', label: '创建时间', widthClass: 'w-[20%] min-w-[10rem]' },
-  { key: 'actions', label: '操作', widthClass: 'w-[10rem]', align: 'right' as const },
-]
 </script>
 
 <template>
   <div class="workspace-shell">
     <div class="workspace-grid">
       <main class="content-pane">
-        <section class="workspace-hero">
-          <div class="workspace-tab-heading__main">
-            <div class="workspace-overline">
-              Class Workspace
-            </div>
-            <h1 class="hero-title">
-              班级管理
-            </h1>
-            <p class="hero-summary">
-              在后台视角查看班级目录、学生规模，并快速进入班级详情。
-            </p>
-          </div>
+        <ClassManageHeroPanel
+          :total="total"
+          :total-students="totalStudents"
+          @refresh="void loadClasses()"
+        />
 
-          <div class="awd-library-hero-actions">
-            <div class="quick-actions">
-              <button
-                type="button"
-                class="ui-btn ui-btn--primary"
-                @click="loadClasses()"
-              >
-                <RefreshCw class="h-4 w-4" />
-                刷新目录
-              </button>
-            </div>
-          </div>
-        </section>
-
-        <div class="admin-class-manage-shell__content">
-          <div class="admin-summary-grid admin-class-manage-shell__summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface">
-            <article class="journal-note progress-card metric-panel-card">
-              <div class="journal-note-label progress-card-label metric-panel-label">
-                <span>班级总量</span>
-                <FolderKanban class="h-4 w-4" />
-              </div>
-              <div class="journal-note-value progress-card-value metric-panel-value">
-                {{ total.toString().padStart(2, '0') }}
-              </div>
-              <div class="journal-note-helper progress-card-hint metric-panel-helper">
-                平台已接入班级
-              </div>
-            </article>
-
-            <article class="journal-note progress-card metric-panel-card">
-              <div class="journal-note-label progress-card-label metric-panel-label">
-                <span>总人数</span>
-                <Users class="h-4 w-4" />
-              </div>
-              <div class="journal-note-value progress-card-value metric-panel-value">
-                {{ totalStudents.toString().padStart(2, '0') }}
-              </div>
-              <div class="journal-note-helper progress-card-hint metric-panel-helper">
-                全平台在籍学生
-              </div>
-            </article>
-
-            <article class="journal-note progress-card metric-panel-card">
-              <div class="journal-note-label progress-card-label metric-panel-label">
-                <span>教学周期</span>
-                <Calendar class="h-4 w-4" />
-              </div>
-              <div class="journal-note-value progress-card-value metric-panel-value">
-                --
-              </div>
-              <div class="journal-note-helper progress-card-hint metric-panel-helper">
-                本学期教学活跃度
-              </div>
-            </article>
-          </div>
-
-          <section class="workspace-directory-section admin-class-manage-directory">
-            <header class="list-heading">
-              <div>
-                <div class="workspace-overline">
-                  Class Directory
-                </div>
-                <h2 class="list-heading__title">
-                  班级目录
-                </h2>
-              </div>
-            </header>
-
-            <div
-              v-if="loading && list.length === 0"
-              class="py-12 flex justify-center"
-            >
-              <AppLoading>同步班级目录...</AppLoading>
-            </div>
-
-            <template v-else>
-              <AppEmpty
-                v-if="list.length === 0"
-                class="workspace-directory-empty"
-                icon="FolderKanban"
-                title="暂无班级数据"
-                description="当前平台尚未创建任何班级。"
-              />
-
-              <WorkspaceDataTable
-                v-else
-                class="workspace-directory-list admin-class-manage-table"
-                :columns="columns"
-                :rows="rows"
-                row-key="id"
-              >
-                <template #cell-actions="{ row }">
-                  <button
-                    type="button"
-                    class="ui-btn ui-btn--ghost"
-                    @click="openClass(String((row as { name: string }).name))"
-                  >
-                    查看班级
-                  </button>
-                </template>
-              </WorkspaceDataTable>
-
-              <div class="workspace-directory-pagination">
-                <WorkspaceDirectoryPagination
-                  :page="page"
-                  :total-pages="Math.max(1, Math.ceil(total / pageSize))"
-                  :total="total"
-                  total-label="个班级"
-                  @change-page="handlePageChange"
-                />
-              </div>
-            </template>
-          </section>
-
-          <div
-            v-if="error"
-            class="teacher-surface-error"
-          >
-            {{ error }}
-          </div>
-        </div>
+        <ClassManageWorkspacePanel
+          :loading="loading"
+          :has-classes="list.length > 0"
+          :rows="rows"
+          :page="page"
+          :total-pages="Math.max(1, Math.ceil(total / pageSize))"
+          :total="total"
+          :error="error"
+          @open-class="openClass"
+          @change-page="handlePageChange"
+        />
       </main>
     </div>
   </div>
 </template>
 
 <style scoped>
-.admin-class-manage-shell__content {
-  display: flex;
-  flex-direction: column;
-  gap: var(--workspace-directory-page-block-gap);
-  margin-top: var(--space-10);
-}
-
-.workspace-hero {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: var(--space-7);
-  padding-bottom: var(--space-6);
-  border-bottom: 1px solid var(--workspace-line-soft);
-}
-
-.hero-title {
-  margin: 0.5rem 0 0;
-  font-size: var(--workspace-page-title-font-size);
-  line-height: var(--workspace-page-title-line-height);
-  letter-spacing: var(--workspace-page-title-letter-spacing);
-  color: var(--journal-ink);
-}
-
-.hero-summary {
-  max-width: 760px;
-  margin-top: var(--space-3-5);
-  font-size: var(--font-size-15);
-  line-height: 1.9;
-  color: var(--journal-muted);
-}
-
-.awd-library-hero-actions {
-  display: flex;
-  align-items: flex-end;
-  padding-bottom: 0.5rem;
-}
-
-.quick-actions {
-  display: flex;
-  gap: 0.75rem;
-}
 </style>

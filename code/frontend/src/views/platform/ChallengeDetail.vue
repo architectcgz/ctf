@@ -2,112 +2,38 @@
   <section
     class="workspace-shell journal-shell journal-shell-admin journal-hero flex min-h-full flex-1 flex-col"
   >
-    <header class="workspace-topbar">
-      <div class="topbar-leading">
-        <span class="workspace-overline">Challenge Profile</span>
-        <span class="class-chip">{{ workspaceLabel }}</span>
-      </div>
-      <div class="topbar-actions">
-        <button
-          v-if="challengeId"
-          class="ui-btn ui-btn--primary"
-          type="button"
-          @click="openTopology"
-        >
-          拓扑编排
-        </button>
-        <button
-          class="ui-btn ui-btn--ghost"
-          type="button"
-          @click="openChallengeList"
-        >
-          返回题库
-        </button>
-      </div>
-    </header>
+    <AdminChallengeTopbarPanel
+      :workspace-label="workspaceLabel"
+      :has-challenge-id="Boolean(challengeId)"
+      @open-topology="openTopology"
+      @open-challenge-list="openChallengeList"
+    />
 
-    <nav
-      class="top-tabs"
-      role="tablist"
-      aria-label="题目管理视图切换"
-    >
-      <button
-        v-for="(tab, index) in panelTabs"
-        :id="tab.tabId"
-        :key="tab.key"
-        :ref="(element) => setTabButtonRef(tab.key, element as HTMLButtonElement | null)"
-        type="button"
-        role="tab"
-        class="top-tab"
-        :class="{ active: activePanel === tab.key }"
-        :aria-selected="activePanel === tab.key ? 'true' : 'false'"
-        :aria-controls="tab.panelId"
-        :tabindex="activePanel === tab.key ? 0 : -1"
-        @click="switchPanel(tab.key)"
-        @keydown="handleTabKeydown($event, index)"
-      >
-        {{ tab.label }}
-      </button>
-    </nav>
-
-    <main class="content-pane">
-      <div
-        v-if="loading"
-        class="flex items-center justify-center py-12"
-      >
-        <div
-          class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--journal-border)] border-t-[var(--journal-accent)]"
-        />
-      </div>
-
-      <template v-else-if="challenge">
-        <!--
-          <div class="workspace-overline">Challenge Profile</div>
-          class="challenge-overview-summary progress-strip metric-panel-grid metric-panel-default-surface"
-          <h2 class="list-heading__title">基础信息</h2>
-          <div class="journal-note-label">Hints</div>
-          <h2 class="list-heading__title">提示管理</h2>
-        -->
-        <AdminChallengeProfilePanel
-          v-show="activePanel === 'detail'"
-          id="admin-challenge-panel-detail"
-          class="tab-panel challenge-panel"
-          role="tabpanel"
-          aria-labelledby="admin-challenge-tab-detail"
-          :aria-hidden="activePanel === 'detail' ? 'false' : 'true'"
-          :challenge="challenge"
-          :downloading-attachment="downloadingAttachment"
-          :flag-config-summary="flagConfigSummary"
-          :flag-draft-summary="flagDraftSummary"
-          :flag-type="flagType"
-          :flag-value="flagValue"
-          :flag-regex="flagRegex"
-          :flag-prefix="flagPrefix"
-          :saving="saving"
-          :is-shared-instance-challenge="isSharedInstanceChallenge"
-          @download-attachment="downloadAttachment"
-          @save-flag-config="saveFlagConfig"
-          @update:flag-type="flagType = $event"
-          @update:flag-value="flagValue = $event"
-          @update:flag-regex="flagRegex = $event"
-          @update:flag-prefix="flagPrefix = $event"
-        />
-
-        <section
-          v-show="activePanel === 'writeup'"
-          id="admin-challenge-panel-writeup"
-          class="tab-panel challenge-panel"
-          role="tabpanel"
-          aria-labelledby="admin-challenge-tab-writeup"
-          :aria-hidden="activePanel === 'writeup' ? 'false' : 'true'"
-        >
-          <ChallengeWriteupManagePanel
-            :challenge-id="challengeId"
-            :challenge-title="challenge.title"
-          />
-        </section>
-      </template>
-    </main>
+    <AdminChallengeWorkspaceTabs
+      :loading="loading"
+      :panel-tabs="panelTabs"
+      :active-panel="activePanel"
+      :set-tab-button-ref="setTabButtonRef"
+      :challenge="challenge"
+      :downloading-attachment="downloadingAttachment"
+      :flag-config-summary="flagConfigSummary"
+      :flag-draft-summary="flagDraftSummary"
+      :flag-type="flagType"
+      :flag-value="flagValue"
+      :flag-regex="flagRegex"
+      :flag-prefix="flagPrefix"
+      :saving="saving"
+      :is-shared-instance-challenge="isSharedInstanceChallenge"
+      :challenge-id="challengeId"
+      @select="switchPanel"
+      @keydown="handleTabKeydown($event.event, $event.index)"
+      @download-attachment="downloadAttachment"
+      @save-flag-config="saveFlagConfig"
+      @update:flag-type="flagType = $event"
+      @update:flag-value="flagValue = $event"
+      @update:flag-regex="flagRegex = $event"
+      @update:flag-prefix="flagPrefix = $event"
+    />
   </section>
 </template>
 
@@ -119,8 +45,8 @@ import type { AdminChallengeFlagPayload } from '@/api/admin'
 import { configureChallengeFlag, getChallengeDetail } from '@/api/admin'
 import { downloadAttachment as downloadChallengeAttachment } from '@/api/challenge'
 import type { AdminChallengeListItem, FlagType } from '@/api/contracts'
-import AdminChallengeProfilePanel from '@/components/platform/challenge/AdminChallengeProfilePanel.vue'
-import ChallengeWriteupManagePanel from '@/components/platform/writeup/ChallengeWriteupManagePanel.vue'
+import AdminChallengeTopbarPanel from '@/components/platform/challenge/AdminChallengeTopbarPanel.vue'
+import AdminChallengeWorkspaceTabs from '@/components/platform/challenge/AdminChallengeWorkspaceTabs.vue'
 import { useRouteQueryTabs } from '@/composables/useRouteQueryTabs'
 import { useToast } from '@/composables/useToast'
 
@@ -363,47 +289,4 @@ onUnmounted(() => {
   --journal-shell-hero-shadow: 0 22px 50px var(--color-shadow-soft);
 }
 
-.workspace-overline {
-  font-size: var(--font-size-0-70);
-  font-weight: 700;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--journal-accent);
-}
-
-.content-pane {
-  display: flex;
-  flex: 1 1 auto;
-  flex-direction: column;
-}
-
-.topbar-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-}
-
-.topbar-actions > .ui-btn {
-  --ui-btn-height: 2.45rem;
-  --ui-btn-radius: 0.75rem;
-  --ui-btn-padding: var(--space-2) var(--space-4);
-  --ui-btn-font-size: var(--font-size-0-875);
-  --ui-btn-font-weight: 600;
-  --ui-btn-primary-border: color-mix(in srgb, var(--journal-accent) 18%, transparent);
-  --ui-btn-primary-background: var(--journal-accent);
-  --ui-btn-primary-hover-background: color-mix(in srgb, var(--journal-accent) 88%, black);
-  --ui-btn-ghost-color: var(--journal-ink);
-  --ui-btn-ghost-hover-color: var(--journal-accent);
-  --ui-btn-ghost-hover-background: color-mix(in srgb, var(--journal-accent) 4%, var(--journal-surface));
-  --ui-btn-focus-ring: color-mix(in srgb, var(--journal-accent) 18%, transparent);
-}
-
-.tab-panel {
-  display: grid;
-  gap: var(--space-5);
-}
-
-.challenge-panel {
-  padding-top: var(--space-6);
-}
 </style>
