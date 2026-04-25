@@ -60,13 +60,6 @@ defineProps<{
   --metric-panel-columns: repeat(3, minmax(0, 1fr));
 }
 
-.cheat-kpi-summary .metric-panel-label {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-2);
-}
-
 @media (max-width: 1100px) {
   .cheat-kpi-summary {
     --metric-panel-columns: repeat(2, minmax(0, 1fr));

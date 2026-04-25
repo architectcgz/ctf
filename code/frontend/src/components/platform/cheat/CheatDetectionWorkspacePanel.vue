@@ -5,7 +5,6 @@ import type { AdminCheatDetectionData } from '@/api/contracts'
 import AppLoading from '@/components/common/AppLoading.vue'
 import CheatDetectionHeroPanel from '@/components/platform/cheat/CheatDetectionHeroPanel.vue'
 import CheatDetectionReviewPanels from '@/components/platform/cheat/CheatDetectionReviewPanels.vue'
-import CheatDetectionSummaryPanel from '@/components/platform/cheat/CheatDetectionSummaryPanel.vue'
 
 type CheatQuickAction = {
   title: string
@@ -43,6 +42,7 @@ function handleOpenAudit(query: Record<string, string>): void {
         <CheatDetectionHeroPanel
           :generated-at-label="riskData ? formatDateTime(riskData.generated_at) : null"
           :loading="loading"
+          :summary="riskData?.summary ?? null"
           @open-audit="handleOpenAudit({})"
           @refresh="handleRefresh"
         />
@@ -60,7 +60,6 @@ function handleOpenAudit(query: Record<string, string>): void {
           v-else-if="riskData"
           class="cheat-workbench"
         >
-          <CheatDetectionSummaryPanel :summary="riskData.summary" />
           <CheatDetectionReviewPanels
             :risk-data="riskData"
             :quick-actions="quickActions"

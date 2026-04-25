@@ -189,10 +189,21 @@ describe('AuditLog', () => {
       "import AuditLogHeroPanel from '@/components/platform/audit/AuditLogHeroPanel.vue'"
     )
     expect(auditLogSource).toContain('<AuditLogHeroPanel')
+    expect(auditLogSource).toContain('class="audit-log-body"')
+    expect(auditLogSource).not.toContain('mt-10 space-y-10')
+    expect(auditLogSource).toContain(
+      'gap: var(--workspace-directory-page-block-gap, var(--space-5));'
+    )
     expect(auditLogHeroPanelSource).toContain('<div class="workspace-overline">Audit Log</div>')
     expect(auditLogHeroPanelSource).not.toContain('<div class="journal-eyebrow">Audit Log</div>')
     expect(auditLogHeroPanelSource).toContain(
       'class="admin-summary-grid progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
+    )
+    expect(auditLogHeroPanelSource).toMatch(
+      /\.audit-log-hero-panel\s*\{[\s\S]*gap:\s*0;/s
+    )
+    expect(auditLogHeroPanelSource).toMatch(
+      /\.workspace-hero\s*\{[\s\S]*border-bottom:\s*1px solid var\(--workspace-line-soft,/s
     )
     expect(auditLogHeroPanelSource).toContain('class="journal-note progress-card metric-panel-card"')
     expect(auditLogHeroPanelSource).toContain(

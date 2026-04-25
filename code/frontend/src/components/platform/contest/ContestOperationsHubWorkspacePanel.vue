@@ -92,35 +92,35 @@ function formatDateTime(value: string): string {
       </div>
     </header>
 
-    <div class="contest-ops-directory__list">
+    <div class="workspace-directory-list contest-ops-directory__list">
       <article
         v-for="contest in operableContests"
         :key="contest.id"
-        class="contest-ops-card"
+        class="contest-ops-row"
       >
-        <div class="contest-ops-card__head">
-          <div class="contest-ops-card__title-wrap">
-            <h3 class="contest-ops-card__title">
+        <div class="contest-ops-row__main">
+          <div class="contest-ops-row__head">
+            <h3 class="contest-ops-row__title">
               {{ contest.title }}
             </h3>
-            <p class="contest-ops-card__copy">
+            <div class="contest-ops-row__badges">
+              <span class="contest-ops-row__badge">
+                {{ getStatusLabel(contest.status) }}
+              </span>
+              <span class="contest-ops-row__badge contest-ops-row__badge--muted">
+                {{ getModeLabel(contest.mode) }}
+              </span>
+            </div>
+          </div>
+
+          <p class="contest-ops-row__copy">
               {{ contest.description || '当前未填写赛事描述。' }}
-            </p>
-          </div>
+          </p>
 
-          <div class="contest-ops-card__badges">
-            <span class="contest-ops-card__badge">
-              {{ getStatusLabel(contest.status) }}
-            </span>
-            <span class="contest-ops-card__badge contest-ops-card__badge--muted">
-              {{ getModeLabel(contest.mode) }}
-            </span>
+          <div class="contest-ops-row__meta">
+            <span>开始：{{ formatDateTime(contest.starts_at) }}</span>
+            <span>结束：{{ formatDateTime(contest.ends_at) }}</span>
           </div>
-        </div>
-
-        <div class="contest-ops-card__meta">
-          <span>开始：{{ formatDateTime(contest.starts_at) }}</span>
-          <span>结束：{{ formatDateTime(contest.ends_at) }}</span>
         </div>
 
         <div class="contest-ops-actions">
@@ -149,98 +149,102 @@ function formatDateTime(value: string): string {
 
 <style scoped>
 .contest-ops-section {
-  padding: 1.5rem;
+  padding: 0;
 }
 
 .contest-ops-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
+  gap: var(--space-3);
 }
 
 .contest-ops-directory {
   display: grid;
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
 .contest-ops-directory__list {
   display: grid;
-  gap: 1rem;
+  gap: 0;
+  padding: 0;
 }
 
-.contest-ops-card {
+.contest-ops-row {
   display: grid;
-  gap: 1rem;
-  padding: 1.2rem 1.25rem;
-  border: 1px solid color-mix(in srgb, var(--journal-border) 72%, transparent);
-  border-radius: 1.1rem;
-  background: color-mix(in srgb, var(--journal-surface) 95%, transparent);
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4-5) var(--space-5);
+  border-bottom: 1px solid var(--workspace-directory-row-divider);
 }
 
-.contest-ops-card__head {
+.contest-ops-row:last-child {
+  border-bottom: 0;
+}
+
+.contest-ops-row__main {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.contest-ops-row__head {
   display: flex;
   flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 0.9rem;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
 }
 
-.contest-ops-card__title-wrap {
-  display: grid;
-  gap: 0.45rem;
-}
-
-.contest-ops-card__title {
+.contest-ops-row__title {
   margin: 0;
   color: var(--journal-ink);
-  font-size: 1.05rem;
+  font-size: var(--font-size-17);
   font-weight: 700;
 }
 
-.contest-ops-card__copy {
+.contest-ops-row__copy {
   margin: 0;
   color: var(--color-text-secondary);
   line-height: 1.7;
 }
 
-.contest-ops-card__badges,
-.contest-ops-card__meta {
+.contest-ops-row__badges,
+.contest-ops-row__meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.6rem 0.9rem;
+  gap: var(--space-2) var(--space-3);
 }
 
-.contest-ops-card__badge {
+.contest-ops-row__badge {
   display: inline-flex;
   align-items: center;
   border-radius: 999px;
-  padding: 0.3rem 0.78rem;
+  padding: var(--space-1) var(--space-2-5);
   background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
   color: var(--journal-accent);
-  font-size: 0.8rem;
+  font-size: var(--font-size-12);
   font-weight: 600;
 }
 
-.contest-ops-card__badge--muted {
+.contest-ops-row__badge--muted {
   background: color-mix(in srgb, var(--journal-border) 14%, transparent);
   color: var(--color-text-secondary);
 }
 
-.contest-ops-card__meta {
+.contest-ops-row__meta {
   color: var(--color-text-secondary);
-  font-size: 0.9rem;
+  font-size: var(--font-size-13);
 }
 
 @media (max-width: 768px) {
-  .contest-ops-section {
-    padding: 1.15rem;
+  .contest-ops-row {
+    grid-template-columns: 1fr;
+    padding: var(--space-4);
   }
 
-  .contest-ops-card {
-    padding: 1rem;
-  }
-
-  .contest-ops-card__actions {
+  .contest-ops-actions {
     align-items: stretch;
+    flex-direction: column;
   }
 }
 </style>

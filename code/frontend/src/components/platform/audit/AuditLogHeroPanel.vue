@@ -96,7 +96,7 @@ function handleSync(): void {
 <style scoped>
 .audit-log-hero-panel {
   display: grid;
-  gap: var(--space-10);
+  gap: 0;
 }
 
 .workspace-hero {
@@ -104,7 +104,7 @@ function handleSync(): void {
   grid-template-columns: minmax(0, 1fr) auto;
   gap: var(--space-7);
   padding-bottom: var(--space-6);
-  border-bottom: 1px solid var(--color-border-subtle);
+  border-bottom: 1px solid var(--workspace-line-soft, var(--color-border-subtle));
 }
 
 .hero-title {
@@ -125,7 +125,7 @@ function handleSync(): void {
 
 .quick-actions {
   display: flex;
-  gap: 0.75rem;
+  gap: var(--space-3);
   align-items: flex-end;
   height: 100%;
   padding-bottom: 0.5rem;

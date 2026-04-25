@@ -353,12 +353,8 @@ describe('admin management surface alignment', () => {
   })
 
   it('cheat detection sections should use list-heading for directory headers', () => {
-    expect(cheatDetectionCombinedSource).toContain(
-      '<header class="workspace-tab-heading cheat-workbench-head">'
-    )
-    expect(cheatDetectionCombinedSource).not.toContain(
-      '<header class="list-heading cheat-workbench-head">'
-    )
+    expect(cheatDetectionHeroPanelSource).toContain('<section class="workspace-hero">')
+    expect(cheatDetectionHeroPanelSource).toContain('<CheatDetectionSummaryPanel')
     expect(cheatDetectionCombinedSource).toMatch(
       /\.cheat-workbench\s*\{[\s\S]*gap:\s*var\(--space-4\);/s
     )
@@ -579,6 +575,13 @@ describe('admin management surface alignment', () => {
 
     expect(journalNotesSource).toContain('.metric-panel-default-surface {')
     expect(journalNotesSource).toContain('.metric-panel-workspace-surface {')
+    expect(styleSource).toContain('--workspace-hero-summary-gap: var(--space-5);')
+    expect(journalNotesSource).toContain(
+      '.workspace-hero + :where(.progress-strip, .admin-summary-grid, .manage-summary-grid),'
+    )
+    expect(journalNotesSource).toContain(
+      'margin-top: var(--workspace-hero-summary-gap, var(--space-5));'
+    )
     expect(journalNotesSource).toContain('.progress-card {')
     expect(journalNotesSource).toContain(
       '--metric-panel-padding: var(--space-3-5) var(--space-4) var(--space-3-5);'
@@ -586,6 +589,15 @@ describe('admin management surface alignment', () => {
     expect(journalNotesSource).toContain('.progress-card-label {')
     expect(journalNotesSource).toContain('.progress-card-value {')
     expect(journalNotesSource).toContain('.progress-card-hint {')
+    expect(journalNotesSource).toContain('position: relative;')
+    expect(journalNotesSource).toContain('display: block;')
+    expect(journalNotesSource).toContain('min-height: 1rem;')
+    expect(journalNotesSource).toContain('padding-inline-end: var(--space-7);')
+    expect(journalNotesSource).toContain(
+      '.progress-card.metric-panel-card .metric-panel-label > :is(svg, .lucide) {'
+    )
+    expect(journalNotesSource).toContain('top: var(--space-3-5);')
+    expect(journalNotesSource).toContain('right: var(--space-4);')
     expect(journalNotesSource).toContain(
       'font-size: var(--metric-panel-label-size, var(--font-size-11));'
     )
@@ -646,9 +658,7 @@ describe('admin management surface alignment', () => {
     expect(userGovernanceSource).toContain(
       'class="admin-summary-grid user-overview-grid progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface'
     )
-    expect(userGovernanceSource).toContain(
-      'class="journal-note user-overview-stat progress-card metric-panel-card"'
-    )
+    expect(userGovernanceSource).toContain('class="journal-note progress-card metric-panel-card"')
     expect(userGovernanceSource).toContain(
       'class="journal-note-label progress-card-label metric-panel-label"'
     )
@@ -658,9 +668,7 @@ describe('admin management surface alignment', () => {
     expect(userGovernanceSource).toContain(
       'class="journal-note-helper progress-card-hint metric-panel-helper"'
     )
-    expect(userGovernanceSource).not.toMatch(
-      /\.user-overview-stat \.journal-note-value\s*\{[\s\S]*font-size:\s*clamp\(1\.35rem,\s*2vw,\s*1\.9rem\);/s
-    )
+    expect(userGovernanceSource).not.toContain('user-overview-stat')
 
     expect(contestOrchestrationSource).toContain(
       'class="admin-summary-grid contest-overview-summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
