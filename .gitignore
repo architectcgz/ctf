@@ -38,6 +38,7 @@ code/frontend/docs/
 
 .env
 .env.local
+/scripts/deploy-private-registry.conf
 
 # Local development artifacts
 /.playwright-cli/

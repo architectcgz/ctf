@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CONFIG_FILE="${CONFIG_FILE:-${SCRIPT_DIR}/deploy-private-registry.conf}"
+CONFIG_FILE_EXPLICIT=false
 REGISTRY_NAME="${REGISTRY_NAME:-ctf-registry}"
 REGISTRY_PORT="${REGISTRY_PORT:-5000}"
 REGISTRY_SERVER="${REGISTRY_SERVER:-}"
@@ -23,6 +26,7 @@ usage() {
   默认监听 127.0.0.1:5000/宿主机 5000 端口，适合单机部署或毕设演示。
 
 选项:
+  --config FILE          读取配置文件，默认 scripts/deploy-private-registry.conf
   --name NAME             Registry 容器名，默认 ctf-registry
   --port PORT             宿主机端口，默认 5000
   --server HOST:PORT      平台配置中的 registry server，默认 127.0.0.1:<port>
@@ -35,7 +39,12 @@ usage() {
   --force-recreate        若同名容器已存在，先删除后重建
   -h, --help              显示帮助
 
-可通过同名环境变量覆盖默认值，例如:
+配置文件:
+  cp scripts/deploy-private-registry.conf.example scripts/deploy-private-registry.conf
+  编辑 scripts/deploy-private-registry.conf 后直接运行:
+  scripts/deploy-private-registry.sh
+
+也可通过同名环境变量或命令行参数覆盖默认值，例如:
   REGISTRY_PORT=15000 REGISTRY_PASSWORD='change-me' scripts/deploy-private-registry.sh
 
 输出:
@@ -57,6 +66,18 @@ die() {
 require_command() {
   if ! command -v "$1" >/dev/null 2>&1; then
     die "缺少命令: $1"
+  fi
+}
+
+load_config_file() {
+  if [[ -f "${CONFIG_FILE}" ]]; then
+    # shellcheck source=/dev/null
+    source "${CONFIG_FILE}"
+    return 0
+  fi
+
+  if [[ "${CONFIG_FILE_EXPLICIT}" == "true" ]]; then
+    die "配置文件不存在: ${CONFIG_FILE}"
   fi
 }
 
@@ -99,8 +120,42 @@ EOF
   chmod 600 "${path}"
 }
 
+ORIGINAL_ARGS=("$@")
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    --config)
+      [[ -n "${2:-}" ]] || die "--config 需要文件路径"
+      CONFIG_FILE="$2"
+      CONFIG_FILE_EXPLICIT=true
+      shift 2
+      ;;
+    --config=*)
+      CONFIG_FILE="${1#--config=}"
+      [[ -n "${CONFIG_FILE}" ]] || die "--config 需要文件路径"
+      CONFIG_FILE_EXPLICIT=true
+      shift
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      shift
+      ;;
+  esac
+done
+
+load_config_file
+set -- "${ORIGINAL_ARGS[@]}"
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --config)
+      shift 2
+      ;;
+    --config=*)
+      shift
+      ;;
     --name)
       REGISTRY_NAME="${2:-}"
       shift 2
