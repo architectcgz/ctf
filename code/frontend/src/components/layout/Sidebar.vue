@@ -861,7 +861,7 @@ async function navigate(item: NavItem): Promise<void> {
   color: white;
   box-shadow: 
     0 4px 12px color-mix(in srgb, var(--color-primary) 24%, transparent),
-    inset 0 1px 1px color-mix(in srgb, var(--backoffice-shell-surface-strong) 42%, transparent);
+    inset 0 1px 1px rgba(255, 255, 255, 0.4);
 }
 
 .backoffice-sidebar__brand {
@@ -881,7 +881,7 @@ async function navigate(item: NavItem): Promise<void> {
   border: 1px solid var(--backoffice-shell-line);
   background: var(--backoffice-shell-surface);
   color: var(--backoffice-shell-faint);
-  box-shadow: 0 1px 2px color-mix(in srgb, var(--color-shadow-soft) 28%, transparent);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   z-index: 70; /* 提升层级，确保高于 TopNav (50) */
 }
 
@@ -939,14 +939,14 @@ async function navigate(item: NavItem): Promise<void> {
   border: 1px solid color-mix(in srgb, var(--color-primary) 22%, transparent);
   font-weight: 700;
   box-shadow: 
-    0 4px 12px color-mix(in srgb, var(--color-shadow-soft) 34%, transparent),
-    0 0 0 1px color-mix(in srgb, var(--backoffice-shell-surface) 88%, transparent);
+    0 4px 12px rgba(0, 0, 0, 0.06),
+    0 0 0 1px rgba(255, 255, 255, 0.8);
 }
 
 [data-theme='dark'] .backoffice-sidebar__item--active {
   box-shadow: 
-    0 4px 12px color-mix(in srgb, var(--color-shadow-strong) 52%, transparent),
-    0 0 0 1px color-mix(in srgb, var(--backoffice-shell-line-strong) 34%, transparent);
+    0 4px 12px rgba(0, 0, 0, 0.24),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
 }
 
 .backoffice-sidebar__item-icon--idle {
@@ -1008,7 +1008,7 @@ async function navigate(item: NavItem): Promise<void> {
 }
 
 .sidebar-shell-mobile {
-  box-shadow: 0 18px 48px color-mix(in srgb, var(--color-shadow-strong) 24%, transparent);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.08);
 }
 
 .sidebar-brand-row {
@@ -1138,12 +1138,12 @@ async function navigate(item: NavItem): Promise<void> {
   color: var(--color-primary);
   font-weight: 700;
   box-shadow: 
-    0 1px 2px color-mix(in srgb, var(--color-shadow-soft) 28%, transparent),
-    0 0 0 1px color-mix(in srgb, var(--color-bg-surface) 88%, transparent);
+    0 1px 2px rgba(0, 0, 0, 0.05),
+    0 0 0 1px rgba(255, 255, 255, 0.8);
 }
 
 [data-theme='dark'] .sidebar-item-active {
-  box-shadow: 0 4px 12px color-mix(in srgb, var(--color-shadow-strong) 46%, transparent);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .sidebar-child-list {
@@ -1165,34 +1165,14 @@ async function navigate(item: NavItem): Promise<void> {
 }
 
 :global([data-theme='light']) .backoffice-sidebar {
-  --backoffice-shell-surface: color-mix(
-    in srgb,
-    var(--journal-surface, var(--color-bg-surface)) 99%,
-    var(--color-bg-base)
-  );
-  --backoffice-shell-surface-subtle: color-mix(
-    in srgb,
-    var(--journal-surface-subtle, var(--color-bg-elevated)) 95%,
-    var(--color-bg-base)
-  );
-  --backoffice-shell-surface-strong: color-mix(
-    in srgb,
-    var(--journal-surface, var(--color-bg-surface)) 96%,
-    var(--color-bg-base)
-  );
-  --backoffice-shell-line: color-mix(
-    in srgb,
-    var(--journal-border, var(--color-border-default)) 92%,
-    transparent
-  );
-  --backoffice-shell-line-strong: color-mix(
-    in srgb,
-    var(--journal-border, var(--color-border-default)) 96%,
-    transparent
-  );
-  --backoffice-shell-text: var(--journal-ink, var(--color-text-primary));
-  --backoffice-shell-muted: var(--journal-muted, var(--color-text-secondary));
-  --backoffice-shell-faint: color-mix(in srgb, var(--color-text-muted) 90%, var(--backoffice-shell-muted));
+  --backoffice-shell-surface: white;
+  --backoffice-shell-surface-subtle: #f8fafc;
+  --backoffice-shell-surface-strong: white;
+  --backoffice-shell-line: color-mix(in srgb, #e2e8f0 92%, transparent);
+  --backoffice-shell-line-strong: color-mix(in srgb, #d9e1ec 94%, transparent);
+  --backoffice-shell-text: #0f172a;
+  --backoffice-shell-muted: #64748b;
+  --backoffice-shell-faint: #94a3b8;
 }
 
 :global([data-theme='dark']) .backoffice-sidebar {

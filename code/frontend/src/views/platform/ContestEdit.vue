@@ -791,14 +791,24 @@ onMounted(() => {
 }
 
 .studio-save-btn {
-  --ui-btn-height: 2.4rem;
-  --ui-btn-padding: 0 1.25rem;
-  --ui-btn-radius: 0.85rem;
-  --ui-btn-font-size: var(--font-size-12);
-  --ui-btn-font-weight: 800;
-  --ui-btn-primary-hover-shadow: 0 10px 24px color-mix(in srgb, var(--color-primary) 30%, transparent);
-  --ui-btn-hover-transform: translateY(-1px);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  height: 2.4rem;
+  padding: 0 1.25rem;
+  background: var(--color-primary);
+  color: white;
+  border-radius: 0.85rem;
+  font-size: 12px;
+  font-weight: 800;
   box-shadow: 0 8px 20px color-mix(in srgb, var(--color-primary) 24%, transparent);
+  transition: all 0.2s ease;
+}
+
+.studio-save-btn:hover {
+  background: var(--color-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--color-primary) 30%, transparent);
 }
 
 .studio-title-group {
@@ -856,7 +866,7 @@ onMounted(() => {
   flex-direction: column;
   min-height: 0; /* 关键：防止 Flex 子项溢出导致滚动失效 */
   position: relative;
-  background: var(--color-bg-surface);
+  background: var(--color-bg-surface, #ffffff);
 }
 
 .studio-scroll-area {

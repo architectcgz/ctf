@@ -101,7 +101,7 @@ function updateAttackSourceFilter(value: string): void {
           <button
             id="awd-export-attacks"
             type="button"
-            class="ui-btn ui-btn--secondary attack-log-export-button"
+            class="ops-btn ops-btn--neutral"
             :disabled="filteredAttacks.length === 0"
             @click="emit('exportAttacks')"
           >
@@ -194,54 +194,36 @@ function updateAttackSourceFilter(value: string): void {
 </template>
 
 <style scoped>
-.studio-attack-log {
-  --attack-log-surface: color-mix(in srgb, var(--color-bg-surface) 94%, var(--color-bg-base));
-  --attack-log-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 84%, var(--color-bg-base));
-  --attack-log-border: color-mix(in srgb, var(--color-border-default) 86%, transparent);
-  --attack-log-border-strong: color-mix(in srgb, var(--color-border-default) 94%, transparent);
-  --attack-log-text: var(--color-text-primary);
-  --attack-log-muted: var(--color-text-secondary);
-  --attack-log-faint: var(--color-text-muted);
-  --attack-log-success-surface: color-mix(in srgb, var(--color-success) 10%, var(--color-bg-surface));
-  --attack-log-success-border: color-mix(in srgb, var(--color-success) 22%, var(--attack-log-border));
-  --attack-log-success-text: color-mix(in srgb, var(--color-success) 78%, var(--color-text-primary));
-  --attack-log-success-glow: color-mix(in srgb, var(--color-success) 42%, transparent);
-  --attack-log-success-divider: color-mix(in srgb, var(--color-success) 24%, transparent);
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-  background: transparent;
-}
+.studio-attack-log { display: flex; flex-direction: column; gap: 2rem; background: transparent; }
 
 /* Toolbar Enhancement */
-.log-toolbar { display: flex; justify-content: space-between; align-items: flex-end; padding: 0 0 1.5rem; border-bottom: 1px solid color-mix(in srgb, var(--workspace-line-soft, var(--attack-log-border)) 60%, transparent); }
-.toolbar-icon { width: 2.75rem; height: 2.75rem; border-radius: 0.85rem; background: var(--attack-log-surface-subtle); color: var(--attack-log-muted); display: flex; align-items: center; justify-content: center; border: 1px solid var(--attack-log-border); }
-.toolbar-title { font-size: 15px; font-weight: 900; color: var(--attack-log-text); margin: 0; letter-spacing: -0.01em; }
-.toolbar-hint { font-size: 11px; color: var(--attack-log-faint); font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 0.15rem; }
+.log-toolbar { display: flex; justify-content: space-between; align-items: flex-end; padding: 0 0 1.5rem; border-bottom: 1px solid color-mix(in srgb, var(--workspace-line-soft) 60%, transparent); }
+.toolbar-icon { width: 2.75rem; height: 2.75rem; border-radius: 0.85rem; background: #f1f5f9; color: #475569; display: flex; align-items: center; justify-content: center; }
+.toolbar-title { font-size: 15px; font-weight: 900; color: #0f172a; margin: 0; letter-spacing: -0.01em; }
+.toolbar-hint { font-size: 11px; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 0.15rem; }
 
 .filter-actions-group { display: flex; align-items: center; gap: 1.5rem; }
 .filter-pills { display: flex; gap: 0.5rem; }
-.log-select { height: 2.25rem; padding: 0 0.75rem; font-size: 12px; font-weight: 700; border-radius: 0.6rem; border: 1px solid var(--attack-log-border); background: var(--attack-log-surface); color: var(--attack-log-muted); outline: none; transition: all 0.2s ease; }
-.log-select:hover,
-.log-select:focus-visible { border-color: var(--attack-log-border-strong); color: var(--attack-log-text); }
+.log-select { height: 2.25rem; padding: 0 0.75rem; font-size: 12px; font-weight: 700; border-radius: 0.6rem; border: 1px solid #e2e8f0; background: white; color: #475569; outline: none; transition: all 0.2s ease; }
+.log-select:hover { border-color: #cbd5e1; }
 
 /* Event Feed Design */
 .event-feed-container { flex: 1; position: relative; }
 
 .event-list { display: flex; flex-direction: column; }
 
-.event-row { display: flex; gap: 2rem; padding: 1rem 0; transition: all 0.2s ease; border-bottom: 1px solid var(--attack-log-border); }
-.event-row:hover { background: color-mix(in srgb, var(--attack-log-surface-subtle) 72%, transparent); }
+.event-row { display: flex; gap: 2rem; padding: 1rem 0; transition: all 0.2s ease; border-bottom: 1px solid #f1f5f9; }
+.event-row:hover { background: rgba(248, 250, 252, 0.6); }
 .event-row:last-child { border-bottom: none; }
 
 /* Timeline Marker */
 .event-marker { display: flex; flex-direction: column; align-items: flex-end; width: 5rem; shrink: 0; padding-top: 0.25rem; }
-.marker-time { font-size: 11px; font-weight: 800; color: var(--attack-log-faint); }
-.marker-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--attack-log-border-strong); margin-top: 0.5rem; position: relative; }
-.marker-dot::after { content: ''; position: absolute; top: 8px; left: 50%; transform: translateX(-50%); width: 1px; height: 2.5rem; background: var(--attack-log-border); }
+.marker-time { font-size: 11px; font-weight: 800; color: #94a3b8; }
+.marker-dot { width: 8px; height: 8px; border-radius: 50%; background: #e2e8f0; margin-top: 0.5rem; position: relative; }
+.marker-dot::after { content: ''; position: absolute; top: 8px; left: 50%; transform: translateX(-50%); width: 1px; height: 2.5rem; background: #f1f5f9; }
 .event-row:last-child .marker-dot::after { display: none; }
 
-.is-success .marker-dot { background: var(--color-success); box-shadow: 0 0 10px var(--attack-log-success-glow); }
+.is-success .marker-dot { background: #22c55e; box-shadow: 0 0 10px rgba(34, 197, 94, 0.4); }
 
 /* Event Body */
 .event-body { flex: 1; display: flex; justify-content: space-between; align-items: center; }
@@ -250,43 +232,34 @@ function updateAttackSourceFilter(value: string): void {
 
 .vector-wrap { display: flex; align-items: center; gap: 1rem; }
 .actor { font-size: 14px; font-weight: 900; letter-spacing: -0.01em; }
-.actor.attacker { color: var(--attack-log-text); }
-.actor.victim { color: var(--attack-log-muted); }
+.actor.attacker { color: #0f172a; }
+.actor.victim { color: #64748b; }
 
 .vector-line { position: relative; width: 4rem; display: flex; align-items: center; }
-.line-path { height: 2px; width: 100%; background: var(--attack-log-border-strong); border-radius: 1px; }
+.line-path { height: 2px; width: 100%; background: #e2e8f0; border-radius: 1px; }
 .line-head { position: absolute; right: -4px; }
-.is-success .line-path { background: color-mix(in srgb, var(--color-success) 24%, var(--attack-log-border-strong)); }
-.is-success .line-head { color: var(--attack-log-success-text); }
+.is-success .line-path { background: #cbd5e1; }
+.is-success .line-head { color: #94a3b8; }
 
 .event-meta { display: flex; align-items: center; gap: 1rem; }
-.meta-item { display: flex; align-items: center; gap: 0.5rem; font-size: 11px; font-weight: 700; color: var(--attack-log-muted); }
-.meta-divider { width: 3px; height: 3px; border-radius: 50%; background: var(--attack-log-border-strong); }
+.meta-item { display: flex; align-items: center; gap: 0.5rem; font-size: 11px; font-weight: 700; color: #64748b; }
+.meta-divider { width: 3px; height: 3px; border-radius: 50%; background: #cbd5e1; }
 
 /* Result Badges */
 .event-secondary { display: flex; align-items: center; }
 .result-badge { display: flex; align-items: center; gap: 0.65rem; padding: 0.45rem 1rem; border-radius: 0.75rem; font-size: 10px; font-weight: 900; letter-spacing: 0.05em; }
-.result-badge.success { background: var(--attack-log-success-surface); color: var(--attack-log-success-text); border: 1px solid var(--attack-log-success-border); }
-.result-badge.failed { background: var(--attack-log-surface); color: var(--attack-log-faint); border: 1px solid var(--attack-log-border); }
+.result-badge.success { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+.result-badge.failed { background: #f8fafc; color: #94a3b8; border: 1px solid #e2e8f0; }
 
-.score-delta { font-size: 13px; color: var(--attack-log-success-text); margin-left: 0.5rem; border-left: 1px solid var(--attack-log-success-divider); padding-left: 0.75rem; }
+.score-delta { font-size: 13px; color: #16a34a; margin-left: 0.5rem; border-left: 1px solid rgba(22, 101, 52, 0.1); padding-left: 0.75rem; }
 
-.attack-log-export-button {
-  --ui-btn-height: 2.25rem;
-  --ui-btn-padding: 0 1.25rem;
-  --ui-btn-radius: 0.75rem;
-  --ui-btn-font-size: var(--font-size-12);
-  --ui-btn-font-weight: 800;
-  --ui-btn-secondary-border: var(--attack-log-border);
-  --ui-btn-secondary-background: var(--attack-log-surface);
-  --ui-btn-secondary-color: var(--attack-log-muted);
-  --ui-btn-secondary-hover-border: var(--attack-log-border-strong);
-  --ui-btn-secondary-hover-background: var(--attack-log-surface-subtle);
-  --ui-btn-secondary-hover-color: var(--attack-log-text);
-}
+/* Global UI Primitives */
+.ops-btn { display: inline-flex; align-items: center; gap: 0.5rem; height: 2.25rem; padding: 0 1.25rem; border-radius: 0.75rem; font-size: 12px; font-weight: 800; cursor: pointer; transition: all 0.2s ease; }
+.ops-btn--neutral { background: white; border: 1px solid #e2e8f0; color: #475569; }
+.ops-btn--neutral:hover { border-color: #cbd5e1; background: #f8fafc; }
 
-.empty-feed { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 5rem 0; color: var(--attack-log-faint); font-size: 14px; font-weight: 600; }
+.empty-feed { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 5rem 0; color: #94a3b8; font-size: 14px; font-weight: 600; }
 
 .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-.custom-scrollbar::-webkit-scrollbar-thumb { background: var(--attack-log-border-strong); border-radius: 10px; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
 </style>

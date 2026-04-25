@@ -2785,8 +2785,8 @@ const rootClasses = computed(() => [
   --ui-btn-primary-border: transparent;
   --ui-btn-primary-background: var(--journal-accent);
   --ui-btn-primary-hover-background: color-mix(in srgb, var(--journal-accent) 88%, black);
-  --ui-btn-primary-hover-color: var(--color-text-inverse);
-  --ui-btn-primary-color: var(--color-text-inverse);
+  --ui-btn-primary-hover-color: #fff;
+  --ui-btn-primary-color: #fff;
   --ui-btn-danger-border: color-mix(in srgb, var(--color-danger) 28%, transparent);
   --ui-btn-danger-background: color-mix(in srgb, var(--color-danger) 10%, var(--journal-surface));
   --ui-btn-danger-color: color-mix(in srgb, var(--color-danger) 88%, var(--journal-ink));

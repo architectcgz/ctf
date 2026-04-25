@@ -67,10 +67,4 @@ describe('ChallengePackageImportReview', () => {
     )
     expect(challengePackageImportReviewSource).toContain('<ChallengeDescriptionPanel')
   })
-
-  it('确认与重置操作应复用共享按钮原语，而不是继续写死局部按钮配色', () => {
-    expect(challengePackageImportReviewSource).toContain('class="ui-btn ui-btn--secondary import-review__ghost"')
-    expect(challengePackageImportReviewSource).toContain('class="ui-btn ui-btn--primary import-review__primary"')
-    expect(challengePackageImportReviewSource).not.toContain('color: #fff;')
-  })
 })

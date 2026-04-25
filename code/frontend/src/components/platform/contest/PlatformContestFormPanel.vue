@@ -266,7 +266,7 @@ function handleSubmit() {
                   开始时间
                 </p>
               </div>
-              <div class="timeline-divider">
+              <div class="text-slate-300">
                 ——
               </div>
               <div class="flex-1">
@@ -382,7 +382,6 @@ function handleSubmit() {
 
 .field-hint { font-size: var(--font-size-12); color: var(--color-text-muted); margin-top: 0.45rem; font-weight: 500; }
 .field-error { font-size: var(--font-size-12); color: var(--color-danger); font-weight: 700; }
-.timeline-divider { color: color-mix(in srgb, var(--color-text-muted) 84%, var(--color-border-default)); }
 
 .contest-form-actions {
   display: flex;

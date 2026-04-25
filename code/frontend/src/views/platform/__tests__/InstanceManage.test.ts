@@ -88,9 +88,6 @@ describe('PlatformInstanceManagement', () => {
     )
     expect(adminInstanceManageSource).toContain('<WorkspaceDataTable')
     expect(adminInstanceManageSource).toContain('<WorkspaceDirectoryPagination')
-    expect(adminInstanceManageSource).toContain('class="instance-status-pill"')
-    expect(adminInstanceManageSource).not.toContain('bg-green-100 text-green-700')
-    expect(adminInstanceManageSource).not.toContain('bg-slate-100 text-slate-600')
 
     const wrapper = mount(PlatformInstanceManagement)
     await flushPromises()

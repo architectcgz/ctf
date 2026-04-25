@@ -129,8 +129,8 @@ function getTrafficStatusGroupLabel(statusGroup: AWDTrafficStatusGroup): string 
                 :key="item.path"
                 class="list-row"
               >
-                <span class="row-name row-name--path truncate">{{ item.path }}</span>
-                <span class="row-count row-count--danger">{{ item.error_count }}</span>
+                <span class="row-name truncate font-mono text-[10px]">{{ item.path }}</span>
+                <span class="row-count text-red-500 font-mono">{{ item.error_count }}</span>
               </div>
             </div>
           </div>
@@ -160,7 +160,7 @@ function getTrafficStatusGroupLabel(statusGroup: AWDTrafficStatusGroup): string 
           </div>
           <p
             v-if="trafficTrendRows.length === 0"
-            class="trend-empty py-4"
+            class="text-[11px] text-slate-400 py-4"
           >
             等待数据注入趋势桶...
           </p>
@@ -319,13 +319,13 @@ function getTrafficStatusGroupLabel(statusGroup: AWDTrafficStatusGroup): string 
               :key="event.occurred_at"
               class="studio-row"
             >
-              <td class="traffic-time-cell">
+              <td class="font-mono text-[11px] text-slate-400">
                 {{ formatDateTime(event.occurred_at).split(' ')[1] }}
               </td>
               <td>
                 <div class="vector-cell">
                   <span class="team-label">{{ getTrafficTeamName(event.attacker_team_id, event.attacker_team_name) }}</span>
-                  <span class="vector-divider">→</span>
+                  <span class="text-slate-300">→</span>
                   <span class="team-label">{{ getTrafficTeamName(event.victim_team_id, event.victim_team_name) }}</span>
                 </div>
               </td>
@@ -356,7 +356,7 @@ function getTrafficStatusGroupLabel(statusGroup: AWDTrafficStatusGroup): string 
             <tr v-if="!loadingTrafficEvents && trafficEvents.length === 0">
               <td
                 colspan="5"
-                class="table-empty-state py-20 text-center"
+                class="py-20 text-center text-slate-400 font-medium"
               >
                 满足当前过滤条件的流量记录为空
               </td>
@@ -396,21 +396,12 @@ function getTrafficStatusGroupLabel(statusGroup: AWDTrafficStatusGroup): string 
 .list-row { display: flex; justify-content: space-between; align-items: center; padding: 0.45rem 0; border-bottom: 1px solid var(--color-border-subtle); }
 .row-name { font-size: var(--font-size-12); font-weight: 700; color: var(--color-text-primary); }
 .row-count { font-size: var(--font-size-12); font-weight: 800; color: var(--color-primary); }
-.row-name--path {
-  font-family: var(--font-family-mono);
-  font-size: var(--font-size-10);
-}
-.row-count--danger { color: var(--color-danger); }
 
 .trend-canvas { background: var(--color-bg-elevated); border: 1px solid var(--color-border-default); border-radius: 1rem; padding: 1.25rem; display: flex; flex-direction: column; gap: 0.75rem; }
 .trend-unit { display: flex; flex-direction: column; gap: 0.25rem; }
 .trend-meta { display: flex; justify-content: space-between; font-size: var(--font-size-10); font-weight: 800; color: var(--color-text-muted); }
 .trend-bar-track { height: 4px; background: var(--color-border-default); border-radius: 2px; overflow: hidden; }
 .trend-bar-fill { height: 100%; background: var(--color-primary); border-radius: 2px; }
-.trend-empty {
-  font-size: var(--font-size-11);
-  color: color-mix(in srgb, var(--color-text-muted) 90%, var(--color-text-secondary));
-}
 
 /* Drill-down area */
 .drill-down-toolbar { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1.5rem; }
@@ -430,15 +421,9 @@ function getTrafficStatusGroupLabel(statusGroup: AWDTrafficStatusGroup): string 
 .studio-row:hover { background: var(--color-bg-elevated); }
 
 .team-label { font-size: var(--font-size-12); font-weight: 800; color: var(--color-text-primary); }
-.vector-divider { color: color-mix(in srgb, var(--color-text-muted) 88%, var(--color-border-default)); }
 .challenge-cell { display: flex; flex-direction: column; }
 .challenge-name { font-size: var(--font-size-12); font-weight: 700; color: var(--color-text-primary); }
 .source-tag { font-size: var(--font-size-10); font-weight: 800; color: var(--color-text-muted); }
-.traffic-time-cell {
-  font-family: var(--font-family-mono);
-  font-size: var(--font-size-11);
-  color: color-mix(in srgb, var(--color-text-muted) 90%, var(--color-text-secondary));
-}
 
 .request-cell { display: flex; align-items: center; gap: 0.75rem; font-size: var(--font-size-11); max-width: 20rem; }
 .method-tag { color: var(--color-primary); font-weight: 900; }
@@ -450,9 +435,6 @@ function getTrafficStatusGroupLabel(statusGroup: AWDTrafficStatusGroup): string 
 .status-badge.status-group-server-error { background: var(--color-danger-soft); color: var(--color-danger); }
 
 .pagination-footer { padding: 1rem 0; border-top: 1px solid var(--color-border-default); }
+.ops-btn { display: inline-flex; align-items: center; justify-content: center; height: 2rem; padding: 0 0.85rem; border-radius: 0.6rem; font-size: var(--font-size-11); font-weight: 700; background: var(--color-bg-surface); border: 1px solid var(--color-border-default); color: var(--color-text-secondary); cursor: pointer; }
 .w-32 { width: 8rem; }
-.table-empty-state {
-  color: color-mix(in srgb, var(--color-text-muted) 90%, var(--color-text-secondary));
-  font-weight: 500;
-}
 </style>
