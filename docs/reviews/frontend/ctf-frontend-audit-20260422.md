@@ -1717,6 +1717,23 @@
   - `npm run test:run -- src/views/challenges/__tests__/challengeDetailSolutionTabsExtraction.test.ts src/views/challenges/__tests__/challengeDetailSharedShell.test.ts`（2 个测试文件，9 个测试）
   - `npm run typecheck`
 
+## 第七十三轮修复进展
+
+- 已完成：
+  - `TD-2` 中平台概览资源水位条样式尾项已收口：`usePlatformOverviewWorkspace` 不再返回 `bg-[var(--color-...)]`，改为 `usage-bar--danger / warning / primary` 语义类。
+  - `PlatformOverviewPage` 删除旧的转义 Tailwind 任意类选择器，水位条颜色由组件 scoped CSS 通过主题 token 承接。
+  - `sharedThemeTokenAdoption.test.ts` 补充平台概览 composable 与组件的回归断言。
+- 本轮涉及文件：
+  - `code/frontend/src/composables/usePlatformOverviewWorkspace.ts`
+  - `code/frontend/src/components/platform/dashboard/PlatformOverviewPage.vue`
+  - `code/frontend/src/views/__tests__/sharedThemeTokenAdoption.test.ts`
+
+## 第七十三轮验证
+
+- 已执行：
+  - `npm run test:run -- src/views/__tests__/sharedThemeTokenAdoption.test.ts`（1 个测试文件，7 个测试）
+  - `npm run typecheck`
+
 ## 后续技术债 Backlog
 
 - `TD-1` 超大组件专题拆分：
@@ -1726,7 +1743,7 @@
 - `TD-2` Tailwind 任意值与主题 token 尾项：
   - 仍可继续扫描并收口 `bg-[var(...)]`、`text-[var(...)]`、`border-[var(...)]`、裸十六进制色值和布局任意值。
   - 处理时需要区分 token bridge 与真正裸魔法值，避免把合法的主题变量透传和样式债混在一次提交里。
-  - AWD inspector 相关格式化 helper 已在第七十轮收口，实例状态样式尾项已在第七十一轮收口，题目详情提交态 presentation 已在第七十二轮收口；当前残留主要集中在部分 mock/reference 页面、平台概览水位色和少量布局组件。
+  - AWD inspector 相关格式化 helper 已在第七十轮收口，实例状态样式尾项已在第七十一轮收口，题目详情提交态 presentation 已在第七十二轮收口，平台概览水位色已在第七十三轮收口；当前残留主要集中在部分 mock/reference 页面和少量布局组件。
 - `TD-3` 性能监控接入：
   - 当前未接入 `web-vitals`、`PerformanceObserver` 或项目自定义性能埋点。
   - 该项需要先明确采集指标、上报端点、隐私边界和生产开关，不能只加依赖或空埋点。
