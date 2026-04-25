@@ -206,7 +206,7 @@ async function handleExportArchive(): Promise<void> {
           title="训练摘要"
           subtitle="将当前归档的关键指标收束为一页课堂摘要。"
         >
-          <div class="summary-grid metric-panel-grid">
+          <div class="summary-grid metric-panel-grid metric-panel-default-surface">
             <article class="summary-card summary-card--primary metric-panel-card">
               <div class="summary-card__label metric-panel-label">
                 完成率

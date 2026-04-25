@@ -202,7 +202,7 @@ function closeDialog(): void {
             <div class="class-report-preview-summary__title">
               Preview Snapshot
             </div>
-            <div class="class-report-preview-summary__grid progress-strip metric-panel-grid">
+            <div class="class-report-preview-summary__grid progress-strip metric-panel-grid metric-panel-default-surface">
               <article class="progress-card metric-panel-card">
                 <div class="progress-card-label metric-panel-label">
                   目标班级
