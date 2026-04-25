@@ -48,17 +48,17 @@ const statusLabel = computed(() => {
 })
 
 const statusClass = computed(() => {
-  if (!effectiveStatus.value) return 'text-[var(--color-text-muted)]'
+  if (!effectiveStatus.value) return 'instance-status-text--muted'
 
   const classes: Record<InstanceStatus, string> = {
-    pending: 'text-[var(--color-warning)]',
-    creating: 'text-[var(--color-warning)]',
-    running: 'text-[var(--color-success)]',
-    expired: 'text-[var(--color-text-muted)]',
-    destroying: 'text-[var(--color-warning)]',
-    destroyed: 'text-[var(--color-text-muted)]',
-    failed: 'text-[var(--color-danger)]',
-    crashed: 'text-[var(--color-danger)]',
+    pending: 'instance-status-text--warning',
+    creating: 'instance-status-text--warning',
+    running: 'instance-status-text--success',
+    expired: 'instance-status-text--muted',
+    destroying: 'instance-status-text--warning',
+    destroyed: 'instance-status-text--muted',
+    failed: 'instance-status-text--danger',
+    crashed: 'instance-status-text--danger',
   }
   return classes[effectiveStatus.value]
 })
@@ -462,6 +462,22 @@ const startButtonLabel = computed(() => {
   font-size: var(--font-size-15);
   font-weight: 800;
   color: var(--text-main);
+}
+
+.instance-status-text--muted {
+  color: var(--text-faint);
+}
+
+.instance-status-text--warning {
+  color: var(--warning);
+}
+
+.instance-status-text--success {
+  color: var(--color-success);
+}
+
+.instance-status-text--danger {
+  color: var(--danger);
 }
 
 .instance-access {

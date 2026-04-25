@@ -152,10 +152,10 @@ function getTimeColor(expiresAt: string): string {
   const expires = new Date(expiresAt).getTime()
   const diff = expires - now.value
 
-  if (diff <= 0) return 'text-[var(--color-text-muted)]'
-  if (diff < 300000) return 'text-[var(--color-danger)]'
-  if (diff < 600000) return 'text-[var(--color-warning)]'
-  return 'text-[var(--color-success)]'
+  if (diff <= 0) return 'instance-countdown--muted'
+  if (diff < 300000) return 'instance-countdown--danger'
+  if (diff < 600000) return 'instance-countdown--warning'
+  return 'instance-countdown--success'
 }
 
 function checkExpiringSoon() {
@@ -322,6 +322,22 @@ watch(
 .instance-card__countdown-value {
   font-size: var(--font-size-1-05);
   font-weight: 700;
+}
+
+.instance-countdown--muted {
+  color: var(--color-text-muted);
+}
+
+.instance-countdown--danger {
+  color: var(--color-danger);
+}
+
+.instance-countdown--warning {
+  color: var(--color-warning);
+}
+
+.instance-countdown--success {
+  color: var(--color-success);
 }
 
 .instance-card__countdown-label,
