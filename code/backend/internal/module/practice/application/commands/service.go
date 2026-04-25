@@ -785,7 +785,7 @@ func (s *Service) ListTeacherManualReviewSubmissions(
 	requesterID int64,
 	requesterRole string,
 	query *dto.TeacherManualReviewSubmissionQuery,
-) (*dto.PageResult, error) {
+) (*dto.PageResult[*dto.TeacherManualReviewSubmissionItemResp], error) {
 	if err := ensureManualReviewRequesterRole(requesterRole); err != nil {
 		return nil, err
 	}
@@ -807,7 +807,7 @@ func (s *Service) ListTeacherManualReviewSubmissions(
 		respItems = append(respItems, manualReviewListItemRespFromRecord(item))
 	}
 
-	return &dto.PageResult{
+	return &dto.PageResult[*dto.TeacherManualReviewSubmissionItemResp]{
 		List:  respItems,
 		Total: total,
 		Page:  normalized.Page,
