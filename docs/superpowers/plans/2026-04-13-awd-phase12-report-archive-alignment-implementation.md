@@ -21,7 +21,7 @@
 
 ### Docs
 
-- Create: `docs/superpowers/specs/2026-04-13-awd-phase12-report-archive-alignment-design.md`
+- Create: `docs/architecture/features/2026-04-13-awd-phase12-report-archive-alignment-design.md`
 - Create: `docs/superpowers/plans/2026-04-13-awd-phase12-report-archive-alignment-implementation.md`
 
 ### Backend
@@ -186,7 +186,7 @@ git add code/backend/internal/module/assessment/infrastructure/report_repository
   code/backend/internal/module/assessment/infrastructure/report_repository_test.go \
   code/backend/internal/module/assessment/application/commands/report_service.go \
   code/backend/internal/module/assessment/application/commands/report_service_test.go
-git add -f docs/superpowers/specs/2026-04-13-awd-phase12-report-archive-alignment-design.md \
+git add -f docs/architecture/features/2026-04-13-awd-phase12-report-archive-alignment-design.md \
   docs/superpowers/plans/2026-04-13-awd-phase12-report-archive-alignment-implementation.md
 git commit -m "feat(assessment): 对齐AWD报告与复盘归档口径"
 ```

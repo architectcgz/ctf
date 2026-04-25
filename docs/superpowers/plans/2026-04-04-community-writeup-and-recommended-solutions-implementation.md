@@ -387,7 +387,7 @@ Expected: PASS.
 ### Task 8: Final verification and doc sync
 
 **Files:**
-- Modify: `docs/superpowers/specs/2026-04-04-community-writeup-and-recommended-solutions-design.md`
+- Modify: `docs/architecture/features/2026-04-04-community-writeup-and-recommended-solutions-design.md`
 - Modify: `docs/contracts/api-contract-v1.md`
 - Modify: `docs/architecture/backend/04-api-design.md`
 - Modify: `docs/architecture/frontend/04-api-layer.md`

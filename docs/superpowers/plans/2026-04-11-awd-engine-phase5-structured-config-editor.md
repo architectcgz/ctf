@@ -128,6 +128,6 @@ npm run typecheck
 
 ```bash
 cd /home/azhi/workspace/projects/ctf/.worktrees/feat-awd-engine-migration
-git add -f docs/superpowers/specs/2026-04-11-awd-checker-structured-editor-design.md docs/superpowers/plans/2026-04-11-awd-engine-phase5-structured-config-editor.md code/frontend/src/components/admin/__tests__/AWDChallengeConfigDialog.test.ts code/frontend/src/components/admin/contest/awdCheckerConfigSupport.ts code/frontend/src/components/admin/contest/AWDChallengeConfigDialog.vue code/frontend/src/views/admin/__tests__/ContestManage.test.ts
+git add -f docs/architecture/features/2026-04-11-awd-checker-structured-editor-design.md docs/superpowers/plans/2026-04-11-awd-engine-phase5-structured-config-editor.md code/frontend/src/components/admin/__tests__/AWDChallengeConfigDialog.test.ts code/frontend/src/components/admin/contest/awdCheckerConfigSupport.ts code/frontend/src/components/admin/contest/AWDChallengeConfigDialog.vue code/frontend/src/views/admin/__tests__/ContestManage.test.ts
 git commit -m "feat(awd): 增加结构化checker配置编辑器"
 ```
