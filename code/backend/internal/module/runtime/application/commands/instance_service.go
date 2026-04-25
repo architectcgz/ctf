@@ -155,8 +155,5 @@ func toInstanceResp(inst *model.Instance) *dto.InstanceResp {
 }
 
 func normalizeContext(ctx context.Context) context.Context {
-	if ctx == nil {
-		return context.Background()
-	}
 	return ctx
 }
