@@ -1,11 +1,9 @@
 <script setup lang="ts">
 import { computed, defineAsyncComponent, ref } from 'vue'
 import {
-  Link2,
   Plus,
   RefreshCw,
   Save,
-  ShieldBan,
   Trash2,
   Layout,
   Server,
@@ -21,13 +19,14 @@ import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
 import SectionCard from '@/components/common/SectionCard.vue'
+import TopologyConnectivitySections from './TopologyConnectivitySections.vue'
 import TopologyNetworkSection from './TopologyNetworkSection.vue'
 import TopologyStatusNotes from './TopologyStatusNotes.vue'
 import TopologySummaryGrid from './TopologySummaryGrid.vue'
 import TopologyTemplateSidePanel from './TopologyTemplateSidePanel.vue'
 
 import type { CanvasInteractionMode } from './TopologyCanvasBoard.vue'
-import type { TopologyNetworkDraft } from './topologyDraft'
+import type { TopologyLinkDraft, TopologyNetworkDraft, TopologyPolicyDraft } from './topologyDraft'
 
 const TopologyCanvasBoard = defineAsyncComponent(() => import('./TopologyCanvasBoard.vue'))
 const TopologyNodeEditor = defineAsyncComponent(() => import('./TopologyNodeEditor.vue'))
@@ -139,6 +138,32 @@ function updateNetworkDraft(payload: {
   const network = draft.value.networks.find((item) => item.uid === payload.uid)
   if (!network) return
   Object.assign(network, payload.patch)
+}
+
+function updateLinkDraft(payload: {
+  uid: string
+  patch: Partial<Pick<TopologyLinkDraft, 'from_node_key' | 'to_node_key'>>
+}) {
+  const link = draft.value.links.find((item) => item.uid === payload.uid)
+  if (!link) return
+  Object.assign(link, payload.patch)
+}
+
+function removeLinkDraft(uid: string) {
+  draft.value.links = draft.value.links.filter((item) => item.uid !== uid)
+}
+
+function updatePolicyDraft(payload: {
+  uid: string
+  patch: Partial<Pick<TopologyPolicyDraft, 'source_node_key' | 'target_node_key' | 'action'>>
+}) {
+  const policy = draft.value.policies.find((item) => item.uid === payload.uid)
+  if (!policy) return
+  Object.assign(policy, payload.patch)
+}
+
+function removePolicyDraft(uid: string) {
+  draft.value.policies = draft.value.policies.filter((item) => item.uid !== uid)
 }
 </script>
 
@@ -590,126 +615,18 @@ function updateNetworkDraft(payload: {
             </div>
 
             <div v-else-if="activeWorkbenchTab === 'policy'" class="space-y-6">
-              <SectionCard
-                title="拓扑连线"
-                subtitle="用于表达逻辑依赖关系，不直接等同于运行时 ACL。"
-              >
-                <div
-                  v-if="draft.links.length === 0"
-                  class="rounded-xl border border-dashed border-border px-4 py-6 text-sm text-text-muted"
-                >
-                  暂无逻辑连线
-                </div>
-                <div v-else class="space-y-3">
-                  <div
-                    v-for="link in draft.links"
-                    :key="link.uid"
-                    class="grid gap-3 rounded-2xl border border-border bg-elevated p-4 md:grid-cols-[1fr_1fr_auto]"
-                  >
-                    <select
-                      v-model="link.from_node_key"
-                      class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
-                    >
-                      <option value="">选择源节点</option>
-                      <option v-for="node in nodeOptions" :key="node.key" :value="node.key">
-                        {{ node.label }}
-                      </option>
-                    </select>
-                    <select
-                      v-model="link.to_node_key"
-                      class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
-                    >
-                      <option value="">选择目标节点</option>
-                      <option v-for="node in nodeOptions" :key="node.key" :value="node.key">
-                        {{ node.label }}
-                      </option>
-                    </select>
-                    <button
-                      type="button"
-                      class="ui-btn ui-btn--danger topology-action-btn topology-action-btn--icon"
-                      @click="draft.links = draft.links.filter((item) => item.uid !== link.uid)"
-                    >
-                      <Trash2 class="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-
-                <template #footer>
-                  <button
-                    type="button"
-                    class="topology-toolbar-btn topology-toolbar-btn--ghost"
-                    @click="addLink"
-                  >
-                    <Link2 class="h-4 w-4" />
-                    添加连线
-                  </button>
-                </template>
-              </SectionCard>
-
-              <SectionCard
-                title="链路策略"
-                subtitle="当前前端只开放粗粒度节点 allow/deny，细粒度端口策略尚未支持。"
-              >
-                <div
-                  v-if="draft.policies.length === 0"
-                  class="rounded-xl border border-dashed border-border px-4 py-6 text-sm text-text-muted"
-                >
-                  暂无链路策略
-                </div>
-                <div v-else class="space-y-3">
-                  <div
-                    v-for="policy in draft.policies"
-                    :key="policy.uid"
-                    class="grid gap-3 rounded-2xl border border-border bg-elevated p-4 md:grid-cols-[1fr_1fr_0.7fr_auto]"
-                  >
-                    <select
-                      v-model="policy.source_node_key"
-                      class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
-                    >
-                      <option value="">选择源节点</option>
-                      <option v-for="node in nodeOptions" :key="node.key" :value="node.key">
-                        {{ node.label }}
-                      </option>
-                    </select>
-                    <select
-                      v-model="policy.target_node_key"
-                      class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
-                    >
-                      <option value="">选择目标节点</option>
-                      <option v-for="node in nodeOptions" :key="node.key" :value="node.key">
-                        {{ node.label }}
-                      </option>
-                    </select>
-                    <select
-                      v-model="policy.action"
-                      class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
-                    >
-                      <option value="allow">allow</option>
-                      <option value="deny">deny</option>
-                    </select>
-                    <button
-                      type="button"
-                      class="ui-btn ui-btn--danger topology-action-btn topology-action-btn--icon"
-                      @click="
-                        draft.policies = draft.policies.filter((item) => item.uid !== policy.uid)
-                      "
-                    >
-                      <Trash2 class="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-
-                <template #footer>
-                  <button
-                    type="button"
-                    class="topology-toolbar-btn topology-toolbar-btn--ghost"
-                    @click="addPolicy"
-                  >
-                    <ShieldBan class="h-4 w-4" />
-                    添加策略
-                  </button>
-                </template>
-              </SectionCard>
+              <TopologyConnectivitySections
+                :links="draft.links"
+                :policies="draft.policies"
+                :node-options="nodeOptions"
+                add-button-class="topology-toolbar-btn topology-toolbar-btn--ghost"
+                @add-link="addLink"
+                @remove-link="removeLinkDraft"
+                @update-link="updateLinkDraft"
+                @add-policy="addPolicy"
+                @remove-policy="removePolicyDraft"
+                @update-policy="updatePolicyDraft"
+              />
             </div>
           </div>
 
@@ -1141,123 +1058,18 @@ function updateNetworkDraft(payload: {
               </template>
             </SectionCard>
 
-            <SectionCard title="拓扑连线" subtitle="用于表达逻辑依赖关系，不直接等同于运行时 ACL。">
-              <div
-                v-if="draft.links.length === 0"
-                class="rounded-xl border border-dashed border-border px-4 py-6 text-sm text-text-muted"
-              >
-                暂无逻辑连线
-              </div>
-              <div v-else class="space-y-3">
-                <div
-                  v-for="link in draft.links"
-                  :key="link.uid"
-                  class="grid gap-3 rounded-2xl border border-border bg-elevated p-4 md:grid-cols-[1fr_1fr_auto]"
-                >
-                  <select
-                    v-model="link.from_node_key"
-                    class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
-                  >
-                    <option value="">选择源节点</option>
-                    <option v-for="node in nodeOptions" :key="node.key" :value="node.key">
-                      {{ node.label }}
-                    </option>
-                  </select>
-                  <select
-                    v-model="link.to_node_key"
-                    class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
-                  >
-                    <option value="">选择目标节点</option>
-                    <option v-for="node in nodeOptions" :key="node.key" :value="node.key">
-                      {{ node.label }}
-                    </option>
-                  </select>
-                  <button
-                    type="button"
-                    class="ui-btn ui-btn--danger topology-action-btn topology-action-btn--icon"
-                    @click="draft.links = draft.links.filter((item) => item.uid !== link.uid)"
-                  >
-                    <Trash2 class="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
-
-              <template #footer>
-                <button
-                  type="button"
-                  class="ui-btn ui-btn--ghost topology-action-btn"
-                  @click="addLink"
-                >
-                  <Link2 class="h-4 w-4" />
-                  添加连线
-                </button>
-              </template>
-            </SectionCard>
-
-            <SectionCard
-              title="链路策略"
-              subtitle="当前前端只开放粗粒度节点 allow/deny，细粒度端口策略尚未支持。"
-            >
-              <div
-                v-if="draft.policies.length === 0"
-                class="rounded-xl border border-dashed border-border px-4 py-6 text-sm text-text-muted"
-              >
-                暂无链路策略
-              </div>
-              <div v-else class="space-y-3">
-                <div
-                  v-for="policy in draft.policies"
-                  :key="policy.uid"
-                  class="grid gap-3 rounded-2xl border border-border bg-elevated p-4 md:grid-cols-[1fr_1fr_0.7fr_auto]"
-                >
-                  <select
-                    v-model="policy.source_node_key"
-                    class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
-                  >
-                    <option value="">选择源节点</option>
-                    <option v-for="node in nodeOptions" :key="node.key" :value="node.key">
-                      {{ node.label }}
-                    </option>
-                  </select>
-                  <select
-                    v-model="policy.target_node_key"
-                    class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
-                  >
-                    <option value="">选择目标节点</option>
-                    <option v-for="node in nodeOptions" :key="node.key" :value="node.key">
-                      {{ node.label }}
-                    </option>
-                  </select>
-                  <select
-                    v-model="policy.action"
-                    class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
-                  >
-                    <option value="allow">allow</option>
-                    <option value="deny">deny</option>
-                  </select>
-                  <button
-                    type="button"
-                    class="ui-btn ui-btn--danger topology-action-btn topology-action-btn--icon"
-                    @click="
-                      draft.policies = draft.policies.filter((item) => item.uid !== policy.uid)
-                    "
-                  >
-                    <Trash2 class="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
-
-              <template #footer>
-                <button
-                  type="button"
-                  class="ui-btn ui-btn--ghost topology-action-btn"
-                  @click="addPolicy"
-                >
-                  <ShieldBan class="h-4 w-4" />
-                  添加策略
-                </button>
-              </template>
-            </SectionCard>
+            <TopologyConnectivitySections
+              :links="draft.links"
+              :policies="draft.policies"
+              :node-options="nodeOptions"
+              add-button-class="ui-btn ui-btn--ghost topology-action-btn"
+              @add-link="addLink"
+              @remove-link="removeLinkDraft"
+              @update-link="updateLinkDraft"
+              @add-policy="addPolicy"
+              @remove-policy="removePolicyDraft"
+              @update-policy="updatePolicyDraft"
+            />
           </div>
 
           <aside class="context-rail topology-context-rail">

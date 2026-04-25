@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest'
 import EnvironmentTemplateLibrary from '../EnvironmentTemplateLibrary.vue'
 import ChallengeTopologyStudioPage from '@/components/platform/topology/ChallengeTopologyStudioPage.vue'
 import challengeTopologyStudioPageSource from '@/components/platform/topology/ChallengeTopologyStudioPage.vue?raw'
+import topologyConnectivitySectionsSource from '@/components/platform/topology/TopologyConnectivitySections.vue?raw'
 import topologyNetworkSectionSource from '@/components/platform/topology/TopologyNetworkSection.vue?raw'
 import topologyNodeEditorSource from '@/components/platform/topology/TopologyNodeEditor.vue?raw'
 import topologySummaryGridSource from '@/components/platform/topology/TopologySummaryGrid.vue?raw'
@@ -140,7 +141,7 @@ describe('EnvironmentTemplateLibrary', () => {
   })
 
   it('工作台分区底部新增按钮应复用统一工具栏按钮原语', () => {
-    const topologySource = `${challengeTopologyStudioPageSource}\n${topologyNetworkSectionSource}`
+    const topologySource = `${challengeTopologyStudioPageSource}\n${topologyNetworkSectionSource}\n${topologyConnectivitySectionsSource}`
 
     expect(challengeTopologyStudioPageSource).toMatch(
       /class="topology-toolbar-btn topology-toolbar-btn--ghost"\s+@click="addNode"[\s\S]*添加节点/
@@ -148,11 +149,11 @@ describe('EnvironmentTemplateLibrary', () => {
     expect(topologySource).toMatch(
       /add-button-class="topology-toolbar-btn topology-toolbar-btn--ghost"[\s\S]*@click="emit\('addNetwork'\)"[\s\S]*添加网络/
     )
-    expect(challengeTopologyStudioPageSource).toMatch(
-      /class="topology-toolbar-btn topology-toolbar-btn--ghost"\s+@click="addLink"[\s\S]*添加连线/
+    expect(topologySource).toMatch(
+      /add-button-class="topology-toolbar-btn topology-toolbar-btn--ghost"[\s\S]*@click="emit\('addLink'\)"[\s\S]*添加连线/
     )
-    expect(challengeTopologyStudioPageSource).toMatch(
-      /class="topology-toolbar-btn topology-toolbar-btn--ghost"\s+@click="addPolicy"[\s\S]*添加策略/
+    expect(topologySource).toMatch(
+      /add-button-class="topology-toolbar-btn topology-toolbar-btn--ghost"[\s\S]*@click="emit\('addPolicy'\)"[\s\S]*添加策略/
     )
     expect(challengeTopologyStudioPageSource).not.toMatch(
       /class="inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-medium text-text-primary transition hover:border-primary"\s+@click="add(Node|Network|Link|Policy)"/
