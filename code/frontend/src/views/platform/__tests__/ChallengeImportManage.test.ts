@@ -3,6 +3,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import ChallengeImportManage from '../ChallengeImportManage.vue'
 import challengeImportHeroPanelSource from '@/components/platform/challenge/ChallengeImportHeroPanel.vue?raw'
+import challengePackageImportEntrySource from '@/components/platform/challenge/ChallengePackageImportEntry.vue?raw'
 
 const pushMock = vi.fn()
 const adminApiMocks = vi.hoisted(() => ({
@@ -65,11 +66,16 @@ describe('ChallengeImportManage', () => {
     expect(challengeImportHeroPanelSource).toContain('返回题目目录')
     expect(challengeImportHeroPanelSource).toContain('题目包规范')
     expect(challengeImportHeroPanelSource).toContain('下载示例题目包')
+    expect(challengePackageImportEntrySource).toContain(
+      'class="ui-btn ui-btn--primary challenge-import-action challenge-import-action--primary import-entry__upload-action"'
+    )
+    expect(challengePackageImportEntrySource).toContain('导入题目包')
+    expect(challengePackageImportEntrySource).not.toContain('class="import-entry__dropzone"')
 
     const wrapper = mount(ChallengeImportManage)
     await flushPromises()
 
-    expect(wrapper.text()).toContain('导入资源包')
+    expect(wrapper.text()).toContain('导入题目')
     expect(wrapper.text()).toContain('题目包规范')
     expect(wrapper.text()).toContain('最近上传结果')
     expect(wrapper.text()).toContain('待确认导入')

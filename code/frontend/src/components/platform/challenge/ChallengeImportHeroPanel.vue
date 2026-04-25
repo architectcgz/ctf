@@ -22,7 +22,7 @@ function handleOpenGuide(): void {
         Challenge Import
       </div>
       <h1 class="workspace-page-title">
-        导入资源包
+        导入题目
       </h1>
       <p class="workspace-page-copy">
         在独立导入页完成上传、核对题目包规范，并处理待确认导入任务。

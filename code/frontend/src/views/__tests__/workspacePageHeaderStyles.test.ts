@@ -16,7 +16,6 @@ import cheatDetectionSource from '@/views/platform/CheatDetection.vue?raw'
 import skillProfileSource from '@/views/profile/SkillProfile.vue?raw'
 import userProfileSource from '@/views/profile/UserProfile.vue?raw'
 import securitySettingsSource from '@/views/profile/SecuritySettings.vue?raw'
-import reportExportSource from '@/views/teacher/ReportExport.vue?raw'
 import classManagementPageSource from '@/components/teacher/class-management/ClassManagementPage.vue?raw'
 import classStudentsPageSource from '@/components/teacher/class-management/ClassStudentsPage.vue?raw'
 import studentAnalysisPageSource from '@/components/teacher/class-management/StudentAnalysisPage.vue?raw'
@@ -266,8 +265,8 @@ describe('workspace page header styles', () => {
       },
       {
         source: challengeImportManageWorkspaceSource,
-        include: /<h1 class="workspace-page-title">\s*导入资源包\s*<\/h1>/,
-        exclude: /<h1 class="workspace-tab-heading__title">导入资源包<\/h1>/,
+        include: /<h1 class="workspace-page-title">\s*导入题目\s*<\/h1>/,
+        exclude: /<h1 class="workspace-tab-heading__title">导入题目<\/h1>/,
       },
       {
         source: challengeImportPreviewWorkspaceBundleSource,

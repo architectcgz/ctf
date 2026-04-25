@@ -179,7 +179,7 @@ export const platformRoutes: RouteRecordRaw[] = [
   meta: {
     requiresAuth: true,
     roles: ['teacher', 'admin'],
-    title: '导入资源包',
+    title: '导入题目',
     contentLayout: 'bleed',
   },
 },
