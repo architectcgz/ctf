@@ -3,6 +3,10 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import ChallengeTopologyStudioPage from '@/components/platform/topology/ChallengeTopologyStudioPage.vue'
 import challengeTopologyStudioPageSource from '@/components/platform/topology/ChallengeTopologyStudioPage.vue?raw'
+import topologyConnectivitySectionsSource from '@/components/platform/topology/TopologyConnectivitySections.vue?raw'
+import topologyNetworkSectionSource from '@/components/platform/topology/TopologyNetworkSection.vue?raw'
+import topologyNodeSectionSource from '@/components/platform/topology/TopologyNodeSection.vue?raw'
+import topologyTemplateSidePanelSource from '@/components/platform/topology/TopologyTemplateSidePanel.vue?raw'
 import { ApiError } from '@/api/request'
 
 const adminApiMocks = vi.hoisted(() => ({
@@ -158,10 +162,16 @@ describe('ChallengeTopologyStudioPage', () => {
   })
 
   it('应使用共享 ui-btn 原语而不是拓扑页私有按钮族', () => {
-    expect(challengeTopologyStudioPageSource).toContain('class="ui-btn ui-btn--ghost topology-action-btn')
-    expect(challengeTopologyStudioPageSource).toContain('class="ui-btn ui-btn--primary topology-action-btn')
-    expect(challengeTopologyStudioPageSource).toContain('class="ui-btn ui-btn--secondary topology-action-btn')
-    expect(challengeTopologyStudioPageSource).toContain('class="ui-btn ui-btn--danger topology-action-btn')
+    const topologySource = `${challengeTopologyStudioPageSource}\n${topologyTemplateSidePanelSource}\n${topologyNetworkSectionSource}\n${topologyConnectivitySectionsSource}\n${topologyNodeSectionSource}`
+
+    expect(challengeTopologyStudioPageSource).toContain(
+      'class="ui-btn ui-btn--ghost topology-action-btn'
+    )
+    expect(challengeTopologyStudioPageSource).toContain(
+      'class="ui-btn ui-btn--primary topology-action-btn'
+    )
+    expect(topologySource).toContain('ui-btn ui-btn--secondary topology-action-btn')
+    expect(topologySource).toContain('ui-btn ui-btn--danger topology-action-btn')
   })
 
   it('删除拓扑失败时应优先展示接口返回消息', async () => {
