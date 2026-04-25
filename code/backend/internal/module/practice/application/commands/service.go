@@ -247,9 +247,6 @@ func (s *Service) markInstanceFailed(ctx context.Context, instance *model.Instan
 	if err := s.runtimeService.CleanupRuntime(ctx, instance); err != nil {
 		s.logger.Warn("清理失败实例运行时资源失败", zap.Int64("instance_id", instance.ID), zap.Error(err))
 	}
-	if ctx == nil {
-		ctx = context.Background()
-	}
 	if err := s.instanceRepo.UpdateStatusAndReleasePort(ctx, instance.ID, model.InstanceStatusFailed); err != nil {
 		s.logger.Warn("更新失败实例状态并释放端口失败", zap.Int64("instance_id", instance.ID), zap.Int("host_port", instance.HostPort), zap.Error(err))
 	}
@@ -1633,9 +1630,6 @@ func (s *Service) runAsyncTask(fn func(context.Context)) {
 func (s *Service) publishWeakEvent(ctx context.Context, evt platformevents.Event) {
 	if s.eventBus == nil {
 		return
-	}
-	if ctx == nil {
-		ctx = context.Background()
 	}
 	if err := s.eventBus.Publish(ctx, evt); err != nil {
 		s.logger.Warn("publish_practice_event_failed", zap.String("event", evt.Name), zap.Error(err))
