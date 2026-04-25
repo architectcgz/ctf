@@ -1660,6 +1660,25 @@
   - `npm run typecheck`
   - `npm run test:run`（244 个测试文件，1009 个测试）
 
+## 第七十轮修复进展
+
+- 已完成：
+  - `TD-2` 中 AWD inspector 相关格式化 helper 的状态样式尾项已收口：`useAwdInspectorFormatting` 和 `useAwdInspectorDerivedData` 不再返回 `bg-[var(...)]`、`text-[var(...)]`、`border-[var(...)]` 这类 Tailwind 任意主题类，改为返回 `awd-status-pill--*`、`awd-service-alert--*` 语义类。
+  - 告警 pill 与流量状态 badge 的颜色、边框和透明度回到组件 scoped CSS 中，由主题 token 与 `color-mix` 承接，避免把展示样式继续泄漏到 composable。
+  - 新增源码护栏 `useAwdInspectorPresentationClasses.test.ts`，防止 AWD inspector helper 后续再次拼接任意主题类。
+- 本轮涉及文件：
+  - `code/frontend/src/composables/useAwdInspectorFormatting.ts`
+  - `code/frontend/src/composables/useAwdInspectorDerivedData.ts`
+  - `code/frontend/src/components/platform/contest/AWDRoundInspector.vue`
+  - `code/frontend/src/components/platform/contest/AWDTrafficPanel.vue`
+  - `code/frontend/src/composables/__tests__/useAwdInspectorPresentationClasses.test.ts`
+
+## 第七十轮验证
+
+- 已执行：
+  - `npm run test:run -- src/composables/__tests__/useAwdInspectorPresentationClasses.test.ts src/composables/__tests__/useAwdInspectorDerivedData.test.ts src/components/platform/__tests__/AWDRoundInspector.test.ts src/components/platform/__tests__/AWDRoundInspectorExtraction.test.ts`（4 个测试文件，11 个测试）
+  - `npm run typecheck`
+
 ## 后续技术债 Backlog
 
 - `TD-1` 超大组件专题拆分：
@@ -1669,7 +1688,7 @@
 - `TD-2` Tailwind 任意值与主题 token 尾项：
   - 仍可继续扫描并收口 `bg-[var(...)]`、`text-[var(...)]`、`border-[var(...)]`、裸十六进制色值和布局任意值。
   - 处理时需要区分 token bridge 与真正裸魔法值，避免把合法的主题变量透传和样式债混在一次提交里。
-  - 当前残留主要集中在 AWD inspector 相关格式化 helper、题目详情 presentation、部分 mock/reference 页面和少量布局组件。
+  - AWD inspector 相关格式化 helper 已在第七十轮收口；当前残留主要集中在题目详情 presentation、部分 mock/reference 页面、教师端实例管理和少量布局组件。
 - `TD-3` 性能监控接入：
   - 当前未接入 `web-vitals`、`PerformanceObserver` 或项目自定义性能埋点。
   - 该项需要先明确采集指标、上报端点、隐私边界和生产开关，不能只加依赖或空埋点。
