@@ -60,7 +60,7 @@ function handleDialogOpenChange(value: boolean) {
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div>
     <AWDServiceTemplateLibraryPage
       :list="list"
       :total="total"

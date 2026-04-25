@@ -2,6 +2,7 @@ import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
 
 import AWDServiceTemplateLibraryPage from '../AWDServiceTemplateLibraryPage.vue'
+import awdServiceTemplateLibraryPageSource from '../AWDServiceTemplateLibraryPage.vue?raw'
 
 describe('AWDServiceTemplateLibraryPage', () => {
   it('renders awd service template rows and emits row actions', async () => {
@@ -79,6 +80,8 @@ describe('AWDServiceTemplateLibraryPage', () => {
     expect(wrapper.text()).toContain('Bank Portal AWD')
     expect(wrapper.text()).toContain('Web HTTP')
     expect(wrapper.text()).toContain('Single')
+    expect(wrapper.text()).toContain('bank-portal-awd')
+    expect(wrapper.text()).not.toContain('@bank-portal-awd')
 
     let buttons = wrapper.findAll('button')
     await buttons.find((button) => button.text() === '编辑')?.trigger('click')
@@ -93,5 +96,58 @@ describe('AWDServiceTemplateLibraryPage', () => {
     expect(wrapper.emitted('openEditDialog')).toHaveLength(1)
     expect(wrapper.emitted('deleteTemplate')).toHaveLength(1)
     expect(wrapper.emitted('commitImport')).toHaveLength(1)
+  })
+
+  it('uses shared platform workspace surfaces instead of page-private premium panels', () => {
+    expect(awdServiceTemplateLibraryPageSource).toContain(
+      'class="workspace-shell journal-shell journal-shell-admin journal-hero awd-template-library-shell"'
+    )
+    expect(awdServiceTemplateLibraryPageSource).toContain(
+      'class="content-pane awd-template-library-content"'
+    )
+    expect(awdServiceTemplateLibraryPageSource).toContain(
+      'class="admin-summary-grid awd-template-summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
+    )
+    expect(awdServiceTemplateLibraryPageSource).toContain(
+      'class="journal-note progress-card metric-panel-card"'
+    )
+    expect(awdServiceTemplateLibraryPageSource).toContain(
+      'class="journal-note-label progress-card-label metric-panel-label"'
+    )
+    expect(awdServiceTemplateLibraryPageSource).toContain(
+      'class="journal-note-value progress-card-value metric-panel-value"'
+    )
+    expect(awdServiceTemplateLibraryPageSource).toContain(
+      'class="workspace-directory-section awd-import-tool-section"'
+    )
+    expect(awdServiceTemplateLibraryPageSource).toContain(
+      'class="workspace-directory-section awd-import-queue-section"'
+    )
+    expect(awdServiceTemplateLibraryPageSource).toContain(
+      'class="workspace-directory-list awd-template-import__queue"'
+    )
+    expect(awdServiceTemplateLibraryPageSource).not.toContain('metric-panel-card--premium')
+    expect(awdServiceTemplateLibraryPageSource).not.toContain('metric-panel-grid--premium')
+  })
+
+  it('keeps AWD template spacing on shared tokens instead of ad hoc page margins', () => {
+    expect(awdServiceTemplateLibraryPageSource).toContain(
+      'gap: var(--workspace-directory-page-block-gap, var(--space-5));'
+    )
+    expect(awdServiceTemplateLibraryPageSource).toContain(
+      'margin-top: var(--workspace-hero-summary-gap, var(--space-5));'
+    )
+    expect(awdServiceTemplateLibraryPageSource).toContain(
+      '--admin-summary-grid-columns: repeat(4, minmax(0, 1fr));'
+    )
+    expect(awdServiceTemplateLibraryPageSource).toContain(
+      '--metric-panel-columns: repeat(4, minmax(0, 1fr));'
+    )
+    expect(awdServiceTemplateLibraryPageSource).not.toContain('class="awd-library-tabs mt-10"')
+    expect(awdServiceTemplateLibraryPageSource).not.toContain('class="awd-library-body mt-10"')
+    expect(awdServiceTemplateLibraryPageSource).not.toContain('class="awd-library-pane space-y-10"')
+    expect(awdServiceTemplateLibraryPageSource).not.toContain('class="awd-import-pane space-y-12"')
+    expect(awdServiceTemplateLibraryPageSource).not.toContain('workspace-directory-pagination mt-6')
+    expect(awdServiceTemplateLibraryPageSource).not.toContain('class="mt-8"')
   })
 })

@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { describe, expect, it, vi } from 'vitest'
 
 import AWDServiceTemplateLibrary from '../AWDServiceTemplateLibrary.vue'
+import awdServiceTemplateLibrarySource from '../AWDServiceTemplateLibrary.vue?raw'
 
 const actionMocks = vi.hoisted(() => ({
   refresh: vi.fn(),
@@ -75,5 +76,10 @@ describe('AWDServiceTemplateLibrary', () => {
     expect(wrapper.text()).toContain('Bank Portal AWD')
     expect(actionMocks.refresh).toHaveBeenCalledTimes(1)
     expect(actionMocks.refreshImportQueue).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not add an extra route-level spacing wrapper around the shared workspace shell', () => {
+    expect(awdServiceTemplateLibrarySource).toContain('<template>\n  <div>')
+    expect(awdServiceTemplateLibrarySource).not.toContain('<div class="space-y-6">')
   })
 })
