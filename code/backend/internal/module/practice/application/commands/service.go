@@ -547,7 +547,7 @@ func (s *Service) SubmitFlag(ctx context.Context, userID, challengeID int64, fla
 	}
 
 	alreadySolved := false
-	if _, err := s.repo.FindCorrectSubmissionWithContext(ctx, userID, challengeID); err == nil {
+	if _, err := s.repo.FindCorrectSubmission(ctx, userID, challengeID); err == nil {
 		alreadySolved = true
 	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, errcode.ErrInternal.WithCause(err)
@@ -605,7 +605,7 @@ func (s *Service) SubmitFlag(ctx context.Context, userID, challengeID int64, fla
 	}
 
 	if !submissionPersisted {
-		if err := s.repo.CreateSubmissionWithContext(ctx, submission); err != nil {
+		if err := s.repo.CreateSubmission(ctx, submission); err != nil {
 			if submission.IsCorrect && s.repo.IsUniqueViolation(err) {
 				return nil, errcode.ErrAlreadySolved
 			}
@@ -743,7 +743,7 @@ func (s *Service) ReviewManualReviewSubmission(
 	item.ReviewedAt = &now
 	item.UpdatedAt = now
 	if req.ReviewStatus == model.SubmissionReviewStatusApproved {
-		if _, err := s.repo.FindCorrectSubmissionWithContext(ctx, item.UserID, item.ChallengeID); err == nil {
+		if _, err := s.repo.FindCorrectSubmission(ctx, item.UserID, item.ChallengeID); err == nil {
 			return nil, errcode.ErrAlreadySolved
 		} else if !errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrInternal.WithCause(err)
@@ -755,7 +755,7 @@ func (s *Service) ReviewManualReviewSubmission(
 		item.Score = 0
 	}
 
-	if err := s.repo.UpdateSubmissionWithContext(ctx, &item); err != nil {
+	if err := s.repo.UpdateSubmission(ctx, &item); err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 	if item.IsCorrect {
@@ -850,7 +850,7 @@ func (s *Service) ListMyChallengeSubmissions(ctx context.Context, userID, challe
 		return nil, errcode.ErrChallengeNotPublish
 	}
 
-	items, err := s.repo.ListChallengeSubmissionsWithContext(ctx, userID, challengeID, 20)
+	items, err := s.repo.ListChallengeSubmissions(ctx, userID, challengeID, 20)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}

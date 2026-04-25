@@ -214,20 +214,12 @@ func (r *Repository) BindReservedPort(ctx context.Context, port int, instanceID 
 }
 
 // CreateSubmission 创建提交记录
-func (r *Repository) CreateSubmission(submission *model.Submission) error {
-	return r.CreateSubmissionWithContext(context.Background(), submission)
-}
-
-func (r *Repository) CreateSubmissionWithContext(ctx context.Context, submission *model.Submission) error {
+func (r *Repository) CreateSubmission(ctx context.Context, submission *model.Submission) error {
 	return r.dbWithContext(ctx).Create(submission).Error
 }
 
 // FindCorrectSubmission 查找用户是否已正确提交过该题
-func (r *Repository) FindCorrectSubmission(userID, challengeID int64) (*model.Submission, error) {
-	return r.FindCorrectSubmissionWithContext(context.Background(), userID, challengeID)
-}
-
-func (r *Repository) FindCorrectSubmissionWithContext(ctx context.Context, userID, challengeID int64) (*model.Submission, error) {
+func (r *Repository) FindCorrectSubmission(ctx context.Context, userID, challengeID int64) (*model.Submission, error) {
 	var submission model.Submission
 	err := r.dbWithContext(ctx).Where("user_id = ? AND challenge_id = ? AND is_correct = ?", userID, challengeID, true).
 		First(&submission).Error
@@ -249,11 +241,7 @@ func (r *Repository) FindByUserAndChallenge(ctx context.Context, userID, challen
 	return &instance, nil
 }
 
-func (r *Repository) ListChallengeSubmissions(userID, challengeID int64, limit int) ([]model.Submission, error) {
-	return r.ListChallengeSubmissionsWithContext(context.Background(), userID, challengeID, limit)
-}
-
-func (r *Repository) ListChallengeSubmissionsWithContext(ctx context.Context, userID, challengeID int64, limit int) ([]model.Submission, error) {
+func (r *Repository) ListChallengeSubmissions(ctx context.Context, userID, challengeID int64, limit int) ([]model.Submission, error) {
 	if limit <= 0 {
 		limit = 20
 	}
@@ -267,11 +255,7 @@ func (r *Repository) ListChallengeSubmissionsWithContext(ctx context.Context, us
 	return submissions, err
 }
 
-func (r *Repository) UpdateSubmission(submission *model.Submission) error {
-	return r.UpdateSubmissionWithContext(context.Background(), submission)
-}
-
-func (r *Repository) UpdateSubmissionWithContext(ctx context.Context, submission *model.Submission) error {
+func (r *Repository) UpdateSubmission(ctx context.Context, submission *model.Submission) error {
 	return r.dbWithContext(ctx).Save(submission).Error
 }
 
