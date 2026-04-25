@@ -1877,10 +1877,34 @@
   - `npm run typecheck`
   - `git diff --check`
 
+## 第八十轮修复进展
+
+- 已完成：
+  - `TD-1` 拓扑页第五个切片完成：模板库模式和挑战模式共用的节点编辑区抽到 `TopologyNodeSection.vue`，父页不再直接重复渲染节点编辑器列表和新增节点按钮。
+  - `TopologyNodeEditor.vue` 的异步加载边界从父页移动到 `TopologyNodeSection.vue`，保留节点编辑器按需加载；`asyncChunkBoundaries.test.ts` 已同步改为检查父页画布异步加载和节点分区内的节点编辑器异步加载。
+  - 父组件继续持有 `draft.nodes` 的添加、删除和整节点更新入口；本轮不混入 `TopologyNodeEditor` 内部字段级改造，避免把壳层抽取和深层表单状态重构合并到同一提交。
+- 本轮涉及文件：
+  - `code/frontend/src/components/platform/topology/ChallengeTopologyStudioPage.vue`
+  - `code/frontend/src/components/platform/topology/TopologyNodeSection.vue`
+  - `code/frontend/src/views/__tests__/asyncChunkBoundaries.test.ts`
+  - `code/frontend/src/views/platform/__tests__/ChallengeTopologyStudio.test.ts`
+  - `code/frontend/src/views/platform/__tests__/EnvironmentTemplateLibrary.test.ts`
+  - `code/frontend/src/views/__tests__/sharedThemeTokenAdoption.test.ts`
+  - `docs/reviews/frontend/README.md`
+  - `docs/reviews/frontend/ctf-frontend-audit-20260422.md`
+
+## 第八十轮验证
+
+- 已执行：
+  - `npm run check:theme-tail`
+  - `npm run test:run -- src/views/__tests__/asyncChunkBoundaries.test.ts src/views/platform/__tests__/ChallengeTopologyStudio.test.ts src/views/platform/__tests__/EnvironmentTemplateLibrary.test.ts src/views/__tests__/workspacePageHeaderStyles.test.ts src/views/__tests__/sharedThemeTokenAdoption.test.ts`（5 个测试文件，32 个测试）
+  - `npm run typecheck`
+  - `git diff --check`
+
 ## 后续技术债 Backlog
 
 - `TD-1` 超大组件专题拆分：
-  - `ChallengeTopologyStudioPage.vue` 已完成模板侧栏、摘要指标、状态说明展示、网络分段编辑区、拓扑连线与链路策略编辑区抽取；当前仍需继续拆分的高复杂度组件包括 `ChallengeTopologyStudioPage.vue` 的画布快速编辑/节点编辑区、`AWDChallengeConfigDialog.vue`、`StudentInsightPanel.vue`、`ContestAWDWorkspacePanel.vue`。
+  - `ChallengeTopologyStudioPage.vue` 已完成模板侧栏、摘要指标、状态说明展示、网络分段编辑区、节点编辑区、拓扑连线与链路策略编辑区抽取；当前仍需继续拆分的高复杂度组件包括 `ChallengeTopologyStudioPage.vue` 的画布快速编辑区、`AWDChallengeConfigDialog.vue`、`StudentInsightPanel.vue`、`ContestAWDWorkspacePanel.vue`。
   - 拆分原则：父页面保留 route/query 同步、页面级数据加载、跨区块协调、错误策略和主业务动作；子组件只承接明确展示区块或局部表单，不允许只为了减少行数而把 owner 边界拆散。
   - 建议顺序：先选一个组件做一个可评审切片，补源码边界测试和行为测试，再继续下一块。
 - `TD-2` Tailwind 任意值与主题 token 尾项：

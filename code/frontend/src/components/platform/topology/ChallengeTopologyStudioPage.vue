@@ -21,15 +21,20 @@ import PageHeader from '@/components/common/PageHeader.vue'
 import SectionCard from '@/components/common/SectionCard.vue'
 import TopologyConnectivitySections from './TopologyConnectivitySections.vue'
 import TopologyNetworkSection from './TopologyNetworkSection.vue'
+import TopologyNodeSection from './TopologyNodeSection.vue'
 import TopologyStatusNotes from './TopologyStatusNotes.vue'
 import TopologySummaryGrid from './TopologySummaryGrid.vue'
 import TopologyTemplateSidePanel from './TopologyTemplateSidePanel.vue'
 
 import type { CanvasInteractionMode } from './TopologyCanvasBoard.vue'
-import type { TopologyLinkDraft, TopologyNetworkDraft, TopologyPolicyDraft } from './topologyDraft'
+import type {
+  TopologyLinkDraft,
+  TopologyNetworkDraft,
+  TopologyNodeDraft,
+  TopologyPolicyDraft,
+} from './topologyDraft'
 
 const TopologyCanvasBoard = defineAsyncComponent(() => import('./TopologyCanvasBoard.vue'))
-const TopologyNodeEditor = defineAsyncComponent(() => import('./TopologyNodeEditor.vue'))
 
 const props = withDefaults(
   defineProps<{
@@ -138,6 +143,12 @@ function updateNetworkDraft(payload: {
   const network = draft.value.networks.find((item) => item.uid === payload.uid)
   if (!network) return
   Object.assign(network, payload.patch)
+}
+
+function updateNodeDraft(payload: { uid: string; node: TopologyNodeDraft }) {
+  const index = draft.value.nodes.findIndex((item) => item.uid === payload.uid)
+  if (index === -1) return
+  draft.value.nodes[index] = payload.node
 }
 
 function updateLinkDraft(payload: {
@@ -571,37 +582,16 @@ function removePolicyDraft(uid: string) {
                 </div>
               </SectionCard>
 
-              <SectionCard
-                title="节点编排"
-                subtitle="节点支持单独镜像、资源限制、网络归属和环境变量。"
-              >
-                <div class="space-y-4">
-                  <TopologyNodeEditor
-                    v-for="(node, index) in draft.nodes"
-                    :key="node.uid"
-                    :data-node-editor="node.key"
-                    :model-value="node"
-                    :index="index"
-                    :images="images"
-                    :networks="draft.networks"
-                    :removable="draft.nodes.length > 1"
-                    :selected="selectedNodeKey === node.key"
-                    @update:model-value="draft.nodes[index] = $event"
-                    @remove="removeNode(node.uid)"
-                  />
-                </div>
-
-                <template #footer>
-                  <button
-                    type="button"
-                    class="topology-toolbar-btn topology-toolbar-btn--ghost"
-                    @click="addNode"
-                  >
-                    <Plus class="h-4 w-4" />
-                    添加节点
-                  </button>
-                </template>
-              </SectionCard>
+              <TopologyNodeSection
+                :nodes="draft.nodes"
+                :images="images"
+                :networks="draft.networks"
+                :selected-node-key="selectedNodeKey"
+                add-button-class="topology-toolbar-btn topology-toolbar-btn--ghost"
+                @add-node="addNode"
+                @remove-node="removeNode"
+                @update-node="updateNodeDraft"
+              />
             </div>
 
             <div v-else-if="activeWorkbenchTab === 'network'" class="space-y-6">
@@ -1026,37 +1016,16 @@ function removePolicyDraft(uid: string) {
               @update-network="updateNetworkDraft"
             />
 
-            <SectionCard
-              title="节点编排"
-              subtitle="节点支持单独镜像、资源限制、网络归属和环境变量。"
-            >
-              <div class="space-y-4">
-                <TopologyNodeEditor
-                  v-for="(node, index) in draft.nodes"
-                  :key="node.uid"
-                  :data-node-editor="node.key"
-                  :model-value="node"
-                  :index="index"
-                  :images="images"
-                  :networks="draft.networks"
-                  :removable="draft.nodes.length > 1"
-                  :selected="selectedNodeKey === node.key"
-                  @update:model-value="draft.nodes[index] = $event"
-                  @remove="removeNode(node.uid)"
-                />
-              </div>
-
-              <template #footer>
-                <button
-                  type="button"
-                  class="ui-btn ui-btn--ghost topology-action-btn"
-                  @click="addNode"
-                >
-                  <Plus class="h-4 w-4" />
-                  添加节点
-                </button>
-              </template>
-            </SectionCard>
+            <TopologyNodeSection
+              :nodes="draft.nodes"
+              :images="images"
+              :networks="draft.networks"
+              :selected-node-key="selectedNodeKey"
+              add-button-class="ui-btn ui-btn--ghost topology-action-btn"
+              @add-node="addNode"
+              @remove-node="removeNode"
+              @update-node="updateNodeDraft"
+            />
 
             <TopologyConnectivitySections
               :links="draft.links"
