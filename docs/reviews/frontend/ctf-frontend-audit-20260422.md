@@ -8,7 +8,7 @@
 | 审查范围 | `code/frontend/src` 路由、关键视图、composables、stores、共享样式与验证门禁 |
 | 审查日期 | 2026-04-22 |
 | 审查方式 | 静态代码审查 + 最小验证基线检查 |
-| 审查状态 | 已记录，已推进至第六十五轮最小高收益修复 |
+| 审查状态 | 已记录，已推进至第六十六轮最小高收益修复 |
 
 ## 当前结论
 
@@ -1550,6 +1550,27 @@
 
 - 已执行：
   - `npm run test:run -- src/views/platform/__tests__/CheatDetection.test.ts src/views/platform/__tests__/cheatDetectionWorkspaceExtraction.test.ts src/views/platform/__tests__/cheatDetectionPanelExtraction.test.ts src/views/platform/__tests__/cheatDetectionReviewPanelsExtraction.test.ts src/views/platform/__tests__/cheatDetectionSurfaceAlignment.test.ts src/views/platform/__tests__/platformManagementSurfaceAlignment.test.ts src/views/platform/__tests__/platformRootShellCleanup.test.ts`
+  - `npm run typecheck`
+
+## 第六十六轮修复进展
+
+- 已完成：
+  - `P2-5` `ContestChallengeOrchestrationPanel.vue` 继续收口已有抽取边界，父组件改为使用 `ContestChallengeFilterStrip.vue` 承载 AWD 筛选条展示，不再内联整段筛选 nav；父组件仍保留题目池加载、保存、删除、弹窗和 AWD 配置事件 owner。
+  - `P2-1` `WorkspaceDirectoryToolbar.vue` 为筛选/排序浮层补齐暗色主题 token，浮层背景与边框不再只依赖默认 surface 回退。
+  - 共享弹窗与 AWD 服务模板测试护栏已对齐当前组件边界：图片管理弹窗检查抽取后的 `ImageCreateModal.vue` / `ImageDetailModal.vue`，AWD 服务模板编辑器检查当前 `SlideOverDrawer` 承载，服务模板库测试按当前 tab 行为先检查列表动作再进入导入队列。
+- 本轮涉及文件：
+  - `code/frontend/src/components/platform/contest/ContestChallengeOrchestrationPanel.vue`
+  - `code/frontend/src/components/platform/__tests__/ContestChallengeOrchestrationPanel.test.ts`
+  - `code/frontend/src/components/common/WorkspaceDirectoryToolbar.vue`
+  - `code/frontend/src/components/common/modal-templates/SlideOverDrawer.vue`
+  - `code/frontend/src/components/common/__tests__/BackofficeDialogAdoption.test.ts`
+  - `code/frontend/src/components/platform/awd-service/__tests__/AWDServiceTemplateEditorDialog.test.ts`
+  - `code/frontend/src/components/platform/awd-service/__tests__/AWDServiceTemplateLibraryPage.test.ts`
+
+## 第六十六轮验证
+
+- 已执行：
+  - `npm run test:run -- src/components/common/__tests__/WorkspaceDirectoryToolbar.test.ts src/components/common/__tests__/BackofficeDialogAdoption.test.ts src/components/common/__tests__/ModalTemplates.test.ts src/components/platform/awd-service/__tests__/AWDServiceTemplateLibraryPage.test.ts src/components/platform/awd-service/__tests__/AWDServiceTemplateEditorDialog.test.ts src/views/platform/__tests__/AWDServiceTemplateLibrary.test.ts src/components/platform/__tests__/contestChallengeOrchestrationExtraction.test.ts src/components/platform/__tests__/ContestChallengeOrchestrationPanel.test.ts`
   - `npm run typecheck`
 
 ## 备注

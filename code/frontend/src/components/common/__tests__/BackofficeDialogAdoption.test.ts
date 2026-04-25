@@ -9,7 +9,8 @@ import awdAttackLogDialogSource from '@/components/platform/contest/AWDAttackLog
 import awdReadinessOverrideDialogSource from '@/components/platform/contest/AWDReadinessOverrideDialog.vue?raw'
 import adminNotificationPublishDrawerSource from '@/components/notifications/AdminNotificationPublishDrawer.vue?raw'
 import teacherAwdReviewTeamDrawerSource from '@/components/teacher/awd-review/TeacherAWDReviewTeamDrawer.vue?raw'
-import imageManageSource from '@/views/platform/ImageManage.vue?raw'
+import imageCreateModalSource from '@/components/platform/images/ImageCreateModal.vue?raw'
+import imageDetailModalSource from '@/components/platform/images/ImageDetailModal.vue?raw'
 
 describe('backoffice dialog adoption', () => {
   it('centered backoffice dialogs should adopt AdminSurfaceModal', () => {
@@ -21,7 +22,8 @@ describe('backoffice dialog adoption', () => {
       awdServiceCheckDialogSource,
       awdAttackLogDialogSource,
       awdReadinessOverrideDialogSource,
-      imageManageSource,
+      imageCreateModalSource,
+      imageDetailModalSource,
     ]
 
     centeredSources.forEach((source) => {
