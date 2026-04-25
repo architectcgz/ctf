@@ -5,7 +5,7 @@
 `docs/architecture/` 是当前项目的最终设计事实源。
 
 - 架构边界、模块职责、接口协作、页面设计、专题设计，统一从这里读取。
-- `docs/superpowers/specs/` 和 `docs/superpowers/plans/` 只保留过程资料，不再作为最终设计入口。
+- `docs/superpowers/plans/` 只保留过程资料，不再作为最终设计入口。
 - `docs/reviews/` 是历史评审快照，不覆盖当前架构和产品设计。
 
 ## 读取顺序
@@ -30,5 +30,5 @@
 ## 历史迁移说明
 
 - 原 `design-system/ctf-platform/` 下的最终设计稿已迁入 `docs/architecture/frontend/`。
-- 原 `docs/superpowers/specs/` 下仍有效的专题设计已同步收口到 `docs/architecture/features/`。
-- 旧目录如果仍存在，只承担跳转和过程追溯，不再承载最终事实。
+- 原 `docs/superpowers/specs/` 下仍有效的专题设计已迁入 `docs/architecture/features/`。
+- `docs/superpowers/` 只保留计划与过程索引，不再承载最终专题设计。

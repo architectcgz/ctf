@@ -1,14 +1,14 @@
-# Superpowers 过程设计索引
+# Superpowers 设计迁移说明
 
 ## 定位
 
-`docs/superpowers/specs/` 只保存使用 superpowers 产出的阶段性专题草稿和过程设计。
+原 `docs/superpowers/specs/` 下的专题设计文件已迁入 `docs/architecture/features/`。
 
-- 这里记录的是当时的思路、拆解顺序和阶段决策。
-- 最终采用的专题设计已统一收口到 `docs/architecture/features/`。
-- 如果两边内容不一致，以 `docs/architecture/features/` 和当前代码为准。
+- 最终专题设计只从 `docs/architecture/features/` 读取。
+- `docs/superpowers/` 现在只保留实施计划和过程索引。
+- 如果需要追溯阶段实现上下文，请查看 `docs/superpowers/plans/`。
 
-## 使用方式
+## 当前入口
 
-- 需要追溯“这个方案最初怎么演进出来”时再读这里。
-- 需要判断“当前设计是什么”时不要直接从这里下结论。
+- 专题最终设计：`docs/architecture/features/`
+- 过程计划：`docs/superpowers/plans/`
