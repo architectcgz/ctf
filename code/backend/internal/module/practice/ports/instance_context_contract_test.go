@@ -30,11 +30,11 @@ func (ctxOnlyInstanceRepository) FindByUserAndChallenge(context.Context, int64, 
 	return nil, nil
 }
 
-func (ctxOnlyInstanceRepository) ListPendingInstancesWithContext(context.Context, int) ([]*model.Instance, error) {
+func (ctxOnlyInstanceRepository) ListPendingInstances(context.Context, int) ([]*model.Instance, error) {
 	return nil, nil
 }
 
-func (ctxOnlyInstanceRepository) TryTransitionStatusWithContext(context.Context, int64, string, string) (bool, error) {
+func (ctxOnlyInstanceRepository) TryTransitionStatus(context.Context, int64, string, string) (bool, error) {
 	return false, nil
 }
 
