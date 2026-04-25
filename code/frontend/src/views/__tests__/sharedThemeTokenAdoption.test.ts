@@ -8,6 +8,7 @@ import classicCenteredModalSource from '@/components/common/modal-templates/Clas
 import minimalFloatingModalSource from '@/components/common/modal-templates/MinimalFloatingModal.vue?raw'
 import slideOverDrawerSource from '@/components/common/modal-templates/SlideOverDrawer.vue?raw'
 import cContextTooltipSource from '@/components/common/modal-templates/CContextTooltip.vue?raw'
+import authEntryShellSource from '@/components/auth/AuthEntryShell.vue?raw'
 import skillRadarSource from '@/components/common/SkillRadar.vue?raw'
 import radarChartSource from '@/components/charts/RadarChart.vue?raw'
 import errorStatusShellSource from '@/components/errors/ErrorStatusShell.vue?raw'
@@ -30,6 +31,18 @@ import adminDashboardSource from '@/components/platform/dashboard/PlatformOvervi
 import platformOverviewWorkspaceSource from '@/composables/usePlatformOverviewWorkspace.ts?raw'
 import writeupManageSource from '@/components/platform/writeup/ChallengeWriteupManagePanel.vue?raw'
 import awdRoundInspectorSource from '@/components/platform/contest/AWDRoundInspector.vue?raw'
+import awdAttackLogPanelSource from '@/components/platform/contest/AWDAttackLogPanel.vue?raw'
+import awdReadinessSummarySource from '@/components/platform/contest/AWDReadinessSummary.vue?raw'
+import awdRuntimePendingStateSource from '@/components/platform/contest/AWDRuntimePendingState.vue?raw'
+import awdScoreboardSummaryPanelSource from '@/components/platform/contest/AWDScoreboardSummaryPanel.vue?raw'
+import awdServiceStatusPanelSource from '@/components/platform/contest/AWDServiceStatusPanel.vue?raw'
+import awdTrafficPanelSource from '@/components/platform/contest/AWDTrafficPanel.vue?raw'
+import awdChallengeConfigPanelSource from '@/components/platform/contest/AWDChallengeConfigPanel.vue?raw'
+import contestAwdPreflightPanelSource from '@/components/platform/contest/ContestAwdPreflightPanel.vue?raw'
+import platformContestFormPanelSource from '@/components/platform/contest/PlatformContestFormPanel.vue?raw'
+import platformContestTableSource from '@/components/platform/contest/PlatformContestTable.vue?raw'
+import awdRoundHeaderPanelSource from '@/components/platform/contest/AWDRoundHeaderPanel.vue?raw'
+import contestAwdWorkspacePanelSource from '@/components/contests/ContestAWDWorkspacePanel.vue?raw'
 import contestOrchestrationSource from '@/components/platform/contest/ContestOrchestrationPage.vue?raw'
 import topologyCanvasBoardSource from '@/components/platform/topology/TopologyCanvasBoard.vue?raw'
 import topologyStudioSource from '@/components/platform/topology/ChallengeTopologyStudioPage.vue?raw'
@@ -42,6 +55,10 @@ import challengeManageSource from '@/views/platform/ChallengeManage.vue?raw'
 import adminChallengeDetailSource from '@/views/platform/ChallengeDetail.vue?raw'
 import challengeDetailSource from '@/views/challenges/ChallengeDetail.vue?raw'
 import userGovernanceSource from '@/components/platform/user/UserGovernancePage.vue?raw'
+import challengeManagePresentationSource from '@/composables/useChallengeManagePresentation.ts?raw'
+import skillProfileUtilsSource from '@/utils/skillProfile.ts?raw'
+import challengeUtilsSource from '@/utils/challenge.ts?raw'
+import reviewArchiveHeroSource from '@/components/teacher/review-archive/ReviewArchiveHero.vue?raw'
 
 function expectNoHardcodedThemeTokens(
   source: string,
@@ -143,11 +160,15 @@ describe('shared theme token adoption', () => {
       '#ffffff',
       '#059669',
       'rgba(15, 23, 42, 0.2)',
+      'rgba(15, 23, 42, 0.45)',
       'rgba(236, 253, 245, 1)',
       'rgba(241, 245, 249, 1)',
       'rgba(248, 250, 252, 1)',
       'rgba(255, 255, 255, 0.82)',
       'rgba(100, 116, 139, 1)',
+    ])
+    expectNoHardcodedThemeTokens(authEntryShellSource, 'AuthEntryShell', [
+      'radial-gradient(circle at 50% 50%, black',
     ])
   })
 
@@ -244,11 +265,23 @@ describe('shared theme token adoption', () => {
     expectNoHardcodedThemeTokens(notificationDropdownSource, 'NotificationDropdown', [
       '0 8px 18px rgba(15, 23, 42, 0.04)',
       '0 18px 42px rgba(15, 23, 42, 0.14)',
+      'text-white',
+      '--notification-surface-subtle: #f8fafc',
+      '--notification-text: #0f172a',
+      '--notification-muted: #64748b',
     ])
     expectNoHardcodedThemeTokens(sidebarSource, 'Sidebar', [
       '0 18px 48px rgba(15, 23, 42, 0.18)',
       '0 18px 48px rgba(15, 23, 42, 0.16)',
       'rgba(99, 102, 241, 0.06)',
+      'bg-black/55',
+      'var(--color-primary) 95%, black',
+      'var(--color-primary) 85%, black',
+      'color: white',
+      'rgba(0, 0, 0, 0.06)',
+      'rgba(255, 255, 255, 0.8)',
+      '--backoffice-shell-surface: white',
+      '--backoffice-shell-surface-subtle: #f8fafc',
     ])
     expectNoHardcodedThemeTokens(topNavSource, 'TopNav', [
       'rgba(99, 102, 241, 0.06)',
@@ -256,6 +289,13 @@ describe('shared theme token adoption', () => {
       '#0891b2',
       '#2563eb',
       '#e18a2a',
+      'text-slate-500',
+      'text-slate-400',
+      'text-slate-300',
+      'text-slate-900',
+      '--topnav-surface-elevated: white',
+      '--topnav-text: #0f172a',
+      'rgba(255, 255, 255, 0.2)',
     ])
   })
 
@@ -288,6 +328,7 @@ describe('shared theme token adoption', () => {
       '.bg-\\[var\\(--color-danger\\)\\]',
       '.bg-\\[var\\(--color-warning\\)\\]',
       '.bg-\\[var\\(--color-primary\\)\\]',
+      'bg-white/5',
     ])
     expectNoHardcodedThemeTokens(platformOverviewWorkspaceSource, 'usePlatformOverviewWorkspace', [
       'bg-[var(--color-danger)]',
@@ -306,6 +347,86 @@ describe('shared theme token adoption', () => {
       'bg-white/5',
       'rgba(8,145,178,0.06)',
       'rgba(8,145,178,0)',
+      'text-emerald-600',
+      'text-orange-500',
+    ])
+    expectNoHardcodedThemeTokens(awdAttackLogPanelSource, 'AWDAttackLogPanel', [
+      '#f1f5f9',
+      '#475569',
+      '#0f172a',
+      '#94a3b8',
+      '#e2e8f0',
+      '#22c55e',
+      '#f0fdf4',
+      '#166534',
+      '#bbf7d0',
+      'rgba(34, 197, 94, 0.4)',
+      'rgba(248, 250, 252, 0.6)',
+      'background: white',
+    ])
+    expectNoHardcodedThemeTokens(awdRuntimePendingStateSource, 'AWDRuntimePendingState', [
+      '#3b82f6',
+      '#0f172a',
+      '#64748b',
+      '#f8fafc',
+      '#e2e8f0',
+      '#94a3b8',
+      '#475569',
+      '#f1f5f9',
+      '#cbd5e1',
+      'background: white',
+    ])
+    expectNoHardcodedThemeTokens(awdScoreboardSummaryPanelSource, 'AWDScoreboardSummaryPanel', [
+      'text-blue-600',
+      'text-slate-500',
+      'text-slate-400',
+      'text-orange-500',
+      'var(--color-warning) 80%, black',
+    ])
+    expectNoHardcodedThemeTokens(awdServiceStatusPanelSource, 'AWDServiceStatusPanel', [
+      'text-slate-900',
+      'text-emerald-600',
+      'text-slate-500',
+      'text-emerald-500',
+      'text-red-500',
+      'text-orange-500',
+      'text-slate-300',
+    ])
+    expectNoHardcodedThemeTokens(awdReadinessSummarySource, 'AWDReadinessSummary', [
+      'text-red-500',
+      'text-slate-500',
+      'color: white',
+    ])
+    expectNoHardcodedThemeTokens(awdTrafficPanelSource, 'AWDTrafficPanel', [
+      'text-slate-400',
+      'text-slate-300',
+    ])
+    expectNoHardcodedThemeTokens(awdChallengeConfigPanelSource, 'AWDChallengeConfigPanel', [
+      'color: white',
+    ])
+    expectNoHardcodedThemeTokens(contestAwdPreflightPanelSource, 'ContestAwdPreflightPanel', [
+      'color: white',
+      'var(--color-warning) 90%, black',
+    ])
+    expectNoHardcodedThemeTokens(platformContestFormPanelSource, 'PlatformContestFormPanel', [
+      'text-orange-500',
+      'text-slate-300',
+    ])
+    expectNoHardcodedThemeTokens(platformContestTableSource, 'PlatformContestTable', [
+      '--ui-btn-primary-color: white',
+    ])
+    expectNoHardcodedThemeTokens(awdRoundHeaderPanelSource, 'AWDRoundHeaderPanel', [
+      'color: white',
+    ])
+    expectNoHardcodedThemeTokens(contestAwdWorkspacePanelSource, 'ContestAWDWorkspacePanel', [
+      'text-cyan-400',
+      'text-cyan-500',
+      'text-red-500',
+      'text-orange-500',
+      'text-emerald-400',
+      'text-slate-500',
+      'color: white',
+      'var(--color-danger) 80%, black',
     ])
     expectNoHardcodedThemeTokens(contestOrchestrationSource, 'ContestOrchestrationPage', [
       '0 8px 18px rgba(15, 23, 42, 0.035);',
@@ -318,6 +439,45 @@ describe('shared theme token adoption', () => {
     expectNoHardcodedThemeTokens(topologyStudioSource, 'ChallengeTopologyStudioPage', [
       'rgba(15, 23, 42, 0.96)',
       'rgba(15, 23, 42, 0.9)',
+      'border-[var(--color-success)]',
+      'bg-[var(--color-success)]/10',
+      'text-[var(--color-success)]',
+      'border-[var(--color-warning)]/20',
+      'bg-[var(--color-warning)]/10',
+      'text-[var(--color-warning)]',
+      'var(--journal-accent) 88%, black',
+    ])
+    expectNoHardcodedThemeTokens(challengeManagePresentationSource, 'useChallengeManagePresentation', [
+      '#2563eb',
+      '#dc2626',
+      '#7c3aed',
+      '#d97706',
+      '#0f766e',
+      '#0891b2',
+      '#16a34a',
+      '#64748b',
+      '#059669',
+      '#6b7280',
+    ])
+    expectNoHardcodedThemeTokens(skillProfileUtilsSource, 'skillProfile utils', [
+      '#3b82f6',
+      '#ef4444',
+      '#8b5cf6',
+      '#f59e0b',
+      '#10b981',
+      '#06b6d4',
+      '#0891b2',
+    ])
+    expectNoHardcodedThemeTokens(challengeUtilsSource, 'challenge utils', [
+      'bg-blue-100',
+      'text-blue-700',
+      'bg-orange-100',
+      'text-orange-700',
+      'bg-red-100',
+      'text-red-700',
+    ])
+    expectNoHardcodedThemeTokens(reviewArchiveHeroSource, 'ReviewArchiveHero', [
+      'rgba(0, 0, 0, 0.8)',
     ])
     expectNoHardcodedThemeTokens(imageManageSource, 'ImageManage', [
       "pending: '#8b949e'",

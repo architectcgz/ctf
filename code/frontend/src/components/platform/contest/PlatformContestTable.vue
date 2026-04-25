@@ -360,7 +360,7 @@ function handleExport(contest: ContestDetailData): void {
 .contest-action--workbench {
   --ui-btn-primary-bg: color-mix(in srgb, var(--color-success) 78%, var(--journal-ink));
   --ui-btn-primary-border: color-mix(in srgb, var(--color-success) 56%, transparent);
-  --ui-btn-primary-color: white;
+  --ui-btn-primary-color: var(--color-bg-base);
   box-shadow: 0 10px 24px color-mix(in srgb, var(--color-success) 18%, transparent);
 }
 

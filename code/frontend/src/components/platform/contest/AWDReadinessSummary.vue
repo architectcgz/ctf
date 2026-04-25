@@ -180,7 +180,7 @@ function formatDateTime(value?: string): string {
           :key="reason"
           class="blocker-item"
         >
-          <AlertCircle class="h-4 w-4 text-red-500" />
+          <AlertCircle class="blocker-item__icon h-4 w-4" />
           <span>{{ getGlobalReasonCopy(reason) }}</span>
         </div>
       </div>
@@ -257,7 +257,7 @@ function formatDateTime(value?: string): string {
                   {{ getBlockingReasonLabel(item) }}
                 </div>
               </td>
-              <td class="col-meta text-[11px] text-slate-500">
+              <td class="col-meta readiness-meta-cell">
                 {{ formatDateTime(item.last_preview_at) }}
               </td>
               <td class="col-actions">
@@ -332,6 +332,7 @@ function formatDateTime(value?: string): string {
 .section-title { font-size: var(--font-size-13); font-weight: 900; color: var(--color-danger); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1rem; }
 .blocker-list { display: flex; flex-direction: column; gap: 0.75rem; }
 .blocker-item { display: flex; align-items: center; gap: 0.75rem; font-size: var(--font-size-13); font-weight: 700; color: var(--color-danger); }
+.blocker-item__icon { color: var(--color-danger); }
 
 /* Directory */
 .directory-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1.25rem; }
@@ -348,9 +349,14 @@ function formatDateTime(value?: string): string {
 .challenge-subtitle { font-size: var(--font-size-12); color: var(--color-text-muted); margin-top: 0.25rem; }
 
 .status-pill { font-size: var(--font-size-11); font-weight: 800; padding: 0.2rem 0.6rem; border-radius: 99px; }
-.status-pill.passed { background: var(--color-success); color: white; }
-.status-pill.failed { background: var(--color-danger); color: white; }
-.status-pill.pending, .status-pill.stale { background: var(--color-warning); color: white; }
+.status-pill.passed { background: var(--color-success); color: var(--color-bg-base); }
+.status-pill.failed { background: var(--color-danger); color: var(--color-bg-base); }
+.status-pill.pending, .status-pill.stale { background: var(--color-warning); color: var(--color-bg-base); }
+
+.readiness-meta-cell {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-11);
+}
 
 .reason-text { font-size: var(--font-size-13); font-weight: 700; color: var(--color-text-secondary); }
 

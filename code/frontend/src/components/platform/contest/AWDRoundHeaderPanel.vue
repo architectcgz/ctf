@@ -322,7 +322,7 @@ function navigateRound(delta: number) {
 
 .ops-btn--primary {
   background: var(--color-primary);
-  color: white;
+  color: var(--color-bg-base);
   border: none;
   box-shadow: 0 8px 20px color-mix(in srgb, var(--color-primary) 15%, transparent);
 }
