@@ -501,6 +501,8 @@ extensions:
 - 若要自动导入拓扑，导入器必须单独调用挑战拓扑落库流程
 - 若要自动导入 Writeup，导入器必须单独调用 Writeup 落库流程
 
+私有 registry 拉取能力的验证边界是：使用带认证的 registry 推送测试镜像，删除运行节点本地同名 tag，然后通过后端 runtime engine 拉取镜像。该验证覆盖 `container.registry` 配置读取、registry 域名匹配、Docker `RegistryAuth` 传递和镜像拉取链路；它不覆盖镜像构建，也不代表平台会接管 registry 的部署和账号生命周期。
+
 ### 8.4 平台发布校验边界
 
 平台当前把“题目是否可发布”拆成两层：
