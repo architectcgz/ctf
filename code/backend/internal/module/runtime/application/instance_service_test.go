@@ -768,3 +768,27 @@ func TestInstanceServiceDestroyTeacherInstancePropagatesContextToRepository(t *t
 		t.Fatalf("expected all repository calls to happen, got findByID=%v requester=%v owner=%v update=%v", findByIDCalled, findRequesterCalled, findOwnerCalled, updateCalled)
 	}
 }
+
+func TestInstanceServiceDestroyTeacherInstanceDoesNotCreateBackgroundContext(t *testing.T) {
+	t.Parallel()
+
+	repo := &runtimeInstanceContextRepo{
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Instance, error) {
+			if ctx != nil {
+				t.Fatalf("expected find-by-id ctx to stay nil, got %v", ctx)
+			}
+			return &model.Instance{ID: id, UserID: 2, Status: model.InstanceStatusRunning}, nil
+		},
+		updateStatusAndReleasePortWithContextFn: func(ctx context.Context, id int64, status string) error {
+			if ctx != nil {
+				t.Fatalf("expected update ctx to stay nil, got %v", ctx)
+			}
+			return nil
+		},
+	}
+	service := runtimecmd.NewInstanceService(repo, noopRuntimeCleaner{}, &config.ContainerConfig{}, nil)
+
+	if err := service.DestroyTeacherInstance(nil, 201, 1001, model.RoleAdmin); err != nil {
+		t.Fatalf("DestroyTeacherInstance() error = %v", err)
+	}
+}
