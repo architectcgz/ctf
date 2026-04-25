@@ -1213,7 +1213,7 @@ func TestStartContestAWDServiceDoesNotRequireContestChallengeLookup(t *testing.T
 
 	teamID := int64(4104)
 	repo := &stubPracticeRepository{
-		findContestByIDWithContextFn: func(ctx context.Context, contestID int64) (*model.Contest, error) {
+		findContestByIDFn: func(ctx context.Context, contestID int64) (*model.Contest, error) {
 			if contestID != 3104 {
 				t.Fatalf("unexpected contest id: %d", contestID)
 			}
@@ -1223,7 +1223,7 @@ func TestStartContestAWDServiceDoesNotRequireContestChallengeLookup(t *testing.T
 				Status: model.ContestStatusRunning,
 			}, nil
 		},
-		findContestAWDServiceWithContextFn: func(ctx context.Context, contestID, serviceID int64) (*model.ContestAWDService, error) {
+		findContestAWDServiceFn: func(ctx context.Context, contestID, serviceID int64) (*model.ContestAWDService, error) {
 			if contestID != 3104 || serviceID != 7104 {
 				t.Fatalf("unexpected awd service lookup: contest=%d service=%d", contestID, serviceID)
 			}
@@ -1235,11 +1235,11 @@ func TestStartContestAWDServiceDoesNotRequireContestChallengeLookup(t *testing.T
 				ServiceSnapshot: `{"name":"awd-service","category":"web","difficulty":"medium","runtime_config":{"image_id":104,"instance_sharing":"per_team"},"flag_config":{"flag_type":"static","flag_prefix":"flag"}}`,
 			}, nil
 		},
-		findContestChallengeWithContextFn: func(ctx context.Context, contestID, challengeID int64) (*model.ContestChallenge, error) {
+		findContestChallengeFn: func(ctx context.Context, contestID, challengeID int64) (*model.ContestChallenge, error) {
 			t.Fatalf("unexpected contest challenge lookup for awd start: contest=%d challenge=%d", contestID, challengeID)
 			return nil, nil
 		},
-		findContestRegistrationWithContextFn: func(ctx context.Context, contestID, userID int64) (*model.ContestRegistration, error) {
+		findContestRegistrationFn: func(ctx context.Context, contestID, userID int64) (*model.ContestRegistration, error) {
 			if contestID != 3104 || userID != 5104 {
 				t.Fatalf("unexpected registration lookup: contest=%d user=%d", contestID, userID)
 			}
