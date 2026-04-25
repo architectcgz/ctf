@@ -34,6 +34,7 @@ import {
 } from '@/utils/platformContestAwdChallengeLinks'
 
 import ContestChallengeEditorDialog from './ContestChallengeEditorDialog.vue'
+import ContestChallengeFilterStrip from './ContestChallengeFilterStrip.vue'
 import ContestChallengeSummaryStrip from './ContestChallengeSummaryStrip.vue'
 
 const props = defineProps<{
@@ -397,22 +398,12 @@ onMounted(() => {
       </AppEmpty>
 
       <template v-else>
-        <nav
+        <ContestChallengeFilterStrip
           v-if="isAwdContest && filterItems.length > 0"
-          class="studio-quick-nav"
-        >
-          <button
-            v-for="filter in filterItems"
-            :key="filter.key"
-            :id="`contest-challenge-filter-${filter.key}`"
-            class="nav-pill"
-            :class="{ active: activeFilter === filter.key }"
-            @click="setFilter(filter.key)"
-          >
-            <span class="nav-pill__label">{{ filter.label }}</span>
-            <span class="nav-pill__count">{{ filter.count }}</span>
-          </button>
-        </nav>
+          :filter-items="filterItems"
+          :active-filter="activeFilter"
+          @select="setFilter"
+        />
 
         <div
           v-if="panelLoading"
@@ -623,15 +614,6 @@ onMounted(() => {
   color: var(--color-primary);
   font-family: var(--font-family-mono);
   line-height: 1.1;
-}
-.studio-quick-nav { display: flex; gap: 0.5rem; margin-bottom: 0.5rem; }
-.nav-pill { padding: 0.45rem 1rem; border-radius: 999px; background: var(--color-bg-surface); border: 1px solid var(--color-border-default); font-size: 12px; font-weight: 700; color: var(--color-text-secondary); cursor: pointer; display: flex; align-items: center; gap: 0.5rem; }
-.nav-pill.active { background: var(--color-primary-soft); border-color: var(--color-primary); color: var(--color-primary); }
-.nav-pill__count {
-  background: color-mix(in srgb, var(--journal-ink) 5%, transparent);
-  padding: 0 0.35rem;
-  border-radius: 4px;
-  font-size: 10px;
 }
 .studio-table-wrap { border: none; border-radius: 0; background: transparent; overflow-x: auto; }
 .studio-table { width: 100%; border-collapse: collapse; background: var(--color-bg-surface); }

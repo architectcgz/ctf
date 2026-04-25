@@ -79,11 +79,15 @@ describe('AWDServiceTemplateLibraryPage', () => {
     expect(wrapper.text()).toContain('Bank Portal AWD')
     expect(wrapper.text()).toContain('Web HTTP')
     expect(wrapper.text()).toContain('Single')
-    expect(wrapper.text()).toContain('dynamic_team')
 
-    const buttons = wrapper.findAll('button')
+    let buttons = wrapper.findAll('button')
     await buttons.find((button) => button.text() === '编辑')?.trigger('click')
     await buttons.find((button) => button.text() === '删除')?.trigger('click')
+
+    await wrapper.get('.awd-library-tabs button:last-child').trigger('click')
+    expect(wrapper.text()).toContain('dynamic_team')
+
+    buttons = wrapper.findAll('button')
     await buttons.find((button) => button.text() === '确认导入')?.trigger('click')
 
     expect(wrapper.emitted('openEditDialog')).toHaveLength(1)
