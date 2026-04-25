@@ -100,7 +100,7 @@ func (s *WriteupService) GetMySubmission(ctx context.Context, userID, challengeI
 	return domain.SubmissionWriteupRespFromModel(item), nil
 }
 
-func (s *WriteupService) ListRecommendedSolutions(ctx context.Context, userID, challengeID int64) (*dto.PageResult, error) {
+func (s *WriteupService) ListRecommendedSolutions(ctx context.Context, userID, challengeID int64) (*dto.PageResult[*dto.RecommendedChallengeSolutionResp], error) {
 	if err := s.ensureSolvedChallengeVisible(ctx, userID, challengeID); err != nil {
 		return nil, err
 	}
@@ -113,7 +113,7 @@ func (s *WriteupService) ListRecommendedSolutions(ctx context.Context, userID, c
 	for _, item := range items {
 		respItems = append(respItems, domain.RecommendedSolutionRespFromRecord(item))
 	}
-	return &dto.PageResult{
+	return &dto.PageResult[*dto.RecommendedChallengeSolutionResp]{
 		List:  respItems,
 		Total: int64(len(respItems)),
 		Page:  1,
@@ -121,7 +121,7 @@ func (s *WriteupService) ListRecommendedSolutions(ctx context.Context, userID, c
 	}, nil
 }
 
-func (s *WriteupService) ListCommunitySolutions(ctx context.Context, userID, challengeID int64, query *dto.CommunityChallengeSolutionQuery) (*dto.PageResult, error) {
+func (s *WriteupService) ListCommunitySolutions(ctx context.Context, userID, challengeID int64, query *dto.CommunityChallengeSolutionQuery) (*dto.PageResult[*dto.CommunityChallengeSolutionResp], error) {
 	if err := s.ensureSolvedChallengeVisible(ctx, userID, challengeID); err != nil {
 		return nil, err
 	}
@@ -150,7 +150,7 @@ func (s *WriteupService) ListCommunitySolutions(ctx context.Context, userID, cha
 	for _, item := range items {
 		respItems = append(respItems, domain.CommunitySolutionRespFromRecord(item))
 	}
-	return &dto.PageResult{
+	return &dto.PageResult[*dto.CommunityChallengeSolutionResp]{
 		List:  respItems,
 		Total: total,
 		Page:  normalized.Page,
@@ -158,7 +158,7 @@ func (s *WriteupService) ListCommunitySolutions(ctx context.Context, userID, cha
 	}, nil
 }
 
-func (s *WriteupService) ListTeacherSubmissions(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherSubmissionWriteupQuery) (*dto.PageResult, error) {
+func (s *WriteupService) ListTeacherSubmissions(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherSubmissionWriteupQuery) (*dto.PageResult[*dto.TeacherSubmissionWriteupItemResp], error) {
 	if query == nil {
 		query = &dto.TeacherSubmissionWriteupQuery{}
 	}
@@ -177,7 +177,7 @@ func (s *WriteupService) ListTeacherSubmissions(ctx context.Context, requesterID
 		respItems = append(respItems, domain.TeacherSubmissionWriteupItemRespFromRecord(item))
 	}
 
-	return &dto.PageResult{
+	return &dto.PageResult[*dto.TeacherSubmissionWriteupItemResp]{
 		List:  respItems,
 		Total: total,
 		Page:  normalized.Page,

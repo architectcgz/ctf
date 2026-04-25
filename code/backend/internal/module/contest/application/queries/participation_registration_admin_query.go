@@ -7,7 +7,7 @@ import (
 	"ctf-platform/pkg/errcode"
 )
 
-func (s *ParticipationService) ListRegistrations(ctx context.Context, contestID int64, query *dto.ContestRegistrationQuery) (*dto.PageResult, error) {
+func (s *ParticipationService) ListRegistrations(ctx context.Context, contestID int64, query *dto.ContestRegistrationQuery) (*dto.PageResult[*dto.ContestRegistrationResp], error) {
 	if err := s.ensureContestExists(ctx, contestID); err != nil {
 		return nil, err
 	}
@@ -45,7 +45,7 @@ func (s *ParticipationService) ListRegistrations(ctx context.Context, contestID 
 		})
 	}
 
-	return &dto.PageResult{
+	return &dto.PageResult[*dto.ContestRegistrationResp]{
 		List:  items,
 		Total: total,
 		Page:  page,

@@ -14,14 +14,15 @@ type UpdateImageReq struct {
 }
 
 type ImageResp struct {
-	ID          int64     `json:"id"`
-	Name        string    `json:"name"`
-	Tag         string    `json:"tag"`
-	Description string    `json:"description"`
-	Size        int64     `json:"size"`
-	Status      string    `json:"status"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	ID            int64     `json:"id"`
+	Name          string    `json:"name"`
+	Tag           string    `json:"tag"`
+	Description   string    `json:"description"`
+	Size          int64     `json:"size"`
+	SizeFormatted string    `json:"size_formatted"`
+	Status        string    `json:"status"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
 }
 
 type ImageQuery struct {

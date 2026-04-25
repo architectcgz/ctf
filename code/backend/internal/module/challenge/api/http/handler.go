@@ -37,8 +37,8 @@ type challengeCommandService interface {
 
 type challengeQueryService interface {
 	GetChallenge(ctx context.Context, id int64) (*dto.ChallengeResp, error)
-	ListChallenges(ctx context.Context, query *dto.ChallengeQuery) (*dto.PageResult, error)
-	ListPublishedChallenges(ctx context.Context, userID int64, query *dto.ChallengeQuery) (*dto.PageResult, error)
+	ListChallenges(ctx context.Context, query *dto.ChallengeQuery) (*dto.PageResult[*dto.ChallengeResp], error)
+	ListPublishedChallenges(ctx context.Context, userID int64, query *dto.ChallengeQuery) (*dto.PageResult[*dto.ChallengeListItem], error)
 	GetPublishedChallenge(ctx context.Context, userID, challengeID int64) (*dto.ChallengeDetailResp, error)
 }
 

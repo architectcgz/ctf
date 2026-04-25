@@ -36,8 +36,8 @@ func (s stubImageQueryService) GetImage(ctx context.Context, id int64) (*dto.Ima
 	return &dto.ImageResp{}, nil
 }
 
-func (s stubImageQueryService) ListImages(ctx context.Context, query *dto.ImageQuery) (*dto.PageResult, error) {
-	return &dto.PageResult{}, nil
+func (s stubImageQueryService) ListImages(ctx context.Context, query *dto.ImageQuery) (*dto.PageResult[*dto.ImageResp], error) {
+	return &dto.PageResult[*dto.ImageResp]{}, nil
 }
 
 func TestImageHandlerCreateImageRejectsInvalidImageName(t *testing.T) {

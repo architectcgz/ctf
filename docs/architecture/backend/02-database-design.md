@@ -212,6 +212,8 @@ CREATE UNIQUE INDEX uk_images_name_tag ON images(name, tag) WHERE deleted_at IS 
   -- 用途：同名同标签镜像唯一，防止重复注册
 CREATE INDEX idx_images_status ON images(status);
   -- 用途：按状态筛选镜像列表（如只看 ready 状态）
+CREATE INDEX idx_images_deleted_at ON images(deleted_at);
+  -- 用途：加速软删除过滤与镜像目录查询
 ```
 
 ### 5.2 challenges — 靶机表

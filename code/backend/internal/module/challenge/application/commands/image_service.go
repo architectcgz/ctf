@@ -12,6 +12,7 @@ import (
 
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	"ctf-platform/internal/module/challenge/domain"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/pkg/errcode"
 )
@@ -76,16 +77,7 @@ func (s *ImageService) CreateImage(ctx context.Context, req *dto.CreateImageReq)
 	}
 
 	s.logger.Info("创建镜像", zap.Int64("id", image.ID), zap.String("name", image.Name), zap.String("tag", image.Tag))
-	return &dto.ImageResp{
-		ID:          image.ID,
-		Name:        image.Name,
-		Tag:         image.Tag,
-		Description: image.Description,
-		Size:        image.Size,
-		Status:      image.Status,
-		CreatedAt:   image.CreatedAt,
-		UpdatedAt:   image.UpdatedAt,
-	}, nil
+	return domain.ImageRespFromModel(image), nil
 }
 
 func (s *ImageService) UpdateImage(ctx context.Context, id int64, req *dto.UpdateImageReq) error {
