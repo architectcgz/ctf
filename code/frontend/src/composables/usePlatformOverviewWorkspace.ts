@@ -20,9 +20,9 @@ function formatBytes(value: number | undefined): string {
 
 function usageTone(value: number | undefined): string {
   const normalized = Math.round(value ?? 0)
-  if (normalized >= 90) return 'bg-[var(--color-danger)]'
-  if (normalized >= 75) return 'bg-[var(--color-warning)]'
-  return 'bg-[var(--color-primary)]'
+  if (normalized >= 90) return 'usage-bar--danger'
+  if (normalized >= 75) return 'usage-bar--warning'
+  return 'usage-bar--primary'
 }
 
 export function usePlatformOverviewWorkspace(dashboard: Ref<AdminDashboardData | null>) {
