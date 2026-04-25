@@ -31,7 +31,7 @@
 
 ## 替代关系
 
-本设计替代 [2026-04-01-contestant-writeup-workflow-design.md](/home/azhi/workspace/projects/ctf/docs/superpowers/specs/2026-04-01-contestant-writeup-workflow-design.md) 中“教师评阅学生 writeup”的部分。
+本设计替代旧的“选手 Writeup 提交与评阅设计”中“教师评阅学生 writeup”的部分。旧设计文件已移除，避免继续把教师评阅流当成当前产品方向。
 
 具体替代内容：
 
