@@ -31,155 +31,108 @@ function handleSave(): void {
 </script>
 
 <template>
-  <div class="workspace-topbar">
-    <header class="studio-topbar">
-      <div class="studio-topbar-left">
-        <button
-          type="button"
-          class="ui-btn ui-btn--ghost studio-back-btn"
-          title="返回竞赛目录"
-          @click="handleBack"
-        >
-          <ChevronLeft class="h-5 w-5" />
-          返回竞赛目录
-        </button>
+  <header class="workspace-topbar studio-topbar-wrapper">
+    <div class="topbar-leading">
+      <button
+        type="button"
+        class="ui-btn ui-btn--secondary studio-back-btn"
+        title="返回竞赛目录"
+        @click="handleBack"
+      >
+        <ChevronLeft class="h-4 w-4" />
+      </button>
 
-        <div class="workspace-topbar__main studio-title-group">
-          <div class="workspace-overline">Contest Editor</div>
+      <div class="studio-title-block">
+        <div class="workspace-overline">Contest Studio</div>
+        <div class="studio-title-row">
           <h1 class="workspace-page-title">编辑竞赛</h1>
-          <p
-            class="workspace-page-copy studio-contest-title"
-            :title="pageTitle"
-          >
-            {{ pageTitle }}
-          </p>
-          <div class="studio-contest-meta">
-            <span
-              class="meta-tag"
-              :class="`meta-tag--${contestMode}`"
-            >
-              <Trophy class="h-3 w-3" /> {{ contestModeLabel }}
-            </span>
-            <span class="meta-tag meta-tag--status">
-              <ShieldCheck class="h-3 w-3" /> {{ contestStatusLabel }}
-            </span>
-          </div>
+          <span class="title-separator">/</span>
+          <span class="studio-contest-name">{{ pageTitle }}</span>
         </div>
       </div>
 
-      <div class="studio-topbar-right">
-        <button
-          id="contest-open-announcements"
-          type="button"
-          class="ui-btn ui-btn--ghost studio-toolbar-btn"
-          @click="handleOpenAnnouncements"
+      <div class="studio-contest-meta">
+        <span
+          class="meta-tag"
+          :class="`meta-tag--${contestMode}`"
         >
-          <Bell class="h-4 w-4" />
-          <span>公告</span>
-        </button>
-        <button
-          v-if="activeStage === 'basics'"
-          type="button"
-          class="ui-btn ui-btn--primary studio-save-btn"
-          :disabled="saving"
-          @click="handleSave"
-        >
-          <Save class="h-4 w-4" />
-          <span>{{ saving ? '正在保存...' : '保存变更' }}</span>
-        </button>
+          <Trophy class="h-3 w-3" /> {{ contestModeLabel }}
+        </span>
+        <span class="meta-tag meta-tag--status">
+          <ShieldCheck class="h-3 w-3" /> {{ contestStatusLabel }}
+        </span>
       </div>
-    </header>
-  </div>
+    </div>
+
+    <div class="top-note">
+      <button
+        id="contest-open-announcements"
+        type="button"
+        class="ui-btn ui-btn--secondary studio-toolbar-btn"
+        @click="handleOpenAnnouncements"
+      >
+        <Bell class="h-3.5 w-3.5" />
+        <span>公告管理</span>
+      </button>
+      
+      <div class="ops-divider" />
+
+      <button
+        v-if="activeStage === 'basics'"
+        type="button"
+        class="ui-btn ui-btn--primary studio-save-btn"
+        :disabled="saving"
+        @click="handleSave"
+      >
+        <Save class="h-4 w-4" />
+        <span>{{ saving ? '正在保存...' : '保存变更' }}</span>
+      </button>
+    </div>
+  </header>
 </template>
 
 <style scoped>
-.studio-topbar {
-  height: 4.5rem;
+.studio-topbar-wrapper {
+  background: var(--color-bg-surface);
+  min-height: 5.5rem;
+  padding: var(--space-workspace-topbar-padding-top) var(--space-workspace-side-padding) var(--space-2);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 2rem;
-  background: var(--color-bg-surface);
-  border-bottom: 1px solid var(--workspace-line-soft);
-  z-index: 10;
 }
 
-.studio-topbar-left {
+.studio-back-btn {
+  --ui-btn-height: 2.25rem;
+  --ui-btn-width: 2.25rem;
+  --ui-btn-padding: 0;
+  border-radius: 0.75rem;
+  margin-right: 0.5rem;
+}
+
+.studio-title-block {
   display: flex;
-  align-items: center;
-  gap: 1.5rem;
+  flex-direction: column;
+  gap: 0.15rem;
 }
 
-.studio-topbar-right {
+.studio-title-row {
   display: flex;
   align-items: center;
   gap: 0.75rem;
 }
 
-.studio-back-btn {
-  width: 2.5rem;
-  height: 2.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 0.75rem;
-  color: var(--journal-muted);
-  border: 1px solid var(--workspace-line-soft);
-  transition: all 0.2s ease;
-  cursor: pointer;
+.title-separator {
+  color: var(--color-text-muted);
+  font-weight: 300;
+  font-size: var(--font-size-18);
+  opacity: 0.5;
 }
 
-.studio-back-btn:hover {
-  background: var(--color-bg-elevated);
-  color: var(--color-text-primary);
-  border-color: var(--color-border-default);
-}
-
-.studio-toolbar-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.65rem;
-  height: 2.4rem;
-  padding: 0 1rem;
-  border-radius: 0.85rem;
-  border: 1px solid var(--workspace-line-soft);
-  background: var(--color-bg-surface);
+.studio-contest-name {
+  font-size: var(--font-size-15);
+  font-weight: 700;
   color: var(--color-text-secondary);
-  font-size: 12px;
-  font-weight: 800;
-  transition: all 0.2s ease;
-}
-
-.studio-toolbar-btn:hover {
-  background: var(--color-bg-elevated);
-  color: var(--color-text-primary);
-  border-color: var(--color-border-default);
-}
-
-.studio-save-btn {
-  --ui-btn-height: 2.4rem;
-  --ui-btn-padding: 0 1.25rem;
-  --ui-btn-radius: 0.85rem;
-  --ui-btn-font-size: var(--font-size-12);
-  --ui-btn-font-weight: 800;
-  --ui-btn-primary-hover-shadow: 0 10px 24px color-mix(in srgb, var(--color-primary) 30%, transparent);
-  --ui-btn-hover-transform: translateY(-1px);
-  box-shadow: 0 8px 20px color-mix(in srgb, var(--color-primary) 24%, transparent);
-}
-
-.studio-title-group {
-  display: flex;
-  align-items: baseline;
-  gap: 1.25rem;
-}
-
-.studio-contest-title {
-  font-size: 1rem;
-  font-weight: 900;
-  letter-spacing: -0.01em;
-  color: var(--color-text-primary);
-  margin: 0;
-  max-width: 24rem;
+  max-width: 18rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -189,30 +142,52 @@ function handleSave(): void {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  margin-left: 1.5rem;
 }
 
 .meta-tag {
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
-  padding: 0.1rem 0.55rem;
-  border-radius: 4px;
-  font-size: 9px;
-  font-weight: 900;
+  gap: 0.35rem;
+  padding: 0.2rem 0.65rem;
+  border-radius: 0.5rem;
+  font-size: 10px;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  border: 1px solid transparent;
+  letter-spacing: 0.02em;
 }
 
 .meta-tag--awd {
-  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
   color: var(--color-primary);
-  border-color: color-mix(in srgb, var(--color-primary) 20%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 15%, transparent);
 }
 
 .meta-tag--status {
-  background: color-mix(in srgb, var(--journal-muted) 8%, transparent);
-  color: var(--journal-muted);
-  border-color: color-mix(in srgb, var(--journal-muted) 20%, transparent);
+  background: var(--color-bg-elevated);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border-subtle);
+}
+
+.studio-toolbar-btn {
+  --ui-btn-height: 2.25rem;
+  font-size: var(--font-size-12);
+  font-weight: 700;
+}
+
+.ops-divider {
+  width: 1px;
+  height: 1.25rem;
+  background: var(--color-border-subtle);
+  margin: 0 0.5rem;
+}
+
+.studio-save-btn {
+  --ui-btn-height: 2.25rem;
+  --ui-btn-padding: 0 1.25rem;
+  --ui-btn-radius: 0.75rem;
+  --ui-btn-font-size: var(--font-size-12);
+  --ui-btn-font-weight: 800;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--color-primary) 20%, transparent);
 }
 </style>
