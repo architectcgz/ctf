@@ -1,0 +1,30 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: <replace-with-slug>
+  title: <replace-with-title>
+  category: web
+  difficulty: easy
+  points: 100
+  tags:
+    - stack:web
+    - kp:<replace-with-knowledge-point>
+
+content:
+  statement: statement.md
+  attachments: []
+
+flag:
+  type: dynamic
+  prefix: flag
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: <replace-with-useful-hint>
+
+runtime:
+  type: container
+  image:
+    ref: registry.example.edu/ctf/<replace-with-slug>:latest

@@ -1,0 +1,73 @@
+api_version: v1
+kind: challenge
+
+meta:
+  mode: awd
+  slug: awd-supply-ticket
+  title: 供应链工单系统
+  category: web
+  difficulty: medium
+  points: 300
+  tags:
+    - mode:awd
+    - stack:web
+    - stack:flask
+    - topic:ssti
+    - topic:weak-password
+
+content:
+  statement: statement.md
+  attachments: []
+
+flag:
+  type: dynamic
+  prefix: flag
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: 工单通知模板会渲染用户提交的标题。
+
+runtime:
+  type: container
+  image:
+    ref: ctf/awd-supply-ticket:latest
+
+extensions:
+  awd:
+    service_type: web_http
+    deployment_mode: single_container
+    version: v2026.04
+    checker:
+      type: http_standard
+      config:
+        put_flag:
+          method: PUT
+          path: /api/flag
+          expected_status: 200
+          body_template: "{{FLAG}}"
+        get_flag:
+          method: GET
+          path: /api/flag
+          expected_status: 200
+          expected_substring: "{{FLAG}}"
+        havoc:
+          method: GET
+          path: /health
+          expected_status: 200
+    flag_policy:
+      mode: dynamic_team
+      config:
+        flag_prefix: flag
+    defense_entry:
+      mode: http
+    access_config:
+      public_base_url: http://{{TEAM_HOST}}:8080
+      service_port: 8080
+      exposed_ports:
+        - port: 8080
+          protocol: tcp
+          purpose: http
+    runtime_config:
+      instance_sharing: per_team
+      service_port: 8080

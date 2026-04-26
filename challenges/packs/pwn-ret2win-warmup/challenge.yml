@@ -1,0 +1,34 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: pwn-ret2win-warmup
+  title: "Pwn 入门：ret2win 热身"
+  category: pwn
+  difficulty: beginner
+  points: 100
+  tags:
+    - stack:pwn
+    - kp:stack-overflow
+    - kp:ret2win
+
+content:
+  statement: statement.md
+  attachments: []
+
+flag:
+  type: dynamic
+  prefix: flag
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: 程序里有一个不会主动调用的 win 函数，先确认它的地址。
+  - level: 2
+    title: Hint 2
+    content: 这个程序没有开启 PIE，也没有栈保护；覆盖返回地址即可跳转。
+
+runtime:
+  type: container
+  image:
+    ref: 127.0.0.1:5000/ctf/pwn-ret2win-warmup:20260425

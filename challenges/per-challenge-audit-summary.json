@@ -1,0 +1,7 @@
+{
+  "total": 333,
+  "failed": 0,
+  "passed": 333,
+  "report": "/home/azhi/workspace/projects/ctf/challenges/per-challenge-audit-report.jsonl",
+  "sample_failures": []
+}

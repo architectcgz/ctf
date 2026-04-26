@@ -1,0 +1,35 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: web-notes-download
+  title: 内部笔记下载器
+  category: web
+  difficulty: easy
+  points: 100
+  tags:
+    - vuln:path-traversal
+    - stack:python
+    - stack:flask
+    - kp:file-read
+
+content:
+  statement: statement.md
+  attachments: []
+
+flag:
+  type: dynamic
+  prefix: flag
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: 下载功能表面上只接受笔记文件名，先确认服务端如何拼接真实路径。
+  - level: 2
+    title: Hint 2
+    content: 目标文件不在源码首页里，它会在服务启动时写入运行目录。
+
+runtime:
+  type: container
+  image:
+    ref: 127.0.0.1:5000/ctf/web-notes-download:20260409

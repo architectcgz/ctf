@@ -88,6 +88,35 @@
 - **AWD 服务模板包**：仍复用 `challenge-pack-v1` 外壳，但必须额外声明 `meta.mode: awd`，并在 `extensions.awd` 内提供攻防运行定义
 - 普通题目导入入口会拒绝 `meta.mode: awd` 的题目包，防止把 AWD 包误导入成 Jeopardy 题
 
+### 4.1 AWD 镜像交付边界
+
+AWD 服务模板包只声明运行镜像引用，不承担镜像构建职责。`runtime.image.ref` 必须指向平台运行节点可拉取的镜像；题目包内的 `docker/` 目录只作为源码、构建上下文和审计材料保留，当前平台导入 AWD 模板时不会自动执行 `docker build`。
+
+推荐交付链路固定为：
+
+```text
+题目作者机器 / CI
+  -> docker build
+  -> docker scan / smoke test
+  -> docker push registry
+
+平台后台
+  -> 上传 AWD 服务模板包
+  -> 解析 runtime.image.ref
+  -> 创建 AWD 模板
+  -> 管理员加入比赛服务
+  -> 队伍启动共享实例
+  -> 平台轮次注入 Flag / Check / 计分
+```
+
+这条边界的含义是：
+
+- 镜像构建失败、基础镜像不可拉取、`pip` / `apt` / `npm` / `composer` 等依赖源不可用，应在题目作者机器或 CI 阶段暴露并修复。
+- 平台导入只校验题目包结构和 AWD 运行定义，不在上传请求中执行不受控构建。
+- 平台运行只依赖最终镜像仓库，避免比赛现场临时访问 Docker Hub、PyPI、apt 源等外部服务。
+- 管理员导入后仍应执行 checker preview；preview 通过后再将模板加入比赛服务并开赛。
+- 如果后续要支持“上传源码后平台自动构建”，应作为独立的镜像构建任务系统设计，例如 `image_build_jobs`、隔离 builder、构建日志、超时、资源限制、registry 凭据和失败重试，而不是混入 AWD 模板导入接口。
+
 ---
 
 ## 5. 题目源包结构
@@ -427,6 +456,7 @@ extensions:
 - `meta.points` 在 AWD 包中只作为**建议分值**保留，当前不会直接写入 AWD 模板；真正比赛分值仍在管理员配置比赛时设置
 - AWD 模板导入成功后，平台会直接生成 `published` 状态模板，便于管理员在比赛题池里立即选题
 - 比赛里的 Checker 覆盖、分值、顺序、可见性仍然属于**比赛级配置**，不应反向写回题库模板
+- `runtime.image.ref` 必须是已构建并已推送到平台可访问 registry 的最终镜像引用；导入 AWD 模板不会自动构建 `docker/` 目录中的 Dockerfile
 
 ---
 

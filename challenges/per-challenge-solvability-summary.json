@@ -1,0 +1,969 @@
+{
+  "total": 333,
+  "passed": 196,
+  "failed": 137,
+  "offline_total": 180,
+  "container_total": 153,
+  "report": "/home/azhi/workspace/projects/ctf/challenges/per-challenge-solvability-verify.jsonl",
+  "failures": [
+    {
+      "slug": "crypto-bleichenbacher",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "crypto-cbc-bit-flip",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "crypto-cbc-padding",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "crypto-dh-small",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "crypto-ecb-mode",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "crypto-hash-length-ext",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "misc-2fa-bypass",
+      "runtime_type": "container",
+      "problems": [
+        "container exits immediately"
+      ]
+    },
+    {
+      "slug": "misc-ai-prompt",
+      "runtime_type": "container",
+      "problems": [
+        "container exits immediately"
+      ]
+    },
+    {
+      "slug": "misc-bash-jail",
+      "runtime_type": "container",
+      "problems": [
+        "container exits immediately"
+      ]
+    },
+    {
+      "slug": "misc-blockchain-puzzle",
+      "runtime_type": "container",
+      "problems": [
+        "container exits immediately"
+      ]
+    },
+    {
+      "slug": "misc-captcha-break",
+      "runtime_type": "container",
+      "problems": [
+        "container exits immediately"
+      ]
+    },
+    {
+      "slug": "misc-docker-escape",
+      "runtime_type": "container",
+      "problems": [
+        "container exits immediately"
+      ]
+    },
+    {
+      "slug": "misc-git-leak",
+      "runtime_type": "container",
+      "problems": [
+        "container exits immediately"
+      ]
+    },
+    {
+      "slug": "misc-ipfs",
+      "runtime_type": "container",
+      "problems": [
+        "container exits immediately"
+      ]
+    },
+    {
+      "slug": "misc-llm-jailbreak",
+      "runtime_type": "container",
+      "problems": [
+        "container exits immediately"
+      ]
+    },
+    {
+      "slug": "misc-magic-hash",
+      "runtime_type": "container",
+      "problems": [
+        "container exits immediately"
+      ]
+    },
+    {
+      "slug": "misc-nft-metadata",
+      "runtime_type": "container",
+      "problems": [
+        "container exits immediately"
+      ]
+    },
+    {
+      "slug": "misc-ocr-bypass",
+      "runtime_type": "container",
+      "problems": [
+        "container exits immediately"
+      ]
+    },
+    {
+      "slug": "misc-overthewire-bandit0",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "misc-overthewire-bandit1",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "misc-overthewire-bandit5",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "misc-overthewire-bandit9",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "misc-polyglot",
+      "runtime_type": "container",
+      "problems": [
+        "container exits immediately"
+      ]
+    },
+    {
+      "slug": "misc-python-jail",
+      "runtime_type": "container",
+      "problems": [
+        "container exits immediately"
+      ]
+    },
+    {
+      "slug": "misc-regex-bypass",
+      "runtime_type": "container",
+      "problems": [
+        "container exits immediately"
+      ]
+    },
+    {
+      "slug": "misc-smart-contract",
+      "runtime_type": "container",
+      "problems": [
+        "container exits immediately"
+      ]
+    },
+    {
+      "slug": "misc-tar-bomb",
+      "runtime_type": "container",
+      "problems": [
+        "container exits immediately"
+      ]
+    },
+    {
+      "slug": "misc-timing-attack",
+      "runtime_type": "container",
+      "problems": [
+        "container exits immediately"
+      ]
+    },
+    {
+      "slug": "misc-web3",
+      "runtime_type": "container",
+      "problems": [
+        "container exits immediately"
+      ]
+    },
+    {
+      "slug": "misc-zip-slip",
+      "runtime_type": "container",
+      "problems": [
+        "container exits immediately"
+      ]
+    },
+    {
+      "slug": "pwn-0day",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "pwn-browser",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "pwn-buffer-overflow",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "pwn-canary-leak",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "pwn-double-free",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "pwn-fastbin",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "pwn-format-string",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "pwn-fsop",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "pwn-full-chain",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "pwn-glibc-2-35",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "pwn-got-overwrite",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "pwn-heap-overflow",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "pwn-house-einherjar",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "pwn-house-force",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "pwn-house-lore",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "pwn-house-orange",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "pwn-house-roman",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "pwn-house-spirit",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "pwn-integer-overflow",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "pwn-io-file",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "pwn-kernel-rop",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "pwn-kernel-uaf",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "pwn-largebin",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "pwn-ld-preload",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "pwn-mprotect",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "pwn-null-byte",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "pwn-off-by-one",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "pwn-one-gadget",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "pwn-partial-overwrite",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "pwn-pie-bypass",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "pwn-race-heap",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "pwn-ret2csu",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "pwn-ret2dlresolve",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "pwn-ret2libc",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "pwn-ret2shellcode",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "pwn-ret2text",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "pwn-rootme-arm64-heap-underflow",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "pwn-rootme-arm64-multithreading",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "pwn-rootme-elf-x64-basic-heap-overflow",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "pwn-rootme-elf-x86-stack-overflow-basic-1",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "pwn-rootme-riscv-intro-rop",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "pwn-rop-chain",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "pwn-safe-linking",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "pwn-seccomp",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "pwn-shellcode",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "pwn-sigrop",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "pwn-srop-chain",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "pwn-stack-pivot",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "pwn-tcache",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "pwn-tcache-key",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "pwn-tls-dtor",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "pwn-uaf-basic",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "pwn-unlink",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "pwn-unsorted-bin",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "pwn-vm-escape",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "reverse-rootme-elf-x86-basic",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "reverse-rootme-elf-x86-keygenme",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "web-0day-exploit",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "web-advanced-ssrf",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "web-api-security",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "web-auth-bypass-advanced",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "web-base64-param",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "web-cache-poisoning",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "web-command-injection",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "web-cookie-edit",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "web-csp-bypass",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "web-csrf-basic",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "web-deserialization",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "web-directory-listing",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "web-dom-xss",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "web-file-upload",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "web-full-chain",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "web-get-parameter",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "web-graphql-idor",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "web-http-smuggling",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "web-idor",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "web-jwt-algorithm",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "web-jwt-weak",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "web-lfi-basic",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "web-mass-assignment",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "web-nosql-injection",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "web-oauth-redirect",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "web-open-redirect",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "web-path-traversal",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "web-polyglot-upload",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "web-post-request",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "web-prototype-pollution",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "web-race-condition",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "web-redirect",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "web-referer-check",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "web-rootme-file-upload-double-ext",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "web-rootme-http-improper-redirect",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "web-rootme-http-open-redirect",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "web-rootme-php-command-injection",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "web-rootme-sqli-authentication",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "web-sqli-blind",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "web-sqli-login-bypass",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "web-sqli-union",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "web-sqli-waf-bypass",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "web-ssrf-basic",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "web-ssti-basic",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "web-ssti-sandbox",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "web-ticket-proxy",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "web-type-juggling",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "web-user-agent",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "web-weak-password",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    },
+    {
+      "slug": "web-websocket-hijack",
+      "runtime_type": "container",
+      "problems": [
+        "docker build failed"
+      ]
+    }
+  ]
+}
