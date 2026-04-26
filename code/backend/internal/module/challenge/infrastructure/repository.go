@@ -275,7 +275,16 @@ func (r *Repository) ListPublished(ctx context.Context, query *dto.ChallengeQuer
 	var challenges []*model.Challenge
 	var total int64
 
-	db := r.dbWithContext(ctx).Model(&model.Challenge{}).Where("status = ?", model.ChallengeStatusPublished)
+	db := r.dbWithContext(ctx).
+		Model(&model.Challenge{}).
+		Where("status = ?", model.ChallengeStatusPublished).
+		Where("NOT EXISTS (?)",
+			r.dbWithContext(ctx).
+				Table("contest_awd_services AS cas").
+				Select("1").
+				Where("cas.challenge_id = challenges.id").
+				Where("cas.deleted_at IS NULL"),
+		)
 
 	if query.Category != "" {
 		db = db.Where("category = ?", query.Category)

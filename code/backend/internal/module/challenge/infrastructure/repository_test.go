@@ -58,6 +58,59 @@ func TestRepositoryList(t *testing.T) {
 	}
 }
 
+func TestRepositoryListPublishedHidesContestAWDServiceChallenges(t *testing.T) {
+	db := testsupport.SetupTestDB(t)
+	repo := NewRepository(db)
+
+	normalChallenge := &model.Challenge{
+		Title:  "Normal Web",
+		Status: model.ChallengeStatusPublished,
+	}
+	awdChallenge := &model.Challenge{
+		Title:  "AWD Web",
+		Status: model.ChallengeStatusPublished,
+	}
+	if err := db.Create(normalChallenge).Error; err != nil {
+		t.Fatalf("create normal challenge: %v", err)
+	}
+	if err := db.Create(awdChallenge).Error; err != nil {
+		t.Fatalf("create awd challenge: %v", err)
+	}
+	now := time.Now()
+	contest := &model.Contest{
+		Title:     "AWD Contest",
+		Mode:      model.ContestModeAWD,
+		Status:    model.ContestStatusRunning,
+		StartTime: now.Add(-time.Hour),
+		EndTime:   now.Add(time.Hour),
+	}
+	if err := db.Create(contest).Error; err != nil {
+		t.Fatalf("create contest: %v", err)
+	}
+	if err := db.Create(&model.ContestAWDService{
+		ContestID:   contest.ID,
+		ChallengeID: awdChallenge.ID,
+		DisplayName: "AWD Web",
+		IsVisible:   true,
+	}).Error; err != nil {
+		t.Fatalf("create awd service: %v", err)
+	}
+
+	challenges, total, err := repo.ListPublished(context.Background(), &dto.ChallengeQuery{Page: 1, Size: 10})
+	if err != nil {
+		t.Fatalf("ListPublished() error = %v", err)
+	}
+	if total != 1 {
+		t.Fatalf("unexpected total: %d", total)
+	}
+	if len(challenges) != 1 {
+		t.Fatalf("unexpected count: %d", len(challenges))
+	}
+	if challenges[0].ID != normalChallenge.ID {
+		t.Fatalf("expected normal challenge, got %+v", challenges[0])
+	}
+}
+
 func TestRepositoryHasRunningInstances(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	repo := NewRepository(db)
