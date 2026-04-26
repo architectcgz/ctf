@@ -14,21 +14,25 @@ AIR_CONFIG="${AIR_CONFIG:-${BACKEND_DIR}/.air.toml}"
 MIGRATE_VERSION="${MIGRATE_VERSION:-v4.18.3}"
 MIGRATE_TAGS="${MIGRATE_TAGS:-postgres}"
 MIGRATE_GOPROXY="${MIGRATE_GOPROXY:-https://goproxy.cn,direct}"
+CTF_BACKEND_LOG="${CTF_BACKEND_LOG:-/tmp/ctf-backend.log}"
+CTF_BACKEND_LOG_TAIL_LINES="${CTF_BACKEND_LOG_TAIL_LINES:-80}"
 
 WITH_MIGRATE=false
 INFRA_MODE=""
 RUN_MODE="run"
+BACKGROUND=false
 
 usage() {
   cat <<'EOF'
 用法:
-  ./scripts/dev-run.sh [--infra] [--infra-shared] [--migrate] [--hot]
+  ./scripts/dev-run.sh [--infra] [--infra-shared] [--migrate] [--hot] [--background]
 
 说明:
   --infra         启动开发依赖容器
   --infra-shared  启动共享开发依赖容器
   --migrate       启动前执行数据库迁移
   --hot           使用 air 热重载启动后端
+  --background    后台启动后端，并把输出写入日志文件
 
 可覆盖环境变量:
   APP_ENV
@@ -36,6 +40,8 @@ usage() {
   CTF_FLAG_SECRET
   AIR_BIN
   AIR_CONFIG
+  CTF_BACKEND_LOG
+  CTF_BACKEND_LOG_TAIL_LINES
 EOF
 }
 
@@ -75,7 +81,9 @@ apply_runtime_defaults() {
   if [[ -n "${INFRA_MODE}" ]]; then
     export CTF_POSTGRES_HOST="${CTF_POSTGRES_HOST:-127.0.0.1}"
     export CTF_POSTGRES_PORT="${CTF_POSTGRES_PORT:-15432}"
+    export CTF_POSTGRES_PASSWORD="${CTF_POSTGRES_PASSWORD:-postgres123456}"
     export CTF_REDIS_ADDR="${CTF_REDIS_ADDR:-127.0.0.1:16379}"
+    export CTF_REDIS_PASSWORD="${CTF_REDIS_PASSWORD:-redis123456}"
   fi
 
   if [[ -z "${CTF_HTTP_PORT:-}" ]] && ss -ltn 'sport = :8080' | grep -q LISTEN; then
@@ -92,25 +100,79 @@ run_migrations() {
     up
 }
 
-start_backend() {
+prepare_log_file() {
+  mkdir -p "$(dirname "${CTF_BACKEND_LOG}")"
+  touch "${CTF_BACKEND_LOG}"
+}
+
+write_log_banner() {
+  {
+    printf '\n===== ctf backend start %s mode=%s background=%s =====\n' \
+      "$(date '+%Y-%m-%d %H:%M:%S %z')" "${RUN_MODE}" "${BACKGROUND}"
+  } >>"${CTF_BACKEND_LOG}"
+}
+
+backend_command() {
   if [[ "${RUN_MODE}" == "hot" ]]; then
     if ! command -v "${AIR_BIN}" >/dev/null 2>&1; then
       echo "air 未安装，请先执行: go install github.com/air-verse/air@latest" >&2
       exit 1
     fi
 
-    exec env \
+    env \
       APP_ENV="${APP_ENV}" \
       CTF_CONTAINER_FLAG_GLOBAL_SECRET="${CTF_CONTAINER_FLAG_GLOBAL_SECRET}" \
       CTF_FLAG_SECRET="${CTF_FLAG_SECRET}" \
       "${AIR_BIN}" -c "${AIR_CONFIG}"
+    return
   fi
 
-  exec env \
+  env \
     APP_ENV="${APP_ENV}" \
     CTF_CONTAINER_FLAG_GLOBAL_SECRET="${CTF_CONTAINER_FLAG_GLOBAL_SECRET}" \
     CTF_FLAG_SECRET="${CTF_FLAG_SECRET}" \
     go run ./cmd/api
+}
+
+start_backend() {
+  prepare_log_file
+  write_log_banner
+  echo "日志文件: ${CTF_BACKEND_LOG}"
+  echo "查看日志: tail -f ${CTF_BACKEND_LOG}"
+
+  if [[ "${BACKGROUND}" == "true" ]]; then
+    setsid bash -c '
+      set -euo pipefail
+      backend_dir="$1"
+      log_file="$2"
+      run_mode="$3"
+      app_env="$4"
+      flag_global_secret="$5"
+      flag_secret="$6"
+      air_bin="$7"
+      air_config="$8"
+
+      cd "${backend_dir}"
+      if [[ "${run_mode}" == "hot" ]]; then
+        exec env \
+          APP_ENV="${app_env}" \
+          CTF_CONTAINER_FLAG_GLOBAL_SECRET="${flag_global_secret}" \
+          CTF_FLAG_SECRET="${flag_secret}" \
+          "${air_bin}" -c "${air_config}" >>"${log_file}" 2>&1
+      fi
+
+      exec env \
+        APP_ENV="${app_env}" \
+        CTF_CONTAINER_FLAG_GLOBAL_SECRET="${flag_global_secret}" \
+        CTF_FLAG_SECRET="${flag_secret}" \
+        go run ./cmd/api >>"${log_file}" 2>&1
+    ' bash "${BACKEND_DIR}" "${CTF_BACKEND_LOG}" "${RUN_MODE}" "${APP_ENV}" "${CTF_CONTAINER_FLAG_GLOBAL_SECRET}" "${CTF_FLAG_SECRET}" "${AIR_BIN}" "${AIR_CONFIG}" </dev/null &
+    echo "后端已后台启动，launcher_pid=$!"
+    tail -n "${CTF_BACKEND_LOG_TAIL_LINES}" "${CTF_BACKEND_LOG}"
+    return
+  fi
+
+  backend_command 2>&1 | tee -a "${CTF_BACKEND_LOG}"
 }
 
 while [[ $# -gt 0 ]]; do
@@ -129,6 +191,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --hot)
       RUN_MODE="hot"
+      shift
+      ;;
+    --background)
+      BACKGROUND=true
       shift
       ;;
     -h|--help)
@@ -170,6 +236,7 @@ fi
 if [[ -n "${CTF_HTTP_PORT:-}" ]]; then
   echo "CTF_HTTP_PORT=${CTF_HTTP_PORT}"
 fi
+echo "CTF_BACKEND_LOG=${CTF_BACKEND_LOG}"
 echo "启动后端服务 (${RUN_MODE})..."
 
 start_backend
