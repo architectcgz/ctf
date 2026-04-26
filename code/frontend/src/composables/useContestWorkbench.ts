@@ -8,6 +8,7 @@ export type ContestWorkbenchStageKey =
   | 'awd-config'
   | 'preflight'
   | 'operations'
+  | 'instances'
 
 export const CONTEST_WORKBENCH_STAGE_ORDER: ContestWorkbenchStageKey[] = [
   'basics',
@@ -15,6 +16,7 @@ export const CONTEST_WORKBENCH_STAGE_ORDER: ContestWorkbenchStageKey[] = [
   'awd-config',
   'preflight',
   'operations',
+  'instances',
 ]
 
 export interface ContestWorkbenchStage {
@@ -40,6 +42,7 @@ const AWD_STAGES: ContestWorkbenchStage[] = [
   { key: 'awd-config', label: 'AWD 服务配置' },
   { key: 'preflight', label: '就绪审计' },
   { key: 'operations', label: '轮次运行' },
+  { key: 'instances', label: '实例编排' },
 ]
 
 const CONTEST_MODE_LABELS: Record<'jeopardy' | 'awd', string> = {

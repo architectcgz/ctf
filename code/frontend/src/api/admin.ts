@@ -1,4 +1,5 @@
 import { ApiError, request } from './request'
+import { normalizeInstanceData, type RawInstanceData } from './instance'
 
 import type {
   AWDAttackLogData,
@@ -31,6 +32,10 @@ import type {
   AdminAwdServiceTemplateImportPreview,
   AdminAwdServiceTemplateData,
   AdminContestAWDServiceData,
+  AdminContestAWDInstanceItemData,
+  AdminContestAWDInstanceOrchestrationData,
+  AdminContestAWDInstanceServiceData,
+  AdminContestAWDInstanceTeamData,
   AdminContestChallengeRelationData,
   AdminContestTeamData,
   AdminChallengeHint,
@@ -439,6 +444,32 @@ interface RawAdminContestAWDServiceItem {
   last_preview_result?: RawAWDCheckerPreviewData | null
   created_at: string
   updated_at: string
+}
+
+interface RawAdminContestAWDInstanceTeamItem {
+  team_id: string | number
+  team_name: string
+  captain_id: string | number
+}
+
+interface RawAdminContestAWDInstanceServiceItem {
+  service_id: string | number
+  challenge_id: string | number
+  display_name: string
+  is_visible: boolean
+}
+
+interface RawAdminContestAWDInstanceItem {
+  team_id: string | number
+  service_id: string | number
+  instance?: RawInstanceData | null
+}
+
+interface RawAdminContestAWDInstanceOrchestration {
+  contest_id: string | number
+  teams: RawAdminContestAWDInstanceTeamItem[]
+  services: RawAdminContestAWDInstanceServiceItem[]
+  instances: RawAdminContestAWDInstanceItem[]
 }
 
 interface RawAdminChallengeItem {
@@ -1242,6 +1273,48 @@ function normalizeAdminContestAWDService(
       : undefined,
     created_at: item.created_at,
     updated_at: item.updated_at,
+  }
+}
+
+function normalizeAdminContestAWDInstanceTeam(
+  item: RawAdminContestAWDInstanceTeamItem
+): AdminContestAWDInstanceTeamData {
+  return {
+    team_id: String(item.team_id),
+    team_name: item.team_name,
+    captain_id: String(item.captain_id),
+  }
+}
+
+function normalizeAdminContestAWDInstanceService(
+  item: RawAdminContestAWDInstanceServiceItem
+): AdminContestAWDInstanceServiceData {
+  return {
+    service_id: String(item.service_id),
+    challenge_id: String(item.challenge_id),
+    display_name: item.display_name,
+    is_visible: item.is_visible,
+  }
+}
+
+function normalizeAdminContestAWDInstanceItem(
+  item: RawAdminContestAWDInstanceItem
+): AdminContestAWDInstanceItemData {
+  return {
+    team_id: String(item.team_id),
+    service_id: String(item.service_id),
+    instance: item.instance ? normalizeInstanceData(item.instance) : undefined,
+  }
+}
+
+function normalizeAdminContestAWDInstanceOrchestration(
+  item: RawAdminContestAWDInstanceOrchestration
+): AdminContestAWDInstanceOrchestrationData {
+  return {
+    contest_id: String(item.contest_id),
+    teams: item.teams.map(normalizeAdminContestAWDInstanceTeam),
+    services: item.services.map(normalizeAdminContestAWDInstanceService),
+    instances: item.instances.map(normalizeAdminContestAWDInstanceItem),
   }
 }
 
@@ -2401,6 +2474,31 @@ export async function listContestAWDServices(
     url: `/admin/contests/${encodeURIComponent(contestId)}/awd/services`,
   })
   return response.map(normalizeAdminContestAWDService)
+}
+
+export async function getContestAWDInstanceOrchestration(
+  contestId: string
+): Promise<AdminContestAWDInstanceOrchestrationData> {
+  const response = await request<RawAdminContestAWDInstanceOrchestration>({
+    method: 'GET',
+    url: `/admin/contests/${encodeURIComponent(contestId)}/awd/instances`,
+  })
+  return normalizeAdminContestAWDInstanceOrchestration(response)
+}
+
+export async function startContestAWDTeamServiceInstance(
+  contestId: string,
+  data: { team_id: string | number; service_id: string | number }
+): Promise<AdminContestAWDInstanceItemData> {
+  const response = await request<RawAdminContestAWDInstanceItem>({
+    method: 'POST',
+    url: `/admin/contests/${encodeURIComponent(contestId)}/awd/instances`,
+    data: {
+      team_id: Number(data.team_id),
+      service_id: Number(data.service_id),
+    },
+  })
+  return normalizeAdminContestAWDInstanceItem(response)
 }
 
 export async function createContestAWDService(

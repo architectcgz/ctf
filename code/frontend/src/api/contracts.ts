@@ -703,6 +703,32 @@ export interface AdminContestAWDServiceData {
   updated_at: ISODateTime
 }
 
+export interface AdminContestAWDInstanceTeamData {
+  team_id: ID
+  team_name: string
+  captain_id: ID
+}
+
+export interface AdminContestAWDInstanceServiceData {
+  service_id: ID
+  challenge_id: ID
+  display_name: string
+  is_visible: boolean
+}
+
+export interface AdminContestAWDInstanceItemData {
+  team_id: ID
+  service_id: ID
+  instance?: InstanceData
+}
+
+export interface AdminContestAWDInstanceOrchestrationData {
+  contest_id: ID
+  teams: AdminContestAWDInstanceTeamData[]
+  services: AdminContestAWDInstanceServiceData[]
+  instances: AdminContestAWDInstanceItemData[]
+}
+
 export type NotificationType = 'system' | 'contest' | 'challenge' | 'team'
 
 export interface NotificationItem {

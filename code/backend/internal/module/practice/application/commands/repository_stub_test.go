@@ -16,6 +16,10 @@ type stubPracticeRepository struct {
 	findContestByIDFn                      func(ctx context.Context, contestID int64) (*model.Contest, error)
 	findContestChallengeFn                 func(ctx context.Context, contestID, challengeID int64) (*model.ContestChallenge, error)
 	findContestAWDServiceFn                func(ctx context.Context, contestID, serviceID int64) (*model.ContestAWDService, error)
+	listContestAWDServicesFn               func(ctx context.Context, contestID int64) ([]*model.ContestAWDService, error)
+	listContestAWDInstancesFn              func(ctx context.Context, contestID int64) ([]*model.Instance, error)
+	findContestTeamFn                      func(ctx context.Context, contestID, teamID int64) (*model.Team, error)
+	listContestTeamsFn                     func(ctx context.Context, contestID int64) ([]*model.Team, error)
 	findContestRegistrationFn              func(ctx context.Context, contestID, userID int64) (*model.ContestRegistration, error)
 	lockInstanceScopeFn                    func(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) error
 	findScopedExistingInstanceFn           func(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) (*model.Instance, error)
@@ -61,6 +65,34 @@ func (s *stubPracticeRepository) FindContestAWDService(ctx context.Context, cont
 		return s.findContestAWDServiceFn(ctx, contestID, serviceID)
 	}
 	return nil, gorm.ErrRecordNotFound
+}
+
+func (s *stubPracticeRepository) ListContestAWDServices(ctx context.Context, contestID int64) ([]*model.ContestAWDService, error) {
+	if s.listContestAWDServicesFn != nil {
+		return s.listContestAWDServicesFn(ctx, contestID)
+	}
+	return []*model.ContestAWDService{}, nil
+}
+
+func (s *stubPracticeRepository) ListContestAWDInstances(ctx context.Context, contestID int64) ([]*model.Instance, error) {
+	if s.listContestAWDInstancesFn != nil {
+		return s.listContestAWDInstancesFn(ctx, contestID)
+	}
+	return []*model.Instance{}, nil
+}
+
+func (s *stubPracticeRepository) FindContestTeam(ctx context.Context, contestID, teamID int64) (*model.Team, error) {
+	if s.findContestTeamFn != nil {
+		return s.findContestTeamFn(ctx, contestID, teamID)
+	}
+	return nil, gorm.ErrRecordNotFound
+}
+
+func (s *stubPracticeRepository) ListContestTeams(ctx context.Context, contestID int64) ([]*model.Team, error) {
+	if s.listContestTeamsFn != nil {
+		return s.listContestTeamsFn(ctx, contestID)
+	}
+	return []*model.Team{}, nil
 }
 
 func (s *stubPracticeRepository) FindContestRegistration(ctx context.Context, contestID, userID int64) (*model.ContestRegistration, error) {

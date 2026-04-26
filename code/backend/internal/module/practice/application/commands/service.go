@@ -121,6 +121,87 @@ func (s *Service) StartContestAWDService(ctx context.Context, userID, contestID,
 	return s.startChallengeWithScope(ctx, userID, challengeID, scope)
 }
 
+func (s *Service) GetContestAWDInstanceOrchestration(ctx context.Context, contestID int64) (*dto.AdminAWDInstanceOrchestrationResp, error) {
+	contest, err := s.repo.FindContestByID(ctx, contestID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errcode.ErrContestNotFound
+		}
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+	if contest.Mode != model.ContestModeAWD {
+		return nil, errcode.ErrInvalidParams.WithCause(errors.New("仅 AWD 赛事支持队伍实例编排"))
+	}
+
+	teams, err := s.repo.ListContestTeams(ctx, contestID)
+	if err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+	services, err := s.repo.ListContestAWDServices(ctx, contestID)
+	if err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+	instances, err := s.repo.ListContestAWDInstances(ctx, contestID)
+	if err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+
+	resp := &dto.AdminAWDInstanceOrchestrationResp{
+		ContestID: contestID,
+		Teams:     make([]*dto.AdminAWDInstanceTeamResp, 0, len(teams)),
+		Services:  make([]*dto.AdminAWDInstanceServiceResp, 0, len(services)),
+		Instances: make([]*dto.AdminAWDInstanceItemResp, 0, len(instances)),
+	}
+	for _, team := range teams {
+		resp.Teams = append(resp.Teams, &dto.AdminAWDInstanceTeamResp{
+			TeamID:    team.ID,
+			TeamName:  team.Name,
+			CaptainID: team.CaptainID,
+		})
+	}
+	for _, service := range services {
+		resp.Services = append(resp.Services, &dto.AdminAWDInstanceServiceResp{
+			ServiceID:   service.ID,
+			ChallengeID: service.ChallengeID,
+			DisplayName: service.DisplayName,
+			IsVisible:   service.IsVisible,
+		})
+	}
+	seen := make(map[string]struct{}, len(instances))
+	for _, instance := range instances {
+		if instance.TeamID == nil || instance.ServiceID == nil {
+			continue
+		}
+		key := fmt.Sprintf("%d:%d", *instance.TeamID, *instance.ServiceID)
+		if _, ok := seen[key]; ok {
+			continue
+		}
+		seen[key] = struct{}{}
+		resp.Instances = append(resp.Instances, &dto.AdminAWDInstanceItemResp{
+			TeamID:    *instance.TeamID,
+			ServiceID: *instance.ServiceID,
+			Instance:  domain.InstanceRespFromModel(instance),
+		})
+	}
+	return resp, nil
+}
+
+func (s *Service) StartAdminContestAWDTeamService(ctx context.Context, contestID, teamID, serviceID int64) (*dto.AdminAWDInstanceItemResp, error) {
+	challengeID, ownerUserID, scope, err := s.resolveAdminContestAWDServiceInstanceScope(ctx, contestID, teamID, serviceID)
+	if err != nil {
+		return nil, err
+	}
+	instance, err := s.startChallengeWithScope(ctx, ownerUserID, challengeID, scope)
+	if err != nil {
+		return nil, err
+	}
+	return &dto.AdminAWDInstanceItemResp{
+		TeamID:    teamID,
+		ServiceID: serviceID,
+		Instance:  instance,
+	}, nil
+}
+
 func (s *Service) startPersonalChallenge(ctx context.Context, userID, challengeID int64) (*dto.InstanceResp, error) {
 	return s.startChallengeWithScope(ctx, userID, challengeID, practiceports.InstanceScope{
 		FlagSubjectID: userID,
@@ -1078,6 +1159,62 @@ func (s *Service) resolveContestAWDServiceInstanceScope(ctx context.Context, use
 	serviceIDCopy := service.ID
 	scope.ServiceID = &serviceIDCopy
 	return service.ChallengeID, scope, nil
+}
+
+func (s *Service) resolveAdminContestAWDServiceInstanceScope(ctx context.Context, contestID, teamID, serviceID int64) (int64, int64, practiceports.InstanceScope, error) {
+	contest, err := s.repo.FindContestByID(ctx, contestID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return 0, 0, practiceports.InstanceScope{}, errcode.ErrContestNotFound
+		}
+		return 0, 0, practiceports.InstanceScope{}, errcode.ErrInternal.WithCause(err)
+	}
+	if contest.Mode != model.ContestModeAWD {
+		return 0, 0, practiceports.InstanceScope{}, errcode.ErrInvalidParams.WithCause(errors.New("仅 AWD 赛事支持队伍实例编排"))
+	}
+	switch contest.Status {
+	case model.ContestStatusRunning, model.ContestStatusFrozen:
+	default:
+		if contest.Status == model.ContestStatusEnded {
+			return 0, 0, practiceports.InstanceScope{}, errcode.ErrContestEnded
+		}
+		return 0, 0, practiceports.InstanceScope{}, errcode.ErrContestNotRunning
+	}
+
+	team, err := s.repo.FindContestTeam(ctx, contestID, teamID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return 0, 0, practiceports.InstanceScope{}, errcode.ErrTeamNotFound
+		}
+		return 0, 0, practiceports.InstanceScope{}, errcode.ErrInternal.WithCause(err)
+	}
+	if team.CaptainID <= 0 {
+		return 0, 0, practiceports.InstanceScope{}, errcode.ErrInvalidParams.WithCause(errors.New("队伍缺少队长用户"))
+	}
+
+	service, err := s.repo.FindContestAWDService(ctx, contestID, serviceID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return 0, 0, practiceports.InstanceScope{}, errcode.ErrChallengeNotInContest
+		}
+		return 0, 0, practiceports.InstanceScope{}, errcode.ErrInternal.WithCause(err)
+	}
+	if !service.IsVisible {
+		return 0, 0, practiceports.InstanceScope{}, errcode.ErrContestChallengeVisible
+	}
+
+	contestIDCopy := contestID
+	teamIDCopy := teamID
+	serviceIDCopy := service.ID
+	scope := practiceports.InstanceScope{
+		ContestID:     &contestIDCopy,
+		ContestMode:   contest.Mode,
+		TeamID:        &teamIDCopy,
+		ServiceID:     &serviceIDCopy,
+		FlagSubjectID: teamID,
+		ShareScope:    model.InstanceSharingPerTeam,
+	}
+	return service.ChallengeID, team.CaptainID, scope, nil
 }
 
 func (s *Service) loadRuntimeSubjectWithScope(ctx context.Context, scope practiceports.InstanceScope, challengeID int64) (*model.Challenge, *model.ChallengeTopology, error) {

@@ -156,11 +156,38 @@ const emit = defineEmits<{
           v-if="contest.mode === 'awd' && activeStage === 'operations'"
           class="studio-pane studio-pane--operations fade-in"
         >
+          <header class="stage-pane-header">
+            <h2 class="stage-pane-title">
+              轮次态势
+            </h2>
+          </header>
           <AWDOperationsPanel
             :contests="[contest]"
             :selected-contest-id="contest.id"
             :hide-contest-selector="true"
             :hide-studio-link="true"
+            :hide-operation-tabs="true"
+            operation-panel="inspector"
+            @open:awd-config="emit('open:awd-config-from-operations', $event)"
+          />
+        </div>
+
+        <div
+          v-if="contest.mode === 'awd' && activeStage === 'instances'"
+          class="studio-pane studio-pane--operations fade-in"
+        >
+          <header class="stage-pane-header">
+            <h2 class="stage-pane-title">
+              实例编排
+            </h2>
+          </header>
+          <AWDOperationsPanel
+            :contests="[contest]"
+            :selected-contest-id="contest.id"
+            :hide-contest-selector="true"
+            :hide-studio-link="true"
+            :hide-operation-tabs="true"
+            operation-panel="instances"
             @open:awd-config="emit('open:awd-config-from-operations', $event)"
           />
         </div>
@@ -205,6 +232,19 @@ const emit = defineEmits<{
 
 .studio-pane--operations {
   padding: 2rem;
+}
+
+.stage-pane-header {
+  margin-bottom: var(--space-5);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.stage-pane-title {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-1-25);
+  font-weight: 900;
 }
 
 .studio-form-canvas {

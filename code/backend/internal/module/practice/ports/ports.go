@@ -61,6 +61,10 @@ type PracticeCommandRepository interface {
 	FindContestByID(ctx context.Context, contestID int64) (*model.Contest, error)
 	FindContestChallenge(ctx context.Context, contestID, challengeID int64) (*model.ContestChallenge, error)
 	FindContestAWDService(ctx context.Context, contestID, serviceID int64) (*model.ContestAWDService, error)
+	ListContestAWDServices(ctx context.Context, contestID int64) ([]*model.ContestAWDService, error)
+	ListContestAWDInstances(ctx context.Context, contestID int64) ([]*model.Instance, error)
+	FindContestTeam(ctx context.Context, contestID, teamID int64) (*model.Team, error)
+	ListContestTeams(ctx context.Context, contestID int64) ([]*model.Team, error)
 	FindContestRegistration(ctx context.Context, contestID, userID int64) (*model.ContestRegistration, error)
 	CreateSubmission(ctx context.Context, submission *model.Submission) error
 	FindCorrectSubmission(ctx context.Context, userID, challengeID int64) (*model.Submission, error)

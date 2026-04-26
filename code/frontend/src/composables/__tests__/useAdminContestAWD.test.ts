@@ -14,6 +14,7 @@ const adminApiMocks = vi.hoisted(() => ({
   createContestAWDServiceCheck: vi.fn(),
   getAdminContestLiveScoreboard: vi.fn(),
   getChallenges: vi.fn(),
+  getContestAWDInstanceOrchestration: vi.fn(),
   getContestAWDReadiness: vi.fn(),
   getContestAWDRoundSummary: vi.fn(),
   getContestAWDRoundTrafficSummary: vi.fn(),
@@ -26,6 +27,7 @@ const adminApiMocks = vi.hoisted(() => ({
   listContestTeams: vi.fn(),
   runContestAWDCurrentRoundCheck: vi.fn(),
   runContestAWDRoundCheck: vi.fn(),
+  startContestAWDTeamServiceInstance: vi.fn(),
   updateContestAWDService: vi.fn(),
   updateAdminContestChallenge: vi.fn(),
 }))
@@ -158,6 +160,7 @@ describe('usePlatformContestAwd', () => {
     adminApiMocks.createContestAWDServiceCheck.mockReset()
     adminApiMocks.getAdminContestLiveScoreboard.mockReset()
     adminApiMocks.getChallenges.mockReset()
+    adminApiMocks.getContestAWDInstanceOrchestration.mockReset()
     adminApiMocks.getContestAWDReadiness.mockReset()
     adminApiMocks.getContestAWDRoundSummary.mockReset()
     adminApiMocks.getContestAWDRoundTrafficSummary.mockReset()
@@ -170,10 +173,17 @@ describe('usePlatformContestAwd', () => {
     adminApiMocks.listContestTeams.mockReset()
     adminApiMocks.runContestAWDCurrentRoundCheck.mockReset()
     adminApiMocks.runContestAWDRoundCheck.mockReset()
+    adminApiMocks.startContestAWDTeamServiceInstance.mockReset()
     adminApiMocks.updateContestAWDService.mockReset()
     adminApiMocks.updateAdminContestChallenge.mockReset()
 
     adminApiMocks.listContestAWDRounds.mockResolvedValue([])
+    adminApiMocks.getContestAWDInstanceOrchestration.mockResolvedValue({
+      contest_id: 'awd-1',
+      teams: [],
+      services: [],
+      instances: [],
+    })
     adminApiMocks.listContestTeams.mockResolvedValue([])
     adminApiMocks.listAdminContestChallenges.mockResolvedValue([])
     adminApiMocks.listContestAWDServices.mockResolvedValue([])
@@ -233,6 +243,11 @@ describe('usePlatformContestAwd', () => {
     adminApiMocks.createAdminContestChallenge.mockResolvedValue(undefined)
     adminApiMocks.createContestAWDService.mockResolvedValue(undefined)
     adminApiMocks.updateContestAWDService.mockResolvedValue(undefined)
+    adminApiMocks.startContestAWDTeamServiceInstance.mockResolvedValue({
+      team_id: 'team-1',
+      service_id: 'service-1',
+      instance: undefined,
+    })
     adminApiMocks.updateAdminContestChallenge.mockResolvedValue(undefined)
   })
 

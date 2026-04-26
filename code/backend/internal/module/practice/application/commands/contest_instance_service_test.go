@@ -145,6 +145,74 @@ func TestServiceStartContestAWDServicePersistsServiceIDOnInstance(t *testing.T) 
 	}
 }
 
+func TestServiceStartAdminContestAWDTeamServiceDoesNotRequireAdminRegistration(t *testing.T) {
+	db := newContestInstanceTestDB(t)
+	now := time.Now()
+
+	seedContestInstanceChallenge(t, db, 1005, 2005, now)
+	seedContestInstanceAWDContest(t, db, 3005, 2005, now)
+	seedContestInstanceAWDService(t, db, 7003005, 3005, 2005, now)
+	seedContestInstanceTeam(t, db, 3005, 4005, 5008, now)
+	seedContestInstanceTeamMember(t, db, 3005, 4005, 5008, now)
+
+	service := newContestInstanceTestService(t, db)
+	resp, err := service.StartAdminContestAWDTeamService(context.Background(), 3005, 4005, 7003005)
+	if err != nil {
+		t.Fatalf("StartAdminContestAWDTeamService() error = %v", err)
+	}
+	if resp.TeamID != 4005 || resp.ServiceID != 7003005 || resp.Instance == nil {
+		t.Fatalf("unexpected admin awd instance response: %+v", resp)
+	}
+
+	var instance model.Instance
+	if err := db.First(&instance, resp.Instance.ID).Error; err != nil {
+		t.Fatalf("load admin-started instance: %v", err)
+	}
+	if instance.TeamID == nil || *instance.TeamID != 4005 {
+		t.Fatalf("expected instance team_id=4005, got %+v", instance.TeamID)
+	}
+	if instance.ServiceID == nil || *instance.ServiceID != 7003005 {
+		t.Fatalf("expected instance service_id=7003005, got %+v", instance.ServiceID)
+	}
+	if instance.UserID != 5008 {
+		t.Fatalf("expected team captain to own runtime instance, got user_id=%d", instance.UserID)
+	}
+	if instance.ShareScope != model.InstanceSharingPerTeam {
+		t.Fatalf("expected per-team share scope, got %s", instance.ShareScope)
+	}
+}
+
+func TestServiceGetContestAWDInstanceOrchestrationReturnsTeamServiceMatrix(t *testing.T) {
+	db := newContestInstanceTestDB(t)
+	now := time.Now()
+
+	seedContestInstanceChallenge(t, db, 1006, 2006, now)
+	seedContestInstanceAWDContest(t, db, 3006, 2006, now)
+	seedContestInstanceAWDService(t, db, 7003006, 3006, 2006, now)
+	seedContestInstanceTeam(t, db, 3006, 4006, 5009, now)
+	seedContestInstanceTeamMember(t, db, 3006, 4006, 5009, now)
+
+	service := newContestInstanceTestService(t, db)
+	started, err := service.StartAdminContestAWDTeamService(context.Background(), 3006, 4006, 7003006)
+	if err != nil {
+		t.Fatalf("StartAdminContestAWDTeamService() error = %v", err)
+	}
+
+	resp, err := service.GetContestAWDInstanceOrchestration(context.Background(), 3006)
+	if err != nil {
+		t.Fatalf("GetContestAWDInstanceOrchestration() error = %v", err)
+	}
+	if len(resp.Teams) != 1 || resp.Teams[0].TeamID != 4006 {
+		t.Fatalf("expected one team in orchestration, got %+v", resp.Teams)
+	}
+	if len(resp.Services) != 1 || resp.Services[0].ServiceID != 7003006 {
+		t.Fatalf("expected one service in orchestration, got %+v", resp.Services)
+	}
+	if len(resp.Instances) != 1 || resp.Instances[0].Instance == nil || resp.Instances[0].Instance.ID != started.Instance.ID {
+		t.Fatalf("expected started instance in orchestration, got %+v", resp.Instances)
+	}
+}
+
 func TestServiceStartChallengeSharedReusesPracticeInstance(t *testing.T) {
 	db := newContestInstanceTestDB(t)
 	now := time.Now()
