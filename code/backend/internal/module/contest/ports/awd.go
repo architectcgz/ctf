@@ -80,6 +80,7 @@ type AWDFlagInjector interface {
 }
 
 type AWDServiceInstance struct {
+	InstanceID  int64
 	ServiceID   int64
 	TeamID      int64
 	ChallengeID int64

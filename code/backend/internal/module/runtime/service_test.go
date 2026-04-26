@@ -745,6 +745,60 @@ func TestServiceCreateTopologyCreatesMultipleContainersOnSharedNetwork(t *testin
 	}
 }
 
+func TestServiceCreateTopologyCanKeepEntryPointPrivate(t *testing.T) {
+	t.Parallel()
+
+	repo := newTestRepository(t)
+	engine := &fakeRuntimeEngine{
+		networkID:    "net-private",
+		containerIDs: []string{"web-private"},
+		inspectContainerNetworkIPsFunc: func(containerID string, engine *fakeRuntimeEngine) map[string]string {
+			if containerID != "web-private" {
+				t.Fatalf("unexpected inspect container id: %s", containerID)
+			}
+			return map[string]string{engine.createdNetworkName: "172.30.0.10"}
+		},
+	}
+	service := runtimecmd.NewProvisioningService(repo, engine, &config.ContainerConfig{
+		PortRangeStart: 30000,
+		PortRangeEnd:   30010,
+		PublicHost:     "127.0.0.1",
+	}, nil)
+
+	result, err := service.CreateTopology(context.Background(), &runtimeports.TopologyCreateRequest{
+		DisableEntryPortPublishing: true,
+		Networks: []runtimeports.TopologyCreateNetwork{
+			{Key: model.TopologyDefaultNetworkKey},
+		},
+		Nodes: []runtimeports.TopologyCreateNode{
+			{Key: "web", Image: "ctf/web:v1", ServicePort: 8080, IsEntryPoint: true, NetworkKeys: []string{model.TopologyDefaultNetworkKey}},
+		},
+	})
+	if err != nil {
+		t.Fatalf("CreateTopology() error = %v", err)
+	}
+	if result.AccessURL != "http://172.30.0.10:8080" {
+		t.Fatalf("expected private access url, got %q", result.AccessURL)
+	}
+	if len(engine.createdContainerCfgs) != 1 {
+		t.Fatalf("expected one create container call, got %d", len(engine.createdContainerCfgs))
+	}
+	if len(engine.createdContainerCfgs[0].Ports) != 0 {
+		t.Fatalf("entry container should not publish host port, got %+v", engine.createdContainerCfgs[0].Ports)
+	}
+	if got := result.RuntimeDetails.Containers[0].HostPort; got != 0 {
+		t.Fatalf("expected no runtime host port, got %d", got)
+	}
+
+	var count int64
+	if err := repo.db.Model(&model.PortAllocation{}).Count(&count).Error; err != nil {
+		t.Fatalf("count port allocations: %v", err)
+	}
+	if count != 0 {
+		t.Fatalf("expected no reserved host ports, count=%d", count)
+	}
+}
+
 func TestServiceDestroyManagedInstanceRemovesAllRuntimeContainers(t *testing.T) {
 	t.Parallel()
 

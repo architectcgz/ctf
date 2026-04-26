@@ -264,7 +264,7 @@ func TestBuildTopologyCreateRequestKeepsFineGrainedPolicies(t *testing.T) {
 		config:    &config.Config{},
 	}
 
-	request, err := service.buildTopologyCreateRequest(context.Background(), 30001, &model.Challenge{ImageID: 1}, "web", model.TopologySpec{
+	request, err := service.buildTopologyCreateRequest(context.Background(), 30001, false, &model.Challenge{ImageID: 1}, "web", model.TopologySpec{
 		Nodes: []model.TopologyNode{
 			{Key: "web", ServicePort: 8080, InjectFlag: true},
 		},
@@ -295,7 +295,7 @@ func TestBuildTopologyCreateRequestRejectsSharedChallengeFlagInjection(t *testin
 		config:    &config.Config{},
 	}
 
-	_, err := service.buildTopologyCreateRequest(context.Background(), 30002, &model.Challenge{
+	_, err := service.buildTopologyCreateRequest(context.Background(), 30002, false, &model.Challenge{
 		ImageID:         2,
 		InstanceSharing: model.InstanceSharingShared,
 	}, "web", model.TopologySpec{
@@ -1403,6 +1403,98 @@ func TestStartContestAWDServiceDoesNotRequireContestChallengeLookup(t *testing.T
 	}
 }
 
+func TestStartContestAWDServiceDoesNotReserveHostPort(t *testing.T) {
+	t.Parallel()
+
+	teamID := int64(4105)
+	var createdInstance *model.Instance
+	repo := &stubPracticeRepository{
+		findContestByIDFn: func(ctx context.Context, contestID int64) (*model.Contest, error) {
+			return &model.Contest{
+				ID:     contestID,
+				Mode:   model.ContestModeAWD,
+				Status: model.ContestStatusRunning,
+			}, nil
+		},
+		findContestAWDServiceFn: func(ctx context.Context, contestID, serviceID int64) (*model.ContestAWDService, error) {
+			return &model.ContestAWDService{
+				ID:              serviceID,
+				ContestID:       contestID,
+				ChallengeID:     2105,
+				IsVisible:       true,
+				ServiceSnapshot: `{"name":"awd-service","category":"web","difficulty":"medium","runtime_config":{"image_id":105,"instance_sharing":"per_team"},"flag_config":{"flag_type":"static","flag_prefix":"flag"}}`,
+			}, nil
+		},
+		findContestRegistrationFn: func(ctx context.Context, contestID, userID int64) (*model.ContestRegistration, error) {
+			return &model.ContestRegistration{
+				ContestID: contestID,
+				UserID:    userID,
+				TeamID:    &teamID,
+				Status:    model.ContestRegistrationStatusApproved,
+			}, nil
+		},
+		reserveAvailablePortFn: func(ctx context.Context, start, end int) (int, error) {
+			t.Fatal("AWD service instances must not reserve host ports")
+			return 0, nil
+		},
+		bindReservedPortFn: func(ctx context.Context, port int, instanceID int64) error {
+			t.Fatalf("AWD service instances must not bind host ports, got port=%d instance_id=%d", port, instanceID)
+			return nil
+		},
+		createInstanceFn: func(ctx context.Context, instance *model.Instance) error {
+			instance.ID = 9105
+			copied := *instance
+			createdInstance = &copied
+			return nil
+		},
+	}
+
+	service := NewService(
+		repo,
+		&stubPracticeChallengeContract{
+			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+				return &model.Challenge{
+					ID:       id,
+					Status:   model.ChallengeStatusPublished,
+					ImageID:  105,
+					FlagType: model.FlagTypeStatic,
+					FlagHash: "flag{awd-static}",
+				}, nil
+			},
+		},
+		nil,
+		&stubPracticeInstanceStore{},
+		&stubPracticeRuntimeService{},
+		nil,
+		nil,
+		nil,
+		&config.Config{
+			Container: config.ContainerConfig{
+				DefaultTTL:           time.Hour,
+				MaxConcurrentPerUser: 3,
+				Scheduler: config.ContainerSchedulerConfig{
+					Enabled: true,
+				},
+			},
+		},
+		nil,
+	)
+
+	resp, err := service.StartContestAWDService(context.Background(), 5105, 3105, 7105)
+	if err != nil {
+		t.Fatalf("StartContestAWDService() error = %v", err)
+	}
+	if resp.ID != 9105 {
+		t.Fatalf("expected created awd service instance, got %+v", resp)
+	}
+	if createdInstance == nil {
+		t.Fatal("expected instance to be created")
+	}
+	if createdInstance.HostPort != 0 {
+		t.Fatalf("expected no host port for awd service instance, got %d", createdInstance.HostPort)
+	}
+}
+
 func TestRunProvisioningLoopPromotesPendingInstanceToRunning(t *testing.T) {
 	t.Parallel()
 
@@ -1749,6 +1841,87 @@ func TestProvisionInstancePropagatesContextToUpdateRuntime(t *testing.T) {
 
 	if err := service.provisionInstance(ctx, instance, challenge, nil, "flag{ok}"); err != nil {
 		t.Fatalf("provisionInstance() error = %v", err)
+	}
+}
+
+func TestCreateSingleAWDContainerUsesPrivateTopology(t *testing.T) {
+	t.Parallel()
+
+	db := newPracticeCommandTestDB(t)
+	now := time.Now()
+	if err := db.Create(&model.Image{
+		ID:        501,
+		Name:      "ctf/awd-web",
+		Tag:       "v1",
+		Status:    model.ImageStatusAvailable,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}).Error; err != nil {
+		t.Fatalf("create image: %v", err)
+	}
+
+	contestID := int64(7001)
+	serviceID := int64(8001)
+	var createTopologyCalled bool
+	service := &Service{
+		imageRepo: challengeinfra.NewImageRepository(db),
+		runtimeService: &stubPracticeRuntimeService{
+			createTopologyFn: func(ctx context.Context, req *practiceports.TopologyCreateRequest) (*practiceports.TopologyCreateResult, error) {
+				createTopologyCalled = true
+				if req.ReservedHostPort != 0 {
+					t.Fatalf("expected no reserved host port, got %d", req.ReservedHostPort)
+				}
+				if !req.DisableEntryPortPublishing {
+					t.Fatal("expected entry port publishing to be disabled")
+				}
+				if len(req.Nodes) != 1 || !req.Nodes[0].IsEntryPoint || req.Nodes[0].Image != "ctf/awd-web:v1" {
+					t.Fatalf("unexpected topology request: %+v", req)
+				}
+				return &practiceports.TopologyCreateResult{
+					PrimaryContainerID: "awd-private-ctr",
+					NetworkID:          "awd-private-net",
+					AccessURL:          "http://172.30.0.10:8080",
+					RuntimeDetails: model.InstanceRuntimeDetails{
+						Containers: []model.InstanceRuntimeContainer{
+							{
+								NodeKey:      "default",
+								ContainerID:  "awd-private-ctr",
+								ServicePort:  8080,
+								IsEntryPoint: true,
+							},
+						},
+					},
+				}, nil
+			},
+			createContainerFn: func(ctx context.Context, imageName string, env map[string]string, reservedHostPort int) (string, string, int, int, error) {
+				t.Fatal("AWD service instances must not use host-port CreateContainer")
+				return "", "", 0, 0, nil
+			},
+		},
+	}
+	instance := &model.Instance{
+		ID:          9001,
+		ContestID:   &contestID,
+		ServiceID:   &serviceID,
+		ChallengeID: 501,
+	}
+	challenge := &model.Challenge{
+		ID:       501,
+		ImageID:  501,
+		FlagType: model.FlagTypeStatic,
+	}
+
+	if err := service.createSingleContainer(context.Background(), instance, challenge, "flag{demo}"); err != nil {
+		t.Fatalf("createSingleContainer() error = %v", err)
+	}
+	if !createTopologyCalled {
+		t.Fatal("expected private topology creation")
+	}
+	if instance.HostPort != 0 {
+		t.Fatalf("expected instance host port to remain empty, got %d", instance.HostPort)
+	}
+	if instance.AccessURL != "http://172.30.0.10:8080" {
+		t.Fatalf("unexpected access url: %s", instance.AccessURL)
 	}
 }
 
@@ -2179,7 +2352,7 @@ func TestBuildTopologyCreateRequestPropagatesContextToImageRepository(t *testing
 	}
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	request, err := service.buildTopologyCreateRequest(ctx, 30001, &model.Challenge{ImageID: 1}, "web", model.TopologySpec{
+	request, err := service.buildTopologyCreateRequest(ctx, 30001, false, &model.Challenge{ImageID: 1}, "web", model.TopologySpec{
 		Nodes: []model.TopologyNode{
 			{Key: "web", Name: "Web", ServicePort: 8080},
 			{Key: "worker", Name: "Worker", ImageID: 2, ServicePort: 9000},

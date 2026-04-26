@@ -7,6 +7,7 @@ import {
   startContestAWDServiceInstance,
   submitContestAWDAttack,
 } from '@/api/contest'
+import { requestInstanceAccess } from '@/api/instance'
 import type {
   AWDAttackLogData,
   ContestAWDWorkspaceData,
@@ -32,6 +33,7 @@ export function useContestAWDWorkspace(options: UseContestAWDWorkspaceOptions) {
   const error = ref('')
   const submitResult = ref<AWDAttackLogData | null>(null)
   const startingServiceKey = ref('')
+  const openingServiceKey = ref('')
   const openingTargetKey = ref('')
   const submittingKey = ref('')
   const lastSyncedAt = ref<string | null>(null)
@@ -123,6 +125,27 @@ export function useContestAWDWorkspace(options: UseContestAWDWorkspaceOptions) {
       toast.error(err instanceof Error ? err.message : '启动服务失败')
     } finally {
       startingServiceKey.value = ''
+    }
+  }
+
+  async function openService(instanceId: string): Promise<string | null> {
+    if (!instanceId || openingServiceKey.value) {
+      return null
+    }
+
+    openingServiceKey.value = instanceId
+    try {
+      const result = await requestInstanceAccess(instanceId)
+      if (typeof window !== 'undefined') {
+        window.open(result.access_url, '_blank', 'noopener,noreferrer')
+      }
+      return result.access_url
+    } catch (err) {
+      console.error(err)
+      toast.error(err instanceof Error ? err.message : '打开本队服务失败')
+      return null
+    } finally {
+      openingServiceKey.value = ''
     }
   }
 
@@ -223,6 +246,7 @@ export function useContestAWDWorkspace(options: UseContestAWDWorkspaceOptions) {
     hasTeam,
     submitResult,
     startingServiceKey,
+    openingServiceKey,
     openingTargetKey,
     submittingKey,
     shouldAutoRefresh,
@@ -230,6 +254,7 @@ export function useContestAWDWorkspace(options: UseContestAWDWorkspaceOptions) {
     refreshAll,
     loadWorkspace,
     startService,
+    openService,
     openTarget,
     submitAttack,
   }

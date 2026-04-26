@@ -92,10 +92,11 @@ interface RawContestAWDWorkspaceTeamData extends Omit<ContestAWDWorkspaceTeamDat
 
 interface RawContestAWDWorkspaceServiceData extends Omit<
   ContestAWDWorkspaceServiceData,
-  'service_id' | 'challenge_id'
+  'service_id' | 'challenge_id' | 'instance_id'
 > {
   service_id?: string | number
   challenge_id: string | number
+  instance_id?: string | number
 }
 
 interface RawContestAWDWorkspaceTargetServiceData extends Omit<
@@ -223,6 +224,7 @@ function normalizeContestAWDWorkspaceService(
     ...item,
     service_id: item.service_id == null ? undefined : String(item.service_id),
     challenge_id: String(item.challenge_id),
+    instance_id: item.instance_id == null ? undefined : String(item.instance_id),
   }
 }
 

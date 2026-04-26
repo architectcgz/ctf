@@ -276,9 +276,13 @@ func (s *Service) startChallengeWithScope(ctx context.Context, userID, challenge
 			return errcode.ErrInstanceLimitExceeded
 		}
 
-		hostPort, err := txRepo.ReserveAvailablePort(ctx, s.config.Container.PortRangeStart, s.config.Container.PortRangeEnd)
-		if err != nil {
-			return errcode.ErrInternal.WithCause(err)
+		hostPort := 0
+		if requiresPublishedHostPort(scope) {
+			var err error
+			hostPort, err = txRepo.ReserveAvailablePort(ctx, s.config.Container.PortRangeStart, s.config.Container.PortRangeEnd)
+			if err != nil {
+				return errcode.ErrInternal.WithCause(err)
+			}
 		}
 
 		instance = &model.Instance{
@@ -297,28 +301,42 @@ func (s *Service) startChallengeWithScope(ctx context.Context, userID, challenge
 		if err := txRepo.CreateInstance(ctx, instance); err != nil {
 			return errcode.ErrInternal.WithCause(err)
 		}
-		if err := txRepo.BindReservedPort(ctx, hostPort, instance.ID); err != nil {
-			return errcode.ErrInternal.WithCause(err)
+		if hostPort > 0 {
+			if err := txRepo.BindReservedPort(ctx, hostPort, instance.ID); err != nil {
+				return errcode.ErrInternal.WithCause(err)
+			}
 		}
 		return nil
 	}); err != nil {
 		return nil, err
 	}
 	if reused {
-		return domain.InstanceRespFromModel(instance), nil
+		return instanceRespForScope(instance, scope), nil
 	}
 	if s.schedulerEnabled() {
 		s.logger.Info("实例已入启动队列",
 			zap.Int64("user_id", userID),
 			zap.Int64("challenge_id", challengeID),
 			zap.Int64("instance_id", instance.ID))
-		return domain.InstanceRespFromModel(instance), nil
+		return instanceRespForScope(instance, scope), nil
 	}
 
 	if err := s.provisionInstance(ctx, instance, chal, topology, flag); err != nil {
 		return nil, err
 	}
-	return domain.InstanceRespFromModel(instance), nil
+	return instanceRespForScope(instance, scope), nil
+}
+
+func requiresPublishedHostPort(scope practiceports.InstanceScope) bool {
+	return scope.ContestMode != model.ContestModeAWD
+}
+
+func instanceRespForScope(instance *model.Instance, scope practiceports.InstanceScope) *dto.InstanceResp {
+	resp := domain.InstanceRespFromModel(instance)
+	if scope.ContestMode == model.ContestModeAWD {
+		resp.AccessURL = ""
+	}
+	return resp
 }
 
 func (s *Service) markInstanceFailed(ctx context.Context, instance *model.Instance) {
@@ -1535,7 +1553,7 @@ func (s *Service) createContainer(ctx context.Context, instance *model.Instance,
 		return errcode.ErrContainerCreateFailed.WithCause(err)
 	}
 
-	request, err := s.buildTopologyCreateRequest(ctx, instance.HostPort, chal, topology.EntryNodeKey, spec, flag)
+	request, err := s.buildTopologyCreateRequest(ctx, instance.HostPort, isAWDInstance(instance), chal, topology.EntryNodeKey, spec, flag)
 	if err != nil {
 		return err
 	}
@@ -1568,6 +1586,37 @@ func (s *Service) createSingleContainer(ctx context.Context, instance *model.Ins
 	}
 
 	imageRef := fmt.Sprintf("%s:%s", imageItem.Name, imageItem.Tag)
+	if isAWDInstance(instance) {
+		result, err := s.runtimeService.CreateTopology(ctx, &practiceports.TopologyCreateRequest{
+			ReservedHostPort:           instance.HostPort,
+			DisableEntryPortPublishing: true,
+			Networks: []practiceports.TopologyCreateNetwork{
+				{Key: model.TopologyDefaultNetworkKey},
+			},
+			Nodes: []practiceports.TopologyCreateNode{
+				{
+					Key:          "default",
+					Image:        imageRef,
+					Env:          env,
+					IsEntryPoint: true,
+					NetworkKeys:  []string{model.TopologyDefaultNetworkKey},
+				},
+			},
+		})
+		if err != nil {
+			return errcode.ErrContainerCreateFailed.WithCause(err)
+		}
+		runtimeDetails, err := model.EncodeInstanceRuntimeDetails(result.RuntimeDetails)
+		if err != nil {
+			return errcode.ErrContainerCreateFailed.WithCause(err)
+		}
+		instance.ContainerID = result.PrimaryContainerID
+		instance.NetworkID = result.NetworkID
+		instance.RuntimeDetails = runtimeDetails
+		instance.AccessURL = result.AccessURL
+		return nil
+	}
+
 	containerID, networkID, hostPort, servicePort, err := s.runtimeService.CreateContainer(ctx, imageRef, env, instance.HostPort)
 	if err != nil {
 		return errcode.ErrContainerCreateFailed.WithCause(err)
@@ -1595,9 +1644,14 @@ func (s *Service) createSingleContainer(ctx context.Context, instance *model.Ins
 	return nil
 }
 
+func isAWDInstance(instance *model.Instance) bool {
+	return instance != nil && instance.ContestID != nil && instance.ServiceID != nil
+}
+
 func (s *Service) buildTopologyCreateRequest(
 	ctx context.Context,
 	reservedHostPort int,
+	disableEntryPortPublishing bool,
 	chal *model.Challenge,
 	entryNodeKey string,
 	spec model.TopologySpec,
@@ -1620,10 +1674,11 @@ func (s *Service) buildTopologyCreateRequest(
 	}
 
 	request := &practiceports.TopologyCreateRequest{
-		ReservedHostPort: reservedHostPort,
-		Networks:         make([]practiceports.TopologyCreateNetwork, 0),
-		Nodes:            make([]practiceports.TopologyCreateNode, 0, len(spec.Nodes)),
-		Policies:         append([]model.TopologyTrafficPolicy(nil), spec.Policies...),
+		ReservedHostPort:           reservedHostPort,
+		DisableEntryPortPublishing: disableEntryPortPublishing,
+		Networks:                   make([]practiceports.TopologyCreateNetwork, 0),
+		Nodes:                      make([]practiceports.TopologyCreateNode, 0, len(spec.Nodes)),
+		Policies:                   append([]model.TopologyTrafficPolicy(nil), spec.Policies...),
 	}
 	runtimePlan := domain.BuildRuntimeTopologyPlan(spec)
 	request.Networks = append(request.Networks, runtimePlan.Networks...)

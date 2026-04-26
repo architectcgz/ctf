@@ -12,12 +12,17 @@ const contestApiMocks = vi.hoisted(() => ({
   submitContestAWDAttack: vi.fn(),
 }))
 
+const instanceApiMocks = vi.hoisted(() => ({
+  requestInstanceAccess: vi.fn(),
+}))
+
 const toastMocks = vi.hoisted(() => ({
   success: vi.fn(),
   error: vi.fn(),
 }))
 
 vi.mock('@/api/contest', () => contestApiMocks)
+vi.mock('@/api/instance', () => instanceApiMocks)
 vi.mock('@/composables/useToast', () => ({
   useToast: () => toastMocks,
 }))
@@ -30,6 +35,7 @@ describe('useContestAWDWorkspace', () => {
     contestApiMocks.requestContestAWDTargetAccess.mockReset()
     contestApiMocks.startContestAWDServiceInstance.mockReset()
     contestApiMocks.submitContestAWDAttack.mockReset()
+    instanceApiMocks.requestInstanceAccess.mockReset()
     toastMocks.success.mockReset()
     toastMocks.error.mockReset()
 
@@ -71,6 +77,9 @@ describe('useContestAWDWorkspace', () => {
     })
     contestApiMocks.requestContestAWDTargetAccess.mockResolvedValue({
       access_url: '/api/v1/contests/1/awd/services/7009/targets/14/proxy/',
+    })
+    instanceApiMocks.requestInstanceAccess.mockResolvedValue({
+      access_url: '/api/v1/instances/900/proxy/',
     })
   })
 
@@ -347,6 +356,63 @@ describe('useContestAWDWorkspace', () => {
       'noopener,noreferrer'
     )
     expect(openingTargetKey.value).toBe('')
+
+    openMock.mockRestore()
+  })
+
+  it('打开本队服务时应请求实例代理 access 并防止重复点击', async () => {
+    let resolveAccess: ((value: { access_url: string }) => void) | null = null
+    const openMock = vi.spyOn(window, 'open').mockImplementation(() => null)
+
+    instanceApiMocks.requestInstanceAccess.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveAccess = resolve
+        })
+    )
+
+    let openService!: (instanceId: string) => Promise<string | null>
+    let openingServiceKey!: { value: string }
+
+    mount(
+      defineComponent({
+        setup() {
+          const workspace = useContestAWDWorkspace({
+            contestId: computed(() => '1'),
+            contestStatus: computed(() => 'running'),
+          } as any)
+          openService = workspace.openService
+          openingServiceKey = workspace.openingServiceKey
+          return () => null
+        },
+      })
+    )
+
+    await flushPromises()
+
+    const firstAttempt = openService('900')
+    const secondAttempt = openService('900')
+
+    expect(openingServiceKey.value).toBe('900')
+    expect(instanceApiMocks.requestInstanceAccess).toHaveBeenCalledTimes(1)
+    expect(instanceApiMocks.requestInstanceAccess).toHaveBeenCalledWith('900')
+
+    if (!resolveAccess) {
+      throw new Error('instance access promise resolver was not captured')
+    }
+    const finishAccess = resolveAccess as (value: { access_url: string }) => void
+    finishAccess({
+      access_url: '/api/v1/instances/900/proxy/',
+    })
+
+    await expect(secondAttempt).resolves.toBeNull()
+    await expect(firstAttempt).resolves.toBe('/api/v1/instances/900/proxy/')
+    expect(openMock).toHaveBeenCalledWith(
+      '/api/v1/instances/900/proxy/',
+      '_blank',
+      'noopener,noreferrer'
+    )
+    expect(openingServiceKey.value).toBe('')
 
     openMock.mockRestore()
   })

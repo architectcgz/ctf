@@ -133,10 +133,11 @@ func (s *ProvisioningService) CreateTopology(ctx context.Context, req *runtimepo
 		return nil, fmt.Errorf("entry node is required")
 	}
 
+	publishEntryPort := !req.DisableEntryPortPublishing
 	hostPort := req.ReservedHostPort
 	allocatedHostPort := 0
 	success := false
-	if hostPort <= 0 {
+	if publishEntryPort && hostPort <= 0 {
 		var err error
 		hostPort, err = s.allocatePort(ctx)
 		if err != nil {
@@ -186,10 +187,19 @@ func (s *ProvisioningService) CreateTopology(ctx context.Context, req *runtimepo
 	for _, node := range req.Nodes {
 		nodeNetworkKeys := normalizedNodeNetworkKeys(node.NetworkKeys, networks)
 		primaryNetwork := networkByKey[nodeNetworkKeys[0]]
+		servicePort := node.ServicePort
+		if node.IsEntryPoint && servicePort <= 0 {
+			resolvedPort, err := s.resolveServicePort(ctx, node.Image)
+			if err != nil {
+				s.cleanupTopologyResources(ctx, createdContainerIDs, collectCreatedNetworkIDs(createdNetworks))
+				return nil, err
+			}
+			servicePort = resolvedPort
+		}
 		ports := map[string]string(nil)
-		if node.IsEntryPoint {
+		if node.IsEntryPoint && publishEntryPort {
 			ports = map[string]string{
-				strconv.Itoa(node.ServicePort): strconv.Itoa(hostPort),
+				strconv.Itoa(servicePort): strconv.Itoa(hostPort),
 			}
 		}
 
@@ -223,11 +233,11 @@ func (s *ProvisioningService) CreateTopology(ctx context.Context, req *runtimepo
 		runtimeItem := model.InstanceRuntimeContainer{
 			NodeKey:      node.Key,
 			ContainerID:  containerID,
-			ServicePort:  node.ServicePort,
+			ServicePort:  servicePort,
 			IsEntryPoint: node.IsEntryPoint,
 			NetworkKeys:  append([]string(nil), nodeNetworkKeys...),
 		}
-		if node.IsEntryPoint {
+		if node.IsEntryPoint && publishEntryPort {
 			runtimeItem.HostPort = hostPort
 		}
 		details.Containers = append(details.Containers, runtimeItem)
@@ -246,13 +256,56 @@ func (s *ProvisioningService) CreateTopology(ctx context.Context, req *runtimepo
 		details.ACLRules = resolvedACLRules
 	}
 
+	accessURL, err := s.resolveEntryAccessURL(ctx, details, entryNodeIndex, publishEntryPort, hostPort)
+	if err != nil {
+		s.cleanupTopologyResources(ctx, createdContainerIDs, collectCreatedNetworkIDs(createdNetworks))
+		return nil, err
+	}
+
 	success = true
 	return &runtimeports.TopologyCreateResult{
 		PrimaryContainerID: details.Containers[entryNodeIndex].ContainerID,
 		NetworkID:          details.Networks[0].NetworkID,
-		AccessURL:          fmt.Sprintf("http://%s:%d", s.config.PublicHost, hostPort),
+		AccessURL:          accessURL,
 		RuntimeDetails:     details,
 	}, nil
+}
+
+func (s *ProvisioningService) resolveEntryAccessURL(ctx context.Context, details model.InstanceRuntimeDetails, entryNodeIndex int, publishEntryPort bool, hostPort int) (string, error) {
+	if entryNodeIndex < 0 || entryNodeIndex >= len(details.Containers) {
+		return "", fmt.Errorf("entry container is missing")
+	}
+	entry := details.Containers[entryNodeIndex]
+	if publishEntryPort {
+		return fmt.Sprintf("http://%s:%d", s.config.PublicHost, hostPort), nil
+	}
+	if entry.ServicePort <= 0 {
+		return "", fmt.Errorf("entry service port is required for private access")
+	}
+
+	ipsByNetworkName, err := s.engine.InspectContainerNetworkIPs(ctx, entry.ContainerID)
+	if err != nil {
+		return "", err
+	}
+	networkNamesByKey := make(map[string]string, len(details.Networks))
+	for _, network := range details.Networks {
+		networkNamesByKey[network.Key] = network.Name
+	}
+	for _, networkKey := range entry.NetworkKeys {
+		networkName := networkNamesByKey[networkKey]
+		if networkName == "" {
+			continue
+		}
+		if ip := strings.TrimSpace(ipsByNetworkName[networkName]); ip != "" {
+			return fmt.Sprintf("http://%s:%d", ip, entry.ServicePort), nil
+		}
+	}
+	for _, ip := range ipsByNetworkName {
+		if strings.TrimSpace(ip) != "" {
+			return fmt.Sprintf("http://%s:%d", strings.TrimSpace(ip), entry.ServicePort), nil
+		}
+	}
+	return "", fmt.Errorf("entry container network ip is not available")
 }
 
 func (s *ProvisioningService) resolveServicePort(ctx context.Context, imageRef string) (int, error) {

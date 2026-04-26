@@ -501,10 +501,11 @@ func toRuntimeTopologyCreateRequest(req *practiceports.TopologyCreateRequest) *r
 	}
 
 	return &runtimeports.TopologyCreateRequest{
-		Networks:         networks,
-		Nodes:            nodes,
-		Policies:         append([]model.TopologyTrafficPolicy(nil), req.Policies...),
-		ReservedHostPort: req.ReservedHostPort,
+		Networks:                   networks,
+		Nodes:                      nodes,
+		Policies:                   append([]model.TopologyTrafficPolicy(nil), req.Policies...),
+		ReservedHostPort:           req.ReservedHostPort,
+		DisableEntryPortPublishing: req.DisableEntryPortPublishing,
 	}
 }
 
