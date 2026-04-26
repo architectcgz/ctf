@@ -27,6 +27,7 @@ type adminRouteDeps struct {
 	challenge       *composition.ChallengeModule
 	contest         *composition.ContestModule
 	ops             *composition.OpsModule
+	practice        *composition.PracticeModule
 }
 
 type userRouteDeps struct {
@@ -487,6 +488,19 @@ func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 	adminOnly.GET("/contests/:id/awd/services",
 		middleware.ParseInt64Param("id"),
 		deps.contest.AWDHandler.ListContestAWDServices,
+	)
+	adminOnly.GET("/contests/:id/awd/instances",
+		middleware.ParseInt64Param("id"),
+		deps.practice.Handler.GetAdminContestAWDInstanceOrchestration,
+	)
+	adminOnly.POST("/contests/:id/awd/instances",
+		middleware.ParseInt64Param("id"),
+		audit(middleware.AuditOptions{
+			Action:        model.AuditActionCreate,
+			ResourceType:  "contest_awd_instance",
+			DetailBuilder: middleware.DetailFromParams("id"),
+		}),
+		deps.practice.Handler.StartAdminContestAWDInstance,
 	)
 	adminOnly.POST("/contests/:id/awd/services",
 		middleware.ParseInt64Param("id"),

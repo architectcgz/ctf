@@ -21,6 +21,7 @@ const stageIcons: Record<string, Component> = {
   teams: UsersRound,
   preflight: ClipboardCheck,
   operations: Activity,
+  instances: Boxes,
 }
 
 function handleStageSelect(stage: ContestWorkbenchStage): void {

@@ -67,6 +67,55 @@ func (r *Repository) FindContestAWDService(ctx context.Context, contestID, servi
 	return &service, nil
 }
 
+func (r *Repository) ListContestAWDServices(ctx context.Context, contestID int64) ([]*model.ContestAWDService, error) {
+	var services []*model.ContestAWDService
+	if err := r.dbWithContext(ctx).
+		Where("contest_id = ?", contestID).
+		Where("deleted_at IS NULL").
+		Order("\"order\" ASC, id ASC").
+		Find(&services).Error; err != nil {
+		return nil, err
+	}
+	return services, nil
+}
+
+func (r *Repository) ListContestAWDInstances(ctx context.Context, contestID int64) ([]*model.Instance, error) {
+	var instances []*model.Instance
+	if err := r.dbWithContext(ctx).
+		Where("contest_id = ? AND team_id IS NOT NULL AND service_id IS NOT NULL", contestID).
+		Where("status IN ?", []string{
+			model.InstanceStatusPending,
+			model.InstanceStatusCreating,
+			model.InstanceStatusRunning,
+		}).
+		Order("created_at DESC").
+		Find(&instances).Error; err != nil {
+		return nil, err
+	}
+	return instances, nil
+}
+
+func (r *Repository) FindContestTeam(ctx context.Context, contestID, teamID int64) (*model.Team, error) {
+	var team model.Team
+	if err := r.dbWithContext(ctx).
+		Where("contest_id = ? AND id = ?", contestID, teamID).
+		First(&team).Error; err != nil {
+		return nil, err
+	}
+	return &team, nil
+}
+
+func (r *Repository) ListContestTeams(ctx context.Context, contestID int64) ([]*model.Team, error) {
+	var teams []*model.Team
+	if err := r.dbWithContext(ctx).
+		Where("contest_id = ?", contestID).
+		Order("created_at ASC, id ASC").
+		Find(&teams).Error; err != nil {
+		return nil, err
+	}
+	return teams, nil
+}
+
 func (r *Repository) FindContestRegistration(ctx context.Context, contestID, userID int64) (*model.ContestRegistration, error) {
 	var registration model.ContestRegistration
 	if err := r.dbWithContext(ctx).

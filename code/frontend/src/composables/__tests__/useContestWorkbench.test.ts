@@ -24,6 +24,7 @@ describe('useContestWorkbench', () => {
       'awd-config',
       'preflight',
       'operations',
+      'instances',
     ])
   })
 
@@ -52,6 +53,7 @@ describe('useContestWorkbench', () => {
       'awd-config',
       'preflight',
       'operations',
+      'instances',
     ])
     expect(result.defaultStage).toBe('operations')
   })
@@ -74,6 +76,7 @@ describe('useContestWorkbench', () => {
       'awd-config',
       'preflight',
       'operations',
+      'instances',
     ])
     expect(result.defaultStage).toBe('pool')
   })

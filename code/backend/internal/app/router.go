@@ -173,6 +173,7 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 		challenge:       challengeModule,
 		contest:         contestModule,
 		ops:             opsModule,
+		practice:        practiceModule,
 	})
 	registerUserRoutes(apiV1, protected, teacherOrAbove, userRouteDeps{
 		auditLogger:       composition.NamedAuditLogger(log),

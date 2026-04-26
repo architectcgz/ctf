@@ -24,6 +24,8 @@ type practiceService interface {
 	StartChallenge(ctx context.Context, userID, challengeID int64) (*dto.InstanceResp, error)
 	StartContestChallenge(ctx context.Context, userID, contestID, challengeID int64) (*dto.InstanceResp, error)
 	StartContestAWDService(ctx context.Context, userID, contestID, serviceID int64) (*dto.InstanceResp, error)
+	GetContestAWDInstanceOrchestration(ctx context.Context, contestID int64) (*dto.AdminAWDInstanceOrchestrationResp, error)
+	StartAdminContestAWDTeamService(ctx context.Context, contestID, teamID, serviceID int64) (*dto.AdminAWDInstanceItemResp, error)
 	SubmitFlag(ctx context.Context, userID, challengeID int64, flag string) (*dto.SubmissionResp, error)
 	ListMyChallengeSubmissions(ctx context.Context, userID, challengeID int64) ([]*dto.ChallengeSubmissionRecordResp, error)
 	ListTeacherManualReviewSubmissions(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherManualReviewSubmissionQuery) (*dto.PageResult[*dto.TeacherManualReviewSubmissionItemResp], error)
@@ -104,6 +106,57 @@ func (h *Handler) StartContestAWDService(c *gin.Context) {
 	}
 
 	response.Success(c, instance)
+}
+
+// GetAdminContestAWDInstanceOrchestration 查看 AWD 队伍服务实例编排
+// GET /api/v1/admin/contests/:id/awd/instances
+func (h *Handler) GetAdminContestAWDInstanceOrchestration(c *gin.Context) {
+	contestID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		response.Error(c, errcode.ErrInvalidParams)
+		return
+	}
+
+	resp, err := h.service.GetContestAWDInstanceOrchestration(c.Request.Context(), contestID)
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+
+	response.Success(c, resp)
+}
+
+// StartAdminContestAWDInstance 启动指定队伍的 AWD 服务实例
+// POST /api/v1/admin/contests/:id/awd/instances
+func (h *Handler) StartAdminContestAWDInstance(c *gin.Context) {
+	contestID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		response.Error(c, errcode.ErrInvalidParams)
+		return
+	}
+
+	var req dto.StartAdminContestAWDInstanceReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.ValidationError(c, err)
+		return
+	}
+	if req.TeamID <= 0 || req.ServiceID <= 0 {
+		response.Error(c, errcode.ErrInvalidParams)
+		return
+	}
+
+	resp, err := h.service.StartAdminContestAWDTeamService(
+		c.Request.Context(),
+		contestID,
+		req.TeamID,
+		req.ServiceID,
+	)
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+
+	response.Success(c, resp)
 }
 
 // SubmitFlag 提交 Flag
