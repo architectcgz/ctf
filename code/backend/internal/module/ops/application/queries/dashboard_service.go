@@ -21,6 +21,10 @@ type DashboardService struct {
 	logger       *zap.Logger
 }
 
+type dashboardSessionRecord struct {
+	UserID int64 `json:"user_id"`
+}
+
 func NewDashboardService(
 	runtimeQuery opsports.RuntimeQuery,
 	runtimeStats opsports.RuntimeStatsProvider,
@@ -163,19 +167,40 @@ func (s *DashboardService) countOnlineUsers(ctx context.Context) (int64, error) 
 	}
 	pattern := sessionPrefix + ":*"
 	var cursor uint64
-	count := int64(0)
+	onlineUserIDs := make(map[int64]struct{})
 	for {
 		keys, nextCursor, err := s.redis.Scan(ctx, cursor, pattern, 100).Result()
 		if err != nil {
 			return 0, err
 		}
-		count += int64(len(keys))
+		if len(keys) > 0 {
+			values, err := s.redis.MGet(ctx, keys...).Result()
+			if err != nil {
+				return 0, err
+			}
+			for index, value := range values {
+				if value == nil {
+					continue
+				}
+				payload, ok := value.(string)
+				if !ok {
+					s.logger.Warn("忽略无法识别的在线会话记录", zap.String("key", keys[index]))
+					continue
+				}
+				var session dashboardSessionRecord
+				if err := json.Unmarshal([]byte(payload), &session); err != nil || session.UserID <= 0 {
+					s.logger.Warn("忽略无效的在线会话记录", zap.String("key", keys[index]), zap.Error(err))
+					continue
+				}
+				onlineUserIDs[session.UserID] = struct{}{}
+			}
+		}
 		cursor = nextCursor
 		if cursor == 0 {
 			break
 		}
 	}
-	return count, nil
+	return int64(len(onlineUserIDs)), nil
 }
 
 func (s *DashboardService) getFromCache(ctx context.Context) (*dto.DashboardStats, error) {
