@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
-import { Activity, MonitorUp, RefreshCw, ShieldAlert, Sword, Trophy, Users, Zap } from 'lucide-vue-next'
+import { Activity, Maximize2, Minimize2, MonitorUp, RefreshCw, ShieldAlert, Sword, Trophy, Users, Zap } from 'lucide-vue-next'
 
 import {
   getAdminContestLiveScoreboard,
@@ -40,17 +40,26 @@ const loadingContests = ref(true)
 const loadingScoreboard = ref(false)
 const loadError = ref('')
 const refreshTimer = ref<number | null>(null)
+const projectorStageRef = ref<HTMLElement | null>(null)
+const fullscreenActive = ref(false)
 
 const awdContests = computed(() => contests.value.filter((item) => item.mode === 'awd'))
 const projectorContests = computed(() =>
-  awdContests.value.filter((item) => ['running', 'frozen', 'ended'].includes(item.status))
+  awdContests.value
+    .filter((item) => ['running', 'frozen', 'ended'].includes(item.status))
+    .slice()
+    .sort((left, right) => {
+      const rightTime = new Date(right.starts_at ?? right.ends_at).getTime()
+      const leftTime = new Date(left.starts_at ?? left.ends_at).getTime()
+      return rightTime - leftTime
+    })
 )
 const selectedContest = computed(
   () => projectorContests.value.find((item) => item.id === selectedContestId.value) ?? null
 )
 const scoreboardRows = computed(() => scoreboard.value?.scoreboard.list ?? [])
 const topThreeRows = computed(() => scoreboardRows.value.slice(0, 3))
-const otherRows = computed(() => scoreboardRows.value.slice(3, 12))
+const leaderboardRows = computed(() => scoreboardRows.value.slice(0, 10))
 const lastUpdatedLabel = ref('未同步')
 const selectedRound = computed(() => rounds.value.find((item) => item.id === selectedRoundId.value) ?? null)
 const firstBlood = computed(() =>
@@ -59,11 +68,22 @@ const firstBlood = computed(() =>
     .slice()
     .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())[0] ?? null
 )
+const latestAttackEvents = computed(() =>
+  attacks.value
+    .slice()
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    .slice(0, 8)
+)
 const serviceStatusCounts = computed(() => ({
   up: services.value.filter((item) => item.service_status === 'up').length,
   down: services.value.filter((item) => item.service_status === 'down').length,
   compromised: services.value.filter((item) => item.service_status === 'compromised').length,
 }))
+const serviceHealthRate = computed(() => {
+  const total = services.value.length
+  if (total === 0) return 0
+  return Math.round((serviceStatusCounts.value.up / total) * 100)
+})
 const serviceMatrixRows = computed(() => {
   const teamMap = new Map<string, { team_id: string; team_name: string; services: AWDTeamServiceData[] }>()
   for (const service of services.value) {
@@ -75,7 +95,7 @@ const serviceMatrixRows = computed(() => {
     row.services.push(service)
     teamMap.set(service.team_id, row)
   }
-  return Array.from(teamMap.values()).slice(0, 8)
+  return Array.from(teamMap.values()).slice(0, 10)
 })
 const attackLeaders = computed(() => {
   const teamMap = new Map<string, { team_id: string; team_name: string; success: number; score: number }>()
@@ -96,6 +116,16 @@ const attackLeaders = computed(() => {
     .sort((a, b) => b.success - a.success || b.score - a.score)
     .slice(0, 5)
 })
+const trafficTrendBars = computed(() => {
+  const buckets = (trafficSummary.value?.trend_buckets ?? []).slice(-12)
+  const maxRequests = Math.max(...buckets.map((item) => item.request_count), 1)
+  return buckets.map((item) => ({
+    ...item,
+    height: `${Math.max(10, Math.round((item.request_count / maxRequests) * 100))}%`,
+    errorWidth: `${Math.min(100, Math.round((item.error_count / Math.max(item.request_count, 1)) * 100))}%`,
+  }))
+})
+const hotVictims = computed(() => (trafficSummary.value?.top_victims ?? []).slice(0, 4))
 
 function getContestStatusLabel(status?: string): string {
   switch (status) {
@@ -149,6 +179,17 @@ function getServiceStatusLabel(status: AWDTeamServiceData['service_status']): st
       return 'PWN'
     default:
       return status
+  }
+}
+
+function getAttackTypeLabel(type: AWDAttackLogData['attack_type']): string {
+  switch (type) {
+    case 'flag_capture':
+      return 'Flag'
+    case 'service_exploit':
+      return 'Exploit'
+    default:
+      return type
   }
 }
 
@@ -261,6 +302,33 @@ async function selectContest(contestId: string): Promise<void> {
   await loadScoreboard(contestId)
 }
 
+function handleContestSelect(event: Event): void {
+  const target = event.target as HTMLSelectElement
+  void selectContest(target.value)
+}
+
+function syncFullscreenState(): void {
+  fullscreenActive.value = document.fullscreenElement === projectorStageRef.value
+}
+
+async function toggleFullscreen(): Promise<void> {
+  try {
+    if (fullscreenActive.value) {
+      await document.exitFullscreen()
+      return
+    }
+
+    const target = projectorStageRef.value
+    if (!target?.requestFullscreen) {
+      toast.error('当前浏览器不支持全屏展示')
+      return
+    }
+    await target.requestFullscreen()
+  } catch (error) {
+    toast.error('切换全屏失败')
+  }
+}
+
 function startAutoRefresh(): void {
   if (refreshTimer.value !== null) {
     window.clearInterval(refreshTimer.value)
@@ -271,11 +339,13 @@ function startAutoRefresh(): void {
 }
 
 onMounted(() => {
+  document.addEventListener('fullscreenchange', syncFullscreenState)
   void loadContests()
   startAutoRefresh()
 })
 
 onUnmounted(() => {
+  document.removeEventListener('fullscreenchange', syncFullscreenState)
   if (refreshTimer.value !== null) {
     window.clearInterval(refreshTimer.value)
     refreshTimer.value = null
@@ -287,14 +357,36 @@ onUnmounted(() => {
   <section class="contest-projector-shell workspace-shell journal-shell journal-shell-admin journal-notes-card journal-hero flex min-h-full flex-1 flex-col">
     <div class="workspace-grid">
       <main class="content-pane contest-projector-content">
-        <section class="projector-stage workspace-directory-section">
+        <section
+          ref="projectorStageRef"
+          class="projector-stage workspace-directory-section"
+        >
           <header class="projector-header">
             <div>
-              <div class="projector-overline">Contest Projector</div>
-              <h1 class="projector-title">大屏展示</h1>
+              <div class="projector-overline">
+                Contest Projector
+              </div>
+              <h1 class="projector-title">
+                大屏展示
+              </h1>
             </div>
             <div class="projector-actions">
               <span class="projector-sync">同步于 {{ lastUpdatedLabel }}</span>
+              <button
+                type="button"
+                class="ops-btn ops-btn--neutral"
+                @click="void toggleFullscreen()"
+              >
+                <Minimize2
+                  v-if="fullscreenActive"
+                  class="btn-icon"
+                />
+                <Maximize2
+                  v-else
+                  class="btn-icon"
+                />
+                <span>{{ fullscreenActive ? '退出全屏' : '全屏' }}</span>
+              </button>
               <button
                 type="button"
                 class="ops-btn ops-btn--neutral"
@@ -310,7 +402,9 @@ onUnmounted(() => {
             </div>
           </header>
 
-          <AppLoading v-if="loadingContests">正在同步大屏赛事...</AppLoading>
+          <AppLoading v-if="loadingContests">
+            正在同步大屏赛事...
+          </AppLoading>
 
           <AppEmpty
             v-else-if="loadError"
@@ -342,31 +436,48 @@ onUnmounted(() => {
             v-else
             class="projector-layout"
           >
-            <aside class="contest-rail">
-              <button
-                v-for="contest in projectorContests"
-                :key="contest.id"
-                type="button"
-                class="contest-switch"
-                :class="{ active: contest.id === selectedContestId }"
-                @click="void selectContest(contest.id)"
+            <div class="contest-selector">
+              <label
+                class="contest-selector__label"
+                for="projector-contest-select"
               >
-                <span class="contest-switch__title">{{ contest.title }}</span>
-                <span class="contest-switch__meta">{{ getContestStatusLabel(contest.status) }}</span>
-              </button>
-            </aside>
+                竞赛
+              </label>
+              <select
+                id="projector-contest-select"
+                class="contest-selector__control"
+                :value="selectedContestId"
+                :disabled="loadingScoreboard"
+                @change="handleContestSelect"
+              >
+                <option
+                  v-for="contest in projectorContests"
+                  :key="contest.id"
+                  :value="contest.id"
+                >
+                  {{ contest.title }} · {{ getContestStatusLabel(contest.status) }} · {{ formatTime(contest.starts_at) }}
+                </option>
+              </select>
+            </div>
 
             <section class="scoreboard-projector">
-              <header class="scoreboard-projector__head">
-                <div>
-                  <div class="projector-overline">Live Scoreboard</div>
+              <header class="projector-hero">
+                <div class="projector-hero__title">
+                  <div class="projector-overline">
+                    实时态势
+                  </div>
                   <h2 class="scoreboard-projector__title">
                     {{ selectedContest?.title ?? scoreboard?.contest.title ?? '未选择赛事' }}
                   </h2>
                 </div>
-                <div class="projector-status">
-                  <MonitorUp class="status-icon" />
-                  <span>{{ getContestStatusLabel(selectedContest?.status ?? scoreboard?.contest.status) }}</span>
+                <div class="projector-hero__status">
+                  <div class="projector-status">
+                    <MonitorUp class="status-icon" />
+                    <span>{{ getContestStatusLabel(selectedContest?.status ?? scoreboard?.contest.status) }}</span>
+                  </div>
+                  <div class="projector-round-pill">
+                    R{{ selectedRound?.round_number ?? '--' }} · {{ getRoundStatusLabel(selectedRound?.status) }}
+                  </div>
                 </div>
               </header>
 
@@ -382,18 +493,19 @@ onUnmounted(() => {
                   <strong>{{ topThreeRows[0]?.team_name ?? '--' }}</strong>
                 </article>
                 <article class="projector-metric">
-                  <span>结束</span>
-                  <strong>{{ formatTime(selectedContest?.ends_at ?? scoreboard?.contest.ends_at) }}</strong>
-                </article>
-                <article class="projector-metric">
                   <Activity class="metric-icon metric-icon--live" />
-                  <span>轮次</span>
-                  <strong>R{{ selectedRound?.round_number ?? '--' }} · {{ getRoundStatusLabel(selectedRound?.status) }}</strong>
+                  <span>服务健康</span>
+                  <strong>{{ serviceHealthRate }}%</strong>
                 </article>
                 <article class="projector-metric">
                   <Sword class="metric-icon metric-icon--attack" />
                   <span>成功攻击</span>
                   <strong>{{ roundSummary?.metrics?.successful_attack_count ?? 0 }}</strong>
+                </article>
+                <article class="projector-metric">
+                  <Activity class="metric-icon metric-icon--live" />
+                  <span>代理流量</span>
+                  <strong>{{ trafficSummary?.total_request_count ?? 0 }}</strong>
                 </article>
                 <article class="projector-metric">
                   <ShieldAlert class="metric-icon metric-icon--danger" />
@@ -413,176 +525,258 @@ onUnmounted(() => {
                 v-else
                 class="projector-board"
               >
-                <div class="podium-grid">
-                  <article
-                    v-for="row in topThreeRows"
-                    :key="row.team_id"
-                    class="podium-card"
-                    :class="`rank-${row.rank}`"
-                  >
-                    <span class="podium-rank">#{{ row.rank }}</span>
-                    <strong>{{ row.team_name }}</strong>
-                    <span>{{ formatScore(row.score) }} pts</span>
-                  </article>
-                </div>
-
-                <div class="battle-grid">
-                  <article class="battle-panel first-blood-panel">
+                <div class="arena-grid">
+                  <section class="leaderboard-panel">
                     <header class="panel-head">
                       <div>
-                        <div class="projector-overline">First Blood</div>
-                        <h3>首血</h3>
+                        <div class="projector-overline">
+                          排行榜
+                        </div>
+                        <h3>实时排名</h3>
                       </div>
-                      <Zap class="panel-icon panel-icon--accent" />
+                      <Trophy class="panel-icon panel-icon--accent" />
                     </header>
-                    <div
-                      v-if="firstBlood"
-                      class="first-blood-body"
-                    >
-                      <strong>{{ firstBlood.attacker_team }}</strong>
-                      <span>攻破 {{ firstBlood.victim_team }}</span>
-                      <small>{{ formatScore(firstBlood.score_gained) }} pts · {{ formatTime(firstBlood.created_at) }}</small>
-                    </div>
-                    <div
-                      v-else
-                      class="panel-empty"
-                    >
-                      暂无首血记录
-                    </div>
-                  </article>
 
-                  <article class="battle-panel attack-panel">
-                    <header class="panel-head">
-                      <div>
-                        <div class="projector-overline">Attack Board</div>
-                        <h3>攻击展示</h3>
-                      </div>
-                      <Sword class="panel-icon panel-icon--attack" />
-                    </header>
-                    <div class="attack-list">
-                      <div
-                        v-for="leader in attackLeaders"
-                        :key="leader.team_id"
-                        class="attack-row"
+                    <div class="podium-grid">
+                      <article
+                        v-for="row in topThreeRows"
+                        :key="row.team_id"
+                        class="podium-card"
+                        :class="`rank-${row.rank}`"
                       >
-                        <span>{{ leader.team_name }}</span>
-                        <strong>{{ leader.success }} HIT</strong>
-                        <small>{{ formatScore(leader.score) }} pts</small>
+                        <span class="podium-rank">#{{ row.rank }}</span>
+                        <strong>{{ row.team_name }}</strong>
+                        <span>{{ formatScore(row.score) }} pts</span>
+                      </article>
+                    </div>
+
+                    <div class="leaderboard-list">
+                      <div
+                        v-for="row in leaderboardRows"
+                        :key="row.team_id"
+                        class="leaderboard-row"
+                        :class="{ 'leaderboard-row--top': row.rank <= 3 }"
+                      >
+                        <span class="leaderboard-rank">#{{ row.rank }}</span>
+                        <strong>{{ row.team_name }}</strong>
+                        <span class="leaderboard-score">{{ formatScore(row.score) }}</span>
                       </div>
                       <div
-                        v-if="attackLeaders.length === 0"
+                        v-if="scoreboardRows.length === 0"
                         class="panel-empty"
                       >
-                        暂无成功攻击
+                        暂无得分记录
                       </div>
                     </div>
-                  </article>
+                  </section>
 
-                  <article class="battle-panel traffic-panel">
-                    <header class="panel-head">
-                      <div>
-                        <div class="projector-overline">Traffic Pulse</div>
-                        <h3>流量热点</h3>
+                  <section class="battlefield-panel">
+                    <div class="service-matrix-panel">
+                      <header class="panel-head">
+                        <div>
+                          <div class="projector-overline">
+                            服务墙
+                          </div>
+                          <h3>队伍服务状态</h3>
+                        </div>
+                        <div class="service-counts">
+                          <span class="service-chip service-chip--up">UP {{ serviceStatusCounts.up }}</span>
+                          <span class="service-chip service-chip--down">DOWN {{ serviceStatusCounts.down }}</span>
+                          <span class="service-chip service-chip--compromised">PWN {{ serviceStatusCounts.compromised }}</span>
+                        </div>
+                      </header>
+                      <div class="service-matrix">
+                        <div
+                          v-for="row in serviceMatrixRows"
+                          :key="row.team_id"
+                          class="service-team-row"
+                        >
+                          <strong>{{ row.team_name }}</strong>
+                          <div class="service-cell-list">
+                            <span
+                              v-for="service in row.services.slice(0, 10)"
+                              :key="service.id"
+                              class="service-dot"
+                              :class="`service-dot--${service.service_status}`"
+                              :title="`${service.challenge_id}: ${getServiceStatusLabel(service.service_status)}`"
+                            >
+                              {{ getServiceStatusLabel(service.service_status) }}
+                            </span>
+                          </div>
+                        </div>
+                        <div
+                          v-if="serviceMatrixRows.length === 0"
+                          class="panel-empty"
+                        >
+                          暂无服务状态
+                        </div>
                       </div>
-                      <Activity class="panel-icon panel-icon--live" />
-                    </header>
-                    <div class="traffic-strip">
-                      <span>请求 {{ trafficSummary?.total_request_count ?? 0 }}</span>
-                      <span>攻击方 {{ trafficSummary?.active_attacker_team_count ?? 0 }}</span>
-                      <span>错误 {{ trafficSummary?.error_request_count ?? 0 }}</span>
                     </div>
-                    <div class="traffic-list">
-                      <div
-                        v-for="item in (trafficSummary?.top_attackers ?? []).slice(0, 3)"
-                        :key="item.team_id"
-                        class="attack-row"
-                      >
-                        <span>{{ item.team_name }}</span>
-                        <strong>{{ item.request_count }} REQ</strong>
-                        <small>{{ item.error_count }} ERR</small>
+
+                    <div class="traffic-panel">
+                      <header class="panel-head">
+                        <div>
+                          <div class="projector-overline">
+                            流量态势
+                          </div>
+                          <h3>代理流量</h3>
+                        </div>
+                        <Activity class="panel-icon panel-icon--live" />
+                      </header>
+                      <div class="traffic-strip">
+                        <span>请求 {{ trafficSummary?.total_request_count ?? 0 }}</span>
+                        <span>攻击方 {{ trafficSummary?.active_attacker_team_count ?? 0 }}</span>
+                        <span>目标 {{ trafficSummary?.victim_team_count ?? 0 }}</span>
+                        <span>错误 {{ trafficSummary?.error_request_count ?? 0 }}</span>
+                      </div>
+                      <div class="traffic-trend">
+                        <span
+                          v-for="bucket in trafficTrendBars"
+                          :key="bucket.bucket_start_at"
+                          class="traffic-bar"
+                          :style="{ height: bucket.height }"
+                          :title="`${formatTime(bucket.bucket_start_at)} · ${bucket.request_count} req`"
+                        >
+                          <i :style="{ height: bucket.errorWidth }" />
+                        </span>
+                      </div>
+                      <div class="traffic-columns">
+                        <div class="traffic-list">
+                          <div class="traffic-list__title">
+                            活跃攻击方
+                          </div>
+                          <div
+                            v-for="item in (trafficSummary?.top_attackers ?? []).slice(0, 4)"
+                            :key="item.team_id"
+                            class="attack-row"
+                          >
+                            <span>{{ item.team_name }}</span>
+                            <strong>{{ item.request_count }} REQ</strong>
+                            <small>{{ item.error_count }} ERR</small>
+                          </div>
+                        </div>
+                        <div class="traffic-list">
+                          <div class="traffic-list__title">
+                            高压目标
+                          </div>
+                          <div
+                            v-for="item in hotVictims"
+                            :key="item.team_id"
+                            class="attack-row"
+                          >
+                            <span>{{ item.team_name }}</span>
+                            <strong>{{ item.request_count }} REQ</strong>
+                            <small>{{ item.error_count }} ERR</small>
+                          </div>
+                        </div>
                       </div>
                       <div
-                        v-if="(trafficSummary?.top_attackers ?? []).length === 0"
+                        v-if="(trafficSummary?.top_attackers ?? []).length === 0 && hotVictims.length === 0"
                         class="panel-empty"
                       >
                         暂无代理流量
                       </div>
                     </div>
-                  </article>
+                  </section>
+
+                  <section class="event-panel">
+                    <article class="first-blood-panel">
+                      <header class="panel-head">
+                        <div>
+                          <div class="projector-overline">
+                            首血
+                          </div>
+                          <h3>First Blood</h3>
+                        </div>
+                        <Zap class="panel-icon panel-icon--accent" />
+                      </header>
+                      <div
+                        v-if="firstBlood"
+                        class="first-blood-body"
+                      >
+                        <strong>{{ firstBlood.attacker_team }}</strong>
+                        <span>攻破 {{ firstBlood.victim_team }}</span>
+                        <small>{{ formatScore(firstBlood.score_gained) }} pts · {{ formatTime(firstBlood.created_at) }}</small>
+                      </div>
+                      <div
+                        v-else
+                        class="panel-empty"
+                      >
+                        暂无首血记录
+                      </div>
+                    </article>
+
+                    <article class="attack-panel">
+                      <header class="panel-head">
+                        <div>
+                          <div class="projector-overline">
+                            攻击榜
+                          </div>
+                          <h3>命中队伍</h3>
+                        </div>
+                        <Sword class="panel-icon panel-icon--attack" />
+                      </header>
+                      <div class="attack-list">
+                        <div
+                          v-for="leader in attackLeaders"
+                          :key="leader.team_id"
+                          class="attack-row"
+                        >
+                          <span>{{ leader.team_name }}</span>
+                          <strong>{{ leader.success }} HIT</strong>
+                          <small>{{ formatScore(leader.score) }} pts</small>
+                        </div>
+                        <div
+                          v-if="attackLeaders.length === 0"
+                          class="panel-empty"
+                        >
+                          暂无成功攻击
+                        </div>
+                      </div>
+                    </article>
+
+                    <article class="attack-feed-panel">
+                      <header class="panel-head">
+                        <div>
+                          <div class="projector-overline">
+                            攻击流水
+                          </div>
+                          <h3>实时事件</h3>
+                        </div>
+                      </header>
+                      <div class="attack-feed">
+                        <div
+                          v-for="event in latestAttackEvents"
+                          :key="event.id"
+                          class="attack-event"
+                          :class="{ 'attack-event--success': event.is_success }"
+                        >
+                          <div class="attack-event__line">
+                            <strong>{{ event.attacker_team }}</strong>
+                            <span>→</span>
+                            <strong>{{ event.victim_team }}</strong>
+                          </div>
+                          <div class="attack-event__meta">
+                            <span>{{ getAttackTypeLabel(event.attack_type) }}</span>
+                            <span>{{ event.is_success ? '成功' : '未命中' }}</span>
+                            <span>{{ formatTime(event.created_at) }}</span>
+                          </div>
+                        </div>
+                        <div
+                          v-if="latestAttackEvents.length === 0"
+                          class="panel-empty"
+                        >
+                          暂无攻击流水
+                        </div>
+                      </div>
+                    </article>
+                  </section>
                 </div>
 
-                <section class="service-matrix-panel">
-                  <header class="panel-head">
-                    <div>
-                      <div class="projector-overline">Service Status</div>
-                      <h3>队伍服务状态</h3>
-                    </div>
-                    <div class="service-counts">
-                      <span class="service-chip service-chip--up">UP {{ serviceStatusCounts.up }}</span>
-                      <span class="service-chip service-chip--down">DOWN {{ serviceStatusCounts.down }}</span>
-                      <span class="service-chip service-chip--compromised">PWN {{ serviceStatusCounts.compromised }}</span>
-                    </div>
-                  </header>
-                  <div class="service-matrix">
-                    <div
-                      v-for="row in serviceMatrixRows"
-                      :key="row.team_id"
-                      class="service-team-row"
-                    >
-                      <strong>{{ row.team_name }}</strong>
-                      <div class="service-cell-list">
-                        <span
-                          v-for="service in row.services.slice(0, 8)"
-                          :key="service.id"
-                          class="service-dot"
-                          :class="`service-dot--${service.service_status}`"
-                          :title="`${service.challenge_id}: ${getServiceStatusLabel(service.service_status)}`"
-                        >
-                          {{ getServiceStatusLabel(service.service_status) }}
-                        </span>
-                      </div>
-                    </div>
-                    <div
-                      v-if="serviceMatrixRows.length === 0"
-                      class="panel-empty"
-                    >
-                      暂无服务状态
-                    </div>
-                  </div>
-                </section>
-
-                <div class="projector-table-wrap">
-                  <table class="projector-table">
-                    <thead>
-                      <tr>
-                        <th>排名</th>
-                        <th>队伍</th>
-                        <th class="text-right">总分</th>
-                        <th class="text-right">解题</th>
-                        <th class="text-right">最后提交</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr
-                        v-for="row in otherRows"
-                        :key="row.team_id"
-                      >
-                        <td>#{{ row.rank }}</td>
-                        <td>{{ row.team_name }}</td>
-                        <td class="text-right font-mono">{{ formatScore(row.score) }}</td>
-                        <td class="text-right font-mono">{{ row.solved_count }}</td>
-                        <td class="text-right">{{ formatTime(row.last_submission_at) }}</td>
-                      </tr>
-                      <tr v-if="scoreboardRows.length === 0">
-                        <td
-                          colspan="5"
-                          class="empty-row"
-                        >
-                          暂无得分记录
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
+                <div class="projector-footer">
+                  <span>结束 {{ formatTime(selectedContest?.ends_at ?? scoreboard?.contest.ends_at) }}</span>
+                  <span>最新流量 {{ formatTime(trafficSummary?.latest_event_at) }}</span>
+                  <span>轮次创建 {{ formatTime(selectedRound?.created_at) }}</span>
                 </div>
               </div>
             </section>
@@ -603,7 +797,9 @@ onUnmounted(() => {
 .projector-stage,
 .projector-layout,
 .scoreboard-projector,
-.projector-board {
+.projector-board,
+.battlefield-panel,
+.event-panel {
   display: flex;
   flex-direction: column;
 }
@@ -613,23 +809,32 @@ onUnmounted(() => {
 }
 
 .projector-stage {
-  --workspace-directory-section-padding: var(--space-5) var(--space-5-5);
-  gap: var(--space-5);
+  --workspace-directory-section-padding: var(--space-4) var(--space-5);
+  gap: var(--space-4);
   background: transparent;
 }
 
+.projector-stage:fullscreen {
+  min-height: 100vh;
+  overflow: auto;
+  background: var(--journal-surface);
+  padding: var(--space-5);
+}
+
 .projector-header,
-.scoreboard-projector__head,
 .projector-actions,
 .projector-status,
+.projector-hero,
+.projector-hero__status,
 .projector-metric,
-.podium-card {
+.podium-card,
+.projector-footer {
   display: flex;
   align-items: center;
 }
 
 .projector-header,
-.scoreboard-projector__head {
+.projector-hero {
   justify-content: space-between;
   gap: var(--space-4);
 }
@@ -637,8 +842,8 @@ onUnmounted(() => {
 .projector-overline {
   color: var(--color-text-muted);
   font-size: var(--font-size-10);
-  font-weight: 800;
-  letter-spacing: 0.16em;
+  font-weight: 900;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
 }
 
@@ -651,7 +856,8 @@ onUnmounted(() => {
 }
 
 .scoreboard-projector__title {
-  font-size: var(--font-size-1-25);
+  font-size: var(--font-size-1-60);
+  line-height: 1.05;
 }
 
 .projector-actions {
@@ -661,7 +867,7 @@ onUnmounted(() => {
 .projector-sync {
   color: var(--color-text-muted);
   font-size: var(--font-size-12);
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .ops-btn {
@@ -696,74 +902,91 @@ onUnmounted(() => {
 }
 
 .projector-layout {
-  display: grid;
-  grid-template-columns: minmax(14rem, 18rem) minmax(0, 1fr);
-  gap: var(--space-5);
+  gap: var(--space-4);
 }
 
-.contest-rail,
-.scoreboard-projector {
-  border: 1px solid var(--color-border-subtle);
-  border-radius: 0.75rem;
-  background: var(--color-bg-surface);
-}
-
-.contest-rail {
+.contest-selector {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  flex-wrap: wrap;
   gap: var(--space-2);
-  padding: var(--space-3);
-}
-
-.contest-switch {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--space-1);
   width: 100%;
-  border: 1px solid transparent;
-  border-radius: 0.5rem;
-  padding: var(--space-3);
+  max-width: 32rem;
+}
+
+.contest-selector__label {
   color: var(--color-text-secondary);
-  text-align: left;
-  transition: all 0.2s ease;
+  font-size: var(--font-size-12);
+  font-weight: 900;
 }
 
-.contest-switch:hover,
-.contest-switch.active {
-  border-color: color-mix(in srgb, var(--journal-accent) 40%, var(--color-border-default));
-  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
+.contest-selector__control {
+  width: min(100%, 26rem);
+  flex: 1 1 16rem;
+  min-height: var(--ui-control-height-md);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 0.5rem;
+  background: color-mix(in srgb, var(--color-bg-surface) 76%, transparent);
+  padding: 0 var(--space-3);
   color: var(--journal-ink);
-}
-
-.contest-switch__title {
   font-size: var(--font-size-13);
   font-weight: 800;
 }
 
-.contest-switch__meta {
-  color: var(--color-text-muted);
-  font-size: var(--font-size-11);
-  font-weight: 700;
+.contest-selector__control:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.contest-selector__control:focus {
+  border-color: color-mix(in srgb, var(--journal-accent) 56%, var(--color-border-default));
+  outline: none;
+  box-shadow: 0 0 0 0.1875rem color-mix(in srgb, var(--journal-accent) 14%, transparent);
+}
+
+.contest-selector__control option {
+  background: var(--color-bg-surface);
+  color: var(--journal-ink);
+}
+
+.contest-selector__control,
+.contest-selector__control option {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .scoreboard-projector {
   position: relative;
-  gap: var(--space-5);
-  min-height: 34rem;
-  padding: var(--space-5);
+  gap: var(--space-4);
+  min-height: 38rem;
 }
 
-.projector-status {
+.projector-hero__title {
+  min-width: 0;
+}
+
+.projector-hero__status {
+  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: var(--space-2);
+}
+
+.projector-status,
+.projector-round-pill {
+  gap: var(--space-2);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 999rem;
+  background: color-mix(in srgb, var(--color-bg-elevated) 70%, transparent);
+  padding: var(--space-2) var(--space-3);
   color: var(--color-text-secondary);
-  font-size: var(--font-size-13);
-  font-weight: 800;
+  font-size: var(--font-size-12);
+  font-weight: 900;
 }
 
 .projector-metrics {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: var(--space-3);
 }
 
@@ -772,17 +995,20 @@ onUnmounted(() => {
   gap: var(--space-3);
   min-width: 0;
   border: 1px solid var(--color-border-subtle);
-  border-radius: 0.5rem;
-  padding: var(--space-3) var(--space-4);
+  border-radius: 0.625rem;
+  background: color-mix(in srgb, var(--color-bg-elevated) 62%, transparent);
+  padding: var(--space-3);
   color: var(--color-text-secondary);
   font-size: var(--font-size-12);
-  font-weight: 800;
+  font-weight: 900;
 }
 
 .projector-metric strong {
   min-width: 0;
   overflow: hidden;
   color: var(--journal-ink);
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-1-00);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -812,65 +1038,46 @@ onUnmounted(() => {
 }
 
 .projector-board {
-  gap: var(--space-5);
-}
-
-.podium-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--space-4);
 }
 
-.podium-card {
-  flex-direction: column;
-  justify-content: center;
-  gap: var(--space-2);
-  min-height: 11rem;
-  border: 1px solid var(--color-border-subtle);
-  border-radius: 0.75rem;
-  background: color-mix(in srgb, var(--journal-accent) 8%, transparent);
-  color: var(--color-text-secondary);
-  text-align: center;
-}
-
-.podium-card.rank-1 {
-  background: color-mix(in srgb, var(--color-warning) 16%, transparent);
-}
-
-.podium-card strong {
-  max-width: 90%;
-  overflow: hidden;
-  color: var(--journal-ink);
-  font-size: var(--font-size-1-125);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.podium-rank {
-  color: var(--color-warning);
-  font-family: var(--font-family-mono);
-  font-size: var(--font-size-1-45);
-  font-weight: 900;
-}
-
-.battle-grid {
+.arena-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: minmax(18rem, 1.05fr) minmax(26rem, 1.65fr) minmax(18rem, 1fr);
   gap: var(--space-4);
+  align-items: stretch;
 }
 
-.battle-panel,
-.service-matrix-panel {
-  border: 1px solid var(--color-border-subtle);
+.leaderboard-panel,
+.service-matrix-panel,
+.traffic-panel,
+.first-blood-panel,
+.attack-panel,
+.attack-feed-panel {
+  border: 1px solid color-mix(in srgb, var(--color-border-subtle) 86%, transparent);
   border-radius: 0.75rem;
-  background: color-mix(in srgb, var(--color-bg-elevated) 58%, transparent);
+  background: color-mix(in srgb, var(--color-bg-elevated) 56%, transparent);
   padding: var(--space-4);
 }
 
-.battle-panel {
+.leaderboard-panel,
+.service-matrix-panel,
+.traffic-panel,
+.first-blood-panel,
+.attack-panel,
+.attack-feed-panel,
+.leaderboard-list,
+.attack-feed,
+.attack-list,
+.traffic-list,
+.service-matrix {
   display: flex;
-  min-height: 13rem;
   flex-direction: column;
+}
+
+.leaderboard-panel,
+.battlefield-panel,
+.event-panel {
   gap: var(--space-4);
 }
 
@@ -897,18 +1104,224 @@ onUnmounted(() => {
   color: var(--color-warning);
 }
 
-.first-blood-body,
-.attack-list,
-.traffic-list,
-.service-matrix {
-  display: flex;
+.podium-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.podium-card {
+  min-height: 8rem;
   flex-direction: column;
+  justify-content: center;
+  gap: var(--space-2);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 0.625rem;
+  background: color-mix(in srgb, var(--journal-accent) 9%, transparent);
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+
+.podium-card.rank-1 {
+  min-height: 9rem;
+  background: color-mix(in srgb, var(--color-warning) 18%, transparent);
+}
+
+.podium-card strong {
+  max-width: 90%;
+  overflow: hidden;
+  color: var(--journal-ink);
+  font-size: var(--font-size-1-00);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.podium-rank {
+  color: var(--color-warning);
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-1-35);
+  font-weight: 900;
+}
+
+.leaderboard-list {
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+
+.leaderboard-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
+  background: color-mix(in srgb, var(--color-bg-surface) 44%, transparent);
+  padding: var(--space-2-5) var(--space-3);
+  color: var(--color-text-secondary);
+}
+
+.leaderboard-row--top {
+  border-color: color-mix(in srgb, var(--color-warning) 24%, transparent);
+}
+
+.leaderboard-rank,
+.leaderboard-score {
+  font-family: var(--font-family-mono);
+  font-weight: 900;
+}
+
+.leaderboard-rank {
+  color: var(--color-warning);
+}
+
+.leaderboard-row strong {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--journal-ink);
+  font-size: var(--font-size-13);
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.leaderboard-score {
+  color: var(--journal-ink);
+}
+
+.service-matrix-panel {
+  gap: var(--space-4);
+}
+
+.service-matrix {
+  gap: var(--space-2);
+}
+
+.service-team-row {
+  display: grid;
+  grid-template-columns: minmax(8rem, 12rem) minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-3);
+  border-bottom: 1px solid var(--color-border-subtle);
+  padding-bottom: var(--space-2);
+}
+
+.service-team-row strong {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--journal-ink);
+  font-size: var(--font-size-13);
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.traffic-strip,
+.service-counts,
+.service-cell-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.traffic-strip span,
+.service-chip,
+.service-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--ui-control-height-sm);
+  border-radius: 0.375rem;
+  padding: 0 var(--space-2-5);
+  font-size: var(--font-size-11);
+  font-weight: 900;
+}
+
+.service-dot {
+  min-width: 3.6rem;
+  font-family: var(--font-family-mono);
+}
+
+.service-chip--up,
+.service-dot--up {
+  background: color-mix(in srgb, var(--color-success) 14%, transparent);
+  color: var(--color-success);
+}
+
+.service-chip--down,
+.service-dot--down {
+  background: color-mix(in srgb, var(--color-danger) 14%, transparent);
+  color: var(--color-danger);
+}
+
+.service-chip--compromised,
+.service-dot--compromised {
+  background: color-mix(in srgb, var(--color-warning) 16%, transparent);
+  color: var(--color-warning);
+}
+
+.traffic-panel {
+  gap: var(--space-4);
+}
+
+.traffic-strip span {
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  color: var(--color-text-secondary);
+}
+
+.traffic-trend {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-1-5);
+  height: 8rem;
+  border-radius: 0.625rem;
+  background: color-mix(in srgb, var(--color-bg-surface) 48%, transparent);
+  padding: var(--space-3);
+}
+
+.traffic-bar {
+  position: relative;
+  display: block;
+  flex: 1;
+  min-height: var(--space-3);
+  border-radius: 999rem 999rem 0 0;
+  background: color-mix(in srgb, var(--color-primary) 58%, transparent);
+  overflow: hidden;
+}
+
+.traffic-bar i {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: block;
+  background: color-mix(in srgb, var(--color-danger) 66%, transparent);
+}
+
+.traffic-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.traffic-list,
+.attack-list,
+.attack-feed {
   gap: var(--space-2-5);
 }
 
+.traffic-list__title {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-11);
+  font-weight: 900;
+}
+
 .first-blood-body {
-  justify-content: center;
+  display: flex;
+  min-height: 6rem;
   flex: 1;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-1);
 }
 
 .first-blood-body strong {
@@ -948,132 +1361,105 @@ onUnmounted(() => {
   font-family: var(--font-family-mono);
 }
 
-.traffic-strip,
-.service-counts,
-.service-cell-list {
+.attack-event {
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 0.5rem;
+  background: color-mix(in srgb, var(--color-bg-surface) 50%, transparent);
+  padding: var(--space-2-5);
+}
+
+.attack-event--success {
+  border-color: color-mix(in srgb, var(--color-danger) 30%, transparent);
+  background: color-mix(in srgb, var(--color-danger) 9%, transparent);
+}
+
+.attack-event__line,
+.attack-event__meta {
   display: flex;
-  flex-wrap: wrap;
+  min-width: 0;
+  align-items: center;
   gap: var(--space-2);
 }
 
-.traffic-strip span,
-.service-chip,
-.service-dot {
-  display: inline-flex;
-  align-items: center;
-  min-height: var(--ui-control-height-sm);
-  border-radius: 0.375rem;
-  padding: 0 var(--space-2-5);
-  font-size: var(--font-size-11);
-  font-weight: 900;
-}
-
-.traffic-strip span {
-  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
-  color: var(--color-text-secondary);
-}
-
-.service-matrix-panel {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-}
-
-.service-team-row {
-  display: grid;
-  grid-template-columns: minmax(10rem, 14rem) minmax(0, 1fr);
-  align-items: center;
-  gap: var(--space-3);
-  border-bottom: 1px solid var(--color-border-subtle);
-  padding-bottom: var(--space-2-5);
-}
-
-.service-team-row strong {
+.attack-event__line strong {
   min-width: 0;
   overflow: hidden;
   color: var(--journal-ink);
-  font-size: var(--font-size-13);
+  font-size: var(--font-size-12);
   font-weight: 900;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.service-chip--up,
-.service-dot--up {
-  background: color-mix(in srgb, var(--color-success) 14%, transparent);
-  color: var(--color-success);
-}
-
-.service-chip--down,
-.service-dot--down {
-  background: color-mix(in srgb, var(--color-danger) 14%, transparent);
+.attack-event__line span {
   color: var(--color-danger);
-}
-
-.service-chip--compromised,
-.service-dot--compromised {
-  background: color-mix(in srgb, var(--color-warning) 16%, transparent);
-  color: var(--color-warning);
-}
-
-.projector-table-wrap {
-  overflow-x: auto;
-}
-
-.projector-table {
-  width: 100%;
-  min-width: 42rem;
-  border-collapse: collapse;
-}
-
-.projector-table th,
-.projector-table td {
-  border-bottom: 1px solid var(--color-border-subtle);
-  padding: var(--space-3);
-}
-
-.projector-table th {
-  color: var(--color-text-muted);
-  font-size: var(--font-size-11);
   font-weight: 900;
-  text-align: left;
 }
 
-.projector-table td {
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-13);
-  font-weight: 700;
-}
-
-.text-right {
-  text-align: right;
-}
-
-.font-mono {
+.attack-event__meta {
+  flex-wrap: wrap;
+  margin-top: var(--space-1);
+  color: var(--color-text-muted);
   font-family: var(--font-family-mono);
+  font-size: var(--font-size-10);
+  font-weight: 800;
 }
 
-.empty-row {
-  padding: var(--space-8) var(--space-3);
+.panel-empty {
+  padding: var(--space-4) 0;
+  font-size: var(--font-size-12);
+  font-weight: 800;
   text-align: center;
 }
 
+.projector-footer {
+  justify-content: space-between;
+  gap: var(--space-3);
+  border-top: 1px solid var(--color-border-subtle);
+  padding-top: var(--space-3);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-11);
+  font-weight: 800;
+}
+
+@media (max-width: 1280px) {
+  .projector-metrics {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .arena-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 900px) {
-  .projector-layout,
+  .projector-stage {
+    --workspace-directory-section-padding: var(--space-4);
+  }
+
+  .projector-header,
+  .projector-hero,
+  .projector-footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .projector-hero__status {
+    justify-content: flex-start;
+  }
+
   .projector-metrics,
   .podium-grid,
-  .battle-grid {
+  .traffic-columns {
     grid-template-columns: 1fr;
+  }
+
+  .scoreboard-projector {
+    padding: var(--space-4);
   }
 
   .service-team-row {
     grid-template-columns: 1fr;
-  }
-
-  .projector-header,
-  .scoreboard-projector__head {
-    align-items: flex-start;
-    flex-direction: column;
   }
 }
 </style>
