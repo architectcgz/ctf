@@ -25,6 +25,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   'update:selectedContestId': [contestId: string]
   'open:awd-config': [challengeId: string]
+  'open:contest-edit': []
 }>()
 
 const selectedContest = computed(
@@ -273,19 +274,30 @@ function handleOverrideDialogOpenChange(value: boolean) {
         class="studio-ops-section"
       >
         <header class="section-header">
-          <h2 class="section-title">
-            轮次态势
-          </h2>
-          <p class="section-hint">
-            需先通过赛前检查并开赛，运行面板才会切换到实时监控。
-          </p>
+          <div class="section-identity">
+            <div class="section-overline">Command Center / Pre-flight</div>
+            <h2 class="section-title">
+              {{ selectedContest.title }}
+            </h2>
+          </div>
+          <div class="section-actions">
+            <button
+              type="button"
+              class="ui-btn ui-btn--secondary"
+              @click="emit('open:contest-edit')"
+            >
+              进入竞赛工作室
+            </button>
+          </div>
         </header>
-        <AWDRuntimePendingState />
-        <AWDReadinessSummary
-          :readiness="readiness"
-          :loading="loadingReadiness"
-          @edit-config="handleEditReadinessConfig"
-        />
+        <div class="readiness-wrap">
+          <AWDRuntimePendingState />
+          <AWDReadinessSummary
+            :readiness="readiness"
+            :loading="loadingReadiness"
+            @edit-config="handleEditReadinessConfig"
+          />
+        </div>
       </section>
 
       <!-- 2. Runtime Workspace -->
@@ -293,23 +305,6 @@ function handleOverrideDialogOpenChange(value: boolean) {
         v-else
         class="studio-ops-section"
       >
-        <header class="section-header">
-          <h2 class="section-title">
-            轮次态势
-          </h2>
-          <p class="section-hint">
-            围绕当前轮次查看服务矩阵、攻击流水、流量审计与得分变化。
-          </p>
-        </header>
-
-        <div class="runtime-readiness-strip">
-          <AWDReadinessSummary
-            :readiness="readiness"
-            :loading="loadingReadiness"
-            @edit-config="handleEditReadinessConfig"
-          />
-        </div>
-
         <!-- Dashboard Navigation (Integrated) -->
         <nav
           v-if="operationTabs.length > 1"
@@ -361,6 +356,7 @@ function handleOverrideDialogOpenChange(value: boolean) {
             @open-attack-log-dialog="openAttackLogDialog"
             @run-selected-round-check="runSelectedRoundCheck"
             @update:selected-round-id="updateSelectedRoundId"
+            @open:contest-edit="emit('open:contest-edit')"
           />
         </div>
       </section>
@@ -430,13 +426,29 @@ function handleOverrideDialogOpenChange(value: boolean) {
 }
 
 .section-header {
-  margin-bottom: var(--space-6);
-  border-left: var(--space-1) solid var(--color-primary);
-  padding-left: var(--space-5);
+  margin-bottom: var(--space-8);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  border-bottom: 1px solid var(--color-border-subtle);
+  padding-bottom: var(--space-4);
 }
 
-.section-title { font-size: var(--font-size-1-15); font-weight: 900; color: var(--color-text-primary); margin: 0; }
-.section-hint { font-size: var(--font-size-13); color: var(--color-text-secondary); margin-top: var(--space-1-5); }
+.section-overline {
+  font-size: var(--font-size-10);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-1-5);
+}
+
+.section-title { font-size: var(--font-size-1-25); font-weight: 900; color: var(--color-text-primary); margin: 0; letter-spacing: -0.01em; }
+
+.section-actions {
+  display: flex;
+  gap: var(--space-3);
+}
 
 .studio-ops-tabs { display: flex; gap: var(--space-8); border-bottom: 1px solid var(--color-border-default); margin-bottom: var(--space-6); }
 .tab-item { padding: var(--space-3) var(--space-1); font-size: var(--font-size-13); font-weight: 800; color: var(--color-text-secondary); border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.2s ease; }

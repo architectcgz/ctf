@@ -72,33 +72,6 @@ onMounted(() => {
       <main class="content-pane contest-ops-content">
         <section
           v-if="contest"
-          class="workspace-directory-section contest-ops-hero"
-        >
-          <header class="list-heading contest-ops-heading">
-            <div class="workspace-tab-heading__main">
-              <div class="workspace-overline">
-                Command Center
-              </div>
-              <h1 class="workspace-page-title">
-                {{ contest.title }}
-              </h1>
-            </div>
-
-            <div class="ui-toolbar-actions contest-ops-actions">
-              <button
-                type="button"
-                class="ui-btn ui-btn--ghost contest-ops-studio-button"
-                @click="goToStudio"
-              >
-                <Settings class="h-4 w-4" />
-                <span>进入竞赛工作室</span>
-              </button>
-            </div>
-          </header>
-        </section>
-
-        <section
-          v-if="contest"
           class="workspace-directory-section contest-ops-workspace"
         >
           <AWDOperationsPanel
@@ -107,6 +80,7 @@ onMounted(() => {
             :selected-contest-id="contest.id"
             :hide-contest-selector="true"
             :initial-tab="activeTab"
+            @open:contest-edit="goToStudio"
           />
         </section>
       </main>
@@ -124,24 +98,11 @@ onMounted(() => {
 .contest-ops-content {
   display: flex;
   flex-direction: column;
-  gap: var(--workspace-directory-page-block-gap, var(--space-5));
 }
 
-.contest-ops-hero,
 .contest-ops-workspace {
   --workspace-directory-section-padding: var(--space-5) var(--space-5-5);
   background: transparent;
-}
-
-.contest-ops-heading {
-  align-items: flex-start;
-}
-
-.contest-ops-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-3);
 }
 
 .ops-loading-overlay {
@@ -155,7 +116,6 @@ onMounted(() => {
 }
 
 @media (max-width: 767px) {
-  .contest-ops-hero,
   .contest-ops-workspace {
     --workspace-directory-section-padding: var(--space-4-5) var(--space-4);
   }

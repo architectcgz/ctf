@@ -14,7 +14,6 @@ import {
 import type { AWDTeamServiceData } from '@/api/contracts'
 import AWDAttackLogPanel from '@/components/platform/contest/AWDAttackLogPanel.vue'
 import AWDRoundHeaderPanel from '@/components/platform/contest/AWDRoundHeaderPanel.vue'
-import AWDRoundSelectionPanel from '@/components/platform/contest/AWDRoundSelectionPanel.vue'
 import AWDScoreboardSummaryPanel from '@/components/platform/contest/AWDScoreboardSummaryPanel.vue'
 import AWDServiceStatusPanel from '@/components/platform/contest/AWDServiceStatusPanel.vue'
 import AWDTrafficPanel from '@/components/platform/contest/AWDTrafficPanel.vue'
@@ -31,7 +30,7 @@ import { useAwdInspectorExports } from '@/composables/useAwdInspectorExports'
 import { useAwdInspectorFormatting } from '@/composables/useAwdInspectorFormatting'
 
 const props = defineProps<AWDRoundInspectorProps & { initialTab?: 'matrix' | 'attacks' | 'traffic' | 'scoreboard' }>()
-const emit = defineEmits<AWDRoundInspectorEmits>()
+const emit = defineEmits<AWDRoundInspectorEmits & { 'open:contestEdit': [] }>()
 
 const activeSubTab = ref<'matrix' | 'attacks' | 'traffic' | 'scoreboard'>(props.initialTab || 'matrix')
 
@@ -209,66 +208,71 @@ function getServiceCheckPresentationResult(service: AWDTeamServiceData): Record<
       @open-attack-log-dialog="emit('openAttackLogDialog')"
       @run-selected-round-check="emit('runSelectedRoundCheck')"
       @update:selected-round-id="emit('update:selectedRoundId', $event)"
+      @open:contest-edit="emit('open:contestEdit')"
     />
 
-    <AWDRoundSelectionPanel
-      :rounds="rounds"
-      :selected-round="selectedRound"
-      :selected-round-id="selectedRoundId"
-      :get-round-status-label="getRoundStatusLabel"
-      @update:selected-round-id="emit('update:selectedRoundId', $event)"
-    />
-
-    <!-- 2. Integrated Metric HUD (Borderless) -->
+    <!-- 2. Integrated Metric HUD (Modern Dashboard Style) -->
     <div
       v-if="selectedRound"
       class="awd-stats-hud"
     >
-      <div class="stat-unit">
-        <div class="unit-label">
-          Infrastructure
+      <div class="stat-card">
+        <div class="stat-card__icon stat-card__icon--blue">
+          <Activity class="h-4 w-4" />
         </div>
-        <div class="unit-value font-mono">
-          {{ totalServiceCount }} <small>SRV</small>
-        </div>
-        <div class="unit-helper">
-          ONLINE: {{ upCount }} · OFF: {{ downCount }}
-        </div>
-      </div>
-      <div class="unit-divider" />
-      <div class="stat-unit">
-        <div class="unit-label">
-          Battle Traffic
-        </div>
-        <div class="unit-value font-mono">
-          {{ totalAttackCount }} <small>HITS</small>
-        </div>
-        <div class="unit-helper unit-helper--success">
-          SUCCESS: {{ successfulAttackCount }}
+        <div class="stat-card__content">
+          <div class="unit-label">Infrastructure</div>
+          <div class="unit-value font-mono">
+            {{ totalServiceCount }} <small>SRV</small>
+          </div>
+          <div class="unit-helper">
+            ONLINE: {{ upCount }} · OFF: {{ downCount }}
+          </div>
         </div>
       </div>
-      <div class="unit-divider" />
-      <div class="stat-unit">
-        <div class="unit-label">
-          Compromised
+
+      <div class="stat-card">
+        <div class="stat-card__icon stat-card__icon--green">
+          <Radar class="h-4 w-4" />
         </div>
-        <div class="unit-value unit-value--warning font-mono">
-          {{ compromisedCount }} <small>EXP</small>
-        </div>
-        <div class="unit-helper">
-          AFFECTED: {{ attackedServiceCount }} TEAMS
+        <div class="stat-card__content">
+          <div class="unit-label">Battle Traffic</div>
+          <div class="unit-value font-mono">
+            {{ totalAttackCount }} <small>HITS</small>
+          </div>
+          <div class="unit-helper unit-helper--success">
+            SUCCESS: {{ successfulAttackCount }}
+          </div>
         </div>
       </div>
-      <div class="unit-divider" />
-      <div class="stat-unit">
-        <div class="unit-label">
-          Composition
+
+      <div class="stat-card">
+        <div class="stat-card__icon stat-card__icon--orange">
+          <ShieldAlert class="h-4 w-4" />
         </div>
-        <div class="unit-value">
-          {{ getSourceOverviewLabel() }}
+        <div class="stat-card__content">
+          <div class="unit-label">Compromised</div>
+          <div class="unit-value unit-value--warning font-mono">
+            {{ compromisedCount }} <small>EXP</small>
+          </div>
+          <div class="unit-helper">
+            AFFECTED: {{ attackedServiceCount }} TEAMS
+          </div>
         </div>
-        <div class="unit-helper">
-          {{ getSourceOverviewDescription() }}
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-card__icon stat-card__icon--purple">
+          <LayoutGrid class="h-4 w-4" />
+        </div>
+        <div class="stat-card__content">
+          <div class="unit-label">Composition</div>
+          <div class="unit-value">
+            {{ getSourceOverviewLabel() }}
+          </div>
+          <div class="unit-helper">
+            {{ getSourceOverviewDescription() }}
+          </div>
         </div>
       </div>
     </div>
@@ -462,17 +466,51 @@ function getServiceCheckPresentationResult(service: AWDTeamServiceData): Record<
 .awd-inspector-workbench { display: flex; flex-direction: column; height: 100%; }
 
 .awd-stats-hud {
-  display: flex; align-items: center; padding: 1.5rem 0;
-  background: transparent; border-bottom: 1px solid var(--color-border-default);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+  padding: 1.5rem 0;
+  background: transparent;
 }
-.stat-unit { flex: 1; display: flex; flex-direction: column; gap: 0.25rem; }
-.unit-label { font-size: 9px; font-weight: 800; text-transform: uppercase; color: var(--color-text-muted); letter-spacing: 0.1em; }
-.unit-value { font-size: 1.15rem; font-weight: 900; color: var(--color-text-primary); line-height: 1; }
-.unit-value small { font-size: 10px; opacity: 0.5; margin-left: 2px; }
+
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1.25rem;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 1rem;
+  transition: all 0.2s ease;
+}
+
+.stat-card:hover {
+  border-color: var(--color-border-default);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--color-text-primary) 4%, transparent);
+}
+
+.stat-card__icon {
+  width: 2.75rem;
+  height: 2.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem;
+}
+
+.stat-card__icon--blue { background: color-mix(in srgb, var(--color-primary) 10%, transparent); color: var(--color-primary); }
+.stat-card__icon--green { background: color-mix(in srgb, var(--color-success) 10%, transparent); color: var(--color-success); }
+.stat-card__icon--orange { background: color-mix(in srgb, var(--color-warning) 10%, transparent); color: var(--color-warning); }
+.stat-card__icon--purple { background: color-mix(in srgb, var(--color-secondary) 10%, transparent); color: var(--color-secondary); }
+
+.stat-card__content { flex: 1; display: flex; flex-direction: column; gap: 0.25rem; }
+
+.unit-label { font-size: 10px; font-weight: 800; text-transform: uppercase; color: var(--color-text-muted); letter-spacing: 0.05em; }
+.unit-value { font-size: 1.25rem; font-weight: 900; color: var(--color-text-primary); line-height: 1; }
+.unit-value small { font-size: 11px; opacity: 0.5; margin-left: 2px; }
 .unit-helper { font-size: 11px; font-weight: 600; color: var(--color-text-secondary); }
 .unit-helper--success { color: var(--color-success); }
 .unit-value--warning { color: var(--color-warning); }
-.unit-divider { width: 1px; height: 2.5rem; background: var(--color-border-default); margin: 0 2rem; }
 
 .awd-detail-canvas { flex: 1; display: flex; flex-direction: column; background: transparent; min-height: 0; }
 .canvas-tabs-header {
