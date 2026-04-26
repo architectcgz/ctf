@@ -261,3 +261,124 @@ func TestProxyAWDTargetForwardsAndRecordsExplicitTrafficScope(t *testing.T) {
 		t.Fatalf("unexpected awd event: %+v", recorder.awdEvent)
 	}
 }
+
+func TestProxyAWDTargetRewritesRootRelativeHTMLLinks(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	target := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		_, _ = w.Write([]byte(`<html><body><a href="/">首页</a><form action="/login"></form><img src="/logo.png"><a href="//cdn.example.com/x">cdn</a></body></html>`))
+	}))
+	defer target.Close()
+
+	contestID := int64(7)
+	attackerTeamID := int64(13)
+	victimTeamID := int64(14)
+	serviceID := int64(7009)
+	challengeID := int64(9)
+	handler := NewHandler(
+		stubAWDProxyRuntimeService{
+			targetURL: target.URL,
+			claims: &runtimeports.ProxyTicketClaims{
+				UserID:            1001,
+				Username:          "alice",
+				Role:              model.RoleStudent,
+				InstanceID:        42,
+				ContestID:         &contestID,
+				Purpose:           runtimeports.ProxyTicketPurposeAWDAttack,
+				AWDAttackerTeamID: &attackerTeamID,
+				AWDVictimTeamID:   &victimTeamID,
+				AWDServiceID:      &serviceID,
+				AWDChallengeID:    &challengeID,
+			},
+		},
+		nil,
+		CookieConfig{},
+		nil,
+	)
+
+	router := gin.New()
+	router.GET("/api/v1/contests/:id/awd/services/:sid/targets/:team_id/proxy/*proxyPath", func(c *gin.Context) {
+		c.Set("id", contestID)
+		c.Set("sid", serviceID)
+		c.Set("team_id", victimTeamID)
+		handler.ProxyAWDTarget(c)
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/contests/7/awd/services/7009/targets/14/proxy/", nil)
+	req.AddCookie(&http.Cookie{Name: proxyAccessCookieName, Value: "ticket-awd"})
+	resp := httptest.NewRecorder()
+
+	router.ServeHTTP(resp, req)
+
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected proxied status 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+	body := resp.Body.String()
+	expectedPrefix := "/api/v1/contests/7/awd/services/7009/targets/14/proxy"
+	for _, expected := range []string{
+		`href="` + expectedPrefix + `/"`,
+		`action="` + expectedPrefix + `/login"`,
+		`src="` + expectedPrefix + `/logo.png"`,
+		`href="//cdn.example.com/x"`,
+	} {
+		if !strings.Contains(body, expected) {
+			t.Fatalf("expected rewritten body to contain %q, got %s", expected, body)
+		}
+	}
+}
+
+func TestProxyAWDTargetRewritesRootRelativeRedirectLocation(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	target := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Location", "/dashboard")
+		w.WriteHeader(http.StatusFound)
+	}))
+	defer target.Close()
+
+	contestID := int64(7)
+	attackerTeamID := int64(13)
+	victimTeamID := int64(14)
+	serviceID := int64(7009)
+	challengeID := int64(9)
+	handler := NewHandler(
+		stubAWDProxyRuntimeService{
+			targetURL: target.URL,
+			claims: &runtimeports.ProxyTicketClaims{
+				UserID:            1001,
+				Username:          "alice",
+				Role:              model.RoleStudent,
+				InstanceID:        42,
+				ContestID:         &contestID,
+				Purpose:           runtimeports.ProxyTicketPurposeAWDAttack,
+				AWDAttackerTeamID: &attackerTeamID,
+				AWDVictimTeamID:   &victimTeamID,
+				AWDServiceID:      &serviceID,
+				AWDChallengeID:    &challengeID,
+			},
+		},
+		nil,
+		CookieConfig{},
+		nil,
+	)
+
+	router := gin.New()
+	router.GET("/api/v1/contests/:id/awd/services/:sid/targets/:team_id/proxy/*proxyPath", func(c *gin.Context) {
+		c.Set("id", contestID)
+		c.Set("sid", serviceID)
+		c.Set("team_id", victimTeamID)
+		handler.ProxyAWDTarget(c)
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/contests/7/awd/services/7009/targets/14/proxy/login", nil)
+	req.AddCookie(&http.Cookie{Name: proxyAccessCookieName, Value: "ticket-awd"})
+	resp := httptest.NewRecorder()
+
+	router.ServeHTTP(resp, req)
+
+	expected := "/api/v1/contests/7/awd/services/7009/targets/14/proxy/dashboard"
+	if resp.Code != http.StatusFound || resp.Header().Get("Location") != expected {
+		t.Fatalf("expected redirect to %q, got status=%d location=%q body=%s", expected, resp.Code, resp.Header().Get("Location"), resp.Body.String())
+	}
+}
