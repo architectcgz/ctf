@@ -19,6 +19,7 @@ const props = defineProps<{
   contests: ContestDetailData[]
   selectedContestId: string | null
   hideContestSelector?: boolean
+  hideStudioLink?: boolean
   initialTab?: 'matrix' | 'attacks' | 'traffic' | 'scoreboard'
 }>()
 
@@ -282,8 +283,9 @@ function handleOverrideDialogOpenChange(value: boolean) {
           </div>
           <div class="section-actions">
             <button
+              v-if="!hideStudioLink"
               type="button"
-              class="ui-btn ui-btn--secondary"
+              class="ops-btn ops-btn--neutral"
               @click="emit('open:contest-edit')"
             >
               进入竞赛工作室
@@ -347,6 +349,7 @@ function handleOverrideDialogOpenChange(value: boolean) {
             :service-check-hint="serviceCheckHint"
             :attack-log-hint="attackLogHint"
             :initial-tab="initialTab"
+            :hide-studio-link="hideStudioLink"
             @refresh="refresh"
             @apply-traffic-filters="handleApplyTrafficFilters"
             @change-traffic-page="handleTrafficPageChange"
@@ -454,6 +457,35 @@ function handleOverrideDialogOpenChange(value: boolean) {
 .tab-item { padding: var(--space-3) var(--space-1); font-size: var(--font-size-13); font-weight: 800; color: var(--color-text-secondary); border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.2s ease; }
 .tab-item:hover { color: var(--color-text-primary); }
 .tab-item.active { color: var(--color-primary); border-bottom-color: var(--color-primary); }
+
+.ops-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: var(--ui-control-height-md);
+  padding: 0 var(--space-5);
+  border-radius: 0.85rem;
+  font-size: var(--font-size-13);
+  font-weight: 700;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.ops-btn--neutral {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-default);
+  color: var(--color-text-secondary);
+}
+
+.ops-btn--neutral:hover:not(:disabled) {
+  border-color: var(--color-primary);
+  color: var(--color-text-primary);
+}
+
+.ops-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 
 .runtime-readiness-strip { margin-bottom: var(--space-6); }
 

@@ -29,7 +29,8 @@ import { useAwdInspectorDerivedData } from '@/composables/useAwdInspectorDerived
 import { useAwdInspectorExports } from '@/composables/useAwdInspectorExports'
 import { useAwdInspectorFormatting } from '@/composables/useAwdInspectorFormatting'
 
-const props = defineProps<AWDRoundInspectorProps & { initialTab?: 'matrix' | 'attacks' | 'traffic' | 'scoreboard' }>()
+const props = defineProps<AWDRoundInspectorProps & { initialTab?: 'matrix' | 'attacks' | 'traffic' | 'scoreboard', hideStudioLink?: boolean }>()
+
 const emit = defineEmits<AWDRoundInspectorEmits & { 'open:contestEdit': [] }>()
 
 const activeSubTab = ref<'matrix' | 'attacks' | 'traffic' | 'scoreboard'>(props.initialTab || 'matrix')
@@ -202,6 +203,7 @@ function getServiceCheckPresentationResult(service: AWDTeamServiceData): Record<
       :get-round-status-label="getRoundStatusLabel"
       :get-round-status-class="getRoundStatusClass"
       :check-button-label="checkButtonLabel"
+      :hide-studio-link="hideStudioLink"
       @refresh="emit('refresh')"
       @open-create-round-dialog="emit('openCreateRoundDialog')"
       @open-service-check-dialog="emit('openServiceCheckDialog')"
