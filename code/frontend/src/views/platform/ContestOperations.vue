@@ -1,47 +1,19 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 
 import { getContest } from '@/api/admin'
 import type { ContestDetailData } from '@/api/contracts'
 import AWDOperationsPanel from '@/components/platform/contest/AWDOperationsPanel.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
 import { useBackofficeBreadcrumbDetail } from '@/composables/useBackofficeBreadcrumbDetail'
-import { useRouteQueryTabs } from '@/composables/useRouteQueryTabs'
 import { useToast } from '@/composables/useToast'
 
-type ContestOperationsPanelKey = 'inspector'
-
-const panelTabs = [
-  {
-    key: 'inspector' as const,
-    label: '轮次态势',
-    tabId: 'contest-ops-tab-inspector',
-    panelId: 'contest-ops-panel-inspector',
-  },
-]
-
 const route = useRoute()
-const router = useRouter()
 const toast = useToast()
 const { setBreadcrumbDetailTitle } = useBackofficeBreadcrumbDetail()
 
 const contestId = computed(() => String(route.params.id ?? ''))
-const panelTabOrder = panelTabs.map((tab) => tab.key) as ContestOperationsPanelKey[]
-const {
-  activeTab: activePanel,
-  setTabButtonRef,
-  selectTab: switchPanel,
-  handleTabKeydown,
-} = useRouteQueryTabs<ContestOperationsPanelKey>({
-  route,
-  router,
-  orderedTabs: panelTabOrder,
-  defaultTab: 'inspector',
-  routeName: 'ContestOperations',
-  routeParams: route.params,
-})
-
 const loading = ref(true)
 const contest = ref<ContestDetailData | null>(null)
 const runtimeStageReady = computed(
@@ -97,49 +69,17 @@ onUnmounted(() => {
           v-if="contest"
           class="workspace-directory-section contest-ops-workspace"
         >
-          <nav
-            class="top-tabs"
-            role="tablist"
-            aria-label="AWD 运维视图切换"
-          >
-            <button
-              v-for="(tab, index) in panelTabs"
-              :id="tab.tabId"
-              :key="tab.key"
-              :ref="(element) => setTabButtonRef(tab.key, element as HTMLButtonElement | null)"
-              type="button"
-              role="tab"
-              class="top-tab"
-              :class="{ active: activePanel === tab.key }"
-              :aria-selected="activePanel === tab.key ? 'true' : 'false'"
-              :aria-controls="tab.panelId"
-              :tabindex="activePanel === tab.key ? 0 : -1"
-              @click="switchPanel(tab.key)"
-              @keydown="handleTabKeydown($event, index)"
-            >
-              {{ tab.label }}
-            </button>
-          </nav>
-
-          <section
-            v-if="activePanel === 'inspector'"
-            id="contest-ops-panel-inspector"
-            class="tab-panel contest-ops-tab-panel active"
-            role="tabpanel"
-            aria-labelledby="contest-ops-tab-inspector"
-          >
-            <AWDOperationsPanel
-              :key="`${contest.id}-inspector`"
-              :contests="[contest]"
-              :selected-contest-id="contest.id"
-              :hide-contest-selector="true"
-              :hide-studio-link="true"
-              :hide-readiness-actions="true"
-              :hide-operation-tabs="true"
-              operation-panel="inspector"
-              :runtime-content="inspectorRuntimeContent"
-            />
-          </section>
+          <AWDOperationsPanel
+            :key="`${contest.id}-inspector`"
+            :contests="[contest]"
+            :selected-contest-id="contest.id"
+            :hide-contest-selector="true"
+            :hide-studio-link="true"
+            :hide-readiness-actions="true"
+            :hide-operation-tabs="true"
+            operation-panel="inspector"
+            :runtime-content="inspectorRuntimeContent"
+          />
         </section>
       </main>
     </div>
@@ -160,21 +100,8 @@ onUnmounted(() => {
 }
 
 .contest-ops-workspace {
-  --workspace-directory-section-padding: var(--space-5) var(--space-5-5);
-  --page-top-tabs-gap: var(--space-7);
-  --page-top-tabs-margin: 0;
-  --page-top-tabs-padding: 0;
-  --page-top-tabs-border: color-mix(in srgb, var(--journal-ink) 10%, transparent);
-  --page-top-tab-min-height: 52px;
-  --page-top-tab-padding: var(--space-2-5) 0 var(--space-3-5);
-  --page-top-tab-font-size: var(--font-size-15);
-  --page-top-tab-active-color: color-mix(in srgb, var(--journal-accent) 74%, var(--journal-ink));
-  --page-top-tab-active-border: color-mix(in srgb, var(--journal-accent) 86%, var(--journal-ink));
+  --workspace-directory-section-padding: var(--space-4) var(--space-5-5);
   background: transparent;
-}
-
-.contest-ops-tab-panel {
-  padding-top: var(--space-6);
 }
 
 .ops-loading-overlay {
