@@ -95,10 +95,13 @@ describe('backofficeNavigation', () => {
 
     const items = getVisibleBackofficeSecondaryItems('/platform/contest-ops/contests', 'admin')
 
-    expect(items.map((item) => item.label)).toEqual(['竞赛列表'])
+    expect(items.map((item) => item.label)).toEqual(['竞赛列表', '大屏展示'])
     expect(items.find((item) => item.active)?.routeName).toBe('PlatformContestOpsIndex')
 
     const manageItems = getVisibleBackofficeSecondaryItems('/platform/contests/contest-1/manage', 'admin')
     expect(manageItems.find((item) => item.active)?.routeName).toBe('PlatformContestOpsIndex')
+
+    const projectorItems = getVisibleBackofficeSecondaryItems('/platform/contest-ops/projector', 'admin')
+    expect(projectorItems.find((item) => item.active)?.routeName).toBe('PlatformContestProjector')
   })
 })
