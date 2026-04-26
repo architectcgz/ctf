@@ -76,6 +76,24 @@ func newDashboardTestService(t *testing.T, db *gorm.DB, redis *redislib.Client) 
 	)
 }
 
+func seedDashboardSession(t *testing.T, redis *redislib.Client, key string, userID int64) {
+	t.Helper()
+
+	payload, err := json.Marshal(map[string]any{
+		"id":         key,
+		"user_id":    userID,
+		"username":   "user",
+		"role":       "student",
+		"expires_at": time.Now().Add(time.Hour).UTC(),
+	})
+	if err != nil {
+		t.Fatalf("marshal session payload: %v", err)
+	}
+	if err := redis.Set(context.Background(), key, payload, time.Hour).Err(); err != nil {
+		t.Fatalf("seed session %s: %v", key, err)
+	}
+}
+
 func TestDashboardServiceGetDashboardStatsUsesCache(t *testing.T) {
 	mr := miniredis.RunT(t)
 	redis := redislib.NewClient(&redislib.Options{Addr: mr.Addr()})
@@ -131,12 +149,9 @@ func TestDashboardServiceGetDashboardStatsComputesAndCachesSummary(t *testing.T)
 	mr := miniredis.RunT(t)
 	redis := redislib.NewClient(&redislib.Options{Addr: mr.Addr()})
 	t.Cleanup(func() { _ = redis.Close() })
-	if err := redis.Set(context.Background(), "ctf:auth:session:101", "session-1", time.Hour).Err(); err != nil {
-		t.Fatalf("seed session 1: %v", err)
-	}
-	if err := redis.Set(context.Background(), "ctf:auth:session:102", "session-2", time.Hour).Err(); err != nil {
-		t.Fatalf("seed session 2: %v", err)
-	}
+	seedDashboardSession(t, redis, "ctf:auth:session:101-a", 101)
+	seedDashboardSession(t, redis, "ctf:auth:session:101-b", 101)
+	seedDashboardSession(t, redis, "ctf:auth:session:102", 102)
 
 	service := newDashboardTestService(t, db, redis)
 
@@ -145,7 +160,7 @@ func TestDashboardServiceGetDashboardStatsComputesAndCachesSummary(t *testing.T)
 		t.Fatalf("GetDashboardStats() error = %v", err)
 	}
 	if got.OnlineUsers != 2 {
-		t.Fatalf("expected 2 online users, got %+v", got)
+		t.Fatalf("expected 2 distinct online users, got %+v", got)
 	}
 	if got.ActiveContainers != 2 {
 		t.Fatalf("expected 2 active containers, got %+v", got)
@@ -164,6 +179,27 @@ func TestDashboardServiceGetDashboardStatsComputesAndCachesSummary(t *testing.T)
 	}
 	if cachedStats.OnlineUsers != 2 || cachedStats.ActiveContainers != 2 {
 		t.Fatalf("unexpected cached stats: %+v", cachedStats)
+	}
+}
+
+func TestDashboardServiceCountOnlineUsersIgnoresInvalidSessions(t *testing.T) {
+	mr := miniredis.RunT(t)
+	redis := redislib.NewClient(&redislib.Options{Addr: mr.Addr()})
+	t.Cleanup(func() { _ = redis.Close() })
+
+	seedDashboardSession(t, redis, "ctf:auth:session:valid", 101)
+	if err := redis.Set(context.Background(), "ctf:auth:session:broken", "not-json", time.Hour).Err(); err != nil {
+		t.Fatalf("seed broken session: %v", err)
+	}
+
+	service := newDashboardTestService(t, setupDashboardTestDB(t), redis)
+
+	got, err := service.countOnlineUsers(context.Background())
+	if err != nil {
+		t.Fatalf("countOnlineUsers() error = %v", err)
+	}
+	if got != 1 {
+		t.Fatalf("expected invalid sessions to be ignored, got %d", got)
 	}
 }
 
