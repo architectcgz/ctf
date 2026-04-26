@@ -113,6 +113,10 @@ func (s *InstanceService) ListTeacherInstances(ctx context.Context, requesterID 
 }
 
 func toInstanceInfo(inst runtimeports.UserVisibleInstanceRow, now time.Time) *dto.InstanceInfo {
+	accessURL := inst.AccessURL
+	if inst.ContestMode == model.ContestModeAWD {
+		accessURL = ""
+	}
 	return &dto.InstanceInfo{
 		ID:               inst.ID,
 		ChallengeID:      inst.ChallengeID,
@@ -122,7 +126,7 @@ func toInstanceInfo(inst runtimeports.UserVisibleInstanceRow, now time.Time) *dt
 		FlagType:         inst.FlagType,
 		Status:           visibleInstanceStatus(inst.Status, inst.ExpiresAt, now),
 		ShareScope:       inst.ShareScope,
-		AccessURL:        inst.AccessURL,
+		AccessURL:        accessURL,
 		ExpiresAt:        inst.ExpiresAt,
 		RemainingTime:    runtimedomain.RemainingTime(inst.ExpiresAt, now),
 		ExtendCount:      inst.ExtendCount,

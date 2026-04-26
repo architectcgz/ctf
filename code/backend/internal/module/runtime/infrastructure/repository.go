@@ -312,6 +312,7 @@ func (r *Repository) ListVisibleByUser(ctx context.Context, userID int64) ([]run
 		metadata := buildRuntimeInstanceMetadata(row.ContestMode, row.ServiceSnapshot, row.ServiceName, row.ChallengeTitle, row.Category, row.Difficulty, row.FlagType)
 		items[idx] = runtimeports.UserVisibleInstanceRow{
 			ID:             row.ID,
+			ContestMode:    row.ContestMode,
 			ChallengeID:    row.ChallengeID,
 			ChallengeTitle: metadata.Title,
 			Category:       metadata.Category,
