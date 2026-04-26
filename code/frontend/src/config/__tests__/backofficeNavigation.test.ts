@@ -82,6 +82,13 @@ describe('backofficeNavigation', () => {
     expect(items.find((item) => item.active)?.routeName).toBe('ChallengeManage')
   })
 
+  it('keeps AWD service template import inside the AWD service template entry', () => {
+    const items = getVisibleBackofficeSecondaryItems('/platform/awd-service-templates/imports', 'admin')
+
+    expect(items.find((item) => item.active)?.routeName).toBe('PlatformAwdServiceTemplateLibrary')
+    expect(getBackofficeModuleByPath('/platform/awd-service-templates/imports')?.key).toBe('resources')
+  })
+
   it('maps admin event operations routes back to 赛事运维 and marks the matched secondary item active', () => {
     expect(getBackofficeModuleByPath('/platform/contest-ops/contests')?.key).toBe('contestOps')
     expect(getBackofficeModuleByPath('/platform/contests/contest-1/manage')?.key).toBe('contestOps')

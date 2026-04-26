@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import {
   Activity,
   Box,
   CheckCircle,
   Clock,
-  Plus,
   RefreshCw,
+  Upload,
 } from 'lucide-vue-next'
 
 import type {
@@ -23,9 +23,9 @@ import type { PlatformAwdServiceTemplateImportUploadResult } from '@/composables
 
 type AwdServiceTypeFilter = AdminAwdServiceTemplateData['service_type'] | ''
 type AwdServiceStatusFilter = AdminAwdServiceTemplateData['status'] | ''
-type LibraryTab = 'library' | 'import'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
+  mode?: 'library' | 'import'
   list: AdminAwdServiceTemplateData[]
   total: number
   page: number
@@ -39,7 +39,9 @@ const props = defineProps<{
   importQueue: AdminAwdServiceTemplateImportPreview[]
   uploadResults: PlatformAwdServiceTemplateImportUploadResult[]
   selectedFileName?: string
-}>()
+}>(), {
+  mode: 'library',
+})
 
 const emit = defineEmits<{
   refresh: []
@@ -49,13 +51,11 @@ const emit = defineEmits<{
   updateStatusFilter: [value: AwdServiceStatusFilter]
   selectImportPackages: [files: File[]]
   commitImport: [preview: AdminAwdServiceTemplateImportPreview]
-  openCreateDialog: []
+  openImportPage: []
   openEditDialog: [template: AdminAwdServiceTemplateData]
   deleteTemplate: [template: AdminAwdServiceTemplateData]
   changePage: [page: number]
 }>()
-
-const activeTab = ref<LibraryTab>('library')
 
 const totalPages = computed(() => Math.max(1, Math.ceil(props.total / props.pageSize)))
 const publishedCount = computed(() => props.list.filter((item) => item.status === 'published').length)
@@ -64,6 +64,12 @@ const pendingReadinessCount = computed(
   () => props.list.filter((item) => item.readiness_status === 'pending').length
 )
 const importQueueCount = computed(() => props.importQueue.length)
+const heroTitle = computed(() => props.mode === 'import' ? '导入 AWD 题目包' : 'AWD 服务模板库')
+const heroSummary = computed(() =>
+  props.mode === 'import'
+    ? '上传符合规范的 AWD 题目包，确认后生成可用于编排的服务模板。'
+    : '这里单独维护 AWD 题目的服务模板，不再和解题赛题目混在同一资源目录。'
+)
 const hasActiveFilters = computed(() =>
   Boolean(props.keyword.trim() || props.serviceTypeFilter || props.statusFilter)
 )
@@ -203,9 +209,6 @@ function formatStructuredJSON(value?: Record<string, unknown>): string {
   return JSON.stringify(value, null, 2)
 }
 
-function selectTab(tab: LibraryTab) {
-  activeTab.value = tab
-}
 </script>
 
 <template>
@@ -218,37 +221,24 @@ function selectTab(tab: LibraryTab) {
               AWD Service Authoring
             </div>
             <h1 class="hero-title">
-              AWD 服务模板库
+              {{ heroTitle }}
             </h1>
             <p class="hero-summary">
-              这里单独维护 AWD 题目的服务模板，不再和解题赛题目混在同一资源目录。
+              {{ heroSummary }}
             </p>
 
-            <nav class="awd-library-tabs">
-              <button
-                class="awd-tab-item"
-                :class="{ active: activeTab === 'library' }"
-                @click="selectTab('library')"
-              >
-                全部模板
-              </button>
-              <button
-                class="awd-tab-item"
-                :class="{ active: activeTab === 'import' }"
-                @click="selectTab('import')"
-              >
-                导入 AWD 题目包
-                <span
-                  v-if="importQueueCount > 0"
-                  class="awd-tab-badge"
-                >{{ importQueueCount }}</span>
-              </button>
-            </nav>
+            <div
+              v-if="mode === 'import'"
+              class="awd-import-page-note"
+            >
+              上传题目包并确认导入后，系统会生成可用于 AWD 编排的服务模板。
+            </div>
           </div>
 
           <div class="awd-library-hero-actions">
             <div class="quick-actions">
               <button
+                v-if="mode === 'library'"
                 type="button"
                 class="ui-btn ui-btn--ghost"
                 @click="emit('refresh')"
@@ -257,22 +247,31 @@ function selectTab(tab: LibraryTab) {
                 刷新列表
               </button>
               <button
-                id="awd-template-open-create"
+                v-if="mode === 'library'"
+                id="awd-template-open-import"
                 type="button"
                 class="ui-btn ui-btn--primary"
-                @click="emit('openCreateDialog')"
+                @click="emit('openImportPage')"
               >
-                <Plus class="h-4 w-4" />
-                创建模板
+                <Upload class="h-4 w-4" />
+                导入题目包
+              </button>
+              <button
+                v-if="mode === 'import'"
+                type="button"
+                class="ui-btn ui-btn--ghost"
+                @click="emit('refreshImportQueue')"
+              >
+                <RefreshCw class="h-4 w-4" />
+                刷新队列
               </button>
             </div>
           </div>
         </section>
 
-        <div class="awd-library-body">
-          <!-- Tab A: Library -->
+        <div>
           <div
-            v-if="activeTab === 'library'"
+            v-if="mode === 'library'"
             class="awd-library-pane"
           >
             <div class="admin-summary-grid awd-template-summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface">
@@ -284,6 +283,9 @@ function selectTab(tab: LibraryTab) {
                 <div class="journal-note-value progress-card-value metric-panel-value">
                   {{ total.toString().padStart(2, '0') }}
                 </div>
+                <div class="journal-note-helper progress-card-hint metric-panel-helper">
+                  当前筛选条件下可管理的服务模板
+                </div>
               </article>
 
               <article class="journal-note progress-card metric-panel-card">
@@ -293,6 +295,9 @@ function selectTab(tab: LibraryTab) {
                 </div>
                 <div class="journal-note-value progress-card-value metric-panel-value">
                   {{ publishedCount.toString().padStart(2, '0') }}
+                </div>
+                <div class="journal-note-helper progress-card-hint metric-panel-helper">
+                  已开放给 AWD 题目编排使用的模板
                 </div>
               </article>
 
@@ -304,6 +309,9 @@ function selectTab(tab: LibraryTab) {
                 <div class="journal-note-value progress-card-value metric-panel-value">
                   {{ webHttpCount.toString().padStart(2, '0') }}
                 </div>
+                <div class="journal-note-helper progress-card-hint metric-panel-helper">
+                  使用 HTTP 探测与 Web 服务模式的模板
+                </div>
               </article>
 
               <article class="journal-note progress-card metric-panel-card">
@@ -313,6 +321,9 @@ function selectTab(tab: LibraryTab) {
                 </div>
                 <div class="journal-note-value progress-card-value metric-panel-value">
                   {{ pendingReadinessCount.toString().padStart(2, '0') }}
+                </div>
+                <div class="journal-note-helper progress-card-hint metric-panel-helper">
+                  仍需完成 Checker 验证的模板
                 </div>
               </article>
             </div>
@@ -466,9 +477,8 @@ function selectTab(tab: LibraryTab) {
             </section>
           </div>
 
-          <!-- Tab B: Import -->
           <div
-            v-if="activeTab === 'import'"
+            v-if="mode === 'import'"
             class="awd-import-pane"
           >
             <section class="workspace-directory-section awd-import-tool-section">
@@ -493,14 +503,6 @@ function selectTab(tab: LibraryTab) {
                     >
                       下载示例题包
                     </a>
-                    <button
-                      type="button"
-                      class="ui-btn ui-btn--ghost"
-                      @click="emit('refreshImportQueue')"
-                    >
-                      <RefreshCw class="h-4 w-4" />
-                      刷新队列
-                    </button>
                   </div>
                 </div>
               </header>
@@ -651,49 +653,12 @@ function selectTab(tab: LibraryTab) {
   gap: var(--space-3);
 }
 
-.awd-library-tabs {
-  display: flex;
-  gap: var(--space-6);
-  margin-top: var(--space-6);
-}
-
-.awd-tab-item {
-  padding: var(--space-3) 0 var(--space-3-5);
-  font-size: var(--font-size-14);
-  font-weight: 800;
-  color: var(--color-text-secondary);
-  border: none;
-  border-bottom: 3px solid transparent;
-  background: transparent;
-  cursor: pointer;
-  transition: all 0.22s ease;
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-.awd-tab-item:hover { color: var(--color-text-primary); }
-.awd-tab-item.active {
-  color: var(--color-primary);
-  border-bottom-color: var(--color-primary);
-}
-
-.awd-tab-badge {
-  background: var(--color-primary);
-  color: var(--color-bg-base);
-  font-size: var(--font-size-10);
-  min-width: 1.25rem;
-  height: 1.25rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 99px;
-  font-family: var(--font-family-mono);
-}
-
-.awd-library-body {
-  margin-top: var(--workspace-hero-summary-gap, var(--space-5));
+.awd-import-page-note {
+  max-width: 46rem;
+  margin-top: var(--space-4);
+  font-size: var(--font-size-13);
+  line-height: 1.7;
+  color: var(--journal-muted);
 }
 
 .awd-template-summary {

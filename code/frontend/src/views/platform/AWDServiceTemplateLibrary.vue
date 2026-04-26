@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 
 import AWDServiceTemplateEditorDialog from '@/components/platform/awd-service/AWDServiceTemplateEditorDialog.vue'
 import AWDServiceTemplateLibraryPage from '@/components/platform/awd-service/AWDServiceTemplateLibraryPage.vue'
 import { usePlatformAwdServiceTemplates } from '@/composables/usePlatformAwdServiceTemplates'
+
+const router = useRouter()
 
 const {
   list,
@@ -25,7 +28,6 @@ const {
   uploadResults,
   selectedImportFileName,
   formDraft,
-  openCreateDialog,
   openEditDialog,
   closeDialog,
   refreshImportQueue,
@@ -37,7 +39,6 @@ const {
 
 onMounted(() => {
   void refresh()
-  void refreshImportQueue()
 })
 
 function updateKeyword(value: string) {
@@ -57,11 +58,16 @@ function handleDialogOpenChange(value: boolean) {
     closeDialog()
   }
 }
+
+function openImportPage() {
+  void router.push({ name: 'PlatformAwdServiceTemplateImport' })
+}
 </script>
 
 <template>
   <div>
     <AWDServiceTemplateLibraryPage
+      mode="library"
       :list="list"
       :total="total"
       :page="page"
@@ -82,7 +88,7 @@ function handleDialogOpenChange(value: boolean) {
       @refresh-import-queue="refreshImportQueue"
       @select-import-packages="selectImportPackages"
       @commit-import="commitImportPreview"
-      @open-create-dialog="openCreateDialog"
+      @open-import-page="openImportPage"
       @open-edit-dialog="openEditDialog"
       @delete-template="removeTemplate"
       @change-page="changePage"
