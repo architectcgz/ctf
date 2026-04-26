@@ -44,7 +44,7 @@ describe('ContestOperations', () => {
     })
   })
 
-  it('父页应默认显示轮次态势 tab，并保留主路由动作', async () => {
+  it('父页应默认显示轮次态势 tab，并只传入运维态能力', async () => {
     const wrapper = mount(ContestOperations, {
       global: {
         stubs: {
@@ -52,10 +52,15 @@ describe('ContestOperations', () => {
             template: '<div><slot /></div>',
           },
           AWDOperationsPanel: {
-            props: ['operationPanel', 'runtimeContent', 'selectedContestId'],
-            emits: ['open:contest-edit'],
+            props: [
+              'operationPanel',
+              'runtimeContent',
+              'selectedContestId',
+              'hideStudioLink',
+              'hideReadinessActions',
+            ],
             template:
-              '<div data-testid="awd-ops-panel">{{ selectedContestId }}::{{ operationPanel }}::{{ runtimeContent }}<button class="contest-ops-studio-button" @click="$emit(\'open:contest-edit\')">进入竞赛工作室</button></div>',
+              '<div data-testid="awd-ops-panel">{{ selectedContestId }}::{{ operationPanel }}::{{ runtimeContent }}::{{ hideStudioLink }}::{{ hideReadinessActions }}</div>',
           },
         },
       },
@@ -68,17 +73,13 @@ describe('ContestOperations', () => {
     expect(wrapper.find('#contest-ops-panel-inspector').exists()).toBe(true)
     expect(wrapper.get('#contest-ops-panel-inspector').classes()).toContain('active')
     expect(wrapper.get('[data-testid="awd-ops-panel"]').text()).toContain(
-      'contest-ops-1::inspector::readiness'
+      'contest-ops-1::inspector::readiness::true::true'
     )
 
     expect(wrapper.find('.ops-topbar').exists()).toBe(false)
     expect(wrapper.text()).not.toContain('返回')
-
-    await wrapper.get('.contest-ops-studio-button').trigger('click')
-    expect(pushMock).toHaveBeenLastCalledWith({
-      name: 'ContestEdit',
-      params: { id: 'contest-ops-1' },
-    })
+    expect(wrapper.text()).not.toContain('进入竞赛工作室')
+    expect(pushMock).not.toHaveBeenCalled()
   })
 
   it('父页应根据 panel query 切到实例编排 tab', async () => {
