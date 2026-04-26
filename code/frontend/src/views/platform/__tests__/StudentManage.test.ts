@@ -119,6 +119,7 @@ describe('PlatformStudentManagement', () => {
     expect(studentManageWorkspacePanelSource).toContain('<WorkspaceDirectoryToolbar')
     expect(studentManageWorkspacePanelSource).toContain('<WorkspaceDataTable')
     expect(studentManageWorkspacePanelSource).toContain('<WorkspaceDirectoryPagination')
+    expect(studentManageWorkspacePanelSource).toContain('class="ui-btn ui-btn--primary ui-btn--sm"')
 
     const wrapper = mount(PlatformStudentManagement)
     await flushPromises()

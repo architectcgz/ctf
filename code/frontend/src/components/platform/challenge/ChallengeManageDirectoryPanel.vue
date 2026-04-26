@@ -373,11 +373,6 @@ function updateStatusFilter(event: Event): void {
 </template>
 
 <style scoped>
-.challenge-manage-directory {
-  display: grid;
-  gap: var(--space-4);
-}
-
 .challenge-filter-grid {
   display: grid;
   gap: var(--space-4);

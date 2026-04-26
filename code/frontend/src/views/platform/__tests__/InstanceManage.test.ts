@@ -108,6 +108,7 @@ describe('PlatformInstanceManagement', () => {
     expect(instanceManageWorkspacePanelSource).toContain('<WorkspaceDataTable')
     expect(instanceManageWorkspacePanelSource).toContain('<WorkspaceDirectoryPagination')
     expect(instanceManageWorkspacePanelSource).toContain('class="instance-status-pill"')
+    expect(instanceManageWorkspacePanelSource).toContain('class="ui-btn ui-btn--danger ui-btn--xs"')
     expect(adminInstanceManageSource).not.toContain('bg-green-100 text-green-700')
     expect(adminInstanceManageSource).not.toContain('bg-slate-100 text-slate-600')
 

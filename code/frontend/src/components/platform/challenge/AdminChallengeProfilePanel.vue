@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { CircleDot, Gauge, Tags, Trophy } from 'lucide-vue-next'
+
 import type { AdminChallengeListItem, FlagType } from '@/api/contracts'
 import ChallengeDescriptionPanel from '@/components/platform/challenge/ChallengeDescriptionPanel.vue'
 
@@ -131,10 +133,11 @@ function formatDateTime(value?: string): string {
       </p>
     </header>
 
-    <div class="challenge-overview-summary progress-strip metric-panel-grid metric-panel-default-surface">
+    <div class="challenge-overview-summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface">
       <article class="journal-note progress-card metric-panel-card">
         <div class="journal-note-label progress-card-label metric-panel-label">
-          分类
+          <span>分类</span>
+          <Tags class="h-4 w-4" />
         </div>
         <div class="journal-note-value progress-card-value metric-panel-value">
           {{ getCategoryLabel(challenge.category) }}
@@ -145,7 +148,8 @@ function formatDateTime(value?: string): string {
       </article>
       <article class="journal-note progress-card metric-panel-card">
         <div class="journal-note-label progress-card-label metric-panel-label">
-          难度
+          <span>难度</span>
+          <Gauge class="h-4 w-4" />
         </div>
         <div class="journal-note-value progress-card-value metric-panel-value">
           {{ getDifficultyLabel(challenge.difficulty) }}
@@ -156,7 +160,8 @@ function formatDateTime(value?: string): string {
       </article>
       <article class="journal-note progress-card metric-panel-card">
         <div class="journal-note-label progress-card-label metric-panel-label">
-          分值
+          <span>分值</span>
+          <Trophy class="h-4 w-4" />
         </div>
         <div class="journal-note-value progress-card-value metric-panel-value">
           {{ challenge.points }}
@@ -167,7 +172,8 @@ function formatDateTime(value?: string): string {
       </article>
       <article class="journal-note progress-card metric-panel-card">
         <div class="journal-note-label progress-card-label metric-panel-label">
-          状态
+          <span>状态</span>
+          <CircleDot class="h-4 w-4" />
         </div>
         <div class="journal-note-value progress-card-value metric-panel-value">
           {{ getStatusLabel(challenge.status) }}

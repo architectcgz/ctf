@@ -62,6 +62,8 @@ describe('PlatformClassManagement', () => {
     )
     expect(classManageWorkspacePanelSource).toContain('<WorkspaceDataTable')
     expect(classManageWorkspacePanelSource).toContain('<WorkspaceDirectoryPagination')
+    expect(classManageWorkspacePanelSource).toContain('class="ui-btn ui-btn--primary ui-btn--sm"')
+    expect(classManageWorkspacePanelSource).not.toContain('class="ui-btn ui-btn--ghost"')
     expect(adminClassManageSource).not.toContain('teacher-management-shell')
     expect(adminClassManageSource).not.toContain('teacher-directory-row')
 

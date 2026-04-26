@@ -339,8 +339,12 @@ describe('admin management surface alignment', () => {
       /<div class="workspace-overline">\s*Challenge Profile\s*<\/div>/
     )
     expect(adminChallengeProfilePanelSource).toContain(
-      'class="challenge-overview-summary progress-strip metric-panel-grid metric-panel-default-surface"'
+      'class="challenge-overview-summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
     )
+    expect(adminChallengeProfilePanelSource).toContain('<Tags class="h-4 w-4" />')
+    expect(adminChallengeProfilePanelSource).toContain('<Gauge class="h-4 w-4" />')
+    expect(adminChallengeProfilePanelSource).toContain('<Trophy class="h-4 w-4" />')
+    expect(adminChallengeProfilePanelSource).toContain('<CircleDot class="h-4 w-4" />')
     expect(adminChallengeProfilePanelSource).toMatch(
       /<h2 class="list-heading__title">\s*基础信息\s*<\/h2>/
     )

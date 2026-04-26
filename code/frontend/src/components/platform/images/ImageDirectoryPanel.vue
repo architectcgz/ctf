@@ -206,7 +206,7 @@ function updateStatusFilter(event: Event): void {
         <template #cell-actions="{ row }">
           <div class="image-row__actions">
             <button
-              class="ui-btn ui-btn--sm ui-btn--ghost"
+              class="ui-btn ui-btn--sm ui-btn--primary"
               @click="emit('open-detail', row as AdminImageListItem)"
             >
               详情

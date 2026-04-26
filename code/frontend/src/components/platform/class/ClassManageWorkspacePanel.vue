@@ -78,7 +78,7 @@ const columns = [
           <template #cell-actions="{ row }">
             <button
               type="button"
-              class="ui-btn ui-btn--ghost"
+              class="ui-btn ui-btn--primary ui-btn--sm"
               @click="emit('open-class', String((row as ClassManageTableRow).name))"
             >
               查看班级

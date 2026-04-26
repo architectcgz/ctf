@@ -105,7 +105,7 @@ const columns = [
             <div class="flex justify-end gap-2">
               <button
                 type="button"
-                class="ui-btn ui-btn--ghost ui-btn--xs"
+                class="ui-btn ui-btn--danger ui-btn--xs"
                 :disabled="destroyingId === (row as InstanceManageTableRow).id"
                 @click="emit('destroy-instance', (row as InstanceManageTableRow).id)"
               >
