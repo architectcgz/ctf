@@ -108,4 +108,23 @@ const series = computed(() => [
 
 <style scoped>
 @import './teacher-panel-shell.css';
+
+.teacher-panel__chart {
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--panel-surface) 98%, var(--color-bg-base)),
+    color-mix(in srgb, var(--panel-surface-subtle) 96%, var(--color-bg-base))
+  );
+  border-radius: 20px;
+  padding: var(--space-6);
+  border: 1px solid var(--panel-border);
+  box-shadow: inset 0 2px 4px var(--color-shadow-soft);
+}
+
+.teacher-panel__chart--bare {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  box-shadow: none;
+}
 </style>

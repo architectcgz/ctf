@@ -66,7 +66,9 @@ describe('TeacherStudentManagement', () => {
           !params?.keyword ||
           item.username.includes(params.keyword) ||
           (item.name ?? '').includes(params.keyword)
-        return keywordMatched
+        const studentNoMatched =
+          !params?.student_no || (item.student_no ?? '').includes(params.student_no)
+        return keywordMatched && studentNoMatched
       })
       return {
         list: filtered,
@@ -111,50 +113,33 @@ describe('TeacherStudentManagement', () => {
       true
     )
     expect(wrapper.find('.list-heading').exists()).toBe(true)
-    expect(wrapper.find('.teacher-directory-head').exists()).toBe(true)
-    expect(wrapper.findAll('.teacher-directory-row')).toHaveLength(2)
-    expect(wrapper.find('.teacher-directory-head').text()).toContain('学号')
-    expect(wrapper.find('.teacher-directory-head').text()).toContain('学生名称')
-    expect(wrapper.find('.teacher-directory-head').text()).toContain('昵称')
-    expect(wrapper.find('.teacher-directory-head').text()).toContain('薄弱项')
-    expect(wrapper.find('.teacher-directory-head').text()).toContain('做题数')
-    expect(wrapper.find('.teacher-directory-head').text()).toContain('得分数')
-    expect(wrapper.find('.teacher-directory-head').text()).not.toContain('数据')
-    const headChildren = Array.from(wrapper.find('.teacher-directory-head').element.children).map(
-      (element) => element.className.toString()
-    )
-    expect(headChildren[0]).toContain('teacher-directory-head-cell-student-no')
-    expect(headChildren[1]).toContain('teacher-directory-head-cell-name')
-    expect(headChildren[2]).toContain('teacher-directory-head-cell-alias')
+    expect(wrapper.find('.workspace-directory-toolbar').exists()).toBe(true)
+    expect(wrapper.find('.workspace-data-table').exists()).toBe(true)
+    expect(wrapper.findAll('.workspace-data-table__body tr')).toHaveLength(2)
+    const headers = wrapper.findAll('.workspace-data-table__head-cell').map((cell) => cell.text())
+    expect(headers).toEqual(['学号', '学生名称', '昵称', '薄弱项', '做题数', '得分数', '操作'])
 
-    const rows = wrapper.findAll('.teacher-directory-row')
-    const firstRowChildren = Array.from(rows[0].element.children).map((element) =>
-      element.className.toString()
-    )
-    expect(firstRowChildren[0]).toContain('teacher-directory-cell-student-no')
-    expect(firstRowChildren[1]).toContain('teacher-directory-cell-name')
-    expect(firstRowChildren[2]).toContain('teacher-directory-cell-alias')
+    const rows = wrapper.findAll('.workspace-data-table__body tr')
     expect(rows[0].find('.teacher-directory-cell-student-no').text()).toContain('2024001')
     expect(rows[0].find('.teacher-directory-cell-name').text()).toContain('Alice Zhang')
-    expect(rows[0].find('.teacher-directory-cell-alias').text()).toContain('alice')
+    expect(rows[0].find('.teacher-directory-row-points').text()).toContain('alice')
     expect(rows[0].find('.teacher-directory-row-title').attributes('title')).toBe('Alice Zhang')
     expect(rows[0].find('.teacher-directory-row-points').attributes('title')).toBe('alice')
-    expect(rows[0].find('.teacher-directory-row-tags').text()).toContain('暂无薄弱项')
+    expect(rows[0].find('.teacher-directory-chip').text()).toContain('暂无薄弱项')
     expect(rows[0].find('.teacher-directory-row-solved').text()).toBe('0')
     expect(rows[0].find('.teacher-directory-row-score').text()).toBe('0')
-    expect(rows[0].find('.teacher-directory-row-tags').text()).not.toContain('Student')
+    expect(rows[0].find('.teacher-directory-chip').text()).not.toContain('Student')
     expect(rows[1].find('.teacher-directory-cell-student-no').text()).toContain('未设置学号')
     expect(rows[1].find('.teacher-directory-cell-name').text()).toContain('未设置姓名')
-    expect(rows[1].find('.teacher-directory-cell-alias').text()).toContain('bob')
-    expect(rows[1].find('.teacher-directory-row-tags').text()).toContain('暂无薄弱项')
+    expect(rows[1].find('.teacher-directory-row-points').text()).toContain('bob')
+    expect(rows[1].find('.teacher-directory-chip').text()).toContain('暂无薄弱项')
     expect(rows[1].find('.teacher-directory-row-solved').text()).toBe('1')
     expect(rows[1].find('.teacher-directory-row-score').text()).toBe('0')
     expect(rows[1].find('.teacher-directory-row-status').exists()).toBe(false)
     expect(wrapper.text()).toContain('alice')
     expect(wrapper.text()).toContain('bob')
-    expect(wrapper.text()).not.toContain('学生筛选')
 
-    const searchInput = wrapper.find('input[placeholder="搜索姓名或用户名"]')
+    const searchInput = wrapper.find('input[placeholder="搜索姓名、用户名或学号"]')
     await searchInput.setValue('Alice')
     expect(teacherApiMocks.getStudentsDirectory).toHaveBeenCalledTimes(1)
     vi.advanceTimersByTime(250)
@@ -172,7 +157,23 @@ describe('TeacherStudentManagement', () => {
     expect(wrapper.text()).toContain('alice')
     expect(wrapper.text()).not.toContain('bob')
 
-    wrapper.findComponent({ name: 'StudentManagementPage' }).vm.$emit('openStudent', 'stu-1')
+    await searchInput.setValue('2024001')
+    vi.advanceTimersByTime(250)
+    await flushPromises()
+
+    expect(teacherApiMocks.getStudentsDirectory).toHaveBeenLastCalledWith({
+      class_name: 'Class A',
+      keyword: undefined,
+      student_no: '2024001',
+      sort_key: 'solved_count',
+      sort_order: 'desc',
+      page: 1,
+      page_size: 20,
+    })
+    expect(wrapper.text()).toContain('Alice Zhang')
+    expect(wrapper.text()).not.toContain('bob')
+
+    await wrapper.find('.workspace-data-table__body tr').find('button').trigger('click')
 
     expect(pushMock).toHaveBeenCalledWith({
       name: 'TeacherStudentAnalysis',
@@ -340,7 +341,7 @@ describe('TeacherStudentManagement', () => {
 
     await flushPromises()
 
-    const searchInput = wrapper.find('input[placeholder="搜索姓名或用户名"]')
+    const searchInput = wrapper.find('input[placeholder="搜索姓名、用户名或学号"]')
     await searchInput.setValue('A')
     vi.advanceTimersByTime(250)
     await flushPromises()
@@ -466,7 +467,8 @@ describe('TeacherStudentManagement', () => {
 
     await flushPromises()
 
-    const classSelect = wrapper.find('select')
+    await wrapper.get('.workspace-directory-toolbar__filter-toggle').trigger('click')
+    const classSelect = wrapper.find('.teacher-directory-filter-control')
     const options = classSelect.findAll('option').map((option) => ({
       value: option.element.getAttribute('value'),
       text: option.text(),
@@ -490,12 +492,12 @@ describe('TeacherStudentManagement', () => {
       page: 1,
       page_size: 20,
     })
-    expect(wrapper.findAll('.teacher-directory-row')).toHaveLength(3)
+    expect(wrapper.findAll('.workspace-data-table__body tr')).toHaveLength(3)
     expect(wrapper.text()).toContain('Alice Zhang')
     expect(wrapper.text()).toContain('Bob Li')
     expect(wrapper.text()).toContain('Carol Chen')
 
-    const searchInput = wrapper.find('input[placeholder="搜索姓名或用户名"]')
+    const searchInput = wrapper.find('input[placeholder="搜索姓名、用户名或学号"]')
     await searchInput.setValue('Carol')
     vi.advanceTimersByTime(250)
     await flushPromises()
@@ -509,15 +511,15 @@ describe('TeacherStudentManagement', () => {
       page: 1,
       page_size: 20,
     })
-    expect(wrapper.findAll('.teacher-directory-row')).toHaveLength(1)
+    expect(wrapper.findAll('.workspace-data-table__body tr')).toHaveLength(1)
     expect(wrapper.text()).toContain('Carol Chen')
     expect(wrapper.text()).not.toContain('Alice Zhang')
 
     const carolRow = wrapper
-      .findAll('.teacher-directory-row')
+      .findAll('.workspace-data-table__body tr')
       .find((row) => row.text().includes('Carol Chen'))
     expect(carolRow).toBeDefined()
-    await carolRow!.trigger('click')
+    await carolRow!.find('button').trigger('click')
 
     expect(pushMock).toHaveBeenCalledWith({
       name: 'TeacherStudentAnalysis',
@@ -576,7 +578,8 @@ describe('TeacherStudentManagement', () => {
 
     await flushPromises()
 
-    expect(wrapper.find('select').element.value).toBe('')
+    await wrapper.get('.workspace-directory-toolbar__filter-toggle').trigger('click')
+    expect((wrapper.find('.teacher-directory-filter-control').element as HTMLSelectElement).value).toBe('')
     expect(teacherApiMocks.getStudentsDirectory).toHaveBeenNthCalledWith(1, {
       class_name: undefined,
       keyword: undefined,
@@ -639,7 +642,7 @@ describe('TeacherStudentManagement', () => {
 
     await flushPromises()
 
-    expect(wrapper.findAll('.teacher-directory-row')).toHaveLength(20)
+    expect(wrapper.findAll('.workspace-data-table__body tr')).toHaveLength(20)
     expect(wrapper.find('.teacher-directory-pagination').text()).toContain('共 21 名学生')
     expect(wrapper.find('.teacher-directory-pagination').text()).toContain('1 / 2')
     expect(wrapper.text()).toContain('Student 20')
@@ -649,7 +652,7 @@ describe('TeacherStudentManagement', () => {
     await paginationButtons[1].trigger('click')
     await flushPromises()
 
-    expect(wrapper.findAll('.teacher-directory-row')).toHaveLength(1)
+    expect(wrapper.findAll('.workspace-data-table__body tr')).toHaveLength(1)
     expect(wrapper.find('.teacher-directory-pagination').text()).toContain('2 / 2')
     expect(wrapper.text()).toContain('Student 21')
     expect(wrapper.text()).not.toContain('Student 20')
@@ -659,20 +662,23 @@ describe('TeacherStudentManagement', () => {
     expect(studentManagementSource).toContain(
       'class="workspace-directory-section teacher-directory-section"'
     )
+    expect(studentManagementSource).toContain('<WorkspaceDirectoryToolbar')
+    expect(studentManagementSource).toContain('<WorkspaceDataTable')
+    expect(studentManagementSource).toContain('<WorkspaceDirectoryPagination')
     expect(studentManagementSource).toContain('class="list-heading"')
     expect(studentManagementSource).not.toContain('teacher-controls-title')
-    expect(studentManagementSource).not.toContain('学生筛选')
-    expect(studentManagementSource).toContain('<span>做题数</span>')
-    expect(studentManagementSource).toContain('<span>得分数</span>')
+    expect(studentManagementSource).toContain('filter-panel-title="学生筛选"')
+    expect(studentManagementSource).toContain("key: 'solved_count', label: '做题数'")
+    expect(studentManagementSource).toContain("key: 'total_score', label: '得分数'")
     expect(studentManagementSource).toContain('class="teacher-directory-row-solved"')
     expect(studentManagementSource).toContain('class="teacher-directory-row-score"')
-    expect(studentManagementSource).not.toContain('<span>数据</span>')
+    expect(studentManagementSource).not.toContain("label: '数据'")
     expect(studentManagementSource).not.toContain('class="teacher-directory-row-metrics"')
     expect(studentManagementSource).toMatch(
-      /class="teacher-directory-row-title"[\s\S]*:title="student\.name \|\| '未设置姓名'"/s
+      /class="teacher-directory-row-title"[\s\S]*:title="\(row as StudentDirectoryTableRow\)\.name"/s
     )
     expect(studentManagementSource).toMatch(
-      /class="teacher-directory-row-points"[\s\S]*:title="student\.username"/s
+      /class="teacher-directory-row-points"[\s\S]*:title="\(row as StudentDirectoryTableRow\)\.username"/s
     )
     expect(studentManagementSource).toMatch(
       /\.teacher-directory-row-title\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s

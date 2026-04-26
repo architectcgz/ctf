@@ -25,6 +25,8 @@ const props = withDefaults(
     filterPanelWidth?: string
     resetLabel?: string
     resetDisabled?: boolean
+    showFilter?: boolean
+    showTotal?: boolean
   }>(),
   {
     searchPlaceholder: '输入关键词检索...',
@@ -37,6 +39,8 @@ const props = withDefaults(
     filterPanelWidth: '24rem',
     resetLabel: '清空筛选',
     resetDisabled: false,
+    showFilter: true,
+    showTotal: true,
   }
 )
 
@@ -153,6 +157,7 @@ onUnmounted(() => {
       </label>
 
       <button
+        v-if="showFilter"
         ref="filterToggleRef"
         type="button"
         class="workspace-directory-toolbar__filter-toggle"
@@ -216,13 +221,16 @@ onUnmounted(() => {
         </div>
       </div>
 
-      <div class="workspace-directory-toolbar__count-pill">
+      <div
+        v-if="showTotal"
+        class="workspace-directory-toolbar__count-pill"
+      >
         共 <span class="workspace-directory-toolbar__count-value">{{ total }}</span> {{ totalSuffix }}
       </div>
     </div>
 
     <div
-      v-if="isFilterOpen"
+      v-if="showFilter && isFilterOpen"
       ref="filterPanelRef"
       class="workspace-directory-toolbar__filter-panel"
       :style="{ width: filterPanelWidth }"
