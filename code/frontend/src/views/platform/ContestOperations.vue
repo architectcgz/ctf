@@ -1,34 +1,67 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { getContest } from '@/api/admin'
 import type { ContestDetailData } from '@/api/contracts'
 import AWDOperationsPanel from '@/components/platform/contest/AWDOperationsPanel.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
+import { useBackofficeBreadcrumbDetail } from '@/composables/useBackofficeBreadcrumbDetail'
+import { useRouteQueryTabs } from '@/composables/useRouteQueryTabs'
 import { useToast } from '@/composables/useToast'
-import { Settings } from 'lucide-vue-next'
 
-type ContestOperationsTab = 'matrix' | 'attacks' | 'traffic' | 'scoreboard'
+type ContestOperationsPanelKey = 'inspector' | 'instances'
 
-const CONTEST_OPERATIONS_TABS: ContestOperationsTab[] = ['matrix', 'attacks', 'traffic', 'scoreboard']
+const panelTabs = [
+  {
+    key: 'inspector' as const,
+    label: '轮次态势',
+    tabId: 'contest-ops-tab-inspector',
+    panelId: 'contest-ops-panel-inspector',
+  },
+  {
+    key: 'instances' as const,
+    label: '实例编排',
+    tabId: 'contest-ops-tab-instances',
+    panelId: 'contest-ops-panel-instances',
+  },
+]
 
 const route = useRoute()
 const router = useRouter()
 const toast = useToast()
+const { setBreadcrumbDetailTitle } = useBackofficeBreadcrumbDetail()
 
 const contestId = computed(() => String(route.params.id ?? ''))
-const activeTab = ref<ContestOperationsTab>(resolveActiveTab(route.query.activeTab))
+const panelTabOrder = panelTabs.map((tab) => tab.key) as ContestOperationsPanelKey[]
+const {
+  activeTab: activePanel,
+  setTabButtonRef,
+  selectTab: switchPanel,
+  handleTabKeydown,
+} = useRouteQueryTabs<ContestOperationsPanelKey>({
+  route,
+  router,
+  orderedTabs: panelTabOrder,
+  defaultTab: 'inspector',
+  routeName: 'ContestOperations',
+  routeParams: route.params,
+})
 
 const loading = ref(true)
 const contest = ref<ContestDetailData | null>(null)
 
 async function loadContest() {
-  if (!contestId.value) return
+  if (!contestId.value) {
+    setBreadcrumbDetailTitle()
+    return
+  }
   loading.value = true
   try {
     contest.value = await getContest(contestId.value)
+    setBreadcrumbDetailTitle(contest.value.title)
   } catch (err) {
+    setBreadcrumbDetailTitle()
     toast.error('加载竞赛信息失败')
   } finally {
     loading.value = false
@@ -39,21 +72,12 @@ function goToStudio() {
   void router.push({ name: 'ContestEdit', params: { id: contestId.value } })
 }
 
-function resolveActiveTab(tab: unknown): ContestOperationsTab {
-  if (typeof tab === 'string' && CONTEST_OPERATIONS_TABS.includes(tab as ContestOperationsTab)) {
-    return tab as ContestOperationsTab
-  }
-
-  return 'matrix'
-}
-
-// Watch for query changes to allow sidebar deep links to work
-watch(() => route.query.activeTab, (newTab) => {
-  activeTab.value = resolveActiveTab(newTab)
-})
-
 onMounted(() => {
   void loadContest()
+})
+
+onUnmounted(() => {
+  setBreadcrumbDetailTitle()
 })
 </script>
 
@@ -74,14 +98,67 @@ onMounted(() => {
           v-if="contest"
           class="workspace-directory-section contest-ops-workspace"
         >
-          <AWDOperationsPanel
-            :key="`${contest.id}-${activeTab}`"
-            :contests="[contest]"
-            :selected-contest-id="contest.id"
-            :hide-contest-selector="true"
-            :initial-tab="activeTab"
-            @open:contest-edit="goToStudio"
-          />
+          <nav
+            class="top-tabs"
+            role="tablist"
+            aria-label="AWD 运维视图切换"
+          >
+            <button
+              v-for="(tab, index) in panelTabs"
+              :id="tab.tabId"
+              :key="tab.key"
+              :ref="(element) => setTabButtonRef(tab.key, element as HTMLButtonElement | null)"
+              type="button"
+              role="tab"
+              class="top-tab"
+              :class="{ active: activePanel === tab.key }"
+              :aria-selected="activePanel === tab.key ? 'true' : 'false'"
+              :aria-controls="tab.panelId"
+              :tabindex="activePanel === tab.key ? 0 : -1"
+              @click="switchPanel(tab.key)"
+              @keydown="handleTabKeydown($event, index)"
+            >
+              {{ tab.label }}
+            </button>
+          </nav>
+
+          <section
+            v-if="activePanel === 'inspector'"
+            id="contest-ops-panel-inspector"
+            class="tab-panel contest-ops-tab-panel active"
+            role="tabpanel"
+            aria-labelledby="contest-ops-tab-inspector"
+          >
+            <AWDOperationsPanel
+              :key="`${contest.id}-inspector`"
+              :contests="[contest]"
+              :selected-contest-id="contest.id"
+              :hide-contest-selector="true"
+              :hide-operation-tabs="true"
+              operation-panel="inspector"
+              runtime-content="readiness"
+              @open:contest-edit="goToStudio"
+            />
+          </section>
+
+          <section
+            v-if="activePanel === 'instances'"
+            id="contest-ops-panel-instances"
+            class="tab-panel contest-ops-tab-panel active"
+            role="tabpanel"
+            aria-labelledby="contest-ops-tab-instances"
+          >
+            <AWDOperationsPanel
+              :key="`${contest.id}-instances`"
+              :contests="[contest]"
+              :selected-contest-id="contest.id"
+              :hide-contest-selector="true"
+              :hide-operation-tabs="true"
+              operation-panel="inspector"
+              runtime-content="round-inspector"
+              @open:contest-edit="goToStudio"
+            />
+          </section>
         </section>
       </main>
     </div>
@@ -98,11 +175,25 @@ onMounted(() => {
 .contest-ops-content {
   display: flex;
   flex-direction: column;
+  padding: 0;
 }
 
 .contest-ops-workspace {
   --workspace-directory-section-padding: var(--space-5) var(--space-5-5);
+  --page-top-tabs-gap: var(--space-7);
+  --page-top-tabs-margin: 0;
+  --page-top-tabs-padding: 0;
+  --page-top-tabs-border: color-mix(in srgb, var(--journal-ink) 10%, transparent);
+  --page-top-tab-min-height: 52px;
+  --page-top-tab-padding: var(--space-2-5) 0 var(--space-3-5);
+  --page-top-tab-font-size: var(--font-size-15);
+  --page-top-tab-active-color: color-mix(in srgb, var(--journal-accent) 74%, var(--journal-ink));
+  --page-top-tab-active-border: color-mix(in srgb, var(--journal-accent) 86%, var(--journal-ink));
   background: transparent;
+}
+
+.contest-ops-tab-panel {
+  padding-top: var(--space-6);
 }
 
 .ops-loading-overlay {
