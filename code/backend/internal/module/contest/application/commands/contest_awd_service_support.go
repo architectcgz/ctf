@@ -103,10 +103,16 @@ func normalizeContestAWDServiceRuntimeFields(
 		checkerConfigValue = checkerConfigOverride
 	}
 	slaScore := defaultSLAScore
+	if slaScoreOverride == nil && slaScore == 0 {
+		slaScore = contestdomain.AWDDefaultServiceSLAScore
+	}
 	if slaScoreOverride != nil {
 		slaScore = *slaScoreOverride
 	}
 	defenseScore := defaultDefenseScore
+	if defenseScoreOverride == nil && defenseScore == 0 {
+		defenseScore = contestdomain.AWDDefaultServiceDefenseScore
+	}
 	if defenseScoreOverride != nil {
 		defenseScore = *defenseScoreOverride
 	}

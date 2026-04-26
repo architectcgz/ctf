@@ -7,7 +7,7 @@ meta:
   title: IoT 设备管理平台
   category: misc
   difficulty: hard
-  points: 400
+  points: 100
   tags:
     - mode:awd
     - stack:web

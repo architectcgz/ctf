@@ -1208,8 +1208,8 @@ components:
         status: { $ref: "#/components/schemas/AWDRoundStatus" }
         started_at: { $ref: "#/components/schemas/ISODateTime", nullable: true }
         ended_at: { $ref: "#/components/schemas/ISODateTime", nullable: true }
-        attack_score: { type: integer, minimum: 0 }
-        defense_score: { type: integer, minimum: 0 }
+        attack_score: { type: integer, minimum: 0, maximum: 100 }
+        defense_score: { type: integer, minimum: 0, maximum: 10 }
         created_at: { $ref: "#/components/schemas/ISODateTime" }
         updated_at: { $ref: "#/components/schemas/ISODateTime" }
 
@@ -1471,10 +1471,11 @@ components:
 
     CreateAdminContestAWDServiceRequest:
       type: object
-      required: [challenge_id, template_id]
+      required: [challenge_id, template_id, points]
       properties:
         challenge_id: { $ref: "#/components/schemas/ID" }
         template_id: { $ref: "#/components/schemas/ID" }
+        points: { type: integer, minimum: 1, maximum: 500 }
         display_name: { type: string, maxLength: 128, nullable: true }
         order: { type: integer, minimum: 0, nullable: true }
         is_visible: { type: boolean, nullable: true }
@@ -1486,8 +1487,8 @@ components:
           type: object
           nullable: true
           additionalProperties: true
-        awd_sla_score: { type: integer, minimum: 0, nullable: true }
-        awd_defense_score: { type: integer, minimum: 0, nullable: true }
+        awd_sla_score: { type: integer, minimum: 0, maximum: 5, nullable: true, default: 1 }
+        awd_defense_score: { type: integer, minimum: 0, maximum: 5, nullable: true, default: 2 }
         awd_checker_preview_token: { type: string, maxLength: 200, nullable: true }
 
     UpdateAdminContestAWDServiceRequest:
@@ -1497,6 +1498,7 @@ components:
           allOf:
             - $ref: "#/components/schemas/ID"
           nullable: true
+        points: { type: integer, minimum: 1, maximum: 500, nullable: true }
         display_name: { type: string, maxLength: 128, nullable: true }
         order: { type: integer, minimum: 0, nullable: true }
         is_visible: { type: boolean, nullable: true }
@@ -1508,8 +1510,8 @@ components:
           type: object
           nullable: true
           additionalProperties: true
-        awd_sla_score: { type: integer, minimum: 0, nullable: true }
-        awd_defense_score: { type: integer, minimum: 0, nullable: true }
+        awd_sla_score: { type: integer, minimum: 0, maximum: 5, nullable: true }
+        awd_defense_score: { type: integer, minimum: 0, maximum: 5, nullable: true }
         awd_checker_preview_token: { type: string, maxLength: 200, nullable: true }
 
     AWDCheckerPreviewContextData:
@@ -1633,8 +1635,8 @@ components:
       properties:
         round_number: { type: integer, minimum: 1 }
         status: { $ref: "#/components/schemas/AWDRoundStatus", nullable: true }
-        attack_score: { type: integer, minimum: 0, nullable: true }
-        defense_score: { type: integer, minimum: 0, nullable: true }
+        attack_score: { type: integer, minimum: 0, maximum: 100, nullable: true, default: 30 }
+        defense_score: { type: integer, minimum: 0, maximum: 10, nullable: true, default: 3 }
 
     UpsertAwdServiceCheckRequest:
       type: object

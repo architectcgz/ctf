@@ -69,6 +69,17 @@ python3 challenges/awd/ctf-1/awd-supply-ticket/docker/check/check.py http://127.
 
 本地 `check/check.py` 覆盖服务可用性、主业务链路和 `/api/flag` 标准检查接口。正式比赛中的轮次检查由平台 `http_standard` checker 执行。
 
+## 分制规范
+
+AWD 题目包只声明题目建议分值，实际每轮计分由赛事服务编排写入 `contest_awd_services.score_config` 和 `awd_rounds`。
+
+- Drill：建议 12-24 轮，总分量级 300-800。
+- 正式赛：建议 24-48 轮，总分量级 1000-3000。
+- 长时赛：建议总分量级 3000-8000，需降低轮频或服务分，避免纯 SLA 堆分。
+- 服务默认每轮 `SLA = 1`、`防御 = 2`；单项上限均为 5。
+- 轮次默认 `攻击 = 30`、`防御兜底 = 3`；攻击分上限 100，轮次防御兜底上限 10。
+- `meta.points` 不参与 AWD 每轮累计，只作为导入预览和服务展示建议值。
+
 ## AWD 题目编写要求
 
 - `PUT /api/flag` 不能只返回成功，必须把请求体中的 Flag 写入题目服务实际读取的位置，例如文件、数据库或内存状态。

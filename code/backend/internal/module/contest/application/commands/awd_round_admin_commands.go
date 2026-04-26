@@ -24,8 +24,8 @@ func (s *AWDService) CreateRound(ctx context.Context, contestID int64, req *dto.
 		ContestID:    contestID,
 		RoundNumber:  req.RoundNumber,
 		Status:       model.AWDRoundStatusPending,
-		AttackScore:  50,
-		DefenseScore: 50,
+		AttackScore:  contestdomain.AWDDefaultRoundAttackScore,
+		DefenseScore: contestdomain.AWDDefaultRoundDefenseScore,
 	}
 	if req.Status != nil && *req.Status != "" {
 		round.Status = *req.Status
@@ -35,6 +35,12 @@ func (s *AWDService) CreateRound(ctx context.Context, contestID int64, req *dto.
 	}
 	if req.DefenseScore != nil {
 		round.DefenseScore = *req.DefenseScore
+	}
+	if round.AttackScore < 0 || round.AttackScore > contestdomain.AWDMaxRoundAttackScore {
+		return nil, errcode.ErrInvalidParams
+	}
+	if round.DefenseScore < 0 || round.DefenseScore > contestdomain.AWDMaxRoundDefenseScore {
+		return nil, errcode.ErrInvalidParams
 	}
 	if err := s.repo.CreateRound(ctx, round); err != nil {
 		if contestdomain.IsUniqueConstraintError(err) {

@@ -10,12 +10,13 @@ import (
 
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
+	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestports "ctf-platform/internal/module/contest/ports"
 )
 
 const (
-	defaultAWDRoundAttackScore  = 50
-	defaultAWDRoundDefenseScore = 50
+	defaultAWDRoundAttackScore  = contestdomain.AWDDefaultRoundAttackScore
+	defaultAWDRoundDefenseScore = contestdomain.AWDDefaultRoundDefenseScore
 )
 
 type AWDRoundUpdater struct {

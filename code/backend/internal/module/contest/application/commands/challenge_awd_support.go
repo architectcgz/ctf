@@ -25,6 +25,12 @@ func validateAndNormalizeContestAWDFields(
 		}
 		return "", "{}", nil
 	}
+	if slaScore < 0 || slaScore > contestdomain.AWDMaxServiceSLAScore {
+		return "", "", errcode.ErrInvalidParams
+	}
+	if defenseScore < 0 || defenseScore > contestdomain.AWDMaxServiceDefenseScore {
+		return "", "", errcode.ErrInvalidParams
+	}
 
 	normalizedType := contestdomain.NormalizeAWDCheckerType(checkerType)
 	if len(checkerConfig) > 0 && normalizedType == "" {

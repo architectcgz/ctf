@@ -317,8 +317,8 @@ describe('admin contest api contract', () => {
         awd_checker_config: {
           put_flag: { method: 'PUT', path: '/api/flag' },
         },
-        awd_sla_score: 18,
-        awd_defense_score: 28,
+        awd_sla_score: 1,
+        awd_defense_score: 2,
         awd_checker_preview_token: 'preview-token-1',
       } as Record<string, unknown> ),
     })
@@ -360,8 +360,8 @@ describe('admin contest api contract', () => {
         awd_checker_config: {
           health_path: '/healthz',
         },
-        awd_sla_score: 10,
-        awd_defense_score: 20,
+        awd_sla_score: 1,
+        awd_defense_score: 2,
         awd_checker_preview_token: 'preview-token-2',
       } as Record<string, unknown> ),
     })
@@ -400,8 +400,8 @@ describe('admin contest api contract', () => {
         is_visible: true,
         score_config: {
           attack_score: 60,
-          awd_sla_score: 18,
-          awd_defense_score: 28,
+          awd_sla_score: 1,
+          awd_defense_score: 2,
         },
         runtime_config: {
           challenge_id: 11,
@@ -449,8 +449,8 @@ describe('admin contest api contract', () => {
         is_visible: true,
         score_config: {
           attack_score: 60,
-          awd_sla_score: 18,
-          awd_defense_score: 28,
+          awd_sla_score: 1,
+          awd_defense_score: 2,
         },
         runtime_config: {
           checker_type: 'http_standard',
@@ -466,8 +466,8 @@ describe('admin contest api contract', () => {
             path: '/health',
           },
         },
-        sla_score: 18,
-        defense_score: 28,
+        sla_score: 1,
+        defense_score: 2,
         validation_state: 'passed',
         last_preview_at: '2026-03-12T00:04:00.000Z',
         last_preview_result: {
@@ -504,8 +504,8 @@ describe('admin contest api contract', () => {
       is_visible: true,
       score_config: {
         attack_score: 60,
-        awd_sla_score: 18,
-        awd_defense_score: 28,
+        awd_sla_score: 1,
+        awd_defense_score: 2,
       },
       runtime_config: {
         checker_type: 'http_standard',
@@ -533,8 +533,8 @@ describe('admin contest api contract', () => {
       checker_config: {
         put_flag: { method: 'PUT', path: '/api/flag' },
       },
-      awd_sla_score: 18,
-      awd_defense_score: 28,
+      awd_sla_score: 1,
+      awd_defense_score: 2,
       awd_checker_preview_token: 'preview-token',
     })
 
@@ -551,8 +551,8 @@ describe('admin contest api contract', () => {
         checker_config: {
           put_flag: { method: 'PUT', path: '/api/flag' },
         },
-        awd_sla_score: 18,
-        awd_defense_score: 28,
+        awd_sla_score: 1,
+        awd_defense_score: 2,
         awd_checker_preview_token: 'preview-token',
       },
     })
@@ -569,8 +569,8 @@ describe('admin contest api contract', () => {
       is_visible: true,
       score_config: {
         attack_score: 60,
-        awd_sla_score: 18,
-        awd_defense_score: 28,
+        awd_sla_score: 1,
+        awd_defense_score: 2,
       },
       runtime_config: {
         checker_type: 'http_standard',
@@ -588,8 +588,8 @@ describe('admin contest api contract', () => {
           path: '/api/flag',
         },
       },
-      sla_score: 18,
-      defense_score: 28,
+      sla_score: 1,
+      defense_score: 2,
       validation_state: 'pending',
       last_preview_at: undefined,
       last_preview_result: undefined,
@@ -611,8 +611,8 @@ describe('admin contest api contract', () => {
       checker_config: {
         health: { path: '/healthz' },
       },
-      awd_sla_score: 12,
-      awd_defense_score: 22,
+      awd_sla_score: 1,
+      awd_defense_score: 2,
       awd_checker_preview_token: 'preview-token-2',
     })
 
@@ -629,8 +629,8 @@ describe('admin contest api contract', () => {
         checker_config: {
           health: { path: '/healthz' },
         },
-        awd_sla_score: 12,
-        awd_defense_score: 22,
+        awd_sla_score: 1,
+        awd_defense_score: 2,
         awd_checker_preview_token: 'preview-token-2',
       },
     })
@@ -672,7 +672,7 @@ describe('admin contest api contract', () => {
           check_result: { status_reason: 'healthy' },
           checker_type: 'http_standard',
           attack_received: 0,
-          sla_score: 18,
+          sla_score: 1,
           defense_score: 45,
           attack_score: 0,
           updated_at: '2026-03-12T10:06:00.000Z',
@@ -710,7 +710,7 @@ describe('admin contest api contract', () => {
           check_result: { status_reason: 'healthy' },
           checker_type: 'http_standard',
           attack_received: 0,
-          sla_score: 18,
+          sla_score: 1,
           defense_score: 45,
           attack_score: 0,
           updated_at: '2026-03-12T10:06:00.000Z',
@@ -830,7 +830,7 @@ describe('admin contest api contract', () => {
           service_up_count: 1,
           service_down_count: 0,
           service_compromised_count: 0,
-          sla_score: 18,
+          sla_score: 1,
           defense_score: 45,
           attack_score: 0,
           successful_attack_count: 0,
@@ -885,7 +885,7 @@ describe('admin contest api contract', () => {
           service_up_count: 1,
           service_down_count: 0,
           service_compromised_count: 0,
-          sla_score: 18,
+          sla_score: 1,
           defense_score: 45,
           attack_score: 0,
           successful_attack_count: 0,
