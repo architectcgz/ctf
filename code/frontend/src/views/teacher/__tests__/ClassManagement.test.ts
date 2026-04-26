@@ -79,32 +79,18 @@ describe('ClassManagement', () => {
     expect(wrapper.find('#class-manage-tab-directory').exists()).toBe(false)
     expect(wrapper.findAll('.metric-panel-card')).toHaveLength(2)
     expect(wrapper.text()).not.toContain('已就绪')
-    expect(wrapper.find('.teacher-directory-head').exists()).toBe(true)
-    expect(wrapper.findAll('.teacher-directory-row')).toHaveLength(2)
+    expect(wrapper.find('.workspace-directory-toolbar').exists()).toBe(true)
+    expect(wrapper.find('.workspace-directory-toolbar__count-pill').exists()).toBe(false)
+    expect(wrapper.find('.workspace-data-table').exists()).toBe(true)
+    expect(wrapper.findAll('.workspace-data-table__body tr')).toHaveLength(2)
     expect(wrapper.find('.teacher-directory-pagination').exists()).toBe(true)
-    expect(wrapper.find('.teacher-directory-head').text()).toContain('班级编号')
-    expect(wrapper.find('.teacher-directory-head').text()).toContain('班级名称')
-    expect(wrapper.find('.teacher-directory-head').text()).toContain('学生数')
-    expect(wrapper.find('.teacher-directory-head').text()).not.toContain('标签')
-    expect(wrapper.find('.teacher-directory-head').text()).not.toContain('数据')
+    const headers = wrapper.findAll('.workspace-data-table__head-cell').map((cell) => cell.text())
+    expect(headers).toEqual(['班级编号', '班级名称', '学生数', '状态', '操作'])
 
-    const headChildren = Array.from(wrapper.find('.teacher-directory-head').element.children).map(
-      (element) => element.className.toString()
-    )
-    expect(headChildren[0]).toContain('teacher-directory-head-cell-class-code')
-    expect(headChildren[1]).toContain('teacher-directory-head-cell-class-name')
-    expect(headChildren[2]).toContain('teacher-directory-head-cell-student-count')
-
-    const rows = wrapper.findAll('.teacher-directory-row')
-    const firstRowChildren = Array.from(rows[0].element.children).map((element) =>
-      element.className.toString()
-    )
-    expect(firstRowChildren[0]).toContain('teacher-directory-cell-class-code')
-    expect(firstRowChildren[1]).toContain('teacher-directory-cell-class-name')
-    expect(firstRowChildren[2]).toContain('teacher-directory-cell-student-count')
+    const rows = wrapper.findAll('.workspace-data-table__body tr')
     expect(rows[0].find('.teacher-directory-cell-class-code').text()).toContain('CL-01')
     expect(rows[0].find('.teacher-directory-cell-class-name').text()).toBe('Class A')
-    expect(rows[0].find('.teacher-directory-cell-student-count').text()).toBe('2')
+    expect(rows[0].find('.teacher-directory-row-points').text()).toBe('2')
     expect(rows[0].find('.teacher-directory-row-title').attributes('title')).toBe('Class A')
     expect(rows[0].find('.teacher-directory-row-tags').exists()).toBe(false)
     expect(rows[0].find('.teacher-directory-row-metrics').exists()).toBe(false)
@@ -145,24 +131,62 @@ describe('ClassManagement', () => {
       true
     )
     expect(wrapper.find('.list-heading').exists()).toBe(true)
-    expect(wrapper.find('.teacher-filter-control').exists()).toBe(true)
+    expect(wrapper.find('.workspace-directory-toolbar').exists()).toBe(true)
+    expect(wrapper.find('.teacher-directory-meta').exists()).toBe(false)
     const searchInput = wrapper.find('input[placeholder="搜索班级编号或名称"]')
     expect(searchInput.exists()).toBe(true)
-    expect(wrapper.text()).not.toContain('班级筛选')
     expect(wrapper.text()).not.toContain('支持按班级编号或班级名称快速定位班级入口。')
 
     await searchInput.setValue('CL-02')
-    expect(wrapper.findAll('.teacher-directory-row')).toHaveLength(1)
+    expect(wrapper.findAll('.workspace-data-table__body tr')).toHaveLength(1)
     expect(wrapper.text()).toContain('Class B')
     expect(wrapper.text()).not.toContain('Class A')
 
     await searchInput.setValue('Class A')
-    expect(wrapper.findAll('.teacher-directory-row')).toHaveLength(1)
+    expect(wrapper.findAll('.workspace-data-table__body tr')).toHaveLength(1)
     expect(wrapper.text()).toContain('Class A')
     expect(wrapper.text()).not.toContain('Class B')
 
     await searchInput.setValue('unknown')
     expect(wrapper.text()).toContain('没有匹配班级')
+  })
+
+  it('应该使用通用筛选面板按班级状态筛选', async () => {
+    teacherApiMocks.getClasses.mockResolvedValueOnce({
+      list: [
+        { name: 'Ready Class', student_count: 2 },
+        { name: 'Empty Class', student_count: 0 },
+      ],
+      total: 2,
+      page: 1,
+      page_size: 20,
+    })
+
+    const wrapper = mount(ClassManagement, {
+      global: {
+        components: {
+          ElTable,
+          ElTableColumn,
+          ElButton,
+        },
+        stubs: {
+          TeacherClassReportExportDialog: reportDialogStub,
+        },
+      },
+    })
+
+    await flushPromises()
+
+    await wrapper.get('.workspace-directory-toolbar__filter-toggle').trigger('click')
+    expect(wrapper.text()).toContain('班级筛选')
+
+    await wrapper.get('.teacher-directory-filter-control').setValue('empty')
+    expect(wrapper.findAll('.workspace-data-table__body tr')).toHaveLength(1)
+    expect(wrapper.text()).toContain('Empty Class')
+    expect(wrapper.text()).not.toContain('Ready Class')
+
+    await wrapper.get('.workspace-directory-toolbar__filter-reset').trigger('click')
+    expect(wrapper.findAll('.workspace-data-table__body tr')).toHaveLength(2)
   })
 
   it('应该支持切换班级目录分页', async () => {
@@ -207,7 +231,7 @@ describe('ClassManagement', () => {
     await flushPromises()
 
     expect(teacherApiMocks.getClasses).toHaveBeenNthCalledWith(2, { page: 2, page_size: 20 })
-    expect(wrapper.findAll('.teacher-directory-row')).toHaveLength(1)
+    expect(wrapper.findAll('.workspace-data-table__body tr')).toHaveLength(1)
     expect(wrapper.text()).toContain('Class 21')
     expect(wrapper.text()).not.toContain('Class 20')
     expect(wrapper.find('.teacher-directory-pagination').text()).toContain('2 / 2')
@@ -222,13 +246,18 @@ describe('ClassManagement', () => {
     expect(classManagementSource).toContain(
       'class="workspace-directory-section teacher-directory-section"'
     )
+    expect(classManagementSource).toContain('<WorkspaceDirectoryToolbar')
+    expect(classManagementSource).toContain(':show-total="false"')
+    expect(classManagementSource).not.toContain(':show-filter="false"')
+    expect(classManagementSource).toContain('filter-panel-title="班级筛选"')
+    expect(classManagementSource).toContain('<WorkspaceDataTable')
+    expect(classManagementSource).toContain('<WorkspaceDirectoryPagination')
     expect(classManagementSource).toContain('class="list-heading"')
     expect(classManagementSource).not.toContain('teacher-controls-title')
     expect(classManagementSource).not.toContain('teacher-controls-copy')
-    expect(classManagementSource).not.toContain('班级筛选')
     expect(classManagementSource).not.toContain('支持按班级编号或班级名称快速定位班级入口。')
     expect(classManagementSource).toMatch(
-      /class="teacher-directory-row-title"[\s\S]*:title="item\.name"/s
+      /class="teacher-directory-row-title"[\s\S]*:title="\(row as ClassDirectoryTableRow\)\.name"/s
     )
     expect(classManagementSource).toMatch(
       /\.teacher-directory-row-title\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s
@@ -248,8 +277,8 @@ describe('ClassManagement', () => {
       '<div class="teacher-heading workspace-tab-heading__main">'
     )
     expect(classManagementSource).toContain('<div class="workspace-overline">')
-    expect(classManagementSource).toContain(
-      '<h1 class="teacher-title workspace-page-title">班级管理</h1>'
+    expect(classManagementSource).toMatch(
+      /<h1 class="teacher-title workspace-page-title">\s*班级管理\s*<\/h1>/
     )
     expect(classManagementSource).toContain('<p class="teacher-copy workspace-page-copy">')
     expect(classManagementSource).not.toContain('teacher-surface-eyebrow journal-eyebrow')
