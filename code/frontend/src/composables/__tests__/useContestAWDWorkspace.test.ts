@@ -7,6 +7,7 @@ import { useContestAWDWorkspace } from '@/composables/useContestAWDWorkspace'
 const contestApiMocks = vi.hoisted(() => ({
   getContestAWDWorkspace: vi.fn(),
   getScoreboard: vi.fn(),
+  requestContestAWDTargetAccess: vi.fn(),
   startContestAWDServiceInstance: vi.fn(),
   submitContestAWDAttack: vi.fn(),
 }))
@@ -26,6 +27,7 @@ describe('useContestAWDWorkspace', () => {
     vi.useRealTimers()
     contestApiMocks.getContestAWDWorkspace.mockReset()
     contestApiMocks.getScoreboard.mockReset()
+    contestApiMocks.requestContestAWDTargetAccess.mockReset()
     contestApiMocks.startContestAWDServiceInstance.mockReset()
     contestApiMocks.submitContestAWDAttack.mockReset()
     toastMocks.success.mockReset()
@@ -66,6 +68,9 @@ describe('useContestAWDWorkspace', () => {
         page_size: 10,
       },
       frozen: false,
+    })
+    contestApiMocks.requestContestAWDTargetAccess.mockResolvedValue({
+      access_url: '/api/v1/contests/1/awd/services/7009/targets/14/proxy/',
     })
   })
 
@@ -285,5 +290,64 @@ describe('useContestAWDWorkspace', () => {
     await flushPromises()
 
     expect(contestApiMocks.startContestAWDServiceInstance).toHaveBeenCalledWith('1', '7009')
+  })
+
+  it('打开跨队攻击入口时应请求目标代理 access 并防止重复点击', async () => {
+    let resolveAccess: ((value: { access_url: string }) => void) | null = null
+    const openMock = vi.spyOn(window, 'open').mockImplementation(() => null)
+
+    contestApiMocks.requestContestAWDTargetAccess.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveAccess = resolve
+        })
+    )
+
+    let openTarget!: (serviceId: string, victimTeamId: string) => Promise<string | null>
+    let openingTargetKey!: { value: string }
+
+    mount(
+      defineComponent({
+        setup() {
+          const workspace = useContestAWDWorkspace({
+            contestId: computed(() => '1'),
+            contestStatus: computed(() => 'running'),
+          } as any)
+          openTarget = workspace.openTarget
+          openingTargetKey = workspace.openingTargetKey
+          return () => null
+        },
+      })
+    )
+
+    await flushPromises()
+
+    const firstAttempt = openTarget('7009', '14')
+    const secondAttempt = openTarget('7009', '14')
+
+    expect(openingTargetKey.value).toBe('7009:14')
+    expect(contestApiMocks.requestContestAWDTargetAccess).toHaveBeenCalledTimes(1)
+    expect(contestApiMocks.requestContestAWDTargetAccess).toHaveBeenCalledWith('1', '7009', '14')
+
+    if (!resolveAccess) {
+      throw new Error('target access promise resolver was not captured')
+    }
+    const finishAccess = resolveAccess as (value: { access_url: string }) => void
+    finishAccess({
+      access_url: '/api/v1/contests/1/awd/services/7009/targets/14/proxy/',
+    })
+
+    await expect(secondAttempt).resolves.toBeNull()
+    await expect(firstAttempt).resolves.toBe(
+      '/api/v1/contests/1/awd/services/7009/targets/14/proxy/'
+    )
+    expect(openMock).toHaveBeenCalledWith(
+      '/api/v1/contests/1/awd/services/7009/targets/14/proxy/',
+      '_blank',
+      'noopener,noreferrer'
+    )
+    expect(openingTargetKey.value).toBe('')
+
+    openMock.mockRestore()
   })
 })

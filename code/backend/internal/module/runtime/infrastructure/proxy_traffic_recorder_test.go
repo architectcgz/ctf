@@ -124,6 +124,91 @@ func TestProxyTrafficEventRecorderPrefersServiceChallengeMetadata(t *testing.T) 
 	}
 }
 
+func TestProxyTrafficEventRecorderRecordsExplicitAWDAttackScope(t *testing.T) {
+	t.Parallel()
+
+	db := newProxyTrafficRecorderTestDB(t)
+	now := time.Now()
+	contestID := int64(902)
+	victimTeamID := int64(90211)
+	attackerTeamID := int64(90212)
+	serviceID := int64(90221)
+
+	seedProxyTrafficRecorderRow(t, db, &model.Contest{
+		ID:        contestID,
+		Title:     "Runtime AWD Contest",
+		Mode:      model.ContestModeAWD,
+		Status:    model.ContestStatusRunning,
+		StartTime: now.Add(-time.Minute),
+		EndTime:   now.Add(time.Hour),
+		CreatedAt: now,
+		UpdatedAt: now,
+	})
+	seedProxyTrafficRecorderRow(t, db, &model.AWDRound{
+		ID:           90201,
+		ContestID:    contestID,
+		RoundNumber:  1,
+		Status:       model.AWDRoundStatusRunning,
+		StartedAt:    &now,
+		AttackScore:  50,
+		DefenseScore: 50,
+		CreatedAt:    now,
+		UpdatedAt:    now,
+	})
+	seedProxyTrafficRecorderRow(t, db, &model.Team{
+		ID:         victimTeamID,
+		ContestID:  contestID,
+		Name:       "Victim",
+		CaptainID:  5001,
+		InviteCode: "victim-team-2",
+		MaxMembers: 4,
+		CreatedAt:  now,
+		UpdatedAt:  now,
+	})
+	seedProxyTrafficRecorderRow(t, db, &model.Team{
+		ID:         attackerTeamID,
+		ContestID:  contestID,
+		Name:       "Attacker",
+		CaptainID:  5002,
+		InviteCode: "attacker-team-2",
+		MaxMembers: 4,
+		CreatedAt:  now,
+		UpdatedAt:  now,
+	})
+
+	recorder := NewProxyTrafficEventRecorder(db)
+	err := recorder.RecordAWDProxyTrafficEvent(context.Background(), model.AWDProxyTrafficEventInput{
+		ContestID:      contestID,
+		AttackerTeamID: attackerTeamID,
+		VictimTeamID:   victimTeamID,
+		ServiceID:      serviceID,
+		ChallengeID:    90231,
+		Method:         "POST",
+		Path:           "/api/flag",
+		StatusCode:     200,
+	})
+	if err != nil {
+		t.Fatalf("RecordAWDProxyTrafficEvent() error = %v", err)
+	}
+
+	var event model.AWDTrafficEvent
+	if err := db.First(&event).Error; err != nil {
+		t.Fatalf("load awd traffic event: %v", err)
+	}
+	if event.RoundID != 90201 || event.ContestID != contestID {
+		t.Fatalf("unexpected round scope: %+v", event)
+	}
+	if event.AttackerTeamID != attackerTeamID || event.VictimTeamID != victimTeamID {
+		t.Fatalf("unexpected teams: %+v", event)
+	}
+	if event.ServiceID != serviceID || event.ChallengeID != 90231 {
+		t.Fatalf("unexpected service scope: %+v", event)
+	}
+	if event.Method != "POST" || event.Path != "/api/flag" || event.StatusCode != 200 {
+		t.Fatalf("unexpected request metadata: %+v", event)
+	}
+}
+
 func newProxyTrafficRecorderTestDB(t *testing.T) *gorm.DB {
 	t.Helper()
 

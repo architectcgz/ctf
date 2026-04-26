@@ -33,12 +33,20 @@ func (s *stubProxyTicketStore) FindProxyTicket(ctx context.Context, ticket strin
 }
 
 type stubProxyTicketInstanceReader struct {
-	findByIDWithContextFn func(ctx context.Context, id int64) (*model.Instance, error)
+	findByIDWithContextFn            func(ctx context.Context, id int64) (*model.Instance, error)
+	findAWDTargetProxyScopeWithCtxFn func(ctx context.Context, userID, contestID, serviceID, victimTeamID int64) (*runtimeports.AWDTargetProxyScope, error)
 }
 
 func (s *stubProxyTicketInstanceReader) FindByID(ctx context.Context, id int64) (*model.Instance, error) {
 	if s.findByIDWithContextFn != nil {
 		return s.findByIDWithContextFn(ctx, id)
+	}
+	return nil, nil
+}
+
+func (s *stubProxyTicketInstanceReader) FindAWDTargetProxyScope(ctx context.Context, userID, contestID, serviceID, victimTeamID int64) (*runtimeports.AWDTargetProxyScope, error) {
+	if s.findAWDTargetProxyScopeWithCtxFn != nil {
+		return s.findAWDTargetProxyScopeWithCtxFn(ctx, userID, contestID, serviceID, victimTeamID)
 	}
 	return nil, nil
 }
@@ -90,6 +98,56 @@ func TestProxyTicketServiceIssueTicketPersistsClaimsWithTTL(t *testing.T) {
 	}
 	if service.MaxAge() != 900 {
 		t.Fatalf("MaxAge() = %d, want 900", service.MaxAge())
+	}
+}
+
+func TestProxyTicketServiceIssueAWDTargetTicketPersistsAttackScope(t *testing.T) {
+	t.Parallel()
+
+	store := &stubProxyTicketStore{}
+	service := runtimeqry.NewProxyTicketService(store, &stubProxyTicketInstanceReader{
+		findAWDTargetProxyScopeWithCtxFn: func(ctx context.Context, userID, contestID, serviceID, victimTeamID int64) (*runtimeports.AWDTargetProxyScope, error) {
+			if userID != 1001 || contestID != 3001 || serviceID != 4001 || victimTeamID != 5002 {
+				t.Fatalf("unexpected target lookup args: user=%d contest=%d service=%d victim=%d", userID, contestID, serviceID, victimTeamID)
+			}
+			return &runtimeports.AWDTargetProxyScope{
+				InstanceID:     9001,
+				ContestID:      contestID,
+				AttackerTeamID: 5001,
+				VictimTeamID:   victimTeamID,
+				ServiceID:      serviceID,
+				ChallengeID:    6001,
+				ShareScope:     model.InstanceSharingPerTeam,
+				AccessURL:      "http://127.0.0.1:39001",
+			}, nil
+		},
+	}, 15*time.Minute)
+
+	ticket, expiresAt, err := service.IssueAWDTargetTicket(context.Background(), authctx.CurrentUser{
+		UserID:   1001,
+		Username: "alice",
+		Role:     model.RoleStudent,
+	}, 3001, 4001, 5002)
+	if err != nil {
+		t.Fatalf("IssueAWDTargetTicket() error = %v", err)
+	}
+	if ticket == "" || expiresAt.IsZero() {
+		t.Fatalf("expected issued ticket and expiry, got ticket=%q expires=%s", ticket, expiresAt)
+	}
+	if store.savedClaims.Purpose != runtimeports.ProxyTicketPurposeAWDAttack {
+		t.Fatalf("expected awd attack purpose, got %+v", store.savedClaims)
+	}
+	if store.savedClaims.InstanceID != 9001 || store.savedClaims.AWDAttackerTeamID == nil || *store.savedClaims.AWDAttackerTeamID != 5001 {
+		t.Fatalf("unexpected attacker claims: %+v", store.savedClaims)
+	}
+	if store.savedClaims.AWDVictimTeamID == nil || *store.savedClaims.AWDVictimTeamID != 5002 {
+		t.Fatalf("unexpected victim claims: %+v", store.savedClaims)
+	}
+	if store.savedClaims.AWDServiceID == nil || *store.savedClaims.AWDServiceID != 4001 {
+		t.Fatalf("unexpected service claims: %+v", store.savedClaims)
+	}
+	if store.savedClaims.AWDChallengeID == nil || *store.savedClaims.AWDChallengeID != 6001 {
+		t.Fatalf("unexpected challenge claims: %+v", store.savedClaims)
 	}
 }
 

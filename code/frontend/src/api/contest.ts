@@ -391,6 +391,17 @@ export async function submitContestAWDAttack(
   return normalizeAWDAttackLog(response)
 }
 
+export async function requestContestAWDTargetAccess(
+  contestId: string,
+  serviceId: string,
+  victimTeamId: string
+): Promise<{ access_url: string }> {
+  return request<{ access_url: string }>({
+    method: 'POST',
+    url: `/contests/${encodeURIComponent(contestId)}/awd/services/${encodeURIComponent(serviceId)}/targets/${encodeURIComponent(victimTeamId)}/access`,
+  })
+}
+
 export async function kickTeamMember(contestId: string, teamId: string, userId: string) {
   return request<void>({
     method: 'DELETE',

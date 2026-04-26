@@ -651,6 +651,24 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 		}),
 		deps.contest.AWDHandler.SubmitAttack,
 	)
+	protected.POST("/contests/:id/awd/services/:sid/targets/:team_id/access",
+		middleware.ParseInt64Param("id"),
+		middleware.ParseInt64Param("sid"),
+		middleware.ParseInt64Param("team_id"),
+		deps.runtime.Handler.AccessAWDTarget,
+	)
+	apiV1.GET("/contests/:id/awd/services/:sid/targets/:team_id/proxy",
+		middleware.ParseInt64Param("id"),
+		middleware.ParseInt64Param("sid"),
+		middleware.ParseInt64Param("team_id"),
+		deps.runtime.Handler.ProxyAWDTarget,
+	)
+	apiV1.Any("/contests/:id/awd/services/:sid/targets/:team_id/proxy/*proxyPath",
+		middleware.ParseInt64Param("id"),
+		middleware.ParseInt64Param("sid"),
+		middleware.ParseInt64Param("team_id"),
+		deps.runtime.Handler.ProxyAWDTarget,
+	)
 	protected.GET("/contests/:id/teams", deps.contest.TeamHandler.ListTeams)
 	protected.GET("/contests/:id/my-team", deps.contest.TeamHandler.GetMyTeam)
 	protected.POST("/contests/:id/teams",

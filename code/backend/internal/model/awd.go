@@ -97,3 +97,14 @@ type AWDTrafficEvent struct {
 func (AWDTrafficEvent) TableName() string {
 	return "awd_traffic_events"
 }
+
+type AWDProxyTrafficEventInput struct {
+	ContestID      int64
+	AttackerTeamID int64
+	VictimTeamID   int64
+	ServiceID      int64
+	ChallengeID    int64
+	Method         string
+	Path           string
+	StatusCode     int
+}

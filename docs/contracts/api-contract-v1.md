@@ -1853,6 +1853,32 @@ export interface SubmitAwdAttackReq {
 > - 仅 `mode=awd` 且 `status=running` 的竞赛允许提交。
 > - 攻击方队伍从当前登录用户的已审核报名记录中解析，必须已加入队伍。
 > - 默认校验当前轮 Flag；在 `contest.awd.previous_round_grace` 宽限期内，同时接受上一轮 Flag。
+
+### 8.19.4 POST `/api/v1/contests/:id/awd/services/:sid/targets/:team_id/access`
+
+`data`：
+
+```ts
+export interface InstanceAccessData {
+  access_url: string
+}
+```
+
+> 说明：
+> - 该接口用于获取 AWD 跨队攻击代理入口，`team_id` 表示受害队伍 ID，`sid` 表示 AWD 服务 ID。
+> - 当前登录用户必须属于该 AWD 赛事中的攻击队伍，且目标队伍不能是自己的队伍。
+> - 比赛必须处于 `running` / `frozen`，当前必须存在 `running` 轮次，目标服务必须可见，目标队伍服务实例必须处于 `running` 且有 `access_url`。
+> - 返回的 `access_url` 指向平台代理路径，调用方不应直接使用实例真实端口作为攻击入口。
+
+### 8.19.5 ANY `/api/v1/contests/:id/awd/services/:sid/targets/:team_id/proxy/*proxyPath`
+
+`data`：目标实例原始响应。
+
+> 说明：
+> - 该代理入口接受 `access` 接口签发的短期 ticket，并把请求转发到目标队伍服务实例。
+> - ticket 首次出现在 query 中时，后端会设置 HttpOnly cookie 并重定向到去除 ticket 的 URL。
+> - 代理请求会写入 `awd_traffic_events`，归因字段来自 ticket 中的 `contest_id`、`attacker_team_id`、`victim_team_id`、`service_id` 和 `challenge_id`。
+> - 该入口只覆盖 HTTP 层代理审计，不等价于 TCP 抓包或 L4 流量审计。
 > - 同一轮内同一 `attacker_team -> victim_team -> challenge` 首次成功提交得分，之后同队成员重复成功提交仅记日志不重复得分。
 
 ### 8.20 POST `/api/v1/admin/contests` / PUT `/api/v1/admin/contests/:id`

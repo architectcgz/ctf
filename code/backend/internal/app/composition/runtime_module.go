@@ -294,7 +294,9 @@ type runtimeHTTPService interface {
 	ListTeacherInstances(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherInstanceQuery) ([]dto.TeacherInstanceItem, error)
 	DestroyTeacherInstance(ctx context.Context, instanceID, requesterID int64, requesterRole string) error
 	IssueProxyTicket(ctx context.Context, user authctx.CurrentUser, instanceID int64) (string, error)
+	IssueAWDTargetProxyTicket(ctx context.Context, user authctx.CurrentUser, contestID, serviceID, victimTeamID int64) (string, error)
 	ResolveProxyTicket(ctx context.Context, ticket string) (*runtimeports.ProxyTicketClaims, error)
+	ResolveAWDTargetAccessURL(ctx context.Context, claims *runtimeports.ProxyTicketClaims, contestID, serviceID, victimTeamID int64) (string, error)
 	ProxyTicketMaxAge() int
 	ProxyBodyPreviewSize() int
 }
@@ -313,7 +315,9 @@ type runtimeHTTPQueryService interface {
 
 type runtimeHTTPProxyTicketService interface {
 	IssueTicket(ctx context.Context, user authctx.CurrentUser, instanceID int64) (string, time.Time, error)
+	IssueAWDTargetTicket(ctx context.Context, user authctx.CurrentUser, contestID, serviceID, victimTeamID int64) (string, time.Time, error)
 	ResolveTicket(ctx context.Context, ticket string) (*runtimeports.ProxyTicketClaims, error)
+	ResolveAWDTargetAccessURL(ctx context.Context, claims *runtimeports.ProxyTicketClaims, contestID, serviceID, victimTeamID int64) (string, error)
 	MaxAge() int
 }
 
@@ -384,11 +388,27 @@ func (a *runtimeHTTPServiceAdapter) IssueProxyTicket(ctx context.Context, user a
 	return ticket, err
 }
 
+func (a *runtimeHTTPServiceAdapter) IssueAWDTargetProxyTicket(ctx context.Context, user authctx.CurrentUser, contestID, serviceID, victimTeamID int64) (string, error) {
+	if a == nil || a.proxyTickets == nil {
+		return "", errRuntimeHTTPProxyTicketServiceUnavailable()
+	}
+
+	ticket, _, err := a.proxyTickets.IssueAWDTargetTicket(ctx, user, contestID, serviceID, victimTeamID)
+	return ticket, err
+}
+
 func (a *runtimeHTTPServiceAdapter) ResolveProxyTicket(ctx context.Context, ticket string) (*runtimeports.ProxyTicketClaims, error) {
 	if a == nil || a.proxyTickets == nil {
 		return nil, errRuntimeHTTPProxyTicketServiceUnavailable()
 	}
 	return a.proxyTickets.ResolveTicket(ctx, ticket)
+}
+
+func (a *runtimeHTTPServiceAdapter) ResolveAWDTargetAccessURL(ctx context.Context, claims *runtimeports.ProxyTicketClaims, contestID, serviceID, victimTeamID int64) (string, error) {
+	if a == nil || a.proxyTickets == nil {
+		return "", errRuntimeHTTPProxyTicketServiceUnavailable()
+	}
+	return a.proxyTickets.ResolveAWDTargetAccessURL(ctx, claims, contestID, serviceID, victimTeamID)
 }
 
 func (a *runtimeHTTPServiceAdapter) ProxyTicketMaxAge() int {

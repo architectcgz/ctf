@@ -37,13 +37,16 @@ type runtimeService interface {
 	ListTeacherInstances(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherInstanceQuery) ([]dto.TeacherInstanceItem, error)
 	DestroyTeacherInstance(ctx context.Context, instanceID, requesterID int64, requesterRole string) error
 	IssueProxyTicket(ctx context.Context, user authctx.CurrentUser, instanceID int64) (string, error)
+	IssueAWDTargetProxyTicket(ctx context.Context, user authctx.CurrentUser, contestID, serviceID, victimTeamID int64) (string, error)
 	ResolveProxyTicket(ctx context.Context, ticket string) (*runtimeports.ProxyTicketClaims, error)
+	ResolveAWDTargetAccessURL(ctx context.Context, claims *runtimeports.ProxyTicketClaims, contestID, serviceID, victimTeamID int64) (string, error)
 	ProxyTicketMaxAge() int
 	ProxyBodyPreviewSize() int
 }
 
 type runtimeProxyTrafficRecorder interface {
 	RecordRuntimeProxyTrafficEvent(ctx context.Context, instanceID, userID int64, method, requestPath string, statusCode int) error
+	RecordAWDProxyTrafficEvent(ctx context.Context, event model.AWDProxyTrafficEventInput) error
 }
 
 type Handler struct {
@@ -166,6 +169,51 @@ func (h *Handler) ProxyInstance(c *gin.Context) {
 		return
 	}
 
+	h.proxyToTarget(c, claims, instanceID, targetURL)
+}
+
+func (h *Handler) AccessAWDTarget(c *gin.Context) {
+	currentUser := authctx.MustCurrentUser(c)
+	contestID := c.GetInt64("id")
+	serviceID := c.GetInt64("sid")
+	victimTeamID := c.GetInt64("team_id")
+
+	ticket, err := h.service.IssueAWDTargetProxyTicket(c.Request.Context(), currentUser, contestID, serviceID, victimTeamID)
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+
+	response.Success(c, &dto.InstanceAccessResp{
+		AccessURL: buildAWDTargetProxyAccessURL(contestID, serviceID, victimTeamID, ticket),
+	})
+}
+
+func (h *Handler) ProxyAWDTarget(c *gin.Context) {
+	contestID := c.GetInt64("id")
+	serviceID := c.GetInt64("sid")
+	victimTeamID := c.GetInt64("team_id")
+
+	claims, redirectURL, err := h.resolveAWDTargetProxyClaims(c, contestID, serviceID, victimTeamID)
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+	if redirectURL != "" {
+		c.Redirect(stdhttp.StatusFound, redirectURL)
+		return
+	}
+
+	targetURL, err := h.service.ResolveAWDTargetAccessURL(c.Request.Context(), claims, contestID, serviceID, victimTeamID)
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+
+	h.proxyToTarget(c, claims, claims.InstanceID, targetURL)
+}
+
+func (h *Handler) proxyToTarget(c *gin.Context, claims *runtimeports.ProxyTicketClaims, instanceID int64, targetURL string) {
 	parsedTarget, err := url.Parse(targetURL)
 	if err != nil || parsedTarget.Scheme == "" || parsedTarget.Host == "" {
 		if err == nil {
@@ -268,6 +316,13 @@ func buildProxyAccessURL(instanceID int64, ticket string) string {
 	return "/api/v1/instances/" + strconv.FormatInt(instanceID, 10) + "/proxy/?ticket=" + url.QueryEscape(ticket)
 }
 
+func buildAWDTargetProxyAccessURL(contestID, serviceID, victimTeamID int64, ticket string) string {
+	return "/api/v1/contests/" + strconv.FormatInt(contestID, 10) +
+		"/awd/services/" + strconv.FormatInt(serviceID, 10) +
+		"/targets/" + strconv.FormatInt(victimTeamID, 10) +
+		"/proxy/?ticket=" + url.QueryEscape(ticket)
+}
+
 func (h *Handler) resolveProxyClaims(c *gin.Context, instanceID int64) (*runtimeports.ProxyTicketClaims, string, error) {
 	if h.service == nil {
 		return nil, "", errcode.ErrInternal.WithCause(errcode.ErrServiceUnavailable)
@@ -300,16 +355,72 @@ func (h *Handler) resolveProxyClaims(c *gin.Context, instanceID int64) (*runtime
 	return claims, "", nil
 }
 
+func (h *Handler) resolveAWDTargetProxyClaims(c *gin.Context, contestID, serviceID, victimTeamID int64) (*runtimeports.ProxyTicketClaims, string, error) {
+	if h.service == nil {
+		return nil, "", errcode.ErrInternal.WithCause(errcode.ErrServiceUnavailable)
+	}
+
+	if ticket := strings.TrimSpace(c.Query("ticket")); ticket != "" {
+		claims, err := h.service.ResolveProxyTicket(c.Request.Context(), ticket)
+		if err != nil {
+			return nil, "", err
+		}
+		if err := validateAWDTargetProxyClaims(claims, contestID, serviceID, victimTeamID); err != nil {
+			return nil, "", err
+		}
+
+		setProxyAccessCookieAtPath(c, ticket, awdTargetProxyCookiePath(contestID, serviceID, victimTeamID), h.service.ProxyTicketMaxAge(), h.cookieConfig)
+		return claims, sanitizedProxyRedirectURL(c), nil
+	}
+
+	ticketCookie, err := c.Cookie(proxyAccessCookieName)
+	if err != nil {
+		return nil, "", errcode.ErrProxyTicketInvalid
+	}
+	claims, err := h.service.ResolveProxyTicket(c.Request.Context(), ticketCookie)
+	if err != nil {
+		return nil, "", err
+	}
+	if err := validateAWDTargetProxyClaims(claims, contestID, serviceID, victimTeamID); err != nil {
+		return nil, "", err
+	}
+	return claims, "", nil
+}
+
+func validateAWDTargetProxyClaims(claims *runtimeports.ProxyTicketClaims, contestID, serviceID, victimTeamID int64) error {
+	if claims == nil || claims.Purpose != runtimeports.ProxyTicketPurposeAWDAttack {
+		return errcode.ErrProxyTicketInvalid
+	}
+	if claims.ContestID == nil || *claims.ContestID != contestID ||
+		claims.AWDServiceID == nil || *claims.AWDServiceID != serviceID ||
+		claims.AWDVictimTeamID == nil || *claims.AWDVictimTeamID != victimTeamID ||
+		claims.AWDAttackerTeamID == nil || claims.AWDChallengeID == nil {
+		return errcode.ErrForbidden
+	}
+	return nil
+}
+
 func setProxyAccessCookie(c *gin.Context, ticket string, instanceID int64, maxAge int, cfg CookieConfig) {
+	setProxyAccessCookieAtPath(c, ticket, "/api/v1/instances/"+strconv.FormatInt(instanceID, 10)+"/proxy", maxAge, cfg)
+}
+
+func setProxyAccessCookieAtPath(c *gin.Context, ticket, cookiePath string, maxAge int, cfg CookieConfig) {
 	stdhttp.SetCookie(c.Writer, &stdhttp.Cookie{
 		Name:     proxyAccessCookieName,
 		Value:    ticket,
-		Path:     "/api/v1/instances/" + strconv.FormatInt(instanceID, 10) + "/proxy",
+		Path:     cookiePath,
 		MaxAge:   maxAge,
 		HttpOnly: true,
 		Secure:   cfg.Secure,
 		SameSite: cfg.SameSite,
 	})
+}
+
+func awdTargetProxyCookiePath(contestID, serviceID, victimTeamID int64) string {
+	return "/api/v1/contests/" + strconv.FormatInt(contestID, 10) +
+		"/awd/services/" + strconv.FormatInt(serviceID, 10) +
+		"/targets/" + strconv.FormatInt(victimTeamID, 10) +
+		"/proxy"
 }
 
 func sanitizedProxyRedirectURL(c *gin.Context) string {
@@ -423,14 +534,32 @@ func (h *Handler) recordProxyAudit(
 		})
 	}
 	if h.proxyTrafficRecorder != nil {
-		_ = h.proxyTrafficRecorder.RecordRuntimeProxyTrafficEvent(
-			c.Request.Context(),
-			instanceID,
-			claims.UserID,
-			c.Request.Method,
-			targetPath,
-			status,
-		)
+		if claims.Purpose == runtimeports.ProxyTicketPurposeAWDAttack &&
+			claims.ContestID != nil &&
+			claims.AWDAttackerTeamID != nil &&
+			claims.AWDVictimTeamID != nil &&
+			claims.AWDServiceID != nil &&
+			claims.AWDChallengeID != nil {
+			_ = h.proxyTrafficRecorder.RecordAWDProxyTrafficEvent(c.Request.Context(), model.AWDProxyTrafficEventInput{
+				ContestID:      *claims.ContestID,
+				AttackerTeamID: *claims.AWDAttackerTeamID,
+				VictimTeamID:   *claims.AWDVictimTeamID,
+				ServiceID:      *claims.AWDServiceID,
+				ChallengeID:    *claims.AWDChallengeID,
+				Method:         c.Request.Method,
+				Path:           targetPath,
+				StatusCode:     status,
+			})
+		} else {
+			_ = h.proxyTrafficRecorder.RecordRuntimeProxyTrafficEvent(
+				c.Request.Context(),
+				instanceID,
+				claims.UserID,
+				c.Request.Method,
+				targetPath,
+				status,
+			)
+		}
 	}
 }
 

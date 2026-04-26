@@ -1,18 +1,17 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { 
-  ShieldAlert, 
-  Sword, 
-  Target, 
-  Activity, 
-  Wifi, 
-  Zap, 
-  BarChart3, 
-  History, 
+import {
+  ShieldAlert,
+  Sword,
+  Target,
+  Activity,
+  Wifi,
+  Zap,
+  BarChart3,
+  History,
   Terminal,
   ExternalLink,
   RefreshCw,
-  AlertTriangle
 } from 'lucide-vue-next'
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
@@ -43,11 +42,13 @@ const {
   hasTeam,
   submitResult,
   startingServiceKey,
+  openingTargetKey,
   submittingKey,
   shouldAutoRefresh,
   lastSyncedAt,
   refreshAll,
   startService,
+  openTarget,
   submitAttack,
 } = useContestAWDWorkspace({
   contestId: computed(() => props.contest.id),
@@ -66,8 +67,8 @@ const servicesByServiceId = computed(() => {
 })
 
 const runtimeChallenges = computed(() =>
-  props.challenges.filter(
-    (item): item is ContestChallengeItem & { awd_service_id: string } => Boolean(item.awd_service_id)
+  props.challenges.filter((item): item is ContestChallengeItem & { awd_service_id: string } =>
+    Boolean(item.awd_service_id)
   )
 )
 
@@ -99,8 +100,9 @@ const targetFilterKeyword = computed(() => targetKeyword.value.trim().toLowerCas
 
 const activeChallenge = computed(
   () =>
-    runtimeChallenges.value.find((item) => getChallengeRuntimeKey(item) === activeChallengeKey.value) ||
-    null
+    runtimeChallenges.value.find(
+      (item) => getChallengeRuntimeKey(item) === activeChallengeKey.value
+    ) || null
 )
 const activeChallengeRuntimeKey = computed(() => getChallengeRuntimeKey(activeChallenge.value))
 
@@ -186,10 +188,14 @@ watch(
 
 function getServiceStatusLabel(status?: string): string {
   switch (status) {
-    case 'up': return 'STABLE'
-    case 'down': return 'OFFLINE'
-    case 'compromised': return 'CRITICAL'
-    default: return 'STANDBY'
+    case 'up':
+      return 'STABLE'
+    case 'down':
+      return 'OFFLINE'
+    case 'compromised':
+      return 'CRITICAL'
+    default:
+      return 'STANDBY'
   }
 }
 
@@ -241,12 +247,17 @@ function formatAttackResultToast(result: {
   return `${challengeTitle}: NO VALID FLAG RECOVERED.`
 }
 
-function getWorkspaceService(challenge: ContestChallengeItem): ContestAWDWorkspaceServiceData | undefined {
+function getWorkspaceService(
+  challenge: ContestChallengeItem
+): ContestAWDWorkspaceServiceData | undefined {
   if (!challenge.awd_service_id) return undefined
   return servicesByServiceId.value.get(challenge.awd_service_id)
 }
 
-function isTargetServiceForChallenge(service: { service_id?: string; challenge_id: string }, challenge: ContestChallengeItem): boolean {
+function isTargetServiceForChallenge(
+  service: { service_id?: string; challenge_id: string },
+  challenge: ContestChallengeItem
+): boolean {
   return Boolean(challenge.awd_service_id) && service.service_id === challenge.awd_service_id
 }
 
@@ -275,9 +286,7 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
     <!-- HUD KPI Strip -->
     <header class="awd-hud-strip">
       <div class="hud-item">
-        <div class="hud-label">
-          OPERATIONAL ROUND
-        </div>
+        <div class="hud-label">OPERATIONAL ROUND</div>
         <div class="hud-value font-mono">
           {{ currentRound ? `#${String(currentRound.round_number).padStart(2, '0')}` : '--' }}
         </div>
@@ -286,57 +295,37 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
         </div>
       </div>
       <div class="hud-item">
-        <div class="hud-label">
-          BATTLE SQUAD
-        </div>
+        <div class="hud-label">BATTLE SQUAD</div>
         <div class="hud-value">
           {{ myTeam?.team_name || 'UNASSIGNED' }}
         </div>
         <div class="hud-helper">
-          RANK: #{{ scoreboardRows.find(r => r.team_id === myTeam?.team_id)?.rank || '--' }}
+          RANK: #{{ scoreboardRows.find((r) => r.team_id === myTeam?.team_id)?.rank || '--' }}
         </div>
       </div>
       <div class="hud-item">
-        <div class="hud-label">
-          SQUAD ASSETS
-        </div>
+        <div class="hud-label">SQUAD ASSETS</div>
         <div class="hud-value font-mono">
           {{ workspace?.services.length || 0 }}
         </div>
-        <div class="hud-helper">
-          ACTIVE SERVICES
-        </div>
+        <div class="hud-helper">ACTIVE SERVICES</div>
       </div>
       <div class="hud-item">
-        <div class="hud-label">
-          APEX SCORE
-        </div>
+        <div class="hud-label">APEX SCORE</div>
         <div class="hud-value hud-value--accent font-mono">
           {{ topScore }}
         </div>
-        <div class="hud-helper">
-          BATTLEFIELD PEAK
-        </div>
+        <div class="hud-helper">BATTLEFIELD PEAK</div>
       </div>
       <div class="hud-actions">
-        <button
-          class="hud-refresh-btn"
-          :disabled="loading"
-          @click="refreshAll"
-        >
-          <RefreshCw
-            class="h-4 w-4"
-            :class="{ 'animate-spin': loading }"
-          />
+        <button class="hud-refresh-btn" :disabled="loading" @click="refreshAll">
+          <RefreshCw class="h-4 w-4" :class="{ 'animate-spin': loading }" />
           <span>{{ lastSyncedLabel }}</span>
         </button>
       </div>
     </header>
 
-    <div
-      v-if="loading && !workspace"
-      class="war-room-loading"
-    >
+    <div v-if="loading && !workspace" class="war-room-loading">
       <div class="radar-scan" />
       <p>ESTABLISHING BATTLEFIELD LINK...</p>
     </div>
@@ -349,26 +338,18 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
       class="war-room-empty"
     />
 
-    <div
-      v-else
-      class="war-room-grid"
-    >
+    <div v-else class="war-room-grid">
       <!-- 1. Defense Monitor (Left) -->
       <aside class="war-room-col column-defense">
         <section class="ops-panel">
           <header class="ops-panel__header">
             <ShieldAlert class="ops-panel__icon ops-panel__icon--warning h-4 w-4" />
-            <h3 class="ops-panel__title">
-              DEFENSE MONITOR
-            </h3>
+            <h3 class="ops-panel__title">DEFENSE MONITOR</h3>
           </header>
-          
+
           <div class="ops-panel__content custom-scrollbar">
             <!-- Alerts -->
-            <div
-              v-if="defenseAlerts.length > 0"
-              class="defense-alerts"
-            >
+            <div v-if="defenseAlerts.length > 0" class="defense-alerts">
               <div
                 v-for="alert in defenseAlerts"
                 :key="alert.challengeId"
@@ -380,37 +361,29 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
                   <span class="alert-badge">{{ alert.statusLabel }}</span>
                 </div>
                 <div class="alert-issues">
-                  <span
-                    v-for="issue in alert.issues"
-                    :key="issue"
-                  >{{ issue }}</span>
+                  <span v-for="issue in alert.issues" :key="issue">{{ issue }}</span>
                 </div>
               </div>
             </div>
 
             <!-- Services -->
             <div class="asset-list mt-4">
-              <div class="asset-header">
-                SQUAD SERVICES
-              </div>
-              <div
-                v-if="runtimeChallenges.length === 0"
-                class="panel-note"
-              >
+              <div class="asset-header">SQUAD SERVICES</div>
+              <div v-if="runtimeChallenges.length === 0" class="panel-note">
                 NO DEPLOYABLE SERVICES IN CURRENT CONTEST.
               </div>
-              <div
-                v-for="challenge in runtimeChallenges"
-                :key="challenge.id"
-                class="asset-item"
-              >
+              <div v-for="challenge in runtimeChallenges" :key="challenge.id" class="asset-item">
                 <div class="asset-main">
                   <div class="flex items-center justify-between">
                     <div class="asset-title-stack">
                       <span class="asset-title">{{ challenge.title }}</span>
-                      <span class="asset-ref">{{ formatServiceRef(challenge.awd_service_id) }}</span>
+                      <span class="asset-ref">{{
+                        formatServiceRef(challenge.awd_service_id)
+                      }}</span>
                     </div>
-                    <span :class="getServiceStatusClass(getWorkspaceService(challenge)?.service_status)">
+                    <span
+                      :class="getServiceStatusClass(getWorkspaceService(challenge)?.service_status)"
+                    >
                       {{ getServiceStatusLabel(getWorkspaceService(challenge)?.service_status) }}
                     </span>
                   </div>
@@ -424,7 +397,8 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
                     :href="getWorkspaceService(challenge)?.access_url"
                     target="_blank"
                     class="asset-btn"
-                  ><ExternalLink class="h-3 w-3" /></a>
+                    ><ExternalLink class="h-3 w-3"
+                  /></a>
                   <button
                     :disabled="startingServiceKey === getServiceStartKey(challenge)"
                     class="asset-btn asset-btn--primary"
@@ -444,9 +418,7 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
         <section class="ops-panel">
           <header class="ops-panel__header">
             <Sword class="ops-panel__icon ops-panel__icon--danger h-4 w-4" />
-            <h3 class="ops-panel__title">
-              ATTACK VECTOR
-            </h3>
+            <h3 class="ops-panel__title">ATTACK VECTOR</h3>
           </header>
 
           <div class="ops-panel__toolbar">
@@ -474,38 +446,22 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
                 type="text"
                 placeholder="FILTER BY NAME..."
                 class="war-room-input"
-              >
+              />
             </div>
           </div>
 
           <div class="ops-panel__content custom-scrollbar">
-            <div
-              v-if="runtimeChallenges.length === 0"
-              class="panel-note"
-            >
+            <div v-if="runtimeChallenges.length === 0" class="panel-note">
               NO DEPLOYABLE SERVICES IN CURRENT CONTEST.
             </div>
-            <div
-              v-else-if="!activeChallenge"
-              class="panel-note"
-            >
+            <div v-else-if="!activeChallenge" class="panel-note">
               SELECT A TARGET SECTOR TO COMMENCE ATTACK.
             </div>
-            <div
-              v-else-if="filteredTargets.length === 0"
-              class="panel-note"
-            >
+            <div v-else-if="filteredTargets.length === 0" class="panel-note">
               NO MATCHING HOSTILES IN CURRENT SECTOR.
             </div>
-            <div
-              v-else
-              class="target-grid"
-            >
-              <article
-                v-for="target in filteredTargets"
-                :key="target.team_id"
-                class="target-card"
-              >
+            <div v-else class="target-grid">
+              <article v-for="target in filteredTargets" :key="target.team_id" class="target-card">
                 <div class="target-info">
                   <div class="target-team font-black">
                     {{ target.team_name.toUpperCase() }}
@@ -518,33 +474,61 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
                   </div>
                 </div>
                 <div class="target-action">
+                  <button
+                    :data-testid="`awd-open-target-${activeChallengeRuntimeKey}-${target.team_id}`"
+                    :disabled="
+                      !target.active_service?.access_url ||
+                      openingTargetKey ===
+                        buildAttackStateKey(activeChallengeRuntimeKey, target.team_id)
+                    "
+                    class="target-open-btn"
+                    type="button"
+                    @click="openTarget(activeChallengeRuntimeKey, target.team_id)"
+                  >
+                    <ExternalLink class="h-3 w-3" />
+                    <span>{{
+                      openingTargetKey ===
+                      buildAttackStateKey(activeChallengeRuntimeKey, target.team_id)
+                        ? '...'
+                        : 'OPEN'
+                    }}</span>
+                  </button>
                   <input
-                    :value="flagInputs[buildAttackStateKey(activeChallengeRuntimeKey, target.team_id)] || ''"
+                    :value="
+                      flagInputs[buildAttackStateKey(activeChallengeRuntimeKey, target.team_id)] ||
+                      ''
+                    "
                     placeholder="ENTER STOLEN FLAG..."
                     class="flag-input"
-                    @input="flagInputs[buildAttackStateKey(activeChallengeRuntimeKey, target.team_id)] = String(($event.target as HTMLInputElement).value)"
+                    @input="
+                      flagInputs[buildAttackStateKey(activeChallengeRuntimeKey, target.team_id)] =
+                        String(($event.target as HTMLInputElement).value)
+                    "
                     @keyup.enter="handleSubmit(activeChallengeRuntimeKey, target.team_id)"
-                  >
+                  />
                   <button
-                    :disabled="!target.active_service?.access_url || submittingKey === buildAttackStateKey(activeChallengeRuntimeKey, target.team_id)"
+                    :disabled="
+                      !target.active_service?.access_url ||
+                      submittingKey ===
+                        buildAttackStateKey(activeChallengeRuntimeKey, target.team_id)
+                    "
                     class="submit-btn"
                     @click="handleSubmit(activeChallengeRuntimeKey, target.team_id)"
                   >
-                    {{ submittingKey === buildAttackStateKey(activeChallengeRuntimeKey, target.team_id) ? '...' : 'SUBMIT' }}
+                    {{
+                      submittingKey ===
+                      buildAttackStateKey(activeChallengeRuntimeKey, target.team_id)
+                        ? '...'
+                        : 'SUBMIT'
+                    }}
                   </button>
                 </div>
               </article>
             </div>
           </div>
 
-          <footer
-            v-if="submitResult"
-            class="ops-panel__footer"
-          >
-            <div
-              class="result-alert"
-              :class="submitResult.is_success ? 'success' : 'danger'"
-            >
+          <footer v-if="submitResult" class="ops-panel__footer">
+            <div class="result-alert" :class="submitResult.is_success ? 'success' : 'danger'">
               <Terminal class="h-3.5 w-3.5" />
               <span>{{ getSubmitResultMessage().toUpperCase() }}</span>
             </div>
@@ -557,9 +541,7 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
         <section class="ops-panel h-1/2 mb-4">
           <header class="ops-panel__header">
             <BarChart3 class="ops-panel__icon ops-panel__icon--accent h-4 w-4" />
-            <h3 class="ops-panel__title">
-              FIELD INTEL
-            </h3>
+            <h3 class="ops-panel__title">FIELD INTEL</h3>
           </header>
           <div class="ops-panel__content custom-scrollbar">
             <div
@@ -578,9 +560,7 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
         <section class="ops-panel h-1/2">
           <header class="ops-panel__header">
             <History class="h-4 w-4 text-purple-500" />
-            <h3 class="ops-panel__title">
-              RECENT FEEDBACK
-            </h3>
+            <h3 class="ops-panel__title">RECENT FEEDBACK</h3>
           </header>
           <div class="ops-panel__content custom-scrollbar">
             <div
@@ -595,20 +575,22 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
               </div>
               <div class="mt-1 text-xs">
                 <span>{{ event.peer_team_name }} / </span>
-                <span data-testid="awd-feedback-challenge-title">{{ getChallengeTitleForEvent(event) }}</span>
+                <span data-testid="awd-feedback-challenge-title">{{
+                  getChallengeTitleForEvent(event)
+                }}</span>
               </div>
               <div class="feedback-ref">
                 {{ formatServiceRef(event.service_id) }}
               </div>
               <div class="mt-1 flex items-center justify-between font-mono text-[10px]">
-                <span :class="event.is_success ? 'feedback-result--success' : 'feedback-result--muted'">{{ eventResultLabel(event.is_success) }}</span>
+                <span
+                  :class="event.is_success ? 'feedback-result--success' : 'feedback-result--muted'"
+                  >{{ eventResultLabel(event.is_success) }}</span
+                >
                 <span class="feedback-score-gain">+{{ event.score_gained }}</span>
               </div>
             </div>
-            <div
-              v-if="workspace?.recent_events.length === 0"
-              class="panel-note"
-            >
+            <div v-if="workspace?.recent_events.length === 0" class="panel-note">
               NO RECENT OPERATIONAL DATA.
             </div>
           </div>
@@ -694,7 +676,9 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
   transition: all 0.2s ease;
 }
 
-.hud-refresh-btn:hover { color: var(--color-text-primary); }
+.hud-refresh-btn:hover {
+  color: var(--color-text-primary);
+}
 
 /* Layout Grid */
 .war-room-grid {
@@ -755,7 +739,8 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
   letter-spacing: 0.1em;
 }
 
-.war-room-select, .war-room-input {
+.war-room-select,
+.war-room-input {
   background: var(--color-bg-elevated);
   border: 1px solid var(--color-border-default);
   border-radius: 0.5rem;
@@ -766,7 +751,8 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
   outline: none;
   transition: all 0.2s ease;
 }
-.war-room-select:focus, .war-room-input:focus {
+.war-room-select:focus,
+.war-room-input:focus {
   border-color: var(--color-primary);
 }
 
@@ -792,9 +778,23 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
   border-left-color: var(--color-danger);
 }
 
-.alert-title { font-size: 12px; font-weight: 800; color: var(--color-text-primary); }
-.alert-badge { font-size: 10px; font-weight: 900; }
-.alert-issues { font-size: 10px; font-weight: 700; color: var(--color-text-secondary); margin-top: 0.35rem; display: flex; gap: 0.5rem; }
+.alert-title {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+.alert-badge {
+  font-size: 10px;
+  font-weight: 900;
+}
+.alert-issues {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  margin-top: 0.35rem;
+  display: flex;
+  gap: 0.5rem;
+}
 
 .asset-header {
   font-size: 10px;
@@ -815,8 +815,16 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
   align-items: center;
 }
 
-.asset-title-stack { display: flex; flex-direction: column; gap: 0.2rem; }
-.asset-title { font-size: 13px; font-weight: 800; color: var(--color-text-primary); }
+.asset-title-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+.asset-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
 .asset-ref,
 .target-ref,
 .feedback-ref {
@@ -825,7 +833,10 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
   letter-spacing: 0.04em;
   color: var(--color-text-muted);
 }
-.asset-meta { color: var(--color-text-muted); margin-top: 0.35rem; }
+.asset-meta {
+  color: var(--color-text-muted);
+  margin-top: 0.35rem;
+}
 
 .status-badge {
   font-size: 10px;
@@ -834,9 +845,18 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
   border-radius: 99px;
 }
 
-.status-badge--up { background: var(--color-success-soft); color: var(--color-success); }
-.status-badge--down { background: var(--color-danger-soft); color: var(--color-danger); }
-.status-badge--compromised { background: var(--color-warning-soft); color: var(--color-warning); }
+.status-badge--up {
+  background: var(--color-success-soft);
+  color: var(--color-success);
+}
+.status-badge--down {
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+}
+.status-badge--compromised {
+  background: var(--color-warning-soft);
+  color: var(--color-warning);
+}
 
 .asset-btn {
   width: 2.25rem;
@@ -889,13 +909,48 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
   gap: 1rem;
 }
 
-.target-team { font-size: 14px; letter-spacing: 0.05em; color: var(--color-primary); }
-.target-url { font-size: 11px; color: var(--color-text-muted); }
-.target-ref { margin-top: 0.2rem; }
+.target-team {
+  font-size: 14px;
+  letter-spacing: 0.05em;
+  color: var(--color-primary);
+}
+.target-url {
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+.target-ref {
+  margin-top: 0.2rem;
+}
 
 .target-action {
   display: flex;
   gap: 0.5rem;
+}
+
+.target-open-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  min-width: 4.5rem;
+  border: 1px solid var(--color-border-default);
+  border-radius: 0.5rem;
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.target-open-btn:hover:not(:disabled) {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.target-open-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
 .flag-input {
@@ -910,7 +965,9 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
   outline: none;
   transition: border-color 0.2s ease;
 }
-.flag-input:focus { border-color: var(--color-primary); }
+.flag-input:focus {
+  border-color: var(--color-primary);
+}
 
 .submit-btn {
   background: var(--color-danger);
@@ -926,7 +983,10 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
 .submit-btn:hover:not(:disabled) {
   background: color-mix(in srgb, var(--color-danger) 80%, var(--color-bg-base));
 }
-.submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 
 .feedback-result--success,
 .feedback-score-gain {
@@ -947,11 +1007,27 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
   font-size: 13px;
 }
 
-.intel-row.is-me { color: var(--color-primary); }
-.intel-rank { font-weight: 900; color: var(--color-text-muted); width: 2rem; }
-.intel-name { flex: 1; font-weight: 700; color: var(--color-text-primary); }
-.intel-score { font-weight: 900; color: var(--color-text-primary); }
-.is-me .intel-name, .is-me .intel-score { color: var(--color-primary); }
+.intel-row.is-me {
+  color: var(--color-primary);
+}
+.intel-rank {
+  font-weight: 900;
+  color: var(--color-text-muted);
+  width: 2rem;
+}
+.intel-name {
+  flex: 1;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+.intel-score {
+  font-weight: 900;
+  color: var(--color-text-primary);
+}
+.is-me .intel-name,
+.is-me .intel-score {
+  color: var(--color-primary);
+}
 
 .feedback-item {
   background: var(--color-bg-elevated);
@@ -961,11 +1037,23 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
   margin-bottom: 0.75rem;
 }
 
-.feedback-item.attack_out { border-left-color: var(--color-danger); }
-.feedback-item.attack_in { border-left-color: var(--color-warning); }
-.feedback-ref { margin-top: 0.35rem; }
+.feedback-item.attack_out {
+  border-left-color: var(--color-danger);
+}
+.feedback-item.attack_in {
+  border-left-color: var(--color-warning);
+}
+.feedback-ref {
+  margin-top: 0.35rem;
+}
 
-.panel-note { font-size: 12px; font-weight: 700; color: var(--color-text-muted); text-align: center; padding: 3rem 0; }
+.panel-note {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-align: center;
+  padding: 3rem 0;
+}
 
 .ops-panel__footer {
   padding: 1rem 1.25rem;
@@ -983,8 +1071,16 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
   font-weight: 900;
 }
 
-.result-alert.success { background: var(--color-success-soft); color: var(--color-success); border: 1px solid color-mix(in srgb, var(--color-success) 20%, transparent); }
-.result-alert.danger { background: var(--color-danger-soft); color: var(--color-danger); border: 1px solid color-mix(in srgb, var(--color-danger) 20%, transparent); }
+.result-alert.success {
+  background: var(--color-success-soft);
+  color: var(--color-success);
+  border: 1px solid color-mix(in srgb, var(--color-success) 20%, transparent);
+}
+.result-alert.danger {
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+  border: 1px solid color-mix(in srgb, var(--color-danger) 20%, transparent);
+}
 
 .war-room-loading {
   flex: 1;
@@ -1017,13 +1113,27 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
   opacity: 0.3;
 }
 
-@keyframes radar { to { transform: rotate(360deg); } }
-
-@media (max-width: 1280px) {
-  .war-room-grid { grid-template-columns: 1fr; }
-  .column-defense, .column-intel { grid-row: auto; }
+@keyframes radar {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-.custom-scrollbar::-webkit-scrollbar { width: 4px; }
-.custom-scrollbar::-webkit-scrollbar-thumb { background: var(--color-border-default); border-radius: 10px; }
+@media (max-width: 1280px) {
+  .war-room-grid {
+    grid-template-columns: 1fr;
+  }
+  .column-defense,
+  .column-intel {
+    grid-row: auto;
+  }
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--color-border-default);
+  border-radius: 10px;
+}
 </style>

@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, ref, toValue, watch, type MaybeRefOrGetter }
 import {
   getContestAWDWorkspace,
   getScoreboard,
+  requestContestAWDTargetAccess,
   startContestAWDServiceInstance,
   submitContestAWDAttack,
 } from '@/api/contest'
@@ -31,6 +32,7 @@ export function useContestAWDWorkspace(options: UseContestAWDWorkspaceOptions) {
   const error = ref('')
   const submitResult = ref<AWDAttackLogData | null>(null)
   const startingServiceKey = ref('')
+  const openingTargetKey = ref('')
   const submittingKey = ref('')
   const lastSyncedAt = ref<string | null>(null)
 
@@ -124,6 +126,30 @@ export function useContestAWDWorkspace(options: UseContestAWDWorkspaceOptions) {
     }
   }
 
+  async function openTarget(serviceId: string, victimTeamId: string): Promise<string | null> {
+    const contestId = toValue(options.contestId)
+    if (!contestId || !serviceId || !victimTeamId || openingTargetKey.value) {
+      return null
+    }
+
+    const targetKey = `${serviceId}:${victimTeamId}`
+    openingTargetKey.value = targetKey
+
+    try {
+      const result = await requestContestAWDTargetAccess(contestId, serviceId, victimTeamId)
+      if (typeof window !== 'undefined') {
+        window.open(result.access_url, '_blank', 'noopener,noreferrer')
+      }
+      return result.access_url
+    } catch (err) {
+      console.error(err)
+      toast.error(err instanceof Error ? err.message : '打开目标服务失败')
+      return null
+    } finally {
+      openingTargetKey.value = ''
+    }
+  }
+
   async function submitAttack(
     serviceId: string,
     victimTeamId: number,
@@ -197,12 +223,14 @@ export function useContestAWDWorkspace(options: UseContestAWDWorkspaceOptions) {
     hasTeam,
     submitResult,
     startingServiceKey,
+    openingTargetKey,
     submittingKey,
     shouldAutoRefresh,
     lastSyncedAt,
     refreshAll,
     loadWorkspace,
     startService,
+    openTarget,
     submitAttack,
   }
 }
