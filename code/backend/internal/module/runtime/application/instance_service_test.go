@@ -233,6 +233,9 @@ func TestInstanceServiceGetUserInstancesPrefersContestAWDServiceMetadata(t *test
 	if items[0].Category != model.DimensionPwn || items[0].Difficulty != model.ChallengeDifficultyHard || items[0].FlagType != model.FlagTypeDynamic {
 		t.Fatalf("expected awd instance metadata from contest service snapshot, got %+v", items[0])
 	}
+	if items[0].AccessURL != "" {
+		t.Fatalf("expected awd user instance list to hide raw access url, got %q", items[0].AccessURL)
+	}
 }
 
 func TestInstanceServiceGetUserInstancesFiltersLegacyAWDInstanceWithoutServiceID(t *testing.T) {

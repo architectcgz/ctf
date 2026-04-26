@@ -33,6 +33,7 @@ type TeacherInstanceFilter struct {
 
 type UserVisibleInstanceRow struct {
 	ID             int64
+	ContestMode    string
 	ChallengeID    int64
 	ChallengeTitle string
 	Category       string
