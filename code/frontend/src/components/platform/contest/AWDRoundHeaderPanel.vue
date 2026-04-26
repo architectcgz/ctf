@@ -17,7 +17,7 @@ import type {
 } from '@/components/platform/contest/awdInspector.types'
 
 const props = defineProps<AWDRoundHeaderPanelProps>()
-const emit = defineEmits<AWDRoundHeaderPanelEmits>()
+const emit = defineEmits<AWDRoundHeaderPanelEmits & { 'open:contest-edit': [] }>()
 
 const roundOptions = computed(() => 
   [...props.rounds].sort((a, b) => b.round_number - a.round_number)
@@ -47,7 +47,7 @@ function navigateRound(delta: number) {
     <div class="awd-ops-header__top">
       <div class="awd-ops-header__identity">
         <div class="awd-ops-header__overline">
-          Operations Control / AWD Platform
+          Command Center / AWD Operations
         </div>
         <div class="flex items-center gap-6">
           <h2 class="awd-ops-header__title">
@@ -105,34 +105,37 @@ function navigateRound(delta: number) {
       </div>
 
       <div class="awd-ops-header__actions">
-        <div class="flex items-center gap-2">
+        <!-- Secondary Actions Group -->
+        <div class="flex items-center gap-2 mr-4">
           <button
             type="button"
-            class="ui-btn ui-btn--secondary awd-round-toolbar__button"
+            class="ops-btn ops-btn--neutral"
+            title="刷新数据"
             :disabled="loadingRounds || loadingRoundDetail"
             @click="emit('refresh')"
           >
             <RefreshCw
-              class="h-3.5 w-3.5"
+              class="h-4 w-4"
               :class="{ 'animate-spin': loadingRounds || loadingRoundDetail }"
             />
-            <span>刷新 AWD 数据</span>
           </button>
           
           <button
             type="button"
-            class="ui-btn ui-btn--secondary awd-round-toolbar__button"
-            @click="emit('openCreateRoundDialog')"
+            class="ops-btn ops-btn--neutral"
+            @click="emit('open:contest-edit')"
           >
-            <PlusCircle class="h-3.5 w-3.5" />
-            <span>创建轮次</span>
+            竞赛工作室
           </button>
+        </div>
 
-          <div class="ops-divider" />
+        <div class="ops-divider" />
 
+        <!-- Primary Operations Group -->
+        <div class="flex items-center gap-2 ml-4">
           <button
             type="button"
-            class="ui-btn ui-btn--secondary awd-round-toolbar__button"
+            class="ops-btn ops-btn--neutral"
             :disabled="!selectedRoundId || !canRecordServiceChecks"
             @click="emit('openServiceCheckDialog')"
           >
@@ -142,7 +145,7 @@ function navigateRound(delta: number) {
           
           <button
             type="button"
-            class="ui-btn ui-btn--secondary awd-round-toolbar__button"
+            class="ops-btn ops-btn--neutral"
             :disabled="!selectedRoundId || !canRecordAttackLogs"
             @click="emit('openAttackLogDialog')"
           >
@@ -152,7 +155,7 @@ function navigateRound(delta: number) {
 
           <button
             type="button"
-            class="ui-btn ui-btn--primary awd-round-toolbar__button"
+            class="ops-btn ops-btn--primary"
             :disabled="checking || !selectedRoundId"
             @click="emit('runSelectedRoundCheck')"
           >
@@ -193,32 +196,32 @@ function navigateRound(delta: number) {
 
 <style scoped>
 .awd-ops-header {
-  padding: 0 0 2rem;
+  padding: 0 0 1.5rem;
   background: transparent;
   display: flex;
   flex-direction: column;
-  gap: var(--space-5);
+  gap: var(--space-4);
 }
 
 .awd-ops-header__top {
   display: flex;
   justify-content: space-between;
-  align-items: flex-end;
+  align-items: center;
 }
 
 .awd-ops-header__overline {
   font-size: var(--font-size-10);
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.15em;
   color: var(--color-text-muted);
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
 }
 
 .awd-ops-header__title {
-  font-size: var(--font-size-1-45);
+  font-size: var(--font-size-1-25);
   font-weight: 900;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
   color: var(--color-text-primary);
   margin: 0;
 }
