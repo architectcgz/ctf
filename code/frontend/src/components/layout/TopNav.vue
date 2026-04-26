@@ -29,13 +29,42 @@
           v-if="isBackofficeRoute"
           class="topnav-breadcrumb flex min-w-0 items-center text-sm font-bold"
         >
-          <span class="topnav-breadcrumb__root whitespace-nowrap">Workspace</span>
+          <button
+            type="button"
+            class="topnav-breadcrumb__link topnav-breadcrumb__root whitespace-nowrap"
+            @click="navigateBreadcrumb(backofficeBreadcrumb.workspacePath)"
+          >
+            Workspace
+          </button>
           <span class="topnav-breadcrumb__divider mx-2">/</span>
-          <span class="whitespace-nowrap">{{ backofficeBreadcrumb.moduleLabel }}</span>
+          <button
+            type="button"
+            class="topnav-breadcrumb__link whitespace-nowrap"
+            @click="navigateBreadcrumb(backofficeBreadcrumb.modulePath)"
+          >
+            {{ backofficeBreadcrumb.moduleLabel }}
+          </button>
           <span class="topnav-breadcrumb__divider mx-2">/</span>
-          <span class="topnav-breadcrumb__current truncate font-black">
+          <button
+            type="button"
+            class="topnav-breadcrumb__link truncate"
+            :class="{ 'topnav-breadcrumb__current font-black': !backofficeBreadcrumb.detailLabel }"
+            :aria-current="backofficeBreadcrumb.detailLabel ? undefined : 'page'"
+            @click="navigateBreadcrumb(backofficeBreadcrumb.secondaryPath)"
+          >
             {{ backofficeBreadcrumb.secondaryLabel }}
-          </span>
+          </button>
+          <template v-if="backofficeBreadcrumb.detailLabel">
+            <span class="topnav-breadcrumb__divider mx-2">/</span>
+            <button
+              type="button"
+              class="topnav-breadcrumb__link topnav-breadcrumb__current truncate font-black"
+              aria-current="page"
+              @click="navigateBreadcrumb(backofficeBreadcrumb.detailPath)"
+            >
+              {{ backofficeBreadcrumb.detailLabel }}
+            </button>
+          </template>
         </div>
 
         <div
@@ -145,7 +174,7 @@
 
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { LogOut, Menu, Moon, Palette, PanelLeftClose, PanelLeftOpen, Sun } from 'lucide-vue-next'
 
 import NotificationDropdown from '@/components/layout/NotificationDropdown.vue'
@@ -155,6 +184,7 @@ import {
 } from '@/config/backofficeNavigation'
 import { useAuth } from '@/composables/useAuth'
 import { useAuthStore } from '@/stores/auth'
+import { useBackofficeBreadcrumbDetail } from '@/composables/useBackofficeBreadcrumbDetail'
 import { useTheme } from '@/composables/useTheme'
 import type { WebSocketStatus } from '@/composables/useWebSocket'
 import { isBackofficeRoute as checkBackofficeRoute } from '@/utils/backofficeRouteMeta'
@@ -171,6 +201,7 @@ defineEmits<{
 }>()
 
 const route = useRoute()
+const router = useRouter()
 const authStore = useAuthStore()
 const isBackofficeRoute = computed(() => checkBackofficeRoute(route.path))
 
@@ -183,16 +214,117 @@ function onResize() {
 }
 const { logout } = useAuth()
 const { availableBrands, brand, setBrand, theme, toggleTheme } = useTheme()
+const { breadcrumbDetailTitle } = useBackofficeBreadcrumbDetail()
 
 const pageTitle = computed(() => resolveRouteTitle(route))
+const workspacePath = computed(() => {
+  if (authStore.user?.role === 'teacher') {
+    return '/academy/overview'
+  }
+  return '/platform/overview'
+})
+function firstRouteParamValue(param: unknown): string {
+  if (Array.isArray(param)) {
+    return param[0] ?? ''
+  }
+  if (typeof param === 'string') {
+    return param
+  }
+  return ''
+}
+
+function prefixedDetailLabel(prefix: string, value: string, fallback: string): string {
+  const normalizedValue = value.trim()
+  return normalizedValue ? `${prefix} #${normalizedValue}` : fallback
+}
+
+const backofficeDetailLabel = computed(() => {
+  if (breadcrumbDetailTitle.value) {
+    return breadcrumbDetailTitle.value
+  }
+
+  const routeName = String(route.name ?? '')
+  const id = firstRouteParamValue(route.params.id)
+  const className = firstRouteParamValue(route.params.className)
+  const studentId = firstRouteParamValue(route.params.studentId)
+  const contestId = firstRouteParamValue(route.params.contestId)
+  const importId = firstRouteParamValue(route.params.importId)
+
+  if (
+    [
+      'PlatformChallengeDetail',
+      'PlatformChallengeTopologyStudio',
+      'PlatformChallengeWriteup',
+      'PlatformChallengeWriteupView',
+    ].includes(routeName)
+  ) {
+    return prefixedDetailLabel('题目', id, '题目详情')
+  }
+
+  if (routeName === 'PlatformChallengeImportPreview') {
+    return prefixedDetailLabel('导入', importId, '导入预览')
+  }
+
+  if (
+    [
+      'ContestEdit',
+      'ContestAnnouncements',
+      'ContestOperations',
+    ].includes(routeName)
+  ) {
+    return prefixedDetailLabel('竞赛', id, '竞赛详情')
+  }
+
+  if (['PlatformAwdReviewDetail', 'TeacherAWDReviewDetail'].includes(routeName)) {
+    return prefixedDetailLabel('赛事', contestId, 'AWD复盘详情')
+  }
+
+  if (
+    [
+      'PlatformStudentAnalysis',
+      'PlatformStudentReviewArchive',
+      'TeacherStudentAnalysis',
+      'TeacherStudentReviewArchive',
+    ].includes(routeName)
+  ) {
+    return studentId.trim() ? `学生 ${studentId.trim()}` : '学生详情'
+  }
+
+  if (
+    [
+      'PlatformClassStudents',
+      'PlatformClassTrend',
+      'PlatformClassReview',
+      'PlatformClassInsights',
+      'PlatformClassIntervention',
+      'TeacherClassStudents',
+      'TeacherClassTrend',
+      'TeacherClassReview',
+      'TeacherClassInsights',
+      'TeacherClassIntervention',
+    ].includes(routeName)
+  ) {
+    return className.trim() || '班级详情'
+  }
+
+  return null
+})
 const backofficeBreadcrumb = computed(() => {
   const module = getBackofficeModuleByPath(route.path)
   const secondaryItems = getVisibleBackofficeSecondaryItems(route.path, authStore.user?.role ?? null)
   const activeSecondaryItem = secondaryItems.find((item) => item.active) ?? null
+  const modulePath = secondaryItems[0]?.path ?? workspacePath.value
+  const secondaryPath = activeSecondaryItem?.path ?? modulePath
+  const detailLabel = backofficeDetailLabel.value
 
   return {
+    workspacePath: workspacePath.value,
     moduleLabel: module?.label ?? '后台',
+    modulePath,
     secondaryLabel: activeSecondaryItem?.label ?? pageTitle.value ?? '工作区',
+    secondaryPath,
+    detailLabel,
+    detailPath: route.fullPath,
   }
 })
 const roleCaption = computed(() => {
@@ -218,6 +350,10 @@ function closeBrandPicker(): void {
 function selectBrand(nextBrand: (typeof availableBrands)[number]['value']): void {
   setBrand(nextBrand)
   closeBrandPicker()
+}
+
+function navigateBreadcrumb(path: string): void {
+  void router.push(path)
 }
 
 function handleDocumentPointerDown(event: MouseEvent): void {
@@ -428,6 +564,34 @@ onUnmounted(() => {
 
 .topnav-breadcrumb__root {
   color: var(--topnav-faint);
+}
+
+.topnav-breadcrumb__link {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  min-height: 1.75rem;
+  padding: 0 var(--space-2);
+  border: 0;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  text-decoration: none;
+  transition:
+    color 160ms ease,
+    background 160ms ease;
+}
+
+.topnav-breadcrumb__link:hover {
+  color: var(--topnav-text);
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+}
+
+.topnav-breadcrumb__link:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--color-primary) 42%, transparent);
+  outline-offset: 3px;
 }
 
 .topnav-breadcrumb__divider {

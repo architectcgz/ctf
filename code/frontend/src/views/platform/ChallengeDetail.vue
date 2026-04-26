@@ -48,6 +48,7 @@ import type { AdminChallengeListItem, FlagType } from '@/api/contracts'
 import AdminChallengeTopbarPanel from '@/components/platform/challenge/AdminChallengeTopbarPanel.vue'
 import AdminChallengeWorkspaceTabs from '@/components/platform/challenge/AdminChallengeWorkspaceTabs.vue'
 import { useRouteQueryTabs } from '@/composables/useRouteQueryTabs'
+import { useBackofficeBreadcrumbDetail } from '@/composables/useBackofficeBreadcrumbDetail'
 import { useToast } from '@/composables/useToast'
 
 type ChallengePanelKey = 'detail' | 'writeup'
@@ -70,6 +71,7 @@ const panelTabs = [
 const route = useRoute()
 const router = useRouter()
 const toast = useToast()
+const { setBreadcrumbDetailTitle } = useBackofficeBreadcrumbDetail()
 
 const loading = ref(true)
 const saving = ref(false)
@@ -182,18 +184,26 @@ function hydrateFlagForm(item: AdminChallengeListItem | null): void {
   flagPrefix.value = config?.flag_prefix ?? ''
 }
 
+function setChallengeBreadcrumbTitle(title?: string): void {
+  setBreadcrumbDetailTitle(title)
+}
+
 async function loadChallenge(id: string): Promise<void> {
   if (!id) {
     challenge.value = null
+    setChallengeBreadcrumbTitle()
     loading.value = false
     return
   }
 
   try {
+    setChallengeBreadcrumbTitle()
     challenge.value = await getChallengeDetail(id)
+    setChallengeBreadcrumbTitle(challenge.value.title)
     hydrateFlagForm(challenge.value)
   } catch {
     challenge.value = null
+    setChallengeBreadcrumbTitle()
     toast.error('加载失败')
     clearRedirectTimer()
     redirectTimer = setTimeout(() => {
@@ -268,6 +278,7 @@ watch(
 
 onUnmounted(() => {
   clearRedirectTimer()
+  setChallengeBreadcrumbTitle()
 })
 </script>
 

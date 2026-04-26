@@ -1,4 +1,4 @@
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { downloadReport } from '@/api/assessment'
@@ -34,6 +34,7 @@ import type {
   TimelineEvent,
 } from '@/api/contracts'
 import { useReportStatusPolling } from '@/composables/useReportStatusPolling'
+import { useBackofficeBreadcrumbDetail } from '@/composables/useBackofficeBreadcrumbDetail'
 import { useToast } from '@/composables/useToast'
 import { useAuthStore } from '@/stores/auth'
 import { getWeakDimensions } from '@/utils/skillProfile'
@@ -49,6 +50,7 @@ export function useTeacherStudentAnalysisPage() {
   const toast = useToast()
   const authStore = useAuthStore()
   const { start: startPolling, stop: stopPolling } = useReportStatusPolling()
+  const { setBreadcrumbDetailTitle } = useBackofficeBreadcrumbDetail()
 
   const classes = ref<TeacherClassItem[]>([])
   const students = ref<TeacherStudentItem[]>([])
@@ -423,8 +425,22 @@ export function useTeacherStudentAnalysisPage() {
     }
   )
 
+  watch(
+    () => [selectedStudent.value?.name, selectedStudent.value?.username, selectedStudentId.value],
+    () => {
+      setBreadcrumbDetailTitle(
+        selectedStudent.value?.name || selectedStudent.value?.username || selectedStudentId.value
+      )
+    },
+    { immediate: true }
+  )
+
   onMounted(() => {
     void initialize()
+  })
+
+  onUnmounted(() => {
+    setBreadcrumbDetailTitle()
   })
 
   return {

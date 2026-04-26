@@ -1,4 +1,4 @@
-import { computed, ref, watch } from 'vue'
+import { computed, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { downloadReport } from '@/api/assessment'
@@ -14,6 +14,7 @@ import type {
   TeacherAWDReviewTeamItemData,
 } from '@/api/contracts'
 import { useReportStatusPolling } from '@/composables/useReportStatusPolling'
+import { useBackofficeBreadcrumbDetail } from '@/composables/useBackofficeBreadcrumbDetail'
 import { useToast } from '@/composables/useToast'
 import { useAuthStore } from '@/stores/auth'
 import { resolveAwdReviewDetailRouteName } from '@/utils/teachingWorkspaceRouting'
@@ -26,6 +27,7 @@ export function useTeacherAwdReviewDetail() {
   const toast = useToast()
   const authStore = useAuthStore()
   const { polling, start: startPolling, stop: stopPolling } = useReportStatusPolling()
+  const { setBreadcrumbDetailTitle } = useBackofficeBreadcrumbDetail()
 
   const loading = ref(false)
   const error = ref<string | null>(null)
@@ -65,6 +67,7 @@ export function useTeacherAwdReviewDetail() {
   async function loadReview(): Promise<void> {
     if (!contestId.value) {
       review.value = null
+      setBreadcrumbDetailTitle()
       return
     }
 
@@ -77,6 +80,7 @@ export function useTeacherAwdReviewDetail() {
         team_id: undefined,
       })
       review.value = next
+      setBreadcrumbDetailTitle(next.contest.title)
 
       if (
         selectedTeamId.value &&
@@ -87,6 +91,7 @@ export function useTeacherAwdReviewDetail() {
     } catch (err) {
       console.error('加载 AWD 复盘详情失败:', err)
       review.value = null
+      setBreadcrumbDetailTitle()
       error.value = '加载 AWD 复盘详情失败，请稍后重试'
     } finally {
       loading.value = false
@@ -254,6 +259,10 @@ export function useTeacherAwdReviewDetail() {
     },
     { immediate: true }
   )
+
+  onUnmounted(() => {
+    setBreadcrumbDetailTitle()
+  })
 
   return {
     router,
