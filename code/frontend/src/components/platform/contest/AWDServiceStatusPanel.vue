@@ -284,7 +284,7 @@ function getServiceCheckTargets(checkResult: Record<string, unknown>) {
 .status-empty { text-align: center; color: var(--color-text-muted); font-family: var(--font-family-mono); font-weight: 800; }
 
 .performance-header { border-left: 3px solid var(--color-success); padding-left: 1rem; }
-.health-stack { display: inline-flex; align-items: center; gap: 0.5rem; font-family: var(--font-family-mono); font-size: 11px; font-weight: 700; }
+.health-stack { display: inline-flex; align-items: center; justify-content: flex-end; gap: 0.5rem; font-family: var(--font-family-mono); font-size: 11px; font-weight: 700; }
 .health-stack__up,
 .performance-total-score { color: var(--color-success); }
 .health-stack__down { color: var(--color-danger); }
@@ -295,6 +295,7 @@ function getServiceCheckTargets(checkResult: Record<string, unknown>) {
 .performance-breach-count { color: var(--color-text-secondary); font-size: var(--font-size-11); }
 .studio-table { width: 100%; border-collapse: collapse; background: var(--color-bg-surface); }
 .studio-table th { background: var(--color-bg-elevated); padding: 0.75rem 1rem; text-align: left; font-size: 10px; font-weight: 800; text-transform: uppercase; color: var(--color-text-muted); border-top: 1px solid var(--color-border-default); border-bottom: 1px solid var(--color-border-default); }
+.studio-table :is(th, td).text-right { text-align: right; }
 .studio-table td { padding: 0.85rem 1rem; border-bottom: 1px solid var(--color-border-subtle); }
 
 .ops-btn {
