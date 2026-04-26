@@ -340,7 +340,14 @@ export const platformRoutes: RouteRecordRaw[] = [
 },
 {
   path: 'platform/contest-ops/projector',
-  redirect: { name: 'PlatformContestOpsIndex' },
+  name: 'PlatformContestProjector',
+  component: () => import('@/views/platform/ContestProjector.vue'),
+  meta: {
+    requiresAuth: true,
+    roles: ['admin'],
+    title: '大屏展示',
+    contentLayout: 'bleed',
+  },
 },
 {
   path: 'platform/contest-ops/scoreboard',
