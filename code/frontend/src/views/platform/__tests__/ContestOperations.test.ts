@@ -41,6 +41,7 @@ describe('ContestOperations', () => {
     adminApiMocks.getContest.mockResolvedValue({
       id: 'contest-ops-1',
       title: '2026 AWD 运维联赛',
+      status: 'running',
     })
   })
 
@@ -73,7 +74,7 @@ describe('ContestOperations', () => {
     expect(wrapper.find('#contest-ops-panel-inspector').exists()).toBe(true)
     expect(wrapper.get('#contest-ops-panel-inspector').classes()).toContain('active')
     expect(wrapper.get('[data-testid="awd-ops-panel"]').text()).toContain(
-      'contest-ops-1::inspector::readiness::true::true'
+      'contest-ops-1::inspector::round-inspector::true::true'
     )
 
     expect(wrapper.find('.ops-topbar').exists()).toBe(false)
@@ -105,7 +106,7 @@ describe('ContestOperations', () => {
     expect(wrapper.find('#contest-ops-panel-instances').exists()).toBe(true)
     expect(wrapper.get('#contest-ops-panel-instances').classes()).toContain('active')
     expect(wrapper.find('#contest-ops-panel-inspector').exists()).toBe(false)
-    expect(wrapper.get('[data-testid="awd-ops-panel"]').text()).toBe('inspector::round-inspector')
+    expect(wrapper.get('[data-testid="awd-ops-panel"]').text()).toBe('instances::instances')
   })
 
   it('父页应在 query 提供非法 panel 时回退到轮次态势', async () => {
@@ -128,7 +129,34 @@ describe('ContestOperations', () => {
     await flushPromises()
 
     expect(wrapper.get('#contest-ops-tab-inspector').attributes('aria-selected')).toBe('true')
-    expect(wrapper.get('[data-testid="awd-ops-panel"]').text()).toBe('inspector::readiness')
+    expect(wrapper.get('[data-testid="awd-ops-panel"]').text()).toBe('inspector::round-inspector')
+  })
+
+  it('赛事未开赛时才在运维页显示只读就绪摘要', async () => {
+    adminApiMocks.getContest.mockResolvedValue({
+      id: 'contest-ops-1',
+      title: '2026 AWD 运维联赛',
+      status: 'registering',
+    })
+
+    const wrapper = mount(ContestOperations, {
+      global: {
+        stubs: {
+          AppLoading: {
+            template: '<div><slot /></div>',
+          },
+          AWDOperationsPanel: {
+            props: ['operationPanel', 'runtimeContent', 'hideReadinessActions'],
+            template:
+              '<div data-testid="awd-ops-panel">{{ operationPanel }}::{{ runtimeContent }}::{{ hideReadinessActions }}</div>',
+          },
+        },
+      },
+    })
+
+    await flushPromises()
+
+    expect(wrapper.get('[data-testid="awd-ops-panel"]').text()).toBe('inspector::readiness::true')
   })
 
   it('点击实例编排 tab 时应同步更新 panel query', async () => {

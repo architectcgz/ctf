@@ -50,6 +50,15 @@ const {
 
 const loading = ref(true)
 const contest = ref<ContestDetailData | null>(null)
+const runtimeStageReady = computed(
+  () =>
+    contest.value?.status === 'running' ||
+    contest.value?.status === 'frozen' ||
+    contest.value?.status === 'ended'
+)
+const inspectorRuntimeContent = computed(() =>
+  runtimeStageReady.value ? 'round-inspector' : 'readiness'
+)
 
 async function loadContest() {
   if (!contestId.value) {
@@ -134,7 +143,7 @@ onUnmounted(() => {
               :hide-readiness-actions="true"
               :hide-operation-tabs="true"
               operation-panel="inspector"
-              runtime-content="readiness"
+              :runtime-content="inspectorRuntimeContent"
             />
           </section>
 
@@ -153,8 +162,8 @@ onUnmounted(() => {
               :hide-studio-link="true"
               :hide-readiness-actions="true"
               :hide-operation-tabs="true"
-              operation-panel="inspector"
-              runtime-content="round-inspector"
+              operation-panel="instances"
+              runtime-content="instances"
             />
           </section>
         </section>
