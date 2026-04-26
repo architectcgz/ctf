@@ -88,13 +88,13 @@ func TestDockerAWDFlagInjectorInjectsAllRunningTeamContainers(t *testing.T) {
 		t.Fatalf("InjectRoundFlags() error = %v", err)
 	}
 
-	if got := writer.writes["ctr-main"]["/flag/flag.txt"]; got != "awd{round-flag}" {
+	if got := writer.writes["ctr-main"]["/flag"]; got != "awd{round-flag}" {
 		t.Fatalf("unexpected main container write: %+v", writer.writes)
 	}
-	if got := writer.writes["ctr-sidecar"]["/flag/flag.txt"]; got != "awd{round-flag}" {
+	if got := writer.writes["ctr-sidecar"]["/flag"]; got != "awd{round-flag}" {
 		t.Fatalf("unexpected sidecar write: %+v", writer.writes)
 	}
-	if got := writer.writes["ctr-second-user"]["/flag/flag.txt"]; got != "awd{round-flag}" {
+	if got := writer.writes["ctr-second-user"]["/flag"]; got != "awd{round-flag}" {
 		t.Fatalf("unexpected second user write: %+v", writer.writes)
 	}
 }
@@ -137,7 +137,7 @@ func TestDockerAWDFlagInjectorInjectsContestScopedTeamInstanceWithoutTeamMemberF
 		t.Fatalf("InjectRoundFlags() error = %v", err)
 	}
 
-	if got := writer.writes["ctr-team-owned"]["/flag/flag.txt"]; got != "awd{contest-scoped}" {
+	if got := writer.writes["ctr-team-owned"]["/flag"]; got != "awd{contest-scoped}" {
 		t.Fatalf("unexpected team scoped container write: %+v", writer.writes)
 	}
 }
@@ -180,7 +180,7 @@ func TestDockerAWDFlagInjectorMatchesInstancesByServiceID(t *testing.T) {
 		t.Fatalf("InjectRoundFlags() error = %v", err)
 	}
 
-	if got := writer.writes["ctr-service-owned"]["/flag/flag.txt"]; got != "awd{service-id}" {
+	if got := writer.writes["ctr-service-owned"]["/flag"]; got != "awd{service-id}" {
 		t.Fatalf("expected service scoped container write by service_id, got %+v", writer.writes)
 	}
 }
