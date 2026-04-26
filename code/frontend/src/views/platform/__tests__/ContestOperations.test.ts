@@ -45,7 +45,7 @@ describe('ContestOperations', () => {
     })
   })
 
-  it('父页应默认显示轮次态势 tab，并只传入运维态能力', async () => {
+  it('父页应直接显示轮次态势内容，并只传入运维态能力', async () => {
     const wrapper = mount(ContestOperations, {
       global: {
         stubs: {
@@ -70,9 +70,8 @@ describe('ContestOperations', () => {
     await flushPromises()
 
     expect(adminApiMocks.getContest).toHaveBeenCalledWith('contest-ops-1')
-    expect(wrapper.get('#contest-ops-tab-inspector').attributes('aria-selected')).toBe('true')
-    expect(wrapper.find('#contest-ops-panel-inspector').exists()).toBe(true)
-    expect(wrapper.get('#contest-ops-panel-inspector').classes()).toContain('active')
+    expect(wrapper.find('[role="tablist"]').exists()).toBe(false)
+    expect(wrapper.find('[role="tabpanel"]').exists()).toBe(false)
     expect(wrapper.get('[data-testid="awd-ops-panel"]').text()).toContain(
       'contest-ops-1::inspector::round-inspector::true::true'
     )
@@ -83,7 +82,7 @@ describe('ContestOperations', () => {
     expect(pushMock).not.toHaveBeenCalled()
   })
 
-  it('父页不再提供实例编排 tab，panel=instances 应回退到轮次态势', async () => {
+  it('父页不再提供实例编排 tab，panel=instances 仍直接显示轮次态势', async () => {
     routeState.query = { panel: 'instances' }
 
     const wrapper = mount(ContestOperations, {
@@ -104,12 +103,12 @@ describe('ContestOperations', () => {
 
     expect(wrapper.find('#contest-ops-tab-instances').exists()).toBe(false)
     expect(wrapper.find('#contest-ops-panel-instances').exists()).toBe(false)
-    expect(wrapper.get('#contest-ops-tab-inspector').attributes('aria-selected')).toBe('true')
-    expect(wrapper.get('#contest-ops-panel-inspector').classes()).toContain('active')
+    expect(wrapper.find('#contest-ops-tab-inspector').exists()).toBe(false)
+    expect(wrapper.find('#contest-ops-panel-inspector').exists()).toBe(false)
     expect(wrapper.get('[data-testid="awd-ops-panel"]').text()).toBe('inspector::round-inspector')
   })
 
-  it('父页应在 query 提供非法 panel 时回退到轮次态势', async () => {
+  it('父页应在 query 提供非法 panel 时仍直接显示轮次态势', async () => {
     routeState.query = { panel: 'unknown-panel' }
 
     const wrapper = mount(ContestOperations, {
@@ -128,7 +127,7 @@ describe('ContestOperations', () => {
 
     await flushPromises()
 
-    expect(wrapper.get('#contest-ops-tab-inspector').attributes('aria-selected')).toBe('true')
+    expect(wrapper.find('[role="tab"]').exists()).toBe(false)
     expect(wrapper.get('[data-testid="awd-ops-panel"]').text()).toBe('inspector::round-inspector')
   })
 
@@ -159,7 +158,7 @@ describe('ContestOperations', () => {
     expect(wrapper.get('[data-testid="awd-ops-panel"]').text()).toBe('inspector::readiness::true')
   })
 
-  it('运维页只保留轮次态势 tab', async () => {
+  it('运维页不再渲染 tab 导航', async () => {
     const wrapper = mount(ContestOperations, {
       global: {
         stubs: {
@@ -176,8 +175,8 @@ describe('ContestOperations', () => {
 
     await flushPromises()
 
-    expect(wrapper.findAll('[role="tab"]')).toHaveLength(1)
-    expect(wrapper.get('#contest-ops-tab-inspector').text()).toContain('轮次态势')
+    expect(wrapper.findAll('[role="tab"]')).toHaveLength(0)
+    expect(wrapper.find('.top-tabs').exists()).toBe(false)
     expect(wrapper.text()).not.toContain('实例编排')
     expect(replaceMock).not.toHaveBeenCalled()
   })
