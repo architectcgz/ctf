@@ -8,6 +8,7 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"path"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -23,6 +24,11 @@ import (
 )
 
 const proxyAccessCookieName = "ctf_instance_proxy_ticket"
+
+var (
+	proxyHTMLRootAttributePattern = regexp.MustCompile(`(?i)\b(?:href|src|action)=["']/{1,2}`)
+	proxyHTMLRootURLPattern       = regexp.MustCompile(`(?i)url\(["']?/{1,2}`)
+)
 
 type CookieConfig struct {
 	Secure   bool
@@ -232,6 +238,7 @@ func (h *Handler) proxyToTarget(c *gin.Context, claims *runtimeports.ProxyTicket
 	shouldAudit := shouldAuditProxyRequest(c.Request.Method, joinedPath)
 	requestID := c.GetString("request_id")
 	username := claims.Username
+	proxyBasePath := proxyBasePath(c.Request.URL.Path, proxyPath)
 
 	proxy := httputil.NewSingleHostReverseProxy(parsedTarget)
 	proxy.Director = func(req *stdhttp.Request) {
@@ -245,6 +252,10 @@ func (h *Handler) proxyToTarget(c *gin.Context, claims *runtimeports.ProxyTicket
 		req.Header.Del("Cookie")
 	}
 	proxy.ModifyResponse = func(resp *stdhttp.Response) error {
+		rewriteProxyRedirectLocation(resp, proxyBasePath)
+		if err := rewriteProxyHTMLRootLinks(resp, proxyBasePath); err != nil {
+			return err
+		}
 		if shouldAudit {
 			h.recordProxyAudit(c, claims, instanceID, username, requestID, joinedPath, resp.StatusCode, bodyPreview, bodyCaptured, bodyTruncated)
 		}
@@ -421,6 +432,57 @@ func awdTargetProxyCookiePath(contestID, serviceID, victimTeamID int64) string {
 		"/awd/services/" + strconv.FormatInt(serviceID, 10) +
 		"/targets/" + strconv.FormatInt(victimTeamID, 10) +
 		"/proxy"
+}
+
+func proxyBasePath(requestPath, proxyPath string) string {
+	if proxyPath == "" {
+		return strings.TrimRight(requestPath, "/")
+	}
+	base := strings.TrimSuffix(requestPath, proxyPath)
+	return strings.TrimRight(base, "/")
+}
+
+func rewriteProxyRedirectLocation(resp *stdhttp.Response, proxyBasePath string) {
+	if resp == nil || proxyBasePath == "" {
+		return
+	}
+	location := strings.TrimSpace(resp.Header.Get("Location"))
+	if location == "" || !strings.HasPrefix(location, "/") || strings.HasPrefix(location, "//") {
+		return
+	}
+	resp.Header.Set("Location", proxyBasePath+location)
+}
+
+func rewriteProxyHTMLRootLinks(resp *stdhttp.Response, proxyBasePath string) error {
+	if resp == nil || resp.Body == nil || proxyBasePath == "" {
+		return nil
+	}
+	contentType := strings.ToLower(resp.Header.Get("Content-Type"))
+	if !strings.Contains(contentType, "text/html") || resp.Header.Get("Content-Encoding") != "" {
+		return nil
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+	_ = resp.Body.Close()
+
+	rewritten := rewriteProxyRootPattern(string(body), proxyHTMLRootAttributePattern, proxyBasePath)
+	rewritten = rewriteProxyRootPattern(rewritten, proxyHTMLRootURLPattern, proxyBasePath)
+	resp.Body = io.NopCloser(strings.NewReader(rewritten))
+	resp.ContentLength = int64(len(rewritten))
+	resp.Header.Set("Content-Length", strconv.Itoa(len(rewritten)))
+	return nil
+}
+
+func rewriteProxyRootPattern(body string, pattern *regexp.Regexp, proxyBasePath string) string {
+	return pattern.ReplaceAllStringFunc(body, func(match string) string {
+		if strings.HasSuffix(match, "//") {
+			return match
+		}
+		return strings.TrimSuffix(match, "/") + proxyBasePath + "/"
+	})
 }
 
 func sanitizedProxyRedirectURL(c *gin.Context) string {
