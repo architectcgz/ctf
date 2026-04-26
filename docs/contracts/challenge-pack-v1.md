@@ -228,6 +228,35 @@ runtime:
 - `flag.type`：必填，仅允许 `static` / `dynamic`
 - `flag.value`：静态题目必填
 - `flag.prefix`：可选，对应平台 `flag_prefix`，默认建议 `flag`
+
+### 6.3 AWD 分制契约
+
+`meta.points` 对 AWD 题目只表示服务展示建议分值，不参与轮次累计得分。AWD 轮次计分由赛事编排写入：
+
+- `contest_awd_services.score_config.awd_sla_score`
+- `contest_awd_services.score_config.awd_defense_score`
+- `awd_rounds.attack_score`
+- `awd_rounds.defense_score`
+
+平台默认值：
+
+- 每服务每轮 SLA 分：`1`
+- 每服务每轮防御分：`2`
+- 每次有效攻击分：`30`
+- 轮次防御兜底分：`3`
+
+平台边界：
+
+- `awd_sla_score`：`0-5`
+- `awd_defense_score`：`0-5`
+- `attack_score`：`0-100`
+- `defense_score`：`0-10`
+
+赛事配置建议：
+
+- Drill：12-24 轮，总分量级 300-800
+- 正式赛：24-48 轮，总分量级 1000-3000
+- 长时赛：总分量级 3000-8000，必须降低轮频或服务分
 - `runtime.type`：当前首版仅支持 `container`
 - `runtime.image.ref`：容器题必填，表示最终运行镜像引用
 

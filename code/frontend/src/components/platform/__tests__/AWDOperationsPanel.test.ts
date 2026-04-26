@@ -254,8 +254,8 @@ describe('AWDOperationsPanel', () => {
         awd_checker_config: {
           get_flag: { method: 'GET', path: '/api/flag' },
         },
-        awd_sla_score: 18,
-        awd_defense_score: 28,
+        awd_sla_score: 1,
+        awd_defense_score: 2,
         awd_checker_validation_state: 'passed',
         awd_checker_last_preview_at: '2026-03-18T09:05:00.000Z',
         awd_checker_last_preview_result: {

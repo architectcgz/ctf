@@ -76,7 +76,7 @@ func TestChallengeServiceListAdminChallengesReturnsRelationFieldsOnly(t *testing
 		DisplayName:   "Bank Portal",
 		Order:         0,
 		IsVisible:     true,
-		ScoreConfig:   `{"points":100,"awd_sla_score":12,"awd_defense_score":22}`,
+		ScoreConfig:   `{"points":100,"awd_sla_score":1,"awd_defense_score":2}`,
 		RuntimeConfig: `{"challenge_id":9101}`,
 		CreatedAt:     now,
 		UpdatedAt:     now,

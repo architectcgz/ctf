@@ -9,8 +9,8 @@ import (
 type CreateAWDRoundReq struct {
 	RoundNumber    int     `json:"round_number" binding:"required,min=1"`
 	Status         *string `json:"status" binding:"omitempty,oneof=pending running finished"`
-	AttackScore    *int    `json:"attack_score" binding:"omitempty,min=0"`
-	DefenseScore   *int    `json:"defense_score" binding:"omitempty,min=0"`
+	AttackScore    *int    `json:"attack_score" binding:"omitempty,min=0,max=100"`
+	DefenseScore   *int    `json:"defense_score" binding:"omitempty,min=0,max=10"`
 	ForceOverride  *bool   `json:"force_override"`
 	OverrideReason *string `json:"override_reason" binding:"omitempty,max=500"`
 }

@@ -50,6 +50,9 @@ func (s *ContestAWDServiceService) CreateContestAWDService(ctx context.Context, 
 	if err != nil {
 		return nil, err
 	}
+	if req.Points < 1 || req.Points > contestdomain.AWDMaxServiceDisplayPoint {
+		return nil, errcode.ErrInvalidParams
+	}
 
 	template, err := s.templateRepo.FindAWDServiceTemplateByID(ctx, req.TemplateID)
 	if err != nil {
@@ -212,6 +215,9 @@ func (s *ContestAWDServiceService) UpdateContestAWDService(ctx context.Context, 
 	}
 	if req.Points != nil || req.AWDSLAScore != nil || req.AWDDefenseScore != nil {
 		if req.Points != nil {
+			if *req.Points < 1 || *req.Points > contestdomain.AWDMaxServiceDisplayPoint {
+				return errcode.ErrInvalidParams
+			}
 			currentPoints = *req.Points
 		}
 		updates["score_config"] = buildContestAWDServiceScoreConfig(currentPoints, slaScore, defenseScore)

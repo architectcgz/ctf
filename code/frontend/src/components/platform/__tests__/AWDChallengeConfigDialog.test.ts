@@ -180,8 +180,8 @@ describe('AWDChallengeConfigDialog', () => {
             expected_status: 200,
           },
         },
-        awd_sla_score: 18,
-        awd_defense_score: 28,
+        awd_sla_score: 1,
+        awd_defense_score: 2,
         created_at: '2026-03-24T09:00:00.000Z',
       },
     })
@@ -225,8 +225,8 @@ describe('AWDChallengeConfigDialog', () => {
           expected_status: 200,
         },
       },
-      awd_sla_score: 18,
-      awd_defense_score: 28,
+      awd_sla_score: 1,
+      awd_defense_score: 2,
     })
   })
 
@@ -265,8 +265,8 @@ describe('AWDChallengeConfigDialog', () => {
           expected_status: 200,
         },
       },
-      awd_sla_score: 0,
-      awd_defense_score: 0,
+      awd_sla_score: 1,
+      awd_defense_score: 2,
     })
   })
 
@@ -286,8 +286,8 @@ describe('AWDChallengeConfigDialog', () => {
       awd_checker_config: {
         health_path: '/healthz',
       },
-      awd_sla_score: 0,
-      awd_defense_score: 0,
+      awd_sla_score: 1,
+      awd_defense_score: 2,
     })
   })
 
@@ -409,8 +409,8 @@ describe('AWDChallengeConfigDialog', () => {
           expected_status: 200,
         },
       },
-      awd_sla_score: 0,
-      awd_defense_score: 0,
+      awd_sla_score: 1,
+      awd_defense_score: 2,
       awd_checker_preview_token: 'preview-token-1',
     })
   })
@@ -568,8 +568,8 @@ describe('AWDChallengeConfigDialog', () => {
             expected_status: 200,
           },
         },
-        awd_sla_score: 18,
-        awd_defense_score: 28,
+        awd_sla_score: 1,
+        awd_defense_score: 2,
         awd_checker_validation_state: 'pending',
         awd_checker_last_preview_result: undefined,
         created_at: '2026-03-24T09:00:00.000Z',
@@ -648,8 +648,8 @@ describe('AWDChallengeConfigDialog', () => {
           expected_status: 200,
         },
       },
-      awd_sla_score: 0,
-      awd_defense_score: 0,
+      awd_sla_score: 1,
+      awd_defense_score: 2,
     })
     expect(wrapper.text()).toContain('需要重新试跑')
   })
@@ -702,8 +702,8 @@ describe('AWDChallengeConfigDialog', () => {
             expected_substring: '{{FLAG}}',
           },
         },
-        awd_sla_score: 18,
-        awd_defense_score: 28,
+        awd_sla_score: 1,
+        awd_defense_score: 2,
         awd_checker_validation_state: 'passed',
         awd_checker_last_preview_at: '2026-03-24T09:12:00.000Z',
         awd_checker_last_preview_result: {

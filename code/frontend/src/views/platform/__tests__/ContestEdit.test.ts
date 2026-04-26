@@ -1901,8 +1901,8 @@ describe('ContestEdit', () => {
         is_visible: true,
         awd_checker_type: 'http_standard',
         awd_checker_config: {},
-        awd_sla_score: 18,
-        awd_defense_score: 28,
+        awd_sla_score: 1,
+        awd_defense_score: 2,
         awd_checker_validation_state: 'stale',
         awd_checker_last_preview_at: '2026-04-12T08:00:00.000Z',
         awd_checker_last_preview_result: undefined,
@@ -1920,8 +1920,8 @@ describe('ContestEdit', () => {
         is_visible: true,
         score_config: {
           points: 120,
-          awd_sla_score: 18,
-          awd_defense_score: 28,
+          awd_sla_score: 1,
+          awd_defense_score: 2,
         },
         runtime_config: {
           checker_type: 'http_standard',

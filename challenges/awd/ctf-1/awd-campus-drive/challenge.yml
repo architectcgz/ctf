@@ -7,7 +7,7 @@ meta:
   title: 校园网盘
   category: web
   difficulty: medium
-  points: 300
+  points: 100
   tags:
     - mode:awd
     - stack:web

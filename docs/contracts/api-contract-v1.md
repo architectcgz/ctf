@@ -1544,6 +1544,7 @@ export type AdminContestAWDServiceListData = AdminContestAWDServiceData[]
 export interface CreateAdminContestAWDServiceReq {
   challenge_id: ID
   template_id: ID
+  points: number
   display_name?: string
   order?: number
   is_visible?: boolean
@@ -1560,6 +1561,7 @@ export interface CreateAdminContestAWDServiceReq {
 ```ts
 export interface UpdateAdminContestAWDServiceReq {
   template_id?: ID
+  points?: number
   display_name?: string
   order?: number
   is_visible?: boolean
@@ -1574,7 +1576,8 @@ export interface UpdateAdminContestAWDServiceReq {
 > 说明：
 > - `contest_awd_services` 是 AWD 运行态配置的显式服务层。
 > - `checker_type / checker_config / awd_sla_score / awd_defense_score / awd_checker_preview_token` 统一通过该接口写入。
-> - `points` 不属于 service 资源，仍通过 `contest_challenges` 关系接口维护。
+> - `points` 写入 `score_config.points`，用于服务在赛事内的展示分值，不参与每轮 SLA/防御累计。
+> - AWD 计分契约：新建服务默认 `awd_sla_score = 1`、`awd_defense_score = 2`；二者单项取值范围均为 `0-5`。轮次默认 `attack_score = 30`、`defense_score = 3`；`attack_score` 范围为 `0-100`，`defense_score` 范围为 `0-10`。
 > - 返回体中的 `runtime_config` 仅保留正式 runtime 配置字段；新写入记录也不再持久化兼容影子字段 `challenge_id`。
 > - `validation_state / last_preview_at / last_preview_result` 反映最近一次保存到 service 层的 checker 校验状态。
 

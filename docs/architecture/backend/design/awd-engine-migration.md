@@ -401,6 +401,26 @@
 - `attack_score` 反映偷取有效 flag 的攻击成果
 - `defense_score` 反映防守方在攻击面上的守住程度
 
+平台默认分制契约：
+
+- 每服务每轮默认 `sla_score = 1`
+- 每服务每轮默认 `defense_score = 2`
+- 每次有效攻击默认 `attack_score = 30`
+- 轮次防御兜底默认 `defense_score = 3`
+
+平台边界：
+
+- `contest_awd_services.score_config.awd_sla_score`：`0-5`
+- `contest_awd_services.score_config.awd_defense_score`：`0-5`
+- `awd_rounds.attack_score`：`0-100`
+- `awd_rounds.defense_score`：`0-10`
+
+赛事总分量级约定：
+
+- Drill：12-24 轮，总分量级 300-800
+- 正式赛：24-48 轮，总分量级 1000-3000
+- 长时赛：总分量级 3000-8000，必须降低轮频或服务分
+
 ### 9.2 SLA 分
 
 每轮每个 service：

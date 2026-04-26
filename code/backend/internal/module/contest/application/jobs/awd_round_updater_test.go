@@ -133,7 +133,7 @@ func TestAWDRoundUpdaterCreatesAndAdvancesRoundsWritesOnlyServiceFlagFields(t *t
 			"display_name":   "Bridge Service",
 			"order":          0,
 			"is_visible":     true,
-			"score_config":   `{"points":100,"awd_sla_score":18,"awd_defense_score":28}`,
+			"score_config":   `{"points":100,"awd_sla_score":1,"awd_defense_score":2}`,
 			"runtime_config": `{"challenge_id":153001,"checker_type":"legacy_probe","checker_config":{}}`,
 			"updated_at":     now,
 		}).Error; err != nil {
@@ -486,7 +486,7 @@ func TestAWDRoundUpdaterUsesContestServiceCheckerConfig(t *testing.T) {
 	createAWDTeamFixture(t, db, 104011, 104, "Config", now)
 	createAWDTeamMemberFixture(t, db, 104, 104011, 5401, now)
 
-	syncAWDContestServiceFixture(t, db, 104, 104001, "awd-service", model.AWDCheckerTypeHTTPStandard, `{"get_flag":{"path":"/internal/flag"}}`, 100, 18, 28, now)
+	syncAWDContestServiceFixture(t, db, 104, 104001, "awd-service", model.AWDCheckerTypeHTTPStandard, `{"get_flag":{"path":"/internal/flag"}}`, 100, 1, 2, now)
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
@@ -531,7 +531,7 @@ func TestAWDRoundUpdaterUsesContestServiceCheckerConfig(t *testing.T) {
 	if err := db.Where("round_id = ? AND team_id = ? AND challenge_id = ?", 10401, 104011, 104001).First(&record).Error; err != nil {
 		t.Fatalf("load service check: %v", err)
 	}
-	if record.ServiceStatus != model.AWDServiceStatusUp || record.DefenseScore != 28 || record.SLAScore != 18 || record.CheckerType != model.AWDCheckerTypeHTTPStandard {
+	if record.ServiceStatus != model.AWDServiceStatusUp || record.DefenseScore != 2 || record.SLAScore != 1 || record.CheckerType != model.AWDCheckerTypeHTTPStandard {
 		t.Fatalf("unexpected configured service record: %+v", record)
 	}
 
@@ -564,7 +564,7 @@ func TestAWDRoundUpdaterSyncsHTTPStandardChecksAsUp(t *testing.T) {
 	syncAWDContestServiceFixture(t, db, 141, 141001, "awd-service", model.AWDCheckerTypeHTTPStandard, `{
 				"put_flag":{"method":"PUT","path":"/api/flag","body_template":"{{FLAG}}","expected_status":200},
 				"get_flag":{"method":"GET","path":"/api/flag","expected_status":200,"expected_substring":"{{FLAG}}"}
-			}`, 100, 18, 28, now)
+			}`, 100, 1, 2, now)
 
 	storedFlag := ""
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -618,7 +618,7 @@ func TestAWDRoundUpdaterSyncsHTTPStandardChecksAsUp(t *testing.T) {
 	if err := db.Where("round_id = ? AND team_id = ? AND challenge_id = ?", 14101, 141011, 141001).First(&record).Error; err != nil {
 		t.Fatalf("load service check: %v", err)
 	}
-	if record.ServiceStatus != model.AWDServiceStatusUp || record.SLAScore != 18 || record.DefenseScore != 28 {
+	if record.ServiceStatus != model.AWDServiceStatusUp || record.SLAScore != 1 || record.DefenseScore != 2 {
 		t.Fatalf("unexpected http_standard record: %+v", record)
 	}
 
@@ -660,7 +660,7 @@ func TestAWDRoundUpdaterPrefersContestAWDServiceDefinitionsForRuntimeChecks(t *t
 			"display_name": "Service First",
 			"order":        0,
 			"is_visible":   true,
-			"score_config": `{"points":100,"awd_sla_score":18,"awd_defense_score":28}`,
+			"score_config": `{"points":100,"awd_sla_score":1,"awd_defense_score":2}`,
 			"runtime_config": `{
 				"challenge_id":144001,
 				"checker_type":"http_standard",
@@ -729,7 +729,7 @@ func TestAWDRoundUpdaterPrefersContestAWDServiceDefinitionsForRuntimeChecks(t *t
 	if record.ServiceID != serviceID {
 		t.Fatalf("expected persisted service_id=%d, got %+v", serviceID, record)
 	}
-	if record.ServiceStatus != model.AWDServiceStatusUp || record.SLAScore != 18 || record.DefenseScore != 28 || record.CheckerType != model.AWDCheckerTypeHTTPStandard {
+	if record.ServiceStatus != model.AWDServiceStatusUp || record.SLAScore != 1 || record.DefenseScore != 2 || record.CheckerType != model.AWDCheckerTypeHTTPStandard {
 		t.Fatalf("expected runtime check to prefer contest_awd_services, got %+v", record)
 	}
 }
@@ -751,7 +751,7 @@ func TestAWDRoundUpdaterMarksHTTPStandardChecksCompromisedOnFlagMismatch(t *test
 	syncAWDContestServiceFixture(t, db, 142, 142001, "awd-service", model.AWDCheckerTypeHTTPStandard, `{
 				"put_flag":{"method":"PUT","path":"/api/flag","body_template":"{{FLAG}}","expected_status":200},
 				"get_flag":{"method":"GET","path":"/api/flag","expected_status":200,"expected_substring":"{{FLAG}}"}
-			}`, 100, 18, 28, now)
+			}`, 100, 1, 2, now)
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch {
@@ -834,7 +834,7 @@ func TestAWDRoundUpdaterMarksHTTPStandardChecksDownWhenHavocFails(t *testing.T) 
 				"put_flag":{"method":"PUT","path":"/api/flag","body_template":"{{FLAG}}","expected_status":200},
 				"get_flag":{"method":"GET","path":"/api/flag","expected_status":200,"expected_substring":"{{FLAG}}"},
 				"havoc":{"method":"GET","path":"/api/ping","expected_status":200}
-			}`, 100, 18, 28, now)
+			}`, 100, 1, 2, now)
 
 	storedFlag := ""
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

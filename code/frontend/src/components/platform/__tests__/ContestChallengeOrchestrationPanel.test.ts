@@ -82,8 +82,8 @@ function buildAwdService(overrides: Record<string, unknown> = {}) {
     is_visible: true,
     score_config: {
       points: 120,
-      awd_sla_score: 18,
-      awd_defense_score: 28,
+      awd_sla_score: 1,
+      awd_defense_score: 2,
     },
     runtime_config: {
       checker_type: 'http_standard',

@@ -80,6 +80,12 @@ const emit = defineEmits<{
   ]
 }>()
 
+const DEFAULT_AWD_SLA_SCORE = 1
+const DEFAULT_AWD_DEFENSE_SCORE = 2
+const MAX_AWD_SLA_SCORE = 5
+const MAX_AWD_DEFENSE_SCORE = 5
+const MAX_AWD_SERVICE_POINTS = 500
+
 const form = reactive({
   challenge_id: '',
   template_id: '',
@@ -87,8 +93,8 @@ const form = reactive({
   order: 0,
   is_visible: 'true',
   awd_checker_type: 'legacy_probe' as AWDCheckerType,
-  awd_sla_score: 0,
-  awd_defense_score: 0,
+  awd_sla_score: DEFAULT_AWD_SLA_SCORE,
+  awd_defense_score: DEFAULT_AWD_DEFENSE_SCORE,
 })
 
 const legacyProbeDraft = reactive<AWDLegacyProbeDraft>(createLegacyProbeDraft())
@@ -469,8 +475,8 @@ watch(
     form.order = props.draft?.order ?? 0
     form.is_visible = props.draft?.is_visible === false ? 'false' : 'true'
     form.awd_checker_type = props.draft?.awd_checker_type || 'legacy_probe'
-    form.awd_sla_score = props.draft?.awd_sla_score ?? 0
-    form.awd_defense_score = props.draft?.awd_defense_score ?? 0
+    form.awd_sla_score = props.draft?.awd_sla_score ?? DEFAULT_AWD_SLA_SCORE
+    form.awd_defense_score = props.draft?.awd_defense_score ?? DEFAULT_AWD_DEFENSE_SCORE
     assignLegacyProbeDraft(createLegacyProbeDraft(props.draft?.awd_checker_config))
     assignHTTPStandardDraft(createHTTPStandardDraft(props.draft?.awd_checker_config))
     previewForm.access_url = ''
@@ -584,17 +590,25 @@ function validate(): boolean {
   if (!form.template_id) {
     fieldErrors.template_id = '请选择服务模板'
   }
-  if (!Number.isInteger(form.points) || form.points <= 0) {
-    fieldErrors.points = '分值必须是大于 0 的整数'
+  if (!Number.isInteger(form.points) || form.points <= 0 || form.points > MAX_AWD_SERVICE_POINTS) {
+    fieldErrors.points = '分值必须是 1-500 的整数'
   }
   if (!Number.isInteger(form.order) || form.order < 0) {
     fieldErrors.order = '顺序必须是大于等于 0 的整数'
   }
-  if (!Number.isInteger(form.awd_sla_score) || form.awd_sla_score < 0) {
-    fieldErrors.awd_sla_score = 'SLA 分必须是大于等于 0 的整数'
+  if (
+    !Number.isInteger(form.awd_sla_score) ||
+    form.awd_sla_score < 0 ||
+    form.awd_sla_score > MAX_AWD_SLA_SCORE
+  ) {
+    fieldErrors.awd_sla_score = 'SLA 分必须是 0-5 的整数'
   }
-  if (!Number.isInteger(form.awd_defense_score) || form.awd_defense_score < 0) {
-    fieldErrors.awd_defense_score = '防守分必须是大于等于 0 的整数'
+  if (
+    !Number.isInteger(form.awd_defense_score) ||
+    form.awd_defense_score < 0 ||
+    form.awd_defense_score > MAX_AWD_DEFENSE_SCORE
+  ) {
+    fieldErrors.awd_defense_score = '防守分必须是 0-5 的整数'
   }
 
   const checkerResult = buildCheckerConfigResult(true)
@@ -960,6 +974,7 @@ function handleSubmit() {
               v-model.number="form.points"
               type="number"
               min="1"
+              max="500"
               step="1"
               class="ui-control"
             />
@@ -1022,6 +1037,7 @@ function handleSubmit() {
               v-model.number="form.awd_sla_score"
               type="number"
               min="0"
+              max="5"
               step="1"
               class="ui-control"
             />
@@ -1039,6 +1055,7 @@ function handleSubmit() {
               v-model.number="form.awd_defense_score"
               type="number"
               min="0"
+              max="5"
               step="1"
               class="ui-control"
             />
