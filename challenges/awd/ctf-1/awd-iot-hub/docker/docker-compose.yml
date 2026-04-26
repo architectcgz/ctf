@@ -1,0 +1,14 @@
+services:
+  iot-hub:
+    image: ctf/awd-iot-hub:latest
+    build: ./app
+    ports:
+      - "18083:8080"
+    environment:
+      FLAG: "flag{awd_iot_hub_demo}"
+      DEVICE_KEY: "device-demo-key"
+    volumes:
+      - iot-data:/data
+
+volumes:
+  iot-data:

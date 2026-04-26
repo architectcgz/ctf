@@ -1,0 +1,13 @@
+services:
+  drive-app:
+    image: ctf/awd-campus-drive:latest
+    build: ./app
+    ports:
+      - "18082:8080"
+    environment:
+      FLAG: "flag{awd_campus_drive_demo}"
+    volumes:
+      - drive-data:/data
+
+volumes:
+  drive-data:

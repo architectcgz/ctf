@@ -1,0 +1,14 @@
+services:
+  ticket-app:
+    image: ctf/awd-supply-ticket:latest
+    build: ./app
+    ports:
+      - "18081:8080"
+    environment:
+      FLAG: "flag{awd_supply_ticket_demo}"
+      ADMIN_PASSWORD: "admin123"
+    volumes:
+      - ticket-data:/data
+
+volumes:
+  ticket-data:
