@@ -336,7 +336,6 @@ onMounted(() => {
         @save="formDraft && void handleSave(formDraft)"
       />
 
-      <!-- Horizontal Stage Navigation -->
       <ContestWorkbenchStageTabs
         v-if="contest"
         :stages="workbench.visibleStages"
