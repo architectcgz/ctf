@@ -615,7 +615,9 @@ func isPublicRoute(method, path string) bool {
 		"/ws/notifications",
 		"/ws/contests/:id/announcements", "/ws/contests/:id/scoreboard",
 		"/api/v1/contests", "/api/v1/contests/:id", "/api/v1/contests/:id/scoreboard", "/api/v1/contests/:id/announcements",
-		"/api/v1/instances/:id/proxy", "/api/v1/instances/:id/proxy/*proxyPath":
+		"/api/v1/instances/:id/proxy", "/api/v1/instances/:id/proxy/*proxyPath",
+		"/api/v1/contests/:id/awd/services/:sid/targets/:team_id/proxy",
+		"/api/v1/contests/:id/awd/services/:sid/targets/:team_id/proxy/*proxyPath":
 		return true
 	}
 	return false

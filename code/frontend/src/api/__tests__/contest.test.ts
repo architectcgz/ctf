@@ -9,6 +9,7 @@ vi.mock('@/api/request', () => ({
 import {
   getContestChallenges,
   getContestAWDWorkspace,
+  requestContestAWDTargetAccess,
   startContestAWDServiceInstance,
   submitContestAWDAttack,
 } from '@/api/contest'
@@ -211,5 +212,21 @@ describe('contest api contract', () => {
       score_gained: 60,
       created_at: '2026-04-12T08:03:00Z',
     })
+  })
+
+  it('请求 AWD 跨队攻击入口时应调用目标代理 access 接口', async () => {
+    requestMock.mockResolvedValue({
+      access_url: '/api/v1/contests/7/awd/services/7009/targets/14/proxy/?ticket=demo',
+    })
+
+    const result = await requestContestAWDTargetAccess('7', '7009', '14')
+
+    expect(requestMock).toHaveBeenCalledWith({
+      method: 'POST',
+      url: '/contests/7/awd/services/7009/targets/14/access',
+    })
+    expect(result.access_url).toBe(
+      '/api/v1/contests/7/awd/services/7009/targets/14/proxy/?ticket=demo'
+    )
   })
 })

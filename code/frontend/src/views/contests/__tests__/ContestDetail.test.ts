@@ -18,6 +18,7 @@ const contestApiMocks = vi.hoisted(() => ({
   createTeam: vi.fn(),
   joinTeam: vi.fn(),
   kickTeamMember: vi.fn(),
+  requestContestAWDTargetAccess: vi.fn(),
   startContestAWDServiceInstance: vi.fn(),
   submitContestAWDAttack: vi.fn(),
   submitContestFlag: vi.fn(),
@@ -70,6 +71,7 @@ describe('ContestDetail', () => {
     contestApiMocks.createTeam.mockReset()
     contestApiMocks.joinTeam.mockReset()
     contestApiMocks.kickTeamMember.mockReset()
+    contestApiMocks.requestContestAWDTargetAccess.mockReset()
     contestApiMocks.startContestAWDServiceInstance.mockReset()
     contestApiMocks.submitContestAWDAttack.mockReset()
     contestApiMocks.submitContestFlag.mockReset()
@@ -145,6 +147,9 @@ describe('ContestDetail', () => {
       expires_at: '2024-03-15T12:00:00Z',
       remaining_extends: 1,
       created_at: '2024-03-15T09:02:00Z',
+    })
+    contestApiMocks.requestContestAWDTargetAccess.mockResolvedValue({
+      access_url: '/api/v1/contests/1/awd/services/7009/targets/14/proxy/',
     })
     contestApiMocks.submitContestAWDAttack.mockResolvedValue({
       id: '88',
@@ -409,7 +414,9 @@ describe('ContestDetail', () => {
   it('队伍页创建和加入弹窗应切换到 C 端输入模板', async () => {
     const contestDetailSource = (await import('../ContestDetail.vue?raw')).default
 
-    expect(contestDetailSource).toContain("from '@/components/common/modal-templates/CFocusedInputDialog.vue'")
+    expect(contestDetailSource).toContain(
+      "from '@/components/common/modal-templates/CFocusedInputDialog.vue'"
+    )
     expect(contestDetailSource).not.toContain('class="contest-modal"')
 
     const wrapper = mount(ContestDetail, {
@@ -428,7 +435,10 @@ describe('ContestDetail', () => {
     await teamTab!.trigger('click')
     await flushPromises()
 
-    await wrapper.findAll('button').find((node) => node.text().trim() === '创建队伍')?.trigger('click')
+    await wrapper
+      .findAll('button')
+      .find((node) => node.text().trim() === '创建队伍')
+      ?.trigger('click')
     await flushPromises()
     expect(document.body.textContent).toContain('创建新队伍')
     expect(document.body.textContent).toContain('队伍名称')
@@ -439,7 +449,10 @@ describe('ContestDetail', () => {
     cancelCreateButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
     await flushPromises()
 
-    await wrapper.findAll('button').find((node) => node.text().trim() === '加入队伍')?.trigger('click')
+    await wrapper
+      .findAll('button')
+      .find((node) => node.text().trim() === '加入队伍')
+      ?.trigger('click')
     await flushPromises()
     expect(document.body.textContent).toContain('加入现有队伍')
     expect(document.body.textContent).toContain('队伍 ID')
@@ -549,7 +562,9 @@ describe('ContestDetail', () => {
     expect(wrapper.text()).toContain('Crypto 102')
     expect(wrapper.text()).toContain('crypto · 200 pts')
 
-    const webChallengeButton = wrapper.findAll('button').find((node) => node.text().includes('Web 101'))
+    const webChallengeButton = wrapper
+      .findAll('button')
+      .find((node) => node.text().includes('Web 101'))
     expect(webChallengeButton).toBeTruthy()
     await webChallengeButton!.trigger('click')
     await flushPromises()
@@ -586,7 +601,9 @@ describe('ContestDetail', () => {
     await challengesTab!.trigger('click')
     await flushPromises()
 
-    const challengeButton = wrapper.findAll('button').find((node) => node.text().includes('Web 101'))
+    const challengeButton = wrapper
+      .findAll('button')
+      .find((node) => node.text().includes('Web 101'))
     expect(challengeButton).toBeTruthy()
     await challengeButton!.trigger('click')
     await flushPromises()
@@ -1108,9 +1125,7 @@ describe('ContestDetail', () => {
     await flushPromises()
 
     expect(
-      wrapper
-        .findAll('[data-testid="awd-feedback-challenge-title"]')
-        .map((node) => node.text())
+      wrapper.findAll('[data-testid="awd-feedback-challenge-title"]').map((node) => node.text())
     ).toContain('Bank Portal')
   })
 
@@ -1373,10 +1388,104 @@ describe('ContestDetail', () => {
     await flushPromises()
 
     await wrapper.find('input[placeholder="ENTER STOLEN FLAG..."]').setValue('flag{demo}')
-    await wrapper.findAll('button').find((node) => node.text().trim() === 'SUBMIT')?.trigger('click')
+    await wrapper
+      .findAll('button')
+      .find((node) => node.text().trim() === 'SUBMIT')
+      ?.trigger('click')
     await flushPromises()
 
     expect(wrapper.text()).toContain('BANK PORTAL: HIT SUCCESSFUL. +60 PTS')
+  })
+
+  it('学生 AWD 工作台应通过跨队攻击代理打开目标服务', async () => {
+    const openMock = vi.spyOn(window, 'open').mockImplementation(() => null)
+    contestApiMocks.getContestDetail.mockResolvedValueOnce({
+      id: '1',
+      title: '2026 春季校园 AWD 联赛',
+      description: '测试描述',
+      status: 'running',
+      mode: 'awd',
+      starts_at: '2024-03-15T09:00:00Z',
+      ends_at: '2024-03-15T21:00:00Z',
+    })
+    contestApiMocks.getContestChallenges.mockResolvedValueOnce([
+      {
+        id: '201',
+        challenge_id: '101',
+        awd_service_id: '7009',
+        title: 'Bank Portal',
+        category: 'web',
+        difficulty: 'medium',
+        points: 100,
+        solved_count: 0,
+        is_solved: false,
+      },
+    ])
+    contestApiMocks.getContestAWDWorkspace.mockResolvedValue({
+      contest_id: '1',
+      current_round: {
+        id: '41',
+        contest_id: '1',
+        round_number: 2,
+        status: 'running',
+        attack_score: 60,
+        defense_score: 40,
+        created_at: '2024-03-15T09:00:00Z',
+        updated_at: '2024-03-15T09:01:00Z',
+      },
+      my_team: {
+        team_id: '13',
+        team_name: 'Red',
+      },
+      services: [
+        {
+          service_id: '7009',
+          challenge_id: 'legacy-101',
+          access_url: 'http://red.internal',
+          service_status: 'up',
+          checker_type: 'http_standard',
+          attack_received: 0,
+          sla_score: 18,
+          defense_score: 40,
+          attack_score: 0,
+          updated_at: '2024-03-15T09:02:00Z',
+        },
+      ],
+      targets: [
+        {
+          team_id: '14',
+          team_name: 'Blue',
+          services: [
+            {
+              service_id: '7009',
+              challenge_id: 'legacy-101',
+              access_url: 'http://blue.internal',
+            },
+          ],
+        },
+      ],
+      recent_events: [],
+    })
+
+    const wrapper = mount(ContestDetail, {
+      global: {
+        plugins: [createPinia(), router],
+      },
+    })
+
+    await flushPromises()
+
+    await wrapper.get('[data-testid="awd-open-target-7009-14"]').trigger('click')
+    await flushPromises()
+
+    expect(contestApiMocks.requestContestAWDTargetAccess).toHaveBeenCalledWith('1', '7009', '14')
+    expect(openMock).toHaveBeenCalledWith(
+      '/api/v1/contests/1/awd/services/7009/targets/14/proxy/',
+      '_blank',
+      'noopener,noreferrer'
+    )
+
+    openMock.mockRestore()
   })
 
   it('踢出队员前应走统一确认弹窗', async () => {
@@ -1425,7 +1534,9 @@ describe('ContestDetail', () => {
   })
 
   it('竞赛详情 hero 应使用共享 workspace overline 语义', () => {
-    expect(contestOverviewPanelSource).toMatch(/<div class="workspace-overline">\s*Contest\s*<\/div>/)
+    expect(contestOverviewPanelSource).toMatch(
+      /<div class="workspace-overline">\s*Contest\s*<\/div>/
+    )
     expect(contestOverviewPanelSource).not.toContain('<div class="contest-overline">Contest</div>')
   })
 

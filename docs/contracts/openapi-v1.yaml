@@ -2838,6 +2838,112 @@ paths:
         "200":
           description: Proxied target response
 
+  /contests/{id}/awd/services/{sid}/targets/{team_id}/access:
+    post:
+      tags: [AWD]
+      summary: 获取 AWD 跨队攻击代理入口
+      security:
+        - sessionCookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+        - in: path
+          name: sid
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+        - in: path
+          name: team_id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeInstanceAccessData" }
+
+  /contests/{id}/awd/services/{sid}/targets/{team_id}/proxy:
+    get:
+      tags: [AWD]
+      summary: 通过平台代理访问 AWD 目标服务根路径
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+        - in: path
+          name: sid
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+        - in: path
+          name: team_id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+        - in: query
+          name: ticket
+          required: false
+          schema: { type: string }
+      responses:
+        "200":
+          description: Proxied target response
+        "302":
+          description: Bootstrap redirect after proxy ticket exchange
+
+  /contests/{id}/awd/services/{sid}/targets/{team_id}/proxy/{proxyPath}:
+    get:
+      tags: [AWD]
+      summary: 通过平台代理访问 AWD 目标服务子路径
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+        - in: path
+          name: sid
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+        - in: path
+          name: team_id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+        - in: path
+          name: proxyPath
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Proxied target response
+    post:
+      tags: [AWD]
+      summary: 通过平台代理向 AWD 目标服务发起写请求
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+        - in: path
+          name: sid
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+        - in: path
+          name: team_id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+        - in: path
+          name: proxyPath
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: { type: object, additionalProperties: true }
+      responses:
+        "200":
+          description: Proxied target response
+
   /instances:
     get:
       tags: [Instances]

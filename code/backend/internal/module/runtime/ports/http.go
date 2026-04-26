@@ -65,13 +65,34 @@ type TeacherInstanceRow struct {
 }
 
 type ProxyTicketClaims struct {
-	UserID     int64            `json:"user_id"`
-	Username   string           `json:"username"`
-	Role       string           `json:"role"`
-	InstanceID int64            `json:"instance_id"`
-	ContestID  *int64           `json:"contest_id,omitempty"`
-	ShareScope model.ShareScope `json:"share_scope"`
-	IssuedAt   time.Time        `json:"issued_at"`
+	UserID            int64            `json:"user_id"`
+	Username          string           `json:"username"`
+	Role              string           `json:"role"`
+	InstanceID        int64            `json:"instance_id"`
+	ContestID         *int64           `json:"contest_id,omitempty"`
+	ShareScope        model.ShareScope `json:"share_scope"`
+	Purpose           string           `json:"purpose,omitempty"`
+	AWDAttackerTeamID *int64           `json:"awd_attacker_team_id,omitempty"`
+	AWDVictimTeamID   *int64           `json:"awd_victim_team_id,omitempty"`
+	AWDServiceID      *int64           `json:"awd_service_id,omitempty"`
+	AWDChallengeID    *int64           `json:"awd_challenge_id,omitempty"`
+	IssuedAt          time.Time        `json:"issued_at"`
+}
+
+const (
+	ProxyTicketPurposeInstanceAccess = "instance_access"
+	ProxyTicketPurposeAWDAttack      = "awd_attack"
+)
+
+type AWDTargetProxyScope struct {
+	InstanceID     int64
+	ContestID      int64
+	AttackerTeamID int64
+	VictimTeamID   int64
+	ServiceID      int64
+	ChallengeID    int64
+	ShareScope     model.ShareScope
+	AccessURL      string
 }
 
 type ProxyTicketStore interface {
@@ -81,8 +102,10 @@ type ProxyTicketStore interface {
 
 type ProxyTicketInstanceReader interface {
 	FindByID(ctx context.Context, id int64) (*model.Instance, error)
+	FindAWDTargetProxyScope(ctx context.Context, userID, contestID, serviceID, victimTeamID int64) (*AWDTargetProxyScope, error)
 }
 
 type ProxyTrafficEventRecorder interface {
 	RecordRuntimeProxyTrafficEvent(ctx context.Context, instanceID, userID int64, method, requestPath string, statusCode int) error
+	RecordAWDProxyTrafficEvent(ctx context.Context, event model.AWDProxyTrafficEventInput) error
 }

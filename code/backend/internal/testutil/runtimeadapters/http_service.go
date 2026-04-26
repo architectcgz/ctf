@@ -23,7 +23,9 @@ type httpInstanceQueryService interface {
 
 type httpProxyTicketService interface {
 	IssueTicket(ctx context.Context, user authctx.CurrentUser, instanceID int64) (string, time.Time, error)
+	IssueAWDTargetTicket(ctx context.Context, user authctx.CurrentUser, contestID, serviceID, victimTeamID int64) (string, time.Time, error)
 	ResolveTicket(ctx context.Context, ticket string) (*runtimeports.ProxyTicketClaims, error)
+	ResolveAWDTargetAccessURL(ctx context.Context, claims *runtimeports.ProxyTicketClaims, contestID, serviceID, victimTeamID int64) (string, error)
 	MaxAge() int
 }
 
@@ -74,8 +76,17 @@ func (a *HTTPService) IssueProxyTicket(ctx context.Context, user authctx.Current
 	return ticket, err
 }
 
+func (a *HTTPService) IssueAWDTargetProxyTicket(ctx context.Context, user authctx.CurrentUser, contestID, serviceID, victimTeamID int64) (string, error) {
+	ticket, _, err := a.proxyTickets.IssueAWDTargetTicket(ctx, user, contestID, serviceID, victimTeamID)
+	return ticket, err
+}
+
 func (a *HTTPService) ResolveProxyTicket(ctx context.Context, ticket string) (*runtimeports.ProxyTicketClaims, error) {
 	return a.proxyTickets.ResolveTicket(ctx, ticket)
+}
+
+func (a *HTTPService) ResolveAWDTargetAccessURL(ctx context.Context, claims *runtimeports.ProxyTicketClaims, contestID, serviceID, victimTeamID int64) (string, error) {
+	return a.proxyTickets.ResolveAWDTargetAccessURL(ctx, claims, contestID, serviceID, victimTeamID)
 }
 
 func (a *HTTPService) ProxyTicketMaxAge() int {

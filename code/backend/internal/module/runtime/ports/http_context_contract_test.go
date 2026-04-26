@@ -44,5 +44,9 @@ func (ctxOnlyProxyTicketInstanceReader) FindByID(context.Context, int64) (*model
 	return nil, nil
 }
 
+func (ctxOnlyProxyTicketInstanceReader) FindAWDTargetProxyScope(context.Context, int64, int64, int64, int64) (*runtimeports.AWDTargetProxyScope, error) {
+	return nil, nil
+}
+
 var _ runtimeports.InstanceRepository = (*ctxOnlyInstanceRepository)(nil)
 var _ runtimeports.ProxyTicketInstanceReader = (*ctxOnlyProxyTicketInstanceReader)(nil)

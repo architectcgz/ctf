@@ -59,6 +59,33 @@ func (r *Repository) RecordRuntimeProxyTrafficEvent(ctx context.Context, instanc
 	}).Error
 }
 
+func (r *Repository) RecordAWDProxyTrafficEvent(ctx context.Context, event model.AWDProxyTrafficEventInput) error {
+	if event.ContestID <= 0 || event.AttackerTeamID <= 0 || event.VictimTeamID <= 0 || event.ServiceID <= 0 || event.ChallengeID <= 0 {
+		return nil
+	}
+
+	round, err := r.findRunningAWDRound(ctx, event.ContestID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil
+		}
+		return err
+	}
+
+	return r.dbWithContext(ctx).Create(&model.AWDTrafficEvent{
+		ContestID:      event.ContestID,
+		RoundID:        round.ID,
+		AttackerTeamID: event.AttackerTeamID,
+		VictimTeamID:   event.VictimTeamID,
+		ServiceID:      event.ServiceID,
+		ChallengeID:    event.ChallengeID,
+		Method:         trimProxyTrafficField(event.Method, 16),
+		Path:           trimProxyTrafficField(event.Path, 1024),
+		StatusCode:     event.StatusCode,
+		Source:         model.AWDTrafficSourceRuntimeProxy,
+	}).Error
+}
+
 func (r *Repository) loadRuntimeProxyTrafficInstanceScope(ctx context.Context, instanceID int64) (*runtimeProxyTrafficInstanceRow, error) {
 	var row runtimeProxyTrafficInstanceRow
 	err := r.dbWithContext(ctx).
