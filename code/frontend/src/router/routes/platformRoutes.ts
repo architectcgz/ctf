@@ -241,6 +241,18 @@ export const platformRoutes: RouteRecordRaw[] = [
   },
 },
 {
+  path: 'platform/awd-service-templates/imports',
+  name: 'PlatformAwdServiceTemplateImport',
+  component: () => import('@/views/platform/AWDServiceTemplateImport.vue'),
+  meta: {
+    requiresAuth: true,
+    roles: ['teacher', 'admin'],
+    title: '导入 AWD 题目包',
+    icon: 'Upload',
+    contentLayout: 'bleed',
+  },
+},
+{
   path: 'platform/challenges/:id/writeup',
   name: 'PlatformChallengeWriteup',
   component: () => import('@/views/platform/ChallengeWriteup.vue'),
