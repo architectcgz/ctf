@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { MoreHorizontal } from 'lucide-vue-next'
+import { FileText, MoreHorizontal, Users } from 'lucide-vue-next'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -259,11 +259,12 @@ onMounted(() => {
 
     <div class="writeup-manage-stats-shell">
       <div
-        class="admin-summary-grid writeup-summary-grid progress-strip metric-panel-grid metric-panel-default-surface"
+        class="admin-summary-grid writeup-summary-grid progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"
       >
         <article class="journal-note progress-card metric-panel-card">
           <div class="journal-note-label progress-card-label metric-panel-label">
-            官方题解
+            <span>官方题解</span>
+            <FileText class="h-4 w-4" />
           </div>
           <div class="journal-note-value progress-card-value metric-panel-value">
             {{ officialWriteupCount }}
@@ -274,7 +275,8 @@ onMounted(() => {
         </article>
         <article class="journal-note progress-card metric-panel-card">
           <div class="journal-note-label progress-card-label metric-panel-label">
-            学员题解
+            <span>学员题解</span>
+            <Users class="h-4 w-4" />
           </div>
           <div class="journal-note-value progress-card-value metric-panel-value">
             {{ submissionTotal }}

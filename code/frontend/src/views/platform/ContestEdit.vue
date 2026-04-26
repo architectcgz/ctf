@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import {
@@ -32,6 +32,7 @@ import {
   type ContestWorkbenchStageKey,
 } from '@/composables/useContestWorkbench'
 import { useContestEditAwdWorkspace } from '@/composables/useContestEditAwdWorkspace'
+import { useBackofficeBreadcrumbDetail } from '@/composables/useBackofficeBreadcrumbDetail'
 import { ApiError } from '@/api/request'
 import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'
 import { useToast } from '@/composables/useToast'
@@ -48,6 +49,7 @@ const ERR_AWD_READINESS_BLOCKED = 14025
 const route = useRoute()
 const router = useRouter()
 const toast = useToast()
+const { setBreadcrumbDetailTitle } = useBackofficeBreadcrumbDetail()
 
 const contestId = computed(() => String(route.params.id ?? ''))
 const loading = ref(true)
@@ -180,16 +182,21 @@ async function openAWDStartOverrideDialog(payload: AdminContestUpdatePayload) {
 }
 
 async function loadContestDetail(): Promise<void> {
-  if (!contestId.value) return
+  if (!contestId.value) {
+    setBreadcrumbDetailTitle()
+    return
+  }
   loading.value = true
   try {
     const detail = await getContest(contestId.value)
     contest.value = detail
+    setBreadcrumbDetailTitle(detail.title)
     editingBaseStatus.value = normalizeEditableStatus(detail.status)
     formDraft.value = createDraftFromContest(detail)
     syncWorkbenchStageSelection()
     if (detail.mode === 'awd') await refreshAwdWorkbenchData(detail.id)
   } catch (error) {
+    setBreadcrumbDetailTitle()
     loadError.value = humanizeRequestError(error, '竞赛详情加载失败')
   } finally {
     loading.value = false
@@ -309,6 +316,10 @@ function getStatusLabel(status: string): string {
 
 onMounted(() => {
   void loadContestDetail()
+})
+
+onUnmounted(() => {
+  setBreadcrumbDetailTitle()
 })
 </script>
 

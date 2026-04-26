@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Bell, ChevronLeft, Save, ShieldCheck, Trophy } from 'lucide-vue-next'
+import { Bell, Save, ShieldCheck, Trophy } from 'lucide-vue-next'
 
 defineProps<{
   pageTitle: string
@@ -17,10 +17,6 @@ const emit = defineEmits<{
   save: []
 }>()
 
-function handleBack(): void {
-  emit('back')
-}
-
 function handleOpenAnnouncements(): void {
   emit('openAnnouncements')
 }
@@ -33,15 +29,6 @@ function handleSave(): void {
 <template>
   <header class="workspace-topbar studio-topbar-wrapper">
     <div class="topbar-leading">
-      <button
-        type="button"
-        class="ui-btn ui-btn--secondary studio-back-btn"
-        title="返回竞赛目录"
-        @click="handleBack"
-      >
-        <ChevronLeft class="h-4 w-4" />
-      </button>
-
       <div class="studio-title-block">
         <div class="workspace-overline">Contest Studio</div>
         <div class="studio-title-row">
@@ -99,14 +86,6 @@ function handleSave(): void {
   display: flex;
   align-items: center;
   justify-content: space-between;
-}
-
-.studio-back-btn {
-  --ui-btn-height: 2.25rem;
-  --ui-btn-width: 2.25rem;
-  --ui-btn-padding: 0;
-  border-radius: 0.75rem;
-  margin-right: 0.5rem;
 }
 
 .studio-title-block {

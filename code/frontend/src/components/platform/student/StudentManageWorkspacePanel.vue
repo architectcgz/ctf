@@ -113,7 +113,7 @@ const columns = [
           <template #cell-actions="{ row }">
             <button
               type="button"
-              class="ui-btn ui-btn--ghost"
+              class="ui-btn ui-btn--primary ui-btn--sm"
               @click="emit('open-student', String((row as StudentManageTableRow).id))"
             >
               查看学员

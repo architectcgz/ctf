@@ -149,6 +149,7 @@ describe('ImageManage', () => {
   it('应改用共享 ui-btn 原语而不是页面私有 admin-btn 按钮族', () => {
     expect(imageManageHeroPanelSource).toContain('class="ui-btn ui-btn--ghost"')
     expect(imageManageHeroPanelSource).toContain('class="ui-btn ui-btn--primary"')
+    expect(imageDirectoryPanelSource).toContain('class="ui-btn ui-btn--sm ui-btn--primary"')
     expect(combinedSource).toContain('class="ui-btn ui-btn--sm ui-btn--danger"')
     expect(imageManageSource).not.toContain('admin-btn admin-btn-ghost')
     expect(imageManageSource).not.toContain('admin-btn admin-btn-primary')

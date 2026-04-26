@@ -103,13 +103,14 @@ const {
 }
 
 .challenge-manage-content {
-  display: grid;
-  gap: var(--space-6);
-  gap: var(--workspace-directory-page-block-gap);
+  display: flex;
+  flex-direction: column;
+  gap: var(--workspace-directory-page-block-gap, var(--space-5));
 }
 
 .challenge-manage-panel {
-  display: grid;
-  gap: var(--space-section-gap-compact, var(--space-4));
+  display: flex;
+  flex-direction: column;
+  gap: var(--workspace-directory-page-block-gap, var(--space-5));
 }
 </style>
