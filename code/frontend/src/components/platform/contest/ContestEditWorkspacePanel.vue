@@ -154,12 +154,13 @@ const emit = defineEmits<{
 
         <div
           v-if="contest.mode === 'awd' && activeStage === 'operations'"
-          class="studio-pane fade-in"
+          class="studio-pane studio-pane--operations fade-in"
         >
           <AWDOperationsPanel
             :contests="[contest]"
             :selected-contest-id="contest.id"
             :hide-contest-selector="true"
+            :hide-studio-link="true"
             @open:awd-config="emit('open:awd-config-from-operations', $event)"
           />
         </div>
@@ -200,6 +201,10 @@ const emit = defineEmits<{
 .studio-pane {
   width: 100%;
   flex: 1 0 auto;
+}
+
+.studio-pane--operations {
+  padding: 2rem;
 }
 
 .studio-form-canvas {

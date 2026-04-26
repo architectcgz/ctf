@@ -16,7 +16,7 @@ import type {
   AWDRoundHeaderPanelProps,
 } from '@/components/platform/contest/awdInspector.types'
 
-const props = defineProps<AWDRoundHeaderPanelProps>()
+const props = defineProps<AWDRoundHeaderPanelProps & { hideStudioLink?: boolean }>()
 const emit = defineEmits<AWDRoundHeaderPanelEmits & { 'open:contest-edit': [] }>()
 
 const roundOptions = computed(() => 
@@ -121,6 +121,7 @@ function navigateRound(delta: number) {
           </button>
           
           <button
+            v-if="!hideStudioLink"
             type="button"
             class="ops-btn ops-btn--neutral"
             @click="emit('open:contest-edit')"
