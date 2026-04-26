@@ -107,8 +107,12 @@ function openContestWorkbench(contest: ContestDetailData) {
       >
         <header class="list-heading contest-overview-head">
           <div class="workspace-tab-heading__main">
-            <div class="workspace-overline">Contest Workspace</div>
-            <h1 class="workspace-page-title">竞赛目录</h1>
+            <div class="workspace-overline">
+              Contest Workspace
+            </div>
+            <h1 class="workspace-page-title">
+              竞赛目录
+            </h1>
           </div>
 
           <div class="ui-toolbar-actions contest-panel-actions">
@@ -192,7 +196,9 @@ function openContestWorkbench(contest: ContestDetailData) {
               <div class="journal-note-label">
                 Contest Directory
               </div>
-              <h2 class="list-heading__title">竞赛列表</h2>
+              <h2 class="list-heading__title">
+                竞赛列表
+              </h2>
             </div>
           </header>
           <WorkspaceDirectoryToolbar
@@ -284,8 +290,12 @@ function openContestWorkbench(contest: ContestDetailData) {
         <section class="workspace-directory-section contest-create-panel">
           <header class="list-heading contest-create-head">
             <div class="workspace-tab-heading__main">
-              <div class="workspace-overline">Contest Setup</div>
-              <h2 class="workspace-page-title">创建竞赛</h2>
+              <div class="workspace-overline">
+                Contest Setup
+              </div>
+              <h2 class="workspace-page-title">
+                创建竞赛
+              </h2>
               <p class="workspace-page-copy">
                 在当前工作区里补齐竞赛基础信息和时间窗口，保存后直接回到赛事工作台继续编排。
               </p>
@@ -337,6 +347,31 @@ function openContestWorkbench(contest: ContestDetailData) {
   --journal-note-label-color: var(--journal-muted);
   --journal-divider-border: 1px dashed color-mix(in srgb, var(--journal-border) 72%, transparent);
   --journal-shell-dark-accent: var(--color-primary-hover);
+  --ui-btn-primary-background: var(--journal-accent);
+  --ui-btn-primary-hover-background: var(--color-primary-hover);
+  --ui-btn-primary-border: color-mix(in srgb, var(--journal-accent) 34%, var(--journal-border));
+  --ui-btn-primary-hover-border: color-mix(in srgb, var(--journal-accent) 42%, transparent);
+  --ui-btn-primary-hover-shadow: 0 10px 24px
+    color-mix(in srgb, var(--journal-accent) 18%, transparent);
+  --ui-btn-secondary-background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
+  --ui-btn-secondary-color: color-mix(in srgb, var(--journal-muted) 86%, var(--journal-ink));
+  --ui-btn-secondary-border: var(--admin-control-border);
+  --ui-btn-secondary-hover-background: color-mix(
+    in srgb,
+    var(--journal-accent) 5%,
+    var(--journal-surface)
+  );
+  --ui-btn-secondary-hover-border: color-mix(
+    in srgb,
+    var(--journal-accent) 22%,
+    var(--admin-control-border)
+  );
+  --ui-btn-secondary-hover-color: var(--journal-ink);
+  --ui-btn-ghost-color: color-mix(in srgb, var(--journal-muted) 92%, var(--journal-ink));
+  --ui-btn-ghost-hover-background: color-mix(in srgb, var(--journal-accent) 7%, transparent);
+  --ui-btn-ghost-hover-color: var(--journal-accent);
+  --ui-btn-focus-ring: color-mix(in srgb, var(--journal-accent) 30%, transparent);
+  --action-menu-accent: var(--journal-accent);
 }
 
 .content-pane {

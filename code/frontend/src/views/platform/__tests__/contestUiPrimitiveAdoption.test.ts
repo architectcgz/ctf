@@ -64,4 +64,20 @@ describe('contest ui primitive adoption', () => {
     expect(adminContestTableSource).not.toContain('class="contest-action contest-action--primary"')
     expect(adminContestTableSource).not.toContain('class="contest-action contest-action--ghost"')
   })
+
+  it('contest directory buttons should inherit theme tokens instead of page-local color overrides', () => {
+    expect(contestOrchestrationSource).toContain('--ui-btn-primary-background: var(--journal-accent);')
+    expect(contestOrchestrationSource).toContain(
+      '--ui-btn-primary-hover-background: var(--color-primary-hover);'
+    )
+    expect(contestOrchestrationSource).toContain(
+      '--ui-btn-ghost-color: color-mix(in srgb, var(--journal-muted) 92%, var(--journal-ink));'
+    )
+    expect(contestOrchestrationSource).toContain('--action-menu-accent: var(--journal-accent);')
+
+    expect(adminContestTableSource).not.toContain('--ui-btn-primary-bg:')
+    expect(adminContestTableSource).not.toMatch(
+      /\.contest-action--workbench\s*\{[\s\S]*var\(--color-success\)[\s\S]*\}/
+    )
+  })
 })
