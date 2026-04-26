@@ -40,9 +40,9 @@ type ContestAWDWorkspaceTargetTeamResp struct {
 }
 
 type ContestAWDWorkspaceTargetServiceResp struct {
-	ServiceID   int64  `json:"service_id"`
-	ChallengeID int64  `json:"challenge_id"`
-	AccessURL   string `json:"access_url,omitempty"`
+	ServiceID   int64 `json:"service_id"`
+	ChallengeID int64 `json:"challenge_id"`
+	Reachable   bool  `json:"reachable"`
 }
 
 type ContestAWDWorkspaceRecentEventResp struct {

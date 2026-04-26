@@ -100,10 +100,12 @@ interface RawContestAWDWorkspaceServiceData extends Omit<
 
 interface RawContestAWDWorkspaceTargetServiceData extends Omit<
   ContestAWDWorkspaceTargetServiceData,
-  'service_id' | 'challenge_id'
+  'service_id' | 'challenge_id' | 'reachable'
 > {
   service_id?: string | number
   challenge_id: string | number
+  reachable?: boolean
+  access_url?: string
 }
 
 interface RawContestAWDWorkspaceTargetTeamData extends Omit<
@@ -228,9 +230,9 @@ function normalizeContestAWDWorkspaceTargetService(
   item: RawContestAWDWorkspaceTargetServiceData
 ): ContestAWDWorkspaceTargetServiceData {
   return {
-    ...item,
     service_id: item.service_id == null ? undefined : String(item.service_id),
     challenge_id: String(item.challenge_id),
+    reachable: item.reachable ?? Boolean(item.access_url),
   }
 }
 

@@ -178,6 +178,7 @@ phase9 又补齐了教师侧复盘、归档和报告导出。
 
 - `services` 只表示“我的队伍”
 - `targets` 只表示“其他队伍”
+- `targets.services` 只返回 `reachable` 等代理可达状态，不向学生端暴露对方实例的原始 `access_url`
 - `recent_events` 只保留与当前队伍有关的当前轮事件，并区分 `attack_out / attack_in`
 
 ## 前端设计
