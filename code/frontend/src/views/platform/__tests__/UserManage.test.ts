@@ -359,7 +359,6 @@ describe('UserManage', () => {
       overviewPanelStart + 640
     )
     const importPanelStart = userGovernanceSource.indexOf('id="user-panel-import"')
-    const importPanelSnippet = userGovernanceSource.slice(importPanelStart, importPanelStart + 420)
 
     expect(userGovernanceSource).toContain('id="user-panel-overview"')
     expect(userGovernanceSource).toContain('id="user-panel-import"')
@@ -369,14 +368,24 @@ describe('UserManage', () => {
     expect(userGovernanceSource).not.toMatch(/role="tablist"/s)
     expect(userGovernanceSource).toContain('<main class="content-pane">')
     expect(overviewPanelStart).toBeGreaterThan(-1)
-    expect(overviewPanelSnippet).toContain('<div class="workspace-overline">User Workspace</div>')
-    expect(overviewPanelSnippet).toContain('<h1 class="workspace-page-title">用户治理台</h1>')
-    expect(userGovernanceSource).toContain('<h2 class="list-heading__title">全部用户</h2>')
+    expect(overviewPanelSnippet).toMatch(
+      /<div class="workspace-overline">\s*User Workspace\s*<\/div>/
+    )
+    expect(overviewPanelSnippet).toMatch(
+      /<h1 class="workspace-page-title">\s*用户治理台\s*<\/h1>/
+    )
+    expect(userGovernanceSource).toMatch(
+      /<h2 class="list-heading__title">\s*全部用户\s*<\/h2>/
+    )
     expect(userGovernanceSource).toContain('<WorkspaceDirectoryToolbar')
     expect(overviewPanelSnippet).not.toContain('<nav class="top-tabs"')
     expect(importPanelStart).toBeGreaterThan(-1)
-    expect(userGovernanceSource).toContain('<div class="workspace-overline">User Import</div>')
-    expect(userGovernanceSource).toContain('<h2 class="workspace-page-title">导入用户</h2>')
+    expect(userGovernanceSource).toMatch(
+      /<div class="workspace-overline">\s*User Import\s*<\/div>/
+    )
+    expect(userGovernanceSource).toMatch(
+      /<h2 class="workspace-page-title">\s*导入用户\s*<\/h2>/
+    )
     expect(userGovernanceSource).not.toMatch(
       /\.user-directory-section :deep\(\.workspace-directory-toolbar\)\s*\{[\s\S]*margin-bottom:\s*0;/s
     )
@@ -385,8 +394,12 @@ describe('UserManage', () => {
   it('用户导入流应保留独立导入面板和回执区', () => {
     expect(userGovernanceSource).toContain('class="workspace-directory-section user-import-panel"')
     expect(userGovernanceSource).toContain('class="workspace-tab-heading user-import-head"')
-    expect(userGovernanceSource).toContain('<h2 class="workspace-page-title">导入用户</h2>')
-    expect(userGovernanceSource).toContain('<h2 class="list-heading__title">导入回执</h2>')
+    expect(userGovernanceSource).toMatch(
+      /<h2 class="workspace-page-title">\s*导入用户\s*<\/h2>/
+    )
+    expect(userGovernanceSource).toMatch(
+      /<h2 class="list-heading__title">\s*导入回执\s*<\/h2>/
+    )
     expect(userGovernanceSource).toContain('id="user-return-overview"')
   })
 
@@ -450,6 +463,15 @@ describe('UserManage', () => {
       '教师角色',
       '导入回执',
     ])
+    expect(userGovernanceSource).not.toContain(
+      '上面直接查看用户规模和导入回执，下面围绕具体账号完成搜索、筛选、编辑与治理操作。'
+    )
+    expect(userGovernanceSource).toContain(
+      '--workspace-line-soft: color-mix(in srgb, var(--color-text-primary) 10%, transparent);'
+    )
+    expect(userGovernanceSource).toMatch(
+      /\.user-overview-head\s*\{[\s\S]*border-bottom:\s*1px solid var\(--workspace-line-soft\);/s
+    )
   })
 
   it('删除用户失败时不应抛到全局错误页', async () => {

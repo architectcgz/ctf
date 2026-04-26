@@ -97,6 +97,8 @@ const emit = defineEmits<{
   align-items: flex-start;
   justify-content: space-between;
   gap: var(--space-4);
+  padding-bottom: var(--space-6);
+  border-bottom: 1px solid var(--workspace-line-soft);
 }
 
 .admin-awd-review-shell__hero-main {

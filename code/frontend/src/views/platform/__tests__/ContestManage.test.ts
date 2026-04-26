@@ -496,6 +496,9 @@ describe('ContestManage', () => {
     expect(contestOrchestrationSource).not.toContain('<nav class="top-tabs"')
     expect(contestOrchestrationSource).not.toContain('class="contest-filter-grid"')
     expect(contestOrchestrationSource).not.toContain('class="contest-filter-strip"')
+    expect(contestOrchestrationSource).toMatch(
+      /\.contest-overview-head\s*\{[\s\S]*border-bottom:\s*1px solid var\(--workspace-line-soft\);/s
+    )
   })
 
   it('应该在赛事目录通过共享筛选面板切换状态筛选', async () => {

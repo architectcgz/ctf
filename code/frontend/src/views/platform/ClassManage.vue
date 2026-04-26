@@ -104,4 +104,7 @@ onMounted(() => {
 </template>
 
 <style scoped>
+.admin-class-manage-shell {
+  --workspace-line-soft: color-mix(in srgb, var(--color-text-primary) 10%, transparent);
+}
 </style>
