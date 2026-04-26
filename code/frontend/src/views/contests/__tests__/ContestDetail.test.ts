@@ -894,7 +894,7 @@ describe('ContestDetail', () => {
         {
           service_id: '7009',
           challenge_id: 'legacy-9',
-          access_url: 'http://red.runtime.internal',
+          instance_id: '9001',
           service_status: 'up',
           checker_type: 'http_standard',
           attack_received: 0,
@@ -928,7 +928,7 @@ describe('ContestDetail', () => {
 
     await flushPromises()
 
-    expect(wrapper.text()).toContain('http://red.runtime.internal')
+    expect(wrapper.text()).toContain('READY VIA PLATFORM PROXY')
     expect(wrapper.text()).not.toContain('http://blue.runtime.internal')
     expect(wrapper.text()).toContain('PROXY ROUTE READY')
     expect(wrapper.text()).toContain('STABLE')

@@ -48,10 +48,11 @@ func (a *PracticeRuntimeService) CreateTopology(ctx context.Context, req *practi
 	}
 
 	result, err := a.provisioner.CreateTopology(ctx, &runtimeports.TopologyCreateRequest{
-		Networks:         toRuntimeTopologyNetworks(req.Networks),
-		Nodes:            toRuntimeTopologyNodes(req.Nodes),
-		Policies:         append([]model.TopologyTrafficPolicy(nil), req.Policies...),
-		ReservedHostPort: req.ReservedHostPort,
+		Networks:                   toRuntimeTopologyNetworks(req.Networks),
+		Nodes:                      toRuntimeTopologyNodes(req.Nodes),
+		Policies:                   append([]model.TopologyTrafficPolicy(nil), req.Policies...),
+		ReservedHostPort:           req.ReservedHostPort,
+		DisableEntryPortPublishing: req.DisableEntryPortPublishing,
 	})
 	if err != nil {
 		return nil, err

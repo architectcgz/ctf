@@ -42,12 +42,14 @@ const {
   hasTeam,
   submitResult,
   startingServiceKey,
+  openingServiceKey,
   openingTargetKey,
   submittingKey,
   shouldAutoRefresh,
   lastSyncedAt,
   refreshAll,
   startService,
+  openService,
   openTarget,
   submitAttack,
 } = useContestAWDWorkspace({
@@ -388,17 +390,25 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
                     </span>
                   </div>
                   <div class="asset-meta font-mono text-[10px]">
-                    {{ getWorkspaceService(challenge)?.access_url || 'WAITING FOR ALLOCATION' }}
+                    {{
+                      getWorkspaceService(challenge)?.instance_id
+                        ? 'READY VIA PLATFORM PROXY'
+                        : 'WAITING FOR ALLOCATION'
+                    }}
                   </div>
                 </div>
                 <div class="asset-actions">
-                  <a
-                    v-if="getWorkspaceService(challenge)?.access_url"
-                    :href="getWorkspaceService(challenge)?.access_url"
-                    target="_blank"
+                  <button
+                    v-if="getWorkspaceService(challenge)?.instance_id"
+                    :disabled="openingServiceKey === getWorkspaceService(challenge)?.instance_id"
                     class="asset-btn"
-                    ><ExternalLink class="h-3 w-3"
-                  /></a>
+                    @click="
+                      getWorkspaceService(challenge)?.instance_id &&
+                      openService(getWorkspaceService(challenge)?.instance_id || '')
+                    "
+                  >
+                    <ExternalLink class="h-3 w-3" />
+                  </button>
                   <button
                     :disabled="startingServiceKey === getServiceStartKey(challenge)"
                     class="asset-btn asset-btn--primary"

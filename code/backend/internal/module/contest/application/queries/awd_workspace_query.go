@@ -83,8 +83,8 @@ func (s *AWDService) GetUserWorkspace(ctx context.Context, userID, contestID int
 	for _, instance := range instances {
 		if instance.TeamID == myTeam.ID {
 			item := ensureAWDWorkspaceService(serviceMap, instance.ServiceID, instance.ChallengeID)
-			if item.AccessURL == "" {
-				item.AccessURL = instance.AccessURL
+			if item.InstanceID == 0 {
+				item.InstanceID = instance.InstanceID
 			}
 			continue
 		}

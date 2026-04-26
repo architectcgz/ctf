@@ -76,7 +76,7 @@ describe('contest api contract', () => {
         {
           service_id: 7009,
           challenge_id: 9,
-          access_url: 'http://red.internal',
+          instance_id: 9001,
           service_status: 'up',
           checker_type: 'http_standard',
           attack_received: 0,
@@ -125,6 +125,8 @@ describe('contest api contract', () => {
     expect(result.my_team?.team_id).toBe('13')
     expect(result.services[0].service_id).toBe('7009')
     expect(result.services[0].challenge_id).toBe('9')
+    expect(result.services[0].instance_id).toBe('9001')
+    expect(result.services[0].access_url).toBeUndefined()
     expect(result.targets[0].services[0].service_id).toBe('7009')
     expect(result.targets[0].services[0].challenge_id).toBe('9')
     expect(result.targets[0].services[0].reachable).toBe(true)

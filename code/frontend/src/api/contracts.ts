@@ -438,6 +438,7 @@ export interface ContestAWDWorkspaceTeamData {
 export interface ContestAWDWorkspaceServiceData {
   service_id?: ID
   challenge_id: ID
+  instance_id?: ID
   access_url?: string
   service_status?: AWDServiceStatus
   checker_type?: AWDCheckerType

@@ -33,10 +33,11 @@ type TopologyCreateNetwork struct {
 }
 
 type TopologyCreateRequest struct {
-	Networks         []TopologyCreateNetwork
-	Nodes            []TopologyCreateNode
-	Policies         []model.TopologyTrafficPolicy
-	ReservedHostPort int
+	Networks                   []TopologyCreateNetwork
+	Nodes                      []TopologyCreateNode
+	Policies                   []model.TopologyTrafficPolicy
+	ReservedHostPort           int
+	DisableEntryPortPublishing bool
 }
 
 type TopologyCreateResult struct {
