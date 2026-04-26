@@ -5,9 +5,9 @@ import { useRoute, useRouter } from 'vue-router'
 import { getContest } from '@/api/admin'
 import type { ContestDetailData } from '@/api/contracts'
 import AWDOperationsPanel from '@/components/platform/contest/AWDOperationsPanel.vue'
-import ContestOperationsTopbarPanel from '@/components/platform/contest/ContestOperationsTopbarPanel.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
 import { useToast } from '@/composables/useToast'
+import { Settings } from 'lucide-vue-next'
 
 type ContestOperationsTab = 'matrix' | 'attacks' | 'traffic' | 'scoreboard'
 
@@ -39,10 +39,6 @@ function goToStudio() {
   void router.push({ name: 'ContestEdit', params: { id: contestId.value } })
 }
 
-function exitToList() {
-  void router.push({ name: 'ContestManage' })
-}
-
 function resolveActiveTab(tab: unknown): ContestOperationsTab {
   if (typeof tab === 'string' && CONTEST_OPERATIONS_TABS.includes(tab as ContestOperationsTab)) {
     return tab as ContestOperationsTab
@@ -62,7 +58,9 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="contest-ops-shell">
+  <section
+    class="contest-ops-shell workspace-shell journal-shell journal-shell-admin journal-notes-card journal-hero flex min-h-full flex-1 flex-col"
+  >
     <div
       v-if="loading"
       class="ops-loading-overlay"
@@ -70,44 +68,96 @@ onMounted(() => {
       <AppLoading>正在建立指挥链路...</AppLoading>
     </div>
 
-    <main class="ops-content">
-      <ContestOperationsTopbarPanel
-        v-if="contest"
-        :contest-title="contest.title"
-        @back="exitToList"
-        @open-studio="goToStudio"
-      />
-
-      <div class="ops-canvas custom-scrollbar">
-        <AWDOperationsPanel
+    <div class="workspace-grid">
+      <main class="content-pane contest-ops-content">
+        <section
           v-if="contest"
-          :key="`${contest.id}-${activeTab}`"
-          :contests="[contest]"
-          :selected-contest-id="contest.id"
-          :hide-contest-selector="true"
-          :initial-tab="activeTab"
-        />
-      </div>
-    </main>
-  </div>
+          class="workspace-directory-section contest-ops-hero"
+        >
+          <header class="list-heading contest-ops-heading">
+            <div class="workspace-tab-heading__main">
+              <div class="workspace-overline">
+                Command Center
+              </div>
+              <h1 class="workspace-page-title">
+                {{ contest.title }}
+              </h1>
+            </div>
+
+            <div class="ui-toolbar-actions contest-ops-actions">
+              <button
+                type="button"
+                class="ui-btn ui-btn--ghost contest-ops-studio-button"
+                @click="goToStudio"
+              >
+                <Settings class="h-4 w-4" />
+                <span>进入竞赛工作室</span>
+              </button>
+            </div>
+          </header>
+        </section>
+
+        <section
+          v-if="contest"
+          class="workspace-directory-section contest-ops-workspace"
+        >
+          <AWDOperationsPanel
+            :key="`${contest.id}-${activeTab}`"
+            :contests="[contest]"
+            :selected-contest-id="contest.id"
+            :hide-contest-selector="true"
+            :initial-tab="activeTab"
+          />
+        </section>
+      </main>
+    </div>
+  </section>
 </template>
 
 <style scoped>
 .contest-ops-shell {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  width: 100%;
-  background: var(--color-bg-base);
-  overflow: hidden;
+  position: relative;
+  --workspace-shell-bg: var(--journal-surface);
+  --workspace-shell-border: color-mix(in srgb, var(--journal-border) 84%, transparent);
 }
 
-.ops-content { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.contest-ops-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--workspace-directory-page-block-gap, var(--space-5));
+}
 
-.ops-canvas { flex: 1; overflow-y: auto; }
+.contest-ops-hero,
+.contest-ops-workspace {
+  --workspace-directory-section-padding: var(--space-5) var(--space-5-5);
+  background: transparent;
+}
+
+.contest-ops-heading {
+  align-items: flex-start;
+}
+
+.contest-ops-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
 
 .ops-loading-overlay {
-  position: absolute; inset: 0; z-index: 100;
-  background: var(--color-bg-base); display: flex; align-items: center; justify-content: center;
+  position: absolute;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--journal-surface);
+}
+
+@media (max-width: 767px) {
+  .contest-ops-hero,
+  .contest-ops-workspace {
+    --workspace-directory-section-padding: var(--space-4-5) var(--space-4);
+  }
 }
 </style>
