@@ -56,12 +56,6 @@ describe('ContestOperations', () => {
             template:
               '<div data-testid="awd-ops-panel">{{ selectedContestId }}::{{ initialTab }}</div>',
           },
-          ContestOperationsTopbarPanel: {
-            props: ['contestTitle'],
-            emits: ['back', 'open-studio'],
-            template:
-              '<div><div data-testid="contest-title">{{ contestTitle }}</div><button id="contest-ops-back" type="button" @click="$emit(\'back\')">返回</button><button id="contest-ops-open-studio" type="button" @click="$emit(\'open-studio\')">进入工作室</button></div>',
-          },
         },
       },
     })
@@ -69,13 +63,13 @@ describe('ContestOperations', () => {
     await flushPromises()
 
     expect(adminApiMocks.getContest).toHaveBeenCalledWith('contest-ops-1')
-    expect(wrapper.get('[data-testid="contest-title"]').text()).toBe('2026 AWD 运维联赛')
+    expect(wrapper.get('.workspace-page-title').text()).toBe('2026 AWD 运维联赛')
     expect(wrapper.get('[data-testid="awd-ops-panel"]').text()).toBe('contest-ops-1::attacks')
 
-    await wrapper.get('#contest-ops-back').trigger('click')
-    expect(pushMock).toHaveBeenLastCalledWith({ name: 'ContestManage' })
+    expect(wrapper.find('.ops-topbar').exists()).toBe(false)
+    expect(wrapper.text()).not.toContain('返回')
 
-    await wrapper.get('#contest-ops-open-studio').trigger('click')
+    await wrapper.get('.contest-ops-studio-button').trigger('click')
     expect(pushMock).toHaveBeenLastCalledWith({
       name: 'ContestEdit',
       params: { id: 'contest-ops-1' },
@@ -94,10 +88,6 @@ describe('ContestOperations', () => {
           AWDOperationsPanel: {
             props: ['initialTab'],
             template: '<div data-testid="awd-ops-panel">{{ initialTab }}</div>',
-          },
-          ContestOperationsTopbarPanel: {
-            props: ['contestTitle'],
-            template: '<div>{{ contestTitle }}</div>',
           },
         },
       },

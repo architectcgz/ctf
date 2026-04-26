@@ -2,11 +2,12 @@ import { describe, expect, it } from 'vitest'
 
 import contestOperationsSource from '../ContestOperations.vue?raw'
 
-describe('ContestOperations topbar extraction', () => {
-  it('应将赛事运维页顶部壳层抽到独立 platform contest 组件', () => {
-    expect(contestOperationsSource).toContain(
-      "import ContestOperationsTopbarPanel from '@/components/platform/contest/ContestOperationsTopbarPanel.vue'"
-    )
-    expect(contestOperationsSource).toContain('<ContestOperationsTopbarPanel')
+describe('ContestOperations workspace shell', () => {
+  it('赛事运维页不应保留额外顶部返回壳层', () => {
+    expect(contestOperationsSource).not.toContain('ContestOperationsTopbarPanel')
+    expect(contestOperationsSource).not.toContain('class="ops-topbar"')
+    expect(contestOperationsSource).toContain('workspace-shell journal-shell journal-shell-admin')
+    expect(contestOperationsSource).not.toContain('height: 100vh')
+    expect(contestOperationsSource).not.toContain('overflow: hidden')
   })
 })
