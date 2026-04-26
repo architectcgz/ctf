@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowRight, Settings } from 'lucide-vue-next'
+import { ArrowRight } from 'lucide-vue-next'
 
 import type { ContestDetailData } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
@@ -16,7 +16,6 @@ const emit = defineEmits<{
   (event: 'retry'): void
   (event: 'back'): void
   (event: 'enter-operations', contestId: string): void
-  (event: 'open-studio', contestId: string): void
 }>()
 
 function formatDateTime(value: string): string {
@@ -132,14 +131,6 @@ function formatDateTime(value: string): string {
           >
             <ArrowRight class="h-4 w-4" />
             进入运维台
-          </button>
-          <button
-            type="button"
-            class="ui-btn ui-btn--ghost"
-            @click="emit('open-studio', contest.id)"
-          >
-            <Settings class="h-4 w-4" />
-            返回编辑
           </button>
         </div>
       </article>

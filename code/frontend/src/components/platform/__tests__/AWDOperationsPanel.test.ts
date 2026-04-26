@@ -335,6 +335,67 @@ describe('AWDOperationsPanel', () => {
     expect(wrapper.emitted('open:awd-config')).toEqual([['challenge-1']])
   })
 
+  it('作为独立运维页使用时应隐藏就绪摘要中的编辑动作', () => {
+    const awdState = getAwdState()
+    awdState.readiness.value = buildReadinessState({
+      pending_challenges: 0,
+      failed_challenges: 1,
+      missing_checker_challenges: 0,
+      blocking_count: 1,
+      items: [
+        {
+          challenge_id: 'challenge-1',
+          title: 'Web Checker',
+          checker_type: 'http_standard',
+          validation_state: 'failed',
+          last_preview_at: '2026-04-12T08:00:00.000Z',
+          last_access_url: 'http://checker.internal/flag',
+          blocking_reason: 'last_preview_failed',
+        },
+      ],
+    })
+
+    const wrapper = mount(AWDOperationsPanel, {
+      props: {
+        contests: [
+          {
+            id: 'awd-1',
+            title: '2026 AWD 联赛',
+            description: '攻防赛',
+            mode: 'awd',
+            status: 'running',
+            starts_at: '2026-03-18T09:00:00.000Z',
+            ends_at: '2026-03-18T18:00:00.000Z',
+          },
+        ],
+        selectedContestId: 'awd-1',
+        hideStudioLink: true,
+        hideReadinessActions: true,
+      },
+      global: {
+        stubs: {
+          ElDialog: {
+            props: ['modelValue', 'title'],
+            template:
+              '<div><div v-if="modelValue"><div>{{ title }}</div><slot /><slot name="footer" /></div></div>',
+          },
+          AWDRoundInspector: true,
+          AWDRoundCreateDialog: true,
+          AWDServiceCheckDialog: true,
+          AWDAttackLogDialog: true,
+          AWDChallengeConfigDialog: true,
+        },
+      },
+    })
+
+    expect(wrapper.text()).toContain('Web Checker')
+    expect(wrapper.text()).not.toContain('编辑配置')
+    expect(wrapper.text()).not.toContain('进入竞赛工作室')
+    expect(wrapper.find('#awd-readiness-edit-challenge-1').exists()).toBe(false)
+    expect(wrapper.emitted('open:awd-config')).toBeUndefined()
+    expect(wrapper.emitted('open:contest-edit')).toBeUndefined()
+  })
+
   it('应该把队伍实例编排放入独立运维 tab', async () => {
     const awdState = getAwdState()
     awdState.instanceOrchestration.value = {

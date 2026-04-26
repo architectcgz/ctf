@@ -68,10 +68,6 @@ async function loadContest() {
   }
 }
 
-function goToStudio() {
-  void router.push({ name: 'ContestEdit', params: { id: contestId.value } })
-}
-
 onMounted(() => {
   void loadContest()
 })
@@ -134,10 +130,11 @@ onUnmounted(() => {
               :contests="[contest]"
               :selected-contest-id="contest.id"
               :hide-contest-selector="true"
+              :hide-studio-link="true"
+              :hide-readiness-actions="true"
               :hide-operation-tabs="true"
               operation-panel="inspector"
               runtime-content="readiness"
-              @open:contest-edit="goToStudio"
             />
           </section>
 
@@ -153,10 +150,11 @@ onUnmounted(() => {
               :contests="[contest]"
               :selected-contest-id="contest.id"
               :hide-contest-selector="true"
+              :hide-studio-link="true"
+              :hide-readiness-actions="true"
               :hide-operation-tabs="true"
               operation-panel="inspector"
               runtime-content="round-inspector"
-              @open:contest-edit="goToStudio"
             />
           </section>
         </section>

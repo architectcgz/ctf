@@ -21,6 +21,7 @@ const props = defineProps<{
   selectedContestId: string | null
   hideContestSelector?: boolean
   hideStudioLink?: boolean
+  hideReadinessActions?: boolean
   hideOperationTabs?: boolean
   operationPanel?: 'inspector' | 'instances'
   runtimeContent?: 'all' | 'readiness' | 'round-inspector' | 'instances'
@@ -378,6 +379,7 @@ function handleOverrideDialogOpenChange(value: boolean) {
           <AWDReadinessSummary
             :readiness="readiness"
             :loading="loadingReadiness"
+            :hide-actions="hideReadinessActions"
             @edit-config="handleEditReadinessConfig"
           />
         </div>
@@ -416,6 +418,7 @@ function handleOverrideDialogOpenChange(value: boolean) {
             v-if="shouldShowRuntimeReadiness"
             :readiness="readiness"
             :loading="loadingReadiness"
+            :hide-actions="hideReadinessActions"
             class="runtime-readiness-strip"
             @edit-config="handleEditReadinessConfig"
           />

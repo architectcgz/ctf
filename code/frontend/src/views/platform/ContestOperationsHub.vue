@@ -58,13 +58,6 @@ async function handleEnterOperations(contestId: string): Promise<void> {
   })
 }
 
-async function handleOpenStudio(contestId: string): Promise<void> {
-  await router.push({
-    name: 'ContestEdit',
-    params: { id: contestId },
-  })
-}
-
 async function handleBackToContestDirectory(): Promise<void> {
   await router.push({
     name: 'ContestManage',
@@ -98,7 +91,6 @@ onMounted(() => {
           @retry="void loadContests()"
           @back="void handleBackToContestDirectory()"
           @enter-operations="void handleEnterOperations($event)"
-          @open-studio="void handleOpenStudio($event)"
         />
       </main>
     </div>

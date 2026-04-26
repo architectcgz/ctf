@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ChevronLeft, Settings } from 'lucide-vue-next'
+import { ChevronLeft } from 'lucide-vue-next'
 
 defineProps<{
   contestTitle: string
@@ -7,16 +7,12 @@ defineProps<{
 
 const emit = defineEmits<{
   (event: 'back'): void
-  (event: 'open-studio'): void
 }>()
 
 function handleBack(): void {
   emit('back')
 }
 
-function handleOpenStudio(): void {
-  emit('open-studio')
-}
 </script>
 
 <template>
@@ -39,17 +35,6 @@ function handleOpenStudio(): void {
           {{ contestTitle }}
         </h1>
       </div>
-    </div>
-
-    <div class="topbar-right">
-      <button
-        type="button"
-        class="studio-link-btn"
-        @click="handleOpenStudio"
-      >
-        <Settings class="h-4 w-4" />
-        <span>进入竞赛工作室</span>
-      </button>
     </div>
   </header>
 </template>
@@ -91,28 +76,6 @@ function handleOpenStudio(): void {
   font-weight: 900;
   color: var(--color-text-primary);
   margin: 0;
-}
-
-.studio-link-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2-5);
-  height: 2.5rem;
-  padding: 0 var(--space-5);
-  border-radius: 0.85rem;
-  background: var(--color-bg-elevated);
-  border: 1px solid var(--color-border-default);
-  font-size: var(--font-size-13);
-  font-weight: 700;
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.studio-link-btn:hover {
-  background: var(--color-bg-surface);
-  border-color: var(--color-primary);
-  color: var(--color-primary);
 }
 
 .icon-btn {

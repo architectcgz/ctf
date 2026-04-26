@@ -13,9 +13,11 @@ const props = withDefaults(
     readiness: AWDReadinessData | null
     loading: boolean
     actionLabel?: string
+    hideActions?: boolean
   }>(),
   {
     actionLabel: '编辑配置',
+    hideActions: false,
   }
 )
 
@@ -225,7 +227,10 @@ function formatDateTime(value?: string): string {
               <th class="col-meta">
                 最近校验
               </th>
-              <th class="col-actions">
+              <th
+                v-if="!hideActions"
+                class="col-actions"
+              >
                 操作
               </th>
             </tr>
@@ -260,14 +265,17 @@ function formatDateTime(value?: string): string {
               <td class="col-meta readiness-meta-cell">
                 {{ formatDateTime(item.last_preview_at) }}
               </td>
-              <td class="col-actions">
+              <td
+                v-if="!hideActions"
+                class="col-actions"
+              >
                 <div class="ui-row-actions readiness-row__actions">
                   <button
-                  :id="`awd-readiness-edit-${item.challenge_id}`"
-                  class="ui-btn ui-btn--sm ui-btn--secondary"
-                  @click="emit('editConfig', item.challenge_id)"
-                >
-                  {{ props.actionLabel }}
+                    :id="`awd-readiness-edit-${item.challenge_id}`"
+                    class="ui-btn ui-btn--sm ui-btn--secondary"
+                    @click="emit('editConfig', item.challenge_id)"
+                  >
+                    {{ props.actionLabel }}
                   </button>
                 </div>
               </td>
