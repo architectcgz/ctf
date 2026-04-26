@@ -190,11 +190,17 @@ func (r *Repository) CreateInstance(ctx context.Context, instance *model.Instanc
 
 func (r *Repository) ReserveAvailablePort(ctx context.Context, start, end int) (int, error) {
 	for port := start; port < end; port++ {
-		if err := r.dbWithContext(ctx).Create(&model.PortAllocation{Port: port}).Error; err != nil {
-			if isPracticePortAllocationConflict(err) {
-				continue
-			}
-			return 0, err
+		result := r.dbWithContext(ctx).
+			Clauses(clause.OnConflict{
+				Columns:   []clause.Column{{Name: "port"}},
+				DoNothing: true,
+			}).
+			Create(&model.PortAllocation{Port: port})
+		if result.Error != nil {
+			return 0, result.Error
+		}
+		if result.RowsAffected == 0 {
+			continue
 		}
 		return port, nil
 	}
