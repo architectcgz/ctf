@@ -214,11 +214,12 @@ function handleImportChange(event: Event): void {
       >
         <header class="workspace-tab-heading user-overview-head">
           <div class="workspace-tab-heading__main">
-            <div class="workspace-overline">User Workspace</div>
-            <h1 class="workspace-page-title">用户治理台</h1>
-            <p class="workspace-page-copy">
-              上面直接查看用户规模和导入回执，下面围绕具体账号完成搜索、筛选、编辑与治理操作。
-            </p>
+            <div class="workspace-overline">
+              User Workspace
+            </div>
+            <h1 class="workspace-page-title">
+              用户治理台
+            </h1>
           </div>
 
           <div class="user-panel-actions">
@@ -311,7 +312,9 @@ function handleImportChange(event: Event): void {
               <div class="journal-note-label">
                 User Directory
               </div>
-              <h2 class="list-heading__title">全部用户</h2>
+              <h2 class="list-heading__title">
+                全部用户
+              </h2>
             </div>
             <div class="user-directory-meta">
               当前页 {{ listCount }} 个用户
@@ -510,8 +513,12 @@ function handleImportChange(event: Event): void {
         <section class="workspace-directory-section user-import-panel">
           <header class="workspace-tab-heading user-import-head">
             <div class="workspace-tab-heading__main">
-              <div class="workspace-overline">User Import</div>
-              <h2 class="workspace-page-title">导入用户</h2>
+              <div class="workspace-overline">
+                User Import
+              </div>
+              <h2 class="workspace-page-title">
+                导入用户
+              </h2>
               <p class="workspace-page-copy">
                 统一导入账号、角色与班级归属，导入完成后可回到工作台继续筛选和治理具体用户。
               </p>
@@ -552,7 +559,9 @@ function handleImportChange(event: Event): void {
                 <div class="journal-note-label">
                   Import Receipt
                 </div>
-                <h2 class="list-heading__title">导入回执</h2>
+                <h2 class="list-heading__title">
+                  导入回执
+                </h2>
               </div>
             </header>
 
@@ -602,6 +611,7 @@ function handleImportChange(event: Event): void {
   --admin-control-border: color-mix(in srgb, var(--journal-border) 76%, transparent);
   --user-table-border: color-mix(in srgb, var(--journal-border) 72%, transparent);
   --user-row-divider: color-mix(in srgb, var(--journal-border) 58%, transparent);
+  --workspace-line-soft: color-mix(in srgb, var(--color-text-primary) 10%, transparent);
   --journal-note-label-weight: 600;
   --journal-note-label-spacing: 0.15em;
   --journal-note-label-color: var(--journal-muted);
@@ -616,6 +626,11 @@ function handleImportChange(event: Event): void {
 .user-overview-head,
 .user-import-head {
   gap: var(--space-3);
+}
+
+.user-overview-head {
+  padding-bottom: var(--space-6);
+  border-bottom: 1px solid var(--workspace-line-soft);
 }
 
 .user-panel-actions {

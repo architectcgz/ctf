@@ -389,6 +389,8 @@ function openContestWorkbench(contest: ContestDetailData) {
 .contest-overview-head {
   display: grid;
   gap: var(--space-4);
+  padding-bottom: var(--space-6);
+  border-bottom: 1px solid var(--workspace-line-soft);
 }
 
 .contest-panel-actions {

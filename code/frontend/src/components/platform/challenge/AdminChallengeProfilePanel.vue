@@ -424,6 +424,11 @@ function formatDateTime(value?: string): string {
   gap: var(--space-4);
 }
 
+.challenge-detail-header {
+  padding-bottom: var(--space-6);
+  border-bottom: 1px solid var(--workspace-line-soft, color-mix(in srgb, var(--journal-border) 88%, transparent));
+}
+
 .challenge-overview-summary {
   --admin-summary-grid-columns: repeat(4, minmax(0, 1fr));
   --admin-summary-grid-gap: var(--space-3);

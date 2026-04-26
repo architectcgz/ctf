@@ -19,10 +19,8 @@ import classManageWorkspacePanelSource from '@/components/platform/class/ClassMa
 import instanceManageSource from '../InstanceManage.vue?raw'
 import instanceManageHeroPanelSource from '@/components/platform/instance/InstanceManageHeroPanel.vue?raw'
 import instanceManageWorkspacePanelSource from '@/components/platform/instance/InstanceManageWorkspacePanel.vue?raw'
-import challengeDetailSource from '../ChallengeDetail.vue?raw'
 import adminChallengeProfilePanelSource from '@/components/platform/challenge/AdminChallengeProfilePanel.vue?raw'
-import adminChallengeTopbarPanelSource from '@/components/platform/challenge/AdminChallengeTopbarPanel.vue?raw'
-import adminChallengeWorkspaceTabsSource from '@/components/platform/challenge/AdminChallengeWorkspaceTabs.vue?raw'
+import challengeWriteupManagePanelSource from '@/components/platform/writeup/ChallengeWriteupManagePanel.vue?raw'
 import contestEditSource from '../ContestEdit.vue?raw'
 import contestEditTopbarPanelSource from '@/components/platform/contest/ContestEditTopbarPanel.vue?raw'
 import contestEditWorkspacePanelSource from '@/components/platform/contest/ContestEditWorkspacePanel.vue?raw'
@@ -68,12 +66,6 @@ const classManageCombinedSource = [
   classManageSource,
   classManageHeroPanelSource,
   classManageWorkspacePanelSource,
-].join('\n')
-const challengeDetailCombinedSource = [
-  challengeDetailSource,
-  adminChallengeTopbarPanelSource,
-  adminChallengeProfilePanelSource,
-  adminChallengeWorkspaceTabsSource,
 ].join('\n')
 const cheatDetectionCombinedSource = [
   cheatDetectionSource,
@@ -153,9 +145,15 @@ describe('admin management surface alignment', () => {
     expect(userGovernanceSource).toMatch(
       /\.user-table-row\s*\{[\s\S]*border-top:\s*1px solid var\(--user-row-divider\);/s
     )
-    expect(userGovernanceSource).toContain('<h2 class="list-heading__title">全部用户</h2>')
-    expect(userGovernanceSource).toContain('<h2 class="workspace-page-title">导入用户</h2>')
-    expect(userGovernanceSource).toContain('<h2 class="list-heading__title">导入回执</h2>')
+    expect(userGovernanceSource).toMatch(
+      /<h2 class="list-heading__title">\s*全部用户\s*<\/h2>/
+    )
+    expect(userGovernanceSource).toMatch(
+      /<h2 class="workspace-page-title">\s*导入用户\s*<\/h2>/
+    )
+    expect(userGovernanceSource).toMatch(
+      /<h2 class="list-heading__title">\s*导入回执\s*<\/h2>/
+    )
     expect(userGovernanceSource).toContain('<header class="workspace-tab-heading user-overview-head">')
     expect(userGovernanceSource).toContain('<header class="workspace-tab-heading user-import-head">')
     expect(userGovernanceSource).not.toContain('<header class="list-heading user-overview-head">')
@@ -203,11 +201,15 @@ describe('admin management surface alignment', () => {
     expect(contestOrchestrationSource).not.toMatch(
       /\.contest-directory-section :deep\(\.workspace-directory-toolbar\)\s*\{[\s\S]*margin-bottom:\s*0;/s
     )
-    expect(contestOrchestrationSource).toContain(
-      '<div class="workspace-overline">Contest Workspace</div>'
+    expect(contestOrchestrationSource).toMatch(
+      /<div class="workspace-overline">\s*Contest Workspace\s*<\/div>/
     )
-    expect(contestOrchestrationSource).toContain('<h1 class="workspace-page-title">竞赛目录</h1>')
-    expect(contestOrchestrationSource).toContain('<h2 class="list-heading__title">竞赛列表</h2>')
+    expect(contestOrchestrationSource).toMatch(
+      /<h1 class="workspace-page-title">\s*竞赛目录\s*<\/h1>/
+    )
+    expect(contestOrchestrationSource).toMatch(
+      /<h2 class="list-heading__title">\s*竞赛列表\s*<\/h2>/
+    )
     expect(contestOrchestrationSource).toContain('workspace-directory-empty contest-empty-state')
     expect(contestOrchestrationSource).not.toContain('当前筛选结果')
     expect(contestOrchestrationSource).not.toContain(
@@ -262,10 +264,12 @@ describe('admin management surface alignment', () => {
   })
 
   it('contest edit page should use the admin workspace shell and a dedicated back action', () => {
-    expect(contestEditCombinedSource).toContain('class="workspace-topbar"')
-    expect(contestEditCombinedSource).toContain('<h1 class="workspace-page-title">编辑竞赛</h1>')
+    expect(contestEditCombinedSource).toMatch(/class="[^"]*\bworkspace-topbar\b[^"]*"/)
+    expect(contestEditCombinedSource).toMatch(
+      /<h1 class="workspace-page-title">\s*编辑竞赛\s*<\/h1>/
+    )
     expect(contestEditCombinedSource).toContain('返回竞赛目录')
-    expect(contestEditCombinedSource).toContain('Contest Editor')
+    expect(contestEditCombinedSource).toContain('Contest Studio')
     expect(contestEditCombinedSource).toContain('class="workspace-directory-section contest-edit-section"')
   })
 
@@ -482,7 +486,13 @@ describe('admin management surface alignment', () => {
     )
 
     expect(challengeManageSource).toMatch(
-      /\.challenge-manage-content\s*\{[\s\S]*gap:\s*var\(--workspace-directory-page-block-gap\);/s
+      /\.challenge-manage-content\s*\{[\s\S]*gap:\s*var\(--workspace-directory-page-block-gap,\s*var\(--space-5\)\);/s
+    )
+    expect(challengeManageSource).toMatch(
+      /\.challenge-manage-panel\s*\{[\s\S]*gap:\s*var\(--workspace-directory-page-block-gap,\s*var\(--space-5\)\);/s
+    )
+    expect(challengeManageCombinedSource).toMatch(
+      /\.challenge-manage-hero-panel\s*\{[\s\S]*gap:\s*0;/s
     )
     expect(challengeManageCombinedSource).toMatch(
       /\.challenge-metric-head\s*\{[\s\S]*margin-bottom:\s*var\(--space-2\);/s
@@ -552,17 +562,26 @@ describe('admin management surface alignment', () => {
     expect(classManageSource).toContain(
       'class="workspace-shell journal-shell journal-shell-admin journal-hero admin-class-manage-shell"'
     )
+    expect(classManageSource).toMatch(
+      /\.admin-class-manage-shell\s*\{[\s\S]*--workspace-line-soft:\s*color-mix\(in srgb,\s*var\(--color-text-primary\) 10%, transparent\);/s
+    )
     expect(studentManageCombinedSource).toContain(
       'class="admin-summary-grid admin-student-manage-shell__summary'
     )
     expect(studentManageSource).toContain(
       'class="workspace-shell journal-shell journal-shell-admin journal-hero admin-student-manage-shell"'
     )
+    expect(studentManageSource).toMatch(
+      /\.admin-student-manage-shell\s*\{[\s\S]*--workspace-line-soft:\s*color-mix\(in srgb,\s*var\(--color-text-primary\) 10%, transparent\);/s
+    )
     expect(instanceManageCombinedSource).toContain(
       'class="admin-summary-grid admin-instance-manage-shell__summary'
     )
     expect(instanceManageSource).toContain(
       'class="workspace-shell journal-shell journal-shell-admin journal-hero admin-instance-manage-shell"'
+    )
+    expect(instanceManageSource).toMatch(
+      /\.admin-instance-manage-shell\s*\{[\s\S]*--workspace-line-soft:\s*color-mix\(in srgb,\s*var\(--color-text-primary\) 10%, transparent\);/s
     )
     expect(awdReviewCombinedSource).toContain('class="admin-summary-grid admin-awd-review-shell__summary')
   })
@@ -706,6 +725,33 @@ describe('admin management surface alignment', () => {
     )
     expect(awdReviewCombinedSource).toContain(
       'class="admin-summary-grid admin-awd-review-shell__summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
+    )
+  })
+
+  it('workspace summary headers should divide actions from metric cards', () => {
+    expect(userGovernanceSource).toMatch(
+      /\.user-overview-head\s*\{[\s\S]*padding-bottom:\s*var\(--space-6\);[\s\S]*border-bottom:\s*1px solid var\(--workspace-line-soft\);/s
+    )
+    expect(contestOrchestrationSource).toMatch(
+      /\.contest-overview-head\s*\{[\s\S]*padding-bottom:\s*var\(--space-6\);[\s\S]*border-bottom:\s*1px solid var\(--workspace-line-soft\);/s
+    )
+    expect(awdReviewHeroPanelSource).toMatch(
+      /\.admin-awd-review-shell__hero\s*\{[\s\S]*padding-bottom:\s*var\(--space-6\);[\s\S]*border-bottom:\s*1px solid var\(--workspace-line-soft\);/s
+    )
+    expect(classManageHeroPanelSource).toMatch(
+      /\.workspace-hero\s*\{[\s\S]*padding-bottom:\s*var\(--space-6\);[\s\S]*border-bottom:\s*1px solid var\(--workspace-line-soft\);/s
+    )
+    expect(studentManageHeroPanelSource).toMatch(
+      /\.workspace-hero\s*\{[\s\S]*padding-bottom:\s*var\(--space-6\);[\s\S]*border-bottom:\s*1px solid var\(--workspace-line-soft\);/s
+    )
+    expect(instanceManageHeroPanelSource).toMatch(
+      /\.workspace-hero\s*\{[\s\S]*padding-bottom:\s*var\(--space-6\);[\s\S]*border-bottom:\s*1px solid var\(--workspace-line-soft\);/s
+    )
+    expect(adminChallengeProfilePanelSource).toMatch(
+      /\.challenge-detail-header\s*\{[\s\S]*padding-bottom:\s*var\(--space-6\);[\s\S]*border-bottom:\s*1px solid var\(--workspace-line-soft,/s
+    )
+    expect(challengeWriteupManagePanelSource).toMatch(
+      /\.writeup-manage-header\s*\{[\s\S]*padding-bottom:\s*var\(--space-6\);[\s\S]*border-bottom:\s*1px solid var\(--workspace-line-soft,/s
     )
   })
 })
