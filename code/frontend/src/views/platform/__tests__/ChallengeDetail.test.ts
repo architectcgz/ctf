@@ -4,6 +4,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import ChallengeDetail from '../ChallengeDetail.vue'
 import challengeDetailSource from '../ChallengeDetail.vue?raw'
 import adminChallengeTopbarPanelSource from '@/components/platform/challenge/AdminChallengeTopbarPanel.vue?raw'
+import { useBackofficeBreadcrumbDetail } from '@/composables/useBackofficeBreadcrumbDetail'
 
 const pushMock = vi.fn()
 const replaceMock = vi.fn()
@@ -50,6 +51,7 @@ describe('Admin ChallengeDetail', () => {
     challengeApiMocks.downloadAttachment.mockReset()
     routeState.params = { id: '11' }
     routeState.query = {}
+    useBackofficeBreadcrumbDetail().setBreadcrumbDetailTitle()
     adminApiMocks.getChallengeDetail.mockReset()
     adminApiMocks.configureChallengeFlag.mockReset()
     adminApiMocks.getChallengeDetail.mockResolvedValue({
@@ -96,6 +98,7 @@ describe('Admin ChallengeDetail', () => {
     expect(wrapper.find('#admin-challenge-panel-detail').attributes('aria-hidden')).toBe('false')
     expect(wrapper.find('#admin-challenge-panel-writeup').attributes('aria-hidden')).toBe('true')
     expect(wrapper.text()).toContain('双节点演练')
+    expect(useBackofficeBreadcrumbDetail().breadcrumbDetailTitle.value).toBe('双节点演练')
     expect(
       wrapper
         .find(
@@ -113,6 +116,9 @@ describe('Admin ChallengeDetail', () => {
     await topologyButton!.trigger('click')
 
     expect(pushMock).toHaveBeenCalledWith('/platform/challenges/11/topology')
+
+    wrapper.unmount()
+    expect(useBackofficeBreadcrumbDetail().breadcrumbDetailTitle.value).toBeNull()
   })
 
   it('应改用共享 ui-btn 原语而不是页面私有 admin-btn 按钮族', () => {
