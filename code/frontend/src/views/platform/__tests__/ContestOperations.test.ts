@@ -83,7 +83,7 @@ describe('ContestOperations', () => {
     expect(pushMock).not.toHaveBeenCalled()
   })
 
-  it('父页应根据 panel query 切到实例编排 tab', async () => {
+  it('父页不再提供实例编排 tab，panel=instances 应回退到轮次态势', async () => {
     routeState.query = { panel: 'instances' }
 
     const wrapper = mount(ContestOperations, {
@@ -102,11 +102,11 @@ describe('ContestOperations', () => {
 
     await flushPromises()
 
-    expect(wrapper.get('#contest-ops-tab-instances').attributes('aria-selected')).toBe('true')
-    expect(wrapper.find('#contest-ops-panel-instances').exists()).toBe(true)
-    expect(wrapper.get('#contest-ops-panel-instances').classes()).toContain('active')
-    expect(wrapper.find('#contest-ops-panel-inspector').exists()).toBe(false)
-    expect(wrapper.get('[data-testid="awd-ops-panel"]').text()).toBe('instances::instances')
+    expect(wrapper.find('#contest-ops-tab-instances').exists()).toBe(false)
+    expect(wrapper.find('#contest-ops-panel-instances').exists()).toBe(false)
+    expect(wrapper.get('#contest-ops-tab-inspector').attributes('aria-selected')).toBe('true')
+    expect(wrapper.get('#contest-ops-panel-inspector').classes()).toContain('active')
+    expect(wrapper.get('[data-testid="awd-ops-panel"]').text()).toBe('inspector::round-inspector')
   })
 
   it('父页应在 query 提供非法 panel 时回退到轮次态势', async () => {
@@ -159,7 +159,7 @@ describe('ContestOperations', () => {
     expect(wrapper.get('[data-testid="awd-ops-panel"]').text()).toBe('inspector::readiness::true')
   })
 
-  it('点击实例编排 tab 时应同步更新 panel query', async () => {
+  it('运维页只保留轮次态势 tab', async () => {
     const wrapper = mount(ContestOperations, {
       global: {
         stubs: {
@@ -175,12 +175,10 @@ describe('ContestOperations', () => {
     })
 
     await flushPromises()
-    await wrapper.get('#contest-ops-tab-instances').trigger('click')
 
-    expect(replaceMock).toHaveBeenCalledWith({
-      name: 'ContestOperations',
-      params: { id: 'contest-ops-1' },
-      query: { panel: 'instances' },
-    })
+    expect(wrapper.findAll('[role="tab"]')).toHaveLength(1)
+    expect(wrapper.get('#contest-ops-tab-inspector').text()).toContain('轮次态势')
+    expect(wrapper.text()).not.toContain('实例编排')
+    expect(replaceMock).not.toHaveBeenCalled()
   })
 })
