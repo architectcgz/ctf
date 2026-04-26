@@ -145,6 +145,7 @@ function handleExport(contest: ContestDetailData): void {
             :open="openActionMenuId === contest.id"
             title="Management"
             menu-label="更多竞赛操作"
+            accent="var(--journal-accent, var(--color-primary))"
             @update:open="setActionMenuOpen(contest.id, $event)"
           >
             <template #trigger="{ open, toggle, setTriggerRef }">
@@ -355,13 +356,6 @@ function handleExport(contest: ContestDetailData): void {
 
 .contest-action {
   min-width: 5.25rem;
-}
-
-.contest-action--workbench {
-  --ui-btn-primary-bg: color-mix(in srgb, var(--color-success) 78%, var(--journal-ink));
-  --ui-btn-primary-border: color-mix(in srgb, var(--color-success) 56%, transparent);
-  --ui-btn-primary-color: var(--color-bg-base);
-  box-shadow: 0 10px 24px color-mix(in srgb, var(--color-success) 18%, transparent);
 }
 
 @media (max-width: 1023px) {
