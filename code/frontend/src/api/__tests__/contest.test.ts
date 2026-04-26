@@ -94,7 +94,7 @@ describe('contest api contract', () => {
             {
               service_id: 7009,
               challenge_id: 9,
-              access_url: 'http://blue.internal',
+              reachable: true,
             },
           ],
         },
@@ -127,6 +127,8 @@ describe('contest api contract', () => {
     expect(result.services[0].challenge_id).toBe('9')
     expect(result.targets[0].services[0].service_id).toBe('7009')
     expect(result.targets[0].services[0].challenge_id).toBe('9')
+    expect(result.targets[0].services[0].reachable).toBe(true)
+    expect('access_url' in result.targets[0].services[0]).toBe(false)
     expect(result.recent_events[0].service_id).toBe('7009')
     expect(result.recent_events[0].id).toBe('88')
   })

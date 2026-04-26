@@ -124,7 +124,7 @@ const filteredTargets = computed(() =>
       targetFilterKeyword.value.length === 0 ||
       target.team_name.toLowerCase().includes(targetFilterKeyword.value)
     const matchesReachable =
-      !showOnlyReachableTargets.value || Boolean(target.active_service?.access_url)
+      !showOnlyReachableTargets.value || Boolean(target.active_service?.reachable)
     return matchesKeyword && matchesReachable
   })
 )
@@ -470,14 +470,14 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
                     {{ formatServiceRef(target.active_service?.service_id) }}
                   </div>
                   <div class="target-url font-mono">
-                    {{ target.active_service?.access_url || 'UNREACHABLE' }}
+                    {{ target.active_service?.reachable ? 'PROXY ROUTE READY' : 'UNREACHABLE' }}
                   </div>
                 </div>
                 <div class="target-action">
                   <button
                     :data-testid="`awd-open-target-${activeChallengeRuntimeKey}-${target.team_id}`"
                     :disabled="
-                      !target.active_service?.access_url ||
+                      !target.active_service?.reachable ||
                       openingTargetKey ===
                         buildAttackStateKey(activeChallengeRuntimeKey, target.team_id)
                     "
@@ -508,7 +508,7 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
                   />
                   <button
                     :disabled="
-                      !target.active_service?.access_url ||
+                      !target.active_service?.reachable ||
                       submittingKey ===
                         buildAttackStateKey(activeChallengeRuntimeKey, target.team_id)
                     "

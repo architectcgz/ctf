@@ -322,7 +322,7 @@ describe('ContestDetail', () => {
             {
               service_id: '7009',
               challenge_id: '101',
-              access_url: 'http://blue.internal',
+              reachable: true,
             },
           ],
         },
@@ -683,7 +683,7 @@ describe('ContestDetail', () => {
             {
               service_id: '7009',
               challenge_id: '101',
-              access_url: 'http://blue.internal',
+              reachable: true,
             },
           ],
         },
@@ -694,7 +694,7 @@ describe('ContestDetail', () => {
             {
               service_id: '7009',
               challenge_id: '101',
-              access_url: '',
+              reachable: false,
             },
           ],
         },
@@ -819,7 +819,7 @@ describe('ContestDetail', () => {
             {
               service_id: '7010',
               challenge_id: '101',
-              access_url: 'http://blue.internal',
+              reachable: true,
             },
           ],
         },
@@ -912,7 +912,7 @@ describe('ContestDetail', () => {
             {
               service_id: '7009',
               challenge_id: 'legacy-9',
-              access_url: 'http://blue.runtime.internal',
+              reachable: true,
             },
           ],
         },
@@ -929,7 +929,8 @@ describe('ContestDetail', () => {
     await flushPromises()
 
     expect(wrapper.text()).toContain('http://red.runtime.internal')
-    expect(wrapper.text()).toContain('http://blue.runtime.internal')
+    expect(wrapper.text()).not.toContain('http://blue.runtime.internal')
+    expect(wrapper.text()).toContain('PROXY ROUTE READY')
     expect(wrapper.text()).toContain('STABLE')
   })
 
@@ -1017,12 +1018,12 @@ describe('ContestDetail', () => {
             {
               service_id: '7009',
               challenge_id: 'legacy-101',
-              access_url: 'http://blue-a.internal',
+              reachable: true,
             },
             {
               service_id: '7010',
               challenge_id: 'legacy-102',
-              access_url: 'http://blue-b.internal',
+              reachable: true,
             },
           ],
         },
@@ -1038,13 +1039,14 @@ describe('ContestDetail', () => {
 
     await flushPromises()
 
-    expect(wrapper.text()).toContain('http://blue-a.internal')
+    expect(wrapper.text()).toContain('Service #7009')
 
     await wrapper.get('#awd-target-challenge').setValue('7010')
     await flushPromises()
 
-    expect(wrapper.text()).toContain('http://blue-b.internal')
+    expect(wrapper.text()).toContain('Service #7010')
     expect(wrapper.text()).not.toContain('http://blue-a.internal')
+    expect(wrapper.text()).not.toContain('http://blue-b.internal')
   })
 
   it('学生 AWD 最近反馈应优先按 service 标识回填题目标题', async () => {
@@ -1190,7 +1192,7 @@ describe('ContestDetail', () => {
             {
               service_id: '7009',
               challenge_id: '101',
-              access_url: 'http://wrong-target.internal',
+              reachable: true,
             },
           ],
         },
@@ -1339,7 +1341,7 @@ describe('ContestDetail', () => {
             {
               service_id: '7009',
               challenge_id: 'legacy-101',
-              access_url: 'http://blue.internal',
+              reachable: true,
             },
           ],
         },
@@ -1459,7 +1461,7 @@ describe('ContestDetail', () => {
             {
               service_id: '7009',
               challenge_id: 'legacy-101',
-              access_url: 'http://blue.internal',
+              reachable: true,
             },
           ],
         },

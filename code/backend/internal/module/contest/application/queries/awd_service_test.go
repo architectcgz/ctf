@@ -516,6 +516,12 @@ func TestAWDServiceGetUserWorkspaceBuildsOwnServicesTargetsAndRecentEvents(t *te
 	if targetService["service_id"] != float64(contesttestsupport.DefaultAWDContestServiceID(801, 8011)) {
 		t.Fatalf("expected target service to expose service_id, got %s", string(raw))
 	}
+	if targetService["reachable"] != true {
+		t.Fatalf("expected target service to expose reachability, got %s", string(raw))
+	}
+	if _, ok := targetService["access_url"]; ok {
+		t.Fatalf("expected target service to hide raw access url, got %s", string(raw))
+	}
 	events, ok := payload["recent_events"].([]any)
 	if !ok || len(events) != 2 {
 		t.Fatalf("unexpected recent events payload: %s", string(raw))
@@ -722,7 +728,7 @@ func TestAWDServiceGetUserWorkspaceMatchesInstancesByPersistedServiceID(t *testi
 	if len(resp.Targets) != 1 || len(resp.Targets[0].Services) != 1 {
 		t.Fatalf("expected 1 target service matched by persisted service_id, got %+v", resp.Targets)
 	}
-	if resp.Targets[0].Services[0].ServiceID != serviceID || resp.Targets[0].Services[0].AccessURL != "http://blue-bank.internal" {
+	if resp.Targets[0].Services[0].ServiceID != serviceID || !resp.Targets[0].Services[0].Reachable {
 		t.Fatalf("expected target service matched by persisted service_id, got %+v", resp.Targets[0].Services[0])
 	}
 	if resp.Targets[0].Services[0].ChallengeID != 8041 {

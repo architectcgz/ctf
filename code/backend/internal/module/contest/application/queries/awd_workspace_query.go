@@ -96,7 +96,7 @@ func (s *AWDService) GetUserWorkspace(ctx context.Context, userID, contestID int
 		target.Services = append(target.Services, &dto.ContestAWDWorkspaceTargetServiceResp{
 			ServiceID:   instance.ServiceID,
 			ChallengeID: instance.ChallengeID,
-			AccessURL:   instance.AccessURL,
+			Reachable:   instance.AccessURL != "",
 		})
 	}
 
@@ -215,13 +215,7 @@ func sortAWDWorkspaceTargets(items map[int64]*dto.ContestAWDWorkspaceTargetTeamR
 	for _, item := range items {
 		sort.Slice(item.Services, func(i, j int) bool {
 			if item.Services[i].ServiceID == item.Services[j].ServiceID {
-				if item.Services[i].ChallengeID == item.Services[j].ChallengeID {
-					return item.Services[i].AccessURL < item.Services[j].AccessURL
-				}
 				return item.Services[i].ChallengeID < item.Services[j].ChallengeID
-			}
-			if item.Services[i].ChallengeID == item.Services[j].ChallengeID {
-				return item.Services[i].AccessURL < item.Services[j].AccessURL
 			}
 			return item.Services[i].ServiceID < item.Services[j].ServiceID
 		})

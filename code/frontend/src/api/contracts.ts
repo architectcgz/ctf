@@ -451,7 +451,7 @@ export interface ContestAWDWorkspaceServiceData {
 export interface ContestAWDWorkspaceTargetServiceData {
   service_id?: ID
   challenge_id: ID
-  access_url?: string
+  reachable: boolean
 }
 
 export interface ContestAWDWorkspaceTargetTeamData {
