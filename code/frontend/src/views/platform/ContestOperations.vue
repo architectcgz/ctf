@@ -10,7 +10,7 @@ import { useBackofficeBreadcrumbDetail } from '@/composables/useBackofficeBreadc
 import { useRouteQueryTabs } from '@/composables/useRouteQueryTabs'
 import { useToast } from '@/composables/useToast'
 
-type ContestOperationsPanelKey = 'inspector' | 'instances'
+type ContestOperationsPanelKey = 'inspector'
 
 const panelTabs = [
   {
@@ -18,12 +18,6 @@ const panelTabs = [
     label: '轮次态势',
     tabId: 'contest-ops-tab-inspector',
     panelId: 'contest-ops-panel-inspector',
-  },
-  {
-    key: 'instances' as const,
-    label: '实例编排',
-    tabId: 'contest-ops-tab-instances',
-    panelId: 'contest-ops-panel-instances',
   },
 ]
 
@@ -144,26 +138,6 @@ onUnmounted(() => {
               :hide-operation-tabs="true"
               operation-panel="inspector"
               :runtime-content="inspectorRuntimeContent"
-            />
-          </section>
-
-          <section
-            v-if="activePanel === 'instances'"
-            id="contest-ops-panel-instances"
-            class="tab-panel contest-ops-tab-panel active"
-            role="tabpanel"
-            aria-labelledby="contest-ops-tab-instances"
-          >
-            <AWDOperationsPanel
-              :key="`${contest.id}-instances`"
-              :contests="[contest]"
-              :selected-contest-id="contest.id"
-              :hide-contest-selector="true"
-              :hide-studio-link="true"
-              :hide-readiness-actions="true"
-              :hide-operation-tabs="true"
-              operation-panel="instances"
-              runtime-content="instances"
             />
           </section>
         </section>
