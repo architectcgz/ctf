@@ -7,7 +7,9 @@ services:
     environment:
       FLAG: "flag{awd_supply_ticket_demo}"
       ADMIN_PASSWORD: "admin123"
+      CHECKER_TOKEN: "demo-checker-token"
     volumes:
+      - ./app/app.py:/app/app.py:ro
       - ticket-data:/data
 
 volumes:
