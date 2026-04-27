@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import type { TeacherInstanceItem } from '@/api/contracts'
@@ -11,14 +11,18 @@ import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
 interface InstanceManageTableRow {
   id: string
   challenge: string
+  student_id: string
   user: string
-  user_meta: string
+  username: string
+  class_name: string
   ip_address: string
   status: string
   status_label: string
   created_at: string
   actions: string
 }
+
+type InstanceStatusFilter = 'running' | 'creating' | 'expired' | 'failed' | 'inactive' | ''
 
 const router = useRouter()
 const list = ref<TeacherInstanceItem[]>([])
@@ -27,16 +31,48 @@ const pageSize = ref(15)
 const loading = ref(false)
 const destroyingId = ref('')
 const error = ref<string | null>(null)
+const keyword = ref('')
+const statusFilter = ref<InstanceStatusFilter>('')
 
-const total = computed(() => list.value.length)
-const totalPages = computed(() => Math.max(1, Math.ceil(total.value / pageSize.value)))
+const totalInstances = computed(() => list.value.length)
+const filteredInstances = computed(() => {
+  const query = keyword.value.trim().toLowerCase()
+
+  return list.value.filter((item) => {
+    const statusGroup: Exclude<InstanceStatusFilter, ''> =
+      item.status === 'running' || item.status === 'creating' || item.status === 'expired' || item.status === 'failed'
+        ? item.status
+        : 'inactive'
+    const searchableText = [
+      item.id,
+      item.challenge_title,
+      item.student_name,
+      item.student_username,
+      item.student_no,
+      item.class_name,
+      item.access_url,
+      item.status,
+    ]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase()
+
+    const matchesKeyword = !query || searchableText.includes(query)
+    const matchesStatus = !statusFilter.value || statusGroup === statusFilter.value
+    return matchesKeyword && matchesStatus
+  })
+})
+const filteredTotal = computed(() => filteredInstances.value.length)
+const totalPages = computed(() => Math.max(1, Math.ceil(filteredTotal.value / pageSize.value)))
 const pageRows = computed<InstanceManageTableRow[]>(() => {
   const start = (page.value - 1) * pageSize.value
-  return list.value.slice(start, start + pageSize.value).map((item) => ({
+  return filteredInstances.value.slice(start, start + pageSize.value).map((item) => ({
     id: item.id,
     challenge: item.challenge_title,
+    student_id: String(item.student_id),
     user: item.student_name || item.student_username,
-    user_meta: `${item.student_username} · ${item.class_name}`,
+    username: item.student_username,
+    class_name: item.class_name,
     ip_address: item.access_url || '暂未分配',
     status: item.status,
     status_label: formatStatus(item.status),
@@ -134,9 +170,30 @@ function requestDestroyById(id: string): void {
   void handleDestroyInstance(instance)
 }
 
-function handlePageChange(p: number): void {
-  page.value = p
+function openStudent(studentId: string, className: string): void {
+  void router.push({
+    name: 'PlatformStudentAnalysis',
+    params: { className, studentId },
+  })
 }
+
+function handlePageChange(p: number): void {
+  const normalizedPage = Math.max(1, Math.floor(p))
+  if (normalizedPage === page.value || normalizedPage > totalPages.value) {
+    return
+  }
+
+  page.value = normalizedPage
+}
+
+function resetFilters(): void {
+  keyword.value = ''
+  statusFilter.value = ''
+}
+
+watch([keyword, statusFilter], () => {
+  page.value = 1
+})
 
 onMounted(() => {
   void loadInstances()
@@ -149,7 +206,7 @@ onMounted(() => {
       <main class="content-pane">
         <InstanceManageHeroPanel
           :running-count="runningCount"
-          :total="total"
+          :total="totalInstances"
           :warning-count="warningCount"
           @back="void router.push({ name: 'PlatformOverview' })"
           @refresh="void loadInstances()"
@@ -159,11 +216,17 @@ onMounted(() => {
           :loading="loading"
           :has-instances="list.length > 0"
           :rows="pageRows"
+          :keyword="keyword"
+          :status-filter="statusFilter"
           :page="page"
           :total-pages="totalPages"
-          :total="total"
+          :total="filteredTotal"
           :destroying-id="destroyingId"
           :error="error"
+          @update:keyword="keyword = $event"
+          @change:status-filter="statusFilter = $event"
+          @reset-filters="resetFilters"
+          @open-student="openStudent"
           @destroy-instance="requestDestroyById"
           @change-page="handlePageChange"
         />

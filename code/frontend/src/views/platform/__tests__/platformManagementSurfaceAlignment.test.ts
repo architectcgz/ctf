@@ -491,6 +491,7 @@ describe('admin management surface alignment', () => {
     expect(instanceManageCombinedSource).toContain(
       'class="workspace-directory-list admin-instance-manage-table"'
     )
+    expect(instanceManageCombinedSource).toContain('<WorkspaceDirectoryToolbar')
     expect(instanceManageCombinedSource).toContain('<WorkspaceDirectoryPagination')
     expect(instanceManageCombinedSource).toMatch(
       /\.admin-instance-manage-shell__content\s*\{[\s\S]*gap:\s*var\(--workspace-directory-page-block-gap\);/s
