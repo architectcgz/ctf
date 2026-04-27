@@ -12,8 +12,19 @@ def get(path):
         return resp.status, resp.read().decode(errors="replace")
 
 
+def checker_get(path):
+    req = urllib.request.Request(BASE + path, headers={"X-AWD-Checker-Token": "demo-checker-token"})
+    with urllib.request.urlopen(req, timeout=5) as resp:
+        return resp.status, resp.read().decode(errors="replace")
+
+
 def put(path, body):
-    req = urllib.request.Request(BASE + path, data=body.encode(), method="PUT")
+    req = urllib.request.Request(
+        BASE + path,
+        data=body.encode(),
+        method="PUT",
+        headers={"X-AWD-Checker-Token": "demo-checker-token"},
+    )
     with urllib.request.urlopen(req, timeout=5) as resp:
         return resp.status, resp.read().decode(errors="replace")
 
@@ -40,6 +51,6 @@ status, body = get("/preview?" + urllib.parse.urlencode({"path": name}))
 assert status == 200 and "drive check" in body
 status, _ = put("/api/flag", "flag{local_demo}")
 assert status == 200
-status, body = get("/api/flag")
+status, body = checker_get("/api/flag")
 assert status == 200 and "flag{" in body
 print("ok")
