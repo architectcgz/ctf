@@ -86,15 +86,29 @@ function handleNavigateChallenge(challengeId: string) {
   flex-direction: column;
   gap: var(--space-5);
   padding: var(--space-6) var(--space-8);
-  background: var(--color-bg-base);
+  background: transparent;
 }
 
 .studio-pane-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  border-bottom: 1px solid var(--color-border-subtle);
-  padding-bottom: var(--space-5);
+  border: 1px solid color-mix(in srgb, var(--workspace-line-soft) 86%, transparent);
+  border-radius: var(--ui-control-radius-lg);
+  background:
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--workspace-brand, var(--color-primary)) 8%, transparent),
+      transparent 42%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base)),
+      color-mix(in srgb, var(--color-bg-surface) 80%, var(--color-bg-base))
+    );
+  box-shadow: 0 var(--space-2) var(--space-5)
+    color-mix(in srgb, var(--color-shadow-soft) 22%, transparent);
+  padding: var(--space-5);
 }
 
 .pane-title {

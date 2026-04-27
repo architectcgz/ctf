@@ -206,12 +206,34 @@ const emit = defineEmits<{
 
 <style scoped>
 .studio-canvas {
+  --contest-studio-canvas-surface: color-mix(
+    in srgb,
+    var(--journal-surface, var(--color-bg-surface)) 88%,
+    var(--color-bg-base)
+  );
+  --contest-studio-canvas-surface-soft: color-mix(
+    in srgb,
+    var(--journal-surface-subtle, var(--color-bg-elevated)) 84%,
+    var(--color-bg-base)
+  );
+  --contest-studio-pane-background:
+    radial-gradient(
+      circle at top left,
+      color-mix(in srgb, var(--workspace-brand, var(--color-primary)) 8%, transparent),
+      transparent 34%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--contest-studio-canvas-surface) 96%, transparent),
+      var(--contest-studio-canvas-surface-soft)
+    );
+
   flex: 1;
   display: flex;
   flex-direction: column;
   min-height: 0;
   position: relative;
-  background: var(--color-bg-base);
+  background: var(--contest-studio-pane-background);
 }
 
 .studio-scroll-area {
@@ -236,6 +258,15 @@ const emit = defineEmits<{
 .studio-pane {
   width: 100%;
   flex: 1 0 auto;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-bg-surface) 42%, transparent),
+      transparent 44%
+    ),
+    color-mix(in srgb, var(--contest-studio-canvas-surface) 74%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--workspace-line-soft) 72%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--color-bg-surface) 84%, transparent);
 }
 
 .studio-pane--operations {
@@ -266,10 +297,22 @@ const emit = defineEmits<{
 .studio-form-canvas {
   width: 100%;
   max-width: none;
-  border: none;
-  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--workspace-line-soft) 84%, transparent);
+  border-radius: var(--workspace-radius-lg, var(--ui-dialog-radius));
+  background:
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--workspace-brand, var(--color-primary)) 7%, transparent),
+      transparent 42%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-bg-surface) 92%, var(--contest-studio-canvas-surface)),
+      color-mix(in srgb, var(--color-bg-surface) 78%, var(--contest-studio-canvas-surface-soft))
+    );
   padding: var(--space-6) var(--space-7);
-  box-shadow: none;
+  box-shadow: 0 var(--space-4) var(--space-8)
+    color-mix(in srgb, var(--color-shadow-soft) 34%, transparent);
 }
 
 .fade-in {

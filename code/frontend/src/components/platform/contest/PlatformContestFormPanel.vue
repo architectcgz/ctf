@@ -348,6 +348,17 @@ function handleSubmit() {
   min-width: 0;
   flex-direction: column;
   gap: var(--space-4);
+  padding: var(--space-5);
+  border: 1px solid color-mix(in srgb, var(--workspace-line-soft) 86%, transparent);
+  border-radius: var(--workspace-radius-md, var(--ui-control-radius-lg));
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-bg-surface) 94%, var(--color-bg-base)),
+      color-mix(in srgb, var(--color-bg-surface) 82%, var(--color-bg-base))
+    );
+  box-shadow: 0 var(--space-2) var(--space-5)
+    color-mix(in srgb, var(--color-shadow-soft) 26%, transparent);
 }
 
 .settings-group--identity {
@@ -430,8 +441,8 @@ function handleSubmit() {
 .control-wrap {
   width: 100%;
   border-radius: var(--ui-control-radius-md);
-  border: 1px solid var(--color-border-default);
-  background: var(--color-bg-surface);
+  border: 1px solid color-mix(in srgb, var(--workspace-line-soft) 88%, transparent);
+  background: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
   transition:
     border-color var(--ui-motion-fast),
     background var(--ui-motion-fast),
@@ -441,6 +452,7 @@ function handleSubmit() {
 
 .control-wrap:focus-within {
   border-color: var(--color-primary);
+  background: var(--color-bg-surface);
   box-shadow: 0 0 0 var(--ui-focus-ring-width)
     color-mix(in srgb, var(--color-primary) 18%, transparent);
 }
@@ -524,8 +536,13 @@ function handleSubmit() {
   min-width: 0;
   padding: var(--space-5);
   border-radius: var(--ui-control-radius-lg);
-  border: 1px solid var(--color-border-default);
-  background: var(--color-bg-surface);
+  border: 1px solid color-mix(in srgb, var(--workspace-line-soft) 88%, transparent);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-bg-surface) 94%, var(--color-bg-base)),
+      color-mix(in srgb, var(--color-bg-surface) 84%, var(--color-bg-base))
+    );
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -540,12 +557,18 @@ function handleSubmit() {
 
 .mode-card:hover:not(:disabled) {
   border-color: var(--color-primary);
-  background: var(--color-bg-elevated);
+  background: color-mix(in srgb, var(--color-primary-soft) 32%, var(--color-bg-surface));
 }
 
 .mode-card.active {
   border-color: var(--color-primary);
-  background: var(--color-primary-soft);
+  background:
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--color-primary) 16%, transparent),
+      transparent 48%
+    ),
+    color-mix(in srgb, var(--color-primary-soft) 74%, var(--color-bg-surface));
   color: var(--color-primary);
   box-shadow: 0 var(--space-1) var(--space-3)
     color-mix(in srgb, var(--color-primary) 15%, transparent);
