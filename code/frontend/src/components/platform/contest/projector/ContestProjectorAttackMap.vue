@@ -1,5 +1,13 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, ref, watch, type ComponentPublicInstance } from 'vue'
+import {
+  computed,
+  nextTick,
+  onMounted,
+  onUnmounted,
+  ref,
+  watch,
+  type ComponentPublicInstance,
+} from 'vue'
 import {
   ArrowRight,
   Box,
@@ -11,10 +19,12 @@ import {
   ShieldAlert,
   Skull,
   Sparkles,
+  Trophy,
+  XCircle,
   Zap,
 } from 'lucide-vue-next'
 
-import type { AWDTeamServiceData, ScoreboardRow } from '@/api/contracts'
+import type { AWDAttackLogData, AWDTeamServiceData, ScoreboardRow } from '@/api/contracts'
 import {
   formatProjectorScore,
   formatProjectorTime,
@@ -22,14 +32,30 @@ import {
 } from '@/components/platform/contest/projector/contestProjectorFormatters'
 import type {
   ContestProjectorAttackEdge,
+  ContestProjectorAttackTeamPanel,
   ContestProjectorServiceMatrixRow,
 } from '@/components/platform/contest/projector/contestProjectorTypes'
+import ContestProjectorAttackDetailOverlay from '@/components/platform/contest/projector/ContestProjectorAttackDetailOverlay.vue'
+import '@/components/platform/contest/projector/ContestProjectorAttackMap.css'
+import '@/components/platform/contest/projector/ContestProjectorAttackMapResponsive.css'
 
-const props = defineProps<{
-  rows: ContestProjectorServiceMatrixRow[]
-  edges: ContestProjectorAttackEdge[]
-  scoreboardRows: ScoreboardRow[]
-}>()
+type AttackMapDetailPanel = 'teams' | 'ranking' | 'attacks'
+
+const props = withDefaults(
+  defineProps<{
+    rows: ContestProjectorServiceMatrixRow[]
+    edges: ContestProjectorAttackEdge[]
+    scoreboardRows: ScoreboardRow[]
+    firstBlood: AWDAttackLogData | null
+    latestAttackEvents: AWDAttackLogData[]
+    expanded?: boolean
+    boardOnly?: boolean
+  }>(),
+  {
+    expanded: false,
+    boardOnly: false,
+  }
+)
 
 interface AttackBeam {
   id: string
@@ -39,47 +65,62 @@ interface AttackBeam {
   markerY: number
 }
 
-interface TeamPanel {
-  row: ContestProjectorServiceMatrixRow
-  rank?: number
-  score: number
-  compromisedCount: number
-  receivedSuccess: number
+interface TeamDragOffset {
+  x: number
+  y: number
 }
 
+interface TeamDragState {
+  teamId: string
+  pointerId: number
+  startX: number
+  startY: number
+  originX: number
+  originY: number
+  minX: number
+  maxX: number
+  minY: number
+  maxY: number
+}
+
+const boardRingXRadius = 42
+const boardRingYRadius = 36
 const boardRef = ref<HTMLElement | null>(null)
+const activeDetailPanel = ref<AttackMapDetailPanel | null>(null)
+const teamDragOffsets = ref<Record<string, TeamDragOffset>>({})
+const teamDragState = ref<TeamDragState | null>(null)
 const teamRefs = new Map<string, HTMLElement>()
 const serviceRefs = new Map<string, HTMLElement>()
 const beams = ref<AttackBeam[]>([])
 let resizeObserver: ResizeObserver | null = null
 
 const scoreMap = computed(() => new Map(props.scoreboardRows.map((row) => [row.team_id, row])))
-const displayedRows = computed(() => props.rows.slice(0, 8))
-const visibleEdges = computed(() => props.edges.slice(0, 12))
+const displayedRows = computed(() => (props.expanded ? props.rows : props.rows.slice(0, 8)))
+const visibleEdges = computed(() =>
+  props.expanded ? props.edges.slice(0, 24) : props.edges.slice(0, 12)
+)
+const attackDetailRows = computed(() => props.edges)
+const recentAttackEvents = computed(() => props.latestAttackEvents.slice(0, 6))
 const successfulEdges = computed(() => visibleEdges.value.filter((edge) => edge.success > 0))
-const failedEdgeCount = computed(() => visibleEdges.value.reduce((sum, edge) => sum + edge.failed, 0))
-const compromisedServiceCount = computed(() =>
-  displayedRows.value.reduce(
-    (sum, row) => sum + row.services.filter((service) => service.service_status === 'compromised').length,
-    0
-  )
+const failedEdgeCount = computed(() =>
+  visibleEdges.value.reduce((sum, edge) => sum + edge.failed, 0)
 )
-const aliveServiceCount = computed(() =>
-  displayedRows.value.reduce(
-    (sum, row) => sum + row.services.filter((service) => service.service_status === 'up').length,
-    0
-  )
-)
-const totalServiceCount = computed(() => displayedRows.value.reduce((sum, row) => sum + row.services.length, 0))
-
-const teamPanels = computed<TeamPanel[]>(() =>
+const dragStorageKey = computed(() => {
+  const teamScope = props.rows
+    .map((row) => row.team_id)
+    .sort()
+    .join('|')
+  return `contest-projector:attack-board:drag-offsets:${teamScope}`
+})
+const teamPanels = computed<ContestProjectorAttackTeamPanel[]>(() =>
   displayedRows.value.map((row) => {
     const score = scoreMap.value.get(row.team_id)
     return {
       row,
       rank: score?.rank,
       score: score?.score ?? 0,
-      compromisedCount: row.services.filter((service) => service.service_status === 'compromised').length,
+      compromisedCount: row.services.filter((service) => service.service_status === 'compromised')
+        .length,
       receivedSuccess: visibleEdges.value
         .filter((edge) => edge.victim_team_id === row.team_id)
         .reduce((sum, edge) => sum + edge.success, 0),
@@ -87,16 +128,52 @@ const teamPanels = computed<TeamPanel[]>(() =>
   })
 )
 
+const detailTeamPanels = computed<ContestProjectorAttackTeamPanel[]>(() =>
+  props.rows.map((row) => {
+    const score = scoreMap.value.get(row.team_id)
+    return {
+      row,
+      rank: score?.rank,
+      score: score?.score ?? 0,
+      compromisedCount: row.services.filter((service) => service.service_status === 'compromised')
+        .length,
+      receivedSuccess: props.edges
+        .filter((edge) => edge.victim_team_id === row.team_id)
+        .reduce((sum, edge) => sum + edge.success, 0),
+    }
+  })
+)
+
 const rankingRows = computed(() =>
-  props.scoreboardRows.slice(0, 8).map((row) => ({
+  props.scoreboardRows.slice(0, props.expanded ? 20 : 8).map((row) => ({
     ...row,
     compromisedCount:
-      teamPanels.value.find((panel) => panel.row.team_id === row.team_id)?.compromisedCount ?? 0,
+      detailTeamPanels.value.find((panel) => panel.row.team_id === row.team_id)?.compromisedCount ??
+      0,
   }))
 )
 
+const detailRankingRows = computed(() =>
+  props.scoreboardRows.map((row) => ({
+    ...row,
+    compromisedCount:
+      detailTeamPanels.value.find((panel) => panel.row.team_id === row.team_id)?.compromisedCount ??
+      0,
+  }))
+)
+
+const firstBloodTargetKey = computed(() => {
+  const event = props.firstBlood
+  if (!event) return null
+  return event.service_id
+    ? `${event.victim_team_id}:service:${event.service_id}`
+    : `${event.victim_team_id}:challenge:${event.challenge_id}`
+})
+
 function getServiceKey(teamId: string, service: AWDTeamServiceData): string {
-  return service.service_id ? `${teamId}:service:${service.service_id}` : `${teamId}:challenge:${service.challenge_id}`
+  return service.service_id
+    ? `${teamId}:service:${service.service_id}`
+    : `${teamId}:challenge:${service.challenge_id}`
 }
 
 function getServiceDisplayName(service: AWDTeamServiceData): string {
@@ -132,9 +209,169 @@ function getServiceAttackCount(teamId: string, service: AWDTeamServiceData): num
     .reduce((total, edge) => total + edge.success, 0)
 }
 
-function getServiceIconName(service: AWDTeamServiceData): 'database' | 'globe' | 'server' | 'shield' {
+function isFirstBloodTarget(teamId: string, service: AWDTeamServiceData): boolean {
+  return firstBloodTargetKey.value === getServiceKey(teamId, service)
+}
+
+function openDetailPanel(panel: AttackMapDetailPanel): void {
+  activeDetailPanel.value = panel
+}
+
+function closeDetailPanel(): void {
+  activeDetailPanel.value = null
+}
+
+function clampValue(value: number, min: number, max: number): number {
+  return Math.min(Math.max(value, min), max)
+}
+
+function loadTeamDragOffsets(): void {
+  if (typeof window === 'undefined') return
+  try {
+    const rawValue = window.localStorage.getItem(dragStorageKey.value)
+    if (!rawValue) {
+      teamDragOffsets.value = {}
+      return
+    }
+    const parsed = JSON.parse(rawValue) as Record<string, TeamDragOffset>
+    teamDragOffsets.value = Object.fromEntries(
+      Object.entries(parsed).filter(([teamId]) => props.rows.some((row) => row.team_id === teamId))
+    )
+  } catch {
+    teamDragOffsets.value = {}
+  }
+}
+
+function saveTeamDragOffsets(): void {
+  if (typeof window === 'undefined') return
+  try {
+    window.localStorage.setItem(dragStorageKey.value, JSON.stringify(teamDragOffsets.value))
+  } catch {
+    // Ignore storage failures; dragging should still work for the current session.
+  }
+}
+
+function getBoardNodePosition(index: number, total: number): { x: number; y: number } {
+  if (total <= 1) return { x: 50, y: 50 }
+
+  const angle = -Math.PI / 2 + (Math.PI * 2 * index) / total
+  return {
+    x: 50 + Math.cos(angle) * boardRingXRadius,
+    y: 50 + Math.sin(angle) * boardRingYRadius,
+  }
+}
+
+function getTeamNodeStyle(teamId: string, index: number): Record<string, string> | undefined {
+  if (!props.expanded) return undefined
+  const offset = teamDragOffsets.value[teamId]
+
+  if (props.boardOnly) {
+    const position = getBoardNodePosition(index, teamPanels.value.length)
+    const dragTransform = offset ? ` translate3d(${offset.x}px, ${offset.y}px, 0)` : ''
+    return {
+      left: `${position.x}%`,
+      top: `${position.y}%`,
+      transform: `translate(-50%, -50%)${dragTransform}`,
+    }
+  }
+
+  if (!offset) return undefined
+  return {
+    transform: `translate3d(${offset.x}px, ${offset.y}px, 0)`,
+  }
+}
+
+function isDraggingTeam(teamId: string): boolean {
+  return teamDragState.value?.teamId === teamId
+}
+
+function startTeamDrag(event: PointerEvent, teamId: string): void {
+  if (!props.expanded) return
+
+  const board = boardRef.value
+  const target = event.currentTarget
+  if (!board || !(target instanceof HTMLElement)) return
+
+  event.preventDefault()
+  event.stopPropagation()
+
+  const boardRect = board.getBoundingClientRect()
+  const targetRect = target.getBoundingClientRect()
+  const currentOffset = teamDragOffsets.value[teamId] ?? { x: 0, y: 0 }
+  const safeInset = 8
+
+  teamDragState.value = {
+    teamId,
+    pointerId: event.pointerId,
+    startX: event.clientX,
+    startY: event.clientY,
+    originX: currentOffset.x,
+    originY: currentOffset.y,
+    minX: safeInset - (targetRect.left - currentOffset.x - boardRect.left),
+    maxX:
+      boardRect.width -
+      safeInset -
+      targetRect.width -
+      (targetRect.left - currentOffset.x - boardRect.left),
+    minY: safeInset - (targetRect.top - currentOffset.y - boardRect.top),
+    maxY:
+      boardRect.height -
+      safeInset -
+      targetRect.height -
+      (targetRect.top - currentOffset.y - boardRect.top),
+  }
+
+  target.setPointerCapture(event.pointerId)
+}
+
+function moveTeamDrag(event: PointerEvent): void {
+  const state = teamDragState.value
+  if (!state || state.pointerId !== event.pointerId) return
+
+  event.preventDefault()
+  const nextOffset = {
+    x: clampValue(state.originX + event.clientX - state.startX, state.minX, state.maxX),
+    y: clampValue(state.originY + event.clientY - state.startY, state.minY, state.maxY),
+  }
+  teamDragOffsets.value = {
+    ...teamDragOffsets.value,
+    [state.teamId]: nextOffset,
+  }
+  requestAnimationFrame(updateBeams)
+}
+
+function endTeamDrag(event: PointerEvent): void {
+  const state = teamDragState.value
+  if (!state || state.pointerId !== event.pointerId) return
+
+  const target = event.currentTarget
+  if (target instanceof HTMLElement && target.hasPointerCapture(event.pointerId)) {
+    target.releasePointerCapture(event.pointerId)
+  }
+  teamDragState.value = null
+  saveTeamDragOffsets()
+  requestAnimationFrame(updateBeams)
+}
+
+function resetTeamDrag(teamId: string): void {
+  if (!props.expanded) return
+  const { [teamId]: _removed, ...restOffsets } = teamDragOffsets.value
+  teamDragOffsets.value = restOffsets
+  saveTeamDragOffsets()
+  void scheduleBeamUpdate()
+}
+
+function getServiceIconName(
+  service: AWDTeamServiceData
+): 'database' | 'globe' | 'server' | 'shield' {
   const label = getServiceDisplayName(service).toLowerCase()
-  if (label.includes('drive') || label.includes('盘') || label.includes('data') || label.includes('db')) return 'database'
+  if (
+    label.includes('drive') ||
+    label.includes('盘') ||
+    label.includes('data') ||
+    label.includes('db')
+  )
+    return 'database'
   if (label.includes('web') || label.includes('ticket') || label.includes('工单')) return 'globe'
   if (service.service_status === 'compromised' || service.service_status === 'down') return 'shield'
   return 'server'
@@ -156,12 +393,20 @@ function updateBeams(): void {
 
       const sourceRect = source.getBoundingClientRect()
       const targetRect = target.getBoundingClientRect()
-      const sourceX = sourceRect.left + sourceRect.width / 2 - boardRect.left
+      const sourceCenterX = sourceRect.left + sourceRect.width / 2 - boardRect.left
+      const targetCenterX = targetRect.left + targetRect.width / 2 - boardRect.left
+      const sourceX =
+        sourceCenterX <= targetCenterX
+          ? sourceRect.right - boardRect.left
+          : sourceRect.left - boardRect.left
       const sourceY = sourceRect.top + sourceRect.height / 2 - boardRect.top
-      const targetX = targetRect.left + targetRect.width / 2 - boardRect.left
+      const targetX =
+        sourceCenterX <= targetCenterX
+          ? targetRect.left - boardRect.left
+          : targetRect.right - boardRect.left
       const targetY = targetRect.top + targetRect.height / 2 - boardRect.top
       const distanceX = Math.abs(targetX - sourceX)
-      const curve = Math.max(96, distanceX * 0.46)
+      const curve = Math.max(72, distanceX * 0.42)
       const controlAX = sourceX + (targetX >= sourceX ? curve : -curve)
       const controlBX = targetX - (targetX >= sourceX ? curve : -curve)
 
@@ -182,22 +427,42 @@ async function scheduleBeamUpdate(): Promise<void> {
 }
 
 watch(
-  () => [props.rows, props.edges],
+  () => [props.rows, props.edges, props.expanded],
   () => {
     void scheduleBeamUpdate()
   },
   { deep: true }
 )
 
+watch(
+  () => [dragStorageKey.value, props.expanded],
+  () => {
+    if (props.expanded) {
+      loadTeamDragOffsets()
+      void scheduleBeamUpdate()
+    }
+  }
+)
+
+function handleKeydown(event: KeyboardEvent): void {
+  if (event.key !== 'Escape') return
+  closeDetailPanel()
+}
+
 onMounted(() => {
+  window.addEventListener('keydown', handleKeydown)
   resizeObserver = new ResizeObserver(() => updateBeams())
   if (boardRef.value) {
     resizeObserver.observe(boardRef.value)
+  }
+  if (props.expanded) {
+    loadTeamDragOffsets()
   }
   void scheduleBeamUpdate()
 })
 
 onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeydown)
   resizeObserver?.disconnect()
   resizeObserver = null
   teamRefs.clear()
@@ -206,31 +471,61 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <section class="attack-map-panel">
+  <section
+    class="attack-map-panel"
+    :class="{
+      'attack-map-panel--expanded': expanded,
+      'attack-map-panel--board-only': boardOnly,
+    }"
+  >
     <header class="panel-head">
       <div>
-        <div class="projector-overline">
-          Attack Map
-        </div>
-        <h3>实时攻击地图</h3>
+        <div class="projector-overline">{{ expanded ? 'Attack Board' : 'Attack Map' }}</div>
+        <h3>{{ expanded ? '实时攻击面板' : '实时攻击地图' }}</h3>
       </div>
       <Crosshair class="panel-icon panel-icon--attack" />
     </header>
 
     <div class="attack-map-layout">
-      <aside class="attack-side attack-side--teams">
+      <aside v-if="!boardOnly" class="attack-side attack-side--teams">
         <section class="legend-block">
           <h4>图例说明</h4>
           <div class="legend-grid">
             <span><Server /> 服务主机</span>
             <span><Shield /> 所属团队</span>
             <span class="legend-success"><ArrowRight /> 成功攻击</span>
-            <span class="legend-failed"><ArrowRight /> 攻击失败</span>
+            <span class="legend-failed"><XCircle /> 攻击失败</span>
           </div>
         </section>
 
-        <section class="team-list-block">
-          <h4>团队及其服务列表</h4>
+        <section v-if="firstBlood" class="first-blood-block">
+          <div class="first-blood-icon">
+            <Trophy />
+          </div>
+          <div>
+            <h4>首血</h4>
+            <strong>{{ firstBlood.attacker_team }}</strong>
+            <span>攻破 {{ firstBlood.victim_team }}</span>
+            <small
+              >{{ formatProjectorScore(firstBlood.score_gained) }} pts ·
+              {{ formatProjectorTime(firstBlood.created_at) }}</small
+            >
+          </div>
+        </section>
+
+        <section
+          class="team-list-block panel-drilldown"
+          role="button"
+          tabindex="0"
+          aria-label="展开队伍与服务列表"
+          @click.stop="openDetailPanel('teams')"
+          @keydown.enter.stop.prevent="openDetailPanel('teams')"
+          @keydown.space.stop.prevent="openDetailPanel('teams')"
+        >
+          <h4>
+            团队及其服务列表
+            <span>展开</span>
+          </h4>
           <article
             v-for="panel in teamPanels"
             :key="panel.row.team_id"
@@ -239,7 +534,9 @@ onUnmounted(() => {
           >
             <header>
               <strong>{{ panel.row.team_name }}</strong>
-              <span>存活 {{ panel.score }} / 已攻破 {{ panel.compromisedCount }}</span>
+              <span
+                >{{ formatProjectorScore(panel.score) }} / 受损 {{ panel.compromisedCount }}</span
+              >
             </header>
             <div class="team-list-services">
               <span
@@ -260,46 +557,39 @@ onUnmounted(() => {
 
       <main class="attack-map-main">
         <div class="map-title">
-          <strong>实时攻击地图</strong>
-          <span>箭头指向：攻击方 → 目标服务</span>
+          <strong>{{ expanded ? '实时攻击面板' : '实时攻击地图' }}</strong>
+          <span>{{ expanded ? '全量队伍攻防矩阵' : '攻击方 → 目标服务' }}</span>
         </div>
 
         <div
           ref="boardRef"
           class="attack-board"
+          :class="{ 'attack-board--drilldown': !expanded }"
+          title="点击铺开攻击面板"
         >
-          <svg
-            class="attack-beam-layer"
-            aria-hidden="true"
-          >
+          <svg class="attack-beam-layer" aria-hidden="true">
             <defs>
               <marker
                 id="attack-arrow-success"
-                markerHeight="8"
-                markerWidth="8"
+                markerHeight="6"
+                markerWidth="6"
                 orient="auto"
-                refX="7"
-                refY="4"
-                viewBox="0 0 8 8"
+                refX="5.25"
+                refY="3"
+                viewBox="0 0 6 6"
               >
-                <path
-                  d="M0,0 L8,4 L0,8 Z"
-                  class="attack-marker attack-marker--success"
-                />
+                <path d="M0,0 L6,3 L0,6 Z" class="attack-marker attack-marker--success" />
               </marker>
               <marker
                 id="attack-arrow-failed"
-                markerHeight="8"
-                markerWidth="8"
+                markerHeight="6"
+                markerWidth="6"
                 orient="auto"
-                refX="7"
-                refY="4"
-                viewBox="0 0 8 8"
+                refX="5.25"
+                refY="3"
+                viewBox="0 0 6 6"
               >
-                <path
-                  d="M0,0 L8,4 L0,8 Z"
-                  class="attack-marker attack-marker--failed"
-                />
+                <path d="M0,0 L6,3 L0,6 Z" class="attack-marker attack-marker--failed" />
               </marker>
             </defs>
 
@@ -313,14 +603,13 @@ onUnmounted(() => {
                 'attack-beam--mutual': beam.edge.reciprocalSuccess > 0,
               }"
             >
-              <path
-                class="attack-beam__halo"
-                :d="beam.path"
-              />
+              <path class="attack-beam__halo" :d="beam.path" />
               <path
                 class="attack-beam__line"
                 :d="beam.path"
-                :marker-end="beam.edge.success > 0 ? 'url(#attack-arrow-success)' : 'url(#attack-arrow-failed)'"
+                :marker-end="
+                  beam.edge.success > 0 ? 'url(#attack-arrow-success)' : 'url(#attack-arrow-failed)'
+                "
               />
               <circle
                 v-if="beam.edge.success > 0"
@@ -333,14 +622,23 @@ onUnmounted(() => {
           </svg>
 
           <article
-            v-for="panel in teamPanels"
+            v-for="(panel, panelIndex) in teamPanels"
             :key="panel.row.team_id"
             :ref="(element) => setTeamRef(panel.row.team_id, element)"
             class="map-team-node"
             :class="{
               'map-team-node--hot': panel.receivedSuccess > 0,
               'map-team-node--rank-one': panel.rank === 1,
+              'map-team-node--draggable': expanded,
+              'map-team-node--dragging': isDraggingTeam(panel.row.team_id),
             }"
+            :style="getTeamNodeStyle(panel.row.team_id, panelIndex)"
+            :title="expanded ? '拖动调整队伍位置，双击恢复' : undefined"
+            @pointerdown="startTeamDrag($event, panel.row.team_id)"
+            @pointermove="moveTeamDrag"
+            @pointerup="endTeamDrag"
+            @pointercancel="endTeamDrag"
+            @dblclick.stop="resetTeamDrag(panel.row.team_id)"
           >
             <header>
               <span class="team-emblem">
@@ -357,11 +655,16 @@ onUnmounted(() => {
               <span
                 v-for="service in panel.row.services.slice(0, 6)"
                 :key="service.id"
-                :ref="(element) => setServiceRef(getServiceKey(panel.row.team_id, service), element)"
+                :ref="
+                  (element) => setServiceRef(getServiceKey(panel.row.team_id, service), element)
+                "
                 class="map-service"
                 :class="[
                   `map-service--${service.service_status}`,
-                  { 'map-service--hit': getServiceAttackCount(panel.row.team_id, service) > 0 },
+                  {
+                    'map-service--hit': getServiceAttackCount(panel.row.team_id, service) > 0,
+                    'map-service--first-blood': isFirstBloodTarget(panel.row.team_id, service),
+                  },
                 ]"
                 :title="`${getServiceDisplayName(service)} · ${getServiceStatusLabel(service.service_status)}`"
               >
@@ -369,39 +672,57 @@ onUnmounted(() => {
                 <Globe2 v-else-if="getServiceIconName(service) === 'globe'" />
                 <ShieldAlert v-else-if="getServiceIconName(service) === 'shield'" />
                 <Server v-else />
-                <span>{{ getServiceDisplayName(service) }}</span>
+                <span class="map-service-name">{{ getServiceDisplayName(service) }}</span>
+                <small class="map-service-status">
+                  {{ getServiceStatusLabel(service.service_status) }}
+                </small>
                 <i v-if="getServiceAttackCount(panel.row.team_id, service) > 0">
                   {{ getServiceAttackCount(panel.row.team_id, service) }}
                 </i>
+                <b v-if="isFirstBloodTarget(panel.row.team_id, service)">
+                  <Sparkles />
+                </b>
               </span>
             </div>
           </article>
         </div>
 
-        <footer class="selected-service-strip">
-          <span>提示：服务图标显示最近攻击落点和受损状态</span>
-          <strong>{{ visibleEdges[0]?.latest_service_label ?? '暂无目标服务' }}</strong>
+        <footer class="attack-event-strip">
+          <article
+            v-for="event in recentAttackEvents"
+            :key="event.id"
+            :class="
+              event.is_success
+                ? 'attack-event-strip__item--success'
+                : 'attack-event-strip__item--failed'
+            "
+          >
+            <span>{{ event.attacker_team }}</span>
+            <ArrowRight v-if="event.is_success" />
+            <XCircle v-else />
+            <strong>{{ event.victim_team }}</strong>
+            <small>{{ formatProjectorTime(event.created_at) }}</small>
+          </article>
+          <strong v-if="recentAttackEvents.length === 0">暂无攻击事件</strong>
         </footer>
       </main>
 
-      <aside class="attack-side attack-side--stats">
-        <section class="status-block">
-          <h4>比赛状态</h4>
-          <div class="status-grid">
-            <span><strong>{{ displayedRows.length }}</strong> 存活团队</span>
-            <span><strong>{{ aliveServiceCount }} / {{ totalServiceCount }}</strong> 存活服务</span>
-            <span><strong>{{ compromisedServiceCount }}</strong> 已攻破服务</span>
-          </div>
-        </section>
-
-        <section class="rank-block">
-          <h4>团队排名</h4>
+      <aside v-if="!boardOnly" class="attack-side attack-side--stats">
+        <section
+          class="rank-block panel-drilldown"
+          role="button"
+          tabindex="0"
+          aria-label="展开完整团队排名"
+          @click.stop="openDetailPanel('ranking')"
+          @keydown.enter.stop.prevent="openDetailPanel('ranking')"
+          @keydown.space.stop.prevent="openDetailPanel('ranking')"
+        >
+          <h4>
+            团队排名
+            <span>展开</span>
+          </h4>
           <div class="rank-list">
-            <div
-              v-for="row in rankingRows"
-              :key="row.team_id"
-              class="rank-row"
-            >
+            <div v-for="row in rankingRows" :key="row.team_id" class="rank-row">
               <span>{{ row.rank }}</span>
               <strong>{{ row.team_name }}</strong>
               <em>{{ formatProjectorScore(row.score) }}</em>
@@ -410,13 +731,20 @@ onUnmounted(() => {
           </div>
         </section>
 
-        <section class="attack-stat-block">
-          <h4>攻击统计</h4>
-          <article
-            v-for="edge in visibleEdges.slice(0, 5)"
-            :key="edge.id"
-            class="attack-stat-row"
-          >
+        <section
+          class="attack-stat-block panel-drilldown"
+          role="button"
+          tabindex="0"
+          aria-label="展开攻击统计"
+          @click.stop="openDetailPanel('attacks')"
+          @keydown.enter.stop.prevent="openDetailPanel('attacks')"
+          @keydown.space.stop.prevent="openDetailPanel('attacks')"
+        >
+          <h4>
+            攻击统计
+            <span>展开</span>
+          </h4>
+          <article v-for="edge in visibleEdges.slice(0, 5)" :key="edge.id" class="attack-stat-row">
             <div>
               <strong>{{ edge.attacker_team }}</strong>
               <ArrowRight />
@@ -432,666 +760,20 @@ onUnmounted(() => {
           <div class="attack-stat-summary">
             <span>成功 {{ successfulEdges.length }}</span>
             <span>失败 {{ failedEdgeCount }}</span>
-            <span v-if="visibleEdges.some((edge) => edge.reciprocalSuccess > 0)"><Zap /> 存在互攻</span>
+            <span v-if="visibleEdges.some((edge) => edge.reciprocalSuccess > 0)"
+              ><Zap /> 存在互攻</span
+            >
           </div>
         </section>
       </aside>
     </div>
+
+    <ContestProjectorAttackDetailOverlay
+      :active-panel="activeDetailPanel"
+      :team-panels="detailTeamPanels"
+      :ranking-rows="detailRankingRows"
+      :attack-rows="attackDetailRows"
+      @close="closeDetailPanel"
+    />
   </section>
 </template>
-
-<style scoped>
-.attack-map-panel,
-.attack-side,
-.legend-block,
-.team-list-block,
-.attack-map-main,
-.status-block,
-.rank-block,
-.attack-stat-block {
-  display: flex;
-  flex-direction: column;
-}
-
-.attack-map-panel {
-  gap: var(--space-4);
-  border: 1px solid color-mix(in srgb, var(--color-border-subtle) 86%, transparent);
-  border-radius: 0.75rem;
-  background: color-mix(in srgb, var(--color-bg-elevated) 56%, transparent);
-  padding: var(--space-4);
-}
-
-.panel-head,
-.map-title,
-.team-list-card header,
-.map-team-node header,
-.attack-stat-row div,
-.attack-stat-row p,
-.attack-stat-summary {
-  display: flex;
-  align-items: center;
-}
-
-.panel-head {
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-3);
-}
-
-.panel-head h3 {
-  margin: var(--space-1) 0 0;
-  color: var(--journal-ink);
-  font-size: var(--font-size-1-00);
-  font-weight: 900;
-}
-
-.projector-overline {
-  color: var(--color-text-muted);
-  font-size: var(--font-size-10);
-  font-weight: 900;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
-.panel-icon {
-  width: var(--space-5);
-  height: var(--space-5);
-}
-
-.panel-icon--attack {
-  color: var(--color-danger);
-}
-
-.attack-map-layout {
-  display: grid;
-  grid-template-columns: minmax(18rem, 0.92fr) minmax(32rem, 1.42fr) minmax(18rem, 0.86fr);
-  gap: var(--space-4);
-}
-
-.attack-side,
-.attack-map-main {
-  gap: var(--space-3);
-  min-width: 0;
-}
-
-.legend-block,
-.team-list-block,
-.status-block,
-.rank-block,
-.attack-stat-block {
-  gap: var(--space-3);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: 0.625rem;
-  background: color-mix(in srgb, var(--color-bg-surface) 48%, transparent);
-  padding: var(--space-3);
-}
-
-.legend-block h4,
-.team-list-block h4,
-.status-block h4,
-.rank-block h4,
-.attack-stat-block h4 {
-  margin: 0;
-  color: var(--journal-ink);
-  font-size: var(--font-size-13);
-  font-weight: 900;
-}
-
-.legend-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-2);
-}
-
-.legend-grid span,
-.team-list-service--up,
-.team-list-service--down,
-.team-list-service--compromised {
-  display: inline-flex;
-  min-width: 0;
-  align-items: center;
-  gap: var(--space-1-5);
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-11);
-  font-weight: 800;
-}
-
-.legend-grid svg,
-.team-list-services svg {
-  width: var(--space-4);
-  height: var(--space-4);
-  flex: 0 0 auto;
-}
-
-.legend-success {
-  color: var(--color-success);
-}
-
-.legend-failed {
-  color: var(--color-danger);
-}
-
-.team-list-block {
-  max-height: 41rem;
-  overflow: auto;
-}
-
-.team-list-card {
-  display: grid;
-  gap: var(--space-3);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: 0.625rem;
-  padding: var(--space-3);
-}
-
-.team-list-card--hot {
-  border-color: color-mix(in srgb, var(--color-danger) 42%, transparent);
-}
-
-.team-list-card header {
-  justify-content: space-between;
-  gap: var(--space-3);
-}
-
-.team-list-card strong {
-  min-width: 0;
-  overflow: hidden;
-  color: var(--journal-ink);
-  font-size: var(--font-size-13);
-  font-weight: 900;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.team-list-card header span,
-.selected-service-strip,
-.attack-stat-row p,
-.attack-stat-summary {
-  color: var(--color-text-muted);
-  font-size: var(--font-size-11);
-  font-weight: 800;
-}
-
-.team-list-services {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-2);
-}
-
-.team-list-services span {
-  overflow: hidden;
-  border: 1px solid var(--color-border-subtle);
-  border-radius: 0.375rem;
-  padding: var(--space-1-5) var(--space-2);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.team-list-service--up {
-  color: var(--color-success);
-}
-
-.team-list-service--down,
-.team-list-service--compromised {
-  color: var(--color-danger);
-}
-
-.map-title {
-  justify-content: space-between;
-  gap: var(--space-3);
-  color: var(--color-text-muted);
-  font-size: var(--font-size-12);
-  font-weight: 800;
-}
-
-.map-title strong {
-  color: var(--journal-ink);
-  font-size: var(--font-size-14);
-  font-weight: 900;
-}
-
-.attack-board {
-  position: relative;
-  min-height: 42rem;
-  overflow: hidden;
-  border: 1px solid var(--color-border-subtle);
-  border-radius: 0.75rem;
-  background:
-    radial-gradient(circle at center, color-mix(in srgb, var(--journal-accent) 12%, transparent), transparent 54%),
-    linear-gradient(
-      90deg,
-      color-mix(in srgb, var(--color-border-subtle) 22%, transparent) 1px,
-      transparent 1px
-    ),
-    linear-gradient(
-      0deg,
-      color-mix(in srgb, var(--color-border-subtle) 18%, transparent) 1px,
-      transparent 1px
-    ),
-    color-mix(in srgb, var(--color-bg-surface) 52%, transparent);
-  background-size: auto, var(--space-8) var(--space-8), var(--space-8) var(--space-8), auto;
-}
-
-.attack-beam-layer {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-}
-
-.attack-beam__halo,
-.attack-beam__line {
-  fill: none;
-}
-
-.attack-beam__halo {
-  stroke: color-mix(in srgb, var(--color-danger) 18%, transparent);
-  stroke-width: var(--space-2);
-}
-
-.attack-beam__line {
-  stroke: color-mix(in srgb, var(--color-warning) 72%, transparent);
-  stroke-dasharray: var(--space-3) var(--space-2);
-  stroke-linecap: round;
-  stroke-width: var(--space-0-5);
-  animation: attack-dash 1.8s linear infinite;
-}
-
-.attack-beam--success .attack-beam__line {
-  stroke: color-mix(in srgb, var(--color-success) 78%, transparent);
-  stroke-dasharray: var(--space-5) var(--space-2);
-  stroke-width: var(--space-1);
-}
-
-.attack-beam--mutual .attack-beam__halo {
-  stroke: color-mix(in srgb, var(--color-warning) 24%, transparent);
-}
-
-.attack-beam__impact {
-  fill: none;
-  stroke: color-mix(in srgb, var(--color-success) 78%, transparent);
-  stroke-width: var(--space-0-5);
-  animation: impact-pulse 1.6s ease-out infinite;
-}
-
-.attack-marker--success {
-  fill: var(--color-success);
-}
-
-.attack-marker--failed {
-  fill: var(--color-danger);
-}
-
-.map-team-node {
-  position: absolute;
-  z-index: 2;
-  width: min(32%, 16rem);
-  min-width: 12rem;
-  border: 1px solid color-mix(in srgb, var(--journal-accent) 34%, transparent);
-  border-radius: 0.75rem;
-  background: color-mix(in srgb, var(--color-bg-elevated) 84%, transparent);
-  padding: var(--space-3);
-  box-shadow: 0 var(--space-2) var(--space-7) color-mix(in srgb, var(--color-shadow-strong) 14%, transparent);
-}
-
-.map-team-node:nth-of-type(1) {
-  top: var(--space-5);
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-.map-team-node:nth-of-type(2) {
-  top: 37%;
-  left: var(--space-5);
-}
-
-.map-team-node:nth-of-type(3) {
-  top: 37%;
-  right: var(--space-5);
-}
-
-.map-team-node:nth-of-type(4) {
-  bottom: var(--space-5);
-  left: var(--space-5);
-}
-
-.map-team-node:nth-of-type(5) {
-  right: var(--space-5);
-  bottom: var(--space-5);
-}
-
-.map-team-node:nth-of-type(n + 6) {
-  display: none;
-}
-
-.map-team-node--hot {
-  border-color: color-mix(in srgb, var(--color-danger) 46%, transparent);
-}
-
-.map-team-node--rank-one {
-  box-shadow:
-    0 var(--space-2) var(--space-7) color-mix(in srgb, var(--color-warning) 14%, transparent),
-    inset 0 0 0 1px color-mix(in srgb, var(--color-warning) 24%, transparent);
-}
-
-.map-team-node header {
-  gap: var(--space-2);
-  margin-bottom: var(--space-3);
-}
-
-.team-emblem {
-  display: inline-flex;
-  width: var(--space-8);
-  height: var(--space-8);
-  flex: 0 0 auto;
-  align-items: center;
-  justify-content: center;
-  border-radius: 999rem;
-  background: color-mix(in srgb, var(--journal-accent) 14%, transparent);
-  color: var(--journal-accent);
-}
-
-.team-emblem svg {
-  width: var(--space-5);
-  height: var(--space-5);
-}
-
-.map-team-node strong,
-.map-team-node small {
-  display: block;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.map-team-node strong {
-  color: var(--journal-ink);
-  font-size: var(--font-size-13);
-  font-weight: 900;
-}
-
-.map-team-node small {
-  color: var(--color-text-muted);
-  font-family: var(--font-family-mono);
-  font-size: var(--font-size-10);
-  font-weight: 900;
-}
-
-.map-service-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-2);
-}
-
-.map-service {
-  position: relative;
-  display: flex;
-  min-width: 0;
-  min-height: 4.25rem;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-1);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: 0.5rem;
-  background: color-mix(in srgb, var(--color-bg-surface) 68%, transparent);
-  padding: var(--space-2);
-  color: var(--color-text-secondary);
-  text-align: center;
-}
-
-.map-service svg {
-  width: var(--space-5);
-  height: var(--space-5);
-}
-
-.map-service span {
-  width: 100%;
-  overflow: hidden;
-  font-size: var(--font-size-10);
-  font-weight: 900;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.map-service i {
-  position: absolute;
-  top: calc(var(--space-1) * -1);
-  right: calc(var(--space-1) * -1);
-  display: inline-flex;
-  min-width: var(--space-5);
-  height: var(--space-5);
-  align-items: center;
-  justify-content: center;
-  border-radius: 999rem;
-  background: var(--color-danger);
-  color: var(--color-bg-elevated);
-  font-family: var(--font-family-mono);
-  font-size: var(--font-size-10);
-  font-style: normal;
-  font-weight: 900;
-}
-
-.map-service--up {
-  border-color: color-mix(in srgb, var(--color-success) 24%, transparent);
-  color: var(--color-success);
-}
-
-.map-service--down,
-.map-service--compromised {
-  border-color: color-mix(in srgb, var(--color-danger) 38%, transparent);
-  background: color-mix(in srgb, var(--color-danger) 12%, var(--color-bg-surface));
-  color: var(--color-danger);
-}
-
-.map-service--hit {
-  box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--color-danger) 44%, transparent),
-    0 0 var(--space-5) color-mix(in srgb, var(--color-danger) 18%, transparent);
-  animation: service-hit 1.8s ease-in-out infinite;
-}
-
-.selected-service-strip {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--space-3);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: 0.625rem;
-  background: color-mix(in srgb, var(--color-bg-surface) 48%, transparent);
-  padding: var(--space-3);
-}
-
-.selected-service-strip strong {
-  color: var(--journal-ink);
-}
-
-.status-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--space-2);
-}
-
-.status-grid span {
-  display: grid;
-  gap: var(--space-1);
-  border-right: 1px solid var(--color-border-subtle);
-  color: var(--color-text-muted);
-  font-size: var(--font-size-11);
-  font-weight: 800;
-  text-align: center;
-}
-
-.status-grid span:last-child {
-  border-right: 0;
-}
-
-.status-grid strong {
-  color: var(--journal-ink);
-  font-family: var(--font-family-mono);
-  font-size: var(--font-size-1-25);
-  font-weight: 900;
-}
-
-.rank-list,
-.attack-stat-block {
-  gap: var(--space-2);
-}
-
-.rank-row {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto auto;
-  gap: var(--space-3);
-  align-items: center;
-  border-bottom: 1px solid var(--color-border-subtle);
-  padding-bottom: var(--space-2);
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-12);
-}
-
-.rank-row strong {
-  min-width: 0;
-  overflow: hidden;
-  color: var(--journal-ink);
-  font-weight: 900;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.rank-row span,
-.rank-row em,
-.rank-row small {
-  font-family: var(--font-family-mono);
-  font-style: normal;
-  font-weight: 900;
-}
-
-.rank-row em {
-  color: var(--journal-ink);
-}
-
-.attack-stat-row {
-  display: grid;
-  gap: var(--space-1);
-  border-bottom: 1px solid var(--color-border-subtle);
-  padding-bottom: var(--space-2);
-}
-
-.attack-stat-row div,
-.attack-stat-row p {
-  gap: var(--space-2);
-}
-
-.attack-stat-row strong,
-.attack-stat-row span {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.attack-stat-row strong {
-  color: var(--journal-ink);
-  font-size: var(--font-size-12);
-  font-weight: 900;
-}
-
-.attack-stat-row svg {
-  width: var(--space-3);
-  height: var(--space-3);
-  color: var(--color-danger);
-}
-
-.result-success {
-  color: var(--color-success);
-}
-
-.result-failed {
-  color: var(--color-danger);
-}
-
-.attack-stat-summary {
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  padding-top: var(--space-1);
-}
-
-.attack-stat-summary span {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-}
-
-.attack-stat-summary svg {
-  width: var(--space-3);
-  height: var(--space-3);
-  color: var(--color-warning);
-}
-
-@keyframes attack-dash {
-  to {
-    stroke-dashoffset: calc(var(--space-8) * -1);
-  }
-}
-
-@keyframes impact-pulse {
-  0% {
-    opacity: 0.86;
-    r: 5;
-  }
-
-  100% {
-    opacity: 0;
-    r: 18;
-  }
-}
-
-@keyframes service-hit {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-
-  50% {
-    transform: translateY(calc(var(--space-0-5) * -1));
-  }
-}
-
-@media (max-width: 1280px) {
-  .attack-map-layout {
-    grid-template-columns: 1fr;
-  }
-
-  .attack-board {
-    min-height: 36rem;
-  }
-}
-
-@media (max-width: 900px) {
-  .map-team-node {
-    position: relative;
-    inset: auto;
-    width: 100%;
-    min-width: 0;
-    transform: none;
-  }
-
-  .attack-board {
-    display: grid;
-    gap: var(--space-3);
-    min-height: auto;
-    padding: var(--space-3);
-  }
-
-  .attack-beam-layer {
-    display: none;
-  }
-
-  .status-grid,
-  .team-list-services {
-    grid-template-columns: 1fr;
-  }
-}
-</style>

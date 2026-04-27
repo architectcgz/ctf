@@ -1,0 +1,78 @@
+@keyframes attack-dash {
+  to {
+    stroke-dashoffset: calc(var(--space-8) * -1);
+  }
+}
+
+@keyframes impact-pulse {
+  0% {
+    opacity: 0.86;
+    r: 5;
+  }
+
+  100% {
+    opacity: 0;
+    r: 18;
+  }
+}
+
+@keyframes service-hit {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(calc(var(--space-0-5) * -1));
+  }
+}
+
+@media (max-width: 1280px) {
+  .attack-map-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .attack-board {
+    min-height: 36rem;
+  }
+}
+
+@media (max-width: 900px) {
+  .map-team-node {
+    position: relative;
+    inset: auto;
+    width: 100%;
+    min-width: 0;
+    transform: none;
+  }
+
+  .attack-board {
+    display: grid;
+    gap: var(--space-3);
+    min-height: auto;
+    padding: var(--space-3);
+  }
+
+  .attack-beam-layer {
+    display: none;
+  }
+
+  .attack-map-panel--board-only .map-team-node {
+    position: absolute;
+    inset: auto;
+    display: block;
+    width: clamp(9rem, 34vw, 12rem);
+  }
+
+  .attack-map-panel--board-only .attack-board {
+    min-height: 32rem;
+  }
+
+  .attack-map-panel--board-only .attack-beam-layer {
+    display: block;
+  }
+
+  .team-list-services {
+    grid-template-columns: 1fr;
+  }
+}

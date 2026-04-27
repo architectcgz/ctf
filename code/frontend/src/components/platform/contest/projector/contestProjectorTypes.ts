@@ -8,6 +8,14 @@ export interface ContestProjectorServiceMatrixRow {
   services: AWDTeamServiceData[]
 }
 
+export interface ContestProjectorAttackTeamPanel {
+  row: ContestProjectorServiceMatrixRow
+  rank?: number
+  score: number
+  compromisedCount: number
+  receivedSuccess: number
+}
+
 export interface ContestProjectorAttackLeader {
   team_id: string
   team_name: string

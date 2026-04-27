@@ -1,8 +1,8 @@
 import { mount } from '@vue/test-utils'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import ContestProjectorAttackMap from '@/components/platform/contest/projector/ContestProjectorAttackMap.vue'
-import type { AWDTeamServiceData, ScoreboardRow } from '@/api/contracts'
+import type { AWDAttackLogData, AWDTeamServiceData, ScoreboardRow } from '@/api/contracts'
 import type {
   ContestProjectorAttackEdge,
   ContestProjectorServiceMatrixRow,
@@ -13,7 +13,9 @@ class ResizeObserverStub {
   disconnect = vi.fn()
 }
 
-function buildEdge(overrides: Partial<ContestProjectorAttackEdge> = {}): ContestProjectorAttackEdge {
+function buildEdge(
+  overrides: Partial<ContestProjectorAttackEdge> = {}
+): ContestProjectorAttackEdge {
   return {
     id: 'blue->red',
     attacker_team_id: 'blue',
@@ -52,6 +54,25 @@ function buildService(overrides: Partial<AWDTeamServiceData> = {}): AWDTeamServi
     defense_score: 0,
     attack_score: 0,
     updated_at: '2026-04-27T15:49:02.000Z',
+    ...overrides,
+  }
+}
+
+function buildAttackEvent(overrides: Partial<AWDAttackLogData> = {}): AWDAttackLogData {
+  return {
+    id: 'attack-1',
+    round_id: 'round-1',
+    attacker_team_id: 'blue',
+    attacker_team: 'Blue Team',
+    victim_team_id: 'red',
+    victim_team: 'Red Team',
+    service_id: 'service-1',
+    challenge_id: 'challenge-1',
+    attack_type: 'flag_capture',
+    source: 'submission',
+    is_success: true,
+    score_gained: 30,
+    created_at: '2026-04-27T15:49:02.000Z',
     ...overrides,
   }
 }
@@ -106,12 +127,26 @@ describe('ContestProjectorAttackMap', () => {
     vi.stubGlobal('ResizeObserver', ResizeObserverStub)
   })
 
+  afterEach(() => {
+    document.body.innerHTML = ''
+  })
+
   it('显示攻击方、目标方和互攻状态', () => {
     const wrapper = mount(ContestProjectorAttackMap, {
       props: {
         rows: buildRows(),
         edges: [buildEdge()],
         scoreboardRows: buildScoreboardRows(),
+        firstBlood: buildAttackEvent(),
+        latestAttackEvents: [
+          buildAttackEvent(),
+          buildAttackEvent({
+            id: 'attack-2',
+            is_success: false,
+            score_gained: 0,
+            created_at: '2026-04-27T15:48:02.000Z',
+          }),
+        ],
       },
     })
 
@@ -119,8 +154,8 @@ describe('ContestProjectorAttackMap', () => {
     expect(wrapper.text()).toContain('Red Team')
     expect(wrapper.text()).toContain('图例说明')
     expect(wrapper.text()).toContain('实时攻击地图')
-    expect(wrapper.text()).toContain('比赛状态')
     expect(wrapper.text()).toContain('团队排名')
+    expect(wrapper.text()).toContain('首血')
     expect(wrapper.text()).toContain('成功 1')
     expect(wrapper.text()).toContain('失败 1')
     expect(wrapper.text()).toContain('Supply Ticket')
@@ -133,9 +168,30 @@ describe('ContestProjectorAttackMap', () => {
         rows: [],
         edges: [],
         scoreboardRows: [],
+        firstBlood: null,
+        latestAttackEvents: [],
       },
     })
 
-    expect(wrapper.text()).toContain('暂无目标服务')
+    expect(wrapper.text()).toContain('暂无攻击事件')
+  })
+
+  it('点击团队排名时打开完整排名详情', async () => {
+    const wrapper = mount(ContestProjectorAttackMap, {
+      attachTo: document.body,
+      props: {
+        rows: buildRows(),
+        edges: [buildEdge()],
+        scoreboardRows: buildScoreboardRows(),
+        firstBlood: buildAttackEvent(),
+        latestAttackEvents: [buildAttackEvent()],
+      },
+    })
+
+    await wrapper.find('.rank-block').trigger('click')
+
+    expect(document.body.textContent).toContain('完整团队排名')
+    expect(document.body.textContent).toContain('解题 2')
+    expect(document.body.textContent).toContain('受损 0')
   })
 })
