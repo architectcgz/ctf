@@ -385,7 +385,7 @@ function isActiveChallenge(item: AdminContestChallengeViewData): boolean {
   display: flex;
   flex-direction: column;
   gap: var(--space-section-gap);
-  background: var(--color-bg-base);
+  background: transparent;
   padding: var(--space-6) var(--space-8);
 }
 
@@ -432,10 +432,18 @@ function isActiveChallenge(item: AdminContestChallengeViewData): boolean {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
-  border: 1px solid var(--color-border-default);
+  border: 1px solid color-mix(in srgb, var(--workspace-line-soft) 86%, transparent);
   border-radius: var(--ui-control-radius-lg);
-  background: color-mix(in srgb, var(--color-bg-surface) 94%, var(--color-primary-soft));
+  background:
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--color-primary) 10%, transparent),
+      transparent 46%
+    ),
+    color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-primary-soft));
   padding: var(--space-4);
+  box-shadow: 0 var(--space-2) var(--space-5)
+    color-mix(in srgb, var(--color-shadow-soft) 22%, transparent);
 }
 
 .config-focus-card__head {
@@ -477,9 +485,16 @@ function isActiveChallenge(item: AdminContestChallengeViewData): boolean {
 
 .studio-table-wrap {
   overflow: hidden;
-  border: 1px solid var(--color-border-default);
+  border: 1px solid color-mix(in srgb, var(--workspace-line-soft) 86%, transparent);
   border-radius: var(--ui-control-radius-lg);
-  background: var(--color-bg-surface);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-bg-surface) 94%, var(--color-bg-base)),
+      color-mix(in srgb, var(--color-bg-surface) 84%, var(--color-bg-base))
+    );
+  box-shadow: 0 var(--space-2) var(--space-5)
+    color-mix(in srgb, var(--color-shadow-soft) 24%, transparent);
 }
 
 .studio-table {
@@ -488,8 +503,8 @@ function isActiveChallenge(item: AdminContestChallengeViewData): boolean {
 }
 
 .studio-table th {
-  border-bottom: 1px solid var(--color-border-default);
-  background: var(--color-bg-elevated);
+  border-bottom: 1px solid color-mix(in srgb, var(--workspace-line-soft) 86%, transparent);
+  background: color-mix(in srgb, var(--color-bg-surface) 72%, var(--color-bg-base));
   padding: var(--space-4);
   text-align: left;
   font-size: var(--font-size-11);

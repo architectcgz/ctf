@@ -583,7 +583,7 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: var(--space-section-gap);
-  background: var(--color-bg-base);
+  background: transparent;
   padding: var(--space-6) var(--space-8);
 }
 .studio-pane-header {
@@ -620,9 +620,16 @@ onMounted(() => {
 
 .studio-table-wrap {
   overflow-x: auto;
-  border: 1px solid var(--color-border-default);
+  border: 1px solid color-mix(in srgb, var(--workspace-line-soft) 86%, transparent);
   border-radius: var(--ui-control-radius-lg);
-  background: var(--color-bg-surface);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-bg-surface) 94%, var(--color-bg-base)),
+      color-mix(in srgb, var(--color-bg-surface) 84%, var(--color-bg-base))
+    );
+  box-shadow: 0 var(--space-2) var(--space-5)
+    color-mix(in srgb, var(--color-shadow-soft) 24%, transparent);
 }
 
 .studio-table {
@@ -631,8 +638,8 @@ onMounted(() => {
 }
 
 .studio-table th {
-  border-bottom: 1px solid var(--color-border-default);
-  background: var(--color-bg-elevated);
+  border-bottom: 1px solid color-mix(in srgb, var(--workspace-line-soft) 86%, transparent);
+  background: color-mix(in srgb, var(--color-bg-surface) 72%, var(--color-bg-base));
   padding: var(--space-4);
   text-align: left;
   font-size: var(--font-size-11);
@@ -655,7 +662,7 @@ onMounted(() => {
 }
 
 .studio-row:hover {
-  background: var(--color-bg-elevated);
+  background: color-mix(in srgb, var(--color-primary-soft) 24%, var(--color-bg-surface));
 }
 
 .challenge-title {
