@@ -211,37 +211,22 @@ onUnmounted(() => {
             >
               <div class="arena-grid">
                 <div
-                  class="projector-focusable-panel"
+                  class="projector-focusable-panel projector-focusable-panel--attack-map"
                   role="button"
                   tabindex="0"
-                  aria-label="聚焦查看实时排名"
-                  @click="focusPanel('leaderboard')"
-                  @keydown.enter.prevent="focusPanel('leaderboard')"
-                  @keydown.space.prevent="focusPanel('leaderboard')"
+                  aria-label="聚焦查看队伍攻击关系"
+                  @click="focusPanel('attack-map')"
+                  @keydown.enter.prevent="focusPanel('attack-map')"
+                  @keydown.space.prevent="focusPanel('attack-map')"
                 >
-                  <ContestProjectorLeaderboard
-                    :top-three-rows="topThreeRows"
-                    :leaderboard-rows="leaderboardRows"
-                    :scoreboard-rows-length="scoreboardRows.length"
+                  <ContestProjectorAttackMap
+                    :rows="serviceMatrixRows"
+                    :edges="attackEdges"
+                    :scoreboard-rows="scoreboardRows"
                   />
                 </div>
 
                 <section class="battlefield-panel">
-                  <div
-                    class="projector-focusable-panel"
-                    role="button"
-                    tabindex="0"
-                    aria-label="聚焦查看队伍攻击关系"
-                    @click="focusPanel('attack-map')"
-                    @keydown.enter.prevent="focusPanel('attack-map')"
-                    @keydown.space.prevent="focusPanel('attack-map')"
-                  >
-                    <ContestProjectorAttackMap
-                      :rows="serviceMatrixRows"
-                      :edges="attackEdges"
-                    />
-                  </div>
-
                   <div
                     class="projector-focusable-panel"
                     role="button"
@@ -291,6 +276,22 @@ onUnmounted(() => {
                     :latest-attack-events="latestAttackEvents"
                   />
                 </div>
+
+                <div
+                  class="projector-focusable-panel"
+                  role="button"
+                  tabindex="0"
+                  aria-label="聚焦查看实时排名"
+                  @click="focusPanel('leaderboard')"
+                  @keydown.enter.prevent="focusPanel('leaderboard')"
+                  @keydown.space.prevent="focusPanel('leaderboard')"
+                >
+                  <ContestProjectorLeaderboard
+                    :top-three-rows="topThreeRows"
+                    :leaderboard-rows="leaderboardRows"
+                    :scoreboard-rows-length="scoreboardRows.length"
+                  />
+                </div>
               </div>
 
               <div class="projector-footer">
@@ -323,6 +324,7 @@ onUnmounted(() => {
                 v-else-if="focusedPanel === 'attack-map'"
                 :rows="serviceMatrixRows"
                 :edges="attackEdges"
+                :scoreboard-rows="scoreboardRows"
               />
 
               <ContestProjectorTraffic
@@ -426,6 +428,10 @@ onUnmounted(() => {
   grid-template-columns: minmax(18rem, 1.05fr) minmax(26rem, 1.65fr) minmax(18rem, 1fr);
   gap: var(--space-4);
   align-items: stretch;
+}
+
+.projector-focusable-panel--attack-map {
+  grid-column: 1 / -1;
 }
 
 .projector-footer {
