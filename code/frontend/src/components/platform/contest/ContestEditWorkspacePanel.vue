@@ -188,14 +188,6 @@ const emit = defineEmits<{
           v-if="contest.mode === 'awd' && activeStage === 'instances'"
           class="studio-pane studio-pane--operations fade-in"
         >
-          <div
-            class="stage-pane-divider"
-            aria-label="实例编排"
-          >
-            <span class="stage-pane-divider__label">
-              实例编排
-            </span>
-          </div>
           <AWDOperationsPanel
             :contests="[contest]"
             :selected-contest-id="contest.id"

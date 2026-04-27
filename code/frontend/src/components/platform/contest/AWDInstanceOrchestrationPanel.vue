@@ -83,14 +83,6 @@ function getStatusLabel(status?: string) {
 <template>
   <section class="awd-instance-orchestration workspace-directory-section">
     <header class="orchestration-header">
-      <div class="orchestration-heading">
-        <div class="orchestration-overline">
-          Runtime / Team Instances
-        </div>
-        <h3 class="orchestration-title">
-          队伍实例编排
-        </h3>
-      </div>
       <div class="orchestration-actions">
         <div class="orchestration-summary">
           <ShieldCheck class="summary-icon" />
@@ -233,24 +225,8 @@ function getStatusLabel(status?: string) {
 .orchestration-header {
   display: flex;
   align-items: flex-end;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: var(--space-4);
-}
-
-.orchestration-overline {
-  margin-bottom: var(--space-1);
-  color: var(--color-text-muted);
-  font-size: var(--font-size-10);
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.orchestration-title {
-  margin: 0;
-  color: var(--color-text-primary);
-  font-size: var(--font-size-1-125);
-  font-weight: 900;
 }
 
 .orchestration-actions {
