@@ -280,7 +280,9 @@ describe('admin management surface alignment', () => {
     expect(contestEditCombinedSource).toContain('background: var(--color-bg-surface);')
     expect(contestEditCombinedSource).toContain('background: var(--color-bg-base);')
     expect(contestEditCombinedSource).toContain('border-top: 0;')
-    expect(contestEditCombinedSource).toContain('class="workspace-directory-section contest-edit-section"')
+    expect(contestEditCombinedSource).toMatch(
+      /class="[^"]*\bworkspace-directory-section\b[^"]*\bcontest-edit-section\b[^"]*"/
+    )
   })
 
   it('awd round inspector traffic filters should stay flattened into the table section instead of using a split intro bar', () => {

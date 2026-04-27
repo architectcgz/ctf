@@ -21,7 +21,7 @@ describe('AppLayout workspace shell', () => {
   })
 
   it('owns full-bleed page spacing and drives it from route meta', () => {
-    expect(appLayoutSource).toContain('<RouterView v-slot="{ Component }">')
+    expect(appLayoutSource).toContain('<RouterView v-slot="{ Component, route: resolvedRoute }">')
     expect(appLayoutSource).toContain('workspace-page')
     expect(appLayoutSource).toContain('workspace-page--bleed')
     expect(appLayoutSource).toContain('pageShellClass')
@@ -29,6 +29,13 @@ describe('AppLayout workspace shell', () => {
     expect(appLayoutSource).toContain('workspace-route-root--bleed')
     expect(routeSources).toContain("contentLayout: 'bleed'")
     expect((routeSources.match(/contentLayout: 'bleed'/g) ?? []).length).toBeGreaterThanOrEqual(30)
+  })
+
+  it('wraps workspace routes in the shared page transition without animating query-only changes', () => {
+    expect(appLayoutSource).toContain('<Transition')
+    expect(appLayoutSource).toContain('name="workspace-route"')
+    expect(appLayoutSource).toContain('mode="out-in"')
+    expect(appLayoutSource).toContain(':key="resolvedRoute.path"')
   })
 
   it('stretches full-bleed route roots so wide screens do not expose main shell gaps', () => {
