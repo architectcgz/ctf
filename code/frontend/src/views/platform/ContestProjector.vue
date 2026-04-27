@@ -3,6 +3,7 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
+import ContestProjectorAttackMap from '@/components/platform/contest/projector/ContestProjectorAttackMap.vue'
 import ContestProjectorEvents from '@/components/platform/contest/projector/ContestProjectorEvents.vue'
 import ContestProjectorFocusOverlay from '@/components/platform/contest/projector/ContestProjectorFocusOverlay.vue'
 import ContestProjectorHero from '@/components/platform/contest/projector/ContestProjectorHero.vue'
@@ -60,6 +61,7 @@ const {
   serviceHealthRate,
   serviceMatrixRows,
   attackLeaders,
+  attackEdges,
   trafficTrendBars,
   hotVictims,
 } = useContestProjectorDerived({
@@ -229,6 +231,18 @@ onUnmounted(() => {
                     class="projector-focusable-panel"
                     role="button"
                     tabindex="0"
+                    aria-label="聚焦查看队伍攻击关系"
+                    @click="focusPanel('attack-map')"
+                    @keydown.enter.prevent="focusPanel('attack-map')"
+                    @keydown.space.prevent="focusPanel('attack-map')"
+                  >
+                    <ContestProjectorAttackMap :edges="attackEdges" />
+                  </div>
+
+                  <div
+                    class="projector-focusable-panel"
+                    role="button"
+                    tabindex="0"
                     aria-label="聚焦查看队伍服务状态"
                     @click="focusPanel('services')"
                     @keydown.enter.prevent="focusPanel('services')"
@@ -300,6 +314,11 @@ onUnmounted(() => {
                 :up-count="serviceStatusCounts.up"
                 :down-count="serviceStatusCounts.down"
                 :compromised-count="serviceStatusCounts.compromised"
+              />
+
+              <ContestProjectorAttackMap
+                v-else-if="focusedPanel === 'attack-map'"
+                :edges="attackEdges"
               />
 
               <ContestProjectorTraffic

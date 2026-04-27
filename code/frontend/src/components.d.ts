@@ -107,6 +107,7 @@ declare module 'vue' {
     ContestOperationsTopbarPanel: typeof import('./components/platform/contest/ContestOperationsTopbarPanel.vue')['default']
     ContestOrchestrationPage: typeof import('./components/platform/contest/ContestOrchestrationPage.vue')['default']
     ContestOverviewPanel: typeof import('./components/contests/ContestOverviewPanel.vue')['default']
+    ContestProjectorAttackMap: typeof import('./components/platform/contest/projector/ContestProjectorAttackMap.vue')['default']
     ContestProjectorEvents: typeof import('./components/platform/contest/projector/ContestProjectorEvents.vue')['default']
     ContestProjectorFocusOverlay: typeof import('./components/platform/contest/projector/ContestProjectorFocusOverlay.vue')['default']
     ContestProjectorHero: typeof import('./components/platform/contest/projector/ContestProjectorHero.vue')['default']
