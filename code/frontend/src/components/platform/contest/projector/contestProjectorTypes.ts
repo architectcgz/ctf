@@ -21,6 +21,9 @@ export interface ContestProjectorAttackEdge {
   attacker_team: string
   victim_team_id: string
   victim_team: string
+  latest_service_id?: string
+  latest_challenge_id: string
+  latest_target_key: string
   success: number
   failed: number
   total: number

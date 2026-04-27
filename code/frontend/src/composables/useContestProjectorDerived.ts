@@ -113,6 +113,11 @@ export function useContestProjectorDerived({
         attacker_team: attack.attacker_team,
         victim_team_id: attack.victim_team_id,
         victim_team: attack.victim_team,
+        latest_service_id: attack.service_id,
+        latest_challenge_id: attack.challenge_id,
+        latest_target_key: attack.service_id
+          ? `${attack.victim_team_id}:service:${attack.service_id}`
+          : `${attack.victim_team_id}:challenge:${attack.challenge_id}`,
         success: 0,
         failed: 0,
         total: 0,
@@ -132,6 +137,11 @@ export function useContestProjectorDerived({
       if (attackTime >= currentTime) {
         next.latest_at = attack.created_at
         next.latest_service_label = latestServiceLabel
+        next.latest_service_id = attack.service_id
+        next.latest_challenge_id = attack.challenge_id
+        next.latest_target_key = attack.service_id
+          ? `${attack.victim_team_id}:service:${attack.service_id}`
+          : `${attack.victim_team_id}:challenge:${attack.challenge_id}`
       }
       next.successRate = Math.round((next.success / Math.max(next.total, 1)) * 100)
       edgeMap.set(edgeId, next)
