@@ -990,7 +990,7 @@ describe('ContestEdit', () => {
     expect(wrapper.text()).toContain('Web 入门')
   })
 
-  it('应该支持从轮次运行跳转到 AWD 配置并保留当前题高亮', async () => {
+  it('轮次运行阶段不应混入就绪审计的配置修正入口', async () => {
     awdMockModule.state.readiness.value = {
       contest_id: 'contest-1',
       ready: false,
@@ -1029,11 +1029,10 @@ describe('ContestEdit', () => {
     await flushPromises()
     await wrapper.get('#contest-workbench-stage-tab-operations').trigger('click')
     await flushPromises()
-    await wrapper.get('#awd-readiness-edit-101').trigger('click')
-    await flushPromises()
 
-    expect(wrapper.text()).toContain('正在编辑')
-    expect(wrapper.text()).toContain('Web 入门')
+    expect(wrapper.find('#awd-readiness-edit-101').exists()).toBe(false)
+    expect(wrapper.find('.runtime-readiness-strip').exists()).toBe(false)
+    expect(wrapper.find('#awd-ops-panel-inspector').exists()).toBe(true)
   })
 
   it('应该在 AWD 赛事已开赛时默认聚焦轮次运行阶段', async () => {
