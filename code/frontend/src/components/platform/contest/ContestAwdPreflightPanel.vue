@@ -84,8 +84,8 @@ function handleNavigateChallenge(challengeId: string) {
 .studio-preflight {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
-  padding: 1.5rem 2rem;
+  gap: var(--space-5);
+  padding: var(--space-6) var(--space-8);
   background: var(--color-bg-base);
 }
 
@@ -94,33 +94,33 @@ function handleNavigateChallenge(challengeId: string) {
   justify-content: space-between;
   align-items: flex-end;
   border-bottom: 1px solid var(--color-border-subtle);
-  padding-bottom: 1.5rem;
+  padding-bottom: var(--space-5);
 }
 
 .pane-title {
-  font-size: 1.5rem;
+  font-size: var(--font-size-1-5);
   font-weight: 900;
   color: var(--color-text-primary);
-  margin: 0.25rem 0 0;
+  margin: var(--space-1) 0 0;
 }
 
 .pane-description {
-  font-size: 14px;
+  font-size: var(--font-size-14);
   color: var(--color-text-secondary);
-  margin: 0.5rem 0 0;
-  max-width: 32rem;
+  margin: var(--space-2) 0 0;
+  max-width: var(--ui-selector-width-lg);
   line-height: 1.6;
 }
 
 .header-side {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
 .preflight-override-entry {
   display: grid;
-  gap: 0.4rem;
+  gap: var(--space-1-5);
   justify-items: end;
 }
 
@@ -158,7 +158,15 @@ function handleNavigateChallenge(challengeId: string) {
 }
 
 @media (max-width: 1280px) {
-  .studio-pane-header { flex-direction: column; align-items: flex-start; gap: 1.5rem; }
-  .header-side { width: 100%; justify-content: space-between; }
+  .studio-pane-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-5);
+  }
+
+  .header-side {
+    width: 100%;
+    justify-content: space-between;
+  }
 }
 </style>
