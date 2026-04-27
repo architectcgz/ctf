@@ -184,10 +184,11 @@ function isActiveChallenge(item: AdminContestChallengeViewData): boolean {
 
 <template>
   <div class="studio-awd-config">
-    <!-- 1. Header with Global Metrics -->
     <header class="studio-pane-header">
       <div class="header-main">
-        <div class="workspace-overline">AWD Service Config</div>
+        <div class="workspace-overline">
+          AWD Service Config
+        </div>
         <h1 class="pane-title">
           AWD 服务配置
         </h1>
@@ -202,19 +203,28 @@ function isActiveChallenge(item: AdminContestChallengeViewData): boolean {
           :key="item.key"
           class="journal-note progress-card metric-panel-card"
         >
-          <div class="journal-note-label progress-card-label metric-panel-label">{{ item.label }}</div>
-          <div class="journal-note-value progress-card-value metric-panel-value">{{ item.value }}</div>
-          <div class="journal-note-helper progress-card-hint metric-panel-helper">{{ item.hint }}</div>
+          <div class="journal-note-label progress-card-label metric-panel-label">
+            {{ item.label }}
+          </div>
+          <div class="journal-note-value progress-card-value metric-panel-value">
+            {{ item.value }}
+          </div>
+          <div class="journal-note-helper progress-card-hint metric-panel-helper">
+            {{ item.hint }}
+          </div>
         </article>
       </div>
     </header>
 
-    <!-- 3. Challenge Asset Directory -->
-    <section class="workspace-directory-section">
+    <section class="workspace-directory-section awd-config-directory">
       <header class="list-heading">
         <div>
-          <div class="journal-note-label">Challenge Directory</div>
-          <h3 class="list-heading__title">题目目录</h3>
+          <div class="journal-note-label">
+            Challenge Directory
+          </div>
+          <h3 class="list-heading__title">
+            题目目录
+          </h3>
         </div>
         <button
           id="awd-challenge-config-create"
@@ -231,13 +241,37 @@ function isActiveChallenge(item: AdminContestChallengeViewData): boolean {
       >
         <header class="list-heading config-focus-card__head">
           <div>
-            <div class="journal-note-label">Current Focus</div>
-            <h3 class="list-heading__title">当前焦点题目</h3>
+            <div class="journal-note-label">
+              Current Focus
+            </div>
+            <h3 class="list-heading__title">
+              当前焦点题目
+            </h3>
           </div>
           <div class="ui-row-actions config-row__actions">
-            <button type="button" class="ui-btn ui-btn--secondary" :disabled="!canNavigatePrevious" @click="emit('previous')">上一题</button>
-            <button type="button" class="ui-btn ui-btn--secondary" :disabled="!canNavigateNext" @click="emit('next')">下一题</button>
-            <button type="button" class="ui-btn ui-btn--primary" @click="emit('edit', activeChallenge)">编辑配置</button>
+            <button
+              type="button"
+              class="ui-btn ui-btn--secondary"
+              :disabled="!canNavigatePrevious"
+              @click="emit('previous')"
+            >
+              上一题
+            </button>
+            <button
+              type="button"
+              class="ui-btn ui-btn--secondary"
+              :disabled="!canNavigateNext"
+              @click="emit('next')"
+            >
+              下一题
+            </button>
+            <button
+              type="button"
+              class="ui-btn ui-btn--primary"
+              @click="emit('edit', activeChallenge)"
+            >
+              编辑配置
+            </button>
           </div>
         </header>
         <div class="config-focus-card__body">
@@ -347,101 +381,255 @@ function isActiveChallenge(item: AdminContestChallengeViewData): boolean {
 </template>
 
 <style scoped>
-.studio-awd-config { display: flex; flex-direction: column; gap: 2rem; padding: 1.5rem 2rem; background: var(--color-bg-base); }
-.studio-pane-header { display: flex; justify-content: space-between; align-items: flex-end; }
-.pane-title { font-size: 1.25rem; font-weight: 900; color: var(--color-text-primary); margin: 0; }
-.pane-description { font-size: var(--font-size-14); color: var(--color-text-secondary); margin: 0.5rem 0 0; }
-
-/* Metric Band - Flattened and Scaled Up */
-.studio-metric-band {
-  display: flex;
-  gap: var(--space-4);
-  background: transparent;
-  padding: 0;
-  border: none;
-  border-radius: 0;
-}
-.metric-pill {
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border-default);
-  padding: var(--space-4) var(--space-6);
-  border-radius: 1rem;
+.studio-awd-config {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
-  min-width: 9rem;
-  box-shadow: var(--color-shadow-soft);
+  gap: var(--space-section-gap);
+  background: var(--color-bg-base);
+  padding: var(--space-6) var(--space-8);
 }
-.metric-pill__label {
-  font-size: var(--font-size-11);
-  font-weight: 800;
-  text-transform: uppercase;
-  color: var(--color-text-muted);
-  letter-spacing: 0.1em;
+
+.studio-pane-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-section-gap-compact);
 }
-.metric-pill__value {
+
+.header-main {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  max-width: var(--ui-selector-width-lg);
+}
+
+.studio-pane-header > .progress-strip {
+  --metric-panel-columns: repeat(
+    auto-fit,
+    minmax(min(100%, var(--ui-selector-control-min-width)), 1fr)
+  );
+}
+
+.pane-title {
+  margin: 0;
   font-size: var(--font-size-20);
   font-weight: 900;
-  color: var(--color-primary);
-  font-family: var(--font-family-mono);
-  line-height: 1.1;
+  color: var(--color-text-primary);
 }
 
-/* Directory Header */
-.directory-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-5); }
-.directory-title { font-size: var(--font-size-16); font-weight: 900; color: var(--color-text-primary); text-transform: uppercase; letter-spacing: 0.1em; }
+.pane-description {
+  margin: var(--space-2) 0 0;
+  font-size: var(--font-size-14);
+  color: var(--color-text-secondary);
+}
 
-.active-edit-banner {
-  display: inline-flex;
-  align-items: center;
+.awd-config-directory {
+  --workspace-directory-section-gap: var(--space-section-gap-compact);
+  --workspace-directory-heading-gap: var(--space-4);
+  --workspace-directory-title-margin-top: var(--space-1-5);
+}
+
+.config-focus-card {
+  display: flex;
+  flex-direction: column;
   gap: var(--space-3);
-  width: fit-content;
-  margin-bottom: var(--space-4);
-  padding: var(--space-2) var(--space-3);
-  border-radius: 999px;
   border: 1px solid var(--color-border-default);
-  background: color-mix(in srgb, var(--color-primary-soft) 72%, var(--color-bg-surface));
+  border-radius: var(--ui-control-radius-lg);
+  background: color-mix(in srgb, var(--color-bg-surface) 94%, var(--color-primary-soft));
+  padding: var(--space-4);
+}
+
+.config-focus-card__head {
+  align-items: center;
+}
+
+.config-row__actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.config-focus-card__body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  min-width: 0;
 }
 
 .active-edit-banner__label {
   font-size: var(--font-size-11);
   font-weight: 800;
-  letter-spacing: 0.08em;
+  letter-spacing: var(--ui-badge-spacing);
   text-transform: uppercase;
   color: var(--color-primary);
 }
 
-/* Table Styles */
-.studio-table-wrap { border: 1px solid var(--color-border-default); border-radius: 1rem; background: var(--color-bg-surface); overflow: hidden; }
-.studio-table { width: 100%; border-collapse: collapse; }
-.studio-table th { background: var(--color-bg-elevated); padding: var(--space-4); text-align: left; font-size: var(--font-size-11); font-weight: 800; text-transform: uppercase; color: var(--color-text-muted); border-bottom: 1px solid var(--color-border-default); }
-.studio-table td { padding: var(--space-5) var(--space-4); border-bottom: 1px solid var(--color-border-subtle); }
+.config-focus-card__body strong {
+  min-width: 0;
+  color: var(--color-text-primary);
+}
 
-.studio-row.is-active { background: var(--color-primary-soft); }
-.studio-row.is-active .challenge-title { color: var(--color-primary); }
+.config-focus-card__hint {
+  flex: 1 1 var(--ui-selector-control-min-width);
+  min-width: 0;
+  font-size: var(--font-size-13);
+  color: var(--color-text-secondary);
+}
 
-.challenge-title { font-size: var(--font-size-16); font-weight: 800; color: var(--color-text-primary); }
-.challenge-subtitle { font-size: var(--font-size-13); color: var(--color-text-muted); margin-top: var(--space-1); }
+.studio-table-wrap {
+  overflow: hidden;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--ui-control-radius-lg);
+  background: var(--color-bg-surface);
+}
 
-.engine-tag { font-size: var(--font-size-13); font-weight: 700; color: var(--color-text-secondary); }
+.studio-table {
+  width: 100%;
+  border-collapse: collapse;
+}
 
-.score-stack { display: flex; flex-direction: column; }
-.score-main { font-size: var(--font-size-15); font-weight: 900; color: var(--color-text-primary); }
-.score-sub { font-size: var(--font-size-12); font-weight: 600; color: var(--color-text-muted); }
+.studio-table th {
+  border-bottom: 1px solid var(--color-border-default);
+  background: var(--color-bg-elevated);
+  padding: var(--space-4);
+  text-align: left;
+  font-size: var(--font-size-11);
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
 
-.rules-summary { font-size: var(--font-size-13); color: var(--color-text-secondary); max-width: 14rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.studio-table td {
+  border-bottom: 1px solid var(--color-border-subtle);
+  padding: var(--space-5) var(--space-4);
+}
 
-.validation-block { display: flex; flex-direction: column; gap: var(--space-1-5); }
-.validation-pill { font-size: var(--font-size-11); font-weight: 800; padding: 0.2rem var(--space-2-5); border-radius: 99px; width: fit-content; }
-.validation-pill.passed { background: var(--color-success); color: var(--color-bg-base); }
-.validation-pill.failed { background: var(--color-danger); color: var(--color-bg-base); }
-.validation-pill.pending, .validation-pill.stale { background: var(--color-warning); color: var(--color-bg-base); }
-.validation-time { font-size: var(--font-size-12); color: var(--color-text-muted); }
+.studio-table tbody tr:last-child td {
+  border-bottom: 0;
+}
 
-.action-btn { width: var(--ui-control-height-sm); height: var(--ui-control-height-sm); border-radius: 0.75rem; border: 1px solid var(--color-border-default); display: flex; align-items: center; justify-content: center; color: var(--color-text-secondary); cursor: pointer; transition: all 0.2s ease; background: var(--color-bg-surface); }
-.action-btn:hover { background: var(--color-bg-elevated); color: var(--color-primary); border-color: var(--color-primary); }
+.studio-row {
+  transition: background var(--ui-motion-fast);
+}
 
-.ops-btn { display: inline-flex; align-items: center; gap: var(--space-2); height: var(--ui-control-height-md); padding: 0 var(--space-6); border-radius: 0.85rem; font-size: var(--font-size-14); font-weight: 700; cursor: pointer; transition: all 0.2s ease; }
-.ops-btn--neutral { background: var(--color-bg-surface); border: 1px solid var(--color-border-default); color: var(--color-text-secondary); }
-.ops-btn--primary { background: var(--color-primary); color: var(--color-bg-base); border: none; }
+.studio-row.is-active {
+  background: var(--color-primary-soft);
+}
+
+.studio-row.is-active .challenge-title {
+  color: var(--color-primary);
+}
+
+.challenge-title {
+  font-size: var(--font-size-16);
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+
+.challenge-subtitle {
+  margin-top: var(--space-1);
+  font-size: var(--font-size-13);
+  color: var(--color-text-muted);
+}
+
+.engine-tag {
+  font-size: var(--font-size-13);
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}
+
+.score-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.score-main {
+  font-size: var(--font-size-15);
+  font-weight: 900;
+  color: var(--color-text-primary);
+}
+
+.score-sub {
+  font-size: var(--font-size-12);
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.rules-summary {
+  overflow: hidden;
+  max-width: var(--ui-selector-control-min-width);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--font-size-13);
+  color: var(--color-text-secondary);
+}
+
+.validation-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1-5);
+}
+
+.validation-pill {
+  width: fit-content;
+  border-radius: var(--ui-badge-radius-pill);
+  padding: var(--space-1) var(--space-2-5);
+  font-size: var(--font-size-11);
+  font-weight: 800;
+}
+
+.validation-pill.passed {
+  background: var(--color-success);
+  color: var(--color-bg-base);
+}
+
+.validation-pill.failed {
+  background: var(--color-danger);
+  color: var(--color-bg-base);
+}
+
+.validation-pill.pending,
+.validation-pill.stale {
+  background: var(--color-warning);
+  color: var(--color-bg-base);
+}
+
+.validation-time {
+  font-size: var(--font-size-12);
+  color: var(--color-text-muted);
+}
+
+.col-actions {
+  text-align: right;
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--ui-control-height-sm);
+  height: var(--ui-control-height-sm);
+  margin-left: auto;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--ui-control-radius-md);
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition:
+    background var(--ui-motion-fast),
+    border-color var(--ui-motion-fast),
+    color var(--ui-motion-fast);
+}
+
+.action-btn:hover {
+  border-color: var(--color-primary);
+  background: var(--color-bg-elevated);
+  color: var(--color-primary);
+}
+
+.action-btn:focus-visible {
+  outline: var(--ui-focus-ring-width) solid
+    color-mix(in srgb, var(--color-primary) 72%, transparent);
+  outline-offset: var(--space-0-5);
+}
 </style>

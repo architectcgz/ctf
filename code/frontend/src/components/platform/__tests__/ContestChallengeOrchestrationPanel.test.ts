@@ -229,6 +229,8 @@ describe('ContestChallengeOrchestrationPanel', () => {
     expect(wrapper.text()).toContain('HTTP 标准 Checker')
     expect(wrapper.text()).toContain('SLA 18 / 防守 28')
     expect(wrapper.text()).toContain('待重新验证')
+    expect(wrapper.find('.contest-challenge-panel__summary').exists()).toBe(false)
+    expect(wrapper.find('.contest-challenge-filters').exists()).toBe(true)
   })
 
   it('应该支持按未配置 AWD 和预检失败筛选', async () => {
