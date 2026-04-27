@@ -1403,11 +1403,12 @@ func TestStartContestAWDServiceDoesNotRequireContestChallengeLookup(t *testing.T
 	}
 }
 
-func TestStartContestAWDServiceDoesNotReserveHostPort(t *testing.T) {
+func TestStartContestAWDServiceReservesHostPort(t *testing.T) {
 	t.Parallel()
 
 	teamID := int64(4105)
 	var createdInstance *model.Instance
+	reservedPort := 31005
 	repo := &stubPracticeRepository{
 		findContestByIDFn: func(ctx context.Context, contestID int64) (*model.Contest, error) {
 			return &model.Contest{
@@ -1434,11 +1435,12 @@ func TestStartContestAWDServiceDoesNotReserveHostPort(t *testing.T) {
 			}, nil
 		},
 		reserveAvailablePortFn: func(ctx context.Context, start, end int) (int, error) {
-			t.Fatal("AWD service instances must not reserve host ports")
-			return 0, nil
+			return reservedPort, nil
 		},
 		bindReservedPortFn: func(ctx context.Context, port int, instanceID int64) error {
-			t.Fatalf("AWD service instances must not bind host ports, got port=%d instance_id=%d", port, instanceID)
+			if port != reservedPort || instanceID != 9105 {
+				t.Fatalf("unexpected reserved port binding: port=%d instance_id=%d", port, instanceID)
+			}
 			return nil
 		},
 		createInstanceFn: func(ctx context.Context, instance *model.Instance) error {
@@ -1490,8 +1492,8 @@ func TestStartContestAWDServiceDoesNotReserveHostPort(t *testing.T) {
 	if createdInstance == nil {
 		t.Fatal("expected instance to be created")
 	}
-	if createdInstance.HostPort != 0 {
-		t.Fatalf("expected no host port for awd service instance, got %d", createdInstance.HostPort)
+	if createdInstance.HostPort != reservedPort {
+		t.Fatalf("expected reserved host port %d, got %d", reservedPort, createdInstance.HostPort)
 	}
 }
 

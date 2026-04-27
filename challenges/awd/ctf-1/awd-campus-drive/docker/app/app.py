@@ -85,6 +85,9 @@ def health():
 
 @APP.route("/api/flag", methods=["GET", "PUT"])
 def checker_flag():
+    expected_token = os.environ.get("CHECKER_TOKEN", "demo-checker-token")
+    if request.headers.get("X-AWD-Checker-Token") != expected_token:
+        return {"error": "not found"}, 404
     if request.method == "PUT":
         candidate = request.get_data(as_text=True).strip()
         if not candidate:

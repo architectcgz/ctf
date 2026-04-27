@@ -328,7 +328,7 @@ func (s *Service) startChallengeWithScope(ctx context.Context, userID, challenge
 }
 
 func requiresPublishedHostPort(scope practiceports.InstanceScope) bool {
-	return scope.ContestMode != model.ContestModeAWD
+	return true
 }
 
 func instanceRespForScope(instance *model.Instance, scope practiceports.InstanceScope) *dto.InstanceResp {
@@ -1589,7 +1589,7 @@ func (s *Service) createSingleContainer(ctx context.Context, instance *model.Ins
 	if isAWDInstance(instance) {
 		result, err := s.runtimeService.CreateTopology(ctx, &practiceports.TopologyCreateRequest{
 			ReservedHostPort:           instance.HostPort,
-			DisableEntryPortPublishing: true,
+			DisableEntryPortPublishing: false,
 			Networks: []practiceports.TopologyCreateNetwork{
 				{Key: model.TopologyDefaultNetworkKey},
 			},

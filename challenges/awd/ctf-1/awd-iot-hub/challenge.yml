@@ -33,7 +33,31 @@ runtime:
   image:
     ref: ctf/awd-iot-hub:latest
 
+topology:
+  entry_node_key: api
+  networks:
+    - key: public
+      name: Public attack surface
+    - key: device
+      name: Device telemetry plane
+      internal: true
+  nodes:
+    - key: api
+      name: IoT Hub API
+      service_port: 8080
+      inject_flag: true
+      network_keys: [public, device]
+  policies:
+    - source_node_key: api
+      target_node_key: api
+      action: allow
+      protocol: tcp
+      ports: [8080]
+
 extensions:
+  topology:
+    enabled: true
+    source: challenge.yml
   awd:
     service_type: web_http
     deployment_mode: single_container
@@ -44,11 +68,15 @@ extensions:
         put_flag:
           method: PUT
           path: /api/flag
+          headers:
+            X-AWD-Checker-Token: demo-checker-token
           expected_status: 200
           body_template: "{{FLAG}}"
         get_flag:
           method: GET
           path: /api/flag
+          headers:
+            X-AWD-Checker-Token: demo-checker-token
           expected_status: 200
           expected_substring: "{{FLAG}}"
         havoc:
@@ -71,3 +99,4 @@ extensions:
     runtime_config:
       instance_sharing: per_team
       service_port: 8080
+      checker_token_env: CHECKER_TOKEN
