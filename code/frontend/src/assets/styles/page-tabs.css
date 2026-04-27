@@ -7,7 +7,7 @@
     --journal-topbar-gap,
     var(--space-workspace-topbar-gap-y) var(--space-workspace-topbar-gap-x)
   );
-  padding-bottom: var(--journal-topbar-padding-bottom, 0);
+  padding-bottom: var(--journal-topbar-padding-bottom, var(--workspace-topbar-tabs-gap, 0));
 }
 
 .journal-shell .topbar-leading {

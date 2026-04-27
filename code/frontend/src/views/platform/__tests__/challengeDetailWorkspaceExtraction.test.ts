@@ -12,5 +12,10 @@ describe('Admin ChallengeDetail workspace extraction', () => {
     expect(adminChallengeWorkspaceTabsSource).toContain('aria-label="题目管理视图切换"')
     expect(adminChallengeWorkspaceTabsSource).toContain('admin-challenge-panel-writeup')
     expect(adminChallengeWorkspaceTabsSource).toContain('ChallengeWriteupManagePanel')
+    expect(adminChallengeWorkspaceTabsSource).toMatch(
+      /\.content-pane\s*\{[\s\S]*padding-top:\s*var\(--workspace-tabs-panel-gap\);/s
+    )
+    expect(adminChallengeWorkspaceTabsSource).toMatch(/\.challenge-panel\s*\{[\s\S]*padding-top:\s*0;/s)
+    expect(adminChallengeWorkspaceTabsSource).not.toContain('padding-top: var(--space-6);')
   })
 })

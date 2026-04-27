@@ -133,6 +133,7 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;
+  padding-top: var(--workspace-tabs-panel-gap);
 }
 
 .tab-panel {
@@ -141,6 +142,6 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
 }
 
 .challenge-panel {
-  padding-top: var(--space-6);
+  padding-top: 0;
 }
 </style>

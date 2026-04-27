@@ -435,12 +435,13 @@ const {
 
 .overview-hero-actions {
   display: grid;
+  align-self: start;
   justify-content: flex-end;
-  align-content: end;
-  gap: var(--space-4);
-  width: min(22rem, 100%);
-  min-width: 18rem;
-  padding: var(--space-4);
+  align-content: start;
+  gap: var(--space-2-5);
+  width: min(19rem, 100%);
+  min-width: 16rem;
+  padding: var(--space-3);
   border: 1px solid var(--workspace-line-soft);
   border-radius: var(--workspace-radius-lg);
   background:
@@ -455,8 +456,8 @@ const {
 
 .hero-meta-badge {
   display: grid;
-  gap: var(--space-1-5);
-  padding-bottom: var(--space-3-5);
+  gap: var(--space-1);
+  padding-bottom: var(--space-2);
   border-bottom: 1px solid var(--workspace-line-soft);
 }
 
@@ -469,33 +470,33 @@ const {
 }
 
 .hero-meta-badge__value {
-  font: 700 var(--font-size-30, 1.875rem) / 1 var(--workspace-font-mono);
+  font: 700 var(--font-size-24, 1.5rem) / 1 var(--workspace-font-mono);
   color: var(--journal-ink);
 }
 
 .hero-meta-badge__value small {
   margin-left: var(--space-1);
-  font-size: var(--font-size-14);
+  font-size: var(--font-size-12);
   color: var(--workspace-faint);
 }
 
 .hero-meta-badge__hint {
-  font-size: var(--font-size-13);
-  line-height: 1.7;
+  font-size: var(--font-size-12);
+  line-height: 1.45;
   color: var(--journal-muted);
 }
 
 .overview-action-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-2-5);
+  gap: var(--space-2);
 }
 
 .overview-hero-actions > .ui-btn,
 .overview-action-grid > .ui-btn,
 .workspace-alert-actions > .ui-btn {
-  --ui-btn-height: 2.75rem;
-  --ui-btn-padding: var(--space-2-5) var(--space-3);
+  --ui-btn-height: 2.5rem;
+  --ui-btn-padding: var(--space-2) var(--space-3);
   --ui-btn-radius: 0.75rem;
   --ui-btn-font-size: var(--font-size-0-875);
   --ui-btn-font-weight: 600;

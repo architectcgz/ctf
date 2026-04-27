@@ -5,7 +5,7 @@ import adminDashboardSource from '@/components/platform/dashboard/PlatformOvervi
 describe('admin dashboard surface alignment', () => {
   it('softens the hero primary action border and focus ring to match the dark surface system', () => {
     expect(adminDashboardSource).toMatch(
-      /\.overview-action-grid\s*>\s*\.ui-btn,\s*\.workspace-alert-actions\s*>\s*\.ui-btn\s*\{[\s\S]*--ui-btn-height:\s*2\.75rem;[\s\S]*--ui-btn-focus-ring:\s*color-mix\(in srgb,\s*var\(--journal-accent\) 16%, transparent\);/s
+      /\.overview-action-grid\s*>\s*\.ui-btn,\s*\.workspace-alert-actions\s*>\s*\.ui-btn\s*\{[\s\S]*--ui-btn-height:\s*2\.5rem;[\s\S]*--ui-btn-focus-ring:\s*color-mix\(in srgb,\s*var\(--journal-accent\) 16%, transparent\);/s
     )
     expect(adminDashboardSource).toMatch(
       /\.overview-action-grid\s*>\s*\.ui-btn\.ui-btn--primary\s*\{[\s\S]*--ui-btn-primary-hover-shadow:\s*0 12px 24px color-mix\(in srgb,\s*var\(--journal-accent\) 24%, transparent\);/s
@@ -25,7 +25,10 @@ describe('admin dashboard surface alignment', () => {
       /\.overview-hero-actions\s*\{[\s\S]*border:\s*1px solid var\(--workspace-line-soft\);[\s\S]*border-radius:\s*var\(--workspace-radius-lg\);[\s\S]*background:/s
     )
     expect(adminDashboardSource).toMatch(
-      /\.hero-meta-badge\s*\{[\s\S]*border-bottom:\s*1px solid var\(--workspace-line-soft\);/s
+      /\.overview-hero-actions\s*\{[\s\S]*align-self:\s*start;[\s\S]*width:\s*min\(19rem,\s*100%\);[\s\S]*padding:\s*var\(--space-3\);/s
+    )
+    expect(adminDashboardSource).toMatch(
+      /\.hero-meta-badge\s*\{[\s\S]*padding-bottom:\s*var\(--space-2\);[\s\S]*border-bottom:\s*1px solid var\(--workspace-line-soft\);/s
     )
     expect(adminDashboardSource).toMatch(
       /\.overview-action-grid\s*\{[\s\S]*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\);/s
