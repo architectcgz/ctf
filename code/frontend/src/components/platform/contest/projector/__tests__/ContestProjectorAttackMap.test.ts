@@ -2,7 +2,7 @@ import { mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import ContestProjectorAttackMap from '@/components/platform/contest/projector/ContestProjectorAttackMap.vue'
-import type { AWDTeamServiceData } from '@/api/contracts'
+import type { AWDTeamServiceData, ScoreboardRow } from '@/api/contracts'
 import type {
   ContestProjectorAttackEdge,
   ContestProjectorServiceMatrixRow,
@@ -80,6 +80,27 @@ function buildRows(): ContestProjectorServiceMatrixRow[] {
   ]
 }
 
+function buildScoreboardRows(): ScoreboardRow[] {
+  return [
+    {
+      rank: 1,
+      team_id: 'blue',
+      team_name: 'Blue Team',
+      score: 3520,
+      solved_count: 2,
+      last_submission_at: '2026-04-27T15:49:02.000Z',
+    },
+    {
+      rank: 2,
+      team_id: 'red',
+      team_name: 'Red Team',
+      score: 2980,
+      solved_count: 1,
+      last_submission_at: '2026-04-27T15:48:02.000Z',
+    },
+  ]
+}
+
 describe('ContestProjectorAttackMap', () => {
   beforeEach(() => {
     vi.stubGlobal('ResizeObserver', ResizeObserverStub)
@@ -90,13 +111,18 @@ describe('ContestProjectorAttackMap', () => {
       props: {
         rows: buildRows(),
         edges: [buildEdge()],
+        scoreboardRows: buildScoreboardRows(),
       },
     })
 
     expect(wrapper.text()).toContain('Blue Team')
     expect(wrapper.text()).toContain('Red Team')
-    expect(wrapper.text()).toContain('1 HIT')
-    expect(wrapper.text()).toContain('1 MISS')
+    expect(wrapper.text()).toContain('图例说明')
+    expect(wrapper.text()).toContain('实时攻击地图')
+    expect(wrapper.text()).toContain('比赛状态')
+    expect(wrapper.text()).toContain('团队排名')
+    expect(wrapper.text()).toContain('成功 1')
+    expect(wrapper.text()).toContain('失败 1')
     expect(wrapper.text()).toContain('Supply Ticket')
     expect(wrapper.text()).toContain('互攻')
   })
@@ -106,9 +132,10 @@ describe('ContestProjectorAttackMap', () => {
       props: {
         rows: [],
         edges: [],
+        scoreboardRows: [],
       },
     })
 
-    expect(wrapper.text()).toContain('暂无队伍攻击关系')
+    expect(wrapper.text()).toContain('暂无目标服务')
   })
 })
