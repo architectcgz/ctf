@@ -630,6 +630,71 @@ describe('AWDOperationsPanel', () => {
     expect(wrapper.get('#awd-runtime-shell-run-check').attributes('disabled')).toBeDefined()
   })
 
+  it('未开赛实例内容应只显示实例编排，不重复显示开赛就绪摘要', () => {
+    const awdState = getAwdState()
+    awdState.readiness.value = buildReadinessState()
+    awdState.instanceOrchestration.value = {
+      contest_id: 'awd-1',
+      teams: [
+        {
+          team_id: 'team-1',
+          team_name: 'Red Team',
+          captain_id: 'captain-1',
+        },
+      ],
+      services: [
+        {
+          service_id: 'service-1',
+          challenge_id: 'challenge-1',
+          display_name: 'Web Service',
+          is_visible: true,
+        },
+      ],
+      instances: [],
+    }
+
+    const wrapper = mount(AWDOperationsPanel, {
+      props: {
+        contests: [
+          {
+            id: 'awd-1',
+            title: '2026 AWD 联赛',
+            description: '攻防赛',
+            mode: 'awd',
+            status: 'registering',
+            starts_at: '2026-03-18T09:00:00.000Z',
+            ends_at: '2026-03-18T18:00:00.000Z',
+          },
+        ],
+        selectedContestId: 'awd-1',
+        hideOperationTabs: true,
+        operationPanel: 'instances',
+        runtimeContent: 'instances',
+      },
+      global: {
+        stubs: {
+          ElDialog: {
+            props: ['modelValue', 'title'],
+            template:
+              '<div><div v-if="modelValue"><div>{{ title }}</div><slot /><slot name="footer" /></div></div>',
+          },
+          AWDRoundInspector: true,
+          AWDRoundCreateDialog: true,
+          AWDServiceCheckDialog: true,
+          AWDAttackLogDialog: true,
+          AWDChallengeConfigDialog: true,
+        },
+      },
+    })
+
+    expect(wrapper.get('#awd-ops-panel-instances').isVisible()).toBe(true)
+    expect(wrapper.text()).toContain('队伍实例编排')
+    expect(wrapper.text()).toContain('Red Team')
+    expect(wrapper.text()).not.toContain('开赛就绪摘要')
+    expect(wrapper.text()).not.toContain('可开赛')
+    expect(wrapper.text()).not.toContain('尚未进入运行阶段')
+  })
+
   it('应该在创建轮次被 gate 拦截时打开强制继续弹层', async () => {
     const awdState = getAwdState()
     awdState.readiness.value = buildReadinessState()

@@ -168,6 +168,7 @@ const emit = defineEmits<{
             :hide-studio-link="true"
             :hide-operation-tabs="true"
             operation-panel="inspector"
+            runtime-content="round-inspector"
             @open:awd-config="emit('open:awd-config-from-operations', $event)"
           />
         </div>
@@ -188,6 +189,7 @@ const emit = defineEmits<{
             :hide-studio-link="true"
             :hide-operation-tabs="true"
             operation-panel="instances"
+            runtime-content="instances"
             @open:awd-config="emit('open:awd-config-from-operations', $event)"
           />
         </div>

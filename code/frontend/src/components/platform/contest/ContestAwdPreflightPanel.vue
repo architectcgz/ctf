@@ -3,7 +3,7 @@ import { computed } from 'vue'
 
 import type { AWDReadinessData } from '@/api/contracts'
 
-import AWDReadinessSummary from './AWDReadinessSummary.vue'
+import AWDReadinessChecklist from './AWDReadinessChecklist.vue'
 import AWDReadinessDecisionHUD from './AWDReadinessDecisionHUD.vue'
 
 const props = defineProps<{
@@ -31,7 +31,9 @@ function handleNavigateChallenge(challengeId: string) {
   <section class="studio-preflight">
     <header class="studio-pane-header">
       <div class="header-main">
-        <div class="workspace-overline">AWD Preflight Check</div>
+        <div class="workspace-overline">
+          AWD Preflight Check
+        </div>
         <h1 class="pane-title">
           赛前就绪检查
         </h1>
@@ -50,8 +52,12 @@ function handleNavigateChallenge(challengeId: string) {
         >
           <header class="list-heading contest-awd-preflight-panel__override-head">
             <div>
-              <div class="journal-note-label">Override Entry</div>
-              <h3 class="list-heading__title">强制启动赛事</h3>
+              <div class="journal-note-label">
+                Override Entry
+              </div>
+              <h3 class="list-heading__title">
+                强制启动赛事
+              </h3>
             </div>
           </header>
           <button
@@ -66,9 +72,8 @@ function handleNavigateChallenge(challengeId: string) {
       </div>
     </header>
 
-    <AWDReadinessSummary
+    <AWDReadinessChecklist
       :readiness="readiness"
-      :loading="loading"
       action-label="修正配置"
       @edit-config="handleNavigateChallenge"
     />
