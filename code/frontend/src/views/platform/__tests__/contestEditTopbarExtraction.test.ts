@@ -9,7 +9,9 @@ describe('ContestEdit topbar extraction', () => {
       "import ContestEditTopbarPanel from '@/components/platform/contest/ContestEditTopbarPanel.vue'"
     )
     expect(contestEditSource).toContain('<ContestEditTopbarPanel')
-    expect(contestEditTopbarPanelSource).toContain('Contest Editor')
+    expect(contestEditTopbarPanelSource).toContain('Contest Studio')
+    expect(contestEditTopbarPanelSource).toContain('class="studio-edit-label"')
+    expect(contestEditTopbarPanelSource).toContain('class="studio-contest-heading"')
     expect(contestEditTopbarPanelSource).toContain('contest-open-announcements')
     expect(contestEditTopbarPanelSource).toContain('保存变更')
   })

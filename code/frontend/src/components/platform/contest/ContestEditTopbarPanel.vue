@@ -30,12 +30,16 @@ function handleSave(): void {
   <header class="workspace-topbar studio-topbar-wrapper">
     <div class="topbar-leading">
       <div class="studio-title-block">
-        <div class="workspace-overline">Contest Studio</div>
-        <div class="studio-title-row">
-          <h1 class="workspace-page-title">编辑竞赛</h1>
-          <span class="title-separator">/</span>
-          <span class="studio-contest-name">{{ pageTitle }}</span>
+        <div class="studio-title-meta">
+          <span class="workspace-overline">Contest Studio</span>
+          <span class="studio-edit-label">编辑竞赛</span>
         </div>
+        <h1
+          class="studio-contest-heading"
+          :title="pageTitle"
+        >
+          {{ pageTitle }}
+        </h1>
       </div>
 
       <div class="studio-contest-meta">
@@ -61,7 +65,7 @@ function handleSave(): void {
         <Bell class="h-3.5 w-3.5" />
         <span>公告管理</span>
       </button>
-      
+
       <div class="ops-divider" />
 
       <button
@@ -80,57 +84,66 @@ function handleSave(): void {
 
 <style scoped>
 .studio-topbar-wrapper {
+  --studio-toolbar-button-height: calc(var(--ui-control-height-sm) + var(--space-1));
+
   background: var(--color-bg-surface);
-  min-height: 5.5rem;
-  padding: var(--space-workspace-topbar-padding-top) var(--space-workspace-side-padding) var(--space-2);
+  min-height: auto;
+  padding: var(--space-4) var(--space-workspace-side-padding) var(--space-3);
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--space-5);
 }
 
 .studio-title-block {
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
+  min-width: 0;
+  gap: var(--space-1);
 }
 
-.studio-title-row {
+.studio-title-meta {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--space-2);
 }
 
-.title-separator {
+.studio-edit-label {
+  display: inline-flex;
+  align-items: center;
+  border-left: 1px solid color-mix(in srgb, var(--color-border-default) 72%, transparent);
+  padding-left: var(--space-2);
+  font-size: var(--font-size-12);
+  font-weight: 800;
   color: var(--color-text-muted);
-  font-weight: 300;
-  font-size: var(--font-size-18);
-  opacity: 0.5;
 }
 
-.studio-contest-name {
-  font-size: var(--font-size-15);
-  font-weight: 700;
-  color: var(--color-text-secondary);
-  max-width: 18rem;
+.studio-contest-heading {
+  margin: 0;
+  max-width: var(--ui-selector-width-lg);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-20);
+  font-weight: 800;
+  line-height: 1.25;
 }
 
 .studio-contest-meta {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  margin-left: 1.5rem;
+  gap: var(--space-2);
+  margin-left: var(--space-5);
 }
 
 .meta-tag {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0.2rem 0.65rem;
-  border-radius: 0.5rem;
-  font-size: 10px;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2-5);
+  border-radius: var(--ui-badge-radius-soft);
+  font-size: var(--font-size-11);
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.02em;
@@ -149,24 +162,25 @@ function handleSave(): void {
 }
 
 .studio-toolbar-btn {
-  --ui-btn-height: 2.25rem;
+  --ui-btn-height: var(--studio-toolbar-button-height);
   font-size: var(--font-size-12);
   font-weight: 700;
 }
 
 .ops-divider {
   width: 1px;
-  height: 1.25rem;
+  height: var(--space-5);
   background: var(--color-border-subtle);
-  margin: 0 0.5rem;
+  margin: 0 var(--space-2);
 }
 
 .studio-save-btn {
-  --ui-btn-height: 2.25rem;
-  --ui-btn-padding: 0 1.25rem;
-  --ui-btn-radius: 0.75rem;
+  --ui-btn-height: var(--studio-toolbar-button-height);
+  --ui-btn-padding: 0 var(--space-5);
+  --ui-btn-radius: var(--ui-control-radius-md);
   --ui-btn-font-size: var(--font-size-12);
   --ui-btn-font-weight: 800;
-  box-shadow: 0 4px 12px color-mix(in srgb, var(--color-primary) 20%, transparent);
+  box-shadow: 0 var(--space-1) var(--space-3)
+    color-mix(in srgb, var(--color-primary) 20%, transparent);
 }
 </style>
