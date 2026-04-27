@@ -41,7 +41,9 @@ type AWDTeamServiceResp struct {
 	TeamID         int64                `json:"team_id"`
 	TeamName       string               `json:"team_name"`
 	ServiceID      int64                `json:"service_id"`
+	ServiceName    string               `json:"service_name,omitempty"`
 	ChallengeID    int64                `json:"challenge_id"`
+	ChallengeTitle string               `json:"challenge_title,omitempty"`
 	ServiceStatus  string               `json:"service_status"`
 	CheckResult    map[string]any       `json:"check_result"`
 	CheckerType    model.AWDCheckerType `json:"checker_type,omitempty"`

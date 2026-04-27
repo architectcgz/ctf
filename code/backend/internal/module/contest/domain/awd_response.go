@@ -25,11 +25,11 @@ func AWDRoundRespFromModel(round *model.AWDRound) *dto.AWDRoundResp {
 	}
 }
 
-func AWDTeamServiceRespFromModel(record *model.AWDTeamService, teamName string) *dto.AWDTeamServiceResp {
+func AWDTeamServiceRespFromModel(record *model.AWDTeamService, teamName string, serviceName ...string) *dto.AWDTeamServiceResp {
 	if record == nil {
 		return nil
 	}
-	return &dto.AWDTeamServiceResp{
+	resp := &dto.AWDTeamServiceResp{
 		ID:             record.ID,
 		RoundID:        record.RoundID,
 		TeamID:         record.TeamID,
@@ -45,6 +45,11 @@ func AWDTeamServiceRespFromModel(record *model.AWDTeamService, teamName string) 
 		AttackScore:    record.AttackScore,
 		UpdatedAt:      record.UpdatedAt,
 	}
+	if len(serviceName) > 0 {
+		resp.ServiceName = serviceName[0]
+		resp.ChallengeTitle = serviceName[0]
+	}
+	return resp
 }
 
 func AWDAttackLogRespFromModel(record *model.AWDAttackLog, attackerTeam, victimTeam string) *dto.AWDAttackLogResp {

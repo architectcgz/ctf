@@ -400,7 +400,9 @@ export interface AWDTeamServiceData {
   team_id: ID
   team_name: string
   service_id?: ID
+  service_name?: string
   challenge_id: ID
+  challenge_title?: string
   service_status: AWDServiceStatus
   checker_type?: AWDCheckerType
   check_result: Record<string, unknown>
@@ -591,7 +593,7 @@ export interface AWDTrafficEventData {
   occurred_at: ISODateTime
 }
 
-export interface AWDTrafficEventPageData extends PageResult<AWDTrafficEventData> {}
+export type AWDTrafficEventPageData = PageResult<AWDTrafficEventData>
 
 export interface AWDCheckerRunData {
   round: AWDRoundData

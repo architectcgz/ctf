@@ -1,15 +1,22 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { Maximize2, Minimize2, RefreshCw } from 'lucide-vue-next'
 
-import type { ContestDetailData } from '@/api/contracts'
+import type { AWDRoundData, ContestDetailData } from '@/api/contracts'
 import {
   formatProjectorTime,
   getContestStatusLabel,
+  getRoundStatusLabel,
 } from '@/components/platform/contest/projector/contestProjectorFormatters'
 
-defineProps<{
+const AUTO_FOLLOW_ROUND_VALUE = '__auto_follow_round__'
+
+const props = defineProps<{
   contests: ContestDetailData[]
+  rounds: AWDRoundData[]
   selectedContestId: string
+  selectedRoundId: string
+  roundAutoFollow: boolean
   lastUpdatedLabel: string
   fullscreenActive: boolean
   loadingContests: boolean
@@ -20,11 +27,29 @@ const emit = defineEmits<{
   refresh: []
   toggleFullscreen: []
   selectContest: [contestId: string]
+  selectRound: [roundId: string]
+  followCurrentRound: []
 }>()
+
+const roundSelectorValue = computed(() =>
+  props.roundAutoFollow ? AUTO_FOLLOW_ROUND_VALUE : props.selectedRoundId
+)
+const orderedRounds = computed(() =>
+  props.rounds.slice().sort((left, right) => right.round_number - left.round_number)
+)
 
 function handleContestSelect(event: Event): void {
   const target = event.target as HTMLSelectElement
   emit('selectContest', target.value)
+}
+
+function handleRoundSelect(event: Event): void {
+  const target = event.target as HTMLSelectElement
+  if (target.value === AUTO_FOLLOW_ROUND_VALUE) {
+    emit('followCurrentRound')
+    return
+  }
+  emit('selectRound', target.value)
 }
 </script>
 
@@ -72,29 +97,61 @@ function handleContestSelect(event: Event): void {
 
   <div
     v-if="contests.length > 0"
-    class="contest-selector"
+    class="projector-selectors"
   >
-    <label
-      class="contest-selector__label"
-      for="projector-contest-select"
-    >
-      竞赛
-    </label>
-    <select
-      id="projector-contest-select"
-      class="contest-selector__control"
-      :value="selectedContestId"
-      :disabled="loadingScoreboard"
-      @change="handleContestSelect"
-    >
-      <option
-        v-for="contest in contests"
-        :key="contest.id"
-        :value="contest.id"
+    <div class="projector-selector">
+      <label
+        class="projector-selector__label"
+        for="projector-contest-select"
       >
-        {{ contest.title }} · {{ getContestStatusLabel(contest.status) }} · {{ formatProjectorTime(contest.starts_at) }}
-      </option>
-    </select>
+        竞赛
+      </label>
+      <select
+        id="projector-contest-select"
+        class="projector-selector__control"
+        :value="selectedContestId"
+        :disabled="loadingScoreboard"
+        @change="handleContestSelect"
+      >
+        <option
+          v-for="contest in contests"
+          :key="contest.id"
+          :value="contest.id"
+        >
+          {{ contest.title }} · {{ getContestStatusLabel(contest.status) }} · {{ formatProjectorTime(contest.starts_at) }}
+        </option>
+      </select>
+    </div>
+
+    <div
+      v-if="rounds.length > 0"
+      class="projector-selector projector-selector--round"
+    >
+      <label
+        class="projector-selector__label"
+        for="projector-round-select"
+      >
+        轮次
+      </label>
+      <select
+        id="projector-round-select"
+        class="projector-selector__control"
+        :value="roundSelectorValue"
+        :disabled="loadingScoreboard"
+        @change="handleRoundSelect"
+      >
+        <option :value="AUTO_FOLLOW_ROUND_VALUE">
+          实时跟随当前轮次
+        </option>
+        <option
+          v-for="round in orderedRounds"
+          :key="round.id"
+          :value="round.id"
+        >
+          R{{ round.round_number }} · {{ getRoundStatusLabel(round.status) }} · {{ formatProjectorTime(round.started_at ?? round.created_at) }}
+        </option>
+      </select>
+    </div>
   </div>
 </template>
 
@@ -142,10 +199,10 @@ function handleContestSelect(event: Event): void {
   gap: var(--space-2);
   min-height: var(--ui-control-height-md);
   padding: 0 var(--space-4);
-  border-radius: 0.5rem;
+  border-radius: var(--ui-control-radius-sm);
   font-size: var(--font-size-13);
   font-weight: 800;
-  transition: all 0.2s ease;
+  transition: all var(--ui-motion-fast);
 }
 
 .ops-btn--neutral {
@@ -164,27 +221,38 @@ function handleContestSelect(event: Event): void {
   height: var(--space-4);
 }
 
-.contest-selector {
+.projector-selectors {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.projector-selector {
   display: flex;
   width: 100%;
-  max-width: 32rem;
+  max-width: var(--ui-selector-width-lg);
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-2);
 }
 
-.contest-selector__label {
+.projector-selector--round {
+  max-width: var(--ui-selector-width-md);
+}
+
+.projector-selector__label {
   color: var(--color-text-secondary);
   font-size: var(--font-size-12);
   font-weight: 900;
 }
 
-.contest-selector__control {
-  width: min(100%, 26rem);
-  flex: 1 1 16rem;
+.projector-selector__control {
+  width: min(100%, var(--ui-selector-control-width));
+  flex: 1 1 var(--ui-selector-control-min-width);
   min-height: var(--ui-control-height-md);
   border: 1px solid var(--color-border-subtle);
-  border-radius: 0.5rem;
+  border-radius: var(--ui-control-radius-sm);
   background: color-mix(in srgb, var(--color-bg-surface) 76%, transparent);
   padding: 0 var(--space-3);
   color: var(--journal-ink);
@@ -192,24 +260,24 @@ function handleContestSelect(event: Event): void {
   font-weight: 800;
 }
 
-.contest-selector__control:disabled {
+.projector-selector__control:disabled {
   cursor: not-allowed;
   opacity: 0.58;
 }
 
-.contest-selector__control:focus {
+.projector-selector__control:focus {
   border-color: color-mix(in srgb, var(--journal-accent) 56%, var(--color-border-default));
   outline: none;
-  box-shadow: 0 0 0 0.1875rem color-mix(in srgb, var(--journal-accent) 14%, transparent);
+  box-shadow: 0 0 0 var(--space-1) color-mix(in srgb, var(--journal-accent) 14%, transparent);
 }
 
-.contest-selector__control option {
+.projector-selector__control option {
   background: var(--color-bg-surface);
   color: var(--journal-ink);
 }
 
-.contest-selector__control,
-.contest-selector__control option {
+.projector-selector__control,
+.projector-selector__control option {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

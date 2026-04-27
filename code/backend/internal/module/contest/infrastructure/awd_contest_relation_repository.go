@@ -87,6 +87,7 @@ func (r *AWDRepository) ListServiceDefinitionsByContest(ctx context.Context, con
 		scoreConfig := contestdomain.ParseAWDCheckerConfig(row.ScoreConfig)
 		definitions = append(definitions, contestports.AWDServiceDefinition{
 			ServiceID:     row.ServiceID,
+			ServiceName:   resolveContestAWDServiceTitle(snapshot, row.DisplayName),
 			ChallengeID:   row.ChallengeID,
 			FlagPrefix:    resolveContestAWDServiceFlagPrefix(snapshot),
 			CheckerType:   resolveContestAWDServiceCheckerType(runtimeConfig),

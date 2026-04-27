@@ -216,7 +216,9 @@ interface RawAWDTeamServiceItem {
   team_id: string | number
   team_name: string
   service_id?: string | number
+  service_name?: string | null
   challenge_id: string | number
+  challenge_title?: string | null
   service_status: AWDTeamServiceData['service_status']
   checker_type?: string | null
   check_result?: Record<string, unknown> | null
@@ -967,7 +969,9 @@ function normalizeAWDTeamService(item: RawAWDTeamServiceItem): AWDTeamServiceDat
     team_id: String(item.team_id),
     team_name: item.team_name,
     service_id: item.service_id == null ? undefined : String(item.service_id),
+    service_name: item.service_name || undefined,
     challenge_id: String(item.challenge_id),
+    challenge_title: item.challenge_title || undefined,
     service_status: item.service_status,
     checker_type: normalizeAWDCheckerType(item.checker_type),
     check_result: item.check_result || {},
