@@ -42,6 +42,8 @@ describe('contest ui primitive adoption phase 4', () => {
 
   it('contest awd preflight panel should consume shared primary button primitive', () => {
     expect(contestAwdPreflightPanelSource).toContain('class="ui-btn ui-btn--primary"')
+    expect(contestAwdPreflightPanelSource).toContain('background: transparent;')
+    expect(contestAwdPreflightPanelSource).not.toContain('background: var(--color-bg-base);')
   })
 
   it('awd readiness decision hud should reuse shared metric panel primitives', () => {
@@ -51,5 +53,8 @@ describe('contest ui primitive adoption phase 4', () => {
     expect(awdReadinessDecisionHUDSource).toContain('class="journal-note-label progress-card-label metric-panel-label"')
     expect(awdReadinessDecisionHUDSource).toContain('class="decision-title progress-card-value metric-panel-value"')
     expect(awdReadinessDecisionHUDSource).toContain('class="decision-description progress-card-hint metric-panel-helper"')
+    expect(awdReadinessDecisionHUDSource).toContain('--metric-panel-padding: var(--space-2-5) var(--space-3);')
+    expect(awdReadinessDecisionHUDSource).toContain('gap: var(--space-2);')
+    expect(awdReadinessDecisionHUDSource).not.toContain('无阻塞')
   })
 })

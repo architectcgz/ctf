@@ -86,7 +86,7 @@ function handleNavigateChallenge(challengeId: string) {
   flex-direction: column;
   gap: var(--space-5);
   padding: var(--space-6) var(--space-8);
-  background: var(--color-bg-base);
+  background: transparent;
 }
 
 .studio-pane-header {

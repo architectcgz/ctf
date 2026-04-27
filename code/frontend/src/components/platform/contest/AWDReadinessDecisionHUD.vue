@@ -61,17 +61,16 @@ const blockingActionLabels = computed(() => {
         </p>
       </div>
     </div>
-    <div class="decision-meta">
+    <div
+      v-if="blockingActionLabels.length > 0"
+      class="decision-meta"
+    >
       <div class="impact-tags">
         <span
           v-for="label in blockingActionLabels"
           :key="label"
           class="impact-tag"
         >{{ label }}</span>
-        <span
-          v-if="blockingActionLabels.length === 0"
-          class="impact-tag neutral"
-        >无阻塞</span>
       </div>
     </div>
   </div>
@@ -79,16 +78,18 @@ const blockingActionLabels = computed(() => {
 
 <style scoped>
 .decision-hud {
-  --metric-panel-value-size: var(--font-size-20);
-  --metric-panel-value-line-height: 1.25;
+  --metric-panel-padding: var(--space-2-5) var(--space-3);
+  --metric-panel-value-size: var(--font-size-18);
+  --metric-panel-value-line-height: 1.2;
   --metric-panel-value-spacing: 0;
-  --metric-panel-helper-line-height: 1.5;
+  --metric-panel-helper-size: var(--font-size-12);
+  --metric-panel-helper-line-height: 1.35;
 
   display: flex;
   min-width: var(--ui-selector-width-md);
   flex-direction: column;
   align-items: stretch;
-  gap: var(--space-3);
+  gap: var(--space-2);
 }
 
 .decision-hud.ready {
@@ -102,13 +103,13 @@ const blockingActionLabels = computed(() => {
 .decision-main {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--space-2);
   min-width: 0;
 }
 
 .decision-icon {
-  width: calc(var(--ui-control-height-sm) + var(--space-1));
-  height: calc(var(--ui-control-height-sm) + var(--space-1));
+  width: var(--ui-control-height-sm);
+  height: var(--ui-control-height-sm);
   border-radius: var(--ui-control-radius-md);
   display: flex;
   align-items: center;
@@ -153,10 +154,6 @@ const blockingActionLabels = computed(() => {
   border-radius: var(--ui-badge-radius-soft);
   background: var(--color-bg-elevated);
   color: var(--color-text-secondary);
-}
-
-.impact-tag.neutral {
-  opacity: 0.5;
 }
 
 .ready .impact-tag {
