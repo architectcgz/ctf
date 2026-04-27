@@ -278,6 +278,7 @@ describe('admin management surface alignment', () => {
     expect(contestEditCombinedSource).toContain('返回竞赛目录')
     expect(contestEditCombinedSource).toContain('Contest Studio')
     expect(contestEditCombinedSource).toContain('background: var(--color-bg-surface);')
+    expect(contestEditCombinedSource).toContain('background: var(--color-bg-base);')
     expect(contestEditCombinedSource).toContain('border-top: 0;')
     expect(contestEditCombinedSource).toContain('class="workspace-directory-section contest-edit-section"')
   })
