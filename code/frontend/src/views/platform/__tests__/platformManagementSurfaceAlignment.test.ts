@@ -468,6 +468,7 @@ describe('admin management surface alignment', () => {
 
     expect(classManageCombinedSource).toContain('class="workspace-directory-section admin-class-manage-directory"')
     expect(classManageCombinedSource).toContain('class="workspace-directory-list admin-class-manage-table"')
+    expect(classManageCombinedSource).toContain('<WorkspaceDirectoryToolbar')
     expect(classManageCombinedSource).toContain('<WorkspaceDirectoryPagination')
     expect(classManageCombinedSource).toMatch(
       /\.admin-class-manage-shell__content\s*\{[\s\S]*gap:\s*var\(--workspace-directory-page-block-gap\);/s

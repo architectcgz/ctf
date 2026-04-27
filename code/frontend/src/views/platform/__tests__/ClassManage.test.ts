@@ -60,8 +60,14 @@ describe('PlatformClassManagement', () => {
     expect(classManageWorkspacePanelSource).toContain(
       "from '@/components/common/WorkspaceDirectoryPagination.vue'"
     )
+    expect(classManageWorkspacePanelSource).toContain(
+      "from '@/components/common/WorkspaceDirectoryToolbar.vue'"
+    )
+    expect(classManageWorkspacePanelSource).toContain('<WorkspaceDirectoryToolbar')
     expect(classManageWorkspacePanelSource).toContain('<WorkspaceDataTable')
     expect(classManageWorkspacePanelSource).toContain('<WorkspaceDirectoryPagination')
+    expect(classManageWorkspacePanelSource).toContain('search-placeholder="搜索班级名称..."')
+    expect(classManageWorkspacePanelSource).toContain('filter-panel-title="班级筛选"')
     expect(classManageWorkspacePanelSource).toContain('class="ui-btn ui-btn--primary ui-btn--sm"')
     expect(classManageWorkspacePanelSource).not.toContain('class="ui-btn ui-btn--ghost"')
     expect(adminClassManageSource).not.toContain('teacher-management-shell')
@@ -77,6 +83,17 @@ describe('PlatformClassManagement', () => {
     expect(wrapper.text()).toContain('班级名称')
     expect(wrapper.text()).toContain('学生人数')
     expect(wrapper.text()).toContain('查看班级')
+    expect(wrapper.text()).toContain('共 2 个班级')
+  })
+
+  it('应支持按班级名称筛选目录', async () => {
+    const wrapper = mount(PlatformClassManagement)
+    await flushPromises()
+
+    await wrapper.get('.workspace-directory-toolbar__search-input').setValue('Class A')
+
+    expect(wrapper.text()).toContain('Class A')
+    expect(wrapper.text()).not.toContain('Class B')
   })
 
   it('应支持进入班级详情', async () => {

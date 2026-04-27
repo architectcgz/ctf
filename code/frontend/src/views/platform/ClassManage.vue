@@ -15,6 +15,7 @@ const page = ref(1)
 const pageSize = ref(DEFAULT_PAGE_SIZE)
 const loading = ref(false)
 const error = ref<string | null>(null)
+const totalPages = computed(() => Math.max(1, Math.ceil(total.value / Math.max(pageSize.value, 1))))
 
 async function loadClasses(): Promise<void> {
   loading.value = true
@@ -45,7 +46,12 @@ async function loadClasses(): Promise<void> {
 }
 
 function handlePageChange(p: number): void {
-  page.value = p
+  const normalizedPage = Math.max(1, Math.floor(p))
+  if (normalizedPage === page.value || normalizedPage > totalPages.value) {
+    return
+  }
+
+  page.value = normalizedPage
   void loadClasses()
 }
 
@@ -92,7 +98,7 @@ onMounted(() => {
           :has-classes="list.length > 0"
           :rows="rows"
           :page="page"
-          :total-pages="Math.max(1, Math.ceil(total / pageSize))"
+          :total-pages="totalPages"
           :total="total"
           :error="error"
           @open-class="openClass"
