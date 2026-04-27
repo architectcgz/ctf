@@ -73,6 +73,10 @@ function handleStageSelect(stage: ContestWorkbenchStage): void {
 
 .top-tab {
   gap: 0.65rem;
+  transition:
+    color 180ms cubic-bezier(0.25, 1, 0.5, 1),
+    border-color 180ms cubic-bezier(0.25, 1, 0.5, 1),
+    background 180ms cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 .top-tab.active {
@@ -83,10 +87,28 @@ function handleStageSelect(stage: ContestWorkbenchStage): void {
 .tab-icon {
   width: 1rem;
   height: 1rem;
+  transition:
+    color 180ms cubic-bezier(0.25, 1, 0.5, 1),
+    transform 180ms cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.top-tab.active .tab-icon {
+  transform: translateY(calc(var(--space-0-5) * -1));
 }
 
 .is-disabled {
   opacity: 0.35;
   cursor: not-allowed;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .top-tab,
+  .tab-icon {
+    transition: none;
+  }
+
+  .top-tab.active .tab-icon {
+    transform: none;
+  }
 }
 </style>

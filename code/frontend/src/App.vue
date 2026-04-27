@@ -1,6 +1,17 @@
 <template>
   <div class="app-root">
-    <RouterView />
+    <RouterView v-slot="{ Component, route: resolvedRoute }">
+      <Transition
+        name="app-route"
+        mode="out-in"
+        appear
+      >
+        <component
+          :is="Component"
+          :key="resolvedRoute.matched[0]?.path || resolvedRoute.path"
+        />
+      </Transition>
+    </RouterView>
     <AppToast />
   </div>
 </template>

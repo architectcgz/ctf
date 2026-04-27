@@ -17,4 +17,15 @@ describe('ContestEdit workspace extraction', () => {
     expect(contestEditWorkspacePanelSource).toContain('operation-panel="instances"')
     expect(contestEditWorkspacePanelSource).toContain('runtime-content="instances"')
   })
+
+  it('编辑工作台所有 stage 应复用统一切换动画并支持减少动态效果', () => {
+    expect(contestEditWorkspacePanelSource).toContain('<Transition')
+    expect(contestEditWorkspacePanelSource).toContain('name="studio-stage"')
+    expect(contestEditWorkspacePanelSource).toContain('mode="out-in"')
+    expect(contestEditWorkspacePanelSource).toContain('class="studio-pane studio-stage-panel"')
+    expect(contestEditWorkspacePanelSource).toContain('class="studio-pane studio-pane--operations studio-stage-panel"')
+    expect(contestEditWorkspacePanelSource).toContain('@media (prefers-reduced-motion: reduce)')
+    expect(contestEditWorkspacePanelSource).not.toContain('class="studio-pane fade-in"')
+    expect(contestEditWorkspacePanelSource).not.toContain('@keyframes studioFadeIn')
+  })
 })

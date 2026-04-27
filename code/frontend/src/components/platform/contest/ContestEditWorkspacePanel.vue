@@ -75,130 +75,141 @@ const emit = defineEmits<{
       </AppEmpty>
 
       <template v-else-if="formDraft && contest">
-        <section class="workspace-directory-section contest-edit-section">
-          <div
+        <Transition
+          name="studio-stage"
+          mode="out-in"
+        >
+          <section
             v-if="activeStage === 'basics'"
-            class="studio-pane studio-pane--full fade-in"
+            key="basics"
+            class="workspace-directory-section contest-edit-section studio-stage-panel"
           >
-            <div class="studio-form-canvas">
-              <PlatformContestFormPanel
-                :mode="'edit'"
-                :draft="formDraft"
-                :saving="saving"
-                :status-options="statusOptions"
-                :field-locks="fieldLocks"
-                :show-cancel="false"
-                @update:draft="emit('update:draft', $event)"
-                @save="emit('save', $event)"
-              />
+            <div class="studio-pane studio-pane--full">
+              <div class="studio-form-canvas">
+                <PlatformContestFormPanel
+                  :mode="'edit'"
+                  :draft="formDraft"
+                  :saving="saving"
+                  :status-options="statusOptions"
+                  :field-locks="fieldLocks"
+                  :show-cancel="false"
+                  @update:draft="emit('update:draft', $event)"
+                  @save="emit('save', $event)"
+                />
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
 
-        <div
-          v-if="activeStage === 'pool'"
-          class="studio-pane fade-in"
-        >
-          <ContestChallengeOrchestrationPanel
-            :contest-id="contest.id"
-            :contest-mode="contest.mode"
-            :challenge-links="contest.mode === 'awd' ? awdChallengeLinks : undefined"
-            :loading-external="loadingAwdStageData"
-            @open:awd-config="emit('open:awd-config-from-pool', $event)"
-            @updated="emit('refresh-awd-workbench')"
-          />
-        </div>
-
-        <div
-          v-if="contest.mode === 'awd' && activeStage === 'awd-config'"
-          class="studio-pane fade-in"
-        >
-          <template v-if="loadingAwdStageData && awdChallengeLinks.length === 0">
-            <AppLoading>正在同步 AWD 配置...</AppLoading>
-          </template>
-          <AWDChallengeConfigPanel
-            v-else
-            :challenge-links="awdChallengeLinks"
-            :active-challenge-id="activeAwdChallengeId"
-            :focus-source="awdConfigFocusSource"
-            :can-navigate-previous="canNavigatePreviousAwdChallenge"
-            :can-navigate-next="canNavigateNextAwdChallenge"
-            @create="emit('create:awd-challenge')"
-            @edit="emit('edit:awd-challenge', $event)"
-            @previous="emit('previous:awd-challenge')"
-            @next="emit('next:awd-challenge')"
-          />
-        </div>
-
-        <div
-          v-if="contest.mode === 'awd' && activeStage === 'preflight'"
-          class="studio-pane fade-in"
-        >
-          <AppEmpty
-            v-if="awdPreflightLoadError"
-            title="赛前检查暂时不可用"
-            :description="awdPreflightLoadError"
-            icon="AlertTriangle"
-          >
-            <template #action>
-              <button
-                type="button"
-                class="ui-btn ui-btn--ghost"
-                @click="emit('retry:preflight')"
-              >
-                重试加载
-              </button>
-            </template>
-          </AppEmpty>
-          <ContestAwdPreflightPanel
-            v-else
-            :readiness="awdReadiness"
-            :loading="loadingAwdStageData"
-            @navigate:challenge="emit('navigate:awd-challenge-from-preflight', $event)"
-            @navigate:stage="emit('navigate:stage', $event)"
-            @open:override="emit('open:preflight-override')"
-          />
-        </div>
-
-        <div
-          v-if="contest.mode === 'awd' && activeStage === 'operations'"
-          class="studio-pane studio-pane--operations fade-in"
-        >
           <div
-            class="stage-pane-divider"
-            aria-label="轮次态势"
+            v-else-if="activeStage === 'pool'"
+            key="pool"
+            class="studio-pane studio-stage-panel"
           >
-            <span class="stage-pane-divider__label">
-              轮次态势
-            </span>
+            <ContestChallengeOrchestrationPanel
+              :contest-id="contest.id"
+              :contest-mode="contest.mode"
+              :challenge-links="contest.mode === 'awd' ? awdChallengeLinks : undefined"
+              :loading-external="loadingAwdStageData"
+              @open:awd-config="emit('open:awd-config-from-pool', $event)"
+              @updated="emit('refresh-awd-workbench')"
+            />
           </div>
-          <AWDOperationsPanel
-            :contests="[contest]"
-            :selected-contest-id="contest.id"
-            :hide-contest-selector="true"
-            :hide-studio-link="true"
-            :hide-operation-tabs="true"
-            operation-panel="inspector"
-            runtime-content="round-inspector"
-            @open:awd-config="emit('open:awd-config-from-operations', $event)"
-          />
-        </div>
 
-        <div
-          v-if="contest.mode === 'awd' && activeStage === 'instances'"
-          class="studio-pane studio-pane--operations fade-in"
-        >
-          <AWDOperationsPanel
-            :contests="[contest]"
-            :selected-contest-id="contest.id"
-            :hide-contest-selector="true"
-            :hide-studio-link="true"
-            :hide-operation-tabs="true"
-            operation-panel="instances"
-            runtime-content="instances"
-            @open:awd-config="emit('open:awd-config-from-operations', $event)"
-          />
-        </div>
+          <div
+            v-else-if="contest.mode === 'awd' && activeStage === 'awd-config'"
+            key="awd-config"
+            class="studio-pane studio-stage-panel"
+          >
+            <template v-if="loadingAwdStageData && awdChallengeLinks.length === 0">
+              <AppLoading>正在同步 AWD 配置...</AppLoading>
+            </template>
+            <AWDChallengeConfigPanel
+              v-else
+              :challenge-links="awdChallengeLinks"
+              :active-challenge-id="activeAwdChallengeId"
+              :focus-source="awdConfigFocusSource"
+              :can-navigate-previous="canNavigatePreviousAwdChallenge"
+              :can-navigate-next="canNavigateNextAwdChallenge"
+              @create="emit('create:awd-challenge')"
+              @edit="emit('edit:awd-challenge', $event)"
+              @previous="emit('previous:awd-challenge')"
+              @next="emit('next:awd-challenge')"
+            />
+          </div>
+
+          <div
+            v-else-if="contest.mode === 'awd' && activeStage === 'preflight'"
+            key="preflight"
+            class="studio-pane studio-stage-panel"
+          >
+            <AppEmpty
+              v-if="awdPreflightLoadError"
+              title="赛前检查暂时不可用"
+              :description="awdPreflightLoadError"
+              icon="AlertTriangle"
+            >
+              <template #action>
+                <button
+                  type="button"
+                  class="ui-btn ui-btn--ghost"
+                  @click="emit('retry:preflight')"
+                >
+                  重试加载
+                </button>
+              </template>
+            </AppEmpty>
+            <ContestAwdPreflightPanel
+              v-else
+              :readiness="awdReadiness"
+              :loading="loadingAwdStageData"
+              @navigate:challenge="emit('navigate:awd-challenge-from-preflight', $event)"
+              @navigate:stage="emit('navigate:stage', $event)"
+              @open:override="emit('open:preflight-override')"
+            />
+          </div>
+
+          <div
+            v-else-if="contest.mode === 'awd' && activeStage === 'operations'"
+            key="operations"
+            class="studio-pane studio-pane--operations studio-stage-panel"
+          >
+            <div
+              class="stage-pane-divider"
+              aria-label="轮次态势"
+            >
+              <span class="stage-pane-divider__label">
+                轮次态势
+              </span>
+            </div>
+            <AWDOperationsPanel
+              :contests="[contest]"
+              :selected-contest-id="contest.id"
+              :hide-contest-selector="true"
+              :hide-studio-link="true"
+              :hide-operation-tabs="true"
+              operation-panel="inspector"
+              runtime-content="round-inspector"
+              @open:awd-config="emit('open:awd-config-from-operations', $event)"
+            />
+          </div>
+
+          <div
+            v-else-if="contest.mode === 'awd' && activeStage === 'instances'"
+            key="instances"
+            class="studio-pane studio-pane--operations studio-stage-panel"
+          >
+            <AWDOperationsPanel
+              :contests="[contest]"
+              :selected-contest-id="contest.id"
+              :hide-contest-selector="true"
+              :hide-studio-link="true"
+              :hide-operation-tabs="true"
+              operation-panel="instances"
+              runtime-content="instances"
+              @open:awd-config="emit('open:awd-config-from-operations', $event)"
+            />
+          </div>
+        </Transition>
       </template>
     </div>
   </div>
@@ -269,6 +280,11 @@ const emit = defineEmits<{
   box-shadow: inset 0 1px 0 color-mix(in srgb, var(--color-bg-surface) 84%, transparent);
 }
 
+.studio-stage-panel {
+  transform-origin: top center;
+  will-change: opacity, transform;
+}
+
 .studio-pane--operations {
   padding: var(--space-4) var(--space-8) var(--space-8);
 }
@@ -315,19 +331,42 @@ const emit = defineEmits<{
     color-mix(in srgb, var(--color-shadow-soft) 34%, transparent);
 }
 
-.fade-in {
-  animation: studioFadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+.studio-stage-enter-active {
+  transition:
+    opacity 280ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 280ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-@keyframes studioFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
+.studio-stage-leave-active {
+  transition:
+    opacity 180ms cubic-bezier(0.25, 1, 0.5, 1),
+    transform 180ms cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.studio-stage-enter-from {
+  opacity: 0;
+  transform: translate3d(0, var(--space-3), 0);
+}
+
+.studio-stage-leave-to {
+  opacity: 0;
+  transform: translate3d(0, calc(var(--space-2) * -1), 0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .studio-stage-panel {
+    will-change: auto;
   }
 
-  to {
+  .studio-stage-enter-active,
+  .studio-stage-leave-active {
+    transition: none;
+  }
+
+  .studio-stage-enter-from,
+  .studio-stage-leave-to {
     opacity: 1;
-    transform: translateY(0);
+    transform: none;
   }
 }
 </style>
