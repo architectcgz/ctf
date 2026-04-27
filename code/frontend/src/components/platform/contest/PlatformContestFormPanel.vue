@@ -330,7 +330,7 @@ function handleSubmit() {
   width: 100%;
   max-width: none;
   margin: 0 auto;
-  padding: var(--space-7) var(--space-8);
+  padding: var(--space-6) var(--space-8);
   display: grid;
   grid-template-columns:
     minmax(0, 1.1fr)
@@ -340,16 +340,14 @@ function handleSubmit() {
     'identity rules timeline'
     'actions actions actions';
   align-items: start;
-  gap: var(--space-8);
+  gap: var(--space-6) var(--space-8);
 }
 
 .settings-group {
   display: flex;
   min-width: 0;
   flex-direction: column;
-  gap: var(--contest-form-section-gap-compact);
-  padding-top: var(--space-5);
-  border-top: 1px solid color-mix(in srgb, var(--color-border-default) 74%, transparent);
+  gap: var(--space-4);
 }
 
 .settings-group--identity {
@@ -402,13 +400,13 @@ function handleSubmit() {
   font-size: var(--font-size-13);
   color: var(--color-text-secondary);
   line-height: 1.6;
-  margin: var(--space-2) 0 0;
+  margin: var(--space-1) 0 0;
 }
 
 .settings-group__content {
   display: flex;
   flex-direction: column;
-  gap: var(--space-5);
+  gap: var(--space-4);
   min-width: 0;
 }
 
@@ -613,7 +611,7 @@ function handleSubmit() {
       'timeline'
       'actions';
     padding: var(--space-6);
-    gap: var(--space-8);
+    gap: var(--space-6);
   }
 
   .settings-group--timeline .timeline-fields {

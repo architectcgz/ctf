@@ -261,10 +261,19 @@ function formatDateTime(value?: string): string {
 }
 
 .global-blockers {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
   border: 1px solid color-mix(in srgb, var(--color-danger) 20%, var(--color-border-default));
   border-radius: var(--ui-control-radius-lg);
   background: var(--color-bg-elevated);
   padding: var(--space-6);
+}
+
+.challenge-blockers {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
 }
 
 .blocker-list {
