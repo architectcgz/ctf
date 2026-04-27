@@ -236,7 +236,10 @@ onUnmounted(() => {
                     @keydown.enter.prevent="focusPanel('attack-map')"
                     @keydown.space.prevent="focusPanel('attack-map')"
                   >
-                    <ContestProjectorAttackMap :edges="attackEdges" />
+                    <ContestProjectorAttackMap
+                      :rows="serviceMatrixRows"
+                      :edges="attackEdges"
+                    />
                   </div>
 
                   <div
@@ -318,6 +321,7 @@ onUnmounted(() => {
 
               <ContestProjectorAttackMap
                 v-else-if="focusedPanel === 'attack-map'"
+                :rows="serviceMatrixRows"
                 :edges="attackEdges"
               />
 

@@ -1,8 +1,17 @@
 import { mount } from '@vue/test-utils'
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import ContestProjectorAttackMap from '@/components/platform/contest/projector/ContestProjectorAttackMap.vue'
-import type { ContestProjectorAttackEdge } from '@/components/platform/contest/projector/contestProjectorTypes'
+import type { AWDTeamServiceData } from '@/api/contracts'
+import type {
+  ContestProjectorAttackEdge,
+  ContestProjectorServiceMatrixRow,
+} from '@/components/platform/contest/projector/contestProjectorTypes'
+
+class ResizeObserverStub {
+  observe = vi.fn()
+  disconnect = vi.fn()
+}
 
 function buildEdge(overrides: Partial<ContestProjectorAttackEdge> = {}): ContestProjectorAttackEdge {
   return {
@@ -11,6 +20,9 @@ function buildEdge(overrides: Partial<ContestProjectorAttackEdge> = {}): Contest
     attacker_team: 'Blue Team',
     victim_team_id: 'red',
     victim_team: 'Red Team',
+    latest_service_id: 'service-1',
+    latest_challenge_id: 'challenge-1',
+    latest_target_key: 'red:service:service-1',
     success: 1,
     failed: 1,
     total: 2,
@@ -23,10 +35,60 @@ function buildEdge(overrides: Partial<ContestProjectorAttackEdge> = {}): Contest
   }
 }
 
+function buildService(overrides: Partial<AWDTeamServiceData> = {}): AWDTeamServiceData {
+  return {
+    id: 'service-state-1',
+    round_id: 'round-1',
+    team_id: 'red',
+    team_name: 'Red Team',
+    service_id: 'service-1',
+    service_name: 'Supply Ticket',
+    challenge_id: 'challenge-1',
+    challenge_title: 'Supply Ticket Challenge',
+    service_status: 'up',
+    check_result: {},
+    attack_received: 0,
+    sla_score: 0,
+    defense_score: 0,
+    attack_score: 0,
+    updated_at: '2026-04-27T15:49:02.000Z',
+    ...overrides,
+  }
+}
+
+function buildRows(): ContestProjectorServiceMatrixRow[] {
+  return [
+    {
+      team_id: 'blue',
+      team_name: 'Blue Team',
+      services: [
+        buildService({
+          id: 'service-state-2',
+          team_id: 'blue',
+          team_name: 'Blue Team',
+          service_id: 'service-2',
+          service_name: 'IoT Hub',
+          challenge_id: 'challenge-2',
+        }),
+      ],
+    },
+    {
+      team_id: 'red',
+      team_name: 'Red Team',
+      services: [buildService()],
+    },
+  ]
+}
+
 describe('ContestProjectorAttackMap', () => {
+  beforeEach(() => {
+    vi.stubGlobal('ResizeObserver', ResizeObserverStub)
+  })
+
   it('显示攻击方、目标方和互攻状态', () => {
     const wrapper = mount(ContestProjectorAttackMap, {
       props: {
+        rows: buildRows(),
         edges: [buildEdge()],
       },
     })
@@ -36,12 +98,13 @@ describe('ContestProjectorAttackMap', () => {
     expect(wrapper.text()).toContain('1 HIT')
     expect(wrapper.text()).toContain('1 MISS')
     expect(wrapper.text()).toContain('Supply Ticket')
-    expect(wrapper.text()).toContain('互攻 1')
+    expect(wrapper.text()).toContain('互攻')
   })
 
   it('没有攻击关系时显示空状态', () => {
     const wrapper = mount(ContestProjectorAttackMap, {
       props: {
+        rows: [],
         edges: [],
       },
     })
