@@ -41,6 +41,17 @@ describe('PlatformContestTable', () => {
     expect(adminContestTableSource).not.toContain('text-[var(--color-text-muted)]')
   })
 
+  it('竞赛目录字号应与平台审计列表使用同一组目录 token', () => {
+    expect(adminContestTableSource).toContain('font-size: var(--font-size-11);')
+    expect(adminContestTableSource).toContain('font-size: var(--font-size-14);')
+    expect(adminContestTableSource).toContain('font-size: var(--font-size-13);')
+    expect(adminContestTableSource).toContain('--ui-badge-size: var(--font-size-11);')
+    expect(adminContestTableSource).not.toContain('font-size: var(--font-size-1-00);')
+    expect(adminContestTableSource).not.toContain('font-size: var(--font-size-0-875);')
+    expect(adminContestTableSource).not.toContain('font-size: var(--font-size-0-90);')
+    expect(adminContestTableSource).not.toContain('--ui-badge-size: var(--font-size-0-78);')
+  })
+
   it('应将编辑和导出结果收纳进更多菜单，并通过浮层渲染', async () => {
     const wrapper = mount(PlatformContestTable, {
       attachTo: document.body,

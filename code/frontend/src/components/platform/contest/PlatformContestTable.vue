@@ -224,7 +224,7 @@ function handleExport(contest: ContestDetailData): void {
   gap: var(--space-4);
   padding: 0 0 var(--space-3);
   border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-  font-size: var(--font-size-0-72);
+  font-size: var(--font-size-11);
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -263,7 +263,7 @@ function handleExport(contest: ContestDetailData): void {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: var(--font-size-1-00);
+  font-size: var(--font-size-14);
   font-weight: 600;
   color: var(--journal-ink);
 }
@@ -274,7 +274,7 @@ function handleExport(contest: ContestDetailData): void {
   overflow: hidden;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
-  font-size: var(--font-size-0-875);
+  font-size: var(--font-size-13);
   line-height: 1.55;
   color: var(--journal-muted);
 }
@@ -282,7 +282,7 @@ function handleExport(contest: ContestDetailData): void {
 .contest-row__mode,
 .contest-row__starts-at,
 .contest-row__ends-at {
-  font-size: var(--font-size-0-90);
+  font-size: var(--font-size-13);
   color: var(--journal-muted);
 }
 
@@ -303,7 +303,7 @@ function handleExport(contest: ContestDetailData): void {
 .contest-status-pill {
   --ui-badge-radius: 999px;
   --ui-badge-padding: 0.35rem 0.75rem;
-  --ui-badge-size: var(--font-size-0-78);
+  --ui-badge-size: var(--font-size-11);
   --ui-badge-spacing: 0.02em;
   line-height: 1;
 }
