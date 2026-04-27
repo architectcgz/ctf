@@ -313,22 +313,10 @@ const emit = defineEmits<{
 .studio-form-canvas {
   width: 100%;
   max-width: none;
-  border: 1px solid color-mix(in srgb, var(--workspace-line-soft) 84%, transparent);
-  border-radius: var(--workspace-radius-lg, var(--ui-dialog-radius));
-  background:
-    radial-gradient(
-      circle at top right,
-      color-mix(in srgb, var(--workspace-brand, var(--color-primary)) 7%, transparent),
-      transparent 42%
-    ),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--color-bg-surface) 92%, var(--contest-studio-canvas-surface)),
-      color-mix(in srgb, var(--color-bg-surface) 78%, var(--contest-studio-canvas-surface-soft))
-    );
+  border: none;
+  background: transparent;
   padding: var(--space-6) var(--space-7);
-  box-shadow: 0 var(--space-4) var(--space-8)
-    color-mix(in srgb, var(--color-shadow-soft) 34%, transparent);
+  box-shadow: none;
 }
 
 .studio-stage-enter-active {

@@ -260,39 +260,14 @@ function formatDateTime(value?: string): string {
   gap: var(--space-section-gap);
 }
 
-.readiness-summary-grid {
-  --metric-panel-border: color-mix(in srgb, var(--workspace-line-soft) 86%, transparent);
-  --metric-panel-background:
-    radial-gradient(
-      circle at top right,
-      color-mix(in srgb, var(--workspace-brand, var(--color-primary)) 12%, transparent),
-      transparent 46%
-    ),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base)),
-      color-mix(in srgb, var(--color-bg-surface) 82%, var(--color-bg-base))
-    );
-  --metric-panel-shadow: 0 var(--space-2) var(--space-5)
-    color-mix(in srgb, var(--color-shadow-soft) 24%, transparent);
-}
-
 .global-blockers {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
   border: 1px solid color-mix(in srgb, var(--color-danger) 20%, var(--color-border-default));
   border-radius: var(--ui-control-radius-lg);
-  background:
-    radial-gradient(
-      circle at top right,
-      color-mix(in srgb, var(--color-danger) 10%, transparent),
-      transparent 46%
-    ),
-    color-mix(in srgb, var(--color-bg-surface) 86%, var(--color-bg-base));
+  background: var(--color-bg-elevated);
   padding: var(--space-6);
-  box-shadow: 0 var(--space-2) var(--space-5)
-    color-mix(in srgb, var(--color-shadow-soft) 22%, transparent);
 }
 
 .challenge-blockers {
@@ -328,16 +303,9 @@ function formatDateTime(value?: string): string {
 
 .studio-table-wrap {
   overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--workspace-line-soft) 86%, transparent);
+  border: 1px solid var(--color-border-default);
   border-radius: var(--ui-control-radius-lg);
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--color-bg-surface) 94%, var(--color-bg-base)),
-      color-mix(in srgb, var(--color-bg-surface) 84%, var(--color-bg-base))
-    );
-  box-shadow: 0 var(--space-2) var(--space-5)
-    color-mix(in srgb, var(--color-shadow-soft) 24%, transparent);
+  background: var(--color-bg-surface);
 }
 
 .studio-table {
@@ -346,8 +314,8 @@ function formatDateTime(value?: string): string {
 }
 
 .studio-table th {
-  border-bottom: 1px solid color-mix(in srgb, var(--workspace-line-soft) 86%, transparent);
-  background: color-mix(in srgb, var(--color-bg-surface) 72%, var(--color-bg-base));
+  border-bottom: 1px solid var(--color-border-default);
+  background: var(--color-bg-elevated);
   padding: var(--space-3) var(--space-4);
   text-align: left;
   font-size: var(--font-size-11);
