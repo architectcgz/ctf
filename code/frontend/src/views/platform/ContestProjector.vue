@@ -4,13 +4,9 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
 import ContestProjectorAttackMap from '@/components/platform/contest/projector/ContestProjectorAttackMap.vue'
-import ContestProjectorEvents from '@/components/platform/contest/projector/ContestProjectorEvents.vue'
 import ContestProjectorFocusOverlay from '@/components/platform/contest/projector/ContestProjectorFocusOverlay.vue'
 import ContestProjectorHero from '@/components/platform/contest/projector/ContestProjectorHero.vue'
-import ContestProjectorLeaderboard from '@/components/platform/contest/projector/ContestProjectorLeaderboard.vue'
-import ContestProjectorServiceMatrix from '@/components/platform/contest/projector/ContestProjectorServiceMatrix.vue'
 import ContestProjectorToolbar from '@/components/platform/contest/projector/ContestProjectorToolbar.vue'
-import ContestProjectorTraffic from '@/components/platform/contest/projector/ContestProjectorTraffic.vue'
 import {
   formatProjectorTime,
   getContestStatusLabel,
@@ -54,16 +50,12 @@ const {
 
 const {
   topThreeRows,
-  leaderboardRows,
   firstBlood,
   latestAttackEvents,
   serviceStatusCounts,
   serviceHealthRate,
   serviceMatrixRows,
-  attackLeaders,
   attackEdges,
-  trafficTrendBars,
-  hotVictims,
 } = useContestProjectorDerived({
   scoreboardRows,
   services,
@@ -71,15 +63,20 @@ const {
   trafficSummary,
 })
 
-const contestTitle = computed(() => selectedContest.value?.title ?? scoreboard.value?.contest.title ?? '未选择赛事')
+const contestTitle = computed(
+  () => selectedContest.value?.title ?? scoreboard.value?.contest.title ?? '未选择赛事'
+)
 const contestStatusLabel = computed(() =>
   getContestStatusLabel(selectedContest.value?.status ?? scoreboard.value?.contest.status)
 )
 const roundLabel = computed(
-  () => `R${selectedRound.value?.round_number ?? '--'} · ${getRoundStatusLabel(selectedRound.value?.status)}`
+  () =>
+    `R${selectedRound.value?.round_number ?? '--'} · ${getRoundStatusLabel(selectedRound.value?.status)}`
 )
 const topTeamName = computed(() => topThreeRows.value[0]?.team_name ?? '--')
-const successfulAttackCount = computed(() => roundSummary.value?.metrics?.successful_attack_count ?? 0)
+const successfulAttackCount = computed(
+  () => roundSummary.value?.metrics?.successful_attack_count ?? 0
+)
 const trafficRequestCount = computed(() => trafficSummary.value?.total_request_count ?? 0)
 const abnormalServiceCount = computed(
   () => serviceStatusCounts.value.down + serviceStatusCounts.value.compromised
@@ -128,13 +125,12 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <section class="contest-projector-shell workspace-shell journal-shell journal-shell-admin journal-notes-card journal-hero flex min-h-full flex-1 flex-col">
+  <section
+    class="contest-projector-shell workspace-shell journal-shell journal-shell-admin journal-notes-card journal-hero flex min-h-full flex-1 flex-col"
+  >
     <div class="workspace-grid">
       <main class="content-pane contest-projector-content">
-        <section
-          ref="projectorStageRef"
-          class="projector-stage workspace-directory-section"
-        >
+        <section ref="projectorStageRef" class="projector-stage workspace-directory-section">
           <ContestProjectorToolbar
             :contests="projectorContests"
             :rounds="rounds"
@@ -152,9 +148,7 @@ onUnmounted(() => {
             @follow-current-round="void followCurrentRound()"
           />
 
-          <AppLoading v-if="loadingContests">
-            正在同步大屏赛事...
-          </AppLoading>
+          <AppLoading v-if="loadingContests"> 正在同步大屏赛事... </AppLoading>
 
           <AppEmpty
             v-else-if="loadError"
@@ -164,11 +158,7 @@ onUnmounted(() => {
             class="py-20"
           >
             <template #action>
-              <button
-                type="button"
-                class="ui-btn ui-btn--ghost"
-                @click="void loadContests()"
-              >
+              <button type="button" class="ui-btn ui-btn--ghost" @click="void loadContests()">
                 重试加载
               </button>
             </template>
@@ -182,10 +172,7 @@ onUnmounted(() => {
             class="py-20"
           />
 
-          <section
-            v-else
-            class="scoreboard-projector"
-          >
+          <section v-else class="scoreboard-projector">
             <ContestProjectorHero
               :title="contestTitle"
               :contest-status-label="contestStatusLabel"
@@ -198,23 +185,17 @@ onUnmounted(() => {
               :abnormal-service-count="abnormalServiceCount"
             />
 
-            <div
-              v-if="loadingScoreboard"
-              class="scoreboard-loading"
-            >
+            <div v-if="loadingScoreboard" class="scoreboard-loading">
               <AppLoading>正在刷新榜单...</AppLoading>
             </div>
 
-            <div
-              v-else
-              class="projector-board"
-            >
+            <div v-else class="projector-board">
               <div class="arena-grid">
                 <div
                   class="projector-focusable-panel projector-focusable-panel--attack-map"
                   role="button"
                   tabindex="0"
-                  aria-label="聚焦查看队伍攻击关系"
+                  aria-label="聚焦查看攻击面板"
                   @click="focusPanel('attack-map')"
                   @keydown.enter.prevent="focusPanel('attack-map')"
                   @keydown.space.prevent="focusPanel('attack-map')"
@@ -223,127 +204,40 @@ onUnmounted(() => {
                     :rows="serviceMatrixRows"
                     :edges="attackEdges"
                     :scoreboard-rows="scoreboardRows"
-                  />
-                </div>
-
-                <section class="battlefield-panel">
-                  <div
-                    class="projector-focusable-panel"
-                    role="button"
-                    tabindex="0"
-                    aria-label="聚焦查看队伍服务状态"
-                    @click="focusPanel('services')"
-                    @keydown.enter.prevent="focusPanel('services')"
-                    @keydown.space.prevent="focusPanel('services')"
-                  >
-                    <ContestProjectorServiceMatrix
-                      :rows="serviceMatrixRows"
-                      :up-count="serviceStatusCounts.up"
-                      :down-count="serviceStatusCounts.down"
-                      :compromised-count="serviceStatusCounts.compromised"
-                    />
-                  </div>
-
-                  <div
-                    class="projector-focusable-panel"
-                    role="button"
-                    tabindex="0"
-                    aria-label="聚焦查看代理流量"
-                    @click="focusPanel('traffic')"
-                    @keydown.enter.prevent="focusPanel('traffic')"
-                    @keydown.space.prevent="focusPanel('traffic')"
-                  >
-                    <ContestProjectorTraffic
-                      :summary="trafficSummary"
-                      :trend-bars="trafficTrendBars"
-                      :hot-victims="hotVictims"
-                    />
-                  </div>
-                </section>
-
-                <div
-                  class="projector-focusable-panel"
-                  role="button"
-                  tabindex="0"
-                  aria-label="聚焦查看攻击事件"
-                  @click="focusPanel('events')"
-                  @keydown.enter.prevent="focusPanel('events')"
-                  @keydown.space.prevent="focusPanel('events')"
-                >
-                  <ContestProjectorEvents
                     :first-blood="firstBlood"
-                    :attack-leaders="attackLeaders"
                     :latest-attack-events="latestAttackEvents"
-                  />
-                </div>
-
-                <div
-                  class="projector-focusable-panel"
-                  role="button"
-                  tabindex="0"
-                  aria-label="聚焦查看实时排名"
-                  @click="focusPanel('leaderboard')"
-                  @keydown.enter.prevent="focusPanel('leaderboard')"
-                  @keydown.space.prevent="focusPanel('leaderboard')"
-                >
-                  <ContestProjectorLeaderboard
-                    :top-three-rows="topThreeRows"
-                    :leaderboard-rows="leaderboardRows"
-                    :scoreboard-rows-length="scoreboardRows.length"
                   />
                 </div>
               </div>
 
               <div class="projector-footer">
-                <span>结束 {{ formatProjectorTime(selectedContest?.ends_at ?? scoreboard?.contest.ends_at) }}</span>
+                <span
+                  >结束
+                  {{
+                    formatProjectorTime(selectedContest?.ends_at ?? scoreboard?.contest.ends_at)
+                  }}</span
+                >
                 <span>最新流量 {{ formatProjectorTime(trafficSummary?.latest_event_at) }}</span>
                 <span>轮次创建 {{ formatProjectorTime(selectedRound?.created_at) }}</span>
               </div>
             </div>
 
-            <ContestProjectorFocusOverlay
-              :active-panel="focusedPanel"
-              @close="closeFocusPanel"
-            >
-              <ContestProjectorLeaderboard
-                v-if="focusedPanel === 'leaderboard'"
-                :top-three-rows="topThreeRows"
-                :leaderboard-rows="leaderboardRows"
-                :scoreboard-rows-length="scoreboardRows.length"
-              />
-
-              <ContestProjectorServiceMatrix
-                v-else-if="focusedPanel === 'services'"
-                :rows="serviceMatrixRows"
-                :up-count="serviceStatusCounts.up"
-                :down-count="serviceStatusCounts.down"
-                :compromised-count="serviceStatusCounts.compromised"
-              />
-
-              <ContestProjectorAttackMap
-                v-else-if="focusedPanel === 'attack-map'"
-                :rows="serviceMatrixRows"
-                :edges="attackEdges"
-                :scoreboard-rows="scoreboardRows"
-              />
-
-              <ContestProjectorTraffic
-                v-else-if="focusedPanel === 'traffic'"
-                :summary="trafficSummary"
-                :trend-bars="trafficTrendBars"
-                :hot-victims="hotVictims"
-              />
-
-              <ContestProjectorEvents
-                v-else-if="focusedPanel === 'events'"
-                :first-blood="firstBlood"
-                :attack-leaders="attackLeaders"
-                :latest-attack-events="latestAttackEvents"
-              />
-            </ContestProjectorFocusOverlay>
           </section>
         </section>
       </main>
+
+      <ContestProjectorFocusOverlay :active-panel="focusedPanel" @close="closeFocusPanel">
+        <ContestProjectorAttackMap
+          v-if="focusedPanel === 'attack-map'"
+          :rows="serviceMatrixRows"
+          :edges="attackEdges"
+          :scoreboard-rows="scoreboardRows"
+          :first-blood="firstBlood"
+          :latest-attack-events="latestAttackEvents"
+          expanded
+          board-only
+        />
+      </ContestProjectorFocusOverlay>
     </div>
   </section>
 </template>
@@ -357,14 +251,18 @@ onUnmounted(() => {
 .contest-projector-content,
 .projector-stage,
 .scoreboard-projector,
-.projector-board,
-.battlefield-panel {
+.projector-board {
   display: flex;
   flex-direction: column;
 }
 
 .contest-projector-content {
   padding: 0;
+}
+
+.workspace-grid {
+  position: relative;
+  min-height: 0;
 }
 
 .projector-stage {
@@ -381,8 +279,7 @@ onUnmounted(() => {
 }
 
 .scoreboard-projector,
-.projector-board,
-.battlefield-panel {
+.projector-board {
   gap: var(--space-4);
 }
 
@@ -408,11 +305,13 @@ onUnmounted(() => {
 
 .projector-focusable-panel:hover {
   transform: translateY(calc(var(--space-0-5) * -1));
-  box-shadow: 0 var(--space-3) var(--space-8) color-mix(in srgb, var(--color-shadow-strong) 18%, transparent);
+  box-shadow: 0 var(--space-3) var(--space-8)
+    color-mix(in srgb, var(--color-shadow-strong) 18%, transparent);
 }
 
 .projector-focusable-panel:focus-visible {
-  outline: var(--ui-focus-ring-width) solid color-mix(in srgb, var(--journal-accent) 58%, transparent);
+  outline: var(--ui-focus-ring-width) solid
+    color-mix(in srgb, var(--journal-accent) 58%, transparent);
   outline-offset: var(--space-1);
 }
 
@@ -425,7 +324,7 @@ onUnmounted(() => {
 
 .arena-grid {
   display: grid;
-  grid-template-columns: minmax(18rem, 1.05fr) minmax(26rem, 1.65fr) minmax(18rem, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-4);
   align-items: stretch;
 }

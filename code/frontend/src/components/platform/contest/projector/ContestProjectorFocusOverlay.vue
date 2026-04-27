@@ -32,16 +32,8 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div
-    v-if="activePanel"
-    class="projector-focus-overlay"
-    @click.self="closeOverlay"
-  >
-    <section
-      class="projector-focus-panel"
-      role="dialog"
-      aria-modal="true"
-    >
+  <div v-if="activePanel" class="projector-focus-overlay" @click.self="closeOverlay">
+    <section class="projector-focus-panel" role="dialog" aria-modal="true">
       <button
         type="button"
         class="projector-focus-close"
@@ -60,20 +52,25 @@ onUnmounted(() => {
 
 <style scoped>
 .projector-focus-overlay {
-  position: fixed;
+  position: absolute;
   z-index: var(--ui-dialog-z-index);
   inset: 0;
   display: grid;
-  place-items: center;
+  min-height: 0;
+  align-items: stretch;
+  justify-items: stretch;
   background: var(--ui-dialog-overlay);
-  padding: var(--space-6);
+  backdrop-filter: blur(var(--space-1));
+  padding: var(--space-4);
 }
 
 .projector-focus-panel {
   position: relative;
-  width: min(var(--ui-dialog-wide-width), calc(100vw - (var(--space-6) * 2)));
-  max-height: calc(100vh - (var(--space-6) * 2));
-  overflow: auto;
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--journal-accent) 30%, var(--color-border-subtle));
   border-radius: var(--ui-dialog-radius);
   background: var(--journal-surface);
@@ -81,15 +78,15 @@ onUnmounted(() => {
 }
 
 .projector-focus-close {
-  position: sticky;
+  position: absolute;
+  z-index: 4;
   top: var(--space-4);
-  float: right;
+  right: var(--space-4);
   display: inline-flex;
   width: var(--ui-control-height-sm);
   height: var(--ui-control-height-sm);
   align-items: center;
   justify-content: center;
-  margin: var(--space-4) var(--space-4) 0 0;
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--ui-control-radius-sm);
   background: color-mix(in srgb, var(--color-bg-elevated) 88%, transparent);
@@ -109,12 +106,21 @@ onUnmounted(() => {
 }
 
 .projector-focus-close:focus-visible {
-  outline: var(--ui-focus-ring-width) solid color-mix(in srgb, var(--journal-accent) 58%, transparent);
+  outline: var(--ui-focus-ring-width) solid
+    color-mix(in srgb, var(--journal-accent) 58%, transparent);
   outline-offset: var(--space-1);
 }
 
 .projector-focus-body {
-  padding: var(--space-5);
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  padding: var(--space-4);
+}
+
+.projector-focus-body :deep(.attack-map-panel--board-only) {
+  min-height: 100%;
 }
 
 .projector-focus-body :deep(.leaderboard-panel),
@@ -128,16 +134,11 @@ onUnmounted(() => {
 
 @media (max-width: 900px) {
   .projector-focus-overlay {
-    padding: var(--space-4);
-  }
-
-  .projector-focus-panel {
-    width: 100%;
-    max-height: calc(100vh - (var(--space-4) * 2));
+    padding: var(--space-3);
   }
 
   .projector-focus-body {
-    padding: var(--space-4);
+    padding: var(--space-3);
   }
 }
 </style>
