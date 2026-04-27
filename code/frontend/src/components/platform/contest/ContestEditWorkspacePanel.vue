@@ -251,10 +251,10 @@ const emit = defineEmits<{
 
 .studio-form-canvas {
   width: 100%;
-  max-width: 64rem;
+  max-width: none;
   border: none;
   background: transparent;
-  padding: 2rem;
+  padding: var(--space-6) var(--space-7);
   box-shadow: none;
 }
 
