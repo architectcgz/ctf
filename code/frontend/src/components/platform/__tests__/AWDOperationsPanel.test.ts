@@ -460,6 +460,7 @@ describe('AWDOperationsPanel', () => {
     expect(wrapper.get('#awd-ops-tab-instances').attributes('aria-selected')).toBe('true')
     expect(wrapper.find('#awd-ops-panel-inspector').exists()).toBe(false)
     expect(wrapper.get('#awd-ops-panel-instances').isVisible()).toBe(true)
+    expect(wrapper.text()).toContain('实例编排')
     expect(wrapper.text()).toContain('Red Team')
   })
 
@@ -687,6 +688,7 @@ describe('AWDOperationsPanel', () => {
     })
 
     expect(wrapper.get('#awd-ops-panel-instances').isVisible()).toBe(true)
+    expect(wrapper.text()).toContain('实例编排')
     expect(wrapper.text()).toContain('Red Team')
     expect(wrapper.text()).not.toContain('开赛就绪摘要')
     expect(wrapper.text()).not.toContain('可开赛')

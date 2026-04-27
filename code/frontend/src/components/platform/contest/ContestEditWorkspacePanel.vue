@@ -211,7 +211,7 @@ const emit = defineEmits<{
   flex-direction: column;
   min-height: 0;
   position: relative;
-  background: var(--color-bg-surface);
+  background: var(--color-bg-base);
 }
 
 .studio-scroll-area {
