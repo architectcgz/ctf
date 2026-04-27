@@ -270,8 +270,9 @@ describe('admin management surface alignment', () => {
   it('contest edit page should use the admin workspace shell and a dedicated back action', () => {
     expect(contestEditCombinedSource).toMatch(/class="[^"]*\bworkspace-topbar\b[^"]*"/)
     expect(contestEditCombinedSource).toMatch(
-      /<h1 class="workspace-page-title">\s*编辑竞赛\s*<\/h1>/
+      /<h1[\s\S]*class="studio-contest-heading"[\s\S]*>\s*\{\{ pageTitle \}\}\s*<\/h1>/
     )
+    expect(contestEditCombinedSource).toContain('class="studio-edit-label"')
     expect(contestEditCombinedSource).toContain('返回竞赛目录')
     expect(contestEditCombinedSource).toContain('Contest Studio')
     expect(contestEditCombinedSource).toContain('class="workspace-directory-section contest-edit-section"')
