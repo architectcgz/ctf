@@ -64,9 +64,11 @@ function handleStageSelect(stage: ContestWorkbenchStage): void {
 
 <style scoped>
 .studio-tabs-container {
-  background: var(--color-bg-base);
+  background: var(--color-bg-surface);
   margin-top: 0;
-  border-top: 1px solid var(--workspace-line-soft);
+  padding: 0 var(--space-workspace-side-padding);
+  border-top: 0;
+  border-bottom-color: var(--workspace-line-soft);
 }
 
 .top-tab {

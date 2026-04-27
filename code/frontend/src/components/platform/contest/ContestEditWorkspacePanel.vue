@@ -1,6 +1,14 @@
 <script setup lang="ts">
-import type { AdminContestChallengeViewData, AWDReadinessData, ContestDetailData } from '@/api/contracts'
-import type { ContestFieldLocks, ContestFormDraft, PlatformContestStatus } from '@/composables/usePlatformContests'
+import type {
+  AdminContestChallengeViewData,
+  AWDReadinessData,
+  ContestDetailData,
+} from '@/api/contracts'
+import type {
+  ContestFieldLocks,
+  ContestFormDraft,
+  PlatformContestStatus,
+} from '@/composables/usePlatformContests'
 import type { ContestWorkbenchStageKey } from '@/composables/useContestWorkbench'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
@@ -156,11 +164,14 @@ const emit = defineEmits<{
           v-if="contest.mode === 'awd' && activeStage === 'operations'"
           class="studio-pane studio-pane--operations fade-in"
         >
-          <header class="stage-pane-header">
-            <h2 class="stage-pane-title">
+          <div
+            class="stage-pane-divider"
+            aria-label="轮次态势"
+          >
+            <span class="stage-pane-divider__label">
               轮次态势
-            </h2>
-          </header>
+            </span>
+          </div>
           <AWDOperationsPanel
             :contests="[contest]"
             :selected-contest-id="contest.id"
@@ -177,11 +188,14 @@ const emit = defineEmits<{
           v-if="contest.mode === 'awd' && activeStage === 'instances'"
           class="studio-pane studio-pane--operations fade-in"
         >
-          <header class="stage-pane-header">
-            <h2 class="stage-pane-title">
+          <div
+            class="stage-pane-divider"
+            aria-label="实例编排"
+          >
+            <span class="stage-pane-divider__label">
               实例编排
-            </h2>
-          </header>
+            </span>
+          </div>
           <AWDOperationsPanel
             :contests="[contest]"
             :selected-contest-id="contest.id"
@@ -233,20 +247,28 @@ const emit = defineEmits<{
 }
 
 .studio-pane--operations {
-  padding: 2rem;
+  padding: var(--space-4) var(--space-8) var(--space-8);
 }
 
-.stage-pane-header {
-  margin-bottom: var(--space-5);
-  padding-bottom: var(--space-4);
-  border-bottom: 1px solid var(--color-border-subtle);
+.stage-pane-divider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-2);
+  color: var(--color-text-muted);
 }
 
-.stage-pane-title {
-  margin: 0;
-  color: var(--color-text-primary);
-  font-size: var(--font-size-1-25);
-  font-weight: 900;
+.stage-pane-divider::after {
+  content: '';
+  flex: 1;
+  border-top: 1px dashed color-mix(in srgb, var(--color-border-default) 84%, transparent);
+}
+
+.stage-pane-divider__label {
+  flex: 0 0 auto;
+  font-size: var(--font-size-12);
+  font-weight: 800;
+  color: var(--color-text-muted);
 }
 
 .studio-form-canvas {

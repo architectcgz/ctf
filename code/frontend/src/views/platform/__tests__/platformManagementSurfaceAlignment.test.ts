@@ -23,6 +23,7 @@ import adminChallengeProfilePanelSource from '@/components/platform/challenge/Ad
 import challengeWriteupManagePanelSource from '@/components/platform/writeup/ChallengeWriteupManagePanel.vue?raw'
 import contestEditSource from '../ContestEdit.vue?raw'
 import contestEditTopbarPanelSource from '@/components/platform/contest/ContestEditTopbarPanel.vue?raw'
+import contestWorkbenchStageTabsSource from '@/components/platform/contest/ContestWorkbenchStageTabs.vue?raw'
 import contestEditWorkspacePanelSource from '@/components/platform/contest/ContestEditWorkspacePanel.vue?raw'
 import imageManageSource from '../ImageManage.vue?raw'
 import imageManageHeroPanelSource from '@/components/platform/images/ImageManageHeroPanel.vue?raw'
@@ -93,6 +94,7 @@ const awdReviewCombinedSource = [
 const contestEditCombinedSource = [
   contestEditSource,
   contestEditTopbarPanelSource,
+  contestWorkbenchStageTabsSource,
   contestEditWorkspacePanelSource,
 ].join('\n')
 
@@ -275,6 +277,8 @@ describe('admin management surface alignment', () => {
     expect(contestEditCombinedSource).toContain('class="studio-edit-label"')
     expect(contestEditCombinedSource).toContain('返回竞赛目录')
     expect(contestEditCombinedSource).toContain('Contest Studio')
+    expect(contestEditCombinedSource).toContain('background: var(--color-bg-surface);')
+    expect(contestEditCombinedSource).toContain('border-top: 0;')
     expect(contestEditCombinedSource).toContain('class="workspace-directory-section contest-edit-section"')
   })
 

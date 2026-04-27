@@ -38,11 +38,11 @@ describe('ContestWorkbenchStageTabs', () => {
 
     expect(wrapper.findAll('[role="tablist"]')).toHaveLength(1)
     expect(wrapper.get('[role="tablist"]').attributes('aria-label')).toBe('竞赛工作台阶段切换')
-    expect(wrapper.findAll('.studio-tab-item')).toHaveLength(5)
-    expect(wrapper.get('.studio-tab-item.is-active').text()).toContain('题目池')
+    expect(wrapper.findAll('.top-tab')).toHaveLength(5)
+    expect(wrapper.get('.top-tab.active').text()).toContain('题目池')
 
     const operationsTab = wrapper
-      .findAll('.studio-tab-item')
+      .findAll('.top-tab')
       .find((node) => node.text().includes('轮次运行'))
 
     expect(operationsTab).toBeDefined()

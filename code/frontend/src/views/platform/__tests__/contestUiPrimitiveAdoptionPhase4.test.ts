@@ -5,7 +5,6 @@ import awdContestSelectorFieldSource from '@/components/platform/contest/AWDCont
 import awdOperationsPanelSource from '@/components/platform/contest/AWDOperationsPanel.vue?raw'
 import awdRoundHeaderPanelSource from '@/components/platform/contest/AWDRoundHeaderPanel.vue?raw'
 import awdRoundInspectorSource from '@/components/platform/contest/AWDRoundInspector.vue?raw'
-import awdRoundSelectionPanelSource from '@/components/platform/contest/AWDRoundSelectionPanel.vue?raw'
 import awdRuntimePendingStateSource from '@/components/platform/contest/AWDRuntimePendingState.vue?raw'
 import awdTrafficPanelSource from '@/components/platform/contest/AWDTrafficPanel.vue?raw'
 import contestAwdPreflightPanelSource from '@/components/platform/contest/ContestAwdPreflightPanel.vue?raw'
@@ -21,15 +20,13 @@ describe('contest ui primitive adoption phase 4', () => {
     expect(awdRuntimePendingStateSource).toContain('class="ui-btn ui-btn--primary"')
   })
 
-  it('awd round inspector should consume shared buttons and field primitives for toolbar and filters', () => {
+  it('awd round inspector should keep toolbar and filters in extracted panels', () => {
     expect(awdRoundInspectorSource).toContain('<AWDRoundHeaderPanel')
-    expect(awdRoundInspectorSource).toContain('<AWDRoundSelectionPanel')
+    expect(awdRoundInspectorSource).not.toContain('<AWDRoundSelectionPanel')
     expect(awdRoundInspectorSource).toContain('<AWDTrafficPanel')
-    expect(awdRoundHeaderPanelSource).toContain('class="ui-btn ui-btn--secondary awd-round-toolbar__button"')
-    expect(awdRoundHeaderPanelSource).toContain('class="ui-btn ui-btn--primary awd-round-toolbar__button"')
-    expect(awdRoundSelectionPanelSource).toContain('class="ui-field awd-round-filter-field"')
-    expect(awdRoundSelectionPanelSource).toContain('class="ui-control-wrap awd-round-filter-control"')
-    expect(awdRoundSelectionPanelSource).toContain('class="ui-control"')
+    expect(awdRoundHeaderPanelSource).toContain('class="round-select-native"')
+    expect(awdRoundHeaderPanelSource).toContain('class="ops-btn ops-btn--neutral"')
+    expect(awdRoundHeaderPanelSource).toContain('class="ops-btn ops-btn--primary"')
     expect(awdTrafficPanelSource).toContain('class="ui-field awd-round-filter-field"')
     expect(awdTrafficPanelSource).toContain('class="ui-control-wrap awd-round-filter-control"')
     expect(awdTrafficPanelSource).toContain('class="ui-control"')
