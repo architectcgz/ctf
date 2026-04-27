@@ -180,4 +180,40 @@ describe('ContestOperations', () => {
     expect(wrapper.text()).not.toContain('实例编排')
     expect(replaceMock).not.toHaveBeenCalled()
   })
+
+  it('赛事运维页应通过插槽注入服务告警摘要', async () => {
+    const wrapper = mount(ContestOperations, {
+      global: {
+        stubs: {
+          AppLoading: {
+            template: '<div><slot /></div>',
+          },
+          AWDOperationsPanel: {
+            props: ['operationPanel'],
+            methods: {
+              getAlertClass() {
+                return 'awd-service-alert--danger'
+              },
+              applyAlertFilter() {},
+            },
+            template: `
+              <div data-testid="awd-ops-panel">
+                <slot
+                  name="service-alerts"
+                  :service-alerts="[{ key: 'service_compromised', label: '服务已失陷', count: 2 }]"
+                  selected-alert-key=""
+                  :get-service-alert-class="getAlertClass"
+                  :apply-service-alert-filter="applyAlertFilter"
+                />
+              </div>
+            `,
+          },
+        },
+      },
+    })
+
+    await flushPromises()
+
+    expect(wrapper.get('[data-testid="awd-ops-panel"]').text()).toContain('服务已失陷 (2)')
+  })
 })

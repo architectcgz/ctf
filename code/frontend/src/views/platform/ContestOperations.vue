@@ -5,6 +5,7 @@ import { useRoute } from 'vue-router'
 import { getContest } from '@/api/admin'
 import type { ContestDetailData } from '@/api/contracts'
 import AWDOperationsPanel from '@/components/platform/contest/AWDOperationsPanel.vue'
+import AWDServiceAlertBanner from '@/components/platform/contest/AWDServiceAlertBanner.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
 import { useBackofficeBreadcrumbDetail } from '@/composables/useBackofficeBreadcrumbDetail'
 import { useToast } from '@/composables/useToast'
@@ -79,7 +80,24 @@ onUnmounted(() => {
             :hide-operation-tabs="true"
             operation-panel="inspector"
             :runtime-content="inspectorRuntimeContent"
-          />
+          >
+            <template
+              #service-alerts="{
+                serviceAlerts,
+                selectedAlertKey,
+                getServiceAlertClass,
+                applyServiceAlertFilter,
+              }"
+            >
+              <AWDServiceAlertBanner
+                class="contest-ops-service-alerts"
+                :alerts="serviceAlerts"
+                :selected-alert-key="selectedAlertKey"
+                :get-alert-class="getServiceAlertClass"
+                @select-alert="applyServiceAlertFilter"
+              />
+            </template>
+          </AWDOperationsPanel>
         </section>
       </main>
     </div>
@@ -102,6 +120,10 @@ onUnmounted(() => {
 .contest-ops-workspace {
   --workspace-directory-section-padding: var(--space-4) var(--space-5-5);
   background: transparent;
+}
+
+.contest-ops-service-alerts {
+  margin-bottom: var(--space-8);
 }
 
 .ops-loading-overlay {

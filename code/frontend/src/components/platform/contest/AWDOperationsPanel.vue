@@ -485,7 +485,14 @@ function handleOverrideDialogOpenChange(value: boolean) {
             @run-selected-round-check="runSelectedRoundCheck"
             @update:selected-round-id="updateSelectedRoundId"
             @open:contest-edit="emit('open:contest-edit')"
-          />
+          >
+            <template #service-alerts="slotProps">
+              <slot
+                name="service-alerts"
+                v-bind="slotProps"
+              />
+            </template>
+          </AWDRoundInspector>
 
           <AWDInstanceOrchestrationPanel
             v-if="shouldShowInstanceOrchestration"

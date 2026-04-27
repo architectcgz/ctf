@@ -18,6 +18,7 @@ import AWDScoreboardSummaryPanel from '@/components/platform/contest/AWDScoreboa
 import AWDServiceStatusPanel from '@/components/platform/contest/AWDServiceStatusPanel.vue'
 import AWDTrafficPanel from '@/components/platform/contest/AWDTrafficPanel.vue'
 import type {
+  AWDServiceAlertView,
   AWDRoundInspectorEmits,
   AWDRoundInspectorProps,
 } from '@/components/platform/contest/awdInspector.types'
@@ -32,6 +33,14 @@ import { useAwdInspectorFormatting } from '@/composables/useAwdInspectorFormatti
 const props = defineProps<AWDRoundInspectorProps & { initialTab?: 'matrix' | 'attacks' | 'traffic' | 'scoreboard', hideStudioLink?: boolean }>()
 
 const emit = defineEmits<AWDRoundInspectorEmits & { 'open:contestEdit': [] }>()
+defineSlots<{
+  'service-alerts'?: (props: {
+    serviceAlerts: AWDServiceAlertView[]
+    selectedAlertKey: string
+    getServiceAlertClass: (alertKey: string) => string
+    applyServiceAlertFilter: (alertKey: string) => void
+  }) => unknown
+}>()
 
 const activeSubTab = ref<'matrix' | 'attacks' | 'traffic' | 'scoreboard'>(props.initialTab || 'matrix')
 
@@ -92,6 +101,7 @@ const {
 const {
   getCheckSourceLabel,
   getCheckerTypeLabel,
+  getCheckStatusLabel,
   summarizeCheckResult,
   getCheckActions,
   getCheckTargets,
@@ -128,7 +138,7 @@ const {
   attackResultFilter,
   attackSourceFilter,
   getChallengeTitle,
-  getCheckStatusLabel: (s: any) => s,
+  getCheckStatusLabel,
 })
 
 const {
@@ -348,23 +358,13 @@ function getServiceCheckPresentationResult(service: AWDTeamServiceData): Record<
             v-show="activeSubTab === 'matrix'"
             class="pane-matrix"
           >
-            <div
-              v-if="serviceAlerts.length > 0"
-              class="alert-banner mb-8"
-            >
-              <span class="banner-tag">重点异常告警</span>
-              <div class="alert-pills">
-                <button
-                  v-for="alert in serviceAlerts"
-                  :key="alert.key"
-                  class="alert-pill"
-                  :class="[getServiceAlertClass(alert.key), { 'is-active': serviceAlertReasonFilter === alert.key }]"
-                  @click="applyServiceAlertFilter(alert.key)"
-                >
-                  {{ alert.label }} ({{ alert.count }})
-                </button>
-              </div>
-            </div>
+            <slot
+              name="service-alerts"
+              :service-alerts="serviceAlerts"
+              :selected-alert-key="serviceAlertReasonFilter"
+              :get-service-alert-class="getServiceAlertClass"
+              :apply-service-alert-filter="applyServiceAlertFilter"
+            />
             <AWDServiceStatusPanel
               :services="services"
               :filtered-services="filteredServices"
@@ -530,34 +530,6 @@ function getServiceCheckPresentationResult(service: AWDTeamServiceData): Record<
 
 .canvas-content { flex: 1; overflow-y: auto; padding: 2rem 0; position: relative; }
 .canvas-loading-overlay { position: absolute; inset: 0; background: color-mix(in srgb, var(--color-bg-base) 70%, transparent); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 10; }
-
-.alert-banner { display: flex; align-items: center; gap: 1.5rem; padding: 0.75rem 1.25rem; background: color-mix(in srgb, var(--color-warning) 10%, var(--color-bg-surface)); border: 1px solid color-mix(in srgb, var(--color-warning) 20%, transparent); border-radius: 0.75rem; }
-.banner-tag { font-size: 10px; font-weight: 800; color: var(--color-warning); text-transform: uppercase; }
-.alert-pills { display: flex; gap: 0.5rem; }
-.alert-pill { padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; border: 1px solid var(--awd-service-alert-border, color-mix(in srgb, var(--color-warning) 30%, transparent)); background: var(--awd-service-alert-bg, transparent); color: var(--awd-service-alert-color, var(--color-warning)); transition: all 0.2s ease; }
-.alert-pill:hover { background: var(--color-bg-elevated); }
-.alert-pill.is-active { background: var(--awd-service-alert-active-bg, var(--color-warning)); color: var(--color-text-inverse); border-color: var(--awd-service-alert-active-bg, var(--color-warning)); }
-
-.awd-service-alert--danger {
-  --awd-service-alert-bg: color-mix(in srgb, var(--color-danger) 10%, var(--color-bg-surface));
-  --awd-service-alert-border: color-mix(in srgb, var(--color-danger) 20%, transparent);
-  --awd-service-alert-color: var(--color-danger);
-  --awd-service-alert-active-bg: var(--color-danger);
-}
-
-.awd-service-alert--warning {
-  --awd-service-alert-bg: color-mix(in srgb, var(--color-warning) 10%, var(--color-bg-surface));
-  --awd-service-alert-border: color-mix(in srgb, var(--color-warning) 20%, transparent);
-  --awd-service-alert-color: var(--color-warning);
-  --awd-service-alert-active-bg: var(--color-warning);
-}
-
-.awd-service-alert--neutral {
-  --awd-service-alert-bg: color-mix(in srgb, var(--color-text-muted) 10%, var(--color-bg-surface));
-  --awd-service-alert-border: color-mix(in srgb, var(--color-text-muted) 20%, transparent);
-  --awd-service-alert-color: var(--color-text-primary);
-  --awd-service-alert-active-bg: var(--color-text-secondary);
-}
 
 .ops-btn {
   display: inline-flex; align-items: center; justify-content: center;
