@@ -105,8 +105,16 @@ describe('PlatformInstanceManagement', () => {
     expect(instanceManageWorkspacePanelSource).toContain(
       "from '@/components/common/WorkspaceDirectoryPagination.vue'"
     )
+    expect(instanceManageWorkspacePanelSource).toContain(
+      "from '@/components/common/WorkspaceDirectoryToolbar.vue'"
+    )
     expect(instanceManageWorkspacePanelSource).toContain('<WorkspaceDataTable')
+    expect(instanceManageWorkspacePanelSource).toContain('<WorkspaceDirectoryToolbar')
     expect(instanceManageWorkspacePanelSource).toContain('<WorkspaceDirectoryPagination')
+    expect(instanceManageWorkspacePanelSource).toContain('search-placeholder="检索实例、题目、用户或访问地址..."')
+    expect(instanceManageWorkspacePanelSource).toContain('filter-panel-title="实例筛选"')
+    expect(instanceManageWorkspacePanelSource).toContain("label: '班级'")
+    expect(instanceManageWorkspacePanelSource).toContain('class="instance-user-link"')
     expect(instanceManageWorkspacePanelSource).toContain('class="instance-status-pill"')
     expect(instanceManageWorkspacePanelSource).toContain('class="ui-btn ui-btn--danger ui-btn--xs"')
     expect(adminInstanceManageSource).not.toContain('bg-green-100 text-green-700')
@@ -123,10 +131,35 @@ describe('PlatformInstanceManagement', () => {
     expect(wrapper.text()).toContain('实例管理')
     expect(wrapper.text()).toContain('Web SQLi 101')
     expect(wrapper.text()).toContain('Alice')
+    expect(wrapper.text()).toContain('Class A')
     expect(wrapper.text()).toContain('http://127.0.0.1:30001')
     expect(wrapper.text()).toContain('运行中')
     expect(wrapper.text()).toContain('已过期')
     expect(wrapper.text()).toContain('销毁')
+    expect(wrapper.text()).toContain('共 2 个实例')
+  })
+
+  it('应支持按实例关键词筛选目录', async () => {
+    const wrapper = mount(PlatformInstanceManagement)
+    await flushPromises()
+
+    await wrapper.get('.workspace-directory-toolbar__search-input').setValue('Pwn')
+
+    expect(wrapper.text()).not.toContain('Web SQLi 101')
+    expect(wrapper.text()).toContain('Pwn Stack 201')
+    expect(wrapper.text()).toContain('共 1 个实例')
+  })
+
+  it('应支持点击所属用户进入学生分析页', async () => {
+    const wrapper = mount(PlatformInstanceManagement)
+    await flushPromises()
+
+    await wrapper.get('.instance-user-link').trigger('click')
+
+    expect(pushMock).toHaveBeenCalledWith({
+      name: 'PlatformStudentAnalysis',
+      params: { className: 'Class A', studentId: 'stu-1' },
+    })
   })
 
   it('应支持销毁实例并更新列表', async () => {
