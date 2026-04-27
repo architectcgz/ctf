@@ -1,5 +1,7 @@
 import type { AWDTeamServiceData } from '@/api/contracts'
 
+export type ContestProjectorFocusPanel = 'leaderboard' | 'services' | 'traffic' | 'events'
+
 export interface ContestProjectorServiceMatrixRow {
   team_id: string
   team_name: string

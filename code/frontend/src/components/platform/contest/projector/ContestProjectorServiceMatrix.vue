@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { AWDTeamServiceData } from '@/api/contracts'
 import type { ContestProjectorServiceMatrixRow } from '@/components/platform/contest/projector/contestProjectorTypes'
 import { getServiceStatusLabel } from '@/components/platform/contest/projector/contestProjectorFormatters'
 
@@ -8,6 +9,14 @@ defineProps<{
   downCount: number
   compromisedCount: number
 }>()
+
+function getServiceDisplayName(service: AWDTeamServiceData): string {
+  return (
+    service.service_name?.trim() ||
+    service.challenge_title?.trim() ||
+    (service.service_id ? `服务 ${service.service_id}` : `题目 ${service.challenge_id}`)
+  )
+}
 </script>
 
 <template>
@@ -36,11 +45,12 @@ defineProps<{
           <span
             v-for="service in row.services.slice(0, 10)"
             :key="service.id"
-            class="service-dot"
-            :class="`service-dot--${service.service_status}`"
-            :title="`${service.challenge_id}: ${getServiceStatusLabel(service.service_status)}`"
+            class="service-cell"
+            :class="`service-cell--${service.service_status}`"
+            :title="`${getServiceDisplayName(service)} · ${getServiceStatusLabel(service.service_status)}`"
           >
-            {{ getServiceStatusLabel(service.service_status) }}
+            <span class="service-cell__name">{{ getServiceDisplayName(service) }}</span>
+            <span class="service-cell__status">{{ getServiceStatusLabel(service.service_status) }}</span>
           </span>
         </div>
       </div>
@@ -122,36 +132,57 @@ defineProps<{
 }
 
 .service-chip,
-.service-dot {
+.service-cell {
   display: inline-flex;
   min-height: var(--ui-control-height-sm);
   align-items: center;
   justify-content: center;
-  border-radius: 0.375rem;
+  border-radius: var(--ui-control-radius-sm);
   padding: 0 var(--space-2-5);
   font-size: var(--font-size-11);
   font-weight: 900;
 }
 
-.service-dot {
-  min-width: 3.6rem;
+.service-cell {
+  min-width: var(--ui-service-cell-min-width);
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-0-5);
+  padding-block: var(--space-1);
+}
+
+.service-cell__name,
+.service-cell__status {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.service-cell__name {
+  color: var(--journal-ink);
+  font-size: var(--font-size-12);
+}
+
+.service-cell__status {
   font-family: var(--font-family-mono);
+  font-size: var(--font-size-10);
 }
 
 .service-chip--up,
-.service-dot--up {
+.service-cell--up {
   background: color-mix(in srgb, var(--color-success) 14%, transparent);
   color: var(--color-success);
 }
 
 .service-chip--down,
-.service-dot--down {
+.service-cell--down {
   background: color-mix(in srgb, var(--color-danger) 14%, transparent);
   color: var(--color-danger);
 }
 
 .service-chip--compromised,
-.service-dot--compromised {
+.service-cell--compromised {
   background: color-mix(in srgb, var(--color-warning) 16%, transparent);
   color: var(--color-warning);
 }

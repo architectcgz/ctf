@@ -29,6 +29,7 @@ export function useContestProjectorData() {
   const scoreboard = ref<ContestScoreboardData | null>(null)
   const rounds = ref<AWDRoundData[]>([])
   const selectedRoundId = ref('')
+  const roundAutoFollow = ref(true)
   const services = ref<AWDTeamServiceData[]>([])
   const attacks = ref<AWDAttackLogData[]>([])
   const roundSummary = ref<AWDRoundSummaryData | null>(null)
@@ -65,6 +66,48 @@ export function useContestProjectorData() {
     selectedContestId.value = preferred?.id ?? ''
   }
 
+  function chooseLiveRound(nextRounds: AWDRoundData[]): AWDRoundData | null {
+    return nextRounds.find((item) => item.status === 'running') ?? nextRounds[nextRounds.length - 1] ?? null
+  }
+
+  function chooseDisplayRound(nextRounds: AWDRoundData[]): AWDRoundData | null {
+    if (!roundAutoFollow.value && selectedRoundId.value) {
+      const manualRound = nextRounds.find((item) => item.id === selectedRoundId.value)
+      if (manualRound) {
+        return manualRound
+      }
+      roundAutoFollow.value = true
+    }
+    return chooseLiveRound(nextRounds)
+  }
+
+  async function loadRoundSnapshot(
+    contestId: string,
+    roundId: string,
+    requestToken: number
+  ): Promise<void> {
+    const [nextServices, nextAttacks, nextRoundSummary, nextTrafficSummary] = await Promise.all([
+      listContestAWDRoundServices(contestId, roundId),
+      listContestAWDRoundAttacks(contestId, roundId),
+      getContestAWDRoundSummary(contestId, roundId),
+      getContestAWDRoundTrafficSummary(contestId, roundId),
+    ])
+    if (requestToken !== scoreboardRequestToken) {
+      return
+    }
+    services.value = nextServices
+    attacks.value = nextAttacks
+    roundSummary.value = nextRoundSummary
+    trafficSummary.value = nextTrafficSummary
+  }
+
+  function clearRoundSnapshot(): void {
+    services.value = []
+    attacks.value = []
+    roundSummary.value = null
+    trafficSummary.value = null
+  }
+
   async function loadScoreboard(contestId = selectedContestId.value): Promise<void> {
     if (!contestId) {
       return
@@ -85,31 +128,16 @@ export function useContestProjectorData() {
       }
       scoreboard.value = nextScoreboard
       rounds.value = nextRounds
-      const preferredRound =
-        nextRounds.find((item) => item.status === 'running') ??
-        nextRounds[nextRounds.length - 1] ??
-        null
+      const preferredRound = chooseDisplayRound(nextRounds)
       selectedRoundId.value = preferredRound?.id ?? ''
 
       if (preferredRound) {
-        const [nextServices, nextAttacks, nextRoundSummary, nextTrafficSummary] = await Promise.all([
-          listContestAWDRoundServices(contestId, preferredRound.id),
-          listContestAWDRoundAttacks(contestId, preferredRound.id),
-          getContestAWDRoundSummary(contestId, preferredRound.id),
-          getContestAWDRoundTrafficSummary(contestId, preferredRound.id),
-        ])
+        await loadRoundSnapshot(contestId, preferredRound.id, requestToken)
         if (requestToken !== scoreboardRequestToken) {
           return
         }
-        services.value = nextServices
-        attacks.value = nextAttacks
-        roundSummary.value = nextRoundSummary
-        trafficSummary.value = nextTrafficSummary
       } else {
-        services.value = []
-        attacks.value = []
-        roundSummary.value = null
-        trafficSummary.value = null
+        clearRoundSnapshot()
       }
       lastUpdatedLabel.value = new Date().toLocaleTimeString('zh-CN', {
         hour: '2-digit',
@@ -123,10 +151,8 @@ export function useContestProjectorData() {
       scoreboard.value = null
       rounds.value = []
       selectedRoundId.value = ''
-      services.value = []
-      attacks.value = []
-      roundSummary.value = null
-      trafficSummary.value = null
+      roundAutoFollow.value = true
+      clearRoundSnapshot()
       toast.error('同步大屏排行榜失败')
     } finally {
       if (requestToken === scoreboardRequestToken) {
@@ -151,6 +177,10 @@ export function useContestProjectorData() {
     } catch (error) {
       contests.value = []
       scoreboard.value = null
+      rounds.value = []
+      selectedRoundId.value = ''
+      roundAutoFollow.value = true
+      clearRoundSnapshot()
       loadError.value = error instanceof Error ? error.message : '大屏赛事加载失败'
     } finally {
       loadingContests.value = false
@@ -162,7 +192,52 @@ export function useContestProjectorData() {
       return
     }
     selectedContestId.value = contestId
+    roundAutoFollow.value = true
+    selectedRoundId.value = ''
     await loadScoreboard(contestId)
+  }
+
+  async function selectRound(roundId: string): Promise<void> {
+    if (!selectedContestId.value || !roundId || (roundId === selectedRoundId.value && !roundAutoFollow.value)) {
+      return
+    }
+    const targetRound = rounds.value.find((item) => item.id === roundId)
+    if (!targetRound) {
+      return
+    }
+
+    const requestToken = ++scoreboardRequestToken
+    roundAutoFollow.value = false
+    selectedRoundId.value = targetRound.id
+    loadingScoreboard.value = true
+    try {
+      await loadRoundSnapshot(selectedContestId.value, targetRound.id, requestToken)
+      if (requestToken !== scoreboardRequestToken) {
+        return
+      }
+      lastUpdatedLabel.value = new Date().toLocaleTimeString('zh-CN', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+      })
+    } catch {
+      if (requestToken !== scoreboardRequestToken) {
+        return
+      }
+      toast.error('同步大屏轮次失败')
+    } finally {
+      if (requestToken === scoreboardRequestToken) {
+        loadingScoreboard.value = false
+      }
+    }
+  }
+
+  async function followCurrentRound(): Promise<void> {
+    if (roundAutoFollow.value) {
+      return
+    }
+    roundAutoFollow.value = true
+    await loadScoreboard()
   }
 
   function startAutoRefresh(): void {
@@ -187,6 +262,7 @@ export function useContestProjectorData() {
     scoreboard,
     rounds,
     selectedRoundId,
+    roundAutoFollow,
     services,
     attacks,
     roundSummary,
@@ -202,6 +278,8 @@ export function useContestProjectorData() {
     loadScoreboard,
     loadContests,
     selectContest,
+    selectRound,
+    followCurrentRound,
     startAutoRefresh,
     stopAutoRefresh,
   }
