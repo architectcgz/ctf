@@ -256,8 +256,12 @@ describe('admin management surface alignment', () => {
       ':deep(.contest-form-dialog .modal-template-panel--classic)'
     )
     expect(adminContestFormDialogSource).toContain('Contest Workspace')
-    expect(adminContestFormPanelSource).toContain('<h3 class="list-heading__title">基础信息</h3>')
-    expect(adminContestFormPanelSource).toContain('<h3 class="list-heading__title">赛制与时间</h3>')
+    expect(adminContestFormPanelSource).toMatch(
+      /<h3 class="list-heading__title">\s*基础信息\s*<\/h3>/
+    )
+    expect(adminContestFormPanelSource).toMatch(
+      /<h3 class="list-heading__title">\s*赛制与时间\s*<\/h3>/
+    )
     expect(adminContestFormPanelSource).toContain(
       'class="ui-btn ui-btn--primary contest-form-button contest-form-button--primary"'
     )
