@@ -7,6 +7,7 @@ import type {
   ScoreboardRow,
 } from '@/api/contracts'
 import type {
+  ContestProjectorAttackEdge,
   ContestProjectorAttackLeader,
   ContestProjectorServiceMatrixRow,
   ContestProjectorTrafficTrendBar,
@@ -81,6 +82,75 @@ export function useContestProjectorDerived({
       .sort((a, b) => b.success - a.success || b.score - a.score)
       .slice(0, 5)
   })
+  const attackEdges = computed<ContestProjectorAttackEdge[]>(() => {
+    const serviceLabelMap = new Map<string, string>()
+    for (const service of services.value) {
+      const label =
+        service.service_name?.trim() ||
+        service.challenge_title?.trim() ||
+        (service.service_id ? `服务 ${service.service_id}` : `题目 ${service.challenge_id}`)
+      if (service.service_id) {
+        serviceLabelMap.set(`${service.team_id}:service:${service.service_id}`, label)
+      }
+      serviceLabelMap.set(`${service.team_id}:challenge:${service.challenge_id}`, label)
+    }
+
+    const edgeMap = new Map<string, ContestProjectorAttackEdge>()
+    for (const attack of attacks.value) {
+      const edgeId = `${attack.attacker_team_id}->${attack.victim_team_id}`
+      const current = edgeMap.get(edgeId)
+      const attackTime = new Date(attack.created_at).getTime()
+      const currentTime = current ? new Date(current.latest_at).getTime() : 0
+      const latestServiceLabel =
+        (attack.service_id
+          ? serviceLabelMap.get(`${attack.victim_team_id}:service:${attack.service_id}`)
+          : undefined) ??
+        serviceLabelMap.get(`${attack.victim_team_id}:challenge:${attack.challenge_id}`) ??
+        (attack.service_id ? `服务 ${attack.service_id}` : `题目 ${attack.challenge_id}`)
+      const next: ContestProjectorAttackEdge = current ?? {
+        id: edgeId,
+        attacker_team_id: attack.attacker_team_id,
+        attacker_team: attack.attacker_team,
+        victim_team_id: attack.victim_team_id,
+        victim_team: attack.victim_team,
+        success: 0,
+        failed: 0,
+        total: 0,
+        score: 0,
+        latest_at: attack.created_at,
+        latest_service_label: latestServiceLabel,
+        successRate: 0,
+        reciprocalSuccess: 0,
+      }
+      next.total += 1
+      if (attack.is_success) {
+        next.success += 1
+        next.score += attack.score_gained
+      } else {
+        next.failed += 1
+      }
+      if (attackTime >= currentTime) {
+        next.latest_at = attack.created_at
+        next.latest_service_label = latestServiceLabel
+      }
+      next.successRate = Math.round((next.success / Math.max(next.total, 1)) * 100)
+      edgeMap.set(edgeId, next)
+    }
+
+    const edges = Array.from(edgeMap.values())
+    for (const edge of edges) {
+      edge.reciprocalSuccess = edgeMap.get(`${edge.victim_team_id}->${edge.attacker_team_id}`)?.success ?? 0
+    }
+
+    return edges
+      .sort(
+        (a, b) =>
+          b.success - a.success ||
+          b.score - a.score ||
+          new Date(b.latest_at).getTime() - new Date(a.latest_at).getTime()
+      )
+      .slice(0, 8)
+  })
   const trafficTrendBars = computed<ContestProjectorTrafficTrendBar[]>(() => {
     const buckets = (trafficSummary.value?.trend_buckets ?? []).slice(-12)
     const maxRequests = Math.max(...buckets.map((item) => item.request_count), 1)
@@ -103,6 +173,7 @@ export function useContestProjectorDerived({
     serviceHealthRate,
     serviceMatrixRows,
     attackLeaders,
+    attackEdges,
     trafficTrendBars,
     hotVictims,
   }
