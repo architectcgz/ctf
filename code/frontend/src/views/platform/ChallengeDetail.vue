@@ -284,14 +284,17 @@ onUnmounted(() => {
 
 <style scoped>
 .journal-shell {
-  --journal-topbar-padding-bottom: var(--space-3);
+  --workspace-topbar-tabs-gap: 0;
+  --workspace-tabs-offset-top: var(--workspace-topbar-tabs-gap);
+  --workspace-tabs-panel-gap: var(--space-2);
+  --journal-topbar-padding-bottom: var(--workspace-topbar-tabs-gap);
   --page-top-tabs-gap: var(--space-7);
-  --page-top-tabs-margin: var(--space-2-5) calc(var(--space-6) * -1) 0;
+  --page-top-tabs-margin: 0 calc(var(--space-6) * -1) 0;
   --page-top-tabs-padding: 0 var(--space-6);
   --page-top-tabs-border: color-mix(in srgb, var(--journal-ink) 10%, transparent);
-  --page-top-tab-min-height: 52px;
-  --page-top-tab-padding: var(--space-2-5) 0 var(--space-3-5);
-  --page-top-tab-font-size: var(--font-size-15);
+  --page-top-tab-min-height: 42px;
+  --page-top-tab-padding: var(--space-1-5) 0 var(--space-2);
+  --page-top-tab-font-size: var(--font-size-14);
   --page-top-tab-active-color: color-mix(in srgb, var(--journal-accent) 74%, var(--journal-ink));
   --page-top-tab-active-border: color-mix(in srgb, var(--journal-accent) 86%, var(--journal-ink));
   --journal-shell-hero-radial-strength: 7%;

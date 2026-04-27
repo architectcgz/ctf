@@ -772,7 +772,7 @@ describe('admin management surface alignment', () => {
       /\.workspace-hero\s*\{[\s\S]*padding-bottom:\s*var\(--space-6\);[\s\S]*border-bottom:\s*1px solid var\(--workspace-line-soft\);/s
     )
     expect(adminChallengeProfilePanelSource).toMatch(
-      /\.challenge-detail-header\s*\{[\s\S]*padding-bottom:\s*var\(--space-6\);[\s\S]*border-bottom:\s*1px solid var\(--workspace-line-soft,/s
+      /\.challenge-detail-header\s*\{[\s\S]*padding-bottom:\s*var\(--space-4\);[\s\S]*border-bottom:\s*1px solid var\(--workspace-line-soft,/s
     )
     expect(challengeWriteupManagePanelSource).toMatch(
       /\.writeup-manage-header\s*\{[\s\S]*padding-bottom:\s*var\(--space-6\);[\s\S]*border-bottom:\s*1px solid var\(--workspace-line-soft,/s
