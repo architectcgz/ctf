@@ -46,6 +46,7 @@ declare module 'vue' {
     AWDRoundSelectionPanel: typeof import('./components/platform/contest/AWDRoundSelectionPanel.vue')['default']
     AWDRuntimePendingState: typeof import('./components/platform/contest/AWDRuntimePendingState.vue')['default']
     AWDScoreboardSummaryPanel: typeof import('./components/platform/contest/AWDScoreboardSummaryPanel.vue')['default']
+    AWDServiceAlertBanner: typeof import('./components/platform/contest/AWDServiceAlertBanner.vue')['default']
     AWDServiceCheckDialog: typeof import('./components/platform/contest/AWDServiceCheckDialog.vue')['default']
     AWDServiceStatusPanel: typeof import('./components/platform/contest/AWDServiceStatusPanel.vue')['default']
     AWDServiceTemplateEditorDialog: typeof import('./components/platform/awd-service/AWDServiceTemplateEditorDialog.vue')['default']
