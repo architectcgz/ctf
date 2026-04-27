@@ -27,9 +27,20 @@ const blockingActionLabels = computed(() => {
 <template>
   <div
     v-if="readiness"
-    class="decision-hud"
+    class="decision-hud progress-card metric-panel-card metric-panel-default-surface"
     :class="readinessDecision.key"
   >
+    <div class="journal-note-label progress-card-label metric-panel-label">
+      就绪态势
+      <ShieldCheck
+        v-if="readinessDecision.key === 'ready'"
+        class="h-4 w-4"
+      />
+      <AlertTriangle
+        v-else
+        class="h-4 w-4"
+      />
+    </div>
     <div class="decision-main">
       <div class="decision-icon">
         <ShieldCheck
@@ -42,10 +53,10 @@ const blockingActionLabels = computed(() => {
         />
       </div>
       <div class="decision-text">
-        <h3 class="decision-title">
+        <h3 class="decision-title progress-card-value metric-panel-value">
           {{ readinessDecision.title }}
         </h3>
-        <p class="decision-description">
+        <p class="decision-description progress-card-hint metric-panel-helper">
           {{ readinessDecision.description }}
         </p>
       </div>
@@ -68,39 +79,93 @@ const blockingActionLabels = computed(() => {
 
 <style scoped>
 .decision-hud {
+  --metric-panel-value-size: var(--font-size-20);
+  --metric-panel-value-line-height: 1.25;
+  --metric-panel-value-spacing: 0;
+  --metric-panel-helper-line-height: 1.5;
+
   display: flex;
-  align-items: center;
-  gap: 1.5rem;
-  padding: 0.75rem 1.25rem;
-  border-radius: 0.85rem;
-  border: 1px solid var(--color-border-default);
-  background: var(--color-bg-surface);
-  min-width: 24rem;
+  min-width: var(--ui-selector-width-md);
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-3);
 }
 
-.decision-hud.ready { border-color: color-mix(in srgb, var(--color-success) 30%, var(--color-border-default)); }
-.decision-hud.blocked { border-color: color-mix(in srgb, var(--color-danger) 30%, var(--color-border-default)); }
+.decision-hud.ready {
+  --metric-panel-border: color-mix(in srgb, var(--color-success) 30%, var(--color-border-default));
+}
 
-.decision-main { display: flex; align-items: center; gap: 0.75rem; flex: 1; }
+.decision-hud.blocked {
+  --metric-panel-border: color-mix(in srgb, var(--color-danger) 30%, var(--color-border-default));
+}
+
+.decision-main {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
 .decision-icon {
-  width: 2.25rem;
-  height: 2.25rem;
-  border-radius: 0.65rem;
+  width: calc(var(--ui-control-height-sm) + var(--space-1));
+  height: calc(var(--ui-control-height-sm) + var(--space-1));
+  border-radius: var(--ui-control-radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
 
-.ready .decision-icon { background: var(--color-success-soft); color: var(--color-success); }
-.blocked .decision-icon { background: var(--color-danger-soft); color: var(--color-danger); }
+.ready .decision-icon {
+  background: color-mix(in srgb, var(--color-success) 14%, var(--color-bg-surface));
+  color: var(--color-success);
+}
 
-.decision-title { font-size: var(--font-size-13); font-weight: 900; margin: 0; color: var(--color-text-primary); white-space: nowrap; }
-.decision-description { font-size: var(--font-size-12); color: var(--color-text-secondary); font-weight: 500; margin: 0; white-space: nowrap; }
+.blocked .decision-icon {
+  background: color-mix(in srgb, var(--color-danger) 14%, var(--color-bg-surface));
+  color: var(--color-danger);
+}
 
-.impact-tags { display: flex; gap: 0.35rem; }
-.impact-tag { font-size: 10px; font-weight: 800; padding: 0.15rem 0.5rem; border-radius: 4px; background: var(--color-bg-elevated); color: var(--color-text-secondary); }
-.impact-tag.neutral { opacity: 0.5; }
-.ready .impact-tag { background: var(--color-success-soft); color: var(--color-success); }
-.blocked .impact-tag { background: var(--color-danger-soft); color: var(--color-danger); }
+.decision-text {
+  min-width: 0;
+}
+
+.decision-title {
+  margin: 0;
+  color: var(--color-text-primary);
+}
+
+.decision-description {
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+.impact-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1-5);
+}
+
+.impact-tag {
+  font-size: var(--font-size-10);
+  font-weight: 800;
+  padding: var(--space-0-5) var(--space-2);
+  border-radius: var(--ui-badge-radius-soft);
+  background: var(--color-bg-elevated);
+  color: var(--color-text-secondary);
+}
+
+.impact-tag.neutral {
+  opacity: 0.5;
+}
+
+.ready .impact-tag {
+  background: color-mix(in srgb, var(--color-success) 14%, var(--color-bg-surface));
+  color: var(--color-success);
+}
+
+.blocked .impact-tag {
+  background: color-mix(in srgb, var(--color-danger) 14%, var(--color-bg-surface));
+  color: var(--color-danger);
+}
 </style>
