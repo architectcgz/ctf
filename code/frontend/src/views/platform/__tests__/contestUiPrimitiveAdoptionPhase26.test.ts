@@ -5,8 +5,8 @@ import awdReadinessSummarySource from '@/components/platform/contest/AWDReadines
 
 describe('contest ui primitive adoption phase 26', () => {
   it('awd challenge config panel should use workspace overline in the active tab panel header', () => {
-    expect(awdChallengeConfigPanelSource).toContain(
-      '<div class="workspace-overline">AWD Service Config</div>'
+    expect(awdChallengeConfigPanelSource).toMatch(
+      /<div class="workspace-overline">\s*AWD Service Config\s*<\/div>/
     )
     expect(awdChallengeConfigPanelSource).not.toContain(
       '<div class="journal-eyebrow">AWD Service Config</div>'

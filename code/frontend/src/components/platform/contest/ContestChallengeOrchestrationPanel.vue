@@ -374,7 +374,7 @@ onMounted(() => {
     </header>
 
     <ContestChallengeSummaryStrip
-      v-if="summaryItems.length > 0"
+      v-if="!isAwdContest && summaryItems.length > 0"
       :summary-items="summaryItems"
     />
 
@@ -397,7 +397,10 @@ onMounted(() => {
         </template>
       </AppEmpty>
 
-      <template v-else>
+      <div
+        v-else
+        class="studio-directory-stack"
+      >
         <ContestChallengeFilterStrip
           v-if="isAwdContest && filterItems.length > 0"
           :filter-items="filterItems"
@@ -512,7 +515,7 @@ onMounted(() => {
                       :open="openActionMenuId === getChallengeActionKey(challenge)"
                       @update:open="setActionMenuOpen(getChallengeActionKey(challenge), $event)"
                     >
-                      <template #trigger="{ open, toggle, setTriggerRef }">
+                      <template #trigger="{ toggle, setTriggerRef }">
                         <button
                           :id="`contest-challenge-actions-${getChallengeActionKey(challenge)}`"
                           :ref="setTriggerRef"
@@ -554,7 +557,7 @@ onMounted(() => {
             </tbody>
           </table>
         </div>
-      </template>
+      </div>
     </div>
 
     <ContestChallengeEditorDialog
@@ -576,79 +579,166 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.studio-orchestration { display: flex; flex-direction: column; gap: 1.5rem; padding: 1.5rem 2rem; background: var(--color-bg-base); }
-.studio-pane-header { display: flex; justify-content: space-between; align-items: flex-end; }
-.pane-title { font-size: 1.25rem; font-weight: 900; color: var(--color-text-primary); margin: 0; }
-.pane-description { font-size: 13px; color: var(--color-text-secondary); margin: 0.5rem 0 0; max-width: 40rem; }
-.header-actions { display: flex; gap: 0.75rem; }
-/* Metric Band - Flattened and Scaled Up */
-.studio-metric-band {
-  display: flex;
-  gap: var(--space-4);
-  background: transparent;
-  padding: 0;
-  border: none;
-  border-radius: 0;
-}
-.metric-pill {
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border-default);
-  padding: var(--space-4) var(--space-6);
-  border-radius: 1rem;
+.studio-orchestration {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
-  min-width: 9rem;
-  box-shadow: var(--color-shadow-soft);
+  gap: var(--space-section-gap);
+  background: var(--color-bg-base);
+  padding: var(--space-6) var(--space-8);
 }
-.metric-pill__label {
+.studio-pane-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.pane-title {
+  margin: 0;
+  font-size: var(--font-size-20);
+  font-weight: 900;
+  color: var(--color-text-primary);
+}
+
+.pane-description {
+  margin: var(--space-2) 0 0;
+  max-width: var(--ui-selector-width-lg);
+  font-size: var(--font-size-13);
+  color: var(--color-text-secondary);
+}
+
+.header-actions {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.studio-directory-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-section-gap-compact);
+}
+
+.studio-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--ui-control-radius-lg);
+  background: var(--color-bg-surface);
+}
+
+.studio-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.studio-table th {
+  border-bottom: 1px solid var(--color-border-default);
+  background: var(--color-bg-elevated);
+  padding: var(--space-4);
+  text-align: left;
   font-size: var(--font-size-11);
   font-weight: 800;
   text-transform: uppercase;
   color: var(--color-text-muted);
-  letter-spacing: 0.1em;
 }
-.metric-pill__value {
-  font-size: var(--font-size-20);
-  font-weight: 900;
-  color: var(--color-primary);
-  font-family: var(--font-family-mono);
-  line-height: 1.1;
+
+.studio-table td {
+  border-bottom: 1px solid var(--color-border-subtle);
+  padding: var(--space-5) var(--space-4);
 }
-.studio-table-wrap { border: none; border-radius: 0; background: transparent; overflow-x: auto; }
-.studio-table { width: 100%; border-collapse: collapse; background: var(--color-bg-surface); }
-.studio-table th { background: var(--color-bg-elevated); padding: 0.75rem 1rem; text-align: left; font-size: 10px; font-weight: 800; text-transform: uppercase; color: var(--color-text-muted); border-bottom: 1px solid var(--color-border-default); border-top: 1px solid var(--color-border-default); }
-.studio-table td { padding: 1rem; border-bottom: 1px solid var(--color-border-subtle); }
-.studio-row:hover { background: var(--color-bg-elevated); }
-.challenge-title { font-size: 14px; font-weight: 800; color: var(--color-text-primary); }
-.challenge-subtitle { font-size: 11px; color: var(--color-text-muted); margin-top: 0.15rem; }
+
+.studio-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.studio-row {
+  transition: background var(--ui-motion-fast);
+}
+
+.studio-row:hover {
+  background: var(--color-bg-elevated);
+}
+
+.challenge-title {
+  font-size: var(--font-size-16);
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+
+.challenge-subtitle {
+  margin-top: var(--space-1);
+  font-size: var(--font-size-13);
+  color: var(--color-text-muted);
+}
+
 .contest-points-cell {
   font-family: var(--font-family-mono);
   font-weight: 900;
   color: color-mix(in srgb, var(--journal-ink) 82%, var(--journal-muted));
 }
+
 .contest-awd-score {
   font-family: var(--font-family-mono);
   font-size: var(--font-size-11);
   color: var(--journal-muted);
 }
+
 .contest-awd-preview {
   font-size: var(--font-size-11);
   color: color-mix(in srgb, var(--journal-muted) 84%, var(--journal-ink));
 }
-.status-badge { padding: 0.15rem 0.5rem; border-radius: 6px; font-size: 10px; font-weight: 800; }
-.is-visible { background: var(--color-success-soft); color: var(--color-success); }
-.is-hidden { background: var(--color-bg-elevated); color: var(--color-text-secondary); }
-.order-chip { font-size: 10px; font-weight: 900; color: var(--color-primary); background: var(--color-primary-soft); padding: 0.25rem 0.5rem; border-radius: 4px; display: inline-block; }
-.engine-tag { font-size: 11px; font-weight: 700; color: var(--color-text-secondary); }
-.validation-status { font-size: 10px; font-weight: 700; }
-.validation-status.valid { color: var(--color-success); }
-.validation-status.invalid { color: var(--color-danger); }
-.validation-status.pending { color: var(--color-warning); }
-.action-trigger { width: 2rem; height: 2rem; display: flex; align-items: center; justify-content: center; border-radius: 0.5rem; color: var(--color-text-muted); transition: all 0.2s ease; cursor: pointer; }
-.action-trigger:hover { background: var(--color-bg-elevated); color: var(--color-text-primary); }
-.menu-item { width: 100%; padding: 0.5rem 1rem; display: flex; align-items: center; font-size: 12px; font-weight: 600; color: var(--color-text-secondary); background: transparent; cursor: pointer; }
-.menu-item:hover { background: var(--color-bg-elevated); }
-.menu-item.danger { color: var(--color-danger); }
-.menu-divider { height: 1px; background: var(--color-border-default); margin: 0.25rem 0; }
+
+.status-badge {
+  border-radius: var(--ui-badge-radius-soft);
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--font-size-11);
+  font-weight: 800;
+}
+
+.is-visible {
+  background: var(--color-success-soft);
+  color: var(--color-success);
+}
+
+.is-hidden {
+  background: var(--color-bg-elevated);
+  color: var(--color-text-secondary);
+}
+
+.order-chip {
+  display: inline-block;
+  border-radius: var(--ui-badge-radius-soft);
+  background: var(--color-primary-soft);
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--font-size-11);
+  font-weight: 900;
+  color: var(--color-primary);
+}
+
+.engine-tag {
+  font-size: var(--font-size-13);
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}
+
+.validation-status {
+  font-size: var(--font-size-11);
+  font-weight: 700;
+}
+
+.validation-status.valid {
+  color: var(--color-success);
+}
+
+.validation-status.invalid {
+  color: var(--color-danger);
+}
+
+.validation-status.pending {
+  color: var(--color-warning);
+}
+
+.menu-divider {
+  border-top: 1px solid var(--color-border-default);
+  margin: var(--space-1) 0;
+}
 </style>
