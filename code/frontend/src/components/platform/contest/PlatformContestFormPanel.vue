@@ -92,7 +92,7 @@ function handleSubmit() {
     class="studio-settings-layout"
     @submit.prevent="handleSubmit"
   >
-    <section class="settings-group">
+    <section class="settings-group settings-group--identity">
       <div class="settings-group__info">
         <div class="info-icon">
           <FileText class="info-icon__glyph" />
@@ -153,7 +153,7 @@ function handleSubmit() {
       </div>
     </section>
 
-    <section class="settings-group">
+    <section class="settings-group settings-group--rules">
       <div class="settings-group__info">
         <div class="info-icon">
           <Settings class="info-icon__glyph" />
@@ -232,7 +232,7 @@ function handleSubmit() {
       </div>
     </section>
 
-    <section class="settings-group">
+    <section class="settings-group settings-group--timeline">
       <div class="settings-group__info">
         <div class="info-icon">
           <Clock class="info-icon__glyph" />
@@ -321,36 +321,62 @@ function handleSubmit() {
 
 <style scoped>
 .studio-settings-layout {
-  --contest-form-sidebar-width: var(--ui-dialog-sidebar-width);
-  --contest-form-control-width: var(--ui-selector-control-width);
+  --contest-form-aside-min-width: var(--ui-selector-control-min-width);
   --contest-form-section-gap: var(--space-section-gap);
   --contest-form-section-gap-compact: var(--space-section-gap-compact);
   --contest-form-inline-gap: var(--space-4);
   --contest-form-control-padding-y: var(--space-3);
 
   width: 100%;
-  max-width: var(--ui-dialog-wide-width);
+  max-width: none;
   margin: 0 auto;
   padding: var(--space-7) var(--space-8);
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1.1fr)
+    minmax(var(--contest-form-aside-min-width), 0.8fr)
+    minmax(var(--contest-form-aside-min-width), 0.8fr);
+  grid-template-areas:
+    'identity rules timeline'
+    'actions actions actions';
+  align-items: start;
   gap: var(--space-8);
 }
 
 .settings-group {
-  display: grid;
-  grid-template-columns: minmax(0, var(--contest-form-sidebar-width)) minmax(0, 1fr);
-  gap: var(--contest-form-section-gap);
-  align-items: start;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--contest-form-section-gap-compact);
+  padding-top: var(--space-5);
+  border-top: 1px solid color-mix(in srgb, var(--color-border-default) 74%, transparent);
+}
+
+.settings-group--identity {
+  grid-area: identity;
+}
+
+.settings-group--rules {
+  grid-area: rules;
+}
+
+.settings-group--timeline {
+  grid-area: timeline;
 }
 
 .settings-group__info {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas:
+    'icon title'
+    'icon desc';
+  column-gap: var(--space-4);
+  align-items: start;
   min-width: 0;
 }
 
 .info-icon {
+  grid-area: icon;
   width: var(--ui-control-height-md);
   height: var(--ui-control-height-md);
   border-radius: var(--ui-control-radius-md);
@@ -359,7 +385,11 @@ function handleSubmit() {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: var(--space-4);
+}
+
+.settings-group__info .list-heading__title {
+  grid-area: title;
+  margin: 0;
 }
 
 .info-icon__glyph {
@@ -368,6 +398,7 @@ function handleSubmit() {
 }
 
 .info-desc {
+  grid-area: desc;
   font-size: var(--font-size-13);
   color: var(--color-text-secondary);
   line-height: 1.6;
@@ -377,7 +408,7 @@ function handleSubmit() {
 .settings-group__content {
   display: flex;
   flex-direction: column;
-  gap: var(--contest-form-section-gap);
+  gap: var(--space-5);
   min-width: 0;
 }
 
@@ -395,7 +426,6 @@ function handleSubmit() {
 
 .row-control {
   width: 100%;
-  max-width: var(--contest-form-control-width);
   min-width: 0;
 }
 
@@ -442,7 +472,7 @@ function handleSubmit() {
 }
 
 .studio-textarea {
-  min-height: calc(var(--ui-control-height-md) * 3);
+  min-height: calc(var(--ui-control-height-md) * 3.5);
   resize: vertical;
   line-height: 1.6;
 }
@@ -478,10 +508,12 @@ function handleSubmit() {
 }
 
 .contest-form-actions {
+  grid-area: actions;
   display: flex;
   justify-content: flex-end;
   gap: var(--ui-action-gap);
-  padding-top: var(--space-2);
+  padding-top: var(--space-4);
+  border-top: 1px solid color-mix(in srgb, var(--color-border-default) 74%, transparent);
 }
 
 .mode-options {
@@ -559,26 +591,55 @@ function handleSubmit() {
   min-width: 0;
 }
 
+.settings-group--timeline .timeline-fields {
+  grid-template-columns: 1fr;
+}
+
 .timeline-divider {
   padding-top: var(--contest-form-control-padding-y);
   font-weight: 800;
 }
 
+.settings-group--timeline .timeline-divider {
+  display: none;
+}
+
 @media (max-width: 1024px) {
   .studio-settings-layout {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      'identity'
+      'rules'
+      'timeline'
+      'actions';
     padding: var(--space-6);
     gap: var(--space-8);
   }
 
-  .settings-group {
-    grid-template-columns: 1fr;
-    gap: var(--contest-form-section-gap-compact);
+  .settings-group--timeline .timeline-fields {
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  }
+
+  .settings-group--timeline .timeline-divider {
+    display: block;
   }
 }
 
 @media (max-width: 640px) {
   .studio-settings-layout {
     padding: var(--space-5);
+  }
+
+  .settings-group__info {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      'icon'
+      'title'
+      'desc';
+  }
+
+  .info-icon {
+    margin-bottom: var(--space-3);
   }
 
   .mode-options,
