@@ -36,7 +36,7 @@ import cheatDetectionWorkspacePanelSource from '@/components/platform/cheat/Chea
 import awdRoundInspectorSource from '@/components/platform/contest/AWDRoundInspector.vue?raw'
 import awdTrafficPanelSource from '@/components/platform/contest/AWDTrafficPanel.vue?raw'
 import awdChallengeConfigPanelSource from '@/components/platform/contest/AWDChallengeConfigPanel.vue?raw'
-import awdReadinessSummarySource from '@/components/platform/contest/AWDReadinessSummary.vue?raw'
+import awdReadinessChecklistSource from '@/components/platform/contest/AWDReadinessChecklist.vue?raw'
 import awdReadinessOverrideDialogSource from '@/components/platform/contest/AWDReadinessOverrideDialog.vue?raw'
 import awdChallengeConfigDialogSource from '@/components/platform/contest/AWDChallengeConfigDialog.vue?raw'
 import workspaceDataTableSource from '@/components/common/WorkspaceDataTable.vue?raw'
@@ -285,18 +285,24 @@ describe('admin management surface alignment', () => {
   })
 
   it('awd challenge config and readiness sections should use list-heading for directory blocks', () => {
-    expect(awdChallengeConfigPanelSource).toContain('class="workspace-directory-section"')
+    expect(awdChallengeConfigPanelSource).toMatch(/class="[^"]*\bworkspace-directory-section\b[^"]*"/)
     expect(awdChallengeConfigPanelSource).toMatch(/class="[^"]*list-heading[^"]*"/)
-    expect(awdChallengeConfigPanelSource).toContain('<h3 class="list-heading__title">题目目录</h3>')
+    expect(awdChallengeConfigPanelSource).toMatch(
+      /<h3 class="list-heading__title">\s*题目目录\s*<\/h3>/
+    )
     expect(awdChallengeConfigPanelSource).not.toContain(
       'workspace-tab-heading__title">已关联题目</h3>'
     )
 
-    expect(awdReadinessSummarySource).toMatch(/class="[^"]*list-heading[^"]*"/)
-    expect(awdReadinessSummarySource).toContain('<h3 class="list-heading__title">系统级阻塞</h3>')
-    expect(awdReadinessSummarySource).toContain('<h3 class="list-heading__title">阻塞短名单</h3>')
-    expect(awdReadinessSummarySource).not.toContain('workspace-tab-heading__title">系统级阻塞</h3>')
-    expect(awdReadinessSummarySource).not.toContain('workspace-tab-heading__title">阻塞短名单</h3>')
+    expect(awdReadinessChecklistSource).toMatch(/class="[^"]*list-heading[^"]*"/)
+    expect(awdReadinessChecklistSource).toMatch(
+      /<h3 class="list-heading__title">\s*系统级阻塞\s*<\/h3>/
+    )
+    expect(awdReadinessChecklistSource).toMatch(
+      /<h3 class="list-heading__title">\s*阻塞短名单\s*<\/h3>/
+    )
+    expect(awdReadinessChecklistSource).not.toContain('workspace-tab-heading__title">系统级阻塞</h3>')
+    expect(awdReadinessChecklistSource).not.toContain('workspace-tab-heading__title">阻塞短名单</h3>')
   })
 
   it('awd readiness override dialog should use list-heading for override sections', () => {

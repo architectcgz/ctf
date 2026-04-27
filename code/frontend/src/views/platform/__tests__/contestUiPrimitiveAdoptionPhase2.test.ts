@@ -4,7 +4,7 @@ import contestEditSource from '../ContestEdit.vue?raw'
 import contestEditWorkspacePanelSource from '@/components/platform/contest/ContestEditWorkspacePanel.vue?raw'
 import awdChallengeConfigDialogSource from '@/components/platform/contest/AWDChallengeConfigDialog.vue?raw'
 import awdReadinessOverrideDialogSource from '@/components/platform/contest/AWDReadinessOverrideDialog.vue?raw'
-import awdReadinessSummarySource from '@/components/platform/contest/AWDReadinessSummary.vue?raw'
+import awdReadinessChecklistSource from '@/components/platform/contest/AWDReadinessChecklist.vue?raw'
 import contestChallengeOrchestrationPanelSource from '@/components/platform/contest/ContestChallengeOrchestrationPanel.vue?raw'
 
 describe('contest ui primitive adoption phase 2', () => {
@@ -46,10 +46,10 @@ describe('contest ui primitive adoption phase 2', () => {
     expect(contestChallengeOrchestrationPanelSource).not.toContain('class="admin-btn')
   })
 
-  it('awd readiness summary should consume shared badges and action primitives', () => {
-    expect(awdReadinessSummarySource).toContain('class="ui-badge readiness-status-chip')
-    expect(awdReadinessSummarySource).toContain('class="ui-row-actions readiness-row__actions"')
-    expect(awdReadinessSummarySource).toContain('class="ui-btn ui-btn--sm ui-btn--secondary"')
+  it('awd readiness checklist should consume shared badges and action primitives', () => {
+    expect(awdReadinessChecklistSource).toContain('class="ui-badge readiness-status-chip')
+    expect(awdReadinessChecklistSource).toContain('class="ui-row-actions readiness-row__actions"')
+    expect(awdReadinessChecklistSource).toContain('class="ui-btn ui-btn--sm ui-btn--secondary"')
   })
 
   it('awd readiness override dialog should consume shared field and button primitives', () => {

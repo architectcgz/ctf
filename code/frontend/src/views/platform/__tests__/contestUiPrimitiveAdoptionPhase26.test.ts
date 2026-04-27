@@ -14,8 +14,8 @@ describe('contest ui primitive adoption phase 26', () => {
   })
 
   it('awd readiness summary should use workspace overline in the active tab panel header', () => {
-    expect(awdReadinessSummarySource).toContain(
-      '<div class="workspace-overline">AWD Readiness</div>'
+    expect(awdReadinessSummarySource).toMatch(
+      /<div class="workspace-overline">\s*AWD Readiness\s*<\/div>/
     )
     expect(awdReadinessSummarySource).not.toContain(
       '<div class="journal-eyebrow">AWD Readiness</div>'

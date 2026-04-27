@@ -34,6 +34,7 @@ declare module 'vue' {
     AWDContestSelectorField: typeof import('./components/platform/contest/AWDContestSelectorField.vue')['default']
     AWDInstanceOrchestrationPanel: typeof import('./components/platform/contest/AWDInstanceOrchestrationPanel.vue')['default']
     AWDOperationsPanel: typeof import('./components/platform/contest/AWDOperationsPanel.vue')['default']
+    AWDReadinessChecklist: typeof import('./components/platform/contest/AWDReadinessChecklist.vue')['default']
     AWDReadinessDecisionHUD: typeof import('./components/platform/contest/AWDReadinessDecisionHUD.vue')['default']
     AWDReadinessOverrideDialog: typeof import('./components/platform/contest/AWDReadinessOverrideDialog.vue')['default']
     AWDReadinessSummary: typeof import('./components/platform/contest/AWDReadinessSummary.vue')['default']

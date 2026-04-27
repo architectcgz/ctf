@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
 
+import AWDReadinessChecklist from '../contest/AWDReadinessChecklist.vue'
 import AWDReadinessSummary from '../contest/AWDReadinessSummary.vue'
 import type { AWDReadinessData } from '@/api/contracts'
 
@@ -90,5 +91,24 @@ describe('AWDReadinessSummary', () => {
 
     expect(wrapper.text()).toContain('系统级阻塞仍会拦截开赛关键动作')
     expect(wrapper.text()).not.toContain('题目侧的 checker 校验已经满足开赛关键动作要求')
+  })
+
+  it('明细组件只展示统计与阻塞列表，不包含完整摘要的就绪标题与决策卡', () => {
+    const wrapper = mount(AWDReadinessChecklist, {
+      props: {
+        readiness: buildReadiness({
+          ready: true,
+          total_challenges: 2,
+          passed_challenges: 2,
+          global_blocking_reasons: [],
+          blocking_actions: [],
+        }),
+      },
+    })
+
+    expect(wrapper.text()).not.toContain('开赛就绪摘要')
+    expect(wrapper.text()).not.toContain('就绪决策')
+    expect(wrapper.text()).toContain('最近通过')
+    expect(wrapper.text()).toContain('阻塞短名单')
   })
 })

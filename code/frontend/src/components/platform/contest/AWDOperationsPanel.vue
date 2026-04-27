@@ -340,8 +340,8 @@ function handleOverrideDialogOpenChange(value: boolean) {
         >
           <button
             v-for="(tab, index) in visibleOperationTabs"
-            :key="tab.key"
             :id="tab.tabId"
+            :key="tab.key"
             :ref="(el) => setTabButtonRef(tab.key, el as HTMLButtonElement | null)"
             class="tab-item"
             :class="{ active: activePanel === tab.key }"
@@ -358,7 +358,9 @@ function handleOverrideDialogOpenChange(value: boolean) {
 
         <header class="section-header">
           <div class="section-identity">
-            <div class="section-overline">Command Center / Pre-flight</div>
+            <div class="section-overline">
+              Command Center / Pre-flight
+            </div>
             <h2 class="section-title">
               {{ selectedContest.title }}
             </h2>
@@ -374,15 +376,35 @@ function handleOverrideDialogOpenChange(value: boolean) {
             </button>
           </div>
         </header>
-        <div class="readiness-wrap">
-          <AWDRuntimePendingState />
+        <div
+          v-if="shouldShowRuntimeReadiness || runtimeContent === 'round-inspector'"
+          class="readiness-wrap"
+        >
+          <AWDRuntimePendingState
+            v-if="runtimeContent !== 'readiness'"
+          />
           <AWDReadinessSummary
+            v-if="shouldShowRuntimeReadiness"
             :readiness="readiness"
             :loading="loadingReadiness"
             :hide-actions="hideReadinessActions"
             @edit-config="handleEditReadinessConfig"
           />
         </div>
+
+        <AWDInstanceOrchestrationPanel
+          v-if="shouldShowInstanceOrchestration"
+          id="awd-ops-panel-instances"
+          role="tabpanel"
+          aria-labelledby="awd-ops-tab-instances"
+          :orchestration="instanceOrchestration"
+          :loading="loadingInstanceOrchestration"
+          :starting-key="startingInstanceKey"
+          @refresh="refreshInstanceOrchestration"
+          @start-cell="handleStartTeamServiceInstance"
+          @start-team="handleStartTeamAllServices"
+          @start-all="handleStartAllTeamServices"
+        />
       </section>
 
       <!-- 2. Runtime Workspace -->
@@ -397,8 +419,8 @@ function handleOverrideDialogOpenChange(value: boolean) {
         >
           <button
             v-for="(tab, index) in visibleOperationTabs"
-            :key="tab.key"
             :id="tab.tabId"
+            :key="tab.key"
             :ref="(el) => setTabButtonRef(tab.key, el as HTMLButtonElement | null)"
             class="tab-item"
             :class="{ active: activePanel === tab.key }"
