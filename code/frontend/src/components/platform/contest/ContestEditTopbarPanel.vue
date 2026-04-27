@@ -88,7 +88,7 @@ function handleSave(): void {
 
   background: var(--color-bg-surface);
   min-height: auto;
-  padding: var(--space-4) var(--space-workspace-side-padding) var(--space-3);
+  padding: var(--space-4) var(--space-workspace-side-padding) 0;
   display: flex;
   align-items: center;
   justify-content: space-between;

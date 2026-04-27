@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest'
 import awdAttackLogPanelSource from '@/components/platform/contest/AWDAttackLogPanel.vue?raw'
 import awdRoundHeaderPanelSource from '@/components/platform/contest/AWDRoundHeaderPanel.vue?raw'
 import awdRoundInspectorSource from '@/components/platform/contest/AWDRoundInspector.vue?raw'
-import awdRoundSelectionPanelSource from '@/components/platform/contest/AWDRoundSelectionPanel.vue?raw'
 import awdScoreboardSummaryPanelSource from '@/components/platform/contest/AWDScoreboardSummaryPanel.vue?raw'
 import awdServiceStatusPanelSource from '@/components/platform/contest/AWDServiceStatusPanel.vue?raw'
 import awdTrafficPanelSource from '@/components/platform/contest/AWDTrafficPanel.vue?raw'
@@ -70,14 +69,15 @@ describe('AWDRoundInspector extraction', () => {
 
   it('应将顶部操作头部和轮次切换区收口到独立组件，而不是继续堆在 AWDRoundInspector 内', () => {
     expect(awdRoundInspectorSource).toContain('<AWDRoundHeaderPanel')
-    expect(awdRoundInspectorSource).toContain('<AWDRoundSelectionPanel')
+    expect(awdRoundInspectorSource).not.toContain('<AWDRoundSelectionPanel')
     expect(awdRoundInspectorSource).not.toContain('id="awd-round-selector"')
-    expect(awdRoundInspectorSource).not.toContain('刷新 AWD 数据')
+    expect(awdRoundInspectorSource).not.toContain('title="刷新数据"')
     expect(awdRoundInspectorSource).not.toContain('当前正在跟随 live 轮次')
 
-    expect(awdRoundHeaderPanelSource).toContain('刷新 AWD 数据')
+    expect(awdRoundHeaderPanelSource).toContain('class="round-switcher"')
+    expect(awdRoundHeaderPanelSource).toContain('class="round-select-native"')
+    expect(awdRoundHeaderPanelSource).toContain('title="刷新数据"')
     expect(awdRoundHeaderPanelSource).toContain('当前正在跟随 live 轮次')
-    expect(awdRoundSelectionPanelSource).toContain('id="awd-round-selector"')
-    expect(awdRoundSelectionPanelSource).toContain('当前赛事还没有 AWD 轮次')
+    expect(awdRoundHeaderPanelSource).not.toContain('{{ contest.title }}')
   })
 })

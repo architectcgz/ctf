@@ -12,6 +12,9 @@ describe('ContestEdit topbar extraction', () => {
     expect(contestEditTopbarPanelSource).toContain('Contest Studio')
     expect(contestEditTopbarPanelSource).toContain('class="studio-edit-label"')
     expect(contestEditTopbarPanelSource).toContain('class="studio-contest-heading"')
+    expect(contestEditTopbarPanelSource).toContain(
+      'padding: var(--space-4) var(--space-workspace-side-padding) 0;'
+    )
     expect(contestEditTopbarPanelSource).toContain('contest-open-announcements')
     expect(contestEditTopbarPanelSource).toContain('保存变更')
   })
