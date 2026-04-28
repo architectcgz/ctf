@@ -17,4 +17,10 @@ describe('ContestAWDWorkspacePanel source', () => {
     expect(awdWorkspaceSource).toContain('id="awd-target-search"')
     expect(awdWorkspaceSource).toContain('data-testid="awd-feedback-challenge-title"')
   })
+
+  it('防守入口应跳转到独立工作台页面', () => {
+    expect(awdWorkspaceSource).toContain("name: 'ContestAWDDefenseWorkbench'")
+    expect(awdWorkspaceSource).not.toContain('openDefenseWorkbench(challenge.awd_service_id)')
+    expect(awdWorkspaceSource).not.toContain('class="defense-workbench"')
+  })
 })

@@ -54,6 +54,12 @@ export const studentRoutes: RouteRecordRaw[] = [
   meta: { requiresAuth: true, title: '竞赛详情', contentLayout: 'bleed' },
 },
 {
+  path: 'contests/:id/awd/defense/:serviceId',
+  name: 'ContestAWDDefenseWorkbench',
+  component: () => import('@/views/contests/ContestAWDDefenseWorkbench.vue'),
+  meta: { requiresAuth: true, title: '防守工作台', contentLayout: 'bleed' },
+},
+{
   path: 'scoreboard',
   name: 'Scoreboard',
   component: () => import('@/views/scoreboard/ScoreboardView.vue'),
