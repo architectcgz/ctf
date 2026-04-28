@@ -122,9 +122,16 @@ func (h *Handler) AccessInstance(c *gin.Context) {
 		return
 	}
 
-	_, err = h.service.GetAccessURL(c.Request.Context(), instanceID, currentUser.UserID)
+	accessURL, err := h.service.GetAccessURL(c.Request.Context(), instanceID, currentUser.UserID)
 	if err != nil {
 		response.FromError(c, err)
+		return
+	}
+	if isTCPAccessURL(accessURL) {
+		response.Success(c, &dto.InstanceAccessResp{
+			AccessURL: accessURL,
+			Access:    dto.BuildInstanceAccessInfo(accessURL),
+		})
 		return
 	}
 
@@ -154,7 +161,13 @@ func (h *Handler) AccessInstance(c *gin.Context) {
 
 	response.Success(c, &dto.InstanceAccessResp{
 		AccessURL: buildProxyAccessURL(instanceID, ticket),
+		Access:    dto.BuildInstanceAccessInfo(buildProxyAccessURL(instanceID, ticket)),
 	})
+}
+
+func isTCPAccessURL(accessURL string) bool {
+	parsed, err := url.Parse(strings.TrimSpace(accessURL))
+	return err == nil && strings.EqualFold(parsed.Scheme, model.ChallengeTargetProtocolTCP)
 }
 
 func (h *Handler) ProxyInstance(c *gin.Context) {

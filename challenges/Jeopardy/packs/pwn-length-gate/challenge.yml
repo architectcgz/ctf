@@ -1,0 +1,39 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: pwn-length-gate
+  title: "Pwn 入门：长度门禁"
+  category: pwn
+  difficulty: beginner
+  points: 100
+  tags:
+    - topic:tcp-service
+    - kp:input-length
+    - stack:python
+
+content:
+  statement: statement.md
+  attachments: []
+
+flag:
+  type: dynamic
+  prefix: flag
+
+hints:
+  - level: 1
+    title: Hint 1
+    cost_points: 10
+    content: "服务会告诉你当前输入长度，先观察普通输入和长输入的差异。"
+  - level: 2
+    title: Hint 2
+    cost_points: 20
+    content: "超过 40 个字节并包含 magic 这个单词。"
+
+runtime:
+  type: container
+  image:
+    ref: 127.0.0.1:5000/ctf/pwn-length-gate:20260428
+  service:
+    protocol: tcp
+    port: 8080

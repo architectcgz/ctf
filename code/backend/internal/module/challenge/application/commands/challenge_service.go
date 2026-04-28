@@ -907,13 +907,14 @@ func (s *ChallengeService) buildTopologyRuntimeRequest(
 		}
 
 		req.Nodes = append(req.Nodes, challengeports.RuntimeTopologyCreateNode{
-			Key:          node.Key,
-			Image:        imageRef,
-			Env:          env,
-			ServicePort:  node.ServicePort,
-			IsEntryPoint: node.Key == input.entryNodeKey,
-			NetworkKeys:  networkKeys,
-			Resources:    resources,
+			Key:             node.Key,
+			Image:           imageRef,
+			Env:             env,
+			ServicePort:     node.ServicePort,
+			ServiceProtocol: node.ServiceProtocol,
+			IsEntryPoint:    node.Key == input.entryNodeKey,
+			NetworkKeys:     networkKeys,
+			Resources:       resources,
 		})
 	}
 	if len(req.Networks) == 0 {

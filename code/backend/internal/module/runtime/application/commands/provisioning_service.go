@@ -89,12 +89,13 @@ func (s *ProvisioningService) CreateContainer(ctx context.Context, imageName str
 		},
 		Nodes: []runtimeports.TopologyCreateNode{
 			{
-				Key:          "default",
-				Image:        imageName,
-				Env:          env,
-				ServicePort:  servicePort,
-				IsEntryPoint: true,
-				NetworkKeys:  []string{model.TopologyDefaultNetworkKey},
+				Key:             "default",
+				Image:           imageName,
+				Env:             env,
+				ServicePort:     servicePort,
+				ServiceProtocol: model.ChallengeTargetProtocolHTTP,
+				IsEntryPoint:    true,
+				NetworkKeys:     []string{model.TopologyDefaultNetworkKey},
 			},
 		},
 	})
@@ -230,12 +231,14 @@ func (s *ProvisioningService) CreateTopology(ctx context.Context, req *runtimepo
 		}
 
 		createdContainerIDs = append(createdContainerIDs, containerID)
+		serviceProtocol := normalizeServiceProtocol(node.ServiceProtocol)
 		runtimeItem := model.InstanceRuntimeContainer{
-			NodeKey:      node.Key,
-			ContainerID:  containerID,
-			ServicePort:  servicePort,
-			IsEntryPoint: node.IsEntryPoint,
-			NetworkKeys:  append([]string(nil), nodeNetworkKeys...),
+			NodeKey:         node.Key,
+			ContainerID:     containerID,
+			ServicePort:     servicePort,
+			ServiceProtocol: serviceProtocol,
+			IsEntryPoint:    node.IsEntryPoint,
+			NetworkKeys:     append([]string(nil), nodeNetworkKeys...),
 		}
 		if node.IsEntryPoint && publishEntryPort {
 			runtimeItem.HostPort = hostPort
@@ -276,8 +279,9 @@ func (s *ProvisioningService) resolveEntryAccessURL(ctx context.Context, details
 		return "", fmt.Errorf("entry container is missing")
 	}
 	entry := details.Containers[entryNodeIndex]
+	scheme := normalizeServiceProtocol(entry.ServiceProtocol)
 	if publishEntryPort {
-		return fmt.Sprintf("http://%s:%d", s.config.PublicHost, hostPort), nil
+		return fmt.Sprintf("%s://%s:%d", scheme, s.config.PublicHost, hostPort), nil
 	}
 	if entry.ServicePort <= 0 {
 		return "", fmt.Errorf("entry service port is required for private access")
@@ -297,15 +301,24 @@ func (s *ProvisioningService) resolveEntryAccessURL(ctx context.Context, details
 			continue
 		}
 		if ip := strings.TrimSpace(ipsByNetworkName[networkName]); ip != "" {
-			return fmt.Sprintf("http://%s:%d", ip, entry.ServicePort), nil
+			return fmt.Sprintf("%s://%s:%d", scheme, ip, entry.ServicePort), nil
 		}
 	}
 	for _, ip := range ipsByNetworkName {
 		if strings.TrimSpace(ip) != "" {
-			return fmt.Sprintf("http://%s:%d", strings.TrimSpace(ip), entry.ServicePort), nil
+			return fmt.Sprintf("%s://%s:%d", scheme, strings.TrimSpace(ip), entry.ServicePort), nil
 		}
 	}
 	return "", fmt.Errorf("entry container network ip is not available")
+}
+
+func normalizeServiceProtocol(protocol string) string {
+	switch strings.ToLower(strings.TrimSpace(protocol)) {
+	case model.ChallengeTargetProtocolTCP:
+		return model.ChallengeTargetProtocolTCP
+	default:
+		return model.ChallengeTargetProtocolHTTP
+	}
 }
 
 func (s *ProvisioningService) resolveServicePort(ctx context.Context, imageRef string) (int, error) {

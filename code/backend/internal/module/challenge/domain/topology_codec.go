@@ -66,15 +66,16 @@ func normalizeTopologySpec(entryNodeKey string, networks []dto.TopologyNetworkRe
 		}
 
 		specNodes = append(specNodes, model.TopologyNode{
-			Key:         key,
-			Name:        strings.TrimSpace(node.Name),
-			ImageID:     node.ImageID,
-			ServicePort: node.ServicePort,
-			InjectFlag:  node.InjectFlag,
-			Tier:        tier,
-			NetworkKeys: networkRefs,
-			Env:         trimEnvMap(node.Env),
-			Resources:   resources,
+			Key:             key,
+			Name:            strings.TrimSpace(node.Name),
+			ImageID:         node.ImageID,
+			ServicePort:     node.ServicePort,
+			ServiceProtocol: normalizeServiceProtocol(node.ServiceProtocol),
+			InjectFlag:      node.InjectFlag,
+			Tier:            tier,
+			NetworkKeys:     networkRefs,
+			Env:             trimEnvMap(node.Env),
+			Resources:       resources,
 		})
 	}
 
@@ -199,15 +200,16 @@ func topologyNodeRespList(nodes []model.TopologyNode) []dto.TopologyNodeResp {
 			}
 		}
 		items = append(items, dto.TopologyNodeResp{
-			Key:         node.Key,
-			Name:        node.Name,
-			ImageID:     node.ImageID,
-			ServicePort: node.ServicePort,
-			InjectFlag:  node.InjectFlag,
-			Tier:        node.Tier,
-			NetworkKeys: append([]string(nil), node.NetworkKeys...),
-			Env:         node.Env,
-			Resources:   resources,
+			Key:             node.Key,
+			Name:            node.Name,
+			ImageID:         node.ImageID,
+			ServicePort:     node.ServicePort,
+			ServiceProtocol: node.ServiceProtocol,
+			InjectFlag:      node.InjectFlag,
+			Tier:            node.Tier,
+			NetworkKeys:     append([]string(nil), node.NetworkKeys...),
+			Env:             node.Env,
+			Resources:       resources,
 		})
 	}
 	return items
@@ -322,6 +324,15 @@ func normalizePolicyProtocol(protocol string) string {
 		return model.TopologyPolicyProtocolAny
 	}
 	return trimmed
+}
+
+func normalizeServiceProtocol(protocol string) string {
+	switch strings.ToLower(strings.TrimSpace(protocol)) {
+	case model.ChallengeTargetProtocolTCP:
+		return model.ChallengeTargetProtocolTCP
+	default:
+		return model.ChallengeTargetProtocolHTTP
+	}
 }
 
 func normalizePolicyPorts(ports []int) []int {

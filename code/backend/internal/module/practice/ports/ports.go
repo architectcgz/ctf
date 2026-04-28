@@ -18,13 +18,14 @@ type InstanceScope struct {
 }
 
 type TopologyCreateNode struct {
-	Key          string
-	Image        string
-	Env          map[string]string
-	ServicePort  int
-	IsEntryPoint bool
-	NetworkKeys  []string
-	Resources    *model.ResourceLimits
+	Key             string
+	Image           string
+	Env             map[string]string
+	ServicePort     int
+	ServiceProtocol string
+	IsEntryPoint    bool
+	NetworkKeys     []string
+	Resources       *model.ResourceLimits
 }
 
 type TopologyCreateNetwork struct {

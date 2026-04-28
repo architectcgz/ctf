@@ -12,6 +12,7 @@ func InstanceRespFromModel(inst *model.Instance) *dto.InstanceResp {
 		Status:           inst.Status,
 		ShareScope:       inst.ShareScope,
 		AccessURL:        inst.AccessURL,
+		Access:           dto.BuildInstanceAccessInfo(inst.AccessURL),
 		ExpiresAt:        inst.ExpiresAt,
 		ExtendCount:      inst.ExtendCount,
 		MaxExtends:       inst.MaxExtends,

@@ -1,0 +1,37 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: web-header-door
+  title: "Web 入门：门禁请求头"
+  category: web
+  difficulty: beginner
+  points: 100
+  tags:
+    - topic:http-header
+    - kp:robots
+    - stack:python
+
+content:
+  statement: statement.md
+  attachments: []
+
+flag:
+  type: static
+  prefix: flag
+  value: flag{web_header_door_opened}
+
+hints:
+  - level: 1
+    title: Hint 1
+    cost_points: 10
+    content: "先看 robots.txt，它通常会暴露站点不希望被索引的路径。"
+  - level: 2
+    title: Hint 2
+    cost_points: 20
+    content: "门禁页会明确告诉你缺少哪个 HTTP 请求头。"
+
+runtime:
+  type: container
+  image:
+    ref: 127.0.0.1:5000/ctf/web-header-door:20260428

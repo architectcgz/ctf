@@ -865,6 +865,46 @@ func TestServiceCreateTopologyCanKeepEntryPointPrivate(t *testing.T) {
 	}
 }
 
+func TestServiceCreateTopologyBuildsTCPEntryAccessURL(t *testing.T) {
+	t.Parallel()
+
+	repo := newTestRepository(t)
+	engine := &fakeRuntimeEngine{
+		networkID:    "net-tcp",
+		containerIDs: []string{"pwn-tcp"},
+	}
+	service := runtimecmd.NewProvisioningService(repo, engine, &config.ContainerConfig{
+		PortRangeStart: 30000,
+		PortRangeEnd:   30010,
+		PublicHost:     "127.0.0.1",
+	}, nil)
+
+	result, err := service.CreateTopology(context.Background(), &runtimeports.TopologyCreateRequest{
+		Networks: []runtimeports.TopologyCreateNetwork{
+			{Key: model.TopologyDefaultNetworkKey},
+		},
+		Nodes: []runtimeports.TopologyCreateNode{
+			{
+				Key:             "pwn",
+				Image:           "ctf/pwn:v1",
+				ServicePort:     31337,
+				ServiceProtocol: model.ChallengeTargetProtocolTCP,
+				IsEntryPoint:    true,
+				NetworkKeys:     []string{model.TopologyDefaultNetworkKey},
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("CreateTopology() error = %v", err)
+	}
+	if result.AccessURL != "tcp://127.0.0.1:30000" {
+		t.Fatalf("expected tcp access url, got %q", result.AccessURL)
+	}
+	if got := result.RuntimeDetails.Containers[0].ServiceProtocol; got != model.ChallengeTargetProtocolTCP {
+		t.Fatalf("expected runtime details service protocol tcp, got %q", got)
+	}
+}
+
 func TestServiceDestroyManagedInstanceRemovesAllRuntimeContainers(t *testing.T) {
 	t.Parallel()
 
