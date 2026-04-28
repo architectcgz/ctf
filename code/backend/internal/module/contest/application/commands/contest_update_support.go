@@ -58,10 +58,10 @@ func applyContestUpdateFields(contest *model.Contest, req *dto.UpdateContestReq)
 		contest.Description = *req.Description
 	}
 	if req.StartTime != nil {
-		contest.StartTime = *req.StartTime
+		contest.StartTime = domain.NormalizeContestTime(*req.StartTime)
 	}
 	if req.EndTime != nil {
-		contest.EndTime = *req.EndTime
+		contest.EndTime = domain.NormalizeContestTime(*req.EndTime)
 	}
 
 	if !contest.EndTime.After(contest.StartTime) {

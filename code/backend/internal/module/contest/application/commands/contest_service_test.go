@@ -39,6 +39,41 @@ func TestContestServiceCreateContestRejectsInvalidTimeRange(t *testing.T) {
 	}
 }
 
+func TestContestServiceCreateContestNormalizesTimeFieldsToUTC(t *testing.T) {
+	service, db := newContestCommandServiceForTest(t)
+	shanghai := time.FixedZone("Asia/Shanghai", 8*60*60)
+	start := time.Date(2026, 4, 28, 12, 36, 54, 0, shanghai)
+	end := start.Add(2 * time.Hour)
+
+	resp, err := service.CreateContest(context.Background(), &dto.CreateContestReq{
+		Title:       "utc contest",
+		Description: "time contract",
+		Mode:        model.ContestModeAWD,
+		StartTime:   start,
+		EndTime:     end,
+	})
+	if err != nil {
+		t.Fatalf("CreateContest() error = %v", err)
+	}
+	if resp.StartTime.Location() != time.UTC || resp.EndTime.Location() != time.UTC {
+		t.Fatalf("expected UTC response times, got start=%v end=%v", resp.StartTime.Location(), resp.EndTime.Location())
+	}
+	if !resp.StartTime.Equal(start) || !resp.EndTime.Equal(end) {
+		t.Fatalf("response changed instant: start=%s end=%s", resp.StartTime, resp.EndTime)
+	}
+
+	var stored model.Contest
+	if err := db.First(&stored, resp.ID).Error; err != nil {
+		t.Fatalf("load stored contest: %v", err)
+	}
+	if stored.StartTime.Location() != time.UTC || stored.EndTime.Location() != time.UTC {
+		t.Fatalf("expected UTC stored times, got start=%v end=%v", stored.StartTime.Location(), stored.EndTime.Location())
+	}
+	if !stored.StartTime.Equal(start) || !stored.EndTime.Equal(end) {
+		t.Fatalf("stored changed instant: start=%s end=%s", stored.StartTime, stored.EndTime)
+	}
+}
+
 func TestContestServiceUpdateContestBlocksAWDStartWhenReadinessNotReady(t *testing.T) {
 	service, db := newContestCommandServiceForTest(t)
 	now := time.Now()
@@ -85,6 +120,50 @@ func TestContestServiceUpdateContestAllowsAWDStartOverride(t *testing.T) {
 	}
 	if resp == nil || resp.Status != model.ContestStatusRunning {
 		t.Fatalf("unexpected contest response: %+v", resp)
+	}
+}
+
+func TestContestServiceUpdateContestNormalizesTimeFieldsToUTC(t *testing.T) {
+	service, db := newContestCommandServiceForTest(t)
+	now := time.Now().UTC()
+	shanghai := time.FixedZone("Asia/Shanghai", 8*60*60)
+	start := time.Date(2026, 4, 28, 12, 36, 54, 0, shanghai)
+	end := start.Add(2 * time.Hour)
+
+	createContestForUpdateTest(t, db, &model.Contest{
+		ID:        805,
+		Title:     "time-update",
+		Mode:      model.ContestModeJeopardy,
+		Status:    model.ContestStatusDraft,
+		StartTime: now.Add(time.Hour),
+		EndTime:   now.Add(2 * time.Hour),
+		CreatedAt: now,
+		UpdatedAt: now,
+	})
+
+	resp, err := service.UpdateContest(context.Background(), 805, &dto.UpdateContestReq{
+		StartTime: &start,
+		EndTime:   &end,
+	})
+	if err != nil {
+		t.Fatalf("UpdateContest() error = %v", err)
+	}
+	if resp.StartTime.Location() != time.UTC || resp.EndTime.Location() != time.UTC {
+		t.Fatalf("expected UTC response times, got start=%v end=%v", resp.StartTime.Location(), resp.EndTime.Location())
+	}
+	if !resp.StartTime.Equal(start) || !resp.EndTime.Equal(end) {
+		t.Fatalf("response changed instant: start=%s end=%s", resp.StartTime, resp.EndTime)
+	}
+
+	var stored model.Contest
+	if err := db.First(&stored, 805).Error; err != nil {
+		t.Fatalf("load stored contest: %v", err)
+	}
+	if stored.StartTime.Location() != time.UTC || stored.EndTime.Location() != time.UTC {
+		t.Fatalf("expected UTC stored times, got start=%v end=%v", stored.StartTime.Location(), stored.EndTime.Location())
+	}
+	if !stored.StartTime.Equal(start) || !stored.EndTime.Equal(end) {
+		t.Fatalf("stored changed instant: start=%s end=%s", stored.StartTime, stored.EndTime)
 	}
 }
 
