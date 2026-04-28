@@ -28,6 +28,10 @@ auth:
 container:
   # 生产部署时应显式配置可从浏览器访问的主机名或域名，不要依赖默认 localhost
   public_host: ctf.example.com
+  # 如需开启 AWD 防守 SSH 网关，请配置为可被选手访问的地址和端口。
+  defense_ssh_enabled: false
+  defense_ssh_host: ctf.example.com
+  defense_ssh_port: 2222
   # 启动判定会在容器创建后探测访问地址，只有探测通过才进入 running
   start_probe_timeout: 800ms
   start_probe_interval: 300ms

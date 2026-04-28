@@ -113,6 +113,95 @@ func TestFindAWDTargetProxyScopeRejectsOwnTeamTarget(t *testing.T) {
 	}
 }
 
+func TestFindAWDDefenseSSHScopeReturnsOwnTeamRunningInstance(t *testing.T) {
+	t.Parallel()
+
+	db := newAWDTargetProxyRepositoryTestDB(t)
+	now := time.Now()
+	contestID := int64(9103)
+	teamID := int64(9204)
+	serviceID := int64(9303)
+	challengeID := int64(9403)
+	instanceID := int64(9503)
+
+	seedAWDTargetProxyRow(t, db, &model.Contest{ID: contestID, Title: "AWD", Mode: model.ContestModeAWD, Status: model.ContestStatusRunning, StartTime: now.Add(-time.Minute), EndTime: now.Add(time.Hour), CreatedAt: now, UpdatedAt: now})
+	seedAWDTargetProxyRow(t, db, &model.Team{ID: teamID, ContestID: contestID, Name: "Red", CaptainID: 1004, InviteCode: "redssh", MaxMembers: 4, CreatedAt: now, UpdatedAt: now})
+	seedAWDTargetProxyRow(t, db, &model.TeamMember{ContestID: contestID, TeamID: teamID, UserID: 1004, JoinedAt: now, CreatedAt: now})
+	seedAWDTargetProxyRow(t, db, &model.AWDRound{ID: 9603, ContestID: contestID, RoundNumber: 1, Status: model.AWDRoundStatusRunning, StartedAt: &now, CreatedAt: now, UpdatedAt: now})
+	seedAWDTargetProxyRow(t, db, &model.ContestAWDService{ID: serviceID, ContestID: contestID, ChallengeID: challengeID, DisplayName: "Web", IsVisible: true, CreatedAt: now, UpdatedAt: now})
+	seedAWDTargetProxyRow(t, db, &model.Instance{
+		ID:          instanceID,
+		UserID:      1004,
+		ContestID:   &contestID,
+		TeamID:      &teamID,
+		ChallengeID: challengeID,
+		ServiceID:   &serviceID,
+		ContainerID: "ctr-red-web",
+		ShareScope:  model.InstanceSharingPerTeam,
+		Status:      model.InstanceStatusRunning,
+		AccessURL:   "http://127.0.0.1:39003",
+		ExpiresAt:   now.Add(time.Hour),
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	})
+
+	scope, err := NewRepository(db).FindAWDDefenseSSHScope(context.Background(), 1004, contestID, serviceID)
+	if err != nil {
+		t.Fatalf("FindAWDDefenseSSHScope() error = %v", err)
+	}
+	if scope == nil {
+		t.Fatal("expected defense ssh scope")
+	}
+	if scope.InstanceID != instanceID || scope.ContainerID != "ctr-red-web" {
+		t.Fatalf("unexpected instance scope: %+v", scope)
+	}
+	if scope.TeamID != teamID || scope.ServiceID != serviceID || scope.ChallengeID != challengeID {
+		t.Fatalf("unexpected team/service scope: %+v", scope)
+	}
+}
+
+func TestFindAWDDefenseSSHScopeRejectsOtherTeamInstance(t *testing.T) {
+	t.Parallel()
+
+	db := newAWDTargetProxyRepositoryTestDB(t)
+	now := time.Now()
+	contestID := int64(9104)
+	ownTeamID := int64(9205)
+	otherTeamID := int64(9206)
+	serviceID := int64(9304)
+	challengeID := int64(9404)
+
+	seedAWDTargetProxyRow(t, db, &model.Contest{ID: contestID, Title: "AWD", Mode: model.ContestModeAWD, Status: model.ContestStatusRunning, StartTime: now.Add(-time.Minute), EndTime: now.Add(time.Hour), CreatedAt: now, UpdatedAt: now})
+	seedAWDTargetProxyRow(t, db, &model.Team{ID: ownTeamID, ContestID: contestID, Name: "Red", CaptainID: 1005, InviteCode: "ownssh", MaxMembers: 4, CreatedAt: now, UpdatedAt: now})
+	seedAWDTargetProxyRow(t, db, &model.Team{ID: otherTeamID, ContestID: contestID, Name: "Blue", CaptainID: 1006, InviteCode: "othssh", MaxMembers: 4, CreatedAt: now, UpdatedAt: now})
+	seedAWDTargetProxyRow(t, db, &model.TeamMember{ContestID: contestID, TeamID: ownTeamID, UserID: 1005, JoinedAt: now, CreatedAt: now})
+	seedAWDTargetProxyRow(t, db, &model.AWDRound{ID: 9604, ContestID: contestID, RoundNumber: 1, Status: model.AWDRoundStatusRunning, StartedAt: &now, CreatedAt: now, UpdatedAt: now})
+	seedAWDTargetProxyRow(t, db, &model.ContestAWDService{ID: serviceID, ContestID: contestID, ChallengeID: challengeID, DisplayName: "Web", IsVisible: true, CreatedAt: now, UpdatedAt: now})
+	seedAWDTargetProxyRow(t, db, &model.Instance{
+		ID:          9504,
+		UserID:      1006,
+		ContestID:   &contestID,
+		TeamID:      &otherTeamID,
+		ChallengeID: challengeID,
+		ServiceID:   &serviceID,
+		ContainerID: "ctr-blue-web",
+		ShareScope:  model.InstanceSharingPerTeam,
+		Status:      model.InstanceStatusRunning,
+		AccessURL:   "http://127.0.0.1:39004",
+		ExpiresAt:   now.Add(time.Hour),
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	})
+
+	scope, err := NewRepository(db).FindAWDDefenseSSHScope(context.Background(), 1005, contestID, serviceID)
+	if err != nil {
+		t.Fatalf("FindAWDDefenseSSHScope() error = %v", err)
+	}
+	if scope != nil {
+		t.Fatalf("expected other team instance to be rejected, got %+v", scope)
+	}
+}
+
 func newAWDTargetProxyRepositoryTestDB(t *testing.T) *gorm.DB {
 	t.Helper()
 

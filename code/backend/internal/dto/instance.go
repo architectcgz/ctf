@@ -40,3 +40,12 @@ type InstanceInfo struct {
 type InstanceAccessResp struct {
 	AccessURL string `json:"access_url"`
 }
+
+type AWDDefenseSSHAccessResp struct {
+	Host      string `json:"host"`
+	Port      int    `json:"port"`
+	Username  string `json:"username"`
+	Password  string `json:"password"`
+	Command   string `json:"command"`
+	ExpiresAt string `json:"expires_at"`
+}

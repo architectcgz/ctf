@@ -8,6 +8,7 @@ import (
 	practiceports "ctf-platform/internal/module/practice/ports"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 	"fmt"
+	"io"
 	"time"
 
 	"ctf-platform/internal/authctx"
@@ -39,6 +40,11 @@ type runtimeEngine interface {
 	RemoveImage(ctx context.Context, imageRef string) error
 	ListManagedContainers(ctx context.Context) ([]runtimeports.ManagedContainer, error)
 	ListManagedContainerStats(ctx context.Context) ([]runtimeports.ManagedContainerStat, error)
+	ExecContainerInteractive(ctx context.Context, containerID string, command []string, stdin io.Reader, stdout io.Writer) error
+}
+
+type runtimeContainerInteractiveExecutor interface {
+	ExecContainerInteractive(ctx context.Context, containerID string, command []string, stdin io.Reader, stdout io.Writer) error
 }
 
 type RuntimeModule struct {
@@ -85,6 +91,7 @@ type runtimeContestDeps struct {
 
 type runtimeModuleDeps struct {
 	repo                  runtimeports.InstanceRepository
+	proxyTicketReader     runtimeports.ProxyTicketInstanceReader
 	practiceInstanceRepo  practiceports.InstanceRepository
 	instanceCommands      runtimeHTTPCommandService
 	instanceQueries       runtimeHTTPQueryService
@@ -98,6 +105,10 @@ type runtimeModuleDeps struct {
 	containerFiles        contestports.AWDContainerFileWriter
 	proxyTrafficRecorder  runtimeports.ProxyTrafficEventRecorder
 	containerPublicHost   string
+	sshExecutor           runtimeContainerInteractiveExecutor
+	defenseSSHEnabled     bool
+	defenseSSHHost        string
+	defenseSSHPort        int
 }
 
 func BuildRuntimeModule(root *Root) *RuntimeModule {
@@ -142,6 +153,7 @@ func buildRuntimeModuleDeps(root *Root, engine runtimeEngine) runtimeModuleDeps 
 
 	return runtimeModuleDeps{
 		repo:                  repo,
+		proxyTicketReader:     repo,
 		practiceInstanceRepo:  repo,
 		instanceCommands:      runtimecmd.NewInstanceService(repo, cleanupService, &cfg.Container, log.Named("runtime_instance_service")),
 		instanceQueries:       runtimeqry.NewInstanceService(repo),
@@ -155,6 +167,10 @@ func buildRuntimeModuleDeps(root *Root, engine runtimeEngine) runtimeModuleDeps 
 		imageRuntime:          runtimeapp.NewImageRuntimeService(engine),
 		containerFiles:        runtimeapp.NewContainerFileService(engine, log.Named("runtime_container_file_service")),
 		containerPublicHost:   cfg.Container.PublicHost,
+		sshExecutor:           engine,
+		defenseSSHEnabled:     cfg.Container.DefenseSSHEnabled && engine != nil,
+		defenseSSHHost:        cfg.Container.DefenseSSHHost,
+		defenseSSHPort:        cfg.Container.DefenseSSHPort,
 	}
 }
 
@@ -169,6 +185,21 @@ func registerRuntimeBackgroundJobs(root *Root, deps runtimeModuleDeps) {
 		},
 		cleaner.Stop,
 	))
+
+	if cfg.Container.DefenseSSHEnabled && deps.proxyTicketService != nil && deps.proxyTicketReader != nil && deps.sshExecutor != nil {
+		gateway := NewAWDDefenseSSHGateway(
+			deps.proxyTicketService,
+			deps.proxyTicketReader,
+			deps.sshExecutor,
+			cfg.Container.DefenseSSHPort,
+			log.Named("awd_defense_ssh_gateway"),
+		)
+		root.RegisterBackgroundJob(NewBackgroundJob(
+			"awd_defense_ssh_gateway",
+			gateway.Start,
+			gateway.Stop,
+		))
+	}
 }
 
 func buildRuntimeHTTPDeps(root *Root, deps runtimeModuleDeps) runtimeHTTPDeps {
@@ -178,6 +209,9 @@ func buildRuntimeHTTPDeps(root *Root, deps runtimeModuleDeps) runtimeHTTPDeps {
 			deps.instanceQueries,
 			deps.proxyTicketService,
 			root.Config().Container.ProxyBodyPreviewSize,
+			deps.defenseSSHEnabled,
+			deps.defenseSSHHost,
+			deps.defenseSSHPort,
 		),
 		proxyTrafficRecorder: deps.proxyTrafficRecorder,
 	}
@@ -295,6 +329,7 @@ type runtimeHTTPService interface {
 	DestroyTeacherInstance(ctx context.Context, instanceID, requesterID int64, requesterRole string) error
 	IssueProxyTicket(ctx context.Context, user authctx.CurrentUser, instanceID int64) (string, error)
 	IssueAWDTargetProxyTicket(ctx context.Context, user authctx.CurrentUser, contestID, serviceID, victimTeamID int64) (string, error)
+	IssueAWDDefenseSSHTicket(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64) (*dto.AWDDefenseSSHAccessResp, error)
 	ResolveProxyTicket(ctx context.Context, ticket string) (*runtimeports.ProxyTicketClaims, error)
 	ResolveAWDTargetAccessURL(ctx context.Context, claims *runtimeports.ProxyTicketClaims, contestID, serviceID, victimTeamID int64) (string, error)
 	ProxyTicketMaxAge() int
@@ -316,6 +351,7 @@ type runtimeHTTPQueryService interface {
 type runtimeHTTPProxyTicketService interface {
 	IssueTicket(ctx context.Context, user authctx.CurrentUser, instanceID int64) (string, time.Time, error)
 	IssueAWDTargetTicket(ctx context.Context, user authctx.CurrentUser, contestID, serviceID, victimTeamID int64) (string, time.Time, error)
+	IssueAWDDefenseSSHTicket(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64) (string, time.Time, error)
 	ResolveTicket(ctx context.Context, ticket string) (*runtimeports.ProxyTicketClaims, error)
 	ResolveAWDTargetAccessURL(ctx context.Context, claims *runtimeports.ProxyTicketClaims, contestID, serviceID, victimTeamID int64) (string, error)
 	MaxAge() int
@@ -326,14 +362,20 @@ type runtimeHTTPServiceAdapter struct {
 	queryService         runtimeHTTPQueryService
 	proxyTickets         runtimeHTTPProxyTicketService
 	proxyBodyPreviewSize int
+	defenseSSHEnabled    bool
+	defenseSSHHost       string
+	defenseSSHPort       int
 }
 
-func newRuntimeHTTPServiceAdapter(commandService runtimeHTTPCommandService, queryService runtimeHTTPQueryService, proxyTickets runtimeHTTPProxyTicketService, proxyBodyPreviewSize int) *runtimeHTTPServiceAdapter {
+func newRuntimeHTTPServiceAdapter(commandService runtimeHTTPCommandService, queryService runtimeHTTPQueryService, proxyTickets runtimeHTTPProxyTicketService, proxyBodyPreviewSize int, defenseSSHEnabled bool, defenseSSHHost string, defenseSSHPort int) *runtimeHTTPServiceAdapter {
 	return &runtimeHTTPServiceAdapter{
 		commandService:       commandService,
 		queryService:         queryService,
 		proxyTickets:         proxyTickets,
 		proxyBodyPreviewSize: proxyBodyPreviewSize,
+		defenseSSHEnabled:    defenseSSHEnabled,
+		defenseSSHHost:       defenseSSHHost,
+		defenseSSHPort:       defenseSSHPort,
 	}
 }
 
@@ -395,6 +437,29 @@ func (a *runtimeHTTPServiceAdapter) IssueAWDTargetProxyTicket(ctx context.Contex
 
 	ticket, _, err := a.proxyTickets.IssueAWDTargetTicket(ctx, user, contestID, serviceID, victimTeamID)
 	return ticket, err
+}
+
+func (a *runtimeHTTPServiceAdapter) IssueAWDDefenseSSHTicket(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64) (*dto.AWDDefenseSSHAccessResp, error) {
+	if a == nil || a.proxyTickets == nil {
+		return nil, errRuntimeHTTPProxyTicketServiceUnavailable()
+	}
+	if !a.defenseSSHEnabled || a.defenseSSHHost == "" || a.defenseSSHPort <= 0 {
+		return nil, errcode.ErrAWDDefenseSSHUnavailable.WithCause(fmt.Errorf("awd defense ssh gateway is not enabled"))
+	}
+
+	ticket, expiresAt, err := a.proxyTickets.IssueAWDDefenseSSHTicket(ctx, user, contestID, serviceID)
+	if err != nil {
+		return nil, err
+	}
+	username := fmt.Sprintf("%s+%d+%d", user.Username, contestID, serviceID)
+	return &dto.AWDDefenseSSHAccessResp{
+		Host:      a.defenseSSHHost,
+		Port:      a.defenseSSHPort,
+		Username:  username,
+		Password:  ticket,
+		Command:   fmt.Sprintf("ssh %s@%s -p %d", username, a.defenseSSHHost, a.defenseSSHPort),
+		ExpiresAt: expiresAt.Format(time.RFC3339),
+	}, nil
 }
 
 func (a *runtimeHTTPServiceAdapter) ResolveProxyTicket(ctx context.Context, ticket string) (*runtimeports.ProxyTicketClaims, error) {

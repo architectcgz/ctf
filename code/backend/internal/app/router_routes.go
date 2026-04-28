@@ -671,6 +671,11 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 		middleware.ParseInt64Param("team_id"),
 		deps.runtime.Handler.AccessAWDTarget,
 	)
+	protected.POST("/contests/:id/awd/services/:sid/defense/ssh",
+		middleware.ParseInt64Param("id"),
+		middleware.ParseInt64Param("sid"),
+		deps.runtime.Handler.AccessAWDDefenseSSH,
+	)
 	apiV1.GET("/contests/:id/awd/services/:sid/targets/:team_id/proxy",
 		middleware.ParseInt64Param("id"),
 		middleware.ParseInt64Param("sid"),

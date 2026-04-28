@@ -238,6 +238,56 @@ func (e *Engine) WriteFileToContainer(ctx context.Context, containerID, filePath
 	return e.cli.CopyToContainer(ctx, containerID, dir, io.NopCloser(bytes.NewReader(archive.Bytes())), container.CopyToContainerOptions{})
 }
 
+func (e *Engine) ExecContainerInteractive(ctx context.Context, containerID string, command []string, stdin io.Reader, stdout io.Writer) error {
+	if e == nil || e.cli == nil {
+		return fmt.Errorf("runtime engine is not configured")
+	}
+	if strings.TrimSpace(containerID) == "" {
+		return fmt.Errorf("container id is empty")
+	}
+	if len(command) == 0 {
+		command = []string{"/bin/sh"}
+	}
+
+	execID, err := e.cli.ContainerExecCreate(ctx, containerID, container.ExecOptions{
+		AttachStdin:  true,
+		AttachStdout: true,
+		AttachStderr: true,
+		Tty:          true,
+		Cmd:          command,
+	})
+	if err != nil {
+		return err
+	}
+
+	attach, err := e.cli.ContainerExecAttach(ctx, execID.ID, container.ExecAttachOptions{Tty: true})
+	if err != nil {
+		return err
+	}
+	defer attach.Close()
+
+	copyErr := make(chan error, 2)
+	go func() {
+		_, err := io.Copy(attach.Conn, stdin)
+		_ = attach.CloseWrite()
+		copyErr <- err
+	}()
+	go func() {
+		_, err := io.Copy(stdout, attach.Reader)
+		copyErr <- err
+	}()
+
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case err := <-copyErr:
+		if err != nil && err != io.EOF {
+			return err
+		}
+		return nil
+	}
+}
+
 func (e *Engine) ListManagedContainers(ctx context.Context) ([]runtimeports.ManagedContainer, error) {
 	containers, err := e.cli.ContainerList(ctx, container.ListOptions{
 		All: true,

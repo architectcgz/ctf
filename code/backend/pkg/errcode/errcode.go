@@ -115,6 +115,7 @@ var (
 	ErrAWDReadinessBlocked          = New(14025, "AWD 开赛就绪检查未通过", http.StatusConflict)
 	ErrAWDCheckerPreviewExpired     = New(14026, "试跑结果已失效，请重新试跑后再保存", http.StatusConflict)
 	ErrAWDCheckerPreviewUnavailable = New(14027, "当前未配置可保存试跑结果的 Redis，请先完成 Redis 配置后再试跑", http.StatusServiceUnavailable)
+	ErrAWDDefenseSSHUnavailable     = New(14028, "AWD SSH 防守入口未启用", http.StatusConflict)
 )
 
 // 通知与 WebSocket 相关错误码 (15000-15999)

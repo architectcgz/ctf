@@ -44,6 +44,7 @@ type runtimeService interface {
 	DestroyTeacherInstance(ctx context.Context, instanceID, requesterID int64, requesterRole string) error
 	IssueProxyTicket(ctx context.Context, user authctx.CurrentUser, instanceID int64) (string, error)
 	IssueAWDTargetProxyTicket(ctx context.Context, user authctx.CurrentUser, contestID, serviceID, victimTeamID int64) (string, error)
+	IssueAWDDefenseSSHTicket(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64) (*dto.AWDDefenseSSHAccessResp, error)
 	ResolveProxyTicket(ctx context.Context, ticket string) (*runtimeports.ProxyTicketClaims, error)
 	ResolveAWDTargetAccessURL(ctx context.Context, claims *runtimeports.ProxyTicketClaims, contestID, serviceID, victimTeamID int64) (string, error)
 	ProxyTicketMaxAge() int
@@ -193,6 +194,20 @@ func (h *Handler) AccessAWDTarget(c *gin.Context) {
 	response.Success(c, &dto.InstanceAccessResp{
 		AccessURL: buildAWDTargetProxyAccessURL(contestID, serviceID, victimTeamID, ticket),
 	})
+}
+
+func (h *Handler) AccessAWDDefenseSSH(c *gin.Context) {
+	currentUser := authctx.MustCurrentUser(c)
+	contestID := c.GetInt64("id")
+	serviceID := c.GetInt64("sid")
+
+	resp, err := h.service.IssueAWDDefenseSSHTicket(c.Request.Context(), currentUser, contestID, serviceID)
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+
+	response.Success(c, resp)
 }
 
 func (h *Handler) ProxyAWDTarget(c *gin.Context) {

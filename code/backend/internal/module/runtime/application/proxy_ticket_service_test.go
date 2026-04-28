@@ -35,6 +35,7 @@ func (s *stubProxyTicketStore) FindProxyTicket(ctx context.Context, ticket strin
 type stubProxyTicketInstanceReader struct {
 	findByIDWithContextFn            func(ctx context.Context, id int64) (*model.Instance, error)
 	findAWDTargetProxyScopeWithCtxFn func(ctx context.Context, userID, contestID, serviceID, victimTeamID int64) (*runtimeports.AWDTargetProxyScope, error)
+	findAWDDefenseSSHScopeWithCtxFn  func(ctx context.Context, userID, contestID, serviceID int64) (*runtimeports.AWDDefenseSSHScope, error)
 }
 
 func (s *stubProxyTicketInstanceReader) FindByID(ctx context.Context, id int64) (*model.Instance, error) {
@@ -47,6 +48,13 @@ func (s *stubProxyTicketInstanceReader) FindByID(ctx context.Context, id int64) 
 func (s *stubProxyTicketInstanceReader) FindAWDTargetProxyScope(ctx context.Context, userID, contestID, serviceID, victimTeamID int64) (*runtimeports.AWDTargetProxyScope, error) {
 	if s.findAWDTargetProxyScopeWithCtxFn != nil {
 		return s.findAWDTargetProxyScopeWithCtxFn(ctx, userID, contestID, serviceID, victimTeamID)
+	}
+	return nil, nil
+}
+
+func (s *stubProxyTicketInstanceReader) FindAWDDefenseSSHScope(ctx context.Context, userID, contestID, serviceID int64) (*runtimeports.AWDDefenseSSHScope, error) {
+	if s.findAWDDefenseSSHScopeWithCtxFn != nil {
+		return s.findAWDDefenseSSHScopeWithCtxFn(ctx, userID, contestID, serviceID)
 	}
 	return nil, nil
 }
@@ -142,6 +150,58 @@ func TestProxyTicketServiceIssueAWDTargetTicketPersistsAttackScope(t *testing.T)
 	}
 	if store.savedClaims.AWDVictimTeamID == nil || *store.savedClaims.AWDVictimTeamID != 5002 {
 		t.Fatalf("unexpected victim claims: %+v", store.savedClaims)
+	}
+	if store.savedClaims.AWDServiceID == nil || *store.savedClaims.AWDServiceID != 4001 {
+		t.Fatalf("unexpected service claims: %+v", store.savedClaims)
+	}
+	if store.savedClaims.AWDChallengeID == nil || *store.savedClaims.AWDChallengeID != 6001 {
+		t.Fatalf("unexpected challenge claims: %+v", store.savedClaims)
+	}
+}
+
+func TestProxyTicketServiceIssueAWDDefenseSSHTicketPersistsOwnTeamScope(t *testing.T) {
+	t.Parallel()
+
+	store := &stubProxyTicketStore{}
+	service := runtimeqry.NewProxyTicketService(store, &stubProxyTicketInstanceReader{
+		findAWDDefenseSSHScopeWithCtxFn: func(ctx context.Context, userID, contestID, serviceID int64) (*runtimeports.AWDDefenseSSHScope, error) {
+			if userID != 1001 || contestID != 3001 || serviceID != 4001 {
+				t.Fatalf("unexpected defense ssh lookup args: user=%d contest=%d service=%d", userID, contestID, serviceID)
+			}
+			return &runtimeports.AWDDefenseSSHScope{
+				InstanceID:  9001,
+				ContestID:   contestID,
+				TeamID:      5001,
+				ServiceID:   serviceID,
+				ChallengeID: 6001,
+				ContainerID: "ctr-red-web",
+				ShareScope:  model.InstanceSharingPerTeam,
+			}, nil
+		},
+	}, 15*time.Minute)
+
+	ticket, expiresAt, err := service.IssueAWDDefenseSSHTicket(context.Background(), authctx.CurrentUser{
+		UserID:   1001,
+		Username: "alice",
+		Role:     model.RoleStudent,
+	}, 3001, 4001)
+	if err != nil {
+		t.Fatalf("IssueAWDDefenseSSHTicket() error = %v", err)
+	}
+	if ticket == "" || expiresAt.IsZero() {
+		t.Fatalf("expected issued ticket and expiry, got ticket=%q expires=%s", ticket, expiresAt)
+	}
+	if store.savedClaims.Purpose != runtimeports.ProxyTicketPurposeAWDDefenseSSH {
+		t.Fatalf("expected awd defense ssh purpose, got %+v", store.savedClaims)
+	}
+	if store.savedClaims.InstanceID != 9001 {
+		t.Fatalf("unexpected instance claims: %+v", store.savedClaims)
+	}
+	if store.savedClaims.AWDAttackerTeamID == nil || *store.savedClaims.AWDAttackerTeamID != 5001 {
+		t.Fatalf("expected own team in attacker team field, got %+v", store.savedClaims)
+	}
+	if store.savedClaims.AWDVictimTeamID != nil {
+		t.Fatalf("defense ssh claims must not include a victim team: %+v", store.savedClaims)
 	}
 	if store.savedClaims.AWDServiceID == nil || *store.savedClaims.AWDServiceID != 4001 {
 		t.Fatalf("unexpected service claims: %+v", store.savedClaims)

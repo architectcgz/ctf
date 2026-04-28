@@ -145,6 +145,9 @@ type ContainerConfig struct {
 	PublicHost           string                   `mapstructure:"public_host"`
 	ProxyTicketTTL       time.Duration            `mapstructure:"proxy_ticket_ttl"`
 	ProxyBodyPreviewSize int                      `mapstructure:"proxy_body_preview_size"`
+	DefenseSSHEnabled    bool                     `mapstructure:"defense_ssh_enabled"`
+	DefenseSSHHost       string                   `mapstructure:"defense_ssh_host"`
+	DefenseSSHPort       int                      `mapstructure:"defense_ssh_port"`
 	Registry             ContainerRegistryConfig  `mapstructure:"registry"`
 	Scheduler            ContainerSchedulerConfig `mapstructure:"scheduler"`
 }
@@ -340,6 +343,14 @@ func (c *Config) Validate() error {
 	}
 	if c.Container.ProxyBodyPreviewSize <= 0 {
 		return fmt.Errorf("container.proxy_body_preview_size must be greater than 0")
+	}
+	if c.Container.DefenseSSHEnabled {
+		if strings.TrimSpace(c.Container.DefenseSSHHost) == "" {
+			return fmt.Errorf("container.defense_ssh_host must not be empty when container.defense_ssh_enabled is true")
+		}
+		if c.Container.DefenseSSHPort <= 0 || c.Container.DefenseSSHPort > 65535 {
+			return fmt.Errorf("container.defense_ssh_port must be between 1 and 65535")
+		}
 	}
 	if c.Container.Registry.Enabled {
 		if strings.TrimSpace(c.Container.Registry.Server) == "" {
@@ -579,6 +590,9 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("container.public_host", "localhost")
 	v.SetDefault("container.proxy_ticket_ttl", 15*time.Minute)
 	v.SetDefault("container.proxy_body_preview_size", 1024)
+	v.SetDefault("container.defense_ssh_enabled", false)
+	v.SetDefault("container.defense_ssh_host", "127.0.0.1")
+	v.SetDefault("container.defense_ssh_port", 2222)
 	v.SetDefault("container.registry.enabled", false)
 	v.SetDefault("container.registry.server", "")
 	v.SetDefault("container.registry.username", "")
