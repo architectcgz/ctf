@@ -122,7 +122,7 @@ function getCellValue(row: unknown, key: string): unknown {
 .workspace-data-table__head-cell {
   padding: 0.75rem 0.5rem;
   border-bottom: 1px solid var(--workspace-table-line-strong);
-  font-size: 0.6875rem;
+  font-size: var(--font-size-11);
   font-weight: 800;
   letter-spacing: 0.05em;
   text-transform: uppercase;

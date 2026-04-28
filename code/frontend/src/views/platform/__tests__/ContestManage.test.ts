@@ -576,7 +576,7 @@ describe('ContestManage', () => {
     await flushPromises()
 
     expect(wrapper.find('#contest-panel-operations').exists()).toBe(false)
-    expect(wrapper.text()).toContain('进入运维台')
+    expect(wrapper.get('#contest-open-workbench-awd-running').text()).toBe('运维')
 
     await wrapper.get('#contest-open-workbench-awd-running').trigger('click')
 
