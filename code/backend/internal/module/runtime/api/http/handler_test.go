@@ -163,12 +163,13 @@ func TestAccessAWDDefenseSSHReturnsConnectionInfo(t *testing.T) {
 	handler := NewHandler(
 		stubAWDDefenseSSHRuntimeService{
 			resp: &dto.AWDDefenseSSHAccessResp{
-				Host:      "127.0.0.1",
-				Port:      2222,
-				Username:  "student+5+12",
-				Password:  "ticket-secret",
-				Command:   "ssh student+5+12@127.0.0.1 -p 2222",
-				ExpiresAt: "2026-04-28T10:00:00Z",
+				Host:         "127.0.0.1",
+				Port:         2222,
+				Username:     "student+5+12",
+				Password:     "ticket-secret",
+				Command:      "ssh student+5+12@127.0.0.1 -p 2222",
+				VSCodeConfig: "Host ctf-awd-5-12\n  HostName 127.0.0.1\n  Port 2222\n  User student+5+12\n",
+				ExpiresAt:    "2026-04-28T10:00:00Z",
 			},
 		},
 		nil,
@@ -201,9 +202,12 @@ func TestAccessAWDDefenseSSHReturnsConnectionInfo(t *testing.T) {
 	if !strings.Contains(resp.Body.String(), `"command":"ssh student+5+12@127.0.0.1 -p 2222"`) {
 		t.Fatalf("expected ssh command in response, got %s", resp.Body.String())
 	}
+	if !strings.Contains(resp.Body.String(), `"vscode_config":"Host ctf-awd-5-12\n  HostName 127.0.0.1\n  Port 2222\n  User student+5+12\n"`) {
+		t.Fatalf("expected vscode ssh config in response, got %s", resp.Body.String())
+	}
 }
 
-func TestAWDDefenseWorkbenchHandlersReturnFileAndCommandData(t *testing.T) {
+func TestAWDDefenseWorkbenchHandlersRejectBrowserFileAndCommandAccess(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	handler := NewHandler(
@@ -249,31 +253,31 @@ func TestAWDDefenseWorkbenchHandlersReturnFileAndCommandData(t *testing.T) {
 	readReq := httptest.NewRequest(http.MethodGet, "/api/v1/contests/5/awd/services/12/defense/files?path=app.py", nil)
 	readResp := httptest.NewRecorder()
 	router.ServeHTTP(readResp, readReq)
-	if readResp.Code != http.StatusOK || !strings.Contains(readResp.Body.String(), `"content":"print('vuln')"`) {
-		t.Fatalf("unexpected read response status=%d body=%s", readResp.Code, readResp.Body.String())
+	if readResp.Code != http.StatusForbidden || strings.Contains(readResp.Body.String(), "print('vuln')") {
+		t.Fatalf("expected forbidden read response without file content, status=%d body=%s", readResp.Code, readResp.Body.String())
 	}
 
 	listReq := httptest.NewRequest(http.MethodGet, "/api/v1/contests/5/awd/services/12/defense/directories?path=.", nil)
 	listResp := httptest.NewRecorder()
 	router.ServeHTTP(listResp, listReq)
-	if listResp.Code != http.StatusOK || !strings.Contains(listResp.Body.String(), `"name":"templates"`) {
-		t.Fatalf("unexpected list response status=%d body=%s", listResp.Code, listResp.Body.String())
+	if listResp.Code != http.StatusForbidden || strings.Contains(listResp.Body.String(), "templates") {
+		t.Fatalf("expected forbidden list response without directory entries, status=%d body=%s", listResp.Code, listResp.Body.String())
 	}
 
 	saveReq := httptest.NewRequest(http.MethodPut, "/api/v1/contests/5/awd/services/12/defense/files", strings.NewReader(`{"path":"app.py","content":"print('fixed')","backup":true}`))
 	saveReq.Header.Set("Content-Type", "application/json")
 	saveResp := httptest.NewRecorder()
 	router.ServeHTTP(saveResp, saveReq)
-	if saveResp.Code != http.StatusOK || !strings.Contains(saveResp.Body.String(), `"backup_path":"app.py.bak.1"`) {
-		t.Fatalf("unexpected save response status=%d body=%s", saveResp.Code, saveResp.Body.String())
+	if saveResp.Code != http.StatusForbidden || strings.Contains(saveResp.Body.String(), "app.py.bak.1") {
+		t.Fatalf("expected forbidden save response without backup path, status=%d body=%s", saveResp.Code, saveResp.Body.String())
 	}
 
 	commandReq := httptest.NewRequest(http.MethodPost, "/api/v1/contests/5/awd/services/12/defense/commands", strings.NewReader(`{"command":"ls"}`))
 	commandReq.Header.Set("Content-Type", "application/json")
 	commandResp := httptest.NewRecorder()
 	router.ServeHTTP(commandResp, commandReq)
-	if commandResp.Code != http.StatusOK || !strings.Contains(commandResp.Body.String(), `"output":"app.py\nrequirements.txt\n"`) {
-		t.Fatalf("unexpected command response status=%d body=%s", commandResp.Code, commandResp.Body.String())
+	if commandResp.Code != http.StatusForbidden || strings.Contains(commandResp.Body.String(), "requirements.txt") {
+		t.Fatalf("expected forbidden command response without shell output, status=%d body=%s", commandResp.Code, commandResp.Body.String())
 	}
 }
 
