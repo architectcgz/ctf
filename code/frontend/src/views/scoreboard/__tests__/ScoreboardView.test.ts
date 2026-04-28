@@ -154,6 +154,8 @@ describe('ScoreboardView', () => {
 
     expect(wrapper.text()).toContain('竞赛排行榜')
     expect(wrapper.text()).toContain('积分排行榜')
+    expect(wrapper.find('#scoreboard-panel-contest').classes()).toContain('active')
+    expect(wrapper.find('#scoreboard-panel-points').classes()).not.toContain('active')
     expect(cards).toHaveLength(3)
     expect(cards[0].text()).toContain('当前竞赛')
     expect(cards[1].text()).toContain('冻结竞赛')
@@ -473,7 +475,7 @@ describe('ScoreboardView', () => {
       history: createMemoryHistory(),
       routes: [{ path: '/scoreboard', name: 'Scoreboard', component: ScoreboardView }],
     })
-    await router.push('/scoreboard?tab=points')
+    await router.push('/scoreboard?panel=points')
     await router.isReady()
 
     const wrapper = mount(ScoreboardView, {
@@ -487,6 +489,8 @@ describe('ScoreboardView', () => {
 
     expect(wrapper.text()).toContain('竞赛排行榜')
     expect(wrapper.text()).toContain('积分排行榜')
+    expect(wrapper.find('#scoreboard-panel-points').classes()).toContain('active')
+    expect(wrapper.find('#scoreboard-panel-contest').classes()).not.toContain('active')
     expect(wrapper.text()).toContain('student_user')
     expect(wrapper.text()).toContain('320')
     expect(wrapper.text()).toContain('4')

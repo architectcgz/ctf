@@ -94,10 +94,13 @@ describe('SkillProfile', () => {
     expect(wrapper.find('[role="tablist"]').exists()).toBe(true)
     expect(wrapper.find('#skill-profile-tab-analysis').attributes('aria-selected')).toBe('true')
     expect(wrapper.find('#skill-profile-panel-analysis').attributes('aria-hidden')).toBe('false')
+    expect(wrapper.find('#skill-profile-panel-analysis').classes()).toContain('active')
     expect(wrapper.find('#skill-profile-panel-weakness').attributes('aria-hidden')).toBe('true')
+    expect(wrapper.find('#skill-profile-panel-weakness').classes()).not.toContain('active')
     expect(wrapper.find('#skill-profile-panel-recommendations').attributes('aria-hidden')).toBe(
       'true'
     )
+    expect(wrapper.find('#skill-profile-panel-recommendations').classes()).not.toContain('active')
     expect(wrapper.find('.skill-overview-head').exists()).toBe(true)
     expect(wrapper.find('.skill-overview-head').text()).toContain('能力画像')
     expect(wrapper.find('.skill-overview-head').text()).toContain(
@@ -112,7 +115,9 @@ describe('SkillProfile', () => {
 
     expect(wrapper.find('#skill-profile-tab-weakness').attributes('aria-selected')).toBe('true')
     expect(wrapper.find('#skill-profile-panel-analysis').attributes('aria-hidden')).toBe('true')
+    expect(wrapper.find('#skill-profile-panel-analysis').classes()).not.toContain('active')
     expect(wrapper.find('#skill-profile-panel-weakness').attributes('aria-hidden')).toBe('false')
+    expect(wrapper.find('#skill-profile-panel-weakness').classes()).toContain('active')
     expect(wrapper.find('#skill-profile-panel-weakness .skill-overview-head').exists()).toBe(false)
     expect(wrapper.find('#skill-profile-panel-weakness .skill-overview-actions').exists()).toBe(
       false
@@ -128,6 +133,8 @@ describe('SkillProfile', () => {
     expect(wrapper.find('#skill-profile-panel-recommendations').attributes('aria-hidden')).toBe(
       'false'
     )
+    expect(wrapper.find('#skill-profile-panel-recommendations').classes()).toContain('active')
+    expect(wrapper.find('#skill-profile-panel-analysis').classes()).not.toContain('active')
     expect(wrapper.find('#skill-profile-panel-recommendations .skill-overview-head').exists()).toBe(
       false
     )
