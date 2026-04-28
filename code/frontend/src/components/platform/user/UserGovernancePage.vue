@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed, useTemplateRef } from 'vue'
+import { computed, ref, useTemplateRef } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { FileUp, GraduationCap, RefreshCw, UserPlus, UserRoundCheck, Users } from 'lucide-vue-next'
+import { FileUp, GraduationCap, RefreshCw, UserPlus, UserRoundCheck, Users, X } from 'lucide-vue-next'
 
 import type { AdminUserImportData, AdminUserListItem, UserStatus } from '@/api/contracts'
 import PlatformPaginationControls from '@/components/platform/PlatformPaginationControls.vue'
@@ -46,6 +46,7 @@ const emit = defineEmits<{
 const route = useRoute()
 const router = useRouter()
 const importInput = useTemplateRef<HTMLInputElement>('importInput')
+const selectedUserId = ref<string | null>(null)
 
 const activePanel = computed<UserPanelKey>(() => {
   const rawPanel = route.query.panel
@@ -75,60 +76,39 @@ const importSummary = computed(() => {
   if (!props.importResult) return '暂无导入记录'
   return `创建 ${props.importResult.created} / 更新 ${props.importResult.updated}`
 })
+const selectedUser = computed(() =>
+  props.list.find((user) => user.id === selectedUserId.value) ?? null
+)
 const userTableColumns = [
   {
     key: 'username',
     label: '用户',
-    widthClass: 'w-[12%] min-w-[8rem]',
+    widthClass: 'w-[20%] min-w-[10rem]',
     cellClass: 'user-table__username-cell',
   },
   {
     key: 'name',
     label: '姓名',
-    widthClass: 'w-[13%] min-w-[8rem]',
+    widthClass: 'w-[20%] min-w-[10rem]',
     cellClass: 'user-table__name-cell',
-  },
-  {
-    key: 'email',
-    label: '邮箱',
-    widthClass: 'w-[16%] min-w-[10rem]',
-    cellClass: 'user-table__email-cell',
   },
   {
     key: 'roles',
     label: '角色',
-    widthClass: 'w-[15%] min-w-[9rem]',
+    widthClass: 'w-[24%] min-w-[13rem]',
     cellClass: 'user-table__roles-cell',
   },
   {
     key: 'status',
     label: '状态',
-    widthClass: 'w-[10%] min-w-[7rem]',
+    widthClass: 'w-[14%] min-w-[8rem]',
     cellClass: 'user-table__status-cell',
-  },
-  {
-    key: 'class_name',
-    label: '班级',
-    widthClass: 'w-[10%] min-w-[7rem]',
-    cellClass: 'user-table__class-cell',
-  },
-  {
-    key: 'identity',
-    label: '学号 / 工号',
-    widthClass: 'w-[12%] min-w-[8rem]',
-    cellClass: 'user-table__identity-cell',
-  },
-  {
-    key: 'created_at',
-    label: '创建时间',
-    widthClass: 'w-[12%] min-w-[9rem]',
-    cellClass: 'user-table__time-cell',
   },
   {
     key: 'actions',
     label: '操作',
     align: 'right' as const,
-    widthClass: 'w-[10rem]',
+    widthClass: 'w-[12rem]',
     cellClass: 'user-table__actions-cell',
   },
 ]
@@ -164,6 +144,24 @@ function getUserIdentity(user: AdminUserListItem): string {
 
 function formatCreatedAt(value: string): string {
   return new Date(value).toLocaleString('zh-CN')
+}
+
+function openUserDetail(user: AdminUserListItem): void {
+  selectedUserId.value = user.id
+}
+
+function closeUserDetail(): void {
+  selectedUserId.value = null
+}
+
+function handleDetailEdit(user: AdminUserListItem): void {
+  closeUserDetail()
+  emit('openEditDialog', user)
+}
+
+function handleDetailDelete(user: AdminUserListItem): void {
+  closeUserDetail()
+  emit('deleteUser', user.id)
 }
 
 function resetDirectoryFilters(): void {
@@ -423,12 +421,6 @@ function handleImportChange(event: Event): void {
               </span>
             </template>
 
-            <template #cell-email="{ row }">
-              <span class="user-row__email">
-                {{ (row as AdminUserListItem).email || '未填写邮箱' }}
-              </span>
-            </template>
-
             <template #cell-roles="{ row }">
               <div class="user-row__roles">
                 <span
@@ -451,39 +443,22 @@ function handleImportChange(event: Event): void {
               </span>
             </template>
 
-            <template #cell-class_name="{ row }">
-              <span class="user-row__class">
-                {{ (row as AdminUserListItem).class_name || '未分配班级' }}
-              </span>
-            </template>
-
-            <template #cell-identity="{ row }">
-              <span class="user-row__identity">
-                {{ getUserIdentity(row as AdminUserListItem) }}
-              </span>
-            </template>
-
-            <template #cell-created_at="{ row }">
-              <span class="user-row__time">
-                {{ formatCreatedAt((row as AdminUserListItem).created_at) }}
-              </span>
-            </template>
-
             <template #cell-actions="{ row }">
               <div class="user-row__actions">
+                <button
+                  :id="`user-row-detail-${(row as AdminUserListItem).id}`"
+                  type="button"
+                  class="ui-btn ui-btn--secondary user-action-btn"
+                  @click="openUserDetail(row as AdminUserListItem)"
+                >
+                  详情
+                </button>
                 <button
                   type="button"
                   class="ui-btn ui-btn--secondary user-action-btn"
                   @click="emit('openEditDialog', row as AdminUserListItem)"
                 >
                   编辑
-                </button>
-                <button
-                  type="button"
-                  class="ui-btn ui-btn--danger user-action-btn"
-                  @click="emit('deleteUser', (row as AdminUserListItem).id)"
-                >
-                  删除
                 </button>
               </div>
             </template>
@@ -502,6 +477,112 @@ function handleImportChange(event: Event): void {
             />
           </div>
         </section>
+
+        <div
+          v-if="selectedUser"
+          class="user-detail-overlay"
+          @click.self="closeUserDetail"
+        >
+          <aside
+            class="user-detail-drawer"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="user-detail-title"
+          >
+            <header class="user-detail-head">
+              <div>
+                <div class="journal-note-label">
+                  User Detail
+                </div>
+                <h3
+                  id="user-detail-title"
+                  class="user-detail-title"
+                >
+                  {{ selectedUser.username }}
+                </h3>
+              </div>
+              <button
+                id="user-detail-close"
+                type="button"
+                class="user-detail-close"
+                aria-label="关闭用户详情"
+                @click="closeUserDetail"
+              >
+                <X class="h-4 w-4" />
+              </button>
+            </header>
+
+            <dl class="user-detail-list">
+              <div class="user-detail-item">
+                <dt>用户名</dt>
+                <dd>{{ selectedUser.username }}</dd>
+              </div>
+              <div class="user-detail-item">
+                <dt>姓名</dt>
+                <dd>{{ selectedUser.name || selectedUser.username }}</dd>
+              </div>
+              <div class="user-detail-item">
+                <dt>邮箱</dt>
+                <dd>{{ selectedUser.email || '未填写邮箱' }}</dd>
+              </div>
+              <div class="user-detail-item">
+                <dt>角色</dt>
+                <dd>
+                  <div class="user-row__roles">
+                    <span
+                      v-for="role in selectedUser.roles"
+                      :key="`detail-${selectedUser.id}-${role}`"
+                      class="admin-role-chip"
+                    >
+                      <UserRoundCheck class="h-3.5 w-3.5" />
+                      {{ role }}
+                    </span>
+                  </div>
+                </dd>
+              </div>
+              <div class="user-detail-item">
+                <dt>状态</dt>
+                <dd>
+                  <span
+                    class="admin-status-chip"
+                    :style="getUserStatusStyle(selectedUser.status)"
+                  >
+                    {{ selectedUser.status }}
+                  </span>
+                </dd>
+              </div>
+              <div class="user-detail-item">
+                <dt>班级</dt>
+                <dd>{{ selectedUser.class_name || '未分配班级' }}</dd>
+              </div>
+              <div class="user-detail-item">
+                <dt>学号 / 工号</dt>
+                <dd>{{ getUserIdentity(selectedUser) }}</dd>
+              </div>
+              <div class="user-detail-item">
+                <dt>创建时间</dt>
+                <dd>{{ formatCreatedAt(selectedUser.created_at) }}</dd>
+              </div>
+            </dl>
+
+            <footer class="user-detail-actions">
+              <button
+                type="button"
+                class="ui-btn ui-btn--secondary user-action-btn"
+                @click="handleDetailEdit(selectedUser)"
+              >
+                编辑
+              </button>
+              <button
+                type="button"
+                class="ui-btn ui-btn--danger user-action-btn"
+                @click="handleDetailDelete(selectedUser)"
+              >
+                删除
+              </button>
+            </footer>
+          </aside>
+        </div>
       </section>
 
       <section
@@ -657,6 +738,7 @@ function handleImportChange(event: Event): void {
 
 .user-panel-actions > .ui-btn,
 .user-row__actions > .ui-btn,
+.user-detail-actions > .ui-btn,
 .workspace-directory-empty .ui-btn {
   --ui-btn-height: 2.75rem;
   --ui-btn-radius: 1rem;
@@ -697,7 +779,8 @@ function handleImportChange(event: Event): void {
   --ui-btn-hover-color: var(--journal-accent);
 }
 
-.user-row__actions > .ui-btn.ui-btn--danger {
+.user-row__actions > .ui-btn.ui-btn--danger,
+.user-detail-actions > .ui-btn.ui-btn--danger {
   --ui-btn-danger-border: color-mix(in srgb, var(--color-danger) 20%, transparent);
   --ui-btn-danger-background: color-mix(in srgb, var(--color-danger) 10%, var(--journal-surface));
   --ui-btn-danger-color: color-mix(in srgb, var(--color-danger) 88%, var(--journal-ink));
@@ -839,6 +922,110 @@ function handleImportChange(event: Event): void {
 .user-row__actions {
   justify-content: flex-end;
   gap: var(--space-2);
+}
+
+.user-detail-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-index-modal, 50);
+  display: flex;
+  justify-content: flex-end;
+  background: color-mix(in srgb, var(--color-bg-base) 42%, transparent);
+  padding: var(--space-6);
+}
+
+.user-detail-drawer {
+  display: flex;
+  flex-direction: column;
+  width: min(32rem, calc(100vw - var(--space-6) * 2));
+  max-height: calc(100vh - var(--space-6) * 2);
+  border: 1px solid color-mix(in srgb, var(--journal-border) 78%, transparent);
+  border-radius: 1.25rem;
+  background: var(--journal-surface);
+  box-shadow: var(--shadow-xl, var(--shadow-lg));
+  overflow: hidden;
+}
+
+.user-detail-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 72%, transparent);
+}
+
+.user-detail-title {
+  margin: var(--space-2) 0 0;
+  color: var(--journal-ink);
+  font-size: var(--font-size-20);
+  font-weight: 700;
+}
+
+.user-detail-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 1px solid var(--admin-control-border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
+  color: var(--journal-muted);
+  cursor: pointer;
+}
+
+.user-detail-close:hover,
+.user-detail-close:focus-visible {
+  border-color: color-mix(in srgb, var(--journal-accent) 34%, transparent);
+  color: var(--journal-accent);
+  outline: none;
+}
+
+.user-detail-list {
+  display: grid;
+  gap: var(--space-4);
+  margin: 0;
+  padding: var(--space-5);
+  overflow: auto;
+}
+
+.user-detail-item {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 54%, transparent);
+}
+
+.user-detail-item:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.user-detail-item dt {
+  color: var(--journal-muted);
+  font-size: var(--font-size-11);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.user-detail-item dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: var(--journal-ink);
+  font-size: var(--font-size-14);
+}
+
+.user-detail-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  padding: var(--space-5);
+  border-top: 1px solid color-mix(in srgb, var(--journal-border) 72%, transparent);
+  background: color-mix(in srgb, var(--journal-surface-subtle) 72%, var(--journal-surface));
 }
 
 .admin-status-chip,
