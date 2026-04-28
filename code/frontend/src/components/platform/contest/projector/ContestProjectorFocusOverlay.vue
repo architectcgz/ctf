@@ -52,6 +52,16 @@ onUnmounted(() => {
 
 <style scoped>
 .projector-focus-overlay {
+  --projector-focus-panel-surface: color-mix(
+    in srgb,
+    var(--journal-surface, var(--color-bg-surface)) 98%,
+    var(--color-bg-base)
+  );
+  --projector-focus-content-surface: color-mix(
+    in srgb,
+    var(--color-bg-elevated) 92%,
+    var(--color-bg-surface)
+  );
   position: absolute;
   z-index: var(--ui-dialog-z-index);
   inset: 0;
@@ -73,7 +83,7 @@ onUnmounted(() => {
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--journal-accent) 30%, var(--color-border-subtle));
   border-radius: var(--ui-dialog-radius);
-  background: var(--journal-surface);
+  background: var(--projector-focus-panel-surface);
   box-shadow: var(--ui-dialog-shadow);
 }
 
@@ -129,7 +139,7 @@ onUnmounted(() => {
 .projector-focus-body :deep(.first-blood-panel),
 .projector-focus-body :deep(.attack-panel),
 .projector-focus-body :deep(.attack-feed-panel) {
-  background: color-mix(in srgb, var(--color-bg-elevated) 68%, transparent);
+  background: var(--projector-focus-content-surface);
 }
 
 @media (max-width: 900px) {

@@ -1,4 +1,19 @@
 .attack-detail-overlay {
+  --projector-detail-panel-surface: color-mix(
+    in srgb,
+    var(--journal-surface, var(--color-bg-surface)) 98%,
+    var(--color-bg-base)
+  );
+  --projector-detail-item-surface: color-mix(
+    in srgb,
+    var(--color-bg-elevated) 92%,
+    var(--color-bg-surface)
+  );
+  --projector-detail-item-surface-strong: color-mix(
+    in srgb,
+    var(--color-bg-elevated) 96%,
+    var(--color-bg-surface)
+  );
   position: fixed;
   z-index: calc(var(--ui-dialog-z-index) + 1);
   inset: 0;
@@ -14,7 +29,7 @@
   overflow: auto;
   border: 1px solid color-mix(in srgb, var(--journal-accent) 32%, var(--color-border-subtle));
   border-radius: var(--ui-dialog-radius);
-  background: var(--journal-surface);
+  background: var(--projector-detail-panel-surface);
   padding: var(--space-5);
   box-shadow: var(--ui-dialog-shadow);
 }
@@ -83,7 +98,7 @@
   gap: var(--space-3);
   border: 1px solid var(--color-border-subtle);
   border-radius: 0.625rem;
-  background: color-mix(in srgb, var(--color-bg-elevated) 58%, transparent);
+  background: var(--projector-detail-item-surface);
   padding: var(--space-3);
 }
 
@@ -125,6 +140,7 @@
   align-items: center;
   border: 1px solid var(--color-border-subtle);
   border-radius: 0.5rem;
+  background: var(--projector-detail-item-surface-strong);
   padding: var(--space-2);
 }
 
@@ -175,7 +191,7 @@
   gap: var(--space-3);
   border: 1px solid var(--color-border-subtle);
   border-radius: 0.5rem;
-  background: color-mix(in srgb, var(--color-bg-elevated) 50%, transparent);
+  background: var(--projector-detail-item-surface);
   padding: var(--space-2) var(--space-3);
   color: var(--color-text-secondary);
   font-size: var(--font-size-12);
@@ -207,7 +223,7 @@
   gap: var(--space-2);
   border: 1px solid var(--color-border-subtle);
   border-radius: 0.625rem;
-  background: color-mix(in srgb, var(--color-bg-elevated) 52%, transparent);
+  background: var(--projector-detail-item-surface);
   padding: var(--space-3);
 }
 
@@ -255,4 +271,3 @@
   font-family: var(--font-family-mono);
   font-style: normal;
 }
-

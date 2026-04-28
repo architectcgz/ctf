@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { nextTick } from 'vue'
 
 import ContestProjectorFocusOverlay from '@/components/platform/contest/projector/ContestProjectorFocusOverlay.vue'
+import focusOverlaySource from '@/components/platform/contest/projector/ContestProjectorFocusOverlay.vue?raw'
 
 afterEach(() => {
   document.body.innerHTML = ''
@@ -39,5 +40,11 @@ describe('ContestProjectorFocusOverlay', () => {
 
     await wrapper.setProps({ activePanel: null })
     expect(wrapper.find('[role="dialog"]').exists()).toBe(false)
+  })
+
+  it('聚焦弹出框内嵌面板应使用实体背景，避免内容区域透明', () => {
+    expect(focusOverlaySource).toContain('background: var(--projector-focus-panel-surface);')
+    expect(focusOverlaySource).toContain('background: var(--projector-focus-content-surface);')
+    expect(focusOverlaySource).not.toContain('var(--color-bg-elevated) 68%, transparent')
   })
 })
