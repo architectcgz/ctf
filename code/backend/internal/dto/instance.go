@@ -42,12 +42,13 @@ type InstanceAccessResp struct {
 }
 
 type AWDDefenseSSHAccessResp struct {
-	Host      string `json:"host"`
-	Port      int    `json:"port"`
-	Username  string `json:"username"`
-	Password  string `json:"password"`
-	Command   string `json:"command"`
-	ExpiresAt string `json:"expires_at"`
+	Host         string `json:"host"`
+	Port         int    `json:"port"`
+	Username     string `json:"username"`
+	Password     string `json:"password"`
+	Command      string `json:"command"`
+	VSCodeConfig string `json:"vscode_config"`
+	ExpiresAt    string `json:"expires_at"`
 }
 
 type AWDDefenseFileResp struct {
