@@ -12,6 +12,8 @@ import {
   Terminal,
   ExternalLink,
   RefreshCw,
+  Folder,
+  FileText,
 } from 'lucide-vue-next'
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
@@ -46,9 +48,12 @@ const {
   openingSSHKey,
   sshAccessByServiceId,
   activeDefenseServiceId,
+  defenseDirectory,
+  defenseDirectoryPath,
   defenseFile,
   defenseDraft,
   defenseFilePath,
+  loadingDefenseDirectory,
   loadingDefenseFile,
   savingDefenseFile,
   runningDefenseCommand,
@@ -62,6 +67,8 @@ const {
   startService,
   openService,
   openDefenseSSH,
+  openDefenseDirectory,
+  openDefenseFile,
   openDefenseWorkbench,
   saveDefenseFile,
   runDefenseCommand,
@@ -298,6 +305,25 @@ function getActiveDefenseTitle(): string {
   return challenge?.title || '防守工作台'
 }
 
+function getDefenseParentPath(): string {
+  if (!defenseDirectoryPath.value || defenseDirectoryPath.value === '.') {
+    return '.'
+  }
+  const parts = defenseDirectoryPath.value.split('/').filter(Boolean)
+  parts.pop()
+  return parts.length > 0 ? parts.join('/') : '.'
+}
+
+function openDefenseEntry(entry: { path: string; type: 'file' | 'dir' | 'other' }): void {
+  if (entry.type === 'dir') {
+    void openDefenseDirectory(entry.path)
+    return
+  }
+  if (entry.type === 'file') {
+    void openDefenseFile(entry.path)
+  }
+}
+
 function isTargetServiceForChallenge(
   service: { service_id?: string; challenge_id: string },
   challenge: ContestChallengeItem
@@ -514,19 +540,57 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
                 <button
                   class="asset-btn"
                   :disabled="loadingDefenseFile"
-                  @click="openDefenseWorkbench(activeDefenseServiceId, defenseFilePath)"
+                  @click="openDefenseFile(defenseFilePath)"
                 >
                   读取
                 </button>
               </div>
-              <textarea
-                v-model="defenseDraft"
-                class="defense-editor"
-                spellcheck="false"
-                :disabled="loadingDefenseFile || !defenseFile"
-              />
-              <div class="defense-file-meta">
-                {{ defenseFile ? `${defenseFile.path} · ${defenseFile.size} bytes` : '未载入文件' }}
+              <div class="defense-browser">
+                <div class="defense-file-list">
+                  <div class="defense-file-list__bar">
+                    <span>{{ defenseDirectoryPath }}</span>
+                    <button
+                      class="asset-btn"
+                      :disabled="loadingDefenseDirectory || defenseDirectoryPath === '.'"
+                      @click="openDefenseDirectory(getDefenseParentPath())"
+                    >
+                      上级
+                    </button>
+                  </div>
+                  <button
+                    v-for="entry in defenseDirectory?.entries || []"
+                    :key="entry.path"
+                    class="defense-file-entry"
+                    :class="{ 'defense-file-entry--active': defenseFile?.path === entry.path }"
+                    :disabled="
+                      loadingDefenseDirectory || loadingDefenseFile || entry.type === 'other'
+                    "
+                    @click="openDefenseEntry(entry)"
+                  >
+                    <Folder v-if="entry.type === 'dir'" class="h-3.5 w-3.5" />
+                    <FileText v-else class="h-3.5 w-3.5" />
+                    <span>{{ entry.name }}</span>
+                  </button>
+                  <div
+                    v-if="!loadingDefenseDirectory && (defenseDirectory?.entries.length || 0) === 0"
+                    class="defense-file-empty"
+                  >
+                    当前目录为空
+                  </div>
+                </div>
+                <div class="defense-editor-pane">
+                  <textarea
+                    v-model="defenseDraft"
+                    class="defense-editor"
+                    spellcheck="false"
+                    :disabled="loadingDefenseFile || !defenseFile"
+                  />
+                  <div class="defense-file-meta">
+                    {{
+                      defenseFile ? `${defenseFile.path} · ${defenseFile.size} bytes` : '未载入文件'
+                    }}
+                  </div>
+                </div>
               </div>
               <div class="defense-command">
                 <input
@@ -1114,17 +1178,84 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
   flex: 1;
 }
 
+.defense-browser {
+  display: grid;
+  grid-template-columns: minmax(9rem, 0.4fr) minmax(0, 1fr);
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+.defense-file-list {
+  min-height: 18rem;
+  max-height: 24rem;
+  overflow: auto;
+  border: 1px solid var(--color-border-default);
+  border-radius: 0.75rem;
+  background: var(--color-bg-surface);
+}
+
+.defense-file-list__bar {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border-bottom: 1px solid var(--color-border-subtle);
+  background: var(--color-bg-surface);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-12);
+  font-weight: 800;
+}
+
+.defense-file-list__bar span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.defense-file-entry {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-12);
+  font-weight: 800;
+  text-align: left;
+}
+
+.defense-file-entry:hover:not(:disabled),
+.defense-file-entry--active {
+  background: color-mix(in srgb, var(--color-success) 14%, transparent);
+  color: var(--color-text-primary);
+}
+
+.defense-file-empty {
+  padding: var(--space-3);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-12);
+  font-weight: 800;
+}
+
+.defense-editor-pane {
+  min-width: 0;
+}
+
 .defense-editor {
   width: 100%;
   min-height: 18rem;
-  margin-top: var(--space-3);
   padding: var(--space-3);
   border: 1px solid var(--color-border-default);
   border-radius: 0.75rem;
   background: var(--color-bg-surface);
   color: var(--color-text-primary);
   font-family: var(--font-family-mono);
-  font-size: 12px;
+  font-size: var(--font-size-12);
   line-height: 1.55;
   resize: vertical;
   outline: none;
@@ -1137,7 +1268,7 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
 .defense-file-meta {
   margin-top: var(--space-2);
   color: var(--color-text-muted);
-  font-size: 11px;
+  font-size: var(--font-size-12);
   font-weight: 800;
 }
 
@@ -1152,8 +1283,14 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
   background: color-mix(in srgb, black 28%, var(--color-bg-surface));
   color: var(--color-text-primary);
   font-family: var(--font-family-mono);
-  font-size: 11px;
+  font-size: var(--font-size-12);
   line-height: 1.5;
+}
+
+@media (max-width: 900px) {
+  .defense-browser {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Attack Components */

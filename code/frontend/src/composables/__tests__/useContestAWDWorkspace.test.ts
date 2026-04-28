@@ -7,6 +7,7 @@ import { useContestAWDWorkspace } from '@/composables/useContestAWDWorkspace'
 const contestApiMocks = vi.hoisted(() => ({
   getContestAWDWorkspace: vi.fn(),
   getScoreboard: vi.fn(),
+  listContestAWDDefenseDirectory: vi.fn(),
   readContestAWDDefenseFile: vi.fn(),
   requestContestAWDDefenseSSH: vi.fn(),
   requestContestAWDTargetAccess: vi.fn(),
@@ -36,6 +37,7 @@ describe('useContestAWDWorkspace', () => {
     vi.useRealTimers()
     contestApiMocks.getContestAWDWorkspace.mockReset()
     contestApiMocks.getScoreboard.mockReset()
+    contestApiMocks.listContestAWDDefenseDirectory.mockReset()
     contestApiMocks.readContestAWDDefenseFile.mockReset()
     contestApiMocks.requestContestAWDDefenseSSH.mockReset()
     contestApiMocks.requestContestAWDTargetAccess.mockReset()
@@ -93,6 +95,13 @@ describe('useContestAWDWorkspace', () => {
       password: 'ticket-secret',
       command: 'ssh student+1+7009@127.0.0.1 -p 2222',
       expires_at: '2026-04-12T08:15:00Z',
+    })
+    contestApiMocks.listContestAWDDefenseDirectory.mockResolvedValue({
+      path: '.',
+      entries: [
+        { name: 'app.py', path: 'app.py', type: 'file', size: 8 },
+        { name: 'requirements.txt', path: 'requirements.txt', type: 'file', size: 13 },
+      ],
     })
     contestApiMocks.readContestAWDDefenseFile.mockResolvedValue({
       path: 'app.py',
@@ -525,8 +534,15 @@ describe('useContestAWDWorkspace', () => {
 
   it('防守工作台应读取保存文件并执行命令', async () => {
     let openDefenseWorkbench!: (serviceId: string, filePath?: string) => Promise<void>
+    let openDefenseDirectory!: (dirPath?: string) => Promise<void>
     let saveDefenseFile!: () => Promise<void>
     let runDefenseCommand!: (command?: string) => Promise<unknown>
+    let defenseDirectory!: {
+      value: {
+        path: string
+        entries: { name: string; path: string; type: string; size: number }[]
+      } | null
+    }
     let defenseDraft!: { value: string }
     let defenseFile!: { value: { path: string; content: string; size: number } | null }
     let defenseCommandResult!: { value: { command: string; output: string } | null }
@@ -539,8 +555,10 @@ describe('useContestAWDWorkspace', () => {
             contestStatus: computed(() => 'running'),
           } as any)
           openDefenseWorkbench = workspace.openDefenseWorkbench
+          openDefenseDirectory = workspace.openDefenseDirectory
           saveDefenseFile = workspace.saveDefenseFile
           runDefenseCommand = workspace.runDefenseCommand
+          defenseDirectory = workspace.defenseDirectory
           defenseDraft = workspace.defenseDraft
           defenseFile = workspace.defenseFile
           defenseCommandResult = workspace.defenseCommandResult
@@ -554,8 +572,18 @@ describe('useContestAWDWorkspace', () => {
     await flushPromises()
 
     expect(contestApiMocks.readContestAWDDefenseFile).toHaveBeenCalledWith('1', '7009', 'app.py')
+    expect(contestApiMocks.listContestAWDDefenseDirectory).toHaveBeenCalledWith('1', '7009', '.')
+    expect(defenseDirectory.value?.entries[0].name).toBe('app.py')
     expect(defenseFile.value?.content).toBe('print(1)')
     expect(defenseDraft.value).toBe('print(1)')
+
+    await openDefenseDirectory('templates')
+
+    expect(contestApiMocks.listContestAWDDefenseDirectory).toHaveBeenCalledWith(
+      '1',
+      '7009',
+      'templates'
+    )
 
     defenseDraft.value = 'print(2)'
     await saveDefenseFile()

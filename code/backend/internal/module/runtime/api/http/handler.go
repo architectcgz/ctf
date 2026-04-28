@@ -46,6 +46,7 @@ type runtimeService interface {
 	IssueAWDTargetProxyTicket(ctx context.Context, user authctx.CurrentUser, contestID, serviceID, victimTeamID int64) (string, error)
 	IssueAWDDefenseSSHTicket(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64) (*dto.AWDDefenseSSHAccessResp, error)
 	ReadAWDDefenseFile(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64, filePath string) (*dto.AWDDefenseFileResp, error)
+	ListAWDDefenseDirectory(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64, dirPath string) (*dto.AWDDefenseDirectoryResp, error)
 	SaveAWDDefenseFile(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64, req dto.AWDDefenseFileSaveReq) (*dto.AWDDefenseFileSaveResp, error)
 	RunAWDDefenseCommand(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64, req dto.AWDDefenseCommandReq) (*dto.AWDDefenseCommandResp, error)
 	ResolveProxyTicket(ctx context.Context, ticket string) (*runtimeports.ProxyTicketClaims, error)
@@ -220,6 +221,21 @@ func (h *Handler) ReadAWDDefenseFile(c *gin.Context) {
 	filePath := c.Query("path")
 
 	resp, err := h.service.ReadAWDDefenseFile(c.Request.Context(), currentUser, contestID, serviceID, filePath)
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+
+	response.Success(c, resp)
+}
+
+func (h *Handler) ListAWDDefenseDirectory(c *gin.Context) {
+	currentUser := authctx.MustCurrentUser(c)
+	contestID := c.GetInt64("id")
+	serviceID := c.GetInt64("sid")
+	dirPath := c.DefaultQuery("path", ".")
+
+	resp, err := h.service.ListAWDDefenseDirectory(c.Request.Context(), currentUser, contestID, serviceID, dirPath)
 	if err != nil {
 		response.FromError(c, err)
 		return
