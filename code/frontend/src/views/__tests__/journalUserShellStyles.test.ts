@@ -59,7 +59,7 @@ describe('journal user shell shared styles', () => {
     }
   })
 
-  it('除 skill profile 的圆角补充外，目标页面不应继续本地重写 hero 背景壳子', () => {
+  it('目标页面不应继续本地重写 hero 背景壳子', () => {
     for (const source of [
       challengeListSource,
       challengeDetailSource,
@@ -70,6 +70,7 @@ describe('journal user shell shared styles', () => {
       notificationListSource,
       scoreboardSource,
       securitySettingsSource,
+      skillProfileSource,
       userProfileSource,
     ]) {
       expect(extractScopedStyle(source)).not.toMatch(/^\.journal-hero\s*\{/m)
@@ -80,16 +81,6 @@ describe('journal user shell shared styles', () => {
         /^:global\(\[data-theme='dark'\]\) \.journal-hero\s*\{/m
       )
     }
-
-    const skillProfileStyle = extractScopedStyle(skillProfileSource)
-    const localHeroRule = skillProfileStyle.match(/^\.journal-hero\s*\{([\s\S]*?)^\}/m)
-
-    expect(localHeroRule).not.toBeNull()
-    expect(localHeroRule?.[1]).toContain('border-radius: 16px !important;')
-    expect(localHeroRule?.[1]).toContain('overflow: hidden;')
-    expect(localHeroRule?.[1]).not.toContain('background:')
-    expect(skillProfileStyle).not.toMatch(/^:global\(\[data-theme='dark'\]\) \.journal-shell\s*\{/m)
-    expect(skillProfileStyle).not.toMatch(/^:global\(\[data-theme='dark'\]\) \.journal-hero\s*\{/m)
   })
 
   it('profile 与 security 顶部概况应显式使用 metric-panel 类，旧共享 CSS 只保留变量桥接', () => {

@@ -32,9 +32,7 @@ describe('page tabs shared styles', () => {
   it('使用共享页签轨道的页面应改为注入变量，而不是继续本地重写整套样式', () => {
     for (const source of [
       classManagementSource,
-      challengeDetailSource,
       contestDetailSource,
-      skillProfileSource,
       userGovernanceSource,
       challengeManageSource,
     ].filter((source) => source.includes('top-tabs'))) {
@@ -42,6 +40,22 @@ describe('page tabs shared styles', () => {
       expect(source).toContain('--page-top-tab-active-border:')
       expect(source).not.toMatch(/\.top-tabs\s*\{[^}]*display:\s*flex;/s)
       expect(source).not.toMatch(/\.top-tab\s*\{[^}]*border-bottom:\s*2px solid transparent;/s)
+    }
+  })
+
+  it('workspace 顶部主页签应由共享预设提供默认变量', () => {
+    expect(pageTabsSource).toContain('.workspace-tabbar.top-tabs')
+    expect(pageTabsSource).toContain('--page-top-tabs-gap: var(--space-7);')
+    expect(pageTabsSource).toContain('--page-top-tabs-padding: 0 var(--space-7);')
+    expect(pageTabsSource).toContain('--page-top-tab-min-height: 52px;')
+    expect(pageTabsSource).toContain('--page-top-tab-active-border: var(--brand);')
+
+    for (const source of [challengeDetailSource, skillProfileSource].filter((source) =>
+      source.includes('class="workspace-tabbar top-tabs"')
+    )) {
+      expect(source).not.toContain('--page-top-tabs-gap: var(--space-7);')
+      expect(source).not.toContain('--page-top-tabs-padding: 0 var(--space-7);')
+      expect(source).not.toContain('--page-top-tab-min-height: 52px;')
     }
   })
 })
