@@ -1544,6 +1544,20 @@ describe('ContestDetail', () => {
     expect(contestOverviewPanelSource).not.toContain('<div class="contest-overline">Contest</div>')
   })
 
+  it('竞赛概览数值区域应接入共享 metric panel surface', () => {
+    expect(contestOverviewPanelSource).toContain(
+      'class="contest-score-rail metric-panel-card metric-panel-workspace-surface"'
+    )
+    expect(contestOverviewPanelSource).toContain(
+      'class="contest-stat-grid metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
+    )
+    expect(contestOverviewPanelSource).toContain(
+      'class="contest-stat progress-card metric-panel-card"'
+    )
+    expect(contestOverviewPanelSource).not.toContain('--metric-panel-grid-gap: 0.85rem;')
+    expect(contestOverviewPanelSource).not.toContain('gap: 1.25rem;')
+  })
+
   it('竞赛详情 section heading 应切到共享 workspace overline 语义', () => {
     const combinedSource = [contestDetailSource, contestOverviewPanelSource].join('\n')
 

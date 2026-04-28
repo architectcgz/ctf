@@ -56,14 +56,14 @@ defineProps<Props>()
         </div>
       </div>
 
-      <aside class="contest-score-rail">
-        <div class="contest-score-rail__label">
+      <aside class="contest-score-rail metric-panel-card metric-panel-workspace-surface">
+        <div class="contest-score-rail__label metric-panel-label">
           总分
         </div>
-        <div class="contest-score-rail__value">
-          {{ totalPoints }} <small>pts</small>
+        <div class="contest-score-rail__value metric-panel-value">
+          {{ totalPoints }} <small>分</small>
         </div>
-        <div class="contest-score-rail__note">
+        <div class="contest-score-rail__note metric-panel-helper">
           {{ challengeCount }} 题 · {{ solvedCount }} 已解 · {{ memberCount }} 人
         </div>
       </aside>
@@ -71,8 +71,8 @@ defineProps<Props>()
 
     <div class="contest-divider" />
 
-    <section class="contest-stat-grid metric-panel-grid">
-      <article class="contest-stat metric-panel-card">
+    <section class="contest-stat-grid metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface">
+      <article class="contest-stat progress-card metric-panel-card">
         <div class="contest-stat__label metric-panel-label">
           队伍成员
         </div>
@@ -83,7 +83,7 @@ defineProps<Props>()
           当前队伍人数
         </div>
       </article>
-      <article class="contest-stat metric-panel-card">
+      <article class="contest-stat progress-card metric-panel-card">
         <div class="contest-stat__label metric-panel-label">
           题目数量
         </div>
@@ -94,7 +94,7 @@ defineProps<Props>()
           本场竞赛题目总数
         </div>
       </article>
-      <article class="contest-stat metric-panel-card">
+      <article class="contest-stat progress-card metric-panel-card">
         <div class="contest-stat__label metric-panel-label">
           已解题目
         </div>
@@ -105,7 +105,7 @@ defineProps<Props>()
           当前账号已完成数量
         </div>
       </article>
-      <article class="contest-stat metric-panel-card">
+      <article class="contest-stat progress-card metric-panel-card">
         <div class="contest-stat__label metric-panel-label">
           积分总览
         </div>
@@ -199,64 +199,42 @@ defineProps<Props>()
 .contest-hero {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 15rem;
-  gap: 1.25rem;
+  gap: var(--space-5);
 }
 
 .contest-hero__title {
-  margin-top: 0.85rem;
+  margin-top: var(--space-3-5);
   font-weight: 700;
   color: var(--color-text-primary);
 }
 
 .contest-hero__desc {
-  margin-top: 0.8rem;
+  margin-top: var(--space-3);
   max-width: 60ch;
   color: var(--color-text-secondary);
 }
 
 .contest-meta-strip {
-  margin-top: 1rem;
+  margin-top: var(--space-4);
   display: flex;
   flex-wrap: wrap;
-  gap: 0.55rem;
+  gap: var(--space-2);
 }
 
 .contest-score-rail {
+  --metric-panel-padding: var(--space-4);
+  --metric-panel-value-size: var(--font-size-34);
   align-self: start;
-  border-inline-start: 1px solid color-mix(in srgb, var(--color-border-default) 86%, transparent);
-  padding-inline-start: 1.1rem;
-}
-
-.contest-score-rail__label {
-  font-size: var(--font-size-0-74);
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--color-text-secondary);
-}
-
-.contest-score-rail__value {
-  margin-top: 0.7rem;
-  font-size: var(--font-size-2-10);
-  font-weight: 700;
-  line-height: 1;
-  color: var(--color-text-primary);
 }
 
 .contest-score-rail__value small {
   font-size: var(--font-size-0-85);
-  color: var(--color-text-secondary);
-}
-
-.contest-score-rail__note {
-  margin-top: 0.7rem;
-  font-size: var(--font-size-0-84);
-  line-height: 1.7;
+  font-weight: 700;
   color: var(--color-text-secondary);
 }
 
 .contest-stat-grid {
-  --metric-panel-grid-gap: 0.85rem;
+  --metric-panel-grid-gap: var(--space-3);
   --metric-panel-columns: repeat(4, minmax(0, 1fr));
 }
 
@@ -266,7 +244,7 @@ defineProps<Props>()
 
 .contest-overview-grid {
   display: grid;
-  gap: 1.25rem;
+  gap: var(--space-5);
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
@@ -276,7 +254,7 @@ defineProps<Props>()
 
 .contest-copy,
 .contest-copy-list {
-  margin-top: 1rem;
+  margin-top: var(--space-4);
 }
 
 .contest-copy {
@@ -288,7 +266,7 @@ defineProps<Props>()
 
 .contest-copy-list {
   display: grid;
-  gap: 0.8rem;
+  gap: var(--space-3);
 }
 
 .contest-copy-row {
@@ -296,9 +274,9 @@ defineProps<Props>()
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 0.5rem 1rem;
+  gap: var(--space-2) var(--space-4);
   border-bottom: 1px solid color-mix(in srgb, var(--color-border-default) 82%, transparent);
-  padding-bottom: 0.8rem;
+  padding-bottom: var(--space-3);
   font-size: var(--font-size-0-88);
   color: var(--color-text-secondary);
 }
@@ -320,10 +298,7 @@ defineProps<Props>()
   }
 
   .contest-score-rail {
-    border-inline-start: 0;
-    border-top: 1px solid color-mix(in srgb, var(--color-border-default) 86%, transparent);
-    padding-inline-start: 0;
-    padding-top: 1rem;
+    width: 100%;
   }
 
   .contest-stat-grid,
