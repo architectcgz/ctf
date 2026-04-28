@@ -54,6 +54,18 @@ func (stubRuntimeService) IssueAWDDefenseSSHTicket(context.Context, authctx.Curr
 	return nil, nil
 }
 
+func (stubRuntimeService) ReadAWDDefenseFile(context.Context, authctx.CurrentUser, int64, int64, string) (*dto.AWDDefenseFileResp, error) {
+	return nil, nil
+}
+
+func (stubRuntimeService) SaveAWDDefenseFile(context.Context, authctx.CurrentUser, int64, int64, dto.AWDDefenseFileSaveReq) (*dto.AWDDefenseFileSaveResp, error) {
+	return nil, nil
+}
+
+func (stubRuntimeService) RunAWDDefenseCommand(context.Context, authctx.CurrentUser, int64, int64, dto.AWDDefenseCommandReq) (*dto.AWDDefenseCommandResp, error) {
+	return nil, nil
+}
+
 func (stubRuntimeService) ResolveProxyTicket(context.Context, string) (*runtimeports.ProxyTicketClaims, error) {
 	return nil, nil
 }
@@ -105,6 +117,34 @@ func (s stubAWDDefenseSSHRuntimeService) IssueAWDDefenseSSHTicket(context.Contex
 	return s.resp, nil
 }
 
+type stubAWDDefenseWorkbenchRuntimeService struct {
+	stubRuntimeService
+	fileResp    *dto.AWDDefenseFileResp
+	saveResp    *dto.AWDDefenseFileSaveResp
+	commandResp *dto.AWDDefenseCommandResp
+}
+
+func (s stubAWDDefenseWorkbenchRuntimeService) ReadAWDDefenseFile(_ context.Context, _ authctx.CurrentUser, contestID, serviceID int64, filePath string) (*dto.AWDDefenseFileResp, error) {
+	if contestID != 5 || serviceID != 12 || filePath != "app.py" {
+		return nil, errors.New("unexpected read args")
+	}
+	return s.fileResp, nil
+}
+
+func (s stubAWDDefenseWorkbenchRuntimeService) SaveAWDDefenseFile(_ context.Context, _ authctx.CurrentUser, contestID, serviceID int64, req dto.AWDDefenseFileSaveReq) (*dto.AWDDefenseFileSaveResp, error) {
+	if contestID != 5 || serviceID != 12 || req.Path != "app.py" || req.Content != "print('fixed')" || !req.Backup {
+		return nil, errors.New("unexpected save args")
+	}
+	return s.saveResp, nil
+}
+
+func (s stubAWDDefenseWorkbenchRuntimeService) RunAWDDefenseCommand(_ context.Context, _ authctx.CurrentUser, contestID, serviceID int64, req dto.AWDDefenseCommandReq) (*dto.AWDDefenseCommandResp, error) {
+	if contestID != 5 || serviceID != 12 || req.Command != "ls" {
+		return nil, errors.New("unexpected command args")
+	}
+	return s.commandResp, nil
+}
+
 func TestAccessAWDDefenseSSHReturnsConnectionInfo(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
@@ -148,6 +188,65 @@ func TestAccessAWDDefenseSSHReturnsConnectionInfo(t *testing.T) {
 	}
 	if !strings.Contains(resp.Body.String(), `"command":"ssh student+5+12@127.0.0.1 -p 2222"`) {
 		t.Fatalf("expected ssh command in response, got %s", resp.Body.String())
+	}
+}
+
+func TestAWDDefenseWorkbenchHandlersReturnFileAndCommandData(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	handler := NewHandler(
+		stubAWDDefenseWorkbenchRuntimeService{
+			fileResp: &dto.AWDDefenseFileResp{
+				Path:    "app.py",
+				Content: "print('vuln')",
+				Size:    13,
+			},
+			saveResp: &dto.AWDDefenseFileSaveResp{
+				Path:       "app.py",
+				Size:       14,
+				BackupPath: "app.py.bak.1",
+			},
+			commandResp: &dto.AWDDefenseCommandResp{
+				Command: "ls",
+				Output:  "app.py\nrequirements.txt\n",
+			},
+		},
+		nil,
+		CookieConfig{},
+		nil,
+	)
+
+	router := gin.New()
+	router.Use(func(c *gin.Context) {
+		c.Set("current_user", authctx.CurrentUser{UserID: 1001, Username: "student", Role: model.RoleStudent})
+		c.Set("id", int64(5))
+		c.Set("sid", int64(12))
+	})
+	router.GET("/api/v1/contests/:id/awd/services/:sid/defense/files", handler.ReadAWDDefenseFile)
+	router.PUT("/api/v1/contests/:id/awd/services/:sid/defense/files", handler.SaveAWDDefenseFile)
+	router.POST("/api/v1/contests/:id/awd/services/:sid/defense/commands", handler.RunAWDDefenseCommand)
+
+	readReq := httptest.NewRequest(http.MethodGet, "/api/v1/contests/5/awd/services/12/defense/files?path=app.py", nil)
+	readResp := httptest.NewRecorder()
+	router.ServeHTTP(readResp, readReq)
+	if readResp.Code != http.StatusOK || !strings.Contains(readResp.Body.String(), `"content":"print('vuln')"`) {
+		t.Fatalf("unexpected read response status=%d body=%s", readResp.Code, readResp.Body.String())
+	}
+
+	saveReq := httptest.NewRequest(http.MethodPut, "/api/v1/contests/5/awd/services/12/defense/files", strings.NewReader(`{"path":"app.py","content":"print('fixed')","backup":true}`))
+	saveReq.Header.Set("Content-Type", "application/json")
+	saveResp := httptest.NewRecorder()
+	router.ServeHTTP(saveResp, saveReq)
+	if saveResp.Code != http.StatusOK || !strings.Contains(saveResp.Body.String(), `"backup_path":"app.py.bak.1"`) {
+		t.Fatalf("unexpected save response status=%d body=%s", saveResp.Code, saveResp.Body.String())
+	}
+
+	commandReq := httptest.NewRequest(http.MethodPost, "/api/v1/contests/5/awd/services/12/defense/commands", strings.NewReader(`{"command":"ls"}`))
+	commandReq.Header.Set("Content-Type", "application/json")
+	commandResp := httptest.NewRecorder()
+	router.ServeHTTP(commandResp, commandReq)
+	if commandResp.Code != http.StatusOK || !strings.Contains(commandResp.Body.String(), `"output":"app.py\nrequirements.txt\n"`) {
+		t.Fatalf("unexpected command response status=%d body=%s", commandResp.Code, commandResp.Body.String())
 	}
 }
 

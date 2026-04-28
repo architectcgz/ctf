@@ -21,6 +21,7 @@ import (
 	"github.com/docker/docker/api/types/registry"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/errdefs"
+	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/docker/go-connections/nat"
 
 	"ctf-platform/internal/config"
@@ -32,6 +33,27 @@ import (
 type Engine struct {
 	cli          *client.Client
 	containerCfg *config.ContainerConfig
+}
+
+type limitedBuffer struct {
+	buffer *bytes.Buffer
+	limit  int64
+}
+
+func (w *limitedBuffer) Write(p []byte) (int, error) {
+	if w == nil || w.buffer == nil {
+		return len(p), nil
+	}
+	remaining := int(w.limit) - w.buffer.Len()
+	if remaining <= 0 {
+		return len(p), nil
+	}
+	if len(p) > remaining {
+		_, _ = w.buffer.Write(p[:remaining])
+		return len(p), nil
+	}
+	_, _ = w.buffer.Write(p)
+	return len(p), nil
 }
 
 func NewEngine(cfg *config.ContainerConfig) (*Engine, error) {
@@ -236,6 +258,92 @@ func (e *Engine) WriteFileToContainer(ctx context.Context, containerID, filePath
 	}
 
 	return e.cli.CopyToContainer(ctx, containerID, dir, io.NopCloser(bytes.NewReader(archive.Bytes())), container.CopyToContainerOptions{})
+}
+
+func (e *Engine) ReadFileFromContainer(ctx context.Context, containerID, filePath string, limit int64) ([]byte, error) {
+	if e == nil || e.cli == nil {
+		return nil, fmt.Errorf("runtime engine is not configured")
+	}
+	if strings.TrimSpace(containerID) == "" {
+		return nil, fmt.Errorf("container id is empty")
+	}
+	if limit <= 0 {
+		limit = 256 * 1024
+	}
+
+	reader, _, err := e.cli.CopyFromContainer(ctx, containerID, filePath)
+	if err != nil {
+		return nil, err
+	}
+	defer reader.Close()
+
+	tr := tar.NewReader(reader)
+	for {
+		header, err := tr.Next()
+		if err != nil {
+			return nil, err
+		}
+		if header.Typeflag != tar.TypeReg && header.Typeflag != tar.TypeRegA {
+			continue
+		}
+		if header.Size > limit {
+			return nil, fmt.Errorf("file exceeds limit")
+		}
+		var content bytes.Buffer
+		if _, err := io.CopyN(&content, tr, limit+1); err != nil && err != io.EOF {
+			return nil, err
+		}
+		if int64(content.Len()) > limit {
+			return nil, fmt.Errorf("file exceeds limit")
+		}
+		return content.Bytes(), nil
+	}
+}
+
+func (e *Engine) ExecContainerCommand(ctx context.Context, containerID string, command []string, stdin []byte, limit int64) ([]byte, error) {
+	if e == nil || e.cli == nil {
+		return nil, fmt.Errorf("runtime engine is not configured")
+	}
+	if strings.TrimSpace(containerID) == "" {
+		return nil, fmt.Errorf("container id is empty")
+	}
+	if len(command) == 0 {
+		return nil, fmt.Errorf("command is empty")
+	}
+	if limit <= 0 {
+		limit = 64 * 1024
+	}
+
+	execID, err := e.cli.ContainerExecCreate(ctx, containerID, container.ExecOptions{
+		AttachStdin:  len(stdin) > 0,
+		AttachStdout: true,
+		AttachStderr: true,
+		Tty:          false,
+		Cmd:          command,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	attach, err := e.cli.ContainerExecAttach(ctx, execID.ID, container.ExecAttachOptions{Tty: false})
+	if err != nil {
+		return nil, err
+	}
+	defer attach.Close()
+
+	if len(stdin) > 0 {
+		go func() {
+			_, _ = attach.Conn.Write(stdin)
+			_ = attach.CloseWrite()
+		}()
+	}
+
+	var output bytes.Buffer
+	limited := &limitedBuffer{buffer: &output, limit: limit}
+	if _, err := stdcopy.StdCopy(limited, limited, attach.Reader); err != nil {
+		return nil, err
+	}
+	return output.Bytes(), nil
 }
 
 func (e *Engine) ExecContainerInteractive(ctx context.Context, containerID string, command []string, stdin io.Reader, stdout io.Writer) error {

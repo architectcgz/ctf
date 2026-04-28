@@ -45,6 +45,15 @@ const {
   openingServiceKey,
   openingSSHKey,
   sshAccessByServiceId,
+  activeDefenseServiceId,
+  defenseFile,
+  defenseDraft,
+  defenseFilePath,
+  loadingDefenseFile,
+  savingDefenseFile,
+  runningDefenseCommand,
+  defenseCommand,
+  defenseCommandResult,
   openingTargetKey,
   submittingKey,
   shouldAutoRefresh,
@@ -53,6 +62,9 @@ const {
   startService,
   openService,
   openDefenseSSH,
+  openDefenseWorkbench,
+  saveDefenseFile,
+  runDefenseCommand,
   openTarget,
   submitAttack,
 } = useContestAWDWorkspace({
@@ -279,6 +291,13 @@ function getSSHAccess(serviceId?: string) {
   return sshAccessByServiceId.value[serviceId]
 }
 
+function getActiveDefenseTitle(): string {
+  const challenge = runtimeChallenges.value.find(
+    (item) => item.awd_service_id === activeDefenseServiceId.value
+  )
+  return challenge?.title || '防守工作台'
+}
+
 function isTargetServiceForChallenge(
   service: { service_id?: string; challenge_id: string },
   challenge: ContestChallengeItem
@@ -450,6 +469,22 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
                     {{ openingSSHKey === getServiceStartKey(challenge) ? '...' : 'SSH' }}
                   </button>
                   <button
+                    v-if="getWorkspaceService(challenge)?.instance_id"
+                    :disabled="
+                      loadingDefenseFile && activeDefenseServiceId === challenge.awd_service_id
+                    "
+                    class="asset-btn asset-btn--defense"
+                    @click="
+                      challenge.awd_service_id && openDefenseWorkbench(challenge.awd_service_id)
+                    "
+                  >
+                    {{
+                      loadingDefenseFile && activeDefenseServiceId === challenge.awd_service_id
+                        ? '...'
+                        : '防守'
+                    }}
+                  </button>
+                  <button
                     :disabled="startingServiceKey === getServiceStartKey(challenge)"
                     class="asset-btn asset-btn--primary"
                     @click="challenge.awd_service_id && startService(challenge.awd_service_id)"
@@ -458,6 +493,59 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
                   </button>
                 </div>
               </div>
+            </div>
+
+            <div v-if="activeDefenseServiceId" class="defense-workbench">
+              <div class="defense-workbench__head">
+                <div>
+                  <div class="asset-header">防守工作台</div>
+                  <div class="defense-workbench__title">{{ getActiveDefenseTitle() }}</div>
+                </div>
+                <button
+                  class="asset-btn asset-btn--primary"
+                  :disabled="savingDefenseFile || !defenseFile"
+                  @click="saveDefenseFile"
+                >
+                  {{ savingDefenseFile ? '保存中' : '保存' }}
+                </button>
+              </div>
+              <div class="defense-file-row">
+                <input v-model="defenseFilePath" class="war-room-input" placeholder="app.py" />
+                <button
+                  class="asset-btn"
+                  :disabled="loadingDefenseFile"
+                  @click="openDefenseWorkbench(activeDefenseServiceId, defenseFilePath)"
+                >
+                  读取
+                </button>
+              </div>
+              <textarea
+                v-model="defenseDraft"
+                class="defense-editor"
+                spellcheck="false"
+                :disabled="loadingDefenseFile || !defenseFile"
+              />
+              <div class="defense-file-meta">
+                {{ defenseFile ? `${defenseFile.path} · ${defenseFile.size} bytes` : '未载入文件' }}
+              </div>
+              <div class="defense-command">
+                <input
+                  v-model="defenseCommand"
+                  class="war-room-input"
+                  placeholder="ls"
+                  @keyup.enter="runDefenseCommand()"
+                />
+                <button
+                  class="asset-btn asset-btn--primary"
+                  :disabled="runningDefenseCommand"
+                  @click="runDefenseCommand()"
+                >
+                  {{ runningDefenseCommand ? '执行中' : '执行' }}
+                </button>
+              </div>
+              <pre v-if="defenseCommandResult" class="defense-output">{{
+                defenseCommandResult.output || '(无输出)'
+              }}</pre>
             </div>
           </div>
         </section>
@@ -504,9 +592,7 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
             <div v-if="runtimeChallenges.length === 0" class="panel-note">
               当前竞赛暂无可部署服务。
             </div>
-            <div v-else-if="!activeChallenge" class="panel-note">
-              请选择目标题目后开始攻击。
-            </div>
+            <div v-else-if="!activeChallenge" class="panel-note">请选择目标题目后开始攻击。</div>
             <div v-else-if="filteredTargets.length === 0" class="panel-note">
               当前题目下没有匹配的目标队伍。
             </div>
@@ -982,6 +1068,92 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
 .asset-btn--primary:hover {
   background: var(--color-primary);
   color: var(--color-bg-base);
+}
+
+.asset-btn--defense {
+  width: auto;
+  padding: 0 var(--space-3);
+  color: var(--color-success);
+}
+
+.defense-workbench {
+  margin-top: var(--space-5);
+  padding: var(--space-3);
+  border: 1px solid color-mix(in srgb, var(--color-success) 24%, transparent);
+  border-radius: 0.875rem;
+  background: color-mix(in srgb, var(--color-success) 7%, var(--color-bg-elevated));
+}
+
+.defense-workbench__head,
+.defense-file-row,
+.defense-command {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.defense-workbench__head {
+  justify-content: space-between;
+  margin-bottom: var(--space-3);
+}
+
+.defense-workbench__title {
+  color: var(--color-text-primary);
+  font-size: var(--font-size-14);
+  font-weight: 900;
+}
+
+.defense-file-row,
+.defense-command {
+  margin-top: var(--space-2);
+}
+
+.defense-file-row .war-room-input,
+.defense-command .war-room-input {
+  min-width: 0;
+  flex: 1;
+}
+
+.defense-editor {
+  width: 100%;
+  min-height: 18rem;
+  margin-top: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border-default);
+  border-radius: 0.75rem;
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  font-family: var(--font-family-mono);
+  font-size: 12px;
+  line-height: 1.55;
+  resize: vertical;
+  outline: none;
+}
+
+.defense-editor:focus {
+  border-color: var(--color-success);
+}
+
+.defense-file-meta {
+  margin-top: var(--space-2);
+  color: var(--color-text-muted);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.defense-output {
+  max-height: 12rem;
+  margin-top: var(--space-3);
+  padding: var(--space-3);
+  overflow: auto;
+  white-space: pre-wrap;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, black 28%, var(--color-bg-surface));
+  color: var(--color-text-primary);
+  font-family: var(--font-family-mono);
+  font-size: 11px;
+  line-height: 1.5;
 }
 
 /* Attack Components */

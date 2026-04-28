@@ -99,6 +99,23 @@ func (a *HTTPService) IssueAWDDefenseSSHTicket(ctx context.Context, user authctx
 	}, nil
 }
 
+func (a *HTTPService) ReadAWDDefenseFile(context.Context, authctx.CurrentUser, int64, int64, string) (*dto.AWDDefenseFileResp, error) {
+	return &dto.AWDDefenseFileResp{}, nil
+}
+
+func (a *HTTPService) SaveAWDDefenseFile(_ context.Context, _ authctx.CurrentUser, _ int64, _ int64, req dto.AWDDefenseFileSaveReq) (*dto.AWDDefenseFileSaveResp, error) {
+	return &dto.AWDDefenseFileSaveResp{
+		Path: req.Path,
+		Size: len(req.Content),
+	}, nil
+}
+
+func (a *HTTPService) RunAWDDefenseCommand(_ context.Context, _ authctx.CurrentUser, _ int64, _ int64, req dto.AWDDefenseCommandReq) (*dto.AWDDefenseCommandResp, error) {
+	return &dto.AWDDefenseCommandResp{
+		Command: req.Command,
+	}, nil
+}
+
 func (a *HTTPService) ResolveProxyTicket(ctx context.Context, ticket string) (*runtimeports.ProxyTicketClaims, error) {
 	return a.proxyTickets.ResolveTicket(ctx, ticket)
 }

@@ -7,8 +7,11 @@ import { useContestAWDWorkspace } from '@/composables/useContestAWDWorkspace'
 const contestApiMocks = vi.hoisted(() => ({
   getContestAWDWorkspace: vi.fn(),
   getScoreboard: vi.fn(),
+  readContestAWDDefenseFile: vi.fn(),
   requestContestAWDDefenseSSH: vi.fn(),
   requestContestAWDTargetAccess: vi.fn(),
+  runContestAWDDefenseCommand: vi.fn(),
+  saveContestAWDDefenseFile: vi.fn(),
   startContestAWDServiceInstance: vi.fn(),
   submitContestAWDAttack: vi.fn(),
 }))
@@ -33,8 +36,11 @@ describe('useContestAWDWorkspace', () => {
     vi.useRealTimers()
     contestApiMocks.getContestAWDWorkspace.mockReset()
     contestApiMocks.getScoreboard.mockReset()
+    contestApiMocks.readContestAWDDefenseFile.mockReset()
     contestApiMocks.requestContestAWDDefenseSSH.mockReset()
     contestApiMocks.requestContestAWDTargetAccess.mockReset()
+    contestApiMocks.runContestAWDDefenseCommand.mockReset()
+    contestApiMocks.saveContestAWDDefenseFile.mockReset()
     contestApiMocks.startContestAWDServiceInstance.mockReset()
     contestApiMocks.submitContestAWDAttack.mockReset()
     instanceApiMocks.requestInstanceAccess.mockReset()
@@ -87,6 +93,20 @@ describe('useContestAWDWorkspace', () => {
       password: 'ticket-secret',
       command: 'ssh student+1+7009@127.0.0.1 -p 2222',
       expires_at: '2026-04-12T08:15:00Z',
+    })
+    contestApiMocks.readContestAWDDefenseFile.mockResolvedValue({
+      path: 'app.py',
+      content: 'print(1)',
+      size: 8,
+    })
+    contestApiMocks.saveContestAWDDefenseFile.mockResolvedValue({
+      path: 'app.py',
+      size: 8,
+      backup_path: 'app.py.bak.1',
+    })
+    contestApiMocks.runContestAWDDefenseCommand.mockResolvedValue({
+      command: 'ls',
+      output: 'app.py\n',
     })
     instanceApiMocks.requestInstanceAccess.mockResolvedValue({
       access_url: '/api/v1/instances/900/proxy/',
@@ -501,5 +521,92 @@ describe('useContestAWDWorkspace', () => {
     expect(openingSSHKey.value).toBe('')
     expect(sshAccessByServiceId.value['7009'].command).toBe('ssh student+1+7009@127.0.0.1 -p 2222')
     expect(sshAccessByServiceId.value['7009'].password).toBe('ticket-secret')
+  })
+
+  it('防守工作台应读取保存文件并执行命令', async () => {
+    let openDefenseWorkbench!: (serviceId: string, filePath?: string) => Promise<void>
+    let saveDefenseFile!: () => Promise<void>
+    let runDefenseCommand!: (command?: string) => Promise<unknown>
+    let defenseDraft!: { value: string }
+    let defenseFile!: { value: { path: string; content: string; size: number } | null }
+    let defenseCommandResult!: { value: { command: string; output: string } | null }
+
+    mount(
+      defineComponent({
+        setup() {
+          const workspace = useContestAWDWorkspace({
+            contestId: computed(() => '1'),
+            contestStatus: computed(() => 'running'),
+          } as any)
+          openDefenseWorkbench = workspace.openDefenseWorkbench
+          saveDefenseFile = workspace.saveDefenseFile
+          runDefenseCommand = workspace.runDefenseCommand
+          defenseDraft = workspace.defenseDraft
+          defenseFile = workspace.defenseFile
+          defenseCommandResult = workspace.defenseCommandResult
+          return () => null
+        },
+      })
+    )
+
+    await flushPromises()
+    await openDefenseWorkbench('7009')
+    await flushPromises()
+
+    expect(contestApiMocks.readContestAWDDefenseFile).toHaveBeenCalledWith('1', '7009', 'app.py')
+    expect(defenseFile.value?.content).toBe('print(1)')
+    expect(defenseDraft.value).toBe('print(1)')
+
+    defenseDraft.value = 'print(2)'
+    await saveDefenseFile()
+    await runDefenseCommand('ls')
+
+    expect(contestApiMocks.saveContestAWDDefenseFile).toHaveBeenCalledWith('1', '7009', {
+      path: 'app.py',
+      content: 'print(2)',
+      backup: true,
+    })
+    expect(contestApiMocks.runContestAWDDefenseCommand).toHaveBeenCalledWith('1', '7009', 'ls')
+    expect(defenseCommandResult.value?.output).toBe('app.py\n')
+  })
+
+  it('防守文件读取失败时应清空上一次载入的草稿', async () => {
+    const consoleErrorMock = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+    let openDefenseWorkbench!: (serviceId: string, filePath?: string) => Promise<void>
+    let defenseDraft!: { value: string }
+    let defenseFile!: { value: { path: string; content: string; size: number } | null }
+
+    mount(
+      defineComponent({
+        setup() {
+          const workspace = useContestAWDWorkspace({
+            contestId: computed(() => '1'),
+            contestStatus: computed(() => 'running'),
+          } as any)
+          openDefenseWorkbench = workspace.openDefenseWorkbench
+          defenseDraft = workspace.defenseDraft
+          defenseFile = workspace.defenseFile
+          return () => null
+        },
+      })
+    )
+
+    await flushPromises()
+    await openDefenseWorkbench('7009')
+    await flushPromises()
+
+    expect(defenseFile.value?.content).toBe('print(1)')
+    expect(defenseDraft.value).toBe('print(1)')
+
+    contestApiMocks.readContestAWDDefenseFile.mockRejectedValueOnce(new Error('文件不存在'))
+
+    await openDefenseWorkbench('7010')
+    await flushPromises()
+
+    expect(defenseFile.value).toBeNull()
+    expect(defenseDraft.value).toBe('')
+    expect(toastMocks.error).toHaveBeenCalledWith('文件不存在')
+
+    consoleErrorMock.mockRestore()
   })
 })

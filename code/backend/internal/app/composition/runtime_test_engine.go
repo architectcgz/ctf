@@ -37,6 +37,7 @@ type testRuntimeContainer struct {
 	hostPort    int
 	servicePort int
 	networks    map[string]string
+	files       map[string][]byte
 	serverRef   *sharedTestRuntimeHTTPServer
 	createdAt   time.Time
 }
@@ -93,6 +94,7 @@ func (e *testRuntimeEngine) CreateContainer(_ context.Context, cfg *model.Contai
 	container := &testRuntimeContainer{
 		id:        id,
 		networks:  make(map[string]string),
+		files:     make(map[string][]byte),
 		createdAt: time.Now(),
 	}
 
@@ -241,8 +243,45 @@ func (e *testRuntimeEngine) RemoveACLRules(_ context.Context, _ []model.Instance
 	return nil
 }
 
-func (e *testRuntimeEngine) WriteFileToContainer(_ context.Context, _, _ string, _ []byte) error {
+func (e *testRuntimeEngine) ReadFileFromContainer(_ context.Context, containerID, filePath string, limit int64) ([]byte, error) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	container, ok := e.containers[containerID]
+	if !ok {
+		return nil, fmt.Errorf("container not found")
+	}
+	content, ok := container.files[filePath]
+	if !ok {
+		return nil, fmt.Errorf("file not found")
+	}
+	if limit > 0 && int64(len(content)) > limit {
+		return nil, fmt.Errorf("file exceeds limit")
+	}
+	return append([]byte(nil), content...), nil
+}
+
+func (e *testRuntimeEngine) WriteFileToContainer(_ context.Context, containerID, filePath string, content []byte) error {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	container, ok := e.containers[containerID]
+	if !ok {
+		return fmt.Errorf("container not found")
+	}
+	if container.files == nil {
+		container.files = make(map[string][]byte)
+	}
+	container.files[filePath] = append([]byte(nil), content...)
 	return nil
+}
+
+func (e *testRuntimeEngine) ExecContainerCommand(_ context.Context, containerID string, command []string, _ []byte, _ int64) ([]byte, error) {
+	e.mu.Lock()
+	_, ok := e.containers[containerID]
+	e.mu.Unlock()
+	if !ok {
+		return nil, fmt.Errorf("container not found")
+	}
+	return []byte(strings.Join(command, " ")), nil
 }
 
 func (e *testRuntimeEngine) ExecContainerInteractive(ctx context.Context, containerID string, _ []string, stdin io.Reader, stdout io.Writer) error {
