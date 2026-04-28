@@ -96,7 +96,7 @@ const currentRound = computed(() => workspace.value?.current_round)
 const myTeam = computed(() => workspace.value?.my_team ?? null)
 const topScore = computed(() => scoreboardRows.value[0]?.score ?? 0)
 const lastSyncedLabel = computed(() =>
-  lastSyncedAt.value ? formatTime(lastSyncedAt.value) : 'UNSYNCED'
+  lastSyncedAt.value ? formatTime(lastSyncedAt.value) : '未同步'
 )
 const targetFilterKeyword = computed(() => targetKeyword.value.trim().toLowerCase())
 
@@ -145,20 +145,20 @@ const defenseAlerts = computed(() => {
     if (!service) continue
 
     const issues: string[] = []
-    let statusLabel = 'STABLE'
+    let statusLabel = '正常'
     let tone: 'danger' | 'warning' = 'warning'
 
     if (service.service_status === 'compromised') {
-      issues.push('INFILTRATED')
-      statusLabel = 'CRITICAL'
+      issues.push('已失陷')
+      statusLabel = '严重'
       tone = 'danger'
     } else if (service.service_status === 'down') {
-      issues.push('OFFLINE')
-      statusLabel = 'ALERT'
+      issues.push('已离线')
+      statusLabel = '告警'
     }
 
     if ((service.attack_received ?? 0) > 0) {
-      issues.push(`${service.attack_received} HITS DETECTED`)
+      issues.push(`检测到 ${service.attack_received} 次攻击`)
     }
 
     if (issues.length === 0) continue
@@ -191,13 +191,13 @@ watch(
 function getServiceStatusLabel(status?: string): string {
   switch (status) {
     case 'up':
-      return 'STABLE'
+      return '正常'
     case 'down':
-      return 'OFFLINE'
+      return '离线'
     case 'compromised':
-      return 'CRITICAL'
+      return '失陷'
     default:
-      return 'STANDBY'
+      return '待命'
   }
 }
 
@@ -206,15 +206,30 @@ function getServiceStatusClass(status?: string): string {
 }
 
 function eventDirectionLabel(direction: 'attack_in' | 'attack_out'): string {
-  return direction === 'attack_out' ? 'OUTBOUND' : 'INBOUND'
+  return direction === 'attack_out' ? '对外攻击' : '受到攻击'
 }
 
 function eventResultLabel(success: boolean): string {
-  return success ? 'SUCCESS' : 'FAILED'
+  return success ? '成功' : '失败'
 }
 
 function formatServiceRef(serviceId?: string): string {
-  return `Service #${serviceId || '--'}`
+  return `服务 #${serviceId || '--'}`
+}
+
+function formatRoundStatusLabel(status?: string): string {
+  switch (status) {
+    case 'running':
+      return '进行中'
+    case 'frozen':
+      return '已冻结'
+    case 'finished':
+    case 'completed':
+    case 'ended':
+      return '已结束'
+    default:
+      return '等待中'
+  }
 }
 
 function getChallengeRuntimeKey(challenge: ContestChallengeItem | null | undefined): string {
@@ -245,8 +260,8 @@ function formatAttackResultToast(result: {
   score_gained: number
 }): string {
   const challengeTitle = getChallengeTitleForEvent(result)
-  if (result.is_success) return `${challengeTitle}: HIT SUCCESSFUL. +${result.score_gained} PTS`
-  return `${challengeTitle}: NO VALID FLAG RECOVERED.`
+  if (result.is_success) return `${challengeTitle}: 攻击成功，+${result.score_gained} 分`
+  return `${challengeTitle}: 未获取到有效 Flag。`
 }
 
 function getWorkspaceService(
@@ -288,36 +303,36 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
     <!-- HUD KPI Strip -->
     <header class="awd-hud-strip">
       <div class="hud-item">
-        <div class="hud-label">OPERATIONAL ROUND</div>
+        <div class="hud-label">当前回合</div>
         <div class="hud-value font-mono">
           {{ currentRound ? `#${String(currentRound.round_number).padStart(2, '0')}` : '--' }}
         </div>
         <div class="hud-helper">
-          {{ currentRound?.status.toUpperCase() || 'WAITING' }}
+          {{ formatRoundStatusLabel(currentRound?.status) }}
         </div>
       </div>
       <div class="hud-item">
-        <div class="hud-label">BATTLE SQUAD</div>
+        <div class="hud-label">我的战队</div>
         <div class="hud-value">
-          {{ myTeam?.team_name || 'UNASSIGNED' }}
+          {{ myTeam?.team_name || '未加入' }}
         </div>
         <div class="hud-helper">
-          RANK: #{{ scoreboardRows.find((r) => r.team_id === myTeam?.team_id)?.rank || '--' }}
+          排名 #{{ scoreboardRows.find((r) => r.team_id === myTeam?.team_id)?.rank || '--' }}
         </div>
       </div>
       <div class="hud-item">
-        <div class="hud-label">SQUAD ASSETS</div>
+        <div class="hud-label">战队服务</div>
         <div class="hud-value font-mono">
           {{ workspace?.services.length || 0 }}
         </div>
-        <div class="hud-helper">ACTIVE SERVICES</div>
+        <div class="hud-helper">运行中服务</div>
       </div>
       <div class="hud-item">
-        <div class="hud-label">APEX SCORE</div>
+        <div class="hud-label">最高分</div>
         <div class="hud-value hud-value--accent font-mono">
           {{ topScore }}
         </div>
-        <div class="hud-helper">BATTLEFIELD PEAK</div>
+        <div class="hud-helper">当前榜首</div>
       </div>
       <div class="hud-actions">
         <button class="hud-refresh-btn" :disabled="loading" @click="refreshAll">
@@ -329,14 +344,14 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
 
     <div v-if="loading && !workspace" class="war-room-loading">
       <div class="radar-scan" />
-      <p>ESTABLISHING BATTLEFIELD LINK...</p>
+      <p>正在建立战场连接...</p>
     </div>
 
     <AppEmpty
       v-else-if="!hasTeam"
       icon="Users"
-      title="JOIN A SQUAD"
-      description="You must be part of a team to access the AWD battlefield."
+      title="先加入队伍"
+      description="需要先加入队伍后才能进入 AWD 战场。"
       class="war-room-empty"
     />
 
@@ -346,7 +361,7 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
         <section class="ops-panel">
           <header class="ops-panel__header">
             <ShieldAlert class="ops-panel__icon ops-panel__icon--warning h-4 w-4" />
-            <h3 class="ops-panel__title">DEFENSE MONITOR</h3>
+            <h3 class="ops-panel__title">防守监控</h3>
           </header>
 
           <div class="ops-panel__content custom-scrollbar">
@@ -370,9 +385,9 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
 
             <!-- Services -->
             <div class="asset-list mt-4">
-              <div class="asset-header">SQUAD SERVICES</div>
+              <div class="asset-header">战队服务</div>
               <div v-if="runtimeChallenges.length === 0" class="panel-note">
-                NO DEPLOYABLE SERVICES IN CURRENT CONTEST.
+                当前竞赛暂无可部署服务。
               </div>
               <div v-for="challenge in runtimeChallenges" :key="challenge.id" class="asset-item">
                 <div class="asset-main">
@@ -392,8 +407,8 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
                   <div class="asset-meta font-mono text-[10px]">
                     {{
                       getWorkspaceService(challenge)?.instance_id
-                        ? 'READY VIA PLATFORM PROXY'
-                        : 'WAITING FOR ALLOCATION'
+                        ? '已通过平台代理就绪'
+                        : '等待分配实例'
                     }}
                   </div>
                 </div>
@@ -414,7 +429,7 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
                     class="asset-btn asset-btn--primary"
                     @click="challenge.awd_service_id && startService(challenge.awd_service_id)"
                   >
-                    {{ startingServiceKey === getServiceStartKey(challenge) ? '...' : 'REBOOT' }}
+                    {{ startingServiceKey === getServiceStartKey(challenge) ? '...' : '重启' }}
                   </button>
                 </div>
               </div>
@@ -428,12 +443,12 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
         <section class="ops-panel">
           <header class="ops-panel__header">
             <Sword class="ops-panel__icon ops-panel__icon--danger h-4 w-4" />
-            <h3 class="ops-panel__title">ATTACK VECTOR</h3>
+            <h3 class="ops-panel__title">攻击向量</h3>
           </header>
 
           <div class="ops-panel__toolbar">
             <div class="toolbar-field">
-              <label>TARGET SECTOR</label>
+              <label>目标题目</label>
               <select
                 id="awd-target-challenge"
                 v-model="activeChallengeKey"
@@ -449,12 +464,12 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
               </select>
             </div>
             <div class="toolbar-field">
-              <label>SQUAD FILTER</label>
+              <label>队伍筛选</label>
               <input
                 id="awd-target-search"
                 v-model="targetKeyword"
                 type="text"
-                placeholder="FILTER BY NAME..."
+                placeholder="按队伍名称筛选..."
                 class="war-room-input"
               />
             </div>
@@ -462,13 +477,13 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
 
           <div class="ops-panel__content custom-scrollbar">
             <div v-if="runtimeChallenges.length === 0" class="panel-note">
-              NO DEPLOYABLE SERVICES IN CURRENT CONTEST.
+              当前竞赛暂无可部署服务。
             </div>
             <div v-else-if="!activeChallenge" class="panel-note">
-              SELECT A TARGET SECTOR TO COMMENCE ATTACK.
+              请选择目标题目后开始攻击。
             </div>
             <div v-else-if="filteredTargets.length === 0" class="panel-note">
-              NO MATCHING HOSTILES IN CURRENT SECTOR.
+              当前题目下没有匹配的目标队伍。
             </div>
             <div v-else class="target-grid">
               <article v-for="target in filteredTargets" :key="target.team_id" class="target-card">
@@ -480,7 +495,7 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
                     {{ formatServiceRef(target.active_service?.service_id) }}
                   </div>
                   <div class="target-url font-mono">
-                    {{ target.active_service?.reachable ? 'PROXY ROUTE READY' : 'UNREACHABLE' }}
+                    {{ target.active_service?.reachable ? '代理链路已就绪' : '不可达' }}
                   </div>
                 </div>
                 <div class="target-action">
@@ -500,7 +515,7 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
                       openingTargetKey ===
                       buildAttackStateKey(activeChallengeRuntimeKey, target.team_id)
                         ? '...'
-                        : 'OPEN'
+                        : '打开'
                     }}</span>
                   </button>
                   <input
@@ -508,7 +523,7 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
                       flagInputs[buildAttackStateKey(activeChallengeRuntimeKey, target.team_id)] ||
                       ''
                     "
-                    placeholder="ENTER STOLEN FLAG..."
+                    placeholder="输入获取到的 Flag..."
                     class="flag-input"
                     @input="
                       flagInputs[buildAttackStateKey(activeChallengeRuntimeKey, target.team_id)] =
@@ -529,7 +544,7 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
                       submittingKey ===
                       buildAttackStateKey(activeChallengeRuntimeKey, target.team_id)
                         ? '...'
-                        : 'SUBMIT'
+                        : '提交'
                     }}
                   </button>
                 </div>
@@ -540,7 +555,7 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
           <footer v-if="submitResult" class="ops-panel__footer">
             <div class="result-alert" :class="submitResult.is_success ? 'success' : 'danger'">
               <Terminal class="h-3.5 w-3.5" />
-              <span>{{ getSubmitResultMessage().toUpperCase() }}</span>
+              <span>{{ getSubmitResultMessage() }}</span>
             </div>
           </footer>
         </section>
@@ -551,7 +566,7 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
         <section class="ops-panel h-1/2 mb-4">
           <header class="ops-panel__header">
             <BarChart3 class="ops-panel__icon ops-panel__icon--accent h-4 w-4" />
-            <h3 class="ops-panel__title">FIELD INTEL</h3>
+            <h3 class="ops-panel__title">战场情报</h3>
           </header>
           <div class="ops-panel__content custom-scrollbar">
             <div
@@ -570,7 +585,7 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
         <section class="ops-panel h-1/2">
           <header class="ops-panel__header">
             <History class="h-4 w-4 text-purple-500" />
-            <h3 class="ops-panel__title">RECENT FEEDBACK</h3>
+            <h3 class="ops-panel__title">最近战报</h3>
           </header>
           <div class="ops-panel__content custom-scrollbar">
             <div
@@ -601,7 +616,7 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
               </div>
             </div>
             <div v-if="workspace?.recent_events.length === 0" class="panel-note">
-              NO RECENT OPERATIONAL DATA.
+              暂无最近战报。
             </div>
           </div>
         </section>
