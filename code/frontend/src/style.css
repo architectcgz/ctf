@@ -632,6 +632,11 @@ option {
 
 /* 2. 弹窗面板核心样式 */
 .modal-template-panel--classic {
+  display: flex;
+  flex-direction: column;
+  width: min(var(--modal-template-classic-width, 32rem), 100%);
+  max-height: calc(100vh - (var(--space-4) * 2));
+  max-height: calc(100dvh - (var(--space-4) * 2));
   background-color: var(--color-bg-surface);
   border: 1px solid color-mix(in srgb, var(--color-text-primary) 12%, transparent);
   border-radius: 1.5rem;
@@ -641,6 +646,13 @@ option {
     0 10px 15px -3px rgba(0, 0, 0, 0.1),
     0 25px 50px -12px var(--color-shadow-soft);
   overflow: hidden;
+}
+
+.modal-template-panel--classic .modal-template-classic {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: inherit;
 }
 
 /* 3. 统一各级背景色（去卡片化） */
@@ -653,6 +665,17 @@ option {
 /* 4. 优化头部边界感 */
 .modal-template-panel--classic .modal-template-classic__header {
   border-bottom: 1px solid color-mix(in srgb, var(--color-text-primary) 8%, transparent);
+}
+
+.modal-template-panel--classic .modal-template-classic__body {
+  min-height: 0;
+  overflow-y: auto;
+  flex: 1 1 auto;
+}
+
+.modal-template-panel--classic .modal-template-classic__header,
+.modal-template-panel--classic .modal-template-classic__footer {
+  flex: 0 0 auto;
 }
 
 /**
