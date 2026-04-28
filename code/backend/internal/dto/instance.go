@@ -56,6 +56,18 @@ type AWDDefenseFileResp struct {
 	Size    int    `json:"size"`
 }
 
+type AWDDefenseDirectoryEntryResp struct {
+	Name string `json:"name"`
+	Path string `json:"path"`
+	Type string `json:"type"`
+	Size int64  `json:"size"`
+}
+
+type AWDDefenseDirectoryResp struct {
+	Path    string                         `json:"path"`
+	Entries []AWDDefenseDirectoryEntryResp `json:"entries"`
+}
+
 type AWDDefenseFileSaveReq struct {
 	Path    string `json:"path" binding:"required"`
 	Content string `json:"content"`

@@ -58,6 +58,10 @@ func (stubRuntimeService) ReadAWDDefenseFile(context.Context, authctx.CurrentUse
 	return nil, nil
 }
 
+func (stubRuntimeService) ListAWDDefenseDirectory(context.Context, authctx.CurrentUser, int64, int64, string) (*dto.AWDDefenseDirectoryResp, error) {
+	return nil, nil
+}
+
 func (stubRuntimeService) SaveAWDDefenseFile(context.Context, authctx.CurrentUser, int64, int64, dto.AWDDefenseFileSaveReq) (*dto.AWDDefenseFileSaveResp, error) {
 	return nil, nil
 }
@@ -119,9 +123,10 @@ func (s stubAWDDefenseSSHRuntimeService) IssueAWDDefenseSSHTicket(context.Contex
 
 type stubAWDDefenseWorkbenchRuntimeService struct {
 	stubRuntimeService
-	fileResp    *dto.AWDDefenseFileResp
-	saveResp    *dto.AWDDefenseFileSaveResp
-	commandResp *dto.AWDDefenseCommandResp
+	fileResp      *dto.AWDDefenseFileResp
+	directoryResp *dto.AWDDefenseDirectoryResp
+	saveResp      *dto.AWDDefenseFileSaveResp
+	commandResp   *dto.AWDDefenseCommandResp
 }
 
 func (s stubAWDDefenseWorkbenchRuntimeService) ReadAWDDefenseFile(_ context.Context, _ authctx.CurrentUser, contestID, serviceID int64, filePath string) (*dto.AWDDefenseFileResp, error) {
@@ -129,6 +134,13 @@ func (s stubAWDDefenseWorkbenchRuntimeService) ReadAWDDefenseFile(_ context.Cont
 		return nil, errors.New("unexpected read args")
 	}
 	return s.fileResp, nil
+}
+
+func (s stubAWDDefenseWorkbenchRuntimeService) ListAWDDefenseDirectory(_ context.Context, _ authctx.CurrentUser, contestID, serviceID int64, dirPath string) (*dto.AWDDefenseDirectoryResp, error) {
+	if contestID != 5 || serviceID != 12 || dirPath != "." {
+		return nil, errors.New("unexpected list args")
+	}
+	return s.directoryResp, nil
 }
 
 func (s stubAWDDefenseWorkbenchRuntimeService) SaveAWDDefenseFile(_ context.Context, _ authctx.CurrentUser, contestID, serviceID int64, req dto.AWDDefenseFileSaveReq) (*dto.AWDDefenseFileSaveResp, error) {
@@ -201,6 +213,13 @@ func TestAWDDefenseWorkbenchHandlersReturnFileAndCommandData(t *testing.T) {
 				Content: "print('vuln')",
 				Size:    13,
 			},
+			directoryResp: &dto.AWDDefenseDirectoryResp{
+				Path: ".",
+				Entries: []dto.AWDDefenseDirectoryEntryResp{
+					{Name: "app.py", Path: "app.py", Type: "file", Size: 13},
+					{Name: "templates", Path: "templates", Type: "dir"},
+				},
+			},
 			saveResp: &dto.AWDDefenseFileSaveResp{
 				Path:       "app.py",
 				Size:       14,
@@ -222,6 +241,7 @@ func TestAWDDefenseWorkbenchHandlersReturnFileAndCommandData(t *testing.T) {
 		c.Set("id", int64(5))
 		c.Set("sid", int64(12))
 	})
+	router.GET("/api/v1/contests/:id/awd/services/:sid/defense/directories", handler.ListAWDDefenseDirectory)
 	router.GET("/api/v1/contests/:id/awd/services/:sid/defense/files", handler.ReadAWDDefenseFile)
 	router.PUT("/api/v1/contests/:id/awd/services/:sid/defense/files", handler.SaveAWDDefenseFile)
 	router.POST("/api/v1/contests/:id/awd/services/:sid/defense/commands", handler.RunAWDDefenseCommand)
@@ -231,6 +251,13 @@ func TestAWDDefenseWorkbenchHandlersReturnFileAndCommandData(t *testing.T) {
 	router.ServeHTTP(readResp, readReq)
 	if readResp.Code != http.StatusOK || !strings.Contains(readResp.Body.String(), `"content":"print('vuln')"`) {
 		t.Fatalf("unexpected read response status=%d body=%s", readResp.Code, readResp.Body.String())
+	}
+
+	listReq := httptest.NewRequest(http.MethodGet, "/api/v1/contests/5/awd/services/12/defense/directories?path=.", nil)
+	listResp := httptest.NewRecorder()
+	router.ServeHTTP(listResp, listReq)
+	if listResp.Code != http.StatusOK || !strings.Contains(listResp.Body.String(), `"name":"templates"`) {
+		t.Fatalf("unexpected list response status=%d body=%s", listResp.Code, listResp.Body.String())
 	}
 
 	saveReq := httptest.NewRequest(http.MethodPut, "/api/v1/contests/5/awd/services/12/defense/files", strings.NewReader(`{"path":"app.py","content":"print('fixed')","backup":true}`))

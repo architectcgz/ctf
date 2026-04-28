@@ -208,6 +208,7 @@ func TestNewRouterUsesRuntimeHandlersForInstanceRoutes(t *testing.T) {
 	assertRouteHandlerContains(t, router, "POST", "/api/v1/contests/:id/awd/services/:sid/targets/:team_id/access", "internal/module/runtime")
 	assertRouteHandlerContains(t, router, "POST", "/api/v1/contests/:id/awd/services/:sid/defense/ssh", "internal/module/runtime")
 	assertRouteHandlerContains(t, router, "GET", "/api/v1/contests/:id/awd/services/:sid/defense/files", "internal/module/runtime")
+	assertRouteHandlerContains(t, router, "GET", "/api/v1/contests/:id/awd/services/:sid/defense/directories", "internal/module/runtime")
 	assertRouteHandlerContains(t, router, "PUT", "/api/v1/contests/:id/awd/services/:sid/defense/files", "internal/module/runtime")
 	assertRouteHandlerContains(t, router, "POST", "/api/v1/contests/:id/awd/services/:sid/defense/commands", "internal/module/runtime")
 	assertRouteHandlerContains(t, router, "GET", "/api/v1/contests/:id/awd/services/:sid/targets/:team_id/proxy", "internal/module/runtime")

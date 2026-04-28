@@ -499,6 +499,18 @@ export interface AWDDefenseFileData {
   size: number
 }
 
+export interface AWDDefenseDirectoryEntryData {
+  name: string
+  path: string
+  type: 'file' | 'dir' | 'other'
+  size: number
+}
+
+export interface AWDDefenseDirectoryData {
+  path: string
+  entries: AWDDefenseDirectoryEntryData[]
+}
+
 export interface AWDDefenseFileSaveData {
   path: string
   size: number

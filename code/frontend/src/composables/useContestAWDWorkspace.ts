@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, ref, toValue, watch, type MaybeRefOrGetter }
 import {
   getContestAWDWorkspace,
   getScoreboard,
+  listContestAWDDefenseDirectory,
   readContestAWDDefenseFile,
   requestContestAWDDefenseSSH,
   requestContestAWDTargetAccess,
@@ -15,6 +16,7 @@ import { requestInstanceAccess } from '@/api/instance'
 import type {
   AWDAttackLogData,
   AWDDefenseCommandData,
+  AWDDefenseDirectoryData,
   AWDDefenseFileData,
   AWDDefenseSSHAccessData,
   ContestAWDWorkspaceData,
@@ -44,9 +46,12 @@ export function useContestAWDWorkspace(options: UseContestAWDWorkspaceOptions) {
   const openingSSHKey = ref('')
   const sshAccessByServiceId = ref<Record<string, AWDDefenseSSHAccessData>>({})
   const activeDefenseServiceId = ref('')
+  const defenseDirectory = ref<AWDDefenseDirectoryData | null>(null)
+  const defenseDirectoryPath = ref('.')
   const defenseFile = ref<AWDDefenseFileData | null>(null)
   const defenseDraft = ref('')
   const defenseFilePath = ref('app.py')
+  const loadingDefenseDirectory = ref(false)
   const loadingDefenseFile = ref(false)
   const savingDefenseFile = ref(false)
   const runningDefenseCommand = ref(false)
@@ -84,6 +89,8 @@ export function useContestAWDWorkspace(options: UseContestAWDWorkspaceOptions) {
       lastSyncedAt.value = null
       sshAccessByServiceId.value = {}
       activeDefenseServiceId.value = ''
+      defenseDirectory.value = null
+      defenseDirectoryPath.value = '.'
       defenseFile.value = null
       defenseDraft.value = ''
       defenseCommandResult.value = null
@@ -196,13 +203,33 @@ export function useContestAWDWorkspace(options: UseContestAWDWorkspaceOptions) {
     }
   }
 
-  async function openDefenseWorkbench(serviceId: string, filePath = 'app.py'): Promise<void> {
+  async function openDefenseDirectory(dirPath = defenseDirectoryPath.value): Promise<void> {
     const contestId = toValue(options.contestId)
-    if (!contestId || !serviceId || loadingDefenseFile.value) {
+    const serviceId = activeDefenseServiceId.value
+    if (!contestId || !serviceId || loadingDefenseDirectory.value) {
       return
     }
 
-    activeDefenseServiceId.value = serviceId
+    loadingDefenseDirectory.value = true
+    try {
+      const result = await listContestAWDDefenseDirectory(contestId, serviceId, dirPath || '.')
+      defenseDirectory.value = result
+      defenseDirectoryPath.value = result.path
+    } catch (err) {
+      console.error(err)
+      toast.error(err instanceof Error ? err.message : '读取文件列表失败')
+    } finally {
+      loadingDefenseDirectory.value = false
+    }
+  }
+
+  async function openDefenseFile(filePath: string): Promise<void> {
+    const contestId = toValue(options.contestId)
+    const serviceId = activeDefenseServiceId.value
+    if (!contestId || !serviceId || !filePath || loadingDefenseFile.value) {
+      return
+    }
+
     defenseFilePath.value = filePath
     loadingDefenseFile.value = true
     defenseFile.value = null
@@ -217,6 +244,40 @@ export function useContestAWDWorkspace(options: UseContestAWDWorkspaceOptions) {
       console.error(err)
       toast.error(err instanceof Error ? err.message : '读取防守文件失败')
     } finally {
+      loadingDefenseFile.value = false
+    }
+  }
+
+  async function openDefenseWorkbench(serviceId: string, filePath = 'app.py'): Promise<void> {
+    const contestId = toValue(options.contestId)
+    if (!contestId || !serviceId || loadingDefenseFile.value || loadingDefenseDirectory.value) {
+      return
+    }
+
+    activeDefenseServiceId.value = serviceId
+    defenseFilePath.value = filePath
+    loadingDefenseDirectory.value = true
+    loadingDefenseFile.value = true
+    defenseDirectory.value = null
+    defenseDirectoryPath.value = '.'
+    defenseFile.value = null
+    defenseDraft.value = ''
+    defenseCommandResult.value = null
+    try {
+      const [directory, result] = await Promise.all([
+        listContestAWDDefenseDirectory(contestId, serviceId, '.'),
+        readContestAWDDefenseFile(contestId, serviceId, filePath),
+      ])
+      defenseDirectory.value = directory
+      defenseDirectoryPath.value = directory.path
+      defenseFile.value = result
+      defenseDraft.value = result.content
+      toast.success('防守文件已载入')
+    } catch (err) {
+      console.error(err)
+      toast.error(err instanceof Error ? err.message : '读取防守文件失败')
+    } finally {
+      loadingDefenseDirectory.value = false
       loadingDefenseFile.value = false
     }
   }
@@ -342,6 +403,8 @@ export function useContestAWDWorkspace(options: UseContestAWDWorkspaceOptions) {
     () => {
       sshAccessByServiceId.value = {}
       activeDefenseServiceId.value = ''
+      defenseDirectory.value = null
+      defenseDirectoryPath.value = '.'
       defenseFile.value = null
       defenseDraft.value = ''
       defenseCommandResult.value = null
@@ -380,9 +443,12 @@ export function useContestAWDWorkspace(options: UseContestAWDWorkspaceOptions) {
     openingSSHKey,
     sshAccessByServiceId,
     activeDefenseServiceId,
+    defenseDirectory,
+    defenseDirectoryPath,
     defenseFile,
     defenseDraft,
     defenseFilePath,
+    loadingDefenseDirectory,
     loadingDefenseFile,
     savingDefenseFile,
     runningDefenseCommand,
@@ -397,6 +463,8 @@ export function useContestAWDWorkspace(options: UseContestAWDWorkspaceOptions) {
     startService,
     openService,
     openDefenseSSH,
+    openDefenseDirectory,
+    openDefenseFile,
     openDefenseWorkbench,
     saveDefenseFile,
     runDefenseCommand,

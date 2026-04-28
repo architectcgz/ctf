@@ -681,6 +681,11 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 		middleware.ParseInt64Param("sid"),
 		deps.runtime.Handler.ReadAWDDefenseFile,
 	)
+	protected.GET("/contests/:id/awd/services/:sid/defense/directories",
+		middleware.ParseInt64Param("id"),
+		middleware.ParseInt64Param("sid"),
+		deps.runtime.Handler.ListAWDDefenseDirectory,
+	)
 	protected.PUT("/contests/:id/awd/services/:sid/defense/files",
 		middleware.ParseInt64Param("id"),
 		middleware.ParseInt64Param("sid"),

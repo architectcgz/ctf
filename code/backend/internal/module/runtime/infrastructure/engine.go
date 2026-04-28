@@ -317,6 +317,69 @@ func (e *Engine) ReadFileFromContainer(ctx context.Context, containerID, filePat
 	}
 }
 
+func (e *Engine) ListDirectoryFromContainer(ctx context.Context, containerID, dirPath string, limit int) ([]runtimeports.ContainerDirectoryEntry, error) {
+	if e == nil || e.cli == nil {
+		return nil, fmt.Errorf("runtime engine is not configured")
+	}
+	if strings.TrimSpace(containerID) == "" {
+		return nil, fmt.Errorf("container id is empty")
+	}
+	if limit <= 0 {
+		limit = 300
+	}
+
+	resolvedPath, err := e.resolveContainerFilePath(ctx, containerID, dirPath)
+	if err != nil {
+		return nil, err
+	}
+
+	reader, _, err := e.cli.CopyFromContainer(ctx, containerID, resolvedPath)
+	if err != nil {
+		return nil, err
+	}
+	defer reader.Close()
+
+	rootName := path.Base(path.Clean(resolvedPath))
+	entriesByName := make(map[string]runtimeports.ContainerDirectoryEntry)
+	tr := tar.NewReader(reader)
+	for {
+		header, err := tr.Next()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+		name, entryType, ok := containerDirectoryEntryFromTar(rootName, header)
+		if !ok {
+			continue
+		}
+		entry := runtimeports.ContainerDirectoryEntry{
+			Name: name,
+			Type: entryType,
+			Size: header.Size,
+		}
+		if existing, exists := entriesByName[name]; !exists || existing.Type != "dir" {
+			entriesByName[name] = entry
+		}
+		if len(entriesByName) >= limit {
+			break
+		}
+	}
+
+	entries := make([]runtimeports.ContainerDirectoryEntry, 0, len(entriesByName))
+	for _, entry := range entriesByName {
+		entries = append(entries, entry)
+	}
+	sort.Slice(entries, func(i, j int) bool {
+		if entries[i].Type != entries[j].Type {
+			return entries[i].Type == "dir"
+		}
+		return entries[i].Name < entries[j].Name
+	})
+	return entries, nil
+}
+
 func (e *Engine) ExecContainerCommand(ctx context.Context, containerID string, command []string, stdin []byte, limit int64) ([]byte, error) {
 	if e == nil || e.cli == nil {
 		return nil, fmt.Errorf("runtime engine is not configured")
@@ -401,6 +464,31 @@ func resolveContainerFilePath(workingDir, filePath string) string {
 		base = "/" + base
 	}
 	return path.Join(path.Clean(base), cleanFilePath)
+}
+
+func containerDirectoryEntryFromTar(rootName string, header *tar.Header) (string, string, bool) {
+	if header == nil {
+		return "", "", false
+	}
+	name := strings.Trim(path.Clean(header.Name), "/")
+	if name == "" || name == "." || name == rootName {
+		return "", "", false
+	}
+	if rootName != "." && strings.HasPrefix(name, rootName+"/") {
+		name = strings.TrimPrefix(name, rootName+"/")
+	}
+	parts := strings.Split(name, "/")
+	if len(parts) == 0 || parts[0] == "" || parts[0] == "." {
+		return "", "", false
+	}
+
+	entryType := "file"
+	if len(parts) > 1 || header.Typeflag == tar.TypeDir {
+		entryType = "dir"
+	} else if header.Typeflag != tar.TypeReg && header.Typeflag != tar.TypeRegA {
+		entryType = "other"
+	}
+	return parts[0], entryType, true
 }
 
 func (e *Engine) ExecContainerInteractive(ctx context.Context, containerID string, command []string, stdin io.Reader, stdout io.Writer) error {

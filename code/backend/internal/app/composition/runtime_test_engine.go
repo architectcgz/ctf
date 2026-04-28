@@ -260,6 +260,55 @@ func (e *testRuntimeEngine) ReadFileFromContainer(_ context.Context, containerID
 	return append([]byte(nil), content...), nil
 }
 
+func (e *testRuntimeEngine) ListDirectoryFromContainer(_ context.Context, containerID, dirPath string, limit int) ([]runtimeports.ContainerDirectoryEntry, error) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	container, ok := e.containers[containerID]
+	if !ok {
+		return nil, fmt.Errorf("container not found")
+	}
+	if limit <= 0 {
+		limit = 300
+	}
+	if dirPath == "" {
+		dirPath = "."
+	}
+	prefix := ""
+	if dirPath != "." {
+		prefix = strings.TrimSuffix(dirPath, "/") + "/"
+	}
+
+	entriesByName := make(map[string]runtimeports.ContainerDirectoryEntry)
+	for filePath, content := range container.files {
+		if prefix != "" && !strings.HasPrefix(filePath, prefix) {
+			continue
+		}
+		rel := strings.TrimPrefix(filePath, prefix)
+		parts := strings.Split(rel, "/")
+		if len(parts) == 0 || parts[0] == "" {
+			continue
+		}
+		entryType := "file"
+		size := int64(len(content))
+		if len(parts) > 1 {
+			entryType = "dir"
+			size = 0
+		}
+		name := parts[0]
+		if existing, exists := entriesByName[name]; !exists || existing.Type != "dir" {
+			entriesByName[name] = runtimeports.ContainerDirectoryEntry{Name: name, Type: entryType, Size: size}
+		}
+		if len(entriesByName) >= limit {
+			break
+		}
+	}
+	entries := make([]runtimeports.ContainerDirectoryEntry, 0, len(entriesByName))
+	for _, entry := range entriesByName {
+		entries = append(entries, entry)
+	}
+	return entries, nil
+}
+
 func (e *testRuntimeEngine) WriteFileToContainer(_ context.Context, containerID, filePath string, content []byte) error {
 	e.mu.Lock()
 	defer e.mu.Unlock()

@@ -103,6 +103,10 @@ func (a *HTTPService) ReadAWDDefenseFile(context.Context, authctx.CurrentUser, i
 	return &dto.AWDDefenseFileResp{}, nil
 }
 
+func (a *HTTPService) ListAWDDefenseDirectory(context.Context, authctx.CurrentUser, int64, int64, string) (*dto.AWDDefenseDirectoryResp, error) {
+	return &dto.AWDDefenseDirectoryResp{}, nil
+}
+
 func (a *HTTPService) SaveAWDDefenseFile(_ context.Context, _ authctx.CurrentUser, _ int64, _ int64, req dto.AWDDefenseFileSaveReq) (*dto.AWDDefenseFileSaveResp, error) {
 	return &dto.AWDDefenseFileSaveResp{
 		Path: req.Path,

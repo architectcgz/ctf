@@ -38,6 +38,7 @@ type runtimeEngine interface {
 	ApplyACLRules(ctx context.Context, rules []model.InstanceRuntimeACLRule) error
 	RemoveACLRules(ctx context.Context, rules []model.InstanceRuntimeACLRule) error
 	ReadFileFromContainer(ctx context.Context, containerID, filePath string, limit int64) ([]byte, error)
+	ListDirectoryFromContainer(ctx context.Context, containerID, dirPath string, limit int) ([]runtimeports.ContainerDirectoryEntry, error)
 	WriteFileToContainer(ctx context.Context, containerID, filePath string, content []byte) error
 	ExecContainerCommand(ctx context.Context, containerID string, command []string, stdin []byte, limit int64) ([]byte, error)
 	InspectImageSize(ctx context.Context, imageRef string) (int64, error)
@@ -53,6 +54,7 @@ type runtimeContainerInteractiveExecutor interface {
 
 type runtimeDefenseWorkbenchRuntime interface {
 	ReadFileFromContainer(ctx context.Context, containerID, filePath string, limit int64) ([]byte, error)
+	ListDirectoryFromContainer(ctx context.Context, containerID, dirPath string, limit int) ([]runtimeports.ContainerDirectoryEntry, error)
 	WriteFileToContainer(ctx context.Context, containerID, filePath string, content []byte) error
 	ExecContainerCommand(ctx context.Context, containerID string, command []string, stdin []byte, limit int64) ([]byte, error)
 }
@@ -345,6 +347,7 @@ type runtimeHTTPService interface {
 	IssueAWDTargetProxyTicket(ctx context.Context, user authctx.CurrentUser, contestID, serviceID, victimTeamID int64) (string, error)
 	IssueAWDDefenseSSHTicket(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64) (*dto.AWDDefenseSSHAccessResp, error)
 	ReadAWDDefenseFile(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64, filePath string) (*dto.AWDDefenseFileResp, error)
+	ListAWDDefenseDirectory(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64, dirPath string) (*dto.AWDDefenseDirectoryResp, error)
 	SaveAWDDefenseFile(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64, req dto.AWDDefenseFileSaveReq) (*dto.AWDDefenseFileSaveResp, error)
 	RunAWDDefenseCommand(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64, req dto.AWDDefenseCommandReq) (*dto.AWDDefenseCommandResp, error)
 	ResolveProxyTicket(ctx context.Context, ticket string) (*runtimeports.ProxyTicketClaims, error)
@@ -485,6 +488,7 @@ func (a *runtimeHTTPServiceAdapter) IssueAWDDefenseSSHTicket(ctx context.Context
 
 const (
 	awdDefenseMaxFileSize      = 256 * 1024
+	awdDefenseMaxDirectoryList = 300
 	awdDefenseMaxCommandSize   = 2000
 	awdDefenseMaxCommandOutput = 64 * 1024
 )
@@ -514,6 +518,45 @@ func (a *runtimeHTTPServiceAdapter) ReadAWDDefenseFile(ctx context.Context, user
 		Content: string(content),
 		Size:    len(content),
 	}, nil
+}
+
+func (a *runtimeHTTPServiceAdapter) ListAWDDefenseDirectory(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64, dirPath string) (*dto.AWDDefenseDirectoryResp, error) {
+	if a == nil || a.proxyTicketReader == nil || a.defenseWorkbench == nil {
+		return nil, errRuntimeHTTPProxyTicketServiceUnavailable()
+	}
+	cleanPath, err := normalizeAWDDefenseDirectoryPath(dirPath)
+	if err != nil {
+		return nil, err
+	}
+	scope, err := a.proxyTicketReader.FindAWDDefenseSSHScope(ctx, user.UserID, contestID, serviceID)
+	if err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+	if scope == nil || scope.ContainerID == "" {
+		return nil, errcode.ErrForbidden
+	}
+
+	entries, err := a.defenseWorkbench.ListDirectoryFromContainer(ctx, scope.ContainerID, cleanPath, awdDefenseMaxDirectoryList)
+	if err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+	resp := &dto.AWDDefenseDirectoryResp{
+		Path:    cleanPath,
+		Entries: make([]dto.AWDDefenseDirectoryEntryResp, 0, len(entries)),
+	}
+	for _, entry := range entries {
+		entryPath := entry.Name
+		if cleanPath != "." {
+			entryPath = path.Join(cleanPath, entry.Name)
+		}
+		resp.Entries = append(resp.Entries, dto.AWDDefenseDirectoryEntryResp{
+			Name: entry.Name,
+			Path: entryPath,
+			Type: entry.Type,
+			Size: entry.Size,
+		})
+	}
+	return resp, nil
 }
 
 func (a *runtimeHTTPServiceAdapter) SaveAWDDefenseFile(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64, req dto.AWDDefenseFileSaveReq) (*dto.AWDDefenseFileSaveResp, error) {
@@ -583,6 +626,14 @@ func (a *runtimeHTTPServiceAdapter) RunAWDDefenseCommand(ctx context.Context, us
 		Command: command,
 		Output:  string(output),
 	}, nil
+}
+
+func normalizeAWDDefenseDirectoryPath(input string) (string, error) {
+	trimmed := strings.TrimSpace(input)
+	if trimmed == "" || trimmed == "." {
+		return ".", nil
+	}
+	return normalizeAWDDefensePath(trimmed)
 }
 
 func normalizeAWDDefensePath(input string) (string, error) {

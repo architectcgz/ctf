@@ -4,6 +4,7 @@ import { normalizeInstanceData, type RawInstanceData } from './instance'
 import type {
   AWDAttackLogData,
   AWDDefenseCommandData,
+  AWDDefenseDirectoryData,
   AWDDefenseFileData,
   AWDDefenseFileSaveData,
   AWDDefenseSSHAccessData,
@@ -428,6 +429,18 @@ export async function readContestAWDDefenseFile(
   return request<AWDDefenseFileData>({
     method: 'GET',
     url: `/contests/${encodeURIComponent(contestId)}/awd/services/${encodeURIComponent(serviceId)}/defense/files`,
+    params: { path },
+  })
+}
+
+export async function listContestAWDDefenseDirectory(
+  contestId: string,
+  serviceId: string,
+  path = '.'
+): Promise<AWDDefenseDirectoryData> {
+  return request<AWDDefenseDirectoryData>({
+    method: 'GET',
+    url: `/contests/${encodeURIComponent(contestId)}/awd/services/${encodeURIComponent(serviceId)}/defense/directories`,
     params: { path },
   })
 }

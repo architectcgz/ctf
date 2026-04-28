@@ -118,6 +118,12 @@ type AWDDefenseSSHSession struct {
 	ContainerID string
 }
 
+type ContainerDirectoryEntry struct {
+	Name string
+	Type string
+	Size int64
+}
+
 type ProxyTicketStore interface {
 	SaveProxyTicket(ctx context.Context, ticket string, claims ProxyTicketClaims, ttl time.Duration) error
 	FindProxyTicket(ctx context.Context, ticket string) (*ProxyTicketClaims, error)
