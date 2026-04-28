@@ -49,7 +49,7 @@ export interface ApiEnvelope<T> {
 
 ```ts
 export type ID = string                 // 统一：所有 id/xxx_id 字段均返回 string（避免 JS 超过 2^53 精度问题）
-export type ISODateTime = string        // RFC3339/ISO8601，如 "2026-03-01T03:15:22Z"
+export type ISODateTime = string        // RFC3339/ISO8601，服务端统一以 UTC 输出，如 "2026-03-01T03:15:22Z"
 export type UserRole = 'student' | 'teacher' | 'admin'
 
 export interface PageResult<T> {

@@ -76,7 +76,7 @@ func NewAWDRoundUpdater(
 }
 
 func (u *AWDRoundUpdater) Start(ctx context.Context) {
-	u.UpdateRoundsAt(ctx, time.Now())
+	u.UpdateRoundsAt(ctx, time.Now().UTC())
 
 	ticker := time.NewTicker(u.cfg.SchedulerInterval)
 	defer ticker.Stop()
@@ -86,7 +86,7 @@ func (u *AWDRoundUpdater) Start(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			u.UpdateRoundsAt(ctx, time.Now())
+			u.UpdateRoundsAt(ctx, time.Now().UTC())
 		}
 	}
 }

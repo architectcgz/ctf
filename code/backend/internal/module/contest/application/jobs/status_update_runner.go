@@ -34,7 +34,7 @@ func (u *StatusUpdater) updateStatuses(ctx context.Context) {
 		}()
 	}
 
-	now := time.Now()
+	now := time.Now().UTC()
 	statuses := []string{
 		model.ContestStatusRegistration,
 		model.ContestStatusRunning,
