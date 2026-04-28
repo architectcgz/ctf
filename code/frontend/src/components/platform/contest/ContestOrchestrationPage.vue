@@ -46,7 +46,6 @@ const emit = defineEmits<{
   updateStatusFilter: [value: StatusFilter]
   openEditDialog: [contest: ContestDetailData]
   announce: [contest: ContestDetailData]
-  exportContest: [contest: ContestDetailData]
   changePage: [page: number]
 }>()
 
@@ -274,7 +273,6 @@ function openContestWorkbench(contest: ContestDetailData) {
             :total="total"
             @edit="openEditContest"
             @announce="emit('announce', $event)"
-            @export="emit('exportContest', $event)"
             @workbench="openContestWorkbench"
             @change-page="emit('changePage', $event)"
           />

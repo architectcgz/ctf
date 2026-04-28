@@ -82,7 +82,6 @@ const {
   editingAwdChallengeLink,
   existingAwdChallengeIds,
   focusAwdChallengeByOffset,
-  handleNavigateAwdChallengeFromOperations,
   handleNavigateAwdChallengeFromPreflight,
   handleOpenAwdConfigFromPool,
   handleSaveAwdChallengeConfig,
@@ -383,7 +382,6 @@ onUnmounted(() => {
         @navigate:awd-challenge-from-preflight="handleNavigateAwdChallengeFromPreflight"
         @navigate:stage="handleWorkspaceStageNavigation"
         @open:preflight-override="openPreflightOverrideDialog"
-        @open:awd-config-from-operations="handleNavigateAwdChallengeFromOperations"
       />
     </main>
 

@@ -36,9 +36,6 @@ const toastMocks = vi.hoisted(() => ({
   warning: vi.fn(),
   info: vi.fn(),
 }))
-const awdMockModule = vi.hoisted(() => ({
-  state: null as any,
-}))
 
 vi.mock('vue-router', async () => {
   const actual = await vi.importActual<typeof import('vue-router')>('vue-router')
@@ -76,124 +73,6 @@ vi.mock('@/composables/useDestructiveConfirm', () => ({
 vi.mock('@/composables/useToast', () => ({
   useToast: () => toastMocks,
 }))
-
-vi.mock('@/composables/usePlatformContestAwd', async () => {
-  const { ref } = await vi.importActual<typeof import('vue')>('vue')
-  awdMockModule.state = {
-    rounds: ref([
-      {
-        id: 'round-1',
-        contest_id: 'contest-1',
-        round_number: 1,
-        status: 'running',
-        attack_score: 50,
-        defense_score: 50,
-        created_at: '2026-03-15T09:00:00.000Z',
-        updated_at: '2026-03-15T09:05:00.000Z',
-      },
-    ]),
-    selectedRoundId: ref('round-1'),
-    readiness: ref(null),
-    loadingReadiness: ref(false),
-    overrideDialogState: ref({
-      open: false,
-      action: null,
-      title: '',
-      reason: '',
-      readiness: null,
-      confirmLoading: false,
-    }),
-    services: ref([]),
-    attacks: ref([]),
-    summary: ref(null),
-    trafficSummary: ref(null),
-    trafficEvents: ref([]),
-    trafficEventsTotal: ref(0),
-    trafficFilters: ref({
-      attacker_team_id: '',
-      victim_team_id: '',
-      service_id: '',
-      challenge_id: '',
-      status_group: 'all',
-      path_keyword: '',
-      page: 1,
-      page_size: 20,
-    }),
-    scoreboardRows: ref([]),
-    scoreboardFrozen: ref(false),
-    teams: ref([
-      {
-        id: 'team-1',
-        contest_id: 'contest-1',
-        name: '蓝队一',
-        captain_id: '1001',
-        invite_code: 'ABC123',
-        max_members: 4,
-        member_count: 3,
-        created_at: '2026-03-15T08:00:00.000Z',
-      },
-      {
-        id: 'team-2',
-        contest_id: 'contest-1',
-        name: '红队一',
-        captain_id: '1002',
-        invite_code: 'DEF456',
-        max_members: 4,
-        member_count: 3,
-        created_at: '2026-03-15T08:01:00.000Z',
-      },
-    ]),
-    challengeLinks: ref([
-      {
-        id: 'link-1',
-        contest_id: 'contest-1',
-        challenge_id: '101',
-        title: 'Web 入门',
-        category: 'web',
-        difficulty: 'easy',
-        points: 120,
-        order: 1,
-        is_visible: true,
-        awd_checker_type: undefined,
-        awd_checker_config: {},
-        awd_sla_score: 0,
-        awd_defense_score: 0,
-        awd_checker_validation_state: 'pending',
-        awd_checker_last_preview_at: undefined,
-        awd_checker_last_preview_result: undefined,
-        created_at: '2026-03-10T00:00:00.000Z',
-      },
-    ]),
-    challengeCatalog: ref([]),
-    loadingRounds: ref(false),
-    loadingRoundDetail: ref(false),
-    loadingTrafficSummary: ref(false),
-    loadingTrafficEvents: ref(false),
-    loadingChallengeCatalog: ref(false),
-    checking: ref(false),
-    creatingRound: ref(false),
-    savingServiceCheck: ref(false),
-    savingAttackLog: ref(false),
-    savingChallengeConfig: ref(false),
-    shouldAutoRefresh: ref(false),
-    refresh: vi.fn(),
-    applyTrafficFilters: vi.fn(),
-    setTrafficPage: vi.fn(),
-    resetTrafficFilters: vi.fn(),
-    runSelectedRoundCheck: vi.fn(),
-    createRound: vi.fn(),
-    confirmOverrideAction: vi.fn(),
-    closeOverrideDialog: vi.fn(),
-    createServiceCheck: vi.fn(),
-    createAttackLog: vi.fn(),
-    loadChallengeCatalog: vi.fn(),
-    createChallengeLink: vi.fn(),
-    updateChallengeLink: vi.fn(),
-  }
-  return {
-    usePlatformContestAwd: () => awdMockModule.state,
-  }
-})
 
 function buildContestDetail(overrides: Partial<ContestDetailData> = {}): ContestDetailData {
   return {
@@ -576,117 +455,6 @@ describe('ContestEdit', () => {
     toastMocks.error.mockReset()
     toastMocks.warning.mockReset()
     toastMocks.info.mockReset()
-    awdMockModule.state.rounds.value = [
-      {
-        id: 'round-1',
-        contest_id: 'contest-1',
-        round_number: 1,
-        status: 'running',
-        attack_score: 50,
-        defense_score: 50,
-        created_at: '2026-03-15T09:00:00.000Z',
-        updated_at: '2026-03-15T09:05:00.000Z',
-      },
-    ]
-    awdMockModule.state.selectedRoundId.value = 'round-1'
-    awdMockModule.state.readiness.value = null
-    awdMockModule.state.loadingReadiness.value = false
-    awdMockModule.state.overrideDialogState.value = {
-      open: false,
-      action: null,
-      title: '',
-      reason: '',
-      readiness: null,
-      confirmLoading: false,
-    }
-    awdMockModule.state.services.value = []
-    awdMockModule.state.attacks.value = []
-    awdMockModule.state.summary.value = null
-    awdMockModule.state.trafficSummary.value = null
-    awdMockModule.state.trafficEvents.value = []
-    awdMockModule.state.trafficEventsTotal.value = 0
-    awdMockModule.state.trafficFilters.value = {
-      attacker_team_id: '',
-      victim_team_id: '',
-      service_id: '',
-      challenge_id: '',
-      status_group: 'all',
-      path_keyword: '',
-      page: 1,
-      page_size: 20,
-    }
-    awdMockModule.state.scoreboardRows.value = []
-    awdMockModule.state.scoreboardFrozen.value = false
-    awdMockModule.state.teams.value = [
-      {
-        id: 'team-1',
-        contest_id: 'contest-1',
-        name: '蓝队一',
-        captain_id: '1001',
-        invite_code: 'ABC123',
-        max_members: 4,
-        member_count: 3,
-        created_at: '2026-03-15T08:00:00.000Z',
-      },
-      {
-        id: 'team-2',
-        contest_id: 'contest-1',
-        name: '红队一',
-        captain_id: '1002',
-        invite_code: 'DEF456',
-        max_members: 4,
-        member_count: 3,
-        created_at: '2026-03-15T08:01:00.000Z',
-      },
-    ]
-    awdMockModule.state.challengeLinks.value = [
-      {
-        id: 'link-1',
-        contest_id: 'contest-1',
-        challenge_id: '101',
-        awd_service_id: 'service-1',
-        awd_template_id: '1',
-        title: 'Web 入门',
-        category: 'web',
-        difficulty: 'easy',
-        points: 120,
-        order: 1,
-        is_visible: true,
-        awd_checker_type: undefined,
-        awd_checker_config: {},
-        awd_sla_score: 0,
-        awd_defense_score: 0,
-        awd_checker_validation_state: 'pending',
-        awd_checker_last_preview_at: undefined,
-        awd_checker_last_preview_result: undefined,
-        created_at: '2026-03-10T00:00:00.000Z',
-      },
-    ]
-    awdMockModule.state.challengeCatalog.value = []
-    awdMockModule.state.loadingRounds.value = false
-    awdMockModule.state.loadingRoundDetail.value = false
-    awdMockModule.state.loadingTrafficSummary.value = false
-    awdMockModule.state.loadingTrafficEvents.value = false
-    awdMockModule.state.loadingChallengeCatalog.value = false
-    awdMockModule.state.checking.value = false
-    awdMockModule.state.creatingRound.value = false
-    awdMockModule.state.savingServiceCheck.value = false
-    awdMockModule.state.savingAttackLog.value = false
-    awdMockModule.state.savingChallengeConfig.value = false
-    awdMockModule.state.shouldAutoRefresh.value = false
-    awdMockModule.state.refresh.mockReset()
-    awdMockModule.state.applyTrafficFilters.mockReset()
-    awdMockModule.state.setTrafficPage.mockReset()
-    awdMockModule.state.resetTrafficFilters.mockReset()
-    awdMockModule.state.runSelectedRoundCheck.mockReset()
-    awdMockModule.state.createRound.mockReset()
-    awdMockModule.state.confirmOverrideAction.mockReset()
-    awdMockModule.state.closeOverrideDialog.mockReset()
-    awdMockModule.state.createServiceCheck.mockReset()
-    awdMockModule.state.createAttackLog.mockReset()
-    awdMockModule.state.loadChallengeCatalog.mockReset()
-    awdMockModule.state.createChallengeLink.mockReset()
-    awdMockModule.state.updateChallengeLink.mockReset()
     routeState.params = { id: 'contest-1' }
 
     contestApiMocks.getContest.mockResolvedValue({
@@ -914,7 +682,7 @@ describe('ContestEdit', () => {
     expect(stageRail.text()).not.toContain('轮次运行')
   })
 
-  it('应该在 AWD 赛事下展示基础信息、题目池、AWD 配置、赛前检查与轮次运行', async () => {
+  it('应该在 AWD 赛事下只展示编辑工作台阶段，不混入赛事运维阶段', async () => {
     contestApiMocks.getContest.mockResolvedValue(
       buildContestDetail({
         title: '2026 AWD 联赛',
@@ -934,7 +702,8 @@ describe('ContestEdit', () => {
     expect(stageRail.text()).toContain('题目编排')
     expect(stageRail.text()).toContain('AWD 服务配置')
     expect(stageRail.text()).toContain('就绪审计')
-    expect(stageRail.text()).toContain('轮次运行')
+    expect(stageRail.text()).not.toContain('轮次运行')
+    expect(stageRail.text()).not.toContain('实例编排')
   })
 
   it('应该在赛前检查中列出阻塞项、保留强制开赛入口，并支持返回 AWD 配置后高亮当前题', async () => {
@@ -990,31 +759,7 @@ describe('ContestEdit', () => {
     expect(wrapper.text()).toContain('Web 入门')
   })
 
-  it('轮次运行阶段不应混入就绪审计的配置修正入口', async () => {
-    awdMockModule.state.readiness.value = {
-      contest_id: 'contest-1',
-      ready: false,
-      total_challenges: 1,
-      passed_challenges: 0,
-      pending_challenges: 0,
-      failed_challenges: 1,
-      stale_challenges: 0,
-      missing_checker_challenges: 0,
-      blocking_count: 1,
-      global_blocking_reasons: [],
-      blocking_actions: ['create_round'],
-      items: [
-        {
-          challenge_id: '101',
-          title: 'Web 入门',
-          checker_type: 'http_standard',
-          validation_state: 'failed',
-          last_preview_at: '2026-04-12T08:00:00.000Z',
-          last_access_url: 'http://checker.internal/flag',
-          blocking_reason: 'last_preview_failed',
-        },
-      ],
-    }
+  it('竞赛编辑页不应渲染轮次运行面板和赛事运维内容', async () => {
     contestApiMocks.getContest.mockResolvedValue(
       buildContestDetail({
         title: '2026 AWD 联赛',
@@ -1027,15 +772,17 @@ describe('ContestEdit', () => {
     const wrapper = mountContestEdit()
 
     await flushPromises()
-    await wrapper.get('#contest-workbench-stage-tab-operations').trigger('click')
-    await flushPromises()
 
+    expect(wrapper.find('#contest-workbench-stage-tab-operations').exists()).toBe(false)
+    expect(wrapper.find('#contest-workbench-stage-tab-instances').exists()).toBe(false)
     expect(wrapper.find('#awd-readiness-edit-101').exists()).toBe(false)
     expect(wrapper.find('.runtime-readiness-strip').exists()).toBe(false)
-    expect(wrapper.find('#awd-ops-panel-inspector').exists()).toBe(true)
+    expect(wrapper.find('#awd-ops-panel-inspector').exists()).toBe(false)
+    expect(wrapper.text()).not.toContain('本轮得分')
+    expect(wrapper.text()).not.toContain('攻击流水')
   })
 
-  it('应该在 AWD 赛事已开赛时默认聚焦轮次运行阶段', async () => {
+  it('应该在 AWD 赛事已开赛时默认聚焦 AWD 服务配置阶段', async () => {
     contestApiMocks.getContest.mockResolvedValue(
       buildContestDetail({
         title: '2026 AWD 联赛',
@@ -1051,11 +798,12 @@ describe('ContestEdit', () => {
 
     const stageRail = getWorkbenchStageRail(wrapper)
 
-    expect(stageRail.get('[role="tab"][aria-selected="true"]').text()).toContain('轮次运行')
-    expect(wrapper.text()).toContain('轮次态势')
+    expect(stageRail.get('[role="tab"][aria-selected="true"]').text()).toContain('AWD 服务配置')
+    expect(wrapper.text()).not.toContain('轮次态势')
   })
 
-  it('未开赛时工作台运行段应承接降级壳', async () => {
+  it('旧 operations URL 在编辑页应回落到默认编辑阶段', async () => {
+    window.history.replaceState({}, '', '/platform/contests/contest-1/edit?panel=operations')
     contestApiMocks.getContest.mockResolvedValue(
       buildContestDetail({
         title: '2026 AWD 联赛',
@@ -1068,14 +816,15 @@ describe('ContestEdit', () => {
     const wrapper = mountContestEdit()
 
     await flushPromises()
-    await wrapper.get('#contest-workbench-stage-tab-operations').trigger('click')
-    await flushPromises()
 
-    expect(wrapper.text()).toContain('尚未进入运行阶段')
-    expect(wrapper.text()).toContain('需先通过赛前检查并开赛，本面板才会切换到实时监控模式。')
+    const stageRail = getWorkbenchStageRail(wrapper)
+
+    expect(stageRail.get('[role="tab"][aria-selected="true"]').text()).toContain('题目编排')
+    expect(wrapper.find('#contest-workbench-stage-tab-operations').exists()).toBe(false)
+    expect(wrapper.text()).not.toContain('尚未进入运行阶段')
   })
 
-  it('应该在 AWD 赛事已结束时进入运行段而不是显示赛前降级壳', async () => {
+  it('AWD 赛事已结束时仍停留在编辑配置阶段，报告导出进入赛事运维页处理', async () => {
     contestApiMocks.getContest.mockResolvedValue(
       buildContestDetail({
         title: '2026 AWD 联赛',
@@ -1091,8 +840,8 @@ describe('ContestEdit', () => {
 
     const stageRail = getWorkbenchStageRail(wrapper)
 
-    expect(stageRail.get('[role="tab"][aria-selected="true"]').text()).toContain('轮次运行')
-    expect(wrapper.text()).toContain('轮次态势')
+    expect(stageRail.get('[role="tab"][aria-selected="true"]').text()).toContain('AWD 服务配置')
+    expect(wrapper.text()).not.toContain('轮次态势')
     expect(wrapper.text()).not.toContain('尚未进入运行阶段')
   })
 
@@ -1159,7 +908,7 @@ describe('ContestEdit', () => {
     expect(wrapper.text()).not.toContain('共 0 道题目')
   })
 
-  it('应该在管理页工作台交接时强制落到轮次态势而不是恢复旧子页签', async () => {
+  it('应该在管理页工作台交接时忽略旧运维子页签并落到编辑阶段', async () => {
     window.sessionStorage.setItem('ctf_admin_awd_ops_panel:contest-1', 'challenges')
     window.history.replaceState({}, '', '/platform/contests/contest-1/edit?panel=operations&opsPanel=inspector')
     contestApiMocks.getContest.mockResolvedValue(
@@ -1176,11 +925,12 @@ describe('ContestEdit', () => {
     await flushPromises()
 
     expect(wrapper.find('#awd-ops-tab-challenges').exists()).toBe(false)
-    expect(getWorkbenchStageRail(wrapper).get('[role="tab"][aria-selected="true"]').text()).toContain('轮次运行')
-    expect(wrapper.text()).toContain('轮次态势')
+    expect(wrapper.find('#contest-workbench-stage-tab-operations').exists()).toBe(false)
+    expect(getWorkbenchStageRail(wrapper).get('[role="tab"][aria-selected="true"]').text()).toContain('AWD 服务配置')
+    expect(wrapper.text()).not.toContain('轮次态势')
   })
 
-  it('应该在 URL 已指定有效阶段时保留该阶段', async () => {
+  it('旧 operations URL 不再作为编辑页有效阶段保留', async () => {
     window.history.replaceState({}, '', '/platform/contests/contest-1/edit?panel=operations')
     contestApiMocks.getContest.mockResolvedValue(
       buildContestDetail({
@@ -1197,8 +947,8 @@ describe('ContestEdit', () => {
 
     const stageRail = getWorkbenchStageRail(wrapper)
 
-    expect(stageRail.get('[role="tab"][aria-selected="true"]').text()).toContain('轮次运行')
-    expect(window.location.search).toContain('panel=operations')
+    expect(stageRail.get('[role="tab"][aria-selected="true"]').text()).toContain('题目编排')
+    expect(window.location.search).not.toContain('panel=operations')
   })
 
   it('应该加载竞赛详情并在保存成功后返回赛事目录', async () => {

@@ -57,6 +57,15 @@ describe('ContestOperationsHub', () => {
           ends_at: '2026-04-16T18:00:00.000Z',
         },
         {
+          id: 'awd-ended',
+          title: '2026 AWD 复盘赛',
+          description: '已结束待导出',
+          mode: 'awd',
+          status: 'ended',
+          starts_at: '2026-04-14T09:00:00.000Z',
+          ends_at: '2026-04-14T18:00:00.000Z',
+        },
+        {
           id: 'jeopardy-1',
           title: '2026 Jeopardy 校内赛',
           description: '非 AWD',
@@ -80,6 +89,7 @@ describe('ContestOperationsHub', () => {
     expect(wrapper.text()).toContain('竞赛列表')
     expect(wrapper.text()).toContain('2026 AWD 联赛')
     expect(wrapper.text()).toContain('2026 AWD 冻结赛')
+    expect(wrapper.text()).toContain('2026 AWD 复盘赛')
     expect(wrapper.text()).not.toContain('2026 Jeopardy 校内赛')
     expect(wrapper.text()).toContain('进入运维台')
   })

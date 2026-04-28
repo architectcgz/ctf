@@ -11,11 +11,12 @@ describe('ContestEdit workspace extraction', () => {
     expect(contestEditSource).toContain('<ContestEditWorkspacePanel')
   })
 
-  it('编辑工作台运行面板应按阶段收窄 AWDOperationsPanel 内容，避免重复显示开赛就绪摘要', () => {
-    expect(contestEditWorkspacePanelSource).toContain('operation-panel="inspector"')
-    expect(contestEditWorkspacePanelSource).toContain('runtime-content="round-inspector"')
-    expect(contestEditWorkspacePanelSource).toContain('operation-panel="instances"')
-    expect(contestEditWorkspacePanelSource).toContain('runtime-content="instances"')
+  it('编辑工作台不应继续挂载赛事运维面板，避免混入轮次、得分和攻击流水', () => {
+    expect(contestEditWorkspacePanelSource).not.toContain('AWDOperationsPanel')
+    expect(contestEditWorkspacePanelSource).not.toContain('operation-panel="inspector"')
+    expect(contestEditWorkspacePanelSource).not.toContain('runtime-content="round-inspector"')
+    expect(contestEditWorkspacePanelSource).not.toContain('operation-panel="instances"')
+    expect(contestEditWorkspacePanelSource).not.toContain('runtime-content="instances"')
   })
 
   it('编辑工作台所有 stage 应复用统一切换动画并支持减少动态效果', () => {
@@ -23,7 +24,6 @@ describe('ContestEdit workspace extraction', () => {
     expect(contestEditWorkspacePanelSource).toContain('name="studio-stage"')
     expect(contestEditWorkspacePanelSource).toContain('mode="out-in"')
     expect(contestEditWorkspacePanelSource).toContain('class="studio-pane studio-stage-panel"')
-    expect(contestEditWorkspacePanelSource).toContain('class="studio-pane studio-pane--operations studio-stage-panel"')
     expect(contestEditWorkspacePanelSource).toContain('@media (prefers-reduced-motion: reduce)')
     expect(contestEditWorkspacePanelSource).not.toContain('class="studio-pane fade-in"')
     expect(contestEditWorkspacePanelSource).not.toContain('@keyframes studioFadeIn')

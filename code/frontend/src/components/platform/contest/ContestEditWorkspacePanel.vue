@@ -13,7 +13,6 @@ import type { ContestWorkbenchStageKey } from '@/composables/useContestWorkbench
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
 import AWDChallengeConfigPanel from '@/components/platform/contest/AWDChallengeConfigPanel.vue'
-import AWDOperationsPanel from '@/components/platform/contest/AWDOperationsPanel.vue'
 import ContestAwdPreflightPanel from '@/components/platform/contest/ContestAwdPreflightPanel.vue'
 import ContestChallengeOrchestrationPanel from '@/components/platform/contest/ContestChallengeOrchestrationPanel.vue'
 import PlatformContestFormPanel from '@/components/platform/contest/PlatformContestFormPanel.vue'
@@ -42,7 +41,6 @@ const emit = defineEmits<{
   (event: 'save', draft: ContestFormDraft): void
   (event: 'refresh-awd-workbench'): void
   (event: 'open:awd-config-from-pool', challenge: AdminContestChallengeViewData): void
-  (event: 'open:awd-config-from-operations', challengeId: string): void
   (event: 'create:awd-challenge'): void
   (event: 'edit:awd-challenge', challenge: AdminContestChallengeViewData): void
   (event: 'previous:awd-challenge'): void
@@ -168,47 +166,6 @@ const emit = defineEmits<{
             />
           </div>
 
-          <div
-            v-else-if="contest.mode === 'awd' && activeStage === 'operations'"
-            key="operations"
-            class="studio-pane studio-pane--operations studio-stage-panel"
-          >
-            <div
-              class="stage-pane-divider"
-              aria-label="轮次态势"
-            >
-              <span class="stage-pane-divider__label">
-                轮次态势
-              </span>
-            </div>
-            <AWDOperationsPanel
-              :contests="[contest]"
-              :selected-contest-id="contest.id"
-              :hide-contest-selector="true"
-              :hide-studio-link="true"
-              :hide-operation-tabs="true"
-              operation-panel="inspector"
-              runtime-content="round-inspector"
-              @open:awd-config="emit('open:awd-config-from-operations', $event)"
-            />
-          </div>
-
-          <div
-            v-else-if="contest.mode === 'awd' && activeStage === 'instances'"
-            key="instances"
-            class="studio-pane studio-pane--operations studio-stage-panel"
-          >
-            <AWDOperationsPanel
-              :contests="[contest]"
-              :selected-contest-id="contest.id"
-              :hide-contest-selector="true"
-              :hide-studio-link="true"
-              :hide-operation-tabs="true"
-              operation-panel="instances"
-              runtime-content="instances"
-              @open:awd-config="emit('open:awd-config-from-operations', $event)"
-            />
-          </div>
         </Transition>
       </template>
     </div>
@@ -283,31 +240,6 @@ const emit = defineEmits<{
 .studio-stage-panel {
   transform-origin: top center;
   will-change: opacity, transform;
-}
-
-.studio-pane--operations {
-  padding: var(--space-4) var(--space-8) var(--space-8);
-}
-
-.stage-pane-divider {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  margin-bottom: var(--space-2);
-  color: var(--color-text-muted);
-}
-
-.stage-pane-divider::after {
-  content: '';
-  flex: 1;
-  border-top: 1px dashed color-mix(in srgb, var(--color-border-default) 84%, transparent);
-}
-
-.stage-pane-divider__label {
-  flex: 0 0 auto;
-  font-size: var(--font-size-12);
-  font-weight: 800;
-  color: var(--color-text-muted);
 }
 
 .studio-form-canvas {

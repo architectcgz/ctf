@@ -6,10 +6,7 @@ import PlatformContestFormDialog from '@/components/platform/contest/PlatformCon
 import AWDReadinessOverrideDialog from '@/components/platform/contest/AWDReadinessOverrideDialog.vue'
 import ContestAnnouncementManageDrawer from '@/components/platform/contest/ContestAnnouncementManageDrawer.vue'
 import ContestOrchestrationPage from '@/components/platform/contest/ContestOrchestrationPage.vue'
-import { useContestExportFlow } from '@/composables/useContestExportFlow'
 import { usePlatformContests } from '@/composables/usePlatformContests'
-
-const { handleExportContest } = useContestExportFlow()
 
 const {
   list,
@@ -104,7 +101,6 @@ async function handleCreateContestSave(draft: Parameters<typeof saveContest>[0])
       @update-status-filter="updateStatusFilter"
       @open-edit-dialog="openEditDialog"
       @announce="openAnnouncementDrawer"
-      @export-contest="handleExportContest"
       @change-page="changePage"
     />
 

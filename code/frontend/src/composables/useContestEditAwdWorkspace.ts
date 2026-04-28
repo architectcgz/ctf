@@ -223,11 +223,6 @@ export function useContestEditAwdWorkspace(options: UseContestEditAwdWorkspaceOp
     selectTab('awd-config')
   }
 
-  function handleNavigateAwdChallengeFromOperations(challengeId: string) {
-    setActiveAwdChallenge(challengeId, null)
-    selectTab('awd-config')
-  }
-
   return {
     activeAwdChallengeId,
     awdChallengeConfigDialogOpen,
@@ -244,7 +239,6 @@ export function useContestEditAwdWorkspace(options: UseContestEditAwdWorkspaceOp
     editingAwdChallengeLink,
     existingAwdChallengeIds,
     focusAwdChallengeByOffset,
-    handleNavigateAwdChallengeFromOperations,
     handleNavigateAwdChallengeFromPreflight,
     handleOpenAwdConfigFromPool,
     handleSaveAwdChallengeConfig,

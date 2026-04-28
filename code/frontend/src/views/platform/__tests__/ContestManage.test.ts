@@ -13,7 +13,6 @@ const contestMocks = vi.hoisted(() => ({
   createContest: vi.fn(),
   updateContest: vi.fn(),
   getContestAWDReadiness: vi.fn(),
-  exportContestArchive: vi.fn(),
 }))
 const destructiveConfirmMock = vi.hoisted(() => vi.fn())
 
@@ -26,7 +25,6 @@ vi.mock('@/api/admin', async () => {
     createContest: contestMocks.createContest,
     updateContest: contestMocks.updateContest,
     getContestAWDReadiness: contestMocks.getContestAWDReadiness,
-    exportContestArchive: contestMocks.exportContestArchive,
   }
 })
 
@@ -50,7 +48,6 @@ describe('ContestManage', () => {
     contestMocks.createContest.mockReset()
     contestMocks.updateContest.mockReset()
     contestMocks.getContestAWDReadiness.mockReset()
-    contestMocks.exportContestArchive.mockReset()
     destructiveConfirmMock.mockReset()
 
     contestMocks.getChallenges.mockResolvedValue({
@@ -359,49 +356,6 @@ describe('ContestManage', () => {
     )
   })
 
-  it('导出竞赛归档失败时不应抛到全局错误页', async () => {
-    contestMocks.getContests.mockResolvedValue({
-      list: [
-        {
-          id: 'contest-1',
-          title: '2026 春季校园 CTF',
-          description: '校内赛',
-          mode: 'jeopardy',
-          status: 'ended',
-          starts_at: '2026-04-12T09:00:00.000Z',
-          ends_at: '2026-04-12T18:00:00.000Z',
-        },
-      ],
-      total: 1,
-      page: 1,
-      page_size: 20,
-    })
-    contestMocks.exportContestArchive.mockRejectedValue(new Error('导出失败'))
-
-    const wrapper = mount(ContestManage, {
-      global: {
-        stubs: {
-          ContestOrchestrationPage: {
-            props: ['list'],
-            template:
-              '<div><button id="export-contest" type="button" @click="$emit(\'exportContest\', list[0])">导出竞赛结果</button></div>',
-          },
-          PlatformContestFormDialog: true,
-          AWDReadinessOverrideDialog: true,
-        },
-      },
-    })
-
-    await flushPromises()
-
-    await expect(wrapper.get('#export-contest').trigger('click')).resolves.toBeUndefined()
-    await flushPromises()
-
-    expect(contestMocks.exportContestArchive).toHaveBeenCalledWith('contest-1', {
-      format: 'json',
-    })
-  })
-
   it('应该渲染真实竞赛列表', async () => {
     contestMocks.getContests.mockResolvedValue({
       list: [
@@ -544,7 +498,7 @@ describe('ContestManage', () => {
     })
   })
 
-  it('应该在赛事目录通过更多操作菜单点击编辑后跳转到独立编辑页', async () => {
+  it('应该在赛事目录通过行内编辑按钮跳转到独立编辑页', async () => {
     contestMocks.getContests.mockResolvedValue({
       list: [
         {
@@ -573,16 +527,8 @@ describe('ContestManage', () => {
     })
 
     await flushPromises()
-    await wrapper.get('#contest-row-more-contest-1').trigger('click')
-    await flushPromises()
 
-    const editButton = document.body.querySelector<HTMLButtonElement>(
-      '#contest-row-menu-edit-contest-1'
-    )
-
-    expect(editButton).toBeTruthy()
-
-    editButton!.click()
+    await wrapper.get('#contest-row-edit-contest-1').trigger('click')
     await flushPromises()
 
     expect(pushMock).toHaveBeenCalledWith({ name: 'ContestEdit', params: { id: 'contest-1' } })

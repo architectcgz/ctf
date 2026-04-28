@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import {
-  Activity,
   Boxes,
   ClipboardCheck,
   Settings2,
@@ -20,8 +19,6 @@ const stageIcons: Record<string, Component> = {
   pool: Boxes,
   teams: UsersRound,
   preflight: ClipboardCheck,
-  operations: Activity,
-  instances: Boxes,
 }
 
 function handleStageSelect(stage: ContestWorkbenchStage): void {
