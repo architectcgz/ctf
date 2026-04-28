@@ -16,7 +16,7 @@ const contests = ref<ContestDetailData[]>([])
 const awdContests = computed(() => contests.value.filter((item) => item.mode === 'awd'))
 const operableContests = computed(() =>
   awdContests.value.filter((item) =>
-    ['running', 'frozen', 'registering'].includes(item.status)
+    ['running', 'frozen', 'ended', 'registering'].includes(item.status)
   )
 )
 const runningContestCount = computed(

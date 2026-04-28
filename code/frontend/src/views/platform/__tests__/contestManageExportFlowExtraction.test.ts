@@ -3,10 +3,11 @@ import { describe, expect, it } from 'vitest'
 import contestManageSource from '../ContestManage.vue?raw'
 
 describe('ContestManage export flow extraction', () => {
-  it('应将赛事结果导出与轮询下载逻辑抽到独立 composable', () => {
+  it('赛事目录不再直接挂载导出流程，结果导出应进入赛事运维处理', () => {
     expect(contestManageSource).toContain(
-      "import { useContestExportFlow } from '@/composables/useContestExportFlow'"
+      "import ContestOrchestrationPage from '@/components/platform/contest/ContestOrchestrationPage.vue'"
     )
-    expect(contestManageSource).toContain('const { handleExportContest } = useContestExportFlow()')
+    expect(contestManageSource).not.toContain('useContestExportFlow')
+    expect(contestManageSource).not.toContain('@export-contest')
   })
 })

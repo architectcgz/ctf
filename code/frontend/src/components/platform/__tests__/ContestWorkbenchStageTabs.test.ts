@@ -7,7 +7,6 @@ type ContestWorkbenchStageKey =
   | 'pool'
   | 'awd-config'
   | 'preflight'
-  | 'operations'
 
 interface ContestWorkbenchStage {
   key: ContestWorkbenchStageKey
@@ -21,7 +20,6 @@ function buildStages(): ContestWorkbenchStage[] {
     { key: 'pool', label: '题目池' },
     { key: 'awd-config', label: 'AWD 配置' },
     { key: 'preflight', label: '赛前检查' },
-    { key: 'operations', label: '轮次运行' },
   ]
 }
 
@@ -38,17 +36,17 @@ describe('ContestWorkbenchStageTabs', () => {
 
     expect(wrapper.findAll('[role="tablist"]')).toHaveLength(1)
     expect(wrapper.get('[role="tablist"]').attributes('aria-label')).toBe('竞赛工作台阶段切换')
-    expect(wrapper.findAll('.top-tab')).toHaveLength(5)
+    expect(wrapper.findAll('.top-tab')).toHaveLength(4)
     expect(wrapper.get('.top-tab.active').text()).toContain('题目池')
 
-    const operationsTab = wrapper
+    const preflightTab = wrapper
       .findAll('.top-tab')
-      .find((node) => node.text().includes('轮次运行'))
+      .find((node) => node.text().includes('赛前检查'))
 
-    expect(operationsTab).toBeDefined()
+    expect(preflightTab).toBeDefined()
 
-    await operationsTab!.trigger('click')
+    await preflightTab!.trigger('click')
 
-    expect(selectStage).toHaveBeenCalledWith('operations')
+    expect(selectStage).toHaveBeenCalledWith('preflight')
   })
 })
