@@ -385,7 +385,7 @@ describe('TeacherDashboard', () => {
       'class="teacher-dashboard-panel-body workspace-subpanel workspace-subpanel--flat"'
     )
     expect(teacherDashboardPageSource).toMatch(
-      /\.overview-panel\s*\{[\s\S]*--workspace-directory-section-padding:\s*var\(--space-5\)\s*var\(--space-5-5\)\s*var\(--space-5-5\);[\s\S]*border:\s*1px solid var\(--teacher-card-border\);[\s\S]*border-radius:\s*22px;/s
+      /\.overview-panel\s*\{[\s\S]*--workspace-directory-section-padding:\s*0;[\s\S]*border:\s*0;[\s\S]*border-radius:\s*0;[\s\S]*background:\s*transparent;/s
     )
     expect(teacherDashboardPageSource).toMatch(
       /\.overview-panel > \.list-heading\s*\{[\s\S]*border-bottom:\s*1px solid var\(--workspace-line-soft\);/s
