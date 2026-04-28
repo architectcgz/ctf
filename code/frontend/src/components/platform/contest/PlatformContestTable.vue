@@ -128,7 +128,7 @@ function handleAnnounce(contest: ContestDetailData): void {
         </div>
 
         <div
-          class="ui-row-actions contest-row__actions"
+          class="ui-row-actions contest-row__actions ui-row-actions--fixed"
           role="group"
           aria-label="竞赛操作"
         >
@@ -136,7 +136,7 @@ function handleAnnounce(contest: ContestDetailData): void {
             v-if="canEnterWorkbench(contest)"
             :id="`contest-open-workbench-${contest.id}`"
             type="button"
-            class="ui-btn ui-btn--sm ui-btn--primary contest-action contest-action--workbench"
+            class="ui-btn ui-btn--sm ui-btn--primary contest-action contest-action--workbench ui-row-action--main"
             @click="emit('workbench', contest)"
           >
             <Swords class="h-3.5 w-3.5" />
@@ -145,7 +145,7 @@ function handleAnnounce(contest: ContestDetailData): void {
           <button
             :id="`contest-row-edit-${contest.id}`"
             type="button"
-            class="ui-btn ui-btn--sm ui-btn--secondary contest-action contest-action--edit"
+            class="ui-btn ui-btn--sm ui-btn--secondary contest-action contest-action--edit ui-row-action--default"
             @click="handleEdit(contest)"
           >
             编辑
@@ -156,6 +156,7 @@ function handleAnnounce(contest: ContestDetailData): void {
             title="Management"
             menu-label="更多竞赛操作"
             accent="var(--journal-accent, var(--color-primary))"
+            class="ui-row-action--menu"
             @update:open="setActionMenuOpen(contest.id, $event)"
           >
             <template #trigger="{ open, toggle, setTriggerRef }">
@@ -203,8 +204,10 @@ function handleAnnounce(contest: ContestDetailData): void {
 
 <style scoped>
 .contest-directory {
+  --contest-directory-action-column: var(--ui-row-action-fixed-width);
   --contest-directory-columns: minmax(17rem, 1.46fr) minmax(6rem, 0.54fr) minmax(7rem, 0.68fr)
-    minmax(9.5rem, 0.78fr) minmax(9.5rem, 0.78fr) minmax(11rem, 11rem);
+    minmax(9.5rem, 0.78fr) minmax(9.5rem, 0.78fr)
+    minmax(var(--contest-directory-action-column), var(--contest-directory-action-column));
   display: grid;
   gap: 0;
 }
@@ -338,15 +341,10 @@ function handleAnnounce(contest: ContestDetailData): void {
 
 .contest-row__actions {
   justify-content: flex-end;
-  flex-wrap: nowrap;
 }
 
 .contest-pagination-tone {
   color: var(--color-text-muted);
-}
-
-.contest-action {
-  min-width: 5.25rem;
 }
 
 @media (max-width: 1023px) {

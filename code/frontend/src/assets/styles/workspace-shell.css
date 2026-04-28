@@ -617,6 +617,40 @@
   justify-content: flex-end;
 }
 
+.ui-row-actions--fixed {
+  --ui-row-action-main-width: 6.75rem;
+  --ui-row-action-button-width: 5.25rem;
+  --ui-row-action-menu-width: 1.95rem;
+  --ui-row-action-gap: var(--ui-action-gap);
+  --ui-row-action-fixed-width: calc(var(--ui-row-action-main-width) + var(--ui-row-action-button-width) + var(--ui-row-action-menu-width) + var(--ui-row-action-gap) * 2);
+  display: grid;
+  grid-template-columns: var(--ui-row-action-main-width) var(--ui-row-action-button-width) var(--ui-row-action-menu-width);
+  gap: 0 var(--ui-row-action-gap);
+  justify-content: flex-end;
+  justify-items: stretch;
+  align-items: center;
+}
+
+.ui-row-actions--fixed > .ui-row-action--main {
+  grid-column: 1;
+}
+
+.ui-row-actions--fixed > .ui-row-action--default {
+  grid-column: 2;
+}
+
+.ui-row-actions--fixed > .ui-row-action--menu {
+  grid-column: 3;
+  justify-self: end;
+}
+
+.ui-row-actions--fixed > :is(.ui-row-action--main, .ui-row-action--default) {
+  width: 100%;
+  min-width: 0;
+  justify-content: center;
+  white-space: nowrap;
+}
+
 .ui-row-actions.is-hoverable {
   opacity: 0.64;
   transition: opacity var(--ui-motion-fast);

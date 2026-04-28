@@ -198,6 +198,25 @@ xl:   1280px  -- 大桌面
   lg: px-5 py-2.5 text-base
 ```
 
+#### 行内操作按钮
+
+列表行内操作默认使用 `.ui-row-actions`。如果同一列表中不同状态的行会显示不同数量的按钮，必须使用固定槽位规范，避免“编辑”、“更多”等稳定入口随按钮数量左右跳动。
+
+- 固定槽位容器：`class="ui-row-actions ui-row-actions--fixed"`
+- 主操作槽：`.ui-row-action--main`，默认宽度 `6.75rem`
+- 常规操作槽：`.ui-row-action--default`，默认宽度 `5.25rem`
+- 更多菜单槽：`.ui-row-action--menu`，默认宽度 `1.95rem`
+- 目录/表格的操作列宽使用 `var(--ui-row-action-fixed-width)`，与槽位总宽保持一致
+- 工具栏、卡片底部操作、按钮数量固定的简单行操作继续使用默认 flex 布局
+
+```html
+<div class="ui-row-actions ui-row-actions--fixed" role="group" aria-label="行操作">
+  <button class="ui-btn ui-btn--sm ui-btn--primary ui-row-action--main">进入</button>
+  <button class="ui-btn ui-btn--sm ui-btn--secondary ui-row-action--default">编辑</button>
+  <CActionMenu class="ui-row-action--menu" />
+</div>
+```
+
 ### 5.2 卡片
 
 ```
