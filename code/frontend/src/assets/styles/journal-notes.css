@@ -122,8 +122,14 @@
   --metric-panel-grid-gap: var(--space-3);
 }
 
+.workspace-hero + :where(.progress-strip, .admin-summary-grid, .manage-summary-grid),
+.contest-ops-hero + .contest-ops-summary {
+  margin-top: var(--workspace-hero-summary-gap, var(--space-5));
+}
+
 .progress-card {
   --metric-panel-padding: var(--space-3-5) var(--space-4) var(--space-3-5);
+  position: relative;
 }
 
 .progress-card--skeleton {
@@ -131,7 +137,7 @@
 }
 
 .progress-card-label {
-  --metric-panel-label-size: var(--font-size-15, 15px);
+  --metric-panel-label-size: var(--font-size-11);
   --metric-panel-label-weight: 800;
   --metric-panel-label-spacing: 0.01em;
   --metric-panel-label-color: color-mix(
@@ -139,6 +145,18 @@
     var(--journal-muted, var(--color-text-secondary)) 88%,
     var(--color-bg-base)
   );
+  display: block;
+  min-height: 1rem;
+  padding-inline-end: var(--space-7);
+}
+
+.progress-card.metric-panel-card .metric-panel-label > :is(svg, .lucide) {
+  position: absolute;
+  top: var(--space-3-5);
+  right: var(--space-4);
+  width: 1rem;
+  height: 1rem;
+  pointer-events: none;
 }
 
 .progress-card-value {
@@ -169,13 +187,13 @@
     );
   --metric-panel-shadow: 0 14px 28px color-mix(in srgb, var(--color-shadow-soft) 55%, transparent);
   --metric-panel-padding: var(--space-4);
-  --metric-panel-label-size: var(--font-size-15, 15px);
+  --metric-panel-label-size: var(--font-size-11);
   --metric-panel-label-weight: 800;
   --metric-panel-label-spacing: 0.01em;
   --metric-panel-value-margin-top: var(--space-2);
   --metric-panel-value-size: var(--font-size-30, 1.875rem);
   --metric-panel-helper-margin-top: var(--space-2);
-  --metric-panel-helper-size: var(--font-size-12, 12px);
+  --metric-panel-helper-size: var(--font-size-13);
   --metric-panel-helper-line-height: 1.7;
 }
 
@@ -216,7 +234,7 @@
     0 14px 34px color-mix(in srgb, var(--color-shadow-soft) 42%, transparent)
   );
   --metric-panel-padding: var(--space-3-5, 0.875rem) var(--space-4, 1rem) var(--space-4, 1rem);
-  --metric-panel-label-size: var(--font-size-15, 15px);
+  --metric-panel-label-size: var(--font-size-11);
   --metric-panel-label-weight: 800;
   --metric-panel-label-spacing: 0.01em;
   --metric-panel-label-color: color-mix(
@@ -249,7 +267,7 @@
     --workspace-shadow-panel,
     0 14px 34px color-mix(in srgb, var(--color-shadow-soft) 42%, transparent)
   );
-  --metric-panel-label-size: var(--font-size-15, 15px);
+  --metric-panel-label-size: var(--font-size-11);
   --metric-panel-label-weight: 800;
   --metric-panel-label-spacing: 0.01em;
   --metric-panel-label-color: var(
@@ -352,7 +370,7 @@
 }
 
 .journal-shell-admin :is(.admin-summary-grid, .manage-summary-grid, .image-summary-grid) > .journal-note .journal-note-label {
-  font-size: var(--metric-panel-label-size, var(--font-size-15, 15px));
+  font-size: var(--metric-panel-label-size, var(--font-size-11));
   font-weight: var(--metric-panel-label-weight, 800);
   letter-spacing: var(--metric-panel-label-spacing, 0.01em);
   text-transform: uppercase;

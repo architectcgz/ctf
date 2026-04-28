@@ -1,0 +1,20 @@
+spec_version: challenge-pack-v1
+slug: <replace-with-slug>
+title: <replace-with-title>
+category: crypto
+difficulty: beginner
+tags:
+- kp:<replace-with-knowledge-point>
+description:
+  file: statement.md
+hints:
+- text: <replace-with-useful-hint>
+  cost: 10
+attachments:
+- path: attachments/challenge.txt
+  name: challenge.txt
+  sha256: <replace-with-real-sha256>
+flag:
+  mode: static
+runtime:
+  type: none

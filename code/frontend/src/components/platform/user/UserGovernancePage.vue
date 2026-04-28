@@ -220,9 +220,6 @@ function handleImportChange(event: Event): void {
             <h1 class="workspace-page-title">
               用户治理台
             </h1>
-            <p class="workspace-page-copy">
-              上面直接查看用户规模和导入回执，下面围绕具体账号完成搜索、筛选、编辑与治理操作。
-            </p>
           </div>
 
           <div class="user-panel-actions">
@@ -255,58 +252,58 @@ function handleImportChange(event: Event): void {
           </div>
         </header>
 
-        <div class="metric-panel-grid metric-panel-grid--premium cols-4">
-          <div class="metric-panel-card metric-panel-card--premium">
-            <div class="metric-panel-label">
+        <div class="admin-summary-grid user-overview-grid progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface">
+          <article class="journal-note progress-card metric-panel-card">
+            <div class="journal-note-label progress-card-label metric-panel-label">
               <span>用户总量</span>
               <Users class="h-4 w-4" />
             </div>
-            <div class="metric-panel-value">
+            <div class="journal-note-value progress-card-value metric-panel-value">
               {{ total.toString().padStart(2, '0') }}
             </div>
-            <div class="metric-panel-helper">
+            <div class="journal-note-helper progress-card-hint metric-panel-helper">
               当前条件下的用户总数
             </div>
-          </div>
+          </article>
 
-          <div class="metric-panel-card metric-panel-card--premium">
-            <div class="metric-panel-label">
+          <article class="journal-note progress-card metric-panel-card">
+            <div class="journal-note-label progress-card-label metric-panel-label">
               <span>活跃账号</span>
               <UserPlus class="h-4 w-4" />
             </div>
-            <div class="metric-panel-value">
+            <div class="journal-note-value progress-card-value metric-panel-value">
               {{ activeCount.toString().padStart(2, '0') }}
             </div>
-            <div class="metric-panel-helper">
+            <div class="journal-note-helper progress-card-hint metric-panel-helper">
               当前活跃状态的账号
             </div>
-          </div>
+          </article>
 
-          <div class="metric-panel-card metric-panel-card--premium">
-            <div class="metric-panel-label">
+          <article class="journal-note progress-card metric-panel-card">
+            <div class="journal-note-label progress-card-label metric-panel-label">
               <span>教师角色</span>
               <GraduationCap class="h-4 w-4" />
             </div>
-            <div class="metric-panel-value">
+            <div class="journal-note-value progress-card-value metric-panel-value">
               {{ teacherCount.toString().padStart(2, '0') }}
             </div>
-            <div class="metric-panel-helper">
+            <div class="journal-note-helper progress-card-hint metric-panel-helper">
               当前页教师账号数量
             </div>
-          </div>
+          </article>
 
-          <div class="metric-panel-card metric-panel-card--premium">
-            <div class="metric-panel-label">
+          <article class="journal-note progress-card metric-panel-card">
+            <div class="journal-note-label progress-card-label metric-panel-label">
               <span>导入回执</span>
               <FileUp class="h-4 w-4" />
             </div>
-            <div class="metric-panel-value">
+            <div class="journal-note-value progress-card-value metric-panel-value">
               {{ props.importResult ? (props.importResult.created + props.importResult.updated).toString().padStart(2, '0') : '00' }}
             </div>
-            <div class="metric-panel-helper">
+            <div class="journal-note-helper progress-card-hint metric-panel-helper">
               {{ importSummary }}
             </div>
-          </div>
+          </article>
         </div>
 
         <section class="workspace-directory-section user-directory-section">
@@ -614,6 +611,7 @@ function handleImportChange(event: Event): void {
   --admin-control-border: color-mix(in srgb, var(--journal-border) 76%, transparent);
   --user-table-border: color-mix(in srgb, var(--journal-border) 72%, transparent);
   --user-row-divider: color-mix(in srgb, var(--journal-border) 58%, transparent);
+  --workspace-line-soft: color-mix(in srgb, var(--color-text-primary) 10%, transparent);
   --journal-note-label-weight: 600;
   --journal-note-label-spacing: 0.15em;
   --journal-note-label-color: var(--journal-muted);
@@ -630,6 +628,11 @@ function handleImportChange(event: Event): void {
   gap: var(--space-3);
 }
 
+.user-overview-head {
+  padding-bottom: var(--space-6);
+  border-bottom: 1px solid var(--workspace-line-soft);
+}
+
 .user-panel-actions {
   display: flex;
   flex-wrap: wrap;
@@ -641,13 +644,6 @@ function handleImportChange(event: Event): void {
 .user-overview-grid {
   --admin-summary-grid-gap: var(--space-3-5);
   --admin-summary-grid-columns: repeat(4, minmax(0, 1fr));
-}
-
-.user-overview-stat {
-  display: flex;
-  min-height: 140px;
-  flex-direction: column;
-  justify-content: space-between;
 }
 
 .user-directory-head {

@@ -9,6 +9,8 @@ import (
 	"github.com/redis/go-redis/v9"
 
 	"ctf-platform/internal/model"
+	contestinfra "ctf-platform/internal/module/contest/infrastructure"
+	"ctf-platform/internal/module/contest/testsupport"
 	rediskeys "ctf-platform/internal/pkg/redis"
 )
 
@@ -122,6 +124,43 @@ func TestStatusUpdaterUpdateStatuses_ClearsAWDRuntimeStateWhenContestEnds(t *tes
 	}
 	if mini.Exists(rediskeys.AWDServiceStatusKey(11)) {
 		t.Fatalf("expected service status key to be cleared")
+	}
+}
+
+func TestStatusUpdaterUpdateStatuses_BlocksAWDRegistrationStartWhenReadinessNotReady(t *testing.T) {
+	db := testsupport.SetupAWDTestDB(t)
+	now := time.Now().UTC()
+	contestID := int64(12)
+	if err := db.Create(&model.Contest{
+		ID:        contestID,
+		Title:     "blocked-awd-start",
+		Mode:      model.ContestModeAWD,
+		Status:    model.ContestStatusRegistration,
+		StartTime: now.Add(-time.Minute),
+		EndTime:   now.Add(time.Hour),
+		CreatedAt: now,
+		UpdatedAt: now,
+	}).Error; err != nil {
+		t.Fatalf("create contest: %v", err)
+	}
+
+	updater := NewStatusUpdater(
+		contestinfra.NewRepository(db),
+		nil,
+		time.Minute,
+		100,
+		30*time.Second,
+		nil,
+		contestinfra.NewAWDRepository(db),
+	)
+	updater.updateStatuses(context.Background())
+
+	var contest model.Contest
+	if err := db.First(&contest, contestID).Error; err != nil {
+		t.Fatalf("load contest: %v", err)
+	}
+	if contest.Status != model.ContestStatusRegistration {
+		t.Fatalf("expected readiness to keep contest in registration, got %q", contest.Status)
 	}
 }
 

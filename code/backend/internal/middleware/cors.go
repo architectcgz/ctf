@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"net/http"
-	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -13,25 +12,29 @@ import (
 )
 
 func CORS(cfg config.CORSConfig) gin.HandlerFunc {
-	allowAllOrigins := len(cfg.AllowOrigins) == 0
 	allowMethods := strings.Join(cfg.AllowMethods, ", ")
 	allowHeaders := strings.Join(cfg.AllowHeaders, ", ")
 	exposeHeaders := strings.Join(cfg.ExposeHeaders, ", ")
 	maxAge := formatMaxAge(cfg.MaxAge)
 
 	return func(c *gin.Context) {
-		origin := c.GetHeader("Origin")
+		origin := strings.TrimSpace(c.GetHeader("Origin"))
 		if origin == "" {
 			c.Next()
 			return
 		}
 
-		if allowAllOrigins {
-			c.Header("Access-Control-Allow-Origin", origin)
-		} else if slices.Contains(cfg.AllowOrigins, origin) {
-			c.Header("Access-Control-Allow-Origin", origin)
-		}
 		c.Header("Vary", "Origin")
+		if !isAllowedOrigin(cfg.AllowOrigins, origin) {
+			if c.Request.Method == http.MethodOptions {
+				c.AbortWithStatus(http.StatusForbidden)
+				return
+			}
+			c.Next()
+			return
+		}
+
+		c.Header("Access-Control-Allow-Origin", origin)
 		c.Header("Access-Control-Allow-Methods", allowMethods)
 		c.Header("Access-Control-Allow-Headers", allowHeaders)
 		c.Header("Access-Control-Expose-Headers", exposeHeaders)
@@ -48,6 +51,15 @@ func CORS(cfg config.CORSConfig) gin.HandlerFunc {
 		}
 		c.Next()
 	}
+}
+
+func isAllowedOrigin(allowOrigins []string, origin string) bool {
+	for _, item := range allowOrigins {
+		if strings.TrimSpace(item) == origin {
+			return true
+		}
+	}
+	return false
 }
 
 func formatMaxAge(duration time.Duration) string {

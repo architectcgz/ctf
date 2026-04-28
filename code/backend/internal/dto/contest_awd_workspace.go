@@ -23,6 +23,7 @@ type ContestAWDWorkspaceTeamResp struct {
 type ContestAWDWorkspaceServiceResp struct {
 	ServiceID      int64                `json:"service_id"`
 	ChallengeID    int64                `json:"challenge_id"`
+	InstanceID     int64                `json:"instance_id,omitempty"`
 	AccessURL      string               `json:"access_url,omitempty"`
 	ServiceStatus  string               `json:"service_status,omitempty"`
 	CheckerType    model.AWDCheckerType `json:"checker_type,omitempty"`
@@ -40,9 +41,9 @@ type ContestAWDWorkspaceTargetTeamResp struct {
 }
 
 type ContestAWDWorkspaceTargetServiceResp struct {
-	ServiceID   int64  `json:"service_id"`
-	ChallengeID int64  `json:"challenge_id"`
-	AccessURL   string `json:"access_url,omitempty"`
+	ServiceID   int64 `json:"service_id"`
+	ChallengeID int64 `json:"challenge_id"`
+	Reachable   bool  `json:"reachable"`
 }
 
 type ContestAWDWorkspaceRecentEventResp struct {

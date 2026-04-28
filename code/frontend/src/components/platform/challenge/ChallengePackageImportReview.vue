@@ -219,7 +219,7 @@ const metadata = computed(() => [
 .import-review__primary {
   border: 1px solid color-mix(in srgb, var(--journal-accent) 18%, transparent);
   background: var(--journal-accent);
-  color: #fff;
+  color: var(--color-bg-base);
 }
 
 .import-review__primary:disabled {

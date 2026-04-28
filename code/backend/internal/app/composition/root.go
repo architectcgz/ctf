@@ -144,18 +144,12 @@ func (j BackgroundJob) Start(ctx context.Context) error {
 	if j.start == nil {
 		return nil
 	}
-	if ctx == nil {
-		ctx = context.Background()
-	}
 	return j.start(ctx)
 }
 
 func (j BackgroundJob) Stop(ctx context.Context) error {
 	if j.stop == nil {
 		return nil
-	}
-	if ctx == nil {
-		ctx = context.Background()
 	}
 	return j.stop(ctx)
 }

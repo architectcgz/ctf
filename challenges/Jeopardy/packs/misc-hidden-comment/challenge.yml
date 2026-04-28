@@ -1,0 +1,32 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: misc-hidden-comment
+  title: "Misc 入门：注释里的便签"
+  category: misc
+  difficulty: beginner
+  points: 100
+  tags:
+    - kp:html-comment
+    - kp:base64
+
+content:
+  statement: statement.md
+  attachments:
+    - path: attachments/page.html
+      name: page.html
+
+flag:
+  type: static
+  prefix: flag
+  value: flag{misc_comment_note}
+
+hints:
+  - level: 1
+    title: Hint 1
+    cost_points: 10
+    content: "浏览器展示出来的内容不一定包含全部信息，源码注释也要看。"
+
+runtime:
+  type: none

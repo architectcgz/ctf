@@ -2,6 +2,11 @@ import { describe, expect, it } from 'vitest'
 
 import appLayoutSource from '../AppLayout.vue?raw'
 import routerSource from '../../../router/index.ts?raw'
+import platformRoutesSource from '../../../router/routes/platformRoutes.ts?raw'
+import studentRoutesSource from '../../../router/routes/studentRoutes.ts?raw'
+import teacherRoutesSource from '../../../router/routes/teacherRoutes.ts?raw'
+
+const routeSources = [routerSource, platformRoutesSource, studentRoutesSource, teacherRoutesSource].join('\n')
 
 describe('AppLayout workspace shell', () => {
   it('switches academy and platform routes into a shared backoffice shell while leaving student routes on the default layout', () => {
@@ -16,14 +21,21 @@ describe('AppLayout workspace shell', () => {
   })
 
   it('owns full-bleed page spacing and drives it from route meta', () => {
-    expect(appLayoutSource).toContain('<RouterView v-slot="{ Component }">')
+    expect(appLayoutSource).toContain('<RouterView v-slot="{ Component, route: resolvedRoute }">')
     expect(appLayoutSource).toContain('workspace-page')
     expect(appLayoutSource).toContain('workspace-page--bleed')
     expect(appLayoutSource).toContain('pageShellClass')
     expect(appLayoutSource).toContain('workspace-route-root')
     expect(appLayoutSource).toContain('workspace-route-root--bleed')
-    expect(routerSource).toContain("contentLayout: 'bleed'")
-    expect((routerSource.match(/contentLayout: 'bleed'/g) ?? []).length).toBeGreaterThanOrEqual(30)
+    expect(routeSources).toContain("contentLayout: 'bleed'")
+    expect((routeSources.match(/contentLayout: 'bleed'/g) ?? []).length).toBeGreaterThanOrEqual(30)
+  })
+
+  it('wraps workspace routes in the shared page transition without animating query-only changes', () => {
+    expect(appLayoutSource).toContain('<Transition')
+    expect(appLayoutSource).toContain('name="workspace-route"')
+    expect(appLayoutSource).toContain('mode="out-in"')
+    expect(appLayoutSource).toContain(':key="resolvedRoute.path"')
   })
 
   it('stretches full-bleed route roots so wide screens do not expose main shell gaps', () => {

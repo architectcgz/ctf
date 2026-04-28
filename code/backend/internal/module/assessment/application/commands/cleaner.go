@@ -80,7 +80,7 @@ func (c *Cleaner) runOnce(timeout time.Duration) {
 
 func (c *Cleaner) Stop(ctx context.Context) error {
 	if ctx == nil {
-		ctx = context.Background()
+		return errors.New("assessment cleaner stop requires context")
 	}
 	c.cancel()
 	stopped := c.cron.Stop()

@@ -12,7 +12,9 @@ import (
 )
 
 func (s *ContestService) CreateContest(ctx context.Context, req *dto.CreateContestReq) (*dto.ContestResp, error) {
-	if !req.EndTime.After(req.StartTime) {
+	startTime := domain.NormalizeContestTime(req.StartTime)
+	endTime := domain.NormalizeContestTime(req.EndTime)
+	if !endTime.After(startTime) {
 		return nil, errcode.ErrInvalidTimeRange
 	}
 
@@ -20,8 +22,8 @@ func (s *ContestService) CreateContest(ctx context.Context, req *dto.CreateConte
 		Title:       req.Title,
 		Description: req.Description,
 		Mode:        req.Mode,
-		StartTime:   req.StartTime,
-		EndTime:     req.EndTime,
+		StartTime:   startTime,
+		EndTime:     endTime,
 		Status:      model.ContestStatusDraft,
 	}
 

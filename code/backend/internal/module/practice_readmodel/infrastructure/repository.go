@@ -15,8 +15,5 @@ func NewRepository(db *gorm.DB) *Repository {
 }
 
 func (r *Repository) dbWithContext(ctx context.Context) *gorm.DB {
-	if ctx == nil {
-		ctx = context.Background()
-	}
 	return r.db.WithContext(ctx)
 }

@@ -68,22 +68,13 @@ func (r *Repository) WithDB(db *gorm.DB) *Repository {
 	return &Repository{db: db}
 }
 
-func (r *Repository) FindByID(id int64) (*model.Instance, error) {
-	var instance model.Instance
-	err := r.db.Where("id = ?", id).First(&instance).Error
-	if err != nil {
-		return nil, err
-	}
-	return &instance, nil
+func (r *Repository) dbWithContext(ctx context.Context) *gorm.DB {
+	return r.db.WithContext(ctx)
 }
 
-func (r *Repository) FindByIDWithContext(ctx context.Context, id int64) (*model.Instance, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
+func (r *Repository) FindByID(ctx context.Context, id int64) (*model.Instance, error) {
 	var instance model.Instance
-	err := r.db.WithContext(ctx).Where("id = ?", id).First(&instance).Error
+	err := r.dbWithContext(ctx).Where("id = ?", id).First(&instance).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
@@ -104,17 +95,17 @@ func (r *Repository) FindUserByID(ctx context.Context, userID int64) (*model.Use
 	return &user, nil
 }
 
-func (r *Repository) FindChallengeByID(challengeID int64) (*model.Challenge, error) {
+func (r *Repository) FindChallengeByID(ctx context.Context, challengeID int64) (*model.Challenge, error) {
 	var challenge model.Challenge
-	if err := r.db.Where("id = ?", challengeID).First(&challenge).Error; err != nil {
+	if err := r.dbWithContext(ctx).Where("id = ?", challengeID).First(&challenge).Error; err != nil {
 		return nil, err
 	}
 	return &challenge, nil
 }
 
-func (r *Repository) FindByUserAndChallenge(userID, challengeID int64) (*model.Instance, error) {
+func (r *Repository) FindByUserAndChallenge(ctx context.Context, userID, challengeID int64) (*model.Instance, error) {
 	var instance model.Instance
-	err := r.db.Where("user_id = ? AND contest_id IS NULL AND team_id IS NULL AND challenge_id = ? AND status IN ?", userID, challengeID,
+	err := r.dbWithContext(ctx).Where("user_id = ? AND contest_id IS NULL AND team_id IS NULL AND challenge_id = ? AND status IN ?", userID, challengeID,
 		[]string{model.InstanceStatusPending, model.InstanceStatusCreating, model.InstanceStatusRunning}).
 		First(&instance).Error
 	if err != nil {
@@ -126,18 +117,18 @@ func (r *Repository) FindByUserAndChallenge(userID, challengeID int64) (*model.I
 	return &instance, nil
 }
 
-func (r *Repository) FindByContestUserID(contestID, userID int64) ([]*model.Instance, error) {
+func (r *Repository) FindByContestUserID(ctx context.Context, contestID, userID int64) ([]*model.Instance, error) {
 	var instances []*model.Instance
-	err := r.db.Where("contest_id = ? AND user_id = ? AND team_id IS NULL AND status IN ?", contestID, userID,
+	err := r.dbWithContext(ctx).Where("contest_id = ? AND user_id = ? AND team_id IS NULL AND status IN ?", contestID, userID,
 		[]string{model.InstanceStatusPending, model.InstanceStatusCreating, model.InstanceStatusRunning}).
 		Order("created_at DESC").
 		Find(&instances).Error
 	return instances, err
 }
 
-func (r *Repository) FindByContestUserAndChallenge(contestID, userID, challengeID int64) (*model.Instance, error) {
+func (r *Repository) FindByContestUserAndChallenge(ctx context.Context, contestID, userID, challengeID int64) (*model.Instance, error) {
 	var instance model.Instance
-	err := r.db.Where("contest_id = ? AND user_id = ? AND team_id IS NULL AND challenge_id = ? AND status IN ?",
+	err := r.dbWithContext(ctx).Where("contest_id = ? AND user_id = ? AND team_id IS NULL AND challenge_id = ? AND status IN ?",
 		contestID, userID, challengeID, []string{model.InstanceStatusPending, model.InstanceStatusCreating, model.InstanceStatusRunning}).
 		First(&instance).Error
 	if err != nil {
@@ -149,18 +140,18 @@ func (r *Repository) FindByContestUserAndChallenge(contestID, userID, challengeI
 	return &instance, nil
 }
 
-func (r *Repository) FindByContestTeamID(contestID, teamID int64) ([]*model.Instance, error) {
+func (r *Repository) FindByContestTeamID(ctx context.Context, contestID, teamID int64) ([]*model.Instance, error) {
 	var instances []*model.Instance
-	err := r.db.Where("contest_id = ? AND team_id = ? AND status IN ?", contestID, teamID,
+	err := r.dbWithContext(ctx).Where("contest_id = ? AND team_id = ? AND status IN ?", contestID, teamID,
 		[]string{model.InstanceStatusPending, model.InstanceStatusCreating, model.InstanceStatusRunning}).
 		Order("created_at DESC").
 		Find(&instances).Error
 	return instances, err
 }
 
-func (r *Repository) FindByContestTeamAndChallenge(contestID, teamID, challengeID int64) (*model.Instance, error) {
+func (r *Repository) FindByContestTeamAndChallenge(ctx context.Context, contestID, teamID, challengeID int64) (*model.Instance, error) {
 	var instance model.Instance
-	err := r.db.Where("contest_id = ? AND team_id = ? AND challenge_id = ? AND status IN ?",
+	err := r.dbWithContext(ctx).Where("contest_id = ? AND team_id = ? AND challenge_id = ? AND status IN ?",
 		contestID, teamID, challengeID, []string{model.InstanceStatusPending, model.InstanceStatusCreating, model.InstanceStatusRunning}).
 		First(&instance).Error
 	if err != nil {
@@ -172,8 +163,8 @@ func (r *Repository) FindByContestTeamAndChallenge(contestID, teamID, challengeI
 	return &instance, nil
 }
 
-func (r *Repository) RefreshInstanceExpiry(instanceID int64, expiresAt time.Time) error {
-	return r.db.Model(&model.Instance{}).
+func (r *Repository) RefreshInstanceExpiry(ctx context.Context, instanceID int64, expiresAt time.Time) error {
+	return r.dbWithContext(ctx).Model(&model.Instance{}).
 		Where("id = ?", instanceID).
 		Updates(map[string]any{
 			"expires_at": expiresAt,
@@ -181,23 +172,27 @@ func (r *Repository) RefreshInstanceExpiry(instanceID int64, expiresAt time.Time
 		}).Error
 }
 
-func (r *Repository) UpdateStatusAndReleasePort(id int64, status string) error {
+func (r *Repository) UpdateStatusAndReleasePort(ctx context.Context, id int64, status string) error {
 	if id <= 0 {
 		return nil
 	}
 
-	return r.db.Transaction(func(tx *gorm.DB) error {
+	return r.dbWithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		var instance model.Instance
 		if err := tx.Select("id", "host_port").Where("id = ?", id).First(&instance).Error; err != nil {
 			return err
 		}
 
+		updates := map[string]any{
+			"status":     status,
+			"updated_at": time.Now(),
+		}
+		if status == model.InstanceStatusStopped || status == model.InstanceStatusExpired {
+			updates["destroyed_at"] = time.Now()
+		}
 		if err := tx.Model(&model.Instance{}).
 			Where("id = ?", id).
-			Updates(map[string]any{
-				"status":     status,
-				"updated_at": time.Now(),
-			}).Error; err != nil {
+			Updates(updates).Error; err != nil {
 			return err
 		}
 
@@ -212,8 +207,8 @@ func (r *Repository) UpdateStatusAndReleasePort(id int64, status string) error {
 	})
 }
 
-func (r *Repository) UpdateRuntime(instance *model.Instance) error {
-	return r.db.Model(&model.Instance{}).
+func (r *Repository) UpdateRuntime(ctx context.Context, instance *model.Instance) error {
+	return r.dbWithContext(ctx).Model(&model.Instance{}).
 		Where("id = ?", instance.ID).
 		Updates(map[string]any{
 			"contest_id":      instance.ContestID,
@@ -317,6 +312,7 @@ func (r *Repository) ListVisibleByUser(ctx context.Context, userID int64) ([]run
 		metadata := buildRuntimeInstanceMetadata(row.ContestMode, row.ServiceSnapshot, row.ServiceName, row.ChallengeTitle, row.Category, row.Difficulty, row.FlagType)
 		items[idx] = runtimeports.UserVisibleInstanceRow{
 			ID:             row.ID,
+			ContestMode:    row.ContestMode,
 			ChallengeID:    row.ChallengeID,
 			ChallengeTitle: metadata.Title,
 			Category:       metadata.Category,
@@ -334,9 +330,9 @@ func (r *Repository) ListVisibleByUser(ctx context.Context, userID int64) ([]run
 	return items, nil
 }
 
-func (r *Repository) FindExpired() ([]*model.Instance, error) {
+func (r *Repository) FindExpired(ctx context.Context) ([]*model.Instance, error) {
 	var instances []*model.Instance
-	err := r.db.Where("status = ? AND expires_at < ?",
+	err := r.dbWithContext(ctx).Where("status = ? AND expires_at < ?",
 		model.InstanceStatusRunning, time.Now()).
 		Find(&instances).Error
 	return instances, err
@@ -459,8 +455,8 @@ func buildRuntimeInstanceMetadata(contestMode, serviceSnapshot, serviceName, cha
 	return metadata
 }
 
-func (r *Repository) UpdateExtend(id int64, expiresAt time.Time, extendCount int) error {
-	return r.db.Model(&model.Instance{}).
+func (r *Repository) UpdateExtend(ctx context.Context, id int64, expiresAt time.Time, extendCount int) error {
+	return r.dbWithContext(ctx).Model(&model.Instance{}).
 		Where("id = ?", id).
 		Updates(map[string]interface{}{
 			"expires_at":   expiresAt,
@@ -468,8 +464,8 @@ func (r *Repository) UpdateExtend(id int64, expiresAt time.Time, extendCount int
 		}).Error
 }
 
-func (r *Repository) AtomicExtend(id int64, userID int64, maxExtends int, duration time.Duration) error {
-	result := r.db.Model(&model.Instance{}).
+func (r *Repository) AtomicExtend(ctx context.Context, id int64, userID int64, maxExtends int, duration time.Duration) error {
+	result := r.dbWithContext(ctx).Model(&model.Instance{}).
 		Where("id = ? AND user_id = ? AND status = ? AND extend_count < ?",
 			id, userID, model.InstanceStatusRunning, maxExtends).
 		Updates(map[string]interface{}{
@@ -485,15 +481,7 @@ func (r *Repository) AtomicExtend(id int64, userID int64, maxExtends int, durati
 	return nil
 }
 
-func (r *Repository) AtomicExtendByID(id int64, maxExtends int, duration time.Duration) error {
-	return r.AtomicExtendByIDWithContext(context.Background(), id, maxExtends, duration)
-}
-
-func (r *Repository) AtomicExtendByIDWithContext(ctx context.Context, id int64, maxExtends int, duration time.Duration) error {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
+func (r *Repository) AtomicExtendByID(ctx context.Context, id int64, maxExtends int, duration time.Duration) error {
 	result := r.db.WithContext(ctx).Model(&model.Instance{}).
 		Where("id = ? AND status = ? AND extend_count < ?",
 			id, model.InstanceStatusRunning, maxExtends).
@@ -510,18 +498,15 @@ func (r *Repository) AtomicExtendByIDWithContext(ctx context.Context, id int64, 
 	return nil
 }
 
-func (r *Repository) CountRunning() (int64, error) {
+func (r *Repository) CountRunning(ctx context.Context) (int64, error) {
 	var count int64
-	err := r.db.Model(&model.Instance{}).
+	err := r.db.WithContext(ctx).Model(&model.Instance{}).
 		Where("status = ?", model.InstanceStatusRunning).
 		Count(&count).Error
 	return count, err
 }
 
-func (r *Repository) ListPendingInstancesWithContext(ctx context.Context, limit int) ([]*model.Instance, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
+func (r *Repository) ListPendingInstances(ctx context.Context, limit int) ([]*model.Instance, error) {
 	if limit <= 0 {
 		return []*model.Instance{}, nil
 	}
@@ -538,11 +523,7 @@ func (r *Repository) ListPendingInstancesWithContext(ctx context.Context, limit 
 	return instances, nil
 }
 
-func (r *Repository) TryTransitionStatusWithContext(ctx context.Context, id int64, fromStatus, toStatus string) (bool, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
+func (r *Repository) TryTransitionStatus(ctx context.Context, id int64, fromStatus, toStatus string) (bool, error) {
 	result := r.db.WithContext(ctx).Model(&model.Instance{}).
 		Where("id = ? AND status = ?", id, fromStatus).
 		Updates(map[string]any{
@@ -555,10 +536,7 @@ func (r *Repository) TryTransitionStatusWithContext(ctx context.Context, id int6
 	return result.RowsAffected > 0, nil
 }
 
-func (r *Repository) CountInstancesByStatusWithContext(ctx context.Context, statuses []string) (int64, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
+func (r *Repository) CountInstancesByStatus(ctx context.Context, statuses []string) (int64, error) {
 	if len(statuses) == 0 {
 		return 0, nil
 	}
@@ -570,9 +548,9 @@ func (r *Repository) CountInstancesByStatusWithContext(ctx context.Context, stat
 	return count, err
 }
 
-func (r *Repository) ReserveAvailablePort(start, end int) (int, error) {
+func (r *Repository) ReserveAvailablePort(ctx context.Context, start, end int) (int, error) {
 	for port := start; port < end; port++ {
-		if err := r.db.Create(&model.PortAllocation{Port: port}).Error; err != nil {
+		if err := r.dbWithContext(ctx).Create(&model.PortAllocation{Port: port}).Error; err != nil {
 			if isPortAllocationConflict(err) {
 				continue
 			}
@@ -583,8 +561,8 @@ func (r *Repository) ReserveAvailablePort(start, end int) (int, error) {
 	return 0, fmt.Errorf("no available port in range %d-%d", start, end)
 }
 
-func (r *Repository) BindReservedPort(port int, instanceID int64) error {
-	return r.db.Model(&model.PortAllocation{}).
+func (r *Repository) BindReservedPort(ctx context.Context, port int, instanceID int64) error {
+	return r.dbWithContext(ctx).Model(&model.PortAllocation{}).
 		Where("port = ?", port).
 		Updates(map[string]any{
 			"instance_id": instanceID,
@@ -592,19 +570,19 @@ func (r *Repository) BindReservedPort(port int, instanceID int64) error {
 		}).Error
 }
 
-func (r *Repository) ReleasePort(port int) error {
+func (r *Repository) ReleasePort(ctx context.Context, port int) error {
 	if port <= 0 {
 		return nil
 	}
-	return r.db.Where("port = ?", port).Delete(&model.PortAllocation{}).Error
+	return r.dbWithContext(ctx).Where("port = ?", port).Delete(&model.PortAllocation{}).Error
 }
 
-func (r *Repository) ListActiveContainerIDs() ([]string, error) {
+func (r *Repository) ListActiveContainerIDs(ctx context.Context) ([]string, error) {
 	var items []struct {
 		ContainerID    string
 		RuntimeDetails string
 	}
-	if err := r.db.Model(&model.Instance{}).
+	if err := r.dbWithContext(ctx).Model(&model.Instance{}).
 		Where("status IN ?", []string{model.InstanceStatusCreating, model.InstanceStatusRunning}).
 		Select("container_id, runtime_details").
 		Scan(&items).Error; err != nil {
@@ -634,16 +612,16 @@ func (r *Repository) ListActiveContainerIDs() ([]string, error) {
 	return result, nil
 }
 
-func (r *Repository) ListAllocatedPorts() ([]int, error) {
+func (r *Repository) ListAllocatedPorts(ctx context.Context) ([]int, error) {
 	var ports []int
-	if err := r.db.Model(&model.PortAllocation{}).Pluck("port", &ports).Error; err == nil {
+	if err := r.dbWithContext(ctx).Model(&model.PortAllocation{}).Pluck("port", &ports).Error; err == nil {
 		return ports, nil
 	} else if !strings.Contains(strings.ToLower(err.Error()), "no such table") && !strings.Contains(strings.ToLower(err.Error()), "does not exist") {
 		return nil, err
 	}
 
 	var accessURLs []string
-	if err := r.db.Model(&model.Instance{}).
+	if err := r.dbWithContext(ctx).Model(&model.Instance{}).
 		Where("status IN ?", []string{model.InstanceStatusCreating, model.InstanceStatusRunning}).
 		Where("access_url <> ''").
 		Pluck("access_url", &accessURLs).Error; err != nil {

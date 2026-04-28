@@ -14,6 +14,7 @@ func (u *AWDRoundUpdater) UpdateRoundsAt(ctx context.Context, now time.Time) {
 	if u.repo == nil {
 		return
 	}
+	now = now.UTC()
 	u.withSchedulerLock(ctx, func() {
 		recentCutoff := now.Add(-u.cfg.RoundInterval)
 		contests, err := u.repo.ListSchedulableAWDContests(ctx, now, recentCutoff, u.cfg.SchedulerBatchSize)

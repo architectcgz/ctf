@@ -10,12 +10,13 @@ import (
 
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
+	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestports "ctf-platform/internal/module/contest/ports"
 )
 
 const (
-	defaultAWDRoundAttackScore  = 50
-	defaultAWDRoundDefenseScore = 50
+	defaultAWDRoundAttackScore  = contestdomain.AWDDefaultRoundAttackScore
+	defaultAWDRoundDefenseScore = contestdomain.AWDDefaultRoundDefenseScore
 )
 
 type AWDRoundUpdater struct {
@@ -75,7 +76,7 @@ func NewAWDRoundUpdater(
 }
 
 func (u *AWDRoundUpdater) Start(ctx context.Context) {
-	u.UpdateRoundsAt(ctx, time.Now())
+	u.UpdateRoundsAt(ctx, time.Now().UTC())
 
 	ticker := time.NewTicker(u.cfg.SchedulerInterval)
 	defer ticker.Stop()
@@ -85,7 +86,7 @@ func (u *AWDRoundUpdater) Start(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			u.UpdateRoundsAt(ctx, time.Now())
+			u.UpdateRoundsAt(ctx, time.Now().UTC())
 		}
 	}
 }

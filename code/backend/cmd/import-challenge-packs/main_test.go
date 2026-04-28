@@ -93,6 +93,108 @@ extensions:
 	}
 }
 
+func TestImportOnePackSupportsDynamicFlag(t *testing.T) {
+	db := setupImportTestDB(t)
+
+	packDir := t.TempDir()
+	mustWriteFile(t, filepath.Join(packDir, "challenge.yml"), []byte(`
+api_version: v1
+kind: challenge
+meta:
+  slug: pwn-length-gate
+  title: Pwn Length Gate
+  category: pwn
+  difficulty: beginner
+  points: 100
+content:
+  statement: statement.md
+  attachments: []
+flag:
+  type: dynamic
+  prefix: flag
+runtime:
+  type: container
+  image:
+    ref: ctf/pwn-length-gate:latest
+  service:
+    protocol: tcp
+    port: 8080
+`))
+	mustWriteFile(t, filepath.Join(packDir, "statement.md"), []byte("# Pwn Length Gate\n\nConnect to the TCP service."))
+
+	created, _, err := importOnePack(db, packDir, false, false)
+	if err != nil {
+		t.Fatalf("importOnePack() error = %v", err)
+	}
+	if !created {
+		t.Fatalf("expected challenge to be created")
+	}
+
+	var challenge model.Challenge
+	if err := db.Where("package_slug = ?", "pwn-length-gate").First(&challenge).Error; err != nil {
+		t.Fatalf("find imported challenge: %v", err)
+	}
+	if challenge.FlagType != model.FlagTypeDynamic {
+		t.Fatalf("expected dynamic flag type, got %s", challenge.FlagType)
+	}
+	if challenge.FlagHash != "" || challenge.FlagSalt != "" || challenge.FlagRegex != "" {
+		t.Fatalf("expected dynamic flag to clear static/regex fields, got hash=%q salt=%q regex=%q", challenge.FlagHash, challenge.FlagSalt, challenge.FlagRegex)
+	}
+	if challenge.TargetProtocol != model.ChallengeTargetProtocolTCP || challenge.TargetPort != 8080 {
+		t.Fatalf("unexpected target service: protocol=%q port=%d", challenge.TargetProtocol, challenge.TargetPort)
+	}
+}
+
+func TestImportOnePackUpdatesChangedFlagType(t *testing.T) {
+	db := setupImportTestDB(t)
+
+	packDir := t.TempDir()
+	writeChallengePackFixture(t, packDir, "mode-switch", "Mode Switch", 100)
+	if _, _, err := importOnePack(db, packDir, false, false); err != nil {
+		t.Fatalf("first importOnePack() error = %v", err)
+	}
+
+	mustWriteFile(t, filepath.Join(packDir, "challenge.yml"), []byte(`
+api_version: v1
+kind: challenge
+meta:
+  slug: mode-switch
+  title: Mode Switch
+  category: web
+  difficulty: easy
+  points: 100
+content:
+  statement: statement.md
+  attachments: []
+flag:
+  type: dynamic
+  prefix: flag
+runtime:
+  type: container
+  image:
+    ref: ctf/web-sqli-101:latest
+`))
+
+	created, _, err := importOnePack(db, packDir, false, false)
+	if err != nil {
+		t.Fatalf("second importOnePack() error = %v", err)
+	}
+	if created {
+		t.Fatalf("expected second import to update existing challenge")
+	}
+
+	var challenge model.Challenge
+	if err := db.Where("package_slug = ?", "mode-switch").First(&challenge).Error; err != nil {
+		t.Fatalf("find imported challenge: %v", err)
+	}
+	if challenge.FlagType != model.FlagTypeDynamic {
+		t.Fatalf("expected flag type to change to dynamic, got %s", challenge.FlagType)
+	}
+	if challenge.FlagHash != "" || challenge.FlagSalt != "" {
+		t.Fatalf("expected changed dynamic flag to clear static fields, got hash=%q salt=%q", challenge.FlagHash, challenge.FlagSalt)
+	}
+}
+
 func TestImportOnePackUpsertsByPackageSlug(t *testing.T) {
 	db := setupImportTestDB(t)
 

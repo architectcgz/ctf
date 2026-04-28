@@ -11,6 +11,7 @@ import {
   type AdminUserUpdatePayload,
 } from '@/api/admin'
 import type { AdminUserImportData, AdminUserListItem, UserStatus } from '@/api/contracts'
+import { ApiError } from '@/api/request'
 import { usePagination } from '@/composables/usePagination'
 import { useToast } from '@/composables/useToast'
 import type { UserRole } from '@/utils/constants'
@@ -78,6 +79,15 @@ export function usePlatformUsers() {
   const scheduleTextFilterRefresh = useDebounceFn(() => {
     void pagination.changePage(1)
   }, 250) as DebouncedRefresh
+
+  function notifyUserActionError(error: unknown, fallback: string): void {
+    console.error(fallback, error)
+    if (error instanceof ApiError) {
+      return
+    }
+    const message = error instanceof Error && error.message.trim() ? error.message : fallback
+    toast.error(message)
+  }
 
   watch([keyword, studentNo, teacherNo], () => {
     scheduleTextFilterRefresh()
@@ -148,21 +158,34 @@ export function usePlatformUsers() {
 
       dialogOpen.value = false
       await pagination.refresh()
+    } catch (error) {
+      notifyUserActionError(
+        error,
+        editingUserId.value ? '用户更新失败，请稍后重试' : '用户创建失败，请稍后重试'
+      )
     } finally {
       saving.value = false
     }
   }
 
   async function removeUser(user: AdminUserListItem) {
-    await deleteUser(user.id)
-    toast.success(`已删除用户 ${user.username}`)
-    await pagination.refresh()
+    try {
+      await deleteUser(user.id)
+      toast.success(`已删除用户 ${user.username}`)
+      await pagination.refresh()
+    } catch (error) {
+      notifyUserActionError(error, `删除用户失败：${user.username}`)
+    }
   }
 
   async function importUserFile(file: File) {
-    importResult.value = await importUsers(file)
-    toast.success('批量导入已完成')
-    await pagination.refresh()
+    try {
+      importResult.value = await importUsers(file)
+      toast.success('批量导入已完成')
+      await pagination.refresh()
+    } catch (error) {
+      notifyUserActionError(error, '批量导入失败，请稍后重试')
+    }
   }
 
   return {

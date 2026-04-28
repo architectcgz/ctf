@@ -67,7 +67,7 @@ describe('additional error views', () => {
 
   it('renders server-side failure pages with back-first and workspace recovery actions', () => {
     const authStore = useAuthStore()
-    authStore.setAuth({ id: 'stu-1', username: 'alice', role: 'student' }, 'token')
+    authStore.setAuth({ id: 'stu-1', username: 'alice', role: 'student' })
 
     const pages = [
       { component: InternalServerErrorView, code: '500', text: '系统内部错误' },
@@ -104,7 +104,7 @@ describe('additional error views', () => {
     window.history.pushState({}, '', '/500?from=%2Fchallenges%2F5')
     const backSpy = vi.spyOn(window.history, 'back').mockImplementation(() => undefined)
     const authStore = useAuthStore()
-    authStore.setAuth({ id: 'stu-1', username: 'alice', role: 'student' }, 'token')
+    authStore.setAuth({ id: 'stu-1', username: 'alice', role: 'student' })
 
     const wrapper = mount(InternalServerErrorView, {
       global: {
@@ -126,7 +126,7 @@ describe('additional error views', () => {
     vi.mocked(getNavigationType).mockReturnValue('reload')
     window.history.replaceState({}, '', '/500?from=%2Fchallenges%2F5')
     const authStore = useAuthStore()
-    authStore.setAuth({ id: 'stu-1', username: 'alice', role: 'student' }, 'token')
+    authStore.setAuth({ id: 'stu-1', username: 'alice', role: 'student' })
 
     mount(InternalServerErrorView, {
       global: {

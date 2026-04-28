@@ -3,6 +3,7 @@ import { normalizeInstanceData, type RawInstanceData } from './instance'
 
 import type {
   AWDAttackLogData,
+  AWDDefenseSSHAccessData,
   AWDRoundData,
   ContestAnnouncement,
   ContestAWDWorkspaceData,
@@ -92,18 +93,21 @@ interface RawContestAWDWorkspaceTeamData extends Omit<ContestAWDWorkspaceTeamDat
 
 interface RawContestAWDWorkspaceServiceData extends Omit<
   ContestAWDWorkspaceServiceData,
-  'service_id' | 'challenge_id'
+  'service_id' | 'challenge_id' | 'instance_id'
 > {
   service_id?: string | number
   challenge_id: string | number
+  instance_id?: string | number
 }
 
 interface RawContestAWDWorkspaceTargetServiceData extends Omit<
   ContestAWDWorkspaceTargetServiceData,
-  'service_id' | 'challenge_id'
+  'service_id' | 'challenge_id' | 'reachable'
 > {
   service_id?: string | number
   challenge_id: string | number
+  reachable?: boolean
+  access_url?: string
 }
 
 interface RawContestAWDWorkspaceTargetTeamData extends Omit<
@@ -221,6 +225,7 @@ function normalizeContestAWDWorkspaceService(
     ...item,
     service_id: item.service_id == null ? undefined : String(item.service_id),
     challenge_id: String(item.challenge_id),
+    instance_id: item.instance_id == null ? undefined : String(item.instance_id),
   }
 }
 
@@ -228,9 +233,9 @@ function normalizeContestAWDWorkspaceTargetService(
   item: RawContestAWDWorkspaceTargetServiceData
 ): ContestAWDWorkspaceTargetServiceData {
   return {
-    ...item,
     service_id: item.service_id == null ? undefined : String(item.service_id),
     challenge_id: String(item.challenge_id),
+    reachable: item.reachable ?? Boolean(item.access_url),
   }
 }
 
@@ -389,6 +394,27 @@ export async function submitContestAWDAttack(
     data,
   })
   return normalizeAWDAttackLog(response)
+}
+
+export async function requestContestAWDTargetAccess(
+  contestId: string,
+  serviceId: string,
+  victimTeamId: string
+): Promise<{ access_url: string }> {
+  return request<{ access_url: string }>({
+    method: 'POST',
+    url: `/contests/${encodeURIComponent(contestId)}/awd/services/${encodeURIComponent(serviceId)}/targets/${encodeURIComponent(victimTeamId)}/access`,
+  })
+}
+
+export async function requestContestAWDDefenseSSH(
+  contestId: string,
+  serviceId: string
+): Promise<AWDDefenseSSHAccessData> {
+  return request<AWDDefenseSSHAccessData>({
+    method: 'POST',
+    url: `/contests/${encodeURIComponent(contestId)}/awd/services/${encodeURIComponent(serviceId)}/defense/ssh`,
+  })
 }
 
 export async function kickTeamMember(contestId: string, teamId: string, userId: string) {

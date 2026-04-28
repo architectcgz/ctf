@@ -4,7 +4,12 @@ import { describe, expect, it, vi } from 'vitest'
 import EnvironmentTemplateLibrary from '../EnvironmentTemplateLibrary.vue'
 import ChallengeTopologyStudioPage from '@/components/platform/topology/ChallengeTopologyStudioPage.vue'
 import challengeTopologyStudioPageSource from '@/components/platform/topology/ChallengeTopologyStudioPage.vue?raw'
+import topologyConnectivitySectionsSource from '@/components/platform/topology/TopologyConnectivitySections.vue?raw'
+import topologyNetworkSectionSource from '@/components/platform/topology/TopologyNetworkSection.vue?raw'
 import topologyNodeEditorSource from '@/components/platform/topology/TopologyNodeEditor.vue?raw'
+import topologyNodeSectionSource from '@/components/platform/topology/TopologyNodeSection.vue?raw'
+import topologySummaryGridSource from '@/components/platform/topology/TopologySummaryGrid.vue?raw'
+import topologyTemplateSidePanelSource from '@/components/platform/topology/TopologyTemplateSidePanel.vue?raw'
 
 vi.mock('@/api/admin', () => ({
   getChallengeDetail: vi.fn(),
@@ -90,23 +95,26 @@ describe('EnvironmentTemplateLibrary', () => {
   })
 
   it('模板库概览卡片应补齐统一的说明文案', () => {
+    const topologySource = `${challengeTopologyStudioPageSource}\n${topologySummaryGridSource}`
+
     expect(challengeTopologyStudioPageSource).not.toContain('rounded-[30px]')
-    expect(challengeTopologyStudioPageSource).toContain(
-      'class="topology-summary-grid progress-strip metric-panel-grid metric-panel-default-surface"'
-    )
+    expect(topologySource).toContain('topology-summary-grid')
+    expect(topologySource).toContain('progress-strip')
+    expect(topologySource).toContain('metric-panel-grid')
+    expect(topologySource).toContain('metric-panel-default-surface')
     expect(challengeTopologyStudioPageSource).toMatch(
       /\.topology-page--template-library \.template-library-main,\s*\.topology-page--template-library :deep\(\.page-header\)\s*\{[\s\S]*border-radius:\s*0;/s
     )
-    expect(challengeTopologyStudioPageSource).toContain(
-      'class="topology-summary-tile progress-card metric-panel-card"'
+    expect(topologySource).toContain('topology-summary-tile')
+    expect(topologySource).toContain('progress-card')
+    expect(topologySource).toContain('metric-panel-card')
+    expect(topologySource).toContain(
+      'topology-summary-helper progress-card-hint metric-panel-helper'
     )
-    expect(challengeTopologyStudioPageSource).toContain(
-      'class="topology-summary-helper progress-card-hint metric-panel-helper"'
-    )
-    expect(challengeTopologyStudioPageSource).toContain('当前模板草稿中的网络数量')
-    expect(challengeTopologyStudioPageSource).toContain('当前模板草稿中的节点数量')
-    expect(challengeTopologyStudioPageSource).toContain('当前模板草稿中的连线数量')
-    expect(challengeTopologyStudioPageSource).toContain('当前模板草稿中的策略数量')
+    expect(topologySource).toContain('当前模板草稿中的网络数量')
+    expect(topologySource).toContain('当前模板草稿中的节点数量')
+    expect(topologySource).toContain('当前模板草稿中的连线数量')
+    expect(topologySource).toContain('当前模板草稿中的策略数量')
   })
 
   it('节点编辑器应改用后台共享字段与按钮原语', () => {
@@ -119,8 +127,12 @@ describe('EnvironmentTemplateLibrary', () => {
   })
 
   it('模板库页头操作不应保留挑战模式按钮样式分支', () => {
-    expect(challengeTopologyStudioPageSource).toContain('class="topology-toolbar-btn topology-toolbar-btn--ghost"')
-    expect(challengeTopologyStudioPageSource).toContain('class="topology-toolbar-btn topology-toolbar-btn--primary"')
+    expect(challengeTopologyStudioPageSource).toContain(
+      'class="topology-toolbar-btn topology-toolbar-btn--ghost"'
+    )
+    expect(challengeTopologyStudioPageSource).toContain(
+      'class="topology-toolbar-btn topology-toolbar-btn--primary"'
+    )
     expect(challengeTopologyStudioPageSource).not.toContain(
       "isTemplateLibraryMode\n            ? 'topology-toolbar-btn topology-toolbar-btn--ghost'\n            : 'inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-medium text-text-primary transition hover:border-primary'"
     )
@@ -130,17 +142,19 @@ describe('EnvironmentTemplateLibrary', () => {
   })
 
   it('工作台分区底部新增按钮应复用统一工具栏按钮原语', () => {
-    expect(challengeTopologyStudioPageSource).toMatch(
-      /class="topology-toolbar-btn topology-toolbar-btn--ghost"\s+@click="addNode"[\s\S]*添加节点/
+    const topologySource = `${challengeTopologyStudioPageSource}\n${topologyNetworkSectionSource}\n${topologyConnectivitySectionsSource}\n${topologyNodeSectionSource}`
+
+    expect(topologySource).toMatch(
+      /add-button-class="topology-toolbar-btn topology-toolbar-btn--ghost"[\s\S]*@click="emit\('addNode'\)"[\s\S]*添加节点/
     )
-    expect(challengeTopologyStudioPageSource).toMatch(
-      /class="topology-toolbar-btn topology-toolbar-btn--ghost"\s+@click="addNetwork"[\s\S]*添加网络/
+    expect(topologySource).toMatch(
+      /add-button-class="topology-toolbar-btn topology-toolbar-btn--ghost"[\s\S]*@click="emit\('addNetwork'\)"[\s\S]*添加网络/
     )
-    expect(challengeTopologyStudioPageSource).toMatch(
-      /class="topology-toolbar-btn topology-toolbar-btn--ghost"\s+@click="addLink"[\s\S]*添加连线/
+    expect(topologySource).toMatch(
+      /add-button-class="topology-toolbar-btn topology-toolbar-btn--ghost"[\s\S]*@click="emit\('addLink'\)"[\s\S]*添加连线/
     )
-    expect(challengeTopologyStudioPageSource).toMatch(
-      /class="topology-toolbar-btn topology-toolbar-btn--ghost"\s+@click="addPolicy"[\s\S]*添加策略/
+    expect(topologySource).toMatch(
+      /add-button-class="topology-toolbar-btn topology-toolbar-btn--ghost"[\s\S]*@click="emit\('addPolicy'\)"[\s\S]*添加策略/
     )
     expect(challengeTopologyStudioPageSource).not.toMatch(
       /class="inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-medium text-text-primary transition hover:border-primary"\s+@click="add(Node|Network|Link|Policy)"/
@@ -166,26 +180,19 @@ describe('EnvironmentTemplateLibrary', () => {
   })
 
   it('模板目录操作应复用共享小尺寸按钮原语', () => {
-    expect(challengeTopologyStudioPageSource).toContain(
-      'class="ui-btn ui-btn--sm ui-btn--secondary"'
+    expect(challengeTopologyStudioPageSource).toContain('<TopologyTemplateSidePanel')
+    expect(topologyTemplateSidePanelSource).toContain('ui-btn--sm')
+    expect(topologyTemplateSidePanelSource).toContain('templateActionClass()')
+    expect(topologyTemplateSidePanelSource).toContain("templateActionClass('primary')")
+    expect(topologyTemplateSidePanelSource).toContain("templateActionClass('danger')")
+    expect(topologyTemplateSidePanelSource).not.toContain(
+      'rounded-xl border border-border px-3 py-2 text-xs font-medium text-text-primary transition hover:border-primary'
     )
-    expect(challengeTopologyStudioPageSource).toContain(
-      "isTemplateLibraryMode\n                                ? 'template-action-btn'\n                                : 'ui-btn ui-btn--sm ui-btn--secondary'"
+    expect(topologyTemplateSidePanelSource).not.toContain(
+      'rounded-xl bg-primary px-3 py-2 text-xs font-medium text-white transition hover:opacity-90'
     )
-    expect(challengeTopologyStudioPageSource).toContain(
-      "isTemplateLibraryMode\n                                ? 'template-action-btn template-action-btn--primary'\n                                : 'ui-btn ui-btn--sm ui-btn--primary'"
-    )
-    expect(challengeTopologyStudioPageSource).toContain(
-      "isTemplateLibraryMode\n                                ? 'template-action-btn template-action-btn--danger'\n                                : 'ui-btn ui-btn--sm ui-btn--danger'"
-    )
-    expect(challengeTopologyStudioPageSource).not.toContain(
-      "rounded-xl border border-border px-3 py-2 text-xs font-medium text-text-primary transition hover:border-primary"
-    )
-    expect(challengeTopologyStudioPageSource).not.toContain(
-      "rounded-xl bg-primary px-3 py-2 text-xs font-medium text-white transition hover:opacity-90"
-    )
-    expect(challengeTopologyStudioPageSource).not.toContain(
-      "rounded-xl border border-danger/30 bg-danger/10 px-3 py-2 text-xs font-medium text-danger transition hover:bg-danger/15"
+    expect(topologyTemplateSidePanelSource).not.toContain(
+      'rounded-xl border border-danger/30 bg-danger/10 px-3 py-2 text-xs font-medium text-danger transition hover:bg-danger/15'
     )
   })
 })

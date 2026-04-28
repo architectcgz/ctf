@@ -1,0 +1,32 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: crypto-caesar-postcard
+  title: "Crypto 入门：移位明信片"
+  category: crypto
+  difficulty: beginner
+  points: 100
+  tags:
+    - kp:caesar
+    - kp:classic-cipher
+
+content:
+  statement: statement.md
+  attachments:
+    - path: attachments/postcard.txt
+      name: postcard.txt
+
+flag:
+  type: static
+  prefix: flag
+  value: flag{crypto_caesar_postcard}
+
+hints:
+  - level: 1
+    title: Hint 1
+    cost_points: 10
+    content: "题面里的 shift=7 是加密方向，解密时要反向移动。"
+
+runtime:
+  type: none

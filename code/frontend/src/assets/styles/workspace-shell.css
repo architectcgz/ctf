@@ -241,8 +241,8 @@
   --ui-btn-border: var(--ui-btn-secondary-border, color-mix(in srgb, var(--color-border-default) 84%, transparent));
   --ui-btn-background: var(--ui-btn-secondary-background, var(--color-bg-surface));
   --ui-btn-color: var(--ui-btn-secondary-color, var(--color-text-secondary));
-  --ui-btn-hover-background: var(--ui-btn-secondary-hover-background, color-mix(in srgb, var(--color-bg-surface) 88%, white));
-  --ui-btn-hover-border: var(--ui-btn-secondary-hover-border, color-mix(in srgb, var(--color-border-default) 96%, transparent));
+  --ui-btn-hover-background: var(--ui-btn-secondary-hover-background, var(--color-bg-elevated));
+  --ui-btn-hover-border: var(--ui-btn-secondary-hover-border, var(--color-border-default));
   --ui-btn-hover-color: var(--ui-btn-secondary-hover-color, var(--color-text-primary));
 }
 
@@ -250,7 +250,7 @@
   --ui-btn-border: transparent;
   --ui-btn-background: transparent;
   --ui-btn-color: var(--ui-btn-ghost-color, var(--color-text-secondary));
-  --ui-btn-hover-background: var(--ui-btn-ghost-hover-background, color-mix(in srgb, var(--color-border-default) 7%, transparent));
+  --ui-btn-hover-background: var(--ui-btn-ghost-hover-background, color-mix(in srgb, var(--color-text-primary) 5%, transparent));
   --ui-btn-hover-color: var(--ui-btn-ghost-hover-color, var(--color-text-primary));
 }
 
@@ -665,6 +665,48 @@
 .ui-card-action.is-danger:hover {
   background: color-mix(in srgb, var(--color-danger) 7%, transparent);
   color: var(--color-danger);
+}
+
+.difficulty-chip {
+  border: 1px solid var(--difficulty-chip-border, var(--color-border-default));
+  background: var(--difficulty-chip-bg, var(--color-bg-elevated));
+  color: var(--difficulty-chip-color, var(--color-text-secondary));
+}
+
+.difficulty-chip--beginner {
+  --difficulty-chip-border: color-mix(in srgb, var(--color-diff-beginner) 22%, transparent);
+  --difficulty-chip-bg: color-mix(in srgb, var(--color-diff-beginner) 10%, transparent);
+  --difficulty-chip-color: var(--color-diff-beginner);
+}
+
+.difficulty-chip--easy {
+  --difficulty-chip-border: color-mix(in srgb, var(--color-diff-easy) 22%, transparent);
+  --difficulty-chip-bg: color-mix(in srgb, var(--color-diff-easy) 10%, transparent);
+  --difficulty-chip-color: var(--color-diff-easy);
+}
+
+.difficulty-chip--medium {
+  --difficulty-chip-border: color-mix(in srgb, var(--color-diff-medium) 22%, transparent);
+  --difficulty-chip-bg: color-mix(in srgb, var(--color-diff-medium) 10%, transparent);
+  --difficulty-chip-color: var(--color-diff-medium);
+}
+
+.difficulty-chip--hard {
+  --difficulty-chip-border: color-mix(in srgb, var(--color-diff-hard) 22%, transparent);
+  --difficulty-chip-bg: color-mix(in srgb, var(--color-diff-hard) 10%, transparent);
+  --difficulty-chip-color: var(--color-diff-hard);
+}
+
+.difficulty-chip--insane {
+  --difficulty-chip-border: color-mix(in srgb, var(--color-diff-insane) 22%, transparent);
+  --difficulty-chip-bg: color-mix(in srgb, var(--color-diff-insane) 10%, transparent);
+  --difficulty-chip-color: var(--color-diff-insane);
+}
+
+.difficulty-chip--unknown {
+  --difficulty-chip-border: color-mix(in srgb, var(--color-text-muted) 22%, transparent);
+  --difficulty-chip-bg: color-mix(in srgb, var(--color-text-muted) 10%, transparent);
+  --difficulty-chip-color: var(--color-text-secondary);
 }
 
 @media (max-width: 960px) {

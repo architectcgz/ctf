@@ -9,6 +9,7 @@ import {
 } from '@/api/instance'
 import type { InstanceData } from '@/api/contracts'
 import { ApiError } from '@/api/request'
+import { useClipboard } from '@/composables/useClipboard'
 import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
 import { useToast } from '@/composables/useToast'
 
@@ -16,6 +17,7 @@ const CHALLENGE_INSTANCE_POLL_INTERVAL_MS = 3000
 
 export function useChallengeInstance(challengeId: MaybeRefOrGetter<string | undefined>) {
   const toast = useToast()
+  const { copy } = useClipboard()
 
   const instance = ref<InstanceData | null>(null)
   const loading = ref(false)
@@ -114,6 +116,12 @@ export function useChallengeInstance(challengeId: MaybeRefOrGetter<string | unde
     opening.value = true
     try {
       const result = await requestInstanceAccess(instance.value.id)
+      const command = result.access?.protocol === 'tcp' ? result.access.command : ''
+      if (command) {
+        await copy(command)
+        toast.info('TCP 连接命令已复制')
+        return
+      }
       window.open(result.access_url, '_blank', 'noopener,noreferrer')
     } catch (error) {
       toast.error('打开目标失败')

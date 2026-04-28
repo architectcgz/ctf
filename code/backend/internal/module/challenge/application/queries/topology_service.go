@@ -1,6 +1,7 @@
 package queries
 
 import (
+	"context"
 	"errors"
 	"os"
 	"path/filepath"
@@ -16,25 +17,30 @@ import (
 )
 
 type TopologyService struct {
-	repo         challengeports.ChallengeTopologyRepository
-	templateRepo challengeports.EnvironmentTemplateRepository
+	repo                challengeports.ChallengeTopologyRepository
+	packageRevisionRepo challengeports.ChallengePackageRevisionRepository
+	templateRepo        challengeports.EnvironmentTemplateRepository
 }
 
 func NewTopologyService(repo challengeports.ChallengeTopologyRepository, templateRepo challengeports.EnvironmentTemplateRepository) *TopologyService {
-	return &TopologyService{
+	service := &TopologyService{
 		repo:         repo,
 		templateRepo: templateRepo,
 	}
+	if packageRevisionRepo, ok := repo.(challengeports.ChallengePackageRevisionRepository); ok {
+		service.packageRevisionRepo = packageRevisionRepo
+	}
+	return service
 }
 
-func (s *TopologyService) GetChallengeTopology(challengeID int64) (*dto.ChallengeTopologyResp, error) {
-	if _, err := s.repo.FindByID(challengeID); err != nil {
+func (s *TopologyService) GetChallengeTopology(ctx context.Context, challengeID int64) (*dto.ChallengeTopologyResp, error) {
+	if _, err := s.repo.FindByID(ctx, challengeID); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrChallengeNotFound
 		}
 		return nil, err
 	}
-	item, err := s.repo.FindChallengeTopologyByChallengeID(challengeID)
+	item, err := s.repo.FindChallengeTopologyByChallengeID(ctx, challengeID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrNotFound
@@ -45,36 +51,38 @@ func (s *TopologyService) GetChallengeTopology(challengeID int64) (*dto.Challeng
 	if err != nil {
 		return nil, err
 	}
-	revisions, err := s.repo.ListChallengePackageRevisionsByChallengeID(challengeID)
-	if err != nil {
-		return nil, err
-	}
-	if len(revisions) > 0 {
-		resp.PackageRevisions = make([]dto.ChallengePackageRevisionResp, 0, len(revisions))
-		for _, revision := range revisions {
-			if revision == nil {
-				continue
+	if s.packageRevisionRepo != nil {
+		revisions, err := s.packageRevisionRepo.ListChallengePackageRevisionsByChallengeID(ctx, challengeID)
+		if err != nil {
+			return nil, err
+		}
+		if len(revisions) > 0 {
+			resp.PackageRevisions = make([]dto.ChallengePackageRevisionResp, 0, len(revisions))
+			for _, revision := range revisions {
+				if revision == nil {
+					continue
+				}
+				resp.PackageRevisions = append(resp.PackageRevisions, domain.ChallengePackageRevisionRespFromModel(revision))
 			}
-			resp.PackageRevisions = append(resp.PackageRevisions, domain.ChallengePackageRevisionRespFromModel(revision))
 		}
-	}
-	if item.PackageRevisionID != nil && *item.PackageRevisionID > 0 {
-		revision, findErr := s.repo.FindChallengePackageRevisionByID(*item.PackageRevisionID)
-		if findErr != nil && !errors.Is(findErr, gorm.ErrRecordNotFound) {
-			return nil, findErr
-		}
-		if findErr == nil {
-			resp.PackageFiles, err = listChallengePackageFilesFromSourceDir(revision.SourceDir)
-			if err != nil {
-				return nil, err
+		if item.PackageRevisionID != nil && *item.PackageRevisionID > 0 {
+			revision, findErr := s.packageRevisionRepo.FindChallengePackageRevisionByID(ctx, *item.PackageRevisionID)
+			if findErr != nil && !errors.Is(findErr, gorm.ErrRecordNotFound) {
+				return nil, findErr
+			}
+			if findErr == nil {
+				resp.PackageFiles, err = listChallengePackageFilesFromSourceDir(revision.SourceDir)
+				if err != nil {
+					return nil, err
+				}
 			}
 		}
 	}
 	return resp, nil
 }
 
-func (s *TopologyService) GetTemplate(id int64) (*dto.EnvironmentTemplateResp, error) {
-	item, err := s.templateRepo.FindByID(id)
+func (s *TopologyService) GetTemplate(ctx context.Context, id int64) (*dto.EnvironmentTemplateResp, error) {
+	item, err := s.templateRepo.FindByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrNotFound
@@ -84,8 +92,8 @@ func (s *TopologyService) GetTemplate(id int64) (*dto.EnvironmentTemplateResp, e
 	return domain.TemplateRespFromModel(item)
 }
 
-func (s *TopologyService) ListTemplates(keyword string) ([]*dto.EnvironmentTemplateResp, error) {
-	items, err := s.templateRepo.List(strings.TrimSpace(keyword))
+func (s *TopologyService) ListTemplates(ctx context.Context, keyword string) ([]*dto.EnvironmentTemplateResp, error) {
+	items, err := s.templateRepo.List(ctx, strings.TrimSpace(keyword))
 	if err != nil {
 		return nil, err
 	}

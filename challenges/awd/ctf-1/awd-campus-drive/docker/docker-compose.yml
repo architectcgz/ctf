@@ -1,0 +1,15 @@
+services:
+  drive-app:
+    image: ctf/awd-campus-drive:latest
+    build: ./app
+    ports:
+      - "18082:8080"
+    environment:
+      FLAG: "flag{awd_campus_drive_demo}"
+      CHECKER_TOKEN: "demo-checker-token"
+    volumes:
+      - ./app/app.py:/app/app.py:ro
+      - drive-data:/data
+
+volumes:
+  drive-data:

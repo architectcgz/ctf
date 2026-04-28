@@ -72,7 +72,7 @@ func TestServiceListChallengeImportsSortsAndFiltersByActor(t *testing.T) {
 
 	service := &ChallengeService{}
 
-	previews, err := service.ListChallengeImports(1001)
+	previews, err := service.ListChallengeImports(context.Background(), 1001)
 	if err != nil {
 		t.Fatalf("ListChallengeImports() error = %v", err)
 	}
@@ -94,7 +94,7 @@ func TestServiceListChallengeImportsReturnsEmptyWhenPreviewRootMissing(t *testin
 
 	service := &ChallengeService{}
 
-	previews, err := service.ListChallengeImports(1001)
+	previews, err := service.ListChallengeImports(context.Background(), 1001)
 	if err != nil {
 		t.Fatalf("ListChallengeImports() error = %v", err)
 	}
@@ -193,6 +193,89 @@ flag:
 	}
 	if restored.Title != "Web-01 源码审计：双层伪装" {
 		t.Fatalf("expected restored challenge title to update, got %q", restored.Title)
+	}
+}
+
+func TestCommitChallengeImportPersistsRuntimeServiceTarget(t *testing.T) {
+	tempDir := t.TempDir()
+	t.Setenv("CHALLENGE_IMPORT_PREVIEW_DIR", tempDir)
+	t.Setenv("CHALLENGE_ATTACHMENT_STORAGE_DIR", t.TempDir())
+
+	db := testsupport.SetupTestDB(t)
+	repo := challengeinfra.NewRepository(db)
+	imageRepo := challengeinfra.NewImageRepository(db)
+	service := NewChallengeService(db, repo, imageRepo, nil, nil, SelfCheckConfig{}, zap.NewNop())
+
+	packageDir := filepath.Join(tempDir, "package")
+	if err := os.MkdirAll(packageDir, 0o755); err != nil {
+		t.Fatalf("MkdirAll(packageDir) error = %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(packageDir, "statement.md"), []byte("tcp statement"), 0o644); err != nil {
+		t.Fatalf("WriteFile(statement.md) error = %v", err)
+	}
+	manifest := []byte(`api_version: v1
+kind: challenge
+
+meta:
+  slug: pwn-tcp-demo
+  title: "Pwn TCP Demo"
+  category: pwn
+  difficulty: beginner
+  points: 100
+
+content:
+  statement: statement.md
+
+flag:
+  type: static
+  prefix: flag
+  value: flag{tcp}
+
+runtime:
+  type: container
+  image:
+    ref: 127.0.0.1:5000/ctf/pwn-tcp-demo:v1
+  service:
+    protocol: tcp
+    port: 31337
+`)
+	if err := os.WriteFile(filepath.Join(packageDir, "challenge.yml"), manifest, 0o644); err != nil {
+		t.Fatalf("WriteFile(challenge.yml) error = %v", err)
+	}
+
+	mustWriteChallengeImportPreviewRecord(t, tempDir, storedChallengeImportPreview{
+		ID:        "tcp-target",
+		FileName:  "tcp-target.zip",
+		SourceDir: packageDir,
+		CreatedBy: 4,
+		CreatedAt: time.Now(),
+		Preview: dto.ChallengeImportPreviewResp{
+			ID:         "tcp-target",
+			FileName:   "tcp-target.zip",
+			Slug:       "pwn-tcp-demo",
+			Title:      "Pwn TCP Demo",
+			Category:   "pwn",
+			Difficulty: "beginner",
+			Points:     100,
+			Flag:       dto.ChallengeImportFlagResp{Type: "static", Prefix: "flag"},
+			CreatedAt:  time.Now(),
+		},
+	})
+
+	resp, err := service.CommitChallengeImport(context.Background(), 4, "tcp-target")
+	if err != nil {
+		t.Fatalf("CommitChallengeImport() error = %v", err)
+	}
+
+	var stored model.Challenge
+	if err := db.First(&stored, resp.ID).Error; err != nil {
+		t.Fatalf("load imported challenge: %v", err)
+	}
+	if stored.TargetProtocol != model.ChallengeTargetProtocolTCP {
+		t.Fatalf("expected target protocol tcp, got %q", stored.TargetProtocol)
+	}
+	if stored.TargetPort != 31337 {
+		t.Fatalf("expected target port 31337, got %d", stored.TargetPort)
 	}
 }
 

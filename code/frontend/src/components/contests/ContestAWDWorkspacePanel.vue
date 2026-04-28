@@ -1,18 +1,18 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { 
-  ShieldAlert, 
-  Sword, 
-  Target, 
-  Activity, 
-  Wifi, 
-  Zap, 
-  BarChart3, 
-  History, 
+import {
+  ShieldAlert,
+  Sword,
+  Target,
+  Activity,
+  Wifi,
+  Zap,
+  BarChart3,
+  History,
   Terminal,
   ExternalLink,
   RefreshCw,
-  AlertTriangle
+  Copy,
 } from 'lucide-vue-next'
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
@@ -22,6 +22,7 @@ import type {
   ContestAWDWorkspaceServiceData,
   ContestChallengeItem,
   ContestDetailData,
+  SSHProfileData,
 } from '@/api/contracts'
 import { formatTime } from '@/utils/format'
 
@@ -34,6 +35,7 @@ const activeChallengeKey = ref('')
 const flagInputs = ref<Record<string, string>>({})
 const targetKeyword = ref('')
 const showOnlyReachableTargets = ref(false)
+const copiedSSHConfigKey = ref('')
 
 const {
   workspace,
@@ -43,11 +45,18 @@ const {
   hasTeam,
   submitResult,
   startingServiceKey,
+  openingServiceKey,
+  openingSSHKey,
+  sshAccessByServiceId,
+  openingTargetKey,
   submittingKey,
   shouldAutoRefresh,
   lastSyncedAt,
   refreshAll,
   startService,
+  openService,
+  openDefenseSSH,
+  openTarget,
   submitAttack,
 } = useContestAWDWorkspace({
   contestId: computed(() => props.contest.id),
@@ -66,8 +75,8 @@ const servicesByServiceId = computed(() => {
 })
 
 const runtimeChallenges = computed(() =>
-  props.challenges.filter(
-    (item): item is ContestChallengeItem & { awd_service_id: string } => Boolean(item.awd_service_id)
+  props.challenges.filter((item): item is ContestChallengeItem & { awd_service_id: string } =>
+    Boolean(item.awd_service_id)
   )
 )
 
@@ -93,14 +102,15 @@ const currentRound = computed(() => workspace.value?.current_round)
 const myTeam = computed(() => workspace.value?.my_team ?? null)
 const topScore = computed(() => scoreboardRows.value[0]?.score ?? 0)
 const lastSyncedLabel = computed(() =>
-  lastSyncedAt.value ? formatTime(lastSyncedAt.value) : 'UNSYNCED'
+  lastSyncedAt.value ? formatTime(lastSyncedAt.value) : '未同步'
 )
 const targetFilterKeyword = computed(() => targetKeyword.value.trim().toLowerCase())
 
 const activeChallenge = computed(
   () =>
-    runtimeChallenges.value.find((item) => getChallengeRuntimeKey(item) === activeChallengeKey.value) ||
-    null
+    runtimeChallenges.value.find(
+      (item) => getChallengeRuntimeKey(item) === activeChallengeKey.value
+    ) || null
 )
 const activeChallengeRuntimeKey = computed(() => getChallengeRuntimeKey(activeChallenge.value))
 
@@ -122,7 +132,7 @@ const filteredTargets = computed(() =>
       targetFilterKeyword.value.length === 0 ||
       target.team_name.toLowerCase().includes(targetFilterKeyword.value)
     const matchesReachable =
-      !showOnlyReachableTargets.value || Boolean(target.active_service?.access_url)
+      !showOnlyReachableTargets.value || Boolean(target.active_service?.reachable)
     return matchesKeyword && matchesReachable
   })
 )
@@ -141,20 +151,20 @@ const defenseAlerts = computed(() => {
     if (!service) continue
 
     const issues: string[] = []
-    let statusLabel = 'STABLE'
+    let statusLabel = '正常'
     let tone: 'danger' | 'warning' = 'warning'
 
     if (service.service_status === 'compromised') {
-      issues.push('INFILTRATED')
-      statusLabel = 'CRITICAL'
+      issues.push('已失陷')
+      statusLabel = '严重'
       tone = 'danger'
     } else if (service.service_status === 'down') {
-      issues.push('OFFLINE')
-      statusLabel = 'ALERT'
+      issues.push('已离线')
+      statusLabel = '告警'
     }
 
     if ((service.attack_received ?? 0) > 0) {
-      issues.push(`${service.attack_received} HITS DETECTED`)
+      issues.push(`检测到 ${service.attack_received} 次攻击`)
     }
 
     if (issues.length === 0) continue
@@ -186,10 +196,14 @@ watch(
 
 function getServiceStatusLabel(status?: string): string {
   switch (status) {
-    case 'up': return 'STABLE'
-    case 'down': return 'OFFLINE'
-    case 'compromised': return 'CRITICAL'
-    default: return 'STANDBY'
+    case 'up':
+      return '正常'
+    case 'down':
+      return '离线'
+    case 'compromised':
+      return '失陷'
+    default:
+      return '待命'
   }
 }
 
@@ -198,15 +212,30 @@ function getServiceStatusClass(status?: string): string {
 }
 
 function eventDirectionLabel(direction: 'attack_in' | 'attack_out'): string {
-  return direction === 'attack_out' ? 'OUTBOUND' : 'INBOUND'
+  return direction === 'attack_out' ? '对外攻击' : '受到攻击'
 }
 
 function eventResultLabel(success: boolean): string {
-  return success ? 'SUCCESS' : 'FAILED'
+  return success ? '成功' : '失败'
 }
 
 function formatServiceRef(serviceId?: string): string {
-  return `SRV-${serviceId || '--'}`
+  return `服务 #${serviceId || '--'}`
+}
+
+function formatRoundStatusLabel(status?: string): string {
+  switch (status) {
+    case 'running':
+      return '进行中'
+    case 'frozen':
+      return '已冻结'
+    case 'finished':
+    case 'completed':
+    case 'ended':
+      return '已结束'
+    default:
+      return '等待中'
+  }
 }
 
 function getChallengeRuntimeKey(challenge: ContestChallengeItem | null | undefined): string {
@@ -237,16 +266,56 @@ function formatAttackResultToast(result: {
   score_gained: number
 }): string {
   const challengeTitle = getChallengeTitleForEvent(result)
-  if (result.is_success) return `${challengeTitle}: HIT SUCCESSFUL. +${result.score_gained} PTS`
-  return `${challengeTitle}: NO VALID FLAG RECOVERED.`
+  if (result.is_success) return `${challengeTitle}: 攻击成功，+${result.score_gained} 分`
+  return `${challengeTitle}: 未获取到有效 Flag。`
 }
 
-function getWorkspaceService(challenge: ContestChallengeItem): ContestAWDWorkspaceServiceData | undefined {
+function getWorkspaceService(
+  challenge: ContestChallengeItem
+): ContestAWDWorkspaceServiceData | undefined {
   if (!challenge.awd_service_id) return undefined
   return servicesByServiceId.value.get(challenge.awd_service_id)
 }
 
-function isTargetServiceForChallenge(service: { service_id?: string; challenge_id: string }, challenge: ContestChallengeItem): boolean {
+function getSSHAccess(serviceId?: string) {
+  if (!serviceId) return undefined
+  return sshAccessByServiceId.value[serviceId]
+}
+
+function buildOpenSSHConfig(profile?: SSHProfileData): string {
+  if (!profile) return ''
+  return [
+    `Host ${profile.alias}`,
+    `  HostName ${profile.host_name}`,
+    `  Port ${profile.port}`,
+    `  User ${profile.user}`,
+    '',
+  ].join('\n')
+}
+
+function getOpenSSHConfig(serviceId?: string): string {
+  const access = getSSHAccess(serviceId)
+  return buildOpenSSHConfig(access?.ssh_profile)
+}
+
+async function copySSHConfig(serviceId?: string): Promise<void> {
+  const config = getOpenSSHConfig(serviceId)
+  if (!serviceId || !config || typeof navigator === 'undefined' || !navigator.clipboard) {
+    return
+  }
+
+  try {
+    await navigator.clipboard.writeText(config)
+    copiedSSHConfigKey.value = serviceId
+  } catch (err) {
+    console.error(err)
+  }
+}
+
+function isTargetServiceForChallenge(
+  service: { service_id?: string; challenge_id: string },
+  challenge: ContestChallengeItem
+): boolean {
   return Boolean(challenge.awd_service_id) && service.service_id === challenge.awd_service_id
 }
 
@@ -275,100 +344,70 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
     <!-- HUD KPI Strip -->
     <header class="awd-hud-strip">
       <div class="hud-item">
-        <div class="hud-label">
-          OPERATIONAL ROUND
-        </div>
+        <div class="hud-label">当前回合</div>
         <div class="hud-value font-mono">
           {{ currentRound ? `#${String(currentRound.round_number).padStart(2, '0')}` : '--' }}
         </div>
         <div class="hud-helper">
-          {{ currentRound?.status.toUpperCase() || 'WAITING' }}
+          {{ formatRoundStatusLabel(currentRound?.status) }}
         </div>
       </div>
       <div class="hud-item">
-        <div class="hud-label">
-          BATTLE SQUAD
-        </div>
+        <div class="hud-label">我的战队</div>
         <div class="hud-value">
-          {{ myTeam?.team_name || 'UNASSIGNED' }}
+          {{ myTeam?.team_name || '未加入' }}
         </div>
         <div class="hud-helper">
-          RANK: #{{ scoreboardRows.find(r => r.team_id === myTeam?.team_id)?.rank || '--' }}
+          排名 #{{ scoreboardRows.find((r) => r.team_id === myTeam?.team_id)?.rank || '--' }}
         </div>
       </div>
       <div class="hud-item">
-        <div class="hud-label">
-          SQUAD ASSETS
-        </div>
+        <div class="hud-label">战队服务</div>
         <div class="hud-value font-mono">
           {{ workspace?.services.length || 0 }}
         </div>
-        <div class="hud-helper">
-          ACTIVE SERVICES
-        </div>
+        <div class="hud-helper">运行中服务</div>
       </div>
       <div class="hud-item">
-        <div class="hud-label">
-          APEX SCORE
-        </div>
-        <div class="hud-value font-mono text-cyan-400">
+        <div class="hud-label">最高分</div>
+        <div class="hud-value hud-value--accent font-mono">
           {{ topScore }}
         </div>
-        <div class="hud-helper">
-          BATTLEFIELD PEAK
-        </div>
+        <div class="hud-helper">当前榜首</div>
       </div>
       <div class="hud-actions">
-        <button
-          class="hud-refresh-btn"
-          :disabled="loading"
-          @click="refreshAll"
-        >
-          <RefreshCw
-            class="h-4 w-4"
-            :class="{ 'animate-spin': loading }"
-          />
+        <button class="hud-refresh-btn" :disabled="loading" @click="refreshAll">
+          <RefreshCw class="h-4 w-4" :class="{ 'animate-spin': loading }" />
           <span>{{ lastSyncedLabel }}</span>
         </button>
       </div>
     </header>
 
-    <div
-      v-if="loading && !workspace"
-      class="war-room-loading"
-    >
+    <div v-if="loading && !workspace" class="war-room-loading">
       <div class="radar-scan" />
-      <p>ESTABLISHING BATTLEFIELD LINK...</p>
+      <p>正在建立战场连接...</p>
     </div>
 
     <AppEmpty
       v-else-if="!hasTeam"
       icon="Users"
-      title="JOIN A SQUAD"
-      description="You must be part of a team to access the AWD battlefield."
+      title="先加入队伍"
+      description="需要先加入队伍后才能进入 AWD 战场。"
       class="war-room-empty"
     />
 
-    <div
-      v-else
-      class="war-room-grid"
-    >
+    <div v-else class="war-room-grid">
       <!-- 1. Defense Monitor (Left) -->
       <aside class="war-room-col column-defense">
         <section class="ops-panel">
           <header class="ops-panel__header">
-            <ShieldAlert class="h-4 w-4 text-orange-500" />
-            <h3 class="ops-panel__title">
-              DEFENSE MONITOR
-            </h3>
+            <ShieldAlert class="ops-panel__icon ops-panel__icon--warning h-4 w-4" />
+            <h3 class="ops-panel__title">防守监控</h3>
           </header>
-          
+
           <div class="ops-panel__content custom-scrollbar">
             <!-- Alerts -->
-            <div
-              v-if="defenseAlerts.length > 0"
-              class="defense-alerts"
-            >
+            <div v-if="defenseAlerts.length > 0" class="defense-alerts">
               <div
                 v-for="alert in defenseAlerts"
                 :key="alert.challengeId"
@@ -380,52 +419,95 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
                   <span class="alert-badge">{{ alert.statusLabel }}</span>
                 </div>
                 <div class="alert-issues">
-                  <span
-                    v-for="issue in alert.issues"
-                    :key="issue"
-                  >{{ issue }}</span>
+                  <span v-for="issue in alert.issues" :key="issue">{{ issue }}</span>
                 </div>
               </div>
             </div>
 
             <!-- Services -->
             <div class="asset-list mt-4">
-              <div class="asset-header">
-                SQUAD SERVICES
+              <div class="asset-header">战队服务</div>
+              <div v-if="runtimeChallenges.length === 0" class="panel-note">
+                当前竞赛暂无可部署服务。
               </div>
-              <div
-                v-for="challenge in runtimeChallenges"
-                :key="challenge.id"
-                class="asset-item"
-              >
+              <div v-for="challenge in runtimeChallenges" :key="challenge.id" class="asset-item">
                 <div class="asset-main">
                   <div class="flex items-center justify-between">
-                    <span class="asset-title">{{ challenge.title }}</span>
-                    <span :class="getServiceStatusClass(getWorkspaceService(challenge)?.service_status)">
+                    <div class="asset-title-stack">
+                      <span class="asset-title">{{ challenge.title }}</span>
+                      <span class="asset-ref">{{
+                        formatServiceRef(challenge.awd_service_id)
+                      }}</span>
+                    </div>
+                    <span
+                      :class="getServiceStatusClass(getWorkspaceService(challenge)?.service_status)"
+                    >
                       {{ getServiceStatusLabel(getWorkspaceService(challenge)?.service_status) }}
                     </span>
                   </div>
                   <div class="asset-meta font-mono text-[10px]">
-                    {{ getWorkspaceService(challenge)?.access_url || 'WAITING FOR ALLOCATION' }}
+                    {{
+                      getWorkspaceService(challenge)?.instance_id
+                        ? '已通过平台代理就绪'
+                        : '等待分配实例'
+                    }}
+                  </div>
+                  <div v-if="getSSHAccess(challenge.awd_service_id)" class="asset-ssh">
+                    <div class="asset-ssh__label">SSH DEFENSE</div>
+                    <code class="asset-ssh__command">{{
+                      getSSHAccess(challenge.awd_service_id)?.command
+                    }}</code>
+                    <div class="asset-ssh__password font-mono">
+                      PASS {{ getSSHAccess(challenge.awd_service_id)?.password }}
+                    </div>
+                    <pre
+                      v-if="getOpenSSHConfig(challenge.awd_service_id)"
+                      class="asset-ssh__config"
+                    >{{ getOpenSSHConfig(challenge.awd_service_id) }}</pre>
+                    <button
+                      v-if="getOpenSSHConfig(challenge.awd_service_id)"
+                      class="asset-ssh__copy"
+                      type="button"
+                      @click="copySSHConfig(challenge.awd_service_id)"
+                    >
+                      <Copy class="h-3 w-3" />
+                      <span>{{
+                        copiedSSHConfigKey === challenge.awd_service_id ? '已复制' : '复制 VS Code'
+                      }}</span>
+                    </button>
                   </div>
                 </div>
                 <div class="asset-actions">
-                  <a
-                    v-if="getWorkspaceService(challenge)?.access_url"
-                    :href="getWorkspaceService(challenge)?.access_url"
-                    target="_blank"
+                  <button
+                    v-if="getWorkspaceService(challenge)?.instance_id"
+                    :disabled="openingServiceKey === getWorkspaceService(challenge)?.instance_id"
                     class="asset-btn"
-                  ><ExternalLink class="h-3 w-3" /></a>
+                    @click="
+                      getWorkspaceService(challenge)?.instance_id &&
+                      openService(getWorkspaceService(challenge)?.instance_id || '')
+                    "
+                  >
+                    <ExternalLink class="h-3 w-3" />
+                  </button>
+                  <button
+                    v-if="getWorkspaceService(challenge)?.instance_id"
+                    :disabled="openingSSHKey === getServiceStartKey(challenge)"
+                    class="asset-btn"
+                    @click="challenge.awd_service_id && openDefenseSSH(challenge.awd_service_id)"
+                  >
+                    {{ openingSSHKey === getServiceStartKey(challenge) ? '...' : 'SSH' }}
+                  </button>
                   <button
                     :disabled="startingServiceKey === getServiceStartKey(challenge)"
                     class="asset-btn asset-btn--primary"
                     @click="challenge.awd_service_id && startService(challenge.awd_service_id)"
                   >
-                    {{ startingServiceKey === getServiceStartKey(challenge) ? '...' : 'REBOOT' }}
+                    {{ startingServiceKey === getServiceStartKey(challenge) ? '...' : '重启' }}
                   </button>
                 </div>
               </div>
             </div>
+
           </div>
         </section>
       </aside>
@@ -434,16 +516,15 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
       <main class="war-room-col column-attack">
         <section class="ops-panel">
           <header class="ops-panel__header">
-            <Sword class="h-4 w-4 text-red-500" />
-            <h3 class="ops-panel__title">
-              ATTACK VECTOR
-            </h3>
+            <Sword class="ops-panel__icon ops-panel__icon--danger h-4 w-4" />
+            <h3 class="ops-panel__title">攻击向量</h3>
           </header>
 
           <div class="ops-panel__toolbar">
             <div class="toolbar-field">
-              <label>TARGET SECTOR</label>
+              <label>目标题目</label>
               <select
+                id="awd-target-challenge"
                 v-model="activeChallengeKey"
                 class="war-room-select"
               >
@@ -457,76 +538,96 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
               </select>
             </div>
             <div class="toolbar-field">
-              <label>SQUAD FILTER</label>
+              <label>队伍筛选</label>
               <input
+                id="awd-target-search"
                 v-model="targetKeyword"
                 type="text"
-                placeholder="FILTER BY NAME..."
+                placeholder="按队伍名称筛选..."
                 class="war-room-input"
-              >
+              />
             </div>
           </div>
 
           <div class="ops-panel__content custom-scrollbar">
-            <div
-              v-if="!activeChallenge"
-              class="panel-note"
-            >
-              SELECT A TARGET SECTOR TO COMMENCE ATTACK.
+            <div v-if="runtimeChallenges.length === 0" class="panel-note">
+              当前竞赛暂无可部署服务。
             </div>
-            <div
-              v-else-if="filteredTargets.length === 0"
-              class="panel-note"
-            >
-              NO MATCHING HOSTILES IN CURRENT SECTOR.
+            <div v-else-if="!activeChallenge" class="panel-note">请选择目标题目后开始攻击。</div>
+            <div v-else-if="filteredTargets.length === 0" class="panel-note">
+              当前题目下没有匹配的目标队伍。
             </div>
-            <div
-              v-else
-              class="target-grid"
-            >
-              <article
-                v-for="target in filteredTargets"
-                :key="target.team_id"
-                class="target-card"
-              >
+            <div v-else class="target-grid">
+              <article v-for="target in filteredTargets" :key="target.team_id" class="target-card">
                 <div class="target-info">
-                  <div class="target-team font-black text-cyan-400">
+                  <div class="target-team font-black">
                     {{ target.team_name.toUpperCase() }}
                   </div>
+                  <div class="target-ref">
+                    {{ formatServiceRef(target.active_service?.service_id) }}
+                  </div>
                   <div class="target-url font-mono">
-                    {{ target.active_service?.access_url || 'UNREACHABLE' }}
+                    {{ target.active_service?.reachable ? '代理链路已就绪' : '不可达' }}
                   </div>
                 </div>
                 <div class="target-action">
-                  <input
-                    :value="flagInputs[buildAttackStateKey(activeChallengeRuntimeKey, target.team_id)] || ''"
-                    placeholder="ENTER STOLEN FLAG..."
-                    class="flag-input"
-                    @input="flagInputs[buildAttackStateKey(activeChallengeRuntimeKey, target.team_id)] = String(($event.target as HTMLInputElement).value)"
-                    @keyup.enter="handleSubmit(activeChallengeRuntimeKey, target.team_id)"
-                  >
                   <button
-                    :disabled="!target.active_service?.access_url || submittingKey === buildAttackStateKey(activeChallengeRuntimeKey, target.team_id)"
+                    :data-testid="`awd-open-target-${activeChallengeRuntimeKey}-${target.team_id}`"
+                    :disabled="
+                      !target.active_service?.reachable ||
+                      openingTargetKey ===
+                        buildAttackStateKey(activeChallengeRuntimeKey, target.team_id)
+                    "
+                    class="target-open-btn"
+                    type="button"
+                    @click="openTarget(activeChallengeRuntimeKey, target.team_id)"
+                  >
+                    <ExternalLink class="h-3 w-3" />
+                    <span>{{
+                      openingTargetKey ===
+                      buildAttackStateKey(activeChallengeRuntimeKey, target.team_id)
+                        ? '...'
+                        : '打开'
+                    }}</span>
+                  </button>
+                  <input
+                    :value="
+                      flagInputs[buildAttackStateKey(activeChallengeRuntimeKey, target.team_id)] ||
+                      ''
+                    "
+                    placeholder="输入获取到的 Flag..."
+                    class="flag-input"
+                    @input="
+                      flagInputs[buildAttackStateKey(activeChallengeRuntimeKey, target.team_id)] =
+                        String(($event.target as HTMLInputElement).value)
+                    "
+                    @keyup.enter="handleSubmit(activeChallengeRuntimeKey, target.team_id)"
+                  />
+                  <button
+                    :disabled="
+                      !target.active_service?.reachable ||
+                      submittingKey ===
+                        buildAttackStateKey(activeChallengeRuntimeKey, target.team_id)
+                    "
                     class="submit-btn"
                     @click="handleSubmit(activeChallengeRuntimeKey, target.team_id)"
                   >
-                    {{ submittingKey === buildAttackStateKey(activeChallengeRuntimeKey, target.team_id) ? '...' : 'SUBMIT' }}
+                    {{
+                      submittingKey ===
+                      buildAttackStateKey(activeChallengeRuntimeKey, target.team_id)
+                        ? '...'
+                        : '提交'
+                    }}
                   </button>
                 </div>
               </article>
             </div>
           </div>
 
-          <footer
-            v-if="submitResult"
-            class="ops-panel__footer"
-          >
-            <div
-              class="result-alert"
-              :class="submitResult.is_success ? 'success' : 'danger'"
-            >
+          <footer v-if="submitResult" class="ops-panel__footer">
+            <div class="result-alert" :class="submitResult.is_success ? 'success' : 'danger'">
               <Terminal class="h-3.5 w-3.5" />
-              <span>{{ getSubmitResultMessage().toUpperCase() }}</span>
+              <span>{{ getSubmitResultMessage() }}</span>
             </div>
           </footer>
         </section>
@@ -536,10 +637,8 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
       <aside class="war-room-col column-intel">
         <section class="ops-panel h-1/2 mb-4">
           <header class="ops-panel__header">
-            <BarChart3 class="h-4 w-4 text-cyan-500" />
-            <h3 class="ops-panel__title">
-              FIELD INTEL
-            </h3>
+            <BarChart3 class="ops-panel__icon ops-panel__icon--accent h-4 w-4" />
+            <h3 class="ops-panel__title">战场情报</h3>
           </header>
           <div class="ops-panel__content custom-scrollbar">
             <div
@@ -558,9 +657,7 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
         <section class="ops-panel h-1/2">
           <header class="ops-panel__header">
             <History class="h-4 w-4 text-purple-500" />
-            <h3 class="ops-panel__title">
-              RECENT FEEDBACK
-            </h3>
+            <h3 class="ops-panel__title">最近战报</h3>
           </header>
           <div class="ops-panel__content custom-scrollbar">
             <div
@@ -574,18 +671,24 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
                 <span>{{ formatTime(event.created_at) }}</span>
               </div>
               <div class="mt-1 text-xs">
-                {{ event.peer_team_name }} / {{ getChallengeTitleForEvent(event) }}
+                <span>{{ event.peer_team_name }} / </span>
+                <span data-testid="awd-feedback-challenge-title">{{
+                  getChallengeTitleForEvent(event)
+                }}</span>
+              </div>
+              <div class="feedback-ref">
+                {{ formatServiceRef(event.service_id) }}
               </div>
               <div class="mt-1 flex items-center justify-between font-mono text-[10px]">
-                <span :class="event.is_success ? 'text-emerald-400' : 'text-slate-500'">{{ eventResultLabel(event.is_success) }}</span>
-                <span class="text-cyan-400">+{{ event.score_gained }}</span>
+                <span
+                  :class="event.is_success ? 'feedback-result--success' : 'feedback-result--muted'"
+                  >{{ eventResultLabel(event.is_success) }}</span
+                >
+                <span class="feedback-score-gain">+{{ event.score_gained }}</span>
               </div>
             </div>
-            <div
-              v-if="workspace?.recent_events.length === 0"
-              class="panel-note"
-            >
-              NO RECENT OPERATIONAL DATA.
+            <div v-if="workspace?.recent_events.length === 0" class="panel-note">
+              暂无最近战报。
             </div>
           </div>
         </section>
@@ -596,32 +699,22 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
 
 <style scoped>
 .awd-war-room {
-  --war-bg: #0f172a;
-  --war-panel: rgba(30, 41, 59, 0.7);
-  --war-border: #334155;
-  --war-accent: #22d3ee;
-  --war-text: #f8fafc;
-  --war-muted: #94a3b8;
-  
-  background: var(--war-bg);
-  color: var(--war-text);
-  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  padding: 1rem;
+  gap: var(--space-6);
+  padding-top: var(--space-4);
 }
 
 /* HUD Strip */
 .awd-hud-strip {
   display: grid;
   grid-template-columns: repeat(4, 1fr) auto;
-  gap: 1rem;
-  background: var(--war-panel);
-  border: 1px solid var(--war-border);
-  border-radius: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  backdrop-filter: blur(10px);
+  gap: var(--space-4);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-default);
+  border-radius: 1rem;
+  padding: 1.25rem 1.5rem;
+  box-shadow: var(--color-shadow-soft);
 }
 
 .hud-item {
@@ -630,22 +723,37 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
 }
 
 .hud-label {
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 900;
-  color: var(--war-muted);
+  color: var(--color-text-muted);
   letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
 .hud-value {
-  font-size: 1.15rem;
+  font-size: var(--font-size-24);
   font-weight: 900;
-  margin: 0.15rem 0;
+  color: var(--color-text-primary);
+  margin: 0.25rem 0;
+}
+
+.hud-value--accent,
+.ops-panel__icon--accent {
+  color: var(--color-primary);
+}
+
+.ops-panel__icon--warning {
+  color: var(--color-warning);
+}
+
+.ops-panel__icon--danger {
+  color: var(--color-danger);
 }
 
 .hud-helper {
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--war-accent);
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--color-primary);
 }
 
 .hud-refresh-btn {
@@ -654,209 +762,406 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.25rem;
-  padding: 0 1rem;
-  border-left: 1px solid var(--war-border);
-  color: var(--war-muted);
-  font-size: 10px;
-  font-weight: 700;
+  gap: 0.35rem;
+  padding: 0 1.25rem;
+  border-left: 1px solid var(--color-border-subtle);
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  font-weight: 800;
   cursor: pointer;
+  background: transparent;
+  transition: all 0.2s ease;
 }
 
-.hud-refresh-btn:hover { color: var(--war-text); }
+.hud-refresh-btn:hover {
+  color: var(--color-text-primary);
+}
 
 /* Layout Grid */
 .war-room-grid {
   display: grid;
-  grid-template-columns: 18rem 1fr 18rem;
-  gap: 1rem;
+  grid-template-columns: 22rem 1fr 22rem;
+  gap: var(--space-5);
   flex: 1;
   min-height: 0;
 }
 
 .ops-panel {
-  background: var(--war-panel);
-  border: 1px solid var(--war-border);
-  border-radius: 0.5rem;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-default);
+  border-radius: 1rem;
   display: flex;
   flex-direction: column;
   min-height: 0;
+  box-shadow: var(--color-shadow-soft);
+  overflow: hidden;
 }
 
 .ops-panel__header {
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid var(--war-border);
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--color-border-subtle);
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  background: rgba(0,0,0,0.1);
+  background: var(--color-bg-elevated);
 }
 
 .ops-panel__title {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 900;
   letter-spacing: 0.15em;
-  color: var(--war-text);
+  color: var(--color-text-primary);
   margin: 0;
 }
 
 .ops-panel__toolbar {
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid var(--war-border);
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--color-border-subtle);
   display: flex;
   gap: 1rem;
+  background: var(--color-bg-surface);
 }
 
 .toolbar-field {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.35rem;
   flex: 1;
 }
 
 .toolbar-field label {
-  font-size: 8px;
+  font-size: 9px;
   font-weight: 900;
-  color: var(--war-muted);
+  color: var(--color-text-muted);
+  letter-spacing: 0.1em;
 }
 
-.war-room-select, .war-room-input {
-  background: #0f172a;
-  border: 1px solid var(--war-border);
-  border-radius: 0.25rem;
-  color: var(--war-text);
-  font-size: 11px;
+.war-room-select,
+.war-room-input {
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-default);
+  border-radius: 0.5rem;
+  color: var(--color-text-primary);
+  font-size: 12px;
   font-weight: 700;
-  padding: 0.35rem;
+  padding: 0.5rem 0.75rem;
   outline: none;
+  transition: all 0.2s ease;
+}
+.war-room-select:focus,
+.war-room-input:focus {
+  border-color: var(--color-primary);
 }
 
 .ops-panel__content {
   flex: 1;
   overflow-y: auto;
-  padding: 1rem;
+  padding: 1.25rem;
 }
 
 /* Defense Components */
 .defense-alert {
-  background: rgba(249, 115, 22, 0.05);
-  border: 1px solid rgba(249, 115, 22, 0.2);
-  border-left: 3px solid #f97316;
-  border-radius: 0.25rem;
-  padding: 0.5rem 0.75rem;
-  margin-bottom: 0.5rem;
+  background: var(--color-warning-soft);
+  border: 1px solid color-mix(in srgb, var(--color-warning) 20%, transparent);
+  border-left: 3px solid var(--color-warning);
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.75rem;
 }
 
 .defense-alert.danger {
-  background: rgba(239, 68, 68, 0.05);
-  border-color: rgba(239, 68, 68, 0.2);
-  border-left-color: #ef4444;
+  background: var(--color-danger-soft);
+  border-color: color-mix(in srgb, var(--color-danger) 20%, transparent);
+  border-left-color: var(--color-danger);
 }
 
-.alert-title { font-size: 11px; font-weight: 800; }
-.alert-badge { font-size: 9px; font-weight: 900; }
-.alert-issues { font-size: 9px; color: var(--war-muted); margin-top: 0.25rem; }
+.alert-title {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+.alert-badge {
+  font-size: 10px;
+  font-weight: 900;
+}
+.alert-issues {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  margin-top: 0.35rem;
+  display: flex;
+  gap: 0.5rem;
+}
 
 .asset-header {
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 900;
-  color: var(--war-muted);
-  margin-bottom: 0.5rem;
+  color: var(--color-text-muted);
+  letter-spacing: 0.1em;
+  margin-bottom: 0.75rem;
 }
 
 .asset-item {
-  background: rgba(255,255,255,0.02);
-  border: 1px solid var(--war-border);
-  padding: 0.75rem;
-  border-radius: 0.25rem;
-  margin-bottom: 0.5rem;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-default);
+  padding: 1rem;
+  border-radius: 0.75rem;
+  margin-bottom: 0.75rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: var(--space-3);
 }
 
-.asset-title { font-size: 12px; font-weight: 800; }
-.asset-meta { color: var(--war-muted); margin-top: 0.25rem; }
+.asset-main {
+  min-width: 0;
+  flex: 1;
+}
 
-.status-badge {
+.asset-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+.asset-title-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+.asset-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+.asset-ref,
+.target-ref,
+.feedback-ref {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+}
+.asset-meta {
+  color: var(--color-text-muted);
+  margin-top: 0.35rem;
+}
+
+.asset-ssh {
+  margin-top: var(--space-3);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 24%, transparent);
+  border-radius: 0.625rem;
+  background: color-mix(in srgb, var(--color-primary) 8%, var(--color-bg-surface));
+  padding: var(--space-2);
+}
+
+.asset-ssh__label {
   font-size: 9px;
   font-weight: 900;
-  padding: 0.15rem 0.45rem;
+  letter-spacing: 0.1em;
+  color: var(--color-primary);
+}
+
+.asset-ssh__command,
+.asset-ssh__password {
+  display: block;
+  margin-top: var(--space-1);
+  color: var(--color-text-primary);
+  font-size: 11px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.asset-ssh__command {
+  font-family: var(--font-family-mono);
+}
+
+.asset-ssh__config {
+  margin-top: var(--space-2);
+  padding: var(--space-2);
+  white-space: pre-wrap;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 18%, transparent);
+  border-radius: 0.5rem;
+  background: color-mix(in srgb, var(--color-bg-surface) 76%, var(--color-bg-base));
+  color: var(--color-text-primary);
+  font-family: var(--font-family-mono);
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.asset-ssh__copy {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-top: var(--space-2);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 20%, transparent);
+  border-radius: 0.5rem;
+  background: var(--color-bg-surface);
+  color: var(--color-primary);
+  padding: var(--space-1) var(--space-2);
+  font-size: 10px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.status-badge {
+  font-size: 10px;
+  font-weight: 900;
+  padding: 0.2rem 0.6rem;
   border-radius: 99px;
 }
 
-.status-badge--up { background: rgba(16, 185, 129, 0.1); color: #10b981; }
-.status-badge--down { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
-.status-badge--compromised { background: rgba(249, 115, 22, 0.1); color: #f97316; }
+.status-badge--up {
+  background: var(--color-success-soft);
+  color: var(--color-success);
+}
+.status-badge--down {
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+}
+.status-badge--compromised {
+  background: var(--color-warning-soft);
+  color: var(--color-warning);
+}
 
 .asset-btn {
-  width: 2rem;
-  height: 2rem;
+  width: 2.25rem;
+  height: 2.25rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 0.25rem;
-  background: var(--war-border);
-  color: var(--war-text);
-  border: none;
+  border-radius: 0.5rem;
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border-default);
   cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.asset-btn:hover {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
 }
 
 .asset-btn--primary {
   width: auto;
-  padding: 0 0.75rem;
-  font-size: 10px;
+  padding: 0 1rem;
+  font-size: 11px;
   font-weight: 900;
-  background: var(--war-accent);
-  color: #0f172a;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  border-color: color-mix(in srgb, var(--color-primary) 20%, transparent);
+}
+
+.asset-btn--primary:hover {
+  background: var(--color-primary);
+  color: var(--color-bg-base);
 }
 
 /* Attack Components */
 .target-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
-  gap: 1rem;
+  gap: 1.25rem;
 }
 
 .target-card {
-  background: rgba(0,0,0,0.2);
-  border: 1px solid var(--war-border);
-  padding: 1rem;
-  border-radius: 0.5rem;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-default);
+  padding: 1.25rem;
+  border-radius: 0.75rem;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 1rem;
 }
 
-.target-team { font-size: 13px; letter-spacing: 0.05em; }
-.target-url { font-size: 10px; color: var(--war-muted); }
+.target-team {
+  font-size: 14px;
+  letter-spacing: 0.05em;
+  color: var(--color-primary);
+}
+.target-url {
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+.target-ref {
+  margin-top: 0.2rem;
+}
 
 .target-action {
   display: flex;
   gap: 0.5rem;
 }
 
+.target-open-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  min-width: 4.5rem;
+  border: 1px solid var(--color-border-default);
+  border-radius: 0.5rem;
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.target-open-btn:hover:not(:disabled) {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.target-open-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
 .flag-input {
   flex: 1;
-  background: #0f172a;
-  border: 1px solid var(--war-border);
-  padding: 0.5rem;
-  border-radius: 0.25rem;
-  color: var(--war-text);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-default);
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  color: var(--color-text-primary);
   font-family: var(--font-family-mono);
-  font-size: 12px;
+  font-size: 13px;
   outline: none;
+  transition: border-color 0.2s ease;
+}
+.flag-input:focus {
+  border-color: var(--color-primary);
 }
 
 .submit-btn {
-  background: #ef4444;
-  color: white;
+  background: var(--color-danger);
+  color: var(--color-bg-base);
   border: none;
-  padding: 0 1rem;
-  border-radius: 0.25rem;
+  padding: 0 1.25rem;
+  border-radius: 0.5rem;
   font-weight: 900;
-  font-size: 11px;
+  font-size: 12px;
   cursor: pointer;
+  transition: all 0.2s ease;
+}
+.submit-btn:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-danger) 80%, var(--color-bg-base));
+}
+.submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.feedback-result--success,
+.feedback-score-gain {
+  color: var(--color-success);
+}
+
+.feedback-result--muted {
+  color: var(--color-text-muted);
 }
 
 /* Intel Components */
@@ -864,46 +1169,85 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.5rem 0;
-  border-bottom: 1px solid rgba(255,255,255,0.02);
-  font-size: 12px;
+  padding: 0.65rem 0;
+  border-bottom: 1px solid var(--color-border-subtle);
+  font-size: 13px;
 }
 
-.intel-row.is-me { color: var(--war-accent); }
-.intel-rank { font-weight: 900; color: var(--war-muted); width: 2rem; }
-.intel-name { flex: 1; font-weight: 700; }
-.intel-score { font-weight: 900; }
+.intel-row.is-me {
+  color: var(--color-primary);
+}
+.intel-rank {
+  font-weight: 900;
+  color: var(--color-text-muted);
+  width: 2rem;
+}
+.intel-name {
+  flex: 1;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+.intel-score {
+  font-weight: 900;
+  color: var(--color-text-primary);
+}
+.is-me .intel-name,
+.is-me .intel-score {
+  color: var(--color-primary);
+}
 
 .feedback-item {
-  background: rgba(255,255,255,0.01);
-  padding: 0.65rem;
-  border-radius: 0.25rem;
-  border-left: 2px solid #334155;
-  margin-bottom: 0.5rem;
+  background: var(--color-bg-elevated);
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  border-left: 2px solid var(--color-border-default);
+  margin-bottom: 0.75rem;
 }
 
-.feedback-item.attack_out { border-left-color: #ef4444; }
-.feedback-item.attack_in { border-left-color: #f97316; }
+.feedback-item.attack_out {
+  border-left-color: var(--color-danger);
+}
+.feedback-item.attack_in {
+  border-left-color: var(--color-warning);
+}
+.feedback-ref {
+  margin-top: 0.35rem;
+}
 
-.panel-note { font-size: 11px; color: var(--war-muted); text-align: center; padding: 2rem 0; }
+.panel-note {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-align: center;
+  padding: 3rem 0;
+}
 
 .ops-panel__footer {
-  padding: 0.75rem 1rem;
-  border-top: 1px solid var(--war-border);
+  padding: 1rem 1.25rem;
+  border-top: 1px solid var(--color-border-subtle);
+  background: var(--color-bg-surface);
 }
 
 .result-alert {
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.25rem;
+  padding: 0.65rem 1rem;
+  border-radius: 0.5rem;
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 900;
 }
 
-.result-alert.success { background: rgba(16, 185, 129, 0.1); color: #10b981; }
-.result-alert.danger { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+.result-alert.success {
+  background: var(--color-success-soft);
+  color: var(--color-success);
+  border: 1px solid color-mix(in srgb, var(--color-success) 20%, transparent);
+}
+.result-alert.danger {
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+  border: 1px solid color-mix(in srgb, var(--color-danger) 20%, transparent);
+}
 
 .war-room-loading {
   flex: 1;
@@ -912,15 +1256,16 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
   align-items: center;
   justify-content: center;
   gap: 2rem;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 900;
-  color: var(--war-accent);
+  color: var(--color-primary);
+  padding: 4rem 0;
 }
 
 .radar-scan {
-  width: 4rem;
-  height: 4rem;
-  border: 2px solid var(--war-accent);
+  width: 5rem;
+  height: 5rem;
+  border: 2px solid var(--color-primary);
   border-radius: 50%;
   position: relative;
 }
@@ -929,15 +1274,33 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
   content: '';
   position: absolute;
   inset: 0;
-  background: conic-gradient(from 0deg, var(--war-accent), transparent);
+  background: conic-gradient(from 0deg, var(--color-primary), transparent);
   border-radius: 50%;
   animation: radar 2s linear infinite;
+  opacity: 0.3;
 }
 
-@keyframes radar { to { transform: rotate(360deg); } }
+@keyframes radar {
+  to {
+    transform: rotate(360deg);
+  }
+}
 
 @media (max-width: 1280px) {
-  .war-room-grid { grid-template-columns: 1fr; }
-  .column-defense, .column-intel { grid-row: auto; }
+  .war-room-grid {
+    grid-template-columns: 1fr;
+  }
+  .column-defense,
+  .column-intel {
+    grid-row: auto;
+  }
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--color-border-default);
+  border-radius: 10px;
 }
 </style>

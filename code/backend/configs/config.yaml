@@ -23,7 +23,7 @@ postgres:
   port: 5432
   database: ctf
   username: postgres
-  password: postgres123456
+  password: "" # 通过 CTF_POSTGRES_PASSWORD 注入
   ssl_mode: disable
   max_open_conns: 20
   max_idle_conns: 10
@@ -31,7 +31,7 @@ postgres:
 
 redis:
   addr: 127.0.0.1:6379
-  password: redis123456
+  password: "" # 通过 CTF_REDIS_PASSWORD 注入
   db: 2
   dial_timeout: 5s
   read_timeout: 3s
@@ -49,7 +49,6 @@ cors:
     - DELETE
     - OPTIONS
   allow_headers:
-    - Authorization
     - Content-Type
     - X-Request-ID
   expose_headers:
@@ -62,17 +61,13 @@ cors:
   max_age: 12h
 
 auth:
-  issuer: ctf-platform
-  access_token_ttl: 15m
-  refresh_token_ttl: 168h
-  refresh_cookie_name: ctf_refresh_token
-  refresh_cookie_path: /api/v1/auth
-  refresh_cookie_secure: false
-  refresh_cookie_http_only: true
-  refresh_cookie_same_site: lax
-  private_key_path: configs/keys/dev_private.pem
-  public_key_path: configs/keys/dev_public.pem
-  token_blacklist_prefix: ctf:auth:blacklist
+  session_ttl: 168h
+  session_cookie_name: ctf_session
+  session_cookie_path: /api/v1
+  session_cookie_secure: false
+  session_cookie_http_only: true
+  session_cookie_same_site: lax
+  session_key_prefix: ctf:auth:session
   cas:
     enabled: false
     base_url: ""
@@ -135,6 +130,15 @@ container:
   public_host: localhost
   proxy_ticket_ttl: 15m
   proxy_body_preview_size: 1024
+  defense_ssh_enabled: false
+  defense_ssh_host: 127.0.0.1
+  defense_ssh_port: 2222
+  registry:
+    enabled: false
+    server: "" # 例如 registry.example.edu 或 registry.local:5000
+    username: "" # 建议通过 CTF_CONTAINER_REGISTRY_USERNAME 注入
+    password: "" # 建议通过 CTF_CONTAINER_REGISTRY_PASSWORD 注入
+    identity_token: "" # 可选，使用 token 认证时通过 CTF_CONTAINER_REGISTRY_IDENTITY_TOKEN 注入
   scheduler:
     enabled: true
     poll_interval: 1s

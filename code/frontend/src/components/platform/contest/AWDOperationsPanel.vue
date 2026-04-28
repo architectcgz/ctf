@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import type { AWDTrafficStatusGroup, ContestDetailData } from '@/api/contracts'
 import AWDAttackLogDialog from './AWDAttackLogDialog.vue'
 import AWDContestSelectorField from './AWDContestSelectorField.vue'
+import AWDInstanceOrchestrationPanel from './AWDInstanceOrchestrationPanel.vue'
 import AWDReadinessOverrideDialog from './AWDReadinessOverrideDialog.vue'
 import AWDReadinessSummary from './AWDReadinessSummary.vue'
 import AWDRuntimePendingState from './AWDRuntimePendingState.vue'
@@ -19,12 +20,18 @@ const props = defineProps<{
   contests: ContestDetailData[]
   selectedContestId: string | null
   hideContestSelector?: boolean
+  hideStudioLink?: boolean
+  hideReadinessActions?: boolean
+  hideOperationTabs?: boolean
+  operationPanel?: 'inspector' | 'instances'
+  runtimeContent?: 'all' | 'readiness' | 'round-inspector' | 'instances'
   initialTab?: 'matrix' | 'attacks' | 'traffic' | 'scoreboard'
 }>()
 
 const emit = defineEmits<{
   'update:selectedContestId': [contestId: string]
   'open:awd-config': [challengeId: string]
+  'open:contest-edit': []
 }>()
 
 const selectedContest = computed(
@@ -48,11 +55,44 @@ const operationTabs = [
     tabId: 'awd-ops-tab-inspector',
     panelId: 'awd-ops-panel-inspector',
   },
+  {
+    key: 'instances',
+    label: '实例编排',
+    tabId: 'awd-ops-tab-instances',
+    panelId: 'awd-ops-panel-instances',
+  },
 ] as const
 
 type AWDOperationsPanelKey = (typeof operationTabs)[number]['key']
 const operationTabOrder = operationTabs.map((tab) => tab.key) as AWDOperationsPanelKey[]
-const activePanel = ref<AWDOperationsPanelKey>('inspector')
+const activePanel = ref<AWDOperationsPanelKey>(props.operationPanel ?? 'inspector')
+const visibleOperationTabs = computed(() =>
+  runtimeStageReady.value ? operationTabs : operationTabs.filter((tab) => tab.key === 'inspector')
+)
+const shouldShowOperationTabs = computed(() => !props.hideOperationTabs)
+const runtimeContent = computed(() => props.runtimeContent ?? 'all')
+const shouldShowRuntimeReadiness = computed(
+  () => runtimeContent.value === 'all' || runtimeContent.value === 'readiness'
+)
+const shouldShowRoundInspector = computed(
+  () =>
+    activePanel.value === 'inspector' &&
+    (runtimeContent.value === 'all' || runtimeContent.value === 'round-inspector')
+)
+const shouldShowInstanceOrchestration = computed(
+  () =>
+    activePanel.value === 'instances' &&
+    (runtimeContent.value === 'all' || runtimeContent.value === 'instances')
+)
+
+watch(
+  () => props.operationPanel,
+  (panel) => {
+    if (panel) {
+      activePanel.value = panel
+    }
+  }
+)
 
 const {
   rounds,
@@ -68,23 +108,30 @@ const {
   scoreboardFrozen,
   teams,
   challengeLinks,
+  instanceOrchestration,
   readiness,
   loadingRounds,
   loadingRoundDetail,
   loadingTrafficSummary,
   loadingTrafficEvents,
+  loadingInstanceOrchestration,
   loadingReadiness,
   checking,
   creatingRound,
   savingServiceCheck,
   savingAttackLog,
+  startingInstanceKey,
   shouldAutoRefresh,
   overrideDialogState,
   refresh,
+  refreshInstanceOrchestration,
   applyTrafficFilters,
   setTrafficPage,
   resetTrafficFilters,
   runSelectedRoundCheck,
+  startTeamServiceInstance,
+  startTeamAllServices,
+  startAllTeamServices,
   confirmOverrideAction,
   closeOverrideDialog,
   createRound,
@@ -168,6 +215,9 @@ function updateAttackLogDialogOpen(value: boolean) {
 }
 
 function selectPanel(panel: AWDOperationsPanelKey) {
+  if (props.operationPanel) {
+    return
+  }
   activePanel.value = panel
 }
 
@@ -231,6 +281,18 @@ function handleEditReadinessConfig(challengeId: string) {
   emit('open:awd-config', challengeId)
 }
 
+async function handleStartTeamServiceInstance(teamId: string, serviceId: string) {
+  await startTeamServiceInstance(teamId, serviceId)
+}
+
+async function handleStartTeamAllServices(teamId: string) {
+  await startTeamAllServices(teamId)
+}
+
+async function handleStartAllTeamServices() {
+  await startAllTeamServices()
+}
+
 function handleOverrideDialogOpenChange(value: boolean) {
   if (!value) {
     closeOverrideDialog()
@@ -250,14 +312,14 @@ function handleOverrideDialogOpenChange(value: boolean) {
     <AppEmpty
       v-if="contests.length === 0"
       title="暂无 AWD 赛事"
-      description="当前列表没有可操作的攻防赛事。"
+      description="当前页没有 AWD 赛事，可先创建或切换到包含 AWD 赛事的页码。"
       icon="Flag"
       class="py-20"
     />
 
     <AppEmpty
       v-else-if="!selectedContest"
-      title="未选择赛事"
+      title="暂无 AWD 赛事"
       description="请先选择一个 AWD 赛事以进入运维面板。"
       icon="Flag"
       class="py-20"
@@ -272,18 +334,76 @@ function handleOverrideDialogOpenChange(value: boolean) {
         v-if="!runtimeStageReady"
         class="studio-ops-section"
       >
-        <header class="section-header mb-6">
-          <h2 class="section-title">
-            运维就绪审计
-          </h2>
-          <p class="section-hint">
-            开赛前必须修正以下阻塞项，以确保裁判引擎正常运行。
-          </p>
+        <nav
+          v-if="shouldShowOperationTabs"
+          class="studio-ops-tabs"
+        >
+          <button
+            v-for="(tab, index) in visibleOperationTabs"
+            :id="tab.tabId"
+            :key="tab.key"
+            :ref="(el) => setTabButtonRef(tab.key, el as HTMLButtonElement | null)"
+            class="tab-item"
+            :class="{ active: activePanel === tab.key }"
+            type="button"
+            role="tab"
+            :aria-selected="activePanel === tab.key"
+            :aria-controls="tab.panelId"
+            @keydown="handleTabKeydown($event, index)"
+            @click="selectPanel(tab.key)"
+          >
+            {{ tab.label }}
+          </button>
+        </nav>
+
+        <header class="section-header">
+          <div class="section-identity">
+            <div class="section-overline">
+              Command Center / Pre-flight
+            </div>
+            <h2 class="section-title">
+              {{ selectedContest.title }}
+            </h2>
+          </div>
+          <div class="section-actions">
+            <button
+              v-if="!hideStudioLink"
+              type="button"
+              class="ops-btn ops-btn--neutral"
+              @click="emit('open:contest-edit')"
+            >
+              进入竞赛工作室
+            </button>
+          </div>
         </header>
-        <AWDReadinessSummary
-          :readiness="readiness"
-          :loading="loadingReadiness"
-          @edit-config="handleEditReadinessConfig"
+        <div
+          v-if="shouldShowRuntimeReadiness || runtimeContent === 'round-inspector'"
+          class="readiness-wrap"
+        >
+          <AWDRuntimePendingState
+            v-if="runtimeContent !== 'readiness'"
+          />
+          <AWDReadinessSummary
+            v-if="shouldShowRuntimeReadiness"
+            :readiness="readiness"
+            :loading="loadingReadiness"
+            :hide-actions="hideReadinessActions"
+            @edit-config="handleEditReadinessConfig"
+          />
+        </div>
+
+        <AWDInstanceOrchestrationPanel
+          v-if="shouldShowInstanceOrchestration"
+          id="awd-ops-panel-instances"
+          role="tabpanel"
+          aria-labelledby="awd-ops-tab-instances"
+          :orchestration="instanceOrchestration"
+          :loading="loadingInstanceOrchestration"
+          :starting-key="startingInstanceKey"
+          @refresh="refreshInstanceOrchestration"
+          @start-cell="handleStartTeamServiceInstance"
+          @start-team="handleStartTeamAllServices"
+          @start-all="handleStartAllTeamServices"
         />
       </section>
 
@@ -292,33 +412,23 @@ function handleOverrideDialogOpenChange(value: boolean) {
         v-else
         class="studio-ops-section"
       >
-        <header class="section-header mb-6">
-          <h2 class="section-title">
-            轮次态势
-          </h2>
-          <p class="section-hint">
-            围绕当前轮次查看服务矩阵、攻击流水、流量审计与得分变化。
-          </p>
-        </header>
-
-        <div class="runtime-readiness-strip">
-          <AWDReadinessSummary
-            :readiness="readiness"
-            :loading="loadingReadiness"
-            @edit-config="handleEditReadinessConfig"
-          />
-        </div>
-
         <!-- Dashboard Navigation (Integrated) -->
         <nav
-          v-if="operationTabs.length > 1"
+          v-if="shouldShowOperationTabs"
           class="studio-ops-tabs"
         >
           <button
-            v-for="tab in operationTabs"
+            v-for="(tab, index) in visibleOperationTabs"
+            :id="tab.tabId"
             :key="tab.key"
+            :ref="(el) => setTabButtonRef(tab.key, el as HTMLButtonElement | null)"
             class="tab-item"
             :class="{ active: activePanel === tab.key }"
+            type="button"
+            role="tab"
+            :aria-selected="activePanel === tab.key"
+            :aria-controls="tab.panelId"
+            @keydown="handleTabKeydown($event, index)"
             @click="selectPanel(tab.key)"
           >
             {{ tab.label }}
@@ -326,7 +436,20 @@ function handleOverrideDialogOpenChange(value: boolean) {
         </nav>
 
         <div class="inspector-wrap">
+          <AWDReadinessSummary
+            v-if="shouldShowRuntimeReadiness"
+            :readiness="readiness"
+            :loading="loadingReadiness"
+            :hide-actions="hideReadinessActions"
+            class="runtime-readiness-strip"
+            @edit-config="handleEditReadinessConfig"
+          />
+
           <AWDRoundInspector
+            v-if="shouldShowRoundInspector"
+            id="awd-ops-panel-inspector"
+            role="tabpanel"
+            aria-labelledby="awd-ops-tab-inspector"
             :contest="selectedContest"
             :rounds="rounds"
             :selected-round-id="selectedRoundId"
@@ -351,6 +474,7 @@ function handleOverrideDialogOpenChange(value: boolean) {
             :service-check-hint="serviceCheckHint"
             :attack-log-hint="attackLogHint"
             :initial-tab="initialTab"
+            :hide-studio-link="hideStudioLink"
             @refresh="refresh"
             @apply-traffic-filters="handleApplyTrafficFilters"
             @change-traffic-page="handleTrafficPageChange"
@@ -360,9 +484,39 @@ function handleOverrideDialogOpenChange(value: boolean) {
             @open-attack-log-dialog="openAttackLogDialog"
             @run-selected-round-check="runSelectedRoundCheck"
             @update:selected-round-id="updateSelectedRoundId"
+            @open:contest-edit="emit('open:contest-edit')"
+          >
+            <template #service-alerts="slotProps">
+              <slot
+                name="service-alerts"
+                v-bind="slotProps"
+              />
+            </template>
+          </AWDRoundInspector>
+
+          <AWDInstanceOrchestrationPanel
+            v-if="shouldShowInstanceOrchestration"
+            id="awd-ops-panel-instances"
+            role="tabpanel"
+            aria-labelledby="awd-ops-tab-instances"
+            :orchestration="instanceOrchestration"
+            :loading="loadingInstanceOrchestration"
+            :starting-key="startingInstanceKey"
+            @refresh="refreshInstanceOrchestration"
+            @start-cell="handleStartTeamServiceInstance"
+            @start-team="handleStartTeamAllServices"
+            @start-all="handleStartAllTeamServices"
           />
         </div>
       </section>
+    </div>
+
+    <div
+      v-if="overrideDialogState.open"
+      class="sr-only"
+      aria-live="assertive"
+    >
+      {{ overrideDialogState.title }} 强制继续
     </div>
 
     <AWDRoundCreateDialog
@@ -405,14 +559,14 @@ function handleOverrideDialogOpenChange(value: boolean) {
 <style scoped>
 .studio-ops-shell {
   min-height: 100%;
-  background: var(--color-bg-base);
+  background: transparent;
 }
 
 .studio-ops-content {
-  padding: 1.5rem 2rem;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: var(--workspace-directory-page-block-gap, var(--space-5));
 }
 
 .studio-ops-section {
@@ -420,16 +574,71 @@ function handleOverrideDialogOpenChange(value: boolean) {
   flex-direction: column;
 }
 
-.section-header { border-left: 4px solid var(--color-primary); padding-left: var(--space-5); }
-.section-title { font-size: var(--font-size-1-15); font-weight: 900; color: var(--color-text-primary); margin: 0; }
-.section-hint { font-size: var(--font-size-13); color: var(--color-text-secondary); margin-top: var(--space-1-5); }
+.section-header {
+  margin-bottom: var(--space-8);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  border-bottom: 1px solid var(--color-border-subtle);
+  padding-bottom: var(--space-4);
+}
+
+.section-overline {
+  font-size: var(--font-size-10);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-1-5);
+}
+
+.section-title { font-size: var(--font-size-1-25); font-weight: 900; color: var(--color-text-primary); margin: 0; letter-spacing: -0.01em; }
+
+.section-actions {
+  display: flex;
+  gap: var(--space-3);
+}
 
 .studio-ops-tabs { display: flex; gap: var(--space-8); border-bottom: 1px solid var(--color-border-default); margin-bottom: var(--space-6); }
-.tab-item { padding: 0.75rem 0.25rem; font-size: var(--font-size-13); font-weight: 800; color: var(--color-text-secondary); border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.2s ease; }
+.tab-item { padding: var(--space-3) var(--space-1); font-size: var(--font-size-13); font-weight: 800; color: var(--color-text-secondary); border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.2s ease; }
 .tab-item:hover { color: var(--color-text-primary); }
 .tab-item.active { color: var(--color-primary); border-bottom-color: var(--color-primary); }
 
+.ops-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: var(--ui-control-height-md);
+  padding: 0 var(--space-5);
+  border-radius: 0.85rem;
+  font-size: var(--font-size-13);
+  font-weight: 700;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.ops-btn--neutral {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-default);
+  color: var(--color-text-secondary);
+}
+
+.ops-btn--neutral:hover:not(:disabled) {
+  border-color: var(--color-primary);
+  color: var(--color-text-primary);
+}
+
+.ops-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .runtime-readiness-strip { margin-bottom: var(--space-6); }
 
-.inspector-wrap { min-width: 0; }
+.inspector-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--workspace-directory-page-block-gap, var(--space-5));
+  min-width: 0;
+}
 </style>

@@ -44,14 +44,20 @@ type ChallengePackageHint struct {
 }
 
 type ChallengePackageRuntime struct {
-	Type  string                       `yaml:"type"`
-	Image ChallengePackageRuntimeImage `yaml:"image"`
+	Type    string                         `yaml:"type"`
+	Image   ChallengePackageRuntimeImage   `yaml:"image"`
+	Service ChallengePackageRuntimeService `yaml:"service"`
 }
 
 type ChallengePackageRuntimeImage struct {
 	Ref  string `yaml:"ref"`
 	Name string `yaml:"name"`
 	Tag  string `yaml:"tag"`
+}
+
+type ChallengePackageRuntimeService struct {
+	Protocol string `yaml:"protocol"`
+	Port     int    `yaml:"port"`
 }
 
 type ChallengePackageExtensions struct {
@@ -157,6 +163,8 @@ type ParsedChallengePackage struct {
 	FlagValue       string
 	FlagPrefix      string
 	RuntimeImageRef string
+	RuntimeProtocol string
+	RuntimePort     int
 	Attachments     []ParsedChallengePackageAttachment
 	Hints           []ParsedChallengePackageHint
 	Topology        *ParsedChallengePackageTopology

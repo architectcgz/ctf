@@ -163,8 +163,8 @@
 .journal-shell.journal-shell-user {
   --ui-btn-radius: 0.25rem;
   --ui-btn-font-size: var(--font-size-13);
-  --ui-btn-primary-background: #2a7a58;
-  --ui-btn-primary-hover-background: #206346;
+  --ui-btn-primary-background: var(--color-primary);
+  --ui-btn-primary-hover-background: var(--color-primary-hover);
   --ui-btn-secondary-background: #ffffff;
   --ui-btn-secondary-color: #475569;
   --ui-btn-secondary-border: #e2e8f0;

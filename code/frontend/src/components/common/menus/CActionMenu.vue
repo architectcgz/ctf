@@ -13,6 +13,7 @@ const props = withDefaults(
     viewportPadding?: number
     closeOnBackdrop?: boolean
     closeOnEscape?: boolean
+    accent?: string
   }>(),
   {
     title: '',
@@ -24,6 +25,7 @@ const props = withDefaults(
     viewportPadding: 12,
     closeOnBackdrop: true,
     closeOnEscape: true,
+    accent: '',
   }
 )
 
@@ -48,6 +50,17 @@ const resolvedPanelStyle = computed<Record<string, string>>(() => {
     style.minWidth = props.minWidth
   }
 
+  return style
+})
+
+const resolvedThemeStyle = computed<Record<string, string>>(() => {
+  const style: Record<string, string> = {}
+
+  if (!props.accent) {
+    return style
+  }
+
+  style['--action-menu-accent'] = props.accent
   return style
 })
 
@@ -149,7 +162,10 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="c-action-menu">
+  <div
+    class="c-action-menu"
+    :style="resolvedThemeStyle"
+  >
     <slot
       name="trigger"
       :open="open"
@@ -163,6 +179,7 @@ onBeforeUnmount(() => {
         v-if="open"
         class="c-action-menu__layer"
         data-action-menu-layer
+        :style="resolvedThemeStyle"
         @click="handleBackdropClick"
       >
         <div

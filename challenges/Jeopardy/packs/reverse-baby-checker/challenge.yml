@@ -1,0 +1,33 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: reverse-baby-checker
+  title: "Reverse 入门：小小校验器"
+  category: reverse
+  difficulty: beginner
+  points: 100
+  tags:
+    - kp:string-recovery
+    - topic:checker
+    - stack:python
+
+content:
+  statement: statement.md
+  attachments:
+    - path: attachments/checker.py
+      name: checker.py
+
+flag:
+  type: static
+  prefix: flag
+  value: flag{reverse_baby_checker}
+
+hints:
+  - level: 1
+    title: Hint 1
+    cost_points: 10
+    content: "不要暴力猜输入，先看 check 函数如何生成 expect。"
+
+runtime:
+  type: none

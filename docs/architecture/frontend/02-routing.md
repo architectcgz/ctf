@@ -22,7 +22,8 @@
 | `/challenges/:id` | ChallengeDetail | `challenges/ChallengeDetail.vue` | student, teacher | 靶场详情 + Flag 提交 |
 | `/contests` | Contests | `contests/ContestList.vue` | 全部 | 竞赛列表 |
 | `/contests/:id` | ContestDetail | `contests/ContestDetail.vue` | 全部 | 竞赛详情（Tab 子视图） |
-| `/scoreboard` | Scoreboard | `scoreboard/ScoreboardView.vue` | 全部 | 全站排行榜 |
+| `/scoreboard` | Scoreboard | `scoreboard/ScoreboardView.vue` | 全部 | 排行榜入口，展示竞赛排行列表和全站积分榜 |
+| `/scoreboard/:contestId` | ScoreboardDetail | `scoreboard/ScoreboardDetail.vue` | 全部 | 单个竞赛排行榜详情 |
 | `/instances` | Instances | `instances/InstanceList.vue` | student | 我的实例 |
 | `/skill-profile` | SkillProfile | `profile/SkillProfile.vue` | student | 能力评估 |
 | `/profile` | Profile | `profile/UserProfile.vue` | 全部 | 个人资料 + 安全设置 |

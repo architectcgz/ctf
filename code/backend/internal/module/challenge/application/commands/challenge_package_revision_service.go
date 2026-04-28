@@ -78,10 +78,6 @@ func (s *ChallengeService) ExportChallengePackage(
 	actorUserID int64,
 	challengeID int64,
 ) (*dto.ChallengePackageExportResp, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
 	var response *dto.ChallengePackageExportResp
 	cleanupPaths := make([]string, 0, 2)
 	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
@@ -202,8 +198,11 @@ func (s *ChallengeService) ExportChallengePackage(
 	return response, nil
 }
 
-func (s *ChallengeService) GetChallengePackageExport(challengeID int64, revisionID *int64) (*dto.ChallengePackageExportResp, error) {
-	if _, err := s.repo.FindByID(challengeID); err != nil {
+func (s *ChallengeService) GetChallengePackageExport(ctx context.Context, challengeID int64, revisionID *int64) (*dto.ChallengePackageExportResp, error) {
+	if s.packageRepo == nil {
+		return nil, errcode.ErrNotFound.WithCause(errors.New("题包修订仓储未配置"))
+	}
+	if _, err := s.repo.FindByID(ctx, challengeID); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrChallengeNotFound
 		}
@@ -213,7 +212,7 @@ func (s *ChallengeService) GetChallengePackageExport(challengeID int64, revision
 	var revision *model.ChallengePackageRevision
 	var err error
 	if revisionID != nil && *revisionID > 0 {
-		revision, err = s.topologyRepo.FindChallengePackageRevisionByID(*revisionID)
+		revision, err = s.packageRepo.FindChallengePackageRevisionByID(ctx, *revisionID)
 		if err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				return nil, errcode.ErrNotFound.WithCause(errors.New("题包修订不存在"))
@@ -224,7 +223,7 @@ func (s *ChallengeService) GetChallengePackageExport(challengeID int64, revision
 			return nil, errcode.ErrForbidden
 		}
 	} else {
-		topology, findErr := s.topologyRepo.FindChallengeTopologyByChallengeID(challengeID)
+		topology, findErr := s.topologyRepo.FindChallengeTopologyByChallengeID(ctx, challengeID)
 		if findErr != nil {
 			if errors.Is(findErr, gorm.ErrRecordNotFound) {
 				return nil, errcode.ErrNotFound.WithCause(errors.New("题目拓扑不存在"))
@@ -238,7 +237,7 @@ func (s *ChallengeService) GetChallengePackageExport(challengeID int64, revision
 		if selectedRevisionID == nil || *selectedRevisionID <= 0 {
 			return nil, errcode.ErrNotFound.WithCause(errors.New("尚未生成可下载的题包"))
 		}
-		revision, err = s.topologyRepo.FindChallengePackageRevisionByID(*selectedRevisionID)
+		revision, err = s.packageRepo.FindChallengePackageRevisionByID(ctx, *selectedRevisionID)
 		if err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				return nil, errcode.ErrNotFound.WithCause(errors.New("题包修订不存在"))

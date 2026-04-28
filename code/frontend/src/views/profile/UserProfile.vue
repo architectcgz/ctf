@@ -151,13 +151,20 @@ async function createReport(): Promise<void> {
 
 async function handleDownload(): Promise<void> {
   if (!latestReport.value) return
-  const file = await downloadReport(latestReport.value.report_id)
-  const url = window.URL.createObjectURL(file.blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = file.filename
-  link.click()
-  window.URL.revokeObjectURL(url)
+  exportError.value = null
+  try {
+    const file = await downloadReport(latestReport.value.report_id)
+    const url = window.URL.createObjectURL(file.blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = file.filename
+    link.click()
+    window.URL.revokeObjectURL(url)
+  } catch (err) {
+    console.error('下载个人报告失败:', err)
+    exportError.value =
+      err instanceof Error && err.message.trim() ? err.message : '下载最近报告失败，请稍后重试'
+  }
 }
 
 onMounted(() => {
@@ -269,9 +276,7 @@ onUnmounted(() => {
           <section class="profile-section">
             <div class="profile-section-head">
               <div>
-                <div class="profile-section-kicker">
-                  Account
-                </div>
+                <div class="profile-section-kicker">Account</div>
                 <h2 class="profile-section-title">
                   <UserCircle2 class="profile-accent-icon h-5 w-5" />
                   账号信息
@@ -311,9 +316,7 @@ onUnmounted(() => {
           >
             <div class="profile-section-head">
               <div>
-                <div class="profile-section-kicker">
-                  Report
-                </div>
+                <div class="profile-section-kicker">Report</div>
                 <h2 class="profile-section-title">
                   个人报告
                 </h2>

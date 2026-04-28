@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { RefreshCw } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
 
@@ -9,6 +9,7 @@ import AppEmpty from '@/components/common/AppEmpty.vue'
 import AdminNotificationPublishDrawer from '@/components/notifications/AdminNotificationPublishDrawer.vue'
 import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
 import { usePagination } from '@/composables/usePagination'
+import { useProbeEasterEggs } from '@/composables/useProbeEasterEggs'
 import { useToast } from '@/composables/useToast'
 import { useAuthStore } from '@/stores/auth'
 import { useNotificationStore } from '@/stores/notification'
@@ -18,7 +19,10 @@ const toast = useToast()
 const authStore = useAuthStore()
 const notificationStore = useNotificationStore()
 const router = useRouter()
+const { track } = useProbeEasterEggs()
 const publishDrawerOpen = ref(false)
+const probeMessage = ref('')
+let probeMessageTimer: number | null = null
 
 async function fetchNotifications(params: { page: number; page_size: number }) {
   const data = await getNotifications(params)
@@ -51,6 +55,17 @@ function openNotificationDetail(item: NotificationItem): void {
   void router.push(`/notifications/${encodeURIComponent(String(item.id))}`)
 }
 
+function showProbeMessage(message: string) {
+  probeMessage.value = message
+  if (probeMessageTimer) {
+    window.clearTimeout(probeMessageTimer)
+  }
+  probeMessageTimer = window.setTimeout(() => {
+    probeMessage.value = ''
+    probeMessageTimer = null
+  }, 3000)
+}
+
 async function markCurrentPageRead(): Promise<void> {
   const unreadItems = list.value.filter((item) => item.unread)
   if (unreadItems.length === 0) return
@@ -76,6 +91,12 @@ onMounted(() => {
   void refresh()
 })
 
+onBeforeUnmount(() => {
+  if (probeMessageTimer) {
+    window.clearTimeout(probeMessageTimer)
+  }
+})
+
 const headStats = computed(() => [
   { key: 'total', label: '消息数', value: total.value },
   { key: 'unread', label: '未读数', value: unreadOnPage.value },
@@ -95,6 +116,14 @@ async function handlePublishSuccess(): Promise<void> {
   closePublishDrawer()
   await refresh()
 }
+
+async function handleRefresh() {
+  const result = track('notification-refresh', 3)
+  if (result.unlocked) {
+    showProbeMessage('新消息不会因为执念刷新得更快。')
+  }
+  await refresh()
+}
 </script>
 
 <template>
@@ -105,9 +134,7 @@ async function handlePublishSuccess(): Promise<void> {
       <div class="notification-page">
         <header class="notification-topbar">
           <div class="notification-heading">
-            <div class="workspace-overline">
-              Notifications
-            </div>
+            <div class="workspace-overline">Notifications</div>
             <h1 class="notification-title workspace-page-title">
               通知中心
             </h1>
@@ -150,7 +177,7 @@ async function handlePublishSuccess(): Promise<void> {
               <button
                 type="button"
                 class="ui-btn ui-btn--secondary"
-                @click="refresh"
+                @click="handleRefresh"
               >
                 <RefreshCw class="h-4 w-4" />
                 刷新
@@ -158,6 +185,13 @@ async function handlePublishSuccess(): Promise<void> {
             </div>
           </div>
         </header>
+
+        <p
+          v-if="probeMessage"
+          class="notification-probe-note"
+        >
+          {{ probeMessage }}
+        </p>
 
         <div
           v-if="loading"
@@ -177,7 +211,7 @@ async function handlePublishSuccess(): Promise<void> {
             <button
               type="button"
               class="ui-btn ui-btn--secondary"
-              @click="refresh"
+              @click="handleRefresh"
             >
               重新加载
             </button>
@@ -300,6 +334,14 @@ async function handlePublishSuccess(): Promise<void> {
 
 .notification-subtitle {
   max-width: 720px;
+}
+
+.notification-probe-note {
+  margin-top: 12px;
+  font-size: var(--font-size-13);
+  font-weight: 600;
+  line-height: 1.7;
+  color: color-mix(in srgb, var(--journal-accent) 84%, var(--journal-muted));
 }
 
 .notification-topbar-meta {

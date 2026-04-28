@@ -25,6 +25,8 @@ const props = withDefaults(
     filterPanelWidth?: string
     resetLabel?: string
     resetDisabled?: boolean
+    showFilter?: boolean
+    showTotal?: boolean
   }>(),
   {
     searchPlaceholder: '输入关键词检索...',
@@ -37,6 +39,8 @@ const props = withDefaults(
     filterPanelWidth: '24rem',
     resetLabel: '清空筛选',
     resetDisabled: false,
+    showFilter: true,
+    showTotal: true,
   }
 )
 
@@ -153,6 +157,7 @@ onUnmounted(() => {
       </label>
 
       <button
+        v-if="showFilter"
         ref="filterToggleRef"
         type="button"
         class="workspace-directory-toolbar__filter-toggle"
@@ -216,13 +221,16 @@ onUnmounted(() => {
         </div>
       </div>
 
-      <div class="workspace-directory-toolbar__count-pill">
+      <div
+        v-if="showTotal"
+        class="workspace-directory-toolbar__count-pill"
+      >
         共 <span class="workspace-directory-toolbar__count-value">{{ total }}</span> {{ totalSuffix }}
       </div>
     </div>
 
     <div
-      v-if="isFilterOpen"
+      v-if="showFilter && isFilterOpen"
       ref="filterPanelRef"
       class="workspace-directory-toolbar__filter-panel"
       :style="{ width: filterPanelWidth }"
@@ -275,6 +283,16 @@ onUnmounted(() => {
   justify-content: space-between;
   gap: var(--space-3);
   margin-bottom: var(--workspace-directory-toolbar-gap-bottom, 1.5rem);
+}
+
+:global([data-theme='dark']) .workspace-directory-toolbar {
+  --workspace-toolbar-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
+  --workspace-toolbar-surface-subtle: color-mix(in srgb, var(--color-bg-elevated) 84%, var(--color-bg-base));
+  --workspace-toolbar-control-border: color-mix(in srgb, var(--color-border-default) 72%, transparent);
+  --workspace-toolbar-control-border-strong: color-mix(in srgb, var(--color-primary) 32%, var(--color-border-default));
+  --workspace-toolbar-control-background: var(--workspace-toolbar-surface);
+  --workspace-toolbar-menu-surface: var(--workspace-toolbar-surface-subtle);
+  --workspace-toolbar-menu-border: color-mix(in srgb, var(--color-border-default) 76%, transparent);
 }
 
 .workspace-directory-toolbar__main,

@@ -18,11 +18,14 @@ import type {
   TeamData,
 } from '@/api/contracts'
 import { useToast } from '@/composables/useToast'
+import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
 import { formatDuration } from '@/utils/format'
 
 interface UseContestDetailPageOptions {
   contestId: MaybeRefOrGetter<string>
   currentUserId: MaybeRefOrGetter<string | undefined>
+  selectedChallengeId?: MaybeRefOrGetter<string | null | Array<string | null> | undefined>
+  onSelectedChallengeChange?: (challengeId: string | null) => void
 }
 
 function createEmptyState() {
@@ -71,6 +74,26 @@ export function useContestDetailPage(options: UseContestDetailPageOptions) {
     const currentUserId = toValue(options.currentUserId)
     return Boolean(team.value && currentUserId && team.value.captain_user_id === currentUserId)
   })
+
+  function normalizeChallengeId(value: string | null | Array<string | null> | undefined): string {
+    if (Array.isArray(value)) {
+      return value.find((item): item is string => typeof item === 'string' && item.length > 0) ?? ''
+    }
+    return typeof value === 'string' ? value : ''
+  }
+
+  function requestedChallengeId(): string {
+    return normalizeChallengeId(toValue(options.selectedChallengeId))
+  }
+
+  function syncSelectedChallengeFromQuery() {
+    const challengeId = requestedChallengeId()
+    selectedChallenge.value = challengeId
+      ? challenges.value.find((challenge) => challenge.id === challengeId) ?? null
+      : null
+    flagInput.value = ''
+    submitResult.value = null
+  }
 
   function stopCountdown() {
     if (countdownTimer) {
@@ -180,7 +203,7 @@ export function useContestDetailPage(options: UseContestDetailPageOptions) {
       contest.value = contestData
       team.value = teamData
       challenges.value = challengesData
-      selectedChallenge.value = null
+      syncSelectedChallengeFromQuery()
       flagInput.value = ''
       submitResult.value = null
 
@@ -212,6 +235,7 @@ export function useContestDetailPage(options: UseContestDetailPageOptions) {
     selectedChallenge.value = challenge
     flagInput.value = ''
     submitResult.value = null
+    options.onSelectedChallengeChange?.(challenge.id)
   }
 
   function buildContestSubmitMessage(result: SubmitFlagData): string {
@@ -222,6 +246,10 @@ export function useContestDetailPage(options: UseContestDetailPageOptions) {
   }
 
   async function submitFlagAction() {
+    if (submitting.value) {
+      return
+    }
+
     const flag = flagInput.value.trim()
     if (!flag) {
       toast.warning('请输入 Flag')
@@ -335,7 +363,16 @@ export function useContestDetailPage(options: UseContestDetailPageOptions) {
   }
 
   async function kickMember(userId: string) {
-    if (!contest.value || !team.value || !window.confirm('确定踢出该成员？')) {
+    if (!contest.value || !team.value) {
+      return
+    }
+
+    const confirmed = await confirmDestructiveAction({
+      title: '踢出成员',
+      message: '确定踢出该成员？',
+      confirmButtonText: '确认踢出',
+    })
+    if (!confirmed) {
       return
     }
 
@@ -355,6 +392,13 @@ export function useContestDetailPage(options: UseContestDetailPageOptions) {
       void loadPage()
     },
     { immediate: true }
+  )
+
+  watch(
+    () => toValue(options.selectedChallengeId),
+    () => {
+      syncSelectedChallengeFromQuery()
+    }
   )
 
   onUnmounted(() => {

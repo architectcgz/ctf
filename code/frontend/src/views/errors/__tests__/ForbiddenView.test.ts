@@ -39,9 +39,7 @@ describe('ForbiddenView', () => {
         id: 'admin-1',
         username: 'root',
         role: 'admin',
-      },
-      'token'
-    )
+      })
 
     const wrapper = mount(ForbiddenView, {
       global: {

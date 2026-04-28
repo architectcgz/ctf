@@ -45,11 +45,13 @@ describe('misc design style system', () => {
   })
 
   it('should split admin and student visual variants into dedicated shell style files', () => {
-    expect(adminShellSource).toContain('--ui-btn-primary-background: #2563eb;')
+    expect(adminShellSource).toContain('--ui-btn-primary-background: var(--color-primary);')
+    expect(adminShellSource).toContain('--ui-btn-primary-hover-background: var(--color-primary-hover);')
     expect(adminShellSource).toContain('--ui-control-focus-border: #3b82f6;')
     expect(adminShellSource).toContain('--ui-dialog-radius-wide: 1.75rem;')
 
-    expect(userShellSource).toContain('--ui-btn-primary-background: #2a7a58;')
+    expect(userShellSource).toContain('--ui-btn-primary-background: var(--color-primary);')
+    expect(userShellSource).toContain('--ui-btn-primary-hover-background: var(--color-primary-hover);')
     expect(userShellSource).toContain('--ui-control-focus-border: #2a7a58;')
     expect(userShellSource).toContain('--ui-badge-radius: var(--ui-badge-radius-pill);')
   })

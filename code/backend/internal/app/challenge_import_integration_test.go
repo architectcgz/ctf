@@ -27,19 +27,19 @@ import (
 
 type challengeImportQueryStub struct{}
 
-func (challengeImportQueryStub) GetChallenge(id int64) (*dto.ChallengeResp, error) {
+func (challengeImportQueryStub) GetChallenge(ctx context.Context, id int64) (*dto.ChallengeResp, error) {
 	panic("unexpected call")
 }
 
-func (challengeImportQueryStub) ListChallenges(query *dto.ChallengeQuery) (*dto.PageResult, error) {
+func (challengeImportQueryStub) ListChallenges(ctx context.Context, query *dto.ChallengeQuery) (*dto.PageResult[*dto.ChallengeResp], error) {
 	panic("unexpected call")
 }
 
-func (challengeImportQueryStub) ListPublishedChallengesWithContext(ctx context.Context, userID int64, query *dto.ChallengeQuery) (*dto.PageResult, error) {
+func (challengeImportQueryStub) ListPublishedChallenges(ctx context.Context, userID int64, query *dto.ChallengeQuery) (*dto.PageResult[*dto.ChallengeListItem], error) {
 	panic("unexpected call")
 }
 
-func (challengeImportQueryStub) GetPublishedChallengeWithContext(ctx context.Context, userID, challengeID int64) (*dto.ChallengeDetailResp, error) {
+func (challengeImportQueryStub) GetPublishedChallenge(ctx context.Context, userID, challengeID int64) (*dto.ChallengeDetailResp, error) {
 	panic("unexpected call")
 }
 

@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { downloadReport } from '@/api/assessment'
+import { ApiError } from '@/api/request'
 import { exportStudentReviewArchive } from '@/api/teacher'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import SectionCard from '@/components/common/SectionCard.vue'
@@ -86,6 +87,24 @@ async function downloadGeneratedReport(reportId: string): Promise<void> {
   URL.revokeObjectURL(objectUrl)
 }
 
+function notifyExportActionError(error: unknown, fallback: string): void {
+  console.error(fallback, error)
+  if (error instanceof ApiError) {
+    return
+  }
+  const message = error instanceof Error && error.message.trim() ? error.message : fallback
+  toast.error(message)
+}
+
+async function downloadArchiveReport(reportId: string): Promise<void> {
+  try {
+    await downloadGeneratedReport(reportId)
+    toast.success('复盘归档已生成并开始下载')
+  } catch (error) {
+    notifyExportActionError(error, '复盘归档下载失败，请稍后重试')
+  }
+}
+
 async function handleExportArchive(): Promise<void> {
   if (!studentId.value) return
 
@@ -93,12 +112,13 @@ async function handleExportArchive(): Promise<void> {
   try {
     const result = await exportStudentReviewArchive(studentId.value, { format: 'json' })
     if (result.status === 'ready') {
+      pendingReportId.value = null
       stopPolling()
-      await downloadGeneratedReport(result.report_id)
-      toast.success('复盘归档已生成并开始下载')
+      await downloadArchiveReport(result.report_id)
       return
     }
     if (result.status === 'failed') {
+      pendingReportId.value = null
       stopPolling()
       toast.error(result.error_message || '复盘归档生成失败')
       return
@@ -109,16 +129,24 @@ async function handleExportArchive(): Promise<void> {
       if (next.report_id !== pendingReportId.value) return
       if (next.status === 'ready') {
         pendingReportId.value = null
-        void downloadGeneratedReport(next.report_id)
-        toast.success('复盘归档已生成并开始下载')
+        stopPolling()
+        void downloadArchiveReport(next.report_id)
         return
       }
       if (next.status === 'failed') {
         pendingReportId.value = null
+        stopPolling()
         toast.error(next.error_message || '复盘归档生成失败')
       }
+    }, (error) => {
+      pendingReportId.value = null
+      notifyExportActionError(error, '复盘归档生成状态同步失败，请稍后重试')
     })
     toast.info('复盘归档开始生成，完成后会自动下载')
+  } catch (error) {
+    pendingReportId.value = null
+    stopPolling()
+    notifyExportActionError(error, '复盘归档导出失败，请稍后重试')
   } finally {
     exporting.value = false
   }
@@ -178,7 +206,7 @@ async function handleExportArchive(): Promise<void> {
           title="训练摘要"
           subtitle="将当前归档的关键指标收束为一页课堂摘要。"
         >
-          <div class="summary-grid metric-panel-grid">
+          <div class="summary-grid metric-panel-grid metric-panel-default-surface">
             <article class="summary-card summary-card--primary metric-panel-card">
               <div class="summary-card__label metric-panel-label">
                 完成率

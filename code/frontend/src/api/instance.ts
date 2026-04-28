@@ -1,6 +1,11 @@
 import { request } from './request'
 
-import type { InstanceData, InstanceExtendData, InstanceListItem } from './contracts'
+import type {
+  InstanceAccessInfo,
+  InstanceData,
+  InstanceExtendData,
+  InstanceListItem,
+} from './contracts'
 
 interface RawExtendFields {
   remaining_extends?: number
@@ -91,7 +96,7 @@ export async function extendInstance(id: string) {
 export { normalizeInstanceData }
 
 export async function requestInstanceAccess(id: string) {
-  return request<{ access_url: string }>({
+  return request<{ access_url: string; access?: InstanceAccessInfo }>({
     method: 'POST',
     url: `/instances/${encodeURIComponent(id)}/access`,
   })

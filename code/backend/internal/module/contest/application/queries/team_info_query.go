@@ -1,6 +1,7 @@
 package queries
 
 import (
+	"context"
 	"errors"
 
 	"gorm.io/gorm"
@@ -11,8 +12,8 @@ import (
 	"ctf-platform/pkg/errcode"
 )
 
-func (s *TeamService) GetTeamInfo(teamID int64) (*dto.TeamResp, []*dto.TeamMemberResp, error) {
-	team, err := s.teamRepo.FindByID(teamID)
+func (s *TeamService) GetTeamInfo(ctx context.Context, teamID int64) (*dto.TeamResp, []*dto.TeamMemberResp, error) {
+	team, err := s.teamRepo.FindByID(ctx, teamID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil, errcode.ErrTeamNotFound
@@ -20,12 +21,12 @@ func (s *TeamService) GetTeamInfo(teamID int64) (*dto.TeamResp, []*dto.TeamMembe
 		return nil, nil, err
 	}
 
-	members, err := s.teamRepo.GetMembers(teamID)
+	members, err := s.teamRepo.GetMembers(ctx, teamID)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	userMap, err := s.loadTeamUsersByMembers(members)
+	userMap, err := s.loadTeamUsersByMembers(ctx, members)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -44,13 +45,13 @@ func (s *TeamService) GetTeamInfo(teamID int64) (*dto.TeamResp, []*dto.TeamMembe
 	return contestdomain.TeamRespFromModel(team, len(members)), memberResps, nil
 }
 
-func (s *TeamService) loadTeamUsersByMembers(members []*model.TeamMember) (map[int64]*model.User, error) {
+func (s *TeamService) loadTeamUsersByMembers(ctx context.Context, members []*model.TeamMember) (map[int64]*model.User, error) {
 	userIDs := make([]int64, len(members))
 	for i, member := range members {
 		userIDs[i] = member.UserID
 	}
 
-	users, err := s.teamRepo.FindUsersByIDs(userIDs)
+	users, err := s.teamRepo.FindUsersByIDs(ctx, userIDs)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}

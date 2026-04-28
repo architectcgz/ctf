@@ -19,7 +19,7 @@ func (s *TeamService) ListTeams(ctx context.Context, contestID int64) ([]*dto.Te
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	teams, err := s.teamRepo.ListByContest(contestID)
+	teams, err := s.teamRepo.ListByContest(ctx, contestID)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
@@ -29,7 +29,7 @@ func (s *TeamService) ListTeams(ctx context.Context, contestID int64) ([]*dto.Te
 		teamIDs[i] = team.ID
 	}
 
-	countMap, err := s.teamRepo.GetMemberCountBatch(teamIDs)
+	countMap, err := s.teamRepo.GetMemberCountBatch(ctx, teamIDs)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
@@ -42,7 +42,7 @@ func (s *TeamService) ListTeams(ctx context.Context, contestID int64) ([]*dto.Te
 }
 
 func (s *TeamService) GetMyTeam(ctx context.Context, contestID, userID int64) (map[string]any, error) {
-	team, err := s.teamRepo.FindUserTeamInContest(userID, contestID)
+	team, err := s.teamRepo.FindUserTeamInContest(ctx, userID, contestID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
@@ -50,7 +50,7 @@ func (s *TeamService) GetMyTeam(ctx context.Context, contestID, userID int64) (m
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	teamResp, members, err := s.GetTeamInfo(team.ID)
+	teamResp, members, err := s.GetTeamInfo(ctx, team.ID)
 	if err != nil {
 		return nil, err
 	}

@@ -82,8 +82,8 @@ function buildAwdService(overrides: Record<string, unknown> = {}) {
     is_visible: true,
     score_config: {
       points: 120,
-      awd_sla_score: 18,
-      awd_defense_score: 28,
+      awd_sla_score: 1,
+      awd_defense_score: 2,
     },
     runtime_config: {
       checker_type: 'http_standard',
@@ -229,6 +229,8 @@ describe('ContestChallengeOrchestrationPanel', () => {
     expect(wrapper.text()).toContain('HTTP 标准 Checker')
     expect(wrapper.text()).toContain('SLA 18 / 防守 28')
     expect(wrapper.text()).toContain('待重新验证')
+    expect(wrapper.find('.contest-challenge-panel__summary').exists()).toBe(false)
+    expect(wrapper.find('.contest-challenge-filters').exists()).toBe(true)
   })
 
   it('应该支持按未配置 AWD 和预检失败筛选', async () => {
@@ -446,9 +448,9 @@ describe('ContestChallengeOrchestrationPanel', () => {
     })
 
     await flushPromises()
-    await wrapper.get('#contest-challenge-more-link-1').trigger('click')
+    await wrapper.get('#contest-challenge-actions-101').trigger('click')
     await flushPromises()
-    await wrapper.get('#contest-challenge-menu-edit-link-1').trigger('click')
+    await wrapper.get('#contest-challenge-edit-101').trigger('click')
     await flushPromises()
 
     await wrapper.get('#contest-challenge-template').setValue('12')

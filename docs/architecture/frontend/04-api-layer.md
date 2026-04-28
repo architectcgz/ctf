@@ -15,7 +15,7 @@
 const instance = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || '/api/v1',
   timeout: 15000,
-  // 若 Refresh Token 采用 HttpOnly Cookie 且前后端不同源，需要开启 withCredentials（推荐开发环境用 Vite Proxy 保持同源）
+  // 若浏览器与 API 不同源，需要开启 withCredentials 以携带 session cookie
   // withCredentials: true,
   headers: { 'Content-Type': 'application/json' }
 })
@@ -25,9 +25,8 @@ const instance = axios.create({
 
 ```
 请求发出前:
-  ├─ 从 authStore 读取 accessToken
-  ├─ 存在 → 注入 Authorization: Bearer <token>
-  └─ 不存在 → 不注入（公开接口）
+  ├─ 浏览器自动携带 session cookie
+  └─ 公开接口与受保护接口共用同一请求实例
 ```
 
 ### 1.3 响应拦截器
@@ -35,63 +34,22 @@ const instance = axios.create({
 ```
 响应到达后:
   ├─ HTTP 2xx + code === 0 → 返回 data 字段
-  ├─ HTTP 401 + code === 11002 (Access Token 过期)
-  │   ├─ 正在刷新？ → 加入等待队列
-  │   ├─ 未在刷新 → 调用 /auth/refresh
-  │   │   ├─ 刷新成功 → 更新 Token → 重放原请求 + 队列请求
-  │   │   └─ 刷新失败 → 清除状态 → 跳转 /login
-  │   └─ 返回 Promise（等待刷新结果）
+  ├─ HTTP 401 → 清理登录态并跳转 /login
   ├─ HTTP 429 → Toast "请求过于频繁" + 读取 Retry-After
   ├─ HTTP 4xx/5xx → 通过 errorMap 映射错误码为中文提示 → Toast
   └─ 网络错误 → Toast "网络连接失败"
 ```
 
-### 1.4 Token 无感刷新
+### 1.4 401 处理
 
-关键实现：使用 `isRefreshing` 标志位 + `pendingRequests` 队列，避免并发请求同时触发多次 refresh。
+关键实现：认证已切到服务端 session，前端不再维护 token，也不做 `/auth/refresh` 重试链路；401 统一按登录态失效处理。
 
 ```ts
-let isRefreshing = false
-let pendingRequests = []
-
 // 401 处理
-if (error.response?.status === 401 && error.response?.data?.code === 11002) {
-  // 刷新接口自身失败时不允许再次触发刷新（避免死循环）
-  if (error.config?.url?.includes('/auth/refresh')) {
-    authStore.logout()
-    router.push('/login')
-    return Promise.reject(error)
-  }
-
-  if (isRefreshing) {
-    // 加入队列等待
-    return new Promise((resolve, reject) => {
-      pendingRequests.push({ resolve, reject, config: error.config })
-    })
-  }
-  isRefreshing = true
-  const originalConfig = error.config
-  try {
-    // Refresh Token 由后端写入 HttpOnly Cookie，刷新时只需要确保请求能携带 Cookie。
-    const { access_token } = await refreshTokenAPI()
-    authStore.updateTokens(access_token)
-    // 重放队列中的请求
-    pendingRequests.forEach(({ resolve, config }) => {
-      config.headers.Authorization = `Bearer ${access_token}`
-      resolve(instance(config))
-    })
-    // 重放触发 401 的原请求
-    if (originalConfig?.headers) originalConfig.headers.Authorization = `Bearer ${access_token}`
-    return instance(originalConfig)
-  } catch {
-    authStore.logout()
-    router.push('/login')
-    pendingRequests.forEach(({ reject }) => reject(error))
-    return Promise.reject(error)
-  } finally {
-    isRefreshing = false
-    pendingRequests = []
-  }
+if (error.response?.status === 401) {
+  authStore.logout()
+  router.push('/login')
+  return Promise.reject(error)
 }
 ```
 
@@ -109,13 +67,12 @@ if (error.response?.status === 401 && error.response?.data?.code === 11002) {
 |------|------|------|
 | `login(data)` | POST | `/auth/login` |
 | `register(data)` | POST | `/auth/register` |
-| `refreshToken()` | POST | `/auth/refresh` |
 | `logout()` | POST | `/auth/logout` |
 | `getProfile()` | GET | `/auth/profile` |
 | `changePassword(data)` | PUT | `/auth/password` |
 | `getWsTicket()` | POST | `/auth/ws-ticket` |
 
-说明：Refresh Token 采用 HttpOnly Cookie 方案，`refreshToken()` 请求体为空；同源无需额外配置；不同源需 `withCredentials` + 后端 CORS 允许。
+说明：认证采用 HttpOnly session cookie；同源无需额外配置；不同源需 `withCredentials` + 后端 CORS 允许。
 
 ### 2.2 靶场模块 `api/challenge.ts`
 

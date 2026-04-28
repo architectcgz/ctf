@@ -15,7 +15,8 @@
 | ChallengeDetail | MarkdownRenderer, FlagInput, InstanceControl, HintList | `getChallengeDetail`, `submitFlag`, `createInstance`, `destroyInstance`, `extendInstance`, `unlockHint` | - |
 | ContestList | ContestCard(列表), StatusTabs | `getContests(params)` | - |
 | ContestDetail | Tab(题目/公告/队伍/排行榜), ChallengeGrid, AnnouncementList, TeamPanel, ScoreboardTable, LineChart | `getContestDetail`, `getContestChallenges`, `getAnnouncements`, `getScoreboard` | `scoreboard/:id`, `contest/:id/announcements` |
-| ScoreboardView | AppTable(highlightTop=3), LineChart, FrozenBanner | `getScoreboard` | `scoreboard/:id`(竞赛模式) |
+| ScoreboardView | 竞赛排行列表, 积分排行榜 | `getContests`, `getPracticeRanking` | - |
+| ScoreboardDetail | ScoreboardTable, FrozenBanner | `getScoreboard` | `scoreboard/:id`(运行中/封榜竞赛) |
 | InstanceList | InstanceCard(列表), QueueStatus | `getMyInstances`, `destroyInstance`, `extendInstance` | - |
 | SkillProfile | RadarChart, ProgressBar ×6, WeaknessAlert, RecommendCard ×3 | `getSkillProfile`, `getRecommendations` | - |
 | UserProfile | AvatarDisplay, ProfileForm, PasswordForm | `getProfile`, `changePassword` | - |
@@ -93,7 +94,7 @@
 ### 2.3 竞赛排行榜实时更新
 
 ```
-进入竞赛排行榜 Tab
+进入竞赛排行详情页
   │
   ├─ GET /contests/:id/scoreboard 初始加载
   ├─ useWebSocket('scoreboard/:id', handlers) 建立连接

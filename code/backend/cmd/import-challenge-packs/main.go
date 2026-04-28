@@ -27,18 +27,21 @@ const (
 )
 
 type challengeSpec struct {
-	Slug        string
-	Title       string
-	Description string
-	Category    string
-	Difficulty  string
-	Points      int
-	ImageID     int64
-	ImageRef    string
-	Attachment  string
-	Hints       []hintSpec
-	FlagPrefix  string
-	FlagValue   string
+	Slug           string
+	Title          string
+	Description    string
+	Category       string
+	Difficulty     string
+	Points         int
+	ImageID        int64
+	ImageRef       string
+	TargetProtocol string
+	TargetPort     int
+	Attachment     string
+	Hints          []hintSpec
+	FlagType       string
+	FlagPrefix     string
+	FlagValue      string
 }
 
 type hintSpec struct {
@@ -170,18 +173,20 @@ func importOnePack(db *gorm.DB, packDir string, publish, forceFlag bool) (bool, 
 		switch {
 		case errors.Is(err, gorm.ErrRecordNotFound):
 			challenge = model.Challenge{
-				PackageSlug:   stringPtr(spec.Slug),
-				Title:         spec.Title,
-				Description:   spec.Description,
-				Category:      spec.Category,
-				Difficulty:    spec.Difficulty,
-				Points:        spec.Points,
-				ImageID:       chooseImportedImageID(spec.ImageID, resolvedImageID),
-				AttachmentURL: spec.Attachment,
-				Status:        model.ChallengeStatusDraft,
-				FlagPrefix:    spec.FlagPrefix,
-				CreatedAt:     now,
-				UpdatedAt:     now,
+				PackageSlug:    stringPtr(spec.Slug),
+				Title:          spec.Title,
+				Description:    spec.Description,
+				Category:       spec.Category,
+				Difficulty:     spec.Difficulty,
+				Points:         spec.Points,
+				ImageID:        chooseImportedImageID(spec.ImageID, resolvedImageID),
+				AttachmentURL:  spec.Attachment,
+				Status:         model.ChallengeStatusDraft,
+				FlagPrefix:     spec.FlagPrefix,
+				TargetProtocol: spec.TargetProtocol,
+				TargetPort:     spec.TargetPort,
+				CreatedAt:      now,
+				UpdatedAt:      now,
 			}
 			if err := tx.Create(&challenge).Error; err != nil {
 				return fmt.Errorf("create challenge %s: %w", spec.Slug, err)
@@ -202,16 +207,18 @@ func importOnePack(db *gorm.DB, packDir string, publish, forceFlag bool) (bool, 
 			}
 
 			updates := map[string]any{
-				"package_slug":   spec.Slug,
-				"title":          spec.Title,
-				"description":    spec.Description,
-				"category":       spec.Category,
-				"difficulty":     spec.Difficulty,
-				"points":         spec.Points,
-				"image_id":       imageID,
-				"attachment_url": attachment,
-				"deleted_at":     nil,
-				"updated_at":     now,
+				"package_slug":    spec.Slug,
+				"title":           spec.Title,
+				"description":     spec.Description,
+				"category":        spec.Category,
+				"difficulty":      spec.Difficulty,
+				"points":          spec.Points,
+				"image_id":        imageID,
+				"target_protocol": spec.TargetProtocol,
+				"target_port":     spec.TargetPort,
+				"attachment_url":  attachment,
+				"deleted_at":      nil,
+				"updated_at":      now,
 			}
 			if err := tx.Model(&challenge).Updates(updates).Error; err != nil {
 				return fmt.Errorf("update challenge %s: %w", spec.Slug, err)
@@ -223,9 +230,11 @@ func importOnePack(db *gorm.DB, packDir string, publish, forceFlag bool) (bool, 
 		}
 
 		needFlagConfig := created || forceFlag || strings.TrimSpace(challenge.FlagType) == "" ||
-			(challenge.FlagType == model.FlagTypeStatic && strings.TrimSpace(challenge.FlagHash) == "")
+			strings.TrimSpace(challenge.FlagType) != spec.FlagType ||
+			(challenge.FlagType == model.FlagTypeStatic && strings.TrimSpace(challenge.FlagHash) == "") ||
+			(challenge.FlagType == model.FlagTypeRegex && strings.TrimSpace(challenge.FlagRegex) == "")
 		if needFlagConfig {
-			if err := configureStaticFlag(tx, challenge.ID, spec.FlagPrefix, spec.FlagValue); err != nil {
+			if err := configureFlag(tx, challenge.ID, spec.FlagType, spec.FlagPrefix, spec.FlagValue); err != nil {
 				return err
 			}
 		}
@@ -299,18 +308,21 @@ func buildChallengeSpec(parsed *challengedomain.ParsedChallengePackage) (*challe
 	}
 
 	return &challengeSpec{
-		Slug:        parsed.Slug,
-		Title:       parsed.Title,
-		Description: parsed.Description,
-		Category:    parsed.Category,
-		Difficulty:  parsed.Difficulty,
-		Points:      parsed.Points,
-		ImageID:     0,
-		ImageRef:    parsed.RuntimeImageRef,
-		Attachment:  attachmentURL,
-		Hints:       hints,
-		FlagPrefix:  parsed.FlagPrefix,
-		FlagValue:   parsed.FlagValue,
+		Slug:           parsed.Slug,
+		Title:          parsed.Title,
+		Description:    parsed.Description,
+		Category:       parsed.Category,
+		Difficulty:     parsed.Difficulty,
+		Points:         parsed.Points,
+		ImageID:        0,
+		ImageRef:       parsed.RuntimeImageRef,
+		TargetProtocol: parsed.RuntimeProtocol,
+		TargetPort:     parsed.RuntimePort,
+		Attachment:     attachmentURL,
+		Hints:          hints,
+		FlagType:       parsed.FlagType,
+		FlagPrefix:     parsed.FlagPrefix,
+		FlagValue:      parsed.FlagValue,
 	}, nil
 }
 
@@ -355,6 +367,21 @@ func syncChallengeHints(tx *gorm.DB, challengeID int64, hints []hintSpec) error 
 	return nil
 }
 
+func configureFlag(tx *gorm.DB, challengeID int64, flagType, prefix, value string) error {
+	switch flagType {
+	case model.FlagTypeStatic:
+		return configureStaticFlag(tx, challengeID, prefix, value)
+	case model.FlagTypeDynamic:
+		return configureDynamicFlag(tx, challengeID, prefix)
+	case model.FlagTypeRegex:
+		return configureRegexFlag(tx, challengeID, prefix, value)
+	case model.FlagTypeManualReview:
+		return configureManualReviewFlag(tx, challengeID, prefix)
+	default:
+		return fmt.Errorf("unsupported flag type %q for challenge %d", flagType, challengeID)
+	}
+}
+
 func configureStaticFlag(tx *gorm.DB, challengeID int64, prefix, value string) error {
 	salt, err := crypto.GenerateSalt()
 	if err != nil {
@@ -364,6 +391,7 @@ func configureStaticFlag(tx *gorm.DB, challengeID int64, prefix, value string) e
 		"flag_type":   model.FlagTypeStatic,
 		"flag_salt":   salt,
 		"flag_hash":   crypto.HashStaticFlag(value, salt),
+		"flag_regex":  "",
 		"flag_prefix": prefix,
 		"updated_at":  time.Now(),
 	}
@@ -371,6 +399,57 @@ func configureStaticFlag(tx *gorm.DB, challengeID int64, prefix, value string) e
 		Where("id = ?", challengeID).
 		Updates(updates).Error; err != nil {
 		return fmt.Errorf("configure static flag for challenge %d: %w", challengeID, err)
+	}
+	return nil
+}
+
+func configureDynamicFlag(tx *gorm.DB, challengeID int64, prefix string) error {
+	updates := map[string]any{
+		"flag_type":   model.FlagTypeDynamic,
+		"flag_salt":   "",
+		"flag_hash":   "",
+		"flag_regex":  "",
+		"flag_prefix": prefix,
+		"updated_at":  time.Now(),
+	}
+	if err := tx.Model(&model.Challenge{}).
+		Where("id = ?", challengeID).
+		Updates(updates).Error; err != nil {
+		return fmt.Errorf("configure dynamic flag for challenge %d: %w", challengeID, err)
+	}
+	return nil
+}
+
+func configureRegexFlag(tx *gorm.DB, challengeID int64, prefix, value string) error {
+	updates := map[string]any{
+		"flag_type":   model.FlagTypeRegex,
+		"flag_salt":   "",
+		"flag_hash":   "",
+		"flag_regex":  value,
+		"flag_prefix": prefix,
+		"updated_at":  time.Now(),
+	}
+	if err := tx.Model(&model.Challenge{}).
+		Where("id = ?", challengeID).
+		Updates(updates).Error; err != nil {
+		return fmt.Errorf("configure regex flag for challenge %d: %w", challengeID, err)
+	}
+	return nil
+}
+
+func configureManualReviewFlag(tx *gorm.DB, challengeID int64, prefix string) error {
+	updates := map[string]any{
+		"flag_type":   model.FlagTypeManualReview,
+		"flag_salt":   "",
+		"flag_hash":   "",
+		"flag_regex":  "",
+		"flag_prefix": prefix,
+		"updated_at":  time.Now(),
+	}
+	if err := tx.Model(&model.Challenge{}).
+		Where("id = ?", challengeID).
+		Updates(updates).Error; err != nil {
+		return fmt.Errorf("configure manual review flag for challenge %d: %w", challengeID, err)
 	}
 	return nil
 }

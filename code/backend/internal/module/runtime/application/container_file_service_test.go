@@ -24,7 +24,7 @@ func TestContainerFileServiceWriteFileToContainerSkipsNilRuntime(t *testing.T) {
 	t.Parallel()
 
 	service := NewContainerFileService(nil, nil)
-	if err := service.WriteFileToContainer(context.Background(), "container-1", "/flag/flag.txt", []byte("flag")); err != nil {
+	if err := service.WriteFileToContainer(context.Background(), "container-1", "/flag", []byte("flag")); err != nil {
 		t.Fatalf("WriteFileToContainer() error = %v", err)
 	}
 }
@@ -35,13 +35,13 @@ func TestContainerFileServiceWriteFileToContainerDelegatesToRuntime(t *testing.T
 	runtime := &stubContainerFileRuntime{}
 	service := NewContainerFileService(runtime, nil)
 
-	if err := service.WriteFileToContainer(context.Background(), "container-1", "/flag/flag.txt", []byte("flag")); err != nil {
+	if err := service.WriteFileToContainer(context.Background(), "container-1", "/flag", []byte("flag")); err != nil {
 		t.Fatalf("WriteFileToContainer() error = %v", err)
 	}
 	if runtime.calls != 1 {
 		t.Fatalf("WriteFileToContainer() calls = %d, want 1", runtime.calls)
 	}
-	if runtime.containerID != "container-1" || runtime.filePath != "/flag/flag.txt" || string(runtime.content) != "flag" {
+	if runtime.containerID != "container-1" || runtime.filePath != "/flag" || string(runtime.content) != "flag" {
 		t.Fatalf("WriteFileToContainer() delegated incorrectly, containerID = %q filePath = %q content = %q", runtime.containerID, runtime.filePath, string(runtime.content))
 	}
 }

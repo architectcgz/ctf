@@ -1,0 +1,102 @@
+api_version: v1
+kind: challenge
+
+meta:
+  mode: awd
+  slug: awd-campus-drive
+  title: 校园网盘
+  category: web
+  difficulty: medium
+  points: 100
+  tags:
+    - mode:awd
+    - stack:web
+    - stack:flask
+    - topic:file-upload
+    - topic:path-traversal
+
+content:
+  statement: statement.md
+  attachments: []
+
+flag:
+  type: dynamic
+  prefix: flag
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: 预览接口收到的是路径，不是文件 ID。
+
+runtime:
+  type: container
+  image:
+    ref: ctf/awd-campus-drive:latest
+
+topology:
+  entry_node_key: web
+  networks:
+    - key: public
+      name: Public attack surface
+    - key: storage
+      name: Upload storage plane
+      internal: true
+  nodes:
+    - key: web
+      name: Campus Drive Web
+      service_port: 8080
+      inject_flag: true
+      network_keys: [public, storage]
+  policies:
+    - source_node_key: web
+      target_node_key: web
+      action: allow
+      protocol: tcp
+      ports: [8080]
+
+extensions:
+  topology:
+    enabled: true
+    source: challenge.yml
+  awd:
+    service_type: web_http
+    deployment_mode: single_container
+    version: v2026.04
+    checker:
+      type: http_standard
+      config:
+        put_flag:
+          method: PUT
+          path: /api/flag
+          headers:
+            X-AWD-Checker-Token: demo-checker-token
+          expected_status: 200
+          body_template: "{{FLAG}}"
+        get_flag:
+          method: GET
+          path: /api/flag
+          headers:
+            X-AWD-Checker-Token: demo-checker-token
+          expected_status: 200
+          expected_substring: "{{FLAG}}"
+        havoc:
+          method: GET
+          path: /health
+          expected_status: 200
+    flag_policy:
+      mode: dynamic_team
+      config:
+        flag_prefix: flag
+    defense_entry:
+      mode: http
+    access_config:
+      public_base_url: http://{{TEAM_HOST}}:8080
+      service_port: 8080
+      exposed_ports:
+        - port: 8080
+          protocol: tcp
+          purpose: http
+    runtime_config:
+      instance_sharing: per_team
+      service_port: 8080
+      checker_token_env: CHECKER_TOKEN

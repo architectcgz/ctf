@@ -6,6 +6,7 @@ import {
   createContestAWDAttackLog,
   createContestAWDServiceCheck,
   getContestAWDReadiness,
+  getContestAWDInstanceOrchestration,
   getAdminContestLiveScoreboard,
   getContestAWDRoundSummary,
   getContestAWDRoundTrafficSummary,
@@ -17,6 +18,7 @@ import {
   listContestAWDRounds,
   runContestAWDRoundCheck,
   runContestAWDCurrentRoundCheck,
+  startContestAWDTeamServiceInstance,
   updateContestAWDService,
 } from '@/api/admin'
 import { ApiError } from '@/api/request'
@@ -31,6 +33,7 @@ import type {
   AWDTrafficSummaryData,
   AWDTeamServiceData,
   AdminChallengeListItem,
+  AdminContestAWDInstanceOrchestrationData,
   AdminContestChallengeData,
   AdminContestTeamData,
   ContestDetailData,
@@ -42,6 +45,15 @@ import { mapPlatformContestAwdServicesToChallengeLinks } from '@/utils/platformC
 const AWD_AUTO_REFRESH_INTERVAL_MS = 15_000
 const AWD_TRAFFIC_DEFAULT_PAGE_SIZE = 20
 const ERR_AWD_READINESS_BLOCKED = 14025
+
+function createEmptyInstanceOrchestration(): AdminContestAWDInstanceOrchestrationData {
+  return {
+    contest_id: '',
+    teams: [],
+    services: [],
+    instances: [],
+  }
+}
 
 interface AWDTrafficFilterState {
   attacker_team_id: string
@@ -160,18 +172,23 @@ export function usePlatformContestAwd(selectedContest: Readonly<Ref<ContestDetai
   const teams = ref<AdminContestTeamData[]>([])
   const challengeLinks = ref<AdminContestChallengeData[]>([])
   const challengeCatalog = ref<AdminChallengeListItem[]>([])
+  const instanceOrchestration = ref<AdminContestAWDInstanceOrchestrationData>(
+    createEmptyInstanceOrchestration()
+  )
   const readiness = ref<AWDReadinessData | null>(null)
   const loadingRounds = ref(false)
   const loadingRoundDetail = ref(false)
   const loadingTrafficSummary = ref(false)
   const loadingTrafficEvents = ref(false)
   const loadingChallengeCatalog = ref(false)
+  const loadingInstanceOrchestration = ref(false)
   const loadingReadiness = ref(false)
   const checking = ref(false)
   const creatingRound = ref(false)
   const savingServiceCheck = ref(false)
   const savingAttackLog = ref(false)
   const savingChallengeConfig = ref(false)
+  const startingInstanceKey = ref<string | null>(null)
   const overrideDialogState = ref<AWDReadinessOverrideDialogState>(
     createDefaultOverrideDialogState()
   )
@@ -328,6 +345,116 @@ export function usePlatformContestAwd(selectedContest: Readonly<Ref<ContestDetai
     challengeLinks.value = mapPlatformContestAwdServicesToChallengeLinks(nextServices)
   }
 
+  function findInstanceItem(teamId: string, serviceId: string) {
+    return instanceOrchestration.value.instances.find(
+      (item) => item.team_id === teamId && item.service_id === serviceId && item.instance
+    )
+  }
+
+  async function refreshInstanceOrchestration() {
+    if (!selectedContest.value || selectedContest.value.mode !== 'awd') {
+      instanceOrchestration.value = createEmptyInstanceOrchestration()
+      return
+    }
+
+    loadingInstanceOrchestration.value = true
+    try {
+      instanceOrchestration.value = await getContestAWDInstanceOrchestration(selectedContest.value.id)
+    } finally {
+      loadingInstanceOrchestration.value = false
+    }
+  }
+
+  async function startTeamServiceInstance(teamId: string, serviceId: string) {
+    if (!selectedContest.value || startingInstanceKey.value) {
+      return
+    }
+
+    const instanceKey = `${teamId}:${serviceId}`
+    startingInstanceKey.value = instanceKey
+    try {
+      await startContestAWDTeamServiceInstance(selectedContest.value.id, {
+        team_id: teamId,
+        service_id: serviceId,
+      })
+      toast.success('队伍服务实例已启动')
+      await refreshInstanceOrchestration()
+    } catch (error) {
+      toast.error(humanizeRequestError(error, '启动队伍服务实例失败'))
+    } finally {
+      startingInstanceKey.value = null
+    }
+  }
+
+  async function startTeamAllServices(teamId: string) {
+    if (!selectedContest.value || startingInstanceKey.value) {
+      return
+    }
+
+    const serviceIds = instanceOrchestration.value.services
+      .filter((service) => service.is_visible)
+      .map((service) => service.service_id)
+      .filter((serviceId) => !findInstanceItem(teamId, serviceId))
+    if (serviceIds.length === 0) {
+      toast.success('该队伍服务实例已全部启动')
+      return
+    }
+
+    startingInstanceKey.value = `team:${teamId}`
+    try {
+      for (const serviceId of serviceIds) {
+        await startContestAWDTeamServiceInstance(selectedContest.value.id, {
+          team_id: teamId,
+          service_id: serviceId,
+        })
+      }
+      toast.success('队伍服务实例已批量启动')
+      await refreshInstanceOrchestration()
+    } catch (error) {
+      toast.error(humanizeRequestError(error, '批量启动队伍服务实例失败'))
+      await refreshInstanceOrchestration()
+    } finally {
+      startingInstanceKey.value = null
+    }
+  }
+
+  async function startAllTeamServices() {
+    if (!selectedContest.value || startingInstanceKey.value) {
+      return
+    }
+
+    const targets = instanceOrchestration.value.teams.flatMap((team) =>
+      instanceOrchestration.value.services
+        .filter((service) => service.is_visible)
+        .filter((service) => !findInstanceItem(team.team_id, service.service_id))
+        .map((service) => ({
+          teamId: team.team_id,
+          serviceId: service.service_id,
+        }))
+    )
+    if (targets.length === 0) {
+      toast.success('所有队伍服务实例已启动')
+      return
+    }
+
+    startingInstanceKey.value = 'all'
+    try {
+      for (const target of targets) {
+        await startContestAWDTeamServiceInstance(selectedContest.value.id, {
+          team_id: target.teamId,
+          service_id: target.serviceId,
+        })
+      }
+      toast.success('全部队伍服务实例已批量启动')
+      await refreshInstanceOrchestration()
+    } catch (error) {
+      toast.error(humanizeRequestError(error, '批量启动全部实例失败'))
+      await refreshInstanceOrchestration()
+    } finally {
+      startingInstanceKey.value = null
+    }
+  }
+
   async function refreshRoundDetail(roundId = selectedRoundId.value) {
     if (!selectedContest.value || !roundId) {
       clearRoundDetail()
@@ -459,8 +586,10 @@ export function usePlatformContestAwd(selectedContest: Readonly<Ref<ContestDetai
       trafficFilters.value = createDefaultTrafficFilters()
       teams.value = []
       challengeLinks.value = []
+      instanceOrchestration.value = createEmptyInstanceOrchestration()
       readiness.value = null
       loadingReadiness.value = false
+      loadingInstanceOrchestration.value = false
       resetOverrideDialog()
       clearRoundDetail()
       return
@@ -469,14 +598,22 @@ export function usePlatformContestAwd(selectedContest: Readonly<Ref<ContestDetai
     const requestToken = ++roundsRequestToken
     loadingRounds.value = true
     loadingReadiness.value = true
+    loadingInstanceOrchestration.value = true
     try {
       const previousSelectedRound = selectedRound.value
       const wasFollowingRunningRound = previousSelectedRound?.status === 'running'
       const storedRoundId = loadStoredSelectedRoundId(selectedContest.value.id)
-      const [nextRounds, nextTeams, nextContestAWDServices, nextReadiness] = await Promise.all([
+      const [
+        nextRounds,
+        nextTeams,
+        nextContestAWDServices,
+        nextInstanceOrchestration,
+        nextReadiness,
+      ] = await Promise.all([
         listContestAWDRounds(selectedContest.value.id),
         listContestTeams(selectedContest.value.id),
         listContestAWDServices(selectedContest.value.id),
+        getContestAWDInstanceOrchestration(selectedContest.value.id),
         getContestAWDReadiness(selectedContest.value.id),
       ])
       if (requestToken !== roundsRequestToken) {
@@ -484,6 +621,7 @@ export function usePlatformContestAwd(selectedContest: Readonly<Ref<ContestDetai
       }
 
       rounds.value = nextRounds
+      instanceOrchestration.value = nextInstanceOrchestration
       teams.value = nextTeams
       challengeLinks.value = mapPlatformContestAwdServicesToChallengeLinks(nextContestAWDServices)
       readiness.value = nextReadiness
@@ -505,6 +643,7 @@ export function usePlatformContestAwd(selectedContest: Readonly<Ref<ContestDetai
       if (requestToken === roundsRequestToken) {
         loadingRounds.value = false
         loadingReadiness.value = false
+        loadingInstanceOrchestration.value = false
       }
     }
   }
@@ -645,6 +784,7 @@ export function usePlatformContestAwd(selectedContest: Readonly<Ref<ContestDetai
       })
       toast.success('赛事题目已关联')
       await refreshChallengeLinks()
+      await refreshInstanceOrchestration()
       await refreshReadiness()
     } finally {
       savingChallengeConfig.value = false
@@ -698,6 +838,7 @@ export function usePlatformContestAwd(selectedContest: Readonly<Ref<ContestDetai
       }
       toast.success('题目配置已更新')
       await refreshChallengeLinks()
+      await refreshInstanceOrchestration()
       await refreshReadiness()
     } finally {
       savingChallengeConfig.value = false
@@ -783,29 +924,36 @@ export function usePlatformContestAwd(selectedContest: Readonly<Ref<ContestDetai
     teams,
     challengeLinks,
     challengeCatalog,
+    instanceOrchestration,
     readiness,
     loadingRounds,
     loadingRoundDetail,
     loadingTrafficSummary,
     loadingTrafficEvents,
     loadingChallengeCatalog,
+    loadingInstanceOrchestration,
     loadingReadiness,
     checking,
     creatingRound,
     savingServiceCheck,
     savingAttackLog,
     savingChallengeConfig,
+    startingInstanceKey,
     overrideDialogState,
     hasSelectedContest,
     shouldAutoRefresh,
     refresh,
     refreshReadiness,
+    refreshInstanceOrchestration,
     refreshRoundDetail,
     refreshTrafficEvents,
     applyTrafficFilters,
     setTrafficPage,
     resetTrafficFilters,
     runSelectedRoundCheck,
+    startTeamServiceInstance,
+    startTeamAllServices,
+    startAllTeamServices,
     confirmOverrideAction,
     closeOverrideDialog,
     createRound,

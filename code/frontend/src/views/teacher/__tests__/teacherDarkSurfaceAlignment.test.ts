@@ -14,7 +14,11 @@ const teacherSurfaceSource = readFileSync(
 )
 
 const teacherDirectoryPattern =
-  /teacher-directory-head[\s\S]*teacher-directory-row[\s\S]*(teacher-directory-row-main|teacher-directory-cell)[\s\S]*teacher-directory-row-tags/s
+  /WorkspaceDataTable[\s\S]*workspace-directory-list[\s\S]*teacher-directory-cell-name[\s\S]*teacher-directory-row-cta/s
+const teacherClassDirectoryPattern =
+  /WorkspaceDataTable[\s\S]*workspace-directory-list[\s\S]*teacher-directory-cell-class-name[\s\S]*teacher-directory-state-chip/s
+const teacherInstanceDataTablePattern =
+  /WorkspaceDataTable[\s\S]*workspace-directory-list[\s\S]*teacher-instance-user-cell[\s\S]*instance-status-pill/s
 
 describe('teacher dark surface alignment', () => {
   it('teacher management pages should use shared teacher surface classes', () => {
@@ -26,22 +30,22 @@ describe('teacher dark surface alignment', () => {
   })
 
   it('target pages should reuse shared journal and directory surface vocabulary instead of page-local skins', () => {
-    expect(classManagementSource).toContain('journal-eyebrow')
+    expect(classManagementSource).toContain('workspace-overline')
     expect(classManagementSource).toContain('metric-panel-card')
     expect(classManagementSource).not.toContain('teacher-summary-item')
-    expect(classManagementSource).toContain('teacher-directory-head')
-    expect(classManagementSource).toContain('teacher-directory-row')
-    expect(studentManagementSource).toContain('journal-eyebrow')
+    expect(classManagementSource).toContain('WorkspaceDataTable')
+    expect(classManagementSource).toContain('teacher-directory-row-cta')
+    expect(studentManagementSource).toContain('workspace-overline')
     expect(studentManagementSource).toContain('teacher-actions')
     expect(studentManagementSource).toContain('metric-panel-card')
     expect(studentManagementSource).not.toContain('teacher-summary-item')
-    expect(studentManagementSource).toContain('teacher-directory-head')
-    expect(studentManagementSource).toContain('teacher-directory-row')
-    expect(instanceManagementSource).toContain('journal-eyebrow')
+    expect(studentManagementSource).toContain('WorkspaceDataTable')
+    expect(studentManagementSource).toContain('teacher-directory-row-cta')
+    expect(instanceManagementSource).toContain('workspace-overline')
     expect(instanceManagementSource).toContain('teacher-actions')
     expect(instanceManagementSource).toContain('metric-panel-card')
     expect(instanceManagementSource).not.toContain('teacher-summary-item')
-    expect(instanceManagementSource).toContain('teacher-directory-head')
+    expect(instanceManagementSource).toContain('WorkspaceDataTable')
     expect(instanceManagementSource).toContain('teacher-directory-row')
     expect(awdReviewIndexSource).toContain('workspace-overline')
     expect(awdReviewIndexSource).toContain('teacher-actions')
@@ -72,9 +76,9 @@ describe('teacher dark surface alignment', () => {
   })
 
   it('teacher management list pages should render shared directory shells for rows and empty states', () => {
-    expect(classManagementSource).toMatch(teacherDirectoryPattern)
+    expect(classManagementSource).toMatch(teacherClassDirectoryPattern)
     expect(studentManagementSource).toMatch(teacherDirectoryPattern)
-    expect(instanceManagementSource).toMatch(teacherDirectoryPattern)
+    expect(instanceManagementSource).toMatch(teacherInstanceDataTablePattern)
     expect(classManagementSource).toContain('teacher-empty-state')
     expect(studentManagementSource).toContain('teacher-empty-state')
     expect(instanceManagementSource).toContain('teacher-empty-state')

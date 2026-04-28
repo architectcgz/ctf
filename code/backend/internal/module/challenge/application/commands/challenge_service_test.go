@@ -4,8 +4,8 @@ import (
 	"context"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
-	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	"ctf-platform/internal/module/challenge/domain"
+	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/internal/module/challenge/testsupport"
 	flagcrypto "ctf-platform/pkg/crypto"
@@ -54,14 +54,14 @@ func TestServiceCreateChallengeSuccess(t *testing.T) {
 	imageRepo := challengeinfra.NewImageRepository(db)
 	service := newTestService(repo, imageRepo)
 
-	resp, err := service.CreateChallenge(1001, &dto.CreateChallengeReq{
-		Title:            "Test Challenge",
-		Description:      "Test",
-		Category:         "web",
-		Difficulty:       "easy",
-		Points:           100,
-		ImageID:          1,
-		InstanceSharing:  model.InstanceSharingPerUser,
+	resp, err := service.CreateChallenge(context.Background(), 1001, &dto.CreateChallengeReq{
+		Title:           "Test Challenge",
+		Description:     "Test",
+		Category:        "web",
+		Difficulty:      "easy",
+		Points:          100,
+		ImageID:         1,
+		InstanceSharing: model.InstanceSharingPerUser,
 	})
 
 	if err != nil {
@@ -85,7 +85,7 @@ func TestServiceCreateChallengeImageNotFound(t *testing.T) {
 	imageRepo := challengeinfra.NewImageRepository(db)
 	service := newTestService(repo, imageRepo)
 
-	_, err := service.CreateChallenge(1001, &dto.CreateChallengeReq{
+	_, err := service.CreateChallenge(context.Background(), 1001, &dto.CreateChallengeReq{
 		ImageID: 999,
 	})
 	if err == nil || err.Error() != errcode.ErrNotFound.Error() {
@@ -100,7 +100,7 @@ func TestServiceCreateChallengeWithoutImageSuccess(t *testing.T) {
 	imageRepo := challengeinfra.NewImageRepository(db)
 	service := newTestService(repo, imageRepo)
 
-	resp, err := service.CreateChallenge(1001, &dto.CreateChallengeReq{
+	resp, err := service.CreateChallenge(context.Background(), 1001, &dto.CreateChallengeReq{
 		Title:       "No Target Challenge",
 		Description: "No target required",
 		Category:    "misc",
@@ -144,7 +144,7 @@ func TestServiceUpdateChallengeRejectsSharedDynamicFlagCombination(t *testing.T)
 	imageRepo := challengeinfra.NewImageRepository(db)
 	service := newTestService(repo, imageRepo)
 
-	err = service.UpdateChallenge(challenge.ID, &dto.UpdateChallengeReq{
+	err = service.UpdateChallenge(context.Background(), challenge.ID, &dto.UpdateChallengeReq{
 		InstanceSharing: model.InstanceSharingShared,
 	})
 	if err == nil || err.Error() != errcode.ErrInvalidParams.Error() {
@@ -189,7 +189,7 @@ func TestServiceUpdateChallengeRejectsSharedInjectFlagTopologyCombination(t *tes
 	imageRepo := challengeinfra.NewImageRepository(db)
 	service := NewChallengeService(nil, repo, imageRepo, repo, nil, SelfCheckConfig{}, zap.NewNop())
 
-	err = service.UpdateChallenge(challenge.ID, &dto.UpdateChallengeReq{
+	err = service.UpdateChallenge(context.Background(), challenge.ID, &dto.UpdateChallengeReq{
 		InstanceSharing: model.InstanceSharingShared,
 	})
 	if err == nil || err.Error() != errcode.ErrInvalidParams.Error() {
@@ -208,7 +208,7 @@ func TestServiceDeleteChallengeWithRunningInstances(t *testing.T) {
 	repo := challengeinfra.NewRepository(db)
 	service := newTestService(repo, nil)
 
-	err := service.DeleteChallenge(challenge.ID)
+	err := service.DeleteChallenge(context.Background(), challenge.ID)
 	if err == nil {
 		t.Fatal("expected running instances error, got nil")
 	}
@@ -230,12 +230,12 @@ func TestServicePublishChallengeNoImage(t *testing.T) {
 	repo := challengeinfra.NewRepository(db)
 	service := newTestService(repo, nil)
 
-	err := service.PublishChallenge(challenge.ID)
+	err := service.PublishChallenge(context.Background(), challenge.ID)
 	if err != nil {
 		t.Fatalf("PublishChallenge() error = %v", err)
 	}
 
-	published, findErr := repo.FindByID(challenge.ID)
+	published, findErr := repo.FindByID(context.Background(), challenge.ID)
 	if findErr != nil {
 		t.Fatalf("FindByID() error = %v", findErr)
 	}
@@ -299,7 +299,7 @@ func TestServiceDispatchPublishCheckJobsPublishesChallengeAndNotifiesRequester(t
 
 	service.dispatchPublishCheckJobs(context.Background())
 
-	published, err := repo.FindByID(challenge.ID)
+	published, err := repo.FindByID(context.Background(), challenge.ID)
 	if err != nil {
 		t.Fatalf("FindByID() error = %v", err)
 	}
@@ -368,7 +368,7 @@ func TestServiceDispatchPublishCheckJobsKeepsDraftOnFailureAndNotifiesRequester(
 
 	service.dispatchPublishCheckJobs(context.Background())
 
-	stored, err := repo.FindByID(challenge.ID)
+	stored, err := repo.FindByID(context.Background(), challenge.ID)
 	if err != nil {
 		t.Fatalf("FindByID() error = %v", err)
 	}
@@ -439,7 +439,7 @@ func TestServiceDispatchPublishCheckJobsPublishesAttachmentOnlyChallenge(t *test
 
 	service.dispatchPublishCheckJobs(context.Background())
 
-	published, err := repo.FindByID(challenge.ID)
+	published, err := repo.FindByID(context.Background(), challenge.ID)
 	if err != nil {
 		t.Fatalf("FindByID() error = %v", err)
 	}

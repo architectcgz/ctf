@@ -14,9 +14,7 @@ import (
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/config"
 	authcontracts "ctf-platform/internal/module/auth/contracts"
-	rediskeys "ctf-platform/internal/pkg/redis"
 	"ctf-platform/pkg/errcode"
-	jwtpkg "ctf-platform/pkg/jwt"
 )
 
 type wsTicketPayload struct {
@@ -26,135 +24,113 @@ type wsTicketPayload struct {
 	IssuedAt time.Time `json:"issued_at"`
 }
 
+type sessionRecord struct {
+	ID        string    `json:"id"`
+	UserID    int64     `json:"user_id"`
+	Username  string    `json:"username"`
+	Role      string    `json:"role"`
+	ExpiresAt time.Time `json:"expires_at"`
+}
+
 type tokenService struct {
 	config   config.AuthConfig
 	wsConfig config.WebSocketConfig
 	cache    *redislib.Client
-	manager  *jwtpkg.Manager
 }
 
-func NewTokenService(cfg config.AuthConfig, wsConfig config.WebSocketConfig, cache *redislib.Client, manager *jwtpkg.Manager) authcontracts.TokenService {
+func NewTokenService(cfg config.AuthConfig, wsConfig config.WebSocketConfig, cache *redislib.Client) authcontracts.TokenService {
 	return &tokenService{
 		config:   cfg,
 		wsConfig: wsConfig,
 		cache:    cache,
-		manager:  manager,
 	}
 }
 
-func (s *tokenService) IssueTokens(userID int64, username, role string) (*authcontracts.TokenPair, error) {
-	return s.IssueTokensWithContext(context.Background(), userID, username, role)
-}
-
-func (s *tokenService) IssueTokensWithContext(ctx context.Context, userID int64, username, role string) (*authcontracts.TokenPair, error) {
-	if ctx == nil {
-		ctx = context.Background()
+func (s *tokenService) CreateSession(ctx context.Context, userID int64, username, role string) (*authcontracts.Session, error) {
+	if err := requireContext(ctx); err != nil {
+		return nil, err
 	}
 
-	accessToken, _, err := s.manager.GenerateAccessToken(userID, username, role)
+	sessionID, err := generateOpaqueToken(32)
 	if err != nil {
-		return nil, fmt.Errorf("generate access token: %w", err)
+		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	refreshToken, refreshClaims, err := s.manager.GenerateRefreshToken(userID, username, role)
+	expiresAt := time.Now().Add(s.config.SessionTTL).UTC()
+	record := sessionRecord{
+		ID:        sessionID,
+		UserID:    userID,
+		Username:  username,
+		Role:      role,
+		ExpiresAt: expiresAt,
+	}
+	payload, err := json.Marshal(record)
 	if err != nil {
-		return nil, fmt.Errorf("generate refresh token: %w", err)
+		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	if err := s.storeRefreshSession(ctx, userID, refreshClaims.ID); err != nil {
-		return nil, fmt.Errorf("store refresh session: %w", err)
+	if err := s.cache.Set(ctx, s.sessionKey(sessionID), payload, s.config.SessionTTL).Err(); err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	return &authcontracts.TokenPair{
-		AccessToken:     accessToken,
-		RefreshToken:    refreshToken,
-		AccessTokenTTL:  s.manager.AccessTokenTTL(),
-		RefreshTokenTTL: s.manager.RefreshTokenTTL(),
+	return &authcontracts.Session{
+		ID:        sessionID,
+		UserID:    userID,
+		Username:  username,
+		Role:      role,
+		ExpiresAt: expiresAt,
 	}, nil
 }
 
-func (s *tokenService) RefreshAccessToken(ctx context.Context, refreshToken string) (*authcontracts.RefreshAccessPayload, error) {
-	claims, err := s.manager.ParseToken(refreshToken)
-	if err != nil {
-		return nil, mapJWTError(err, true)
+func (s *tokenService) GetSession(ctx context.Context, sessionID string) (*authcontracts.Session, error) {
+	if err := requireContext(ctx); err != nil {
+		return nil, err
 	}
-	if claims.TokenType != jwtpkg.TokenTypeRefresh {
-		return nil, errcode.ErrTokenInvalid
-	}
-
-	revoked, err := s.IsRevoked(ctx, claims.ID)
-	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
-	}
-	if revoked {
-		return nil, errcode.ErrTokenRevoked
-	}
-	active, err := s.isActiveRefreshSession(ctx, claims.UserID, claims.ID)
-	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
-	}
-	if !active {
-		return nil, errcode.ErrTokenRevoked
+	if sessionID == "" {
+		return nil, errcode.ErrUnauthorized
 	}
 
-	accessToken, accessClaims, err := s.manager.GenerateAccessToken(claims.UserID, claims.Username, claims.Role)
+	payload, err := s.cache.Get(ctx, s.sessionKey(sessionID)).Result()
+	if errors.Is(err, redislib.Nil) {
+		return nil, errcode.ErrUnauthorized
+	}
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	return &authcontracts.RefreshAccessPayload{
-		AccessToken: accessToken,
-		ExpiresIn:   accessClaims.ExpiresAt.Time.Unix() - time.Now().Unix(),
+	var record sessionRecord
+	if err := json.Unmarshal([]byte(payload), &record); err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+	if record.ID == "" || record.UserID <= 0 || record.Username == "" || record.Role == "" {
+		return nil, errcode.ErrUnauthorized
+	}
+
+	return &authcontracts.Session{
+		ID:        record.ID,
+		UserID:    record.UserID,
+		Username:  record.Username,
+		Role:      record.Role,
+		ExpiresAt: record.ExpiresAt,
 	}, nil
 }
 
-func (s *tokenService) RevokeToken(ctx context.Context, jti string, ttl time.Duration) error {
-	if jti == "" {
-		return nil
-	}
-	return s.cache.Set(ctx, s.blacklistKey(jti), "1", ttl).Err()
-}
-
-func (s *tokenService) ClearRefreshSession(ctx context.Context, userID int64, refreshJTI string) error {
-	if s.cache == nil || userID <= 0 {
-		return nil
-	}
-
-	key := rediskeys.TokenKey(userID)
-	if refreshJTI == "" {
-		return s.cache.Del(ctx, key).Err()
-	}
-
-	result, err := s.cache.Eval(ctx, `
-		if redis.call("get", KEYS[1]) == ARGV[1] then
-			return redis.call("del", KEYS[1])
-		else
-			return 0
-		end
-	`, []string{key}, refreshJTI).Result()
-	if err != nil {
+func (s *tokenService) DeleteSession(ctx context.Context, sessionID string) error {
+	if err := requireContext(ctx); err != nil {
 		return err
 	}
-	_ = result
+	if sessionID == "" {
+		return nil
+	}
+	if err := s.cache.Del(ctx, s.sessionKey(sessionID)).Err(); err != nil {
+		return err
+	}
 	return nil
 }
 
-func (s *tokenService) IsRevoked(ctx context.Context, jti string) (bool, error) {
-	if jti == "" {
-		return false, nil
-	}
-
-	count, err := s.cache.Exists(ctx, s.blacklistKey(jti)).Result()
-	if err != nil {
-		return false, err
-	}
-	return count > 0, nil
-}
-
-func (s *tokenService) ParseToken(tokenString string) (*jwtpkg.Claims, error) {
-	return s.manager.ParseToken(tokenString)
-}
-
 func (s *tokenService) IssueWSTicket(ctx context.Context, user authctx.CurrentUser) (*authcontracts.WSTicket, error) {
+	if err := requireContext(ctx); err != nil {
+		return nil, err
+	}
 	ticket, err := generateOpaqueToken(32)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
@@ -182,6 +158,9 @@ func (s *tokenService) IssueWSTicket(ctx context.Context, user authctx.CurrentUs
 }
 
 func (s *tokenService) ConsumeWSTicket(ctx context.Context, ticket string) (*authctx.CurrentUser, error) {
+	if err := requireContext(ctx); err != nil {
+		return nil, err
+	}
 	if ticket == "" {
 		return nil, errcode.ErrWSTicketInvalid
 	}
@@ -209,34 +188,19 @@ func (s *tokenService) ConsumeWSTicket(ctx context.Context, ticket string) (*aut
 	}, nil
 }
 
-func (s *tokenService) blacklistKey(jti string) string {
-	return fmt.Sprintf("%s:%s", s.config.TokenBlacklistPrefix, jti)
+func (s *tokenService) sessionKey(sessionID string) string {
+	return fmt.Sprintf("%s:%s", s.config.SessionKeyPrefix, sessionID)
+}
+
+func requireContext(ctx context.Context) error {
+	if ctx == nil {
+		return errcode.ErrInternal.WithCause(fmt.Errorf("context is required"))
+	}
+	return nil
 }
 
 func (s *tokenService) wsTicketKey(ticket string) string {
 	return fmt.Sprintf("%s:%s", s.wsConfig.TicketKeyPrefix, ticket)
-}
-
-func (s *tokenService) storeRefreshSession(ctx context.Context, userID int64, refreshJTI string) error {
-	if s.cache == nil || userID <= 0 || refreshJTI == "" {
-		return nil
-	}
-	return s.cache.Set(ctx, rediskeys.TokenKey(userID), refreshJTI, s.manager.RefreshTokenTTL()).Err()
-}
-
-func (s *tokenService) isActiveRefreshSession(ctx context.Context, userID int64, refreshJTI string) (bool, error) {
-	if s.cache == nil || userID <= 0 || refreshJTI == "" {
-		return true, nil
-	}
-
-	value, err := s.cache.Get(ctx, rediskeys.TokenKey(userID)).Result()
-	if errors.Is(err, redislib.Nil) {
-		return false, nil
-	}
-	if err != nil {
-		return false, err
-	}
-	return value == refreshJTI, nil
 }
 
 func generateOpaqueToken(size int) (string, error) {
@@ -245,17 +209,4 @@ func generateOpaqueToken(size int) (string, error) {
 		return "", err
 	}
 	return base64.RawURLEncoding.EncodeToString(buffer), nil
-}
-
-func mapJWTError(err error, isRefresh bool) error {
-	switch {
-	case errors.Is(err, jwtpkg.ErrExpiredToken) && isRefresh:
-		return errcode.ErrRefreshTokenExpired
-	case errors.Is(err, jwtpkg.ErrExpiredToken):
-		return errcode.ErrAccessTokenExpired
-	case errors.Is(err, jwtpkg.ErrInvalidToken):
-		return errcode.ErrTokenInvalid
-	default:
-		return err
-	}
 }

@@ -9,12 +9,10 @@ import type {
   TeacherClassTrendData,
   TeacherStudentItem,
 } from '@/api/contracts'
-import TeacherClassInsightsPanel from '@/components/teacher/TeacherClassInsightsPanel.vue'
 import TeacherInterventionPanel from '@/components/teacher/TeacherInterventionPanel.vue'
 import TeacherClassReviewPanel from '@/components/teacher/TeacherClassReviewPanel.vue'
 import TeacherClassTrendPanel from '@/components/teacher/TeacherClassTrendPanel.vue'
 import { useTeacherDashboardMetrics } from '@/composables/useTeacherDashboardMetrics'
-import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'
 
 const props = defineProps<{
   classes: TeacherClassItem[]
@@ -32,50 +30,15 @@ const emit = defineEmits<{
   openClassManagement: []
 }>()
 
-type WorkspaceTab = 'overview' | 'portrait' | 'trend' | 'insight' | 'advice' | 'action'
-
-interface WorkspaceTabItem {
-  key: WorkspaceTab
-  label: string
-  buttonId: string
-  panelId: string
-}
-
-const workspaceTabs: WorkspaceTabItem[] = [
-  { key: 'overview', label: '进度总览', buttonId: 'top-tab-overview', panelId: 'overview' },
-  { key: 'portrait', label: '能力画像', buttonId: 'top-tab-portrait', panelId: 'portrait' },
-  { key: 'trend', label: '趋势复盘', buttonId: 'top-tab-trend', panelId: 'trend' },
-  { key: 'insight', label: '学生洞察', buttonId: 'top-tab-insight', panelId: 'insight' },
-  { key: 'advice', label: '今日教学建议', buttonId: 'top-tab-advice', panelId: 'advice' },
-  { key: 'action', label: '介入建议', buttonId: 'top-tab-action', panelId: 'action' },
-]
-
-const workspaceTabOrder = workspaceTabs.map((tab) => tab.key) as WorkspaceTab[]
-const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSyncedTabs<WorkspaceTab>({
-  orderedTabs: workspaceTabOrder,
-  defaultTab: 'overview',
-})
-
 const {
-  averageSolvedText,
   activeRateText,
-  studentCountText,
-  recentEventCountText,
-  recentTrendPoints,
-  weakDimensionStats,
-  dominantWeakDimension,
   riskStudentCount,
-  activeStudentValue,
-  topStudent,
-  strongestDimensionCount,
   overviewDescription,
   metaPills,
   overviewMetrics,
-  interventionTips,
-  teachingAdvice,
   studentInsightRows,
   portraitSummaryNotes,
-  trendSignals,
+  weakDimensionStats,
 } = useTeacherDashboardMetrics({
   students: toRef(props, 'students'),
   selectedClassName: toRef(props, 'selectedClassName'),
@@ -87,41 +50,12 @@ const {
 </script>
 
 <template>
-  <div class="workspace-shell teacher-management-shell teacher-surface">
-    <nav
-      class="top-tabs"
-      role="tablist"
-      aria-label="教学概览标签页"
-    >
-      <button
-        v-for="(tab, index) in workspaceTabs"
-        :id="tab.buttonId"
-        :key="tab.key"
-        :ref="(element) => setTabButtonRef(tab.key, element as HTMLButtonElement | null)"
-        class="top-tab"
-        :class="{ active: activeTab === tab.key }"
-        type="button"
-        role="tab"
-        :tabindex="activeTab === tab.key ? 0 : -1"
-        :aria-selected="activeTab === tab.key ? 'true' : 'false'"
-        :aria-controls="tab.panelId"
-        @click="selectTab(tab.key)"
-        @keydown="handleTabKeydown($event, index)"
-      >
-        {{ tab.label }}
-      </button>
-    </nav>
-
+  <div class="workspace-shell teacher-management-shell teacher-surface teacher-dashboard-shell flex min-h-full flex-1 flex-col">
     <div class="workspace-grid">
-      <main class="content-pane">
+      <main class="content-pane teacher-dashboard-content">
         <section
-          v-show="activeTab === 'overview'"
           id="overview"
-          class="workspace-hero tab-panel"
-          :class="{ active: activeTab === 'overview' }"
-          role="tabpanel"
-          aria-labelledby="top-tab-overview"
-          :aria-hidden="activeTab === 'overview' ? 'false' : 'true'"
+          class="workspace-hero teacher-dashboard-hero"
         >
           <div class="workspace-tab-heading__main">
             <div class="workspace-overline">
@@ -145,11 +79,11 @@ const {
               </span>
             </div>
 
-            <div class="progress-strip metric-panel-grid">
+            <div class="teacher-overview-summary progress-strip metric-panel-grid metric-panel-default-surface">
               <article
                 v-for="item in overviewMetrics"
                 :key="item.key"
-                class="progress-card metric-panel-card"
+                class="teacher-overview-card progress-card metric-panel-card"
               >
                 <div class="progress-card-label metric-panel-label">
                   {{ item.label }}
@@ -166,41 +100,29 @@ const {
             <div
               v-if="error"
               class="workspace-alert"
-              role="alert"
-              aria-live="polite"
             >
               <div class="workspace-alert-title-row">
-                <AlertTriangle class="workspace-alert-icon" />
+                <AlertTriangle class="workspace-alert-icon h-4 w-4" />
                 <div class="workspace-alert-title">
-                  教师概览加载失败
+                  加载失败
                 </div>
               </div>
               <div class="workspace-alert-copy">
                 {{ error }}
               </div>
-              <div class="workspace-alert-copy">
-                可先重试刷新数据，再继续查看趋势与复盘信息；若持续失败，可先进入班级管理确认当前班级与权限状态。
-              </div>
               <div class="workspace-alert-actions">
                 <button
                   type="button"
-                  class="quick-action quick-action--compact"
+                  class="ui-btn ui-btn--primary ui-btn--sm"
                   @click="emit('retry')"
                 >
-                  <span>重试加载</span><span>→</span>
-                </button>
-                <button
-                  type="button"
-                  class="quick-action quick-action--compact"
-                  @click="emit('openClassManagement')"
-                >
-                  <span>班级管理</span><span>→</span>
+                  重试加载
                 </button>
               </div>
             </div>
           </div>
 
-          <aside class="hero-rail">
+          <aside class="hero-rail workspace-subpanel">
             <div class="rail-label">
               Class Pulse
             </div>
@@ -211,282 +133,214 @@ const {
             <div class="rail-copy">
               {{
                 riskStudentCount > 0
-                  ? `当前仍有 ${riskStudentCount} 名学生需要优先回流训练节奏，建议先投放低门槛补训题，再通过复盘结论安排课堂干预。`
-                  : '班级整体节奏稳定，可以把更多注意力放在薄弱维度补强和中段学生进阶上。'
+                  ? `当前仍有 ${riskStudentCount} 名学生需要优先回流训练节奏。`
+                  : '班级整体节奏稳定，建议关注薄弱维度补强。'
               }}
             </div>
           </aside>
-        </section>
 
-        <section
-          v-show="activeTab === 'portrait'"
-          id="portrait"
-          class="section tab-panel"
-          :class="{ active: activeTab === 'portrait' }"
-          role="tabpanel"
-          aria-labelledby="top-tab-portrait"
-          :aria-hidden="activeTab === 'portrait' ? 'false' : 'true'"
-        >
-          <div class="section-head workspace-tab-heading">
-            <div class="workspace-tab-heading__main">
-              <div class="section-kicker">
-                Skill Portrait
-              </div>
-              <h2 class="workspace-tab-heading__title">
-                能力画像与薄弱维度
-              </h2>
-            </div>
-          </div>
-
-          <div class="portrait-grid">
-            <div class="portrait-summary-block">
-              <h3 class="panel-title">
-                优先补强方向
-              </h3>
-
-              <div
-                v-if="weakDimensionStats.length > 0"
-                class="weak-list"
-              >
-                <article
-                  v-for="(item, index) in weakDimensionStats.slice(0, 3)"
-                  :key="item.dimension"
-                  class="weak-item"
-                >
-                  <div class="weak-rank">
-                    {{ `${index + 1}`.padStart(2, '0') }}
-                  </div>
-                  <div>
-                    <div class="weak-name">
-                      {{ item.dimension }}
-                    </div>
-                    <div class="weak-copy">
-                      {{ item.count }}
-                      名学生当前在该方向暴露弱项，建议优先投放基础题并安排一次路径梳理。
-                    </div>
-                  </div>
-                  <div class="weak-score">
-                    {{ item.count }} 人
-                  </div>
-                </article>
-              </div>
-              <div
-                v-else
-                class="empty-inline"
-              >
-                当前班级还没有足够的能力画像数据。
-              </div>
-
-              <div
-                class="summary-grid progress-strip metric-panel-grid metric-panel-default-surface"
-              >
-                <article
-                  v-for="item in portraitSummaryNotes"
-                  :key="item.key"
-                  class="summary-note progress-card metric-panel-card"
-                >
-                  <div class="summary-note-label progress-card-label metric-panel-label">
-                    {{ item.label }}
-                  </div>
-                  <div class="summary-note-value progress-card-value metric-panel-value">
-                    {{ item.value }}
-                  </div>
-                  <div class="summary-note-copy progress-card-hint metric-panel-helper">
-                    {{ item.copy }}
-                  </div>
-                </article>
-              </div>
-            </div>
-
-            <div class="workspace-subpanel">
-              <TeacherClassInsightsPanel
-                :students="students"
-                :class-name="selectedClassName"
-                split-cards
-              />
-            </div>
-          </div>
-        </section>
-
-        <section
-          v-show="activeTab === 'trend'"
-          id="trend"
-          class="section tab-panel"
-          :class="{ active: activeTab === 'trend' }"
-          role="tabpanel"
-          aria-labelledby="top-tab-trend"
-          :aria-hidden="activeTab === 'trend' ? 'false' : 'true'"
-        >
-          <div class="section-head workspace-tab-heading">
-            <div class="workspace-tab-heading__main">
-              <div class="section-kicker">
-                Trend Review
-              </div>
-              <h2 class="workspace-tab-heading__title">
-                近 7 天训练趋势
-              </h2>
-            </div>
-          </div>
-
-          <div class="trend-layout">
-            <div class="workspace-subpanel">
-              <TeacherClassTrendPanel
-                :trend="trend"
-                title="班级近 7 天训练趋势"
-                subtitle=""
-                bare
-              />
-            </div>
-
-            <aside class="trend-side">
-              <article
-                v-for="item in trendSignals"
-                :key="item.key"
-                class="trend-signal"
-              >
-                <div class="trend-signal-label">
-                  {{ item.label }}
-                </div>
-                <div class="trend-signal-value">
-                  {{ item.value }}
-                </div>
-                <div class="trend-signal-copy">
-                  {{ item.copy }}
-                </div>
-              </article>
-            </aside>
-          </div>
-        </section>
-
-        <section
-          v-show="activeTab === 'insight'"
-          id="insight"
-          class="section tab-panel"
-          :class="{ active: activeTab === 'insight' }"
-          role="tabpanel"
-          aria-labelledby="top-tab-insight"
-          :aria-hidden="activeTab === 'insight' ? 'false' : 'true'"
-        >
-          <div class="section-head workspace-tab-heading">
-            <div class="workspace-tab-heading__main">
-              <div class="section-kicker">
-                Student Insight
-              </div>
-              <h2 class="workspace-tab-heading__title">
-                学生洞察
-              </h2>
-            </div>
-          </div>
-
-          <article class="panel panel-pad">
-            <div class="insight-list">
-              <div
-                v-for="item in studentInsightRows"
-                :key="item.key"
-                class="insight-item"
-              >
+          <div class="overview-workbench">
+            <section class="overview-panel overview-panel--wide workspace-directory-section teacher-directory-section">
+              <header class="list-heading">
                 <div>
-                  <strong>{{ item.title }}</strong>
-                  <div class="insight-meta">
-                    <span
-                      v-for="chip in item.chips"
-                      :key="chip"
-                      class="chip"
-                      :class="item.tone"
+                  <div class="workspace-overline">
+                    Skill Portrait
+                  </div>
+                  <h2 class="list-heading__title">
+                    能力画像与薄弱维度
+                  </h2>
+                </div>
+              </header>
+
+              <div class="teacher-dashboard-panel-body portrait-grid">
+                <div class="portrait-summary-block">
+                  <div class="summary-grid progress-strip metric-panel-grid metric-panel-default-surface">
+                    <article
+                      v-for="item in portraitSummaryNotes"
+                      :key="item.key"
+                      class="summary-note progress-card metric-panel-card"
                     >
-                      {{ chip }}
-                    </span>
+                      <div class="summary-note-label progress-card-label metric-panel-label">
+                        {{ item.label }}
+                      </div>
+                      <div class="summary-note-value progress-card-value metric-panel-value">
+                        {{ item.value }}
+                      </div>
+                      <div class="summary-note-copy progress-card-hint metric-panel-helper">
+                        {{ item.copy || '画像摘要' }}
+                      </div>
+                    </article>
                   </div>
-                  <div class="item-copy">
-                    {{ item.detail }}
+
+                  <div class="portrait-guidance">
+                    <div class="portrait-guidance__label">
+                      使用方式
+                    </div>
+                    <div class="portrait-guidance__copy">
+                      先看影响学生最多的能力方向，再结合复盘结论安排题单或课堂讲解。
+                    </div>
                   </div>
                 </div>
-                <div
-                  class="status-pill"
-                  :class="item.tone"
-                >
-                  {{ item.status }}
+
+                <div class="portrait-dimension-block">
+                  <div class="panel-header-row">
+                    <h3 class="panel-title">
+                      优先补强方向
+                    </h3>
+                    <span class="panel-badge">按学生数排序</span>
+                  </div>
+
+                  <div
+                    v-if="weakDimensionStats.length > 0"
+                    class="weak-list workspace-directory-list"
+                  >
+                    <article
+                      v-for="(item, index) in weakDimensionStats.slice(0, 5)"
+                      :key="item.dimension"
+                      class="weak-item"
+                    >
+                      <div class="weak-rank">
+                        {{ `${index + 1}`.padStart(2, '0') }}
+                      </div>
+                      <div class="weak-content">
+                        <div
+                          class="weak-name"
+                          :title="item.dimension"
+                        >
+                          {{ item.dimension }}
+                        </div>
+                        <div class="weak-copy">
+                          {{ item.count }} 名学生当前在该方向暴露弱项。
+                        </div>
+                        <div class="weak-bar">
+                          <span :style="{ width: item.width }" />
+                        </div>
+                      </div>
+                      <div class="weak-score">
+                        {{ item.count }} 人
+                      </div>
+                    </article>
+                  </div>
+                  <div
+                    v-else
+                    class="workspace-directory-empty portrait-empty"
+                  >
+                    暂无可排序的薄弱维度
+                  </div>
                 </div>
               </div>
-            </div>
-          </article>
-        </section>
+            </section>
 
-        <section
-          v-show="activeTab === 'advice'"
-          id="advice"
-          class="section tab-panel"
-          :class="{ active: activeTab === 'advice' }"
-          role="tabpanel"
-          aria-labelledby="top-tab-advice"
-          :aria-hidden="activeTab === 'advice' ? 'false' : 'true'"
-        >
-          <div class="section-head workspace-tab-heading">
-            <div class="workspace-tab-heading__main">
-              <div class="section-kicker">
-                Today Focus
-              </div>
-              <h2 class="workspace-tab-heading__title">
-                今日教学建议
-              </h2>
-            </div>
-          </div>
-
-          <article class="panel panel-pad">
-            <div class="advice-lines">
-              <div
-                v-for="(item, index) in teachingAdvice"
-                :key="item.title"
-                class="hint-line"
-              >
-                <div class="hint-index">
-                  {{ index + 1 }}
-                </div>
+            <section class="overview-panel workspace-directory-section teacher-directory-section">
+              <header class="list-heading">
                 <div>
-                  <div class="hint-label">
-                    {{ item.title }}
+                  <div class="workspace-overline">
+                    Student Insight
                   </div>
-                  <div class="hint-copy">
-                    {{ item.detail }}
-                  </div>
+                  <h2 class="list-heading__title">
+                    学生洞察
+                  </h2>
+                </div>
+              </header>
+
+              <div class="teacher-dashboard-panel-body">
+                <div class="student-insight-list workspace-directory-list">
+                  <article
+                    v-for="row in studentInsightRows"
+                    :key="row.key"
+                    class="student-insight-row"
+                    :class="`student-insight-row--${row.tone}`"
+                  >
+                    <div class="student-insight-row__status">
+                      {{ row.status }}
+                    </div>
+                    <div class="student-insight-row__main">
+                      <h3
+                        class="student-insight-row__title"
+                        :title="row.title"
+                      >
+                        {{ row.title }}
+                      </h3>
+                      <p class="student-insight-row__detail">
+                        {{ row.detail }}
+                      </p>
+                      <div class="student-insight-row__chips">
+                        <span
+                          v-for="chip in row.chips"
+                          :key="chip"
+                          class="student-insight-chip"
+                        >
+                          {{ chip }}
+                        </span>
+                      </div>
+                    </div>
+                  </article>
                 </div>
               </div>
-            </div>
-          </article>
+            </section>
 
-          <div class="workspace-subpanel section-stack">
-            <TeacherClassReviewPanel
-              :review="review"
-              :class-name="selectedClassName"
-            />
-          </div>
-        </section>
+            <section class="overview-panel workspace-directory-section teacher-directory-section">
+              <header class="list-heading">
+                <div>
+                  <div class="workspace-overline">
+                    Trend Review
+                  </div>
+                  <h2 class="list-heading__title">
+                    趋势复盘
+                  </h2>
+                </div>
+              </header>
 
-        <section
-          v-show="activeTab === 'action'"
-          id="action"
-          class="section tab-panel"
-          :class="{ active: activeTab === 'action' }"
-          role="tabpanel"
-          aria-labelledby="top-tab-action"
-          :aria-hidden="activeTab === 'action' ? 'false' : 'true'"
-        >
-          <div class="section-head workspace-tab-heading">
-            <div class="workspace-tab-heading__main">
-              <div class="section-kicker">
-                Intervention Board
+              <div class="teacher-dashboard-panel-body workspace-subpanel workspace-subpanel--flat">
+                <TeacherClassTrendPanel
+                  :trend="trend"
+                  title="班级近 7 天训练趋势"
+                  bare
+                />
               </div>
-              <h2 class="workspace-tab-heading__title">
-                介入建议
-              </h2>
-            </div>
-          </div>
+            </section>
 
-          <div class="workspace-subpanel section-stack">
-            <TeacherInterventionPanel
-              :students="students"
-              :class-name="selectedClassName"
-            />
+            <section class="overview-panel workspace-directory-section teacher-directory-section">
+              <header class="list-heading">
+                <div>
+                  <div class="workspace-overline">
+                    Review
+                  </div>
+                  <h2 class="list-heading__title">
+                    教学复盘结论
+                  </h2>
+                </div>
+              </header>
+
+              <div class="teacher-dashboard-panel-body workspace-subpanel workspace-subpanel--flat">
+                <TeacherClassReviewPanel
+                  :review="review"
+                  :class-name="selectedClassName"
+                  bare
+                />
+              </div>
+            </section>
+
+            <section class="overview-panel workspace-directory-section teacher-directory-section">
+              <header class="list-heading">
+                <div>
+                  <div class="workspace-overline">
+                    Intervention
+                  </div>
+                  <h2 class="list-heading__title">
+                    优先介入学生
+                  </h2>
+                </div>
+              </header>
+
+              <div class="teacher-dashboard-panel-body workspace-subpanel workspace-subpanel--flat">
+                <TeacherInterventionPanel
+                  :students="students"
+                  :class-name="selectedClassName"
+                  bare
+                />
+              </div>
+            </section>
           </div>
         </section>
       </main>
@@ -497,177 +351,18 @@ const {
 <style scoped>
 @import '../teacher-workspace-subpanel.css';
 
-.workspace-shell {
+.teacher-dashboard-shell {
   --journal-ink: var(--color-text-primary);
-  --journal-muted: var(--color-text-secondary);
-  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
   --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
-  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
-  --teacher-card-border: color-mix(in srgb, var(--journal-border) 76%, transparent);
-  --teacher-control-border: color-mix(in srgb, var(--journal-border) 78%, transparent);
-  --teacher-divider: color-mix(in srgb, var(--journal-border) 86%, transparent);
-  --workspace-page: color-mix(in srgb, var(--color-bg-base) 94%, var(--color-bg-surface));
-  --workspace-shell: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
-  --workspace-panel: color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-bg-base));
-  --workspace-panel-soft: color-mix(in srgb, var(--color-bg-surface) 82%, var(--color-bg-base));
-  --workspace-line-soft: color-mix(in srgb, var(--color-text-primary) 10%, transparent);
-  --workspace-line-strong: color-mix(in srgb, var(--color-text-primary) 16%, transparent);
-  --workspace-faint: color-mix(in srgb, var(--color-text-secondary) 88%, var(--color-bg-base));
-  --workspace-brand: color-mix(in srgb, var(--color-primary) 86%, var(--journal-ink));
-  --workspace-brand-ink: color-mix(in srgb, var(--color-primary) 74%, var(--journal-ink));
-  --workspace-brand-soft: color-mix(in srgb, var(--color-primary) 10%, transparent);
-  --workspace-success: var(--color-success);
-  --workspace-warning: var(--color-warning);
-  --workspace-danger: var(--color-danger);
-  --workspace-shadow-shell: 0 24px 84px
-    color-mix(in srgb, var(--color-shadow-soft) 58%, transparent);
-  --workspace-shadow-panel: 0 14px 34px
-    color-mix(in srgb, var(--color-shadow-soft) 42%, transparent);
-  --workspace-radius-xl: 28px;
-  --workspace-radius-lg: 18px;
-  --workspace-radius-md: 14px;
-  --workspace-font-sans: var(--font-family-sans);
-  --workspace-font-mono: var(--font-family-mono);
-  --teacher-workspace-panel-border: var(--workspace-line-soft);
-  --teacher-workspace-panel-background: color-mix(in srgb, var(--workspace-panel) 90%, transparent);
-  --teacher-workspace-panel-shadow: var(--workspace-shadow-panel);
-  --teacher-workspace-panel-padding: var(--space-5);
-  --teacher-workspace-panel-header-gap: var(--space-4);
-  --teacher-workspace-eyebrow-color: color-mix(
-    in srgb,
-    var(--workspace-brand) 60%,
-    var(--workspace-faint)
-  );
-  --teacher-workspace-line-soft: var(--workspace-line-soft);
-  --teacher-workspace-chart-background: color-mix(
-    in srgb,
-    var(--workspace-panel-soft) 82%,
-    transparent
-  );
-  --teacher-workspace-review-background: color-mix(
-    in srgb,
-    var(--workspace-panel-soft) 86%,
-    transparent
-  );
-  --teacher-workspace-mono-font: var(--workspace-font-mono);
-}
-
-.tab-panel.section {
-  padding-top: 0;
-  border-top: 0;
-}
-
-.workspace-hero {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 244px;
-  gap: var(--space-7);
-  padding-bottom: var(--space-6);
-  border-bottom: 1px solid var(--workspace-line-soft);
-}
-
-.tab-panel.workspace-hero.active {
-  display: grid;
-}
-
-.hero-title {
-  max-width: 11ch;
-}
-
-.hero-summary {
-  max-width: 760px;
-  margin-top: var(--space-3-5);
-  font-size: var(--font-size-15);
-  line-height: 1.9;
-  color: var(--journal-muted);
-}
-
-.meta-strip {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2-5);
-  margin-top: var(--space-4-5);
-}
-
-.meta-pill {
-  display: inline-flex;
-  align-items: center;
-  min-height: 28px;
-  padding: 0 var(--space-2-5);
-  border: 1px solid var(--workspace-line-soft);
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--workspace-panel) 72%, transparent);
-  font-size: var(--font-size-12);
-  color: var(--journal-muted);
-}
-
-.meta-pill.brand {
-  border-color: color-mix(in srgb, var(--workspace-brand) 20%, transparent);
-  background: var(--workspace-brand-soft);
-  color: var(--workspace-brand-ink);
-}
-
-.progress-strip {
+  --teacher-card-border: color-mix(in srgb, var(--color-border-default) 76%, transparent);
+  --teacher-control-border: color-mix(in srgb, var(--color-border-default) 78%, transparent);
+  --teacher-divider: color-mix(in srgb, var(--color-border-default) 86%, transparent);
+  --workspace-line-soft: var(--color-border-subtle);
+  --workspace-panel: var(--color-bg-surface);
+  --workspace-brand: var(--journal-accent);
+  --workspace-brand-ink: var(--journal-accent-strong);
+  --workspace-brand-soft: color-mix(in srgb, var(--journal-accent) 10%, transparent);
   --metric-panel-columns: repeat(4, minmax(0, 1fr));
-  --metric-panel-grid-gap: var(--space-3);
-  margin-top: var(--space-5-5);
-}
-
-.panel,
-.trend-signal {
-  border: 1px solid var(--workspace-line-soft);
-  border-radius: var(--workspace-radius-lg);
-  background: color-mix(in srgb, var(--workspace-panel) 88%, transparent);
-  box-shadow: var(--workspace-shadow-panel);
-}
-
-.trend-signal-label {
-  font-size: var(--font-size-11);
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--workspace-faint);
-}
-
-.trend-signal-copy {
-  margin-top: var(--space-2);
-  font-size: var(--font-size-13);
-  line-height: 1.7;
-  color: var(--journal-muted);
-}
-
-.quick-action {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-2-5);
-  min-height: 52px;
-  padding: 0 var(--space-3-5);
-  border: 1px solid var(--workspace-line-soft);
-  border-radius: 14px;
-  background: color-mix(in srgb, var(--workspace-panel) 82%, transparent);
-  color: var(--journal-ink);
-  text-decoration: none;
-  cursor: pointer;
-  transition:
-    border-color 160ms ease,
-    background 160ms ease,
-    color 160ms ease;
-}
-
-.quick-action span:last-child {
-  color: var(--workspace-faint);
-}
-
-.quick-action:hover,
-.quick-action:focus-visible {
-  border-color: color-mix(in srgb, var(--workspace-brand) 34%, transparent);
-  background: color-mix(in srgb, var(--workspace-brand) 8%, var(--workspace-panel));
-  color: var(--workspace-brand-ink);
-  outline: none;
-}
-
-.quick-action--compact {
-  min-height: 42px;
 }
 
 .teacher-btn {
@@ -682,366 +377,431 @@ const {
   border-top: 1px dashed var(--teacher-divider);
 }
 
+.teacher-dashboard-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.teacher-dashboard-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(17rem, 0.34fr);
+  gap: var(--space-7);
+  align-items: stretch;
+}
+
+.overview-workbench {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-5);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--workspace-line-soft);
+}
+
+.overview-panel {
+  --workspace-directory-section-padding: var(--space-5) var(--space-5-5) var(--space-5-5);
+  --workspace-directory-section-gap: var(--space-5);
+  --workspace-directory-shell-radius: 16px;
+  --workspace-directory-shell-padding: 0;
+  border: 1px solid var(--teacher-card-border);
+  border-radius: 22px;
+  background: color-mix(in srgb, var(--journal-surface) 92%, transparent);
+}
+
+.overview-panel--wide {
+  grid-column: 1 / -1;
+}
+
+.overview-panel > .list-heading {
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--workspace-line-soft);
+}
+
+.hero-summary {
+  max-width: 760px;
+  margin-top: var(--space-4);
+  font-size: var(--font-size-15);
+  line-height: 1.8;
+  color: var(--journal-muted);
+}
+
+.meta-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-5);
+}
+
+.meta-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--teacher-control-border);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--journal-surface) 88%, transparent);
+  font-size: var(--font-size-12);
+  color: var(--journal-muted);
+}
+.meta-pill.brand {
+  border-color: color-mix(in srgb, var(--journal-accent) 34%, transparent);
+  background: var(--workspace-brand-soft);
+  color: var(--journal-accent-strong);
+}
+
+.teacher-overview-summary {
+  margin-top: var(--space-5);
+}
+
+.summary-grid {
+  --metric-panel-columns: repeat(3, minmax(0, 1fr));
+}
+
+.teacher-overview-card {
+  min-height: 7.75rem;
+}
+
 .hero-rail {
-  padding-left: var(--space-6);
-  border-left: 1px solid var(--workspace-line-soft);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: 100%;
+  padding: var(--space-5);
+  border-color: color-mix(in srgb, var(--journal-accent) 18%, var(--teacher-card-border));
+  background: color-mix(in srgb, var(--journal-surface) 88%, transparent);
 }
 
 .rail-label {
   font-size: var(--font-size-11);
-  letter-spacing: 0.22em;
+  font-weight: 800;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--workspace-faint);
+  color: color-mix(in srgb, var(--journal-accent) 68%, var(--journal-muted));
 }
 
 .rail-score {
-  margin-top: var(--space-2-5);
-  font: 700 38px/1 var(--workspace-font-mono);
+  margin-top: var(--space-3);
+  font: 900 var(--font-size-38, 2.375rem) / 1 var(--font-family-mono);
   color: var(--journal-ink);
 }
 
 .rail-score small {
   margin-left: var(--space-1);
-  font-size: var(--font-size-15);
-  color: var(--workspace-faint);
+  font: 700 var(--font-size-12) / 1 var(--font-family-sans);
+  color: var(--journal-muted);
 }
 
 .rail-copy {
-  margin-top: var(--space-3-5);
-  padding-top: var(--space-3-5);
-  border-top: 1px solid var(--workspace-line-soft);
-  font-size: var(--font-size-14);
-  line-height: 1.78;
-  color: var(--journal-muted);
-}
-
-.panel-title {
-  margin: 0;
-  font-size: var(--font-size-18);
-  line-height: 1.2;
-  color: var(--journal-ink);
-}
-
-.section {
-  padding-top: var(--space-6);
-  border-top: 1px solid var(--workspace-line-soft);
-}
-
-.section-head {
-  display: flex;
-  align-items: end;
-  justify-content: space-between;
-  gap: var(--space-4);
-  margin-bottom: var(--space-4);
-}
-
-.section-kicker {
-  font-size: var(--font-size-11);
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: color-mix(in srgb, var(--workspace-brand) 60%, var(--workspace-faint));
-}
-
-.section-title {
-  margin: var(--space-2-5) 0 0;
-  font-size: var(--font-size-22);
-  line-height: 1.12;
-  color: var(--journal-ink);
-}
-
-.portrait-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: var(--space-5);
-}
-
-.portrait-summary-block {
-  min-width: 0;
-}
-
-.weak-list {
-  display: grid;
-  gap: var(--space-3);
-  margin-top: var(--space-4-5);
-}
-
-.weak-item {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  gap: var(--space-3-5);
-  align-items: start;
-  padding: var(--space-3-5) 0;
-  border-top: 1px dashed var(--workspace-line-soft);
-}
-
-.weak-item:first-child {
-  padding-top: 0;
-  border-top: 0;
-}
-
-.weak-rank,
-.hint-index {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 12px;
-  background: var(--workspace-brand-soft);
-  font: 700 13px/1 var(--workspace-font-mono);
-  color: var(--workspace-brand-ink);
-}
-
-.weak-name {
-  font-size: var(--font-size-15);
-  font-weight: 700;
-  color: var(--journal-ink);
-}
-
-.weak-copy {
-  margin-top: var(--space-1-5);
-  font-size: var(--font-size-14);
-  line-height: 1.75;
-  color: var(--journal-muted);
-}
-
-.weak-score {
-  font: 600 13px/1 var(--workspace-font-mono);
-  color: var(--workspace-faint);
-}
-
-.summary-grid {
-  --metric-panel-columns: repeat(3, minmax(0, 1fr));
-  --metric-panel-grid-gap: var(--space-3);
-  margin-top: var(--space-4-5);
-}
-
-.trend-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 220px;
-  gap: var(--space-4-5);
-}
-
-.trend-side {
-  display: grid;
-  gap: var(--space-3);
-}
-
-.trend-signal {
-  padding: var(--space-4);
-}
-
-.trend-signal-value {
-  margin-top: var(--space-2-5);
-  font-size: var(--font-size-24);
-  letter-spacing: -0.03em;
-  color: var(--journal-ink);
-}
-
-.insight-list,
-.action-list {
-  display: grid;
-  border-top: 1px solid var(--workspace-line-soft);
-}
-
-.insight-item,
-.action-item {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: var(--space-4-5);
-  padding: var(--space-4) 0;
-  border-bottom: 1px solid var(--workspace-line-soft);
-}
-
-.insight-item strong,
-.action-item strong {
-  display: block;
-  font-size: var(--font-size-15);
-  color: var(--journal-ink);
-}
-
-.insight-meta,
-.action-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  margin-top: var(--space-2);
-}
-
-.chip,
-.status-pill {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 24px;
-  padding: 0 var(--space-2);
-  border-radius: 7px;
-  border: 1px solid var(--workspace-line-soft);
-  font-size: var(--font-size-11-5);
-  font-weight: 600;
-  letter-spacing: 0.01em;
-  color: var(--journal-muted);
-}
-
-.chip.ready,
-.status-pill.ready {
-  border-color: color-mix(in srgb, var(--workspace-success) 28%, transparent);
-  background: color-mix(in srgb, var(--workspace-success) 10%, transparent);
-  color: color-mix(in srgb, var(--workspace-success) 82%, var(--journal-ink));
-}
-
-.chip.warning,
-.status-pill.warning {
-  border-color: color-mix(in srgb, var(--workspace-warning) 28%, transparent);
-  background: color-mix(in srgb, var(--workspace-warning) 10%, transparent);
-  color: color-mix(in srgb, var(--workspace-warning) 86%, var(--journal-ink));
-}
-
-.chip.danger,
-.status-pill.danger {
-  border-color: color-mix(in srgb, var(--workspace-danger) 28%, transparent);
-  background: color-mix(in srgb, var(--workspace-danger) 10%, transparent);
-  color: color-mix(in srgb, var(--workspace-danger) 82%, var(--journal-ink));
-}
-
-.item-copy {
-  margin-top: var(--space-2-5);
-  font-size: var(--font-size-14);
-  line-height: 1.8;
-  color: var(--journal-muted);
-}
-
-.status-pill {
-  min-height: 30px;
-  min-width: 78px;
-  border-radius: 8px;
-}
-
-.advice-lines {
-  margin-top: var(--space-0-5);
-}
-
-.hint-line {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: var(--space-3);
-  padding: var(--space-3-5) 0;
-  border-top: 1px dashed var(--workspace-line-soft);
-}
-
-.hint-line:first-of-type {
-  padding-top: 0;
-  border-top: 0;
-}
-
-.hint-index {
-  width: 28px;
-  height: 28px;
-  border-radius: 10px;
-  font-size: var(--font-size-12);
-}
-
-.hint-label {
-  font-size: var(--font-size-14);
-  font-weight: 600;
-  color: var(--journal-ink);
-}
-
-.hint-copy {
-  margin-top: var(--space-1-5);
-  font-size: var(--font-size-14);
-  line-height: 1.75;
-  color: var(--journal-muted);
-}
-
-.section-stack {
-  margin-top: var(--space-4-5);
-}
-
-.workspace-alert {
-  margin-top: var(--space-4-5);
-  padding: var(--space-4) var(--space-4-5);
-  border: 1px solid color-mix(in srgb, var(--workspace-danger) 24%, var(--workspace-line-soft));
-  border-radius: 18px;
-  background: color-mix(in srgb, var(--workspace-danger) 6%, transparent);
-}
-
-.workspace-alert-title-row {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2-5);
-}
-
-.workspace-alert-icon {
-  width: 18px;
-  height: 18px;
-  color: color-mix(in srgb, var(--workspace-danger) 82%, var(--journal-ink));
-}
-
-.workspace-alert-title {
-  font-size: var(--font-size-14);
-  font-weight: 700;
-  color: var(--journal-ink);
-}
-
-.workspace-alert-copy {
-  margin-top: var(--space-2);
+  margin-top: var(--space-4);
   font-size: var(--font-size-13);
   line-height: 1.7;
   color: var(--journal-muted);
 }
 
-.workspace-alert-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2-5);
-  margin-top: var(--space-3-5);
+.teacher-dashboard-panel-body {
+  min-width: 0;
 }
 
-.empty-inline {
-  margin-top: var(--space-4-5);
+.portrait-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.25fr);
+  gap: var(--space-5);
+  align-items: start;
+}
+
+.portrait-summary-block,
+.portrait-dimension-block {
+  display: grid;
+  gap: var(--space-5);
+  min-width: 0;
+}
+
+.panel-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.panel-title {
+  margin: 0;
+  font-size: var(--font-size-17);
+  font-weight: 800;
+  color: var(--journal-ink);
+}
+
+.panel-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.75rem;
+  padding: 0 var(--space-3);
+  border: 1px solid color-mix(in srgb, var(--journal-accent) 22%, transparent);
+  border-radius: 999px;
+  background: var(--workspace-brand-soft);
+  font-size: var(--font-size-11);
+  font-weight: 700;
+  color: var(--journal-accent-strong);
+}
+
+.weak-list {
+  --workspace-directory-shell-background: color-mix(
+    in srgb,
+    var(--journal-surface) 96%,
+    transparent
+  );
+  display: grid;
+  overflow: hidden;
+}
+
+.weak-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: var(--space-4);
+  align-items: center;
+  padding: var(--space-4) var(--space-4-5);
+  border-bottom: 1px solid var(--workspace-directory-row-divider);
+  background: transparent;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.weak-item:last-child {
+  border-bottom: 0;
+}
+
+.weak-item:hover {
+  background: color-mix(in srgb, var(--journal-accent) 5%, transparent);
+}
+
+.weak-rank {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.125rem;
+  height: 2.125rem;
+  border-radius: 12px;
+  background: var(--workspace-brand-soft);
+  font: 700 var(--font-size-13) / 1 var(--font-family-mono);
+  color: var(--journal-accent-strong);
+}
+
+.weak-content {
+  min-width: 0;
+}
+
+.weak-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--font-size-15);
+  font-weight: 800;
+  color: var(--journal-ink);
+}
+
+.weak-copy {
+  margin-top: var(--space-1);
+  font-size: var(--font-size-13);
+  line-height: 1.6;
+  color: var(--journal-muted);
+}
+
+.weak-score {
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-13);
+  font-weight: 800;
+  color: var(--journal-accent-strong);
+}
+
+.weak-bar {
+  height: 0.375rem;
+  margin-top: var(--space-2);
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--teacher-card-border) 66%, transparent);
+}
+
+.weak-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: color-mix(in srgb, var(--journal-accent) 72%, var(--journal-accent-strong));
+}
+
+.portrait-empty {
+  padding: var(--space-5);
+  font-size: var(--font-size-13);
+  color: var(--journal-muted);
+}
+
+.portrait-guidance {
+  border-left: 3px solid color-mix(in srgb, var(--journal-accent) 58%, transparent);
+  padding: var(--space-3) var(--space-4);
+  background: color-mix(in srgb, var(--journal-accent) 5%, transparent);
+}
+
+.portrait-guidance__label {
+  font-size: var(--font-size-12);
+  font-weight: 800;
+  color: var(--journal-accent-strong);
+}
+
+.portrait-guidance__copy {
+  margin-top: var(--space-1);
+  font-size: var(--font-size-13);
+  line-height: 1.65;
+  color: var(--journal-muted);
+}
+
+.summary-note {
+  min-height: 7.25rem;
+}
+
+.summary-note-copy {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.teacher-dashboard-panel-body.workspace-subpanel--flat {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.teacher-dashboard-panel-body.workspace-subpanel--flat :deep(.teacher-panel) {
+  width: 100%;
+}
+
+.teacher-dashboard-panel-body.workspace-subpanel--flat :deep(.review-item),
+.teacher-dashboard-panel-body.workspace-subpanel--flat :deep(.intervention-item) {
+  border-width: 0 0 1px;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.student-insight-list {
+  display: grid;
+}
+
+.student-insight-row {
+  display: grid;
+  grid-template-columns: minmax(7rem, 0.18fr) minmax(0, 1fr);
+  gap: var(--space-5);
+  padding: var(--space-4-5) var(--space-5);
+  border-bottom: 1px solid var(--workspace-directory-row-divider);
+}
+
+.student-insight-row:last-child {
+  border-bottom: 0;
+}
+
+.student-insight-row__status {
+  align-self: start;
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.875rem;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--teacher-card-border);
+  border-radius: 999px;
+  font-size: var(--font-size-12);
+  font-weight: 800;
+  color: var(--journal-muted);
+}
+
+.student-insight-row--ready .student-insight-row__status {
+  border-color: color-mix(in srgb, var(--color-success) 28%, transparent);
+  background: color-mix(in srgb, var(--color-success) 8%, transparent);
+  color: color-mix(in srgb, var(--color-success) 78%, var(--journal-ink));
+}
+
+.student-insight-row--warning .student-insight-row__status {
+  border-color: color-mix(in srgb, var(--color-warning) 32%, transparent);
+  background: color-mix(in srgb, var(--color-warning) 9%, transparent);
+  color: color-mix(in srgb, var(--color-warning) 78%, var(--journal-ink));
+}
+
+.student-insight-row--danger .student-insight-row__status {
+  border-color: color-mix(in srgb, var(--color-danger) 30%, transparent);
+  background: color-mix(in srgb, var(--color-danger) 8%, transparent);
+  color: color-mix(in srgb, var(--color-danger) 78%, var(--journal-ink));
+}
+
+.student-insight-row__main {
+  min-width: 0;
+}
+
+.student-insight-row__title {
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--font-size-16);
+  font-weight: 800;
+  color: var(--journal-ink);
+}
+
+.student-insight-row__detail {
+  margin: var(--space-2) 0 0;
   font-size: var(--font-size-14);
-  line-height: 1.75;
-  color: var(--workspace-faint);
+  line-height: 1.7;
+  color: var(--journal-muted);
+}
+
+.student-insight-row__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.student-insight-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.625rem;
+  padding: 0 var(--space-2-5);
+  border: 1px solid color-mix(in srgb, var(--teacher-card-border) 86%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--journal-surface) 78%, transparent);
+  font-size: var(--font-size-12);
+  color: var(--journal-muted);
 }
 
 @media (max-width: 1180px) {
-  .workspace-hero,
-  .portrait-grid,
-  .trend-layout {
+  .teacher-dashboard-hero,
+  .overview-workbench,
+  .portrait-grid {
     grid-template-columns: 1fr;
-  }
-
-  .hero-rail {
-    padding-top: var(--space-5);
-    padding-left: 0;
-    border-top: 1px solid var(--workspace-line-soft);
-    border-left: 0;
   }
 }
 
-@media (max-width: 860px) {
-  .progress-strip,
+@media (max-width: 760px) {
+  .teacher-dashboard-shell {
+    --metric-panel-columns: 1fr;
+  }
+
   .summary-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    --metric-panel-columns: 1fr;
   }
 
-  .section-head {
-    display: block;
-  }
-}
-
-@media (max-width: 640px) {
-  .top-tabs,
-  .content-pane {
-    padding-left: var(--space-4-5);
-    padding-right: var(--space-4-5);
+  .weak-item {
+    grid-template-columns: auto minmax(0, 1fr);
   }
 
-  .progress-strip,
-  .summary-grid {
+  .weak-score {
+    grid-column: 2;
+  }
+
+  .student-insight-row {
     grid-template-columns: 1fr;
+    gap: var(--space-3);
   }
 }
 </style>

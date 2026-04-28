@@ -23,7 +23,7 @@ func withNS(key string) string {
 // ============================================================
 
 const (
-	// keyTokenPrefix 用户 Refresh Token 存储，登出时删除实现强制下线
+	// keyTokenPrefix 兼容旧在线用户统计键前缀；新认证链路已改为 session 前缀
 	keyTokenPrefix = "token:"
 	// keyLoginFailPrefix 登录失败计数，达到阈值后触发账户锁定
 	keyLoginFailPrefix = "login_fail:"
@@ -33,8 +33,8 @@ const (
 	keyUserRolesPrefix = "user:roles:"
 )
 
-// TokenKey 用户 Refresh Token
-// 数据结构: STRING (JWT refresh token hash) | TTL: 7d
+// TokenKey 旧在线用户统计兼容键
+// 数据结构: STRING | TTL: 由调用方控制
 func TokenKey(userID int64) string {
 	return withNS(fmt.Sprintf("%s%d", keyTokenPrefix, userID))
 }

@@ -43,7 +43,6 @@ async function mountPage(role: 'student' | 'teacher' | 'admin' = 'student') {
     username: 'tester',
     role,
   }
-  authStore.accessToken = 'token'
 
   const wrapper = mount(NotificationList, {
     global: {
@@ -167,9 +166,11 @@ describe('NotificationList', () => {
   })
 
   it('通知页头部应将消息数与未读数收进同一行，并把操作按钮放到下一行', () => {
-    expect(notificationListSource).toContain('<div class="workspace-overline">Notifications</div>')
-    expect(notificationListSource).toContain(
-      '<h1 class="notification-title workspace-page-title">通知中心</h1>'
+    expect(notificationListSource).toMatch(
+      /<div class="workspace-overline">\s*Notifications\s*<\/div>/
+    )
+    expect(notificationListSource).toMatch(
+      /<h1 class="notification-title workspace-page-title">\s*通知中心\s*<\/h1>/
     )
     expect(notificationListSource).not.toContain('<div class="journal-eyebrow">Notifications</div>')
     expect(notificationListSource).not.toContain('journal-eyebrow-text')
@@ -188,5 +189,26 @@ describe('NotificationList', () => {
     expect(notificationListSource).toContain('class="ui-btn ui-btn--primary"')
     expect(notificationListSource).toContain('class="ui-btn ui-btn--secondary"')
     expect(notificationListSource).not.toContain('class="notification-btn')
+  })
+
+  it('短时间内连续刷新后应显示试探型提示且仍执行真实刷新', async () => {
+    const { wrapper } = await mountPage()
+
+    const refreshButton = wrapper
+      .findAll('button')
+      .find((node) => node.text().includes('刷新'))
+
+    expect(refreshButton).toBeTruthy()
+    expect(wrapper.text()).not.toContain('新消息不会因为执念刷新得更快。')
+
+    await refreshButton!.trigger('click')
+    await flushPromises()
+    await refreshButton!.trigger('click')
+    await flushPromises()
+    await refreshButton!.trigger('click')
+    await flushPromises()
+
+    expect(notificationApiMocks.getNotifications).toHaveBeenCalledTimes(4)
+    expect(wrapper.text()).toContain('新消息不会因为执念刷新得更快。')
   })
 })

@@ -48,10 +48,18 @@ const totalStudents = computed(() => {
 
   return classes.value.reduce((total, item) => total + (item.student_count || 0), 0)
 })
+const trimmedSearchQuery = computed(() => searchQuery.value.trim())
+const searchLooksLikeStudentNo = computed(() =>
+  Boolean(
+    trimmedSearchQuery.value &&
+    /\d/.test(trimmedSearchQuery.value) &&
+    /^[A-Za-z0-9_-]+$/.test(trimmedSearchQuery.value)
+  )
+)
 const directoryParams = computed(() => ({
   class_name: selectedClassName.value || undefined,
-  keyword: searchQuery.value.trim() || undefined,
-  student_no: studentNoQuery.value.trim() || undefined,
+  keyword: searchLooksLikeStudentNo.value ? undefined : trimmedSearchQuery.value || undefined,
+  student_no: searchLooksLikeStudentNo.value ? trimmedSearchQuery.value : undefined,
   sort_key: 'solved_count' as const,
   sort_order: 'desc' as const,
   page: page.value,
@@ -113,6 +121,7 @@ function openStudent(studentId: string): void {
 
 function updateSearchQuery(value: string): void {
   filters.updateSearchQuery(value)
+  filters.updateStudentNoQuery('')
 }
 
 function updateStudentNoQuery(value: string): void {

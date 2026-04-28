@@ -12,6 +12,14 @@ function findChild(path: string) {
 }
 
 describe('shared route canonical paths', () => {
+  it('收拢 ui-lab 为受保护的内部页面', () => {
+    const uiLabRoute = routes.find((route) => route.path === '/ui-lab')
+
+    expect(uiLabRoute?.name).toBe('UILab')
+    expect(uiLabRoute?.meta?.requiresAuth).toBe(true)
+    expect(uiLabRoute?.meta?.roles).toEqual(['admin'])
+  })
+
   it('uses role-neutral paths as the canonical location for shared profile pages', () => {
     expect(findChild('profile')?.name).toBe('Profile')
     expect(findChild('settings/security')?.name).toBe('SecuritySettings')
@@ -84,6 +92,9 @@ describe('shared route canonical paths', () => {
     expect(findChild('platform/awd-service-templates')?.name).toBe(
       'PlatformAwdServiceTemplateLibrary'
     )
+    expect(findChild('platform/awd-service-templates/imports')?.name).toBe(
+      'PlatformAwdServiceTemplateImport'
+    )
     expect(findChild('platform/images')?.name).toBe('ImageManage')
   })
 
@@ -119,6 +130,7 @@ describe('shared route canonical paths', () => {
       'admin/challenges/:id/writeup/view',
       'admin/environment-templates',
       'admin/awd-service-templates',
+      'admin/awd-service-templates/imports',
       'admin/images',
     ]
 

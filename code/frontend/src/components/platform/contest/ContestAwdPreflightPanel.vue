@@ -3,7 +3,7 @@ import { computed } from 'vue'
 
 import type { AWDReadinessData } from '@/api/contracts'
 
-import AWDReadinessSummary from './AWDReadinessSummary.vue'
+import AWDReadinessChecklist from './AWDReadinessChecklist.vue'
 import AWDReadinessDecisionHUD from './AWDReadinessDecisionHUD.vue'
 
 const props = defineProps<{
@@ -31,7 +31,9 @@ function handleNavigateChallenge(challengeId: string) {
   <section class="studio-preflight">
     <header class="studio-pane-header">
       <div class="header-main">
-        <div class="workspace-overline">AWD Preflight Check</div>
+        <div class="workspace-overline">
+          AWD Preflight Check
+        </div>
         <h1 class="pane-title">
           赛前就绪检查
         </h1>
@@ -42,23 +44,36 @@ function handleNavigateChallenge(challengeId: string) {
 
       <div class="header-side">
         <AWDReadinessDecisionHUD :readiness="readiness" />
-        
+
         <!-- Override Entry - Compact -->
-        <button
+        <div
           v-if="canForceStart"
-          id="contest-awd-preflight-force-start"
-          type="button"
-          class="ops-btn ops-btn--primary"
-          @click="emit('open:override')"
+          class="preflight-override-entry"
         >
-          强制放行
-        </button>
+          <header class="list-heading contest-awd-preflight-panel__override-head">
+            <div>
+              <div class="journal-note-label">
+                Override Entry
+              </div>
+              <h3 class="list-heading__title">
+                强制启动赛事
+              </h3>
+            </div>
+          </header>
+          <button
+            id="contest-awd-preflight-force-start"
+            type="button"
+            class="ui-btn ui-btn--primary"
+            @click="emit('open:override')"
+          >
+            强制放行
+          </button>
+        </div>
       </div>
     </header>
 
-    <AWDReadinessSummary
+    <AWDReadinessChecklist
       :readiness="readiness"
-      :loading="loading"
       action-label="修正配置"
       @edit-config="handleNavigateChallenge"
     />
@@ -69,9 +84,9 @@ function handleNavigateChallenge(challengeId: string) {
 .studio-preflight {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
-  padding: 1.5rem 2rem;
-  background: var(--color-bg-base);
+  gap: var(--space-5);
+  padding: var(--space-6) var(--space-8);
+  background: transparent;
 }
 
 .studio-pane-header {
@@ -79,28 +94,42 @@ function handleNavigateChallenge(challengeId: string) {
   justify-content: space-between;
   align-items: flex-end;
   border-bottom: 1px solid var(--color-border-subtle);
-  padding-bottom: 1.5rem;
+  padding-bottom: var(--space-5);
 }
 
 .pane-title {
-  font-size: 1.5rem;
+  font-size: var(--font-size-1-5);
   font-weight: 900;
   color: var(--color-text-primary);
-  margin: 0.25rem 0 0;
+  margin: var(--space-1) 0 0;
 }
 
 .pane-description {
-  font-size: 14px;
+  font-size: var(--font-size-14);
   color: var(--color-text-secondary);
-  margin: 0.5rem 0 0;
-  max-width: 32rem;
+  margin: var(--space-2) 0 0;
+  max-width: var(--ui-selector-width-lg);
   line-height: 1.6;
 }
 
 .header-side {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: var(--space-4);
+}
+
+.preflight-override-entry {
+  display: grid;
+  gap: var(--space-1-5);
+  justify-items: end;
+}
+
+.preflight-override-entry__label {
+  font-size: var(--font-size-11);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
 }
 
 .ops-btn {
@@ -118,18 +147,26 @@ function handleNavigateChallenge(challengeId: string) {
 
 .ops-btn--primary {
   background: var(--color-warning);
-  color: white;
+  color: var(--color-bg-base);
   border: none;
   box-shadow: 0 4px 12px color-mix(in srgb, var(--color-warning) 20%, transparent);
 }
 
 .ops-btn--primary:hover {
-  background: color-mix(in srgb, var(--color-warning) 90%, black);
+  background: color-mix(in srgb, var(--color-warning) 90%, var(--color-bg-base));
   transform: translateY(-1px);
 }
 
 @media (max-width: 1280px) {
-  .studio-pane-header { flex-direction: column; align-items: flex-start; gap: 1.5rem; }
-  .header-side { width: 100%; justify-content: space-between; }
+  .studio-pane-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-5);
+  }
+
+  .header-side {
+    width: 100%;
+    justify-content: space-between;
+  }
 }
 </style>

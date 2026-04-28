@@ -372,6 +372,13 @@ export function usePlatformContests() {
         await pagination.refresh()
         return 'create'
       }
+    } catch (error) {
+      if (!(error instanceof ApiError)) {
+        toast.error(
+          humanizeRequestError(error, editingContestId.value ? '竞赛更新失败' : '竞赛创建失败')
+        )
+      }
+      return null
     } finally {
       saving.value = false
     }

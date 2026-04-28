@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import {
   Activity,
   Box,
   CheckCircle,
   Clock,
-  Plus,
   RefreshCw,
+  Upload,
 } from 'lucide-vue-next'
 
 import type {
@@ -23,9 +23,9 @@ import type { PlatformAwdServiceTemplateImportUploadResult } from '@/composables
 
 type AwdServiceTypeFilter = AdminAwdServiceTemplateData['service_type'] | ''
 type AwdServiceStatusFilter = AdminAwdServiceTemplateData['status'] | ''
-type LibraryTab = 'library' | 'import'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
+  mode?: 'library' | 'import'
   list: AdminAwdServiceTemplateData[]
   total: number
   page: number
@@ -39,7 +39,9 @@ const props = defineProps<{
   importQueue: AdminAwdServiceTemplateImportPreview[]
   uploadResults: PlatformAwdServiceTemplateImportUploadResult[]
   selectedFileName?: string
-}>()
+}>(), {
+  mode: 'library',
+})
 
 const emit = defineEmits<{
   refresh: []
@@ -49,13 +51,11 @@ const emit = defineEmits<{
   updateStatusFilter: [value: AwdServiceStatusFilter]
   selectImportPackages: [files: File[]]
   commitImport: [preview: AdminAwdServiceTemplateImportPreview]
-  openCreateDialog: []
+  openImportPage: []
   openEditDialog: [template: AdminAwdServiceTemplateData]
   deleteTemplate: [template: AdminAwdServiceTemplateData]
   changePage: [page: number]
 }>()
-
-const activeTab = ref<LibraryTab>('library')
 
 const totalPages = computed(() => Math.max(1, Math.ceil(props.total / props.pageSize)))
 const publishedCount = computed(() => props.list.filter((item) => item.status === 'published').length)
@@ -64,6 +64,12 @@ const pendingReadinessCount = computed(
   () => props.list.filter((item) => item.readiness_status === 'pending').length
 )
 const importQueueCount = computed(() => props.importQueue.length)
+const heroTitle = computed(() => props.mode === 'import' ? '导入 AWD 题目包' : 'AWD 服务模板库')
+const heroSummary = computed(() =>
+  props.mode === 'import'
+    ? '上传符合规范的 AWD 题目包，确认后生成可用于编排的服务模板。'
+    : '这里单独维护 AWD 题目的服务模板，不再和解题赛题目混在同一资源目录。'
+)
 const hasActiveFilters = computed(() =>
   Boolean(props.keyword.trim() || props.serviceTypeFilter || props.statusFilter)
 )
@@ -203,52 +209,36 @@ function formatStructuredJSON(value?: Record<string, unknown>): string {
   return JSON.stringify(value, null, 2)
 }
 
-function selectTab(tab: LibraryTab) {
-  activeTab.value = tab
-}
 </script>
 
 <template>
-  <div class="workspace-shell">
+  <div class="workspace-shell journal-shell journal-shell-admin journal-hero awd-template-library-shell">
     <div class="workspace-grid">
-      <main class="content-pane">
+      <main class="content-pane awd-template-library-content">
         <section class="workspace-hero">
           <div class="workspace-tab-heading__main">
             <div class="workspace-overline">
               AWD Service Authoring
             </div>
             <h1 class="hero-title">
-              AWD 服务模板
+              {{ heroTitle }}
             </h1>
             <p class="hero-summary">
-              这里单独维护 AWD 题目的服务模板，不再和解题赛题目混在同一资源目录。
+              {{ heroSummary }}
             </p>
 
-            <nav class="awd-library-tabs mt-10">
-              <button
-                class="awd-tab-item"
-                :class="{ active: activeTab === 'library' }"
-                @click="selectTab('library')"
-              >
-                全部模板
-              </button>
-              <button
-                class="awd-tab-item"
-                :class="{ active: activeTab === 'import' }"
-                @click="selectTab('import')"
-              >
-                题目包导入
-                <span
-                  v-if="importQueueCount > 0"
-                  class="awd-tab-badge"
-                >{{ importQueueCount }}</span>
-              </button>
-            </nav>
+            <div
+              v-if="mode === 'import'"
+              class="awd-import-page-note"
+            >
+              上传题目包并确认导入后，系统会生成可用于 AWD 编排的服务模板。
+            </div>
           </div>
 
           <div class="awd-library-hero-actions">
             <div class="quick-actions">
               <button
+                v-if="mode === 'library'"
                 type="button"
                 class="ui-btn ui-btn--ghost"
                 @click="emit('refresh')"
@@ -257,62 +247,83 @@ function selectTab(tab: LibraryTab) {
                 刷新列表
               </button>
               <button
-                id="awd-template-open-create"
+                v-if="mode === 'library'"
+                id="awd-template-open-import"
                 type="button"
                 class="ui-btn ui-btn--primary"
-                @click="emit('openCreateDialog')"
+                @click="emit('openImportPage')"
               >
-                <Plus class="h-4 w-4" />
-                创建模板
+                <Upload class="h-4 w-4" />
+                导入题目包
+              </button>
+              <button
+                v-if="mode === 'import'"
+                type="button"
+                class="ui-btn ui-btn--ghost"
+                @click="emit('refreshImportQueue')"
+              >
+                <RefreshCw class="h-4 w-4" />
+                刷新队列
               </button>
             </div>
           </div>
         </section>
 
-        <div class="awd-library-body mt-10">
-          <!-- Tab A: Library -->
+        <div>
           <div
-            v-if="activeTab === 'library'"
-            class="awd-library-pane space-y-10"
+            v-if="mode === 'library'"
+            class="awd-library-pane"
           >
-            <div class="metric-panel-grid metric-panel-grid--premium cols-4">
-              <article class="metric-panel-card metric-panel-card--premium">
-                <div class="metric-panel-label">
+            <div class="admin-summary-grid awd-template-summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface">
+              <article class="journal-note progress-card metric-panel-card">
+                <div class="journal-note-label progress-card-label metric-panel-label">
                   <span>模板总量</span>
                   <Box class="h-4 w-4" />
                 </div>
-                <div class="metric-panel-value">
+                <div class="journal-note-value progress-card-value metric-panel-value">
                   {{ total.toString().padStart(2, '0') }}
+                </div>
+                <div class="journal-note-helper progress-card-hint metric-panel-helper">
+                  当前筛选条件下可管理的服务模板
                 </div>
               </article>
 
-              <article class="metric-panel-card metric-panel-card--premium">
-                <div class="metric-panel-label">
+              <article class="journal-note progress-card metric-panel-card">
+                <div class="journal-note-label progress-card-label metric-panel-label">
                   <span>已发布</span>
                   <CheckCircle class="h-4 w-4" />
                 </div>
-                <div class="metric-panel-value">
+                <div class="journal-note-value progress-card-value metric-panel-value">
                   {{ publishedCount.toString().padStart(2, '0') }}
+                </div>
+                <div class="journal-note-helper progress-card-hint metric-panel-helper">
+                  已开放给 AWD 题目编排使用的模板
                 </div>
               </article>
 
-              <article class="metric-panel-card metric-panel-card--premium">
-                <div class="metric-panel-label">
+              <article class="journal-note progress-card metric-panel-card">
+                <div class="journal-note-label progress-card-label metric-panel-label">
                   <span>Web HTTP</span>
                   <Activity class="h-4 w-4" />
                 </div>
-                <div class="metric-panel-value">
+                <div class="journal-note-value progress-card-value metric-panel-value">
                   {{ webHttpCount.toString().padStart(2, '0') }}
+                </div>
+                <div class="journal-note-helper progress-card-hint metric-panel-helper">
+                  使用 HTTP 探测与 Web 服务模式的模板
                 </div>
               </article>
 
-              <article class="metric-panel-card metric-panel-card--premium">
-                <div class="metric-panel-label">
+              <article class="journal-note progress-card metric-panel-card">
+                <div class="journal-note-label progress-card-label metric-panel-label">
                   <span>待验证</span>
                   <Clock class="h-4 w-4" />
                 </div>
-                <div class="metric-panel-value">
+                <div class="journal-note-value progress-card-value metric-panel-value">
                   {{ pendingReadinessCount.toString().padStart(2, '0') }}
+                </div>
+                <div class="journal-note-helper progress-card-hint metric-panel-helper">
+                  仍需完成 Checker 验证的模板
                 </div>
               </article>
             </div>
@@ -394,7 +405,7 @@ function selectTab(tab: LibraryTab) {
                         {{ (row as AdminAwdServiceTemplateData).name }}
                       </div>
                       <div class="awd-template-table__slug">
-                        @{{ (row as AdminAwdServiceTemplateData).slug }}
+                        {{ (row as AdminAwdServiceTemplateData).slug }}
                       </div>
                     </div>
                   </template>
@@ -451,7 +462,7 @@ function selectTab(tab: LibraryTab) {
 
                 <div
                   v-if="total > 0"
-                  class="admin-pagination workspace-directory-pagination mt-6"
+                  class="admin-pagination workspace-directory-pagination"
                 >
                   <WorkspaceDirectoryPagination
                     :page="page"
@@ -466,12 +477,11 @@ function selectTab(tab: LibraryTab) {
             </section>
           </div>
 
-          <!-- Tab B: Import -->
           <div
-            v-if="activeTab === 'import'"
-            class="awd-import-pane space-y-12"
+            v-if="mode === 'import'"
+            class="awd-import-pane"
           >
-            <section class="awd-import-tool-section">
+            <section class="workspace-directory-section awd-import-tool-section">
               <header class="list-heading awd-template-import__head">
                 <div>
                   <div class="workspace-overline">
@@ -493,19 +503,11 @@ function selectTab(tab: LibraryTab) {
                     >
                       下载示例题包
                     </a>
-                    <button
-                      type="button"
-                      class="ui-btn ui-btn--ghost"
-                      @click="emit('refreshImportQueue')"
-                    >
-                      <RefreshCw class="h-4 w-4" />
-                      刷新队列
-                    </button>
                   </div>
                 </div>
               </header>
 
-              <div class="mt-8">
+              <div class="awd-template-import__entry">
                 <ChallengePackageImportEntry
                   :hide-header="true"
                   :uploading="uploading"
@@ -533,13 +535,18 @@ function selectTab(tab: LibraryTab) {
               </div>
             </section>
 
-            <section class="awd-import-queue-section">
-              <div class="awd-template-import__queue-head">
-                <div class="workspace-overline">
-                  Review Queue
+            <section class="workspace-directory-section awd-import-queue-section">
+              <header class="list-heading awd-template-import__queue-head">
+                <div>
+                  <div class="workspace-overline">
+                    Review Queue
+                  </div>
+                  <h2 class="list-heading__title">
+                    待确认题目包
+                  </h2>
                 </div>
                 <span class="awd-template-import__queue-count">共 {{ importQueueCount }} 个待确认包</span>
-              </div>
+              </header>
 
               <div
                 v-if="queueLoading"
@@ -556,7 +563,7 @@ function selectTab(tab: LibraryTab) {
               />
               <div
                 v-else
-                class="awd-template-import__queue"
+                class="workspace-directory-list awd-template-import__queue"
               >
                 <article
                   v-for="item in importQueue"
@@ -603,6 +610,14 @@ function selectTab(tab: LibraryTab) {
 </template>
 
 <style scoped>
+.awd-template-library-content,
+.awd-library-pane,
+.awd-import-pane {
+  display: flex;
+  flex-direction: column;
+  gap: var(--workspace-directory-page-block-gap, var(--space-5));
+}
+
 .workspace-hero {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -635,85 +650,60 @@ function selectTab(tab: LibraryTab) {
 
 .quick-actions {
   display: flex;
-  gap: 0.75rem;
+  gap: var(--space-3);
 }
 
-.awd-library-tabs {
-  display: flex;
-  gap: 2.5rem;
+.awd-import-page-note {
+  max-width: 46rem;
+  margin-top: var(--space-4);
+  font-size: var(--font-size-13);
+  line-height: 1.7;
+  color: var(--journal-muted);
 }
 
-.awd-tab-item {
-  padding: 0.75rem 0 1rem;
-  font-size: 14px;
-  font-weight: 800;
-  color: var(--color-text-secondary);
-  border: none;
-  border-bottom: 3px solid transparent;
-  background: transparent;
-  cursor: pointer;
-  transition: all 0.22s ease;
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
+.awd-template-summary {
+  --admin-summary-grid-columns: repeat(4, minmax(0, 1fr));
+  --metric-panel-columns: repeat(4, minmax(0, 1fr));
 }
 
-.awd-tab-item:hover { color: var(--color-text-primary); }
-.awd-tab-item.active {
-  color: var(--color-primary);
-  border-bottom-color: var(--color-primary);
-}
-
-.awd-tab-badge {
-  background: var(--color-primary);
-  color: white;
-  font-size: 10px;
-  min-width: 1.25rem;
-  height: 1.25rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 99px;
-  font-family: var(--font-family-mono);
-}
-
-.awd-template-import__uploads { display: grid; gap: 0.75rem; margin-top: 1.5rem; }
-.awd-template-import__upload { padding: 1.1rem; border-radius: 1rem; border: 1px solid var(--color-border-default); background: var(--color-bg-surface); }
+.awd-template-import__uploads { display: grid; gap: var(--space-3); margin-top: var(--space-4); }
+.awd-template-import__upload { padding: var(--space-4); border-radius: 1rem; border: 1px solid var(--color-border-default); background: var(--color-bg-surface); }
 .awd-template-import__upload.is-success { border-color: color-mix(in srgb, var(--color-success) 24%, transparent); }
-.awd-template-import__upload-head { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin-bottom: 0.5rem; }
-.awd-template-import__queue-head { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin-bottom: 1.5rem; }
-.awd-template-import__queue-count { color: var(--color-text-muted); font-size: 13px; font-weight: 700; }
-.awd-template-import__queue { display: grid; gap: 1.75rem; }
-.awd-template-import__card { display: grid; gap: 1.5rem; padding: 1.75rem; border: 1px solid var(--color-border-default); border-radius: 1.25rem; background: var(--color-bg-surface); box-shadow: var(--color-shadow-soft); }
-.awd-template-import__card-title { margin: 0; font-size: 1.15rem; font-weight: 900; color: var(--color-text-primary); }
-.awd-template-import__card-file { margin: 0.35rem 0 0; color: var(--color-text-muted); font-family: var(--font-family-mono); font-size: 12px; }
-.awd-template-import__chips { display: flex; flex-wrap: wrap; gap: 0.6rem; }
-.awd-template-import__grid { display: grid; gap: 1.25rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.awd-template-import__json { margin: 0; min-height: 10rem; padding: 1.25rem; border-radius: 1rem; background: var(--color-bg-elevated); border: 1px solid var(--color-border-subtle); color: var(--color-text-secondary); font-family: var(--font-family-mono); font-size: 12px; line-height: 1.6; white-space: pre-wrap; word-break: break-word; }
+.awd-template-import__upload-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-2); }
+.awd-template-import__entry { margin-top: var(--workspace-directory-gap-top); }
+.awd-template-import__queue-head { margin-bottom: 0; }
+.awd-template-import__queue-count { color: var(--color-text-muted); font-size: var(--font-size-13); font-weight: 700; }
+.awd-template-import__queue { display: grid; gap: 0; padding: 0; }
+.awd-template-import__card { display: grid; gap: var(--space-4); padding: var(--space-4-5) var(--space-5); border-bottom: 1px solid var(--workspace-directory-row-divider); }
+.awd-template-import__card:last-child { border-bottom: 0; }
+.awd-template-import__card-title { margin: 0; font-size: var(--font-size-17); font-weight: 800; color: var(--color-text-primary); }
+.awd-template-import__card-file { margin: var(--space-1) 0 0; color: var(--color-text-muted); font-family: var(--font-family-mono); font-size: var(--font-size-12); }
+.awd-template-import__chips { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.awd-template-import__grid { display: grid; gap: var(--space-3); grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.awd-template-import__json { margin: 0; min-height: 10rem; padding: var(--space-4); border-radius: 1rem; background: var(--color-bg-elevated); border: 1px solid var(--color-border-subtle); color: var(--color-text-secondary); font-family: var(--font-family-mono); font-size: var(--font-size-12); line-height: 1.6; white-space: pre-wrap; word-break: break-word; }
 
-.awd-template-library__filter-grid { display: grid; gap: 1.25rem; }
-.awd-template-library__filter-field { display: grid; gap: 0.6rem; }
-.awd-template-library__filter-label { font-size: 11px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-text-muted); }
-.awd-filter-control { width: 100%; min-height: 2.85rem; padding: 0 1rem; font-size: 14px; font-weight: 600; border-radius: 0.9rem; border: 1px solid var(--color-border-default); background: var(--color-bg-surface); color: var(--color-text-primary); outline: none; transition: all 180ms ease; }
+.awd-template-library__filter-grid { display: grid; gap: var(--space-4); }
+.awd-template-library__filter-field { display: grid; gap: var(--space-2); }
+.awd-template-library__filter-label { font-size: var(--font-size-11); font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-text-muted); }
+.awd-filter-control { width: 100%; min-height: 2.85rem; padding: 0 var(--space-4); font-size: var(--font-size-14); font-weight: 600; border-radius: 0.9rem; border: 1px solid var(--color-border-default); background: var(--color-bg-surface); color: var(--color-text-primary); outline: none; transition: all 180ms ease; }
 .awd-filter-control:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 14%, transparent); }
 
 .awd-template-table__name { display: flex; flex-direction: column; gap: 0.25rem; }
-.awd-template-table__title { font-size: 15px; font-weight: 700; color: var(--color-text-primary); }
-.awd-template-table__slug { font-family: var(--font-family-mono); font-size: 12px; color: var(--color-text-muted); }
-.awd-template-table__mono { font-family: var(--font-family-mono); font-size: 13px; font-weight: 700; color: var(--color-text-primary); }
-.awd-template-table__difficulty { font-size: 13px; font-weight: 700; color: var(--color-text-muted); }
-.awd-template-table__compact-text { font-size: 13px; color: var(--color-text-primary); }
+.awd-template-table__title { font-size: var(--font-size-15); font-weight: 700; color: var(--color-text-primary); }
+.awd-template-table__slug { font-family: var(--font-family-mono); font-size: var(--font-size-12); color: var(--color-text-muted); }
+.awd-template-table__mono { font-family: var(--font-family-mono); font-size: var(--font-size-13); font-weight: 700; color: var(--color-text-primary); }
+.awd-template-table__difficulty { font-size: var(--font-size-13); font-weight: 700; color: var(--color-text-muted); }
+.awd-template-table__compact-text { font-size: var(--font-size-13); color: var(--color-text-primary); }
 
-.awd-status-pill { display: inline-flex; align-items: center; justify-content: center; min-height: 1.85rem; min-width: 4.8rem; padding: 0 0.75rem; border: 1px solid transparent; border-radius: 999px; font-size: 12px; font-weight: 800; }
+.awd-status-pill { display: inline-flex; align-items: center; justify-content: center; min-height: 1.85rem; min-width: 4.8rem; padding: 0 var(--space-3); border: 1px solid transparent; border-radius: 999px; font-size: var(--font-size-12); font-weight: 800; }
 .awd-status-pill--success { border-color: color-mix(in srgb, var(--color-success) 22%, transparent); background: color-mix(in srgb, var(--color-success) 8%, transparent); color: var(--color-success); }
 .awd-status-pill--primary { border-color: color-mix(in srgb, var(--color-primary) 22%, transparent); background: color-mix(in srgb, var(--color-primary) 8%, transparent); color: var(--color-primary); }
 .awd-status-pill--warning { border-color: color-mix(in srgb, var(--color-warning) 22%, transparent); background: color-mix(in srgb, var(--color-warning) 8%, transparent); color: var(--color-warning); }
 .awd-status-pill--danger { border-color: color-mix(in srgb, var(--color-danger) 22%, transparent); background: color-mix(in srgb, var(--color-danger) 8%, transparent); color: var(--color-danger); }
 .awd-status-pill--muted { border-color: var(--color-border-default); background: var(--color-bg-elevated); color: var(--color-text-muted); }
 
-.awd-template-table__actions { display: flex; align-items: center; justify-content: flex-end; gap: 0.6rem; }
-.awd-row-btn { display: inline-flex; align-items: center; justify-content: center; min-height: 1.9rem; padding: 0 0.95rem; border: 1px solid var(--color-border-default); border-radius: 9px; background: var(--color-bg-surface); font-size: 12px; font-weight: 800; color: var(--color-text-secondary); transition: all 0.2s ease; }
+.awd-template-table__actions { display: flex; align-items: center; justify-content: flex-end; gap: var(--space-2); }
+.awd-row-btn { display: inline-flex; align-items: center; justify-content: center; min-height: 1.9rem; padding: 0 var(--space-3); border: 1px solid var(--color-border-default); border-radius: 9px; background: var(--color-bg-surface); font-size: var(--font-size-12); font-weight: 800; color: var(--color-text-secondary); transition: all 0.2s ease; }
 .awd-row-btn:hover { border-color: var(--color-primary); background: var(--color-primary-soft); color: var(--color-primary); transform: translateY(-1px); }
 .awd-row-btn--danger:hover { border-color: var(--color-danger); background: color-mix(in srgb, var(--color-danger) 8%, var(--color-bg-surface)); color: var(--color-danger); }
 
@@ -721,5 +711,19 @@ function selectTab(tab: LibraryTab) {
   .awd-template-import__grid { grid-template-columns: 1fr; }
   .awd-template-table__actions { flex-direction: column; align-items: stretch; }
   .workspace-hero { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 860px) {
+  .awd-template-summary {
+    --admin-summary-grid-columns: repeat(2, minmax(0, 1fr));
+    --metric-panel-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .awd-template-summary {
+    --admin-summary-grid-columns: 1fr;
+    --metric-panel-columns: 1fr;
+  }
 }
 </style>

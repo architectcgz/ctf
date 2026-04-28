@@ -81,6 +81,7 @@ var fullRouterTestSchemaModels = []any{
 	&model.SubmissionWriteup{},
 	&model.EnvironmentTemplate{},
 	&model.ChallengeTopology{},
+	&model.ChallengePackageRevision{},
 	&model.Submission{},
 	&model.Instance{},
 	&model.PortAllocation{},
@@ -120,7 +121,7 @@ func TestFullRouter_AccessControlMatrix(t *testing.T) {
 		}
 
 		if access == routeAccessTeacher || access == routeAccessAdmin {
-			studentHeaders := bearerHeaders(loginForToken(t, env.router, env.student.Username, env.studentPwd))
+			studentHeaders := sessionHeaders(loginForSession(t, env.router, env.student.Username, env.studentPwd))
 			resp = performFullRouterRequest(t, env.router, route.Method, target, nil, studentHeaders)
 			if resp.Code != http.StatusForbidden {
 				t.Errorf("expected forbidden for student on %s %s, got %d body=%s", route.Method, route.Path, resp.Code, resp.Body.String())
@@ -128,7 +129,7 @@ func TestFullRouter_AccessControlMatrix(t *testing.T) {
 		}
 
 		if access == routeAccessAdmin {
-			teacherHeaders := bearerHeaders(loginForToken(t, env.router, env.teacher.Username, env.teacherPwd))
+			teacherHeaders := sessionHeaders(loginForSession(t, env.router, env.teacher.Username, env.teacherPwd))
 			resp = performFullRouterRequest(t, env.router, route.Method, target, nil, teacherHeaders)
 			if resp.Code != http.StatusForbidden {
 				t.Errorf("expected forbidden for teacher on %s %s, got %d body=%s", route.Method, route.Path, resp.Code, resp.Body.String())
@@ -171,7 +172,7 @@ func TestFullRouter_AuthorizedSmokeMatrix(t *testing.T) {
 func TestFullRouter_ListInstancesMatchesContract(t *testing.T) {
 	env := newFullRouterTestEnv(t)
 
-	headers := bearerHeaders(loginForToken(t, env.router, env.student.Username, env.studentPwd))
+	headers := sessionHeaders(loginForSession(t, env.router, env.student.Username, env.studentPwd))
 	resp := performFullRouterRequest(t, env.router, http.MethodGet, "/api/v1/instances", nil, headers)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
@@ -220,8 +221,8 @@ func TestFullRouter_ListInstancesMatchesContract(t *testing.T) {
 func TestFullRouter_TeacherCanOnlyManageOwnChallenges(t *testing.T) {
 	env := newFullRouterTestEnv(t)
 
-	adminHeaders := bearerHeaders(loginForToken(t, env.router, env.admin.Username, env.adminPwd))
-	teacherHeaders := bearerHeaders(loginForToken(t, env.router, env.teacher.Username, env.teacherPwd))
+	adminHeaders := sessionHeaders(loginForSession(t, env.router, env.admin.Username, env.adminPwd))
+	teacherHeaders := sessionHeaders(loginForSession(t, env.router, env.teacher.Username, env.teacherPwd))
 
 	createPayload := func(title string) map[string]any {
 		return map[string]any{
@@ -314,7 +315,7 @@ func TestFullRouter_TeacherCanOnlyManageOwnChallenges(t *testing.T) {
 func TestFullRouter_CreateChallengeStoresCreator(t *testing.T) {
 	env := newFullRouterTestEnv(t)
 
-	teacherHeaders := bearerHeaders(loginForToken(t, env.router, env.teacher.Username, env.teacherPwd))
+	teacherHeaders := sessionHeaders(loginForSession(t, env.router, env.teacher.Username, env.teacherPwd))
 	resp := performFullRouterRequest(t, env.router, http.MethodPost, "/api/v1/authoring/challenges", map[string]any{
 		"title":       "creator-marker",
 		"description": "creator marker challenge",
@@ -348,7 +349,7 @@ func TestFullRouter_CreateChallengeStoresCreator(t *testing.T) {
 func TestFullRouter_ChallengeSelfCheckRunsPrecheckAndRuntime(t *testing.T) {
 	env := newFullRouterTestEnv(t)
 
-	teacherHeaders := bearerHeaders(loginForToken(t, env.router, env.teacher.Username, env.teacherPwd))
+	teacherHeaders := sessionHeaders(loginForSession(t, env.router, env.teacher.Username, env.teacherPwd))
 	resp := performFullRouterRequest(
 		t,
 		env.router,
@@ -387,7 +388,7 @@ func TestFullRouter_AdminChallengePublishRequestLifecycle(t *testing.T) {
 	}
 	env.challenge.Status = model.ChallengeStatusDraft
 
-	teacherHeaders := bearerHeaders(loginForToken(t, env.router, env.teacher.Username, env.teacherPwd))
+	teacherHeaders := sessionHeaders(loginForSession(t, env.router, env.teacher.Username, env.teacherPwd))
 	createResp := performFullRouterRequest(
 		t,
 		env.router,
@@ -610,12 +611,14 @@ func isPublicRoute(method, path string) bool {
 	switch path {
 	case "/health", "/health/db", "/health/redis",
 		"/api/v1/health", "/api/v1/health/db", "/api/v1/health/redis",
-		"/api/v1/auth/register", "/api/v1/auth/login", "/api/v1/auth/refresh",
+		"/api/v1/auth/register", "/api/v1/auth/login",
 		"/api/v1/auth/cas/status", "/api/v1/auth/cas/login", "/api/v1/auth/cas/callback",
 		"/ws/notifications",
 		"/ws/contests/:id/announcements", "/ws/contests/:id/scoreboard",
 		"/api/v1/contests", "/api/v1/contests/:id", "/api/v1/contests/:id/scoreboard", "/api/v1/contests/:id/announcements",
-		"/api/v1/instances/:id/proxy", "/api/v1/instances/:id/proxy/*proxyPath":
+		"/api/v1/instances/:id/proxy", "/api/v1/instances/:id/proxy/*proxyPath",
+		"/api/v1/contests/:id/awd/services/:sid/targets/:team_id/proxy",
+		"/api/v1/contests/:id/awd/services/:sid/targets/:team_id/proxy/*proxyPath":
 		return true
 	}
 	return false
@@ -626,11 +629,11 @@ func authorizedHeadersForRoute(t *testing.T, env *fullRouterTestEnv, method, pat
 
 	switch classifyRouteAccess(method, path) {
 	case routeAccessAdmin:
-		return bearerHeaders(loginForToken(t, env.router, env.admin.Username, env.adminPwd))
+		return sessionHeaders(loginForSession(t, env.router, env.admin.Username, env.adminPwd))
 	case routeAccessTeacher:
-		return bearerHeaders(loginForToken(t, env.router, env.teacher.Username, env.teacherPwd))
+		return sessionHeaders(loginForSession(t, env.router, env.teacher.Username, env.teacherPwd))
 	case routeAccessProtected:
-		return bearerHeaders(loginForToken(t, env.router, env.student.Username, env.studentPwd))
+		return sessionHeaders(loginForSession(t, env.router, env.student.Username, env.studentPwd))
 	default:
 		return nil
 	}

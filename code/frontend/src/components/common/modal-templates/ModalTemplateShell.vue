@@ -116,30 +116,30 @@ onBeforeUnmount(() => {
   --modal-template-shell-overlay: color-mix(in srgb, var(--color-bg-base) 40%, transparent);
   position: fixed;
   inset: 0;
-  z-index: 90;
+  z-index: var(--ui-dialog-z-index);
   display: flex;
 
   /* 优雅做法：使用变量控制布局，默认居中 */
   align-items: var(--modal-shell-align, center);
   justify-content: var(--modal-shell-justify, center);
-  padding: var(--modal-shell-padding, 1rem);
+  padding: var(--modal-shell-padding, var(--space-4));
 
   background: var(--modal-template-shell-overlay);
 }
 
 .modal-template-shell--frosted {
   --modal-template-shell-overlay: color-mix(in srgb, var(--color-bg-base) 60%, transparent);
-  backdrop-filter: blur(var(--modal-shell-blur, 12px));
-  -webkit-backdrop-filter: blur(var(--modal-shell-blur, 12px));
+  backdrop-filter: blur(var(--modal-shell-blur, var(--space-3)));
+  -webkit-backdrop-filter: blur(var(--modal-shell-blur, var(--space-3)));
 }
-...
+
 .modal-template-panel {
   position: relative;
 }
 
 .modal-template-fade-enter-active,
 .modal-template-fade-leave-active {
-  transition: opacity 0.22s ease;
+  transition: opacity var(--ui-motion-normal);
 }
 
 .modal-template-fade-enter-from,

@@ -3,13 +3,14 @@ package ports
 import "ctf-platform/internal/model"
 
 type TopologyCreateNode struct {
-	Key          string
-	Image        string
-	Env          map[string]string
-	ServicePort  int
-	IsEntryPoint bool
-	NetworkKeys  []string
-	Resources    *model.ResourceLimits
+	Key             string
+	Image           string
+	Env             map[string]string
+	ServicePort     int
+	ServiceProtocol string
+	IsEntryPoint    bool
+	NetworkKeys     []string
+	Resources       *model.ResourceLimits
 }
 
 type TopologyCreateNetwork struct {
@@ -18,10 +19,11 @@ type TopologyCreateNetwork struct {
 }
 
 type TopologyCreateRequest struct {
-	Networks         []TopologyCreateNetwork
-	Nodes            []TopologyCreateNode
-	Policies         []model.TopologyTrafficPolicy
-	ReservedHostPort int
+	Networks                   []TopologyCreateNetwork
+	Nodes                      []TopologyCreateNode
+	Policies                   []model.TopologyTrafficPolicy
+	ReservedHostPort           int
+	DisableEntryPortPublishing bool
 }
 
 type TopologyCreateResult struct {

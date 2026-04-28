@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { BarChart2, Shield, Users } from 'lucide-vue-next'
+import { ArrowRight, BarChart2, Shield, Users } from 'lucide-vue-next'
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
-import ScoreboardRealtimeBridge from '@/components/scoreboard/ScoreboardRealtimeBridge.vue'
+import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
 import type { ContestStatus } from '@/api/contracts'
 import { useRouteQueryTabs } from '@/composables/useRouteQueryTabs'
 import { useScoreboardView } from '@/composables/useScoreboardView'
@@ -12,6 +12,7 @@ import { getContestAccentColor, getModeLabel, getStatusLabel } from '@/utils/con
 
 type ScoreboardPanelKey = 'contest' | 'points'
 
+const CONTEST_PAGE_SIZE = 6
 const route = useRoute()
 const router = useRouter()
 const panelTabs: Array<{ key: ScoreboardPanelKey; label: string; panelId: string; tabId: string }> =
@@ -46,24 +47,48 @@ const {
   rankingLoading,
   rankingRows,
   refresh,
-  refreshContestScoreboard,
   refreshPracticeRanking,
   sections,
   selectionHint,
 } = useScoreboardView()
 const contestCount = computed(() => sections.value.length)
-const teamCount = computed(() =>
-  sections.value.reduce((sum, section) => sum + section.rows.length, 0)
+const runningCount = computed(
+  () => sections.value.filter((section) => section.contest.status === 'running').length
 )
 const frozenCount = computed(() => sections.value.filter((section) => section.frozen).length)
-const failureCount = computed(() => sections.value.filter((section) => section.error).length)
-const hasPartialFailure = computed(() => sections.value.some((section) => section.error))
+const endedCount = computed(
+  () => sections.value.filter((section) => section.contest.status === 'ended').length
+)
+const contestPage = ref(1)
+const contestTotalPages = computed(() =>
+  Math.max(1, Math.ceil(sections.value.length / CONTEST_PAGE_SIZE))
+)
+const contestPageStartIndex = computed(() => (contestPage.value - 1) * CONTEST_PAGE_SIZE)
+const paginatedSections = computed(() =>
+  sections.value.slice(
+    contestPageStartIndex.value,
+    contestPageStartIndex.value + CONTEST_PAGE_SIZE
+  )
+)
 const emptyTitle = computed(() =>
   selectionHint.value.includes('失败') ? '排行榜加载失败' : '暂无可查看的竞赛排行榜'
 )
 const pointsEmptyTitle = computed(() =>
   rankingError.value ? '积分排行榜加载失败' : '暂无可查看的积分排行榜'
 )
+
+watch(
+  () => sections.value,
+  () => {
+    contestPage.value = 1
+  }
+)
+
+watch(contestTotalPages, (totalPages) => {
+  if (contestPage.value > totalPages) {
+    contestPage.value = totalPages
+  }
+})
 
 function formatDateTime(value?: string): string {
   if (!value) return '未记录'
@@ -101,33 +126,23 @@ function getRankPillClass(rank: number): string[] {
   ]
 }
 
-function supportsRealtime(status: ContestStatus): boolean {
-  return status === 'running' || status === 'frozen'
-}
-
 function getCardDescription(
   status: ContestStatus,
-  frozen: boolean,
-  hasError: boolean,
-  rowCount: number
+  frozen: boolean
 ): string {
-  if (hasError) {
-    return '该竞赛排行榜暂时不可用，可稍后重新加载。'
-  }
-
-  if (rowCount === 0) {
-    return '当前还没有可展示的队伍成绩，提交后会自动进入榜单。'
-  }
-
   if (frozen || status === 'frozen') {
-    return '封榜阶段仅展示冻结前排名，解封后会同步最终成绩。'
+    return '封榜阶段先展示竞赛入口，进入后查看冻结前排名。'
   }
 
   if (status === 'running') {
-    return '进行中竞赛支持实时刷新，提交后榜单会自动更新。'
+    return '进行中竞赛进入详情后支持实时刷新，提交后榜单会自动更新。'
   }
 
-  return '历史竞赛展示最终成绩，可用于复盘队伍解题表现。'
+  return '历史竞赛进入详情后展示最终成绩，可用于复盘队伍解题表现。'
+}
+
+function changeContestPage(page: number): void {
+  contestPage.value = page
 }
 </script>
 
@@ -137,7 +152,7 @@ function getCardDescription(
   >
     <div class="scoreboard-page">
       <nav
-        class="top-tabs"
+        class="workspace-tabbar top-tabs"
         role="tablist"
         aria-label="排行榜视图切换"
       >
@@ -148,7 +163,7 @@ function getCardDescription(
           :ref="(element) => setTabButtonRef(tab.key, element as HTMLButtonElement | null)"
           type="button"
           role="tab"
-          class="top-tab"
+          class="workspace-tab top-tab"
           :class="{ active: activeTab === tab.key }"
           :aria-selected="activeTab === tab.key ? 'true' : 'false'"
           :aria-controls="tab.panelId"
@@ -165,6 +180,7 @@ function getCardDescription(
           v-show="activeTab === 'contest'"
           id="scoreboard-panel-contest"
           class="tab-panel"
+          :class="{ active: activeTab === 'contest' }"
           role="tabpanel"
           aria-labelledby="scoreboard-tab-contest"
           :aria-hidden="activeTab === 'contest' ? 'false' : 'true'"
@@ -192,13 +208,13 @@ function getCardDescription(
               </div>
               <div class="scoreboard-summary-item metric-panel-card">
                 <div class="scoreboard-summary-label metric-panel-label">
-                  参赛队伍
+                  进行中
                 </div>
                 <div class="scoreboard-summary-value metric-panel-value">
-                  {{ teamCount }}
+                  {{ runningCount }}
                 </div>
                 <div class="scoreboard-summary-helper metric-panel-helper">
-                  已进入榜单统计的队伍规模
+                  支持进入后实时刷新的竞赛数量
                 </div>
               </div>
               <div class="scoreboard-summary-item metric-panel-card">
@@ -214,21 +230,15 @@ function getCardDescription(
               </div>
               <div class="scoreboard-summary-item metric-panel-card">
                 <div class="scoreboard-summary-label metric-panel-label">
-                  异常分区
+                  已结束
                 </div>
                 <div class="scoreboard-summary-value metric-panel-value">
-                  {{ failureCount }}
+                  {{ endedCount }}
                 </div>
                 <div class="scoreboard-summary-helper metric-panel-helper">
-                  排行榜加载异常的竞赛分区
+                  可查看最终成绩的历史竞赛
                 </div>
               </div>
-            </div>
-            <div
-              v-if="hasPartialFailure"
-              class="scoreboard-inline-note"
-            >
-              部分竞赛加载失败
             </div>
           </section>
 
@@ -272,22 +282,20 @@ function getCardDescription(
             </div>
 
             <div class="scoreboard-sections">
-              <article
-                v-for="(section, index) in sections"
+              <router-link
+                v-for="(section, index) in paginatedSections"
                 :key="section.contest.id"
                 data-testid="scoreboard-card"
-                class="scoreboard-card"
+                class="scoreboard-card scoreboard-card-link"
                 :style="sectionAccentStyle(section.contest.status)"
+                :to="{ name: 'ScoreboardDetail', params: { contestId: section.contest.id } }"
               >
-                <ScoreboardRealtimeBridge
-                  v-if="supportsRealtime(section.contest.status)"
-                  :contest-id="section.contest.id"
-                  @updated="refreshContestScoreboard(section.contest.id)"
-                />
                 <div class="scoreboard-card-header">
                   <div class="scoreboard-card-main">
                     <div class="scoreboard-card-chips">
-                      <span class="sb-index">{{ String(index + 1).padStart(2, '0') }}</span>
+                      <span class="sb-index">{{
+                        String(contestPageStartIndex + index + 1).padStart(2, '0')
+                      }}</span>
                       <span class="sb-status-chip">{{
                         getStatusLabel(section.contest.status)
                       }}</span>
@@ -309,75 +317,31 @@ function getCardDescription(
                       {{
                         getCardDescription(
                           section.contest.status,
-                          section.frozen,
-                          section.error,
-                          section.rows.length
+                          section.frozen
                         )
                       }}
                     </p>
                   </div>
                   <div class="scoreboard-card-meta">
                     <Users class="h-3.5 w-3.5" />
-                    {{
-                      section.rows.length > 0
-                        ? `展示前 ${section.rows.length} 支队伍`
-                        : '暂无排行队伍'
-                    }}
+                    <span>点击进入排行详情</span>
+                    <ArrowRight class="h-4 w-4" />
                   </div>
                 </div>
+              </router-link>
+            </div>
 
-                <div class="scoreboard-card-divider" />
-
-                <div
-                  v-if="section.error"
-                  class="scoreboard-inline-note scoreboard-inline-note-danger"
-                >
-                  该竞赛排行榜加载失败，请稍后重试
-                </div>
-
-                <div
-                  v-else-if="section.rows.length === 0"
-                  class="scoreboard-inline-note"
-                >
-                  暂无排行榜数据
-                </div>
-
-                <div
-                  v-else
-                  class="scoreboard-table-shell overflow-x-auto"
-                >
-                  <table class="sb-table">
-                    <thead>
-                      <tr>
-                        <th>排名</th>
-                        <th>队伍</th>
-                        <th>得分</th>
-                        <th>解题数</th>
-                        <th>最近得分</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr
-                        v-for="item in section.rows"
-                        :key="`${section.contest.id}-${item.team_id}`"
-                        :class="getRowClass(item.rank)"
-                      >
-                        <td class="sb-cell--rank">
-                          <span :class="getRankPillClass(item.rank)">{{ item.rank }}</span>
-                        </td>
-                        <td>{{ item.team_name }}</td>
-                        <td class="sb-cell--mono">
-                          {{ item.score }}
-                        </td>
-                        <td>{{ item.solved_count }}</td>
-                        <td class="sb-cell--muted">
-                          {{ formatDateTime(item.last_submission_at) }}
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </article>
+            <div
+              class="scoreboard-pagination workspace-directory-pagination"
+            >
+              <PagePaginationControls
+                :page="contestPage"
+                :total-pages="contestTotalPages"
+                :total="sections.length"
+                :total-label="`共 ${sections.length} 个竞赛`"
+                show-jump
+                @change-page="changeContestPage"
+              />
             </div>
           </section>
         </section>
@@ -386,6 +350,7 @@ function getCardDescription(
           v-show="activeTab === 'points'"
           id="scoreboard-panel-points"
           class="tab-panel"
+          :class="{ active: activeTab === 'points' }"
           role="tabpanel"
           aria-labelledby="scoreboard-tab-points"
           :aria-hidden="activeTab === 'points' ? 'false' : 'true'"
@@ -531,6 +496,20 @@ function getCardDescription(
   border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
+.scoreboard-card-link {
+  display: block;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    transform 160ms ease;
+}
+
+.scoreboard-card-link:hover,
+.scoreboard-card-link:focus-visible {
+  background: color-mix(in srgb, var(--scoreboard-accent, var(--journal-accent)) 4%, transparent);
+  transform: translateY(-0.0625rem);
+}
+
 .scoreboard-card-header {
   display: flex;
   flex-wrap: wrap;
@@ -578,11 +557,6 @@ function getCardDescription(
   display: inline-flex;
   align-items: center;
   gap: 6px;
-}
-
-.scoreboard-card-divider {
-  margin: 16px 0;
-  border-top: 1px solid color-mix(in srgb, var(--journal-border) 82%, transparent);
 }
 
 .scoreboard-table-shell {

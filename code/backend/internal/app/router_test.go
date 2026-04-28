@@ -3,6 +3,8 @@ package app
 import (
 	"context"
 	"errors"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -19,8 +21,10 @@ import (
 
 	"ctf-platform/internal/app/composition"
 	"ctf-platform/internal/auditlog"
+	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
+	"ctf-platform/internal/model"
 	assessmenthttp "ctf-platform/internal/module/assessment/api/http"
 	assessmentqry "ctf-platform/internal/module/assessment/application/queries"
 	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
@@ -44,6 +48,17 @@ import (
 	teachingreadmodelqueries "ctf-platform/internal/module/teaching_readmodel/application/queries"
 	"ctf-platform/pkg/errcode"
 )
+
+type routerChallengeLookupContextStub struct {
+	findByIDWithContextFn func(ctx context.Context, id int64) (*model.Challenge, error)
+}
+
+func (s *routerChallengeLookupContextStub) FindByID(ctx context.Context, id int64) (*model.Challenge, error) {
+	if s.findByIDWithContextFn != nil {
+		return s.findByIDWithContextFn(ctx, id)
+	}
+	return nil, nil
+}
 
 func TestNewRouterRegistersStudentChallengeRoutes(t *testing.T) {
 	cfg, db, cache := newAppTestDependencies(t)
@@ -104,6 +119,8 @@ func TestNewRouterRegistersStudentChallengeRoutes(t *testing.T) {
 	assertRouteHandlerContains(t, router, "POST", "/api/v1/admin/contests", "internal/module/contest/api/http")
 	assertRouteHandlerContains(t, router, "GET", "/api/v1/admin/contests/:id", "internal/module/contest/api/http")
 	assertRouteHandlerContains(t, router, "GET", "/api/v1/admin/contests/:id/awd/services", "internal/module/contest/api/http")
+	assertRouteHandlerContains(t, router, "GET", "/api/v1/admin/contests/:id/awd/instances", "internal/module/practice/api/http")
+	assertRouteHandlerContains(t, router, "POST", "/api/v1/admin/contests/:id/awd/instances", "internal/module/practice/api/http")
 	assertRouteHandlerContains(t, router, "POST", "/api/v1/admin/contests/:id/awd/services", "internal/module/contest/api/http")
 	assertRouteHandlerContains(t, router, "PUT", "/api/v1/admin/contests/:id/awd/services/:sid", "internal/module/contest/api/http")
 	assertRouteHandlerContains(t, router, "DELETE", "/api/v1/admin/contests/:id/awd/services/:sid", "internal/module/contest/api/http")
@@ -127,6 +144,52 @@ func TestNewRouterRegistersStudentChallengeRoutes(t *testing.T) {
 	assertRouteHandlerContains(t, router, "GET", "/ws/contests/:id/scoreboard", "internal/module/contest/api/http")
 }
 
+func TestChallengeOwnerGuardPropagatesRequestContextToLookup(t *testing.T) {
+	t.Parallel()
+
+	type ctxKey string
+
+	const expectedCtxValue = "ctx-owner-guard"
+	var called bool
+
+	gin.SetMode(gin.TestMode)
+	router := gin.New()
+	router.GET("/authoring/challenges/:id",
+		func(c *gin.Context) {
+			authctx.SetCurrentUser(c, authctx.CurrentUser{UserID: 42, Role: model.RoleTeacher})
+			c.Next()
+		},
+		challengeOwnerGuard(&routerChallengeLookupContextStub{
+			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+				called = true
+				if got := ctx.Value(ctxKey("owner-guard")); got != expectedCtxValue {
+					t.Fatalf("expected ctx value %v, got %v", expectedCtxValue, got)
+				}
+				if id != 11 {
+					t.Fatalf("unexpected challenge id: %d", id)
+				}
+				createdBy := int64(42)
+				return &model.Challenge{ID: id, CreatedBy: &createdBy}, nil
+			},
+		}),
+		func(c *gin.Context) {
+			c.Status(http.StatusNoContent)
+		},
+	)
+
+	req := httptest.NewRequest(http.MethodGet, "/authoring/challenges/11", nil)
+	req = req.WithContext(context.WithValue(req.Context(), ctxKey("owner-guard"), expectedCtxValue))
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+
+	if !called {
+		t.Fatal("expected challenge lookup to be called")
+	}
+	if rec.Code != http.StatusNoContent {
+		t.Fatalf("status = %d, want %d", rec.Code, http.StatusNoContent)
+	}
+}
+
 func TestNewRouterUsesRuntimeHandlersForInstanceRoutes(t *testing.T) {
 	cfg, db, cache := newAppTestDependencies(t)
 
@@ -142,6 +205,15 @@ func TestNewRouterUsesRuntimeHandlersForInstanceRoutes(t *testing.T) {
 	assertRouteHandlerContains(t, router, "GET", "/api/v1/instances/:id/proxy", "internal/module/runtime")
 	assertRouteHandlerContains(t, router, "GET", "/api/v1/instances/:id/proxy/*proxyPath", "internal/module/runtime")
 	assertRouteHandlerContains(t, router, "POST", "/api/v1/instances/:id/proxy/*proxyPath", "internal/module/runtime")
+	assertRouteHandlerContains(t, router, "POST", "/api/v1/contests/:id/awd/services/:sid/targets/:team_id/access", "internal/module/runtime")
+	assertRouteHandlerContains(t, router, "POST", "/api/v1/contests/:id/awd/services/:sid/defense/ssh", "internal/module/runtime")
+	assertRouteHandlerContains(t, router, "GET", "/api/v1/contests/:id/awd/services/:sid/defense/files", "internal/module/runtime")
+	assertRouteHandlerContains(t, router, "GET", "/api/v1/contests/:id/awd/services/:sid/defense/directories", "internal/module/runtime")
+	assertRouteHandlerContains(t, router, "PUT", "/api/v1/contests/:id/awd/services/:sid/defense/files", "internal/module/runtime")
+	assertRouteHandlerContains(t, router, "POST", "/api/v1/contests/:id/awd/services/:sid/defense/commands", "internal/module/runtime")
+	assertRouteHandlerContains(t, router, "GET", "/api/v1/contests/:id/awd/services/:sid/targets/:team_id/proxy", "internal/module/runtime")
+	assertRouteHandlerContains(t, router, "GET", "/api/v1/contests/:id/awd/services/:sid/targets/:team_id/proxy/*proxyPath", "internal/module/runtime")
+	assertRouteHandlerContains(t, router, "POST", "/api/v1/contests/:id/awd/services/:sid/targets/:team_id/proxy/*proxyPath", "internal/module/runtime")
 	assertRouteHandlerContains(t, router, "GET", "/api/v1/teacher/instances", "internal/module/runtime")
 	assertRouteHandlerContains(t, router, "DELETE", "/api/v1/teacher/instances/:id", "internal/module/runtime")
 }

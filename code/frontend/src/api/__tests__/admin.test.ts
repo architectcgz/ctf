@@ -17,6 +17,7 @@ vi.mock('@/api/request', () => ({
 
 import {
   createAdminAwdServiceTemplate,
+  createAdminContestAnnouncement,
   createAdminContestChallenge,
   createEnvironmentTemplate,
   createChallenge,
@@ -27,12 +28,14 @@ import {
   configureChallengeFlag,
   createContestAWDService,
   deleteAdminAwdServiceTemplate,
+  deleteAdminContestAnnouncement,
   deleteAdminContestChallenge,
   deleteContestAWDService,
   deleteChallengeTopology,
   deleteEnvironmentTemplate,
   deleteImage,
   deleteChallengeWriteup,
+  getAdminContestAnnouncements,
   getAdminContestLiveScoreboard,
   getChallengeTopology,
   getChallengeDetail,
@@ -173,6 +176,72 @@ describe('admin contest api contract', () => {
     })
   })
 
+  it('应该读取管理员竞赛公告列表并归一化公告 id', async () => {
+    requestMock.mockResolvedValue([
+      {
+        id: 12,
+        title: '报名提醒',
+        content: '请尽快完成组队。',
+        created_at: '2026-04-22T09:00:00.000Z',
+      },
+    ])
+
+    const result = await getAdminContestAnnouncements('7')
+
+    expect(requestMock).toHaveBeenCalledWith({
+      method: 'GET',
+      url: '/admin/contests/7/announcements',
+    })
+    expect(result).toEqual([
+      {
+        id: '12',
+        title: '报名提醒',
+        content: '请尽快完成组队。',
+        created_at: '2026-04-22T09:00:00.000Z',
+      },
+    ])
+  })
+
+  it('应该按后端契约创建管理员竞赛公告', async () => {
+    requestMock.mockResolvedValue({
+      id: 13,
+      title: '开赛通知',
+      content: '比赛将于十分钟后开始。',
+      created_at: '2026-04-22T09:10:00.000Z',
+    })
+
+    const result = await createAdminContestAnnouncement('7', {
+      title: '开赛通知',
+      content: '比赛将于十分钟后开始。',
+    })
+
+    expect(requestMock).toHaveBeenCalledWith({
+      method: 'POST',
+      url: '/admin/contests/7/announcements',
+      data: {
+        title: '开赛通知',
+        content: '比赛将于十分钟后开始。',
+      },
+    })
+    expect(result).toEqual({
+      id: '13',
+      title: '开赛通知',
+      content: '比赛将于十分钟后开始。',
+      created_at: '2026-04-22T09:10:00.000Z',
+    })
+  })
+
+  it('应该按后端契约删除管理员竞赛公告', async () => {
+    requestMock.mockResolvedValue(undefined)
+
+    await deleteAdminContestAnnouncement('7', '13')
+
+    expect(requestMock).toHaveBeenCalledWith({
+      method: 'DELETE',
+      url: '/admin/contests/7/announcements/13',
+    })
+  })
+
   it('应该在导入记录接口返回空值时兜底为空数组', async () => {
     requestMock.mockResolvedValue(null)
 
@@ -248,8 +317,8 @@ describe('admin contest api contract', () => {
         awd_checker_config: {
           put_flag: { method: 'PUT', path: '/api/flag' },
         },
-        awd_sla_score: 18,
-        awd_defense_score: 28,
+        awd_sla_score: 1,
+        awd_defense_score: 2,
         awd_checker_preview_token: 'preview-token-1',
       } as Record<string, unknown> ),
     })
@@ -291,8 +360,8 @@ describe('admin contest api contract', () => {
         awd_checker_config: {
           health_path: '/healthz',
         },
-        awd_sla_score: 10,
-        awd_defense_score: 20,
+        awd_sla_score: 1,
+        awd_defense_score: 2,
         awd_checker_preview_token: 'preview-token-2',
       } as Record<string, unknown> ),
     })
@@ -331,8 +400,8 @@ describe('admin contest api contract', () => {
         is_visible: true,
         score_config: {
           attack_score: 60,
-          awd_sla_score: 18,
-          awd_defense_score: 28,
+          awd_sla_score: 1,
+          awd_defense_score: 2,
         },
         runtime_config: {
           challenge_id: 11,
@@ -380,8 +449,8 @@ describe('admin contest api contract', () => {
         is_visible: true,
         score_config: {
           attack_score: 60,
-          awd_sla_score: 18,
-          awd_defense_score: 28,
+          awd_sla_score: 1,
+          awd_defense_score: 2,
         },
         runtime_config: {
           checker_type: 'http_standard',
@@ -397,8 +466,8 @@ describe('admin contest api contract', () => {
             path: '/health',
           },
         },
-        sla_score: 18,
-        defense_score: 28,
+        sla_score: 1,
+        defense_score: 2,
         validation_state: 'passed',
         last_preview_at: '2026-03-12T00:04:00.000Z',
         last_preview_result: {
@@ -435,8 +504,8 @@ describe('admin contest api contract', () => {
       is_visible: true,
       score_config: {
         attack_score: 60,
-        awd_sla_score: 18,
-        awd_defense_score: 28,
+        awd_sla_score: 1,
+        awd_defense_score: 2,
       },
       runtime_config: {
         checker_type: 'http_standard',
@@ -464,8 +533,8 @@ describe('admin contest api contract', () => {
       checker_config: {
         put_flag: { method: 'PUT', path: '/api/flag' },
       },
-      awd_sla_score: 18,
-      awd_defense_score: 28,
+      awd_sla_score: 1,
+      awd_defense_score: 2,
       awd_checker_preview_token: 'preview-token',
     })
 
@@ -482,8 +551,8 @@ describe('admin contest api contract', () => {
         checker_config: {
           put_flag: { method: 'PUT', path: '/api/flag' },
         },
-        awd_sla_score: 18,
-        awd_defense_score: 28,
+        awd_sla_score: 1,
+        awd_defense_score: 2,
         awd_checker_preview_token: 'preview-token',
       },
     })
@@ -500,8 +569,8 @@ describe('admin contest api contract', () => {
       is_visible: true,
       score_config: {
         attack_score: 60,
-        awd_sla_score: 18,
-        awd_defense_score: 28,
+        awd_sla_score: 1,
+        awd_defense_score: 2,
       },
       runtime_config: {
         checker_type: 'http_standard',
@@ -519,8 +588,8 @@ describe('admin contest api contract', () => {
           path: '/api/flag',
         },
       },
-      sla_score: 18,
-      defense_score: 28,
+      sla_score: 1,
+      defense_score: 2,
       validation_state: 'pending',
       last_preview_at: undefined,
       last_preview_result: undefined,
@@ -542,8 +611,8 @@ describe('admin contest api contract', () => {
       checker_config: {
         health: { path: '/healthz' },
       },
-      awd_sla_score: 12,
-      awd_defense_score: 22,
+      awd_sla_score: 1,
+      awd_defense_score: 2,
       awd_checker_preview_token: 'preview-token-2',
     })
 
@@ -560,8 +629,8 @@ describe('admin contest api contract', () => {
         checker_config: {
           health: { path: '/healthz' },
         },
-        awd_sla_score: 12,
-        awd_defense_score: 22,
+        awd_sla_score: 1,
+        awd_defense_score: 2,
         awd_checker_preview_token: 'preview-token-2',
       },
     })
@@ -603,7 +672,7 @@ describe('admin contest api contract', () => {
           check_result: { status_reason: 'healthy' },
           checker_type: 'http_standard',
           attack_received: 0,
-          sla_score: 18,
+          sla_score: 1,
           defense_score: 45,
           attack_score: 0,
           updated_at: '2026-03-12T10:06:00.000Z',
@@ -641,7 +710,7 @@ describe('admin contest api contract', () => {
           check_result: { status_reason: 'healthy' },
           checker_type: 'http_standard',
           attack_received: 0,
-          sla_score: 18,
+          sla_score: 1,
           defense_score: 45,
           attack_score: 0,
           updated_at: '2026-03-12T10:06:00.000Z',
@@ -761,7 +830,7 @@ describe('admin contest api contract', () => {
           service_up_count: 1,
           service_down_count: 0,
           service_compromised_count: 0,
-          sla_score: 18,
+          sla_score: 1,
           defense_score: 45,
           attack_score: 0,
           successful_attack_count: 0,
@@ -816,7 +885,7 @@ describe('admin contest api contract', () => {
           service_up_count: 1,
           service_down_count: 0,
           service_compromised_count: 0,
-          sla_score: 18,
+          sla_score: 1,
           defense_score: 45,
           attack_score: 0,
           successful_attack_count: 0,
@@ -825,6 +894,58 @@ describe('admin contest api contract', () => {
           total_score: 63,
         },
       ],
+    })
+  })
+
+  it('应该把缺失的 AWD 轮次汇总计数字段回落为 0', async () => {
+    requestMock.mockResolvedValue({
+      round: {
+        id: 41,
+        contest_id: 7,
+        round_number: 3,
+        status: 'finished',
+        started_at: '2026-03-12T10:00:00.000Z',
+        ended_at: '2026-03-12T10:05:00.000Z',
+        attack_score: 80,
+        defense_score: 45,
+        created_at: '2026-03-12T10:00:00.000Z',
+        updated_at: '2026-03-12T10:06:00.000Z',
+      },
+      metrics: {
+        total_service_count: 6,
+        service_up_count: 4,
+        service_down_count: 1,
+        service_compromised_count: 1,
+        attacked_service_count: 2,
+        defense_success_count: 1,
+        total_attack_count: 5,
+        successful_attack_count: 3,
+        failed_attack_count: 2,
+        manual_service_check_count: 1,
+        submission_attack_count: 3,
+      },
+      items: [],
+    })
+
+    const result = await getContestAWDRoundSummary('7', '41')
+
+    expect(result.metrics).toEqual({
+      total_service_count: 6,
+      service_up_count: 4,
+      service_down_count: 1,
+      service_compromised_count: 1,
+      attacked_service_count: 2,
+      defense_success_count: 1,
+      total_attack_count: 5,
+      successful_attack_count: 3,
+      failed_attack_count: 2,
+      scheduler_check_count: 0,
+      manual_current_round_check_count: 0,
+      manual_selected_round_check_count: 0,
+      manual_service_check_count: 1,
+      submission_attack_count: 3,
+      manual_attack_log_count: 0,
+      legacy_attack_log_count: 0,
     })
   })
 

@@ -4,7 +4,7 @@
       <button
         v-if="mobileOpen"
         type="button"
-        class="fixed inset-0 z-40 bg-black/55 md:hidden"
+        class="backoffice-sidebar-backdrop fixed inset-0 z-40 md:hidden"
         aria-label="关闭导航"
         @click="emit('closeMobile')"
       />
@@ -209,7 +209,7 @@
       <button
         v-if="mobileOpen"
         type="button"
-        class="fixed inset-0 z-40 bg-black/55 md:hidden"
+        class="backoffice-sidebar-backdrop fixed inset-0 z-40 md:hidden"
         aria-label="关闭导航"
         @click="emit('closeMobile')"
       />
@@ -843,6 +843,10 @@ async function navigate(item: NavItem): Promise<void> {
     );
 }
 
+.backoffice-sidebar-backdrop {
+  background: color-mix(in srgb, var(--color-bg-base) 55%, transparent);
+}
+
 .backoffice-sidebar--expanded {
   width: 17rem;
 }
@@ -855,13 +859,13 @@ async function navigate(item: NavItem): Promise<void> {
   border: 1px solid color-mix(in srgb, var(--color-primary) 40%, transparent);
   background: linear-gradient(
     135deg,
-    color-mix(in srgb, var(--color-primary) 95%, black),
-    color-mix(in srgb, var(--color-primary) 85%, black)
+    color-mix(in srgb, var(--color-primary) 95%, var(--color-bg-base)),
+    color-mix(in srgb, var(--color-primary) 85%, var(--color-bg-base))
   );
-  color: white;
+  color: var(--color-bg-base);
   box-shadow: 
     0 4px 12px color-mix(in srgb, var(--color-primary) 24%, transparent),
-    inset 0 1px 1px rgba(255, 255, 255, 0.4);
+    inset 0 1px 1px color-mix(in srgb, var(--color-bg-surface) 40%, transparent);
 }
 
 .backoffice-sidebar__brand {
@@ -881,7 +885,7 @@ async function navigate(item: NavItem): Promise<void> {
   border: 1px solid var(--backoffice-shell-line);
   background: var(--backoffice-shell-surface);
   color: var(--backoffice-shell-faint);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--color-shadow-soft) 30%, transparent);
   z-index: 70; /* 提升层级，确保高于 TopNav (50) */
 }
 
@@ -939,14 +943,14 @@ async function navigate(item: NavItem): Promise<void> {
   border: 1px solid color-mix(in srgb, var(--color-primary) 22%, transparent);
   font-weight: 700;
   box-shadow: 
-    0 4px 12px rgba(0, 0, 0, 0.06),
-    0 0 0 1px rgba(255, 255, 255, 0.8);
+    0 4px 12px color-mix(in srgb, var(--color-shadow-soft) 40%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--color-bg-surface) 80%, transparent);
 }
 
 [data-theme='dark'] .backoffice-sidebar__item--active {
   box-shadow: 
-    0 4px 12px rgba(0, 0, 0, 0.24),
-    0 0 0 1px rgba(255, 255, 255, 0.05);
+    0 4px 12px color-mix(in srgb, var(--color-shadow-strong) 24%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--color-bg-surface) 5%, transparent);
 }
 
 .backoffice-sidebar__item-icon--idle {
@@ -1008,7 +1012,7 @@ async function navigate(item: NavItem): Promise<void> {
 }
 
 .sidebar-shell-mobile {
-  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 18px 48px color-mix(in srgb, var(--color-shadow-strong) 8%, transparent);
 }
 
 .sidebar-brand-row {
@@ -1138,12 +1142,12 @@ async function navigate(item: NavItem): Promise<void> {
   color: var(--color-primary);
   font-weight: 700;
   box-shadow: 
-    0 1px 2px rgba(0, 0, 0, 0.05),
-    0 0 0 1px rgba(255, 255, 255, 0.8);
+    0 1px 2px color-mix(in srgb, var(--color-shadow-soft) 30%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--color-bg-surface) 80%, transparent);
 }
 
 [data-theme='dark'] .sidebar-item-active {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--color-shadow-strong) 20%, transparent);
 }
 
 .sidebar-child-list {
@@ -1165,14 +1169,14 @@ async function navigate(item: NavItem): Promise<void> {
 }
 
 :global([data-theme='light']) .backoffice-sidebar {
-  --backoffice-shell-surface: white;
-  --backoffice-shell-surface-subtle: #f8fafc;
-  --backoffice-shell-surface-strong: white;
-  --backoffice-shell-line: color-mix(in srgb, #e2e8f0 92%, transparent);
-  --backoffice-shell-line-strong: color-mix(in srgb, #d9e1ec 94%, transparent);
-  --backoffice-shell-text: #0f172a;
-  --backoffice-shell-muted: #64748b;
-  --backoffice-shell-faint: #94a3b8;
+  --backoffice-shell-surface: var(--color-bg-surface);
+  --backoffice-shell-surface-subtle: var(--color-bg-elevated);
+  --backoffice-shell-surface-strong: var(--color-bg-surface);
+  --backoffice-shell-line: color-mix(in srgb, var(--color-border-default) 92%, transparent);
+  --backoffice-shell-line-strong: color-mix(in srgb, var(--color-border-default) 94%, transparent);
+  --backoffice-shell-text: var(--color-text-primary);
+  --backoffice-shell-muted: var(--color-text-secondary);
+  --backoffice-shell-faint: var(--color-text-muted);
 }
 
 :global([data-theme='dark']) .backoffice-sidebar {

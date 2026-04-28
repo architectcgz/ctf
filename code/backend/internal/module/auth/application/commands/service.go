@@ -17,8 +17,8 @@ import (
 )
 
 type Service interface {
-	Register(ctx context.Context, req *dto.RegisterReq) (*dto.LoginResp, *authcontracts.TokenPair, error)
-	Login(ctx context.Context, req *dto.LoginReq) (*dto.LoginResp, *authcontracts.TokenPair, error)
+	Register(ctx context.Context, req *dto.RegisterReq) (*dto.LoginResp, *authcontracts.Session, error)
+	Login(ctx context.Context, req *dto.LoginReq) (*dto.LoginResp, *authcontracts.Session, error)
 	ValidatePassword(user *model.User, password string) bool
 }
 
@@ -42,7 +42,7 @@ func NewService(users identitycontracts.UserRepository, tokenService authcontrac
 	}
 }
 
-func (s *service) Register(ctx context.Context, req *dto.RegisterReq) (*dto.LoginResp, *authcontracts.TokenPair, error) {
+func (s *service) Register(ctx context.Context, req *dto.RegisterReq) (*dto.LoginResp, *authcontracts.Session, error) {
 	s.log.Info("auth_register_attempt", zap.String("username", req.Username))
 
 	user := &model.User{
@@ -78,7 +78,7 @@ func (s *service) Register(ctx context.Context, req *dto.RegisterReq) (*dto.Logi
 	return s.issueLoginResp(ctx, user)
 }
 
-func (s *service) Login(ctx context.Context, req *dto.LoginReq) (*dto.LoginResp, *authcontracts.TokenPair, error) {
+func (s *service) Login(ctx context.Context, req *dto.LoginReq) (*dto.LoginResp, *authcontracts.Session, error) {
 	s.log.Info("auth_login_attempt", zap.String("username", req.Username))
 
 	user, err := s.users.FindByUsername(ctx, req.Username)
@@ -138,19 +138,16 @@ func (s *service) ValidatePassword(user *model.User, password string) bool {
 	return user.CheckPassword(password)
 }
 
-func (s *service) issueLoginResp(ctx context.Context, user *model.User) (*dto.LoginResp, *authcontracts.TokenPair, error) {
-	tokens, err := s.tokenService.IssueTokensWithContext(ctx, user.ID, user.Username, user.Role)
+func (s *service) issueLoginResp(ctx context.Context, user *model.User) (*dto.LoginResp, *authcontracts.Session, error) {
+	session, err := s.tokenService.CreateSession(ctx, user.ID, user.Username, user.Role)
 	if err != nil {
-		s.log.Error("auth_issue_token_failed", zap.String("username", user.Username), zap.Int64("user_id", user.ID), zap.Error(err))
+		s.log.Error("auth_create_session_failed", zap.String("username", user.Username), zap.Int64("user_id", user.ID), zap.Error(err))
 		return nil, nil, errcode.ErrInternal.WithCause(err)
 	}
 
 	return &dto.LoginResp{
-		AccessToken: tokens.AccessToken,
-		TokenType:   "Bearer",
-		ExpiresIn:   int64(tokens.AccessTokenTTL.Seconds()),
-		User:        buildAuthUser(user),
-	}, tokens, nil
+		User: buildAuthUser(user),
+	}, session, nil
 }
 
 func (s *service) recordFailedLogin(ctx context.Context, user *model.User, now time.Time) (bool, error) {

@@ -49,7 +49,7 @@ export interface ApiEnvelope<T> {
 
 ```ts
 export type ID = string                 // 统一：所有 id/xxx_id 字段均返回 string（避免 JS 超过 2^53 精度问题）
-export type ISODateTime = string        // RFC3339/ISO8601，如 "2026-03-01T03:15:22Z"
+export type ISODateTime = string        // RFC3339/ISO8601，服务端统一以 UTC 输出，如 "2026-03-01T03:15:22Z"
 export type UserRole = 'student' | 'teacher' | 'admin'
 
 export interface PageResult<T> {
@@ -81,46 +81,31 @@ export interface AuthUser {
 }
 
 export interface LoginData {
-  access_token: string
-  token_type: 'Bearer'
-  expires_in: number        // 秒
   user: AuthUser
 }
 ```
 
-> 说明：账号在连续输错密码达到阈值后会被临时锁定；触发锁定的那次登录返回 `429`，锁定期内再次尝试返回 `403`。
+> 说明：
+> - 登录成功后，服务端会通过 `Set-Cookie` 写入 HttpOnly session cookie。
+> - 账号在连续输错密码达到阈值后会被临时锁定；触发锁定的那次登录返回 `429`，锁定期内再次尝试返回 `403`。
 
 ### 2.2 POST `/api/v1/auth/register`
 
 `data`：同 `LoginData`（注册成功即登录）。
 
-### 2.3 POST `/api/v1/auth/refresh`
-
-`data`：
-
-```ts
-export interface RefreshData {
-  access_token: string
-  token_type: 'Bearer'
-  expires_in: number
-}
-```
-
-> Refresh Token 由后端写入 HttpOnly Cookie；前端不落盘。
-
-### 2.4 POST `/api/v1/auth/logout`
+### 2.3 POST `/api/v1/auth/logout`
 
 `data`：`null`
 
-### 2.5 GET `/api/v1/auth/profile`
+### 2.4 GET `/api/v1/auth/profile`
 
 `data`：`AuthUser`
 
-### 2.6 PUT `/api/v1/auth/password`
+### 2.5 PUT `/api/v1/auth/password`
 
 `data`：`null`
 
-### 2.7 POST `/api/v1/auth/ws-ticket`
+### 2.6 POST `/api/v1/auth/ws-ticket`
 
 `data`：
 
@@ -234,11 +219,14 @@ export interface ChallengeDetailData {
 ```ts
 export type InstanceStatus = 'pending' | 'creating' | 'running' | 'expired' | 'destroying' | 'destroyed' | 'failed' | 'crashed'
 export type FlagType = 'static' | 'dynamic' | 'regex' | 'manual_review'
+export type InstanceSharing = 'per_user' | 'per_team' | 'shared'
 
 export interface InstanceData {
   id: ID
+  contest_mode?: ContestMode
   challenge_id: ID
   status: InstanceStatus
+  share_scope: InstanceSharing
   access_url?: string
   ssh_info?: { host: string; port: number; username: string }
   flag_type: FlagType
@@ -259,7 +247,7 @@ export interface InstanceData {
 
 `data`：`null`
 
-> 说明：若该实例是 AWD 队伍共享实例，则当前队伍成员均可销毁。
+> 说明：共享实例和 AWD 队伍服务实例不允许通过该接口由普通用户手动销毁；AWD 队伍服务实例由赛程和队伍工作台托管生命周期。
 
 ### 3.5 POST `/api/v1/instances/:id/extend`
 
@@ -273,7 +261,7 @@ export interface InstanceExtendData {
 }
 ```
 
-> 说明：若该实例是 AWD 队伍共享实例，则当前队伍成员均可续期。
+> 说明：共享实例和 AWD 队伍服务实例不允许通过该接口由普通用户手动续期；AWD 队伍服务实例由赛程和队伍工作台托管生命周期。
 
 ### 3.5.1 POST `/api/v1/instances/:id/access`
 
@@ -1129,20 +1117,21 @@ export interface AdminChallengePublishRequestData {
 
 ### 8.9 GET `/api/v1/authoring/images`（分页）
 
-`data`（缺少示例，需确认）：
+`data`：
 
 ```ts
-export type ImageSourceType = 'registry' | 'dockerfile' | 'upload'
-export type ImageStatus = 'pending' | 'building' | 'ready' | 'failed' | 'deprecated'
+export type ImageStatus = 'pending' | 'building' | 'available' | 'failed'
 
 export interface AdminImageListItem {
   id: ID
   name: string
   tag: string
-  source_type: ImageSourceType
+  description: string
+  size: number
+  size_formatted: string
   status: ImageStatus
-  size_bytes?: number
   created_at: ISODateTime
+  updated_at: ISODateTime
 }
 
 export type AdminImageListData = PageResult<AdminImageListItem>
@@ -1150,13 +1139,15 @@ export type AdminImageListData = PageResult<AdminImageListItem>
 
 ### 8.10 POST `/api/v1/authoring/images`
 
-`data`（缺少示例，需确认）：
+`data`：
 
 ```ts
-export interface AdminImageCreateData {
-  image: AdminImageListItem
-}
+export type AdminImageCreateData = AdminImageListItem
 ```
+
+### 8.10.1 PUT `/api/v1/authoring/images/:id`
+
+`data`：`null`
 
 ### 8.11 DELETE `/api/v1/authoring/images/:id`
 
@@ -1556,6 +1547,7 @@ export type AdminContestAWDServiceListData = AdminContestAWDServiceData[]
 export interface CreateAdminContestAWDServiceReq {
   challenge_id: ID
   template_id: ID
+  points: number
   display_name?: string
   order?: number
   is_visible?: boolean
@@ -1572,6 +1564,7 @@ export interface CreateAdminContestAWDServiceReq {
 ```ts
 export interface UpdateAdminContestAWDServiceReq {
   template_id?: ID
+  points?: number
   display_name?: string
   order?: number
   is_visible?: boolean
@@ -1586,7 +1579,8 @@ export interface UpdateAdminContestAWDServiceReq {
 > 说明：
 > - `contest_awd_services` 是 AWD 运行态配置的显式服务层。
 > - `checker_type / checker_config / awd_sla_score / awd_defense_score / awd_checker_preview_token` 统一通过该接口写入。
-> - `points` 不属于 service 资源，仍通过 `contest_challenges` 关系接口维护。
+> - `points` 写入 `score_config.points`，用于服务在赛事内的展示分值，不参与每轮 SLA/防御累计。
+> - AWD 计分契约：新建服务默认 `awd_sla_score = 1`、`awd_defense_score = 2`；二者单项取值范围均为 `0-5`。轮次默认 `attack_score = 30`、`defense_score = 3`；`attack_score` 范围为 `0-100`，`defense_score` 范围为 `0-10`。
 > - 返回体中的 `runtime_config` 仅保留正式 runtime 配置字段；新写入记录也不再持久化兼容影子字段 `challenge_id`。
 > - `validation_state / last_preview_at / last_preview_result` 反映最近一次保存到 service 层的 checker 校验状态。
 
@@ -1865,6 +1859,32 @@ export interface SubmitAwdAttackReq {
 > - 仅 `mode=awd` 且 `status=running` 的竞赛允许提交。
 > - 攻击方队伍从当前登录用户的已审核报名记录中解析，必须已加入队伍。
 > - 默认校验当前轮 Flag；在 `contest.awd.previous_round_grace` 宽限期内，同时接受上一轮 Flag。
+
+### 8.19.4 POST `/api/v1/contests/:id/awd/services/:sid/targets/:team_id/access`
+
+`data`：
+
+```ts
+export interface InstanceAccessData {
+  access_url: string
+}
+```
+
+> 说明：
+> - 该接口用于获取 AWD 跨队攻击代理入口，`team_id` 表示受害队伍 ID，`sid` 表示 AWD 服务 ID。
+> - 当前登录用户必须属于该 AWD 赛事中的攻击队伍，且目标队伍不能是自己的队伍。
+> - 比赛必须处于 `running` / `frozen`，当前必须存在 `running` 轮次，目标服务必须可见，目标队伍服务实例必须处于 `running` 且有 `access_url`。
+> - 返回的 `access_url` 指向平台代理路径，调用方不应直接使用实例真实端口作为攻击入口。
+
+### 8.19.5 ANY `/api/v1/contests/:id/awd/services/:sid/targets/:team_id/proxy/*proxyPath`
+
+`data`：目标实例原始响应。
+
+> 说明：
+> - 该代理入口接受 `access` 接口签发的短期 ticket，并把请求转发到目标队伍服务实例。
+> - ticket 首次出现在 query 中时，后端会设置 HttpOnly cookie 并重定向到去除 ticket 的 URL。
+> - 代理请求会写入 `awd_traffic_events`，归因字段来自 ticket 中的 `contest_id`、`attacker_team_id`、`victim_team_id`、`service_id` 和 `challenge_id`。
+> - 该入口只覆盖 HTTP 层代理审计，不等价于 TCP 抓包或 L4 流量审计。
 > - 同一轮内同一 `attacker_team -> victim_team -> challenge` 首次成功提交得分，之后同队成员重复成功提交仅记日志不重复得分。
 
 ### 8.20 POST `/api/v1/admin/contests` / PUT `/api/v1/admin/contests/:id`

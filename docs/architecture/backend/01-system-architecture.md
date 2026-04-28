@@ -210,12 +210,12 @@ flowchart TD
 
 | 项目 | 说明 |
 |------|------|
-| 核心职责 | 用户注册/登录、JWT 签发与刷新、RBAC 权限控制 |
+| 核心职责 | 用户注册/登录、服务端 session 管理、RBAC 权限控制 |
 | 角色模型 | `admin`（平台管理员）、`teacher`（教师）、`student`（学生） |
-| 关键接口 | 注册、登录、刷新 Token、获取当前用户、角色管理 |
+| 关键接口 | 注册、登录、登出、获取当前用户、角色管理 |
 | 数据表 | `users`、`roles`、`user_roles`、`permissions`、`role_permissions` |
-| 对外暴露 | `AuthService` 接口（Token 校验）、`AuthMiddleware`（Gin 中间件） |
-| 安全要求 | 密码 bcrypt 加盐、JWT 双 Token（Access 15min + Refresh 7d）、登录失败锁定 |
+| 对外暴露 | `AuthService` 接口（session 校验）、`AuthMiddleware`（Gin 中间件） |
+| 安全要求 | 密码 bcrypt 加盐、HttpOnly session cookie、登录失败锁定 |
 
 #### challenge 模块 — 靶场管理
 
@@ -355,7 +355,6 @@ flowchart LR
 | Redis 客户端 | go-redis | v9.x | 功能完整，支持 Pipeline/Lua 脚本/Pub-Sub |
 | Docker SDK | Docker SDK for Go | latest | 官方 SDK，API 覆盖完整 |
 | WebSocket | github.com/coder/websocket | v1.8+ | gorilla/websocket 已归档，coder/websocket 是活跃维护的继任者，API 兼容，支持并发读写控制 |
-| JWT | golang-jwt | v5.x | 社区标准库，支持多种签名算法 |
 | 密码哈希 | bcrypt | golang.org/x/crypto | 标准库，自带盐值管理 |
 | 参数校验 | validator | v10.x | Gin 内置集成，支持自定义校验规则 |
 | 定时任务 | robfig/cron | v3.x | 容器过期清理、竞赛轮次推进等定时场景 |
@@ -404,7 +403,7 @@ ctf-platform/
 │   ├── config/
 │   │   └── config.go                # 配置结构体定义 + Viper 加载逻辑
 │   ├── middleware/
-│   │   ├── auth.go                  # JWT 认证中间件
+│   │   ├── auth.go                  # Session 认证中间件
 │   │   ├── rbac.go                  # RBAC 权限校验中间件
 │   │   ├── audit.go                 # 审计日志中间件
 │   │   ├── ratelimit.go             # 限流中间件（令牌桶 / 滑动窗口）
@@ -507,7 +506,7 @@ ctf-platform/
 | 模块 | 区间 | 示例 |
 |------|------|------|
 | 通用 | 10000-10999 | 10002 参数校验失败、10003 未认证、10004 无权限、10005 资源不存在 |
-| 认证 | 11000-11999 | 11001 用户名或密码错误、11002 Access Token 过期 |
+| 认证 | 11000-11999 | 11001 用户名或密码错误、11002 会话失效 |
 | 靶场 | 12000-12999 | 12001 镜像构建失败、12003 靶机未配置 Flag |
 | 演练 | 13000-13999 | 13002 实例数上限、13003 Flag 错误、13005 实例过期 |
 | 竞赛 | 14000-14999 | 14001 竞赛未开始、14003 队伍人数已满 |
@@ -686,7 +685,7 @@ flowchart LR
 | CORS | 全局 | 处理跨域请求（开发环境宽松，生产环境限制 Origin 白名单） |
 | Logger | 全局 | 记录请求方法、路径、状态码、耗时、客户端 IP |
 | RateLimiter | 全局 | 基于 IP 或用户 ID 的请求限流，防止恶意刷接口 |
-| Auth | 需认证路由 | 解析 JWT Token，校验有效性，将用户信息注入 context |
+| Auth | 需认证路由 | 解析 session cookie，校验会话有效性，将用户信息注入 context |
 | RBAC | 需权限路由 | 根据用户角色和路由权限配置，判断是否有权访问 |
 | Audit | 写操作路由 | 记录关键写操作（创建/修改/删除）到审计日志表 |
 
@@ -708,12 +707,11 @@ func RegisterRoutes(r *gin.Engine, deps *Dependencies) {
     {
         public.POST("/auth/register", deps.AuthHandler.Register)
         public.POST("/auth/login", deps.AuthHandler.Login)
-        public.POST("/auth/refresh", deps.AuthHandler.RefreshToken)
     }
 
     // 需认证路由
     authed := r.Group("/api/v1")
-    authed.Use(middleware.Auth(deps.AuthService))
+    authed.Use(middleware.Auth(deps.AuthService, cfg.Auth.SessionCookieName))
     {
         // 学生可访问的路由
         authed.GET("/challenges", deps.ChallengeHandler.List)
@@ -960,13 +958,13 @@ redis:
   db: 0
   pool_size: 20
 
-jwt:
-  algorithm: "RS256"                 # RS256 / ES256 / HS256（仅开发环境）
-  private_key_path: "/etc/ctf/jwt_private.pem" # 生产环境：私钥签名
-  public_key_path: "/etc/ctf/jwt_public.pem"   # 生产环境：公钥验签
-  secret: "${JWT_SECRET}"            # 开发环境（HS256）使用，生产环境可不配置
-  access_token_ttl: "15m"
-  refresh_token_ttl: "168h"          # 7 天
+auth:
+  session_ttl: "168h"                # 7 天
+  session_cookie_name: "ctf_session"
+  session_cookie_path: "/api/v1"
+  session_cookie_secure: true
+  session_cookie_http_only: true
+  session_cookie_same_site: "lax"
 
 docker:
   host: "unix:///var/run/docker.sock" # 单机模式
@@ -1008,7 +1006,7 @@ cors:
     - "http://localhost:5173"       # Vite 开发服务器
     - "https://ctf.campus.edu"      # 生产域名
   allowed_methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
-  allowed_headers: ["Authorization", "Content-Type", "X-Request-ID"]
+  allowed_headers: ["Content-Type", "X-Request-ID"]
 ```
 
 ---

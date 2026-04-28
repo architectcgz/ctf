@@ -107,6 +107,10 @@ function parseCheckResult(): Record<string, unknown> | null {
 }
 
 function handleSubmit() {
+  if (props.saving) {
+    return
+  }
+
   clearErrors()
 
   if (!form.team_id) {

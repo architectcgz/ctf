@@ -34,16 +34,16 @@ import (
 )
 
 type stubPracticeRuntimeService struct {
-	cleanupRuntimeFn  func(instance *model.Instance) error
+	cleanupRuntimeFn  func(ctx context.Context, instance *model.Instance) error
 	createTopologyFn  func(ctx context.Context, req *practiceports.TopologyCreateRequest) (*practiceports.TopologyCreateResult, error)
 	createContainerFn func(ctx context.Context, imageName string, env map[string]string, reservedHostPort int) (containerID, networkID string, hostPort, servicePort int, err error)
 }
 
-func (s *stubPracticeRuntimeService) CleanupRuntime(instance *model.Instance) error {
+func (s *stubPracticeRuntimeService) CleanupRuntime(ctx context.Context, instance *model.Instance) error {
 	if s.cleanupRuntimeFn == nil {
 		return nil
 	}
-	return s.cleanupRuntimeFn(instance)
+	return s.cleanupRuntimeFn(ctx, instance)
 }
 
 func (s *stubPracticeRuntimeService) CreateTopology(ctx context.Context, req *practiceports.TopologyCreateRequest) (*practiceports.TopologyCreateResult, error) {
@@ -58,6 +58,19 @@ func (s *stubPracticeRuntimeService) CreateContainer(ctx context.Context, imageN
 		return "", "", 0, 0, errors.New("unexpected CreateContainer call")
 	}
 	return s.createContainerFn(ctx, imageName, env, reservedHostPort)
+}
+
+type stubPracticeEventBus struct {
+	publishFn func(ctx context.Context, evt events.Event) error
+}
+
+func (s *stubPracticeEventBus) Subscribe(string, events.Handler) {}
+
+func (s *stubPracticeEventBus) Publish(ctx context.Context, evt events.Event) error {
+	if s.publishFn != nil {
+		return s.publishFn(ctx, evt)
+	}
+	return nil
 }
 
 func requireEventually(t *testing.T, timeout time.Duration, check func() bool) {
@@ -143,7 +156,7 @@ type stubScoreUpdater struct {
 	lockWait time.Duration
 }
 
-func (s *stubScoreUpdater) UpdateUserScoreWithContext(ctx context.Context, userID int64) error {
+func (s *stubScoreUpdater) UpdateUserScore(ctx context.Context, userID int64) error {
 	if s.updateFn == nil {
 		return nil
 	}
@@ -155,52 +168,87 @@ func (s *stubScoreUpdater) lockTimeout() time.Duration {
 }
 
 type stubPracticeChallengeContract struct {
-	findByIDFn func(id int64) (*model.Challenge, error)
+	findByIDWithContextFn                func(ctx context.Context, id int64) (*model.Challenge, error)
+	findChallengeTopologyByChallengeIDFn func(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error)
 }
 
-func (s *stubPracticeChallengeContract) FindByID(id int64) (*model.Challenge, error) {
-	if s.findByIDFn == nil {
-		return nil, nil
+func (s *stubPracticeChallengeContract) FindByID(ctx context.Context, id int64) (*model.Challenge, error) {
+	if s.findByIDWithContextFn != nil {
+		return s.findByIDWithContextFn(ctx, id)
 	}
-	return s.findByIDFn(id)
+	return nil, nil
 }
 
-func (s *stubPracticeChallengeContract) FindChallengeTopologyByChallengeID(challengeID int64) (*model.ChallengeTopology, error) {
+func (s *stubPracticeChallengeContract) FindChallengeTopologyByChallengeID(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error) {
+	if s.findChallengeTopologyByChallengeIDFn != nil {
+		return s.findChallengeTopologyByChallengeIDFn(ctx, challengeID)
+	}
+	return nil, nil
+}
+
+type stubPracticeImageStore struct {
+	findByIDFn func(ctx context.Context, id int64) (*model.Image, error)
+}
+
+func (s *stubPracticeImageStore) FindByID(ctx context.Context, id int64) (*model.Image, error) {
+	if s.findByIDFn != nil {
+		return s.findByIDFn(ctx, id)
+	}
 	return nil, nil
 }
 
 type stubPracticeInstanceStore struct {
+	findByIDWithContextFn                   func(ctx context.Context, id int64) (*model.Instance, error)
+	updateRuntimeWithContextFn              func(ctx context.Context, instance *model.Instance) error
+	refreshInstanceExpiryWithContextFn      func(ctx context.Context, instanceID int64, expiresAt time.Time) error
+	updateStatusAndReleasePortWithContextFn func(ctx context.Context, id int64, status string) error
+	findByUserAndChallengeWithContextFn     func(ctx context.Context, userID, challengeID int64) (*model.Instance, error)
 }
 
-func (s *stubPracticeInstanceStore) FindByIDWithContext(ctx context.Context, id int64) (*model.Instance, error) {
+func (s *stubPracticeInstanceStore) FindByID(ctx context.Context, id int64) (*model.Instance, error) {
+	if s.findByIDWithContextFn != nil {
+		return s.findByIDWithContextFn(ctx, id)
+	}
 	return nil, nil
 }
 
-func (s *stubPracticeInstanceStore) UpdateRuntime(instance *model.Instance) error {
+func (s *stubPracticeInstanceStore) UpdateRuntime(ctx context.Context, instance *model.Instance) error {
+	if s.updateRuntimeWithContextFn != nil {
+		return s.updateRuntimeWithContextFn(ctx, instance)
+	}
 	return nil
 }
 
-func (s *stubPracticeInstanceStore) RefreshInstanceExpiry(instanceID int64, expiresAt time.Time) error {
+func (s *stubPracticeInstanceStore) RefreshInstanceExpiry(ctx context.Context, instanceID int64, expiresAt time.Time) error {
+	if s.refreshInstanceExpiryWithContextFn != nil {
+		return s.refreshInstanceExpiryWithContextFn(ctx, instanceID, expiresAt)
+	}
 	return nil
 }
 
-func (s *stubPracticeInstanceStore) UpdateStatusAndReleasePort(id int64, status string) error {
+func (s *stubPracticeInstanceStore) UpdateStatusAndReleasePort(ctx context.Context, id int64, status string) error {
+	if s.updateStatusAndReleasePortWithContextFn != nil {
+		return s.updateStatusAndReleasePortWithContextFn(ctx, id, status)
+	}
 	return nil
 }
 
-func (s *stubPracticeInstanceStore) FindByUserAndChallenge(userID, challengeID int64) (*model.Instance, error) {
+func (s *stubPracticeInstanceStore) FindByUserAndChallenge(ctx context.Context, userID, challengeID int64) (*model.Instance, error) {
+	if s.findByUserAndChallengeWithContextFn != nil {
+		return s.findByUserAndChallengeWithContextFn(ctx, userID, challengeID)
+	}
 	return nil, nil
 }
 
-func (s *stubPracticeInstanceStore) ListPendingInstancesWithContext(ctx context.Context, limit int) ([]*model.Instance, error) {
+func (s *stubPracticeInstanceStore) ListPendingInstances(ctx context.Context, limit int) ([]*model.Instance, error) {
 	return []*model.Instance{}, nil
 }
 
-func (s *stubPracticeInstanceStore) TryTransitionStatusWithContext(ctx context.Context, id int64, fromStatus, toStatus string) (bool, error) {
+func (s *stubPracticeInstanceStore) TryTransitionStatus(ctx context.Context, id int64, fromStatus, toStatus string) (bool, error) {
 	return false, nil
 }
 
-func (s *stubPracticeInstanceStore) CountInstancesByStatusWithContext(ctx context.Context, statuses []string) (int64, error) {
+func (s *stubPracticeInstanceStore) CountInstancesByStatus(ctx context.Context, statuses []string) (int64, error) {
 	return 0, nil
 }
 
@@ -216,7 +264,7 @@ func TestBuildTopologyCreateRequestKeepsFineGrainedPolicies(t *testing.T) {
 		config:    &config.Config{},
 	}
 
-	request, err := service.buildTopologyCreateRequest(30001, &model.Challenge{ImageID: 1}, "web", model.TopologySpec{
+	request, err := service.buildTopologyCreateRequest(context.Background(), 30001, false, &model.Challenge{ImageID: 1}, "web", model.TopologySpec{
 		Nodes: []model.TopologyNode{
 			{Key: "web", ServicePort: 8080, InjectFlag: true},
 		},
@@ -247,7 +295,7 @@ func TestBuildTopologyCreateRequestRejectsSharedChallengeFlagInjection(t *testin
 		config:    &config.Config{},
 	}
 
-	_, err := service.buildTopologyCreateRequest(30002, &model.Challenge{
+	_, err := service.buildTopologyCreateRequest(context.Background(), 30002, false, &model.Challenge{
 		ImageID:         2,
 		InstanceSharing: model.InstanceSharingShared,
 	}, "web", model.TopologySpec{
@@ -266,7 +314,14 @@ func TestPracticeServiceCloseCancelsAssessmentUpdate(t *testing.T) {
 	startedCh := make(chan struct{})
 	var calls atomic.Int32
 	service := NewService(
-		nil,
+		&stubPracticeRepository{
+			findCorrectSubmissionFn: func(ctx context.Context, userID, challengeID int64) (*model.Submission, error) {
+				return nil, gorm.ErrRecordNotFound
+			},
+			createSubmissionFn: func(ctx context.Context, submission *model.Submission) error {
+				return nil
+			},
+		},
 		nil,
 		nil,
 		nil,
@@ -320,7 +375,14 @@ func TestPracticeServiceCloseCancelsAsyncScoreUpdate(t *testing.T) {
 	startedCh := make(chan struct{})
 	var calls atomic.Int32
 	service := NewService(
-		nil,
+		&stubPracticeRepository{
+			findCorrectSubmissionFn: func(ctx context.Context, userID, challengeID int64) (*model.Submission, error) {
+				return nil, gorm.ErrRecordNotFound
+			},
+			createSubmissionFn: func(ctx context.Context, submission *model.Submission) error {
+				return nil
+			},
+		},
 		nil,
 		nil,
 		nil,
@@ -372,7 +434,7 @@ func TestSubmitFlagWithRegexChallengeMatchesPattern(t *testing.T) {
 	service := NewService(
 		repo,
 		&stubPracticeChallengeContract{
-			findByIDFn: func(id int64) (*model.Challenge, error) {
+			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
 				return &model.Challenge{
 					ID:        id,
 					Category:  model.DimensionWeb,
@@ -401,12 +463,66 @@ func TestSubmitFlagWithRegexChallengeMatchesPattern(t *testing.T) {
 		nil,
 	)
 
-	resp, err := service.SubmitFlagWithContext(context.Background(), 9, 19, "flag{regex-42}")
+	resp, err := service.SubmitFlag(context.Background(), 9, 19, "flag{regex-42}")
 	if err != nil {
-		t.Fatalf("SubmitFlagWithContext() error = %v", err)
+		t.Fatalf("SubmitFlag() error = %v", err)
 	}
 	if !resp.IsCorrect || resp.Status != dto.SubmissionStatusCorrect {
 		t.Fatalf("expected regex submission success, got %+v", resp)
+	}
+}
+
+func TestMarkInstanceFailedDoesNotCreateBackgroundContext(t *testing.T) {
+	t.Parallel()
+
+	service := NewService(
+		nil,
+		nil,
+		nil,
+		&stubPracticeInstanceStore{
+			updateStatusAndReleasePortWithContextFn: func(ctx context.Context, id int64, status string) error {
+				if ctx != nil {
+					t.Fatalf("expected update status ctx to stay nil, got %v", ctx)
+				}
+				return nil
+			},
+		},
+		&stubPracticeRuntimeService{
+			cleanupRuntimeFn: func(ctx context.Context, instance *model.Instance) error {
+				if ctx != nil {
+					t.Fatalf("expected cleanup ctx to stay nil, got %v", ctx)
+				}
+				return nil
+			},
+		},
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+
+	service.markInstanceFailed(nil, &model.Instance{ID: 42})
+}
+
+func TestPublishWeakEventDoesNotCreateBackgroundContext(t *testing.T) {
+	t.Parallel()
+
+	publishCalled := false
+	service := NewService(nil, nil, nil, nil, nil, nil, nil, nil, nil, nil).
+		SetEventBus(&stubPracticeEventBus{
+			publishFn: func(ctx context.Context, evt events.Event) error {
+				publishCalled = true
+				if ctx != nil {
+					t.Fatalf("expected publish ctx to stay nil, got %v", ctx)
+				}
+				return nil
+			},
+		})
+
+	service.publishWeakEvent(nil, events.Event{Name: "practice.test"})
+	if !publishCalled {
+		t.Fatal("expected event to be published")
 	}
 }
 
@@ -419,7 +535,7 @@ func TestSubmitFlagWithManualReviewChallengeCreatesPendingSubmission(t *testing.
 
 	var createdSubmission *model.Submission
 	repo := &stubPracticeRepository{
-		createSubmissionFn: func(submission *model.Submission) error {
+		createSubmissionFn: func(ctx context.Context, submission *model.Submission) error {
 			createdSubmission = submission
 			return nil
 		},
@@ -427,7 +543,7 @@ func TestSubmitFlagWithManualReviewChallengeCreatesPendingSubmission(t *testing.
 	service := NewService(
 		repo,
 		&stubPracticeChallengeContract{
-			findByIDFn: func(id int64) (*model.Challenge, error) {
+			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
 				return &model.Challenge{
 					ID:       id,
 					Category: model.DimensionWeb,
@@ -455,9 +571,9 @@ func TestSubmitFlagWithManualReviewChallengeCreatesPendingSubmission(t *testing.
 		nil,
 	)
 
-	resp, err := service.SubmitFlagWithContext(context.Background(), 8, 18, "answer with reasoning")
+	resp, err := service.SubmitFlag(context.Background(), 8, 18, "answer with reasoning")
 	if err != nil {
-		t.Fatalf("SubmitFlagWithContext() error = %v", err)
+		t.Fatalf("SubmitFlag() error = %v", err)
 	}
 	if resp.IsCorrect || resp.Status != dto.SubmissionStatusPendingReview {
 		t.Fatalf("expected pending-review response, got %+v", resp)
@@ -487,7 +603,7 @@ func TestReviewManualReviewSubmissionApprovesAndTriggersScoreUpdate(t *testing.T
 	var updatedSubmission *model.Submission
 	var scoreUpdateCalls atomic.Int32
 	repo := &stubPracticeRepository{
-		getTeacherManualReviewSubmissionByIDFn: func(id int64) (*practiceports.TeacherManualReviewSubmissionRecord, error) {
+		getTeacherManualReviewSubmissionByIDFn: func(ctx context.Context, id int64) (*practiceports.TeacherManualReviewSubmissionRecord, error) {
 			if id != submissionID {
 				t.Fatalf("unexpected submission id: %d", id)
 			}
@@ -506,18 +622,18 @@ func TestReviewManualReviewSubmissionApprovesAndTriggersScoreUpdate(t *testing.T
 				ChallengeTitle:  "manual challenge",
 			}, nil
 		},
-		updateSubmissionFn: func(submission *model.Submission) error {
+		updateSubmissionFn: func(ctx context.Context, submission *model.Submission) error {
 			updatedSubmission = submission
 			return nil
 		},
-		findUserByIDFn: func(userID int64) (*model.User, error) {
+		findUserByIDFn: func(ctx context.Context, userID int64) (*model.User, error) {
 			return &model.User{ID: userID, Username: "teacher", Role: model.RoleTeacher, ClassName: "Class 1"}, nil
 		},
 	}
 	service := NewService(
 		repo,
 		&stubPracticeChallengeContract{
-			findByIDFn: func(id int64) (*model.Challenge, error) {
+			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
 				return &model.Challenge{
 					ID:       id,
 					Category: model.DimensionWeb,
@@ -556,7 +672,7 @@ func TestReviewManualReviewSubmissionApprovesAndTriggersScoreUpdate(t *testing.T
 		nil,
 	)
 
-	resp, err := service.ReviewManualReviewSubmissionWithContext(
+	resp, err := service.ReviewManualReviewSubmission(
 		context.Background(),
 		submissionID,
 		reviewerID,
@@ -567,7 +683,7 @@ func TestReviewManualReviewSubmissionApprovesAndTriggersScoreUpdate(t *testing.T
 		},
 	)
 	if err != nil {
-		t.Fatalf("ReviewManualReviewSubmissionWithContext() error = %v", err)
+		t.Fatalf("ReviewManualReviewSubmission() error = %v", err)
 	}
 	if resp.ReviewStatus != model.SubmissionReviewStatusApproved || !resp.IsCorrect || resp.Score != 120 {
 		t.Fatalf("unexpected review response: %+v", resp)
@@ -605,6 +721,35 @@ func TestPracticeServiceRunAsyncTaskReturnsWhenClosed(t *testing.T) {
 	}
 }
 
+func TestRunProvisioningLoopReturnsWhenContextMissing(t *testing.T) {
+	t.Parallel()
+
+	service := NewService(nil, nil, nil, nil, nil, nil, nil, nil, &config.Config{
+		Container: config.ContainerConfig{
+			Scheduler: config.ContainerSchedulerConfig{
+				Enabled: true,
+			},
+		},
+	}, nil)
+
+	defer func() {
+		if recovered := recover(); recovered != nil {
+			t.Fatalf("RunProvisioningLoop(nil) should return without panic, got %v", recovered)
+		}
+	}()
+	service.RunProvisioningLoop(nil)
+}
+
+func TestPracticeServiceCloseRejectsNilContext(t *testing.T) {
+	t.Parallel()
+
+	service := NewService(nil, nil, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
+
+	if err := service.Close(nil); err == nil {
+		t.Fatal("expected Close(nil) to reject missing context")
+	}
+}
+
 func TestPracticePublishesFlagAcceptedEvent(t *testing.T) {
 	t.Parallel()
 
@@ -625,17 +770,17 @@ func TestPracticePublishesFlagAcceptedEvent(t *testing.T) {
 
 	bus := events.NewBus()
 	repo := &stubPracticeRepository{
-		findCorrectSubmissionFn: func(userID, challengeID int64) (*model.Submission, error) {
+		findCorrectSubmissionFn: func(ctx context.Context, userID, challengeID int64) (*model.Submission, error) {
 			return nil, gorm.ErrRecordNotFound
 		},
-		createSubmissionFn: func(submission *model.Submission) error {
+		createSubmissionFn: func(ctx context.Context, submission *model.Submission) error {
 			return db.Create(submission).Error
 		},
 	}
 	service := NewService(
 		repo,
 		&stubPracticeChallengeContract{
-			findByIDFn: func(id int64) (*model.Challenge, error) {
+			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
 				return &model.Challenge{
 					ID:       id,
 					Category: model.DimensionWeb,
@@ -679,9 +824,9 @@ func TestPracticePublishesFlagAcceptedEvent(t *testing.T) {
 		return nil
 	})
 
-	resp, err := service.SubmitFlagWithContext(context.Background(), 7, 11, "flag{correct}")
+	resp, err := service.SubmitFlag(context.Background(), 7, 11, "flag{correct}")
 	if err != nil {
-		t.Fatalf("SubmitFlagWithContext() error = %v", err)
+		t.Fatalf("SubmitFlag() error = %v", err)
 	}
 	if !resp.IsCorrect {
 		t.Fatalf("expected correct submission response, got %+v", resp)
@@ -710,7 +855,7 @@ func TestSubmitFlagWithSharedStaticChallengeUsesRegularFlagValidation(t *testing
 	service := NewService(
 		practiceinfra.NewRepository(db),
 		&stubPracticeChallengeContract{
-			findByIDFn: func(id int64) (*model.Challenge, error) {
+			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
 				return &model.Challenge{
 					ID:              id,
 					Category:        model.DimensionWeb,
@@ -741,16 +886,16 @@ func TestSubmitFlagWithSharedStaticChallengeUsesRegularFlagValidation(t *testing
 		nil,
 	)
 
-	resp, err := service.SubmitFlagWithContext(context.Background(), 7, 11, "flag{shared-static}")
+	resp, err := service.SubmitFlag(context.Background(), 7, 11, "flag{shared-static}")
 	if err != nil {
-		t.Fatalf("SubmitFlagWithContext() error = %v", err)
+		t.Fatalf("SubmitFlag() error = %v", err)
 	}
 	if !resp.IsCorrect || resp.Status != dto.SubmissionStatusCorrect {
 		t.Fatalf("expected shared static submission success, got %+v", resp)
 	}
 }
 
-func TestSubmitFlagWithContextAllowsRepeatCorrectSubmissionWithoutExtraPoints(t *testing.T) {
+func TestSubmitFlagAllowsRepeatCorrectSubmissionWithoutExtraPoints(t *testing.T) {
 	t.Parallel()
 
 	db := newPracticeCommandTestDB(t)
@@ -775,7 +920,7 @@ func TestSubmitFlagWithContextAllowsRepeatCorrectSubmissionWithoutExtraPoints(t 
 	service := NewService(
 		practiceinfra.NewRepository(db),
 		&stubPracticeChallengeContract{
-			findByIDFn: func(id int64) (*model.Challenge, error) {
+			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
 				return &model.Challenge{
 					ID:       id,
 					Category: model.DimensionWeb,
@@ -805,17 +950,17 @@ func TestSubmitFlagWithContextAllowsRepeatCorrectSubmissionWithoutExtraPoints(t 
 		nil,
 	)
 
-	first, err := service.SubmitFlagWithContext(context.Background(), 71, 11, "flag{repeatable}")
+	first, err := service.SubmitFlag(context.Background(), 71, 11, "flag{repeatable}")
 	if err != nil {
-		t.Fatalf("SubmitFlagWithContext() first error = %v", err)
+		t.Fatalf("SubmitFlag() first error = %v", err)
 	}
 	if !first.IsCorrect || first.Points != 100 {
 		t.Fatalf("expected first correct submission to score once, got %+v", first)
 	}
 
-	repeat, err := service.SubmitFlagWithContext(context.Background(), 71, 11, "flag{repeatable}")
+	repeat, err := service.SubmitFlag(context.Background(), 71, 11, "flag{repeatable}")
 	if err != nil {
-		t.Fatalf("SubmitFlagWithContext() repeat error = %v", err)
+		t.Fatalf("SubmitFlag() repeat error = %v", err)
 	}
 	if !repeat.IsCorrect || repeat.Status != dto.SubmissionStatusCorrect {
 		t.Fatalf("expected repeated correct submission to stay correct, got %+v", repeat)
@@ -823,9 +968,19 @@ func TestSubmitFlagWithContextAllowsRepeatCorrectSubmissionWithoutExtraPoints(t 
 	if repeat.Points != 0 {
 		t.Fatalf("expected repeated correct submission not to award points, got %+v", repeat)
 	}
+
+	var count int64
+	if err := db.Model(&model.Submission{}).
+		Where("user_id = ? AND challenge_id = ?", 71, 11).
+		Count(&count).Error; err != nil {
+		t.Fatalf("count submissions: %v", err)
+	}
+	if count != 1 {
+		t.Fatalf("expected repeated correct submission not to create extra record, got %d", count)
+	}
 }
 
-func TestSubmitFlagWithContextShrinksOwnedInstanceExpiryAfterSolve(t *testing.T) {
+func TestSubmitFlagShrinksOwnedInstanceExpiryAfterSolve(t *testing.T) {
 	t.Parallel()
 
 	db := newPracticeCommandTestDB(t)
@@ -865,7 +1020,7 @@ func TestSubmitFlagWithContextShrinksOwnedInstanceExpiryAfterSolve(t *testing.T)
 	service := NewService(
 		practiceinfra.NewRepository(db),
 		&stubPracticeChallengeContract{
-			findByIDFn: func(id int64) (*model.Challenge, error) {
+			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
 				return &model.Challenge{
 					ID:              id,
 					Category:        model.DimensionWeb,
@@ -900,9 +1055,9 @@ func TestSubmitFlagWithContextShrinksOwnedInstanceExpiryAfterSolve(t *testing.T)
 	)
 
 	beforeSubmit := time.Now()
-	resp, err := service.SubmitFlagWithContext(context.Background(), 7, 11, "flag{correct}")
+	resp, err := service.SubmitFlag(context.Background(), 7, 11, "flag{correct}")
 	if err != nil {
-		t.Fatalf("SubmitFlagWithContext() error = %v", err)
+		t.Fatalf("SubmitFlag() error = %v", err)
 	}
 	if !resp.IsCorrect {
 		t.Fatalf("expected correct submission response, got %+v", resp)
@@ -938,7 +1093,7 @@ func TestListMyChallengeSubmissionsMapsStoredHistory(t *testing.T) {
 	now := time.Now()
 	service := NewService(
 		&stubPracticeRepository{
-			listChallengeSubmissionsFn: func(userID, challengeID int64, limit int) ([]model.Submission, error) {
+			listChallengeSubmissionsFn: func(ctx context.Context, userID, challengeID int64, limit int) ([]model.Submission, error) {
 				if userID != 7 || challengeID != 11 {
 					t.Fatalf("unexpected query: user=%d challenge=%d", userID, challengeID)
 				}
@@ -975,7 +1130,7 @@ func TestListMyChallengeSubmissionsMapsStoredHistory(t *testing.T) {
 			},
 		},
 		&stubPracticeChallengeContract{
-			findByIDFn: func(id int64) (*model.Challenge, error) {
+			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
 				return &model.Challenge{
 					ID:     id,
 					Status: model.ChallengeStatusPublished,
@@ -992,7 +1147,7 @@ func TestListMyChallengeSubmissionsMapsStoredHistory(t *testing.T) {
 		nil,
 	)
 
-	items, err := service.ListMyChallengeSubmissions(7, 11)
+	items, err := service.ListMyChallengeSubmissions(context.Background(), 7, 11)
 	if err != nil {
 		t.Fatalf("ListMyChallengeSubmissions() error = %v", err)
 	}
@@ -1025,7 +1180,7 @@ func TestSubmitFlagRejectsUnknownFlagType(t *testing.T) {
 	service := NewService(
 		practiceinfra.NewRepository(db),
 		&stubPracticeChallengeContract{
-			findByIDFn: func(id int64) (*model.Challenge, error) {
+			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
 				return &model.Challenge{
 					ID:       id,
 					Category: model.DimensionWeb,
@@ -1053,7 +1208,7 @@ func TestSubmitFlagRejectsUnknownFlagType(t *testing.T) {
 		nil,
 	)
 
-	_, err := service.SubmitFlagWithContext(context.Background(), 7, 11, "flag{legacy}")
+	_, err := service.SubmitFlag(context.Background(), 7, 11, "flag{legacy}")
 	if err == nil || err.Error() != errcode.ErrInvalidParams.Error() {
 		t.Fatalf("expected invalid params for unknown flag type, got %v", err)
 	}
@@ -1129,9 +1284,9 @@ func TestStartChallengeQueuesProvisioningWithoutSynchronousContainerCreation(t *
 		nil,
 	)
 
-	resp, err := service.StartChallengeWithContext(context.Background(), 42, 201)
+	resp, err := service.StartChallenge(context.Background(), 42, 201)
 	if err != nil {
-		t.Fatalf("StartChallengeWithContext() error = %v", err)
+		t.Fatalf("StartChallenge() error = %v", err)
 	}
 	if resp.Status != model.InstanceStatusPending {
 		t.Fatalf("expected pending status, got %+v", resp)
@@ -1154,7 +1309,7 @@ func TestStartContestAWDServiceDoesNotRequireContestChallengeLookup(t *testing.T
 
 	teamID := int64(4104)
 	repo := &stubPracticeRepository{
-		findContestByIDWithContextFn: func(ctx context.Context, contestID int64) (*model.Contest, error) {
+		findContestByIDFn: func(ctx context.Context, contestID int64) (*model.Contest, error) {
 			if contestID != 3104 {
 				t.Fatalf("unexpected contest id: %d", contestID)
 			}
@@ -1164,7 +1319,7 @@ func TestStartContestAWDServiceDoesNotRequireContestChallengeLookup(t *testing.T
 				Status: model.ContestStatusRunning,
 			}, nil
 		},
-		findContestAWDServiceWithContextFn: func(ctx context.Context, contestID, serviceID int64) (*model.ContestAWDService, error) {
+		findContestAWDServiceFn: func(ctx context.Context, contestID, serviceID int64) (*model.ContestAWDService, error) {
 			if contestID != 3104 || serviceID != 7104 {
 				t.Fatalf("unexpected awd service lookup: contest=%d service=%d", contestID, serviceID)
 			}
@@ -1176,11 +1331,11 @@ func TestStartContestAWDServiceDoesNotRequireContestChallengeLookup(t *testing.T
 				ServiceSnapshot: `{"name":"awd-service","category":"web","difficulty":"medium","runtime_config":{"image_id":104,"instance_sharing":"per_team"},"flag_config":{"flag_type":"static","flag_prefix":"flag"}}`,
 			}, nil
 		},
-		findContestChallengeWithContextFn: func(ctx context.Context, contestID, challengeID int64) (*model.ContestChallenge, error) {
+		findContestChallengeFn: func(ctx context.Context, contestID, challengeID int64) (*model.ContestChallenge, error) {
 			t.Fatalf("unexpected contest challenge lookup for awd start: contest=%d challenge=%d", contestID, challengeID)
 			return nil, nil
 		},
-		findContestRegistrationWithContextFn: func(ctx context.Context, contestID, userID int64) (*model.ContestRegistration, error) {
+		findContestRegistrationFn: func(ctx context.Context, contestID, userID int64) (*model.ContestRegistration, error) {
 			if contestID != 3104 || userID != 5104 {
 				t.Fatalf("unexpected registration lookup: contest=%d user=%d", contestID, userID)
 			}
@@ -1191,7 +1346,7 @@ func TestStartContestAWDServiceDoesNotRequireContestChallengeLookup(t *testing.T
 				Status:    model.ContestRegistrationStatusApproved,
 			}, nil
 		},
-		createInstanceFn: func(instance *model.Instance) error {
+		createInstanceFn: func(ctx context.Context, instance *model.Instance) error {
 			instance.ID = 9104
 			return nil
 		},
@@ -1200,7 +1355,7 @@ func TestStartContestAWDServiceDoesNotRequireContestChallengeLookup(t *testing.T
 	service := NewService(
 		repo,
 		&stubPracticeChallengeContract{
-			findByIDFn: func(id int64) (*model.Challenge, error) {
+			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
 				if id != 2104 {
 					t.Fatalf("unexpected challenge lookup: %d", id)
 				}
@@ -1245,6 +1400,100 @@ func TestStartContestAWDServiceDoesNotRequireContestChallengeLookup(t *testing.T
 	}
 	if resp.Status != model.InstanceStatusPending {
 		t.Fatalf("expected pending awd service instance, got %+v", resp)
+	}
+}
+
+func TestStartContestAWDServiceReservesHostPort(t *testing.T) {
+	t.Parallel()
+
+	teamID := int64(4105)
+	var createdInstance *model.Instance
+	reservedPort := 31005
+	repo := &stubPracticeRepository{
+		findContestByIDFn: func(ctx context.Context, contestID int64) (*model.Contest, error) {
+			return &model.Contest{
+				ID:     contestID,
+				Mode:   model.ContestModeAWD,
+				Status: model.ContestStatusRunning,
+			}, nil
+		},
+		findContestAWDServiceFn: func(ctx context.Context, contestID, serviceID int64) (*model.ContestAWDService, error) {
+			return &model.ContestAWDService{
+				ID:              serviceID,
+				ContestID:       contestID,
+				ChallengeID:     2105,
+				IsVisible:       true,
+				ServiceSnapshot: `{"name":"awd-service","category":"web","difficulty":"medium","runtime_config":{"image_id":105,"instance_sharing":"per_team"},"flag_config":{"flag_type":"static","flag_prefix":"flag"}}`,
+			}, nil
+		},
+		findContestRegistrationFn: func(ctx context.Context, contestID, userID int64) (*model.ContestRegistration, error) {
+			return &model.ContestRegistration{
+				ContestID: contestID,
+				UserID:    userID,
+				TeamID:    &teamID,
+				Status:    model.ContestRegistrationStatusApproved,
+			}, nil
+		},
+		reserveAvailablePortFn: func(ctx context.Context, start, end int) (int, error) {
+			return reservedPort, nil
+		},
+		bindReservedPortFn: func(ctx context.Context, port int, instanceID int64) error {
+			if port != reservedPort || instanceID != 9105 {
+				t.Fatalf("unexpected reserved port binding: port=%d instance_id=%d", port, instanceID)
+			}
+			return nil
+		},
+		createInstanceFn: func(ctx context.Context, instance *model.Instance) error {
+			instance.ID = 9105
+			copied := *instance
+			createdInstance = &copied
+			return nil
+		},
+	}
+
+	service := NewService(
+		repo,
+		&stubPracticeChallengeContract{
+			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+				return &model.Challenge{
+					ID:       id,
+					Status:   model.ChallengeStatusPublished,
+					ImageID:  105,
+					FlagType: model.FlagTypeStatic,
+					FlagHash: "flag{awd-static}",
+				}, nil
+			},
+		},
+		nil,
+		&stubPracticeInstanceStore{},
+		&stubPracticeRuntimeService{},
+		nil,
+		nil,
+		nil,
+		&config.Config{
+			Container: config.ContainerConfig{
+				DefaultTTL:           time.Hour,
+				MaxConcurrentPerUser: 3,
+				Scheduler: config.ContainerSchedulerConfig{
+					Enabled: true,
+				},
+			},
+		},
+		nil,
+	)
+
+	resp, err := service.StartContestAWDService(context.Background(), 5105, 3105, 7105)
+	if err != nil {
+		t.Fatalf("StartContestAWDService() error = %v", err)
+	}
+	if resp.ID != 9105 {
+		t.Fatalf("expected created awd service instance, got %+v", resp)
+	}
+	if createdInstance == nil {
+		t.Fatal("expected instance to be created")
+	}
+	if createdInstance.HostPort != reservedPort {
+		t.Fatalf("expected reserved host port %d, got %d", reservedPort, createdInstance.HostPort)
 	}
 }
 
@@ -1322,9 +1571,9 @@ func TestRunProvisioningLoopPromotesPendingInstanceToRunning(t *testing.T) {
 		nil,
 	)
 
-	resp, err := service.StartChallengeWithContext(context.Background(), 43, 202)
+	resp, err := service.StartChallenge(context.Background(), 43, 202)
 	if err != nil {
-		t.Fatalf("StartChallengeWithContext() error = %v", err)
+		t.Fatalf("StartChallenge() error = %v", err)
 	}
 	if resp.Status != model.InstanceStatusPending {
 		t.Fatalf("expected pending status, got %+v", resp)
@@ -1343,7 +1592,7 @@ func TestRunProvisioningLoopPromotesPendingInstanceToRunning(t *testing.T) {
 	})
 }
 
-func TestStartChallengeWithContextIgnoresExpiredRunningInstance(t *testing.T) {
+func TestStartChallengeIgnoresExpiredRunningInstance(t *testing.T) {
 	t.Parallel()
 
 	db := newPracticeCommandTestDB(t)
@@ -1422,9 +1671,9 @@ func TestStartChallengeWithContextIgnoresExpiredRunningInstance(t *testing.T) {
 		nil,
 	)
 
-	resp, err := service.StartChallengeWithContext(context.Background(), 46, 206)
+	resp, err := service.StartChallenge(context.Background(), 46, 206)
 	if err != nil {
-		t.Fatalf("StartChallengeWithContext() error = %v", err)
+		t.Fatalf("StartChallenge() error = %v", err)
 	}
 	if resp.ID == 9006 {
 		t.Fatalf("expected expired instance to be replaced, got reused instance %+v", resp)
@@ -1496,7 +1745,7 @@ func TestProvisionInstanceMarksInstanceFailedWhenAccessURLIsNotReady(t *testing.
 		challengeinfra.NewImageRepository(db),
 		runtimeinfrarepo.NewRepository(db),
 		&stubPracticeRuntimeService{
-			cleanupRuntimeFn: func(instance *model.Instance) error {
+			cleanupRuntimeFn: func(context.Context, *model.Instance) error {
 				cleanupCalls.Add(1)
 				return nil
 			},
@@ -1536,6 +1785,313 @@ func TestProvisionInstanceMarksInstanceFailedWhenAccessURLIsNotReady(t *testing.
 	}
 	if cleanupCalls.Load() != 1 {
 		t.Fatalf("expected cleanup to be called once, got %d", cleanupCalls.Load())
+	}
+}
+
+func TestProvisionInstancePropagatesContextToUpdateRuntime(t *testing.T) {
+	t.Parallel()
+
+	ctxKey := practiceServiceContextKey("update-runtime")
+	expectedCtxValue := "ctx-update-runtime"
+	instanceStore := &stubPracticeInstanceStore{
+		updateRuntimeWithContextFn: func(ctx context.Context, instance *model.Instance) error {
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected update runtime ctx value %v, got %v", expectedCtxValue, got)
+			}
+			if instance.Status != model.InstanceStatusRunning {
+				t.Fatalf("expected running status before persistence, got %+v", instance)
+			}
+			return nil
+		},
+	}
+	service := NewService(
+		nil,
+		nil,
+		&stubPracticeImageStore{
+			findByIDFn: func(ctx context.Context, id int64) (*model.Image, error) {
+				if got := ctx.Value(ctxKey); got != expectedCtxValue {
+					t.Fatalf("expected image lookup ctx value %v, got %v", expectedCtxValue, got)
+				}
+				return &model.Image{ID: id, Name: "ctf/web", Tag: "v1", Status: model.ImageStatusAvailable}, nil
+			},
+		},
+		instanceStore,
+		&stubPracticeRuntimeService{
+			createContainerFn: func(ctx context.Context, imageName string, env map[string]string, reservedHostPort int) (string, string, int, int, error) {
+				if got := ctx.Value(ctxKey); got != expectedCtxValue {
+					t.Fatalf("expected runtime create ctx value %v, got %v", expectedCtxValue, got)
+				}
+				return "ctr-running", "net-running", reservedHostPort, 8080, nil
+			},
+		},
+		nil,
+		nil,
+		nil,
+		&config.Config{Container: config.ContainerConfig{PublicHost: "127.0.0.1", CreateTimeout: time.Second, StartProbeTimeout: 50 * time.Millisecond, StartProbeInterval: 10 * time.Millisecond, StartProbeAttempts: 1}},
+		nil,
+	)
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer server.Close()
+	host, port := parseHTTPServerEndpoint(t, server.URL)
+	instance := &model.Instance{ID: 951, ChallengeID: 2051, HostPort: port, Status: model.InstanceStatusCreating}
+	challenge := &model.Challenge{ID: 2051, ImageID: 301, Status: model.ChallengeStatusPublished, FlagType: model.FlagTypeStatic, FlagHash: "flag{ok}"}
+	service.config.Container.PublicHost = host
+	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
+
+	if err := service.provisionInstance(ctx, instance, challenge, nil, "flag{ok}"); err != nil {
+		t.Fatalf("provisionInstance() error = %v", err)
+	}
+}
+
+func TestProvisionInstanceAcceptsTCPAccessURLReadiness(t *testing.T) {
+	t.Parallel()
+
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("listen tcp: %v", err)
+	}
+	defer listener.Close()
+
+	accepted := make(chan struct{}, 1)
+	go func() {
+		conn, acceptErr := listener.Accept()
+		if acceptErr != nil {
+			return
+		}
+		_ = conn.Close()
+		accepted <- struct{}{}
+	}()
+
+	instanceStore := &stubPracticeInstanceStore{
+		updateRuntimeWithContextFn: func(ctx context.Context, instance *model.Instance) error {
+			if instance.Status != model.InstanceStatusRunning {
+				t.Fatalf("expected running status, got %+v", instance)
+			}
+			if !strings.HasPrefix(instance.AccessURL, "tcp://") {
+				t.Fatalf("expected tcp access url, got %q", instance.AccessURL)
+			}
+			return nil
+		},
+	}
+	service := NewService(
+		nil,
+		nil,
+		&stubPracticeImageStore{
+			findByIDFn: func(context.Context, int64) (*model.Image, error) {
+				return &model.Image{ID: 301, Name: "ctf/pwn", Tag: "v1", Status: model.ImageStatusAvailable}, nil
+			},
+		},
+		instanceStore,
+		&stubPracticeRuntimeService{
+			createTopologyFn: func(ctx context.Context, req *practiceports.TopologyCreateRequest) (*practiceports.TopologyCreateResult, error) {
+				if len(req.Nodes) != 1 {
+					t.Fatalf("unexpected topology request: %+v", req)
+				}
+				if req.Nodes[0].ServiceProtocol != model.ChallengeTargetProtocolTCP {
+					t.Fatalf("expected tcp topology node, got %+v", req.Nodes[0])
+				}
+				return &practiceports.TopologyCreateResult{
+					PrimaryContainerID: "pwn-ctr",
+					NetworkID:          "pwn-net",
+					AccessURL:          fmt.Sprintf("tcp://%s", listener.Addr().String()),
+					RuntimeDetails: model.InstanceRuntimeDetails{
+						Containers: []model.InstanceRuntimeContainer{
+							{
+								NodeKey:         "default",
+								ContainerID:     "pwn-ctr",
+								ServicePort:     8080,
+								ServiceProtocol: model.ChallengeTargetProtocolTCP,
+								IsEntryPoint:    true,
+								NetworkKeys:     []string{model.TopologyDefaultNetworkKey},
+							},
+						},
+					},
+				}, nil
+			},
+		},
+		nil,
+		nil,
+		nil,
+		&config.Config{Container: config.ContainerConfig{PublicHost: "127.0.0.1", CreateTimeout: time.Second, StartProbeTimeout: 50 * time.Millisecond, StartProbeInterval: 10 * time.Millisecond, StartProbeAttempts: 2}},
+		nil,
+	)
+
+	instance := &model.Instance{ID: 952, ChallengeID: 2052, HostPort: 0, Status: model.InstanceStatusCreating}
+	challenge := &model.Challenge{
+		ID:             2052,
+		ImageID:        301,
+		Status:         model.ChallengeStatusPublished,
+		FlagType:       model.FlagTypeStatic,
+		FlagHash:       "flag{ok}",
+		TargetProtocol: model.ChallengeTargetProtocolTCP,
+	}
+
+	if err := service.provisionInstance(context.Background(), instance, challenge, nil, "flag{ok}"); err != nil {
+		t.Fatalf("provisionInstance() error = %v", err)
+	}
+	select {
+	case <-accepted:
+	case <-time.After(time.Second):
+		t.Fatal("expected tcp readiness probe to connect")
+	}
+}
+
+func TestCreateSingleAWDContainerUsesPrivateTopology(t *testing.T) {
+	t.Parallel()
+
+	db := newPracticeCommandTestDB(t)
+	now := time.Now()
+	if err := db.Create(&model.Image{
+		ID:        501,
+		Name:      "ctf/awd-web",
+		Tag:       "v1",
+		Status:    model.ImageStatusAvailable,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}).Error; err != nil {
+		t.Fatalf("create image: %v", err)
+	}
+
+	contestID := int64(7001)
+	serviceID := int64(8001)
+	var createTopologyCalled bool
+	service := &Service{
+		imageRepo: challengeinfra.NewImageRepository(db),
+		runtimeService: &stubPracticeRuntimeService{
+			createTopologyFn: func(ctx context.Context, req *practiceports.TopologyCreateRequest) (*practiceports.TopologyCreateResult, error) {
+				createTopologyCalled = true
+				if req.ReservedHostPort != 0 {
+					t.Fatalf("expected no reserved host port, got %d", req.ReservedHostPort)
+				}
+				if !req.DisableEntryPortPublishing {
+					t.Fatal("expected entry port publishing to be disabled")
+				}
+				if len(req.Nodes) != 1 || !req.Nodes[0].IsEntryPoint || req.Nodes[0].Image != "ctf/awd-web:v1" {
+					t.Fatalf("unexpected topology request: %+v", req)
+				}
+				return &practiceports.TopologyCreateResult{
+					PrimaryContainerID: "awd-private-ctr",
+					NetworkID:          "awd-private-net",
+					AccessURL:          "http://172.30.0.10:8080",
+					RuntimeDetails: model.InstanceRuntimeDetails{
+						Containers: []model.InstanceRuntimeContainer{
+							{
+								NodeKey:      "default",
+								ContainerID:  "awd-private-ctr",
+								ServicePort:  8080,
+								IsEntryPoint: true,
+							},
+						},
+					},
+				}, nil
+			},
+			createContainerFn: func(ctx context.Context, imageName string, env map[string]string, reservedHostPort int) (string, string, int, int, error) {
+				t.Fatal("AWD service instances must not use host-port CreateContainer")
+				return "", "", 0, 0, nil
+			},
+		},
+	}
+	instance := &model.Instance{
+		ID:          9001,
+		ContestID:   &contestID,
+		ServiceID:   &serviceID,
+		ChallengeID: 501,
+	}
+	challenge := &model.Challenge{
+		ID:       501,
+		ImageID:  501,
+		FlagType: model.FlagTypeStatic,
+	}
+
+	if err := service.createSingleContainer(context.Background(), instance, challenge, "flag{demo}"); err != nil {
+		t.Fatalf("createSingleContainer() error = %v", err)
+	}
+	if !createTopologyCalled {
+		t.Fatal("expected private topology creation")
+	}
+	if instance.HostPort != 0 {
+		t.Fatalf("expected instance host port to remain empty, got %d", instance.HostPort)
+	}
+	if instance.AccessURL != "http://172.30.0.10:8080" {
+		t.Fatalf("unexpected access url: %s", instance.AccessURL)
+	}
+}
+
+func TestProvisionInstanceMarksInstanceFailedWithContext(t *testing.T) {
+	t.Parallel()
+
+	db := newPracticeCommandTestDB(t)
+	now := time.Now()
+	if err := db.Create(&model.Image{
+		ID:        105,
+		Name:      "ctf/web",
+		Tag:       "v1",
+		Status:    model.ImageStatusAvailable,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}).Error; err != nil {
+		t.Fatalf("create image: %v", err)
+	}
+
+	ctxKey := practiceServiceContextKey("mark-failed")
+	const expectedCtxValue = "practice-provision-failure"
+
+	var markedFailed atomic.Int32
+	service := NewService(
+		nil,
+		nil,
+		challengeinfra.NewImageRepository(db),
+		&stubPracticeInstanceStore{
+			updateStatusAndReleasePortWithContextFn: func(ctx context.Context, id int64, status string) error {
+				markedFailed.Add(1)
+				if got := ctx.Value(ctxKey); got != expectedCtxValue {
+					t.Fatalf("expected failed status update ctx value %v, got %v", expectedCtxValue, got)
+				}
+				if id != 611 {
+					t.Fatalf("expected failed instance id 611, got %d", id)
+				}
+				if status != model.InstanceStatusFailed {
+					t.Fatalf("expected failed instance status %s, got %s", model.InstanceStatusFailed, status)
+				}
+				return nil
+			},
+		},
+		&stubPracticeRuntimeService{
+			createContainerFn: func(ctx context.Context, imageName string, env map[string]string, reservedHostPort int) (string, string, int, int, error) {
+				if got := ctx.Value(ctxKey); got != expectedCtxValue {
+					t.Fatalf("expected create container ctx value %v, got %v", expectedCtxValue, got)
+				}
+				return "ctr-ctx", "net-ctx", reservedHostPort, 8080, nil
+			},
+		},
+		nil,
+		nil,
+		nil,
+		&config.Config{
+			Container: config.ContainerConfig{
+				PublicHost:         "127.0.0.1",
+				CreateTimeout:      time.Second,
+				StartProbeTimeout:  20 * time.Millisecond,
+				StartProbeInterval: 10 * time.Millisecond,
+				StartProbeAttempts: 1,
+			},
+		},
+		nil,
+	)
+
+	instance := &model.Instance{ID: 611, ChallengeID: 711, HostPort: reserveClosedLoopbackPort(t), Status: model.InstanceStatusCreating}
+	challenge := &model.Challenge{ID: 711, ImageID: 105, Status: model.ChallengeStatusPublished}
+	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
+
+	err := service.provisionInstance(ctx, instance, challenge, nil, "flag{ctx}")
+	if err == nil || err.Error() != errcode.ErrContainerStartFailed.Error() {
+		t.Fatalf("expected container start failed error, got %v", err)
+	}
+	if markedFailed.Load() != 1 {
+		t.Fatalf("expected failed status update once, got %d", markedFailed.Load())
 	}
 }
 
@@ -1615,13 +2171,13 @@ func TestRunProvisioningLoopLeavesOverflowPendingWhenGlobalCapacityReached(t *te
 		nil,
 	)
 
-	first, err := service.StartChallengeWithContext(context.Background(), 51, 203)
+	first, err := service.StartChallenge(context.Background(), 51, 203)
 	if err != nil {
-		t.Fatalf("StartChallengeWithContext() first error = %v", err)
+		t.Fatalf("StartChallenge() first error = %v", err)
 	}
-	second, err := service.StartChallengeWithContext(context.Background(), 52, 204)
+	second, err := service.StartChallenge(context.Background(), 52, 204)
 	if err != nil {
-		t.Fatalf("StartChallengeWithContext() second error = %v", err)
+		t.Fatalf("StartChallenge() second error = %v", err)
 	}
 
 	runCtx, cancel := context.WithCancel(context.Background())
@@ -1659,4 +2215,1097 @@ func TestRunProvisioningLoopLeavesOverflowPendingWhenGlobalCapacityReached(t *te
 	}
 
 	close(release)
+}
+
+type practiceServiceContextKey string
+
+func TestStartChallengePropagatesContextToTransactionalRepositoryWhenReusingSharedInstance(t *testing.T) {
+	t.Parallel()
+
+	ctxKey := practiceServiceContextKey("tx-reuse")
+	expectedCtxValue := "ctx-tx-reuse"
+	lockCalled := false
+	findExistingCalled := false
+	refreshCalled := false
+	service := NewService(
+		&stubPracticeRepository{
+			lockInstanceScopeFn: func(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) error {
+				lockCalled = true
+				if got := ctx.Value(ctxKey); got != expectedCtxValue {
+					t.Fatalf("expected lock ctx value %v, got %v", expectedCtxValue, got)
+				}
+				return nil
+			},
+			findScopedExistingInstanceFn: func(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) (*model.Instance, error) {
+				findExistingCalled = true
+				if got := ctx.Value(ctxKey); got != expectedCtxValue {
+					t.Fatalf("expected find-existing ctx value %v, got %v", expectedCtxValue, got)
+				}
+				return &model.Instance{ID: 901, UserID: 7, ChallengeID: challengeID, ShareScope: model.InstanceSharingShared, Status: model.InstanceStatusRunning, ExpiresAt: time.Now().Add(5 * time.Minute), MaxExtends: 2}, nil
+			},
+			refreshInstanceExpiryFn: func(instanceID int64, expiresAt time.Time) error {
+				t.Fatalf("expected context-aware expiry refresh, got legacy call")
+				return nil
+			},
+			refreshInstanceExpiryWithContextFn: func(ctx context.Context, instanceID int64, expiresAt time.Time) error {
+				refreshCalled = true
+				if got := ctx.Value(ctxKey); got != expectedCtxValue {
+					t.Fatalf("expected refresh ctx value %v, got %v", expectedCtxValue, got)
+				}
+				return nil
+			},
+		},
+		&stubPracticeChallengeContract{
+			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+				return &model.Challenge{ID: id, ImageID: 1, Status: model.ChallengeStatusPublished, FlagType: model.FlagTypeStatic, FlagHash: "flag{shared}", InstanceSharing: model.InstanceSharingShared}, nil
+			},
+			findChallengeTopologyByChallengeIDFn: func(context.Context, int64) (*model.ChallengeTopology, error) {
+				return nil, nil
+			},
+		},
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		&config.Config{Container: config.ContainerConfig{DefaultTTL: time.Hour, MaxConcurrentPerUser: 3}},
+		nil,
+	)
+
+	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
+	resp, err := service.StartChallenge(ctx, 7, 11)
+	if err != nil {
+		t.Fatalf("StartChallenge() error = %v", err)
+	}
+	if resp == nil || resp.ID != 901 {
+		t.Fatalf("expected reused instance 901, got %+v", resp)
+	}
+	if !lockCalled || !findExistingCalled || !refreshCalled {
+		t.Fatalf("expected lock/find/refresh to be called, got lock=%v find=%v refresh=%v", lockCalled, findExistingCalled, refreshCalled)
+	}
+}
+
+func TestStartChallengePropagatesContextToTransactionalRepositoryWhenCreatingInstance(t *testing.T) {
+	t.Parallel()
+
+	ctxKey := practiceServiceContextKey("tx-create")
+	expectedCtxValue := "ctx-tx-create"
+	countCalled := false
+	reserveCalled := false
+	createCalled := false
+	bindCalled := false
+	service := NewService(
+		&stubPracticeRepository{
+			lockInstanceScopeFn: func(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) error {
+				if got := ctx.Value(ctxKey); got != expectedCtxValue {
+					t.Fatalf("expected lock ctx value %v, got %v", expectedCtxValue, got)
+				}
+				return nil
+			},
+			findScopedExistingInstanceFn: func(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) (*model.Instance, error) {
+				if got := ctx.Value(ctxKey); got != expectedCtxValue {
+					t.Fatalf("expected find-existing ctx value %v, got %v", expectedCtxValue, got)
+				}
+				return nil, nil
+			},
+			countScopedRunningInstancesFn: func(ctx context.Context, userID int64, scope practiceports.InstanceScope) (int, error) {
+				countCalled = true
+				if got := ctx.Value(ctxKey); got != expectedCtxValue {
+					t.Fatalf("expected count ctx value %v, got %v", expectedCtxValue, got)
+				}
+				return 0, nil
+			},
+			reserveAvailablePortFn: func(ctx context.Context, start, end int) (int, error) {
+				reserveCalled = true
+				if got := ctx.Value(ctxKey); got != expectedCtxValue {
+					t.Fatalf("expected reserve-port ctx value %v, got %v", expectedCtxValue, got)
+				}
+				return 30007, nil
+			},
+			createInstanceFn: func(ctx context.Context, instance *model.Instance) error {
+				createCalled = true
+				if got := ctx.Value(ctxKey); got != expectedCtxValue {
+					t.Fatalf("expected create-instance ctx value %v, got %v", expectedCtxValue, got)
+				}
+				instance.ID = 902
+				return nil
+			},
+			bindReservedPortFn: func(ctx context.Context, port int, instanceID int64) error {
+				bindCalled = true
+				if got := ctx.Value(ctxKey); got != expectedCtxValue {
+					t.Fatalf("expected bind-port ctx value %v, got %v", expectedCtxValue, got)
+				}
+				if port != 30007 || instanceID != 902 {
+					t.Fatalf("unexpected bind args port=%d instanceID=%d", port, instanceID)
+				}
+				return nil
+			},
+		},
+		&stubPracticeChallengeContract{
+			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+				return &model.Challenge{ID: id, ImageID: 1, Status: model.ChallengeStatusPublished, FlagType: model.FlagTypeStatic, FlagHash: "flag{new}"}, nil
+			},
+			findChallengeTopologyByChallengeIDFn: func(context.Context, int64) (*model.ChallengeTopology, error) {
+				return nil, nil
+			},
+		},
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		&config.Config{Container: config.ContainerConfig{DefaultTTL: time.Hour, MaxConcurrentPerUser: 3, MaxExtends: 2, Scheduler: config.ContainerSchedulerConfig{Enabled: true}}},
+		nil,
+	)
+
+	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
+	resp, err := service.StartChallenge(ctx, 7, 11)
+	if err != nil {
+		t.Fatalf("StartChallenge() error = %v", err)
+	}
+	if resp == nil || resp.ID != 902 {
+		t.Fatalf("expected created instance 902, got %+v", resp)
+	}
+	if !countCalled || !reserveCalled || !createCalled || !bindCalled {
+		t.Fatalf("expected count/reserve/create/bind to be called, got count=%v reserve=%v create=%v bind=%v", countCalled, reserveCalled, createCalled, bindCalled)
+	}
+}
+
+func TestLoadRuntimeSubjectWithScopePropagatesContextToChallengeContract(t *testing.T) {
+	t.Parallel()
+
+	ctxKey := practiceServiceContextKey("runtime-subject")
+	expectedCtxValue := "ctx-runtime-subject"
+	challengeLookupCalled := false
+	topologyLookupCalled := false
+	service := NewService(
+		nil,
+		&stubPracticeChallengeContract{
+			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+				challengeLookupCalled = true
+				if got := ctx.Value(ctxKey); got != expectedCtxValue {
+					t.Fatalf("expected challenge lookup ctx value %v, got %v", expectedCtxValue, got)
+				}
+				return &model.Challenge{ID: id, Status: model.ChallengeStatusPublished}, nil
+			},
+			findChallengeTopologyByChallengeIDFn: func(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error) {
+				topologyLookupCalled = true
+				if got := ctx.Value(ctxKey); got != expectedCtxValue {
+					t.Fatalf("expected topology lookup ctx value %v, got %v", expectedCtxValue, got)
+				}
+				return nil, nil
+			},
+		},
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		&config.Config{},
+		nil,
+	)
+
+	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
+	challenge, topology, err := service.loadRuntimeSubjectWithScope(ctx, practiceports.InstanceScope{}, 42)
+	if err != nil {
+		t.Fatalf("loadRuntimeSubjectWithScope() error = %v", err)
+	}
+	if challenge == nil || challenge.ID != 42 {
+		t.Fatalf("expected challenge 42, got %+v", challenge)
+	}
+	if topology != nil {
+		t.Fatalf("expected nil topology, got %+v", topology)
+	}
+	if !challengeLookupCalled {
+		t.Fatal("expected challenge lookup to be called")
+	}
+	if !topologyLookupCalled {
+		t.Fatal("expected topology lookup to be called")
+	}
+}
+
+func TestBuildTopologyCreateRequestPropagatesContextToImageRepository(t *testing.T) {
+	t.Parallel()
+
+	ctxKey := practiceServiceContextKey("topology-image")
+	expectedCtxValue := "ctx-topology-image"
+	lookups := make([]int64, 0, 2)
+	service := &Service{
+		imageRepo: &stubPracticeImageStore{
+			findByIDFn: func(ctx context.Context, id int64) (*model.Image, error) {
+				if got := ctx.Value(ctxKey); got != expectedCtxValue {
+					t.Fatalf("expected image lookup ctx value %v, got %v", expectedCtxValue, got)
+				}
+				lookups = append(lookups, id)
+				return &model.Image{ID: id, Name: fmt.Sprintf("repo/%d", id), Tag: "latest", Status: model.ImageStatusAvailable}, nil
+			},
+		},
+		config: &config.Config{},
+	}
+
+	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
+	request, err := service.buildTopologyCreateRequest(ctx, 30001, false, &model.Challenge{ImageID: 1}, "web", model.TopologySpec{
+		Nodes: []model.TopologyNode{
+			{Key: "web", Name: "Web", ServicePort: 8080},
+			{Key: "worker", Name: "Worker", ImageID: 2, ServicePort: 9000},
+		},
+	}, "flag{ctx-image}")
+	if err != nil {
+		t.Fatalf("buildTopologyCreateRequest() error = %v", err)
+	}
+	if len(request.Nodes) != 2 {
+		t.Fatalf("expected 2 nodes, got %+v", request.Nodes)
+	}
+	if len(lookups) != 2 || lookups[0] != 1 || lookups[1] != 2 {
+		t.Fatalf("expected image lookups [1 2], got %v", lookups)
+	}
+}
+
+func TestSubmitFlagPropagatesContextToRepository(t *testing.T) {
+	t.Parallel()
+
+	ctxKey := practiceServiceContextKey("submit")
+	expectedCtxValue := "ctx-submit-flag"
+	redisServer := miniredis.RunT(t)
+	redisClient := redis.NewClient(&redis.Options{Addr: redisServer.Addr()})
+	defer redisClient.Close()
+	flagSalt := "context-submit-salt"
+
+	findCorrectCalled := false
+	createSubmissionCalled := false
+	challengeLookupCalled := false
+	repo := &stubPracticeRepository{
+		findCorrectSubmissionFn: func(ctx context.Context, userID, challengeID int64) (*model.Submission, error) {
+			findCorrectCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected find-correct ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return nil, gorm.ErrRecordNotFound
+		},
+		createSubmissionFn: func(ctx context.Context, submission *model.Submission) error {
+			createSubmissionCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected create-submission ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return nil
+		},
+	}
+	service := NewService(
+		repo,
+		&stubPracticeChallengeContract{
+			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+				challengeLookupCalled = true
+				if got := ctx.Value(ctxKey); got != expectedCtxValue {
+					t.Fatalf("expected challenge lookup ctx value %v, got %v", expectedCtxValue, got)
+				}
+				return &model.Challenge{
+					ID:       id,
+					Category: model.DimensionWeb,
+					Points:   100,
+					Status:   model.ChallengeStatusPublished,
+					FlagType: model.FlagTypeStatic,
+					FlagSalt: flagSalt,
+					FlagHash: flagcrypto.HashStaticFlag("flag{ctx-submit}", flagSalt),
+				}, nil
+			},
+		},
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		redisClient,
+		&config.Config{
+			RateLimit: config.RateLimitConfig{
+				RedisKeyPrefix: "practice:test",
+				FlagSubmit: config.RateLimitPolicyConfig{
+					Limit:  5,
+					Window: time.Minute,
+				},
+			},
+		},
+		nil,
+	)
+
+	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
+	if _, err := service.SubmitFlag(ctx, 7, 11, "flag{ctx-submit}"); err != nil {
+		t.Fatalf("SubmitFlag() error = %v", err)
+	}
+	if !challengeLookupCalled {
+		t.Fatal("expected challenge lookup to be called")
+	}
+	if !findCorrectCalled {
+		t.Fatal("expected find correct submission repository to be called")
+	}
+	if !createSubmissionCalled {
+		t.Fatal("expected create submission repository to be called")
+	}
+}
+
+func TestReviewManualReviewSubmissionPropagatesContextToRepository(t *testing.T) {
+	t.Parallel()
+
+	ctxKey := practiceServiceContextKey("review")
+	expectedCtxValue := "ctx-review-manual"
+	now := time.Now()
+	updatedCalled := false
+	findRequesterCalled := false
+	findRecordCalled := false
+	challengeLookupCalled := false
+	repo := &stubPracticeRepository{
+		getTeacherManualReviewSubmissionByIDFn: func(ctx context.Context, id int64) (*practiceports.TeacherManualReviewSubmissionRecord, error) {
+			findRecordCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected get-review-record ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return &practiceports.TeacherManualReviewSubmissionRecord{
+				Submission: model.Submission{
+					ID:           id,
+					UserID:       88,
+					ChallengeID:  11,
+					Flag:         "answer",
+					ReviewStatus: model.SubmissionReviewStatusPending,
+					SubmittedAt:  now,
+					UpdatedAt:    now,
+				},
+				StudentUsername: "student88",
+				StudentName:     "Student 88",
+				ClassName:       "Class A",
+				ChallengeTitle:  "manual challenge",
+			}, nil
+		},
+		findUserByIDFn: func(ctx context.Context, userID int64) (*model.User, error) {
+			findRequesterCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected find-user ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return &model.User{ID: userID, Role: model.RoleTeacher, ClassName: "Class A"}, nil
+		},
+		updateSubmissionFn: func(ctx context.Context, submission *model.Submission) error {
+			updatedCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected update-submission ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return nil
+		},
+	}
+	service := NewService(
+		repo,
+		&stubPracticeChallengeContract{
+			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+				challengeLookupCalled = true
+				if got := ctx.Value(ctxKey); got != expectedCtxValue {
+					t.Fatalf("expected challenge lookup ctx value %v, got %v", expectedCtxValue, got)
+				}
+				return &model.Challenge{
+					ID:       id,
+					Category: model.DimensionWeb,
+					Points:   120,
+					Status:   model.ChallengeStatusPublished,
+					FlagType: model.FlagTypeManualReview,
+				}, nil
+			},
+		},
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		&config.Config{},
+		nil,
+	)
+
+	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
+	if _, err := service.ReviewManualReviewSubmission(
+		ctx,
+		91,
+		1001,
+		model.RoleTeacher,
+		&dto.ReviewManualReviewSubmissionReq{ReviewStatus: model.SubmissionReviewStatusApproved},
+	); err != nil {
+		t.Fatalf("ReviewManualReviewSubmission() error = %v", err)
+	}
+	if !findRecordCalled {
+		t.Fatal("expected review record repository to be called")
+	}
+	if !findRequesterCalled {
+		t.Fatal("expected requester repository to be called")
+	}
+	if !challengeLookupCalled {
+		t.Fatal("expected challenge lookup to be called")
+	}
+	if !updatedCalled {
+		t.Fatal("expected update submission repository to be called")
+	}
+}
+
+func TestListTeacherManualReviewSubmissionsPropagatesContextToRepository(t *testing.T) {
+	t.Parallel()
+
+	ctxKey := practiceServiceContextKey("list-review")
+	expectedCtxValue := "ctx-list-review"
+	listCalled := false
+	repo := &stubPracticeRepository{
+		findUserByIDFn: func(ctx context.Context, userID int64) (*model.User, error) {
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected find-user ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return &model.User{ID: userID, Role: model.RoleTeacher, ClassName: "Class A"}, nil
+		},
+		listTeacherManualReviewSubmissionsFn: func(ctx context.Context, query *dto.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error) {
+			listCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected list-review ctx value %v, got %v", expectedCtxValue, got)
+			}
+			if query.ClassName != "Class A" {
+				t.Fatalf("expected normalized class name, got %+v", query)
+			}
+			return []practiceports.TeacherManualReviewSubmissionRecord{}, 0, nil
+		},
+	}
+	service := NewService(repo, nil, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
+
+	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
+	if _, err := service.ListTeacherManualReviewSubmissions(ctx, 1001, model.RoleTeacher, &dto.TeacherManualReviewSubmissionQuery{}); err != nil {
+		t.Fatalf("ListTeacherManualReviewSubmissions() error = %v", err)
+	}
+	if !listCalled {
+		t.Fatal("expected list manual review repository to be called")
+	}
+}
+
+func TestListTeacherManualReviewSubmissionsRejectsStudentRole(t *testing.T) {
+	t.Parallel()
+
+	repo := &stubPracticeRepository{
+		findUserByIDFn: func(ctx context.Context, userID int64) (*model.User, error) {
+			t.Fatal("did not expect requester lookup for student role")
+			return nil, nil
+		},
+		listTeacherManualReviewSubmissionsFn: func(ctx context.Context, query *dto.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error) {
+			t.Fatal("did not expect list repository call for student role")
+			return nil, 0, nil
+		},
+	}
+	service := NewService(repo, nil, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
+
+	_, err := service.ListTeacherManualReviewSubmissions(context.Background(), 1001, model.RoleStudent, &dto.TeacherManualReviewSubmissionQuery{})
+	if err == nil {
+		t.Fatal("expected student role to be rejected")
+	}
+	var appErr *errcode.AppError
+	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrForbidden.Code {
+		t.Fatalf("expected forbidden error, got %v", err)
+	}
+}
+
+func TestListTeacherManualReviewSubmissionsRejectsInvalidReviewStatus(t *testing.T) {
+	t.Parallel()
+
+	repo := &stubPracticeRepository{
+		findUserByIDFn: func(ctx context.Context, userID int64) (*model.User, error) {
+			t.Fatal("did not expect requester lookup for invalid review status")
+			return nil, nil
+		},
+		listTeacherManualReviewSubmissionsFn: func(ctx context.Context, query *dto.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error) {
+			t.Fatal("did not expect list repository call for invalid review status")
+			return nil, 0, nil
+		},
+	}
+	service := NewService(repo, nil, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
+
+	_, err := service.ListTeacherManualReviewSubmissions(
+		context.Background(),
+		1001,
+		model.RoleTeacher,
+		&dto.TeacherManualReviewSubmissionQuery{ReviewStatus: "archived"},
+	)
+	if err == nil {
+		t.Fatal("expected invalid review status to be rejected")
+	}
+	var appErr *errcode.AppError
+	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrInvalidParams.Code {
+		t.Fatalf("expected invalid params error, got %v", err)
+	}
+}
+
+func TestListTeacherManualReviewSubmissionsRejectsOversizedPageSize(t *testing.T) {
+	t.Parallel()
+
+	repo := &stubPracticeRepository{
+		findUserByIDFn: func(ctx context.Context, userID int64) (*model.User, error) {
+			t.Fatal("did not expect requester lookup for oversized page size")
+			return nil, nil
+		},
+		listTeacherManualReviewSubmissionsFn: func(ctx context.Context, query *dto.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error) {
+			t.Fatal("did not expect list repository call for oversized page size")
+			return nil, 0, nil
+		},
+	}
+	service := NewService(repo, nil, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
+
+	_, err := service.ListTeacherManualReviewSubmissions(
+		context.Background(),
+		1001,
+		model.RoleTeacher,
+		&dto.TeacherManualReviewSubmissionQuery{Size: 101},
+	)
+	if err == nil {
+		t.Fatal("expected oversized page size to be rejected")
+	}
+	var appErr *errcode.AppError
+	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrInvalidParams.Code {
+		t.Fatalf("expected invalid params error, got %v", err)
+	}
+}
+
+func TestListTeacherManualReviewSubmissionsRejectsNonPositiveStudentID(t *testing.T) {
+	t.Parallel()
+
+	repo := &stubPracticeRepository{
+		findUserByIDFn: func(ctx context.Context, userID int64) (*model.User, error) {
+			t.Fatal("did not expect requester lookup for non-positive student id")
+			return nil, nil
+		},
+		listTeacherManualReviewSubmissionsFn: func(ctx context.Context, query *dto.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error) {
+			t.Fatal("did not expect list repository call for non-positive student id")
+			return nil, 0, nil
+		},
+	}
+	service := NewService(repo, nil, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
+	studentID := int64(0)
+
+	_, err := service.ListTeacherManualReviewSubmissions(
+		context.Background(),
+		1001,
+		model.RoleTeacher,
+		&dto.TeacherManualReviewSubmissionQuery{StudentID: &studentID},
+	)
+	if err == nil {
+		t.Fatal("expected non-positive student id to be rejected")
+	}
+	var appErr *errcode.AppError
+	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrInvalidParams.Code {
+		t.Fatalf("expected invalid params error, got %v", err)
+	}
+}
+
+func TestListTeacherManualReviewSubmissionsRejectsNonPositiveChallengeID(t *testing.T) {
+	t.Parallel()
+
+	repo := &stubPracticeRepository{
+		findUserByIDFn: func(ctx context.Context, userID int64) (*model.User, error) {
+			t.Fatal("did not expect requester lookup for non-positive challenge id")
+			return nil, nil
+		},
+		listTeacherManualReviewSubmissionsFn: func(ctx context.Context, query *dto.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error) {
+			t.Fatal("did not expect list repository call for non-positive challenge id")
+			return nil, 0, nil
+		},
+	}
+	service := NewService(repo, nil, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
+	challengeID := int64(0)
+
+	_, err := service.ListTeacherManualReviewSubmissions(
+		context.Background(),
+		1001,
+		model.RoleTeacher,
+		&dto.TeacherManualReviewSubmissionQuery{ChallengeID: &challengeID},
+	)
+	if err == nil {
+		t.Fatal("expected non-positive challenge id to be rejected")
+	}
+	var appErr *errcode.AppError
+	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrInvalidParams.Code {
+		t.Fatalf("expected invalid params error, got %v", err)
+	}
+}
+
+func TestListTeacherManualReviewSubmissionsRejectsOversizedClassName(t *testing.T) {
+	t.Parallel()
+
+	repo := &stubPracticeRepository{
+		findUserByIDFn: func(ctx context.Context, userID int64) (*model.User, error) {
+			t.Fatal("did not expect requester lookup for oversized class name")
+			return nil, nil
+		},
+		listTeacherManualReviewSubmissionsFn: func(ctx context.Context, query *dto.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error) {
+			t.Fatal("did not expect list repository call for oversized class name")
+			return nil, 0, nil
+		},
+	}
+	service := NewService(repo, nil, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
+
+	_, err := service.ListTeacherManualReviewSubmissions(
+		context.Background(),
+		1001,
+		model.RoleAdmin,
+		&dto.TeacherManualReviewSubmissionQuery{ClassName: strings.Repeat("A", 129)},
+	)
+	if err == nil {
+		t.Fatal("expected oversized class name to be rejected")
+	}
+	var appErr *errcode.AppError
+	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrInvalidParams.Code {
+		t.Fatalf("expected invalid params error, got %v", err)
+	}
+}
+
+func TestGetTeacherManualReviewSubmissionPropagatesContextToRepository(t *testing.T) {
+	t.Parallel()
+
+	ctxKey := practiceServiceContextKey("get-review")
+	expectedCtxValue := "ctx-get-review"
+	now := time.Now()
+	getCalled := false
+	findRequesterCalled := false
+	repo := &stubPracticeRepository{
+		getTeacherManualReviewSubmissionByIDFn: func(ctx context.Context, id int64) (*practiceports.TeacherManualReviewSubmissionRecord, error) {
+			getCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected get-review ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return &practiceports.TeacherManualReviewSubmissionRecord{
+				Submission:      model.Submission{ID: id, UserID: 88, ChallengeID: 11, ReviewStatus: model.SubmissionReviewStatusPending, SubmittedAt: now, UpdatedAt: now},
+				StudentUsername: "student88",
+				StudentName:     "Student 88",
+				ClassName:       "Class A",
+				ChallengeTitle:  "manual challenge",
+			}, nil
+		},
+		findUserByIDFn: func(ctx context.Context, userID int64) (*model.User, error) {
+			findRequesterCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected find-user ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return &model.User{ID: userID, Role: model.RoleTeacher, ClassName: "Class A"}, nil
+		},
+	}
+	service := NewService(repo, nil, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
+
+	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
+	if _, err := service.GetTeacherManualReviewSubmission(ctx, 91, 1001, model.RoleTeacher); err != nil {
+		t.Fatalf("GetTeacherManualReviewSubmission() error = %v", err)
+	}
+	if !getCalled {
+		t.Fatal("expected get manual review repository to be called")
+	}
+	if !findRequesterCalled {
+		t.Fatal("expected requester repository to be called")
+	}
+}
+
+func TestGetTeacherManualReviewSubmissionRejectsStudentRole(t *testing.T) {
+	t.Parallel()
+
+	repo := &stubPracticeRepository{
+		getTeacherManualReviewSubmissionByIDFn: func(ctx context.Context, id int64) (*practiceports.TeacherManualReviewSubmissionRecord, error) {
+			t.Fatal("did not expect get repository call for student role")
+			return nil, nil
+		},
+		findUserByIDFn: func(ctx context.Context, userID int64) (*model.User, error) {
+			t.Fatal("did not expect requester lookup for student role")
+			return nil, nil
+		},
+	}
+	service := NewService(repo, nil, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
+
+	_, err := service.GetTeacherManualReviewSubmission(context.Background(), 91, 1001, model.RoleStudent)
+	if err == nil {
+		t.Fatal("expected student role to be rejected")
+	}
+	var appErr *errcode.AppError
+	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrForbidden.Code {
+		t.Fatalf("expected forbidden error, got %v", err)
+	}
+}
+
+func TestReviewManualReviewSubmissionRejectsStudentRole(t *testing.T) {
+	t.Parallel()
+
+	repo := &stubPracticeRepository{
+		getTeacherManualReviewSubmissionByIDFn: func(ctx context.Context, id int64) (*practiceports.TeacherManualReviewSubmissionRecord, error) {
+			t.Fatal("did not expect review record lookup for student role")
+			return nil, nil
+		},
+		findUserByIDFn: func(ctx context.Context, userID int64) (*model.User, error) {
+			t.Fatal("did not expect requester lookup for student role")
+			return nil, nil
+		},
+		updateSubmissionFn: func(ctx context.Context, submission *model.Submission) error {
+			t.Fatal("did not expect submission update for student role")
+			return nil
+		},
+	}
+	service := NewService(repo, nil, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
+
+	_, err := service.ReviewManualReviewSubmission(
+		context.Background(),
+		91,
+		1001,
+		model.RoleStudent,
+		&dto.ReviewManualReviewSubmissionReq{ReviewStatus: model.SubmissionReviewStatusApproved},
+	)
+	if err == nil {
+		t.Fatal("expected student role to be rejected")
+	}
+	var appErr *errcode.AppError
+	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrForbidden.Code {
+		t.Fatalf("expected forbidden error, got %v", err)
+	}
+}
+
+func TestReviewManualReviewSubmissionRejectsInvalidReviewStatus(t *testing.T) {
+	t.Parallel()
+
+	repo := &stubPracticeRepository{
+		getTeacherManualReviewSubmissionByIDFn: func(ctx context.Context, id int64) (*practiceports.TeacherManualReviewSubmissionRecord, error) {
+			t.Fatal("did not expect review record lookup for invalid review status")
+			return nil, nil
+		},
+		findUserByIDFn: func(ctx context.Context, userID int64) (*model.User, error) {
+			t.Fatal("did not expect requester lookup for invalid review status")
+			return nil, nil
+		},
+		updateSubmissionFn: func(ctx context.Context, submission *model.Submission) error {
+			t.Fatal("did not expect submission update for invalid review status")
+			return nil
+		},
+	}
+	service := NewService(repo, nil, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
+
+	_, err := service.ReviewManualReviewSubmission(
+		context.Background(),
+		91,
+		1001,
+		model.RoleTeacher,
+		&dto.ReviewManualReviewSubmissionReq{ReviewStatus: model.SubmissionReviewStatusPending},
+	)
+	if err == nil {
+		t.Fatal("expected invalid review status to be rejected")
+	}
+	var appErr *errcode.AppError
+	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrInvalidParams.Code {
+		t.Fatalf("expected invalid params error, got %v", err)
+	}
+}
+
+func TestReviewManualReviewSubmissionRejectsOversizedReviewComment(t *testing.T) {
+	t.Parallel()
+
+	repo := &stubPracticeRepository{
+		getTeacherManualReviewSubmissionByIDFn: func(ctx context.Context, id int64) (*practiceports.TeacherManualReviewSubmissionRecord, error) {
+			t.Fatal("did not expect review record lookup for oversized review comment")
+			return nil, nil
+		},
+		findUserByIDFn: func(ctx context.Context, userID int64) (*model.User, error) {
+			t.Fatal("did not expect requester lookup for oversized review comment")
+			return nil, nil
+		},
+		updateSubmissionFn: func(ctx context.Context, submission *model.Submission) error {
+			t.Fatal("did not expect submission update for oversized review comment")
+			return nil
+		},
+	}
+	service := NewService(repo, nil, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
+
+	_, err := service.ReviewManualReviewSubmission(
+		context.Background(),
+		91,
+		1001,
+		model.RoleTeacher,
+		&dto.ReviewManualReviewSubmissionReq{
+			ReviewStatus:  model.SubmissionReviewStatusApproved,
+			ReviewComment: strings.Repeat("a", 4001),
+		},
+	)
+	if err == nil {
+		t.Fatal("expected oversized review comment to be rejected")
+	}
+	var appErr *errcode.AppError
+	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrInvalidParams.Code {
+		t.Fatalf("expected invalid params error, got %v", err)
+	}
+}
+
+func TestReviewManualReviewSubmissionRejectsApprovalAfterChallengeAlreadySolved(t *testing.T) {
+	t.Parallel()
+
+	now := time.Now()
+	repo := &stubPracticeRepository{
+		getTeacherManualReviewSubmissionByIDFn: func(ctx context.Context, id int64) (*practiceports.TeacherManualReviewSubmissionRecord, error) {
+			return &practiceports.TeacherManualReviewSubmissionRecord{
+				Submission: model.Submission{
+					ID:           id,
+					UserID:       88,
+					ChallengeID:  11,
+					Flag:         "answer",
+					ReviewStatus: model.SubmissionReviewStatusPending,
+					SubmittedAt:  now,
+					UpdatedAt:    now,
+				},
+				StudentUsername: "student88",
+				StudentName:     "Student 88",
+				ClassName:       "Class A",
+				ChallengeTitle:  "manual challenge",
+			}, nil
+		},
+		findUserByIDFn: func(ctx context.Context, userID int64) (*model.User, error) {
+			return &model.User{ID: userID, Role: model.RoleTeacher, ClassName: "Class A"}, nil
+		},
+		findCorrectSubmissionFn: func(ctx context.Context, userID, challengeID int64) (*model.Submission, error) {
+			return &model.Submission{
+				ID:           99,
+				UserID:       userID,
+				ChallengeID:  challengeID,
+				IsCorrect:    true,
+				ReviewStatus: model.SubmissionReviewStatusApproved,
+				SubmittedAt:  now.Add(-time.Minute),
+				UpdatedAt:    now.Add(-time.Minute),
+			}, nil
+		},
+		updateSubmissionFn: func(ctx context.Context, submission *model.Submission) error {
+			t.Fatal("did not expect submission update when challenge already solved")
+			return nil
+		},
+	}
+	service := NewService(
+		repo,
+		&stubPracticeChallengeContract{
+			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+				return &model.Challenge{
+					ID:       id,
+					Category: model.DimensionWeb,
+					Points:   120,
+					Status:   model.ChallengeStatusPublished,
+					FlagType: model.FlagTypeManualReview,
+				}, nil
+			},
+		},
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		&config.Config{},
+		nil,
+	)
+
+	_, err := service.ReviewManualReviewSubmission(
+		context.Background(),
+		91,
+		1001,
+		model.RoleTeacher,
+		&dto.ReviewManualReviewSubmissionReq{ReviewStatus: model.SubmissionReviewStatusApproved},
+	)
+	if err == nil {
+		t.Fatal("expected already solved approval to be rejected")
+	}
+	var appErr *errcode.AppError
+	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrAlreadySolved.Code {
+		t.Fatalf("expected already solved error, got %v", err)
+	}
+}
+
+func TestListMyChallengeSubmissionsPropagatesContextToRepository(t *testing.T) {
+	t.Parallel()
+
+	ctxKey := practiceServiceContextKey("list-submissions")
+	expectedCtxValue := "ctx-list-submissions"
+	challengeLookupCalled := false
+	listCalled := false
+	service := NewService(
+		&stubPracticeRepository{
+			listChallengeSubmissionsFn: func(ctx context.Context, userID, challengeID int64, limit int) ([]model.Submission, error) {
+				listCalled = true
+				if got := ctx.Value(ctxKey); got != expectedCtxValue {
+					t.Fatalf("expected submission listing ctx value %v, got %v", expectedCtxValue, got)
+				}
+				return []model.Submission{{ID: 1, UserID: userID, ChallengeID: challengeID, SubmittedAt: time.Now()}}, nil
+			},
+		},
+		&stubPracticeChallengeContract{
+			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+				challengeLookupCalled = true
+				if got := ctx.Value(ctxKey); got != expectedCtxValue {
+					t.Fatalf("expected challenge lookup ctx value %v, got %v", expectedCtxValue, got)
+				}
+				return &model.Challenge{ID: id, Status: model.ChallengeStatusPublished}, nil
+			},
+		},
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		&config.Config{},
+		nil,
+	)
+
+	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
+	items, err := service.ListMyChallengeSubmissions(ctx, 7, 11)
+	if err != nil {
+		t.Fatalf("ListMyChallengeSubmissions() error = %v", err)
+	}
+	if len(items) != 1 {
+		t.Fatalf("expected one submission item, got %+v", items)
+	}
+	if !challengeLookupCalled {
+		t.Fatal("expected challenge lookup to be called")
+	}
+	if !listCalled {
+		t.Fatal("expected submission listing to be called")
+	}
+}
+
+func TestSubmitFlagPropagatesContextToDynamicFlagInstanceLookup(t *testing.T) {
+	t.Parallel()
+
+	ctxKey := practiceServiceContextKey("dynamic-flag")
+	expectedCtxValue := "ctx-dynamic-flag"
+	redisServer := miniredis.RunT(t)
+	redisClient := redis.NewClient(&redis.Options{Addr: redisServer.Addr()})
+	defer redisClient.Close()
+	instanceLookupCalled := false
+	instanceStore := &stubPracticeInstanceStore{
+		findByUserAndChallengeWithContextFn: func(ctx context.Context, userID, challengeID int64) (*model.Instance, error) {
+			instanceLookupCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected dynamic flag instance lookup ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return &model.Instance{ID: 301, UserID: userID, ChallengeID: challengeID, Nonce: "nonce-301"}, nil
+		},
+	}
+	service := NewService(
+		&stubPracticeRepository{
+			findCorrectSubmissionFn: func(context.Context, int64, int64) (*model.Submission, error) {
+				return nil, gorm.ErrRecordNotFound
+			},
+			createSubmissionFn: func(context.Context, *model.Submission) error {
+				return nil
+			},
+		},
+		&stubPracticeChallengeContract{
+			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+				return &model.Challenge{
+					ID:         id,
+					Category:   model.DimensionWeb,
+					Points:     100,
+					Status:     model.ChallengeStatusPublished,
+					FlagType:   model.FlagTypeDynamic,
+					FlagPrefix: "flag",
+				}, nil
+			},
+		},
+		nil,
+		instanceStore,
+		nil,
+		nil,
+		nil,
+		redisClient,
+		&config.Config{
+			RateLimit: config.RateLimitConfig{
+				RedisKeyPrefix: "practice:test",
+				FlagSubmit:     config.RateLimitPolicyConfig{Limit: 5, Window: time.Minute},
+			},
+			Container: config.ContainerConfig{FlagGlobalSecret: "12345678901234567890123456789012"},
+		},
+		nil,
+	)
+
+	flag := flagcrypto.GenerateDynamicFlag(7, 11, "12345678901234567890123456789012", "nonce-301", "flag")
+	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
+	if _, err := service.SubmitFlag(ctx, 7, 11, flag); err != nil {
+		t.Fatalf("SubmitFlag() error = %v", err)
+	}
+	if !instanceLookupCalled {
+		t.Fatal("expected dynamic flag instance lookup to be called")
+	}
+}
+
+func TestSubmitFlagPropagatesContextToSolveGraceInstanceUpdates(t *testing.T) {
+	t.Parallel()
+
+	ctxKey := practiceServiceContextKey("solve-grace")
+	expectedCtxValue := "ctx-solve-grace"
+	redisServer := miniredis.RunT(t)
+	redisClient := redis.NewClient(&redis.Options{Addr: redisServer.Addr()})
+	defer redisClient.Close()
+	lookupCalled := false
+	refreshCalled := false
+	instanceStore := &stubPracticeInstanceStore{
+		findByUserAndChallengeWithContextFn: func(ctx context.Context, userID, challengeID int64) (*model.Instance, error) {
+			lookupCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected solve grace lookup ctx value %v, got %v", expectedCtxValue, got)
+			}
+			return &model.Instance{ID: 401, UserID: userID, ChallengeID: challengeID, ShareScope: model.InstanceSharingPerUser, ExpiresAt: time.Now().Add(2 * time.Hour)}, nil
+		},
+		refreshInstanceExpiryWithContextFn: func(ctx context.Context, instanceID int64, expiresAt time.Time) error {
+			refreshCalled = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected solve grace refresh ctx value %v, got %v", expectedCtxValue, got)
+			}
+			if instanceID != 401 {
+				t.Fatalf("unexpected instance id: %d", instanceID)
+			}
+			return nil
+		},
+	}
+	flagSalt := "solve-grace-ctx"
+	service := NewService(
+		&stubPracticeRepository{
+			findCorrectSubmissionFn: func(context.Context, int64, int64) (*model.Submission, error) {
+				return nil, gorm.ErrRecordNotFound
+			},
+			createSubmissionFn: func(context.Context, *model.Submission) error {
+				return nil
+			},
+		},
+		&stubPracticeChallengeContract{
+			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+				return &model.Challenge{
+					ID:              id,
+					Category:        model.DimensionWeb,
+					Points:          100,
+					Status:          model.ChallengeStatusPublished,
+					FlagType:        model.FlagTypeStatic,
+					FlagSalt:        flagSalt,
+					FlagHash:        flagcrypto.HashStaticFlag("flag{solve-grace-ctx}", flagSalt),
+					InstanceSharing: model.InstanceSharingPerUser,
+				}, nil
+			},
+		},
+		nil,
+		instanceStore,
+		nil,
+		nil,
+		nil,
+		redisClient,
+		&config.Config{
+			RateLimit: config.RateLimitConfig{
+				RedisKeyPrefix: "practice:test",
+				FlagSubmit:     config.RateLimitPolicyConfig{Limit: 5, Window: time.Minute},
+			},
+			Container: config.ContainerConfig{SolveGracePeriod: 10 * time.Minute},
+		},
+		nil,
+	)
+
+	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
+	if _, err := service.SubmitFlag(ctx, 7, 11, "flag{solve-grace-ctx}"); err != nil {
+		t.Fatalf("SubmitFlag() error = %v", err)
+	}
+	if !lookupCalled {
+		t.Fatal("expected solve grace instance lookup to be called")
+	}
+	if !refreshCalled {
+		t.Fatal("expected solve grace refresh to be called")
+	}
 }

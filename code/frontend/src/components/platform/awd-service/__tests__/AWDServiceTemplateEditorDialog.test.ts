@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 
 import AWDServiceTemplateEditorDialog from '../AWDServiceTemplateEditorDialog.vue'
 
-const AdminSurfaceModalStub = defineComponent({
+const SlideOverDrawerStub = defineComponent({
   props: {
     open: { type: Boolean, default: false },
     title: { type: String, default: '' },
@@ -42,7 +42,7 @@ describe('AWDServiceTemplateEditorDialog', () => {
       },
       global: {
         stubs: {
-          AdminSurfaceModal: AdminSurfaceModalStub,
+          SlideOverDrawer: SlideOverDrawerStub,
         },
       },
     })

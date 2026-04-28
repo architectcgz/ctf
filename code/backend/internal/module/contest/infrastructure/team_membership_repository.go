@@ -1,6 +1,7 @@
 package infrastructure
 
 import (
+	"context"
 	"time"
 
 	"gorm.io/gorm"
@@ -10,8 +11,8 @@ import (
 	contestdomain "ctf-platform/internal/module/contest/domain"
 )
 
-func (r *TeamRepository) AddMemberWithLock(contestID, teamID, userID int64) error {
-	return r.db.Transaction(func(tx *gorm.DB) error {
+func (r *TeamRepository) AddMemberWithLock(ctx context.Context, contestID, teamID, userID int64) error {
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		var team model.Team
 		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
 			Where("id = ? AND contest_id = ?", teamID, contestID).
@@ -50,8 +51,8 @@ func (r *TeamRepository) AddMemberWithLock(contestID, teamID, userID int64) erro
 	})
 }
 
-func (r *TeamRepository) RemoveMember(teamID, userID int64) error {
-	return r.db.Transaction(func(tx *gorm.DB) error {
+func (r *TeamRepository) RemoveMember(ctx context.Context, teamID, userID int64) error {
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		var team model.Team
 		if err := tx.Where("id = ?", teamID).First(&team).Error; err != nil {
 			return err

@@ -23,7 +23,6 @@ describe('useContestWorkbench', () => {
       'pool',
       'awd-config',
       'preflight',
-      'operations',
     ])
   })
 
@@ -34,7 +33,7 @@ describe('useContestWorkbench', () => {
     expect(result.defaultStage).toBe('basics')
   })
 
-  it('awd + running 状态默认阶段为 operations', async () => {
+  it('awd + running 状态默认停留在配置工作台，不再进入赛事运维阶段', async () => {
     const result = useContestWorkbench(
       ref(
         buildContestDetail({
@@ -51,9 +50,8 @@ describe('useContestWorkbench', () => {
       'pool',
       'awd-config',
       'preflight',
-      'operations',
     ])
-    expect(result.defaultStage).toBe('operations')
+    expect(result.defaultStage).toBe('awd-config')
   })
 
   it('awd + registering 状态默认阶段为 pool', async () => {
@@ -73,7 +71,6 @@ describe('useContestWorkbench', () => {
       'pool',
       'awd-config',
       'preflight',
-      'operations',
     ])
     expect(result.defaultStage).toBe('pool')
   })

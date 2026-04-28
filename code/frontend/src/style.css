@@ -19,9 +19,12 @@
   --el-bg-color-overlay: var(--color-bg-elevated);
   --workspace-tab-panel-gap-top: 1.5rem;
   --workspace-tab-panel-gap-top-tight: 0.2rem;
+  --workspace-topbar-tabs-gap: 0;
+  --workspace-tabs-panel-gap: var(--workspace-tab-panel-gap-top-tight);
   --workspace-directory-gap-top: 0.75rem;
   --workspace-directory-gap-pagination: 0.5rem;
   --workspace-directory-page-block-gap: var(--space-5);
+  --workspace-hero-summary-gap: var(--space-5);
   --workspace-page-title-margin-top: 0.85rem;
   --workspace-page-title-font-size: clamp(24px, 3vw, 34px);
   --workspace-page-title-line-height: 1.08;
@@ -29,6 +32,10 @@
   --workspace-page-copy-margin-top: 0.8rem;
   --workspace-page-copy-font-size: var(--font-size-0-94);
   --workspace-page-copy-line-height: 1.75;
+  --workspace-route-motion-enter-duration: 280ms;
+  --workspace-route-motion-leave-duration: 180ms;
+  --workspace-route-motion-enter-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --workspace-route-motion-leave-ease: cubic-bezier(0.25, 1, 0.5, 1);
   color-scheme: dark;
 }
 
@@ -183,6 +190,70 @@ option {
 
 .workspace-directory-section > .workspace-directory-pagination {
   margin-top: var(--workspace-directory-gap-pagination);
+}
+
+.workspace-route-enter-active {
+  transition:
+    opacity var(--workspace-route-motion-enter-duration) var(--workspace-route-motion-enter-ease),
+    transform var(--workspace-route-motion-enter-duration) var(--workspace-route-motion-enter-ease);
+  will-change: opacity, transform;
+}
+
+.workspace-route-leave-active {
+  transition:
+    opacity var(--workspace-route-motion-leave-duration) var(--workspace-route-motion-leave-ease),
+    transform var(--workspace-route-motion-leave-duration) var(--workspace-route-motion-leave-ease);
+  will-change: opacity, transform;
+}
+
+.workspace-route-enter-from {
+  opacity: 0;
+  transform: translate3d(0, var(--space-3), 0);
+}
+
+.workspace-route-leave-to {
+  opacity: 0;
+  transform: translate3d(0, calc(var(--space-1-5) * -1), 0);
+}
+
+.app-route-enter-active {
+  transition:
+    opacity var(--workspace-route-motion-enter-duration) var(--workspace-route-motion-enter-ease),
+    transform var(--workspace-route-motion-enter-duration) var(--workspace-route-motion-enter-ease);
+}
+
+.app-route-leave-active {
+  transition:
+    opacity var(--workspace-route-motion-leave-duration) var(--workspace-route-motion-leave-ease),
+    transform var(--workspace-route-motion-leave-duration) var(--workspace-route-motion-leave-ease);
+}
+
+.app-route-enter-from {
+  opacity: 0;
+  transform: translate3d(0, var(--space-3), 0);
+}
+
+.app-route-leave-to {
+  opacity: 0;
+  transform: translate3d(0, calc(var(--space-1-5) * -1), 0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-route-enter-active,
+  .app-route-leave-active,
+  .workspace-route-enter-active,
+  .workspace-route-leave-active {
+    transition: none;
+    will-change: auto;
+  }
+
+  .app-route-enter-from,
+  .app-route-leave-to,
+  .workspace-route-enter-from,
+  .workspace-route-leave-to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 .workspace-directory-pagination {

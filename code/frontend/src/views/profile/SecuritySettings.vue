@@ -75,7 +75,7 @@ function validatePasswordForm(): boolean {
 }
 
 async function submitPasswordChange(): Promise<void> {
-  if (!validatePasswordForm()) {
+  if (passwordSaving.value || !validatePasswordForm()) {
     return
   }
 

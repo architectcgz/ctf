@@ -3,11 +3,15 @@ import { computed, onBeforeUnmount, ref, toValue, watch, type MaybeRefOrGetter }
 import {
   getContestAWDWorkspace,
   getScoreboard,
+  requestContestAWDDefenseSSH,
+  requestContestAWDTargetAccess,
   startContestAWDServiceInstance,
   submitContestAWDAttack,
 } from '@/api/contest'
+import { requestInstanceAccess } from '@/api/instance'
 import type {
   AWDAttackLogData,
+  AWDDefenseSSHAccessData,
   ContestAWDWorkspaceData,
   ContestDetailData,
   ScoreboardRow,
@@ -31,6 +35,10 @@ export function useContestAWDWorkspace(options: UseContestAWDWorkspaceOptions) {
   const error = ref('')
   const submitResult = ref<AWDAttackLogData | null>(null)
   const startingServiceKey = ref('')
+  const openingServiceKey = ref('')
+  const openingSSHKey = ref('')
+  const sshAccessByServiceId = ref<Record<string, AWDDefenseSSHAccessData>>({})
+  const openingTargetKey = ref('')
   const submittingKey = ref('')
   const lastSyncedAt = ref<string | null>(null)
 
@@ -60,6 +68,7 @@ export function useContestAWDWorkspace(options: UseContestAWDWorkspaceOptions) {
       error.value = ''
       loading.value = false
       lastSyncedAt.value = null
+      sshAccessByServiceId.value = {}
       return
     }
 
@@ -124,6 +133,75 @@ export function useContestAWDWorkspace(options: UseContestAWDWorkspaceOptions) {
     }
   }
 
+  async function openService(instanceId: string): Promise<string | null> {
+    if (!instanceId || openingServiceKey.value) {
+      return null
+    }
+
+    openingServiceKey.value = instanceId
+    try {
+      const result = await requestInstanceAccess(instanceId)
+      if (typeof window !== 'undefined') {
+        window.open(result.access_url, '_blank', 'noopener,noreferrer')
+      }
+      return result.access_url
+    } catch (err) {
+      console.error(err)
+      toast.error(err instanceof Error ? err.message : '打开本队服务失败')
+      return null
+    } finally {
+      openingServiceKey.value = ''
+    }
+  }
+
+  async function openDefenseSSH(serviceId: string): Promise<AWDDefenseSSHAccessData | null> {
+    const contestId = toValue(options.contestId)
+    if (!contestId || !serviceId || openingSSHKey.value) {
+      return null
+    }
+
+    openingSSHKey.value = serviceId
+    try {
+      const result = await requestContestAWDDefenseSSH(contestId, serviceId)
+      sshAccessByServiceId.value = {
+        ...sshAccessByServiceId.value,
+        [serviceId]: result,
+      }
+      toast.success('SSH 防守连接已生成')
+      return result
+    } catch (err) {
+      console.error(err)
+      toast.error(err instanceof Error ? err.message : '生成 SSH 防守连接失败')
+      return null
+    } finally {
+      openingSSHKey.value = ''
+    }
+  }
+
+  async function openTarget(serviceId: string, victimTeamId: string): Promise<string | null> {
+    const contestId = toValue(options.contestId)
+    if (!contestId || !serviceId || !victimTeamId || openingTargetKey.value) {
+      return null
+    }
+
+    const targetKey = `${serviceId}:${victimTeamId}`
+    openingTargetKey.value = targetKey
+
+    try {
+      const result = await requestContestAWDTargetAccess(contestId, serviceId, victimTeamId)
+      if (typeof window !== 'undefined') {
+        window.open(result.access_url, '_blank', 'noopener,noreferrer')
+      }
+      return result.access_url
+    } catch (err) {
+      console.error(err)
+      toast.error(err instanceof Error ? err.message : '打开目标服务失败')
+      return null
+    } finally {
+      openingTargetKey.value = ''
+    }
+  }
+
   async function submitAttack(
     serviceId: string,
     victimTeamId: number,
@@ -166,6 +244,7 @@ export function useContestAWDWorkspace(options: UseContestAWDWorkspaceOptions) {
   watch(
     () => toValue(options.contestId),
     () => {
+      sshAccessByServiceId.value = {}
       void refreshAll()
     },
     { immediate: true }
@@ -197,12 +276,19 @@ export function useContestAWDWorkspace(options: UseContestAWDWorkspaceOptions) {
     hasTeam,
     submitResult,
     startingServiceKey,
+    openingServiceKey,
+    openingSSHKey,
+    sshAccessByServiceId,
+    openingTargetKey,
     submittingKey,
     shouldAutoRefresh,
     lastSyncedAt,
     refreshAll,
     loadWorkspace,
     startService,
+    openService,
+    openDefenseSSH,
+    openTarget,
     submitAttack,
   }
 }

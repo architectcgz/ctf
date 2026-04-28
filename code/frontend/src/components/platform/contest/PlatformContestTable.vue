@@ -16,7 +16,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   edit: [contest: ContestDetailData]
-  export: [contest: ContestDetailData]
+  announce: [contest: ContestDetailData]
   workbench: [contest: ContestDetailData]
   changePage: [page: number]
 }>()
@@ -45,7 +45,14 @@ function getStatusPillClass(status: ContestStatus): string {
 }
 
 function canEnterWorkbench(contest: ContestDetailData): boolean {
-  return contest.mode === 'awd' && (contest.status === 'running' || contest.status === 'frozen')
+  return (
+    contest.mode === 'awd' &&
+    (contest.status === 'running' || contest.status === 'frozen' || contest.status === 'ended')
+  )
+}
+
+function canOpenActionMenu(contest: ContestDetailData): boolean {
+  return contest.status !== 'ended'
 }
 
 function closeActionMenu(): void {
@@ -61,9 +68,9 @@ function handleEdit(contest: ContestDetailData): void {
   emit('edit', contest)
 }
 
-function handleExport(contest: ContestDetailData): void {
+function handleAnnounce(contest: ContestDetailData): void {
   closeActionMenu()
-  emit('export', contest)
+  emit('announce', contest)
 }
 </script>
 
@@ -135,10 +142,20 @@ function handleExport(contest: ContestDetailData): void {
             <Swords class="h-3.5 w-3.5" />
             进入运维台
           </button>
+          <button
+            :id="`contest-row-edit-${contest.id}`"
+            type="button"
+            class="ui-btn ui-btn--sm ui-btn--secondary contest-action contest-action--edit"
+            @click="handleEdit(contest)"
+          >
+            编辑
+          </button>
           <CActionMenu
+            v-if="canOpenActionMenu(contest)"
             :open="openActionMenuId === contest.id"
             title="Management"
             menu-label="更多竞赛操作"
+            accent="var(--journal-accent, var(--color-primary))"
             @update:open="setActionMenuOpen(contest.id, $event)"
           >
             <template #trigger="{ open, toggle, setTriggerRef }">
@@ -158,22 +175,13 @@ function handleExport(contest: ContestDetailData): void {
 
             <template #default>
               <button
-                :id="`contest-row-menu-edit-${contest.id}`"
+                :id="`contest-row-menu-announce-${contest.id}`"
                 type="button"
                 class="c-action-menu__item"
                 role="menuitem"
-                @click="handleEdit(contest)"
+                @click="handleAnnounce(contest)"
               >
-                编辑
-              </button>
-              <button
-                :id="`contest-row-menu-export-${contest.id}`"
-                type="button"
-                class="c-action-menu__item"
-                role="menuitem"
-                @click="handleExport(contest)"
-              >
-                导出结果
+                发布通知
               </button>
             </template>
           </CActionMenu>
@@ -207,7 +215,7 @@ function handleExport(contest: ContestDetailData): void {
   gap: var(--space-4);
   padding: 0 0 var(--space-3);
   border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-  font-size: var(--font-size-0-72);
+  font-size: var(--font-size-11);
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -246,7 +254,7 @@ function handleExport(contest: ContestDetailData): void {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: var(--font-size-1-00);
+  font-size: var(--font-size-14);
   font-weight: 600;
   color: var(--journal-ink);
 }
@@ -257,7 +265,7 @@ function handleExport(contest: ContestDetailData): void {
   overflow: hidden;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
-  font-size: var(--font-size-0-875);
+  font-size: var(--font-size-13);
   line-height: 1.55;
   color: var(--journal-muted);
 }
@@ -265,7 +273,7 @@ function handleExport(contest: ContestDetailData): void {
 .contest-row__mode,
 .contest-row__starts-at,
 .contest-row__ends-at {
-  font-size: var(--font-size-0-90);
+  font-size: var(--font-size-13);
   color: var(--journal-muted);
 }
 
@@ -286,7 +294,7 @@ function handleExport(contest: ContestDetailData): void {
 .contest-status-pill {
   --ui-badge-radius: 999px;
   --ui-badge-padding: 0.35rem 0.75rem;
-  --ui-badge-size: var(--font-size-0-78);
+  --ui-badge-size: var(--font-size-11);
   --ui-badge-spacing: 0.02em;
   line-height: 1;
 }
@@ -339,13 +347,6 @@ function handleExport(contest: ContestDetailData): void {
 
 .contest-action {
   min-width: 5.25rem;
-}
-
-.contest-action--workbench {
-  --ui-btn-primary-bg: color-mix(in srgb, var(--color-success) 78%, var(--journal-ink));
-  --ui-btn-primary-border: color-mix(in srgb, var(--color-success) 56%, transparent);
-  --ui-btn-primary-color: white;
-  box-shadow: 0 10px 24px color-mix(in srgb, var(--color-success) 18%, transparent);
 }
 
 @media (max-width: 1023px) {

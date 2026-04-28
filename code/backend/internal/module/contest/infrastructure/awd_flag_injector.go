@@ -47,7 +47,7 @@ func NewDockerAWDFlagInjector(db *gorm.DB, writer contestports.AWDContainerFileW
 	return &dockerAWDFlagInjector{
 		db:           db,
 		writer:       writer,
-		flagFilePath: "/flag/flag.txt",
+		flagFilePath: "/flag",
 		log:          log,
 	}
 }

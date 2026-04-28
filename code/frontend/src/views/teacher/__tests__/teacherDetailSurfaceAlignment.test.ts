@@ -69,7 +69,7 @@ describe('teacher detail surface alignment', () => {
     )
     expect(reviewArchiveSource).toContain('metric-panel-card')
     expect(reviewArchiveSource).toContain('--metric-panel-border: var(--teacher-card-border);')
-    expect(reviewArchiveSource).toContain('class="summary-grid metric-panel-grid"')
+    expect(reviewArchiveSource).toContain('class="summary-grid metric-panel-grid metric-panel-default-surface"')
     expect(reviewArchiveSource).toContain(
       'class="summary-card summary-card--primary metric-panel-card"'
     )

@@ -7,7 +7,6 @@ import (
 	identityqry "ctf-platform/internal/module/identity/application/queries"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	identityinfra "ctf-platform/internal/module/identity/infrastructure"
-	jwtpkg "ctf-platform/pkg/jwt"
 )
 
 type IdentityModule struct {
@@ -26,13 +25,7 @@ type identityModuleDeps struct {
 func BuildIdentityModule(root *Root) (*IdentityModule, error) {
 	cfg := root.Config()
 	log := root.Logger()
-
-	jwtManager, err := jwtpkg.NewManager(cfg.Auth, cfg.App.Name)
-	if err != nil {
-		return nil, err
-	}
-
-	deps := buildIdentityModuleDeps(root, jwtManager)
+	deps := buildIdentityModuleDeps(root)
 	adminCommandService := identitycmd.NewAdminService(deps.users, log.Named("identity_admin_command_service"))
 	adminQueryService := identityqry.NewAdminService(deps.users, cfg.Pagination, log.Named("identity_admin_query_service"))
 	profileCommandService := identitycmd.NewProfileService(deps.users, log.Named("identity_profile_command_service"))
@@ -47,10 +40,10 @@ func BuildIdentityModule(root *Root) (*IdentityModule, error) {
 	}, nil
 }
 
-func buildIdentityModuleDeps(root *Root, jwtManager *jwtpkg.Manager) identityModuleDeps {
+func buildIdentityModuleDeps(root *Root) identityModuleDeps {
 	cfg := root.Config()
 	return identityModuleDeps{
 		users:        identityinfra.NewRepository(root.DB()),
-		tokenService: identitycmd.NewAuthenticatorService(authinfra.NewTokenService(cfg.Auth, cfg.WebSocket, root.Cache(), jwtManager)),
+		tokenService: identitycmd.NewAuthenticatorService(authinfra.NewTokenService(cfg.Auth, cfg.WebSocket, root.Cache())),
 	}
 }

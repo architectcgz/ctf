@@ -7,12 +7,15 @@ log:
   format: console
 
 redis:
-  password: redis123456
+  password: "" # 开发环境通过 CTF_REDIS_PASSWORD 注入
   db: 2
 
 auth:
-  refresh_cookie_secure: false
+  session_cookie_secure: false
 
 container:
   # 开发环境默认经由宿主机本地端口访问实例，避免 localhost 解析到 IPv6 [::1]
   public_host: 127.0.0.1
+  defense_ssh_enabled: true
+  defense_ssh_host: 127.0.0.1
+  defense_ssh_port: 2222

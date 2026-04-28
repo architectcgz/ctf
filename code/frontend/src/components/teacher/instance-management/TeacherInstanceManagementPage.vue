@@ -3,7 +3,8 @@ import { Search, Trash2 } from 'lucide-vue-next'
 
 import type { TeacherClassItem, TeacherInstanceItem } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
-import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
+import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
+import WorkspaceDirectoryPagination from '@/components/common/WorkspaceDirectoryPagination.vue'
 
 const props = defineProps<{
   classes: TeacherClassItem[]
@@ -33,6 +34,65 @@ const emit = defineEmits<{
   changePage: [page: number]
 }>()
 
+const instanceTableColumns = [
+  {
+    key: 'student',
+    label: '学生',
+    widthClass: 'w-[20%] min-w-[14rem]',
+    cellClass: 'teacher-instance-table__student-cell',
+  },
+  {
+    key: 'challenge',
+    label: '题目',
+    widthClass: 'w-[17%] min-w-[12rem]',
+    cellClass: 'teacher-instance-table__challenge-cell',
+  },
+  {
+    key: 'status',
+    label: '状态',
+    widthClass: 'w-[9%] min-w-[6rem]',
+    cellClass: 'teacher-instance-table__status-cell',
+  },
+  {
+    key: 'created_at',
+    label: '创建时间',
+    widthClass: 'w-[12%] min-w-[9rem]',
+    cellClass: 'teacher-instance-table__time-cell',
+  },
+  {
+    key: 'expires_at',
+    label: '到期时间',
+    widthClass: 'w-[12%] min-w-[9rem]',
+    cellClass: 'teacher-instance-table__time-cell',
+  },
+  {
+    key: 'extends',
+    label: '延期',
+    align: 'center' as const,
+    widthClass: 'w-[7%] min-w-[5rem]',
+    cellClass: 'teacher-instance-table__compact-cell',
+  },
+  {
+    key: 'remaining',
+    label: '剩余时间',
+    widthClass: 'w-[9%] min-w-[7rem]',
+    cellClass: 'teacher-instance-table__compact-cell',
+  },
+  {
+    key: 'access_url',
+    label: '访问地址',
+    widthClass: 'w-[14%] min-w-[12rem]',
+    cellClass: 'teacher-instance-table__url-cell',
+  },
+  {
+    key: 'actions',
+    label: '操作',
+    align: 'right' as const,
+    widthClass: 'w-[8rem]',
+    cellClass: 'teacher-instance-table__actions-cell',
+  },
+]
+
 function formatDateTime(value: string): string {
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return '--'
@@ -58,29 +118,25 @@ function statusMeta(status: string): { label: string; chipClass: string } {
     case 'running':
       return {
         label: '运行中',
-        chipClass:
-          'border-[var(--color-success)]/25 bg-[var(--color-success)]/10 text-[var(--color-success)]',
+        chipClass: 'instance-status-pill--running',
       }
     case 'creating':
       return {
         label: '创建中',
-        chipClass:
-          'border-[var(--color-primary)]/25 bg-[var(--color-primary)]/10 text-[var(--color-primary)]',
+        chipClass: 'instance-status-pill--pending',
       }
     case 'expired':
       return {
         label: '已过期',
-        chipClass:
-          'border-[var(--color-warning)]/25 bg-[var(--color-warning)]/10 text-[var(--color-warning)]',
+        chipClass: 'instance-status-pill--inactive',
       }
     case 'failed':
       return {
         label: '异常',
-        chipClass:
-          'border-[var(--color-danger)]/25 bg-[var(--color-danger)]/10 text-[var(--color-danger)]',
+        chipClass: 'instance-status-pill--danger',
       }
     default:
-      return { label: status, chipClass: 'border-border bg-elevated/70 text-text-secondary' }
+      return { label: status, chipClass: 'instance-status-pill--inactive' }
   }
 }
 </script>
@@ -90,14 +146,14 @@ function statusMeta(status: string): { label: string; chipClass: string } {
     <main class="content-pane">
       <div class="teacher-page">
         <header class="teacher-topbar">
-          <div class="teacher-heading">
-            <div class="teacher-surface-eyebrow journal-eyebrow">
+          <div class="teacher-heading workspace-tab-heading__main">
+            <div class="workspace-overline">
               Teacher Instance Ops
             </div>
-            <h1 class="teacher-title">
+            <h1 class="teacher-title workspace-page-title">
               实例管理
             </h1>
-            <p class="teacher-copy">
+            <p class="teacher-copy workspace-page-copy">
               先筛班级与学员，再快速定位异常或即将到期的训练实例。
             </p>
           </div>
@@ -117,7 +173,7 @@ function statusMeta(status: string): { label: string; chipClass: string } {
           <div class="teacher-summary-title">
             <span>Instance Snapshot</span>
           </div>
-          <div class="teacher-summary-grid progress-strip metric-panel-grid">
+          <div class="teacher-summary-grid progress-strip metric-panel-grid metric-panel-default-surface">
             <article class="progress-card metric-panel-card">
               <div class="progress-card-label metric-panel-label">
                 当前可见
@@ -248,117 +304,110 @@ function statusMeta(status: string): { label: string; chipClass: string } {
             description="可以调整筛选条件，或等待学员创建新的训练环境后再查看。"
           />
 
-          <section
-            v-else
-            class="teacher-directory"
-            aria-label="实例目录"
-          >
-            <div class="teacher-directory-head">
-              <span>学生</span>
-              <span>题目</span>
-              <span>标签</span>
-              <span>状态</span>
-              <span>创建时间</span>
-              <span>到期时间</span>
-              <span>延期</span>
-              <span>剩余时间</span>
-              <span>访问地址</span>
-              <span>操作</span>
-            </div>
-
-            <div
-              v-for="item in instances"
-              :key="item.id"
-              class="teacher-directory-row"
+          <template v-else>
+            <WorkspaceDataTable
+              class="teacher-instance-list workspace-directory-list"
+              :columns="instanceTableColumns"
+              :rows="instances"
+              row-key="id"
+              row-class="teacher-directory-row teacher-instance-table-row"
             >
-              <div class="teacher-directory-row-main">
-                <div class="teacher-directory-row-index">
-                  {{ item.student_no || `@${item.student_username}` }}
+              <template #cell-student="{ row }">
+                <div class="teacher-instance-user-cell">
+                  <span class="teacher-instance-user-meta">
+                    {{ (row as TeacherInstanceItem).student_no || `@${(row as TeacherInstanceItem).student_username}` }}
+                  </span>
+                  <span
+                    class="teacher-instance-primary-text"
+                    :title="(row as TeacherInstanceItem).student_name || (row as TeacherInstanceItem).student_username"
+                  >
+                    {{ (row as TeacherInstanceItem).student_name || (row as TeacherInstanceItem).student_username }}
+                  </span>
+                  <span
+                    class="teacher-instance-secondary-text"
+                    :title="`@${(row as TeacherInstanceItem).student_username} · ${(row as TeacherInstanceItem).class_name}`"
+                  >
+                    @{{ (row as TeacherInstanceItem).student_username }} · {{ (row as TeacherInstanceItem).class_name }}
+                  </span>
                 </div>
-                <h4
-                  class="teacher-directory-row-title"
-                  :title="item.student_name || item.student_username"
-                >
-                  {{ item.student_name || item.student_username }}
-                </h4>
-                <div
-                  class="teacher-directory-row-copy"
-                  :title="`@${item.student_username} · ${item.class_name}`"
-                >
-                  @{{ item.student_username }} · {{ item.class_name }}
-                </div>
-              </div>
+              </template>
 
-              <div
-                class="teacher-directory-row-challenge"
-                :title="item.challenge_title"
-              >
-                {{ item.challenge_title }}
-              </div>
-
-              <div class="teacher-directory-row-tags">
-                <span class="teacher-directory-chip">Instance</span>
-              </div>
-
-              <div class="teacher-directory-row-status">
+              <template #cell-challenge="{ row }">
                 <span
-                  class="teacher-directory-state-chip border"
-                  :class="statusMeta(item.status).chipClass"
+                  class="teacher-instance-primary-text"
+                  :title="(row as TeacherInstanceItem).challenge_title"
                 >
-                  {{ statusMeta(item.status).label }}
+                  {{ (row as TeacherInstanceItem).challenge_title }}
                 </span>
-              </div>
+              </template>
 
-              <div class="teacher-directory-row-created">
-                {{ formatDateTime(item.created_at) }}
-              </div>
-
-              <div class="teacher-directory-row-expires-at">
-                {{ formatDateTime(item.expires_at) }}
-              </div>
-
-              <div class="teacher-directory-row-extends">
-                {{ item.extend_count }} / {{ item.max_extends }}
-              </div>
-
-              <div class="teacher-directory-row-remaining">
-                {{ formatRemainingTime(item.remaining_time) }}
-              </div>
-
-              <div
-                class="teacher-directory-row-url"
-                :title="item.access_url || '暂未分配访问地址'"
-              >
-                {{ item.access_url || '暂未分配访问地址' }}
-              </div>
-
-              <div class="teacher-directory-row-cta">
-                <button
-                  type="button"
-                  class="teacher-row-btn teacher-row-btn--danger"
-                  :disabled="destroyingId === item.id"
-                  :data-instance-id="item.id"
-                  @click="emit('destroy', item.id)"
+              <template #cell-status="{ row }">
+                <span
+                  class="instance-status-pill"
+                  :class="statusMeta((row as TeacherInstanceItem).status).chipClass"
                 >
-                  <Trash2 class="h-4 w-4" />
-                  {{ destroyingId === item.id ? '销毁中...' : '销毁实例' }}
-                </button>
-              </div>
-            </div>
+                  {{ statusMeta((row as TeacherInstanceItem).status).label }}
+                </span>
+              </template>
 
-            <div
-              v-if="totalCount > 0"
-              class="teacher-directory-pagination workspace-directory-pagination"
-            >
-              <PagePaginationControls
-                :page="page"
-                :total-pages="totalPages"
-                :total="totalCount"
-                :total-label="`共 ${totalCount} 条实例`"
-                @change-page="emit('changePage', $event)"
-              />
-            </div>
-          </section>
+              <template #cell-created_at="{ row }">
+                <span class="teacher-instance-muted-text">
+                  {{ formatDateTime((row as TeacherInstanceItem).created_at) }}
+                </span>
+              </template>
+
+              <template #cell-expires_at="{ row }">
+                <span class="teacher-instance-muted-text">
+                  {{ formatDateTime((row as TeacherInstanceItem).expires_at) }}
+                </span>
+              </template>
+
+              <template #cell-extends="{ row }">
+                <span class="teacher-instance-muted-text">
+                  {{ (row as TeacherInstanceItem).extend_count }} / {{ (row as TeacherInstanceItem).max_extends }}
+                </span>
+              </template>
+
+              <template #cell-remaining="{ row }">
+                <span class="teacher-instance-muted-text">
+                  {{ formatRemainingTime((row as TeacherInstanceItem).remaining_time) }}
+                </span>
+              </template>
+
+              <template #cell-access_url="{ row }">
+                <span
+                  class="teacher-instance-url-text"
+                  :title="(row as TeacherInstanceItem).access_url || '暂未分配访问地址'"
+                >
+                  {{ (row as TeacherInstanceItem).access_url || '暂未分配访问地址' }}
+                </span>
+              </template>
+
+              <template #cell-actions="{ row }">
+                <div class="teacher-directory-row-cta">
+                  <button
+                    type="button"
+                    class="ui-btn ui-btn--danger ui-btn--xs teacher-instance-danger-action"
+                    :disabled="destroyingId === (row as TeacherInstanceItem).id"
+                    :data-instance-id="(row as TeacherInstanceItem).id"
+                    @click="emit('destroy', (row as TeacherInstanceItem).id)"
+                  >
+                    <Trash2 class="h-3 w-3" />
+                    {{ destroyingId === (row as TeacherInstanceItem).id ? '销毁中' : '销毁' }}
+                  </button>
+                </div>
+              </template>
+            </WorkspaceDataTable>
+
+            <WorkspaceDirectoryPagination
+              class="teacher-directory-pagination"
+              :page="page"
+              :total-pages="totalPages"
+              :total="totalCount"
+              :total-label="`共 ${totalCount} 条实例`"
+              @change-page="emit('changePage', $event)"
+            />
+          </template>
         </section>
         <div
           v-if="error"
@@ -387,8 +436,6 @@ function statusMeta(status: string): { label: string; chipClass: string } {
     var(--journal-ink)
   );
   --teacher-management-hero-border: var(--teacher-card-border);
-  --teacher-directory-columns: minmax(0, 1.1fr) minmax(0, 0.92fr) 6rem 7rem minmax(132px, 0.7fr)
-    minmax(132px, 0.7fr) 5rem 7rem minmax(180px, 1fr) 8rem;
 }
 
 .teacher-page {
@@ -407,15 +454,7 @@ function statusMeta(status: string): { label: string; chipClass: string } {
 }
 
 .teacher-directory-section {
-  margin-top: var(--space-6);
-}
-
-.list-heading {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: var(--space-3);
+  margin-top: var(--workspace-directory-page-block-gap, var(--space-5));
 }
 
 .list-heading__title {
@@ -428,7 +467,7 @@ function statusMeta(status: string): { label: string; chipClass: string } {
 .teacher-directory-filters {
   display: grid;
   gap: var(--space-4);
-  padding: var(--space-5) 0;
+  padding: var(--workspace-directory-gap-top) 0 var(--space-4);
 }
 
 .teacher-filter-grid {
@@ -442,173 +481,109 @@ function statusMeta(status: string): { label: string; chipClass: string } {
   gap: var(--space-3);
 }
 
-.teacher-directory {
+.teacher-instance-list {
+  --workspace-directory-shell-border: color-mix(
+    in srgb,
+    var(--teacher-card-border) 86%,
+    transparent
+  );
+}
+
+.teacher-instance-user-cell {
   display: flex;
+  min-width: 0;
   flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
 }
 
-.teacher-directory-head,
-.teacher-directory-row {
-  display: grid;
-  grid-template-columns: var(--teacher-directory-columns);
-  gap: var(--space-4);
-}
-
-.teacher-directory-row {
-  width: 100%;
-  align-items: center;
-  border: 0;
-  padding: var(--space-4-5) 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-  background: transparent;
-  text-align: left;
-}
-
-.teacher-directory-row-main {
-  display: grid;
-  gap: var(--space-2);
+.teacher-instance-primary-text,
+.teacher-instance-secondary-text,
+.teacher-instance-user-meta,
+.teacher-instance-muted-text,
+.teacher-instance-url-text {
+  display: block;
   min-width: 0;
-}
-
-.teacher-directory-row-index,
-.teacher-directory-row-challenge,
-.teacher-directory-row-url {
-  font-family: var(--font-family-mono);
-}
-
-.teacher-directory-row-index {
-  font-size: var(--font-size-0-76);
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  color: var(--journal-muted);
-}
-
-.teacher-directory-row-title {
-  min-width: 0;
-  font-family: var(--font-family-mono);
-  font-size: var(--font-size-1-08);
-  font-weight: 700;
-  line-height: 1.35;
-  color: var(--journal-ink);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.teacher-directory-row-challenge {
-  min-width: 0;
-  font-size: var(--font-size-0-80);
+.teacher-instance-primary-text {
+  font-size: var(--font-size-0-875);
   font-weight: 700;
-  color: var(--journal-accent-strong);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  color: var(--color-text-primary);
 }
 
-.teacher-directory-row-copy {
-  display: -webkit-box;
-  font-size: var(--font-size-0-84);
-  line-height: 1.6;
-  color: color-mix(in srgb, var(--journal-muted) 92%, transparent);
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.teacher-directory-row-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-}
-
-.teacher-directory-chip {
-  display: inline-flex;
-  align-items: center;
-  min-height: 1.65rem;
-  padding: 0 var(--space-2-5);
-  border-radius: 0.5rem;
-  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
-  font-size: var(--font-size-0-75);
-  font-weight: 600;
-  color: var(--journal-accent-strong);
-}
-
-.teacher-directory-chip-muted {
-  background: color-mix(in srgb, var(--journal-muted) 10%, transparent);
-  color: var(--journal-muted);
-}
-
-.teacher-directory-row-status {
-  display: flex;
-  justify-content: flex-start;
-}
-
-.teacher-directory-state-chip {
-  display: inline-flex;
-  align-items: center;
-  min-height: 1.75rem;
-  padding: 0 var(--space-2-5);
-  border-radius: 0.5rem;
-  font-size: var(--font-size-0-75);
-  font-weight: 600;
-}
-
-.teacher-directory-row-created,
-.teacher-directory-row-expires-at,
-.teacher-directory-row-extends,
-.teacher-directory-row-remaining,
-.teacher-directory-row-url {
-  min-width: 0;
-  font-size: var(--font-size-0-81);
+.teacher-instance-secondary-text,
+.teacher-instance-muted-text {
+  font-size: var(--font-size-0-8125);
   line-height: 1.5;
   color: var(--journal-muted);
 }
 
-.teacher-directory-row-url {
+.teacher-instance-user-meta,
+.teacher-instance-url-text {
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-0-75);
+  line-height: 1.5;
+  color: var(--journal-muted);
+}
+
+.teacher-instance-url-text {
+  white-space: normal;
   overflow-wrap: anywhere;
   word-break: break-word;
 }
 
-.teacher-directory-row-cta {
-  display: flex;
-  justify-content: flex-start;
-}
-
-.teacher-row-btn {
+.instance-status-pill {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-1-5);
-  border-radius: 0.75rem;
-  border: 1px solid color-mix(in srgb, var(--journal-accent) 24%, var(--teacher-control-border));
-  background: color-mix(in srgb, var(--journal-accent) 10%, var(--journal-surface));
-  padding: var(--space-2-5) var(--space-4);
-  font-size: var(--font-size-0-84);
-  font-weight: 600;
-  color: color-mix(in srgb, var(--journal-accent) 78%, var(--journal-ink));
-  transition:
-    border-color 0.18s ease,
-    background 0.18s ease,
-    color 0.18s ease;
+  min-height: 1.4rem;
+  padding: 0 var(--space-2);
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: var(--font-size-10);
+  font-weight: 700;
+  text-transform: uppercase;
 }
 
-.teacher-row-btn:hover:not(:disabled),
-.teacher-row-btn:focus-visible:not(:disabled) {
-  border-color: color-mix(in srgb, var(--journal-accent) 38%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 16%, var(--journal-surface));
-  color: var(--journal-accent);
+.instance-status-pill--running {
+  background: color-mix(in srgb, var(--color-success) 10%, transparent);
+  border-color: color-mix(in srgb, var(--color-success) 24%, transparent);
+  color: color-mix(in srgb, var(--color-success) 82%, var(--color-text-primary));
 }
 
-.teacher-row-btn--danger {
-  border-color: color-mix(in srgb, var(--color-danger) 24%, var(--teacher-control-border));
-  background: color-mix(in srgb, var(--color-danger) 10%, var(--journal-surface));
+.instance-status-pill--pending {
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  border-color: color-mix(in srgb, var(--color-primary) 24%, transparent);
+  color: color-mix(in srgb, var(--color-primary) 82%, var(--color-text-primary));
+}
+
+.instance-status-pill--danger {
+  background: color-mix(in srgb, var(--color-danger) 10%, transparent);
+  border-color: color-mix(in srgb, var(--color-danger) 24%, transparent);
+  color: color-mix(in srgb, var(--color-danger) 82%, var(--color-text-primary));
+}
+
+.instance-status-pill--inactive {
+  background: color-mix(in srgb, var(--color-text-muted) 10%, transparent);
+  border-color: color-mix(in srgb, var(--color-border-default) 92%, transparent);
+  color: var(--color-text-secondary);
+}
+
+.teacher-directory-row-cta {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.teacher-instance-danger-action {
   color: var(--color-danger);
 }
 
-.teacher-row-btn--danger:hover:not(:disabled),
-.teacher-row-btn--danger:focus-visible:not(:disabled) {
-  border-color: color-mix(in srgb, var(--color-danger) 40%, transparent);
-  background: color-mix(in srgb, var(--color-danger) 16%, var(--journal-surface));
+.teacher-instance-danger-action:hover:not(:disabled),
+.teacher-instance-danger-action:focus-visible:not(:disabled) {
   color: color-mix(in srgb, var(--color-danger) 90%, var(--journal-ink));
 }
 
@@ -622,16 +597,6 @@ function statusMeta(status: string): { label: string; chipClass: string } {
   .teacher-summary-grid,
   .teacher-filter-grid {
     grid-template-columns: 1fr;
-  }
-
-  .teacher-directory-head {
-    display: none;
-  }
-
-  .teacher-directory-row {
-    grid-template-columns: 1fr;
-    gap: var(--space-3);
-    padding: var(--space-4) 0;
   }
 }
 </style>

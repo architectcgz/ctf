@@ -131,10 +131,14 @@ describe('NotificationDetail', () => {
   })
 
   it('通知详情页 overline 应接入 workspace-overline 共享语义', () => {
-    expect(notificationDetailSource).toContain('<div class="workspace-overline">Notification</div>')
-    expect(notificationDetailSource).toContain('<div class="workspace-overline">Meta</div>')
-    expect(notificationDetailSource).toContain('<div class="workspace-overline">ID</div>')
-    expect(notificationDetailSource).toContain('<div class="workspace-overline">Message</div>')
+    expect(notificationDetailSource).toMatch(
+      /<div class="workspace-overline">\s*Notification\s*<\/div>/
+    )
+    expect(notificationDetailSource).toMatch(/<div class="workspace-overline">\s*Meta\s*<\/div>/)
+    expect(notificationDetailSource).toMatch(/<div class="workspace-overline">\s*ID\s*<\/div>/)
+    expect(notificationDetailSource).toMatch(
+      /<div class="workspace-overline">\s*Message\s*<\/div>/
+    )
     expect(notificationDetailSource).not.toContain('<div class="notification-overline">Notification</div>')
     expect(notificationDetailSource).not.toContain('<div class="notification-overline">Meta</div>')
     expect(notificationDetailSource).not.toContain('<div class="notification-overline">ID</div>')
@@ -167,5 +171,35 @@ describe('NotificationDetail', () => {
 
     expect(wrapper.text()).toContain('查看关联对象')
     expect(wrapper.find('button[disabled]').exists()).toBe(false)
+  })
+
+  it('连续点击 ID 卡片后应短暂显示值守备注', async () => {
+    const store = useNotificationStore()
+    store.setNotifications([
+      {
+        id: '9',
+        type: 'challenge',
+        title: '题目更新',
+        content: '请查看最新题目说明。',
+        link: '/challenges/9',
+        unread: false,
+        created_at: '2026-03-31T10:00:00Z',
+      },
+    ])
+
+    const { wrapper } = await mountPage('/notifications/9')
+
+    expect(wrapper.text()).toContain('9')
+    expect(wrapper.text()).not.toContain('值守备注：有人开始认真看编号了。')
+
+    const idCard = wrapper.get('.notification-detail-side-value--mono')
+    await idCard.trigger('click')
+    await idCard.trigger('click')
+    await idCard.trigger('click')
+    await idCard.trigger('click')
+
+    expect(wrapper.text()).toContain('值守备注：有人开始认真看编号了。')
+    expect(wrapper.text()).toContain('请查看最新题目说明。')
+    expect(wrapper.text()).toContain('返回通知列表')
   })
 })

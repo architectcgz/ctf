@@ -67,15 +67,12 @@ describe('SkillProfile', () => {
 
   it('应该渲染能力画像与推荐靶场', async () => {
     const authStore = useAuthStore()
-    authStore.setAuth(
-      {
-        id: 'student-1',
-        username: 'alice',
-        role: 'student',
-        class_name: 'Class A',
-      },
-      'token'
-    )
+    authStore.setAuth({
+      id: 'student-1',
+      username: 'alice',
+      role: 'student',
+      class_name: 'Class A',
+    })
 
     const wrapper = mount(SkillProfile, {
       global: {
@@ -96,10 +93,13 @@ describe('SkillProfile', () => {
     expect(wrapper.find('[role="tablist"]').exists()).toBe(true)
     expect(wrapper.find('#skill-profile-tab-analysis').attributes('aria-selected')).toBe('true')
     expect(wrapper.find('#skill-profile-panel-analysis').attributes('aria-hidden')).toBe('false')
+    expect(wrapper.find('#skill-profile-panel-analysis').classes()).toContain('active')
     expect(wrapper.find('#skill-profile-panel-weakness').attributes('aria-hidden')).toBe('true')
+    expect(wrapper.find('#skill-profile-panel-weakness').classes()).not.toContain('active')
     expect(wrapper.find('#skill-profile-panel-recommendations').attributes('aria-hidden')).toBe(
       'true'
     )
+    expect(wrapper.find('#skill-profile-panel-recommendations').classes()).not.toContain('active')
     expect(wrapper.find('.skill-overview-head').exists()).toBe(true)
     expect(wrapper.find('.skill-overview-head').text()).toContain('能力画像')
     expect(wrapper.find('.skill-overview-head').text()).toContain(
@@ -114,7 +114,9 @@ describe('SkillProfile', () => {
 
     expect(wrapper.find('#skill-profile-tab-weakness').attributes('aria-selected')).toBe('true')
     expect(wrapper.find('#skill-profile-panel-analysis').attributes('aria-hidden')).toBe('true')
+    expect(wrapper.find('#skill-profile-panel-analysis').classes()).not.toContain('active')
     expect(wrapper.find('#skill-profile-panel-weakness').attributes('aria-hidden')).toBe('false')
+    expect(wrapper.find('#skill-profile-panel-weakness').classes()).toContain('active')
     expect(wrapper.find('#skill-profile-panel-weakness .skill-overview-head').exists()).toBe(false)
     expect(wrapper.find('#skill-profile-panel-weakness .skill-overview-actions').exists()).toBe(
       false
@@ -130,6 +132,8 @@ describe('SkillProfile', () => {
     expect(wrapper.find('#skill-profile-panel-recommendations').attributes('aria-hidden')).toBe(
       'false'
     )
+    expect(wrapper.find('#skill-profile-panel-recommendations').classes()).toContain('active')
+    expect(wrapper.find('#skill-profile-panel-analysis').classes()).not.toContain('active')
     expect(wrapper.find('#skill-profile-panel-recommendations .skill-overview-head').exists()).toBe(
       false
     )
@@ -139,18 +143,24 @@ describe('SkillProfile', () => {
     expect(wrapper.text()).toContain('密码学入门')
   })
 
-  it('应该将标签栏放在内容区前部，保持与学生仪表盘一致的层级位置', () => {
-    expect(skillProfileSource).toContain('class="top-tabs"')
-    expect(skillProfileSource.indexOf('class="top-tabs"')).toBeGreaterThan(
-      skillProfileSource.indexOf('<div class="workspace-overline">Skill Profile</div>')
+  it('应该将页面顶部标签栏放在内容区外，保持与学生仪表盘一致的层级位置', () => {
+    expect(skillProfileSource).toContain('class="skill-profile-page"')
+    expect(skillProfileSource).toContain('class="workspace-tabbar top-tabs"')
+    expect(skillProfileSource).toContain('class="workspace-tab top-tab"')
+    expect(skillProfileSource).not.toContain('class="skill-profile-tabs-head"')
+    expect(skillProfileSource).not.toContain('--page-top-tabs-gap: var(--space-7);')
+    expect(skillProfileSource).not.toContain('--page-top-tabs-padding: 0 var(--space-7);')
+    expect(skillProfileSource).not.toContain('--page-top-tab-min-height: 52px;')
+    expect(skillProfileSource).toMatch(
+      /class="workspace-tabbar top-tabs"[\s\S]*<\/nav>\s*<main class="content-pane">\s*<div class="skill-profile-content">/s
     )
-    expect(skillProfileSource.indexOf('class="top-tabs"')).toBeLessThan(
+    expect(skillProfileSource.indexOf('class="workspace-tabbar top-tabs"')).toBeLessThan(
       skillProfileSource.indexOf('<h1 class="journal-page-title workspace-page-title')
     )
-    expect(skillProfileSource.indexOf('class="top-tabs"')).toBeLessThan(
+    expect(skillProfileSource.indexOf('class="workspace-tabbar top-tabs"')).toBeLessThan(
       skillProfileSource.indexOf('class="skill-teacher-panel')
     )
-    expect(skillProfileSource.indexOf('class="top-tabs"')).toBeLessThan(
+    expect(skillProfileSource.indexOf('class="workspace-tabbar top-tabs"')).toBeLessThan(
       skillProfileSource.indexOf('class="skill-board')
     )
     expect(skillProfileSource).toMatch(
@@ -159,27 +169,50 @@ describe('SkillProfile', () => {
     expect(skillProfileSource).toContain('class="skill-board px-1 md:px-2"')
     expect(skillProfileSource).not.toContain('class="skill-board mt-6')
     expect(skillProfileSource).not.toMatch(
-      /\.skill-board\s*\{[\s\S]*border-top:\s*1px solid var\(--journal-divider\);/s
+      /\.skill-board\s*\{[^}]*border-top:\s*1px solid var\(--journal-divider\);/s
     )
     expect(skillProfileSource).not.toMatch(
       /\.skill-section \+ \.skill-section\s*\{[\s\S]*border-top:\s*1px solid var\(--journal-divider\);/s
     )
   })
 
-  it('应该把能力画像页级眉标切到共享 workspace header 语义', () => {
-    expect(skillProfileSource).toContain('<div class="workspace-overline">Skill Profile</div>')
+  it('能力画像页面顶部标签栏应复用共享顶部 tab 边距，不应在 content pane 内局部抵消 padding', () => {
+    expect(skillProfileSource).toContain('class="skill-profile-content"')
+    expect(skillProfileSource).toContain('gap: var(--workspace-tabs-panel-gap);')
+    expect(skillProfileSource).not.toContain('--page-top-tabs-margin: 0;')
+    expect(skillProfileSource).not.toContain('--page-top-tabs-padding: 0;')
+    expect(skillProfileSource).not.toContain('margin-top: var(--workspace-tabs-panel-gap);')
+    expect(skillProfileSource).not.toContain('--page-top-tabs-padding: 0 var(--space-7);')
+  })
+
+  it('不应渲染能力画像页级眉标', () => {
+    expect(skillProfileSource).not.toContain('<div class="workspace-overline">Skill Profile</div>')
     expect(skillProfileSource).not.toContain('<div class="journal-eyebrow">Skill Profile</div>')
     expect(skillProfileSource).not.toContain('journal-eyebrow-text')
   })
 
   it('应该把能力画像内容区的 soft eyebrow 收敛为局部 section kicker', () => {
-    expect(skillProfileSource).toContain('<div class="skill-section-kicker">Teacher View</div>')
-    expect(skillProfileSource).toContain('<div class="skill-section-kicker">Radar Analysis</div>')
-    expect(skillProfileSource).toContain('<div class="skill-section-kicker">Weak Points</div>')
-    expect(skillProfileSource).toContain('<div class="skill-section-kicker">Recommendations</div>')
-    expect(skillProfileSource).not.toContain('<div class="journal-eyebrow journal-eyebrow-soft">Teacher View</div>')
-    expect(skillProfileSource).not.toContain('<div class="journal-eyebrow journal-eyebrow-soft">Radar Analysis</div>')
-    expect(skillProfileSource).not.toContain('<div class="journal-eyebrow journal-eyebrow-soft">Weak Points</div>')
+    expect(skillProfileSource).toMatch(
+      /<div class="skill-section-kicker">\s*Teacher View\s*<\/div>/s
+    )
+    expect(skillProfileSource).toMatch(
+      /<div class="skill-section-kicker">\s*Radar Analysis\s*<\/div>/s
+    )
+    expect(skillProfileSource).toMatch(
+      /<div class="skill-section-kicker">\s*Weak Points\s*<\/div>/s
+    )
+    expect(skillProfileSource).toMatch(
+      /<div class="skill-section-kicker">\s*Recommendations\s*<\/div>/s
+    )
+    expect(skillProfileSource).not.toContain(
+      '<div class="journal-eyebrow journal-eyebrow-soft">Teacher View</div>'
+    )
+    expect(skillProfileSource).not.toContain(
+      '<div class="journal-eyebrow journal-eyebrow-soft">Radar Analysis</div>'
+    )
+    expect(skillProfileSource).not.toContain(
+      '<div class="journal-eyebrow journal-eyebrow-soft">Weak Points</div>'
+    )
     expect(skillProfileSource).not.toContain(
       '<div class="journal-eyebrow journal-eyebrow-soft">Recommendations</div>'
     )

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { nextTick, ref, watch } from 'vue'
+
 import {
   EXTEND_DURATION_SECONDS,
   WARNING_THRESHOLD_SECONDS,
@@ -6,6 +8,7 @@ import {
   getInstanceStatusClass,
   getInstanceStatusLabel,
   getInstanceWaitingHint,
+  isInstanceManualActionAllowed,
   useInstanceListPage,
 } from '@/composables/useInstanceListPage'
 
@@ -24,6 +27,41 @@ const {
   extendFromWarning,
   closeWarning,
 } = useInstanceListPage()
+
+const warningCloseButton = ref<HTMLButtonElement | null>(null)
+let previouslyFocusedElement: HTMLElement | null = null
+
+function formatInstanceAccess(instance: {
+  access_url?: string
+  access?: { command?: string }
+  ssh_info?: { host: string; port: number }
+}): string {
+  return (
+    instance.access?.command ||
+    instance.access_url ||
+    (instance.ssh_info ? `${instance.ssh_info.host}:${instance.ssh_info.port}` : '')
+  )
+}
+
+function canOpenInstanceInBrowser(instance: {
+  access_url?: string
+  access?: { protocol?: string }
+}): boolean {
+  return Boolean(instance.access_url) && instance.access?.protocol !== 'tcp'
+}
+
+watch(showWarning, async (visible) => {
+  if (visible) {
+    previouslyFocusedElement =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null
+    await nextTick()
+    warningCloseButton.value?.focus()
+    return
+  }
+
+  previouslyFocusedElement?.focus()
+  previouslyFocusedElement = null
+})
 </script>
 
 <template>
@@ -34,12 +72,8 @@ const {
       <div class="instance-page">
         <header class="instance-topbar">
           <div class="instance-heading">
-            <div class="workspace-overline">
-              Instances
-            </div>
-            <h1 class="instance-title workspace-page-title">
-              我的实例
-            </h1>
+            <div class="workspace-overline">Instances</div>
+            <h1 class="instance-title workspace-page-title">我的实例</h1>
             <p class="instance-subtitle">
               管理运行中与等待创建中的靶机实例，查看状态并执行延时或销毁。
             </p>
@@ -47,14 +81,10 @@ const {
         </header>
 
         <section class="instance-summary">
-          <div class="instance-summary-title">
-            当前运行概况
-          </div>
+          <div class="instance-summary-title">当前运行概况</div>
           <div class="instance-summary-grid metric-panel-grid">
             <div class="instance-summary-item metric-panel-card">
-              <div class="instance-summary-label metric-panel-label">
-                运行中
-              </div>
+              <div class="instance-summary-label metric-panel-label">运行中</div>
               <div class="instance-summary-value metric-panel-value">
                 {{ runningCount }}
               </div>
@@ -63,9 +93,7 @@ const {
               </div>
             </div>
             <div class="instance-summary-item metric-panel-card">
-              <div class="instance-summary-label metric-panel-label">
-                等待创建
-              </div>
+              <div class="instance-summary-label metric-panel-label">等待创建</div>
               <div class="instance-summary-value metric-panel-value">
                 {{ waitingCount }}
               </div>
@@ -74,9 +102,7 @@ const {
               </div>
             </div>
             <div class="instance-summary-item metric-panel-card">
-              <div class="instance-summary-label metric-panel-label">
-                实例上限
-              </div>
+              <div class="instance-summary-label metric-panel-label">实例上限</div>
               <div class="instance-summary-value metric-panel-value">
                 {{ maxInstances }}
               </div>
@@ -87,40 +113,21 @@ const {
           </div>
         </section>
 
-        <div
-          v-if="loading"
-          class="instance-loading"
-        >
+        <div v-if="loading" class="instance-loading">
           <div class="instance-loading-spinner" />
         </div>
 
-        <div
-          v-else-if="instances.length === 0"
-          class="instance-empty"
-        >
-          <div class="instance-empty-title">
-            暂无运行中或等待创建的实例
-          </div>
-          <router-link
-            to="/challenges"
-            class="instance-empty-link"
-          >
+        <div v-else-if="instances.length === 0" class="instance-empty">
+          <div class="instance-empty-title">暂无运行中或等待创建的实例</div>
+          <router-link to="/challenges" class="instance-empty-link">
             前往靶场列表创建实例
           </router-link>
         </div>
 
-        <section
-          v-else
-          class="instance-directory"
-          aria-label="实例目录"
-        >
+        <section v-else class="instance-directory" aria-label="实例目录">
           <div class="instance-directory-top">
-            <h2 class="instance-directory-title">
-              实例列表
-            </h2>
-            <div class="instance-directory-meta">
-              共 {{ instances.length }} 个实例
-            </div>
+            <h2 class="instance-directory-title">实例列表</h2>
+            <div class="instance-directory-meta">共 {{ instances.length }} 个实例</div>
           </div>
 
           <div class="instance-directory-head">
@@ -131,21 +138,16 @@ const {
             <span>操作</span>
           </div>
 
-          <article
-            v-for="instance in instances"
-            :key="instance.id"
-            class="instance-row"
-          >
+          <article v-for="instance in instances" :key="instance.id" class="instance-row">
             <div class="instance-row-main">
-              <h2
-                class="instance-row-title"
-                :title="instance.challenge_title"
-              >
+              <h2 class="instance-row-title" :title="instance.challenge_title">
                 {{ instance.challenge_title }}
               </h2>
               <div class="instance-row-tags">
                 <span class="instance-chip instance-chip-category">{{ instance.category }}</span>
-                <span class="instance-chip instance-chip-difficulty">{{ instance.difficulty }}</span>
+                <span class="instance-chip instance-chip-difficulty">{{
+                  instance.difficulty
+                }}</span>
               </div>
             </div>
 
@@ -153,33 +155,20 @@ const {
               <template v-if="instance.status === 'running'">
                 <div
                   class="instance-row-mono instance-row-access-value"
-                  :title="
-                    instance.access_url ||
-                      (instance.ssh_info ? `${instance.ssh_info.host}:${instance.ssh_info.port}` : '')
-                  "
+                  :title="formatInstanceAccess(instance)"
                 >
-                  {{
-                    instance.access_url ||
-                      (instance.ssh_info ? `${instance.ssh_info.host}:${instance.ssh_info.port}` : '')
-                  }}
+                  {{ formatInstanceAccess(instance) }}
                 </div>
                 <div class="instance-row-inline-actions">
                   <button
                     type="button"
                     class="ui-btn ui-btn--link instance-link-btn"
-                    @click="
-                      copyAddress(
-                        instance.access_url ||
-                          (instance.ssh_info
-                            ? `${instance.ssh_info.host}:${instance.ssh_info.port}`
-                            : '')
-                      )
-                    "
+                    @click="copyAddress(formatInstanceAccess(instance))"
                   >
                     复制
                   </button>
                   <button
-                    v-if="instance.access_url"
+                    v-if="canOpenInstanceInBrowser(instance)"
                     type="button"
                     class="ui-btn ui-btn--link instance-link-btn"
                     @click="openTarget(instance.id)"
@@ -188,10 +177,7 @@ const {
                   </button>
                 </div>
               </template>
-              <div
-                v-else
-                class="instance-row-note"
-              >
+              <div v-else class="instance-row-note">
                 {{ getInstanceWaitingHint(instance) }}
               </div>
             </div>
@@ -213,10 +199,7 @@ const {
               >
                 {{ formatRemainingTime(instance.remaining) }}
               </span>
-              <span
-                v-else
-                class="instance-row-note"
-              >
+              <span v-else class="instance-row-note">
                 {{
                   instance.status === 'failed'
                     ? '启动失败'
@@ -229,7 +212,7 @@ const {
 
             <div class="instance-row-actions">
               <button
-                v-if="instance.status === 'running' && instance.share_scope !== 'shared'"
+                v-if="instance.status === 'running' && isInstanceManualActionAllowed(instance)"
                 :disabled="instance.remaining_extends <= 0"
                 class="ui-btn ui-btn--sm ui-btn--primary"
                 @click="extendTime(instance.id)"
@@ -237,16 +220,15 @@ const {
                 延时 +{{ EXTEND_DURATION_SECONDS / 60 }}min
               </button>
               <button
-                v-if="instance.share_scope !== 'shared'"
+                v-if="isInstanceManualActionAllowed(instance)"
                 class="ui-btn ui-btn--sm ui-btn--danger"
                 @click="destroyInstance(instance.id)"
               >
                 销毁
               </button>
-              <span
-                v-if="instance.share_scope === 'shared'"
-                class="instance-row-note"
-              >系统托管</span>
+              <span v-if="!isInstanceManualActionAllowed(instance)" class="instance-row-note">
+                系统托管
+              </span>
             </div>
           </article>
         </section>
@@ -255,27 +237,35 @@ const {
 
     <div
       v-if="showWarning"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+      class="instance-warning-overlay"
+      role="presentation"
       @click.self="closeWarning"
     >
-      <div class="warning-dialog w-full max-w-md rounded-[24px] border px-6 py-6 shadow-xl">
-        <h3 class="text-lg font-semibold text-[var(--journal-ink)]">
-          实例即将过期
-        </h3>
-        <p class="mt-2 text-sm leading-6 text-[var(--journal-muted)]">
-          实例 "{{ warningInstance?.challenge_title }}" 剩余时间不足 5 分钟，是否延长？
-        </p>
-        <div class="mt-6 flex justify-end gap-3">
+      <div
+        class="warning-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="instance-warning-title"
+        aria-describedby="instance-warning-description"
+      >
+        <div class="warning-dialog__header">
+          <h3 id="instance-warning-title" class="warning-dialog__title">实例即将过期</h3>
           <button
-            class="ui-btn ui-btn--secondary"
+            ref="warningCloseButton"
+            type="button"
+            class="ui-btn ui-btn--sm ui-btn--secondary"
+            aria-label="关闭实例过期提醒"
             @click="closeWarning"
           >
-            取消
+            关闭
           </button>
-          <button
-            class="ui-btn ui-btn--primary"
-            @click="extendFromWarning"
-          >
+        </div>
+        <p id="instance-warning-description" class="warning-dialog__description">
+          实例 "{{ warningInstance?.challenge_title }}" 剩余时间不足 5 分钟，是否延长？
+        </p>
+        <div class="warning-dialog__actions">
+          <button class="ui-btn ui-btn--secondary" @click="closeWarning">取消</button>
+          <button class="ui-btn ui-btn--primary" @click="extendFromWarning">
             延长 {{ EXTEND_DURATION_SECONDS / 60 }} 分钟
           </button>
         </div>
@@ -455,15 +445,76 @@ const {
   color: var(--journal-accent);
 }
 
+.instance-status-dot--warning {
+  color: var(--color-warning);
+}
+
+.instance-status-dot--success {
+  color: var(--color-success);
+}
+
+.instance-status-dot--danger {
+  color: var(--color-danger);
+}
+
+.instance-status-dot--muted {
+  color: var(--color-text-muted);
+}
+
 .instance-row-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
 
+.instance-warning-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  background: color-mix(in srgb, var(--color-bg-base) 64%, transparent);
+}
+
 .warning-dialog {
+  width: min(100%, 28rem);
+  max-height: min(32rem, calc(100vh - var(--space-12)));
+  overflow: auto;
+  padding: var(--space-6);
+  border: 1px solid var(--journal-border);
+  border-radius: var(--ui-dialog-radius-wide);
   border-color: var(--journal-border);
   background: color-mix(in srgb, var(--journal-surface) 98%, var(--color-bg-base));
+  box-shadow: var(--ui-dialog-shadow);
+}
+
+.warning-dialog__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.warning-dialog__title {
+  font-size: var(--font-size-18);
+  font-weight: 700;
+  color: var(--journal-ink);
+}
+
+.warning-dialog__description {
+  margin-top: var(--space-2);
+  font-size: var(--font-size-14);
+  line-height: 1.7;
+  color: var(--journal-muted);
+}
+
+.warning-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
 }
 
 @keyframes instanceSpin {

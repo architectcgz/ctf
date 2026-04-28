@@ -1,14 +1,12 @@
 import axios, {
   AxiosError,
-  AxiosHeaders,
   type AxiosInstance,
   type AxiosRequestConfig,
-  type InternalAxiosRequestConfig,
 } from 'axios'
 import NProgress from 'nprogress'
 
 import { useAuthStore } from '@/stores/auth'
-import { AUTH_ERROR_CODES, mapErrorCode } from '@/utils/errorMap'
+import { mapErrorCode } from '@/utils/errorMap'
 import { useToast } from '@/composables/useToast'
 import { redirectToErrorStatusPage, shouldRedirectToErrorStatusPage } from '@/utils/errorStatusPage'
 
@@ -58,65 +56,10 @@ const instance = axios.create({
   headers: { 'Content-Type': 'application/json' },
 })
 
-let isRefreshing = false
-let pendingRequests: Array<{
-  resolve: (value: unknown) => void
-  reject: (reason?: unknown) => void
-  config: AxiosRequestConfig
-}> = []
-
-function normalizeHeaders(headers?: AxiosRequestConfig['headers']): AxiosHeaders {
-  return AxiosHeaders.from((headers ?? {}) as any)
-}
-
-function attachAuth<T extends AxiosRequestConfig>(config: T): T {
-  const authStore = useAuthStore()
-  config.headers = normalizeHeaders(config.headers)
-  if (authStore.accessToken) {
-    ;(config.headers as AxiosHeaders).set('Authorization', `Bearer ${authStore.accessToken}`)
-  }
-  return config
-}
-
 instance.interceptors.request.use((config) => {
   NProgress.start()
-  return attachAuth(config as InternalAxiosRequestConfig)
+  return config
 })
-
-async function refreshTokens(): Promise<{ access_token: string }> {
-  const refreshClient = axios.create({
-    baseURL,
-    timeout: DEFAULT_TIMEOUT,
-    withCredentials: true,
-    headers: { 'Content-Type': 'application/json' },
-  })
-
-  const resp = await refreshClient.post<
-    ApiEnvelope<{ access_token: string; token_type?: string; expires_in?: number }>
-  >('/auth/refresh', {})
-  if (resp.data?.code !== 0) {
-    throw new ApiError(mapErrorCode(resp.data?.code) || '登录已过期，请重新登录', {
-      code: resp.data?.code,
-      requestId: resp.data?.request_id,
-      status: resp.status,
-    })
-  }
-  return resp.data.data
-}
-
-function isRefreshRequest(config: AxiosRequestConfig | undefined): boolean {
-  const url = config?.url || ''
-  return typeof url === 'string' && url.includes('/auth/refresh')
-}
-
-function humanizeError(err: unknown): string {
-  if (err instanceof ApiError) return err.message
-  if (axios.isAxiosError(err)) {
-    return err.message || '网络连接失败'
-  }
-  if (err instanceof Error) return err.message || '请求失败'
-  return '请求失败'
-}
 
 function resolveApiMessage(
   code: number | undefined,
@@ -186,42 +129,6 @@ instance.interceptors.response.use(
     const status = error.response?.status
     const code = error.response?.data?.code
 
-    if (
-      status === 401 &&
-      code === AUTH_ERROR_CODES.ACCESS_TOKEN_EXPIRED &&
-      !isRefreshRequest(error.config)
-    ) {
-      if (isRefreshing) {
-        return new Promise((resolve, reject) => {
-          pendingRequests.push({ resolve, reject, config: error.config || {} })
-        })
-      }
-
-      isRefreshing = true
-      const originalConfig = error.config || {}
-      try {
-        const tokens = await refreshTokens()
-        authStore.updateTokens(tokens.access_token)
-
-        pendingRequests.forEach(({ resolve, config }) => {
-          const replayConfig = attachAuth(config)
-          resolve(instance(replayConfig))
-        })
-
-        const replayOriginal = attachAuth(originalConfig)
-        return instance(replayOriginal)
-      } catch (refreshErr) {
-        pendingRequests.forEach(({ reject }) => reject(refreshErr))
-        authStore.logout()
-        toast.error(humanizeError(refreshErr))
-        redirectToErrorStatusPage(401, error.config?.url)
-        return Promise.reject(refreshErr)
-      } finally {
-        isRefreshing = false
-        pendingRequests = []
-      }
-    }
-
     if (status === 429) {
       const retryAfter = error.response?.headers?.['retry-after']
       const retryMessage = retryAfter
@@ -234,7 +141,7 @@ instance.interceptors.response.use(
       return Promise.reject(error)
     }
 
-    if (status === 401 && !isRefreshRequest(error.config)) {
+    if (status === 401) {
       const unauthorizedError = toApiError(
         code,
         error.response?.data?.request_id,

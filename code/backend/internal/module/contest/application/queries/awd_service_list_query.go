@@ -23,6 +23,11 @@ func (s *AWDService) ListServices(ctx context.Context, contestID, roundID int64)
 		return nil, err
 	}
 
+	serviceNames, err := s.loadServiceNames(ctx, contestID)
+	if err != nil {
+		return nil, err
+	}
+
 	resp := make([]*dto.AWDTeamServiceResp, 0, len(records))
 	for _, record := range records {
 		recordCopy := record
@@ -30,7 +35,20 @@ func (s *AWDService) ListServices(ctx context.Context, contestID, roundID int64)
 		if team := teams[record.TeamID]; team != nil {
 			teamName = team.Name
 		}
-		resp = append(resp, contestdomain.AWDTeamServiceRespFromModel(&recordCopy, teamName))
+		resp = append(resp, contestdomain.AWDTeamServiceRespFromModel(&recordCopy, teamName, serviceNames[record.ServiceID]))
 	}
 	return resp, nil
+}
+
+func (s *AWDService) loadServiceNames(ctx context.Context, contestID int64) (map[int64]string, error) {
+	definitions, err := s.repo.ListServiceDefinitionsByContest(ctx, contestID)
+	if err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+
+	names := make(map[int64]string, len(definitions))
+	for _, definition := range definitions {
+		names[definition.ServiceID] = definition.ServiceName
+	}
+	return names, nil
 }

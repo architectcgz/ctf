@@ -7,27 +7,26 @@ import (
 )
 
 type FlagValidator interface {
-	ValidateFlag(userID, challengeID int64, input string, nonce string) (bool, error)
+	ValidateFlag(ctx context.Context, userID, challengeID int64, input string, nonce string) (bool, error)
 }
 
 type ImageStore interface {
-	FindByID(id int64) (*model.Image, error)
+	FindByID(ctx context.Context, id int64) (*model.Image, error)
 }
 
 type ContestChallengeContract interface {
-	FindByID(id int64) (*model.Challenge, error)
-	BatchGetSolvedStatus(userID int64, challengeIDs []int64) (map[int64]bool, error)
-	BatchGetSolvedCount(challengeIDs []int64) (map[int64]int64, error)
+	FindByID(ctx context.Context, id int64) (*model.Challenge, error)
+	BatchGetSolvedStatus(ctx context.Context, userID int64, challengeIDs []int64) (map[int64]bool, error)
+	BatchGetSolvedCount(ctx context.Context, challengeIDs []int64) (map[int64]int64, error)
 }
 
 type PracticeChallengeContract interface {
-	FindByID(id int64) (*model.Challenge, error)
-	FindChallengeTopologyByChallengeID(challengeID int64) (*model.ChallengeTopology, error)
+	FindByID(ctx context.Context, id int64) (*model.Challenge, error)
+	FindChallengeTopologyByChallengeID(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error)
 }
 
 type ChallengeContract interface {
 	ContestChallengeContract
 	PracticeChallengeContract
-	FindPublishedForRecommendation(limit int, dimensions []string, excludeSolved []int64) ([]*model.Challenge, error)
-	FindPublishedForRecommendationWithContext(ctx context.Context, limit int, dimensions []string, excludeSolved []int64) ([]*model.Challenge, error)
+	FindPublishedForRecommendation(ctx context.Context, limit int, dimensions []string, excludeSolved []int64) ([]*model.Challenge, error)
 }

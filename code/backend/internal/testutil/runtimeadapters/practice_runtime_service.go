@@ -48,10 +48,11 @@ func (a *PracticeRuntimeService) CreateTopology(ctx context.Context, req *practi
 	}
 
 	result, err := a.provisioner.CreateTopology(ctx, &runtimeports.TopologyCreateRequest{
-		Networks:         toRuntimeTopologyNetworks(req.Networks),
-		Nodes:            toRuntimeTopologyNodes(req.Nodes),
-		Policies:         append([]model.TopologyTrafficPolicy(nil), req.Policies...),
-		ReservedHostPort: req.ReservedHostPort,
+		Networks:                   toRuntimeTopologyNetworks(req.Networks),
+		Nodes:                      toRuntimeTopologyNodes(req.Nodes),
+		Policies:                   append([]model.TopologyTrafficPolicy(nil), req.Policies...),
+		ReservedHostPort:           req.ReservedHostPort,
+		DisableEntryPortPublishing: req.DisableEntryPortPublishing,
 	})
 	if err != nil {
 		return nil, err
@@ -102,13 +103,14 @@ func toRuntimeTopologyNodes(items []practiceports.TopologyCreateNode) []runtimep
 	result := make([]runtimeports.TopologyCreateNode, 0, len(items))
 	for _, item := range items {
 		result = append(result, runtimeports.TopologyCreateNode{
-			Key:          item.Key,
-			Image:        item.Image,
-			Env:          cloneStringMap(item.Env),
-			ServicePort:  item.ServicePort,
-			IsEntryPoint: item.IsEntryPoint,
-			NetworkKeys:  append([]string(nil), item.NetworkKeys...),
-			Resources:    cloneResourceLimits(item.Resources),
+			Key:             item.Key,
+			Image:           item.Image,
+			Env:             cloneStringMap(item.Env),
+			ServicePort:     item.ServicePort,
+			ServiceProtocol: item.ServiceProtocol,
+			IsEntryPoint:    item.IsEntryPoint,
+			NetworkKeys:     append([]string(nil), item.NetworkKeys...),
+			Resources:       cloneResourceLimits(item.Resources),
 		})
 	}
 	return result

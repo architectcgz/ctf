@@ -1,9 +1,12 @@
 package infrastructure
 
 import (
+	"encoding/base64"
+	"encoding/json"
 	"reflect"
 	"testing"
 
+	"github.com/docker/docker/api/types/registry"
 	"github.com/docker/go-connections/nat"
 
 	"ctf-platform/internal/config"
@@ -71,6 +74,101 @@ func TestDefaultSecurityConfigUsesNormalizedSecurityOpts(t *testing.T) {
 	want := []string{"no-new-privileges:true"}
 	if !reflect.DeepEqual(got.SecurityOpt, want) {
 		t.Fatalf("DefaultSecurityConfig().SecurityOpt = %v, want %v", got.SecurityOpt, want)
+	}
+}
+
+func TestResolveContainerFilePathUsesWorkingDirForRelativePath(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name       string
+		workingDir string
+		filePath   string
+		want       string
+	}{
+		{
+			name:       "relative path uses container working dir",
+			workingDir: "/app",
+			filePath:   "app.py",
+			want:       "/app/app.py",
+		},
+		{
+			name:       "relative nested path uses container working dir",
+			workingDir: "/app",
+			filePath:   "src/main.py",
+			want:       "/app/src/main.py",
+		},
+		{
+			name:       "empty working dir falls back to root",
+			workingDir: "",
+			filePath:   "app.py",
+			want:       "/app.py",
+		},
+		{
+			name:       "absolute path is preserved",
+			workingDir: "/app",
+			filePath:   "/etc/hosts",
+			want:       "/etc/hosts",
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			got := resolveContainerFilePath(tt.workingDir, tt.filePath)
+			if got != tt.want {
+				t.Fatalf("resolveContainerFilePath() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestBuildImagePullRegistryAuthMatchesConfiguredRegistry(t *testing.T) {
+	t.Parallel()
+
+	auth := buildImagePullRegistryAuth("registry.example.edu/ctf/awd-supply-ticket:v1", config.ContainerRegistryConfig{
+		Enabled:  true,
+		Server:   "https://registry.example.edu/",
+		Username: "ctf",
+		Password: "registry-token",
+	})
+	if auth == "" {
+		t.Fatal("buildImagePullRegistryAuth() returned empty auth for configured registry")
+	}
+
+	decoded, err := base64.URLEncoding.DecodeString(auth)
+	if err != nil {
+		t.Fatalf("DecodeString() error = %v", err)
+	}
+
+	var got registry.AuthConfig
+	if err := json.Unmarshal(decoded, &got); err != nil {
+		t.Fatalf("Unmarshal() error = %v", err)
+	}
+	if got.ServerAddress != "registry.example.edu" {
+		t.Fatalf("ServerAddress = %q, want registry.example.edu", got.ServerAddress)
+	}
+	if got.Username != "ctf" {
+		t.Fatalf("Username = %q, want ctf", got.Username)
+	}
+	if got.Password != "registry-token" {
+		t.Fatalf("Password = %q, want registry-token", got.Password)
+	}
+}
+
+func TestBuildImagePullRegistryAuthSkipsUnmatchedRegistry(t *testing.T) {
+	t.Parallel()
+
+	auth := buildImagePullRegistryAuth("docker.io/library/nginx:latest", config.ContainerRegistryConfig{
+		Enabled:  true,
+		Server:   "registry.example.edu",
+		Username: "ctf",
+		Password: "registry-token",
+	})
+	if auth != "" {
+		t.Fatalf("buildImagePullRegistryAuth() = %q, want empty auth for public registry", auth)
 	}
 }
 

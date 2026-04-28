@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { flushPromises, mount } from '@vue/test-utils'
 import { readFileSync } from 'node:fs'
 import InstanceList from '../InstanceList.vue'
 import instanceListSource from '../InstanceList.vue?raw'
@@ -117,8 +117,10 @@ describe('InstanceList', () => {
   })
 
   it('实例页概况卡片应使用统一 metric-panel 样式类', () => {
-    expect(instanceListSource).toContain('<div class="workspace-overline">Instances</div>')
-    expect(instanceListSource).toContain('<h1 class="instance-title workspace-page-title">我的实例</h1>')
+    expect(instanceListSource).toMatch(/<div class="workspace-overline">\s*Instances\s*<\/div>/)
+    expect(instanceListSource).toMatch(
+      /<h1 class="instance-title workspace-page-title">\s*我的实例\s*<\/h1>/
+    )
     expect(instanceListSource).not.toContain('<div class="journal-eyebrow">Instances</div>')
     expect(instanceListSource).not.toContain('journal-eyebrow-text')
     expect(instanceListSource).toContain('class="instance-summary-grid metric-panel-grid"')
@@ -147,5 +149,157 @@ describe('InstanceList', () => {
     expect(instanceListSource).toContain('class="ui-btn ui-btn--secondary"')
     expect(instanceListSource).not.toMatch(/^\.instance-link-btn\s*\{/m)
     expect(instanceListSource).not.toMatch(/^\.instance-btn-danger\s*\{/m)
+  })
+
+  it('AWD 队伍实例不应显示延时或销毁操作', async () => {
+    instanceApiMocks.getMyInstances.mockResolvedValueOnce([
+      {
+        id: 'awd-inst-1',
+        challenge_id: 'awd-service-1',
+        challenge_title: 'Bank Portal',
+        category: 'web',
+        difficulty: 'medium',
+        status: 'running',
+        access_url: '',
+        flag_type: 'dynamic',
+        share_scope: 'per_team',
+        contest_mode: 'awd',
+        expires_at: '2099-01-01T00:00:00Z',
+        remaining_extends: 1,
+        created_at: '2026-03-05T00:00:00Z',
+      },
+    ])
+
+    const wrapper = mount(InstanceList, {
+      global: {
+        stubs: {
+          RouterLink: {
+            template: '<a><slot /></a>',
+          },
+        },
+      },
+    })
+
+    await flushPromises()
+
+    const row = wrapper.get('.instance-row')
+    expect(row.text()).toContain('Bank Portal')
+    expect(row.text()).toContain('系统托管')
+    expect(row.text()).not.toContain('延时')
+    expect(row.text()).not.toContain('销毁')
+  })
+
+  it('即将过期提醒应具备对话框语义、关闭按钮和 ESC 关闭能力', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-03-05T00:00:00Z'))
+    instanceApiMocks.getMyInstances.mockResolvedValueOnce([
+      {
+        id: 'inst-expiring',
+        challenge_id: 'chal-expiring',
+        challenge_title: '即将过期靶机',
+        category: 'web',
+        difficulty: 'easy',
+        status: 'running',
+        access_url: 'http://example.test',
+        flag_type: 'dynamic',
+        share_scope: 'per_user',
+        expires_at: '2026-03-05T00:04:00Z',
+        remaining_extends: 1,
+        created_at: '2026-03-05T00:00:00Z',
+      },
+    ])
+
+    const wrapper = mount(InstanceList, {
+      attachTo: document.body,
+      global: {
+        stubs: {
+          RouterLink: {
+            template: '<a><slot /></a>',
+          },
+        },
+      },
+    })
+
+    await flushPromises()
+    vi.advanceTimersByTime(1000)
+    await flushPromises()
+
+    const dialog = wrapper.get('[role="dialog"]')
+    expect(dialog.attributes('aria-modal')).toBe('true')
+    expect(dialog.attributes('aria-labelledby')).toBe('instance-warning-title')
+    expect(dialog.attributes('aria-describedby')).toBe('instance-warning-description')
+    expect(wrapper.text()).toContain('实例即将过期')
+    expect(wrapper.get('button[aria-label="关闭实例过期提醒"]').element).toBe(
+      document.activeElement
+    )
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.find('[role="dialog"]').exists()).toBe(false)
+    wrapper.unmount()
+    vi.useRealTimers()
+  })
+
+  it('等待创建中的实例应定时重新同步服务端状态', async () => {
+    vi.useFakeTimers()
+    instanceApiMocks.getMyInstances
+      .mockResolvedValueOnce([
+        {
+          id: 'inst-2',
+          challenge_id: 'chal-2',
+          challenge_title: '反序列化迷宫',
+          category: 'web',
+          difficulty: 'medium',
+          status: 'pending',
+          access_url: '',
+          flag_type: 'dynamic',
+          share_scope: 'per_user',
+          expires_at: '2099-01-01T00:00:00Z',
+          remaining_extends: 1,
+          created_at: '2026-03-05T00:00:00Z',
+          queue_position: 2,
+          eta_seconds: 90,
+          progress: 35,
+        },
+      ])
+      .mockResolvedValueOnce([
+        {
+          id: 'inst-2',
+          challenge_id: 'chal-2',
+          challenge_title: '反序列化迷宫',
+          category: 'web',
+          difficulty: 'medium',
+          status: 'running',
+          access_url: 'http://instance.ready.test',
+          flag_type: 'dynamic',
+          share_scope: 'per_user',
+          expires_at: '2099-01-01T00:00:00Z',
+          remaining_extends: 1,
+          created_at: '2026-03-05T00:00:00Z',
+        },
+      ])
+
+    const wrapper = mount(InstanceList, {
+      global: {
+        stubs: {
+          RouterLink: {
+            template: '<a><slot /></a>',
+          },
+        },
+      },
+    })
+
+    await flushPromises()
+    expect(wrapper.text()).toContain('等待创建')
+
+    vi.advanceTimersByTime(5000)
+    await flushPromises()
+
+    expect(instanceApiMocks.getMyInstances.mock.calls.length).toBeGreaterThanOrEqual(2)
+    expect(wrapper.text()).toContain('运行中')
+    expect(wrapper.text()).toContain('http://instance.ready.test')
+
+    vi.useRealTimers()
   })
 })

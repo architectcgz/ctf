@@ -2,8 +2,20 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import { createRouter, createMemoryHistory } from 'vue-router'
 
+import ScoreboardDetail from '../ScoreboardDetail.vue'
 import ScoreboardView from '../ScoreboardView.vue'
 import scoreboardSource from '../ScoreboardView.vue?raw'
+
+function createScoreboardRouter(initialPath = '/scoreboard') {
+  const router = createRouter({
+    history: createMemoryHistory(),
+    routes: [
+      { path: '/scoreboard', name: 'Scoreboard', component: ScoreboardView },
+      { path: '/scoreboard/:contestId', name: 'ScoreboardDetail', component: ScoreboardDetail },
+    ],
+  })
+  return router.push(initialPath).then(() => router.isReady()).then(() => router)
+}
 
 const { getContestsMock, getScoreboardMock, getPracticeRankingMock } = vi.hoisted(() => ({
   getContestsMock: vi.fn(),
@@ -103,43 +115,7 @@ describe('ScoreboardView', () => {
       page_size: 100,
     })
 
-    getScoreboardMock.mockImplementation(async (contestId: string) => ({
-      contest: {
-        id: contestId,
-        title: `${contestId}-title`,
-        status:
-          contestId === 'contest-old'
-            ? 'ended'
-            : contestId === 'contest-frozen'
-              ? 'frozen'
-              : 'running',
-        started_at: '2026-03-12T00:00:00Z',
-        ends_at: '2026-03-12T12:00:00Z',
-      },
-      scoreboard: {
-        list: [
-          {
-            rank: 1,
-            team_id: `${contestId}-team`,
-            team_name: `${contestId}-team-name`,
-            score: 1000,
-            solved_count: 5,
-            last_submission_at: '2026-03-12T10:15:00Z',
-          },
-        ],
-        total: 1,
-        page: 1,
-        page_size: 20,
-      },
-      frozen: contestId === 'contest-frozen',
-    }))
-
-    const router = createRouter({
-      history: createMemoryHistory(),
-      routes: [{ path: '/scoreboard', name: 'Scoreboard', component: ScoreboardView }],
-    })
-    await router.push('/scoreboard')
-    await router.isReady()
+    const router = await createScoreboardRouter()
 
     const wrapper = mount(ScoreboardView, {
       global: {
@@ -154,20 +130,23 @@ describe('ScoreboardView', () => {
 
     expect(wrapper.text()).toContain('竞赛排行榜')
     expect(wrapper.text()).toContain('积分排行榜')
+    expect(wrapper.find('#scoreboard-panel-contest').classes()).toContain('active')
+    expect(wrapper.find('#scoreboard-panel-points').classes()).not.toContain('active')
     expect(cards).toHaveLength(3)
     expect(cards[0].text()).toContain('当前竞赛')
     expect(cards[1].text()).toContain('冻结竞赛')
     expect(cards[2].text()).toContain('往期竞赛')
-    expect(wrapper.text()).toContain('进行中竞赛支持实时刷新，提交后榜单会自动更新。')
-    expect(wrapper.text()).toContain('封榜阶段仅展示冻结前排名，解封后会同步最终成绩。')
-    expect(wrapper.text()).toContain('历史竞赛展示最终成绩，可用于复盘队伍解题表现。')
+    expect(wrapper.text()).toContain('进行中竞赛进入详情后支持实时刷新，提交后榜单会自动更新。')
+    expect(wrapper.text()).toContain('封榜阶段先展示竞赛入口，进入后查看冻结前排名。')
+    expect(wrapper.text()).toContain('历史竞赛进入详情后展示最终成绩，可用于复盘队伍解题表现。')
     expect(wrapper.text()).toContain('当前可查看排行的竞赛总数')
-    expect(wrapper.text()).toContain('排行榜加载异常的竞赛分区')
+    expect(wrapper.text()).toContain('支持进入后实时刷新的竞赛数量')
     expect(wrapper.text()).not.toContain('报名中竞赛')
-    expect(getScoreboardMock).toHaveBeenCalledTimes(3)
+    expect(wrapper.find('a[href="/scoreboard/contest-running"]').exists()).toBe(true)
+    expect(getScoreboardMock).not.toHaveBeenCalled()
   })
 
-  it('同时展示当前排行和历史排行内容', async () => {
+  it('竞赛排行列表不直接展开当前排行和历史排行内容', async () => {
     getPracticeRankingMock.mockResolvedValue([])
     getContestsMock.mockResolvedValue({
       list: [
@@ -193,68 +172,7 @@ describe('ScoreboardView', () => {
       page_size: 100,
     })
 
-    getScoreboardMock.mockImplementation(async (contestId: string) => {
-      if (contestId === 'contest-history') {
-        return {
-          contest: {
-            id: 'contest-history',
-            title: '往期竞赛',
-            status: 'ended',
-            started_at: '2026-03-01T00:00:00Z',
-            ends_at: '2026-03-01T12:00:00Z',
-          },
-          scoreboard: {
-            list: [
-              {
-                rank: 1,
-                team_id: 'team-history',
-                team_name: 'History Masters',
-                score: 1980,
-                solved_count: 6,
-                last_submission_at: '2026-03-01T10:15:00Z',
-              },
-            ],
-            total: 1,
-            page: 1,
-            page_size: 20,
-          },
-          frozen: false,
-        }
-      }
-
-      return {
-        contest: {
-          id: 'contest-running',
-          title: '当前竞赛',
-          status: 'running',
-          started_at: '2026-03-12T00:00:00Z',
-          ends_at: '2026-03-12T12:00:00Z',
-        },
-        scoreboard: {
-          list: [
-            {
-              rank: 1,
-              team_id: 'team-running',
-              team_name: 'Current Champions',
-              score: 2450,
-              solved_count: 8,
-              last_submission_at: '2026-03-12T10:15:00Z',
-            },
-          ],
-          total: 1,
-          page: 1,
-          page_size: 20,
-        },
-        frozen: false,
-      }
-    })
-
-    const router = createRouter({
-      history: createMemoryHistory(),
-      routes: [{ path: '/scoreboard', name: 'Scoreboard', component: ScoreboardView }],
-    })
-    await router.push('/scoreboard')
-    await router.isReady()
+    const router = await createScoreboardRouter()
 
     const wrapper = mount(ScoreboardView, {
       global: {
@@ -265,72 +183,21 @@ describe('ScoreboardView', () => {
     await flushPromises()
     await flushPromises()
 
-    expect(wrapper.text()).toContain('Current Champions')
-    expect(wrapper.text()).toContain('History Masters')
-    expect(wrapper.text()).toContain('按竞赛开始时间倒序展示排行榜')
+    expect(wrapper.text()).toContain('当前竞赛')
+    expect(wrapper.text()).toContain('往期竞赛')
+    expect(wrapper.text()).toContain('点击进入排行详情')
+    expect(wrapper.text()).not.toContain('Current Champions')
+    expect(wrapper.text()).not.toContain('History Masters')
+    expect(wrapper.text()).not.toContain('查看完整排行榜')
+    expect(getScoreboardMock).not.toHaveBeenCalled()
   })
 
-  it('收到进行中竞赛的 scoreboard.updated 后只刷新对应竞赛', async () => {
-    getPracticeRankingMock.mockResolvedValue([])
-    getContestsMock.mockResolvedValue({
-      list: [
-        {
-          id: 'contest-history',
-          title: '往期竞赛',
-          mode: 'jeopardy',
-          status: 'ended',
-          starts_at: '2026-03-01T00:00:00Z',
-          ends_at: '2026-03-01T12:00:00Z',
-        },
-        {
-          id: 'contest-running',
-          title: '当前竞赛',
-          mode: 'jeopardy',
-          status: 'running',
-          starts_at: '2026-03-12T00:00:00Z',
-          ends_at: '2026-03-12T12:00:00Z',
-        },
-      ],
-      total: 2,
-      page: 1,
-      page_size: 100,
-    })
-
+  it('排行详情页收到 scoreboard.updated 后刷新当前竞赛', async () => {
     getScoreboardMock.mockImplementation(async (contestId: string) => {
-      if (contestId === 'contest-history') {
-        return {
-          contest: {
-            id: 'contest-history',
-            title: '往期竞赛',
-            status: 'ended',
-            started_at: '2026-03-01T00:00:00Z',
-            ends_at: '2026-03-01T12:00:00Z',
-          },
-          scoreboard: {
-            list: [
-              {
-                rank: 1,
-                team_id: 'team-history',
-                team_name: 'History Masters',
-                score: 1980,
-                solved_count: 6,
-                last_submission_at: '2026-03-01T10:15:00Z',
-              },
-            ],
-            total: 1,
-            page: 1,
-            page_size: 20,
-          },
-          frozen: false,
-        }
-      }
-
-      const refreshCount = getScoreboardMock.mock.calls.filter(
-        ([id]) => id === 'contest-running'
-      ).length
+      const refreshCount = getScoreboardMock.mock.calls.filter(([id]) => id === contestId).length
       return {
         contest: {
-          id: 'contest-running',
+          id: contestId,
           title: '当前竞赛',
           status: 'running',
           started_at: '2026-03-12T00:00:00Z',
@@ -355,14 +222,8 @@ describe('ScoreboardView', () => {
       }
     })
 
-    const router = createRouter({
-      history: createMemoryHistory(),
-      routes: [{ path: '/scoreboard', name: 'Scoreboard', component: ScoreboardView }],
-    })
-    await router.push('/scoreboard')
-    await router.isReady()
-
-    const wrapper = mount(ScoreboardView, {
+    const router = await createScoreboardRouter('/scoreboard/contest-running')
+    const wrapper = mount(ScoreboardDetail, {
       global: {
         plugins: [router],
       },
@@ -371,8 +232,8 @@ describe('ScoreboardView', () => {
     await flushPromises()
     await flushPromises()
 
-    expect(getScoreboardMock).toHaveBeenCalledTimes(2)
-    expect(webSocketMocks.getHandlers('contests/contest-history/scoreboard')).toBeUndefined()
+    expect(getScoreboardMock).toHaveBeenCalledTimes(1)
+    expect(wrapper.text()).toContain('Current Champions')
 
     webSocketMocks.getHandlers('contests/contest-running/scoreboard')?.['scoreboard.updated']?.({
       contest_id: 'contest-running',
@@ -381,9 +242,93 @@ describe('ScoreboardView', () => {
     await flushPromises()
     await flushPromises()
 
-    expect(getScoreboardMock).toHaveBeenCalledTimes(3)
+    expect(getScoreboardMock).toHaveBeenCalledTimes(2)
     expect(getScoreboardMock.mock.calls.at(-1)?.[0]).toBe('contest-running')
     expect(wrapper.text()).toContain('Updated Champions')
+  })
+
+  it('排行详情页只展示指定竞赛的排行内容', async () => {
+    getScoreboardMock.mockResolvedValue({
+      contest: {
+        id: 'contest-history',
+        title: '往期竞赛',
+        status: 'ended',
+        started_at: '2026-03-01T00:00:00Z',
+        ends_at: '2026-03-01T12:00:00Z',
+      },
+      scoreboard: {
+        list: [
+          {
+            rank: 1,
+            team_id: 'team-history',
+            team_name: 'History Masters',
+            score: 1980,
+            solved_count: 6,
+            last_submission_at: '2026-03-01T10:15:00Z',
+          },
+        ],
+        total: 1,
+        page: 1,
+        page_size: 20,
+      },
+      frozen: false,
+    })
+
+    const router = await createScoreboardRouter('/scoreboard/contest-history')
+    const wrapper = mount(ScoreboardDetail, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await flushPromises()
+    await flushPromises()
+
+    expect(getScoreboardMock).toHaveBeenCalledWith('contest-history', { page: 1, page_size: 100 })
+    expect(wrapper.text()).toContain('往期竞赛')
+    expect(wrapper.text()).toContain('History Masters')
+    expect(wrapper.findAll('[data-testid="scoreboard-detail-row"]')).toHaveLength(1)
+  })
+
+  it('列表页不会为竞赛列表建立实时排行榜连接', async () => {
+    getPracticeRankingMock.mockResolvedValue([])
+    getContestsMock.mockResolvedValue({
+      list: [
+        {
+          id: 'contest-history',
+          title: '往期竞赛',
+          mode: 'jeopardy',
+          status: 'ended',
+          starts_at: '2026-03-01T00:00:00Z',
+          ends_at: '2026-03-01T12:00:00Z',
+        },
+        {
+          id: 'contest-running',
+          title: '当前竞赛',
+          mode: 'jeopardy',
+          status: 'running',
+          starts_at: '2026-03-12T00:00:00Z',
+          ends_at: '2026-03-12T12:00:00Z',
+        },
+      ],
+      total: 2,
+      page: 1,
+      page_size: 100,
+    })
+
+    const router = await createScoreboardRouter()
+    mount(ScoreboardView, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await flushPromises()
+    await flushPromises()
+
+    expect(getScoreboardMock).not.toHaveBeenCalled()
+    expect(webSocketMocks.getHandlers('contests/contest-history/scoreboard')).toBeUndefined()
+    expect(webSocketMocks.getHandlers('contests/contest-running/scoreboard')).toBeUndefined()
   })
 
   it('排行榜页概况卡片应使用统一 metric-panel 样式类', () => {
@@ -397,12 +342,105 @@ describe('ScoreboardView', () => {
   it('tabs 应直接位于页面顶部，points 页签不应重复渲染局部页头', () => {
     expect(scoreboardSource).not.toContain('<header class="scoreboard-topbar">')
     expect(scoreboardSource).not.toContain('<h2 class="scoreboard-directory-title">积分排行榜</h2>')
-    expect(scoreboardSource).toContain(
-      '<div class="workspace-overline scoreboard-panel-overline">Contest Scoreboard</div>'
-    )
-    expect(scoreboardSource).toContain(
-      '<div class="workspace-overline scoreboard-panel-overline">Points Scoreboard</div>'
-    )
+    expect(scoreboardSource).toContain('Contest Scoreboard')
+    expect(scoreboardSource).toContain('Points Scoreboard')
+  })
+
+  it('排行榜顶部页签应接入统一 workspace tab 样式', () => {
+    expect(scoreboardSource).toContain('class="workspace-tabbar top-tabs"')
+    expect(scoreboardSource).toContain('class="workspace-tab top-tab"')
+    expect(scoreboardSource).not.toContain('--page-top-tabs-gap: var(--space-7);')
+    expect(scoreboardSource).not.toContain('--page-top-tabs-padding: 0 var(--space-7);')
+    expect(scoreboardSource).not.toContain('--page-top-tab-min-height: 52px;')
+  })
+
+  it('竞赛排行列表分页展示并支持切换下一页', async () => {
+    getPracticeRankingMock.mockResolvedValue([])
+    getContestsMock.mockResolvedValue({
+      list: Array.from({ length: 7 }, (_, index) => {
+        const day = String(12 - index).padStart(2, '0')
+        return {
+          id: `contest-${index + 1}`,
+          title: `竞赛 ${index + 1}`,
+          mode: 'jeopardy',
+          status: 'running',
+          starts_at: `2026-03-${day}T00:00:00Z`,
+          ends_at: `2026-03-${day}T12:00:00Z`,
+        }
+      }),
+      total: 7,
+      page: 1,
+      page_size: 100,
+    })
+
+    const router = await createScoreboardRouter()
+    const wrapper = mount(ScoreboardView, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await flushPromises()
+    await flushPromises()
+
+    const firstPageCards = wrapper.findAll('[data-testid="scoreboard-card"]')
+    expect(firstPageCards).toHaveLength(6)
+    expect(wrapper.find('.scoreboard-pagination').text()).toContain('共 7 个竞赛')
+    expect(wrapper.find('.scoreboard-pagination').text()).toContain('1 / 2')
+    expect(firstPageCards.some((card) => card.text().includes('竞赛 1'))).toBe(true)
+    expect(firstPageCards.some((card) => card.text().includes('竞赛 7'))).toBe(false)
+
+    const nextButton = wrapper
+      .findAll('.page-pagination-controls__button')
+      .find((button) => button.text().trim() === '下一页')
+    expect(nextButton).toBeTruthy()
+    await nextButton?.trigger('click')
+
+    const secondPageCards = wrapper.findAll('[data-testid="scoreboard-card"]')
+    expect(secondPageCards).toHaveLength(1)
+    expect(wrapper.find('.scoreboard-pagination').text()).toContain('2 / 2')
+    expect(secondPageCards[0].text()).toContain('竞赛 7')
+    expect(secondPageCards[0].text()).not.toContain('竞赛 1')
+  })
+
+  it('竞赛排行列表只有一页时也应显示分页控件', async () => {
+    getPracticeRankingMock.mockResolvedValue([])
+    getContestsMock.mockResolvedValue({
+      list: [
+        {
+          id: 'contest-running',
+          title: '当前竞赛',
+          mode: 'jeopardy',
+          status: 'running',
+          starts_at: '2026-03-12T00:00:00Z',
+          ends_at: '2026-03-12T12:00:00Z',
+        },
+      ],
+      total: 1,
+      page: 1,
+      page_size: 100,
+    })
+
+    const router = await createScoreboardRouter()
+    const wrapper = mount(ScoreboardView, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await flushPromises()
+    await flushPromises()
+
+    const pagination = wrapper.find('.scoreboard-pagination')
+    expect(pagination.exists()).toBe(true)
+    expect(pagination.text()).toContain('共 1 个竞赛')
+    expect(pagination.text()).toContain('上一页')
+    expect(pagination.text()).toContain('1 / 1')
+    expect(pagination.text()).toContain('下一页')
+
+    const paginationButtons = wrapper.findAll('.page-pagination-controls__button')
+    expect(paginationButtons[0].attributes('disabled')).toBeDefined()
+    expect(paginationButtons[1].attributes('disabled')).toBeDefined()
   })
 
   it('排行榜页级 shell 不应继续携带 journal-eyebrow-text 修饰类', () => {
@@ -469,12 +507,7 @@ describe('ScoreboardView', () => {
       frozen: false,
     })
 
-    const router = createRouter({
-      history: createMemoryHistory(),
-      routes: [{ path: '/scoreboard', name: 'Scoreboard', component: ScoreboardView }],
-    })
-    await router.push('/scoreboard?tab=points')
-    await router.isReady()
+    const router = await createScoreboardRouter('/scoreboard?panel=points')
 
     const wrapper = mount(ScoreboardView, {
       global: {
@@ -487,6 +520,8 @@ describe('ScoreboardView', () => {
 
     expect(wrapper.text()).toContain('竞赛排行榜')
     expect(wrapper.text()).toContain('积分排行榜')
+    expect(wrapper.find('#scoreboard-panel-points').classes()).toContain('active')
+    expect(wrapper.find('#scoreboard-panel-contest').classes()).not.toContain('active')
     expect(wrapper.text()).toContain('student_user')
     expect(wrapper.text()).toContain('320')
     expect(wrapper.text()).toContain('4')

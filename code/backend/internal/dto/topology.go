@@ -16,15 +16,16 @@ type TopologyNetworkReq struct {
 }
 
 type TopologyNodeReq struct {
-	Key         string                `json:"key" binding:"required,max=64"`
-	Name        string                `json:"name" binding:"required,max=128"`
-	ImageID     int64                 `json:"image_id" binding:"omitempty,min=1"`
-	ServicePort int                   `json:"service_port" binding:"omitempty,min=1,max=65535"`
-	InjectFlag  bool                  `json:"inject_flag"`
-	Tier        string                `json:"tier" binding:"omitempty,oneof=public service internal"`
-	NetworkKeys []string              `json:"network_keys" binding:"omitempty,min=1,dive,required,max=64"`
-	Env         map[string]string     `json:"env"`
-	Resources   *TopologyResourcesReq `json:"resources"`
+	Key             string                `json:"key" binding:"required,max=64"`
+	Name            string                `json:"name" binding:"required,max=128"`
+	ImageID         int64                 `json:"image_id" binding:"omitempty,min=1"`
+	ServicePort     int                   `json:"service_port" binding:"omitempty,min=1,max=65535"`
+	ServiceProtocol string                `json:"service_protocol" binding:"omitempty,oneof=http tcp"`
+	InjectFlag      bool                  `json:"inject_flag"`
+	Tier            string                `json:"tier" binding:"omitempty,oneof=public service internal"`
+	NetworkKeys     []string              `json:"network_keys" binding:"omitempty,min=1,dive,required,max=64"`
+	Env             map[string]string     `json:"env"`
+	Resources       *TopologyResourcesReq `json:"resources"`
 }
 
 type TopologyLinkReq struct {
@@ -63,15 +64,16 @@ type TopologyNetworkResp struct {
 }
 
 type TopologyNodeResp struct {
-	Key         string                 `json:"key"`
-	Name        string                 `json:"name"`
-	ImageID     int64                  `json:"image_id,omitempty"`
-	ServicePort int                    `json:"service_port,omitempty"`
-	InjectFlag  bool                   `json:"inject_flag,omitempty"`
-	Tier        string                 `json:"tier,omitempty"`
-	NetworkKeys []string               `json:"network_keys,omitempty"`
-	Env         map[string]string      `json:"env,omitempty"`
-	Resources   *TopologyResourcesResp `json:"resources,omitempty"`
+	Key             string                 `json:"key"`
+	Name            string                 `json:"name"`
+	ImageID         int64                  `json:"image_id,omitempty"`
+	ServicePort     int                    `json:"service_port,omitempty"`
+	ServiceProtocol string                 `json:"service_protocol,omitempty"`
+	InjectFlag      bool                   `json:"inject_flag,omitempty"`
+	Tier            string                 `json:"tier,omitempty"`
+	NetworkKeys     []string               `json:"network_keys,omitempty"`
+	Env             map[string]string      `json:"env,omitempty"`
+	Resources       *TopologyResourcesResp `json:"resources,omitempty"`
 }
 
 type TopologyLinkResp struct {

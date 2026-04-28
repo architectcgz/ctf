@@ -447,7 +447,7 @@ git commit -m "feat(竞赛): 将 AWD 运行态承接到工作台"
 ## Task 6: 做最终验证并补文档回链
 
 **Files:**
-- Modify: `docs/superpowers/specs/2026-04-14-contest-orchestration-workbench-design.md`
+- Modify: `docs/architecture/features/2026-04-14-contest-orchestration-workbench-design.md`
 - Modify: `docs/superpowers/plans/2026-04-15-contest-orchestration-workbench-implementation.md`
 
 - [ ] **Step 1: 运行最小充分验证**
@@ -486,7 +486,7 @@ git diff --stat
 - [ ] **Step 4: 提交最终验证与文档回链**
 
 ```bash
-git add docs/superpowers/specs/2026-04-14-contest-orchestration-workbench-design.md docs/superpowers/plans/2026-04-15-contest-orchestration-workbench-implementation.md
+git add docs/architecture/features/2026-04-14-contest-orchestration-workbench-design.md docs/superpowers/plans/2026-04-15-contest-orchestration-workbench-implementation.md
 git commit -m "docs(竞赛): 更新编排工作台实施记录"
 ```
 

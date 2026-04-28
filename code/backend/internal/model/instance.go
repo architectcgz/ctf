@@ -19,6 +19,7 @@ type Instance struct {
 	AccessURL      string     `gorm:"size:255"`
 	Nonce          string     `gorm:"size:64"`
 	ExpiresAt      time.Time  `gorm:"not null;index"`
+	DestroyedAt    *time.Time `gorm:"column:destroyed_at;index"`
 	ExtendCount    int        `gorm:"default:0"`
 	MaxExtends     int        `gorm:"default:2"`
 	CreatedAt      time.Time

@@ -28,9 +28,14 @@ import { useAwdCheckResultPresentation } from '@/composables/useAwdCheckResultPr
 import { useContestChallengePool } from '@/composables/useContestChallengePool'
 import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
 import { useToast } from '@/composables/useToast'
-import { mapPlatformContestAwdServicesToChallengeLinks } from '@/utils/platformContestAwdChallengeLinks'
+import {
+  mapPlatformContestAwdServicesToChallengeLinks,
+  mergePlatformContestChallengesWithAwdServices,
+} from '@/utils/platformContestAwdChallengeLinks'
 
 import ContestChallengeEditorDialog from './ContestChallengeEditorDialog.vue'
+import ContestChallengeFilterStrip from './ContestChallengeFilterStrip.vue'
+import ContestChallengeSummaryStrip from './ContestChallengeSummaryStrip.vue'
 
 const props = defineProps<{
   contestId: string
@@ -98,9 +103,7 @@ const existingChallengeIdSet = computed(
 )
 const existingChallengeIds = computed(() => Array.from(existingChallengeIdSet.value))
 const dialogChallengeOptions = computed(() =>
-  isAwdContest.value
-    ? []
-    : dialogMode.value === 'edit'
+  dialogMode.value === 'edit'
     ? challengeCatalog.value
     : challengeCatalog.value.filter((item) => !existingChallengeIdSet.value.has(String(item.id)))
 )
@@ -120,6 +123,10 @@ function getChallengeTitle(item: AdminContestChallengeViewData): string {
   return item.title?.trim() || `Challenge #${item.challenge_id}`
 }
 
+function getChallengeActionKey(item: AdminContestChallengeViewData): string {
+  return item.challenge_id
+}
+
 function getCheckerLabel(item: AdminContestChallengeViewData): string {
   return getCheckerTypeLabel(item.awd_checker_type) || '未配置'
 }
@@ -129,7 +136,7 @@ function getValidationSummary(item: AdminContestChallengeViewData): string {
 }
 
 function getAwdScoreSummary(item: AdminContestChallengeViewData): string {
-  return `S:${item.awd_sla_score ?? 0} D:${item.awd_defense_score ?? 0}`
+  return `SLA ${item.awd_sla_score ?? 0} / 防守 ${item.awd_defense_score ?? 0}`
 }
 
 function getPreviewSummary(item: AdminContestChallengeViewData): string {
@@ -149,8 +156,14 @@ async function refresh() {
   loading.value = true
   try {
     if (props.contestMode === 'awd') {
-      const nextAwdServices = await listContestAWDServices(props.contestId)
-      localChallengeLinks.value = mapPlatformContestAwdServicesToChallengeLinks(nextAwdServices)
+      const [nextChallengeLinks, nextAwdServices] = await Promise.all([
+        listAdminContestChallenges(props.contestId),
+        listContestAWDServices(props.contestId),
+      ])
+      localChallengeLinks.value =
+        nextChallengeLinks.length > 0
+          ? mergePlatformContestChallengesWithAwdServices(nextChallengeLinks, nextAwdServices)
+          : mapPlatformContestAwdServicesToChallengeLinks(nextAwdServices)
     } else {
       localChallengeLinks.value = await listAdminContestChallenges(props.contestId)
     }
@@ -195,9 +208,7 @@ function openCreateDialog() {
   dialogMode.value = 'create'
   editingChallenge.value = null
   dialogOpen.value = true
-  if (!isAwdContest.value) {
-    void ensureChallengeCatalogLoaded()
-  }
+  void ensureChallengeCatalogLoaded()
   if (isAwdContest.value) void ensureTemplateCatalogLoaded()
 }
 
@@ -223,16 +234,44 @@ interface ContestOrchestrationSavePayload {
   points: number
   order: number
   is_visible: boolean
+  awd_checker_type?: AdminContestChallengeViewData['awd_checker_type']
+  awd_checker_config?: Record<string, unknown>
+  awd_sla_score?: number
+  awd_defense_score?: number
+  awd_checker_preview_token?: string
 }
 
 async function handleSave(payload: ContestOrchestrationSavePayload) {
   saving.value = true
   try {
     if (isAwdContest.value) {
+      if (!payload.template_id || !payload.challenge_id) {
+        toast.error('请选择题目和服务模板')
+        return
+      }
       if (dialogMode.value === 'create') {
-        await createContestAWDService(props.contestId, payload)
+        await createContestAWDService(props.contestId, {
+          challenge_id: payload.challenge_id,
+          template_id: payload.template_id,
+          order: payload.order,
+          is_visible: payload.is_visible,
+        } as Parameters<typeof createContestAWDService>[1] & { challenge_id: number })
+        await updateAdminContestChallenge(props.contestId, String(payload.challenge_id), {
+          points: payload.points,
+        })
       } else if (editingChallenge.value) {
-        await updateContestAWDService(props.contestId, editingChallenge.value.awd_service_id!, payload)
+        await updateContestAWDService(
+          props.contestId,
+          editingChallenge.value.awd_service_id!,
+          {
+            template_id: payload.template_id,
+            order: payload.order,
+            is_visible: payload.is_visible,
+          }
+        )
+        await updateAdminContestChallenge(props.contestId, editingChallenge.value.challenge_id, {
+          points: payload.points,
+        })
       }
     } else if (dialogMode.value === 'create') {
       await createAdminContestChallenge(props.contestId, {
@@ -313,7 +352,7 @@ onMounted(() => {
       <div class="header-actions">
         <button
           type="button"
-          class="ops-btn ops-btn--neutral"
+          class="ui-btn ui-btn--ghost"
           @click="refresh"
         >
           <RefreshCw
@@ -325,7 +364,7 @@ onMounted(() => {
         <button
           id="contest-challenge-add"
           type="button"
-          class="ops-btn ops-btn--primary"
+          class="ui-btn ui-btn--primary"
           @click="openCreateDialog"
         >
           <Plus class="h-3.5 w-3.5" />
@@ -334,24 +373,15 @@ onMounted(() => {
       </div>
     </header>
 
-    <div
-      v-if="summaryItems.length > 0"
-      class="studio-metric-band"
-    >
-      <div
-        v-for="item in summaryItems"
-        :key="item.key"
-        class="metric-pill"
-      >
-        <span class="metric-pill__label">{{ item.label }}</span>
-        <span class="metric-pill__value">{{ item.value }}</span>
-      </div>
-    </div>
+    <ContestChallengeSummaryStrip
+      v-if="!isAwdContest && summaryItems.length > 0"
+      :summary-items="summaryItems"
+    />
 
     <div class="studio-directory-canvas">
       <AppEmpty
         v-if="panelLoadError && currentChallengeLinks.length === 0"
-        title="同步中断"
+        title="赛事题目暂时不可用"
         :description="panelLoadError"
         icon="AlertTriangle"
         class="py-20"
@@ -359,7 +389,7 @@ onMounted(() => {
         <template #action>
           <button
             type="button"
-            class="ops-btn ops-btn--neutral"
+            class="ui-btn ui-btn--ghost"
             @click="refresh"
           >
             重试
@@ -367,22 +397,16 @@ onMounted(() => {
         </template>
       </AppEmpty>
 
-      <template v-else>
-        <nav
+      <div
+        v-else
+        class="studio-directory-stack"
+      >
+        <ContestChallengeFilterStrip
           v-if="isAwdContest && filterItems.length > 0"
-          class="studio-quick-nav"
-        >
-          <button
-            v-for="filter in filterItems"
-            :key="filter.key"
-            class="nav-pill"
-            :class="{ active: activeFilter === filter.key }"
-            @click="setFilter(filter.key)"
-          >
-            <span class="nav-pill__label">{{ filter.label }}</span>
-            <span class="nav-pill__count">{{ filter.count }}</span>
-          </button>
-        </nav>
+          :filter-items="filterItems"
+          :active-filter="activeFilter"
+          @select="setFilter"
+        />
 
         <div
           v-if="panelLoading"
@@ -419,16 +443,16 @@ onMounted(() => {
                 </th>
                 <template v-if="isAwdContest">
                   <th class="col-awd">
-                    裁判引擎
+                    Checker
                   </th>
                   <th class="col-awd">
-                    就绪校验
+                    验证状态
                   </th>
                   <th class="col-awd">
-                    A/D 权重
+                    SLA / 防守分
                   </th>
                   <th class="col-awd">
-                    最后活动
+                    最近试跑
                   </th>
                 </template>
                 <th class="col-actions">
@@ -458,12 +482,12 @@ onMounted(() => {
                     :class="challenge.is_visible ? 'is-visible' : 'is-hidden'"
                   >{{ challenge.is_visible ? '公开' : '隐藏' }}</span>
                 </td>
-                <td class="col-meta font-mono font-black text-slate-700">
+                <td class="col-meta contest-points-cell">
                   {{ challenge.points }} <small>PTS</small>
                 </td>
                 <td class="col-meta">
                   <div class="order-chip">
-                    RANK {{ challenge.order }}
+                    第 {{ challenge.order }} 位
                   </div>
                 </td>
                 <template v-if="isAwdContest">
@@ -478,60 +502,62 @@ onMounted(() => {
                       :class="challenge.awd_checker_validation_state"
                     >{{ getValidationSummary(challenge) }}</span>
                   </td>
-                  <td class="col-awd font-mono text-[10px] text-slate-500">
+                  <td class="col-awd contest-awd-score">
                     {{ getAwdScoreSummary(challenge) }}
                   </td>
-                  <td class="col-awd text-[10px] text-slate-400">
+                  <td class="col-awd contest-awd-preview">
                     {{ getPreviewSummary(challenge) }}
                   </td>
                 </template>
                 <td class="col-actions">
-                  <CActionMenu
-                    :open="openActionMenuId === challenge.id"
-                    @update:open="setActionMenuOpen(challenge.id, $event)"
-                  >
-                    <template #trigger="{ open, toggle, setTriggerRef }">
-                      <button
-                        :id="`contest-challenge-actions-${challenge.challenge_id}`"
-                        :ref="setTriggerRef"
-                        class="action-trigger"
-                        @click.stop="toggle"
-                      >
-                        <MoreHorizontal class="h-4 w-4" />
-                      </button>
-                    </template>
-                    <template #default="{ close }">
-                      <button
-                        v-if="isAwdContest"
-                        :id="`contest-challenge-open-awd-config-${challenge.challenge_id}`"
-                        class="menu-item"
-                        @click="handleOpenAwdConfig(challenge, close)"
-                      >
-                        <Zap class="h-3.5 w-3.5 mr-2" /> 补 AWD 配置
-                      </button>
-                      <button
-                        :id="`contest-challenge-edit-${challenge.challenge_id}`"
-                        class="menu-item"
-                        @click="handleOpenEditDialog(challenge, close)"
-                      >
-                        <Edit class="h-3.5 w-3.5 mr-2" /> 属性修改
-                      </button>
-                      <div class="menu-divider" />
-                      <button
-                        :id="`contest-challenge-remove-${challenge.challenge_id}`"
-                        class="menu-item danger"
-                        @click="handleRemoveFromMenu(challenge, close)"
-                      >
-                        <Trash class="h-3.5 w-3.5 mr-2" /> 移除题目
-                      </button>
-                    </template>
-                  </CActionMenu>
+                  <div class="ui-row-actions contest-challenge-row__actions">
+                    <CActionMenu
+                      :open="openActionMenuId === getChallengeActionKey(challenge)"
+                      @update:open="setActionMenuOpen(getChallengeActionKey(challenge), $event)"
+                    >
+                      <template #trigger="{ toggle, setTriggerRef }">
+                        <button
+                          :id="`contest-challenge-actions-${getChallengeActionKey(challenge)}`"
+                          :ref="setTriggerRef"
+                          class="c-action-menu__trigger c-action-menu__trigger--icon"
+                          @click.stop="toggle"
+                        >
+                          <MoreHorizontal class="h-4 w-4" />
+                        </button>
+                      </template>
+                      <template #default="{ close }">
+                        <button
+                          v-if="isAwdContest"
+                          :id="`contest-challenge-open-awd-config-${getChallengeActionKey(challenge)}`"
+                          class="c-action-menu__item"
+                          @click="handleOpenAwdConfig(challenge, close)"
+                        >
+                          <Zap class="h-3.5 w-3.5 mr-2" /> 补 AWD 配置
+                        </button>
+                        <button
+                          :id="`contest-challenge-edit-${getChallengeActionKey(challenge)}`"
+                          class="c-action-menu__item"
+                          @click="handleOpenEditDialog(challenge, close)"
+                        >
+                          <Edit class="h-3.5 w-3.5 mr-2" /> 属性修改
+                        </button>
+                        <div class="menu-divider" />
+                        <button
+                          :id="`contest-challenge-remove-${getChallengeActionKey(challenge)}`"
+                          class="c-action-menu__item c-action-menu__item--danger"
+                          @click="handleRemoveFromMenu(challenge, close)"
+                        >
+                          <Trash class="h-3.5 w-3.5 mr-2" /> 移除题目
+                        </button>
+                      </template>
+                    </CActionMenu>
+                  </div>
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
-      </template>
+      </div>
     </div>
 
     <ContestChallengeEditorDialog
@@ -553,42 +579,173 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.studio-orchestration { display: flex; flex-direction: column; gap: 1.5rem; padding: 1.5rem 2rem; background: var(--color-bg-base); }
-.studio-pane-header { display: flex; justify-content: space-between; align-items: flex-end; }
-.pane-title { font-size: 1.25rem; font-weight: 900; color: var(--color-text-primary); margin: 0; }
-.pane-description { font-size: 13px; color: var(--color-text-secondary); margin: 0.5rem 0 0; max-width: 40rem; }
-.header-actions { display: flex; gap: 0.75rem; }
-.ops-btn { display: inline-flex; align-items: center; gap: 0.5rem; height: 2.25rem; padding: 0 1rem; border-radius: 0.75rem; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s ease; }
-.ops-btn--neutral { background: var(--color-bg-surface); border: 1px solid var(--color-border-default); color: var(--color-text-secondary); }
-.ops-btn--primary { background: var(--color-primary); color: white; border: none; box-shadow: 0 4px 12px color-mix(in srgb, var(--color-primary) 15%, transparent); }
-.studio-metric-band { display: flex; gap: 0.75rem; padding: 1rem; background: var(--color-bg-elevated); border: 1px solid var(--color-border-default); border-radius: 1rem; }
-.metric-pill { background: var(--color-bg-surface); border: 1px solid var(--color-border-default); padding: 0.5rem 1rem; border-radius: 0.75rem; display: flex; align-items: baseline; gap: 0.75rem; }
-.metric-pill__label { font-size: 9px; font-weight: 800; text-transform: uppercase; color: var(--color-text-secondary); letter-spacing: 0.05em; }
-.metric-pill__value { font-size: 14px; font-weight: 900; color: var(--color-text-primary); font-family: var(--font-family-mono); }
-.studio-quick-nav { display: flex; gap: 0.5rem; margin-bottom: 0.5rem; }
-.nav-pill { padding: 0.45rem 1rem; border-radius: 999px; background: var(--color-bg-surface); border: 1px solid var(--color-border-default); font-size: 12px; font-weight: 700; color: var(--color-text-secondary); cursor: pointer; display: flex; align-items: center; gap: 0.5rem; }
-.nav-pill.active { background: var(--color-primary-soft); border-color: var(--color-primary); color: var(--color-primary); }
-.nav-pill__count { background: rgba(0,0,0,0.05); padding: 0 0.35rem; border-radius: 4px; font-size: 10px; }
-.studio-table-wrap { border: none; border-radius: 0; background: transparent; overflow-x: auto; }
-.studio-table { width: 100%; border-collapse: collapse; background: var(--color-bg-surface); }
-.studio-table th { background: var(--color-bg-elevated); padding: 0.75rem 1rem; text-align: left; font-size: 10px; font-weight: 800; text-transform: uppercase; color: var(--color-text-muted); border-bottom: 1px solid var(--color-border-default); border-top: 1px solid var(--color-border-default); }
-.studio-table td { padding: 1rem; border-bottom: 1px solid var(--color-border-subtle); }
-.studio-row:hover { background: var(--color-bg-elevated); }
-.challenge-title { font-size: 14px; font-weight: 800; color: var(--color-text-primary); }
-.challenge-subtitle { font-size: 11px; color: var(--color-text-muted); margin-top: 0.15rem; }
-.status-badge { padding: 0.15rem 0.5rem; border-radius: 6px; font-size: 10px; font-weight: 800; }
-.is-visible { background: var(--color-success-soft); color: var(--color-success); }
-.is-hidden { background: var(--color-bg-elevated); color: var(--color-text-secondary); }
-.order-chip { font-size: 10px; font-weight: 900; color: var(--color-primary); background: var(--color-primary-soft); padding: 0.25rem 0.5rem; border-radius: 4px; display: inline-block; }
-.engine-tag { font-size: 11px; font-weight: 700; color: var(--color-text-secondary); }
-.validation-status { font-size: 10px; font-weight: 700; }
-.validation-status.valid { color: var(--color-success); }
-.validation-status.invalid { color: var(--color-danger); }
-.validation-status.pending { color: var(--color-warning); }
-.action-trigger { width: 2rem; height: 2rem; display: flex; align-items: center; justify-content: center; border-radius: 0.5rem; color: var(--color-text-muted); transition: all 0.2s ease; cursor: pointer; }
-.action-trigger:hover { background: var(--color-bg-elevated); color: var(--color-text-primary); }
-.menu-item { width: 100%; padding: 0.5rem 1rem; display: flex; align-items: center; font-size: 12px; font-weight: 600; color: var(--color-text-secondary); background: transparent; cursor: pointer; }
-.menu-item:hover { background: var(--color-bg-elevated); }
-.menu-item.danger { color: var(--color-danger); }
-.menu-divider { height: 1px; background: var(--color-border-default); margin: 0.25rem 0; }
+.studio-orchestration {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-section-gap);
+  background: transparent;
+  padding: var(--space-6) var(--space-8);
+}
+.studio-pane-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.pane-title {
+  margin: 0;
+  font-size: var(--font-size-20);
+  font-weight: 900;
+  color: var(--color-text-primary);
+}
+
+.pane-description {
+  margin: var(--space-2) 0 0;
+  max-width: var(--ui-selector-width-lg);
+  font-size: var(--font-size-13);
+  color: var(--color-text-secondary);
+}
+
+.header-actions {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.studio-directory-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-section-gap-compact);
+}
+
+.studio-table-wrap {
+  overflow-x: auto;
+  border: 1px solid color-mix(in srgb, var(--workspace-line-soft) 86%, transparent);
+  border-radius: var(--ui-control-radius-lg);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-bg-surface) 94%, var(--color-bg-base)),
+      color-mix(in srgb, var(--color-bg-surface) 84%, var(--color-bg-base))
+    );
+  box-shadow: 0 var(--space-2) var(--space-5)
+    color-mix(in srgb, var(--color-shadow-soft) 24%, transparent);
+}
+
+.studio-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.studio-table th {
+  border-bottom: 1px solid color-mix(in srgb, var(--workspace-line-soft) 86%, transparent);
+  background: color-mix(in srgb, var(--color-bg-surface) 72%, var(--color-bg-base));
+  padding: var(--space-4);
+  text-align: left;
+  font-size: var(--font-size-11);
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.studio-table td {
+  border-bottom: 1px solid var(--color-border-subtle);
+  padding: var(--space-5) var(--space-4);
+}
+
+.studio-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.studio-row {
+  transition: background var(--ui-motion-fast);
+}
+
+.studio-row:hover {
+  background: color-mix(in srgb, var(--color-primary-soft) 24%, var(--color-bg-surface));
+}
+
+.challenge-title {
+  font-size: var(--font-size-16);
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+
+.challenge-subtitle {
+  margin-top: var(--space-1);
+  font-size: var(--font-size-13);
+  color: var(--color-text-muted);
+}
+
+.contest-points-cell {
+  font-family: var(--font-family-mono);
+  font-weight: 900;
+  color: color-mix(in srgb, var(--journal-ink) 82%, var(--journal-muted));
+}
+
+.contest-awd-score {
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-11);
+  color: var(--journal-muted);
+}
+
+.contest-awd-preview {
+  font-size: var(--font-size-11);
+  color: color-mix(in srgb, var(--journal-muted) 84%, var(--journal-ink));
+}
+
+.status-badge {
+  border-radius: var(--ui-badge-radius-soft);
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--font-size-11);
+  font-weight: 800;
+}
+
+.is-visible {
+  background: var(--color-success-soft);
+  color: var(--color-success);
+}
+
+.is-hidden {
+  background: var(--color-bg-elevated);
+  color: var(--color-text-secondary);
+}
+
+.order-chip {
+  display: inline-block;
+  border-radius: var(--ui-badge-radius-soft);
+  background: var(--color-primary-soft);
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--font-size-11);
+  font-weight: 900;
+  color: var(--color-primary);
+}
+
+.engine-tag {
+  font-size: var(--font-size-13);
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}
+
+.validation-status {
+  font-size: var(--font-size-11);
+  font-weight: 700;
+}
+
+.validation-status.valid {
+  color: var(--color-success);
+}
+
+.validation-status.invalid {
+  color: var(--color-danger);
+}
+
+.validation-status.pending {
+  color: var(--color-warning);
+}
+
+.menu-divider {
+  border-top: 1px solid var(--color-border-default);
+  margin: var(--space-1) 0;
+}
 </style>

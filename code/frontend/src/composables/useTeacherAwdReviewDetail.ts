@@ -1,7 +1,8 @@
-import { computed, ref, watch } from 'vue'
+import { computed, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { downloadReport } from '@/api/assessment'
+import { ApiError } from '@/api/request'
 import {
   exportTeacherAWDReviewArchive,
   exportTeacherAWDReviewReport,
@@ -13,6 +14,7 @@ import type {
   TeacherAWDReviewTeamItemData,
 } from '@/api/contracts'
 import { useReportStatusPolling } from '@/composables/useReportStatusPolling'
+import { useBackofficeBreadcrumbDetail } from '@/composables/useBackofficeBreadcrumbDetail'
 import { useToast } from '@/composables/useToast'
 import { useAuthStore } from '@/stores/auth'
 import { resolveAwdReviewDetailRouteName } from '@/utils/teachingWorkspaceRouting'
@@ -25,6 +27,7 @@ export function useTeacherAwdReviewDetail() {
   const toast = useToast()
   const authStore = useAuthStore()
   const { polling, start: startPolling, stop: stopPolling } = useReportStatusPolling()
+  const { setBreadcrumbDetailTitle } = useBackofficeBreadcrumbDetail()
 
   const loading = ref(false)
   const error = ref<string | null>(null)
@@ -64,6 +67,7 @@ export function useTeacherAwdReviewDetail() {
   async function loadReview(): Promise<void> {
     if (!contestId.value) {
       review.value = null
+      setBreadcrumbDetailTitle()
       return
     }
 
@@ -76,6 +80,7 @@ export function useTeacherAwdReviewDetail() {
         team_id: undefined,
       })
       review.value = next
+      setBreadcrumbDetailTitle(next.contest.title)
 
       if (
         selectedTeamId.value &&
@@ -86,6 +91,7 @@ export function useTeacherAwdReviewDetail() {
     } catch (err) {
       console.error('加载 AWD 复盘详情失败:', err)
       review.value = null
+      setBreadcrumbDetailTitle()
       error.value = '加载 AWD 复盘详情失败，请稍后重试'
     } finally {
       loading.value = false
@@ -111,16 +117,36 @@ export function useTeacherAwdReviewDetail() {
     URL.revokeObjectURL(objectUrl)
   }
 
+  function notifyExportError(error: unknown, fallback: string): void {
+    console.error(fallback, error)
+    if (error instanceof ApiError) {
+      return
+    }
+    const message = error instanceof Error && error.message.trim() ? error.message : fallback
+    toast.error(message)
+  }
+
+  async function downloadExportedReport(kind: ExportKind, reportId: string): Promise<void> {
+    const successMessage =
+      kind === 'archive' ? '复盘归档已生成并开始下载' : '教师复盘报告已生成并开始下载'
+    const fallbackMessage =
+      kind === 'archive' ? '复盘归档下载失败，请稍后重试' : '教师复盘报告下载失败，请稍后重试'
+
+    try {
+      await downloadGeneratedReport(reportId)
+      toast.success(successMessage)
+    } catch (error) {
+      notifyExportError(error, fallbackMessage)
+    }
+  }
+
   function handleExportUpdate(kind: ExportKind, next: ReportExportData): void {
     if (next.report_id !== pendingReportId.value) return
 
     if (next.status === 'ready') {
       pendingReportId.value = null
       stopPolling()
-      void downloadGeneratedReport(next.report_id)
-      toast.success(
-        kind === 'archive' ? '复盘归档已生成并开始下载' : '教师复盘报告已生成并开始下载'
-      )
+      void downloadExportedReport(kind, next.report_id)
       return
     }
 
@@ -146,11 +172,9 @@ export function useTeacherAwdReviewDetail() {
           : await exportTeacherAWDReviewReport(contestId.value, payload)
 
       if (result.status === 'ready') {
+        pendingReportId.value = null
         stopPolling()
-        await downloadGeneratedReport(result.report_id)
-        toast.success(
-          kind === 'archive' ? '复盘归档已生成并开始下载' : '教师复盘报告已生成并开始下载'
-        )
+        await downloadExportedReport(kind, result.report_id)
         return
       }
 
@@ -165,11 +189,26 @@ export function useTeacherAwdReviewDetail() {
       pendingReportId.value = result.report_id
       startPolling(result.report_id, (next) => {
         handleExportUpdate(kind, next)
+      }, (error) => {
+        pendingReportId.value = null
+        notifyExportError(
+          error,
+          kind === 'archive'
+            ? '复盘归档生成状态同步失败，请稍后重试'
+            : '教师复盘报告生成状态同步失败，请稍后重试'
+        )
       })
       toast.info(
         kind === 'archive'
           ? '复盘归档开始生成，完成后会自动下载'
           : '教师复盘报告开始生成，完成后会自动下载'
+      )
+    } catch (error) {
+      pendingReportId.value = null
+      stopPolling()
+      notifyExportError(
+        error,
+        kind === 'archive' ? '复盘归档导出失败，请稍后重试' : '教师复盘报告导出失败，请稍后重试'
       )
     } finally {
       exporting.value = null
@@ -220,6 +259,10 @@ export function useTeacherAwdReviewDetail() {
     },
     { immediate: true }
   )
+
+  onUnmounted(() => {
+    setBreadcrumbDetailTitle()
+  })
 
   return {
     router,

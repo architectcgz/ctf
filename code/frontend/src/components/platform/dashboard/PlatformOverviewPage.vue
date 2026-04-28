@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { toRef } from 'vue'
-import { 
-  Activity, 
-  AlertTriangle, 
-  Clock, 
-  ShieldCheck, 
-  Server, 
-  Users 
+import {
+  Activity,
+  AlertTriangle,
+  ArrowRight,
+  Clock,
+  Server,
+  ShieldCheck,
+  Users,
 } from 'lucide-vue-next'
 
 import type { AdminDashboardData } from '@/api/contracts'
@@ -38,167 +39,177 @@ const {
 </script>
 
 <template>
-  <div class="workspace-shell">
+  <div class="workspace-shell journal-shell journal-shell-admin journal-hero overview-shell">
     <div class="workspace-grid">
-      <main class="content-pane">
+      <main class="content-pane overview-content">
         <section
           id="admin-dashboard-overview"
-          class="workspace-hero"
+          class="overview-panel"
         >
-          <div class="workspace-tab-heading__main">
-            <div class="workspace-overline">
-              Operations Workspace
-            </div>
-            <h1 class="hero-title">
-              系统值守台
-            </h1>
-            <p class="hero-summary">
-              在这里查看平台状态、异常和当前资源热点。
-            </p>
-
-            <div class="meta-strip mb-10">
-              <span
-                v-for="(pill, index) in metaPills"
-                :key="pill"
-                class="meta-pill"
-                :class="{ brand: index === 0 }"
-              >
-                {{ pill }}
-              </span>
-            </div>
-
-            <div class="metric-panel-grid metric-panel-grid--premium cols-4 mb-14">
-              <article
-                v-for="item in overviewMetrics"
-                :key="item.key"
-                class="metric-panel-card metric-panel-card--premium"
-              >
-                <div class="metric-panel-label">
-                  <span>{{ item.label }}</span>
-                  <component 
-                    :is="item.key === 'users' ? 'Users' : item.key === 'nodes' ? 'Server' : item.key === 'uptime' ? 'Clock' : 'ShieldCheck'" 
-                    class="h-4 w-4" 
-                  />
-                </div>
-                <div class="metric-panel-value">
-                  {{ item.value.toString().padStart(2, '0') }}
-                </div>
-                <div class="metric-panel-helper">
-                  {{ item.hint }}
-                </div>
-              </article>
-            </div>
-
-            <div class="overview-quick-actions">
+          <section class="workspace-hero">
+            <div class="workspace-tab-heading__main">
               <div class="workspace-overline">
-                Quick Actions
+                Operations Workspace
               </div>
-              <div class="quick-actions">
+              <h1 class="hero-title workspace-page-title">
+                系统值守台
+              </h1>
+              <p class="hero-summary workspace-page-copy">
+                在这里查看平台状态、异常和当前资源热点。
+              </p>
+
+              <div class="meta-strip">
+                <span
+                  v-for="(pill, index) in metaPills"
+                  :key="pill"
+                  class="meta-pill"
+                  :class="{ brand: index === 0 }"
+                >
+                  {{ pill }}
+                </span>
+              </div>
+            </div>
+
+            <div class="overview-hero-actions">
+              <div class="hero-meta-badge">
+                <span class="hero-meta-badge__label">System Pulse</span>
+                <span class="hero-meta-badge__value">
+                  {{ railScore }}
+                  <small>% peak</small>
+                </span>
+                <span class="hero-meta-badge__hint">{{ railCopy }}</span>
+              </div>
+
+              <div class="overview-action-grid">
                 <button
                   type="button"
-                  class="quick-action ui-btn ui-btn--primary"
+                  class="ui-btn ui-btn--primary overview-action-main"
                   @click="emit('openAuditLog')"
                 >
-                  <span>审计日志</span><span>→</span>
+                  <Clock class="h-4 w-4" />
+                  审计日志
                 </button>
                 <button
                   type="button"
-                  class="quick-action ui-btn ui-btn--ghost"
+                  class="ui-btn ui-btn--ghost"
                   @click="emit('openCheatDetection')"
                 >
-                  <span>风险研判</span><span>→</span>
+                  <ShieldCheck class="h-4 w-4" />
+                  风险研判
                 </button>
                 <a
-                  class="quick-action"
+                  class="ui-btn ui-btn--ghost overview-anchor-btn"
                   href="#admin-dashboard-alerts"
                 >
-                  <span>查看当前告警</span><span>→</span>
+                  <AlertTriangle class="h-4 w-4" />
+                  当前告警
                 </a>
                 <a
-                  class="quick-action"
+                  class="ui-btn ui-btn--ghost overview-anchor-btn"
                   href="#admin-dashboard-hotspots"
                 >
-                  <span>查看资源热点</span><span>→</span>
+                  <Server class="h-4 w-4" />
+                  资源热点
                 </a>
               </div>
             </div>
+          </section>
 
-            <div
-              v-if="error"
-              class="workspace-alert"
-              role="alert"
-              aria-live="polite"
+          <div
+            v-if="loading && !dashboard"
+            class="admin-summary-grid overview-summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"
+          >
+            <article
+              v-for="index in 4"
+              :key="index"
+              class="journal-note progress-card metric-panel-card progress-card--skeleton animate-pulse"
             >
-              <div class="workspace-alert-title-row">
-                <AlertTriangle class="workspace-alert-icon" />
-                <div class="workspace-alert-title">
-                  管理端概览加载失败
-                </div>
-              </div>
-              <div class="workspace-alert-copy">
-                {{ error }}
-              </div>
-              <div class="workspace-alert-copy">
-                可先重试刷新资源状态，再继续查看当前告警与资源热点；若持续失败，建议优先进入审计日志确认后台任务与容器记录。
-              </div>
-              <div class="workspace-alert-actions">
-                <button
-                  type="button"
-                  class="quick-action quick-action--compact"
-                  @click="emit('retry')"
-                >
-                  <span>重试加载</span><span>→</span>
-                </button>
-                <button
-                  type="button"
-                  class="quick-action quick-action--compact"
-                  @click="emit('openAuditLog')"
-                >
-                  <span>审计日志</span><span>→</span>
-                </button>
-              </div>
-            </div>
-
-            <div
-              v-else-if="loading"
-              class="metric-panel-grid metric-panel-grid--premium cols-4 mb-10"
-            >
-              <div
-                v-for="index in 4"
-                :key="index"
-                class="metric-panel-card metric-panel-card--premium animate-pulse"
-              >
-                <div class="h-24 bg-white/5 rounded-2xl" />
-              </div>
-            </div>
+              <div class="overview-skeleton-block" />
+            </article>
           </div>
 
-          <aside class="hero-rail">
-            <div class="rail-label">
-              System Pulse
+          <div
+            v-else
+            class="admin-summary-grid overview-summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"
+          >
+            <article
+              v-for="item in overviewMetrics"
+              :key="item.key"
+              class="journal-note progress-card metric-panel-card"
+            >
+              <div class="journal-note-label progress-card-label metric-panel-label">
+                <span>{{ item.label }}</span>
+                <component
+                  :is="
+                    item.key === 'online_users'
+                      ? Users
+                      : item.key === 'active_containers'
+                        ? Server
+                        : item.key === 'cpu_usage'
+                          ? Activity
+                          : ShieldCheck
+                  "
+                  class="h-4 w-4"
+                />
+              </div>
+              <div class="journal-note-value progress-card-value metric-panel-value">
+                {{ item.value.padStart(2, '0') }}
+              </div>
+              <div class="journal-note-helper progress-card-hint metric-panel-helper">
+                {{ item.hint }}
+              </div>
+            </article>
+          </div>
+
+          <div
+            v-if="error"
+            class="workspace-alert"
+            role="alert"
+            aria-live="polite"
+          >
+            <div class="workspace-alert-title-row">
+              <AlertTriangle class="workspace-alert-icon" />
+              <div class="workspace-alert-title">
+                管理端概览加载失败
+              </div>
             </div>
-            <div class="rail-score">
-              {{ railScore }}
-              <small>% peak</small>
+            <div class="workspace-alert-copy">
+              {{ error }}
             </div>
-            <div class="rail-copy">
-              {{ railCopy }}
+            <div class="workspace-alert-copy">
+              可先重试刷新资源状态，再继续查看当前告警与资源热点；若持续失败，建议优先进入审计日志确认后台任务与容器记录。
             </div>
-          </aside>
+            <div class="workspace-alert-actions">
+              <button
+                type="button"
+                class="ui-btn ui-btn--ghost"
+                @click="emit('retry')"
+              >
+                <ArrowRight class="h-4 w-4" />
+                重试加载
+              </button>
+              <button
+                type="button"
+                class="ui-btn ui-btn--ghost"
+                @click="emit('openAuditLog')"
+              >
+                <Clock class="h-4 w-4" />
+                审计日志
+              </button>
+            </div>
+          </div>
         </section>
 
         <section
           id="admin-dashboard-alerts"
-          class="section"
+          class="workspace-directory-section overview-directory-section"
         >
-          <div class="section-head list-heading">
+          <header class="list-heading">
             <div>
               <div class="section-kicker">
                 Alert Stack
               </div>
-              <h2 class="section-title list-heading__title">
-                当前告警
-              </h2>
+              <h2 class="section-title list-heading__title">当前告警</h2>
             </div>
             <div
               class="status-pill"
@@ -206,25 +217,25 @@ const {
             >
               {{ alertCount }} 条
             </div>
-          </div>
+          </header>
 
-          <article class="panel panel-pad">
-            <div
-              v-if="loading"
-              class="empty-inline"
-            >
-              正在同步告警数据...
-            </div>
-            <div
-              v-else-if="alertCount === 0"
-              class="empty-inline"
-            >
-              当前没有资源告警。
-            </div>
-            <div
-              v-else
-              class="insight-list"
-            >
+          <div
+            v-if="loading"
+            class="workspace-directory-loading overview-state"
+          >
+            正在同步告警数据...
+          </div>
+          <div
+            v-else-if="alertCount === 0"
+            class="workspace-directory-empty overview-state"
+          >
+            当前没有资源告警。
+          </div>
+          <div
+            v-else
+            class="workspace-directory-list overview-list-shell"
+          >
+            <div class="insight-list">
               <div
                 v-for="alert in dashboard?.alerts"
                 :key="`${alert.container_id}-${alert.type}`"
@@ -246,41 +257,39 @@ const {
                 </div>
               </div>
             </div>
-          </article>
+          </div>
         </section>
 
         <section
           id="admin-dashboard-hotspots"
-          class="section"
+          class="workspace-directory-section overview-directory-section"
         >
-          <div class="section-head list-heading">
+          <header class="list-heading">
             <div>
               <div class="section-kicker">
                 Resource Hotspots
               </div>
-              <h2 class="section-title list-heading__title">
-                资源热点
-              </h2>
+              <h2 class="section-title list-heading__title">资源热点</h2>
             </div>
-          </div>
+          </header>
 
-          <article class="panel panel-pad">
-            <div
-              v-if="loading"
-              class="empty-inline"
-            >
-              正在同步容器资源数据...
-            </div>
-            <div
-              v-else-if="sortedContainers.length === 0"
-              class="empty-inline"
-            >
-              暂无容器运行数据。
-            </div>
-            <div
-              v-else
-              class="hotspot-list"
-            >
+          <div
+            v-if="loading"
+            class="workspace-directory-loading overview-state"
+          >
+            正在同步容器资源数据...
+          </div>
+          <div
+            v-else-if="sortedContainers.length === 0"
+            class="workspace-directory-empty overview-state"
+          >
+            暂无容器运行数据。
+          </div>
+          <div
+            v-else
+            class="workspace-directory-list overview-list-shell"
+          >
+            <div class="hotspot-list">
               <article
                 v-for="item in sortedContainers"
                 :key="item.container_id"
@@ -340,7 +349,7 @@ const {
                 </div>
               </article>
             </div>
-          </article>
+          </div>
         </section>
       </main>
     </div>
@@ -348,15 +357,14 @@ const {
 </template>
 
 <style scoped>
-.workspace-shell {
+.overview-shell {
+  --journal-shell-dark-accent: var(--color-primary-hover);
   --journal-ink: var(--color-text-primary);
   --journal-muted: var(--color-text-secondary);
   --journal-accent: var(--color-primary);
   --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
   --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
   --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
-  --workspace-page: color-mix(in srgb, var(--color-bg-base) 94%, var(--color-bg-surface));
-  --workspace-shell-bg: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
   --workspace-panel: color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-bg-base));
   --workspace-panel-soft: color-mix(in srgb, var(--color-bg-surface) 82%, var(--color-bg-base));
   --workspace-line-soft: color-mix(in srgb, var(--color-text-primary) 10%, transparent);
@@ -367,20 +375,26 @@ const {
   --workspace-success: var(--color-success);
   --workspace-warning: var(--color-warning);
   --workspace-danger: var(--color-danger);
-  --workspace-shadow-shell: 0 24px 84px
-    color-mix(in srgb, var(--color-shadow-soft) 58%, transparent);
   --workspace-shadow-panel: 0 14px 34px
     color-mix(in srgb, var(--color-shadow-soft) 42%, transparent);
-  --workspace-radius-xl: 28px;
   --workspace-radius-lg: 18px;
-  --workspace-radius-md: 14px;
-  --workspace-font-sans: var(--font-family-sans);
   --workspace-font-mono: var(--font-family-mono);
+}
+
+.overview-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--workspace-directory-page-block-gap, var(--space-5));
+}
+
+.overview-panel {
+  display: grid;
+  gap: 0;
 }
 
 .workspace-hero {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 244px;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: var(--space-7);
   padding-bottom: var(--space-6);
   border-bottom: 1px solid var(--workspace-line-soft);
@@ -391,11 +405,7 @@ const {
 }
 
 .hero-summary {
-  max-width: 760px;
-  margin-top: var(--space-3-5);
-  font-size: var(--font-size-15);
-  line-height: 1.9;
-  color: var(--journal-muted);
+  max-width: 48rem;
 }
 
 .meta-strip {
@@ -408,10 +418,10 @@ const {
 .meta-pill {
   display: inline-flex;
   align-items: center;
-  min-height: 28px;
+  min-height: 1.75rem;
   padding: 0 var(--space-2-5);
   border: 1px solid var(--workspace-line-soft);
-  border-radius: 8px;
+  border-radius: 0.5rem;
   background: color-mix(in srgb, var(--workspace-panel) 72%, transparent);
   font-size: var(--font-size-12);
   color: var(--journal-muted);
@@ -423,138 +433,91 @@ const {
   color: var(--workspace-brand-ink);
 }
 
-.progress-strip {
-  --metric-panel-columns: repeat(4, minmax(0, 1fr));
-  --metric-panel-grid-gap: 0;
-  margin-top: var(--space-8);
-}
-
-.panel {
+.overview-hero-actions {
+  display: grid;
+  align-self: start;
+  justify-content: flex-end;
+  align-content: start;
+  gap: var(--space-2-5);
+  width: min(19rem, 100%);
+  min-width: 16rem;
+  padding: var(--space-3);
   border: 1px solid var(--workspace-line-soft);
   border-radius: var(--workspace-radius-lg);
-  background: color-mix(in srgb, var(--workspace-panel) 88%, transparent);
+  background:
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--workspace-brand) 12%, transparent),
+      transparent 46%
+    ),
+    color-mix(in srgb, var(--workspace-panel) 90%, transparent);
   box-shadow: var(--workspace-shadow-panel);
 }
 
-.progress-card {
-  --metric-panel-padding: var(--space-3-5) var(--space-4) var(--space-4);
+.hero-meta-badge {
+  display: grid;
+  gap: var(--space-1);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--workspace-line-soft);
 }
 
-.progress-card--skeleton {
-  min-height: 110px;
-}
-
-.progress-card-label,
-.section-kicker {
+.hero-meta-badge__label {
   font-size: var(--font-size-11);
   font-weight: 700;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--workspace-faint);
-}
-
-.progress-card-value {
-  --metric-panel-value-margin-top: var(--space-2-5);
-  --metric-panel-value-size: 26px;
-}
-
-.progress-card-hint,
-.item-copy,
-.rail-copy,
-.workspace-alert-copy,
-.hotspot-memory {
-  margin-top: var(--space-2);
-  font-size: var(--font-size-13);
-  line-height: 1.7;
   color: var(--journal-muted);
 }
 
-.overview-quick-actions {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--space-2-5) var(--space-4);
-  margin-top: var(--space-4-5);
-}
-
-.quick-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2-5);
-}
-
-.quick-action {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-2-5);
-  min-height: 52px;
-  padding: 0 var(--space-3-5);
-  border: 1px solid var(--workspace-line-soft);
-  border-radius: 14px;
-  background: color-mix(in srgb, var(--workspace-panel) 82%, transparent);
+.hero-meta-badge__value {
+  font: 700 var(--font-size-24, 1.5rem) / 1 var(--workspace-font-mono);
   color: var(--journal-ink);
-  text-decoration: none;
-  cursor: pointer;
-  transition:
-    border-color 160ms ease,
-    background 160ms ease,
-    color 160ms ease;
 }
 
-.quick-action span:last-child {
+.hero-meta-badge__value small {
+  margin-left: var(--space-1);
+  font-size: var(--font-size-12);
   color: var(--workspace-faint);
 }
 
-.quick-action:hover,
-.quick-action:focus-visible {
-  border-color: color-mix(in srgb, var(--workspace-brand) 34%, transparent);
-  background: color-mix(in srgb, var(--workspace-brand) 8%, var(--workspace-panel));
-  color: var(--workspace-brand-ink);
-  outline: none;
+.hero-meta-badge__hint {
+  font-size: var(--font-size-12);
+  line-height: 1.45;
+  color: var(--journal-muted);
 }
 
-.quick-action--compact {
-  min-height: 42px;
+.overview-action-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
 }
 
-.quick-action.ui-btn {
-  min-height: var(--ui-btn-height, 52px);
-  border-color: var(--ui-btn-border, var(--workspace-line-soft));
-  background: var(--ui-btn-background, color-mix(in srgb, var(--workspace-panel) 82%, transparent));
-  padding: var(--ui-btn-padding, 0 var(--space-3-5));
-  color: var(--ui-btn-color, var(--journal-ink));
-  box-shadow: none;
-}
-
-.quick-action.ui-btn:hover:not(:disabled) {
-  border-color: var(--ui-btn-hover-border, color-mix(in srgb, var(--workspace-brand) 34%, transparent));
-  background: var(--ui-btn-hover-background, color-mix(in srgb, var(--workspace-brand) 8%, var(--workspace-panel)));
-  color: var(--ui-btn-hover-color, var(--workspace-brand-ink));
-}
-
-.quick-action.ui-btn:focus-visible {
-  outline: 2px solid var(--ui-btn-focus-ring, color-mix(in srgb, var(--workspace-brand) 16%, transparent));
-  outline-offset: 2px;
-}
-
-.quick-actions > .ui-btn {
-  --ui-btn-height: 2.75rem;
-  --ui-btn-padding: var(--space-2-5) var(--space-4);
-  --ui-btn-radius: 1rem;
+.overview-hero-actions > .ui-btn,
+.overview-action-grid > .ui-btn,
+.workspace-alert-actions > .ui-btn {
+  --ui-btn-height: 2.5rem;
+  --ui-btn-padding: var(--space-2) var(--space-3);
+  --ui-btn-radius: 0.75rem;
   --ui-btn-font-size: var(--font-size-0-875);
   --ui-btn-font-weight: 600;
   --ui-btn-focus-ring: color-mix(in srgb, var(--journal-accent) 16%, transparent);
+  justify-content: center;
+  min-width: 0;
 }
 
-.quick-actions > .ui-btn.ui-btn--primary {
+.overview-action-main {
+  grid-column: 1 / -1;
+}
+
+.overview-action-grid > .ui-btn.ui-btn--primary {
   --ui-btn-primary-border: color-mix(in srgb, var(--journal-accent) 46%, var(--journal-border));
   --ui-btn-primary-background: var(--journal-accent);
   --ui-btn-primary-hover-background: var(--color-primary-hover);
   --ui-btn-primary-hover-shadow: 0 12px 24px color-mix(in srgb, var(--journal-accent) 24%, transparent);
 }
 
-.quick-actions > .ui-btn.ui-btn--ghost {
+.overview-action-grid > .ui-btn.ui-btn--ghost,
+.workspace-alert-actions > .ui-btn.ui-btn--ghost {
   --ui-btn-border: var(--journal-border);
   --ui-btn-background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
   --ui-btn-color: var(--journal-ink);
@@ -563,89 +526,112 @@ const {
   --ui-btn-hover-color: var(--journal-accent);
 }
 
-.hero-rail {
-  padding-left: var(--space-6);
-  border-left: 1px solid var(--workspace-line-soft);
+.overview-anchor-btn {
+  text-decoration: none;
 }
 
-.rail-label {
+.overview-summary {
+  --metric-panel-columns: 4;
+  --metric-panel-grid-gap: var(--space-3);
+}
+
+.overview-skeleton-block {
+  min-height: 6.875rem;
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--workspace-panel-soft) 84%, transparent);
+}
+
+.workspace-alert {
+  margin-top: var(--space-5);
+  padding: var(--space-4) var(--space-4-5);
+  border: 1px solid color-mix(in srgb, var(--workspace-danger) 24%, var(--workspace-line-soft));
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--workspace-danger) 6%, transparent);
+}
+
+.workspace-alert-title-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2-5);
+}
+
+.workspace-alert-icon {
+  width: 1.125rem;
+  height: 1.125rem;
+  color: color-mix(in srgb, var(--workspace-danger) 82%, var(--journal-ink));
+}
+
+.workspace-alert-title {
+  font-size: var(--font-size-14);
+  font-weight: 700;
+  color: var(--journal-ink);
+}
+
+.workspace-alert-copy {
+  margin-top: var(--space-2);
+  font-size: var(--font-size-13);
+  line-height: 1.7;
+  color: var(--journal-muted);
+}
+
+.workspace-alert-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2-5);
+  margin-top: var(--space-3-5);
+}
+
+.section-title {
+  margin-top: var(--space-2-5);
+}
+
+.section-kicker {
   font-size: var(--font-size-11);
-  letter-spacing: 0.22em;
+  font-weight: 700;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--workspace-faint);
 }
 
-.rail-score {
-  margin-top: var(--space-2-5);
-  font: 700 38px/1 var(--workspace-font-mono);
-  color: var(--journal-ink);
-}
-
-.rail-score small {
-  margin-left: var(--space-1);
-  font-size: var(--font-size-15);
+.overview-state {
+  padding: var(--space-5);
+  font-size: var(--font-size-14);
+  line-height: 1.75;
   color: var(--workspace-faint);
 }
 
-.rail-copy {
-  padding-top: var(--space-3-5);
-  border-top: 1px solid var(--workspace-line-soft);
+.overview-list-shell {
+  overflow: hidden;
+  border: 1px solid var(--workspace-line-soft);
+  border-radius: var(--workspace-radius-lg);
+  background: color-mix(in srgb, var(--workspace-panel) 88%, transparent);
+  box-shadow: var(--workspace-shadow-panel);
 }
 
-.panel-pad {
-  padding: var(--space-5);
-}
-
-.panel-title {
-  margin: 0;
-  font-size: var(--font-size-18);
-  line-height: 1.2;
-  color: var(--journal-ink);
-}
-
-.section {
-  padding-top: var(--space-6);
-  border-top: 1px solid var(--workspace-line-soft);
-}
-
-.section-head {
-  display: flex;
-  align-items: end;
-  justify-content: space-between;
-  gap: var(--space-4);
-  margin-bottom: var(--space-4);
-}
-
-.list-heading {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: var(--space-4);
-}
-
-.list-heading__title,
-.section-title {
-  margin: var(--space-2-5) 0 0;
-  font-size: var(--font-size-22);
-  line-height: 1.12;
-  color: var(--journal-ink);
-}
-
-.insight-list {
+.insight-list,
+.hotspot-list {
   display: grid;
+}
+
+.insight-item,
+.hotspot-item {
+  display: grid;
+  gap: var(--space-4-5);
+  padding: var(--space-4-5) var(--space-5);
   border-top: 1px solid var(--workspace-line-soft);
+}
+
+.insight-item:first-child,
+.hotspot-item:first-child {
+  border-top: 0;
 }
 
 .insight-item {
-  display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: var(--space-4-5);
-  padding: var(--space-4) 0;
-  border-bottom: 1px solid var(--workspace-line-soft);
 }
 
-.insight-item strong {
+.insight-item strong,
+.hotspot-title-row strong {
   display: block;
   font-size: var(--font-size-15);
   color: var(--journal-ink);
@@ -658,14 +644,22 @@ const {
   margin-top: var(--space-2);
 }
 
+.item-copy,
+.hotspot-memory {
+  margin-top: var(--space-2);
+  font-size: var(--font-size-13);
+  line-height: 1.7;
+  color: var(--journal-muted);
+}
+
 .chip,
 .status-pill {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 24px;
+  min-height: 1.5rem;
   padding: 0 var(--space-2);
-  border-radius: 7px;
+  border-radius: 0.4375rem;
   border: 1px solid var(--workspace-line-soft);
   font-size: var(--font-size-11-5);
   font-weight: 600;
@@ -695,66 +689,13 @@ const {
 }
 
 .status-pill {
-  min-height: 30px;
-  min-width: 78px;
-  border-radius: 8px;
-}
-
-.workspace-alert {
-  margin-top: var(--space-4-5);
-  padding: var(--space-4) var(--space-4-5);
-  border: 1px solid color-mix(in srgb, var(--workspace-danger) 24%, var(--workspace-line-soft));
-  border-radius: 18px;
-  background: color-mix(in srgb, var(--workspace-danger) 6%, transparent);
-}
-
-.workspace-alert-title-row {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2-5);
-}
-
-.workspace-alert-icon {
-  width: 18px;
-  height: 18px;
-  color: color-mix(in srgb, var(--workspace-danger) 82%, var(--journal-ink));
-}
-
-.workspace-alert-title {
-  font-size: var(--font-size-14);
-  font-weight: 700;
-  color: var(--journal-ink);
-}
-
-.workspace-alert-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2-5);
-  margin-top: var(--space-3-5);
-}
-
-.empty-inline {
-  font-size: var(--font-size-14);
-  line-height: 1.75;
-  color: var(--workspace-faint);
-}
-
-.hotspot-list {
-  display: grid;
-  gap: var(--space-3-5);
+  min-height: 1.875rem;
+  min-width: 4.875rem;
+  border-radius: 0.5rem;
 }
 
 .hotspot-item {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
-  gap: var(--space-4-5);
-  padding: var(--space-4-5) 0;
-  border-top: 1px solid var(--workspace-line-soft);
-}
-
-.hotspot-item:first-child {
-  padding-top: 0;
-  border-top: 0;
+  grid-template-columns: minmax(0, 1fr) minmax(17.5rem, 22.5rem);
 }
 
 .hotspot-title-row {
@@ -762,11 +703,6 @@ const {
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-2) var(--space-2-5);
-}
-
-.hotspot-title-row strong {
-  font-size: var(--font-size-15);
-  color: var(--journal-ink);
 }
 
 .hotspot-copy {
@@ -789,7 +725,7 @@ const {
 
 .usage-track {
   margin-top: var(--space-2);
-  height: 8px;
+  height: 0.5rem;
   overflow: hidden;
   border-radius: 999px;
   background: color-mix(in srgb, var(--workspace-panel-soft) 84%, transparent);
@@ -800,42 +736,16 @@ const {
   border-radius: 999px;
 }
 
-.bg-\[var\(--color-danger\)\] {
+.usage-bar--danger {
   background: var(--color-danger);
 }
 
-.bg-\[var\(--color-warning\)\] {
+.usage-bar--warning {
   background: var(--color-warning);
 }
 
-.bg-\[var\(--color-primary\)\] {
+.usage-bar--primary {
   background: var(--color-primary);
-}
-
-.admin-action-row {
-  --admin-action-border: color-mix(in srgb, var(--journal-border) 72%, transparent);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  border: 1px solid var(--admin-action-border);
-  border-radius: 16px;
-  background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
-  padding: var(--space-4) var(--space-4);
-  text-align: left;
-  transition:
-    border-color 150ms ease,
-    background-color 150ms ease;
-}
-
-.admin-action-row:hover {
-  border-color: color-mix(in srgb, var(--journal-accent) 24%, var(--journal-border));
-  background: color-mix(in srgb, var(--journal-surface-subtle) 88%, var(--journal-surface));
-}
-
-.admin-action-row:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--journal-accent) 12%, transparent);
 }
 
 @media (max-width: 1180px) {
@@ -844,34 +754,43 @@ const {
     grid-template-columns: 1fr;
   }
 
-  .hero-rail {
-    padding-top: var(--space-5);
-    padding-left: 0;
-    border-top: 1px solid var(--workspace-line-soft);
-    border-left: 0;
+  .overview-hero-actions {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 720px) {
+  .overview-action-grid {
+    grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 860px) {
-  .progress-strip {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .overview-summary {
+    --metric-panel-columns: 2;
   }
 
-  .list-heading,
-  .section-head {
+  .list-heading {
     align-items: flex-start;
     flex-direction: column;
   }
 }
 
 @media (max-width: 640px) {
+  .overview-summary {
+    --metric-panel-columns: 1;
+  }
+
   .content-pane {
     padding-left: var(--space-4-5);
     padding-right: var(--space-4-5);
   }
 
-  .progress-strip {
-    grid-template-columns: 1fr;
+  .insight-item,
+  .hotspot-item {
+    padding-left: var(--space-4);
+    padding-right: var(--space-4);
   }
 }
 </style>

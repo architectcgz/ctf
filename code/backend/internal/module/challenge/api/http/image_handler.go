@@ -10,20 +10,22 @@ import (
 	"ctf-platform/pkg/response"
 )
 
+const errMsgInvalidImageID = "无效的镜像 ID"
+
 type ImageHandler struct {
 	commands imageCommandService
 	queries  imageQueryService
 }
 
 type imageCommandService interface {
-	CreateImageWithContext(ctx context.Context, req *dto.CreateImageReq) (*dto.ImageResp, error)
-	UpdateImage(id int64, req *dto.UpdateImageReq) error
-	DeleteImage(id int64) error
+	CreateImage(ctx context.Context, req *dto.CreateImageReq) (*dto.ImageResp, error)
+	UpdateImage(ctx context.Context, id int64, req *dto.UpdateImageReq) error
+	DeleteImage(ctx context.Context, id int64) error
 }
 
 type imageQueryService interface {
-	GetImage(id int64) (*dto.ImageResp, error)
-	ListImages(query *dto.ImageQuery) (*dto.PageResult, error)
+	GetImage(ctx context.Context, id int64) (*dto.ImageResp, error)
+	ListImages(ctx context.Context, query *dto.ImageQuery) (*dto.PageResult[*dto.ImageResp], error)
 }
 
 func NewImageHandler(commands imageCommandService, queries imageQueryService) *ImageHandler {
@@ -37,7 +39,7 @@ func (h *ImageHandler) CreateImage(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.commands.CreateImageWithContext(c.Request.Context(), &req)
+	resp, err := h.commands.CreateImage(c.Request.Context(), &req)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -49,11 +51,11 @@ func (h *ImageHandler) CreateImage(c *gin.Context) {
 func (h *ImageHandler) GetImage(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		response.InvalidParams(c, "无效的镜像 ID")
+		response.InvalidParams(c, errMsgInvalidImageID)
 		return
 	}
 
-	resp, err := h.queries.GetImage(id)
+	resp, err := h.queries.GetImage(c.Request.Context(), id)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -69,7 +71,7 @@ func (h *ImageHandler) ListImages(c *gin.Context) {
 		return
 	}
 
-	result, err := h.queries.ListImages(&query)
+	result, err := h.queries.ListImages(c.Request.Context(), &query)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -81,7 +83,7 @@ func (h *ImageHandler) ListImages(c *gin.Context) {
 func (h *ImageHandler) UpdateImage(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		response.InvalidParams(c, "无效的镜像 ID")
+		response.InvalidParams(c, errMsgInvalidImageID)
 		return
 	}
 
@@ -91,7 +93,7 @@ func (h *ImageHandler) UpdateImage(c *gin.Context) {
 		return
 	}
 
-	if err := h.commands.UpdateImage(id, &req); err != nil {
+	if err := h.commands.UpdateImage(c.Request.Context(), id, &req); err != nil {
 		response.FromError(c, err)
 		return
 	}
@@ -102,11 +104,11 @@ func (h *ImageHandler) UpdateImage(c *gin.Context) {
 func (h *ImageHandler) DeleteImage(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		response.InvalidParams(c, "无效的镜像 ID")
+		response.InvalidParams(c, errMsgInvalidImageID)
 		return
 	}
 
-	if err := h.commands.DeleteImage(id); err != nil {
+	if err := h.commands.DeleteImage(c.Request.Context(), id); err != nil {
 		response.FromError(c, err)
 		return
 	}

@@ -3,6 +3,8 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import PlatformClassManagement from '../ClassManage.vue'
 import adminClassManageSource from '../ClassManage.vue?raw'
+import classManageHeroPanelSource from '@/components/platform/class/ClassManageHeroPanel.vue?raw'
+import classManageWorkspacePanelSource from '@/components/platform/class/ClassManageWorkspacePanel.vue?raw'
 
 const pushMock = vi.fn()
 
@@ -36,26 +38,38 @@ describe('PlatformClassManagement', () => {
   })
 
   it('应使用后台工作台目录组件而不是教师端班级目录壳层', async () => {
+    expect(adminClassManageSource).toContain("from '@/api/teacher'")
+    expect(adminClassManageSource).not.toContain("from '@/api/admin'")
+    expect(adminClassManageSource).not.toContain('getAdminClasses')
     expect(adminClassManageSource).toContain(
-      "from '@/components/common/WorkspaceDirectoryToolbar.vue'"
-    )
-    expect(adminClassManageSource).toContain("from '@/components/common/WorkspaceDataTable.vue'")
-    expect(adminClassManageSource).toContain(
-      "from '@/components/common/WorkspaceDirectoryPagination.vue'"
-    )
-    expect(adminClassManageSource).toContain(
-      'class="workspace-shell journal-shell journal-shell-admin journal-notes-card journal-hero admin-class-manage-shell flex min-h-full flex-1 flex-col"'
+      "import ClassManageHeroPanel from '@/components/platform/class/ClassManageHeroPanel.vue'"
     )
     expect(adminClassManageSource).toContain(
+      "import ClassManageWorkspacePanel from '@/components/platform/class/ClassManageWorkspacePanel.vue'"
+    )
+    expect(adminClassManageSource).toContain('<ClassManageHeroPanel')
+    expect(adminClassManageSource).toContain('<ClassManageWorkspacePanel')
+    expect(adminClassManageSource).toContain(
+      'class="workspace-shell journal-shell journal-shell-admin journal-hero admin-class-manage-shell"'
+    )
+    expect(classManageHeroPanelSource).toContain('刷新目录')
+    expect(classManageHeroPanelSource).toContain(
       'class="admin-summary-grid admin-class-manage-shell__summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
     )
-    expect(adminClassManageSource).toContain('class="workspace-directory-section admin-class-manage-directory"')
-    expect(adminClassManageSource).toContain('class="workspace-directory-list admin-class-manage-table"')
-    expect(adminClassManageSource).toContain('<WorkspaceDirectoryToolbar')
-    expect(adminClassManageSource).toContain('<WorkspaceDataTable')
-    expect(adminClassManageSource).toContain('<WorkspaceDirectoryPagination')
-    expect(adminClassManageSource).not.toMatch(/^\.list-heading\s*\{/m)
-    expect(adminClassManageSource).not.toMatch(/\.admin-class-manage-directory\s*\{/s)
+    expect(classManageWorkspacePanelSource).toContain("from '@/components/common/WorkspaceDataTable.vue'")
+    expect(classManageWorkspacePanelSource).toContain(
+      "from '@/components/common/WorkspaceDirectoryPagination.vue'"
+    )
+    expect(classManageWorkspacePanelSource).toContain(
+      "from '@/components/common/WorkspaceDirectoryToolbar.vue'"
+    )
+    expect(classManageWorkspacePanelSource).toContain('<WorkspaceDirectoryToolbar')
+    expect(classManageWorkspacePanelSource).toContain('<WorkspaceDataTable')
+    expect(classManageWorkspacePanelSource).toContain('<WorkspaceDirectoryPagination')
+    expect(classManageWorkspacePanelSource).toContain('search-placeholder="搜索班级名称..."')
+    expect(classManageWorkspacePanelSource).toContain('filter-panel-title="班级筛选"')
+    expect(classManageWorkspacePanelSource).toContain('class="ui-btn ui-btn--primary ui-btn--sm"')
+    expect(classManageWorkspacePanelSource).not.toContain('class="ui-btn ui-btn--ghost"')
     expect(adminClassManageSource).not.toContain('teacher-management-shell')
     expect(adminClassManageSource).not.toContain('teacher-directory-row')
 
@@ -67,19 +81,24 @@ describe('PlatformClassManagement', () => {
     expect(wrapper.text()).toContain('Class A')
     expect(wrapper.text()).toContain('Class B')
     expect(wrapper.text()).toContain('班级名称')
-    expect(wrapper.text()).toContain('学生数')
-    expect(wrapper.text()).toContain('状态')
+    expect(wrapper.text()).toContain('学生人数')
+    expect(wrapper.text()).toContain('查看班级')
+    expect(wrapper.text()).toContain('共 2 个班级')
   })
 
-  it('应支持本页检索并可进入班级详情', async () => {
+  it('应支持按班级名称筛选目录', async () => {
     const wrapper = mount(PlatformClassManagement)
     await flushPromises()
 
-    const searchInput = wrapper.get('input[placeholder="检索班级名称或编号..."]')
-    await searchInput.setValue('CL-02')
+    await wrapper.get('.workspace-directory-toolbar__search-input').setValue('Class A')
 
-    expect(wrapper.text()).toContain('Class B')
-    expect(wrapper.text()).not.toContain('Class A')
+    expect(wrapper.text()).toContain('Class A')
+    expect(wrapper.text()).not.toContain('Class B')
+  })
+
+  it('应支持进入班级详情', async () => {
+    const wrapper = mount(PlatformClassManagement)
+    await flushPromises()
 
     await wrapper
       .findAll('button')
@@ -88,7 +107,7 @@ describe('PlatformClassManagement', () => {
 
     expect(pushMock).toHaveBeenCalledWith({
       name: 'PlatformClassStudents',
-      params: { className: 'Class B' },
+      params: { className: 'Class A' },
     })
   })
 })
