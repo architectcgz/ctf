@@ -25,6 +25,10 @@ export function useAwdInspectorFormatting({
   summaryMetrics,
   manualCheckCount,
 }: UseAwdInspectorFormattingOptions) {
+  function formatMetricCount(value: unknown): number {
+    return typeof value === 'number' && Number.isFinite(value) ? value : 0
+  }
+
   function formatDateTime(value?: string): string {
     if (!value) {
       return '未记录'
@@ -150,7 +154,7 @@ export function useAwdInspectorFormatting({
     if (!metrics) {
       return '等待轮次汇总'
     }
-    return `巡检 调度 ${metrics.scheduler_check_count} / 手动 ${manualCheckCount.value}`
+    return `巡检 调度 ${formatMetricCount(metrics.scheduler_check_count)} / 手动 ${formatMetricCount(manualCheckCount.value)}`
   }
 
   function getSourceOverviewDescription(): string {
@@ -158,7 +162,7 @@ export function useAwdInspectorFormatting({
     if (!metrics) {
       return '攻击日志来源将在轮次汇总返回后展示。'
     }
-    return `日志 提交 ${metrics.submission_attack_count} / 人工 ${metrics.manual_attack_log_count} / 历史 ${metrics.legacy_attack_log_count}`
+    return `日志 提交 ${formatMetricCount(metrics.submission_attack_count)} / 人工 ${formatMetricCount(metrics.manual_attack_log_count)} / 历史 ${formatMetricCount(metrics.legacy_attack_log_count)}`
   }
 
   return {
