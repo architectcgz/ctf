@@ -185,9 +185,10 @@ describe('ScoreboardView', () => {
 
     expect(wrapper.text()).toContain('当前竞赛')
     expect(wrapper.text()).toContain('往期竞赛')
-    expect(wrapper.text()).toContain('查看完整排行榜')
+    expect(wrapper.text()).toContain('点击进入排行详情')
     expect(wrapper.text()).not.toContain('Current Champions')
     expect(wrapper.text()).not.toContain('History Masters')
+    expect(wrapper.text()).not.toContain('查看完整排行榜')
     expect(getScoreboardMock).not.toHaveBeenCalled()
   })
 

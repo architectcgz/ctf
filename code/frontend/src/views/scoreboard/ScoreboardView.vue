@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ArrowRight, BarChart2, Shield, Trophy, Users } from 'lucide-vue-next'
+import { ArrowRight, BarChart2, Shield, Users } from 'lucide-vue-next'
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import type { ContestStatus } from '@/api/contracts'
@@ -252,12 +252,13 @@ function getCardDescription(
             </div>
 
             <div class="scoreboard-sections">
-              <article
+              <router-link
                 v-for="(section, index) in sections"
                 :key="section.contest.id"
                 data-testid="scoreboard-card"
-                class="scoreboard-card"
+                class="scoreboard-card scoreboard-card-link"
                 :style="sectionAccentStyle(section.contest.status)"
+                :to="{ name: 'ScoreboardDetail', params: { contestId: section.contest.id } }"
               >
                 <div class="scoreboard-card-header">
                   <div class="scoreboard-card-main">
@@ -291,21 +292,11 @@ function getCardDescription(
                   </div>
                   <div class="scoreboard-card-meta">
                     <Users class="h-3.5 w-3.5" />
-                    点击进入排行详情
+                    <span>点击进入排行详情</span>
+                    <ArrowRight class="h-4 w-4" />
                   </div>
                 </div>
-
-                <div class="scoreboard-card-divider" />
-
-                <router-link
-                  class="scoreboard-detail-link"
-                  :to="{ name: 'ScoreboardDetail', params: { contestId: section.contest.id } }"
-                >
-                  <Trophy class="h-4 w-4" />
-                  <span>查看完整排行榜</span>
-                  <ArrowRight class="h-4 w-4" />
-                </router-link>
-              </article>
+              </router-link>
             </div>
           </section>
         </section>
@@ -460,6 +451,20 @@ function getCardDescription(
   border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
+.scoreboard-card-link {
+  display: block;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    transform 160ms ease;
+}
+
+.scoreboard-card-link:hover,
+.scoreboard-card-link:focus-visible {
+  background: color-mix(in srgb, var(--scoreboard-accent, var(--journal-accent)) 4%, transparent);
+  transform: translateY(-0.0625rem);
+}
+
 .scoreboard-card-header {
   display: flex;
   flex-wrap: wrap;
@@ -507,36 +512,6 @@ function getCardDescription(
   display: inline-flex;
   align-items: center;
   gap: 6px;
-}
-
-.scoreboard-card-divider {
-  margin: 16px 0;
-  border-top: 1px solid color-mix(in srgb, var(--journal-border) 82%, transparent);
-}
-
-.scoreboard-detail-link {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  min-height: 2.25rem;
-  padding: 0 var(--space-3);
-  border: 1px solid color-mix(in srgb, var(--scoreboard-accent, var(--journal-accent)) 32%, var(--journal-border));
-  border-radius: var(--radius-md);
-  font-size: var(--font-size-13);
-  font-weight: 700;
-  color: var(--scoreboard-accent, var(--journal-accent));
-  background: color-mix(in srgb, var(--scoreboard-accent, var(--journal-accent)) 8%, transparent);
-  transition:
-    border-color 160ms ease,
-    background 160ms ease,
-    transform 160ms ease;
-}
-
-.scoreboard-detail-link:hover,
-.scoreboard-detail-link:focus-visible {
-  border-color: color-mix(in srgb, var(--scoreboard-accent, var(--journal-accent)) 54%, var(--journal-border));
-  background: color-mix(in srgb, var(--scoreboard-accent, var(--journal-accent)) 12%, transparent);
-  transform: translateY(-0.0625rem);
 }
 
 .scoreboard-table-shell {
