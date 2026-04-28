@@ -1019,24 +1019,28 @@ function normalizeAWDRoundSummaryItem(item: RawAWDRoundSummaryItem): AWDRoundSum
   }
 }
 
+function normalizeNumberOrZero(value: unknown): number {
+  return typeof value === 'number' && Number.isFinite(value) ? value : 0
+}
+
 function normalizeAWDRoundMetrics(item: RawAWDRoundMetricsData): AWDRoundMetricsData {
   return {
-    total_service_count: item.total_service_count,
-    service_up_count: item.service_up_count,
-    service_down_count: item.service_down_count,
-    service_compromised_count: item.service_compromised_count,
-    attacked_service_count: item.attacked_service_count,
-    defense_success_count: item.defense_success_count,
-    total_attack_count: item.total_attack_count,
-    successful_attack_count: item.successful_attack_count,
-    failed_attack_count: item.failed_attack_count,
-    scheduler_check_count: item.scheduler_check_count,
-    manual_current_round_check_count: item.manual_current_round_check_count,
-    manual_selected_round_check_count: item.manual_selected_round_check_count,
-    manual_service_check_count: item.manual_service_check_count,
-    submission_attack_count: item.submission_attack_count,
-    manual_attack_log_count: item.manual_attack_log_count,
-    legacy_attack_log_count: item.legacy_attack_log_count,
+    total_service_count: normalizeNumberOrZero(item.total_service_count),
+    service_up_count: normalizeNumberOrZero(item.service_up_count),
+    service_down_count: normalizeNumberOrZero(item.service_down_count),
+    service_compromised_count: normalizeNumberOrZero(item.service_compromised_count),
+    attacked_service_count: normalizeNumberOrZero(item.attacked_service_count),
+    defense_success_count: normalizeNumberOrZero(item.defense_success_count),
+    total_attack_count: normalizeNumberOrZero(item.total_attack_count),
+    successful_attack_count: normalizeNumberOrZero(item.successful_attack_count),
+    failed_attack_count: normalizeNumberOrZero(item.failed_attack_count),
+    scheduler_check_count: normalizeNumberOrZero(item.scheduler_check_count),
+    manual_current_round_check_count: normalizeNumberOrZero(item.manual_current_round_check_count),
+    manual_selected_round_check_count: normalizeNumberOrZero(item.manual_selected_round_check_count),
+    manual_service_check_count: normalizeNumberOrZero(item.manual_service_check_count),
+    submission_attack_count: normalizeNumberOrZero(item.submission_attack_count),
+    manual_attack_log_count: normalizeNumberOrZero(item.manual_attack_log_count),
+    legacy_attack_log_count: normalizeNumberOrZero(item.legacy_attack_log_count),
   }
 }
 
