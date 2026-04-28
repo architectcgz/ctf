@@ -33,7 +33,7 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
 
 function selectedChallengeMeta(): string {
   if (!props.selectedChallenge) return ''
-  return `${props.selectedChallenge.category} · ${props.selectedChallenge.points} pts`
+  return `${props.selectedChallenge.category} · ${props.selectedChallenge.points} 分`
 }
 </script>
 
@@ -72,7 +72,7 @@ function selectedChallengeMeta(): string {
         </div>
         <div class="contest-challenge__meta">
           <span>{{ challenge.category }}</span>
-          <span>{{ challenge.points }} pts</span>
+          <span>{{ challenge.points }} 分</span>
           <span>{{ challenge.solved_count }} 人解出</span>
         </div>
       </button>
@@ -83,7 +83,7 @@ function selectedChallengeMeta(): string {
         <div class="challenge-focus__head">
           <div>
             <div class="workspace-overline">
-              Selected
+              已选题目
             </div>
             <h3 class="challenge-focus__title">
               {{ selectedChallenge.title }}
@@ -111,7 +111,7 @@ function selectedChallengeMeta(): string {
         <div class="challenge-focus__form">
           <div>
             <div class="workspace-overline">
-              Primary Action
+              主要操作
             </div>
             <h4 class="challenge-focus__form-title">
               提交 Flag
@@ -122,7 +122,7 @@ function selectedChallengeMeta(): string {
             class="ui-field__label flag-submit__label"
             for="contest-flag-input"
           >
-            Flag
+            Flag 值
           </label>
           <div class="flag-submit">
             <div class="ui-control-wrap flag-submit__control">

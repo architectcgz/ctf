@@ -221,7 +221,7 @@ const contestAccessible = computed(() =>
               <div class="contest-section__head workspace-tab-heading">
                 <div class="workspace-tab-heading__main">
                   <div class="workspace-overline">
-                    {{ contest.mode === 'awd' ? 'Battle' : 'Challenges' }}
+                    {{ contest.mode === 'awd' ? '战场' : '题目' }}
                   </div>
                   <h2 class="contest-section__title workspace-tab-heading__title">
                     {{ contest.mode === 'awd' ? '战场' : '题目' }}

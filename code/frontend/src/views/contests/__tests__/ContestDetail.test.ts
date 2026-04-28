@@ -559,8 +559,10 @@ describe('ContestDetail', () => {
     await challengesTab!.trigger('click')
     await flushPromises()
 
+    expect(wrapper.text()).toContain('已选题目')
+    expect(wrapper.text()).toContain('主要操作')
     expect(wrapper.text()).toContain('Crypto 102')
-    expect(wrapper.text()).toContain('crypto · 200 pts')
+    expect(wrapper.text()).toContain('crypto · 200 分')
 
     const webChallengeButton = wrapper
       .findAll('button')
@@ -1549,7 +1551,7 @@ describe('ContestDetail', () => {
     expect(combinedSource).toMatch(/<div class="workspace-overline">\s*Schedule\s*<\/div>/)
     expect(combinedSource).toMatch(/<div class="workspace-overline">\s*Announcements\s*<\/div>/)
     expect(combinedSource).toMatch(
-      /<div class="workspace-overline">\s*\{\{ contest\.mode === 'awd' \? 'Battle' : 'Challenges' \}\}\s*<\/div>/
+      /<div class="workspace-overline">\s*\{\{ contest\.mode === 'awd' \? '战场' : '题目' \}\}\s*<\/div>/
     )
     expect(combinedSource).toMatch(/<div class="workspace-overline">\s*Team\s*<\/div>/)
     expect(combinedSource).not.toContain('<div class="contest-overline">Rules</div>')
@@ -1561,11 +1563,11 @@ describe('ContestDetail', () => {
   it('竞赛详情剩余局部 kicker 也应统一到 workspace overline 语义', () => {
     const combinedSource = [contestDetailSource, contestChallengeWorkspacePanelSource].join('\n')
 
-    expect(combinedSource).toMatch(/<div class="workspace-overline">\s*Selected\s*<\/div>/)
-    expect(combinedSource).toMatch(/<div class="workspace-overline">\s*Primary Action\s*<\/div>/)
+    expect(combinedSource).toMatch(/<div class="workspace-overline">\s*已选题目\s*<\/div>/)
+    expect(combinedSource).toMatch(/<div class="workspace-overline">\s*主要操作\s*<\/div>/)
     expect(contestDetailSource).toMatch(/<div class="workspace-overline">\s*Current Team\s*<\/div>/)
-    expect(combinedSource).not.toContain('<div class="contest-overline">Selected</div>')
-    expect(combinedSource).not.toContain('<div class="contest-overline">Primary Action</div>')
+    expect(combinedSource).not.toContain('<div class="contest-overline">已选题目</div>')
+    expect(combinedSource).not.toContain('<div class="contest-overline">主要操作</div>')
     expect(contestDetailSource).not.toContain('<div class="contest-overline">Current Team</div>')
     expect(contestDetailSource).not.toMatch(/^\.contest-overline\s*\{/m)
   })
