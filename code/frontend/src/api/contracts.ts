@@ -296,13 +296,13 @@ export interface ContestListItem {
   starts_at: ISODateTime
   ends_at: ISODateTime
   register_ends_at?: ISODateTime
+  scoreboard_frozen?: boolean
 }
 
 export interface ContestDetailData extends ContestListItem {
   description?: string
   rules?: string
   team_size_limit?: number
-  scoreboard_frozen?: boolean
 }
 
 export interface ContestChallengeItem {

@@ -60,6 +60,12 @@ export const studentRoutes: RouteRecordRaw[] = [
   meta: { requiresAuth: true, title: '排行榜', icon: 'BarChart3', contentLayout: 'bleed' },
 },
 {
+  path: 'scoreboard/:contestId',
+  name: 'ScoreboardDetail',
+  component: () => import('@/views/scoreboard/ScoreboardDetail.vue'),
+  meta: { requiresAuth: true, title: '排行详情', contentLayout: 'bleed' },
+},
+{
   path: 'student/instances',
   name: 'Instances',
   component: () => import('@/views/instances/InstanceList.vue'),

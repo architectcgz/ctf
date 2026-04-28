@@ -53,14 +53,14 @@ export function useWebSocket(endpoint, handlers) {
 |------|----------|----------|----------|
 | `/ws/notifications` | AppLayout (全局) | `notification.new` | notificationStore |
 | `/ws/contests/:id/announcements` | ContestDetail (公告 Tab) | `contest.announcement.created`, `contest.announcement.deleted` | contestStore |
-| `/ws/contests/:id/scoreboard` | ScoreboardView / ContestDetail (排行榜 Tab) | `scoreboard.updated` | 收到事件后重新调用 HTTP 榜单接口 |
+| `/ws/contests/:id/scoreboard` | ScoreboardDetail / ContestDetail (排行榜 Tab) | `scoreboard.updated` | 收到事件后重新调用 HTTP 榜单接口 |
 
 ### 1.4 当前实现约束
 
 - 通知、比赛公告、比赛榜单使用**独立 WS 端点**，不混用单一 socket + 订阅协议。
-- `ScoreboardView` 只会为 `running` / `frozen` 状态的比赛挂载实时 bridge。
+- `ScoreboardView` 只展示竞赛排行入口，不挂载榜单实时 bridge；`ScoreboardDetail` 只会为 `running` / `frozen` 状态的比赛挂载实时 bridge。
 - 榜单通道只推送轻量事件 `scoreboard.updated`，避免在 WS 中重复下发整榜数据。
-- 前端收到 `scoreboard.updated` 后，按比赛粒度调用现有 `GET /api/v1/contests/:id/scoreboard` 刷新对应卡片。
+- 前端收到 `scoreboard.updated` 后，按比赛粒度调用现有 `GET /api/v1/contests/:id/scoreboard` 刷新当前详情页榜单。
 
 ---
 
