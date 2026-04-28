@@ -77,6 +77,54 @@ func TestDefaultSecurityConfigUsesNormalizedSecurityOpts(t *testing.T) {
 	}
 }
 
+func TestResolveContainerFilePathUsesWorkingDirForRelativePath(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name       string
+		workingDir string
+		filePath   string
+		want       string
+	}{
+		{
+			name:       "relative path uses container working dir",
+			workingDir: "/app",
+			filePath:   "app.py",
+			want:       "/app/app.py",
+		},
+		{
+			name:       "relative nested path uses container working dir",
+			workingDir: "/app",
+			filePath:   "src/main.py",
+			want:       "/app/src/main.py",
+		},
+		{
+			name:       "empty working dir falls back to root",
+			workingDir: "",
+			filePath:   "app.py",
+			want:       "/app.py",
+		},
+		{
+			name:       "absolute path is preserved",
+			workingDir: "/app",
+			filePath:   "/etc/hosts",
+			want:       "/etc/hosts",
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			got := resolveContainerFilePath(tt.workingDir, tt.filePath)
+			if got != tt.want {
+				t.Fatalf("resolveContainerFilePath() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestBuildImagePullRegistryAuthMatchesConfiguredRegistry(t *testing.T) {
 	t.Parallel()
 
