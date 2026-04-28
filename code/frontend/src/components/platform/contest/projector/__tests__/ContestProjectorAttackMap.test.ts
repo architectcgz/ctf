@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
+
 import { mount } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -7,6 +10,14 @@ import type {
   ContestProjectorAttackEdge,
   ContestProjectorServiceMatrixRow,
 } from '@/components/platform/contest/projector/contestProjectorTypes'
+
+const attackDetailOverlayCss = readFileSync(
+  join(
+    process.cwd(),
+    'src/components/platform/contest/projector/ContestProjectorAttackDetailOverlay.css'
+  ),
+  'utf-8'
+)
 
 class ResizeObserverStub {
   observe = vi.fn()
@@ -193,5 +204,13 @@ describe('ContestProjectorAttackMap', () => {
     expect(document.body.textContent).toContain('完整团队排名')
     expect(document.body.textContent).toContain('解题 2')
     expect(document.body.textContent).toContain('受损 0')
+  })
+
+  it('详情弹出框应使用实体 surface 背景，避免排名和服务列表透出底层画面', () => {
+    expect(attackDetailOverlayCss).toContain('background: var(--projector-detail-panel-surface);')
+    expect(attackDetailOverlayCss).toContain('background: var(--projector-detail-item-surface);')
+    expect(attackDetailOverlayCss).not.toContain('var(--color-bg-elevated) 58%, transparent')
+    expect(attackDetailOverlayCss).not.toContain('var(--color-bg-elevated) 50%, transparent')
+    expect(attackDetailOverlayCss).not.toContain('var(--color-bg-elevated) 52%, transparent')
   })
 })
