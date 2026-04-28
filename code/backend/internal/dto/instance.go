@@ -21,6 +21,7 @@ type InstanceResp struct {
 
 type InstanceInfo struct {
 	ID               int64            `json:"id"`
+	ContestMode      string           `json:"contest_mode,omitempty"`
 	ChallengeID      int64            `json:"challenge_id"`
 	ChallengeTitle   string           `json:"challenge_title,omitempty"`
 	Category         string           `json:"category,omitempty"`

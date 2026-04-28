@@ -151,6 +151,44 @@ describe('InstanceList', () => {
     expect(instanceListSource).not.toMatch(/^\.instance-btn-danger\s*\{/m)
   })
 
+  it('AWD 队伍实例不应显示延时或销毁操作', async () => {
+    instanceApiMocks.getMyInstances.mockResolvedValueOnce([
+      {
+        id: 'awd-inst-1',
+        challenge_id: 'awd-service-1',
+        challenge_title: 'Bank Portal',
+        category: 'web',
+        difficulty: 'medium',
+        status: 'running',
+        access_url: '',
+        flag_type: 'dynamic',
+        share_scope: 'per_team',
+        contest_mode: 'awd',
+        expires_at: '2099-01-01T00:00:00Z',
+        remaining_extends: 1,
+        created_at: '2026-03-05T00:00:00Z',
+      },
+    ])
+
+    const wrapper = mount(InstanceList, {
+      global: {
+        stubs: {
+          RouterLink: {
+            template: '<a><slot /></a>',
+          },
+        },
+      },
+    })
+
+    await flushPromises()
+
+    const row = wrapper.get('.instance-row')
+    expect(row.text()).toContain('Bank Portal')
+    expect(row.text()).toContain('系统托管')
+    expect(row.text()).not.toContain('延时')
+    expect(row.text()).not.toContain('销毁')
+  })
+
   it('即将过期提醒应具备对话框语义、关闭按钮和 ESC 关闭能力', async () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2026-03-05T00:00:00Z'))

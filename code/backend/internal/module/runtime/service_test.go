@@ -455,6 +455,72 @@ func TestServiceExtendInstanceAllowsContestTeamMember(t *testing.T) {
 	}
 }
 
+func TestServiceDestroyInstanceRejectsAWDTeamServiceInstance(t *testing.T) {
+	t.Parallel()
+
+	repo := newTestRepository(t)
+	service := newTestRuntimeModule(repo, nil)
+	now := time.Now()
+	contestID := int64(303)
+	teamID := int64(403)
+	serviceID := int64(503)
+
+	if err := repo.db.Create(&model.Team{ID: teamID, ContestID: contestID, Name: "Gamma", CaptainID: 1, InviteCode: "gamma", MaxMembers: 4, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
+		t.Fatalf("create team: %v", err)
+	}
+	if err := repo.db.Create(&model.TeamMember{ContestID: contestID, TeamID: teamID, UserID: 2, JoinedAt: now, CreatedAt: now}).Error; err != nil {
+		t.Fatalf("create team member: %v", err)
+	}
+	seedInstance(t, repo.db, &model.Instance{
+		ID:          905,
+		UserID:      1,
+		ContestID:   &contestID,
+		TeamID:      &teamID,
+		ChallengeID: 105,
+		ServiceID:   &serviceID,
+		Status:      model.InstanceStatusRunning,
+		ExpiresAt:   now.Add(time.Hour),
+	})
+
+	err := service.DestroyInstance(context.Background(), 905, 2)
+	if err == nil || err.Error() != errcode.ErrForbidden.Error() {
+		t.Fatalf("expected forbidden for awd team service destroy, got %v", err)
+	}
+}
+
+func TestServiceExtendInstanceRejectsAWDTeamServiceInstance(t *testing.T) {
+	t.Parallel()
+
+	repo := newTestRepository(t)
+	service := newTestRuntimeModule(repo, nil)
+	now := time.Now()
+	contestID := int64(304)
+	teamID := int64(404)
+	serviceID := int64(504)
+
+	if err := repo.db.Create(&model.Team{ID: teamID, ContestID: contestID, Name: "Delta", CaptainID: 1, InviteCode: "delta", MaxMembers: 4, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
+		t.Fatalf("create team: %v", err)
+	}
+	if err := repo.db.Create(&model.TeamMember{ContestID: contestID, TeamID: teamID, UserID: 2, JoinedAt: now, CreatedAt: now}).Error; err != nil {
+		t.Fatalf("create team member: %v", err)
+	}
+	seedInstance(t, repo.db, &model.Instance{
+		ID:          906,
+		UserID:      1,
+		ContestID:   &contestID,
+		TeamID:      &teamID,
+		ChallengeID: 106,
+		ServiceID:   &serviceID,
+		Status:      model.InstanceStatusRunning,
+		ExpiresAt:   now.Add(time.Hour),
+	})
+
+	_, err := service.ExtendInstance(context.Background(), 906, 2)
+	if err == nil || err.Error() != errcode.ErrForbidden.Error() {
+		t.Fatalf("expected forbidden for awd team service extend, got %v", err)
+	}
+}
+
 func TestServiceDestroyInstanceRejectsSharedInstance(t *testing.T) {
 	t.Parallel()
 

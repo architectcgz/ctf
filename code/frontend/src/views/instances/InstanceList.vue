@@ -8,6 +8,7 @@ import {
   getInstanceStatusClass,
   getInstanceStatusLabel,
   getInstanceWaitingHint,
+  isInstanceManualActionAllowed,
   useInstanceListPage,
 } from '@/composables/useInstanceListPage'
 
@@ -247,7 +248,7 @@ watch(showWarning, async (visible) => {
 
             <div class="instance-row-actions">
               <button
-                v-if="instance.status === 'running' && instance.share_scope !== 'shared'"
+                v-if="instance.status === 'running' && isInstanceManualActionAllowed(instance)"
                 :disabled="instance.remaining_extends <= 0"
                 class="ui-btn ui-btn--sm ui-btn--primary"
                 @click="extendTime(instance.id)"
@@ -255,16 +256,18 @@ watch(showWarning, async (visible) => {
                 延时 +{{ EXTEND_DURATION_SECONDS / 60 }}min
               </button>
               <button
-                v-if="instance.share_scope !== 'shared'"
+                v-if="isInstanceManualActionAllowed(instance)"
                 class="ui-btn ui-btn--sm ui-btn--danger"
                 @click="destroyInstance(instance.id)"
               >
                 销毁
               </button>
               <span
-                v-if="instance.share_scope === 'shared'"
+                v-if="!isInstanceManualActionAllowed(instance)"
                 class="instance-row-note"
-              >系统托管</span>
+              >
+                系统托管
+              </span>
             </div>
           </article>
         </section>

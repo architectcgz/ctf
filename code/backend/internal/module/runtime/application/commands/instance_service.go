@@ -50,6 +50,9 @@ func (s *InstanceService) DestroyInstance(ctx context.Context, instanceID, userI
 	if instance.ShareScope == model.InstanceSharingShared {
 		return errcode.ErrForbidden
 	}
+	if isAWDTeamServiceInstance(instance) {
+		return errcode.ErrForbidden
+	}
 
 	s.logger.Info("销毁实例", zap.Int64("instance_id", instanceID), zap.Int64("user_id", userID))
 
@@ -67,6 +70,9 @@ func (s *InstanceService) ExtendInstance(ctx context.Context, instanceID, userID
 		return nil, errcode.ErrForbidden
 	}
 	if instance.ShareScope == model.InstanceSharingShared {
+		return nil, errcode.ErrForbidden
+	}
+	if isAWDTeamServiceInstance(instance) {
 		return nil, errcode.ErrForbidden
 	}
 	if instance.Status != model.InstanceStatusRunning || !instance.ExpiresAt.After(time.Now()) {
@@ -91,6 +97,10 @@ func (s *InstanceService) ExtendInstance(ctx context.Context, instanceID, userID
 		zap.Time("new_expires_at", instance.ExpiresAt.Add(s.config.ExtendDuration)))
 
 	return toInstanceResp(updatedInstance), nil
+}
+
+func isAWDTeamServiceInstance(instance *model.Instance) bool {
+	return instance != nil && instance.ContestID != nil && instance.TeamID != nil && instance.ServiceID != nil
 }
 
 func (s *InstanceService) DestroyTeacherInstance(ctx context.Context, instanceID, requesterID int64, requesterRole string) error {
