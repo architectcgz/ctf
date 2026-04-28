@@ -346,6 +346,103 @@ describe('ScoreboardView', () => {
     expect(scoreboardSource).toContain('Points Scoreboard')
   })
 
+  it('排行榜顶部页签应接入统一 workspace tab 样式', () => {
+    expect(scoreboardSource).toContain('class="workspace-tabbar top-tabs"')
+    expect(scoreboardSource).toContain('class="workspace-tab top-tab"')
+    expect(scoreboardSource).not.toContain('--page-top-tabs-gap: var(--space-7);')
+    expect(scoreboardSource).not.toContain('--page-top-tabs-padding: 0 var(--space-7);')
+    expect(scoreboardSource).not.toContain('--page-top-tab-min-height: 52px;')
+  })
+
+  it('竞赛排行列表分页展示并支持切换下一页', async () => {
+    getPracticeRankingMock.mockResolvedValue([])
+    getContestsMock.mockResolvedValue({
+      list: Array.from({ length: 7 }, (_, index) => {
+        const day = String(12 - index).padStart(2, '0')
+        return {
+          id: `contest-${index + 1}`,
+          title: `竞赛 ${index + 1}`,
+          mode: 'jeopardy',
+          status: 'running',
+          starts_at: `2026-03-${day}T00:00:00Z`,
+          ends_at: `2026-03-${day}T12:00:00Z`,
+        }
+      }),
+      total: 7,
+      page: 1,
+      page_size: 100,
+    })
+
+    const router = await createScoreboardRouter()
+    const wrapper = mount(ScoreboardView, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await flushPromises()
+    await flushPromises()
+
+    const firstPageCards = wrapper.findAll('[data-testid="scoreboard-card"]')
+    expect(firstPageCards).toHaveLength(6)
+    expect(wrapper.find('.scoreboard-pagination').text()).toContain('共 7 个竞赛')
+    expect(wrapper.find('.scoreboard-pagination').text()).toContain('1 / 2')
+    expect(firstPageCards.some((card) => card.text().includes('竞赛 1'))).toBe(true)
+    expect(firstPageCards.some((card) => card.text().includes('竞赛 7'))).toBe(false)
+
+    const nextButton = wrapper
+      .findAll('.page-pagination-controls__button')
+      .find((button) => button.text().trim() === '下一页')
+    expect(nextButton).toBeTruthy()
+    await nextButton?.trigger('click')
+
+    const secondPageCards = wrapper.findAll('[data-testid="scoreboard-card"]')
+    expect(secondPageCards).toHaveLength(1)
+    expect(wrapper.find('.scoreboard-pagination').text()).toContain('2 / 2')
+    expect(secondPageCards[0].text()).toContain('竞赛 7')
+    expect(secondPageCards[0].text()).not.toContain('竞赛 1')
+  })
+
+  it('竞赛排行列表只有一页时也应显示分页控件', async () => {
+    getPracticeRankingMock.mockResolvedValue([])
+    getContestsMock.mockResolvedValue({
+      list: [
+        {
+          id: 'contest-running',
+          title: '当前竞赛',
+          mode: 'jeopardy',
+          status: 'running',
+          starts_at: '2026-03-12T00:00:00Z',
+          ends_at: '2026-03-12T12:00:00Z',
+        },
+      ],
+      total: 1,
+      page: 1,
+      page_size: 100,
+    })
+
+    const router = await createScoreboardRouter()
+    const wrapper = mount(ScoreboardView, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await flushPromises()
+    await flushPromises()
+
+    const pagination = wrapper.find('.scoreboard-pagination')
+    expect(pagination.exists()).toBe(true)
+    expect(pagination.text()).toContain('共 1 个竞赛')
+    expect(pagination.text()).toContain('上一页')
+    expect(pagination.text()).toContain('1 / 1')
+    expect(pagination.text()).toContain('下一页')
+
+    const paginationButtons = wrapper.findAll('.page-pagination-controls__button')
+    expect(paginationButtons[0].attributes('disabled')).toBeDefined()
+    expect(paginationButtons[1].attributes('disabled')).toBeDefined()
+  })
+
   it('排行榜页级 shell 不应继续携带 journal-eyebrow-text 修饰类', () => {
     expect(scoreboardSource).toContain(
       'class="workspace-shell journal-shell journal-shell-user journal-hero flex min-h-full flex-1 flex-col"'

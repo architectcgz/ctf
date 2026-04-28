@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ArrowRight, BarChart2, Shield, Users } from 'lucide-vue-next'
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
+import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
 import type { ContestStatus } from '@/api/contracts'
 import { useRouteQueryTabs } from '@/composables/useRouteQueryTabs'
 import { useScoreboardView } from '@/composables/useScoreboardView'
@@ -11,6 +12,7 @@ import { getContestAccentColor, getModeLabel, getStatusLabel } from '@/utils/con
 
 type ScoreboardPanelKey = 'contest' | 'points'
 
+const CONTEST_PAGE_SIZE = 6
 const route = useRoute()
 const router = useRouter()
 const panelTabs: Array<{ key: ScoreboardPanelKey; label: string; panelId: string; tabId: string }> =
@@ -57,12 +59,36 @@ const frozenCount = computed(() => sections.value.filter((section) => section.fr
 const endedCount = computed(
   () => sections.value.filter((section) => section.contest.status === 'ended').length
 )
+const contestPage = ref(1)
+const contestTotalPages = computed(() =>
+  Math.max(1, Math.ceil(sections.value.length / CONTEST_PAGE_SIZE))
+)
+const contestPageStartIndex = computed(() => (contestPage.value - 1) * CONTEST_PAGE_SIZE)
+const paginatedSections = computed(() =>
+  sections.value.slice(
+    contestPageStartIndex.value,
+    contestPageStartIndex.value + CONTEST_PAGE_SIZE
+  )
+)
 const emptyTitle = computed(() =>
   selectionHint.value.includes('失败') ? '排行榜加载失败' : '暂无可查看的竞赛排行榜'
 )
 const pointsEmptyTitle = computed(() =>
   rankingError.value ? '积分排行榜加载失败' : '暂无可查看的积分排行榜'
 )
+
+watch(
+  () => sections.value,
+  () => {
+    contestPage.value = 1
+  }
+)
+
+watch(contestTotalPages, (totalPages) => {
+  if (contestPage.value > totalPages) {
+    contestPage.value = totalPages
+  }
+})
 
 function formatDateTime(value?: string): string {
   if (!value) return '未记录'
@@ -114,6 +140,10 @@ function getCardDescription(
 
   return '历史竞赛进入详情后展示最终成绩，可用于复盘队伍解题表现。'
 }
+
+function changeContestPage(page: number): void {
+  contestPage.value = page
+}
 </script>
 
 <template>
@@ -122,7 +152,7 @@ function getCardDescription(
   >
     <div class="scoreboard-page">
       <nav
-        class="top-tabs"
+        class="workspace-tabbar top-tabs"
         role="tablist"
         aria-label="排行榜视图切换"
       >
@@ -133,7 +163,7 @@ function getCardDescription(
           :ref="(element) => setTabButtonRef(tab.key, element as HTMLButtonElement | null)"
           type="button"
           role="tab"
-          class="top-tab"
+          class="workspace-tab top-tab"
           :class="{ active: activeTab === tab.key }"
           :aria-selected="activeTab === tab.key ? 'true' : 'false'"
           :aria-controls="tab.panelId"
@@ -253,7 +283,7 @@ function getCardDescription(
 
             <div class="scoreboard-sections">
               <router-link
-                v-for="(section, index) in sections"
+                v-for="(section, index) in paginatedSections"
                 :key="section.contest.id"
                 data-testid="scoreboard-card"
                 class="scoreboard-card scoreboard-card-link"
@@ -263,7 +293,9 @@ function getCardDescription(
                 <div class="scoreboard-card-header">
                   <div class="scoreboard-card-main">
                     <div class="scoreboard-card-chips">
-                      <span class="sb-index">{{ String(index + 1).padStart(2, '0') }}</span>
+                      <span class="sb-index">{{
+                        String(contestPageStartIndex + index + 1).padStart(2, '0')
+                      }}</span>
                       <span class="sb-status-chip">{{
                         getStatusLabel(section.contest.status)
                       }}</span>
@@ -297,6 +329,19 @@ function getCardDescription(
                   </div>
                 </div>
               </router-link>
+            </div>
+
+            <div
+              class="scoreboard-pagination workspace-directory-pagination"
+            >
+              <PagePaginationControls
+                :page="contestPage"
+                :total-pages="contestTotalPages"
+                :total="sections.length"
+                :total-label="`共 ${sections.length} 个竞赛`"
+                show-jump
+                @change-page="changeContestPage"
+              />
             </div>
           </section>
         </section>

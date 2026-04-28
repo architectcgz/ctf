@@ -41,9 +41,10 @@ describe('challenge detail shared shell alignment', () => {
   })
 
   it('主标签轨道应通过 page-tabs 变量接入共享规则，而不是继续本地声明 top-tabs/top-tab', () => {
-    expect(challengeDetailSource).toContain('--page-top-tabs-gap: var(--space-7);')
-    expect(challengeDetailSource).toContain('--page-top-tabs-padding: 0 var(--space-7);')
-    expect(challengeDetailSource).toContain('--page-top-tab-active-border: var(--brand);')
+    expect(challengeDetailSource).toContain('class="workspace-tabbar top-tabs"')
+    expect(challengeDetailSource).not.toContain('--page-top-tabs-gap: var(--space-7);')
+    expect(challengeDetailSource).not.toContain('--page-top-tabs-padding: 0 var(--space-7);')
+    expect(challengeDetailSource).not.toContain('--page-top-tab-active-border: var(--brand);')
     expect(challengeDetailSource).not.toMatch(/^\.top-tabs\s*,/m)
     expect(challengeDetailSource).not.toMatch(/^\.top-tab\s*,/m)
   })

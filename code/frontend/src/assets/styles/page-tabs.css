@@ -49,6 +49,20 @@
   color: var(--journal-muted, var(--color-text-secondary));
 }
 
+.workspace-tabbar.top-tabs {
+  --page-top-tabs-gap: var(--space-7);
+  --page-top-tabs-margin: var(--space-2-5) 0 0;
+  --page-top-tabs-padding: 0 var(--space-7);
+  --page-top-tabs-border: var(--line-soft);
+  --page-top-tab-min-height: 52px;
+  --page-top-tab-padding: var(--space-2-5) 0 var(--space-3-5);
+  --page-top-tab-font-size: var(--font-size-15);
+  --page-top-tab-font-weight: 600;
+  --page-top-tab-color: var(--text-faint);
+  --page-top-tab-active-color: var(--brand-ink);
+  --page-top-tab-active-border: var(--brand);
+}
+
 .top-tabs {
   display: flex;
   gap: var(--page-top-tabs-gap, var(--space-workspace-tabs-gap));
