@@ -89,8 +89,13 @@ describe('UserManage', () => {
     expect(wrapper.exists()).toBe(true)
     expect(wrapper.text()).toContain('用户治理台')
     expect(wrapper.text()).toContain('alice')
-    expect(wrapper.text()).toContain('alice@example.com')
+    expect(wrapper.text()).not.toContain('alice@example.com')
     expect(wrapper.text()).toContain('teacher')
+
+    await wrapper.get('#user-row-detail-1').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.get('.user-detail-drawer').text()).toContain('alice@example.com')
     expect(adminApiMocks.getUsers).toHaveBeenCalledWith(
       {
         page: 1,
@@ -256,28 +261,41 @@ describe('UserManage', () => {
     expect(headers).toEqual([
       '用户',
       '姓名',
-      '邮箱',
       '角色',
       '状态',
-      '班级',
-      '学号 / 工号',
-      '创建时间',
       '操作',
     ])
     expect(wrapper.find('.admin-pagination').exists()).toBe(true)
     const rows = wrapper.findAll('.workspace-data-table__body tr')
     expect(rows[0]?.text()).toContain('alice')
-    expect(rows[0]?.text()).toContain('alice@example.com')
-    expect(rows[0]?.text()).toContain('T001')
+    expect(rows[0]?.text()).not.toContain('alice@example.com')
+    expect(rows[0]?.text()).not.toContain('T001')
     expect(rows[0]?.text()).not.toContain('工号：')
     expect(rows[0]?.text()).not.toContain('学号：')
     expect(rows[1]?.text()).toContain('bob')
-    expect(rows[1]?.text()).toContain('bob@example.com')
-    expect(rows[1]?.text()).toContain('S002')
+    expect(rows[1]?.text()).not.toContain('bob@example.com')
+    expect(rows[1]?.text()).not.toContain('S002')
     expect(rows[1]?.text()).not.toContain('学号：')
     expect(rows[1]?.text()).not.toContain('工号：')
     expect(wrapper.findAll('.user-action-btn')).toHaveLength(4)
     expect(wrapper.find('.user-list .admin-inline-chip').exists()).toBe(false)
+
+    expect(wrapper.find('.user-detail-drawer').exists()).toBe(false)
+    await wrapper.get('#user-row-detail-1').trigger('click')
+    await flushPromises()
+
+    const drawer = wrapper.get('.user-detail-drawer')
+    expect(drawer.attributes('role')).toBe('dialog')
+    expect(drawer.text()).toContain('alice')
+    expect(drawer.text()).toContain('alice@example.com')
+    expect(drawer.text()).toContain('Class A')
+    expect(drawer.text()).toContain('T001')
+    expect(drawer.text()).toContain('2026')
+
+    await wrapper.get('#user-detail-close').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.find('.user-detail-drawer').exists()).toBe(false)
   })
 
   it('文本筛选应在节流后再请求用户列表', async () => {

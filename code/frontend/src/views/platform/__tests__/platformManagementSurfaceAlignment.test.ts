@@ -239,14 +239,14 @@ describe('admin management surface alignment', () => {
   })
 
   it('contest directory rows should expose split schedule columns and dedicated status pills', () => {
-    expect(adminContestTableSource).toContain('<span>开始时间</span>')
-    expect(adminContestTableSource).toContain('<span>结束时间</span>')
+    expect(adminContestTableSource).toContain("{ key: 'starts_at', label: '开始时间'")
+    expect(adminContestTableSource).toContain("{ key: 'ends_at', label: '结束时间'")
     expect(adminContestTableSource).not.toContain('<span>时间窗口</span>')
     expect(adminContestTableSource).toContain('class="ui-badge contest-status-pill"')
     expect(adminContestTableSource).toContain('.contest-status-pill--registering')
     expect(adminContestTableSource).toContain('.contest-status-pill--running')
-    expect(adminContestTableSource).toContain('.contest-row__starts-at')
-    expect(adminContestTableSource).toContain('.contest-row__ends-at')
+    expect(adminContestTableSource).toContain('.contest-table__time--start')
+    expect(adminContestTableSource).toContain('.contest-table__time--end')
   })
 
   it('contest form dialog should adopt the admin workspace dialog shell and section headings', () => {
