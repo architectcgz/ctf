@@ -50,6 +50,10 @@ func (stubRuntimeService) IssueAWDTargetProxyTicket(context.Context, authctx.Cur
 	return "", nil
 }
 
+func (stubRuntimeService) IssueAWDDefenseSSHTicket(context.Context, authctx.CurrentUser, int64, int64) (*dto.AWDDefenseSSHAccessResp, error) {
+	return nil, nil
+}
+
 func (stubRuntimeService) ResolveProxyTicket(context.Context, string) (*runtimeports.ProxyTicketClaims, error) {
 	return nil, nil
 }
@@ -90,6 +94,61 @@ type stubAWDProxyRuntimeService struct {
 	issuedTicket string
 	targetURL    string
 	claims       *runtimeports.ProxyTicketClaims
+}
+
+type stubAWDDefenseSSHRuntimeService struct {
+	stubRuntimeService
+	resp *dto.AWDDefenseSSHAccessResp
+}
+
+func (s stubAWDDefenseSSHRuntimeService) IssueAWDDefenseSSHTicket(context.Context, authctx.CurrentUser, int64, int64) (*dto.AWDDefenseSSHAccessResp, error) {
+	return s.resp, nil
+}
+
+func TestAccessAWDDefenseSSHReturnsConnectionInfo(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	handler := NewHandler(
+		stubAWDDefenseSSHRuntimeService{
+			resp: &dto.AWDDefenseSSHAccessResp{
+				Host:      "127.0.0.1",
+				Port:      2222,
+				Username:  "student+5+12",
+				Password:  "ticket-secret",
+				Command:   "ssh student+5+12@127.0.0.1 -p 2222",
+				ExpiresAt: "2026-04-28T10:00:00Z",
+			},
+		},
+		nil,
+		CookieConfig{},
+		nil,
+	)
+
+	router := gin.New()
+	router.POST("/api/v1/contests/:id/awd/services/:sid/defense/ssh", func(c *gin.Context) {
+		c.Set("current_user", authctx.CurrentUser{UserID: 1001, Username: "student", Role: model.RoleStudent})
+		c.Set("id", int64(5))
+		c.Set("sid", int64(12))
+		handler.AccessAWDDefenseSSH(c)
+	})
+
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/contests/5/awd/services/12/defense/ssh", nil)
+	resp := httptest.NewRecorder()
+
+	router.ServeHTTP(resp, req)
+
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+	if !strings.Contains(resp.Body.String(), `"username":"student+5+12"`) {
+		t.Fatalf("expected ssh username in response, got %s", resp.Body.String())
+	}
+	if !strings.Contains(resp.Body.String(), `"password":"ticket-secret"`) {
+		t.Fatalf("expected temporary password in response, got %s", resp.Body.String())
+	}
+	if !strings.Contains(resp.Body.String(), `"command":"ssh student+5+12@127.0.0.1 -p 2222"`) {
+		t.Fatalf("expected ssh command in response, got %s", resp.Body.String())
+	}
 }
 
 func (s stubAWDProxyRuntimeService) IssueAWDTargetProxyTicket(context.Context, authctx.CurrentUser, int64, int64, int64) (string, error) {

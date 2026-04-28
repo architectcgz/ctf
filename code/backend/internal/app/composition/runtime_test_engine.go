@@ -3,6 +3,7 @@ package composition
 import (
 	"context"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"strconv"
@@ -17,9 +18,9 @@ import (
 )
 
 type testRuntimeEngine struct {
-	mu         sync.Mutex
-	logger     *zap.Logger
-	nextID     int64
+	mu             sync.Mutex
+	logger         *zap.Logger
+	nextID         int64
 	networksByID   map[string]*testRuntimeNetwork
 	networksByName map[string]*testRuntimeNetwork
 	containers     map[string]*testRuntimeContainer
@@ -242,6 +243,29 @@ func (e *testRuntimeEngine) RemoveACLRules(_ context.Context, _ []model.Instance
 
 func (e *testRuntimeEngine) WriteFileToContainer(_ context.Context, _, _ string, _ []byte) error {
 	return nil
+}
+
+func (e *testRuntimeEngine) ExecContainerInteractive(ctx context.Context, containerID string, _ []string, stdin io.Reader, stdout io.Writer) error {
+	e.mu.Lock()
+	_, ok := e.containers[containerID]
+	e.mu.Unlock()
+	if !ok {
+		return nil
+	}
+
+	_, _ = io.WriteString(stdout, "test shell\n")
+	done := make(chan struct{})
+	go func() {
+		_, _ = io.Copy(io.Discard, stdin)
+		close(done)
+	}()
+
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-done:
+		return nil
+	}
 }
 
 func (e *testRuntimeEngine) InspectImageSize(_ context.Context, _ string) (int64, error) {

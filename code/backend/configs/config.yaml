@@ -130,6 +130,9 @@ container:
   public_host: localhost
   proxy_ticket_ttl: 15m
   proxy_body_preview_size: 1024
+  defense_ssh_enabled: false
+  defense_ssh_host: 127.0.0.1
+  defense_ssh_port: 2222
   registry:
     enabled: false
     server: "" # 例如 registry.example.edu 或 registry.local:5000

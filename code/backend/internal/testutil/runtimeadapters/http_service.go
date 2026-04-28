@@ -2,6 +2,7 @@ package runtimeadapters
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"ctf-platform/internal/authctx"
@@ -24,6 +25,7 @@ type httpInstanceQueryService interface {
 type httpProxyTicketService interface {
 	IssueTicket(ctx context.Context, user authctx.CurrentUser, instanceID int64) (string, time.Time, error)
 	IssueAWDTargetTicket(ctx context.Context, user authctx.CurrentUser, contestID, serviceID, victimTeamID int64) (string, time.Time, error)
+	IssueAWDDefenseSSHTicket(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64) (string, time.Time, error)
 	ResolveTicket(ctx context.Context, ticket string) (*runtimeports.ProxyTicketClaims, error)
 	ResolveAWDTargetAccessURL(ctx context.Context, claims *runtimeports.ProxyTicketClaims, contestID, serviceID, victimTeamID int64) (string, error)
 	MaxAge() int
@@ -79,6 +81,22 @@ func (a *HTTPService) IssueProxyTicket(ctx context.Context, user authctx.Current
 func (a *HTTPService) IssueAWDTargetProxyTicket(ctx context.Context, user authctx.CurrentUser, contestID, serviceID, victimTeamID int64) (string, error) {
 	ticket, _, err := a.proxyTickets.IssueAWDTargetTicket(ctx, user, contestID, serviceID, victimTeamID)
 	return ticket, err
+}
+
+func (a *HTTPService) IssueAWDDefenseSSHTicket(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64) (*dto.AWDDefenseSSHAccessResp, error) {
+	ticket, expiresAt, err := a.proxyTickets.IssueAWDDefenseSSHTicket(ctx, user, contestID, serviceID)
+	if err != nil {
+		return nil, err
+	}
+	username := fmt.Sprintf("%s+%d+%d", user.Username, contestID, serviceID)
+	return &dto.AWDDefenseSSHAccessResp{
+		Host:      "127.0.0.1",
+		Port:      2222,
+		Username:  username,
+		Password:  ticket,
+		Command:   fmt.Sprintf("ssh %s@127.0.0.1 -p 2222", username),
+		ExpiresAt: expiresAt.Format(time.RFC3339),
+	}, nil
 }
 
 func (a *HTTPService) ResolveProxyTicket(ctx context.Context, ticket string) (*runtimeports.ProxyTicketClaims, error) {

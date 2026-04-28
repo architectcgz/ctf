@@ -83,6 +83,7 @@ type ProxyTicketClaims struct {
 const (
 	ProxyTicketPurposeInstanceAccess = "instance_access"
 	ProxyTicketPurposeAWDAttack      = "awd_attack"
+	ProxyTicketPurposeAWDDefenseSSH  = "awd_defense_ssh"
 )
 
 type AWDTargetProxyScope struct {
@@ -96,6 +97,27 @@ type AWDTargetProxyScope struct {
 	AccessURL      string
 }
 
+type AWDDefenseSSHScope struct {
+	InstanceID  int64
+	ContestID   int64
+	TeamID      int64
+	ServiceID   int64
+	ChallengeID int64
+	ContainerID string
+	ShareScope  model.ShareScope
+}
+
+type AWDDefenseSSHSession struct {
+	UserID      int64
+	Username    string
+	InstanceID  int64
+	ContestID   int64
+	TeamID      int64
+	ServiceID   int64
+	ChallengeID int64
+	ContainerID string
+}
+
 type ProxyTicketStore interface {
 	SaveProxyTicket(ctx context.Context, ticket string, claims ProxyTicketClaims, ttl time.Duration) error
 	FindProxyTicket(ctx context.Context, ticket string) (*ProxyTicketClaims, error)
@@ -104,6 +126,7 @@ type ProxyTicketStore interface {
 type ProxyTicketInstanceReader interface {
 	FindByID(ctx context.Context, id int64) (*model.Instance, error)
 	FindAWDTargetProxyScope(ctx context.Context, userID, contestID, serviceID, victimTeamID int64) (*AWDTargetProxyScope, error)
+	FindAWDDefenseSSHScope(ctx context.Context, userID, contestID, serviceID int64) (*AWDDefenseSSHScope, error)
 }
 
 type ProxyTrafficEventRecorder interface {

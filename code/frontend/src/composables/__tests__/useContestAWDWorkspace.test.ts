@@ -7,6 +7,7 @@ import { useContestAWDWorkspace } from '@/composables/useContestAWDWorkspace'
 const contestApiMocks = vi.hoisted(() => ({
   getContestAWDWorkspace: vi.fn(),
   getScoreboard: vi.fn(),
+  requestContestAWDDefenseSSH: vi.fn(),
   requestContestAWDTargetAccess: vi.fn(),
   startContestAWDServiceInstance: vi.fn(),
   submitContestAWDAttack: vi.fn(),
@@ -32,6 +33,7 @@ describe('useContestAWDWorkspace', () => {
     vi.useRealTimers()
     contestApiMocks.getContestAWDWorkspace.mockReset()
     contestApiMocks.getScoreboard.mockReset()
+    contestApiMocks.requestContestAWDDefenseSSH.mockReset()
     contestApiMocks.requestContestAWDTargetAccess.mockReset()
     contestApiMocks.startContestAWDServiceInstance.mockReset()
     contestApiMocks.submitContestAWDAttack.mockReset()
@@ -77,6 +79,14 @@ describe('useContestAWDWorkspace', () => {
     })
     contestApiMocks.requestContestAWDTargetAccess.mockResolvedValue({
       access_url: '/api/v1/contests/1/awd/services/7009/targets/14/proxy/',
+    })
+    contestApiMocks.requestContestAWDDefenseSSH.mockResolvedValue({
+      host: '127.0.0.1',
+      port: 2222,
+      username: 'student+1+7009',
+      password: 'ticket-secret',
+      command: 'ssh student+1+7009@127.0.0.1 -p 2222',
+      expires_at: '2026-04-12T08:15:00Z',
     })
     instanceApiMocks.requestInstanceAccess.mockResolvedValue({
       access_url: '/api/v1/instances/900/proxy/',
@@ -415,5 +425,81 @@ describe('useContestAWDWorkspace', () => {
     expect(openingServiceKey.value).toBe('')
 
     openMock.mockRestore()
+  })
+
+  it('生成 SSH 防守连接时应保存临时连接信息并防止重复点击', async () => {
+    let resolveAccess:
+      | ((value: {
+          host: string
+          port: number
+          username: string
+          password: string
+          command: string
+          expires_at: string
+        }) => void)
+      | null = null
+
+    contestApiMocks.requestContestAWDDefenseSSH.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveAccess = resolve
+        })
+    )
+
+    let openDefenseSSH!: (serviceId: string) => Promise<unknown>
+    let openingSSHKey!: { value: string }
+    let sshAccessByServiceId!: {
+      value: Record<string, { command: string; password: string }>
+    }
+
+    mount(
+      defineComponent({
+        setup() {
+          const workspace = useContestAWDWorkspace({
+            contestId: computed(() => '1'),
+            contestStatus: computed(() => 'running'),
+          } as any)
+          openDefenseSSH = workspace.openDefenseSSH
+          openingSSHKey = workspace.openingSSHKey
+          sshAccessByServiceId = workspace.sshAccessByServiceId
+          return () => null
+        },
+      })
+    )
+
+    await flushPromises()
+
+    const firstAttempt = openDefenseSSH('7009')
+    const secondAttempt = openDefenseSSH('7009')
+
+    expect(openingSSHKey.value).toBe('7009')
+    expect(contestApiMocks.requestContestAWDDefenseSSH).toHaveBeenCalledTimes(1)
+    expect(contestApiMocks.requestContestAWDDefenseSSH).toHaveBeenCalledWith('1', '7009')
+
+    if (!resolveAccess) {
+      throw new Error('ssh access promise resolver was not captured')
+    }
+    const finishAccess = resolveAccess as (value: {
+      host: string
+      port: number
+      username: string
+      password: string
+      command: string
+      expires_at: string
+    }) => void
+    finishAccess({
+      host: '127.0.0.1',
+      port: 2222,
+      username: 'student+1+7009',
+      password: 'ticket-secret',
+      command: 'ssh student+1+7009@127.0.0.1 -p 2222',
+      expires_at: '2026-04-12T08:15:00Z',
+    })
+
+    await expect(secondAttempt).resolves.toBeNull()
+    await firstAttempt
+    expect(openingSSHKey.value).toBe('')
+    expect(sshAccessByServiceId.value['7009'].command).toBe('ssh student+1+7009@127.0.0.1 -p 2222')
+    expect(sshAccessByServiceId.value['7009'].password).toBe('ticket-secret')
   })
 })

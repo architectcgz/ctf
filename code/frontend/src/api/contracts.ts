@@ -484,6 +484,15 @@ export interface ContestAWDWorkspaceData {
   recent_events: ContestAWDWorkspaceRecentEventData[]
 }
 
+export interface AWDDefenseSSHAccessData {
+  host: string
+  port: number
+  username: string
+  password: string
+  command: string
+  expires_at: ISODateTime
+}
+
 export interface AWDRoundSummaryItemData {
   team_id: ID
   team_name: string

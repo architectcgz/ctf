@@ -9,6 +9,7 @@ vi.mock('@/api/request', () => ({
 import {
   getContestChallenges,
   getContestAWDWorkspace,
+  requestContestAWDDefenseSSH,
   requestContestAWDTargetAccess,
   startContestAWDServiceInstance,
   submitContestAWDAttack,
@@ -232,5 +233,25 @@ describe('contest api contract', () => {
     expect(result.access_url).toBe(
       '/api/v1/contests/7/awd/services/7009/targets/14/proxy/?ticket=demo'
     )
+  })
+
+  it('请求 AWD 防守 SSH 入口时应调用 defense ssh 接口', async () => {
+    requestMock.mockResolvedValue({
+      host: '127.0.0.1',
+      port: 2222,
+      username: 'student+7+7009',
+      password: 'ticket-secret',
+      command: 'ssh student+7+7009@127.0.0.1 -p 2222',
+      expires_at: '2026-04-12T08:15:00Z',
+    })
+
+    const result = await requestContestAWDDefenseSSH('7', '7009')
+
+    expect(requestMock).toHaveBeenCalledWith({
+      method: 'POST',
+      url: '/contests/7/awd/services/7009/defense/ssh',
+    })
+    expect(result.command).toBe('ssh student+7+7009@127.0.0.1 -p 2222')
+    expect(result.password).toBe('ticket-secret')
   })
 })

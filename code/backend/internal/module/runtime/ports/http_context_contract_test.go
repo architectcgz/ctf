@@ -48,5 +48,9 @@ func (ctxOnlyProxyTicketInstanceReader) FindAWDTargetProxyScope(context.Context,
 	return nil, nil
 }
 
+func (ctxOnlyProxyTicketInstanceReader) FindAWDDefenseSSHScope(context.Context, int64, int64, int64) (*runtimeports.AWDDefenseSSHScope, error) {
+	return nil, nil
+}
+
 var _ runtimeports.InstanceRepository = (*ctxOnlyInstanceRepository)(nil)
 var _ runtimeports.ProxyTicketInstanceReader = (*ctxOnlyProxyTicketInstanceReader)(nil)

@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, ref, toValue, watch, type MaybeRefOrGetter }
 import {
   getContestAWDWorkspace,
   getScoreboard,
+  requestContestAWDDefenseSSH,
   requestContestAWDTargetAccess,
   startContestAWDServiceInstance,
   submitContestAWDAttack,
@@ -10,6 +11,7 @@ import {
 import { requestInstanceAccess } from '@/api/instance'
 import type {
   AWDAttackLogData,
+  AWDDefenseSSHAccessData,
   ContestAWDWorkspaceData,
   ContestDetailData,
   ScoreboardRow,
@@ -34,6 +36,8 @@ export function useContestAWDWorkspace(options: UseContestAWDWorkspaceOptions) {
   const submitResult = ref<AWDAttackLogData | null>(null)
   const startingServiceKey = ref('')
   const openingServiceKey = ref('')
+  const openingSSHKey = ref('')
+  const sshAccessByServiceId = ref<Record<string, AWDDefenseSSHAccessData>>({})
   const openingTargetKey = ref('')
   const submittingKey = ref('')
   const lastSyncedAt = ref<string | null>(null)
@@ -64,6 +68,7 @@ export function useContestAWDWorkspace(options: UseContestAWDWorkspaceOptions) {
       error.value = ''
       loading.value = false
       lastSyncedAt.value = null
+      sshAccessByServiceId.value = {}
       return
     }
 
@@ -149,6 +154,30 @@ export function useContestAWDWorkspace(options: UseContestAWDWorkspaceOptions) {
     }
   }
 
+  async function openDefenseSSH(serviceId: string): Promise<AWDDefenseSSHAccessData | null> {
+    const contestId = toValue(options.contestId)
+    if (!contestId || !serviceId || openingSSHKey.value) {
+      return null
+    }
+
+    openingSSHKey.value = serviceId
+    try {
+      const result = await requestContestAWDDefenseSSH(contestId, serviceId)
+      sshAccessByServiceId.value = {
+        ...sshAccessByServiceId.value,
+        [serviceId]: result,
+      }
+      toast.success('SSH 防守连接已生成')
+      return result
+    } catch (err) {
+      console.error(err)
+      toast.error(err instanceof Error ? err.message : '生成 SSH 防守连接失败')
+      return null
+    } finally {
+      openingSSHKey.value = ''
+    }
+  }
+
   async function openTarget(serviceId: string, victimTeamId: string): Promise<string | null> {
     const contestId = toValue(options.contestId)
     if (!contestId || !serviceId || !victimTeamId || openingTargetKey.value) {
@@ -215,6 +244,7 @@ export function useContestAWDWorkspace(options: UseContestAWDWorkspaceOptions) {
   watch(
     () => toValue(options.contestId),
     () => {
+      sshAccessByServiceId.value = {}
       void refreshAll()
     },
     { immediate: true }
@@ -247,6 +277,8 @@ export function useContestAWDWorkspace(options: UseContestAWDWorkspaceOptions) {
     submitResult,
     startingServiceKey,
     openingServiceKey,
+    openingSSHKey,
+    sshAccessByServiceId,
     openingTargetKey,
     submittingKey,
     shouldAutoRefresh,
@@ -255,6 +287,7 @@ export function useContestAWDWorkspace(options: UseContestAWDWorkspaceOptions) {
     loadWorkspace,
     startService,
     openService,
+    openDefenseSSH,
     openTarget,
     submitAttack,
   }

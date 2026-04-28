@@ -43,6 +43,8 @@ const {
   submitResult,
   startingServiceKey,
   openingServiceKey,
+  openingSSHKey,
+  sshAccessByServiceId,
   openingTargetKey,
   submittingKey,
   shouldAutoRefresh,
@@ -50,6 +52,7 @@ const {
   refreshAll,
   startService,
   openService,
+  openDefenseSSH,
   openTarget,
   submitAttack,
 } = useContestAWDWorkspace({
@@ -271,6 +274,11 @@ function getWorkspaceService(
   return servicesByServiceId.value.get(challenge.awd_service_id)
 }
 
+function getSSHAccess(serviceId?: string) {
+  if (!serviceId) return undefined
+  return sshAccessByServiceId.value[serviceId]
+}
+
 function isTargetServiceForChallenge(
   service: { service_id?: string; challenge_id: string },
   challenge: ContestChallengeItem
@@ -411,6 +419,15 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
                         : '等待分配实例'
                     }}
                   </div>
+                  <div v-if="getSSHAccess(challenge.awd_service_id)" class="asset-ssh">
+                    <div class="asset-ssh__label">SSH DEFENSE</div>
+                    <code class="asset-ssh__command">{{
+                      getSSHAccess(challenge.awd_service_id)?.command
+                    }}</code>
+                    <div class="asset-ssh__password font-mono">
+                      PASS {{ getSSHAccess(challenge.awd_service_id)?.password }}
+                    </div>
+                  </div>
                 </div>
                 <div class="asset-actions">
                   <button
@@ -423,6 +440,14 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
                     "
                   >
                     <ExternalLink class="h-3 w-3" />
+                  </button>
+                  <button
+                    v-if="getWorkspaceService(challenge)?.instance_id"
+                    :disabled="openingSSHKey === getServiceStartKey(challenge)"
+                    class="asset-btn"
+                    @click="challenge.awd_service_id && openDefenseSSH(challenge.awd_service_id)"
+                  >
+                    {{ openingSSHKey === getServiceStartKey(challenge) ? '...' : 'SSH' }}
                   </button>
                   <button
                     :disabled="startingServiceKey === getServiceStartKey(challenge)"
@@ -838,6 +863,19 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: var(--space-3);
+}
+
+.asset-main {
+  min-width: 0;
+  flex: 1;
+}
+
+.asset-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
 }
 
 .asset-title-stack {
@@ -861,6 +899,35 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
 .asset-meta {
   color: var(--color-text-muted);
   margin-top: 0.35rem;
+}
+
+.asset-ssh {
+  margin-top: var(--space-3);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 24%, transparent);
+  border-radius: 0.625rem;
+  background: color-mix(in srgb, var(--color-primary) 8%, var(--color-bg-surface));
+  padding: var(--space-2);
+}
+
+.asset-ssh__label {
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  color: var(--color-primary);
+}
+
+.asset-ssh__command,
+.asset-ssh__password {
+  display: block;
+  margin-top: var(--space-1);
+  color: var(--color-text-primary);
+  font-size: 11px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.asset-ssh__command {
+  font-family: var(--font-family-mono);
 }
 
 .status-badge {
