@@ -13,6 +13,7 @@ import TeacherInterventionPanel from '@/components/teacher/TeacherInterventionPa
 import TeacherClassReviewPanel from '@/components/teacher/TeacherClassReviewPanel.vue'
 import TeacherClassTrendPanel from '@/components/teacher/TeacherClassTrendPanel.vue'
 import { useTeacherDashboardMetrics } from '@/composables/useTeacherDashboardMetrics'
+import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'
 
 const props = defineProps<{
   classes: TeacherClassItem[]
@@ -29,6 +30,28 @@ const emit = defineEmits<{
   retry: []
   openClassManagement: []
 }>()
+
+type DashboardTab = 'overview' | 'portrait' | 'insight' | 'trend' | 'review' | 'intervention'
+
+const dashboardTabs: Array<{
+  key: DashboardTab
+  label: string
+  buttonId: string
+  panelId: string
+}> = [
+  { key: 'overview', label: '进度总览', buttonId: 'dashboard-tab-overview', panelId: 'overview' },
+  { key: 'portrait', label: '能力画像', buttonId: 'dashboard-tab-portrait', panelId: 'portrait' },
+  { key: 'insight', label: '学生洞察', buttonId: 'dashboard-tab-insight', panelId: 'insight' },
+  { key: 'trend', label: '趋势复盘', buttonId: 'dashboard-tab-trend', panelId: 'trend' },
+  { key: 'review', label: '教学复盘', buttonId: 'dashboard-tab-review', panelId: 'review' },
+  { key: 'intervention', label: '介入建议', buttonId: 'dashboard-tab-intervention', panelId: 'intervention' },
+]
+
+const dashboardTabOrder = dashboardTabs.map((tab) => tab.key) as DashboardTab[]
+const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSyncedTabs<DashboardTab>({
+  orderedTabs: dashboardTabOrder,
+  defaultTab: 'overview',
+})
 
 const {
   activeRateText,
@@ -51,11 +74,40 @@ const {
 
 <template>
   <div class="workspace-shell teacher-management-shell teacher-surface teacher-dashboard-shell flex min-h-full flex-1 flex-col">
+    <nav
+      class="workspace-tabbar top-tabs"
+      role="tablist"
+      aria-label="教学概览标签页"
+    >
+      <button
+        v-for="(tab, index) in dashboardTabs"
+        :id="tab.buttonId"
+        :key="tab.key"
+        :ref="(element) => setTabButtonRef(tab.key, element as HTMLButtonElement | null)"
+        class="workspace-tab top-tab"
+        :class="{ active: activeTab === tab.key }"
+        type="button"
+        role="tab"
+        :tabindex="activeTab === tab.key ? 0 : -1"
+        :aria-selected="activeTab === tab.key ? 'true' : 'false'"
+        :aria-controls="tab.panelId"
+        @click="selectTab(tab.key)"
+        @keydown="handleTabKeydown($event, index)"
+      >
+        {{ tab.label }}
+      </button>
+    </nav>
+
     <div class="workspace-grid">
       <main class="content-pane teacher-dashboard-content">
         <section
+          v-show="activeTab === 'overview'"
           id="overview"
-          class="workspace-hero teacher-dashboard-hero"
+          class="workspace-hero teacher-dashboard-hero tab-panel"
+          :class="{ active: activeTab === 'overview' }"
+          role="tabpanel"
+          aria-labelledby="dashboard-tab-overview"
+          :aria-hidden="activeTab === 'overview' ? 'false' : 'true'"
         >
           <div class="workspace-tab-heading__main">
             <div class="workspace-overline">
@@ -138,210 +190,258 @@ const {
               }}
             </div>
           </aside>
+        </section>
 
-          <div class="overview-workbench">
-            <section class="overview-panel overview-panel--wide workspace-directory-section teacher-directory-section">
-              <header class="list-heading">
-                <div>
-                  <div class="workspace-overline">
-                    Skill Portrait
-                  </div>
-                  <h2 class="list-heading__title">
-                    能力画像与薄弱维度
-                  </h2>
+        <section
+          v-show="activeTab === 'portrait'"
+          id="portrait"
+          class="tab-panel"
+          :class="{ active: activeTab === 'portrait' }"
+          role="tabpanel"
+          aria-labelledby="dashboard-tab-portrait"
+          :aria-hidden="activeTab === 'portrait' ? 'false' : 'true'"
+        >
+          <section class="overview-panel overview-panel--wide workspace-directory-section teacher-directory-section">
+            <header class="list-heading">
+              <div>
+                <div class="workspace-overline">
+                  Skill Portrait
                 </div>
-              </header>
-
-              <div class="teacher-dashboard-panel-body portrait-grid">
-                <div class="portrait-summary-block">
-                  <div class="summary-grid progress-strip metric-panel-grid metric-panel-default-surface">
-                    <article
-                      v-for="item in portraitSummaryNotes"
-                      :key="item.key"
-                      class="summary-note progress-card metric-panel-card"
-                    >
-                      <div class="summary-note-label progress-card-label metric-panel-label">
-                        {{ item.label }}
-                      </div>
-                      <div class="summary-note-value progress-card-value metric-panel-value">
-                        {{ item.value }}
-                      </div>
-                      <div class="summary-note-copy progress-card-hint metric-panel-helper">
-                        {{ item.copy || '画像摘要' }}
-                      </div>
-                    </article>
-                  </div>
-
-                  <div class="portrait-guidance">
-                    <div class="portrait-guidance__label">
-                      使用方式
-                    </div>
-                    <div class="portrait-guidance__copy">
-                      先看影响学生最多的能力方向，再结合复盘结论安排题单或课堂讲解。
-                    </div>
-                  </div>
-                </div>
-
-                <div class="portrait-dimension-block">
-                  <div class="panel-header-row">
-                    <h3 class="panel-title">
-                      优先补强方向
-                    </h3>
-                    <span class="panel-badge">按学生数排序</span>
-                  </div>
-
-                  <div
-                    v-if="weakDimensionStats.length > 0"
-                    class="weak-list workspace-directory-list"
-                  >
-                    <article
-                      v-for="(item, index) in weakDimensionStats.slice(0, 5)"
-                      :key="item.dimension"
-                      class="weak-item"
-                    >
-                      <div class="weak-rank">
-                        {{ `${index + 1}`.padStart(2, '0') }}
-                      </div>
-                      <div class="weak-content">
-                        <div
-                          class="weak-name"
-                          :title="item.dimension"
-                        >
-                          {{ item.dimension }}
-                        </div>
-                        <div class="weak-copy">
-                          {{ item.count }} 名学生当前在该方向暴露弱项。
-                        </div>
-                        <div class="weak-bar">
-                          <span :style="{ width: item.width }" />
-                        </div>
-                      </div>
-                      <div class="weak-score">
-                        {{ item.count }} 人
-                      </div>
-                    </article>
-                  </div>
-                  <div
-                    v-else
-                    class="workspace-directory-empty portrait-empty"
-                  >
-                    暂无可排序的薄弱维度
-                  </div>
-                </div>
+                <h2 class="list-heading__title">
+                  能力画像与薄弱维度
+                </h2>
               </div>
-            </section>
+            </header>
 
-            <section class="overview-panel workspace-directory-section teacher-directory-section">
-              <header class="list-heading">
-                <div>
-                  <div class="workspace-overline">
-                    Student Insight
-                  </div>
-                  <h2 class="list-heading__title">
-                    学生洞察
-                  </h2>
-                </div>
-              </header>
-
-              <div class="teacher-dashboard-panel-body">
-                <div class="student-insight-list workspace-directory-list">
+            <div class="teacher-dashboard-panel-body portrait-grid">
+              <div class="portrait-summary-block">
+                <div class="summary-grid progress-strip metric-panel-grid metric-panel-default-surface">
                   <article
-                    v-for="row in studentInsightRows"
-                    :key="row.key"
-                    class="student-insight-row"
-                    :class="`student-insight-row--${row.tone}`"
+                    v-for="item in portraitSummaryNotes"
+                    :key="item.key"
+                    class="summary-note progress-card metric-panel-card"
                   >
-                    <div class="student-insight-row__status">
-                      {{ row.status }}
+                    <div class="summary-note-label progress-card-label metric-panel-label">
+                      {{ item.label }}
                     </div>
-                    <div class="student-insight-row__main">
-                      <h3
-                        class="student-insight-row__title"
-                        :title="row.title"
-                      >
-                        {{ row.title }}
-                      </h3>
-                      <p class="student-insight-row__detail">
-                        {{ row.detail }}
-                      </p>
-                      <div class="student-insight-row__chips">
-                        <span
-                          v-for="chip in row.chips"
-                          :key="chip"
-                          class="student-insight-chip"
-                        >
-                          {{ chip }}
-                        </span>
-                      </div>
+                    <div class="summary-note-value progress-card-value metric-panel-value">
+                      {{ item.value }}
+                    </div>
+                    <div class="summary-note-copy progress-card-hint metric-panel-helper">
+                      {{ item.copy || '画像摘要' }}
                     </div>
                   </article>
                 </div>
-              </div>
-            </section>
 
-            <section class="overview-panel workspace-directory-section teacher-directory-section">
-              <header class="list-heading">
-                <div>
-                  <div class="workspace-overline">
-                    Trend Review
+                <div class="portrait-guidance">
+                  <div class="portrait-guidance__label">
+                    使用方式
                   </div>
-                  <h2 class="list-heading__title">
-                    趋势复盘
-                  </h2>
-                </div>
-              </header>
-
-              <div class="teacher-dashboard-panel-body workspace-subpanel workspace-subpanel--flat">
-                <TeacherClassTrendPanel
-                  :trend="trend"
-                  title="班级近 7 天训练趋势"
-                  bare
-                />
-              </div>
-            </section>
-
-            <section class="overview-panel workspace-directory-section teacher-directory-section">
-              <header class="list-heading">
-                <div>
-                  <div class="workspace-overline">
-                    Review
+                  <div class="portrait-guidance__copy">
+                    先看影响学生最多的能力方向，再结合复盘结论安排题单或课堂讲解。
                   </div>
-                  <h2 class="list-heading__title">
-                    教学复盘结论
-                  </h2>
                 </div>
-              </header>
-
-              <div class="teacher-dashboard-panel-body workspace-subpanel workspace-subpanel--flat">
-                <TeacherClassReviewPanel
-                  :review="review"
-                  :class-name="selectedClassName"
-                  bare
-                />
               </div>
-            </section>
 
-            <section class="overview-panel workspace-directory-section teacher-directory-section">
-              <header class="list-heading">
-                <div>
-                  <div class="workspace-overline">
-                    Intervention
+              <div class="portrait-dimension-block">
+                <div class="panel-header-row">
+                  <h3 class="panel-title">
+                    优先补强方向
+                  </h3>
+                  <span class="panel-badge">按学生数排序</span>
+                </div>
+
+                <div
+                  v-if="weakDimensionStats.length > 0"
+                  class="weak-list workspace-directory-list"
+                >
+                  <article
+                    v-for="(item, index) in weakDimensionStats.slice(0, 5)"
+                    :key="item.dimension"
+                    class="weak-item"
+                  >
+                    <div class="weak-rank">
+                      {{ `${index + 1}`.padStart(2, '0') }}
+                    </div>
+                    <div class="weak-content">
+                      <div
+                        class="weak-name"
+                        :title="item.dimension"
+                      >
+                        {{ item.dimension }}
+                      </div>
+                      <div class="weak-copy">
+                        {{ item.count }} 名学生当前在该方向暴露弱项。
+                      </div>
+                      <div class="weak-bar">
+                        <span :style="{ width: item.width }" />
+                      </div>
+                    </div>
+                    <div class="weak-score">
+                      {{ item.count }} 人
+                    </div>
+                  </article>
+                </div>
+                <div
+                  v-else
+                  class="workspace-directory-empty portrait-empty"
+                >
+                  暂无可排序的薄弱维度
+                </div>
+              </div>
+            </div>
+          </section>
+        </section>
+
+        <section
+          v-show="activeTab === 'insight'"
+          id="insight"
+          class="tab-panel"
+          :class="{ active: activeTab === 'insight' }"
+          role="tabpanel"
+          aria-labelledby="dashboard-tab-insight"
+          :aria-hidden="activeTab === 'insight' ? 'false' : 'true'"
+        >
+          <section class="overview-panel workspace-directory-section teacher-directory-section">
+            <header class="list-heading">
+              <div>
+                <div class="workspace-overline">
+                  Student Insight
+                </div>
+                <h2 class="list-heading__title">
+                  学生洞察
+                </h2>
+              </div>
+            </header>
+
+            <div class="teacher-dashboard-panel-body">
+              <div class="student-insight-list workspace-directory-list">
+                <article
+                  v-for="row in studentInsightRows"
+                  :key="row.key"
+                  class="student-insight-row"
+                  :class="`student-insight-row--${row.tone}`"
+                >
+                  <div class="student-insight-row__status">
+                    {{ row.status }}
                   </div>
-                  <h2 class="list-heading__title">
-                    优先介入学生
-                  </h2>
-                </div>
-              </header>
-
-              <div class="teacher-dashboard-panel-body workspace-subpanel workspace-subpanel--flat">
-                <TeacherInterventionPanel
-                  :students="students"
-                  :class-name="selectedClassName"
-                  bare
-                />
+                  <div class="student-insight-row__main">
+                    <h3
+                      class="student-insight-row__title"
+                      :title="row.title"
+                    >
+                      {{ row.title }}
+                    </h3>
+                    <p class="student-insight-row__detail">
+                      {{ row.detail }}
+                    </p>
+                    <div class="student-insight-row__chips">
+                      <span
+                        v-for="chip in row.chips"
+                        :key="chip"
+                        class="student-insight-chip"
+                      >
+                        {{ chip }}
+                      </span>
+                    </div>
+                  </div>
+                </article>
               </div>
-            </section>
-          </div>
+            </div>
+          </section>
+        </section>
+
+        <section
+          v-show="activeTab === 'trend'"
+          id="trend"
+          class="tab-panel"
+          :class="{ active: activeTab === 'trend' }"
+          role="tabpanel"
+          aria-labelledby="dashboard-tab-trend"
+          :aria-hidden="activeTab === 'trend' ? 'false' : 'true'"
+        >
+          <section class="overview-panel workspace-directory-section teacher-directory-section">
+            <header class="list-heading">
+              <div>
+                <div class="workspace-overline">
+                  Trend Review
+                </div>
+                <h2 class="list-heading__title">
+                  趋势复盘
+                </h2>
+              </div>
+            </header>
+
+            <div class="teacher-dashboard-panel-body workspace-subpanel workspace-subpanel--flat">
+              <TeacherClassTrendPanel
+                :trend="trend"
+                title="班级近 7 天训练趋势"
+                bare
+              />
+            </div>
+          </section>
+        </section>
+
+        <section
+          v-show="activeTab === 'review'"
+          id="review"
+          class="tab-panel"
+          :class="{ active: activeTab === 'review' }"
+          role="tabpanel"
+          aria-labelledby="dashboard-tab-review"
+          :aria-hidden="activeTab === 'review' ? 'false' : 'true'"
+        >
+          <section class="overview-panel workspace-directory-section teacher-directory-section">
+            <header class="list-heading">
+              <div>
+                <div class="workspace-overline">
+                  Review
+                </div>
+                <h2 class="list-heading__title">
+                  教学复盘结论
+                </h2>
+              </div>
+            </header>
+
+            <div class="teacher-dashboard-panel-body workspace-subpanel workspace-subpanel--flat">
+              <TeacherClassReviewPanel
+                :review="review"
+                :class-name="selectedClassName"
+                bare
+              />
+            </div>
+          </section>
+        </section>
+
+        <section
+          v-show="activeTab === 'intervention'"
+          id="intervention"
+          class="tab-panel"
+          :class="{ active: activeTab === 'intervention' }"
+          role="tabpanel"
+          aria-labelledby="dashboard-tab-intervention"
+          :aria-hidden="activeTab === 'intervention' ? 'false' : 'true'"
+        >
+          <section class="overview-panel workspace-directory-section teacher-directory-section">
+            <header class="list-heading">
+              <div>
+                <div class="workspace-overline">
+                  Intervention
+                </div>
+                <h2 class="list-heading__title">
+                  优先介入学生
+                </h2>
+              </div>
+            </header>
+
+            <div class="teacher-dashboard-panel-body workspace-subpanel workspace-subpanel--flat">
+              <TeacherInterventionPanel
+                :students="students"
+                :class-name="selectedClassName"
+                bare
+              />
+            </div>
+          </section>
         </section>
       </main>
     </div>
@@ -388,15 +488,6 @@ const {
   grid-template-columns: minmax(0, 1fr) minmax(17rem, 0.34fr);
   gap: var(--space-7);
   align-items: stretch;
-}
-
-.overview-workbench {
-  grid-column: 1 / -1;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-5);
-  padding-top: var(--space-6);
-  border-top: 1px solid var(--workspace-line-soft);
 }
 
 .overview-panel {
@@ -776,7 +867,6 @@ const {
 
 @media (max-width: 1180px) {
   .teacher-dashboard-hero,
-  .overview-workbench,
   .portrait-grid {
     grid-template-columns: 1fr;
   }

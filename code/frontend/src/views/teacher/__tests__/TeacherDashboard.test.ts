@@ -200,17 +200,19 @@ describe('TeacherDashboard', () => {
     }
   })
 
-  it('教师概览应合并为单一进度总览页面而不再渲染 tabs', () => {
+  it('教师概览应复用全局 tab 样式拆分内容区', () => {
     expect(teacherDashboardPageSource).toContain(
       'class="workspace-shell teacher-management-shell teacher-surface teacher-dashboard-shell flex min-h-full flex-1 flex-col"'
     )
     expect(teacherDashboardPageSource).not.toContain('class="workspace-topbar"')
-    expect(teacherDashboardPageSource).not.toContain('class="workspace-tabbar top-tabs teacher-dashboard-tabs"')
-    expect(teacherDashboardPageSource).not.toContain('role="tablist"')
-    expect(teacherDashboardPageSource).not.toContain('top-tab-')
-    expect(teacherDashboardPageSource).not.toContain('useUrlSyncedTabs')
-    expect(teacherDashboardPageSource).not.toContain('activeTab')
-    expect(teacherDashboardPageSource).not.toContain('tab-panel')
+    expect(teacherDashboardPageSource).toContain('class="workspace-tabbar top-tabs"')
+    expect(teacherDashboardPageSource).toContain('class="workspace-tab top-tab"')
+    expect(teacherDashboardPageSource).not.toContain('teacher-dashboard-tabs')
+    expect(teacherDashboardPageSource).toContain('role="tablist"')
+    expect(teacherDashboardPageSource).toContain('dashboard-tab-portrait')
+    expect(teacherDashboardPageSource).toContain('useUrlSyncedTabs')
+    expect(teacherDashboardPageSource).toContain('activeTab')
+    expect(teacherDashboardPageSource).toContain('tab-panel')
     expect(teacherDashboardPageSource).not.toContain('overview-pulse-panel')
   })
 
@@ -219,7 +221,7 @@ describe('TeacherDashboard', () => {
       'class="content-pane teacher-dashboard-content"'
     )
     expect(teacherDashboardPageSource).toContain(
-      'class="workspace-hero teacher-dashboard-hero"'
+      'class="workspace-hero teacher-dashboard-hero tab-panel"'
     )
     expect(teacherDashboardPageSource).toContain(
       'class="teacher-overview-summary progress-strip metric-panel-grid metric-panel-default-surface"'
@@ -227,7 +229,6 @@ describe('TeacherDashboard', () => {
     expect(teacherDashboardPageSource).toContain(
       'class="teacher-overview-card progress-card metric-panel-card"'
     )
-    expect(teacherDashboardPageSource).toContain('class="overview-workbench"')
     expect(teacherDashboardPageSource).toContain(
       'class="overview-panel overview-panel--wide workspace-directory-section teacher-directory-section"'
     )
@@ -269,14 +270,15 @@ describe('TeacherDashboard', () => {
     expect(summary.classes()).toContain('metric-panel-default-surface')
     expect(summary.findAll('.teacher-overview-card.progress-card.metric-panel-card')).toHaveLength(4)
     expect(wrapper.find('#overview .hero-rail.workspace-subpanel').exists()).toBe(true)
-    expect(wrapper.find('#overview .overview-workbench').exists()).toBe(true)
-    expect(wrapper.find('#overview .student-insight-list').exists()).toBe(true)
-    expect(wrapper.find('#overview .weak-list').exists()).toBe(true)
-    expect(wrapper.find('#overview .review-list').exists()).toBe(true)
-    expect(wrapper.find('#overview .intervention-list').exists()).toBe(true)
+    expect(wrapper.find('#overview .student-insight-list').exists()).toBe(false)
+    expect(wrapper.find('#portrait .weak-list').exists()).toBe(true)
+    expect(wrapper.find('#insight .student-insight-list').exists()).toBe(true)
+    expect(wrapper.find('#trend .teacher-panel__chart').exists()).toBe(true)
+    expect(wrapper.find('#review .review-list').exists()).toBe(true)
+    expect(wrapper.find('#intervention .intervention-list').exists()).toBe(true)
   })
 
-  it('教师概览能力画像摘要应在进度总览内采用统一 metric-panel 样式栈', async () => {
+  it('教师概览能力画像摘要应在画像 tab 内采用统一 metric-panel 样式栈', async () => {
     expect(teacherDashboardPageSource).toContain(
       'class="summary-grid progress-strip metric-panel-grid metric-panel-default-surface"'
     )
@@ -311,7 +313,7 @@ describe('TeacherDashboard', () => {
     await flushPromises()
     await flushPromises()
 
-    const summary = wrapper.get('#overview .summary-grid')
+    const summary = wrapper.get('#portrait .summary-grid')
     expect(summary.classes()).toContain('progress-strip')
     expect(summary.classes()).toContain('metric-panel-grid')
     expect(summary.classes()).toContain('metric-panel-default-surface')
@@ -348,7 +350,7 @@ describe('TeacherDashboard', () => {
     expect(pushMock).toHaveBeenCalledWith({ name: 'PlatformClassManagement' })
   })
 
-  it('带 panel 查询参数进入时仍应显示同一个进度总览页面', async () => {
+  it('带 panel 查询参数进入时应激活对应教师概览 tab', async () => {
     window.history.replaceState(window.history.state, '', '/academy/overview?panel=portrait')
 
     const wrapper = mount(TeacherDashboard, {
@@ -365,23 +367,23 @@ describe('TeacherDashboard', () => {
 
     expect(window.location.search).toBe('?panel=portrait')
     expect(wrapper.find('#overview').exists()).toBe(true)
-    expect(wrapper.find('#overview .overview-workbench').exists()).toBe(true)
-    expect(wrapper.find('#top-tab-portrait').exists()).toBe(false)
-    expect(wrapper.find('#portrait').exists()).toBe(false)
-    expect(wrapper.find('#trend').exists()).toBe(false)
-    expect(wrapper.find('#insight').exists()).toBe(false)
-    expect(wrapper.find('#advice').exists()).toBe(false)
-    expect(wrapper.find('#action').exists()).toBe(false)
+    expect(wrapper.find('#dashboard-tab-portrait').classes()).toContain('active')
+    expect(wrapper.find('#portrait').exists()).toBe(true)
+    expect(wrapper.find('#portrait').attributes('aria-hidden')).toBe('false')
+    expect(wrapper.find('#overview').attributes('aria-hidden')).toBe('true')
+    expect(wrapper.find('#trend').exists()).toBe(true)
+    expect(wrapper.find('#insight').exists()).toBe(true)
+    expect(wrapper.find('#review').exists()).toBe(true)
+    expect(wrapper.find('#intervention').exists()).toBe(true)
   })
 
-  it('教师概览合并区块应使用通用目录区块和扁平内容区', () => {
+  it('教师概览 tab 内容应使用通用目录区块和扁平内容区', () => {
     expect(teacherDashboardPageSource).toContain('class="teacher-dashboard-panel-body portrait-grid"')
     expect(teacherDashboardPageSource).toContain('class="weak-list workspace-directory-list"')
     expect(teacherDashboardPageSource).toContain('class="student-insight-list workspace-directory-list"')
     expect(teacherDashboardPageSource).toContain(
       'class="teacher-dashboard-panel-body workspace-subpanel workspace-subpanel--flat"'
     )
-    expect(teacherDashboardPageSource).not.toContain('TeacherClassInsightsPanel')
     expect(teacherDashboardPageSource).toMatch(
       /\.overview-panel\s*\{[\s\S]*--workspace-directory-section-padding:\s*var\(--space-5\)\s*var\(--space-5-5\)\s*var\(--space-5-5\);[\s\S]*border:\s*1px solid var\(--teacher-card-border\);[\s\S]*border-radius:\s*22px;/s
     )
@@ -438,7 +440,7 @@ describe('TeacherDashboard', () => {
     await flushPromises()
     await flushPromises()
 
-    expect(wrapper.find('#overview').text()).toContain('暂无')
+    expect(wrapper.find('#trend').text()).toContain('暂无')
   })
 
   it('趋势点位全为 0 时也应显示“暂无”空态提示', async () => {
@@ -462,7 +464,7 @@ describe('TeacherDashboard', () => {
     await flushPromises()
     await flushPromises()
 
-    expect(wrapper.find('#overview').text()).toContain('暂无')
+    expect(wrapper.find('#trend').text()).toContain('暂无')
   })
 
   it('教师概览不应渲染设计介绍式文案', async () => {
