@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { RouterLink } from 'vue-router'
 import {
   ShieldAlert,
   Sword,
@@ -13,6 +12,7 @@ import {
   Terminal,
   ExternalLink,
   RefreshCw,
+  Copy,
 } from 'lucide-vue-next'
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
@@ -34,6 +34,7 @@ const activeChallengeKey = ref('')
 const flagInputs = ref<Record<string, string>>({})
 const targetKeyword = ref('')
 const showOnlyReachableTargets = ref(false)
+const copiedSSHConfigKey = ref('')
 
 const {
   workspace,
@@ -280,6 +281,20 @@ function getSSHAccess(serviceId?: string) {
   return sshAccessByServiceId.value[serviceId]
 }
 
+async function copySSHConfig(serviceId?: string): Promise<void> {
+  const config = getSSHAccess(serviceId)?.vscode_config
+  if (!serviceId || !config || typeof navigator === 'undefined' || !navigator.clipboard) {
+    return
+  }
+
+  try {
+    await navigator.clipboard.writeText(config)
+    copiedSSHConfigKey.value = serviceId
+  } catch (err) {
+    console.error(err)
+  }
+}
+
 function isTargetServiceForChallenge(
   service: { service_id?: string; challenge_id: string },
   challenge: ContestChallengeItem
@@ -428,6 +443,21 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
                     <div class="asset-ssh__password font-mono">
                       PASS {{ getSSHAccess(challenge.awd_service_id)?.password }}
                     </div>
+                    <pre
+                      v-if="getSSHAccess(challenge.awd_service_id)?.vscode_config"
+                      class="asset-ssh__config"
+                    >{{ getSSHAccess(challenge.awd_service_id)?.vscode_config }}</pre>
+                    <button
+                      v-if="getSSHAccess(challenge.awd_service_id)?.vscode_config"
+                      class="asset-ssh__copy"
+                      type="button"
+                      @click="copySSHConfig(challenge.awd_service_id)"
+                    >
+                      <Copy class="h-3 w-3" />
+                      <span>{{
+                        copiedSSHConfigKey === challenge.awd_service_id ? '已复制' : '复制 VS Code'
+                      }}</span>
+                    </button>
                   </div>
                 </div>
                 <div class="asset-actions">
@@ -450,16 +480,6 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
                   >
                     {{ openingSSHKey === getServiceStartKey(challenge) ? '...' : 'SSH' }}
                   </button>
-                  <RouterLink
-                    v-if="getWorkspaceService(challenge)?.instance_id && challenge.awd_service_id"
-                    class="asset-btn asset-btn--defense"
-                    :to="{
-                      name: 'ContestAWDDefenseWorkbench',
-                      params: { id: props.contest.id, serviceId: challenge.awd_service_id },
-                    }"
-                  >
-                    防守
-                  </RouterLink>
                   <button
                     :disabled="startingServiceKey === getServiceStartKey(challenge)"
                     class="asset-btn asset-btn--primary"
@@ -940,6 +960,34 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
   font-family: var(--font-family-mono);
 }
 
+.asset-ssh__config {
+  margin-top: var(--space-2);
+  padding: var(--space-2);
+  white-space: pre-wrap;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 18%, transparent);
+  border-radius: 0.5rem;
+  background: color-mix(in srgb, var(--color-bg-surface) 76%, var(--color-bg-base));
+  color: var(--color-text-primary);
+  font-family: var(--font-family-mono);
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.asset-ssh__copy {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-top: var(--space-2);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 20%, transparent);
+  border-radius: 0.5rem;
+  background: var(--color-bg-surface);
+  color: var(--color-primary);
+  padding: var(--space-1) var(--space-2);
+  font-size: 10px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
 .status-badge {
   font-size: 10px;
   font-weight: 900;
@@ -971,7 +1019,6 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
   color: var(--color-text-secondary);
   border: 1px solid var(--color-border-default);
   cursor: pointer;
-  text-decoration: none;
   transition: all 0.2s ease;
 }
 
@@ -993,12 +1040,6 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
 .asset-btn--primary:hover {
   background: var(--color-primary);
   color: var(--color-bg-base);
-}
-
-.asset-btn--defense {
-  width: auto;
-  padding: 0 var(--space-3);
-  color: var(--color-success);
 }
 
 /* Attack Components */

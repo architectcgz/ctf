@@ -16,11 +16,15 @@ describe('ContestAWDWorkspacePanel source', () => {
     expect(awdWorkspaceSource).toContain('id="awd-target-challenge"')
     expect(awdWorkspaceSource).toContain('id="awd-target-search"')
     expect(awdWorkspaceSource).toContain('data-testid="awd-feedback-challenge-title"')
+    expect(awdWorkspaceSource).toContain('vscode_config')
+    expect(awdWorkspaceSource).toContain('copySSHConfig')
+    expect(awdWorkspaceSource).toContain('VS Code')
   })
 
-  it('防守入口应跳转到独立工作台页面', () => {
-    expect(awdWorkspaceSource).toContain("name: 'ContestAWDDefenseWorkbench'")
+  it('不再暴露浏览器文件防守工作台入口', () => {
+    expect(awdWorkspaceSource).not.toContain("name: 'ContestAWDDefenseWorkbench'")
     expect(awdWorkspaceSource).not.toContain('openDefenseWorkbench(challenge.awd_service_id)')
+    expect(awdWorkspaceSource).not.toContain('asset-btn--defense')
     expect(awdWorkspaceSource).not.toContain('class="defense-workbench"')
   })
 })

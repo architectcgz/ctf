@@ -2,6 +2,7 @@ package composition
 
 import (
 	"context"
+	"ctf-platform/internal/authctx"
 	"net/http"
 	"testing"
 	"time"
@@ -10,6 +11,7 @@ import (
 
 	"ctf-platform/internal/config"
 	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
+	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
 func TestBuildRuntimeEngineProvidesReachableRuntimeInTestEnv(t *testing.T) {
@@ -64,4 +66,62 @@ func TestBuildRuntimeEngineProvidesReachableRuntimeInTestEnv(t *testing.T) {
 			t.Fatalf("RemoveNetwork() error = %v", err)
 		}
 	}
+}
+
+func TestRuntimeHTTPServiceAdapterBuildsVSCodeSSHConfig(t *testing.T) {
+	expiresAt := time.Date(2026, 4, 28, 10, 0, 0, 0, time.UTC)
+	adapter := newRuntimeHTTPServiceAdapter(
+		nil,
+		nil,
+		stubRuntimeHTTPProxyTickets{ticket: "ticket-secret", expiresAt: expiresAt},
+		nil,
+		nil,
+		0,
+		true,
+		"ssh.ctf.local",
+		2222,
+	)
+
+	resp, err := adapter.IssueAWDDefenseSSHTicket(context.Background(), authctx.CurrentUser{
+		UserID:   1001,
+		Username: "student",
+		Role:     "student",
+	}, 5, 12)
+	if err != nil {
+		t.Fatalf("IssueAWDDefenseSSHTicket() error = %v", err)
+	}
+
+	expectedConfig := "Host ctf-awd-5-12\n  HostName ssh.ctf.local\n  Port 2222\n  User student+5+12\n"
+	if resp.VSCodeConfig != expectedConfig {
+		t.Fatalf("unexpected vscode ssh config:\n%s", resp.VSCodeConfig)
+	}
+}
+
+type stubRuntimeHTTPProxyTickets struct {
+	ticket    string
+	expiresAt time.Time
+}
+
+func (s stubRuntimeHTTPProxyTickets) IssueTicket(context.Context, authctx.CurrentUser, int64) (string, time.Time, error) {
+	return s.ticket, s.expiresAt, nil
+}
+
+func (s stubRuntimeHTTPProxyTickets) IssueAWDTargetTicket(context.Context, authctx.CurrentUser, int64, int64, int64) (string, time.Time, error) {
+	return s.ticket, s.expiresAt, nil
+}
+
+func (s stubRuntimeHTTPProxyTickets) IssueAWDDefenseSSHTicket(context.Context, authctx.CurrentUser, int64, int64) (string, time.Time, error) {
+	return s.ticket, s.expiresAt, nil
+}
+
+func (s stubRuntimeHTTPProxyTickets) ResolveTicket(context.Context, string) (*runtimeports.ProxyTicketClaims, error) {
+	return nil, nil
+}
+
+func (s stubRuntimeHTTPProxyTickets) ResolveAWDTargetAccessURL(context.Context, *runtimeports.ProxyTicketClaims, int64, int64, int64) (string, error) {
+	return "", nil
+}
+
+func (s stubRuntimeHTTPProxyTickets) MaxAge() int {
+	return 900
 }

@@ -9,12 +9,8 @@ vi.mock('@/api/request', () => ({
 import {
   getContestChallenges,
   getContestAWDWorkspace,
-  listContestAWDDefenseDirectory,
-  readContestAWDDefenseFile,
   requestContestAWDDefenseSSH,
   requestContestAWDTargetAccess,
-  runContestAWDDefenseCommand,
-  saveContestAWDDefenseFile,
   startContestAWDServiceInstance,
   submitContestAWDAttack,
 } from '@/api/contest'
@@ -246,6 +242,8 @@ describe('contest api contract', () => {
       username: 'student+7+7009',
       password: 'ticket-secret',
       command: 'ssh student+7+7009@127.0.0.1 -p 2222',
+      vscode_config:
+        'Host ctf-awd-7-7009\n  HostName 127.0.0.1\n  Port 2222\n  User student+7+7009\n',
       expires_at: '2026-04-12T08:15:00Z',
     })
 
@@ -256,54 +254,8 @@ describe('contest api contract', () => {
       url: '/contests/7/awd/services/7009/defense/ssh',
     })
     expect(result.command).toBe('ssh student+7+7009@127.0.0.1 -p 2222')
+    expect(result.vscode_config).toContain('Host ctf-awd-7-7009')
     expect(result.password).toBe('ticket-secret')
   })
 
-  it('请求 AWD 防守文件和命令接口时应携带服务上下文', async () => {
-    requestMock
-      .mockResolvedValueOnce({
-        path: '.',
-        entries: [
-          { name: 'app.py', path: 'app.py', type: 'file', size: 8 },
-          { name: 'templates', path: 'templates', type: 'dir', size: 0 },
-        ],
-      })
-      .mockResolvedValueOnce({ path: 'app.py', content: 'print(1)', size: 8 })
-      .mockResolvedValueOnce({ path: 'app.py', size: 8, backup_path: 'app.py.bak.1' })
-      .mockResolvedValueOnce({ command: 'ls', output: 'app.py\n' })
-
-    const directory = await listContestAWDDefenseDirectory('7', '7009', '.')
-    const file = await readContestAWDDefenseFile('7', '7009', 'app.py')
-    const saved = await saveContestAWDDefenseFile('7', '7009', {
-      path: 'app.py',
-      content: 'print(1)',
-      backup: true,
-    })
-    const command = await runContestAWDDefenseCommand('7', '7009', 'ls')
-
-    expect(requestMock).toHaveBeenNthCalledWith(1, {
-      method: 'GET',
-      url: '/contests/7/awd/services/7009/defense/directories',
-      params: { path: '.' },
-    })
-    expect(requestMock).toHaveBeenNthCalledWith(2, {
-      method: 'GET',
-      url: '/contests/7/awd/services/7009/defense/files',
-      params: { path: 'app.py' },
-    })
-    expect(requestMock).toHaveBeenNthCalledWith(3, {
-      method: 'PUT',
-      url: '/contests/7/awd/services/7009/defense/files',
-      data: { path: 'app.py', content: 'print(1)', backup: true },
-    })
-    expect(requestMock).toHaveBeenNthCalledWith(4, {
-      method: 'POST',
-      url: '/contests/7/awd/services/7009/defense/commands',
-      data: { command: 'ls' },
-    })
-    expect(directory.entries[1].type).toBe('dir')
-    expect(file.content).toBe('print(1)')
-    expect(saved.backup_path).toBe('app.py.bak.1')
-    expect(command.output).toBe('app.py\n')
-  })
 })

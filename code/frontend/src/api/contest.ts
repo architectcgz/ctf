@@ -3,10 +3,6 @@ import { normalizeInstanceData, type RawInstanceData } from './instance'
 
 import type {
   AWDAttackLogData,
-  AWDDefenseCommandData,
-  AWDDefenseDirectoryData,
-  AWDDefenseFileData,
-  AWDDefenseFileSaveData,
   AWDDefenseSSHAccessData,
   AWDRoundData,
   ContestAnnouncement,
@@ -418,54 +414,6 @@ export async function requestContestAWDDefenseSSH(
   return request<AWDDefenseSSHAccessData>({
     method: 'POST',
     url: `/contests/${encodeURIComponent(contestId)}/awd/services/${encodeURIComponent(serviceId)}/defense/ssh`,
-  })
-}
-
-export async function readContestAWDDefenseFile(
-  contestId: string,
-  serviceId: string,
-  path: string
-): Promise<AWDDefenseFileData> {
-  return request<AWDDefenseFileData>({
-    method: 'GET',
-    url: `/contests/${encodeURIComponent(contestId)}/awd/services/${encodeURIComponent(serviceId)}/defense/files`,
-    params: { path },
-  })
-}
-
-export async function listContestAWDDefenseDirectory(
-  contestId: string,
-  serviceId: string,
-  path = '.'
-): Promise<AWDDefenseDirectoryData> {
-  return request<AWDDefenseDirectoryData>({
-    method: 'GET',
-    url: `/contests/${encodeURIComponent(contestId)}/awd/services/${encodeURIComponent(serviceId)}/defense/directories`,
-    params: { path },
-  })
-}
-
-export async function saveContestAWDDefenseFile(
-  contestId: string,
-  serviceId: string,
-  data: { path: string; content: string; backup: boolean }
-): Promise<AWDDefenseFileSaveData> {
-  return request<AWDDefenseFileSaveData>({
-    method: 'PUT',
-    url: `/contests/${encodeURIComponent(contestId)}/awd/services/${encodeURIComponent(serviceId)}/defense/files`,
-    data,
-  })
-}
-
-export async function runContestAWDDefenseCommand(
-  contestId: string,
-  serviceId: string,
-  command: string
-): Promise<AWDDefenseCommandData> {
-  return request<AWDDefenseCommandData>({
-    method: 'POST',
-    url: `/contests/${encodeURIComponent(contestId)}/awd/services/${encodeURIComponent(serviceId)}/defense/commands`,
-    data: { command },
   })
 }
 
