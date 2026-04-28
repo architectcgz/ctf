@@ -54,6 +54,8 @@ describe('UserManage', () => {
 
   afterEach(() => {
     vi.useRealTimers()
+    document.body.innerHTML = ''
+    document.body.style.overflow = ''
   })
 
   it('应该渲染真实用户列表', async () => {
@@ -95,7 +97,9 @@ describe('UserManage', () => {
     await wrapper.get('#user-row-detail-1').trigger('click')
     await flushPromises()
 
-    expect(wrapper.get('.user-detail-drawer').text()).toContain('alice@example.com')
+    const detailDrawer = document.body.querySelector<HTMLElement>('.user-detail-drawer')
+    expect(detailDrawer).not.toBeNull()
+    expect(detailDrawer?.textContent).toContain('alice@example.com')
     expect(adminApiMocks.getUsers).toHaveBeenCalledWith(
       {
         page: 1,
@@ -280,22 +284,31 @@ describe('UserManage', () => {
     expect(wrapper.findAll('.user-action-btn')).toHaveLength(4)
     expect(wrapper.find('.user-list .admin-inline-chip').exists()).toBe(false)
 
-    expect(wrapper.find('.user-detail-drawer').exists()).toBe(false)
+    expect(document.body.querySelector('.user-detail-drawer')).toBeNull()
     await wrapper.get('#user-row-detail-1').trigger('click')
     await flushPromises()
 
-    const drawer = wrapper.get('.user-detail-drawer')
-    expect(drawer.attributes('role')).toBe('dialog')
-    expect(drawer.text()).toContain('alice')
-    expect(drawer.text()).toContain('alice@example.com')
-    expect(drawer.text()).toContain('Class A')
-    expect(drawer.text()).toContain('T001')
-    expect(drawer.text()).toContain('2026')
+    const drawer = document.body.querySelector<HTMLElement>('.user-detail-drawer')
+    expect(userGovernanceSource).toContain(
+      "from '@/components/common/modal-templates/AdminSurfaceModal.vue'"
+    )
+    expect(userGovernanceSource).toContain('<AdminSurfaceModal')
+    expect(userGovernanceSource).toContain('width="40rem"')
+    expect(userGovernanceSource).not.toContain('.user-detail-overlay')
+    expect(userGovernanceSource).not.toContain('background: color-mix(in srgb, var(--color-bg-base) 42%, transparent);')
+    expect(drawer).not.toBeNull()
+    expect(drawer?.textContent).toContain('alice')
+    expect(drawer?.textContent).toContain('alice@example.com')
+    expect(drawer?.textContent).toContain('Class A')
+    expect(drawer?.textContent).toContain('T001')
+    expect(drawer?.textContent).toContain('2026')
 
-    await wrapper.get('#user-detail-close').trigger('click')
+    const closeButton = document.body.querySelector<HTMLButtonElement>('#user-detail-close')
+    expect(closeButton).not.toBeNull()
+    closeButton?.click()
     await flushPromises()
 
-    expect(wrapper.find('.user-detail-drawer').exists()).toBe(false)
+    expect(document.body.querySelector('.user-detail-drawer')).toBeNull()
   })
 
   it('文本筛选应在节流后再请求用户列表', async () => {

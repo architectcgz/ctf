@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { computed, ref, useTemplateRef } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { FileUp, GraduationCap, RefreshCw, UserPlus, UserRoundCheck, Users, X } from 'lucide-vue-next'
+import { FileUp, GraduationCap, RefreshCw, UserPlus, UserRoundCheck, Users } from 'lucide-vue-next'
 
 import type { AdminUserImportData, AdminUserListItem, UserStatus } from '@/api/contracts'
+import AdminSurfaceModal from '@/components/common/modal-templates/AdminSurfaceModal.vue'
 import PlatformPaginationControls from '@/components/platform/PlatformPaginationControls.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
@@ -478,40 +479,16 @@ function handleImportChange(event: Event): void {
           </div>
         </section>
 
-        <div
+        <AdminSurfaceModal
           v-if="selectedUser"
-          class="user-detail-overlay"
-          @click.self="closeUserDetail"
+          :open="!!selectedUser"
+          :title="selectedUser.username"
+          eyebrow="User Detail"
+          width="40rem"
+          @close="closeUserDetail"
+          @update:open="($event) => { if (!$event) closeUserDetail() }"
         >
-          <aside
-            class="user-detail-drawer"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="user-detail-title"
-          >
-            <header class="user-detail-head">
-              <div>
-                <div class="journal-note-label">
-                  User Detail
-                </div>
-                <h3
-                  id="user-detail-title"
-                  class="user-detail-title"
-                >
-                  {{ selectedUser.username }}
-                </h3>
-              </div>
-              <button
-                id="user-detail-close"
-                type="button"
-                class="user-detail-close"
-                aria-label="关闭用户详情"
-                @click="closeUserDetail"
-              >
-                <X class="h-4 w-4" />
-              </button>
-            </header>
-
+          <div class="user-detail-drawer">
             <dl class="user-detail-list">
               <div class="user-detail-item">
                 <dt>用户名</dt>
@@ -564,8 +541,18 @@ function handleImportChange(event: Event): void {
                 <dd>{{ formatCreatedAt(selectedUser.created_at) }}</dd>
               </div>
             </dl>
+          </div>
 
-            <footer class="user-detail-actions">
+          <template #footer>
+            <div class="user-detail-actions">
+              <button
+                id="user-detail-close"
+                type="button"
+                class="ui-btn ui-btn--secondary user-action-btn"
+                @click="closeUserDetail"
+              >
+                关闭
+              </button>
               <button
                 type="button"
                 class="ui-btn ui-btn--secondary user-action-btn"
@@ -580,9 +567,9 @@ function handleImportChange(event: Event): void {
               >
                 删除
               </button>
-            </footer>
-          </aside>
-        </div>
+            </div>
+          </template>
+        </AdminSurfaceModal>
       </section>
 
       <section
@@ -924,62 +911,8 @@ function handleImportChange(event: Event): void {
   gap: var(--space-2);
 }
 
-.user-detail-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: var(--z-index-modal, 50);
-  display: flex;
-  justify-content: flex-end;
-  background: color-mix(in srgb, var(--color-bg-base) 42%, transparent);
-  padding: var(--space-6);
-}
-
 .user-detail-drawer {
-  display: flex;
-  flex-direction: column;
-  width: min(32rem, calc(100vw - var(--space-6) * 2));
-  max-height: calc(100vh - var(--space-6) * 2);
-  border: 1px solid color-mix(in srgb, var(--journal-border) 78%, transparent);
-  border-radius: 1.25rem;
-  background: var(--journal-surface);
-  box-shadow: var(--shadow-xl, var(--shadow-lg));
-  overflow: hidden;
-}
-
-.user-detail-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-4);
-  padding: var(--space-5);
-  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 72%, transparent);
-}
-
-.user-detail-title {
-  margin: var(--space-2) 0 0;
-  color: var(--journal-ink);
-  font-size: var(--font-size-20);
-  font-weight: 700;
-}
-
-.user-detail-close {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.25rem;
-  height: 2.25rem;
-  border: 1px solid var(--admin-control-border);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
-  color: var(--journal-muted);
-  cursor: pointer;
-}
-
-.user-detail-close:hover,
-.user-detail-close:focus-visible {
-  border-color: color-mix(in srgb, var(--journal-accent) 34%, transparent);
-  color: var(--journal-accent);
-  outline: none;
+  min-width: 0;
 }
 
 .user-detail-list {

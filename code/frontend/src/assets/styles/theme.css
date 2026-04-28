@@ -174,7 +174,7 @@
   --ui-badge-spacing: 0.08em;
   --ui-dialog-overlay: rgba(15, 23, 42, 0.34);
   --ui-dialog-shadow: 0 28px 80px rgba(15, 23, 42, 0.22);
-  --ui-dialog-z-index: 90;
+  --ui-dialog-z-index: 200;
   --ui-dialog-surface: #ffffff;
   --ui-dialog-border: color-mix(in srgb, var(--color-border-default) 86%, transparent);
   --ui-dialog-radius: 1rem;
