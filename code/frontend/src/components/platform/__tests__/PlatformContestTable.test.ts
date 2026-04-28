@@ -87,6 +87,21 @@ describe('PlatformContestTable', () => {
     wrapper.unmount()
   })
 
+  it('行内操作应使用固定槽位，避免不同按钮数量导致编辑和更多入口错位', () => {
+    expect(adminContestTableSource).toContain('class="ui-row-actions contest-row__actions ui-row-actions--fixed"')
+    expect(adminContestTableSource).toContain('ui-row-action--main')
+    expect(adminContestTableSource).toContain('ui-row-action--default')
+    expect(adminContestTableSource).toContain('ui-row-action--menu')
+    expect(adminContestTableSource).toContain('--contest-directory-action-column: var(--ui-row-action-fixed-width);')
+    expect(adminContestTableSource).toContain(
+      'minmax(var(--contest-directory-action-column), var(--contest-directory-action-column));'
+    )
+    expect(adminContestTableSource).not.toContain('--contest-action-workbench-width')
+    expect(adminContestTableSource).not.toContain('--contest-action-button-width')
+    expect(adminContestTableSource).not.toContain('--contest-action-menu-width')
+    expect(adminContestTableSource).not.toContain('minmax(11rem, 11rem)')
+  })
+
   it('未结束竞赛的更多菜单应提供发布通知入口并抛出 announce 事件', async () => {
     const wrapper = mount(PlatformContestTable, {
       attachTo: document.body,

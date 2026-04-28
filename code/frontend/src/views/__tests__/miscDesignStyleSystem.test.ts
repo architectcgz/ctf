@@ -35,11 +35,19 @@ describe('misc design style system', () => {
       '.ui-workbench-modal',
       '.ui-toolbar-actions',
       '.ui-row-actions',
+      '.ui-row-actions--fixed',
+      '.ui-row-action--main',
+      '.ui-row-action--default',
+      '.ui-row-action--menu',
       '.ui-card-actions',
     ]) {
       expect(workspaceShellSource).toContain(selector)
     }
 
+    expect(workspaceShellSource).toContain('--ui-row-action-fixed-width')
+    expect(workspaceShellSource).toContain(
+      'grid-template-columns: var(--ui-row-action-main-width) var(--ui-row-action-button-width) var(--ui-row-action-menu-width);'
+    )
     expect(workspaceShellSource).toContain('.ui-workbench-modal__nav-button.is-active')
     expect(workspaceShellSource).toContain('.ui-card-action.is-danger:hover')
   })
