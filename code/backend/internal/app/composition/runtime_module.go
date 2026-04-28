@@ -477,18 +477,23 @@ func (a *runtimeHTTPServiceAdapter) IssueAWDDefenseSSHTicket(ctx context.Context
 	}
 	username := fmt.Sprintf("%s+%d+%d", user.Username, contestID, serviceID)
 	return &dto.AWDDefenseSSHAccessResp{
-		Host:         a.defenseSSHHost,
-		Port:         a.defenseSSHPort,
-		Username:     username,
-		Password:     ticket,
-		Command:      fmt.Sprintf("ssh %s@%s -p %d", username, a.defenseSSHHost, a.defenseSSHPort),
-		VSCodeConfig: buildAWDDefenseVSCodeSSHConfig(contestID, serviceID, a.defenseSSHHost, a.defenseSSHPort, username),
-		ExpiresAt:    expiresAt.Format(time.RFC3339),
+		Host:     a.defenseSSHHost,
+		Port:     a.defenseSSHPort,
+		Username: username,
+		Password: ticket,
+		Command:  fmt.Sprintf("ssh %s@%s -p %d", username, a.defenseSSHHost, a.defenseSSHPort),
+		SSHProfile: &dto.SSHProfileResp{
+			Alias:    buildAWDDefenseSSHProfileAlias(contestID, serviceID),
+			HostName: a.defenseSSHHost,
+			Port:     a.defenseSSHPort,
+			User:     username,
+		},
+		ExpiresAt: expiresAt.Format(time.RFC3339),
 	}, nil
 }
 
-func buildAWDDefenseVSCodeSSHConfig(contestID, serviceID int64, host string, port int, username string) string {
-	return fmt.Sprintf("Host ctf-awd-%d-%d\n  HostName %s\n  Port %d\n  User %s\n", contestID, serviceID, host, port, username)
+func buildAWDDefenseSSHProfileAlias(contestID, serviceID int64) string {
+	return fmt.Sprintf("ctf-awd-%d-%d", contestID, serviceID)
 }
 
 const (

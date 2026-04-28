@@ -163,13 +163,13 @@ func TestAccessAWDDefenseSSHReturnsConnectionInfo(t *testing.T) {
 	handler := NewHandler(
 		stubAWDDefenseSSHRuntimeService{
 			resp: &dto.AWDDefenseSSHAccessResp{
-				Host:         "127.0.0.1",
-				Port:         2222,
-				Username:     "student+5+12",
-				Password:     "ticket-secret",
-				Command:      "ssh student+5+12@127.0.0.1 -p 2222",
-				VSCodeConfig: "Host ctf-awd-5-12\n  HostName 127.0.0.1\n  Port 2222\n  User student+5+12\n",
-				ExpiresAt:    "2026-04-28T10:00:00Z",
+				Host:       "127.0.0.1",
+				Port:       2222,
+				Username:   "student+5+12",
+				Password:   "ticket-secret",
+				Command:    "ssh student+5+12@127.0.0.1 -p 2222",
+				SSHProfile: &dto.SSHProfileResp{Alias: "ctf-awd-5-12", HostName: "127.0.0.1", Port: 2222, User: "student+5+12"},
+				ExpiresAt:  "2026-04-28T10:00:00Z",
 			},
 		},
 		nil,
@@ -202,8 +202,8 @@ func TestAccessAWDDefenseSSHReturnsConnectionInfo(t *testing.T) {
 	if !strings.Contains(resp.Body.String(), `"command":"ssh student+5+12@127.0.0.1 -p 2222"`) {
 		t.Fatalf("expected ssh command in response, got %s", resp.Body.String())
 	}
-	if !strings.Contains(resp.Body.String(), `"vscode_config":"Host ctf-awd-5-12\n  HostName 127.0.0.1\n  Port 2222\n  User student+5+12\n"`) {
-		t.Fatalf("expected vscode ssh config in response, got %s", resp.Body.String())
+	if !strings.Contains(resp.Body.String(), `"ssh_profile":{"alias":"ctf-awd-5-12","host_name":"127.0.0.1","port":2222,"user":"student+5+12"}`) {
+		t.Fatalf("expected structured ssh profile in response, got %s", resp.Body.String())
 	}
 }
 

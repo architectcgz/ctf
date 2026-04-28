@@ -86,8 +86,12 @@ describe('useContestAWDWorkspace', () => {
       username: 'student+1+7009',
       password: 'ticket-secret',
       command: 'ssh student+1+7009@127.0.0.1 -p 2222',
-      vscode_config:
-        'Host ctf-awd-1-7009\n  HostName 127.0.0.1\n  Port 2222\n  User student+1+7009\n',
+      ssh_profile: {
+        alias: 'ctf-awd-1-7009',
+        host_name: '127.0.0.1',
+        port: 2222,
+        user: 'student+1+7009',
+      },
       expires_at: '2026-04-12T08:15:00Z',
     })
     instanceApiMocks.requestInstanceAccess.mockResolvedValue({
@@ -437,7 +441,12 @@ describe('useContestAWDWorkspace', () => {
           username: string
           password: string
           command: string
-          vscode_config: string
+          ssh_profile: {
+            alias: string
+            host_name: string
+            port: number
+            user: string
+          }
           expires_at: string
         }) => void)
       | null = null
@@ -488,7 +497,12 @@ describe('useContestAWDWorkspace', () => {
       username: string
       password: string
       command: string
-      vscode_config: string
+      ssh_profile: {
+        alias: string
+        host_name: string
+        port: number
+        user: string
+      }
       expires_at: string
     }) => void
     finishAccess({
@@ -497,8 +511,12 @@ describe('useContestAWDWorkspace', () => {
       username: 'student+1+7009',
       password: 'ticket-secret',
       command: 'ssh student+1+7009@127.0.0.1 -p 2222',
-      vscode_config:
-        'Host ctf-awd-1-7009\n  HostName 127.0.0.1\n  Port 2222\n  User student+1+7009\n',
+      ssh_profile: {
+        alias: 'ctf-awd-1-7009',
+        host_name: '127.0.0.1',
+        port: 2222,
+        user: 'student+1+7009',
+      },
       expires_at: '2026-04-12T08:15:00Z',
     })
 
