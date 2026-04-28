@@ -491,13 +491,13 @@ const {
 }
 
 .overview-panel {
-  --workspace-directory-section-padding: var(--space-5) var(--space-5-5) var(--space-5-5);
+  --workspace-directory-section-padding: 0;
   --workspace-directory-section-gap: var(--space-5);
   --workspace-directory-shell-radius: 16px;
   --workspace-directory-shell-padding: 0;
-  border: 1px solid var(--teacher-card-border);
-  border-radius: 22px;
-  background: color-mix(in srgb, var(--journal-surface) 92%, transparent);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
 }
 
 .overview-panel--wide {
