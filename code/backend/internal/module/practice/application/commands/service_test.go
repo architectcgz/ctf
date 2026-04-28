@@ -1846,6 +1846,99 @@ func TestProvisionInstancePropagatesContextToUpdateRuntime(t *testing.T) {
 	}
 }
 
+func TestProvisionInstanceAcceptsTCPAccessURLReadiness(t *testing.T) {
+	t.Parallel()
+
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("listen tcp: %v", err)
+	}
+	defer listener.Close()
+
+	accepted := make(chan struct{}, 1)
+	go func() {
+		conn, acceptErr := listener.Accept()
+		if acceptErr != nil {
+			return
+		}
+		_ = conn.Close()
+		accepted <- struct{}{}
+	}()
+
+	instanceStore := &stubPracticeInstanceStore{
+		updateRuntimeWithContextFn: func(ctx context.Context, instance *model.Instance) error {
+			if instance.Status != model.InstanceStatusRunning {
+				t.Fatalf("expected running status, got %+v", instance)
+			}
+			if !strings.HasPrefix(instance.AccessURL, "tcp://") {
+				t.Fatalf("expected tcp access url, got %q", instance.AccessURL)
+			}
+			return nil
+		},
+	}
+	service := NewService(
+		nil,
+		nil,
+		&stubPracticeImageStore{
+			findByIDFn: func(context.Context, int64) (*model.Image, error) {
+				return &model.Image{ID: 301, Name: "ctf/pwn", Tag: "v1", Status: model.ImageStatusAvailable}, nil
+			},
+		},
+		instanceStore,
+		&stubPracticeRuntimeService{
+			createTopologyFn: func(ctx context.Context, req *practiceports.TopologyCreateRequest) (*practiceports.TopologyCreateResult, error) {
+				if len(req.Nodes) != 1 {
+					t.Fatalf("unexpected topology request: %+v", req)
+				}
+				if req.Nodes[0].ServiceProtocol != model.ChallengeTargetProtocolTCP {
+					t.Fatalf("expected tcp topology node, got %+v", req.Nodes[0])
+				}
+				return &practiceports.TopologyCreateResult{
+					PrimaryContainerID: "pwn-ctr",
+					NetworkID:          "pwn-net",
+					AccessURL:          fmt.Sprintf("tcp://%s", listener.Addr().String()),
+					RuntimeDetails: model.InstanceRuntimeDetails{
+						Containers: []model.InstanceRuntimeContainer{
+							{
+								NodeKey:         "default",
+								ContainerID:     "pwn-ctr",
+								ServicePort:     8080,
+								ServiceProtocol: model.ChallengeTargetProtocolTCP,
+								IsEntryPoint:    true,
+								NetworkKeys:     []string{model.TopologyDefaultNetworkKey},
+							},
+						},
+					},
+				}, nil
+			},
+		},
+		nil,
+		nil,
+		nil,
+		&config.Config{Container: config.ContainerConfig{PublicHost: "127.0.0.1", CreateTimeout: time.Second, StartProbeTimeout: 50 * time.Millisecond, StartProbeInterval: 10 * time.Millisecond, StartProbeAttempts: 2}},
+		nil,
+	)
+
+	instance := &model.Instance{ID: 952, ChallengeID: 2052, HostPort: 0, Status: model.InstanceStatusCreating}
+	challenge := &model.Challenge{
+		ID:             2052,
+		ImageID:        301,
+		Status:         model.ChallengeStatusPublished,
+		FlagType:       model.FlagTypeStatic,
+		FlagHash:       "flag{ok}",
+		TargetProtocol: model.ChallengeTargetProtocolTCP,
+	}
+
+	if err := service.provisionInstance(context.Background(), instance, challenge, nil, "flag{ok}"); err != nil {
+		t.Fatalf("provisionInstance() error = %v", err)
+	}
+	select {
+	case <-accepted:
+	case <-time.After(time.Second):
+		t.Fatal("expected tcp readiness probe to connect")
+	}
+}
+
 func TestCreateSingleAWDContainerUsesPrivateTopology(t *testing.T) {
 	t.Parallel()
 

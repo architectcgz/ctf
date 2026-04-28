@@ -6,7 +6,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
+	"net/url"
 	"regexp"
 	"strings"
 	"sync"
@@ -536,6 +538,14 @@ func (s *Service) waitForInstanceReadiness(ctx context.Context, accessURL string
 }
 
 func (s *Service) probeInstanceAccessURL(ctx context.Context, client *http.Client, accessURL string) error {
+	parsed, err := url.Parse(accessURL)
+	if err != nil {
+		return err
+	}
+	if strings.EqualFold(parsed.Scheme, model.ChallengeTargetProtocolTCP) {
+		return probeTCPAccessURL(ctx, parsed, s.startProbeTimeout())
+	}
+
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, accessURL, nil)
 	if err != nil {
 		return err
@@ -549,6 +559,22 @@ func (s *Service) probeInstanceAccessURL(ctx context.Context, client *http.Clien
 
 	_, _ = io.Copy(io.Discard, io.LimitReader(resp.Body, 512))
 	return nil
+}
+
+func probeTCPAccessURL(ctx context.Context, parsed *url.URL, timeout time.Duration) error {
+	host := parsed.Host
+	if strings.TrimSpace(host) == "" {
+		return fmt.Errorf("tcp access url missing host")
+	}
+	if timeout <= 0 {
+		timeout = 2 * time.Second
+	}
+	dialer := net.Dialer{Timeout: timeout}
+	conn, err := dialer.DialContext(ctx, "tcp", host)
+	if err != nil {
+		return err
+	}
+	return conn.Close()
 }
 
 func (s *Service) buildProvisioningFlag(instance *model.Instance, chal *model.Challenge) (string, error) {
@@ -1586,20 +1612,23 @@ func (s *Service) createSingleContainer(ctx context.Context, instance *model.Ins
 	}
 
 	imageRef := fmt.Sprintf("%s:%s", imageItem.Name, imageItem.Tag)
-	if isAWDInstance(instance) {
+	targetProtocol := normalizeChallengeTargetProtocol(chal.TargetProtocol)
+	if isAWDInstance(instance) || targetProtocol == model.ChallengeTargetProtocolTCP || chal.TargetPort > 0 {
 		result, err := s.runtimeService.CreateTopology(ctx, &practiceports.TopologyCreateRequest{
 			ReservedHostPort:           instance.HostPort,
-			DisableEntryPortPublishing: false,
+			DisableEntryPortPublishing: isAWDInstance(instance),
 			Networks: []practiceports.TopologyCreateNetwork{
 				{Key: model.TopologyDefaultNetworkKey},
 			},
 			Nodes: []practiceports.TopologyCreateNode{
 				{
-					Key:          "default",
-					Image:        imageRef,
-					Env:          env,
-					IsEntryPoint: true,
-					NetworkKeys:  []string{model.TopologyDefaultNetworkKey},
+					Key:             "default",
+					Image:           imageRef,
+					Env:             env,
+					ServicePort:     chal.TargetPort,
+					ServiceProtocol: targetProtocol,
+					IsEntryPoint:    true,
+					NetworkKeys:     []string{model.TopologyDefaultNetworkKey},
 				},
 			},
 		})
@@ -1625,11 +1654,12 @@ func (s *Service) createSingleContainer(ctx context.Context, instance *model.Ins
 	runtimeDetails, err := model.EncodeInstanceRuntimeDetails(model.InstanceRuntimeDetails{
 		Containers: []model.InstanceRuntimeContainer{
 			{
-				NodeKey:      "default",
-				ContainerID:  containerID,
-				ServicePort:  servicePort,
-				HostPort:     hostPort,
-				IsEntryPoint: true,
+				NodeKey:         "default",
+				ContainerID:     containerID,
+				ServicePort:     servicePort,
+				ServiceProtocol: model.ChallengeTargetProtocolHTTP,
+				HostPort:        hostPort,
+				IsEntryPoint:    true,
 			},
 		},
 	})
@@ -1642,6 +1672,15 @@ func (s *Service) createSingleContainer(ctx context.Context, instance *model.Ins
 	instance.RuntimeDetails = runtimeDetails
 	instance.AccessURL = fmt.Sprintf("http://%s:%d", s.config.Container.PublicHost, hostPort)
 	return nil
+}
+
+func normalizeChallengeTargetProtocol(protocol string) string {
+	switch strings.ToLower(strings.TrimSpace(protocol)) {
+	case model.ChallengeTargetProtocolTCP:
+		return model.ChallengeTargetProtocolTCP
+	default:
+		return model.ChallengeTargetProtocolHTTP
+	}
 }
 
 func isAWDInstance(instance *model.Instance) bool {
@@ -1709,13 +1748,14 @@ func (s *Service) buildTopologyCreateRequest(
 		}
 
 		request.Nodes = append(request.Nodes, practiceports.TopologyCreateNode{
-			Key:          node.Key,
-			Image:        imageRef,
-			Env:          env,
-			ServicePort:  node.ServicePort,
-			IsEntryPoint: node.Key == entryNodeKey,
-			NetworkKeys:  append([]string(nil), runtimePlan.NodeNetworkKeys[node.Key]...),
-			Resources:    resources,
+			Key:             node.Key,
+			Image:           imageRef,
+			Env:             env,
+			ServicePort:     node.ServicePort,
+			ServiceProtocol: normalizeChallengeTargetProtocol(node.ServiceProtocol),
+			IsEntryPoint:    node.Key == entryNodeKey,
+			NetworkKeys:     append([]string(nil), runtimePlan.NodeNetworkKeys[node.Key]...),
+			Resources:       resources,
 		})
 	}
 
