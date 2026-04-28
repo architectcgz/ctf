@@ -163,32 +163,34 @@ onMounted(() => {
 </script>
 
 <template>
-  <StudentManagementPage
-    :classes="classes"
-    :selected-class-name="selectedClassName"
-    :search-query="searchQuery"
-    :student-no-query="studentNoQuery"
-    :filtered-students="students"
-    :filtered-total="filteredTotal"
-    :total-students="totalStudents"
-    :page="page"
-    :total-pages="totalPages"
-    :loading-classes="loadingClasses"
-    :loading-students="loadingStudents"
-    :error="error"
-    @retry="initialize"
-    @open-class-management="
-      router.push({ name: resolveClassManagementRouteName(authStore.user?.role) })
-    "
-    @open-report-export="openClassReportDialog"
-    @update-search-query="updateSearchQuery"
-    @update-student-no-query="updateStudentNoQuery"
-    @select-class="selectClass"
-    @change-page="handlePageChange"
-    @open-student="openStudent"
-  />
-  <TeacherClassReportExportDialog
-    v-model="reportDialogVisible"
-    :default-class-name="selectedClassName"
-  />
+  <section class="teacher-route-root">
+    <StudentManagementPage
+      :classes="classes"
+      :selected-class-name="selectedClassName"
+      :search-query="searchQuery"
+      :student-no-query="studentNoQuery"
+      :filtered-students="students"
+      :filtered-total="filteredTotal"
+      :total-students="totalStudents"
+      :page="page"
+      :total-pages="totalPages"
+      :loading-classes="loadingClasses"
+      :loading-students="loadingStudents"
+      :error="error"
+      @retry="initialize"
+      @open-class-management="
+        router.push({ name: resolveClassManagementRouteName(authStore.user?.role) })
+      "
+      @open-report-export="openClassReportDialog"
+      @update-search-query="updateSearchQuery"
+      @update-student-no-query="updateStudentNoQuery"
+      @select-class="selectClass"
+      @change-page="handlePageChange"
+      @open-student="openStudent"
+    />
+    <TeacherClassReportExportDialog
+      v-model="reportDialogVisible"
+      :default-class-name="selectedClassName"
+    />
+  </section>
 </template>

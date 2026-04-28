@@ -65,21 +65,23 @@ onMounted(() => {
 </script>
 
 <template>
-  <ClassManagementPage
-    :classes="classes"
-    :total="total"
-    :page="page"
-    :page-size="pageSize"
-    :loading="loading"
-    :error="error"
-    @retry="loadClasses"
-    @change-page="handlePageChange"
-    @open-dashboard="router.push({ name: 'TeacherDashboard' })"
-    @open-report-export="openClassReportDialog"
-    @open-class="openClass"
-  />
-  <TeacherClassReportExportDialog
-    v-model="reportDialogVisible"
-    :default-class-name="defaultReportClassName"
-  />
+  <section class="teacher-route-root">
+    <ClassManagementPage
+      :classes="classes"
+      :total="total"
+      :page="page"
+      :page-size="pageSize"
+      :loading="loading"
+      :error="error"
+      @retry="loadClasses"
+      @change-page="handlePageChange"
+      @open-dashboard="router.push({ name: 'TeacherDashboard' })"
+      @open-report-export="openClassReportDialog"
+      @open-class="openClass"
+    />
+    <TeacherClassReportExportDialog
+      v-model="reportDialogVisible"
+      :default-class-name="defaultReportClassName"
+    />
+  </section>
 </template>

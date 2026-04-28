@@ -346,6 +346,73 @@ describe('Sidebar desktop layout', () => {
     wrapper.unmount()
   })
 
+  it('navigates teacher users when clicking operations and resources secondary entries', async () => {
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        { path: '/academy/overview', component: { template: '<div>overview</div>' } },
+        { path: '/academy/classes', component: { template: '<div>classes</div>' } },
+        { path: '/academy/students', component: { template: '<div>students</div>' } },
+        { path: '/academy/awd-reviews', component: { template: '<div>awd reviews</div>' } },
+        { path: '/academy/instances', component: { template: '<div>instances</div>' } },
+        { path: '/platform/challenges', component: { template: '<div>challenges</div>' } },
+        { path: '/platform/environment-templates', component: { template: '<div>environment templates</div>' } },
+        { path: '/platform/awd-service-templates', component: { template: '<div>awd service templates</div>' } },
+        { path: '/platform/images', component: { template: '<div>images</div>' } },
+      ],
+    })
+
+    const authStore = useAuthStore()
+    authStore.setAuth(
+      {
+        id: 'teacher-1',
+        username: 'teacher',
+        role: 'teacher',
+        name: 'Teacher',
+      })
+
+    await router.push('/academy/overview')
+    await router.isReady()
+
+    const wrapper = mount(Sidebar, {
+      props: {
+        collapsed: false,
+        mobileOpen: false,
+      },
+      global: {
+        plugins: [router],
+      },
+    })
+
+    const desktopAside = wrapper.findAll('aside').at(-1)
+
+    expect(desktopAside).toBeTruthy()
+
+    async function clickSidebarEntry(label: string, expectedPath: string): Promise<void> {
+      const button = desktopAside!
+        .findAll('button')
+        .find((node) => node.text().trim() === label)
+
+      expect(button).toBeTruthy()
+
+      await button!.trigger('click')
+      await flushPromises()
+
+      expect(router.currentRoute.value.path).toBe(expectedPath)
+    }
+
+    await clickSidebarEntry('教学运营', '/academy/classes')
+    await clickSidebarEntry('学生管理', '/academy/students')
+    await clickSidebarEntry('AWD复盘', '/academy/awd-reviews')
+    await clickSidebarEntry('实例管理', '/academy/instances')
+    await clickSidebarEntry('题库与资源', '/platform/challenges')
+    await clickSidebarEntry('环境模板', '/platform/environment-templates')
+    await clickSidebarEntry('AWD服务模板', '/platform/awd-service-templates')
+    await clickSidebarEntry('镜像管理', '/platform/images')
+
+    wrapper.unmount()
+  })
+
   it('allows the active backoffice module to collapse after the user toggles it closed', async () => {
     const router = createRouter({
       history: createMemoryHistory(),
