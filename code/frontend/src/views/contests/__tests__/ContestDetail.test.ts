@@ -364,8 +364,8 @@ describe('ContestDetail', () => {
     await flushPromises()
 
     expect(wrapper.text()).toContain('战场')
-    expect(wrapper.text()).toContain('ATTACK VECTOR')
-    expect(wrapper.text()).toContain('TARGET SECTOR')
+    expect(wrapper.text()).toContain('攻击向量')
+    expect(wrapper.text()).toContain('目标题目')
     expect(wrapper.text()).toContain('BLUE')
     expect(contestApiMocks.getContestAWDWorkspace).toHaveBeenCalledWith('1')
   })
@@ -406,8 +406,8 @@ describe('ContestDetail', () => {
 
     await flushPromises()
 
-    expect(wrapper.text()).toContain('JOIN A SQUAD')
-    expect(wrapper.text()).toContain('You must be part of a team to access the AWD battlefield.')
+    expect(wrapper.text()).toContain('先加入队伍')
+    expect(wrapper.text()).toContain('需要先加入队伍后才能进入 AWD 战场。')
     expect(wrapper.text()).toContain('战场')
   })
 
@@ -737,7 +737,7 @@ describe('ContestDetail', () => {
 
     await flushPromises()
 
-    expect(wrapper.text()).toContain('DEFENSE MONITOR')
+    expect(wrapper.text()).toContain('防守监控')
     expect(wrapper.text()).toContain('Service A')
     expect(wrapper.text()).toContain('BLUE')
     expect(wrapper.text()).toContain('GREEN')
@@ -751,7 +751,7 @@ describe('ContestDetail', () => {
     await wrapper.get('#awd-target-search').setValue('Yellow')
     await flushPromises()
 
-    expect(wrapper.text()).toContain('NO MATCHING HOSTILES IN CURRENT SECTOR.')
+    expect(wrapper.text()).toContain('当前题目下没有匹配的目标队伍。')
 
     await vi.advanceTimersByTimeAsync(15_000)
     await flushPromises()
@@ -849,8 +849,8 @@ describe('ContestDetail', () => {
 
     await flushPromises()
 
-    expect(wrapper.text()).toContain('Service #7009')
-    expect(wrapper.text()).toContain('Service #7010')
+    expect(wrapper.text()).toContain('服务 #7009')
+    expect(wrapper.text()).toContain('服务 #7010')
   })
 
   it('学生 AWD 工作台应优先用 awd service 标识匹配运行态服务', async () => {
@@ -930,10 +930,10 @@ describe('ContestDetail', () => {
 
     await flushPromises()
 
-    expect(wrapper.text()).toContain('READY VIA PLATFORM PROXY')
+    expect(wrapper.text()).toContain('已通过平台代理就绪')
     expect(wrapper.text()).not.toContain('http://blue.runtime.internal')
-    expect(wrapper.text()).toContain('PROXY ROUTE READY')
-    expect(wrapper.text()).toContain('STABLE')
+    expect(wrapper.text()).toContain('代理链路已就绪')
+    expect(wrapper.text()).toContain('正常')
   })
 
   it('学生 AWD 工作台应允许用 awd service 标识切换攻击题目', async () => {
@@ -1041,12 +1041,12 @@ describe('ContestDetail', () => {
 
     await flushPromises()
 
-    expect(wrapper.text()).toContain('Service #7009')
+    expect(wrapper.text()).toContain('服务 #7009')
 
     await wrapper.get('#awd-target-challenge').setValue('7010')
     await flushPromises()
 
-    expect(wrapper.text()).toContain('Service #7010')
+    expect(wrapper.text()).toContain('服务 #7010')
     expect(wrapper.text()).not.toContain('http://blue-a.internal')
     expect(wrapper.text()).not.toContain('http://blue-b.internal')
   })
@@ -1279,7 +1279,7 @@ describe('ContestDetail', () => {
     await flushPromises()
 
     expect(wrapper.text()).not.toContain('Legacy Gateway')
-    expect(wrapper.text()).toContain('NO DEPLOYABLE SERVICES IN CURRENT CONTEST.')
+    expect(wrapper.text()).toContain('当前竞赛暂无可部署服务。')
   })
 
   it('学生 AWD 提交结果提示应优先按 service 标识回填题目标题', async () => {
@@ -1391,14 +1391,14 @@ describe('ContestDetail', () => {
 
     await flushPromises()
 
-    await wrapper.find('input[placeholder="ENTER STOLEN FLAG..."]').setValue('flag{demo}')
+    await wrapper.find('input[placeholder="输入获取到的 Flag..."]').setValue('flag{demo}')
     await wrapper
       .findAll('button')
-      .find((node) => node.text().trim() === 'SUBMIT')
+      .find((node) => node.text().trim() === '提交')
       ?.trigger('click')
     await flushPromises()
 
-    expect(wrapper.text()).toContain('BANK PORTAL: HIT SUCCESSFUL. +60 PTS')
+    expect(wrapper.text()).toContain('Bank Portal: 攻击成功，+60 分')
   })
 
   it('学生 AWD 工作台应通过跨队攻击代理打开目标服务', async () => {

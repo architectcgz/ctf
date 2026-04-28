@@ -4,10 +4,14 @@ import awdWorkspaceSource from '@/components/contests/ContestAWDWorkspacePanel.v
 
 describe('ContestAWDWorkspacePanel source', () => {
   it('AWD 工作台应保留当前战情面板结构与运行态 service 标识', () => {
-    expect(awdWorkspaceSource).toContain('DEFENSE MONITOR')
-    expect(awdWorkspaceSource).toContain('ATTACK VECTOR')
-    expect(awdWorkspaceSource).toContain('FIELD INTEL')
-    expect(awdWorkspaceSource).toContain('RECENT FEEDBACK')
+    expect(awdWorkspaceSource).toContain('防守监控')
+    expect(awdWorkspaceSource).toContain('攻击向量')
+    expect(awdWorkspaceSource).toContain('战场情报')
+    expect(awdWorkspaceSource).toContain('最近战报')
+    expect(awdWorkspaceSource).toContain('目标题目')
+    expect(awdWorkspaceSource).toContain('队伍筛选')
+    expect(awdWorkspaceSource).toContain('输入获取到的 Flag...')
+    expect(awdWorkspaceSource).toContain('当前竞赛暂无可部署服务。')
     expect(awdWorkspaceSource).toContain('formatServiceRef')
     expect(awdWorkspaceSource).toContain('id="awd-target-challenge"')
     expect(awdWorkspaceSource).toContain('id="awd-target-search"')
