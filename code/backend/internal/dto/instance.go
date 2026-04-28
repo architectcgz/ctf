@@ -49,3 +49,30 @@ type AWDDefenseSSHAccessResp struct {
 	Command   string `json:"command"`
 	ExpiresAt string `json:"expires_at"`
 }
+
+type AWDDefenseFileResp struct {
+	Path    string `json:"path"`
+	Content string `json:"content"`
+	Size    int    `json:"size"`
+}
+
+type AWDDefenseFileSaveReq struct {
+	Path    string `json:"path" binding:"required"`
+	Content string `json:"content"`
+	Backup  bool   `json:"backup"`
+}
+
+type AWDDefenseFileSaveResp struct {
+	Path       string `json:"path"`
+	Size       int    `json:"size"`
+	BackupPath string `json:"backup_path,omitempty"`
+}
+
+type AWDDefenseCommandReq struct {
+	Command string `json:"command" binding:"required"`
+}
+
+type AWDDefenseCommandResp struct {
+	Command string `json:"command"`
+	Output  string `json:"output"`
+}

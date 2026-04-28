@@ -493,6 +493,23 @@ export interface AWDDefenseSSHAccessData {
   expires_at: ISODateTime
 }
 
+export interface AWDDefenseFileData {
+  path: string
+  content: string
+  size: number
+}
+
+export interface AWDDefenseFileSaveData {
+  path: string
+  size: number
+  backup_path?: string
+}
+
+export interface AWDDefenseCommandData {
+  command: string
+  output: string
+}
+
 export interface AWDRoundSummaryItemData {
   team_id: ID
   team_name: string

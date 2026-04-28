@@ -9,8 +9,11 @@ vi.mock('@/api/request', () => ({
 import {
   getContestChallenges,
   getContestAWDWorkspace,
+  readContestAWDDefenseFile,
   requestContestAWDDefenseSSH,
   requestContestAWDTargetAccess,
+  runContestAWDDefenseCommand,
+  saveContestAWDDefenseFile,
   startContestAWDServiceInstance,
   submitContestAWDAttack,
 } from '@/api/contest'
@@ -253,5 +256,39 @@ describe('contest api contract', () => {
     })
     expect(result.command).toBe('ssh student+7+7009@127.0.0.1 -p 2222')
     expect(result.password).toBe('ticket-secret')
+  })
+
+  it('请求 AWD 防守文件和命令接口时应携带服务上下文', async () => {
+    requestMock
+      .mockResolvedValueOnce({ path: 'app.py', content: 'print(1)', size: 8 })
+      .mockResolvedValueOnce({ path: 'app.py', size: 8, backup_path: 'app.py.bak.1' })
+      .mockResolvedValueOnce({ command: 'ls', output: 'app.py\n' })
+
+    const file = await readContestAWDDefenseFile('7', '7009', 'app.py')
+    const saved = await saveContestAWDDefenseFile('7', '7009', {
+      path: 'app.py',
+      content: 'print(1)',
+      backup: true,
+    })
+    const command = await runContestAWDDefenseCommand('7', '7009', 'ls')
+
+    expect(requestMock).toHaveBeenNthCalledWith(1, {
+      method: 'GET',
+      url: '/contests/7/awd/services/7009/defense/files',
+      params: { path: 'app.py' },
+    })
+    expect(requestMock).toHaveBeenNthCalledWith(2, {
+      method: 'PUT',
+      url: '/contests/7/awd/services/7009/defense/files',
+      data: { path: 'app.py', content: 'print(1)', backup: true },
+    })
+    expect(requestMock).toHaveBeenNthCalledWith(3, {
+      method: 'POST',
+      url: '/contests/7/awd/services/7009/defense/commands',
+      data: { command: 'ls' },
+    })
+    expect(file.content).toBe('print(1)')
+    expect(saved.backup_path).toBe('app.py.bak.1')
+    expect(command.output).toBe('app.py\n')
   })
 })

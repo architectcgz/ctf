@@ -45,6 +45,9 @@ type runtimeService interface {
 	IssueProxyTicket(ctx context.Context, user authctx.CurrentUser, instanceID int64) (string, error)
 	IssueAWDTargetProxyTicket(ctx context.Context, user authctx.CurrentUser, contestID, serviceID, victimTeamID int64) (string, error)
 	IssueAWDDefenseSSHTicket(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64) (*dto.AWDDefenseSSHAccessResp, error)
+	ReadAWDDefenseFile(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64, filePath string) (*dto.AWDDefenseFileResp, error)
+	SaveAWDDefenseFile(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64, req dto.AWDDefenseFileSaveReq) (*dto.AWDDefenseFileSaveResp, error)
+	RunAWDDefenseCommand(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64, req dto.AWDDefenseCommandReq) (*dto.AWDDefenseCommandResp, error)
 	ResolveProxyTicket(ctx context.Context, ticket string) (*runtimeports.ProxyTicketClaims, error)
 	ResolveAWDTargetAccessURL(ctx context.Context, claims *runtimeports.ProxyTicketClaims, contestID, serviceID, victimTeamID int64) (string, error)
 	ProxyTicketMaxAge() int
@@ -202,6 +205,61 @@ func (h *Handler) AccessAWDDefenseSSH(c *gin.Context) {
 	serviceID := c.GetInt64("sid")
 
 	resp, err := h.service.IssueAWDDefenseSSHTicket(c.Request.Context(), currentUser, contestID, serviceID)
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+
+	response.Success(c, resp)
+}
+
+func (h *Handler) ReadAWDDefenseFile(c *gin.Context) {
+	currentUser := authctx.MustCurrentUser(c)
+	contestID := c.GetInt64("id")
+	serviceID := c.GetInt64("sid")
+	filePath := c.Query("path")
+
+	resp, err := h.service.ReadAWDDefenseFile(c.Request.Context(), currentUser, contestID, serviceID, filePath)
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+
+	response.Success(c, resp)
+}
+
+func (h *Handler) SaveAWDDefenseFile(c *gin.Context) {
+	currentUser := authctx.MustCurrentUser(c)
+	contestID := c.GetInt64("id")
+	serviceID := c.GetInt64("sid")
+
+	var req dto.AWDDefenseFileSaveReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.ValidationError(c, err)
+		return
+	}
+
+	resp, err := h.service.SaveAWDDefenseFile(c.Request.Context(), currentUser, contestID, serviceID, req)
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+
+	response.Success(c, resp)
+}
+
+func (h *Handler) RunAWDDefenseCommand(c *gin.Context) {
+	currentUser := authctx.MustCurrentUser(c)
+	contestID := c.GetInt64("id")
+	serviceID := c.GetInt64("sid")
+
+	var req dto.AWDDefenseCommandReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.ValidationError(c, err)
+		return
+	}
+
+	resp, err := h.service.RunAWDDefenseCommand(c.Request.Context(), currentUser, contestID, serviceID, req)
 	if err != nil {
 		response.FromError(c, err)
 		return

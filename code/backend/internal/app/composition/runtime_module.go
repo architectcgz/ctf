@@ -9,6 +9,8 @@ import (
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 	"fmt"
 	"io"
+	"path"
+	"strings"
 	"time"
 
 	"ctf-platform/internal/authctx"
@@ -35,7 +37,9 @@ type runtimeEngine interface {
 	RemoveNetwork(ctx context.Context, networkID string) error
 	ApplyACLRules(ctx context.Context, rules []model.InstanceRuntimeACLRule) error
 	RemoveACLRules(ctx context.Context, rules []model.InstanceRuntimeACLRule) error
+	ReadFileFromContainer(ctx context.Context, containerID, filePath string, limit int64) ([]byte, error)
 	WriteFileToContainer(ctx context.Context, containerID, filePath string, content []byte) error
+	ExecContainerCommand(ctx context.Context, containerID string, command []string, stdin []byte, limit int64) ([]byte, error)
 	InspectImageSize(ctx context.Context, imageRef string) (int64, error)
 	RemoveImage(ctx context.Context, imageRef string) error
 	ListManagedContainers(ctx context.Context) ([]runtimeports.ManagedContainer, error)
@@ -45,6 +49,12 @@ type runtimeEngine interface {
 
 type runtimeContainerInteractiveExecutor interface {
 	ExecContainerInteractive(ctx context.Context, containerID string, command []string, stdin io.Reader, stdout io.Writer) error
+}
+
+type runtimeDefenseWorkbenchRuntime interface {
+	ReadFileFromContainer(ctx context.Context, containerID, filePath string, limit int64) ([]byte, error)
+	WriteFileToContainer(ctx context.Context, containerID, filePath string, content []byte) error
+	ExecContainerCommand(ctx context.Context, containerID string, command []string, stdin []byte, limit int64) ([]byte, error)
 }
 
 type RuntimeModule struct {
@@ -106,6 +116,7 @@ type runtimeModuleDeps struct {
 	proxyTrafficRecorder  runtimeports.ProxyTrafficEventRecorder
 	containerPublicHost   string
 	sshExecutor           runtimeContainerInteractiveExecutor
+	defenseWorkbench      runtimeDefenseWorkbenchRuntime
 	defenseSSHEnabled     bool
 	defenseSSHHost        string
 	defenseSSHPort        int
@@ -168,6 +179,7 @@ func buildRuntimeModuleDeps(root *Root, engine runtimeEngine) runtimeModuleDeps 
 		containerFiles:        runtimeapp.NewContainerFileService(engine, log.Named("runtime_container_file_service")),
 		containerPublicHost:   cfg.Container.PublicHost,
 		sshExecutor:           engine,
+		defenseWorkbench:      engine,
 		defenseSSHEnabled:     cfg.Container.DefenseSSHEnabled && engine != nil,
 		defenseSSHHost:        cfg.Container.DefenseSSHHost,
 		defenseSSHPort:        cfg.Container.DefenseSSHPort,
@@ -208,6 +220,8 @@ func buildRuntimeHTTPDeps(root *Root, deps runtimeModuleDeps) runtimeHTTPDeps {
 			deps.instanceCommands,
 			deps.instanceQueries,
 			deps.proxyTicketService,
+			deps.proxyTicketReader,
+			deps.defenseWorkbench,
 			root.Config().Container.ProxyBodyPreviewSize,
 			deps.defenseSSHEnabled,
 			deps.defenseSSHHost,
@@ -330,6 +344,9 @@ type runtimeHTTPService interface {
 	IssueProxyTicket(ctx context.Context, user authctx.CurrentUser, instanceID int64) (string, error)
 	IssueAWDTargetProxyTicket(ctx context.Context, user authctx.CurrentUser, contestID, serviceID, victimTeamID int64) (string, error)
 	IssueAWDDefenseSSHTicket(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64) (*dto.AWDDefenseSSHAccessResp, error)
+	ReadAWDDefenseFile(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64, filePath string) (*dto.AWDDefenseFileResp, error)
+	SaveAWDDefenseFile(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64, req dto.AWDDefenseFileSaveReq) (*dto.AWDDefenseFileSaveResp, error)
+	RunAWDDefenseCommand(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64, req dto.AWDDefenseCommandReq) (*dto.AWDDefenseCommandResp, error)
 	ResolveProxyTicket(ctx context.Context, ticket string) (*runtimeports.ProxyTicketClaims, error)
 	ResolveAWDTargetAccessURL(ctx context.Context, claims *runtimeports.ProxyTicketClaims, contestID, serviceID, victimTeamID int64) (string, error)
 	ProxyTicketMaxAge() int
@@ -361,17 +378,21 @@ type runtimeHTTPServiceAdapter struct {
 	commandService       runtimeHTTPCommandService
 	queryService         runtimeHTTPQueryService
 	proxyTickets         runtimeHTTPProxyTicketService
+	proxyTicketReader    runtimeports.ProxyTicketInstanceReader
+	defenseWorkbench     runtimeDefenseWorkbenchRuntime
 	proxyBodyPreviewSize int
 	defenseSSHEnabled    bool
 	defenseSSHHost       string
 	defenseSSHPort       int
 }
 
-func newRuntimeHTTPServiceAdapter(commandService runtimeHTTPCommandService, queryService runtimeHTTPQueryService, proxyTickets runtimeHTTPProxyTicketService, proxyBodyPreviewSize int, defenseSSHEnabled bool, defenseSSHHost string, defenseSSHPort int) *runtimeHTTPServiceAdapter {
+func newRuntimeHTTPServiceAdapter(commandService runtimeHTTPCommandService, queryService runtimeHTTPQueryService, proxyTickets runtimeHTTPProxyTicketService, proxyTicketReader runtimeports.ProxyTicketInstanceReader, defenseWorkbench runtimeDefenseWorkbenchRuntime, proxyBodyPreviewSize int, defenseSSHEnabled bool, defenseSSHHost string, defenseSSHPort int) *runtimeHTTPServiceAdapter {
 	return &runtimeHTTPServiceAdapter{
 		commandService:       commandService,
 		queryService:         queryService,
 		proxyTickets:         proxyTickets,
+		proxyTicketReader:    proxyTicketReader,
+		defenseWorkbench:     defenseWorkbench,
 		proxyBodyPreviewSize: proxyBodyPreviewSize,
 		defenseSSHEnabled:    defenseSSHEnabled,
 		defenseSSHHost:       defenseSSHHost,
@@ -460,6 +481,123 @@ func (a *runtimeHTTPServiceAdapter) IssueAWDDefenseSSHTicket(ctx context.Context
 		Command:   fmt.Sprintf("ssh %s@%s -p %d", username, a.defenseSSHHost, a.defenseSSHPort),
 		ExpiresAt: expiresAt.Format(time.RFC3339),
 	}, nil
+}
+
+const (
+	awdDefenseMaxFileSize      = 256 * 1024
+	awdDefenseMaxCommandSize   = 2000
+	awdDefenseMaxCommandOutput = 64 * 1024
+)
+
+func (a *runtimeHTTPServiceAdapter) ReadAWDDefenseFile(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64, filePath string) (*dto.AWDDefenseFileResp, error) {
+	if a == nil || a.proxyTicketReader == nil || a.defenseWorkbench == nil {
+		return nil, errRuntimeHTTPProxyTicketServiceUnavailable()
+	}
+	cleanPath, err := normalizeAWDDefensePath(filePath)
+	if err != nil {
+		return nil, err
+	}
+	scope, err := a.proxyTicketReader.FindAWDDefenseSSHScope(ctx, user.UserID, contestID, serviceID)
+	if err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+	if scope == nil || scope.ContainerID == "" {
+		return nil, errcode.ErrForbidden
+	}
+
+	content, err := a.defenseWorkbench.ReadFileFromContainer(ctx, scope.ContainerID, cleanPath, awdDefenseMaxFileSize)
+	if err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+	return &dto.AWDDefenseFileResp{
+		Path:    cleanPath,
+		Content: string(content),
+		Size:    len(content),
+	}, nil
+}
+
+func (a *runtimeHTTPServiceAdapter) SaveAWDDefenseFile(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64, req dto.AWDDefenseFileSaveReq) (*dto.AWDDefenseFileSaveResp, error) {
+	if a == nil || a.proxyTicketReader == nil || a.defenseWorkbench == nil {
+		return nil, errRuntimeHTTPProxyTicketServiceUnavailable()
+	}
+	cleanPath, err := normalizeAWDDefensePath(req.Path)
+	if err != nil {
+		return nil, err
+	}
+	content := []byte(req.Content)
+	if len(content) > awdDefenseMaxFileSize {
+		return nil, errcode.ErrInvalidParams.WithCause(fmt.Errorf("awd defense file is too large"))
+	}
+	scope, err := a.proxyTicketReader.FindAWDDefenseSSHScope(ctx, user.UserID, contestID, serviceID)
+	if err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+	if scope == nil || scope.ContainerID == "" {
+		return nil, errcode.ErrForbidden
+	}
+
+	backupPath := ""
+	if req.Backup {
+		existing, readErr := a.defenseWorkbench.ReadFileFromContainer(ctx, scope.ContainerID, cleanPath, awdDefenseMaxFileSize)
+		if readErr == nil {
+			backupPath = fmt.Sprintf("%s.bak.%d", cleanPath, time.Now().Unix())
+			if err := a.defenseWorkbench.WriteFileToContainer(ctx, scope.ContainerID, backupPath, existing); err != nil {
+				return nil, errcode.ErrInternal.WithCause(err)
+			}
+		}
+	}
+	if err := a.defenseWorkbench.WriteFileToContainer(ctx, scope.ContainerID, cleanPath, content); err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+
+	return &dto.AWDDefenseFileSaveResp{
+		Path:       cleanPath,
+		Size:       len(content),
+		BackupPath: backupPath,
+	}, nil
+}
+
+func (a *runtimeHTTPServiceAdapter) RunAWDDefenseCommand(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64, req dto.AWDDefenseCommandReq) (*dto.AWDDefenseCommandResp, error) {
+	if a == nil || a.proxyTicketReader == nil || a.defenseWorkbench == nil {
+		return nil, errRuntimeHTTPProxyTicketServiceUnavailable()
+	}
+	command := strings.TrimSpace(req.Command)
+	if command == "" || len(command) > awdDefenseMaxCommandSize {
+		return nil, errcode.ErrInvalidParams
+	}
+	scope, err := a.proxyTicketReader.FindAWDDefenseSSHScope(ctx, user.UserID, contestID, serviceID)
+	if err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+	if scope == nil || scope.ContainerID == "" {
+		return nil, errcode.ErrForbidden
+	}
+
+	runCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	output, err := a.defenseWorkbench.ExecContainerCommand(runCtx, scope.ContainerID, []string{"/bin/sh", "-lc", command}, nil, awdDefenseMaxCommandOutput)
+	if err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+	return &dto.AWDDefenseCommandResp{
+		Command: command,
+		Output:  string(output),
+	}, nil
+}
+
+func normalizeAWDDefensePath(input string) (string, error) {
+	trimmed := strings.TrimSpace(input)
+	if trimmed == "" {
+		return "", errcode.ErrInvalidParams
+	}
+	if strings.HasPrefix(trimmed, "/") {
+		return "", errcode.ErrInvalidParams
+	}
+	cleaned := path.Clean(trimmed)
+	if cleaned == "." || cleaned == ".." || strings.HasPrefix(cleaned, "../") || strings.Contains(cleaned, "/../") {
+		return "", errcode.ErrInvalidParams
+	}
+	return cleaned, nil
 }
 
 func (a *runtimeHTTPServiceAdapter) ResolveProxyTicket(ctx context.Context, ticket string) (*runtimeports.ProxyTicketClaims, error) {
