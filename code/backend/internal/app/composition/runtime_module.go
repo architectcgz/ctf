@@ -744,13 +744,14 @@ func toRuntimeTopologyCreateRequest(req *practiceports.TopologyCreateRequest) *r
 	nodes := make([]runtimeports.TopologyCreateNode, 0, len(req.Nodes))
 	for _, node := range req.Nodes {
 		nodes = append(nodes, runtimeports.TopologyCreateNode{
-			Key:          node.Key,
-			Image:        node.Image,
-			Env:          cloneRuntimeStringMap(node.Env),
-			ServicePort:  node.ServicePort,
-			IsEntryPoint: node.IsEntryPoint,
-			NetworkKeys:  append([]string(nil), node.NetworkKeys...),
-			Resources:    cloneRuntimeResourceLimits(node.Resources),
+			Key:             node.Key,
+			Image:           node.Image,
+			Env:             cloneRuntimeStringMap(node.Env),
+			ServicePort:     node.ServicePort,
+			ServiceProtocol: node.ServiceProtocol,
+			IsEntryPoint:    node.IsEntryPoint,
+			NetworkKeys:     append([]string(nil), node.NetworkKeys...),
+			Resources:       cloneRuntimeResourceLimits(node.Resources),
 		})
 	}
 
@@ -852,12 +853,13 @@ func (a *runtimeChallengeServiceAdapter) CreateContainer(ctx context.Context, im
 		},
 		Containers: []model.InstanceRuntimeContainer{
 			{
-				NodeKey:      "default",
-				ContainerID:  containerID,
-				ServicePort:  servicePort,
-				HostPort:     hostPort,
-				IsEntryPoint: true,
-				NetworkKeys:  []string{model.TopologyDefaultNetworkKey},
+				NodeKey:         "default",
+				ContainerID:     containerID,
+				ServicePort:     servicePort,
+				ServiceProtocol: model.ChallengeTargetProtocolHTTP,
+				HostPort:        hostPort,
+				IsEntryPoint:    true,
+				NetworkKeys:     []string{model.TopologyDefaultNetworkKey},
 			},
 		},
 	}, nil
@@ -893,13 +895,14 @@ func toRuntimeChallengeTopologyCreateRequest(req *challengeports.RuntimeTopology
 	nodes := make([]runtimeports.TopologyCreateNode, 0, len(req.Nodes))
 	for _, node := range req.Nodes {
 		nodes = append(nodes, runtimeports.TopologyCreateNode{
-			Key:          node.Key,
-			Image:        node.Image,
-			Env:          cloneRuntimeStringMap(node.Env),
-			ServicePort:  node.ServicePort,
-			IsEntryPoint: node.IsEntryPoint,
-			NetworkKeys:  append([]string(nil), node.NetworkKeys...),
-			Resources:    cloneRuntimeResourceLimits(node.Resources),
+			Key:             node.Key,
+			Image:           node.Image,
+			Env:             cloneRuntimeStringMap(node.Env),
+			ServicePort:     node.ServicePort,
+			ServiceProtocol: node.ServiceProtocol,
+			IsEntryPoint:    node.IsEntryPoint,
+			NetworkKeys:     append([]string(nil), node.NetworkKeys...),
+			Resources:       cloneRuntimeResourceLimits(node.Resources),
 		})
 	}
 

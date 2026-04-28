@@ -243,6 +243,12 @@ export function useInstanceListPage() {
   async function openTarget(id: string) {
     try {
       const result = await requestInstanceAccess(id)
+      const command = result.access?.protocol === 'tcp' ? result.access.command : ''
+      if (command) {
+        await copy(command)
+        toast.info('TCP 连接命令已复制')
+        return
+      }
       window.open(result.access_url, '_blank', 'noopener,noreferrer')
     } catch (error) {
       console.error('打开目标失败:', error)
