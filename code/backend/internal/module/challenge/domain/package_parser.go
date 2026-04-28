@@ -112,6 +112,8 @@ func buildParsedChallengePackage(rootDir string, manifest *ChallengePackageManif
 		FlagValue:       flagValue,
 		FlagPrefix:      flagPrefix,
 		RuntimeImageRef: resolvePackageRuntimeImageRef(manifest.Runtime),
+		RuntimeProtocol: normalizePackageRuntimeProtocol(manifest.Runtime.Service.Protocol),
+		RuntimePort:     normalizePackageRuntimePort(manifest.Runtime.Service.Port),
 		Attachments:     attachments,
 		Hints:           hints,
 	}
@@ -237,6 +239,22 @@ func normalizePackageDifficulty(raw string) string {
 	default:
 		return model.ChallengeDifficultyEasy
 	}
+}
+
+func normalizePackageRuntimeProtocol(raw string) string {
+	switch strings.ToLower(strings.TrimSpace(raw)) {
+	case model.ChallengeTargetProtocolTCP:
+		return model.ChallengeTargetProtocolTCP
+	default:
+		return model.ChallengeTargetProtocolHTTP
+	}
+}
+
+func normalizePackageRuntimePort(port int) int {
+	if port <= 0 || port > 65535 {
+		return 0
+	}
+	return port
 }
 
 func safePackageJoin(baseDir, rel string) (string, error) {

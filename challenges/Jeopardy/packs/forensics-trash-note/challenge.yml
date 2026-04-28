@@ -1,0 +1,32 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: forensics-trash-note
+  title: "Forensics 入门：回收站便签"
+  category: forensics
+  difficulty: beginner
+  points: 100
+  tags:
+    - kp:archive-analysis
+    - topic:deleted-file
+
+content:
+  statement: statement.md
+  attachments:
+    - path: attachments/evidence.tar
+      name: evidence.tar
+
+flag:
+  type: static
+  prefix: flag
+  value: flag{forensics_trash_note}
+
+hints:
+  - level: 1
+    title: Hint 1
+    cost_points: 10
+    content: "列出归档内所有路径，尤其注意以点开头的隐藏目录。"
+
+runtime:
+  type: none
