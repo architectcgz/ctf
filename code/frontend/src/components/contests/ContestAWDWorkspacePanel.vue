@@ -12,6 +12,7 @@ import {
   Terminal,
   ExternalLink,
   RefreshCw,
+  Copy,
 } from 'lucide-vue-next'
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
@@ -33,6 +34,7 @@ const activeChallengeKey = ref('')
 const flagInputs = ref<Record<string, string>>({})
 const targetKeyword = ref('')
 const showOnlyReachableTargets = ref(false)
+const copiedSSHConfigKey = ref('')
 
 const {
   workspace,
@@ -45,15 +47,6 @@ const {
   openingServiceKey,
   openingSSHKey,
   sshAccessByServiceId,
-  activeDefenseServiceId,
-  defenseFile,
-  defenseDraft,
-  defenseFilePath,
-  loadingDefenseFile,
-  savingDefenseFile,
-  runningDefenseCommand,
-  defenseCommand,
-  defenseCommandResult,
   openingTargetKey,
   submittingKey,
   shouldAutoRefresh,
@@ -62,9 +55,6 @@ const {
   startService,
   openService,
   openDefenseSSH,
-  openDefenseWorkbench,
-  saveDefenseFile,
-  runDefenseCommand,
   openTarget,
   submitAttack,
 } = useContestAWDWorkspace({
@@ -291,11 +281,18 @@ function getSSHAccess(serviceId?: string) {
   return sshAccessByServiceId.value[serviceId]
 }
 
-function getActiveDefenseTitle(): string {
-  const challenge = runtimeChallenges.value.find(
-    (item) => item.awd_service_id === activeDefenseServiceId.value
-  )
-  return challenge?.title || '防守工作台'
+async function copySSHConfig(serviceId?: string): Promise<void> {
+  const config = getSSHAccess(serviceId)?.vscode_config
+  if (!serviceId || !config || typeof navigator === 'undefined' || !navigator.clipboard) {
+    return
+  }
+
+  try {
+    await navigator.clipboard.writeText(config)
+    copiedSSHConfigKey.value = serviceId
+  } catch (err) {
+    console.error(err)
+  }
 }
 
 function isTargetServiceForChallenge(
@@ -446,6 +443,21 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
                     <div class="asset-ssh__password font-mono">
                       PASS {{ getSSHAccess(challenge.awd_service_id)?.password }}
                     </div>
+                    <pre
+                      v-if="getSSHAccess(challenge.awd_service_id)?.vscode_config"
+                      class="asset-ssh__config"
+                    >{{ getSSHAccess(challenge.awd_service_id)?.vscode_config }}</pre>
+                    <button
+                      v-if="getSSHAccess(challenge.awd_service_id)?.vscode_config"
+                      class="asset-ssh__copy"
+                      type="button"
+                      @click="copySSHConfig(challenge.awd_service_id)"
+                    >
+                      <Copy class="h-3 w-3" />
+                      <span>{{
+                        copiedSSHConfigKey === challenge.awd_service_id ? '已复制' : '复制 VS Code'
+                      }}</span>
+                    </button>
                   </div>
                 </div>
                 <div class="asset-actions">
@@ -469,22 +481,6 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
                     {{ openingSSHKey === getServiceStartKey(challenge) ? '...' : 'SSH' }}
                   </button>
                   <button
-                    v-if="getWorkspaceService(challenge)?.instance_id"
-                    :disabled="
-                      loadingDefenseFile && activeDefenseServiceId === challenge.awd_service_id
-                    "
-                    class="asset-btn asset-btn--defense"
-                    @click="
-                      challenge.awd_service_id && openDefenseWorkbench(challenge.awd_service_id)
-                    "
-                  >
-                    {{
-                      loadingDefenseFile && activeDefenseServiceId === challenge.awd_service_id
-                        ? '...'
-                        : '防守'
-                    }}
-                  </button>
-                  <button
                     :disabled="startingServiceKey === getServiceStartKey(challenge)"
                     class="asset-btn asset-btn--primary"
                     @click="challenge.awd_service_id && startService(challenge.awd_service_id)"
@@ -495,58 +491,6 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
               </div>
             </div>
 
-            <div v-if="activeDefenseServiceId" class="defense-workbench">
-              <div class="defense-workbench__head">
-                <div>
-                  <div class="asset-header">防守工作台</div>
-                  <div class="defense-workbench__title">{{ getActiveDefenseTitle() }}</div>
-                </div>
-                <button
-                  class="asset-btn asset-btn--primary"
-                  :disabled="savingDefenseFile || !defenseFile"
-                  @click="saveDefenseFile"
-                >
-                  {{ savingDefenseFile ? '保存中' : '保存' }}
-                </button>
-              </div>
-              <div class="defense-file-row">
-                <input v-model="defenseFilePath" class="war-room-input" placeholder="app.py" />
-                <button
-                  class="asset-btn"
-                  :disabled="loadingDefenseFile"
-                  @click="openDefenseWorkbench(activeDefenseServiceId, defenseFilePath)"
-                >
-                  读取
-                </button>
-              </div>
-              <textarea
-                v-model="defenseDraft"
-                class="defense-editor"
-                spellcheck="false"
-                :disabled="loadingDefenseFile || !defenseFile"
-              />
-              <div class="defense-file-meta">
-                {{ defenseFile ? `${defenseFile.path} · ${defenseFile.size} bytes` : '未载入文件' }}
-              </div>
-              <div class="defense-command">
-                <input
-                  v-model="defenseCommand"
-                  class="war-room-input"
-                  placeholder="ls"
-                  @keyup.enter="runDefenseCommand()"
-                />
-                <button
-                  class="asset-btn asset-btn--primary"
-                  :disabled="runningDefenseCommand"
-                  @click="runDefenseCommand()"
-                >
-                  {{ runningDefenseCommand ? '执行中' : '执行' }}
-                </button>
-              </div>
-              <pre v-if="defenseCommandResult" class="defense-output">{{
-                defenseCommandResult.output || '(无输出)'
-              }}</pre>
-            </div>
           </div>
         </section>
       </aside>
@@ -1016,6 +960,34 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
   font-family: var(--font-family-mono);
 }
 
+.asset-ssh__config {
+  margin-top: var(--space-2);
+  padding: var(--space-2);
+  white-space: pre-wrap;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 18%, transparent);
+  border-radius: 0.5rem;
+  background: color-mix(in srgb, var(--color-bg-surface) 76%, var(--color-bg-base));
+  color: var(--color-text-primary);
+  font-family: var(--font-family-mono);
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.asset-ssh__copy {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-top: var(--space-2);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 20%, transparent);
+  border-radius: 0.5rem;
+  background: var(--color-bg-surface);
+  color: var(--color-primary);
+  padding: var(--space-1) var(--space-2);
+  font-size: 10px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
 .status-badge {
   font-size: 10px;
   font-weight: 900;
@@ -1068,92 +1040,6 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
 .asset-btn--primary:hover {
   background: var(--color-primary);
   color: var(--color-bg-base);
-}
-
-.asset-btn--defense {
-  width: auto;
-  padding: 0 var(--space-3);
-  color: var(--color-success);
-}
-
-.defense-workbench {
-  margin-top: var(--space-5);
-  padding: var(--space-3);
-  border: 1px solid color-mix(in srgb, var(--color-success) 24%, transparent);
-  border-radius: 0.875rem;
-  background: color-mix(in srgb, var(--color-success) 7%, var(--color-bg-elevated));
-}
-
-.defense-workbench__head,
-.defense-file-row,
-.defense-command {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-.defense-workbench__head {
-  justify-content: space-between;
-  margin-bottom: var(--space-3);
-}
-
-.defense-workbench__title {
-  color: var(--color-text-primary);
-  font-size: var(--font-size-14);
-  font-weight: 900;
-}
-
-.defense-file-row,
-.defense-command {
-  margin-top: var(--space-2);
-}
-
-.defense-file-row .war-room-input,
-.defense-command .war-room-input {
-  min-width: 0;
-  flex: 1;
-}
-
-.defense-editor {
-  width: 100%;
-  min-height: 18rem;
-  margin-top: var(--space-3);
-  padding: var(--space-3);
-  border: 1px solid var(--color-border-default);
-  border-radius: 0.75rem;
-  background: var(--color-bg-surface);
-  color: var(--color-text-primary);
-  font-family: var(--font-family-mono);
-  font-size: 12px;
-  line-height: 1.55;
-  resize: vertical;
-  outline: none;
-}
-
-.defense-editor:focus {
-  border-color: var(--color-success);
-}
-
-.defense-file-meta {
-  margin-top: var(--space-2);
-  color: var(--color-text-muted);
-  font-size: 11px;
-  font-weight: 800;
-}
-
-.defense-output {
-  max-height: 12rem;
-  margin-top: var(--space-3);
-  padding: var(--space-3);
-  overflow: auto;
-  white-space: pre-wrap;
-  border: 1px solid var(--color-border-subtle);
-  border-radius: 0.75rem;
-  background: color-mix(in srgb, black 28%, var(--color-bg-surface));
-  color: var(--color-text-primary);
-  font-family: var(--font-family-mono);
-  font-size: 11px;
-  line-height: 1.5;
 }
 
 /* Attack Components */

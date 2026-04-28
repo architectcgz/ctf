@@ -16,5 +16,8 @@ describe('ContestAWDWorkspacePanel source', () => {
     expect(awdWorkspaceSource).toContain('id="awd-target-challenge"')
     expect(awdWorkspaceSource).toContain('id="awd-target-search"')
     expect(awdWorkspaceSource).toContain('data-testid="awd-feedback-challenge-title"')
+    expect(awdWorkspaceSource).toContain('vscode_config')
+    expect(awdWorkspaceSource).toContain('copySSHConfig')
+    expect(awdWorkspaceSource).toContain('VS Code')
   })
 })

@@ -490,24 +490,8 @@ export interface AWDDefenseSSHAccessData {
   username: string
   password: string
   command: string
+  vscode_config: string
   expires_at: ISODateTime
-}
-
-export interface AWDDefenseFileData {
-  path: string
-  content: string
-  size: number
-}
-
-export interface AWDDefenseFileSaveData {
-  path: string
-  size: number
-  backup_path?: string
-}
-
-export interface AWDDefenseCommandData {
-  command: string
-  output: string
 }
 
 export interface AWDRoundSummaryItemData {
