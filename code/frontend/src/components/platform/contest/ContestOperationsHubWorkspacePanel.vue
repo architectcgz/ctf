@@ -4,6 +4,7 @@ import { ArrowRight } from 'lucide-vue-next'
 import type { ContestDetailData } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
+import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
 import { getModeLabel, getStatusLabel } from '@/utils/contest'
 
 defineProps<{
@@ -27,6 +28,15 @@ function formatDateTime(value: string): string {
     minute: '2-digit',
   })
 }
+
+const contestTableColumns = [
+  { key: 'title', label: '赛事名称', widthClass: 'w-[30%] min-w-[15rem]' },
+  { key: 'status', label: '状态', widthClass: 'w-[12%] min-w-[7rem]', align: 'center' as const },
+  { key: 'mode', label: '模式', widthClass: 'w-[12%] min-w-[7rem]', align: 'center' as const },
+  { key: 'starts_at', label: '开始时间', widthClass: 'w-[18%] min-w-[11rem]' },
+  { key: 'ends_at', label: '结束时间', widthClass: 'w-[18%] min-w-[11rem]' },
+  { key: 'actions', label: '操作', widthClass: 'w-[10rem]', align: 'right' as const },
+]
 </script>
 
 <template>
@@ -86,55 +96,69 @@ function formatDateTime(value: string): string {
           竞赛列表
         </h2>
       </div>
-      <div class="contest-section-meta">
-        进入具体赛事后查看轮次、流量、大屏和实时榜单
-      </div>
     </header>
 
-    <div class="workspace-directory-list contest-ops-directory__list">
-      <article
-        v-for="contest in operableContests"
-        :key="contest.id"
-        class="contest-ops-row"
-      >
-        <div class="contest-ops-row__main">
-          <div class="contest-ops-row__head">
-            <h3 class="contest-ops-row__title">
-              {{ contest.title }}
-            </h3>
-            <div class="contest-ops-row__badges">
-              <span class="contest-ops-row__badge">
-                {{ getStatusLabel(contest.status) }}
-              </span>
-              <span class="contest-ops-row__badge contest-ops-row__badge--muted">
-                {{ getModeLabel(contest.mode) }}
-              </span>
-            </div>
+    <WorkspaceDataTable
+      class="workspace-directory-list contest-ops-table"
+      :columns="contestTableColumns"
+      :rows="operableContests"
+      row-key="id"
+    >
+      <template #cell-title="{ row }">
+        <div class="contest-ops-table__contest">
+          <div
+            class="contest-ops-table__title"
+            :title="String((row as ContestDetailData).title)"
+          >
+            {{ (row as ContestDetailData).title }}
           </div>
-
-          <p class="contest-ops-row__copy">
-              {{ contest.description || '当前未填写赛事描述。' }}
-          </p>
-
-          <div class="contest-ops-row__meta">
-            <span>开始：{{ formatDateTime(contest.starts_at) }}</span>
-            <span>结束：{{ formatDateTime(contest.ends_at) }}</span>
+          <div
+            class="contest-ops-table__description"
+            :title="(row as ContestDetailData).description || '当前未填写赛事描述。'"
+          >
+            {{ (row as ContestDetailData).description || '当前未填写赛事描述。' }}
           </div>
         </div>
+      </template>
 
+      <template #cell-status="{ row }">
+        <span class="contest-ops-table__badge">
+          {{ getStatusLabel((row as ContestDetailData).status) }}
+        </span>
+      </template>
+
+      <template #cell-mode="{ row }">
+        <span class="contest-ops-table__badge contest-ops-table__badge--muted">
+          {{ getModeLabel((row as ContestDetailData).mode) }}
+        </span>
+      </template>
+
+      <template #cell-starts_at="{ row }">
+        <span class="contest-ops-table__time">
+          {{ formatDateTime((row as ContestDetailData).starts_at) }}
+        </span>
+      </template>
+
+      <template #cell-ends_at="{ row }">
+        <span class="contest-ops-table__time">
+          {{ formatDateTime((row as ContestDetailData).ends_at) }}
+        </span>
+      </template>
+
+      <template #cell-actions="{ row }">
         <div class="contest-ops-actions">
           <button
-            :id="`contest-ops-enter-${contest.id}`"
+            :id="`contest-ops-enter-${(row as ContestDetailData).id}`"
             type="button"
-            class="ui-btn ui-btn--primary"
-            @click="emit('enter-operations', contest.id)"
+            class="ui-btn ui-btn--primary ui-btn--sm"
+            @click="emit('enter-operations', String((row as ContestDetailData).id))"
           >
             <ArrowRight class="h-4 w-4" />
             进入运维台
           </button>
         </div>
-      </article>
-    </div>
+      </template>
+    </WorkspaceDataTable>
   </section>
 </template>
 
@@ -154,59 +178,39 @@ function formatDateTime(value: string): string {
   gap: var(--space-4);
 }
 
-.contest-ops-directory__list {
-  display: grid;
-  gap: 0;
+.contest-ops-table {
   padding: 0;
 }
 
-.contest-ops-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: var(--space-4);
-  padding: var(--space-4-5) var(--space-5);
-  border-bottom: 1px solid var(--workspace-directory-row-divider);
+.contest-ops-table :deep(.workspace-data-table__cell + .workspace-data-table__cell) {
+  border-left: 1px solid var(--workspace-table-line);
 }
 
-.contest-ops-row:last-child {
-  border-bottom: 0;
-}
-
-.contest-ops-row__main {
+.contest-ops-table__contest {
   display: grid;
-  gap: var(--space-2);
+  gap: var(--space-1);
   min-width: 0;
 }
 
-.contest-ops-row__head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-2) var(--space-3);
-}
-
-.contest-ops-row__title {
-  margin: 0;
+.contest-ops-table__title {
+  overflow: hidden;
   color: var(--journal-ink);
-  font-size: var(--font-size-17);
+  font-size: var(--font-size-15);
   font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.contest-ops-row__copy {
-  margin: 0;
+.contest-ops-table__description,
+.contest-ops-table__time {
+  overflow: hidden;
   color: var(--color-text-secondary);
-  line-height: 1.7;
+  font-size: var(--font-size-13);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.contest-ops-row__badges,
-.contest-ops-row__meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2) var(--space-3);
-}
-
-.contest-ops-row__badge {
+.contest-ops-table__badge {
   display: inline-flex;
   align-items: center;
   border-radius: 999px;
@@ -217,20 +221,14 @@ function formatDateTime(value: string): string {
   font-weight: 600;
 }
 
-.contest-ops-row__badge--muted {
+.contest-ops-table__badge--muted {
   background: color-mix(in srgb, var(--journal-border) 14%, transparent);
   color: var(--color-text-secondary);
 }
 
-.contest-ops-row__meta {
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-13);
-}
-
 @media (max-width: 768px) {
-  .contest-ops-row {
-    grid-template-columns: 1fr;
-    padding: var(--space-4);
+  .contest-ops-table :deep(.workspace-data-table) {
+    min-width: 52rem;
   }
 
   .contest-ops-actions {

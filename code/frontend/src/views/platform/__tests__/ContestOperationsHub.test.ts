@@ -156,14 +156,17 @@ describe('ContestOperationsHub', () => {
     expect(contestOperationsHubSource).toContain('<ContestOperationsHubWorkspacePanel')
     expect(contestOperationsHubWorkspacePanelSource).toContain('contest-ops-directory')
     expect(contestOperationsHubWorkspacePanelSource).toContain(
-      'class="workspace-directory-list contest-ops-directory__list"'
+      "import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'"
     )
-    expect(contestOperationsHubWorkspacePanelSource).toContain('class="contest-ops-row"')
+    expect(contestOperationsHubWorkspacePanelSource).toContain('<WorkspaceDataTable')
+    expect(contestOperationsHubWorkspacePanelSource).toContain('class="workspace-directory-list contest-ops-table"')
+    expect(contestOperationsHubWorkspacePanelSource).toContain('contestTableColumns')
+    expect(contestOperationsHubWorkspacePanelSource).toContain('border-left: 1px solid var(--workspace-table-line);')
+    expect(contestOperationsHubWorkspacePanelSource).not.toContain('class="contest-ops-row"')
     expect(contestOperationsHubWorkspacePanelSource).not.toContain('class="contest-ops-card"')
     expect(contestOperationsHubHeroPanelSource).not.toContain('margin-top: var(--space-5);')
     expect(contestOperationsHubWorkspacePanelSource).toContain('padding: 0;')
     expect(contestOperationsHubWorkspacePanelSource).toContain('gap: var(--space-4);')
-    expect(contestOperationsHubWorkspacePanelSource).toContain('border-bottom: 1px solid var(--workspace-directory-row-divider);')
     expect(contestOperationsHubSource).not.toContain('PlatformContestOpsTraffic')
     expect(contestOperationsHubSource).not.toContain('PlatformContestOpsProjector')
     expect(contestOperationsHubSource).not.toContain('PlatformContestOpsScoreboard')

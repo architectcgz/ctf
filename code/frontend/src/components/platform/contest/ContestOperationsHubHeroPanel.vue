@@ -26,9 +26,6 @@ function handleBack(): void {
       <h1 class="workspace-page-title">
         赛事运维
       </h1>
-      <p class="workspace-page-copy">
-        先从运维赛事目录中选择具体比赛，再进入单场运维台查看轮次、流量、大屏和榜单。
-      </p>
     </div>
 
     <div class="contest-ops-hero__actions">
