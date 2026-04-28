@@ -129,6 +129,7 @@ func buildContestCoreHandler(deps *contestModuleDeps) (*contesthttp.Handler, *co
 		cfg.Contest.StatusUpdateBatchSize,
 		cfg.Contest.StatusUpdateLockTTL,
 		log.Named("contest_status_updater"),
+		deps.awdRepo,
 	)
 
 	return contesthttp.NewHandler(contestCommands, contestQueries, readinessQueries, scoreboardQueries, scoreboardCommands), scoreboardCommands, statusUpdater

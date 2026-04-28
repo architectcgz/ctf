@@ -33,7 +33,7 @@ func (u *AWDRoundUpdater) runRoundServiceChecks(ctx context.Context, contest *mo
 		grouped[key] = append(grouped[key], instance)
 	}
 
-	now := time.Now()
+	now := time.Now().UTC()
 	records := make([]model.AWDTeamService, 0, len(teams)*len(definitions))
 	statusFields := make(map[string]any, len(teams)*len(definitions))
 	for _, team := range teams {

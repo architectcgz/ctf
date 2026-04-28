@@ -21,7 +21,7 @@ func (s *AWDService) resolveCurrentRoundForContest(ctx context.Context, contest 
 		return nil, errcode.ErrContestNotFound
 	}
 
-	now := time.Now()
+	now := time.Now().UTC()
 	if activeRoundNumber, ok := s.calculateActiveRoundNumber(contest, now); ok {
 		return s.resolveMaterializedActiveRound(ctx, contest, activeRoundNumber, now)
 	}
