@@ -3,15 +3,10 @@ package http
 import (
 	"bytes"
 	"context"
-	"crypto/rand"
-	"crypto/rsa"
-	"crypto/x509"
 	"encoding/json"
-	"encoding/pem"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -41,7 +36,6 @@ import (
 	opsqry "ctf-platform/internal/module/ops/application/queries"
 	opsinfra "ctf-platform/internal/module/ops/infrastructure"
 	"ctf-platform/internal/validation"
-	jwtpkg "ctf-platform/pkg/jwt"
 	ctfws "ctf-platform/pkg/websocket"
 )
 
@@ -82,9 +76,9 @@ func TestHTTP_NotificationsSupportTicketListReadAndWebSocketPush(t *testing.T) {
 	defer server.Close()
 
 	user := createNotificationUser(t, env.db, "notify_user", model.RoleStudent)
-	tokens, err := env.tokenService.IssueTokens(user.ID, user.Username, user.Role)
+	sessionCookie, err := issueNotificationSessionCookie(env.tokenService, user)
 	if err != nil {
-		t.Fatalf("issue tokens: %v", err)
+		t.Fatalf("issue session: %v", err)
 	}
 
 	ticketResp := performNotificationJSONRequest(
@@ -93,7 +87,8 @@ func TestHTTP_NotificationsSupportTicketListReadAndWebSocketPush(t *testing.T) {
 		http.MethodPost,
 		"/api/v1/auth/ws-ticket",
 		nil,
-		map[string]string{"Authorization": "Bearer " + tokens.AccessToken},
+		nil,
+		[]*http.Cookie{sessionCookie},
 	)
 	if ticketResp.Code != http.StatusOK {
 		t.Fatalf("unexpected ws-ticket status: %d body=%s", ticketResp.Code, ticketResp.Body.String())
@@ -151,7 +146,8 @@ func TestHTTP_NotificationsSupportTicketListReadAndWebSocketPush(t *testing.T) {
 		http.MethodGet,
 		"/api/v1/notifications?page=1&page_size=10",
 		nil,
-		map[string]string{"Authorization": "Bearer " + tokens.AccessToken},
+		nil,
+		[]*http.Cookie{sessionCookie},
 	)
 	if listResp.Code != http.StatusOK {
 		t.Fatalf("unexpected notifications status: %d body=%s", listResp.Code, listResp.Body.String())
@@ -171,7 +167,8 @@ func TestHTTP_NotificationsSupportTicketListReadAndWebSocketPush(t *testing.T) {
 		http.MethodPut,
 		fmt.Sprintf("/api/v1/notifications/%d/read", listData.List[0].ID),
 		nil,
-		map[string]string{"Authorization": "Bearer " + tokens.AccessToken},
+		nil,
+		[]*http.Cookie{sessionCookie},
 	)
 	if markResp.Code != http.StatusOK {
 		t.Fatalf("unexpected mark-as-read status: %d body=%s", markResp.Code, markResp.Body.String())
@@ -189,7 +186,8 @@ func TestHTTP_NotificationsSupportTicketListReadAndWebSocketPush(t *testing.T) {
 		http.MethodGet,
 		"/api/v1/notifications?page=1&page_size=10",
 		nil,
-		map[string]string{"Authorization": "Bearer " + tokens.AccessToken},
+		nil,
+		[]*http.Cookie{sessionCookie},
 	)
 	listAfterBody := decodeNotificationEnvelope(t, listAfterResp)
 	listAfterData := decodeNotificationJSON[notificationTestPage](t, listAfterBody.Data)
@@ -203,13 +201,13 @@ func TestHTTP_AdminNotificationPublishRequiresAdminAndValidPayload(t *testing.T)
 
 	admin := createNotificationUser(t, env.db, "admin_notify", model.RoleAdmin)
 	student := createNotificationUser(t, env.db, "student_notify", model.RoleStudent)
-	adminTokens, err := env.tokenService.IssueTokens(admin.ID, admin.Username, admin.Role)
+	adminSessionCookie, err := issueNotificationSessionCookie(env.tokenService, admin)
 	if err != nil {
-		t.Fatalf("issue admin tokens: %v", err)
+		t.Fatalf("issue admin session: %v", err)
 	}
-	studentTokens, err := env.tokenService.IssueTokens(student.ID, student.Username, student.Role)
+	studentSessionCookie, err := issueNotificationSessionCookie(env.tokenService, student)
 	if err != nil {
-		t.Fatalf("issue student tokens: %v", err)
+		t.Fatalf("issue student session: %v", err)
 	}
 
 	publishPayload := map[string]any{
@@ -230,7 +228,8 @@ func TestHTTP_AdminNotificationPublishRequiresAdminAndValidPayload(t *testing.T)
 		http.MethodPost,
 		"/api/v1/admin/notifications",
 		publishPayload,
-		map[string]string{"Authorization": "Bearer " + adminTokens.AccessToken},
+		nil,
+		[]*http.Cookie{adminSessionCookie},
 	)
 	if adminResp.Code != http.StatusOK {
 		t.Fatalf("unexpected publish status: %d body=%s", adminResp.Code, adminResp.Body.String())
@@ -247,7 +246,8 @@ func TestHTTP_AdminNotificationPublishRequiresAdminAndValidPayload(t *testing.T)
 		http.MethodPost,
 		"/api/v1/admin/notifications",
 		publishPayload,
-		map[string]string{"Authorization": "Bearer " + studentTokens.AccessToken},
+		nil,
+		[]*http.Cookie{studentSessionCookie},
 	)
 	if forbiddenResp.Code != http.StatusForbidden {
 		t.Fatalf("expected student forbidden, got %d body=%s", forbiddenResp.Code, forbiddenResp.Body.String())
@@ -269,7 +269,8 @@ func TestHTTP_AdminNotificationPublishRequiresAdminAndValidPayload(t *testing.T)
 				},
 			},
 		},
-		map[string]string{"Authorization": "Bearer " + adminTokens.AccessToken},
+		nil,
+		[]*http.Cookie{adminSessionCookie},
 	)
 	if invalidResp.Code != http.StatusBadRequest {
 		t.Fatalf("expected validation failed, got %d body=%s", invalidResp.Code, invalidResp.Body.String())
@@ -281,7 +282,8 @@ func TestHTTP_AdminNotificationPublishRequiresAdminAndValidPayload(t *testing.T)
 		http.MethodGet,
 		"/api/v1/notifications?page=1&page_size=10",
 		nil,
-		map[string]string{"Authorization": "Bearer " + studentTokens.AccessToken},
+		nil,
+		[]*http.Cookie{studentSessionCookie},
 	)
 	if listResp.Code != http.StatusOK {
 		t.Fatalf("unexpected list status: %d body=%s", listResp.Code, listResp.Body.String())
@@ -321,11 +323,7 @@ func newNotificationIntegrationEnv(t *testing.T) *notificationIntegrationEnv {
 	seedNotificationRoles(t, db)
 
 	authCfg, wsCfg := newNotificationTestConfigs(t)
-	jwtManager, err := jwtpkg.NewManager(authCfg, "ctf-platform-test")
-	if err != nil {
-		t.Fatalf("create jwt manager: %v", err)
-	}
-	tokenService := authinfra.NewTokenService(authCfg, wsCfg, cache, jwtManager)
+	tokenService := authinfra.NewTokenService(authCfg, wsCfg, cache)
 	authRepo := identityinfra.NewRepository(db)
 	authService := authcmd.NewService(authRepo, tokenService, config.RateLimitPolicyConfig{
 		Enabled:      true,
@@ -338,11 +336,11 @@ func newNotificationIntegrationEnv(t *testing.T) *notificationIntegrationEnv {
 	profileCommandService := identitycmd.NewProfileService(authRepo, zap.NewNop())
 	profileQueryService := identityqry.NewProfileService(authRepo)
 	authHandler := authhttp.NewHandler(authService, profileCommandService, profileQueryService, tokenService, casCommandService, casQueryService, authhttp.CookieConfig{
-		Name:     authCfg.RefreshCookieName,
-		Path:     authCfg.RefreshCookiePath,
-		HTTPOnly: authCfg.RefreshCookieHTTPOnly,
+		Name:     authCfg.SessionCookieName,
+		Path:     authCfg.SessionCookiePath,
+		HTTPOnly: authCfg.SessionCookieHTTPOnly,
 		SameSite: http.SameSiteLaxMode,
-		MaxAge:   authCfg.RefreshTokenTTL,
+		MaxAge:   authCfg.SessionTTL,
 	}, zap.NewNop(), nil)
 
 	wsManager := ctfws.NewManager(wsCfg, zap.NewNop())
@@ -361,7 +359,7 @@ func newNotificationIntegrationEnv(t *testing.T) *notificationIntegrationEnv {
 	router.Use(middleware.RequestID())
 	apiV1 := router.Group("/api/v1")
 	protected := apiV1.Group("")
-	protected.Use(middleware.Auth(tokenService))
+	protected.Use(middleware.Auth(tokenService, authCfg.SessionCookieName))
 	protected.POST("/auth/ws-ticket", authHandler.IssueWSTicket)
 	protected.GET("/notifications", notificationHandler.ListNotifications)
 	protected.PUT("/notifications/:id/read", middleware.ParseInt64Param("id"), notificationHandler.MarkAsRead)
@@ -382,38 +380,13 @@ func newNotificationIntegrationEnv(t *testing.T) *notificationIntegrationEnv {
 func newNotificationTestConfigs(t *testing.T) (config.AuthConfig, config.WebSocketConfig) {
 	t.Helper()
 
-	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
-	if err != nil {
-		t.Fatalf("generate rsa key: %v", err)
-	}
-	privatePEM := pem.EncodeToMemory(&pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(privateKey)})
-	publicDER, err := x509.MarshalPKIXPublicKey(&privateKey.PublicKey)
-	if err != nil {
-		t.Fatalf("marshal public key: %v", err)
-	}
-	publicPEM := pem.EncodeToMemory(&pem.Block{Type: "PUBLIC KEY", Bytes: publicDER})
-
-	keyDir := t.TempDir()
-	privatePath := filepath.Join(keyDir, "private.pem")
-	publicPath := filepath.Join(keyDir, "public.pem")
-	if err := os.WriteFile(privatePath, privatePEM, 0o600); err != nil {
-		t.Fatalf("write private key: %v", err)
-	}
-	if err := os.WriteFile(publicPath, publicPEM, 0o644); err != nil {
-		t.Fatalf("write public key: %v", err)
-	}
-
 	return config.AuthConfig{
-			Issuer:                "ctf-platform-test",
-			AccessTokenTTL:        10 * time.Minute,
-			RefreshTokenTTL:       time.Hour,
-			RefreshCookieName:     "refresh_token",
-			RefreshCookiePath:     "/api/v1/auth",
-			RefreshCookieHTTPOnly: true,
-			RefreshCookieSameSite: "lax",
-			PrivateKeyPath:        privatePath,
-			PublicKeyPath:         publicPath,
-			TokenBlacklistPrefix:  "ctf:test:blacklist",
+			SessionTTL:            time.Hour,
+			SessionCookieName:     "ctf_session",
+			SessionCookiePath:     "/api/v1",
+			SessionCookieHTTPOnly: true,
+			SessionCookieSameSite: "lax",
+			SessionKeyPrefix:      "ctf:test:session",
 		}, config.WebSocketConfig{
 			TicketTTL:         30 * time.Second,
 			TicketKeyPrefix:   "ctf:test:ws:ticket",
@@ -455,7 +428,15 @@ func createNotificationUser(t *testing.T, db *gorm.DB, username, role string) *m
 	return user
 }
 
-func performNotificationJSONRequest(t *testing.T, router http.Handler, method, target string, payload any, headers map[string]string) *httptest.ResponseRecorder {
+func performNotificationJSONRequest(
+	t *testing.T,
+	router http.Handler,
+	method,
+	target string,
+	payload any,
+	headers map[string]string,
+	cookies []*http.Cookie,
+) *httptest.ResponseRecorder {
 	t.Helper()
 
 	var body bytes.Buffer
@@ -472,10 +453,21 @@ func performNotificationJSONRequest(t *testing.T, router http.Handler, method, t
 	for key, value := range headers {
 		req.Header.Set(key, value)
 	}
+	for _, cookie := range cookies {
+		req.AddCookie(cookie)
+	}
 
 	recorder := httptest.NewRecorder()
 	router.ServeHTTP(recorder, req)
 	return recorder
+}
+
+func issueNotificationSessionCookie(tokenService authcontracts.TokenService, user *model.User) (*http.Cookie, error) {
+	session, err := tokenService.CreateSession(context.Background(), user.ID, user.Username, user.Role)
+	if err != nil {
+		return nil, err
+	}
+	return &http.Cookie{Name: "ctf_session", Value: session.ID}, nil
 }
 
 func decodeNotificationEnvelope(t *testing.T, recorder *httptest.ResponseRecorder) notificationTestEnvelope {

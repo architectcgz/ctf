@@ -14,6 +14,13 @@
 cd code/backend && APP_ENV=dev go run ./cmd/api
 ```
 
+默认开发账号由初始迁移写入，密码均为 `Password123`：
+
+- `admin`：管理员账号
+- `teacher`：教师账号，班级 `CTF-1`
+- `student`：学员账号，班级 `CTF-1`
+- `student2`：学员账号，班级 `CTF-1`
+
 后端热重载开发（推荐）：
 
 ```bash
@@ -21,10 +28,18 @@ go install github.com/air-verse/air@latest
 cd code/backend && ./scripts/dev-run.sh --infra-shared --hot
 ```
 
+后端后台启动并保留 Codex 可读日志：
+
+```bash
+cd code/backend && ./scripts/dev-run.sh --infra-shared --background
+tail -f /tmp/ctf-backend.log
+```
+
 脚本会在以下场景自动补齐本地开发环境变量：
 
-- 复用 Docker 中的 PostgreSQL / Redis 时，默认切到 `127.0.0.1:15432` 与 `127.0.0.1:16379`
+- 复用 Docker 中的 PostgreSQL / Redis 时，默认切到 `127.0.0.1:15432` 与 `127.0.0.1:16379`，并注入开发默认密码
 - 如果 `8080` 已被 `ctf-api` 容器占用，默认把本地 API 端口切到 `18080`
+- 默认把后端输出写入 `CTF_BACKEND_LOG`，未指定时为 `/tmp/ctf-backend.log`
 
 如果共享依赖已经在跑，也可以直接：
 
@@ -32,7 +47,9 @@ cd code/backend && ./scripts/dev-run.sh --infra-shared --hot
 cd code/backend && \
   APP_ENV=dev \
   CTF_POSTGRES_PORT=15432 \
+  CTF_POSTGRES_PASSWORD=postgres123456 \
   CTF_REDIS_ADDR=127.0.0.1:16379 \
+  CTF_REDIS_PASSWORD=redis123456 \
   CTF_HTTP_PORT=18080 \
   air -c .air.toml
 ```

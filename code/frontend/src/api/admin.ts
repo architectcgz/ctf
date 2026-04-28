@@ -1,4 +1,5 @@
 import { ApiError, request } from './request'
+import { normalizeInstanceData, type RawInstanceData } from './instance'
 
 import type {
   AWDAttackLogData,
@@ -31,6 +32,10 @@ import type {
   AdminAwdServiceTemplateImportPreview,
   AdminAwdServiceTemplateData,
   AdminContestAWDServiceData,
+  AdminContestAWDInstanceItemData,
+  AdminContestAWDInstanceOrchestrationData,
+  AdminContestAWDInstanceServiceData,
+  AdminContestAWDInstanceTeamData,
   AdminContestChallengeRelationData,
   AdminContestTeamData,
   AdminChallengeHint,
@@ -54,6 +59,7 @@ import type {
   ChallengePackageFileData,
   ChallengePackageRevisionData,
   ChallengeTopologyData,
+  ContestAnnouncement,
   ContestMode,
   ContestDetailData,
   ContestScoreboardData,
@@ -189,6 +195,13 @@ interface RawContestItem {
   updated_at: string
 }
 
+interface RawContestAnnouncement {
+  id: string | number
+  title: string
+  content?: string
+  created_at: string
+}
+
 interface RawAWDRoundItem {
   id: string | number
   contest_id: string | number
@@ -208,7 +221,9 @@ interface RawAWDTeamServiceItem {
   team_id: string | number
   team_name: string
   service_id?: string | number
+  service_name?: string | null
   challenge_id: string | number
+  challenge_title?: string | null
   service_status: AWDTeamServiceData['service_status']
   checker_type?: string | null
   check_result?: Record<string, unknown> | null
@@ -436,6 +451,32 @@ interface RawAdminContestAWDServiceItem {
   last_preview_result?: RawAWDCheckerPreviewData | null
   created_at: string
   updated_at: string
+}
+
+interface RawAdminContestAWDInstanceTeamItem {
+  team_id: string | number
+  team_name: string
+  captain_id: string | number
+}
+
+interface RawAdminContestAWDInstanceServiceItem {
+  service_id: string | number
+  challenge_id: string | number
+  display_name: string
+  is_visible: boolean
+}
+
+interface RawAdminContestAWDInstanceItem {
+  team_id: string | number
+  service_id: string | number
+  instance?: RawInstanceData | null
+}
+
+interface RawAdminContestAWDInstanceOrchestration {
+  contest_id: string | number
+  teams: RawAdminContestAWDInstanceTeamItem[]
+  services: RawAdminContestAWDInstanceServiceItem[]
+  instances: RawAdminContestAWDInstanceItem[]
 }
 
 interface RawAdminChallengeItem {
@@ -817,6 +858,11 @@ export interface AdminContestUpdatePayload {
   override_reason?: string
 }
 
+export interface AdminContestAnnouncementCreatePayload {
+  title: string
+  content: string
+}
+
 export interface AdminAWDRoundCreatePayload {
   round_number: number
   status?: AWDRoundData['status']
@@ -952,6 +998,15 @@ function normalizeContest(item: RawContestItem): ContestDetailData {
   }
 }
 
+function normalizeContestAnnouncement(item: RawContestAnnouncement): ContestAnnouncement {
+  return {
+    id: String(item.id),
+    title: item.title,
+    content: item.content,
+    created_at: item.created_at,
+  }
+}
+
 function normalizeAWDRound(item: RawAWDRoundItem): AWDRoundData {
   return {
     id: String(item.id),
@@ -984,7 +1039,9 @@ function normalizeAWDTeamService(item: RawAWDTeamServiceItem): AWDTeamServiceDat
     team_id: String(item.team_id),
     team_name: item.team_name,
     service_id: item.service_id == null ? undefined : String(item.service_id),
+    service_name: item.service_name || undefined,
     challenge_id: String(item.challenge_id),
+    challenge_title: item.challenge_title || undefined,
     service_status: item.service_status,
     checker_type: normalizeAWDCheckerType(item.checker_type),
     check_result: item.check_result || {},
@@ -1032,24 +1089,28 @@ function normalizeAWDRoundSummaryItem(item: RawAWDRoundSummaryItem): AWDRoundSum
   }
 }
 
+function normalizeNumberOrZero(value: unknown): number {
+  return typeof value === 'number' && Number.isFinite(value) ? value : 0
+}
+
 function normalizeAWDRoundMetrics(item: RawAWDRoundMetricsData): AWDRoundMetricsData {
   return {
-    total_service_count: item.total_service_count,
-    service_up_count: item.service_up_count,
-    service_down_count: item.service_down_count,
-    service_compromised_count: item.service_compromised_count,
-    attacked_service_count: item.attacked_service_count,
-    defense_success_count: item.defense_success_count,
-    total_attack_count: item.total_attack_count,
-    successful_attack_count: item.successful_attack_count,
-    failed_attack_count: item.failed_attack_count,
-    scheduler_check_count: item.scheduler_check_count,
-    manual_current_round_check_count: item.manual_current_round_check_count,
-    manual_selected_round_check_count: item.manual_selected_round_check_count,
-    manual_service_check_count: item.manual_service_check_count,
-    submission_attack_count: item.submission_attack_count,
-    manual_attack_log_count: item.manual_attack_log_count,
-    legacy_attack_log_count: item.legacy_attack_log_count,
+    total_service_count: normalizeNumberOrZero(item.total_service_count),
+    service_up_count: normalizeNumberOrZero(item.service_up_count),
+    service_down_count: normalizeNumberOrZero(item.service_down_count),
+    service_compromised_count: normalizeNumberOrZero(item.service_compromised_count),
+    attacked_service_count: normalizeNumberOrZero(item.attacked_service_count),
+    defense_success_count: normalizeNumberOrZero(item.defense_success_count),
+    total_attack_count: normalizeNumberOrZero(item.total_attack_count),
+    successful_attack_count: normalizeNumberOrZero(item.successful_attack_count),
+    failed_attack_count: normalizeNumberOrZero(item.failed_attack_count),
+    scheduler_check_count: normalizeNumberOrZero(item.scheduler_check_count),
+    manual_current_round_check_count: normalizeNumberOrZero(item.manual_current_round_check_count),
+    manual_selected_round_check_count: normalizeNumberOrZero(item.manual_selected_round_check_count),
+    manual_service_check_count: normalizeNumberOrZero(item.manual_service_check_count),
+    submission_attack_count: normalizeNumberOrZero(item.submission_attack_count),
+    manual_attack_log_count: normalizeNumberOrZero(item.manual_attack_log_count),
+    legacy_attack_log_count: normalizeNumberOrZero(item.legacy_attack_log_count),
   }
 }
 
@@ -1290,6 +1351,48 @@ function normalizeAdminContestAWDService(
       : undefined,
     created_at: item.created_at,
     updated_at: item.updated_at,
+  }
+}
+
+function normalizeAdminContestAWDInstanceTeam(
+  item: RawAdminContestAWDInstanceTeamItem
+): AdminContestAWDInstanceTeamData {
+  return {
+    team_id: String(item.team_id),
+    team_name: item.team_name,
+    captain_id: String(item.captain_id),
+  }
+}
+
+function normalizeAdminContestAWDInstanceService(
+  item: RawAdminContestAWDInstanceServiceItem
+): AdminContestAWDInstanceServiceData {
+  return {
+    service_id: String(item.service_id),
+    challenge_id: String(item.challenge_id),
+    display_name: item.display_name,
+    is_visible: item.is_visible,
+  }
+}
+
+function normalizeAdminContestAWDInstanceItem(
+  item: RawAdminContestAWDInstanceItem
+): AdminContestAWDInstanceItemData {
+  return {
+    team_id: String(item.team_id),
+    service_id: String(item.service_id),
+    instance: item.instance ? normalizeInstanceData(item.instance) : undefined,
+  }
+}
+
+function normalizeAdminContestAWDInstanceOrchestration(
+  item: RawAdminContestAWDInstanceOrchestration
+): AdminContestAWDInstanceOrchestrationData {
+  return {
+    contest_id: String(item.contest_id),
+    teams: item.teams.map(normalizeAdminContestAWDInstanceTeam),
+    services: item.services.map(normalizeAdminContestAWDInstanceService),
+    instances: item.instances.map(normalizeAdminContestAWDInstanceItem),
   }
 }
 
@@ -2384,6 +2487,17 @@ export async function getContest(id: string): Promise<ContestDetailData> {
   return normalizeContest(contest)
 }
 
+export async function getAdminContestAnnouncements(
+  contestId: string
+): Promise<ContestAnnouncement[]> {
+  const response = await request<RawContestAnnouncement[]>({
+    method: 'GET',
+    url: `/admin/contests/${encodeURIComponent(contestId)}/announcements`,
+  })
+
+  return response.map(normalizeContestAnnouncement)
+}
+
 export async function createContest(
   data: AdminContestCreatePayload
 ): Promise<{ contest: ContestDetailData }> {
@@ -2394,6 +2508,22 @@ export async function createContest(
   })
 
   return { contest: normalizeContest(contest) }
+}
+
+export async function createAdminContestAnnouncement(
+  contestId: string,
+  data: AdminContestAnnouncementCreatePayload
+): Promise<ContestAnnouncement> {
+  const response = await request<RawContestAnnouncement>({
+    method: 'POST',
+    url: `/admin/contests/${encodeURIComponent(contestId)}/announcements`,
+    data: {
+      title: data.title,
+      content: data.content,
+    },
+  })
+
+  return normalizeContestAnnouncement(response)
 }
 
 export async function updateContest(
@@ -2502,6 +2632,16 @@ export async function deleteAdminContestChallenge(
   })
 }
 
+export async function deleteAdminContestAnnouncement(
+  contestId: string,
+  announcementId: string
+): Promise<void> {
+  await request<void>({
+    method: 'DELETE',
+    url: `/admin/contests/${encodeURIComponent(contestId)}/announcements/${encodeURIComponent(announcementId)}`,
+  })
+}
+
 export async function listContestAWDServices(
   contestId: string
 ): Promise<AdminContestAWDServiceData[]> {
@@ -2510,6 +2650,31 @@ export async function listContestAWDServices(
     url: `/admin/contests/${encodeURIComponent(contestId)}/awd/services`,
   })
   return response.map(normalizeAdminContestAWDService)
+}
+
+export async function getContestAWDInstanceOrchestration(
+  contestId: string
+): Promise<AdminContestAWDInstanceOrchestrationData> {
+  const response = await request<RawAdminContestAWDInstanceOrchestration>({
+    method: 'GET',
+    url: `/admin/contests/${encodeURIComponent(contestId)}/awd/instances`,
+  })
+  return normalizeAdminContestAWDInstanceOrchestration(response)
+}
+
+export async function startContestAWDTeamServiceInstance(
+  contestId: string,
+  data: { team_id: string | number; service_id: string | number }
+): Promise<AdminContestAWDInstanceItemData> {
+  const response = await request<RawAdminContestAWDInstanceItem>({
+    method: 'POST',
+    url: `/admin/contests/${encodeURIComponent(contestId)}/awd/instances`,
+    data: {
+      team_id: Number(data.team_id),
+      service_id: Number(data.service_id),
+    },
+  })
+  return normalizeAdminContestAWDInstanceItem(response)
 }
 
 export async function createContestAWDService(

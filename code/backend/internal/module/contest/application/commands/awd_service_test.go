@@ -275,12 +275,12 @@ func TestAWDServiceCreateRoundAndListRounds(t *testing.T) {
 	round, err := service.CreateRound(context.Background(), 1, &dto.CreateAWDRoundReq{
 		RoundNumber:  1,
 		AttackScore:  intPtr(80),
-		DefenseScore: intPtr(30),
+		DefenseScore: intPtr(3),
 	})
 	if err != nil {
 		t.Fatalf("CreateRound() error = %v", err)
 	}
-	if round.AttackScore != 80 || round.DefenseScore != 30 {
+	if round.AttackScore != 80 || round.DefenseScore != 3 {
 		t.Fatalf("unexpected round: %+v", round)
 	}
 
@@ -290,6 +290,49 @@ func TestAWDServiceCreateRoundAndListRounds(t *testing.T) {
 	}
 	if len(rounds) != 1 || rounds[0].RoundNumber != 1 {
 		t.Fatalf("unexpected rounds: %+v", rounds)
+	}
+}
+
+func TestAWDServiceCreateRoundAppliesDefaultScoreContract(t *testing.T) {
+	db := newAWDTestDB(t)
+	service := newAWDServiceForTest(db, nil, "", config.ContestAWDConfig{})
+	now := time.Now()
+
+	createAWDContestFixture(t, db, 71, now)
+	createAWDChallengeFixture(t, db, 7101, now)
+	createAWDContestChallengeFixture(t, db, 71, 7101, now)
+	syncAWDContestServiceFixture(t, db, 71, 7101, "awd-service", model.AWDCheckerTypeHTTPStandard, `{"get_flag":{"path":"/health"}}`, 100, 1, 2, now)
+	syncAWDContestServiceReadinessFixture(t, db, 71, 7101, model.AWDCheckerValidationStatePassed, nil, "")
+
+	round, err := service.CreateRound(context.Background(), 71, &dto.CreateAWDRoundReq{
+		RoundNumber: 1,
+	})
+	if err != nil {
+		t.Fatalf("CreateRound() error = %v", err)
+	}
+	if round.AttackScore != 30 || round.DefenseScore != 3 {
+		t.Fatalf("unexpected default round scores: %+v", round)
+	}
+}
+
+func TestAWDServiceCreateRoundRejectsOversizedScores(t *testing.T) {
+	db := newAWDTestDB(t)
+	service := newAWDServiceForTest(db, nil, "", config.ContestAWDConfig{})
+	now := time.Now()
+
+	createAWDContestFixture(t, db, 72, now)
+	createAWDChallengeFixture(t, db, 7201, now)
+	createAWDContestChallengeFixture(t, db, 72, 7201, now)
+	syncAWDContestServiceFixture(t, db, 72, 7201, "awd-service", model.AWDCheckerTypeHTTPStandard, `{"get_flag":{"path":"/health"}}`, 100, 1, 2, now)
+	syncAWDContestServiceReadinessFixture(t, db, 72, 7201, model.AWDCheckerValidationStatePassed, nil, "")
+
+	_, err := service.CreateRound(context.Background(), 72, &dto.CreateAWDRoundReq{
+		RoundNumber:  1,
+		AttackScore:  intPtr(101),
+		DefenseScore: intPtr(3),
+	})
+	if err == nil {
+		t.Fatal("expected oversized attack score to be rejected")
 	}
 }
 
@@ -513,7 +556,7 @@ func TestAWDServiceCreateRoundAllowsForceOverrideWithReason(t *testing.T) {
 		ForceOverride:  boolPtr(true),
 		OverrideReason: strPtr("teacher drill"),
 		AttackScore:    intPtr(80),
-		DefenseScore:   intPtr(30),
+		DefenseScore:   intPtr(3),
 	})
 	if err != nil {
 		t.Fatalf("CreateRound() error = %v", err)
@@ -1820,7 +1863,7 @@ func TestAWDServiceSubmitAttackAcceptsServiceScopedRoundFlagField(t *testing.T) 
 			"display_name":   "Bank Portal",
 			"order":          0,
 			"is_visible":     true,
-			"score_config":   `{"points":100,"awd_sla_score":18,"awd_defense_score":28}`,
+			"score_config":   `{"points":100,"awd_sla_score":1,"awd_defense_score":2}`,
 			"runtime_config": `{"challenge_id":2401,"checker_type":"legacy_probe","checker_config":{}}`,
 			"updated_at":     now,
 		}).Error; err != nil {

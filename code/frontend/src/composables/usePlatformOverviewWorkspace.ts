@@ -20,9 +20,9 @@ function formatBytes(value: number | undefined): string {
 
 function usageTone(value: number | undefined): string {
   const normalized = Math.round(value ?? 0)
-  if (normalized >= 90) return 'bg-[var(--color-danger)]'
-  if (normalized >= 75) return 'bg-[var(--color-warning)]'
-  return 'bg-[var(--color-primary)]'
+  if (normalized >= 90) return 'usage-bar--danger'
+  if (normalized >= 75) return 'usage-bar--warning'
+  return 'usage-bar--primary'
 }
 
 export function usePlatformOverviewWorkspace(dashboard: Ref<AdminDashboardData | null>) {
@@ -42,24 +42,28 @@ export function usePlatformOverviewWorkspace(dashboard: Ref<AdminDashboardData |
 
   const quickSignals = computed(() => [
     {
+      key: 'online_users',
       label: '在线用户',
       value: dashboard.value?.online_users ?? 0,
       helper: '当前在线账号',
       accent: 'primary' as const,
     },
     {
+      key: 'active_containers',
       label: '活跃容器',
       value: dashboard.value?.active_containers ?? 0,
       helper: '正在运行的实例',
       accent: 'success' as const,
     },
     {
+      key: 'cpu_usage',
       label: '平均 CPU',
       value: formatPercent(dashboard.value?.cpu_usage),
       helper: '当前资源水位',
       accent: healthSummary.value.accent,
     },
     {
+      key: 'memory_usage',
       label: '平均内存',
       value: formatPercent(dashboard.value?.memory_usage),
       helper: '结合阈值判断回收',
@@ -84,7 +88,7 @@ export function usePlatformOverviewWorkspace(dashboard: Ref<AdminDashboardData |
 
   const overviewMetrics = computed(() =>
     quickSignals.value.map((item) => ({
-      key: item.label,
+      key: item.key,
       label: item.label,
       value: String(item.value),
       hint: item.helper,

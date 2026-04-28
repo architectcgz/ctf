@@ -1,92 +1,77 @@
 <script setup lang="ts">
-interface AuthSignalItem {
-  key: string
-  title: string
-  description: string
-}
-
 defineProps<{
   panelEyebrow: string
   panelTitle: string
   panelDescription: string
 }>()
 
-const signals: AuthSignalItem[] = [
-  {
-    key: 'training',
-    title: '训练空间',
-    description: '进入靶场、竞赛、实例与排行榜视图。',
-  },
-  {
-    key: 'teaching',
-    title: '教学协同',
-    description: '班级、学生分析与报告导出在同一平台完成。',
-  },
-  {
-    key: 'operations',
-    title: '系统值守',
-    description: '支持管理员进入审计、告警与风险研判链路。',
-  },
-]
+const emit = defineEmits<{
+  heroProbe: []
+}>()
 </script>
 
 <template>
   <div class="auth-entry-shell">
-    <div class="auth-entry-shell__ambient auth-entry-shell__ambient--top" />
-    <div class="auth-entry-shell__ambient auth-entry-shell__ambient--side" />
+    <!-- 背景层：网格与环境光 -->
+    <div class="auth-entry-shell__bg">
+      <div class="technical-grid" />
+      <div class="ambient-glow ambient-glow--1" />
+      <div class="ambient-glow ambient-glow--2" />
+    </div>
 
-    <div class="auth-entry-shell__frame">
-      <section class="auth-entry-shell__overview">
-        <div class="auth-entry-shell__kicker">
-          Teaching Platform Access
-        </div>
-        <h1 class="auth-entry-shell__title workspace-page-title">
-          教学平台入口
-        </h1>
-        <p class="auth-entry-shell__copy workspace-page-copy">
-          学生训练、教师教学和管理员值守共用同一套账号体系。登录后按角色进入对应工作台。
-        </p>
-
-        <div class="auth-entry-shell__signals">
-          <article
-            v-for="signal in signals"
-            :key="signal.key"
-            class="auth-entry-shell__signal"
-          >
-            <div class="auth-entry-shell__signal-title">
-              {{ signal.title }}
-            </div>
-            <p class="auth-entry-shell__signal-copy">
-              {{ signal.description }}
-            </p>
-          </article>
-        </div>
-      </section>
-
-      <section class="auth-entry-shell__panel">
-        <header class="auth-entry-shell__panel-header">
-          <div class="auth-entry-shell__panel-eyebrow">
-            {{ panelEyebrow }}
-          </div>
-          <h2 class="auth-entry-shell__panel-title">
-            {{ panelTitle }}
-          </h2>
-          <p class="auth-entry-shell__panel-copy">
-            {{ panelDescription }}
-          </p>
+    <div class="auth-entry-shell__container">
+      <!-- 左侧：视觉锚点 -->
+      <section
+        class="auth-entry-shell__hero"
+        @click="emit('heroProbe')"
+      >
+        <header class="hero-branding">
+          <div class="branding-overline">CTF Platform Infrastructure</div>
+          <h1 class="branding-title">
+            SECURE<br />PLATFORM<br /><span>ACCESS</span>
+          </h1>
+          <div class="branding-decoration" />
         </header>
-
-        <div class="auth-entry-shell__panel-body">
-          <slot />
+        
+        <div class="hero-features">
+          <p class="hero-copy">
+            统一身份认证系统。集成训练靶场、教学协同与系统值守链路，为网络安全实战提供全栈技术支持。
+          </p>
+          <div class="signal-list">
+            <div class="signal-item">
+              <span class="signal-dot" />
+              <span>训练空间</span>
+            </div>
+            <div class="signal-item">
+              <span class="signal-dot" />
+              <span>教学协同</span>
+            </div>
+            <div class="signal-item">
+              <span class="signal-dot" />
+              <span>系统值守</span>
+            </div>
+          </div>
         </div>
-
-        <footer
-          v-if="$slots.footer"
-          class="auth-entry-shell__panel-footer"
-        >
-          <slot name="footer" />
-        </footer>
       </section>
+
+      <!-- 右侧：表单面板 -->
+      <main class="auth-entry-shell__content">
+        <div class="auth-panel">
+          <header class="auth-panel__header">
+            <div class="auth-panel__eyebrow">{{ panelEyebrow }}</div>
+            <h2 class="auth-panel__title">{{ panelTitle }}</h2>
+            <p class="auth-panel__desc">{{ panelDescription }}</p>
+          </header>
+
+          <div class="auth-panel__body">
+            <slot />
+          </div>
+
+          <footer v-if="$slots.footer" class="auth-panel__footer">
+            <slot name="footer" />
+          </footer>
+        </div>
+      </main>
     </div>
   </div>
 </template>
@@ -95,201 +80,191 @@ const signals: AuthSignalItem[] = [
 .auth-entry-shell {
   position: relative;
   min-height: 100vh;
-  display: flex;
-  align-items: center;
-  overflow: hidden;
-  padding: 1rem 0;
-  background: var(--color-bg-base);
+  width: 100%;
+  background-color: var(--color-bg-base);
   color: var(--color-text-primary);
+  display: flex;
+  overflow: hidden;
 }
 
-.auth-entry-shell__ambient {
+/* 背景系统 */
+.auth-entry-shell__bg {
   position: absolute;
-  pointer-events: none;
-  border-radius: 999px;
-  filter: blur(80px);
+  inset: 0;
+  z-index: 0;
 }
 
-.auth-entry-shell__ambient--top {
-  top: -9rem;
-  right: -5rem;
-  width: 22rem;
-  height: 22rem;
-  background: color-mix(in srgb, var(--color-primary) 18%, transparent);
+.technical-grid {
+  position: absolute;
+  inset: 0;
+  background-image: 
+    linear-gradient(var(--color-border-subtle) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-border-subtle) 1px, transparent 1px);
+  background-size: var(--space-16, 4rem) var(--space-16, 4rem);
+  opacity: 0.15;
+  mask-image: radial-gradient(circle at 50% 50%, var(--color-bg-base), transparent 80%);
 }
 
-.auth-entry-shell__ambient--side {
-  bottom: -8rem;
-  left: -6rem;
-  width: 20rem;
-  height: 20rem;
-  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+.ambient-glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(160px);
+  opacity: 0.4;
 }
 
-.auth-entry-shell__frame {
+.ambient-glow--1 {
+  top: -10%; left: -10%;
+  width: 40rem; height: 40rem;
+  background: var(--color-primary);
+}
+
+.ambient-glow--2 {
+  bottom: -5%; right: -5%;
+  width: 30rem; height: 30rem;
+  background: color-mix(in srgb, var(--color-primary) 30%, transparent);
+}
+
+.auth-entry-shell__container {
   position: relative;
   z-index: 1;
-  display: grid;
-  grid-template-columns: minmax(0, 1.02fr) minmax(0, 0.98fr);
-  gap: 0;
-  width: min(1040px, calc(100% - 2rem));
-  min-height: min(640px, calc(100vh - 2rem));
+  width: 100%;
+  max-width: 1440px;
   margin: 0 auto;
-  border: 1px solid color-mix(in srgb, var(--color-border-default) 78%, transparent);
-  border-radius: 1.5rem;
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base)),
-      color-mix(in srgb, var(--color-bg-surface) 86%, var(--color-bg-base))
-    ),
-    radial-gradient(
-      circle at top right,
-      color-mix(in srgb, var(--color-primary) 12%, transparent),
-      transparent 18rem
-    );
-  box-shadow: 0 22px 48px var(--color-shadow-strong);
-  overflow: hidden;
-}
-
-.auth-entry-shell__overview,
-.auth-entry-shell__panel {
-  padding: 1.75rem;
-}
-
-.auth-entry-shell__overview {
-  border-right: 1px solid color-mix(in srgb, var(--color-border-default) 76%, transparent);
-}
-
-.auth-entry-shell__kicker,
-.auth-entry-shell__panel-eyebrow {
-  font-size: var(--font-size-0-70);
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-}
-
-.auth-entry-shell__kicker {
-  display: inline-flex;
-  align-items: center;
-  min-height: 2rem;
-  padding: 0 0.8rem;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--color-primary) 28%, var(--color-border-default));
-  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
-  color: color-mix(in srgb, var(--color-primary-hover) 82%, white);
-}
-
-.auth-entry-shell__title {
-  margin: 1.1rem 0 0.6rem;
-  font-weight: 700;
-}
-
-.auth-entry-shell__panel-copy,
-.auth-entry-shell__signal-copy {
-  color: var(--color-text-secondary);
-  line-height: 1.7;
-}
-
-.auth-entry-shell__copy {
-  max-width: 34rem;
-  color: var(--color-text-secondary);
-}
-
-.auth-entry-shell__signals {
   display: grid;
-  gap: 0.75rem;
-  margin-top: 1.4rem;
+  grid-template-columns: 1.2fr 0.8fr;
+  padding: var(--space-8) var(--space-12);
+  align-items: center;
 }
 
-.auth-entry-shell__signal {
-  padding: 0.85rem 0.95rem 0.85rem 1rem;
-  border: 1px solid color-mix(in srgb, var(--color-border-default) 80%, transparent);
-  border-left: 3px solid color-mix(in srgb, var(--color-primary) 58%, transparent);
-  border-radius: 1rem;
-  background: color-mix(in srgb, var(--color-bg-elevated) 78%, transparent);
+/* 左侧设计 */
+.auth-entry-shell__hero {
+  padding-right: var(--space-12);
 }
 
-.auth-entry-shell__signal-title {
-  font-size: var(--font-size-0-95);
-  font-weight: 600;
+.hero-branding {
+  position: relative;
+  margin-bottom: calc(var(--space-8) * 2);
+}
+
+.branding-overline {
+  font-size: var(--font-size-12);
+  font-weight: 800;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: var(--color-primary);
+  margin-bottom: var(--space-6);
+}
+
+.branding-title {
+  font-size: clamp(48px, 6vw, 84px);
+  font-weight: 900;
+  line-height: 0.9;
+  letter-spacing: -0.05em;
+  margin: 0;
   color: var(--color-text-primary);
 }
 
-.auth-entry-shell__signal-copy {
-  margin-top: 0.35rem;
-  font-size: var(--font-size-0-80);
+.branding-title span {
+  color: transparent;
+  -webkit-text-stroke: 1.5px var(--color-text-primary);
 }
 
-.auth-entry-shell__panel {
+.branding-decoration {
+  margin-top: var(--space-8);
+  width: var(--space-16, 4rem);
+  height: var(--space-1);
+  background: var(--color-primary);
+}
+
+.hero-features {
+  max-width: 32rem;
+}
+
+.hero-copy {
+  font-size: var(--font-size-15);
+  line-height: 1.8;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-12);
+}
+
+.signal-list {
   display: flex;
   flex-direction: column;
+  gap: var(--space-5);
 }
 
-.auth-entry-shell__panel-header {
-  padding-bottom: 1rem;
-  border-bottom: 1px dashed color-mix(in srgb, var(--color-border-default) 76%, transparent);
-}
-
-.auth-entry-shell__panel-eyebrow {
+.signal-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  font-size: var(--font-size-11);
+  font-weight: 800;
+  letter-spacing: 0.2em;
   color: var(--color-text-muted);
 }
 
-.auth-entry-shell__panel-title {
-  margin: 0.6rem 0 0.3rem;
-  font-size: var(--font-size-1-60);
-  line-height: 1.15;
-  font-weight: 700;
+.signal-dot {
+  width: var(--space-1-5);
+  height: var(--space-1-5);
+  background: var(--color-primary);
+  border-radius: 50%;
+  box-shadow: 0 0 10px var(--color-primary);
 }
 
-.auth-entry-shell__panel-copy {
-  font-size: var(--font-size-0-88);
+/* 右侧表单面板 */
+.auth-panel {
+  background: color-mix(in srgb, var(--color-bg-surface) 60%, transparent);
+  backdrop-filter: blur(24px);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--space-6);
+  padding: var(--space-10) var(--space-12);
+  box-shadow: 
+    0 40px 100px -20px color-mix(in srgb, var(--color-shadow-strong) 40%, transparent),
+    inset 0 0 0 1px color-mix(in srgb, white 10%, transparent);
 }
 
-.auth-entry-shell__panel-body {
-  margin-top: 1.2rem;
+.auth-panel__eyebrow {
+  font-size: var(--font-size-10, 10px);
+  font-weight: 900;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-3);
 }
 
-.auth-entry-shell__panel-footer {
-  margin-top: auto;
-  padding-top: 1rem;
-  border-top: 1px dashed color-mix(in srgb, var(--color-border-default) 76%, transparent);
+.auth-panel__title {
+  font-size: var(--font-size-24);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  margin: 0 0 var(--space-2);
 }
 
-:global([data-theme='light']) .auth-entry-shell__frame {
-  box-shadow: 0 18px 40px var(--color-shadow-soft);
+.auth-panel__desc {
+  font-size: var(--font-size-13);
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+  margin: 0 0 var(--space-12);
 }
 
-:global([data-theme='light']) .auth-entry-shell__signal,
-:global([data-theme='light']) .auth-entry-shell__frame {
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--color-bg-surface) 96%, white),
-      color-mix(in srgb, var(--color-bg-elevated) 94%, white)
-    ),
-    radial-gradient(
-      circle at top right,
-      color-mix(in srgb, var(--color-primary) 7%, transparent),
-      transparent 18rem
-    );
+.auth-panel__footer {
+  margin-top: var(--space-8);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--color-border-subtle);
+  text-align: center;
 }
 
-@media (max-width: 960px) {
-  .auth-entry-shell__frame {
+@media (max-width: 1200px) {
+  .auth-entry-shell__container {
     grid-template-columns: 1fr;
-    width: min(720px, calc(100% - 1rem));
-    min-height: auto;
+    padding: var(--space-12) var(--space-8);
   }
-
-  .auth-entry-shell__overview,
-  .auth-entry-shell__panel {
-    padding: 1.25rem;
+  .auth-entry-shell__hero {
+    display: none;
   }
-
-  .auth-entry-shell__overview {
-    border-right: none;
-    border-bottom: 1px solid color-mix(in srgb, var(--color-border-default) 76%, transparent);
+  .auth-panel {
+    max-width: 32rem;
+    margin: 0 auto;
+    padding: var(--space-12);
   }
 }
 </style>

@@ -25,6 +25,10 @@ export function useAwdInspectorFormatting({
   summaryMetrics,
   manualCheckCount,
 }: UseAwdInspectorFormattingOptions) {
+  function formatMetricCount(value: unknown): number {
+    return typeof value === 'number' && Number.isFinite(value) ? value : 0
+  }
+
   function formatDateTime(value?: string): string {
     if (!value) {
       return '未记录'
@@ -50,12 +54,9 @@ export function useAwdInspectorFormatting({
 
   function getRoundStatusClass(status: AWDRoundData['status']): string {
     const classes: Record<AWDRoundData['status'], string> = {
-      pending:
-        'bg-[var(--color-warning)]/10 text-[var(--color-warning)] border border-[var(--color-warning)]/20',
-      running:
-        'bg-[var(--color-success)]/10 text-[var(--color-success)] border border-[var(--color-success)]/20',
-      finished:
-        'bg-[var(--color-text-muted)]/10 text-[var(--color-text-secondary)] border border-[var(--color-text-muted)]/20',
+      pending: 'awd-status-pill awd-status-pill--warning',
+      running: 'awd-status-pill awd-status-pill--success',
+      finished: 'awd-status-pill awd-status-pill--muted',
     }
     return classes[status]
   }
@@ -71,10 +72,9 @@ export function useAwdInspectorFormatting({
 
   function getServiceStatusClass(status: AWDTeamServiceData['service_status']): string {
     const classes: Record<AWDTeamServiceData['service_status'], string> = {
-      up: 'bg-[var(--color-success)]/10 text-[var(--color-success)] border border-[var(--color-success)]/20',
-      down: 'bg-[var(--color-warning)]/10 text-[var(--color-warning)] border border-[var(--color-warning)]/20',
-      compromised:
-        'bg-[var(--color-danger)]/10 text-[var(--color-danger)] border border-[var(--color-danger)]/20',
+      up: 'awd-status-pill awd-status-pill--success',
+      down: 'awd-status-pill awd-status-pill--warning',
+      compromised: 'awd-status-pill awd-status-pill--danger',
     }
     return classes[status]
   }
@@ -112,15 +112,15 @@ export function useAwdInspectorFormatting({
   function getTrafficStatusGroupClass(statusGroup: AWDTrafficStatusGroup): string {
     switch (statusGroup) {
       case 'success':
-        return 'bg-[var(--color-success)]/10 text-[var(--color-success)] border border-[var(--color-success)]/20'
+        return 'awd-status-pill awd-status-pill--success'
       case 'redirect':
-        return 'bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-[var(--color-primary)]/20'
+        return 'awd-status-pill awd-status-pill--primary'
       case 'client_error':
-        return 'bg-[var(--color-warning)]/10 text-[var(--color-warning)] border border-[var(--color-warning)]/20'
+        return 'awd-status-pill awd-status-pill--warning'
       case 'server_error':
-        return 'bg-[var(--color-danger)]/10 text-[var(--color-danger)] border border-[var(--color-danger)]/20'
+        return 'awd-status-pill awd-status-pill--danger'
     }
-    return 'bg-[var(--color-text-muted)]/10 text-[var(--color-text-secondary)] border border-[var(--color-text-muted)]/20'
+    return 'awd-status-pill awd-status-pill--muted'
   }
 
   function getChallengeTitle(challengeId: string): string {
@@ -154,7 +154,7 @@ export function useAwdInspectorFormatting({
     if (!metrics) {
       return '等待轮次汇总'
     }
-    return `巡检 调度 ${metrics.scheduler_check_count} / 手动 ${manualCheckCount.value}`
+    return `巡检 调度 ${formatMetricCount(metrics.scheduler_check_count)} / 手动 ${formatMetricCount(manualCheckCount.value)}`
   }
 
   function getSourceOverviewDescription(): string {
@@ -162,7 +162,7 @@ export function useAwdInspectorFormatting({
     if (!metrics) {
       return '攻击日志来源将在轮次汇总返回后展示。'
     }
-    return `日志 提交 ${metrics.submission_attack_count} / 人工 ${metrics.manual_attack_log_count} / 历史 ${metrics.legacy_attack_log_count}`
+    return `日志 提交 ${formatMetricCount(metrics.submission_attack_count)} / 人工 ${formatMetricCount(metrics.manual_attack_log_count)} / 历史 ${formatMetricCount(metrics.legacy_attack_log_count)}`
   }
 
   return {

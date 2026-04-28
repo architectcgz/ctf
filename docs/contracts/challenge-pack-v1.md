@@ -46,7 +46,7 @@
 
 ## 4. 当前平台能力边界
 
-截至 2026-04-21，当前仓库内与题目包最相关的后端事实如下：
+截至 2026-04-25，当前仓库内与题目包最相关的后端事实如下：
 
 - 题目基础字段已支持：`title`、`description`、`category`、`difficulty`、`points`、`image_id`、`attachment_url`、`hints`
 - 题目发布已支持：`draft` -> `published`
@@ -56,7 +56,7 @@
   - 查询最近一次发布自检：`GET /api/v1/authoring/challenges/:id/publish-requests/latest`
 - Flag 已支持：`static` / `dynamic`
 - 动态 Flag 注入已支持：实例启动时通过环境变量 `FLAG` 注入容器；拓扑节点可按 `inject_flag` 控制是否注入
-- 镜像已支持：平台当前通过“已注册镜像”运行题目，不支持公开的在线 Dockerfile 构建导入
+- 镜像已支持：平台当前通过“已注册镜像”运行题目；运行时可按 `container.registry` 配置为匹配的私有 registry 拉取镜像，但不支持公开的在线 Dockerfile 构建导入
 - 拓扑已支持：挑战拓扑、环境模板、多节点网络与 ACL 已有独立 API
 - Writeup 已支持：挑战 Writeup 已有独立 API
 - 标签已支持：通过独立 Tag API 和 `challenge_tags` 关系维护，不在当前创建题目 API 内直接写入
@@ -87,6 +87,35 @@
 - **Jeopardy / 解题赛题目包**：继续使用默认 `kind: challenge`，并省略 `meta.mode` 或显式写为 `jeopardy`
 - **AWD 服务模板包**：仍复用 `challenge-pack-v1` 外壳，但必须额外声明 `meta.mode: awd`，并在 `extensions.awd` 内提供攻防运行定义
 - 普通题目导入入口会拒绝 `meta.mode: awd` 的题目包，防止把 AWD 包误导入成 Jeopardy 题
+
+### 4.1 AWD 镜像交付边界
+
+AWD 服务模板包只声明运行镜像引用，不承担镜像构建职责。`runtime.image.ref` 必须指向平台运行节点可拉取的镜像；题目包内的 `docker/` 目录只作为源码、构建上下文和审计材料保留，当前平台导入 AWD 模板时不会自动执行 `docker build`。
+
+推荐交付链路固定为：
+
+```text
+题目作者机器 / CI
+  -> docker build
+  -> docker scan / smoke test
+  -> docker push registry
+
+平台后台
+  -> 上传 AWD 服务模板包
+  -> 解析 runtime.image.ref
+  -> 创建 AWD 模板
+  -> 管理员加入比赛服务
+  -> 队伍启动共享实例
+  -> 平台轮次注入 Flag / Check / 计分
+```
+
+这条边界的含义是：
+
+- 镜像构建失败、基础镜像不可拉取、`pip` / `apt` / `npm` / `composer` 等依赖源不可用，应在题目作者机器或 CI 阶段暴露并修复。
+- 平台导入只校验题目包结构和 AWD 运行定义，不在上传请求中执行不受控构建。
+- 平台运行只依赖最终镜像仓库，避免比赛现场临时访问 Docker Hub、PyPI、apt 源等外部服务。
+- 管理员导入后仍应执行 checker preview；preview 通过后再将模板加入比赛服务并开赛。
+- 如果后续要支持“上传源码后平台自动构建”，应作为独立的镜像构建任务系统设计，例如 `image_build_jobs`、隔离 builder、构建日志、超时、资源限制、registry 凭据和失败重试，而不是混入 AWD 模板导入接口。
 
 ---
 
@@ -199,6 +228,35 @@ runtime:
 - `flag.type`：必填，仅允许 `static` / `dynamic`
 - `flag.value`：静态题目必填
 - `flag.prefix`：可选，对应平台 `flag_prefix`，默认建议 `flag`
+
+### 6.3 AWD 分制契约
+
+`meta.points` 对 AWD 题目只表示服务展示建议分值，不参与轮次累计得分。AWD 轮次计分由赛事编排写入：
+
+- `contest_awd_services.score_config.awd_sla_score`
+- `contest_awd_services.score_config.awd_defense_score`
+- `awd_rounds.attack_score`
+- `awd_rounds.defense_score`
+
+平台默认值：
+
+- 每服务每轮 SLA 分：`1`
+- 每服务每轮防御分：`2`
+- 每次有效攻击分：`30`
+- 轮次防御兜底分：`3`
+
+平台边界：
+
+- `awd_sla_score`：`0-5`
+- `awd_defense_score`：`0-5`
+- `attack_score`：`0-100`
+- `defense_score`：`0-10`
+
+赛事配置建议：
+
+- Drill：12-24 轮，总分量级 300-800
+- 正式赛：24-48 轮，总分量级 1000-3000
+- 长时赛：总分量级 3000-8000，必须降低轮频或服务分
 - `runtime.type`：当前首版仅支持 `container`
 - `runtime.image.ref`：容器题必填，表示最终运行镜像引用
 
@@ -427,6 +485,7 @@ extensions:
 - `meta.points` 在 AWD 包中只作为**建议分值**保留，当前不会直接写入 AWD 模板；真正比赛分值仍在管理员配置比赛时设置
 - AWD 模板导入成功后，平台会直接生成 `published` 状态模板，便于管理员在比赛题池里立即选题
 - 比赛里的 Checker 覆盖、分值、顺序、可见性仍然属于**比赛级配置**，不应反向写回题库模板
+- `runtime.image.ref` 必须是已构建并已推送到平台可访问 registry 的最终镜像引用；导入 AWD 模板不会自动构建 `docker/` 目录中的 Dockerfile
 
 ---
 
@@ -496,10 +555,12 @@ extensions:
 
 即使未来实现导入器，也必须先满足：
 
-- `runtime.image.ref` 已可被平台所在 Docker/registry 环境访问
+- `runtime.image.ref` 已可被平台所在 Docker/registry 环境访问；若使用私有 registry，需要在后端 `container.registry` 配置匹配的 `server` 与凭据
 - 若要自动创建题目，导入器必须把 `runtime.image.ref` 先映射为平台 `images` 记录
 - 若要自动导入拓扑，导入器必须单独调用挑战拓扑落库流程
 - 若要自动导入 Writeup，导入器必须单独调用 Writeup 落库流程
+
+私有 registry 拉取能力的验证边界是：使用带认证的 registry 推送测试镜像，删除运行节点本地同名 tag，然后通过后端 runtime engine 拉取镜像。该验证覆盖 `container.registry` 配置读取、registry 域名匹配、Docker `RegistryAuth` 传递和镜像拉取链路；它不覆盖镜像构建，也不代表平台会接管 registry 的部署和账号生命周期。
 
 ### 8.4 平台发布校验边界
 
@@ -538,7 +599,7 @@ extensions:
 1. 本地制作题目源码、题面、Hint、附件与可选拓扑定义
 2. 本地构建并验证镜像
 3. 本地完成最小可用验证
-4. 推送镜像或确保镜像在平台运行节点可见
+4. 推送镜像或确保镜像在平台运行节点可见；私有 registry 镜像需要平台后端配置 `container.registry`
 5. 生成 challenge pack 作为归档与审计材料
 6. 在平台中分别创建：
    - 镜像

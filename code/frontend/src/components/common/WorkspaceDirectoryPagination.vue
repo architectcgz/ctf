@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { computed } from 'vue'
+
 import PlatformPaginationControls from '@/components/platform/PlatformPaginationControls.vue'
 
 const props = withDefaults(
@@ -18,6 +20,12 @@ const props = withDefaults(
 const emit = defineEmits<{
   changePage: [page: number]
 }>()
+
+const summaryLabel = computed(() => {
+  const label = props.totalLabel.trim()
+  if (!label) return ''
+  return label.startsWith('共') ? label : `共 ${props.total} ${label}`
+})
 </script>
 
 <template>
@@ -29,7 +37,7 @@ const emit = defineEmits<{
       :page="page"
       :total-pages="totalPages"
       :total="total"
-      :total-label="totalLabel"
+      :total-label="summaryLabel"
       :disabled="disabled"
       @change-page="emit('changePage', $event)"
     />

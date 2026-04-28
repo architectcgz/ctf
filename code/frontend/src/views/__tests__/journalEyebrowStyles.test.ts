@@ -27,7 +27,12 @@ describe('journal eyebrow shared styles', () => {
     )
   })
 
-  it('列表页、profile 页和 workspace 页应通过根节点 class 接入共享 eyebrow 样式', () => {
+  it('仍使用 journal eyebrow 的 workspace 页应通过根节点 class 接入共享样式', () => {
+    expect(studentAnalysisSource).toContain('journal-eyebrow-text')
+    expect(studentAnalysisSource).not.toMatch(/^\.journal-eyebrow\s*\{/m)
+  })
+
+  it('已切到 workspace overline 的页面不应继续携带旧 eyebrow 根节点修饰类', () => {
     for (const source of [
       challengeListSource,
       contestListSource,
@@ -37,9 +42,8 @@ describe('journal eyebrow shared styles', () => {
       securitySettingsSource,
       skillProfileSource,
       userProfileSource,
-      studentAnalysisSource,
     ]) {
-      expect(source).toContain('journal-eyebrow-text')
+      expect(source).not.toContain('journal-eyebrow-text')
       expect(source).not.toMatch(/^\.journal-eyebrow\s*\{/m)
     }
   })

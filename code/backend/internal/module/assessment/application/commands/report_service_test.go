@@ -168,7 +168,7 @@ type testAssessmentProfileReader struct {
 	resp *dto.SkillProfileResp
 }
 
-func (r *testAssessmentProfileReader) GetSkillProfileWithContext(context.Context, int64) (*dto.SkillProfileResp, error) {
+func (r *testAssessmentProfileReader) GetSkillProfile(context.Context, int64) (*dto.SkillProfileResp, error) {
 	if r == nil || r.resp == nil {
 		return &dto.SkillProfileResp{}, nil
 	}
@@ -1017,6 +1017,45 @@ func TestReportServiceCloseCancelsAsyncTasks(t *testing.T) {
 	}
 	if started.Load() != 1 {
 		t.Fatalf("expected async task to start once, got %d", started.Load())
+	}
+}
+
+func TestReportServiceCloseRejectsNilContext(t *testing.T) {
+	t.Parallel()
+
+	service := NewReportService(
+		nil,
+		nil,
+		config.ReportConfig{
+			StorageDir:    t.TempDir(),
+			DefaultFormat: model.ReportFormatPDF,
+			MaxWorkers:    1,
+		},
+		nil,
+	)
+
+	if err := service.Close(nil); err == nil {
+		t.Fatal("expected Close(nil) to reject missing context")
+	}
+}
+
+func TestCreatePersonalReportRejectsNilContext(t *testing.T) {
+	t.Parallel()
+
+	service := NewReportService(
+		&testReportRepository{},
+		nil,
+		config.ReportConfig{
+			StorageDir:    t.TempDir(),
+			DefaultFormat: model.ReportFormatPDF,
+			MaxWorkers:    1,
+		},
+		nil,
+	)
+
+	_, err := service.CreatePersonalReport(nil, 1, &dto.CreatePersonalReportReq{Format: model.ReportFormatPDF})
+	if err == nil {
+		t.Fatal("expected CreatePersonalReport(nil) to reject missing context")
 	}
 }
 

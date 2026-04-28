@@ -70,6 +70,24 @@ function getServiceCheckTargets(checkResult: Record<string, unknown>) {
       <div class="toolbar-right">
         <div class="matrix-filters">
           <select
+            id="awd-service-filter-team"
+            :value="serviceTeamFilter"
+            class="matrix-select"
+            @change="emit('updateServiceTeamFilter', ($event.target as HTMLSelectElement).value)"
+          >
+            <option value="">
+              所有队伍
+            </option>
+            <option
+              v-for="team in serviceTeamOptions"
+              :key="team.team_id"
+              :value="team.team_id"
+            >
+              {{ team.team_name }}
+            </option>
+          </select>
+          <select
+            id="awd-service-filter-status"
             :value="serviceStatusFilter"
             class="matrix-select"
             @change="updateServiceStatusFilter(($event.target as HTMLSelectElement).value)"
@@ -88,6 +106,7 @@ function getServiceCheckTargets(checkResult: Record<string, unknown>) {
             </option>
           </select>
           <select
+            id="awd-service-filter-source"
             :value="serviceCheckSourceFilter"
             class="matrix-select"
             @change="emit('updateServiceCheckSourceFilter', ($event.target as HTMLSelectElement).value)"
@@ -103,8 +122,26 @@ function getServiceCheckTargets(checkResult: Record<string, unknown>) {
               {{ getCheckSourceLabel(source) }}
             </option>
           </select>
+          <select
+            id="awd-service-filter-alert"
+            :value="serviceAlertReasonFilter"
+            class="matrix-select"
+            @change="emit('updateServiceAlertReasonFilter', ($event.target as HTMLSelectElement).value)"
+          >
+            <option value="">
+              所有告警
+            </option>
+            <option
+              v-for="alert in serviceAlerts"
+              :key="alert.key"
+              :value="alert.key"
+            >
+              {{ alert.label }}
+            </option>
+          </select>
         </div>
         <button
+          id="awd-export-services"
           type="button"
           class="ops-btn ops-btn--neutral"
           @click="emit('exportServices')"
@@ -159,25 +196,25 @@ function getServiceCheckTargets(checkResult: Record<string, unknown>) {
               :key="item.team_id"
               class="studio-row"
             >
-              <td class="font-bold text-slate-900">
+              <td class="performance-team-name font-bold">
                 {{ item.team_name }}
               </td>
-              <td class="text-right font-mono font-black text-emerald-600">
+              <td class="performance-total-score text-right font-mono font-black">
                 {{ item.total_score }}
               </td>
-              <td class="text-right font-mono text-[11px] text-slate-500">
+              <td class="performance-score-breakdown text-right font-mono">
                 {{ item.sla_score ?? 0 }} / {{ item.attack_score }} / {{ item.defense_score }}
               </td>
               <td class="text-right">
                 <div class="health-stack">
-                  <span class="text-emerald-500">{{ item.service_up_count }} UP</span>
-                  <span class="text-slate-300">/</span>
-                  <span class="text-red-500">{{ item.service_down_count }} OFF</span>
-                  <span class="text-slate-300">/</span>
-                  <span class="text-orange-500">{{ item.service_compromised_count }} EXP</span>
+                  <span class="health-stack__up">{{ item.service_up_count }} UP</span>
+                  <span class="health-stack__separator">/</span>
+                  <span class="health-stack__down">{{ item.service_down_count }} OFF</span>
+                  <span class="health-stack__separator">/</span>
+                  <span class="health-stack__compromised">{{ item.service_compromised_count }} EXP</span>
                 </div>
               </td>
-              <td class="text-right text-[11px] text-slate-500">
+              <td class="performance-breach-count text-right">
                 攻破 {{ item.successful_breach_count }} 次 · {{ item.unique_attackers_against }} 攻击方
               </td>
             </tr>
@@ -247,9 +284,18 @@ function getServiceCheckTargets(checkResult: Record<string, unknown>) {
 .status-empty { text-align: center; color: var(--color-text-muted); font-family: var(--font-family-mono); font-weight: 800; }
 
 .performance-header { border-left: 3px solid var(--color-success); padding-left: 1rem; }
-.health-stack { display: inline-flex; align-items: center; gap: 0.5rem; font-family: var(--font-family-mono); font-size: 11px; font-weight: 700; }
+.health-stack { display: inline-flex; align-items: center; justify-content: flex-end; gap: 0.5rem; font-family: var(--font-family-mono); font-size: 11px; font-weight: 700; }
+.health-stack__up,
+.performance-total-score { color: var(--color-success); }
+.health-stack__down { color: var(--color-danger); }
+.health-stack__compromised { color: var(--color-warning); }
+.health-stack__separator { color: var(--color-text-muted); }
+.performance-team-name { color: var(--color-text-primary); }
+.performance-score-breakdown,
+.performance-breach-count { color: var(--color-text-secondary); font-size: var(--font-size-11); }
 .studio-table { width: 100%; border-collapse: collapse; background: var(--color-bg-surface); }
 .studio-table th { background: var(--color-bg-elevated); padding: 0.75rem 1rem; text-align: left; font-size: 10px; font-weight: 800; text-transform: uppercase; color: var(--color-text-muted); border-top: 1px solid var(--color-border-default); border-bottom: 1px solid var(--color-border-default); }
+.studio-table :is(th, td).text-right { text-align: right; }
 .studio-table td { padding: 0.85rem 1rem; border-bottom: 1px solid var(--color-border-subtle); }
 
 .ops-btn {

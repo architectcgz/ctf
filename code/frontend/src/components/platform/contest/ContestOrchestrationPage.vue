@@ -45,7 +45,7 @@ const emit = defineEmits<{
   saveCreateContest: [value: ContestFormDraft]
   updateStatusFilter: [value: StatusFilter]
   openEditDialog: [contest: ContestDetailData]
-  exportContest: [contest: ContestDetailData]
+  announce: [contest: ContestDetailData]
   changePage: [page: number]
 }>()
 
@@ -135,58 +135,58 @@ function openContestWorkbench(contest: ContestDetailData) {
           </div>
         </header>
 
-        <div class="metric-panel-grid metric-panel-grid--premium">
-          <div class="metric-panel-card metric-panel-card--premium">
-            <div class="metric-panel-label">
+        <div class="admin-summary-grid contest-overview-summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface">
+          <article class="journal-note progress-card metric-panel-card">
+            <div class="journal-note-label progress-card-label metric-panel-label">
               <span>赛事总量</span>
               <Trophy class="h-4 w-4" />
             </div>
-            <div class="metric-panel-value">
+            <div class="journal-note-value progress-card-value metric-panel-value">
               {{ total.toString().padStart(2, '0') }}
             </div>
-            <div class="metric-panel-helper">
+            <div class="journal-note-helper progress-card-hint metric-panel-helper">
               当前条件下的赛事总数
             </div>
-          </div>
+          </article>
 
-          <div class="metric-panel-card metric-panel-card--premium">
-            <div class="metric-panel-label">
+          <article class="journal-note progress-card metric-panel-card">
+            <div class="journal-note-label progress-card-label metric-panel-label">
               <span>报名中</span>
               <Users class="h-4 w-4" />
             </div>
-            <div class="metric-panel-value">
+            <div class="journal-note-value progress-card-value metric-panel-value">
               {{ registeringCount.toString().padStart(2, '0') }}
             </div>
-            <div class="metric-panel-helper">
+            <div class="journal-note-helper progress-card-hint metric-panel-helper">
               当前页开放报名的赛事
             </div>
-          </div>
+          </article>
 
-          <div class="metric-panel-card metric-panel-card--premium">
-            <div class="metric-panel-label">
+          <article class="journal-note progress-card metric-panel-card">
+            <div class="journal-note-label progress-card-label metric-panel-label">
               <span>进行中</span>
               <Activity class="h-4 w-4" />
             </div>
-            <div class="metric-panel-value">
+            <div class="journal-note-value progress-card-value metric-panel-value">
               {{ runningCount.toString().padStart(2, '0') }}
             </div>
-            <div class="metric-panel-helper">
+            <div class="journal-note-helper progress-card-hint metric-panel-helper">
               当前页正在进行的赛事
             </div>
-          </div>
+          </article>
 
-          <div class="metric-panel-card metric-panel-card--premium">
-            <div class="metric-panel-label">
+          <article class="journal-note progress-card metric-panel-card">
+            <div class="journal-note-label progress-card-label metric-panel-label">
               <span>AWD 模式</span>
               <Layers class="h-4 w-4" />
             </div>
-            <div class="metric-panel-value">
+            <div class="journal-note-value progress-card-value metric-panel-value">
               {{ awdCount.toString().padStart(2, '0') }}
             </div>
-            <div class="metric-panel-helper">
+            <div class="journal-note-helper progress-card-hint metric-panel-helper">
               已接入运维链路的赛事
             </div>
-          </div>
+          </article>
         </div>
 
         <section class="workspace-directory-section contest-directory-section">
@@ -272,7 +272,7 @@ function openContestWorkbench(contest: ContestDetailData) {
             :page-size="pageSize"
             :total="total"
             @edit="openEditContest"
-            @export="emit('exportContest', $event)"
+            @announce="emit('announce', $event)"
             @workbench="openContestWorkbench"
             @change-page="emit('changePage', $event)"
           />
@@ -345,6 +345,31 @@ function openContestWorkbench(contest: ContestDetailData) {
   --journal-note-label-color: var(--journal-muted);
   --journal-divider-border: 1px dashed color-mix(in srgb, var(--journal-border) 72%, transparent);
   --journal-shell-dark-accent: var(--color-primary-hover);
+  --ui-btn-primary-background: var(--journal-accent);
+  --ui-btn-primary-hover-background: var(--color-primary-hover);
+  --ui-btn-primary-border: color-mix(in srgb, var(--journal-accent) 34%, var(--journal-border));
+  --ui-btn-primary-hover-border: color-mix(in srgb, var(--journal-accent) 42%, transparent);
+  --ui-btn-primary-hover-shadow: 0 10px 24px
+    color-mix(in srgb, var(--journal-accent) 18%, transparent);
+  --ui-btn-secondary-background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
+  --ui-btn-secondary-color: color-mix(in srgb, var(--journal-muted) 86%, var(--journal-ink));
+  --ui-btn-secondary-border: var(--admin-control-border);
+  --ui-btn-secondary-hover-background: color-mix(
+    in srgb,
+    var(--journal-accent) 5%,
+    var(--journal-surface)
+  );
+  --ui-btn-secondary-hover-border: color-mix(
+    in srgb,
+    var(--journal-accent) 22%,
+    var(--admin-control-border)
+  );
+  --ui-btn-secondary-hover-color: var(--journal-ink);
+  --ui-btn-ghost-color: color-mix(in srgb, var(--journal-muted) 92%, var(--journal-ink));
+  --ui-btn-ghost-hover-background: color-mix(in srgb, var(--journal-accent) 7%, transparent);
+  --ui-btn-ghost-hover-color: var(--journal-accent);
+  --ui-btn-focus-ring: color-mix(in srgb, var(--journal-accent) 30%, transparent);
+  --action-menu-accent: var(--journal-accent);
 }
 
 .content-pane {
@@ -362,6 +387,8 @@ function openContestWorkbench(contest: ContestDetailData) {
 .contest-overview-head {
   display: grid;
   gap: var(--space-4);
+  padding-bottom: var(--space-6);
+  border-bottom: 1px solid var(--workspace-line-soft);
 }
 
 .contest-panel-actions {
@@ -373,13 +400,14 @@ function openContestWorkbench(contest: ContestDetailData) {
 
 .contest-directory-section,
 .contest-create-panel {
-  --workspace-directory-section-padding: var(--space-2) 0;
+  --workspace-directory-section-padding: var(--space-5) var(--space-5-5);
   background: transparent;
   border: none;
 }
 
-.contest-directory-section :deep(.workspace-directory-toolbar) {
-  margin-bottom: 0.5rem;
+.contest-overview-summary.metric-panel-default-surface.metric-panel-workspace-surface {
+  --metric-panel-columns: 4;
+  --metric-panel-border: color-mix(in srgb, var(--workspace-brand) 16%, var(--workspace-line-soft));
 }
 
 .contest-create-head {

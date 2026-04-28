@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"context"
 	"errors"
 	"strings"
 	"time"
@@ -28,8 +29,8 @@ func NewTopologyService(repo challengeports.ChallengeTopologyRepository, templat
 	}
 }
 
-func (s *TopologyService) SaveChallengeTopology(challengeID int64, req *dto.SaveChallengeTopologyReq) (*dto.ChallengeTopologyResp, error) {
-	challenge, err := s.repo.FindByID(challengeID)
+func (s *TopologyService) SaveChallengeTopology(ctx context.Context, challengeID int64, req *dto.SaveChallengeTopologyReq) (*dto.ChallengeTopologyResp, error) {
+	challenge, err := s.repo.FindByID(ctx, challengeID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrChallengeNotFound
@@ -37,19 +38,19 @@ func (s *TopologyService) SaveChallengeTopology(challengeID int64, req *dto.Save
 		return nil, err
 	}
 
-	rawSpec, entryNodeKey, templateID, err := s.resolveTopologyPayload(req)
+	rawSpec, entryNodeKey, templateID, err := s.resolveTopologyPayload(ctx, req)
 	if err != nil {
 		return nil, err
 	}
 	if err := validateSharedTopologyConstraint(challenge, rawSpec); err != nil {
 		return nil, err
 	}
-	if err := s.ensureTopologyImagesExist(rawSpec); err != nil {
+	if err := s.ensureTopologyImagesExist(ctx, rawSpec); err != nil {
 		return nil, err
 	}
 
 	var existing *model.ChallengeTopology
-	existing, err = s.repo.FindChallengeTopologyByChallengeID(challengeID)
+	existing, err = s.repo.FindChallengeTopologyByChallengeID(ctx, challengeID)
 	switch {
 	case err == nil:
 	case errors.Is(err, gorm.ErrRecordNotFound):
@@ -76,15 +77,15 @@ func (s *TopologyService) SaveChallengeTopology(challengeID int64, req *dto.Save
 		item.SourceType = model.ChallengeTopologySourceTypeManual
 		item.SyncStatus = model.ChallengeTopologySyncStatusClean
 	}
-	if err := s.repo.UpsertChallengeTopology(item); err != nil {
+	if err := s.repo.UpsertChallengeTopology(ctx, item); err != nil {
 		return nil, err
 	}
 	if templateID != nil {
-		if err := s.templateRepo.IncrementUsage(*templateID); err != nil {
+		if err := s.templateRepo.IncrementUsage(ctx, *templateID); err != nil {
 			return nil, err
 		}
 	}
-	saved, err := s.repo.FindChallengeTopologyByChallengeID(challengeID)
+	saved, err := s.repo.FindChallengeTopologyByChallengeID(ctx, challengeID)
 	if err != nil {
 		return nil, err
 	}
@@ -117,22 +118,22 @@ func validateSharedTopologyConstraint(challenge *model.Challenge, rawSpec string
 	return nil
 }
 
-func (s *TopologyService) DeleteChallengeTopology(challengeID int64) error {
-	if _, err := s.repo.FindByID(challengeID); err != nil {
+func (s *TopologyService) DeleteChallengeTopology(ctx context.Context, challengeID int64) error {
+	if _, err := s.repo.FindByID(ctx, challengeID); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return errcode.ErrChallengeNotFound
 		}
 		return err
 	}
-	return s.repo.DeleteChallengeTopologyByChallengeID(challengeID)
+	return s.repo.DeleteChallengeTopologyByChallengeID(ctx, challengeID)
 }
 
-func (s *TopologyService) CreateTemplate(req *dto.UpsertEnvironmentTemplateReq) (*dto.EnvironmentTemplateResp, error) {
+func (s *TopologyService) CreateTemplate(ctx context.Context, req *dto.UpsertEnvironmentTemplateReq) (*dto.EnvironmentTemplateResp, error) {
 	rawSpec, entryNodeKey, err := domain.BuildTopologySpec(req.EntryNodeKey, req.Networks, req.Nodes, req.Links, req.Policies)
 	if err != nil {
 		return nil, err
 	}
-	if err := s.ensureTopologyImagesExist(rawSpec); err != nil {
+	if err := s.ensureTopologyImagesExist(ctx, rawSpec); err != nil {
 		return nil, err
 	}
 	item := &model.EnvironmentTemplate{
@@ -141,14 +142,14 @@ func (s *TopologyService) CreateTemplate(req *dto.UpsertEnvironmentTemplateReq) 
 		EntryNodeKey: entryNodeKey,
 		Spec:         rawSpec,
 	}
-	if err := s.templateRepo.Create(item); err != nil {
+	if err := s.templateRepo.Create(ctx, item); err != nil {
 		return nil, err
 	}
 	return domain.TemplateRespFromModel(item)
 }
 
-func (s *TopologyService) UpdateTemplate(id int64, req *dto.UpsertEnvironmentTemplateReq) (*dto.EnvironmentTemplateResp, error) {
-	item, err := s.templateRepo.FindByID(id)
+func (s *TopologyService) UpdateTemplate(ctx context.Context, id int64, req *dto.UpsertEnvironmentTemplateReq) (*dto.EnvironmentTemplateResp, error) {
+	item, err := s.templateRepo.FindByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrNotFound
@@ -159,7 +160,7 @@ func (s *TopologyService) UpdateTemplate(id int64, req *dto.UpsertEnvironmentTem
 	if err != nil {
 		return nil, err
 	}
-	if err := s.ensureTopologyImagesExist(rawSpec); err != nil {
+	if err := s.ensureTopologyImagesExist(ctx, rawSpec); err != nil {
 		return nil, err
 	}
 	item.Name = strings.TrimSpace(req.Name)
@@ -167,25 +168,25 @@ func (s *TopologyService) UpdateTemplate(id int64, req *dto.UpsertEnvironmentTem
 	item.EntryNodeKey = entryNodeKey
 	item.Spec = rawSpec
 	item.UpdatedAt = time.Now()
-	if err := s.templateRepo.Update(item); err != nil {
+	if err := s.templateRepo.Update(ctx, item); err != nil {
 		return nil, err
 	}
 	return domain.TemplateRespFromModel(item)
 }
 
-func (s *TopologyService) DeleteTemplate(id int64) error {
-	if _, err := s.templateRepo.FindByID(id); err != nil {
+func (s *TopologyService) DeleteTemplate(ctx context.Context, id int64) error {
+	if _, err := s.templateRepo.FindByID(ctx, id); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return errcode.ErrNotFound
 		}
 		return err
 	}
-	return s.templateRepo.Delete(id)
+	return s.templateRepo.Delete(ctx, id)
 }
 
-func (s *TopologyService) resolveTopologyPayload(req *dto.SaveChallengeTopologyReq) (rawSpec, entryNodeKey string, templateID *int64, err error) {
+func (s *TopologyService) resolveTopologyPayload(ctx context.Context, req *dto.SaveChallengeTopologyReq) (rawSpec, entryNodeKey string, templateID *int64, err error) {
 	if req.TemplateID != nil {
-		item, findErr := s.templateRepo.FindByID(*req.TemplateID)
+		item, findErr := s.templateRepo.FindByID(ctx, *req.TemplateID)
 		if findErr != nil {
 			if errors.Is(findErr, gorm.ErrRecordNotFound) {
 				return "", "", nil, errcode.ErrNotFound.WithCause(errors.New("环境模板不存在"))
@@ -202,7 +203,7 @@ func (s *TopologyService) resolveTopologyPayload(req *dto.SaveChallengeTopologyR
 	return rawSpec, entryNodeKey, nil, nil
 }
 
-func (s *TopologyService) ensureTopologyImagesExist(rawSpec string) error {
+func (s *TopologyService) ensureTopologyImagesExist(ctx context.Context, rawSpec string) error {
 	spec, err := model.DecodeTopologySpec(rawSpec)
 	if err != nil {
 		return err
@@ -216,7 +217,7 @@ func (s *TopologyService) ensureTopologyImagesExist(rawSpec string) error {
 			continue
 		}
 		seen[node.ImageID] = struct{}{}
-		if _, findErr := s.imageRepo.FindByID(node.ImageID); findErr != nil {
+		if _, findErr := s.imageRepo.FindByID(ctx, node.ImageID); findErr != nil {
 			if errors.Is(findErr, gorm.ErrRecordNotFound) {
 				return errcode.ErrInvalidParams.WithCause(errors.New("拓扑节点引用的镜像不存在"))
 			}

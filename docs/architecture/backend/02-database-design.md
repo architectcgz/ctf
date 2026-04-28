@@ -212,6 +212,8 @@ CREATE UNIQUE INDEX uk_images_name_tag ON images(name, tag) WHERE deleted_at IS 
   -- 用途：同名同标签镜像唯一，防止重复注册
 CREATE INDEX idx_images_status ON images(status);
   -- 用途：按状态筛选镜像列表（如只看 ready 状态）
+CREATE INDEX idx_images_deleted_at ON images(deleted_at);
+  -- 用途：加速软删除过滤与镜像目录查询
 ```
 
 ### 5.2 challenges — 靶机表
@@ -1085,8 +1087,7 @@ CREATE INDEX idx_notifications_user_type ON notifications(user_id, type, created
 
 | 键名模式 | 数据结构 | TTL | 用途 |
 |----------|----------|-----|------|
-| `ctf:token:{user_id}` | STRING (JWT refresh token hash) | 7d | 用户 Refresh Token 存储，登出时删除实现强制下线 |
-| `ctf:token:revoked_after:{user_id}` | STRING (Unix 秒) | 与 Refresh TTL 对齐 | 用户维度吊销时间点（修改密码/管理员强制下线：设置为 now；鉴权时校验 iat >= revoked_after） |
+| `ctf:auth:session:{session_id}` | STRING (session json) | 7d | 服务端 session 存储；登出或强制下线时删除 |
 | `ctf:login_fail:{username}` | STRING (int 计数) | 30min | 登录失败计数，达到阈值后触发账户锁定 |
 | `ctf:user:profile:{user_id}` | HASH | 30min | 用户基本信息缓存（减少 DB 查询） |
 | `ctf:user:roles:{user_id}` | SET | 30min | 用户角色列表缓存 |

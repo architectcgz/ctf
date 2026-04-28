@@ -1,6 +1,7 @@
 package queries
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"regexp"
@@ -34,20 +35,20 @@ func NewFlagService(repo ports.ChallengeFlagRepository, globalSecret string) (*F
 	}, nil
 }
 
-func (s *FlagService) GenerateDynamicFlag(userID, challengeID int64, nonce string) (string, error) {
+func (s *FlagService) GenerateDynamicFlag(ctx context.Context, userID, challengeID int64, nonce string) (string, error) {
 	if nonce == "" {
 		return "", errcode.ErrInvalidParams
 	}
 
-	challenge, err := s.loadChallenge(challengeID)
+	challenge, err := s.loadChallenge(ctx, challengeID)
 	if err != nil {
 		return "", err
 	}
 	return crypto.GenerateDynamicFlag(userID, challengeID, s.globalSecret, nonce, challenge.FlagPrefix), nil
 }
 
-func (s *FlagService) ValidateFlag(userID, challengeID int64, input string, nonce string) (bool, error) {
-	challenge, err := s.loadChallenge(challengeID)
+func (s *FlagService) ValidateFlag(ctx context.Context, userID, challengeID int64, input string, nonce string) (bool, error) {
+	challenge, err := s.loadChallenge(ctx, challengeID)
 	if err != nil {
 		return false, err
 	}
@@ -61,7 +62,7 @@ func (s *FlagService) ValidateFlag(userID, challengeID int64, input string, nonc
 	case model.FlagTypeManualReview:
 		return false, nil
 	case model.FlagTypeDynamic:
-		expectedFlag, err := s.GenerateDynamicFlag(userID, challengeID, nonce)
+		expectedFlag, err := s.GenerateDynamicFlag(ctx, userID, challengeID, nonce)
 		if err != nil {
 			return false, err
 		}
@@ -71,8 +72,8 @@ func (s *FlagService) ValidateFlag(userID, challengeID int64, input string, nonc
 	}
 }
 
-func (s *FlagService) GetFlagConfig(challengeID int64) (*dto.FlagResp, error) {
-	challenge, err := s.loadChallenge(challengeID)
+func (s *FlagService) GetFlagConfig(ctx context.Context, challengeID int64) (*dto.FlagResp, error) {
+	challenge, err := s.loadChallenge(ctx, challengeID)
 	if err != nil {
 		return nil, err
 	}
@@ -96,8 +97,8 @@ func (s *FlagService) GetFlagConfig(challengeID int64) (*dto.FlagResp, error) {
 	}, nil
 }
 
-func (s *FlagService) loadChallenge(challengeID int64) (*model.Challenge, error) {
-	challenge, err := s.repo.FindByID(challengeID)
+func (s *FlagService) loadChallenge(ctx context.Context, challengeID int64) (*model.Challenge, error) {
+	challenge, err := s.repo.FindByID(ctx, challengeID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrNotFound

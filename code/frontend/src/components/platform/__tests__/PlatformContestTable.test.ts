@@ -41,7 +41,18 @@ describe('PlatformContestTable', () => {
     expect(adminContestTableSource).not.toContain('text-[var(--color-text-muted)]')
   })
 
-  it('应将编辑和导出结果收纳进更多菜单，并通过浮层渲染', async () => {
+  it('竞赛目录字号应与平台审计列表使用同一组目录 token', () => {
+    expect(adminContestTableSource).toContain('font-size: var(--font-size-11);')
+    expect(adminContestTableSource).toContain('font-size: var(--font-size-14);')
+    expect(adminContestTableSource).toContain('font-size: var(--font-size-13);')
+    expect(adminContestTableSource).toContain('--ui-badge-size: var(--font-size-11);')
+    expect(adminContestTableSource).not.toContain('font-size: var(--font-size-1-00);')
+    expect(adminContestTableSource).not.toContain('font-size: var(--font-size-0-875);')
+    expect(adminContestTableSource).not.toContain('font-size: var(--font-size-0-90);')
+    expect(adminContestTableSource).not.toContain('--ui-badge-size: var(--font-size-0-78);')
+  })
+
+  it('行内操作应直接提供编辑入口，更多菜单不再承载导出结果', async () => {
     const wrapper = mount(PlatformContestTable, {
       attachTo: document.body,
       props: {
@@ -52,8 +63,14 @@ describe('PlatformContestTable', () => {
       },
     })
 
-    expect(wrapper.text()).toContain('进入 AWD 赛区')
-    expect(wrapper.findAll('.contest-action').length).toBe(1)
+    expect(wrapper.text()).toContain('进入运维台')
+    expect(wrapper.findAll('.contest-action').length).toBe(2)
+    expect(wrapper.get('#contest-row-edit-awd-running').text()).toContain('编辑')
+
+    await wrapper.get('#contest-row-edit-awd-running').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.emitted('edit')?.[0]?.[0]).toMatchObject({ id: 'awd-running' })
 
     await wrapper.get('#contest-row-more-awd-running').trigger('click')
     await flushPromises()
@@ -61,24 +78,63 @@ describe('PlatformContestTable', () => {
     const teleportedMenu = document.body.querySelector('[data-action-menu-panel]')
     expect(teleportedMenu).not.toBeNull()
     expect(wrapper.find('.workspace-directory-list [data-action-menu-panel]').exists()).toBe(false)
-    const editButton = document.body.querySelector<HTMLButtonElement>(
-      '#contest-row-menu-edit-awd-running'
-    )
     const exportButton = document.body.querySelector<HTMLButtonElement>(
       '#contest-row-menu-export-awd-running'
     )
-    expect(editButton?.textContent).toContain('编辑')
-    expect(exportButton?.textContent).toContain('导出结果')
+    expect(document.body.querySelector('#contest-row-menu-edit-awd-running')).toBeNull()
+    expect(exportButton).toBeNull()
 
-    editButton?.click()
-    await flushPromises()
-    expect(wrapper.emitted('edit')?.[0]?.[0]).toMatchObject({ id: 'awd-running' })
+    wrapper.unmount()
+  })
+
+  it('未结束竞赛的更多菜单应提供发布通知入口并抛出 announce 事件', async () => {
+    const wrapper = mount(PlatformContestTable, {
+      attachTo: document.body,
+      props: {
+        contests: [buildContest()],
+        page: 1,
+        pageSize: 20,
+        total: 1,
+      },
+    })
 
     await wrapper.get('#contest-row-more-awd-running').trigger('click')
     await flushPromises()
-    document.body.querySelector<HTMLButtonElement>('#contest-row-menu-export-awd-running')?.click()
+
+    const announceButton = document.body.querySelector<HTMLButtonElement>(
+      '#contest-row-menu-announce-awd-running'
+    )
+    expect(announceButton?.textContent).toContain('发布通知')
+
+    announceButton?.click()
     await flushPromises()
-    expect(wrapper.emitted('export')?.[0]?.[0]).toMatchObject({ id: 'awd-running' })
+
+    expect(wrapper.emitted('announce')?.[0]?.[0]).toMatchObject({ id: 'awd-running' })
+
+    wrapper.unmount()
+  })
+
+  it('已结束竞赛不显示更多菜单，但仍可进入运维台与编辑', async () => {
+    const wrapper = mount(PlatformContestTable, {
+      attachTo: document.body,
+      props: {
+        contests: [buildContest({ id: 'contest-ended', status: 'ended' })],
+        page: 1,
+        pageSize: 20,
+        total: 1,
+      },
+    })
+
+    expect(wrapper.get('#contest-open-workbench-contest-ended').text()).toContain('进入运维台')
+    expect(wrapper.get('#contest-row-edit-contest-ended').text()).toContain('编辑')
+    expect(wrapper.find('#contest-row-more-contest-ended').exists()).toBe(false)
+
+    await wrapper.get('#contest-open-workbench-contest-ended').trigger('click')
+    await wrapper.get('#contest-row-edit-contest-ended').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.emitted('workbench')?.[0]?.[0]).toMatchObject({ id: 'contest-ended' })
+    expect(wrapper.emitted('edit')?.[0]?.[0]).toMatchObject({ id: 'contest-ended' })
 
     wrapper.unmount()
   })

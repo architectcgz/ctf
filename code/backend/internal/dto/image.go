@@ -3,25 +3,26 @@ package dto
 import "time"
 
 type CreateImageReq struct {
-	Name        string `json:"name" binding:"required"`
-	Tag         string `json:"tag" binding:"required"`
+	Name        string `json:"name" binding:"required,ctf_image_name"`
+	Tag         string `json:"tag" binding:"required,ctf_image_tag"`
 	Description string `json:"description"`
 }
 
 type UpdateImageReq struct {
-	Description string `json:"description"`
-	Status      string `json:"status" binding:"omitempty,oneof=pending building available failed"`
+	Description *string `json:"description"`
+	Status      string  `json:"status" binding:"omitempty,oneof=pending building available failed"`
 }
 
 type ImageResp struct {
-	ID          int64     `json:"id"`
-	Name        string    `json:"name"`
-	Tag         string    `json:"tag"`
-	Description string    `json:"description"`
-	Size        int64     `json:"size"`
-	Status      string    `json:"status"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	ID            int64     `json:"id"`
+	Name          string    `json:"name"`
+	Tag           string    `json:"tag"`
+	Description   string    `json:"description"`
+	Size          int64     `json:"size"`
+	SizeFormatted string    `json:"size_formatted"`
+	Status        string    `json:"status"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
 }
 
 type ImageQuery struct {

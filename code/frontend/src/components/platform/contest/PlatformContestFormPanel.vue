@@ -1,12 +1,6 @@
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from 'vue'
-import { 
-  FileText, 
-  Settings, 
-  Clock, 
-  Swords, 
-  Trophy,
-} from 'lucide-vue-next'
+import { reactive, ref, watch } from 'vue'
+import { FileText, Settings, Clock, Swords, Trophy } from 'lucide-vue-next'
 
 import type { ContestFieldLocks, ContestFormDraft } from '@/composables/usePlatformContests'
 import { getStatusLabel } from '@/utils/contest'
@@ -76,8 +70,12 @@ function validate(): boolean {
   if (!localDraft.title.trim()) fieldErrors.title = '请填写竞赛标题'
   if (!localDraft.starts_at) fieldErrors.starts_at = '请填写开始时间'
   if (!localDraft.ends_at) fieldErrors.ends_at = '请填写结束时间'
-  
-  if (localDraft.starts_at && localDraft.ends_at && new Date(localDraft.ends_at) <= new Date(localDraft.starts_at)) {
+
+  if (
+    localDraft.starts_at &&
+    localDraft.ends_at &&
+    new Date(localDraft.ends_at) <= new Date(localDraft.starts_at)
+  ) {
     fieldErrors.ends_at = '结束时间必须晚于开始时间'
   }
   return !fieldErrors.title && !fieldErrors.starts_at && !fieldErrors.ends_at
@@ -94,33 +92,32 @@ function handleSubmit() {
     class="studio-settings-layout"
     @submit.prevent="handleSubmit"
   >
-    <!-- Section: Identity -->
-    <section class="settings-group">
+    <section class="settings-group settings-group--identity">
       <div class="settings-group__info">
         <div class="info-icon">
-          <FileText class="h-4 w-4" />
+          <FileText class="info-icon__glyph" />
         </div>
-        <h3 class="info-title">
-          核心标识
+        <h3 class="list-heading__title">
+          基础信息
         </h3>
         <p class="info-desc">
           定义竞赛在平台展示的基础信息与访问权限。
         </p>
       </div>
-      
+
       <div class="settings-group__content">
-        <div class="settings-row">
+        <div class="ui-field contest-form-field settings-row">
           <label class="row-label">竞赛标题</label>
           <div class="row-control">
             <div
-              class="control-wrap"
+              class="ui-control-wrap control-wrap"
               :class="{ 'is-error': !!fieldErrors.title }"
             >
               <input
                 id="contest-title"
                 v-model="localDraft.title"
                 type="text"
-                class="studio-input"
+                class="ui-control"
                 placeholder="输入竞赛标题..."
               >
             </div>
@@ -136,15 +133,15 @@ function handleSubmit() {
           </div>
         </div>
 
-        <div class="settings-row">
+        <div class="ui-field contest-form-field settings-row">
           <label class="row-label">竞赛描述</label>
           <div class="row-control">
-            <div class="control-wrap">
+            <div class="ui-control-wrap control-wrap">
               <textarea
                 id="contest-description"
                 v-model="localDraft.description"
                 rows="4"
-                class="studio-textarea"
+                class="ui-control studio-textarea"
                 placeholder="描述竞赛的背景、赛制及对参赛者的要求..."
               />
             </div>
@@ -156,49 +153,50 @@ function handleSubmit() {
       </div>
     </section>
 
-    <!-- Section: Configuration -->
-    <section class="settings-group">
+    <section class="settings-group settings-group--rules">
       <div class="settings-group__info">
         <div class="info-icon">
-          <Settings class="h-4 w-4" />
+          <Settings class="info-icon__glyph" />
         </div>
-        <h3 class="info-title">
+        <h3 class="list-heading__title">
           赛制与状态
         </h3>
         <p class="info-desc">
           控制竞赛的底层逻辑模式与全平台生命周期。
         </p>
       </div>
-      
+
       <div class="settings-group__content">
-        <div class="settings-row">
+        <div class="ui-field contest-form-field settings-row">
           <label class="row-label">竞技模式</label>
           <div class="row-control">
-            <div class="flex gap-4">
-              <button 
-                type="button" 
-                class="mode-card" 
+            <div class="mode-options">
+              <button
+                type="button"
+                class="mode-card"
                 :class="{ active: localDraft.mode === 'jeopardy', disabled: fieldLocks.mode }"
+                :disabled="fieldLocks.mode"
                 @click="!fieldLocks.mode && (localDraft.mode = 'jeopardy')"
               >
-                <Trophy class="h-5 w-5 mb-2" />
+                <Trophy class="mode-card__icon" />
                 <span class="mode-label">Jeopardy</span>
                 <span class="mode-desc">经典夺旗解题赛</span>
               </button>
-              <button 
-                type="button" 
-                class="mode-card" 
+              <button
+                type="button"
+                class="mode-card"
                 :class="{ active: localDraft.mode === 'awd', disabled: fieldLocks.mode }"
+                :disabled="fieldLocks.mode"
                 @click="!fieldLocks.mode && (localDraft.mode = 'awd')"
               >
-                <Swords class="h-5 w-5 mb-2" />
+                <Swords class="mode-card__icon" />
                 <span class="mode-label">AWD</span>
                 <span class="mode-desc">实时攻防对抗赛</span>
               </button>
             </div>
             <p
               v-if="fieldLocks.mode"
-              class="field-hint text-orange-500 mt-3 font-bold"
+              class="field-hint field-hint--warning field-hint--strong"
             >
               竞赛已生效，模式锁定不可更改。
             </p>
@@ -207,15 +205,15 @@ function handleSubmit() {
 
         <div
           v-if="mode === 'edit'"
-          class="settings-row"
+          class="ui-field contest-form-field settings-row"
         >
           <label class="row-label">运行阶段</label>
           <div class="row-control">
-            <div class="control-wrap">
+            <div class="ui-control-wrap control-wrap">
               <select
                 id="contest-status"
                 v-model="localDraft.status"
-                class="studio-select"
+                class="ui-control studio-select"
               >
                 <option
                   v-for="option in statusOptions"
@@ -234,66 +232,65 @@ function handleSubmit() {
       </div>
     </section>
 
-    <!-- Section: Timeline -->
-    <section class="settings-group">
+    <section class="settings-group settings-group--timeline">
       <div class="settings-group__info">
         <div class="info-icon">
-          <Clock class="h-4 w-4" />
+          <Clock class="info-icon__glyph" />
         </div>
-        <h3 class="info-title">
-          时间窗口
+        <h3 class="list-heading__title">
+          赛制与时间
         </h3>
         <p class="info-desc">
           精确配置比赛的启停节点，系统将按此时钟自动调度。
         </p>
       </div>
-      
+
       <div class="settings-group__content">
         <div class="settings-row">
           <label class="row-label">赛程时间轴</label>
           <div class="row-control">
-            <div class="flex items-center gap-4">
-              <div class="flex-1">
+            <div class="timeline-fields">
+              <div class="timeline-field">
                 <div
-                  class="control-wrap"
+                  class="ui-control-wrap control-wrap"
                   :class="{ 'is-disabled': fieldLocks.starts_at }"
                 >
                   <input
                     id="contest-starts-at"
                     v-model="localDraft.starts_at"
                     type="datetime-local"
-                    class="studio-input"
+                    class="ui-control studio-input"
                     :disabled="fieldLocks.starts_at"
                   >
                 </div>
-                <p class="field-hint mt-1">
+                <p class="field-hint field-hint--compact">
                   开始时间
                 </p>
               </div>
-              <div class="text-slate-300">
+              <div class="timeline-divider">
                 ——
               </div>
-              <div class="flex-1">
+              <div class="timeline-field">
                 <div
-                  class="control-wrap"
+                  class="ui-control-wrap control-wrap"
                   :class="{ 'is-disabled': fieldLocks.ends_at }"
                 >
                   <input
                     id="contest-ends-at"
                     v-model="localDraft.ends_at"
                     type="datetime-local"
-                    class="studio-input"
+                    class="ui-control studio-input"
                     :disabled="fieldLocks.ends_at"
                   >
                 </div>
-                <p class="field-hint mt-1">
+                <p class="field-hint field-hint--compact">
                   结束时间
                 </p>
               </div>
             </div>
             <p
               v-if="fieldErrors.starts_at || fieldErrors.ends_at"
-              class="field-error mt-2"
+              class="field-error field-error--spaced"
             >
               {{ fieldErrors.starts_at || fieldErrors.ends_at }}
             </p>
@@ -306,7 +303,7 @@ function handleSubmit() {
       <button
         v-if="showCancel"
         type="button"
-        class="ui-btn ui-btn--ghost contest-form-button contest-form-button--secondary"
+        class="ui-btn ui-btn--secondary contest-form-button contest-form-button--secondary"
         @click="emit('cancel')"
       >
         取消
@@ -324,92 +321,332 @@ function handleSubmit() {
 
 <style scoped>
 .studio-settings-layout {
+  --contest-form-aside-min-width: var(--ui-selector-control-min-width);
+  --contest-form-section-gap: var(--space-section-gap);
+  --contest-form-section-gap-compact: var(--space-section-gap-compact);
+  --contest-form-inline-gap: var(--space-4);
+  --contest-form-control-padding-y: var(--space-3);
+
   width: 100%;
-  max-width: 64rem;
+  max-width: none;
   margin: 0 auto;
-  padding: 4rem 2rem;
-  display: flex;
-  flex-direction: column;
-  gap: 5rem;
+  padding: var(--space-6) var(--space-8);
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1.1fr)
+    minmax(var(--contest-form-aside-min-width), 0.8fr)
+    minmax(var(--contest-form-aside-min-width), 0.8fr);
+  grid-template-areas:
+    'identity rules timeline'
+    'actions actions actions';
+  align-items: start;
+  gap: var(--space-6) var(--space-8);
 }
 
 .settings-group {
-  display: grid;
-  grid-template-columns: 18rem 1fr;
-  gap: 4rem;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.settings-group--identity {
+  grid-area: identity;
+}
+
+.settings-group--rules {
+  grid-area: rules;
+}
+
+.settings-group--timeline {
+  grid-area: timeline;
 }
 
 .settings-group__info {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas:
+    'icon title'
+    'icon desc';
+  column-gap: var(--space-4);
+  align-items: start;
+  min-width: 0;
 }
 
 .info-icon {
-  width: 2.25rem; height: 2.25rem; border-radius: 0.75rem;
-  background: var(--color-primary-soft); color: var(--color-primary);
-  display: flex; align-items: center; justify-content: center;
-  margin-bottom: 1.25rem;
+  grid-area: icon;
+  width: var(--ui-control-height-md);
+  height: var(--ui-control-height-md);
+  border-radius: var(--ui-control-radius-md);
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.info-title { font-size: var(--font-size-1-00); font-weight: 900; color: var(--color-text-primary); margin: 0; }
-.info-desc { font-size: var(--font-size-13); color: var(--color-text-secondary); line-height: 1.6; margin-top: 0.5rem; }
+.settings-group__info .list-heading__title {
+  grid-area: title;
+  margin: 0;
+}
+
+.info-icon__glyph {
+  width: var(--space-4);
+  height: var(--space-4);
+}
+
+.info-desc {
+  grid-area: desc;
+  font-size: var(--font-size-13);
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+  margin: var(--space-1) 0 0;
+}
 
 .settings-group__content {
   display: flex;
   flex-direction: column;
-  gap: 2.5rem;
+  gap: var(--space-4);
+  min-width: 0;
 }
 
 .settings-row {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: var(--ui-field-gap);
 }
 
-.row-label { font-size: var(--font-size-13); font-weight: 800; color: var(--color-text-primary); }
-.row-control { width: 100%; max-width: 36rem; }
+.row-label {
+  font-size: var(--font-size-13);
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+
+.row-control {
+  width: 100%;
+  min-width: 0;
+}
 
 .control-wrap {
-  width: 100%; border-radius: 0.8rem; border: 1px solid var(--color-border-default);
-  background: var(--color-bg-surface); transition: all 0.2s ease;
+  width: 100%;
+  border-radius: var(--ui-control-radius-md);
+  border: 1px solid var(--color-border-default);
+  background: var(--color-bg-surface);
+  transition:
+    border-color var(--ui-motion-fast),
+    background var(--ui-motion-fast),
+    box-shadow var(--ui-motion-fast);
   overflow: hidden;
 }
-.control-wrap:focus-within { border-color: var(--color-primary); box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-primary) 12%, transparent); }
-.control-wrap.is-error { border-color: var(--color-danger); }
-.control-wrap.is-disabled { background: var(--color-bg-elevated); opacity: 0.7; cursor: not-allowed; }
 
-.studio-input, .studio-select, .studio-textarea {
-  width: 100%; border: none; background: transparent; padding: 0.65rem 0.85rem;
-  font-size: var(--font-size-14); font-weight: 600; color: var(--color-text-primary); outline: none;
+.control-wrap:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 var(--ui-focus-ring-width)
+    color-mix(in srgb, var(--color-primary) 18%, transparent);
 }
-.studio-textarea { min-height: 7rem; resize: vertical; line-height: 1.6; }
 
-.field-hint { font-size: var(--font-size-12); color: var(--color-text-muted); margin-top: 0.45rem; font-weight: 500; }
-.field-error { font-size: var(--font-size-12); color: var(--color-danger); font-weight: 700; }
+.control-wrap.is-error {
+  border-color: var(--color-danger);
+}
+
+.control-wrap.is-disabled {
+  background: var(--color-bg-elevated);
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.ui-control,
+.studio-input,
+.studio-select,
+.studio-textarea {
+  width: 100%;
+  border: none;
+  background: transparent;
+  padding: var(--contest-form-control-padding-y) var(--ui-control-padding-x-md);
+  font-size: var(--font-size-14);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  outline: none;
+}
+
+.studio-textarea {
+  min-height: calc(var(--ui-control-height-md) * 3.5);
+  resize: vertical;
+  line-height: 1.6;
+}
+
+.field-hint {
+  font-size: var(--font-size-12);
+  color: var(--color-text-muted);
+  margin: var(--space-2) 0 0;
+  font-weight: 500;
+}
+
+.field-hint--warning,
+.timeline-divider {
+  color: var(--color-warning);
+}
+
+.field-hint--strong {
+  font-weight: 700;
+}
+
+.field-hint--compact {
+  margin-top: var(--space-1);
+}
+
+.field-error {
+  font-size: var(--font-size-12);
+  color: var(--color-danger);
+  font-weight: 700;
+}
+
+.field-error--spaced {
+  margin-top: var(--space-2);
+}
 
 .contest-form-actions {
+  grid-area: actions;
   display: flex;
   justify-content: flex-end;
-  gap: 0.75rem;
-  margin-top: -1rem;
+  gap: var(--ui-action-gap);
+  padding-top: var(--space-4);
+  border-top: 1px solid color-mix(in srgb, var(--color-border-default) 74%, transparent);
 }
 
-/* Mode Cards */
+.mode-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--contest-form-inline-gap);
+}
+
 .mode-card {
-  flex: 1; padding: 1.5rem; border-radius: 1rem; border: 1px solid var(--color-border-default);
-  background: var(--color-bg-surface); display: flex; flex-direction: column; align-items: center;
-  cursor: pointer; transition: all 0.2s ease; color: var(--color-text-secondary);
+  min-width: 0;
+  padding: var(--space-5);
+  border-radius: var(--ui-control-radius-lg);
+  border: 1px solid var(--color-border-default);
+  background: var(--color-bg-surface);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  transition:
+    border-color var(--ui-motion-fast),
+    background var(--ui-motion-fast),
+    box-shadow var(--ui-motion-fast),
+    color var(--ui-motion-fast);
+  color: var(--color-text-secondary);
 }
-.mode-card:hover:not(.disabled) { border-color: var(--color-primary); background: var(--color-bg-elevated); }
-.mode-card.active { border-color: var(--color-primary); background: var(--color-primary-soft); color: var(--color-primary); box-shadow: 0 4px 12px color-mix(in srgb, var(--color-primary) 15%, transparent); }
-.mode-card.active .mode-label { color: var(--color-text-primary); }
-.mode-card.disabled { opacity: 0.6; cursor: not-allowed; }
 
-.mode-label { font-size: var(--font-size-14); font-weight: 900; margin-bottom: 0.25rem; }
-.mode-desc { font-size: var(--font-size-11); opacity: 0.8; }
+.mode-card:hover:not(:disabled) {
+  border-color: var(--color-primary);
+  background: var(--color-bg-elevated);
+}
+
+.mode-card.active {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  box-shadow: 0 var(--space-1) var(--space-3)
+    color-mix(in srgb, var(--color-primary) 15%, transparent);
+}
+
+.mode-card.active .mode-label {
+  color: var(--color-text-primary);
+}
+
+.mode-card:disabled,
+.mode-card.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.mode-card__icon {
+  width: var(--space-5);
+  height: var(--space-5);
+  margin-bottom: var(--space-2);
+}
+
+.mode-label {
+  font-size: var(--font-size-14);
+  font-weight: 900;
+  margin-bottom: var(--space-1);
+}
+
+.mode-desc {
+  font-size: var(--font-size-11);
+  opacity: 0.8;
+}
+
+.timeline-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: start;
+  gap: var(--contest-form-inline-gap);
+}
+
+.timeline-field {
+  min-width: 0;
+}
+
+.settings-group--timeline .timeline-fields {
+  grid-template-columns: 1fr;
+}
+
+.timeline-divider {
+  padding-top: var(--contest-form-control-padding-y);
+  font-weight: 800;
+}
+
+.settings-group--timeline .timeline-divider {
+  display: none;
+}
 
 @media (max-width: 1024px) {
-  .settings-group { grid-template-columns: 1fr; gap: 1.5rem; }
-  .studio-settings-layout { padding: 2rem 1.5rem; gap: 3rem; }
+  .studio-settings-layout {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      'identity'
+      'rules'
+      'timeline'
+      'actions';
+    padding: var(--space-6);
+    gap: var(--space-6);
+  }
+
+  .settings-group--timeline .timeline-fields {
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  }
+
+  .settings-group--timeline .timeline-divider {
+    display: block;
+  }
+}
+
+@media (max-width: 640px) {
+  .studio-settings-layout {
+    padding: var(--space-5);
+  }
+
+  .settings-group__info {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      'icon'
+      'title'
+      'desc';
+  }
+
+  .info-icon {
+    margin-bottom: var(--space-3);
+  }
+
+  .mode-options,
+  .timeline-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .timeline-divider {
+    display: none;
+  }
 }
 </style>

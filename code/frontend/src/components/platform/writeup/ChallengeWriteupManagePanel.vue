@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { MoreHorizontal } from 'lucide-vue-next'
+import { FileText, MoreHorizontal, Users } from 'lucide-vue-next'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -74,7 +74,7 @@ const directoryRows = computed<WriteupDirectoryRow[]>(() => {
       title: item.title,
       preview: item.content_preview,
       authorPrimary: resolveAuthorName(item),
-      authorSecondary: `@${item.student_username}`,
+      authorSecondary: item.student_username,
       authorTertiary: resolveClassName(item),
       studentNo: resolveStudentNo(item),
       statusPrimary: submissionStatusLabel(item.submission_status),
@@ -259,11 +259,12 @@ onMounted(() => {
 
     <div class="writeup-manage-stats-shell">
       <div
-        class="admin-summary-grid writeup-summary-grid progress-strip metric-panel-grid metric-panel-default-surface"
+        class="admin-summary-grid writeup-summary-grid progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"
       >
         <article class="journal-note progress-card metric-panel-card">
           <div class="journal-note-label progress-card-label metric-panel-label">
-            官方题解
+            <span>官方题解</span>
+            <FileText class="h-4 w-4" />
           </div>
           <div class="journal-note-value progress-card-value metric-panel-value">
             {{ officialWriteupCount }}
@@ -274,7 +275,8 @@ onMounted(() => {
         </article>
         <article class="journal-note progress-card metric-panel-card">
           <div class="journal-note-label progress-card-label metric-panel-label">
-            学员题解
+            <span>学员题解</span>
+            <Users class="h-4 w-4" />
           </div>
           <div class="journal-note-value progress-card-value metric-panel-value">
             {{ submissionTotal }}
@@ -297,7 +299,7 @@ onMounted(() => {
       <section class="writeup-manage-section">
         <header class="list-heading writeup-manage-section__head">
           <div class="writeup-manage-section__intro">
-            <div class="journal-note-label">
+            <div class="workspace-overline">
               Writeup Directory
             </div>
             <h2 class="list-heading__title">
@@ -498,6 +500,8 @@ onMounted(() => {
   align-items: flex-start;
   justify-content: space-between;
   gap: var(--space-4);
+  padding-bottom: var(--space-6);
+  border-bottom: 1px solid var(--workspace-line-soft, color-mix(in srgb, var(--journal-border) 88%, transparent));
 }
 
 .list-heading {
@@ -724,7 +728,7 @@ onMounted(() => {
 .writeup-manage-actions > .ui-btn,
 .writeup-manage-section :deep(.app-empty__actions .ui-btn) {
   --ui-btn-primary-background: var(--journal-accent);
-  --ui-btn-primary-hover-background: color-mix(in srgb, var(--journal-accent) 88%, black);
+  --ui-btn-primary-hover-background: color-mix(in srgb, var(--journal-accent) 88%, var(--color-bg-base));
   --ui-btn-primary-border: color-mix(in srgb, var(--journal-accent) 18%, transparent);
 }
 

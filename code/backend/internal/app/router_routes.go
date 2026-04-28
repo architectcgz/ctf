@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"errors"
 	"strconv"
 
@@ -26,6 +27,7 @@ type adminRouteDeps struct {
 	challenge       *composition.ChallengeModule
 	contest         *composition.ContestModule
 	ops             *composition.OpsModule
+	practice        *composition.PracticeModule
 }
 
 type userRouteDeps struct {
@@ -41,7 +43,7 @@ type userRouteDeps struct {
 }
 
 type challengeLookup interface {
-	FindByID(id int64) (*model.Challenge, error)
+	FindByID(ctx context.Context, id int64) (*model.Challenge, error)
 }
 
 func routeAudit(recorder auditlog.Recorder, logger *zap.Logger, options middleware.AuditOptions) gin.HandlerFunc {
@@ -63,7 +65,7 @@ func challengeOwnerGuard(catalog challengeLookup) gin.HandlerFunc {
 			return
 		}
 
-		challenge, err := catalog.FindByID(challengeID)
+		challenge, err := catalog.FindByID(c.Request.Context(), challengeID)
 		if err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				response.Error(c, errcode.ErrChallengeNotFound)
@@ -500,6 +502,19 @@ func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 		middleware.ParseInt64Param("id"),
 		deps.contest.AWDHandler.ListContestAWDServices,
 	)
+	adminOnly.GET("/contests/:id/awd/instances",
+		middleware.ParseInt64Param("id"),
+		deps.practice.Handler.GetAdminContestAWDInstanceOrchestration,
+	)
+	adminOnly.POST("/contests/:id/awd/instances",
+		middleware.ParseInt64Param("id"),
+		audit(middleware.AuditOptions{
+			Action:        model.AuditActionCreate,
+			ResourceType:  "contest_awd_instance",
+			DetailBuilder: middleware.DetailFromParams("id"),
+		}),
+		deps.practice.Handler.StartAdminContestAWDInstance,
+	)
 	adminOnly.POST("/contests/:id/awd/services",
 		middleware.ParseInt64Param("id"),
 		audit(middleware.AuditOptions{
@@ -662,6 +677,49 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 			DetailBuilder:   middleware.DetailFromParams("id", "sid"),
 		}),
 		deps.contest.AWDHandler.SubmitAttack,
+	)
+	protected.POST("/contests/:id/awd/services/:sid/targets/:team_id/access",
+		middleware.ParseInt64Param("id"),
+		middleware.ParseInt64Param("sid"),
+		middleware.ParseInt64Param("team_id"),
+		deps.runtime.Handler.AccessAWDTarget,
+	)
+	protected.POST("/contests/:id/awd/services/:sid/defense/ssh",
+		middleware.ParseInt64Param("id"),
+		middleware.ParseInt64Param("sid"),
+		deps.runtime.Handler.AccessAWDDefenseSSH,
+	)
+	protected.GET("/contests/:id/awd/services/:sid/defense/files",
+		middleware.ParseInt64Param("id"),
+		middleware.ParseInt64Param("sid"),
+		deps.runtime.Handler.ReadAWDDefenseFile,
+	)
+	protected.GET("/contests/:id/awd/services/:sid/defense/directories",
+		middleware.ParseInt64Param("id"),
+		middleware.ParseInt64Param("sid"),
+		deps.runtime.Handler.ListAWDDefenseDirectory,
+	)
+	protected.PUT("/contests/:id/awd/services/:sid/defense/files",
+		middleware.ParseInt64Param("id"),
+		middleware.ParseInt64Param("sid"),
+		deps.runtime.Handler.SaveAWDDefenseFile,
+	)
+	protected.POST("/contests/:id/awd/services/:sid/defense/commands",
+		middleware.ParseInt64Param("id"),
+		middleware.ParseInt64Param("sid"),
+		deps.runtime.Handler.RunAWDDefenseCommand,
+	)
+	apiV1.GET("/contests/:id/awd/services/:sid/targets/:team_id/proxy",
+		middleware.ParseInt64Param("id"),
+		middleware.ParseInt64Param("sid"),
+		middleware.ParseInt64Param("team_id"),
+		deps.runtime.Handler.ProxyAWDTarget,
+	)
+	apiV1.Any("/contests/:id/awd/services/:sid/targets/:team_id/proxy/*proxyPath",
+		middleware.ParseInt64Param("id"),
+		middleware.ParseInt64Param("sid"),
+		middleware.ParseInt64Param("team_id"),
+		deps.runtime.Handler.ProxyAWDTarget,
 	)
 	protected.GET("/contests/:id/teams", deps.contest.TeamHandler.ListTeams)
 	protected.GET("/contests/:id/my-team", deps.contest.TeamHandler.GetMyTeam)

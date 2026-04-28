@@ -259,17 +259,6 @@ function openPrimaryCategory(): void {
 
 .category-summary-strip.metric-panel-default-surface {
   --metric-panel-border: var(--journal-soft-border);
-  --metric-panel-background:
-    radial-gradient(
-      circle at top right,
-      color-mix(in srgb, var(--journal-accent) 12%, transparent),
-      transparent 42%
-    ),
-    linear-gradient(
-      165deg,
-      color-mix(in srgb, var(--journal-surface-subtle) 92%, transparent),
-      color-mix(in srgb, var(--journal-surface) 96%, transparent)
-    );
   --metric-panel-shadow: 0 10px 20px color-mix(in srgb, var(--color-shadow-soft) 30%, transparent);
 }
 

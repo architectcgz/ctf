@@ -1,15 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { createPinia, setActivePinia } from 'pinia'
 import { flushPromises, mount } from '@vue/test-utils'
 
 import PlatformInstanceManagement from '../InstanceManage.vue'
 import adminInstanceManageSource from '../InstanceManage.vue?raw'
-import { useAuthStore } from '@/stores/auth'
+import instanceManageHeroPanelSource from '@/components/platform/instance/InstanceManageHeroPanel.vue?raw'
+import instanceManageWorkspacePanelSource from '@/components/platform/instance/InstanceManageWorkspacePanel.vue?raw'
 
 const pushMock = vi.fn()
 
 const teacherApiMocks = vi.hoisted(() => ({
-  getClasses: vi.fn(),
   getTeacherInstances: vi.fn(),
   destroyTeacherInstance: vi.fn(),
 }))
@@ -31,16 +30,11 @@ vi.mock('@/composables/useDestructiveConfirm', () => ({
 
 describe('PlatformInstanceManagement', () => {
   beforeEach(() => {
-    vi.useFakeTimers()
-    setActivePinia(createPinia())
-    localStorage.clear()
     pushMock.mockReset()
-    Object.values(teacherApiMocks).forEach((mock) => mock.mockReset())
+    teacherApiMocks.getTeacherInstances.mockReset()
+    teacherApiMocks.destroyTeacherInstance.mockReset()
+    confirmMock.mockReset()
 
-    teacherApiMocks.getClasses.mockResolvedValue([
-      { name: 'Class A', student_count: 1 },
-      { name: 'Class B', student_count: 1 },
-    ])
     teacherApiMocks.getTeacherInstances.mockResolvedValue([
       {
         id: 'inst-1',
@@ -59,105 +53,140 @@ describe('PlatformInstanceManagement', () => {
         max_extends: 3,
         created_at: '2026-03-09T09:30:00Z',
       },
+      {
+        id: 'inst-2',
+        student_id: 'stu-2',
+        student_name: 'Bob',
+        student_username: 'bob',
+        student_no: 'S-1002',
+        class_name: 'Class B',
+        challenge_id: 'challenge-2',
+        challenge_title: 'Pwn Stack 201',
+        status: 'expired',
+        access_url: '',
+        expires_at: '2026-03-09T09:00:00Z',
+        remaining_time: 0,
+        extend_count: 0,
+        max_extends: 3,
+        created_at: '2026-03-09T08:30:00Z',
+      },
     ])
     teacherApiMocks.destroyTeacherInstance.mockResolvedValue(undefined)
-    confirmMock.mockReset()
     confirmMock.mockResolvedValue(true)
-
-    const authStore = useAuthStore()
-    authStore.setAuth(
-      {
-        id: 'admin-1',
-        username: 'admin',
-        role: 'admin',
-      },
-      'token'
-    )
   })
 
   afterEach(() => {
     vi.useRealTimers()
   })
 
-  it('应使用后台工作台目录组件而不是教师端实例目录壳层', async () => {
+  it('应保留当前后台实例页样式并复用 teacher 实例接口', async () => {
+    expect(adminInstanceManageSource).toContain("from '@/api/teacher'")
+    expect(adminInstanceManageSource).toContain("from '@/composables/useDestructiveConfirm'")
+    expect(adminInstanceManageSource).not.toContain("from '@/api/admin'")
+    expect(adminInstanceManageSource).not.toContain("from '@/composables/useAdminDestructiveConfirm'")
     expect(adminInstanceManageSource).toContain(
-      "from '@/components/common/WorkspaceDirectoryToolbar.vue'"
-    )
-    expect(adminInstanceManageSource).toContain("from '@/components/common/WorkspaceDataTable.vue'")
-    expect(adminInstanceManageSource).toContain(
-      "from '@/components/common/WorkspaceDirectoryPagination.vue'"
-    )
-    expect(adminInstanceManageSource).toContain(
-      'class="workspace-shell journal-shell journal-shell-admin journal-notes-card journal-hero admin-instance-manage-shell flex min-h-full flex-1 flex-col"'
+      "import InstanceManageWorkspacePanel from '@/components/platform/instance/InstanceManageWorkspacePanel.vue'"
     )
     expect(adminInstanceManageSource).toContain(
+      "import InstanceManageHeroPanel from '@/components/platform/instance/InstanceManageHeroPanel.vue'"
+    )
+    expect(adminInstanceManageSource).toContain('<InstanceManageHeroPanel')
+    expect(adminInstanceManageSource).toContain('<InstanceManageWorkspacePanel')
+    expect(adminInstanceManageSource).toContain(
+      'class="workspace-shell journal-shell journal-shell-admin journal-hero admin-instance-manage-shell"'
+    )
+    expect(instanceManageHeroPanelSource).toContain('返回概览')
+    expect(instanceManageHeroPanelSource).toContain('刷新列表')
+    expect(instanceManageHeroPanelSource).toContain('class="ui-btn ui-btn--primary"')
+    expect(instanceManageHeroPanelSource).toContain(
       'class="admin-summary-grid admin-instance-manage-shell__summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
     )
-    expect(adminInstanceManageSource).toContain(
-      'class="workspace-directory-section admin-instance-manage-directory"'
+    expect(instanceManageWorkspacePanelSource).toContain("from '@/components/common/WorkspaceDataTable.vue'")
+    expect(instanceManageWorkspacePanelSource).toContain(
+      "from '@/components/common/WorkspaceDirectoryPagination.vue'"
     )
-    expect(adminInstanceManageSource).toContain(
-      'class="workspace-directory-list admin-instance-manage-table"'
+    expect(instanceManageWorkspacePanelSource).toContain(
+      "from '@/components/common/WorkspaceDirectoryToolbar.vue'"
     )
-    expect(adminInstanceManageSource).toContain('<WorkspaceDirectoryToolbar')
-    expect(adminInstanceManageSource).toContain('<WorkspaceDataTable')
-    expect(adminInstanceManageSource).toContain('<WorkspaceDirectoryPagination')
-    expect(adminInstanceManageSource).not.toMatch(/^\.list-heading\s*\{/m)
-    expect(adminInstanceManageSource).not.toMatch(/\.admin-instance-manage-directory\s*\{/s)
-    expect(adminInstanceManageSource).not.toContain('teacher-management-shell')
-    expect(adminInstanceManageSource).not.toContain('teacher-directory-row')
+    expect(instanceManageWorkspacePanelSource).toContain('<WorkspaceDataTable')
+    expect(instanceManageWorkspacePanelSource).toContain('<WorkspaceDirectoryToolbar')
+    expect(instanceManageWorkspacePanelSource).toContain('<WorkspaceDirectoryPagination')
+    expect(instanceManageWorkspacePanelSource).toContain('search-placeholder="检索实例、题目、用户或访问地址..."')
+    expect(instanceManageWorkspacePanelSource).toContain('filter-panel-title="实例筛选"')
+    expect(instanceManageWorkspacePanelSource).toContain("label: '班级'")
+    expect(instanceManageWorkspacePanelSource).toContain('class="instance-user-link"')
+    expect(instanceManageWorkspacePanelSource).toContain('class="instance-status-pill"')
+    expect(instanceManageWorkspacePanelSource).toContain('class="ui-btn ui-btn--danger ui-btn--xs"')
+    expect(adminInstanceManageSource).not.toContain('bg-green-100 text-green-700')
+    expect(adminInstanceManageSource).not.toContain('bg-slate-100 text-slate-600')
 
     const wrapper = mount(PlatformInstanceManagement)
     await flushPromises()
 
+    expect(teacherApiMocks.getTeacherInstances).toHaveBeenCalledWith({
+      class_name: undefined,
+      keyword: undefined,
+      student_no: undefined,
+    })
     expect(wrapper.text()).toContain('实例管理')
     expect(wrapper.text()).toContain('Web SQLi 101')
     expect(wrapper.text()).toContain('Alice')
+    expect(wrapper.text()).toContain('Class A')
+    expect(wrapper.text()).toContain('http://127.0.0.1:30001')
     expect(wrapper.text()).toContain('运行中')
-    expect(wrapper.text()).toContain('访问地址')
-    expect(wrapper.text()).toContain('销毁实例')
+    expect(wrapper.text()).toContain('已过期')
+    expect(wrapper.text()).toContain('销毁')
+    expect(wrapper.text()).toContain('共 2 个实例')
   })
 
-  it('应支持筛选并销毁实例', async () => {
+  it('应支持按实例关键词筛选目录', async () => {
     const wrapper = mount(PlatformInstanceManagement)
     await flushPromises()
 
-    const searchInput = wrapper.get('input[placeholder="检索学生、用户名或题目名称..."]')
-    await searchInput.setValue('ali')
-    vi.advanceTimersByTime(250)
+    await wrapper.get('.workspace-directory-toolbar__search-input').setValue('Pwn')
+
+    expect(wrapper.text()).not.toContain('Web SQLi 101')
+    expect(wrapper.text()).toContain('Pwn Stack 201')
+    expect(wrapper.text()).toContain('共 1 个实例')
+  })
+
+  it('应支持点击所属用户进入学生分析页', async () => {
+    const wrapper = mount(PlatformInstanceManagement)
     await flushPromises()
 
-    expect(teacherApiMocks.getTeacherInstances).toHaveBeenLastCalledWith(
-      {
-        class_name: undefined,
-        keyword: 'ali',
-        student_no: undefined,
-      },
-      expect.objectContaining({
-        signal: expect.any(AbortSignal),
-      })
-    )
+    await wrapper.get('.instance-user-link').trigger('click')
 
-    await wrapper.find('[data-instance-id="inst-1"]').trigger('click')
+    expect(pushMock).toHaveBeenCalledWith({
+      name: 'PlatformStudentAnalysis',
+      params: { className: 'Class A', studentId: 'stu-1' },
+    })
+  })
+
+  it('应支持销毁实例并更新列表', async () => {
+    const wrapper = mount(PlatformInstanceManagement)
+    await flushPromises()
+
+    await wrapper
+      .findAll('button')
+      .find((node) => node.text().includes('销毁'))
+      ?.trigger('click')
     await flushPromises()
 
     expect(confirmMock).toHaveBeenCalled()
     expect(teacherApiMocks.destroyTeacherInstance).toHaveBeenCalledWith('inst-1')
     expect(wrapper.text()).not.toContain('Web SQLi 101')
+    expect(wrapper.text()).toContain('Pwn Stack 201')
   })
 
-  it('卸载页面前的延迟筛选不应在离开后继续发请求', async () => {
+  it('应支持返回概览页', async () => {
     const wrapper = mount(PlatformInstanceManagement)
     await flushPromises()
 
-    const searchInput = wrapper.get('input[placeholder="检索学生、用户名或题目名称..."]')
-    await searchInput.setValue('alice')
+    await wrapper
+      .findAll('button')
+      .find((node) => node.text().includes('返回概览'))
+      ?.trigger('click')
 
-    wrapper.unmount()
-
-    vi.advanceTimersByTime(250)
-    await flushPromises()
-
-    expect(teacherApiMocks.getTeacherInstances).toHaveBeenCalledTimes(1)
+    expect(pushMock).toHaveBeenCalledWith({ name: 'PlatformOverview' })
   })
 })

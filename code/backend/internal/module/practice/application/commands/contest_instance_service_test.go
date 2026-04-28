@@ -20,9 +20,8 @@ import (
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	practicecmd "ctf-platform/internal/module/practice/application/commands"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
-	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
+	practiceports "ctf-platform/internal/module/practice/ports"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
-	runtimeadapters "ctf-platform/internal/testutil/runtimeadapters"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -146,6 +145,74 @@ func TestServiceStartContestAWDServicePersistsServiceIDOnInstance(t *testing.T) 
 	}
 }
 
+func TestServiceStartAdminContestAWDTeamServiceDoesNotRequireAdminRegistration(t *testing.T) {
+	db := newContestInstanceTestDB(t)
+	now := time.Now()
+
+	seedContestInstanceChallenge(t, db, 1005, 2005, now)
+	seedContestInstanceAWDContest(t, db, 3005, 2005, now)
+	seedContestInstanceAWDService(t, db, 7003005, 3005, 2005, now)
+	seedContestInstanceTeam(t, db, 3005, 4005, 5008, now)
+	seedContestInstanceTeamMember(t, db, 3005, 4005, 5008, now)
+
+	service := newContestInstanceTestService(t, db)
+	resp, err := service.StartAdminContestAWDTeamService(context.Background(), 3005, 4005, 7003005)
+	if err != nil {
+		t.Fatalf("StartAdminContestAWDTeamService() error = %v", err)
+	}
+	if resp.TeamID != 4005 || resp.ServiceID != 7003005 || resp.Instance == nil {
+		t.Fatalf("unexpected admin awd instance response: %+v", resp)
+	}
+
+	var instance model.Instance
+	if err := db.First(&instance, resp.Instance.ID).Error; err != nil {
+		t.Fatalf("load admin-started instance: %v", err)
+	}
+	if instance.TeamID == nil || *instance.TeamID != 4005 {
+		t.Fatalf("expected instance team_id=4005, got %+v", instance.TeamID)
+	}
+	if instance.ServiceID == nil || *instance.ServiceID != 7003005 {
+		t.Fatalf("expected instance service_id=7003005, got %+v", instance.ServiceID)
+	}
+	if instance.UserID != 5008 {
+		t.Fatalf("expected team captain to own runtime instance, got user_id=%d", instance.UserID)
+	}
+	if instance.ShareScope != model.InstanceSharingPerTeam {
+		t.Fatalf("expected per-team share scope, got %s", instance.ShareScope)
+	}
+}
+
+func TestServiceGetContestAWDInstanceOrchestrationReturnsTeamServiceMatrix(t *testing.T) {
+	db := newContestInstanceTestDB(t)
+	now := time.Now()
+
+	seedContestInstanceChallenge(t, db, 1006, 2006, now)
+	seedContestInstanceAWDContest(t, db, 3006, 2006, now)
+	seedContestInstanceAWDService(t, db, 7003006, 3006, 2006, now)
+	seedContestInstanceTeam(t, db, 3006, 4006, 5009, now)
+	seedContestInstanceTeamMember(t, db, 3006, 4006, 5009, now)
+
+	service := newContestInstanceTestService(t, db)
+	started, err := service.StartAdminContestAWDTeamService(context.Background(), 3006, 4006, 7003006)
+	if err != nil {
+		t.Fatalf("StartAdminContestAWDTeamService() error = %v", err)
+	}
+
+	resp, err := service.GetContestAWDInstanceOrchestration(context.Background(), 3006)
+	if err != nil {
+		t.Fatalf("GetContestAWDInstanceOrchestration() error = %v", err)
+	}
+	if len(resp.Teams) != 1 || resp.Teams[0].TeamID != 4006 {
+		t.Fatalf("expected one team in orchestration, got %+v", resp.Teams)
+	}
+	if len(resp.Services) != 1 || resp.Services[0].ServiceID != 7003006 {
+		t.Fatalf("expected one service in orchestration, got %+v", resp.Services)
+	}
+	if len(resp.Instances) != 1 || resp.Instances[0].Instance == nil || resp.Instances[0].Instance.ID != started.Instance.ID {
+		t.Fatalf("expected started instance in orchestration, got %+v", resp.Instances)
+	}
+}
+
 func TestServiceStartChallengeSharedReusesPracticeInstance(t *testing.T) {
 	db := newContestInstanceTestDB(t)
 	now := time.Now()
@@ -161,13 +228,13 @@ func TestServiceStartChallengeSharedReusesPracticeInstance(t *testing.T) {
 
 	service := newContestInstanceTestService(t, db)
 
-	first, err := service.StartChallengeWithContext(context.Background(), 5101, 2101)
+	first, err := service.StartChallenge(context.Background(), 5101, 2101)
 	if err != nil {
-		t.Fatalf("StartChallengeWithContext() first error = %v", err)
+		t.Fatalf("StartChallenge() first error = %v", err)
 	}
-	second, err := service.StartChallengeWithContext(context.Background(), 5102, 2101)
+	second, err := service.StartChallenge(context.Background(), 5102, 2101)
 	if err != nil {
-		t.Fatalf("StartChallengeWithContext() second error = %v", err)
+		t.Fatalf("StartChallenge() second error = %v", err)
 	}
 	if first.ID != second.ID {
 		t.Fatalf("expected shared practice instance reuse, got first=%d second=%d", first.ID, second.ID)
@@ -204,9 +271,9 @@ func TestServiceStartChallengeSharedReusesPracticeInstanceAndRefreshesExpiry(t *
 	}
 
 	service := newContestInstanceTestService(t, db)
-	resp, err := service.StartChallengeWithContext(context.Background(), 5202, 2201)
+	resp, err := service.StartChallenge(context.Background(), 5202, 2201)
 	if err != nil {
-		t.Fatalf("StartChallengeWithContext() error = %v", err)
+		t.Fatalf("StartChallenge() error = %v", err)
 	}
 	if resp.ID != 9201 {
 		t.Fatalf("expected shared instance reuse, got %+v", resp)
@@ -275,7 +342,7 @@ func TestServiceStartChallengeRejectsNoTargetChallenge(t *testing.T) {
 	}
 
 	service := newContestInstanceTestService(t, db)
-	_, err := service.StartChallengeWithContext(context.Background(), 5001, 2201)
+	_, err := service.StartChallenge(context.Background(), 5001, 2201)
 	if err == nil || err.Error() != errcode.ErrInvalidParams.Error() {
 		t.Fatalf("expected invalid params for no-target challenge, got %v", err)
 	}
@@ -318,6 +385,36 @@ func ensureContestInstanceServiceIDColumn(db *gorm.DB) error {
 	return db.Exec("ALTER TABLE instances ADD COLUMN service_id integer").Error
 }
 
+type contestInstanceTestRuntimeService struct{}
+
+func (contestInstanceTestRuntimeService) CleanupRuntime(context.Context, *model.Instance) error {
+	return nil
+}
+
+func (contestInstanceTestRuntimeService) CreateTopology(_ context.Context, req *practiceports.TopologyCreateRequest) (*practiceports.TopologyCreateResult, error) {
+	if req == nil {
+		return nil, nil
+	}
+	return &practiceports.TopologyCreateResult{
+		PrimaryContainerID: fmt.Sprintf("contest-topology-%d", req.ReservedHostPort),
+		NetworkID:          fmt.Sprintf("contest-network-%d", req.ReservedHostPort),
+		AccessURL:          fmt.Sprintf("http://127.0.0.1:%d", req.ReservedHostPort),
+		RuntimeDetails: model.InstanceRuntimeDetails{
+			Containers: []model.InstanceRuntimeContainer{{
+				NodeKey:      "entry",
+				ContainerID:  fmt.Sprintf("contest-topology-%d", req.ReservedHostPort),
+				HostPort:     req.ReservedHostPort,
+				ServicePort:  8080,
+				IsEntryPoint: true,
+			}},
+		},
+	}, nil
+}
+
+func (contestInstanceTestRuntimeService) CreateContainer(_ context.Context, _ string, _ map[string]string, reservedHostPort int) (string, string, int, int, error) {
+	return fmt.Sprintf("contest-container-%d", reservedHostPort), fmt.Sprintf("contest-network-%d", reservedHostPort), reservedHostPort, 8080, nil
+}
+
 func newContestInstanceTestService(t *testing.T, db *gorm.DB) *practicecmd.Service {
 	t.Helper()
 
@@ -336,23 +433,12 @@ func newContestInstanceTestService(t *testing.T, db *gorm.DB) *practicecmd.Servi
 	challengeRepo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
 	instanceRepo := runtimeinfrarepo.NewRepository(db)
-	runtimeCleanupService := runtimecmd.NewRuntimeCleanupService(nil, nil)
-	runtimeProvisioningService := runtimecmd.NewProvisioningService(instanceRepo, nil, &config.ContainerConfig{
-		PortRangeStart:       30000,
-		PortRangeEnd:         30010,
-		DefaultExposedPort:   8080,
-		PublicHost:           "127.0.0.1",
-		DefaultTTL:           time.Hour,
-		MaxConcurrentPerUser: 3,
-		MaxExtends:           2,
-		CreateTimeout:        time.Second,
-	}, nil)
 	return practicecmd.NewService(
 		practiceinfra.NewRepository(db),
 		challengeRepo,
 		imageRepo,
 		instanceRepo,
-		runtimeadapters.NewPracticeRuntimeService(runtimeCleanupService, runtimeProvisioningService),
+		contestInstanceTestRuntimeService{},
 		nil,
 		nil,
 		nil,

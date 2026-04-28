@@ -1,18 +1,12 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 
-import { downloadReport } from '@/api/assessment'
-import { exportContestArchive } from '@/api/admin'
 import type { ContestDetailData } from '@/api/contracts'
 import PlatformContestFormDialog from '@/components/platform/contest/PlatformContestFormDialog.vue'
 import AWDReadinessOverrideDialog from '@/components/platform/contest/AWDReadinessOverrideDialog.vue'
+import ContestAnnouncementManageDrawer from '@/components/platform/contest/ContestAnnouncementManageDrawer.vue'
 import ContestOrchestrationPage from '@/components/platform/contest/ContestOrchestrationPage.vue'
-import { useReportStatusPolling } from '@/composables/useReportStatusPolling'
-import { useToast } from '@/composables/useToast'
 import { usePlatformContests } from '@/composables/usePlatformContests'
-
-const toast = useToast()
-const { start: startPolling, stop: stopPolling } = useReportStatusPolling()
 
 const {
   list,
@@ -39,11 +33,10 @@ const {
 } = usePlatformContests()
 
 const awdContests = computed(() => list.value.filter((item) => item.mode === 'awd'))
-const exportingContestId = ref<string | null>(null)
-const downloadingContestReport = ref(false)
-const pendingContestReportId = ref<string | null>(null)
 const requestedPanel = ref<'overview' | 'list' | 'create' | null>(null)
 const requestedPanelVersion = ref(0)
+const announcementDrawerOpen = ref(false)
+const activeAnnouncementContest = ref<ContestDetailData | null>(null)
 
 onMounted(() => {
   void refresh()
@@ -70,59 +63,13 @@ function handleAwdStartOverrideDialogOpenChange(value: boolean) {
   }
 }
 
-async function downloadGeneratedReport(reportId: string): Promise<void> {
-  downloadingContestReport.value = true
-  try {
-    const { blob, filename } = await downloadReport(reportId)
-    const objectUrl = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = objectUrl
-    link.download = filename
-    document.body.appendChild(link)
-    link.click()
-    link.remove()
-    URL.revokeObjectURL(objectUrl)
-  } finally {
-    downloadingContestReport.value = false
-  }
+function openAnnouncementDrawer(contest: ContestDetailData): void {
+  activeAnnouncementContest.value = contest
+  announcementDrawerOpen.value = true
 }
 
-async function handleExportContest(contest: ContestDetailData): Promise<void> {
-  exportingContestId.value = contest.id
-  try {
-    const result = await exportContestArchive(contest.id, { format: 'json' })
-
-    if (result.status === 'ready') {
-      stopPolling()
-      await downloadGeneratedReport(result.report_id)
-      toast.success(`赛事结果已导出：${contest.title}`)
-      return
-    }
-
-    if (result.status === 'failed') {
-      stopPolling()
-      toast.error(result.error_message || '赛事结果导出失败')
-      return
-    }
-
-    pendingContestReportId.value = result.report_id
-    startPolling(result.report_id, (next) => {
-      if (next.report_id !== pendingContestReportId.value) return
-      if (next.status === 'ready') {
-        pendingContestReportId.value = null
-        void downloadGeneratedReport(next.report_id)
-        toast.success(`赛事结果已导出：${contest.title}`)
-        return
-      }
-      if (next.status === 'failed') {
-        pendingContestReportId.value = null
-        toast.error(next.error_message || '赛事结果导出失败')
-      }
-    })
-    toast.info(`已开始导出赛事结果：${contest.title}`)
-  } finally {
-    exportingContestId.value = null
-  }
+function closeAnnouncementDrawer(): void {
+  announcementDrawerOpen.value = false
 }
 
 async function handleCreateContestSave(draft: Parameters<typeof saveContest>[0]): Promise<void> {
@@ -153,8 +100,14 @@ async function handleCreateContestSave(draft: Parameters<typeof saveContest>[0])
       @save-create-contest="handleCreateContestSave"
       @update-status-filter="updateStatusFilter"
       @open-edit-dialog="openEditDialog"
-      @export-contest="handleExportContest"
+      @announce="openAnnouncementDrawer"
       @change-page="changePage"
+    />
+
+    <ContestAnnouncementManageDrawer
+      :open="announcementDrawerOpen"
+      :contest="activeAnnouncementContest"
+      @close="closeAnnouncementDrawer"
     />
 
     <PlatformContestFormDialog

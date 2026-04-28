@@ -2,10 +2,10 @@ import { describe, expect, it } from 'vitest'
 
 import challengeDetailSource from '../ChallengeDetail.vue?raw'
 import contestEditSource from '../ContestEdit.vue?raw'
-import cheatDetectionSource from '../CheatDetection.vue?raw'
+import cheatDetectionWorkspacePanelSource from '@/components/platform/cheat/CheatDetectionWorkspacePanel.vue?raw'
 import auditLogSource from '../AuditLog.vue?raw'
 import imageManageSource from '../ImageManage.vue?raw'
-import challengeImportPreviewSource from '../ChallengeImportPreview.vue?raw'
+import challengeImportPreviewWorkspaceSource from '@/components/platform/challenge/ChallengeImportPreviewWorkspacePanel.vue?raw'
 import challengePackageFormatSource from '../ChallengePackageFormat.vue?raw'
 import userGovernanceSource from '@/components/platform/user/UserGovernancePage.vue?raw'
 
@@ -13,10 +13,10 @@ describe('admin root shell cleanup', () => {
   it.each([
     ['ChallengeDetail.vue', challengeDetailSource],
     ['ContestEdit.vue', contestEditSource],
-    ['CheatDetection.vue', cheatDetectionSource],
+    ['CheatDetectionWorkspacePanel.vue', cheatDetectionWorkspacePanelSource],
     ['AuditLog.vue', auditLogSource],
     ['ImageManage.vue', imageManageSource],
-    ['ChallengeImportPreview.vue', challengeImportPreviewSource],
+    ['ChallengeImportPreviewWorkspacePanel.vue', challengeImportPreviewWorkspaceSource],
     ['ChallengePackageFormat.vue', challengePackageFormatSource],
     ['UserGovernancePage.vue', userGovernanceSource],
   ])('%s 应只保留共享管理员根壳，不再手写外层圆角', (_name, source) => {

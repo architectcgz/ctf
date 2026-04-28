@@ -50,8 +50,11 @@ func (s *ContestAWDServiceService) CreateContestAWDService(ctx context.Context, 
 	if err != nil {
 		return nil, err
 	}
+	if req.Points < 1 || req.Points > contestdomain.AWDMaxServiceDisplayPoint {
+		return nil, errcode.ErrInvalidParams
+	}
 
-	template, err := s.templateRepo.FindAWDServiceTemplateByID(req.TemplateID)
+	template, err := s.templateRepo.FindAWDServiceTemplateByID(ctx, req.TemplateID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrNotFound
@@ -170,7 +173,7 @@ func (s *ContestAWDServiceService) UpdateContestAWDService(ctx context.Context, 
 	currentDefenseScore, _ := parseContestAWDServiceScore(stored.ScoreConfig, "awd_defense_score")
 
 	if req.TemplateID != nil {
-		template, err := s.templateRepo.FindAWDServiceTemplateByID(*req.TemplateID)
+		template, err := s.templateRepo.FindAWDServiceTemplateByID(ctx, *req.TemplateID)
 		if err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				return errcode.ErrNotFound
@@ -212,6 +215,9 @@ func (s *ContestAWDServiceService) UpdateContestAWDService(ctx context.Context, 
 	}
 	if req.Points != nil || req.AWDSLAScore != nil || req.AWDDefenseScore != nil {
 		if req.Points != nil {
+			if *req.Points < 1 || *req.Points > contestdomain.AWDMaxServiceDisplayPoint {
+				return errcode.ErrInvalidParams
+			}
 			currentPoints = *req.Points
 		}
 		updates["score_config"] = buildContestAWDServiceScoreConfig(currentPoints, slaScore, defenseScore)
@@ -317,7 +323,7 @@ func (s *ContestAWDServiceService) syncContestChallengeRelation(ctx context.Cont
 		return errcode.ErrInternal.WithCause(err)
 	}
 	if !exists {
-		challenge, err := s.challengeRepo.FindByID(challengeID)
+		challenge, err := s.challengeRepo.FindByID(ctx, challengeID)
 		if err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				return errcode.ErrChallengeNotFound

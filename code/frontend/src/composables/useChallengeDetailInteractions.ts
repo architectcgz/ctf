@@ -43,10 +43,11 @@ export function useChallengeDetailInteractions({
   const expandedHintLevels = ref<number[]>([])
   const submitResult = ref<{
     variant: 'success' | 'error' | 'pending'
-    className: string
     message: string
   } | null>(null)
   const submissionRecords = ref<SubmissionRecordItem[]>([])
+  let latestWriteupRequestId = 0
+  let latestSubmissionRecordsRequestId = 0
 
   function hydrateSubmissionForm(item: SubmissionWriteupData | null): void {
     writeupTitle.value = item?.title ?? ''
@@ -67,24 +68,43 @@ export function useChallengeDetailInteractions({
   }
 
   async function loadMyWriteupSubmission(): Promise<void> {
-    if (!challengeId.value) return
+    const currentChallengeId = challengeId.value
+    if (!currentChallengeId) return
 
+    const requestId = ++latestWriteupRequestId
     submissionLoading.value = true
     try {
-      myWriteup.value = await getMyChallengeWriteupSubmission(challengeId.value)
+      const nextWriteup = await getMyChallengeWriteupSubmission(currentChallengeId)
+      if (requestId !== latestWriteupRequestId || currentChallengeId !== challengeId.value) {
+        return
+      }
+      myWriteup.value = nextWriteup
       hydrateSubmissionForm(myWriteup.value)
     } catch {
+      if (requestId !== latestWriteupRequestId || currentChallengeId !== challengeId.value) {
+        return
+      }
       toast.error('加载个人题解失败')
     } finally {
-      submissionLoading.value = false
+      if (requestId === latestWriteupRequestId && currentChallengeId === challengeId.value) {
+        submissionLoading.value = false
+      }
     }
   }
 
   async function loadSubmissionRecords(): Promise<void> {
-    if (!challengeId.value) return
+    const currentChallengeId = challengeId.value
+    if (!currentChallengeId) return
 
+    const requestId = ++latestSubmissionRecordsRequestId
     try {
-      const records = await getMyChallengeSubmissionRecords(challengeId.value)
+      const records = await getMyChallengeSubmissionRecords(currentChallengeId)
+      if (
+        requestId !== latestSubmissionRecordsRequestId ||
+        currentChallengeId !== challengeId.value
+      ) {
+        return
+      }
       submissionRecords.value = records.map((item) => ({
         id: item.id,
         answer: item.answer,
@@ -92,6 +112,12 @@ export function useChallengeDetailInteractions({
         submittedAt: item.submitted_at,
       }))
     } catch {
+      if (
+        requestId !== latestSubmissionRecordsRequestId ||
+        currentChallengeId !== challengeId.value
+      ) {
+        return
+      }
       toast.error('加载提交记录失败')
     }
   }
@@ -149,7 +175,7 @@ export function useChallengeDetailInteractions({
 
   async function submitFlagHandler(): Promise<void> {
     const currentChallenge = challenge.value
-    if (!currentChallenge || !flagInput.value.trim()) return
+    if (submitting.value || !currentChallenge || !flagInput.value.trim()) return
 
     const answer = flagInput.value.trim()
     const alreadySolved = currentChallenge.is_solved
@@ -171,7 +197,6 @@ export function useChallengeDetailInteractions({
         case 'correct':
           submitResult.value = {
             variant: 'success',
-            className: 'text-[var(--color-success)]',
             message: submitMessage,
           }
           toast.success(submitMessage)
@@ -183,7 +208,6 @@ export function useChallengeDetailInteractions({
         case 'pending_review':
           submitResult.value = {
             variant: 'pending',
-            className: 'text-[var(--color-warning)]',
             message: submitMessage,
           }
           toast.info(submitMessage)
@@ -191,7 +215,6 @@ export function useChallengeDetailInteractions({
         default:
           submitResult.value = {
             variant: 'error',
-            className: 'text-[var(--color-danger)]',
             message: submitMessage,
           }
           break
@@ -208,7 +231,6 @@ export function useChallengeDetailInteractions({
       ]
       submitResult.value = {
         variant: 'error',
-        className: 'text-[var(--color-danger)]',
         message: '提交失败，请重试',
       }
     } finally {

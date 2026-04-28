@@ -1,9 +1,24 @@
 <script setup lang="ts">
-import { ArrowRight, Search } from 'lucide-vue-next'
+import { computed } from 'vue'
+import { ArrowRight } from 'lucide-vue-next'
 
 import type { TeacherClassItem, TeacherStudentItem } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
-import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
+import AppLoading from '@/components/common/AppLoading.vue'
+import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
+import WorkspaceDirectoryPagination from '@/components/common/WorkspaceDirectoryPagination.vue'
+import WorkspaceDirectoryToolbar from '@/components/common/WorkspaceDirectoryToolbar.vue'
+
+interface StudentDirectoryTableRow {
+  id: string
+  student_no: string
+  name: string
+  username: string
+  weak_dimension: string
+  solved_count: number
+  total_score: number
+  actions: string
+}
 
 const props = defineProps<{
   classes: TeacherClassItem[]
@@ -30,6 +45,44 @@ const emit = defineEmits<{
   changePage: [page: number]
   openStudent: [studentId: string]
 }>()
+
+const rows = computed<StudentDirectoryTableRow[]>(() =>
+  props.filteredStudents.map((student) => ({
+    id: student.id,
+    student_no: student.student_no || '未设置学号',
+    name: student.name || '未设置姓名',
+    username: student.username,
+    weak_dimension: student.weak_dimension || '暂无薄弱项',
+    solved_count: student.solved_count ?? 0,
+    total_score: student.total_score ?? 0,
+    actions: 'open',
+  }))
+)
+
+const hasActiveFilters = computed(() =>
+  Boolean(props.selectedClassName || props.searchQuery.trim())
+)
+
+const columns = [
+  { key: 'student_no', label: '学号', widthClass: 'w-[15%] min-w-[8rem]' },
+  { key: 'name', label: '学生名称', widthClass: 'w-[20%] min-w-[11rem]' },
+  { key: 'username', label: '昵称', widthClass: 'w-[16%] min-w-[10rem]' },
+  { key: 'weak_dimension', label: '薄弱项', widthClass: 'w-[18%] min-w-[10rem]' },
+  { key: 'solved_count', label: '做题数', widthClass: 'w-[10%] min-w-[6rem]', align: 'center' as const },
+  { key: 'total_score', label: '得分数', widthClass: 'w-[10%] min-w-[6rem]', align: 'center' as const },
+  { key: 'actions', label: '操作', widthClass: 'w-[9rem]', align: 'right' as const },
+]
+
+function resetFilters(): void {
+  emit('selectClass', '')
+  emit('updateSearchQuery', '')
+}
+
+function handleClassChange(event: Event): void {
+  const target = event.target
+  emit('selectClass', target instanceof HTMLSelectElement ? target.value : '')
+}
+
 </script>
 
 <template>
@@ -37,14 +90,14 @@ const emit = defineEmits<{
     <main class="content-pane">
       <div class="teacher-page">
         <header class="teacher-topbar">
-          <div class="teacher-heading">
-            <div class="teacher-surface-eyebrow journal-eyebrow">
+          <div class="teacher-heading workspace-tab-heading__main">
+            <div class="workspace-overline">
               Student Directory
             </div>
-            <h1 class="teacher-title">
+            <h1 class="teacher-title workspace-page-title">
               学生管理
             </h1>
-            <p class="teacher-copy">
+            <p class="teacher-copy workspace-page-copy">
               按班级筛选、搜索并进入学员分析。
             </p>
           </div>
@@ -52,14 +105,14 @@ const emit = defineEmits<{
           <div class="teacher-actions">
             <button
               type="button"
-              class="teacher-btn teacher-btn--primary"
+              class="ui-btn ui-btn--secondary"
               @click="emit('openClassManagement')"
             >
               班级管理
             </button>
             <button
               type="button"
-              class="teacher-btn teacher-btn--ghost"
+              class="ui-btn ui-btn--secondary"
               @click="emit('openReportExport')"
             >
               导出班级报告
@@ -71,7 +124,7 @@ const emit = defineEmits<{
           <div class="teacher-summary-title">
             <span>Directory Snapshot</span>
           </div>
-          <div class="teacher-summary-grid progress-strip metric-panel-grid">
+          <div class="teacher-summary-grid progress-strip metric-panel-grid metric-panel-default-surface">
             <article class="progress-card metric-panel-card">
               <div class="progress-card-label metric-panel-label">
                 可访问班级
@@ -121,23 +174,30 @@ const emit = defineEmits<{
                 学生目录
               </h3>
             </div>
-            <div class="teacher-directory-meta">
-              共 {{ filteredTotal }} 名学生
-            </div>
           </header>
 
-          <section
-            class="teacher-directory-filters"
-            aria-label="学生过滤"
+          <WorkspaceDirectoryToolbar
+            :model-value="searchQuery"
+            :total="filteredTotal"
+            selected-sort-label=""
+            :sort-options="[]"
+            search-placeholder="搜索姓名、用户名或学号"
+            total-suffix="名学生"
+            :show-total="false"
+            filter-panel-title="学生筛选"
+            reset-label="清空筛选"
+            :reset-disabled="!hasActiveFilters"
+            @update:model-value="emit('updateSearchQuery', $event)"
+            @reset-filters="resetFilters"
           >
-            <div class="teacher-filter-grid">
-              <label class="teacher-field">
-                <span class="teacher-field-label">班级</span>
+            <template #filter-panel>
+              <label class="teacher-directory-filter-field">
+                <span class="workspace-overline">班级</span>
                 <select
                   :value="selectedClassName"
-                  class="teacher-field-control"
+                  class="teacher-directory-filter-control"
                   :disabled="loadingClasses"
-                  @change="emit('selectClass', ($event.target as HTMLSelectElement).value)"
+                  @change="handleClassChange"
                 >
                   <option value="">全部班级</option>
                   <option
@@ -149,46 +209,14 @@ const emit = defineEmits<{
                   </option>
                 </select>
               </label>
-
-              <label class="teacher-field">
-                <span class="teacher-field-label">搜索姓名或用户名</span>
-                <div class="teacher-field-control teacher-filter-control">
-                  <Search class="h-4 w-4 text-text-muted" />
-                  <input
-                    :value="searchQuery"
-                    type="text"
-                    placeholder="搜索姓名或用户名"
-                    class="teacher-input"
-                    @input="emit('updateSearchQuery', ($event.target as HTMLInputElement).value)"
-                  >
-                </div>
-              </label>
-
-              <label class="teacher-field">
-                <span class="teacher-field-label">按学号查询</span>
-                <div class="teacher-field-control teacher-filter-control">
-                  <Search class="h-4 w-4 text-text-muted" />
-                  <input
-                    :value="studentNoQuery"
-                    type="text"
-                    placeholder="输入学号精确查询"
-                    class="teacher-input"
-                    @input="emit('updateStudentNoQuery', ($event.target as HTMLInputElement).value)"
-                  >
-                </div>
-              </label>
-            </div>
-          </section>
+            </template>
+          </WorkspaceDirectoryToolbar>
 
           <div
             v-if="loadingStudents"
-            class="teacher-skeleton-list workspace-directory-loading"
+            class="workspace-directory-loading"
           >
-            <div
-              v-for="index in 6"
-              :key="index"
-              class="h-14 animate-pulse rounded-2xl bg-[var(--journal-surface-subtle)]"
-            />
+            <AppLoading>同步学生目录...</AppLoading>
           </div>
 
           <AppEmpty
@@ -199,89 +227,85 @@ const emit = defineEmits<{
             description="调整搜索词或切换班级后再试。"
           />
 
-          <section
+          <div
             v-else
             class="teacher-directory"
           >
-            <div class="teacher-directory-head">
-              <span class="teacher-directory-head-cell teacher-directory-head-cell-student-no">
-                学号
-              </span>
-              <span class="teacher-directory-head-cell teacher-directory-head-cell-name">
-                学生名称
-              </span>
-              <span class="teacher-directory-head-cell teacher-directory-head-cell-alias">
-                昵称
-              </span>
-              <span>薄弱项</span>
-              <span>做题数</span>
-              <span>得分数</span>
-              <span>操作</span>
-            </div>
-
-            <button
-              v-for="student in filteredStudents"
-              :key="student.id"
-              type="button"
-              class="teacher-directory-row"
-              :aria-label="`${student.name || student.username}，${student.solved_count ?? 0} 题，${student.total_score ?? 0} 分，查看学员分析`"
-              @click="emit('openStudent', student.id)"
+            <WorkspaceDataTable
+              class="workspace-directory-list teacher-student-directory-table"
+              :columns="columns"
+              :rows="rows"
+              row-key="id"
             >
-              <div class="teacher-directory-cell teacher-directory-cell-student-no">
-                {{ student.student_no || '未设置学号' }}
-              </div>
-
-              <div class="teacher-directory-cell teacher-directory-cell-name">
-                <h4
-                  class="teacher-directory-row-title"
-                  :title="student.name || '未设置姓名'"
-                >
-                  {{ student.name || '未设置姓名' }}
-                </h4>
-              </div>
-
-              <div class="teacher-directory-cell teacher-directory-cell-alias">
-                <div
-                  class="teacher-directory-row-points"
-                  :title="student.username"
-                >
-                  {{ student.username }}
-                </div>
-              </div>
-
-              <div class="teacher-directory-row-tags">
-                <span class="teacher-directory-chip teacher-directory-chip-muted">
-                  {{ student.weak_dimension || '暂无薄弱项' }}
+              <template #cell-student_no="{ row }">
+                <span class="teacher-directory-cell-student-no">
+                  {{ (row as StudentDirectoryTableRow).student_no }}
                 </span>
-              </div>
+              </template>
 
-              <div class="teacher-directory-row-solved">
-                {{ student.solved_count ?? 0 }}
-              </div>
+              <template #cell-name="{ row }">
+                <div class="teacher-directory-cell-name">
+                  <h4
+                    class="teacher-directory-row-title"
+                    :title="(row as StudentDirectoryTableRow).name"
+                  >
+                    {{ (row as StudentDirectoryTableRow).name }}
+                  </h4>
+                </div>
+              </template>
 
-              <div class="teacher-directory-row-score">
-                {{ student.total_score ?? 0 }}
-              </div>
+              <template #cell-username="{ row }">
+                <span
+                  class="teacher-directory-row-points"
+                  :title="(row as StudentDirectoryTableRow).username"
+                >
+                  {{ (row as StudentDirectoryTableRow).username }}
+                </span>
+              </template>
 
-              <div class="teacher-directory-row-cta">
-                <span>查看学员分析</span>
-                <ArrowRight class="h-4 w-4" />
-              </div>
-            </button>
+              <template #cell-weak_dimension="{ row }">
+                <span class="teacher-directory-chip teacher-directory-chip-muted">
+                  {{ (row as StudentDirectoryTableRow).weak_dimension }}
+                </span>
+              </template>
 
-            <div
+              <template #cell-solved_count="{ row }">
+                <span class="teacher-directory-row-solved">
+                  {{ (row as StudentDirectoryTableRow).solved_count }}
+                </span>
+              </template>
+
+              <template #cell-total_score="{ row }">
+                <span class="teacher-directory-row-score">
+                  {{ (row as StudentDirectoryTableRow).total_score }}
+                </span>
+              </template>
+
+              <template #cell-actions="{ row }">
+                <div class="teacher-directory-row-cta">
+                  <button
+                    type="button"
+                    class="ui-btn ui-btn--primary ui-btn--xs"
+                    :aria-label="`${(row as StudentDirectoryTableRow).name || (row as StudentDirectoryTableRow).username}，${(row as StudentDirectoryTableRow).solved_count} 题，${(row as StudentDirectoryTableRow).total_score} 分，查看学员分析`"
+                    @click="emit('openStudent', (row as StudentDirectoryTableRow).id)"
+                  >
+                    学员分析
+                    <ArrowRight class="h-4 w-4" />
+                  </button>
+                </div>
+              </template>
+            </WorkspaceDataTable>
+
+            <WorkspaceDirectoryPagination
               v-if="filteredTotal > 0"
-              class="teacher-directory-pagination workspace-directory-pagination"
-            >
-              <PagePaginationControls
-                :page="page"
-                :total-pages="totalPages"
-                :total="filteredTotal"
-                :total-label="`共 ${filteredTotal} 名学生`"
-                @change-page="emit('changePage', $event)"
-              />
-            </div>
-          </section>
+              class="teacher-directory-pagination"
+              :page="page"
+              :total-pages="totalPages"
+              :total="filteredTotal"
+              :total-label="`共 ${filteredTotal} 名学生`"
+              @change-page="emit('changePage', $event)"
+            />
+          </div>
         </section>
         <div
           v-if="error"
@@ -303,16 +327,11 @@ const emit = defineEmits<{
 
 <style scoped>
 .teacher-management-shell {
-  --teacher-management-accent: var(--color-primary);
-  --teacher-management-accent-strong: color-mix(
-    in srgb,
-    var(--color-primary-hover) 82%,
-    var(--journal-ink)
-  );
-  --teacher-directory-columns: var(--teacher-student-directory-columns);
-  --teacher-student-directory-columns: minmax(7.5rem, 0.7fr) minmax(10rem, 1fr) minmax(10rem, 0.9fr)
-    minmax(12rem, 0.95fr) minmax(6rem, 0.55fr) minmax(6rem, 0.55fr) minmax(8.5rem, 0.85fr);
-  --teacher-management-font: var(--font-family-sans);
+  font-family: var(--font-family-sans);
+}
+
+.teacher-badge-card {
+  border: 1px solid var(--teacher-card-border);
 }
 
 .teacher-page {
@@ -322,48 +341,34 @@ const emit = defineEmits<{
   flex-direction: column;
 }
 
-.teacher-badge-card {
-  border: 1px solid var(--teacher-card-border);
-}
-
 .teacher-directory-section {
-  margin-top: var(--space-6);
+  margin-top: var(--workspace-directory-page-block-gap, var(--space-5));
 }
 
-.list-heading {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: var(--space-3);
+.teacher-directory-section :deep(.workspace-directory-pagination-shell) {
+  margin-top: var(--space-2);
 }
 
 .list-heading__title {
   margin: var(--space-1) 0 0;
   font-size: var(--font-size-1-20);
-  font-weight: 700;
-  color: var(--journal-ink);
+  font-weight: 900;
+  color: var(--color-text-primary);
 }
 
-.teacher-directory-filters {
+.teacher-directory-filter-field {
   display: grid;
-  gap: var(--space-4);
-  padding: var(--space-5) 0;
+  gap: var(--space-2);
 }
 
-.teacher-filter-grid {
-  display: grid;
-  gap: var(--space-4);
-  grid-template-columns: 220px minmax(0, 1fr) minmax(0, 1fr);
-}
-
-.teacher-summary-grid.progress-strip {
-  margin-top: var(--space-4-5);
-}
-
-.teacher-skeleton-list {
-  display: grid;
-  gap: var(--space-3);
+.teacher-directory-filter-control {
+  min-height: 2.5rem;
+  width: 100%;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  padding: 0 var(--space-3);
 }
 
 .teacher-directory {
@@ -371,94 +376,41 @@ const emit = defineEmits<{
   flex-direction: column;
 }
 
-.teacher-directory-row {
-  display: grid;
-  grid-template-columns: var(--teacher-student-directory-columns);
-  gap: var(--space-4);
-  align-items: center;
-  width: 100%;
-  padding: var(--space-4-5) 0;
-  border: 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-  background: transparent;
-  text-align: left;
-  cursor: pointer;
-  transition:
-    background 160ms ease,
-    border-color 160ms ease;
-}
-
-.teacher-directory-row:hover,
-.teacher-directory-row:focus-visible {
-  background: color-mix(in srgb, var(--journal-accent) 5%, transparent);
-  box-shadow: inset 2px 0 0 color-mix(in srgb, var(--journal-accent) 62%, transparent);
-  outline: none;
-}
-
-.teacher-directory-cell {
-  display: grid;
-  gap: var(--space-2);
-  min-width: 0;
-  align-content: center;
-  justify-self: stretch;
-  text-align: left;
-}
-
-.teacher-directory-cell-alias .teacher-directory-row-points,
 .teacher-directory-row-points {
   font-family: var(--font-family-mono);
 }
 
 .teacher-directory-cell-student-no {
   font-size: var(--font-size-0-76);
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: 0.02em;
-  color: var(--journal-muted);
-  font-family: var(--font-family-sans);
+  color: var(--color-text-muted);
   font-variant-numeric: tabular-nums;
 }
 
 .teacher-directory-row-title {
   margin: 0;
   min-width: 0;
-  font-size: var(--font-size-0-90);
-  font-weight: 400;
+  font-size: var(--font-size-0-98);
+  font-weight: 800;
   line-height: 1.35;
-  color: var(--journal-ink);
+  color: var(--color-text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.teacher-directory-head-cell-student-no,
-.teacher-directory-head-cell-name,
-.teacher-directory-head-cell-alias,
-.teacher-directory-cell-student-no,
-.teacher-directory-cell-name,
-.teacher-directory-cell-alias {
-  justify-self: start;
-  width: 100%;
+.teacher-student-directory-table :deep(.workspace-data-table__row:hover) .teacher-directory-row-title {
+  color: var(--color-primary);
 }
 
 .teacher-directory-row-points {
   font-size: var(--font-size-0-80);
-  font-weight: 400;
-  color: var(--journal-muted);
+  font-weight: 800;
+  color: var(--color-text-secondary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.teacher-directory-row-copy {
-  font-size: var(--font-size-0-84);
-  line-height: 1.6;
-  color: color-mix(in srgb, var(--journal-muted) 92%, transparent);
-}
-
-.teacher-directory-row-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
 }
 
 .teacher-directory-chip {
@@ -467,31 +419,25 @@ const emit = defineEmits<{
   min-height: 1.65rem;
   padding: 0 var(--space-2-5);
   border-radius: 0.5rem;
-  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
+  background: var(--color-bg-elevated);
   font-size: var(--font-size-0-75);
-  font-weight: 600;
-  color: var(--journal-accent-strong);
-}
-
-.teacher-directory-chip-muted {
-  background: color-mix(in srgb, var(--journal-muted) 10%, transparent);
-  color: var(--journal-muted);
+  font-weight: 800;
+  color: var(--color-text-secondary);
 }
 
 .teacher-directory-row-solved,
 .teacher-directory-row-score {
+  font-family: var(--font-family-mono);
   font-size: var(--font-size-0-81);
-  line-height: 1.5;
-  color: var(--journal-muted);
+  font-weight: 800;
+  color: var(--color-text-primary);
 }
 
 .teacher-directory-row-cta {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-1-5);
-  font-size: var(--font-size-0-82);
-  font-weight: 700;
-  color: var(--journal-accent-strong);
+  justify-content: flex-end;
+  gap: var(--space-2);
 }
 
 @media (max-width: 1080px) {
@@ -501,19 +447,12 @@ const emit = defineEmits<{
     flex-direction: column;
   }
 
-  .teacher-summary-grid,
-  .teacher-filter-grid {
+  .teacher-summary-grid {
     grid-template-columns: 1fr;
   }
 
-  .teacher-directory-head {
-    display: none;
-  }
-
-  .teacher-directory-row {
-    grid-template-columns: 1fr;
-    gap: var(--space-3);
-    padding: var(--space-4) 0;
+  .teacher-directory-row-cta {
+    justify-content: flex-start;
   }
 }
 </style>

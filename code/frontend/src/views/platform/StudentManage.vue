@@ -1,223 +1,183 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
-import { 
-  Users, 
-  GraduationCap, 
-  UserPlus, 
-  RefreshCw,
-  Search,
-  Filter
-} from 'lucide-vue-next'
+import { computed, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 
-import { usePlatformStudentDirectory } from '@/composables/usePlatformStudentDirectory'
-import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
-import WorkspaceDirectoryPagination from '@/components/common/WorkspaceDirectoryPagination.vue'
-import WorkspaceDirectoryToolbar from '@/components/common/WorkspaceDirectoryToolbar.vue'
-import AppLoading from '@/components/common/AppLoading.vue'
-import AppEmpty from '@/components/common/AppEmpty.vue'
+import { getClasses, getStudentsDirectory } from '@/api/teacher'
+import type { TeacherClassItem } from '@/api/contracts'
+import StudentManageHeroPanel from '@/components/platform/student/StudentManageHeroPanel.vue'
+import StudentManageWorkspacePanel from '@/components/platform/student/StudentManageWorkspacePanel.vue'
+import { useStudentDirectoryQuery } from '@/composables/useStudentDirectoryQuery'
+import { DEFAULT_PAGE_SIZE } from '@/utils/constants'
 
-const studentDirectoryQuery = usePlatformStudentDirectory()
+const router = useRouter()
+const classes = ref<TeacherClassItem[]>([])
+const loadingClasses = ref(false)
+const pageError = ref<string | null>(null)
+const page = ref(1)
+const pageSize = ref(DEFAULT_PAGE_SIZE)
+const keyword = ref('')
+const classFilter = ref('')
+const studentDirectoryQuery = useStudentDirectoryQuery({
+  debounceMs: 250,
+  errorMessage: '加载学生目录失败，请稍后重试',
+  request: getStudentsDirectory,
+})
 
-const {
-  list,
-  total,
-  page,
-  pageSize,
-  loading,
-  keyword,
-  classFilter,
-  clearFilters,
-} = studentDirectoryQuery
+const list = computed(() => studentDirectoryQuery.students.value)
+const total = computed(() => studentDirectoryQuery.total.value)
+const loading = computed(() => studentDirectoryQuery.loading.value)
+const error = computed(() => pageError.value ?? studentDirectoryQuery.error.value)
+const hasActiveFilters = computed(() => Boolean(keyword.value.trim() || classFilter.value))
+const totalPages = computed(() => Math.max(1, Math.ceil(total.value / Math.max(pageSize.value, 1))))
+const activeStudents = computed(() =>
+  list.value.filter((item) => (item.recent_event_count ?? 0) > 0).length
+)
+const assignedClassCount = computed(() =>
+  classes.value.filter((item) => (item.student_count ?? 0) > 0).length
+)
+const directoryParams = computed(() => ({
+  class_name: classFilter.value || undefined,
+  keyword: keyword.value.trim() || undefined,
+  student_no: undefined,
+  sort_key: 'name' as const,
+  sort_order: 'asc' as const,
+  page: page.value,
+  page_size: pageSize.value,
+}))
+const rows = computed(() =>
+  list.value.map((item) => ({
+    id: item.id,
+    name: item.name?.trim() || '未设置姓名',
+    username: item.username,
+    student_no: item.student_no?.trim() || '未设置学号',
+    class_name: item.class_name || '未分班',
+    total_score: item.total_score ?? 0,
+    actions: '查看学员',
+  }))
+)
+
+async function loadClasses(): Promise<void> {
+  loadingClasses.value = true
+  try {
+    classes.value = await getClasses()
+  } finally {
+    loadingClasses.value = false
+  }
+}
+
+async function loadStudents(): Promise<void> {
+  await studentDirectoryQuery.loadStudents(directoryParams.value)
+}
 
 async function initialize(): Promise<void> {
-  await studentDirectoryQuery.loadStudents({
-    page: page.value,
-    pageSize: pageSize.value,
-    keyword: keyword.value,
-    classId: classFilter.value,
+  pageError.value = null
+  studentDirectoryQuery.cancelScheduledLoad()
+
+  try {
+    await loadClasses()
+    await loadStudents()
+  } catch (err) {
+    console.error('初始化学生管理失败:', err)
+    pageError.value = '加载学生管理失败，请稍后重试'
+  }
+}
+
+function handleKeywordChange(value: string): void {
+  keyword.value = value
+  page.value = 1
+  studentDirectoryQuery.scheduleLoadStudents({
+    ...directoryParams.value,
+    keyword: value.trim() || undefined,
+    page: 1,
   })
 }
 
-const directoryParams = computed(() => ({
-  page: page.value,
-  pageSize: pageSize.value,
-  keyword: keyword.value,
-  classId: classFilter.value,
-}))
+function handleClassFilterChange(value: string): void {
+  classFilter.value = value
+  page.value = 1
+  studentDirectoryQuery.cancelScheduledLoad()
+  void studentDirectoryQuery.loadStudents({
+    ...directoryParams.value,
+    class_name: value || undefined,
+    page: 1,
+  })
+}
 
-watch(directoryParams, () => {
-  void studentDirectoryQuery.loadStudents(directoryParams.value)
-})
+function resetFilters(): void {
+  keyword.value = ''
+  classFilter.value = ''
+  page.value = 1
+  studentDirectoryQuery.cancelScheduledLoad()
+  void studentDirectoryQuery.loadStudents({
+    ...directoryParams.value,
+    class_name: undefined,
+    keyword: undefined,
+    page: 1,
+  })
+}
+
+function handlePageChange(nextPage: number): void {
+  const normalizedPage = Math.max(1, Math.floor(nextPage))
+  if (normalizedPage === page.value || normalizedPage > totalPages.value) {
+    return
+  }
+
+  page.value = normalizedPage
+  void loadStudents()
+}
+
+function openStudent(studentId: string): void {
+  const student = list.value.find((item) => item.id === studentId)
+  void router.push({
+    name: 'PlatformStudentAnalysis',
+    params: {
+      className: student?.class_name || classFilter.value || '',
+      studentId,
+    },
+  })
+}
 
 onMounted(() => {
   void initialize()
 })
-
-const columns = [
-  { key: 'username', label: '用户名', widthClass: 'w-[15%]' },
-  { key: 'nickname', label: '昵称', widthClass: 'w-[15%]' },
-  { key: 'email', label: '邮箱', widthClass: 'w-[20%]' },
-  { key: 'class_name', label: '所属班级', widthClass: 'w-[15%]' },
-  { key: 'created_at', label: '加入时间', widthClass: 'w-[15%]' },
-  { key: 'actions', label: '操作', widthClass: 'w-[10%]', align: 'right' as const },
-]
 </script>
 
 <template>
-  <div class="workspace-shell">
+  <div class="workspace-shell journal-shell journal-shell-admin journal-hero admin-student-manage-shell">
     <div class="workspace-grid">
       <main class="content-pane">
-        <section class="workspace-hero">
-          <div class="workspace-tab-heading__main">
-            <div class="workspace-overline">
-              Student Workspace
-            </div>
-            <h1 class="hero-title">
-              学生管理
-            </h1>
-            <p class="hero-summary">
-              在后台视角查看学生目录、班级归属与学习表现，并快速进入学员分析。
-            </p>
-          </div>
+        <StudentManageHeroPanel
+          :total="total"
+          :active-students="activeStudents"
+          :assigned-class-count="assignedClassCount"
+          @refresh="void initialize()"
+        />
 
-          <div class="awd-library-hero-actions">
-            <div class="quick-actions">
-              <button
-                type="button"
-                class="ui-btn ui-btn--primary"
-                @click="initialize()"
-              >
-                <RefreshCw class="h-4 w-4" />
-                刷新目录
-              </button>
-            </div>
-          </div>
-        </section>
-
-        <div class="student-manage-body mt-10 space-y-10">
-          <div class="metric-panel-grid metric-panel-grid--premium cols-3">
-            <article class="metric-panel-card metric-panel-card--premium">
-              <div class="metric-panel-label">
-                <span>学生总量</span>
-                <Users class="h-4 w-4" />
-              </div>
-              <div class="metric-panel-value">
-                {{ total.toString().padStart(2, '0') }}
-              </div>
-              <div class="metric-panel-helper">
-                平台注册学员总数
-              </div>
-            </article>
-
-            <article class="metric-panel-card metric-panel-card--premium">
-              <div class="metric-panel-label">
-                <span>活跃学员</span>
-                <Activity class="h-4 w-4" />
-              </div>
-              <div class="metric-panel-value">
-                {{ total.toString().padStart(2, '0') }}
-              </div>
-              <div class="metric-panel-helper">
-                最近 30 天有登录记录
-              </div>
-            </article>
-
-            <article class="metric-panel-card metric-panel-card--premium">
-              <div class="metric-panel-label">
-                <span>正式班级</span>
-                <GraduationCap class="h-4 w-4" />
-              </div>
-              <div class="metric-panel-value">
-                00
-              </div>
-              <div class="metric-panel-helper">
-                已分配班级的学员
-              </div>
-            </article>
-          </div>
-
-          <section class="workspace-directory-section">
-            <WorkspaceDirectoryToolbar
-              v-model="keyword"
-              :total="total"
-              search-placeholder="检索学生姓名或邮箱..."
-              @reset-filters="clearFilters"
-            />
-
-            <div
-              v-if="loading && list.length === 0"
-              class="py-12 flex justify-center"
-            >
-              <AppLoading>同步学员目录...</AppLoading>
-            </div>
-
-            <template v-else>
-              <AppEmpty
-                v-if="list.length === 0"
-                class="workspace-directory-empty"
-                icon="Users"
-                title="暂无学生数据"
-                description="当前平台上没有任何学生账号。"
-              />
-
-              <WorkspaceDataTable
-                v-else
-                class="workspace-directory-list"
-                :columns="columns"
-                :rows="list"
-                row-key="id"
-              />
-
-              <div class="mt-6">
-                <WorkspaceDirectoryPagination
-                  :page="page"
-                  :total-pages="Math.max(1, Math.ceil(total / pageSize))"
-                  :total="total"
-                  total-label="名学生"
-                  @change-page="page = $event"
-                />
-              </div>
-            </template>
-          </section>
-        </div>
+        <StudentManageWorkspacePanel
+          :classes="classes"
+          :loading="loading"
+          :loading-classes="loadingClasses"
+          :error="error"
+          :keyword="keyword"
+          :class-filter="classFilter"
+          :total="total"
+          :has-active-filters="hasActiveFilters"
+          :rows="rows"
+          :page="page"
+          :total-pages="totalPages"
+          @update:keyword="handleKeywordChange"
+          @change:class-filter="handleClassFilterChange"
+          @reset-filters="resetFilters"
+          @change-page="handlePageChange"
+          @open-student="openStudent"
+        />
       </main>
     </div>
   </div>
 </template>
 
 <style scoped>
-.workspace-hero {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: var(--space-7);
-  padding-bottom: var(--space-6);
-  border-bottom: 1px solid var(--workspace-line-soft);
-}
-
-.hero-title {
-  margin: 0.5rem 0 0;
-  font-size: var(--workspace-page-title-font-size);
-  line-height: var(--workspace-page-title-line-height);
-  letter-spacing: var(--workspace-page-title-letter-spacing);
-  color: var(--journal-ink);
-}
-
-.hero-summary {
-  max-width: 760px;
-  margin-top: var(--space-3-5);
-  font-size: var(--font-size-15);
-  line-height: 1.9;
-  color: var(--journal-muted);
-}
-
-.awd-library-hero-actions {
-  display: flex;
-  align-items: flex-end;
-  padding-bottom: 0.5rem;
-}
-
-.quick-actions {
-  display: flex;
-  gap: 0.75rem;
+.admin-student-manage-shell {
+  --workspace-line-soft: color-mix(in srgb, var(--color-text-primary) 10%, transparent);
 }
 </style>

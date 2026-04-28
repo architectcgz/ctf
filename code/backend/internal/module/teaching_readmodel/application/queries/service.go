@@ -397,7 +397,7 @@ func (s *QueryService) GetStudentRecommendations(ctx context.Context, requesterI
 		return nil, err
 	}
 
-	result, err := s.recommendationService.RecommendWithContext(ctx, student.ID, limit)
+	result, err := s.recommendationService.Recommend(ctx, student.ID, limit)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
@@ -740,7 +740,7 @@ func (s *QueryService) firstStudentRecommendation(ctx context.Context, students 
 		return nil
 	}
 	for _, student := range students {
-		result, err := s.recommendationService.RecommendWithContext(ctx, student.ID, limit)
+		result, err := s.recommendationService.Recommend(ctx, student.ID, limit)
 		if err != nil {
 			s.logger.Warn("recommend_student_for_class_review_failed", zap.Int64("student_id", student.ID), zap.Error(err))
 			continue

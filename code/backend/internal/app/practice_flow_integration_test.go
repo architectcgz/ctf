@@ -3,15 +3,10 @@ package app
 import (
 	"bytes"
 	"context"
-	"crypto/rand"
-	"crypto/rsa"
-	"crypto/x509"
 	"encoding/json"
-	"encoding/pem"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -25,6 +20,7 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
+	"ctf-platform/internal/app/composition"
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/middleware"
@@ -61,7 +57,6 @@ import (
 	runtimeadapters "ctf-platform/internal/testutil/runtimeadapters"
 	"ctf-platform/internal/validation"
 	"ctf-platform/pkg/errcode"
-	jwtpkg "ctf-platform/pkg/jwt"
 )
 
 type flowTestEnv struct {
@@ -80,8 +75,7 @@ type flowEnvelope struct {
 }
 
 type flowLoginResponse struct {
-	AccessToken string `json:"access_token"`
-	User        struct {
+	User struct {
 		ID       int64  `json:"id"`
 		Username string `json:"username"`
 		Role     string `json:"role"`
@@ -199,8 +193,8 @@ type flowAuditItem struct {
 func TestPracticeFlow_AdminPublishesChallengeStudentSolvesChallenge(t *testing.T) {
 	env := newPracticeFlowTestEnv(t)
 
-	adminToken := loginForToken(t, env.router, "admin_user", "Password123")
-	studentToken := loginForToken(t, env.router, "student_user", "Password123")
+	adminSession := loginForSession(t, env.router, "admin_user", "Password123")
+	studentSession := loginForSession(t, env.router, "student_user", "Password123")
 
 	createResp := performFlowJSONRequest(
 		t,
@@ -223,7 +217,7 @@ func TestPracticeFlow_AdminPublishesChallengeStudentSolvesChallenge(t *testing.T
 				},
 			},
 		},
-		bearerHeaders(adminToken),
+		sessionHeaders(adminSession),
 		nil,
 	)
 	if createResp.Code != http.StatusOK {
@@ -241,7 +235,7 @@ func TestPracticeFlow_AdminPublishesChallengeStudentSolvesChallenge(t *testing.T
 			"flag_type": "static",
 			"flag":      "flag{sqli_success}",
 		},
-		bearerHeaders(adminToken),
+		sessionHeaders(adminSession),
 		nil,
 	)
 	if configureFlagResp.Code != http.StatusOK {
@@ -260,14 +254,14 @@ func TestPracticeFlow_AdminPublishesChallengeStudentSolvesChallenge(t *testing.T
 		http.MethodGet,
 		"/api/v1/challenges",
 		nil,
-		bearerHeaders(studentToken),
+		sessionHeaders(studentSession),
 		nil,
 	)
 	if listBeforeResp.Code != http.StatusOK {
 		t.Fatalf("unexpected list challenges status: %d body=%s", listBeforeResp.Code, listBeforeResp.Body.String())
 	}
 	listBeforeBody := decodeFlowEnvelope(t, listBeforeResp)
-	listBefore := decodeFlowJSON[dto.PageResult](t, listBeforeBody.Data)
+	listBefore := decodeFlowJSON[dto.PageResult[json.RawMessage]](t, listBeforeBody.Data)
 	listBeforeItems := decodeFlowJSON[[]flowChallengeListItem](t, mustMarshalJSON(t, listBefore.List))
 	if len(listBeforeItems) != 1 {
 		t.Fatalf("expected 1 published challenge, got %+v", listBeforeItems)
@@ -282,7 +276,7 @@ func TestPracticeFlow_AdminPublishesChallengeStudentSolvesChallenge(t *testing.T
 		http.MethodGet,
 		"/api/v1/challenges/"+strconv.FormatInt(challenge.ID, 10),
 		nil,
-		bearerHeaders(studentToken),
+		sessionHeaders(studentSession),
 		nil,
 	)
 	if detailResp.Code != http.StatusOK {
@@ -315,7 +309,7 @@ func TestPracticeFlow_AdminPublishesChallengeStudentSolvesChallenge(t *testing.T
 		http.MethodPost,
 		"/api/v1/challenges/"+strconv.FormatInt(challenge.ID, 10)+"/instances",
 		nil,
-		bearerHeaders(studentToken),
+		sessionHeaders(studentSession),
 		nil,
 	)
 	if instanceCreateResp.Code != http.StatusOK {
@@ -349,7 +343,7 @@ func TestPracticeFlow_AdminPublishesChallengeStudentSolvesChallenge(t *testing.T
 		http.MethodPost,
 		"/api/v1/instances/"+strconv.FormatInt(instance.ID, 10)+"/access",
 		nil,
-		bearerHeaders(studentToken),
+		sessionHeaders(studentSession),
 		nil,
 	)
 	if instanceAccessResp.Code != http.StatusOK {
@@ -414,7 +408,7 @@ func TestPracticeFlow_AdminPublishesChallengeStudentSolvesChallenge(t *testing.T
 		http.MethodPost,
 		"/api/v1/challenges/"+strconv.FormatInt(challenge.ID, 10)+"/submit",
 		map[string]any{"flag": "flag{wrong_answer}"},
-		bearerHeaders(studentToken),
+		sessionHeaders(studentSession),
 		nil,
 	)
 	if wrongSubmitResp.Code != http.StatusOK {
@@ -435,7 +429,7 @@ func TestPracticeFlow_AdminPublishesChallengeStudentSolvesChallenge(t *testing.T
 		http.MethodPost,
 		"/api/v1/challenges/"+strconv.FormatInt(challenge.ID, 10)+"/submit",
 		map[string]any{"flag": "flag{sqli_success}"},
-		bearerHeaders(studentToken),
+		sessionHeaders(studentSession),
 		nil,
 	)
 	if correctSubmitResp.Code != http.StatusOK {
@@ -459,7 +453,7 @@ func TestPracticeFlow_AdminPublishesChallengeStudentSolvesChallenge(t *testing.T
 		http.MethodGet,
 		"/api/v1/challenges/"+strconv.FormatInt(challenge.ID, 10)+"/submissions/mine",
 		nil,
-		bearerHeaders(studentToken),
+		sessionHeaders(studentSession),
 		nil,
 	)
 	if submissionHistoryResp.Code != http.StatusOK {
@@ -489,7 +483,7 @@ func TestPracticeFlow_AdminPublishesChallengeStudentSolvesChallenge(t *testing.T
 		http.MethodPost,
 		"/api/v1/challenges/"+strconv.FormatInt(challenge.ID, 10)+"/submit",
 		map[string]any{"flag": "flag{sqli_success}"},
-		bearerHeaders(studentToken),
+		sessionHeaders(studentSession),
 		nil,
 	)
 	if repeatSubmitResp.Code != http.StatusOK {
@@ -510,14 +504,14 @@ func TestPracticeFlow_AdminPublishesChallengeStudentSolvesChallenge(t *testing.T
 		http.MethodGet,
 		"/api/v1/challenges",
 		nil,
-		bearerHeaders(studentToken),
+		sessionHeaders(studentSession),
 		nil,
 	)
 	if listAfterResp.Code != http.StatusOK {
 		t.Fatalf("unexpected post-submit list status: %d body=%s", listAfterResp.Code, listAfterResp.Body.String())
 	}
 	listAfterBody := decodeFlowEnvelope(t, listAfterResp)
-	listAfter := decodeFlowJSON[dto.PageResult](t, listAfterBody.Data)
+	listAfter := decodeFlowJSON[dto.PageResult[json.RawMessage]](t, listAfterBody.Data)
 	listAfterItems := decodeFlowJSON[[]flowChallengeListItem](t, mustMarshalJSON(t, listAfter.List))
 	if len(listAfterItems) != 1 {
 		t.Fatalf("expected 1 challenge after submit, got %+v", listAfterItems)
@@ -538,7 +532,7 @@ func TestPracticeFlow_AdminPublishesChallengeStudentSolvesChallenge(t *testing.T
 		http.MethodGet,
 		"/api/v1/users/me/progress",
 		nil,
-		bearerHeaders(studentToken),
+		sessionHeaders(studentSession),
 		nil,
 	)
 	if progressResp.Code != http.StatusOK {
@@ -562,7 +556,7 @@ func TestPracticeFlow_AdminPublishesChallengeStudentSolvesChallenge(t *testing.T
 		http.MethodGet,
 		"/api/v1/users/me/timeline",
 		nil,
-		bearerHeaders(studentToken),
+		sessionHeaders(studentSession),
 		nil,
 	)
 	if timelineResp.Code != http.StatusOK {
@@ -585,7 +579,7 @@ func TestPracticeFlow_AdminPublishesChallengeStudentSolvesChallenge(t *testing.T
 		http.MethodGet,
 		"/api/v1/teacher/students/"+strconv.FormatInt(env.student.ID, 10)+"/evidence?challenge_id="+strconv.FormatInt(challenge.ID, 10),
 		nil,
-		bearerHeaders(adminToken),
+		sessionHeaders(adminSession),
 		nil,
 	)
 	if evidenceResp.Code != http.StatusOK {
@@ -612,7 +606,7 @@ func TestPracticeFlow_AdminPublishesChallengeStudentSolvesChallenge(t *testing.T
 		http.MethodGet,
 		"/api/v1/admin/audit-logs?action=submit&resource_type=challenge_submission&user_id="+strconv.FormatInt(env.student.ID, 10),
 		nil,
-		bearerHeaders(adminToken),
+		sessionHeaders(adminSession),
 		nil,
 	)
 	if auditResp.Code != http.StatusOK {
@@ -642,8 +636,8 @@ func TestPracticeFlow_AdminPublishesChallengeStudentSolvesChallenge(t *testing.T
 func TestPracticeFlow_UnpublishedChallengeCannotBeSolved(t *testing.T) {
 	env := newPracticeFlowTestEnv(t)
 
-	adminToken := loginForToken(t, env.router, "admin_user", "Password123")
-	studentToken := loginForToken(t, env.router, "student_user", "Password123")
+	adminSession := loginForSession(t, env.router, "admin_user", "Password123")
+	studentSession := loginForSession(t, env.router, "student_user", "Password123")
 
 	createResp := performFlowJSONRequest(
 		t,
@@ -658,7 +652,7 @@ func TestPracticeFlow_UnpublishedChallengeCannotBeSolved(t *testing.T) {
 			"points":      150,
 			"image_id":    env.image.ID,
 		},
-		bearerHeaders(adminToken),
+		sessionHeaders(adminSession),
 		nil,
 	)
 	if createResp.Code != http.StatusOK {
@@ -676,7 +670,7 @@ func TestPracticeFlow_UnpublishedChallengeCannotBeSolved(t *testing.T) {
 			"flag_type": "static",
 			"flag":      "flag{draft_secret}",
 		},
-		bearerHeaders(adminToken),
+		sessionHeaders(adminSession),
 		nil,
 	)
 	if configureFlagResp.Code != http.StatusOK {
@@ -689,14 +683,14 @@ func TestPracticeFlow_UnpublishedChallengeCannotBeSolved(t *testing.T) {
 		http.MethodGet,
 		"/api/v1/challenges",
 		nil,
-		bearerHeaders(studentToken),
+		sessionHeaders(studentSession),
 		nil,
 	)
 	if listResp.Code != http.StatusOK {
 		t.Fatalf("unexpected list challenges status: %d body=%s", listResp.Code, listResp.Body.String())
 	}
 	listBody := decodeFlowEnvelope(t, listResp)
-	listPage := decodeFlowJSON[dto.PageResult](t, listBody.Data)
+	listPage := decodeFlowJSON[dto.PageResult[json.RawMessage]](t, listBody.Data)
 	listItems := decodeFlowJSON[[]flowChallengeListItem](t, mustMarshalJSON(t, listPage.List))
 	if len(listItems) != 0 {
 		t.Fatalf("expected unpublished challenge to stay hidden, got %+v", listItems)
@@ -708,7 +702,7 @@ func TestPracticeFlow_UnpublishedChallengeCannotBeSolved(t *testing.T) {
 		http.MethodGet,
 		"/api/v1/challenges/"+strconv.FormatInt(challenge.ID, 10),
 		nil,
-		bearerHeaders(studentToken),
+		sessionHeaders(studentSession),
 		nil,
 	)
 	if detailResp.Code != http.StatusForbidden {
@@ -721,7 +715,7 @@ func TestPracticeFlow_UnpublishedChallengeCannotBeSolved(t *testing.T) {
 		http.MethodPost,
 		"/api/v1/challenges/"+strconv.FormatInt(challenge.ID, 10)+"/submit",
 		map[string]any{"flag": "flag{draft_secret}"},
-		bearerHeaders(studentToken),
+		sessionHeaders(studentSession),
 		nil,
 	)
 	if submitResp.Code != http.StatusForbidden {
@@ -770,7 +764,9 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 		&model.ChallengeHint{},
 		&model.ChallengeWriteup{},
 		&model.ChallengeTopology{},
+		&model.ChallengePackageRevision{},
 		&model.EnvironmentTemplate{},
+		&model.ContestAWDService{},
 		&model.Submission{},
 		&model.Instance{},
 		&model.PortAllocation{},
@@ -783,11 +779,7 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 	cfg := newPracticeFlowTestConfig(t)
 	logger := zap.NewNop()
 
-	jwtManager, err := jwtpkg.NewManager(cfg.Auth, cfg.App.Name)
-	if err != nil {
-		t.Fatalf("create jwt manager: %v", err)
-	}
-	tokenService := authinfra.NewTokenService(cfg.Auth, cfg.WebSocket, cache, jwtManager)
+	tokenService := authinfra.NewTokenService(cfg.Auth, cfg.WebSocket, cache)
 	authRepo := identityinfra.NewRepository(db)
 	authService := authcmd.NewService(authRepo, tokenService, cfg.RateLimit.Login, logger)
 	casCommandService := authcmd.NewCASService(cfg.Auth.CAS, authRepo, tokenService, logger.Named("cas_command_service"), nil)
@@ -798,12 +790,12 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 	auditCommandService := opscmd.NewAuditService(auditRepo, logger)
 	auditQueryService := opsqry.NewAuditService(auditRepo, cfg.Pagination, logger)
 	authHandler := authhttp.NewHandler(authService, profileCommandService, profileQueryService, tokenService, casCommandService, casQueryService, authhttp.CookieConfig{
-		Name:     cfg.Auth.RefreshCookieName,
-		Path:     cfg.Auth.RefreshCookiePath,
-		Secure:   cfg.Auth.RefreshCookieSecure,
-		HTTPOnly: cfg.Auth.RefreshCookieHTTPOnly,
+		Name:     cfg.Auth.SessionCookieName,
+		Path:     cfg.Auth.SessionCookiePath,
+		Secure:   cfg.Auth.SessionCookieSecure,
+		HTTPOnly: cfg.Auth.SessionCookieHTTPOnly,
 		SameSite: cfg.Auth.CookieSameSite(),
-		MaxAge:   cfg.Auth.RefreshTokenTTL,
+		MaxAge:   cfg.Auth.SessionTTL,
 	}, logger, auditCommandService)
 	auditHandler := opshttp.NewAuditHandler(auditQueryService)
 
@@ -838,8 +830,12 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 
 	practiceRepo := practiceinfra.NewRepository(db)
 	instanceRepo := runtimeinfrarepo.NewRepository(db)
-	runtimeCleanupService := runtimecmd.NewRuntimeCleanupService(nil, logger)
-	runtimeProvisioningService := runtimecmd.NewProvisioningService(instanceRepo, nil, &cfg.Container, logger)
+	root, err := composition.BuildRoot(cfg, logger, db, cache)
+	if err != nil {
+		t.Fatalf("build composition root: %v", err)
+	}
+	runtimeModule := composition.BuildRuntimeModule(root)
+	runtimeCleanupService := runtimecmd.NewRuntimeCleanupService(nil, nil, logger)
 	runtimeInstanceCommands := runtimecmd.NewInstanceService(instanceRepo, runtimeCleanupService, &cfg.Container, logger)
 	runtimeInstanceQueries := runtimeqry.NewInstanceService(instanceRepo)
 	runtimeProxyTicketService := runtimeqry.NewProxyTicketService(runtimeinfrarepo.NewProxyTicketStore(cache), instanceRepo, cfg.Container.ProxyTicketTTL)
@@ -853,8 +849,8 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 		practiceRepo,
 		challengeRepo,
 		imageRepo,
-		instanceRepo,
-		runtimeadapters.NewPracticeRuntimeService(runtimeCleanupService, runtimeProvisioningService),
+		runtimeModule.PracticeInstanceRepository,
+		runtimeModule.PracticeRuntimeService,
 		nil,
 		nil,
 		cache,
@@ -883,7 +879,7 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 	authGroup.POST("/login", authHandler.Login)
 
 	protected := apiV1.Group("")
-	protected.Use(middleware.Auth(tokenService))
+	protected.Use(middleware.Auth(tokenService, cfg.Auth.SessionCookieName))
 
 	authoringOnly := protected.Group("/authoring")
 	authoringOnly.Use(middleware.RequireRole(model.RoleTeacher))
@@ -944,23 +940,18 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 func newPracticeFlowTestConfig(t *testing.T) *config.Config {
 	t.Helper()
 
-	privateKeyPath, publicKeyPath := writeFlowTestKeyPair(t)
 	return &config.Config{
 		App: config.AppConfig{
 			Name: "ctf-platform-test",
 			Env:  "test",
 		},
 		Auth: config.AuthConfig{
-			Issuer:                "ctf-platform-test",
-			AccessTokenTTL:        15 * time.Minute,
-			RefreshTokenTTL:       24 * time.Hour,
-			RefreshCookieName:     "refresh_token",
-			RefreshCookiePath:     "/",
-			RefreshCookieHTTPOnly: true,
-			RefreshCookieSameSite: "lax",
-			PrivateKeyPath:        privateKeyPath,
-			PublicKeyPath:         publicKeyPath,
-			TokenBlacklistPrefix:  "test:blacklist",
+			SessionTTL:            24 * time.Hour,
+			SessionCookieName:     "ctf_session",
+			SessionCookiePath:     "/",
+			SessionCookieHTTPOnly: true,
+			SessionCookieSameSite: "lax",
+			SessionKeyPrefix:      "test:session",
 		},
 		RateLimit: config.RateLimitConfig{
 			RedisKeyPrefix: "test:rate_limit",
@@ -1009,40 +1000,6 @@ func newPracticeFlowTestConfig(t *testing.T) *config.Config {
 	}
 }
 
-func writeFlowTestKeyPair(t *testing.T) (string, string) {
-	t.Helper()
-
-	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
-	if err != nil {
-		t.Fatalf("generate rsa key: %v", err)
-	}
-
-	privatePEM := pem.EncodeToMemory(&pem.Block{
-		Type:  "RSA PRIVATE KEY",
-		Bytes: x509.MarshalPKCS1PrivateKey(privateKey),
-	})
-	publicDER, err := x509.MarshalPKIXPublicKey(&privateKey.PublicKey)
-	if err != nil {
-		t.Fatalf("marshal public key: %v", err)
-	}
-	publicPEM := pem.EncodeToMemory(&pem.Block{
-		Type:  "PUBLIC KEY",
-		Bytes: publicDER,
-	})
-
-	keyDir := t.TempDir()
-	privatePath := filepath.Join(keyDir, "test_private.pem")
-	publicPath := filepath.Join(keyDir, "test_public.pem")
-	if err := os.WriteFile(privatePath, privatePEM, 0o600); err != nil {
-		t.Fatalf("write private key: %v", err)
-	}
-	if err := os.WriteFile(publicPath, publicPEM, 0o644); err != nil {
-		t.Fatalf("write public key: %v", err)
-	}
-
-	return privatePath, publicPath
-}
-
 func createFlowUser(t *testing.T, db *gorm.DB, username, password, role string) *model.User {
 	t.Helper()
 
@@ -1073,7 +1030,7 @@ func createFlowImage(t *testing.T, db *gorm.DB) *model.Image {
 	return image
 }
 
-func loginForToken(t *testing.T, router http.Handler, username, password string) string {
+func loginForSession(t *testing.T, router http.Handler, username, password string) *http.Cookie {
 	t.Helper()
 
 	resp := performFlowJSONRequest(
@@ -1092,15 +1049,45 @@ func loginForToken(t *testing.T, router http.Handler, username, password string)
 		t.Fatalf("unexpected login status for %s: %d body=%s", username, resp.Code, resp.Body.String())
 	}
 	body := decodeFlowEnvelope(t, resp)
-	login := decodeFlowJSON[flowLoginResponse](t, body.Data)
-	if login.AccessToken == "" {
-		t.Fatalf("expected access token for %s", username)
+	_ = decodeFlowJSON[flowLoginResponse](t, body.Data)
+	sessionCookie := cloneCookie(resp.Result().Cookies(), "ctf_session")
+	if sessionCookie == nil {
+		t.Fatalf("expected session cookie for %s", username)
 	}
-	return login.AccessToken
+	return sessionCookie
+}
+
+func sessionHeaders(cookie *http.Cookie) map[string]string {
+	if cookie == nil {
+		return nil
+	}
+	return map[string]string{
+		"Cookie": fmt.Sprintf("%s=%s", cookie.Name, cookie.Value),
+	}
+}
+
+func loginForToken(t *testing.T, router http.Handler, username, password string) string {
+	t.Helper()
+	return loginForSession(t, router, username, password).Value
 }
 
 func bearerHeaders(token string) map[string]string {
-	return map[string]string{"Authorization": "Bearer " + token}
+	if token == "" {
+		return nil
+	}
+	return map[string]string{
+		"Cookie": "ctf_session=" + token,
+	}
+}
+
+func cloneCookie(cookies []*http.Cookie, name string) *http.Cookie {
+	for _, cookie := range cookies {
+		if cookie.Name == name {
+			cloned := *cookie
+			return &cloned
+		}
+	}
+	return nil
 }
 
 func performFlowJSONRequest(

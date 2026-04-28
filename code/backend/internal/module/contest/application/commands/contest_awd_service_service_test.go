@@ -53,7 +53,7 @@ func TestContestAWDServiceServiceCreateFromTemplate(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := challengeRepo.Create(&model.Challenge{
+	if err := challengeRepo.Create(context.Background(), &model.Challenge{
 		ID:         9801,
 		Title:      "bank-portal",
 		Category:   "web",
@@ -66,7 +66,7 @@ func TestContestAWDServiceServiceCreateFromTemplate(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
-	if err := challengeRepo.CreateAWDServiceTemplate(&model.AWDServiceTemplate{
+	if err := challengeRepo.CreateAWDServiceTemplate(context.Background(), &model.AWDServiceTemplate{
 		ID:             1001,
 		Name:           "Bank Portal",
 		Slug:           "bank-portal",
@@ -118,6 +118,149 @@ func TestContestAWDServiceServiceCreateFromTemplate(t *testing.T) {
 	}
 }
 
+func TestContestAWDServiceServiceCreateAppliesDefaultScoreContract(t *testing.T) {
+	service, challengeRepo, contestRepo, _, awdRepo := newContestAWDServiceForTest(t)
+
+	now := time.Now()
+	if err := contestRepo.Create(context.Background(), &model.Contest{
+		ID:        1808,
+		Title:     "awd-service-default-score",
+		Mode:      model.ContestModeAWD,
+		Status:    model.ContestStatusDraft,
+		StartTime: now.Add(time.Hour),
+		EndTime:   now.Add(2 * time.Hour),
+		CreatedAt: now,
+		UpdatedAt: now,
+	}); err != nil {
+		t.Fatalf("create contest: %v", err)
+	}
+	if err := challengeRepo.CreateAWDServiceTemplate(context.Background(), &model.AWDServiceTemplate{
+		ID:             180801,
+		Name:           "Default Score Service",
+		Slug:           "default-score-service",
+		Category:       "web",
+		Difficulty:     model.ChallengeDifficultyMedium,
+		ServiceType:    model.AWDServiceTypeWebHTTP,
+		DeploymentMode: model.AWDDeploymentModeSingleContainer,
+		Status:         model.AWDServiceTemplateStatusPublished,
+		CheckerType:    model.AWDCheckerTypeHTTPStandard,
+		CheckerConfig:  `{"get_flag":{"path":"/flag"}}`,
+		AccessConfig:   `{"primary_url":"http://default.internal"}`,
+		CreatedAt:      now,
+		UpdatedAt:      now,
+	}); err != nil {
+		t.Fatalf("create template: %v", err)
+	}
+
+	resp, err := service.CreateContestAWDService(context.Background(), 1808, &dto.CreateContestAWDServiceReq{
+		TemplateID: 180801,
+		Points:     100,
+	})
+	if err != nil {
+		t.Fatalf("CreateContestAWDService() error = %v", err)
+	}
+
+	stored, err := awdRepo.FindContestAWDServiceByContestAndID(context.Background(), 1808, resp.ID)
+	if err != nil {
+		t.Fatalf("FindContestAWDServiceByContestAndID() error = %v", err)
+	}
+	var scoreConfig map[string]any
+	if err := json.Unmarshal([]byte(stored.ScoreConfig), &scoreConfig); err != nil {
+		t.Fatalf("unmarshal score config: %v", err)
+	}
+	if scoreConfig["awd_sla_score"] != float64(1) || scoreConfig["awd_defense_score"] != float64(2) {
+		t.Fatalf("unexpected default score config: %+v", scoreConfig)
+	}
+}
+
+func TestContestAWDServiceServiceCreateRejectsOversizedServiceScores(t *testing.T) {
+	service, challengeRepo, contestRepo, _, _ := newContestAWDServiceForTest(t)
+
+	now := time.Now()
+	if err := contestRepo.Create(context.Background(), &model.Contest{
+		ID:        1809,
+		Title:     "awd-service-oversized-score",
+		Mode:      model.ContestModeAWD,
+		Status:    model.ContestStatusDraft,
+		StartTime: now.Add(time.Hour),
+		EndTime:   now.Add(2 * time.Hour),
+		CreatedAt: now,
+		UpdatedAt: now,
+	}); err != nil {
+		t.Fatalf("create contest: %v", err)
+	}
+	if err := challengeRepo.CreateAWDServiceTemplate(context.Background(), &model.AWDServiceTemplate{
+		ID:             180901,
+		Name:           "Oversized Score Service",
+		Slug:           "oversized-score-service",
+		Category:       "web",
+		Difficulty:     model.ChallengeDifficultyMedium,
+		ServiceType:    model.AWDServiceTypeWebHTTP,
+		DeploymentMode: model.AWDDeploymentModeSingleContainer,
+		Status:         model.AWDServiceTemplateStatusPublished,
+		CheckerType:    model.AWDCheckerTypeHTTPStandard,
+		CheckerConfig:  `{"get_flag":{"path":"/flag"}}`,
+		AccessConfig:   `{"primary_url":"http://oversized.internal"}`,
+		CreatedAt:      now,
+		UpdatedAt:      now,
+	}); err != nil {
+		t.Fatalf("create template: %v", err)
+	}
+
+	_, err := service.CreateContestAWDService(context.Background(), 1809, &dto.CreateContestAWDServiceReq{
+		TemplateID:      180901,
+		Points:          100,
+		AWDSLAScore:     intPtr(6),
+		AWDDefenseScore: intPtr(2),
+	})
+	if err == nil {
+		t.Fatal("expected oversized SLA score to be rejected")
+	}
+}
+
+func TestContestAWDServiceServiceCreateRejectsOversizedDisplayPoints(t *testing.T) {
+	service, challengeRepo, contestRepo, _, _ := newContestAWDServiceForTest(t)
+
+	now := time.Now()
+	if err := contestRepo.Create(context.Background(), &model.Contest{
+		ID:        1810,
+		Title:     "awd-service-oversized-points",
+		Mode:      model.ContestModeAWD,
+		Status:    model.ContestStatusDraft,
+		StartTime: now.Add(time.Hour),
+		EndTime:   now.Add(2 * time.Hour),
+		CreatedAt: now,
+		UpdatedAt: now,
+	}); err != nil {
+		t.Fatalf("create contest: %v", err)
+	}
+	if err := challengeRepo.CreateAWDServiceTemplate(context.Background(), &model.AWDServiceTemplate{
+		ID:             181001,
+		Name:           "Oversized Points Service",
+		Slug:           "oversized-points-service",
+		Category:       "web",
+		Difficulty:     model.ChallengeDifficultyMedium,
+		ServiceType:    model.AWDServiceTypeWebHTTP,
+		DeploymentMode: model.AWDDeploymentModeSingleContainer,
+		Status:         model.AWDServiceTemplateStatusPublished,
+		CheckerType:    model.AWDCheckerTypeHTTPStandard,
+		CheckerConfig:  `{"get_flag":{"path":"/flag"}}`,
+		AccessConfig:   `{"primary_url":"http://points.internal"}`,
+		CreatedAt:      now,
+		UpdatedAt:      now,
+	}); err != nil {
+		t.Fatalf("create template: %v", err)
+	}
+
+	_, err := service.CreateContestAWDService(context.Background(), 1810, &dto.CreateContestAWDServiceReq{
+		TemplateID: 181001,
+		Points:     501,
+	})
+	if err == nil {
+		t.Fatal("expected oversized display points to be rejected")
+	}
+}
+
 func TestContestAWDServiceServiceUpdateMaintainsSnapshotOnly(t *testing.T) {
 	service, challengeRepo, contestRepo, contestChallengeRepo, awdRepo := newContestAWDServiceForTest(t)
 
@@ -134,7 +277,7 @@ func TestContestAWDServiceServiceUpdateMaintainsSnapshotOnly(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := challengeRepo.Create(&model.Challenge{
+	if err := challengeRepo.Create(context.Background(), &model.Challenge{
 		ID:         9802,
 		Title:      "billing-api",
 		Category:   "web",
@@ -147,7 +290,7 @@ func TestContestAWDServiceServiceUpdateMaintainsSnapshotOnly(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
-	if err := challengeRepo.CreateAWDServiceTemplate(&model.AWDServiceTemplate{
+	if err := challengeRepo.CreateAWDServiceTemplate(context.Background(), &model.AWDServiceTemplate{
 		ID:             1002,
 		Name:           "Billing API",
 		Slug:           "billing-api",
@@ -216,7 +359,7 @@ func TestContestAWDServiceServiceCreateDoesNotPersistLegacyChallengeIDInRuntimeC
 	}); err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := challengeRepo.Create(&model.Challenge{
+	if err := challengeRepo.Create(context.Background(), &model.Challenge{
 		ID:         9804,
 		Title:      "orders-api",
 		Category:   "web",
@@ -229,7 +372,7 @@ func TestContestAWDServiceServiceCreateDoesNotPersistLegacyChallengeIDInRuntimeC
 	}); err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
-	if err := challengeRepo.CreateAWDServiceTemplate(&model.AWDServiceTemplate{
+	if err := challengeRepo.CreateAWDServiceTemplate(context.Background(), &model.AWDServiceTemplate{
 		ID:             1004,
 		Name:           "Orders API",
 		Slug:           "orders-api",
@@ -254,8 +397,8 @@ func TestContestAWDServiceServiceCreateDoesNotPersistLegacyChallengeIDInRuntimeC
 		IsVisible:       boolPtr(true),
 		CheckerType:     stringPtr(string(model.AWDCheckerTypeHTTPStandard)),
 		CheckerConfig:   map[string]any{"get_flag": map[string]any{"path": "/flag"}},
-		AWDSLAScore:     intPtr(20),
-		AWDDefenseScore: intPtr(30),
+		AWDSLAScore:     intPtr(2),
+		AWDDefenseScore: intPtr(3),
 	})
 	if err != nil {
 		t.Fatalf("create contest awd service: %v", err)
@@ -288,7 +431,7 @@ func TestContestAWDServiceServiceCreateDoesNotPersistLegacyChallengeIDInRuntimeC
 	if err := json.Unmarshal([]byte(stored.ScoreConfig), &scoreConfig); err != nil {
 		t.Fatalf("unmarshal score config: %v", err)
 	}
-	if scoreConfig["awd_sla_score"] != float64(20) || scoreConfig["awd_defense_score"] != float64(30) {
+	if scoreConfig["awd_sla_score"] != float64(2) || scoreConfig["awd_defense_score"] != float64(3) {
 		t.Fatalf("unexpected score config: %+v", scoreConfig)
 	}
 	if stored.ValidationState != model.AWDCheckerValidationStatePending {
@@ -312,7 +455,7 @@ func TestContestAWDServiceServiceUpdateDoesNotPersistLegacyChallengeIDInRuntimeC
 	}); err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := challengeRepo.Create(&model.Challenge{
+	if err := challengeRepo.Create(context.Background(), &model.Challenge{
 		ID:         9805,
 		Title:      "inventory-api",
 		Category:   "web",
@@ -325,7 +468,7 @@ func TestContestAWDServiceServiceUpdateDoesNotPersistLegacyChallengeIDInRuntimeC
 	}); err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
-	if err := challengeRepo.CreateAWDServiceTemplate(&model.AWDServiceTemplate{
+	if err := challengeRepo.CreateAWDServiceTemplate(context.Background(), &model.AWDServiceTemplate{
 		ID:             1005,
 		Name:           "Inventory API",
 		Slug:           "inventory-api",
@@ -356,8 +499,8 @@ func TestContestAWDServiceServiceUpdateDoesNotPersistLegacyChallengeIDInRuntimeC
 	if err := service.UpdateContestAWDService(context.Background(), 805, resp.ID, &dto.UpdateContestAWDServiceReq{
 		CheckerType:     stringPtr(string(model.AWDCheckerTypeHTTPStandard)),
 		CheckerConfig:   map[string]any{"get_flag": map[string]any{"path": "/healthz"}},
-		AWDSLAScore:     intPtr(26),
-		AWDDefenseScore: intPtr(36),
+		AWDSLAScore:     intPtr(2),
+		AWDDefenseScore: intPtr(4),
 	}); err != nil {
 		t.Fatalf("UpdateContestAWDService() error = %v", err)
 	}
@@ -382,7 +525,7 @@ func TestContestAWDServiceServiceUpdateDoesNotPersistLegacyChallengeIDInRuntimeC
 	if err := json.Unmarshal([]byte(stored.ScoreConfig), &scoreConfig); err != nil {
 		t.Fatalf("unmarshal score config: %v", err)
 	}
-	if scoreConfig["awd_sla_score"] != float64(26) || scoreConfig["awd_defense_score"] != float64(36) {
+	if scoreConfig["awd_sla_score"] != float64(2) || scoreConfig["awd_defense_score"] != float64(4) {
 		t.Fatalf("unexpected score config: %+v", scoreConfig)
 	}
 }
@@ -414,7 +557,7 @@ func TestContestAWDServiceServiceCreateConsumesCheckerPreviewToken(t *testing.T)
 	}); err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := challengeRepo.Create(&model.Challenge{
+	if err := challengeRepo.Create(context.Background(), &model.Challenge{
 		ID:         9806,
 		Title:      "preview-service",
 		Category:   "web",
@@ -427,7 +570,7 @@ func TestContestAWDServiceServiceCreateConsumesCheckerPreviewToken(t *testing.T)
 	}); err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
-	if err := challengeRepo.CreateAWDServiceTemplate(&model.AWDServiceTemplate{
+	if err := challengeRepo.CreateAWDServiceTemplate(context.Background(), &model.AWDServiceTemplate{
 		ID:             1006,
 		Name:           "Preview Service",
 		Slug:           "preview-service",
@@ -534,7 +677,7 @@ func TestContestAWDServiceServiceCreateRejectsMissingCheckerPreviewToken(t *test
 	}); err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := challengeRepo.Create(&model.Challenge{
+	if err := challengeRepo.Create(context.Background(), &model.Challenge{
 		ID:         19806,
 		Title:      "preview-service-missing-token",
 		Category:   "web",
@@ -547,7 +690,7 @@ func TestContestAWDServiceServiceCreateRejectsMissingCheckerPreviewToken(t *test
 	}); err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
-	if err := challengeRepo.CreateAWDServiceTemplate(&model.AWDServiceTemplate{
+	if err := challengeRepo.CreateAWDServiceTemplate(context.Background(), &model.AWDServiceTemplate{
 		ID:             1106,
 		Name:           "Preview Service Missing Token",
 		Slug:           "preview-service-missing-token",
@@ -609,7 +752,7 @@ func TestContestAWDServiceServiceUpdateConsumesCheckerPreviewTokenByServiceID(t 
 	}); err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := challengeRepo.Create(&model.Challenge{
+	if err := challengeRepo.Create(context.Background(), &model.Challenge{
 		ID:         9807,
 		Title:      "preview-update-service",
 		Category:   "web",
@@ -622,7 +765,7 @@ func TestContestAWDServiceServiceUpdateConsumesCheckerPreviewTokenByServiceID(t 
 	}); err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
-	if err := challengeRepo.CreateAWDServiceTemplate(&model.AWDServiceTemplate{
+	if err := challengeRepo.CreateAWDServiceTemplate(context.Background(), &model.AWDServiceTemplate{
 		ID:             1007,
 		Name:           "Preview Update Service",
 		Slug:           "preview-update-service",
@@ -733,7 +876,7 @@ func TestContestAWDServiceServiceUpdateRejectsMissingCheckerPreviewToken(t *test
 	}); err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := challengeRepo.Create(&model.Challenge{
+	if err := challengeRepo.Create(context.Background(), &model.Challenge{
 		ID:         19807,
 		Title:      "preview-update-missing-token",
 		Category:   "web",
@@ -746,7 +889,7 @@ func TestContestAWDServiceServiceUpdateRejectsMissingCheckerPreviewToken(t *test
 	}); err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
-	if err := challengeRepo.CreateAWDServiceTemplate(&model.AWDServiceTemplate{
+	if err := challengeRepo.CreateAWDServiceTemplate(context.Background(), &model.AWDServiceTemplate{
 		ID:             1107,
 		Name:           "Preview Update Missing Token",
 		Slug:           "preview-update-missing-token",
@@ -801,7 +944,7 @@ func TestContestAWDServiceServiceDeleteRemovesOnlyServiceRecord(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := challengeRepo.Create(&model.Challenge{
+	if err := challengeRepo.Create(context.Background(), &model.Challenge{
 		ID:         9803,
 		Title:      "user-center",
 		Category:   "web",
@@ -814,7 +957,7 @@ func TestContestAWDServiceServiceDeleteRemovesOnlyServiceRecord(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
-	if err := challengeRepo.CreateAWDServiceTemplate(&model.AWDServiceTemplate{
+	if err := challengeRepo.CreateAWDServiceTemplate(context.Background(), &model.AWDServiceTemplate{
 		ID:             1003,
 		Name:           "User Center",
 		Slug:           "user-center",

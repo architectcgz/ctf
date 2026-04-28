@@ -41,18 +41,11 @@ func (s *ScoreboardService) getScoreboard(ctx context.Context, contestID int64, 
 		return nil, err
 	}
 
-	total, err := s.redis.ZCard(ctx, key).Result()
+	results, err := s.redis.ZRevRangeWithScores(ctx, key, 0, -1).Result()
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-
-	start, stop := scoreboardPageBounds(page, pageSize)
-	results, err := s.redis.ZRevRangeWithScores(ctx, key, start, stop).Result()
-	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
-	}
-
-	teamIDs := scoreboardTeamIDs(results)
+	results, teamIDs := filterScoreboardResults(s.logger, contestID, results)
 
 	teams, err := s.repo.FindTeamsByIDs(ctx, teamIDs)
 	if err != nil {
@@ -62,7 +55,32 @@ func (s *ScoreboardService) getScoreboard(ctx context.Context, contestID int64, 
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	items := buildScoreboardItems(start, results, teamIDs, teams, statsMap)
+	allItems := buildScoreboardItems(s.logger, contestID, 0, results, teamIDs, teams, statsMap)
+	total := int64(len(allItems))
+
+	start, stop := scoreboardPageBounds(page, pageSize)
+	if start >= total {
+		return &dto.ScoreboardResp{
+			Contest: &dto.ScoreboardContestInfo{
+				ID:        contest.ID,
+				Title:     contest.Title,
+				Status:    contest.Status,
+				StartedAt: contest.StartTime,
+				EndsAt:    contest.EndTime,
+			},
+			Scoreboard: &dto.ScoreboardPage{
+				List:     []*dto.ScoreboardItem{},
+				Total:    total,
+				Page:     page,
+				PageSize: pageSize,
+			},
+			Frozen: frozen,
+		}, nil
+	}
+	if stop >= total {
+		stop = total - 1
+	}
+	items := allItems[start : stop+1]
 
 	return &dto.ScoreboardResp{
 		Contest: &dto.ScoreboardContestInfo{

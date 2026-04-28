@@ -55,7 +55,7 @@ func TestChallengeServiceAddChallengeToAWDContestDoesNotCreateAWDService(t *test
 	if err := contestRepo.Create(context.Background(), contest); err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := challengeRepo.Create(&model.Challenge{
+	if err := challengeRepo.Create(context.Background(), &model.Challenge{
 		ID:         9001,
 		Title:      "awd-web",
 		Category:   "web",
@@ -119,7 +119,7 @@ func TestChallengeServiceUpdateChallengeDoesNotCreateAWDService(t *testing.T) {
 	if err := contestRepo.Create(context.Background(), contest); err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := challengeRepo.Create(&model.Challenge{
+	if err := challengeRepo.Create(context.Background(), &model.Challenge{
 		ID:         9003,
 		Title:      "awd-update-challenge",
 		Category:   "web",
@@ -189,7 +189,7 @@ func TestChallengeServiceRemoveChallengeFromContestDoesNotDeleteAWDService(t *te
 	if err := contestRepo.Create(context.Background(), contest); err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := challengeRepo.Create(&model.Challenge{
+	if err := challengeRepo.Create(context.Background(), &model.Challenge{
 		ID:         9006,
 		Title:      "awd-remove-challenge",
 		Category:   "web",

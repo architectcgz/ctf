@@ -52,6 +52,32 @@ describe('SecuritySettings', () => {
     })
   })
 
+  it('密码修改进行中重复提交表单时只应提交一次', async () => {
+    authApiMocks.changePassword.mockImplementation(() => new Promise(() => {}))
+
+    const wrapper = mount(SecuritySettings)
+    await flushPromises()
+
+    const passwordInputs = wrapper.findAll('input[type="password"]')
+    await passwordInputs[0].setValue('Password123')
+    await passwordInputs[1].setValue('Password456')
+    await passwordInputs[2].setValue('Password456')
+
+    const submitButton = wrapper
+      .findAll('button')
+      .find((button) => button.text().includes('更新密码'))
+    expect(submitButton).toBeTruthy()
+
+    await wrapper.get('form').trigger('submit.prevent')
+    await wrapper.get('form').trigger('submit.prevent')
+
+    expect(authApiMocks.changePassword).toHaveBeenCalledTimes(1)
+    expect(authApiMocks.changePassword).toHaveBeenCalledWith({
+      old_password: 'Password123',
+      new_password: 'Password456',
+    })
+  })
+
   it('应该移除安全设置页中的主题色切换区块', async () => {
     const wrapper = mount(SecuritySettings)
     await flushPromises()
@@ -70,8 +96,12 @@ describe('SecuritySettings', () => {
   })
 
   it('应该把安全设置内容区的 soft eyebrow 收敛为局部 section kicker', () => {
-    expect(securitySettingsSource).toContain('<div class="security-section-kicker">Password</div>')
-    expect(securitySettingsSource).toContain('<div class="security-section-kicker">Tips</div>')
+    expect(securitySettingsSource).toMatch(
+      /<div class="security-section-kicker">\s*Password\s*<\/div>/
+    )
+    expect(securitySettingsSource).toMatch(
+      /<div class="security-section-kicker">\s*Tips\s*<\/div>/
+    )
     expect(securitySettingsSource).not.toContain(
       '<div class="journal-eyebrow journal-eyebrow-soft">Password</div>'
     )

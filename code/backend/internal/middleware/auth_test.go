@@ -9,46 +9,27 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
 
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/model"
 	authcontracts "ctf-platform/internal/module/auth/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
-	jwtpkg "ctf-platform/pkg/jwt"
 )
 
 type stubTokenService struct {
-	claims  *jwtpkg.Claims
-	revoked bool
+	session *authcontracts.Session
 }
 
-func (s *stubTokenService) IssueTokens(int64, string, string) (*authcontracts.TokenPair, error) {
-	panic("unexpected call to IssueTokens")
+func (s *stubTokenService) CreateSession(context.Context, int64, string, string) (*authcontracts.Session, error) {
+	panic("unexpected call to CreateSession")
 }
 
-func (s *stubTokenService) IssueTokensWithContext(context.Context, int64, string, string) (*authcontracts.TokenPair, error) {
-	panic("unexpected call to IssueTokensWithContext")
+func (s *stubTokenService) GetSession(context.Context, string) (*authcontracts.Session, error) {
+	return s.session, nil
 }
 
-func (s *stubTokenService) RefreshAccessToken(context.Context, string) (*authcontracts.RefreshAccessPayload, error) {
-	panic("unexpected call to RefreshAccessToken")
-}
-
-func (s *stubTokenService) RevokeToken(context.Context, string, time.Duration) error {
-	panic("unexpected call to RevokeToken")
-}
-
-func (s *stubTokenService) ClearRefreshSession(context.Context, int64, string) error {
-	panic("unexpected call to ClearRefreshSession")
-}
-
-func (s *stubTokenService) IsRevoked(context.Context, string) (bool, error) {
-	return s.revoked, nil
-}
-
-func (s *stubTokenService) ParseToken(string) (*jwtpkg.Claims, error) {
-	return s.claims, nil
+func (s *stubTokenService) DeleteSession(context.Context, string) error {
+	panic("unexpected call to DeleteSession")
 }
 
 func (s *stubTokenService) IssueWSTicket(context.Context, authctx.CurrentUser) (*authcontracts.WSTicket, error) {
@@ -103,14 +84,12 @@ func TestAuthUsesCurrentPersistedRoleForRBAC(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	tokenService := &stubTokenService{
-		claims: &jwtpkg.Claims{
+		session: &authcontracts.Session{
+			ID:        "sess-1",
 			UserID:    42,
 			Username:  "teacher-token",
 			Role:      model.RoleTeacher,
-			TokenType: jwtpkg.TokenTypeAccess,
-			RegisteredClaims: jwt.RegisteredClaims{
-				ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour)),
-			},
+			ExpiresAt: time.Now().Add(time.Hour),
 		},
 	}
 	users := &stubUserRepository{
@@ -122,7 +101,7 @@ func TestAuthUsesCurrentPersistedRoleForRBAC(t *testing.T) {
 	}
 
 	router := gin.New()
-	router.Use(Auth(tokenService, users))
+	router.Use(Auth(tokenService, "ctf_session", users))
 	adminOnly := router.Group("/admin")
 	adminOnly.Use(RequireRole(model.RoleAdmin))
 	adminOnly.PUT("/contests/1", func(c *gin.Context) {
@@ -134,7 +113,7 @@ func TestAuthUsesCurrentPersistedRoleForRBAC(t *testing.T) {
 	})
 
 	req := httptest.NewRequest(http.MethodPut, "/admin/contests/1", nil)
-	req.Header.Set("Authorization", "Bearer test-token")
+	req.AddCookie(&http.Cookie{Name: "ctf_session", Value: "sess-1"})
 	resp := httptest.NewRecorder()
 
 	router.ServeHTTP(resp, req)
@@ -159,14 +138,12 @@ func TestAuthRejectsPrivilegesRemovedAfterTokenIssued(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	tokenService := &stubTokenService{
-		claims: &jwtpkg.Claims{
+		session: &authcontracts.Session{
+			ID:        "sess-2",
 			UserID:    99,
 			Username:  "admin-token",
 			Role:      model.RoleAdmin,
-			TokenType: jwtpkg.TokenTypeAccess,
-			RegisteredClaims: jwt.RegisteredClaims{
-				ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour)),
-			},
+			ExpiresAt: time.Now().Add(time.Hour),
 		},
 	}
 	users := &stubUserRepository{
@@ -178,7 +155,7 @@ func TestAuthRejectsPrivilegesRemovedAfterTokenIssued(t *testing.T) {
 	}
 
 	router := gin.New()
-	router.Use(Auth(tokenService, users))
+	router.Use(Auth(tokenService, "ctf_session", users))
 	adminOnly := router.Group("/admin")
 	adminOnly.Use(RequireRole(model.RoleAdmin))
 	adminOnly.PUT("/contests/1", func(c *gin.Context) {
@@ -186,7 +163,7 @@ func TestAuthRejectsPrivilegesRemovedAfterTokenIssued(t *testing.T) {
 	})
 
 	req := httptest.NewRequest(http.MethodPut, "/admin/contests/1", nil)
-	req.Header.Set("Authorization", "Bearer test-token")
+	req.AddCookie(&http.Cookie{Name: "ctf_session", Value: "sess-2"})
 	resp := httptest.NewRecorder()
 
 	router.ServeHTTP(resp, req)

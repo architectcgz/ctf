@@ -83,17 +83,13 @@ type CORSConfig struct {
 }
 
 type AuthConfig struct {
-	Issuer                string        `mapstructure:"issuer"`
-	AccessTokenTTL        time.Duration `mapstructure:"access_token_ttl"`
-	RefreshTokenTTL       time.Duration `mapstructure:"refresh_token_ttl"`
-	RefreshCookieName     string        `mapstructure:"refresh_cookie_name"`
-	RefreshCookiePath     string        `mapstructure:"refresh_cookie_path"`
-	RefreshCookieSecure   bool          `mapstructure:"refresh_cookie_secure"`
-	RefreshCookieHTTPOnly bool          `mapstructure:"refresh_cookie_http_only"`
-	RefreshCookieSameSite string        `mapstructure:"refresh_cookie_same_site"`
-	PrivateKeyPath        string        `mapstructure:"private_key_path"`
-	PublicKeyPath         string        `mapstructure:"public_key_path"`
-	TokenBlacklistPrefix  string        `mapstructure:"token_blacklist_prefix"`
+	SessionTTL            time.Duration `mapstructure:"session_ttl"`
+	SessionCookieName     string        `mapstructure:"session_cookie_name"`
+	SessionCookiePath     string        `mapstructure:"session_cookie_path"`
+	SessionCookieSecure   bool          `mapstructure:"session_cookie_secure"`
+	SessionCookieHTTPOnly bool          `mapstructure:"session_cookie_http_only"`
+	SessionCookieSameSite string        `mapstructure:"session_cookie_same_site"`
+	SessionKeyPrefix      string        `mapstructure:"session_key_prefix"`
 	CAS                   CASConfig     `mapstructure:"cas"`
 }
 
@@ -149,7 +145,19 @@ type ContainerConfig struct {
 	PublicHost           string                   `mapstructure:"public_host"`
 	ProxyTicketTTL       time.Duration            `mapstructure:"proxy_ticket_ttl"`
 	ProxyBodyPreviewSize int                      `mapstructure:"proxy_body_preview_size"`
+	DefenseSSHEnabled    bool                     `mapstructure:"defense_ssh_enabled"`
+	DefenseSSHHost       string                   `mapstructure:"defense_ssh_host"`
+	DefenseSSHPort       int                      `mapstructure:"defense_ssh_port"`
+	Registry             ContainerRegistryConfig  `mapstructure:"registry"`
 	Scheduler            ContainerSchedulerConfig `mapstructure:"scheduler"`
+}
+
+type ContainerRegistryConfig struct {
+	Enabled       bool   `mapstructure:"enabled"`
+	Server        string `mapstructure:"server"`
+	Username      string `mapstructure:"username"`
+	Password      string `mapstructure:"password"`
+	IdentityToken string `mapstructure:"identity_token"`
 }
 
 type ContainerSchedulerConfig struct {
@@ -227,14 +235,15 @@ type WebSocketConfig struct {
 }
 
 type ContestConfig struct {
-	StatusUpdateInterval  time.Duration    `mapstructure:"status_update_interval"`
-	StatusUpdateBatchSize int              `mapstructure:"status_update_batch_size"`
-	StatusUpdateLockTTL   time.Duration    `mapstructure:"status_update_lock_ttl"`
-	BaseScore             float64          `mapstructure:"base_score"`
-	MinScore              float64          `mapstructure:"min_score"`
-	Decay                 float64          `mapstructure:"decay"`
-	FirstBloodBonus       float64          `mapstructure:"first_blood_bonus"`
-	AWD                   ContestAWDConfig `mapstructure:"awd"`
+	StatusUpdateInterval   time.Duration    `mapstructure:"status_update_interval"`
+	StatusUpdateBatchSize  int              `mapstructure:"status_update_batch_size"`
+	StatusUpdateLockTTL    time.Duration    `mapstructure:"status_update_lock_ttl"`
+	SubmissionRateLimitTTL time.Duration    `mapstructure:"submission_rate_limit_ttl"`
+	BaseScore              float64          `mapstructure:"base_score"`
+	MinScore               float64          `mapstructure:"min_score"`
+	Decay                  float64          `mapstructure:"decay"`
+	FirstBloodBonus        float64          `mapstructure:"first_blood_bonus"`
+	AWD                    ContestAWDConfig `mapstructure:"awd"`
 }
 
 type ContestAWDConfig struct {
@@ -296,6 +305,14 @@ func Load(env string) (*Config, error) {
 }
 
 func (c *Config) Validate() error {
+	if c.CORS.AllowCredentials && len(c.CORS.AllowOrigins) == 0 {
+		return fmt.Errorf("cors.allow_origins must not be empty when cors.allow_credentials is true")
+	}
+	for _, origin := range c.CORS.AllowOrigins {
+		if strings.TrimSpace(origin) == "" {
+			return fmt.Errorf("cors.allow_origins must not contain empty origin")
+		}
+	}
 	if c.Container.DefaultCPUQuota <= 0 || c.Container.DefaultCPUQuota > 16 {
 		return fmt.Errorf("container.default_cpu_quota must be between 0 and 16 cores")
 	}
@@ -308,6 +325,13 @@ func (c *Config) Validate() error {
 	if c.Container.DefaultExposedPort <= 0 || c.Container.DefaultExposedPort > 65535 {
 		return fmt.Errorf("container.default_exposed_port must be between 1 and 65535")
 	}
+	if c.Container.PortRangeStart <= 0 || c.Container.PortRangeStart > 65535 ||
+		c.Container.PortRangeEnd <= 0 || c.Container.PortRangeEnd > 65535 {
+		return fmt.Errorf("container.port_range_start and container.port_range_end must be between 1 and 65535")
+	}
+	if c.Container.PortRangeStart >= c.Container.PortRangeEnd {
+		return fmt.Errorf("container.port_range_start must be less than container.port_range_end")
+	}
 	if c.Container.OrphanGracePeriod <= 0 {
 		return fmt.Errorf("container.orphan_grace_period must be greater than 0")
 	}
@@ -319,6 +343,24 @@ func (c *Config) Validate() error {
 	}
 	if c.Container.ProxyBodyPreviewSize <= 0 {
 		return fmt.Errorf("container.proxy_body_preview_size must be greater than 0")
+	}
+	if c.Container.DefenseSSHEnabled {
+		if strings.TrimSpace(c.Container.DefenseSSHHost) == "" {
+			return fmt.Errorf("container.defense_ssh_host must not be empty when container.defense_ssh_enabled is true")
+		}
+		if c.Container.DefenseSSHPort <= 0 || c.Container.DefenseSSHPort > 65535 {
+			return fmt.Errorf("container.defense_ssh_port must be between 1 and 65535")
+		}
+	}
+	if c.Container.Registry.Enabled {
+		if strings.TrimSpace(c.Container.Registry.Server) == "" {
+			return fmt.Errorf("container.registry.server must not be empty when container.registry.enabled is true")
+		}
+		hasIdentityToken := strings.TrimSpace(c.Container.Registry.IdentityToken) != ""
+		hasBasicAuth := strings.TrimSpace(c.Container.Registry.Username) != "" && strings.TrimSpace(c.Container.Registry.Password) != ""
+		if !hasIdentityToken && !hasBasicAuth {
+			return fmt.Errorf("container.registry requires username/password or identity_token when enabled")
+		}
 	}
 	if c.Container.Scheduler.Enabled {
 		if c.Container.Scheduler.PollInterval <= 0 {
@@ -391,6 +433,14 @@ func (c *Config) Validate() error {
 	if c.WebSocket.RetryMaxDelay < c.WebSocket.RetryInitialDelay {
 		return fmt.Errorf("websocket.retry_max_delay must be greater than or equal to retry_initial_delay")
 	}
+	if isProductionEnv(c.App.Env) {
+		if isPlaceholderSecret(c.Postgres.Password) {
+			return fmt.Errorf("postgres.password must be provided from a non-placeholder secret in prod")
+		}
+		if isPlaceholderSecret(c.Redis.Password) {
+			return fmt.Errorf("redis.password must be provided from a non-placeholder secret in prod")
+		}
+	}
 	if c.Contest.StatusUpdateInterval <= 0 {
 		return fmt.Errorf("contest.status_update_interval must be greater than 0")
 	}
@@ -399,6 +449,9 @@ func (c *Config) Validate() error {
 	}
 	if c.Contest.StatusUpdateLockTTL <= 0 {
 		return fmt.Errorf("contest.status_update_lock_ttl must be greater than 0")
+	}
+	if c.Contest.SubmissionRateLimitTTL <= 0 {
+		return fmt.Errorf("contest.submission_rate_limit_ttl must be greater than 0")
 	}
 	if c.Contest.AWD.SchedulerInterval <= 0 {
 		return fmt.Errorf("contest.awd.scheduler_interval must be greater than 0")
@@ -432,6 +485,20 @@ func (c *Config) Validate() error {
 	return nil
 }
 
+func isProductionEnv(env string) bool {
+	switch strings.ToLower(strings.TrimSpace(env)) {
+	case "prod", "production":
+		return true
+	default:
+		return false
+	}
+}
+
+func isPlaceholderSecret(value string) bool {
+	normalized := strings.TrimSpace(value)
+	return normalized == "" || normalized == "change_me"
+}
+
 func (c PostgresConfig) DSN() string {
 	return fmt.Sprintf(
 		"host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
@@ -445,7 +512,7 @@ func (c PostgresConfig) DSN() string {
 }
 
 func (c AuthConfig) CookieSameSite() http.SameSite {
-	switch strings.ToLower(strings.TrimSpace(c.RefreshCookieSameSite)) {
+	switch strings.ToLower(strings.TrimSpace(c.SessionCookieSameSite)) {
 	case "strict":
 		return http.SameSiteStrictMode
 	case "none":
@@ -468,17 +535,15 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("redis.read_timeout", 3*time.Second)
 	v.SetDefault("redis.write_timeout", 3*time.Second)
 	v.SetDefault("cors.allow_methods", []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"})
-	v.SetDefault("cors.allow_headers", []string{"Authorization", "Content-Type", "X-Request-ID"})
+	v.SetDefault("cors.allow_headers", []string{"Content-Type", "X-Request-ID"})
 	v.SetDefault("cors.expose_headers", []string{"X-Request-ID", "X-RateLimit-Limit", "X-RateLimit-Remaining", "X-RateLimit-Reset", "Retry-After"})
 	v.SetDefault("cors.max_age", 12*time.Hour)
-	v.SetDefault("auth.issuer", "ctf-platform")
-	v.SetDefault("auth.access_token_ttl", 15*time.Minute)
-	v.SetDefault("auth.refresh_token_ttl", 7*24*time.Hour)
-	v.SetDefault("auth.refresh_cookie_name", "ctf_refresh_token")
-	v.SetDefault("auth.refresh_cookie_path", "/api/v1/auth")
-	v.SetDefault("auth.refresh_cookie_http_only", true)
-	v.SetDefault("auth.refresh_cookie_same_site", "lax")
-	v.SetDefault("auth.token_blacklist_prefix", "ctf:auth:blacklist")
+	v.SetDefault("auth.session_ttl", 7*24*time.Hour)
+	v.SetDefault("auth.session_cookie_name", "ctf_session")
+	v.SetDefault("auth.session_cookie_path", "/api/v1")
+	v.SetDefault("auth.session_cookie_http_only", true)
+	v.SetDefault("auth.session_cookie_same_site", "lax")
+	v.SetDefault("auth.session_key_prefix", "ctf:auth:session")
 	v.SetDefault("auth.cas.enabled", false)
 	v.SetDefault("auth.cas.login_path", "/login")
 	v.SetDefault("auth.cas.validate_path", "/serviceValidate")
@@ -525,6 +590,14 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("container.public_host", "localhost")
 	v.SetDefault("container.proxy_ticket_ttl", 15*time.Minute)
 	v.SetDefault("container.proxy_body_preview_size", 1024)
+	v.SetDefault("container.defense_ssh_enabled", false)
+	v.SetDefault("container.defense_ssh_host", "127.0.0.1")
+	v.SetDefault("container.defense_ssh_port", 2222)
+	v.SetDefault("container.registry.enabled", false)
+	v.SetDefault("container.registry.server", "")
+	v.SetDefault("container.registry.username", "")
+	v.SetDefault("container.registry.password", "")
+	v.SetDefault("container.registry.identity_token", "")
 	v.SetDefault("container.scheduler.enabled", true)
 	v.SetDefault("container.scheduler.poll_interval", time.Second)
 	v.SetDefault("container.scheduler.batch_size", 4)
@@ -568,6 +641,7 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("contest.status_update_interval", 1*time.Minute)
 	v.SetDefault("contest.status_update_batch_size", 1000)
 	v.SetDefault("contest.status_update_lock_ttl", 30*time.Second)
+	v.SetDefault("contest.submission_rate_limit_ttl", 5*time.Second)
 	v.SetDefault("contest.base_score", 1000.0)
 	v.SetDefault("contest.min_score", 100.0)
 	v.SetDefault("contest.decay", 0.9)

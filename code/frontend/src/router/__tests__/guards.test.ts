@@ -122,9 +122,26 @@ describe('router guards', () => {
     })
   })
 
+  it('不应继续将 ui-lab 作为匿名可访问页面放行', async () => {
+    const { runBeforeEach } = createRouterMock()
+
+    const next = await runBeforeEach(
+      createRoute({
+        path: '/ui-lab',
+        fullPath: '/ui-lab',
+        meta: { requiresAuth: true, roles: ['admin'] },
+      })
+    )
+
+    expect(next).toHaveBeenCalledWith({
+      path: '/login',
+      query: { redirect: '/ui-lab' },
+    })
+  })
+
   it('应该阻止无权限用户访问受限路由', async () => {
     const authStore = useAuthStore()
-    authStore.setAuth(buildUser('student'), 'token')
+    authStore.setAuth(buildUser('student'))
 
     const { runBeforeEach } = createRouterMock()
     const next = await runBeforeEach(
@@ -139,9 +156,7 @@ describe('router guards', () => {
     expect(next).toHaveBeenCalledWith('/403')
   })
 
-  it('应该在仅有 token 时自动拉取用户资料并放行 AWD 复盘入口', async () => {
-    const authStore = useAuthStore()
-    authStore.updateTokens('token')
+  it('应该在 session cookie 有效时静默恢复资料并放行 AWD 复盘入口', async () => {
     getProfileMock.mockResolvedValue(buildUser('teacher'))
 
     const { runBeforeEach } = createRouterMock()
@@ -154,13 +169,32 @@ describe('router guards', () => {
     )
 
     expect(getProfileMock).toHaveBeenCalledTimes(1)
-    expect(authStore.user?.role).toBe('teacher')
+    expect(useAuthStore().user?.role).toBe('teacher')
     expect(next).toHaveBeenCalledWith()
+  })
+
+  it('应该在 session cookie 无效时跳回登录页', async () => {
+    getProfileMock.mockRejectedValue(new Error('unauthorized'))
+
+    const { runBeforeEach } = createRouterMock()
+    const next = await runBeforeEach(
+      createRoute({
+        path: '/academy/awd-reviews',
+        fullPath: '/academy/awd-reviews',
+        meta: { requiresAuth: true, roles: ['teacher', 'admin'] },
+      })
+    )
+
+    expect(next).toHaveBeenCalledWith({
+      path: '/login',
+      query: { redirect: '/academy/awd-reviews' },
+    })
   })
 
   it('已登录用户访问登录页且没有 redirect 时应返回角色工作台', async () => {
     const authStore = useAuthStore()
-    authStore.setAuth(buildUser('teacher'), 'token')
+    authStore.setAuth(buildUser('teacher'))
+    authStore.sessionRestored = true
 
     const { runBeforeEach } = createRouterMock()
     const next = await runBeforeEach(
@@ -170,6 +204,21 @@ describe('router guards', () => {
       })
     )
 
+    expect(next).toHaveBeenCalledWith('/academy/overview')
+  })
+
+  it('访问登录页时应先尝试通过 session cookie 恢复会话', async () => {
+    getProfileMock.mockResolvedValue(buildUser('teacher'))
+
+    const { runBeforeEach } = createRouterMock()
+    const next = await runBeforeEach(
+      createRoute({
+        path: '/login',
+        fullPath: '/login',
+      })
+    )
+
+    expect(getProfileMock).toHaveBeenCalledTimes(1)
     expect(next).toHaveBeenCalledWith('/academy/overview')
   })
 })

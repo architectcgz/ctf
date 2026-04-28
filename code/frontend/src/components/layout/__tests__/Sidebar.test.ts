@@ -89,9 +89,7 @@ describe('Sidebar desktop layout', () => {
         username: 'admin',
         role: 'admin',
         name: 'Admin',
-      },
-      'token'
-    )
+      })
 
     await router.push('/platform/overview')
     await router.isReady()
@@ -121,6 +119,7 @@ describe('Sidebar desktop layout', () => {
       routes: [
         { path: '/platform/overview', component: { template: '<div>admin</div>' } },
         { path: '/platform/contest-ops/contests', component: { template: '<div>contest management</div>' } },
+        { path: '/platform/contest-ops/projector', component: { template: '<div>projector</div>' } },
         { path: '/platform/contests/:id/manage', component: { template: '<div>manage</div>' } },
       ],
     })
@@ -132,9 +131,7 @@ describe('Sidebar desktop layout', () => {
         username: 'admin',
         role: 'admin',
         name: 'Admin',
-      },
-      'token'
-    )
+      })
 
     await router.push('/platform/contest-ops/contests')
     await router.isReady()
@@ -151,6 +148,7 @@ describe('Sidebar desktop layout', () => {
 
     expect(wrapper.text()).toContain('赛事运维')
     expect(wrapper.text()).toContain('竞赛列表')
+    expect(wrapper.text()).toContain('大屏展示')
     expect(wrapper.text()).not.toContain('环境管理')
     expect(wrapper.text()).not.toContain('流量监控')
     expect(wrapper.text()).not.toContain('大屏投射')
@@ -177,9 +175,7 @@ describe('Sidebar desktop layout', () => {
         username: 'admin',
         role: 'admin',
         name: 'Admin',
-      },
-      'token'
-    )
+      })
 
     await router.push('/platform/contests/contest-1/manage')
     await router.isReady()
@@ -223,9 +219,7 @@ describe('Sidebar desktop layout', () => {
         username: 'admin',
         role: 'admin',
         name: 'Admin',
-      },
-      'token'
-    )
+      })
 
     await router.push('/platform/overview')
     await router.isReady()
@@ -272,9 +266,7 @@ describe('Sidebar desktop layout', () => {
         username: 'teacher',
         role: 'teacher',
         name: 'Teacher',
-      },
-      'token'
-    )
+      })
 
     await router.push('/academy/classes')
     await router.isReady()
@@ -319,9 +311,7 @@ describe('Sidebar desktop layout', () => {
         username: 'teacher',
         role: 'teacher',
         name: 'Teacher',
-      },
-      'token'
-    )
+      })
 
     await router.push('/academy/classes')
     await router.isReady()
@@ -375,9 +365,7 @@ describe('Sidebar desktop layout', () => {
         username: 'teacher',
         role: 'teacher',
         name: 'Teacher',
-      },
-      'token'
-    )
+      })
 
     await router.push('/academy/classes')
     await router.isReady()
@@ -435,9 +423,7 @@ describe('Sidebar desktop layout', () => {
         username: 'teacher',
         role: 'teacher',
         name: 'Teacher',
-      },
-      'token'
-    )
+      })
 
     await router.push('/academy/overview')
     await router.isReady()

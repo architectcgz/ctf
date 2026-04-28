@@ -1,9 +1,14 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { flushPromises, mount } from '@vue/test-utils'
 import { createRouter, createMemoryHistory } from 'vue-router'
 
 import ChallengeDetail from '../ChallengeDetail.vue'
 import challengeDetailSource from '../ChallengeDetail.vue?raw'
+import challengeQuestionPanelSource from '@/components/challenge/ChallengeQuestionPanel.vue?raw'
+import challengeSolutionsPanelSource from '@/components/challenge/ChallengeSolutionsPanel.vue?raw'
+import challengeSubmissionRecordsPanelSource from '@/components/challenge/ChallengeSubmissionRecordsPanel.vue?raw'
+import challengeWriteupPanelSource from '@/components/challenge/ChallengeWriteupPanel.vue?raw'
+import challengeActionAsideSource from '@/components/challenge/ChallengeActionAside.vue?raw'
 
 const challengeApiMocks = vi.hoisted(() => ({
   getChallengeDetail: vi.fn(),
@@ -25,6 +30,17 @@ const instanceApiMocks = vi.hoisted(() => ({
   extendInstance: vi.fn(),
   requestInstanceAccess: vi.fn(),
 }))
+
+function createDeferred<T>() {
+  let resolve!: (value: T) => void
+  let reject!: (reason?: unknown) => void
+  const promise = new Promise<T>((nextResolve, nextReject) => {
+    resolve = nextResolve
+    reject = nextReject
+  })
+
+  return { promise, resolve, reject }
+}
 
 vi.mock('@/api/challenge', () => challengeApiMocks)
 vi.mock('@/api/instance', () => instanceApiMocks)
@@ -194,26 +210,34 @@ describe('ChallengeDetail', () => {
   })
 
   it('题目详情 hero 应使用共享 workspace overline 语义', () => {
-    expect(challengeDetailSource).toContain('<div class="workspace-overline">Question</div>')
-    expect(challengeDetailSource).not.toContain('<div class="overline">Question</div>')
+    expect(challengeQuestionPanelSource).toMatch(/<div class="workspace-overline">\s*Question\s*<\/div>/)
+    expect(challengeQuestionPanelSource).not.toContain('<div class="overline">Question</div>')
   })
 
   it('题目详情 section heading 应切到共享 workspace overline 语义', () => {
-    expect(challengeDetailSource).toContain('<div class="workspace-overline">Statement</div>')
-    expect(challengeDetailSource).toContain('<div class="workspace-overline">Hints</div>')
-    expect(challengeDetailSource).toContain('<div class="workspace-overline">Solutions</div>')
-    expect(challengeDetailSource).toContain('<div class="workspace-overline">Submissions</div>')
-    expect(challengeDetailSource).toContain('<div class="workspace-overline">My Writeup</div>')
-    expect(challengeDetailSource).not.toContain('<div class="overline">Statement</div>')
-    expect(challengeDetailSource).not.toContain('<div class="overline">Hints</div>')
-    expect(challengeDetailSource).not.toContain('<div class="overline">Solutions</div>')
-    expect(challengeDetailSource).not.toContain('<div class="overline">Submissions</div>')
-    expect(challengeDetailSource).not.toContain('<div class="overline">My Writeup</div>')
+    const combinedSource = [
+      challengeDetailSource,
+      challengeQuestionPanelSource,
+      challengeSolutionsPanelSource,
+      challengeSubmissionRecordsPanelSource,
+      challengeWriteupPanelSource,
+    ].join('\n')
+
+    expect(combinedSource).toMatch(/<div class="workspace-overline">\s*Statement\s*<\/div>/)
+    expect(combinedSource).toMatch(/<div class="workspace-overline">\s*Hints\s*<\/div>/)
+    expect(combinedSource).toMatch(/<div class="workspace-overline">\s*Solutions\s*<\/div>/)
+    expect(combinedSource).toMatch(/<div class="workspace-overline">\s*Submissions\s*<\/div>/)
+    expect(combinedSource).toMatch(/<div class="workspace-overline">\s*My Writeup\s*<\/div>/)
+    expect(combinedSource).not.toContain('<div class="overline">Statement</div>')
+    expect(combinedSource).not.toContain('<div class="overline">Hints</div>')
+    expect(combinedSource).not.toContain('<div class="overline">Solutions</div>')
+    expect(combinedSource).not.toContain('<div class="overline">Submissions</div>')
+    expect(combinedSource).not.toContain('<div class="overline">My Writeup</div>')
   })
 
   it('题目详情剩余局部 kicker 也应统一到 workspace overline 语义', () => {
-    expect(challengeDetailSource).toContain('<div class="workspace-overline">Primary Action</div>')
-    expect(challengeDetailSource).not.toContain('<div class="overline">Primary Action</div>')
+    expect(challengeActionAsideSource).toMatch(/<div class="workspace-overline">\s*Primary Action\s*<\/div>/)
+    expect(challengeActionAsideSource).not.toContain('<div class="overline">Primary Action</div>')
     expect(challengeDetailSource).not.toMatch(/^\.overline\s*\{/m)
   })
 
@@ -240,6 +264,98 @@ describe('ChallengeDetail', () => {
     expect(wrapper.text()).not.toContain('精选官方题解')
     expect(challengeApiMocks.getRecommendedChallengeSolutions).not.toHaveBeenCalled()
     expect(challengeApiMocks.getCommunityChallengeSolutions).not.toHaveBeenCalled()
+  })
+
+  it('快速切换题目时不应被旧详情和旧提交记录回写', async () => {
+    const staleDetail = createDeferred<{
+      id: string
+      title: string
+      description: string
+      category: 'web'
+      difficulty: 'easy'
+      tags: string[]
+      points: number
+      need_target: boolean
+      is_solved: boolean
+      attachment_url?: string
+      hints: Array<{ id: string; level: number; title?: string; content?: string }>
+    }>()
+    const staleRecords = createDeferred<Array<{ id: string; answer?: string; status: 'correct'; submitted_at: string }>>()
+
+    challengeApiMocks.getChallengeDetail.mockImplementation((id: string) => {
+      if (id === '1') {
+        return staleDetail.promise
+      }
+
+      return Promise.resolve({
+        id: '2',
+        title: 'Fresh Challenge',
+        description: '<p>Fresh description</p>',
+        category: 'web',
+        difficulty: 'easy',
+        tags: ['fresh'],
+        points: 200,
+        need_target: true,
+        is_solved: false,
+        attachment_url: undefined,
+        hints: [],
+      })
+    })
+    challengeApiMocks.getMyChallengeSubmissionRecords.mockImplementation((id: string) => {
+      if (id === '1') {
+        return staleRecords.promise
+      }
+
+      return Promise.resolve([])
+    })
+
+    await router.push('/challenges/1')
+    await router.isReady()
+
+    const wrapper = mount(ChallengeDetail, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await router.push('/challenges/2')
+    await flushPromises()
+
+    staleDetail.resolve({
+      id: '1',
+      title: 'Stale Challenge',
+      description: '<p>Stale description</p>',
+      category: 'web',
+      difficulty: 'easy',
+      tags: ['stale'],
+      points: 100,
+      need_target: true,
+      is_solved: false,
+      attachment_url: undefined,
+      hints: [],
+    })
+    staleRecords.resolve([
+      {
+        id: 'record-1',
+        answer: 'flag{stale}',
+        status: 'correct',
+        submitted_at: '2026-04-22T08:00:00.000Z',
+      },
+    ])
+
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('Fresh Challenge')
+    expect(wrapper.text()).not.toContain('Stale Challenge')
+
+    const recordsTab = wrapper.findAll('button').find((node) => node.text().trim() === '提交记录')
+    expect(recordsTab).toBeTruthy()
+
+    await recordsTab!.trigger('click')
+    await flushPromises()
+
+    expect(wrapper.text()).not.toContain('flag{stale}')
+    expect(wrapper.text()).toContain('还没有提交记录')
   })
 
   it('已解题时应通过顶部标签切换到推荐题解、社区题解和编写题解', async () => {
@@ -621,6 +737,33 @@ describe('ChallengeDetail', () => {
     expect(challengeApiMocks.submitFlag).toHaveBeenCalledWith('1', 'exploit chain answer')
     expect(wrapper.text()).toContain('答案已提交，等待教师审核')
     expect(wrapper.text()).not.toContain('已完成 ✓')
+  })
+
+  it('Flag 提交进行中遇到回车和点击重叠时只应提交一次', async () => {
+    challengeApiMocks.submitFlag.mockImplementation(() => new Promise(() => {}))
+
+    await router.push('/challenges/1')
+    await router.isReady()
+
+    const wrapper = mount(ChallengeDetail, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await wrapper.vm.$nextTick()
+    await new Promise((resolve) => setTimeout(resolve, 100))
+
+    const flagInput = wrapper.get('input[aria-label="Flag"]')
+    const submitButton = wrapper.findAll('button').find((node) => node.text().trim() === '提交')
+
+    await flagInput.setValue('flag{pending}')
+    flagInput.element.dispatchEvent(new KeyboardEvent('keyup', { key: 'Enter', bubbles: true }))
+    submitButton!.element.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    await wrapper.vm.$nextTick()
+
+    expect(challengeApiMocks.submitFlag).toHaveBeenCalledTimes(1)
+    expect(challengeApiMocks.submitFlag).toHaveBeenCalledWith('1', 'flag{pending}')
   })
 
   it('正确提交后应提示实例将在 10 分钟后自动关闭', async () => {
@@ -1182,5 +1325,31 @@ describe('ChallengeDetail', () => {
     expect(content.html()).toContain('<h1')
     expect(content.html()).toContain('<h2')
     expect(content.html()).toContain('<li')
+  })
+
+  it('点击分值侧栏达到阈值后应显示试探提示', async () => {
+    await router.push('/challenges/1')
+    await router.isReady()
+
+    const wrapper = mount(ChallengeDetail, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await wrapper.vm.$nextTick()
+    await new Promise((resolve) => setTimeout(resolve, 100))
+
+    expect(wrapper.text()).not.toContain('这块区域的情报价值，低于你现在的期待。')
+
+    const scoreRail = wrapper.get('.score-rail')
+    await scoreRail.trigger('click')
+    await scoreRail.trigger('click')
+    await scoreRail.trigger('click')
+    await scoreRail.trigger('click')
+
+    expect(wrapper.text()).toContain('这块区域的情报价值，低于你现在的期待。')
+    expect(wrapper.text()).toContain('下载附件')
+    expect(wrapper.text()).toContain('题目描述')
   })
 })

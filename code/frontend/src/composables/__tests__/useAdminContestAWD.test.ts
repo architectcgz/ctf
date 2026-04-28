@@ -14,6 +14,7 @@ const adminApiMocks = vi.hoisted(() => ({
   createContestAWDServiceCheck: vi.fn(),
   getAdminContestLiveScoreboard: vi.fn(),
   getChallenges: vi.fn(),
+  getContestAWDInstanceOrchestration: vi.fn(),
   getContestAWDReadiness: vi.fn(),
   getContestAWDRoundSummary: vi.fn(),
   getContestAWDRoundTrafficSummary: vi.fn(),
@@ -26,6 +27,7 @@ const adminApiMocks = vi.hoisted(() => ({
   listContestTeams: vi.fn(),
   runContestAWDCurrentRoundCheck: vi.fn(),
   runContestAWDRoundCheck: vi.fn(),
+  startContestAWDTeamServiceInstance: vi.fn(),
   updateContestAWDService: vi.fn(),
   updateAdminContestChallenge: vi.fn(),
 }))
@@ -106,8 +108,8 @@ function buildContestAWDService(overrides: Record<string, unknown> = {}) {
     is_visible: true,
     score_config: {
       points: 100,
-      awd_sla_score: 20,
-      awd_defense_score: 30,
+      awd_sla_score: 1,
+      awd_defense_score: 2,
     },
     runtime_config: {
       checker_type: 'http_standard',
@@ -123,8 +125,8 @@ function buildContestAWDService(overrides: Record<string, unknown> = {}) {
         path: '/flag',
       },
     },
-    sla_score: 20,
-    defense_score: 30,
+    sla_score: 1,
+    defense_score: 2,
     validation_state: 'stale',
     last_preview_at: '2026-04-12T08:00:00.000Z',
     last_preview_result: {
@@ -158,6 +160,7 @@ describe('usePlatformContestAwd', () => {
     adminApiMocks.createContestAWDServiceCheck.mockReset()
     adminApiMocks.getAdminContestLiveScoreboard.mockReset()
     adminApiMocks.getChallenges.mockReset()
+    adminApiMocks.getContestAWDInstanceOrchestration.mockReset()
     adminApiMocks.getContestAWDReadiness.mockReset()
     adminApiMocks.getContestAWDRoundSummary.mockReset()
     adminApiMocks.getContestAWDRoundTrafficSummary.mockReset()
@@ -170,10 +173,17 @@ describe('usePlatformContestAwd', () => {
     adminApiMocks.listContestTeams.mockReset()
     adminApiMocks.runContestAWDCurrentRoundCheck.mockReset()
     adminApiMocks.runContestAWDRoundCheck.mockReset()
+    adminApiMocks.startContestAWDTeamServiceInstance.mockReset()
     adminApiMocks.updateContestAWDService.mockReset()
     adminApiMocks.updateAdminContestChallenge.mockReset()
 
     adminApiMocks.listContestAWDRounds.mockResolvedValue([])
+    adminApiMocks.getContestAWDInstanceOrchestration.mockResolvedValue({
+      contest_id: 'awd-1',
+      teams: [],
+      services: [],
+      instances: [],
+    })
     adminApiMocks.listContestTeams.mockResolvedValue([])
     adminApiMocks.listAdminContestChallenges.mockResolvedValue([])
     adminApiMocks.listContestAWDServices.mockResolvedValue([])
@@ -233,6 +243,11 @@ describe('usePlatformContestAwd', () => {
     adminApiMocks.createAdminContestChallenge.mockResolvedValue(undefined)
     adminApiMocks.createContestAWDService.mockResolvedValue(undefined)
     adminApiMocks.updateContestAWDService.mockResolvedValue(undefined)
+    adminApiMocks.startContestAWDTeamServiceInstance.mockResolvedValue({
+      team_id: 'team-1',
+      service_id: 'service-1',
+      instance: undefined,
+    })
     adminApiMocks.updateAdminContestChallenge.mockResolvedValue(undefined)
   })
 
@@ -277,8 +292,8 @@ describe('usePlatformContestAwd', () => {
             path: '/flag',
           },
         },
-        awd_sla_score: 20,
-        awd_defense_score: 30,
+        awd_sla_score: 1,
+        awd_defense_score: 2,
         awd_checker_validation_state: 'stale',
         awd_checker_last_preview_at: '2026-04-12T08:00:00.000Z',
         awd_checker_last_preview_result: expect.objectContaining({
@@ -366,8 +381,8 @@ describe('usePlatformContestAwd', () => {
         },
         score_config: {
           points: 100,
-          awd_sla_score: 99,
-          awd_defense_score: 88,
+          awd_sla_score: 5,
+          awd_defense_score: 5,
         },
       }),
     ])
@@ -630,8 +645,8 @@ describe('usePlatformContestAwd', () => {
       is_visible: true,
       awd_checker_type: 'http_standard',
       awd_checker_config: { put_flag: { path: '/flag' } },
-      awd_sla_score: 20,
-      awd_defense_score: 30,
+      awd_sla_score: 1,
+      awd_defense_score: 2,
       awd_checker_preview_token: 'preview-token',
     })
     await flushPromises()
@@ -643,8 +658,8 @@ describe('usePlatformContestAwd', () => {
       is_visible: true,
       checker_type: 'http_standard',
       checker_config: { put_flag: { path: '/flag' } },
-      awd_sla_score: 20,
-      awd_defense_score: 30,
+      awd_sla_score: 1,
+      awd_defense_score: 2,
       awd_checker_preview_token: 'preview-token',
     })
     expect(adminApiMocks.updateAdminContestChallenge).not.toHaveBeenCalled()
@@ -682,8 +697,8 @@ describe('usePlatformContestAwd', () => {
       is_visible: false,
       awd_checker_type: 'http_standard',
       awd_checker_config: { get_flag: { path: '/flag' } },
-      awd_sla_score: 25,
-      awd_defense_score: 35,
+      awd_sla_score: 2,
+      awd_defense_score: 3,
       awd_checker_preview_token: 'preview-token-2',
     })
     await flushPromises()
@@ -695,8 +710,8 @@ describe('usePlatformContestAwd', () => {
       is_visible: false,
       checker_type: 'http_standard',
       checker_config: { get_flag: { path: '/flag' } },
-      awd_sla_score: 25,
-      awd_defense_score: 35,
+      awd_sla_score: 2,
+      awd_defense_score: 3,
       awd_checker_preview_token: 'preview-token-2',
     })
     expect(adminApiMocks.updateAdminContestChallenge).not.toHaveBeenCalled()

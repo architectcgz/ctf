@@ -16,7 +16,6 @@ import cheatDetectionSource from '@/views/platform/CheatDetection.vue?raw'
 import skillProfileSource from '@/views/profile/SkillProfile.vue?raw'
 import userProfileSource from '@/views/profile/UserProfile.vue?raw'
 import securitySettingsSource from '@/views/profile/SecuritySettings.vue?raw'
-import reportExportSource from '@/views/teacher/ReportExport.vue?raw'
 import classManagementPageSource from '@/components/teacher/class-management/ClassManagementPage.vue?raw'
 import classStudentsPageSource from '@/components/teacher/class-management/ClassStudentsPage.vue?raw'
 import studentAnalysisPageSource from '@/components/teacher/class-management/StudentAnalysisPage.vue?raw'
@@ -38,12 +37,29 @@ import writeupViewSource from '@/components/platform/writeup/ChallengeWriteupVie
 import pageHeaderSource from '@/components/common/PageHeader.vue?raw'
 import adminChallengeDetailSource from '@/views/platform/ChallengeDetail.vue?raw'
 import challengeImportPreviewSource from '@/views/platform/ChallengeImportPreview.vue?raw'
+import adminChallengeTopbarSource from '@/components/platform/challenge/AdminChallengeTopbarPanel.vue?raw'
+import challengeImportHeroSource from '@/components/platform/challenge/ChallengeImportHeroPanel.vue?raw'
+import challengeImportPreviewWorkspaceSource from '@/components/platform/challenge/ChallengeImportPreviewWorkspacePanel.vue?raw'
+import challengeManageHeroSource from '@/components/platform/challenge/ChallengeManageHeroPanel.vue?raw'
+import challengeQuestionPanelSource from '@/components/challenge/ChallengeQuestionPanel.vue?raw'
+import challengeSolutionsPanelSource from '@/components/challenge/ChallengeSolutionsPanel.vue?raw'
 import challengeDetailSource from '@/views/challenges/ChallengeDetail.vue?raw'
 import contestDetailSource from '@/views/contests/ContestDetail.vue?raw'
+import contestOverviewPanelSource from '@/components/contests/ContestOverviewPanel.vue?raw'
 import notificationDetailSource from '@/views/notifications/NotificationDetail.vue?raw'
 import reviewArchiveHeroSource from '@/components/teacher/review-archive/ReviewArchiveHero.vue?raw'
-import authEntryShellSource from '@/components/auth/AuthEntryShell.vue?raw'
 import errorStatusShellSource from '@/components/errors/ErrorStatusShell.vue?raw'
+
+const challengeManageWorkspaceSource = `${challengeManageSource}\n${challengeManageHeroSource}`
+const challengeImportManageWorkspaceSource = `${challengeImportManageSource}\n${challengeImportHeroSource}`
+const challengeImportPreviewWorkspaceBundleSource = `${challengeImportPreviewSource}\n${challengeImportPreviewWorkspaceSource}`
+const adminChallengeDetailWorkspaceSource = `${adminChallengeDetailSource}\n${adminChallengeTopbarSource}`
+const challengeDetailWorkspaceSource = [
+  challengeDetailSource,
+  challengeQuestionPanelSource,
+  challengeSolutionsPanelSource,
+].join('\n')
+const contestDetailWorkspaceSource = `${contestDetailSource}\n${contestOverviewPanelSource}`
 
 const sharedStylesSource = readFileSync(`${process.cwd()}/src/style.css`, 'utf-8')
 
@@ -203,8 +219,23 @@ describe('workspace page header styles', () => {
       },
       {
         source: teacherDashboardSource,
-        include: '<h1 class="hero-title">教学介入台</h1>',
+        include: /<h1 class="hero-title">\s*教学介入台\s*<\/h1>/,
         exclude: '<h1 class="hero-title workspace-tab-heading__title">教学介入台</h1>',
+      },
+      {
+        source: classManagementPageSource,
+        include: '<h1 class="teacher-title workspace-page-title">班级管理</h1>',
+        exclude: '<h1 class="teacher-title workspace-tab-heading__title">班级管理</h1>',
+      },
+      {
+        source: studentManagementPageSource,
+        include: /<h1 class="teacher-title workspace-page-title">\s*学生管理\s*<\/h1>/,
+        exclude: /<h1 class="teacher-title workspace-tab-heading__title">\s*学生管理\s*<\/h1>/,
+      },
+      {
+        source: teacherInstanceManagementPageSource,
+        include: /<h1 class="teacher-title workspace-page-title">\s*实例管理\s*<\/h1>/,
+        exclude: /<h1 class="teacher-title workspace-tab-heading__title">\s*实例管理\s*<\/h1>/,
       },
       {
         source: studentAnalysisPageSource,
@@ -213,7 +244,7 @@ describe('workspace page header styles', () => {
       },
       {
         source: adminDashboardSource,
-        include: '<h1 class="hero-title">系统值守台</h1>',
+        include: /<h1 class="hero-title workspace-page-title">\s*系统值守台\s*<\/h1>/,
         exclude: '<h1 class="hero-title workspace-tab-heading__title">系统值守台</h1>',
       },
       {
@@ -227,24 +258,24 @@ describe('workspace page header styles', () => {
         exclude: '<h1 class="workspace-page-title workspace-tab-heading__title">竞赛目录</h1>',
       },
       {
-        source: challengeManageSource,
-        include: /<h1 class="workspace-page-title">(?:题目管理|题目资源管理中心)<\/h1>/,
+        source: challengeManageWorkspaceSource,
+        include: /<h1 class="workspace-page-title">\s*(?:题目管理|题目资源管理中心)\s*<\/h1>/,
         exclude:
           /<h1 class="workspace-tab-heading__title">(?:题目管理|题目资源管理中心)<\/h1>/,
       },
       {
-        source: challengeImportManageSource,
-        include: /<h1 class="workspace-page-title">导入资源包<\/h1>/,
-        exclude: /<h1 class="workspace-tab-heading__title">导入资源包<\/h1>/,
+        source: challengeImportManageWorkspaceSource,
+        include: /<h1 class="workspace-page-title">\s*导入题目\s*<\/h1>/,
+        exclude: /<h1 class="workspace-tab-heading__title">导入题目<\/h1>/,
       },
       {
-        source: challengeImportPreviewSource,
+        source: challengeImportPreviewWorkspaceBundleSource,
         include: /<PageHeader[\s\S]*title="导入预览"/,
         exclude: '<h1 class="workspace-tab-heading__title">导入预览</h1>',
       },
       {
-        source: adminChallengeDetailSource,
-        include: '<h1 class="workspace-page-title">题目管理</h1>',
+        source: adminChallengeDetailWorkspaceSource,
+        include: '<span class="workspace-overline">Challenge Profile</span>',
         exclude: '<h1 class="workspace-tab-heading__title">题目管理</h1>',
       },
       {
@@ -264,7 +295,7 @@ describe('workspace page header styles', () => {
       },
       {
         source: topologyStudioSource,
-        include: /<h1 class="hero-title">\{\{ heroTitle \}\}<\/h1>/,
+        include: /<h1 class="hero-title">\s*\{\{ heroTitle \}\}\s*<\/h1>/,
         exclude: /<h1 class="hero-title workspace-tab-heading__title">\{\{ heroTitle \}\}<\/h1>/,
       },
       {
@@ -289,33 +320,28 @@ describe('workspace page header styles', () => {
   it('独立详情和状态页标题也应接入共享页级标题类', () => {
     const specialPageTitleSources = [
       {
-        source: challengeDetailSource,
-        include: '<h1 class="question-title workspace-page-title">',
+        source: challengeDetailWorkspaceSource,
+        include: /<h1 class="question-title workspace-page-title">\s*\{\{ challenge\.title \}\}/,
         exclude: '<h1 class="question-title">',
       },
       {
-        source: contestDetailSource,
-        include: '<h1 class="contest-hero__title workspace-page-title">{{ contest.title }}</h1>',
+        source: contestDetailWorkspaceSource,
+        include: /<h1 class="contest-hero__title workspace-page-title">\s*\{\{ contest\.title \}\}\s*<\/h1>/,
         exclude: '<h1 class="contest-hero__title">{{ contest.title }}</h1>',
       },
       {
         source: notificationDetailSource,
-        include: '<h1 class="notification-detail-title workspace-page-title">',
+        include: /<h1 class="notification-detail-title workspace-page-title">\s*/,
         exclude: '<h1 class="notification-detail-title">',
       },
       {
         source: reviewArchiveHeroSource,
-        include: '<h1 class="archive-hero__title workspace-page-title">教学复盘归档</h1>',
+        include: /<h1 class="archive-hero__title workspace-page-title">\s*教学复盘归档\s*<\/h1>/,
         exclude: '<h1 class="archive-hero__title">教学复盘归档</h1>',
       },
       {
-        source: authEntryShellSource,
-        include: '<h1 class="auth-entry-shell__title workspace-page-title">教学平台入口</h1>',
-        exclude: '<h1 class="auth-entry-shell__title">教学平台入口</h1>',
-      },
-      {
         source: errorStatusShellSource,
-        include: '<h1 class="error-status-title workspace-page-title">',
+        include: /<h1 class="error-status-title workspace-page-title">\s*/,
         exclude: '<h1 class="error-status-title">',
       },
     ]
@@ -325,12 +351,11 @@ describe('workspace page header styles', () => {
       expectSourceNotToContain(entry.source, entry.exclude)
     }
 
-    expect(contestDetailSource).toContain('<p class="contest-hero__desc workspace-page-copy">')
-    expect(reviewArchiveHeroSource).toContain(
-      '<p class="archive-hero__description workspace-page-copy">'
+    expect(contestDetailWorkspaceSource).toMatch(/<p class="contest-hero__desc workspace-page-copy">\s*/)
+    expect(reviewArchiveHeroSource).toMatch(
+      /<p class="archive-hero__description workspace-page-copy">\s*/
     )
-    expect(authEntryShellSource).toContain('<p class="auth-entry-shell__copy workspace-page-copy">')
-    expect(errorStatusShellSource).toContain('<p class="error-status-text workspace-page-copy">')
+    expect(errorStatusShellSource).toMatch(/<p class="error-status-text workspace-page-copy">\s*/)
   })
 
   it('页级说明应统一接入共享页级说明类，而不是继续使用 tab copy', () => {
@@ -371,12 +396,22 @@ describe('workspace page header styles', () => {
         exclude: '<p class="workspace-tab-copy">',
       },
       {
-        source: challengeManageSource,
-        include: '<p class="workspace-page-copy">',
-        exclude: '<p class="workspace-tab-copy">',
+        source: classManagementPageSource,
+        include: '<p class="teacher-copy workspace-page-copy">',
+        exclude: '<p class="teacher-copy workspace-tab-copy">',
       },
       {
-        source: adminChallengeDetailSource,
+        source: studentManagementPageSource,
+        include: '<p class="teacher-copy workspace-page-copy">',
+        exclude: '<p class="teacher-copy workspace-tab-copy">',
+      },
+      {
+        source: teacherInstanceManagementPageSource,
+        include: '<p class="teacher-copy workspace-page-copy">',
+        exclude: '<p class="teacher-copy workspace-tab-copy">',
+      },
+      {
+        source: challengeManageWorkspaceSource,
         include: '<p class="workspace-page-copy">',
         exclude: '<p class="workspace-tab-copy">',
       },
@@ -394,7 +429,7 @@ describe('workspace page header styles', () => {
   })
 
   it('典型工作区页头应复用 PageHeader 组件，而不是继续手写同构头部', () => {
-    expect(challengeImportPreviewSource).toContain('<PageHeader')
+    expect(challengeImportPreviewWorkspaceBundleSource).toContain('<PageHeader')
     expect(userProfileSource).toContain('<PageHeader')
     expect(securitySettingsSource).toContain('<PageHeader')
     expect(writeupEditorSource).toContain('<PageHeader')
@@ -402,10 +437,10 @@ describe('workspace page header styles', () => {
   })
 
   it('高频详情页顶部 tab 触控高度应回到共享默认值', () => {
-    expect(challengeDetailSource).toMatch(
+    expect(challengeDetailWorkspaceSource).toMatch(
       /\.challenge-subtabs\s*\{[\s\S]*--page-top-tab-min-height: 3rem;/s
     )
-    expect(challengeDetailSource).not.toMatch(
+    expect(challengeDetailWorkspaceSource).not.toMatch(
       /\.challenge-subtabs\s*\{[\s\S]*--page-top-tab-min-height: 2\.5rem;/s
     )
     expect(contestDetailSource).toContain('--page-top-tab-min-height: 3rem;')

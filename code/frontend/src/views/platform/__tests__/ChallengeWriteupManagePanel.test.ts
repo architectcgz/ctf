@@ -64,18 +64,20 @@ describe('ChallengeWriteupManagePanel', () => {
       'class="list-heading writeup-manage-heading"'
     )
     expect(manageHeadingStart).toBeGreaterThan(-1)
-    expect(manageHeadingSnippet).toContain('<div class="workspace-overline">Writeup Directory</div>')
+    expect(manageHeadingSnippet).toMatch(
+      /<div class="workspace-overline">\s*Writeup Directory\s*<\/div>/
+    )
     expect(manageHeadingSnippet).not.toContain(
       '<div class="journal-note-label">Writeup Directory</div>'
     )
-    expect(challengeWriteupManagePanelSource).toContain(
-      '<h1 class="workspace-page-title">题解管理</h1>'
+    expect(challengeWriteupManagePanelSource).toMatch(
+      /<h1 class="workspace-page-title">\s*题解管理\s*<\/h1>/
     )
     expect(challengeWriteupManagePanelSource).toContain(
       'class="list-heading writeup-manage-section__head"'
     )
-    expect(challengeWriteupManagePanelSource).toContain(
-      '<h2 class="list-heading__title">题解目录</h2>'
+    expect(challengeWriteupManagePanelSource).toMatch(
+      /<h2 class="list-heading__title">\s*题解目录\s*<\/h2>/
     )
     expect(challengeWriteupManagePanelSource).not.toContain('workspace-tab-heading')
     expect(challengeWriteupManagePanelSource).not.toContain(
@@ -167,7 +169,9 @@ describe('ChallengeWriteupManagePanel', () => {
     expect(wrapper.find('.writeup-manage-header + .writeup-manage-stats-shell').exists()).toBe(true)
     expect(
       wrapper
-        .find('.writeup-summary-grid.progress-strip.metric-panel-grid.metric-panel-default-surface')
+        .find(
+          '.writeup-summary-grid.progress-strip.metric-panel-grid.metric-panel-default-surface.metric-panel-workspace-surface'
+        )
         .exists()
     ).toBe(true)
     expect(wrapper.findAll('.writeup-summary-grid .journal-note')).toHaveLength(2)
@@ -175,6 +179,7 @@ describe('ChallengeWriteupManagePanel', () => {
     expect(wrapper.findAll('.writeup-summary-grid .metric-panel-card')).toHaveLength(2)
     expect(wrapper.findAll('.writeup-summary-grid .progress-card-label')).toHaveLength(2)
     expect(wrapper.findAll('.writeup-summary-grid .metric-panel-label')).toHaveLength(2)
+    expect(wrapper.findAll('.writeup-summary-grid .metric-panel-label svg')).toHaveLength(2)
     expect(wrapper.findAll('.writeup-summary-grid .progress-card-value')).toHaveLength(2)
     expect(wrapper.findAll('.writeup-summary-grid .metric-panel-value')).toHaveLength(2)
     expect(wrapper.findAll('.writeup-summary-grid .progress-card-hint')).toHaveLength(2)
@@ -467,7 +472,9 @@ describe('ChallengeWriteupManagePanel', () => {
     expect(wrapper.find('.writeup-manage-header + .writeup-manage-stats-shell').exists()).toBe(true)
     expect(
       wrapper
-        .find('.writeup-summary-grid.progress-strip.metric-panel-grid.metric-panel-default-surface')
+        .find(
+          '.writeup-summary-grid.progress-strip.metric-panel-grid.metric-panel-default-surface.metric-panel-workspace-surface'
+        )
         .exists()
     ).toBe(true)
     expect(wrapper.findAll('.writeup-summary-grid .journal-note')).toHaveLength(2)

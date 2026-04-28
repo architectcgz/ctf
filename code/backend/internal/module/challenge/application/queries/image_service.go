@@ -1,6 +1,8 @@
 package queries
 
 import (
+	"context"
+
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/config"
@@ -22,8 +24,8 @@ func NewImageService(repo challengeports.ImageRepository, config *config.Config)
 	}
 }
 
-func (s *ImageService) GetImage(id int64) (*dto.ImageResp, error) {
-	image, err := s.repo.FindByID(id)
+func (s *ImageService) GetImage(ctx context.Context, id int64) (*dto.ImageResp, error) {
+	image, err := s.repo.FindByID(ctx, id)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, errcode.ErrImageNotFound
@@ -33,7 +35,7 @@ func (s *ImageService) GetImage(id int64) (*dto.ImageResp, error) {
 	return domain.ImageRespFromModel(image), nil
 }
 
-func (s *ImageService) ListImages(query *dto.ImageQuery) (*dto.PageResult, error) {
+func (s *ImageService) ListImages(ctx context.Context, query *dto.ImageQuery) (*dto.PageResult[*dto.ImageResp], error) {
 	page := query.Page
 	if page < 1 {
 		page = 1
@@ -47,17 +49,17 @@ func (s *ImageService) ListImages(query *dto.ImageQuery) (*dto.PageResult, error
 	}
 
 	offset := (page - 1) * size
-	images, total, err := s.repo.List(query.Name, query.Status, offset, size)
+	images, total, err := s.repo.List(ctx, query.Name, query.Status, offset, size)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	items := make([]interface{}, len(images))
+	items := make([]*dto.ImageResp, len(images))
 	for index, image := range images {
 		items[index] = domain.ImageRespFromModel(image)
 	}
 
-	return &dto.PageResult{
+	return &dto.PageResult[*dto.ImageResp]{
 		List:  items,
 		Total: total,
 		Page:  page,

@@ -1,12 +1,12 @@
 export function difficultyClass(difficulty: string): string {
   const map: Record<string, string> = {
-    beginner: 'bg-green-100 text-green-700',
-    easy: 'bg-blue-100 text-blue-700',
-    medium: 'bg-yellow-100 text-yellow-700',
-    hard: 'bg-orange-100 text-orange-700',
-    insane: 'bg-red-100 text-red-700',
+    beginner: 'difficulty-chip difficulty-chip--beginner',
+    easy: 'difficulty-chip difficulty-chip--easy',
+    medium: 'difficulty-chip difficulty-chip--medium',
+    hard: 'difficulty-chip difficulty-chip--hard',
+    insane: 'difficulty-chip difficulty-chip--insane',
   }
-  return map[difficulty] || 'bg-gray-100 text-gray-700'
+  return map[difficulty] || 'difficulty-chip difficulty-chip--unknown'
 }
 
 export function difficultyLabel(difficulty: string): string {

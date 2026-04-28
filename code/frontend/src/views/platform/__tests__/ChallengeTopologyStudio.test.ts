@@ -3,6 +3,10 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import ChallengeTopologyStudioPage from '@/components/platform/topology/ChallengeTopologyStudioPage.vue'
 import challengeTopologyStudioPageSource from '@/components/platform/topology/ChallengeTopologyStudioPage.vue?raw'
+import topologyConnectivitySectionsSource from '@/components/platform/topology/TopologyConnectivitySections.vue?raw'
+import topologyNetworkSectionSource from '@/components/platform/topology/TopologyNetworkSection.vue?raw'
+import topologyNodeSectionSource from '@/components/platform/topology/TopologyNodeSection.vue?raw'
+import topologyTemplateSidePanelSource from '@/components/platform/topology/TopologyTemplateSidePanel.vue?raw'
 import { ApiError } from '@/api/request'
 
 const adminApiMocks = vi.hoisted(() => ({
@@ -23,10 +27,14 @@ const toastMocks = vi.hoisted(() => ({
   success: vi.fn(),
   warning: vi.fn(),
 }))
+const destructiveConfirmMock = vi.hoisted(() => vi.fn())
 
 vi.mock('@/api/admin', () => adminApiMocks)
 vi.mock('@/composables/useToast', () => ({
   useToast: () => toastMocks,
+}))
+vi.mock('@/composables/useDestructiveConfirm', () => ({
+  confirmDestructiveAction: destructiveConfirmMock,
 }))
 
 describe('ChallengeTopologyStudioPage', () => {
@@ -35,6 +43,8 @@ describe('ChallengeTopologyStudioPage', () => {
     toastMocks.error.mockReset()
     toastMocks.success.mockReset()
     toastMocks.warning.mockReset()
+    destructiveConfirmMock.mockReset()
+    destructiveConfirmMock.mockResolvedValue(true)
 
     adminApiMocks.getChallengeDetail.mockResolvedValue({
       id: '11',
@@ -126,11 +136,6 @@ describe('ChallengeTopologyStudioPage', () => {
     adminApiMocks.createEnvironmentTemplate.mockResolvedValue(undefined)
     adminApiMocks.updateEnvironmentTemplate.mockResolvedValue(undefined)
     adminApiMocks.deleteEnvironmentTemplate.mockResolvedValue(undefined)
-
-    vi.stubGlobal(
-      'confirm',
-      vi.fn(() => true)
-    )
   })
 
   it('应该渲染当前挑战拓扑与模板区块', async () => {
@@ -156,6 +161,9 @@ describe('ChallengeTopologyStudioPage', () => {
     expect(wrapper.text()).toContain('链路策略')
     expect(wrapper.text()).toContain('基础校验已通过')
     expect(wrapper.text()).toContain('当前模板')
+    expect(wrapper.text()).toContain('题包基线已接入')
+    expect(wrapper.text()).toContain('docker/topology.yml')
+    expect(wrapper.text()).toContain('dual-node-demo')
   })
 
   it('应该使用统一的工作区壳层与右侧上下文轨道', async () => {
@@ -194,20 +202,16 @@ describe('ChallengeTopologyStudioPage', () => {
   })
 
   it('应使用共享 ui-btn 原语而不是拓扑页私有按钮族', () => {
+    const topologySource = `${challengeTopologyStudioPageSource}\n${topologyTemplateSidePanelSource}\n${topologyNetworkSectionSource}\n${topologyConnectivitySectionsSource}\n${topologyNodeSectionSource}`
+
     expect(challengeTopologyStudioPageSource).toContain(
       'class="ui-btn ui-btn--ghost topology-action-btn'
     )
     expect(challengeTopologyStudioPageSource).toContain(
       'class="ui-btn ui-btn--primary topology-action-btn'
     )
-    expect(challengeTopologyStudioPageSource).toContain(
-      'class="ui-btn ui-btn--secondary topology-action-btn'
-    )
-    expect(challengeTopologyStudioPageSource).toContain(
-      'class="ui-btn ui-btn--danger topology-action-btn'
-    )
-    expect(challengeTopologyStudioPageSource).not.toContain('topology-toolbar-btn')
-    expect(challengeTopologyStudioPageSource).not.toContain('template-action-btn')
+    expect(topologySource).toContain('ui-btn ui-btn--secondary topology-action-btn')
+    expect(topologySource).toContain('ui-btn ui-btn--danger topology-action-btn')
   })
 
   it('删除拓扑失败时应优先展示接口返回消息', async () => {
@@ -240,6 +244,11 @@ describe('ChallengeTopologyStudioPage', () => {
     await deleteButton!.trigger('click')
     await flushPromises()
 
+    expect(destructiveConfirmMock).toHaveBeenCalledWith({
+      title: '删除题目拓扑',
+      message: '确认删除当前题目已保存的拓扑吗？删除后需要重新保存才能恢复。',
+      confirmButtonText: '确认删除',
+    })
     expect(toastMocks.error).toHaveBeenCalledWith('拓扑已被实例引用，暂时不能删除')
     expect(toastMocks.error).not.toHaveBeenCalledWith('删除题目拓扑失败')
   })

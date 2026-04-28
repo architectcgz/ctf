@@ -14,6 +14,7 @@ import { useToast } from '@/composables/useToast'
 export const MAX_INSTANCES = 3
 export const WARNING_THRESHOLD_SECONDS = 300
 export const EXTEND_DURATION_SECONDS = 1800
+export const INSTANCE_STATUS_REFRESH_INTERVAL_MS = 5000
 
 export interface InstanceViewModel extends InstanceListItem {
   remaining: number
@@ -21,6 +22,18 @@ export interface InstanceViewModel extends InstanceListItem {
 
 function isSharedInstance(instance: Pick<InstanceListItem, 'share_scope'>): boolean {
   return instance.share_scope === 'shared'
+}
+
+function isAWDTeamInstance(
+  instance: Pick<InstanceListItem, 'contest_mode' | 'share_scope'>
+): boolean {
+  return instance.contest_mode === 'awd' && instance.share_scope === 'per_team'
+}
+
+export function isInstanceManualActionAllowed(
+  instance: Pick<InstanceListItem, 'contest_mode' | 'share_scope'>
+): boolean {
+  return !isSharedInstance(instance) && !isAWDTeamInstance(instance)
 }
 
 function calculateRemaining(expiresAt: string): number {
@@ -51,17 +64,17 @@ export function getInstanceStatusLabel(status: InstanceStatus): string {
 
 export function getInstanceStatusClass(status: InstanceStatus): string {
   const classes: Record<InstanceStatus, string> = {
-    pending: 'text-[#f59e0b]',
-    creating: 'text-[#f59e0b]',
-    running: 'text-[#22c55e]',
-    expired: 'text-[var(--color-text-muted)]',
-    destroying: 'text-[#f59e0b]',
-    destroyed: 'text-[var(--color-text-muted)]',
-    failed: 'text-[#ef4444]',
-    crashed: 'text-[#ef4444]',
+    pending: 'instance-status-dot--warning',
+    creating: 'instance-status-dot--warning',
+    running: 'instance-status-dot--success',
+    expired: 'instance-status-dot--muted',
+    destroying: 'instance-status-dot--warning',
+    destroyed: 'instance-status-dot--muted',
+    failed: 'instance-status-dot--danger',
+    crashed: 'instance-status-dot--danger',
   }
 
-  return classes[status] || 'text-[var(--color-text-muted)]'
+  return classes[status] || 'instance-status-dot--muted'
 }
 
 export function formatRemainingTime(seconds: number): string {
@@ -120,6 +133,8 @@ export function useInstanceListPage() {
   const warnedInstances = new Set<string>()
 
   let timer: number | null = null
+  let statusRefreshTimer: number | null = null
+  let refreshInFlight = false
 
   const maxInstances = MAX_INSTANCES
   const runningCount = computed(
@@ -132,20 +147,58 @@ export function useInstanceListPage() {
       ).length
   )
 
+  function hasPendingRemoteStatus(instance: InstanceViewModel): boolean {
+    return instance.status === 'pending' || instance.status === 'creating'
+  }
+
+  function stopStatusRefresh() {
+    if (statusRefreshTimer !== null) {
+      window.clearInterval(statusRefreshTimer)
+      statusRefreshTimer = null
+    }
+  }
+
+  function syncStatusRefresh() {
+    const shouldPoll = instances.value.some(hasPendingRemoteStatus)
+    if (!shouldPoll) {
+      stopStatusRefresh()
+      return
+    }
+    if (statusRefreshTimer !== null) {
+      return
+    }
+    statusRefreshTimer = window.setInterval(() => {
+      void refresh({ silent: true })
+    }, INSTANCE_STATUS_REFRESH_INTERVAL_MS)
+  }
+
   async function loadInstances() {
     const data = await getMyInstances()
     instances.value = data.map(toViewModel)
   }
 
-  async function refresh() {
-    loading.value = true
+  async function refresh(options?: { silent?: boolean }) {
+    if (refreshInFlight) {
+      return
+    }
+
+    refreshInFlight = true
+    if (!options?.silent) {
+      loading.value = true
+    }
     try {
       await loadInstances()
     } catch (error) {
-      console.error('加载实例失败:', error)
-      toast.error('加载实例失败，请刷新重试')
+      if (!options?.silent) {
+        console.error('加载实例失败:', error)
+        toast.error('加载实例失败，请刷新重试')
+      }
     } finally {
-      loading.value = false
+      refreshInFlight = false
+      syncStatusRefresh()
+      if (!options?.silent) {
+        loading.value = false
+      }
     }
   }
 
@@ -158,8 +211,10 @@ export function useInstanceListPage() {
 
   async function extendTime(id: string) {
     const target = instances.value.find((instance) => instance.id === id)
-    if (target && isSharedInstance(target)) {
-      toast.error('共享实例不支持手动延时')
+    if (target && !isInstanceManualActionAllowed(target)) {
+      toast.error(
+        isAWDTeamInstance(target) ? 'AWD 队伍实例不支持在此处延时或销毁' : '共享实例不支持手动延时'
+      )
       return
     }
     try {
@@ -188,6 +243,12 @@ export function useInstanceListPage() {
   async function openTarget(id: string) {
     try {
       const result = await requestInstanceAccess(id)
+      const command = result.access?.protocol === 'tcp' ? result.access.command : ''
+      if (command) {
+        await copy(command)
+        toast.info('TCP 连接命令已复制')
+        return
+      }
       window.open(result.access_url, '_blank', 'noopener,noreferrer')
     } catch (error) {
       console.error('打开目标失败:', error)
@@ -197,8 +258,10 @@ export function useInstanceListPage() {
 
   async function destroyInstance(id: string) {
     const target = instances.value.find((instance) => instance.id === id)
-    if (target && isSharedInstance(target)) {
-      toast.error('共享实例不支持手动销毁')
+    if (target && !isInstanceManualActionAllowed(target)) {
+      toast.error(
+        isAWDTeamInstance(target) ? 'AWD 队伍实例不支持在此处延时或销毁' : '共享实例不支持手动销毁'
+      )
       return
     }
     const confirmed = await confirmDestructiveAction({
@@ -251,7 +314,7 @@ export function useInstanceListPage() {
       if (instance.status !== 'running') {
         return instance
       }
-      if (isSharedInstance(instance)) {
+      if (!isInstanceManualActionAllowed(instance)) {
         return instance
       }
 
@@ -285,6 +348,7 @@ export function useInstanceListPage() {
       window.clearInterval(timer)
       timer = null
     }
+    stopStatusRefresh()
     window.removeEventListener('keydown', handleEscKey)
   })
 

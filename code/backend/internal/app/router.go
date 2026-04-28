@@ -110,13 +110,12 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 	}
 	loginHandlers = append(loginHandlers, authModule.Handler.Login)
 	authGroup.POST("/login", loginHandlers...)
-	authGroup.POST("/refresh", authModule.Handler.Refresh)
 	authGroup.GET("/cas/status", authModule.Handler.CASStatus)
 	authGroup.GET("/cas/login", authModule.Handler.CASLogin)
 	authGroup.GET("/cas/callback", authModule.Handler.CASCallback)
 
 	protected := apiV1.Group("")
-	protected.Use(middleware.Auth(identityModule.TokenService, identityModule.Users))
+	protected.Use(middleware.Auth(identityModule.TokenService, cfg.Auth.SessionCookieName, identityModule.Users))
 	if cfg.RateLimit.Global.Enabled {
 		protected.Use(middleware.RateLimitByUser(rateChecker, "global", cfg.RateLimit.Global.Limit, cfg.RateLimit.Global.Window))
 	}
@@ -174,6 +173,7 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 		challenge:       challengeModule,
 		contest:         contestModule,
 		ops:             opsModule,
+		practice:        practiceModule,
 	})
 	registerUserRoutes(apiV1, protected, teacherOrAbove, userRouteDeps{
 		auditLogger:       composition.NamedAuditLogger(log),

@@ -2,6 +2,7 @@ import { createPinia } from 'pinia'
 import { createApp } from 'vue'
 
 import App from './App.vue'
+import { ApiError } from './api/request'
 import router from './router'
 import { useAuthStore } from './stores/auth'
 import { redirectToErrorStatusPage } from './utils/errorStatusPage'
@@ -28,10 +29,13 @@ app.use(router)
 // 全局错误处理
 app.config.errorHandler = (err, instance, info) => {
   console.error('Vue error:', err, info)
+  if (err instanceof ApiError) {
+    return
+  }
   redirectToErrorStatusPage(500)
 }
 
-// Restore the access token early; user profile is loaded lazily by router guards.
-useAuthStore(pinia).restore()
+// Kick off silent session restore early. Router guards await the same restore promise when needed.
+void useAuthStore(pinia).restore()
 
 app.mount('#app')

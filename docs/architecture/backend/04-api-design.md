@@ -214,10 +214,10 @@ GET /api/v1/admin/audit-logs?start_time=2026-01-01T00:00:00Z&end_time=2026-02-01
 | 错误码 | 含义 | HTTP 状态码 |
 |--------|------|-------------|
 | `11001` | 用户名或密码错误 | 401 |
-| `11002` | Access Token 已过期 | 401 |
-| `11003` | Refresh Token 已过期 | 401 |
-| `11004` | Token 格式无效 | 401 |
-| `11005` | Token 已被吊销（黑名单） | 401 |
+| `11002` | 会话已失效或不存在 | 401 |
+| `11003` | 会话已过期 | 401 |
+| `11004` | Session Cookie 格式无效 | 401 |
+| `11005` | 会话已被吊销 | 401 |
 | `11006` | 账户已被锁定 | 403 |
 | `11007` | 账户已被禁用 | 403 |
 | `11008` | 用户名已存在 | 409 |
@@ -291,122 +291,90 @@ GET /api/v1/admin/audit-logs?start_time=2026-01-01T00:00:00Z&end_time=2026-02-01
 
 ## 4. 认证方案
 
-### 4.1 JWT 结构
+### 4.1 服务端 Session 结构
 
-采用标准 JWT（JSON Web Token）三段式结构：
+认证采用 Redis 持久化的 opaque session。浏览器只保留 `HttpOnly + Secure + SameSite` session cookie，不暴露 access token，也不提供 refresh 接口。
 
-```
-Header.Payload.Signature
-```
-
-**Header：**
+**服务端 Session 记录：**
 
 ```json
 {
-  "alg": "RS256",
-  "typ": "JWT"
-}
-```
-
-> 签名算法说明：
-> - 生产环境强制使用 `RS256`（RSA + SHA-256 非对称签名），私钥签发、公钥验证，便于多服务场景下安全分发验证能力
-> - 开发环境可降级为 `HS256`（对称签名），通过配置项 `jwt.algorithm` 切换
-> - 服务端硬编码允许的 `alg` 白名单 `["RS256", "ES256"]`，拒绝 `none` 和 `HS256`（生产），防止算法混淆攻击
-
-**Payload（Access Token）：**
-
-```json
-{
-  "sub": "10042",
+  "id": "sess_b1c2d3e4",
+  "user_id": 10042,
   "username": "zhangsan",
   "role": "student",
-  "iat": 1740787200,
-  "exp": 1740794400,
-  "jti": "tok_a1b2c3d4"
+  "expires_at": "2026-04-30T12:00:00Z"
 }
 ```
 
 | 字段 | 说明 |
 |------|------|
-| `sub` | 用户 ID（字符串） |
-| `username` | 用户名 |
+| `id` | Session ID，随机 opaque 标识 |
+| `user_id` | 用户 ID |
+| `username` | 用户名快照 |
 | `role` | 角色：`student` / `teacher` / `admin` |
-| `iat` | 签发时间（Unix 时间戳） |
-| `exp` | 过期时间（Unix 时间戳） |
-| `jti` | Token 唯一标识，用于黑名单吊销 |
+| `expires_at` | 会话过期时间 |
 
-**Signature：**
+### 4.2 会话 Cookie 机制
 
-```
-RSA-SHA256(base64UrlEncode(header) + "." + base64UrlEncode(payload), private_key)
-```
+| 项目 | 默认值 | 用途 |
+|------|--------|------|
+| Session TTL | 7 天 | 控制 Redis session 记录与 cookie 的有效期 |
+| Session Cookie | `ctf_session` | 浏览器自动随请求携带，用于接口鉴权 |
 
-> 生产环境使用 RSA 私钥签名，公钥验证。密钥对通过配置文件路径注入：`jwt.private_key_path` / `jwt.public_key_path`。
-
-### 4.2 双 Token 机制
-
-| Token 类型 | 有效期 | 用途 |
-|------------|--------|------|
-| Access Token | 默认 15 分钟（可配置） | 携带于请求头，用于接口鉴权 |
-| Refresh Token | 7 天 | 仅用于刷新 Access Token，存储于 HttpOnly Cookie（后端写入；前端不落盘） |
-
-请求头携带方式：
+受保护请求的携带方式：
 
 ```
-Authorization: Bearer <access_token>
+Cookie: ctf_session=<session_id>
 ```
 
-### 4.3 Token 刷新流程
+### 4.3 会话恢复与失效流程
 
 ```
 客户端                          服务端
   │                               │
-  │  请求接口（携带 Access Token）  │
+  │  请求接口（浏览器自动携带 session cookie） │
   │──────────────────────────────>│
-  │  返回 401（Token 过期）        │
+  │                               │── 从 cookie 读取 session_id
+  │                               │── 查询 Redis session
+  │                               │── 校验会话是否存在/未过期
+  │  返回业务数据或 401            │
   │<──────────────────────────────│
   │                               │
-  │  POST /api/v1/auth/refresh    │
-  │  携带 HttpOnly Cookie（Refresh Token） │
+  │  POST /api/v1/auth/logout     │
   │──────────────────────────────>│
-  │                               │── 校验 Refresh Token 有效性
-  │                               │── 检查是否在黑名单中
-  │                               │── 签发新 Access Token
-  │                               │── 轮换 Refresh Token（旧的失效）
-  │  返回新 Access Token（并通过 Set-Cookie 轮换 Refresh Token） │
+  │                               │── 删除 Redis session
+  │                               │── Clear-Cookie: ctf_session
+  │  返回 200                     │
   │<──────────────────────────────│
-  │                               │
-  │  使用新 Access Token 重试请求  │
-  │──────────────────────────────>│
 ```
 
-- Refresh Token 采用**轮换策略**：每次刷新后旧 Refresh Token 立即失效，防止重放攻击
-- 若检测到已失效的 Refresh Token 被再次使用，视为 Token 泄露，吊销该用户所有 Token
+- 登录成功或注册成功后，服务端通过 `Set-Cookie` 写入 session cookie。
+- 页面刷新后的登录恢复依赖 `/api/v1/auth/profile`，不再走 `/api/v1/auth/refresh`。
 
-### 4.4 Token 黑名单（Redis）
+### 4.4 Session 存储（Redis）
 
 用于支持主动登出和强制下线场景：
 
 ```
-Redis Key:   token:blacklist:{jti}
-Value:       1
-TTL:         与 Token 剩余有效期一致（避免无限膨胀）
+Redis Key:   ctf:auth:session:{session_id}
+Value:       session json
+TTL:         与 session_ttl 对齐
 ```
 
-**触发黑名单的场景：**
+**触发会话失效的场景：**
 
 | 场景 | 操作 |
 |------|------|
-| 用户主动登出 | 将当前 Access Token 的 `jti` 加入黑名单 |
-| 修改密码 / 管理员强制下线 / 账户被禁用 | 设置用户维度吊销时间点 `ctf:token:revoked_after:{user_id}=now`（可选：同时将当前 `jti` 加入黑名单） |
+| 用户主动登出 | 删除当前 session，并清除 cookie |
+| 修改密码 / 管理员强制下线 / 账户被禁用 | 删除对应 session 记录，使后续请求统一返回 401 |
 
 **鉴权中间件校验流程：**
 
-1. 解析 JWT，校验签名和过期时间
-2. 从 Payload 提取 `jti`，查询 Redis 黑名单
-3. 若在黑名单中，返回 `11005 Token 已被吊销`
-4. 校验用户维度吊销时间点：若 `iat < revoked_after`，返回 `11005 Token 已被吊销`
-5. 校验通过，将用户信息注入请求上下文
+1. 从 Cookie 读取 session ID
+2. 查询 Redis session 记录并校验 TTL
+3. 若会话不存在或已过期，返回 `11002/11003`
+4. 校验通过，将用户信息注入请求上下文
 
 ---
 
@@ -419,9 +387,8 @@ TTL:         与 Token 剩余有效期一致（避免无限膨胀）
 | 方法 | 路径 | 角色 | 说明 |
 |------|------|------|------|
 | `POST` | `/api/v1/auth/register` | * | 用户注册 |
-| `POST` | `/api/v1/auth/login` | * | 用户登录：返回 Access Token；Refresh Token 通过 HttpOnly Cookie 写入 |
-| `POST` | `/api/v1/auth/refresh` | @ | 刷新 Access Token（Refresh Token 从 HttpOnly Cookie 读取） |
-| `POST` | `/api/v1/auth/logout` | @ | 登出，Token 加入黑名单 |
+| `POST` | `/api/v1/auth/login` | * | 用户登录：返回用户信息，并通过 HttpOnly Cookie 写入 session |
+| `POST` | `/api/v1/auth/logout` | @ | 登出，删除当前 session 并清除 cookie |
 | `GET` | `/api/v1/auth/profile` | @ | 获取当前用户信息 |
 | `PUT` | `/api/v1/auth/password` | @ | 修改密码 |
 | `POST` | `/api/v1/auth/ws-ticket` | @ | 获取 WebSocket 一次性 ticket（TTL 30s） |
@@ -597,7 +564,7 @@ Content-Type: application/json
 **成功响应（200）：**
 
 ```
-Set-Cookie: ctf_refresh_token=<refresh_token>; HttpOnly; Secure; SameSite=Lax; Path=/api/v1/auth; Max-Age=604800
+Set-Cookie: ctf_session=<session_id>; HttpOnly; Secure; SameSite=Lax; Path=/api/v1; Max-Age=604800
 ```
 
 ```json
@@ -605,9 +572,6 @@ Set-Cookie: ctf_refresh_token=<refresh_token>; HttpOnly; Secure; SameSite=Lax; P
   "code": 0,
   "message": "success",
   "data": {
-    "access_token": "eyJhbGciOiJIUzI1NiIs...",
-    "token_type": "Bearer",
-    "expires_in": 7200,
     "user": {
       "id": 10042,
       "username": "zhangsan",
@@ -636,7 +600,7 @@ Set-Cookie: ctf_refresh_token=<refresh_token>; HttpOnly; Secure; SameSite=Lax; P
 
 ```
 GET /api/v1/challenges?page=1&page_size=10&category=web&difficulty=easy&sort=created_at:desc
-Authorization: Bearer <access_token>
+Cookie: ctf_session=<session_id>
 ```
 
 **成功响应（200）：**
@@ -686,7 +650,7 @@ Authorization: Bearer <access_token>
 
 ```
 POST /api/v1/challenges/101/instances
-Authorization: Bearer <access_token>
+Cookie: ctf_session=<session_id>
 ```
 
 **成功响应（201）：**
@@ -731,7 +695,7 @@ Authorization: Bearer <access_token>
 
 ```
 POST /api/v1/challenges/101/submissions
-Authorization: Bearer <access_token>
+Cookie: ctf_session=<session_id>
 Content-Type: application/json
 ```
 
@@ -781,7 +745,7 @@ Content-Type: application/json
 
 ```
 GET /api/v1/contests/5/scoreboard?page=1&page_size=20
-Authorization: Bearer <access_token>
+Cookie: ctf_session=<session_id>
 ```
 
 **成功响应（200）：**
@@ -966,7 +930,6 @@ Authorization: Bearer <access_token>
 | 注册 | `rate:register:{ip}` | 每分钟 5 次 | `POST /api/v1/auth/register` |
 | Flag 提交 | `rate:flag:{user_id}:{challenge_id}` | 每分钟 20 次 | Flag 提交接口 |
 | 实例启动 | `rate:instance:{user_id}` | 每分钟 5 次 | 实例创建接口 |
-| Token 刷新 | `rate:refresh:{user_id}` | 每分钟 10 次 | `POST /api/v1/auth/refresh` |
 
 ### 7.2 限流响应头
 

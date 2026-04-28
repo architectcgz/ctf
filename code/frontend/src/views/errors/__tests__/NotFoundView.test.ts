@@ -39,9 +39,7 @@ describe('NotFoundView', () => {
         id: 'admin-1',
         username: 'root',
         role: 'admin',
-      },
-      'token'
-    )
+      })
 
     const wrapper = mount(NotFoundView, {
       global: {
@@ -59,5 +57,27 @@ describe('NotFoundView', () => {
     expect(links[0]?.props('to')).toBe('/platform/overview')
     expect(links).toHaveLength(1)
     expect(wrapper.get('button.error-status-action-primary').text()).toContain('返回上一页')
+  })
+
+  it('连续点击状态区域后应显示路径试探附注', async () => {
+    const wrapper = mount(NotFoundView, {
+      global: {
+        stubs: {
+          RouterLink: RouterLinkStub,
+        },
+      },
+    })
+
+    expect(wrapper.text()).not.toContain('路径枚举记录已写入：热情可嘉，命中率一般。')
+
+    const kicker = wrapper.get('.error-status-kicker')
+    await kicker.trigger('click')
+    await kicker.trigger('click')
+    await kicker.trigger('click')
+    await kicker.trigger('click')
+
+    expect(wrapper.text()).toContain('路径枚举记录已写入：热情可嘉，命中率一般。')
+    expect(wrapper.get('button.error-status-action-primary').text()).toContain('返回上一页')
+    expect(wrapper.findAllComponents(RouterLinkStub)[0]?.props('to')).toBe('/login')
   })
 })

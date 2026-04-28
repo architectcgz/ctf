@@ -24,8 +24,8 @@ type awdServiceTemplateCommandService interface {
 	UpdateTemplate(ctx context.Context, id int64, req *dto.UpdateAWDServiceTemplateReq) (*dto.AWDServiceTemplateResp, error)
 	DeleteTemplate(ctx context.Context, id int64) error
 	PreviewImport(ctx context.Context, actorUserID int64, fileName string, reader io.Reader) (*dto.AWDServiceTemplateImportPreviewResp, error)
-	ListImports(actorUserID int64) ([]dto.AWDServiceTemplateImportPreviewResp, error)
-	GetImport(actorUserID int64, id string) (*dto.AWDServiceTemplateImportPreviewResp, error)
+	ListImports(ctx context.Context, actorUserID int64) ([]dto.AWDServiceTemplateImportPreviewResp, error)
+	GetImport(ctx context.Context, actorUserID int64, id string) (*dto.AWDServiceTemplateImportPreviewResp, error)
 	CommitImport(ctx context.Context, actorUserID int64, id string) (*dto.AWDServiceTemplateResp, error)
 }
 
@@ -140,7 +140,7 @@ func (h *AWDServiceTemplateHandler) PreviewImport(c *gin.Context) {
 }
 
 func (h *AWDServiceTemplateHandler) ListImports(c *gin.Context) {
-	resp, err := h.commands.ListImports(authctx.MustCurrentUser(c).UserID)
+	resp, err := h.commands.ListImports(c.Request.Context(), authctx.MustCurrentUser(c).UserID)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -149,7 +149,7 @@ func (h *AWDServiceTemplateHandler) ListImports(c *gin.Context) {
 }
 
 func (h *AWDServiceTemplateHandler) GetImport(c *gin.Context) {
-	resp, err := h.commands.GetImport(authctx.MustCurrentUser(c).UserID, strings.TrimSpace(c.Param("id")))
+	resp, err := h.commands.GetImport(c.Request.Context(), authctx.MustCurrentUser(c).UserID, strings.TrimSpace(c.Param("id")))
 	if err != nil {
 		response.FromError(c, err)
 		return

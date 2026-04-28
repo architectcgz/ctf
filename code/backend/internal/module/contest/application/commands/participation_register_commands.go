@@ -25,7 +25,7 @@ func (s *ParticipationService) RegisterContest(ctx context.Context, contestID, u
 	}
 
 	var teamID *int64
-	team, err := s.teamRepo.FindUserTeamInContest(userID, contestID)
+	team, err := s.teamRepo.FindUserTeamInContest(ctx, userID, contestID)
 	if err == nil && team != nil && team.ID > 0 {
 		teamID = &team.ID
 	} else if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {

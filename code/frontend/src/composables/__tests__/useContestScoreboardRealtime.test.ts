@@ -2,6 +2,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { useContestScoreboardRealtime } from '@/composables/useContestScoreboardRealtime'
 
+const toastMocks = vi.hoisted(() => ({
+  warning: vi.fn(),
+}))
+
 const webSocketMocks = vi.hoisted(() => {
   const connect = vi.fn().mockResolvedValue(undefined)
   const disconnect = vi.fn()
@@ -30,6 +34,10 @@ const webSocketMocks = vi.hoisted(() => {
   }
 })
 
+vi.mock('@/composables/useToast', () => ({
+  useToast: () => toastMocks,
+}))
+
 vi.mock('@/composables/useWebSocket', () => ({
   useWebSocket: webSocketMocks.useWebSocket,
 }))
@@ -40,6 +48,7 @@ describe('useContestScoreboardRealtime', () => {
     webSocketMocks.disconnect.mockClear()
     webSocketMocks.send.mockClear()
     webSocketMocks.useWebSocket.mockClear()
+    toastMocks.warning.mockReset()
   })
 
   it('subscribes to contest scoreboard channel and forwards update events', async () => {
@@ -56,5 +65,15 @@ describe('useContestScoreboardRealtime', () => {
 
     stop()
     expect(webSocketMocks.disconnect).toHaveBeenCalledTimes(1)
+  })
+
+  it('连接失败时应在本地消费异常并提示降级为手动刷新', async () => {
+    webSocketMocks.connect.mockRejectedValueOnce(new Error('ws unavailable'))
+
+    const { start } = useContestScoreboardRealtime('contest-running', vi.fn())
+
+    await expect(start()).resolves.toBeUndefined()
+    expect(webSocketMocks.connect).toHaveBeenCalledTimes(1)
+    expect(toastMocks.warning).toHaveBeenCalledWith('实时排行榜连接失败，已切换为手动刷新')
   })
 })

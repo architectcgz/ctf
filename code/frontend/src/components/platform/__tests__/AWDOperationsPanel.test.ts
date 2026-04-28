@@ -43,22 +43,34 @@ vi.mock('@/composables/usePlatformContestAwd', async () => {
     teams: ref([]),
     challengeLinks: ref([]),
     challengeCatalog: ref([]),
+    instanceOrchestration: ref({
+      contest_id: '',
+      teams: [],
+      services: [],
+      instances: [],
+    }),
     loadingRounds: ref(false),
     loadingRoundDetail: ref(false),
     loadingTrafficSummary: ref(false),
     loadingTrafficEvents: ref(false),
     loadingChallengeCatalog: ref(false),
+    loadingInstanceOrchestration: ref(false),
     checking: ref(false),
     creatingRound: ref(false),
     savingServiceCheck: ref(false),
     savingAttackLog: ref(false),
     savingChallengeConfig: ref(false),
+    startingInstanceKey: ref(null),
     shouldAutoRefresh: ref(false),
     refresh: vi.fn(),
+    refreshInstanceOrchestration: vi.fn(),
     applyTrafficFilters: vi.fn(),
     setTrafficPage: vi.fn(),
     resetTrafficFilters: vi.fn(),
     runSelectedRoundCheck: vi.fn(),
+    startTeamServiceInstance: vi.fn(),
+    startTeamAllServices: vi.fn(),
+    startAllTeamServices: vi.fn(),
     createRound: vi.fn(),
     confirmOverrideAction: vi.fn(),
     closeOverrideDialog: vi.fn(),
@@ -122,6 +134,12 @@ describe('AWDOperationsPanel', () => {
     awdState.challengeLinks.value = []
     awdState.challengeCatalog.value = []
     awdState.teams.value = []
+    awdState.instanceOrchestration.value = {
+      contest_id: '',
+      teams: [],
+      services: [],
+      instances: [],
+    }
     awdState.rounds.value = []
     awdState.selectedRoundId.value = null
     awdState.readiness.value = null
@@ -136,6 +154,10 @@ describe('AWDOperationsPanel', () => {
     awdState.loadChallengeCatalog.mockReset()
     awdState.createChallengeLink.mockReset()
     awdState.updateChallengeLink.mockReset()
+    awdState.refreshInstanceOrchestration.mockReset()
+    awdState.startTeamServiceInstance.mockReset()
+    awdState.startTeamAllServices.mockReset()
+    awdState.startAllTeamServices.mockReset()
     awdState.createRound.mockReset()
     awdState.runSelectedRoundCheck.mockReset()
     awdState.confirmOverrideAction.mockReset()
@@ -232,8 +254,8 @@ describe('AWDOperationsPanel', () => {
         awd_checker_config: {
           get_flag: { method: 'GET', path: '/api/flag' },
         },
-        awd_sla_score: 18,
-        awd_defense_score: 28,
+        awd_sla_score: 1,
+        awd_defense_score: 2,
         awd_checker_validation_state: 'passed',
         awd_checker_last_preview_at: '2026-03-18T09:05:00.000Z',
         awd_checker_last_preview_result: {
@@ -311,6 +333,219 @@ describe('AWDOperationsPanel', () => {
     await wrapper.get('#awd-readiness-edit-challenge-1').trigger('click')
 
     expect(wrapper.emitted('open:awd-config')).toEqual([['challenge-1']])
+  })
+
+  it('作为独立运维页使用时应隐藏就绪摘要中的编辑动作', () => {
+    const awdState = getAwdState()
+    awdState.readiness.value = buildReadinessState({
+      pending_challenges: 0,
+      failed_challenges: 1,
+      missing_checker_challenges: 0,
+      blocking_count: 1,
+      items: [
+        {
+          challenge_id: 'challenge-1',
+          title: 'Web Checker',
+          checker_type: 'http_standard',
+          validation_state: 'failed',
+          last_preview_at: '2026-04-12T08:00:00.000Z',
+          last_access_url: 'http://checker.internal/flag',
+          blocking_reason: 'last_preview_failed',
+        },
+      ],
+    })
+
+    const wrapper = mount(AWDOperationsPanel, {
+      props: {
+        contests: [
+          {
+            id: 'awd-1',
+            title: '2026 AWD 联赛',
+            description: '攻防赛',
+            mode: 'awd',
+            status: 'running',
+            starts_at: '2026-03-18T09:00:00.000Z',
+            ends_at: '2026-03-18T18:00:00.000Z',
+          },
+        ],
+        selectedContestId: 'awd-1',
+        hideStudioLink: true,
+        hideReadinessActions: true,
+      },
+      global: {
+        stubs: {
+          ElDialog: {
+            props: ['modelValue', 'title'],
+            template:
+              '<div><div v-if="modelValue"><div>{{ title }}</div><slot /><slot name="footer" /></div></div>',
+          },
+          AWDRoundInspector: true,
+          AWDRoundCreateDialog: true,
+          AWDServiceCheckDialog: true,
+          AWDAttackLogDialog: true,
+          AWDChallengeConfigDialog: true,
+        },
+      },
+    })
+
+    expect(wrapper.text()).toContain('Web Checker')
+    expect(wrapper.text()).not.toContain('编辑配置')
+    expect(wrapper.text()).not.toContain('进入竞赛工作室')
+    expect(wrapper.find('#awd-readiness-edit-challenge-1').exists()).toBe(false)
+    expect(wrapper.emitted('open:awd-config')).toBeUndefined()
+    expect(wrapper.emitted('open:contest-edit')).toBeUndefined()
+  })
+
+  it('应该把队伍实例编排放入独立运维 tab', async () => {
+    const awdState = getAwdState()
+    awdState.instanceOrchestration.value = {
+      contest_id: 'awd-1',
+      teams: [
+        {
+          team_id: 'team-1',
+          team_name: 'Red Team',
+          captain_id: 'captain-1',
+        },
+      ],
+      services: [
+        {
+          service_id: 'service-1',
+          challenge_id: 'challenge-1',
+          display_name: 'Web Service',
+          is_visible: true,
+        },
+      ],
+      instances: [],
+    }
+
+    const wrapper = mount(AWDOperationsPanel, {
+      props: {
+        contests: [
+          {
+            id: 'awd-1',
+            title: '2026 AWD 联赛',
+            description: '攻防赛',
+            mode: 'awd',
+            status: 'running',
+            starts_at: '2026-03-18T09:00:00.000Z',
+            ends_at: '2026-03-18T18:00:00.000Z',
+          },
+        ],
+        selectedContestId: 'awd-1',
+      },
+      global: {
+        stubs: {
+          ElDialog: {
+            props: ['modelValue', 'title'],
+            template:
+              '<div><div v-if="modelValue"><div>{{ title }}</div><slot /><slot name="footer" /></div></div>',
+          },
+          AWDRoundInspector: true,
+          AWDRoundCreateDialog: true,
+          AWDServiceCheckDialog: true,
+          AWDAttackLogDialog: true,
+          AWDChallengeConfigDialog: true,
+        },
+      },
+    })
+
+    expect(wrapper.get('#awd-ops-tab-inspector').attributes('aria-selected')).toBe('true')
+    expect(wrapper.get('#awd-ops-tab-instances').attributes('aria-selected')).toBe('false')
+    expect(wrapper.find('#awd-ops-panel-instances').exists()).toBe(false)
+
+    await wrapper.get('#awd-ops-tab-instances').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.get('#awd-ops-tab-inspector').attributes('aria-selected')).toBe('false')
+    expect(wrapper.get('#awd-ops-tab-instances').attributes('aria-selected')).toBe('true')
+    expect(wrapper.find('#awd-ops-panel-inspector').exists()).toBe(false)
+    expect(wrapper.get('#awd-ops-panel-instances').isVisible()).toBe(true)
+    expect(wrapper.text()).toContain('实例编排')
+    expect(wrapper.text()).toContain('Red Team')
+  })
+
+  it('运行内容为 readiness 时只显示运行态摘要', () => {
+    const wrapper = mount(AWDOperationsPanel, {
+      props: {
+        contests: [
+          {
+            id: 'awd-1',
+            title: '2026 AWD 联赛',
+            description: '攻防赛',
+            mode: 'awd',
+            status: 'running',
+            starts_at: '2026-03-18T09:00:00.000Z',
+            ends_at: '2026-03-18T18:00:00.000Z',
+          },
+        ],
+        selectedContestId: 'awd-1',
+        hideOperationTabs: true,
+        operationPanel: 'inspector',
+        runtimeContent: 'readiness',
+      },
+      global: {
+        stubs: {
+          ElDialog: {
+            props: ['modelValue', 'title'],
+            template:
+              '<div><div v-if="modelValue"><div>{{ title }}</div><slot /><slot name="footer" /></div></div>',
+          },
+          AWDRoundInspector: {
+            template: '<section id="awd-ops-panel-inspector">轮次矩阵</section>',
+          },
+          AWDRoundCreateDialog: true,
+          AWDServiceCheckDialog: true,
+          AWDAttackLogDialog: true,
+          AWDChallengeConfigDialog: true,
+        },
+      },
+    })
+
+    expect(wrapper.find('.runtime-readiness-strip').exists()).toBe(true)
+    expect(wrapper.find('#awd-ops-panel-inspector').exists()).toBe(false)
+    expect(wrapper.find('#awd-ops-panel-instances').exists()).toBe(false)
+  })
+
+  it('运行内容为 round-inspector 时只显示轮次矩阵本体', () => {
+    const wrapper = mount(AWDOperationsPanel, {
+      props: {
+        contests: [
+          {
+            id: 'awd-1',
+            title: '2026 AWD 联赛',
+            description: '攻防赛',
+            mode: 'awd',
+            status: 'running',
+            starts_at: '2026-03-18T09:00:00.000Z',
+            ends_at: '2026-03-18T18:00:00.000Z',
+          },
+        ],
+        selectedContestId: 'awd-1',
+        hideOperationTabs: true,
+        operationPanel: 'inspector',
+        runtimeContent: 'round-inspector',
+      },
+      global: {
+        stubs: {
+          ElDialog: {
+            props: ['modelValue', 'title'],
+            template:
+              '<div><div v-if="modelValue"><div>{{ title }}</div><slot /><slot name="footer" /></div></div>',
+          },
+          AWDRoundInspector: {
+            template: '<section id="awd-ops-panel-inspector">轮次矩阵</section>',
+          },
+          AWDRoundCreateDialog: true,
+          AWDServiceCheckDialog: true,
+          AWDAttackLogDialog: true,
+          AWDChallengeConfigDialog: true,
+        },
+      },
+    })
+
+    expect(wrapper.find('.runtime-readiness-strip').exists()).toBe(false)
+    expect(wrapper.get('#awd-ops-panel-inspector').text()).toBe('轮次矩阵')
+    expect(wrapper.find('#awd-ops-panel-instances').exists()).toBe(false)
   })
 
   it('应该渲染 readiness 摘要与系统级阻塞提示', () => {
@@ -393,6 +628,71 @@ describe('AWDOperationsPanel', () => {
     expect(wrapper.text()).toContain('需先通过赛前检查并开赛')
     expect(wrapper.get('#awd-runtime-shell-create-round').attributes('disabled')).toBeDefined()
     expect(wrapper.get('#awd-runtime-shell-run-check').attributes('disabled')).toBeDefined()
+  })
+
+  it('未开赛实例内容应只显示实例编排，不重复显示开赛就绪摘要', () => {
+    const awdState = getAwdState()
+    awdState.readiness.value = buildReadinessState()
+    awdState.instanceOrchestration.value = {
+      contest_id: 'awd-1',
+      teams: [
+        {
+          team_id: 'team-1',
+          team_name: 'Red Team',
+          captain_id: 'captain-1',
+        },
+      ],
+      services: [
+        {
+          service_id: 'service-1',
+          challenge_id: 'challenge-1',
+          display_name: 'Web Service',
+          is_visible: true,
+        },
+      ],
+      instances: [],
+    }
+
+    const wrapper = mount(AWDOperationsPanel, {
+      props: {
+        contests: [
+          {
+            id: 'awd-1',
+            title: '2026 AWD 联赛',
+            description: '攻防赛',
+            mode: 'awd',
+            status: 'registering',
+            starts_at: '2026-03-18T09:00:00.000Z',
+            ends_at: '2026-03-18T18:00:00.000Z',
+          },
+        ],
+        selectedContestId: 'awd-1',
+        hideOperationTabs: true,
+        operationPanel: 'instances',
+        runtimeContent: 'instances',
+      },
+      global: {
+        stubs: {
+          ElDialog: {
+            props: ['modelValue', 'title'],
+            template:
+              '<div><div v-if="modelValue"><div>{{ title }}</div><slot /><slot name="footer" /></div></div>',
+          },
+          AWDRoundInspector: true,
+          AWDRoundCreateDialog: true,
+          AWDServiceCheckDialog: true,
+          AWDAttackLogDialog: true,
+          AWDChallengeConfigDialog: true,
+        },
+      },
+    })
+
+    expect(wrapper.get('#awd-ops-panel-instances').isVisible()).toBe(true)
+    expect(wrapper.text()).toContain('实例编排')
+    expect(wrapper.text()).toContain('Red Team')
+    expect(wrapper.text()).not.toContain('开赛就绪摘要')
+    expect(wrapper.text()).not.toContain('可开赛')
+    expect(wrapper.text()).not.toContain('尚未进入运行阶段')
   })
 
   it('应该在创建轮次被 gate 拦截时打开强制继续弹层', async () => {

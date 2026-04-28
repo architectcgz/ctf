@@ -5,30 +5,32 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/gin-gonic/gin"
 
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
+	"ctf-platform/internal/model"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
 type stubRuntimeService struct{}
 
-func (stubRuntimeService) DestroyInstanceWithContext(context.Context, int64, int64) error {
+func (stubRuntimeService) DestroyInstance(context.Context, int64, int64) error {
 	return nil
 }
 
-func (stubRuntimeService) ExtendInstanceWithContext(context.Context, int64, int64) (*dto.InstanceResp, error) {
+func (stubRuntimeService) ExtendInstance(context.Context, int64, int64) (*dto.InstanceResp, error) {
 	return nil, nil
 }
 
-func (stubRuntimeService) GetAccessURLWithContext(context.Context, int64, int64) (string, error) {
+func (stubRuntimeService) GetAccessURL(context.Context, int64, int64) (string, error) {
 	return "", nil
 }
 
-func (stubRuntimeService) GetUserInstancesWithContext(context.Context, int64) ([]*dto.InstanceInfo, error) {
+func (stubRuntimeService) GetUserInstances(context.Context, int64) ([]*dto.InstanceInfo, error) {
 	return nil, nil
 }
 
@@ -44,8 +46,36 @@ func (stubRuntimeService) IssueProxyTicket(context.Context, authctx.CurrentUser,
 	return "", nil
 }
 
+func (stubRuntimeService) IssueAWDTargetProxyTicket(context.Context, authctx.CurrentUser, int64, int64, int64) (string, error) {
+	return "", nil
+}
+
+func (stubRuntimeService) IssueAWDDefenseSSHTicket(context.Context, authctx.CurrentUser, int64, int64) (*dto.AWDDefenseSSHAccessResp, error) {
+	return nil, nil
+}
+
+func (stubRuntimeService) ReadAWDDefenseFile(context.Context, authctx.CurrentUser, int64, int64, string) (*dto.AWDDefenseFileResp, error) {
+	return nil, nil
+}
+
+func (stubRuntimeService) ListAWDDefenseDirectory(context.Context, authctx.CurrentUser, int64, int64, string) (*dto.AWDDefenseDirectoryResp, error) {
+	return nil, nil
+}
+
+func (stubRuntimeService) SaveAWDDefenseFile(context.Context, authctx.CurrentUser, int64, int64, dto.AWDDefenseFileSaveReq) (*dto.AWDDefenseFileSaveResp, error) {
+	return nil, nil
+}
+
+func (stubRuntimeService) RunAWDDefenseCommand(context.Context, authctx.CurrentUser, int64, int64, dto.AWDDefenseCommandReq) (*dto.AWDDefenseCommandResp, error) {
+	return nil, nil
+}
+
 func (stubRuntimeService) ResolveProxyTicket(context.Context, string) (*runtimeports.ProxyTicketClaims, error) {
 	return nil, nil
+}
+
+func (stubRuntimeService) ResolveAWDTargetAccessURL(context.Context, *runtimeports.ProxyTicketClaims, int64, int64, int64) (string, error) {
+	return "", nil
 }
 
 func (stubRuntimeService) ProxyTicketMaxAge() int {
@@ -67,7 +97,7 @@ type stubProxyRuntimeService struct {
 	claims    *runtimeports.ProxyTicketClaims
 }
 
-func (s stubProxyRuntimeService) GetAccessURLWithContext(context.Context, int64, int64) (string, error) {
+func (s stubProxyRuntimeService) GetAccessURL(context.Context, int64, int64) (string, error) {
 	return s.targetURL, nil
 }
 
@@ -75,11 +105,204 @@ func (s stubProxyRuntimeService) ResolveProxyTicket(context.Context, string) (*r
 	return s.claims, nil
 }
 
+type stubAWDProxyRuntimeService struct {
+	stubRuntimeService
+	issuedTicket string
+	targetURL    string
+	claims       *runtimeports.ProxyTicketClaims
+}
+
+type stubAWDDefenseSSHRuntimeService struct {
+	stubRuntimeService
+	resp *dto.AWDDefenseSSHAccessResp
+}
+
+func (s stubAWDDefenseSSHRuntimeService) IssueAWDDefenseSSHTicket(context.Context, authctx.CurrentUser, int64, int64) (*dto.AWDDefenseSSHAccessResp, error) {
+	return s.resp, nil
+}
+
+type stubAWDDefenseWorkbenchRuntimeService struct {
+	stubRuntimeService
+	fileResp      *dto.AWDDefenseFileResp
+	directoryResp *dto.AWDDefenseDirectoryResp
+	saveResp      *dto.AWDDefenseFileSaveResp
+	commandResp   *dto.AWDDefenseCommandResp
+}
+
+func (s stubAWDDefenseWorkbenchRuntimeService) ReadAWDDefenseFile(_ context.Context, _ authctx.CurrentUser, contestID, serviceID int64, filePath string) (*dto.AWDDefenseFileResp, error) {
+	if contestID != 5 || serviceID != 12 || filePath != "app.py" {
+		return nil, errors.New("unexpected read args")
+	}
+	return s.fileResp, nil
+}
+
+func (s stubAWDDefenseWorkbenchRuntimeService) ListAWDDefenseDirectory(_ context.Context, _ authctx.CurrentUser, contestID, serviceID int64, dirPath string) (*dto.AWDDefenseDirectoryResp, error) {
+	if contestID != 5 || serviceID != 12 || dirPath != "." {
+		return nil, errors.New("unexpected list args")
+	}
+	return s.directoryResp, nil
+}
+
+func (s stubAWDDefenseWorkbenchRuntimeService) SaveAWDDefenseFile(_ context.Context, _ authctx.CurrentUser, contestID, serviceID int64, req dto.AWDDefenseFileSaveReq) (*dto.AWDDefenseFileSaveResp, error) {
+	if contestID != 5 || serviceID != 12 || req.Path != "app.py" || req.Content != "print('fixed')" || !req.Backup {
+		return nil, errors.New("unexpected save args")
+	}
+	return s.saveResp, nil
+}
+
+func (s stubAWDDefenseWorkbenchRuntimeService) RunAWDDefenseCommand(_ context.Context, _ authctx.CurrentUser, contestID, serviceID int64, req dto.AWDDefenseCommandReq) (*dto.AWDDefenseCommandResp, error) {
+	if contestID != 5 || serviceID != 12 || req.Command != "ls" {
+		return nil, errors.New("unexpected command args")
+	}
+	return s.commandResp, nil
+}
+
+func TestAccessAWDDefenseSSHReturnsConnectionInfo(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	handler := NewHandler(
+		stubAWDDefenseSSHRuntimeService{
+			resp: &dto.AWDDefenseSSHAccessResp{
+				Host:       "127.0.0.1",
+				Port:       2222,
+				Username:   "student+5+12",
+				Password:   "ticket-secret",
+				Command:    "ssh student+5+12@127.0.0.1 -p 2222",
+				SSHProfile: &dto.SSHProfileResp{Alias: "ctf-awd-5-12", HostName: "127.0.0.1", Port: 2222, User: "student+5+12"},
+				ExpiresAt:  "2026-04-28T10:00:00Z",
+			},
+		},
+		nil,
+		CookieConfig{},
+		nil,
+	)
+
+	router := gin.New()
+	router.POST("/api/v1/contests/:id/awd/services/:sid/defense/ssh", func(c *gin.Context) {
+		c.Set("current_user", authctx.CurrentUser{UserID: 1001, Username: "student", Role: model.RoleStudent})
+		c.Set("id", int64(5))
+		c.Set("sid", int64(12))
+		handler.AccessAWDDefenseSSH(c)
+	})
+
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/contests/5/awd/services/12/defense/ssh", nil)
+	resp := httptest.NewRecorder()
+
+	router.ServeHTTP(resp, req)
+
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+	if !strings.Contains(resp.Body.String(), `"username":"student+5+12"`) {
+		t.Fatalf("expected ssh username in response, got %s", resp.Body.String())
+	}
+	if !strings.Contains(resp.Body.String(), `"password":"ticket-secret"`) {
+		t.Fatalf("expected temporary password in response, got %s", resp.Body.String())
+	}
+	if !strings.Contains(resp.Body.String(), `"command":"ssh student+5+12@127.0.0.1 -p 2222"`) {
+		t.Fatalf("expected ssh command in response, got %s", resp.Body.String())
+	}
+	if !strings.Contains(resp.Body.String(), `"ssh_profile":{"alias":"ctf-awd-5-12","host_name":"127.0.0.1","port":2222,"user":"student+5+12"}`) {
+		t.Fatalf("expected structured ssh profile in response, got %s", resp.Body.String())
+	}
+}
+
+func TestAWDDefenseWorkbenchHandlersRejectBrowserFileAndCommandAccess(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	handler := NewHandler(
+		stubAWDDefenseWorkbenchRuntimeService{
+			fileResp: &dto.AWDDefenseFileResp{
+				Path:    "app.py",
+				Content: "print('vuln')",
+				Size:    13,
+			},
+			directoryResp: &dto.AWDDefenseDirectoryResp{
+				Path: ".",
+				Entries: []dto.AWDDefenseDirectoryEntryResp{
+					{Name: "app.py", Path: "app.py", Type: "file", Size: 13},
+					{Name: "templates", Path: "templates", Type: "dir"},
+				},
+			},
+			saveResp: &dto.AWDDefenseFileSaveResp{
+				Path:       "app.py",
+				Size:       14,
+				BackupPath: "app.py.bak.1",
+			},
+			commandResp: &dto.AWDDefenseCommandResp{
+				Command: "ls",
+				Output:  "app.py\nrequirements.txt\n",
+			},
+		},
+		nil,
+		CookieConfig{},
+		nil,
+	)
+
+	router := gin.New()
+	router.Use(func(c *gin.Context) {
+		c.Set("current_user", authctx.CurrentUser{UserID: 1001, Username: "student", Role: model.RoleStudent})
+		c.Set("id", int64(5))
+		c.Set("sid", int64(12))
+	})
+	router.GET("/api/v1/contests/:id/awd/services/:sid/defense/directories", handler.ListAWDDefenseDirectory)
+	router.GET("/api/v1/contests/:id/awd/services/:sid/defense/files", handler.ReadAWDDefenseFile)
+	router.PUT("/api/v1/contests/:id/awd/services/:sid/defense/files", handler.SaveAWDDefenseFile)
+	router.POST("/api/v1/contests/:id/awd/services/:sid/defense/commands", handler.RunAWDDefenseCommand)
+
+	readReq := httptest.NewRequest(http.MethodGet, "/api/v1/contests/5/awd/services/12/defense/files?path=app.py", nil)
+	readResp := httptest.NewRecorder()
+	router.ServeHTTP(readResp, readReq)
+	if readResp.Code != http.StatusForbidden || strings.Contains(readResp.Body.String(), "print('vuln')") {
+		t.Fatalf("expected forbidden read response without file content, status=%d body=%s", readResp.Code, readResp.Body.String())
+	}
+
+	listReq := httptest.NewRequest(http.MethodGet, "/api/v1/contests/5/awd/services/12/defense/directories?path=.", nil)
+	listResp := httptest.NewRecorder()
+	router.ServeHTTP(listResp, listReq)
+	if listResp.Code != http.StatusForbidden || strings.Contains(listResp.Body.String(), "templates") {
+		t.Fatalf("expected forbidden list response without directory entries, status=%d body=%s", listResp.Code, listResp.Body.String())
+	}
+
+	saveReq := httptest.NewRequest(http.MethodPut, "/api/v1/contests/5/awd/services/12/defense/files", strings.NewReader(`{"path":"app.py","content":"print('fixed')","backup":true}`))
+	saveReq.Header.Set("Content-Type", "application/json")
+	saveResp := httptest.NewRecorder()
+	router.ServeHTTP(saveResp, saveReq)
+	if saveResp.Code != http.StatusForbidden || strings.Contains(saveResp.Body.String(), "app.py.bak.1") {
+		t.Fatalf("expected forbidden save response without backup path, status=%d body=%s", saveResp.Code, saveResp.Body.String())
+	}
+
+	commandReq := httptest.NewRequest(http.MethodPost, "/api/v1/contests/5/awd/services/12/defense/commands", strings.NewReader(`{"command":"ls"}`))
+	commandReq.Header.Set("Content-Type", "application/json")
+	commandResp := httptest.NewRecorder()
+	router.ServeHTTP(commandResp, commandReq)
+	if commandResp.Code != http.StatusForbidden || strings.Contains(commandResp.Body.String(), "requirements.txt") {
+		t.Fatalf("expected forbidden command response without shell output, status=%d body=%s", commandResp.Code, commandResp.Body.String())
+	}
+}
+
+func (s stubAWDProxyRuntimeService) IssueAWDTargetProxyTicket(context.Context, authctx.CurrentUser, int64, int64, int64) (string, error) {
+	return s.issuedTicket, nil
+}
+
+func (s stubAWDProxyRuntimeService) ResolveProxyTicket(context.Context, string) (*runtimeports.ProxyTicketClaims, error) {
+	return s.claims, nil
+}
+
+func (s stubAWDProxyRuntimeService) ResolveAWDTargetAccessURL(context.Context, *runtimeports.ProxyTicketClaims, int64, int64, int64) (string, error) {
+	return s.targetURL, nil
+}
+
 type failingTrafficRecorder struct {
 	calls int
 }
 
 func (r *failingTrafficRecorder) RecordRuntimeProxyTrafficEvent(context.Context, int64, int64, string, string, int) error {
+	r.calls++
+	return errors.New("persist failed")
+}
+
+func (r *failingTrafficRecorder) RecordAWDProxyTrafficEvent(context.Context, model.AWDProxyTrafficEventInput) error {
 	r.calls++
 	return errors.New("persist failed")
 }
@@ -125,5 +348,226 @@ func TestProxyInstanceTrafficRecorderFailureDoesNotAffectProxyResponse(t *testin
 	}
 	if recorder.calls != 1 {
 		t.Fatalf("expected traffic recorder called once, got %d", recorder.calls)
+	}
+}
+
+func TestAccessAWDTargetReturnsTargetProxyURL(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	handler := NewHandler(
+		stubAWDProxyRuntimeService{issuedTicket: "ticket-awd"},
+		nil,
+		CookieConfig{},
+		nil,
+	)
+
+	router := gin.New()
+	router.POST("/api/v1/contests/:id/awd/services/:sid/targets/:team_id/access", func(c *gin.Context) {
+		c.Set("current_user", authctx.CurrentUser{UserID: 1001, Username: "alice", Role: model.RoleStudent})
+		c.Set("id", int64(7))
+		c.Set("sid", int64(7009))
+		c.Set("team_id", int64(14))
+		handler.AccessAWDTarget(c)
+	})
+
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/contests/7/awd/services/7009/targets/14/access", nil)
+	resp := httptest.NewRecorder()
+
+	router.ServeHTTP(resp, req)
+
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+	if !strings.Contains(resp.Body.String(), "/api/v1/contests/7/awd/services/7009/targets/14/proxy/?ticket=ticket-awd") {
+		t.Fatalf("expected awd proxy url in response, got %s", resp.Body.String())
+	}
+}
+
+func TestProxyAWDTargetForwardsAndRecordsExplicitTrafficScope(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	target := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/api/flag" {
+			t.Fatalf("unexpected target path: %s", r.URL.Path)
+		}
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("flag page"))
+	}))
+	defer target.Close()
+
+	contestID := int64(7)
+	attackerTeamID := int64(13)
+	victimTeamID := int64(14)
+	serviceID := int64(7009)
+	challengeID := int64(9)
+	recorder := &recordingProxyTrafficRecorder{}
+	handler := NewHandler(
+		stubAWDProxyRuntimeService{
+			targetURL: target.URL,
+			claims: &runtimeports.ProxyTicketClaims{
+				UserID:            1001,
+				Username:          "alice",
+				Role:              model.RoleStudent,
+				InstanceID:        42,
+				ContestID:         &contestID,
+				Purpose:           runtimeports.ProxyTicketPurposeAWDAttack,
+				ShareScope:        model.InstanceSharingPerTeam,
+				AWDAttackerTeamID: &attackerTeamID,
+				AWDVictimTeamID:   &victimTeamID,
+				AWDServiceID:      &serviceID,
+				AWDChallengeID:    &challengeID,
+			},
+		},
+		nil,
+		CookieConfig{},
+		recorder,
+	)
+
+	router := gin.New()
+	router.GET("/api/v1/contests/:id/awd/services/:sid/targets/:team_id/proxy/*proxyPath", func(c *gin.Context) {
+		c.Set("id", contestID)
+		c.Set("sid", serviceID)
+		c.Set("team_id", victimTeamID)
+		handler.ProxyAWDTarget(c)
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/contests/7/awd/services/7009/targets/14/proxy/api/flag", nil)
+	req.AddCookie(&http.Cookie{Name: proxyAccessCookieName, Value: "ticket-awd"})
+	resp := httptest.NewRecorder()
+
+	router.ServeHTTP(resp, req)
+
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected proxied status 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+	if resp.Body.String() != "flag page" {
+		t.Fatalf("unexpected proxy body: %s", resp.Body.String())
+	}
+	if recorder.awdEvent == nil {
+		t.Fatal("expected explicit awd traffic event")
+	}
+	if recorder.awdEvent.AttackerTeamID != attackerTeamID || recorder.awdEvent.VictimTeamID != victimTeamID || recorder.awdEvent.ServiceID != serviceID {
+		t.Fatalf("unexpected awd event: %+v", recorder.awdEvent)
+	}
+}
+
+func TestProxyAWDTargetRewritesRootRelativeHTMLLinks(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	target := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		_, _ = w.Write([]byte(`<html><body><a href="/">首页</a><form action="/login"></form><img src="/logo.png"><a href="//cdn.example.com/x">cdn</a></body></html>`))
+	}))
+	defer target.Close()
+
+	contestID := int64(7)
+	attackerTeamID := int64(13)
+	victimTeamID := int64(14)
+	serviceID := int64(7009)
+	challengeID := int64(9)
+	handler := NewHandler(
+		stubAWDProxyRuntimeService{
+			targetURL: target.URL,
+			claims: &runtimeports.ProxyTicketClaims{
+				UserID:            1001,
+				Username:          "alice",
+				Role:              model.RoleStudent,
+				InstanceID:        42,
+				ContestID:         &contestID,
+				Purpose:           runtimeports.ProxyTicketPurposeAWDAttack,
+				AWDAttackerTeamID: &attackerTeamID,
+				AWDVictimTeamID:   &victimTeamID,
+				AWDServiceID:      &serviceID,
+				AWDChallengeID:    &challengeID,
+			},
+		},
+		nil,
+		CookieConfig{},
+		nil,
+	)
+
+	router := gin.New()
+	router.GET("/api/v1/contests/:id/awd/services/:sid/targets/:team_id/proxy/*proxyPath", func(c *gin.Context) {
+		c.Set("id", contestID)
+		c.Set("sid", serviceID)
+		c.Set("team_id", victimTeamID)
+		handler.ProxyAWDTarget(c)
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/contests/7/awd/services/7009/targets/14/proxy/", nil)
+	req.AddCookie(&http.Cookie{Name: proxyAccessCookieName, Value: "ticket-awd"})
+	resp := httptest.NewRecorder()
+
+	router.ServeHTTP(resp, req)
+
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected proxied status 200, got %d body=%s", resp.Code, resp.Body.String())
+	}
+	body := resp.Body.String()
+	expectedPrefix := "/api/v1/contests/7/awd/services/7009/targets/14/proxy"
+	for _, expected := range []string{
+		`href="` + expectedPrefix + `/"`,
+		`action="` + expectedPrefix + `/login"`,
+		`src="` + expectedPrefix + `/logo.png"`,
+		`href="//cdn.example.com/x"`,
+	} {
+		if !strings.Contains(body, expected) {
+			t.Fatalf("expected rewritten body to contain %q, got %s", expected, body)
+		}
+	}
+}
+
+func TestProxyAWDTargetRewritesRootRelativeRedirectLocation(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	target := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Location", "/dashboard")
+		w.WriteHeader(http.StatusFound)
+	}))
+	defer target.Close()
+
+	contestID := int64(7)
+	attackerTeamID := int64(13)
+	victimTeamID := int64(14)
+	serviceID := int64(7009)
+	challengeID := int64(9)
+	handler := NewHandler(
+		stubAWDProxyRuntimeService{
+			targetURL: target.URL,
+			claims: &runtimeports.ProxyTicketClaims{
+				UserID:            1001,
+				Username:          "alice",
+				Role:              model.RoleStudent,
+				InstanceID:        42,
+				ContestID:         &contestID,
+				Purpose:           runtimeports.ProxyTicketPurposeAWDAttack,
+				AWDAttackerTeamID: &attackerTeamID,
+				AWDVictimTeamID:   &victimTeamID,
+				AWDServiceID:      &serviceID,
+				AWDChallengeID:    &challengeID,
+			},
+		},
+		nil,
+		CookieConfig{},
+		nil,
+	)
+
+	router := gin.New()
+	router.GET("/api/v1/contests/:id/awd/services/:sid/targets/:team_id/proxy/*proxyPath", func(c *gin.Context) {
+		c.Set("id", contestID)
+		c.Set("sid", serviceID)
+		c.Set("team_id", victimTeamID)
+		handler.ProxyAWDTarget(c)
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/contests/7/awd/services/7009/targets/14/proxy/login", nil)
+	req.AddCookie(&http.Cookie{Name: proxyAccessCookieName, Value: "ticket-awd"})
+	resp := httptest.NewRecorder()
+
+	router.ServeHTTP(resp, req)
+
+	expected := "/api/v1/contests/7/awd/services/7009/targets/14/proxy/dashboard"
+	if resp.Code != http.StatusFound || resp.Header().Get("Location") != expected {
+		t.Fatalf("expected redirect to %q, got status=%d location=%q body=%s", expected, resp.Code, resp.Header().Get("Location"), resp.Body.String())
 	}
 }

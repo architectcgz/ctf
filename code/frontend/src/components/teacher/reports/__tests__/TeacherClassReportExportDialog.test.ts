@@ -108,9 +108,7 @@ describe('TeacherClassReportExportDialog', () => {
         role: 'teacher',
         class_name: 'Class A',
         name: 'Teacher A',
-      },
-      'token'
-    )
+      })
 
     vi.stubGlobal('URL', {
       createObjectURL: vi.fn(() => 'blob:report'),

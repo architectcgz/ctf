@@ -19,6 +19,7 @@ import type {
   ChallengePackageRevisionData,
   EnvironmentTemplateData,
 } from '@/api/contracts'
+import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
 import { useToast } from '@/composables/useToast'
 
 import {
@@ -639,11 +640,13 @@ export function useChallengeTopologyStudioPage(options: UseChallengeTopologyStud
     interactionMode.value = 'pan'
   }
 
-  function removeSelectedCanvasItem() {
-    if (
-      typeof window !== 'undefined' &&
-      !window.confirm('确认删除当前选中的节点或连线吗？该操作会直接修改当前草稿。')
-    ) {
+  async function removeSelectedCanvasItem() {
+    const confirmed = await confirmDestructiveAction({
+      title: '删除选中项',
+      message: '确认删除当前选中的节点或连线吗？该操作会直接修改当前草稿。',
+      confirmButtonText: '确认删除',
+    })
+    if (!confirmed) {
       return
     }
     if (selectedEdgeId.value) {
@@ -693,10 +696,12 @@ export function useChallengeTopologyStudioPage(options: UseChallengeTopologyStud
   }
 
   async function handleApplyTemplate(template: EnvironmentTemplateData) {
-    if (
-      typeof window !== 'undefined' &&
-      !window.confirm(`确认将模板“${template.name}”应用到当前题目吗？已保存拓扑会被模板覆盖。`)
-    ) {
+    const confirmed = await confirmDestructiveAction({
+      title: '应用模板',
+      message: `确认将模板“${template.name}”应用到当前题目吗？已保存拓扑会被模板覆盖。`,
+      confirmButtonText: '确认覆盖',
+    })
+    if (!confirmed) {
       return
     }
     templateBusy.value = true
@@ -747,10 +752,12 @@ export function useChallengeTopologyStudioPage(options: UseChallengeTopologyStud
       toast.warning('当前题目还没有已保存的拓扑')
       return
     }
-    if (
-      typeof window !== 'undefined' &&
-      !window.confirm('确认删除当前题目已保存的拓扑吗？删除后需要重新保存才能恢复。')
-    ) {
+    const confirmed = await confirmDestructiveAction({
+      title: '删除题目拓扑',
+      message: '确认删除当前题目已保存的拓扑吗？删除后需要重新保存才能恢复。',
+      confirmButtonText: '确认删除',
+    })
+    if (!confirmed) {
       return
     }
     saving.value = true
@@ -821,10 +828,12 @@ export function useChallengeTopologyStudioPage(options: UseChallengeTopologyStud
 
   async function handleDeleteTemplate(templateId: string) {
     const template = templates.value.find((item) => item.id === templateId)
-    if (
-      typeof window !== 'undefined' &&
-      !window.confirm(`确认删除模板“${template?.name || templateId}”吗？该操作不可撤销。`)
-    ) {
+    const confirmed = await confirmDestructiveAction({
+      title: '删除模板',
+      message: `确认删除模板“${template?.name || templateId}”吗？该操作不可撤销。`,
+      confirmButtonText: '确认删除',
+    })
+    if (!confirmed) {
       return
     }
     templateBusy.value = true

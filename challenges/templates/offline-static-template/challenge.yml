@@ -1,0 +1,27 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: <replace-with-slug>
+  title: <replace-with-title>
+  category: crypto
+  difficulty: beginner
+  points: 100
+  tags:
+    - kp:<replace-with-knowledge-point>
+
+content:
+  statement: statement.md
+  attachments:
+    - path: attachments/challenge.txt
+      name: challenge.txt
+
+flag:
+  type: static
+  value: flag{replace-with-real-flag}
+  prefix: flag
+
+hints:
+  - level: 1
+    title: Hint 1
+    content: <replace-with-useful-hint>

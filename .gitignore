@@ -6,6 +6,8 @@
 
 bin/
 dist/
+__pycache__/
+*.pyc
 coverage.out
 logs/
 docs/*
@@ -14,6 +16,14 @@ docs/*
 !docs/contracts/
 !docs/refs/
 !docs/refs/*.md
+!docs/reviews/
+!docs/reviews/frontend/
+!docs/reviews/frontend/*.md
+!docs/superpowers/
+!docs/superpowers/plans/
+!docs/superpowers/plans/*.md
+!docs/superpowers/specs/
+!docs/superpowers/specs/*.md
 
 frontend/dist/
 frontend/node_modules/
@@ -30,6 +40,7 @@ code/frontend/docs/
 
 .env
 .env.local
+/scripts/registry/deploy-private-registry.conf
 
 # Local development artifacts
 /.playwright-cli/

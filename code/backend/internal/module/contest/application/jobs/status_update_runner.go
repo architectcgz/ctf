@@ -34,7 +34,7 @@ func (u *StatusUpdater) updateStatuses(ctx context.Context) {
 		}()
 	}
 
-	now := time.Now()
+	now := time.Now().UTC()
 	statuses := []string{
 		model.ContestStatusRegistration,
 		model.ContestStatusRunning,
@@ -50,6 +50,9 @@ func (u *StatusUpdater) updateStatuses(ctx context.Context) {
 	for _, contest := range contests {
 		newStatus := u.calculateStatus(contest, now)
 		if newStatus != contest.Status {
+			if u.shouldBlockAutomaticAWDStart(ctx, contest, newStatus) {
+				continue
+			}
 			if contest.Status == model.ContestStatusRunning && newStatus == model.ContestStatusFrozen {
 				u.createFrozenSnapshot(ctx, contest.ID)
 			}

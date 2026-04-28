@@ -18,14 +18,14 @@ export function useAuth() {
 
   async function login(payload: LoginRequest, redirectTo?: string): Promise<void> {
     const resp = await loginApi(payload)
-    authStore.setAuth(resp.user, resp.access_token)
+    authStore.setAuth(resp.user)
     toast.success('登录成功')
     await router.push(redirectTo || getRoleDashboardPath(resp.user.role))
   }
 
   async function register(payload: RegisterRequest, redirectTo?: string): Promise<void> {
     const resp = await registerApi(payload)
-    authStore.setAuth(resp.user, resp.access_token)
+    authStore.setAuth(resp.user)
     toast.success('注册成功')
     await router.push(redirectTo || getRoleDashboardPath(resp.user.role))
   }

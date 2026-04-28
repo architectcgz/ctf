@@ -1,11 +1,13 @@
 package http
 
 import (
+	"context"
+	"strconv"
+
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	"ctf-platform/pkg/errcode"
 	"ctf-platform/pkg/response"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -16,14 +18,14 @@ type FlagHandler struct {
 }
 
 type flagCommandService interface {
-	ConfigureStaticFlag(challengeID int64, flag, flagPrefix string) error
-	ConfigureDynamicFlag(challengeID int64, flagPrefix string) error
-	ConfigureRegexFlag(challengeID int64, flagRegex, flagPrefix string) error
-	ConfigureManualReviewFlag(challengeID int64) error
+	ConfigureStaticFlag(ctx context.Context, challengeID int64, flag, flagPrefix string) error
+	ConfigureDynamicFlag(ctx context.Context, challengeID int64, flagPrefix string) error
+	ConfigureRegexFlag(ctx context.Context, challengeID int64, flagRegex, flagPrefix string) error
+	ConfigureManualReviewFlag(ctx context.Context, challengeID int64) error
 }
 
 type flagQueryService interface {
-	GetFlagConfig(challengeID int64) (*dto.FlagResp, error)
+	GetFlagConfig(ctx context.Context, challengeID int64) (*dto.FlagResp, error)
 }
 
 func NewFlagHandler(commands flagCommandService, queries flagQueryService) *FlagHandler {
@@ -46,13 +48,13 @@ func (h *FlagHandler) ConfigureFlag(c *gin.Context) {
 	}
 
 	if req.FlagType == model.FlagTypeStatic {
-		err = h.commands.ConfigureStaticFlag(challengeID, req.Flag, req.FlagPrefix)
+		err = h.commands.ConfigureStaticFlag(c.Request.Context(), challengeID, req.Flag, req.FlagPrefix)
 	} else if req.FlagType == model.FlagTypeDynamic {
-		err = h.commands.ConfigureDynamicFlag(challengeID, req.FlagPrefix)
+		err = h.commands.ConfigureDynamicFlag(c.Request.Context(), challengeID, req.FlagPrefix)
 	} else if req.FlagType == model.FlagTypeRegex {
-		err = h.commands.ConfigureRegexFlag(challengeID, req.FlagRegex, req.FlagPrefix)
+		err = h.commands.ConfigureRegexFlag(c.Request.Context(), challengeID, req.FlagRegex, req.FlagPrefix)
 	} else {
-		err = h.commands.ConfigureManualReviewFlag(challengeID)
+		err = h.commands.ConfigureManualReviewFlag(c.Request.Context(), challengeID)
 	}
 
 	if err != nil {
@@ -72,7 +74,7 @@ func (h *FlagHandler) GetFlagConfig(c *gin.Context) {
 		return
 	}
 
-	flagResp, err := h.queries.GetFlagConfig(challengeID)
+	flagResp, err := h.queries.GetFlagConfig(c.Request.Context(), challengeID)
 	if err != nil {
 		response.FromError(c, err)
 		return

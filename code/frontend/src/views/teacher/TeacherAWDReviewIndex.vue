@@ -32,19 +32,15 @@ function contestStatusLabel(status: string): string {
 </script>
 
 <template>
-  <div class="teacher-management-shell teacher-surface flex min-h-full flex-1 flex-col">
+  <div class="teacher-management-shell teacher-surface workspace-shell flex min-h-full flex-1 flex-col">
     <section
-      class="teacher-hero teacher-surface-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
+      class="teacher-hero teacher-surface-hero flex min-h-full flex-1 flex-col border px-6 py-6 md:px-8"
     >
       <div class="teacher-page">
         <header class="teacher-topbar workspace-tab-heading awd-review-index-header">
           <div class="teacher-heading workspace-tab-heading__main">
-            <div class="workspace-overline awd-review-index-overline">
-              AWD Review
-            </div>
-            <h1 class="teacher-title workspace-page-title">
-              AWD复盘
-            </h1>
+            <div class="workspace-overline awd-review-index-overline">AWD Review</div>
+            <h1 class="teacher-title workspace-page-title">AWD复盘</h1>
             <p class="teacher-copy workspace-page-copy">
               集中查看赛事轮次、状态与导出就绪度，从统一入口进入整场或单轮复盘。
             </p>
@@ -74,7 +70,7 @@ function contestStatusLabel(status: string): string {
             <FolderKanban class="h-4 w-4" />
             <span>Review Snapshot</span>
           </div>
-          <div class="teacher-summary-grid progress-strip metric-panel-grid">
+          <div class="teacher-summary-grid progress-strip metric-panel-grid metric-panel-default-surface">
             <article class="progress-card metric-panel-card">
               <div class="progress-card-label metric-panel-label">
                 赛事数量
@@ -292,15 +288,7 @@ function contestStatusLabel(status: string): string {
 }
 
 .teacher-directory-section {
-  margin-top: var(--space-6);
-}
-
-.list-heading {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: var(--space-3);
+  margin-top: var(--workspace-directory-page-block-gap, var(--space-5));
 }
 
 .list-heading__title {
@@ -313,7 +301,7 @@ function contestStatusLabel(status: string): string {
 .teacher-directory-filters {
   display: grid;
   gap: var(--space-4);
-  padding: var(--space-5) 0;
+  padding: var(--workspace-directory-gap-top) 0 var(--space-4);
 }
 
 .awd-review-filter-grid {

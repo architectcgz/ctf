@@ -14,8 +14,8 @@ import (
 	"ctf-platform/pkg/errcode"
 )
 
-func (s *TeamService) ensureApprovedRegistration(contestID, userID int64) error {
-	registration, err := s.teamRepo.FindContestRegistration(contestID, userID)
+func (s *TeamService) ensureApprovedRegistration(ctx context.Context, contestID, userID int64) error {
+	registration, err := s.teamRepo.FindContestRegistration(ctx, contestID, userID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return errcode.ErrNotRegistered

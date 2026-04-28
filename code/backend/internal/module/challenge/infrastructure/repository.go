@@ -24,9 +24,6 @@ func (r *Repository) WithDB(db *gorm.DB) *Repository {
 }
 
 func (r *Repository) dbWithContext(ctx context.Context) *gorm.DB {
-	if ctx == nil {
-		ctx = context.Background()
-	}
 	return r.db.WithContext(ctx)
 }
 
@@ -36,12 +33,12 @@ func (r *Repository) WithinTransaction(ctx context.Context, fn func(txRepo *Repo
 	})
 }
 
-func (r *Repository) Create(challenge *model.Challenge) error {
-	return r.db.Create(challenge).Error
+func (r *Repository) Create(ctx context.Context, challenge *model.Challenge) error {
+	return r.dbWithContext(ctx).Create(challenge).Error
 }
 
-func (r *Repository) CreateWithHints(challenge *model.Challenge, hints []*model.ChallengeHint) error {
-	return r.db.Transaction(func(tx *gorm.DB) error {
+func (r *Repository) CreateWithHints(ctx context.Context, challenge *model.Challenge, hints []*model.ChallengeHint) error {
+	return r.dbWithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		if err := tx.Create(challenge).Error; err != nil {
 			return err
 		}
@@ -55,22 +52,18 @@ func (r *Repository) CreateWithHints(challenge *model.Challenge, hints []*model.
 	})
 }
 
-func (r *Repository) FindByID(id int64) (*model.Challenge, error) {
-	return r.FindByIDWithContext(context.Background(), id)
-}
-
-func (r *Repository) FindByIDWithContext(ctx context.Context, id int64) (*model.Challenge, error) {
+func (r *Repository) FindByID(ctx context.Context, id int64) (*model.Challenge, error) {
 	var challenge model.Challenge
 	err := r.dbWithContext(ctx).Where("id = ?", id).First(&challenge).Error
 	return &challenge, err
 }
 
-func (r *Repository) Update(challenge *model.Challenge) error {
-	return r.db.Save(challenge).Error
+func (r *Repository) Update(ctx context.Context, challenge *model.Challenge) error {
+	return r.dbWithContext(ctx).Save(challenge).Error
 }
 
-func (r *Repository) UpdateWithHints(challenge *model.Challenge, hints []*model.ChallengeHint, replaceHints bool) error {
-	return r.db.Transaction(func(tx *gorm.DB) error {
+func (r *Repository) UpdateWithHints(ctx context.Context, challenge *model.Challenge, hints []*model.ChallengeHint, replaceHints bool) error {
+	return r.dbWithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		if err := tx.Save(challenge).Error; err != nil {
 			return err
 		}
@@ -90,26 +83,26 @@ func (r *Repository) UpdateWithHints(challenge *model.Challenge, hints []*model.
 	})
 }
 
-func (r *Repository) Delete(id int64) error {
-	return r.db.Delete(&model.Challenge{}, id).Error
+func (r *Repository) Delete(ctx context.Context, id int64) error {
+	return r.dbWithContext(ctx).Delete(&model.Challenge{}, id).Error
 }
 
-func (r *Repository) CreateAWDServiceTemplate(template *model.AWDServiceTemplate) error {
-	return r.db.Create(template).Error
+func (r *Repository) CreateAWDServiceTemplate(ctx context.Context, template *model.AWDServiceTemplate) error {
+	return r.dbWithContext(ctx).Create(template).Error
 }
 
-func (r *Repository) FindAWDServiceTemplateByID(id int64) (*model.AWDServiceTemplate, error) {
+func (r *Repository) FindAWDServiceTemplateByID(ctx context.Context, id int64) (*model.AWDServiceTemplate, error) {
 	var template model.AWDServiceTemplate
-	err := r.db.Where("id = ?", id).First(&template).Error
+	err := r.dbWithContext(ctx).Where("id = ?", id).First(&template).Error
 	return &template, err
 }
 
-func (r *Repository) UpdateAWDServiceTemplate(template *model.AWDServiceTemplate) error {
-	return r.db.Save(template).Error
+func (r *Repository) UpdateAWDServiceTemplate(ctx context.Context, template *model.AWDServiceTemplate) error {
+	return r.dbWithContext(ctx).Save(template).Error
 }
 
-func (r *Repository) DeleteAWDServiceTemplate(id int64) error {
-	return r.db.Delete(&model.AWDServiceTemplate{}, id).Error
+func (r *Repository) DeleteAWDServiceTemplate(ctx context.Context, id int64) error {
+	return r.dbWithContext(ctx).Delete(&model.AWDServiceTemplate{}, id).Error
 }
 
 func (r *Repository) ListAWDServiceTemplates(ctx context.Context, query *dto.AWDServiceTemplateQuery) ([]*model.AWDServiceTemplate, int64, error) {
@@ -152,11 +145,11 @@ func (r *Repository) ListAWDServiceTemplates(ctx context.Context, query *dto.AWD
 	return templates, total, err
 }
 
-func (r *Repository) List(query *dto.ChallengeQuery) ([]*model.Challenge, int64, error) {
+func (r *Repository) List(ctx context.Context, query *dto.ChallengeQuery) ([]*model.Challenge, int64, error) {
 	var challenges []*model.Challenge
 	var total int64
 
-	db := r.db.Model(&model.Challenge{})
+	db := r.dbWithContext(ctx).Model(&model.Challenge{})
 
 	if query.Category != "" {
 		db = db.Where("category = ?", query.Category)
@@ -189,9 +182,9 @@ func (r *Repository) List(query *dto.ChallengeQuery) ([]*model.Challenge, int64,
 	return challenges, total, err
 }
 
-func (r *Repository) HasRunningInstances(challengeID int64) (bool, error) {
+func (r *Repository) HasRunningInstances(ctx context.Context, challengeID int64) (bool, error) {
 	var count int64
-	err := r.db.Model(&model.Instance{}).
+	err := r.dbWithContext(ctx).Model(&model.Instance{}).
 		Where("challenge_id = ? AND status IN (?)", challengeID, []string{"creating", "running"}).
 		Count(&count).Error
 	return count > 0, err
@@ -263,34 +256,35 @@ func (r *Repository) UpdatePublishCheckJob(ctx context.Context, job *model.Chall
 	return r.dbWithContext(ctx).Save(job).Error
 }
 
-func (r *Repository) CountByImageID(imageID int64) (int64, error) {
+func (r *Repository) CountByImageID(ctx context.Context, imageID int64) (int64, error) {
 	var count int64
-	err := r.db.Model(&model.Challenge{}).
+	err := r.dbWithContext(ctx).Model(&model.Challenge{}).
 		Where("image_id = ?", imageID).
 		Count(&count).Error
 	return count, err
 }
 
-func (r *Repository) ListHintsByChallengeID(challengeID int64) ([]*model.ChallengeHint, error) {
-	return r.ListHintsByChallengeIDWithContext(context.Background(), challengeID)
-}
-
-func (r *Repository) ListHintsByChallengeIDWithContext(ctx context.Context, challengeID int64) ([]*model.ChallengeHint, error) {
+func (r *Repository) ListHintsByChallengeID(ctx context.Context, challengeID int64) ([]*model.ChallengeHint, error) {
 	var hints []*model.ChallengeHint
 	err := r.dbWithContext(ctx).Where("challenge_id = ?", challengeID).Order("level ASC, id ASC").Find(&hints).Error
 	return hints, err
 }
 
 // ListPublished 查询已发布的靶场列表（学员视图）
-func (r *Repository) ListPublished(query *dto.ChallengeQuery) ([]*model.Challenge, int64, error) {
-	return r.ListPublishedWithContext(context.Background(), query)
-}
-
-func (r *Repository) ListPublishedWithContext(ctx context.Context, query *dto.ChallengeQuery) ([]*model.Challenge, int64, error) {
+func (r *Repository) ListPublished(ctx context.Context, query *dto.ChallengeQuery) ([]*model.Challenge, int64, error) {
 	var challenges []*model.Challenge
 	var total int64
 
-	db := r.dbWithContext(ctx).Model(&model.Challenge{}).Where("status = ?", model.ChallengeStatusPublished)
+	db := r.dbWithContext(ctx).
+		Model(&model.Challenge{}).
+		Where("status = ?", model.ChallengeStatusPublished).
+		Where("NOT EXISTS (?)",
+			r.dbWithContext(ctx).
+				Table("contest_awd_services AS cas").
+				Select("1").
+				Where("cas.challenge_id = challenges.id").
+				Where("cas.deleted_at IS NULL"),
+		)
 
 	if query.Category != "" {
 		db = db.Where("category = ?", query.Category)
@@ -334,12 +328,7 @@ func (r *Repository) applyPagination(db *gorm.DB, page, size int) *gorm.DB {
 	return db.Offset(offset).Limit(size)
 }
 
-// GetSolvedStatus 获取用户是否已完成靶场
-func (r *Repository) GetSolvedStatus(userID, challengeID int64) (bool, error) {
-	return r.GetSolvedStatusWithContext(context.Background(), userID, challengeID)
-}
-
-func (r *Repository) GetSolvedStatusWithContext(ctx context.Context, userID, challengeID int64) (bool, error) {
+func (r *Repository) GetSolvedStatus(ctx context.Context, userID, challengeID int64) (bool, error) {
 	var count int64
 	err := r.dbWithContext(ctx).Table("submissions").
 		Where("user_id = ? AND challenge_id = ? AND is_correct = ?", userID, challengeID, true).
@@ -347,12 +336,7 @@ func (r *Repository) GetSolvedStatusWithContext(ctx context.Context, userID, cha
 	return count > 0, err
 }
 
-// GetSolvedCount 获取靶场完成人数
-func (r *Repository) GetSolvedCount(challengeID int64) (int64, error) {
-	return r.GetSolvedCountWithContext(context.Background(), challengeID)
-}
-
-func (r *Repository) GetSolvedCountWithContext(ctx context.Context, challengeID int64) (int64, error) {
+func (r *Repository) GetSolvedCount(ctx context.Context, challengeID int64) (int64, error) {
 	var count int64
 	err := r.dbWithContext(ctx).Table("submissions").
 		Where("challenge_id = ? AND is_correct = ?", challengeID, true).
@@ -361,12 +345,7 @@ func (r *Repository) GetSolvedCountWithContext(ctx context.Context, challengeID 
 	return count, err
 }
 
-// GetTotalAttempts 获取靶场总尝试次数
-func (r *Repository) GetTotalAttempts(challengeID int64) (int64, error) {
-	return r.GetTotalAttemptsWithContext(context.Background(), challengeID)
-}
-
-func (r *Repository) GetTotalAttemptsWithContext(ctx context.Context, challengeID int64) (int64, error) {
+func (r *Repository) GetTotalAttempts(ctx context.Context, challengeID int64) (int64, error) {
 	var count int64
 	err := r.dbWithContext(ctx).Table("submissions").
 		Where("challenge_id = ?", challengeID).
@@ -374,12 +353,7 @@ func (r *Repository) GetTotalAttemptsWithContext(ctx context.Context, challengeI
 	return count, err
 }
 
-// BatchGetSolvedStatus 批量获取用户完成状态
-func (r *Repository) BatchGetSolvedStatus(userID int64, challengeIDs []int64) (map[int64]bool, error) {
-	return r.BatchGetSolvedStatusWithContext(context.Background(), userID, challengeIDs)
-}
-
-func (r *Repository) BatchGetSolvedStatusWithContext(ctx context.Context, userID int64, challengeIDs []int64) (map[int64]bool, error) {
+func (r *Repository) BatchGetSolvedStatus(ctx context.Context, userID int64, challengeIDs []int64) (map[int64]bool, error) {
 	if userID == 0 || len(challengeIDs) == 0 {
 		return make(map[int64]bool), nil
 	}
@@ -399,12 +373,7 @@ func (r *Repository) BatchGetSolvedStatusWithContext(ctx context.Context, userID
 	return statusMap, err
 }
 
-// BatchGetSolvedCount 批量获取靶场完成人数
-func (r *Repository) BatchGetSolvedCount(challengeIDs []int64) (map[int64]int64, error) {
-	return r.BatchGetSolvedCountWithContext(context.Background(), challengeIDs)
-}
-
-func (r *Repository) BatchGetSolvedCountWithContext(ctx context.Context, challengeIDs []int64) (map[int64]int64, error) {
+func (r *Repository) BatchGetSolvedCount(ctx context.Context, challengeIDs []int64) (map[int64]int64, error) {
 	if len(challengeIDs) == 0 {
 		return make(map[int64]int64), nil
 	}
@@ -426,12 +395,7 @@ func (r *Repository) BatchGetSolvedCountWithContext(ctx context.Context, challen
 	return countMap, err
 }
 
-// BatchGetTotalAttempts 批量获取靶场尝试次数
-func (r *Repository) BatchGetTotalAttempts(challengeIDs []int64) (map[int64]int64, error) {
-	return r.BatchGetTotalAttemptsWithContext(context.Background(), challengeIDs)
-}
-
-func (r *Repository) BatchGetTotalAttemptsWithContext(ctx context.Context, challengeIDs []int64) (map[int64]int64, error) {
+func (r *Repository) BatchGetTotalAttempts(ctx context.Context, challengeIDs []int64) (map[int64]int64, error) {
 	if len(challengeIDs) == 0 {
 		return make(map[int64]int64), nil
 	}
@@ -453,11 +417,7 @@ func (r *Repository) BatchGetTotalAttemptsWithContext(ctx context.Context, chall
 	return countMap, err
 }
 
-func (r *Repository) FindPublishedForRecommendation(limit int, dimensions []string, excludeSolved []int64) ([]*model.Challenge, error) {
-	return r.FindPublishedForRecommendationWithContext(context.Background(), limit, dimensions, excludeSolved)
-}
-
-func (r *Repository) FindPublishedForRecommendationWithContext(ctx context.Context, limit int, dimensions []string, excludeSolved []int64) ([]*model.Challenge, error) {
+func (r *Repository) FindPublishedForRecommendation(ctx context.Context, limit int, dimensions []string, excludeSolved []int64) ([]*model.Challenge, error) {
 	if len(dimensions) == 0 || limit <= 0 {
 		return []*model.Challenge{}, nil
 	}

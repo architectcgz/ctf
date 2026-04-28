@@ -82,16 +82,26 @@ describe('backofficeNavigation', () => {
     expect(items.find((item) => item.active)?.routeName).toBe('ChallengeManage')
   })
 
+  it('keeps AWD service template import inside the AWD service template entry', () => {
+    const items = getVisibleBackofficeSecondaryItems('/platform/awd-service-templates/imports', 'admin')
+
+    expect(items.find((item) => item.active)?.routeName).toBe('PlatformAwdServiceTemplateLibrary')
+    expect(getBackofficeModuleByPath('/platform/awd-service-templates/imports')?.key).toBe('resources')
+  })
+
   it('maps admin event operations routes back to 赛事运维 and marks the matched secondary item active', () => {
     expect(getBackofficeModuleByPath('/platform/contest-ops/contests')?.key).toBe('contestOps')
     expect(getBackofficeModuleByPath('/platform/contests/contest-1/manage')?.key).toBe('contestOps')
 
     const items = getVisibleBackofficeSecondaryItems('/platform/contest-ops/contests', 'admin')
 
-    expect(items.map((item) => item.label)).toEqual(['竞赛列表'])
+    expect(items.map((item) => item.label)).toEqual(['竞赛列表', '大屏展示'])
     expect(items.find((item) => item.active)?.routeName).toBe('PlatformContestOpsIndex')
 
     const manageItems = getVisibleBackofficeSecondaryItems('/platform/contests/contest-1/manage', 'admin')
     expect(manageItems.find((item) => item.active)?.routeName).toBe('PlatformContestOpsIndex')
+
+    const projectorItems = getVisibleBackofficeSecondaryItems('/platform/contest-ops/projector', 'admin')
+    expect(projectorItems.find((item) => item.active)?.routeName).toBe('PlatformContestProjector')
   })
 })

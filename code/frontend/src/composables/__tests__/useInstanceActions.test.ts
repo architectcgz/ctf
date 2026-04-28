@@ -142,6 +142,48 @@ describe('instance action errors', () => {
     wrapper.unmount()
   })
 
+  it('实例列表中的 AWD 队伍实例不应触发延时或销毁请求', async () => {
+    let composable!: ReturnType<typeof useInstanceListPage>
+    const Harness = defineComponent({
+      setup() {
+        composable = useInstanceListPage()
+        return () => null
+      },
+    })
+
+    const wrapper = mount(Harness)
+    await flushPromises()
+
+    composable.instances.value = [
+      {
+        id: 'awd-inst-1',
+        challenge_id: 'awd-service-1',
+        challenge_title: 'Bank Portal',
+        category: 'web',
+        difficulty: 'medium',
+        status: 'running',
+        access_url: '',
+        flag_type: 'dynamic',
+        share_scope: 'per_team',
+        contest_mode: 'awd',
+        expires_at: '2099-01-01T00:00:00Z',
+        remaining_extends: 1,
+        created_at: '2026-03-05T00:00:00Z',
+        remaining: 1200,
+      },
+    ]
+
+    await composable.extendTime('awd-inst-1')
+    await composable.destroyInstance('awd-inst-1')
+    await flushPromises()
+
+    expect(instanceApiMocks.extendInstance).not.toHaveBeenCalled()
+    expect(instanceApiMocks.destroyInstance).not.toHaveBeenCalled()
+    expect(confirmMock).not.toHaveBeenCalled()
+    expect(toastMocks.error).toHaveBeenCalledWith('AWD 队伍实例不支持在此处延时或销毁')
+    wrapper.unmount()
+  })
+
   it('题目详情销毁实例失败时应优先展示接口返回消息', async () => {
     instanceApiMocks.destroyInstance.mockRejectedValue(
       new ApiError('实例仍在创建中，暂时不能销毁', { status: 409 })
@@ -212,6 +254,57 @@ describe('instance action errors', () => {
     expect(confirmMock).toHaveBeenCalled()
     expect(instanceApiMocks.destroyInstance).not.toHaveBeenCalled()
     wrapper.unmount()
+  })
+
+  it('题目详情打开 TCP 实例时不应尝试用浏览器打开 tcp URL', async () => {
+    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null)
+    instanceApiMocks.requestInstanceAccess.mockResolvedValue({
+      access_url: 'tcp://127.0.0.1:30001',
+      access: {
+        protocol: 'tcp',
+        host: '127.0.0.1',
+        port: 30001,
+        command: 'nc 127.0.0.1 30001',
+      },
+    })
+
+    let composable!: ReturnType<typeof useChallengeInstance>
+    const challengeId = ref('challenge-1')
+    const Harness = defineComponent({
+      setup() {
+        composable = useChallengeInstance(challengeId)
+        return () => null
+      },
+    })
+
+    const wrapper = mount(Harness)
+    await flushPromises()
+
+    composable.instance.value = {
+      id: 'inst-tcp',
+      challenge_id: 'challenge-1',
+      status: 'running',
+      share_scope: 'per_user',
+      access_url: 'tcp://127.0.0.1:30001',
+      access: {
+        protocol: 'tcp',
+        host: '127.0.0.1',
+        port: 30001,
+        command: 'nc 127.0.0.1 30001',
+      },
+      flag_type: 'dynamic',
+      expires_at: '2099-01-01T00:00:00Z',
+      remaining_extends: 1,
+      created_at: '2026-04-09T00:00:00.000Z',
+    }
+
+    await composable.open()
+    await flushPromises()
+
+    expect(openSpy).not.toHaveBeenCalled()
+    expect(toastMocks.info).toHaveBeenCalledWith('TCP 连接命令已复制')
+    wrapper.unmount()
+    openSpy.mockRestore()
   })
 
   it('教师实例管理销毁失败时应优先展示接口返回消息', async () => {

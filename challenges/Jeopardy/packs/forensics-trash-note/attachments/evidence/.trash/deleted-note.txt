@@ -1,0 +1,2 @@
+Recovered note:
+flag{forensics_trash_note}

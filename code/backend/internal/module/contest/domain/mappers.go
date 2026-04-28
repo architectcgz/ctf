@@ -13,12 +13,12 @@ func ContestRespFromModel(contest *model.Contest) *dto.ContestResp {
 		Title:       contest.Title,
 		Description: contest.Description,
 		Mode:        contest.Mode,
-		StartTime:   contest.StartTime,
-		EndTime:     contest.EndTime,
-		FreezeTime:  contest.FreezeTime,
+		StartTime:   NormalizeContestTime(contest.StartTime),
+		EndTime:     NormalizeContestTime(contest.EndTime),
+		FreezeTime:  NormalizeContestTimePtr(contest.FreezeTime),
 		Status:      contest.Status,
-		CreatedAt:   contest.CreatedAt,
-		UpdatedAt:   contest.UpdatedAt,
+		CreatedAt:   NormalizeContestTime(contest.CreatedAt),
+		UpdatedAt:   NormalizeContestTime(contest.UpdatedAt),
 	}
 }
 

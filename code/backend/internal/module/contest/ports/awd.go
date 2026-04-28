@@ -52,6 +52,7 @@ type AWDFlagAssignment struct {
 
 type AWDServiceDefinition struct {
 	ServiceID     int64                `gorm:"column:service_id"`
+	ServiceName   string               `gorm:"column:service_name"`
 	ChallengeID   int64                `gorm:"column:challenge_id"`
 	FlagPrefix    string               `gorm:"column:flag_prefix"`
 	CheckerType   model.AWDCheckerType `gorm:"column:awd_checker_type"`
@@ -80,6 +81,7 @@ type AWDFlagInjector interface {
 }
 
 type AWDServiceInstance struct {
+	InstanceID  int64
 	ServiceID   int64
 	TeamID      int64
 	ChallengeID int64

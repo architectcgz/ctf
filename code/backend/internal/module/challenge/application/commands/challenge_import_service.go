@@ -51,6 +51,7 @@ func (s *ChallengeService) PreviewChallengeImport(
 	fileName string,
 	reader io.Reader,
 ) (*dto.ChallengeImportPreviewResp, error) {
+	_ = ctx
 	if strings.TrimSpace(fileName) == "" {
 		fileName = "challenge-package.zip"
 	}
@@ -96,7 +97,8 @@ func (s *ChallengeService) PreviewChallengeImport(
 	return preview, nil
 }
 
-func (s *ChallengeService) GetChallengeImport(actorUserID int64, id string) (*dto.ChallengeImportPreviewResp, error) {
+func (s *ChallengeService) GetChallengeImport(ctx context.Context, actorUserID int64, id string) (*dto.ChallengeImportPreviewResp, error) {
+	_ = ctx
 	record, err := loadChallengeImportPreviewRecord(id)
 	if err != nil {
 		return nil, err
@@ -108,7 +110,8 @@ func (s *ChallengeService) GetChallengeImport(actorUserID int64, id string) (*dt
 	return &preview, nil
 }
 
-func (s *ChallengeService) ListChallengeImports(actorUserID int64) ([]dto.ChallengeImportPreviewResp, error) {
+func (s *ChallengeService) ListChallengeImports(ctx context.Context, actorUserID int64) ([]dto.ChallengeImportPreviewResp, error) {
+	_ = ctx
 	records, err := loadChallengeImportPreviewRecords()
 	if err != nil {
 		return nil, err
@@ -150,10 +153,6 @@ func (s *ChallengeService) CommitChallengeImport(
 		return nil, err
 	}
 
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
 	var challenge *model.Challenge
 	cleanupPaths := make([]string, 0, 2)
 	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
@@ -169,19 +168,21 @@ func (s *ChallengeService) CommitChallengeImport(
 		switch {
 		case errors.Is(findErr, gorm.ErrRecordNotFound):
 			current = model.Challenge{
-				PackageSlug:   stringPointer(parsed.Slug),
-				Title:         parsed.Title,
-				Description:   parsed.Description,
-				Category:      parsed.Category,
-				Difficulty:    parsed.Difficulty,
-				Points:        parsed.Points,
-				ImageID:       resolvedImageID,
-				AttachmentURL: attachmentURL,
-				Status:        model.ChallengeStatusDraft,
-				FlagPrefix:    parsed.FlagPrefix,
-				CreatedBy:     &actorUserID,
-				CreatedAt:     now,
-				UpdatedAt:     now,
+				PackageSlug:    stringPointer(parsed.Slug),
+				Title:          parsed.Title,
+				Description:    parsed.Description,
+				Category:       parsed.Category,
+				Difficulty:     parsed.Difficulty,
+				Points:         parsed.Points,
+				ImageID:        resolvedImageID,
+				AttachmentURL:  attachmentURL,
+				Status:         model.ChallengeStatusDraft,
+				FlagPrefix:     parsed.FlagPrefix,
+				TargetProtocol: parsed.RuntimeProtocol,
+				TargetPort:     parsed.RuntimePort,
+				CreatedBy:      &actorUserID,
+				CreatedAt:      now,
+				UpdatedAt:      now,
 			}
 			if err := tx.Create(&current).Error; err != nil {
 				return fmt.Errorf("create imported challenge %s: %w", parsed.Slug, err)
@@ -190,17 +191,19 @@ func (s *ChallengeService) CommitChallengeImport(
 			return fmt.Errorf("find imported challenge %s: %w", parsed.Slug, findErr)
 		default:
 			updates := map[string]any{
-				"package_slug":   parsed.Slug,
-				"title":          parsed.Title,
-				"description":    parsed.Description,
-				"category":       parsed.Category,
-				"difficulty":     parsed.Difficulty,
-				"points":         parsed.Points,
-				"image_id":       resolvedImageID,
-				"attachment_url": attachmentURL,
-				"status":         model.ChallengeStatusDraft,
-				"deleted_at":     nil,
-				"updated_at":     now,
+				"package_slug":    parsed.Slug,
+				"title":           parsed.Title,
+				"description":     parsed.Description,
+				"category":        parsed.Category,
+				"difficulty":      parsed.Difficulty,
+				"points":          parsed.Points,
+				"image_id":        resolvedImageID,
+				"attachment_url":  attachmentURL,
+				"status":          model.ChallengeStatusDraft,
+				"target_protocol": parsed.RuntimeProtocol,
+				"target_port":     parsed.RuntimePort,
+				"deleted_at":      nil,
+				"updated_at":      now,
 			}
 			if err := tx.Unscoped().Model(&current).Updates(updates).Error; err != nil {
 				return fmt.Errorf("update imported challenge %s: %w", parsed.Slug, err)

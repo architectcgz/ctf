@@ -51,7 +51,7 @@ func (s *ParticipationService) resolveUserTeamID(ctx context.Context, contestID,
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	team, err := s.teamRepo.FindUserTeamInContest(userID, contestID)
+	team, err := s.teamRepo.FindUserTeamInContest(ctx, userID, contestID)
 	if err == nil && team != nil && team.ID > 0 {
 		return &team.ID, nil
 	}

@@ -56,7 +56,7 @@ func TestRepositoryListActiveContainerIDs(t *testing.T) {
 		ExpiresAt:   time.Now().Add(time.Hour),
 	})
 
-	containerIDs, err := repo.ListActiveContainerIDs()
+	containerIDs, err := repo.ListActiveContainerIDs(context.Background())
 	if err != nil {
 		t.Fatalf("ListActiveContainerIDs() error = %v", err)
 	}
@@ -104,11 +104,11 @@ func TestRepositoryUpdateStatusAndReleasePortRemovesAllocation(t *testing.T) {
 		t.Fatalf("create port allocation: %v", err)
 	}
 
-	if err := repo.UpdateStatusAndReleasePort(instance.ID, model.InstanceStatusFailed); err != nil {
+	if err := repo.UpdateStatusAndReleasePort(context.Background(), instance.ID, model.InstanceStatusFailed); err != nil {
 		t.Fatalf("UpdateStatusAndReleasePort() error = %v", err)
 	}
 
-	updated, err := repo.FindByID(instance.ID)
+	updated, err := repo.FindByID(context.Background(), instance.ID)
 	if err != nil {
 		t.Fatalf("FindByID() error = %v", err)
 	}
@@ -167,6 +167,98 @@ func TestServiceCreateContainerCreatesIsolatedNetwork(t *testing.T) {
 	}
 }
 
+func TestServiceCreateContainerReservesAllocatedHostPort(t *testing.T) {
+	t.Parallel()
+
+	repo := newTestRepository(t)
+	engine := &fakeRuntimeEngine{
+		networkID:           "net-reserve",
+		containerID:         "ctr-reserve",
+		resolvedServicePort: 80,
+	}
+	service := runtimecmd.NewProvisioningService(repo, engine, &config.ContainerConfig{
+		PortRangeStart:     30000,
+		PortRangeEnd:       30010,
+		DefaultExposedPort: 8080,
+	}, nil)
+
+	_, _, hostPort, _, err := service.CreateContainer(context.Background(), "ctf/web:v1", nil, 0)
+	if err != nil {
+		t.Fatalf("CreateContainer() error = %v", err)
+	}
+
+	var count int64
+	if err := repo.db.Model(&model.PortAllocation{}).Where("port = ?", hostPort).Count(&count).Error; err != nil {
+		t.Fatalf("count reserved port allocation: %v", err)
+	}
+	if count != 1 {
+		t.Fatalf("expected host port %d to be reserved once, count=%d", hostPort, count)
+	}
+}
+
+func TestRuntimeCleanupServiceReleasesRuntimeDetailHostPort(t *testing.T) {
+	t.Parallel()
+
+	repo := newTestRepository(t)
+	engine := &fakeRuntimeEngine{}
+	service := runtimecmd.NewRuntimeCleanupService(engine, repo, nil)
+	now := time.Now()
+	if err := repo.db.Create(&model.PortAllocation{
+		Port:      30001,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}).Error; err != nil {
+		t.Fatalf("create port allocation: %v", err)
+	}
+	runtimeDetails, err := model.EncodeInstanceRuntimeDetails(model.InstanceRuntimeDetails{
+		Containers: []model.InstanceRuntimeContainer{
+			{
+				ContainerID:  "ctr-cleanup",
+				HostPort:     30001,
+				IsEntryPoint: true,
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("encode runtime details: %v", err)
+	}
+
+	if err := service.CleanupRuntime(context.Background(), &model.Instance{RuntimeDetails: runtimeDetails}); err != nil {
+		t.Fatalf("CleanupRuntime() error = %v", err)
+	}
+
+	var count int64
+	if err := repo.db.Model(&model.PortAllocation{}).Where("port = ?", 30001).Count(&count).Error; err != nil {
+		t.Fatalf("count port allocations: %v", err)
+	}
+	if count != 0 {
+		t.Fatalf("expected runtime detail host port to be released, count=%d", count)
+	}
+}
+
+func TestServiceCreateContainerFailsWhenRuntimeEngineUnavailable(t *testing.T) {
+	t.Parallel()
+
+	repo := newTestRepository(t)
+	service := runtimecmd.NewProvisioningService(repo, nil, &config.ContainerConfig{
+		PortRangeStart:     30000,
+		PortRangeEnd:       30010,
+		DefaultExposedPort: 8080,
+		PublicHost:         "127.0.0.1",
+	}, nil)
+
+	containerID, networkID, hostPort, servicePort, err := service.CreateContainer(context.Background(), "ctf/web:v1", nil, 0)
+	if err == nil {
+		t.Fatal("expected CreateContainer() to fail when runtime engine is unavailable")
+	}
+	if !strings.Contains(err.Error(), "runtime engine is not configured") {
+		t.Fatalf("expected runtime engine unavailable error, got %v", err)
+	}
+	if containerID != "" || networkID != "" || hostPort != 0 || servicePort != 0 {
+		t.Fatalf("expected zero runtime result on failure, got container=%q network=%q hostPort=%d servicePort=%d", containerID, networkID, hostPort, servicePort)
+	}
+}
+
 func TestServiceCreateContainerRemovesNetworkWhenStartFails(t *testing.T) {
 	t.Parallel()
 
@@ -194,7 +286,21 @@ func TestServiceCreateContainerRemovesNetworkWhenStartFails(t *testing.T) {
 	}
 }
 
-func TestServiceRemoveContainerWithContextHonorsCancellation(t *testing.T) {
+func TestServiceRemoveContainerFailsWhenRuntimeEngineUnavailable(t *testing.T) {
+	t.Parallel()
+
+	cleanupService := runtimecmd.NewRuntimeCleanupService(nil, nil, nil)
+
+	err := cleanupService.RemoveContainer(context.Background(), "ctr-missing-engine")
+	if err == nil {
+		t.Fatal("expected RemoveContainer() to fail when runtime engine is unavailable")
+	}
+	if !strings.Contains(err.Error(), "runtime engine is not configured") {
+		t.Fatalf("expected runtime engine unavailable error, got %v", err)
+	}
+}
+
+func TestServiceRemoveContainerHonorsCancellation(t *testing.T) {
 	t.Parallel()
 
 	engine := &fakeRuntimeEngine{
@@ -206,17 +312,36 @@ func TestServiceRemoveContainerWithContextHonorsCancellation(t *testing.T) {
 			return ctx.Err()
 		},
 	}
-	cleanupService := runtimecmd.NewRuntimeCleanupService(engine, nil)
+	cleanupService := runtimecmd.NewRuntimeCleanupService(engine, nil, nil)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 
-	if err := cleanupService.RemoveContainerWithContext(ctx, "ctr-ctx"); !errors.Is(err, context.Canceled) {
+	if err := cleanupService.RemoveContainer(ctx, "ctr-ctx"); !errors.Is(err, context.Canceled) {
 		t.Fatalf("expected context canceled, got %v", err)
 	}
 }
 
-func TestServiceCleanupRuntimeWithContextHonorsCancellation(t *testing.T) {
+func TestServiceCleanupRuntimeFailsWhenRuntimeEngineUnavailable(t *testing.T) {
+	t.Parallel()
+
+	cleanupService := runtimecmd.NewRuntimeCleanupService(nil, nil, nil)
+	instance := &model.Instance{
+		ID:          3002,
+		ContainerID: "ctr-missing-engine",
+		NetworkID:   "net-missing-engine",
+	}
+
+	err := cleanupService.CleanupRuntime(context.Background(), instance)
+	if err == nil {
+		t.Fatal("expected CleanupRuntime() to fail when runtime engine is unavailable")
+	}
+	if !strings.Contains(err.Error(), "runtime engine is not configured") {
+		t.Fatalf("expected runtime engine unavailable error, got %v", err)
+	}
+}
+
+func TestServiceCleanupRuntimeHonorsCancellation(t *testing.T) {
 	t.Parallel()
 
 	engine := &fakeRuntimeEngine{
@@ -228,7 +353,7 @@ func TestServiceCleanupRuntimeWithContextHonorsCancellation(t *testing.T) {
 			return ctx.Err()
 		},
 	}
-	cleanupService := runtimecmd.NewRuntimeCleanupService(engine, nil)
+	cleanupService := runtimecmd.NewRuntimeCleanupService(engine, nil, nil)
 
 	instance := &model.Instance{
 		ID:          3001,
@@ -237,7 +362,7 @@ func TestServiceCleanupRuntimeWithContextHonorsCancellation(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 
-	if err := cleanupService.CleanupRuntimeWithContext(ctx, instance); !errors.Is(err, context.Canceled) {
+	if err := cleanupService.CleanupRuntime(ctx, instance); !errors.Is(err, context.Canceled) {
 		t.Fatalf("expected context canceled, got %v", err)
 	}
 }
@@ -263,16 +388,15 @@ func TestServiceDestroyInstanceAllowsContestTeamMember(t *testing.T) {
 		ContestID:   &contestID,
 		TeamID:      &teamID,
 		ChallengeID: 101,
-		ContainerID: "contest-shared",
 		Status:      model.InstanceStatusRunning,
 		ExpiresAt:   now.Add(time.Hour),
 	})
 
-	if err := service.DestroyInstanceWithContext(context.Background(), 901, 2); err != nil {
-		t.Fatalf("DestroyInstanceWithContext() error = %v", err)
+	if err := service.DestroyInstance(context.Background(), 901, 2); err != nil {
+		t.Fatalf("DestroyInstance() error = %v", err)
 	}
 
-	instance, err := repo.FindByID(901)
+	instance, err := repo.FindByID(context.Background(), 901)
 	if err != nil {
 		t.Fatalf("FindByID() error = %v", err)
 	}
@@ -308,9 +432,9 @@ func TestServiceExtendInstanceAllowsContestTeamMember(t *testing.T) {
 		ExpiresAt:   initialExpiry,
 	})
 
-	resp, err := service.ExtendInstanceWithContext(context.Background(), 902, 2)
+	resp, err := service.ExtendInstance(context.Background(), 902, 2)
 	if err != nil {
-		t.Fatalf("ExtendInstanceWithContext() error = %v", err)
+		t.Fatalf("ExtendInstance() error = %v", err)
 	}
 	if resp == nil {
 		t.Fatal("expected extend response")
@@ -319,7 +443,7 @@ func TestServiceExtendInstanceAllowsContestTeamMember(t *testing.T) {
 		t.Fatalf("expected remaining extends 1, got %d", resp.RemainingExtends)
 	}
 
-	instance, err := repo.FindByID(902)
+	instance, err := repo.FindByID(context.Background(), 902)
 	if err != nil {
 		t.Fatalf("FindByID() error = %v", err)
 	}
@@ -328,6 +452,72 @@ func TestServiceExtendInstanceAllowsContestTeamMember(t *testing.T) {
 	}
 	if instance.ExtendCount != 1 {
 		t.Fatalf("expected extend count 1, got %d", instance.ExtendCount)
+	}
+}
+
+func TestServiceDestroyInstanceRejectsAWDTeamServiceInstance(t *testing.T) {
+	t.Parallel()
+
+	repo := newTestRepository(t)
+	service := newTestRuntimeModule(repo, nil)
+	now := time.Now()
+	contestID := int64(303)
+	teamID := int64(403)
+	serviceID := int64(503)
+
+	if err := repo.db.Create(&model.Team{ID: teamID, ContestID: contestID, Name: "Gamma", CaptainID: 1, InviteCode: "gamma", MaxMembers: 4, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
+		t.Fatalf("create team: %v", err)
+	}
+	if err := repo.db.Create(&model.TeamMember{ContestID: contestID, TeamID: teamID, UserID: 2, JoinedAt: now, CreatedAt: now}).Error; err != nil {
+		t.Fatalf("create team member: %v", err)
+	}
+	seedInstance(t, repo.db, &model.Instance{
+		ID:          905,
+		UserID:      1,
+		ContestID:   &contestID,
+		TeamID:      &teamID,
+		ChallengeID: 105,
+		ServiceID:   &serviceID,
+		Status:      model.InstanceStatusRunning,
+		ExpiresAt:   now.Add(time.Hour),
+	})
+
+	err := service.DestroyInstance(context.Background(), 905, 2)
+	if err == nil || err.Error() != errcode.ErrForbidden.Error() {
+		t.Fatalf("expected forbidden for awd team service destroy, got %v", err)
+	}
+}
+
+func TestServiceExtendInstanceRejectsAWDTeamServiceInstance(t *testing.T) {
+	t.Parallel()
+
+	repo := newTestRepository(t)
+	service := newTestRuntimeModule(repo, nil)
+	now := time.Now()
+	contestID := int64(304)
+	teamID := int64(404)
+	serviceID := int64(504)
+
+	if err := repo.db.Create(&model.Team{ID: teamID, ContestID: contestID, Name: "Delta", CaptainID: 1, InviteCode: "delta", MaxMembers: 4, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
+		t.Fatalf("create team: %v", err)
+	}
+	if err := repo.db.Create(&model.TeamMember{ContestID: contestID, TeamID: teamID, UserID: 2, JoinedAt: now, CreatedAt: now}).Error; err != nil {
+		t.Fatalf("create team member: %v", err)
+	}
+	seedInstance(t, repo.db, &model.Instance{
+		ID:          906,
+		UserID:      1,
+		ContestID:   &contestID,
+		TeamID:      &teamID,
+		ChallengeID: 106,
+		ServiceID:   &serviceID,
+		Status:      model.InstanceStatusRunning,
+		ExpiresAt:   now.Add(time.Hour),
+	})
+
+	_, err := service.ExtendInstance(context.Background(), 906, 2)
+	if err == nil || err.Error() != errcode.ErrForbidden.Error() {
+		t.Fatalf("expected forbidden for awd team service extend, got %v", err)
 	}
 }
 
@@ -362,7 +552,7 @@ func TestServiceDestroyInstanceRejectsSharedInstance(t *testing.T) {
 		ExpiresAt:   now.Add(time.Hour),
 	})
 
-	err := service.DestroyInstanceWithContext(context.Background(), 903, 2)
+	err := service.DestroyInstance(context.Background(), 903, 2)
 	if err == nil || err.Error() != errcode.ErrForbidden.Error() {
 		t.Fatalf("expected forbidden for shared destroy, got %v", err)
 	}
@@ -399,7 +589,7 @@ func TestServiceExtendInstanceRejectsSharedInstance(t *testing.T) {
 		ExpiresAt:   now.Add(time.Hour),
 	})
 
-	_, err := service.ExtendInstanceWithContext(context.Background(), 904, 2)
+	_, err := service.ExtendInstance(context.Background(), 904, 2)
 	if err == nil || err.Error() != errcode.ErrForbidden.Error() {
 		t.Fatalf("expected forbidden for shared extend, got %v", err)
 	}
@@ -439,9 +629,9 @@ func TestServiceGetUserInstancesIncludesChallengeMetadata(t *testing.T) {
 		UpdatedAt:   now,
 	})
 
-	items, err := service.GetUserInstancesWithContext(context.Background(), 1)
+	items, err := service.GetUserInstances(context.Background(), 1)
 	if err != nil {
-		t.Fatalf("GetUserInstancesWithContext() error = %v", err)
+		t.Fatalf("GetUserInstances() error = %v", err)
 	}
 	if len(items) != 1 {
 		t.Fatalf("expected 1 instance, got %+v", items)
@@ -522,9 +712,9 @@ func TestServiceGetUserInstancesShowsContestSharedInstanceToTeamMember(t *testin
 		UpdatedAt:   now,
 	})
 
-	items, err := service.GetUserInstancesWithContext(context.Background(), 2)
+	items, err := service.GetUserInstances(context.Background(), 2)
 	if err != nil {
-		t.Fatalf("GetUserInstancesWithContext() error = %v", err)
+		t.Fatalf("GetUserInstances() error = %v", err)
 	}
 	if len(items) != 1 || items[0].ID != 1002 {
 		t.Fatalf("expected teammate visible shared instance, got %+v", items)
@@ -566,9 +756,9 @@ func TestServiceGetUserInstancesShowsPracticeSharedInstanceToAnyUser(t *testing.
 		UpdatedAt:   now,
 	})
 
-	items, err := service.GetUserInstancesWithContext(context.Background(), 2)
+	items, err := service.GetUserInstances(context.Background(), 2)
 	if err != nil {
-		t.Fatalf("GetUserInstancesWithContext() error = %v", err)
+		t.Fatalf("GetUserInstances() error = %v", err)
 	}
 	if len(items) != 1 || items[0].ID != 1003 {
 		t.Fatalf("expected global shared instance visible to another user, got %+v", items)
@@ -621,6 +811,100 @@ func TestServiceCreateTopologyCreatesMultipleContainersOnSharedNetwork(t *testin
 	}
 }
 
+func TestServiceCreateTopologyCanKeepEntryPointPrivate(t *testing.T) {
+	t.Parallel()
+
+	repo := newTestRepository(t)
+	engine := &fakeRuntimeEngine{
+		networkID:    "net-private",
+		containerIDs: []string{"web-private"},
+		inspectContainerNetworkIPsFunc: func(containerID string, engine *fakeRuntimeEngine) map[string]string {
+			if containerID != "web-private" {
+				t.Fatalf("unexpected inspect container id: %s", containerID)
+			}
+			return map[string]string{engine.createdNetworkName: "172.30.0.10"}
+		},
+	}
+	service := runtimecmd.NewProvisioningService(repo, engine, &config.ContainerConfig{
+		PortRangeStart: 30000,
+		PortRangeEnd:   30010,
+		PublicHost:     "127.0.0.1",
+	}, nil)
+
+	result, err := service.CreateTopology(context.Background(), &runtimeports.TopologyCreateRequest{
+		DisableEntryPortPublishing: true,
+		Networks: []runtimeports.TopologyCreateNetwork{
+			{Key: model.TopologyDefaultNetworkKey},
+		},
+		Nodes: []runtimeports.TopologyCreateNode{
+			{Key: "web", Image: "ctf/web:v1", ServicePort: 8080, IsEntryPoint: true, NetworkKeys: []string{model.TopologyDefaultNetworkKey}},
+		},
+	})
+	if err != nil {
+		t.Fatalf("CreateTopology() error = %v", err)
+	}
+	if result.AccessURL != "http://172.30.0.10:8080" {
+		t.Fatalf("expected private access url, got %q", result.AccessURL)
+	}
+	if len(engine.createdContainerCfgs) != 1 {
+		t.Fatalf("expected one create container call, got %d", len(engine.createdContainerCfgs))
+	}
+	if len(engine.createdContainerCfgs[0].Ports) != 0 {
+		t.Fatalf("entry container should not publish host port, got %+v", engine.createdContainerCfgs[0].Ports)
+	}
+	if got := result.RuntimeDetails.Containers[0].HostPort; got != 0 {
+		t.Fatalf("expected no runtime host port, got %d", got)
+	}
+
+	var count int64
+	if err := repo.db.Model(&model.PortAllocation{}).Count(&count).Error; err != nil {
+		t.Fatalf("count port allocations: %v", err)
+	}
+	if count != 0 {
+		t.Fatalf("expected no reserved host ports, count=%d", count)
+	}
+}
+
+func TestServiceCreateTopologyBuildsTCPEntryAccessURL(t *testing.T) {
+	t.Parallel()
+
+	repo := newTestRepository(t)
+	engine := &fakeRuntimeEngine{
+		networkID:    "net-tcp",
+		containerIDs: []string{"pwn-tcp"},
+	}
+	service := runtimecmd.NewProvisioningService(repo, engine, &config.ContainerConfig{
+		PortRangeStart: 30000,
+		PortRangeEnd:   30010,
+		PublicHost:     "127.0.0.1",
+	}, nil)
+
+	result, err := service.CreateTopology(context.Background(), &runtimeports.TopologyCreateRequest{
+		Networks: []runtimeports.TopologyCreateNetwork{
+			{Key: model.TopologyDefaultNetworkKey},
+		},
+		Nodes: []runtimeports.TopologyCreateNode{
+			{
+				Key:             "pwn",
+				Image:           "ctf/pwn:v1",
+				ServicePort:     31337,
+				ServiceProtocol: model.ChallengeTargetProtocolTCP,
+				IsEntryPoint:    true,
+				NetworkKeys:     []string{model.TopologyDefaultNetworkKey},
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("CreateTopology() error = %v", err)
+	}
+	if result.AccessURL != "tcp://127.0.0.1:30000" {
+		t.Fatalf("expected tcp access url, got %q", result.AccessURL)
+	}
+	if got := result.RuntimeDetails.Containers[0].ServiceProtocol; got != model.ChallengeTargetProtocolTCP {
+		t.Fatalf("expected runtime details service protocol tcp, got %q", got)
+	}
+}
+
 func TestServiceDestroyManagedInstanceRemovesAllRuntimeContainers(t *testing.T) {
 	t.Parallel()
 
@@ -644,8 +928,8 @@ func TestServiceDestroyManagedInstanceRemovesAllRuntimeContainers(t *testing.T) 
 		t.Fatalf("create port allocation: %v", err)
 	}
 
-	if err := service.DestroyInstanceWithContext(context.Background(), instance.ID, instance.UserID); err != nil {
-		t.Fatalf("DestroyInstanceWithContext() error = %v", err)
+	if err := service.DestroyInstance(context.Background(), instance.ID, instance.UserID); err != nil {
+		t.Fatalf("DestroyInstance() error = %v", err)
 	}
 	if len(engine.removedContainerIDs) != 2 {
 		t.Fatalf("expected 2 removed containers, got %v", engine.removedContainerIDs)
@@ -657,7 +941,7 @@ func TestServiceDestroyManagedInstanceRemovesAllRuntimeContainers(t *testing.T) 
 		t.Fatalf("expected acl rules to be removed, got %+v", engine.removedACLRules)
 	}
 
-	updated, err := repo.FindByID(instance.ID)
+	updated, err := repo.FindByID(context.Background(), instance.ID)
 	if err != nil {
 		t.Fatalf("FindByID() error = %v", err)
 	}
@@ -702,7 +986,7 @@ func TestServiceCleanExpiredInstancesKeepsRunningStateWhenRuntimeCleanupFails(t 
 	}
 
 	engine := &fakeRuntimeEngine{removeContainerErr: errors.New("remove failed")}
-	cleanupService := runtimecmd.NewRuntimeCleanupService(engine, nil)
+	cleanupService := runtimecmd.NewRuntimeCleanupService(engine, nil, nil)
 	service := runtimecmd.NewRuntimeMaintenanceService(repo, nil, cleanupService, &config.ContainerConfig{
 		MaxExtends:        2,
 		ExtendDuration:    30 * time.Minute,
@@ -713,7 +997,7 @@ func TestServiceCleanExpiredInstancesKeepsRunningStateWhenRuntimeCleanupFails(t 
 		t.Fatalf("CleanExpiredInstances() error = %v", err)
 	}
 
-	updated, err := repo.FindByID(instance.ID)
+	updated, err := repo.FindByID(context.Background(), instance.ID)
 	if err != nil {
 		t.Fatalf("FindByID() error = %v", err)
 	}
@@ -760,7 +1044,7 @@ func TestServiceCleanExpiredInstancesMarksExpiredWhenContainerAlreadyRemoved(t *
 	engine := &fakeRuntimeEngine{
 		removeContainerErr: errors.New("Error response from daemon: No such container: missing-ctr"),
 	}
-	cleanupService := runtimecmd.NewRuntimeCleanupService(engine, nil)
+	cleanupService := runtimecmd.NewRuntimeCleanupService(engine, nil, nil)
 	service := runtimecmd.NewRuntimeMaintenanceService(repo, nil, cleanupService, &config.ContainerConfig{
 		MaxExtends:        2,
 		ExtendDuration:    30 * time.Minute,
@@ -771,7 +1055,7 @@ func TestServiceCleanExpiredInstancesMarksExpiredWhenContainerAlreadyRemoved(t *
 		t.Fatalf("CleanExpiredInstances() error = %v", err)
 	}
 
-	updated, err := repo.FindByID(instance.ID)
+	updated, err := repo.FindByID(context.Background(), instance.ID)
 	if err != nil {
 		t.Fatalf("FindByID() error = %v", err)
 	}
@@ -1013,8 +1297,8 @@ func TestServiceDestroyTeacherInstanceHonorsClassScope(t *testing.T) {
 	seedUser(t, repo.db, &model.User{ID: 2, Username: "alice", Role: model.RoleStudent, ClassName: "Class A", Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now})
 	seedUser(t, repo.db, &model.User{ID: 3, Username: "bob", Role: model.RoleStudent, ClassName: "Class B", Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now})
 	seedChallenge(t, repo.db, &model.Challenge{ID: 11, Title: "web-101", Status: model.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now})
-	seedInstance(t, repo.db, &model.Instance{ID: 201, UserID: 2, ChallengeID: 11, ContainerID: "inst-a", Status: model.InstanceStatusRunning, ExpiresAt: now.Add(time.Hour), CreatedAt: now, UpdatedAt: now})
-	seedInstance(t, repo.db, &model.Instance{ID: 202, UserID: 3, ChallengeID: 11, ContainerID: "inst-b", Status: model.InstanceStatusRunning, ExpiresAt: now.Add(time.Hour), CreatedAt: now, UpdatedAt: now})
+	seedInstance(t, repo.db, &model.Instance{ID: 201, UserID: 2, ChallengeID: 11, Status: model.InstanceStatusRunning, ExpiresAt: now.Add(time.Hour), CreatedAt: now, UpdatedAt: now})
+	seedInstance(t, repo.db, &model.Instance{ID: 202, UserID: 3, ChallengeID: 11, Status: model.InstanceStatusRunning, ExpiresAt: now.Add(time.Hour), CreatedAt: now, UpdatedAt: now})
 
 	if err := service.DestroyTeacherInstance(context.Background(), 202, 1, model.RoleTeacher); err == nil || err.Error() != errcode.ErrForbidden.Error() {
 		t.Fatalf("expected forbidden destroy, got %v", err)
@@ -1024,7 +1308,7 @@ func TestServiceDestroyTeacherInstanceHonorsClassScope(t *testing.T) {
 		t.Fatalf("DestroyTeacherInstance() error = %v", err)
 	}
 
-	instance, err := repo.FindByID(201)
+	instance, err := repo.FindByID(context.Background(), 201)
 	if err != nil {
 		t.Fatalf("FindByID() error = %v", err)
 	}
@@ -1068,20 +1352,20 @@ type testRuntimeService struct {
 	queries  *runtimeqry.InstanceService
 }
 
-func (s *testRuntimeService) DestroyInstanceWithContext(ctx context.Context, instanceID, userID int64) error {
-	return s.commands.DestroyInstanceWithContext(ctx, instanceID, userID)
+func (s *testRuntimeService) DestroyInstance(ctx context.Context, instanceID, userID int64) error {
+	return s.commands.DestroyInstance(ctx, instanceID, userID)
 }
 
-func (s *testRuntimeService) ExtendInstanceWithContext(ctx context.Context, instanceID, userID int64) (*dto.InstanceResp, error) {
-	return s.commands.ExtendInstanceWithContext(ctx, instanceID, userID)
+func (s *testRuntimeService) ExtendInstance(ctx context.Context, instanceID, userID int64) (*dto.InstanceResp, error) {
+	return s.commands.ExtendInstance(ctx, instanceID, userID)
 }
 
-func (s *testRuntimeService) GetUserInstancesWithContext(ctx context.Context, userID int64) ([]*dto.InstanceInfo, error) {
-	return s.queries.GetUserInstancesWithContext(ctx, userID)
+func (s *testRuntimeService) GetUserInstances(ctx context.Context, userID int64) ([]*dto.InstanceInfo, error) {
+	return s.queries.GetUserInstances(ctx, userID)
 }
 
-func (s *testRuntimeService) GetAccessURLWithContext(ctx context.Context, instanceID, userID int64) (string, error) {
-	return s.queries.GetAccessURLWithContext(ctx, instanceID, userID)
+func (s *testRuntimeService) GetAccessURL(ctx context.Context, instanceID, userID int64) (string, error) {
+	return s.queries.GetAccessURL(ctx, instanceID, userID)
 }
 
 func (s *testRuntimeService) ListTeacherInstances(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherInstanceQuery) ([]dto.TeacherInstanceItem, error) {
@@ -1098,7 +1382,7 @@ func newTestRuntimeModule(repo *runtimeTestRepository, engine *fakeRuntimeEngine
 		ExtendDuration:    30 * time.Minute,
 		OrphanGracePeriod: 5 * time.Minute,
 	}
-	cleanupService := runtimecmd.NewRuntimeCleanupService(engine, nil)
+	cleanupService := runtimecmd.NewRuntimeCleanupService(engine, repo, nil)
 	return &testRuntimeService{
 		commands: runtimecmd.NewInstanceService(repo, cleanupService, cfg, nil),
 		queries:  runtimeqry.NewInstanceService(repo),

@@ -13,6 +13,23 @@ import { useAwdTrafficPanel } from '@/composables/useAwdTrafficPanel'
 const props = defineProps<AWDTrafficPanelProps>()
 const emit = defineEmits<AWDTrafficPanelEmits>()
 
+const serviceOptions = computed(() => {
+  const seen = new Set<string>()
+  return props.challengeLinks
+    .filter((item) => {
+      const serviceId = item.awd_service_id?.trim()
+      if (!serviceId || seen.has(serviceId)) {
+        return false
+      }
+      seen.add(serviceId)
+      return true
+    })
+    .map((item) => ({
+      serviceId: item.awd_service_id!,
+      title: item.title,
+    }))
+})
+
 const {
   trafficPathKeywordInput,
   trafficTotalPages,
@@ -55,7 +72,7 @@ function getTrafficStatusGroupLabel(statusGroup: AWDTrafficStatusGroup): string 
       <div
         v-for="item in trafficSummaryStats"
         :key="item.key"
-        class="metric-pill"
+        class="metric-pill awd-traffic-summary-card"
       >
         <span class="metric-pill__label">{{ item.label }}</span>
         <span class="metric-pill__value">{{ item.value }}</span>
@@ -113,7 +130,7 @@ function getTrafficStatusGroupLabel(statusGroup: AWDTrafficStatusGroup): string 
                 class="list-row"
               >
                 <span class="row-name truncate font-mono text-[10px]">{{ item.path }}</span>
-                <span class="row-count text-red-500 font-mono">{{ item.error_count }}</span>
+                <span class="row-count row-count--danger font-mono">{{ item.error_count }}</span>
               </div>
             </div>
           </div>
@@ -143,7 +160,7 @@ function getTrafficStatusGroupLabel(statusGroup: AWDTrafficStatusGroup): string 
           </div>
           <p
             v-if="trafficTrendRows.length === 0"
-            class="text-[11px] text-slate-400 py-4"
+            class="traffic-empty-hint py-4"
           >
             等待数据注入趋势桶...
           </p>
@@ -165,30 +182,114 @@ function getTrafficStatusGroupLabel(statusGroup: AWDTrafficStatusGroup): string 
         
         <div class="toolbar-right">
           <div class="filter-row">
-            <select
-              :value="trafficFilters.status_group"
-              class="log-select"
-              @change="handleTrafficStatusGroupChange(($event.target as HTMLSelectElement).value)"
-            >
-              <option
-                v-for="item in trafficStatusGroupOptions"
-                :key="item.value"
-                :value="item.value"
-              >
-                {{ item.label }}
-              </option>
-            </select>
-            <div class="search-input-wrap">
-              <Search class="h-3 w-3 search-icon" />
-              <input
-                v-model="trafficPathKeywordInput"
-                class="log-input"
-                placeholder="过滤路径..."
-                @keydown.enter.prevent="applyTrafficKeywordFilter"
-              >
-            </div>
+            <label class="ui-field awd-round-filter-field">
+              <span class="ui-field__label">攻击队</span>
+              <span class="ui-control-wrap awd-round-filter-control">
+                <select
+                  id="awd-traffic-filter-attacker"
+                  :value="trafficFilters.attacker_team_id"
+                  class="ui-control"
+                  @change="applyTrafficFilterPatch({ attacker_team_id: ($event.target as HTMLSelectElement).value })"
+                >
+                  <option value="">
+                    全部攻击队
+                  </option>
+                  <option
+                    v-for="team in trafficTeamOptions"
+                    :key="`attacker-${team.id}`"
+                    :value="team.id"
+                  >
+                    {{ team.name }}
+                  </option>
+                </select>
+              </span>
+            </label>
+            <label class="ui-field awd-round-filter-field">
+              <span class="ui-field__label">受害队</span>
+              <span class="ui-control-wrap awd-round-filter-control">
+                <select
+                  id="awd-traffic-filter-victim"
+                  :value="trafficFilters.victim_team_id"
+                  class="ui-control"
+                  @change="applyTrafficFilterPatch({ victim_team_id: ($event.target as HTMLSelectElement).value })"
+                >
+                  <option value="">
+                    全部受害队
+                  </option>
+                  <option
+                    v-for="team in trafficTeamOptions"
+                    :key="`victim-${team.id}`"
+                    :value="team.id"
+                  >
+                    {{ team.name }}
+                  </option>
+                </select>
+              </span>
+            </label>
+            <label class="ui-field awd-round-filter-field">
+              <span class="ui-field__label">服务引用</span>
+              <span class="ui-control-wrap awd-round-filter-control">
+                <select
+                  id="awd-traffic-filter-service"
+                  :value="trafficFilters.service_id"
+                  class="ui-control"
+                  @change="applyTrafficFilterPatch({ service_id: ($event.target as HTMLSelectElement).value })"
+                >
+                  <option value="">
+                    所有服务
+                  </option>
+                  <option
+                    v-for="item in serviceOptions"
+                    :key="item.serviceId"
+                    :value="item.serviceId"
+                  >
+                    {{ item.title }} · Service #{{ item.serviceId }}
+                  </option>
+                </select>
+              </span>
+            </label>
+            <label class="ui-field awd-round-filter-field">
+              <span class="ui-field__label">状态分桶</span>
+              <span class="ui-control-wrap awd-round-filter-control">
+                <select
+                  id="awd-traffic-filter-status-group"
+                  :value="trafficFilters.status_group"
+                  class="ui-control"
+                  @change="handleTrafficStatusGroupChange(($event.target as HTMLSelectElement).value)"
+                >
+                  <option
+                    v-for="item in trafficStatusGroupOptions"
+                    :key="item.value"
+                    :value="item.value"
+                  >
+                    {{ item.label }}
+                  </option>
+                </select>
+              </span>
+            </label>
+            <label class="ui-field awd-round-filter-field">
+              <span class="ui-field__label">路径搜索</span>
+              <span class="ui-control-wrap awd-round-filter-control">
+                <Search class="h-3 w-3 search-icon" />
+                <input
+                  v-model="trafficPathKeywordInput"
+                  class="ui-control"
+                  placeholder="过滤路径..."
+                  @keydown.enter.prevent="applyTrafficKeywordFilter"
+                >
+              </span>
+            </label>
             <button
-              class="ops-btn ops-btn--neutral"
+              type="button"
+              class="ui-btn ui-btn--ghost awd-round-filter-search"
+              @click="applyTrafficKeywordFilter"
+            >
+              搜索
+            </button>
+            <button
+              id="awd-traffic-reset-filters"
+              type="button"
+              class="ui-btn ui-btn--ghost"
               @click="emit('resetTrafficFilters')"
             >
               重置
@@ -218,13 +319,13 @@ function getTrafficStatusGroupLabel(statusGroup: AWDTrafficStatusGroup): string 
               :key="event.occurred_at"
               class="studio-row"
             >
-              <td class="font-mono text-[11px] text-slate-400">
+              <td class="traffic-time-cell font-mono">
                 {{ formatDateTime(event.occurred_at).split(' ')[1] }}
               </td>
               <td>
                 <div class="vector-cell">
                   <span class="team-label">{{ getTrafficTeamName(event.attacker_team_id, event.attacker_team_name) }}</span>
-                  <span class="text-slate-300">→</span>
+                  <span class="traffic-vector-separator">→</span>
                   <span class="team-label">{{ getTrafficTeamName(event.victim_team_id, event.victim_team_name) }}</span>
                 </div>
               </td>
@@ -234,7 +335,7 @@ function getTrafficStatusGroupLabel(statusGroup: AWDTrafficStatusGroup): string 
                   <span
                     v-if="event.service_id"
                     class="source-tag font-mono"
-                  >#{{ event.service_id }}</span>
+                  >Service #{{ event.service_id }}</span>
                 </div>
               </td>
               <td>
@@ -255,7 +356,7 @@ function getTrafficStatusGroupLabel(statusGroup: AWDTrafficStatusGroup): string 
             <tr v-if="!loadingTrafficEvents && trafficEvents.length === 0">
               <td
                 colspan="5"
-                class="py-20 text-center text-slate-400 font-medium"
+                class="traffic-empty-cell py-20 text-center font-medium"
               >
                 满足当前过滤条件的流量记录为空
               </td>
@@ -295,12 +396,19 @@ function getTrafficStatusGroupLabel(statusGroup: AWDTrafficStatusGroup): string 
 .list-row { display: flex; justify-content: space-between; align-items: center; padding: 0.45rem 0; border-bottom: 1px solid var(--color-border-subtle); }
 .row-name { font-size: var(--font-size-12); font-weight: 700; color: var(--color-text-primary); }
 .row-count { font-size: var(--font-size-12); font-weight: 800; color: var(--color-primary); }
+.row-count--danger { color: var(--color-danger); }
 
 .trend-canvas { background: var(--color-bg-elevated); border: 1px solid var(--color-border-default); border-radius: 1rem; padding: 1.25rem; display: flex; flex-direction: column; gap: 0.75rem; }
 .trend-unit { display: flex; flex-direction: column; gap: 0.25rem; }
 .trend-meta { display: flex; justify-content: space-between; font-size: var(--font-size-10); font-weight: 800; color: var(--color-text-muted); }
 .trend-bar-track { height: 4px; background: var(--color-border-default); border-radius: 2px; overflow: hidden; }
 .trend-bar-fill { height: 100%; background: var(--color-primary); border-radius: 2px; }
+.traffic-empty-hint,
+.traffic-time-cell,
+.traffic-empty-cell {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-11);
+}
 
 /* Drill-down area */
 .drill-down-toolbar { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1.5rem; }
@@ -320,6 +428,7 @@ function getTrafficStatusGroupLabel(statusGroup: AWDTrafficStatusGroup): string 
 .studio-row:hover { background: var(--color-bg-elevated); }
 
 .team-label { font-size: var(--font-size-12); font-weight: 800; color: var(--color-text-primary); }
+.traffic-vector-separator { color: var(--color-text-muted); }
 .challenge-cell { display: flex; flex-direction: column; }
 .challenge-name { font-size: var(--font-size-12); font-weight: 700; color: var(--color-text-primary); }
 .source-tag { font-size: var(--font-size-10); font-weight: 800; color: var(--color-text-muted); }
@@ -328,10 +437,12 @@ function getTrafficStatusGroupLabel(statusGroup: AWDTrafficStatusGroup): string 
 .method-tag { color: var(--color-primary); font-weight: 900; }
 .path-text { color: var(--color-text-secondary); }
 
-.status-badge { font-size: var(--font-size-10); font-weight: 900; padding: 0.15rem 0.6rem; border-radius: 99px; }
-.status-badge.status-group-success { background: var(--color-success-soft); color: var(--color-success); }
-.status-badge.status-group-client-error { background: color-mix(in srgb, var(--color-warning) 10%, var(--color-bg-surface)); color: var(--color-warning); }
-.status-badge.status-group-server-error { background: var(--color-danger-soft); color: var(--color-danger); }
+.status-badge { font-size: var(--font-size-10); font-weight: 900; padding: 0.15rem 0.6rem; border-radius: 99px; border: 1px solid var(--awd-status-pill-border, transparent); background: var(--awd-status-pill-bg, var(--color-bg-elevated)); color: var(--awd-status-pill-color, var(--color-text-secondary)); }
+.awd-status-pill--success { --awd-status-pill-bg: var(--color-success-soft); --awd-status-pill-border: color-mix(in srgb, var(--color-success) 20%, transparent); --awd-status-pill-color: var(--color-success); }
+.awd-status-pill--primary { --awd-status-pill-bg: color-mix(in srgb, var(--color-primary) 10%, var(--color-bg-surface)); --awd-status-pill-border: color-mix(in srgb, var(--color-primary) 20%, transparent); --awd-status-pill-color: var(--color-primary); }
+.awd-status-pill--warning { --awd-status-pill-bg: color-mix(in srgb, var(--color-warning) 10%, var(--color-bg-surface)); --awd-status-pill-border: color-mix(in srgb, var(--color-warning) 20%, transparent); --awd-status-pill-color: var(--color-warning); }
+.awd-status-pill--danger { --awd-status-pill-bg: var(--color-danger-soft); --awd-status-pill-border: color-mix(in srgb, var(--color-danger) 20%, transparent); --awd-status-pill-color: var(--color-danger); }
+.awd-status-pill--muted { --awd-status-pill-bg: color-mix(in srgb, var(--color-text-muted) 10%, var(--color-bg-surface)); --awd-status-pill-border: color-mix(in srgb, var(--color-text-muted) 20%, transparent); --awd-status-pill-color: var(--color-text-secondary); }
 
 .pagination-footer { padding: 1rem 0; border-top: 1px solid var(--color-border-default); }
 .ops-btn { display: inline-flex; align-items: center; justify-content: center; height: 2rem; padding: 0 0.85rem; border-radius: 0.6rem; font-size: var(--font-size-11); font-weight: 700; background: var(--color-bg-surface); border: 1px solid var(--color-border-default); color: var(--color-text-secondary); cursor: pointer; }

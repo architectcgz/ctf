@@ -12,9 +12,9 @@ import (
 )
 
 type runtimeMaintenanceRepository interface {
-	UpdateStatusAndReleasePort(id int64, status string) error
-	FindExpired() ([]*model.Instance, error)
-	ListActiveContainerIDs() ([]string, error)
+	UpdateStatusAndReleasePort(ctx context.Context, id int64, status string) error
+	FindExpired(ctx context.Context) ([]*model.Instance, error)
+	ListActiveContainerIDs(ctx context.Context) ([]string, error)
 }
 
 type runtimeMaintenanceEngine interface {
@@ -23,7 +23,7 @@ type runtimeMaintenanceEngine interface {
 
 type runtimeMaintenanceCleaner interface {
 	runtimeports.RuntimeCleaner
-	RemoveContainerWithContext(ctx context.Context, containerID string) error
+	RemoveContainer(ctx context.Context, containerID string) error
 }
 
 // RuntimeMaintenanceService 收口后台定时任务驱动的运行时维护能力。
@@ -63,7 +63,8 @@ func NewRuntimeMaintenanceService(repo runtimeMaintenanceRepository, engine runt
 
 // CleanExpiredInstances 清理已过期实例的运行时资源并释放端口占用。
 func (s *RuntimeMaintenanceService) CleanExpiredInstances(ctx context.Context) error {
-	instances, err := s.repo.FindExpired()
+	ctx = normalizeContext(ctx)
+	instances, err := s.repo.FindExpired(ctx)
 	if err != nil {
 		return err
 	}
@@ -72,12 +73,12 @@ func (s *RuntimeMaintenanceService) CleanExpiredInstances(ctx context.Context) e
 		s.logger.Info("清理过期实例", zap.Int64("instance_id", instance.ID))
 
 		if s.cleaner != nil {
-			if err := s.cleaner.CleanupRuntimeWithContext(normalizeContext(ctx), instance); err != nil {
+			if err := s.cleaner.CleanupRuntime(normalizeContext(ctx), instance); err != nil {
 				s.logger.Warn("清理过期实例运行时失败", zap.Int64("instance_id", instance.ID), zap.Error(err))
 				continue
 			}
 		}
-		if err := s.repo.UpdateStatusAndReleasePort(instance.ID, model.InstanceStatusExpired); err != nil {
+		if err := s.repo.UpdateStatusAndReleasePort(ctx, instance.ID, model.InstanceStatusExpired); err != nil {
 			s.logger.Warn("更新过期实例状态并释放端口失败", zap.Int64("instance_id", instance.ID), zap.Int("host_port", instance.HostPort), zap.Error(err))
 		}
 	}
@@ -87,6 +88,7 @@ func (s *RuntimeMaintenanceService) CleanExpiredInstances(ctx context.Context) e
 
 // CleanupOrphans 清理未被实例记录持有的受管孤儿容器。
 func (s *RuntimeMaintenanceService) CleanupOrphans(ctx context.Context) error {
+	ctx = normalizeContext(ctx)
 	if s.engine == nil {
 		s.logger.Debug("跳过孤儿容器清理，Docker 引擎未启用")
 		return nil
@@ -96,11 +98,11 @@ func (s *RuntimeMaintenanceService) CleanupOrphans(ctx context.Context) error {
 		return nil
 	}
 
-	managedContainers, err := s.engine.ListManagedContainers(normalizeContext(ctx))
+	managedContainers, err := s.engine.ListManagedContainers(ctx)
 	if err != nil {
 		return err
 	}
-	activeContainerIDs, err := s.repo.ListActiveContainerIDs()
+	activeContainerIDs, err := s.repo.ListActiveContainerIDs(ctx)
 	if err != nil {
 		return err
 	}
@@ -111,7 +113,7 @@ func (s *RuntimeMaintenanceService) CleanupOrphans(ctx context.Context) error {
 	}
 
 	for _, orphan := range selectOrphanContainers(managedContainers, activeSet, s.config.OrphanGracePeriod) {
-		if err := s.cleaner.RemoveContainerWithContext(ctx, orphan.ID); err != nil {
+		if err := s.cleaner.RemoveContainer(ctx, orphan.ID); err != nil {
 			s.logger.Warn("删除孤儿容器失败",
 				zap.String("container_id", orphan.ID),
 				zap.String("container_name", orphan.Name),

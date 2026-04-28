@@ -1,6 +1,8 @@
 package infrastructure
 
 import (
+	"context"
+
 	"ctf-platform/internal/model"
 
 	"gorm.io/gorm"
@@ -14,33 +16,37 @@ func NewImageRepository(db *gorm.DB) *ImageRepository {
 	return &ImageRepository{db: db}
 }
 
-func (r *ImageRepository) Create(image *model.Image) error {
-	return r.db.Create(image).Error
+func (r *ImageRepository) dbWithContext(ctx context.Context) *gorm.DB {
+	return r.db.WithContext(ctx)
 }
 
-func (r *ImageRepository) FindByID(id int64) (*model.Image, error) {
+func (r *ImageRepository) Create(ctx context.Context, image *model.Image) error {
+	return r.dbWithContext(ctx).Create(image).Error
+}
+
+func (r *ImageRepository) FindByID(ctx context.Context, id int64) (*model.Image, error) {
 	var image model.Image
-	err := r.db.Where("id = ?", id).First(&image).Error
+	err := r.dbWithContext(ctx).Where("id = ?", id).First(&image).Error
 	if err != nil {
 		return nil, err
 	}
 	return &image, nil
 }
 
-func (r *ImageRepository) FindByNameTag(name, tag string) (*model.Image, error) {
+func (r *ImageRepository) FindByNameTag(ctx context.Context, name, tag string) (*model.Image, error) {
 	var image model.Image
-	err := r.db.Where("name = ? AND tag = ?", name, tag).First(&image).Error
+	err := r.dbWithContext(ctx).Where("name = ? AND tag = ?", name, tag).First(&image).Error
 	if err != nil {
 		return nil, err
 	}
 	return &image, nil
 }
 
-func (r *ImageRepository) List(name, status string, offset, limit int) ([]*model.Image, int64, error) {
+func (r *ImageRepository) List(ctx context.Context, name, status string, offset, limit int) ([]*model.Image, int64, error) {
 	var images []*model.Image
 	var total int64
 
-	query := r.db.Model(&model.Image{})
+	query := r.dbWithContext(ctx).Model(&model.Image{}).Where("deleted_at IS NULL")
 	if name != "" {
 		query = query.Where("name LIKE ?", "%"+name+"%")
 	}
@@ -56,10 +62,10 @@ func (r *ImageRepository) List(name, status string, offset, limit int) ([]*model
 	return images, total, err
 }
 
-func (r *ImageRepository) Update(image *model.Image) error {
-	return r.db.Save(image).Error
+func (r *ImageRepository) Update(ctx context.Context, image *model.Image) error {
+	return r.dbWithContext(ctx).Save(image).Error
 }
 
-func (r *ImageRepository) Delete(id int64) error {
-	return r.db.Delete(&model.Image{}, id).Error
+func (r *ImageRepository) Delete(ctx context.Context, id int64) error {
+	return r.dbWithContext(ctx).Delete(&model.Image{}, id).Error
 }

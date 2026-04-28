@@ -40,7 +40,7 @@ function formatServiceRef(serviceId?: string): string {
         v-if="team"
         class="awd-review-drawer__summary metric-panel-default-surface"
       >
-        <div class="awd-review-drawer__metrics metric-panel-grid">
+        <div class="awd-review-drawer__metrics metric-panel-grid metric-panel-default-surface">
           <article class="metric-panel-card">
             <div class="metric-panel-label">
               总分

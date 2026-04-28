@@ -40,15 +40,7 @@ func NewScoreService(repo practiceports.PracticeRankingRepository, redis *redis.
 	}
 }
 
-func (s *ScoreService) GetUserScore(userID int64) (*dto.UserScoreInfo, error) {
-	return s.GetUserScoreWithContext(context.Background(), userID)
-}
-
-func (s *ScoreService) GetUserScoreWithContext(ctx context.Context, userID int64) (*dto.UserScoreInfo, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
+func (s *ScoreService) GetUserScore(ctx context.Context, userID int64) (*dto.UserScoreInfo, error) {
 	cacheKey := cache.UserScoreKey(userID)
 	cached, err := s.redis.Get(ctx, cacheKey).Result()
 	if err == nil {
@@ -58,7 +50,7 @@ func (s *ScoreService) GetUserScoreWithContext(ctx context.Context, userID int64
 		}
 	}
 
-	userScore, err := s.repo.FindUserScoreWithContext(ctx, userID)
+	userScore, err := s.repo.FindUserScore(ctx, userID)
 	if err == gorm.ErrRecordNotFound {
 		return &dto.UserScoreInfo{
 			UserID:      userID,
@@ -71,7 +63,7 @@ func (s *ScoreService) GetUserScoreWithContext(ctx context.Context, userID int64
 		return nil, err
 	}
 
-	userProfiles, userErr := s.getUserProfilesWithContext(ctx, []int64{userID})
+	userProfiles, userErr := s.getUserProfiles(ctx, []int64{userID})
 	if userErr != nil {
 		s.logger.Warn("查询用户名失败", zap.Int64("userID", userID), zap.Error(userErr))
 	}
@@ -90,18 +82,11 @@ func (s *ScoreService) GetUserScoreWithContext(ctx context.Context, userID int64
 	return info, nil
 }
 
-func (s *ScoreService) GetRanking(limit int) ([]*dto.RankingItem, error) {
-	return s.GetRankingWithContext(context.Background(), limit)
-}
-
-func (s *ScoreService) GetRankingWithContext(ctx context.Context, limit int) ([]*dto.RankingItem, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
+func (s *ScoreService) GetRanking(ctx context.Context, limit int) ([]*dto.RankingItem, error) {
 	if limit <= 0 || limit > s.config.MaxRankingLimit {
 		limit = s.config.MaxRankingLimit
 	}
-	scores, err := s.repo.ListTopUserScoresWithContext(ctx, limit)
+	scores, err := s.repo.ListTopUserScores(ctx, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +95,7 @@ func (s *ScoreService) GetRankingWithContext(ctx context.Context, limit int) ([]
 	for idx, score := range scores {
 		userIDs[idx] = score.UserID
 	}
-	userProfiles, err := s.getUserProfilesWithContext(ctx, userIDs)
+	userProfiles, err := s.getUserProfiles(ctx, userIDs)
 	if err != nil {
 		s.logger.Error("批量查询用户名失败", zap.Error(err))
 	}
@@ -135,15 +120,12 @@ type userProfile struct {
 	ClassName string
 }
 
-func (s *ScoreService) getUserProfilesWithContext(ctx context.Context, userIDs []int64) (map[int64]userProfile, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
+func (s *ScoreService) getUserProfiles(ctx context.Context, userIDs []int64) (map[int64]userProfile, error) {
 	if len(userIDs) == 0 {
 		return make(map[int64]userProfile), nil
 	}
 
-	users, err := s.repo.FindUsersByIDsWithContext(ctx, userIDs)
+	users, err := s.repo.FindUsersByIDs(ctx, userIDs)
 	if err != nil {
 		return nil, err
 	}

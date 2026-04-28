@@ -35,6 +35,14 @@ export interface AuthUser {
 export type ChallengeCategory = 'web' | 'pwn' | 'reverse' | 'crypto' | 'misc' | 'forensics'
 export type ChallengeDifficulty = 'beginner' | 'easy' | 'medium' | 'hard' | 'insane'
 export type InstanceSharing = 'per_user' | 'per_team' | 'shared'
+export type InstanceAccessProtocol = 'http' | 'tcp'
+
+export interface InstanceAccessInfo {
+  protocol: InstanceAccessProtocol
+  host?: string
+  port?: number
+  command?: string
+}
 
 export interface ChallengeListItem {
   id: ID
@@ -174,10 +182,12 @@ export type FlagType = 'static' | 'dynamic' | 'regex' | 'manual_review'
 
 export interface InstanceData {
   id: ID
+  contest_mode?: ContestMode
   challenge_id: ID
   status: InstanceStatus
   share_scope: InstanceSharing
   access_url?: string
+  access?: InstanceAccessInfo
   ssh_info?: { host: string; port: number; username: string }
   flag_type: FlagType
   expires_at: ISODateTime
@@ -295,13 +305,13 @@ export interface ContestListItem {
   starts_at: ISODateTime
   ends_at: ISODateTime
   register_ends_at?: ISODateTime
+  scoreboard_frozen?: boolean
 }
 
 export interface ContestDetailData extends ContestListItem {
   description?: string
   rules?: string
   team_size_limit?: number
-  scoreboard_frozen?: boolean
 }
 
 export interface ContestChallengeItem {
@@ -400,7 +410,9 @@ export interface AWDTeamServiceData {
   team_id: ID
   team_name: string
   service_id?: ID
+  service_name?: string
   challenge_id: ID
+  challenge_title?: string
   service_status: AWDServiceStatus
   checker_type?: AWDCheckerType
   check_result: Record<string, unknown>
@@ -438,6 +450,7 @@ export interface ContestAWDWorkspaceTeamData {
 export interface ContestAWDWorkspaceServiceData {
   service_id?: ID
   challenge_id: ID
+  instance_id?: ID
   access_url?: string
   service_status?: AWDServiceStatus
   checker_type?: AWDCheckerType
@@ -451,7 +464,7 @@ export interface ContestAWDWorkspaceServiceData {
 export interface ContestAWDWorkspaceTargetServiceData {
   service_id?: ID
   challenge_id: ID
-  access_url?: string
+  reachable: boolean
 }
 
 export interface ContestAWDWorkspaceTargetTeamData {
@@ -479,6 +492,23 @@ export interface ContestAWDWorkspaceData {
   services: ContestAWDWorkspaceServiceData[]
   targets: ContestAWDWorkspaceTargetTeamData[]
   recent_events: ContestAWDWorkspaceRecentEventData[]
+}
+
+export interface SSHProfileData {
+  alias: string
+  host_name: string
+  port: number
+  user: string
+}
+
+export interface AWDDefenseSSHAccessData {
+  host: string
+  port: number
+  username: string
+  password: string
+  command: string
+  ssh_profile?: SSHProfileData
+  expires_at: ISODateTime
 }
 
 export interface AWDRoundSummaryItemData {
@@ -590,7 +620,7 @@ export interface AWDTrafficEventData {
   occurred_at: ISODateTime
 }
 
-export interface AWDTrafficEventPageData extends PageResult<AWDTrafficEventData> {}
+export type AWDTrafficEventPageData = PageResult<AWDTrafficEventData>
 
 export interface AWDCheckerRunData {
   round: AWDRoundData
@@ -701,6 +731,32 @@ export interface AdminContestAWDServiceData {
   last_preview_result?: AWDCheckerPreviewData
   created_at: ISODateTime
   updated_at: ISODateTime
+}
+
+export interface AdminContestAWDInstanceTeamData {
+  team_id: ID
+  team_name: string
+  captain_id: ID
+}
+
+export interface AdminContestAWDInstanceServiceData {
+  service_id: ID
+  challenge_id: ID
+  display_name: string
+  is_visible: boolean
+}
+
+export interface AdminContestAWDInstanceItemData {
+  team_id: ID
+  service_id: ID
+  instance?: InstanceData
+}
+
+export interface AdminContestAWDInstanceOrchestrationData {
+  contest_id: ID
+  teams: AdminContestAWDInstanceTeamData[]
+  services: AdminContestAWDInstanceServiceData[]
+  instances: AdminContestAWDInstanceItemData[]
 }
 
 export type NotificationType = 'system' | 'contest' | 'challenge' | 'team'

@@ -230,17 +230,6 @@ const summaryCards = computed(() => [
 
 .recommendation-summary-strip.metric-panel-default-surface {
   --metric-panel-border: var(--journal-soft-border);
-  --metric-panel-background:
-    radial-gradient(
-      circle at top right,
-      color-mix(in srgb, var(--journal-accent) 14%, transparent),
-      transparent 42%
-    ),
-    linear-gradient(
-      165deg,
-      color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)),
-      color-mix(in srgb, var(--journal-surface-subtle) 92%, var(--color-bg-base))
-    );
   --metric-panel-shadow: 0 10px 20px color-mix(in srgb, var(--color-shadow-soft) 30%, transparent);
 }
 

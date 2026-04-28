@@ -20,30 +20,27 @@
 // stores/auth.ts
 export const useAuthStore = defineStore('auth', () => {
   const user = ref(null)          // { id, username, role, avatar, class_name }
-  const accessToken = ref('')
 
-  const isLoggedIn = computed(() => !!accessToken.value)
+  const isLoggedIn = computed(() => !!user.value)
   const isAdmin = computed(() => user.value?.role === 'admin')
   const isTeacher = computed(() => user.value?.role === 'teacher')
   const isStudent = computed(() => user.value?.role === 'student')
 
   // 登录成功后调用
-  function setAuth(data) { ... }
-  // 刷新 Token 后更新
-  function updateTokens(access, refresh) { ... }
+  function setAuth(user) { ... }
   // 登出清除
   function logout() { ... }
-  // 从 localStorage 恢复
+  // 通过 Cookie + profile 恢复
   function restore() { ... }
 
-  return { user, accessToken, isLoggedIn, isAdmin, isTeacher, isStudent, setAuth, updateTokens, logout, restore }
+  return { user, isLoggedIn, isAdmin, isTeacher, isStudent, setAuth, logout, restore }
 })
 ```
 
 持久化策略：
-- `accessToken` 可存 `localStorage`（便于刷新页面保持登录态）。
-- **Refresh Token 必须由后端写入 HttpOnly Cookie（前端不落盘）**。
-- `user` 信息每次刷新页面从 `/api/v1/auth/profile` 重新拉取（避免前端落盘敏感信息）。
+- 前端不持久化认证 token。
+- 登录态由后端写入 `HttpOnly + Secure + SameSite` session cookie。
+- `user` 信息每次刷新页面从 `/api/v1/auth/profile` 重新拉取；store 只保留内存态的当前用户。
 
 ### 2.2 notification Store
 

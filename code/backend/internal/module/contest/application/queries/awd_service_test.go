@@ -454,8 +454,8 @@ func TestAWDServiceGetUserWorkspaceBuildsOwnServicesTargetsAndRecentEvents(t *te
 	if len(resp.Services) != 2 {
 		t.Fatalf("expected 2 own services, got %+v", resp.Services)
 	}
-	if resp.Services[0].ChallengeID != 8011 || resp.Services[0].AccessURL != "http://red-1.internal" {
-		t.Fatalf("expected first own service to include red access url, got %+v", resp.Services[0])
+	if resp.Services[0].ChallengeID != 8011 || resp.Services[0].InstanceID != 1 || resp.Services[0].AccessURL != "" {
+		t.Fatalf("expected first own service to expose instance id without raw access url, got %+v", resp.Services[0])
 	}
 	if len(resp.Targets) != 2 {
 		t.Fatalf("expected 2 target teams, got %+v", resp.Targets)
@@ -515,6 +515,12 @@ func TestAWDServiceGetUserWorkspaceBuildsOwnServicesTargetsAndRecentEvents(t *te
 	}
 	if targetService["service_id"] != float64(contesttestsupport.DefaultAWDContestServiceID(801, 8011)) {
 		t.Fatalf("expected target service to expose service_id, got %s", string(raw))
+	}
+	if targetService["reachable"] != true {
+		t.Fatalf("expected target service to expose reachability, got %s", string(raw))
+	}
+	if _, ok := targetService["access_url"]; ok {
+		t.Fatalf("expected target service to hide raw access url, got %s", string(raw))
 	}
 	events, ok := payload["recent_events"].([]any)
 	if !ok || len(events) != 2 {
@@ -643,7 +649,7 @@ func TestAWDServiceGetUserWorkspacePrefersContestServicesAndSeedsMissingDefiniti
 	if serviceIDs[0] != expectedBankServiceID || serviceIDs[1] != expectedAdminServiceID {
 		t.Fatalf("expected contest service ids [%d %d], got %+v", expectedBankServiceID, expectedAdminServiceID, serviceIDs)
 	}
-	if resp.Services[0].ChallengeID != 8031 || resp.Services[0].AccessURL != "http://red-bank.internal" {
+	if resp.Services[0].ChallengeID != 8031 || resp.Services[0].InstanceID != 6 || resp.Services[0].AccessURL != "" {
 		t.Fatalf("expected bank portal service bound by contest service mapping, got %+v", resp.Services[0])
 	}
 	if resp.Services[1].ChallengeID != 8032 || resp.Services[1].AccessURL != "" {
@@ -709,7 +715,7 @@ func TestAWDServiceGetUserWorkspaceMatchesInstancesByPersistedServiceID(t *testi
 	if matchedOwnService == nil {
 		t.Fatalf("expected contest service %d in own services, got %+v", serviceID, resp.Services)
 	}
-	if matchedOwnService.AccessURL != "http://red-bank.internal" || matchedOwnService.ChallengeID != 8041 {
+	if matchedOwnService.InstanceID != 9 || matchedOwnService.AccessURL != "" || matchedOwnService.ChallengeID != 8041 {
 		t.Fatalf("expected own service matched by persisted service_id, got %+v", matchedOwnService)
 	}
 	generatedOwnService := findAWDWorkspaceServiceByChallenge(resp.Services, 8042)
@@ -722,7 +728,7 @@ func TestAWDServiceGetUserWorkspaceMatchesInstancesByPersistedServiceID(t *testi
 	if len(resp.Targets) != 1 || len(resp.Targets[0].Services) != 1 {
 		t.Fatalf("expected 1 target service matched by persisted service_id, got %+v", resp.Targets)
 	}
-	if resp.Targets[0].Services[0].ServiceID != serviceID || resp.Targets[0].Services[0].AccessURL != "http://blue-bank.internal" {
+	if resp.Targets[0].Services[0].ServiceID != serviceID || !resp.Targets[0].Services[0].Reachable {
 		t.Fatalf("expected target service matched by persisted service_id, got %+v", resp.Targets[0].Services[0])
 	}
 	if resp.Targets[0].Services[0].ChallengeID != 8041 {

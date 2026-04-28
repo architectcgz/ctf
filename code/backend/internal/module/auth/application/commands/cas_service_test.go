@@ -68,15 +68,16 @@ func TestCASServiceAuthenticateAutoProvisionSuccess(t *testing.T) {
 		},
 	}
 	tokenService := &mockTokenService{
-		issueFn: func(userID int64, username, role string) (*authcontracts.TokenPair, error) {
+		issueFn: func(userID int64, username, role string) (*authcontracts.Session, error) {
 			if userID != 101 || username != "cas_user_1" || role != model.RoleStudent {
-				t.Fatalf("unexpected token issue params: %d %s %s", userID, username, role)
+				t.Fatalf("unexpected session issue params: %d %s %s", userID, username, role)
 			}
-			return &authcontracts.TokenPair{
-				AccessToken:     "cas-access-token",
-				RefreshToken:    "cas-refresh-token",
-				AccessTokenTTL:  15 * time.Minute,
-				RefreshTokenTTL: 24 * time.Hour,
+			return &authcontracts.Session{
+				ID:        "cas-session-1",
+				UserID:    userID,
+				Username:  username,
+				Role:      role,
+				ExpiresAt: time.Now().Add(24 * time.Hour),
 			}, nil
 		},
 	}
@@ -95,8 +96,8 @@ func TestCASServiceAuthenticateAutoProvisionSuccess(t *testing.T) {
 	if resp.User.Username != "cas_user_1" || resp.User.Role != model.RoleStudent {
 		t.Fatalf("unexpected login response user: %+v", resp.User)
 	}
-	if tokens.RefreshToken != "cas-refresh-token" {
-		t.Fatalf("unexpected refresh token: %s", tokens.RefreshToken)
+	if tokens.ID != "cas-session-1" {
+		t.Fatalf("unexpected session id: %s", tokens.ID)
 	}
 }
 
@@ -156,12 +157,13 @@ func TestCASServiceAuthenticateExistingUserSyncsProfileAndUnlocksExpired(t *test
 		},
 	}
 	tokenService := &mockTokenService{
-		issueFn: func(int64, string, string) (*authcontracts.TokenPair, error) {
-			return &authcontracts.TokenPair{
-				AccessToken:     "existing-access-token",
-				RefreshToken:    "existing-refresh-token",
-				AccessTokenTTL:  15 * time.Minute,
-				RefreshTokenTTL: 24 * time.Hour,
+		issueFn: func(userID int64, username, role string) (*authcontracts.Session, error) {
+			return &authcontracts.Session{
+				ID:        "cas-session-2",
+				UserID:    userID,
+				Username:  username,
+				Role:      role,
+				ExpiresAt: time.Now().Add(24 * time.Hour),
 			}, nil
 		},
 	}

@@ -29,7 +29,7 @@ func TestContestAWDServiceServiceCreateUsesTemplateSnapshotOnly(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := challengeRepo.CreateAWDServiceTemplate(&model.AWDServiceTemplate{
+	if err := challengeRepo.CreateAWDServiceTemplate(context.Background(), &model.AWDServiceTemplate{
 		ID:               2801,
 		Name:             "Bank Portal",
 		Slug:             "bank-portal",
@@ -124,7 +124,7 @@ func TestContestAWDServiceServiceSnapshotRemainsFrozenAfterTemplateUpdate(t *tes
 		CreatedAt:      now,
 		UpdatedAt:      now,
 	}
-	if err := challengeRepo.CreateAWDServiceTemplate(template); err != nil {
+	if err := challengeRepo.CreateAWDServiceTemplate(context.Background(), template); err != nil {
 		t.Fatalf("create template: %v", err)
 	}
 
@@ -141,7 +141,7 @@ func TestContestAWDServiceServiceSnapshotRemainsFrozenAfterTemplateUpdate(t *tes
 	template.Name = "Billing API v2"
 	template.Category = "misc"
 	template.RuntimeConfig = `{"image_id":19902}`
-	if err := challengeRepo.UpdateAWDServiceTemplate(template); err != nil {
+	if err := challengeRepo.UpdateAWDServiceTemplate(context.Background(), template); err != nil {
 		t.Fatalf("update template: %v", err)
 	}
 

@@ -13,6 +13,7 @@ const adminApiMocks = vi.hoisted(() => ({
 }))
 const pushMock = vi.fn()
 const replaceMock = vi.fn()
+const destructiveConfirmMock = vi.hoisted(() => vi.fn())
 const routeState = vi.hoisted(() => ({
   query: {} as Record<string, string>,
 }))
@@ -36,11 +37,16 @@ vi.mock('vue-router', async () => {
     useRouter: () => ({ push: pushMock, replace: replaceMock }),
   }
 })
+vi.mock('@/composables/useDestructiveConfirm', () => ({
+  confirmDestructiveAction: destructiveConfirmMock,
+}))
 
 describe('UserManage', () => {
   beforeEach(() => {
     vi.useFakeTimers()
     Object.values(adminApiMocks).forEach((mock) => mock.mockReset())
+    destructiveConfirmMock.mockReset()
+    destructiveConfirmMock.mockResolvedValue(true)
     pushMock.mockReset()
     replaceMock.mockReset()
     routeState.query = {}
@@ -353,7 +359,6 @@ describe('UserManage', () => {
       overviewPanelStart + 640
     )
     const importPanelStart = userGovernanceSource.indexOf('id="user-panel-import"')
-    const importPanelSnippet = userGovernanceSource.slice(importPanelStart, importPanelStart + 420)
 
     expect(userGovernanceSource).toContain('id="user-panel-overview"')
     expect(userGovernanceSource).toContain('id="user-panel-import"')
@@ -363,15 +368,25 @@ describe('UserManage', () => {
     expect(userGovernanceSource).not.toMatch(/role="tablist"/s)
     expect(userGovernanceSource).toContain('<main class="content-pane">')
     expect(overviewPanelStart).toBeGreaterThan(-1)
-    expect(overviewPanelSnippet).toContain('<div class="workspace-overline">User Workspace</div>')
-    expect(overviewPanelSnippet).toContain('<h1 class="workspace-page-title">用户治理台</h1>')
-    expect(userGovernanceSource).toContain('<h2 class="list-heading__title">全部用户</h2>')
+    expect(overviewPanelSnippet).toMatch(
+      /<div class="workspace-overline">\s*User Workspace\s*<\/div>/
+    )
+    expect(overviewPanelSnippet).toMatch(
+      /<h1 class="workspace-page-title">\s*用户治理台\s*<\/h1>/
+    )
+    expect(userGovernanceSource).toMatch(
+      /<h2 class="list-heading__title">\s*全部用户\s*<\/h2>/
+    )
     expect(userGovernanceSource).toContain('<WorkspaceDirectoryToolbar')
     expect(overviewPanelSnippet).not.toContain('<nav class="top-tabs"')
     expect(importPanelStart).toBeGreaterThan(-1)
-    expect(userGovernanceSource).toContain('<div class="workspace-overline">User Import</div>')
-    expect(userGovernanceSource).toContain('<h2 class="workspace-page-title">导入用户</h2>')
     expect(userGovernanceSource).toMatch(
+      /<div class="workspace-overline">\s*User Import\s*<\/div>/
+    )
+    expect(userGovernanceSource).toMatch(
+      /<h2 class="workspace-page-title">\s*导入用户\s*<\/h2>/
+    )
+    expect(userGovernanceSource).not.toMatch(
       /\.user-directory-section :deep\(\.workspace-directory-toolbar\)\s*\{[\s\S]*margin-bottom:\s*0;/s
     )
   })
@@ -379,8 +394,12 @@ describe('UserManage', () => {
   it('用户导入流应保留独立导入面板和回执区', () => {
     expect(userGovernanceSource).toContain('class="workspace-directory-section user-import-panel"')
     expect(userGovernanceSource).toContain('class="workspace-tab-heading user-import-head"')
-    expect(userGovernanceSource).toContain('<h2 class="workspace-page-title">导入用户</h2>')
-    expect(userGovernanceSource).toContain('<h2 class="list-heading__title">导入回执</h2>')
+    expect(userGovernanceSource).toMatch(
+      /<h2 class="workspace-page-title">\s*导入用户\s*<\/h2>/
+    )
+    expect(userGovernanceSource).toMatch(
+      /<h2 class="list-heading__title">\s*导入回执\s*<\/h2>/
+    )
     expect(userGovernanceSource).toContain('id="user-return-overview"')
   })
 
@@ -431,11 +450,10 @@ describe('UserManage', () => {
     await flushPromises()
 
     const summary = wrapper.get('#user-panel-overview')
-    const summaryCards = summary.findAll('.user-overview-stat')
+    const summaryCards = summary.findAll('.progress-card.metric-panel-card')
 
     expect(summaryCards).toHaveLength(4)
     expect(summary.find('.user-overview-grid').exists()).toBe(true)
-    expect(summary.findAll('.user-overview-stat.progress-card.metric-panel-card')).toHaveLength(4)
     expect(summary.findAll('.progress-card-label.metric-panel-label')).toHaveLength(4)
     expect(summary.findAll('.progress-card-value.metric-panel-value')).toHaveLength(4)
     expect(summary.findAll('.progress-card-hint.metric-panel-helper')).toHaveLength(4)
@@ -445,5 +463,59 @@ describe('UserManage', () => {
       '教师角色',
       '导入回执',
     ])
+    expect(userGovernanceSource).not.toContain(
+      '上面直接查看用户规模和导入回执，下面围绕具体账号完成搜索、筛选、编辑与治理操作。'
+    )
+    expect(userGovernanceSource).toContain(
+      '--workspace-line-soft: color-mix(in srgb, var(--color-text-primary) 10%, transparent);'
+    )
+    expect(userGovernanceSource).toMatch(
+      /\.user-overview-head\s*\{[\s\S]*border-bottom:\s*1px solid var\(--workspace-line-soft\);/s
+    )
+  })
+
+  it('删除用户失败时不应抛到全局错误页', async () => {
+    adminApiMocks.getUsers.mockResolvedValue({
+      list: [
+        {
+          id: '1',
+          username: 'alice',
+          email: 'alice@example.com',
+          class_name: 'Class A',
+          status: 'active',
+          roles: ['teacher'],
+          created_at: '2026-03-01T00:00:00.000Z',
+        },
+      ],
+      total: 1,
+      page: 1,
+      page_size: 20,
+    })
+    adminApiMocks.deleteUser.mockRejectedValue(new Error('删除失败'))
+
+    const wrapper = mount(UserManage, {
+      global: {
+        stubs: {
+          UserGovernancePage: {
+            props: ['list'],
+            template:
+              '<button id="delete-user" type="button" @click="$emit(\'deleteUser\', list[0].id)">删除用户</button>',
+          },
+          PlatformUserFormDialog: true,
+        },
+      },
+    })
+
+    await flushPromises()
+
+    await expect(wrapper.get('#delete-user').trigger('click')).resolves.toBeUndefined()
+    await flushPromises()
+
+    expect(destructiveConfirmMock).toHaveBeenCalledWith({
+      title: '删除用户',
+      message: '确定删除用户 alice 吗？',
+      confirmButtonText: '确认删除',
+    })
+    expect(adminApiMocks.deleteUser).toHaveBeenCalledWith('1')
   })
 })

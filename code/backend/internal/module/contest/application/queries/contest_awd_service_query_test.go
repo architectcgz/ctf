@@ -40,7 +40,7 @@ func TestContestAWDServiceQueryServiceListContestAWDServicesIncludesValidationSt
 	}); err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := challengeRepo.Create(&model.Challenge{
+	if err := challengeRepo.Create(context.Background(), &model.Challenge{
 		ID:         9801,
 		Title:      "service-query-challenge",
 		Category:   "web",
@@ -61,7 +61,7 @@ func TestContestAWDServiceQueryServiceListContestAWDServicesIncludesValidationSt
 		DisplayName:       "Bank Portal",
 		Order:             2,
 		IsVisible:         true,
-		ScoreConfig:       `{"points":100,"awd_sla_score":18,"awd_defense_score":28}`,
+		ScoreConfig:       `{"points":100,"awd_sla_score":1,"awd_defense_score":2}`,
 		RuntimeConfig:     `{"challenge_id":9801,"checker_type":"http_standard","checker_config":{"get_flag":{"path":"/health"}}}`,
 		ValidationState:   model.AWDCheckerValidationStateFailed,
 		LastPreviewAt:     &now,

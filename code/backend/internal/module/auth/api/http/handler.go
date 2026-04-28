@@ -21,8 +21,8 @@ import (
 )
 
 type authCommandService interface {
-	Register(ctx context.Context, req *dto.RegisterReq) (*dto.LoginResp, *authcontracts.TokenPair, error)
-	Login(ctx context.Context, req *dto.LoginReq) (*dto.LoginResp, *authcontracts.TokenPair, error)
+	Register(ctx context.Context, req *dto.RegisterReq) (*dto.LoginResp, *authcontracts.Session, error)
+	Login(ctx context.Context, req *dto.LoginReq) (*dto.LoginResp, *authcontracts.Session, error)
 }
 
 type profileCommandService interface {
@@ -34,7 +34,7 @@ type profileQueryService interface {
 }
 
 type casCommandService interface {
-	Authenticate(ctx context.Context, ticket string) (*dto.LoginResp, *authcontracts.TokenPair, error)
+	Authenticate(ctx context.Context, ticket string) (*dto.LoginResp, *authcontracts.Session, error)
 }
 
 type casQueryService interface {
@@ -96,13 +96,13 @@ func (h *Handler) Register(c *gin.Context) {
 		return
 	}
 
-	resp, tokens, err := h.commands.Register(c.Request.Context(), req)
+	resp, session, err := h.commands.Register(c.Request.Context(), req)
 	if err != nil {
 		response.FromError(c, err)
 		return
 	}
 
-	h.writeRefreshCookie(c, tokens.RefreshToken)
+	h.writeSessionCookie(c, session.ID)
 	response.Success(c, resp)
 }
 
@@ -113,7 +113,7 @@ func (h *Handler) Login(c *gin.Context) {
 		return
 	}
 
-	resp, tokens, err := h.commands.Login(c.Request.Context(), req)
+	resp, session, err := h.commands.Login(c.Request.Context(), req)
 	if err != nil {
 		h.recordAudit(c, auditlog.Entry{
 			Action:       model.AuditActionLogin,
@@ -131,7 +131,7 @@ func (h *Handler) Login(c *gin.Context) {
 		return
 	}
 
-	h.writeRefreshCookie(c, tokens.RefreshToken)
+	h.writeSessionCookie(c, session.ID)
 	userID := resp.User.ID
 	h.recordAudit(c, auditlog.Entry{
 		UserID:       &userID,
@@ -148,53 +148,16 @@ func (h *Handler) Login(c *gin.Context) {
 	response.Success(c, resp)
 }
 
-func (h *Handler) Refresh(c *gin.Context) {
-	refreshToken, err := c.Cookie(h.cookieConfig.Name)
-	if err != nil {
-		response.Error(c, errcode.ErrRefreshTokenExpired)
-		return
-	}
-
-	payload, refreshErr := h.tokenService.RefreshAccessToken(c.Request.Context(), refreshToken)
-	if refreshErr != nil {
-		response.FromError(c, refreshErr)
-		return
-	}
-
-	response.Success(c, &dto.RefreshResp{
-		AccessToken: payload.AccessToken,
-		TokenType:   "Bearer",
-		ExpiresIn:   payload.ExpiresIn,
-	})
-}
-
 func (h *Handler) Logout(c *gin.Context) {
 	authUser := authctx.MustCurrentUser(c)
 	h.log.Info("auth_logout_attempt", zap.Int64("user_id", authUser.UserID), zap.String("username", authUser.Username))
-	tokenExpiry := time.Until(authUser.ExpiresAt)
-	if tokenExpiry < 0 {
-		tokenExpiry = 0
-	}
-	if err := h.tokenService.RevokeToken(c.Request.Context(), authUser.JTI, tokenExpiry); err != nil {
-		h.log.Error("auth_logout_failed_revoke_access_token", zap.Int64("user_id", authUser.UserID), zap.Error(err))
+	if err := h.tokenService.DeleteSession(c.Request.Context(), authUser.SessionID); err != nil {
+		h.log.Error("auth_logout_failed_delete_session", zap.Int64("user_id", authUser.UserID), zap.Error(err))
 		response.FromError(c, errcode.ErrInternal.WithCause(err))
 		return
 	}
 
-	if refreshToken, cookieErr := c.Cookie(h.cookieConfig.Name); cookieErr == nil {
-		if claims, parseErr := h.tokenService.ParseToken(refreshToken); parseErr == nil {
-			refreshExpiry := time.Until(claims.ExpiresAt.Time)
-			if refreshExpiry < 0 {
-				refreshExpiry = 0
-			}
-			_ = h.tokenService.RevokeToken(c.Request.Context(), claims.ID, refreshExpiry)
-			if err := h.tokenService.ClearRefreshSession(c.Request.Context(), authUser.UserID, claims.ID); err != nil {
-				h.log.Warn("auth_logout_failed_clear_refresh_session", zap.Int64("user_id", authUser.UserID), zap.Error(err))
-			}
-		}
-	}
-
-	h.clearRefreshCookie(c)
+	h.clearSessionCookie(c)
 	h.log.Info("auth_logout_succeeded", zap.Int64("user_id", authUser.UserID), zap.String("username", authUser.Username))
 	h.recordAudit(c, auditlog.Entry{
 		UserID:       &authUser.UserID,
@@ -305,7 +268,7 @@ func (h *Handler) CASCallback(c *gin.Context) {
 		return
 	}
 
-	resp, tokens, err := h.casCommands.Authenticate(c.Request.Context(), ticket)
+	resp, session, err := h.casCommands.Authenticate(c.Request.Context(), ticket)
 	if err != nil {
 		h.recordAudit(c, auditlog.Entry{
 			Action:       model.AuditActionLogin,
@@ -323,7 +286,7 @@ func (h *Handler) CASCallback(c *gin.Context) {
 		return
 	}
 
-	h.writeRefreshCookie(c, tokens.RefreshToken)
+	h.writeSessionCookie(c, session.ID)
 	userID := resp.User.ID
 	h.recordAudit(c, auditlog.Entry{
 		UserID:       &userID,
@@ -341,7 +304,7 @@ func (h *Handler) CASCallback(c *gin.Context) {
 	response.Success(c, resp)
 }
 
-func (h *Handler) writeRefreshCookie(c *gin.Context, value string) {
+func (h *Handler) writeSessionCookie(c *gin.Context, value string) {
 	c.SetSameSite(h.cookieConfig.SameSite)
 	c.SetCookie(
 		h.cookieConfig.Name,
@@ -354,7 +317,7 @@ func (h *Handler) writeRefreshCookie(c *gin.Context, value string) {
 	)
 }
 
-func (h *Handler) clearRefreshCookie(c *gin.Context) {
+func (h *Handler) clearSessionCookie(c *gin.Context) {
 	c.SetSameSite(h.cookieConfig.SameSite)
 	c.SetCookie(h.cookieConfig.Name, "", -1, h.cookieConfig.Path, "", h.cookieConfig.Secure, h.cookieConfig.HTTPOnly)
 }

@@ -152,6 +152,6 @@ npm run typecheck
 
 ```bash
 cd /home/azhi/workspace/projects/ctf/.worktrees/feat-awd-engine-migration
-git add -f docs/superpowers/specs/2026-04-11-awd-challenge-config-design.md docs/superpowers/plans/2026-04-11-awd-engine-phase4-challenge-config.md code/frontend/src/api/contracts.ts code/frontend/src/api/admin.ts code/frontend/src/api/__tests__/admin.test.ts code/frontend/src/composables/useAdminContestAWD.ts code/frontend/src/components/admin/contest/AWDOperationsPanel.vue code/frontend/src/components/admin/contest/AWDChallengeConfigPanel.vue code/frontend/src/components/admin/contest/AWDChallengeConfigDialog.vue code/frontend/src/components/admin/__tests__/AWDOperationsPanel.test.ts code/frontend/src/views/admin/__tests__/ContestManage.test.ts
+git add -f docs/architecture/features/2026-04-11-awd-challenge-config-design.md docs/superpowers/plans/2026-04-11-awd-engine-phase4-challenge-config.md code/frontend/src/api/contracts.ts code/frontend/src/api/admin.ts code/frontend/src/api/__tests__/admin.test.ts code/frontend/src/composables/useAdminContestAWD.ts code/frontend/src/components/admin/contest/AWDOperationsPanel.vue code/frontend/src/components/admin/contest/AWDChallengeConfigPanel.vue code/frontend/src/components/admin/contest/AWDChallengeConfigDialog.vue code/frontend/src/components/admin/__tests__/AWDOperationsPanel.test.ts code/frontend/src/views/admin/__tests__/ContestManage.test.ts
 git commit -m "feat(awd): 增加题目配置面板"
 ```

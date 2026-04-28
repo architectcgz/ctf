@@ -299,9 +299,7 @@ describe('TeacherStudentAnalysis', () => {
         username: 'teacher',
         role: 'teacher',
         class_name: 'Class A',
-      },
-      'token'
-    )
+      })
   })
 
   it('应该展示当前学员分析内容', async () => {
@@ -472,6 +470,32 @@ describe('TeacherStudentAnalysis', () => {
     expect(pushMock).not.toHaveBeenCalledWith({ name: 'TeacherAWDReviewIndex' })
   })
 
+  it('导出复盘归档失败时不应抛到全局错误页', async () => {
+    teacherApiMocks.exportStudentReviewArchive.mockRejectedValue(new Error('导出失败'))
+
+    const wrapper = mount(TeacherStudentAnalysis, {
+      global: {
+        stubs: {
+          TeacherClassReportExportDialog: reportDialogStub,
+          StudentAnalysisPage: {
+            name: 'StudentAnalysisPage',
+            template:
+              '<button id="export-review-archive" type="button" @click="$emit(\'exportReviewArchive\')">导出复盘归档</button>',
+          },
+        },
+      },
+    })
+
+    await flushPromises()
+
+    await expect(wrapper.get('#export-review-archive').trigger('click')).resolves.toBeUndefined()
+    await flushPromises()
+
+    expect(teacherApiMocks.exportStudentReviewArchive).toHaveBeenCalledWith('stu-1', {
+      format: 'json',
+    })
+  })
+
   it('管理员从学员分析返回班级管理时应回到后台班级页', async () => {
     const authStore = useAuthStore()
     authStore.setAuth(
@@ -480,9 +504,7 @@ describe('TeacherStudentAnalysis', () => {
         username: 'admin',
         role: 'admin',
         class_name: 'Class A',
-      },
-      'token'
-    )
+      })
 
     const wrapper = mount(TeacherStudentAnalysis, {
       global: {
@@ -508,9 +530,7 @@ describe('TeacherStudentAnalysis', () => {
         username: 'admin',
         role: 'admin',
         class_name: 'Class A',
-      },
-      'token'
-    )
+      })
 
     const wrapper = mount(TeacherStudentAnalysis, {
       global: {

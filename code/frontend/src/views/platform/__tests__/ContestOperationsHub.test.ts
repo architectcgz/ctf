@@ -3,6 +3,8 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import ContestOperationsHub from '../ContestOperationsHub.vue'
 import contestOperationsHubSource from '../ContestOperationsHub.vue?raw'
+import contestOperationsHubHeroPanelSource from '@/components/platform/contest/ContestOperationsHubHeroPanel.vue?raw'
+import contestOperationsHubWorkspacePanelSource from '@/components/platform/contest/ContestOperationsHubWorkspacePanel.vue?raw'
 
 const pushMock = vi.fn()
 const routeState = vi.hoisted(() => ({
@@ -55,6 +57,15 @@ describe('ContestOperationsHub', () => {
           ends_at: '2026-04-16T18:00:00.000Z',
         },
         {
+          id: 'awd-ended',
+          title: '2026 AWD 复盘赛',
+          description: '已结束待导出',
+          mode: 'awd',
+          status: 'ended',
+          starts_at: '2026-04-14T09:00:00.000Z',
+          ends_at: '2026-04-14T18:00:00.000Z',
+        },
+        {
           id: 'jeopardy-1',
           title: '2026 Jeopardy 校内赛',
           description: '非 AWD',
@@ -78,6 +89,7 @@ describe('ContestOperationsHub', () => {
     expect(wrapper.text()).toContain('竞赛列表')
     expect(wrapper.text()).toContain('2026 AWD 联赛')
     expect(wrapper.text()).toContain('2026 AWD 冻结赛')
+    expect(wrapper.text()).toContain('2026 AWD 复盘赛')
     expect(wrapper.text()).not.toContain('2026 Jeopardy 校内赛')
     expect(wrapper.text()).toContain('进入运维台')
   })
@@ -120,13 +132,38 @@ describe('ContestOperationsHub', () => {
   })
 
   it('uses shared directory heading and metric primitives for the ops index shell', () => {
-    expect(contestOperationsHubSource).toContain(
+    expect(contestOperationsHubHeroPanelSource).toContain(
       '<header class="list-heading contest-ops-hero workspace-directory-section">'
     )
-    expect(contestOperationsHubSource).toContain(
+    expect(contestOperationsHubHeroPanelSource).toContain(
       'class="progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface contest-ops-summary"'
     )
-    expect(contestOperationsHubSource).toContain('contest-ops-directory')
+    expect(contestOperationsHubHeroPanelSource).toContain(
+      '--metric-panel-columns: repeat(4, minmax(0, 1fr));'
+    )
+    expect(contestOperationsHubHeroPanelSource).toContain(
+      '--metric-panel-columns: repeat(2, minmax(0, 1fr));'
+    )
+    expect(contestOperationsHubHeroPanelSource).not.toContain('--metric-panel-columns: 4;')
+    expect(contestOperationsHubHeroPanelSource).toContain('<Trophy class="h-4 w-4" />')
+    expect(contestOperationsHubHeroPanelSource).toContain('<Activity class="h-4 w-4" />')
+    expect(contestOperationsHubHeroPanelSource).toContain('<PauseCircle class="h-4 w-4" />')
+    expect(contestOperationsHubHeroPanelSource).toContain('<Star class="h-4 w-4" />')
+    expect(contestOperationsHubSource).toContain('class="content-pane contest-ops-content"')
+    expect(contestOperationsHubSource).toContain(
+      'gap: var(--workspace-directory-page-block-gap, var(--space-5));'
+    )
+    expect(contestOperationsHubSource).toContain('<ContestOperationsHubWorkspacePanel')
+    expect(contestOperationsHubWorkspacePanelSource).toContain('contest-ops-directory')
+    expect(contestOperationsHubWorkspacePanelSource).toContain(
+      'class="workspace-directory-list contest-ops-directory__list"'
+    )
+    expect(contestOperationsHubWorkspacePanelSource).toContain('class="contest-ops-row"')
+    expect(contestOperationsHubWorkspacePanelSource).not.toContain('class="contest-ops-card"')
+    expect(contestOperationsHubHeroPanelSource).not.toContain('margin-top: var(--space-5);')
+    expect(contestOperationsHubWorkspacePanelSource).toContain('padding: 0;')
+    expect(contestOperationsHubWorkspacePanelSource).toContain('gap: var(--space-4);')
+    expect(contestOperationsHubWorkspacePanelSource).toContain('border-bottom: 1px solid var(--workspace-directory-row-divider);')
     expect(contestOperationsHubSource).not.toContain('PlatformContestOpsTraffic')
     expect(contestOperationsHubSource).not.toContain('PlatformContestOpsProjector')
     expect(contestOperationsHubSource).not.toContain('PlatformContestOpsScoreboard')

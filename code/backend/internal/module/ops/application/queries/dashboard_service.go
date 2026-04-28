@@ -11,7 +11,6 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
 	opsports "ctf-platform/internal/module/ops/ports"
-	rediskeys "ctf-platform/internal/pkg/redis"
 )
 
 type DashboardService struct {
@@ -20,6 +19,10 @@ type DashboardService struct {
 	redis        *redislib.Client
 	config       *config.Config
 	logger       *zap.Logger
+}
+
+type dashboardSessionRecord struct {
+	UserID int64 `json:"user_id"`
 }
 
 func NewDashboardService(
@@ -68,7 +71,7 @@ func (s *DashboardService) GetDashboardStats(ctx context.Context) (*dto.Dashboar
 
 	activeContainers := int64(0)
 	if s.runtimeQuery != nil {
-		activeContainers, err = s.runtimeQuery.CountRunning()
+		activeContainers, err = s.runtimeQuery.CountRunning(ctx)
 		if err != nil {
 			return nil, fmt.Errorf("统计活跃容器失败: %w", err)
 		}
@@ -158,21 +161,46 @@ func (s *DashboardService) countOnlineUsers(ctx context.Context) (int64, error) 
 	if s.redis == nil {
 		return 0, nil
 	}
-	pattern := rediskeys.Namespace + ":token:*"
+	sessionPrefix := s.config.Auth.SessionKeyPrefix
+	if sessionPrefix == "" {
+		sessionPrefix = "ctf:auth:session"
+	}
+	pattern := sessionPrefix + ":*"
 	var cursor uint64
-	count := int64(0)
+	onlineUserIDs := make(map[int64]struct{})
 	for {
 		keys, nextCursor, err := s.redis.Scan(ctx, cursor, pattern, 100).Result()
 		if err != nil {
 			return 0, err
 		}
-		count += int64(len(keys))
+		if len(keys) > 0 {
+			values, err := s.redis.MGet(ctx, keys...).Result()
+			if err != nil {
+				return 0, err
+			}
+			for index, value := range values {
+				if value == nil {
+					continue
+				}
+				payload, ok := value.(string)
+				if !ok {
+					s.logger.Warn("忽略无法识别的在线会话记录", zap.String("key", keys[index]))
+					continue
+				}
+				var session dashboardSessionRecord
+				if err := json.Unmarshal([]byte(payload), &session); err != nil || session.UserID <= 0 {
+					s.logger.Warn("忽略无效的在线会话记录", zap.String("key", keys[index]), zap.Error(err))
+					continue
+				}
+				onlineUserIDs[session.UserID] = struct{}{}
+			}
+		}
 		cursor = nextCursor
 		if cursor == 0 {
 			break
 		}
 	}
-	return count, nil
+	return int64(len(onlineUserIDs)), nil
 }
 
 func (s *DashboardService) getFromCache(ctx context.Context) (*dto.DashboardStats, error) {

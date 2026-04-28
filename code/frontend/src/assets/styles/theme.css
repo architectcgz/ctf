@@ -151,6 +151,7 @@
   --shell-sidebar-expanded: 15.5rem;
   --ui-motion-fast: 160ms ease;
   --ui-motion-normal: 220ms ease;
+  --ui-focus-ring-width: 2px;
   --ui-control-height-sm: 2rem;
   --ui-control-height-md: 2.75rem;
   --ui-control-height-lg: 3.25rem;
@@ -161,6 +162,11 @@
   --ui-control-padding-x-md: 1rem;
   --ui-control-padding-x-lg: 1.25rem;
   --ui-button-font-weight: 700;
+  --ui-selector-width-lg: 32rem;
+  --ui-selector-width-md: 24rem;
+  --ui-selector-control-width: 26rem;
+  --ui-selector-control-min-width: 16rem;
+  --ui-service-cell-min-width: 8rem;
   --ui-field-gap: var(--space-1-5);
   --ui-field-error-size: var(--font-size-12);
   --ui-badge-radius-pill: 999px;
@@ -168,6 +174,7 @@
   --ui-badge-spacing: 0.08em;
   --ui-dialog-overlay: rgba(15, 23, 42, 0.34);
   --ui-dialog-shadow: 0 28px 80px rgba(15, 23, 42, 0.22);
+  --ui-dialog-z-index: 90;
   --ui-dialog-surface: #ffffff;
   --ui-dialog-border: color-mix(in srgb, var(--color-border-default) 86%, transparent);
   --ui-dialog-radius: 1rem;

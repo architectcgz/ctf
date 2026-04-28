@@ -2,10 +2,13 @@ package commands
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"ctf-platform/internal/model"
 )
+
+const defaultContestSubmissionRateLimitPrefix = "ctf:ratelimit"
 
 type validatedContestSubmission struct {
 	contestChallenge *model.ContestChallenge
@@ -21,13 +24,17 @@ func buildContestSubmission(userID, contestID, challengeID int64, flag string, t
 		ChallengeID: challengeID,
 		ContestID:   &contestID,
 		TeamID:      teamID,
-		Flag:        flag,
+		Flag:        "",
 		IsCorrect:   false,
 		Score:       0,
 		SubmittedAt: submittedAt,
 	}
 }
 
-func contestSubmissionRateLimitKey(userID, contestID, challengeID int64) string {
-	return fmt.Sprintf("contest:submit:rate:%d:%d:%d", userID, contestID, challengeID)
+func contestSubmissionRateLimitKey(prefix string, userID, contestID, challengeID int64) string {
+	trimmedPrefix := strings.TrimSpace(prefix)
+	if trimmedPrefix == "" {
+		trimmedPrefix = defaultContestSubmissionRateLimitPrefix
+	}
+	return fmt.Sprintf("%s:contest:submit:rate:%d:%d:%d", trimmedPrefix, userID, contestID, challengeID)
 }

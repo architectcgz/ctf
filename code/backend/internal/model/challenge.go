@@ -21,6 +21,9 @@ const (
 	FlagTypeDynamic      = "dynamic"
 	FlagTypeRegex        = "regex"
 	FlagTypeManualReview = "manual_review"
+
+	ChallengeTargetProtocolHTTP = "http"
+	ChallengeTargetProtocolTCP  = "tcp"
 )
 
 type InstanceSharing string
@@ -54,6 +57,8 @@ type Challenge struct {
 	FlagRegex       string          `gorm:"column:flag_regex;size:512"`
 	FlagPrefix      string          `gorm:"column:flag_prefix;size:32;default:'flag'"`
 	InstanceSharing InstanceSharing `gorm:"column:instance_sharing;size:16;default:'per_user'"`
+	TargetProtocol  string          `gorm:"column:target_protocol;size:16;default:'http'"`
+	TargetPort      int             `gorm:"column:target_port;default:0"`
 	CreatedBy       *int64          `gorm:"column:created_by"`
 	CreatedAt       time.Time       `gorm:"column:created_at"`
 	UpdatedAt       time.Time       `gorm:"column:updated_at"`

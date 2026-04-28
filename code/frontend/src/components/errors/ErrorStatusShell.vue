@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed, onMounted, type Component } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, type Component } from 'vue'
 import { RouterLink } from 'vue-router'
 
+import { useProbeEasterEggs } from '@/composables/useProbeEasterEggs'
 import { useAuthStore } from '@/stores/auth'
 import { getNavigationType, redirectTo, reloadPage } from '@/utils/browser'
 import { resolveErrorStatusRetryTarget } from '@/utils/errorStatusPage'
@@ -37,6 +38,9 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const authStore = useAuthStore()
+const { track } = useProbeEasterEggs()
+const probeMessage = ref('')
+let probeMessageTimer: number | null = null
 
 const accentValueMap: Record<NonNullable<Props['accent']>, string> = {
   primary: 'var(--color-primary)',
@@ -99,6 +103,31 @@ onMounted(() => {
   }
 })
 
+onBeforeUnmount(() => {
+  if (probeMessageTimer) {
+    window.clearTimeout(probeMessageTimer)
+  }
+})
+
+function showProbeMessage(message: string) {
+  probeMessage.value = message
+  if (probeMessageTimer) {
+    window.clearTimeout(probeMessageTimer)
+  }
+  probeMessageTimer = window.setTimeout(() => {
+    probeMessage.value = ''
+    probeMessageTimer = null
+  }, 3200)
+}
+
+function handleProbeClick() {
+  const result = track('error-status', 4)
+  if (!result.unlocked) {
+    return
+  }
+  showProbeMessage('路径枚举记录已写入：热情可嘉，命中率一般。')
+}
+
 function navigateBack() {
   if (window.history.length > 1) {
     window.history.back()
@@ -127,7 +156,10 @@ function executeAction(action: NonNullable<Props['primaryAction'] | Props['secon
     class="error-status-view"
     :style="accentVars"
   >
-    <div class="error-status-kicker">
+    <div
+      class="error-status-kicker"
+      @click="handleProbeClick"
+    >
       <component
         :is="icon"
         class="h-4 w-4"
@@ -142,6 +174,12 @@ function executeAction(action: NonNullable<Props['primaryAction'] | Props['secon
         </h1>
         <p class="error-status-text workspace-page-copy">
           {{ description }}
+        </p>
+        <p
+          v-if="probeMessage"
+          class="error-status-probe"
+        >
+          {{ probeMessage }}
         </p>
 
         <div class="error-status-actions">
@@ -240,6 +278,14 @@ function executeAction(action: NonNullable<Props['primaryAction'] | Props['secon
   margin-top: 0.8rem;
   max-width: 56ch;
   color: var(--color-text-secondary);
+}
+
+.error-status-probe {
+  margin-top: 0.9rem;
+  max-width: 56ch;
+  font-size: var(--font-size-0-82);
+  line-height: 1.7;
+  color: color-mix(in srgb, var(--error-accent) 84%, var(--color-text-secondary));
 }
 
 .error-status-actions {

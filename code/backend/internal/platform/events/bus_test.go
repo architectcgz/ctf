@@ -45,3 +45,25 @@ func TestBusPublishDeliversToSubscriber(t *testing.T) {
 		t.Fatal("expected subscriber to receive published event")
 	}
 }
+
+func TestBusPublishDoesNotCreateBackgroundContext(t *testing.T) {
+	t.Parallel()
+
+	bus := NewBus()
+	called := false
+
+	bus.Subscribe("practice.created", func(ctx context.Context, evt Event) error {
+		called = true
+		if ctx != nil {
+			t.Fatalf("expected publish ctx to stay nil, got %v", ctx)
+		}
+		return nil
+	})
+
+	if err := bus.Publish(nil, Event{Name: "practice.created"}); err != nil {
+		t.Fatalf("Publish() error = %v", err)
+	}
+	if !called {
+		t.Fatal("expected subscriber to be called")
+	}
+}

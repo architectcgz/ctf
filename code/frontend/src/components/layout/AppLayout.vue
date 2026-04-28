@@ -27,12 +27,19 @@
             class="workspace-page"
             :class="pageShellClass"
           >
-            <RouterView v-slot="{ Component }">
-              <component
-                :is="Component"
-                class="workspace-route-root"
-                :class="routeRootClass"
-              />
+            <RouterView v-slot="{ Component, route: resolvedRoute }">
+              <Transition
+                name="workspace-route"
+                mode="out-in"
+                appear
+              >
+                <component
+                  :is="Component"
+                  :key="resolvedRoute.path"
+                  class="workspace-route-root"
+                  :class="routeRootClass"
+                />
+              </Transition>
             </RouterView>
           </div>
         </main>

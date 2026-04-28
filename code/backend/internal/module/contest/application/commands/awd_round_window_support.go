@@ -51,7 +51,7 @@ func (s *AWDService) isLiveContestWindow(ctx context.Context, contestID int64) b
 	if err != nil || contest == nil {
 		return false
 	}
-	now := time.Now()
+	now := time.Now().UTC()
 	if !now.Before(contest.EndTime) {
 		return false
 	}

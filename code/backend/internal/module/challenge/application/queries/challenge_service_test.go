@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"ctf-platform/internal/dto"
+
 	miniredis "github.com/alicebob/miniredis/v2"
 	"github.com/redis/go-redis/v9"
 
@@ -23,7 +25,7 @@ func TestServiceGetPublishedChallengeNotPublished(t *testing.T) {
 	repo := challengeinfra.NewRepository(db)
 	service := NewChallengeService(repo, nil, &Config{SolvedCountCacheTTL: time.Minute}, nil)
 
-	_, err := service.GetPublishedChallenge(1, challenge.ID)
+	_, err := service.GetPublishedChallenge(context.Background(), 1, challenge.ID)
 	if err == nil || err.Error() != errcode.ErrForbidden.Error() {
 		t.Fatalf("expected not published error, got %v", err)
 	}
@@ -57,7 +59,7 @@ func TestServiceGetChallengeIncludesHintsAndAttachment(t *testing.T) {
 	repo := challengeinfra.NewRepository(db)
 	service := NewChallengeService(repo, nil, &Config{SolvedCountCacheTTL: time.Minute}, nil)
 
-	resp, err := service.GetChallenge(challenge.ID)
+	resp, err := service.GetChallenge(context.Background(), challenge.ID)
 	if err != nil {
 		t.Fatalf("GetChallenge() error = %v", err)
 	}
@@ -99,6 +101,42 @@ func TestServiceGetSolvedCountCachedHonorsContextCancellation(t *testing.T) {
 	cancel()
 
 	_, err := service.getSolvedCountCached(ctx, challenge.ID)
+	if err == nil || err != context.Canceled {
+		t.Fatalf("expected context canceled, got %v", err)
+	}
+}
+
+func TestServiceGetChallengeHonorsCancellation(t *testing.T) {
+	db := testsupport.SetupTestDB(t)
+
+	challenge := &model.Challenge{Title: "ctx get", Status: model.ChallengeStatusDraft}
+	if err := db.Create(challenge).Error; err != nil {
+		t.Fatalf("create challenge: %v", err)
+	}
+
+	service := NewChallengeService(challengeinfra.NewRepository(db), nil, &Config{SolvedCountCacheTTL: time.Minute}, nil)
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	_, err := service.GetChallenge(ctx, challenge.ID)
+	if err == nil || err != context.Canceled {
+		t.Fatalf("expected context canceled, got %v", err)
+	}
+}
+
+func TestServiceListChallengesHonorsCancellation(t *testing.T) {
+	db := testsupport.SetupTestDB(t)
+
+	challenge := &model.Challenge{Title: "ctx list", Status: model.ChallengeStatusDraft}
+	if err := db.Create(challenge).Error; err != nil {
+		t.Fatalf("create challenge: %v", err)
+	}
+
+	service := NewChallengeService(challengeinfra.NewRepository(db), nil, &Config{SolvedCountCacheTTL: time.Minute}, nil)
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	_, err := service.ListChallenges(ctx, &dto.ChallengeQuery{})
 	if err == nil || err != context.Canceled {
 		t.Fatalf("expected context canceled, got %v", err)
 	}

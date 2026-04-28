@@ -9,6 +9,8 @@ vi.mock('@/api/request', () => ({
 import {
   getContestChallenges,
   getContestAWDWorkspace,
+  requestContestAWDDefenseSSH,
+  requestContestAWDTargetAccess,
   startContestAWDServiceInstance,
   submitContestAWDAttack,
 } from '@/api/contest'
@@ -75,7 +77,7 @@ describe('contest api contract', () => {
         {
           service_id: 7009,
           challenge_id: 9,
-          access_url: 'http://red.internal',
+          instance_id: 9001,
           service_status: 'up',
           checker_type: 'http_standard',
           attack_received: 0,
@@ -93,7 +95,7 @@ describe('contest api contract', () => {
             {
               service_id: 7009,
               challenge_id: 9,
-              access_url: 'http://blue.internal',
+              reachable: true,
             },
           ],
         },
@@ -124,8 +126,12 @@ describe('contest api contract', () => {
     expect(result.my_team?.team_id).toBe('13')
     expect(result.services[0].service_id).toBe('7009')
     expect(result.services[0].challenge_id).toBe('9')
+    expect(result.services[0].instance_id).toBe('9001')
+    expect(result.services[0].access_url).toBeUndefined()
     expect(result.targets[0].services[0].service_id).toBe('7009')
     expect(result.targets[0].services[0].challenge_id).toBe('9')
+    expect(result.targets[0].services[0].reachable).toBe(true)
+    expect('access_url' in result.targets[0].services[0]).toBe(false)
     expect(result.recent_events[0].service_id).toBe('7009')
     expect(result.recent_events[0].id).toBe('88')
   })
@@ -212,4 +218,48 @@ describe('contest api contract', () => {
       created_at: '2026-04-12T08:03:00Z',
     })
   })
+
+  it('请求 AWD 跨队攻击入口时应调用目标代理 access 接口', async () => {
+    requestMock.mockResolvedValue({
+      access_url: '/api/v1/contests/7/awd/services/7009/targets/14/proxy/?ticket=demo',
+    })
+
+    const result = await requestContestAWDTargetAccess('7', '7009', '14')
+
+    expect(requestMock).toHaveBeenCalledWith({
+      method: 'POST',
+      url: '/contests/7/awd/services/7009/targets/14/access',
+    })
+    expect(result.access_url).toBe(
+      '/api/v1/contests/7/awd/services/7009/targets/14/proxy/?ticket=demo'
+    )
+  })
+
+  it('请求 AWD 防守 SSH 入口时应调用 defense ssh 接口', async () => {
+    requestMock.mockResolvedValue({
+      host: '127.0.0.1',
+      port: 2222,
+      username: 'student+7+7009',
+      password: 'ticket-secret',
+      command: 'ssh student+7+7009@127.0.0.1 -p 2222',
+      ssh_profile: {
+        alias: 'ctf-awd-7-7009',
+        host_name: '127.0.0.1',
+        port: 2222,
+        user: 'student+7+7009',
+      },
+      expires_at: '2026-04-12T08:15:00Z',
+    })
+
+    const result = await requestContestAWDDefenseSSH('7', '7009')
+
+    expect(requestMock).toHaveBeenCalledWith({
+      method: 'POST',
+      url: '/contests/7/awd/services/7009/defense/ssh',
+    })
+    expect(result.command).toBe('ssh student+7+7009@127.0.0.1 -p 2222')
+    expect(result.ssh_profile?.alias).toBe('ctf-awd-7-7009')
+    expect(result.password).toBe('ticket-secret')
+  })
+
 })

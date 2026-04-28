@@ -1,275 +1,242 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import {
-  Server,
-  Activity,
-  AlertTriangle,
-  ExternalLink,
-  Trash2,
-  RefreshCw,
-} from 'lucide-vue-next'
 
-import type { AdminInstanceListItem } from '@/api/contracts'
-import { getAdminInstances, deleteAdminInstance } from '@/api/admin'
-import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
-import WorkspaceDirectoryPagination from '@/components/common/WorkspaceDirectoryPagination.vue'
-import AppLoading from '@/components/common/AppLoading.vue'
-import AppEmpty from '@/components/common/AppEmpty.vue'
-import { useAdminDestructiveConfirm } from '@/composables/useAdminDestructiveConfirm'
+import type { TeacherInstanceItem } from '@/api/contracts'
+import { destroyTeacherInstance, getTeacherInstances } from '@/api/teacher'
+import InstanceManageHeroPanel from '@/components/platform/instance/InstanceManageHeroPanel.vue'
+import InstanceManageWorkspacePanel from '@/components/platform/instance/InstanceManageWorkspacePanel.vue'
+import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
+
+interface InstanceManageTableRow {
+  id: string
+  challenge: string
+  student_id: string
+  user: string
+  username: string
+  class_name: string
+  ip_address: string
+  status: string
+  status_label: string
+  created_at: string
+  actions: string
+}
+
+type InstanceStatusFilter = 'running' | 'creating' | 'expired' | 'failed' | 'inactive' | ''
 
 const router = useRouter()
-const list = ref<AdminInstanceListItem[]>([])
-const total = ref(0)
+const list = ref<TeacherInstanceItem[]>([])
 const page = ref(1)
 const pageSize = ref(15)
 const loading = ref(false)
+const destroyingId = ref('')
+const error = ref<string | null>(null)
+const keyword = ref('')
+const statusFilter = ref<InstanceStatusFilter>('')
 
-const { confirmDestruction } = useAdminDestructiveConfirm()
+const totalInstances = computed(() => list.value.length)
+const filteredInstances = computed(() => {
+  const query = keyword.value.trim().toLowerCase()
+
+  return list.value.filter((item) => {
+    const statusGroup: Exclude<InstanceStatusFilter, ''> =
+      item.status === 'running' || item.status === 'creating' || item.status === 'expired' || item.status === 'failed'
+        ? item.status
+        : 'inactive'
+    const searchableText = [
+      item.id,
+      item.challenge_title,
+      item.student_name,
+      item.student_username,
+      item.student_no,
+      item.class_name,
+      item.access_url,
+      item.status,
+    ]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase()
+
+    const matchesKeyword = !query || searchableText.includes(query)
+    const matchesStatus = !statusFilter.value || statusGroup === statusFilter.value
+    return matchesKeyword && matchesStatus
+  })
+})
+const filteredTotal = computed(() => filteredInstances.value.length)
+const totalPages = computed(() => Math.max(1, Math.ceil(filteredTotal.value / pageSize.value)))
+const pageRows = computed<InstanceManageTableRow[]>(() => {
+  const start = (page.value - 1) * pageSize.value
+  return filteredInstances.value.slice(start, start + pageSize.value).map((item) => ({
+    id: item.id,
+    challenge: item.challenge_title,
+    student_id: String(item.student_id),
+    user: item.student_name || item.student_username,
+    username: item.student_username,
+    class_name: item.class_name,
+    ip_address: item.access_url || '暂未分配',
+    status: item.status,
+    status_label: formatStatus(item.status),
+    created_at: formatDateTime(item.created_at),
+    actions: '销毁',
+  }))
+})
+const runningCount = computed(() => list.value.filter((item) => item.status === 'running').length)
+const warningCount = computed(
+  () => list.value.filter((item) => item.status !== 'running' || item.remaining_time <= 600).length
+)
+
+function formatStatus(status: string): string {
+  switch (status) {
+    case 'running':
+      return '运行中'
+    case 'creating':
+      return '创建中'
+    case 'expired':
+      return '已过期'
+    case 'failed':
+      return '异常'
+    default:
+      return status
+  }
+}
+
+function formatDateTime(value: string): string {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) {
+    return '--'
+  }
+
+  return new Intl.DateTimeFormat('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date)
+}
 
 async function loadInstances(): Promise<void> {
   loading.value = true
+  error.value = null
   try {
-    const data = await getAdminInstances({
-      page: page.value,
-      pageSize: pageSize.value,
+    list.value = await getTeacherInstances({
+      class_name: undefined,
+      keyword: undefined,
+      student_no: undefined,
     })
-    list.value = data.items
-    total.value = data.total
+    if (page.value > totalPages.value) {
+      page.value = totalPages.value
+    }
   } catch (err) {
     console.error('加载实例列表失败:', err)
+    error.value = '加载实例列表失败，请稍后重试'
+    list.value = []
   } finally {
     loading.value = false
   }
 }
 
-async function handleDestroyInstance(instance: AdminInstanceListItem): Promise<void> {
-  const confirmed = await confirmDestruction({
+async function handleDestroyInstance(instance: TeacherInstanceItem): Promise<void> {
+  const confirmed = await confirmDestructiveAction({
     title: '强制销毁实例',
     message: `您确定要强制销毁实例 ${instance.id} 吗？此操作不可逆，用户当前的运行状态将丢失。`,
     confirmButtonText: '强制销毁',
+    cancelButtonText: '取消',
   })
 
   if (!confirmed) return
 
   try {
-    await deleteAdminInstance(instance.id)
-    await loadInstances()
+    destroyingId.value = instance.id
+    await destroyTeacherInstance(instance.id)
+    list.value = list.value.filter((item) => item.id !== instance.id)
+    if (page.value > totalPages.value) {
+      page.value = totalPages.value
+    }
   } catch (err) {
     console.error('销毁实例失败:', err)
+    error.value = '销毁实例失败，请稍后重试'
+  } finally {
+    destroyingId.value = ''
   }
 }
 
-function handlePageChange(p: number): void {
-  page.value = p
-  void loadInstances()
+function requestDestroyById(id: string): void {
+  const instance = list.value.find((item) => item.id === id)
+  if (!instance) {
+    return
+  }
+
+  void handleDestroyInstance(instance)
 }
+
+function openStudent(studentId: string, className: string): void {
+  void router.push({
+    name: 'PlatformStudentAnalysis',
+    params: { className, studentId },
+  })
+}
+
+function handlePageChange(p: number): void {
+  const normalizedPage = Math.max(1, Math.floor(p))
+  if (normalizedPage === page.value || normalizedPage > totalPages.value) {
+    return
+  }
+
+  page.value = normalizedPage
+}
+
+function resetFilters(): void {
+  keyword.value = ''
+  statusFilter.value = ''
+}
+
+watch([keyword, statusFilter], () => {
+  page.value = 1
+})
 
 onMounted(() => {
   void loadInstances()
 })
-
-const columns = [
-  { key: 'id', label: '实例 ID', widthClass: 'w-[20%] min-w-[12rem]' },
-  { key: 'challenge', label: '关联题目', widthClass: 'w-[15%] min-w-[10rem]' },
-  { key: 'user', label: '所属用户', widthClass: 'w-[15%] min-w-[10rem]' },
-  { key: 'ip_address', label: '访问地址', widthClass: 'w-[15%] min-w-[10rem]' },
-  { key: 'status', label: '状态', widthClass: 'w-[10%] min-w-[6rem]', align: 'center' as const },
-  { key: 'created_at', label: '创建时间', widthClass: 'w-[15%] min-w-[10rem]' },
-  { key: 'actions', label: '操作', widthClass: 'w-[8rem]', align: 'right' as const },
-]
 </script>
 
 <template>
-  <div class="workspace-shell">
+  <div class="workspace-shell journal-shell journal-shell-admin journal-hero admin-instance-manage-shell">
     <div class="workspace-grid">
       <main class="content-pane">
-        <section class="workspace-hero">
-          <div class="workspace-tab-heading__main">
-            <div class="workspace-overline">
-              Instance Workspace
-            </div>
-            <h1 class="hero-title">
-              实例管理
-            </h1>
-            <p class="hero-summary">
-              在后台视角查看实例状态、到期节奏与访问地址，并快速销毁异常环境。
-            </p>
-          </div>
+        <InstanceManageHeroPanel
+          :running-count="runningCount"
+          :total="totalInstances"
+          :warning-count="warningCount"
+          @back="void router.push({ name: 'PlatformOverview' })"
+          @refresh="void loadInstances()"
+        />
 
-          <div class="awd-library-hero-actions">
-            <div class="quick-actions">
-              <button
-                type="button"
-                class="ui-btn ui-btn--ghost"
-                @click="router.push({ name: 'PlatformOverview' })"
-              >
-                返回概览
-              </button>
-              <button
-                type="button"
-                class="ui-btn ui-btn--primary"
-                @click="loadInstances"
-              >
-                <RefreshCw class="h-4 w-4" />
-                刷新列表
-              </button>
-            </div>
-          </div>
-        </section>
-
-        <div class="instance-manage-body mt-10 space-y-10">
-          <div class="metric-panel-grid metric-panel-grid--premium cols-3">
-            <article class="metric-panel-card metric-panel-card--premium">
-              <div class="metric-panel-label">
-                <span>运行中</span>
-                <Activity class="h-4 w-4" />
-              </div>
-              <div class="metric-panel-value">
-                {{ list.filter(i => i.status === 'running').length.toString().padStart(2, '0') }}
-              </div>
-              <div class="metric-panel-helper">
-                当前活跃实例
-              </div>
-            </article>
-
-            <article class="metric-panel-card metric-panel-card--premium">
-              <div class="metric-panel-label">
-                <span>总实例数</span>
-                <Server class="h-4 w-4" />
-              </div>
-              <div class="metric-panel-value">
-                {{ total.toString().padStart(2, '0') }}
-              </div>
-              <div class="metric-panel-helper">
-                系统托管总计
-              </div>
-            </article>
-
-            <article class="metric-panel-card metric-panel-card--premium">
-              <div class="metric-panel-label">
-                <span>预警项</span>
-                <AlertTriangle class="h-4 w-4" />
-              </div>
-              <div class="metric-panel-value">
-                00
-              </div>
-              <div class="metric-panel-helper">
-                即将过期或异常
-              </div>
-            </article>
-          </div>
-
-          <section class="workspace-directory-section">
-            <header class="list-heading">
-              <div>
-                <div class="workspace-overline">
-                  Active Instances
-                </div>
-                <h2 class="list-heading__title">
-                  实时实例列表
-                </h2>
-              </div>
-            </header>
-
-            <div
-              v-if="loading && list.length === 0"
-              class="py-12 flex justify-center"
-            >
-              <AppLoading>同步实例状态...</AppLoading>
-            </div>
-
-            <template v-else>
-              <AppEmpty
-                v-if="list.length === 0"
-                class="workspace-directory-empty"
-                icon="Server"
-                title="暂无运行中的实例"
-                description="当前平台上没有任何用户开启题目环境。"
-              />
-
-              <WorkspaceDataTable
-                v-else
-                class="workspace-directory-list"
-                :columns="columns"
-                :rows="list"
-                row-key="id"
-              >
-                <template #cell-id="{ row }">
-                  <span class="font-mono text-xs">{{ (row as AdminInstanceListItem).id }}</span>
-                </template>
-                <template #cell-status="{ row }">
-                  <span
-                    class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase"
-                    :class="(row as AdminInstanceListItem).status === 'running' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'"
-                  >
-                    {{ (row as AdminInstanceListItem).status }}
-                  </span>
-                </template>
-                <template #cell-actions="{ row }">
-                  <div class="flex justify-end gap-2">
-                    <button
-                      type="button"
-                      class="ui-btn ui-btn--ghost ui-btn--xs"
-                      @click="handleDestroyInstance(row as AdminInstanceListItem)"
-                    >
-                      <Trash2 class="h-3 w-3 mr-1" />
-                      销毁
-                    </button>
-                  </div>
-                </template>
-              </WorkspaceDataTable>
-
-              <div class="mt-6">
-                <WorkspaceDirectoryPagination
-                  :page="page"
-                  :total-pages="Math.max(1, Math.ceil(total / pageSize))"
-                  :total="total"
-                  total-label="个实例"
-                  @change-page="handlePageChange"
-                />
-              </div>
-            </template>
-          </section>
-        </div>
+        <InstanceManageWorkspacePanel
+          :loading="loading"
+          :has-instances="list.length > 0"
+          :rows="pageRows"
+          :keyword="keyword"
+          :status-filter="statusFilter"
+          :page="page"
+          :total-pages="totalPages"
+          :total="filteredTotal"
+          :destroying-id="destroyingId"
+          :error="error"
+          @update:keyword="keyword = $event"
+          @change:status-filter="statusFilter = $event"
+          @reset-filters="resetFilters"
+          @open-student="openStudent"
+          @destroy-instance="requestDestroyById"
+          @change-page="handlePageChange"
+        />
       </main>
     </div>
   </div>
 </template>
 
 <style scoped>
-.workspace-hero {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: var(--space-7);
-  padding-bottom: var(--space-6);
-  border-bottom: 1px solid var(--workspace-line-soft);
-}
-
-.hero-title {
-  margin: 0.5rem 0 0;
-  font-size: var(--workspace-page-title-font-size);
-  line-height: var(--workspace-page-title-line-height);
-  letter-spacing: var(--workspace-page-title-letter-spacing);
-  color: var(--journal-ink);
-}
-
-.hero-summary {
-  max-width: 760px;
-  margin-top: var(--space-3-5);
-  font-size: var(--font-size-15);
-  line-height: 1.9;
-  color: var(--journal-muted);
-}
-
-.awd-library-hero-actions {
-  display: flex;
-  align-items: flex-end;
-  padding-bottom: 0.5rem;
-}
-
-.quick-actions {
-  display: flex;
-  gap: 0.75rem;
+.admin-instance-manage-shell {
+  --workspace-line-soft: color-mix(in srgb, var(--color-text-primary) 10%, transparent);
 }
 </style>

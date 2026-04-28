@@ -18,6 +18,7 @@ import AWDScoreboardSummaryPanel from '@/components/platform/contest/AWDScoreboa
 import AWDServiceStatusPanel from '@/components/platform/contest/AWDServiceStatusPanel.vue'
 import AWDTrafficPanel from '@/components/platform/contest/AWDTrafficPanel.vue'
 import type {
+  AWDServiceAlertView,
   AWDRoundInspectorEmits,
   AWDRoundInspectorProps,
 } from '@/components/platform/contest/awdInspector.types'
@@ -29,8 +30,17 @@ import { useAwdInspectorDerivedData } from '@/composables/useAwdInspectorDerived
 import { useAwdInspectorExports } from '@/composables/useAwdInspectorExports'
 import { useAwdInspectorFormatting } from '@/composables/useAwdInspectorFormatting'
 
-const props = defineProps<AWDRoundInspectorProps & { initialTab?: 'matrix' | 'attacks' | 'traffic' | 'scoreboard' }>()
-const emit = defineEmits<AWDRoundInspectorEmits>()
+const props = defineProps<AWDRoundInspectorProps & { initialTab?: 'matrix' | 'attacks' | 'traffic' | 'scoreboard', hideStudioLink?: boolean }>()
+
+const emit = defineEmits<AWDRoundInspectorEmits & { 'open:contestEdit': [] }>()
+defineSlots<{
+  'service-alerts'?: (props: {
+    serviceAlerts: AWDServiceAlertView[]
+    selectedAlertKey: string
+    getServiceAlertClass: (alertKey: string) => string
+    applyServiceAlertFilter: (alertKey: string) => void
+  }) => unknown
+}>()
 
 const activeSubTab = ref<'matrix' | 'attacks' | 'traffic' | 'scoreboard'>(props.initialTab || 'matrix')
 
@@ -52,6 +62,7 @@ const {
   successfulAttackCount,
   failedAttackCount,
   attackedServiceCount,
+  manualCheckCount,
   checkButtonLabel,
 } = useAwdInspectorCoreState({
   contest: toRef(props, 'contest'),
@@ -85,12 +96,13 @@ const {
   challengeLinks: toRef(props, 'challengeLinks'),
   selectedRound,
   summaryMetrics,
-  manualCheckCount: toRef(props, 'manualCheckCount' as any),
+  manualCheckCount,
 })
 
 const {
   getCheckSourceLabel,
   getCheckerTypeLabel,
+  getCheckStatusLabel,
   summarizeCheckResult,
   getCheckActions,
   getCheckTargets,
@@ -127,7 +139,7 @@ const {
   attackResultFilter,
   attackSourceFilter,
   getChallengeTitle,
-  getCheckStatusLabel: (s: any) => s,
+  getCheckStatusLabel,
 })
 
 const {
@@ -202,64 +214,78 @@ function getServiceCheckPresentationResult(service: AWDTeamServiceData): Record<
       :get-round-status-label="getRoundStatusLabel"
       :get-round-status-class="getRoundStatusClass"
       :check-button-label="checkButtonLabel"
+      :hide-studio-link="hideStudioLink"
       @refresh="emit('refresh')"
       @open-create-round-dialog="emit('openCreateRoundDialog')"
       @open-service-check-dialog="emit('openServiceCheckDialog')"
       @open-attack-log-dialog="emit('openAttackLogDialog')"
       @run-selected-round-check="emit('runSelectedRoundCheck')"
       @update:selected-round-id="emit('update:selectedRoundId', $event)"
+      @open:contest-edit="emit('open:contestEdit')"
     />
 
-    <!-- 2. Integrated Metric HUD (Borderless) -->
+    <!-- 2. Integrated Metric HUD (Modern Dashboard Style) -->
     <div
       v-if="selectedRound"
       class="awd-stats-hud"
     >
-      <div class="stat-unit">
-        <div class="unit-label">
-          Infrastructure
+      <div class="stat-card">
+        <div class="stat-card__icon stat-card__icon--blue">
+          <Activity class="h-4 w-4" />
         </div>
-        <div class="unit-value font-mono">
-          {{ totalServiceCount }} <small>SRV</small>
-        </div>
-        <div class="unit-helper">
-          ONLINE: {{ upCount }} · OFF: {{ downCount }}
-        </div>
-      </div>
-      <div class="unit-divider" />
-      <div class="stat-unit">
-        <div class="unit-label">
-          Battle Traffic
-        </div>
-        <div class="unit-value font-mono">
-          {{ totalAttackCount }} <small>HITS</small>
-        </div>
-        <div class="unit-helper text-emerald-600">
-          SUCCESS: {{ successfulAttackCount }}
+        <div class="stat-card__content">
+          <div class="unit-label">Infrastructure</div>
+          <div class="unit-value font-mono">
+            {{ totalServiceCount }} <small>SRV</small>
+          </div>
+          <div class="unit-helper">
+            ONLINE: {{ upCount }} · OFF: {{ downCount }}
+          </div>
         </div>
       </div>
-      <div class="unit-divider" />
-      <div class="stat-unit">
-        <div class="unit-label">
-          Compromised
+
+      <div class="stat-card">
+        <div class="stat-card__icon stat-card__icon--green">
+          <Radar class="h-4 w-4" />
         </div>
-        <div class="unit-value font-mono text-orange-500">
-          {{ compromisedCount }} <small>EXP</small>
-        </div>
-        <div class="unit-helper">
-          AFFECTED: {{ attackedServiceCount }} TEAMS
+        <div class="stat-card__content">
+          <div class="unit-label">Battle Traffic</div>
+          <div class="unit-value font-mono">
+            {{ totalAttackCount }} <small>HITS</small>
+          </div>
+          <div class="unit-helper unit-helper--success">
+            SUCCESS: {{ successfulAttackCount }}
+          </div>
         </div>
       </div>
-      <div class="unit-divider" />
-      <div class="stat-unit">
-        <div class="unit-label">
-          Composition
+
+      <div class="stat-card">
+        <div class="stat-card__icon stat-card__icon--orange">
+          <ShieldAlert class="h-4 w-4" />
         </div>
-        <div class="unit-value">
-          {{ getSourceOverviewLabel() }}
+        <div class="stat-card__content">
+          <div class="unit-label">Compromised</div>
+          <div class="unit-value unit-value--warning font-mono">
+            {{ compromisedCount }} <small>EXP</small>
+          </div>
+          <div class="unit-helper">
+            AFFECTED: {{ attackedServiceCount }} TEAMS
+          </div>
         </div>
-        <div class="unit-helper">
-          {{ getSourceOverviewDescription() }}
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-card__icon stat-card__icon--purple">
+          <LayoutGrid class="h-4 w-4" />
+        </div>
+        <div class="stat-card__content">
+          <div class="unit-label">Composition</div>
+          <div class="unit-value">
+            {{ getSourceOverviewLabel() }}
+          </div>
+          <div class="unit-helper">
+            {{ getSourceOverviewDescription() }}
+          </div>
         </div>
       </div>
     </div>
@@ -333,23 +359,13 @@ function getServiceCheckPresentationResult(service: AWDTeamServiceData): Record<
             v-show="activeSubTab === 'matrix'"
             class="pane-matrix"
           >
-            <div
-              v-if="serviceAlerts.length > 0"
-              class="alert-banner mb-8"
-            >
-              <span class="banner-tag">重点异常告警</span>
-              <div class="alert-pills">
-                <button
-                  v-for="alert in serviceAlerts"
-                  :key="alert.key"
-                  class="alert-pill"
-                  :class="[getServiceAlertClass(alert.key), { 'is-active': serviceAlertReasonFilter === alert.key }]"
-                  @click="applyServiceAlertFilter(alert.key)"
-                >
-                  {{ alert.label }} ({{ alert.count }})
-                </button>
-              </div>
-            </div>
+            <slot
+              name="service-alerts"
+              :service-alerts="serviceAlerts"
+              :selected-alert-key="serviceAlertReasonFilter"
+              :get-service-alert-class="getServiceAlertClass"
+              :apply-service-alert-filter="applyServiceAlertFilter"
+            />
             <AWDServiceStatusPanel
               :services="services"
               :filtered-services="filteredServices"
@@ -453,15 +469,51 @@ function getServiceCheckPresentationResult(service: AWDTeamServiceData): Record<
 .awd-inspector-workbench { display: flex; flex-direction: column; height: 100%; }
 
 .awd-stats-hud {
-  display: flex; align-items: center; padding: 1.5rem 0;
-  background: transparent; border-bottom: 1px solid var(--color-border-default);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+  padding: 1.5rem 0;
+  background: transparent;
 }
-.stat-unit { flex: 1; display: flex; flex-direction: column; gap: 0.25rem; }
-.unit-label { font-size: 9px; font-weight: 800; text-transform: uppercase; color: var(--color-text-muted); letter-spacing: 0.1em; }
-.unit-value { font-size: 1.15rem; font-weight: 900; color: var(--color-text-primary); line-height: 1; }
-.unit-value small { font-size: 10px; opacity: 0.5; margin-left: 2px; }
+
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1.25rem;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 1rem;
+  transition: all 0.2s ease;
+}
+
+.stat-card:hover {
+  border-color: var(--color-border-default);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--color-text-primary) 4%, transparent);
+}
+
+.stat-card__icon {
+  width: 2.75rem;
+  height: 2.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem;
+}
+
+.stat-card__icon--blue { background: color-mix(in srgb, var(--color-primary) 10%, transparent); color: var(--color-primary); }
+.stat-card__icon--green { background: color-mix(in srgb, var(--color-success) 10%, transparent); color: var(--color-success); }
+.stat-card__icon--orange { background: color-mix(in srgb, var(--color-warning) 10%, transparent); color: var(--color-warning); }
+.stat-card__icon--purple { background: color-mix(in srgb, var(--color-secondary) 10%, transparent); color: var(--color-secondary); }
+
+.stat-card__content { flex: 1; display: flex; flex-direction: column; gap: 0.25rem; }
+
+.unit-label { font-size: 10px; font-weight: 800; text-transform: uppercase; color: var(--color-text-muted); letter-spacing: 0.05em; }
+.unit-value { font-size: 1.25rem; font-weight: 900; color: var(--color-text-primary); line-height: 1; }
+.unit-value small { font-size: 11px; opacity: 0.5; margin-left: 2px; }
 .unit-helper { font-size: 11px; font-weight: 600; color: var(--color-text-secondary); }
-.unit-divider { width: 1px; height: 2.5rem; background: var(--color-border-default); margin: 0 2rem; }
+.unit-helper--success { color: var(--color-success); }
+.unit-value--warning { color: var(--color-warning); }
 
 .awd-detail-canvas { flex: 1; display: flex; flex-direction: column; background: transparent; min-height: 0; }
 .canvas-tabs-header {
@@ -479,13 +531,6 @@ function getServiceCheckPresentationResult(service: AWDTeamServiceData): Record<
 
 .canvas-content { flex: 1; overflow-y: auto; padding: 2rem 0; position: relative; }
 .canvas-loading-overlay { position: absolute; inset: 0; background: color-mix(in srgb, var(--color-bg-base) 70%, transparent); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 10; }
-
-.alert-banner { display: flex; align-items: center; gap: 1.5rem; padding: 0.75rem 1.25rem; background: color-mix(in srgb, var(--color-warning) 10%, var(--color-bg-surface)); border: 1px solid color-mix(in srgb, var(--color-warning) 20%, transparent); border-radius: 0.75rem; }
-.banner-tag { font-size: 10px; font-weight: 800; color: var(--color-warning); text-transform: uppercase; }
-.alert-pills { display: flex; gap: 0.5rem; }
-.alert-pill { padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; border: 1px solid color-mix(in srgb, var(--color-warning) 30%, transparent); color: var(--color-warning); transition: all 0.2s ease; }
-.alert-pill:hover { background: var(--color-bg-elevated); }
-.alert-pill.is-active { background: var(--color-warning); color: white; border-color: var(--color-warning); }
 
 .ops-btn {
   display: inline-flex; align-items: center; justify-content: center;

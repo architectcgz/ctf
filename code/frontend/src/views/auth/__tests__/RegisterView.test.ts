@@ -30,13 +30,13 @@ describe('RegisterView', () => {
 
     await flushPromises()
 
-    expect(wrapper.text()).toContain('教学平台入口')
+    expect(wrapper.text()).toContain('CTF Platform Infrastructure')
     expect(wrapper.text()).toContain('训练空间')
     expect(wrapper.text()).toContain('教学协同')
     expect(wrapper.text()).toContain('系统值守')
-    expect(wrapper.text()).toContain('创建账号')
-    expect(wrapper.text()).toContain('已有账号')
-    expect(wrapper.text()).toContain('去登录')
+    expect(wrapper.text()).toContain('注册账号')
+    expect(wrapper.text()).toContain('已经有账号了')
+    expect(wrapper.text()).toContain('返回登录')
     expect(wrapper.findAll('input')).toHaveLength(3)
   })
 
@@ -71,15 +71,73 @@ describe('RegisterView', () => {
 
     await flushPromises()
 
-    expect(wrapper.get('button').attributes('type')).toBe('submit')
+    expect(wrapper.get('button[type="submit"]').attributes('type')).toBe('submit')
+  })
+
+  it('注册表单标签应与输入框建立明确关联', async () => {
+    const wrapper = mountRegisterView()
+
+    await flushPromises()
+
+    expect(wrapper.get('label[for="register-username"]').text()).toContain('用户名')
+    expect(wrapper.get('input#register-username').attributes('autocomplete')).toBe('username')
+    expect(wrapper.get('label[for="register-password"]').text()).toContain('设置密码')
+    expect(wrapper.get('input#register-password').attributes('autocomplete')).toBe('new-password')
+    expect(wrapper.get('label[for="register-class-name"]').text()).toContain('班级邀请码')
+    expect(wrapper.find('input#register-class-name').exists()).toBe(true)
+  })
+
+  it('注册失败时应停留在当前页并展示错误信息', async () => {
+    authMocks.register.mockRejectedValue(new Error('用户名已存在'))
+
+    const wrapper = mountRegisterView()
+    await flushPromises()
+
+    const usernameInput = wrapper.find('input[autocomplete="username"]')
+    const passwordInput = wrapper.find('input[autocomplete="new-password"]')
+
+    await usernameInput.setValue('alice')
+    await passwordInput.setValue('secure-pass')
+
+    await expect(wrapper.get('form').trigger('submit.prevent')).resolves.toBeUndefined()
+    await flushPromises()
+
+    expect(authMocks.register).toHaveBeenCalledWith({
+      username: 'alice',
+      password: 'secure-pass',
+      class_name: undefined,
+    })
+    expect(wrapper.text()).toContain('用户名已存在')
+    expect(wrapper.get('button[type="submit"]').attributes('disabled')).toBeUndefined()
+  })
+
+  it('注册进行中重复提交时只应发起一次请求', async () => {
+    authMocks.register.mockImplementation(() => new Promise(() => {}))
+
+    const wrapper = mountRegisterView()
+    await flushPromises()
+
+    const usernameInput = wrapper.find('input[autocomplete="username"]')
+    const passwordInput = wrapper.find('input[autocomplete="new-password"]')
+
+    await usernameInput.setValue('alice')
+    await passwordInput.setValue('secure-pass')
+
+    await wrapper.get('form').trigger('submit.prevent')
+    await wrapper.get('form').trigger('submit.prevent')
+
+    expect(authMocks.register).toHaveBeenCalledTimes(1)
+    expect(authMocks.register).toHaveBeenCalledWith({
+      username: 'alice',
+      password: 'secure-pass',
+      class_name: undefined,
+    })
   })
 
   it('注册表单应切到共享控件原语而不是继续使用 Element Plus 表单', () => {
     expect(registerViewSource).toContain('class="ui-control-wrap"')
     expect(registerViewSource).toContain('class="ui-control"')
-    expect(registerViewSource).toContain(
-      'class="ui-btn ui-btn--primary ui-btn--block auth-register-form__submit"'
-    )
+    expect(registerViewSource).toContain('class="ui-btn ui-btn--primary ui-btn--block auth-register-submit"')
     expect(registerViewSource).not.toContain('<ElForm')
     expect(registerViewSource).not.toContain('<ElFormItem')
     expect(registerViewSource).not.toContain('<ElInput')

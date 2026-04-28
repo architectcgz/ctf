@@ -1,6 +1,7 @@
 package queries
 
 import (
+	"context"
 	"errors"
 	"time"
 
@@ -21,14 +22,14 @@ func NewWriteupService(repo challengeports.ChallengeWriteupRepository) *WriteupS
 	return &WriteupService{repo: repo}
 }
 
-func (s *WriteupService) GetAdmin(challengeID int64) (*dto.AdminChallengeWriteupResp, error) {
-	if _, err := s.repo.FindByID(challengeID); err != nil {
+func (s *WriteupService) GetAdmin(ctx context.Context, challengeID int64) (*dto.AdminChallengeWriteupResp, error) {
+	if _, err := s.repo.FindByID(ctx, challengeID); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrChallengeNotFound
 		}
 		return nil, err
 	}
-	item, err := s.repo.FindWriteupByChallengeID(challengeID)
+	item, err := s.repo.FindWriteupByChallengeID(ctx, challengeID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrNotFound
@@ -38,8 +39,8 @@ func (s *WriteupService) GetAdmin(challengeID int64) (*dto.AdminChallengeWriteup
 	return domain.AdminWriteupRespFromModel(item), nil
 }
 
-func (s *WriteupService) GetPublished(userID, challengeID int64) (*dto.ChallengeWriteupResp, error) {
-	challengeItem, err := s.repo.FindByID(challengeID)
+func (s *WriteupService) GetPublished(ctx context.Context, userID, challengeID int64) (*dto.ChallengeWriteupResp, error) {
+	challengeItem, err := s.repo.FindByID(ctx, challengeID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrChallengeNotFound
@@ -50,7 +51,7 @@ func (s *WriteupService) GetPublished(userID, challengeID int64) (*dto.Challenge
 		return nil, errcode.ErrChallengeNotPublish
 	}
 
-	item, err := s.repo.FindReleasedWriteupByChallengeID(challengeID, time.Now())
+	item, err := s.repo.FindReleasedWriteupByChallengeID(ctx, challengeID, time.Now())
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrNotFound
@@ -58,7 +59,7 @@ func (s *WriteupService) GetPublished(userID, challengeID int64) (*dto.Challenge
 		return nil, err
 	}
 
-	isSolved, err := s.repo.GetSolvedStatus(userID, challengeID)
+	isSolved, err := s.repo.GetSolvedStatus(ctx, userID, challengeID)
 	if err != nil {
 		isSolved = false
 	}
@@ -78,8 +79,8 @@ func (s *WriteupService) GetPublished(userID, challengeID int64) (*dto.Challenge
 	}, nil
 }
 
-func (s *WriteupService) GetMySubmission(userID, challengeID int64) (*dto.SubmissionWriteupResp, error) {
-	challengeItem, err := s.repo.FindByID(challengeID)
+func (s *WriteupService) GetMySubmission(ctx context.Context, userID, challengeID int64) (*dto.SubmissionWriteupResp, error) {
+	challengeItem, err := s.repo.FindByID(ctx, challengeID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrChallengeNotFound
@@ -89,7 +90,7 @@ func (s *WriteupService) GetMySubmission(userID, challengeID int64) (*dto.Submis
 	if challengeItem.Status != model.ChallengeStatusPublished {
 		return nil, errcode.ErrChallengeNotPublish
 	}
-	item, err := s.repo.FindSubmissionWriteupByUserChallenge(userID, challengeID)
+	item, err := s.repo.FindSubmissionWriteupByUserChallenge(ctx, userID, challengeID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
@@ -99,12 +100,12 @@ func (s *WriteupService) GetMySubmission(userID, challengeID int64) (*dto.Submis
 	return domain.SubmissionWriteupRespFromModel(item), nil
 }
 
-func (s *WriteupService) ListRecommendedSolutions(userID, challengeID int64) (*dto.PageResult, error) {
-	if err := s.ensureSolvedChallengeVisible(userID, challengeID); err != nil {
+func (s *WriteupService) ListRecommendedSolutions(ctx context.Context, userID, challengeID int64) (*dto.PageResult[*dto.RecommendedChallengeSolutionResp], error) {
+	if err := s.ensureSolvedChallengeVisible(ctx, userID, challengeID); err != nil {
 		return nil, err
 	}
 
-	items, err := s.repo.ListRecommendedSolutionsByChallengeID(challengeID, time.Now())
+	items, err := s.repo.ListRecommendedSolutionsByChallengeID(ctx, challengeID, time.Now())
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +113,7 @@ func (s *WriteupService) ListRecommendedSolutions(userID, challengeID int64) (*d
 	for _, item := range items {
 		respItems = append(respItems, domain.RecommendedSolutionRespFromRecord(item))
 	}
-	return &dto.PageResult{
+	return &dto.PageResult[*dto.RecommendedChallengeSolutionResp]{
 		List:  respItems,
 		Total: int64(len(respItems)),
 		Page:  1,
@@ -120,8 +121,8 @@ func (s *WriteupService) ListRecommendedSolutions(userID, challengeID int64) (*d
 	}, nil
 }
 
-func (s *WriteupService) ListCommunitySolutions(userID, challengeID int64, query *dto.CommunityChallengeSolutionQuery) (*dto.PageResult, error) {
-	if err := s.ensureSolvedChallengeVisible(userID, challengeID); err != nil {
+func (s *WriteupService) ListCommunitySolutions(ctx context.Context, userID, challengeID int64, query *dto.CommunityChallengeSolutionQuery) (*dto.PageResult[*dto.CommunityChallengeSolutionResp], error) {
+	if err := s.ensureSolvedChallengeVisible(ctx, userID, challengeID); err != nil {
 		return nil, err
 	}
 
@@ -141,7 +142,7 @@ func (s *WriteupService) ListCommunitySolutions(userID, challengeID int64, query
 		}
 	}
 
-	items, total, err := s.repo.ListCommunitySolutionsByChallengeID(challengeID, normalized)
+	items, total, err := s.repo.ListCommunitySolutionsByChallengeID(ctx, challengeID, normalized)
 	if err != nil {
 		return nil, err
 	}
@@ -149,7 +150,7 @@ func (s *WriteupService) ListCommunitySolutions(userID, challengeID int64, query
 	for _, item := range items {
 		respItems = append(respItems, domain.CommunitySolutionRespFromRecord(item))
 	}
-	return &dto.PageResult{
+	return &dto.PageResult[*dto.CommunityChallengeSolutionResp]{
 		List:  respItems,
 		Total: total,
 		Page:  normalized.Page,
@@ -157,16 +158,16 @@ func (s *WriteupService) ListCommunitySolutions(userID, challengeID int64, query
 	}, nil
 }
 
-func (s *WriteupService) ListTeacherSubmissions(requesterID int64, requesterRole string, query *dto.TeacherSubmissionWriteupQuery) (*dto.PageResult, error) {
+func (s *WriteupService) ListTeacherSubmissions(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherSubmissionWriteupQuery) (*dto.PageResult[*dto.TeacherSubmissionWriteupItemResp], error) {
 	if query == nil {
 		query = &dto.TeacherSubmissionWriteupQuery{}
 	}
-	normalized, err := normalizeTeacherSubmissionQuery(s.repo, requesterID, requesterRole, query)
+	normalized, err := normalizeTeacherSubmissionQuery(ctx, s.repo, requesterID, requesterRole, query)
 	if err != nil {
 		return nil, err
 	}
 
-	items, total, err := s.repo.ListTeacherSubmissionWriteups(normalized)
+	items, total, err := s.repo.ListTeacherSubmissionWriteups(ctx, normalized)
 	if err != nil {
 		return nil, err
 	}
@@ -176,7 +177,7 @@ func (s *WriteupService) ListTeacherSubmissions(requesterID int64, requesterRole
 		respItems = append(respItems, domain.TeacherSubmissionWriteupItemRespFromRecord(item))
 	}
 
-	return &dto.PageResult{
+	return &dto.PageResult[*dto.TeacherSubmissionWriteupItemResp]{
 		List:  respItems,
 		Total: total,
 		Page:  normalized.Page,
@@ -184,21 +185,22 @@ func (s *WriteupService) ListTeacherSubmissions(requesterID int64, requesterRole
 	}, nil
 }
 
-func (s *WriteupService) GetTeacherSubmission(submissionID, requesterID int64, requesterRole string) (*dto.TeacherSubmissionWriteupDetailResp, error) {
-	record, err := s.repo.GetTeacherSubmissionWriteupByID(submissionID)
+func (s *WriteupService) GetTeacherSubmission(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*dto.TeacherSubmissionWriteupDetailResp, error) {
+	record, err := s.repo.GetTeacherSubmissionWriteupByID(ctx, submissionID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrNotFound
 		}
 		return nil, err
 	}
-	if err := ensureTeacherCanAccessQueryRecord(s.repo, requesterID, requesterRole, record); err != nil {
+	if err := ensureTeacherCanAccessQueryRecord(ctx, s.repo, requesterID, requesterRole, record); err != nil {
 		return nil, err
 	}
 	return domain.TeacherSubmissionWriteupDetailRespFromRecord(*record), nil
 }
 
 func normalizeTeacherSubmissionQuery(
+	ctx context.Context,
 	repo challengeports.ChallengeWriteupRepository,
 	requesterID int64,
 	requesterRole string,
@@ -215,7 +217,7 @@ func normalizeTeacherSubmissionQuery(
 		return &normalized, nil
 	}
 
-	requester, err := repo.FindUserByID(requesterID)
+	requester, err := repo.FindUserByID(ctx, requesterID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrUnauthorized
@@ -233,6 +235,7 @@ func normalizeTeacherSubmissionQuery(
 }
 
 func ensureTeacherCanAccessQueryRecord(
+	ctx context.Context,
 	repo challengeports.ChallengeWriteupRepository,
 	requesterID int64,
 	requesterRole string,
@@ -241,7 +244,7 @@ func ensureTeacherCanAccessQueryRecord(
 	if requesterRole == model.RoleAdmin {
 		return nil
 	}
-	requester, err := repo.FindUserByID(requesterID)
+	requester, err := repo.FindUserByID(ctx, requesterID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return errcode.ErrUnauthorized
@@ -254,8 +257,8 @@ func ensureTeacherCanAccessQueryRecord(
 	return nil
 }
 
-func (s *WriteupService) ensureSolvedChallengeVisible(userID, challengeID int64) error {
-	challengeItem, err := s.repo.FindByID(challengeID)
+func (s *WriteupService) ensureSolvedChallengeVisible(ctx context.Context, userID, challengeID int64) error {
+	challengeItem, err := s.repo.FindByID(ctx, challengeID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return errcode.ErrChallengeNotFound
@@ -265,7 +268,7 @@ func (s *WriteupService) ensureSolvedChallengeVisible(userID, challengeID int64)
 	if challengeItem.Status != model.ChallengeStatusPublished {
 		return errcode.ErrChallengeNotPublish
 	}
-	isSolved, err := s.repo.GetSolvedStatus(userID, challengeID)
+	isSolved, err := s.repo.GetSolvedStatus(ctx, userID, challengeID)
 	if err != nil {
 		return err
 	}

@@ -37,7 +37,7 @@ func NewInstanceService(repo runtimeports.InstanceRepository, cleaner runtimepor
 	}
 }
 
-func (s *InstanceService) DestroyInstanceWithContext(ctx context.Context, instanceID, userID int64) error {
+func (s *InstanceService) DestroyInstance(ctx context.Context, instanceID, userID int64) error {
 	ctx = normalizeContext(ctx)
 
 	instance, err := s.repo.FindAccessibleByIDForUser(ctx, instanceID, userID)
@@ -50,13 +50,16 @@ func (s *InstanceService) DestroyInstanceWithContext(ctx context.Context, instan
 	if instance.ShareScope == model.InstanceSharingShared {
 		return errcode.ErrForbidden
 	}
+	if isAWDTeamServiceInstance(instance) {
+		return errcode.ErrForbidden
+	}
 
 	s.logger.Info("销毁实例", zap.Int64("instance_id", instanceID), zap.Int64("user_id", userID))
 
-	return s.destroyManagedInstanceWithContext(ctx, instance)
+	return s.destroyManagedInstance(ctx, instance)
 }
 
-func (s *InstanceService) ExtendInstanceWithContext(ctx context.Context, instanceID, userID int64) (*dto.InstanceResp, error) {
+func (s *InstanceService) ExtendInstance(ctx context.Context, instanceID, userID int64) (*dto.InstanceResp, error) {
 	ctx = normalizeContext(ctx)
 
 	instance, err := s.repo.FindAccessibleByIDForUser(ctx, instanceID, userID)
@@ -69,11 +72,14 @@ func (s *InstanceService) ExtendInstanceWithContext(ctx context.Context, instanc
 	if instance.ShareScope == model.InstanceSharingShared {
 		return nil, errcode.ErrForbidden
 	}
+	if isAWDTeamServiceInstance(instance) {
+		return nil, errcode.ErrForbidden
+	}
 	if instance.Status != model.InstanceStatusRunning || !instance.ExpiresAt.After(time.Now()) {
 		return nil, errcode.ErrInstanceExpired
 	}
 
-	if err := s.repo.AtomicExtendByIDWithContext(ctx, instanceID, s.config.MaxExtends, s.config.ExtendDuration); err != nil {
+	if err := s.repo.AtomicExtendByID(ctx, instanceID, s.config.MaxExtends, s.config.ExtendDuration); err != nil {
 		return nil, err
 	}
 
@@ -93,10 +99,14 @@ func (s *InstanceService) ExtendInstanceWithContext(ctx context.Context, instanc
 	return toInstanceResp(updatedInstance), nil
 }
 
+func isAWDTeamServiceInstance(instance *model.Instance) bool {
+	return instance != nil && instance.ContestID != nil && instance.TeamID != nil && instance.ServiceID != nil
+}
+
 func (s *InstanceService) DestroyTeacherInstance(ctx context.Context, instanceID, requesterID int64, requesterRole string) error {
 	ctx = normalizeContext(ctx)
 
-	instance, err := s.repo.FindByID(instanceID)
+	instance, err := s.repo.FindByID(ctx, instanceID)
 	if err != nil {
 		return errcode.ErrInstanceNotFound
 	}
@@ -124,16 +134,16 @@ func (s *InstanceService) DestroyTeacherInstance(ctx context.Context, instanceID
 		zap.Int64("requester_id", requesterID),
 		zap.String("requester_role", requesterRole))
 
-	return s.destroyManagedInstanceWithContext(ctx, instance)
+	return s.destroyManagedInstance(ctx, instance)
 }
 
-func (s *InstanceService) destroyManagedInstanceWithContext(ctx context.Context, instance *model.Instance) error {
+func (s *InstanceService) destroyManagedInstance(ctx context.Context, instance *model.Instance) error {
 	if s.cleaner != nil {
-		if err := s.cleaner.CleanupRuntimeWithContext(ctx, instance); err != nil {
+		if err := s.cleaner.CleanupRuntime(ctx, instance); err != nil {
 			return errcode.ErrInternal.WithCause(err)
 		}
 	}
-	if err := s.repo.UpdateStatusAndReleasePort(instance.ID, model.InstanceStatusStopped); err != nil {
+	if err := s.repo.UpdateStatusAndReleasePort(ctx, instance.ID, model.InstanceStatusStopped); err != nil {
 		return errcode.ErrInternal.WithCause(err)
 	}
 	return nil
@@ -155,8 +165,5 @@ func toInstanceResp(inst *model.Instance) *dto.InstanceResp {
 }
 
 func normalizeContext(ctx context.Context) context.Context {
-	if ctx == nil {
-		return context.Background()
-	}
 	return ctx
 }

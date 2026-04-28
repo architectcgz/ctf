@@ -1348,6 +1348,28 @@ func (s *Scheduler) SelectNode(ctx context.Context,
 
 **私有 Registry 部署（多机必备）：**
 
+仓库提供了带 Basic Auth 的部署脚本，单机演示或小规模内网部署可以直接使用：
+
+```bash
+cp scripts/registry/deploy-private-registry.conf.example scripts/registry/deploy-private-registry.conf
+vim scripts/registry/deploy-private-registry.conf
+scripts/registry/deploy-private-registry.sh
+```
+
+`scripts/registry/deploy-private-registry.conf` 是本机部署配置文件，已被 `.gitignore` 忽略，不应提交到仓库。也可以通过 `--config` 指定其他配置文件：
+
+```bash
+scripts/registry/deploy-private-registry.sh --config /etc/ctf/private-registry.conf
+```
+
+脚本会启动 `registry:2` 容器，生成 htpasswd 认证文件，并在认证目录写入后端可加载的 `ctf-platform-registry.env`：
+
+```bash
+source "$HOME/ctf-registry/auth/ctf-platform-registry.env"
+```
+
+如果需要手工部署，等价流程如下：
+
 ```bash
 # 使用 Docker Registry 搭建私有镜像仓库
 docker run -d \
@@ -1361,6 +1383,49 @@ docker run -d \
 docker tag challenge-web:v1 registry.ctf.local:5000/challenge-web:v1
 docker push registry.ctf.local:5000/challenge-web:v1
 ```
+
+平台运行节点拉取私有镜像时，可以在后端配置中启用 `container.registry`。该配置只负责运行时 `docker pull` 的认证，不负责构建镜像或管理 registry 生命周期。
+
+```yaml
+container:
+  registry:
+    enabled: true
+    server: registry.ctf.local:5000
+    username: ctf
+    password: ${CTF_CONTAINER_REGISTRY_PASSWORD}
+```
+
+当前实现会按镜像引用中的 registry 域名匹配 `container.registry.server`，只有匹配时才向 Docker Engine 传递认证信息。例如 `registry.ctf.local:5000/challenge-web:v1` 会使用上述凭据，`nginx:latest` 不会使用该凭据。
+
+**私有 Registry 拉取烟测：**
+
+平台侧验证私有仓库拉取时，应使用带认证的 registry、已推送镜像和后端 runtime engine 共同验证，而不是只检查配置是否能读取。推荐流程如下：
+
+```bash
+# 1. 准备带认证的 registry，并确认未认证访问会被拒绝
+curl -o /dev/null -w '%{http_code}' http://127.0.0.1:15000/v2/
+# 预期：401
+
+# 2. 使用临时 Docker config 登录并推送测试镜像
+DOCKER_CONFIG=/tmp/ctf-registry-smoke-docker-config \
+  docker login 127.0.0.1:15000 -u ctf --password-stdin
+docker tag busybox:1.36 127.0.0.1:15000/ctf/private-registry-smoke:v1
+DOCKER_CONFIG=/tmp/ctf-registry-smoke-docker-config \
+  docker push 127.0.0.1:15000/ctf/private-registry-smoke:v1
+
+# 3. 删除本地同名 tag，确保后端必须从 registry 拉取
+docker image rm 127.0.0.1:15000/ctf/private-registry-smoke:v1
+
+# 4. 运行后端集成测试
+CTF_TEST_PRIVATE_REGISTRY_IMAGE=127.0.0.1:15000/ctf/private-registry-smoke:v1 \
+CTF_TEST_PRIVATE_REGISTRY_SERVER=127.0.0.1:15000 \
+CTF_TEST_PRIVATE_REGISTRY_USERNAME=ctf \
+CTF_TEST_PRIVATE_REGISTRY_PASSWORD=registry-token \
+go test -count=1 ./internal/module/runtime/infrastructure \
+  -run TestEnginePullsImageFromPrivateRegistryWithConfiguredAuth -v
+```
+
+该测试默认跳过，只有显式提供 `CTF_TEST_PRIVATE_REGISTRY_*` 环境变量时才会访问 Docker Engine 和私有 registry。测试通过表示平台运行时可以使用 `container.registry` 凭据完成真实 `docker pull`。
 
 ---
 

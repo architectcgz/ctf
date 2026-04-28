@@ -10,7 +10,7 @@ import (
 )
 
 func (s *AWDService) persistAttackLogAndScores(ctx context.Context, contestID, roundID int64, req *dto.CreateAWDAttackLogReq, logRecord *model.AWDAttackLog) error {
-	now := time.Now()
+	now := time.Now().UTC()
 	return s.repo.WithinTransaction(ctx, func(txRepo contestports.AWDRepository) error {
 		if err := txRepo.CreateAttackLog(ctx, logRecord); err != nil {
 			return err

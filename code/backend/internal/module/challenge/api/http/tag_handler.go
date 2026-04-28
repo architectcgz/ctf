@@ -1,6 +1,7 @@
 package http
 
 import (
+	"context"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -15,13 +16,13 @@ type TagHandler struct {
 }
 
 type tagCommandService interface {
-	CreateTag(req *dto.CreateTagReq) (*dto.TagResp, error)
-	AttachTags(challengeID int64, tagIDs []int64) error
-	DetachTags(challengeID int64, tagIDs []int64) error
+	CreateTag(ctx context.Context, req *dto.CreateTagReq) (*dto.TagResp, error)
+	AttachTags(ctx context.Context, challengeID int64, tagIDs []int64) error
+	DetachTags(ctx context.Context, challengeID int64, tagIDs []int64) error
 }
 
 type tagQueryService interface {
-	ListTags(tagType string) ([]*dto.TagResp, error)
+	ListTags(ctx context.Context, tagType string) ([]*dto.TagResp, error)
 }
 
 func NewTagHandler(commands tagCommandService, queries tagQueryService) *TagHandler {
@@ -35,7 +36,7 @@ func (h *TagHandler) CreateTag(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.commands.CreateTag(&req)
+	resp, err := h.commands.CreateTag(c.Request.Context(), &req)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -51,7 +52,7 @@ func (h *TagHandler) ListTags(c *gin.Context) {
 		return
 	}
 
-	result, err := h.queries.ListTags(query.Type)
+	result, err := h.queries.ListTags(c.Request.Context(), query.Type)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -73,7 +74,7 @@ func (h *TagHandler) AttachTags(c *gin.Context) {
 		return
 	}
 
-	if err := h.commands.AttachTags(id, req.TagIDs); err != nil {
+	if err := h.commands.AttachTags(c.Request.Context(), id, req.TagIDs); err != nil {
 		response.FromError(c, err)
 		return
 	}
@@ -94,7 +95,7 @@ func (h *TagHandler) DetachTags(c *gin.Context) {
 		return
 	}
 
-	if err := h.commands.DetachTags(id, req.TagIDs); err != nil {
+	if err := h.commands.DetachTags(c.Request.Context(), id, req.TagIDs); err != nil {
 		response.FromError(c, err)
 		return
 	}
