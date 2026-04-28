@@ -235,7 +235,19 @@ func (e *Engine) RemoveACLRules(ctx context.Context, rules []model.InstanceRunti
 }
 
 func (e *Engine) WriteFileToContainer(ctx context.Context, containerID, filePath string, content []byte) error {
-	dir := path.Dir(filePath)
+	if e == nil || e.cli == nil {
+		return fmt.Errorf("runtime engine is not configured")
+	}
+	if strings.TrimSpace(containerID) == "" {
+		return fmt.Errorf("container id is empty")
+	}
+
+	resolvedPath, err := e.resolveContainerFilePath(ctx, containerID, filePath)
+	if err != nil {
+		return err
+	}
+
+	dir := path.Dir(resolvedPath)
 	if dir == "." || dir == "" {
 		dir = "/"
 	}
@@ -243,7 +255,7 @@ func (e *Engine) WriteFileToContainer(ctx context.Context, containerID, filePath
 	var archive bytes.Buffer
 	tw := tar.NewWriter(&archive)
 	header := &tar.Header{
-		Name: path.Base(filePath),
+		Name: path.Base(resolvedPath),
 		Mode: 0o644,
 		Size: int64(len(content)),
 	}
@@ -271,7 +283,12 @@ func (e *Engine) ReadFileFromContainer(ctx context.Context, containerID, filePat
 		limit = 256 * 1024
 	}
 
-	reader, _, err := e.cli.CopyFromContainer(ctx, containerID, filePath)
+	resolvedPath, err := e.resolveContainerFilePath(ctx, containerID, filePath)
+	if err != nil {
+		return nil, err
+	}
+
+	reader, _, err := e.cli.CopyFromContainer(ctx, containerID, resolvedPath)
 	if err != nil {
 		return nil, err
 	}
@@ -313,6 +330,10 @@ func (e *Engine) ExecContainerCommand(ctx context.Context, containerID string, c
 	if limit <= 0 {
 		limit = 64 * 1024
 	}
+	workingDir, err := e.inspectContainerWorkingDir(ctx, containerID)
+	if err != nil {
+		return nil, err
+	}
 
 	execID, err := e.cli.ContainerExecCreate(ctx, containerID, container.ExecOptions{
 		AttachStdin:  len(stdin) > 0,
@@ -320,6 +341,7 @@ func (e *Engine) ExecContainerCommand(ctx context.Context, containerID string, c
 		AttachStderr: true,
 		Tty:          false,
 		Cmd:          command,
+		WorkingDir:   workingDir,
 	})
 	if err != nil {
 		return nil, err
@@ -344,6 +366,41 @@ func (e *Engine) ExecContainerCommand(ctx context.Context, containerID string, c
 		return nil, err
 	}
 	return output.Bytes(), nil
+}
+
+func (e *Engine) resolveContainerFilePath(ctx context.Context, containerID, filePath string) (string, error) {
+	workingDir, err := e.inspectContainerWorkingDir(ctx, containerID)
+	if err != nil {
+		return "", err
+	}
+	return resolveContainerFilePath(workingDir, filePath), nil
+}
+
+func (e *Engine) inspectContainerWorkingDir(ctx context.Context, containerID string) (string, error) {
+	info, err := e.cli.ContainerInspect(ctx, containerID)
+	if err != nil {
+		return "", err
+	}
+	if info.Config == nil {
+		return "", nil
+	}
+	return info.Config.WorkingDir, nil
+}
+
+func resolveContainerFilePath(workingDir, filePath string) string {
+	cleanFilePath := path.Clean(filePath)
+	if path.IsAbs(cleanFilePath) {
+		return cleanFilePath
+	}
+
+	base := strings.TrimSpace(workingDir)
+	if base == "" {
+		base = "/"
+	}
+	if !path.IsAbs(base) {
+		base = "/" + base
+	}
+	return path.Join(path.Clean(base), cleanFilePath)
 }
 
 func (e *Engine) ExecContainerInteractive(ctx context.Context, containerID string, command []string, stdin io.Reader, stdout io.Writer) error {
