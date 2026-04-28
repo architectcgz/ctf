@@ -346,4 +346,61 @@ describe('AWDRoundInspector', () => {
 
     expect(wrapper.emitted('applyTrafficFilters')).toEqual([[{ service_id: '7009' }]])
   })
+
+  it('轮次汇总应展示手动巡检合计，而不是渲染 undefined', () => {
+    const wrapper = mount(AWDRoundInspector, {
+      props: buildRequiredProps({
+        services: [
+          {
+            id: 'service-row-1',
+            round_id: 'round-1',
+            team_id: 'team-1',
+            team_name: 'Blue Team',
+            service_id: '7009',
+            challenge_id: '101',
+            challenge_title: 'Bank Portal',
+            service_status: 'up',
+            checker_type: 'http_standard',
+            check_result: {
+              check_source: 'manual_service_check',
+            },
+            attack_received: 0,
+            sla_score: 0,
+            defense_score: 0,
+            attack_score: 0,
+            updated_at: '2026-04-18T09:10:00.000Z',
+          },
+        ],
+        summary: {
+          round: baseRound,
+          metrics: {
+            total_service_count: 1,
+            service_up_count: 1,
+            service_down_count: 0,
+            service_compromised_count: 0,
+            attacked_service_count: 0,
+            defense_success_count: 0,
+            total_attack_count: 3,
+            successful_attack_count: 2,
+            failed_attack_count: 1,
+            scheduler_check_count: 0,
+            manual_current_round_check_count: 0,
+            manual_selected_round_check_count: 0,
+            manual_service_check_count: 1,
+            submission_attack_count: 3,
+            manual_attack_log_count: 0,
+            legacy_attack_log_count: 0,
+          },
+          items: [],
+        },
+      }),
+      global: {
+        stubs: globalStubs,
+      },
+    })
+
+    expect(wrapper.text()).toContain('巡检 调度 0 / 手动 1')
+    expect(wrapper.text()).toContain('日志 提交 3 / 人工 0 / 历史 0')
+    expect(wrapper.text()).not.toContain('undefined')
+  })
 })

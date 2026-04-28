@@ -62,6 +62,7 @@ const {
   successfulAttackCount,
   failedAttackCount,
   attackedServiceCount,
+  manualCheckCount,
   checkButtonLabel,
 } = useAwdInspectorCoreState({
   contest: toRef(props, 'contest'),
@@ -95,7 +96,7 @@ const {
   challengeLinks: toRef(props, 'challengeLinks'),
   selectedRound,
   summaryMetrics,
-  manualCheckCount: toRef(props, 'manualCheckCount' as any),
+  manualCheckCount,
 })
 
 const {
