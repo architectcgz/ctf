@@ -23,7 +23,7 @@ func (r *AWDRepository) UpsertRound(ctx context.Context, round *model.AWDRound) 
 			"status":     round.Status,
 			"started_at": round.StartedAt,
 			"ended_at":   round.EndedAt,
-			"updated_at": time.Now(),
+			"updated_at": time.Now().UTC(),
 		}),
 	}).Create(round).Error
 }

@@ -23,7 +23,7 @@ func (s *AWDService) prepareSubmitAttackContext(ctx context.Context, userID, con
 	if err != nil {
 		return nil, err
 	}
-	now := time.Now()
+	now := time.Now().UTC()
 	if !now.Before(contest.EndTime) {
 		return nil, errcode.ErrContestEnded
 	}

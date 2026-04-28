@@ -21,7 +21,7 @@ func (s *AWDService) RunCurrentRoundChecks(ctx context.Context, contestID int64,
 	if err != nil {
 		return nil, err
 	}
-	now := time.Now()
+	now := time.Now().UTC()
 	if !now.Before(contest.EndTime) {
 		return nil, errcode.ErrContestEnded
 	}

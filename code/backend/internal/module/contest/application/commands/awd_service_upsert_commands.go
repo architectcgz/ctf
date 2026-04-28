@@ -46,7 +46,7 @@ func (s *AWDService) UpsertServiceCheck(ctx context.Context, contestID, roundID 
 		req,
 		checkResult,
 		defenseScore,
-		time.Now(),
+		time.Now().UTC(),
 	)
 	if err != nil {
 		return nil, err
