@@ -219,11 +219,14 @@ export interface ChallengeDetailData {
 ```ts
 export type InstanceStatus = 'pending' | 'creating' | 'running' | 'expired' | 'destroying' | 'destroyed' | 'failed' | 'crashed'
 export type FlagType = 'static' | 'dynamic' | 'regex' | 'manual_review'
+export type InstanceSharing = 'per_user' | 'per_team' | 'shared'
 
 export interface InstanceData {
   id: ID
+  contest_mode?: ContestMode
   challenge_id: ID
   status: InstanceStatus
+  share_scope: InstanceSharing
   access_url?: string
   ssh_info?: { host: string; port: number; username: string }
   flag_type: FlagType
@@ -244,7 +247,7 @@ export interface InstanceData {
 
 `data`：`null`
 
-> 说明：若该实例是 AWD 队伍共享实例，则当前队伍成员均可销毁。
+> 说明：共享实例和 AWD 队伍服务实例不允许通过该接口由普通用户手动销毁；AWD 队伍服务实例由赛程和队伍工作台托管生命周期。
 
 ### 3.5 POST `/api/v1/instances/:id/extend`
 
@@ -258,7 +261,7 @@ export interface InstanceExtendData {
 }
 ```
 
-> 说明：若该实例是 AWD 队伍共享实例，则当前队伍成员均可续期。
+> 说明：共享实例和 AWD 队伍服务实例不允许通过该接口由普通用户手动续期；AWD 队伍服务实例由赛程和队伍工作台托管生命周期。
 
 ### 3.5.1 POST `/api/v1/instances/:id/access`
 

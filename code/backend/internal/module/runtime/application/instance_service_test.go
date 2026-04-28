@@ -236,6 +236,9 @@ func TestInstanceServiceGetUserInstancesPrefersContestAWDServiceMetadata(t *test
 	if items[0].AccessURL != "" {
 		t.Fatalf("expected awd user instance list to hide raw access url, got %q", items[0].AccessURL)
 	}
+	if items[0].ContestMode != model.ContestModeAWD {
+		t.Fatalf("expected awd contest mode in user instance list, got %+v", items[0])
+	}
 }
 
 func TestInstanceServiceGetUserInstancesFiltersLegacyAWDInstanceWithoutServiceID(t *testing.T) {

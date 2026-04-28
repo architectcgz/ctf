@@ -119,6 +119,7 @@ func toInstanceInfo(inst runtimeports.UserVisibleInstanceRow, now time.Time) *dt
 	}
 	return &dto.InstanceInfo{
 		ID:               inst.ID,
+		ContestMode:      inst.ContestMode,
 		ChallengeID:      inst.ChallengeID,
 		ChallengeTitle:   inst.ChallengeTitle,
 		Category:         inst.Category,

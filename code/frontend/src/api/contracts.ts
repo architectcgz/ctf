@@ -174,6 +174,7 @@ export type FlagType = 'static' | 'dynamic' | 'regex' | 'manual_review'
 
 export interface InstanceData {
   id: ID
+  contest_mode?: ContestMode
   challenge_id: ID
   status: InstanceStatus
   share_scope: InstanceSharing

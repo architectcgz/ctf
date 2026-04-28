@@ -77,6 +77,7 @@
 - 地址：`font-mono text-sm`，复制按钮 Lucide Copy
 - 倒计时：`font-mono`，每秒更新
 - 排队进度条：`bg-primary/20` 底色 + `bg-primary` 填充，轮询更新位置
+- 共享实例和 AWD 队伍服务实例隐藏“延时/销毁”，操作区显示“系统托管”
 
 ### 空状态
 - 图标：Lucide Server 48px

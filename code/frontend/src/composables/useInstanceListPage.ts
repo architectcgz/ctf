@@ -24,6 +24,18 @@ function isSharedInstance(instance: Pick<InstanceListItem, 'share_scope'>): bool
   return instance.share_scope === 'shared'
 }
 
+function isAWDTeamInstance(
+  instance: Pick<InstanceListItem, 'contest_mode' | 'share_scope'>
+): boolean {
+  return instance.contest_mode === 'awd' && instance.share_scope === 'per_team'
+}
+
+export function isInstanceManualActionAllowed(
+  instance: Pick<InstanceListItem, 'contest_mode' | 'share_scope'>
+): boolean {
+  return !isSharedInstance(instance) && !isAWDTeamInstance(instance)
+}
+
 function calculateRemaining(expiresAt: string): number {
   return Math.max(0, Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000))
 }
@@ -199,8 +211,10 @@ export function useInstanceListPage() {
 
   async function extendTime(id: string) {
     const target = instances.value.find((instance) => instance.id === id)
-    if (target && isSharedInstance(target)) {
-      toast.error('共享实例不支持手动延时')
+    if (target && !isInstanceManualActionAllowed(target)) {
+      toast.error(
+        isAWDTeamInstance(target) ? 'AWD 队伍实例不支持在此处延时或销毁' : '共享实例不支持手动延时'
+      )
       return
     }
     try {
@@ -238,8 +252,10 @@ export function useInstanceListPage() {
 
   async function destroyInstance(id: string) {
     const target = instances.value.find((instance) => instance.id === id)
-    if (target && isSharedInstance(target)) {
-      toast.error('共享实例不支持手动销毁')
+    if (target && !isInstanceManualActionAllowed(target)) {
+      toast.error(
+        isAWDTeamInstance(target) ? 'AWD 队伍实例不支持在此处延时或销毁' : '共享实例不支持手动销毁'
+      )
       return
     }
     const confirmed = await confirmDestructiveAction({
@@ -292,7 +308,7 @@ export function useInstanceListPage() {
       if (instance.status !== 'running') {
         return instance
       }
-      if (isSharedInstance(instance)) {
+      if (!isInstanceManualActionAllowed(instance)) {
         return instance
       }
 
