@@ -16,7 +16,7 @@ const contestOperationsHubCombinedSource = [
 describe('contest ui primitive adoption', () => {
   it('contest workspace pages should consume shared ui button and control primitives', () => {
     expect(contestOperationsHubCombinedSource).toContain('class="ui-btn ui-btn--ghost"')
-    expect(contestOperationsHubCombinedSource).toContain('class="ui-btn ui-btn--primary"')
+    expect(contestOperationsHubCombinedSource).toContain('class="ui-btn ui-btn--primary ui-btn--sm"')
     expect(contestOperationsHubCombinedSource).toContain('class="contest-ops-hero__actions"')
     expect(contestOperationsHubCombinedSource).toContain('class="contest-ops-actions"')
     expect(contestOperationsHubHeroPanelSource).toContain(
@@ -25,9 +25,11 @@ describe('contest ui primitive adoption', () => {
     expect(contestOperationsHubHeroPanelSource).not.toContain('--metric-panel-columns: 4;')
     expect(contestOperationsHubHeroPanelSource).toContain('<Trophy class="h-4 w-4" />')
     expect(contestOperationsHubCombinedSource).toContain(
-      'class="workspace-directory-list contest-ops-directory__list"'
+      'class="workspace-directory-list contest-ops-table"'
     )
-    expect(contestOperationsHubCombinedSource).toContain('class="contest-ops-row"')
+    expect(contestOperationsHubCombinedSource).toContain('<WorkspaceDataTable')
+    expect(contestOperationsHubCombinedSource).toContain('contestTableColumns')
+    expect(contestOperationsHubCombinedSource).not.toContain('class="contest-ops-row"')
     expect(contestOperationsHubCombinedSource).not.toContain('contest-ops-card')
     expect(contestOperationsHubSource).toContain('class="content-pane contest-ops-content"')
     expect(contestOperationsHubCombinedSource).toContain(
@@ -54,8 +56,10 @@ describe('contest ui primitive adoption', () => {
 
   it('contest directory rows should consume shared badge and row action primitives', () => {
     expect(adminContestTableSource).toContain('class="ui-badge contest-status-pill')
-    expect(adminContestTableSource).toContain('class="ui-row-actions contest-row__actions"')
+    expect(adminContestTableSource).toContain('class="ui-row-actions contest-table__actions')
     expect(adminContestTableSource).toContain('class="ui-btn ui-btn--sm ui-btn--primary')
+    expect(adminContestTableSource).toContain('<WorkspaceDataTable')
+    expect(adminContestTableSource).toContain('contestTableColumns')
     expect(adminContestTableSource).toContain("from '@/components/common/menus/CActionMenu.vue'")
     expect(adminContestTableSource).toContain('class="c-action-menu__trigger c-action-menu__trigger--icon')
     expect(adminContestTableSource).toContain('aria-label="更多竞赛操作"')

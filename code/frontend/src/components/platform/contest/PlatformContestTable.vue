@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { MoreHorizontal, Swords } from 'lucide-vue-next'
+import { MoreHorizontal } from 'lucide-vue-next'
 
 import type { ContestDetailData, ContestStatus } from '@/api/contracts'
 import CActionMenu from '@/components/common/menus/CActionMenu.vue'
+import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
 import PlatformPaginationControls from '@/components/platform/PlatformPaginationControls.vue'
 import { getModeLabel, getStatusLabel } from '@/utils/contest'
 
@@ -23,6 +24,14 @@ const emit = defineEmits<{
 
 const totalPages = computed(() => Math.max(1, Math.ceil(props.total / props.pageSize)))
 const openActionMenuId = ref<string | null>(null)
+const contestTableColumns = [
+  { key: 'title', label: '竞赛', widthClass: 'w-[30%] min-w-[17rem]' },
+  { key: 'mode', label: '模式', widthClass: 'w-[12%] min-w-[7rem]' },
+  { key: 'status', label: '状态', widthClass: 'w-[12%] min-w-[7rem]', align: 'center' as const },
+  { key: 'starts_at', label: '开始时间', widthClass: 'w-[16%] min-w-[10rem]' },
+  { key: 'ends_at', label: '结束时间', widthClass: 'w-[16%] min-w-[10rem]' },
+  { key: 'actions', label: '操作', widthClass: 'w-[14rem]', align: 'right' as const },
+]
 
 function formatTime(value: string): string {
   return new Date(value).toLocaleString('zh-CN', {
@@ -76,92 +85,91 @@ function handleAnnounce(contest: ContestDetailData): void {
 
 <template>
   <div class="space-y-5">
-    <div class="contest-directory workspace-directory-list">
-      <div
-        class="contest-directory-head"
-        aria-hidden="true"
-      >
-        <span>竞赛</span>
-        <span>模式</span>
-        <span>状态</span>
-        <span>开始时间</span>
-        <span>结束时间</span>
-        <span class="contest-directory-head__actions">操作</span>
-      </div>
-
-      <article
-        v-for="contest in contests"
-        :key="contest.id"
-        class="contest-row"
-      >
-        <div class="contest-row__identity">
+    <WorkspaceDataTable
+      class="contest-directory workspace-directory-list"
+      :columns="contestTableColumns"
+      :rows="contests"
+      row-key="id"
+    >
+      <template #cell-title="{ row }">
+        <div class="contest-table__identity">
           <h3
-            class="contest-row__title"
-            :title="contest.title"
+            class="contest-table__title"
+            :title="(row as ContestDetailData).title"
           >
-            {{ contest.title }}
+            {{ (row as ContestDetailData).title }}
           </h3>
-          <p class="contest-row__description">
-            {{ contest.description || '当前未填写竞赛描述。' }}
+          <p
+            class="contest-table__description"
+            :title="(row as ContestDetailData).description || '当前未填写竞赛描述。'"
+          >
+            {{ (row as ContestDetailData).description || '当前未填写竞赛描述。' }}
           </p>
         </div>
+      </template>
 
-        <div class="contest-row__mode">
-          {{ getModeLabel(contest.mode) }}
-        </div>
+      <template #cell-mode="{ row }">
+        <span class="contest-table__muted">
+          {{ getModeLabel((row as ContestDetailData).mode) }}
+        </span>
+      </template>
 
-        <div class="contest-row__status">
-          <span
-            class="ui-badge contest-status-pill"
-            :class="getStatusPillClass(contest.status)"
-          >
-            {{ getStatusLabel(contest.status) }}
-          </span>
-        </div>
+      <template #cell-status="{ row }">
+        <span
+          class="ui-badge contest-status-pill"
+          :class="getStatusPillClass((row as ContestDetailData).status)"
+        >
+          {{ getStatusLabel((row as ContestDetailData).status) }}
+        </span>
+      </template>
 
-        <div class="contest-row__starts-at">
-          <p>{{ formatTime(contest.starts_at) }}</p>
-        </div>
+      <template #cell-starts_at="{ row }">
+        <span class="contest-table__time contest-table__time--start">
+          {{ formatTime((row as ContestDetailData).starts_at) }}
+        </span>
+      </template>
 
-        <div class="contest-row__ends-at">
-          <p>{{ formatTime(contest.ends_at) }}</p>
-        </div>
+      <template #cell-ends_at="{ row }">
+        <span class="contest-table__time contest-table__time--end">
+          {{ formatTime((row as ContestDetailData).ends_at) }}
+        </span>
+      </template>
 
+      <template #cell-actions="{ row }">
         <div
-          class="ui-row-actions contest-row__actions ui-row-actions--fixed"
+          class="ui-row-actions contest-table__actions ui-row-actions--fixed"
           role="group"
           aria-label="竞赛操作"
         >
           <button
-            v-if="canEnterWorkbench(contest)"
-            :id="`contest-open-workbench-${contest.id}`"
+            v-if="canEnterWorkbench(row as ContestDetailData)"
+            :id="`contest-open-workbench-${(row as ContestDetailData).id}`"
             type="button"
             class="ui-btn ui-btn--sm ui-btn--primary contest-action contest-action--workbench ui-row-action--main"
-            @click="emit('workbench', contest)"
+            @click="emit('workbench', row as ContestDetailData)"
           >
-            <Swords class="h-3.5 w-3.5" />
-            进入运维台
+            运维
           </button>
           <button
-            :id="`contest-row-edit-${contest.id}`"
+            :id="`contest-row-edit-${(row as ContestDetailData).id}`"
             type="button"
             class="ui-btn ui-btn--sm ui-btn--secondary contest-action contest-action--edit ui-row-action--default"
-            @click="handleEdit(contest)"
+            @click="handleEdit(row as ContestDetailData)"
           >
             编辑
           </button>
           <CActionMenu
-            v-if="canOpenActionMenu(contest)"
-            :open="openActionMenuId === contest.id"
+            v-if="canOpenActionMenu(row as ContestDetailData)"
+            :open="openActionMenuId === (row as ContestDetailData).id"
             title="Management"
             menu-label="更多竞赛操作"
             accent="var(--journal-accent, var(--color-primary))"
             class="ui-row-action--menu"
-            @update:open="setActionMenuOpen(contest.id, $event)"
+            @update:open="setActionMenuOpen((row as ContestDetailData).id, $event)"
           >
             <template #trigger="{ open, toggle, setTriggerRef }">
               <button
-                :id="`contest-row-more-${contest.id}`"
+                :id="`contest-row-more-${(row as ContestDetailData).id}`"
                 :ref="setTriggerRef"
                 type="button"
                 class="c-action-menu__trigger c-action-menu__trigger--icon"
@@ -176,19 +184,19 @@ function handleAnnounce(contest: ContestDetailData): void {
 
             <template #default>
               <button
-                :id="`contest-row-menu-announce-${contest.id}`"
+                :id="`contest-row-menu-announce-${(row as ContestDetailData).id}`"
                 type="button"
                 class="c-action-menu__item"
                 role="menuitem"
-                @click="handleAnnounce(contest)"
+                @click="handleAnnounce(row as ContestDetailData)"
               >
                 发布通知
               </button>
             </template>
           </CActionMenu>
         </div>
-      </article>
-    </div>
+      </template>
+    </WorkspaceDataTable>
 
     <div class="admin-pagination workspace-directory-pagination contest-pagination-tone text-sm">
       <PlatformPaginationControls
@@ -204,54 +212,20 @@ function handleAnnounce(contest: ContestDetailData): void {
 
 <style scoped>
 .contest-directory {
-  --contest-directory-action-column: var(--ui-row-action-fixed-width);
-  --contest-directory-columns: minmax(17rem, 1.46fr) minmax(6rem, 0.54fr) minmax(7rem, 0.68fr)
-    minmax(9.5rem, 0.78fr) minmax(9.5rem, 0.78fr)
-    minmax(var(--contest-directory-action-column), var(--contest-directory-action-column));
-  display: grid;
-  gap: 0;
+  padding: 0;
 }
 
-.contest-directory-head {
-  display: grid;
-  grid-template-columns: var(--contest-directory-columns);
-  gap: var(--space-4);
-  padding: 0 0 var(--space-3);
-  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-  font-size: var(--font-size-11);
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--journal-muted);
+.contest-directory :deep(.workspace-data-table__cell + .workspace-data-table__cell) {
+  border-left: 1px solid var(--workspace-table-line);
 }
 
-.contest-directory-head > span {
-  min-width: 0;
-}
-
-.contest-directory-head__actions {
-  text-align: right;
-}
-
-.contest-row {
-  display: grid;
-  grid-template-columns: var(--contest-directory-columns);
-  gap: var(--space-4);
-  align-items: start;
-  padding: var(--space-4) 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-}
-
-.contest-row > div {
-  min-width: 0;
-}
-
-.contest-row__identity {
+.contest-table__identity {
   display: grid;
   gap: var(--space-1-5);
+  min-width: 0;
 }
 
-.contest-row__title {
+.contest-table__title {
   min-width: 0;
   margin: 0;
   overflow: hidden;
@@ -262,7 +236,7 @@ function handleAnnounce(contest: ContestDetailData): void {
   color: var(--journal-ink);
 }
 
-.contest-row__description {
+.contest-table__description {
   margin: 0;
   display: -webkit-box;
   overflow: hidden;
@@ -273,24 +247,21 @@ function handleAnnounce(contest: ContestDetailData): void {
   color: var(--journal-muted);
 }
 
-.contest-row__mode,
-.contest-row__starts-at,
-.contest-row__ends-at {
+.contest-table__muted,
+.contest-table__time {
+  display: block;
+  overflow: hidden;
   font-size: var(--font-size-13);
+  text-overflow: ellipsis;
+  white-space: nowrap;
   color: var(--journal-muted);
 }
 
-.contest-row__starts-at p,
-.contest-row__ends-at p {
-  margin: 0;
-  line-height: 1.45;
-}
-
-.contest-row__starts-at p {
+.contest-table__time--start {
   color: color-mix(in srgb, var(--journal-ink) 84%, var(--journal-muted));
 }
 
-.contest-row__ends-at p {
+.contest-table__time--end {
   color: color-mix(in srgb, var(--journal-muted) 88%, var(--journal-ink));
 }
 
@@ -339,7 +310,8 @@ function handleAnnounce(contest: ContestDetailData): void {
   --ui-badge-color: color-mix(in srgb, var(--journal-muted) 92%, var(--journal-ink));
 }
 
-.contest-row__actions {
+.contest-table__actions {
+  --ui-row-action-main-width: 4.25rem;
   justify-content: flex-end;
 }
 
@@ -348,17 +320,11 @@ function handleAnnounce(contest: ContestDetailData): void {
 }
 
 @media (max-width: 1023px) {
-  .contest-directory-head {
-    display: none;
+  .contest-directory :deep(.workspace-data-table) {
+    min-width: 58rem;
   }
 
-  .contest-row {
-    grid-template-columns: 1fr;
-    gap: var(--space-2-5);
-    padding: var(--space-4) 0;
-  }
-
-  .contest-row__actions {
+  .contest-table__actions {
     justify-content: flex-start;
   }
 }

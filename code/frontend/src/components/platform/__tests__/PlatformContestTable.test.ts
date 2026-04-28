@@ -3,6 +3,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import PlatformContestTable from '../contest/PlatformContestTable.vue'
 import adminContestTableSource from '../contest/PlatformContestTable.vue?raw'
+import workspaceDataTableSource from '@/components/common/WorkspaceDataTable.vue?raw'
 import type { ContestDetailData } from '@/api/contracts'
 
 function buildContest(overrides: Partial<ContestDetailData> = {}): ContestDetailData {
@@ -42,13 +43,18 @@ describe('PlatformContestTable', () => {
   })
 
   it('竞赛目录字号应与平台审计列表使用同一组目录 token', () => {
-    expect(adminContestTableSource).toContain('font-size: var(--font-size-11);')
+    expect(adminContestTableSource).toContain("from '@/components/common/WorkspaceDataTable.vue'")
+    expect(adminContestTableSource).toContain('<WorkspaceDataTable')
+    expect(adminContestTableSource).toContain('class="contest-directory workspace-directory-list"')
+    expect(workspaceDataTableSource).toContain('font-size: var(--font-size-11);')
     expect(adminContestTableSource).toContain('font-size: var(--font-size-14);')
     expect(adminContestTableSource).toContain('font-size: var(--font-size-13);')
     expect(adminContestTableSource).toContain('--ui-badge-size: var(--font-size-11);')
+    expect(adminContestTableSource).toContain('border-left: 1px solid var(--workspace-table-line);')
     expect(adminContestTableSource).not.toContain('font-size: var(--font-size-1-00);')
     expect(adminContestTableSource).not.toContain('font-size: var(--font-size-0-875);')
     expect(adminContestTableSource).not.toContain('font-size: var(--font-size-0-90);')
+    expect(workspaceDataTableSource).not.toContain('font-size: 0.6875rem;')
     expect(adminContestTableSource).not.toContain('--ui-badge-size: var(--font-size-0-78);')
   })
 
@@ -63,7 +69,7 @@ describe('PlatformContestTable', () => {
       },
     })
 
-    expect(wrapper.text()).toContain('进入运维台')
+    expect(wrapper.get('#contest-open-workbench-awd-running').text()).toBe('运维')
     expect(wrapper.findAll('.contest-action').length).toBe(2)
     expect(wrapper.get('#contest-row-edit-awd-running').text()).toContain('编辑')
 
@@ -88,14 +94,15 @@ describe('PlatformContestTable', () => {
   })
 
   it('行内操作应使用固定槽位，避免不同按钮数量导致编辑和更多入口错位', () => {
-    expect(adminContestTableSource).toContain('class="ui-row-actions contest-row__actions ui-row-actions--fixed"')
+    expect(adminContestTableSource).toContain('contestTableColumns')
+    expect(adminContestTableSource).toContain("{ key: 'actions', label: '操作', widthClass: 'w-[14rem]', align: 'right' as const }")
+    expect(adminContestTableSource).toContain('class="ui-row-actions contest-table__actions ui-row-actions--fixed"')
     expect(adminContestTableSource).toContain('ui-row-action--main')
     expect(adminContestTableSource).toContain('ui-row-action--default')
     expect(adminContestTableSource).toContain('ui-row-action--menu')
-    expect(adminContestTableSource).toContain('--contest-directory-action-column: var(--ui-row-action-fixed-width);')
-    expect(adminContestTableSource).toContain(
-      'minmax(var(--contest-directory-action-column), var(--contest-directory-action-column));'
-    )
+    expect(adminContestTableSource).toContain('--ui-row-action-main-width: 4.25rem;')
+    expect(adminContestTableSource).not.toContain('Swords')
+    expect(adminContestTableSource).not.toContain('--contest-directory-action-column')
     expect(adminContestTableSource).not.toContain('--contest-action-workbench-width')
     expect(adminContestTableSource).not.toContain('--contest-action-button-width')
     expect(adminContestTableSource).not.toContain('--contest-action-menu-width')
@@ -129,7 +136,7 @@ describe('PlatformContestTable', () => {
     wrapper.unmount()
   })
 
-  it('已结束竞赛不显示更多菜单，但仍可进入运维台与编辑', async () => {
+  it('已结束竞赛不显示更多菜单，但仍可进入运维与编辑', async () => {
     const wrapper = mount(PlatformContestTable, {
       attachTo: document.body,
       props: {
@@ -140,7 +147,7 @@ describe('PlatformContestTable', () => {
       },
     })
 
-    expect(wrapper.get('#contest-open-workbench-contest-ended').text()).toContain('进入运维台')
+    expect(wrapper.get('#contest-open-workbench-contest-ended').text()).toBe('运维')
     expect(wrapper.get('#contest-row-edit-contest-ended').text()).toContain('编辑')
     expect(wrapper.find('#contest-row-more-contest-ended').exists()).toBe(false)
 
