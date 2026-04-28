@@ -2,6 +2,7 @@
 import { computed, reactive, watch } from 'vue'
 
 import AdminSurfaceModal from '@/components/common/modal-templates/AdminSurfaceModal.vue'
+import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
 import type {
   AdminAwdServiceTemplateData,
   AdminChallengeListItem,
@@ -55,7 +56,7 @@ const fieldErrors = reactive({
 const dialogTitle = computed(() =>
   props.mode === 'create'
     ? isAwdContest.value
-      ? '关联 AWD 题库题目'
+      ? '关联 AWD 题库服务'
       : '关联赛事题目'
     : '编辑赛事题目'
 )
@@ -68,42 +69,51 @@ const selectableChallenges = computed(() =>
 const selectableTemplates = computed(() => props.templateOptions ?? [])
 
 const isAwdContest = computed(() => props.contestMode === 'awd')
-const selectedTemplate = computed<AdminAwdServiceTemplateData | null>(() =>
-  selectableTemplates.value.find((item) => item.id === form.template_id) || null
+const isAwdCreateMode = computed(() => isAwdContest.value && props.mode === 'create')
+const dialogWidth = computed(() =>
+  isAwdCreateMode.value ? 'min(60rem, calc(100vw - (var(--space-4) * 2)))' : '42rem'
 )
-const selectedTemplateSummary = computed(() => {
-  if (!selectedTemplate.value) {
-    return ''
-  }
-  return [
-    selectedTemplate.value.category.toUpperCase(),
-    selectedTemplate.value.difficulty,
-    selectedTemplate.value.service_type,
-    selectedTemplate.value.deployment_mode,
-  ].join(' · ')
-})
-const selectedTemplateSections = computed(() => {
-  if (!selectedTemplate.value) {
-    return []
-  }
-  return [
-    {
-      key: 'flag',
-      label: 'Flag',
-      value: selectedTemplate.value.flag_config,
-    },
-    {
-      key: 'access',
-      label: '访问入口',
-      value: selectedTemplate.value.access_config,
-    },
-    {
-      key: 'runtime',
-      label: '运行参数',
-      value: selectedTemplate.value.runtime_config,
-    },
-  ]
-})
+const showContestSelector = computed(() => !isAwdContest.value || props.mode === 'edit')
+const showContestSettings = computed(() => !isAwdCreateMode.value)
+const templateTableColumns = [
+  {
+    key: 'name',
+    label: '名称',
+    widthClass: 'w-[30%] min-w-[14rem]',
+    cellClass: 'contest-template-table__name-cell',
+  },
+  {
+    key: 'category',
+    label: '分类',
+    align: 'center' as const,
+    widthClass: 'w-[12%] min-w-[6rem]',
+  },
+  {
+    key: 'difficulty',
+    label: '难度',
+    align: 'center' as const,
+    widthClass: 'w-[12%] min-w-[6rem]',
+  },
+  {
+    key: 'service_type',
+    label: '服务类型',
+    align: 'center' as const,
+    widthClass: 'w-[16%] min-w-[8rem]',
+  },
+  {
+    key: 'deployment_mode',
+    label: '部署方式',
+    align: 'center' as const,
+    widthClass: 'w-[16%] min-w-[8rem]',
+  },
+  {
+    key: 'actions',
+    label: '选择',
+    align: 'right' as const,
+    widthClass: 'w-[7rem]',
+    cellClass: 'contest-template-table__actions-cell',
+  },
+]
 
 watch(
   () => [props.open, props.mode, props.draft, selectableChallenges.value, selectableTemplates.value] as const,
@@ -114,7 +124,9 @@ watch(
     form.challenge_id =
       props.mode === 'edit'
         ? props.draft?.challenge_id || ''
-        : selectableChallenges.value[0]?.id || ''
+        : isAwdContest.value
+          ? ''
+          : selectableChallenges.value[0]?.id || ''
     form.template_id = isAwdContest.value
       ? props.draft?.awd_template_id || selectableTemplates.value[0]?.id || ''
       : ''
@@ -137,11 +149,30 @@ function closeDialog() {
   emit('update:open', false)
 }
 
-function formatTemplateJSON(value?: Record<string, unknown>): string {
-  if (!value || Object.keys(value).length === 0) {
-    return '{}'
+function selectTemplate(templateId: string) {
+  form.template_id = templateId
+}
+
+function getServiceTypeLabel(value: AdminAwdServiceTemplateData['service_type']): string {
+  switch (value) {
+    case 'binary_tcp':
+      return 'Binary TCP'
+    case 'multi_container':
+      return 'Multi Container'
+    case 'web_http':
+    default:
+      return 'Web HTTP'
   }
-  return JSON.stringify(value, null, 2)
+}
+
+function getDeploymentModeLabel(value: AdminAwdServiceTemplateData['deployment_mode']): string {
+  switch (value) {
+    case 'topology':
+      return '拓扑'
+    case 'single_container':
+    default:
+      return '单容器'
+  }
 }
 
 function submit() {
@@ -151,7 +182,7 @@ function submit() {
 
   clearErrors()
 
-  if (!form.challenge_id.trim()) {
+  if (!isAwdContest.value && !form.challenge_id.trim()) {
     fieldErrors.challenge_id = '请选择题目'
   }
   if (isAwdContest.value && !form.template_id.trim()) {
@@ -178,7 +209,11 @@ function submit() {
   }
 
   emit('save', {
-    challenge_id: form.challenge_id ? Number(form.challenge_id) : undefined,
+    challenge_id: isAwdContest.value
+      ? undefined
+      : form.challenge_id
+        ? Number(form.challenge_id)
+        : undefined,
     template_id: isAwdContest.value ? Number(form.template_id) : undefined,
     points,
     order,
@@ -193,11 +228,11 @@ function submit() {
     :title="dialogTitle"
     :subtitle="
       isAwdContest
-        ? '在题目池里从 AWD 题库模板选题，先继承模板里的入口与攻防定义，再编排顺序、分值和可见性。'
+        ? '从 AWD 题库选择服务模板。'
         : '维护赛事题目的关联关系、顺序、分值和可见性。'
     "
     eyebrow="Contest Orchestration"
-    width="42rem"
+    :width="dialogWidth"
     @close="closeDialog"
     @update:open="emit('update:open', $event)"
   >
@@ -205,18 +240,12 @@ function submit() {
       class="contest-challenge-dialog"
       @submit.prevent="submit"
     >
-      <p
-        v-if="isAwdContest"
-        class="contest-challenge-dialog__hint"
-      >
-        这里先从 AWD 题库模板选题并继承端口、入口和 flag 策略；Checker 与预检细节继续在 AWD 配置页补充。
-      </p>
-
       <label
+        v-if="showContestSelector"
         class="ui-field contest-challenge-dialog__field"
         for="contest-challenge-select"
       >
-        <span class="ui-field__label contest-challenge-dialog__label">题目</span>
+        <span class="ui-field__label contest-challenge-dialog__label">{{ isAwdContest ? 'AWD 服务' : '题目' }}</span>
         <template v-if="mode === 'create'">
           <span
             class="ui-control-wrap"
@@ -259,100 +288,74 @@ function submit() {
         </span>
       </label>
 
-      <label
+      <section
         v-if="isAwdContest"
-        class="ui-field contest-challenge-dialog__field"
-        for="contest-challenge-template"
+        class="contest-template-list"
+        :class="{ 'is-error': !!fieldErrors.template_id }"
       >
-        <span class="ui-field__label contest-challenge-dialog__label">AWD 题库模板</span>
-        <span
-          class="ui-control-wrap"
-          :class="{
-            'is-disabled': loadingTemplateCatalog || selectableTemplates.length === 0,
-            'is-error': !!fieldErrors.template_id,
-          }"
+        <div class="contest-template-list__head">
+          <span class="ui-field__label contest-challenge-dialog__label">AWD 题库模板</span>
+          <span class="contest-template-list__count">
+            {{ loadingTemplateCatalog ? '加载中' : `${selectableTemplates.length} 个可选` }}
+          </span>
+        </div>
+        <div
+          v-if="selectableTemplates.length > 0"
+          class="contest-template-list__table workspace-directory-list"
         >
-          <select
-            id="contest-challenge-template"
-            v-model="form.template_id"
-            class="ui-control contest-challenge-dialog__control"
-            :disabled="loadingTemplateCatalog || selectableTemplates.length === 0"
+          <WorkspaceDataTable
+            :columns="templateTableColumns"
+            :rows="selectableTemplates"
+            row-key="id"
+            row-class="contest-template-table-row"
           >
-            <option
-              value=""
-              disabled
-            >
-              {{ loadingTemplateCatalog ? '正在加载 AWD 题库模板...' : '请选择 AWD 题库模板' }}
-            </option>
-            <option
-              v-for="template in selectableTemplates"
-              :key="template.id"
-              :value="template.id"
-            >
-              {{ template.name }}
-            </option>
-          </select>
-        </span>
+            <template #cell-name="{ row }">
+              <span class="contest-template-table__name">
+                {{ (row as AdminAwdServiceTemplateData).name }}
+              </span>
+            </template>
+            <template #cell-service_type="{ row }">
+              <span class="contest-template-table__mono">
+                {{ getServiceTypeLabel((row as AdminAwdServiceTemplateData).service_type) }}
+              </span>
+            </template>
+            <template #cell-deployment_mode="{ row }">
+              <span class="contest-template-table__text">
+                {{ getDeploymentModeLabel((row as AdminAwdServiceTemplateData).deployment_mode) }}
+              </span>
+            </template>
+            <template #cell-actions="{ row }">
+              <button
+                :id="`contest-template-option-${(row as AdminAwdServiceTemplateData).id}`"
+                type="button"
+                class="contest-template-option"
+                :class="{ 'is-selected': form.template_id === (row as AdminAwdServiceTemplateData).id }"
+                :aria-pressed="form.template_id === (row as AdminAwdServiceTemplateData).id"
+                @click="selectTemplate((row as AdminAwdServiceTemplateData).id)"
+              >
+                {{ form.template_id === (row as AdminAwdServiceTemplateData).id ? '已选择' : '选择' }}
+              </button>
+            </template>
+          </WorkspaceDataTable>
+        </div>
+        <div
+          v-else
+          class="contest-template-list__empty"
+        >
+          {{ loadingTemplateCatalog ? '正在加载 AWD 题库模板...' : '暂无可选 AWD 题库模板' }}
+        </div>
         <span
           v-if="fieldErrors.template_id"
           class="ui-field__error contest-challenge-dialog__error"
         >
           {{ fieldErrors.template_id }}
         </span>
-      </label>
-
-      <section
-        v-if="isAwdContest && selectedTemplate"
-        class="contest-challenge-dialog__template-card"
-      >
-        <header class="contest-challenge-dialog__template-head">
-          <div>
-            <div class="journal-note-label">
-              Template Snapshot
-            </div>
-            <h3 class="contest-challenge-dialog__template-title">
-              题库模板快照
-            </h3>
-          </div>
-          <p class="contest-challenge-dialog__template-copy">
-            这部分内容来自 AWD 题库定义，比赛里的服务会以它为基础生成。
-          </p>
-        </header>
-
-        <div class="contest-challenge-dialog__template-chips">
-          <div class="contest-challenge-dialog__template-chip">
-            <span class="contest-challenge-dialog__template-chip-label">模板</span>
-            <span class="contest-challenge-dialog__template-chip-value">{{ selectedTemplate.name }}</span>
-          </div>
-          <div class="contest-challenge-dialog__template-chip">
-            <span class="contest-challenge-dialog__template-chip-label">摘要</span>
-            <span class="contest-challenge-dialog__template-chip-value">{{ selectedTemplateSummary }}</span>
-          </div>
-          <div class="contest-challenge-dialog__template-chip">
-            <span class="contest-challenge-dialog__template-chip-label">防守入口</span>
-            <span class="contest-challenge-dialog__template-chip-value">{{ selectedTemplate.defense_entry_mode || '未定义' }}</span>
-          </div>
-          <div class="contest-challenge-dialog__template-chip">
-            <span class="contest-challenge-dialog__template-chip-label">Flag 模式</span>
-            <span class="contest-challenge-dialog__template-chip-value">{{ selectedTemplate.flag_mode || '未定义' }}</span>
-          </div>
-        </div>
-
-        <div class="contest-challenge-dialog__template-grid">
-          <article
-            v-for="section in selectedTemplateSections"
-            :key="section.key"
-            class="contest-challenge-dialog__template-panel"
-          >
-            <h4 class="contest-challenge-dialog__template-panel-title">
-              {{ section.label }}
-            </h4>
-            <pre class="contest-challenge-dialog__template-json">{{ formatTemplateJSON(section.value) }}</pre>
-          </article>
-        </div>
       </section>
 
-      <div class="contest-challenge-dialog__grid">
+      <div
+        v-if="showContestSettings"
+        class="contest-challenge-dialog__grid"
+      >
         <label
           class="ui-field contest-challenge-dialog__field"
           for="contest-challenge-points"
@@ -407,6 +410,7 @@ function submit() {
       </div>
 
       <label
+        v-if="showContestSettings"
         class="ui-field contest-challenge-dialog__field"
         for="contest-challenge-visibility"
       >
@@ -440,7 +444,7 @@ function submit() {
           :disabled="saving"
           @click="submit"
         >
-          {{ saving ? '保存中...' : mode === 'create' ? '关联题目' : '保存变更' }}
+          {{ saving ? '保存中...' : mode === 'create' ? (isAwdContest ? '关联服务' : '关联题目') : '保存变更' }}
         </button>
       </div>
     </template>
@@ -476,99 +480,100 @@ function submit() {
   background: color-mix(in srgb, var(--journal-surface) 96%, transparent);
 }
 
-.contest-challenge-dialog__hint {
-  margin: 0;
-  font-size: var(--font-size-0-875);
-  color: var(--journal-muted);
-}
-
-.contest-challenge-dialog__template-card {
+.contest-template-list {
   display: grid;
-  gap: var(--space-4);
-  padding: var(--space-4);
-  border: 1px solid var(--color-border-default);
-  border-radius: 1rem;
-  background: var(--color-bg-surface);
+  gap: var(--space-3);
 }
 
-.contest-challenge-dialog__template-head {
+.contest-template-list__head {
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
 }
 
-.contest-challenge-dialog__template-title {
-  margin: var(--space-1) 0 0;
-  font-size: var(--font-size-1-125);
-  font-weight: 700;
-  color: var(--color-text-primary);
-}
-
-.contest-challenge-dialog__template-copy {
-  margin: 0;
-  max-width: 22rem;
-  font-size: var(--font-size-0-875);
-  line-height: 1.6;
-  color: var(--journal-muted);
-}
-
-.contest-challenge-dialog__template-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-}
-
-.contest-challenge-dialog__template-chip {
-  display: grid;
-  gap: 0.15rem;
-  min-width: 10rem;
-  padding: 0.8rem 0.9rem;
-  border-radius: 0.85rem;
-  border: 1px solid var(--color-border-subtle);
-  background: var(--color-bg-elevated);
-}
-
-.contest-challenge-dialog__template-chip-label {
+.contest-template-list__count {
   font-size: var(--font-size-0-75);
   color: var(--journal-muted);
 }
 
-.contest-challenge-dialog__template-chip-value {
-  font-weight: 600;
-  color: var(--color-text-primary);
-  word-break: break-word;
-}
-
-.contest-challenge-dialog__template-grid {
-  display: grid;
-  gap: var(--space-3);
-}
-
-.contest-challenge-dialog__template-panel {
-  display: grid;
-  gap: var(--space-2);
-  padding: 0.85rem;
-  border-radius: 0.85rem;
-  border: 1px solid var(--color-border-subtle);
-  background: var(--color-bg-elevated);
-}
-
-.contest-challenge-dialog__template-panel-title {
-  margin: 0;
+.contest-template-list__empty {
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--ui-control-radius);
+  background: var(--color-bg-surface);
+  padding: var(--space-4);
+  color: var(--journal-muted);
   font-size: var(--font-size-0-875);
-  font-weight: 700;
+}
+
+.contest-template-list__table {
+  max-height: clamp(12rem, calc(100dvh - 18rem), 30rem);
+  overflow: auto;
+}
+
+.contest-template-list__table :deep(.workspace-data-table) {
+  min-width: 48rem;
+}
+
+.contest-template-list__table :deep(.workspace-data-table__head-cell) {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--color-bg-surface);
+}
+
+.contest-template-table__name {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--font-size-0-875);
+  font-weight: 800;
   color: var(--color-text-primary);
 }
 
-.contest-challenge-dialog__template-json {
-  margin: 0;
-  font-family: var(--font-family-mono);
+.contest-template-table__mono,
+.contest-template-table__text {
   font-size: var(--font-size-0-75);
-  line-height: 1.6;
+  font-weight: 700;
   color: var(--color-text-secondary);
-  white-space: pre-wrap;
-  word-break: break-word;
+}
+
+.contest-template-table__mono {
+  font-family: var(--font-family-mono);
+}
+
+.contest-template-option {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--ui-control-height-sm);
+  min-width: 4.5rem;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--ui-control-radius-md);
+  background: var(--color-bg-surface);
+  padding: 0 var(--space-3);
+  font-size: var(--font-size-0-75);
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition:
+    background var(--ui-motion-fast),
+    border-color var(--ui-motion-fast),
+    color var(--ui-motion-fast);
+}
+
+.contest-template-option:hover,
+.contest-template-option:focus-visible {
+  border-color: color-mix(in srgb, var(--color-primary) 62%, var(--color-border-default));
+  background: color-mix(in srgb, var(--color-primary) 8%, var(--color-bg-surface));
+  color: var(--color-primary);
+}
+
+.contest-template-option.is-selected {
+  border-color: color-mix(in srgb, var(--color-primary) 70%, var(--color-border-default));
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
 }
 
 .contest-challenge-dialog__error {
