@@ -22,6 +22,7 @@ import type {
   ContestAWDWorkspaceServiceData,
   ContestChallengeItem,
   ContestDetailData,
+  SSHProfileData,
 } from '@/api/contracts'
 import { formatTime } from '@/utils/format'
 
@@ -281,8 +282,24 @@ function getSSHAccess(serviceId?: string) {
   return sshAccessByServiceId.value[serviceId]
 }
 
+function buildOpenSSHConfig(profile?: SSHProfileData): string {
+  if (!profile) return ''
+  return [
+    `Host ${profile.alias}`,
+    `  HostName ${profile.host_name}`,
+    `  Port ${profile.port}`,
+    `  User ${profile.user}`,
+    '',
+  ].join('\n')
+}
+
+function getOpenSSHConfig(serviceId?: string): string {
+  const access = getSSHAccess(serviceId)
+  return buildOpenSSHConfig(access?.ssh_profile)
+}
+
 async function copySSHConfig(serviceId?: string): Promise<void> {
-  const config = getSSHAccess(serviceId)?.vscode_config
+  const config = getOpenSSHConfig(serviceId)
   if (!serviceId || !config || typeof navigator === 'undefined' || !navigator.clipboard) {
     return
   }
@@ -444,11 +461,11 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
                       PASS {{ getSSHAccess(challenge.awd_service_id)?.password }}
                     </div>
                     <pre
-                      v-if="getSSHAccess(challenge.awd_service_id)?.vscode_config"
+                      v-if="getOpenSSHConfig(challenge.awd_service_id)"
                       class="asset-ssh__config"
-                    >{{ getSSHAccess(challenge.awd_service_id)?.vscode_config }}</pre>
+                    >{{ getOpenSSHConfig(challenge.awd_service_id) }}</pre>
                     <button
-                      v-if="getSSHAccess(challenge.awd_service_id)?.vscode_config"
+                      v-if="getOpenSSHConfig(challenge.awd_service_id)"
                       class="asset-ssh__copy"
                       type="button"
                       @click="copySSHConfig(challenge.awd_service_id)"

@@ -91,9 +91,14 @@ func TestRuntimeHTTPServiceAdapterBuildsVSCodeSSHConfig(t *testing.T) {
 		t.Fatalf("IssueAWDDefenseSSHTicket() error = %v", err)
 	}
 
-	expectedConfig := "Host ctf-awd-5-12\n  HostName ssh.ctf.local\n  Port 2222\n  User student+5+12\n"
-	if resp.VSCodeConfig != expectedConfig {
-		t.Fatalf("unexpected vscode ssh config:\n%s", resp.VSCodeConfig)
+	if resp.SSHProfile == nil {
+		t.Fatal("expected ssh profile in response")
+	}
+	if resp.SSHProfile.Alias != "ctf-awd-5-12" ||
+		resp.SSHProfile.HostName != "ssh.ctf.local" ||
+		resp.SSHProfile.Port != 2222 ||
+		resp.SSHProfile.User != "student+5+12" {
+		t.Fatalf("unexpected ssh profile: %+v", resp.SSHProfile)
 	}
 }
 
