@@ -407,6 +407,83 @@ describe('ContestChallengeOrchestrationPanel', () => {
     expect(contestApiMocks.createAdminContestChallenge).not.toHaveBeenCalled()
   })
 
+  it('应该在 AWD 题目池新增弹层中一次关联多个 AWD 题目', async () => {
+    contestApiMocks.listAdminAwdChallenges.mockResolvedValue({
+      list: [
+        {
+          id: '11',
+          name: 'Upload HTTP 模板',
+          slug: 'upload-http',
+          category: 'web',
+          difficulty: 'medium',
+          description: 'http service',
+          service_type: 'web_http',
+          deployment_mode: 'single_container',
+          version: '1.0.0',
+          status: 'published',
+          readiness_status: 'passed',
+          created_at: '2026-03-01T00:00:00.000Z',
+          updated_at: '2026-03-01T00:00:00.000Z',
+        },
+        {
+          id: '12',
+          name: 'IoT TCP 模板',
+          slug: 'iot-tcp',
+          category: 'misc',
+          difficulty: 'easy',
+          description: 'tcp service',
+          service_type: 'binary_tcp',
+          deployment_mode: 'single_container',
+          version: '1.0.0',
+          status: 'published',
+          readiness_status: 'passed',
+          created_at: '2026-03-01T00:00:00.000Z',
+          updated_at: '2026-03-01T00:00:00.000Z',
+        },
+      ],
+      total: 2,
+      page: 1,
+      page_size: 100,
+    })
+    contestApiMocks.createContestAWDService.mockResolvedValue({
+      id: 'service-2',
+      contest_id: 'contest-1',
+      challenge_id: '11',
+      awd_challenge_id: '11',
+      display_name: 'Upload Service',
+      order: 0,
+      is_visible: true,
+      created_at: '2026-03-10T01:00:00.000Z',
+      updated_at: '2026-03-10T01:00:00.000Z',
+    })
+
+    const wrapper = mountPanel({
+      contestMode: 'awd',
+    })
+
+    await flushPromises()
+    await wrapper.get('#contest-challenge-add').trigger('click')
+    await flushPromises()
+
+    await wrapper.get('#contest-template-option-12').trigger('click')
+    await wrapper.get('#contest-challenge-dialog-submit').trigger('click')
+    await flushPromises()
+
+    expect(contestApiMocks.createContestAWDService).toHaveBeenCalledTimes(2)
+    expect(contestApiMocks.createContestAWDService).toHaveBeenNthCalledWith(1, 'contest-1', {
+      awd_challenge_id: 11,
+      points: 100,
+      order: 0,
+      is_visible: true,
+    })
+    expect(contestApiMocks.createContestAWDService).toHaveBeenNthCalledWith(2, 'contest-1', {
+      awd_challenge_id: 12,
+      points: 100,
+      order: 1,
+      is_visible: true,
+    })
+  })
+
   it('应该在 AWD 题目池编辑时同步更新 service 模板，并仅更新关系层分值', async () => {
     contestApiMocks.listAdminContestChallenges.mockResolvedValue([
       buildChallenge(),

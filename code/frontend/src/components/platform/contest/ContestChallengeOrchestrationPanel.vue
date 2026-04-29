@@ -242,6 +242,7 @@ function setActionMenuOpen(challengeId: string, nextOpen: boolean): void {
 interface ContestOrchestrationSavePayload {
   challenge_id?: number
   awd_challenge_id?: number
+  awd_challenge_ids?: number[]
   points: number
   order: number
   is_visible: boolean
@@ -256,23 +257,32 @@ async function handleSave(payload: ContestOrchestrationSavePayload) {
   saving.value = true
   try {
     if (isAwdContest.value) {
-      if (!payload.awd_challenge_id) {
+      const awdChallengeIds =
+        dialogMode.value === 'create' && payload.awd_challenge_ids?.length
+          ? payload.awd_challenge_ids
+          : payload.awd_challenge_id
+            ? [payload.awd_challenge_id]
+            : []
+
+      if (awdChallengeIds.length === 0) {
         toast.error('请选择 AWD 题目')
         return
       }
       if (dialogMode.value === 'create') {
-        await createContestAWDService(props.contestId, {
-          awd_challenge_id: payload.awd_challenge_id,
-          points: payload.points,
-          order: payload.order,
-          is_visible: payload.is_visible,
-        })
+        for (const [index, awdChallengeId] of awdChallengeIds.entries()) {
+          await createContestAWDService(props.contestId, {
+            awd_challenge_id: awdChallengeId,
+            points: payload.points,
+            order: payload.order + index,
+            is_visible: payload.is_visible,
+          })
+        }
       } else if (editingChallenge.value) {
         await updateContestAWDService(
           props.contestId,
           editingChallenge.value.awd_service_id!,
           {
-            awd_challenge_id: payload.awd_challenge_id,
+            awd_challenge_id: awdChallengeIds[0],
             points: payload.points,
             order: payload.order,
             is_visible: payload.is_visible,
