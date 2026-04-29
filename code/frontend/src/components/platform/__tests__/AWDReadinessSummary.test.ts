@@ -24,7 +24,7 @@ function buildReadiness(overrides: Partial<AWDReadinessData> = {}): AWDReadiness
 }
 
 describe('AWDReadinessSummary', () => {
-  it('应该显示可开赛 / 可强制开赛 / 不可开赛结论', () => {
+  it('应该显示可开赛 / 待修复 / 不可开赛结论', () => {
     const readyWrapper = mount(AWDReadinessSummary, {
       props: {
         loading: false,
@@ -39,7 +39,7 @@ describe('AWDReadinessSummary', () => {
       },
     })
 
-    const forceStartWrapper = mount(AWDReadinessSummary, {
+    const needsFixWrapper = mount(AWDReadinessSummary, {
       props: {
         loading: false,
         readiness: buildReadiness({
@@ -69,7 +69,8 @@ describe('AWDReadinessSummary', () => {
     })
 
     expect(readyWrapper.text()).toContain('可开赛')
-    expect(forceStartWrapper.text()).toContain('可强制开赛')
+    expect(needsFixWrapper.text()).toContain('待修复')
+    expect(needsFixWrapper.text()).not.toContain('可强制开赛')
     expect(blockedWrapper.text()).toContain('不可开赛')
   })
 
@@ -89,7 +90,7 @@ describe('AWDReadinessSummary', () => {
       },
     })
 
-    expect(wrapper.text()).toContain('系统级阻塞仍会拦截开赛关键动作')
+    expect(wrapper.text()).toContain('请先处理上方系统级阻塞项')
     expect(wrapper.text()).not.toContain('题目侧的 checker 校验已经满足开赛关键动作要求')
   })
 

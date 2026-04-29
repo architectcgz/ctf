@@ -112,6 +112,29 @@ describe('NotificationDropdown', () => {
     expect(notificationDropdownSource).not.toContain('h-[1px]')
   })
 
+  it('通知抽屉头部应将消息数收进一行，并把操作按钮放到同一行', () => {
+    expect(notificationDropdownSource).toContain('class="notification-summary-stack mt-2"')
+    expect(notificationDropdownSource).toContain(
+      'class="notification-summary notification-summary-line text-xs font-medium"'
+    )
+    expect(notificationDropdownSource).toContain('消息数')
+    expect(notificationDropdownSource).toContain('未读数')
+    expect(notificationDropdownSource).toContain('class="notification-summary-actions"')
+    expect(notificationDropdownSource).toMatch(
+      /\.notification-summary-actions\s*\{[^}]*align-items:\s*center;[^}]*justify-content:\s*space-between;[^}]*gap:\s*var\(--space-3\);/s
+    )
+    expect(notificationDropdownSource).toMatch(
+      /\.notification-summary__value,\s*\.notification-summary__accent\s*\{[^}]*font-size:\s*var\(--font-size-16\);/s
+    )
+    expect(notificationDropdownSource).toContain(
+      'class="notification-summary-link notification-summary-action-row text-xs font-bold transition-colors"'
+    )
+    expect(notificationDropdownSource).not.toContain(
+      'class="flex items-center justify-between mt-2"'
+    )
+    expect(notificationDropdownSource).not.toContain('notification-summary-divider')
+  })
+
   it('navigates to notification detail when clicking a timeline item', async () => {
     const { wrapper, router } = await openDropdown()
 

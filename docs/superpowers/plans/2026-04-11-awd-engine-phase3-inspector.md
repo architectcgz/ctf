@@ -66,7 +66,7 @@ npm run test:run -- src/composables/__tests__/useAwdCheckResultPresentation.test
 - Modify: `code/frontend/src/api/admin.ts`
 - Modify: `code/frontend/src/composables/useAwdCheckResultPresentation.ts`
 - Modify: `code/frontend/src/composables/useAwdInspectorExports.ts`
-- Modify: `code/frontend/src/components/admin/contest/AWDRoundInspector.vue`
+- Modify: `code/frontend/src/components/platform/contest/AWDRoundInspector.vue`
 
 - [x] **Step 1: 接入前端 contracts 与 normalize 新字段**
 
@@ -103,7 +103,7 @@ npm run test:run -- src/composables/__tests__/useAwdCheckResultPresentation.test
 
 ```bash
 cd /home/azhi/workspace/projects/ctf/.worktrees/feat-awd-engine-migration/code/frontend
-npm run test:run -- src/api/__tests__/admin.test.ts src/composables/__tests__/useAwdCheckResultPresentation.test.ts src/views/admin/__tests__/ContestManage.test.ts
+npm run test:run -- src/api/__tests__/admin.test.ts src/composables/__tests__/useAwdCheckResultPresentation.test.ts src/views/platform/__tests__/ContestManage.test.ts
 ```
 
 预期：PASS，说明 API 归一化、展示 helper 和后台 AWD 面板已兼容 checker 结果结构。
@@ -132,6 +132,6 @@ npm run typecheck
 
 ```bash
 cd /home/azhi/workspace/projects/ctf/.worktrees/feat-awd-engine-migration
-git add -f docs/superpowers/plans/2026-04-11-awd-engine-phase3-inspector.md code/frontend/src/api/contracts.ts code/frontend/src/api/admin.ts code/frontend/src/api/__tests__/admin.test.ts code/frontend/src/composables/useAwdCheckResultPresentation.ts code/frontend/src/composables/__tests__/useAwdCheckResultPresentation.test.ts code/frontend/src/composables/useAwdInspectorExports.ts code/frontend/src/components/admin/contest/AWDRoundInspector.vue code/frontend/src/views/admin/__tests__/ContestManage.test.ts
+git add -f docs/superpowers/plans/2026-04-11-awd-engine-phase3-inspector.md code/frontend/src/api/contracts.ts code/frontend/src/api/admin.ts code/frontend/src/api/__tests__/admin.test.ts code/frontend/src/composables/useAwdCheckResultPresentation.ts code/frontend/src/composables/__tests__/useAwdCheckResultPresentation.test.ts code/frontend/src/composables/useAwdInspectorExports.ts code/frontend/src/components/platform/contest/AWDRoundInspector.vue code/frontend/src/views/platform/__tests__/ContestManage.test.ts
 git commit -m "feat(awd): 升级后台巡检结果视图"
 ```

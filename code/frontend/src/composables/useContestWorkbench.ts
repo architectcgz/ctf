@@ -35,7 +35,7 @@ const BASE_STAGES: ContestWorkbenchStage[] = [
 
 const AWD_STAGES: ContestWorkbenchStage[] = [
   ...BASE_STAGES,
-  { key: 'awd-config', label: 'AWD 服务配置' },
+  { key: 'awd-config', label: 'AWD 编排' },
   { key: 'preflight', label: '就绪审计' },
 ]
 

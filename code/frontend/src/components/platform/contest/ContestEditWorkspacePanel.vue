@@ -41,7 +41,6 @@ const emit = defineEmits<{
   (event: 'retry:preflight'): void
   (event: 'navigate:awd-challenge-from-preflight', challengeId: string): void
   (event: 'navigate:stage', stage: ContestWorkbenchStageKey): void
-  (event: 'open:preflight-override'): void
 }>()
 </script>
 
@@ -148,7 +147,6 @@ const emit = defineEmits<{
               :loading="loadingAwdStageData"
               @navigate:challenge="emit('navigate:awd-challenge-from-preflight', $event)"
               @navigate:stage="emit('navigate:stage', $event)"
-              @open:override="emit('open:preflight-override')"
             />
           </div>
 

@@ -217,18 +217,6 @@ export const platformRoutes: RouteRecordRaw[] = [
   },
 },
 {
-  path: 'platform/environment-templates',
-  name: 'PlatformEnvironmentTemplateLibrary',
-  component: () => import('@/views/platform/EnvironmentTemplateLibrary.vue'),
-  meta: {
-    requiresAuth: true,
-    roles: ['teacher', 'admin'],
-    title: '环境模板',
-    icon: 'Server',
-    contentLayout: 'bleed',
-  },
-},
-{
   path: 'platform/awd-challenges',
   name: 'PlatformAwdChallengeLibrary',
   component: () => import('@/views/platform/AWDChallengeLibrary.vue'),

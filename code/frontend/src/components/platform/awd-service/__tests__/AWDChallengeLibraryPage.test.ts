@@ -143,13 +143,13 @@ describe('AWDChallengeLibraryPage', () => {
 
   it('uses shared platform workspace surfaces instead of page-private premium panels', () => {
     expect(awdChallengeLibraryPageSource).toContain(
-      'class="workspace-shell journal-shell journal-shell-admin journal-hero awd-template-library-shell"'
+      'class="workspace-shell journal-shell journal-shell-admin journal-hero awd-challenge-library-shell"'
     )
     expect(awdChallengeLibraryPageSource).toContain(
-      'class="content-pane awd-template-library-content"'
+      'class="content-pane awd-challenge-library-content"'
     )
     expect(awdChallengeLibraryPageSource).toContain(
-      'class="admin-summary-grid awd-template-summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
+      'class="admin-summary-grid awd-challenge-summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
     )
     expect(awdChallengeLibraryPageSource).toContain(
       'class="journal-note progress-card metric-panel-card"'
@@ -174,13 +174,13 @@ describe('AWDChallengeLibraryPage', () => {
       'class="workspace-directory-section awd-import-queue-section"'
     )
     expect(awdChallengeLibraryPageSource).toContain(
-      'class="workspace-directory-list awd-template-import__queue"'
+      'class="workspace-directory-list awd-challenge-import__queue"'
     )
     expect(awdChallengeLibraryPageSource).not.toContain('metric-panel-card--premium')
     expect(awdChallengeLibraryPageSource).not.toContain('metric-panel-grid--premium')
   })
 
-  it('keeps AWD template spacing on shared tokens instead of ad hoc page margins', () => {
+  it('keeps AWD challenge spacing on shared tokens instead of ad hoc page margins', () => {
     expect(awdChallengeLibraryPageSource).toContain(
       'gap: var(--workspace-directory-page-block-gap, var(--space-5));'
     )

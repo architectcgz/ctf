@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	authcontracts "ctf-platform/internal/module/auth/contracts"
 	"ctf-platform/internal/model"
+	authcontracts "ctf-platform/internal/module/auth/contracts"
 )
 
 type Authenticator interface {

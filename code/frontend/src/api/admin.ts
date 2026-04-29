@@ -925,6 +925,8 @@ export interface AdminAwdChallengeListParams {
   page_size?: number
   keyword?: string
   service_type?: AWDServiceType
+  deployment_mode?: AWDDeploymentMode
+  readiness_status?: AWDReadinessStatus
   status?: AWDChallengeStatus
 }
 

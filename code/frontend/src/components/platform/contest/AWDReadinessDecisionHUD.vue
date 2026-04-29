@@ -8,18 +8,40 @@ const props = defineProps<{
 }>()
 
 const readinessDecision = computed(() => {
-  if (!props.readiness) return { key: 'pending', title: '正在审计...', description: '请稍候，系统正在扫描题目状态。' }
-  if (props.readiness.ready) return { key: 'ready', title: '环境已就绪', description: '所有服务均通过验证。' }
-  return { key: 'blocked', title: '存在阻塞风险', description: '部分题目校验失败。' }
+  const readiness = props.readiness
+  if (!readiness) {
+    return {
+      key: 'pending',
+      title: '正在审计',
+      description: '系统正在同步题目、队伍与 Checker 状态。',
+    }
+  }
+  if (readiness.ready) {
+    return {
+      key: 'ready',
+      title: '可以开赛',
+      description: '系统级门禁与题目 Checker 均已通过。',
+    }
+  }
+  if ((readiness.global_blocking_reasons?.length ?? 0) > 0) {
+    return {
+      key: 'blocked',
+      title: '开赛已锁定',
+      description: '请先处理系统级阻塞项，再重新执行就绪检查。',
+    }
+  }
+  return {
+    key: 'blocked',
+    title: '开赛已锁定',
+    description: '请修复下方题目阻塞项，全部通过后才能启动比赛。',
+  }
 })
 
 const blockingActionLabels = computed(() => {
   if (!props.readiness) return []
   const labels: string[] = []
   const actions = props.readiness.blocking_actions || []
-  if (actions.includes('start_contest')) labels.push('开启比赛')
-  if (actions.includes('create_round')) labels.push('创建轮次')
-  if (actions.includes('run_current_round_check')) labels.push('即时巡检')
+  if (actions.includes('start_contest')) labels.push('就绪检查')
   return labels
 })
 </script>

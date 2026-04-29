@@ -13,8 +13,8 @@
 ### Task 1: 为结构化 checker 配置编辑补 RED 测试
 
 **Files:**
-- Create: `code/frontend/src/components/admin/__tests__/AWDChallengeConfigDialog.test.ts`
-- Modify: `code/frontend/src/views/admin/__tests__/ContestManage.test.ts`
+- Create: `code/frontend/src/components/platform/__tests__/AWDChallengeConfigDialog.test.ts`
+- Modify: `code/frontend/src/views/platform/__tests__/ContestManage.test.ts`
 
 - [x] **Step 1: 写失败测试，要求对话框能展示并保存 `http_standard` 结构化字段**
 
@@ -45,7 +45,7 @@
 
 ```bash
 cd /home/azhi/workspace/projects/ctf/.worktrees/feat-awd-engine-migration/code/frontend
-npm run test:run -- src/components/admin/__tests__/AWDChallengeConfigDialog.test.ts src/views/admin/__tests__/ContestManage.test.ts
+npm run test:run -- src/components/platform/__tests__/AWDChallengeConfigDialog.test.ts src/views/platform/__tests__/ContestManage.test.ts
 ```
 
 预期：FAIL，失败原因是当前对话框仍只有原始 JSON 文本框。
@@ -53,8 +53,8 @@ npm run test:run -- src/components/admin/__tests__/AWDChallengeConfigDialog.test
 ### Task 2: 实现 checker 配置解析、构建和预置支持
 
 **Files:**
-- Create: `code/frontend/src/components/admin/contest/awdCheckerConfigSupport.ts`
-- Modify: `code/frontend/src/components/admin/contest/AWDChallengeConfigDialog.vue`
+- Create: `code/frontend/src/components/platform/contest/awdCheckerConfigSupport.ts`
+- Modify: `code/frontend/src/components/platform/contest/AWDChallengeConfigDialog.vue`
 
 - [x] **Step 1: 新增 checker 配置支持文件**
 
@@ -88,7 +88,7 @@ npm run test:run -- src/components/admin/__tests__/AWDChallengeConfigDialog.test
 
 ```bash
 cd /home/azhi/workspace/projects/ctf/.worktrees/feat-awd-engine-migration/code/frontend
-npm run test:run -- src/components/admin/__tests__/AWDChallengeConfigDialog.test.ts src/views/admin/__tests__/ContestManage.test.ts
+npm run test:run -- src/components/platform/__tests__/AWDChallengeConfigDialog.test.ts src/views/platform/__tests__/ContestManage.test.ts
 ```
 
 预期：PASS。
@@ -104,7 +104,7 @@ npm run test:run -- src/components/admin/__tests__/AWDChallengeConfigDialog.test
 
 ```bash
 cd /home/azhi/workspace/projects/ctf/.worktrees/feat-awd-engine-migration/code/frontend
-npm run test:run -- src/api/__tests__/admin.test.ts src/components/admin/__tests__/AWDChallengeConfigDialog.test.ts src/components/admin/__tests__/AWDOperationsPanel.test.ts src/views/admin/__tests__/ContestManage.test.ts
+npm run test:run -- src/api/__tests__/admin.test.ts src/components/platform/__tests__/AWDChallengeConfigDialog.test.ts src/components/platform/__tests__/AWDOperationsPanel.test.ts src/views/platform/__tests__/ContestManage.test.ts
 ```
 
 预期：PASS。
@@ -128,6 +128,6 @@ npm run typecheck
 
 ```bash
 cd /home/azhi/workspace/projects/ctf/.worktrees/feat-awd-engine-migration
-git add -f docs/architecture/features/2026-04-11-awd-checker-structured-editor-design.md docs/superpowers/plans/2026-04-11-awd-engine-phase5-structured-config-editor.md code/frontend/src/components/admin/__tests__/AWDChallengeConfigDialog.test.ts code/frontend/src/components/admin/contest/awdCheckerConfigSupport.ts code/frontend/src/components/admin/contest/AWDChallengeConfigDialog.vue code/frontend/src/views/admin/__tests__/ContestManage.test.ts
+git add -f docs/architecture/features/awd-checker-structured-editor-design.md docs/superpowers/plans/2026-04-11-awd-engine-phase5-structured-config-editor.md code/frontend/src/components/platform/__tests__/AWDChallengeConfigDialog.test.ts code/frontend/src/components/platform/contest/awdCheckerConfigSupport.ts code/frontend/src/components/platform/contest/AWDChallengeConfigDialog.vue code/frontend/src/views/platform/__tests__/ContestManage.test.ts
 git commit -m "feat(awd): 增加结构化checker配置编辑器"
 ```
