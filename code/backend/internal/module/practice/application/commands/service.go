@@ -163,10 +163,10 @@ func (s *Service) GetContestAWDInstanceOrchestration(ctx context.Context, contes
 	}
 	for _, service := range services {
 		resp.Services = append(resp.Services, &dto.AdminAWDInstanceServiceResp{
-			ServiceID:   service.ID,
-			ChallengeID: service.ChallengeID,
-			DisplayName: service.DisplayName,
-			IsVisible:   service.IsVisible,
+			ServiceID:      service.ID,
+			AWDChallengeID: service.AWDChallengeID,
+			DisplayName:    service.DisplayName,
+			IsVisible:      service.IsVisible,
 		})
 	}
 	seen := make(map[string]struct{}, len(instances))
@@ -1202,7 +1202,7 @@ func (s *Service) resolveContestAWDServiceInstanceScope(ctx context.Context, use
 	}
 	serviceIDCopy := service.ID
 	scope.ServiceID = &serviceIDCopy
-	return service.ChallengeID, scope, nil
+	return service.AWDChallengeID, scope, nil
 }
 
 func (s *Service) resolveAdminContestAWDServiceInstanceScope(ctx context.Context, contestID, teamID, serviceID int64) (int64, int64, practiceports.InstanceScope, error) {
@@ -1258,7 +1258,7 @@ func (s *Service) resolveAdminContestAWDServiceInstanceScope(ctx context.Context
 		FlagSubjectID: teamID,
 		ShareScope:    model.InstanceSharingPerTeam,
 	}
-	return service.ChallengeID, team.CaptainID, scope, nil
+	return service.AWDChallengeID, team.CaptainID, scope, nil
 }
 
 func (s *Service) loadRuntimeSubjectWithScope(ctx context.Context, scope practiceports.InstanceScope, challengeID int64) (*model.Challenge, *model.ChallengeTopology, error) {
@@ -1388,7 +1388,7 @@ func resolveEffectiveInstanceScope(chal *model.Challenge, scope practiceports.In
 
 func buildContestAWDServiceVirtualChallenge(service *model.ContestAWDService, snapshot model.ContestAWDServiceSnapshot) *model.Challenge {
 	chal := &model.Challenge{
-		ID:              service.ChallengeID,
+		ID:              service.AWDChallengeID,
 		Title:           firstRuntimeValue(service.DisplayName, snapshot.Name),
 		Category:        snapshot.Category,
 		Difficulty:      snapshot.Difficulty,
@@ -1424,7 +1424,7 @@ func buildContestAWDServiceVirtualTopology(service *model.ContestAWDService, sna
 		return nil, err
 	}
 	return &model.ChallengeTopology{
-		ChallengeID:  service.ChallengeID,
+		ChallengeID:  service.AWDChallengeID,
 		EntryNodeKey: strings.TrimSpace(entryNodeKey),
 		Spec:         string(specRaw),
 	}, nil

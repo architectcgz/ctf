@@ -184,6 +184,7 @@ export interface InstanceData {
   id: ID
   contest_mode?: ContestMode
   challenge_id: ID
+  awd_challenge_id?: ID
   status: InstanceStatus
   share_scope: InstanceSharing
   access_url?: string
@@ -317,6 +318,7 @@ export interface ContestDetailData extends ContestListItem {
 export interface ContestChallengeItem {
   id: ID
   challenge_id: ID
+  awd_challenge_id?: ID
   awd_service_id?: ID
   title: string
   category: ChallengeCategory
@@ -411,8 +413,8 @@ export interface AWDTeamServiceData {
   team_name: string
   service_id?: ID
   service_name?: string
-  challenge_id: ID
-  challenge_title?: string
+  awd_challenge_id: ID
+  awd_challenge_title?: string
   service_status: AWDServiceStatus
   checker_type?: AWDCheckerType
   check_result: Record<string, unknown>
@@ -431,7 +433,7 @@ export interface AWDAttackLogData {
   victim_team_id: ID
   victim_team: string
   service_id?: ID
-  challenge_id: ID
+  awd_challenge_id: ID
   attack_type: AWDAttackType
   source: AWDAttackSource
   submitted_flag?: string
@@ -449,7 +451,7 @@ export interface ContestAWDWorkspaceTeamData {
 
 export interface ContestAWDWorkspaceServiceData {
   service_id?: ID
-  challenge_id: ID
+  awd_challenge_id: ID
   instance_id?: ID
   access_url?: string
   service_status?: AWDServiceStatus
@@ -463,7 +465,7 @@ export interface ContestAWDWorkspaceServiceData {
 
 export interface ContestAWDWorkspaceTargetServiceData {
   service_id?: ID
-  challenge_id: ID
+  awd_challenge_id: ID
   reachable: boolean
 }
 
@@ -477,7 +479,7 @@ export interface ContestAWDWorkspaceRecentEventData {
   id: ID
   direction: ContestAWDWorkspaceEventDirection
   service_id?: ID
-  challenge_id: ID
+  awd_challenge_id: ID
   peer_team_id: ID
   peer_team_name: string
   is_success: boolean
@@ -561,8 +563,8 @@ export interface AWDTrafficTopTeamData {
 }
 
 export interface AWDTrafficTopChallengeData {
-  challenge_id: ID
-  challenge_title?: string
+  awd_challenge_id: ID
+  awd_challenge_title?: string
   request_count: number
   error_count: number
 }
@@ -608,8 +610,8 @@ export interface AWDTrafficEventData {
   victim_team_id: ID
   victim_team_name?: string
   service_id?: ID
-  challenge_id: ID
-  challenge_title?: string
+  awd_challenge_id: ID
+  awd_challenge_title?: string
   method: string
   path: string
   status_code: number
@@ -632,7 +634,7 @@ export interface AWDCheckerPreviewContextData {
   preview_flag: string
   round_number: number
   team_id: ID
-  challenge_id: ID
+  awd_challenge_id: ID
 }
 
 export type AWDCheckerValidationState = 'pending' | 'passed' | 'failed' | 'stale'
@@ -646,7 +648,7 @@ export interface AWDCheckerPreviewData {
 }
 
 export interface AWDReadinessItemData {
-  challenge_id: ID
+  awd_challenge_id: ID
   title: string
   checker_type?: AWDCheckerType
   validation_state: 'pending' | 'failed' | 'stale' | 'passed'
@@ -712,8 +714,7 @@ export type AdminContestChallengeData = AdminContestChallengeViewData
 export interface AdminContestAWDServiceData {
   id: ID
   contest_id: ID
-  challenge_id: ID
-  awd_challenge_id?: ID
+  awd_challenge_id: ID
   title?: string
   category?: ChallengeCategory
   difficulty?: ChallengeDifficulty
@@ -741,7 +742,7 @@ export interface AdminContestAWDInstanceTeamData {
 
 export interface AdminContestAWDInstanceServiceData {
   service_id: ID
-  challenge_id: ID
+  awd_challenge_id: ID
   display_name: string
   is_visible: boolean
 }

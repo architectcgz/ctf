@@ -18,7 +18,7 @@ interface AWDServiceAlertView {
   samples: Array<{
     service_id: string
     team_name: string
-    challenge_title: string
+    awd_challenge_title: string
   }>
 }
 
@@ -138,7 +138,7 @@ export function useAwdInspectorExports({
             ? getServiceAlertLabel(serviceAlertReasonFilter.value)
             : '全部告警',
           队伍: item.team_name,
-          靶题: getChallengeTitle(item.challenge_id),
+          靶题: getChallengeTitle(item.awd_challenge_id),
           服务编号: item.service_id || '',
           服务状态: getServiceStatusLabel(item.service_status),
           巡检来源: getCheckSourceLabel(item.check_result.check_source) || '',
@@ -180,7 +180,7 @@ export function useAwdInspectorExports({
         时间: formatDateTime(item.created_at),
         攻击方: item.attacker_team,
         受害方: item.victim_team,
-        靶题: getChallengeTitle(item.challenge_id),
+        靶题: getChallengeTitle(item.awd_challenge_id),
         服务编号: item.service_id || '',
         攻击类型: getAttackTypeLabel(item.attack_type),
         记录来源: getAttackSourceLabel(item.source),
@@ -264,8 +264,8 @@ export function useAwdInspectorExports({
         team_id: item.team_id,
         team_name: item.team_name,
         service_id: item.service_id || null,
-        challenge_id: item.challenge_id,
-        challenge_title: getChallengeTitle(item.challenge_id),
+        awd_challenge_id: item.awd_challenge_id,
+        awd_challenge_title: getChallengeTitle(item.awd_challenge_id),
         service_status: item.service_status,
         service_status_label: getServiceStatusLabel(item.service_status),
         checker_type: item.checker_type,
@@ -285,8 +285,8 @@ export function useAwdInspectorExports({
         victim_team_id: item.victim_team_id,
         victim_team: item.victim_team,
         service_id: item.service_id || null,
-        challenge_id: item.challenge_id,
-        challenge_title: getChallengeTitle(item.challenge_id),
+        awd_challenge_id: item.awd_challenge_id,
+        awd_challenge_title: getChallengeTitle(item.awd_challenge_id),
         attack_type: item.attack_type,
         attack_type_label: getAttackTypeLabel(item.attack_type),
         source: item.source,

@@ -31,7 +31,7 @@ func TestServiceStartContestAWDServiceCanProvisionFromContestAWDServiceSnapshot(
 	if err := db.Create(&model.ContestAWDService{
 		ID:              7901,
 		ContestID:       3901,
-		ChallengeID:     2801,
+		AWDChallengeID:  2801,
 		DisplayName:     "Bank Portal",
 		Order:           1,
 		IsVisible:       true,

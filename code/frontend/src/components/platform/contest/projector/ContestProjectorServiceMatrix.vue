@@ -13,8 +13,8 @@ defineProps<{
 function getServiceDisplayName(service: AWDTeamServiceData): string {
   return (
     service.service_name?.trim() ||
-    service.challenge_title?.trim() ||
-    (service.service_id ? `服务 ${service.service_id}` : `题目 ${service.challenge_id}`)
+    service.awd_challenge_title?.trim() ||
+    (service.service_id ? `服务 ${service.service_id}` : `题目 ${service.awd_challenge_id}`)
   )
 }
 </script>

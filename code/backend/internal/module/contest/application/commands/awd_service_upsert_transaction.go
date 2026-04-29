@@ -27,7 +27,7 @@ func (s *AWDService) upsertServiceCheckAndRecalculate(
 			roundID,
 			req.TeamID,
 			runtimeService.ID,
-			runtimeService.ChallengeID,
+			runtimeService.AWDChallengeID,
 			req.ServiceStatus,
 			checkResult,
 			defenseScore,

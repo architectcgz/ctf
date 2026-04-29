@@ -215,7 +215,7 @@ func TestChallengeServiceRemoveChallengeFromContestDoesNotDeleteAWDService(t *te
 	if err := awdRepo.CreateContestAWDService(context.Background(), &model.ContestAWDService{
 		ID:              contesttestsupport.DefaultAWDContestServiceID(contest.ID, 9006),
 		ContestID:       contest.ID,
-		ChallengeID:     9006,
+		AWDChallengeID:  9006,
 		DisplayName:     "AWD Remove Service",
 		Order:           1,
 		IsVisible:       true,

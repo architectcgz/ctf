@@ -75,7 +75,6 @@ function buildAwdService(overrides: Record<string, unknown> = {}) {
   return {
     id: 'service-1',
     contest_id: 'contest-1',
-    challenge_id: '101',
     awd_challenge_id: '11',
     display_name: 'Web 入门',
     order: 1,
@@ -252,7 +251,6 @@ describe('ContestChallengeOrchestrationPanel', () => {
     contestApiMocks.listContestAWDServices.mockResolvedValue([
       buildAwdService({
         id: 'service-1',
-        challenge_id: '101',
         display_name: 'AWD Bank Portal',
       }),
     ])
@@ -273,7 +271,6 @@ describe('ContestChallengeOrchestrationPanel', () => {
     contestApiMocks.listContestAWDServices.mockResolvedValue([
       buildAwdService({
         id: 'service-1',
-        challenge_id: '101',
         display_name: '未配 Checker 题目',
         checker_type: undefined,
         validation_state: undefined,
@@ -417,7 +414,6 @@ describe('ContestChallengeOrchestrationPanel', () => {
     contestApiMocks.listContestAWDServices.mockResolvedValue([
       buildAwdService({
         id: 'service-1',
-        challenge_id: '101',
         awd_challenge_id: '11',
       }),
     ])
@@ -466,9 +462,9 @@ describe('ContestChallengeOrchestrationPanel', () => {
     })
 
     await flushPromises()
-    await wrapper.get('#contest-challenge-actions-101').trigger('click')
+    await wrapper.get('#contest-challenge-actions-11').trigger('click')
     await flushPromises()
-    await wrapper.get('#contest-challenge-edit-101').trigger('click')
+    await wrapper.get('#contest-challenge-edit-11').trigger('click')
     await flushPromises()
 
     await wrapper.get('#contest-template-option-12').trigger('click')

@@ -32,7 +32,7 @@ vi.mock('@/composables/usePlatformContestAwd', async () => {
       attacker_team_id: '',
       victim_team_id: '',
       service_id: '',
-      challenge_id: '',
+      awd_challenge_id: '',
       status_group: 'all',
       path_keyword: '',
       page: 1,
@@ -104,7 +104,7 @@ function buildReadinessState(overrides: Record<string, unknown> = {}) {
     blocking_actions: ['create_round', 'run_current_round_check'],
     items: [
       {
-        challenge_id: 'challenge-1',
+        awd_challenge_id: 'challenge-1',
         title: 'Web Checker',
         checker_type: 'http_standard',
         validation_state: 'failed',
@@ -271,7 +271,7 @@ describe('AWDOperationsPanel', () => {
             preview_flag: 'flag{preview}',
             round_number: 0,
             team_id: '0',
-            challenge_id: 'challenge-1',
+            awd_challenge_id: 'challenge-1',
           },
         },
         created_at: '2026-03-18T09:00:00.000Z',
@@ -284,7 +284,7 @@ describe('AWDOperationsPanel', () => {
       blocking_count: 1,
       items: [
         {
-          challenge_id: 'challenge-1',
+          awd_challenge_id: 'challenge-1',
           title: 'Web Checker',
           checker_type: 'http_standard',
           validation_state: 'failed',
@@ -344,7 +344,7 @@ describe('AWDOperationsPanel', () => {
       blocking_count: 1,
       items: [
         {
-          challenge_id: 'challenge-1',
+          awd_challenge_id: 'challenge-1',
           title: 'Web Checker',
           checker_type: 'http_standard',
           validation_state: 'failed',

@@ -273,7 +273,7 @@ func (r *Repository) ListVisibleByUser(ctx context.Context, userID int64) ([]run
 		Select(strings.Join([]string{
 			"inst.id",
 			"COALESCE(co.mode, '') AS contest_mode",
-			"CASE WHEN co.mode = 'awd' THEN cas.challenge_id ELSE inst.challenge_id END AS challenge_id",
+			"CASE WHEN co.mode = 'awd' THEN cas.awd_challenge_id ELSE inst.challenge_id END AS challenge_id",
 			"c.title AS challenge_title",
 			"c.category",
 			"c.difficulty",
@@ -351,7 +351,7 @@ func (r *Repository) ListTeacherInstances(ctx context.Context, filter runtimepor
 			"NULLIF(u.student_no, '') AS student_no",
 			"u.class_name",
 			"COALESCE(co.mode, '') AS contest_mode",
-			"CASE WHEN co.mode = 'awd' THEN cas.challenge_id ELSE i.challenge_id END AS challenge_id",
+			"CASE WHEN co.mode = 'awd' THEN cas.awd_challenge_id ELSE i.challenge_id END AS challenge_id",
 			"c.title AS challenge_title",
 			"cas.display_name AS service_name",
 			"cas.service_snapshot AS service_snapshot",

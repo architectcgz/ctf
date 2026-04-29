@@ -59,7 +59,7 @@ interface AWDTrafficFilterState {
   attacker_team_id: string
   victim_team_id: string
   service_id: string
-  challenge_id: string
+  awd_challenge_id: string
   status_group: 'all' | AWDTrafficStatusGroup
   path_keyword: string
   page: number
@@ -85,7 +85,7 @@ function createDefaultTrafficFilters(): AWDTrafficFilterState {
     attacker_team_id: '',
     victim_team_id: '',
     service_id: '',
-    challenge_id: '',
+    awd_challenge_id: '',
     status_group: 'all',
     path_keyword: '',
     page: 1,
@@ -233,7 +233,7 @@ export function usePlatformContestAwd(selectedContest: Readonly<Ref<ContestDetai
       attacker_team_id: filters.attacker_team_id || undefined,
       victim_team_id: filters.victim_team_id || undefined,
       service_id: filters.service_id || undefined,
-      challenge_id: filters.challenge_id || undefined,
+      awd_challenge_id: filters.awd_challenge_id || undefined,
       status_group: filters.status_group === 'all' ? undefined : filters.status_group,
       path_keyword: filters.path_keyword.trim() || undefined,
       page: filters.page,
@@ -551,7 +551,7 @@ export function usePlatformContestAwd(selectedContest: Readonly<Ref<ContestDetai
         | 'attacker_team_id'
         | 'victim_team_id'
         | 'service_id'
-        | 'challenge_id'
+        | 'awd_challenge_id'
         | 'status_group'
         | 'path_keyword'
       >

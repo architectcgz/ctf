@@ -27,7 +27,7 @@ func (r *AWDRepository) CreateAttackLog(ctx context.Context, logRecord *model.AW
 
 func (r *AWDRepository) ApplyAttackImpactToVictimService(
 	ctx context.Context,
-	roundID, victimTeamID, serviceID, challengeID int64,
+	roundID, victimTeamID, serviceID, awdChallengeID int64,
 	scoreGained int,
 	updatedAt time.Time,
 ) error {
@@ -35,7 +35,7 @@ func (r *AWDRepository) ApplyAttackImpactToVictimService(
 		RoundID:        roundID,
 		TeamID:         victimTeamID,
 		ServiceID:      serviceID,
-		ChallengeID:    challengeID,
+		AWDChallengeID: awdChallengeID,
 		ServiceStatus:  model.AWDServiceStatusCompromised,
 		CheckResult:    "{}",
 		AttackReceived: 1,
@@ -47,13 +47,13 @@ func (r *AWDRepository) ApplyAttackImpactToVictimService(
 	return r.dbWithContext(ctx).
 		Where("round_id = ? AND team_id = ? AND service_id = ?", roundID, victimTeamID, serviceID).
 		Assign(map[string]any{
-			"service_id":      serviceID,
-			"challenge_id":    challengeID,
-			"service_status":  model.AWDServiceStatusCompromised,
-			"attack_received": gorm.Expr("attack_received + ?", 1),
-			"attack_score":    gorm.Expr("attack_score + ?", scoreGained),
-			"defense_score":   0,
-			"updated_at":      updatedAt,
+			"service_id":       serviceID,
+			"awd_challenge_id": awdChallengeID,
+			"service_status":   model.AWDServiceStatusCompromised,
+			"attack_received":  gorm.Expr("attack_received + ?", 1),
+			"attack_score":     gorm.Expr("attack_score + ?", scoreGained),
+			"defense_score":    0,
+			"updated_at":       updatedAt,
 		}).
 		FirstOrCreate(record).Error
 }

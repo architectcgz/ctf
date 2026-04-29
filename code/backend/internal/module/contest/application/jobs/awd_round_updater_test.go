@@ -310,13 +310,13 @@ func TestAWDRoundUpdaterCreatesAndAdvancesRoundsWritesOnlyServiceFlagFields(t *t
 	}
 	serviceID := defaultAWDContestServiceID(153, 153001)
 	if err := db.Model(&model.ContestAWDService{}).
-		Where("contest_id = ? AND challenge_id = ?", 153, 153001).
+		Where("contest_id = ? AND awd_challenge_id = ?", 153, 153001).
 		Updates(map[string]any{
 			"display_name":   "Bridge Service",
 			"order":          0,
 			"is_visible":     true,
 			"score_config":   `{"points":100,"awd_sla_score":1,"awd_defense_score":2}`,
-			"runtime_config": `{"challenge_id":153001,"checker_type":"legacy_probe","checker_config":{}}`,
+			"runtime_config": `{"awd_challenge_id":153001,"checker_type":"legacy_probe","checker_config":{}}`,
 			"updated_at":     now,
 		}).Error; err != nil {
 		t.Fatalf("update contest awd service: %v", err)
@@ -615,7 +615,7 @@ func TestAWDRoundUpdaterSyncsServiceChecksAsUp(t *testing.T) {
 	}
 
 	var record model.AWDTeamService
-	if err := db.Where("round_id = ? AND team_id = ? AND challenge_id = ?", 10301, 103011, 103001).First(&record).Error; err != nil {
+	if err := db.Where("round_id = ? AND team_id = ? AND awd_challenge_id = ?", 10301, 103011, 103001).First(&record).Error; err != nil {
 		t.Fatalf("load service check: %v", err)
 	}
 	if record.ServiceStatus != model.AWDServiceStatusUp {
@@ -713,7 +713,7 @@ func TestAWDRoundUpdaterUsesContestServiceCheckerConfig(t *testing.T) {
 	}
 
 	var record model.AWDTeamService
-	if err := db.Where("round_id = ? AND team_id = ? AND challenge_id = ?", 10401, 104011, 104001).First(&record).Error; err != nil {
+	if err := db.Where("round_id = ? AND team_id = ? AND awd_challenge_id = ?", 10401, 104011, 104001).First(&record).Error; err != nil {
 		t.Fatalf("load service check: %v", err)
 	}
 	if record.ServiceStatus != model.AWDServiceStatusUp || record.DefenseScore != 2 || record.SLAScore != 1 || record.CheckerType != model.AWDCheckerTypeHTTPStandard {
@@ -800,7 +800,7 @@ func TestAWDRoundUpdaterSyncsHTTPStandardChecksAsUp(t *testing.T) {
 	}
 
 	var record model.AWDTeamService
-	if err := db.Where("round_id = ? AND team_id = ? AND challenge_id = ?", 14101, 141011, 141001).First(&record).Error; err != nil {
+	if err := db.Where("round_id = ? AND team_id = ? AND awd_challenge_id = ?", 14101, 141011, 141001).First(&record).Error; err != nil {
 		t.Fatalf("load service check: %v", err)
 	}
 	if record.ServiceStatus != model.AWDServiceStatusUp || record.SLAScore != 1 || record.DefenseScore != 2 {
@@ -840,14 +840,14 @@ func TestAWDRoundUpdaterPrefersContestAWDServiceDefinitionsForRuntimeChecks(t *t
 	}
 	serviceID := defaultAWDContestServiceID(144, 144001)
 	if err := db.Model(&model.ContestAWDService{}).
-		Where("contest_id = ? AND challenge_id = ?", 144, 144001).
+		Where("contest_id = ? AND awd_challenge_id = ?", 144, 144001).
 		Updates(map[string]any{
 			"display_name": "Service First",
 			"order":        0,
 			"is_visible":   true,
 			"score_config": `{"points":100,"awd_sla_score":1,"awd_defense_score":2}`,
 			"runtime_config": `{
-				"challenge_id":144001,
+				"awd_challenge_id":144001,
 				"checker_type":"http_standard",
 				"checker_config":{
 					"put_flag":{"method":"PUT","path":"/api/service-flag","body_template":"{{FLAG}}","expected_status":200},
@@ -908,7 +908,7 @@ func TestAWDRoundUpdaterPrefersContestAWDServiceDefinitionsForRuntimeChecks(t *t
 	}
 
 	var record model.AWDTeamService
-	if err := db.Where("round_id = ? AND team_id = ? AND challenge_id = ?", 14401, 144011, 144001).First(&record).Error; err != nil {
+	if err := db.Where("round_id = ? AND team_id = ? AND awd_challenge_id = ?", 14401, 144011, 144001).First(&record).Error; err != nil {
 		t.Fatalf("load service check: %v", err)
 	}
 	if record.ServiceID != serviceID {
@@ -981,7 +981,7 @@ func TestAWDRoundUpdaterMarksHTTPStandardChecksCompromisedOnFlagMismatch(t *test
 	}
 
 	var record model.AWDTeamService
-	if err := db.Where("round_id = ? AND team_id = ? AND challenge_id = ?", 14201, 142011, 142001).First(&record).Error; err != nil {
+	if err := db.Where("round_id = ? AND team_id = ? AND awd_challenge_id = ?", 14201, 142011, 142001).First(&record).Error; err != nil {
 		t.Fatalf("load service check: %v", err)
 	}
 	if record.ServiceStatus != model.AWDServiceStatusCompromised || record.SLAScore != 0 || record.DefenseScore != 0 {
@@ -1072,7 +1072,7 @@ func TestAWDRoundUpdaterMarksHTTPStandardChecksDownWhenHavocFails(t *testing.T) 
 	}
 
 	var record model.AWDTeamService
-	if err := db.Where("round_id = ? AND team_id = ? AND challenge_id = ?", 14301, 143011, 143001).First(&record).Error; err != nil {
+	if err := db.Where("round_id = ? AND team_id = ? AND awd_challenge_id = ?", 14301, 143011, 143001).First(&record).Error; err != nil {
 		t.Fatalf("load service check: %v", err)
 	}
 	if record.ServiceStatus != model.AWDServiceStatusDown || record.SLAScore != 0 || record.DefenseScore != 0 {
@@ -1142,7 +1142,7 @@ func TestAWDRoundUpdaterSyncsServiceChecksForContestScopedTeamInstance(t *testin
 	}
 
 	var record model.AWDTeamService
-	if err := db.Where("round_id = ? AND team_id = ? AND challenge_id = ?", 10501, 105011, 105001).First(&record).Error; err != nil {
+	if err := db.Where("round_id = ? AND team_id = ? AND awd_challenge_id = ?", 10501, 105011, 105001).First(&record).Error; err != nil {
 		t.Fatalf("load service check: %v", err)
 	}
 	if record.ServiceStatus != model.AWDServiceStatusUp {
@@ -1223,7 +1223,7 @@ func TestAWDRoundUpdaterHistoricalRoundChecksDoNotOverwriteLiveStatusCache(t *te
 	assertAWDServiceStatusCache(t, redisClient, 108, 108011, serviceID, model.AWDServiceStatusCompromised)
 
 	var record model.AWDTeamService
-	if err := db.Where("round_id = ? AND team_id = ? AND challenge_id = ?", 10801, 108011, 108001).First(&record).Error; err != nil {
+	if err := db.Where("round_id = ? AND team_id = ? AND awd_challenge_id = ?", 10801, 108011, 108001).First(&record).Error; err != nil {
 		t.Fatalf("load historical service check: %v", err)
 	}
 	if record.ServiceStatus != model.AWDServiceStatusUp {
@@ -1457,7 +1457,7 @@ func TestAWDRoundUpdaterSyncsServiceChecksWithPartialAvailability(t *testing.T) 
 	}
 
 	var record model.AWDTeamService
-	if err := db.Where("round_id = ? AND team_id = ? AND challenge_id = ?", 10701, 107011, 107001).First(&record).Error; err != nil {
+	if err := db.Where("round_id = ? AND team_id = ? AND awd_challenge_id = ?", 10701, 107011, 107001).First(&record).Error; err != nil {
 		t.Fatalf("load service check: %v", err)
 	}
 	if record.ServiceStatus != model.AWDServiceStatusUp {
@@ -1507,7 +1507,7 @@ func TestAWDRoundUpdaterSyncsServiceChecksAsDownWithoutHealthyInstance(t *testin
 	}
 
 	var record model.AWDTeamService
-	if err := db.Where("round_id = ? AND team_id = ? AND challenge_id = ?", 10401, 104011, 104001).First(&record).Error; err != nil {
+	if err := db.Where("round_id = ? AND team_id = ? AND awd_challenge_id = ?", 10401, 104011, 104001).First(&record).Error; err != nil {
 		t.Fatalf("load service check: %v", err)
 	}
 	if record.ServiceStatus != model.AWDServiceStatusDown {
@@ -1580,7 +1580,7 @@ func TestAWDRoundUpdaterMarksServiceDownAfterHTTPFailure(t *testing.T) {
 	}
 
 	var record model.AWDTeamService
-	if err := db.Where("round_id = ? AND team_id = ? AND challenge_id = ?", 10601, 106011, 106001).First(&record).Error; err != nil {
+	if err := db.Where("round_id = ? AND team_id = ? AND awd_challenge_id = ?", 10601, 106011, 106001).First(&record).Error; err != nil {
 		t.Fatalf("load service check: %v", err)
 	}
 	if record.ServiceStatus != model.AWDServiceStatusDown {

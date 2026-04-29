@@ -7,10 +7,10 @@ type AdminAWDInstanceTeamResp struct {
 }
 
 type AdminAWDInstanceServiceResp struct {
-	ServiceID   int64  `json:"service_id"`
-	ChallengeID int64  `json:"challenge_id"`
-	DisplayName string `json:"display_name"`
-	IsVisible   bool   `json:"is_visible"`
+	ServiceID      int64  `json:"service_id"`
+	AWDChallengeID int64  `json:"awd_challenge_id"`
+	DisplayName    string `json:"display_name"`
+	IsVisible      bool   `json:"is_visible"`
 }
 
 type AdminAWDInstanceItemResp struct {

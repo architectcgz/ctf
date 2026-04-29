@@ -11,31 +11,31 @@ import (
 
 func (r *AWDRepository) UpsertServiceCheck(
 	ctx context.Context,
-	roundID, teamID, serviceID, challengeID int64,
+	roundID, teamID, serviceID, awdChallengeID int64,
 	serviceStatus, checkResult string,
 	defenseScore int,
 	updatedAt time.Time,
 ) (*model.AWDTeamService, error) {
 	record := &model.AWDTeamService{
-		RoundID:       roundID,
-		TeamID:        teamID,
-		ServiceID:     serviceID,
-		ChallengeID:   challengeID,
-		ServiceStatus: serviceStatus,
-		CheckResult:   checkResult,
-		CheckerType:   "",
-		SLAScore:      0,
-		DefenseScore:  defenseScore,
+		RoundID:        roundID,
+		TeamID:         teamID,
+		ServiceID:      serviceID,
+		AWDChallengeID: awdChallengeID,
+		ServiceStatus:  serviceStatus,
+		CheckResult:    checkResult,
+		CheckerType:    "",
+		SLAScore:       0,
+		DefenseScore:   defenseScore,
 	}
 	if err := r.dbWithContext(ctx).
 		Where("round_id = ? AND team_id = ? AND service_id = ?", roundID, teamID, serviceID).
 		Assign(map[string]any{
-			"service_id":     serviceID,
-			"challenge_id":   challengeID,
-			"service_status": serviceStatus,
-			"check_result":   checkResult,
-			"defense_score":  defenseScore,
-			"updated_at":     updatedAt,
+			"service_id":       serviceID,
+			"awd_challenge_id": awdChallengeID,
+			"service_status":   serviceStatus,
+			"check_result":     checkResult,
+			"defense_score":    defenseScore,
+			"updated_at":       updatedAt,
 		}).
 		FirstOrCreate(record).Error; err != nil {
 		return nil, err
@@ -54,7 +54,7 @@ func (r *AWDRepository) UpsertTeamServices(ctx context.Context, records []model.
 			{Name: "service_id"},
 		},
 		DoUpdates: clause.AssignmentColumns([]string{
-			"challenge_id",
+			"awd_challenge_id",
 			"service_status",
 			"check_result",
 			"checker_type",
@@ -69,7 +69,7 @@ func (r *AWDRepository) ListServicesByRound(ctx context.Context, roundID int64) 
 	var records []model.AWDTeamService
 	err := r.dbWithContext(ctx).
 		Where("round_id = ?", roundID).
-		Order("team_id ASC, service_id ASC, challenge_id ASC").
+		Order("team_id ASC, service_id ASC, awd_challenge_id ASC").
 		Find(&records).Error
 	return records, err
 }

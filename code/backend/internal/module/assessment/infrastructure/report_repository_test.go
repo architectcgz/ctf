@@ -27,6 +27,7 @@ func newReportRepositoryTestDB(t *testing.T) *gorm.DB {
 	if err := db.AutoMigrate(
 		&model.User{},
 		&model.Challenge{},
+		&model.AWDChallenge{},
 		&model.Submission{},
 		&model.AWDRound{},
 		&model.AWDAttackLog{},
@@ -100,7 +101,7 @@ func TestReportRepositoryGetPersonalStatsIncludesAWDSolvedAndAttempts(t *testing
 			RoundID:           round.ID,
 			AttackerTeamID:    301,
 			VictimTeamID:      401,
-			ChallengeID:       102,
+			AWDChallengeID:    102,
 			AttackType:        model.AWDAttackTypeFlagCapture,
 			Source:            model.AWDAttackSourceSubmission,
 			SubmittedByUserID: &aliceID,
@@ -113,7 +114,7 @@ func TestReportRepositoryGetPersonalStatsIncludesAWDSolvedAndAttempts(t *testing
 			RoundID:           round.ID,
 			AttackerTeamID:    301,
 			VictimTeamID:      402,
-			ChallengeID:       101,
+			AWDChallengeID:    101,
 			AttackType:        model.AWDAttackTypeFlagCapture,
 			Source:            model.AWDAttackSourceSubmission,
 			SubmittedByUserID: &aliceID,
@@ -126,7 +127,7 @@ func TestReportRepositoryGetPersonalStatsIncludesAWDSolvedAndAttempts(t *testing
 			RoundID:           round.ID,
 			AttackerTeamID:    301,
 			VictimTeamID:      403,
-			ChallengeID:       102,
+			AWDChallengeID:    102,
 			AttackType:        model.AWDAttackTypeFlagCapture,
 			Source:            model.AWDAttackSourceSubmission,
 			SubmittedByUserID: &aliceID,
@@ -144,17 +145,17 @@ func TestReportRepositoryGetPersonalStatsIncludesAWDSolvedAndAttempts(t *testing
 		t.Fatalf("GetPersonalStats() error = %v", err)
 	}
 
-	if stats.TotalScore != 300 {
-		t.Fatalf("expected total score 300, got %+v", stats)
+	if stats.TotalScore != 100 {
+		t.Fatalf("expected ordinary total score 100 after awd separation, got %+v", stats)
 	}
-	if stats.TotalSolved != 2 {
-		t.Fatalf("expected total solved 2, got %+v", stats)
+	if stats.TotalSolved != 1 {
+		t.Fatalf("expected total solved 1 after awd separation, got %+v", stats)
 	}
 	if stats.TotalAttempts != 4 {
 		t.Fatalf("expected total attempts 4, got %+v", stats)
 	}
-	if stats.Rank != 1 {
-		t.Fatalf("expected rank 1 after AWD score boost, got %+v", stats)
+	if stats.Rank != 2 {
+		t.Fatalf("expected rank 2 without awd score boost, got %+v", stats)
 	}
 }
 
@@ -204,7 +205,7 @@ func TestReportRepositoryListPersonalDimensionStatsDedupesPracticeAndAWD(t *test
 			RoundID:           round.ID,
 			AttackerTeamID:    1,
 			VictimTeamID:      2,
-			ChallengeID:       201,
+			AWDChallengeID:    201,
 			AttackType:        model.AWDAttackTypeFlagCapture,
 			Source:            model.AWDAttackSourceSubmission,
 			SubmittedByUserID: &userID,
@@ -217,7 +218,7 @@ func TestReportRepositoryListPersonalDimensionStatsDedupesPracticeAndAWD(t *test
 			RoundID:           round.ID,
 			AttackerTeamID:    1,
 			VictimTeamID:      3,
-			ChallengeID:       202,
+			AWDChallengeID:    202,
 			AttackType:        model.AWDAttackTypeFlagCapture,
 			Source:            model.AWDAttackSourceSubmission,
 			SubmittedByUserID: &userID,
@@ -239,8 +240,8 @@ func TestReportRepositoryListPersonalDimensionStatsDedupesPracticeAndAWD(t *test
 	if web == nil {
 		t.Fatalf("expected web row, got %+v", rows)
 	}
-	if web.Solved != 2 || web.Total != 2 {
-		t.Fatalf("expected web solved=2 total=2 after dedupe, got %+v", web)
+	if web.Solved != 1 || web.Total != 2 {
+		t.Fatalf("expected web solved=1 total=2 after awd separation, got %+v", web)
 	}
 
 	crypto := findDimensionStat(rows, "crypto")
@@ -297,7 +298,7 @@ func TestReportRepositoryClassStatsIncludeAWDSolvedEvidence(t *testing.T) {
 		RoundID:           round.ID,
 		AttackerTeamID:    11,
 		VictimTeamID:      22,
-		ChallengeID:       302,
+		AWDChallengeID:    302,
 		AttackType:        model.AWDAttackTypeFlagCapture,
 		Source:            model.AWDAttackSourceSubmission,
 		SubmittedByUserID: &aliceID,
@@ -313,8 +314,8 @@ func TestReportRepositoryClassStatsIncludeAWDSolvedEvidence(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetClassAverageScore() error = %v", err)
 	}
-	if avg != 200 {
-		t.Fatalf("expected class average score 200, got %.2f", avg)
+	if avg != 100 {
+		t.Fatalf("expected class average score 100 after awd separation, got %.2f", avg)
 	}
 
 	top, err := repo.ListClassTopStudents(ctx, "class-a", 10)
@@ -324,8 +325,8 @@ func TestReportRepositoryClassStatsIncludeAWDSolvedEvidence(t *testing.T) {
 	if len(top) != 2 {
 		t.Fatalf("expected 2 top students, got %+v", top)
 	}
-	if top[0].UserID != 1 || top[0].TotalScore != 300 || top[0].Rank != 1 {
-		t.Fatalf("expected alice on top with AWD score, got %+v", top[0])
+	if top[0].UserID != 1 || top[0].TotalScore != 100 || top[0].Rank != 1 {
+		t.Fatalf("expected alice tied on ordinary score, got %+v", top[0])
 	}
 	if top[1].UserID != 2 || top[1].TotalScore != 100 || top[1].Rank != 2 {
 		t.Fatalf("expected bob second, got %+v", top[1])
@@ -341,7 +342,7 @@ func TestReportRepositoryGetStudentTimelineIncludesAWDAttackEvents(t *testing.T)
 	now := time.Date(2026, 4, 13, 13, 0, 0, 0, time.UTC)
 
 	user := model.User{ID: 1, Username: "alice", Role: model.RoleStudent, ClassName: "class-a", Status: model.UserStatusActive}
-	challenge := model.Challenge{ID: 401, Title: "web-attack", Category: "web", Difficulty: model.ChallengeDifficultyEasy, Points: 120, Status: model.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now}
+	challenge := model.AWDChallenge{ID: 401, Name: "web-attack", Slug: "web-attack", Category: "web", Difficulty: model.ChallengeDifficultyEasy, Status: model.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now}
 	round := model.AWDRound{ID: 51, ContestID: 200, RoundNumber: 2, Status: model.AWDRoundStatusFinished, CreatedAt: now, UpdatedAt: now}
 	teams := []model.Team{
 		{ID: 501, ContestID: 200, Name: "red-team", CaptainID: user.ID, InviteCode: "invite-red", MaxMembers: 4, CreatedAt: now, UpdatedAt: now},
@@ -367,7 +368,7 @@ func TestReportRepositoryGetStudentTimelineIncludesAWDAttackEvents(t *testing.T)
 			RoundID:           round.ID,
 			AttackerTeamID:    900,
 			VictimTeamID:      501,
-			ChallengeID:       challenge.ID,
+			AWDChallengeID:    challenge.ID,
 			AttackType:        model.AWDAttackTypeFlagCapture,
 			Source:            model.AWDAttackSourceSubmission,
 			SubmittedByUserID: &userID,
@@ -380,7 +381,7 @@ func TestReportRepositoryGetStudentTimelineIncludesAWDAttackEvents(t *testing.T)
 			RoundID:           round.ID,
 			AttackerTeamID:    900,
 			VictimTeamID:      502,
-			ChallengeID:       challenge.ID,
+			AWDChallengeID:    challenge.ID,
 			AttackType:        model.AWDAttackTypeFlagCapture,
 			Source:            model.AWDAttackSourceSubmission,
 			SubmittedByUserID: &userID,
@@ -402,6 +403,9 @@ func TestReportRepositoryGetStudentTimelineIncludesAWDAttackEvents(t *testing.T)
 	}
 	if events[0].Type != "awd_attack_submit" || events[0].Detail != "AWD 攻击命中 blue-team，得分 120" {
 		t.Fatalf("expected latest AWD success event, got %+v", events[0])
+	}
+	if events[0].ChallengeID != 0 || events[0].AWDChallengeID != challenge.ID || events[0].Title != challenge.Name {
+		t.Fatalf("expected AWD challenge identity to be separated, got %+v", events[0])
 	}
 	if events[0].IsCorrect == nil || !*events[0].IsCorrect {
 		t.Fatalf("expected success event IsCorrect=true, got %+v", events[0])
@@ -426,7 +430,7 @@ func TestReportRepositoryGetStudentEvidenceIncludesAWDAttackLogs(t *testing.T) {
 	now := time.Date(2026, 4, 13, 14, 0, 0, 0, time.UTC)
 
 	user := model.User{ID: 1, Username: "alice", Role: model.RoleStudent, ClassName: "class-a", Status: model.UserStatusActive}
-	challenge := model.Challenge{ID: 501, Title: "pwn-attack", Category: "pwn", Difficulty: model.ChallengeDifficultyMedium, Points: 150, Status: model.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now}
+	challenge := model.AWDChallenge{ID: 501, Name: "pwn-attack", Slug: "pwn-attack", Category: "pwn", Difficulty: model.ChallengeDifficultyMedium, Status: model.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now}
 	round := model.AWDRound{ID: 61, ContestID: 300, RoundNumber: 3, Status: model.AWDRoundStatusFinished, CreatedAt: now, UpdatedAt: now}
 	teams := []model.Team{
 		{ID: 601, ContestID: 300, Name: "green-team", CaptainID: user.ID, InviteCode: "invite-green", MaxMembers: 4, CreatedAt: now, UpdatedAt: now},
@@ -452,7 +456,7 @@ func TestReportRepositoryGetStudentEvidenceIncludesAWDAttackLogs(t *testing.T) {
 			RoundID:           round.ID,
 			AttackerTeamID:    910,
 			VictimTeamID:      601,
-			ChallengeID:       challenge.ID,
+			AWDChallengeID:    challenge.ID,
 			AttackType:        model.AWDAttackTypeFlagCapture,
 			Source:            model.AWDAttackSourceSubmission,
 			SubmittedByUserID: &userID,
@@ -465,7 +469,7 @@ func TestReportRepositoryGetStudentEvidenceIncludesAWDAttackLogs(t *testing.T) {
 			RoundID:           round.ID,
 			AttackerTeamID:    910,
 			VictimTeamID:      602,
-			ChallengeID:       challenge.ID,
+			AWDChallengeID:    challenge.ID,
 			AttackType:        model.AWDAttackTypeFlagCapture,
 			Source:            model.AWDAttackSourceSubmission,
 			SubmittedByUserID: &userID,
@@ -487,6 +491,9 @@ func TestReportRepositoryGetStudentEvidenceIncludesAWDAttackLogs(t *testing.T) {
 	}
 	if events[0].Type != "awd_attack_submission" || events[0].Detail != "AWD 攻击未命中 green-team" {
 		t.Fatalf("expected first AWD failure evidence, got %+v", events[0])
+	}
+	if events[0].ChallengeID != 0 || events[0].AWDChallengeID != challenge.ID || events[0].Title != challenge.Name {
+		t.Fatalf("expected AWD evidence identity to be separated, got %+v", events[0])
 	}
 	if events[0].Meta["event_stage"] != "exploit" {
 		t.Fatalf("expected exploit stage meta, got %+v", events[0].Meta)

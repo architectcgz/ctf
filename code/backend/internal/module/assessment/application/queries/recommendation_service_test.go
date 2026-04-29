@@ -128,7 +128,7 @@ func TestRecommendationServiceRecommendChallengesUsesWeakDimensionsAndSolvedFilt
 		RoundID:           701,
 		AttackerTeamID:    801,
 		VictimTeamID:      802,
-		ChallengeID:       303,
+		AWDChallengeID:    303,
 		AttackType:        model.AWDAttackTypeFlagCapture,
 		Source:            model.AWDAttackSourceSubmission,
 		IsSuccess:         true,
@@ -163,7 +163,7 @@ func TestRecommendationServiceRecommendChallengesUsesWeakDimensionsAndSolvedFilt
 	if len(stubRepo.lastDims) != 2 || stubRepo.lastDims[0] != model.DimensionWeb || stubRepo.lastDims[1] != model.DimensionPwn {
 		t.Fatalf("unexpected weak dimensions: %+v", stubRepo.lastDims)
 	}
-	if len(stubRepo.lastSolved) != 2 || stubRepo.lastSolved[0] != 101 || stubRepo.lastSolved[1] != 303 {
+	if len(stubRepo.lastSolved) != 1 || stubRepo.lastSolved[0] != 101 {
 		t.Fatalf("unexpected solved challenge ids: %+v", stubRepo.lastSolved)
 	}
 	if items[0].Reason == "" || items[1].Reason == "" {
@@ -240,11 +240,11 @@ func TestRecommendationServiceRegistersContestAttackAcceptedConsumer(t *testing.
 	if err := bus.Publish(context.Background(), platformevents.Event{
 		Name: contestcontracts.EventAWDAttackAccepted,
 		Payload: contestcontracts.AWDAttackAcceptedEvent{
-			UserID:      17,
-			ContestID:   99,
-			ChallengeID: 501,
-			Dimension:   model.DimensionWeb,
-			OccurredAt:  time.Now(),
+			UserID:         17,
+			ContestID:      99,
+			AWDChallengeID: 501,
+			Dimension:      model.DimensionWeb,
+			OccurredAt:     time.Now(),
 		},
 	}); err != nil {
 		t.Fatalf("Publish() error = %v", err)

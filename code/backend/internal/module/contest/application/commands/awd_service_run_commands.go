@@ -81,7 +81,7 @@ func (s *AWDService) PreviewChecker(ctx context.Context, contestID int64, req *d
 	}
 
 	var previewServiceID int64
-	previewChallengeID := req.ChallengeID
+	previewChallengeID := req.AWDChallengeID
 	var previewService *model.ContestAWDService
 	if req.ServiceID > 0 {
 		service, err := s.resolveContestRuntimeService(ctx, contestID, req.ServiceID)
@@ -90,8 +90,8 @@ func (s *AWDService) PreviewChecker(ctx context.Context, contestID int64, req *d
 		}
 		previewService = service
 		previewServiceID = service.ID
-		previewChallengeID = service.ChallengeID
-		if req.ChallengeID > 0 && req.ChallengeID != service.ChallengeID {
+		previewChallengeID = service.AWDChallengeID
+		if req.AWDChallengeID > 0 && req.AWDChallengeID != service.AWDChallengeID {
 			return nil, errcode.ErrInvalidParams
 		}
 	}
@@ -134,12 +134,12 @@ func (s *AWDService) PreviewChecker(ctx context.Context, contestID int64, req *d
 	}
 
 	preview, err := s.runPreviewCheckerAttempts(ctx, contestID, req.PreviewRequestID, contestports.AWDServicePreviewRequest{
-		ServiceID:     previewServiceID,
-		ChallengeID:   previewChallengeID,
-		CheckerType:   checkerType,
-		CheckerConfig: checkerConfig,
-		AccessURL:     previewAccessURL,
-		PreviewFlag:   req.PreviewFlag,
+		ServiceID:      previewServiceID,
+		AWDChallengeID: previewChallengeID,
+		CheckerType:    checkerType,
+		CheckerConfig:  checkerConfig,
+		AccessURL:      previewAccessURL,
+		PreviewFlag:    req.PreviewFlag,
 	})
 	if cleanupErr := s.cleanupCheckerPreviewRuntime(ctx, cleanupRuntime, err); cleanupErr != nil {
 		s.reportAWDPreviewFailure(ctx, contestID, req.PreviewRequestID, "summary", "预览实例回收失败。", cleanupErr)
@@ -155,12 +155,12 @@ func (s *AWDService) PreviewChecker(ctx context.Context, contestID int64, req *d
 		ServiceStatus: preview.ServiceStatus,
 		CheckResult:   contestdomain.ParseAWDCheckResult(preview.CheckResult),
 		PreviewContext: dto.AWDCheckerPreviewContextResp{
-			ServiceID:   preview.PreviewContext.ServiceID,
-			AccessURL:   preview.PreviewContext.AccessURL,
-			PreviewFlag: preview.PreviewContext.PreviewFlag,
-			RoundNumber: preview.PreviewContext.RoundNumber,
-			TeamID:      preview.PreviewContext.TeamID,
-			ChallengeID: preview.PreviewContext.ChallengeID,
+			ServiceID:      preview.PreviewContext.ServiceID,
+			AccessURL:      preview.PreviewContext.AccessURL,
+			PreviewFlag:    preview.PreviewContext.PreviewFlag,
+			RoundNumber:    preview.PreviewContext.RoundNumber,
+			TeamID:         preview.PreviewContext.TeamID,
+			AWDChallengeID: preview.PreviewContext.AWDChallengeID,
 		},
 	}
 	if s.redis == nil {

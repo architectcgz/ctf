@@ -221,7 +221,7 @@ func assertCommandReadinessBlockingReason(t *testing.T, db *gorm.DB, contestID, 
 
 func commandReadinessBlockingReasonByChallenge(items []*dto.AWDReadinessItemResp, challengeID int64) string {
 	for _, item := range items {
-		if item.ChallengeID == challengeID {
+		if item.AWDChallengeID == challengeID {
 			return item.BlockingReason
 		}
 	}

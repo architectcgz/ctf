@@ -74,10 +74,10 @@ func (u *AWDRoundUpdater) runAWDHTTPCheckerTarget(
 	}
 
 	templateData := awdHTTPCheckerTemplateData{
-		Flag:        currentFlag,
-		Round:       0,
-		TeamID:      teamID,
-		ChallengeID: definition.ChallengeID,
+		Flag:           currentFlag,
+		Round:          0,
+		TeamID:         teamID,
+		AWDChallengeID: definition.AWDChallengeID,
 	}
 	if round != nil {
 		templateData.Round = round.RoundNumber

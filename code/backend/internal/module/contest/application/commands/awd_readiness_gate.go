@@ -90,7 +90,8 @@ func mapAWDReadinessChallengeRecords(records []contestports.AWDReadinessChalleng
 	challenges := make([]contestdomain.AWDReadinessChallenge, 0, len(records))
 	for _, record := range records {
 		challenges = append(challenges, contestdomain.AWDReadinessChallenge{
-			ChallengeID:       record.ChallengeID,
+			ServiceID:         record.ServiceID,
+			AWDChallengeID:    record.AWDChallengeID,
 			Title:             record.Title,
 			CheckerType:       record.CheckerType,
 			CheckerConfig:     record.CheckerConfig,

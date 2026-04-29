@@ -393,7 +393,6 @@ describe('admin contest api contract', () => {
       {
         id: 7009,
         contest_id: 7,
-        challenge_id: 11,
         awd_challenge_id: 5,
         display_name: 'Bank Portal',
         order: 2,
@@ -404,7 +403,7 @@ describe('admin contest api contract', () => {
           awd_defense_score: 2,
         },
         runtime_config: {
-          challenge_id: 11,
+          awd_challenge_id: 5,
           checker_type: 'http_standard',
           checker_config: {
             get_flag: {
@@ -424,7 +423,7 @@ describe('admin contest api contract', () => {
             preview_flag: 'FLAG{preview}',
             round_number: 0,
             team_id: 0,
-            challenge_id: 11,
+            awd_challenge_id: 5,
           },
         },
         created_at: '2026-03-12T00:00:00.000Z',
@@ -442,7 +441,6 @@ describe('admin contest api contract', () => {
       {
         id: '7009',
         contest_id: '7',
-        challenge_id: '11',
         awd_challenge_id: '5',
         title: undefined,
         category: undefined,
@@ -485,7 +483,7 @@ describe('admin contest api contract', () => {
             preview_flag: 'FLAG{preview}',
             round_number: 0,
             team_id: '0',
-            challenge_id: '11',
+            awd_challenge_id: '5',
           },
         },
         created_at: '2026-03-12T00:00:00.000Z',
@@ -498,7 +496,6 @@ describe('admin contest api contract', () => {
     requestMock.mockResolvedValue({
       id: 7009,
       contest_id: 7,
-      challenge_id: 11,
       awd_challenge_id: 5,
       title: 'Bank Portal',
       category: 'web',
@@ -563,7 +560,6 @@ describe('admin contest api contract', () => {
     expect(result).toEqual({
       id: '7009',
       contest_id: '7',
-      challenge_id: '11',
       awd_challenge_id: '5',
       title: 'Bank Portal',
       category: 'web',
@@ -671,7 +667,10 @@ describe('admin contest api contract', () => {
           round_id: 41,
           team_id: 12,
           team_name: 'Blue',
-          challenge_id: 101,
+          service_id: 7009,
+          service_name: 'Bank Portal',
+          awd_challenge_id: 101,
+          awd_challenge_title: 'Bank Portal',
           service_status: 'up',
           check_result: { status_reason: 'healthy' },
           checker_type: 'http_standard',
@@ -709,7 +708,10 @@ describe('admin contest api contract', () => {
           round_id: '41',
           team_id: '12',
           team_name: 'Blue',
-          challenge_id: '101',
+          service_id: '7009',
+          service_name: 'Bank Portal',
+          awd_challenge_id: '101',
+          awd_challenge_title: 'Bank Portal',
           service_status: 'up',
           check_result: { status_reason: 'healthy' },
           checker_type: 'http_standard',
@@ -737,7 +739,7 @@ describe('admin contest api contract', () => {
         preview_flag: 'flag{preview}',
         round_number: 0,
         team_id: 0,
-        challenge_id: 101,
+        awd_challenge_id: 101,
       },
       preview_token: 'preview-token-9',
     })
@@ -752,7 +754,7 @@ describe('admin contest api contract', () => {
     ).runContestAWDCheckerPreview
 
     const result = await previewFn('7', {
-      challenge_id: 101,
+      awd_challenge_id: 101,
       checker_type: 'http_standard',
       checker_config: {
         put_flag: { method: 'PUT', path: '/api/flag' },
@@ -766,7 +768,7 @@ describe('admin contest api contract', () => {
       method: 'POST',
       url: '/admin/contests/7/awd/checker-preview',
       data: {
-        challenge_id: 101,
+        awd_challenge_id: 101,
         checker_type: 'http_standard',
         checker_config: {
           put_flag: { method: 'PUT', path: '/api/flag' },
@@ -789,7 +791,7 @@ describe('admin contest api contract', () => {
         preview_flag: 'flag{preview}',
         round_number: 0,
         team_id: '0',
-        challenge_id: '101',
+        awd_challenge_id: '101',
       },
       preview_token: 'preview-token-9',
     })
@@ -1001,8 +1003,8 @@ describe('admin contest api contract', () => {
       ],
       top_challenges: [
         {
-          challenge_id: 101,
-          challenge_title: 'Web 1',
+          awd_challenge_id: 101,
+          awd_challenge_title: 'Web 1',
           request_count: 11,
           error_count: 4,
         },
@@ -1078,8 +1080,8 @@ describe('admin contest api contract', () => {
       ],
       top_challenges: [
         {
-          challenge_id: '101',
-          challenge_title: 'Web 1',
+          awd_challenge_id: '101',
+          awd_challenge_title: 'Web 1',
           request_count: 11,
           error_count: 4,
         },
@@ -1115,8 +1117,9 @@ describe('admin contest api contract', () => {
           attacker_team_name: 'Red',
           victim_team_id: 12,
           victim_team_name: 'Blue',
-          challenge_id: 101,
-          challenge_title: 'Web 1',
+          service_id: 7009,
+          awd_challenge_id: 101,
+          awd_challenge_title: 'Web 1',
           method: 'GET',
           path: '/api/flag',
           status_code: 500,
@@ -1161,8 +1164,9 @@ describe('admin contest api contract', () => {
           attacker_team_name: 'Red',
           victim_team_id: '12',
           victim_team_name: 'Blue',
-          challenge_id: '101',
-          challenge_title: 'Web 1',
+          service_id: '7009',
+          awd_challenge_id: '101',
+          awd_challenge_title: 'Web 1',
           method: 'GET',
           path: '/api/flag',
           status_code: 500,
@@ -1248,7 +1252,8 @@ describe('admin contest api contract', () => {
         attacker_team: 'Red',
         victim_team_id: 12,
         victim_team: 'Blue',
-        challenge_id: 101,
+        service_id: 7009,
+        awd_challenge_id: 101,
         attack_type: 'flag_capture',
         source: 'submission',
         submitted_flag: 'flag{demo}',
@@ -1272,7 +1277,8 @@ describe('admin contest api contract', () => {
         attacker_team: 'Red',
         victim_team_id: '12',
         victim_team: 'Blue',
-        challenge_id: '101',
+        service_id: '7009',
+        awd_challenge_id: '101',
         attack_type: 'flag_capture',
         source: 'submission',
         submitted_flag: 'flag{demo}',
@@ -1331,7 +1337,7 @@ describe('admin contest api contract', () => {
       blocking_actions: ['create_round', 'run_current_round_check'],
       items: [
         {
-          challenge_id: 101,
+          awd_challenge_id: 101,
           title: 'web-checker',
           checker_type: 'http_standard',
           validation_state: 'failed',
@@ -1363,7 +1369,7 @@ describe('admin contest api contract', () => {
       blocking_actions: ['create_round', 'run_current_round_check'],
       items: [
         {
-          challenge_id: '101',
+          awd_challenge_id: '101',
           title: 'web-checker',
           checker_type: 'http_standard',
           validation_state: 'failed',

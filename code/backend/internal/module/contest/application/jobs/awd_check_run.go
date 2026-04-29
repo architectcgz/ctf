@@ -45,17 +45,17 @@ func (u *AWDRoundUpdater) runRoundServiceChecks(ctx context.Context, contest *mo
 			}
 
 			records = append(records, model.AWDTeamService{
-				RoundID:       round.ID,
-				TeamID:        team.ID,
-				ServiceID:     definition.ServiceID,
-				ChallengeID:   definition.ChallengeID,
-				ServiceStatus: outcome.serviceStatus,
-				CheckResult:   outcome.checkResult,
-				CheckerType:   outcome.checkerType,
-				SLAScore:      outcome.slaScore,
-				DefenseScore:  outcome.defenseScore,
-				CreatedAt:     now,
-				UpdatedAt:     now,
+				RoundID:        round.ID,
+				TeamID:         team.ID,
+				ServiceID:      definition.ServiceID,
+				AWDChallengeID: definition.AWDChallengeID,
+				ServiceStatus:  outcome.serviceStatus,
+				CheckResult:    outcome.checkResult,
+				CheckerType:    outcome.checkerType,
+				SLAScore:       outcome.slaScore,
+				DefenseScore:   outcome.defenseScore,
+				CreatedAt:      now,
+				UpdatedAt:      now,
 			})
 			statusFields[rediskeys.AWDRoundFlagServiceField(team.ID, definition.ServiceID)] = outcome.serviceStatus
 		}

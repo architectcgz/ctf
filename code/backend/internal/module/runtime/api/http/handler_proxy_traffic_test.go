@@ -140,7 +140,7 @@ func TestRecordProxyAuditUsesExplicitAWDAttackScope(t *testing.T) {
 	if trafficRecorder.awdEvent.ContestID != contestID || trafficRecorder.awdEvent.AttackerTeamID != attackerTeamID || trafficRecorder.awdEvent.VictimTeamID != victimTeamID {
 		t.Fatalf("unexpected awd event teams: %+v", trafficRecorder.awdEvent)
 	}
-	if trafficRecorder.awdEvent.ServiceID != serviceID || trafficRecorder.awdEvent.ChallengeID != challengeID {
+	if trafficRecorder.awdEvent.ServiceID != serviceID || trafficRecorder.awdEvent.AWDChallengeID != challengeID {
 		t.Fatalf("unexpected awd event service scope: %+v", trafficRecorder.awdEvent)
 	}
 }

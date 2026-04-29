@@ -23,20 +23,13 @@ func NewReportRepository(db *gorm.DB) *ReportRepository {
 }
 
 func reportSolvedChallengesCTE() string {
-	return fmt.Sprintf(`
+	return `
 		solved_challenges AS (
 			SELECT DISTINCT s.user_id AS user_id, s.challenge_id AS challenge_id
 			FROM submissions s
 			WHERE s.is_correct = TRUE AND s.contest_id IS NULL
-			UNION
-			SELECT DISTINCT aal.submitted_by_user_id AS user_id, aal.challenge_id AS challenge_id
-			FROM awd_attack_logs aal
-			WHERE aal.submitted_by_user_id IS NOT NULL
-				AND aal.source = '%s'
-				AND aal.is_success = TRUE
-				AND aal.score_gained > 0
 		)
-	`, model.AWDAttackSourceSubmission)
+	`
 }
 
 func reportAWDAttackDetailSQL(successExpr, victimTeamNameExpr, scoreExpr string) string {
@@ -435,7 +428,9 @@ func (r *ReportRepository) GetStudentTimeline(ctx context.Context, userID int64,
 		SELECT
 			events.type,
 			events.challenge_id,
-			COALESCE(c.title, '') AS title,
+			events.awd_challenge_id,
+			events.awd_challenge_title,
+			COALESCE(NULLIF(events.awd_challenge_title, ''), c.title, '') AS title,
 			events.timestamp,
 			events.is_correct,
 			events.points,
@@ -444,6 +439,8 @@ func (r *ReportRepository) GetStudentTimeline(ctx context.Context, userID int64,
 			SELECT
 				'instance_start' AS type,
 				i.challenge_id,
+				0 AS awd_challenge_id,
+				'' AS awd_challenge_title,
 				i.created_at AS timestamp,
 				NULL AS is_correct,
 				NULL AS points,
@@ -454,6 +451,8 @@ func (r *ReportRepository) GetStudentTimeline(ctx context.Context, userID int64,
 			SELECT
 				'flag_submit' AS type,
 				s.challenge_id,
+				0 AS awd_challenge_id,
+				'' AS awd_challenge_title,
 				s.submitted_at AS timestamp,
 				s.is_correct,
 				CASE WHEN s.is_correct THEN c.points ELSE NULL END AS points,
@@ -465,6 +464,8 @@ func (r *ReportRepository) GetStudentTimeline(ctx context.Context, userID int64,
 			SELECT
 				'instance_destroy' AS type,
 				i.challenge_id,
+				0 AS awd_challenge_id,
+				'' AS awd_challenge_title,
 				i.destroyed_at AS timestamp,
 				NULL AS is_correct,
 				NULL AS points,
@@ -474,12 +475,15 @@ func (r *ReportRepository) GetStudentTimeline(ctx context.Context, userID int64,
 			UNION ALL
 			SELECT
 				'awd_attack_submit' AS type,
-				al.challenge_id,
+				0 AS challenge_id,
+				al.awd_challenge_id AS awd_challenge_id,
+				COALESCE(ac.name, '') AS awd_challenge_title,
 				al.created_at AS timestamp,
 				al.is_success AS is_correct,
 				CASE WHEN al.score_gained > 0 THEN al.score_gained ELSE NULL END AS points,
 				%s AS detail
 			FROM awd_attack_logs al
+			LEFT JOIN awd_challenges ac ON ac.id = al.awd_challenge_id
 			LEFT JOIN teams vt ON vt.id = al.victim_team_id
 			WHERE al.submitted_by_user_id = ? AND al.source = '%s'
 		) events
@@ -602,51 +606,54 @@ func (r *ReportRepository) GetStudentEvidence(ctx context.Context, userID int64,
 	}
 
 	awdRows := make([]struct {
-		RoundID        int64     `gorm:"column:round_id"`
-		VictimTeamID   int64     `gorm:"column:victim_team_id"`
-		VictimTeamName string    `gorm:"column:victim_team_name"`
-		ChallengeID    int64     `gorm:"column:challenge_id"`
-		Title          string    `gorm:"column:title"`
-		Timestamp      time.Time `gorm:"column:timestamp"`
-		IsSuccess      bool      `gorm:"column:is_success"`
-		ScoreGained    int       `gorm:"column:score_gained"`
-		Detail         string    `gorm:"column:detail"`
+		RoundID           int64     `gorm:"column:round_id"`
+		VictimTeamID      int64     `gorm:"column:victim_team_id"`
+		VictimTeamName    string    `gorm:"column:victim_team_name"`
+		AWDChallengeID    int64     `gorm:"column:awd_challenge_id"`
+		AWDChallengeTitle string    `gorm:"column:awd_challenge_title"`
+		Timestamp         time.Time `gorm:"column:timestamp"`
+		IsSuccess         bool      `gorm:"column:is_success"`
+		ScoreGained       int       `gorm:"column:score_gained"`
+		Detail            string    `gorm:"column:detail"`
 	}, 0)
 	awdQuery := r.db.WithContext(ctx).Table("awd_attack_logs AS al").
 		Select(strings.Join([]string{
 			"al.round_id AS round_id",
 			"al.victim_team_id AS victim_team_id",
 			"COALESCE(vt.name, '') AS victim_team_name",
-			"al.challenge_id AS challenge_id",
-			"COALESCE(c.title, '') AS title",
+			"al.awd_challenge_id AS awd_challenge_id",
+			"COALESCE(ac.name, '') AS awd_challenge_title",
 			"al.created_at AS timestamp",
 			"al.is_success AS is_success",
 			"al.score_gained AS score_gained",
 			reportAWDAttackDetailSQL("al.is_success", "vt.name", "al.score_gained") + " AS detail",
 		}, ", ")).
+		Joins("LEFT JOIN awd_challenges ac ON ac.id = al.awd_challenge_id").
 		Joins("LEFT JOIN teams vt ON vt.id = al.victim_team_id").
-		Joins("LEFT JOIN challenges c ON c.id = al.challenge_id").
 		Where("al.submitted_by_user_id = ? AND al.source = ?", userID, model.AWDAttackSourceSubmission)
 	if challengeID != nil {
-		awdQuery = awdQuery.Where("al.challenge_id = ?", *challengeID)
+		awdQuery = awdQuery.Where("al.awd_challenge_id = ?", *challengeID)
 	}
 	if err := awdQuery.Order("al.created_at ASC").Scan(&awdRows).Error; err != nil {
 		return nil, err
 	}
 	for _, row := range awdRows {
 		events = append(events, assessmentdomain.ReviewArchiveEvidenceEvent{
-			Type:        "awd_attack_submission",
-			ChallengeID: row.ChallengeID,
-			Title:       row.Title,
-			Timestamp:   row.Timestamp,
-			Detail:      row.Detail,
+			Type:              "awd_attack_submission",
+			AWDChallengeID:    row.AWDChallengeID,
+			AWDChallengeTitle: row.AWDChallengeTitle,
+			Title:             row.AWDChallengeTitle,
+			Timestamp:         row.Timestamp,
+			Detail:            row.Detail,
 			Meta: map[string]any{
-				"event_stage":      "exploit",
-				"is_success":       row.IsSuccess,
-				"score_gained":     row.ScoreGained,
-				"round_id":         row.RoundID,
-				"victim_team_id":   row.VictimTeamID,
-				"victim_team_name": row.VictimTeamName,
+				"event_stage":         "exploit",
+				"is_success":          row.IsSuccess,
+				"score_gained":        row.ScoreGained,
+				"round_id":            row.RoundID,
+				"victim_team_id":      row.VictimTeamID,
+				"victim_team_name":    row.VictimTeamName,
+				"awd_challenge_id":    row.AWDChallengeID,
+				"awd_challenge_title": row.AWDChallengeTitle,
 			},
 		})
 	}

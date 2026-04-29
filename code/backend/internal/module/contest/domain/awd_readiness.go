@@ -30,7 +30,7 @@ var awdReadinessBlockingActions = []string{
 
 type AWDReadinessChallenge struct {
 	ServiceID         int64
-	ChallengeID       int64
+	AWDChallengeID    int64
 	Title             string
 	CheckerType       model.AWDCheckerType
 	CheckerConfig     string
@@ -41,7 +41,7 @@ type AWDReadinessChallenge struct {
 
 type AWDReadinessItem struct {
 	ServiceID       int64
-	ChallengeID     int64
+	AWDChallengeID  int64
 	Title           string
 	CheckerType     model.AWDCheckerType
 	ValidationState string
@@ -81,7 +81,7 @@ func BuildAWDReadiness(contestID int64, challenges []AWDReadinessChallenge) *AWD
 	for _, challenge := range challenges {
 		item := AWDReadinessItem{
 			ServiceID:       challenge.ServiceID,
-			ChallengeID:     challenge.ChallengeID,
+			AWDChallengeID:  challenge.AWDChallengeID,
 			Title:           challenge.Title,
 			CheckerType:     NormalizeAWDCheckerType(string(challenge.CheckerType)),
 			ValidationState: string(NormalizeAWDCheckerValidationState(string(challenge.ValidationState))),

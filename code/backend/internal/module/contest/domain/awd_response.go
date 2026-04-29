@@ -35,7 +35,7 @@ func AWDTeamServiceRespFromModel(record *model.AWDTeamService, teamName string, 
 		TeamID:         record.TeamID,
 		TeamName:       teamName,
 		ServiceID:      record.ServiceID,
-		ChallengeID:    record.ChallengeID,
+		AWDChallengeID: record.AWDChallengeID,
 		ServiceStatus:  record.ServiceStatus,
 		CheckResult:    ParseAWDCheckResult(record.CheckResult),
 		CheckerType:    record.CheckerType,
@@ -47,7 +47,7 @@ func AWDTeamServiceRespFromModel(record *model.AWDTeamService, teamName string, 
 	}
 	if len(serviceName) > 0 {
 		resp.ServiceName = serviceName[0]
-		resp.ChallengeTitle = serviceName[0]
+		resp.AWDChallengeTitle = serviceName[0]
 	}
 	return resp
 }
@@ -64,7 +64,7 @@ func AWDAttackLogRespFromModel(record *model.AWDAttackLog, attackerTeam, victimT
 		VictimTeamID:   record.VictimTeamID,
 		VictimTeam:     victimTeam,
 		ServiceID:      record.ServiceID,
-		ChallengeID:    record.ChallengeID,
+		AWDChallengeID: record.AWDChallengeID,
 		AttackType:     record.AttackType,
 		Source:         NormalizeAWDAttackSource(record.Source),
 		SubmittedFlag:  record.SubmittedFlag,

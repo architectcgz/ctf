@@ -13,7 +13,7 @@ import (
 
 type awdContestServiceRuntimeRow struct {
 	ServiceID         int64                           `gorm:"column:service_id"`
-	ChallengeID       int64                           `gorm:"column:challenge_id"`
+	AWDChallengeID    int64                           `gorm:"column:awd_challenge_id"`
 	DisplayName       string                          `gorm:"column:display_name"`
 	ServiceSnapshot   string                          `gorm:"column:service_snapshot"`
 	RuntimeConfig     string                          `gorm:"column:runtime_config"`
@@ -75,7 +75,7 @@ func (r *AWDRepository) ListChallengesByContest(ctx context.Context, contestID i
 			return nil, decodeErr
 		}
 		challenges = append(challenges, model.Challenge{
-			ID:         row.ChallengeID,
+			ID:         row.AWDChallengeID,
 			Title:      resolveContestAWDServiceTitle(snapshot, row.DisplayName),
 			Category:   snapshot.Category,
 			Difficulty: snapshot.Difficulty,
@@ -103,14 +103,14 @@ func (r *AWDRepository) ListServiceDefinitionsByContest(ctx context.Context, con
 		runtimeConfig := contestdomain.ParseAWDCheckerConfig(row.RuntimeConfig)
 		scoreConfig := contestdomain.ParseAWDCheckerConfig(row.ScoreConfig)
 		definitions = append(definitions, contestports.AWDServiceDefinition{
-			ServiceID:     row.ServiceID,
-			ServiceName:   resolveContestAWDServiceTitle(snapshot, row.DisplayName),
-			ChallengeID:   row.ChallengeID,
-			FlagPrefix:    resolveContestAWDServiceFlagPrefix(snapshot),
-			CheckerType:   resolveContestAWDServiceCheckerType(runtimeConfig),
-			CheckerConfig: resolveContestAWDServiceCheckerConfig(runtimeConfig),
-			SLAScore:      resolveContestAWDServiceScore(scoreConfig, "awd_sla_score"),
-			DefenseScore:  resolveContestAWDServiceScore(scoreConfig, "awd_defense_score"),
+			ServiceID:      row.ServiceID,
+			ServiceName:    resolveContestAWDServiceTitle(snapshot, row.DisplayName),
+			AWDChallengeID: row.AWDChallengeID,
+			FlagPrefix:     resolveContestAWDServiceFlagPrefix(snapshot),
+			CheckerType:    resolveContestAWDServiceCheckerType(runtimeConfig),
+			CheckerConfig:  resolveContestAWDServiceCheckerConfig(runtimeConfig),
+			SLAScore:       resolveContestAWDServiceScore(scoreConfig, "awd_sla_score"),
+			DefenseScore:   resolveContestAWDServiceScore(scoreConfig, "awd_defense_score"),
 		})
 	}
 	return definitions, nil
@@ -131,7 +131,7 @@ func (r *AWDRepository) ListReadinessChallengesByContest(ctx context.Context, co
 		runtimeConfig := contestdomain.ParseAWDCheckerConfig(row.RuntimeConfig)
 		records = append(records, contestports.AWDReadinessChallengeRecord{
 			ServiceID:         row.ServiceID,
-			ChallengeID:       row.ChallengeID,
+			AWDChallengeID:    row.AWDChallengeID,
 			Title:             resolveContestAWDServiceTitle(snapshot, row.DisplayName),
 			CheckerType:       resolveContestAWDServiceCheckerType(runtimeConfig),
 			CheckerConfig:     resolveContestAWDServiceCheckerConfig(runtimeConfig),
@@ -149,7 +149,7 @@ func (r *AWDRepository) listContestAWDServiceRuntimeRows(ctx context.Context, co
 		Table("contest_awd_services AS cas").
 		Select(`
 			cas.id AS service_id,
-			cas.challenge_id AS challenge_id,
+			cas.awd_challenge_id AS awd_challenge_id,
 			cas.display_name AS display_name,
 			cas.service_snapshot AS service_snapshot,
 			cas.runtime_config AS runtime_config,

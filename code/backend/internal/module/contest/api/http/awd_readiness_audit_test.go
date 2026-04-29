@@ -284,7 +284,7 @@ func testAWDReadinessSnapshot(contestID int64) *dto.AWDReadinessResp {
 		GlobalBlockingReasons: []string{contestdomain.AWDReadinessGlobalReasonNoChallenges},
 		Items: []*dto.AWDReadinessItemResp{
 			{
-				ChallengeID:     101,
+				AWDChallengeID:  101,
 				Title:           "calc",
 				CheckerType:     model.AWDCheckerTypeHTTPStandard,
 				ValidationState: string(model.AWDCheckerValidationStateFailed),

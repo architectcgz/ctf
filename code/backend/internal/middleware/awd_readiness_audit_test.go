@@ -36,7 +36,7 @@ func TestAWDReadinessAuditRecordsSucceededForcedOverride(t *testing.T) {
 			GlobalBlockingReasons: []string{"no_challenges"},
 			BlockingItems: []AWDReadinessAuditItem{
 				{
-					ChallengeID:     11,
+					AWDChallengeID:  11,
 					Title:           "calc",
 					CheckerType:     model.AWDCheckerType("http_standard"),
 					ValidationState: "failed",
@@ -80,7 +80,7 @@ func TestAWDReadinessAuditRecordsFailedForcedOverride(t *testing.T) {
 			GlobalBlockingReasons: []string{"missing_checker"},
 			BlockingItems: []AWDReadinessAuditItem{
 				{
-					ChallengeID:     21,
+					AWDChallengeID:  21,
 					Title:           "pwn",
 					CheckerType:     model.AWDCheckerType("legacy_probe"),
 					ValidationState: "missing_checker",

@@ -81,7 +81,7 @@ func TestProxyTrafficEventRecorderPrefersServiceChallengeMetadata(t *testing.T) 
 	seedProxyTrafficRecorderRow(t, db, &model.ContestAWDService{
 		ID:              serviceID,
 		ContestID:       contestID,
-		ChallengeID:     9012,
+		AWDChallengeID:  9012,
 		DisplayName:     "Bank Portal",
 		Order:           1,
 		IsVisible:       true,
@@ -113,8 +113,8 @@ func TestProxyTrafficEventRecorderPrefersServiceChallengeMetadata(t *testing.T) 
 	if err := db.First(&event).Error; err != nil {
 		t.Fatalf("load awd traffic event: %v", err)
 	}
-	if event.ChallengeID != 9012 {
-		t.Fatalf("expected traffic event challenge_id=9012 from contest awd service, got %+v", event)
+	if event.AWDChallengeID != 9012 {
+		t.Fatalf("expected traffic event awd_challenge_id=9012 from contest awd service, got %+v", event)
 	}
 	if event.ServiceID != serviceID {
 		t.Fatalf("expected traffic event service_id=%d from runtime instance, got %+v", serviceID, event)
@@ -182,7 +182,7 @@ func TestProxyTrafficEventRecorderRecordsExplicitAWDAttackScope(t *testing.T) {
 		AttackerTeamID: attackerTeamID,
 		VictimTeamID:   victimTeamID,
 		ServiceID:      serviceID,
-		ChallengeID:    90231,
+		AWDChallengeID: 90231,
 		Method:         "POST",
 		Path:           "/api/flag",
 		StatusCode:     200,
@@ -201,7 +201,7 @@ func TestProxyTrafficEventRecorderRecordsExplicitAWDAttackScope(t *testing.T) {
 	if event.AttackerTeamID != attackerTeamID || event.VictimTeamID != victimTeamID {
 		t.Fatalf("unexpected teams: %+v", event)
 	}
-	if event.ServiceID != serviceID || event.ChallengeID != 90231 {
+	if event.ServiceID != serviceID || event.AWDChallengeID != 90231 {
 		t.Fatalf("unexpected service scope: %+v", event)
 	}
 	if event.Method != "POST" || event.Path != "/api/flag" || event.StatusCode != 200 {

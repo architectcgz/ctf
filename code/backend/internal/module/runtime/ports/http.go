@@ -92,19 +92,19 @@ type AWDTargetProxyScope struct {
 	AttackerTeamID int64
 	VictimTeamID   int64
 	ServiceID      int64
-	ChallengeID    int64
+	AWDChallengeID int64
 	ShareScope     model.ShareScope
 	AccessURL      string
 }
 
 type AWDDefenseSSHScope struct {
-	InstanceID  int64
-	ContestID   int64
-	TeamID      int64
-	ServiceID   int64
-	ChallengeID int64
-	ContainerID string
-	ShareScope  model.ShareScope
+	InstanceID     int64
+	ContestID      int64
+	TeamID         int64
+	ServiceID      int64
+	AWDChallengeID int64
+	ContainerID    string
+	ShareScope     model.ShareScope
 }
 
 type AWDDefenseSSHSession struct {

@@ -27,10 +27,10 @@ func (u *AWDRoundUpdater) buildRoundFlagAssignments(ctx context.Context, contest
 	for _, team := range teams {
 		for _, definition := range definitions {
 			assignments = append(assignments, contestports.AWDFlagAssignment{
-				ServiceID:   definition.ServiceID,
-				TeamID:      team.ID,
-				ChallengeID: definition.ChallengeID,
-				Flag:        contestdomain.BuildAWDRoundFlag(contestID, round.RoundNumber, team.ID, definition.ChallengeID, u.flagSecret, definition.FlagPrefix),
+				ServiceID:      definition.ServiceID,
+				TeamID:         team.ID,
+				AWDChallengeID: definition.AWDChallengeID,
+				Flag:           contestdomain.BuildAWDRoundFlag(contestID, round.RoundNumber, team.ID, definition.AWDChallengeID, u.flagSecret, definition.FlagPrefix),
 			})
 		}
 	}

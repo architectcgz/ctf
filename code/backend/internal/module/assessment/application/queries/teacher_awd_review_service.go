@@ -205,19 +205,19 @@ func toTeacherAWDReviewServices(items []assessmentdomain.TeacherAWDReviewService
 	resp := make([]dto.TeacherAWDReviewServiceResp, 0, len(items))
 	for _, item := range items {
 		resp = append(resp, dto.TeacherAWDReviewServiceResp{
-			ID:             item.ID,
-			RoundID:        item.RoundID,
-			TeamID:         item.TeamID,
-			TeamName:       item.TeamName,
-			ServiceID:      item.ServiceID,
-			ChallengeID:    item.ChallengeID,
-			ChallengeTitle: item.ChallengeTitle,
-			ServiceStatus:  item.ServiceStatus,
-			AttackReceived: item.AttackReceived,
-			SLAScore:       item.SLAScore,
-			DefenseScore:   item.DefenseScore,
-			AttackScore:    item.AttackScore,
-			UpdatedAt:      item.UpdatedAt,
+			ID:                item.ID,
+			RoundID:           item.RoundID,
+			TeamID:            item.TeamID,
+			TeamName:          item.TeamName,
+			ServiceID:         item.ServiceID,
+			AWDChallengeID:    item.AWDChallengeID,
+			AWDChallengeTitle: item.AWDChallengeTitle,
+			ServiceStatus:     item.ServiceStatus,
+			AttackReceived:    item.AttackReceived,
+			SLAScore:          item.SLAScore,
+			DefenseScore:      item.DefenseScore,
+			AttackScore:       item.AttackScore,
+			UpdatedAt:         item.UpdatedAt,
 		})
 	}
 	return resp
@@ -227,21 +227,21 @@ func toTeacherAWDReviewAttacks(items []assessmentdomain.TeacherAWDReviewAttackRe
 	resp := make([]dto.TeacherAWDReviewAttackResp, 0, len(items))
 	for _, item := range items {
 		resp = append(resp, dto.TeacherAWDReviewAttackResp{
-			ID:               item.ID,
-			RoundID:          item.RoundID,
-			AttackerTeamID:   item.AttackerTeamID,
-			AttackerTeamName: item.AttackerTeamName,
-			VictimTeamID:     item.VictimTeamID,
-			VictimTeamName:   item.VictimTeamName,
-			ServiceID:        item.ServiceID,
-			ChallengeID:      item.ChallengeID,
-			ChallengeTitle:   item.ChallengeTitle,
-			AttackType:       item.AttackType,
-			Source:           item.Source,
-			SubmittedFlag:    item.SubmittedFlag,
-			IsSuccess:        item.IsSuccess,
-			ScoreGained:      item.ScoreGained,
-			CreatedAt:        item.CreatedAt,
+			ID:                item.ID,
+			RoundID:           item.RoundID,
+			AttackerTeamID:    item.AttackerTeamID,
+			AttackerTeamName:  item.AttackerTeamName,
+			VictimTeamID:      item.VictimTeamID,
+			VictimTeamName:    item.VictimTeamName,
+			ServiceID:         item.ServiceID,
+			AWDChallengeID:    item.AWDChallengeID,
+			AWDChallengeTitle: item.AWDChallengeTitle,
+			AttackType:        item.AttackType,
+			Source:            item.Source,
+			SubmittedFlag:     item.SubmittedFlag,
+			IsSuccess:         item.IsSuccess,
+			ScoreGained:       item.ScoreGained,
+			CreatedAt:         item.CreatedAt,
 		})
 	}
 	return resp
@@ -251,21 +251,21 @@ func toTeacherAWDReviewTraffic(items []assessmentdomain.TeacherAWDReviewTrafficR
 	resp := make([]dto.TeacherAWDReviewTrafficResp, 0, len(items))
 	for _, item := range items {
 		resp = append(resp, dto.TeacherAWDReviewTrafficResp{
-			ID:               item.ID,
-			ContestID:        item.ContestID,
-			RoundID:          item.RoundID,
-			AttackerTeamID:   item.AttackerTeamID,
-			AttackerTeamName: item.AttackerTeamName,
-			VictimTeamID:     item.VictimTeamID,
-			VictimTeamName:   item.VictimTeamName,
-			ServiceID:        item.ServiceID,
-			ChallengeID:      item.ChallengeID,
-			ChallengeTitle:   item.ChallengeTitle,
-			Method:           item.Method,
-			Path:             item.Path,
-			StatusCode:       item.StatusCode,
-			Source:           item.Source,
-			CreatedAt:        item.CreatedAt,
+			ID:                item.ID,
+			ContestID:         item.ContestID,
+			RoundID:           item.RoundID,
+			AttackerTeamID:    item.AttackerTeamID,
+			AttackerTeamName:  item.AttackerTeamName,
+			VictimTeamID:      item.VictimTeamID,
+			VictimTeamName:    item.VictimTeamName,
+			ServiceID:         item.ServiceID,
+			AWDChallengeID:    item.AWDChallengeID,
+			AWDChallengeTitle: item.AWDChallengeTitle,
+			Method:            item.Method,
+			Path:              item.Path,
+			StatusCode:        item.StatusCode,
+			Source:            item.Source,
+			CreatedAt:         item.CreatedAt,
 		})
 	}
 	return resp

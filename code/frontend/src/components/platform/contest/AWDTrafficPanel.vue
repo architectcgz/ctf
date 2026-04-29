@@ -331,7 +331,7 @@ function getTrafficStatusGroupLabel(statusGroup: AWDTrafficStatusGroup): string 
               </td>
               <td>
                 <div class="challenge-cell">
-                  <span class="challenge-name">{{ getTrafficChallengeTitle(event.challenge_id, event.challenge_title) }}</span>
+                  <span class="challenge-name">{{ getTrafficChallengeTitle(event.awd_challenge_id, event.awd_challenge_title) }}</span>
                   <span
                     v-if="event.service_id"
                     class="source-tag font-mono"

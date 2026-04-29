@@ -21,7 +21,7 @@ func (s *AWDService) persistAttackLogAndScores(ctx context.Context, contestID, r
 				roundID,
 				req.VictimTeamID,
 				logRecord.ServiceID,
-				logRecord.ChallengeID,
+				logRecord.AWDChallengeID,
 				logRecord.ScoreGained,
 				now,
 			); err != nil {

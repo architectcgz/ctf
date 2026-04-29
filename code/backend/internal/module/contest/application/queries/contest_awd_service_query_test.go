@@ -57,7 +57,7 @@ func TestContestAWDServiceQueryServiceListContestAWDServicesIncludesValidationSt
 	if err := awdRepo.CreateContestAWDService(context.Background(), &model.ContestAWDService{
 		ID:                7101,
 		ContestID:         801,
-		ChallengeID:       9801,
+		AWDChallengeID:    9801,
 		DisplayName:       "Bank Portal",
 		Order:             2,
 		IsVisible:         true,

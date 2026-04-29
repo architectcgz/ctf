@@ -15,7 +15,7 @@ func (r *AWDRepository) ListServiceInstancesByContest(ctx context.Context, conte
 	var instances []contestports.AWDServiceInstance
 	if err := r.dbWithContext(ctx).
 		Table("instances AS inst").
-		Select("inst.id AS instance_id, cas.id AS service_id, COALESCE(inst.team_id, tm.team_id) AS team_id, cas.challenge_id AS challenge_id, inst.access_url AS access_url").
+		Select("inst.id AS instance_id, cas.id AS service_id, COALESCE(inst.team_id, tm.team_id) AS team_id, cas.awd_challenge_id AS awd_challenge_id, inst.access_url AS access_url").
 		Joins("LEFT JOIN team_members AS tm ON tm.user_id = inst.user_id AND tm.contest_id = ?", contestID).
 		Joins("JOIN contest_awd_services AS cas ON cas.contest_id = ? AND cas.id = inst.service_id AND cas.deleted_at IS NULL", contestID).
 		Where("cas.id IN ?", serviceIDs).

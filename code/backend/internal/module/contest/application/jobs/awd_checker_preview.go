@@ -17,24 +17,24 @@ const (
 func (u *AWDRoundUpdater) PreviewServiceCheck(ctx context.Context, req contestports.AWDServicePreviewRequest) (*contestports.AWDServicePreviewResult, error) {
 	checkerType := effectiveAWDCheckerType(req.CheckerType)
 	previewContext := contestports.AWDCheckerPreviewContext{
-		ServiceID:   req.ServiceID,
-		AccessURL:   strings.TrimSpace(req.AccessURL),
-		PreviewFlag: normalizeAWDCheckerPreviewFlag(req.PreviewFlag),
-		RoundNumber: 0,
-		TeamID:      0,
-		ChallengeID: req.ChallengeID,
+		ServiceID:      req.ServiceID,
+		AccessURL:      strings.TrimSpace(req.AccessURL),
+		PreviewFlag:    normalizeAWDCheckerPreviewFlag(req.PreviewFlag),
+		RoundNumber:    0,
+		TeamID:         0,
+		AWDChallengeID: req.AWDChallengeID,
 	}
 	definition := contestports.AWDServiceDefinition{
-		ServiceID:     req.ServiceID,
-		ChallengeID:   req.ChallengeID,
-		CheckerType:   checkerType,
-		CheckerConfig: req.CheckerConfig,
+		ServiceID:      req.ServiceID,
+		AWDChallengeID: req.AWDChallengeID,
+		CheckerType:    checkerType,
+		CheckerConfig:  req.CheckerConfig,
 	}
 	instances := []contestports.AWDServiceInstance{
 		{
-			ServiceID:   req.ServiceID,
-			ChallengeID: req.ChallengeID,
-			AccessURL:   previewContext.AccessURL,
+			ServiceID:      req.ServiceID,
+			AWDChallengeID: req.AWDChallengeID,
+			AccessURL:      previewContext.AccessURL,
 		},
 	}
 
@@ -104,10 +104,10 @@ func (u *AWDRoundUpdater) buildAWDPreviewOutcomeFromHTTPStandard(
 	}
 
 	templateData := awdHTTPCheckerTemplateData{
-		Flag:        previewContext.PreviewFlag,
-		Round:       previewContext.RoundNumber,
-		TeamID:      previewContext.TeamID,
-		ChallengeID: previewContext.ChallengeID,
+		Flag:           previewContext.PreviewFlag,
+		Round:          previewContext.RoundNumber,
+		TeamID:         previewContext.TeamID,
+		AWDChallengeID: previewContext.AWDChallengeID,
 	}
 	acceptedFlags := []string{previewContext.PreviewFlag}
 	targets := make([]awdHTTPCheckerTargetRuntimeResult, 0, len(instances))

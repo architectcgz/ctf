@@ -172,7 +172,7 @@ func (g *AWDDefenseSSHGateway) authenticate(ctx context.Context, sshUsername, pa
 	if scope == nil ||
 		scope.InstanceID != claims.InstanceID ||
 		scope.TeamID != *claims.AWDAttackerTeamID ||
-		scope.ChallengeID != *claims.AWDChallengeID ||
+		scope.AWDChallengeID != *claims.AWDChallengeID ||
 		scope.ContainerID == "" {
 		return nil, errcode.ErrForbidden
 	}
@@ -184,7 +184,7 @@ func (g *AWDDefenseSSHGateway) authenticate(ctx context.Context, sshUsername, pa
 		ContestID:   scope.ContestID,
 		TeamID:      scope.TeamID,
 		ServiceID:   scope.ServiceID,
-		ChallengeID: scope.ChallengeID,
+		ChallengeID: scope.AWDChallengeID,
 		ContainerID: scope.ContainerID,
 	}, nil
 }

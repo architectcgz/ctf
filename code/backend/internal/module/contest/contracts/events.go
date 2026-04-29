@@ -7,9 +7,9 @@ const (
 )
 
 type AWDAttackAcceptedEvent struct {
-	UserID      int64
-	ContestID   int64
-	ChallengeID int64
-	Dimension   string
-	OccurredAt  time.Time
+	UserID         int64
+	ContestID      int64
+	AWDChallengeID int64
+	Dimension      string
+	OccurredAt     time.Time
 }

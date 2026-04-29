@@ -63,10 +63,11 @@ interface RawTeamCreateResp {
 
 interface RawContestChallengeItem extends Omit<
   ContestChallengeItem,
-  'id' | 'challenge_id' | 'awd_service_id'
+  'id' | 'challenge_id' | 'awd_challenge_id' | 'awd_service_id'
 > {
   id: string | number
-  challenge_id: string | number
+  challenge_id?: string | number
+  awd_challenge_id?: string | number
   awd_service_id?: string | number | null
 }
 
@@ -77,14 +78,14 @@ interface RawAWDRoundData extends Omit<AWDRoundData, 'id' | 'contest_id'> {
 
 interface RawAWDAttackLogData extends Omit<
   AWDAttackLogData,
-  'id' | 'round_id' | 'attacker_team_id' | 'victim_team_id' | 'service_id' | 'challenge_id'
+  'id' | 'round_id' | 'attacker_team_id' | 'victim_team_id' | 'service_id' | 'awd_challenge_id'
 > {
   id: string | number
   round_id: string | number
   attacker_team_id: string | number
   victim_team_id: string | number
   service_id?: string | number
-  challenge_id: string | number
+  awd_challenge_id: string | number
 }
 
 interface RawContestAWDWorkspaceTeamData extends Omit<ContestAWDWorkspaceTeamData, 'team_id'> {
@@ -93,19 +94,19 @@ interface RawContestAWDWorkspaceTeamData extends Omit<ContestAWDWorkspaceTeamDat
 
 interface RawContestAWDWorkspaceServiceData extends Omit<
   ContestAWDWorkspaceServiceData,
-  'service_id' | 'challenge_id' | 'instance_id'
+  'service_id' | 'awd_challenge_id' | 'instance_id'
 > {
   service_id?: string | number
-  challenge_id: string | number
+  awd_challenge_id: string | number
   instance_id?: string | number
 }
 
 interface RawContestAWDWorkspaceTargetServiceData extends Omit<
   ContestAWDWorkspaceTargetServiceData,
-  'service_id' | 'challenge_id' | 'reachable'
+  'service_id' | 'awd_challenge_id' | 'reachable'
 > {
   service_id?: string | number
-  challenge_id: string | number
+  awd_challenge_id: string | number
   reachable?: boolean
   access_url?: string
 }
@@ -120,11 +121,11 @@ interface RawContestAWDWorkspaceTargetTeamData extends Omit<
 
 interface RawContestAWDWorkspaceRecentEventData extends Omit<
   ContestAWDWorkspaceRecentEventData,
-  'id' | 'service_id' | 'challenge_id' | 'peer_team_id'
+  'id' | 'service_id' | 'awd_challenge_id' | 'peer_team_id'
 > {
   id: string | number
   service_id?: string | number
-  challenge_id: string | number
+  awd_challenge_id: string | number
   peer_team_id: string | number
 }
 
@@ -163,10 +164,12 @@ function normalizeContest(item: RawContestItem): ContestDetailData {
 }
 
 function normalizeContestChallenge(item: RawContestChallengeItem): ContestChallengeItem {
+  const challengeId = item.challenge_id ?? item.awd_challenge_id
   return {
     ...item,
     id: String(item.id),
-    challenge_id: String(item.challenge_id),
+    challenge_id: challengeId == null ? '' : String(challengeId),
+    awd_challenge_id: item.awd_challenge_id == null ? undefined : String(item.awd_challenge_id),
     awd_service_id: item.awd_service_id == null ? undefined : String(item.awd_service_id),
   }
 }
@@ -205,7 +208,7 @@ function normalizeAWDAttackLog(item: RawAWDAttackLogData): AWDAttackLogData {
     attacker_team_id: String(item.attacker_team_id),
     victim_team_id: String(item.victim_team_id),
     service_id: item.service_id == null ? undefined : String(item.service_id),
-    challenge_id: String(item.challenge_id),
+    awd_challenge_id: String(item.awd_challenge_id),
   }
 }
 
@@ -224,7 +227,7 @@ function normalizeContestAWDWorkspaceService(
   return {
     ...item,
     service_id: item.service_id == null ? undefined : String(item.service_id),
-    challenge_id: String(item.challenge_id),
+    awd_challenge_id: String(item.awd_challenge_id),
     instance_id: item.instance_id == null ? undefined : String(item.instance_id),
   }
 }
@@ -234,7 +237,7 @@ function normalizeContestAWDWorkspaceTargetService(
 ): ContestAWDWorkspaceTargetServiceData {
   return {
     service_id: item.service_id == null ? undefined : String(item.service_id),
-    challenge_id: String(item.challenge_id),
+    awd_challenge_id: String(item.awd_challenge_id),
     reachable: item.reachable ?? Boolean(item.access_url),
   }
 }
@@ -256,7 +259,7 @@ function normalizeContestAWDWorkspaceEvent(
     ...item,
     id: String(item.id),
     service_id: item.service_id == null ? undefined : String(item.service_id),
-    challenge_id: String(item.challenge_id),
+    awd_challenge_id: String(item.awd_challenge_id),
     peer_team_id: String(item.peer_team_id),
   }
 }

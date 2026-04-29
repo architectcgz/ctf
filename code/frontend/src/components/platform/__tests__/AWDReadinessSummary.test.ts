@@ -48,7 +48,7 @@ describe('AWDReadinessSummary', () => {
           global_blocking_reasons: [],
           items: [
             {
-              challenge_id: '101',
+              awd_challenge_id: '101',
               title: 'Challenge 101',
               checker_type: 'http_standard',
               validation_state: 'failed',

@@ -15,7 +15,7 @@ interface AWDServiceAlertView {
   samples: Array<{
     service_id: string
     team_name: string
-    challenge_title: string
+    awd_challenge_title: string
   }>
 }
 
@@ -148,7 +148,7 @@ export function useAwdInspectorDerivedData({
         existing.samples.push({
           service_id: service.service_id || '',
           team_name: service.team_name,
-          challenge_title: getChallengeTitle(service.challenge_id),
+          awd_challenge_title: getChallengeTitle(service.awd_challenge_id),
         })
       }
       grouped.set(reason, existing)

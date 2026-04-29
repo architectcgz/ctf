@@ -19,19 +19,19 @@ import (
 const awdCheckerPreviewTokenTTL = 30 * time.Minute
 
 type storedAWDCheckerPreviewToken struct {
-	ContestID     int64                     `json:"contest_id"`
-	ServiceID     int64                     `json:"service_id"`
-	ChallengeID   int64                     `json:"challenge_id"`
-	CheckerType   model.AWDCheckerType      `json:"checker_type"`
-	CheckerConfig string                    `json:"checker_config"`
-	Result        dto.AWDCheckerPreviewResp `json:"result"`
-	CreatedAt     time.Time                 `json:"created_at"`
+	ContestID      int64                     `json:"contest_id"`
+	ServiceID      int64                     `json:"service_id"`
+	AWDChallengeID int64                     `json:"awd_challenge_id"`
+	CheckerType    model.AWDCheckerType      `json:"checker_type"`
+	CheckerConfig  string                    `json:"checker_config"`
+	Result         dto.AWDCheckerPreviewResp `json:"result"`
+	CreatedAt      time.Time                 `json:"created_at"`
 }
 
 func storeAWDCheckerPreviewToken(
 	ctx context.Context,
 	redisClient *redislib.Client,
-	contestID, serviceID, challengeID int64,
+	contestID, serviceID, awdChallengeID int64,
 	checkerType model.AWDCheckerType,
 	checkerConfig string,
 	result *dto.AWDCheckerPreviewResp,
@@ -42,13 +42,13 @@ func storeAWDCheckerPreviewToken(
 
 	token := uuid.NewString()
 	record := storedAWDCheckerPreviewToken{
-		ContestID:     contestID,
-		ServiceID:     serviceID,
-		ChallengeID:   challengeID,
-		CheckerType:   checkerType,
-		CheckerConfig: checkerConfig,
-		Result:        *result,
-		CreatedAt:     time.Now().UTC(),
+		ContestID:      contestID,
+		ServiceID:      serviceID,
+		AWDChallengeID: awdChallengeID,
+		CheckerType:    checkerType,
+		CheckerConfig:  checkerConfig,
+		Result:         *result,
+		CreatedAt:      time.Now().UTC(),
 	}
 	raw, err := json.Marshal(record)
 	if err != nil {
@@ -63,7 +63,7 @@ func storeAWDCheckerPreviewToken(
 func consumeCheckerPreviewValidationState(
 	ctx context.Context,
 	redisClient *redislib.Client,
-	contestID, serviceID, challengeID int64,
+	contestID, serviceID, awdChallengeID int64,
 	checkerType model.AWDCheckerType,
 	checkerConfig string,
 	previewToken string,
@@ -71,7 +71,7 @@ func consumeCheckerPreviewValidationState(
 	if strings.TrimSpace(previewToken) != "" && redisClient == nil {
 		return model.AWDCheckerValidationStatePending, nil, "", errcode.ErrAWDCheckerPreviewUnavailable
 	}
-	record, err := consumeAWDCheckerPreviewToken(ctx, redisClient, contestID, serviceID, challengeID, checkerType, checkerConfig, previewToken)
+	record, err := consumeAWDCheckerPreviewToken(ctx, redisClient, contestID, serviceID, awdChallengeID, checkerType, checkerConfig, previewToken)
 	if err != nil {
 		return model.AWDCheckerValidationStatePending, nil, "", err
 	}
@@ -100,7 +100,7 @@ func consumeCheckerPreviewValidationState(
 func consumeAWDCheckerPreviewToken(
 	ctx context.Context,
 	redisClient *redislib.Client,
-	contestID, serviceID, challengeID int64,
+	contestID, serviceID, awdChallengeID int64,
 	checkerType model.AWDCheckerType,
 	checkerConfig string,
 	previewToken string,
@@ -122,7 +122,7 @@ func consumeAWDCheckerPreviewToken(
 	if err := json.Unmarshal([]byte(raw), &record); err != nil {
 		return nil, err
 	}
-	if !record.matches(contestID, serviceID, challengeID, checkerType, checkerConfig) {
+	if !record.matches(contestID, serviceID, awdChallengeID, checkerType, checkerConfig) {
 		return nil, nil
 	}
 	if err := redisClient.Del(ctx, key).Err(); err != nil {
@@ -132,7 +132,7 @@ func consumeAWDCheckerPreviewToken(
 }
 
 func (r storedAWDCheckerPreviewToken) matches(
-	contestID, serviceID, challengeID int64,
+	contestID, serviceID, awdChallengeID int64,
 	checkerType model.AWDCheckerType,
 	checkerConfig string,
 ) bool {
@@ -142,10 +142,10 @@ func (r storedAWDCheckerPreviewToken) matches(
 		return false
 	}
 	if serviceID > 0 || r.ServiceID > 0 {
-		return r.ServiceID == serviceID && r.ChallengeID == challengeID
+		return r.ServiceID == serviceID && r.AWDChallengeID == awdChallengeID
 	}
 	return r.ContestID == contestID &&
 		r.ServiceID == serviceID &&
-		r.ChallengeID == challengeID &&
+		r.AWDChallengeID == awdChallengeID &&
 		r.ServiceID == 0
 }

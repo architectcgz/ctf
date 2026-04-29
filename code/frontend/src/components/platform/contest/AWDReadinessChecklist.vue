@@ -202,7 +202,7 @@ function formatDateTime(value?: string): string {
           <tbody>
             <tr
               v-for="item in blockingItems"
-              :key="item.challenge_id"
+              :key="item.awd_challenge_id"
               class="studio-row"
             >
               <td class="col-identity">
@@ -237,9 +237,9 @@ function formatDateTime(value?: string): string {
               >
                 <div class="ui-row-actions readiness-row__actions">
                   <button
-                    :id="`awd-readiness-edit-${item.challenge_id}`"
+                    :id="`awd-readiness-edit-${item.awd_challenge_id}`"
                     class="ui-btn ui-btn--sm ui-btn--secondary"
-                    @click="emit('editConfig', item.challenge_id)"
+                    @click="emit('editConfig', item.awd_challenge_id)"
                   >
                     {{ props.actionLabel }}
                   </button>
