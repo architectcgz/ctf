@@ -154,6 +154,7 @@ func (s *AWDChallengeImportService) CommitImport(
 	}
 
 	var challenge *model.AWDChallenge
+	artifactCleanupDirs := make([]string, 0, 1)
 	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		resolvedImageID, err := resolveImportedImageID(tx, parsed.Slug, parsed.RuntimeImageRef)
 		if err != nil {
@@ -175,6 +176,7 @@ func (s *AWDChallengeImportService) CommitImport(
 		if err != nil {
 			return err
 		}
+		nextArtifactDir := awdCheckerArtifactDirFromConfig(checkerConfigWithArtifact)
 		flagConfigRaw, err := marshalAWDChallengeConfig(parsed.FlagConfig)
 		if err != nil {
 			return err
@@ -221,6 +223,9 @@ func (s *AWDChallengeImportService) CommitImport(
 		case findErr != nil:
 			return fmt.Errorf("find imported awd challenge %s: %w", parsed.Slug, findErr)
 		default:
+			if oldArtifactDir := awdCheckerArtifactDirFromConfig(current.CheckerConfig); oldArtifactDir != "" && oldArtifactDir != nextArtifactDir {
+				artifactCleanupDirs = append(artifactCleanupDirs, oldArtifactDir)
+			}
 			updates := map[string]any{
 				"name":               parsed.Title,
 				"slug":               parsed.Slug,
@@ -257,6 +262,9 @@ func (s *AWDChallengeImportService) CommitImport(
 		return nil
 	}); err != nil {
 		return nil, err
+	}
+	for _, cleanupDir := range artifactCleanupDirs {
+		_ = removeAWDCheckerArtifactDir(cleanupDir)
 	}
 
 	_ = os.RemoveAll(filepath.Join(awdChallengeImportPreviewRoot(), id))
@@ -380,6 +388,77 @@ func persistAWDCheckerArtifact(parsed *domain.ParsedAWDChallengePackage) (string
 		"files":        fileMetadata,
 	}
 	return marshalAWDChallengeConfig(config)
+}
+
+func awdCheckerArtifactDirFromConfig(raw string) string {
+	var config map[string]any
+	if err := json.Unmarshal([]byte(strings.TrimSpace(raw)), &config); err != nil {
+		return ""
+	}
+	artifact, ok := config["artifact"].(map[string]any)
+	if !ok {
+		return ""
+	}
+	storagePath, _ := artifact["storage_path"].(string)
+	packagePath, _ := artifact["entry"].(string)
+	if strings.TrimSpace(storagePath) == "" {
+		if files, ok := artifact["files"].([]any); ok {
+			for _, item := range files {
+				file, ok := item.(map[string]any)
+				if !ok {
+					continue
+				}
+				storagePath, _ = file["storage_path"].(string)
+				packagePath, _ = file["path"].(string)
+				if strings.TrimSpace(storagePath) != "" && strings.TrimSpace(packagePath) != "" {
+					break
+				}
+			}
+		}
+	}
+	return awdCheckerArtifactDirFromFile(storagePath, packagePath)
+}
+
+func awdCheckerArtifactDirFromFile(storagePath, packagePath string) string {
+	storagePath = filepath.Clean(strings.TrimSpace(storagePath))
+	packagePath = filepath.Clean(strings.TrimSpace(packagePath))
+	if storagePath == "." || packagePath == "." || packagePath == "" || filepath.IsAbs(packagePath) {
+		return ""
+	}
+	suffix := filepath.FromSlash(packagePath)
+	if !strings.HasSuffix(storagePath, suffix) {
+		return ""
+	}
+	dir := strings.TrimSuffix(storagePath, suffix)
+	dir = strings.TrimRight(dir, string(filepath.Separator))
+	if dir == "" || !isAWDCheckerArtifactDirInsideRoot(dir) {
+		return ""
+	}
+	return dir
+}
+
+func removeAWDCheckerArtifactDir(dir string) error {
+	dir = filepath.Clean(strings.TrimSpace(dir))
+	if dir == "." || dir == "" || !isAWDCheckerArtifactDirInsideRoot(dir) {
+		return nil
+	}
+	return os.RemoveAll(dir)
+}
+
+func isAWDCheckerArtifactDirInsideRoot(dir string) bool {
+	root, err := filepath.Abs(awdCheckerArtifactRoot())
+	if err != nil {
+		return false
+	}
+	target, err := filepath.Abs(dir)
+	if err != nil {
+		return false
+	}
+	rel, err := filepath.Rel(root, target)
+	if err != nil {
+		return false
+	}
+	return rel != "." && rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator))
 }
 
 func sanitizeAWDCheckerArtifactSegment(value string) string {

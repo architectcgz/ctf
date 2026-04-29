@@ -64,7 +64,7 @@ func (u *AWDRoundUpdater) buildAWDCheckOutcomeFromTCPStandard(
 	status := model.AWDServiceStatusUp
 	statusReason := "healthy"
 	for _, instance := range instances {
-		target, targetStatus, reason := u.runAWDTCPCheckerTarget(ctx, config, round, teamID, definition, instance, flag)
+		target, targetStatus, reason := u.runAWDTCPCheckerTarget(ctx, config, contestID, round, teamID, definition, instance, flag)
 		targets = append(targets, target)
 		if targetStatus != model.AWDServiceStatusUp && status == model.AWDServiceStatusUp {
 			status = targetStatus
@@ -104,6 +104,7 @@ func needsAWDTCPCheckerFlags(config awdTCPCheckerConfig) bool {
 func (u *AWDRoundUpdater) runAWDTCPCheckerTarget(
 	ctx context.Context,
 	config awdTCPCheckerConfig,
+	contestID int64,
 	round *model.AWDRound,
 	teamID int64,
 	definition contestports.AWDServiceDefinition,
@@ -115,11 +116,20 @@ func (u *AWDRoundUpdater) runAWDTCPCheckerTarget(
 		AccessURL: instance.AccessURL,
 		Probe:     string(model.AWDCheckerTypeTCPStandard),
 	}
+	auditJob := contestports.CheckerRunJob{
+		Metadata: contestports.CheckerRunMetadata{
+			ContestID:   contestID,
+			ServiceID:   definition.ServiceID,
+			TeamID:      teamID,
+			RoundNumber: awdScriptRoundNumber(round),
+		},
+	}
 	timeout := config.timeout(u.cfg.CheckerTimeout)
 	address, err := resolveAWDTCPCheckerAddress(config, instance, definition, round, teamID, flag)
 	if err != nil {
 		target.ErrorCode = "invalid_access_url"
-		target.Error = sanitizeAWDCheckError(err)
+		target.Error = sanitizeAWDCheckErrorWithSecrets(err, flag)
+		target.Audit = buildAWDCheckerAuditRecord(auditJob, model.AWDCheckerTypeTCPStandard, "", contestports.CheckerRunResult{Duration: time.Since(startedAt)}, target.ErrorCode, flag)
 		return target, model.AWDServiceStatusDown, target.ErrorCode
 	}
 
@@ -129,7 +139,8 @@ func (u *AWDRoundUpdater) runAWDTCPCheckerTarget(
 	conn, err := dialer.DialContext(runCtx, "tcp", address)
 	if err != nil {
 		target.ErrorCode = "tcp_connect_failed"
-		target.Error = sanitizeAWDCheckError(err)
+		target.Error = sanitizeAWDCheckErrorWithSecrets(err, flag)
+		target.Audit = buildAWDCheckerAuditRecord(auditJob, model.AWDCheckerTypeTCPStandard, "", contestports.CheckerRunResult{Duration: time.Since(startedAt)}, target.ErrorCode, flag)
 		return target, model.AWDServiceStatusDown, target.ErrorCode
 	}
 	defer conn.Close()
@@ -138,14 +149,16 @@ func (u *AWDRoundUpdater) runAWDTCPCheckerTarget(
 		if err := runAWDTCPCheckerStep(conn, step, timeout, instance, definition, round, teamID, flag); err != nil {
 			code, message := normalizeAWDCheckError(err, "tcp_step_failed")
 			target.ErrorCode = code
-			target.Error = message
+			target.Error = sanitizeAWDCheckerText(message, flag)
 			target.LatencyMS = time.Since(startedAt).Milliseconds()
+			target.Audit = buildAWDCheckerAuditRecord(auditJob, model.AWDCheckerTypeTCPStandard, "", contestports.CheckerRunResult{Duration: time.Since(startedAt)}, code, flag)
 			return target, model.AWDServiceStatusDown, code
 		}
 	}
 
 	target.Healthy = true
 	target.LatencyMS = time.Since(startedAt).Milliseconds()
+	target.Audit = buildAWDCheckerAuditRecord(auditJob, model.AWDCheckerTypeTCPStandard, "", contestports.CheckerRunResult{Duration: time.Since(startedAt)}, "healthy", flag)
 	return target, model.AWDServiceStatusUp, "healthy"
 }
 

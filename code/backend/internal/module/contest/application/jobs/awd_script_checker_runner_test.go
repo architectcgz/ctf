@@ -4,8 +4,11 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -188,6 +191,86 @@ func TestLoadAWDScriptCheckerArtifactLoadsMultipleFiles(t *testing.T) {
 	}
 	if files[1].Path != "docker/check/protocol.py" || string(files[1].Content) != string(protocolContent) {
 		t.Fatalf("unexpected second file: %#v", files[1])
+	}
+}
+
+func TestAWDRoundUpdaterScriptCheckerRedactsFlagInFailedAudit(t *testing.T) {
+	artifactRoot := t.TempDir()
+	t.Setenv("AWD_CHECKER_ARTIFACT_DIR", artifactRoot)
+	artifactContent := []byte("print('fail')\n")
+	artifactPath := filepath.Join(artifactRoot, "script-checker", "check.py")
+	if err := os.MkdirAll(filepath.Dir(artifactPath), 0o700); err != nil {
+		t.Fatalf("create artifact dir: %v", err)
+	}
+	if err := os.WriteFile(artifactPath, artifactContent, 0o600); err != nil {
+		t.Fatalf("write artifact: %v", err)
+	}
+	artifactHash := sha256.Sum256(artifactContent)
+	runner := &fakeCheckerRunner{
+		result: contestports.CheckerRunResult{
+			Status:   contestports.CheckerRunStatusFailed,
+			Reason:   contestports.CheckerReasonFailed,
+			ExitCode: 1,
+			Stdout:   "stdout leaked flag{preview}",
+			Stderr:   "stderr leaked flag{preview}",
+			Duration: 23 * time.Millisecond,
+		},
+	}
+	updater := NewAWDRoundUpdater(nil, nil, config.ContestAWDConfig{
+		CheckerTimeout: time.Second,
+		CheckerSandbox: config.CheckerSandboxConfig{
+			Timeout:          10 * time.Second,
+			OutputLimitBytes: 32768,
+		},
+	}, "", nil, nil)
+	updater.SetCheckerRunner(runner)
+
+	resp, err := updater.PreviewServiceCheck(context.Background(), contestports.AWDServicePreviewRequest{
+		ServiceID:      2001,
+		AWDChallengeID: 3001,
+		CheckerType:    model.AWDCheckerTypeScript,
+		CheckerConfig: `{
+			"runtime": "python3",
+			"entry": "docker/check/check.py",
+			"output": "json",
+			"artifact": {
+				"entry": "docker/check/check.py",
+				"storage_path": "` + artifactPath + `",
+				"sha256": "` + hex.EncodeToString(artifactHash[:]) + `",
+				"size": 14,
+				"digest": "artifact-digest-1"
+			}
+		}`,
+		AccessURL:   "http://10.10.0.23:8080",
+		PreviewFlag: "flag{preview}",
+	})
+	if err != nil {
+		t.Fatalf("PreviewServiceCheck() error = %v", err)
+	}
+	if strings.Contains(resp.CheckResult, "flag{preview}") {
+		t.Fatalf("CheckResult leaked flag: %s", resp.CheckResult)
+	}
+	var result map[string]any
+	if err := json.Unmarshal([]byte(resp.CheckResult), &result); err != nil {
+		t.Fatalf("unmarshal check result: %v", err)
+	}
+	targets, ok := result["targets"].([]any)
+	if !ok || len(targets) != 1 {
+		t.Fatalf("unexpected targets: %#v", result["targets"])
+	}
+	target, ok := targets[0].(map[string]any)
+	if !ok {
+		t.Fatalf("unexpected target: %#v", targets[0])
+	}
+	audit, ok := target["audit"].(map[string]any)
+	if !ok {
+		t.Fatalf("missing audit: %#v", target)
+	}
+	if audit["checker_type"] != string(model.AWDCheckerTypeScript) || audit["service_id"] != float64(2001) || audit["artifact_digest"] != "artifact-digest-1" {
+		t.Fatalf("unexpected audit: %#v", audit)
+	}
+	if !strings.Contains(fmt.Sprint(audit["stderr"]), "[redacted]") {
+		t.Fatalf("audit stderr was not redacted: %#v", audit)
 	}
 }
 
