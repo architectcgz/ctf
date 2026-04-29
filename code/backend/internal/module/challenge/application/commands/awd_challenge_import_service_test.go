@@ -6,7 +6,9 @@ import (
 	"context"
 	"encoding/json"
 	"io"
+	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
@@ -81,6 +83,61 @@ func TestAWDChallengeImportFlowPreviewAndCommit(t *testing.T) {
 	}
 }
 
+func TestAWDChallengeImportStoresScriptCheckerArtifactPrivately(t *testing.T) {
+	db := testsupport.SetupTestDB(t)
+	repo := challengeinfra.NewRepository(db)
+	service := NewAWDChallengeImportService(db, repo)
+
+	previewDir := filepath.Join(t.TempDir(), "awd-imports")
+	artifactDir := filepath.Join(t.TempDir(), "checker-artifacts")
+	t.Setenv("AWD_CHALLENGE_IMPORT_PREVIEW_DIR", previewDir)
+	t.Setenv("AWD_CHECKER_ARTIFACT_DIR", artifactDir)
+
+	preview, err := service.PreviewImport(
+		context.Background(),
+		2001,
+		"script-checker.zip",
+		bytes.NewReader(buildAWDScriptCheckerImportArchive(t)),
+	)
+	if err != nil {
+		t.Fatalf("PreviewImport() error = %v", err)
+	}
+	if preview.CheckerType != "script_checker" {
+		t.Fatalf("CheckerType = %q, want script_checker", preview.CheckerType)
+	}
+
+	committed, err := service.CommitImport(context.Background(), 2001, preview.ID)
+	if err != nil {
+		t.Fatalf("CommitImport() error = %v", err)
+	}
+	stored, err := repo.FindAWDChallengeByID(context.Background(), committed.ID)
+	if err != nil {
+		t.Fatalf("FindByID() error = %v", err)
+	}
+
+	var checkerConfig map[string]any
+	if err := json.Unmarshal([]byte(stored.CheckerConfig), &checkerConfig); err != nil {
+		t.Fatalf("unmarshal checker_config: %v", err)
+	}
+	artifact, ok := checkerConfig["artifact"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected private artifact metadata in checker_config: %+v", checkerConfig)
+	}
+	if artifact["entry"] != "docker/check/check.py" {
+		t.Fatalf("unexpected artifact entry: %+v", artifact)
+	}
+	storagePath, _ := artifact["storage_path"].(string)
+	if storagePath == "" {
+		t.Fatalf("expected artifact storage_path: %+v", artifact)
+	}
+	if !strings.Contains(storagePath, artifactDir) {
+		t.Fatalf("unexpected artifact storage path: %s", storagePath)
+	}
+	if _, err := os.Stat(storagePath); err != nil {
+		t.Fatalf("expected stored checker artifact file: %v", err)
+	}
+}
+
 func buildAWDChallengeImportArchive(t *testing.T) []byte {
 	t.Helper()
 
@@ -149,6 +206,76 @@ extensions:
       service_port: 8080
 `,
 		"awd-bank-portal-01/statement.md": "银行门户存在越权修改 flag 的逻辑。",
+	}
+
+	var buffer bytes.Buffer
+	writer := zip.NewWriter(&buffer)
+	for name, content := range files {
+		fileWriter, err := writer.Create(name)
+		if err != nil {
+			t.Fatalf("Create(%s) error = %v", name, err)
+		}
+		if _, err := io.WriteString(fileWriter, content); err != nil {
+			t.Fatalf("WriteString(%s) error = %v", name, err)
+		}
+	}
+	if err := writer.Close(); err != nil {
+		t.Fatalf("Close() error = %v", err)
+	}
+	return buffer.Bytes()
+}
+
+func buildAWDScriptCheckerImportArchive(t *testing.T) []byte {
+	t.Helper()
+
+	files := map[string]string{
+		"script-checker/challenge.yml": `api_version: v1
+kind: challenge
+
+meta:
+  mode: awd
+  slug: script-checker
+  title: Script Checker AWD
+  category: web
+  difficulty: hard
+
+content:
+  statement: statement.md
+
+flag:
+  type: dynamic
+  prefix: awd
+
+runtime:
+  type: container
+  image:
+    ref: registry.example.edu/ctf/script-checker:v1
+
+extensions:
+  awd:
+    service_type: web_http
+    deployment_mode: single_container
+    checker:
+      type: script_checker
+      config:
+        runtime: python3
+        entry: docker/check/check.py
+        timeout_sec: 10
+        args:
+          - "{{TARGET_URL}}"
+        output: json
+    flag_policy:
+      mode: dynamic_team
+    defense_entry:
+      mode: http
+    access_config:
+      public_base_url: http://{{TEAM_HOST}}:8080
+      service_port: 8080
+    runtime_config:
+      service_port: 8080
+`,
+		"script-checker/statement.md":          "Script checker service.",
+		"script-checker/docker/check/check.py": "print('{\"status\":\"ok\"}')\n",
 	}
 
 	var buffer bytes.Buffer

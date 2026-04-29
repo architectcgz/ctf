@@ -2,9 +2,13 @@ package jobs
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"net"
 	"net/url"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -12,6 +16,8 @@ import (
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestports "ctf-platform/internal/module/contest/ports"
 )
+
+const defaultAWDCheckerArtifactRoot = "./data/awd-checker-artifacts"
 
 func (u *AWDRoundUpdater) buildAWDPreviewOutcomeFromScriptChecker(
 	ctx context.Context,
@@ -121,6 +127,13 @@ func (u *AWDRoundUpdater) runAWDScriptCheckerTarget(
 			RoundNumber: awdScriptRoundNumber(round),
 		},
 	}
+	if file, ok, err := loadAWDScriptCheckerArtifact(cfg); err != nil {
+		target.ErrorCode = "checker_artifact_unavailable"
+		target.Error = sanitizeAWDCheckError(err)
+		return target, model.AWDServiceStatusDown, target.ErrorCode
+	} else if ok {
+		job.Files = []contestports.CheckerRunFile{file}
+	}
 
 	runResult, err := u.checkerRunner.RunChecker(ctx, job)
 	target.LatencyMS = time.Since(startedAt).Milliseconds()
@@ -140,6 +153,74 @@ func (u *AWDRoundUpdater) runAWDScriptCheckerTarget(
 	}
 	target.Healthy = true
 	return target, model.AWDServiceStatusUp, "healthy"
+}
+
+func loadAWDScriptCheckerArtifact(cfg awdScriptCheckerConfig) (contestports.CheckerRunFile, bool, error) {
+	storagePath := strings.TrimSpace(cfg.Artifact.StoragePath)
+	if storagePath == "" {
+		return contestports.CheckerRunFile{}, false, nil
+	}
+	if err := validateAWDScriptCheckerArtifactPath(storagePath); err != nil {
+		return contestports.CheckerRunFile{}, false, err
+	}
+	content, err := os.ReadFile(storagePath)
+	if err != nil {
+		return contestports.CheckerRunFile{}, false, err
+	}
+	if expected := strings.TrimSpace(cfg.Artifact.SHA256); expected != "" {
+		sum := sha256.Sum256(content)
+		actual := hex.EncodeToString(sum[:])
+		if !strings.EqualFold(actual, expected) {
+			return contestports.CheckerRunFile{}, false, fmt.Errorf("script checker artifact sha256 mismatch")
+		}
+	}
+	if cfg.Artifact.Size > 0 && int64(len(content)) != cfg.Artifact.Size {
+		return contestports.CheckerRunFile{}, false, fmt.Errorf("script checker artifact size mismatch")
+	}
+	entry := strings.TrimSpace(cfg.Artifact.Entry)
+	if entry == "" {
+		entry = cfg.Entry
+	}
+	if err := validateAWDScriptCheckerEntry(entry); err != nil {
+		return contestports.CheckerRunFile{}, false, err
+	}
+	return contestports.CheckerRunFile{
+		Path:    entry,
+		Content: content,
+		Mode:    0o500,
+	}, true, nil
+}
+
+func validateAWDScriptCheckerArtifactPath(storagePath string) error {
+	root, err := filepath.Abs(awdCheckerArtifactRoot())
+	if err != nil {
+		return err
+	}
+	target, err := filepath.Abs(storagePath)
+	if err != nil {
+		return err
+	}
+	if resolvedRoot, err := filepath.EvalSymlinks(root); err == nil {
+		root = resolvedRoot
+	}
+	if resolvedTarget, err := filepath.EvalSymlinks(target); err == nil {
+		target = resolvedTarget
+	}
+	rel, err := filepath.Rel(root, target)
+	if err != nil {
+		return err
+	}
+	if rel == "." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) || rel == ".." {
+		return fmt.Errorf("script checker artifact path is outside artifact root")
+	}
+	return nil
+}
+
+func awdCheckerArtifactRoot() string {
+	if value := strings.TrimSpace(os.Getenv("AWD_CHECKER_ARTIFACT_DIR")); value != "" {
+		return value
+	}
+	return defaultAWDCheckerArtifactRoot
 }
 
 func renderAWDScriptCheckerEnv(env map[string]string, instance contestports.AWDServiceInstance, definition contestports.AWDServiceDefinition, round *model.AWDRound, teamID int64, flag string) map[string]string {

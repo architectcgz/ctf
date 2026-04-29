@@ -2,6 +2,8 @@ package commands
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -22,6 +24,7 @@ import (
 )
 
 const defaultAWDChallengeImportPreviewRoot = "./data/awd-challenge-import-previews"
+const defaultAWDCheckerArtifactRoot = "./data/awd-checker-artifacts"
 
 type storedAWDChallengeImportPreview struct {
 	ID        string                            `json:"id"`
@@ -168,7 +171,7 @@ func (s *AWDChallengeImportService) CommitImport(
 		now := time.Now()
 		var current model.AWDChallenge
 		findErr := findAWDChallengeForImportedPackageUpsert(tx, parsed.Slug, &current)
-		checkerConfigRaw, err := marshalAWDChallengeConfig(parsed.CheckerConfig)
+		checkerConfigWithArtifact, err := persistAWDCheckerArtifact(parsed)
 		if err != nil {
 			return err
 		}
@@ -198,7 +201,7 @@ func (s *AWDChallengeImportService) CommitImport(
 				Version:          parsed.Version,
 				Status:           model.AWDChallengeStatusPublished,
 				CheckerType:      model.AWDCheckerType(parsed.CheckerType),
-				CheckerConfig:    checkerConfigRaw,
+				CheckerConfig:    checkerConfigWithArtifact,
 				FlagMode:         parsed.FlagMode,
 				FlagConfig:       flagConfigRaw,
 				DefenseEntryMode: parsed.DefenseEntryMode,
@@ -229,7 +232,7 @@ func (s *AWDChallengeImportService) CommitImport(
 				"version":            parsed.Version,
 				"status":             model.AWDChallengeStatusPublished,
 				"checker_type":       model.AWDCheckerType(parsed.CheckerType),
-				"checker_config":     checkerConfigRaw,
+				"checker_config":     checkerConfigWithArtifact,
 				"flag_mode":          parsed.FlagMode,
 				"flag_config":        flagConfigRaw,
 				"defense_entry_mode": parsed.DefenseEntryMode,
@@ -309,6 +312,60 @@ func marshalAWDChallengeConfig(value map[string]any) (string, error) {
 		return "", err
 	}
 	return string(encoded), nil
+}
+
+func persistAWDCheckerArtifact(parsed *domain.ParsedAWDChallengePackage) (string, error) {
+	if parsed == nil {
+		return "{}", nil
+	}
+	config := cloneAWDChallengeConfig(parsed.CheckerConfig)
+	if parsed.CheckerType != string(model.AWDCheckerTypeScript) {
+		return marshalAWDChallengeConfig(config)
+	}
+	if strings.TrimSpace(parsed.CheckerEntryAbs) == "" || strings.TrimSpace(parsed.CheckerEntryPath) == "" {
+		return "", errcode.ErrInvalidParams.WithCause(errors.New("script_checker artifact entry is missing"))
+	}
+	content, err := os.ReadFile(parsed.CheckerEntryAbs)
+	if err != nil {
+		return "", fmt.Errorf("read script checker artifact: %w", err)
+	}
+	sum := sha256.Sum256(content)
+	digest := hex.EncodeToString(sum[:])
+	targetDir := filepath.Join(awdCheckerArtifactRoot(), sanitizeAWDCheckerArtifactSegment(parsed.Slug), digest)
+	targetPath := filepath.Join(targetDir, filepath.FromSlash(parsed.CheckerEntryPath))
+	if err := os.MkdirAll(filepath.Dir(targetPath), 0o750); err != nil {
+		return "", fmt.Errorf("create script checker artifact dir: %w", err)
+	}
+	if err := os.WriteFile(targetPath, content, 0o400); err != nil {
+		return "", fmt.Errorf("write script checker artifact: %w", err)
+	}
+	config["artifact"] = map[string]any{
+		"entry":        parsed.CheckerEntryPath,
+		"storage_path": targetPath,
+		"sha256":       digest,
+		"size":         len(content),
+	}
+	return marshalAWDChallengeConfig(config)
+}
+
+func sanitizeAWDCheckerArtifactSegment(value string) string {
+	trimmed := strings.TrimSpace(value)
+	if trimmed == "" {
+		return "unknown"
+	}
+	var builder strings.Builder
+	for _, r := range trimmed {
+		if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '-' || r == '_' {
+			builder.WriteRune(r)
+			continue
+		}
+		builder.WriteByte('-')
+	}
+	result := strings.Trim(builder.String(), "-")
+	if result == "" {
+		return "unknown"
+	}
+	return result
 }
 
 func cloneAWDChallengeConfig(value map[string]any) map[string]any {
@@ -392,4 +449,11 @@ func awdChallengeImportPreviewRoot() string {
 		return value
 	}
 	return defaultAWDChallengeImportPreviewRoot
+}
+
+func awdCheckerArtifactRoot() string {
+	if value := strings.TrimSpace(os.Getenv("AWD_CHECKER_ARTIFACT_DIR")); value != "" {
+		return value
+	}
+	return defaultAWDCheckerArtifactRoot
 }

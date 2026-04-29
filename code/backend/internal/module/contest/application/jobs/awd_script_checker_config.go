@@ -9,12 +9,20 @@ import (
 )
 
 type awdScriptCheckerConfig struct {
-	Runtime    string            `json:"runtime"`
-	Entry      string            `json:"entry"`
-	TimeoutSec int               `json:"timeout_sec"`
-	Args       []string          `json:"args"`
-	Env        map[string]string `json:"env"`
-	Output     string            `json:"output"`
+	Runtime    string                         `json:"runtime"`
+	Entry      string                         `json:"entry"`
+	TimeoutSec int                            `json:"timeout_sec"`
+	Args       []string                       `json:"args"`
+	Env        map[string]string              `json:"env"`
+	Output     string                         `json:"output"`
+	Artifact   awdScriptCheckerArtifactConfig `json:"artifact"`
+}
+
+type awdScriptCheckerArtifactConfig struct {
+	Entry       string `json:"entry"`
+	StoragePath string `json:"storage_path"`
+	SHA256      string `json:"sha256"`
+	Size        int64  `json:"size"`
 }
 
 func parseAWDScriptCheckerConfig(raw string) (awdScriptCheckerConfig, error) {
