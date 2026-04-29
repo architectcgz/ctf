@@ -129,7 +129,7 @@ func (u *AWDRoundUpdater) runAWDScriptCheckerTarget(
 	}
 	if files, ok, err := loadAWDScriptCheckerArtifacts(cfg); err != nil {
 		target.ErrorCode = "checker_artifact_unavailable"
-		target.Error = sanitizeAWDCheckError(err)
+		target.Error = sanitizeAWDCheckerText(err.Error(), flag)
 		return target, model.AWDServiceStatusDown, target.ErrorCode
 	} else if ok {
 		job.Files = files
@@ -139,7 +139,8 @@ func (u *AWDRoundUpdater) runAWDScriptCheckerTarget(
 	target.LatencyMS = time.Since(startedAt).Milliseconds()
 	if err != nil {
 		target.ErrorCode = "checker_runner_error"
-		target.Error = sanitizeAWDCheckError(err)
+		target.Error = sanitizeAWDCheckerText(err.Error(), flag)
+		target.Audit = buildAWDCheckerAuditRecord(job, model.AWDCheckerTypeScript, cfg.Artifact.Digest, contestports.CheckerRunResult{}, target.ErrorCode, flag)
 		return target, model.AWDServiceStatusDown, target.ErrorCode
 	}
 	if runResult.Status != contestports.CheckerRunStatusOK {
@@ -148,10 +149,12 @@ func (u *AWDRoundUpdater) runAWDScriptCheckerTarget(
 			reason = contestports.CheckerReasonFailed
 		}
 		target.ErrorCode = reason
-		target.Error = sanitizeAWDScriptCheckerError(runResult)
+		target.Error = sanitizeAWDScriptCheckerError(runResult, flag)
+		target.Audit = buildAWDCheckerAuditRecord(job, model.AWDCheckerTypeScript, cfg.Artifact.Digest, runResult, reason, flag)
 		return target, model.AWDServiceStatusDown, reason
 	}
 	target.Healthy = true
+	target.Audit = buildAWDCheckerAuditRecord(job, model.AWDCheckerTypeScript, cfg.Artifact.Digest, runResult, "healthy", flag)
 	return target, model.AWDServiceStatusUp, "healthy"
 }
 
@@ -325,12 +328,12 @@ func awdScriptRoundNumber(round *model.AWDRound) int {
 	return round.RoundNumber
 }
 
-func sanitizeAWDScriptCheckerError(result contestports.CheckerRunResult) string {
+func sanitizeAWDScriptCheckerError(result contestports.CheckerRunResult, secrets ...string) string {
 	if strings.TrimSpace(result.Stderr) != "" {
-		return sanitizeAWDCheckError(fmt.Errorf("%s", result.Stderr))
+		return sanitizeAWDCheckerText(result.Stderr, secrets...)
 	}
 	if strings.TrimSpace(result.Stdout) != "" {
-		return sanitizeAWDCheckError(fmt.Errorf("%s", result.Stdout))
+		return sanitizeAWDCheckerText(result.Stdout, secrets...)
 	}
 	return strings.TrimSpace(result.Reason)
 }

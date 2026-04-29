@@ -194,6 +194,68 @@ func TestAWDChallengeImportStoresScriptCheckerArtifactFiles(t *testing.T) {
 	}
 }
 
+func TestAWDChallengeImportCleansReplacedScriptCheckerArtifact(t *testing.T) {
+	db := testsupport.SetupTestDB(t)
+	repo := challengeinfra.NewRepository(db)
+	service := NewAWDChallengeImportService(db, repo)
+
+	previewDir := filepath.Join(t.TempDir(), "awd-imports")
+	artifactDir := filepath.Join(t.TempDir(), "checker-artifacts")
+	t.Setenv("AWD_CHALLENGE_IMPORT_PREVIEW_DIR", previewDir)
+	t.Setenv("AWD_CHECKER_ARTIFACT_DIR", artifactDir)
+
+	firstPreview, err := service.PreviewImport(
+		context.Background(),
+		2001,
+		"script-checker-cleanup-v1.zip",
+		bytes.NewReader(buildAWDScriptCheckerImportArchiveWithSlug(t, "script-checker-cleanup", "print('v1')\n")),
+	)
+	if err != nil {
+		t.Fatalf("PreviewImport(v1) error = %v", err)
+	}
+	firstCommitted, err := service.CommitImport(context.Background(), 2001, firstPreview.ID)
+	if err != nil {
+		t.Fatalf("CommitImport(v1) error = %v", err)
+	}
+	firstStored, err := repo.FindAWDChallengeByID(context.Background(), firstCommitted.ID)
+	if err != nil {
+		t.Fatalf("FindAWDChallengeByID(v1) error = %v", err)
+	}
+	firstDigest := readAWDCheckerArtifactDigestForTest(t, firstStored.CheckerConfig)
+	firstDir := filepath.Join(artifactDir, "script-checker-cleanup", firstDigest)
+	if _, err := os.Stat(firstDir); err != nil {
+		t.Fatalf("expected first artifact dir: %v", err)
+	}
+
+	secondPreview, err := service.PreviewImport(
+		context.Background(),
+		2001,
+		"script-checker-cleanup-v2.zip",
+		bytes.NewReader(buildAWDScriptCheckerImportArchiveWithSlug(t, "script-checker-cleanup", "print('v2 changed')\n")),
+	)
+	if err != nil {
+		t.Fatalf("PreviewImport(v2) error = %v", err)
+	}
+	secondCommitted, err := service.CommitImport(context.Background(), 2001, secondPreview.ID)
+	if err != nil {
+		t.Fatalf("CommitImport(v2) error = %v", err)
+	}
+	secondStored, err := repo.FindAWDChallengeByID(context.Background(), secondCommitted.ID)
+	if err != nil {
+		t.Fatalf("FindAWDChallengeByID(v2) error = %v", err)
+	}
+	secondDigest := readAWDCheckerArtifactDigestForTest(t, secondStored.CheckerConfig)
+	if secondDigest == firstDigest {
+		t.Fatalf("expected changed artifact digest, got %s", secondDigest)
+	}
+	if _, err := os.Stat(firstDir); !os.IsNotExist(err) {
+		t.Fatalf("expected old artifact dir cleanup, stat err = %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(artifactDir, "script-checker-cleanup", secondDigest)); err != nil {
+		t.Fatalf("expected second artifact dir: %v", err)
+	}
+}
+
 func TestAWDChallengeImportKeepsTCPStandardCheckerConfig(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	repo := challengeinfra.NewRepository(db)
@@ -238,6 +300,23 @@ func TestAWDChallengeImportKeepsTCPStandardCheckerConfig(t *testing.T) {
 	if checkerConfig["timeout_ms"] != float64(3000) {
 		t.Fatalf("unexpected tcp checker timeout: %+v", checkerConfig)
 	}
+}
+
+func readAWDCheckerArtifactDigestForTest(t *testing.T, checkerConfigRaw string) string {
+	t.Helper()
+	var checkerConfig map[string]any
+	if err := json.Unmarshal([]byte(checkerConfigRaw), &checkerConfig); err != nil {
+		t.Fatalf("unmarshal checker_config: %v", err)
+	}
+	artifact, ok := checkerConfig["artifact"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected artifact metadata: %+v", checkerConfig)
+	}
+	digest, _ := artifact["digest"].(string)
+	if digest == "" {
+		t.Fatalf("expected artifact digest: %+v", artifact)
+	}
+	return digest
 }
 
 func buildAWDChallengeImportArchive(t *testing.T) []byte {
@@ -400,14 +479,18 @@ extensions:
 
 func buildAWDScriptCheckerImportArchive(t *testing.T) []byte {
 	t.Helper()
+	return buildAWDScriptCheckerImportArchiveWithSlug(t, "script-checker", "print('{\"status\":\"ok\"}')\n")
+}
 
+func buildAWDScriptCheckerImportArchiveWithSlug(t *testing.T, slug string, checkerContent string) []byte {
+	t.Helper()
 	files := map[string]string{
-		"script-checker/challenge.yml": `api_version: v1
+		slug + "/challenge.yml": `api_version: v1
 kind: challenge
 
 meta:
   mode: awd
-  slug: script-checker
+  slug: ` + slug + `
   title: Script Checker AWD
   category: web
   difficulty: hard
@@ -422,7 +505,7 @@ flag:
 runtime:
   type: container
   image:
-    ref: registry.example.edu/ctf/script-checker:v1
+    ref: registry.example.edu/ctf/` + slug + `:v1
 
 extensions:
   awd:
@@ -447,8 +530,8 @@ extensions:
     runtime_config:
       service_port: 8080
 `,
-		"script-checker/statement.md":          "Script checker service.",
-		"script-checker/docker/check/check.py": "print('{\"status\":\"ok\"}')\n",
+		slug + "/statement.md":          "Script checker service.",
+		slug + "/docker/check/check.py": checkerContent,
 	}
 
 	var buffer bytes.Buffer

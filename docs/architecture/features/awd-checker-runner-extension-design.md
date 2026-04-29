@@ -170,16 +170,24 @@ extensions:
 
 ### 审计与可观测
 
-每次 `script_checker` 执行必须记录：
+每次 `script_checker` 执行必须记录；`tcp_standard` 虽不进入脚本沙箱，也应在 target 结果里记录同一套基础定位字段：
 
 - contest id、service id、team id、round number。
-- checker type、checker package digest、runtime image digest。
-- started_at、finished_at、duration_ms。
-- exit_code、status_reason、resource_limit_hit。
+- checker type、checker package digest；`tcp_standard` 无 artifact 时该字段为空。
+- duration_ms。
+- exit_code、status_reason / error_code、resource_limit_hit。
 - stdout/stderr 截断摘要。
 - target allowlist 摘要。
 
 审计记录不能保存完整 flag。输出中出现 flag 时，应在持久化前脱敏。
+
+当前实现把审计摘要写入 `check_result.targets[].audit`，用于定位单个 target 的执行结果。脚本 runner 的 stdout/stderr 会在写入前截断并替换当前轮 flag；TCP runner 的连接错误、步骤错误和 target audit 也会经过同一套脱敏逻辑。
+
+## Artifact 清理
+
+`script_checker` artifact 按 `AWD_CHECKER_ARTIFACT_DIR/<slug>/<digest>/...` 存储。题目包重新导入同一个 slug 且 digest 变化时，平台在数据库事务提交成功后清理旧 digest 目录；事务失败时不清理旧目录，避免保存态仍引用旧 artifact。
+
+清理函数必须先校验目标目录位于 `AWD_CHECKER_ARTIFACT_DIR` 内，且不能等于 artifact root 本身。清理只针对被新导入替换的旧 digest 目录，不扫描或删除未被当前操作确认的其它路径。
 
 ## Runner 接入点
 

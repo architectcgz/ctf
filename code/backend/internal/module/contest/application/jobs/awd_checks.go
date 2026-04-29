@@ -45,6 +45,7 @@ type awdCheckTargetResult struct {
 	LatencyMS int64                   `json:"latency_ms,omitempty"`
 	ErrorCode string                  `json:"error_code,omitempty"`
 	Error     string                  `json:"error,omitempty"`
+	Audit     *awdCheckerAuditRecord  `json:"audit,omitempty"`
 	PutFlag   *awdCheckActionResult   `json:"put_flag,omitempty"`
 	GetFlag   *awdCheckActionResult   `json:"get_flag,omitempty"`
 	Havoc     *awdCheckActionResult   `json:"havoc,omitempty"`

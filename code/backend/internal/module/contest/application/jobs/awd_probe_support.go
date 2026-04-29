@@ -45,7 +45,18 @@ func sanitizeAWDCheckError(err error) string {
 	if err == nil {
 		return ""
 	}
-	msg := strings.TrimSpace(err.Error())
+	return sanitizeAWDCheckErrorMessage(err.Error())
+}
+
+func sanitizeAWDCheckErrorWithSecrets(err error, secrets ...string) string {
+	if err == nil {
+		return ""
+	}
+	return sanitizeAWDCheckerText(err.Error(), secrets...)
+}
+
+func sanitizeAWDCheckErrorMessage(value string) string {
+	msg := strings.TrimSpace(value)
 	if msg == "" {
 		return "unknown_checker_error"
 	}
