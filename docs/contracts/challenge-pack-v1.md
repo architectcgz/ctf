@@ -503,8 +503,9 @@ extensions:
   - 必填，对应 `checker_type`
   - 当前枚举：`legacy_probe` `http_standard`
 - `extensions.awd.checker.config`
-  - 建议必填，对应 `checker_config`
-  - 对 `http_standard`，建议至少显式提供 `put_flag / get_flag / havoc`
+  - 必填，对应 `checker_config`
+  - 对 `http_standard`，必须至少显式提供 `put_flag / get_flag`；建议同时提供 `havoc`
+  - 这是 AWD service 的默认裁判契约，题目包导入后会进入 AWD 题库模板，管理员把题目加入赛事时默认继承该配置
 - `extensions.awd.flag_policy.mode`
   - 必填，对应 `flag_mode`
   - 例如 `dynamic_team`
@@ -527,8 +528,9 @@ extensions:
 
 - `meta.points` 在 AWD 包中只作为**建议分值**保留，当前不会直接写入 AWD 题目；真正比赛分值仍在管理员配置比赛时设置
 - AWD 题目导入成功后，平台会直接生成 `published` 状态题目，便于管理员在比赛题池里立即选题
-- 比赛里的 Checker 覆盖、分值、顺序、可见性仍然属于**比赛级配置**，不应反向写回 AWD 题目
+- 比赛里的 Checker 覆盖、分值、顺序、可见性仍然属于**比赛级配置**，不应反向写回 AWD 题目；上传后编辑只能覆盖赛事副本，不能替代题目包内的默认 checker
 - `runtime.image.ref` 必须是已构建并已推送到平台可访问 registry 的最终镜像引用；导入 AWD 题目不会自动构建 `docker/` 目录中的 Dockerfile
+- `docker/check/` 或类似目录中的 `check.py` 只作为出题人本地验证脚本和审计材料保留；当前平台正式轮次只执行 `legacy_probe` / `http_standard` 配置化 checker，不会把任意脚本作为选手附件公开或直接调度
 
 ---
 
@@ -563,8 +565,8 @@ extensions:
 | `extensions.awd.service_type` | 已支持 | 映射到 `awd_challenges.service_type` |
 | `extensions.awd.deployment_mode` | 已支持 | 映射到 `awd_challenges.deployment_mode` |
 | `extensions.awd.version` | 已支持 | 映射到 `awd_challenges.version` |
-| `extensions.awd.checker.type` | 已支持 | 映射到 `checker_type` |
-| `extensions.awd.checker.config` | 已支持 | 映射到 `checker_config` |
+| `extensions.awd.checker.type` | 已支持 | 映射到 `checker_type`；加入赛事时作为默认 checker 类型继承到 `contest_awd_services.runtime_config` |
+| `extensions.awd.checker.config` | 已支持 | 映射到 `checker_config`；加入赛事时作为默认 checker 配置继承到 `contest_awd_services.runtime_config` |
 | `extensions.awd.flag_policy.mode` | 已支持 | 映射到 `flag_mode` |
 | `extensions.awd.flag_policy.config` | 已支持 | 映射到 `flag_config` |
 | `extensions.awd.defense_entry.mode` | 已支持 | 映射到 `defense_entry_mode` |
