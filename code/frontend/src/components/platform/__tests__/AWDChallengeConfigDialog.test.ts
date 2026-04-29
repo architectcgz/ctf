@@ -195,6 +195,11 @@ describe('AWDChallengeConfigDialog', () => {
       },
     })
 
+    expect(wrapper.text()).toContain('默认使用题目包中的 Checker')
+    expect(wrapper.find('#awd-challenge-config-checker-type').exists()).toBe(false)
+    expect(wrapper.find('#awd-challenge-config-preview').exists()).toBe(false)
+    await enableCheckerOverride(wrapper)
+
     expect((wrapper.get('#awd-http-put-path').element as HTMLInputElement).value).toBe('/api/flag')
     expect(
       (wrapper.get('#awd-http-put-body-template').element as HTMLTextAreaElement).value
