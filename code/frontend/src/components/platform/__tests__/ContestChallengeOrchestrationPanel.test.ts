@@ -420,6 +420,26 @@ describe('ContestChallengeOrchestrationPanel', () => {
           version: '1.0.0',
           status: 'published',
           readiness_status: 'passed',
+          checker_type: 'http_standard',
+          checker_config: {
+            put_flag: {
+              method: 'PUT',
+              path: '/api/flag',
+              expected_status: 200,
+              body_template: '{{FLAG}}',
+            },
+            get_flag: {
+              method: 'GET',
+              path: '/api/flag',
+              expected_status: 200,
+              expected_substring: '{{FLAG}}',
+            },
+            havoc: {
+              method: 'GET',
+              path: '/health',
+              expected_status: 200,
+            },
+          },
           created_at: '2026-03-01T00:00:00.000Z',
           updated_at: '2026-03-01T00:00:00.000Z',
         },
@@ -435,6 +455,10 @@ describe('ContestChallengeOrchestrationPanel', () => {
           version: '1.0.0',
           status: 'published',
           readiness_status: 'passed',
+          checker_type: 'legacy_probe',
+          checker_config: {
+            health_path: '/healthz',
+          },
           created_at: '2026-03-01T00:00:00.000Z',
           updated_at: '2026-03-01T00:00:00.000Z',
         },
@@ -473,12 +497,36 @@ describe('ContestChallengeOrchestrationPanel', () => {
       points: 100,
       order: 0,
       is_visible: true,
+      checker_type: 'http_standard',
+      checker_config: {
+        put_flag: {
+          method: 'PUT',
+          path: '/api/flag',
+          expected_status: 200,
+          body_template: '{{FLAG}}',
+        },
+        get_flag: {
+          method: 'GET',
+          path: '/api/flag',
+          expected_status: 200,
+          expected_substring: '{{FLAG}}',
+        },
+        havoc: {
+          method: 'GET',
+          path: '/health',
+          expected_status: 200,
+        },
+      },
     })
     expect(contestApiMocks.createContestAWDService).toHaveBeenNthCalledWith(2, 'contest-1', {
       awd_challenge_id: 12,
       points: 100,
       order: 1,
       is_visible: true,
+      checker_type: 'legacy_probe',
+      checker_config: {
+        health_path: '/healthz',
+      },
     })
   })
 

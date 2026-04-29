@@ -8,6 +8,7 @@ const packageTree = `challenge-package.zip    # 上传的题目包压缩文件
     Dockerfile           # 容器构建文件示例
     app.py               # 教师编写的 Web 服务器入口示例
     requirements.txt     # 运行依赖示例
+    check/check.py       # 本地 checker 脚本示例（AWD 推荐随包提供）
     topology.yml         # 拓扑扩展配置（extensions.topology.source）`
 
 const challengeManifest = `api_version: v1 # 固定为 v1
@@ -48,6 +49,28 @@ runtime:
     ref: ctf/web-demo:latest # 容器镜像地址（type=container 时使用）
 
 extensions:
+  awd:
+    checker:
+      type: http_standard # AWD 推荐在题目包中声明 checker
+      config:
+        put_flag:
+          method: PUT
+          path: /api/flag
+          expected_status: 200
+          headers:
+            X-AWD-Checker-Token: demo-checker-token
+          body_template: "{{FLAG}}"
+        get_flag:
+          method: GET
+          path: /api/flag
+          expected_status: 200
+          headers:
+            X-AWD-Checker-Token: demo-checker-token
+          expected_substring: "{{FLAG}}"
+        havoc:
+          method: GET
+          path: /health
+          expected_status: 200
   topology:
     source: docker/topology.yml # 拓扑文件路径（可选）
     enabled: false # 是否启用拓扑扩展`

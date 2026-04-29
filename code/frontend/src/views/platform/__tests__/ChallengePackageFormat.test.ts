@@ -27,6 +27,9 @@ describe('ChallengePackageFormat', () => {
     expect(wrapper.text()).toContain('不要写 ## 题目描述')
     expect(wrapper.text()).toContain('api_version: v1')
     expect(wrapper.text()).toContain('flag:')
+    expect(wrapper.text()).toContain('checker:')
+    expect(wrapper.text()).toContain('http_standard')
+    expect(wrapper.text()).toContain('X-AWD-Checker-Token')
   })
 
   it('应使用共享 workspace overline 作为上传示例页的 hero 标记', () => {
