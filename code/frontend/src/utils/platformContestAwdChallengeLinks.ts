@@ -27,7 +27,7 @@ export function mergePlatformContestChallengesWithAwdServices(
     return {
       ...challenge,
       awd_service_id: service?.id,
-      awd_template_id: service?.template_id,
+      awd_challenge_id: service?.awd_challenge_id,
       awd_service_display_name: service?.display_name || undefined,
       order: service?.order ?? challenge.order,
       is_visible: service?.is_visible ?? challenge.is_visible,
@@ -57,7 +57,7 @@ export function mapPlatformContestAwdServicesToChallengeLinks(
     is_visible: service.is_visible,
     created_at: service.created_at,
     awd_service_id: service.id,
-    awd_template_id: service.template_id,
+    awd_challenge_id: service.awd_challenge_id,
     awd_service_display_name: service.display_name || undefined,
     awd_checker_type: service.checker_type,
     awd_checker_config: normalizeCheckerConfig(service),

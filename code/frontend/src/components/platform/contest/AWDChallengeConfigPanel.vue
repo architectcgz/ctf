@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { RouterLink } from 'vue-router'
 import { ChevronLeft, ChevronRight, Edit, Plus } from 'lucide-vue-next'
 
 import type { AdminContestChallengeViewData } from '@/api/contracts'
@@ -134,6 +135,13 @@ function readActionSummary(value: unknown, label: string): string {
 
 function getChallengeTitle(item: AdminContestChallengeViewData): string {
   return item.title?.trim() || `Challenge #${item.challenge_id}`
+}
+
+function getChallengePreviewRoute(item: AdminContestChallengeViewData) {
+  return {
+    name: 'PlatformChallengeDetail',
+    params: { id: item.challenge_id },
+  }
 }
 
 function buildPresentationResult(item: AdminContestChallengeViewData): Record<string, unknown> {
@@ -276,7 +284,13 @@ function isActiveChallenge(item: AdminContestChallengeViewData): boolean {
         </header>
         <div class="config-focus-card__body">
           <span class="active-edit-banner__label">正在编辑</span>
-          <strong>{{ getChallengeTitle(activeChallenge) }}</strong>
+          <RouterLink
+            class="challenge-title-link config-focus-card__title-link"
+            :to="getChallengePreviewRoute(activeChallenge)"
+            :title="`打开题目预览：${getChallengeTitle(activeChallenge)}`"
+          >
+            {{ getChallengeTitle(activeChallenge) }}
+          </RouterLink>
           <span class="config-focus-card__hint">{{ getValidationHint(activeChallenge) }}</span>
         </div>
       </section>
@@ -325,9 +339,14 @@ function isActiveChallenge(item: AdminContestChallengeViewData): boolean {
             >
               <td class="col-identity">
                 <div class="challenge-identity">
-                  <div class="challenge-title">
+                  <RouterLink
+                    :id="`awd-challenge-preview-${item.challenge_id}`"
+                    class="challenge-title challenge-title-link"
+                    :to="getChallengePreviewRoute(item)"
+                    :title="`打开题目预览：${getChallengeTitle(item)}`"
+                  >
                     {{ getChallengeTitle(item) }}
-                  </div>
+                  </RouterLink>
                   <div class="challenge-subtitle">
                     {{ item.category }} · RANK {{ item.order }}
                   </div>
@@ -471,8 +490,9 @@ function isActiveChallenge(item: AdminContestChallengeViewData): boolean {
   color: var(--color-primary);
 }
 
-.config-focus-card__body strong {
+.config-focus-card__title-link {
   min-width: 0;
+  font-weight: 800;
   color: var(--color-text-primary);
 }
 
@@ -535,9 +555,36 @@ function isActiveChallenge(item: AdminContestChallengeViewData): boolean {
 }
 
 .challenge-title {
+  display: inline-block;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: var(--font-size-16);
   font-weight: 800;
   color: var(--color-text-primary);
+}
+
+.challenge-title-link {
+  text-decoration: none;
+  transition:
+    color var(--ui-motion-fast),
+    text-decoration-color var(--ui-motion-fast);
+}
+
+.challenge-title-link:hover {
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-decoration-thickness: var(--ui-focus-ring-width);
+  text-underline-offset: var(--space-1);
+}
+
+.challenge-title-link:focus-visible {
+  outline: var(--ui-focus-ring-width) solid
+    color-mix(in srgb, var(--color-primary) 72%, transparent);
+  outline-offset: var(--space-1);
+  border-radius: var(--ui-control-radius-sm);
 }
 
 .challenge-subtitle {

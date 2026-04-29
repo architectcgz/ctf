@@ -66,7 +66,7 @@ CREATE SEQUENCE public.awd_rounds_id_seq
 
 ALTER SEQUENCE public.awd_rounds_id_seq OWNED BY public.awd_rounds.id;
 
-CREATE TABLE public.awd_service_templates (
+CREATE TABLE public.awd_challenges (
     id bigint NOT NULL,
     name character varying(128) NOT NULL,
     slug character varying(128) NOT NULL,
@@ -94,14 +94,14 @@ CREATE TABLE public.awd_service_templates (
     deleted_at timestamp without time zone
 );
 
-CREATE SEQUENCE public.awd_service_templates_id_seq
+CREATE SEQUENCE public.awd_challenges_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
     NO MAXVALUE
     CACHE 1;
 
-ALTER SEQUENCE public.awd_service_templates_id_seq OWNED BY public.awd_service_templates.id;
+ALTER SEQUENCE public.awd_challenges_id_seq OWNED BY public.awd_challenges.id;
 
 CREATE TABLE public.awd_team_services (
     id bigint NOT NULL,
@@ -311,7 +311,7 @@ CREATE TABLE public.contest_awd_services (
     id bigint NOT NULL,
     contest_id bigint NOT NULL,
     challenge_id bigint NOT NULL,
-    template_id bigint,
+    awd_challenge_id bigint,
     display_name character varying(128) DEFAULT ''::character varying NOT NULL,
     "order" integer DEFAULT 0 NOT NULL,
     is_visible boolean DEFAULT true NOT NULL,
@@ -760,7 +760,7 @@ ALTER TABLE ONLY public.awd_attack_logs ALTER COLUMN id SET DEFAULT nextval('pub
 
 ALTER TABLE ONLY public.awd_rounds ALTER COLUMN id SET DEFAULT nextval('public.awd_rounds_id_seq'::regclass);
 
-ALTER TABLE ONLY public.awd_service_templates ALTER COLUMN id SET DEFAULT nextval('public.awd_service_templates_id_seq'::regclass);
+ALTER TABLE ONLY public.awd_challenges ALTER COLUMN id SET DEFAULT nextval('public.awd_challenges_id_seq'::regclass);
 
 ALTER TABLE ONLY public.awd_team_services ALTER COLUMN id SET DEFAULT nextval('public.awd_team_services_id_seq'::regclass);
 
@@ -827,8 +827,8 @@ ALTER TABLE ONLY public.awd_attack_logs
 ALTER TABLE ONLY public.awd_rounds
     ADD CONSTRAINT awd_rounds_pkey PRIMARY KEY (id);
 
-ALTER TABLE ONLY public.awd_service_templates
-    ADD CONSTRAINT awd_service_templates_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.awd_challenges
+    ADD CONSTRAINT awd_challenges_pkey PRIMARY KEY (id);
 
 ALTER TABLE ONLY public.awd_team_services
     ADD CONSTRAINT awd_team_services_pkey PRIMARY KEY (id);
@@ -957,7 +957,7 @@ CREATE INDEX idx_awd_attack_victim ON public.awd_attack_logs USING btree (round_
 
 CREATE INDEX idx_awd_rounds_status ON public.awd_rounds USING btree (contest_id, status);
 
-CREATE INDEX idx_awd_service_templates_status ON public.awd_service_templates USING btree (status, service_type);
+CREATE INDEX idx_awd_challenges_status ON public.awd_challenges USING btree (status, service_type);
 
 CREATE INDEX idx_awd_traffic_attacker ON public.awd_traffic_events USING btree (round_id, attacker_team_id);
 
@@ -997,7 +997,7 @@ CREATE INDEX idx_contest_announcements_contest_created ON public.contest_announc
 
 CREATE INDEX idx_contest_awd_services_contest_order ON public.contest_awd_services USING btree (contest_id, "order", id) WHERE (deleted_at IS NULL);
 
-CREATE INDEX idx_contest_awd_services_template ON public.contest_awd_services USING btree (template_id) WHERE ((deleted_at IS NULL) AND (template_id IS NOT NULL));
+CREATE INDEX idx_contest_awd_services_awd_challenge ON public.contest_awd_services USING btree (awd_challenge_id) WHERE ((deleted_at IS NULL) AND (awd_challenge_id IS NOT NULL));
 
 CREATE UNIQUE INDEX idx_contest_challenges_active_order ON public.contest_challenges USING btree (contest_id, "order") WHERE (deleted_at IS NULL);
 
@@ -1103,7 +1103,7 @@ CREATE INDEX idx_users_status ON public.users USING btree (status) WHERE (delete
 
 CREATE UNIQUE INDEX uk_awd_rounds ON public.awd_rounds USING btree (contest_id, round_number);
 
-CREATE UNIQUE INDEX uk_awd_service_templates_slug ON public.awd_service_templates USING btree (slug) WHERE (deleted_at IS NULL);
+CREATE UNIQUE INDEX uk_awd_challenges_slug ON public.awd_challenges USING btree (slug) WHERE (deleted_at IS NULL);
 
 CREATE UNIQUE INDEX uk_awd_team_services ON public.awd_team_services USING btree (round_id, team_id, service_id);
 

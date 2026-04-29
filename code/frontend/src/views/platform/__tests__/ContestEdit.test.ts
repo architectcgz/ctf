@@ -17,7 +17,7 @@ const contestApiMocks = vi.hoisted(() => ({
   getContest: vi.fn(),
   updateContest: vi.fn(),
   getContestAWDReadiness: vi.fn(),
-  listAdminAwdServiceTemplates: vi.fn(),
+  listAdminAwdChallenges: vi.fn(),
   listAdminContestChallenges: vi.fn(),
   listContestAWDServices: vi.fn(),
   getChallenges: vi.fn(),
@@ -53,7 +53,7 @@ vi.mock('@/api/admin', async () => {
     getContest: contestApiMocks.getContest,
     updateContest: contestApiMocks.updateContest,
     getContestAWDReadiness: contestApiMocks.getContestAWDReadiness,
-    listAdminAwdServiceTemplates: contestApiMocks.listAdminAwdServiceTemplates,
+    listAdminAwdChallenges: contestApiMocks.listAdminAwdChallenges,
     listAdminContestChallenges: contestApiMocks.listAdminContestChallenges,
     listContestAWDServices: contestApiMocks.listContestAWDServices,
     getChallenges: contestApiMocks.getChallenges,
@@ -136,17 +136,17 @@ const ContestChallengeEditorDialogStub = defineComponent({
     mode: { type: String, default: 'create' },
     contestMode: { type: String, default: 'jeopardy' },
     challengeOptions: { type: Array, default: () => [] },
-    templateOptions: { type: Array, default: () => [] },
+    awdChallengeOptions: { type: Array, default: () => [] },
     existingChallengeIds: { type: Array, default: () => [] },
     draft: { type: Object, default: null },
     loadingChallengeCatalog: { type: Boolean, default: false },
-    loadingTemplateCatalog: { type: Boolean, default: false },
+    loadingAwdChallengeCatalog: { type: Boolean, default: false },
     saving: { type: Boolean, default: false },
   },
   emits: ['update:open', 'save'],
   setup(props, { emit }) {
     const challengeId = ref('')
-    const templateId = ref('')
+    const awdChallengeId = ref('')
     const points = ref('100')
     const order = ref('0')
     const isVisible = ref('true')
@@ -160,7 +160,7 @@ const ContestChallengeEditorDialogStub = defineComponent({
 
     watch(
       () =>
-        [props.open, props.mode, props.draft, selectableChallenges.value, props.templateOptions] as const,
+        [props.open, props.mode, props.draft, selectableChallenges.value, props.awdChallengeOptions] as const,
       ([open]) => {
         if (!open) {
           return
@@ -170,10 +170,10 @@ const ContestChallengeEditorDialogStub = defineComponent({
           props.mode === 'edit'
             ? String((props.draft as { challenge_id?: string } | null)?.challenge_id ?? '')
             : String(selectableChallenges.value[0]?.id ?? '')
-        templateId.value = isAwdContest.value
+        awdChallengeId.value = isAwdContest.value
           ? String(
-              (props.draft as { awd_template_id?: string } | null)?.awd_template_id ??
-                (props.templateOptions as Array<{ id: string }>)[0]?.id ??
+              (props.draft as { awd_challenge_id?: string } | null)?.awd_challenge_id ??
+                (props.awdChallengeOptions as Array<{ id: string }>)[0]?.id ??
                 ''
             )
           : ''
@@ -187,20 +187,38 @@ const ContestChallengeEditorDialogStub = defineComponent({
 
     function submit() {
       emit('save', {
-        challenge_id: challengeId.value ? Number(challengeId.value) : undefined,
-        template_id: isAwdContest.value ? Number(templateId.value) : undefined,
+        challenge_id: isAwdContest.value
+          ? undefined
+          : challengeId.value
+            ? Number(challengeId.value)
+            : undefined,
+        awd_challenge_id: isAwdContest.value ? Number(awdChallengeId.value) : undefined,
         points: Number(points.value),
         order: Number(order.value),
         is_visible: isVisible.value === 'true',
       })
     }
 
-    return { challengeId, templateId, points, order, isVisible, selectableChallenges, isAwdContest, submit }
+    function selectAwdChallenge(id: string) {
+      awdChallengeId.value = id
+    }
+
+    return {
+      challengeId,
+      awdChallengeId,
+      points,
+      order,
+      isVisible,
+      selectableChallenges,
+      isAwdContest,
+      selectAwdChallenge,
+      submit,
+    }
   },
   template: `
     <div v-if="open">
       <select
-        v-if="mode === 'create'"
+        v-if="mode === 'create' && !isAwdContest"
         id="contest-challenge-select"
         v-model="challengeId"
         :disabled="loadingChallengeCatalog"
@@ -214,20 +232,21 @@ const ContestChallengeEditorDialogStub = defineComponent({
         </option>
       </select>
       <div v-else>{{ draft?.title }}</div>
-      <select
+      <div
         v-if="isAwdContest"
-        id="contest-challenge-template"
-        v-model="templateId"
-        :disabled="loadingTemplateCatalog"
+        id="contest-template-list"
       >
-        <option
-          v-for="template in templateOptions"
+        <button
+          v-for="template in awdChallengeOptions"
+          :id="'contest-template-option-' + template.id"
           :key="template.id"
-          :value="template.id"
+          type="button"
+          :class="{ 'is-selected': awdChallengeId === template.id }"
+          @click="selectAwdChallenge(template.id)"
         >
           {{ template.name }}
-        </option>
-      </select>
+        </button>
+      </div>
       <input id="contest-challenge-points" v-model="points" />
       <input id="contest-challenge-order" v-model="order" />
       <select id="contest-challenge-visibility" v-model="isVisible">
@@ -251,17 +270,17 @@ const AWDChallengeConfigDialogStub = defineComponent({
     open: { type: Boolean, default: false },
     mode: { type: String, default: 'create' },
     challengeOptions: { type: Array, default: () => [] },
-    templateOptions: { type: Array, default: () => [] },
+    awdChallengeOptions: { type: Array, default: () => [] },
     existingChallengeIds: { type: Array, default: () => [] },
     draft: { type: Object, default: null },
     loadingChallengeCatalog: { type: Boolean, default: false },
-    loadingTemplateCatalog: { type: Boolean, default: false },
+    loadingAwdChallengeCatalog: { type: Boolean, default: false },
     saving: { type: Boolean, default: false },
   },
   emits: ['update:open', 'save'],
   setup(props, { emit }) {
     const challengeId = ref('')
-    const templateId = ref('')
+    const awdChallengeId = ref('')
     const points = ref('100')
     const order = ref('0')
     const isVisible = ref('true')
@@ -273,7 +292,7 @@ const AWDChallengeConfigDialogStub = defineComponent({
     )
 
     watch(
-      () => [props.open, props.mode, props.draft, selectableChallenges.value, props.templateOptions] as const,
+      () => [props.open, props.mode, props.draft, selectableChallenges.value, props.awdChallengeOptions] as const,
       ([open]) => {
         if (!open) {
           return
@@ -283,9 +302,9 @@ const AWDChallengeConfigDialogStub = defineComponent({
           props.mode === 'edit'
             ? String((props.draft as { challenge_id?: string } | null)?.challenge_id ?? '')
             : String(selectableChallenges.value[0]?.id ?? '')
-        templateId.value = String(
-          (props.draft as { awd_template_id?: string } | null)?.awd_template_id ??
-            (props.templateOptions as Array<{ id: string }>)[0]?.id ??
+        awdChallengeId.value = String(
+          (props.draft as { awd_challenge_id?: string } | null)?.awd_challenge_id ??
+            (props.awdChallengeOptions as Array<{ id: string }>)[0]?.id ??
             ''
         )
         points.value = String((props.draft as { points?: number } | null)?.points ?? 100)
@@ -299,14 +318,14 @@ const AWDChallengeConfigDialogStub = defineComponent({
     function submit() {
       emit('save', {
         challenge_id: props.mode === 'edit' ? Number(challengeId.value) : undefined,
-        template_id: Number(templateId.value),
+        awd_challenge_id: Number(awdChallengeId.value),
         points: Number(points.value),
         order: Number(order.value),
         is_visible: isVisible.value === 'true',
       })
     }
 
-    return { challengeId, templateId, points, order, isVisible, selectableChallenges, submit }
+    return { challengeId, awdChallengeId, points, order, isVisible, selectableChallenges, submit }
   },
   template: `
     <div v-if="open">
@@ -314,11 +333,11 @@ const AWDChallengeConfigDialogStub = defineComponent({
       <div v-if="mode === 'edit'">{{ draft?.title }}</div>
       <select
         id="awd-challenge-config-template"
-        v-model="templateId"
-        :disabled="loadingTemplateCatalog"
+        v-model="awdChallengeId"
+        :disabled="loadingAwdChallengeCatalog"
       >
         <option
-          v-for="template in templateOptions"
+          v-for="template in awdChallengeOptions"
           :key="template.id"
           :value="template.id"
         >
@@ -368,6 +387,10 @@ function mountContestEdit() {
           props: ['modelValue', 'title'],
           template: '<div><div v-if="title">{{ title }}</div><slot /><slot name="footer" /></div>',
         },
+        RouterLink: {
+          props: ['to'],
+          template: '<a><slot /></a>',
+        },
       },
     },
   })
@@ -397,6 +420,10 @@ function mountContestEditWithRealChallengeDialog() {
         ElDialog: {
           props: ['modelValue', 'title'],
           template: '<div><div v-if="title">{{ title }}</div><slot /><slot name="footer" /></div>',
+        },
+        RouterLink: {
+          props: ['to'],
+          template: '<a><slot /></a>',
         },
       },
     },
@@ -440,7 +467,7 @@ describe('ContestEdit', () => {
     contestApiMocks.getContest.mockReset()
     contestApiMocks.updateContest.mockReset()
     contestApiMocks.getContestAWDReadiness.mockReset()
-    contestApiMocks.listAdminAwdServiceTemplates.mockReset()
+    contestApiMocks.listAdminAwdChallenges.mockReset()
     contestApiMocks.listAdminContestChallenges.mockReset()
     contestApiMocks.listContestAWDServices.mockReset()
     contestApiMocks.getChallenges.mockReset()
@@ -501,7 +528,7 @@ describe('ContestEdit', () => {
         },
       ],
     })
-    contestApiMocks.listAdminAwdServiceTemplates.mockResolvedValue({
+    contestApiMocks.listAdminAwdChallenges.mockResolvedValue({
       list: [
         {
           id: '1',
@@ -551,7 +578,7 @@ describe('ContestEdit', () => {
         id: 'service-1',
         contest_id: 'contest-1',
         challenge_id: '101',
-        template_id: '1',
+        awd_challenge_id: '1',
         display_name: 'Web 入门',
         order: 1,
         is_visible: true,
@@ -618,7 +645,7 @@ describe('ContestEdit', () => {
       contest_id: 'contest-1',
       challenge_id: '102',
       awd_service_id: 'service-2',
-      awd_template_id: '1',
+      awd_challenge_id: '1',
       title: 'Crypto 进阶',
       category: 'crypto',
       difficulty: 'medium',
@@ -638,7 +665,7 @@ describe('ContestEdit', () => {
       id: 'service-2',
       contest_id: 'contest-1',
       challenge_id: '102',
-      template_id: '1',
+      awd_challenge_id: '1',
       display_name: 'Crypto 进阶',
       order: 3,
       is_visible: false,
@@ -860,7 +887,7 @@ describe('ContestEdit', () => {
           id: 'service-1',
           contest_id: 'contest-1',
           challenge_id: '101',
-          template_id: '1',
+          awd_challenge_id: '1',
           title: 'Web 入门',
           category: 'web',
           difficulty: 'easy',
@@ -1190,7 +1217,7 @@ describe('ContestEdit', () => {
     expect(wrapper.text()).not.toContain('竞赛详情加载失败')
   })
 
-  it('应该为 AWD 配置按 published 状态加载服务模板目录', async () => {
+  it('AWD 配置新增应回到题目池并打开题库选题弹层', async () => {
     contestApiMocks.getContest.mockResolvedValue(
       buildContestDetail({
         title: '2026 AWD 联赛',
@@ -1199,7 +1226,7 @@ describe('ContestEdit', () => {
         status: 'registering',
       })
     )
-    contestApiMocks.listAdminAwdServiceTemplates.mockResolvedValueOnce({
+    contestApiMocks.listAdminAwdChallenges.mockResolvedValueOnce({
       list: [
         {
           id: '999',
@@ -1230,7 +1257,13 @@ describe('ContestEdit', () => {
     await wrapper.get('#awd-challenge-config-create').trigger('click')
     await flushPromises()
 
-    expect(contestApiMocks.listAdminAwdServiceTemplates).toHaveBeenCalledWith({
+    expect(wrapper.get('#contest-workbench-stage-tab-pool').attributes('aria-selected')).toBe('true')
+    expect(wrapper.find('#contest-challenge-library').exists()).toBe(false)
+    expect(wrapper.find('#contest-challenge-select').exists()).toBe(false)
+    expect(wrapper.find('#contest-template-option-999').exists()).toBe(true)
+    expect(wrapper.find('#awd-challenge-config-template').exists()).toBe(false)
+    expect(contestApiMocks.getChallenges).not.toHaveBeenCalled()
+    expect(contestApiMocks.listAdminAwdChallenges).toHaveBeenCalledWith({
       page: 1,
       page_size: 100,
       status: 'published',
@@ -1238,7 +1271,7 @@ describe('ContestEdit', () => {
     expect(wrapper.text()).toContain('Final Template')
   })
 
-  it('应该在 AWD 配置服务模板加载失败时给出错误提示而不是留下未处理异常', async () => {
+  it('应该在 AWD 配置AWD 题目加载失败时给出错误提示而不是留下未处理异常', async () => {
     contestApiMocks.getContest.mockResolvedValue(
       buildContestDetail({
         title: '2026 AWD 联赛',
@@ -1247,7 +1280,7 @@ describe('ContestEdit', () => {
         status: 'registering',
       })
     )
-    contestApiMocks.listAdminAwdServiceTemplates.mockRejectedValueOnce(new Error('catalog failed'))
+    contestApiMocks.listAdminAwdChallenges.mockRejectedValueOnce(new Error('catalog failed'))
 
     const wrapper = mountContestEdit()
 
@@ -1258,7 +1291,8 @@ describe('ContestEdit', () => {
     await flushPromises()
 
     expect(toastMocks.error).toHaveBeenCalledWith('catalog failed')
-    expect(wrapper.text()).toContain('新增 AWD 题库题目')
+    expect(wrapper.get('#contest-workbench-stage-tab-pool').attributes('aria-selected')).toBe('true')
+    expect(wrapper.find('#contest-template-list').exists()).toBe(true)
   })
 
   it('应该在 AWD 辅助数据仍在加载时显示阶段级加载提示而不是空态', async () => {
@@ -1288,7 +1322,7 @@ describe('ContestEdit', () => {
         id: 'service-1',
         contest_id: 'contest-1',
         challenge_id: '101',
-        template_id: '1',
+        awd_challenge_id: '1',
         title: 'Web 入门',
         category: 'web',
         difficulty: 'easy',
@@ -1399,7 +1433,7 @@ describe('ContestEdit', () => {
       blocking_actions: awdServicesState.length > 0 ? [] : ['start_contest'],
       items: [],
     }))
-    contestApiMocks.listAdminAwdServiceTemplates.mockResolvedValue({
+    contestApiMocks.listAdminAwdChallenges.mockResolvedValue({
       list: [
         {
           id: '11',
@@ -1423,16 +1457,16 @@ describe('ContestEdit', () => {
     })
     contestApiMocks.createContestAWDService.mockImplementation(async (_contestId, payload) => {
       expect(payload).toEqual({
-        challenge_id: 102,
-        template_id: 11,
+        awd_challenge_id: 11,
+        points: 160,
         order: 3,
         is_visible: true,
       })
       awdServicesState.push({
         id: 'service-2',
         contest_id: 'contest-1',
-        challenge_id: '102',
-        template_id: '11',
+        challenge_id: '11',
+        awd_challenge_id: '11',
         title: 'Upload Service',
         category: 'web',
         difficulty: 'medium',
@@ -1465,8 +1499,7 @@ describe('ContestEdit', () => {
     await flushPromises()
     await wrapper.get('#contest-challenge-add').trigger('click')
     await flushPromises()
-    await wrapper.get('#contest-challenge-select').setValue('102')
-    await wrapper.get('#contest-challenge-template').setValue('11')
+    await wrapper.get('#contest-template-option-11').trigger('click')
     await wrapper.get('#contest-challenge-points').setValue('160')
     await wrapper.get('#contest-challenge-order').setValue('3')
     await wrapper.get('#contest-challenge-dialog-submit').trigger('click')
@@ -1511,7 +1544,7 @@ describe('ContestEdit', () => {
         id: 'service-1',
         contest_id: 'contest-1',
         challenge_id: '101',
-        template_id: '1',
+        awd_challenge_id: '1',
         title: 'Web 入门',
         category: 'web',
         difficulty: 'easy',
@@ -1548,7 +1581,7 @@ describe('ContestEdit', () => {
     )
     contestApiMocks.createContestAWDService.mockImplementation(async (_contestId, payload) => {
       expect(payload).toEqual({
-        template_id: 1,
+        awd_challenge_id: 1,
         points: 160,
         order: 2,
         is_visible: true,
@@ -1556,12 +1589,12 @@ describe('ContestEdit', () => {
       const created = {
         id: 'service-2',
         contest_id: 'contest-1',
-        challenge_id: '102',
-        template_id: '1',
-        title: 'Crypto 进阶',
-        category: 'crypto',
+        challenge_id: '1',
+        awd_challenge_id: '1',
+        title: 'Bank Portal AWD',
+        category: 'web',
         difficulty: 'medium',
-        display_name: 'Crypto 进阶',
+        display_name: 'Bank Portal AWD',
         order: 2,
         is_visible: true,
         score_config: {
@@ -1584,20 +1617,22 @@ describe('ContestEdit', () => {
     await flushPromises()
     await wrapper.get('#awd-challenge-config-create').trigger('click')
     await flushPromises()
-    await wrapper.get('#awd-challenge-config-template').setValue('1')
-    await wrapper.get('#awd-challenge-config-points').setValue('160')
-    await wrapper.get('#awd-challenge-config-order').setValue('2')
-    await wrapper.get('#awd-challenge-config-submit').trigger('click')
+    await wrapper.get('#contest-template-option-1').trigger('click')
+    await wrapper.get('#contest-challenge-points').setValue('160')
+    await wrapper.get('#contest-challenge-order').setValue('2')
+    await wrapper.get('#contest-challenge-dialog-submit').trigger('click')
     await flushPromises()
+
+    expect(contestApiMocks.updateAdminContestChallenge).not.toHaveBeenCalled()
 
     await wrapper.get('#contest-workbench-stage-tab-pool').trigger('click')
     await flushPromises()
-    expect(wrapper.text()).toContain('Crypto 进阶')
+    expect(wrapper.text()).toContain('Bank Portal AWD')
 
     await wrapper.get('#contest-challenge-add').trigger('click')
     await flushPromises()
-    expect(wrapper.find('#contest-challenge-select').exists()).toBe(true)
-    expect(wrapper.find('#contest-challenge-template').exists()).toBe(true)
+    expect(wrapper.find('#contest-challenge-library').exists()).toBe(false)
+    expect(wrapper.find('#contest-template-option-1').exists()).toBe(true)
   })
 
   it('AWD 配置保存失败时应提示错误并保持弹层打开', async () => {
@@ -1618,14 +1653,14 @@ describe('ContestEdit', () => {
     await flushPromises()
     await wrapper.get('#awd-challenge-config-create').trigger('click')
     await flushPromises()
-    await wrapper.get('#awd-challenge-config-template').setValue('1')
-    await wrapper.get('#awd-challenge-config-points').setValue('160')
-    await wrapper.get('#awd-challenge-config-order').setValue('2')
-    await wrapper.get('#awd-challenge-config-submit').trigger('click')
+    await wrapper.get('#contest-template-option-1').trigger('click')
+    await wrapper.get('#contest-challenge-points').setValue('160')
+    await wrapper.get('#contest-challenge-order').setValue('2')
+    await wrapper.get('#contest-challenge-dialog-submit').trigger('click')
     await flushPromises()
 
     expect(toastMocks.error).toHaveBeenCalledWith('save failed')
-    expect(wrapper.text()).toContain('新增 AWD 题库题目')
+    expect(wrapper.find('#contest-template-option-1').exists()).toBe(true)
   })
 
   it('应该在 AWD 赛事的题目池阶段展示摘要列与筛选入口', async () => {
@@ -1663,7 +1698,7 @@ describe('ContestEdit', () => {
         id: 'service-1',
         contest_id: 'contest-1',
         challenge_id: '101',
-        template_id: '1',
+        awd_challenge_id: '1',
         display_name: 'Web 入门',
         order: 1,
         is_visible: true,

@@ -10,26 +10,26 @@ import (
 	"ctf-platform/internal/module/challenge/testsupport"
 )
 
-func TestAWDServiceTemplateQueryServiceListTemplates(t *testing.T) {
+func TestAWDChallengeQueryServiceListChallenges(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	repo := challengeinfra.NewRepository(db)
-	service := NewAWDServiceTemplateQueryService(repo)
+	service := NewAWDChallengeQueryService(repo)
 
-	if err := repo.CreateAWDServiceTemplate(context.Background(), &model.AWDServiceTemplate{
+	if err := repo.CreateAWDChallenge(context.Background(), &model.AWDChallenge{
 		Name:           "Bank Portal AWD",
 		Slug:           "bank-portal-awd",
 		Category:       "web",
 		Difficulty:     model.ChallengeDifficultyHard,
 		ServiceType:    model.AWDServiceTypeWebHTTP,
 		DeploymentMode: model.AWDDeploymentModeSingleContainer,
-		Status:         model.AWDServiceTemplateStatusDraft,
+		Status:         model.AWDChallengeStatusDraft,
 	}); err != nil {
 		t.Fatalf("Create() error = %v", err)
 	}
 
-	page, err := service.ListTemplates(context.Background(), &dto.AWDServiceTemplateQuery{Page: 1, Size: 10})
+	page, err := service.ListChallenges(context.Background(), &dto.AWDChallengeQuery{Page: 1, Size: 10})
 	if err != nil {
-		t.Fatalf("ListTemplates() error = %v", err)
+		t.Fatalf("ListChallenges() error = %v", err)
 	}
 	if page.Total != 1 || len(page.Items) != 1 {
 		t.Fatalf("unexpected page: %+v", page)
@@ -39,12 +39,12 @@ func TestAWDServiceTemplateQueryServiceListTemplates(t *testing.T) {
 	}
 }
 
-func TestAWDServiceTemplateQueryServiceGetTemplateIncludesInheritedRuntimeFields(t *testing.T) {
+func TestAWDChallengeQueryServiceGetChallengeIncludesInheritedRuntimeFields(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	repo := challengeinfra.NewRepository(db)
-	service := NewAWDServiceTemplateQueryService(repo)
+	service := NewAWDChallengeQueryService(repo)
 
-	if err := repo.CreateAWDServiceTemplate(context.Background(), &model.AWDServiceTemplate{
+	if err := repo.CreateAWDChallenge(context.Background(), &model.AWDChallenge{
 		ID:               2401,
 		Name:             "Bank Portal AWD",
 		Slug:             "bank-portal-awd",
@@ -53,7 +53,7 @@ func TestAWDServiceTemplateQueryServiceGetTemplateIncludesInheritedRuntimeFields
 		Description:      "multi-step banking target",
 		ServiceType:      model.AWDServiceTypeWebHTTP,
 		DeploymentMode:   model.AWDDeploymentModeSingleContainer,
-		Status:           model.AWDServiceTemplateStatusPublished,
+		Status:           model.AWDChallengeStatusPublished,
 		CheckerType:      model.AWDCheckerTypeHTTPStandard,
 		CheckerConfig:    `{"put_flag":{"path":"/api/flag"},"get_flag":{"path":"/api/flag"}}`,
 		FlagMode:         "dynamic_team",
@@ -66,9 +66,9 @@ func TestAWDServiceTemplateQueryServiceGetTemplateIncludesInheritedRuntimeFields
 		t.Fatalf("Create() error = %v", err)
 	}
 
-	item, err := service.GetTemplate(context.Background(), 2401)
+	item, err := service.GetChallenge(context.Background(), 2401)
 	if err != nil {
-		t.Fatalf("GetTemplate() error = %v", err)
+		t.Fatalf("GetChallenge() error = %v", err)
 	}
 
 	if item.CheckerType != string(model.AWDCheckerTypeHTTPStandard) {

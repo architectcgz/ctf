@@ -13,22 +13,22 @@ import (
 	"ctf-platform/pkg/errcode"
 )
 
-func buildContestAWDServiceSnapshot(template *model.AWDServiceTemplate) string {
-	if template == nil {
+func buildContestAWDServiceSnapshot(awdChallenge *model.AWDChallenge) string {
+	if awdChallenge == nil {
 		return "{}"
 	}
 	snapshot := model.ContestAWDServiceSnapshot{
-		Name:             strings.TrimSpace(template.Name),
-		Category:         strings.TrimSpace(template.Category),
-		Difficulty:       strings.TrimSpace(template.Difficulty),
-		Description:      strings.TrimSpace(template.Description),
-		ServiceType:      template.ServiceType,
-		DeploymentMode:   template.DeploymentMode,
-		FlagMode:         strings.TrimSpace(template.FlagMode),
-		FlagConfig:       parseContestAWDServiceJSONMap(template.FlagConfig),
-		DefenseEntryMode: strings.TrimSpace(template.DefenseEntryMode),
-		AccessConfig:     parseContestAWDServiceJSONMap(template.AccessConfig),
-		RuntimeConfig:    parseContestAWDServiceJSONMap(template.RuntimeConfig),
+		Name:             strings.TrimSpace(awdChallenge.Name),
+		Category:         strings.TrimSpace(awdChallenge.Category),
+		Difficulty:       strings.TrimSpace(awdChallenge.Difficulty),
+		Description:      strings.TrimSpace(awdChallenge.Description),
+		ServiceType:      awdChallenge.ServiceType,
+		DeploymentMode:   awdChallenge.DeploymentMode,
+		FlagMode:         strings.TrimSpace(awdChallenge.FlagMode),
+		FlagConfig:       parseContestAWDServiceJSONMap(awdChallenge.FlagConfig),
+		DefenseEntryMode: strings.TrimSpace(awdChallenge.DefenseEntryMode),
+		AccessConfig:     parseContestAWDServiceJSONMap(awdChallenge.AccessConfig),
+		RuntimeConfig:    parseContestAWDServiceJSONMap(awdChallenge.RuntimeConfig),
 	}
 	raw, err := model.EncodeContestAWDServiceSnapshot(snapshot)
 	if err != nil {
@@ -76,7 +76,7 @@ func buildContestAWDServiceRuntimeConfig(
 		value["checker_config_raw"] = normalizedCheckerConfig
 	}
 	if extra := contestdomain.ParseAWDCheckerConfig(extraRuntimeConfig); len(extra) > 0 {
-		value["template_runtime"] = extra
+		value["challenge_runtime"] = extra
 	}
 	raw, err := json.Marshal(value)
 	if err != nil {
@@ -152,9 +152,9 @@ func parseContestAWDServiceRuntimeChecker(runtimeConfig string) (model.AWDChecke
 	return checkerType, "{}"
 }
 
-func parseContestAWDServiceTemplateRuntimeConfig(runtimeConfig string) string {
+func parseContestAWDChallengeRuntimeConfig(runtimeConfig string) string {
 	value := contestdomain.ParseAWDCheckerConfig(runtimeConfig)
-	raw, ok := value["template_runtime"]
+	raw, ok := value["challenge_runtime"]
 	if !ok {
 		return ""
 	}

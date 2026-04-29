@@ -2,7 +2,7 @@ import { mount } from '@vue/test-utils'
 import { defineComponent, h } from 'vue'
 import { describe, expect, it } from 'vitest'
 
-import AWDServiceTemplateEditorDialog from '../AWDServiceTemplateEditorDialog.vue'
+import AWDChallengeEditorDialog from '../AWDChallengeEditorDialog.vue'
 
 const SlideOverDrawerStub = defineComponent({
   props: {
@@ -22,9 +22,9 @@ const SlideOverDrawerStub = defineComponent({
   },
 })
 
-describe('AWDServiceTemplateEditorDialog', () => {
+describe('AWDChallengeEditorDialog', () => {
   it('uses category enum select instead of free text input', async () => {
-    const wrapper = mount(AWDServiceTemplateEditorDialog, {
+    const wrapper = mount(AWDChallengeEditorDialog, {
       props: {
         open: true,
         mode: 'create',

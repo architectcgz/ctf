@@ -4,7 +4,7 @@
 > 文档目的：定义“题目源包（Zip）”的结构与 `challenge.yml` 规范，并明确当前平台如何导入、校验与发布题目。
 > 版本：v1.4 | 日期：2026-04-21
 
-> 说明：截至 2026-04-21，仓库内已有题目、镜像、Hint、拓扑、Writeup 与 AWD 服务模板等后端能力，且已新增后台 `challenge.yml` 题目包上传预览、确认导入、同步自检与发布自检队列接口，以及 AWD 服务模板包预览/确认导入接口与复用同一解析核心的 CLI 导入脚本。
+> 说明：截至 2026-04-21，仓库内已有题目、镜像、Hint、拓扑、Writeup 与 AWD 题目等后端能力，且已新增后台 `challenge.yml` 题目包上传预览、确认导入、同步自检与发布自检队列接口，以及 AWD 题目包预览/确认导入接口与复用同一解析核心的 CLI 导入脚本。
 > 因此本规范既是“作者侧源包规范”，也是当前实现中的导入契约；文中会显式标注哪些扩展字段仍处于保留状态。
 
 ---
@@ -66,9 +66,9 @@
 - `POST /api/v1/authoring/challenge-imports`
 - `GET /api/v1/authoring/challenge-imports/:id`
 - `POST /api/v1/authoring/challenge-imports/:id/commit`
-- `POST /api/v1/authoring/awd-service-template-imports`
-- `GET /api/v1/authoring/awd-service-template-imports/:id`
-- `POST /api/v1/authoring/awd-service-template-imports/:id/commit`
+- `POST /api/v1/authoring/awd-challenge-imports`
+- `GET /api/v1/authoring/awd-challenge-imports/:id`
+- `POST /api/v1/authoring/awd-challenge-imports/:id/commit`
 - `POST /api/v1/authoring/challenges/:id/self-check`
 - `POST /api/v1/authoring/challenges/:id/publish-requests`
 - `GET /api/v1/authoring/challenges/:id/publish-requests/latest`
@@ -85,12 +85,12 @@
 同时约定：
 
 - **Jeopardy / 解题赛题目包**：继续使用默认 `kind: challenge`，并省略 `meta.mode` 或显式写为 `jeopardy`
-- **AWD 服务模板包**：仍复用 `challenge-pack-v1` 外壳，但必须额外声明 `meta.mode: awd`，并在 `extensions.awd` 内提供攻防运行定义
+- **AWD 题目包**：仍复用 `challenge-pack-v1` 外壳，但必须额外声明 `meta.mode: awd`，并在 `extensions.awd` 内提供攻防运行定义
 - 普通题目导入入口会拒绝 `meta.mode: awd` 的题目包，防止把 AWD 包误导入成 Jeopardy 题
 
 ### 4.1 AWD 镜像交付边界
 
-AWD 服务模板包只声明运行镜像引用，不承担镜像构建职责。`runtime.image.ref` 必须指向平台运行节点可拉取的镜像；题目包内的 `docker/` 目录只作为源码、构建上下文和审计材料保留，当前平台导入 AWD 模板时不会自动执行 `docker build`。
+AWD 题目包只声明运行镜像引用，不承担镜像构建职责。`runtime.image.ref` 必须指向平台运行节点可拉取的镜像；题目包内的 `docker/` 目录只作为源码、构建上下文和审计材料保留，当前平台导入 AWD 题目时不会自动执行 `docker build`。
 
 推荐交付链路固定为：
 
@@ -101,9 +101,9 @@ AWD 服务模板包只声明运行镜像引用，不承担镜像构建职责。`
   -> docker push registry
 
 平台后台
-  -> 上传 AWD 服务模板包
+  -> 上传 AWD 题目包
   -> 解析 runtime.image.ref
-  -> 创建 AWD 模板
+  -> 创建 AWD 题目
   -> 管理员加入比赛服务
   -> 队伍启动共享实例
   -> 平台轮次注入 Flag / Check / 计分
@@ -114,8 +114,8 @@ AWD 服务模板包只声明运行镜像引用，不承担镜像构建职责。`
 - 镜像构建失败、基础镜像不可拉取、`pip` / `apt` / `npm` / `composer` 等依赖源不可用，应在题目作者机器或 CI 阶段暴露并修复。
 - 平台导入只校验题目包结构和 AWD 运行定义，不在上传请求中执行不受控构建。
 - 平台运行只依赖最终镜像仓库，避免比赛现场临时访问 Docker Hub、PyPI、apt 源等外部服务。
-- 管理员导入后仍应执行 checker preview；preview 通过后再将模板加入比赛服务并开赛。
-- 如果后续要支持“上传源码后平台自动构建”，应作为独立的镜像构建任务系统设计，例如 `image_build_jobs`、隔离 builder、构建日志、超时、资源限制、registry 凭据和失败重试，而不是混入 AWD 模板导入接口。
+- 管理员导入后仍应执行 checker preview；preview 通过后再将 AWD 题目加入比赛服务并开赛。
+- 如果后续要支持“上传源码后平台自动构建”，应作为独立的镜像构建任务系统设计，例如 `image_build_jobs`、隔离 builder、构建日志、超时、资源限制、registry 凭据和失败重试，而不是混入 AWD 题目导入接口。
 
 ---
 
@@ -210,6 +210,9 @@ runtime:
   type: container
   image:
     ref: "registry.example.edu/ctf/web-sqli-login:20260312"
+  service:
+    protocol: http
+    port: 8080
 ```
 
 字段说明：
@@ -228,6 +231,49 @@ runtime:
 - `flag.type`：必填，仅允许 `static` / `dynamic`
 - `flag.value`：静态题目必填
 - `flag.prefix`：可选，对应平台 `flag_prefix`，默认建议 `flag`
+- `runtime.type`：当前首版仅支持 `container`
+- `runtime.image.ref`：容器题必填，表示最终运行镜像引用
+- `runtime.service`：可选，声明单容器题的入口服务；省略时按 HTTP 题兼容处理
+  - `protocol`：入口协议，当前支持 `http` / `tcp`，默认 `http`
+  - `port`：容器内入口端口；TCP 题必须填写，例如 Pwn 原生 TCP 服务监听 `8080` 时写 `8080`
+
+HTTP 单容器题通常保持：
+
+```yaml
+runtime:
+  type: container
+  image:
+    ref: "registry.example.edu/ctf/web-header-door:20260428"
+  service:
+    protocol: http
+    port: 8080
+```
+
+TCP 单容器题必须显式声明入口协议和容器端口：
+
+```yaml
+runtime:
+  type: container
+  image:
+    ref: "registry.example.edu/ctf/pwn-length-gate:20260428"
+  service:
+    protocol: tcp
+    port: 8080
+```
+
+平台导入后会把 `runtime.service.protocol` 和 `runtime.service.port` 持久化为题目的目标服务配置。学生启动实例后，HTTP 题继续返回浏览器可打开的 HTTP 代理入口；TCP 题返回 `tcp://<host>:<port>` 和结构化连接命令，例如：
+
+```json
+{
+  "access_url": "tcp://127.0.0.1:30008",
+  "access": {
+    "protocol": "tcp",
+    "host": "127.0.0.1",
+    "port": 30008,
+    "command": "nc 127.0.0.1 30008"
+  }
+}
+```
 
 ### 6.3 AWD 分制契约
 
@@ -257,9 +303,6 @@ runtime:
 - Drill：12-24 轮，总分量级 300-800
 - 正式赛：24-48 轮，总分量级 1000-3000
 - 长时赛：总分量级 3000-8000，必须降低轮频或服务分
-- `runtime.type`：当前首版仅支持 `container`
-- `runtime.image.ref`：容器题必填，表示最终运行镜像引用
-
 ### 6.3 v1 建议字段
 
 以下字段设计合理，但当前平台不一定自动导入，应作为“作者侧规范”保留：
@@ -374,7 +417,7 @@ runtime:
 AWD 不应另起一套完全独立的包格式；但也不能直接拿 Jeopardy 的最小字段原样复用。推荐做法是：
 
 - 继续复用 `challenge-pack-v1` 的根目录结构、`challenge.yml` 外壳与 `statement.md`
-- 通过 `meta.mode: awd` 明确声明“这是 AWD 服务模板包”
+- 通过 `meta.mode: awd` 明确声明“这是 AWD 题目包”
 - 通过 `extensions.awd` 补齐服务类型、Checker、Flag 策略、防守入口、访问端口与运行参数
 
 最小可用示例：
@@ -449,10 +492,10 @@ extensions:
 - `meta.mode`
   - 必填，AWD 固定为 `awd`
 - `extensions.awd.service_type`
-  - 必填，对应 `awd_service_templates.service_type`
+  - 必填，对应 `awd_challenges.service_type`
   - 当前枚举：`web_http` `binary_tcp` `multi_container`
 - `extensions.awd.deployment_mode`
-  - 必填，对应 `awd_service_templates.deployment_mode`
+  - 必填，对应 `awd_challenges.deployment_mode`
   - 当前枚举：`single_container` `topology`
 - `extensions.awd.version`
   - 可选，对应模板版本字符串；未填写时平台默认回落到 `v1`
@@ -478,14 +521,14 @@ extensions:
 - `extensions.awd.runtime_config`
   - 可选，对应 `runtime_config`
   - 建议写 `instance_sharing`、`service_port`、拓扑或运行时参数
-  - 平台导入时会额外把 `runtime.image.ref` 解析成 `image_ref` 与 `image_id` 并补进模板运行配置
+  - 平台导入时会额外把 `runtime.image.ref` 解析成 `image_ref` 与 `image_id` 并补进题目运行配置
 
 边界说明：
 
-- `meta.points` 在 AWD 包中只作为**建议分值**保留，当前不会直接写入 AWD 模板；真正比赛分值仍在管理员配置比赛时设置
-- AWD 模板导入成功后，平台会直接生成 `published` 状态模板，便于管理员在比赛题池里立即选题
-- 比赛里的 Checker 覆盖、分值、顺序、可见性仍然属于**比赛级配置**，不应反向写回题库模板
-- `runtime.image.ref` 必须是已构建并已推送到平台可访问 registry 的最终镜像引用；导入 AWD 模板不会自动构建 `docker/` 目录中的 Dockerfile
+- `meta.points` 在 AWD 包中只作为**建议分值**保留，当前不会直接写入 AWD 题目；真正比赛分值仍在管理员配置比赛时设置
+- AWD 题目导入成功后，平台会直接生成 `published` 状态题目，便于管理员在比赛题池里立即选题
+- 比赛里的 Checker 覆盖、分值、顺序、可见性仍然属于**比赛级配置**，不应反向写回 AWD 题目
+- `runtime.image.ref` 必须是已构建并已推送到平台可访问 registry 的最终镜像引用；导入 AWD 题目不会自动构建 `docker/` 目录中的 Dockerfile
 
 ---
 
@@ -517,9 +560,9 @@ extensions:
 | AWD 包字段 | 当前平台状态 | 说明 |
 |---|---|---|
 | `meta.mode=awd` | 已支持 | 作为 AWD 包入口识别条件 |
-| `extensions.awd.service_type` | 已支持 | 映射到 `awd_service_templates.service_type` |
-| `extensions.awd.deployment_mode` | 已支持 | 映射到 `awd_service_templates.deployment_mode` |
-| `extensions.awd.version` | 已支持 | 映射到模板 `version` |
+| `extensions.awd.service_type` | 已支持 | 映射到 `awd_challenges.service_type` |
+| `extensions.awd.deployment_mode` | 已支持 | 映射到 `awd_challenges.deployment_mode` |
+| `extensions.awd.version` | 已支持 | 映射到 `awd_challenges.version` |
 | `extensions.awd.checker.type` | 已支持 | 映射到 `checker_type` |
 | `extensions.awd.checker.config` | 已支持 | 映射到 `checker_config` |
 | `extensions.awd.flag_policy.mode` | 已支持 | 映射到 `flag_mode` |
@@ -527,8 +570,8 @@ extensions:
 | `extensions.awd.defense_entry.mode` | 已支持 | 映射到 `defense_entry_mode` |
 | `extensions.awd.access_config` | 已支持 | 映射到 `access_config`，建议承载可攻击端口与展示入口 |
 | `extensions.awd.runtime_config` | 已支持 | 映射到 `runtime_config`，导入时会额外补齐 `image_ref/image_id` |
-| `runtime.image.ref` | 已支持 | 导入 AWD 模板时会自动关联或创建镜像记录 |
-| `meta.points` | 部分支持 | 当前只作为建议分值，不直接落 AWD 模板 |
+| `runtime.image.ref` | 已支持 | 导入 AWD 题目时会自动关联或创建镜像记录 |
+| `meta.points` | 部分支持 | 当前只作为建议分值，不直接落 AWD 题目 |
 
 ---
 

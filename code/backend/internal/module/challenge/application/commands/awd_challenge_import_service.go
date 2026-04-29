@@ -21,37 +21,37 @@ import (
 	"ctf-platform/pkg/errcode"
 )
 
-const defaultAWDServiceTemplateImportPreviewRoot = "./data/awd-service-template-import-previews"
+const defaultAWDChallengeImportPreviewRoot = "./data/awd-challenge-import-previews"
 
-type storedAWDServiceTemplateImportPreview struct {
-	ID        string                                  `json:"id"`
-	FileName  string                                  `json:"file_name"`
-	SourceDir string                                  `json:"source_dir"`
-	CreatedBy int64                                   `json:"created_by"`
-	CreatedAt time.Time                               `json:"created_at"`
-	Preview   dto.AWDServiceTemplateImportPreviewResp `json:"preview"`
+type storedAWDChallengeImportPreview struct {
+	ID        string                            `json:"id"`
+	FileName  string                            `json:"file_name"`
+	SourceDir string                            `json:"source_dir"`
+	CreatedBy int64                             `json:"created_by"`
+	CreatedAt time.Time                         `json:"created_at"`
+	Preview   dto.AWDChallengeImportPreviewResp `json:"preview"`
 }
 
-type AWDServiceTemplateImportService struct {
+type AWDChallengeImportService struct {
 	db   *gorm.DB
-	repo challengeports.AWDServiceTemplateCommandRepository
+	repo challengeports.AWDChallengeCommandRepository
 }
 
-func NewAWDServiceTemplateImportService(
+func NewAWDChallengeImportService(
 	db *gorm.DB,
-	repo challengeports.AWDServiceTemplateCommandRepository,
-) *AWDServiceTemplateImportService {
-	return &AWDServiceTemplateImportService{db: db, repo: repo}
+	repo challengeports.AWDChallengeCommandRepository,
+) *AWDChallengeImportService {
+	return &AWDChallengeImportService{db: db, repo: repo}
 }
 
-func (s *AWDServiceTemplateImportService) PreviewImport(
+func (s *AWDChallengeImportService) PreviewImport(
 	ctx context.Context,
 	actorUserID int64,
 	fileName string,
 	reader io.Reader,
-) (*dto.AWDServiceTemplateImportPreviewResp, error) {
+) (*dto.AWDChallengeImportPreviewResp, error) {
 	if strings.TrimSpace(fileName) == "" {
-		fileName = "awd-service-template-package.zip"
+		fileName = "awd-challenge-package.zip"
 	}
 
 	previewID, err := generateChallengeImportPreviewID()
@@ -59,7 +59,7 @@ func (s *AWDServiceTemplateImportService) PreviewImport(
 		return nil, err
 	}
 
-	previewDir := filepath.Join(awdServiceTemplateImportPreviewRoot(), previewID)
+	previewDir := filepath.Join(awdChallengeImportPreviewRoot(), previewID)
 	archivePath := filepath.Join(previewDir, "package.zip")
 	extractDir := filepath.Join(previewDir, "source")
 	if err := os.MkdirAll(previewDir, 0o755); err != nil {
@@ -75,13 +75,13 @@ func (s *AWDServiceTemplateImportService) PreviewImport(
 		return nil, err
 	}
 
-	parsed, err := domain.ParseAWDServiceTemplatePackageDir(rootDir)
+	parsed, err := domain.ParseAWDChallengePackageDir(rootDir)
 	if err != nil {
 		return nil, err
 	}
 
-	preview := buildAWDServiceTemplateImportPreview(previewID, fileName, parsed, time.Now())
-	record := storedAWDServiceTemplateImportPreview{
+	preview := buildAWDChallengeImportPreview(previewID, fileName, parsed, time.Now())
+	record := storedAWDChallengeImportPreview{
 		ID:        previewID,
 		FileName:  fileName,
 		SourceDir: rootDir,
@@ -89,20 +89,20 @@ func (s *AWDServiceTemplateImportService) PreviewImport(
 		CreatedAt: preview.CreatedAt,
 		Preview:   *preview,
 	}
-	if err := saveAWDServiceTemplateImportPreviewRecord(previewDir, &record); err != nil {
+	if err := saveAWDChallengeImportPreviewRecord(previewDir, &record); err != nil {
 		return nil, err
 	}
 	return preview, nil
 }
 
-func (s *AWDServiceTemplateImportService) ListImports(ctx context.Context, actorUserID int64) ([]dto.AWDServiceTemplateImportPreviewResp, error) {
+func (s *AWDChallengeImportService) ListImports(ctx context.Context, actorUserID int64) ([]dto.AWDChallengeImportPreviewResp, error) {
 	_ = ctx
-	records, err := loadAWDServiceTemplateImportPreviewRecords()
+	records, err := loadAWDChallengeImportPreviewRecords()
 	if err != nil {
 		return nil, err
 	}
 
-	previews := make([]dto.AWDServiceTemplateImportPreviewResp, 0, len(records))
+	previews := make([]dto.AWDChallengeImportPreviewResp, 0, len(records))
 	for _, record := range records {
 		if record == nil {
 			continue
@@ -115,13 +115,13 @@ func (s *AWDServiceTemplateImportService) ListImports(ctx context.Context, actor
 	return previews, nil
 }
 
-func (s *AWDServiceTemplateImportService) GetImport(
+func (s *AWDChallengeImportService) GetImport(
 	ctx context.Context,
 	actorUserID int64,
 	id string,
-) (*dto.AWDServiceTemplateImportPreviewResp, error) {
+) (*dto.AWDChallengeImportPreviewResp, error) {
 	_ = ctx
-	record, err := loadAWDServiceTemplateImportPreviewRecord(id)
+	record, err := loadAWDChallengeImportPreviewRecord(id)
 	if err != nil {
 		return nil, err
 	}
@@ -132,12 +132,12 @@ func (s *AWDServiceTemplateImportService) GetImport(
 	return &preview, nil
 }
 
-func (s *AWDServiceTemplateImportService) CommitImport(
+func (s *AWDChallengeImportService) CommitImport(
 	ctx context.Context,
 	actorUserID int64,
 	id string,
-) (*dto.AWDServiceTemplateResp, error) {
-	record, err := loadAWDServiceTemplateImportPreviewRecord(id)
+) (*dto.AWDChallengeResp, error) {
+	record, err := loadAWDChallengeImportPreviewRecord(id)
 	if err != nil {
 		return nil, err
 	}
@@ -145,19 +145,19 @@ func (s *AWDServiceTemplateImportService) CommitImport(
 		return nil, errcode.ErrForbidden
 	}
 
-	parsed, err := domain.ParseAWDServiceTemplatePackageDir(record.SourceDir)
+	parsed, err := domain.ParseAWDChallengePackageDir(record.SourceDir)
 	if err != nil {
 		return nil, err
 	}
 
-	var template *model.AWDServiceTemplate
+	var challenge *model.AWDChallenge
 	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		resolvedImageID, err := resolveImportedImageID(tx, parsed.Slug, parsed.RuntimeImageRef)
 		if err != nil {
 			return err
 		}
 
-		runtimeConfig := cloneAWDTemplateConfig(parsed.RuntimeConfig)
+		runtimeConfig := cloneAWDChallengeConfig(parsed.RuntimeConfig)
 		if strings.TrimSpace(parsed.RuntimeImageRef) != "" {
 			runtimeConfig["image_ref"] = parsed.RuntimeImageRef
 		}
@@ -166,28 +166,28 @@ func (s *AWDServiceTemplateImportService) CommitImport(
 		}
 
 		now := time.Now()
-		var current model.AWDServiceTemplate
-		findErr := findAWDServiceTemplateForImportedPackageUpsert(tx, parsed.Slug, &current)
-		checkerConfigRaw, err := marshalAWDTemplateConfig(parsed.CheckerConfig)
+		var current model.AWDChallenge
+		findErr := findAWDChallengeForImportedPackageUpsert(tx, parsed.Slug, &current)
+		checkerConfigRaw, err := marshalAWDChallengeConfig(parsed.CheckerConfig)
 		if err != nil {
 			return err
 		}
-		flagConfigRaw, err := marshalAWDTemplateConfig(parsed.FlagConfig)
+		flagConfigRaw, err := marshalAWDChallengeConfig(parsed.FlagConfig)
 		if err != nil {
 			return err
 		}
-		accessConfigRaw, err := marshalAWDTemplateConfig(parsed.AccessConfig)
+		accessConfigRaw, err := marshalAWDChallengeConfig(parsed.AccessConfig)
 		if err != nil {
 			return err
 		}
-		runtimeConfigRaw, err := marshalAWDTemplateConfig(runtimeConfig)
+		runtimeConfigRaw, err := marshalAWDChallengeConfig(runtimeConfig)
 		if err != nil {
 			return err
 		}
 
 		switch {
 		case errors.Is(findErr, gorm.ErrRecordNotFound):
-			current = model.AWDServiceTemplate{
+			current = model.AWDChallenge{
 				Name:             parsed.Title,
 				Slug:             parsed.Slug,
 				Category:         parsed.Category,
@@ -196,7 +196,7 @@ func (s *AWDServiceTemplateImportService) CommitImport(
 				ServiceType:      model.AWDServiceType(parsed.ServiceType),
 				DeploymentMode:   model.AWDDeploymentMode(parsed.DeploymentMode),
 				Version:          parsed.Version,
-				Status:           model.AWDServiceTemplateStatusPublished,
+				Status:           model.AWDChallengeStatusPublished,
 				CheckerType:      model.AWDCheckerType(parsed.CheckerType),
 				CheckerConfig:    checkerConfigRaw,
 				FlagMode:         parsed.FlagMode,
@@ -213,10 +213,10 @@ func (s *AWDServiceTemplateImportService) CommitImport(
 				UpdatedAt:        now,
 			}
 			if err := tx.Create(&current).Error; err != nil {
-				return fmt.Errorf("create imported awd service template %s: %w", parsed.Slug, err)
+				return fmt.Errorf("create imported awd challenge %s: %w", parsed.Slug, err)
 			}
 		case findErr != nil:
-			return fmt.Errorf("find imported awd service template %s: %w", parsed.Slug, findErr)
+			return fmt.Errorf("find imported awd challenge %s: %w", parsed.Slug, findErr)
 		default:
 			updates := map[string]any{
 				"name":               parsed.Title,
@@ -227,7 +227,7 @@ func (s *AWDServiceTemplateImportService) CommitImport(
 				"service_type":       model.AWDServiceType(parsed.ServiceType),
 				"deployment_mode":    model.AWDDeploymentMode(parsed.DeploymentMode),
 				"version":            parsed.Version,
-				"status":             model.AWDServiceTemplateStatusPublished,
+				"status":             model.AWDChallengeStatusPublished,
 				"checker_type":       model.AWDCheckerType(parsed.CheckerType),
 				"checker_config":     checkerConfigRaw,
 				"flag_mode":          parsed.FlagMode,
@@ -243,33 +243,33 @@ func (s *AWDServiceTemplateImportService) CommitImport(
 				"updated_at":         now,
 			}
 			if err := tx.Unscoped().Model(&current).Updates(updates).Error; err != nil {
-				return fmt.Errorf("update imported awd service template %s: %w", parsed.Slug, err)
+				return fmt.Errorf("update imported awd challenge %s: %w", parsed.Slug, err)
 			}
 			if err := tx.Where("id = ?", current.ID).First(&current).Error; err != nil {
-				return fmt.Errorf("reload imported awd service template %s: %w", parsed.Slug, err)
+				return fmt.Errorf("reload imported awd challenge %s: %w", parsed.Slug, err)
 			}
 		}
 
-		template = &current
+		challenge = &current
 		return nil
 	}); err != nil {
 		return nil, err
 	}
 
-	_ = os.RemoveAll(filepath.Join(awdServiceTemplateImportPreviewRoot(), id))
-	return domain.AWDServiceTemplateRespFromModel(template), nil
+	_ = os.RemoveAll(filepath.Join(awdChallengeImportPreviewRoot(), id))
+	return domain.AWDChallengeRespFromModel(challenge), nil
 }
 
-func buildAWDServiceTemplateImportPreview(
+func buildAWDChallengeImportPreview(
 	id string,
 	fileName string,
-	parsed *domain.ParsedAWDServiceTemplatePackage,
+	parsed *domain.ParsedAWDChallengePackage,
 	createdAt time.Time,
-) *dto.AWDServiceTemplateImportPreviewResp {
+) *dto.AWDChallengeImportPreviewResp {
 	if parsed == nil {
 		return nil
 	}
-	return &dto.AWDServiceTemplateImportPreviewResp{
+	return &dto.AWDChallengeImportPreviewResp{
 		ID:               id,
 		FileName:         fileName,
 		Slug:             parsed.Slug,
@@ -281,37 +281,37 @@ func buildAWDServiceTemplateImportPreview(
 		DeploymentMode:   parsed.DeploymentMode,
 		Version:          parsed.Version,
 		CheckerType:      parsed.CheckerType,
-		CheckerConfig:    cloneAWDTemplateConfig(parsed.CheckerConfig),
+		CheckerConfig:    cloneAWDChallengeConfig(parsed.CheckerConfig),
 		FlagMode:         parsed.FlagMode,
-		FlagConfig:       cloneAWDTemplateConfig(parsed.FlagConfig),
+		FlagConfig:       cloneAWDChallengeConfig(parsed.FlagConfig),
 		DefenseEntryMode: parsed.DefenseEntryMode,
-		AccessConfig:     cloneAWDTemplateConfig(parsed.AccessConfig),
-		RuntimeConfig:    cloneAWDTemplateConfig(parsed.RuntimeConfig),
+		AccessConfig:     cloneAWDChallengeConfig(parsed.AccessConfig),
+		RuntimeConfig:    cloneAWDChallengeConfig(parsed.RuntimeConfig),
 		Warnings:         append([]string(nil), parsed.Warnings...),
 		CreatedAt:        createdAt,
 	}
 }
 
-func findAWDServiceTemplateForImportedPackageUpsert(
+func findAWDChallengeForImportedPackageUpsert(
 	tx *gorm.DB,
 	slug string,
-	template *model.AWDServiceTemplate,
+	challenge *model.AWDChallenge,
 ) error {
-	if template == nil {
-		return fmt.Errorf("awd service template target is nil")
+	if challenge == nil {
+		return fmt.Errorf("awd challenge target is nil")
 	}
-	return tx.Unscoped().Where("slug = ?", strings.TrimSpace(slug)).First(template).Error
+	return tx.Unscoped().Where("slug = ?", strings.TrimSpace(slug)).First(challenge).Error
 }
 
-func marshalAWDTemplateConfig(value map[string]any) (string, error) {
-	encoded, err := json.Marshal(cloneAWDTemplateConfig(value))
+func marshalAWDChallengeConfig(value map[string]any) (string, error) {
+	encoded, err := json.Marshal(cloneAWDChallengeConfig(value))
 	if err != nil {
 		return "", err
 	}
 	return string(encoded), nil
 }
 
-func cloneAWDTemplateConfig(value map[string]any) map[string]any {
+func cloneAWDChallengeConfig(value map[string]any) map[string]any {
 	if len(value) == 0 {
 		return map[string]any{}
 	}
@@ -329,9 +329,9 @@ func cloneAWDTemplateConfig(value map[string]any) map[string]any {
 	return cloned
 }
 
-func saveAWDServiceTemplateImportPreviewRecord(
+func saveAWDChallengeImportPreviewRecord(
 	previewDir string,
-	record *storedAWDServiceTemplateImportPreview,
+	record *storedAWDChallengeImportPreview,
 ) error {
 	content, err := json.MarshalIndent(record, "", "  ")
 	if err != nil {
@@ -340,8 +340,8 @@ func saveAWDServiceTemplateImportPreviewRecord(
 	return os.WriteFile(filepath.Join(previewDir, "preview.json"), content, 0o644)
 }
 
-func loadAWDServiceTemplateImportPreviewRecord(id string) (*storedAWDServiceTemplateImportPreview, error) {
-	content, err := os.ReadFile(filepath.Join(awdServiceTemplateImportPreviewRoot(), id, "preview.json"))
+func loadAWDChallengeImportPreviewRecord(id string) (*storedAWDChallengeImportPreview, error) {
+	content, err := os.ReadFile(filepath.Join(awdChallengeImportPreviewRoot(), id, "preview.json"))
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
 			return nil, errcode.ErrNotFound
@@ -349,15 +349,15 @@ func loadAWDServiceTemplateImportPreviewRecord(id string) (*storedAWDServiceTemp
 		return nil, err
 	}
 
-	var record storedAWDServiceTemplateImportPreview
+	var record storedAWDChallengeImportPreview
 	if err := json.Unmarshal(content, &record); err != nil {
-		return nil, fmt.Errorf("parse awd service template import preview: %w", err)
+		return nil, fmt.Errorf("parse awd challenge import preview: %w", err)
 	}
 	return &record, nil
 }
 
-func loadAWDServiceTemplateImportPreviewRecords() ([]*storedAWDServiceTemplateImportPreview, error) {
-	root := awdServiceTemplateImportPreviewRoot()
+func loadAWDChallengeImportPreviewRecords() ([]*storedAWDChallengeImportPreview, error) {
+	root := awdChallengeImportPreviewRoot()
 	entries, err := os.ReadDir(root)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
@@ -366,12 +366,12 @@ func loadAWDServiceTemplateImportPreviewRecords() ([]*storedAWDServiceTemplateIm
 		return nil, err
 	}
 
-	records := make([]*storedAWDServiceTemplateImportPreview, 0, len(entries))
+	records := make([]*storedAWDChallengeImportPreview, 0, len(entries))
 	for _, entry := range entries {
 		if !entry.IsDir() {
 			continue
 		}
-		record, err := loadAWDServiceTemplateImportPreviewRecord(entry.Name())
+		record, err := loadAWDChallengeImportPreviewRecord(entry.Name())
 		if err != nil {
 			if errors.Is(err, errcode.ErrNotFound) {
 				continue
@@ -387,9 +387,9 @@ func loadAWDServiceTemplateImportPreviewRecords() ([]*storedAWDServiceTemplateIm
 	return records, nil
 }
 
-func awdServiceTemplateImportPreviewRoot() string {
-	if value := strings.TrimSpace(os.Getenv("AWD_SERVICE_TEMPLATE_IMPORT_PREVIEW_DIR")); value != "" {
+func awdChallengeImportPreviewRoot() string {
+	if value := strings.TrimSpace(os.Getenv("AWD_CHALLENGE_IMPORT_PREVIEW_DIR")); value != "" {
 		return value
 	}
-	return defaultAWDServiceTemplateImportPreviewRoot
+	return defaultAWDChallengeImportPreviewRoot
 }

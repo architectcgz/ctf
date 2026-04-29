@@ -4,7 +4,7 @@ import { computed, reactive, watch } from 'vue'
 import AdminSurfaceModal from '@/components/common/modal-templates/AdminSurfaceModal.vue'
 import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
 import type {
-  AdminAwdServiceTemplateData,
+  AdminAwdChallengeData,
   AdminChallengeListItem,
   AdminContestChallengeViewData,
   ContestDetailData,
@@ -17,11 +17,11 @@ const props = defineProps<{
   mode: DialogMode
   contestMode: ContestDetailData['mode']
   challengeOptions: AdminChallengeListItem[]
-  templateOptions?: AdminAwdServiceTemplateData[]
+  awdChallengeOptions?: AdminAwdChallengeData[]
   existingChallengeIds: string[]
   draft?: AdminContestChallengeViewData | null
   loadingChallengeCatalog: boolean
-  loadingTemplateCatalog?: boolean
+  loadingAwdChallengeCatalog?: boolean
   saving: boolean
 }>()
 
@@ -30,7 +30,7 @@ const emit = defineEmits<{
   save: [
     value: {
       challenge_id?: number
-      template_id?: number
+      awd_challenge_id?: number
       points: number
       order: number
       is_visible: boolean
@@ -40,7 +40,7 @@ const emit = defineEmits<{
 
 const form = reactive({
   challenge_id: '',
-  template_id: '',
+  awd_challenge_id: '',
   points: '100',
   order: '0',
   is_visible: 'true',
@@ -48,7 +48,7 @@ const form = reactive({
 
 const fieldErrors = reactive({
   challenge_id: '',
-  template_id: '',
+  awd_challenge_id: '',
   points: '',
   order: '',
 })
@@ -56,7 +56,7 @@ const fieldErrors = reactive({
 const dialogTitle = computed(() =>
   props.mode === 'create'
     ? isAwdContest.value
-      ? '关联 AWD 题库服务'
+      ? '关联 AWD 题目'
       : '关联赛事题目'
     : '编辑赛事题目'
 )
@@ -66,7 +66,7 @@ const selectableChallenges = computed(() =>
     (item) => props.mode === 'edit' || !props.existingChallengeIds.includes(item.id)
   )
 )
-const selectableTemplates = computed(() => props.templateOptions ?? [])
+const selectableAwdChallenges = computed(() => props.awdChallengeOptions ?? [])
 
 const isAwdContest = computed(() => props.contestMode === 'awd')
 const isAwdCreateMode = computed(() => isAwdContest.value && props.mode === 'create')
@@ -75,7 +75,7 @@ const dialogWidth = computed(() =>
 )
 const showContestSelector = computed(() => !isAwdContest.value || props.mode === 'edit')
 const showContestSettings = computed(() => !isAwdCreateMode.value)
-const templateTableColumns = [
+const awdChallengeTableColumns = [
   {
     key: 'name',
     label: '名称',
@@ -116,7 +116,7 @@ const templateTableColumns = [
 ]
 
 watch(
-  () => [props.open, props.mode, props.draft, selectableChallenges.value, selectableTemplates.value] as const,
+  () => [props.open, props.mode, props.draft, selectableChallenges.value, selectableAwdChallenges.value] as const,
   ([open]) => {
     if (!open) {
       return
@@ -127,8 +127,8 @@ watch(
         : isAwdContest.value
           ? ''
           : selectableChallenges.value[0]?.id || ''
-    form.template_id = isAwdContest.value
-      ? props.draft?.awd_template_id || selectableTemplates.value[0]?.id || ''
+    form.awd_challenge_id = isAwdContest.value
+      ? props.draft?.awd_challenge_id || selectableAwdChallenges.value[0]?.id || ''
       : ''
     form.points = String(props.draft?.points ?? 100)
     form.order = String(props.draft?.order ?? 0)
@@ -140,7 +140,7 @@ watch(
 
 function clearErrors() {
   fieldErrors.challenge_id = ''
-  fieldErrors.template_id = ''
+  fieldErrors.awd_challenge_id = ''
   fieldErrors.points = ''
   fieldErrors.order = ''
 }
@@ -149,11 +149,11 @@ function closeDialog() {
   emit('update:open', false)
 }
 
-function selectTemplate(templateId: string) {
-  form.template_id = templateId
+function selectAwdChallenge(awdChallengeId: string) {
+  form.awd_challenge_id = awdChallengeId
 }
 
-function getServiceTypeLabel(value: AdminAwdServiceTemplateData['service_type']): string {
+function getServiceTypeLabel(value: AdminAwdChallengeData['service_type']): string {
   switch (value) {
     case 'binary_tcp':
       return 'Binary TCP'
@@ -165,7 +165,7 @@ function getServiceTypeLabel(value: AdminAwdServiceTemplateData['service_type'])
   }
 }
 
-function getDeploymentModeLabel(value: AdminAwdServiceTemplateData['deployment_mode']): string {
+function getDeploymentModeLabel(value: AdminAwdChallengeData['deployment_mode']): string {
   switch (value) {
     case 'topology':
       return '拓扑'
@@ -185,8 +185,8 @@ function submit() {
   if (!isAwdContest.value && !form.challenge_id.trim()) {
     fieldErrors.challenge_id = '请选择题目'
   }
-  if (isAwdContest.value && !form.template_id.trim()) {
-    fieldErrors.template_id = '请选择服务模板'
+  if (isAwdContest.value && !form.awd_challenge_id.trim()) {
+    fieldErrors.awd_challenge_id = '请选择 AWD 题目'
   }
 
   const points = Number(form.points)
@@ -201,7 +201,7 @@ function submit() {
 
   if (
     fieldErrors.challenge_id ||
-    fieldErrors.template_id ||
+    fieldErrors.awd_challenge_id ||
     fieldErrors.points ||
     fieldErrors.order
   ) {
@@ -214,7 +214,7 @@ function submit() {
       : form.challenge_id
         ? Number(form.challenge_id)
         : undefined,
-    template_id: isAwdContest.value ? Number(form.template_id) : undefined,
+    awd_challenge_id: isAwdContest.value ? Number(form.awd_challenge_id) : undefined,
     points,
     order,
     is_visible: form.is_visible === 'true',
@@ -228,7 +228,7 @@ function submit() {
     :title="dialogTitle"
     :subtitle="
       isAwdContest
-        ? '从 AWD 题库选择服务模板。'
+          ? '从 AWD 题库选择题目'
         : '维护赛事题目的关联关系、顺序、分值和可见性。'
     "
     eyebrow="Contest Orchestration"
@@ -291,49 +291,55 @@ function submit() {
       <section
         v-if="isAwdContest"
         class="contest-template-list"
-        :class="{ 'is-error': !!fieldErrors.template_id }"
+        :class="{ 'is-error': !!fieldErrors.awd_challenge_id }"
       >
         <div class="contest-template-list__head">
-          <span class="ui-field__label contest-challenge-dialog__label">AWD 题库模板</span>
+          <span class="ui-field__label contest-challenge-dialog__label">AWD 题目</span>
           <span class="contest-template-list__count">
-            {{ loadingTemplateCatalog ? '加载中' : `${selectableTemplates.length} 个可选` }}
+            {{ loadingAwdChallengeCatalog ? '加载中' : `${selectableAwdChallenges.length} 个可选` }}
           </span>
         </div>
         <div
-          v-if="selectableTemplates.length > 0"
+          v-if="selectableAwdChallenges.length > 0"
           class="contest-template-list__table workspace-directory-list"
         >
           <WorkspaceDataTable
-            :columns="templateTableColumns"
-            :rows="selectableTemplates"
+            :columns="awdChallengeTableColumns"
+            :rows="selectableAwdChallenges"
             row-key="id"
             row-class="contest-template-table-row"
           >
             <template #cell-name="{ row }">
-              <span class="contest-template-table__name">
-                {{ (row as AdminAwdServiceTemplateData).name }}
-              </span>
+              <button
+                :id="`contest-template-name-${(row as AdminAwdChallengeData).id}`"
+                type="button"
+                class="contest-template-table__name"
+                :aria-pressed="form.awd_challenge_id === (row as AdminAwdChallengeData).id"
+                @click="selectAwdChallenge((row as AdminAwdChallengeData).id)"
+              >
+                {{ (row as AdminAwdChallengeData).name }}
+              </button>
             </template>
             <template #cell-service_type="{ row }">
               <span class="contest-template-table__mono">
-                {{ getServiceTypeLabel((row as AdminAwdServiceTemplateData).service_type) }}
+                {{ getServiceTypeLabel((row as AdminAwdChallengeData).service_type) }}
               </span>
             </template>
             <template #cell-deployment_mode="{ row }">
               <span class="contest-template-table__text">
-                {{ getDeploymentModeLabel((row as AdminAwdServiceTemplateData).deployment_mode) }}
+                {{ getDeploymentModeLabel((row as AdminAwdChallengeData).deployment_mode) }}
               </span>
             </template>
             <template #cell-actions="{ row }">
               <button
-                :id="`contest-template-option-${(row as AdminAwdServiceTemplateData).id}`"
+                :id="`contest-template-option-${(row as AdminAwdChallengeData).id}`"
                 type="button"
                 class="contest-template-option"
-                :class="{ 'is-selected': form.template_id === (row as AdminAwdServiceTemplateData).id }"
-                :aria-pressed="form.template_id === (row as AdminAwdServiceTemplateData).id"
-                @click="selectTemplate((row as AdminAwdServiceTemplateData).id)"
+                :class="{ 'is-selected': form.awd_challenge_id === (row as AdminAwdChallengeData).id }"
+                :aria-pressed="form.awd_challenge_id === (row as AdminAwdChallengeData).id"
+                @click="selectAwdChallenge((row as AdminAwdChallengeData).id)"
               >
-                {{ form.template_id === (row as AdminAwdServiceTemplateData).id ? '已选择' : '选择' }}
+                {{ form.awd_challenge_id === (row as AdminAwdChallengeData).id ? '已选择' : '选择' }}
               </button>
             </template>
           </WorkspaceDataTable>
@@ -342,13 +348,13 @@ function submit() {
           v-else
           class="contest-template-list__empty"
         >
-          {{ loadingTemplateCatalog ? '正在加载 AWD 题库模板...' : '暂无可选 AWD 题库模板' }}
+          {{ loadingAwdChallengeCatalog ? '正在加载 AWD 题目...' : '暂无可选 AWD 题目' }}
         </div>
         <span
-          v-if="fieldErrors.template_id"
+          v-if="fieldErrors.awd_challenge_id"
           class="ui-field__error contest-challenge-dialog__error"
         >
-          {{ fieldErrors.template_id }}
+          {{ fieldErrors.awd_challenge_id }}
         </span>
       </section>
 
@@ -444,7 +450,7 @@ function submit() {
           :disabled="saving"
           @click="submit"
         >
-          {{ saving ? '保存中...' : mode === 'create' ? (isAwdContest ? '关联服务' : '关联题目') : '保存变更' }}
+          {{ saving ? '保存中...' : mode === 'create' ? (isAwdContest ? '关联题目' : '关联题目') : '保存变更' }}
         </button>
       </div>
     </template>
@@ -525,11 +531,30 @@ function submit() {
 .contest-template-table__name {
   display: block;
   overflow: hidden;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  padding: 0;
   text-overflow: ellipsis;
   white-space: nowrap;
+  text-align: left;
   font-size: var(--font-size-0-875);
   font-weight: 800;
   color: var(--color-text-primary);
+  cursor: pointer;
+  transition: color var(--ui-motion-fast);
+}
+
+.contest-template-table__name:hover,
+.contest-template-table__name:focus-visible {
+  color: var(--color-primary);
+}
+
+.contest-template-table__name:focus-visible {
+  outline: var(--ui-focus-ring-width) solid
+    color-mix(in srgb, var(--color-primary) 72%, transparent);
+  outline-offset: var(--space-1);
+  border-radius: var(--ui-control-radius-sm);
 }
 
 .contest-template-table__mono,

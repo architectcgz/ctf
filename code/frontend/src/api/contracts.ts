@@ -696,7 +696,7 @@ export interface AdminContestChallengeRelationData {
 
 export interface AdminContestChallengeViewData extends AdminContestChallengeRelationData {
   awd_service_id?: ID
-  awd_template_id?: ID
+  awd_challenge_id?: ID
   awd_service_display_name?: string
   awd_checker_type?: AWDCheckerType
   awd_checker_config?: Record<string, unknown>
@@ -713,7 +713,7 @@ export interface AdminContestAWDServiceData {
   id: ID
   contest_id: ID
   challenge_id: ID
-  template_id?: ID
+  awd_challenge_id?: ID
   title?: string
   category?: ChallengeCategory
   difficulty?: ChallengeDifficulty
@@ -1400,10 +1400,10 @@ export interface EnvironmentTemplateData {
 
 export type AWDServiceType = 'web_http' | 'binary_tcp' | 'multi_container'
 export type AWDDeploymentMode = 'single_container' | 'topology'
-export type AWDServiceTemplateStatus = 'draft' | 'published' | 'archived'
+export type AWDChallengeStatus = 'draft' | 'published' | 'archived'
 export type AWDReadinessStatus = 'pending' | 'passed' | 'failed'
 
-export interface AdminAwdServiceTemplateData {
+export interface AdminAwdChallengeData {
   id: ID
   name: string
   slug: string
@@ -1413,7 +1413,7 @@ export interface AdminAwdServiceTemplateData {
   service_type: AWDServiceType
   deployment_mode: AWDDeploymentMode
   version: string
-  status: AWDServiceTemplateStatus
+  status: AWDChallengeStatus
   readiness_status: AWDReadinessStatus
   checker_type?: AWDCheckerType
   checker_config?: Record<string, unknown>
@@ -1428,7 +1428,7 @@ export interface AdminAwdServiceTemplateData {
   updated_at: ISODateTime
 }
 
-export interface AdminAwdServiceTemplateImportPreview {
+export interface AdminAwdChallengeImportPreview {
   id: ID
   file_name: string
   slug: string
@@ -1450,8 +1450,8 @@ export interface AdminAwdServiceTemplateImportPreview {
   created_at: ISODateTime
 }
 
-export interface AdminAwdServiceTemplateImportCommitData {
-  template: AdminAwdServiceTemplateData
+export interface AdminAwdChallengeImportCommitData {
+  challenge: AdminAwdChallengeData
 }
 
 export interface AdminChallengeListItem {

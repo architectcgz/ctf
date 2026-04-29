@@ -73,10 +73,11 @@ const {
   awdChallengeConfigMode,
   awdChallengeLinks,
   awdChallengeLinksLoaded,
+  awdChallengePoolCreateRequestKey,
   awdConfigFocusSource,
   awdPreflightLoadError,
   awdReadiness,
-  awdServiceTemplateCatalog,
+  awdChallengeCatalog,
   canNavigateNextAwdChallenge,
   canNavigatePreviousAwdChallenge,
   editingAwdChallengeLink,
@@ -85,7 +86,7 @@ const {
   handleNavigateAwdChallengeFromPreflight,
   handleOpenAwdConfigFromPool,
   handleSaveAwdChallengeConfig,
-  loadingAwdServiceTemplateCatalog,
+  loadingAwdChallengeCatalog,
   loadingAwdStageData,
   openAwdChallengeCreateDialog,
   openAwdChallengeEditDialog,
@@ -363,6 +364,7 @@ onUnmounted(() => {
         :field-locks="fieldLocks"
         :loading-awd-stage-data="loadingAwdStageData"
         :awd-challenge-links="awdChallengeLinks"
+        :awd-challenge-pool-create-request-key="awdChallengePoolCreateRequestKey"
         :active-awd-challenge-id="activeAwdChallengeId"
         :awd-config-focus-source="awdConfigFocusSource"
         :can-navigate-previous-awd-challenge="canNavigatePreviousAwdChallenge"
@@ -391,11 +393,11 @@ onUnmounted(() => {
       :open="awdChallengeConfigDialogOpen"
       :mode="awdChallengeConfigMode"
       :challenge-options="[]"
-      :template-options="awdServiceTemplateCatalog"
+      :awd-challenge-options="awdChallengeCatalog"
       :existing-challenge-ids="existingAwdChallengeIds"
       :draft="editingAwdChallengeLink"
       :loading-challenge-catalog="false"
-      :loading-template-catalog="loadingAwdServiceTemplateCatalog"
+      :loading-awd-challenge-catalog="loadingAwdChallengeCatalog"
       :saving="savingChallengeConfig"
       @update:open="awdChallengeConfigDialogOpen = $event"
       @save="handleSaveAwdChallengeConfig"

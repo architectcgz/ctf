@@ -19,7 +19,7 @@ func SetupTestDB(t *testing.T) *gorm.DB {
 		&model.User{},
 		&model.Challenge{},
 		&model.ChallengePackageRevision{},
-		&model.AWDServiceTemplate{},
+		&model.AWDChallenge{},
 		&model.ChallengePublishCheckJob{},
 		&model.Image{},
 		&model.Instance{},

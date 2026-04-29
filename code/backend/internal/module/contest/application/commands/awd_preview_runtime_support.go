@@ -33,7 +33,7 @@ func (s *AWDService) prepareCheckerPreviewAccessURL(
 		return strings.TrimSpace(explicitAccessURL), nil, nil
 	}
 	if s.runtimeProbe == nil {
-		return "", nil, errcode.ErrInvalidParams.WithCause(errors.New("当前模板无法自动拉起试跑实例，请手动填写目标访问地址"))
+		return "", nil, errcode.ErrInvalidParams.WithCause(errors.New("当前 AWD 题目无法自动拉起试跑实例，请手动填写目标访问地址"))
 	}
 
 	deploymentMode, runtimeConfig, err := s.loadPreviewRuntimeDefinition(ctx, previewService, previewChallengeID)
@@ -41,7 +41,7 @@ func (s *AWDService) prepareCheckerPreviewAccessURL(
 		return "", nil, err
 	}
 	if deploymentMode != "" && deploymentMode != model.AWDDeploymentModeSingleContainer {
-		return "", nil, errcode.ErrInvalidParams.WithCause(errors.New("当前模板尚不支持自动拉起该部署模式的试跑实例，请手动填写目标访问地址"))
+		return "", nil, errcode.ErrInvalidParams.WithCause(errors.New("当前 AWD 题目尚不支持自动拉起该部署模式的试跑实例，请手动填写目标访问地址"))
 	}
 
 	imageRef, err := s.resolvePreviewImageRef(ctx, runtimeConfig)
@@ -75,18 +75,18 @@ func (s *AWDService) loadPreviewRuntimeDefinition(
 			return snapshot.DeploymentMode, snapshot.RuntimeConfig, nil
 		}
 	}
-	if previewChallengeID <= 0 || s.templateRepo == nil {
-		return "", nil, errcode.ErrInvalidParams.WithCause(errors.New("当前模板缺少可用的运行配置，请手动填写目标访问地址"))
+	if previewChallengeID <= 0 || s.awdChallengeRepo == nil {
+		return "", nil, errcode.ErrInvalidParams.WithCause(errors.New("当前 AWD 题目缺少可用的运行配置，请手动填写目标访问地址"))
 	}
 
-	template, err := s.templateRepo.FindAWDServiceTemplateByID(ctx, previewChallengeID)
+	challenge, err := s.awdChallengeRepo.FindAWDChallengeByID(ctx, previewChallengeID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return "", nil, errcode.ErrNotFound
 		}
 		return "", nil, errcode.ErrInternal.WithCause(err)
 	}
-	return template.DeploymentMode, parseContestAWDServiceJSONMap(template.RuntimeConfig), nil
+	return challenge.DeploymentMode, parseContestAWDServiceJSONMap(challenge.RuntimeConfig), nil
 }
 
 func (s *AWDService) resolvePreviewImageRef(ctx context.Context, runtimeConfig map[string]any) (string, error) {
@@ -102,10 +102,10 @@ func (s *AWDService) resolvePreviewImageRef(ctx context.Context, runtimeConfig m
 
 	imageID := readInt64FromAny(runtimeConfig["image_id"])
 	if imageID <= 0 {
-		return "", errcode.ErrInvalidParams.WithCause(errors.New("当前模板未配置可拉起的镜像，请手动填写目标访问地址"))
+		return "", errcode.ErrInvalidParams.WithCause(errors.New("当前 AWD 题目未配置可拉起的镜像，请手动填写目标访问地址"))
 	}
 	if s.imageRepo == nil {
-		return "", errcode.ErrInvalidParams.WithCause(errors.New("当前模板无法解析镜像配置，请手动填写目标访问地址"))
+		return "", errcode.ErrInvalidParams.WithCause(errors.New("当前 AWD 题目无法解析镜像配置，请手动填写目标访问地址"))
 	}
 	return s.resolvePreviewImageRefByID(ctx, imageID)
 }

@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestParseAWDServiceTemplatePackageDir(t *testing.T) {
+func TestParseAWDChallengePackageDir(t *testing.T) {
 	rootDir := t.TempDir()
 
 	manifest := `api_version: v1
@@ -80,9 +80,9 @@ extensions:
 		t.Fatalf("write statement.md: %v", err)
 	}
 
-	parsed, err := ParseAWDServiceTemplatePackageDir(rootDir)
+	parsed, err := ParseAWDChallengePackageDir(rootDir)
 	if err != nil {
-		t.Fatalf("ParseAWDServiceTemplatePackageDir() error = %v", err)
+		t.Fatalf("ParseAWDChallengePackageDir() error = %v", err)
 	}
 
 	if parsed.Slug != "awd-bank-portal-01" || parsed.Title != "Bank Portal AWD" {

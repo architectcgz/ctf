@@ -3,13 +3,13 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { defineComponent } from 'vue'
 
 import { ApiError } from '@/api/request'
-import { usePlatformAwdServiceTemplates } from '@/composables/usePlatformAwdServiceTemplates'
+import { usePlatformAwdChallenges } from '@/composables/usePlatformAwdChallenges'
 
 const adminApiMocks = vi.hoisted(() => ({
-  createAdminAwdServiceTemplate: vi.fn(),
-  deleteAdminAwdServiceTemplate: vi.fn(),
-  listAdminAwdServiceTemplates: vi.fn(),
-  updateAdminAwdServiceTemplate: vi.fn(),
+  createAdminAwdChallenge: vi.fn(),
+  deleteAdminAwdChallenge: vi.fn(),
+  listAdminAwdChallenges: vi.fn(),
+  updateAdminAwdChallenge: vi.fn(),
 }))
 
 const toastMocks = vi.hoisted(() => ({
@@ -27,17 +27,17 @@ vi.mock('@/composables/useDestructiveConfirm', () => ({
   confirmDestructiveAction: confirmMock,
 }))
 
-describe('usePlatformAwdServiceTemplates', () => {
+describe('usePlatformAwdChallenges', () => {
   beforeEach(() => {
-    adminApiMocks.createAdminAwdServiceTemplate.mockReset()
-    adminApiMocks.deleteAdminAwdServiceTemplate.mockReset()
-    adminApiMocks.listAdminAwdServiceTemplates.mockReset()
-    adminApiMocks.updateAdminAwdServiceTemplate.mockReset()
+    adminApiMocks.createAdminAwdChallenge.mockReset()
+    adminApiMocks.deleteAdminAwdChallenge.mockReset()
+    adminApiMocks.listAdminAwdChallenges.mockReset()
+    adminApiMocks.updateAdminAwdChallenge.mockReset()
     toastMocks.success.mockReset()
     toastMocks.error.mockReset()
     confirmMock.mockReset()
 
-    adminApiMocks.listAdminAwdServiceTemplates.mockResolvedValue({
+    adminApiMocks.listAdminAwdChallenges.mockResolvedValue({
       list: [
         {
           id: '1',
@@ -62,10 +62,10 @@ describe('usePlatformAwdServiceTemplates', () => {
   })
 
   it('loads list data and creates templates', async () => {
-    let composable!: ReturnType<typeof usePlatformAwdServiceTemplates>
+    let composable!: ReturnType<typeof usePlatformAwdChallenges>
     const Harness = defineComponent({
       setup() {
-        composable = usePlatformAwdServiceTemplates()
+        composable = usePlatformAwdChallenges()
         return () => null
       },
     })
@@ -74,7 +74,7 @@ describe('usePlatformAwdServiceTemplates', () => {
     await composable.refresh()
     await flushPromises()
 
-    expect(adminApiMocks.listAdminAwdServiceTemplates).toHaveBeenCalledWith({
+    expect(adminApiMocks.listAdminAwdChallenges).toHaveBeenCalledWith({
       page: 1,
       page_size: 20,
       keyword: undefined,
@@ -83,7 +83,7 @@ describe('usePlatformAwdServiceTemplates', () => {
     })
     expect(composable.list.value[0]?.slug).toBe('bank-portal-awd')
 
-    adminApiMocks.createAdminAwdServiceTemplate.mockResolvedValue({
+    adminApiMocks.createAdminAwdChallenge.mockResolvedValue({
       id: '2',
       name: 'Binary Gate AWD',
       slug: 'binary-gate-awd',
@@ -99,7 +99,7 @@ describe('usePlatformAwdServiceTemplates', () => {
       updated_at: '2026-04-17T10:00:00.000Z',
     })
 
-    await composable.saveTemplate({
+    await composable.saveChallenge({
       name: 'Binary Gate AWD',
       slug: 'binary-gate-awd',
       category: 'pwn',
@@ -111,7 +111,7 @@ describe('usePlatformAwdServiceTemplates', () => {
     })
     await flushPromises()
 
-    expect(adminApiMocks.createAdminAwdServiceTemplate).toHaveBeenCalledWith({
+    expect(adminApiMocks.createAdminAwdChallenge).toHaveBeenCalledWith({
       name: 'Binary Gate AWD',
       slug: 'binary-gate-awd',
       category: 'pwn',
@@ -120,14 +120,14 @@ describe('usePlatformAwdServiceTemplates', () => {
       service_type: 'binary_tcp',
       deployment_mode: 'single_container',
     })
-    expect(toastMocks.success).toHaveBeenCalledWith('AWD 服务模板已创建')
+    expect(toastMocks.success).toHaveBeenCalledWith('AWD 题目已创建')
   })
 
   it('preserves delete failure messages', async () => {
-    let composable!: ReturnType<typeof usePlatformAwdServiceTemplates>
+    let composable!: ReturnType<typeof usePlatformAwdChallenges>
     const Harness = defineComponent({
       setup() {
-        composable = usePlatformAwdServiceTemplates()
+        composable = usePlatformAwdChallenges()
         return () => null
       },
     })
@@ -137,13 +137,13 @@ describe('usePlatformAwdServiceTemplates', () => {
     await flushPromises()
 
     confirmMock.mockResolvedValue(true)
-    adminApiMocks.deleteAdminAwdServiceTemplate.mockRejectedValue(
-      new ApiError('模板已被赛事配置引用，暂时不能删除', { status: 409 })
+    adminApiMocks.deleteAdminAwdChallenge.mockRejectedValue(
+      new ApiError('AWD 题目已被赛事配置引用，暂时不能删除', { status: 409 })
     )
 
-    await composable.removeTemplate(composable.list.value[0]!)
+    await composable.removeChallenge(composable.list.value[0]!)
     await flushPromises()
 
-    expect(toastMocks.error).toHaveBeenCalledWith('模板已被赛事配置引用，暂时不能删除')
+    expect(toastMocks.error).toHaveBeenCalledWith('AWD 题目已被赛事配置引用，暂时不能删除')
   })
 })

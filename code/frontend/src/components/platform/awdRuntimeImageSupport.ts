@@ -59,10 +59,10 @@ export function formatAwdPreviewRuntimeError(rawMessage: string, imageRef: strin
   }
 
   const resolvedImageRef = imageRef || extractImageRefFromRuntimeError(normalized)
-  const parts = ['自动拉起预览实例失败：当前模板引用的运行镜像暂时无法拉取。']
+  const parts = ['自动拉起预览实例失败：当前 AWD 题目引用的运行镜像暂时无法拉取。']
 
   if (isPlaceholderAwdRuntimeImageRef(resolvedImageRef)) {
-    parts.push('如果这是示例占位地址，请先在当前环境构建同名镜像，或把模板镜像改成可直接拉取的真实地址。')
+    parts.push('如果这是示例占位地址，请先在当前环境构建同名镜像，或把题目镜像改成可直接拉取的真实地址。')
   } else {
     parts.push('请确认平台所在机器能拉取这个镜像，或先把镜像推送到当前环境可访问的仓库。')
   }

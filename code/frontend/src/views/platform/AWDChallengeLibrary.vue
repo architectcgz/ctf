@@ -2,9 +2,9 @@
 import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 
-import AWDServiceTemplateEditorDialog from '@/components/platform/awd-service/AWDServiceTemplateEditorDialog.vue'
-import AWDServiceTemplateLibraryPage from '@/components/platform/awd-service/AWDServiceTemplateLibraryPage.vue'
-import { usePlatformAwdServiceTemplates } from '@/composables/usePlatformAwdServiceTemplates'
+import AWDChallengeEditorDialog from '@/components/platform/awd-service/AWDChallengeEditorDialog.vue'
+import AWDChallengeLibraryPage from '@/components/platform/awd-service/AWDChallengeLibraryPage.vue'
+import { usePlatformAwdChallenges } from '@/composables/usePlatformAwdChallenges'
 
 const router = useRouter()
 
@@ -33,9 +33,9 @@ const {
   refreshImportQueue,
   selectImportPackages,
   commitImportPreview,
-  saveTemplate,
-  removeTemplate,
-} = usePlatformAwdServiceTemplates()
+  saveChallenge,
+  removeChallenge,
+} = usePlatformAwdChallenges()
 
 onMounted(() => {
   void refresh()
@@ -60,13 +60,13 @@ function handleDialogOpenChange(value: boolean) {
 }
 
 function openImportPage() {
-  void router.push({ name: 'PlatformAwdServiceTemplateImport' })
+  void router.push({ name: 'PlatformAwdChallengeImport' })
 }
 </script>
 
 <template>
   <div>
-    <AWDServiceTemplateLibraryPage
+    <AWDChallengeLibraryPage
       mode="library"
       :list="list"
       :total="total"
@@ -90,17 +90,17 @@ function openImportPage() {
       @commit-import="commitImportPreview"
       @open-import-page="openImportPage"
       @open-edit-dialog="openEditDialog"
-      @delete-template="removeTemplate"
+      @delete-challenge="removeChallenge"
       @change-page="changePage"
     />
 
-    <AWDServiceTemplateEditorDialog
+    <AWDChallengeEditorDialog
       :open="dialogOpen"
       :mode="dialogMode"
       :draft="formDraft"
       :saving="saving"
       @update:open="handleDialogOpenChange"
-      @save="saveTemplate"
+      @save="saveChallenge"
     />
   </div>
 </template>

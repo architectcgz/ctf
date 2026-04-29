@@ -13,7 +13,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func ParseAWDServiceTemplatePackageDir(rootDir string) (*ParsedAWDServiceTemplatePackage, error) {
+func ParseAWDChallengePackageDir(rootDir string) (*ParsedAWDChallengePackage, error) {
 	manifestPath := filepath.Join(rootDir, "challenge.yml")
 	content, err := os.ReadFile(manifestPath)
 	if err != nil {
@@ -25,13 +25,13 @@ func ParseAWDServiceTemplatePackageDir(rootDir string) (*ParsedAWDServiceTemplat
 		return nil, fmt.Errorf("parse challenge.yml %s: %w", manifestPath, err)
 	}
 
-	return buildParsedAWDServiceTemplatePackage(rootDir, &manifest)
+	return buildParsedAWDChallengePackage(rootDir, &manifest)
 }
 
-func buildParsedAWDServiceTemplatePackage(
+func buildParsedAWDChallengePackage(
 	rootDir string,
 	manifest *ChallengePackageManifest,
-) (*ParsedAWDServiceTemplatePackage, error) {
+) (*ParsedAWDChallengePackage, error) {
 	if manifest == nil {
 		return nil, errcode.ErrInvalidParams.WithCause(errors.New("challenge.yml 不能为空"))
 	}
@@ -119,7 +119,7 @@ func buildParsedAWDServiceTemplatePackage(
 
 	warnings := make([]string, 0, 1)
 	if manifest.Meta.Points > 0 {
-		warnings = append(warnings, "meta.points 仅作为建议分值，不会直接写入模板。")
+		warnings = append(warnings, "meta.points 仅作为建议分值，不会直接写入 AWD 题目。")
 	}
 
 	version := strings.TrimSpace(awd.Version)
@@ -127,7 +127,7 @@ func buildParsedAWDServiceTemplatePackage(
 		version = "v1"
 	}
 
-	return &ParsedAWDServiceTemplatePackage{
+	return &ParsedAWDChallengePackage{
 		Manifest:         *manifest,
 		RootDir:          rootDir,
 		Slug:             slug,

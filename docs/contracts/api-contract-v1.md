@@ -1525,7 +1525,7 @@ export interface AdminContestAWDServiceData {
   id: ID
   contest_id: ID
   challenge_id: ID
-  template_id?: ID
+  awd_challenge_id?: ID
   display_name: string
   order: number
   is_visible: boolean
@@ -1545,8 +1545,7 @@ export type AdminContestAWDServiceListData = AdminContestAWDServiceData[]
 
 ```ts
 export interface CreateAdminContestAWDServiceReq {
-  challenge_id: ID
-  template_id: ID
+  awd_challenge_id: ID
   points: number
   display_name?: string
   order?: number
@@ -1563,7 +1562,7 @@ export interface CreateAdminContestAWDServiceReq {
 
 ```ts
 export interface UpdateAdminContestAWDServiceReq {
-  template_id?: ID
+  awd_challenge_id?: ID
   points?: number
   display_name?: string
   order?: number

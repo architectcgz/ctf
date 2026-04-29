@@ -3,13 +3,13 @@ import { computed, ref, type Ref } from 'vue'
 import {
   createContestAWDService,
   getContestAWDReadiness,
-  listAdminAwdServiceTemplates,
+  listAdminAwdChallenges,
   listContestAWDServices,
   updateContestAWDService,
   type AdminContestAWDServiceCreatePayload,
 } from '@/api/admin'
 import type {
-  AdminAwdServiceTemplateData,
+  AdminAwdChallengeData,
   AdminContestChallengeViewData,
   AWDReadinessData,
   ContestDetailData,
@@ -21,7 +21,7 @@ import { mapPlatformContestAwdServicesToChallengeLinks } from '@/utils/platformC
 
 export interface ContestAwdChallengeConfigPayload {
   challenge_id?: number
-  template_id: number
+  awd_challenge_id: number
   points: number
   order: number
   is_visible: boolean
@@ -51,13 +51,14 @@ export function useContestEditAwdWorkspace(options: UseContestEditAwdWorkspaceOp
   const awdChallengeLinks = ref<AdminContestChallengeViewData[]>([])
   const awdChallengeLinksLoaded = ref(false)
   const awdReadiness = ref<AWDReadinessData | null>(null)
-  const awdServiceTemplateCatalog = ref<AdminAwdServiceTemplateData[]>([])
+  const awdChallengeCatalog = ref<AdminAwdChallengeData[]>([])
   const awdChallengeConfigDialogOpen = ref(false)
   const awdChallengeConfigMode = ref<'create' | 'edit'>('create')
   const editingAwdChallengeLink = ref<AdminContestChallengeViewData | null>(null)
   const activeAwdChallengeId = ref<string | null>(null)
   const awdConfigFocusSource = ref<AwdConfigFocusSource>(null)
-  const loadingAwdServiceTemplateCatalog = ref(false)
+  const loadingAwdChallengeCatalog = ref(false)
+  const awdChallengePoolCreateRequestKey = ref(0)
 
   const sortedAwdChallengeLinks = computed(() =>
     [...awdChallengeLinks.value].sort(
@@ -85,7 +86,7 @@ export function useContestEditAwdWorkspace(options: UseContestEditAwdWorkspaceOp
     awdChallengeLinks.value = []
     awdChallengeLinksLoaded.value = false
     awdReadiness.value = null
-    awdServiceTemplateCatalog.value = []
+    awdChallengeCatalog.value = []
     awdChallengeConfigDialogOpen.value = false
   }
 
@@ -128,17 +129,17 @@ export function useContestEditAwdWorkspace(options: UseContestEditAwdWorkspaceOp
     }
   }
 
-  async function loadAwdServiceTemplateCatalog(): Promise<void> {
-    if (loadingAwdServiceTemplateCatalog.value || awdServiceTemplateCatalog.value.length > 0) return
+  async function loadAwdChallengeCatalog(): Promise<void> {
+    if (loadingAwdChallengeCatalog.value || awdChallengeCatalog.value.length > 0) return
 
-    loadingAwdServiceTemplateCatalog.value = true
+    loadingAwdChallengeCatalog.value = true
     try {
-      const result = await listAdminAwdServiceTemplates({ page: 1, page_size: 100, status: 'published' })
-      awdServiceTemplateCatalog.value = result.list
+      const result = await listAdminAwdChallenges({ page: 1, page_size: 100, status: 'published' })
+      awdChallengeCatalog.value = result.list
     } catch (error) {
-      toast.error(humanizeRequestError(error, '服务模板加载失败'))
+      toast.error(humanizeRequestError(error, 'AWD 题目加载失败'))
     } finally {
-      loadingAwdServiceTemplateCatalog.value = false
+      loadingAwdChallengeCatalog.value = false
     }
   }
 
@@ -151,7 +152,7 @@ export function useContestEditAwdWorkspace(options: UseContestEditAwdWorkspaceOp
     payload: ContestAwdChallengeConfigPayload
   ): AdminContestAWDServiceCreatePayload {
     return {
-      template_id: payload.template_id,
+      awd_challenge_id: payload.awd_challenge_id,
       points: payload.points,
       order: payload.order,
       is_visible: payload.is_visible,
@@ -173,10 +174,10 @@ export function useContestEditAwdWorkspace(options: UseContestEditAwdWorkspaceOp
   }
 
   function openAwdChallengeCreateDialog() {
-    awdChallengeConfigMode.value = 'create'
+    selectTab('pool')
     editingAwdChallengeLink.value = null
-    awdChallengeConfigDialogOpen.value = true
-    void loadAwdServiceTemplateCatalog()
+    awdChallengeConfigDialogOpen.value = false
+    awdChallengePoolCreateRequestKey.value += 1
   }
 
   function openAwdChallengeEditDialog(challenge: AdminContestChallengeViewData) {
@@ -184,7 +185,7 @@ export function useContestEditAwdWorkspace(options: UseContestEditAwdWorkspaceOp
     awdChallengeConfigMode.value = 'edit'
     editingAwdChallengeLink.value = challenge
     awdChallengeConfigDialogOpen.value = true
-    void loadAwdServiceTemplateCatalog()
+    void loadAwdChallengeCatalog()
   }
 
   async function handleSaveAwdChallengeConfig(payload: ContestAwdChallengeConfigPayload) {
@@ -229,11 +230,12 @@ export function useContestEditAwdWorkspace(options: UseContestEditAwdWorkspaceOp
     awdChallengeConfigMode,
     awdChallengeLinks,
     awdChallengeLinksLoaded,
+    awdChallengePoolCreateRequestKey,
     awdConfigFocusSource,
     awdConfigLoadError,
     awdPreflightLoadError,
     awdReadiness,
-    awdServiceTemplateCatalog,
+    awdChallengeCatalog,
     canNavigateNextAwdChallenge,
     canNavigatePreviousAwdChallenge,
     editingAwdChallengeLink,
@@ -242,8 +244,8 @@ export function useContestEditAwdWorkspace(options: UseContestEditAwdWorkspaceOp
     handleNavigateAwdChallengeFromPreflight,
     handleOpenAwdConfigFromPool,
     handleSaveAwdChallengeConfig,
-    loadAwdServiceTemplateCatalog,
-    loadingAwdServiceTemplateCatalog,
+    loadAwdChallengeCatalog,
+    loadingAwdChallengeCatalog,
     loadingAwdStageData,
     openAwdChallengeCreateDialog,
     openAwdChallengeEditDialog,

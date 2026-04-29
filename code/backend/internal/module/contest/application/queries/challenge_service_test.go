@@ -70,16 +70,16 @@ func TestChallengeServiceListAdminChallengesReturnsRelationFieldsOnly(t *testing
 	}
 	templateID := int64(3001)
 	if err := awdRepo.CreateContestAWDService(context.Background(), &model.ContestAWDService{
-		ContestID:     601,
-		ChallengeID:   9101,
-		TemplateID:    &templateID,
-		DisplayName:   "Bank Portal",
-		Order:         0,
-		IsVisible:     true,
-		ScoreConfig:   `{"points":100,"awd_sla_score":1,"awd_defense_score":2}`,
-		RuntimeConfig: `{"challenge_id":9101}`,
-		CreatedAt:     now,
-		UpdatedAt:     now,
+		ContestID:      601,
+		ChallengeID:    9101,
+		AWDChallengeID: &templateID,
+		DisplayName:    "Bank Portal",
+		Order:          0,
+		IsVisible:      true,
+		ScoreConfig:    `{"points":100,"awd_sla_score":1,"awd_defense_score":2}`,
+		RuntimeConfig:  `{"challenge_id":9101}`,
+		CreatedAt:      now,
+		UpdatedAt:      now,
 	}); err != nil {
 		t.Fatalf("create contest awd service: %v", err)
 	}
@@ -104,7 +104,7 @@ func TestChallengeServiceListAdminChallengesReturnsRelationFieldsOnly(t *testing
 	}
 	for _, key := range []string{
 		"awd_service_id",
-		"awd_template_id",
+		"awd_challenge_id",
 		"awd_service_display_name",
 		"awd_checker_type",
 		"awd_checker_config",

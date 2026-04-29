@@ -2,7 +2,7 @@ package dto
 
 import "time"
 
-type AWDServiceTemplateImportPreviewResp struct {
+type AWDChallengeImportPreviewResp struct {
 	ID               string         `json:"id"`
 	FileName         string         `json:"file_name"`
 	Slug             string         `json:"slug"`
@@ -24,6 +24,6 @@ type AWDServiceTemplateImportPreviewResp struct {
 	CreatedAt        time.Time      `json:"created_at"`
 }
 
-type AWDServiceTemplateImportCommitResp struct {
-	Template *AWDServiceTemplateResp `json:"template"`
+type AWDChallengeImportCommitResp struct {
+	Challenge *AWDChallengeResp `json:"challenge"`
 }

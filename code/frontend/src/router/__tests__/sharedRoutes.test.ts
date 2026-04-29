@@ -89,11 +89,11 @@ describe('shared route canonical paths', () => {
     expect(findChild('platform/environment-templates')?.name).toBe(
       'PlatformEnvironmentTemplateLibrary'
     )
-    expect(findChild('platform/awd-service-templates')?.name).toBe(
-      'PlatformAwdServiceTemplateLibrary'
+    expect(findChild('platform/awd-challenges')?.name).toBe(
+      'PlatformAwdChallengeLibrary'
     )
-    expect(findChild('platform/awd-service-templates/imports')?.name).toBe(
-      'PlatformAwdServiceTemplateImport'
+    expect(findChild('platform/awd-challenges/imports')?.name).toBe(
+      'PlatformAwdChallengeImport'
     )
     expect(findChild('platform/images')?.name).toBe('ImageManage')
   })
@@ -129,8 +129,8 @@ describe('shared route canonical paths', () => {
       'admin/challenges/:id/writeup',
       'admin/challenges/:id/writeup/view',
       'admin/environment-templates',
-      'admin/awd-service-templates',
-      'admin/awd-service-templates/imports',
+      'admin/awd-challenges',
+      'admin/awd-challenges/imports',
       'admin/images',
     ]
 

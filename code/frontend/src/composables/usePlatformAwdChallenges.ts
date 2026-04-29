@@ -2,22 +2,22 @@ import { computed, ref, watch } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 
 import {
-  commitAdminAwdServiceTemplateImport,
-  createAdminAwdServiceTemplate,
-  deleteAdminAwdServiceTemplate,
-  listAdminAwdServiceTemplateImports,
-  listAdminAwdServiceTemplates,
-  previewAdminAwdServiceTemplateImport,
-  updateAdminAwdServiceTemplate,
-  type AdminAwdServiceTemplateCreatePayload,
-  type AdminAwdServiceTemplateUpdatePayload,
+  commitAdminAwdChallengeImport,
+  createAdminAwdChallenge,
+  deleteAdminAwdChallenge,
+  listAdminAwdChallengeImports,
+  listAdminAwdChallenges,
+  previewAdminAwdChallengeImport,
+  updateAdminAwdChallenge,
+  type AdminAwdChallengeCreatePayload,
+  type AdminAwdChallengeUpdatePayload,
 } from '@/api/admin'
 import { ApiError } from '@/api/request'
 import type {
-  AdminAwdServiceTemplateImportPreview,
-  AdminAwdServiceTemplateData,
+  AdminAwdChallengeImportPreview,
+  AdminAwdChallengeData,
   AWDDeploymentMode,
-  AWDServiceTemplateStatus,
+  AWDChallengeStatus,
   AWDServiceType,
   ChallengeCategory,
   ChallengeDifficulty,
@@ -27,9 +27,9 @@ import { usePagination } from '@/composables/usePagination'
 import { useToast } from '@/composables/useToast'
 
 type AwdServiceTypeFilter = AWDServiceType | ''
-type AwdServiceStatusFilter = AWDServiceTemplateStatus | ''
+type AwdServiceStatusFilter = AWDChallengeStatus | ''
 
-export interface PlatformAwdServiceTemplateFormDraft {
+export interface PlatformAwdChallengeFormDraft {
   name: string
   slug: string
   category: ChallengeCategory
@@ -37,10 +37,10 @@ export interface PlatformAwdServiceTemplateFormDraft {
   description: string
   service_type: AWDServiceType
   deployment_mode: AWDDeploymentMode
-  status: AWDServiceTemplateStatus
+  status: AWDChallengeStatus
 }
 
-export interface PlatformAwdServiceTemplateImportUploadResult {
+export interface PlatformAwdChallengeImportUploadResult {
   id: string
   status: 'success' | 'error'
   fileName: string
@@ -50,7 +50,7 @@ export interface PlatformAwdServiceTemplateImportUploadResult {
   requestId?: string
 }
 
-function createEmptyDraft(): PlatformAwdServiceTemplateFormDraft {
+function createEmptyDraft(): PlatformAwdChallengeFormDraft {
   return {
     name: '',
     slug: '',
@@ -73,23 +73,23 @@ function humanizeRequestError(error: unknown, fallback: string): string {
   return fallback
 }
 
-export function usePlatformAwdServiceTemplates() {
+export function usePlatformAwdChallenges() {
   const toast = useToast()
   const keyword = ref('')
   const serviceTypeFilter = ref<AwdServiceTypeFilter>('')
   const statusFilter = ref<AwdServiceStatusFilter>('')
   const dialogOpen = ref(false)
   const saving = ref(false)
-  const editingTemplateId = ref<string | null>(null)
-  const formDraft = ref<PlatformAwdServiceTemplateFormDraft>(createEmptyDraft())
+  const editingChallengeId = ref<string | null>(null)
+  const formDraft = ref<PlatformAwdChallengeFormDraft>(createEmptyDraft())
   const uploading = ref(false)
   const queueLoading = ref(false)
   const selectedImportFileName = ref('')
-  const importQueue = ref<AdminAwdServiceTemplateImportPreview[]>([])
-  const uploadResults = ref<PlatformAwdServiceTemplateImportUploadResult[]>([])
+  const importQueue = ref<AdminAwdChallengeImportPreview[]>([])
+  const uploadResults = ref<PlatformAwdChallengeImportUploadResult[]>([])
 
-  const pagination = usePagination<AdminAwdServiceTemplateData>(({ page, page_size }) =>
-    listAdminAwdServiceTemplates({
+  const pagination = usePagination<AdminAwdChallengeData>(({ page, page_size }) =>
+    listAdminAwdChallenges({
       page,
       page_size,
       keyword: keyword.value.trim() || undefined,
@@ -98,7 +98,7 @@ export function usePlatformAwdServiceTemplates() {
     })
   )
 
-  const dialogMode = computed<'create' | 'edit'>(() => (editingTemplateId.value ? 'edit' : 'create'))
+  const dialogMode = computed<'create' | 'edit'>(() => (editingChallengeId.value ? 'edit' : 'create'))
 
   type DebouncedRefresh = ReturnType<typeof useDebounceFn> & {
     cancel?: () => void
@@ -117,22 +117,22 @@ export function usePlatformAwdServiceTemplates() {
   })
 
   function openCreateDialog() {
-    editingTemplateId.value = null
+    editingChallengeId.value = null
     formDraft.value = createEmptyDraft()
     dialogOpen.value = true
   }
 
-  function openEditDialog(template: AdminAwdServiceTemplateData) {
-    editingTemplateId.value = template.id
+  function openEditDialog(challenge: AdminAwdChallengeData) {
+    editingChallengeId.value = challenge.id
     formDraft.value = {
-      name: template.name,
-      slug: template.slug,
-      category: template.category,
-      difficulty: template.difficulty,
-      description: template.description,
-      service_type: template.service_type,
-      deployment_mode: template.deployment_mode,
-      status: template.status,
+      name: challenge.name,
+      slug: challenge.slug,
+      category: challenge.category,
+      difficulty: challenge.difficulty,
+      description: challenge.description,
+      service_type: challenge.service_type,
+      deployment_mode: challenge.deployment_mode,
+      status: challenge.status,
     }
     dialogOpen.value = true
   }
@@ -141,7 +141,7 @@ export function usePlatformAwdServiceTemplates() {
     dialogOpen.value = false
   }
 
-  function appendUploadResult(result: Omit<PlatformAwdServiceTemplateImportUploadResult, 'id' | 'createdAt'>) {
+  function appendUploadResult(result: Omit<PlatformAwdChallengeImportUploadResult, 'id' | 'createdAt'>) {
     uploadResults.value = [
       {
         id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
@@ -155,7 +155,7 @@ export function usePlatformAwdServiceTemplates() {
   async function refreshImportQueue() {
     queueLoading.value = true
     try {
-      importQueue.value = await listAdminAwdServiceTemplateImports()
+      importQueue.value = await listAdminAwdChallengeImports()
     } catch (error) {
       toast.error(humanizeRequestError(error, '加载 AWD 导入队列失败'))
     } finally {
@@ -169,13 +169,13 @@ export function usePlatformAwdServiceTemplates() {
     }
 
     uploading.value = true
-    let latestSuccess: AdminAwdServiceTemplateImportPreview | null = null
+    let latestSuccess: AdminAwdChallengeImportPreview | null = null
 
     try {
       for (const file of files) {
         selectedImportFileName.value = file.name
         try {
-          const preview = await previewAdminAwdServiceTemplateImport(file)
+          const preview = await previewAdminAwdChallengeImport(file)
           latestSuccess = preview
           appendUploadResult({
             status: 'success',
@@ -203,24 +203,24 @@ export function usePlatformAwdServiceTemplates() {
     }
   }
 
-  async function commitImportPreview(preview: AdminAwdServiceTemplateImportPreview) {
+  async function commitImportPreview(preview: AdminAwdChallengeImportPreview) {
     try {
-      const result = await commitAdminAwdServiceTemplateImport(preview.id)
-      toast.success(`已导入模板 ${result.template.name}`)
+      const result = await commitAdminAwdChallengeImport(preview.id)
+      toast.success(`已导入题目 ${result.challenge.name}`)
       await Promise.all([pagination.refresh(), refreshImportQueue()])
       return result
     } catch (error) {
-      toast.error(humanizeRequestError(error, '导入 AWD 模板失败'))
+      toast.error(humanizeRequestError(error, '导入 AWD 题目失败'))
       return null
     }
   }
 
-  async function saveTemplate(draft: PlatformAwdServiceTemplateFormDraft) {
+  async function saveChallenge(draft: PlatformAwdChallengeFormDraft) {
     saving.value = true
 
     try {
-      if (editingTemplateId.value) {
-        const payload: AdminAwdServiceTemplateUpdatePayload = {
+      if (editingChallengeId.value) {
+        const payload: AdminAwdChallengeUpdatePayload = {
           name: draft.name.trim(),
           slug: draft.slug.trim(),
           category: draft.category,
@@ -230,10 +230,10 @@ export function usePlatformAwdServiceTemplates() {
           deployment_mode: draft.deployment_mode,
           status: draft.status,
         }
-        await updateAdminAwdServiceTemplate(editingTemplateId.value, payload)
-        toast.success('AWD 服务模板已更新')
+        await updateAdminAwdChallenge(editingChallengeId.value, payload)
+        toast.success('AWD 题目已更新')
       } else {
-        const payload: AdminAwdServiceTemplateCreatePayload = {
+        const payload: AdminAwdChallengeCreatePayload = {
           name: draft.name.trim(),
           slug: draft.slug.trim(),
           category: draft.category,
@@ -242,35 +242,35 @@ export function usePlatformAwdServiceTemplates() {
           service_type: draft.service_type,
           deployment_mode: draft.deployment_mode,
         }
-        await createAdminAwdServiceTemplate(payload)
-        toast.success('AWD 服务模板已创建')
+        await createAdminAwdChallenge(payload)
+        toast.success('AWD 题目已创建')
       }
 
       dialogOpen.value = false
       await pagination.refresh()
     } catch (error) {
       toast.error(
-        humanizeRequestError(error, editingTemplateId.value ? '更新 AWD 服务模板失败' : '创建 AWD 服务模板失败')
+        humanizeRequestError(error, editingChallengeId.value ? '更新 AWD 题目失败' : '创建 AWD 题目失败')
       )
     } finally {
       saving.value = false
     }
   }
 
-  async function removeTemplate(template: AdminAwdServiceTemplateData) {
+  async function removeChallenge(challenge: AdminAwdChallengeData) {
     const confirmed = await confirmDestructiveAction({
-      message: `确定要删除模板 ${template.name} 吗？`,
+      message: `确定要删除 AWD 题目 ${challenge.name} 吗？`,
     })
     if (!confirmed) {
       return
     }
 
     try {
-      await deleteAdminAwdServiceTemplate(template.id)
-      toast.success(`已删除模板 ${template.name}`)
+      await deleteAdminAwdChallenge(challenge.id)
+      toast.success(`已删除 AWD 题目 ${challenge.name}`)
       await pagination.refresh()
     } catch (error) {
-      toast.error(humanizeRequestError(error, '删除 AWD 服务模板失败'))
+      toast.error(humanizeRequestError(error, '删除 AWD 题目失败'))
     }
   }
 
@@ -294,7 +294,7 @@ export function usePlatformAwdServiceTemplates() {
     refreshImportQueue,
     selectImportPackages,
     commitImportPreview,
-    saveTemplate,
-    removeTemplate,
+    saveChallenge,
+    removeChallenge,
   }
 }

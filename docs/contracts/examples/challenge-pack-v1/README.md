@@ -12,12 +12,12 @@
 
 - `web-hello-01/`：最小 Web 容器题示例，用于演示题面、提示、动态 Flag 与镜像/构建材料写法
 - `web-sqli-login-01/`：SQL 注入登录绕过示例，演示更接近真实 CTF Web 题的 `challenge.yml` 组织方式
-- `awd-bank-portal-01/`：最小可用 AWD 服务模板示例，演示 `meta.mode: awd` 与 `extensions.awd` 的模板定义方式
+- `awd-bank-portal-01/`：最小可用 AWD 题目示例，演示 `meta.mode: awd` 与 `extensions.awd` 的题目定义方式
 
 当前示例压缩包：
 
 - `web-sqli-login-01.zip`：源包打包示例，用于说明目录与文件布局
-- `awd-bank-portal-01.zip`：AWD 服务模板包打包示例，可直接用于后台 AWD 模板导入预览与确认导入
+- `awd-bank-portal-01.zip`：AWD 题目包打包示例，可直接用于后台 AWD 题目导入预览与确认导入
 
 AWD 示例镜像准备：
 

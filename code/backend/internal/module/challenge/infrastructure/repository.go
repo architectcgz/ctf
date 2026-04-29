@@ -87,29 +87,29 @@ func (r *Repository) Delete(ctx context.Context, id int64) error {
 	return r.dbWithContext(ctx).Delete(&model.Challenge{}, id).Error
 }
 
-func (r *Repository) CreateAWDServiceTemplate(ctx context.Context, template *model.AWDServiceTemplate) error {
-	return r.dbWithContext(ctx).Create(template).Error
+func (r *Repository) CreateAWDChallenge(ctx context.Context, challenge *model.AWDChallenge) error {
+	return r.dbWithContext(ctx).Create(challenge).Error
 }
 
-func (r *Repository) FindAWDServiceTemplateByID(ctx context.Context, id int64) (*model.AWDServiceTemplate, error) {
-	var template model.AWDServiceTemplate
-	err := r.dbWithContext(ctx).Where("id = ?", id).First(&template).Error
-	return &template, err
+func (r *Repository) FindAWDChallengeByID(ctx context.Context, id int64) (*model.AWDChallenge, error) {
+	var challenge model.AWDChallenge
+	err := r.dbWithContext(ctx).Where("id = ?", id).First(&challenge).Error
+	return &challenge, err
 }
 
-func (r *Repository) UpdateAWDServiceTemplate(ctx context.Context, template *model.AWDServiceTemplate) error {
-	return r.dbWithContext(ctx).Save(template).Error
+func (r *Repository) UpdateAWDChallenge(ctx context.Context, challenge *model.AWDChallenge) error {
+	return r.dbWithContext(ctx).Save(challenge).Error
 }
 
-func (r *Repository) DeleteAWDServiceTemplate(ctx context.Context, id int64) error {
-	return r.dbWithContext(ctx).Delete(&model.AWDServiceTemplate{}, id).Error
+func (r *Repository) DeleteAWDChallenge(ctx context.Context, id int64) error {
+	return r.dbWithContext(ctx).Delete(&model.AWDChallenge{}, id).Error
 }
 
-func (r *Repository) ListAWDServiceTemplates(ctx context.Context, query *dto.AWDServiceTemplateQuery) ([]*model.AWDServiceTemplate, int64, error) {
-	var templates []*model.AWDServiceTemplate
+func (r *Repository) ListAWDChallenges(ctx context.Context, query *dto.AWDChallengeQuery) ([]*model.AWDChallenge, int64, error) {
+	var challenges []*model.AWDChallenge
 	var total int64
 
-	db := r.dbWithContext(ctx).Model(&model.AWDServiceTemplate{})
+	db := r.dbWithContext(ctx).Model(&model.AWDChallenge{})
 	if query != nil {
 		if keyword := strings.TrimSpace(query.Keyword); keyword != "" {
 			pattern := "%" + keyword + "%"
@@ -141,8 +141,8 @@ func (r *Repository) ListAWDServiceTemplates(ctx context.Context, query *dto.AWD
 	err := db.Offset((page - 1) * size).
 		Limit(size).
 		Order("created_at DESC, id DESC").
-		Find(&templates).Error
-	return templates, total, err
+		Find(&challenges).Error
+	return challenges, total, err
 }
 
 func (r *Repository) List(ctx context.Context, query *dto.ChallengeQuery) ([]*model.Challenge, int64, error) {
