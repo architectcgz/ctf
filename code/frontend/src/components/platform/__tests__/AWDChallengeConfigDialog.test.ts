@@ -307,6 +307,50 @@ describe('AWDChallengeConfigDialog', () => {
     })
   })
 
+  it('应该允许编辑 tcp_standard 配置并保存结构化步骤', async () => {
+    const wrapper = mountDialog()
+
+    await wrapper.get('#awd-challenge-config-checker-type').setValue('tcp_standard')
+    await wrapper.get('#awd-tcp-timeout-ms').setValue(5000)
+    await wrapper.get('#awd-tcp-step-0-send').setValue('HELLO\n')
+    await wrapper.get('#awd-tcp-step-0-expect-contains').setValue('WORLD')
+    await wrapper.get('#awd-tcp-step-1-send-template').setValue('SET_FLAG {{FLAG}}\n')
+    await wrapper.get('#awd-tcp-step-1-expect-contains').setValue('OK')
+    await wrapper.get('#awd-tcp-step-2-send').setValue('GET_FLAG\n')
+    await wrapper.get('#awd-tcp-step-2-expect-contains').setValue('{{FLAG}}')
+    await wrapper.get('#awd-challenge-config-submit').trigger('click')
+
+    expect(wrapper.emitted('save')?.[0]?.[0]).toEqual({
+      awd_challenge_id: 501,
+      points: 100,
+      order: 0,
+      is_visible: true,
+      awd_checker_type: 'tcp_standard',
+      awd_checker_config: {
+        timeout_ms: 5000,
+        steps: [
+          {
+            send: 'HELLO\n',
+            expect_contains: 'WORLD',
+            timeout_ms: 3000,
+          },
+          {
+            send_template: 'SET_FLAG {{FLAG}}\n',
+            expect_contains: 'OK',
+            timeout_ms: 3000,
+          },
+          {
+            send: 'GET_FLAG\n',
+            expect_contains: '{{FLAG}}',
+            timeout_ms: 3000,
+          },
+        ],
+      },
+      awd_sla_score: 1,
+      awd_defense_score: 2,
+    })
+  })
+
   it('应该在 legacy_probe 模式下使用健康检查路径字段保存', async () => {
     const wrapper = mountDialog()
 

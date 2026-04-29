@@ -28,13 +28,16 @@ import {
   buildHTTPStandardCheckerConfig,
   buildLegacyProbeCheckerConfig,
   buildScriptCheckerConfig,
+  buildTCPStandardCheckerConfig,
   createHTTPStandardDraft,
   createLegacyProbeDraft,
   createScriptCheckerDraft,
+  createTCPStandardDraft,
   getHTTPStandardPresetDraft,
   type AWDHTTPStandardDraft,
   type AWDLegacyProbeDraft,
   type AWDScriptCheckerDraft,
+  type AWDTCPStandardDraft,
 } from './awdCheckerConfigSupport'
 import {
   AWD_CHECKER_PREVIEW_ATTEMPT_TOTAL,
@@ -102,6 +105,7 @@ const form = reactive({
 
 const legacyProbeDraft = reactive<AWDLegacyProbeDraft>(createLegacyProbeDraft())
 const httpStandardDraft = reactive<AWDHTTPStandardDraft>(createHTTPStandardDraft())
+const tcpStandardDraft = reactive<AWDTCPStandardDraft>(createTCPStandardDraft())
 const scriptCheckerDraft = reactive<AWDScriptCheckerDraft>(createScriptCheckerDraft())
 const previewForm = reactive({
   access_url: '',
@@ -143,6 +147,8 @@ function createFieldErrorState() {
     http_get_headers_text: '',
     http_havoc_expected_status: '',
     http_havoc_headers_text: '',
+    tcp_timeout: '',
+    tcp_steps: '',
     script_entry: '',
     script_timeout: '',
     script_args_text: '',
@@ -198,6 +204,7 @@ const checkerPreviewText = computed(() =>
     buildCheckerConfigPreview(form.awd_checker_type, {
       legacyProbeDraft,
       httpStandardDraft,
+      tcpStandardDraft,
       scriptCheckerDraft,
     }),
     null,
@@ -424,11 +431,35 @@ function assignScriptCheckerDraft(next: AWDScriptCheckerDraft) {
   scriptCheckerDraft.output = next.output
 }
 
+function assignTCPStandardDraft(next: AWDTCPStandardDraft) {
+  tcpStandardDraft.timeout_ms = next.timeout_ms
+  tcpStandardDraft.steps.splice(0, tcpStandardDraft.steps.length, ...next.steps)
+}
+
+function addTCPCheckerStep() {
+  tcpStandardDraft.steps.push({
+    send: '',
+    send_template: '',
+    send_hex: '',
+    expect_contains: '',
+    expect_regex: '',
+    timeout_ms: 3000,
+  })
+}
+
+function removeTCPCheckerStep(index: number) {
+  if (tcpStandardDraft.steps.length <= 1) {
+    return
+  }
+  tcpStandardDraft.steps.splice(index, 1)
+}
+
 function applyAwdChallengeCheckerDefaults(challenge: AdminAwdChallengeData | null) {
   if (!challenge) {
     form.awd_checker_type = 'legacy_probe'
     assignLegacyProbeDraft(createLegacyProbeDraft())
     assignHTTPStandardDraft(createHTTPStandardDraft())
+    assignTCPStandardDraft(createTCPStandardDraft())
     assignScriptCheckerDraft(createScriptCheckerDraft())
     return
   }
@@ -436,6 +467,7 @@ function applyAwdChallengeCheckerDefaults(challenge: AdminAwdChallengeData | nul
   form.awd_checker_type = challenge.checker_type || 'legacy_probe'
   assignLegacyProbeDraft(createLegacyProbeDraft(challenge.checker_config))
   assignHTTPStandardDraft(createHTTPStandardDraft(challenge.checker_config))
+  assignTCPStandardDraft(createTCPStandardDraft(challenge.checker_config))
   assignScriptCheckerDraft(createScriptCheckerDraft(challenge.checker_config))
 }
 
@@ -461,6 +493,7 @@ watch(
     form.awd_defense_score = props.draft?.awd_defense_score ?? DEFAULT_AWD_DEFENSE_SCORE
     assignLegacyProbeDraft(createLegacyProbeDraft(props.draft?.awd_checker_config))
     assignHTTPStandardDraft(createHTTPStandardDraft(props.draft?.awd_checker_config))
+    assignTCPStandardDraft(createTCPStandardDraft(props.draft?.awd_checker_config))
     assignScriptCheckerDraft(createScriptCheckerDraft(props.draft?.awd_checker_config))
     if (props.mode === 'create') {
       applyAwdChallengeCheckerDefaults(selectedAwdChallenge.value)
@@ -632,6 +665,8 @@ function buildCheckerConfigResult(strict = true) {
   switch (form.awd_checker_type) {
     case 'http_standard':
       return buildHTTPStandardCheckerConfig(httpStandardDraft, strict)
+    case 'tcp_standard':
+      return buildTCPStandardCheckerConfig(tcpStandardDraft, strict)
     case 'script_checker':
       return buildScriptCheckerConfig(scriptCheckerDraft, strict)
     default:
@@ -922,6 +957,7 @@ function handleSubmit() {
             >
               <option value="legacy_probe">基础探活</option>
               <option value="http_standard">HTTP 标准 Checker</option>
+              <option value="tcp_standard">TCP 标准 Checker</option>
               <option value="script_checker">脚本 Checker</option>
             </select>
           </span>
@@ -972,6 +1008,8 @@ function handleSubmit() {
               {{
                 form.awd_checker_type === 'http_standard'
                   ? 'HTTP Standard 配置'
+                  : form.awd_checker_type === 'tcp_standard'
+                    ? 'TCP Standard 配置'
                   : form.awd_checker_type === 'script_checker'
                     ? 'Script Checker 配置'
                     : 'Legacy Probe 配置'
@@ -982,6 +1020,8 @@ function handleSubmit() {
             {{
               form.awd_checker_type === 'http_standard'
                 ? '按动作填写巡检规则，保存时会自动构造成 awd_checker_config。'
+                : form.awd_checker_type === 'tcp_standard'
+                  ? '按顺序填写 TCP 协议收发步骤。'
                 : form.awd_checker_type === 'script_checker'
                   ? '声明题目包内私有 checker 脚本，由平台安全沙箱执行。'
                   : '配置基础探活路径；留空则回退全局健康检查路径。'
@@ -1006,6 +1046,154 @@ function handleSubmit() {
           <p v-if="fieldErrors.legacy_health_path" class="ui-field__error">
             {{ fieldErrors.legacy_health_path }}
           </p>
+        </div>
+
+        <div
+          v-else-if="form.awd_checker_type === 'tcp_standard'"
+          class="checker-action-section"
+        >
+          <div class="checker-action-grid">
+            <div class="ui-field awd-http-action-field">
+              <label class="ui-field__label" for="awd-tcp-timeout-ms">总超时</label>
+              <span
+                class="ui-control-wrap awd-http-action-control"
+                :class="{ 'is-error': !!fieldErrors.tcp_timeout }"
+              >
+                <input
+                  id="awd-tcp-timeout-ms"
+                  v-model.number="tcpStandardDraft.timeout_ms"
+                  type="number"
+                  min="1"
+                  max="60000"
+                  step="100"
+                  class="ui-control"
+                />
+              </span>
+              <p v-if="fieldErrors.tcp_timeout" class="ui-field__error awd-http-action-error">
+                {{ fieldErrors.tcp_timeout }}
+              </p>
+            </div>
+          </div>
+
+          <p v-if="fieldErrors.tcp_steps" class="ui-field__error awd-http-action-error">
+            {{ fieldErrors.tcp_steps }}
+          </p>
+
+          <section
+            v-for="(step, index) in tcpStandardDraft.steps"
+            :key="index"
+            class="checker-action-section"
+          >
+            <header class="list-heading checker-action-section__head">
+              <h4 class="list-heading__title checker-action-section__title">
+                Step {{ index + 1 }}
+              </h4>
+              <button
+                v-if="tcpStandardDraft.steps.length > 1"
+                type="button"
+                class="ui-btn ui-btn--secondary"
+                @click="removeTCPCheckerStep(index)"
+              >
+                删除
+              </button>
+            </header>
+
+            <div class="checker-action-extra-grid">
+              <div class="ui-field awd-http-action-field">
+                <label class="ui-field__label" :for="`awd-tcp-step-${index}-send`">Send</label>
+                <span class="ui-control-wrap awd-http-action-control">
+                  <textarea
+                    :id="`awd-tcp-step-${index}-send`"
+                    v-model="step.send"
+                    rows="3"
+                    class="ui-control awd-config-control--mono"
+                  />
+                </span>
+              </div>
+
+              <div class="ui-field awd-http-action-field">
+                <label class="ui-field__label" :for="`awd-tcp-step-${index}-send-template`">
+                  Send Template
+                </label>
+                <span class="ui-control-wrap awd-http-action-control">
+                  <textarea
+                    :id="`awd-tcp-step-${index}-send-template`"
+                    v-model="step.send_template"
+                    rows="3"
+                    class="ui-control awd-config-control--mono"
+                  />
+                </span>
+              </div>
+
+              <div class="ui-field awd-http-action-field">
+                <label class="ui-field__label" :for="`awd-tcp-step-${index}-send-hex`">
+                  Send Hex
+                </label>
+                <span class="ui-control-wrap awd-http-action-control">
+                  <textarea
+                    :id="`awd-tcp-step-${index}-send-hex`"
+                    v-model="step.send_hex"
+                    rows="3"
+                    class="ui-control awd-config-control--mono"
+                  />
+                </span>
+              </div>
+
+              <div class="ui-field awd-http-action-field">
+                <label class="ui-field__label" :for="`awd-tcp-step-${index}-expect-contains`">
+                  Expect Contains
+                </label>
+                <span class="ui-control-wrap awd-http-action-control">
+                  <textarea
+                    :id="`awd-tcp-step-${index}-expect-contains`"
+                    v-model="step.expect_contains"
+                    rows="3"
+                    class="ui-control awd-config-control--mono"
+                  />
+                </span>
+              </div>
+
+              <div class="ui-field awd-http-action-field">
+                <label class="ui-field__label" :for="`awd-tcp-step-${index}-expect-regex`">
+                  Expect Regex
+                </label>
+                <span class="ui-control-wrap awd-http-action-control">
+                  <input
+                    :id="`awd-tcp-step-${index}-expect-regex`"
+                    v-model="step.expect_regex"
+                    type="text"
+                    class="ui-control awd-config-control--mono"
+                  />
+                </span>
+              </div>
+
+              <div class="ui-field awd-http-action-field">
+                <label class="ui-field__label" :for="`awd-tcp-step-${index}-timeout`">
+                  Step Timeout
+                </label>
+                <span class="ui-control-wrap awd-http-action-control">
+                  <input
+                    :id="`awd-tcp-step-${index}-timeout`"
+                    v-model.number="step.timeout_ms"
+                    type="number"
+                    min="0"
+                    max="60000"
+                    step="100"
+                    class="ui-control"
+                  />
+                </span>
+              </div>
+            </div>
+          </section>
+
+          <button
+            id="awd-tcp-add-step"
+            type="button"
+            class="ui-btn ui-btn--secondary"
+            @click="addTCPCheckerStep"
+          >
+            添加步骤
+          </button>
         </div>
 
         <div
