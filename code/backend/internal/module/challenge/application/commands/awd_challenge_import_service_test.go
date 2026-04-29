@@ -138,6 +138,62 @@ func TestAWDChallengeImportStoresScriptCheckerArtifactPrivately(t *testing.T) {
 	}
 }
 
+func TestAWDChallengeImportStoresScriptCheckerArtifactFiles(t *testing.T) {
+	db := testsupport.SetupTestDB(t)
+	repo := challengeinfra.NewRepository(db)
+	service := NewAWDChallengeImportService(db, repo)
+
+	previewDir := filepath.Join(t.TempDir(), "awd-imports")
+	artifactDir := filepath.Join(t.TempDir(), "checker-artifacts")
+	t.Setenv("AWD_CHALLENGE_IMPORT_PREVIEW_DIR", previewDir)
+	t.Setenv("AWD_CHECKER_ARTIFACT_DIR", artifactDir)
+
+	preview, err := service.PreviewImport(
+		context.Background(),
+		2001,
+		"script-checker-files.zip",
+		bytes.NewReader(buildAWDMultiFileScriptCheckerImportArchive(t)),
+	)
+	if err != nil {
+		t.Fatalf("PreviewImport() error = %v", err)
+	}
+
+	committed, err := service.CommitImport(context.Background(), 2001, preview.ID)
+	if err != nil {
+		t.Fatalf("CommitImport() error = %v", err)
+	}
+	stored, err := repo.FindAWDChallengeByID(context.Background(), committed.ID)
+	if err != nil {
+		t.Fatalf("FindByID() error = %v", err)
+	}
+
+	var checkerConfig map[string]any
+	if err := json.Unmarshal([]byte(stored.CheckerConfig), &checkerConfig); err != nil {
+		t.Fatalf("unmarshal checker_config: %v", err)
+	}
+	artifact, ok := checkerConfig["artifact"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected private artifact metadata in checker_config: %+v", checkerConfig)
+	}
+	files, ok := artifact["files"].([]any)
+	if !ok || len(files) != 2 {
+		t.Fatalf("expected two artifact files: %+v", artifact)
+	}
+	for _, item := range files {
+		file, ok := item.(map[string]any)
+		if !ok {
+			t.Fatalf("unexpected artifact file item: %#v", item)
+		}
+		storagePath, _ := file["storage_path"].(string)
+		if storagePath == "" || !strings.Contains(storagePath, artifactDir) {
+			t.Fatalf("unexpected artifact file storage path: %+v", file)
+		}
+		if _, err := os.Stat(storagePath); err != nil {
+			t.Fatalf("expected stored checker artifact file: %v", err)
+		}
+	}
+}
+
 func TestAWDChallengeImportKeepsTCPStandardCheckerConfig(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	repo := challengeinfra.NewRepository(db)
@@ -393,6 +449,81 @@ extensions:
 `,
 		"script-checker/statement.md":          "Script checker service.",
 		"script-checker/docker/check/check.py": "print('{\"status\":\"ok\"}')\n",
+	}
+
+	var buffer bytes.Buffer
+	writer := zip.NewWriter(&buffer)
+	for name, content := range files {
+		fileWriter, err := writer.Create(name)
+		if err != nil {
+			t.Fatalf("Create(%s) error = %v", name, err)
+		}
+		if _, err := io.WriteString(fileWriter, content); err != nil {
+			t.Fatalf("WriteString(%s) error = %v", name, err)
+		}
+	}
+	if err := writer.Close(); err != nil {
+		t.Fatalf("Close() error = %v", err)
+	}
+	return buffer.Bytes()
+}
+
+func buildAWDMultiFileScriptCheckerImportArchive(t *testing.T) []byte {
+	t.Helper()
+
+	files := map[string]string{
+		"script-checker-files/challenge.yml": `api_version: v1
+kind: challenge
+
+meta:
+  mode: awd
+  slug: script-checker-files
+  title: Script Checker Files AWD
+  category: web
+  difficulty: hard
+
+content:
+  statement: statement.md
+
+flag:
+  type: dynamic
+  prefix: awd
+
+runtime:
+  type: container
+  image:
+    ref: registry.example.edu/ctf/script-checker-files:v1
+
+extensions:
+  awd:
+    service_type: web_http
+    deployment_mode: single_container
+    checker:
+      type: script_checker
+      config:
+        runtime: python3
+        entry: docker/check/check.py
+        files:
+          - docker/check/check.py
+          - docker/check/protocol.py
+        timeout_sec: 10
+        args:
+          - "{{TARGET_URL}}"
+        output: json
+    flag_policy:
+      mode: dynamic_team
+    defense_entry:
+      mode: http
+    access_config:
+      public_base_url: http://{{TEAM_HOST}}:8080
+      service_port: 8080
+    runtime_config:
+      service_port: 8080
+`,
+		"script-checker-files/statement.md":                "Script checker service.",
+		"script-checker-files/docker/check/check.py":       "import protocol\nprint(protocol.STATUS)\n",
+		"script-checker-files/docker/check/protocol.py":    "STATUS = '{\"status\":\"ok\"}'\n",
+		"script-checker-files/docker/check/unused_file.py": "SHOULD_NOT_IMPORT = True\n",
 	}
 
 	var buffer bytes.Buffer

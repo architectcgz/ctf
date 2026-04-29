@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"ctf-platform/internal/model"
@@ -109,7 +110,7 @@ func buildParsedAWDChallengePackage(
 	}
 
 	checkerConfig := normalizePackageConfigMap(awd.Checker.Config)
-	checkerEntryPath, checkerEntryAbs, err := resolveAWDPackageCheckerEntry(rootDir, checkerType, checkerConfig)
+	checkerEntryPath, checkerEntryAbs, checkerFiles, err := resolveAWDPackageCheckerFiles(rootDir, checkerType, checkerConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -148,6 +149,7 @@ func buildParsedAWDChallengePackage(
 		CheckerConfig:    checkerConfig,
 		CheckerEntryPath: checkerEntryPath,
 		CheckerEntryAbs:  checkerEntryAbs,
+		CheckerFiles:     checkerFiles,
 		FlagMode:         flagMode,
 		FlagConfig:       flagConfig,
 		DefenseEntryMode: defenseEntryMode,
@@ -157,30 +159,86 @@ func buildParsedAWDChallengePackage(
 	}, nil
 }
 
-func resolveAWDPackageCheckerEntry(rootDir, checkerType string, checkerConfig map[string]any) (string, string, error) {
+func resolveAWDPackageCheckerFiles(rootDir, checkerType string, checkerConfig map[string]any) (string, string, []ParsedAWDCheckerFile, error) {
 	if checkerType != string(model.AWDCheckerTypeScript) {
-		return "", "", nil
+		return "", "", nil, nil
 	}
 	rawEntry, ok := checkerConfig["entry"].(string)
 	entry := strings.TrimSpace(rawEntry)
 	if !ok || entry == "" {
-		return "", "", errcode.ErrInvalidParams.WithCause(errors.New("script_checker config.entry 不能为空"))
+		return "", "", nil, errcode.ErrInvalidParams.WithCause(errors.New("script_checker config.entry 不能为空"))
 	}
-	if filepath.IsAbs(entry) || entry == "." || entry == ".." || strings.HasPrefix(filepath.Clean(entry), ".."+string(filepath.Separator)) {
-		return "", "", errcode.ErrInvalidParams.WithCause(errors.New("script_checker config.entry 必须是题目包内相对路径"))
-	}
-	entryAbs, err := safePackageJoin(rootDir, entry)
+	entryPath, entryAbs, err := resolveAWDPackageCheckerFile(rootDir, entry, "script_checker config.entry")
 	if err != nil {
-		return "", "", errcode.ErrInvalidParams.WithCause(fmt.Errorf("script_checker entry 路径非法: %w", err))
+		return "", "", nil, err
 	}
-	info, err := os.Stat(entryAbs)
+
+	fileValues := []string{entryPath}
+	if rawFiles, ok := checkerConfig["files"]; ok {
+		values, err := readAWDPackageCheckerFileList(rawFiles)
+		if err != nil {
+			return "", "", nil, err
+		}
+		fileValues = values
+	}
+
+	seen := map[string]bool{}
+	files := make([]ParsedAWDCheckerFile, 0, len(fileValues))
+	entryIncluded := false
+	for _, value := range fileValues {
+		pathValue, absValue, err := resolveAWDPackageCheckerFile(rootDir, value, "script_checker config.files")
+		if err != nil {
+			return "", "", nil, err
+		}
+		if seen[pathValue] {
+			continue
+		}
+		seen[pathValue] = true
+		if pathValue == entryPath {
+			entryIncluded = true
+		}
+		files = append(files, ParsedAWDCheckerFile{Path: pathValue, Abs: absValue})
+	}
+	if !entryIncluded {
+		return "", "", nil, errcode.ErrInvalidParams.WithCause(errors.New("script_checker config.entry 必须包含在 config.files 中"))
+	}
+	sort.Slice(files, func(i, j int) bool { return files[i].Path < files[j].Path })
+	return entryPath, entryAbs, files, nil
+}
+
+func readAWDPackageCheckerFileList(raw any) ([]string, error) {
+	rawList, ok := raw.([]any)
+	if !ok {
+		return nil, errcode.ErrInvalidParams.WithCause(errors.New("script_checker config.files 必须是字符串数组"))
+	}
+	values := make([]string, 0, len(rawList))
+	for _, item := range rawList {
+		value, ok := item.(string)
+		if !ok || strings.TrimSpace(value) == "" {
+			return nil, errcode.ErrInvalidParams.WithCause(errors.New("script_checker config.files 必须是非空字符串数组"))
+		}
+		values = append(values, value)
+	}
+	return values, nil
+}
+
+func resolveAWDPackageCheckerFile(rootDir, value, fieldName string) (string, string, error) {
+	clean := filepath.Clean(strings.TrimSpace(value))
+	if filepath.IsAbs(clean) || clean == "." || clean == ".." || strings.HasPrefix(clean, ".."+string(filepath.Separator)) {
+		return "", "", errcode.ErrInvalidParams.WithCause(fmt.Errorf("%s 必须是题目包内相对文件路径", fieldName))
+	}
+	abs, err := safePackageJoin(rootDir, clean)
 	if err != nil {
-		return "", "", fmt.Errorf("read script_checker entry %s: %w", entryAbs, err)
+		return "", "", errcode.ErrInvalidParams.WithCause(fmt.Errorf("%s 路径非法: %w", fieldName, err))
+	}
+	info, err := os.Stat(abs)
+	if err != nil {
+		return "", "", fmt.Errorf("read %s %s: %w", fieldName, abs, err)
 	}
 	if info.IsDir() {
-		return "", "", errcode.ErrInvalidParams.WithCause(errors.New("script_checker config.entry 不能是目录"))
+		return "", "", errcode.ErrInvalidParams.WithCause(fmt.Errorf("%s 不能是目录", fieldName))
 	}
-	return filepath.ToSlash(filepath.Clean(entry)), entryAbs, nil
+	return filepath.ToSlash(clean), abs, nil
 }
 
 func normalizePackageConfigMap(raw map[string]any) map[string]any {
