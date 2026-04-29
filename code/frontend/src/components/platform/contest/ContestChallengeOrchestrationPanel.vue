@@ -218,6 +218,27 @@ function summarizeAwdChallengeFailures(awdChallengeIds: number[]): string {
   return `部分 AWD 题目关联失败：${failedNames.join('、')}`
 }
 
+function buildAwdServiceCreatePayload(
+  awdChallengeId: number,
+  payload: ContestOrchestrationSavePayload,
+  order: number
+) {
+  const awdChallenge = awdChallengeCatalog.value.find((item) => Number(item.id) === awdChallengeId)
+  const checkerConfig =
+    awdChallenge?.checker_config && typeof awdChallenge.checker_config === 'object'
+      ? awdChallenge.checker_config
+      : undefined
+
+  return {
+    awd_challenge_id: awdChallengeId,
+    points: payload.points,
+    order,
+    is_visible: payload.is_visible,
+    ...(awdChallenge?.checker_type ? { checker_type: awdChallenge.checker_type } : {}),
+    ...(checkerConfig ? { checker_config: checkerConfig } : {}),
+  }
+}
+
 async function handleSave(payload: ContestOrchestrationSavePayload) {
   saving.value = true
   try {
@@ -236,12 +257,10 @@ async function handleSave(payload: ContestOrchestrationSavePayload) {
       if (dialogMode.value === 'create') {
         const results = await Promise.allSettled(
           awdChallengeIds.map((awdChallengeId, index) =>
-            createContestAWDService(props.contestId, {
-              awd_challenge_id: awdChallengeId,
-              points: payload.points,
-              order: payload.order + index,
-              is_visible: payload.is_visible,
-            })
+            createContestAWDService(
+              props.contestId,
+              buildAwdServiceCreatePayload(awdChallengeId, payload, payload.order + index)
+            )
           )
         )
         const failedResults = results.flatMap((result, index) =>
