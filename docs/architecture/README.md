@@ -27,6 +27,11 @@
 - `frontend/pages/`：页面级最终设计稿。
 - `features/`：跨前后端的专题最终设计。
 
+## AWD Checker 扩展
+
+- `features/awd-http-standard-checker-design.md`：当前已实现的 `http_standard` checker 事实源。
+- `features/awd-checker-runner-extension-design.md`：`tcp_standard`、`script_checker` 与安全 sandbox runner 的目标设计。
+
 ## 历史迁移说明
 
 - 原 `design-system/ctf-platform/` 下的最终设计稿已迁入 `docs/architecture/frontend/`。
