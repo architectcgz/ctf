@@ -247,14 +247,28 @@ type ContestConfig struct {
 }
 
 type ContestAWDConfig struct {
-	SchedulerInterval  time.Duration `mapstructure:"scheduler_interval"`
-	SchedulerLockTTL   time.Duration `mapstructure:"scheduler_lock_ttl"`
-	SchedulerBatchSize int           `mapstructure:"scheduler_batch_size"`
-	RoundInterval      time.Duration `mapstructure:"round_interval"`
-	RoundLockTTL       time.Duration `mapstructure:"round_lock_ttl"`
-	PreviousRoundGrace time.Duration `mapstructure:"previous_round_grace"`
-	CheckerTimeout     time.Duration `mapstructure:"checker_timeout"`
-	CheckerHealthPath  string        `mapstructure:"checker_health_path"`
+	SchedulerInterval  time.Duration        `mapstructure:"scheduler_interval"`
+	SchedulerLockTTL   time.Duration        `mapstructure:"scheduler_lock_ttl"`
+	SchedulerBatchSize int                  `mapstructure:"scheduler_batch_size"`
+	RoundInterval      time.Duration        `mapstructure:"round_interval"`
+	RoundLockTTL       time.Duration        `mapstructure:"round_lock_ttl"`
+	PreviousRoundGrace time.Duration        `mapstructure:"previous_round_grace"`
+	CheckerTimeout     time.Duration        `mapstructure:"checker_timeout"`
+	CheckerHealthPath  string               `mapstructure:"checker_health_path"`
+	CheckerSandbox     CheckerSandboxConfig `mapstructure:"checker_sandbox"`
+}
+
+type CheckerSandboxConfig struct {
+	Image            string        `mapstructure:"image"`
+	User             string        `mapstructure:"user"`
+	WorkDir          string        `mapstructure:"work_dir"`
+	Timeout          time.Duration `mapstructure:"timeout"`
+	CPUQuota         float64       `mapstructure:"cpu_quota"`
+	MemoryBytes      int64         `mapstructure:"memory_bytes"`
+	PidsLimit        int64         `mapstructure:"pids_limit"`
+	NofileLimit      int64         `mapstructure:"nofile_limit"`
+	OutputLimitBytes int64         `mapstructure:"output_limit_bytes"`
+	NetworkMode      string        `mapstructure:"network_mode"`
 }
 
 func Load(env string) (*Config, error) {
@@ -474,6 +488,33 @@ func (c *Config) Validate() error {
 	if c.Contest.AWD.CheckerTimeout <= 0 {
 		return fmt.Errorf("contest.awd.checker_timeout must be greater than 0")
 	}
+	if strings.TrimSpace(c.Contest.AWD.CheckerSandbox.Image) == "" {
+		return fmt.Errorf("contest.awd.checker_sandbox.image must not be empty")
+	}
+	if strings.TrimSpace(c.Contest.AWD.CheckerSandbox.WorkDir) == "" {
+		return fmt.Errorf("contest.awd.checker_sandbox.work_dir must not be empty")
+	}
+	if !strings.HasPrefix(strings.TrimSpace(c.Contest.AWD.CheckerSandbox.WorkDir), "/") || strings.TrimSpace(c.Contest.AWD.CheckerSandbox.WorkDir) == "/" {
+		return fmt.Errorf("contest.awd.checker_sandbox.work_dir must be an absolute non-root path")
+	}
+	if c.Contest.AWD.CheckerSandbox.Timeout <= 0 {
+		return fmt.Errorf("contest.awd.checker_sandbox.timeout must be greater than 0")
+	}
+	if c.Contest.AWD.CheckerSandbox.CPUQuota <= 0 || c.Contest.AWD.CheckerSandbox.CPUQuota > 4 {
+		return fmt.Errorf("contest.awd.checker_sandbox.cpu_quota must be between 0 and 4 cores")
+	}
+	if c.Contest.AWD.CheckerSandbox.MemoryBytes < 32*1024*1024 || c.Contest.AWD.CheckerSandbox.MemoryBytes > 2*1024*1024*1024 {
+		return fmt.Errorf("contest.awd.checker_sandbox.memory_bytes must be between 32MB and 2GB")
+	}
+	if c.Contest.AWD.CheckerSandbox.PidsLimit <= 0 || c.Contest.AWD.CheckerSandbox.PidsLimit > 1024 {
+		return fmt.Errorf("contest.awd.checker_sandbox.pids_limit must be between 1 and 1024")
+	}
+	if c.Contest.AWD.CheckerSandbox.NofileLimit <= 0 || c.Contest.AWD.CheckerSandbox.NofileLimit > 4096 {
+		return fmt.Errorf("contest.awd.checker_sandbox.nofile_limit must be between 1 and 4096")
+	}
+	if c.Contest.AWD.CheckerSandbox.OutputLimitBytes <= 0 || c.Contest.AWD.CheckerSandbox.OutputLimitBytes > 1024*1024 {
+		return fmt.Errorf("contest.awd.checker_sandbox.output_limit_bytes must be between 1 and 1MB")
+	}
 	if c.Auth.CAS.Enabled {
 		if strings.TrimSpace(c.Auth.CAS.BaseURL) == "" {
 			return fmt.Errorf("auth.cas.base_url must not be empty when CAS is enabled")
@@ -654,4 +695,14 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("contest.awd.previous_round_grace", 30*time.Second)
 	v.SetDefault("contest.awd.checker_timeout", 3*time.Second)
 	v.SetDefault("contest.awd.checker_health_path", "/health")
+	v.SetDefault("contest.awd.checker_sandbox.image", "python:3.12-alpine")
+	v.SetDefault("contest.awd.checker_sandbox.user", "65532:65532")
+	v.SetDefault("contest.awd.checker_sandbox.work_dir", "/checker")
+	v.SetDefault("contest.awd.checker_sandbox.timeout", 10*time.Second)
+	v.SetDefault("contest.awd.checker_sandbox.cpu_quota", 0.5)
+	v.SetDefault("contest.awd.checker_sandbox.memory_bytes", 134217728)
+	v.SetDefault("contest.awd.checker_sandbox.pids_limit", 64)
+	v.SetDefault("contest.awd.checker_sandbox.nofile_limit", 128)
+	v.SetDefault("contest.awd.checker_sandbox.output_limit_bytes", 32768)
+	v.SetDefault("contest.awd.checker_sandbox.network_mode", "")
 }

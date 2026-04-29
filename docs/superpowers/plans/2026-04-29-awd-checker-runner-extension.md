@@ -268,6 +268,8 @@ git commit -m "feat(awd): 增加tcp标准checker"
 
 ## Task 3: 建立 sandbox runner port 与 Docker 实现
 
+当前进度：基础 `CheckerRunner` port、Docker sandbox runner、配置项和安全边界单元测试已完成。该 runner 还没有接入 `script_checker` 的 preview / 赛中链路。
+
 **Files:**
 - Create: `code/backend/internal/module/contest/ports/checker_runner.go`
 - Create: `code/backend/internal/module/contest/infrastructure/docker_checker_runner.go`
@@ -295,7 +297,7 @@ cd code/backend && go test ./internal/module/contest/infrastructure -run DockerC
 
 Expected: FAIL，runner 不存在。
 
-- [ ] **Step 3: 定义 port**
+- [x] **Step 3: 定义 port**
 
 `CheckerRunner` 接口输入：
 
@@ -317,7 +319,7 @@ Expected: FAIL，runner 不存在。
 - duration
 - resource limit flags
 
-- [ ] **Step 4: 实现 Docker runner**
+- [x] **Step 4: 实现 Docker runner**
 
 容器配置必须：
 
@@ -329,7 +331,7 @@ Expected: FAIL，runner 不存在。
 - 设置 memory、nano CPUs、pids limit
 - 设置执行超时和清理逻辑
 
-- [ ] **Step 5: 验证**
+- [x] **Step 5: 验证**
 
 Run:
 
