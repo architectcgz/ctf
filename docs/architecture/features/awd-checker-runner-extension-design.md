@@ -95,6 +95,9 @@ extensions:
       config:
         runtime: python3
         entry: docker/check/check.py
+        files:
+          - docker/check/check.py
+          - docker/check/protocol.py
         timeout_sec: 10
         args:
           - "{{TARGET_URL}}"
@@ -104,11 +107,11 @@ extensions:
         output: json
 ```
 
-`script_checker` 只能访问平台注入的参数和环境变量。题目包中的 checker 文件不作为选手附件公开，也不允许被平台直接挂载到目标服务容器。
+`script_checker` 只能访问平台注入的参数、环境变量和声明过的私有 checker 文件。`files` 未声明时默认只包含 `entry`；声明后 `entry` 必须位于 `files` 内，且所有文件都必须是题目包内相对路径。题目包中的 checker 文件不作为选手附件公开，也不允许被平台直接挂载到目标服务容器。
 
 ## Sandbox Runner 安全边界
 
-`script_checker` 必须运行在独立 runner 中，不允许在 API 进程、轮次调度进程或宿主机 shell 中直接执行。当前基础 Docker runner 已落地，`script_checker` 的 preview / 赛中链路已通过 runner port 调用沙箱；题目包导入时会校验 `config.entry` 位于包内，并把该 entry 文件复制到服务端私有 artifact 目录，runner 执行时再把文件只读注入沙箱。
+`script_checker` 必须运行在独立 runner 中，不允许在 API 进程、轮次调度进程或宿主机 shell 中直接执行。当前基础 Docker runner 已落地，`script_checker` 的 preview / 赛中链路已通过 runner port 调用沙箱；题目包导入时会校验 `config.entry` / `config.files` 位于包内，并把声明文件复制到服务端私有 artifact 目录，runner 执行时再把文件只读注入沙箱。
 
 第一版必须具备以下安全边界。
 

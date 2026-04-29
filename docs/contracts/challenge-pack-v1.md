@@ -501,10 +501,12 @@ extensions:
   - 可选，对应模板版本字符串；未填写时平台默认回落到 `v1`
 - `extensions.awd.checker.type`
   - 必填，对应 `checker_type`
-  - 当前枚举：`legacy_probe` `http_standard`
+  - 当前枚举：`legacy_probe` `http_standard` `tcp_standard` `script_checker`
 - `extensions.awd.checker.config`
   - 必填，对应 `checker_config`
   - 对 `http_standard`，必须至少显式提供 `put_flag / get_flag`；建议同时提供 `havoc`
+  - 对 `tcp_standard`，使用 `steps` 描述 TCP connect 后的收发顺序；支持 `send`、`send_template`、`send_hex`、`expect_contains`、`expect_regex`、`timeout_ms`
+  - 对 `script_checker`，必须提供 `runtime`、`entry`、`timeout_sec`；可提供 `files` 声明 entry 依赖的同包文件
   - 这是 AWD service 的默认裁判契约，题目包导入后会进入 AWD 题库模板，管理员把题目加入赛事时默认继承该配置
 - `extensions.awd.flag_policy.mode`
   - 必填，对应 `flag_mode`
@@ -530,7 +532,64 @@ extensions:
 - AWD 题目导入成功后，平台会直接生成 `published` 状态题目，便于管理员在比赛题池里立即选题
 - 比赛里的 Checker 覆盖、分值、顺序、可见性仍然属于**比赛级配置**，不应反向写回 AWD 题目；上传后编辑只能覆盖赛事副本，不能替代题目包内的默认 checker
 - `runtime.image.ref` 必须是已构建并已推送到平台可访问 registry 的最终镜像引用；导入 AWD 题目不会自动构建 `docker/` 目录中的 Dockerfile
-- `docker/check/` 或类似目录中的 `check.py` 只作为出题人本地验证脚本和审计材料保留；当前平台正式轮次只执行 `legacy_probe` / `http_standard` 配置化 checker，不会把任意脚本作为选手附件公开或直接调度
+- `docker/check/` 或类似目录中的 `check.py` 默认只作为出题人本地验证脚本和审计材料保留；只有在 `checker.type=script_checker` 且通过 `config.entry` / `config.files` 显式声明时，平台才会把这些文件作为私有 artifact 交给 sandbox runner 执行。私有 checker 文件不会作为选手附件公开，也不会挂载进目标服务容器。
+
+### 6.1 `tcp_standard` 配置示例
+
+`tcp_standard` 适合简单 TCP / Binary 文本协议，不执行任意脚本。平台会从服务访问地址解析 `{{TARGET_HOST}}` / `{{TARGET_PORT}}`，连接后按 `steps` 顺序执行。
+
+```yaml
+checker:
+  type: tcp_standard
+  config:
+    timeout_ms: 3000
+    steps:
+      - send: "PING\n"
+        expect_contains: PONG
+      - send_template: "SET_FLAG {{FLAG}}\n"
+        expect_contains: OK
+      - send: "GET_FLAG\n"
+        expect_contains: "{{FLAG}}"
+```
+
+字段约束：
+
+- `timeout_ms`：总超时，范围 `1-60000`。
+- `steps[].send`：原样发送文本。
+- `steps[].send_template`：发送前替换模板变量，例如 `{{FLAG}}`、`{{ROUND}}`、`{{TEAM_ID}}`、`{{CHALLENGE_ID}}`、`{{TARGET_HOST}}`、`{{TARGET_PORT}}`。
+- `steps[].send_hex`：发送十六进制 payload；不能与 `send` / `send_template` 同时出现。
+- `steps[].expect_contains`：响应中必须包含指定文本。
+- `steps[].expect_regex`：响应中必须匹配指定正则。
+- `steps[].timeout_ms`：单步超时，未配置时使用总超时。
+
+### 6.2 `script_checker` 配置示例
+
+`script_checker` 适合复杂协议、多步骤业务逻辑或 `tcp_standard` 无法表达的二进制交互。脚本只能通过 sandbox runner 执行。
+
+```yaml
+checker:
+  type: script_checker
+  config:
+    runtime: python3
+    entry: docker/check/check.py
+    files:
+      - docker/check/check.py
+      - docker/check/protocol.py
+    timeout_sec: 10
+    args:
+      - "{{TARGET_URL}}"
+    env:
+      FLAG: "{{FLAG}}"
+    output: json
+```
+
+字段约束：
+
+- `entry` 必须是题目包内相对文件路径。
+- `files` 可选；未声明时默认只包含 `entry`。
+- `entry` 必须包含在 `files` 内。
+- `files` 只允许题目包内相对文件路径，不支持目录、绝对路径、`..` 或通配符。
+- 平台导入后保存私有 artifact 摘要和服务端存储路径，执行时只读注入 sandbox。
 
 ---
 

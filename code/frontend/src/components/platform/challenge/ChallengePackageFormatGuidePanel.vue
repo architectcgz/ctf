@@ -9,6 +9,7 @@ const packageTree = `challenge-package.zip    # 上传的题目包压缩文件
     app.py               # 教师编写的 Web 服务器入口示例
     requirements.txt     # 运行依赖示例
     check/check.py       # 本地 checker 脚本示例（AWD 推荐随包提供）
+    check/protocol.py    # checker 依赖文件示例（script_checker.files）
     topology.yml         # 拓扑扩展配置（extensions.topology.source）`
 
 const challengeManifest = `api_version: v1 # 固定为 v1
@@ -75,6 +76,36 @@ extensions:
     source: docker/topology.yml # 拓扑文件路径（可选）
     enabled: false # 是否启用拓扑扩展`
 
+const tcpCheckerManifest = `extensions:
+  awd:
+    service_type: binary_tcp
+    checker:
+      type: tcp_standard
+      config:
+        timeout_ms: 3000
+        steps:
+          - send: "PING\\n"
+            expect_contains: PONG
+          - send_template: "SET_FLAG {{FLAG}}\\n"
+            expect_contains: OK
+          - send: "GET_FLAG\\n"
+            expect_contains: "{{FLAG}}"`
+
+const scriptCheckerManifest = `extensions:
+  awd:
+    checker:
+      type: script_checker
+      config:
+        runtime: python3
+        entry: docker/check/check.py
+        files:
+          - docker/check/check.py
+          - docker/check/protocol.py
+        timeout_sec: 10
+        args:
+          - "{{TARGET_URL}}"
+        output: json`
+
 const statementGuide = `statement.md 写法建议
 
 - 不要写 # 题目名，页面外层已经展示标题
@@ -129,6 +160,28 @@ const statementGuide = `statement.md 写法建议
       </h2>
       <pre class="guide-code"><code>{{ challengeManifest }}</code></pre>
     </article>
+
+    <div class="guide-grid">
+      <article class="guide-section guide-section--plain">
+        <div class="guide-section__label">
+          tcp_standard
+        </div>
+        <h2 class="guide-section__title">
+          TCP Checker
+        </h2>
+        <pre class="guide-code"><code>{{ tcpCheckerManifest }}</code></pre>
+      </article>
+
+      <article class="guide-section guide-section--plain">
+        <div class="guide-section__label">
+          script_checker
+        </div>
+        <h2 class="guide-section__title">
+          私有脚本 Checker
+        </h2>
+        <pre class="guide-code"><code>{{ scriptCheckerManifest }}</code></pre>
+      </article>
+    </div>
   </main>
 </template>
 

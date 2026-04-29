@@ -1661,6 +1661,34 @@ export interface PreviewAwdCheckerReq {
 > - 试跑接口会返回 `preview_token`，后续管理员保存赛事题目配置时可通过 `awd_checker_preview_token` 把最近一次试跑结果与配置草稿绑定。
 > - 当前 readiness 与 checker preview 统一读取 `contest_awd_services.runtime_config + score_config + validation`。
 
+`tcp_standard` 配置示例：
+
+```json
+{
+  "timeout_ms": 3000,
+  "steps": [
+    { "send": "PING\n", "expect_contains": "PONG" },
+    { "send_template": "SET_FLAG {{FLAG}}\n", "expect_contains": "OK" },
+    { "send": "GET_FLAG\n", "expect_contains": "{{FLAG}}" }
+  ]
+}
+```
+
+`script_checker` 配置示例：
+
+```json
+{
+  "runtime": "python3",
+  "entry": "docker/check/check.py",
+  "files": ["docker/check/check.py", "docker/check/protocol.py"],
+  "timeout_sec": 10,
+  "args": ["{{TARGET_URL}}"],
+  "output": "json"
+}
+```
+
+`script_checker.files` 只允许题目包内相对文件路径；未声明时默认只导入 `entry`。脚本文件作为平台私有 artifact 保存，不会作为选手附件公开。
+
 ### 8.19 GET `/api/v1/admin/contests/:id/awd/rounds` / POST `/api/v1/admin/contests/:id/awd/rounds` / GET `/api/v1/admin/contests/:id/awd/rounds/:rid/services` / POST `/api/v1/admin/contests/:id/awd/rounds/:rid/services/check` / GET `/api/v1/admin/contests/:id/awd/rounds/:rid/attacks` / POST `/api/v1/admin/contests/:id/awd/rounds/:rid/attacks` / GET `/api/v1/admin/contests/:id/awd/rounds/:rid/summary`
 
 `data`：
