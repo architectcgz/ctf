@@ -12,6 +12,10 @@ export const AWD_CHECKER_FIELD_ERROR_KEYS = [
   'http_get_headers_text',
   'http_havoc_expected_status',
   'http_havoc_headers_text',
+  'script_entry',
+  'script_timeout',
+  'script_args_text',
+  'script_env_text',
 ] as const
 
 export type AWDCheckerFieldErrorKey = (typeof AWD_CHECKER_FIELD_ERROR_KEYS)[number]
@@ -33,6 +37,15 @@ export interface AWDHTTPStandardDraft {
   put_flag: AWDHTTPActionDraft
   get_flag: AWDHTTPActionDraft
   havoc: AWDHTTPActionDraft
+}
+
+export interface AWDScriptCheckerDraft {
+  runtime: string
+  entry: string
+  timeout_sec: number
+  args_text: string
+  env_text: string
+  output: 'exit_code' | 'json'
 }
 
 export interface AWDHTTPStandardPreset {
@@ -185,6 +198,11 @@ function stringifyHeaders(value: unknown): string {
   return Object.keys(headers).length > 0 ? JSON.stringify(headers, null, 2) : ''
 }
 
+function stringifyStringRecord(value: unknown): string {
+  const record = readRecord(value)
+  return Object.keys(record).length > 0 ? JSON.stringify(record, null, 2) : ''
+}
+
 function normalizeHTTPMethod(value: string, fallback: string): string {
   const method = value.trim().toUpperCase()
   return AWD_HTTP_METHOD_OPTIONS.includes(method as (typeof AWD_HTTP_METHOD_OPTIONS)[number])
@@ -333,6 +351,23 @@ export function cloneHTTPStandardDraft(draft: AWDHTTPStandardDraft): AWDHTTPStan
   }
 }
 
+export function createScriptCheckerDraft(
+  config?: Record<string, unknown> | null
+): AWDScriptCheckerDraft {
+  const output = readString(config?.output) === 'json' ? 'json' : 'exit_code'
+  const args = Array.isArray(config?.args)
+    ? (config.args as unknown[]).map((item) => String(item)).join('\n')
+    : '{{TARGET_URL}}'
+  return {
+    runtime: readString(config?.runtime) || 'python3',
+    entry: readString(config?.entry) || 'docker/check/check.py',
+    timeout_sec: readPositiveInteger(config?.timeout_sec, 10),
+    args_text: args,
+    env_text: stringifyStringRecord(config?.env),
+    output,
+  }
+}
+
 export function getHTTPStandardPresetDraft(presetId: string): AWDHTTPStandardDraft {
   const preset = AWD_HTTP_STANDARD_PRESETS.find((item) => item.id === presetId)
   return cloneHTTPStandardDraft(preset?.draft || AWD_HTTP_STANDARD_PRESETS[0].draft)
@@ -404,14 +439,78 @@ export function buildHTTPStandardCheckerConfig(
   }
 }
 
+export function buildScriptCheckerConfig(
+  draft: AWDScriptCheckerDraft,
+  strict = true
+): AWDCheckerBuildResult {
+  const errors: Partial<Record<AWDCheckerFieldErrorKey, string>> = {}
+  const entry = draft.entry.trim()
+  if (!entry && strict) {
+    errors.script_entry = '入口文件不能为空'
+  }
+  if (entry.startsWith('/') || entry.includes('..')) {
+    errors.script_entry = '入口文件必须是题目包内相对路径'
+  }
+  if (!Number.isInteger(draft.timeout_sec) || draft.timeout_sec <= 0 || draft.timeout_sec > 60) {
+    errors.script_timeout = '超时时间必须是 1-60 秒'
+  }
+
+  const args = draft.args_text
+    .split('\n')
+    .map((item) => item.trim())
+    .filter(Boolean)
+
+  let env: Record<string, string> = {}
+  const envText = draft.env_text.trim()
+  if (envText) {
+    try {
+      const parsed = JSON.parse(envText)
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+        errors.script_env_text = '环境变量必须是 JSON 对象'
+      } else {
+        env = Object.fromEntries(
+          Object.entries(parsed as Record<string, unknown>).map(([key, value]) => [
+            key,
+            String(value),
+          ])
+        )
+      }
+    } catch {
+      errors.script_env_text = '环境变量必须是合法 JSON'
+    }
+  }
+
+  return {
+    config: {
+      runtime: draft.runtime.trim() || 'python3',
+      entry,
+      timeout_sec:
+        Number.isInteger(draft.timeout_sec) && draft.timeout_sec > 0 ? draft.timeout_sec : 10,
+      args,
+      ...(Object.keys(env).length > 0 ? { env } : {}),
+      output: draft.output,
+    },
+    errors,
+  }
+}
+
 export function buildCheckerConfigPreview(
   checkerType: AWDCheckerType,
   drafts: {
     legacyProbeDraft: AWDLegacyProbeDraft
     httpStandardDraft: AWDHTTPStandardDraft
+    scriptCheckerDraft?: AWDScriptCheckerDraft
   }
 ): Record<string, unknown> {
-  return checkerType === 'http_standard'
-    ? buildHTTPStandardCheckerConfig(drafts.httpStandardDraft, false).config
-    : buildLegacyProbeCheckerConfig(drafts.legacyProbeDraft).config
+  switch (checkerType) {
+    case 'http_standard':
+      return buildHTTPStandardCheckerConfig(drafts.httpStandardDraft, false).config
+    case 'script_checker':
+      return buildScriptCheckerConfig(
+        drafts.scriptCheckerDraft || createScriptCheckerDraft(),
+        false
+      ).config
+    default:
+      return buildLegacyProbeCheckerConfig(drafts.legacyProbeDraft).config
+  }
 }

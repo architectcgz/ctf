@@ -1550,7 +1550,7 @@ export interface CreateAdminContestAWDServiceReq {
   display_name?: string
   order?: number
   is_visible?: boolean
-  checker_type?: 'legacy_probe' | 'http_standard'
+  checker_type?: 'legacy_probe' | 'http_standard' | 'tcp_standard' | 'script_checker'
   checker_config?: Record<string, unknown>
   awd_sla_score?: number
   awd_defense_score?: number
@@ -1567,7 +1567,7 @@ export interface UpdateAdminContestAWDServiceReq {
   display_name?: string
   order?: number
   is_visible?: boolean
-  checker_type?: 'legacy_probe' | 'http_standard'
+  checker_type?: 'legacy_probe' | 'http_standard' | 'tcp_standard' | 'script_checker'
   checker_config?: Record<string, unknown>
   awd_sla_score?: number
   awd_defense_score?: number
@@ -1600,7 +1600,7 @@ export type AWDReadinessGlobalReason = 'no_challenges'
 export interface AWDReadinessItemData {
   challenge_id: ID
   title: string
-  checker_type?: 'legacy_probe' | 'http_standard'
+  checker_type?: 'legacy_probe' | 'http_standard' | 'tcp_standard' | 'script_checker'
   validation_state: 'pending' | 'passed' | 'failed' | 'stale'
   last_preview_at?: ISODateTime
   last_access_url?: string
@@ -1637,7 +1637,7 @@ export interface AWDCheckerPreviewContextData {
 }
 
 export interface AWDCheckerPreviewData {
-  checker_type?: 'legacy_probe' | 'http_standard'
+  checker_type?: 'legacy_probe' | 'http_standard' | 'tcp_standard' | 'script_checker'
   service_status: 'up' | 'down' | 'compromised'
   check_result: Record<string, unknown>
   preview_context: AWDCheckerPreviewContextData
@@ -1650,7 +1650,7 @@ export interface AWDCheckerPreviewData {
 ```ts
 export interface PreviewAwdCheckerReq {
   challenge_id: ID
-  checker_type: 'legacy_probe' | 'http_standard'
+  checker_type: 'legacy_probe' | 'http_standard' | 'tcp_standard' | 'script_checker'
   checker_config?: Record<string, unknown>
   access_url: string
   preview_flag?: string

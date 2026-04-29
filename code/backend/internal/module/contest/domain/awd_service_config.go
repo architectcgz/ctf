@@ -13,6 +13,10 @@ func NormalizeAWDCheckerType(value string) model.AWDCheckerType {
 		return model.AWDCheckerTypeLegacyProbe
 	case string(model.AWDCheckerTypeHTTPStandard):
 		return model.AWDCheckerTypeHTTPStandard
+	case string(model.AWDCheckerTypeTCPStandard):
+		return model.AWDCheckerTypeTCPStandard
+	case string(model.AWDCheckerTypeScript):
+		return model.AWDCheckerTypeScript
 	default:
 		return ""
 	}

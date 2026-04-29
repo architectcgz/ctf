@@ -87,6 +87,10 @@ function getCheckerTypeLabel(value?: string): string {
       return '基础探活'
     case 'http_standard':
       return 'HTTP 标准 Checker'
+    case 'tcp_standard':
+      return 'TCP 标准 Checker'
+    case 'script_checker':
+      return '脚本 Checker'
     default:
       return '未配置'
   }

@@ -1027,6 +1027,8 @@ function normalizeAWDCheckerType(value: unknown): AWDCheckerType | undefined {
   switch (value) {
     case 'legacy_probe':
     case 'http_standard':
+    case 'tcp_standard':
+    case 'script_checker':
       return value
     default:
       return undefined

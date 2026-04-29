@@ -350,6 +350,8 @@ git commit -m "feat(awd): 增加checker安全沙箱runner"
 
 ## Task 4: 接入 `script_checker`
 
+当前进度：后端 `script_checker` 类型契约、配置解析、preview / 赛中 runner 分派和管理端最小配置 UI 已完成。题目包私有 checker artifact 的导入、存储、挂载仍未完成。
+
 **Files:**
 - Create: `code/backend/internal/module/contest/application/jobs/awd_script_checker_config.go`
 - Create: `code/backend/internal/module/contest/application/jobs/awd_script_checker_runner.go`
@@ -383,6 +385,8 @@ checker:
 
 - [ ] **Step 3: 实现配置解析与导入校验**
 
+进度：运行态配置解析已完成；题目包导入校验和 artifact 存储仍待实现。
+
 校验：
 
 - runtime 必须在 allowlist。
@@ -390,7 +394,7 @@ checker:
 - timeout 在配置范围内。
 - args/env 只允许模板变量。
 
-- [ ] **Step 4: 实现 preview 和轮次分派**
+- [x] **Step 4: 实现 preview 和轮次分派**
 
 `script_checker` 不直接执行脚本，只创建 runner job。
 

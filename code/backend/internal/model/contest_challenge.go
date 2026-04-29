@@ -11,6 +11,8 @@ type AWDCheckerType string
 const (
 	AWDCheckerTypeLegacyProbe  AWDCheckerType = "legacy_probe"
 	AWDCheckerTypeHTTPStandard AWDCheckerType = "http_standard"
+	AWDCheckerTypeTCPStandard  AWDCheckerType = "tcp_standard"
+	AWDCheckerTypeScript       AWDCheckerType = "script_checker"
 )
 
 type AWDCheckerValidationState string

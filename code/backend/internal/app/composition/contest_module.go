@@ -1,6 +1,8 @@
 package composition
 
 import (
+	"go.uber.org/zap"
+
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	contesthttp "ctf-platform/internal/module/contest/api/http"
@@ -149,6 +151,11 @@ func buildContestAWDHandler(deps *contestModuleDeps) (*contesthttp.AWDHandler, *
 		contestinfra.NewDockerAWDFlagInjector(db, deps.containerFiles, log.Named("awd_flag_injector")),
 		log.Named("awd_round_updater"),
 	)
+	if checkerRunner, err := contestinfra.NewDockerCheckerRunner(cfg.Contest.AWD.CheckerSandbox); err == nil {
+		awdUpdater.SetCheckerRunner(checkerRunner)
+	} else {
+		log.Named("awd_round_updater").Warn("checker_sandbox_runner_unavailable", zap.Error(err))
+	}
 	awdCommands := contestcmd.NewAWDService(
 		deps.awdRepo,
 		deps.contestLookup,

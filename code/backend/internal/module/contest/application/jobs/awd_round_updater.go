@@ -20,13 +20,14 @@ const (
 )
 
 type AWDRoundUpdater struct {
-	repo       contestports.AWDRepository
-	redis      *redislib.Client
-	cfg        config.ContestAWDConfig
-	flagSecret string
-	injector   contestports.AWDFlagInjector
-	httpClient *http.Client
-	log        *zap.Logger
+	repo          contestports.AWDRepository
+	redis         *redislib.Client
+	cfg           config.ContestAWDConfig
+	flagSecret    string
+	injector      contestports.AWDFlagInjector
+	checkerRunner contestports.CheckerRunner
+	httpClient    *http.Client
+	log           *zap.Logger
 }
 
 type awdServiceTargetKey struct {

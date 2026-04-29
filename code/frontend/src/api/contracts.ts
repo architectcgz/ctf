@@ -383,7 +383,7 @@ export type AWDRoundStatus = 'pending' | 'running' | 'finished'
 export type AWDServiceStatus = 'up' | 'down' | 'compromised'
 export type AWDAttackType = 'flag_capture' | 'service_exploit'
 export type AWDAttackSource = 'legacy' | 'manual_attack_log' | 'submission'
-export type AWDCheckerType = 'legacy_probe' | 'http_standard'
+export type AWDCheckerType = 'legacy_probe' | 'http_standard' | 'tcp_standard' | 'script_checker'
 export type AWDReadinessAction = 'create_round' | 'run_current_round_check' | 'start_contest'
 export type AWDReadinessBlockingReason =
   | 'missing_checker'

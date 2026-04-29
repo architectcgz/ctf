@@ -164,7 +164,7 @@ type AWDReadinessItemResp struct {
 type PreviewAWDCheckerReq struct {
 	ServiceID        int64          `json:"service_id" binding:"omitempty,min=1"`
 	AWDChallengeID   int64          `json:"awd_challenge_id" binding:"omitempty,min=1"`
-	CheckerType      string         `json:"checker_type" binding:"required,oneof=legacy_probe http_standard"`
+	CheckerType      string         `json:"checker_type" binding:"required,oneof=legacy_probe http_standard tcp_standard script_checker"`
 	CheckerConfig    map[string]any `json:"checker_config"`
 	AccessURL        string         `json:"access_url" binding:"omitempty,max=1024"`
 	PreviewFlag      string         `json:"preview_flag" binding:"omitempty,max=512"`
