@@ -62,6 +62,8 @@ func (u *AWDRoundUpdater) previewServiceCheck(
 	switch checkerType {
 	case model.AWDCheckerTypeHTTPStandard:
 		return u.buildAWDPreviewOutcomeFromHTTPStandard(ctx, definition, instances, previewContext)
+	case model.AWDCheckerTypeTCPStandard:
+		return u.buildAWDPreviewOutcomeFromTCPStandard(ctx, definition, instances, previewContext)
 	case model.AWDCheckerTypeScript:
 		return u.buildAWDPreviewOutcomeFromScriptChecker(ctx, definition, instances, previewContext)
 	default:

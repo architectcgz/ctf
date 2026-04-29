@@ -8,7 +8,7 @@
 - `script_checker`：执行题目包提供的私有 checker 脚本，用于复杂业务逻辑、多步骤协议和非 HTTP 服务。
 - `checker-runner`：独立安全沙箱 runner，作为所有脚本型 checker 的唯一执行环境。
 
-这份文档描述目标架构与安全边界。当前已实现能力包含 `legacy_probe`、`http_standard`、基础 Docker sandbox runner port、`script_checker` 的 preview / 赛中 runner 调用链，以及题目包私有 checker entry artifact 的导入、存储和只读注入。`tcp_standard` 仍需按计划新增。
+这份文档描述目标架构与安全边界。当前已实现能力包含 `legacy_probe`、`http_standard`、`tcp_standard` 基础结构化 TCP runner、基础 Docker sandbox runner port、`script_checker` 的 preview / 赛中 runner 调用链，以及题目包私有 checker entry artifact 的导入、存储和只读注入。
 
 ## 现有边界
 
