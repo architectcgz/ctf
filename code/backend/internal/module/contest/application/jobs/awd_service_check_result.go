@@ -26,6 +26,8 @@ func (u *AWDRoundUpdater) checkTeamChallengeServices(
 	switch checkerType {
 	case model.AWDCheckerTypeHTTPStandard:
 		outcome, err = u.buildAWDCheckOutcomeFromHTTPStandard(ctx, contestID, round, teamID, definition, instances, source)
+	case model.AWDCheckerTypeTCPStandard:
+		outcome, err = u.buildAWDCheckOutcomeFromTCPStandard(ctx, contestID, round, teamID, definition, instances, source, "")
 	case model.AWDCheckerTypeScript:
 		roundFlag, flagErr := u.resolveRoundFlag(ctx, contestID, round, teamID, definition)
 		if flagErr != nil {

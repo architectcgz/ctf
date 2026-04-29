@@ -200,6 +200,8 @@ git commit -m "feat(awd): 扩展checker类型契约"
 
 ## Task 2: 实现 `tcp_standard` runner
 
+当前进度：后端 `tcp_standard` 配置解析、preview / 赛中 runner 分派和本地 TCP fixture 验证已完成。第一版支持 connect、`send` / `send_template` / `send_hex`、`expect_contains` / `expect_regex`、总超时和单步超时。
+
 **Files:**
 - Create: `code/backend/internal/module/contest/application/jobs/awd_tcp_checker_config.go`
 - Create: `code/backend/internal/module/contest/application/jobs/awd_tcp_checker_runner.go`
@@ -208,7 +210,7 @@ git commit -m "feat(awd): 扩展checker类型契约"
 - Modify: `code/backend/internal/module/contest/application/jobs/awd_checker_preview.go`
 - Modify: `code/backend/internal/module/contest/application/jobs/awd_round_updater.go`
 
-- [ ] **Step 1: 写 TCP fixture 失败测试**
+- [x] **Step 1: 写 TCP fixture 失败测试**
 
 测试启动本地 TCP listener，协议：
 
@@ -218,7 +220,7 @@ git commit -m "feat(awd): 扩展checker类型契约"
 
 断言 runner 输出 `service_status=up`，`status_reason=healthy`。
 
-- [ ] **Step 2: 运行失败测试**
+- [x] **Step 2: 运行失败测试**
 
 Run:
 
@@ -228,7 +230,7 @@ cd code/backend && go test ./internal/module/contest/application/jobs -run TCPSt
 
 Expected: FAIL，runner 不存在。
 
-- [ ] **Step 3: 实现配置解析**
+- [x] **Step 3: 实现配置解析**
 
 支持字段：
 
@@ -241,15 +243,15 @@ Expected: FAIL，runner 不存在。
 - `steps[].expect_regex`
 - `havoc[]`
 
-- [ ] **Step 4: 实现 runner**
+- [x] **Step 4: 实现 runner**
 
 使用 `net.Dialer` + deadline。每步设置 read/write deadline，总超时由 context 控制。
 
-- [ ] **Step 5: 接入 preview 和 round updater**
+- [x] **Step 5: 接入 preview 和 round updater**
 
 在 checker type 分派中新增 `tcp_standard`。
 
-- [ ] **Step 6: 验证**
+- [x] **Step 6: 验证**
 
 Run:
 
