@@ -95,18 +95,15 @@ func TestContestAWDServiceServiceCreateFromTemplate(t *testing.T) {
 	if err != nil {
 		t.Fatalf("create contest awd service: %v", err)
 	}
-	if resp.AWDChallengeID == nil || *resp.AWDChallengeID != 1001 {
+	if resp.AWDChallengeID != 1001 {
 		t.Fatalf("unexpected AWD challenge id: %+v", resp.AWDChallengeID)
-	}
-	if resp.ChallengeID != 1001 {
-		t.Fatalf("unexpected challenge id: %d", resp.ChallengeID)
 	}
 
 	stored, err := awdRepo.FindContestAWDServiceByContestAndID(context.Background(), 801, resp.ID)
 	if err != nil {
 		t.Fatalf("FindContestAWDServiceByContestAndID() error = %v", err)
 	}
-	if stored.AWDChallengeID == nil || *stored.AWDChallengeID != 1001 {
+	if stored.AWDChallengeID != 1001 {
 		t.Fatalf("unexpected stored AWD challenge id: %+v", stored.AWDChallengeID)
 	}
 	if stored.DisplayName != "Bank Portal" {
@@ -612,9 +609,9 @@ func TestContestAWDServiceServiceCreateConsumesCheckerPreviewToken(t *testing.T)
 				"checked_at": now.Format(time.RFC3339),
 			},
 			PreviewContext: dto.AWDCheckerPreviewContextResp{
-				AccessURL:   "http://preview.internal",
-				PreviewFlag: "flag{preview}",
-				ChallengeID: 1006,
+				AccessURL:      "http://preview.internal",
+				PreviewFlag:    "flag{preview}",
+				AWDChallengeID: 1006,
 			},
 		},
 	)
@@ -817,10 +814,10 @@ func TestContestAWDServiceServiceUpdateConsumesCheckerPreviewTokenByServiceID(t 
 				"checked_at": now.Format(time.RFC3339),
 			},
 			PreviewContext: dto.AWDCheckerPreviewContextResp{
-				ServiceID:   resp.ID,
-				AccessURL:   "http://preview-update.internal",
-				PreviewFlag: "flag{preview}",
-				ChallengeID: 1007,
+				ServiceID:      resp.ID,
+				AccessURL:      "http://preview-update.internal",
+				PreviewFlag:    "flag{preview}",
+				AWDChallengeID: 1007,
 			},
 		},
 	)

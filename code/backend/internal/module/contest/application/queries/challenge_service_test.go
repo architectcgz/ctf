@@ -71,8 +71,7 @@ func TestChallengeServiceListAdminChallengesReturnsRelationFieldsOnly(t *testing
 	templateID := int64(3001)
 	if err := awdRepo.CreateContestAWDService(context.Background(), &model.ContestAWDService{
 		ContestID:      601,
-		ChallengeID:    9101,
-		AWDChallengeID: &templateID,
+		AWDChallengeID: templateID,
 		DisplayName:    "Bank Portal",
 		Order:          0,
 		IsVisible:      true,
@@ -139,7 +138,7 @@ func TestChallengeServiceGetContestChallengesReadsAWDServicesFromServiceSnapshot
 	if err := awdRepo.CreateContestAWDService(context.Background(), &model.ContestAWDService{
 		ID:              7201,
 		ContestID:       611,
-		ChallengeID:     9111,
+		AWDChallengeID:  9111,
 		DisplayName:     "Bank Portal",
 		Order:           0,
 		IsVisible:       true,
@@ -161,7 +160,7 @@ func TestChallengeServiceGetContestChallengesReadsAWDServicesFromServiceSnapshot
 	if resp[0].AWDServiceID == nil || *resp[0].AWDServiceID != 7201 {
 		t.Fatalf("expected awd service id 7201, got %+v", resp[0])
 	}
-	if resp[0].ChallengeID != 9111 || resp[0].Title != "Bank Portal" || resp[0].Category != "web" || resp[0].Difficulty != model.ChallengeDifficultyMedium {
+	if resp[0].AWDChallengeID == nil || *resp[0].AWDChallengeID != 9111 || resp[0].Title != "Bank Portal" || resp[0].Category != "web" || resp[0].Difficulty != model.ChallengeDifficultyMedium {
 		t.Fatalf("expected awd challenge info from service snapshot, got %+v", resp[0])
 	}
 }

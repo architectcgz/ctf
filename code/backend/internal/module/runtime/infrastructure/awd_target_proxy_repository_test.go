@@ -39,7 +39,7 @@ func TestFindAWDTargetProxyScopeReturnsCrossTeamRunningInstance(t *testing.T) {
 	seedAWDTargetProxyRow(t, db, &model.Team{ID: victimTeamID, ContestID: contestID, Name: "Blue", CaptainID: 1002, InviteCode: "blue", MaxMembers: 4, CreatedAt: now, UpdatedAt: now})
 	seedAWDTargetProxyRow(t, db, &model.TeamMember{ContestID: contestID, TeamID: attackerTeamID, UserID: 1001, JoinedAt: now, CreatedAt: now})
 	seedAWDTargetProxyRow(t, db, &model.AWDRound{ID: 9601, ContestID: contestID, RoundNumber: 1, Status: model.AWDRoundStatusRunning, StartedAt: &now, CreatedAt: now, UpdatedAt: now})
-	seedAWDTargetProxyRow(t, db, &model.ContestAWDService{ID: serviceID, ContestID: contestID, ChallengeID: challengeID, DisplayName: "Web", IsVisible: true, CreatedAt: now, UpdatedAt: now})
+	seedAWDTargetProxyRow(t, db, &model.ContestAWDService{ID: serviceID, ContestID: contestID, AWDChallengeID: challengeID, DisplayName: "Web", IsVisible: true, CreatedAt: now, UpdatedAt: now})
 	seedAWDTargetProxyRow(t, db, &model.Instance{
 		ID:          instanceID,
 		UserID:      1002,
@@ -69,7 +69,7 @@ func TestFindAWDTargetProxyScopeReturnsCrossTeamRunningInstance(t *testing.T) {
 	if scope.AttackerTeamID != attackerTeamID || scope.VictimTeamID != victimTeamID {
 		t.Fatalf("unexpected team scope: %+v", scope)
 	}
-	if scope.ServiceID != serviceID || scope.ChallengeID != challengeID {
+	if scope.ServiceID != serviceID || scope.AWDChallengeID != challengeID {
 		t.Fatalf("unexpected service scope: %+v", scope)
 	}
 }
@@ -87,7 +87,7 @@ func TestFindAWDTargetProxyScopeRejectsOwnTeamTarget(t *testing.T) {
 	seedAWDTargetProxyRow(t, db, &model.Team{ID: teamID, ContestID: contestID, Name: "Red", CaptainID: 1003, InviteCode: "red-own", MaxMembers: 4, CreatedAt: now, UpdatedAt: now})
 	seedAWDTargetProxyRow(t, db, &model.TeamMember{ContestID: contestID, TeamID: teamID, UserID: 1003, JoinedAt: now, CreatedAt: now})
 	seedAWDTargetProxyRow(t, db, &model.AWDRound{ID: 9602, ContestID: contestID, RoundNumber: 1, Status: model.AWDRoundStatusRunning, StartedAt: &now, CreatedAt: now, UpdatedAt: now})
-	seedAWDTargetProxyRow(t, db, &model.ContestAWDService{ID: serviceID, ContestID: contestID, ChallengeID: 9402, DisplayName: "Web", IsVisible: true, CreatedAt: now, UpdatedAt: now})
+	seedAWDTargetProxyRow(t, db, &model.ContestAWDService{ID: serviceID, ContestID: contestID, AWDChallengeID: 9402, DisplayName: "Web", IsVisible: true, CreatedAt: now, UpdatedAt: now})
 	seedAWDTargetProxyRow(t, db, &model.Instance{
 		ID:          9502,
 		UserID:      1003,
@@ -128,7 +128,7 @@ func TestFindAWDDefenseSSHScopeReturnsOwnTeamRunningInstance(t *testing.T) {
 	seedAWDTargetProxyRow(t, db, &model.Team{ID: teamID, ContestID: contestID, Name: "Red", CaptainID: 1004, InviteCode: "redssh", MaxMembers: 4, CreatedAt: now, UpdatedAt: now})
 	seedAWDTargetProxyRow(t, db, &model.TeamMember{ContestID: contestID, TeamID: teamID, UserID: 1004, JoinedAt: now, CreatedAt: now})
 	seedAWDTargetProxyRow(t, db, &model.AWDRound{ID: 9603, ContestID: contestID, RoundNumber: 1, Status: model.AWDRoundStatusRunning, StartedAt: &now, CreatedAt: now, UpdatedAt: now})
-	seedAWDTargetProxyRow(t, db, &model.ContestAWDService{ID: serviceID, ContestID: contestID, ChallengeID: challengeID, DisplayName: "Web", IsVisible: true, CreatedAt: now, UpdatedAt: now})
+	seedAWDTargetProxyRow(t, db, &model.ContestAWDService{ID: serviceID, ContestID: contestID, AWDChallengeID: challengeID, DisplayName: "Web", IsVisible: true, CreatedAt: now, UpdatedAt: now})
 	seedAWDTargetProxyRow(t, db, &model.Instance{
 		ID:          instanceID,
 		UserID:      1004,
@@ -155,7 +155,7 @@ func TestFindAWDDefenseSSHScopeReturnsOwnTeamRunningInstance(t *testing.T) {
 	if scope.InstanceID != instanceID || scope.ContainerID != "ctr-red-web" {
 		t.Fatalf("unexpected instance scope: %+v", scope)
 	}
-	if scope.TeamID != teamID || scope.ServiceID != serviceID || scope.ChallengeID != challengeID {
+	if scope.TeamID != teamID || scope.ServiceID != serviceID || scope.AWDChallengeID != challengeID {
 		t.Fatalf("unexpected team/service scope: %+v", scope)
 	}
 }
@@ -176,7 +176,7 @@ func TestFindAWDDefenseSSHScopeRejectsOtherTeamInstance(t *testing.T) {
 	seedAWDTargetProxyRow(t, db, &model.Team{ID: otherTeamID, ContestID: contestID, Name: "Blue", CaptainID: 1006, InviteCode: "othssh", MaxMembers: 4, CreatedAt: now, UpdatedAt: now})
 	seedAWDTargetProxyRow(t, db, &model.TeamMember{ContestID: contestID, TeamID: ownTeamID, UserID: 1005, JoinedAt: now, CreatedAt: now})
 	seedAWDTargetProxyRow(t, db, &model.AWDRound{ID: 9604, ContestID: contestID, RoundNumber: 1, Status: model.AWDRoundStatusRunning, StartedAt: &now, CreatedAt: now, UpdatedAt: now})
-	seedAWDTargetProxyRow(t, db, &model.ContestAWDService{ID: serviceID, ContestID: contestID, ChallengeID: challengeID, DisplayName: "Web", IsVisible: true, CreatedAt: now, UpdatedAt: now})
+	seedAWDTargetProxyRow(t, db, &model.ContestAWDService{ID: serviceID, ContestID: contestID, AWDChallengeID: challengeID, DisplayName: "Web", IsVisible: true, CreatedAt: now, UpdatedAt: now})
 	seedAWDTargetProxyRow(t, db, &model.Instance{
 		ID:          9504,
 		UserID:      1006,

@@ -106,8 +106,7 @@ func (s *ContestAWDServiceService) CreateContestAWDService(ctx context.Context, 
 	}
 	record := &model.ContestAWDService{
 		ContestID:         contestID,
-		ChallengeID:       awdChallenge.ID,
-		AWDChallengeID:    &req.AWDChallengeID,
+		AWDChallengeID:    req.AWDChallengeID,
 		DisplayName:       firstNonEmpty(req.DisplayName, awdChallenge.Name),
 		ServiceSnapshot:   buildContestAWDServiceSnapshot(awdChallenge),
 		Order:             req.Order,
@@ -117,7 +116,6 @@ func (s *ContestAWDServiceService) CreateContestAWDService(ctx context.Context, 
 		LastPreviewAt:     lastPreviewAt,
 		LastPreviewResult: lastPreviewResult,
 		RuntimeConfig: buildContestAWDServiceRuntimeConfig(
-			awdChallenge.ID,
 			checkerType,
 			checkerConfig,
 			awdChallenge.RuntimeConfig,
@@ -181,7 +179,6 @@ func (s *ContestAWDServiceService) UpdateContestAWDService(ctx context.Context, 
 			return errcode.ErrInternal.WithCause(err)
 		}
 		updates["awd_challenge_id"] = *req.AWDChallengeID
-		updates["challenge_id"] = awdChallenge.ID
 		updates["service_snapshot"] = buildContestAWDServiceSnapshot(awdChallenge)
 		defaultCheckerType = awdChallenge.CheckerType
 		defaultCheckerConfig = awdChallenge.CheckerConfig
@@ -207,7 +204,6 @@ func (s *ContestAWDServiceService) UpdateContestAWDService(ctx context.Context, 
 	}
 	if req.AWDChallengeID != nil || req.CheckerType != nil || req.CheckerConfig != nil {
 		updates["runtime_config"] = buildContestAWDServiceRuntimeConfig(
-			stored.ChallengeID,
 			checkerType,
 			checkerConfig,
 			extraRuntimeConfig,

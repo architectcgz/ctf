@@ -24,7 +24,7 @@ CREATE TABLE public.awd_attack_logs (
     round_id bigint NOT NULL,
     attacker_team_id bigint NOT NULL,
     victim_team_id bigint NOT NULL,
-    challenge_id bigint NOT NULL,
+    awd_challenge_id bigint NOT NULL,
     attack_type character varying(32) NOT NULL,
     submitted_flag character varying(512) DEFAULT NULL::character varying,
     is_success boolean DEFAULT false NOT NULL,
@@ -107,7 +107,7 @@ CREATE TABLE public.awd_team_services (
     id bigint NOT NULL,
     round_id bigint NOT NULL,
     team_id bigint NOT NULL,
-    challenge_id bigint NOT NULL,
+    awd_challenge_id bigint NOT NULL,
     service_status character varying(16) DEFAULT 'up'::character varying NOT NULL,
     check_result jsonb DEFAULT '{}'::jsonb NOT NULL,
     attack_received integer DEFAULT 0 NOT NULL,
@@ -135,7 +135,7 @@ CREATE TABLE public.awd_traffic_events (
     round_id bigint NOT NULL,
     attacker_team_id bigint NOT NULL,
     victim_team_id bigint NOT NULL,
-    challenge_id bigint NOT NULL,
+    awd_challenge_id bigint NOT NULL,
     method character varying(16) NOT NULL,
     path character varying(1024) NOT NULL,
     status_code integer NOT NULL,
@@ -310,8 +310,7 @@ ALTER SEQUENCE public.contest_announcements_id_seq OWNED BY public.contest_annou
 CREATE TABLE public.contest_awd_services (
     id bigint NOT NULL,
     contest_id bigint NOT NULL,
-    challenge_id bigint NOT NULL,
-    awd_challenge_id bigint,
+    awd_challenge_id bigint NOT NULL,
     display_name character varying(128) DEFAULT ''::character varying NOT NULL,
     "order" integer DEFAULT 0 NOT NULL,
     is_visible boolean DEFAULT true NOT NULL,
@@ -997,7 +996,7 @@ CREATE INDEX idx_contest_announcements_contest_created ON public.contest_announc
 
 CREATE INDEX idx_contest_awd_services_contest_order ON public.contest_awd_services USING btree (contest_id, "order", id) WHERE (deleted_at IS NULL);
 
-CREATE INDEX idx_contest_awd_services_awd_challenge ON public.contest_awd_services USING btree (awd_challenge_id) WHERE ((deleted_at IS NULL) AND (awd_challenge_id IS NOT NULL));
+CREATE INDEX idx_contest_awd_services_awd_challenge ON public.contest_awd_services USING btree (awd_challenge_id) WHERE (deleted_at IS NULL);
 
 CREATE UNIQUE INDEX idx_contest_challenges_active_order ON public.contest_challenges USING btree (contest_id, "order") WHERE (deleted_at IS NULL);
 
@@ -1111,7 +1110,7 @@ CREATE UNIQUE INDEX uk_challenge_hints_challenge_level ON public.challenge_hints
 
 CREATE UNIQUE INDEX uk_challenge_tags ON public.challenge_tags USING btree (challenge_id, tag_id);
 
-CREATE UNIQUE INDEX uk_contest_awd_services_contest_challenge ON public.contest_awd_services USING btree (contest_id, challenge_id) WHERE (deleted_at IS NULL);
+CREATE UNIQUE INDEX uk_contest_awd_services_contest_awd_challenge ON public.contest_awd_services USING btree (contest_id, awd_challenge_id) WHERE (deleted_at IS NULL);
 
 CREATE UNIQUE INDEX uk_contest_reg_user ON public.contest_registrations USING btree (contest_id, user_id);
 
@@ -1161,7 +1160,7 @@ ALTER TABLE ONLY public.awd_attack_logs
     ADD CONSTRAINT awd_attack_logs_attacker_team_id_fkey FOREIGN KEY (attacker_team_id) REFERENCES public.teams(id) ON DELETE CASCADE;
 
 ALTER TABLE ONLY public.awd_attack_logs
-    ADD CONSTRAINT awd_attack_logs_challenge_id_fkey FOREIGN KEY (challenge_id) REFERENCES public.challenges(id) ON DELETE RESTRICT;
+    ADD CONSTRAINT awd_attack_logs_awd_challenge_id_fkey FOREIGN KEY (awd_challenge_id) REFERENCES public.awd_challenges(id) ON DELETE RESTRICT;
 
 ALTER TABLE ONLY public.awd_attack_logs
     ADD CONSTRAINT awd_attack_logs_round_id_fkey FOREIGN KEY (round_id) REFERENCES public.awd_rounds(id) ON DELETE CASCADE;
@@ -1173,7 +1172,7 @@ ALTER TABLE ONLY public.awd_rounds
     ADD CONSTRAINT awd_rounds_contest_id_fkey FOREIGN KEY (contest_id) REFERENCES public.contests(id) ON DELETE CASCADE;
 
 ALTER TABLE ONLY public.awd_team_services
-    ADD CONSTRAINT awd_team_services_challenge_id_fkey FOREIGN KEY (challenge_id) REFERENCES public.challenges(id) ON DELETE RESTRICT;
+    ADD CONSTRAINT awd_team_services_awd_challenge_id_fkey FOREIGN KEY (awd_challenge_id) REFERENCES public.awd_challenges(id) ON DELETE RESTRICT;
 
 ALTER TABLE ONLY public.awd_team_services
     ADD CONSTRAINT awd_team_services_round_id_fkey FOREIGN KEY (round_id) REFERENCES public.awd_rounds(id) ON DELETE CASCADE;
@@ -1185,7 +1184,7 @@ ALTER TABLE ONLY public.awd_traffic_events
     ADD CONSTRAINT awd_traffic_events_attacker_team_id_fkey FOREIGN KEY (attacker_team_id) REFERENCES public.teams(id) ON DELETE CASCADE;
 
 ALTER TABLE ONLY public.awd_traffic_events
-    ADD CONSTRAINT awd_traffic_events_challenge_id_fkey FOREIGN KEY (challenge_id) REFERENCES public.challenges(id) ON DELETE RESTRICT;
+    ADD CONSTRAINT awd_traffic_events_awd_challenge_id_fkey FOREIGN KEY (awd_challenge_id) REFERENCES public.awd_challenges(id) ON DELETE RESTRICT;
 
 ALTER TABLE ONLY public.awd_traffic_events
     ADD CONSTRAINT awd_traffic_events_contest_id_fkey FOREIGN KEY (contest_id) REFERENCES public.contests(id) ON DELETE CASCADE;

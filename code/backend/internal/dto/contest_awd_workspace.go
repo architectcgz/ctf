@@ -22,7 +22,7 @@ type ContestAWDWorkspaceTeamResp struct {
 
 type ContestAWDWorkspaceServiceResp struct {
 	ServiceID      int64                `json:"service_id"`
-	ChallengeID    int64                `json:"challenge_id"`
+	AWDChallengeID int64                `json:"awd_challenge_id"`
 	InstanceID     int64                `json:"instance_id,omitempty"`
 	AccessURL      string               `json:"access_url,omitempty"`
 	ServiceStatus  string               `json:"service_status,omitempty"`
@@ -41,19 +41,19 @@ type ContestAWDWorkspaceTargetTeamResp struct {
 }
 
 type ContestAWDWorkspaceTargetServiceResp struct {
-	ServiceID   int64 `json:"service_id"`
-	ChallengeID int64 `json:"challenge_id"`
-	Reachable   bool  `json:"reachable"`
+	ServiceID      int64 `json:"service_id"`
+	AWDChallengeID int64 `json:"awd_challenge_id"`
+	Reachable      bool  `json:"reachable"`
 }
 
 type ContestAWDWorkspaceRecentEventResp struct {
-	ID           int64     `json:"id"`
-	Direction    string    `json:"direction"`
-	ServiceID    int64     `json:"service_id"`
-	ChallengeID  int64     `json:"challenge_id"`
-	PeerTeamID   int64     `json:"peer_team_id"`
-	PeerTeamName string    `json:"peer_team_name"`
-	IsSuccess    bool      `json:"is_success"`
-	ScoreGained  int       `json:"score_gained"`
-	CreatedAt    time.Time `json:"created_at"`
+	ID             int64     `json:"id"`
+	Direction      string    `json:"direction"`
+	ServiceID      int64     `json:"service_id"`
+	AWDChallengeID int64     `json:"awd_challenge_id"`
+	PeerTeamID     int64     `json:"peer_team_id"`
+	PeerTeamName   string    `json:"peer_team_name"`
+	IsSuccess      bool      `json:"is_success"`
+	ScoreGained    int       `json:"score_gained"`
+	CreatedAt      time.Time `json:"created_at"`
 }

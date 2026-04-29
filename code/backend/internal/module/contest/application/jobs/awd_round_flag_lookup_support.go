@@ -85,7 +85,7 @@ func (u *AWDRoundUpdater) resolveRoundFlag(
 		contestID,
 		round.RoundNumber,
 		teamID,
-		definition.ChallengeID,
+		definition.AWDChallengeID,
 		u.flagSecret,
 		definition.FlagPrefix,
 	), nil

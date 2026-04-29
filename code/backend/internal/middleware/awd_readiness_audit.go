@@ -16,7 +16,7 @@ import (
 const awdReadinessAuditPayloadKey = "awd_readiness_audit_payload"
 
 type AWDReadinessAuditItem struct {
-	ChallengeID     int64                `json:"challenge_id"`
+	AWDChallengeID  int64                `json:"awd_challenge_id"`
 	Title           string               `json:"title"`
 	CheckerType     model.AWDCheckerType `json:"checker_type,omitempty"`
 	ValidationState string               `json:"validation_state"`
@@ -46,7 +46,7 @@ func BuildAWDReadinessAuditPayload(gateAction string, overrideReason *string, sn
 			continue
 		}
 		items = append(items, AWDReadinessAuditItem{
-			ChallengeID:     item.ChallengeID,
+			AWDChallengeID:  item.AWDChallengeID,
 			Title:           item.Title,
 			CheckerType:     item.CheckerType,
 			ValidationState: item.ValidationState,
@@ -158,7 +158,7 @@ func awdReadinessAuditItemsToDetail(items []AWDReadinessAuditItem) []map[string]
 	detail := make([]map[string]any, 0, len(items))
 	for _, item := range items {
 		detail = append(detail, map[string]any{
-			"challenge_id":     item.ChallengeID,
+			"awd_challenge_id": item.AWDChallengeID,
 			"title":            item.Title,
 			"checker_type":     item.CheckerType,
 			"validation_state": item.ValidationState,

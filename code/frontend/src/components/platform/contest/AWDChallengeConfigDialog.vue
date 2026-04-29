@@ -626,7 +626,7 @@ async function handlePreview() {
     const accessURL = previewForm.access_url.trim()
     const result = await runContestAWDCheckerPreview(props.contestId, {
       ...(resolvePreviewServiceID() > 0 ? { service_id: resolvePreviewServiceID() } : {}),
-      challenge_id: resolvePreviewChallengeID(),
+      awd_challenge_id: resolvePreviewChallengeID(),
       checker_type: form.awd_checker_type,
       checker_config: buildCheckerConfig(),
       ...(accessURL ? { access_url: accessURL } : {}),

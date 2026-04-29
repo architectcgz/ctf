@@ -655,7 +655,7 @@ func (h *Handler) recordProxyAudit(
 				AttackerTeamID: *claims.AWDAttackerTeamID,
 				VictimTeamID:   *claims.AWDVictimTeamID,
 				ServiceID:      *claims.AWDServiceID,
-				ChallengeID:    *claims.AWDChallengeID,
+				AWDChallengeID: *claims.AWDChallengeID,
 				Method:         c.Request.Method,
 				Path:           targetPath,
 				StatusCode:     status,

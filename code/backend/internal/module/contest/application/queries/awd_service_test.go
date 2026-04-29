@@ -375,7 +375,7 @@ func TestAWDServiceGetUserWorkspaceBuildsOwnServicesTargetsAndRecentEvents(t *te
 		RoundID:        80101,
 		TeamID:         8101,
 		ServiceID:      contesttestsupport.DefaultAWDContestServiceID(801, 8011),
-		ChallengeID:    8011,
+		AWDChallengeID: 8011,
 		ServiceStatus:  model.AWDServiceStatusUp,
 		CheckResult:    `{"status_reason":"healthy"}`,
 		CheckerType:    model.AWDCheckerTypeHTTPStandard,
@@ -390,7 +390,7 @@ func TestAWDServiceGetUserWorkspaceBuildsOwnServicesTargetsAndRecentEvents(t *te
 		RoundID:        80101,
 		TeamID:         8101,
 		ServiceID:      contesttestsupport.DefaultAWDContestServiceID(801, 8012),
-		ChallengeID:    8012,
+		AWDChallengeID: 8012,
 		ServiceStatus:  model.AWDServiceStatusCompromised,
 		CheckResult:    `{"status_reason":"flag_mismatch"}`,
 		CheckerType:    model.AWDCheckerTypeHTTPStandard,
@@ -407,7 +407,7 @@ func TestAWDServiceGetUserWorkspaceBuildsOwnServicesTargetsAndRecentEvents(t *te
 		AttackerTeamID: 8101,
 		VictimTeamID:   8102,
 		ServiceID:      contesttestsupport.DefaultAWDContestServiceID(801, 8011),
-		ChallengeID:    8011,
+		AWDChallengeID: 8011,
 		AttackType:     model.AWDAttackTypeFlagCapture,
 		Source:         model.AWDAttackSourceSubmission,
 		IsSuccess:      true,
@@ -420,7 +420,7 @@ func TestAWDServiceGetUserWorkspaceBuildsOwnServicesTargetsAndRecentEvents(t *te
 		AttackerTeamID: 8102,
 		VictimTeamID:   8101,
 		ServiceID:      contesttestsupport.DefaultAWDContestServiceID(801, 8012),
-		ChallengeID:    8012,
+		AWDChallengeID: 8012,
 		AttackType:     model.AWDAttackTypeFlagCapture,
 		Source:         model.AWDAttackSourceSubmission,
 		IsSuccess:      false,
@@ -433,7 +433,7 @@ func TestAWDServiceGetUserWorkspaceBuildsOwnServicesTargetsAndRecentEvents(t *te
 		AttackerTeamID: 8102,
 		VictimTeamID:   8103,
 		ServiceID:      contesttestsupport.DefaultAWDContestServiceID(801, 8011),
-		ChallengeID:    8011,
+		AWDChallengeID: 8011,
 		AttackType:     model.AWDAttackTypeFlagCapture,
 		Source:         model.AWDAttackSourceSubmission,
 		IsSuccess:      true,
@@ -454,7 +454,7 @@ func TestAWDServiceGetUserWorkspaceBuildsOwnServicesTargetsAndRecentEvents(t *te
 	if len(resp.Services) != 2 {
 		t.Fatalf("expected 2 own services, got %+v", resp.Services)
 	}
-	if resp.Services[0].ChallengeID != 8011 || resp.Services[0].InstanceID != 1 || resp.Services[0].AccessURL != "" {
+	if resp.Services[0].AWDChallengeID != 8011 || resp.Services[0].InstanceID != 1 || resp.Services[0].AccessURL != "" {
 		t.Fatalf("expected first own service to expose instance id without raw access url, got %+v", resp.Services[0])
 	}
 	if len(resp.Targets) != 2 {
@@ -555,7 +555,7 @@ func TestAWDServiceGetUserWorkspaceWithoutTeamHidesTargets(t *testing.T) {
 		AttackerTeamID: 8201,
 		VictimTeamID:   8202,
 		ServiceID:      contesttestsupport.DefaultAWDContestServiceID(802, 8021),
-		ChallengeID:    8021,
+		AWDChallengeID: 8021,
 		AttackType:     model.AWDAttackTypeFlagCapture,
 		Source:         model.AWDAttackSourceSubmission,
 		IsSuccess:      true,
@@ -621,7 +621,7 @@ func TestAWDServiceGetUserWorkspacePrefersContestServicesAndSeedsMissingDefiniti
 		28,
 		now,
 	)
-	if err := db.Where("contest_id = ? AND challenge_id = ?", 803, 8033).
+	if err := db.Where("contest_id = ? AND awd_challenge_id = ?", 803, 8033).
 		Delete(&model.ContestAWDService{}).Error; err != nil {
 		t.Fatalf("delete generated contest awd service definition: %v", err)
 	}
@@ -649,10 +649,10 @@ func TestAWDServiceGetUserWorkspacePrefersContestServicesAndSeedsMissingDefiniti
 	if serviceIDs[0] != expectedBankServiceID || serviceIDs[1] != expectedAdminServiceID {
 		t.Fatalf("expected contest service ids [%d %d], got %+v", expectedBankServiceID, expectedAdminServiceID, serviceIDs)
 	}
-	if resp.Services[0].ChallengeID != 8031 || resp.Services[0].InstanceID != 6 || resp.Services[0].AccessURL != "" {
+	if resp.Services[0].AWDChallengeID != 8031 || resp.Services[0].InstanceID != 6 || resp.Services[0].AccessURL != "" {
 		t.Fatalf("expected bank portal service bound by contest service mapping, got %+v", resp.Services[0])
 	}
-	if resp.Services[1].ChallengeID != 8032 || resp.Services[1].AccessURL != "" {
+	if resp.Services[1].AWDChallengeID != 8032 || resp.Services[1].AccessURL != "" {
 		t.Fatalf("expected admin gateway definition seeded without instance url, got %+v", resp.Services[1])
 	}
 	if len(resp.Targets) != 1 {
@@ -715,7 +715,7 @@ func TestAWDServiceGetUserWorkspaceMatchesInstancesByPersistedServiceID(t *testi
 	if matchedOwnService == nil {
 		t.Fatalf("expected contest service %d in own services, got %+v", serviceID, resp.Services)
 	}
-	if matchedOwnService.InstanceID != 9 || matchedOwnService.AccessURL != "" || matchedOwnService.ChallengeID != 8041 {
+	if matchedOwnService.InstanceID != 9 || matchedOwnService.AccessURL != "" || matchedOwnService.AWDChallengeID != 8041 {
 		t.Fatalf("expected own service matched by persisted service_id, got %+v", matchedOwnService)
 	}
 	generatedOwnService := findAWDWorkspaceServiceByChallenge(resp.Services, 8042)
@@ -731,7 +731,7 @@ func TestAWDServiceGetUserWorkspaceMatchesInstancesByPersistedServiceID(t *testi
 	if resp.Targets[0].Services[0].ServiceID != serviceID || !resp.Targets[0].Services[0].Reachable {
 		t.Fatalf("expected target service matched by persisted service_id, got %+v", resp.Targets[0].Services[0])
 	}
-	if resp.Targets[0].Services[0].ChallengeID != 8041 {
+	if resp.Targets[0].Services[0].AWDChallengeID != 8041 {
 		t.Fatalf("expected contest service metadata to stay on challenge 8041, got %+v", resp.Targets[0].Services[0])
 	}
 }
@@ -765,7 +765,7 @@ func TestAWDServiceGetUserWorkspaceIgnoresLegacyServiceRowsWithoutServiceID(t *t
 		RoundID:        80501,
 		TeamID:         8501,
 		ServiceID:      serviceID,
-		ChallengeID:    8051,
+		AWDChallengeID: 8051,
 		ServiceStatus:  model.AWDServiceStatusUp,
 		AttackReceived: 1,
 		SLAScore:       30,
@@ -779,7 +779,7 @@ func TestAWDServiceGetUserWorkspaceIgnoresLegacyServiceRowsWithoutServiceID(t *t
 		RoundID:        80501,
 		TeamID:         8501,
 		ServiceID:      0,
-		ChallengeID:    8051,
+		AWDChallengeID: 8051,
 		ServiceStatus:  model.AWDServiceStatusDown,
 		AttackReceived: 9,
 		SLAScore:       0,
@@ -881,7 +881,7 @@ func createAWDReadinessRelationFixture(t *testing.T, db *gorm.DB, seed awdReadin
 
 func readinessBlockingReasonByChallenge(items []*dto.AWDReadinessItemResp, challengeID int64) string {
 	for _, item := range items {
-		if item.ChallengeID == challengeID {
+		if item.AWDChallengeID == challengeID {
 			return item.BlockingReason
 		}
 	}
@@ -954,7 +954,7 @@ func findAWDWorkspaceServiceByID(items []*dto.ContestAWDWorkspaceServiceResp, se
 
 func findAWDWorkspaceServiceByChallenge(items []*dto.ContestAWDWorkspaceServiceResp, challengeID int64) *dto.ContestAWDWorkspaceServiceResp {
 	for _, item := range items {
-		if item.ChallengeID == challengeID {
+		if item.AWDChallengeID == challengeID {
 			return item
 		}
 	}

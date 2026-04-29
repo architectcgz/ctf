@@ -14,10 +14,10 @@ func NewProxyTrafficEventRecorder(db *gorm.DB) *Repository {
 }
 
 type runtimeProxyTrafficInstanceRow struct {
-	ContestID   *int64 `gorm:"column:contest_id"`
-	TeamID      *int64 `gorm:"column:team_id"`
-	ServiceID   *int64 `gorm:"column:service_id"`
-	ChallengeID int64  `gorm:"column:challenge_id"`
+	ContestID      *int64 `gorm:"column:contest_id"`
+	TeamID         *int64 `gorm:"column:team_id"`
+	ServiceID      *int64 `gorm:"column:service_id"`
+	AWDChallengeID int64  `gorm:"column:awd_challenge_id"`
 }
 
 func (r *Repository) RecordRuntimeProxyTrafficEvent(ctx context.Context, instanceID, userID int64, method, requestPath string, statusCode int) error {
@@ -25,7 +25,7 @@ func (r *Repository) RecordRuntimeProxyTrafficEvent(ctx context.Context, instanc
 	if err != nil || instanceScope == nil {
 		return err
 	}
-	if instanceScope.ContestID == nil || instanceScope.TeamID == nil || instanceScope.ServiceID == nil || *instanceScope.ServiceID <= 0 || instanceScope.ChallengeID <= 0 {
+	if instanceScope.ContestID == nil || instanceScope.TeamID == nil || instanceScope.ServiceID == nil || *instanceScope.ServiceID <= 0 || instanceScope.AWDChallengeID <= 0 {
 		return nil
 	}
 
@@ -51,7 +51,7 @@ func (r *Repository) RecordRuntimeProxyTrafficEvent(ctx context.Context, instanc
 		AttackerTeamID: attackerTeam.ID,
 		VictimTeamID:   *instanceScope.TeamID,
 		ServiceID:      *instanceScope.ServiceID,
-		ChallengeID:    instanceScope.ChallengeID,
+		AWDChallengeID: instanceScope.AWDChallengeID,
 		Method:         trimProxyTrafficField(method, 16),
 		Path:           trimProxyTrafficField(requestPath, 1024),
 		StatusCode:     statusCode,
@@ -60,7 +60,7 @@ func (r *Repository) RecordRuntimeProxyTrafficEvent(ctx context.Context, instanc
 }
 
 func (r *Repository) RecordAWDProxyTrafficEvent(ctx context.Context, event model.AWDProxyTrafficEventInput) error {
-	if event.ContestID <= 0 || event.AttackerTeamID <= 0 || event.VictimTeamID <= 0 || event.ServiceID <= 0 || event.ChallengeID <= 0 {
+	if event.ContestID <= 0 || event.AttackerTeamID <= 0 || event.VictimTeamID <= 0 || event.ServiceID <= 0 || event.AWDChallengeID <= 0 {
 		return nil
 	}
 
@@ -78,7 +78,7 @@ func (r *Repository) RecordAWDProxyTrafficEvent(ctx context.Context, event model
 		AttackerTeamID: event.AttackerTeamID,
 		VictimTeamID:   event.VictimTeamID,
 		ServiceID:      event.ServiceID,
-		ChallengeID:    event.ChallengeID,
+		AWDChallengeID: event.AWDChallengeID,
 		Method:         trimProxyTrafficField(event.Method, 16),
 		Path:           trimProxyTrafficField(event.Path, 1024),
 		StatusCode:     event.StatusCode,
@@ -90,7 +90,7 @@ func (r *Repository) loadRuntimeProxyTrafficInstanceScope(ctx context.Context, i
 	var row runtimeProxyTrafficInstanceRow
 	err := r.dbWithContext(ctx).
 		Table("instances AS inst").
-		Select("inst.contest_id, inst.team_id, inst.service_id, cas.challenge_id AS challenge_id").
+		Select("inst.contest_id, inst.team_id, inst.service_id, cas.awd_challenge_id AS awd_challenge_id").
 		Joins("LEFT JOIN contest_awd_services AS cas ON cas.id = inst.service_id AND cas.deleted_at IS NULL").
 		Where("inst.id = ?", instanceID).
 		First(&row).Error

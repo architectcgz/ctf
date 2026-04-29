@@ -161,7 +161,7 @@ function updateAttackSourceFilter(value: string): void {
               <div class="event-meta">
                 <div class="meta-item">
                   <Target class="h-3 w-3" />
-                  <span>{{ getChallengeTitle(attack.challenge_id) }}</span>
+                  <span>{{ getChallengeTitle(attack.awd_challenge_id) }}</span>
                 </div>
                 <div class="meta-divider" />
                 <div class="meta-item opacity-60">

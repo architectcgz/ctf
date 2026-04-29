@@ -742,7 +742,7 @@ func TestAWDServicePreviewCheckerRunsWithoutPersistingServices(t *testing.T) {
 	}
 
 	reqValue := reflect.New(method.Type().In(2).Elem())
-	setReflectedField(t, reqValue.Elem(), "ChallengeID", int64(2401))
+	setReflectedField(t, reqValue.Elem(), "AWDChallengeID", int64(2401))
 	setReflectedField(t, reqValue.Elem(), "CheckerType", string(model.AWDCheckerTypeHTTPStandard))
 	setReflectedField(t, reqValue.Elem(), "CheckerConfig", map[string]any{
 		"put_flag": map[string]any{
@@ -862,8 +862,8 @@ func TestAWDServicePreviewCheckerRejectsWhenRedisUnavailable(t *testing.T) {
 	})
 
 	_, err := service.commands.PreviewChecker(context.Background(), 27, &dto.PreviewAWDCheckerReq{
-		ChallengeID: 2701,
-		CheckerType: string(model.AWDCheckerTypeHTTPStandard),
+		AWDChallengeID: 2701,
+		CheckerType:    string(model.AWDCheckerTypeHTTPStandard),
 		CheckerConfig: map[string]any{
 			"get_flag": map[string]any{
 				"method":             "GET",
@@ -904,9 +904,9 @@ func TestAWDServicePreviewCheckerReturnsQuorumPassWhenTwoOfThreeAttemptsSucceed(
 				CheckerType:   model.AWDCheckerTypeHTTPStandard,
 				CheckResult:   `{"check_source":"checker_preview","checker_type":"http_standard","status_reason":"healthy","checked_at":"2026-04-21T11:00:00Z","targets":[{"access_url":"http://preview.internal","healthy":true,"latency_ms":21}],"put_flag":{"healthy":true,"method":"PUT","path":"/api/flag"},"get_flag":{"healthy":true,"method":"GET","path":"/api/flag"}}`,
 				PreviewContext: contestports.AWDCheckerPreviewContext{
-					AccessURL:   "http://preview.internal",
-					PreviewFlag: "flag{preview}",
-					ChallengeID: 2801,
+					AccessURL:      "http://preview.internal",
+					PreviewFlag:    "flag{preview}",
+					AWDChallengeID: 2801,
 				},
 			},
 			{
@@ -914,9 +914,9 @@ func TestAWDServicePreviewCheckerReturnsQuorumPassWhenTwoOfThreeAttemptsSucceed(
 				CheckerType:   model.AWDCheckerTypeHTTPStandard,
 				CheckResult:   `{"check_source":"checker_preview","checker_type":"http_standard","status_reason":"http_request_failed","checked_at":"2026-04-21T11:00:01Z","error_code":"http_request_failed","error":"connection reset by peer","targets":[{"access_url":"http://preview.internal","healthy":false,"error_code":"http_request_failed","error":"connection reset by peer"}]}`,
 				PreviewContext: contestports.AWDCheckerPreviewContext{
-					AccessURL:   "http://preview.internal",
-					PreviewFlag: "flag{preview}",
-					ChallengeID: 2801,
+					AccessURL:      "http://preview.internal",
+					PreviewFlag:    "flag{preview}",
+					AWDChallengeID: 2801,
 				},
 			},
 			{
@@ -924,9 +924,9 @@ func TestAWDServicePreviewCheckerReturnsQuorumPassWhenTwoOfThreeAttemptsSucceed(
 				CheckerType:   model.AWDCheckerTypeHTTPStandard,
 				CheckResult:   `{"check_source":"checker_preview","checker_type":"http_standard","status_reason":"healthy","checked_at":"2026-04-21T11:00:02Z","targets":[{"access_url":"http://preview.internal","healthy":true,"latency_ms":18}],"put_flag":{"healthy":true,"method":"PUT","path":"/api/flag"},"get_flag":{"healthy":true,"method":"GET","path":"/api/flag"},"havoc":{"healthy":true,"method":"GET","path":"/healthz"}}`,
 				PreviewContext: contestports.AWDCheckerPreviewContext{
-					AccessURL:   "http://preview.internal",
-					PreviewFlag: "flag{preview}",
-					ChallengeID: 2801,
+					AccessURL:      "http://preview.internal",
+					PreviewFlag:    "flag{preview}",
+					AWDChallengeID: 2801,
 				},
 			},
 		},
@@ -950,8 +950,8 @@ func TestAWDServicePreviewCheckerReturnsQuorumPassWhenTwoOfThreeAttemptsSucceed(
 	)
 
 	resp, err := service.PreviewChecker(context.Background(), 28, &dto.PreviewAWDCheckerReq{
-		ChallengeID: 2801,
-		CheckerType: string(model.AWDCheckerTypeHTTPStandard),
+		AWDChallengeID: 2801,
+		CheckerType:    string(model.AWDCheckerTypeHTTPStandard),
 		CheckerConfig: map[string]any{
 			"get_flag": map[string]any{
 				"method":             "GET",
@@ -1013,9 +1013,9 @@ func TestAWDServicePreviewCheckerBroadcastsRealtimeProgressToRequester(t *testin
 				CheckerType:   model.AWDCheckerTypeHTTPStandard,
 				CheckResult:   `{"check_source":"checker_preview","checker_type":"http_standard","status_reason":"healthy","checked_at":"2026-04-21T11:00:00Z","targets":[{"access_url":"http://preview.internal","healthy":true}]}`,
 				PreviewContext: contestports.AWDCheckerPreviewContext{
-					AccessURL:   "http://preview.internal",
-					PreviewFlag: "flag{preview}",
-					ChallengeID: 2811,
+					AccessURL:      "http://preview.internal",
+					PreviewFlag:    "flag{preview}",
+					AWDChallengeID: 2811,
 				},
 			},
 			{
@@ -1023,9 +1023,9 @@ func TestAWDServicePreviewCheckerBroadcastsRealtimeProgressToRequester(t *testin
 				CheckerType:   model.AWDCheckerTypeHTTPStandard,
 				CheckResult:   `{"check_source":"checker_preview","checker_type":"http_standard","status_reason":"healthy","checked_at":"2026-04-21T11:00:01Z","targets":[{"access_url":"http://preview.internal","healthy":true}]}`,
 				PreviewContext: contestports.AWDCheckerPreviewContext{
-					AccessURL:   "http://preview.internal",
-					PreviewFlag: "flag{preview}",
-					ChallengeID: 2811,
+					AccessURL:      "http://preview.internal",
+					PreviewFlag:    "flag{preview}",
+					AWDChallengeID: 2811,
 				},
 			},
 			{
@@ -1033,9 +1033,9 @@ func TestAWDServicePreviewCheckerBroadcastsRealtimeProgressToRequester(t *testin
 				CheckerType:   model.AWDCheckerTypeHTTPStandard,
 				CheckResult:   `{"check_source":"checker_preview","checker_type":"http_standard","status_reason":"healthy","checked_at":"2026-04-21T11:00:02Z","targets":[{"access_url":"http://preview.internal","healthy":true}]}`,
 				PreviewContext: contestports.AWDCheckerPreviewContext{
-					AccessURL:   "http://preview.internal",
-					PreviewFlag: "flag{preview}",
-					ChallengeID: 2811,
+					AccessURL:      "http://preview.internal",
+					PreviewFlag:    "flag{preview}",
+					AWDChallengeID: 2811,
 				},
 			},
 		},
@@ -1062,7 +1062,7 @@ func TestAWDServicePreviewCheckerBroadcastsRealtimeProgressToRequester(t *testin
 
 	ctx := contestcmd.WithAWDPreviewRequester(context.Background(), 9001)
 	_, err = service.PreviewChecker(ctx, 281, &dto.PreviewAWDCheckerReq{
-		ChallengeID:      2811,
+		AWDChallengeID:   2811,
 		CheckerType:      string(model.AWDCheckerTypeHTTPStandard),
 		PreviewRequestID: "preview-progress-1",
 		AccessURL:        "http://preview.internal",
@@ -1134,9 +1134,9 @@ func TestAWDServicePreviewCheckerReturnsQuorumFailureWhenOnlyOneAttemptSucceeds(
 				CheckerType:   model.AWDCheckerTypeHTTPStandard,
 				CheckResult:   `{"check_source":"checker_preview","checker_type":"http_standard","status_reason":"http_request_failed","checked_at":"2026-04-21T11:00:00Z","error_code":"http_request_failed","error":"connection reset by peer","targets":[{"access_url":"http://preview.internal","healthy":false,"error_code":"http_request_failed"}]}`,
 				PreviewContext: contestports.AWDCheckerPreviewContext{
-					AccessURL:   "http://preview.internal",
-					PreviewFlag: "flag{preview}",
-					ChallengeID: 2901,
+					AccessURL:      "http://preview.internal",
+					PreviewFlag:    "flag{preview}",
+					AWDChallengeID: 2901,
 				},
 			},
 			{
@@ -1144,9 +1144,9 @@ func TestAWDServicePreviewCheckerReturnsQuorumFailureWhenOnlyOneAttemptSucceeds(
 				CheckerType:   model.AWDCheckerTypeHTTPStandard,
 				CheckResult:   `{"check_source":"checker_preview","checker_type":"http_standard","status_reason":"healthy","checked_at":"2026-04-21T11:00:01Z","targets":[{"access_url":"http://preview.internal","healthy":true,"latency_ms":20}]}`,
 				PreviewContext: contestports.AWDCheckerPreviewContext{
-					AccessURL:   "http://preview.internal",
-					PreviewFlag: "flag{preview}",
-					ChallengeID: 2901,
+					AccessURL:      "http://preview.internal",
+					PreviewFlag:    "flag{preview}",
+					AWDChallengeID: 2901,
 				},
 			},
 			{
@@ -1154,9 +1154,9 @@ func TestAWDServicePreviewCheckerReturnsQuorumFailureWhenOnlyOneAttemptSucceeds(
 				CheckerType:   model.AWDCheckerTypeHTTPStandard,
 				CheckResult:   `{"check_source":"checker_preview","checker_type":"http_standard","status_reason":"unexpected_http_status","checked_at":"2026-04-21T11:00:02Z","error_code":"unexpected_http_status","error":"unexpected status 502","targets":[{"access_url":"http://preview.internal","healthy":false,"error_code":"unexpected_http_status"}]}`,
 				PreviewContext: contestports.AWDCheckerPreviewContext{
-					AccessURL:   "http://preview.internal",
-					PreviewFlag: "flag{preview}",
-					ChallengeID: 2901,
+					AccessURL:      "http://preview.internal",
+					PreviewFlag:    "flag{preview}",
+					AWDChallengeID: 2901,
 				},
 			},
 		},
@@ -1180,8 +1180,8 @@ func TestAWDServicePreviewCheckerReturnsQuorumFailureWhenOnlyOneAttemptSucceeds(
 	)
 
 	resp, err := service.PreviewChecker(context.Background(), 29, &dto.PreviewAWDCheckerReq{
-		ChallengeID: 2901,
-		CheckerType: string(model.AWDCheckerTypeHTTPStandard),
+		AWDChallengeID: 2901,
+		CheckerType:    string(model.AWDCheckerTypeHTTPStandard),
 		CheckerConfig: map[string]any{
 			"get_flag": map[string]any{
 				"method":             "GET",
@@ -1297,8 +1297,8 @@ func TestAWDServicePreviewCheckerAcceptsServiceIDAndReturnsServiceContext(t *tes
 	if gotServiceID := previewContext.FieldByName("ServiceID").Int(); gotServiceID != serviceID {
 		t.Fatalf("unexpected preview service_id: %d", gotServiceID)
 	}
-	if gotChallengeID := previewContext.FieldByName("ChallengeID").Int(); gotChallengeID != 2501 {
-		t.Fatalf("unexpected preview challenge_id: %d", gotChallengeID)
+	if gotChallengeID := previewContext.FieldByName("AWDChallengeID").Int(); gotChallengeID != 2501 {
+		t.Fatalf("unexpected preview awd_challenge_id: %d", gotChallengeID)
 	}
 	previewToken := resp.FieldByName("PreviewToken")
 	if !previewToken.IsValid() || strings.TrimSpace(previewToken.String()) == "" {
@@ -1391,8 +1391,8 @@ func TestAWDServicePreviewCheckerStartsPreviewRuntimeWhenAccessURLMissing(t *tes
 	)
 
 	resp, err := service.PreviewChecker(context.Background(), 26, &dto.PreviewAWDCheckerReq{
-		ChallengeID: 2601,
-		CheckerType: string(model.AWDCheckerTypeHTTPStandard),
+		AWDChallengeID: 2601,
+		CheckerType:    string(model.AWDCheckerTypeHTTPStandard),
 		CheckerConfig: map[string]any{
 			"get_flag": map[string]any{
 				"method":             "GET",
@@ -1476,7 +1476,7 @@ func TestAWDServiceCreateAttackLogDeduplicatesScoringAndBuildsSummary(t *testing
 		t.Fatalf("seed Green service check: %v", err)
 	}
 	if err := db.Model(&model.AWDTeamService{}).
-		Where("round_id = ? AND team_id = ? AND challenge_id = ?", 31, 311, 301).
+		Where("round_id = ? AND team_id = ? AND awd_challenge_id = ?", 31, 311, 301).
 		Updates(map[string]any{
 			"sla_score":    10,
 			"checker_type": model.AWDCheckerTypeHTTPStandard,
@@ -1484,7 +1484,7 @@ func TestAWDServiceCreateAttackLogDeduplicatesScoringAndBuildsSummary(t *testing
 		t.Fatalf("seed Red sla/checker fields: %v", err)
 	}
 	if err := db.Model(&model.AWDTeamService{}).
-		Where("round_id = ? AND team_id = ? AND challenge_id = ?", 31, 312, 301).
+		Where("round_id = ? AND team_id = ? AND awd_challenge_id = ?", 31, 312, 301).
 		Updates(map[string]any{
 			"sla_score":    9,
 			"checker_type": model.AWDCheckerTypeHTTPStandard,
@@ -1492,7 +1492,7 @@ func TestAWDServiceCreateAttackLogDeduplicatesScoringAndBuildsSummary(t *testing
 		t.Fatalf("seed Blue sla/checker fields: %v", err)
 	}
 	if err := db.Model(&model.AWDTeamService{}).
-		Where("round_id = ? AND team_id = ? AND challenge_id = ?", 31, 313, 301).
+		Where("round_id = ? AND team_id = ? AND awd_challenge_id = ?", 31, 313, 301).
 		Updates(map[string]any{
 			"sla_score":    8,
 			"checker_type": model.AWDCheckerTypeHTTPStandard,
@@ -1533,7 +1533,7 @@ func TestAWDServiceCreateAttackLogDeduplicatesScoringAndBuildsSummary(t *testing
 		t.Fatalf("expected duplicate score gained 0, got %+v", second)
 	}
 	var blueService model.AWDTeamService
-	if err := db.Where("round_id = ? AND team_id = ? AND challenge_id = ?", 31, 312, 301).First(&blueService).Error; err != nil {
+	if err := db.Where("round_id = ? AND team_id = ? AND awd_challenge_id = ?", 31, 312, 301).First(&blueService).Error; err != nil {
 		t.Fatalf("load Blue service: %v", err)
 	}
 	if blueService.ServiceStatus != model.AWDServiceStatusCompromised || blueService.AttackReceived != 2 || blueService.AttackScore != 60 || blueService.DefenseScore != 0 || blueService.SLAScore != 9 || blueService.CheckerType != model.AWDCheckerTypeHTTPStandard {
@@ -1649,7 +1649,7 @@ func TestAWDServiceCreateAttackLogCreatesVictimServiceImpactWhenMissing(t *testi
 	assertAWDServiceStatusCache(t, redisClient, 6, 612, serviceID, model.AWDServiceStatusCompromised)
 
 	var victimService model.AWDTeamService
-	if err := db.Where("round_id = ? AND team_id = ? AND challenge_id = ?", 61, 612, 601).First(&victimService).Error; err != nil {
+	if err := db.Where("round_id = ? AND team_id = ? AND awd_challenge_id = ?", 61, 612, 601).First(&victimService).Error; err != nil {
 		t.Fatalf("load victim service: %v", err)
 	}
 	if victimService.ServiceStatus != model.AWDServiceStatusCompromised || victimService.AttackReceived != 1 || victimService.AttackScore != 75 || victimService.DefenseScore != 0 {
@@ -1858,13 +1858,13 @@ func TestAWDServiceSubmitAttackAcceptsServiceScopedRoundFlagField(t *testing.T) 
 	}
 	serviceID := defaultAWDContestServiceID(24, 2401)
 	if err := db.Model(&model.ContestAWDService{}).
-		Where("contest_id = ? AND challenge_id = ?", 24, 2401).
+		Where("contest_id = ? AND awd_challenge_id = ?", 24, 2401).
 		Updates(map[string]any{
 			"display_name":   "Bank Portal",
 			"order":          0,
 			"is_visible":     true,
 			"score_config":   `{"points":100,"awd_sla_score":1,"awd_defense_score":2}`,
-			"runtime_config": `{"challenge_id":2401,"checker_type":"legacy_probe","checker_config":{}}`,
+			"runtime_config": `{"awd_challenge_id":2401,"checker_type":"legacy_probe","checker_config":{}}`,
 			"updated_at":     now,
 		}).Error; err != nil {
 		t.Fatalf("update contest awd service: %v", err)
@@ -1900,7 +1900,7 @@ func TestAWDServiceSubmitAttackAcceptsServiceScopedRoundFlagField(t *testing.T) 
 	}
 
 	var victimService model.AWDTeamService
-	if err := db.Where("round_id = ? AND team_id = ? AND challenge_id = ?", 241, 2412, 2401).First(&victimService).Error; err != nil {
+	if err := db.Where("round_id = ? AND team_id = ? AND awd_challenge_id = ?", 241, 2412, 2401).First(&victimService).Error; err != nil {
 		t.Fatalf("load victim service after service scoped submit: %v", err)
 	}
 	if victimService.ServiceID != serviceID {
@@ -1988,7 +1988,7 @@ func TestAWDServiceSubmitAttackPublishesAttackAcceptedEvent(t *testing.T) {
 
 	select {
 	case evt := <-received:
-		if evt.UserID != 14001 || evt.ChallengeID != 1401 || evt.Dimension != model.DimensionWeb {
+		if evt.UserID != 14001 || evt.AWDChallengeID != 1401 || evt.Dimension != model.DimensionWeb {
 			t.Fatalf("unexpected event payload: %+v", evt)
 		}
 	case <-time.After(time.Second):
@@ -2589,7 +2589,7 @@ func mustCreateAWDTrafficEvent(
 		AttackerTeamID: attackerTeamID,
 		VictimTeamID:   victimTeamID,
 		ServiceID:      serviceID,
-		ChallengeID:    challengeID,
+		AWDChallengeID: challengeID,
 		Method:         method,
 		Path:           requestPath,
 		StatusCode:     statusCode,

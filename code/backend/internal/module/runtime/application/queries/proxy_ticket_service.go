@@ -95,7 +95,7 @@ func (s *ProxyTicketService) IssueAWDTargetTicket(ctx context.Context, user auth
 		AWDAttackerTeamID: &scope.AttackerTeamID,
 		AWDVictimTeamID:   &scope.VictimTeamID,
 		AWDServiceID:      &scope.ServiceID,
-		AWDChallengeID:    &scope.ChallengeID,
+		AWDChallengeID:    &scope.AWDChallengeID,
 		IssuedAt:          time.Now().UTC(),
 	}
 	expiresAt := time.Now().Add(s.ticketTTL).UTC()
@@ -135,7 +135,7 @@ func (s *ProxyTicketService) IssueAWDDefenseSSHTicket(ctx context.Context, user 
 		Purpose:           runtimeports.ProxyTicketPurposeAWDDefenseSSH,
 		AWDAttackerTeamID: &scope.TeamID,
 		AWDServiceID:      &scope.ServiceID,
-		AWDChallengeID:    &scope.ChallengeID,
+		AWDChallengeID:    &scope.AWDChallengeID,
 		IssuedAt:          time.Now().UTC(),
 	}
 	expiresAt := time.Now().Add(s.ticketTTL).UTC()

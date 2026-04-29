@@ -200,7 +200,7 @@ function handleSubmit() {
         >
           <article
             v-for="item in readiness.items"
-            :key="item.challenge_id"
+            :key="item.awd_challenge_id"
             class="readiness-override-row"
           >
             <div class="readiness-override-row__title">

@@ -20,11 +20,12 @@ func (s *AWDService) resolveAcceptedRoundFlags(
 	contestID int64,
 	round *model.AWDRound,
 	victimTeamID int64,
-	challenge *model.Challenge,
+	awdChallengeID int64,
+	flagPrefix string,
 	serviceID int64,
 	now time.Time,
 ) ([]string, error) {
-	currentFlag, err := s.resolveRoundFlag(ctx, contestID, round, victimTeamID, challenge, serviceID)
+	currentFlag, err := s.resolveRoundFlag(ctx, contestID, round, victimTeamID, awdChallengeID, flagPrefix, serviceID)
 	if err != nil {
 		return nil, err
 	}
@@ -41,7 +42,7 @@ func (s *AWDService) resolveAcceptedRoundFlags(
 		}
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	previousFlag, err := s.resolveRoundFlag(ctx, contestID, previousRound, victimTeamID, challenge, serviceID)
+	previousFlag, err := s.resolveRoundFlag(ctx, contestID, previousRound, victimTeamID, awdChallengeID, flagPrefix, serviceID)
 	if err != nil {
 		if err == errcode.ErrAWDFlagUnavailable {
 			return flags, nil
@@ -58,8 +59,8 @@ func (s *AWDService) allowPreviousRoundFlag(round *model.AWDRound, now time.Time
 	return now.Before(round.StartedAt.Add(s.awdConfig.PreviousRoundGrace))
 }
 
-func (s *AWDService) resolveRoundFlag(ctx context.Context, contestID int64, round *model.AWDRound, victimTeamID int64, challenge *model.Challenge, serviceID int64) (string, error) {
-	if round == nil || challenge == nil {
+func (s *AWDService) resolveRoundFlag(ctx context.Context, contestID int64, round *model.AWDRound, victimTeamID int64, awdChallengeID int64, flagPrefix string, serviceID int64) (string, error) {
+	if round == nil || awdChallengeID <= 0 {
 		return "", errcode.ErrAWDFlagUnavailable
 	}
 	if s.redis != nil {
@@ -74,5 +75,5 @@ func (s *AWDService) resolveRoundFlag(ctx context.Context, contestID int64, roun
 	if strings.TrimSpace(s.flagSecret) == "" {
 		return "", errcode.ErrAWDFlagUnavailable
 	}
-	return contestdomain.BuildAWDRoundFlag(contestID, round.RoundNumber, victimTeamID, challenge.ID, s.flagSecret, challenge.FlagPrefix), nil
+	return contestdomain.BuildAWDRoundFlag(contestID, round.RoundNumber, victimTeamID, awdChallengeID, s.flagSecret, flagPrefix), nil
 }

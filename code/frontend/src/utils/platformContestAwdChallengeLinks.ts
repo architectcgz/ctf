@@ -18,7 +18,8 @@ export function mapPlatformContestAwdServicesToChallengeLinks(
   return services.map((service) => ({
     id: service.id,
     contest_id: service.contest_id,
-    challenge_id: service.challenge_id,
+    challenge_id: service.awd_challenge_id,
+    awd_challenge_id: service.awd_challenge_id,
     title: service.title || service.display_name,
     category: service.category,
     difficulty: service.difficulty,
@@ -27,7 +28,6 @@ export function mapPlatformContestAwdServicesToChallengeLinks(
     is_visible: service.is_visible,
     created_at: service.created_at,
     awd_service_id: service.id,
-    awd_challenge_id: service.awd_challenge_id,
     awd_service_display_name: service.display_name || undefined,
     awd_checker_type: service.checker_type,
     awd_checker_config: normalizeCheckerConfig(service),

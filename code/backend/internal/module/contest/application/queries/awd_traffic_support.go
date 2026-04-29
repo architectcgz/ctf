@@ -17,25 +17,25 @@ func buildAWDTrafficEvents(records []contestports.AWDTrafficEventRecord) []*dto.
 			source = "runtime_proxy"
 		}
 		items = append(items, &dto.AWDTrafficEventResp{
-			ID:               record.ID,
-			ContestID:        record.ContestID,
-			RoundID:          record.RoundID,
-			AttackerTeamID:   record.AttackerTeamID,
-			AttackerTeam:     record.AttackerTeamName,
-			AttackerTeamName: record.AttackerTeamName,
-			VictimTeamID:     record.VictimTeamID,
-			VictimTeam:       record.VictimTeamName,
-			VictimTeamName:   record.VictimTeamName,
-			ServiceID:        record.ServiceID,
-			ChallengeID:      record.ChallengeID,
-			ChallengeTitle:   record.ChallengeTitle,
-			Method:           strings.TrimSpace(record.Method),
-			Path:             strings.TrimSpace(record.Path),
-			StatusCode:       record.StatusCode,
-			StatusGroup:      awdTrafficStatusGroup(record.StatusCode),
-			IsError:          record.StatusCode >= 400,
-			Source:           source,
-			OccurredAt:       record.OccurredAt,
+			ID:                record.ID,
+			ContestID:         record.ContestID,
+			RoundID:           record.RoundID,
+			AttackerTeamID:    record.AttackerTeamID,
+			AttackerTeam:      record.AttackerTeamName,
+			AttackerTeamName:  record.AttackerTeamName,
+			VictimTeamID:      record.VictimTeamID,
+			VictimTeam:        record.VictimTeamName,
+			VictimTeamName:    record.VictimTeamName,
+			ServiceID:         record.ServiceID,
+			AWDChallengeID:    record.AWDChallengeID,
+			AWDChallengeTitle: record.AWDChallengeTitle,
+			Method:            strings.TrimSpace(record.Method),
+			Path:              strings.TrimSpace(record.Path),
+			StatusCode:        record.StatusCode,
+			StatusGroup:       awdTrafficStatusGroup(record.StatusCode),
+			IsError:           record.StatusCode >= 400,
+			Source:            source,
+			OccurredAt:        record.OccurredAt,
 		})
 	}
 	sort.Slice(items, func(i, j int) bool {
@@ -66,7 +66,7 @@ func filterAWDTrafficEvents(items []*dto.AWDTrafficEventResp, req *dto.ListAWDTr
 		if req.ServiceID > 0 && item.ServiceID != req.ServiceID {
 			continue
 		}
-		if req.ChallengeID > 0 && item.ChallengeID != req.ChallengeID {
+		if req.AWDChallengeID > 0 && item.AWDChallengeID != req.AWDChallengeID {
 			continue
 		}
 		if req.StatusGroup != "" && !matchAWDTrafficStatusGroup(item.StatusCode, req.StatusGroup) {
@@ -174,10 +174,10 @@ func buildAWDTrafficSummary(round *dto.AWDRoundResp, items []*dto.AWDTrafficEven
 				entry.ErrorCount++
 			}
 		}
-		entry := challengeAgg[item.ChallengeID]
+		entry := challengeAgg[item.AWDChallengeID]
 		if entry == nil {
-			entry = &dto.AWDTrafficTopChallengeResp{ChallengeID: item.ChallengeID, ChallengeTitle: item.ChallengeTitle}
-			challengeAgg[item.ChallengeID] = entry
+			entry = &dto.AWDTrafficTopChallengeResp{AWDChallengeID: item.AWDChallengeID, AWDChallengeTitle: item.AWDChallengeTitle}
+			challengeAgg[item.AWDChallengeID] = entry
 		}
 		entry.RequestCount++
 		if item.StatusCode >= 400 {
@@ -253,7 +253,7 @@ func sortAWDTrafficChallenges(items map[int64]*dto.AWDTrafficTopChallengeResp) [
 		if list[i].RequestCount != list[j].RequestCount {
 			return list[i].RequestCount > list[j].RequestCount
 		}
-		return list[i].ChallengeID < list[j].ChallengeID
+		return list[i].AWDChallengeID < list[j].AWDChallengeID
 	})
 	if len(list) > 5 {
 		return list[:5]

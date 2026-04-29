@@ -82,7 +82,7 @@ func TestDockerAWDFlagInjectorInjectsAllRunningTeamContainers(t *testing.T) {
 	injector := contestinfra.NewDockerAWDFlagInjector(db, writer, zap.NewNop())
 
 	err = injector.InjectRoundFlags(context.Background(), &model.Contest{ID: 10}, &model.AWDRound{ID: 10001}, []contestports.AWDFlagAssignment{
-		{TeamID: 1011, ServiceID: serviceID, ChallengeID: 1001, Flag: "awd{round-flag}"},
+		{TeamID: 1011, ServiceID: serviceID, AWDChallengeID: 1001, Flag: "awd{round-flag}"},
 	})
 	if err != nil {
 		t.Fatalf("InjectRoundFlags() error = %v", err)
@@ -131,7 +131,7 @@ func TestDockerAWDFlagInjectorInjectsContestScopedTeamInstanceWithoutTeamMemberF
 	injector := contestinfra.NewDockerAWDFlagInjector(db, writer, zap.NewNop())
 
 	err := injector.InjectRoundFlags(context.Background(), &model.Contest{ID: 20}, &model.AWDRound{ID: 20001}, []contestports.AWDFlagAssignment{
-		{TeamID: 2011, ServiceID: serviceID, ChallengeID: 2001, Flag: "awd{contest-scoped}"},
+		{TeamID: 2011, ServiceID: serviceID, AWDChallengeID: 2001, Flag: "awd{contest-scoped}"},
 	})
 	if err != nil {
 		t.Fatalf("InjectRoundFlags() error = %v", err)
@@ -174,7 +174,7 @@ func TestDockerAWDFlagInjectorMatchesInstancesByServiceID(t *testing.T) {
 	injector := contestinfra.NewDockerAWDFlagInjector(db, writer, zap.NewNop())
 
 	err := injector.InjectRoundFlags(context.Background(), &model.Contest{ID: 30}, &model.AWDRound{ID: 30001}, []contestports.AWDFlagAssignment{
-		{TeamID: 3011, ServiceID: serviceID, ChallengeID: 3001, Flag: "awd{service-id}"},
+		{TeamID: 3011, ServiceID: serviceID, AWDChallengeID: 3001, Flag: "awd{service-id}"},
 	})
 	if err != nil {
 		t.Fatalf("InjectRoundFlags() error = %v", err)

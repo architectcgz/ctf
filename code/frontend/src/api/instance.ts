@@ -14,15 +14,19 @@ interface RawExtendFields {
 }
 
 export interface RawInstanceData
-  extends Omit<InstanceData, 'id' | 'challenge_id' | 'remaining_extends'>, RawExtendFields {
+  extends Omit<InstanceData, 'id' | 'challenge_id' | 'awd_challenge_id' | 'remaining_extends'>,
+    RawExtendFields {
   id: string | number
-  challenge_id: string | number
+  challenge_id?: string | number
+  awd_challenge_id?: string | number
 }
 
 interface RawInstanceListItem
-  extends Omit<InstanceListItem, 'id' | 'challenge_id' | 'remaining_extends'>, RawExtendFields {
+  extends Omit<InstanceListItem, 'id' | 'challenge_id' | 'awd_challenge_id' | 'remaining_extends'>,
+    RawExtendFields {
   id: string | number
-  challenge_id: string | number
+  challenge_id?: string | number
+  awd_challenge_id?: string | number
 }
 
 interface RawInstanceExtendData
@@ -43,11 +47,14 @@ function resolveRemainingExtends(item: RawExtendFields): number {
 }
 
 function normalizeInstanceData(item: RawInstanceData): InstanceData {
-  const { id, challenge_id, remaining_extends, extend_count, max_extends, ...rest } = item
+  const { id, challenge_id, awd_challenge_id, remaining_extends, extend_count, max_extends, ...rest } =
+    item
+  const normalizedChallengeId = challenge_id ?? awd_challenge_id
   return {
     ...rest,
     id: String(id),
-    challenge_id: String(challenge_id),
+    challenge_id: normalizedChallengeId == null ? '' : String(normalizedChallengeId),
+    awd_challenge_id: awd_challenge_id == null ? undefined : String(awd_challenge_id),
     share_scope: item.share_scope ?? 'per_user',
     remaining_extends: resolveRemainingExtends({ remaining_extends, extend_count, max_extends }),
   }

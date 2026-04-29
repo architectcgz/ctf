@@ -24,7 +24,7 @@ describe('contest api contract', () => {
     requestMock.mockResolvedValue([
       {
         id: 21,
-        challenge_id: 9,
+        awd_challenge_id: 9,
         awd_service_id: 7009,
         title: 'Bank Portal',
         category: 'web',
@@ -45,6 +45,7 @@ describe('contest api contract', () => {
       {
         id: '21',
         challenge_id: '9',
+        awd_challenge_id: '9',
         awd_service_id: '7009',
         title: 'Bank Portal',
         category: 'web',
@@ -76,7 +77,7 @@ describe('contest api contract', () => {
       services: [
         {
           service_id: 7009,
-          challenge_id: 9,
+          awd_challenge_id: 9,
           instance_id: 9001,
           service_status: 'up',
           checker_type: 'http_standard',
@@ -94,7 +95,7 @@ describe('contest api contract', () => {
           services: [
             {
               service_id: 7009,
-              challenge_id: 9,
+              awd_challenge_id: 9,
               reachable: true,
             },
           ],
@@ -105,7 +106,7 @@ describe('contest api contract', () => {
           id: 88,
           direction: 'attack_out',
           service_id: 7009,
-          challenge_id: 9,
+          awd_challenge_id: 9,
           peer_team_id: 14,
           peer_team_name: 'Blue',
           is_success: true,
@@ -125,11 +126,11 @@ describe('contest api contract', () => {
     expect(result.current_round?.id).toBe('41')
     expect(result.my_team?.team_id).toBe('13')
     expect(result.services[0].service_id).toBe('7009')
-    expect(result.services[0].challenge_id).toBe('9')
+    expect(result.services[0].awd_challenge_id).toBe('9')
     expect(result.services[0].instance_id).toBe('9001')
     expect(result.services[0].access_url).toBeUndefined()
     expect(result.targets[0].services[0].service_id).toBe('7009')
-    expect(result.targets[0].services[0].challenge_id).toBe('9')
+    expect(result.targets[0].services[0].awd_challenge_id).toBe('9')
     expect(result.targets[0].services[0].reachable).toBe(true)
     expect('access_url' in result.targets[0].services[0]).toBe(false)
     expect(result.recent_events[0].service_id).toBe('7009')
@@ -139,7 +140,7 @@ describe('contest api contract', () => {
   it('启动 AWD 服务实例时应命中 service 实例接口并复用实例标准化', async () => {
     requestMock.mockResolvedValue({
       id: 22,
-      challenge_id: 9,
+      awd_challenge_id: 9,
       status: 'running',
       share_scope: 'per_team',
       access_url: 'http://red.internal',
@@ -160,6 +161,7 @@ describe('contest api contract', () => {
     expect(result).toEqual({
       id: '22',
       challenge_id: '9',
+      awd_challenge_id: '9',
       status: 'running',
       share_scope: 'per_team',
       access_url: 'http://red.internal',
@@ -179,7 +181,7 @@ describe('contest api contract', () => {
       victim_team_id: 14,
       victim_team: 'Blue',
       service_id: 7009,
-      challenge_id: 9,
+      awd_challenge_id: 9,
       attack_type: 'flag_capture',
       source: 'submission',
       submitted_flag: 'flag{demo}',
@@ -209,7 +211,7 @@ describe('contest api contract', () => {
       victim_team_id: '14',
       victim_team: 'Blue',
       service_id: '7009',
-      challenge_id: '9',
+      awd_challenge_id: '9',
       attack_type: 'flag_capture',
       source: 'submission',
       submitted_flag: 'flag{demo}',

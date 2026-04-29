@@ -1326,7 +1326,7 @@ func TestStartContestAWDServiceDoesNotRequireContestChallengeLookup(t *testing.T
 			return &model.ContestAWDService{
 				ID:              serviceID,
 				ContestID:       contestID,
-				ChallengeID:     2104,
+				AWDChallengeID:  2104,
 				IsVisible:       true,
 				ServiceSnapshot: `{"name":"awd-service","category":"web","difficulty":"medium","runtime_config":{"image_id":104,"instance_sharing":"per_team"},"flag_config":{"flag_type":"static","flag_prefix":"flag"}}`,
 			}, nil
@@ -1421,7 +1421,7 @@ func TestStartContestAWDServiceReservesHostPort(t *testing.T) {
 			return &model.ContestAWDService{
 				ID:              serviceID,
 				ContestID:       contestID,
-				ChallengeID:     2105,
+				AWDChallengeID:  2105,
 				IsVisible:       true,
 				ServiceSnapshot: `{"name":"awd-service","category":"web","difficulty":"medium","runtime_config":{"image_id":105,"instance_sharing":"per_team"},"flag_config":{"flag_type":"static","flag_prefix":"flag"}}`,
 			}, nil

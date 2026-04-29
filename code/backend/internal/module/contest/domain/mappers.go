@@ -49,7 +49,6 @@ func ContestAWDServiceRespFromModel(item *model.ContestAWDService) *dto.ContestA
 	return &dto.ContestAWDServiceResp{
 		ID:                item.ID,
 		ContestID:         item.ContestID,
-		ChallengeID:       item.ChallengeID,
 		AWDChallengeID:    item.AWDChallengeID,
 		Title:             snapshot.Name,
 		Category:          snapshot.Category,

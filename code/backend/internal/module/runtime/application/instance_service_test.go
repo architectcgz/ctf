@@ -170,7 +170,7 @@ func TestInstanceServiceGetUserInstancesPrefersContestAWDServiceMetadata(t *test
 	if err := db.Create(&model.ContestAWDService{
 		ID:              serviceID,
 		ContestID:       contestID,
-		ChallengeID:     202,
+		AWDChallengeID:  202,
 		DisplayName:     "Bank Portal",
 		Order:           1,
 		IsVisible:       true,
@@ -546,7 +546,7 @@ func TestInstanceServiceListTeacherInstancesPrefersContestAWDServiceMetadata(t *
 	if err := db.Create(&model.ContestAWDService{
 		ID:              serviceID,
 		ContestID:       contestID,
-		ChallengeID:     212,
+		AWDChallengeID:  212,
 		DisplayName:     "Bank Portal",
 		Order:           1,
 		IsVisible:       true,

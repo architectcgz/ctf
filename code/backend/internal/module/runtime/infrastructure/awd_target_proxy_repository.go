@@ -23,7 +23,7 @@ func (r *Repository) FindAWDTargetProxyScope(ctx context.Context, userID, contes
 			tm.team_id AS attacker_team_id,
 			victim.id AS victim_team_id,
 			cas.id AS service_id,
-			cas.challenge_id AS challenge_id
+			cas.awd_challenge_id AS awd_challenge_id
 		`).
 		Joins("JOIN team_members AS tm ON tm.contest_id = co.id AND tm.user_id = ?", userID).
 		Joins("JOIN teams AS victim ON victim.contest_id = co.id AND victim.id = ? AND victim.deleted_at IS NULL", victimTeamID).
@@ -60,7 +60,7 @@ func (r *Repository) FindAWDDefenseSSHScope(ctx context.Context, userID, contest
 			co.id AS contest_id,
 			tm.team_id AS team_id,
 			cas.id AS service_id,
-			cas.challenge_id AS challenge_id
+			cas.awd_challenge_id AS awd_challenge_id
 		`).
 		Joins("JOIN team_members AS tm ON tm.contest_id = co.id AND tm.user_id = ?", userID).
 		Joins("JOIN contest_awd_services AS cas ON cas.contest_id = co.id AND cas.id = ? AND cas.is_visible = ? AND cas.deleted_at IS NULL", serviceID, true).

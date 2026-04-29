@@ -83,7 +83,7 @@ const runtimeChallenges = computed(() =>
 const challengeByChallengeId = computed(() => {
   const map = new Map<string, ContestChallengeItem>()
   for (const item of props.challenges) {
-    map.set(item.challenge_id, item)
+    map.set(getAWDChallengeId(item), item)
   }
   return map
 })
@@ -170,7 +170,7 @@ const defenseAlerts = computed(() => {
     if (issues.length === 0) continue
 
     items.push({
-      challengeId: challenge.challenge_id,
+      challengeId: getAWDChallengeId(challenge),
       challengeTitle: challenge.title,
       statusLabel,
       tone,
@@ -242,16 +242,20 @@ function getChallengeRuntimeKey(challenge: ContestChallengeItem | null | undefin
   return challenge?.awd_service_id || ''
 }
 
+function getAWDChallengeId(challenge: ContestChallengeItem): string {
+  return challenge.awd_challenge_id || challenge.challenge_id
+}
+
 function getServiceStartKey(challenge: ContestChallengeItem): string {
   return challenge.awd_service_id || ''
 }
 
-function getChallengeTitleForEvent(event: { service_id?: string; challenge_id: string }): string {
+function getChallengeTitleForEvent(event: { service_id?: string; awd_challenge_id: string }): string {
   if (event.service_id) {
     const matchedByService = challengeByServiceId.value.get(event.service_id)
     if (matchedByService) return matchedByService.title
   }
-  return challengeByChallengeId.value.get(event.challenge_id)?.title || event.challenge_id
+  return challengeByChallengeId.value.get(event.awd_challenge_id)?.title || event.awd_challenge_id
 }
 
 function getSubmitResultMessage(): string {
@@ -261,7 +265,7 @@ function getSubmitResultMessage(): string {
 
 function formatAttackResultToast(result: {
   service_id?: string
-  challenge_id: string
+  awd_challenge_id: string
   is_success: boolean
   score_gained: number
 }): string {
@@ -313,7 +317,7 @@ async function copySSHConfig(serviceId?: string): Promise<void> {
 }
 
 function isTargetServiceForChallenge(
-  service: { service_id?: string; challenge_id: string },
+  service: { service_id?: string; awd_challenge_id: string },
   challenge: ContestChallengeItem
 ): boolean {
   return Boolean(challenge.awd_service_id) && service.service_id === challenge.awd_service_id

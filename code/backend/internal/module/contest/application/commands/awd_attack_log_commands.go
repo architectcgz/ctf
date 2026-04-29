@@ -59,7 +59,7 @@ func (s *AWDService) createAttackLog(
 		AttackerTeamID:    req.AttackerTeamID,
 		VictimTeamID:      req.VictimTeamID,
 		ServiceID:         runtimeService.ID,
-		ChallengeID:       runtimeService.ChallengeID,
+		AWDChallengeID:    runtimeService.AWDChallengeID,
 		AttackType:        req.AttackType,
 		Source:            contestdomain.NormalizeAWDAttackSource(source),
 		SubmittedFlag:     req.SubmittedFlag,
@@ -78,18 +78,15 @@ func (s *AWDService) createAttackLog(
 		return nil, err
 	}
 	if submittedByUserID != nil && logRecord.IsSuccess && logRecord.ScoreGained > 0 {
-		challengeItem, err := s.loadChallenge(ctx, runtimeService.ChallengeID)
-		if err != nil {
-			return nil, err
-		}
+		snapshot, _ := model.DecodeContestAWDServiceSnapshot(runtimeService.ServiceSnapshot)
 		s.publishWeakEvent(ctx, events.Event{
 			Name: contestcontracts.EventAWDAttackAccepted,
 			Payload: contestcontracts.AWDAttackAcceptedEvent{
-				UserID:      *submittedByUserID,
-				ContestID:   contestID,
-				ChallengeID: runtimeService.ChallengeID,
-				Dimension:   challengeItem.Category,
-				OccurredAt:  logRecord.CreatedAt,
+				UserID:         *submittedByUserID,
+				ContestID:      contestID,
+				AWDChallengeID: runtimeService.AWDChallengeID,
+				Dimension:      snapshot.Category,
+				OccurredAt:     logRecord.CreatedAt,
 			},
 		})
 	}

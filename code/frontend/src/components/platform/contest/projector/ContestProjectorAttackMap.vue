@@ -167,20 +167,20 @@ const firstBloodTargetKey = computed(() => {
   if (!event) return null
   return event.service_id
     ? `${event.victim_team_id}:service:${event.service_id}`
-    : `${event.victim_team_id}:challenge:${event.challenge_id}`
+    : `${event.victim_team_id}:challenge:${event.awd_challenge_id}`
 })
 
 function getServiceKey(teamId: string, service: AWDTeamServiceData): string {
   return service.service_id
     ? `${teamId}:service:${service.service_id}`
-    : `${teamId}:challenge:${service.challenge_id}`
+    : `${teamId}:challenge:${service.awd_challenge_id}`
 }
 
 function getServiceDisplayName(service: AWDTeamServiceData): string {
   return (
     service.service_name?.trim() ||
-    service.challenge_title?.trim() ||
-    (service.service_id ? `服务 ${service.service_id}` : `题目 ${service.challenge_id}`)
+    service.awd_challenge_title?.trim() ||
+    (service.service_id ? `服务 ${service.service_id}` : `题目 ${service.awd_challenge_id}`)
   )
 }
 

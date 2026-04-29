@@ -63,7 +63,6 @@ func buildContestAWDServiceScoreConfig(points, slaScore, defenseScore int) strin
 }
 
 func buildContestAWDServiceRuntimeConfig(
-	_ int64,
 	checkerType model.AWDCheckerType,
 	checkerConfig string,
 	extraRuntimeConfig string,
@@ -209,7 +208,7 @@ func buildContestAWDServiceValidationUpdate(
 		redisClient,
 		contestID,
 		current.ID,
-		current.ChallengeID,
+		current.AWDChallengeID,
 		nextCheckerType,
 		nextCheckerConfig,
 		previewToken,

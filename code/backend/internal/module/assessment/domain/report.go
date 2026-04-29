@@ -118,22 +118,26 @@ type ReviewArchiveTeacherObservations struct {
 }
 
 type ReviewArchiveTimelineEvent struct {
-	Type        string    `json:"type"`
-	ChallengeID int64     `json:"challenge_id"`
-	Title       string    `json:"title"`
-	Timestamp   time.Time `json:"timestamp"`
-	IsCorrect   *bool     `json:"is_correct,omitempty"`
-	Points      *int      `json:"points,omitempty"`
-	Detail      string    `json:"detail,omitempty"`
+	Type              string    `json:"type"`
+	ChallengeID       int64     `json:"challenge_id"`
+	AWDChallengeID    int64     `json:"awd_challenge_id,omitempty"`
+	AWDChallengeTitle string    `json:"awd_challenge_title,omitempty"`
+	Title             string    `json:"title"`
+	Timestamp         time.Time `json:"timestamp"`
+	IsCorrect         *bool     `json:"is_correct,omitempty"`
+	Points            *int      `json:"points,omitempty"`
+	Detail            string    `json:"detail,omitempty"`
 }
 
 type ReviewArchiveEvidenceEvent struct {
-	Type        string         `json:"type"`
-	ChallengeID int64          `json:"challenge_id"`
-	Title       string         `json:"title"`
-	Timestamp   time.Time      `json:"timestamp"`
-	Detail      string         `json:"detail,omitempty"`
-	Meta        map[string]any `json:"meta,omitempty"`
+	Type              string         `json:"type"`
+	ChallengeID       int64          `json:"challenge_id"`
+	AWDChallengeID    int64          `json:"awd_challenge_id,omitempty"`
+	AWDChallengeTitle string         `json:"awd_challenge_title,omitempty"`
+	Title             string         `json:"title"`
+	Timestamp         time.Time      `json:"timestamp"`
+	Detail            string         `json:"detail,omitempty"`
+	Meta              map[string]any `json:"meta,omitempty"`
 }
 
 type ReviewArchiveWriteupItem struct {

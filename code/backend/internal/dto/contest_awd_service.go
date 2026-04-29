@@ -35,8 +35,7 @@ type UpdateContestAWDServiceReq struct {
 type ContestAWDServiceResp struct {
 	ID                int64                           `json:"id"`
 	ContestID         int64                           `json:"contest_id"`
-	ChallengeID       int64                           `json:"challenge_id"`
-	AWDChallengeID    *int64                          `json:"awd_challenge_id,omitempty"`
+	AWDChallengeID    int64                           `json:"awd_challenge_id"`
 	Title             string                          `json:"title,omitempty"`
 	Category          string                          `json:"category,omitempty"`
 	Difficulty        string                          `json:"difficulty,omitempty"`

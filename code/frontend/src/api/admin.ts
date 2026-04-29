@@ -158,7 +158,7 @@ export interface AdminContestAWDServiceUpdatePayload {
 
 export interface AdminAWDCheckerPreviewPayload {
   service_id?: number
-  challenge_id: number
+  awd_challenge_id: number
   checker_type: AWDCheckerType
   checker_config: Record<string, unknown>
   access_url?: string
@@ -222,8 +222,8 @@ interface RawAWDTeamServiceItem {
   team_name: string
   service_id?: string | number
   service_name?: string | null
-  challenge_id: string | number
-  challenge_title?: string | null
+  awd_challenge_id: string | number
+  awd_challenge_title?: string | null
   service_status: AWDTeamServiceData['service_status']
   checker_type?: string | null
   check_result?: Record<string, unknown> | null
@@ -242,7 +242,7 @@ interface RawAWDAttackLogItem {
   victim_team_id: string | number
   victim_team: string
   service_id?: string | number
-  challenge_id: string | number
+  awd_challenge_id: string | number
   attack_type: AWDAttackLogData['attack_type']
   source?: AWDAttackLogData['source']
   submitted_flag?: string
@@ -304,8 +304,8 @@ interface RawAWDTrafficTopTeamItem {
 }
 
 interface RawAWDTrafficTopChallengeItem {
-  challenge_id: string | number
-  challenge_title?: string
+  awd_challenge_id: string | number
+  awd_challenge_title?: string
   request_count: number
   error_count: number
 }
@@ -351,8 +351,8 @@ interface RawAWDTrafficEventItem {
   victim_team_id: string | number
   victim_team_name?: string
   service_id?: string | number
-  challenge_id: string | number
-  challenge_title?: string
+  awd_challenge_id: string | number
+  awd_challenge_title?: string
   method: string
   path: string
   status_code: number
@@ -369,7 +369,7 @@ interface RawAWDCheckerRunData {
 }
 
 interface RawAWDReadinessItemData {
-  challenge_id: string | number
+  awd_challenge_id: string | number
   title: string
   checker_type?: AWDCheckerType | null
   validation_state: AWDReadinessItemData['validation_state']
@@ -398,7 +398,7 @@ interface RawAWDCheckerPreviewContext {
   preview_flag: string
   round_number: number
   team_id: string | number
-  challenge_id: string | number
+  awd_challenge_id: string | number
 }
 
 interface RawAWDCheckerPreviewData {
@@ -436,8 +436,7 @@ interface RawAdminContestChallengeItem {
 interface RawAdminContestAWDServiceItem {
   id: string | number
   contest_id: string | number
-  challenge_id: string | number
-  awd_challenge_id?: string | number | null
+  awd_challenge_id: string | number
   title?: string | null
   category?: AdminContestAWDServiceData['category'] | null
   difficulty?: AdminContestAWDServiceData['difficulty'] | null
@@ -461,7 +460,7 @@ interface RawAdminContestAWDInstanceTeamItem {
 
 interface RawAdminContestAWDInstanceServiceItem {
   service_id: string | number
-  challenge_id: string | number
+  awd_challenge_id: string | number
   display_name: string
   is_visible: boolean
 }
@@ -914,7 +913,7 @@ export interface AdminAWDTrafficEventsParams {
   attacker_team_id?: string
   victim_team_id?: string
   service_id?: string
-  challenge_id?: string
+  awd_challenge_id?: string
   status_group?: AWDTrafficStatusGroup
   path_keyword?: string
   page?: number
@@ -1040,8 +1039,8 @@ function normalizeAWDTeamService(item: RawAWDTeamServiceItem): AWDTeamServiceDat
     team_name: item.team_name,
     service_id: item.service_id == null ? undefined : String(item.service_id),
     service_name: item.service_name || undefined,
-    challenge_id: String(item.challenge_id),
-    challenge_title: item.challenge_title || undefined,
+    awd_challenge_id: String(item.awd_challenge_id),
+    awd_challenge_title: item.awd_challenge_title || undefined,
     service_status: item.service_status,
     checker_type: normalizeAWDCheckerType(item.checker_type),
     check_result: item.check_result || {},
@@ -1062,7 +1061,7 @@ function normalizeAWDAttackLog(item: RawAWDAttackLogItem): AWDAttackLogData {
     victim_team_id: String(item.victim_team_id),
     victim_team: item.victim_team,
     service_id: item.service_id == null ? undefined : String(item.service_id),
-    challenge_id: String(item.challenge_id),
+    awd_challenge_id: String(item.awd_challenge_id),
     attack_type: item.attack_type,
     source: item.source || 'legacy',
     submitted_flag: item.submitted_flag || undefined,
@@ -1135,8 +1134,8 @@ function normalizeAWDTrafficTopChallenge(
   item: RawAWDTrafficTopChallengeItem
 ): AWDTrafficTopChallengeData {
   return {
-    challenge_id: String(item.challenge_id),
-    challenge_title: item.challenge_title,
+    awd_challenge_id: String(item.awd_challenge_id),
+    awd_challenge_title: item.awd_challenge_title,
     request_count: item.request_count,
     error_count: item.error_count,
   }
@@ -1206,8 +1205,8 @@ function normalizeAWDTrafficEvent(item: RawAWDTrafficEventItem): AWDTrafficEvent
     victim_team_id: String(item.victim_team_id),
     victim_team_name: item.victim_team_name,
     service_id: item.service_id == null ? undefined : String(item.service_id),
-    challenge_id: String(item.challenge_id),
-    challenge_title: item.challenge_title,
+    awd_challenge_id: String(item.awd_challenge_id),
+    awd_challenge_title: item.awd_challenge_title,
     method: item.method,
     path: item.path,
     status_code: item.status_code,
@@ -1256,7 +1255,7 @@ function normalizeAWDCheckerPreview(item: RawAWDCheckerPreviewData): AWDCheckerP
       preview_flag: item.preview_context?.preview_flag || '',
       round_number: item.preview_context?.round_number ?? 0,
       team_id: String(item.preview_context?.team_id ?? 0),
-      challenge_id: String(item.preview_context?.challenge_id ?? 0),
+      awd_challenge_id: String(item.preview_context?.awd_challenge_id ?? 0),
     },
     preview_token: item.preview_token || undefined,
   }
@@ -1264,7 +1263,7 @@ function normalizeAWDCheckerPreview(item: RawAWDCheckerPreviewData): AWDCheckerP
 
 function normalizeAWDReadinessItem(item: RawAWDReadinessItemData): AWDReadinessItemData {
   return {
-    challenge_id: String(item.challenge_id),
+    awd_challenge_id: String(item.awd_challenge_id),
     title: item.title,
     checker_type: item.checker_type || undefined,
     validation_state: item.validation_state,
@@ -1326,12 +1325,12 @@ function normalizeAdminContestAWDService(
 ): AdminContestAWDServiceData {
   const runtimeConfig = { ...(item.runtime_config || {}) }
   delete runtimeConfig.challenge_id
+  delete runtimeConfig.awd_challenge_id
   const scoreConfig = item.score_config || {}
   return {
     id: String(item.id),
     contest_id: String(item.contest_id),
-    challenge_id: String(item.challenge_id),
-    awd_challenge_id: item.awd_challenge_id == null ? undefined : String(item.awd_challenge_id),
+    awd_challenge_id: String(item.awd_challenge_id),
     title: item.title || undefined,
     category: item.category || undefined,
     difficulty: item.difficulty || undefined,
@@ -1369,7 +1368,7 @@ function normalizeAdminContestAWDInstanceService(
 ): AdminContestAWDInstanceServiceData {
   return {
     service_id: String(item.service_id),
-    challenge_id: String(item.challenge_id),
+    awd_challenge_id: String(item.awd_challenge_id),
     display_name: item.display_name,
     is_visible: item.is_visible,
   }

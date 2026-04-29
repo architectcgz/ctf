@@ -183,7 +183,7 @@ func CreateAWDContestChallengeFixture(t *testing.T, db *gorm.DB, contestID, chal
 	var count int64
 	if err := db.WithContext(context.Background()).
 		Model(&model.ContestAWDService{}).
-		Where("contest_id = ? AND challenge_id = ?", contestID, challengeID).
+		Where("contest_id = ? AND awd_challenge_id = ?", contestID, challengeID).
 		Count(&count).Error; err != nil {
 		t.Fatalf("count awd contest services: %v", err)
 	}
@@ -196,7 +196,7 @@ func CreateAWDContestChallengeFixture(t *testing.T, db *gorm.DB, contestID, chal
 	if err := db.Create(&model.ContestAWDService{
 		ID:                DefaultAWDContestServiceID(contestID, challengeID),
 		ContestID:         contestID,
-		ChallengeID:       challengeID,
+		AWDChallengeID:    challengeID,
 		DisplayName:       fmt.Sprintf("awd-service-%d", challengeID),
 		ServiceSnapshot:   serviceSnapshot,
 		Order:             0,
@@ -267,7 +267,7 @@ func SyncAWDContestServiceFixture(
 		"updated_at":       now,
 	}
 	result := db.Model(&model.ContestAWDService{}).
-		Where("contest_id = ? AND challenge_id = ?", contestID, challengeID).
+		Where("contest_id = ? AND awd_challenge_id = ?", contestID, challengeID).
 		Updates(updates)
 	if result.Error != nil {
 		t.Fatalf("update awd contest service fixture: %v", result.Error)
@@ -279,7 +279,7 @@ func SyncAWDContestServiceFixture(
 	if err := db.Create(&model.ContestAWDService{
 		ID:                DefaultAWDContestServiceID(contestID, challengeID),
 		ContestID:         contestID,
-		ChallengeID:       challengeID,
+		AWDChallengeID:    challengeID,
 		DisplayName:       displayName,
 		ServiceSnapshot:   serviceSnapshot,
 		Order:             0,
@@ -311,7 +311,7 @@ func SyncAWDContestServiceReadinessFixture(
 		"awd_checker_last_preview_result": lastPreviewResult,
 	}
 	result := db.Model(&model.ContestAWDService{}).
-		Where("contest_id = ? AND challenge_id = ?", contestID, challengeID).
+		Where("contest_id = ? AND awd_challenge_id = ?", contestID, challengeID).
 		Updates(updates)
 	if result.Error != nil {
 		t.Fatalf("update awd contest service readiness fixture: %v", result.Error)

@@ -10,10 +10,10 @@ import (
 )
 
 type runtimeProxyTrafficInstanceRow struct {
-	ContestID   *int64 `gorm:"column:contest_id"`
-	TeamID      *int64 `gorm:"column:team_id"`
-	ServiceID   *int64 `gorm:"column:service_id"`
-	ChallengeID int64  `gorm:"column:challenge_id"`
+	ContestID      *int64 `gorm:"column:contest_id"`
+	TeamID         *int64 `gorm:"column:team_id"`
+	ServiceID      *int64 `gorm:"column:service_id"`
+	AWDChallengeID int64  `gorm:"column:awd_challenge_id"`
 }
 
 func (r *AWDRepository) RecordRuntimeProxyTrafficEvent(ctx context.Context, instanceID, userID int64, method, requestPath string, statusCode int) error {
@@ -21,7 +21,7 @@ func (r *AWDRepository) RecordRuntimeProxyTrafficEvent(ctx context.Context, inst
 	if err != nil || instanceScope == nil {
 		return err
 	}
-	if instanceScope.ContestID == nil || instanceScope.TeamID == nil || instanceScope.ServiceID == nil || *instanceScope.ServiceID <= 0 || instanceScope.ChallengeID <= 0 {
+	if instanceScope.ContestID == nil || instanceScope.TeamID == nil || instanceScope.ServiceID == nil || *instanceScope.ServiceID <= 0 || instanceScope.AWDChallengeID <= 0 {
 		return nil
 	}
 
@@ -47,7 +47,7 @@ func (r *AWDRepository) RecordRuntimeProxyTrafficEvent(ctx context.Context, inst
 		AttackerTeamID: attackerTeam.ID,
 		VictimTeamID:   *instanceScope.TeamID,
 		ServiceID:      *instanceScope.ServiceID,
-		ChallengeID:    instanceScope.ChallengeID,
+		AWDChallengeID: instanceScope.AWDChallengeID,
 		Method:         trimToLength(method, 16),
 		Path:           trimToLength(requestPath, 1024),
 		StatusCode:     statusCode,
@@ -68,8 +68,8 @@ func (r *AWDRepository) ListTrafficEvents(ctx context.Context, contestID, roundI
 			te.victim_team_id AS victim_team_id,
 			COALESCE(vic.name, '') AS victim_team_name,
 			te.service_id AS service_id,
-			te.challenge_id AS challenge_id,
-			COALESCE(ch.title, '') AS challenge_title,
+			te.awd_challenge_id AS awd_challenge_id,
+			COALESCE(ch.name, '') AS awd_challenge_title,
 			te.method AS method,
 			te.path AS path,
 			te.status_code AS status_code,
@@ -78,7 +78,7 @@ func (r *AWDRepository) ListTrafficEvents(ctx context.Context, contestID, roundI
 		`).
 		Joins("LEFT JOIN teams att ON att.id = te.attacker_team_id").
 		Joins("LEFT JOIN teams vic ON vic.id = te.victim_team_id").
-		Joins("LEFT JOIN challenges ch ON ch.id = te.challenge_id").
+		Joins("LEFT JOIN awd_challenges ch ON ch.id = te.awd_challenge_id").
 		Where("te.contest_id = ? AND te.round_id = ?", contestID, roundID).
 		Order("te.created_at DESC, te.id DESC").
 		Scan(&rows).Error
@@ -89,7 +89,7 @@ func (r *AWDRepository) loadRuntimeProxyTrafficInstanceScope(ctx context.Context
 	var row runtimeProxyTrafficInstanceRow
 	err := r.dbWithContext(ctx).
 		Table("instances AS inst").
-		Select("inst.contest_id, inst.team_id, inst.service_id, cas.challenge_id AS challenge_id").
+		Select("inst.contest_id, inst.team_id, inst.service_id, cas.awd_challenge_id AS awd_challenge_id").
 		Joins("LEFT JOIN contest_awd_services AS cas ON cas.id = inst.service_id AND cas.deleted_at IS NULL").
 		Where("inst.id = ?", instanceID).
 		First(&row).Error

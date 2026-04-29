@@ -6,7 +6,7 @@ export interface AWDTrafficFilters {
   attacker_team_id: string
   victim_team_id: string
   service_id: string
-  challenge_id: string
+  awd_challenge_id: string
   status_group: 'all' | AWDTrafficStatusGroup
   path_keyword: string
   page: number

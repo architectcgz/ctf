@@ -332,7 +332,7 @@ describe('AWDChallengeConfigDialog', () => {
         preview_flag: 'flag{preview}',
         round_number: 0,
         team_id: '0',
-        challenge_id: '101',
+        awd_challenge_id: '501',
       },
       preview_token: 'preview-token-1',
     })
@@ -349,7 +349,7 @@ describe('AWDChallengeConfigDialog', () => {
     await flushPromises()
 
     expect(previewMock).toHaveBeenCalledWith('awd-1', {
-      challenge_id: 501,
+      awd_challenge_id: 501,
       checker_type: 'http_standard',
       checker_config: {
         put_flag: {

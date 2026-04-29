@@ -24,7 +24,7 @@ const emit = defineEmits<AWDServiceStatusPanelEmits>()
 // Matrix specific derivations
 const distinctChallengeIds = computed(() => {
   const ids = new Set<string>()
-  props.services.forEach(s => ids.add(s.challenge_id))
+  props.services.forEach(s => ids.add(s.awd_challenge_id))
   return Array.from(ids)
 })
 
@@ -34,7 +34,7 @@ const teamMap = computed(() => {
     if (!map.has(s.team_id)) {
       map.set(s.team_id, { team_name: s.team_name, services: {} })
     }
-    map.get(s.team_id)!.services[s.challenge_id] = s
+    map.get(s.team_id)!.services[s.awd_challenge_id] = s
   })
   return Array.from(map.entries()).sort((a, b) => a[1].team_name.localeCompare(b[1].team_name))
 })

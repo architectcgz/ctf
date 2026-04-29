@@ -42,7 +42,7 @@ func mapStatusAWDReadinessRecords(records []contestports.AWDReadinessChallengeRe
 	for _, record := range records {
 		challenges = append(challenges, contestdomain.AWDReadinessChallenge{
 			ServiceID:         record.ServiceID,
-			ChallengeID:       record.ChallengeID,
+			AWDChallengeID:    record.AWDChallengeID,
 			Title:             record.Title,
 			CheckerType:       record.CheckerType,
 			CheckerConfig:     record.CheckerConfig,

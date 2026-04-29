@@ -124,7 +124,7 @@ func TestProxyTicketServiceIssueAWDTargetTicketPersistsAttackScope(t *testing.T)
 				AttackerTeamID: 5001,
 				VictimTeamID:   victimTeamID,
 				ServiceID:      serviceID,
-				ChallengeID:    6001,
+				AWDChallengeID: 6001,
 				ShareScope:     model.InstanceSharingPerTeam,
 				AccessURL:      "http://127.0.0.1:39001",
 			}, nil
@@ -169,13 +169,13 @@ func TestProxyTicketServiceIssueAWDDefenseSSHTicketPersistsOwnTeamScope(t *testi
 				t.Fatalf("unexpected defense ssh lookup args: user=%d contest=%d service=%d", userID, contestID, serviceID)
 			}
 			return &runtimeports.AWDDefenseSSHScope{
-				InstanceID:  9001,
-				ContestID:   contestID,
-				TeamID:      5001,
-				ServiceID:   serviceID,
-				ChallengeID: 6001,
-				ContainerID: "ctr-red-web",
-				ShareScope:  model.InstanceSharingPerTeam,
+				InstanceID:     9001,
+				ContestID:      contestID,
+				TeamID:         5001,
+				ServiceID:      serviceID,
+				AWDChallengeID: 6001,
+				ContainerID:    "ctr-red-web",
+				ShareScope:     model.InstanceSharingPerTeam,
 			}, nil
 		},
 	}, 15*time.Minute)

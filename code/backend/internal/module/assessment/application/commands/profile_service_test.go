@@ -165,7 +165,7 @@ func TestCalculateSkillProfileCountsSuccessfulAWDAttacks(t *testing.T) {
 			RoundID:           301,
 			AttackerTeamID:    401,
 			VictimTeamID:      402,
-			ChallengeID:       31,
+			AWDChallengeID:    31,
 			AttackType:        model.AWDAttackTypeFlagCapture,
 			Source:            model.AWDAttackSourceSubmission,
 			IsSuccess:         true,
@@ -178,7 +178,7 @@ func TestCalculateSkillProfileCountsSuccessfulAWDAttacks(t *testing.T) {
 			RoundID:           302,
 			AttackerTeamID:    401,
 			VictimTeamID:      403,
-			ChallengeID:       32,
+			AWDChallengeID:    32,
 			AttackType:        model.AWDAttackTypeFlagCapture,
 			Source:            model.AWDAttackSourceSubmission,
 			IsSuccess:         true,
@@ -202,8 +202,8 @@ func TestCalculateSkillProfileCountsSuccessfulAWDAttacks(t *testing.T) {
 	for _, item := range dimensions {
 		scoreByDimension[item.Dimension] = item.Score
 	}
-	if scoreByDimension[model.DimensionWeb] != 1 {
-		t.Fatalf("expected web score 1.0 after unioning practice and awd evidence, got %+v", scoreByDimension)
+	if scoreByDimension[model.DimensionWeb] != 2.0/3.0 {
+		t.Fatalf("expected web score to ignore separated awd evidence, got %+v", scoreByDimension)
 	}
 	if scoreByDimension[model.DimensionCrypto] != 0 {
 		t.Fatalf("expected crypto score 0, got %+v", scoreByDimension)
@@ -350,7 +350,7 @@ func TestProfileServiceRegistersContestAttackAcceptedConsumer(t *testing.T) {
 		RoundID:           501,
 		AttackerTeamID:    601,
 		VictimTeamID:      602,
-		ChallengeID:       51,
+		AWDChallengeID:    51,
 		AttackType:        model.AWDAttackTypeFlagCapture,
 		Source:            model.AWDAttackSourceSubmission,
 		IsSuccess:         true,
@@ -364,11 +364,11 @@ func TestProfileServiceRegistersContestAttackAcceptedConsumer(t *testing.T) {
 	if err := bus.Publish(context.Background(), platformevents.Event{
 		Name: contestcontracts.EventAWDAttackAccepted,
 		Payload: contestcontracts.AWDAttackAcceptedEvent{
-			UserID:      77,
-			ContestID:   99,
-			ChallengeID: 51,
-			Dimension:   model.DimensionWeb,
-			OccurredAt:  now,
+			UserID:         77,
+			ContestID:      99,
+			AWDChallengeID: 51,
+			Dimension:      model.DimensionWeb,
+			OccurredAt:     now,
 		},
 	}); err != nil {
 		t.Fatalf("Publish() error = %v", err)
@@ -378,8 +378,8 @@ func TestProfileServiceRegistersContestAttackAcceptedConsumer(t *testing.T) {
 	if err := db.Where("user_id = ? AND dimension = ?", 77, model.DimensionWeb).First(&profile).Error; err != nil {
 		t.Fatalf("query profile after event: %v", err)
 	}
-	if profile.Score != 1 {
-		t.Fatalf("expected profile score 1 after awd event, got %+v", profile)
+	if profile.Score != 0 {
+		t.Fatalf("expected profile score to ignore separated awd event in ordinary challenge profile, got %+v", profile)
 	}
 }
 

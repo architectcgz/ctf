@@ -31,12 +31,12 @@ type AWDRepository interface {
 	FindContestTeamByMember(ctx context.Context, contestID, userID int64) (*model.Team, error)
 	FindChallengeByID(ctx context.Context, challengeID int64) (*model.Challenge, error)
 	ListServiceInstancesByContest(ctx context.Context, contestID int64, serviceIDs []int64) ([]AWDServiceInstance, error)
-	UpsertServiceCheck(ctx context.Context, roundID, teamID, serviceID, challengeID int64, serviceStatus, checkResult string, defenseScore int, updatedAt time.Time) (*model.AWDTeamService, error)
+	UpsertServiceCheck(ctx context.Context, roundID, teamID, serviceID, awdChallengeID int64, serviceStatus, checkResult string, defenseScore int, updatedAt time.Time) (*model.AWDTeamService, error)
 	UpsertTeamServices(ctx context.Context, records []model.AWDTeamService) error
 	ListServicesByRound(ctx context.Context, roundID int64) ([]model.AWDTeamService, error)
 	CountSuccessfulAttacks(ctx context.Context, roundID, attackerTeamID, victimTeamID, serviceID int64) (int64, error)
 	CreateAttackLog(ctx context.Context, logRecord *model.AWDAttackLog) error
-	ApplyAttackImpactToVictimService(ctx context.Context, roundID, victimTeamID, serviceID, challengeID int64, scoreGained int, updatedAt time.Time) error
+	ApplyAttackImpactToVictimService(ctx context.Context, roundID, victimTeamID, serviceID, awdChallengeID int64, scoreGained int, updatedAt time.Time) error
 	ListAttackLogsByRound(ctx context.Context, roundID int64) ([]model.AWDAttackLog, error)
 	ListTrafficEvents(ctx context.Context, contestID, roundID int64) ([]AWDTrafficEventRecord, error)
 	RecalculateContestTeamScores(ctx context.Context, contestID int64) error
@@ -44,26 +44,26 @@ type AWDRepository interface {
 }
 
 type AWDFlagAssignment struct {
-	ServiceID   int64
-	TeamID      int64
-	ChallengeID int64
-	Flag        string
+	ServiceID      int64
+	TeamID         int64
+	AWDChallengeID int64
+	Flag           string
 }
 
 type AWDServiceDefinition struct {
-	ServiceID     int64                `gorm:"column:service_id"`
-	ServiceName   string               `gorm:"column:service_name"`
-	ChallengeID   int64                `gorm:"column:challenge_id"`
-	FlagPrefix    string               `gorm:"column:flag_prefix"`
-	CheckerType   model.AWDCheckerType `gorm:"column:awd_checker_type"`
-	CheckerConfig string               `gorm:"column:awd_checker_config"`
-	SLAScore      int                  `gorm:"column:awd_sla_score"`
-	DefenseScore  int                  `gorm:"column:awd_defense_score"`
+	ServiceID      int64                `gorm:"column:service_id"`
+	ServiceName    string               `gorm:"column:service_name"`
+	AWDChallengeID int64                `gorm:"column:awd_challenge_id"`
+	FlagPrefix     string               `gorm:"column:flag_prefix"`
+	CheckerType    model.AWDCheckerType `gorm:"column:awd_checker_type"`
+	CheckerConfig  string               `gorm:"column:awd_checker_config"`
+	SLAScore       int                  `gorm:"column:awd_sla_score"`
+	DefenseScore   int                  `gorm:"column:awd_defense_score"`
 }
 
 type AWDReadinessChallengeRecord struct {
 	ServiceID         int64                           `gorm:"column:service_id"`
-	ChallengeID       int64                           `gorm:"column:challenge_id"`
+	AWDChallengeID    int64                           `gorm:"column:awd_challenge_id"`
 	Title             string                          `gorm:"column:title"`
 	CheckerType       model.AWDCheckerType            `gorm:"column:awd_checker_type"`
 	CheckerConfig     string                          `gorm:"column:awd_checker_config"`
@@ -81,47 +81,47 @@ type AWDFlagInjector interface {
 }
 
 type AWDServiceInstance struct {
-	InstanceID  int64
-	ServiceID   int64
-	TeamID      int64
-	ChallengeID int64
-	AccessURL   string
+	InstanceID     int64
+	ServiceID      int64
+	TeamID         int64
+	AWDChallengeID int64
+	AccessURL      string
 }
 
 type AWDTrafficEventRecord struct {
-	ID               int64
-	ContestID        int64
-	RoundID          int64
-	AttackerTeamID   int64
-	AttackerTeamName string
-	VictimTeamID     int64
-	VictimTeamName   string
-	ServiceID        int64
-	ChallengeID      int64
-	ChallengeTitle   string
-	Method           string
-	Path             string
-	StatusCode       int
-	Source           string
-	OccurredAt       time.Time
+	ID                int64
+	ContestID         int64
+	RoundID           int64
+	AttackerTeamID    int64
+	AttackerTeamName  string
+	VictimTeamID      int64
+	VictimTeamName    string
+	ServiceID         int64
+	AWDChallengeID    int64
+	AWDChallengeTitle string
+	Method            string
+	Path              string
+	StatusCode        int
+	Source            string
+	OccurredAt        time.Time
 }
 
 type AWDCheckerPreviewContext struct {
-	ServiceID   int64
-	AccessURL   string
-	PreviewFlag string
-	RoundNumber int
-	TeamID      int64
-	ChallengeID int64
+	ServiceID      int64
+	AccessURL      string
+	PreviewFlag    string
+	RoundNumber    int
+	TeamID         int64
+	AWDChallengeID int64
 }
 
 type AWDServicePreviewRequest struct {
-	ServiceID     int64
-	ChallengeID   int64
-	CheckerType   model.AWDCheckerType
-	CheckerConfig string
-	AccessURL     string
-	PreviewFlag   string
+	ServiceID      int64
+	AWDChallengeID int64
+	CheckerType    model.AWDCheckerType
+	CheckerConfig  string
+	AccessURL      string
+	PreviewFlag    string
 }
 
 type AWDServicePreviewResult struct {

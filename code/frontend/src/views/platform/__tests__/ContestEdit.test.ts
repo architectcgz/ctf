@@ -518,7 +518,7 @@ describe('ContestEdit', () => {
       blocking_actions: ['start_contest'],
       items: [
         {
-          challenge_id: '101',
+          awd_challenge_id: '1',
           title: 'Challenge 101',
           checker_type: 'http_standard',
           validation_state: 'failed',
@@ -754,7 +754,7 @@ describe('ContestEdit', () => {
     expect(wrapper.text()).toContain('修正配置')
     expect(wrapper.text()).toContain('强制放行')
 
-    await wrapper.get('#awd-readiness-edit-101').trigger('click')
+    await wrapper.get('#awd-readiness-edit-1').trigger('click')
     await flushPromises()
 
     expect(getWorkbenchStageRail(wrapper).get('[role="tab"][aria-selected="true"]').text()).toContain('AWD 服务配置')
@@ -777,8 +777,8 @@ describe('ContestEdit', () => {
     await flushPromises()
     await wrapper.get('#contest-workbench-stage-tab-pool').trigger('click')
     await flushPromises()
-    await openChallengeActionMenu(wrapper)
-    getTeleportTarget<HTMLButtonElement>('#contest-challenge-open-awd-config-101').click()
+    await openChallengeActionMenu(wrapper, '1')
+    getTeleportTarget<HTMLButtonElement>('#contest-challenge-open-awd-config-1').click()
     await flushPromises()
 
     expect(getWorkbenchStageRail(wrapper).get('[role="tab"][aria-selected="true"]').text()).toContain('AWD 服务配置')
@@ -1530,8 +1530,8 @@ describe('ContestEdit', () => {
     await flushPromises()
     await wrapper.get('#contest-workbench-stage-tab-pool').trigger('click')
     await flushPromises()
-    await openChallengeActionMenu(wrapper)
-    getTeleportTarget<HTMLButtonElement>('#contest-challenge-remove-101').click()
+    await openChallengeActionMenu(wrapper, '1')
+    getTeleportTarget<HTMLButtonElement>('#contest-challenge-remove-1').click()
     await flushPromises()
 
     expect(contestApiMocks.deleteContestAWDService).toHaveBeenCalledWith('contest-1', 'service-1')

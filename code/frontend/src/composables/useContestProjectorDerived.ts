@@ -87,12 +87,12 @@ export function useContestProjectorDerived({
     for (const service of services.value) {
       const label =
         service.service_name?.trim() ||
-        service.challenge_title?.trim() ||
-        (service.service_id ? `服务 ${service.service_id}` : `题目 ${service.challenge_id}`)
+        service.awd_challenge_title?.trim() ||
+        (service.service_id ? `服务 ${service.service_id}` : `题目 ${service.awd_challenge_id}`)
       if (service.service_id) {
         serviceLabelMap.set(`${service.team_id}:service:${service.service_id}`, label)
       }
-      serviceLabelMap.set(`${service.team_id}:challenge:${service.challenge_id}`, label)
+      serviceLabelMap.set(`${service.team_id}:challenge:${service.awd_challenge_id}`, label)
     }
 
     const edgeMap = new Map<string, ContestProjectorAttackEdge>()
@@ -105,8 +105,8 @@ export function useContestProjectorDerived({
         (attack.service_id
           ? serviceLabelMap.get(`${attack.victim_team_id}:service:${attack.service_id}`)
           : undefined) ??
-        serviceLabelMap.get(`${attack.victim_team_id}:challenge:${attack.challenge_id}`) ??
-        (attack.service_id ? `服务 ${attack.service_id}` : `题目 ${attack.challenge_id}`)
+        serviceLabelMap.get(`${attack.victim_team_id}:challenge:${attack.awd_challenge_id}`) ??
+        (attack.service_id ? `服务 ${attack.service_id}` : `题目 ${attack.awd_challenge_id}`)
       const next: ContestProjectorAttackEdge = current ?? {
         id: edgeId,
         attacker_team_id: attack.attacker_team_id,
@@ -114,10 +114,10 @@ export function useContestProjectorDerived({
         victim_team_id: attack.victim_team_id,
         victim_team: attack.victim_team,
         latest_service_id: attack.service_id,
-        latest_challenge_id: attack.challenge_id,
+        latest_challenge_id: attack.awd_challenge_id,
         latest_target_key: attack.service_id
           ? `${attack.victim_team_id}:service:${attack.service_id}`
-          : `${attack.victim_team_id}:challenge:${attack.challenge_id}`,
+          : `${attack.victim_team_id}:challenge:${attack.awd_challenge_id}`,
         success: 0,
         failed: 0,
         total: 0,
@@ -138,10 +138,10 @@ export function useContestProjectorDerived({
         next.latest_at = attack.created_at
         next.latest_service_label = latestServiceLabel
         next.latest_service_id = attack.service_id
-        next.latest_challenge_id = attack.challenge_id
+        next.latest_challenge_id = attack.awd_challenge_id
         next.latest_target_key = attack.service_id
           ? `${attack.victim_team_id}:service:${attack.service_id}`
-          : `${attack.victim_team_id}:challenge:${attack.challenge_id}`
+          : `${attack.victim_team_id}:challenge:${attack.awd_challenge_id}`
       }
       next.successRate = Math.round((next.success / Math.max(next.total, 1)) * 100)
       edgeMap.set(edgeId, next)

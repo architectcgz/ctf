@@ -29,14 +29,15 @@ type ContestChallengeResp struct {
 }
 
 type ContestChallengeInfo struct {
-	ID           int64  `json:"id"`
-	ChallengeID  int64  `json:"challenge_id"`
-	AWDServiceID *int64 `json:"awd_service_id,omitempty"`
-	Title        string `json:"title"`
-	Category     string `json:"category"`
-	Difficulty   string `json:"difficulty"`
-	Points       int    `json:"points"`
-	Order        int    `json:"order"`
-	SolvedCount  int64  `json:"solved_count"`
-	IsSolved     bool   `json:"is_solved"`
+	ID             int64  `json:"id"`
+	ChallengeID    int64  `json:"challenge_id"`
+	AWDChallengeID *int64 `json:"awd_challenge_id,omitempty"`
+	AWDServiceID   *int64 `json:"awd_service_id,omitempty"`
+	Title          string `json:"title"`
+	Category       string `json:"category"`
+	Difficulty     string `json:"difficulty"`
+	Points         int    `json:"points"`
+	Order          int    `json:"order"`
+	SolvedCount    int64  `json:"solved_count"`
+	IsSolved       bool   `json:"is_solved"`
 }

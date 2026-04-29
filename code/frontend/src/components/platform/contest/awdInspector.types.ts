@@ -90,7 +90,7 @@ export interface AWDServiceAlertView {
   samples: Array<{
     service_id: string
     team_name: string
-    challenge_title: string
+    awd_challenge_title: string
   }>
 }
 

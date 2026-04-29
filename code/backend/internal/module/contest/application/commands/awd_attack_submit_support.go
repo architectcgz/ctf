@@ -2,6 +2,7 @@ package commands
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"ctf-platform/internal/dto"
@@ -14,7 +15,8 @@ type submitAttackContext struct {
 	attackerTeamID int64
 	round          *model.AWDRound
 	runtimeService *model.ContestAWDService
-	challenge      *model.Challenge
+	awdChallengeID int64
+	flagPrefix     string
 	acceptedFlags  []string
 }
 
@@ -43,12 +45,10 @@ func (s *AWDService) prepareSubmitAttackContext(ctx context.Context, userID, con
 	if err != nil {
 		return nil, err
 	}
-	challengeItem, err := s.loadChallenge(ctx, runtimeService.ChallengeID)
-	if err != nil {
-		return nil, err
-	}
+	snapshot, _ := model.DecodeContestAWDServiceSnapshot(runtimeService.ServiceSnapshot)
+	flagPrefix := resolveSubmitAttackFlagPrefix(snapshot)
 
-	acceptedFlags, err := s.resolveAcceptedRoundFlags(ctx, contestID, round, req.VictimTeamID, challengeItem, runtimeService.ID, now)
+	acceptedFlags, err := s.resolveAcceptedRoundFlags(ctx, contestID, round, req.VictimTeamID, runtimeService.AWDChallengeID, flagPrefix, runtimeService.ID, now)
 	if err != nil {
 		return nil, err
 	}
@@ -56,9 +56,19 @@ func (s *AWDService) prepareSubmitAttackContext(ctx context.Context, userID, con
 		attackerTeamID: attackerTeamID,
 		round:          round,
 		runtimeService: runtimeService,
-		challenge:      challengeItem,
+		awdChallengeID: runtimeService.AWDChallengeID,
+		flagPrefix:     flagPrefix,
 		acceptedFlags:  acceptedFlags,
 	}, nil
+}
+
+func resolveSubmitAttackFlagPrefix(snapshot model.ContestAWDServiceSnapshot) string {
+	if snapshot.FlagConfig != nil {
+		if value, ok := snapshot.FlagConfig["flag_prefix"].(string); ok && strings.TrimSpace(value) != "" {
+			return strings.TrimSpace(value)
+		}
+	}
+	return "flag"
 }
 
 func validateSubmittedAttackFlag(submittedFlag string, acceptedFlags []string) bool {

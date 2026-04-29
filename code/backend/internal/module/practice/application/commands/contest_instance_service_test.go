@@ -536,7 +536,7 @@ func seedContestInstanceAWDService(t *testing.T, db *gorm.DB, serviceID, contest
 	if err := db.Create(&model.ContestAWDService{
 		ID:              serviceID,
 		ContestID:       contestID,
-		ChallengeID:     challengeID,
+		AWDChallengeID:  challengeID,
 		DisplayName:     "Bank Portal",
 		Order:           1,
 		IsVisible:       true,

@@ -12,7 +12,7 @@ describe('useAwdInspectorDerivedData', () => {
         team_id: 'team-1',
         team_name: 'Blue Team',
         service_id: '7009',
-        challenge_id: 'challenge-1',
+        awd_challenge_id: 'challenge-1',
         service_status: 'down' as const,
         checker_type: 'http_standard' as const,
         check_result: {
@@ -54,7 +54,7 @@ describe('useAwdInspectorDerivedData', () => {
         round_id: 'round-2',
         team_id: 'team-1',
         team_name: 'Blue Team',
-        challenge_id: 'challenge-1',
+        awd_challenge_id: 'challenge-1',
         service_status: 'down' as const,
         checker_type: 'http_standard' as const,
         check_result: {

@@ -53,8 +53,8 @@ func TestAWDRepositoryRecordRuntimeProxyTrafficEventPrefersServiceChallengeMetad
 	if err := db.First(&event).Error; err != nil {
 		t.Fatalf("load awd traffic event: %v", err)
 	}
-	if event.ChallengeID != 9012 {
-		t.Fatalf("expected traffic event challenge_id=9012 from contest awd service, got %+v", event)
+	if event.AWDChallengeID != 9012 {
+		t.Fatalf("expected traffic event awd_challenge_id=9012 from contest awd service, got %+v", event)
 	}
 	if event.ServiceID != serviceID {
 		t.Fatalf("expected traffic event service_id=%d from runtime instance, got %+v", serviceID, event)

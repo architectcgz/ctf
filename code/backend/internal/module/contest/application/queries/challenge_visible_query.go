@@ -34,18 +34,6 @@ func (s *ChallengeService) GetContestChallenges(ctx context.Context, userID, con
 	if len(challenges) == 0 {
 		return []*dto.ContestChallengeInfo{}, nil
 	}
-	servicesByChallenge := make(map[int64]model.ContestAWDService)
-	if s.awdRepo != nil {
-		services, listErr := s.awdRepo.ListContestAWDServicesByContest(ctx, contestID)
-		if listErr != nil {
-			return nil, errcode.ErrInternal.WithCause(listErr)
-		}
-		for i := range services {
-			item := services[i]
-			servicesByChallenge[item.ChallengeID] = item
-		}
-	}
-
 	challengeIDs := make([]int64, 0, len(challenges))
 	for _, item := range challenges {
 		challengeIDs = append(challengeIDs, item.ChallengeID)
@@ -77,9 +65,6 @@ func (s *ChallengeService) GetContestChallenges(ctx context.Context, userID, con
 			SolvedCount: solvedCountMap[item.ChallengeID],
 			IsSolved:    solvedMap[item.ChallengeID],
 		}
-		if service, ok := servicesByChallenge[item.ChallengeID]; ok {
-			resp.AWDServiceID = &service.ID
-		}
 		result = append(result, resp)
 	}
 	return result, nil
@@ -95,25 +80,14 @@ func (s *ChallengeService) getAWDContestChallenges(ctx context.Context, userID, 
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 	visibleServices := make([]model.ContestAWDService, 0, len(services))
-	challengeIDs := make([]int64, 0, len(services))
 	for _, service := range services {
 		if !service.IsVisible {
 			continue
 		}
 		visibleServices = append(visibleServices, service)
-		challengeIDs = append(challengeIDs, service.ChallengeID)
 	}
 	if len(visibleServices) == 0 {
 		return []*dto.ContestChallengeInfo{}, nil
-	}
-
-	solvedMap, err := s.challengeRepo.BatchGetSolvedStatus(ctx, userID, challengeIDs)
-	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
-	}
-	solvedCountMap, err := s.challengeRepo.BatchGetSolvedCount(ctx, challengeIDs)
-	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
 	result := make([]*dto.ContestChallengeInfo, 0, len(visibleServices))
@@ -122,17 +96,16 @@ func (s *ChallengeService) getAWDContestChallenges(ctx context.Context, userID, 
 		if decodeErr != nil {
 			return nil, errcode.ErrInternal.WithCause(decodeErr)
 		}
+		awdChallengeID := service.AWDChallengeID
 		result = append(result, &dto.ContestChallengeInfo{
-			ID:           service.ID,
-			ChallengeID:  service.ChallengeID,
-			AWDServiceID: &service.ID,
-			Title:        firstAWDServiceValue(service.DisplayName, snapshot.Name),
-			Category:     snapshot.Category,
-			Difficulty:   snapshot.Difficulty,
-			Points:       parseAWDServicePoints(service.ScoreConfig),
-			Order:        service.Order,
-			SolvedCount:  solvedCountMap[service.ChallengeID],
-			IsSolved:     solvedMap[service.ChallengeID],
+			ID:             service.ID,
+			AWDChallengeID: &awdChallengeID,
+			AWDServiceID:   &service.ID,
+			Title:          firstAWDServiceValue(service.DisplayName, snapshot.Name),
+			Category:       snapshot.Category,
+			Difficulty:     snapshot.Difficulty,
+			Points:         parseAWDServicePoints(service.ScoreConfig),
+			Order:          service.Order,
 		})
 	}
 	return result, nil
