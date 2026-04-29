@@ -623,10 +623,10 @@ func TestFullRouter_TeacherAWDReviewExportStateMatrix(t *testing.T) {
 	)
 
 	serviceSeeds := []*model.AWDTeamService{
-		{RoundID: round1.ID, TeamID: blueTeam.ID, ServiceID: reviewServiceID, ChallengeID: env.challenge.ID, ServiceStatus: model.AWDServiceStatusUp, AttackReceived: 1, SLAScore: 30, DefenseScore: 40, AttackScore: 20, UpdatedAt: now.Add(-70 * time.Minute)},
-		{RoundID: round1.ID, TeamID: redTeam.ID, ServiceID: reviewServiceID, ChallengeID: env.challenge.ID, ServiceStatus: model.AWDServiceStatusCompromised, AttackReceived: 2, SLAScore: 20, DefenseScore: 30, AttackScore: 15, UpdatedAt: now.Add(-68 * time.Minute)},
-		{RoundID: round2.ID, TeamID: blueTeam.ID, ServiceID: reviewServiceID, ChallengeID: env.challenge.ID, ServiceStatus: model.AWDServiceStatusUp, AttackReceived: 1, SLAScore: 40, DefenseScore: 50, AttackScore: 35, UpdatedAt: now.Add(-12 * time.Minute)},
-		{RoundID: round2.ID, TeamID: redTeam.ID, ServiceID: reviewServiceID, ChallengeID: env.challenge.ID, ServiceStatus: model.AWDServiceStatusDown, AttackReceived: 3, SLAScore: 10, DefenseScore: 15, AttackScore: 10, UpdatedAt: now.Add(-11 * time.Minute)},
+		{RoundID: round1.ID, TeamID: blueTeam.ID, ServiceID: reviewServiceID, AWDChallengeID: env.challenge.ID, ServiceStatus: model.AWDServiceStatusUp, AttackReceived: 1, SLAScore: 30, DefenseScore: 40, AttackScore: 20, UpdatedAt: now.Add(-70 * time.Minute)},
+		{RoundID: round1.ID, TeamID: redTeam.ID, ServiceID: reviewServiceID, AWDChallengeID: env.challenge.ID, ServiceStatus: model.AWDServiceStatusCompromised, AttackReceived: 2, SLAScore: 20, DefenseScore: 30, AttackScore: 15, UpdatedAt: now.Add(-68 * time.Minute)},
+		{RoundID: round2.ID, TeamID: blueTeam.ID, ServiceID: reviewServiceID, AWDChallengeID: env.challenge.ID, ServiceStatus: model.AWDServiceStatusUp, AttackReceived: 1, SLAScore: 40, DefenseScore: 50, AttackScore: 35, UpdatedAt: now.Add(-12 * time.Minute)},
+		{RoundID: round2.ID, TeamID: redTeam.ID, ServiceID: reviewServiceID, AWDChallengeID: env.challenge.ID, ServiceStatus: model.AWDServiceStatusDown, AttackReceived: 3, SLAScore: 10, DefenseScore: 15, AttackScore: 10, UpdatedAt: now.Add(-11 * time.Minute)},
 	}
 	for _, item := range serviceSeeds {
 		if err := env.db.Create(item).Error; err != nil {
@@ -635,8 +635,8 @@ func TestFullRouter_TeacherAWDReviewExportStateMatrix(t *testing.T) {
 	}
 
 	attackSeeds := []*model.AWDAttackLog{
-		{RoundID: round1.ID, AttackerTeamID: blueTeam.ID, VictimTeamID: redTeam.ID, ServiceID: reviewServiceID, ChallengeID: env.challenge.ID, AttackType: model.AWDAttackTypeFlagCapture, Source: model.AWDAttackSourceManual, IsSuccess: true, ScoreGained: 30, CreatedAt: now.Add(-65 * time.Minute)},
-		{RoundID: round2.ID, AttackerTeamID: redTeam.ID, VictimTeamID: blueTeam.ID, ServiceID: reviewServiceID, ChallengeID: env.challenge.ID, AttackType: model.AWDAttackTypeFlagCapture, Source: model.AWDAttackSourceManual, IsSuccess: false, ScoreGained: 0, CreatedAt: now.Add(-10 * time.Minute)},
+		{RoundID: round1.ID, AttackerTeamID: blueTeam.ID, VictimTeamID: redTeam.ID, ServiceID: reviewServiceID, AWDChallengeID: env.challenge.ID, AttackType: model.AWDAttackTypeFlagCapture, Source: model.AWDAttackSourceManual, IsSuccess: true, ScoreGained: 30, CreatedAt: now.Add(-65 * time.Minute)},
+		{RoundID: round2.ID, AttackerTeamID: redTeam.ID, VictimTeamID: blueTeam.ID, ServiceID: reviewServiceID, AWDChallengeID: env.challenge.ID, AttackType: model.AWDAttackTypeFlagCapture, Source: model.AWDAttackSourceManual, IsSuccess: false, ScoreGained: 0, CreatedAt: now.Add(-10 * time.Minute)},
 	}
 	for _, item := range attackSeeds {
 		if err := env.db.Create(item).Error; err != nil {
@@ -645,8 +645,8 @@ func TestFullRouter_TeacherAWDReviewExportStateMatrix(t *testing.T) {
 	}
 
 	trafficSeeds := []*model.AWDTrafficEvent{
-		{ContestID: reviewContest.ID, RoundID: round1.ID, AttackerTeamID: blueTeam.ID, VictimTeamID: redTeam.ID, ServiceID: reviewServiceID, ChallengeID: env.challenge.ID, Method: http.MethodGet, Path: "/health", StatusCode: http.StatusOK, Source: model.AWDAttackSourceSubmission, CreatedAt: now.Add(-64 * time.Minute)},
-		{ContestID: reviewContest.ID, RoundID: round2.ID, AttackerTeamID: redTeam.ID, VictimTeamID: blueTeam.ID, ServiceID: reviewServiceID, ChallengeID: env.challenge.ID, Method: http.MethodPost, Path: "/exploit", StatusCode: http.StatusForbidden, Source: model.AWDAttackSourceManual, CreatedAt: now.Add(-9 * time.Minute)},
+		{ContestID: reviewContest.ID, RoundID: round1.ID, AttackerTeamID: blueTeam.ID, VictimTeamID: redTeam.ID, ServiceID: reviewServiceID, AWDChallengeID: env.challenge.ID, Method: http.MethodGet, Path: "/health", StatusCode: http.StatusOK, Source: model.AWDAttackSourceSubmission, CreatedAt: now.Add(-64 * time.Minute)},
+		{ContestID: reviewContest.ID, RoundID: round2.ID, AttackerTeamID: redTeam.ID, VictimTeamID: blueTeam.ID, ServiceID: reviewServiceID, AWDChallengeID: env.challenge.ID, Method: http.MethodPost, Path: "/exploit", StatusCode: http.StatusForbidden, Source: model.AWDAttackSourceManual, CreatedAt: now.Add(-9 * time.Minute)},
 	}
 	for _, item := range trafficSeeds {
 		if err := env.db.Create(item).Error; err != nil {
@@ -1941,39 +1941,45 @@ func TestFullRouter_ContestChallengeAndScoreboardStateMatrix(t *testing.T) {
 	assertFullRouterStatus(t, resp, http.StatusBadRequest)
 }
 
-func TestFullRouter_VisibleContestChallengesIncludeAWDServiceID(t *testing.T) {
+func TestFullRouter_VisibleAWDContestChallengesIncludeAWDServiceID(t *testing.T) {
 	env := newFullRouterTestEnv(t)
 
-	adminHeaders := bearerHeaders(loginForToken(t, env.router, env.admin.Username, env.adminPwd))
 	studentHeaders := bearerHeaders(loginForToken(t, env.router, env.student.Username, env.studentPwd))
 
-	challenge := createRecommendationChallenge(t, env, "Visible AWD Challenge", model.DimensionWeb)
+	awdChallenge := &model.AWDChallenge{
+		Name:           "Visible AWD Challenge",
+		Category:       model.DimensionWeb,
+		Difficulty:     model.ChallengeDifficultyMedium,
+		ServiceType:    model.AWDServiceTypeWebHTTP,
+		DeploymentMode: model.AWDDeploymentModeSingleContainer,
+		Status:         model.AWDChallengeStatusPublished,
+	}
+	if err := env.db.Create(awdChallenge).Error; err != nil {
+		t.Fatalf("create awd challenge: %v", err)
+	}
+
 	contest := createFullRouterContest(t, env, "Visible AWD Contest", model.ContestStatusRunning)
+	contest.Mode = model.ContestModeAWD
+	if err := env.db.Save(contest).Error; err != nil {
+		t.Fatalf("update contest mode: %v", err)
+	}
 
 	now := time.Now()
-	contestChallenge := &model.ContestChallenge{
-		ContestID:   contest.ID,
-		ChallengeID: challenge.ID,
-		Points:      260,
-		Order:       2,
-		IsVisible:   true,
-		CreatedAt:   now,
-		UpdatedAt:   now,
-	}
-	if err := env.db.Create(contestChallenge).Error; err != nil {
-		t.Fatalf("create contest challenge: %v", err)
-	}
-
 	awdService := &model.ContestAWDService{
-		ContestID:     contest.ID,
-		ChallengeID:   challenge.ID,
-		DisplayName:   "Visible Bank Portal",
-		Order:         0,
-		IsVisible:     true,
-		ScoreConfig:   `{"points":260}`,
-		RuntimeConfig: fmt.Sprintf(`{"challenge_id":%d}`, challenge.ID),
-		CreatedAt:     now,
-		UpdatedAt:     now,
+		ContestID:      contest.ID,
+		AWDChallengeID: awdChallenge.ID,
+		DisplayName:    "Visible Bank Portal",
+		Order:          0,
+		IsVisible:      true,
+		ScoreConfig:    `{"points":260}`,
+		RuntimeConfig:  fmt.Sprintf(`{"awd_challenge_id":%d}`, awdChallenge.ID),
+		ServiceSnapshot: `{
+			"name":"Visible Bank Portal",
+			"category":"web",
+			"difficulty":"medium"
+		}`,
+		CreatedAt: now,
+		UpdatedAt: now,
 	}
 	if err := env.db.Create(awdService).Error; err != nil {
 		t.Fatalf("create contest awd service: %v", err)
@@ -1981,16 +1987,7 @@ func TestFullRouter_VisibleContestChallengesIncludeAWDServiceID(t *testing.T) {
 
 	createContestRegistration(t, env, contest.ID, env.student.ID, model.ContestRegistrationStatusApproved, nil)
 
-	resp := performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/admin/contests/%d/challenges", contest.ID), nil, adminHeaders)
-	assertFullRouterStatus(t, resp, http.StatusOK)
-
-	var adminChallenges []dto.ContestChallengeResp
-	decodeFullRouterData(t, resp, &adminChallenges)
-	if len(adminChallenges) != 1 || adminChallenges[0].ChallengeID != challenge.ID {
-		t.Fatalf("unexpected admin challenge payload: %+v", adminChallenges)
-	}
-
-	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/contests/%d/challenges", contest.ID), nil, studentHeaders)
+	resp := performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/contests/%d/challenges", contest.ID), nil, studentHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
 	var visibleChallenges []dto.ContestChallengeInfo

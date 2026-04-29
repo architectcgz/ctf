@@ -50,7 +50,7 @@ func NewAWDDefenseSSHGateway(
 	}
 }
 
-func (g *AWDDefenseSSHGateway) Start(context.Context) error {
+func (g *AWDDefenseSSHGateway) Start(ctx context.Context) error {
 	if g == nil || g.proxyTickets == nil || g.scopeReader == nil || g.executor == nil || g.port <= 0 {
 		return nil
 	}
@@ -70,7 +70,7 @@ func (g *AWDDefenseSSHGateway) Start(context.Context) error {
 	done := g.done
 	g.mu.Unlock()
 
-	config, err := g.serverConfig()
+	config, err := g.serverConfig(ctx)
 	if err != nil {
 		_ = listener.Close()
 		g.mu.Lock()
@@ -80,7 +80,7 @@ func (g *AWDDefenseSSHGateway) Start(context.Context) error {
 		return err
 	}
 
-	go g.serve(listener, config, done)
+	go g.serve(ctx, listener, config, done)
 	g.logger.Info("awd_defense_ssh_gateway_started", zap.Int("port", g.port))
 	return nil
 }
@@ -113,7 +113,7 @@ func (g *AWDDefenseSSHGateway) Stop(ctx context.Context) error {
 	}
 }
 
-func (g *AWDDefenseSSHGateway) serverConfig() (*ssh.ServerConfig, error) {
+func (g *AWDDefenseSSHGateway) serverConfig(ctx context.Context) (*ssh.ServerConfig, error) {
 	hostKey, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
 		return nil, err
@@ -126,7 +126,7 @@ func (g *AWDDefenseSSHGateway) serverConfig() (*ssh.ServerConfig, error) {
 	config := &ssh.ServerConfig{
 		ServerVersion: "SSH-2.0-CTF-AWD-Defense",
 		PasswordCallback: func(meta ssh.ConnMetadata, password []byte) (*ssh.Permissions, error) {
-			session, err := g.authenticate(context.Background(), meta.User(), string(password))
+			session, err := g.authenticate(ctx, meta.User(), string(password))
 			if err != nil {
 				return nil, err
 			}
@@ -189,7 +189,7 @@ func (g *AWDDefenseSSHGateway) authenticate(ctx context.Context, sshUsername, pa
 	}, nil
 }
 
-func (g *AWDDefenseSSHGateway) serve(listener net.Listener, config *ssh.ServerConfig, done chan struct{}) {
+func (g *AWDDefenseSSHGateway) serve(ctx context.Context, listener net.Listener, config *ssh.ServerConfig, done chan struct{}) {
 	defer close(done)
 
 	for {
@@ -198,11 +198,11 @@ func (g *AWDDefenseSSHGateway) serve(listener net.Listener, config *ssh.ServerCo
 			g.logger.Debug("awd_defense_ssh_accept_stopped", zap.Error(err))
 			return
 		}
-		go g.handleConn(conn, config)
+		go g.handleConn(ctx, conn, config)
 	}
 }
 
-func (g *AWDDefenseSSHGateway) handleConn(rawConn net.Conn, config *ssh.ServerConfig) {
+func (g *AWDDefenseSSHGateway) handleConn(ctx context.Context, rawConn net.Conn, config *ssh.ServerConfig) {
 	defer rawConn.Close()
 
 	serverConn, channels, requests, err := ssh.NewServerConn(rawConn, config)
@@ -229,11 +229,11 @@ func (g *AWDDefenseSSHGateway) handleConn(rawConn net.Conn, config *ssh.ServerCo
 			g.logger.Debug("awd_defense_ssh_channel_accept_failed", zap.Error(err))
 			continue
 		}
-		go g.handleSessionChannel(channel, requests, session)
+		go g.handleSessionChannel(ctx, channel, requests, session)
 	}
 }
 
-func (g *AWDDefenseSSHGateway) handleSessionChannel(channel ssh.Channel, requests <-chan *ssh.Request, session *runtimeports.AWDDefenseSSHSession) {
+func (g *AWDDefenseSSHGateway) handleSessionChannel(ctx context.Context, channel ssh.Channel, requests <-chan *ssh.Request, session *runtimeports.AWDDefenseSSHSession) {
 	defer channel.Close()
 
 	started := false
@@ -250,7 +250,7 @@ func (g *AWDDefenseSSHGateway) handleSessionChannel(channel ssh.Channel, request
 			}
 			started = true
 			_ = req.Reply(true, nil)
-			g.runContainerCommand(channel, session, []string{"/bin/sh"})
+			g.runContainerCommand(ctx, channel, session, []string{"/bin/sh"})
 			return
 		case "exec":
 			if started {
@@ -264,7 +264,7 @@ func (g *AWDDefenseSSHGateway) handleSessionChannel(channel ssh.Channel, request
 			}
 			started = true
 			_ = req.Reply(true, nil)
-			g.runContainerCommand(channel, session, []string{"/bin/sh", "-lc", command})
+			g.runContainerCommand(ctx, channel, session, []string{"/bin/sh", "-lc", command})
 			return
 		default:
 			_ = req.Reply(false, nil)
@@ -272,8 +272,8 @@ func (g *AWDDefenseSSHGateway) handleSessionChannel(channel ssh.Channel, request
 	}
 }
 
-func (g *AWDDefenseSSHGateway) runContainerCommand(channel ssh.Channel, session *runtimeports.AWDDefenseSSHSession, command []string) {
-	ctx, cancel := context.WithCancel(context.Background())
+func (g *AWDDefenseSSHGateway) runContainerCommand(ctx context.Context, channel ssh.Channel, session *runtimeports.AWDDefenseSSHSession, command []string) {
+	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
 	status := uint32(0)
