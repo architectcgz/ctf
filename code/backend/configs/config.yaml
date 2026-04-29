@@ -217,3 +217,15 @@ contest:
     previous_round_grace: 30s
     checker_timeout: 3s
     checker_health_path: /health
+    checker_sandbox:
+      image: python:3.12-alpine
+      user: "65532:65532"
+      work_dir: /checker
+      timeout: 10s
+      cpu_quota: 0.5
+      memory_bytes: 134217728
+      pids_limit: 64
+      nofile_limit: 128
+      output_limit_bytes: 32768
+      # 默认关闭网络；script_checker 接入目标服务时必须由平台显式传入受控 network_mode。
+      network_mode: ""

@@ -314,6 +314,17 @@ func validConfigForValidationTests() *Config {
 				RoundLockTTL:       time.Minute,
 				PreviousRoundGrace: 0,
 				CheckerTimeout:     time.Second,
+				CheckerSandbox: CheckerSandboxConfig{
+					Image:            "python:3.12-alpine",
+					User:             "65532:65532",
+					WorkDir:          "/checker",
+					Timeout:          10 * time.Second,
+					CPUQuota:         0.5,
+					MemoryBytes:      128 * 1024 * 1024,
+					PidsLimit:        64,
+					NofileLimit:      128,
+					OutputLimitBytes: 32768,
+				},
 			},
 		},
 	}
