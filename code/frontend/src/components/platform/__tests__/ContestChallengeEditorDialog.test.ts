@@ -100,7 +100,30 @@ describe('ContestChallengeEditorDialog', () => {
     expect(wrapper.emitted('save')?.[0]).toEqual([
       {
         challenge_id: undefined,
-        awd_challenge_id: 12,
+        awd_challenge_id: 11,
+        awd_challenge_ids: [11, 12],
+        points: 100,
+        order: 0,
+        is_visible: true,
+      },
+    ])
+  })
+
+  it('AWD 题目池创建时应该支持复选多个题目', async () => {
+    const wrapper = mountDialog()
+
+    await wrapper.get('#contest-template-option-12').trigger('click')
+
+    expect(wrapper.find('#contest-template-option-11').classes()).toContain('is-selected')
+    expect(wrapper.find('#contest-template-option-12').classes()).toContain('is-selected')
+
+    await wrapper.get('#contest-challenge-dialog-submit').trigger('click')
+
+    expect(wrapper.emitted('save')?.[0]).toEqual([
+      {
+        challenge_id: undefined,
+        awd_challenge_id: 11,
+        awd_challenge_ids: [11, 12],
         points: 100,
         order: 0,
         is_visible: true,

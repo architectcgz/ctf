@@ -31,6 +31,7 @@ const emit = defineEmits<{
     value: {
       challenge_id?: number
       awd_challenge_id?: number
+      awd_challenge_ids?: number[]
       points: number
       order: number
       is_visible: boolean
@@ -41,6 +42,7 @@ const emit = defineEmits<{
 const form = reactive({
   challenge_id: '',
   awd_challenge_id: '',
+  awd_challenge_ids: [] as string[],
   points: '100',
   order: '0',
   is_visible: 'true',
@@ -66,7 +68,11 @@ const selectableChallenges = computed(() =>
     (item) => props.mode === 'edit' || !props.existingChallengeIds.includes(item.id)
   )
 )
-const selectableAwdChallenges = computed(() => props.awdChallengeOptions ?? [])
+const selectableAwdChallenges = computed(() =>
+  (props.awdChallengeOptions ?? []).filter(
+    (item) => props.mode === 'edit' || !props.existingChallengeIds.includes(item.id)
+  )
+)
 
 const isAwdContest = computed(() => props.contestMode === 'awd')
 const isAwdCreateMode = computed(() => isAwdContest.value && props.mode === 'create')
@@ -130,6 +136,7 @@ watch(
     form.awd_challenge_id = isAwdContest.value
       ? props.draft?.awd_challenge_id || selectableAwdChallenges.value[0]?.id || ''
       : ''
+    form.awd_challenge_ids = isAwdCreateMode.value && form.awd_challenge_id ? [form.awd_challenge_id] : []
     form.points = String(props.draft?.points ?? 100)
     form.order = String(props.draft?.order ?? 0)
     form.is_visible = props.draft?.is_visible === false ? 'false' : 'true'
@@ -150,7 +157,27 @@ function closeDialog() {
 }
 
 function selectAwdChallenge(awdChallengeId: string) {
+  if (isAwdCreateMode.value) {
+    const selected = new Set(form.awd_challenge_ids)
+    if (selected.has(awdChallengeId)) {
+      if (selected.size > 1) selected.delete(awdChallengeId)
+    } else {
+      selected.add(awdChallengeId)
+    }
+    form.awd_challenge_ids = selectableAwdChallenges.value
+      .map((item) => item.id)
+      .filter((id) => selected.has(id))
+    form.awd_challenge_id = form.awd_challenge_ids[0] || ''
+    return
+  }
+
   form.awd_challenge_id = awdChallengeId
+}
+
+function isAwdChallengeSelected(awdChallengeId: string): boolean {
+  return isAwdCreateMode.value
+    ? form.awd_challenge_ids.includes(awdChallengeId)
+    : form.awd_challenge_id === awdChallengeId
 }
 
 function getServiceTypeLabel(value: AdminAwdChallengeData['service_type']): string {
@@ -185,7 +212,10 @@ function submit() {
   if (!isAwdContest.value && !form.challenge_id.trim()) {
     fieldErrors.challenge_id = '请选择题目'
   }
-  if (isAwdContest.value && !form.awd_challenge_id.trim()) {
+  if (
+    isAwdContest.value &&
+    (isAwdCreateMode.value ? form.awd_challenge_ids.length === 0 : !form.awd_challenge_id.trim())
+  ) {
     fieldErrors.awd_challenge_id = '请选择 AWD 题目'
   }
 
@@ -215,6 +245,9 @@ function submit() {
         ? Number(form.challenge_id)
         : undefined,
     awd_challenge_id: isAwdContest.value ? Number(form.awd_challenge_id) : undefined,
+    awd_challenge_ids: isAwdCreateMode.value
+      ? form.awd_challenge_ids.map((id) => Number(id))
+      : undefined,
     points,
     order,
     is_visible: form.is_visible === 'true',
@@ -314,7 +347,7 @@ function submit() {
                 :id="`contest-template-name-${(row as AdminAwdChallengeData).id}`"
                 type="button"
                 class="contest-template-table__name"
-                :aria-pressed="form.awd_challenge_id === (row as AdminAwdChallengeData).id"
+                :aria-pressed="isAwdChallengeSelected((row as AdminAwdChallengeData).id)"
                 @click="selectAwdChallenge((row as AdminAwdChallengeData).id)"
               >
                 {{ (row as AdminAwdChallengeData).name }}
@@ -335,11 +368,11 @@ function submit() {
                 :id="`contest-template-option-${(row as AdminAwdChallengeData).id}`"
                 type="button"
                 class="contest-template-option"
-                :class="{ 'is-selected': form.awd_challenge_id === (row as AdminAwdChallengeData).id }"
-                :aria-pressed="form.awd_challenge_id === (row as AdminAwdChallengeData).id"
+                :class="{ 'is-selected': isAwdChallengeSelected((row as AdminAwdChallengeData).id) }"
+                :aria-pressed="isAwdChallengeSelected((row as AdminAwdChallengeData).id)"
                 @click="selectAwdChallenge((row as AdminAwdChallengeData).id)"
               >
-                {{ form.awd_challenge_id === (row as AdminAwdChallengeData).id ? '已选择' : '选择' }}
+                {{ isAwdChallengeSelected((row as AdminAwdChallengeData).id) ? '已选择' : '选择' }}
               </button>
             </template>
           </WorkspaceDataTable>
