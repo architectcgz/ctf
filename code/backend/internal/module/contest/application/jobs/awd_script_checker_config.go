@@ -19,7 +19,16 @@ type awdScriptCheckerConfig struct {
 }
 
 type awdScriptCheckerArtifactConfig struct {
-	Entry       string `json:"entry"`
+	Entry       string                               `json:"entry"`
+	StoragePath string                               `json:"storage_path"`
+	SHA256      string                               `json:"sha256"`
+	Size        int64                                `json:"size"`
+	Digest      string                               `json:"digest"`
+	Files       []awdScriptCheckerArtifactFileConfig `json:"files"`
+}
+
+type awdScriptCheckerArtifactFileConfig struct {
+	Path        string `json:"path"`
 	StoragePath string `json:"storage_path"`
 	SHA256      string `json:"sha256"`
 	Size        int64  `json:"size"`

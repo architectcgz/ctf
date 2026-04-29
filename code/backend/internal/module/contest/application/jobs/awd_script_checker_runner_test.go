@@ -120,7 +120,7 @@ func TestLoadAWDScriptCheckerArtifactRejectsOutsideRoot(t *testing.T) {
 		t.Fatalf("write outside artifact: %v", err)
 	}
 
-	_, ok, err := loadAWDScriptCheckerArtifact(awdScriptCheckerConfig{
+	_, ok, err := loadAWDScriptCheckerArtifacts(awdScriptCheckerConfig{
 		Entry: "docker/check/check.py",
 		Artifact: awdScriptCheckerArtifactConfig{
 			Entry:       "docker/check/check.py",
@@ -132,6 +132,62 @@ func TestLoadAWDScriptCheckerArtifactRejectsOutsideRoot(t *testing.T) {
 	}
 	if ok {
 		t.Fatalf("ok = true, want false")
+	}
+}
+
+func TestLoadAWDScriptCheckerArtifactLoadsMultipleFiles(t *testing.T) {
+	artifactRoot := t.TempDir()
+	t.Setenv("AWD_CHECKER_ARTIFACT_DIR", artifactRoot)
+	checkContent := []byte("import protocol\n")
+	protocolContent := []byte("def ok(): return True\n")
+	checkPath := filepath.Join(artifactRoot, "script-checker", "check.py")
+	protocolPath := filepath.Join(artifactRoot, "script-checker", "protocol.py")
+	if err := os.MkdirAll(filepath.Dir(checkPath), 0o700); err != nil {
+		t.Fatalf("create artifact dir: %v", err)
+	}
+	if err := os.WriteFile(checkPath, checkContent, 0o600); err != nil {
+		t.Fatalf("write check artifact: %v", err)
+	}
+	if err := os.WriteFile(protocolPath, protocolContent, 0o600); err != nil {
+		t.Fatalf("write protocol artifact: %v", err)
+	}
+	checkHash := sha256.Sum256(checkContent)
+	protocolHash := sha256.Sum256(protocolContent)
+
+	files, ok, err := loadAWDScriptCheckerArtifacts(awdScriptCheckerConfig{
+		Entry: "docker/check/check.py",
+		Artifact: awdScriptCheckerArtifactConfig{
+			Entry: "docker/check/check.py",
+			Files: []awdScriptCheckerArtifactFileConfig{
+				{
+					Path:        "docker/check/check.py",
+					StoragePath: checkPath,
+					SHA256:      hex.EncodeToString(checkHash[:]),
+					Size:        int64(len(checkContent)),
+				},
+				{
+					Path:        "docker/check/protocol.py",
+					StoragePath: protocolPath,
+					SHA256:      hex.EncodeToString(protocolHash[:]),
+					Size:        int64(len(protocolContent)),
+				},
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("loadAWDScriptCheckerArtifacts() error = %v", err)
+	}
+	if !ok {
+		t.Fatal("ok = false, want true")
+	}
+	if len(files) != 2 {
+		t.Fatalf("files = %#v", files)
+	}
+	if files[0].Path != "docker/check/check.py" || string(files[0].Content) != string(checkContent) {
+		t.Fatalf("unexpected first file: %#v", files[0])
+	}
+	if files[1].Path != "docker/check/protocol.py" || string(files[1].Content) != string(protocolContent) {
+		t.Fatalf("unexpected second file: %#v", files[1])
 	}
 }
 

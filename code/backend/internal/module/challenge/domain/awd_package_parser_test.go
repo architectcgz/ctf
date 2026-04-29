@@ -188,6 +188,83 @@ extensions:
 	}
 }
 
+func TestParseAWDChallengePackageDirRejectsInvalidScriptCheckerFiles(t *testing.T) {
+	cases := []struct {
+		name      string
+		filesYAML string
+	}{
+		{name: "absolute", filesYAML: "          - /tmp/check.py\n"},
+		{name: "parent", filesYAML: "          - ../check.py\n"},
+		{name: "directory", filesYAML: "          - docker/check\n"},
+		{name: "missing", filesYAML: "          - docker/check/missing.py\n"},
+		{name: "entry not included", filesYAML: "          - docker/check/protocol.py\n"},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			rootDir := t.TempDir()
+			if err := os.MkdirAll(filepath.Join(rootDir, "docker/check"), 0o755); err != nil {
+				t.Fatalf("create checker dir: %v", err)
+			}
+			if err := os.WriteFile(filepath.Join(rootDir, "statement.md"), []byte("script statement"), 0o644); err != nil {
+				t.Fatalf("write statement.md: %v", err)
+			}
+			if err := os.WriteFile(filepath.Join(rootDir, "docker/check/check.py"), []byte("print('ok')\n"), 0o644); err != nil {
+				t.Fatalf("write check.py: %v", err)
+			}
+			if err := os.WriteFile(filepath.Join(rootDir, "docker/check/protocol.py"), []byte("OK=True\n"), 0o644); err != nil {
+				t.Fatalf("write protocol.py: %v", err)
+			}
+
+			manifest := `api_version: v1
+kind: challenge
+
+meta:
+  mode: awd
+  slug: script-checker-files
+  title: Script Checker Files
+  category: web
+  difficulty: hard
+
+content:
+  statement: statement.md
+
+flag:
+  type: dynamic
+  prefix: awd
+
+runtime:
+  type: container
+  image:
+    ref: registry.example.edu/ctf/script:v1
+
+extensions:
+  awd:
+    service_type: web_http
+    deployment_mode: single_container
+    checker:
+      type: script_checker
+      config:
+        runtime: python3
+        entry: docker/check/check.py
+        files:
+` + tc.filesYAML + `    flag_policy:
+      mode: dynamic_team
+    defense_entry:
+      mode: http
+    access_config:
+      service_port: 8080
+`
+			if err := os.WriteFile(filepath.Join(rootDir, "challenge.yml"), []byte(manifest), 0o644); err != nil {
+				t.Fatalf("write challenge.yml: %v", err)
+			}
+			if _, err := ParseAWDChallengePackageDir(rootDir); err == nil {
+				t.Fatal("expected invalid script_checker files to be rejected")
+			}
+		})
+	}
+}
+
 func TestBuildParsedChallengePackageRejectsAwdModeForJeopardyImport(t *testing.T) {
 	rootDir := t.TempDir()
 	manifest := &ChallengePackageManifest{

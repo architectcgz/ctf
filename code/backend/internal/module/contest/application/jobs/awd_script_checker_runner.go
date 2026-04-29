@@ -127,12 +127,12 @@ func (u *AWDRoundUpdater) runAWDScriptCheckerTarget(
 			RoundNumber: awdScriptRoundNumber(round),
 		},
 	}
-	if file, ok, err := loadAWDScriptCheckerArtifact(cfg); err != nil {
+	if files, ok, err := loadAWDScriptCheckerArtifacts(cfg); err != nil {
 		target.ErrorCode = "checker_artifact_unavailable"
 		target.Error = sanitizeAWDCheckError(err)
 		return target, model.AWDServiceStatusDown, target.ErrorCode
 	} else if ok {
-		job.Files = []contestports.CheckerRunFile{file}
+		job.Files = files
 	}
 
 	runResult, err := u.checkerRunner.RunChecker(ctx, job)
@@ -155,40 +155,64 @@ func (u *AWDRoundUpdater) runAWDScriptCheckerTarget(
 	return target, model.AWDServiceStatusUp, "healthy"
 }
 
-func loadAWDScriptCheckerArtifact(cfg awdScriptCheckerConfig) (contestports.CheckerRunFile, bool, error) {
+func loadAWDScriptCheckerArtifacts(cfg awdScriptCheckerConfig) ([]contestports.CheckerRunFile, bool, error) {
+	if len(cfg.Artifact.Files) > 0 {
+		files := make([]contestports.CheckerRunFile, 0, len(cfg.Artifact.Files))
+		for _, item := range cfg.Artifact.Files {
+			file, err := loadAWDScriptCheckerArtifactFile(item.Path, item.StoragePath, item.SHA256, item.Size)
+			if err != nil {
+				return nil, false, err
+			}
+			files = append(files, file)
+		}
+		return files, true, nil
+	}
 	storagePath := strings.TrimSpace(cfg.Artifact.StoragePath)
 	if storagePath == "" {
-		return contestports.CheckerRunFile{}, false, nil
-	}
-	if err := validateAWDScriptCheckerArtifactPath(storagePath); err != nil {
-		return contestports.CheckerRunFile{}, false, err
-	}
-	content, err := os.ReadFile(storagePath)
-	if err != nil {
-		return contestports.CheckerRunFile{}, false, err
-	}
-	if expected := strings.TrimSpace(cfg.Artifact.SHA256); expected != "" {
-		sum := sha256.Sum256(content)
-		actual := hex.EncodeToString(sum[:])
-		if !strings.EqualFold(actual, expected) {
-			return contestports.CheckerRunFile{}, false, fmt.Errorf("script checker artifact sha256 mismatch")
-		}
-	}
-	if cfg.Artifact.Size > 0 && int64(len(content)) != cfg.Artifact.Size {
-		return contestports.CheckerRunFile{}, false, fmt.Errorf("script checker artifact size mismatch")
+		return nil, false, nil
 	}
 	entry := strings.TrimSpace(cfg.Artifact.Entry)
 	if entry == "" {
 		entry = cfg.Entry
 	}
-	if err := validateAWDScriptCheckerEntry(entry); err != nil {
-		return contestports.CheckerRunFile{}, false, err
+	file, err := loadAWDScriptCheckerArtifactFile(entry, storagePath, cfg.Artifact.SHA256, cfg.Artifact.Size)
+	if err != nil {
+		return nil, false, err
+	}
+	return []contestports.CheckerRunFile{file}, true, nil
+}
+
+func loadAWDScriptCheckerArtifactFile(pathValue, storagePath, expectedSHA string, expectedSize int64) (contestports.CheckerRunFile, error) {
+	storagePath = strings.TrimSpace(storagePath)
+	if storagePath == "" {
+		return contestports.CheckerRunFile{}, fmt.Errorf("script checker artifact storage_path is missing")
+	}
+	if err := validateAWDScriptCheckerArtifactPath(storagePath); err != nil {
+		return contestports.CheckerRunFile{}, err
+	}
+	content, err := os.ReadFile(storagePath)
+	if err != nil {
+		return contestports.CheckerRunFile{}, err
+	}
+	if expected := strings.TrimSpace(expectedSHA); expected != "" {
+		sum := sha256.Sum256(content)
+		actual := hex.EncodeToString(sum[:])
+		if !strings.EqualFold(actual, expected) {
+			return contestports.CheckerRunFile{}, fmt.Errorf("script checker artifact sha256 mismatch")
+		}
+	}
+	if expectedSize > 0 && int64(len(content)) != expectedSize {
+		return contestports.CheckerRunFile{}, fmt.Errorf("script checker artifact size mismatch")
+	}
+	pathValue = strings.TrimSpace(pathValue)
+	if err := validateAWDScriptCheckerEntry(pathValue); err != nil {
+		return contestports.CheckerRunFile{}, err
 	}
 	return contestports.CheckerRunFile{
-		Path:    entry,
+		Path:    pathValue,
 		Content: content,
 		Mode:    0o500,
-	}, true, nil
+	}, nil
 }
 
 func validateAWDScriptCheckerArtifactPath(storagePath string) error {

@@ -325,25 +325,59 @@ func persistAWDCheckerArtifact(parsed *domain.ParsedAWDChallengePackage) (string
 	if strings.TrimSpace(parsed.CheckerEntryAbs) == "" || strings.TrimSpace(parsed.CheckerEntryPath) == "" {
 		return "", errcode.ErrInvalidParams.WithCause(errors.New("script_checker artifact entry is missing"))
 	}
-	content, err := os.ReadFile(parsed.CheckerEntryAbs)
-	if err != nil {
-		return "", fmt.Errorf("read script checker artifact: %w", err)
+	files := parsed.CheckerFiles
+	if len(files) == 0 {
+		files = []domain.ParsedAWDCheckerFile{{Path: parsed.CheckerEntryPath, Abs: parsed.CheckerEntryAbs}}
 	}
-	sum := sha256.Sum256(content)
-	digest := hex.EncodeToString(sum[:])
+	fileContents := make([][]byte, 0, len(files))
+	fileMetadata := make([]map[string]any, 0, len(files))
+	digestSeed := sha256.New()
+	for _, file := range files {
+		content, err := os.ReadFile(file.Abs)
+		if err != nil {
+			return "", fmt.Errorf("read script checker artifact %s: %w", file.Path, err)
+		}
+		sum := sha256.Sum256(content)
+		fileDigest := hex.EncodeToString(sum[:])
+		digestSeed.Write([]byte(file.Path))
+		digestSeed.Write([]byte{0})
+		digestSeed.Write([]byte(fileDigest))
+		digestSeed.Write([]byte{0})
+		digestSeed.Write([]byte(fmt.Sprintf("%d", len(content))))
+		digestSeed.Write([]byte{0})
+		fileContents = append(fileContents, content)
+		fileMetadata = append(fileMetadata, map[string]any{
+			"path":   file.Path,
+			"sha256": fileDigest,
+			"size":   len(content),
+		})
+	}
+	digest := hex.EncodeToString(digestSeed.Sum(nil))
 	targetDir := filepath.Join(awdCheckerArtifactRoot(), sanitizeAWDCheckerArtifactSegment(parsed.Slug), digest)
-	targetPath := filepath.Join(targetDir, filepath.FromSlash(parsed.CheckerEntryPath))
-	if err := os.MkdirAll(filepath.Dir(targetPath), 0o750); err != nil {
-		return "", fmt.Errorf("create script checker artifact dir: %w", err)
+	for index, file := range files {
+		targetPath := filepath.Join(targetDir, filepath.FromSlash(file.Path))
+		if err := os.MkdirAll(filepath.Dir(targetPath), 0o750); err != nil {
+			return "", fmt.Errorf("create script checker artifact dir: %w", err)
+		}
+		if err := os.WriteFile(targetPath, fileContents[index], 0o400); err != nil {
+			return "", fmt.Errorf("write script checker artifact: %w", err)
+		}
+		fileMetadata[index]["storage_path"] = targetPath
 	}
-	if err := os.WriteFile(targetPath, content, 0o400); err != nil {
-		return "", fmt.Errorf("write script checker artifact: %w", err)
+	entryArtifact := fileMetadata[0]
+	for _, item := range fileMetadata {
+		if item["path"] == parsed.CheckerEntryPath {
+			entryArtifact = item
+			break
+		}
 	}
 	config["artifact"] = map[string]any{
 		"entry":        parsed.CheckerEntryPath,
-		"storage_path": targetPath,
-		"sha256":       digest,
-		"size":         len(content),
+		"storage_path": entryArtifact["storage_path"],
+		"sha256":       entryArtifact["sha256"],
+		"size":         entryArtifact["size"],
+		"digest":       digest,
+		"files":        fileMetadata,
 	}
 	return marshalAWDChallengeConfig(config)
 }

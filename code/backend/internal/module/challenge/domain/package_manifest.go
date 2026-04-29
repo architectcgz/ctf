@@ -216,10 +216,16 @@ type ParsedAWDChallengePackage struct {
 	CheckerConfig    map[string]any
 	CheckerEntryPath string
 	CheckerEntryAbs  string
+	CheckerFiles     []ParsedAWDCheckerFile
 	FlagMode         string
 	FlagConfig       map[string]any
 	DefenseEntryMode string
 	AccessConfig     map[string]any
 	RuntimeConfig    map[string]any
 	Warnings         []string
+}
+
+type ParsedAWDCheckerFile struct {
+	Path string
+	Abs  string
 }
