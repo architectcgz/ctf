@@ -286,6 +286,17 @@ export const platformRoutes: RouteRecordRaw[] = [
   },
 },
 {
+  path: 'platform/contests/:id/awd-config',
+  name: 'ContestAWDConfig',
+  component: () => import('@/views/platform/ContestAwdConfig.vue'),
+  meta: {
+    requiresAuth: true,
+    roles: ['admin'],
+    title: 'AWD 服务配置',
+    contentLayout: 'bleed',
+  },
+},
+{
   path: 'platform/contests/:id/announcements',
   name: 'ContestAnnouncements',
   component: () => import('@/views/platform/ContestAnnouncements.vue'),
