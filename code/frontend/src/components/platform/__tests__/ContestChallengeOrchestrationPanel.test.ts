@@ -220,15 +220,6 @@ describe('ContestChallengeOrchestrationPanel', () => {
   })
 
   it('应该在 AWD 模式下显示 checker / SLA / 防守分 / 验证状态摘要列', async () => {
-    contestApiMocks.listAdminContestChallenges.mockResolvedValue([
-      buildChallenge({
-        awd_checker_type: undefined,
-        awd_sla_score: 0,
-        awd_defense_score: 0,
-        awd_checker_validation_state: undefined,
-        awd_checker_last_preview_at: undefined,
-      }),
-    ])
     contestApiMocks.listContestAWDServices.mockResolvedValue([buildAwdService()])
 
     const wrapper = mountPanel({
@@ -247,29 +238,52 @@ describe('ContestChallengeOrchestrationPanel', () => {
     expect(wrapper.text()).toContain('待重新验证')
     expect(wrapper.find('.contest-challenge-panel__summary').exists()).toBe(false)
     expect(wrapper.find('.contest-challenge-filters').exists()).toBe(true)
+    expect(contestApiMocks.listAdminContestChallenges).not.toHaveBeenCalled()
   })
 
-  it('应该支持按未配置 AWD 和预检失败筛选', async () => {
+  it('AWD 模式下题目编排只读取 AWD 服务列表，不读取普通 Jeopardy 题目关系', async () => {
     contestApiMocks.listAdminContestChallenges.mockResolvedValue([
       buildChallenge({
-        id: 'link-1',
-        challenge_id: '101',
-        title: '未配 Checker 题目',
-      }),
-      buildChallenge({
-        id: 'link-2',
-        challenge_id: '102',
-        title: '最近失败题目',
-        order: 2,
-      }),
-      buildChallenge({
-        id: 'link-3',
-        challenge_id: '103',
-        title: '最近通过题目',
-        order: 3,
+        id: 'jeopardy-link',
+        challenge_id: '909',
+        title: '不应出现的 Jeopardy 题',
       }),
     ])
     contestApiMocks.listContestAWDServices.mockResolvedValue([
+      buildAwdService({
+        id: 'service-1',
+        challenge_id: '101',
+        display_name: 'AWD Bank Portal',
+      }),
+    ])
+
+    const wrapper = mountPanel({
+      contestMode: 'awd',
+    })
+
+    await flushPromises()
+
+    expect(contestApiMocks.listContestAWDServices).toHaveBeenCalledWith('contest-1')
+    expect(contestApiMocks.listAdminContestChallenges).not.toHaveBeenCalled()
+    expect(wrapper.text()).toContain('AWD Bank Portal')
+    expect(wrapper.text()).not.toContain('不应出现的 Jeopardy 题')
+  })
+
+  it('应该支持按未配置 AWD 和预检失败筛选', async () => {
+    contestApiMocks.listContestAWDServices.mockResolvedValue([
+      buildAwdService({
+        id: 'service-1',
+        challenge_id: '101',
+        display_name: '未配 Checker 题目',
+        checker_type: undefined,
+        validation_state: undefined,
+        score_config: {
+          points: 120,
+          awd_sla_score: 0,
+          awd_defense_score: 0,
+        },
+        runtime_config: {},
+      }),
       buildAwdService({
         id: 'service-2',
         challenge_id: '102',

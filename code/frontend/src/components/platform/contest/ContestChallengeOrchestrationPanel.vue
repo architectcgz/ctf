@@ -31,7 +31,6 @@ import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
 import { useToast } from '@/composables/useToast'
 import {
   mapPlatformContestAwdServicesToChallengeLinks,
-  mergePlatformContestChallengesWithAwdServices,
 } from '@/utils/platformContestAwdChallengeLinks'
 
 import ContestChallengeEditorDialog from './ContestChallengeEditorDialog.vue'
@@ -165,14 +164,8 @@ async function refresh() {
   loading.value = true
   try {
     if (props.contestMode === 'awd') {
-      const [nextChallengeLinks, nextAwdServices] = await Promise.all([
-        listAdminContestChallenges(props.contestId),
-        listContestAWDServices(props.contestId),
-      ])
-      localChallengeLinks.value =
-        nextChallengeLinks.length > 0
-          ? mergePlatformContestChallengesWithAwdServices(nextChallengeLinks, nextAwdServices)
-          : mapPlatformContestAwdServicesToChallengeLinks(nextAwdServices)
+      const nextAwdServices = await listContestAWDServices(props.contestId)
+      localChallengeLinks.value = mapPlatformContestAwdServicesToChallengeLinks(nextAwdServices)
     } else {
       localChallengeLinks.value = await listAdminContestChallenges(props.contestId)
     }
