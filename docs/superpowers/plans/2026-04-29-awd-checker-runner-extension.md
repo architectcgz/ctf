@@ -350,7 +350,7 @@ git commit -m "feat(awd): 增加checker安全沙箱runner"
 
 ## Task 4: 接入 `script_checker`
 
-当前进度：后端 `script_checker` 类型契约、配置解析、preview / 赛中 runner 分派和管理端最小配置 UI 已完成。题目包私有 checker artifact 的导入、存储、挂载仍未完成。
+当前进度：后端 `script_checker` 类型契约、配置解析、preview / 赛中 runner 分派、管理端最小配置 UI，以及题目包私有 checker entry artifact 的导入、存储、只读注入已完成。
 
 **Files:**
 - Create: `code/backend/internal/module/contest/application/jobs/awd_script_checker_config.go`
@@ -383,9 +383,9 @@ checker:
 
 使用 fake runner，断言 preview 调用 runner，runner 返回 ok 后生成 preview token。
 
-- [ ] **Step 3: 实现配置解析与导入校验**
+- [x] **Step 3: 实现配置解析与导入校验**
 
-进度：运行态配置解析已完成；题目包导入校验和 artifact 存储仍待实现。
+进度：运行态配置解析、题目包 entry 校验和 artifact 存储已完成；当前第一版只存储 `entry` 文件，不递归打包 `docker/check/` 目录。
 
 校验：
 

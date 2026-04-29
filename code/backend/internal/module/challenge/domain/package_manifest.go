@@ -214,6 +214,8 @@ type ParsedAWDChallengePackage struct {
 	Version          string
 	CheckerType      string
 	CheckerConfig    map[string]any
+	CheckerEntryPath string
+	CheckerEntryAbs  string
 	FlagMode         string
 	FlagConfig       map[string]any
 	DefenseEntryMode string

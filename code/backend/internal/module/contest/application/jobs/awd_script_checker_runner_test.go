@@ -2,6 +2,10 @@ package jobs
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -25,8 +29,17 @@ func (f *fakeCheckerRunner) RunChecker(_ context.Context, job contestports.Check
 }
 
 func TestAWDRoundUpdaterPreviewScriptCheckerUsesSandboxRunner(t *testing.T) {
-	t.Parallel()
-
+	artifactRoot := t.TempDir()
+	t.Setenv("AWD_CHECKER_ARTIFACT_DIR", artifactRoot)
+	artifactContent := []byte("print('ok')\n")
+	artifactPath := filepath.Join(artifactRoot, "script-checker", "check.py")
+	if err := os.MkdirAll(filepath.Dir(artifactPath), 0o700); err != nil {
+		t.Fatalf("create artifact dir: %v", err)
+	}
+	if err := os.WriteFile(artifactPath, artifactContent, 0o600); err != nil {
+		t.Fatalf("write artifact: %v", err)
+	}
+	artifactHash := sha256.Sum256(artifactContent)
 	runner := &fakeCheckerRunner{
 		result: contestports.CheckerRunResult{
 			Status:   contestports.CheckerRunStatusOK,
@@ -58,7 +71,13 @@ func TestAWDRoundUpdaterPreviewScriptCheckerUsesSandboxRunner(t *testing.T) {
 			"timeout_sec": 7,
 			"args": ["{{TARGET_URL}}", "{{FLAG}}"],
 			"env": {"CUSTOM_FLAG": "{{FLAG}}"},
-			"output": "json"
+			"output": "json",
+			"artifact": {
+				"entry": "docker/check/check.py",
+				"storage_path": "` + artifactPath + `",
+				"sha256": "` + hex.EncodeToString(artifactHash[:]) + `",
+				"size": 12
+			}
 		}`,
 		AccessURL:   "http://10.10.0.23:8080",
 		PreviewFlag: "flag{preview}",
@@ -87,6 +106,32 @@ func TestAWDRoundUpdaterPreviewScriptCheckerUsesSandboxRunner(t *testing.T) {
 	}
 	if len(job.TargetAllowlist) != 1 || job.TargetAllowlist[0] != "10.10.0.23:8080" {
 		t.Fatalf("TargetAllowlist = %#v", job.TargetAllowlist)
+	}
+	if len(job.Files) != 1 || job.Files[0].Path != "docker/check/check.py" || string(job.Files[0].Content) != "print('ok')\n" {
+		t.Fatalf("Files = %#v", job.Files)
+	}
+}
+
+func TestLoadAWDScriptCheckerArtifactRejectsOutsideRoot(t *testing.T) {
+	artifactRoot := t.TempDir()
+	t.Setenv("AWD_CHECKER_ARTIFACT_DIR", artifactRoot)
+	outsidePath := filepath.Join(t.TempDir(), "check.py")
+	if err := os.WriteFile(outsidePath, []byte("print('ok')\n"), 0o600); err != nil {
+		t.Fatalf("write outside artifact: %v", err)
+	}
+
+	_, ok, err := loadAWDScriptCheckerArtifact(awdScriptCheckerConfig{
+		Entry: "docker/check/check.py",
+		Artifact: awdScriptCheckerArtifactConfig{
+			Entry:       "docker/check/check.py",
+			StoragePath: outsidePath,
+		},
+	})
+	if err == nil {
+		t.Fatalf("expected outside artifact root error")
+	}
+	if ok {
+		t.Fatalf("ok = true, want false")
 	}
 }
 

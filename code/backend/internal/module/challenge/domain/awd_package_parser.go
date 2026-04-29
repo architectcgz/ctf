@@ -93,9 +93,9 @@ func buildParsedAWDChallengePackage(
 
 	checkerType := strings.TrimSpace(awd.Checker.Type)
 	switch checkerType {
-	case string(model.AWDCheckerTypeLegacyProbe), string(model.AWDCheckerTypeHTTPStandard):
+	case string(model.AWDCheckerTypeLegacyProbe), string(model.AWDCheckerTypeHTTPStandard), string(model.AWDCheckerTypeTCPStandard), string(model.AWDCheckerTypeScript):
 	default:
-		return nil, errcode.ErrInvalidParams.WithCause(errors.New("extensions.awd.checker.type 仅支持 legacy_probe、http_standard"))
+		return nil, errcode.ErrInvalidParams.WithCause(errors.New("extensions.awd.checker.type 仅支持 legacy_probe、http_standard、tcp_standard、script_checker"))
 	}
 
 	flagMode := strings.TrimSpace(awd.FlagPolicy.Mode)
@@ -109,6 +109,10 @@ func buildParsedAWDChallengePackage(
 	}
 
 	checkerConfig := normalizePackageConfigMap(awd.Checker.Config)
+	checkerEntryPath, checkerEntryAbs, err := resolveAWDPackageCheckerEntry(rootDir, checkerType, checkerConfig)
+	if err != nil {
+		return nil, err
+	}
 	flagConfig := normalizePackageConfigMap(awd.FlagPolicy.Config)
 	accessConfig := normalizePackageConfigMap(awd.AccessConfig)
 	runtimeConfig := normalizePackageConfigMap(awd.RuntimeConfig)
@@ -142,6 +146,8 @@ func buildParsedAWDChallengePackage(
 		Version:          version,
 		CheckerType:      checkerType,
 		CheckerConfig:    checkerConfig,
+		CheckerEntryPath: checkerEntryPath,
+		CheckerEntryAbs:  checkerEntryAbs,
 		FlagMode:         flagMode,
 		FlagConfig:       flagConfig,
 		DefenseEntryMode: defenseEntryMode,
@@ -149,6 +155,32 @@ func buildParsedAWDChallengePackage(
 		RuntimeConfig:    runtimeConfig,
 		Warnings:         warnings,
 	}, nil
+}
+
+func resolveAWDPackageCheckerEntry(rootDir, checkerType string, checkerConfig map[string]any) (string, string, error) {
+	if checkerType != string(model.AWDCheckerTypeScript) {
+		return "", "", nil
+	}
+	rawEntry, ok := checkerConfig["entry"].(string)
+	entry := strings.TrimSpace(rawEntry)
+	if !ok || entry == "" {
+		return "", "", errcode.ErrInvalidParams.WithCause(errors.New("script_checker config.entry 不能为空"))
+	}
+	if filepath.IsAbs(entry) || entry == "." || entry == ".." || strings.HasPrefix(filepath.Clean(entry), ".."+string(filepath.Separator)) {
+		return "", "", errcode.ErrInvalidParams.WithCause(errors.New("script_checker config.entry 必须是题目包内相对路径"))
+	}
+	entryAbs, err := safePackageJoin(rootDir, entry)
+	if err != nil {
+		return "", "", errcode.ErrInvalidParams.WithCause(fmt.Errorf("script_checker entry 路径非法: %w", err))
+	}
+	info, err := os.Stat(entryAbs)
+	if err != nil {
+		return "", "", fmt.Errorf("read script_checker entry %s: %w", entryAbs, err)
+	}
+	if info.IsDir() {
+		return "", "", errcode.ErrInvalidParams.WithCause(errors.New("script_checker config.entry 不能是目录"))
+	}
+	return filepath.ToSlash(filepath.Clean(entry)), entryAbs, nil
 }
 
 func normalizePackageConfigMap(raw map[string]any) map[string]any {
