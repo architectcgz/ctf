@@ -29,6 +29,10 @@ describe('ChallengePackageFormat', () => {
     expect(wrapper.text()).toContain('flag:')
     expect(wrapper.text()).toContain('checker:')
     expect(wrapper.text()).toContain('http_standard')
+    expect(wrapper.text()).toContain('tcp_standard')
+    expect(wrapper.text()).toContain('script_checker')
+    expect(wrapper.text()).toContain('SET_FLAG {{FLAG}}')
+    expect(wrapper.text()).toContain('docker/check/protocol.py')
     expect(wrapper.text()).toContain('X-AWD-Checker-Token')
   })
 

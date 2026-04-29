@@ -1554,6 +1554,10 @@ components:
         checker_type: { $ref: "#/components/schemas/AWDCheckerType" }
         checker_config:
           type: object
+          description: >
+            Checker 配置。http_standard 使用 put_flag/get_flag/havoc；
+            tcp_standard 使用 timeout_ms 与 steps[].send/send_template/send_hex/expect_contains/expect_regex；
+            script_checker 使用 runtime/entry/files/timeout_sec/args/env/output，其中 files 只允许题目包内相对文件路径。
           additionalProperties: true
         access_url: { type: string, maxLength: 1024 }
         preview_flag: { type: string, maxLength: 512, nullable: true }
