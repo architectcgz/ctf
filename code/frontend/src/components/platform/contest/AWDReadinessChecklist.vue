@@ -42,7 +42,7 @@ const blockingEmptyState = computed(() => {
   if ((readiness?.total_challenges ?? 0) === 0 || hasGlobalBlockingReasons.value) {
     return {
       title: '题目侧暂无可审计阻塞',
-      description: '系统级阻塞仍会拦截开赛关键动作。',
+      description: '请先处理上方系统级阻塞项，再重新执行就绪检查。',
     }
   }
 
@@ -55,7 +55,7 @@ const blockingEmptyState = computed(() => {
 
   return {
     title: '题目级别暂无直接阻塞',
-    description: '题目级别暂无直接阻塞，请检查系统级配置。',
+    description: '请检查赛程、队伍和题目关联状态。',
   }
 })
 
@@ -89,6 +89,20 @@ function getBlockingReasonLabel(item: AWDReadinessItemData): string {
   }
 }
 
+function getActionLabel(item: AWDReadinessItemData): string {
+  switch (item.blocking_reason) {
+    case 'missing_checker':
+    case 'invalid_checker_config':
+      return '配置 Checker'
+    case 'pending_validation':
+    case 'last_preview_failed':
+    case 'validation_stale':
+      return '编辑并试跑'
+    default:
+      return props.actionLabel
+  }
+}
+
 function formatDateTime(value?: string): string {
   if (!value) return '未记录'
   return new Date(value).toLocaleString('zh-CN', {
@@ -102,27 +116,6 @@ function formatDateTime(value?: string): string {
 
 <template>
   <div class="readiness-checklist">
-    <div
-      v-if="readiness"
-      class="progress-strip metric-panel-grid metric-panel-default-surface readiness-summary-grid"
-    >
-      <article
-        v-for="item in summaryItems"
-        :key="item.key"
-        class="journal-note progress-card metric-panel-card"
-      >
-        <div class="journal-note-label progress-card-label metric-panel-label">
-          {{ item.label }}
-        </div>
-        <div class="journal-note-value progress-card-value metric-panel-value">
-          {{ item.value }}
-        </div>
-        <div class="journal-note-helper progress-card-hint metric-panel-helper">
-          题目就绪统计概览
-        </div>
-      </article>
-    </div>
-
     <section
       v-if="hasGlobalBlockingReasons"
       class="global-blockers"
@@ -148,6 +141,27 @@ function formatDateTime(value?: string): string {
         </div>
       </div>
     </section>
+
+    <div
+      v-if="readiness"
+      class="progress-strip metric-panel-grid metric-panel-default-surface readiness-summary-grid"
+    >
+      <article
+        v-for="item in summaryItems"
+        :key="item.key"
+        class="journal-note progress-card metric-panel-card"
+      >
+        <div class="journal-note-label progress-card-label metric-panel-label">
+          {{ item.label }}
+        </div>
+        <div class="journal-note-value progress-card-value metric-panel-value">
+          {{ item.value }}
+        </div>
+        <div class="journal-note-helper progress-card-hint metric-panel-helper">
+          题目就绪统计概览
+        </div>
+      </article>
+    </div>
 
     <section class="challenge-blockers">
       <header class="list-heading">
@@ -241,7 +255,7 @@ function formatDateTime(value?: string): string {
                     class="ui-btn ui-btn--sm ui-btn--secondary"
                     @click="emit('editConfig', item.awd_challenge_id)"
                   >
-                    {{ props.actionLabel }}
+                    {{ getActionLabel(item) }}
                   </button>
                 </div>
               </td>

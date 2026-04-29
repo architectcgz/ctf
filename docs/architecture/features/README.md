@@ -6,27 +6,33 @@
 
 ## 当前专题
 
-- `2026-04-01-attack-evidence-review-design.md`：攻防证据链与教学复盘。
-- `2026-04-01-contest-ops-enhancement-design.md`：赛事运营增强。
-- `2026-04-01-judge-modes-extension-design.md`：判题模式扩展。
-- `2026-04-04-community-writeup-and-recommended-solutions-design.md`：社区题解与推荐题解。
-- `2026-04-04-teacher-dark-surface-alignment-design.md`：教师端暗色 surface 对齐。
-- `2026-04-04-web-source-audit-double-encode-design.md`：Web 源码审计题设计。
-- `2026-04-11-awd-challenge-config-design.md`：AWD 题目配置。
-- `2026-04-11-awd-checker-preview-design.md`：AWD checker 预览。
-- `2026-04-11-awd-checker-structured-editor-design.md`：AWD checker 结构化编辑。
-- `2026-04-11-awd-checker-validation-state-design.md`：AWD checker 校验状态。
-- `2026-04-12-awd-readiness-gate-design.md`：AWD 赛前检查 gate。
-- `2026-04-12-awd-phase9-review-archive-design.md`：AWD 复盘归档。
-- `2026-04-12-awd-phase10-student-battle-workspace-design.md`：AWD 学生作战工作台。
-- `2026-04-12-student-dashboard-action-panels-design.md`：学生仪表盘行动面板。
-- `2026-04-13-awd-phase11-assessment-integration-design.md`：AWD 接入能力画像。
-- `2026-04-13-awd-phase12-report-archive-alignment-design.md`：AWD 报告归档对齐。
-- `2026-04-13-awd-phase13-student-review-archive-structured-ui-design.md`：学生复盘归档结构化 UI。
-- `2026-04-14-contest-orchestration-workbench-design.md`：赛事编排工作台。
-- `2026-04-17-awd-final-design.md`：AWD 总设计与最终目标。
-- `2026-04-22-admin-contest-announcement-ops-design.md`：管理员赛事公告运维。
-- `2026-04-22-probe-easter-eggs-design.md`：探针彩蛋。
+- `teaching-readmodel-boundary-design.md`：教师兼容层移除与教学读模型边界。
+- `attack-evidence-review-design.md`：攻防证据链与教学复盘。
+- `contest-ops-enhancement-design.md`：赛事运营增强。
+- `judge-modes-extension-design.md`：判题模式扩展。
+- `community-writeup-and-recommended-solutions-design.md`：社区题解与推荐题解。
+- `teacher-dark-surface-alignment-design.md`：教师端暗色 surface 对齐。
+- `web-source-audit-double-encode-design.md`：Web 源码审计题设计。
+- `awd-http-standard-checker-design.md`：AWD `http_standard` checker。
+- `awd-inspector-checker-result-design.md`：AWD 巡检结果视图。
+- `awd-challenge-config-design.md`：AWD 题目配置。
+- `awd-checker-preview-design.md`：AWD checker 预览。
+- `awd-checker-structured-editor-design.md`：AWD checker 结构化编辑。
+- `awd-checker-validation-state-design.md`：AWD checker 校验状态。
+- `awd-readiness-gate-design.md`：AWD 赛前检查 gate。
+- `awd-review-archive-design.md`：AWD 复盘归档。
+- `awd-student-battle-workspace-design.md`：AWD 学生作战工作台。
+- `student-dashboard-action-panels-design.md`：学生仪表盘行动面板。
+- `awd-assessment-integration-design.md`：AWD 接入能力画像。
+- `awd-report-archive-alignment-design.md`：AWD 报告归档对齐。
+- `awd-student-review-archive-structured-ui-design.md`：学生复盘归档结构化 UI。
+- `contest-orchestration-workbench-design.md`：赛事编排工作台。
+- `awd-final-design.md`：AWD 总设计与最终目标。
+- `awd-runtime-service-read-path-design.md`：AWD 运行态服务读路径切换。
+- `awd-runtime-service-identity-design.md`：AWD 运行态 `service_id` 主身份。
+- `package-topology-sync-design.md`：题包拓扑同步与导出。
+- `admin-contest-announcement-ops-design.md`：管理员赛事公告运维。
+- `probe-easter-eggs-design.md`：探针彩蛋。
 
 ## 读取规则
 

@@ -132,9 +132,9 @@ go test ./internal/module/contest/application/queries -run ChallengeService -cou
 
 **Files:**
 - Modify: `code/frontend/src/api/__tests__/admin.test.ts`
-- Modify: `code/frontend/src/components/admin/__tests__/AWDChallengeConfigDialog.test.ts`
-- Modify: `code/frontend/src/components/admin/__tests__/AWDOperationsPanel.test.ts`
-- Modify: `code/frontend/src/views/admin/__tests__/ContestManage.test.ts`
+- Modify: `code/frontend/src/components/platform/__tests__/AWDChallengeConfigDialog.test.ts`
+- Modify: `code/frontend/src/components/platform/__tests__/AWDOperationsPanel.test.ts`
+- Modify: `code/frontend/src/views/platform/__tests__/ContestManage.test.ts`
 
 - [ ] **Step 1: 写 API 契约失败测试**
 
@@ -168,7 +168,7 @@ go test ./internal/module/contest/application/queries -run ChallengeService -cou
 
 ```bash
 cd /home/azhi/workspace/projects/ctf/.worktrees/feat-awd-engine-migration/code/frontend
-npm run test:run -- src/api/__tests__/admin.test.ts src/components/admin/__tests__/AWDChallengeConfigDialog.test.ts src/components/admin/__tests__/AWDOperationsPanel.test.ts src/views/admin/__tests__/ContestManage.test.ts
+npm run test:run -- src/api/__tests__/admin.test.ts src/components/platform/__tests__/AWDChallengeConfigDialog.test.ts src/components/platform/__tests__/AWDOperationsPanel.test.ts src/views/platform/__tests__/ContestManage.test.ts
 ```
 
 预期：FAIL，失败原因是前端还没有 token 持久化和校验状态展示。
@@ -180,8 +180,8 @@ npm run test:run -- src/api/__tests__/admin.test.ts src/components/admin/__tests
 - Modify: `code/frontend/src/api/admin.ts`
 - Modify: `code/frontend/src/composables/useAdminContestAWD.ts`
 - Modify: `code/frontend/src/composables/useAwdCheckResultPresentation.ts`
-- Modify: `code/frontend/src/components/admin/contest/AWDChallengeConfigDialog.vue`
-- Modify: `code/frontend/src/components/admin/contest/AWDChallengeConfigPanel.vue`
+- Modify: `code/frontend/src/components/platform/contest/AWDChallengeConfigDialog.vue`
+- Modify: `code/frontend/src/components/platform/contest/AWDChallengeConfigPanel.vue`
 
 - [ ] **Step 1: 接前端 contract 与 admin API**
 
@@ -214,7 +214,7 @@ npm run test:run -- src/api/__tests__/admin.test.ts src/components/admin/__tests
 
 ```bash
 cd /home/azhi/workspace/projects/ctf/.worktrees/feat-awd-engine-migration/code/frontend
-npm run test:run -- src/api/__tests__/admin.test.ts src/components/admin/__tests__/AWDChallengeConfigDialog.test.ts src/components/admin/__tests__/AWDOperationsPanel.test.ts src/views/admin/__tests__/ContestManage.test.ts
+npm run test:run -- src/api/__tests__/admin.test.ts src/components/platform/__tests__/AWDChallengeConfigDialog.test.ts src/components/platform/__tests__/AWDOperationsPanel.test.ts src/views/platform/__tests__/ContestManage.test.ts
 ```
 
 预期：PASS。
@@ -222,7 +222,7 @@ npm run test:run -- src/api/__tests__/admin.test.ts src/components/admin/__tests
 ### Task 5: 做最小回归并整理提交
 
 **Files:**
-- Modify: `docs/architecture/features/2026-04-11-awd-checker-validation-state-design.md`
+- Modify: `docs/architecture/features/awd-checker-validation-state-design.md`
 - Modify: `docs/superpowers/plans/2026-04-11-awd-engine-phase7-checker-validation-state.md`
 
 - [ ] **Step 1: 跑后端 AWD 相关最小回归**
@@ -242,7 +242,7 @@ go test ./internal/module/contest/... -count=1
 
 ```bash
 cd /home/azhi/workspace/projects/ctf/.worktrees/feat-awd-engine-migration/code/frontend
-npm run test:run -- src/api/__tests__/admin.test.ts src/components/admin/__tests__/AWDChallengeConfigDialog.test.ts src/components/admin/__tests__/AWDOperationsPanel.test.ts src/views/admin/__tests__/ContestManage.test.ts
+npm run test:run -- src/api/__tests__/admin.test.ts src/components/platform/__tests__/AWDChallengeConfigDialog.test.ts src/components/platform/__tests__/AWDOperationsPanel.test.ts src/views/platform/__tests__/ContestManage.test.ts
 npm run typecheck
 ```
 
@@ -252,6 +252,6 @@ npm run typecheck
 
 ```bash
 cd /home/azhi/workspace/projects/ctf/.worktrees/feat-awd-engine-migration
-git add -f docs/architecture/features/2026-04-11-awd-checker-validation-state-design.md docs/superpowers/plans/2026-04-11-awd-engine-phase7-checker-validation-state.md code/backend/migrations/000055_add_awd_checker_validation_fields_to_contest_challenges.up.sql code/backend/migrations/000055_add_awd_checker_validation_fields_to_contest_challenges.down.sql code/backend/internal/model/contest_challenge.go code/backend/internal/dto/awd.go code/backend/internal/dto/contest_challenge.go code/backend/internal/module/contest/domain/mappers.go code/backend/internal/module/contest/domain/awd_checker_validation_support.go code/backend/internal/module/contest/application/commands/awd_service_run_commands.go code/backend/internal/module/contest/application/commands/awd_checker_preview_token_support.go code/backend/internal/module/contest/application/commands/challenge_add_commands.go code/backend/internal/module/contest/application/commands/challenge_manage_commands.go code/backend/internal/module/contest/infrastructure/challenge_repository.go code/backend/internal/module/contest/ports/challenge.go code/backend/internal/pkg/redis/keys.go code/backend/internal/module/contest/application/commands/awd_service_test.go code/backend/internal/module/contest/application/commands/challenge_service_test.go code/backend/internal/module/contest/application/queries/challenge_service_test.go code/frontend/src/api/contracts.ts code/frontend/src/api/admin.ts code/frontend/src/composables/useAdminContestAWD.ts code/frontend/src/composables/useAwdCheckResultPresentation.ts code/frontend/src/components/admin/contest/AWDChallengeConfigDialog.vue code/frontend/src/components/admin/contest/AWDChallengeConfigPanel.vue code/frontend/src/api/__tests__/admin.test.ts code/frontend/src/components/admin/__tests__/AWDChallengeConfigDialog.test.ts code/frontend/src/components/admin/__tests__/AWDOperationsPanel.test.ts code/frontend/src/views/admin/__tests__/ContestManage.test.ts
+git add -f docs/architecture/features/awd-checker-validation-state-design.md docs/superpowers/plans/2026-04-11-awd-engine-phase7-checker-validation-state.md code/backend/migrations/000055_add_awd_checker_validation_fields_to_contest_challenges.up.sql code/backend/migrations/000055_add_awd_checker_validation_fields_to_contest_challenges.down.sql code/backend/internal/model/contest_challenge.go code/backend/internal/dto/awd.go code/backend/internal/dto/contest_challenge.go code/backend/internal/module/contest/domain/mappers.go code/backend/internal/module/contest/domain/awd_checker_validation_support.go code/backend/internal/module/contest/application/commands/awd_service_run_commands.go code/backend/internal/module/contest/application/commands/awd_checker_preview_token_support.go code/backend/internal/module/contest/application/commands/challenge_add_commands.go code/backend/internal/module/contest/application/commands/challenge_manage_commands.go code/backend/internal/module/contest/infrastructure/challenge_repository.go code/backend/internal/module/contest/ports/challenge.go code/backend/internal/pkg/redis/keys.go code/backend/internal/module/contest/application/commands/awd_service_test.go code/backend/internal/module/contest/application/commands/challenge_service_test.go code/backend/internal/module/contest/application/queries/challenge_service_test.go code/frontend/src/api/contracts.ts code/frontend/src/api/admin.ts code/frontend/src/composables/useAdminContestAWD.ts code/frontend/src/composables/useAwdCheckResultPresentation.ts code/frontend/src/components/platform/contest/AWDChallengeConfigDialog.vue code/frontend/src/components/platform/contest/AWDChallengeConfigPanel.vue code/frontend/src/api/__tests__/admin.test.ts code/frontend/src/components/platform/__tests__/AWDChallengeConfigDialog.test.ts code/frontend/src/components/platform/__tests__/AWDOperationsPanel.test.ts code/frontend/src/views/platform/__tests__/ContestManage.test.ts
 git commit -m "feat(awd): 增加checker校验状态闭环"
 ```

@@ -44,6 +44,8 @@ code/frontend/docs/
 
 # Local development artifacts
 /.playwright-cli/
+/backups/
+/code/backend/data/challenge-import-previews/
 /docker/
 /output/
 /code/backend/Makefile

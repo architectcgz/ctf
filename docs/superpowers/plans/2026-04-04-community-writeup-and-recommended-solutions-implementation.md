@@ -291,9 +291,9 @@ Expected: PASS.
 
 **Files:**
 - Modify: `code/frontend/src/api/admin.ts`
-- Modify: `code/frontend/src/components/admin/writeup/ChallengeWriteupEditorPage.vue`
+- Modify: `code/frontend/src/components/platform/writeup/ChallengeWriteupEditorPage.vue`
 - Modify: `code/frontend/src/composables/useChallengeWriteupEditorPage.ts`
-- Modify: `code/frontend/src/views/admin/__tests__/ChallengeWriteup.test.ts`
+- Modify: `code/frontend/src/views/platform/__tests__/ChallengeWriteup.test.ts`
 
 - [ ] **Step 1: Write failing admin UI tests**
 
@@ -306,7 +306,7 @@ Run:
 
 ```bash
 cd /home/azhi/workspace/projects/ctf/code/frontend
-npm exec vitest run src/views/admin/__tests__/ChallengeWriteup.test.ts
+npm exec vitest run src/views/platform/__tests__/ChallengeWriteup.test.ts
 ```
 
 Expected: FAIL because the current page only edits the official writeup.
@@ -319,7 +319,7 @@ In `code/frontend/src/api/admin.ts`:
 
 - [ ] **Step 3: Extend the admin writeup page and composable**
 
-In `code/frontend/src/components/admin/writeup/ChallengeWriteupEditorPage.vue` and `code/frontend/src/composables/useChallengeWriteupEditorPage.ts`:
+In `code/frontend/src/components/platform/writeup/ChallengeWriteupEditorPage.vue` and `code/frontend/src/composables/useChallengeWriteupEditorPage.ts`:
 - keep the existing official editor
 - add a community writeup management section
 - surface recommendation and moderation actions
@@ -330,7 +330,7 @@ Run:
 
 ```bash
 cd /home/azhi/workspace/projects/ctf/code/frontend
-npm exec vitest run src/views/admin/__tests__/ChallengeWriteup.test.ts
+npm exec vitest run src/views/platform/__tests__/ChallengeWriteup.test.ts
 ```
 
 Expected: PASS.
@@ -387,7 +387,7 @@ Expected: PASS.
 ### Task 8: Final verification and doc sync
 
 **Files:**
-- Modify: `docs/architecture/features/2026-04-04-community-writeup-and-recommended-solutions-design.md`
+- Modify: `docs/architecture/features/community-writeup-and-recommended-solutions-design.md`
 - Modify: `docs/contracts/api-contract-v1.md`
 - Modify: `docs/architecture/backend/04-api-design.md`
 - Modify: `docs/architecture/frontend/04-api-layer.md`
@@ -417,12 +417,12 @@ Run:
 cd /home/azhi/workspace/projects/ctf/code/frontend
 npm exec vitest run \
   src/views/challenges/__tests__/ChallengeDetail.test.ts \
-  src/views/admin/__tests__/ChallengeWriteup.test.ts \
+  src/views/platform/__tests__/ChallengeWriteup.test.ts \
   src/views/teacher/__tests__/TeacherStudentAnalysis.test.ts \
   src/views/teacher/__tests__/TeacherStudentReviewArchive.test.ts
 npm exec eslint \
   src/views/challenges/ChallengeDetail.vue \
-  src/components/admin/writeup/ChallengeWriteupEditorPage.vue \
+  src/components/platform/writeup/ChallengeWriteupEditorPage.vue \
   src/composables/useChallengeWriteupEditorPage.ts \
   src/views/teacher/TeacherStudentAnalysis.vue \
   src/components/teacher/StudentInsightPanel.vue \
@@ -445,7 +445,7 @@ git commit -m "feat(writeup): convert writeup review flow to community solutions
 
 git add code/frontend/src/api code/frontend/src/views/challenges \
   code/frontend/src/components/challenge code/frontend/src/views/admin \
-  code/frontend/src/components/admin/writeup code/frontend/src/composables \
+  code/frontend/src/components/platform/writeup code/frontend/src/composables \
   code/frontend/src/views/teacher code/frontend/src/components/teacher
 git commit -m "feat(frontend): add community and recommended challenge solutions"
 

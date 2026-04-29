@@ -120,13 +120,13 @@ function handleSubmit() {
     @update:open="emit('update:open', $event)"
   >
     <form
-      class="awd-template-dialog"
+      class="awd-challenge-dialog"
       @submit.prevent="handleSubmit"
     >
-      <div class="awd-template-dialog__grid">
+      <div class="awd-challenge-dialog__grid">
         <label
-          class="ui-field awd-template-dialog__field"
-          for="awd-template-name"
+          class="ui-field awd-challenge-dialog__field"
+          for="awd-challenge-name"
         >
           <span class="ui-field__label">题目名称</span>
           <span
@@ -134,7 +134,7 @@ function handleSubmit() {
             :class="{ 'is-error': !!fieldErrors.name }"
           >
             <input
-              id="awd-template-name"
+              id="awd-challenge-name"
               v-model="localDraft.name"
               type="text"
               class="ui-control"
@@ -148,8 +148,8 @@ function handleSubmit() {
         </label>
 
         <label
-          class="ui-field awd-template-dialog__field"
-          for="awd-template-slug"
+          class="ui-field awd-challenge-dialog__field"
+          for="awd-challenge-slug"
         >
           <span class="ui-field__label">题目 slug</span>
           <span
@@ -157,10 +157,10 @@ function handleSubmit() {
             :class="{ 'is-error': !!fieldErrors.slug }"
           >
             <input
-              id="awd-template-slug"
+              id="awd-challenge-slug"
               v-model="localDraft.slug"
               type="text"
-              class="ui-control awd-template-dialog__mono"
+              class="ui-control awd-challenge-dialog__mono"
               placeholder="bank-portal-awd"
             >
           </span>
@@ -171,10 +171,10 @@ function handleSubmit() {
         </label>
       </div>
 
-      <div class="awd-template-dialog__grid">
+      <div class="awd-challenge-dialog__grid">
         <label
-          class="ui-field awd-template-dialog__field"
-          for="awd-template-category"
+          class="ui-field awd-challenge-dialog__field"
+          for="awd-challenge-category"
         >
           <span class="ui-field__label">分类</span>
           <span
@@ -182,7 +182,7 @@ function handleSubmit() {
             :class="{ 'is-error': !!fieldErrors.category }"
           >
             <select
-              id="awd-template-category"
+              id="awd-challenge-category"
               v-model="localDraft.category"
               class="ui-control"
             >
@@ -202,13 +202,13 @@ function handleSubmit() {
         </label>
 
         <label
-          class="ui-field awd-template-dialog__field"
-          for="awd-template-difficulty"
+          class="ui-field awd-challenge-dialog__field"
+          for="awd-challenge-difficulty"
         >
           <span class="ui-field__label">难度</span>
           <span class="ui-control-wrap">
             <select
-              id="awd-template-difficulty"
+              id="awd-challenge-difficulty"
               v-model="localDraft.difficulty"
               class="ui-control"
             >
@@ -222,15 +222,15 @@ function handleSubmit() {
         </label>
       </div>
 
-      <div class="awd-template-dialog__grid">
+      <div class="awd-challenge-dialog__grid">
         <label
-          class="ui-field awd-template-dialog__field"
-          for="awd-template-service-type"
+          class="ui-field awd-challenge-dialog__field"
+          for="awd-challenge-service-type"
         >
           <span class="ui-field__label">服务类型</span>
           <span class="ui-control-wrap">
             <select
-              id="awd-template-service-type"
+              id="awd-challenge-service-type"
               v-model="localDraft.service_type"
               class="ui-control"
             >
@@ -242,13 +242,13 @@ function handleSubmit() {
         </label>
 
         <label
-          class="ui-field awd-template-dialog__field"
-          for="awd-template-deployment"
+          class="ui-field awd-challenge-dialog__field"
+          for="awd-challenge-deployment"
         >
           <span class="ui-field__label">部署方式</span>
           <span class="ui-control-wrap">
             <select
-              id="awd-template-deployment"
+              id="awd-challenge-deployment"
               v-model="localDraft.deployment_mode"
               class="ui-control"
             >
@@ -260,8 +260,8 @@ function handleSubmit() {
       </div>
 
       <label
-        class="ui-field awd-template-dialog__field awd-template-dialog__field--wide"
-        for="awd-template-description"
+        class="ui-field awd-challenge-dialog__field awd-challenge-dialog__field--wide"
+        for="awd-challenge-description"
       >
         <span class="ui-field__label">描述</span>
         <span
@@ -269,10 +269,10 @@ function handleSubmit() {
           :class="{ 'is-error': !!fieldErrors.description }"
         >
           <textarea
-            id="awd-template-description"
+            id="awd-challenge-description"
             v-model="localDraft.description"
             rows="5"
-            class="ui-control awd-template-dialog__textarea"
+            class="ui-control awd-challenge-dialog__textarea"
             placeholder="概述服务的核心攻击面、运行方式和目标业务场景。"
           />
         </span>
@@ -284,13 +284,13 @@ function handleSubmit() {
 
       <label
         v-if="mode === 'edit'"
-        class="ui-field awd-template-dialog__field awd-template-dialog__field--wide"
-        for="awd-template-status"
+        class="ui-field awd-challenge-dialog__field awd-challenge-dialog__field--wide"
+        for="awd-challenge-status"
       >
         <span class="ui-field__label">发布状态</span>
         <span class="ui-control-wrap">
           <select
-            id="awd-template-status"
+            id="awd-challenge-status"
             v-model="localDraft.status"
             class="ui-control"
           >
@@ -303,7 +303,7 @@ function handleSubmit() {
     </form>
 
     <template #footer>
-      <div class="awd-template-drawer-footer">
+      <div class="awd-challenge-drawer-footer">
         <button
           type="button"
           class="ui-btn ui-btn--secondary"
@@ -312,7 +312,7 @@ function handleSubmit() {
           取消
         </button>
         <button
-          id="awd-template-dialog-submit"
+          id="awd-challenge-dialog-submit"
           type="button"
           class="ui-btn ui-btn--primary"
           :disabled="saving"
@@ -326,35 +326,35 @@ function handleSubmit() {
 </template>
 
 <style scoped>
-.awd-template-dialog {
+.awd-challenge-dialog {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
 }
 
-.awd-template-dialog__grid {
+.awd-challenge-dialog__grid {
   display: grid;
   gap: 1.25rem;
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.awd-template-dialog__field {
+.awd-challenge-dialog__field {
   --ui-field-gap: var(--space-2);
 }
 
-.awd-template-dialog__field--wide {
+.awd-challenge-dialog__field--wide {
   width: 100%;
 }
 
-.awd-template-dialog__textarea {
+.awd-challenge-dialog__textarea {
   min-height: 10rem;
 }
 
-.awd-template-dialog__mono {
+.awd-challenge-dialog__mono {
   font-family: var(--font-family-mono);
 }
 
-.awd-template-drawer-footer {
+.awd-challenge-drawer-footer {
   display: flex;
   justify-content: flex-end;
   gap: 0.75rem;
@@ -362,7 +362,7 @@ function handleSubmit() {
 }
 
 @media (max-width: 768px) {
-  .awd-template-dialog__grid {
+  .awd-challenge-dialog__grid {
     grid-template-columns: 1fr;
   }
 }

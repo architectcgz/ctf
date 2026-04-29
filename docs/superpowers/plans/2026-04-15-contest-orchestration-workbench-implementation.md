@@ -21,46 +21,46 @@
 
 ### Workbench shell / route orchestration
 
-- Modify: `code/frontend/src/views/admin/ContestEdit.vue`
+- Modify: `code/frontend/src/views/platform/ContestEdit.vue`
   - 把当前 `基础设置 / 题目编排` 双标签升级为工作台阶段容器，并按赛事模式控制阶段显示。
-- Create: `code/frontend/src/components/admin/contest/ContestWorkbenchStageRail.vue`
+- Create: `code/frontend/src/components/platform/contest/ContestWorkbenchStageRail.vue`
   - 承载工作台顶部阶段切换、阶段状态、阶段提示和 URL tab 同步。
-- Create: `code/frontend/src/components/admin/contest/ContestWorkbenchSummaryStrip.vue`
+- Create: `code/frontend/src/components/platform/contest/ContestWorkbenchSummaryStrip.vue`
   - 在页头下展示当前赛事状态、模式、题目数、准备度等统一摘要。
 
 ### Contest challenge pool
 
-- Modify: `code/frontend/src/components/admin/contest/ContestChallengeOrchestrationPanel.vue`
+- Modify: `code/frontend/src/components/platform/contest/ContestChallengeOrchestrationPanel.vue`
   - 从轻量挂题面板演进为统一题目池，增加 AWD 摘要列、筛选和批量视图入口。
-- Modify: `code/frontend/src/components/admin/contest/ContestChallengeEditorDialog.vue`
+- Modify: `code/frontend/src/components/platform/contest/ContestChallengeEditorDialog.vue`
   - 保持基础挂题职责，补齐和工作台阶段文案一致的交互。
 - Create: `code/frontend/src/composables/useContestChallengePool.ts`
   - 收敛题目池列表、筛选、排序视图和摘要统计，避免把页面逻辑继续堆进单文件组件。
 
 ### AWD configuration / readiness / running handoff
 
-- Modify: `code/frontend/src/components/admin/contest/AWDChallengeConfigPanel.vue`
+- Modify: `code/frontend/src/components/platform/contest/AWDChallengeConfigPanel.vue`
   - 改成工作台里的 `AWD 配置` 阶段，支持从统一题目池上下文进入，并强调连续逐题编辑。
-- Modify: `code/frontend/src/components/admin/contest/AWDReadinessSummary.vue`
+- Modify: `code/frontend/src/components/platform/contest/AWDReadinessSummary.vue`
   - 从摘要卡演进为 `赛前检查` 主体，展示总体准备度、阻塞清单和快捷返回动作。
-- Create: `code/frontend/src/components/admin/contest/ContestAwdPreflightPanel.vue`
+- Create: `code/frontend/src/components/platform/contest/ContestAwdPreflightPanel.vue`
   - 承载 `赛前检查` 阶段容器，把 readiness 摘要、阻塞列表和开赛动作整合到单面板。
-- Modify: `code/frontend/src/components/admin/contest/AWDOperationsPanel.vue`
+- Modify: `code/frontend/src/components/platform/contest/AWDOperationsPanel.vue`
   - 改成工作台最后一段使用，未开赛时弱化显示，开赛后成为运行态入口。
 - Create: `code/frontend/src/composables/useContestWorkbench.ts`
   - 管理工作台阶段列表、阶段可见性、默认聚焦逻辑，以及开赛后跳转到运行阶段的行为。
 
 ### Tests
 
-- Modify: `code/frontend/src/views/admin/__tests__/ContestEdit.test.ts`
+- Modify: `code/frontend/src/views/platform/__tests__/ContestEdit.test.ts`
   - 覆盖工作台阶段结构、模式差异和 AWD 开赛后的阶段切换。
-- Modify: `code/frontend/src/components/admin/__tests__/AWDOperationsPanel.test.ts`
+- Modify: `code/frontend/src/components/platform/__tests__/AWDOperationsPanel.test.ts`
   - 覆盖工作台运行阶段下的未开赛弱化状态与已开赛行为。
-- Modify: `code/frontend/src/components/admin/__tests__/AWDReadinessSummary.test.ts`
+- Modify: `code/frontend/src/components/platform/__tests__/AWDReadinessSummary.test.ts`
   - 覆盖赛前检查阻塞项与快捷入口。
-- Create: `code/frontend/src/components/admin/__tests__/ContestChallengeOrchestrationPanel.test.ts`
+- Create: `code/frontend/src/components/platform/__tests__/ContestChallengeOrchestrationPanel.test.ts`
   - 覆盖统一题目池的 AWD 摘要列、筛选与摘要统计。
-- Create: `code/frontend/src/components/admin/__tests__/ContestWorkbenchStageRail.test.ts`
+- Create: `code/frontend/src/components/platform/__tests__/ContestWorkbenchStageRail.test.ts`
   - 覆盖阶段显隐、模式切换和键盘导航。
 - Create: `code/frontend/src/composables/__tests__/useContestWorkbench.test.ts`
   - 覆盖工作台阶段计算、默认焦点和模式边界。
@@ -68,8 +68,8 @@
 ## Task 1: 锁定工作台骨架的 RED 测试
 
 **Files:**
-- Modify: `code/frontend/src/views/admin/__tests__/ContestEdit.test.ts`
-- Create: `code/frontend/src/components/admin/__tests__/ContestWorkbenchStageRail.test.ts`
+- Modify: `code/frontend/src/views/platform/__tests__/ContestEdit.test.ts`
+- Create: `code/frontend/src/components/platform/__tests__/ContestWorkbenchStageRail.test.ts`
 - Create: `code/frontend/src/composables/__tests__/useContestWorkbench.test.ts`
 
 - [ ] **Step 1: 给 `ContestEdit` 增加工作台阶段断言**
@@ -124,7 +124,7 @@ expect(result.defaultStage).toBe('operations')
 
 ```bash
 cd /home/azhi/workspace/projects/ctf/.worktrees/spec-contest-orchestration-workbench/code/frontend
-npx vitest run src/views/admin/__tests__/ContestEdit.test.ts src/components/admin/__tests__/ContestWorkbenchStageRail.test.ts src/composables/__tests__/useContestWorkbench.test.ts
+npx vitest run src/views/platform/__tests__/ContestEdit.test.ts src/components/platform/__tests__/ContestWorkbenchStageRail.test.ts src/composables/__tests__/useContestWorkbench.test.ts
 ```
 
 预期：FAIL，失败点集中在新阶段结构和新 composable 尚不存在。
@@ -132,19 +132,19 @@ npx vitest run src/views/admin/__tests__/ContestEdit.test.ts src/components/admi
 - [ ] **Step 5: 提交工作台骨架测试基线**
 
 ```bash
-git add code/frontend/src/views/admin/__tests__/ContestEdit.test.ts code/frontend/src/components/admin/__tests__/ContestWorkbenchStageRail.test.ts code/frontend/src/composables/__tests__/useContestWorkbench.test.ts
+git add code/frontend/src/views/platform/__tests__/ContestEdit.test.ts code/frontend/src/components/platform/__tests__/ContestWorkbenchStageRail.test.ts code/frontend/src/composables/__tests__/useContestWorkbench.test.ts
 git commit -m "test(竞赛): 补充工作台阶段骨架断言"
 ```
 
 ## Task 2: 实现工作台容器与阶段 rail
 
 **Files:**
-- Modify: `code/frontend/src/views/admin/ContestEdit.vue`
-- Create: `code/frontend/src/components/admin/contest/ContestWorkbenchStageRail.vue`
-- Create: `code/frontend/src/components/admin/contest/ContestWorkbenchSummaryStrip.vue`
+- Modify: `code/frontend/src/views/platform/ContestEdit.vue`
+- Create: `code/frontend/src/components/platform/contest/ContestWorkbenchStageRail.vue`
+- Create: `code/frontend/src/components/platform/contest/ContestWorkbenchSummaryStrip.vue`
 - Create: `code/frontend/src/composables/useContestWorkbench.ts`
-- Modify: `code/frontend/src/views/admin/__tests__/ContestEdit.test.ts`
-- Create: `code/frontend/src/components/admin/__tests__/ContestWorkbenchStageRail.test.ts`
+- Modify: `code/frontend/src/views/platform/__tests__/ContestEdit.test.ts`
+- Create: `code/frontend/src/components/platform/__tests__/ContestWorkbenchStageRail.test.ts`
 - Create: `code/frontend/src/composables/__tests__/useContestWorkbench.test.ts`
 
 - [ ] **Step 1: 先写 `useContestWorkbench` 最小实现**
@@ -206,7 +206,7 @@ export function useContestWorkbench(contest: Readonly<Ref<ContestDetailData | nu
 
 ```bash
 cd /home/azhi/workspace/projects/ctf/.worktrees/spec-contest-orchestration-workbench/code/frontend
-npx vitest run src/views/admin/__tests__/ContestEdit.test.ts src/components/admin/__tests__/ContestWorkbenchStageRail.test.ts src/composables/__tests__/useContestWorkbench.test.ts
+npx vitest run src/views/platform/__tests__/ContestEdit.test.ts src/components/platform/__tests__/ContestWorkbenchStageRail.test.ts src/composables/__tests__/useContestWorkbench.test.ts
 ```
 
 预期：PASS。
@@ -214,18 +214,18 @@ npx vitest run src/views/admin/__tests__/ContestEdit.test.ts src/components/admi
 - [ ] **Step 6: 提交工作台骨架实现**
 
 ```bash
-git add code/frontend/src/views/admin/ContestEdit.vue code/frontend/src/components/admin/contest/ContestWorkbenchStageRail.vue code/frontend/src/components/admin/contest/ContestWorkbenchSummaryStrip.vue code/frontend/src/composables/useContestWorkbench.ts code/frontend/src/views/admin/__tests__/ContestEdit.test.ts code/frontend/src/components/admin/__tests__/ContestWorkbenchStageRail.test.ts code/frontend/src/composables/__tests__/useContestWorkbench.test.ts
+git add code/frontend/src/views/platform/ContestEdit.vue code/frontend/src/components/platform/contest/ContestWorkbenchStageRail.vue code/frontend/src/components/platform/contest/ContestWorkbenchSummaryStrip.vue code/frontend/src/composables/useContestWorkbench.ts code/frontend/src/views/platform/__tests__/ContestEdit.test.ts code/frontend/src/components/platform/__tests__/ContestWorkbenchStageRail.test.ts code/frontend/src/composables/__tests__/useContestWorkbench.test.ts
 git commit -m "feat(竞赛): 搭建竞赛编排工作台骨架"
 ```
 
 ## Task 3: 把轻量挂题面板升级为统一题目池
 
 **Files:**
-- Modify: `code/frontend/src/components/admin/contest/ContestChallengeOrchestrationPanel.vue`
-- Modify: `code/frontend/src/components/admin/contest/ContestChallengeEditorDialog.vue`
+- Modify: `code/frontend/src/components/platform/contest/ContestChallengeOrchestrationPanel.vue`
+- Modify: `code/frontend/src/components/platform/contest/ContestChallengeEditorDialog.vue`
 - Create: `code/frontend/src/composables/useContestChallengePool.ts`
-- Create: `code/frontend/src/components/admin/__tests__/ContestChallengeOrchestrationPanel.test.ts`
-- Modify: `code/frontend/src/views/admin/__tests__/ContestEdit.test.ts`
+- Create: `code/frontend/src/components/platform/__tests__/ContestChallengeOrchestrationPanel.test.ts`
+- Modify: `code/frontend/src/views/platform/__tests__/ContestEdit.test.ts`
 
 - [ ] **Step 1: 先写题目池测试**
 
@@ -288,7 +288,7 @@ export function useContestChallengePool(challengeLinks: Ref<AdminContestChalleng
 
 ```bash
 cd /home/azhi/workspace/projects/ctf/.worktrees/spec-contest-orchestration-workbench/code/frontend
-npx vitest run src/components/admin/__tests__/ContestChallengeOrchestrationPanel.test.ts src/views/admin/__tests__/ContestEdit.test.ts
+npx vitest run src/components/platform/__tests__/ContestChallengeOrchestrationPanel.test.ts src/views/platform/__tests__/ContestEdit.test.ts
 ```
 
 预期：PASS。
@@ -296,19 +296,19 @@ npx vitest run src/components/admin/__tests__/ContestChallengeOrchestrationPanel
 - [ ] **Step 6: 提交统一题目池改动**
 
 ```bash
-git add code/frontend/src/components/admin/contest/ContestChallengeOrchestrationPanel.vue code/frontend/src/components/admin/contest/ContestChallengeEditorDialog.vue code/frontend/src/composables/useContestChallengePool.ts code/frontend/src/components/admin/__tests__/ContestChallengeOrchestrationPanel.test.ts code/frontend/src/views/admin/__tests__/ContestEdit.test.ts
+git add code/frontend/src/components/platform/contest/ContestChallengeOrchestrationPanel.vue code/frontend/src/components/platform/contest/ContestChallengeEditorDialog.vue code/frontend/src/composables/useContestChallengePool.ts code/frontend/src/components/platform/__tests__/ContestChallengeOrchestrationPanel.test.ts code/frontend/src/views/platform/__tests__/ContestEdit.test.ts
 git commit -m "feat(竞赛): 将挂题面板升级为统一题目池"
 ```
 
 ## Task 4: 把 AWD 配置与赛前检查接入工作台
 
 **Files:**
-- Modify: `code/frontend/src/components/admin/contest/AWDChallengeConfigPanel.vue`
-- Modify: `code/frontend/src/components/admin/contest/AWDReadinessSummary.vue`
-- Create: `code/frontend/src/components/admin/contest/ContestAwdPreflightPanel.vue`
-- Modify: `code/frontend/src/views/admin/ContestEdit.vue`
-- Modify: `code/frontend/src/components/admin/__tests__/AWDReadinessSummary.test.ts`
-- Modify: `code/frontend/src/views/admin/__tests__/ContestEdit.test.ts`
+- Modify: `code/frontend/src/components/platform/contest/AWDChallengeConfigPanel.vue`
+- Modify: `code/frontend/src/components/platform/contest/AWDReadinessSummary.vue`
+- Create: `code/frontend/src/components/platform/contest/ContestAwdPreflightPanel.vue`
+- Modify: `code/frontend/src/views/platform/ContestEdit.vue`
+- Modify: `code/frontend/src/components/platform/__tests__/AWDReadinessSummary.test.ts`
+- Modify: `code/frontend/src/views/platform/__tests__/ContestEdit.test.ts`
 
 - [ ] **Step 1: 先补赛前检查测试**
 
@@ -366,7 +366,7 @@ expect(wrapper.text()).toContain('返回 AWD 配置')
 
 ```bash
 cd /home/azhi/workspace/projects/ctf/.worktrees/spec-contest-orchestration-workbench/code/frontend
-npx vitest run src/components/admin/__tests__/AWDReadinessSummary.test.ts src/views/admin/__tests__/ContestEdit.test.ts
+npx vitest run src/components/platform/__tests__/AWDReadinessSummary.test.ts src/views/platform/__tests__/ContestEdit.test.ts
 ```
 
 预期：PASS。
@@ -374,18 +374,18 @@ npx vitest run src/components/admin/__tests__/AWDReadinessSummary.test.ts src/vi
 - [ ] **Step 6: 提交 AWD 配置与赛前检查集成**
 
 ```bash
-git add code/frontend/src/components/admin/contest/AWDChallengeConfigPanel.vue code/frontend/src/components/admin/contest/AWDReadinessSummary.vue code/frontend/src/components/admin/contest/ContestAwdPreflightPanel.vue code/frontend/src/views/admin/ContestEdit.vue code/frontend/src/components/admin/__tests__/AWDReadinessSummary.test.ts code/frontend/src/views/admin/__tests__/ContestEdit.test.ts
+git add code/frontend/src/components/platform/contest/AWDChallengeConfigPanel.vue code/frontend/src/components/platform/contest/AWDReadinessSummary.vue code/frontend/src/components/platform/contest/ContestAwdPreflightPanel.vue code/frontend/src/views/platform/ContestEdit.vue code/frontend/src/components/platform/__tests__/AWDReadinessSummary.test.ts code/frontend/src/views/platform/__tests__/ContestEdit.test.ts
 git commit -m "feat(竞赛): 将 AWD 配置与赛前检查接入工作台"
 ```
 
 ## Task 5: 把运行态承接到工作台最后一段
 
 **Files:**
-- Modify: `code/frontend/src/components/admin/contest/AWDOperationsPanel.vue`
-- Modify: `code/frontend/src/views/admin/ContestEdit.vue`
-- Modify: `code/frontend/src/components/admin/__tests__/AWDOperationsPanel.test.ts`
-- Modify: `code/frontend/src/views/admin/__tests__/ContestManage.test.ts`
-- Modify: `code/frontend/src/views/admin/__tests__/ContestEdit.test.ts`
+- Modify: `code/frontend/src/components/platform/contest/AWDOperationsPanel.vue`
+- Modify: `code/frontend/src/views/platform/ContestEdit.vue`
+- Modify: `code/frontend/src/components/platform/__tests__/AWDOperationsPanel.test.ts`
+- Modify: `code/frontend/src/views/platform/__tests__/ContestManage.test.ts`
+- Modify: `code/frontend/src/views/platform/__tests__/ContestEdit.test.ts`
 
 - [ ] **Step 1: 先补运行态承接测试**
 
@@ -432,7 +432,7 @@ expect(wrapper.text()).toContain('轮次态势')
 
 ```bash
 cd /home/azhi/workspace/projects/ctf/.worktrees/spec-contest-orchestration-workbench/code/frontend
-npx vitest run src/components/admin/__tests__/AWDOperationsPanel.test.ts src/views/admin/__tests__/ContestManage.test.ts src/views/admin/__tests__/ContestEdit.test.ts
+npx vitest run src/components/platform/__tests__/AWDOperationsPanel.test.ts src/views/platform/__tests__/ContestManage.test.ts src/views/platform/__tests__/ContestEdit.test.ts
 ```
 
 预期：PASS。
@@ -440,14 +440,14 @@ npx vitest run src/components/admin/__tests__/AWDOperationsPanel.test.ts src/vie
 - [ ] **Step 6: 提交运行态承接改动**
 
 ```bash
-git add code/frontend/src/components/admin/contest/AWDOperationsPanel.vue code/frontend/src/views/admin/ContestEdit.vue code/frontend/src/components/admin/__tests__/AWDOperationsPanel.test.ts code/frontend/src/views/admin/__tests__/ContestManage.test.ts code/frontend/src/views/admin/__tests__/ContestEdit.test.ts
+git add code/frontend/src/components/platform/contest/AWDOperationsPanel.vue code/frontend/src/views/platform/ContestEdit.vue code/frontend/src/components/platform/__tests__/AWDOperationsPanel.test.ts code/frontend/src/views/platform/__tests__/ContestManage.test.ts code/frontend/src/views/platform/__tests__/ContestEdit.test.ts
 git commit -m "feat(竞赛): 将 AWD 运行态承接到工作台"
 ```
 
 ## Task 6: 做最终验证并补文档回链
 
 **Files:**
-- Modify: `docs/architecture/features/2026-04-14-contest-orchestration-workbench-design.md`
+- Modify: `docs/architecture/features/contest-orchestration-workbench-design.md`
 - Modify: `docs/superpowers/plans/2026-04-15-contest-orchestration-workbench-implementation.md`
 
 - [ ] **Step 1: 运行最小充分验证**
@@ -456,7 +456,7 @@ git commit -m "feat(竞赛): 将 AWD 运行态承接到工作台"
 
 ```bash
 cd /home/azhi/workspace/projects/ctf/.worktrees/spec-contest-orchestration-workbench/code/frontend
-npx vitest run src/views/admin/__tests__/ContestEdit.test.ts src/views/admin/__tests__/ContestManage.test.ts src/components/admin/__tests__/ContestChallengeOrchestrationPanel.test.ts src/components/admin/__tests__/AWDReadinessSummary.test.ts src/components/admin/__tests__/AWDOperationsPanel.test.ts src/components/admin/__tests__/ContestWorkbenchStageRail.test.ts src/composables/__tests__/useContestWorkbench.test.ts
+npx vitest run src/views/platform/__tests__/ContestEdit.test.ts src/views/platform/__tests__/ContestManage.test.ts src/components/platform/__tests__/ContestChallengeOrchestrationPanel.test.ts src/components/platform/__tests__/AWDReadinessSummary.test.ts src/components/platform/__tests__/AWDOperationsPanel.test.ts src/components/platform/__tests__/ContestWorkbenchStageRail.test.ts src/composables/__tests__/useContestWorkbench.test.ts
 npx vue-tsc --noEmit
 ```
 
@@ -486,14 +486,14 @@ git diff --stat
 - [ ] **Step 4: 提交最终验证与文档回链**
 
 ```bash
-git add docs/architecture/features/2026-04-14-contest-orchestration-workbench-design.md docs/superpowers/plans/2026-04-15-contest-orchestration-workbench-implementation.md
+git add docs/architecture/features/contest-orchestration-workbench-design.md docs/superpowers/plans/2026-04-15-contest-orchestration-workbench-implementation.md
 git commit -m "docs(竞赛): 更新编排工作台实施记录"
 ```
 
 ## Implementation Backlink（2026-04-15）
 
 - 最小充分验证已执行：
-  - `npx vitest run src/views/admin/__tests__/ContestEdit.test.ts src/views/admin/__tests__/ContestManage.test.ts src/components/admin/__tests__/ContestChallengeOrchestrationPanel.test.ts src/components/admin/__tests__/AWDReadinessSummary.test.ts src/components/admin/__tests__/AWDOperationsPanel.test.ts src/components/admin/__tests__/ContestWorkbenchStageRail.test.ts src/composables/__tests__/useContestWorkbench.test.ts`
+  - `npx vitest run src/views/platform/__tests__/ContestEdit.test.ts src/views/platform/__tests__/ContestManage.test.ts src/components/platform/__tests__/ContestChallengeOrchestrationPanel.test.ts src/components/platform/__tests__/AWDReadinessSummary.test.ts src/components/platform/__tests__/AWDOperationsPanel.test.ts src/components/platform/__tests__/ContestWorkbenchStageRail.test.ts src/composables/__tests__/useContestWorkbench.test.ts`
     - 结果：`7` 个测试文件、`45` 个用例全部通过
   - `npx vue-tsc --noEmit`
     - 结果：通过，退出码 `0`

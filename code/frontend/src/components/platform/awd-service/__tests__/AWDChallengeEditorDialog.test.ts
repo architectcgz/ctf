@@ -47,7 +47,7 @@ describe('AWDChallengeEditorDialog', () => {
       },
     })
 
-    const categoryField = wrapper.get('#awd-template-category')
+    const categoryField = wrapper.get('#awd-challenge-category')
     expect(categoryField.element.tagName).toBe('SELECT')
 
     const optionValues = categoryField
@@ -55,10 +55,10 @@ describe('AWDChallengeEditorDialog', () => {
       .map((option) => (option.element as HTMLOptionElement).value)
     expect(optionValues).toEqual(['web', 'pwn', 'reverse', 'crypto', 'misc', 'forensics'])
 
-    await wrapper.get('#awd-template-name').setValue('Crypto Bank AWD')
-    await wrapper.get('#awd-template-slug').setValue('crypto-bank-awd')
+    await wrapper.get('#awd-challenge-name').setValue('Crypto Bank AWD')
+    await wrapper.get('#awd-challenge-slug').setValue('crypto-bank-awd')
     await categoryField.setValue('crypto')
-    await wrapper.get('#awd-template-dialog-submit').trigger('click')
+    await wrapper.get('#awd-challenge-dialog-submit').trigger('click')
 
     expect(wrapper.emitted('save')).toEqual([
       [

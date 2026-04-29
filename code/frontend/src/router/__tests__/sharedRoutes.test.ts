@@ -86,9 +86,6 @@ describe('shared route canonical paths', () => {
     )
     expect(findChild('platform/challenges/:id/writeup')?.redirect).toBeFalsy()
     expect(findChild('platform/challenges/:id/writeup/view')?.redirect).toBeFalsy()
-    expect(findChild('platform/environment-templates')?.name).toBe(
-      'PlatformEnvironmentTemplateLibrary'
-    )
     expect(findChild('platform/awd-challenges')?.name).toBe(
       'PlatformAwdChallengeLibrary'
     )

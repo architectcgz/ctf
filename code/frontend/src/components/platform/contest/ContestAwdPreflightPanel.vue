@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-
 import type { AWDReadinessData } from '@/api/contracts'
 
 import AWDReadinessChecklist from './AWDReadinessChecklist.vue'
@@ -14,12 +12,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   'navigate:challenge': [challengeId: string]
   'navigate:stage': [stage: 'awd-config']
-  'open:override': []
 }>()
-
-const canForceStart = computed(
-  () => Boolean(props.readiness) && !props.readiness?.ready && (props.readiness?.global_blocking_reasons?.length ?? 0) === 0
-)
 
 function handleNavigateChallenge(challengeId: string) {
   emit('navigate:challenge', challengeId)
@@ -44,31 +37,6 @@ function handleNavigateChallenge(challengeId: string) {
 
       <div class="header-side">
         <AWDReadinessDecisionHUD :readiness="readiness" />
-
-        <!-- Override Entry - Compact -->
-        <div
-          v-if="canForceStart"
-          class="preflight-override-entry"
-        >
-          <header class="list-heading contest-awd-preflight-panel__override-head">
-            <div>
-              <div class="journal-note-label">
-                Override Entry
-              </div>
-              <h3 class="list-heading__title">
-                强制启动赛事
-              </h3>
-            </div>
-          </header>
-          <button
-            id="contest-awd-preflight-force-start"
-            type="button"
-            class="ui-btn ui-btn--primary"
-            @click="emit('open:override')"
-          >
-            强制放行
-          </button>
-        </div>
       </div>
     </header>
 
@@ -92,9 +60,15 @@ function handleNavigateChallenge(challengeId: string) {
 .studio-pane-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-end;
+  align-items: flex-start;
+  gap: var(--space-5);
   border-bottom: 1px solid var(--color-border-subtle);
   padding-bottom: var(--space-5);
+}
+
+.header-main {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .pane-title {
@@ -114,47 +88,9 @@ function handleNavigateChallenge(challengeId: string) {
 
 .header-side {
   display: flex;
-  align-items: center;
+  flex: 0 0 auto;
+  align-items: flex-start;
   gap: var(--space-4);
-}
-
-.preflight-override-entry {
-  display: grid;
-  gap: var(--space-1-5);
-  justify-items: end;
-}
-
-.preflight-override-entry__label {
-  font-size: var(--font-size-11);
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--color-text-muted);
-}
-
-.ops-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: 2.25rem;
-  padding: 0 1.25rem;
-  border-radius: 0.75rem;
-  font-size: 12px;
-  font-weight: 800;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.ops-btn--primary {
-  background: var(--color-warning);
-  color: var(--color-bg-base);
-  border: none;
-  box-shadow: 0 4px 12px color-mix(in srgb, var(--color-warning) 20%, transparent);
-}
-
-.ops-btn--primary:hover {
-  background: color-mix(in srgb, var(--color-warning) 90%, var(--color-bg-base));
-  transform: translateY(-1px);
 }
 
 @media (max-width: 1280px) {

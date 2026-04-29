@@ -68,28 +68,25 @@
                 </div>
               </div>
 
-              <div class="flex items-center justify-between mt-2">
-                <span class="notification-summary text-xs font-medium">
-                  最近 <span class="notification-summary__value font-bold">{{ items.length }}</span> 条消息，<span
-                    class="notification-summary__accent font-bold"
-                  >
-                    {{ unreadCount }}
-                  </span>
-                  条未读
+              <div class="notification-summary-stack mt-2">
+                <span class="notification-summary notification-summary-line text-xs font-medium">
+                  <span class="notification-summary-label">消息数</span>
+                  <span class="notification-summary__value font-bold">{{ items.length }}</span>
+                  <span class="notification-summary-label">未读数</span>
+                  <span class="notification-summary__accent font-bold">{{ unreadCount }}</span>
                 </span>
-                <div class="flex items-center gap-3">
+                <div class="notification-summary-actions">
                   <button
                     type="button"
-                    class="notification-summary-action text-xs font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+                    class="notification-summary-action notification-summary-action-row text-xs font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-50"
                     :disabled="unreadCount === 0"
                     @click="markAllRead"
                   >
                     全部标为已读
                   </button>
-                  <div class="notification-summary-divider h-3.5 w-px" />
                   <button
                     type="button"
-                    class="notification-summary-link flex items-center gap-0.5 text-xs font-bold transition-colors"
+                    class="notification-summary-link notification-summary-action-row text-xs font-bold transition-colors"
                     @click="goToNotifications"
                   >
                     查看全部 <ChevronRight class="h-3.5 w-3.5" />
@@ -274,8 +271,43 @@ const {
   color: var(--notification-text);
 }
 
+.notification-summary-stack,
+.notification-summary-actions {
+  display: flex;
+}
+
+.notification-summary-stack {
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.notification-summary-actions {
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
 .notification-summary {
   color: var(--notification-muted);
+}
+
+.notification-summary-line {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  white-space: nowrap;
+}
+
+.notification-summary-label {
+  margin-right: var(--space-1);
+  color: var(--notification-faint);
+}
+
+.notification-summary__value,
+.notification-summary__accent {
+  margin-right: var(--space-3);
+  font-size: var(--font-size-16);
+  line-height: 1.25rem;
 }
 
 .notification-summary__value {
@@ -287,15 +319,31 @@ const {
   color: color-mix(in srgb, var(--color-primary) 90%, var(--notification-text));
 }
 
+.notification-summary__accent {
+  margin-right: 0;
+}
+
 .notification-summary-action {
   color: var(--notification-muted);
 }
 
-.notification-summary-action:hover {
+.notification-summary-action-row {
+  display: inline-flex;
+  min-height: 1.75rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+}
+
+.notification-summary-link {
+  gap: var(--space-1);
+}
+
+.notification-summary-action:hover,
+.notification-summary-action:focus-visible {
   color: color-mix(in srgb, var(--color-primary) 90%, var(--notification-text));
 }
 
-.notification-summary-divider,
 .notification-rail,
 .notification-endcap__line {
   background: color-mix(in srgb, var(--notification-line) 86%, transparent);

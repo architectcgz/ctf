@@ -10,11 +10,11 @@ const (
 	SubmissionWriteupVisibilityHidden  = "hidden"
 
 	// Deprecated aliases kept temporarily to reduce cross-package churn during migration.
-	SubmissionWriteupStatusSubmitted      = SubmissionWriteupStatusPublished
-	SubmissionWriteupReviewPending        = SubmissionWriteupVisibilityVisible
-	SubmissionWriteupReviewReviewed       = SubmissionWriteupVisibilityVisible
-	SubmissionWriteupReviewExcellent      = SubmissionWriteupVisibilityVisible
-	SubmissionWriteupReviewNeedsRevision  = SubmissionWriteupVisibilityHidden
+	SubmissionWriteupStatusSubmitted     = SubmissionWriteupStatusPublished
+	SubmissionWriteupReviewPending       = SubmissionWriteupVisibilityVisible
+	SubmissionWriteupReviewReviewed      = SubmissionWriteupVisibilityVisible
+	SubmissionWriteupReviewExcellent     = SubmissionWriteupVisibilityVisible
+	SubmissionWriteupReviewNeedsRevision = SubmissionWriteupVisibilityHidden
 )
 
 type SubmissionWriteup struct {

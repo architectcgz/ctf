@@ -16,7 +16,7 @@
 - Modify: `code/backend/internal/module/contest/application/commands/awd_service_test.go`
 - Modify: `code/backend/internal/app/router_test.go`
 - Modify: `code/frontend/src/api/__tests__/admin.test.ts`
-- Modify: `code/frontend/src/components/admin/__tests__/AWDChallengeConfigDialog.test.ts`
+- Modify: `code/frontend/src/components/platform/__tests__/AWDChallengeConfigDialog.test.ts`
 
 - [x] **Step 1: 写后端命令失败测试**
 
@@ -59,7 +59,7 @@ go test ./internal/module/contest/application/commands ./internal/app -count=1
 
 ```bash
 cd /home/azhi/workspace/projects/ctf/.worktrees/feat-awd-engine-migration/code/frontend
-npm run test:run -- src/api/__tests__/admin.test.ts src/components/admin/__tests__/AWDChallengeConfigDialog.test.ts
+npm run test:run -- src/api/__tests__/admin.test.ts src/components/platform/__tests__/AWDChallengeConfigDialog.test.ts
 ```
 
 预期：FAIL，失败原因是 preview 接口和对话框交互尚未实现。
@@ -124,9 +124,9 @@ go test ./internal/module/contest/application/commands ./internal/app -count=1
 **Files:**
 - Modify: `code/frontend/src/api/contracts.ts`
 - Modify: `code/frontend/src/api/admin.ts`
-- Modify: `code/frontend/src/components/admin/contest/AWDChallengeConfigDialog.vue`
+- Modify: `code/frontend/src/components/platform/contest/AWDChallengeConfigDialog.vue`
 - Modify: `code/frontend/src/composables/useAwdCheckResultPresentation.ts`
-- Modify: `code/frontend/src/components/admin/contest/AWDOperationsPanel.vue`
+- Modify: `code/frontend/src/components/platform/contest/AWDOperationsPanel.vue`
 
 - [x] **Step 1: 接前端 API 封装**
 
@@ -160,7 +160,7 @@ go test ./internal/module/contest/application/commands ./internal/app -count=1
 
 ```bash
 cd /home/azhi/workspace/projects/ctf/.worktrees/feat-awd-engine-migration/code/frontend
-npm run test:run -- src/api/__tests__/admin.test.ts src/components/admin/__tests__/AWDChallengeConfigDialog.test.ts
+npm run test:run -- src/api/__tests__/admin.test.ts src/components/platform/__tests__/AWDChallengeConfigDialog.test.ts
 ```
 
 预期：PASS。
@@ -187,7 +187,7 @@ go test ./internal/module/contest/... -count=1
 
 ```bash
 cd /home/azhi/workspace/projects/ctf/.worktrees/feat-awd-engine-migration/code/frontend
-npm run test:run -- src/api/__tests__/admin.test.ts src/components/admin/__tests__/AWDChallengeConfigDialog.test.ts src/components/admin/__tests__/AWDOperationsPanel.test.ts src/views/admin/__tests__/ContestManage.test.ts
+npm run test:run -- src/api/__tests__/admin.test.ts src/components/platform/__tests__/AWDChallengeConfigDialog.test.ts src/components/platform/__tests__/AWDOperationsPanel.test.ts src/views/platform/__tests__/ContestManage.test.ts
 ```
 
 预期：PASS。
@@ -211,6 +211,6 @@ npm run typecheck
 
 ```bash
 cd /home/azhi/workspace/projects/ctf/.worktrees/feat-awd-engine-migration
-git add -f docs/architecture/features/2026-04-11-awd-checker-preview-design.md docs/superpowers/plans/2026-04-11-awd-engine-phase6-checker-preview.md code/backend/internal/dto/awd.go code/backend/internal/module/contest/api/http/awd_handler.go code/backend/internal/module/contest/api/http/awd_round_check_handler.go code/backend/internal/module/contest/application/commands/awd_checker_preview_support.go code/backend/internal/module/contest/application/commands/awd_service_run_commands.go code/backend/internal/module/contest/application/commands/awd_service_test.go code/backend/internal/module/contest/application/jobs/awd_checker_preview.go code/backend/internal/module/contest/application/jobs/awd_round_updater.go code/backend/internal/module/contest/domain/awd_source_support.go code/backend/internal/module/contest/ports/awd.go code/backend/internal/app/router_routes.go code/backend/internal/app/router_test.go code/frontend/src/api/contracts.ts code/frontend/src/api/admin.ts code/frontend/src/api/__tests__/admin.test.ts code/frontend/src/components/admin/contest/AWDChallengeConfigDialog.vue code/frontend/src/components/admin/__tests__/AWDChallengeConfigDialog.test.ts code/frontend/src/composables/useAwdCheckResultPresentation.ts docs/superpowers/plans/2026-04-11-awd-engine-phase6-checker-preview.md
+git add -f docs/architecture/features/awd-checker-preview-design.md docs/superpowers/plans/2026-04-11-awd-engine-phase6-checker-preview.md code/backend/internal/dto/awd.go code/backend/internal/module/contest/api/http/awd_handler.go code/backend/internal/module/contest/api/http/awd_round_check_handler.go code/backend/internal/module/contest/application/commands/awd_checker_preview_support.go code/backend/internal/module/contest/application/commands/awd_service_run_commands.go code/backend/internal/module/contest/application/commands/awd_service_test.go code/backend/internal/module/contest/application/jobs/awd_checker_preview.go code/backend/internal/module/contest/application/jobs/awd_round_updater.go code/backend/internal/module/contest/domain/awd_source_support.go code/backend/internal/module/contest/ports/awd.go code/backend/internal/app/router_routes.go code/backend/internal/app/router_test.go code/frontend/src/api/contracts.ts code/frontend/src/api/admin.ts code/frontend/src/api/__tests__/admin.test.ts code/frontend/src/components/platform/contest/AWDChallengeConfigDialog.vue code/frontend/src/components/platform/__tests__/AWDChallengeConfigDialog.test.ts code/frontend/src/composables/useAwdCheckResultPresentation.ts docs/superpowers/plans/2026-04-11-awd-engine-phase6-checker-preview.md
 git commit -m "feat(awd): 增加checker试跑能力"
 ```

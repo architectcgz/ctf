@@ -18,6 +18,12 @@ const contestApiMocks = vi.hoisted(() => ({
   deleteAdminContestChallenge: vi.fn(),
 }))
 
+const toastMocks = vi.hoisted(() => ({
+  success: vi.fn(),
+  error: vi.fn(),
+  warning: vi.fn(),
+}))
+
 vi.mock('@/api/admin', async () => {
   const actual = await vi.importActual<typeof import('@/api/admin')>('@/api/admin')
   return {
@@ -36,10 +42,7 @@ vi.mock('@/api/admin', async () => {
 })
 
 vi.mock('@/composables/useToast', () => ({
-  useToast: () => ({
-    success: vi.fn(),
-    error: vi.fn(),
-  }),
+  useToast: () => toastMocks,
 }))
 
 vi.mock('@/composables/useDestructiveConfirm', () => ({
@@ -132,30 +135,6 @@ function mountPanel(props?: Record<string, unknown>) {
                 : null
           },
         }),
-        CActionMenu: defineComponent({
-          name: 'CActionMenu',
-          props: {
-            open: { type: Boolean, default: false },
-          },
-          emits: ['update:open'],
-          setup(props, { slots, emit }) {
-            const toggle = () => emit('update:open', !props.open)
-            const close = () => emit('update:open', false)
-
-            return () =>
-              h('div', { class: 'c-action-menu-stub' }, [
-                slots.trigger?.({
-                  open: props.open,
-                  toggle,
-                  close,
-                  setTriggerRef: () => undefined,
-                }),
-                props.open
-                  ? h('div', { class: 'c-action-menu-stub__panel' }, slots.default?.({ close }))
-                  : null,
-              ])
-          },
-        }),
         RouterLink: RouterLinkStub,
       },
     },
@@ -174,6 +153,9 @@ describe('ContestChallengeOrchestrationPanel', () => {
     contestApiMocks.updateAdminContestChallenge.mockReset()
     contestApiMocks.deleteContestAWDService.mockReset()
     contestApiMocks.deleteAdminContestChallenge.mockReset()
+    toastMocks.success.mockReset()
+    toastMocks.error.mockReset()
+    toastMocks.warning.mockReset()
     contestApiMocks.listContestAWDServices.mockResolvedValue([])
   })
 
@@ -218,7 +200,7 @@ describe('ContestChallengeOrchestrationPanel', () => {
     })
   })
 
-  it('应该在 AWD 模式下显示 checker / SLA / 防守分 / 验证状态摘要列', async () => {
+  it('AWD 模式下题目编排只展示题目资源和比赛编排字段', async () => {
     contestApiMocks.listContestAWDServices.mockResolvedValue([buildAwdService()])
 
     const wrapper = mountPanel({
@@ -227,17 +209,34 @@ describe('ContestChallengeOrchestrationPanel', () => {
 
     await flushPromises()
 
-    expect(wrapper.text()).toContain('Checker')
-    expect(wrapper.text()).toContain('验证状态')
-    expect(wrapper.text()).toContain('SLA')
-    expect(wrapper.text()).toContain('防守分')
-    expect(wrapper.text()).toContain('最近试跑')
-    expect(wrapper.text()).toContain('HTTP 标准 Checker')
-    expect(wrapper.text()).toContain('SLA 18 / 防守 28')
-    expect(wrapper.text()).toContain('待重新验证')
+    expect(wrapper.text()).toContain('题目资源')
+    expect(wrapper.text()).toContain('可见性')
+    expect(wrapper.text()).toContain('分值')
+    expect(wrapper.text()).toContain('顺序')
+    expect(wrapper.text()).not.toContain('Checker')
+    expect(wrapper.text()).not.toContain('验证状态')
+    expect(wrapper.text()).not.toContain('SLA / 防守分')
+    expect(wrapper.text()).not.toContain('最近试跑')
+    expect(wrapper.text()).not.toContain('HTTP 标准 Checker')
     expect(wrapper.find('.contest-challenge-panel__summary').exists()).toBe(false)
-    expect(wrapper.find('.contest-challenge-filters').exists()).toBe(true)
+    expect(wrapper.find('.contest-challenge-filters').exists()).toBe(false)
     expect(contestApiMocks.listAdminContestChallenges).not.toHaveBeenCalled()
+  })
+
+  it('AWD 题目行操作应直接显示编辑和移除', async () => {
+    contestApiMocks.listContestAWDServices.mockResolvedValue([buildAwdService()])
+
+    const wrapper = mountPanel({
+      contestMode: 'awd',
+    })
+
+    await flushPromises()
+
+    expect(wrapper.find('#contest-challenge-actions-11').exists()).toBe(false)
+    expect(wrapper.find('#contest-challenge-open-awd-config-11').exists()).toBe(false)
+    expect(wrapper.text()).not.toContain('AWD 编排')
+    expect(wrapper.get('#contest-challenge-edit-11').classes()).toContain('ui-row-action--default')
+    expect(wrapper.get('#contest-challenge-remove-11').classes()).toContain('ui-btn--danger')
   })
 
   it('AWD 模式下题目编排只读取 AWD 服务列表，不读取普通 Jeopardy 题目关系', async () => {
@@ -267,7 +266,7 @@ describe('ContestChallengeOrchestrationPanel', () => {
     expect(wrapper.text()).not.toContain('不应出现的 Jeopardy 题')
   })
 
-  it('应该支持按未配置 AWD 和预检失败筛选', async () => {
+  it('AWD 题目编排不应混入 Checker 状态筛选', async () => {
     contestApiMocks.listContestAWDServices.mockResolvedValue([
       buildAwdService({
         id: 'service-1',
@@ -321,15 +320,11 @@ describe('ContestChallengeOrchestrationPanel', () => {
 
     await flushPromises()
 
-    await wrapper.get('#contest-challenge-filter-unconfigured').trigger('click')
     expect(wrapper.text()).toContain('未配 Checker 题目')
-    expect(wrapper.text()).not.toContain('最近失败题目')
-    expect(wrapper.text()).not.toContain('最近通过题目')
-
-    await wrapper.get('#contest-challenge-filter-validation-failed').trigger('click')
-    expect(wrapper.text()).not.toContain('未配 Checker 题目')
     expect(wrapper.text()).toContain('最近失败题目')
-    expect(wrapper.text()).not.toContain('最近通过题目')
+    expect(wrapper.text()).toContain('最近通过题目')
+    expect(wrapper.find('#contest-challenge-filter-unconfigured').exists()).toBe(false)
+    expect(wrapper.find('#contest-challenge-filter-validation-failed').exists()).toBe(false)
   })
 
   it('应该在 AWD 题目池新增弹层中从 AWD 题库创建 service', async () => {
@@ -338,7 +333,7 @@ describe('ContestChallengeOrchestrationPanel', () => {
       list: [
         {
           id: '11',
-          name: 'Upload HTTP 模板',
+          name: 'Upload HTTP 题目',
           slug: 'upload-http',
           category: 'web',
           difficulty: 'medium',
@@ -381,18 +376,21 @@ describe('ContestChallengeOrchestrationPanel', () => {
     expect(wrapper.find('#contest-challenge-library').exists()).toBe(false)
     expect(wrapper.find('#contest-challenge-select').exists()).toBe(false)
     expect(wrapper.find('#contest-challenge-template').exists()).toBe(false)
-    expect(wrapper.find('#contest-template-option-11').exists()).toBe(true)
+    expect(wrapper.find('#contest-awd-challenge-option-11').exists()).toBe(true)
     expect(contestApiMocks.listAdminAwdChallenges).toHaveBeenCalledWith({
       page: 1,
-      page_size: 100,
+      page_size: 20,
       status: 'published',
     })
     expect(contestApiMocks.getChallenges).not.toHaveBeenCalled()
+    expect(wrapper.text()).toContain('upload-http')
+    expect(wrapper.text()).toContain('已就绪')
+    expect(wrapper.text()).not.toContain('模板')
 
-    await wrapper.get('#contest-template-option-11').trigger('click')
-    expect(wrapper.find('#contest-challenge-points').exists()).toBe(false)
-    expect(wrapper.find('#contest-challenge-order').exists()).toBe(false)
-    expect(wrapper.find('#contest-challenge-visibility').exists()).toBe(false)
+    await wrapper.get('#contest-awd-challenge-option-11').trigger('click')
+    expect(wrapper.find('#contest-awd-service-points').exists()).toBe(false)
+    expect(wrapper.find('#contest-awd-service-order').exists()).toBe(false)
+    expect(wrapper.find('#contest-awd-service-visibility').exists()).toBe(false)
 
     await wrapper.get('#contest-challenge-dialog-submit').trigger('click')
     await flushPromises()
@@ -412,7 +410,7 @@ describe('ContestChallengeOrchestrationPanel', () => {
       list: [
         {
           id: '11',
-          name: 'Upload HTTP 模板',
+          name: 'Upload HTTP 题目',
           slug: 'upload-http',
           category: 'web',
           difficulty: 'medium',
@@ -427,7 +425,7 @@ describe('ContestChallengeOrchestrationPanel', () => {
         },
         {
           id: '12',
-          name: 'IoT TCP 模板',
+          name: 'IoT TCP 题目',
           slug: 'iot-tcp',
           category: 'misc',
           difficulty: 'easy',
@@ -465,7 +463,7 @@ describe('ContestChallengeOrchestrationPanel', () => {
     await wrapper.get('#contest-challenge-add').trigger('click')
     await flushPromises()
 
-    await wrapper.get('#contest-template-option-12').trigger('click')
+    await wrapper.get('#contest-awd-challenge-option-12').trigger('click')
     await wrapper.get('#contest-challenge-dialog-submit').trigger('click')
     await flushPromises()
 
@@ -484,7 +482,230 @@ describe('ContestChallengeOrchestrationPanel', () => {
     })
   })
 
-  it('应该在 AWD 题目池编辑时同步更新 service 模板，并仅更新关系层分值', async () => {
+  it('批量关联部分成功时应提示失败项、保留弹层并刷新成功项', async () => {
+    const awdServicesState: any[] = []
+
+    contestApiMocks.listContestAWDServices.mockImplementation(async () =>
+      awdServicesState.map((item) => ({ ...item }))
+    )
+    contestApiMocks.listAdminAwdChallenges.mockResolvedValue({
+      list: [
+        {
+          id: '11',
+          name: 'Upload HTTP 题目',
+          slug: 'upload-http',
+          category: 'web',
+          difficulty: 'medium',
+          description: 'http service',
+          service_type: 'web_http',
+          deployment_mode: 'single_container',
+          version: '1.0.0',
+          status: 'published',
+          readiness_status: 'passed',
+          created_at: '2026-03-01T00:00:00.000Z',
+          updated_at: '2026-03-01T00:00:00.000Z',
+        },
+        {
+          id: '12',
+          name: 'IoT TCP 题目',
+          slug: 'iot-tcp',
+          category: 'misc',
+          difficulty: 'easy',
+          description: 'tcp service',
+          service_type: 'binary_tcp',
+          deployment_mode: 'single_container',
+          version: '1.0.0',
+          status: 'published',
+          readiness_status: 'passed',
+          created_at: '2026-03-01T00:00:00.000Z',
+          updated_at: '2026-03-01T00:00:00.000Z',
+        },
+      ],
+      total: 2,
+      page: 1,
+      page_size: 20,
+    })
+    contestApiMocks.createContestAWDService
+      .mockImplementationOnce(async (_contestId, payload) => {
+        awdServicesState.push({
+          id: 'service-11',
+          contest_id: 'contest-1',
+          awd_challenge_id: String(payload.awd_challenge_id),
+          display_name: 'Upload HTTP 题目',
+          order: payload.order,
+          is_visible: payload.is_visible,
+          score_config: {
+            points: payload.points,
+            awd_sla_score: 0,
+            awd_defense_score: 0,
+          },
+          runtime_config: {},
+          checker_type: undefined,
+          checker_config: {},
+          sla_score: 0,
+          defense_score: 0,
+          validation_state: 'pending',
+          last_preview_at: undefined,
+          last_preview_result: undefined,
+          created_at: '2026-03-10T01:00:00.000Z',
+          updated_at: '2026-03-10T01:00:00.000Z',
+        })
+        return awdServicesState[0]
+      })
+      .mockRejectedValueOnce(new Error('second failed'))
+
+    const wrapper = mountPanel({
+      contestMode: 'awd',
+    })
+
+    await flushPromises()
+    await wrapper.get('#contest-challenge-add').trigger('click')
+    await flushPromises()
+    await wrapper.get('#contest-awd-challenge-option-12').trigger('click')
+    await wrapper.get('#contest-challenge-dialog-submit').trigger('click')
+    await flushPromises()
+
+    expect(contestApiMocks.createContestAWDService).toHaveBeenCalledTimes(2)
+    expect(toastMocks.warning).toHaveBeenCalledWith('部分 AWD 题目关联失败：IoT TCP 题目')
+    expect(toastMocks.success).not.toHaveBeenCalledWith('题目已保存')
+    expect(wrapper.find('.admin-surface-modal-stub').exists()).toBe(true)
+    expect(wrapper.text()).toContain('Upload HTTP 题目')
+  })
+
+  it('批量关联全部失败时应提示错误且保持弹层打开', async () => {
+    contestApiMocks.listAdminAwdChallenges.mockResolvedValue({
+      list: [
+        {
+          id: '11',
+          name: 'Upload HTTP 题目',
+          slug: 'upload-http',
+          category: 'web',
+          difficulty: 'medium',
+          description: 'http service',
+          service_type: 'web_http',
+          deployment_mode: 'single_container',
+          version: '1.0.0',
+          status: 'published',
+          readiness_status: 'passed',
+          created_at: '2026-03-01T00:00:00.000Z',
+          updated_at: '2026-03-01T00:00:00.000Z',
+        },
+        {
+          id: '12',
+          name: 'IoT TCP 题目',
+          slug: 'iot-tcp',
+          category: 'misc',
+          difficulty: 'easy',
+          description: 'tcp service',
+          service_type: 'binary_tcp',
+          deployment_mode: 'single_container',
+          version: '1.0.0',
+          status: 'published',
+          readiness_status: 'passed',
+          created_at: '2026-03-01T00:00:00.000Z',
+          updated_at: '2026-03-01T00:00:00.000Z',
+        },
+      ],
+      total: 2,
+      page: 1,
+      page_size: 20,
+    })
+    contestApiMocks.createContestAWDService
+      .mockRejectedValueOnce(new Error('first failed'))
+      .mockRejectedValueOnce(new Error('second failed'))
+
+    const wrapper = mountPanel({
+      contestMode: 'awd',
+    })
+
+    await flushPromises()
+    await wrapper.get('#contest-challenge-add').trigger('click')
+    await flushPromises()
+    await wrapper.get('#contest-awd-challenge-option-12').trigger('click')
+    await wrapper.get('#contest-challenge-dialog-submit').trigger('click')
+    await flushPromises()
+
+    expect(contestApiMocks.createContestAWDService).toHaveBeenCalledTimes(2)
+    expect(toastMocks.error).toHaveBeenCalledWith('部分 AWD 题目关联失败：Upload HTTP 题目、IoT TCP 题目')
+    expect(toastMocks.success).not.toHaveBeenCalledWith('题目已保存')
+    expect(wrapper.find('.admin-surface-modal-stub').exists()).toBe(true)
+  })
+
+  it('应该按关键词和筛选条件加载 AWD 题库候选', async () => {
+    contestApiMocks.listAdminAwdChallenges.mockResolvedValue({
+      list: [],
+      total: 0,
+      page: 1,
+      page_size: 20,
+    })
+
+    const wrapper = mountPanel({
+      contestMode: 'awd',
+    })
+
+    await flushPromises()
+    await wrapper.get('#contest-challenge-add').trigger('click')
+    await flushPromises()
+    await wrapper.get('#contest-awd-challenge-keyword').setValue('bank')
+    await wrapper.get('#contest-awd-challenge-service-type').setValue('web_http')
+    await wrapper.get('#contest-awd-challenge-deployment-mode').setValue('single_container')
+    await wrapper.get('#contest-awd-challenge-readiness').setValue('passed')
+    await flushPromises()
+
+    expect(contestApiMocks.listAdminAwdChallenges).toHaveBeenLastCalledWith({
+      page: 1,
+      page_size: 20,
+      keyword: 'bank',
+      service_type: 'web_http',
+      deployment_mode: 'single_container',
+      readiness_status: 'passed',
+      status: 'published',
+    })
+  })
+
+  it('应该支持 AWD 题库分页翻页', async () => {
+    contestApiMocks.listAdminAwdChallenges.mockResolvedValue({
+      list: [
+        {
+          id: '21',
+          name: 'Page 1 AWD',
+          slug: 'page-1-awd',
+          category: 'web',
+          difficulty: 'easy',
+          description: 'page 1',
+          service_type: 'web_http',
+          deployment_mode: 'single_container',
+          version: '1.0.0',
+          status: 'published',
+          readiness_status: 'passed',
+          created_at: '2026-03-01T00:00:00.000Z',
+          updated_at: '2026-03-01T00:00:00.000Z',
+        },
+      ],
+      total: 45,
+      page: 1,
+      page_size: 20,
+    })
+
+    const wrapper = mountPanel({
+      contestMode: 'awd',
+    })
+
+    await flushPromises()
+    await wrapper.get('#contest-challenge-add').trigger('click')
+    await flushPromises()
+    await wrapper.get('#contest-awd-challenge-next-page').trigger('click')
+    await flushPromises()
+
+    expect(contestApiMocks.listAdminAwdChallenges).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        page: 2,
+        page_size: 20,
+      }),
+    )
+  })
+
+  it('应该在 AWD 题目池编辑时同步更新 service 关联题目，并仅更新关系层分值', async () => {
     contestApiMocks.listAdminContestChallenges.mockResolvedValue([
       buildChallenge(),
     ])
@@ -498,7 +719,7 @@ describe('ContestChallengeOrchestrationPanel', () => {
       list: [
         {
           id: '11',
-          name: '旧模板',
+          name: '旧题目',
           slug: 'old-template',
           category: 'web',
           difficulty: 'easy',
@@ -513,7 +734,7 @@ describe('ContestChallengeOrchestrationPanel', () => {
         },
         {
           id: '12',
-          name: '新模板',
+          name: '新题目',
           slug: 'new-template',
           category: 'web',
           difficulty: 'medium',
@@ -539,12 +760,10 @@ describe('ContestChallengeOrchestrationPanel', () => {
     })
 
     await flushPromises()
-    await wrapper.get('#contest-challenge-actions-11').trigger('click')
-    await flushPromises()
     await wrapper.get('#contest-challenge-edit-11').trigger('click')
     await flushPromises()
 
-    await wrapper.get('#contest-template-option-12').trigger('click')
+    expect(wrapper.find('#contest-awd-challenge-list').exists()).toBe(false)
     await wrapper.get('#contest-challenge-points').setValue('140')
     await wrapper.get('#contest-challenge-order').setValue('2')
     await wrapper.get('#contest-challenge-visibility').setValue('false')
@@ -552,7 +771,7 @@ describe('ContestChallengeOrchestrationPanel', () => {
     await flushPromises()
 
     expect(contestApiMocks.updateContestAWDService).toHaveBeenCalledWith('contest-1', 'service-1', {
-      awd_challenge_id: 12,
+      awd_challenge_id: 11,
       points: 140,
       order: 2,
       is_visible: false,

@@ -87,22 +87,22 @@
   - 拉取 readiness；在创建轮次、立即巡检前捕获 `ErrAWDReadinessBlocked` 并打开 override 流程。
 - Modify: `code/frontend/src/composables/useAdminContests.ts`
   - 在 AWD 赛事切到 `running` 时支持 readiness block -> reload -> override 重提交流程。
-- Create: `code/frontend/src/components/admin/contest/AWDReadinessSummary.vue`
+- Create: `code/frontend/src/components/platform/contest/AWDReadinessSummary.vue`
   - 渲染 readiness 概况卡与阻塞短名单。
-- Create: `code/frontend/src/components/admin/contest/AWDReadinessOverrideDialog.vue`
+- Create: `code/frontend/src/components/platform/contest/AWDReadinessOverrideDialog.vue`
   - 渲染阻塞确认层、原因输入、系统级阻塞摘要。
-- Modify: `code/frontend/src/components/admin/contest/AWDOperationsPanel.vue`
+- Modify: `code/frontend/src/components/platform/contest/AWDOperationsPanel.vue`
   - 在赛事选择与 tab rail 之间插入 readiness 区块，并接入创建轮次/当前轮巡检 override dialog。
-- Modify: `code/frontend/src/views/admin/ContestManage.vue`
+- Modify: `code/frontend/src/views/platform/ContestManage.vue`
   - 承接 AWD 开赛状态切换的 override dialog。
 
 ### Frontend tests
 
 - Modify: `code/frontend/src/api/__tests__/admin.test.ts`
   - 覆盖 readiness GET、override payload 和 gate-aware request 选项。
-- Modify: `code/frontend/src/components/admin/__tests__/AWDOperationsPanel.test.ts`
+- Modify: `code/frontend/src/components/platform/__tests__/AWDOperationsPanel.test.ts`
   - 覆盖 readiness 区块、零题目提示、被拦动作弹层。
-- Modify: `code/frontend/src/views/admin/__tests__/ContestManage.test.ts`
+- Modify: `code/frontend/src/views/platform/__tests__/ContestManage.test.ts`
   - 覆盖 AWD 赛事切到 `running` 时的门禁与强制放行。
 
 ## Task 1: 为后端 readiness query / gate 补 RED 测试
@@ -452,8 +452,8 @@ git commit -m "feat(awd): 记录开赛门禁强制放行审计"
 
 **Files:**
 - Modify: `code/frontend/src/api/__tests__/admin.test.ts`
-- Modify: `code/frontend/src/components/admin/__tests__/AWDOperationsPanel.test.ts`
-- Modify: `code/frontend/src/views/admin/__tests__/ContestManage.test.ts`
+- Modify: `code/frontend/src/components/platform/__tests__/AWDOperationsPanel.test.ts`
+- Modify: `code/frontend/src/views/platform/__tests__/ContestManage.test.ts`
 
 - [x] **Step 1: 先写 admin API 契约失败测试**
 
@@ -501,7 +501,7 @@ expect(requestMock).toHaveBeenCalledWith({
 
 ```bash
 cd /home/azhi/workspace/projects/ctf/.worktrees/feat-awd-phase8-readiness-gate/code/frontend
-npm run test:run -- src/api/__tests__/admin.test.ts src/components/admin/__tests__/AWDOperationsPanel.test.ts src/views/admin/__tests__/ContestManage.test.ts
+npm run test:run -- src/api/__tests__/admin.test.ts src/components/platform/__tests__/AWDOperationsPanel.test.ts src/views/platform/__tests__/ContestManage.test.ts
 ```
 
 预期：FAIL，失败点分别对应 readiness API、readiness 区块、override dialog 和 AWD 开赛门禁尚未实现。
@@ -513,10 +513,10 @@ npm run test:run -- src/api/__tests__/admin.test.ts src/components/admin/__tests
 - Modify: `code/frontend/src/api/admin.ts`
 - Modify: `code/frontend/src/composables/useAdminContestAWD.ts`
 - Modify: `code/frontend/src/composables/useAdminContests.ts`
-- Create: `code/frontend/src/components/admin/contest/AWDReadinessSummary.vue`
-- Create: `code/frontend/src/components/admin/contest/AWDReadinessOverrideDialog.vue`
-- Modify: `code/frontend/src/components/admin/contest/AWDOperationsPanel.vue`
-- Modify: `code/frontend/src/views/admin/ContestManage.vue`
+- Create: `code/frontend/src/components/platform/contest/AWDReadinessSummary.vue`
+- Create: `code/frontend/src/components/platform/contest/AWDReadinessOverrideDialog.vue`
+- Modify: `code/frontend/src/components/platform/contest/AWDOperationsPanel.vue`
+- Modify: `code/frontend/src/views/platform/ContestManage.vue`
 
 - [x] **Step 1: 先接好 contract 和 admin API**
 
@@ -633,7 +633,7 @@ suppressErrorToast: true
 
 ```bash
 cd /home/azhi/workspace/projects/ctf/.worktrees/feat-awd-phase8-readiness-gate/code/frontend
-npm run test:run -- src/api/__tests__/admin.test.ts src/components/admin/__tests__/AWDOperationsPanel.test.ts src/views/admin/__tests__/ContestManage.test.ts
+npm run test:run -- src/api/__tests__/admin.test.ts src/components/platform/__tests__/AWDOperationsPanel.test.ts src/views/platform/__tests__/ContestManage.test.ts
 ```
 
 预期：PASS。
@@ -642,7 +642,7 @@ npm run test:run -- src/api/__tests__/admin.test.ts src/components/admin/__tests
 
 ```bash
 cd /home/azhi/workspace/projects/ctf/.worktrees/feat-awd-phase8-readiness-gate
-git add code/frontend/src/api/contracts.ts code/frontend/src/api/admin.ts code/frontend/src/composables/useAdminContestAWD.ts code/frontend/src/composables/useAdminContests.ts code/frontend/src/components/admin/contest/AWDReadinessSummary.vue code/frontend/src/components/admin/contest/AWDReadinessOverrideDialog.vue code/frontend/src/components/admin/contest/AWDOperationsPanel.vue code/frontend/src/views/admin/ContestManage.vue code/frontend/src/api/__tests__/admin.test.ts code/frontend/src/components/admin/__tests__/AWDOperationsPanel.test.ts code/frontend/src/views/admin/__tests__/ContestManage.test.ts
+git add code/frontend/src/api/contracts.ts code/frontend/src/api/admin.ts code/frontend/src/composables/useAdminContestAWD.ts code/frontend/src/composables/useAdminContests.ts code/frontend/src/components/platform/contest/AWDReadinessSummary.vue code/frontend/src/components/platform/contest/AWDReadinessOverrideDialog.vue code/frontend/src/components/platform/contest/AWDOperationsPanel.vue code/frontend/src/views/platform/ContestManage.vue code/frontend/src/api/__tests__/admin.test.ts code/frontend/src/components/platform/__tests__/AWDOperationsPanel.test.ts code/frontend/src/views/platform/__tests__/ContestManage.test.ts
 git commit -m "feat(awd): 增加开赛就绪门禁前端交互"
 ```
 
@@ -669,7 +669,7 @@ go test ./internal/app -run TestNewRouterRegistersStudentChallengeRoutes -count=
 
 ```bash
 cd /home/azhi/workspace/projects/ctf/.worktrees/feat-awd-phase8-readiness-gate/code/frontend
-npm run test:run -- src/api/__tests__/admin.test.ts src/components/admin/__tests__/AWDChallengeConfigDialog.test.ts src/components/admin/__tests__/AWDOperationsPanel.test.ts src/components/admin/__tests__/AWDReadinessSummary.test.ts src/composables/__tests__/useAdminContestAWD.test.ts src/views/admin/__tests__/ContestManage.test.ts
+npm run test:run -- src/api/__tests__/admin.test.ts src/components/platform/__tests__/AWDChallengeConfigDialog.test.ts src/components/platform/__tests__/AWDOperationsPanel.test.ts src/components/platform/__tests__/AWDReadinessSummary.test.ts src/composables/__tests__/useAdminContestAWD.test.ts src/views/platform/__tests__/ContestManage.test.ts
 npm run typecheck
 ```
 

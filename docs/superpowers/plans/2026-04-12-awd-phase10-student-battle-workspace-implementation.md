@@ -270,7 +270,7 @@ timeout 180s npx vue-tsc --noEmit
 建议提交：
 
 ```bash
-git add -f docs/architecture/features/2026-04-12-awd-phase10-student-battle-workspace-design.md \
+git add -f docs/architecture/features/awd-student-battle-workspace-design.md \
   docs/superpowers/plans/2026-04-12-awd-phase10-student-battle-workspace-implementation.md
 git add code/backend/internal/dto/contest_awd_workspace.go \
   code/backend/internal/module/contest/application/queries/awd_workspace_query.go \

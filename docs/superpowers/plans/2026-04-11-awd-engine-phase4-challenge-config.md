@@ -42,8 +42,8 @@ npm run test:run -- src/api/__tests__/admin.test.ts
 ### Task 2: 为 AWD 题目配置面板补 RED 测试
 
 **Files:**
-- Modify: `code/frontend/src/views/admin/__tests__/ContestManage.test.ts`
-- Modify: `code/frontend/src/components/admin/__tests__/AWDOperationsPanel.test.ts`
+- Modify: `code/frontend/src/views/platform/__tests__/ContestManage.test.ts`
+- Modify: `code/frontend/src/components/platform/__tests__/AWDOperationsPanel.test.ts`
 
 - [x] **Step 1: 写失败测试，要求 AWD 运维页可切换到题目配置面板**
 
@@ -68,7 +68,7 @@ npm run test:run -- src/api/__tests__/admin.test.ts
 
 ```bash
 cd /home/azhi/workspace/projects/ctf/.worktrees/feat-awd-engine-migration/code/frontend
-npm run test:run -- src/views/admin/__tests__/ContestManage.test.ts src/components/admin/__tests__/AWDOperationsPanel.test.ts
+npm run test:run -- src/views/platform/__tests__/ContestManage.test.ts src/components/platform/__tests__/AWDOperationsPanel.test.ts
 ```
 
 预期：FAIL，失败原因是 AWD 运维页还没有题目配置面板和配置对话框。
@@ -79,9 +79,9 @@ npm run test:run -- src/views/admin/__tests__/ContestManage.test.ts src/componen
 - Modify: `code/frontend/src/api/contracts.ts`
 - Modify: `code/frontend/src/api/admin.ts`
 - Modify: `code/frontend/src/composables/useAdminContestAWD.ts`
-- Modify: `code/frontend/src/components/admin/contest/AWDOperationsPanel.vue`
-- Create: `code/frontend/src/components/admin/contest/AWDChallengeConfigPanel.vue`
-- Create: `code/frontend/src/components/admin/contest/AWDChallengeConfigDialog.vue`
+- Modify: `code/frontend/src/components/platform/contest/AWDOperationsPanel.vue`
+- Create: `code/frontend/src/components/platform/contest/AWDChallengeConfigPanel.vue`
+- Create: `code/frontend/src/components/platform/contest/AWDChallengeConfigDialog.vue`
 
 - [x] **Step 1: 接入前端 contract 与 admin API**
 
@@ -123,7 +123,7 @@ npm run test:run -- src/views/admin/__tests__/ContestManage.test.ts src/componen
 
 ```bash
 cd /home/azhi/workspace/projects/ctf/.worktrees/feat-awd-engine-migration/code/frontend
-npm run test:run -- src/api/__tests__/admin.test.ts src/components/admin/__tests__/AWDOperationsPanel.test.ts src/views/admin/__tests__/ContestManage.test.ts
+npm run test:run -- src/api/__tests__/admin.test.ts src/components/platform/__tests__/AWDOperationsPanel.test.ts src/views/platform/__tests__/ContestManage.test.ts
 ```
 
 预期：PASS。
@@ -152,6 +152,6 @@ npm run typecheck
 
 ```bash
 cd /home/azhi/workspace/projects/ctf/.worktrees/feat-awd-engine-migration
-git add -f docs/architecture/features/2026-04-11-awd-challenge-config-design.md docs/superpowers/plans/2026-04-11-awd-engine-phase4-challenge-config.md code/frontend/src/api/contracts.ts code/frontend/src/api/admin.ts code/frontend/src/api/__tests__/admin.test.ts code/frontend/src/composables/useAdminContestAWD.ts code/frontend/src/components/admin/contest/AWDOperationsPanel.vue code/frontend/src/components/admin/contest/AWDChallengeConfigPanel.vue code/frontend/src/components/admin/contest/AWDChallengeConfigDialog.vue code/frontend/src/components/admin/__tests__/AWDOperationsPanel.test.ts code/frontend/src/views/admin/__tests__/ContestManage.test.ts
+git add -f docs/architecture/features/awd-challenge-config-design.md docs/superpowers/plans/2026-04-11-awd-engine-phase4-challenge-config.md code/frontend/src/api/contracts.ts code/frontend/src/api/admin.ts code/frontend/src/api/__tests__/admin.test.ts code/frontend/src/composables/useAdminContestAWD.ts code/frontend/src/components/platform/contest/AWDOperationsPanel.vue code/frontend/src/components/platform/contest/AWDChallengeConfigPanel.vue code/frontend/src/components/platform/contest/AWDChallengeConfigDialog.vue code/frontend/src/components/platform/__tests__/AWDOperationsPanel.test.ts code/frontend/src/views/platform/__tests__/ContestManage.test.ts
 git commit -m "feat(awd): 增加题目配置面板"
 ```

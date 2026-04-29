@@ -140,13 +140,6 @@ const backofficeModules: BackofficeModule[] = [
           !matchAny(path, ['/platform/challenges/package-format']),
       },
       {
-        routeName: 'PlatformEnvironmentTemplateLibrary',
-        label: '环境模板',
-        path: '/platform/environment-templates',
-        roles: ['teacher', 'admin'],
-        isMatch: (path) => matchAny(path, ['/platform/environment-templates']),
-      },
-      {
         routeName: 'PlatformAwdChallengeLibrary',
         label: 'AWD题库',
         path: '/platform/awd-challenges',

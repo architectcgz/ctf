@@ -75,7 +75,6 @@ describe('backofficeNavigation', () => {
 
     expect(items.map((item) => item.label)).toEqual([
       '题目管理',
-      '环境模板',
       'AWD题库',
       '镜像管理',
     ])

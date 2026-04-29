@@ -29,7 +29,7 @@ type AuthUser struct {
 }
 
 type LoginResp struct {
-	User        AuthUser `json:"user"`
+	User AuthUser `json:"user"`
 }
 
 type WSTicketResp struct {

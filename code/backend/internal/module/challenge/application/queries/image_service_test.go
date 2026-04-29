@@ -10,12 +10,12 @@ import (
 )
 
 type stubChallengeImageRepository struct {
-	createFn            func(ctx context.Context, image *model.Image) error
-	findByIDFn          func(ctx context.Context, id int64) (*model.Image, error)
-	findByNameTagFn     func(ctx context.Context, name, tag string) (*model.Image, error)
-	listFn              func(ctx context.Context, name, status string, offset, limit int) ([]*model.Image, int64, error)
-	updateFn            func(ctx context.Context, image *model.Image) error
-	deleteFn            func(ctx context.Context, id int64) error
+	createFn        func(ctx context.Context, image *model.Image) error
+	findByIDFn      func(ctx context.Context, id int64) (*model.Image, error)
+	findByNameTagFn func(ctx context.Context, name, tag string) (*model.Image, error)
+	listFn          func(ctx context.Context, name, status string, offset, limit int) ([]*model.Image, int64, error)
+	updateFn        func(ctx context.Context, image *model.Image) error
+	deleteFn        func(ctx context.Context, id int64) error
 }
 
 func (s *stubChallengeImageRepository) Create(ctx context.Context, image *model.Image) error {

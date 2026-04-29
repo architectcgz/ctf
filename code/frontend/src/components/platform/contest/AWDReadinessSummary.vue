@@ -36,9 +36,9 @@ const readinessDecision = computed(() => {
 
   if (!hasGlobalBlockers && (readiness?.total_challenges ?? 0) > 0 && hasChallengeBlockers) {
     return {
-      label: '可强制开赛',
-      helper: '当前没有系统级门禁，但题目侧仍有阻塞，需确认风险后强制继续。',
-      tone: 'force',
+      label: '待修复',
+      helper: '题目侧仍有阻塞项，修复并重新校验后才能开赛。',
+      tone: 'blocked',
     }
   }
 
@@ -102,10 +102,6 @@ const readinessDecision = computed(() => {
 
 .readiness-decision-card--ready {
   border-color: color-mix(in srgb, var(--color-success) 22%, var(--journal-border));
-}
-
-.readiness-decision-card--force {
-  border-color: color-mix(in srgb, var(--color-warning) 24%, var(--journal-border));
 }
 
 .readiness-decision-card--blocked {

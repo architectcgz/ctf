@@ -3,7 +3,6 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { computed, defineComponent, ref, watch } from 'vue'
 
 import ContestEdit from '../ContestEdit.vue'
-import AWDReadinessOverrideDialog from '@/components/platform/contest/AWDReadinessOverrideDialog.vue'
 import { ApiError } from '@/api/request'
 import type { ContestDetailData } from '@/api/contracts'
 import type { VueWrapper } from '@vue/test-utils'
@@ -87,48 +86,6 @@ function buildContestDetail(overrides: Partial<ContestDetailData> = {}): Contest
   }
 }
 
-const AWDReadinessOverrideDialogStub = defineComponent({
-  name: 'AWDReadinessOverrideDialog',
-  props: {
-    open: { type: Boolean, default: false },
-    title: { type: String, default: '' },
-    confirmLoading: { type: Boolean, default: false },
-  },
-  emits: ['update:open', 'confirm'],
-  setup(props, { emit }) {
-    const reason = ref('')
-
-    watch(
-      () => props.open,
-      (open) => {
-        if (!open) {
-          reason.value = ''
-        }
-      },
-      { immediate: true }
-    )
-
-    function handleSubmit() {
-      emit('confirm', reason.value)
-    }
-
-    return { reason, handleSubmit }
-  },
-  template: `
-    <div v-if="open">
-      <div>{{ title }}</div>
-      <textarea id="awd-readiness-override-reason" v-model="reason" />
-      <button
-        id="awd-readiness-override-submit"
-        type="button"
-        @click="handleSubmit"
-      >
-        {{ confirmLoading ? '强制继续中...' : '强制继续' }}
-      </button>
-    </div>
-  `,
-})
-
 const ContestChallengeEditorDialogStub = defineComponent({
   name: 'ContestChallengeEditorDialog',
   props: {
@@ -137,21 +94,36 @@ const ContestChallengeEditorDialogStub = defineComponent({
     contestMode: { type: String, default: 'jeopardy' },
     challengeOptions: { type: Array, default: () => [] },
     awdChallengeOptions: { type: Array, default: () => [] },
+    awdChallengeKeyword: { type: String, default: '' },
+    awdChallengeServiceType: { type: String, default: '' },
+    awdChallengeDeploymentMode: { type: String, default: '' },
+    awdChallengeReadiness: { type: String, default: '' },
     existingChallengeIds: { type: Array, default: () => [] },
     draft: { type: Object, default: null },
     loadingChallengeCatalog: { type: Boolean, default: false },
     loadingAwdChallengeCatalog: { type: Boolean, default: false },
     saving: { type: Boolean, default: false },
   },
-  emits: ['update:open', 'save'],
+  emits: [
+    'update:open',
+    'save',
+    'update-awd-challenge-keyword',
+    'update-awd-challenge-service-type',
+    'update-awd-challenge-deployment-mode',
+    'update-awd-challenge-readiness',
+    'change-awd-challenge-page',
+    'refresh-awd-challenge-catalog',
+  ],
   setup(props, { emit }) {
     const challengeId = ref('')
     const awdChallengeId = ref('')
+    const awdChallengeIds = ref<string[]>([])
     const points = ref('100')
     const order = ref('0')
     const isVisible = ref('true')
 
     const isAwdContest = computed(() => props.contestMode === 'awd')
+    const isAwdCreateMode = computed(() => isAwdContest.value && props.mode === 'create')
     const selectableChallenges = computed(() =>
       (props.challengeOptions as Array<{ id: string }>).filter(
         (item) => props.mode === 'edit' || !(props.existingChallengeIds as string[]).includes(item.id)
@@ -177,6 +149,7 @@ const ContestChallengeEditorDialogStub = defineComponent({
                 ''
             )
           : ''
+        awdChallengeIds.value = isAwdCreateMode.value && awdChallengeId.value ? [awdChallengeId.value] : []
         points.value = String((props.draft as { points?: number } | null)?.points ?? 100)
         order.value = String((props.draft as { order?: number } | null)?.order ?? 0)
         isVisible.value =
@@ -193,6 +166,7 @@ const ContestChallengeEditorDialogStub = defineComponent({
             ? Number(challengeId.value)
             : undefined,
         awd_challenge_id: isAwdContest.value ? Number(awdChallengeId.value) : undefined,
+        awd_challenge_ids: isAwdCreateMode.value ? awdChallengeIds.value.map((id) => Number(id)) : undefined,
         points: Number(points.value),
         order: Number(order.value),
         is_visible: isVisible.value === 'true',
@@ -200,17 +174,34 @@ const ContestChallengeEditorDialogStub = defineComponent({
     }
 
     function selectAwdChallenge(id: string) {
+      if (isAwdCreateMode.value) {
+        const selected = new Set(awdChallengeIds.value)
+        if (selected.has(id)) {
+          if (selected.size > 1) {
+            selected.delete(id)
+          }
+        } else {
+          selected.add(id)
+        }
+        awdChallengeIds.value = (props.awdChallengeOptions as Array<{ id: string }>)
+          .map((item) => item.id)
+          .filter((itemId) => selected.has(itemId))
+        awdChallengeId.value = awdChallengeIds.value[0] ?? ''
+        return
+      }
       awdChallengeId.value = id
     }
 
     return {
       challengeId,
       awdChallengeId,
+      awdChallengeIds,
       points,
       order,
       isVisible,
       selectableChallenges,
       isAwdContest,
+      isAwdCreateMode,
       selectAwdChallenge,
       submit,
     }
@@ -233,23 +224,23 @@ const ContestChallengeEditorDialogStub = defineComponent({
       </select>
       <div v-else>{{ draft?.title }}</div>
       <div
-        v-if="isAwdContest"
-        id="contest-template-list"
+        v-if="isAwdCreateMode"
+        id="contest-awd-challenge-list"
       >
         <button
           v-for="template in awdChallengeOptions"
-          :id="'contest-template-option-' + template.id"
+          :id="'contest-awd-challenge-option-' + template.id"
           :key="template.id"
           type="button"
-          :class="{ 'is-selected': awdChallengeId === template.id }"
+          :class="{ 'is-selected': isAwdCreateMode ? awdChallengeIds.includes(template.id) : awdChallengeId === template.id }"
           @click="selectAwdChallenge(template.id)"
         >
           {{ template.name }}
         </button>
       </div>
-      <input id="contest-challenge-points" v-model="points" />
-      <input id="contest-challenge-order" v-model="order" />
-      <select id="contest-challenge-visibility" v-model="isVisible">
+      <input v-if="!isAwdCreateMode" id="contest-challenge-points" v-model="points" />
+      <input v-if="!isAwdCreateMode" id="contest-challenge-order" v-model="order" />
+      <select v-if="!isAwdCreateMode" id="contest-challenge-visibility" v-model="isVisible">
         <option value="true">可见</option>
         <option value="false">隐藏</option>
       </select>
@@ -366,7 +357,6 @@ function mountContestEdit() {
     global: {
       stubs: {
         AWDChallengeConfigDialog: AWDChallengeConfigDialogStub,
-        AWDReadinessOverrideDialog: AWDReadinessOverrideDialogStub,
         ContestChallengeEditorDialog: ContestChallengeEditorDialogStub,
         AdminSurfaceModal: {
           props: ['open', 'title'],
@@ -401,7 +391,6 @@ function mountContestEditWithRealChallengeDialog() {
     global: {
       stubs: {
         AWDChallengeConfigDialog: AWDChallengeConfigDialogStub,
-        AWDReadinessOverrideDialog: AWDReadinessOverrideDialogStub,
         AdminSurfaceModal: {
           props: ['open', 'title'],
           template:
@@ -447,17 +436,6 @@ function getWorkbenchStageRail(wrapper: VueWrapper<any>) {
 async function submitContestBasicsForm(wrapper: VueWrapper<any>) {
   await wrapper.get('.studio-form-canvas form').trigger('submit')
   await flushPromises()
-}
-
-async function openChallengeActionMenu(wrapper: VueWrapper<any>, challengeId = '101') {
-  await wrapper.get(`#contest-challenge-actions-${challengeId}`).trigger('click')
-  await flushPromises()
-}
-
-function getTeleportTarget<T extends Element = Element>(selector: string): T {
-  const element = document.body.querySelector(selector)
-  expect(element, `expected teleported element ${selector} to exist`).not.toBeNull()
-  return element as T
 }
 
 describe('ContestEdit', () => {
@@ -515,7 +493,7 @@ describe('ContestEdit', () => {
       missing_checker_challenges: 0,
       blocking_count: 1,
       global_blocking_reasons: [],
-      blocking_actions: ['start_contest'],
+      blocking_actions: ['start_contest', 'create_round', 'run_current_round_check'],
       items: [
         {
           awd_challenge_id: '1',
@@ -704,7 +682,7 @@ describe('ContestEdit', () => {
 
     expect(stageRail.text()).toContain('基础信息')
     expect(stageRail.text()).toContain('题目编排')
-    expect(stageRail.text()).not.toContain('AWD 服务配置')
+    expect(stageRail.text()).not.toContain('AWD 编排')
     expect(stageRail.text()).not.toContain('就绪审计')
     expect(stageRail.text()).not.toContain('轮次运行')
   })
@@ -727,13 +705,13 @@ describe('ContestEdit', () => {
 
     expect(stageRail.text()).toContain('基础信息')
     expect(stageRail.text()).toContain('题目编排')
-    expect(stageRail.text()).toContain('AWD 服务配置')
+    expect(stageRail.text()).toContain('AWD 编排')
     expect(stageRail.text()).toContain('就绪审计')
     expect(stageRail.text()).not.toContain('轮次运行')
     expect(stageRail.text()).not.toContain('实例编排')
   })
 
-  it('应该在赛前检查中列出阻塞项、保留强制开赛入口，并支持返回 AWD 配置后高亮当前题', async () => {
+  it('应该在赛前检查中列出阻塞项、移除强制开赛入口，并支持返回 AWD 配置', async () => {
     contestApiMocks.getContest.mockResolvedValue(
       buildContestDetail({
         title: '2026 AWD 联赛',
@@ -749,20 +727,22 @@ describe('ContestEdit', () => {
     await wrapper.get('#contest-workbench-stage-tab-preflight').trigger('click')
     await flushPromises()
 
-    expect(wrapper.text()).toContain('强制启动赛事')
+    expect(wrapper.text()).toContain('开赛已锁定')
+    expect(wrapper.text()).toContain('就绪检查')
+    expect(wrapper.text()).not.toContain('轮次创建')
+    expect(wrapper.text()).not.toContain('即时巡检')
     expect(wrapper.text()).toContain('Challenge 101')
-    expect(wrapper.text()).toContain('修正配置')
-    expect(wrapper.text()).toContain('强制放行')
+    expect(wrapper.text()).toContain('编辑并试跑')
+    expect(wrapper.find('#contest-awd-preflight-force-start').exists()).toBe(false)
 
     await wrapper.get('#awd-readiness-edit-1').trigger('click')
     await flushPromises()
 
-    expect(getWorkbenchStageRail(wrapper).get('[role="tab"][aria-selected="true"]').text()).toContain('AWD 服务配置')
-    expect(wrapper.text()).toContain('正在编辑')
-    expect(wrapper.text()).toContain('Web 入门')
+    expect(getWorkbenchStageRail(wrapper).get('[role="tab"][aria-selected="true"]').text()).toContain('AWD 编排')
+    expect(wrapper.text()).not.toContain('当前焦点题目')
   })
 
-  it('应该支持从题目池跳转到 AWD 配置并保留当前题高亮', async () => {
+  it('题目池更多菜单不应提供 AWD 编排跳转入口', async () => {
     contestApiMocks.getContest.mockResolvedValue(
       buildContestDetail({
         title: '2026 AWD 联赛',
@@ -777,13 +757,10 @@ describe('ContestEdit', () => {
     await flushPromises()
     await wrapper.get('#contest-workbench-stage-tab-pool').trigger('click')
     await flushPromises()
-    await openChallengeActionMenu(wrapper, '1')
-    getTeleportTarget<HTMLButtonElement>('#contest-challenge-open-awd-config-1').click()
-    await flushPromises()
 
-    expect(getWorkbenchStageRail(wrapper).get('[role="tab"][aria-selected="true"]').text()).toContain('AWD 服务配置')
-    expect(wrapper.text()).toContain('正在编辑')
-    expect(wrapper.text()).toContain('Web 入门')
+    expect(wrapper.find('#contest-challenge-actions-1').exists()).toBe(false)
+    expect(document.body.querySelector('#contest-challenge-open-awd-config-1')).toBeNull()
+    expect(getWorkbenchStageRail(wrapper).get('[role="tab"][aria-selected="true"]').text()).toContain('题目编排')
   })
 
   it('竞赛编辑页不应渲染轮次运行面板和赛事运维内容', async () => {
@@ -809,7 +786,7 @@ describe('ContestEdit', () => {
     expect(wrapper.text()).not.toContain('攻击流水')
   })
 
-  it('应该在 AWD 赛事已开赛时默认聚焦 AWD 服务配置阶段', async () => {
+  it('应该在 AWD 赛事已开赛时默认聚焦 AWD 编排阶段', async () => {
     contestApiMocks.getContest.mockResolvedValue(
       buildContestDetail({
         title: '2026 AWD 联赛',
@@ -825,7 +802,7 @@ describe('ContestEdit', () => {
 
     const stageRail = getWorkbenchStageRail(wrapper)
 
-    expect(stageRail.get('[role="tab"][aria-selected="true"]').text()).toContain('AWD 服务配置')
+    expect(stageRail.get('[role="tab"][aria-selected="true"]').text()).toContain('AWD 编排')
     expect(wrapper.text()).not.toContain('轮次态势')
   })
 
@@ -867,7 +844,7 @@ describe('ContestEdit', () => {
 
     const stageRail = getWorkbenchStageRail(wrapper)
 
-    expect(stageRail.get('[role="tab"][aria-selected="true"]').text()).toContain('AWD 服务配置')
+    expect(stageRail.get('[role="tab"][aria-selected="true"]').text()).toContain('AWD 编排')
     expect(wrapper.text()).not.toContain('轮次态势')
     expect(wrapper.text()).not.toContain('尚未进入运行阶段')
   })
@@ -917,7 +894,6 @@ describe('ContestEdit', () => {
 
     await flushPromises()
 
-    expect(wrapper.text()).toContain('已关联题目')
     expect(wrapper.text()).toContain('Web 入门')
 
     await wrapper.get('#contest-workbench-stage-tab-pool').trigger('click')
@@ -930,7 +906,6 @@ describe('ContestEdit', () => {
 
     expect(toastMocks.error).toHaveBeenCalledWith('refresh failed')
     expect(wrapper.text()).toContain('Web 入门')
-    expect(wrapper.text()).toContain('已关联题目')
     expect(wrapper.text()).not.toContain('当前竞赛还没有关联题目')
     expect(wrapper.text()).not.toContain('共 0 道题目')
   })
@@ -953,7 +928,7 @@ describe('ContestEdit', () => {
 
     expect(wrapper.find('#awd-ops-tab-challenges').exists()).toBe(false)
     expect(wrapper.find('#contest-workbench-stage-tab-operations').exists()).toBe(false)
-    expect(getWorkbenchStageRail(wrapper).get('[role="tab"][aria-selected="true"]').text()).toContain('AWD 服务配置')
+    expect(getWorkbenchStageRail(wrapper).get('[role="tab"][aria-selected="true"]').text()).toContain('AWD 编排')
     expect(wrapper.text()).not.toContain('轮次态势')
   })
 
@@ -1055,7 +1030,7 @@ describe('ContestEdit', () => {
       })
     )
   })
-  it('应该在 AWD 启动门禁拦截后展示放行弹层并在确认后回到赛事目录', async () => {
+  it('应该在 AWD 启动门禁拦截后展示错误并停留在当前页面', async () => {
     contestApiMocks.getContest.mockResolvedValue({
       id: 'contest-1',
       title: '2026 AWD 联赛',
@@ -1067,48 +1042,24 @@ describe('ContestEdit', () => {
     })
     contestApiMocks.updateContest
       .mockRejectedValueOnce(new ApiError('AWD 开赛就绪检查未通过', { status: 409, code: 14025 }))
-      .mockResolvedValueOnce({
-        contest: {
-          id: 'contest-1',
-          title: '2026 AWD 联赛',
-          description: '攻防赛',
-          mode: 'awd',
-          status: 'running',
-          starts_at: '2026-03-15T09:00:00.000Z',
-          ends_at: '2026-03-15T13:00:00.000Z',
-        },
-      })
 
     const wrapper = mountContestEdit()
 
     await flushPromises()
+    contestApiMocks.getContestAWDReadiness.mockClear()
     await wrapper.get('#contest-workbench-stage-tab-basics').trigger('click')
     await flushPromises()
     await wrapper.get('#contest-status').setValue('running')
     await submitContestBasicsForm(wrapper)
 
-    expect(contestApiMocks.getContestAWDReadiness).toHaveBeenCalledWith('contest-1')
-    expect(wrapper.text()).toContain('启动赛事')
-    expect(wrapper.text()).toContain('强制继续')
-
-    await wrapper.get('#awd-readiness-override-reason').setValue('teacher drill')
-    await wrapper.get('#awd-readiness-override-submit').trigger('click')
-    await flushPromises()
-
-    expect(contestApiMocks.updateContest).toHaveBeenNthCalledWith(
-      2,
-      'contest-1',
-      expect.objectContaining({
-        status: 'running',
-        force_override: true,
-        override_reason: 'teacher drill',
-      }),
-      { suppressErrorToast: true }
-    )
-    expect(pushMock).toHaveBeenCalledWith({ name: 'ContestManage', query: { panel: 'list' } })
+    expect(contestApiMocks.getContestAWDReadiness).not.toHaveBeenCalled()
+    expect(contestApiMocks.updateContest).toHaveBeenCalledTimes(1)
+    expect(toastMocks.error).toHaveBeenCalledWith('AWD 开赛就绪检查未通过')
+    expect(pushMock).not.toHaveBeenCalled()
+    expect(wrapper.find('#awd-readiness-override-submit').exists()).toBe(false)
   })
 
-  it('应该在 14025 后续读取 readiness 失败时给出清晰错误并保持界面可继续操作', async () => {
+  it('应该在 AWD 启动门禁拦截后不再读取 readiness 放行数据', async () => {
     contestApiMocks.getContest.mockResolvedValue(
       buildContestDetail({
         title: '2026 AWD 联赛',
@@ -1120,48 +1071,24 @@ describe('ContestEdit', () => {
     contestApiMocks.updateContest.mockRejectedValueOnce(
       new ApiError('AWD 开赛就绪检查未通过', { status: 409, code: 14025 })
     )
-    contestApiMocks.getContestAWDReadiness
-      .mockResolvedValueOnce({
-        contest_id: 'contest-1',
-        ready: false,
-        total_challenges: 1,
-        passed_challenges: 0,
-        pending_challenges: 0,
-        failed_challenges: 1,
-        stale_challenges: 0,
-        missing_checker_challenges: 0,
-        blocking_count: 1,
-        global_blocking_reasons: [],
-        blocking_actions: ['start_contest'],
-        items: [
-          {
-            challenge_id: '101',
-            title: 'Challenge 101',
-            checker_type: 'http_standard',
-            validation_state: 'failed',
-            last_preview_at: '2026-04-12T08:00:00.000Z',
-            last_access_url: 'http://checker.internal/flag',
-            blocking_reason: 'last_preview_failed',
-          },
-        ],
-      })
-      .mockRejectedValueOnce(new Error('readiness fetch failed'))
 
     const wrapper = mountContestEdit()
 
     await flushPromises()
+    contestApiMocks.getContestAWDReadiness.mockClear()
     await wrapper.get('#contest-workbench-stage-tab-basics').trigger('click')
     await flushPromises()
     await wrapper.get('#contest-status').setValue('running')
     await submitContestBasicsForm(wrapper)
 
-    expect(toastMocks.error).toHaveBeenCalledWith('readiness fetch failed')
+    expect(contestApiMocks.getContestAWDReadiness).not.toHaveBeenCalled()
     expect(contestApiMocks.updateContest).toHaveBeenCalledTimes(1)
+    expect(toastMocks.error).toHaveBeenCalledWith('AWD 开赛就绪检查未通过')
     expect(pushMock).not.toHaveBeenCalled()
     expect(wrapper.text()).toContain('基础信息')
   })
 
-  it('应该在赛前检查强制开赛时带上基础表单最新草稿值', async () => {
+  it('赛前检查页面不应提供强制开赛入口', async () => {
     contestApiMocks.getContest.mockResolvedValue(
       buildContestDetail({
         title: '2026 AWD 联赛',
@@ -1180,21 +1107,10 @@ describe('ContestEdit', () => {
     await wrapper.get('#contest-workbench-stage-tab-preflight').trigger('click')
     await flushPromises()
 
-    await wrapper.get('#contest-awd-preflight-force-start').trigger('click')
-    await flushPromises()
-    wrapper.findComponent(AWDReadinessOverrideDialog).vm.$emit('confirm', 'teacher drill')
-    await flushPromises()
-
-    expect(contestApiMocks.updateContest).toHaveBeenCalledWith(
-      'contest-1',
-      expect.objectContaining({
-        title: '2026 AWD 联赛（演练版）',
-        status: 'running',
-        force_override: true,
-        override_reason: 'teacher drill',
-      }),
-      { suppressErrorToast: true }
-    )
+    expect(wrapper.find('#contest-awd-preflight-force-start').exists()).toBe(false)
+    expect(wrapper.text()).not.toContain('强制启动赛事')
+    expect(wrapper.text()).not.toContain('强制放行')
+    expect(contestApiMocks.updateContest).not.toHaveBeenCalled()
   })
 
   it('应该在 AWD 辅助请求失败时仍保留工作台而不是进入全局加载错误态', async () => {
@@ -1217,7 +1133,7 @@ describe('ContestEdit', () => {
     expect(wrapper.text()).not.toContain('竞赛详情加载失败')
   })
 
-  it('AWD 配置新增应回到题目池并打开题库选题弹层', async () => {
+  it('新增 AWD 题目应统一从题目编排打开题库选题弹层', async () => {
     contestApiMocks.getContest.mockResolvedValue(
       buildContestDetail({
         title: '2026 AWD 联赛',
@@ -1230,7 +1146,7 @@ describe('ContestEdit', () => {
       list: [
         {
           id: '999',
-          name: 'Final Template',
+          name: 'Final Challenge',
           slug: 'final-template',
           category: 'crypto',
           difficulty: 'medium',
@@ -1254,24 +1170,28 @@ describe('ContestEdit', () => {
     await flushPromises()
     await wrapper.get('#contest-workbench-stage-tab-awd-config').trigger('click')
     await flushPromises()
-    await wrapper.get('#awd-challenge-config-create').trigger('click')
+    expect(wrapper.find('#awd-challenge-config-create').exists()).toBe(false)
+    await wrapper.get('#contest-workbench-stage-tab-pool').trigger('click')
+    await flushPromises()
+    await wrapper.get('#contest-challenge-add').trigger('click')
     await flushPromises()
 
     expect(wrapper.get('#contest-workbench-stage-tab-pool').attributes('aria-selected')).toBe('true')
     expect(wrapper.find('#contest-challenge-library').exists()).toBe(false)
     expect(wrapper.find('#contest-challenge-select').exists()).toBe(false)
-    expect(wrapper.find('#contest-template-option-999').exists()).toBe(true)
+    expect(wrapper.html()).not.toContain(['contest', 'template', 'option', '999'].join('-'))
+    expect(wrapper.find('#contest-awd-challenge-option-999').exists()).toBe(true)
     expect(wrapper.find('#awd-challenge-config-template').exists()).toBe(false)
     expect(contestApiMocks.getChallenges).not.toHaveBeenCalled()
     expect(contestApiMocks.listAdminAwdChallenges).toHaveBeenCalledWith({
       page: 1,
-      page_size: 100,
+      page_size: 20,
       status: 'published',
     })
-    expect(wrapper.text()).toContain('Final Template')
+    expect(wrapper.text()).toContain('Final Challenge')
   })
 
-  it('应该在 AWD 配置AWD 题目加载失败时给出错误提示而不是留下未处理异常', async () => {
+  it('应该在题目编排 AWD 题库加载失败时给出错误提示而不是留下未处理异常', async () => {
     contestApiMocks.getContest.mockResolvedValue(
       buildContestDetail({
         title: '2026 AWD 联赛',
@@ -1285,14 +1205,14 @@ describe('ContestEdit', () => {
     const wrapper = mountContestEdit()
 
     await flushPromises()
-    await wrapper.get('#contest-workbench-stage-tab-awd-config').trigger('click')
+    await wrapper.get('#contest-workbench-stage-tab-pool').trigger('click')
     await flushPromises()
-    await wrapper.get('#awd-challenge-config-create').trigger('click')
+    await wrapper.get('#contest-challenge-add').trigger('click')
     await flushPromises()
 
     expect(toastMocks.error).toHaveBeenCalledWith('catalog failed')
     expect(wrapper.get('#contest-workbench-stage-tab-pool').attributes('aria-selected')).toBe('true')
-    expect(wrapper.find('#contest-template-list').exists()).toBe(true)
+    expect(wrapper.find('#contest-awd-challenge-list').exists()).toBe(true)
   })
 
   it('应该在 AWD 辅助数据仍在加载时显示阶段级加载提示而不是空态', async () => {
@@ -1383,8 +1303,7 @@ describe('ContestEdit', () => {
       is_visible: false,
     })
 
-    await openChallengeActionMenu(wrapper)
-    getTeleportTarget<HTMLButtonElement>('#contest-challenge-edit-101').click()
+    await wrapper.get('#contest-challenge-edit-101').trigger('click')
     await flushPromises()
 
     await wrapper.get('#contest-challenge-points').setValue('140')
@@ -1398,8 +1317,7 @@ describe('ContestEdit', () => {
       is_visible: true,
     })
 
-    await openChallengeActionMenu(wrapper)
-    getTeleportTarget<HTMLButtonElement>('#contest-challenge-remove-101').click()
+    await wrapper.get('#contest-challenge-remove-101').trigger('click')
     await flushPromises()
 
     expect(destructiveConfirmMock).toHaveBeenCalled()
@@ -1458,8 +1376,8 @@ describe('ContestEdit', () => {
     contestApiMocks.createContestAWDService.mockImplementation(async (_contestId, payload) => {
       expect(payload).toEqual({
         awd_challenge_id: 11,
-        points: 160,
-        order: 3,
+        points: 100,
+        order: 0,
         is_visible: true,
       })
       awdServicesState.push({
@@ -1471,10 +1389,10 @@ describe('ContestEdit', () => {
         category: 'web',
         difficulty: 'medium',
         display_name: 'Upload Service',
-        order: 3,
+        order: 0,
         is_visible: true,
         score_config: {
-          points: 160,
+          points: 100,
           awd_sla_score: 0,
           awd_defense_score: 0,
         },
@@ -1499,9 +1417,9 @@ describe('ContestEdit', () => {
     await flushPromises()
     await wrapper.get('#contest-challenge-add').trigger('click')
     await flushPromises()
-    await wrapper.get('#contest-template-option-11').trigger('click')
-    await wrapper.get('#contest-challenge-points').setValue('160')
-    await wrapper.get('#contest-challenge-order').setValue('3')
+    await wrapper.get('#contest-awd-challenge-option-11').trigger('click')
+    expect(wrapper.find('#contest-awd-service-points').exists()).toBe(false)
+    expect(wrapper.find('#contest-awd-service-order').exists()).toBe(false)
     await wrapper.get('#contest-challenge-dialog-submit').trigger('click')
     await flushPromises()
 
@@ -1511,7 +1429,7 @@ describe('ContestEdit', () => {
 
     await wrapper.get('#contest-workbench-stage-tab-preflight').trigger('click')
     await flushPromises()
-    expect(wrapper.text()).toContain('环境已就绪')
+    expect(wrapper.text()).toContain('可以开赛')
     expect(wrapper.text()).not.toContain('当前赛事还没有关联题目，无法执行开赛关键动作')
   })
 
@@ -1530,8 +1448,7 @@ describe('ContestEdit', () => {
     await flushPromises()
     await wrapper.get('#contest-workbench-stage-tab-pool').trigger('click')
     await flushPromises()
-    await openChallengeActionMenu(wrapper, '1')
-    getTeleportTarget<HTMLButtonElement>('#contest-challenge-remove-1').click()
+    await wrapper.get('#contest-challenge-remove-1').trigger('click')
     await flushPromises()
 
     expect(contestApiMocks.deleteContestAWDService).toHaveBeenCalledWith('contest-1', 'service-1')
@@ -1582,8 +1499,8 @@ describe('ContestEdit', () => {
     contestApiMocks.createContestAWDService.mockImplementation(async (_contestId, payload) => {
       expect(payload).toEqual({
         awd_challenge_id: 1,
-        points: 160,
-        order: 2,
+        points: 100,
+        order: 0,
         is_visible: true,
       })
       const created = {
@@ -1595,10 +1512,10 @@ describe('ContestEdit', () => {
         category: 'web',
         difficulty: 'medium',
         display_name: 'Bank Portal AWD',
-        order: 2,
+        order: 0,
         is_visible: true,
         score_config: {
-          points: 160,
+          points: 100,
           awd_sla_score: 0,
           awd_defense_score: 0,
         },
@@ -1613,13 +1530,13 @@ describe('ContestEdit', () => {
     const wrapper = mountContestEdit()
 
     await flushPromises()
-    await wrapper.get('#contest-workbench-stage-tab-awd-config').trigger('click')
+    await wrapper.get('#contest-workbench-stage-tab-pool').trigger('click')
     await flushPromises()
-    await wrapper.get('#awd-challenge-config-create').trigger('click')
+    await wrapper.get('#contest-challenge-add').trigger('click')
     await flushPromises()
-    await wrapper.get('#contest-template-option-1').trigger('click')
-    await wrapper.get('#contest-challenge-points').setValue('160')
-    await wrapper.get('#contest-challenge-order').setValue('2')
+    await wrapper.get('#contest-awd-challenge-option-1').trigger('click')
+    expect(wrapper.find('#contest-awd-service-points').exists()).toBe(false)
+    expect(wrapper.find('#contest-awd-service-order').exists()).toBe(false)
     await wrapper.get('#contest-challenge-dialog-submit').trigger('click')
     await flushPromises()
 
@@ -1632,10 +1549,10 @@ describe('ContestEdit', () => {
     await wrapper.get('#contest-challenge-add').trigger('click')
     await flushPromises()
     expect(wrapper.find('#contest-challenge-library').exists()).toBe(false)
-    expect(wrapper.find('#contest-template-option-1').exists()).toBe(true)
+    expect(wrapper.find('#contest-awd-challenge-option-1').exists()).toBe(true)
   })
 
-  it('AWD 配置保存失败时应提示错误并保持弹层打开', async () => {
+  it('题目编排新增 AWD 题目保存失败时应提示错误并保持弹层打开', async () => {
     contestApiMocks.getContest.mockResolvedValue(
       buildContestDetail({
         title: '2026 AWD 联赛',
@@ -1649,21 +1566,21 @@ describe('ContestEdit', () => {
     const wrapper = mountContestEdit()
 
     await flushPromises()
-    await wrapper.get('#contest-workbench-stage-tab-awd-config').trigger('click')
+    await wrapper.get('#contest-workbench-stage-tab-pool').trigger('click')
     await flushPromises()
-    await wrapper.get('#awd-challenge-config-create').trigger('click')
+    await wrapper.get('#contest-challenge-add').trigger('click')
     await flushPromises()
-    await wrapper.get('#contest-template-option-1').trigger('click')
-    await wrapper.get('#contest-challenge-points').setValue('160')
-    await wrapper.get('#contest-challenge-order').setValue('2')
+    await wrapper.get('#contest-awd-challenge-option-1').trigger('click')
+    expect(wrapper.find('#contest-awd-service-points').exists()).toBe(false)
+    expect(wrapper.find('#contest-awd-service-order').exists()).toBe(false)
     await wrapper.get('#contest-challenge-dialog-submit').trigger('click')
     await flushPromises()
 
-    expect(toastMocks.error).toHaveBeenCalledWith('save failed')
-    expect(wrapper.find('#contest-template-option-1').exists()).toBe(true)
+    expect(toastMocks.error).toHaveBeenCalledWith('部分 AWD 题目关联失败：Bank Portal AWD')
+    expect(wrapper.find('#contest-awd-challenge-option-1').exists()).toBe(true)
   })
 
-  it('应该在 AWD 赛事的题目池阶段展示摘要列与筛选入口', async () => {
+  it('应该在 AWD 赛事的题目池阶段只展示题目编排信息', async () => {
     contestApiMocks.getContest.mockResolvedValue(
       buildContestDetail({
         title: '2026 AWD 联赛',
@@ -1729,10 +1646,14 @@ describe('ContestEdit', () => {
     await wrapper.get('#contest-workbench-stage-tab-pool').trigger('click')
     await flushPromises()
 
-    expect(wrapper.text()).toContain('未配置 AWD')
-    expect(wrapper.text()).toContain('预检失败')
-    expect(wrapper.text()).toContain('Checker')
-    expect(wrapper.text()).toContain('SLA 18 / 防守 28')
-    expect(wrapper.text()).toContain('待重新验证')
+    expect(wrapper.text()).toContain('题目资源')
+    expect(wrapper.text()).toContain('可见性')
+    expect(wrapper.text()).toContain('分值')
+    expect(wrapper.text()).toContain('顺序')
+    expect(wrapper.text()).not.toContain('未配置 AWD')
+    expect(wrapper.text()).not.toContain('预检失败')
+    expect(wrapper.text()).not.toContain('Checker')
+    expect(wrapper.text()).not.toContain('SLA 18 / 防守 28')
+    expect(wrapper.text()).not.toContain('待重新验证')
   })
 })

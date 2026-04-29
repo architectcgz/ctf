@@ -799,7 +799,7 @@ function handleSubmit() {
     :subtitle="
       mode === 'create'
         ? '先从 AWD 题库选题，再整理赛事级 Checker 草稿，保存后即可继续赛前试跑。'
-        : '统一维护赛事服务的 Checker、分值、顺序和试跑结果。'
+        : '维护当前赛事题目的 Checker、SLA / 防守权重和试跑结果。'
     "
     eyebrow="AWD Operations"
     width="52rem"
@@ -819,7 +819,7 @@ function handleSubmit() {
         </p>
       </div>
 
-      <div class="ui-field awd-config-field">
+      <div v-if="mode === 'create'" class="ui-field awd-config-field">
         <label class="ui-field__label" for="awd-challenge-config-template">AWD 题库</label>
         <span class="ui-control-wrap" :class="{ 'is-error': !!fieldErrors.awd_challenge_id }">
           <select
@@ -844,56 +844,8 @@ function handleSubmit() {
           {{ fieldErrors.awd_challenge_id }}
         </p>
         <p class="ui-field__hint">
-          比赛服务会直接继承 AWD 题目里的入口、端口、flag 与基础 checker
-          定义，再叠加本页的分值和校验配置。
+          比赛服务会直接继承 AWD 题目里的入口、端口、flag 与基础 checker 定义。
         </p>
-      </div>
-
-      <div class="grid gap-4 sm:grid-cols-3">
-        <div class="ui-field awd-config-field">
-          <label class="ui-field__label" for="awd-challenge-config-points">分值</label>
-          <span class="ui-control-wrap" :class="{ 'is-error': !!fieldErrors.points }">
-            <input
-              id="awd-challenge-config-points"
-              v-model.number="form.points"
-              type="number"
-              min="1"
-              max="500"
-              step="1"
-              class="ui-control"
-            />
-          </span>
-          <p v-if="fieldErrors.points" class="ui-field__error">
-            {{ fieldErrors.points }}
-          </p>
-        </div>
-
-        <div class="ui-field awd-config-field">
-          <label class="ui-field__label" for="awd-challenge-config-order">顺序</label>
-          <span class="ui-control-wrap" :class="{ 'is-error': !!fieldErrors.order }">
-            <input
-              id="awd-challenge-config-order"
-              v-model.number="form.order"
-              type="number"
-              min="0"
-              step="1"
-              class="ui-control"
-            />
-          </span>
-          <p v-if="fieldErrors.order" class="ui-field__error">
-            {{ fieldErrors.order }}
-          </p>
-        </div>
-
-        <div class="ui-field awd-config-field">
-          <label class="ui-field__label" for="awd-challenge-config-visible">可见性</label>
-          <span class="ui-control-wrap">
-            <select id="awd-challenge-config-visible" v-model="form.is_visible" class="ui-control">
-              <option value="true">可见</option>
-              <option value="false">隐藏</option>
-            </select>
-          </span>
-        </div>
       </div>
 
       <div class="grid gap-4 sm:grid-cols-3">

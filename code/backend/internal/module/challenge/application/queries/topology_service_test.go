@@ -44,12 +44,12 @@ func (s *stubChallengeTopologyRepository) DeleteChallengeTopologyByChallengeID(c
 }
 
 type stubEnvironmentTemplateRepository struct {
-	createFn            func(ctx context.Context, template *model.EnvironmentTemplate) error
-	updateFn            func(ctx context.Context, template *model.EnvironmentTemplate) error
-	deleteFn            func(ctx context.Context, id int64) error
-	findByIDFn          func(ctx context.Context, id int64) (*model.EnvironmentTemplate, error)
-	listFn              func(ctx context.Context, keyword string) ([]*model.EnvironmentTemplate, error)
-	incrementUsageFn    func(ctx context.Context, id int64) error
+	createFn         func(ctx context.Context, template *model.EnvironmentTemplate) error
+	updateFn         func(ctx context.Context, template *model.EnvironmentTemplate) error
+	deleteFn         func(ctx context.Context, id int64) error
+	findByIDFn       func(ctx context.Context, id int64) (*model.EnvironmentTemplate, error)
+	listFn           func(ctx context.Context, keyword string) ([]*model.EnvironmentTemplate, error)
+	incrementUsageFn func(ctx context.Context, id int64) error
 }
 
 func (s *stubEnvironmentTemplateRepository) Create(ctx context.Context, template *model.EnvironmentTemplate) error {
