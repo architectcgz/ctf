@@ -224,19 +224,6 @@ const checkerConfigSourceLabel = computed(() =>
 const packageCheckerType = computed<AWDCheckerType>(
   () => selectedAwdChallenge.value?.checker_type || 'legacy_probe'
 )
-const packageCheckerPreviewText = computed(() =>
-  JSON.stringify(
-    buildCheckerConfigPreview(packageCheckerType.value, {
-      legacyProbeDraft: createLegacyProbeDraft(selectedAwdChallenge.value?.checker_config),
-      httpStandardDraft: createHTTPStandardDraft(selectedAwdChallenge.value?.checker_config),
-      tcpStandardDraft: createTCPStandardDraft(selectedAwdChallenge.value?.checker_config),
-      scriptCheckerDraft: createScriptCheckerDraft(selectedAwdChallenge.value?.checker_config),
-    }),
-    null,
-    2
-  )
-)
-
 function getCheckerTypeLabel(value: AWDCheckerType): string {
   const labels: Record<AWDCheckerType, string> = {
     legacy_probe: '基础探活',
@@ -518,7 +505,7 @@ watch(
     form.order = props.draft?.order ?? 0
     form.is_visible = props.draft?.is_visible === false ? 'false' : 'true'
     form.awd_checker_type = props.draft?.awd_checker_type || 'legacy_probe'
-    checkerOverrideEnabled.value = props.mode === 'edit'
+    checkerOverrideEnabled.value = false
     form.awd_sla_score = props.draft?.awd_sla_score ?? DEFAULT_AWD_SLA_SCORE
     form.awd_defense_score = props.draft?.awd_defense_score ?? DEFAULT_AWD_DEFENSE_SCORE
     assignLegacyProbeDraft(createLegacyProbeDraft(props.draft?.awd_checker_config))
@@ -1017,13 +1004,6 @@ function handleSubmit() {
             }}
           </p>
         </header>
-
-        <pre
-          v-if="!checkerOverrideEnabled"
-          id="awd-challenge-package-checker-preview"
-          class="checker-preview"
-          >{{ packageCheckerPreviewText }}</pre
-        >
 
         <label class="checker-override-toggle" for="awd-checker-override-enabled">
           <input
@@ -1696,7 +1676,7 @@ function handleSubmit() {
         </template>
       </section>
 
-      <section class="checker-config-block">
+      <section v-if="checkerOverrideEnabled" class="checker-config-block">
         <header class="list-heading checker-config-block__head">
           <div>
             <div class="journal-note-label">Payload Preview</div>
