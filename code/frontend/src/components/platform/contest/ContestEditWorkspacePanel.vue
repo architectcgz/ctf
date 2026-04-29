@@ -28,10 +28,6 @@ defineProps<{
   loadingAwdStageData: boolean
   awdChallengeLinks: AdminContestChallengeViewData[]
   awdChallengePoolCreateRequestKey: number
-  activeAwdChallengeId: string | null
-  awdConfigFocusSource: 'pool' | 'preflight' | null
-  canNavigatePreviousAwdChallenge: boolean
-  canNavigateNextAwdChallenge: boolean
   awdPreflightLoadError: string
   awdReadiness: AWDReadinessData | null
 }>()
@@ -41,11 +37,7 @@ const emit = defineEmits<{
   (event: 'update:draft', value: ContestFormDraft): void
   (event: 'save', draft: ContestFormDraft): void
   (event: 'refresh-awd-workbench'): void
-  (event: 'open:awd-config-from-pool', challenge: AdminContestChallengeViewData): void
-  (event: 'create:awd-challenge'): void
   (event: 'edit:awd-challenge', challenge: AdminContestChallengeViewData): void
-  (event: 'previous:awd-challenge'): void
-  (event: 'next:awd-challenge'): void
   (event: 'retry:preflight'): void
   (event: 'navigate:awd-challenge-from-preflight', challengeId: string): void
   (event: 'navigate:stage', stage: ContestWorkbenchStageKey): void
@@ -110,7 +102,6 @@ const emit = defineEmits<{
               :challenge-links="contest.mode === 'awd' ? awdChallengeLinks : undefined"
               :loading-external="loadingAwdStageData"
               :create-dialog-request-key="awdChallengePoolCreateRequestKey"
-              @open:awd-config="emit('open:awd-config-from-pool', $event)"
               @updated="emit('refresh-awd-workbench')"
             />
           </div>
@@ -126,14 +117,7 @@ const emit = defineEmits<{
             <AWDChallengeConfigPanel
               v-else
               :challenge-links="awdChallengeLinks"
-              :active-challenge-id="activeAwdChallengeId"
-              :focus-source="awdConfigFocusSource"
-              :can-navigate-previous="canNavigatePreviousAwdChallenge"
-              :can-navigate-next="canNavigateNextAwdChallenge"
-              @create="emit('create:awd-challenge')"
               @edit="emit('edit:awd-challenge', $event)"
-              @previous="emit('previous:awd-challenge')"
-              @next="emit('next:awd-challenge')"
             />
           </div>
 
