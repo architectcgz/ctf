@@ -406,6 +406,19 @@ function assignHTTPStandardDraft(next: AWDHTTPStandardDraft) {
   httpStandardDraft.havoc.expected_substring = next.havoc.expected_substring
 }
 
+function applyAwdChallengeCheckerDefaults(challenge: AdminAwdChallengeData | null) {
+  if (!challenge) {
+    form.awd_checker_type = 'legacy_probe'
+    assignLegacyProbeDraft(createLegacyProbeDraft())
+    assignHTTPStandardDraft(createHTTPStandardDraft())
+    return
+  }
+
+  form.awd_checker_type = challenge.checker_type || 'legacy_probe'
+  assignLegacyProbeDraft(createLegacyProbeDraft(challenge.checker_config))
+  assignHTTPStandardDraft(createHTTPStandardDraft(challenge.checker_config))
+}
+
 watch(
   () => [props.open, props.mode, props.draft] as const,
   ([open]) => {
@@ -428,6 +441,9 @@ watch(
     form.awd_defense_score = props.draft?.awd_defense_score ?? DEFAULT_AWD_DEFENSE_SCORE
     assignLegacyProbeDraft(createLegacyProbeDraft(props.draft?.awd_checker_config))
     assignHTTPStandardDraft(createHTTPStandardDraft(props.draft?.awd_checker_config))
+    if (props.mode === 'create') {
+      applyAwdChallengeCheckerDefaults(selectedAwdChallenge.value)
+    }
     previewForm.access_url = ''
     previewForm.preview_flag = 'flag{preview}'
     previewResult.value = null
@@ -479,9 +495,28 @@ watch(
     }
     if (props.mode === 'create') {
       form.challenge_id = form.awd_challenge_id
+      applyAwdChallengeCheckerDefaults(selectedAwdChallenge.value)
     }
   },
   { immediate: true }
+)
+
+watch(
+  () => form.awd_challenge_id,
+  (nextChallengeID, previousChallengeID) => {
+    if (
+      !props.open ||
+      props.mode !== 'create' ||
+      syncingDialogState.value ||
+      nextChallengeID === previousChallengeID
+    ) {
+      return
+    }
+
+    applyAwdChallengeCheckerDefaults(selectedAwdChallenge.value)
+    clearCheckerErrors()
+    clearPreviewErrors()
+  }
 )
 
 watch(

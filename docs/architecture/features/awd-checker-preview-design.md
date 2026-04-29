@@ -25,6 +25,7 @@ phase1-5 已经完成：
 - AWD service 配置支持 `checker_type / checker_config / awd_sla_score / awd_defense_score`
 - 后端已有 `legacy_probe / http_standard` checker 执行链
 - 后台已有结构化 checker 配置编辑器和 JSON 预览
+- AWD 题目包已经通过 `extensions.awd.checker` 提供模板级默认 checker；新增赛事服务时先继承这份配置，再允许管理员在赛事层覆盖
 
 但当前仍有一个明显缺口：
 
@@ -114,7 +115,8 @@ phase1-5 已经完成：
 
 - `service_id` 是已存在赛事 service 的优先身份，用于绑定 preview token 和后续保存
 - `challenge_id` 只用于创建前场景的最小上下文，也用于校验题目存在
-- `checker_type / checker_config` 先走与保存时一致的合法化逻辑
+- 创建新 service 时，前端默认把所选 AWD 题目包导入出的 `checker_type / checker_config` 作为草稿传入
+- `checker_type / checker_config` 先走与保存时一致的合法化逻辑；如果管理员在对话框内修改，试跑和保存都以当前赛事级草稿为准
 - `access_url` 是这次试跑唯一目标
 
 ### 模板变量占位策略

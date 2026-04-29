@@ -231,6 +231,42 @@ describe('AWDChallengeConfigDialog', () => {
     })
   })
 
+  it('应该在新增赛事题目时继承 AWD 题目包里的 checker 配置', async () => {
+    const wrapper = mountDialog()
+
+    expect(
+      (wrapper.get('#awd-challenge-config-checker-type').element as HTMLSelectElement).value
+    ).toBe('http_standard')
+    expect((wrapper.get('#awd-http-put-path').element as HTMLInputElement).value).toBe('/api/flag')
+    expect((wrapper.get('#awd-http-get-path').element as HTMLInputElement).value).toBe('/api/flag')
+
+    await wrapper.get('#awd-challenge-config-submit').trigger('click')
+
+    expect(wrapper.emitted('save')?.[0]?.[0]).toEqual({
+      awd_challenge_id: 501,
+      points: 100,
+      order: 0,
+      is_visible: true,
+      awd_checker_type: 'http_standard',
+      awd_checker_config: {
+        put_flag: {
+          method: 'PUT',
+          path: '/api/flag',
+          body_template: '{{FLAG}}',
+          expected_status: 200,
+        },
+        get_flag: {
+          method: 'GET',
+          path: '/api/flag',
+          expected_status: 200,
+          expected_substring: '{{FLAG}}',
+        },
+      },
+      awd_sla_score: 1,
+      awd_defense_score: 2,
+    })
+  })
+
   it('应该允许通过预置模板创建 http_standard 配置', async () => {
     const wrapper = mountDialog()
 

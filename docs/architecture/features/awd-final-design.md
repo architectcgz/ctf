@@ -449,6 +449,8 @@ AWD 题库必须额外具备：
 - 是否支持 `getflag`
 - 是否支持 `havoc`
 
+`checker_type / checker_config` 是 AWD 题目包必须携带的模板级裁判契约。管理员导入题目包后，这组配置进入 AWD 题库模板；添加到某场赛事时，管理端默认继承模板 checker 并写入 `contest_awd_services.runtime_config`。赛事内编辑只产生赛事级覆盖，用于试跑、校验状态和临时调整，不反向修改题目包或模板。
+
 ### 10.6 Flag 相关字段
 
 包含：
@@ -1708,12 +1710,14 @@ evidence-pack/
 #### 1. 模板层
 
 - `awd_service_templates`
-- 描述可复用的 AWD 服务模板、checker 草稿、访问配置与运行配置
+- 描述可复用的 AWD 服务模板、题目包默认 checker、访问配置与运行配置
+- checker 来自管理员导入的 AWD 题目包，是新增赛事服务时的默认裁判契约
 
 #### 2. 赛事服务层
 
 - `contest_awd_services`
 - 描述某场 AWD 赛事采用了哪个模板、映射到哪道题、显示名称与基础服务配置
+- 保存该赛事最终采用的 checker 覆盖、试跑 token 消费后的校验状态和最近一次试跑结果
 
 #### 3. 关系层
 
