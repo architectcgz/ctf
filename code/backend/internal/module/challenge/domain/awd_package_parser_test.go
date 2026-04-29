@@ -108,6 +108,86 @@ extensions:
 	}
 }
 
+func TestParseAWDChallengePackageDirAcceptsTCPStandardChecker(t *testing.T) {
+	rootDir := t.TempDir()
+
+	manifest := `api_version: v1
+kind: challenge
+
+meta:
+  mode: awd
+  slug: awd-tcp-length-gate
+  title: TCP Length Gate
+  category: pwn
+  difficulty: medium
+  points: 500
+
+content:
+  statement: statement.md
+
+flag:
+  type: dynamic
+  prefix: awd
+
+runtime:
+  type: container
+  image:
+    ref: registry.example.edu/ctf/awd-tcp-length-gate:v1
+
+extensions:
+  awd:
+    service_type: binary_tcp
+    deployment_mode: single_container
+    version: v2026.04
+    checker:
+      type: tcp_standard
+      config:
+        timeout_ms: 3000
+        steps:
+          - send: "PING\n"
+            expect_contains: PONG
+          - send_template: "SET_FLAG {{FLAG}}\n"
+            expect_contains: OK
+          - send: "GET_FLAG\n"
+            expect_contains: "{{FLAG}}"
+    flag_policy:
+      mode: dynamic_team
+    defense_entry:
+      mode: tcp
+    access_config:
+      public_base_url: tcp://{{TEAM_HOST}}:8080
+      service_port: 8080
+    runtime_config:
+      instance_sharing: per_team
+      service_port: 8080
+`
+
+	if err := os.WriteFile(filepath.Join(rootDir, "challenge.yml"), []byte(manifest), 0o644); err != nil {
+		t.Fatalf("write challenge.yml: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(rootDir, "statement.md"), []byte("TCP service."), 0o644); err != nil {
+		t.Fatalf("write statement.md: %v", err)
+	}
+
+	parsed, err := ParseAWDChallengePackageDir(rootDir)
+	if err != nil {
+		t.Fatalf("ParseAWDChallengePackageDir() error = %v", err)
+	}
+
+	if parsed.ServiceType != "binary_tcp" {
+		t.Fatalf("ServiceType = %q, want binary_tcp", parsed.ServiceType)
+	}
+	if parsed.CheckerType != "tcp_standard" {
+		t.Fatalf("CheckerType = %q, want tcp_standard", parsed.CheckerType)
+	}
+	if parsed.RuntimeConfig["service_port"] != float64(8080) {
+		t.Fatalf("unexpected runtime_config: %+v", parsed.RuntimeConfig)
+	}
+	if parsed.CheckerConfig["timeout_ms"] != float64(3000) {
+		t.Fatalf("unexpected checker_config: %+v", parsed.CheckerConfig)
+	}
+}
+
 func TestBuildParsedChallengePackageRejectsAwdModeForJeopardyImport(t *testing.T) {
 	rootDir := t.TempDir()
 	manifest := &ChallengePackageManifest{

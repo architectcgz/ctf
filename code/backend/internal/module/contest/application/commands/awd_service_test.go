@@ -1,8 +1,10 @@
 package commands_test
 
 import (
+	"bufio"
 	"context"
 	"errors"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -830,6 +832,162 @@ func TestAWDServicePreviewCheckerRunsWithoutPersistingServices(t *testing.T) {
 	}
 	if serviceCount != 0 {
 		t.Fatalf("expected no persisted awd team services, got %d", serviceCount)
+	}
+}
+
+func TestAWDServicePreviewCheckerTCPStandardTokenMakesReadinessPassed(t *testing.T) {
+	db := newAWDTestDB(t)
+	mini, err := miniredis.Run()
+	if err != nil {
+		t.Fatalf("start miniredis: %v", err)
+	}
+	t.Cleanup(mini.Close)
+
+	redisClient := redis.NewClient(&redis.Options{Addr: mini.Addr()})
+	t.Cleanup(func() {
+		_ = redisClient.Close()
+	})
+
+	now := time.Now()
+	const contestID int64 = 291
+	const awdChallengeID int64 = 291001
+	createAWDContestFixture(t, db, contestID, now)
+	createAWDChallengeFixture(t, db, awdChallengeID, now)
+	if err := db.Create(&model.AWDChallenge{
+		ID:             awdChallengeID,
+		Name:           "TCP Length Gate",
+		Slug:           "awd-tcp-length-gate",
+		Category:       "pwn",
+		Difficulty:     model.ChallengeDifficultyMedium,
+		ServiceType:    model.AWDServiceTypeBinaryTCP,
+		DeploymentMode: model.AWDDeploymentModeSingleContainer,
+		Status:         model.AWDChallengeStatusPublished,
+		CheckerType:    model.AWDCheckerTypeTCPStandard,
+		CheckerConfig:  `{"timeout_ms":3000,"steps":[{"send":"PING\n","expect_contains":"PONG"},{"send_template":"SET_FLAG {{FLAG}}\n","expect_contains":"OK"},{"send":"GET_FLAG\n","expect_contains":"{{FLAG}}"}]}`,
+		AccessConfig:   `{"public_base_url":"tcp://preview.internal:8080","service_port":8080}`,
+		RuntimeConfig:  `{"service_port":8080,"image_ref":"ctf/awd-tcp-length-gate:latest"}`,
+		CreatedAt:      now,
+		UpdatedAt:      now,
+	}).Error; err != nil {
+		t.Fatalf("create awd challenge: %v", err)
+	}
+
+	accessURL, closeTCPFixture := startAWDTCPPreviewFixture(t)
+	t.Cleanup(closeTCPFixture)
+
+	checkerConfig := map[string]any{
+		"timeout_ms": 3000,
+		"steps": []any{
+			map[string]any{"send": "PING\n", "expect_contains": "PONG"},
+			map[string]any{"send_template": "SET_FLAG {{FLAG}}\n", "expect_contains": "OK"},
+			map[string]any{"send": "GET_FLAG\n", "expect_contains": "{{FLAG}}"},
+		},
+	}
+	service := newAWDServiceForTest(db, redisClient, "", config.ContestAWDConfig{
+		CheckerTimeout: time.Second,
+	})
+	preview, err := service.commands.PreviewChecker(context.Background(), contestID, &dto.PreviewAWDCheckerReq{
+		AWDChallengeID: awdChallengeID,
+		CheckerType:    string(model.AWDCheckerTypeTCPStandard),
+		CheckerConfig:  checkerConfig,
+		AccessURL:      accessURL,
+		PreviewFlag:    "flag{preview}",
+	})
+	if err != nil {
+		t.Fatalf("PreviewChecker() error = %v", err)
+	}
+	if preview.ServiceStatus != model.AWDServiceStatusUp || preview.CheckerType != model.AWDCheckerTypeTCPStandard {
+		t.Fatalf("unexpected preview response: %+v", preview)
+	}
+	if strings.TrimSpace(preview.PreviewToken) == "" {
+		t.Fatal("expected preview token")
+	}
+
+	challengeRepo := challengeinfra.NewRepository(db)
+	contestRepo := contestinfra.NewRepository(db)
+	contestChallengeRepo := contestinfra.NewChallengeRepository(db)
+	awdRepo := contestinfra.NewAWDRepository(db)
+	contestService := contestcmd.NewContestAWDServiceService(awdRepo, contestRepo, contestChallengeRepo, challengeRepo, challengeRepo, redisClient)
+	created, err := contestService.CreateContestAWDService(context.Background(), contestID, &dto.CreateContestAWDServiceReq{
+		AWDChallengeID:         awdChallengeID,
+		Points:                 100,
+		Order:                  1,
+		IsVisible:              boolPtr(true),
+		CheckerType:            strPtr(string(model.AWDCheckerTypeTCPStandard)),
+		CheckerConfig:          checkerConfig,
+		AWDCheckerPreviewToken: strPtr(preview.PreviewToken),
+	})
+	if err != nil {
+		t.Fatalf("CreateContestAWDService() error = %v", err)
+	}
+
+	stored, err := awdRepo.FindContestAWDServiceByContestAndID(context.Background(), contestID, created.ID)
+	if err != nil {
+		t.Fatalf("FindContestAWDServiceByContestAndID() error = %v", err)
+	}
+	if stored.ValidationState != model.AWDCheckerValidationStatePassed {
+		t.Fatalf("ValidationState = %s, want passed", stored.ValidationState)
+	}
+	readiness, err := contestqry.NewAWDService(awdRepo, contestRepo).GetReadiness(context.Background(), contestID)
+	if err != nil {
+		t.Fatalf("GetReadiness() error = %v", err)
+	}
+	if !readiness.Ready || readiness.PassedChallenges != 1 || readiness.BlockingCount != 0 {
+		t.Fatalf("unexpected readiness: %+v", readiness)
+	}
+}
+
+func startAWDTCPPreviewFixture(t *testing.T) (string, func()) {
+	t.Helper()
+
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("listen tcp: %v", err)
+	}
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		for {
+			conn, err := listener.Accept()
+			if err != nil {
+				return
+			}
+			go handleAWDTCPPreviewFixtureConn(conn)
+		}
+	}()
+
+	closeFn := func() {
+		_ = listener.Close()
+		select {
+		case <-done:
+		case <-time.After(time.Second):
+			t.Fatalf("tcp preview fixture did not stop")
+		}
+	}
+	return "tcp://" + listener.Addr().String(), closeFn
+}
+
+func handleAWDTCPPreviewFixtureConn(conn net.Conn) {
+	defer conn.Close()
+	reader := bufio.NewReader(conn)
+	storedFlag := ""
+	for {
+		line, err := reader.ReadString('\n')
+		if err != nil {
+			return
+		}
+		switch {
+		case line == "PING\n":
+			_, _ = conn.Write([]byte("PONG\n"))
+		case strings.HasPrefix(line, "SET_FLAG "):
+			storedFlag = strings.TrimSpace(strings.TrimPrefix(line, "SET_FLAG "))
+			_, _ = conn.Write([]byte("OK\n"))
+		case line == "GET_FLAG\n":
+			_, _ = conn.Write([]byte(storedFlag + "\n"))
+			return
+		default:
+			_, _ = conn.Write([]byte("ERR\n"))
+		}
 	}
 }
 
