@@ -24,6 +24,33 @@
 
 这样可以继续复用现有轮次、Redis flag、实例和得分重算链路，避免 checker 与比赛状态出现第二套调度事实源。
 
+### 1.1 赛前验证与本地 `check.py` 的边界
+
+平台赛前 readiness 的正式依据是平台 runner 的执行结果，不是题目包里的本地脚本。
+
+当前链路固定为：
+
+1. 出题人本地自测：运行题目包内 `docker/check/check.py`，验证业务链路、漏洞演示路径和 flag 闭环。
+2. 平台导入：读取 `extensions.awd.checker.type/config`，写入 AWD 题库。
+3. 赛事挂题：默认继承 AWD 题库 checker，写入 `contest_awd_services.runtime_config`。
+4. 赛前验证：平台 `checker-preview` 使用当前赛事服务的 checker 配置执行，并通过 preview token 写入 `validation_state`。
+5. readiness：只根据赛事服务保存态的 checker 配置和校验状态判定是否可开赛。
+6. 赛中轮次：`AWDRoundUpdater` 使用同一份赛事服务 checker 配置执行正式轮次检查。
+
+因此，`check.py` 当前只属于出题人本地验证与审计材料；它可以比 `http_standard` 覆盖更多业务步骤，但不会直接决定平台 readiness。
+
+### 1.2 Checker 流量不是攻击流量
+
+`http_standard` runner 只代表平台裁判流量，用于写入 flag、回读 flag 和探测服务可用性。它不承担选手攻击入口，也不写入攻击流量事实。
+
+流量职责划分如下：
+
+- Checker 流量：平台发起，影响 SLA、防守状态、validation 和 readiness。
+- 选手攻击流量：选手通过 AWD 代理、VPN 或跨队网络入口访问目标服务，应进入 `awd_traffic_events` 等攻击流量记录。
+- Flag 提交流量：选手把偷到的 flag 提交给平台，由攻击提交流程判分。
+
+不要把 checker endpoint 当成选手攻击入口，也不要用 checker 结果推断攻击流量归因。
+
 ### 2. `http_standard` 动作语义
 
 每个目标实例按顺序执行：
@@ -96,7 +123,9 @@ checker 使用平台生成并缓存的官方轮次 flag。当前读取规则：
 
 - `legacy_probe` 保留给旧配置和过渡数据。
 - 新 AWD service 配置默认应使用 `http_standard`。
-- 不新增外置 checker 沙箱，不支持任意脚本执行。
+- 当前已实现版本不新增外置 checker 沙箱，不支持任意脚本执行。
+- `http_standard` 只能验证能表达成 HTTP 请求/响应断言的逻辑；复杂多步骤业务、非 HTTP 协议和漏洞可利用性不应期待由它完整覆盖。
+- TCP / Binary 服务不能直接使用 `http_standard` 验证协议交互，后续应接入 `tcp_standard` 或受控 `script_checker`。
 - checker 不直接处理封禁、申诉或处罚，这些仍属于赛事治理能力。
 
 ## 验收标准

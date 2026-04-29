@@ -451,6 +451,12 @@ AWD 题库必须额外具备：
 
 `checker_type / checker_config` 是 AWD 题目包必须携带的模板级裁判契约。管理员导入题目包后，这组配置进入 AWD 题库模板；添加到某场赛事时，管理端默认继承模板 checker 并写入 `contest_awd_services.runtime_config`。赛事内编辑只产生赛事级覆盖，用于试跑、校验状态和临时调整，不反向修改题目包或模板。
 
+当前已实现的正式平台 runner 是 `http_standard`。它只验证可表达为 HTTP 请求/响应断言的逻辑，例如 `put_flag`、`get_flag` 和 `havoc`；它不是选手攻击入口，也不能完整验证 TCP 协议、复杂业务链或漏洞可利用性。
+
+题目包中的 `docker/check/check.py` 当前是出题人本地自测脚本，不直接参与平台 readiness。若后续允许平台执行教师脚本，必须以 `script_checker` 形式进入私有 checker 契约，并通过独立安全 sandbox runner 执行，不能在 API 进程、轮次调度进程或宿主机 shell 中直接运行。
+
+TCP / Binary 服务应通过 `tcp_standard` 或 `script_checker` 验证；不应为了复用 `http_standard` 而强行给非 HTTP 服务增加伪 HTTP 检查来替代真实协议检查。扩展设计见 `docs/architecture/features/awd-checker-runner-extension-design.md`。
+
 ### 10.6 Flag 相关字段
 
 包含：
