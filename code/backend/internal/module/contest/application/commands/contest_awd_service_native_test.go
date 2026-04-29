@@ -29,7 +29,7 @@ func TestContestAWDServiceServiceCreateUsesTemplateSnapshotOnly(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := challengeRepo.CreateAWDServiceTemplate(context.Background(), &model.AWDServiceTemplate{
+	if err := challengeRepo.CreateAWDChallenge(context.Background(), &model.AWDChallenge{
 		ID:               2801,
 		Name:             "Bank Portal",
 		Slug:             "bank-portal",
@@ -38,7 +38,7 @@ func TestContestAWDServiceServiceCreateUsesTemplateSnapshotOnly(t *testing.T) {
 		Description:      "Bank Portal runtime",
 		ServiceType:      model.AWDServiceTypeWebHTTP,
 		DeploymentMode:   model.AWDDeploymentModeSingleContainer,
-		Status:           model.AWDServiceTemplateStatusPublished,
+		Status:           model.AWDChallengeStatusPublished,
 		CheckerType:      model.AWDCheckerTypeHTTPStandard,
 		CheckerConfig:    `{"get_flag":{"path":"/internal/flag"}}`,
 		FlagMode:         "dynamic",
@@ -49,14 +49,14 @@ func TestContestAWDServiceServiceCreateUsesTemplateSnapshotOnly(t *testing.T) {
 		CreatedAt:        now,
 		UpdatedAt:        now,
 	}); err != nil {
-		t.Fatalf("create template: %v", err)
+		t.Fatalf("create AWD challenge: %v", err)
 	}
 
 	resp, err := service.CreateContestAWDService(context.Background(), 1801, &dto.CreateContestAWDServiceReq{
-		TemplateID: 2801,
-		Points:     180,
-		Order:      1,
-		IsVisible:  boolPtr(true),
+		AWDChallengeID: 2801,
+		Points:         180,
+		Order:          1,
+		IsVisible:      boolPtr(true),
 	})
 	if err != nil {
 		t.Fatalf("CreateContestAWDService() error = %v", err)
@@ -67,7 +67,7 @@ func TestContestAWDServiceServiceCreateUsesTemplateSnapshotOnly(t *testing.T) {
 		t.Fatalf("FindContestAWDServiceByContestAndID() error = %v", err)
 	}
 	if stored.DisplayName != "Bank Portal" {
-		t.Fatalf("expected display name copied from template, got %+v", stored)
+		t.Fatalf("expected display name copied from awdChallenge, got %+v", stored)
 	}
 
 	var snapshot map[string]any
@@ -108,7 +108,7 @@ func TestContestAWDServiceServiceSnapshotRemainsFrozenAfterTemplateUpdate(t *tes
 	}); err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	template := &model.AWDServiceTemplate{
+	awdChallenge := &model.AWDChallenge{
 		ID:             2802,
 		Name:           "Billing API",
 		Slug:           "billing-api",
@@ -117,32 +117,32 @@ func TestContestAWDServiceServiceSnapshotRemainsFrozenAfterTemplateUpdate(t *tes
 		Description:    "Billing runtime",
 		ServiceType:    model.AWDServiceTypeWebHTTP,
 		DeploymentMode: model.AWDDeploymentModeSingleContainer,
-		Status:         model.AWDServiceTemplateStatusPublished,
+		Status:         model.AWDChallengeStatusPublished,
 		CheckerType:    model.AWDCheckerTypeHTTPStandard,
 		CheckerConfig:  `{"health":{"path":"/health"}}`,
 		RuntimeConfig:  `{"image_id":9902}`,
 		CreatedAt:      now,
 		UpdatedAt:      now,
 	}
-	if err := challengeRepo.CreateAWDServiceTemplate(context.Background(), template); err != nil {
-		t.Fatalf("create template: %v", err)
+	if err := challengeRepo.CreateAWDChallenge(context.Background(), awdChallenge); err != nil {
+		t.Fatalf("create AWD challenge: %v", err)
 	}
 
 	resp, err := service.CreateContestAWDService(context.Background(), 1802, &dto.CreateContestAWDServiceReq{
-		TemplateID: 2802,
-		Points:     120,
-		Order:      2,
-		IsVisible:  boolPtr(true),
+		AWDChallengeID: 2802,
+		Points:         120,
+		Order:          2,
+		IsVisible:      boolPtr(true),
 	})
 	if err != nil {
 		t.Fatalf("CreateContestAWDService() error = %v", err)
 	}
 
-	template.Name = "Billing API v2"
-	template.Category = "misc"
-	template.RuntimeConfig = `{"image_id":19902}`
-	if err := challengeRepo.UpdateAWDServiceTemplate(context.Background(), template); err != nil {
-		t.Fatalf("update template: %v", err)
+	awdChallenge.Name = "Billing API v2"
+	awdChallenge.Category = "misc"
+	awdChallenge.RuntimeConfig = `{"image_id":19902}`
+	if err := challengeRepo.UpdateAWDChallenge(context.Background(), awdChallenge); err != nil {
+		t.Fatalf("update awdChallenge: %v", err)
 	}
 
 	stored, err := awdRepo.FindContestAWDServiceByContestAndID(context.Background(), 1802, resp.ID)

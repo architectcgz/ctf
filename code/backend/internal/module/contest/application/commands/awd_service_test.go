@@ -172,7 +172,7 @@ func newAWDServiceForTest(db *gorm.DB, redisClient *redis.Client, flagSecret str
 	awdRepo := contestinfra.NewAWDRepository(db)
 	contestRepo := contestinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
-	templateRepo := challengeinfra.NewRepository(db)
+	awdChallengeRepo := challengeinfra.NewRepository(db)
 	return &awdServiceForTest{
 		commands: contestcmd.NewAWDService(
 			awdRepo,
@@ -183,7 +183,7 @@ func newAWDServiceForTest(db *gorm.DB, redisClient *redis.Client, flagSecret str
 			zap.NewNop(),
 			newAWDRoundUpdaterForTest(db, redisClient, cfg, flagSecret, nil, zap.NewNop()),
 			imageRepo,
-			templateRepo,
+			awdChallengeRepo,
 			nil,
 		),
 		queries: contestqry.NewAWDService(awdRepo, contestRepo),
@@ -935,7 +935,7 @@ func TestAWDServicePreviewCheckerReturnsQuorumPassWhenTwoOfThreeAttemptsSucceed(
 	awdRepo := contestinfra.NewAWDRepository(db)
 	contestRepo := contestinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
-	templateRepo := challengeinfra.NewRepository(db)
+	awdChallengeRepo := challengeinfra.NewRepository(db)
 	service := contestcmd.NewAWDService(
 		awdRepo,
 		contestRepo,
@@ -945,7 +945,7 @@ func TestAWDServicePreviewCheckerReturnsQuorumPassWhenTwoOfThreeAttemptsSucceed(
 		zap.NewNop(),
 		roundManager,
 		imageRepo,
-		templateRepo,
+		awdChallengeRepo,
 		nil,
 	)
 
@@ -1045,7 +1045,7 @@ func TestAWDServicePreviewCheckerBroadcastsRealtimeProgressToRequester(t *testin
 	awdRepo := contestinfra.NewAWDRepository(db)
 	contestRepo := contestinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
-	templateRepo := challengeinfra.NewRepository(db)
+	awdChallengeRepo := challengeinfra.NewRepository(db)
 	service := contestcmd.NewAWDService(
 		awdRepo,
 		contestRepo,
@@ -1055,7 +1055,7 @@ func TestAWDServicePreviewCheckerBroadcastsRealtimeProgressToRequester(t *testin
 		zap.NewNop(),
 		roundManager,
 		imageRepo,
-		templateRepo,
+		awdChallengeRepo,
 		nil,
 	)
 	service.SetRealtimeBroadcaster(broadcaster)
@@ -1165,7 +1165,7 @@ func TestAWDServicePreviewCheckerReturnsQuorumFailureWhenOnlyOneAttemptSucceeds(
 	awdRepo := contestinfra.NewAWDRepository(db)
 	contestRepo := contestinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
-	templateRepo := challengeinfra.NewRepository(db)
+	awdChallengeRepo := challengeinfra.NewRepository(db)
 	service := contestcmd.NewAWDService(
 		awdRepo,
 		contestRepo,
@@ -1175,7 +1175,7 @@ func TestAWDServicePreviewCheckerReturnsQuorumFailureWhenOnlyOneAttemptSucceeds(
 		zap.NewNop(),
 		roundManager,
 		imageRepo,
-		templateRepo,
+		awdChallengeRepo,
 		nil,
 	)
 
@@ -1308,7 +1308,7 @@ func TestAWDServicePreviewCheckerAcceptsServiceIDAndReturnsServiceContext(t *tes
 
 func TestAWDServicePreviewCheckerStartsPreviewRuntimeWhenAccessURLMissing(t *testing.T) {
 	db := newAWDTestDB(t)
-	if err := db.AutoMigrate(&model.Image{}, &model.AWDServiceTemplate{}); err != nil {
+	if err := db.AutoMigrate(&model.Image{}, &model.AWDChallenge{}); err != nil {
 		t.Fatalf("auto migrate preview dependencies: %v", err)
 	}
 	mini, err := miniredis.Run()
@@ -1334,7 +1334,7 @@ func TestAWDServicePreviewCheckerStartsPreviewRuntimeWhenAccessURLMissing(t *tes
 	}).Error; err != nil {
 		t.Fatalf("create image: %v", err)
 	}
-	if err := db.Create(&model.AWDServiceTemplate{
+	if err := db.Create(&model.AWDChallenge{
 		ID:             2601,
 		Name:           "Preview Target",
 		Slug:           "preview-target",
@@ -1342,14 +1342,14 @@ func TestAWDServicePreviewCheckerStartsPreviewRuntimeWhenAccessURLMissing(t *tes
 		Difficulty:     model.ChallengeDifficultyEasy,
 		ServiceType:    model.AWDServiceTypeWebHTTP,
 		DeploymentMode: model.AWDDeploymentModeSingleContainer,
-		Status:         model.AWDServiceTemplateStatusPublished,
+		Status:         model.AWDChallengeStatusPublished,
 		CheckerType:    model.AWDCheckerTypeHTTPStandard,
 		CheckerConfig:  `{"get_flag":{"method":"GET","path":"/api/flag","expected_status":200,"expected_substring":"{{FLAG}}"}}`,
 		RuntimeConfig:  `{"image_id":26001,"image_ref":"registry.example.edu/ctf/awd-preview:v1"}`,
 		CreatedAt:      now,
 		UpdatedAt:      now,
 	}).Error; err != nil {
-		t.Fatalf("create awd template: %v", err)
+		t.Fatalf("create awd challenge: %v", err)
 	}
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -1370,7 +1370,7 @@ func TestAWDServicePreviewCheckerStartsPreviewRuntimeWhenAccessURLMissing(t *tes
 	awdRepo := contestinfra.NewAWDRepository(db)
 	contestRepo := contestinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
-	templateRepo := challengeinfra.NewRepository(db)
+	awdChallengeRepo := challengeinfra.NewRepository(db)
 	service := contestcmd.NewAWDService(
 		awdRepo,
 		contestRepo,
@@ -1386,7 +1386,7 @@ func TestAWDServicePreviewCheckerStartsPreviewRuntimeWhenAccessURLMissing(t *tes
 			CheckerHealthPath: "/healthz",
 		}, "", nil, zap.NewNop()),
 		imageRepo,
-		templateRepo,
+		awdChallengeRepo,
 		runtimeProbe,
 	)
 
@@ -2368,7 +2368,7 @@ func TestAWDServiceSubmitAttackMaterializesMissingCurrentRound(t *testing.T) {
 		t.Fatalf("unexpected materialized round id: resp=%d round=%d", resp.RoundID, round.ID)
 	}
 	if round.AttackScore != 80 || round.DefenseScore != 20 {
-		t.Fatalf("unexpected materialized round score template: %+v", round)
+		t.Fatalf("unexpected materialized round score: %+v", round)
 	}
 
 	currentRound, err := redisClient.Get(context.Background(), rediskeys.AWDCurrentRoundKey(10)).Result()

@@ -2048,14 +2048,14 @@ func TestFullRouter_AWDContestLegacyChallengeInstanceRouteRejected(t *testing.T)
 	}
 }
 
-func TestFullRouter_AWDServiceTemplateAuthoringStateMatrix(t *testing.T) {
+func TestFullRouter_AWDChallengeAuthoringStateMatrix(t *testing.T) {
 	env := newFullRouterTestEnv(t)
 
 	adminHeaders := bearerHeaders(loginForToken(t, env.router, env.admin.Username, env.adminPwd))
 	teacherHeaders := bearerHeaders(loginForToken(t, env.router, env.teacher.Username, env.teacherPwd))
 	studentHeaders := bearerHeaders(loginForToken(t, env.router, env.student.Username, env.studentPwd))
 
-	resp := performFullRouterRequest(t, env.router, http.MethodPost, "/api/v1/authoring/awd-service-templates", map[string]any{
+	resp := performFullRouterRequest(t, env.router, http.MethodPost, "/api/v1/authoring/awd-challenges", map[string]any{
 		"name":            "Bank Portal AWD",
 		"slug":            "bank-portal-awd",
 		"category":        "web",
@@ -2066,7 +2066,7 @@ func TestFullRouter_AWDServiceTemplateAuthoringStateMatrix(t *testing.T) {
 	}, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	invalidCategoryResp := performFullRouterRequest(t, env.router, http.MethodPost, "/api/v1/authoring/awd-service-templates", map[string]any{
+	invalidCategoryResp := performFullRouterRequest(t, env.router, http.MethodPost, "/api/v1/authoring/awd-challenges", map[string]any{
 		"name":            "Invalid Category AWD",
 		"slug":            "invalid-category-awd",
 		"category":        "mobile",
@@ -2077,43 +2077,43 @@ func TestFullRouter_AWDServiceTemplateAuthoringStateMatrix(t *testing.T) {
 	}, adminHeaders)
 	assertFullRouterStatus(t, invalidCategoryResp, http.StatusBadRequest)
 
-	var createdTemplate dto.AWDServiceTemplateResp
-	decodeFullRouterData(t, resp, &createdTemplate)
-	if createdTemplate.ID == 0 || createdTemplate.Slug != "bank-portal-awd" {
-		t.Fatalf("unexpected created awd service template: %+v", createdTemplate)
+	var createdChallenge dto.AWDChallengeResp
+	decodeFullRouterData(t, resp, &createdChallenge)
+	if createdChallenge.ID == 0 || createdChallenge.Slug != "bank-portal-awd" {
+		t.Fatalf("unexpected created awd challenge: %+v", createdChallenge)
 	}
 
-	resp = performFullRouterRequest(t, env.router, http.MethodGet, "/api/v1/authoring/awd-service-templates?page=1&page_size=10", nil, teacherHeaders)
+	resp = performFullRouterRequest(t, env.router, http.MethodGet, "/api/v1/authoring/awd-challenges?page=1&page_size=10", nil, teacherHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var page dto.AWDServiceTemplatePageResp
+	var page dto.AWDChallengePageResp
 	decodeFullRouterData(t, resp, &page)
 	if page.Total < 1 || len(page.Items) == 0 {
-		t.Fatalf("expected awd service template page items, got %+v", page)
+		t.Fatalf("expected awd challenge page items, got %+v", page)
 	}
 
-	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/authoring/awd-service-templates/%d", createdTemplate.ID), nil, adminHeaders)
+	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/authoring/awd-challenges/%d", createdChallenge.ID), nil, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	resp = performFullRouterRequest(t, env.router, http.MethodPut, fmt.Sprintf("/api/v1/authoring/awd-service-templates/%d", createdTemplate.ID), map[string]any{
+	resp = performFullRouterRequest(t, env.router, http.MethodPut, fmt.Sprintf("/api/v1/authoring/awd-challenges/%d", createdChallenge.ID), map[string]any{
 		"name":   "Bank Portal AWD v2",
 		"status": "published",
 	}, teacherHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var updatedTemplate dto.AWDServiceTemplateResp
-	decodeFullRouterData(t, resp, &updatedTemplate)
-	if updatedTemplate.Name != "Bank Portal AWD v2" || updatedTemplate.Status != "published" {
-		t.Fatalf("unexpected updated awd service template: %+v", updatedTemplate)
+	var updatedChallenge dto.AWDChallengeResp
+	decodeFullRouterData(t, resp, &updatedChallenge)
+	if updatedChallenge.Name != "Bank Portal AWD v2" || updatedChallenge.Status != "published" {
+		t.Fatalf("unexpected updated awd challenge: %+v", updatedChallenge)
 	}
 
-	resp = performFullRouterRequest(t, env.router, http.MethodGet, "/api/v1/authoring/awd-service-templates", nil, studentHeaders)
+	resp = performFullRouterRequest(t, env.router, http.MethodGet, "/api/v1/authoring/awd-challenges", nil, studentHeaders)
 	assertFullRouterStatus(t, resp, http.StatusForbidden)
 
-	resp = performFullRouterRequest(t, env.router, http.MethodDelete, fmt.Sprintf("/api/v1/authoring/awd-service-templates/%d", createdTemplate.ID), nil, adminHeaders)
+	resp = performFullRouterRequest(t, env.router, http.MethodDelete, fmt.Sprintf("/api/v1/authoring/awd-challenges/%d", createdChallenge.ID), nil, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/authoring/awd-service-templates/%d", createdTemplate.ID), nil, adminHeaders)
+	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/authoring/awd-challenges/%d", createdChallenge.ID), nil, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusNotFound)
 }
 

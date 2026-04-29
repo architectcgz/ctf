@@ -357,7 +357,7 @@ describe('Sidebar desktop layout', () => {
         { path: '/academy/instances', component: { template: '<div>instances</div>' } },
         { path: '/platform/challenges', component: { template: '<div>challenges</div>' } },
         { path: '/platform/environment-templates', component: { template: '<div>environment templates</div>' } },
-        { path: '/platform/awd-service-templates', component: { template: '<div>awd service templates</div>' } },
+        { path: '/platform/awd-challenges', component: { template: '<div>awd challenges</div>' } },
         { path: '/platform/images', component: { template: '<div>images</div>' } },
       ],
     })
@@ -407,7 +407,7 @@ describe('Sidebar desktop layout', () => {
     await clickSidebarEntry('实例管理', '/academy/instances')
     await clickSidebarEntry('题库与资源', '/platform/challenges')
     await clickSidebarEntry('环境模板', '/platform/environment-templates')
-    await clickSidebarEntry('AWD服务模板', '/platform/awd-service-templates')
+    await clickSidebarEntry('AWD题库', '/platform/awd-challenges')
     await clickSidebarEntry('镜像管理', '/platform/images')
 
     wrapper.unmount()

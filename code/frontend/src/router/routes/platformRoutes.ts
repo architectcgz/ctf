@@ -229,21 +229,21 @@ export const platformRoutes: RouteRecordRaw[] = [
   },
 },
 {
-  path: 'platform/awd-service-templates',
-  name: 'PlatformAwdServiceTemplateLibrary',
-  component: () => import('@/views/platform/AWDServiceTemplateLibrary.vue'),
+  path: 'platform/awd-challenges',
+  name: 'PlatformAwdChallengeLibrary',
+  component: () => import('@/views/platform/AWDChallengeLibrary.vue'),
   meta: {
     requiresAuth: true,
     roles: ['teacher', 'admin'],
-    title: 'AWD 服务模板',
+    title: 'AWD 题目',
     icon: 'Shield',
     contentLayout: 'bleed',
   },
 },
 {
-  path: 'platform/awd-service-templates/imports',
-  name: 'PlatformAwdServiceTemplateImport',
-  component: () => import('@/views/platform/AWDServiceTemplateImport.vue'),
+  path: 'platform/awd-challenges/imports',
+  name: 'PlatformAwdChallengeImport',
+  component: () => import('@/views/platform/AWDChallengeImport.vue'),
   meta: {
     requiresAuth: true,
     roles: ['teacher', 'admin'],

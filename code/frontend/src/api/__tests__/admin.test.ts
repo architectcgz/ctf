@@ -16,7 +16,7 @@ vi.mock('@/api/request', () => ({
 }))
 
 import {
-  createAdminAwdServiceTemplate,
+  createAdminAwdChallenge,
   createAdminContestAnnouncement,
   createAdminContestChallenge,
   createEnvironmentTemplate,
@@ -24,10 +24,10 @@ import {
   createChallengePublishRequest,
   createContest,
   createContestAWDRound,
-  commitAdminAwdServiceTemplateImport,
+  commitAdminAwdChallengeImport,
   configureChallengeFlag,
   createContestAWDService,
-  deleteAdminAwdServiceTemplate,
+  deleteAdminAwdChallenge,
   deleteAdminContestAnnouncement,
   deleteAdminContestChallenge,
   deleteContestAWDService,
@@ -50,8 +50,8 @@ import {
   getEnvironmentTemplates,
   getImages,
   getUsers,
-  listAdminAwdServiceTemplateImports,
-  listAdminAwdServiceTemplates,
+  listAdminAwdChallengeImports,
+  listAdminAwdChallenges,
   listChallengeImports,
   listAdminContestChallenges,
   listContestAWDServices,
@@ -65,10 +65,10 @@ import {
   saveChallengeWriteup,
   unrecommendChallengeWriteup,
   updateAdminContestChallenge,
-  updateAdminAwdServiceTemplate,
+  updateAdminAwdChallenge,
   updateContestAWDService,
   updateContest,
-  previewAdminAwdServiceTemplateImport,
+  previewAdminAwdChallengeImport,
 } from '@/api/admin'
 import * as adminApi from '@/api/admin'
 
@@ -394,7 +394,7 @@ describe('admin contest api contract', () => {
         id: 7009,
         contest_id: 7,
         challenge_id: 11,
-        template_id: 5,
+        awd_challenge_id: 5,
         display_name: 'Bank Portal',
         order: 2,
         is_visible: true,
@@ -443,7 +443,10 @@ describe('admin contest api contract', () => {
         id: '7009',
         contest_id: '7',
         challenge_id: '11',
-        template_id: '5',
+        awd_challenge_id: '5',
+        title: undefined,
+        category: undefined,
+        difficulty: undefined,
         display_name: 'Bank Portal',
         order: 2,
         is_visible: true,
@@ -472,6 +475,7 @@ describe('admin contest api contract', () => {
         last_preview_at: '2026-03-12T00:04:00.000Z',
         last_preview_result: {
           checker_type: undefined,
+          preview_token: undefined,
           service_status: 'up',
           check_result: {
             status_code: 200,
@@ -495,7 +499,7 @@ describe('admin contest api contract', () => {
       id: 7009,
       contest_id: 7,
       challenge_id: 11,
-      template_id: 5,
+      awd_challenge_id: 5,
       title: 'Bank Portal',
       category: 'web',
       difficulty: 'medium',
@@ -524,7 +528,7 @@ describe('admin contest api contract', () => {
     })
 
     const result = await createContestAWDService('7', {
-      template_id: 5,
+      awd_challenge_id: 5,
       points: 180,
       display_name: 'Bank Portal',
       order: 2,
@@ -542,7 +546,7 @@ describe('admin contest api contract', () => {
       method: 'POST',
       url: '/admin/contests/7/awd/services',
       data: {
-        template_id: 5,
+        awd_challenge_id: 5,
         points: 180,
         display_name: 'Bank Portal',
         order: 2,
@@ -560,7 +564,7 @@ describe('admin contest api contract', () => {
       id: '7009',
       contest_id: '7',
       challenge_id: '11',
-      template_id: '5',
+      awd_challenge_id: '5',
       title: 'Bank Portal',
       category: 'web',
       difficulty: 'medium',
@@ -602,7 +606,7 @@ describe('admin contest api contract', () => {
     requestMock.mockResolvedValue(null)
 
     await updateContestAWDService('7', '7009', {
-      template_id: 6,
+      awd_challenge_id: 6,
       points: 200,
       display_name: 'Bank Portal v2',
       order: 3,
@@ -620,7 +624,7 @@ describe('admin contest api contract', () => {
       method: 'PUT',
       url: '/admin/contests/7/awd/services/7009',
       data: {
-        template_id: 6,
+        awd_challenge_id: 6,
         points: 200,
         display_name: 'Bank Portal v2',
         order: 3,
@@ -2240,7 +2244,7 @@ describe('admin contest api contract', () => {
     requestMock.mockResolvedValueOnce([
       {
         id: 3,
-        name: '双节点模板',
+        name: '双节点AWD 题目',
         description: 'web + db',
         entry_node_key: 'web',
         networks: [{ key: 'default', name: '默认网络' }],
@@ -2261,14 +2265,14 @@ describe('admin contest api contract', () => {
     })
     expect(list[0]).toMatchObject({
       id: '3',
-      name: '双节点模板',
+      name: '双节点AWD 题目',
       usage_count: 4,
       nodes: [{ key: 'web', name: 'Web', image_id: '8', network_keys: ['default'] }],
     })
 
     requestMock.mockResolvedValueOnce({
       id: 4,
-      name: '三层模板',
+      name: '三层AWD 题目',
       description: 'web app db',
       entry_node_key: 'web',
       networks: [{ key: 'default', name: '默认网络' }],
@@ -2281,7 +2285,7 @@ describe('admin contest api contract', () => {
     })
 
     await createEnvironmentTemplate({
-      name: '三层模板',
+      name: '三层AWD 题目',
       description: 'web app db',
       entry_node_key: 'web',
       networks: [{ key: 'default', name: '默认网络' }],
@@ -2294,7 +2298,7 @@ describe('admin contest api contract', () => {
       method: 'POST',
       url: '/authoring/environment-templates',
       data: {
-        name: '三层模板',
+        name: '三层AWD 题目',
         description: 'web app db',
         entry_node_key: 'web',
         networks: [{ key: 'default', name: '默认网络' }],
@@ -2305,7 +2309,7 @@ describe('admin contest api contract', () => {
     })
   })
 
-  it('应该把 AWD 服务模板分页结果归一化', async () => {
+  it('应该把 AWD 题目分页结果归一化', async () => {
     requestMock.mockResolvedValueOnce({
       items: [
         {
@@ -2331,7 +2335,7 @@ describe('admin contest api contract', () => {
       size: 10,
     })
 
-    const page = await listAdminAwdServiceTemplates({
+    const page = await listAdminAwdChallenges({
       page: 2,
       page_size: 10,
       keyword: 'bank',
@@ -2341,7 +2345,7 @@ describe('admin contest api contract', () => {
 
     expect(requestMock).toHaveBeenCalledWith({
       method: 'GET',
-      url: '/authoring/awd-service-templates',
+      url: '/authoring/awd-challenges',
       params: {
         page: 2,
         page_size: 10,
@@ -2376,7 +2380,7 @@ describe('admin contest api contract', () => {
     })
   })
 
-  it('应该把 AWD 服务模板创建更新删除请求转换成后台接口格式', async () => {
+  it('应该把 AWD 题目创建更新删除请求转换成后台接口格式', async () => {
     requestMock.mockResolvedValueOnce({
       id: 5,
       name: 'Bank Portal AWD',
@@ -2393,7 +2397,7 @@ describe('admin contest api contract', () => {
       updated_at: '2026-04-17T09:00:00.000Z',
     })
 
-    await createAdminAwdServiceTemplate({
+    await createAdminAwdChallenge({
       name: 'Bank Portal AWD',
       slug: 'bank-portal-awd',
       category: 'web',
@@ -2405,7 +2409,7 @@ describe('admin contest api contract', () => {
 
     expect(requestMock).toHaveBeenNthCalledWith(1, {
       method: 'POST',
-      url: '/authoring/awd-service-templates',
+      url: '/authoring/awd-challenges',
       data: {
         name: 'Bank Portal AWD',
         slug: 'bank-portal-awd',
@@ -2433,14 +2437,14 @@ describe('admin contest api contract', () => {
       updated_at: '2026-04-17T10:00:00.000Z',
     })
 
-    await updateAdminAwdServiceTemplate('5', {
+    await updateAdminAwdChallenge('5', {
       name: 'Bank Portal AWD v2',
       status: 'published',
     })
 
     expect(requestMock).toHaveBeenNthCalledWith(2, {
       method: 'PUT',
-      url: '/authoring/awd-service-templates/5',
+      url: '/authoring/awd-challenges/5',
       data: {
         name: 'Bank Portal AWD v2',
         status: 'published',
@@ -2448,11 +2452,11 @@ describe('admin contest api contract', () => {
     })
 
     requestMock.mockResolvedValueOnce(undefined)
-    await deleteAdminAwdServiceTemplate('5')
+    await deleteAdminAwdChallenge('5')
 
     expect(requestMock).toHaveBeenNthCalledWith(3, {
       method: 'DELETE',
-      url: '/authoring/awd-service-templates/5',
+      url: '/authoring/awd-challenges/5',
       suppressErrorToast: true,
     })
   })
@@ -2480,15 +2484,15 @@ describe('admin contest api contract', () => {
       defense_entry_mode: 'http',
       access_config: { service_port: 8080 },
       runtime_config: { image_ref: 'registry.example.edu/ctf/awd-bank-portal:v1' },
-      warnings: ['meta.points 仅作为建议分值，不会直接写入模板。'],
+      warnings: ['meta.points 仅作为建议分值，不会直接写入AWD 题目。'],
       created_at: '2026-04-21T08:00:00.000Z',
     })
 
-    const preview = await previewAdminAwdServiceTemplateImport(file)
+    const preview = await previewAdminAwdChallengeImport(file)
 
     expect(requestMock).toHaveBeenNthCalledWith(1, {
       method: 'POST',
-      url: '/authoring/awd-service-template-imports',
+      url: '/authoring/awd-challenge-imports',
       data: expect.any(FormData),
       headers: { 'Content-Type': 'multipart/form-data' },
     })
@@ -2512,7 +2516,7 @@ describe('admin contest api contract', () => {
       defense_entry_mode: 'http',
       access_config: { service_port: 8080 },
       runtime_config: { image_ref: 'registry.example.edu/ctf/awd-bank-portal:v1' },
-      warnings: ['meta.points 仅作为建议分值，不会直接写入模板。'],
+      warnings: ['meta.points 仅作为建议分值，不会直接写入AWD 题目。'],
       created_at: '2026-04-21T08:00:00.000Z',
     })
 
@@ -2540,15 +2544,15 @@ describe('admin contest api contract', () => {
       },
     ])
 
-    await listAdminAwdServiceTemplateImports()
+    await listAdminAwdChallengeImports()
 
     expect(requestMock).toHaveBeenNthCalledWith(2, {
       method: 'GET',
-      url: '/authoring/awd-service-template-imports',
+      url: '/authoring/awd-challenge-imports',
     })
 
     requestMock.mockResolvedValueOnce({
-      template: {
+      challenge: {
         id: 5,
         name: 'Bank Portal AWD',
         slug: 'awd-bank-portal-01',
@@ -2565,11 +2569,11 @@ describe('admin contest api contract', () => {
       },
     })
 
-    await commitAdminAwdServiceTemplateImport('imp-1')
+    await commitAdminAwdChallengeImport('imp-1')
 
     expect(requestMock).toHaveBeenNthCalledWith(3, {
       method: 'POST',
-      url: '/authoring/awd-service-template-imports/imp-1/commit',
+      url: '/authoring/awd-challenge-imports/imp-1/commit',
     })
   })
 })

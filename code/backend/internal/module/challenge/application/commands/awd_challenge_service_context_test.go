@@ -8,51 +8,51 @@ import (
 	"ctf-platform/internal/model"
 )
 
-type awdServiceTemplateCommandContextRepoStub struct {
-	createFn   func(ctx context.Context, template *model.AWDServiceTemplate) error
-	findByIDFn func(ctx context.Context, id int64) (*model.AWDServiceTemplate, error)
-	updateFn   func(ctx context.Context, template *model.AWDServiceTemplate) error
+type awdChallengeCommandContextRepoStub struct {
+	createFn   func(ctx context.Context, template *model.AWDChallenge) error
+	findByIDFn func(ctx context.Context, id int64) (*model.AWDChallenge, error)
+	updateFn   func(ctx context.Context, template *model.AWDChallenge) error
 	deleteFn   func(ctx context.Context, id int64) error
 }
 
-func (s *awdServiceTemplateCommandContextRepoStub) CreateAWDServiceTemplate(ctx context.Context, template *model.AWDServiceTemplate) error {
+func (s *awdChallengeCommandContextRepoStub) CreateAWDChallenge(ctx context.Context, template *model.AWDChallenge) error {
 	if s.createFn != nil {
 		return s.createFn(ctx, template)
 	}
 	return nil
 }
 
-func (s *awdServiceTemplateCommandContextRepoStub) FindAWDServiceTemplateByID(ctx context.Context, id int64) (*model.AWDServiceTemplate, error) {
+func (s *awdChallengeCommandContextRepoStub) FindAWDChallengeByID(ctx context.Context, id int64) (*model.AWDChallenge, error) {
 	if s.findByIDFn != nil {
 		return s.findByIDFn(ctx, id)
 	}
 	return nil, nil
 }
 
-func (s *awdServiceTemplateCommandContextRepoStub) UpdateAWDServiceTemplate(ctx context.Context, template *model.AWDServiceTemplate) error {
+func (s *awdChallengeCommandContextRepoStub) UpdateAWDChallenge(ctx context.Context, template *model.AWDChallenge) error {
 	if s.updateFn != nil {
 		return s.updateFn(ctx, template)
 	}
 	return nil
 }
 
-func (s *awdServiceTemplateCommandContextRepoStub) DeleteAWDServiceTemplate(ctx context.Context, id int64) error {
+func (s *awdChallengeCommandContextRepoStub) DeleteAWDChallenge(ctx context.Context, id int64) error {
 	if s.deleteFn != nil {
 		return s.deleteFn(ctx, id)
 	}
 	return nil
 }
 
-type awdServiceTemplateCommandContextKey string
+type awdChallengeCommandContextKey string
 
-func TestAWDServiceTemplateServiceCreateTemplatePropagatesContextToRepository(t *testing.T) {
+func TestAWDChallengeServiceCreateChallengePropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
-	ctxKey := awdServiceTemplateCommandContextKey("create")
+	ctxKey := awdChallengeCommandContextKey("create")
 	expectedCtxValue := "ctx-create"
 	createCalled := false
-	repo := &awdServiceTemplateCommandContextRepoStub{
-		createFn: func(ctx context.Context, template *model.AWDServiceTemplate) error {
+	repo := &awdChallengeCommandContextRepoStub{
+		createFn: func(ctx context.Context, template *model.AWDChallenge) error {
 			createCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected create ctx value %v, got %v", expectedCtxValue, got)
@@ -63,10 +63,10 @@ func TestAWDServiceTemplateServiceCreateTemplatePropagatesContextToRepository(t 
 			return nil
 		},
 	}
-	service := NewAWDServiceTemplateService(repo)
+	service := NewAWDChallengeService(repo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.CreateTemplate(ctx, 2001, &dto.CreateAWDServiceTemplateReq{
+	resp, err := service.CreateChallenge(ctx, 2001, &dto.CreateAWDChallengeReq{
 		Name:           "Bank Portal AWD",
 		Slug:           "bank-portal-awd",
 		Category:       "web",
@@ -76,7 +76,7 @@ func TestAWDServiceTemplateServiceCreateTemplatePropagatesContextToRepository(t 
 		DeploymentMode: string(model.AWDDeploymentModeSingleContainer),
 	})
 	if err != nil {
-		t.Fatalf("CreateTemplate() error = %v", err)
+		t.Fatalf("CreateChallenge() error = %v", err)
 	}
 	if !createCalled {
 		t.Fatal("expected create repository to be called")
@@ -86,20 +86,20 @@ func TestAWDServiceTemplateServiceCreateTemplatePropagatesContextToRepository(t 
 	}
 }
 
-func TestAWDServiceTemplateServiceUpdateTemplatePropagatesContextToRepository(t *testing.T) {
+func TestAWDChallengeServiceUpdateChallengePropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
-	ctxKey := awdServiceTemplateCommandContextKey("update")
+	ctxKey := awdChallengeCommandContextKey("update")
 	expectedCtxValue := "ctx-update"
 	findCalled := false
 	updateCalled := false
-	repo := &awdServiceTemplateCommandContextRepoStub{
-		findByIDFn: func(ctx context.Context, id int64) (*model.AWDServiceTemplate, error) {
+	repo := &awdChallengeCommandContextRepoStub{
+		findByIDFn: func(ctx context.Context, id int64) (*model.AWDChallenge, error) {
 			findCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find ctx value %v, got %v", expectedCtxValue, got)
 			}
-			return &model.AWDServiceTemplate{
+			return &model.AWDChallenge{
 				ID:             id,
 				Name:           "Legacy",
 				Slug:           "legacy",
@@ -107,29 +107,29 @@ func TestAWDServiceTemplateServiceUpdateTemplatePropagatesContextToRepository(t 
 				Difficulty:     model.ChallengeDifficultyEasy,
 				ServiceType:    model.AWDServiceTypeWebHTTP,
 				DeploymentMode: model.AWDDeploymentModeSingleContainer,
-				Status:         model.AWDServiceTemplateStatusDraft,
+				Status:         model.AWDChallengeStatusDraft,
 			}, nil
 		},
-		updateFn: func(ctx context.Context, template *model.AWDServiceTemplate) error {
+		updateFn: func(ctx context.Context, template *model.AWDChallenge) error {
 			updateCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected update ctx value %v, got %v", expectedCtxValue, got)
 			}
-			if template.Name != "Bank Portal AWD" || template.Status != model.AWDServiceTemplateStatusPublished {
+			if template.Name != "Bank Portal AWD" || template.Status != model.AWDChallengeStatusPublished {
 				t.Fatalf("unexpected updated template payload: %+v", template)
 			}
 			return nil
 		},
 	}
-	service := NewAWDServiceTemplateService(repo)
+	service := NewAWDChallengeService(repo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.UpdateTemplate(ctx, 99, &dto.UpdateAWDServiceTemplateReq{
+	resp, err := service.UpdateChallenge(ctx, 99, &dto.UpdateAWDChallengeReq{
 		Name:   "Bank Portal AWD",
-		Status: string(model.AWDServiceTemplateStatusPublished),
+		Status: string(model.AWDChallengeStatusPublished),
 	})
 	if err != nil {
-		t.Fatalf("UpdateTemplate() error = %v", err)
+		t.Fatalf("UpdateChallenge() error = %v", err)
 	}
 	if !findCalled || !updateCalled {
 		t.Fatalf("expected repository calls, got find=%v update=%v", findCalled, updateCalled)
@@ -139,20 +139,20 @@ func TestAWDServiceTemplateServiceUpdateTemplatePropagatesContextToRepository(t 
 	}
 }
 
-func TestAWDServiceTemplateServiceDeleteTemplatePropagatesContextToRepository(t *testing.T) {
+func TestAWDChallengeServiceDeleteChallengePropagatesContextToRepository(t *testing.T) {
 	t.Parallel()
 
-	ctxKey := awdServiceTemplateCommandContextKey("delete")
+	ctxKey := awdChallengeCommandContextKey("delete")
 	expectedCtxValue := "ctx-delete"
 	findCalled := false
 	deleteCalled := false
-	repo := &awdServiceTemplateCommandContextRepoStub{
-		findByIDFn: func(ctx context.Context, id int64) (*model.AWDServiceTemplate, error) {
+	repo := &awdChallengeCommandContextRepoStub{
+		findByIDFn: func(ctx context.Context, id int64) (*model.AWDChallenge, error) {
 			findCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find ctx value %v, got %v", expectedCtxValue, got)
 			}
-			return &model.AWDServiceTemplate{ID: id, Name: "Legacy"}, nil
+			return &model.AWDChallenge{ID: id, Name: "Legacy"}, nil
 		},
 		deleteFn: func(ctx context.Context, id int64) error {
 			deleteCalled = true
@@ -165,11 +165,11 @@ func TestAWDServiceTemplateServiceDeleteTemplatePropagatesContextToRepository(t 
 			return nil
 		},
 	}
-	service := NewAWDServiceTemplateService(repo)
+	service := NewAWDChallengeService(repo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	if err := service.DeleteTemplate(ctx, 99); err != nil {
-		t.Fatalf("DeleteTemplate() error = %v", err)
+	if err := service.DeleteChallenge(ctx, 99); err != nil {
+		t.Fatalf("DeleteChallenge() error = %v", err)
 	}
 	if !findCalled || !deleteCalled {
 		t.Fatalf("expected repository calls, got find=%v delete=%v", findCalled, deleteCalled)

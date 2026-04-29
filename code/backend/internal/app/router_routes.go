@@ -279,47 +279,47 @@ func registerTeacherAuthoringRoutes(adminAuthoring *gin.RouterGroup, deps adminR
 		deps.challenge.TopologyHandler.DeleteTemplate,
 	)
 
-	adminAuthoring.GET("/awd-service-templates", deps.challenge.AWDServiceTemplateHandler.ListTemplates)
-	adminAuthoring.POST("/awd-service-template-imports",
+	adminAuthoring.GET("/awd-challenges", deps.challenge.AWDChallengeHandler.ListChallenges)
+	adminAuthoring.POST("/awd-challenge-imports",
 		audit(middleware.AuditOptions{
 			Action:       model.AuditActionCreate,
-			ResourceType: "awd_service_template_import",
+			ResourceType: "awd_challenge_import",
 		}),
-		deps.challenge.AWDServiceTemplateHandler.PreviewImport,
+		deps.challenge.AWDChallengeHandler.PreviewImport,
 	)
-	adminAuthoring.GET("/awd-service-template-imports", deps.challenge.AWDServiceTemplateHandler.ListImports)
-	adminAuthoring.GET("/awd-service-template-imports/:id", deps.challenge.AWDServiceTemplateHandler.GetImport)
-	adminAuthoring.POST("/awd-service-template-imports/:id/commit",
+	adminAuthoring.GET("/awd-challenge-imports", deps.challenge.AWDChallengeHandler.ListImports)
+	adminAuthoring.GET("/awd-challenge-imports/:id", deps.challenge.AWDChallengeHandler.GetImport)
+	adminAuthoring.POST("/awd-challenge-imports/:id/commit",
 		audit(middleware.AuditOptions{
 			Action:          model.AuditActionCreate,
-			ResourceType:    "awd_service_template_import_commit",
+			ResourceType:    "awd_challenge_import_commit",
 			ResourceIDParam: "id",
 		}),
-		deps.challenge.AWDServiceTemplateHandler.CommitImport,
+		deps.challenge.AWDChallengeHandler.CommitImport,
 	)
-	adminAuthoring.POST("/awd-service-templates",
+	adminAuthoring.POST("/awd-challenges",
 		audit(middleware.AuditOptions{
 			Action:       model.AuditActionCreate,
-			ResourceType: "awd_service_template",
+			ResourceType: "awd_challenge",
 		}),
-		deps.challenge.AWDServiceTemplateHandler.CreateTemplate,
+		deps.challenge.AWDChallengeHandler.CreateChallenge,
 	)
-	adminAuthoring.GET("/awd-service-templates/:id", deps.challenge.AWDServiceTemplateHandler.GetTemplate)
-	adminAuthoring.PUT("/awd-service-templates/:id",
+	adminAuthoring.GET("/awd-challenges/:id", deps.challenge.AWDChallengeHandler.GetChallenge)
+	adminAuthoring.PUT("/awd-challenges/:id",
 		audit(middleware.AuditOptions{
 			Action:          model.AuditActionUpdate,
-			ResourceType:    "awd_service_template",
+			ResourceType:    "awd_challenge",
 			ResourceIDParam: "id",
 		}),
-		deps.challenge.AWDServiceTemplateHandler.UpdateTemplate,
+		deps.challenge.AWDChallengeHandler.UpdateChallenge,
 	)
-	adminAuthoring.DELETE("/awd-service-templates/:id",
+	adminAuthoring.DELETE("/awd-challenges/:id",
 		audit(middleware.AuditOptions{
 			Action:          model.AuditActionDelete,
-			ResourceType:    "awd_service_template",
+			ResourceType:    "awd_challenge",
 			ResourceIDParam: "id",
 		}),
-		deps.challenge.AWDServiceTemplateHandler.DeleteTemplate,
+		deps.challenge.AWDChallengeHandler.DeleteChallenge,
 	)
 
 	adminAuthoring.PUT("/challenges/:id/flag",

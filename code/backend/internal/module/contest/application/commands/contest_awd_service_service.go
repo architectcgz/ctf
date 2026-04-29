@@ -23,7 +23,7 @@ type ContestAWDServiceService struct {
 	contestRepo          contestports.ContestLookupRepository
 	contestChallengeRepo contestports.ContestChallengeRepository
 	challengeRepo        challengecontracts.ContestChallengeContract
-	templateRepo         challengeports.AWDServiceTemplateQueryRepository
+	awdChallengeRepo     challengeports.AWDChallengeQueryRepository
 	redis                *redislib.Client
 }
 
@@ -32,7 +32,7 @@ func NewContestAWDServiceService(
 	contestRepo contestports.ContestLookupRepository,
 	contestChallengeRepo contestports.ContestChallengeRepository,
 	challengeRepo challengecontracts.ContestChallengeContract,
-	templateRepo challengeports.AWDServiceTemplateQueryRepository,
+	awdChallengeRepo challengeports.AWDChallengeQueryRepository,
 	redis *redislib.Client,
 ) *ContestAWDServiceService {
 	return &ContestAWDServiceService{
@@ -40,7 +40,7 @@ func NewContestAWDServiceService(
 		contestRepo:          contestRepo,
 		contestChallengeRepo: contestChallengeRepo,
 		challengeRepo:        challengeRepo,
-		templateRepo:         templateRepo,
+		awdChallengeRepo:     awdChallengeRepo,
 		redis:                redis,
 	}
 }
@@ -54,7 +54,7 @@ func (s *ContestAWDServiceService) CreateContestAWDService(ctx context.Context, 
 		return nil, errcode.ErrInvalidParams
 	}
 
-	template, err := s.templateRepo.FindAWDServiceTemplateByID(ctx, req.TemplateID)
+	awdChallenge, err := s.awdChallengeRepo.FindAWDChallengeByID(ctx, req.AWDChallengeID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrNotFound
@@ -68,8 +68,8 @@ func (s *ContestAWDServiceService) CreateContestAWDService(ctx context.Context, 
 	}
 	checkerType, checkerConfig, slaScore, defenseScore, err := normalizeContestAWDServiceRuntimeFields(
 		contest,
-		template.CheckerType,
-		template.CheckerConfig,
+		awdChallenge.CheckerType,
+		awdChallenge.CheckerConfig,
 		req.CheckerType,
 		req.CheckerConfig,
 		0,
@@ -89,7 +89,7 @@ func (s *ContestAWDServiceService) CreateContestAWDService(ctx context.Context, 
 		s.redis,
 		contestID,
 		0,
-		template.ID,
+		awdChallenge.ID,
 		checkerType,
 		checkerConfig,
 		previewToken,
@@ -106,10 +106,10 @@ func (s *ContestAWDServiceService) CreateContestAWDService(ctx context.Context, 
 	}
 	record := &model.ContestAWDService{
 		ContestID:         contestID,
-		ChallengeID:       template.ID,
-		TemplateID:        &req.TemplateID,
-		DisplayName:       firstNonEmpty(req.DisplayName, template.Name),
-		ServiceSnapshot:   buildContestAWDServiceSnapshot(template),
+		ChallengeID:       awdChallenge.ID,
+		AWDChallengeID:    &req.AWDChallengeID,
+		DisplayName:       firstNonEmpty(req.DisplayName, awdChallenge.Name),
+		ServiceSnapshot:   buildContestAWDServiceSnapshot(awdChallenge),
 		Order:             req.Order,
 		IsVisible:         isVisible,
 		ScoreConfig:       buildContestAWDServiceScoreConfig(req.Points, slaScore, defenseScore),
@@ -117,10 +117,10 @@ func (s *ContestAWDServiceService) CreateContestAWDService(ctx context.Context, 
 		LastPreviewAt:     lastPreviewAt,
 		LastPreviewResult: lastPreviewResult,
 		RuntimeConfig: buildContestAWDServiceRuntimeConfig(
-			template.ID,
+			awdChallenge.ID,
 			checkerType,
 			checkerConfig,
-			template.RuntimeConfig,
+			awdChallenge.RuntimeConfig,
 		),
 	}
 	if err := s.repo.CreateContestAWDService(ctx, record); err != nil {
@@ -164,7 +164,7 @@ func (s *ContestAWDServiceService) UpdateContestAWDService(ctx context.Context, 
 	}
 
 	defaultCheckerType, defaultCheckerConfig := parseContestAWDServiceRuntimeChecker(stored.RuntimeConfig)
-	extraRuntimeConfig := parseContestAWDServiceTemplateRuntimeConfig(stored.RuntimeConfig)
+	extraRuntimeConfig := parseContestAWDChallengeRuntimeConfig(stored.RuntimeConfig)
 	currentPoints, ok := parseContestAWDServiceScore(stored.ScoreConfig, "points")
 	if !ok {
 		currentPoints = 0
@@ -172,22 +172,22 @@ func (s *ContestAWDServiceService) UpdateContestAWDService(ctx context.Context, 
 	currentSLAScore, _ := parseContestAWDServiceScore(stored.ScoreConfig, "awd_sla_score")
 	currentDefenseScore, _ := parseContestAWDServiceScore(stored.ScoreConfig, "awd_defense_score")
 
-	if req.TemplateID != nil {
-		template, err := s.templateRepo.FindAWDServiceTemplateByID(ctx, *req.TemplateID)
+	if req.AWDChallengeID != nil {
+		awdChallenge, err := s.awdChallengeRepo.FindAWDChallengeByID(ctx, *req.AWDChallengeID)
 		if err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				return errcode.ErrNotFound
 			}
 			return errcode.ErrInternal.WithCause(err)
 		}
-		updates["template_id"] = *req.TemplateID
-		updates["challenge_id"] = template.ID
-		updates["service_snapshot"] = buildContestAWDServiceSnapshot(template)
-		defaultCheckerType = template.CheckerType
-		defaultCheckerConfig = template.CheckerConfig
-		extraRuntimeConfig = template.RuntimeConfig
+		updates["awd_challenge_id"] = *req.AWDChallengeID
+		updates["challenge_id"] = awdChallenge.ID
+		updates["service_snapshot"] = buildContestAWDServiceSnapshot(awdChallenge)
+		defaultCheckerType = awdChallenge.CheckerType
+		defaultCheckerConfig = awdChallenge.CheckerConfig
+		extraRuntimeConfig = awdChallenge.RuntimeConfig
 		if req.DisplayName == nil || strings.TrimSpace(displayName) == "" {
-			updates["display_name"] = firstNonEmpty(template.Name)
+			updates["display_name"] = firstNonEmpty(awdChallenge.Name)
 		}
 	}
 
@@ -205,7 +205,7 @@ func (s *ContestAWDServiceService) UpdateContestAWDService(ctx context.Context, 
 	if err != nil {
 		return err
 	}
-	if req.TemplateID != nil || req.CheckerType != nil || req.CheckerConfig != nil {
+	if req.AWDChallengeID != nil || req.CheckerType != nil || req.CheckerConfig != nil {
 		updates["runtime_config"] = buildContestAWDServiceRuntimeConfig(
 			stored.ChallengeID,
 			checkerType,

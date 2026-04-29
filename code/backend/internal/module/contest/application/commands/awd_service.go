@@ -14,18 +14,18 @@ import (
 )
 
 type AWDService struct {
-	repo         contestports.AWDRepository
-	roundManager contestports.AWDRoundManager
-	redis        *redislib.Client
-	contestRepo  contestports.ContestLookupRepository
-	flagSecret   string
-	awdConfig    config.ContestAWDConfig
-	log          *zap.Logger
-	eventBus     platformevents.Bus
-	broadcaster  contestports.RealtimeBroadcaster
-	imageRepo    challengecontracts.ImageStore
-	templateRepo challengeports.AWDServiceTemplateQueryRepository
-	runtimeProbe challengeports.ChallengeRuntimeProbe
+	repo             contestports.AWDRepository
+	roundManager     contestports.AWDRoundManager
+	redis            *redislib.Client
+	contestRepo      contestports.ContestLookupRepository
+	flagSecret       string
+	awdConfig        config.ContestAWDConfig
+	log              *zap.Logger
+	eventBus         platformevents.Bus
+	broadcaster      contestports.RealtimeBroadcaster
+	imageRepo        challengecontracts.ImageStore
+	awdChallengeRepo challengeports.AWDChallengeQueryRepository
+	runtimeProbe     challengeports.ChallengeRuntimeProbe
 }
 
 func NewAWDService(
@@ -37,23 +37,23 @@ func NewAWDService(
 	log *zap.Logger,
 	roundManager contestports.AWDRoundManager,
 	imageRepo challengecontracts.ImageStore,
-	templateRepo challengeports.AWDServiceTemplateQueryRepository,
+	awdChallengeRepo challengeports.AWDChallengeQueryRepository,
 	runtimeProbe challengeports.ChallengeRuntimeProbe,
 ) *AWDService {
 	if log == nil {
 		log = zap.NewNop()
 	}
 	return &AWDService{
-		repo:         repo,
-		roundManager: roundManager,
-		redis:        redis,
-		contestRepo:  contestRepo,
-		flagSecret:   flagSecret,
-		awdConfig:    awdConfig,
-		log:          log,
-		imageRepo:    imageRepo,
-		templateRepo: templateRepo,
-		runtimeProbe: runtimeProbe,
+		repo:             repo,
+		roundManager:     roundManager,
+		redis:            redis,
+		contestRepo:      contestRepo,
+		flagSecret:       flagSecret,
+		awdConfig:        awdConfig,
+		log:              log,
+		imageRepo:        imageRepo,
+		awdChallengeRepo: awdChallengeRepo,
+		runtimeProbe:     runtimeProbe,
 	}
 }
 

@@ -71,13 +71,13 @@ type ChallengePackageTopologyExtension struct {
 }
 
 type ChallengePackageTopologyManifest struct {
-	APIVersion   string                               `yaml:"api_version"`
-	Kind         string                               `yaml:"kind"`
-	EntryNodeKey string                               `yaml:"entry_node_key"`
-	Networks     []ChallengePackageTopologyNetwork    `yaml:"networks"`
-	Nodes        []ChallengePackageTopologyNode       `yaml:"nodes"`
-	Links        []ChallengePackageTopologyLink       `yaml:"links"`
-	Policies     []ChallengePackageTopologyPolicy     `yaml:"policies"`
+	APIVersion   string                            `yaml:"api_version"`
+	Kind         string                            `yaml:"kind"`
+	EntryNodeKey string                            `yaml:"entry_node_key"`
+	Networks     []ChallengePackageTopologyNetwork `yaml:"networks"`
+	Nodes        []ChallengePackageTopologyNode    `yaml:"nodes"`
+	Links        []ChallengePackageTopologyLink    `yaml:"links"`
+	Policies     []ChallengePackageTopologyPolicy  `yaml:"policies"`
 }
 
 type ChallengePackageTopologyNetwork struct {
@@ -199,7 +199,7 @@ type ParsedChallengePackageFile struct {
 	Size int64
 }
 
-type ParsedAWDServiceTemplatePackage struct {
+type ParsedAWDChallengePackage struct {
 	Manifest         ChallengePackageManifest
 	RootDir          string
 	Slug             string

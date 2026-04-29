@@ -102,7 +102,7 @@ function buildContestAWDService(overrides: Record<string, unknown> = {}) {
     id: 'service-1',
     contest_id: 'awd-1',
     challenge_id: 'challenge-1',
-    template_id: 'template-1',
+    awd_challenge_id: 'template-1',
     display_name: 'Bank Portal',
     order: 1,
     is_visible: true,
@@ -255,7 +255,7 @@ describe('usePlatformContestAwd', () => {
     adminApiMocks.listContestAWDServices.mockResolvedValue([
       buildContestAWDService({
         challenge_id: 'challenge-1',
-        template_id: 'template-9',
+        awd_challenge_id: 'template-9',
         order: 2,
         title: 'Web Checker',
         category: 'web',
@@ -282,7 +282,7 @@ describe('usePlatformContestAwd', () => {
       expect.objectContaining({
         challenge_id: 'challenge-1',
         awd_service_id: 'service-1',
-        awd_template_id: 'template-9',
+        awd_challenge_id: 'template-9',
         awd_service_display_name: 'Bank Portal',
         order: 2,
         is_visible: true,
@@ -365,7 +365,7 @@ describe('usePlatformContestAwd', () => {
     adminApiMocks.listContestAWDServices.mockResolvedValue([
       buildContestAWDService({
         challenge_id: 'challenge-1',
-        template_id: 'template-9',
+        awd_challenge_id: 'template-9',
         order: 2,
         checker_type: undefined,
         checker_config: undefined,
@@ -403,7 +403,7 @@ describe('usePlatformContestAwd', () => {
       expect.objectContaining({
         challenge_id: 'challenge-1',
         awd_service_id: 'service-1',
-        awd_template_id: 'template-9',
+        awd_challenge_id: 'template-9',
         order: 2,
         is_visible: true,
         awd_checker_type: undefined,
@@ -639,7 +639,7 @@ describe('usePlatformContestAwd', () => {
 
     await composable.createChallengeLink({
       challenge_id: 101,
-      template_id: 5,
+      awd_challenge_id: 5,
       points: 120,
       order: 2,
       is_visible: true,
@@ -652,7 +652,7 @@ describe('usePlatformContestAwd', () => {
     await flushPromises()
 
     expect(adminApiMocks.createContestAWDService).toHaveBeenCalledWith('awd-1', {
-      template_id: 5,
+      awd_challenge_id: 5,
       points: 120,
       order: 2,
       is_visible: true,
@@ -673,7 +673,7 @@ describe('usePlatformContestAwd', () => {
     adminApiMocks.listContestAWDServices.mockResolvedValueOnce([
       buildContestAWDService({
         challenge_id: '101',
-        template_id: '4',
+        awd_challenge_id: '4',
         title: 'Web Checker',
         category: 'web',
         difficulty: 'medium',
@@ -691,7 +691,7 @@ describe('usePlatformContestAwd', () => {
     await flushPromises()
 
     await composable.updateChallengeLink('101', {
-      template_id: 6,
+      awd_challenge_id: 6,
       points: 150,
       order: 3,
       is_visible: false,
@@ -704,7 +704,7 @@ describe('usePlatformContestAwd', () => {
     await flushPromises()
 
     expect(adminApiMocks.updateContestAWDService).toHaveBeenCalledWith('awd-1', 'service-1', {
-      template_id: 6,
+      awd_challenge_id: 6,
       points: 150,
       order: 3,
       is_visible: false,

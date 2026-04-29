@@ -2,7 +2,7 @@ package dto
 
 import "time"
 
-type AWDServiceTemplateQuery struct {
+type AWDChallengeQuery struct {
 	Keyword     string `form:"keyword"`
 	ServiceType string `form:"service_type"`
 	Status      string `form:"status"`
@@ -10,7 +10,7 @@ type AWDServiceTemplateQuery struct {
 	Size        int    `form:"page_size" binding:"omitempty,min=1,max=100"`
 }
 
-type CreateAWDServiceTemplateReq struct {
+type CreateAWDChallengeReq struct {
 	Name           string `json:"name" binding:"required"`
 	Slug           string `json:"slug" binding:"required"`
 	Category       string `json:"category" binding:"required,oneof=web pwn reverse crypto misc forensics"`
@@ -20,7 +20,7 @@ type CreateAWDServiceTemplateReq struct {
 	DeploymentMode string `json:"deployment_mode" binding:"required,oneof=single_container topology"`
 }
 
-type UpdateAWDServiceTemplateReq struct {
+type UpdateAWDChallengeReq struct {
 	Name           string `json:"name"`
 	Slug           string `json:"slug"`
 	Category       string `json:"category" binding:"omitempty,oneof=web pwn reverse crypto misc forensics"`
@@ -31,7 +31,7 @@ type UpdateAWDServiceTemplateReq struct {
 	Status         string `json:"status" binding:"omitempty,oneof=draft published archived"`
 }
 
-type AWDServiceTemplateResp struct {
+type AWDChallengeResp struct {
 	ID               int64          `json:"id"`
 	Name             string         `json:"name"`
 	Slug             string         `json:"slug"`
@@ -56,9 +56,9 @@ type AWDServiceTemplateResp struct {
 	CreatedAt        time.Time      `json:"created_at"`
 }
 
-type AWDServiceTemplatePageResp struct {
-	Items []*AWDServiceTemplateResp `json:"items"`
-	Total int64                     `json:"total"`
-	Page  int                       `json:"page"`
-	Size  int                       `json:"size"`
+type AWDChallengePageResp struct {
+	Items []*AWDChallengeResp `json:"items"`
+	Total int64               `json:"total"`
+	Page  int                 `json:"page"`
+	Size  int                 `json:"size"`
 }

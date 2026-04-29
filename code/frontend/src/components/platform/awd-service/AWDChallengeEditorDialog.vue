@@ -2,7 +2,7 @@
 import { reactive, watch } from 'vue'
 
 import SlideOverDrawer from '@/components/common/modal-templates/SlideOverDrawer.vue'
-import type { PlatformAwdServiceTemplateFormDraft } from '@/composables/usePlatformAwdServiceTemplates'
+import type { PlatformAwdChallengeFormDraft } from '@/composables/usePlatformAwdChallenges'
 import type { ChallengeCategory } from '@/api/contracts'
 
 const categoryOptions: Array<{ value: ChallengeCategory; label: string }> = [
@@ -17,16 +17,16 @@ const categoryOptions: Array<{ value: ChallengeCategory; label: string }> = [
 const props = defineProps<{
   open: boolean
   mode: 'create' | 'edit'
-  draft: PlatformAwdServiceTemplateFormDraft
+  draft: PlatformAwdChallengeFormDraft
   saving: boolean
 }>()
 
 const emit = defineEmits<{
   'update:open': [value: boolean]
-  save: [value: PlatformAwdServiceTemplateFormDraft]
+  save: [value: PlatformAwdChallengeFormDraft]
 }>()
 
-const localDraft = reactive<PlatformAwdServiceTemplateFormDraft>({
+const localDraft = reactive<PlatformAwdChallengeFormDraft>({
   name: '',
   slug: '',
   category: 'web',
@@ -37,7 +37,7 @@ const localDraft = reactive<PlatformAwdServiceTemplateFormDraft>({
   status: 'draft',
 })
 
-const fieldErrors = reactive<Partial<Record<keyof PlatformAwdServiceTemplateFormDraft, string>>>({})
+const fieldErrors = reactive<Partial<Record<keyof PlatformAwdChallengeFormDraft, string>>>({})
 
 watch(
   () => props.draft,
@@ -63,11 +63,11 @@ function validate(): boolean {
   resetErrors()
 
   if (!localDraft.name.trim()) {
-    fieldErrors.name = '请填写模板名称'
+    fieldErrors.name = '请填写题目名称'
   }
 
   if (!localDraft.slug.trim()) {
-    fieldErrors.slug = '请填写模板 slug'
+    fieldErrors.slug = '请填写题目 slug'
   } else if (!/^[a-z0-9-]+$/.test(localDraft.slug.trim())) {
     fieldErrors.slug = 'slug 仅支持小写字母、数字和中划线'
   }
@@ -108,11 +108,11 @@ function handleSubmit() {
 <template>
   <SlideOverDrawer
     :open="open"
-    :title="mode === 'create' ? '创建 AWD 服务模板' : '编辑 AWD 服务模板'"
+    :title="mode === 'create' ? '创建 AWD 题目' : '编辑 AWD 题目'"
     :subtitle="
       mode === 'create'
-        ? '先登记模板的基础服务属性，后续再继续补 checker、flag 和运行配置。'
-        : '更新模板的基础信息、部署方式和发布状态，保持 AWD 题库与比赛配置分离。'
+        ? '先登记 AWD 题目的基础服务属性，后续再继续补 checker、flag 和运行配置。'
+        : '更新 AWD 题目的基础信息、部署方式和发布状态，保持 AWD 题库与比赛配置分离。'
     "
     eyebrow="AWD Service Library"
     width="42rem"
@@ -128,7 +128,7 @@ function handleSubmit() {
           class="ui-field awd-template-dialog__field"
           for="awd-template-name"
         >
-          <span class="ui-field__label">模板名称</span>
+          <span class="ui-field__label">题目名称</span>
           <span
             class="ui-control-wrap"
             :class="{ 'is-error': !!fieldErrors.name }"
@@ -151,7 +151,7 @@ function handleSubmit() {
           class="ui-field awd-template-dialog__field"
           for="awd-template-slug"
         >
-          <span class="ui-field__label">模板 slug</span>
+          <span class="ui-field__label">题目 slug</span>
           <span
             class="ui-control-wrap"
             :class="{ 'is-error': !!fieldErrors.slug }"
@@ -318,7 +318,7 @@ function handleSubmit() {
           :disabled="saving"
           @click="handleSubmit"
         >
-          {{ saving ? '保存中...' : mode === 'create' ? '创建模板' : '保存修改' }}
+          {{ saving ? '保存中...' : mode === 'create' ? '创建题目' : '保存修改' }}
         </button>
       </div>
     </template>

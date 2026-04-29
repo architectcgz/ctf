@@ -10,7 +10,7 @@ type ContestAWDService struct {
 	ID                int64                     `gorm:"column:id;primaryKey"`
 	ContestID         int64                     `gorm:"column:contest_id"`
 	ChallengeID       int64                     `gorm:"column:challenge_id"`
-	TemplateID        *int64                    `gorm:"column:template_id"`
+	AWDChallengeID    *int64                    `gorm:"column:awd_challenge_id"`
 	DisplayName       string                    `gorm:"column:display_name"`
 	ServiceSnapshot   string                    `gorm:"column:service_snapshot;type:text;default:'{}'"`
 	Order             int                       `gorm:"column:order"`

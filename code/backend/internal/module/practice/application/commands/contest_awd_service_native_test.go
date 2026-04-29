@@ -29,17 +29,17 @@ func TestServiceStartContestAWDServiceCanProvisionFromContestAWDServiceSnapshot(
 		t.Fatalf("create image: %v", err)
 	}
 	if err := db.Create(&model.ContestAWDService{
-		ID:             7901,
-		ContestID:      3901,
-		ChallengeID:    2801,
-		DisplayName:    "Bank Portal",
-		Order:          1,
-		IsVisible:      true,
-		ScoreConfig:    `{"points":180}`,
-		RuntimeConfig:  `{"checker_type":"http_standard","checker_config":{"get_flag":{"path":"/ready"}}}`,
+		ID:              7901,
+		ContestID:       3901,
+		ChallengeID:     2801,
+		DisplayName:     "Bank Portal",
+		Order:           1,
+		IsVisible:       true,
+		ScoreConfig:     `{"points":180}`,
+		RuntimeConfig:   `{"checker_type":"http_standard","checker_config":{"get_flag":{"path":"/ready"}}}`,
 		ServiceSnapshot: `{"name":"Bank Portal","category":"web","difficulty":"medium","runtime_config":{"image_id":9901,"instance_sharing":"per_team"},"flag_config":{"flag_type":"static","flag_prefix":"awd"}}`,
-		CreatedAt:      now,
-		UpdatedAt:      now,
+		CreatedAt:       now,
+		UpdatedAt:       now,
 	}).Error; err != nil {
 		t.Fatalf("create contest awd service: %v", err)
 	}

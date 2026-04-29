@@ -22,25 +22,25 @@ type ContestModule struct {
 }
 
 type contestModuleDeps struct {
-	root              *Root
-	contestCommands   contestports.ContestCommandRepository
-	contestLookup     contestports.ContestLookupRepository
-	contestList       contestports.ContestListRepository
-	contestScoreboard contestports.ContestScoreboardRepository
-	contestAdmin      contestports.ContestScoreboardAdminRepository
-	contestStatus     contestports.ContestStatusRepository
-	awdRepo           contestports.AWDRepository
-	challengeRepo     contestports.ContestChallengeRepository
-	teamRepo          contestports.ContestTeamRepository
-	teamFinder        contestports.ContestTeamFinder
-	participationRepo contestports.ContestParticipationRepository
-	submissionRepo    contestports.ContestSubmissionRepository
-	challengeCatalog  challengecontracts.ContestChallengeContract
-	templateQueryRepo challengeports.AWDServiceTemplateQueryRepository
-	imageRepo         challengecontracts.ImageStore
-	flagValidator     challengecontracts.FlagValidator
-	containerFiles    contestports.AWDContainerFileWriter
-	runtimeProbe      challengeports.ChallengeRuntimeProbe
+	root                  *Root
+	contestCommands       contestports.ContestCommandRepository
+	contestLookup         contestports.ContestLookupRepository
+	contestList           contestports.ContestListRepository
+	contestScoreboard     contestports.ContestScoreboardRepository
+	contestAdmin          contestports.ContestScoreboardAdminRepository
+	contestStatus         contestports.ContestStatusRepository
+	awdRepo               contestports.AWDRepository
+	challengeRepo         contestports.ContestChallengeRepository
+	teamRepo              contestports.ContestTeamRepository
+	teamFinder            contestports.ContestTeamFinder
+	participationRepo     contestports.ContestParticipationRepository
+	submissionRepo        contestports.ContestSubmissionRepository
+	challengeCatalog      challengecontracts.ContestChallengeContract
+	awdChallengeQueryRepo challengeports.AWDChallengeQueryRepository
+	imageRepo             challengecontracts.ImageStore
+	flagValidator         challengecontracts.FlagValidator
+	containerFiles        contestports.AWDContainerFileWriter
+	runtimeProbe          challengeports.ChallengeRuntimeProbe
 }
 
 func BuildContestModule(root *Root, challenge *ChallengeModule, runtime *RuntimeModule) *ContestModule {
@@ -90,25 +90,25 @@ func newContestModuleDeps(root *Root, challenge *ChallengeModule, runtime *Runti
 	submissionRepo := contestinfra.NewSubmissionRepository(db)
 
 	return &contestModuleDeps{
-		root:              root,
-		contestCommands:   contestRepo,
-		contestLookup:     contestRepo,
-		contestList:       contestRepo,
-		contestScoreboard: contestRepo,
-		contestAdmin:      contestRepo,
-		contestStatus:     contestRepo,
-		awdRepo:           awdRepo,
-		challengeRepo:     challengeRepo,
-		teamRepo:          teamRepo,
-		teamFinder:        teamRepo,
-		participationRepo: participationRepo,
-		submissionRepo:    submissionRepo,
-		challengeCatalog:  challenge.Catalog,
-		templateQueryRepo: challenge.AWDServiceTemplateQuery,
-		imageRepo:         challenge.ImageStore,
-		flagValidator:     challenge.FlagValidator,
-		containerFiles:    runtime.ContestContainerFiles,
-		runtimeProbe:      runtime.ChallengeRuntimeProbe,
+		root:                  root,
+		contestCommands:       contestRepo,
+		contestLookup:         contestRepo,
+		contestList:           contestRepo,
+		contestScoreboard:     contestRepo,
+		contestAdmin:          contestRepo,
+		contestStatus:         contestRepo,
+		awdRepo:               awdRepo,
+		challengeRepo:         challengeRepo,
+		teamRepo:              teamRepo,
+		teamFinder:            teamRepo,
+		participationRepo:     participationRepo,
+		submissionRepo:        submissionRepo,
+		challengeCatalog:      challenge.Catalog,
+		awdChallengeQueryRepo: challenge.AWDChallengeQuery,
+		imageRepo:             challenge.ImageStore,
+		flagValidator:         challenge.FlagValidator,
+		containerFiles:        runtime.ContestContainerFiles,
+		runtimeProbe:          runtime.ChallengeRuntimeProbe,
 	}
 }
 
@@ -158,7 +158,7 @@ func buildContestAWDHandler(deps *contestModuleDeps) (*contesthttp.AWDHandler, *
 		log.Named("contest_awd_service"),
 		awdUpdater,
 		deps.imageRepo,
-		deps.templateQueryRepo,
+		deps.awdChallengeQueryRepo,
 		deps.runtimeProbe,
 	)
 	awdCommands.SetEventBus(deps.root.Events)
@@ -168,7 +168,7 @@ func buildContestAWDHandler(deps *contestModuleDeps) (*contesthttp.AWDHandler, *
 		deps.contestLookup,
 		deps.challengeRepo,
 		deps.challengeCatalog,
-		deps.templateQueryRepo,
+		deps.awdChallengeQueryRepo,
 		deps.root.Cache(),
 	)
 	awdServiceQueries := contestqry.NewContestAWDServiceQueryService(deps.awdRepo, deps.contestLookup)

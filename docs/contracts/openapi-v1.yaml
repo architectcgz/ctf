@@ -1420,7 +1420,7 @@ components:
         id: { $ref: "#/components/schemas/ID" }
         contest_id: { $ref: "#/components/schemas/ID" }
         challenge_id: { $ref: "#/components/schemas/ID" }
-        template_id:
+        awd_challenge_id:
           allOf:
             - $ref: "#/components/schemas/ID"
           nullable: true
@@ -1471,10 +1471,9 @@ components:
 
     CreateAdminContestAWDServiceRequest:
       type: object
-      required: [challenge_id, template_id, points]
+      required: [awd_challenge_id, points]
       properties:
-        challenge_id: { $ref: "#/components/schemas/ID" }
-        template_id: { $ref: "#/components/schemas/ID" }
+        awd_challenge_id: { $ref: "#/components/schemas/ID" }
         points: { type: integer, minimum: 1, maximum: 500 }
         display_name: { type: string, maxLength: 128, nullable: true }
         order: { type: integer, minimum: 0, nullable: true }
@@ -1494,7 +1493,7 @@ components:
     UpdateAdminContestAWDServiceRequest:
       type: object
       properties:
-        template_id:
+        awd_challenge_id:
           allOf:
             - $ref: "#/components/schemas/ID"
           nullable: true
@@ -2190,7 +2189,7 @@ components:
       type: string
       enum: [single_container, topology]
 
-    AWDServiceTemplateStatus:
+    AWDChallengeStatus:
       type: string
       enum: [draft, published, archived]
 
@@ -2198,7 +2197,7 @@ components:
       type: string
       enum: [pending, passed, failed]
 
-    AuthoringAWDServiceTemplate:
+    AuthoringAWDChallenge:
       type: object
       required:
         [id, name, slug, category, difficulty, description, service_type, deployment_mode, version, status, readiness_status, created_at, updated_at]
@@ -2214,7 +2213,7 @@ components:
         service_type: { $ref: "#/components/schemas/AWDServiceType" }
         deployment_mode: { $ref: "#/components/schemas/AWDDeploymentMode" }
         version: { type: string }
-        status: { $ref: "#/components/schemas/AWDServiceTemplateStatus" }
+        status: { $ref: "#/components/schemas/AWDChallengeStatus" }
         readiness_status: { $ref: "#/components/schemas/AWDReadinessStatus" }
         created_by:
           allOf:
@@ -2227,7 +2226,7 @@ components:
         created_at: { $ref: "#/components/schemas/ISODateTime" }
         updated_at: { $ref: "#/components/schemas/ISODateTime" }
 
-    CreateAWDServiceTemplateRequest:
+    CreateAWDChallengeRequest:
       type: object
       required: [name, slug, category, difficulty, service_type, deployment_mode]
       properties:
@@ -2241,7 +2240,7 @@ components:
         service_type: { $ref: "#/components/schemas/AWDServiceType" }
         deployment_mode: { $ref: "#/components/schemas/AWDDeploymentMode" }
 
-    UpdateAWDServiceTemplateRequest:
+    UpdateAWDChallengeRequest:
       type: object
       properties:
         name: { type: string }
@@ -2253,34 +2252,34 @@ components:
         description: { type: string }
         service_type: { $ref: "#/components/schemas/AWDServiceType" }
         deployment_mode: { $ref: "#/components/schemas/AWDDeploymentMode" }
-        status: { $ref: "#/components/schemas/AWDServiceTemplateStatus" }
+        status: { $ref: "#/components/schemas/AWDChallengeStatus" }
 
-    AWDServiceTemplatePageData:
+    AWDChallengePageData:
       type: object
       required: [items, total, page, size]
       properties:
         items:
           type: array
-          items: { $ref: "#/components/schemas/AuthoringAWDServiceTemplate" }
+          items: { $ref: "#/components/schemas/AuthoringAWDChallenge" }
         total: { type: integer, minimum: 0 }
         page: { type: integer, minimum: 1 }
         size: { type: integer, minimum: 1 }
 
-    ApiEnvelopeAWDServiceTemplateData:
+    ApiEnvelopeAWDChallengeData:
       allOf:
         - $ref: "#/components/schemas/ApiEnvelopeBase"
         - type: object
           required: [data]
           properties:
-            data: { $ref: "#/components/schemas/AuthoringAWDServiceTemplate" }
+            data: { $ref: "#/components/schemas/AuthoringAWDChallenge" }
 
-    ApiEnvelopeAWDServiceTemplatePageData:
+    ApiEnvelopeAWDChallengePageData:
       allOf:
         - $ref: "#/components/schemas/ApiEnvelopeBase"
         - type: object
           required: [data]
           properties:
-            data: { $ref: "#/components/schemas/AWDServiceTemplatePageData" }
+            data: { $ref: "#/components/schemas/AWDChallengePageData" }
 
     ChallengeSelfCheckStepData:
       type: object
@@ -3980,10 +3979,10 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/ApiEnvelopeAdminChallengeUpsertData" }
 
-  /authoring/awd-service-templates:
+  /authoring/awd-challenges:
     get:
       tags: [Authoring]
-      summary: AWD 服务模板列表（分页）
+      summary: AWD 题目列表（分页）
       security:
         - sessionCookieAuth: []
       parameters:
@@ -3995,7 +3994,7 @@ paths:
           schema: { $ref: "#/components/schemas/AWDServiceType" }
         - in: query
           name: status
-          schema: { $ref: "#/components/schemas/AWDServiceTemplateStatus" }
+          schema: { $ref: "#/components/schemas/AWDChallengeStatus" }
         - in: query
           name: page
           schema: { type: integer, minimum: 1, default: 1 }
@@ -4007,28 +4006,28 @@ paths:
           description: OK
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/ApiEnvelopeAWDServiceTemplatePageData" }
+              schema: { $ref: "#/components/schemas/ApiEnvelopeAWDChallengePageData" }
     post:
       tags: [Authoring]
-      summary: 创建 AWD 服务模板
+      summary: 创建 AWD 题目
       security:
         - sessionCookieAuth: []
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: "#/components/schemas/CreateAWDServiceTemplateRequest" }
+            schema: { $ref: "#/components/schemas/CreateAWDChallengeRequest" }
       responses:
         "200":
           description: OK
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/ApiEnvelopeAWDServiceTemplateData" }
+              schema: { $ref: "#/components/schemas/ApiEnvelopeAWDChallengeData" }
 
-  /authoring/awd-service-templates/{id}:
+  /authoring/awd-challenges/{id}:
     get:
       tags: [Authoring]
-      summary: 获取 AWD 服务模板详情
+      summary: 获取 AWD 题目详情
       security:
         - sessionCookieAuth: []
       parameters:
@@ -4041,12 +4040,12 @@ paths:
           description: OK
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/ApiEnvelopeAWDServiceTemplateData" }
+              schema: { $ref: "#/components/schemas/ApiEnvelopeAWDChallengeData" }
         "404":
           description: Not Found
     put:
       tags: [Authoring]
-      summary: 更新 AWD 服务模板
+      summary: 更新 AWD 题目
       security:
         - sessionCookieAuth: []
       parameters:
@@ -4058,18 +4057,18 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: "#/components/schemas/UpdateAWDServiceTemplateRequest" }
+            schema: { $ref: "#/components/schemas/UpdateAWDChallengeRequest" }
       responses:
         "200":
           description: OK
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/ApiEnvelopeAWDServiceTemplateData" }
+              schema: { $ref: "#/components/schemas/ApiEnvelopeAWDChallengeData" }
         "404":
           description: Not Found
     delete:
       tags: [Authoring]
-      summary: 删除 AWD 服务模板
+      summary: 删除 AWD 题目
       security:
         - sessionCookieAuth: []
       parameters:

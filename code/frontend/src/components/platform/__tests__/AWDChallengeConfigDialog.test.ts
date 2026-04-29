@@ -71,7 +71,7 @@ function mountDialog(props?: Record<string, unknown>) {
           flag_config: undefined,
         },
       ],
-      templateOptions: [
+      awdChallengeOptions: [
         {
           id: '501',
           name: 'Bank Portal',
@@ -112,7 +112,7 @@ function mountDialog(props?: Record<string, unknown>) {
       existingChallengeIds: [],
       draft: null,
       loadingChallengeCatalog: false,
-      loadingTemplateCatalog: false,
+      loadingAwdChallengeCatalog: false,
       saving: false,
       ...props,
     },
@@ -134,16 +134,17 @@ describe('AWDChallengeConfigDialog', () => {
     awdPreviewRealtimeMocks.reset()
   })
 
-  it('应该在创建时展示来自 AWD 题库模板的继承配置，并隐藏独立题目选择', async () => {
+  it('应该在创建时只展示 AWD 题库选题，并隐藏独立题目选择和题目快照', async () => {
     const wrapper = mountDialog()
 
     expect(wrapper.find('#awd-challenge-config-challenge').exists()).toBe(false)
-    expect(wrapper.text()).toContain('题库模板快照')
+    expect(wrapper.text()).toContain('AWD 题库')
     expect(wrapper.text()).toContain('Bank Portal')
-    expect(wrapper.text()).toContain('public_base_url')
-    expect(wrapper.text()).toContain('service_port')
-    expect(wrapper.text()).toContain('flag_prefix')
-    expect(wrapper.text()).toContain('rotate_interval_sec')
+    expect(wrapper.text()).not.toContain('题库模板快照')
+    expect(wrapper.text()).not.toContain('public_base_url')
+    expect(wrapper.text()).not.toContain('service_port')
+    expect(wrapper.text()).not.toContain('flag_prefix')
+    expect(wrapper.text()).not.toContain('rotate_interval_sec')
   })
 
   it('应该在编辑 http_standard 配置时回填结构化字段和 JSON 预览', async () => {
@@ -159,7 +160,7 @@ describe('AWDChallengeConfigDialog', () => {
         points: 120,
         order: 1,
         is_visible: true,
-        awd_template_id: '501',
+        awd_challenge_id: '501',
         awd_checker_type: 'http_standard',
         awd_checker_config: {
           put_flag: {
@@ -201,7 +202,7 @@ describe('AWDChallengeConfigDialog', () => {
     await wrapper.find('#awd-challenge-config-submit').trigger('click')
 
     expect(wrapper.emitted('save')?.[0]?.[0]).toEqual({
-      template_id: 501,
+      awd_challenge_id: 501,
       points: 120,
       order: 1,
       is_visible: true,
@@ -241,7 +242,7 @@ describe('AWDChallengeConfigDialog', () => {
     await wrapper.get('#awd-challenge-config-submit').trigger('click')
 
     expect(wrapper.emitted('save')?.[0]?.[0]).toEqual({
-      template_id: 501,
+      awd_challenge_id: 501,
       points: 100,
       order: 0,
       is_visible: true,
@@ -278,7 +279,7 @@ describe('AWDChallengeConfigDialog', () => {
     await wrapper.get('#awd-challenge-config-submit').trigger('click')
 
     expect(wrapper.emitted('save')?.[0]?.[0]).toEqual({
-      template_id: 501,
+      awd_challenge_id: 501,
       points: 100,
       order: 0,
       is_visible: true,
@@ -385,7 +386,7 @@ describe('AWDChallengeConfigDialog', () => {
     await wrapper.get('#awd-challenge-config-submit').trigger('click')
 
     expect(wrapper.emitted('save')?.[0]?.[0]).toEqual({
-      template_id: 501,
+      awd_challenge_id: 501,
       points: 100,
       order: 0,
       is_visible: true,
@@ -547,7 +548,7 @@ describe('AWDChallengeConfigDialog', () => {
         order: 1,
         is_visible: true,
         awd_service_id: '2',
-        awd_template_id: '501',
+        awd_challenge_id: '501',
         awd_checker_type: 'http_standard',
         awd_checker_config: {
           put_flag: {
@@ -624,7 +625,7 @@ describe('AWDChallengeConfigDialog', () => {
     await wrapper.get('#awd-challenge-config-submit').trigger('click')
 
     expect(wrapper.emitted('save')?.[0]?.[0]).toEqual({
-      template_id: 501,
+      awd_challenge_id: 501,
       points: 100,
       order: 0,
       is_visible: true,
@@ -666,9 +667,9 @@ describe('AWDChallengeConfigDialog', () => {
     await wrapper.get('#awd-challenge-preview-submit').trigger('click')
     await flushPromises()
 
-    expect(wrapper.text()).toContain('自动拉起预览实例失败：当前模板引用的运行镜像暂时无法拉取。')
+    expect(wrapper.text()).toContain('自动拉起预览实例失败：当前 AWD 题目引用的运行镜像暂时无法拉取。')
     expect(wrapper.text()).toContain(
-      '如果这是示例占位地址，请先在当前环境构建同名镜像，或把模板镜像改成可直接拉取的真实地址。'
+      '如果这是示例占位地址，请先在当前环境构建同名镜像，或把题目镜像改成可直接拉取的真实地址。'
     )
     expect(wrapper.text()).toContain('registry.example.edu/ctf/awd-bank-portal:v1')
   })
@@ -686,7 +687,7 @@ describe('AWDChallengeConfigDialog', () => {
         points: 120,
         order: 1,
         is_visible: true,
-        awd_template_id: '501',
+        awd_challenge_id: '501',
         awd_checker_type: 'http_standard',
         awd_checker_config: {
           put_flag: {

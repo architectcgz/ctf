@@ -751,7 +751,7 @@ export function usePlatformContestAwd(selectedContest: Readonly<Ref<ContestDetai
 
   async function createChallengeLink(payload: {
     challenge_id: number
-    template_id?: number
+    awd_challenge_id?: number
     points: number
     order?: number
     is_visible?: boolean
@@ -764,15 +764,15 @@ export function usePlatformContestAwd(selectedContest: Readonly<Ref<ContestDetai
     if (!selectedContest.value) {
       return
     }
-    if (!payload.template_id) {
-      toast.error('请选择服务模板')
+    if (!payload.awd_challenge_id) {
+      toast.error('请选择 AWD 题目')
       return
     }
 
     savingChallengeConfig.value = true
     try {
       await createContestAWDService(selectedContest.value.id, {
-        template_id: payload.template_id,
+        awd_challenge_id: payload.awd_challenge_id,
         points: payload.points,
         order: payload.order,
         is_visible: payload.is_visible,
@@ -794,7 +794,7 @@ export function usePlatformContestAwd(selectedContest: Readonly<Ref<ContestDetai
   async function updateChallengeLink(
     challengeId: string,
     payload: {
-      template_id?: number
+      awd_challenge_id?: number
       points?: number
       order?: number
       is_visible?: boolean
@@ -812,15 +812,15 @@ export function usePlatformContestAwd(selectedContest: Readonly<Ref<ContestDetai
     savingChallengeConfig.value = true
     try {
       const currentChallenge = challengeLinks.value.find((item) => item.challenge_id === challengeId)
-      const currentTemplateID = Number(currentChallenge?.awd_template_id || 0) || undefined
-      const templateID = payload.template_id ?? currentTemplateID
+      const currentAWDChallengeID = Number(currentChallenge?.awd_challenge_id || 0) || undefined
+      const awdChallengeID = payload.awd_challenge_id ?? currentAWDChallengeID
       const points = payload.points ?? currentChallenge?.points
       const order = payload.order ?? currentChallenge?.order
       const isVisible = payload.is_visible ?? currentChallenge?.is_visible
 
-      if (templateID && points !== undefined) {
+      if (awdChallengeID && points !== undefined) {
         const nextPayload = {
-          template_id: templateID,
+          awd_challenge_id: awdChallengeID,
           points,
           order,
           is_visible: isVisible,

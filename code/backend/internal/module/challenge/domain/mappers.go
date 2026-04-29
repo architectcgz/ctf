@@ -72,33 +72,33 @@ func ChallengeRespFromModel(challenge *model.Challenge, hints []*model.Challenge
 	}
 }
 
-func AWDServiceTemplateRespFromModel(template *model.AWDServiceTemplate) *dto.AWDServiceTemplateResp {
-	if template == nil {
+func AWDChallengeRespFromModel(challenge *model.AWDChallenge) *dto.AWDChallengeResp {
+	if challenge == nil {
 		return nil
 	}
-	return &dto.AWDServiceTemplateResp{
-		ID:               template.ID,
-		Name:             template.Name,
-		Slug:             template.Slug,
-		Category:         template.Category,
-		Difficulty:       template.Difficulty,
-		Description:      template.Description,
-		ServiceType:      string(template.ServiceType),
-		DeploymentMode:   string(template.DeploymentMode),
-		Version:          template.Version,
-		Status:           string(template.Status),
-		ReadinessStatus:  string(template.ReadinessStatus),
-		CheckerType:      string(template.CheckerType),
-		CheckerConfig:    parseTemplateConfigMap(template.CheckerConfig),
-		FlagMode:         strings.TrimSpace(template.FlagMode),
-		FlagConfig:       parseTemplateConfigMap(template.FlagConfig),
-		DefenseEntryMode: strings.TrimSpace(template.DefenseEntryMode),
-		AccessConfig:     parseTemplateConfigMap(template.AccessConfig),
-		RuntimeConfig:    parseTemplateConfigMap(template.RuntimeConfig),
-		CreatedBy:        template.CreatedBy,
-		LastVerifiedAt:   template.LastVerifiedAt,
-		UpdatedAt:        template.UpdatedAt,
-		CreatedAt:        template.CreatedAt,
+	return &dto.AWDChallengeResp{
+		ID:               challenge.ID,
+		Name:             challenge.Name,
+		Slug:             challenge.Slug,
+		Category:         challenge.Category,
+		Difficulty:       challenge.Difficulty,
+		Description:      challenge.Description,
+		ServiceType:      string(challenge.ServiceType),
+		DeploymentMode:   string(challenge.DeploymentMode),
+		Version:          challenge.Version,
+		Status:           string(challenge.Status),
+		ReadinessStatus:  string(challenge.ReadinessStatus),
+		CheckerType:      string(challenge.CheckerType),
+		CheckerConfig:    parseTemplateConfigMap(challenge.CheckerConfig),
+		FlagMode:         strings.TrimSpace(challenge.FlagMode),
+		FlagConfig:       parseTemplateConfigMap(challenge.FlagConfig),
+		DefenseEntryMode: strings.TrimSpace(challenge.DefenseEntryMode),
+		AccessConfig:     parseTemplateConfigMap(challenge.AccessConfig),
+		RuntimeConfig:    parseTemplateConfigMap(challenge.RuntimeConfig),
+		CreatedBy:        challenge.CreatedBy,
+		LastVerifiedAt:   challenge.LastVerifiedAt,
+		UpdatedAt:        challenge.UpdatedAt,
+		CreatedAt:        challenge.CreatedAt,
 	}
 }
 

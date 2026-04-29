@@ -23,34 +23,34 @@ type asyncTaskCloser interface {
 }
 
 type ChallengeModule struct {
-	BackgroundCloser          asyncTaskCloser
-	AWDServiceTemplateHandler *challengehttp.AWDServiceTemplateHandler
-	AWDServiceTemplateQuery   challengeports.AWDServiceTemplateQueryRepository
-	Catalog                   challengecontracts.ChallengeContract
-	FlagHandler               *challengehttp.FlagHandler
-	FlagValidator             challengecontracts.FlagValidator
-	Handler                   *challengehttp.Handler
-	ImageHandler              *challengehttp.ImageHandler
-	ImageStore                challengecontracts.ImageStore
-	TopologyHandler           *challengehttp.TopologyHandler
-	WriteupHandler            *challengehttp.WriteupHandler
+	BackgroundCloser    asyncTaskCloser
+	AWDChallengeHandler *challengehttp.AWDChallengeHandler
+	AWDChallengeQuery   challengeports.AWDChallengeQueryRepository
+	Catalog             challengecontracts.ChallengeContract
+	FlagHandler         *challengehttp.FlagHandler
+	FlagValidator       challengecontracts.FlagValidator
+	Handler             *challengehttp.Handler
+	ImageHandler        *challengehttp.ImageHandler
+	ImageStore          challengecontracts.ImageStore
+	TopologyHandler     *challengehttp.TopologyHandler
+	WriteupHandler      *challengehttp.WriteupHandler
 }
 
 type challengeModuleDeps struct {
-	catalog                       challengecontracts.ChallengeContract
-	imageStore                    challengecontracts.ImageStore
-	imageRepo                     challengeports.ImageRepository
-	challengeCommandRepo          challengeports.ChallengeCommandRepository
-	challengeQueryRepo            challengeports.ChallengeQueryRepository
-	awdServiceTemplateCommandRepo challengeports.AWDServiceTemplateCommandRepository
-	awdServiceTemplateQueryRepo   challengeports.AWDServiceTemplateQueryRepository
-	flagRepo                      challengeports.ChallengeFlagRepository
-	imageUsageRepo                challengeports.ChallengeImageUsageRepository
-	topologyRepo                  challengeports.ChallengeTopologyRepository
-	writeupRepo                   challengeports.ChallengeWriteupRepository
-	templateRepo                  challengeports.EnvironmentTemplateRepository
-	imageRuntime                  challengeports.ImageRuntime
-	runtimeProbe                  challengeports.ChallengeRuntimeProbe
+	catalog                 challengecontracts.ChallengeContract
+	imageStore              challengecontracts.ImageStore
+	imageRepo               challengeports.ImageRepository
+	challengeCommandRepo    challengeports.ChallengeCommandRepository
+	challengeQueryRepo      challengeports.ChallengeQueryRepository
+	awdChallengeCommandRepo challengeports.AWDChallengeCommandRepository
+	awdChallengeQueryRepo   challengeports.AWDChallengeQueryRepository
+	flagRepo                challengeports.ChallengeFlagRepository
+	imageUsageRepo          challengeports.ChallengeImageUsageRepository
+	topologyRepo            challengeports.ChallengeTopologyRepository
+	writeupRepo             challengeports.ChallengeWriteupRepository
+	templateRepo            challengeports.EnvironmentTemplateRepository
+	imageRuntime            challengeports.ImageRuntime
+	runtimeProbe            challengeports.ChallengeRuntimeProbe
 }
 
 func BuildChallengeModule(root *Root, runtime *RuntimeModule, ops *OpsModule) (*ChallengeModule, error) {
@@ -63,7 +63,7 @@ func BuildChallengeModule(root *Root, runtime *RuntimeModule, ops *OpsModule) (*
 	if err != nil {
 		return nil, err
 	}
-	awdServiceTemplateHandler := buildChallengeAWDServiceTemplateHandler(root.DB(), deps)
+	awdChallengeHandler := buildChallengeAWDChallengeHandler(root.DB(), deps)
 	topologyHandler := buildChallengeTopologyHandler(deps)
 	writeupHandler := buildChallengeWriteupHandler(deps)
 	if root.Config().Challenge.PublishCheck.Enabled {
@@ -71,24 +71,24 @@ func BuildChallengeModule(root *Root, runtime *RuntimeModule, ops *OpsModule) (*
 	}
 
 	return &ChallengeModule{
-		BackgroundCloser:          imageCommandService,
-		AWDServiceTemplateHandler: awdServiceTemplateHandler,
-		AWDServiceTemplateQuery:   deps.awdServiceTemplateQueryRepo,
-		Catalog:                   deps.catalog,
-		FlagHandler:               flagHandler,
-		FlagValidator:             flagValidator,
-		Handler:                   coreHandler,
-		ImageHandler:              imageHandler,
-		ImageStore:                deps.imageStore,
-		TopologyHandler:           topologyHandler,
-		WriteupHandler:            writeupHandler,
+		BackgroundCloser:    imageCommandService,
+		AWDChallengeHandler: awdChallengeHandler,
+		AWDChallengeQuery:   deps.awdChallengeQueryRepo,
+		Catalog:             deps.catalog,
+		FlagHandler:         flagHandler,
+		FlagValidator:       flagValidator,
+		Handler:             coreHandler,
+		ImageHandler:        imageHandler,
+		ImageStore:          deps.imageStore,
+		TopologyHandler:     topologyHandler,
+		WriteupHandler:      writeupHandler,
 	}, nil
 }
 
-func buildChallengeAWDServiceTemplateHandler(db *gorm.DB, deps challengeModuleDeps) *challengehttp.AWDServiceTemplateHandler {
-	commandService := challengecmd.NewAWDServiceTemplateCommandFacade(db, deps.awdServiceTemplateCommandRepo)
-	queryService := challengeqry.NewAWDServiceTemplateQueryService(deps.awdServiceTemplateQueryRepo)
-	return challengehttp.NewAWDServiceTemplateHandler(commandService, queryService)
+func buildChallengeAWDChallengeHandler(db *gorm.DB, deps challengeModuleDeps) *challengehttp.AWDChallengeHandler {
+	commandService := challengecmd.NewAWDChallengeCommandFacade(db, deps.awdChallengeCommandRepo)
+	queryService := challengeqry.NewAWDChallengeQueryService(deps.awdChallengeQueryRepo)
+	return challengehttp.NewAWDChallengeHandler(commandService, queryService)
 }
 
 func buildChallengeModuleDeps(root *Root, runtime *RuntimeModule) challengeModuleDeps {
@@ -98,20 +98,20 @@ func buildChallengeModuleDeps(root *Root, runtime *RuntimeModule) challengeModul
 	imageRepo := challengeinfra.NewImageRepository(db)
 
 	return challengeModuleDeps{
-		catalog:                       challengeRepo,
-		imageStore:                    imageRepo,
-		imageRepo:                     imageRepo,
-		challengeCommandRepo:          challengeRepo,
-		challengeQueryRepo:            challengeRepo,
-		awdServiceTemplateCommandRepo: challengeRepo,
-		awdServiceTemplateQueryRepo:   challengeRepo,
-		flagRepo:                      challengeRepo,
-		imageUsageRepo:                challengeRepo,
-		topologyRepo:                  challengeRepo,
-		writeupRepo:                   challengeRepo,
-		templateRepo:                  challengeinfra.NewTemplateRepository(db),
-		imageRuntime:                  runtime.ChallengeImageRuntime,
-		runtimeProbe:                  runtime.ChallengeRuntimeProbe,
+		catalog:                 challengeRepo,
+		imageStore:              imageRepo,
+		imageRepo:               imageRepo,
+		challengeCommandRepo:    challengeRepo,
+		challengeQueryRepo:      challengeRepo,
+		awdChallengeCommandRepo: challengeRepo,
+		awdChallengeQueryRepo:   challengeRepo,
+		flagRepo:                challengeRepo,
+		imageUsageRepo:          challengeRepo,
+		topologyRepo:            challengeRepo,
+		writeupRepo:             challengeRepo,
+		templateRepo:            challengeinfra.NewTemplateRepository(db),
+		imageRuntime:            runtime.ChallengeImageRuntime,
+		runtimeProbe:            runtime.ChallengeRuntimeProbe,
 	}
 }
 

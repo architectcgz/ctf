@@ -76,17 +76,17 @@ describe('backofficeNavigation', () => {
     expect(items.map((item) => item.label)).toEqual([
       '题目管理',
       '环境模板',
-      'AWD服务模板',
+      'AWD题库',
       '镜像管理',
     ])
     expect(items.find((item) => item.active)?.routeName).toBe('ChallengeManage')
   })
 
-  it('keeps AWD service template import inside the AWD service template entry', () => {
-    const items = getVisibleBackofficeSecondaryItems('/platform/awd-service-templates/imports', 'admin')
+  it('keeps AWD challenge import inside the AWD challenge library entry', () => {
+    const items = getVisibleBackofficeSecondaryItems('/platform/awd-challenges/imports', 'admin')
 
-    expect(items.find((item) => item.active)?.routeName).toBe('PlatformAwdServiceTemplateLibrary')
-    expect(getBackofficeModuleByPath('/platform/awd-service-templates/imports')?.key).toBe('resources')
+    expect(items.find((item) => item.active)?.routeName).toBe('PlatformAwdChallengeLibrary')
+    expect(getBackofficeModuleByPath('/platform/awd-challenges/imports')?.key).toBe('resources')
   })
 
   it('maps admin event operations routes back to 赛事运维 and marks the matched secondary item active', () => {

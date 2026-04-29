@@ -218,28 +218,28 @@ func TestRepositorySchemaOmitsHintUnlockArtifacts(t *testing.T) {
 	}
 }
 
-func TestRepositoryCreateAndListAWDServiceTemplates(t *testing.T) {
+func TestRepositoryCreateAndListAWDChallenges(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	repo := NewRepository(db)
 
-	template := &model.AWDServiceTemplate{
+	template := &model.AWDChallenge{
 		Name:           "Bank Portal AWD",
 		Slug:           "bank-portal-awd",
 		Category:       "web",
 		Difficulty:     "hard",
 		ServiceType:    model.AWDServiceTypeWebHTTP,
 		DeploymentMode: model.AWDDeploymentModeSingleContainer,
-		Status:         model.AWDServiceTemplateStatusDraft,
+		Status:         model.AWDChallengeStatusDraft,
 	}
 
-	if err := repo.CreateAWDServiceTemplate(context.Background(), template); err != nil {
+	if err := repo.CreateAWDChallenge(context.Background(), template); err != nil {
 		t.Fatalf("Create() error = %v", err)
 	}
 	if template.ID == 0 {
 		t.Fatal("template ID should be set")
 	}
 
-	items, total, err := repo.ListAWDServiceTemplates(context.Background(), &dto.AWDServiceTemplateQuery{
+	items, total, err := repo.ListAWDChallenges(context.Background(), &dto.AWDChallengeQuery{
 		Page: 1,
 		Size: 10,
 	})

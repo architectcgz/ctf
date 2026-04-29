@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent, h } from 'vue'
-import { flushPromises, mount } from '@vue/test-utils'
+import { flushPromises, mount, RouterLinkStub } from '@vue/test-utils'
 
 import ContestChallengeOrchestrationPanel from '../contest/ContestChallengeOrchestrationPanel.vue'
 import type { AdminContestChallengeViewData } from '@/api/contracts'
@@ -9,7 +9,7 @@ const contestApiMocks = vi.hoisted(() => ({
   listAdminContestChallenges: vi.fn(),
   listContestAWDServices: vi.fn(),
   getChallenges: vi.fn(),
-  listAdminAwdServiceTemplates: vi.fn(),
+  listAdminAwdChallenges: vi.fn(),
   createContestAWDService: vi.fn(),
   createAdminContestChallenge: vi.fn(),
   updateContestAWDService: vi.fn(),
@@ -25,7 +25,7 @@ vi.mock('@/api/admin', async () => {
     listAdminContestChallenges: contestApiMocks.listAdminContestChallenges,
     listContestAWDServices: contestApiMocks.listContestAWDServices,
     getChallenges: contestApiMocks.getChallenges,
-    listAdminAwdServiceTemplates: contestApiMocks.listAdminAwdServiceTemplates,
+    listAdminAwdChallenges: contestApiMocks.listAdminAwdChallenges,
     createContestAWDService: contestApiMocks.createContestAWDService,
     createAdminContestChallenge: contestApiMocks.createAdminContestChallenge,
     updateContestAWDService: contestApiMocks.updateContestAWDService,
@@ -76,7 +76,7 @@ function buildAwdService(overrides: Record<string, unknown> = {}) {
     id: 'service-1',
     contest_id: 'contest-1',
     challenge_id: '101',
-    template_id: '11',
+    awd_challenge_id: '11',
     display_name: 'Web 入门',
     order: 1,
     is_visible: true,
@@ -157,6 +157,7 @@ function mountPanel(props?: Record<string, unknown>) {
               ])
           },
         }),
+        RouterLink: RouterLinkStub,
       },
     },
   })
@@ -167,7 +168,7 @@ describe('ContestChallengeOrchestrationPanel', () => {
     contestApiMocks.listAdminContestChallenges.mockReset()
     contestApiMocks.listContestAWDServices.mockReset()
     contestApiMocks.getChallenges.mockReset()
-    contestApiMocks.listAdminAwdServiceTemplates.mockReset()
+    contestApiMocks.listAdminAwdChallenges.mockReset()
     contestApiMocks.createContestAWDService.mockReset()
     contestApiMocks.createAdminContestChallenge.mockReset()
     contestApiMocks.updateContestAWDService.mockReset()
@@ -201,6 +202,21 @@ describe('ContestChallengeOrchestrationPanel', () => {
     expect(wrapper.text()).toContain('顺序')
     expect(wrapper.text()).toContain('Web 入门')
     expect(wrapper.text()).toContain('第 1 位')
+  })
+
+  it('应该把题目编排表的题目标题链接到管理员题目详情页', async () => {
+    contestApiMocks.listAdminContestChallenges.mockResolvedValue([buildChallenge()])
+
+    const wrapper = mountPanel()
+
+    await flushPromises()
+
+    const titleLink = wrapper.findAllComponents(RouterLinkStub).find((link) => link.text() === 'Web 入门')
+
+    expect(titleLink?.props('to')).toEqual({
+      name: 'PlatformChallengeDetail',
+      params: { id: '101' },
+    })
   })
 
   it('应该在 AWD 模式下显示 checker / SLA / 防守分 / 验证状态摘要列', async () => {
@@ -305,25 +321,9 @@ describe('ContestChallengeOrchestrationPanel', () => {
     expect(wrapper.text()).not.toContain('最近通过题目')
   })
 
-  it('应该在 AWD 题目池新增时先创建 service，再仅更新关系层分值', async () => {
+  it('应该在 AWD 题目池新增弹层中从 AWD 题库创建 service', async () => {
     contestApiMocks.listAdminContestChallenges.mockResolvedValue([])
-    contestApiMocks.getChallenges.mockResolvedValue({
-      list: [
-        {
-          id: '102',
-          title: 'Upload Service',
-          category: 'web',
-          difficulty: 'medium',
-          status: 'published',
-          points: 150,
-          created_at: '2026-03-02T00:00:00.000Z',
-        },
-      ],
-      total: 1,
-      page: 1,
-      page_size: 100,
-    })
-    contestApiMocks.listAdminAwdServiceTemplates.mockResolvedValue({
+    contestApiMocks.listAdminAwdChallenges.mockResolvedValue({
       list: [
         {
           id: '11',
@@ -348,8 +348,8 @@ describe('ContestChallengeOrchestrationPanel', () => {
     contestApiMocks.createContestAWDService.mockResolvedValue({
       id: 'service-2',
       contest_id: 'contest-1',
-      challenge_id: '102',
-      template_id: '11',
+      challenge_id: '11',
+      awd_challenge_id: '11',
       display_name: 'Upload Service',
       order: 3,
       is_visible: false,
@@ -366,29 +366,33 @@ describe('ContestChallengeOrchestrationPanel', () => {
     await wrapper.get('#contest-challenge-add').trigger('click')
     await flushPromises()
 
-    expect(contestApiMocks.listAdminAwdServiceTemplates).toHaveBeenCalledWith({
+    expect(wrapper.find('.admin-surface-modal-stub').exists()).toBe(true)
+    expect(wrapper.find('#contest-challenge-library').exists()).toBe(false)
+    expect(wrapper.find('#contest-challenge-select').exists()).toBe(false)
+    expect(wrapper.find('#contest-challenge-template').exists()).toBe(false)
+    expect(wrapper.find('#contest-template-option-11').exists()).toBe(true)
+    expect(contestApiMocks.listAdminAwdChallenges).toHaveBeenCalledWith({
       page: 1,
       page_size: 100,
       status: 'published',
     })
+    expect(contestApiMocks.getChallenges).not.toHaveBeenCalled()
 
-    await wrapper.get('#contest-challenge-select').setValue('102')
-    await wrapper.get('#contest-challenge-template').setValue('11')
-    await wrapper.get('#contest-challenge-points').setValue('160')
-    await wrapper.get('#contest-challenge-order').setValue('3')
-    await wrapper.get('#contest-challenge-visibility').setValue('false')
+    await wrapper.get('#contest-template-option-11').trigger('click')
+    expect(wrapper.find('#contest-challenge-points').exists()).toBe(false)
+    expect(wrapper.find('#contest-challenge-order').exists()).toBe(false)
+    expect(wrapper.find('#contest-challenge-visibility').exists()).toBe(false)
+
     await wrapper.get('#contest-challenge-dialog-submit').trigger('click')
     await flushPromises()
 
     expect(contestApiMocks.createContestAWDService).toHaveBeenCalledWith('contest-1', {
-      challenge_id: 102,
-      template_id: 11,
-      order: 3,
-      is_visible: false,
+      awd_challenge_id: 11,
+      points: 100,
+      order: 0,
+      is_visible: true,
     })
-    expect(contestApiMocks.updateAdminContestChallenge).toHaveBeenCalledWith('contest-1', '102', {
-      points: 160,
-    })
+    expect(contestApiMocks.updateAdminContestChallenge).not.toHaveBeenCalled()
     expect(contestApiMocks.createAdminContestChallenge).not.toHaveBeenCalled()
   })
 
@@ -400,10 +404,10 @@ describe('ContestChallengeOrchestrationPanel', () => {
       buildAwdService({
         id: 'service-1',
         challenge_id: '101',
-        template_id: '11',
+        awd_challenge_id: '11',
       }),
     ])
-    contestApiMocks.listAdminAwdServiceTemplates.mockResolvedValue({
+    contestApiMocks.listAdminAwdChallenges.mockResolvedValue({
       list: [
         {
           id: '11',
@@ -453,7 +457,7 @@ describe('ContestChallengeOrchestrationPanel', () => {
     await wrapper.get('#contest-challenge-edit-101').trigger('click')
     await flushPromises()
 
-    await wrapper.get('#contest-challenge-template').setValue('12')
+    await wrapper.get('#contest-template-option-12').trigger('click')
     await wrapper.get('#contest-challenge-points').setValue('140')
     await wrapper.get('#contest-challenge-order').setValue('2')
     await wrapper.get('#contest-challenge-visibility').setValue('false')
@@ -461,13 +465,12 @@ describe('ContestChallengeOrchestrationPanel', () => {
     await flushPromises()
 
     expect(contestApiMocks.updateContestAWDService).toHaveBeenCalledWith('contest-1', 'service-1', {
-      template_id: 12,
+      awd_challenge_id: 12,
+      points: 140,
       order: 2,
       is_visible: false,
     })
-    expect(contestApiMocks.updateAdminContestChallenge).toHaveBeenCalledWith('contest-1', '101', {
-      points: 140,
-    })
+    expect(contestApiMocks.updateAdminContestChallenge).not.toHaveBeenCalled()
   })
 
   it('外部题目数据加载失败且尚无成功数据时应展示失败态而不是空态', async () => {

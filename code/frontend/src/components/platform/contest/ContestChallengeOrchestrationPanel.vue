@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, toRef } from 'vue'
+import { computed, onMounted, ref, toRef, watch } from 'vue'
+import { RouterLink } from 'vue-router'
 import { MoreHorizontal, Plus, RefreshCw, Zap, Edit, Trash, Boxes, AlertTriangle } from 'lucide-vue-next'
 
 import {
   createContestAWDService,
   createAdminContestChallenge,
-  listAdminAwdServiceTemplates,
+  listAdminAwdChallenges,
   listAdminContestChallenges,
   listContestAWDServices,
   deleteContestAWDService,
@@ -15,7 +16,7 @@ import {
   updateAdminContestChallenge,
 } from '@/api/admin'
 import type {
-  AdminAwdServiceTemplateData,
+  AdminAwdChallengeData,
   AdminChallengeListItem,
   AdminContestChallengeViewData,
   ContestDetailData,
@@ -43,6 +44,7 @@ const props = defineProps<{
   challengeLinks?: AdminContestChallengeViewData[]
   loadingExternal?: boolean
   loadErrorExternal?: string
+  createDialogRequestKey?: number
 }>()
 
 const emit = defineEmits<{
@@ -55,11 +57,11 @@ const CHALLENGE_CATALOG_PAGE_SIZE = 100
 const loading = ref(true)
 const saving = ref(false)
 const loadingChallengeCatalog = ref(false)
-const loadingTemplateCatalog = ref(false)
+const loadingAwdChallengeCatalog = ref(false)
 const localChallengeLinks = ref<AdminContestChallengeViewData[]>([])
 const localLoadError = ref('')
 const challengeCatalog = ref<AdminChallengeListItem[]>([])
-const templateCatalog = ref<AdminAwdServiceTemplateData[]>([])
+const awdChallengeCatalog = ref<AdminAwdChallengeData[]>([])
 const dialogOpen = ref(false)
 const dialogMode = ref<'create' | 'edit'>('create')
 const editingChallenge = ref<AdminContestChallengeViewData | null>(null)
@@ -83,7 +85,7 @@ const {
 
 const panelCopy = computed(() =>
   isAwdContest.value
-    ? '维护统一题目池，从 AWD 题库模板选题并完成比赛级分值编排。'
+    ? '维护统一题目池，从 AWD 题库选题并完成比赛级分值编排。'
     : '维护统一题目池，安排题目顺序、分值和可见状态。'
 )
 const emptyState = computed(() =>
@@ -121,6 +123,13 @@ const { getCheckerTypeLabel, getValidationStateLabel } = useAwdCheckResultPresen
 
 function getChallengeTitle(item: AdminContestChallengeViewData): string {
   return item.title?.trim() || `Challenge #${item.challenge_id}`
+}
+
+function getChallengePreviewRoute(item: AdminContestChallengeViewData) {
+  return {
+    name: 'PlatformChallengeDetail',
+    params: { id: item.challenge_id },
+  }
 }
 
 function getChallengeActionKey(item: AdminContestChallengeViewData): string {
@@ -193,14 +202,16 @@ async function ensureChallengeCatalogLoaded() {
   }
 }
 
-async function ensureTemplateCatalogLoaded() {
-  if (loadingTemplateCatalog.value || templateCatalog.value.length > 0) return
-  loadingTemplateCatalog.value = true
+async function ensureAwdChallengeCatalogLoaded() {
+  if (loadingAwdChallengeCatalog.value || awdChallengeCatalog.value.length > 0) return
+  loadingAwdChallengeCatalog.value = true
   try {
-    const result = await listAdminAwdServiceTemplates({ page: 1, page_size: 100, status: 'published' })
-    templateCatalog.value = result.list
+    const result = await listAdminAwdChallenges({ page: 1, page_size: 100, status: 'published' })
+    awdChallengeCatalog.value = result.list
+  } catch (error) {
+    toast.error(humanizeRequestError(error, 'AWD 题目加载失败'))
   } finally {
-    loadingTemplateCatalog.value = false
+    loadingAwdChallengeCatalog.value = false
   }
 }
 
@@ -208,15 +219,22 @@ function openCreateDialog() {
   dialogMode.value = 'create'
   editingChallenge.value = null
   dialogOpen.value = true
-  void ensureChallengeCatalogLoaded()
-  if (isAwdContest.value) void ensureTemplateCatalogLoaded()
+  if (isAwdContest.value) {
+    void ensureAwdChallengeCatalogLoaded()
+  } else {
+    void ensureChallengeCatalogLoaded()
+  }
+}
+
+function handleCreateAction() {
+  openCreateDialog()
 }
 
 function openEditDialog(challenge: AdminContestChallengeViewData) {
   dialogMode.value = 'edit'
   editingChallenge.value = challenge
   dialogOpen.value = true
-  if (isAwdContest.value) void ensureTemplateCatalogLoaded()
+  if (isAwdContest.value) void ensureAwdChallengeCatalogLoaded()
 }
 
 function closeDialog() {
@@ -230,7 +248,7 @@ function setActionMenuOpen(challengeId: string, nextOpen: boolean): void {
 
 interface ContestOrchestrationSavePayload {
   challenge_id?: number
-  template_id?: number
+  awd_challenge_id?: number
   points: number
   order: number
   is_visible: boolean
@@ -245,33 +263,28 @@ async function handleSave(payload: ContestOrchestrationSavePayload) {
   saving.value = true
   try {
     if (isAwdContest.value) {
-      if (!payload.template_id || !payload.challenge_id) {
-        toast.error('请选择题目和服务模板')
+      if (!payload.awd_challenge_id) {
+        toast.error('请选择 AWD 题目')
         return
       }
       if (dialogMode.value === 'create') {
         await createContestAWDService(props.contestId, {
-          challenge_id: payload.challenge_id,
-          template_id: payload.template_id,
+          awd_challenge_id: payload.awd_challenge_id,
+          points: payload.points,
           order: payload.order,
           is_visible: payload.is_visible,
-        } as Parameters<typeof createContestAWDService>[1] & { challenge_id: number })
-        await updateAdminContestChallenge(props.contestId, String(payload.challenge_id), {
-          points: payload.points,
         })
       } else if (editingChallenge.value) {
         await updateContestAWDService(
           props.contestId,
           editingChallenge.value.awd_service_id!,
           {
-            template_id: payload.template_id,
+            awd_challenge_id: payload.awd_challenge_id,
+            points: payload.points,
             order: payload.order,
             is_visible: payload.is_visible,
           }
         )
-        await updateAdminContestChallenge(props.contestId, editingChallenge.value.challenge_id, {
-          points: payload.points,
-        })
       }
     } else if (dialogMode.value === 'create') {
       await createAdminContestChallenge(props.contestId, {
@@ -336,6 +349,15 @@ async function handleRemoveFromMenu(challenge: AdminContestChallengeViewData, cl
 onMounted(() => {
   if (!usingExternalChallengeLinks.value) void refresh()
 })
+
+watch(
+  () => props.createDialogRequestKey,
+  (requestKey, previousRequestKey) => {
+    if (!requestKey || requestKey === previousRequestKey) return
+    handleCreateAction()
+  },
+  { immediate: true }
+)
 </script>
 
 <template>
@@ -365,7 +387,7 @@ onMounted(() => {
           id="contest-challenge-add"
           type="button"
           class="ui-btn ui-btn--primary"
-          @click="openCreateDialog"
+          @click="handleCreateAction"
         >
           <Plus class="h-3.5 w-3.5" />
           <span>{{ isAwdContest ? '新增服务' : '关联新题目' }}</span>
@@ -468,9 +490,14 @@ onMounted(() => {
               >
                 <td class="col-identity">
                   <div class="challenge-identity">
-                    <div class="challenge-title">
+                    <RouterLink
+                      :id="`contest-challenge-preview-${getChallengeActionKey(challenge)}`"
+                      class="challenge-title challenge-title-link"
+                      :to="getChallengePreviewRoute(challenge)"
+                      :title="`打开题目详情：${getChallengeTitle(challenge)}`"
+                    >
                       {{ getChallengeTitle(challenge) }}
-                    </div>
+                    </RouterLink>
                     <div class="challenge-subtitle">
                       {{ challenge.category || '通用' }} · {{ challenge.difficulty || '常规' }}
                     </div>
@@ -566,11 +593,11 @@ onMounted(() => {
       :mode="dialogMode"
       :contest-mode="contestMode"
       :challenge-options="dialogChallengeOptions"
-      :template-options="templateCatalog"
+      :awd-challenge-options="awdChallengeCatalog"
       :existing-challenge-ids="existingChallengeIds"
       :draft="editingChallenge"
       :loading-challenge-catalog="loadingChallengeCatalog"
-      :loading-template-catalog="loadingTemplateCatalog"
+      :loading-awd-challenge-catalog="loadingAwdChallengeCatalog"
       :saving="saving"
       @update:open="dialogOpen = $event"
       @save="handleSave"
@@ -666,9 +693,36 @@ onMounted(() => {
 }
 
 .challenge-title {
+  display: inline-block;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: var(--font-size-16);
   font-weight: 800;
   color: var(--color-text-primary);
+}
+
+.challenge-title-link {
+  text-decoration: none;
+  transition:
+    color var(--ui-motion-fast),
+    text-decoration-color var(--ui-motion-fast);
+}
+
+.challenge-title-link:hover {
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-decoration-thickness: var(--ui-focus-ring-width);
+  text-underline-offset: var(--space-1);
+}
+
+.challenge-title-link:focus-visible {
+  outline: var(--ui-focus-ring-width) solid
+    color-mix(in srgb, var(--color-primary) 72%, transparent);
+  outline-offset: var(--space-1);
+  border-radius: var(--ui-control-radius-sm);
 }
 
 .challenge-subtitle {
@@ -748,4 +802,5 @@ onMounted(() => {
   border-top: 1px solid var(--color-border-default);
   margin: var(--space-1) 0;
 }
+
 </style>

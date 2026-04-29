@@ -17,7 +17,7 @@ import type {
   AWDRoundMetricsData,
   AWDRoundSummaryData,
   AWDRoundSummaryItemData,
-  AWDServiceTemplateStatus,
+  AWDChallengeStatus,
   AWDServiceType,
   AWDTrafficEventData,
   AWDTrafficEventPageData,
@@ -28,9 +28,9 @@ import type {
   AWDTrafficTopTeamData,
   AWDTrafficTrendBucketData,
   AWDTeamServiceData,
-  AdminAwdServiceTemplateImportCommitData,
-  AdminAwdServiceTemplateImportPreview,
-  AdminAwdServiceTemplateData,
+  AdminAwdChallengeImportCommitData,
+  AdminAwdChallengeImportPreview,
+  AdminAwdChallengeData,
   AdminContestAWDServiceData,
   AdminContestAWDInstanceItemData,
   AdminContestAWDInstanceOrchestrationData,
@@ -131,7 +131,7 @@ export interface AdminContestChallengeUpdatePayload {
 }
 
 export interface AdminContestAWDServiceCreatePayload {
-  template_id: number
+  awd_challenge_id: number
   points: number
   display_name?: string
   order?: number
@@ -144,7 +144,7 @@ export interface AdminContestAWDServiceCreatePayload {
 }
 
 export interface AdminContestAWDServiceUpdatePayload {
-  template_id?: number
+  awd_challenge_id?: number
   points?: number
   display_name?: string
   order?: number
@@ -437,7 +437,7 @@ interface RawAdminContestAWDServiceItem {
   id: string | number
   contest_id: string | number
   challenge_id: string | number
-  template_id?: string | number | null
+  awd_challenge_id?: string | number | null
   title?: string | null
   category?: AdminContestAWDServiceData['category'] | null
   difficulty?: AdminContestAWDServiceData['difficulty'] | null
@@ -709,17 +709,17 @@ interface RawEnvironmentTemplateData {
   updated_at: string
 }
 
-interface RawAdminAwdServiceTemplateData {
+interface RawAdminAwdChallengeData {
   id: string | number
   name: string
   slug: string
   category: ChallengeCategory
-  difficulty: AdminAwdServiceTemplateData['difficulty']
+  difficulty: AdminAwdChallengeData['difficulty']
   description: string
   service_type: AWDServiceType
   deployment_mode: AWDDeploymentMode
   version: string
-  status: AWDServiceTemplateStatus
+  status: AWDChallengeStatus
   readiness_status: AWDReadinessStatus
   checker_type?: AWDCheckerType | null
   checker_config?: Record<string, unknown> | null
@@ -734,20 +734,20 @@ interface RawAdminAwdServiceTemplateData {
   updated_at: string
 }
 
-interface RawAdminAwdServiceTemplatePageData {
-  items: RawAdminAwdServiceTemplateData[]
+interface RawAdminAwdChallengePageData {
+  items: RawAdminAwdChallengeData[]
   total: number
   page: number
   size: number
 }
 
-interface RawAdminAwdServiceTemplateImportPreview {
+interface RawAdminAwdChallengeImportPreview {
   id: string | number
   file_name: string
   slug: string
   title: string
   category: ChallengeCategory
-  difficulty: AdminAwdServiceTemplateImportPreview['difficulty']
+  difficulty: AdminAwdChallengeImportPreview['difficulty']
   description: string
   service_type: AWDServiceType
   deployment_mode: AWDDeploymentMode
@@ -763,8 +763,8 @@ interface RawAdminAwdServiceTemplateImportPreview {
   created_at: string
 }
 
-interface RawAdminAwdServiceTemplateImportCommitData {
-  template: RawAdminAwdServiceTemplateData
+interface RawAdminAwdChallengeImportCommitData {
+  challenge: RawAdminAwdChallengeData
 }
 
 interface RawChallengeFlagConfig {
@@ -921,33 +921,33 @@ export interface AdminAWDTrafficEventsParams {
   page_size?: number
 }
 
-export interface AdminAwdServiceTemplateListParams {
+export interface AdminAwdChallengeListParams {
   page?: number
   page_size?: number
   keyword?: string
   service_type?: AWDServiceType
-  status?: AWDServiceTemplateStatus
+  status?: AWDChallengeStatus
 }
 
-export interface AdminAwdServiceTemplateCreatePayload {
+export interface AdminAwdChallengeCreatePayload {
   name: string
   slug: string
-  category: AdminAwdServiceTemplateData['category']
-  difficulty: AdminAwdServiceTemplateData['difficulty']
+  category: AdminAwdChallengeData['category']
+  difficulty: AdminAwdChallengeData['difficulty']
   description?: string
   service_type: AWDServiceType
   deployment_mode: AWDDeploymentMode
 }
 
-export interface AdminAwdServiceTemplateUpdatePayload {
+export interface AdminAwdChallengeUpdatePayload {
   name?: string
   slug?: string
-  category?: AdminAwdServiceTemplateData['category']
-  difficulty?: AdminAwdServiceTemplateData['difficulty']
+  category?: AdminAwdChallengeData['category']
+  difficulty?: AdminAwdChallengeData['difficulty']
   description?: string
   service_type?: AWDServiceType
   deployment_mode?: AWDDeploymentMode
-  status?: AWDServiceTemplateStatus
+  status?: AWDChallengeStatus
 }
 
 function normalizeContestStatus(status: RawContestItem['status']): AdminContestStatus {
@@ -1331,7 +1331,7 @@ function normalizeAdminContestAWDService(
     id: String(item.id),
     contest_id: String(item.contest_id),
     challenge_id: String(item.challenge_id),
-    template_id: item.template_id == null ? undefined : String(item.template_id),
+    awd_challenge_id: item.awd_challenge_id == null ? undefined : String(item.awd_challenge_id),
     title: item.title || undefined,
     category: item.category || undefined,
     difficulty: item.difficulty || undefined,
@@ -1710,10 +1710,10 @@ function normalizeEnvironmentTemplate(item: RawEnvironmentTemplateData): Environ
   }
 }
 
-function normalizeAdminAwdServiceTemplate(
-  item: RawAdminAwdServiceTemplateData
-): AdminAwdServiceTemplateData {
-  const normalized: AdminAwdServiceTemplateData = {
+function normalizeAdminAwdChallenge(
+  item: RawAdminAwdChallengeData
+): AdminAwdChallengeData {
+  const normalized: AdminAwdChallengeData = {
     id: String(item.id),
     name: item.name,
     slug: item.slug,
@@ -1756,10 +1756,10 @@ function normalizeAdminAwdServiceTemplate(
   return normalized
 }
 
-function normalizeAdminAwdServiceTemplateImportPreview(
-  item: RawAdminAwdServiceTemplateImportPreview
-): AdminAwdServiceTemplateImportPreview {
-  const normalized: AdminAwdServiceTemplateImportPreview = {
+function normalizeAdminAwdChallengeImportPreview(
+  item: RawAdminAwdChallengeImportPreview
+): AdminAwdChallengeImportPreview {
+  const normalized: AdminAwdChallengeImportPreview = {
     id: String(item.id),
     file_name: item.file_name,
     slug: item.slug,
@@ -2312,97 +2312,97 @@ export async function deleteEnvironmentTemplate(id: string) {
   })
 }
 
-export async function listAdminAwdServiceTemplates(
-  params?: AdminAwdServiceTemplateListParams
-): Promise<PageResult<AdminAwdServiceTemplateData>> {
-  const response = await request<RawAdminAwdServiceTemplatePageData>({
+export async function listAdminAwdChallenges(
+  params?: AdminAwdChallengeListParams
+): Promise<PageResult<AdminAwdChallengeData>> {
+  const response = await request<RawAdminAwdChallengePageData>({
     method: 'GET',
-    url: '/authoring/awd-service-templates',
+    url: '/authoring/awd-challenges',
     params,
   })
 
   return {
-    list: response.items.map(normalizeAdminAwdServiceTemplate),
+    list: response.items.map(normalizeAdminAwdChallenge),
     total: response.total,
     page: response.page,
     page_size: response.size,
   }
 }
 
-export async function getAdminAwdServiceTemplate(id: string): Promise<AdminAwdServiceTemplateData> {
-  const response = await request<RawAdminAwdServiceTemplateData>({
+export async function getAdminAwdChallenge(id: string): Promise<AdminAwdChallengeData> {
+  const response = await request<RawAdminAwdChallengeData>({
     method: 'GET',
-    url: `/authoring/awd-service-templates/${encodeURIComponent(id)}`,
+    url: `/authoring/awd-challenges/${encodeURIComponent(id)}`,
   })
-  return normalizeAdminAwdServiceTemplate(response)
+  return normalizeAdminAwdChallenge(response)
 }
 
-export async function createAdminAwdServiceTemplate(
-  data: AdminAwdServiceTemplateCreatePayload
-): Promise<AdminAwdServiceTemplateData> {
-  const response = await request<RawAdminAwdServiceTemplateData>({
+export async function createAdminAwdChallenge(
+  data: AdminAwdChallengeCreatePayload
+): Promise<AdminAwdChallengeData> {
+  const response = await request<RawAdminAwdChallengeData>({
     method: 'POST',
-    url: '/authoring/awd-service-templates',
+    url: '/authoring/awd-challenges',
     data,
   })
-  return normalizeAdminAwdServiceTemplate(response)
+  return normalizeAdminAwdChallenge(response)
 }
 
-export async function updateAdminAwdServiceTemplate(
+export async function updateAdminAwdChallenge(
   id: string,
-  data: AdminAwdServiceTemplateUpdatePayload
-): Promise<AdminAwdServiceTemplateData> {
-  const response = await request<RawAdminAwdServiceTemplateData>({
+  data: AdminAwdChallengeUpdatePayload
+): Promise<AdminAwdChallengeData> {
+  const response = await request<RawAdminAwdChallengeData>({
     method: 'PUT',
-    url: `/authoring/awd-service-templates/${encodeURIComponent(id)}`,
+    url: `/authoring/awd-challenges/${encodeURIComponent(id)}`,
     data,
   })
-  return normalizeAdminAwdServiceTemplate(response)
+  return normalizeAdminAwdChallenge(response)
 }
 
-export async function deleteAdminAwdServiceTemplate(id: string) {
+export async function deleteAdminAwdChallenge(id: string) {
   return request<void>({
     method: 'DELETE',
-    url: `/authoring/awd-service-templates/${encodeURIComponent(id)}`,
+    url: `/authoring/awd-challenges/${encodeURIComponent(id)}`,
     suppressErrorToast: true,
   })
 }
 
-export async function previewAdminAwdServiceTemplateImport(
+export async function previewAdminAwdChallengeImport(
   file: File
-): Promise<AdminAwdServiceTemplateImportPreview> {
+): Promise<AdminAwdChallengeImportPreview> {
   const formData = new FormData()
   formData.append('file', file)
 
-  const response = await request<RawAdminAwdServiceTemplateImportPreview>({
+  const response = await request<RawAdminAwdChallengeImportPreview>({
     method: 'POST',
-    url: '/authoring/awd-service-template-imports',
+    url: '/authoring/awd-challenge-imports',
     data: formData,
     headers: { 'Content-Type': 'multipart/form-data' },
   })
-  return normalizeAdminAwdServiceTemplateImportPreview(response)
+  return normalizeAdminAwdChallengeImportPreview(response)
 }
 
-export async function listAdminAwdServiceTemplateImports(): Promise<
-  AdminAwdServiceTemplateImportPreview[]
+export async function listAdminAwdChallengeImports(): Promise<
+  AdminAwdChallengeImportPreview[]
 > {
-  const response = await request<RawAdminAwdServiceTemplateImportPreview[]>({
+  const response = await request<RawAdminAwdChallengeImportPreview[]>({
     method: 'GET',
-    url: '/authoring/awd-service-template-imports',
+    url: '/authoring/awd-challenge-imports',
   })
-  return Array.isArray(response) ? response.map(normalizeAdminAwdServiceTemplateImportPreview) : []
+  return Array.isArray(response) ? response.map(normalizeAdminAwdChallengeImportPreview) : []
 }
 
-export async function commitAdminAwdServiceTemplateImport(
+export async function commitAdminAwdChallengeImport(
   id: string
-): Promise<AdminAwdServiceTemplateImportCommitData> {
-  const response = await request<RawAdminAwdServiceTemplateImportCommitData>({
+): Promise<AdminAwdChallengeImportCommitData> {
+  const response = await request<RawAdminAwdChallengeImportCommitData>({
     method: 'POST',
-    url: `/authoring/awd-service-template-imports/${encodeURIComponent(id)}/commit`,
+    url: `/authoring/awd-challenge-imports/${encodeURIComponent(id)}/commit`,
   })
 
   return {
-    template: normalizeAdminAwdServiceTemplate(response.template),
+    challenge: normalizeAdminAwdChallenge(response.challenge),
   }
 }
 

@@ -1,6 +1,6 @@
 # AWD 题目包
 
-这里放的是毕设演示用 AWD 服务模板题目包。每个目录都按平台 `challenge-pack-v1` 的 AWD 扩展格式组织，包含题面、元数据、Docker 启动文件、本地 Checkbot 示例和攻防说明。
+这里放的是毕设演示用 AWD 题目包。每个目录都按平台 `challenge-pack-v1` 的 AWD 扩展格式组织，包含题面、元数据、Docker 启动文件、本地 Checkbot 示例和攻防说明。
 
 当前 `ctf-1/` 期次题目：
 
@@ -30,14 +30,14 @@
 
 ## 平台导入
 
-这些包使用 `meta.mode: awd` 和 `extensions.awd`，应通过 AWD 服务模板导入入口导入：
+这些包使用 `meta.mode: awd` 和 `extensions.awd`，应通过 AWD 题目导入入口导入：
 
 ```text
-POST /api/v1/authoring/awd-service-template-imports
-POST /api/v1/authoring/awd-service-template-imports/:id/commit
+POST /api/v1/authoring/awd-challenge-imports
+POST /api/v1/authoring/awd-challenge-imports/:id/commit
 ```
 
-导入后，在 AWD 竞赛后台把模板添加为 `contest_awd_services`，再由队伍在学生端启动队伍共享实例。
+导入后，在 AWD 竞赛后台把 AWD 题目添加为 `contest_awd_services`，再由队伍在学生端启动队伍共享实例。
 
 ## 镜像准备
 

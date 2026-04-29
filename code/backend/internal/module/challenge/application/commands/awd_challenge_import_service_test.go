@@ -13,19 +13,19 @@ import (
 	"ctf-platform/internal/module/challenge/testsupport"
 )
 
-func TestAWDServiceTemplateImportFlowPreviewAndCommit(t *testing.T) {
+func TestAWDChallengeImportFlowPreviewAndCommit(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	repo := challengeinfra.NewRepository(db)
-	service := NewAWDServiceTemplateImportService(db, repo)
+	service := NewAWDChallengeImportService(db, repo)
 
 	previewDir := filepath.Join(t.TempDir(), "awd-imports")
-	t.Setenv("AWD_SERVICE_TEMPLATE_IMPORT_PREVIEW_DIR", previewDir)
+	t.Setenv("AWD_CHALLENGE_IMPORT_PREVIEW_DIR", previewDir)
 
 	preview, err := service.PreviewImport(
 		context.Background(),
 		2001,
 		"awd-bank-portal-01.zip",
-		bytes.NewReader(buildAWDServiceTemplateImportArchive(t)),
+		bytes.NewReader(buildAWDChallengeImportArchive(t)),
 	)
 	if err != nil {
 		t.Fatalf("PreviewImport() error = %v", err)
@@ -47,16 +47,16 @@ func TestAWDServiceTemplateImportFlowPreviewAndCommit(t *testing.T) {
 	}
 
 	if committed.ID == 0 || committed.Slug != "awd-bank-portal-01" {
-		t.Fatalf("unexpected committed template: %+v", committed)
+		t.Fatalf("unexpected committed challenge: %+v", committed)
 	}
 	if committed.Status != "published" {
-		t.Fatalf("expected published imported template, got %+v", committed)
+		t.Fatalf("expected published imported challenge, got %+v", committed)
 	}
 	if committed.RuntimeConfig["image_id"] == nil {
-		t.Fatalf("expected runtime_config.image_id in committed template, got %+v", committed.RuntimeConfig)
+		t.Fatalf("expected runtime_config.image_id in committed challenge, got %+v", committed.RuntimeConfig)
 	}
 
-	stored, err := repo.FindAWDServiceTemplateByID(context.Background(), committed.ID)
+	stored, err := repo.FindAWDChallengeByID(context.Background(), committed.ID)
 	if err != nil {
 		t.Fatalf("FindByID() error = %v", err)
 	}
@@ -81,7 +81,7 @@ func TestAWDServiceTemplateImportFlowPreviewAndCommit(t *testing.T) {
 	}
 }
 
-func buildAWDServiceTemplateImportArchive(t *testing.T) []byte {
+func buildAWDChallengeImportArchive(t *testing.T) []byte {
 	t.Helper()
 
 	files := map[string]string{

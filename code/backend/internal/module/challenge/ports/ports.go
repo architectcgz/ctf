@@ -42,16 +42,16 @@ type ChallengeQueryRepository interface {
 	ListPublished(ctx context.Context, query *dto.ChallengeQuery) ([]*model.Challenge, int64, error)
 }
 
-type AWDServiceTemplateCommandRepository interface {
-	CreateAWDServiceTemplate(ctx context.Context, template *model.AWDServiceTemplate) error
-	FindAWDServiceTemplateByID(ctx context.Context, id int64) (*model.AWDServiceTemplate, error)
-	UpdateAWDServiceTemplate(ctx context.Context, template *model.AWDServiceTemplate) error
-	DeleteAWDServiceTemplate(ctx context.Context, id int64) error
+type AWDChallengeCommandRepository interface {
+	CreateAWDChallenge(ctx context.Context, challenge *model.AWDChallenge) error
+	FindAWDChallengeByID(ctx context.Context, id int64) (*model.AWDChallenge, error)
+	UpdateAWDChallenge(ctx context.Context, challenge *model.AWDChallenge) error
+	DeleteAWDChallenge(ctx context.Context, id int64) error
 }
 
-type AWDServiceTemplateQueryRepository interface {
-	FindAWDServiceTemplateByID(ctx context.Context, id int64) (*model.AWDServiceTemplate, error)
-	ListAWDServiceTemplates(ctx context.Context, query *dto.AWDServiceTemplateQuery) ([]*model.AWDServiceTemplate, int64, error)
+type AWDChallengeQueryRepository interface {
+	FindAWDChallengeByID(ctx context.Context, id int64) (*model.AWDChallenge, error)
+	ListAWDChallenges(ctx context.Context, query *dto.AWDChallengeQuery) ([]*model.AWDChallenge, int64, error)
 }
 
 type ChallengeImageUsageRepository interface {

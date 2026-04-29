@@ -2,10 +2,10 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { ref } from 'vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import AWDServiceTemplateLibrary from '../AWDServiceTemplateLibrary.vue'
-import AWDServiceTemplateImport from '../AWDServiceTemplateImport.vue'
-import awdServiceTemplateLibrarySource from '../AWDServiceTemplateLibrary.vue?raw'
-import awdServiceTemplateImportSource from '../AWDServiceTemplateImport.vue?raw'
+import AWDChallengeLibrary from '../AWDChallengeLibrary.vue'
+import AWDChallengeImport from '../AWDChallengeImport.vue'
+import awdChallengeLibrarySource from '../AWDChallengeLibrary.vue?raw'
+import awdChallengeImportSource from '../AWDChallengeImport.vue?raw'
 
 const pushMock = vi.fn()
 
@@ -15,15 +15,15 @@ const actionMocks = vi.hoisted(() => ({
   openCreateDialog: vi.fn(),
   openEditDialog: vi.fn(),
   closeDialog: vi.fn(),
-  saveTemplate: vi.fn(),
-  removeTemplate: vi.fn(),
+  saveChallenge: vi.fn(),
+  removeChallenge: vi.fn(),
   refreshImportQueue: vi.fn(),
   selectImportPackages: vi.fn(),
   commitImportPreview: vi.fn(),
 }))
 
-vi.mock('@/composables/usePlatformAwdServiceTemplates', () => ({
-  usePlatformAwdServiceTemplates: () => ({
+vi.mock('@/composables/usePlatformAwdChallenges', () => ({
+  usePlatformAwdChallenges: () => ({
     list: ref([
       {
         id: '1',
@@ -83,12 +83,12 @@ beforeEach(() => {
   Object.values(actionMocks).forEach((mock) => mock.mockClear())
 })
 
-describe('AWDServiceTemplateLibrary', () => {
-  it('wires the awd service template workspace and editor dialog', async () => {
-    const wrapper = mount(AWDServiceTemplateLibrary)
+describe('AWDChallengeLibrary', () => {
+  it('wires the awd challenge workspace and editor dialog', async () => {
+    const wrapper = mount(AWDChallengeLibrary)
     await flushPromises()
 
-    expect(wrapper.text()).toContain('AWD 服务模板库')
+    expect(wrapper.text()).toContain('AWD 题目库')
     expect(wrapper.text()).toContain('导入题目包')
     expect(wrapper.text()).toContain('Bank Portal AWD')
     expect(actionMocks.refresh).toHaveBeenCalledTimes(1)
@@ -96,18 +96,18 @@ describe('AWDServiceTemplateLibrary', () => {
 
     await wrapper.findAll('button').find((button) => button.text() === '导入题目包')?.trigger('click')
 
-    expect(pushMock).toHaveBeenCalledWith({ name: 'PlatformAwdServiceTemplateImport' })
+    expect(pushMock).toHaveBeenCalledWith({ name: 'PlatformAwdChallengeImport' })
   })
 
   it('does not add an extra route-level spacing wrapper around the shared workspace shell', () => {
-    expect(awdServiceTemplateLibrarySource).toContain('<template>\n  <div>')
-    expect(awdServiceTemplateLibrarySource).not.toContain('<div class="space-y-6">')
+    expect(awdChallengeLibrarySource).toContain('<template>\n  <div>')
+    expect(awdChallengeLibrarySource).not.toContain('<div class="space-y-6">')
   })
 })
 
-describe('AWDServiceTemplateImport', () => {
+describe('AWDChallengeImport', () => {
   it('wires the standalone awd import workspace', async () => {
-    const wrapper = mount(AWDServiceTemplateImport)
+    const wrapper = mount(AWDChallengeImport)
     await flushPromises()
 
     expect(wrapper.text()).toContain('导入 AWD 题目包')
@@ -115,7 +115,7 @@ describe('AWDServiceTemplateImport', () => {
   })
 
   it('renders the import page mode without a route-level spacing wrapper', () => {
-    expect(awdServiceTemplateImportSource).toContain('mode="import"')
-    expect(awdServiceTemplateImportSource).not.toContain('<div class="space-y-6">')
+    expect(awdChallengeImportSource).toContain('mode="import"')
+    expect(awdChallengeImportSource).not.toContain('<div class="space-y-6">')
   })
 })

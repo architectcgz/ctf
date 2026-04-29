@@ -66,7 +66,7 @@ func TestContestAWDServiceServiceCreateFromTemplate(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
-	if err := challengeRepo.CreateAWDServiceTemplate(context.Background(), &model.AWDServiceTemplate{
+	if err := challengeRepo.CreateAWDChallenge(context.Background(), &model.AWDChallenge{
 		ID:             1001,
 		Name:           "Bank Portal",
 		Slug:           "bank-portal",
@@ -74,7 +74,7 @@ func TestContestAWDServiceServiceCreateFromTemplate(t *testing.T) {
 		Difficulty:     model.ChallengeDifficultyMedium,
 		ServiceType:    model.AWDServiceTypeWebHTTP,
 		DeploymentMode: model.AWDDeploymentModeSingleContainer,
-		Status:         model.AWDServiceTemplateStatusPublished,
+		Status:         model.AWDChallengeStatusPublished,
 		CheckerType:    model.AWDCheckerTypeHTTPStandard,
 		CheckerConfig:  `{"get_flag":{"path":"/internal/flag"}}`,
 		AccessConfig:   `{"primary_url":"http://bank.internal"}`,
@@ -82,21 +82,21 @@ func TestContestAWDServiceServiceCreateFromTemplate(t *testing.T) {
 		CreatedAt:      now,
 		UpdatedAt:      now,
 	}); err != nil {
-		t.Fatalf("create template: %v", err)
+		t.Fatalf("create AWD challenge: %v", err)
 	}
 
 	resp, err := service.CreateContestAWDService(context.Background(), 801, &dto.CreateContestAWDServiceReq{
-		TemplateID:  1001,
-		Points:      100,
-		DisplayName: "Bank Portal",
-		Order:       1,
-		IsVisible:   boolPtr(true),
+		AWDChallengeID: 1001,
+		Points:         100,
+		DisplayName:    "Bank Portal",
+		Order:          1,
+		IsVisible:      boolPtr(true),
 	})
 	if err != nil {
 		t.Fatalf("create contest awd service: %v", err)
 	}
-	if resp.TemplateID == nil || *resp.TemplateID != 1001 {
-		t.Fatalf("unexpected template id: %+v", resp.TemplateID)
+	if resp.AWDChallengeID == nil || *resp.AWDChallengeID != 1001 {
+		t.Fatalf("unexpected AWD challenge id: %+v", resp.AWDChallengeID)
 	}
 	if resp.ChallengeID != 1001 {
 		t.Fatalf("unexpected challenge id: %d", resp.ChallengeID)
@@ -106,8 +106,8 @@ func TestContestAWDServiceServiceCreateFromTemplate(t *testing.T) {
 	if err != nil {
 		t.Fatalf("FindContestAWDServiceByContestAndID() error = %v", err)
 	}
-	if stored.TemplateID == nil || *stored.TemplateID != 1001 {
-		t.Fatalf("unexpected stored template id: %+v", stored.TemplateID)
+	if stored.AWDChallengeID == nil || *stored.AWDChallengeID != 1001 {
+		t.Fatalf("unexpected stored AWD challenge id: %+v", stored.AWDChallengeID)
 	}
 	if stored.DisplayName != "Bank Portal" {
 		t.Fatalf("unexpected display name: %s", stored.DisplayName)
@@ -134,7 +134,7 @@ func TestContestAWDServiceServiceCreateAppliesDefaultScoreContract(t *testing.T)
 	}); err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := challengeRepo.CreateAWDServiceTemplate(context.Background(), &model.AWDServiceTemplate{
+	if err := challengeRepo.CreateAWDChallenge(context.Background(), &model.AWDChallenge{
 		ID:             180801,
 		Name:           "Default Score Service",
 		Slug:           "default-score-service",
@@ -142,19 +142,19 @@ func TestContestAWDServiceServiceCreateAppliesDefaultScoreContract(t *testing.T)
 		Difficulty:     model.ChallengeDifficultyMedium,
 		ServiceType:    model.AWDServiceTypeWebHTTP,
 		DeploymentMode: model.AWDDeploymentModeSingleContainer,
-		Status:         model.AWDServiceTemplateStatusPublished,
+		Status:         model.AWDChallengeStatusPublished,
 		CheckerType:    model.AWDCheckerTypeHTTPStandard,
 		CheckerConfig:  `{"get_flag":{"path":"/flag"}}`,
 		AccessConfig:   `{"primary_url":"http://default.internal"}`,
 		CreatedAt:      now,
 		UpdatedAt:      now,
 	}); err != nil {
-		t.Fatalf("create template: %v", err)
+		t.Fatalf("create AWD challenge: %v", err)
 	}
 
 	resp, err := service.CreateContestAWDService(context.Background(), 1808, &dto.CreateContestAWDServiceReq{
-		TemplateID: 180801,
-		Points:     100,
+		AWDChallengeID: 180801,
+		Points:         100,
 	})
 	if err != nil {
 		t.Fatalf("CreateContestAWDService() error = %v", err)
@@ -189,7 +189,7 @@ func TestContestAWDServiceServiceCreateRejectsOversizedServiceScores(t *testing.
 	}); err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := challengeRepo.CreateAWDServiceTemplate(context.Background(), &model.AWDServiceTemplate{
+	if err := challengeRepo.CreateAWDChallenge(context.Background(), &model.AWDChallenge{
 		ID:             180901,
 		Name:           "Oversized Score Service",
 		Slug:           "oversized-score-service",
@@ -197,18 +197,18 @@ func TestContestAWDServiceServiceCreateRejectsOversizedServiceScores(t *testing.
 		Difficulty:     model.ChallengeDifficultyMedium,
 		ServiceType:    model.AWDServiceTypeWebHTTP,
 		DeploymentMode: model.AWDDeploymentModeSingleContainer,
-		Status:         model.AWDServiceTemplateStatusPublished,
+		Status:         model.AWDChallengeStatusPublished,
 		CheckerType:    model.AWDCheckerTypeHTTPStandard,
 		CheckerConfig:  `{"get_flag":{"path":"/flag"}}`,
 		AccessConfig:   `{"primary_url":"http://oversized.internal"}`,
 		CreatedAt:      now,
 		UpdatedAt:      now,
 	}); err != nil {
-		t.Fatalf("create template: %v", err)
+		t.Fatalf("create AWD challenge: %v", err)
 	}
 
 	_, err := service.CreateContestAWDService(context.Background(), 1809, &dto.CreateContestAWDServiceReq{
-		TemplateID:      180901,
+		AWDChallengeID:  180901,
 		Points:          100,
 		AWDSLAScore:     intPtr(6),
 		AWDDefenseScore: intPtr(2),
@@ -234,7 +234,7 @@ func TestContestAWDServiceServiceCreateRejectsOversizedDisplayPoints(t *testing.
 	}); err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := challengeRepo.CreateAWDServiceTemplate(context.Background(), &model.AWDServiceTemplate{
+	if err := challengeRepo.CreateAWDChallenge(context.Background(), &model.AWDChallenge{
 		ID:             181001,
 		Name:           "Oversized Points Service",
 		Slug:           "oversized-points-service",
@@ -242,19 +242,19 @@ func TestContestAWDServiceServiceCreateRejectsOversizedDisplayPoints(t *testing.
 		Difficulty:     model.ChallengeDifficultyMedium,
 		ServiceType:    model.AWDServiceTypeWebHTTP,
 		DeploymentMode: model.AWDDeploymentModeSingleContainer,
-		Status:         model.AWDServiceTemplateStatusPublished,
+		Status:         model.AWDChallengeStatusPublished,
 		CheckerType:    model.AWDCheckerTypeHTTPStandard,
 		CheckerConfig:  `{"get_flag":{"path":"/flag"}}`,
 		AccessConfig:   `{"primary_url":"http://points.internal"}`,
 		CreatedAt:      now,
 		UpdatedAt:      now,
 	}); err != nil {
-		t.Fatalf("create template: %v", err)
+		t.Fatalf("create AWD challenge: %v", err)
 	}
 
 	_, err := service.CreateContestAWDService(context.Background(), 1810, &dto.CreateContestAWDServiceReq{
-		TemplateID: 181001,
-		Points:     501,
+		AWDChallengeID: 181001,
+		Points:         501,
 	})
 	if err == nil {
 		t.Fatal("expected oversized display points to be rejected")
@@ -290,7 +290,7 @@ func TestContestAWDServiceServiceUpdateMaintainsSnapshotOnly(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
-	if err := challengeRepo.CreateAWDServiceTemplate(context.Background(), &model.AWDServiceTemplate{
+	if err := challengeRepo.CreateAWDChallenge(context.Background(), &model.AWDChallenge{
 		ID:             1002,
 		Name:           "Billing API",
 		Slug:           "billing-api",
@@ -298,22 +298,22 @@ func TestContestAWDServiceServiceUpdateMaintainsSnapshotOnly(t *testing.T) {
 		Difficulty:     model.ChallengeDifficultyMedium,
 		ServiceType:    model.AWDServiceTypeWebHTTP,
 		DeploymentMode: model.AWDDeploymentModeSingleContainer,
-		Status:         model.AWDServiceTemplateStatusPublished,
+		Status:         model.AWDChallengeStatusPublished,
 		CheckerType:    model.AWDCheckerTypeHTTPStandard,
 		CheckerConfig:  `{"health":{"path":"/healthz"}}`,
 		AccessConfig:   `{"primary_url":"http://billing.internal"}`,
 		CreatedAt:      now,
 		UpdatedAt:      now,
 	}); err != nil {
-		t.Fatalf("create template: %v", err)
+		t.Fatalf("create AWD challenge: %v", err)
 	}
 
 	resp, err := service.CreateContestAWDService(context.Background(), 802, &dto.CreateContestAWDServiceReq{
-		TemplateID:  1002,
-		Points:      100,
-		DisplayName: "Billing API",
-		Order:       2,
-		IsVisible:   boolPtr(true),
+		AWDChallengeID: 1002,
+		Points:         100,
+		DisplayName:    "Billing API",
+		Order:          2,
+		IsVisible:      boolPtr(true),
 	})
 	if err != nil {
 		t.Fatalf("create contest awd service: %v", err)
@@ -372,7 +372,7 @@ func TestContestAWDServiceServiceCreateDoesNotPersistLegacyChallengeIDInRuntimeC
 	}); err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
-	if err := challengeRepo.CreateAWDServiceTemplate(context.Background(), &model.AWDServiceTemplate{
+	if err := challengeRepo.CreateAWDChallenge(context.Background(), &model.AWDChallenge{
 		ID:             1004,
 		Name:           "Orders API",
 		Slug:           "orders-api",
@@ -380,18 +380,18 @@ func TestContestAWDServiceServiceCreateDoesNotPersistLegacyChallengeIDInRuntimeC
 		Difficulty:     model.ChallengeDifficultyMedium,
 		ServiceType:    model.AWDServiceTypeWebHTTP,
 		DeploymentMode: model.AWDDeploymentModeSingleContainer,
-		Status:         model.AWDServiceTemplateStatusPublished,
+		Status:         model.AWDChallengeStatusPublished,
 		CheckerType:    model.AWDCheckerTypeLegacyProbe,
 		CheckerConfig:  `{"health":{"path":"/ready"}}`,
 		AccessConfig:   `{"primary_url":"http://orders.internal"}`,
 		CreatedAt:      now,
 		UpdatedAt:      now,
 	}); err != nil {
-		t.Fatalf("create template: %v", err)
+		t.Fatalf("create AWD challenge: %v", err)
 	}
 
 	resp, err := service.CreateContestAWDService(context.Background(), 804, &dto.CreateContestAWDServiceReq{
-		TemplateID:      1004,
+		AWDChallengeID:  1004,
 		Points:          100,
 		Order:           1,
 		IsVisible:       boolPtr(true),
@@ -468,7 +468,7 @@ func TestContestAWDServiceServiceUpdateDoesNotPersistLegacyChallengeIDInRuntimeC
 	}); err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
-	if err := challengeRepo.CreateAWDServiceTemplate(context.Background(), &model.AWDServiceTemplate{
+	if err := challengeRepo.CreateAWDChallenge(context.Background(), &model.AWDChallenge{
 		ID:             1005,
 		Name:           "Inventory API",
 		Slug:           "inventory-api",
@@ -476,21 +476,21 @@ func TestContestAWDServiceServiceUpdateDoesNotPersistLegacyChallengeIDInRuntimeC
 		Difficulty:     model.ChallengeDifficultyMedium,
 		ServiceType:    model.AWDServiceTypeWebHTTP,
 		DeploymentMode: model.AWDDeploymentModeSingleContainer,
-		Status:         model.AWDServiceTemplateStatusPublished,
+		Status:         model.AWDChallengeStatusPublished,
 		CheckerType:    model.AWDCheckerTypeLegacyProbe,
 		CheckerConfig:  `{"health":{"path":"/ready"}}`,
 		AccessConfig:   `{"primary_url":"http://inventory.internal"}`,
 		CreatedAt:      now,
 		UpdatedAt:      now,
 	}); err != nil {
-		t.Fatalf("create template: %v", err)
+		t.Fatalf("create AWD challenge: %v", err)
 	}
 
 	resp, err := service.CreateContestAWDService(context.Background(), 805, &dto.CreateContestAWDServiceReq{
-		TemplateID: 1005,
-		Points:     100,
-		Order:      2,
-		IsVisible:  boolPtr(true),
+		AWDChallengeID: 1005,
+		Points:         100,
+		Order:          2,
+		IsVisible:      boolPtr(true),
 	})
 	if err != nil {
 		t.Fatalf("create contest awd service: %v", err)
@@ -570,7 +570,7 @@ func TestContestAWDServiceServiceCreateConsumesCheckerPreviewToken(t *testing.T)
 	}); err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
-	if err := challengeRepo.CreateAWDServiceTemplate(context.Background(), &model.AWDServiceTemplate{
+	if err := challengeRepo.CreateAWDChallenge(context.Background(), &model.AWDChallenge{
 		ID:             1006,
 		Name:           "Preview Service",
 		Slug:           "preview-service",
@@ -578,14 +578,14 @@ func TestContestAWDServiceServiceCreateConsumesCheckerPreviewToken(t *testing.T)
 		Difficulty:     model.ChallengeDifficultyMedium,
 		ServiceType:    model.AWDServiceTypeWebHTTP,
 		DeploymentMode: model.AWDDeploymentModeSingleContainer,
-		Status:         model.AWDServiceTemplateStatusPublished,
+		Status:         model.AWDChallengeStatusPublished,
 		CheckerType:    model.AWDCheckerTypeHTTPStandard,
 		CheckerConfig:  `{"get_flag":{"path":"/ready"}}`,
 		AccessConfig:   `{"primary_url":"http://preview.internal"}`,
 		CreatedAt:      now,
 		UpdatedAt:      now,
 	}); err != nil {
-		t.Fatalf("create template: %v", err)
+		t.Fatalf("create AWD challenge: %v", err)
 	}
 
 	checkerConfig := map[string]any{
@@ -623,7 +623,7 @@ func TestContestAWDServiceServiceCreateConsumesCheckerPreviewToken(t *testing.T)
 	}
 
 	resp, err := service.CreateContestAWDService(context.Background(), 806, &dto.CreateContestAWDServiceReq{
-		TemplateID:             1006,
+		AWDChallengeID:         1006,
 		Points:                 100,
 		Order:                  1,
 		IsVisible:              boolPtr(true),
@@ -690,7 +690,7 @@ func TestContestAWDServiceServiceCreateRejectsMissingCheckerPreviewToken(t *test
 	}); err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
-	if err := challengeRepo.CreateAWDServiceTemplate(context.Background(), &model.AWDServiceTemplate{
+	if err := challengeRepo.CreateAWDChallenge(context.Background(), &model.AWDChallenge{
 		ID:             1106,
 		Name:           "Preview Service Missing Token",
 		Slug:           "preview-service-missing-token",
@@ -698,18 +698,18 @@ func TestContestAWDServiceServiceCreateRejectsMissingCheckerPreviewToken(t *test
 		Difficulty:     model.ChallengeDifficultyMedium,
 		ServiceType:    model.AWDServiceTypeWebHTTP,
 		DeploymentMode: model.AWDDeploymentModeSingleContainer,
-		Status:         model.AWDServiceTemplateStatusPublished,
+		Status:         model.AWDChallengeStatusPublished,
 		CheckerType:    model.AWDCheckerTypeHTTPStandard,
 		CheckerConfig:  `{"get_flag":{"path":"/ready"}}`,
 		AccessConfig:   `{"primary_url":"http://preview-missing.internal"}`,
 		CreatedAt:      now,
 		UpdatedAt:      now,
 	}); err != nil {
-		t.Fatalf("create template: %v", err)
+		t.Fatalf("create AWD challenge: %v", err)
 	}
 
 	_, err = service.CreateContestAWDService(context.Background(), 1806, &dto.CreateContestAWDServiceReq{
-		TemplateID:             1106,
+		AWDChallengeID:         1106,
 		Points:                 100,
 		Order:                  1,
 		IsVisible:              boolPtr(true),
@@ -765,7 +765,7 @@ func TestContestAWDServiceServiceUpdateConsumesCheckerPreviewTokenByServiceID(t 
 	}); err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
-	if err := challengeRepo.CreateAWDServiceTemplate(context.Background(), &model.AWDServiceTemplate{
+	if err := challengeRepo.CreateAWDChallenge(context.Background(), &model.AWDChallenge{
 		ID:             1007,
 		Name:           "Preview Update Service",
 		Slug:           "preview-update-service",
@@ -773,21 +773,21 @@ func TestContestAWDServiceServiceUpdateConsumesCheckerPreviewTokenByServiceID(t 
 		Difficulty:     model.ChallengeDifficultyMedium,
 		ServiceType:    model.AWDServiceTypeWebHTTP,
 		DeploymentMode: model.AWDDeploymentModeSingleContainer,
-		Status:         model.AWDServiceTemplateStatusPublished,
+		Status:         model.AWDChallengeStatusPublished,
 		CheckerType:    model.AWDCheckerTypeHTTPStandard,
 		CheckerConfig:  `{"get_flag":{"path":"/ready"}}`,
 		AccessConfig:   `{"primary_url":"http://preview-update.internal"}`,
 		CreatedAt:      now,
 		UpdatedAt:      now,
 	}); err != nil {
-		t.Fatalf("create template: %v", err)
+		t.Fatalf("create AWD challenge: %v", err)
 	}
 
 	resp, err := service.CreateContestAWDService(context.Background(), 807, &dto.CreateContestAWDServiceReq{
-		TemplateID: 1007,
-		Points:     100,
-		Order:      1,
-		IsVisible:  boolPtr(true),
+		AWDChallengeID: 1007,
+		Points:         100,
+		Order:          1,
+		IsVisible:      boolPtr(true),
 	})
 	if err != nil {
 		t.Fatalf("CreateContestAWDService() error = %v", err)
@@ -889,7 +889,7 @@ func TestContestAWDServiceServiceUpdateRejectsMissingCheckerPreviewToken(t *test
 	}); err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
-	if err := challengeRepo.CreateAWDServiceTemplate(context.Background(), &model.AWDServiceTemplate{
+	if err := challengeRepo.CreateAWDChallenge(context.Background(), &model.AWDChallenge{
 		ID:             1107,
 		Name:           "Preview Update Missing Token",
 		Slug:           "preview-update-missing-token",
@@ -897,21 +897,21 @@ func TestContestAWDServiceServiceUpdateRejectsMissingCheckerPreviewToken(t *test
 		Difficulty:     model.ChallengeDifficultyMedium,
 		ServiceType:    model.AWDServiceTypeWebHTTP,
 		DeploymentMode: model.AWDDeploymentModeSingleContainer,
-		Status:         model.AWDServiceTemplateStatusPublished,
+		Status:         model.AWDChallengeStatusPublished,
 		CheckerType:    model.AWDCheckerTypeHTTPStandard,
 		CheckerConfig:  `{"get_flag":{"path":"/ready"}}`,
 		AccessConfig:   `{"primary_url":"http://preview-update-missing.internal"}`,
 		CreatedAt:      now,
 		UpdatedAt:      now,
 	}); err != nil {
-		t.Fatalf("create template: %v", err)
+		t.Fatalf("create AWD challenge: %v", err)
 	}
 
 	resp, err := service.CreateContestAWDService(context.Background(), 1807, &dto.CreateContestAWDServiceReq{
-		TemplateID: 1107,
-		Points:     100,
-		Order:      1,
-		IsVisible:  boolPtr(true),
+		AWDChallengeID: 1107,
+		Points:         100,
+		Order:          1,
+		IsVisible:      boolPtr(true),
 	})
 	if err != nil {
 		t.Fatalf("CreateContestAWDService() error = %v", err)
@@ -957,7 +957,7 @@ func TestContestAWDServiceServiceDeleteRemovesOnlyServiceRecord(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
-	if err := challengeRepo.CreateAWDServiceTemplate(context.Background(), &model.AWDServiceTemplate{
+	if err := challengeRepo.CreateAWDChallenge(context.Background(), &model.AWDChallenge{
 		ID:             1003,
 		Name:           "User Center",
 		Slug:           "user-center",
@@ -965,22 +965,22 @@ func TestContestAWDServiceServiceDeleteRemovesOnlyServiceRecord(t *testing.T) {
 		Difficulty:     model.ChallengeDifficultyMedium,
 		ServiceType:    model.AWDServiceTypeWebHTTP,
 		DeploymentMode: model.AWDDeploymentModeSingleContainer,
-		Status:         model.AWDServiceTemplateStatusPublished,
+		Status:         model.AWDChallengeStatusPublished,
 		CheckerType:    model.AWDCheckerTypeHTTPStandard,
 		CheckerConfig:  `{"health":{"path":"/ready"}}`,
 		AccessConfig:   `{"primary_url":"http://user.internal"}`,
 		CreatedAt:      now,
 		UpdatedAt:      now,
 	}); err != nil {
-		t.Fatalf("create template: %v", err)
+		t.Fatalf("create AWD challenge: %v", err)
 	}
 
 	resp, err := service.CreateContestAWDService(context.Background(), 803, &dto.CreateContestAWDServiceReq{
-		TemplateID:  1003,
-		Points:      100,
-		DisplayName: "User Center",
-		Order:       3,
-		IsVisible:   boolPtr(true),
+		AWDChallengeID: 1003,
+		Points:         100,
+		DisplayName:    "User Center",
+		Order:          3,
+		IsVisible:      boolPtr(true),
 	})
 	if err != nil {
 		t.Fatalf("create contest awd service: %v", err)

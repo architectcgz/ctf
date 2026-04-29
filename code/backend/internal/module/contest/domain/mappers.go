@@ -50,7 +50,7 @@ func ContestAWDServiceRespFromModel(item *model.ContestAWDService) *dto.ContestA
 		ID:                item.ID,
 		ContestID:         item.ContestID,
 		ChallengeID:       item.ChallengeID,
-		TemplateID:        item.TemplateID,
+		AWDChallengeID:    item.AWDChallengeID,
 		Title:             snapshot.Name,
 		Category:          snapshot.Category,
 		Difficulty:        snapshot.Difficulty,

@@ -10,8 +10,8 @@ import {
 } from 'lucide-vue-next'
 
 import type {
-  AdminAwdServiceTemplateData,
-  AdminAwdServiceTemplateImportPreview,
+  AdminAwdChallengeData,
+  AdminAwdChallengeImportPreview,
 } from '@/api/contracts'
 import ChallengePackageImportEntry from '@/components/platform/challenge/ChallengePackageImportEntry.vue'
 import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
@@ -19,14 +19,14 @@ import WorkspaceDirectoryPagination from '@/components/common/WorkspaceDirectory
 import WorkspaceDirectoryToolbar from '@/components/common/WorkspaceDirectoryToolbar.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
-import type { PlatformAwdServiceTemplateImportUploadResult } from '@/composables/usePlatformAwdServiceTemplates'
+import type { PlatformAwdChallengeImportUploadResult } from '@/composables/usePlatformAwdChallenges'
 
-type AwdServiceTypeFilter = AdminAwdServiceTemplateData['service_type'] | ''
-type AwdServiceStatusFilter = AdminAwdServiceTemplateData['status'] | ''
+type AwdServiceTypeFilter = AdminAwdChallengeData['service_type'] | ''
+type AwdServiceStatusFilter = AdminAwdChallengeData['status'] | ''
 
 const props = withDefaults(defineProps<{
   mode?: 'library' | 'import'
-  list: AdminAwdServiceTemplateData[]
+  list: AdminAwdChallengeData[]
   total: number
   page: number
   pageSize: number
@@ -36,8 +36,8 @@ const props = withDefaults(defineProps<{
   statusFilter: AwdServiceStatusFilter
   uploading: boolean
   queueLoading: boolean
-  importQueue: AdminAwdServiceTemplateImportPreview[]
-  uploadResults: PlatformAwdServiceTemplateImportUploadResult[]
+  importQueue: AdminAwdChallengeImportPreview[]
+  uploadResults: PlatformAwdChallengeImportUploadResult[]
   selectedFileName?: string
 }>(), {
   mode: 'library',
@@ -50,10 +50,10 @@ const emit = defineEmits<{
   updateServiceTypeFilter: [value: AwdServiceTypeFilter]
   updateStatusFilter: [value: AwdServiceStatusFilter]
   selectImportPackages: [files: File[]]
-  commitImport: [preview: AdminAwdServiceTemplateImportPreview]
+  commitImport: [preview: AdminAwdChallengeImportPreview]
   openImportPage: []
-  openEditDialog: [template: AdminAwdServiceTemplateData]
-  deleteTemplate: [template: AdminAwdServiceTemplateData]
+  openEditDialog: [challenge: AdminAwdChallengeData]
+  deleteChallenge: [challenge: AdminAwdChallengeData]
   changePage: [page: number]
 }>()
 
@@ -64,11 +64,11 @@ const pendingReadinessCount = computed(
   () => props.list.filter((item) => item.readiness_status === 'pending').length
 )
 const importQueueCount = computed(() => props.importQueue.length)
-const heroTitle = computed(() => props.mode === 'import' ? '导入 AWD 题目包' : 'AWD 服务模板库')
+const heroTitle = computed(() => props.mode === 'import' ? '导入 AWD 题目包' : 'AWD 题目库')
 const heroSummary = computed(() =>
   props.mode === 'import'
-    ? '上传符合规范的 AWD 题目包，确认后生成可用于编排的服务模板。'
-    : '这里单独维护 AWD 题目的服务模板，不再和解题赛题目混在同一资源目录。'
+    ? '上传符合规范的 AWD 题目包，确认后生成可用于编排的 AWD 题目。'
+    : '管理 AWD 赛事使用的题目。'
 )
 const hasActiveFilters = computed(() =>
   Boolean(props.keyword.trim() || props.serviceTypeFilter || props.statusFilter)
@@ -77,7 +77,7 @@ const hasActiveFilters = computed(() =>
 const templateTableColumns = [
   {
     key: 'name',
-    label: '模板名称',
+    label: '题目名称',
     widthClass: 'w-[28%] min-w-[16rem]',
     cellClass: 'awd-template-table__name-cell',
   },
@@ -125,7 +125,7 @@ const templateTableColumns = [
   },
 ]
 
-function getServiceTypeLabel(value: AdminAwdServiceTemplateData['service_type']): string {
+function getServiceTypeLabel(value: AdminAwdChallengeData['service_type']): string {
   switch (value) {
     case 'binary_tcp':
       return 'Binary TCP'
@@ -137,11 +137,11 @@ function getServiceTypeLabel(value: AdminAwdServiceTemplateData['service_type'])
   }
 }
 
-function getDeploymentModeLabel(value: AdminAwdServiceTemplateData['deployment_mode']): string {
+function getDeploymentModeLabel(value: AdminAwdChallengeData['deployment_mode']): string {
   return value === 'topology' ? 'Topology' : 'Single'
 }
 
-function getDifficultyLabel(value: AdminAwdServiceTemplateData['difficulty']): string {
+function getDifficultyLabel(value: AdminAwdChallengeData['difficulty']): string {
   switch (value) {
     case 'beginner': return '入门'
     case 'easy': return '简单'
@@ -152,7 +152,7 @@ function getDifficultyLabel(value: AdminAwdServiceTemplateData['difficulty']): s
   }
 }
 
-function getStatusLabel(value: AdminAwdServiceTemplateData['status']): string {
+function getStatusLabel(value: AdminAwdChallengeData['status']): string {
   switch (value) {
     case 'published': return '已发布'
     case 'archived': return '已归档'
@@ -161,7 +161,7 @@ function getStatusLabel(value: AdminAwdServiceTemplateData['status']): string {
   }
 }
 
-function getReadinessLabel(value: AdminAwdServiceTemplateData['readiness_status']): string {
+function getReadinessLabel(value: AdminAwdChallengeData['readiness_status']): string {
   switch (value) {
     case 'passed': return '已通过'
     case 'failed': return '未通过'
@@ -170,13 +170,13 @@ function getReadinessLabel(value: AdminAwdServiceTemplateData['readiness_status'
   }
 }
 
-function getStatusClass(status: AdminAwdServiceTemplateData['status']): string {
+function getStatusClass(status: AdminAwdChallengeData['status']): string {
   if (status === 'published') return 'awd-status-pill--success'
   if (status === 'archived') return 'awd-status-pill--muted'
   return 'awd-status-pill--primary'
 }
 
-function getReadinessClass(readiness: AdminAwdServiceTemplateData['readiness_status']): string {
+function getReadinessClass(readiness: AdminAwdChallengeData['readiness_status']): string {
   if (readiness === 'passed') return 'awd-status-pill--success'
   if (readiness === 'failed') return 'awd-status-pill--danger'
   return 'awd-status-pill--warning'
@@ -231,7 +231,7 @@ function formatStructuredJSON(value?: Record<string, unknown>): string {
               v-if="mode === 'import'"
               class="awd-import-page-note"
             >
-              上传题目包并确认导入后，系统会生成可用于 AWD 编排的服务模板。
+              上传题目包并确认导入后，系统会生成可用于 AWD 编排的题目。
             </div>
           </div>
 
@@ -277,14 +277,14 @@ function formatStructuredJSON(value?: Record<string, unknown>): string {
             <div class="admin-summary-grid awd-template-summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface">
               <article class="journal-note progress-card metric-panel-card">
                 <div class="journal-note-label progress-card-label metric-panel-label">
-                  <span>模板总量</span>
+                  <span>题目总量</span>
                   <Box class="h-4 w-4" />
                 </div>
                 <div class="journal-note-value progress-card-value metric-panel-value">
                   {{ total.toString().padStart(2, '0') }}
                 </div>
                 <div class="journal-note-helper progress-card-hint metric-panel-helper">
-                  当前筛选条件下可管理的服务模板
+                  当前筛选条件下可管理的题目
                 </div>
               </article>
 
@@ -297,7 +297,7 @@ function formatStructuredJSON(value?: Record<string, unknown>): string {
                   {{ publishedCount.toString().padStart(2, '0') }}
                 </div>
                 <div class="journal-note-helper progress-card-hint metric-panel-helper">
-                  已开放给 AWD 题目编排使用的模板
+                  已开放给 AWD 编排使用的题目
                 </div>
               </article>
 
@@ -310,7 +310,7 @@ function formatStructuredJSON(value?: Record<string, unknown>): string {
                   {{ webHttpCount.toString().padStart(2, '0') }}
                 </div>
                 <div class="journal-note-helper progress-card-hint metric-panel-helper">
-                  使用 HTTP 探测与 Web 服务模式的模板
+                  使用 HTTP 探测与 Web 服务模式的题目
                 </div>
               </article>
 
@@ -323,7 +323,7 @@ function formatStructuredJSON(value?: Record<string, unknown>): string {
                   {{ pendingReadinessCount.toString().padStart(2, '0') }}
                 </div>
                 <div class="journal-note-helper progress-card-hint metric-panel-helper">
-                  仍需完成 Checker 验证的模板
+                  仍需完成 Checker 验证的题目
                 </div>
               </article>
             </div>
@@ -334,9 +334,9 @@ function formatStructuredJSON(value?: Record<string, unknown>): string {
                 :total="total"
                 selected-sort-label=""
                 :sort-options="[]"
-                search-placeholder="检索模板名称、Slug 或描述..."
-                filter-panel-title="AWD 模板筛选"
-                total-suffix="个模板"
+                search-placeholder="检索题目名称、Slug 或描述..."
+                filter-panel-title="AWD 题目筛选"
+                total-suffix="个题目"
                 reset-label="重置筛选"
                 :reset-disabled="!hasActiveFilters"
                 @update:model-value="emit('updateKeyword', $event)"
@@ -379,7 +379,7 @@ function formatStructuredJSON(value?: Record<string, unknown>): string {
                 v-if="loading && list.length === 0"
                 class="flex justify-center py-12"
               >
-                <AppLoading>正在同步模板数据...</AppLoading>
+                <AppLoading>正在同步题目数据...</AppLoading>
               </div>
 
               <template v-else>
@@ -387,8 +387,8 @@ function formatStructuredJSON(value?: Record<string, unknown>): string {
                   v-if="list.length === 0"
                   class="awd-template-library__empty"
                   icon="Box"
-                  title="暂无服务模板"
-                  :description="hasActiveFilters ? '当前筛选条件下没有匹配模板。' : '还没有 AWD 模板，请先点击右上角创建。'"
+                  title="暂无 AWD 题目"
+                  :description="hasActiveFilters ? '当前筛选条件下没有匹配题目。' : '还没有 AWD 题目。'"
                 />
 
                 <WorkspaceDataTable
@@ -402,41 +402,41 @@ function formatStructuredJSON(value?: Record<string, unknown>): string {
                   <template #cell-name="{ row }">
                     <div class="awd-template-table__name">
                       <div class="awd-template-table__title">
-                        {{ (row as AdminAwdServiceTemplateData).name }}
+                        {{ (row as AdminAwdChallengeData).name }}
                       </div>
                       <div class="awd-template-table__slug">
-                        {{ (row as AdminAwdServiceTemplateData).slug }}
+                        {{ (row as AdminAwdChallengeData).slug }}
                       </div>
                     </div>
                   </template>
 
                   <template #cell-service_type="{ row }">
-                    <span class="awd-template-table__mono">{{ getServiceTypeLabel((row as AdminAwdServiceTemplateData).service_type) }}</span>
+                    <span class="awd-template-table__mono">{{ getServiceTypeLabel((row as AdminAwdChallengeData).service_type) }}</span>
                   </template>
 
                   <template #cell-deployment_mode="{ row }">
-                    <span class="awd-template-table__compact-text">{{ getDeploymentModeLabel((row as AdminAwdServiceTemplateData).deployment_mode) }}</span>
+                    <span class="awd-template-table__compact-text">{{ getDeploymentModeLabel((row as AdminAwdChallengeData).deployment_mode) }}</span>
                   </template>
 
                   <template #cell-difficulty="{ row }">
-                    <span class="awd-template-table__difficulty">{{ getDifficultyLabel((row as AdminAwdServiceTemplateData).difficulty) }}</span>
+                    <span class="awd-template-table__difficulty">{{ getDifficultyLabel((row as AdminAwdChallengeData).difficulty) }}</span>
                   </template>
 
                   <template #cell-readiness_status="{ row }">
                     <span
                       class="awd-status-pill"
-                      :class="getReadinessClass((row as AdminAwdServiceTemplateData).readiness_status)"
+                      :class="getReadinessClass((row as AdminAwdChallengeData).readiness_status)"
                     >
-                      {{ getReadinessLabel((row as AdminAwdServiceTemplateData).readiness_status) }}
+                      {{ getReadinessLabel((row as AdminAwdChallengeData).readiness_status) }}
                     </span>
                   </template>
 
                   <template #cell-status="{ row }">
                     <span
                       class="awd-status-pill"
-                      :class="getStatusClass((row as AdminAwdServiceTemplateData).status)"
+                      :class="getStatusClass((row as AdminAwdChallengeData).status)"
                     >
-                      {{ getStatusLabel((row as AdminAwdServiceTemplateData).status) }}
+                      {{ getStatusLabel((row as AdminAwdChallengeData).status) }}
                     </span>
                   </template>
 
@@ -445,14 +445,14 @@ function formatStructuredJSON(value?: Record<string, unknown>): string {
                       <button
                         type="button"
                         class="awd-row-btn"
-                        @click="emit('openEditDialog', row as AdminAwdServiceTemplateData)"
+                        @click="emit('openEditDialog', row as AdminAwdChallengeData)"
                       >
                         编辑
                       </button>
                       <button
                         type="button"
                         class="awd-row-btn awd-row-btn--danger"
-                        @click="emit('deleteTemplate', row as AdminAwdServiceTemplateData)"
+                        @click="emit('deleteChallenge', row as AdminAwdChallengeData)"
                       >
                         删除
                       </button>
@@ -469,7 +469,7 @@ function formatStructuredJSON(value?: Record<string, unknown>): string {
                     :total-pages="totalPages"
                     :total="total"
                     :disabled="loading"
-                    total-label="个模板"
+                    total-label="个题目"
                     @change-page="emit('changePage', $event)"
                   />
                 </div>
@@ -491,15 +491,15 @@ function formatStructuredJSON(value?: Record<string, unknown>): string {
                     导入 AWD 题目包
                   </h2>
                   <p class="hero-summary awd-template-import__copy">
-                    教师按统一题目包规范写好 `challenge.yml` 后，从这里导入完整模板。
+                    教师按统一题目包规范写好 `challenge.yml` 后，从这里导入 AWD 题目。
                   </p>
                 </div>
                 <div class="awd-template-import__head-actions">
                   <div class="quick-actions">
                     <a
                       class="ui-btn ui-btn--ghost"
-                      href="/downloads/awd-service-template-package-sample-v1.zip"
-                      download="awd-service-template-package-sample-v1.zip"
+                      href="/downloads/awd-challenge-package-sample-v1.zip"
+                      download="awd-challenge-package-sample-v1.zip"
                     >
                       下载示例题包
                     </a>

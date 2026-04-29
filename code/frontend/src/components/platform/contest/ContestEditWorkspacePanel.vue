@@ -27,6 +27,7 @@ defineProps<{
   fieldLocks: ContestFieldLocks
   loadingAwdStageData: boolean
   awdChallengeLinks: AdminContestChallengeViewData[]
+  awdChallengePoolCreateRequestKey: number
   activeAwdChallengeId: string | null
   awdConfigFocusSource: 'pool' | 'preflight' | null
   canNavigatePreviousAwdChallenge: boolean
@@ -108,6 +109,7 @@ const emit = defineEmits<{
               :contest-mode="contest.mode"
               :challenge-links="contest.mode === 'awd' ? awdChallengeLinks : undefined"
               :loading-external="loadingAwdStageData"
+              :create-dialog-request-key="awdChallengePoolCreateRequestKey"
               @open:awd-config="emit('open:awd-config-from-pool', $event)"
               @updated="emit('refresh-awd-workbench')"
             />
