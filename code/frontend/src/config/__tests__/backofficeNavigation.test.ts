@@ -91,6 +91,7 @@ describe('backofficeNavigation', () => {
   it('maps admin event operations routes back to 赛事运维 and marks the matched secondary item active', () => {
     expect(getBackofficeModuleByPath('/platform/contest-ops/contests')?.key).toBe('contestOps')
     expect(getBackofficeModuleByPath('/platform/contests/contest-1/manage')?.key).toBe('contestOps')
+    expect(getBackofficeModuleByPath('/platform/contests/contest-1/awd-config')?.key).toBe('contestOps')
 
     const items = getVisibleBackofficeSecondaryItems('/platform/contest-ops/contests', 'admin')
 
@@ -99,6 +100,9 @@ describe('backofficeNavigation', () => {
 
     const manageItems = getVisibleBackofficeSecondaryItems('/platform/contests/contest-1/manage', 'admin')
     expect(manageItems.find((item) => item.active)?.routeName).toBe('PlatformContestOpsIndex')
+
+    const awdConfigItems = getVisibleBackofficeSecondaryItems('/platform/contests/contest-1/awd-config', 'admin')
+    expect(awdConfigItems.find((item) => item.active)?.routeName).toBe('PlatformContestOpsIndex')
 
     const projectorItems = getVisibleBackofficeSecondaryItems('/platform/contest-ops/projector', 'admin')
     expect(projectorItems.find((item) => item.active)?.routeName).toBe('PlatformContestProjector')

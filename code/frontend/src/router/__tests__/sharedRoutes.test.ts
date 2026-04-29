@@ -98,6 +98,7 @@ describe('shared route canonical paths', () => {
   it('moves contest management to platform paths without keeping admin redirects', () => {
     expect(findChild('platform/contests')?.name).toBe('ContestManage')
     expect(findChild('platform/contests/:id/edit')?.name).toBe('ContestEdit')
+    expect(findChild('platform/contests/:id/awd-config')?.name).toBe('ContestAWDConfig')
     expect(findChild('admin/contests')).toBeUndefined()
     expect(findChild('admin/contests/:id/edit')).toBeUndefined()
   })

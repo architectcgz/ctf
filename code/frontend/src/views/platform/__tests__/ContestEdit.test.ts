@@ -738,7 +738,11 @@ describe('ContestEdit', () => {
     await wrapper.get('#awd-readiness-edit-1').trigger('click')
     await flushPromises()
 
-    expect(getWorkbenchStageRail(wrapper).get('[role="tab"][aria-selected="true"]').text()).toContain('AWD 编排')
+    expect(pushMock).toHaveBeenCalledWith({
+      name: 'ContestAWDConfig',
+      params: { id: 'contest-1' },
+      query: { service: 'service-1' },
+    })
     expect(wrapper.text()).not.toContain('当前焦点题目')
   })
 

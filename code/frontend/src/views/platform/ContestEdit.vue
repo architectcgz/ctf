@@ -6,8 +6,7 @@ import {
   getContest,
   updateContest,
 } from '@/api/admin'
-import type { ContestDetailData } from '@/api/contracts'
-import AWDChallengeConfigDialog from '@/components/platform/contest/AWDChallengeConfigDialog.vue'
+import type { AdminContestChallengeViewData, ContestDetailData } from '@/api/contracts'
 import ContestEditTopbarPanel from '@/components/platform/contest/ContestEditTopbarPanel.vue'
 import ContestEditWorkspacePanel from '@/components/platform/contest/ContestEditWorkspacePanel.vue'
 import ContestWorkbenchStageTabs from '@/components/platform/contest/ContestWorkbenchStageTabs.vue'
@@ -54,23 +53,13 @@ const { activeTab: activeStage, selectTab } = useUrlSyncedTabs<ContestWorkbenchS
   defaultTab: 'basics',
 })
 const {
-  awdChallengeConfigDialogOpen,
-  awdChallengeConfigMode,
   awdChallengeLinks,
   awdChallengeLinksLoaded,
   awdChallengePoolCreateRequestKey,
   awdPreflightLoadError,
   awdReadiness,
-  awdChallengeCatalog,
-  editingAwdChallengeLink,
-  existingAwdChallengeIds,
-  handleNavigateAwdChallengeFromPreflight,
-  handleSaveAwdChallengeConfig,
-  loadingAwdChallengeCatalog,
   loadingAwdStageData,
-  openAwdChallengeEditDialog,
   refreshAwdWorkbenchData,
-  savingChallengeConfig,
 } = useContestEditAwdWorkspace({
   contest,
   contestId,
@@ -139,6 +128,28 @@ function goToContestAnnouncements() {
 
 function handleWorkspaceStageNavigation(stage: ContestWorkbenchStageKey) {
   selectTab(stage)
+}
+
+function openAwdConfigPage(challenge: AdminContestChallengeViewData) {
+  if (!contest.value) return
+  void router.push({
+    name: 'ContestAWDConfig',
+    params: { id: contest.value.id },
+    query: challenge.awd_service_id ? { service: challenge.awd_service_id } : undefined,
+  })
+}
+
+function handleNavigateAwdChallengeFromPreflight(challengeId: string) {
+  const challenge = awdChallengeLinks.value.find(
+    (item) => item.awd_challenge_id === challengeId || item.challenge_id === challengeId
+  )
+  if (challenge) {
+    openAwdConfigPage(challenge)
+    return
+  }
+  if (contest.value) {
+    void router.push({ name: 'ContestAWDConfig', params: { id: contest.value.id } })
+  }
 }
 
 async function handleSave(draft: ContestFormDraft): Promise<void> {
@@ -236,28 +247,12 @@ onUnmounted(() => {
         @update:draft="handleDraftChange"
         @save="handleSave"
         @refresh-awd-workbench="contest && void refreshAwdWorkbenchData(contest.id)"
-        @edit:awd-challenge="openAwdChallengeEditDialog"
+        @edit:awd-challenge="openAwdConfigPage"
         @retry:preflight="contest && void refreshAwdWorkbenchData(contest.id)"
         @navigate:awd-challenge-from-preflight="handleNavigateAwdChallengeFromPreflight"
         @navigate:stage="handleWorkspaceStageNavigation"
       />
     </main>
-
-    <AWDChallengeConfigDialog
-      v-if="contest?.mode === 'awd'"
-      :contest-id="contest.id"
-      :open="awdChallengeConfigDialogOpen"
-      :mode="awdChallengeConfigMode"
-      :challenge-options="[]"
-      :awd-challenge-options="awdChallengeCatalog"
-      :existing-challenge-ids="existingAwdChallengeIds"
-      :draft="editingAwdChallengeLink"
-      :loading-challenge-catalog="false"
-      :loading-awd-challenge-catalog="loadingAwdChallengeCatalog"
-      :saving="savingChallengeConfig"
-      @update:open="awdChallengeConfigDialogOpen = $event"
-      @save="handleSaveAwdChallengeConfig"
-    />
   </div>
 </template>
 

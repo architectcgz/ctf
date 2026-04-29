@@ -35,7 +35,7 @@ function matchExact(path: string, candidates: string[]): boolean {
 }
 
 function matchContestOperationsManagePath(path: string): boolean {
-  return /^\/platform\/contests\/[^/]+\/manage(?:\/.*)?$/.test(path)
+  return /^\/platform\/contests\/[^/]+\/(?:manage|awd-config)(?:\/.*)?$/.test(path)
 }
 
 const backofficeModules: BackofficeModule[] = [
