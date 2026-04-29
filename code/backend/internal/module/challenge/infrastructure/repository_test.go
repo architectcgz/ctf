@@ -58,7 +58,7 @@ func TestRepositoryList(t *testing.T) {
 	}
 }
 
-func TestRepositoryListPublishedHidesContestAWDServiceChallenges(t *testing.T) {
+func TestRepositoryListPublishedUsesOnlyJeopardyChallenges(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	repo := NewRepository(db)
 
@@ -66,9 +66,9 @@ func TestRepositoryListPublishedHidesContestAWDServiceChallenges(t *testing.T) {
 		Title:  "Normal Web",
 		Status: model.ChallengeStatusPublished,
 	}
-	awdChallenge := &model.Challenge{
-		Title:  "AWD Web",
-		Status: model.ChallengeStatusPublished,
+	awdChallenge := &model.AWDChallenge{
+		Name:   "AWD Web",
+		Status: model.AWDChallengeStatusPublished,
 	}
 	if err := db.Create(normalChallenge).Error; err != nil {
 		t.Fatalf("create normal challenge: %v", err)
@@ -88,10 +88,10 @@ func TestRepositoryListPublishedHidesContestAWDServiceChallenges(t *testing.T) {
 		t.Fatalf("create contest: %v", err)
 	}
 	if err := db.Create(&model.ContestAWDService{
-		ContestID:   contest.ID,
-		ChallengeID: awdChallenge.ID,
-		DisplayName: "AWD Web",
-		IsVisible:   true,
+		ContestID:      contest.ID,
+		AWDChallengeID: awdChallenge.ID,
+		DisplayName:    "AWD Web",
+		IsVisible:      true,
 	}).Error; err != nil {
 		t.Fatalf("create awd service: %v", err)
 	}

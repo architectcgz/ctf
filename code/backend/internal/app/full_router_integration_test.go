@@ -1091,11 +1091,11 @@ func seedFullRouterData(t *testing.T, env *fullRouterTestEnv) {
 		t.Fatalf("create awd round: %v", err)
 	}
 	if err := env.db.Create(&model.AWDTeamService{
-		RoundID:       env.awdRound.ID,
-		TeamID:        env.team.ID,
-		ChallengeID:   env.challenge.ID,
-		ServiceStatus: model.AWDServiceStatusUp,
-		CheckResult:   `{"status":"ok"}`,
+		RoundID:        env.awdRound.ID,
+		TeamID:         env.team.ID,
+		AWDChallengeID: env.challenge.ID,
+		ServiceStatus:  model.AWDServiceStatusUp,
+		CheckResult:    `{"status":"ok"}`,
 	}).Error; err != nil {
 		t.Fatalf("create awd team service: %v", err)
 	}
@@ -1103,7 +1103,7 @@ func seedFullRouterData(t *testing.T, env *fullRouterTestEnv) {
 		RoundID:        env.awdRound.ID,
 		AttackerTeamID: env.team.ID,
 		VictimTeamID:   env.team.ID,
-		ChallengeID:    env.challenge.ID,
+		AWDChallengeID: env.challenge.ID,
 		AttackType:     model.AWDAttackTypeFlagCapture,
 		Source:         model.AWDAttackSourceManual,
 		IsSuccess:      false,
