@@ -12,7 +12,7 @@ type CreateContestAWDServiceReq struct {
 	DisplayName            string         `json:"display_name" binding:"omitempty,max=128"`
 	Order                  int            `json:"order" binding:"omitempty,min=0"`
 	IsVisible              *bool          `json:"is_visible"`
-	CheckerType            *string        `json:"checker_type" binding:"omitempty,oneof=legacy_probe http_standard"`
+	CheckerType            *string        `json:"checker_type" binding:"omitempty,oneof=legacy_probe http_standard tcp_standard script_checker"`
 	CheckerConfig          map[string]any `json:"checker_config"`
 	AWDSLAScore            *int           `json:"awd_sla_score" binding:"omitempty,min=0,max=5"`
 	AWDDefenseScore        *int           `json:"awd_defense_score" binding:"omitempty,min=0,max=5"`
@@ -25,7 +25,7 @@ type UpdateContestAWDServiceReq struct {
 	DisplayName            *string        `json:"display_name" binding:"omitempty,max=128"`
 	Order                  *int           `json:"order" binding:"omitempty,min=0"`
 	IsVisible              *bool          `json:"is_visible"`
-	CheckerType            *string        `json:"checker_type" binding:"omitempty,oneof=legacy_probe http_standard"`
+	CheckerType            *string        `json:"checker_type" binding:"omitempty,oneof=legacy_probe http_standard tcp_standard script_checker"`
 	CheckerConfig          map[string]any `json:"checker_config"`
 	AWDSLAScore            *int           `json:"awd_sla_score" binding:"omitempty,min=0,max=5"`
 	AWDDefenseScore        *int           `json:"awd_defense_score" binding:"omitempty,min=0,max=5"`

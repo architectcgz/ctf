@@ -27,11 +27,14 @@ import {
   buildCheckerConfigPreview,
   buildHTTPStandardCheckerConfig,
   buildLegacyProbeCheckerConfig,
+  buildScriptCheckerConfig,
   createHTTPStandardDraft,
   createLegacyProbeDraft,
+  createScriptCheckerDraft,
   getHTTPStandardPresetDraft,
   type AWDHTTPStandardDraft,
   type AWDLegacyProbeDraft,
+  type AWDScriptCheckerDraft,
 } from './awdCheckerConfigSupport'
 import {
   AWD_CHECKER_PREVIEW_ATTEMPT_TOTAL,
@@ -99,6 +102,7 @@ const form = reactive({
 
 const legacyProbeDraft = reactive<AWDLegacyProbeDraft>(createLegacyProbeDraft())
 const httpStandardDraft = reactive<AWDHTTPStandardDraft>(createHTTPStandardDraft())
+const scriptCheckerDraft = reactive<AWDScriptCheckerDraft>(createScriptCheckerDraft())
 const previewForm = reactive({
   access_url: '',
   preview_flag: 'flag{preview}',
@@ -139,6 +143,10 @@ function createFieldErrorState() {
     http_get_headers_text: '',
     http_havoc_expected_status: '',
     http_havoc_headers_text: '',
+    script_entry: '',
+    script_timeout: '',
+    script_args_text: '',
+    script_env_text: '',
     preview_access_url: '',
   }
 }
@@ -190,6 +198,7 @@ const checkerPreviewText = computed(() =>
     buildCheckerConfigPreview(form.awd_checker_type, {
       legacyProbeDraft,
       httpStandardDraft,
+      scriptCheckerDraft,
     }),
     null,
     2
@@ -406,17 +415,28 @@ function assignHTTPStandardDraft(next: AWDHTTPStandardDraft) {
   httpStandardDraft.havoc.expected_substring = next.havoc.expected_substring
 }
 
+function assignScriptCheckerDraft(next: AWDScriptCheckerDraft) {
+  scriptCheckerDraft.runtime = next.runtime
+  scriptCheckerDraft.entry = next.entry
+  scriptCheckerDraft.timeout_sec = next.timeout_sec
+  scriptCheckerDraft.args_text = next.args_text
+  scriptCheckerDraft.env_text = next.env_text
+  scriptCheckerDraft.output = next.output
+}
+
 function applyAwdChallengeCheckerDefaults(challenge: AdminAwdChallengeData | null) {
   if (!challenge) {
     form.awd_checker_type = 'legacy_probe'
     assignLegacyProbeDraft(createLegacyProbeDraft())
     assignHTTPStandardDraft(createHTTPStandardDraft())
+    assignScriptCheckerDraft(createScriptCheckerDraft())
     return
   }
 
   form.awd_checker_type = challenge.checker_type || 'legacy_probe'
   assignLegacyProbeDraft(createLegacyProbeDraft(challenge.checker_config))
   assignHTTPStandardDraft(createHTTPStandardDraft(challenge.checker_config))
+  assignScriptCheckerDraft(createScriptCheckerDraft(challenge.checker_config))
 }
 
 watch(
@@ -441,6 +461,7 @@ watch(
     form.awd_defense_score = props.draft?.awd_defense_score ?? DEFAULT_AWD_DEFENSE_SCORE
     assignLegacyProbeDraft(createLegacyProbeDraft(props.draft?.awd_checker_config))
     assignHTTPStandardDraft(createHTTPStandardDraft(props.draft?.awd_checker_config))
+    assignScriptCheckerDraft(createScriptCheckerDraft(props.draft?.awd_checker_config))
     if (props.mode === 'create') {
       applyAwdChallengeCheckerDefaults(selectedAwdChallenge.value)
     }
@@ -608,9 +629,14 @@ function validate(): boolean {
 }
 
 function buildCheckerConfigResult(strict = true) {
-  return form.awd_checker_type === 'http_standard'
-    ? buildHTTPStandardCheckerConfig(httpStandardDraft, strict)
-    : buildLegacyProbeCheckerConfig(legacyProbeDraft)
+  switch (form.awd_checker_type) {
+    case 'http_standard':
+      return buildHTTPStandardCheckerConfig(httpStandardDraft, strict)
+    case 'script_checker':
+      return buildScriptCheckerConfig(scriptCheckerDraft, strict)
+    default:
+      return buildLegacyProbeCheckerConfig(legacyProbeDraft)
+  }
 }
 
 function buildCheckerConfig(strict = true) {
@@ -896,6 +922,7 @@ function handleSubmit() {
             >
               <option value="legacy_probe">基础探活</option>
               <option value="http_standard">HTTP 标准 Checker</option>
+              <option value="script_checker">脚本 Checker</option>
             </select>
           </span>
         </div>
@@ -945,7 +972,9 @@ function handleSubmit() {
               {{
                 form.awd_checker_type === 'http_standard'
                   ? 'HTTP Standard 配置'
-                  : 'Legacy Probe 配置'
+                  : form.awd_checker_type === 'script_checker'
+                    ? 'Script Checker 配置'
+                    : 'Legacy Probe 配置'
               }}
             </h3>
           </div>
@@ -953,7 +982,9 @@ function handleSubmit() {
             {{
               form.awd_checker_type === 'http_standard'
                 ? '按动作填写巡检规则，保存时会自动构造成 awd_checker_config。'
-                : '配置基础探活路径；留空则回退全局健康检查路径。'
+                : form.awd_checker_type === 'script_checker'
+                  ? '声明题目包内私有 checker 脚本，由平台安全沙箱执行。'
+                  : '配置基础探活路径；留空则回退全局健康检查路径。'
             }}
           </p>
         </header>
@@ -977,7 +1008,110 @@ function handleSubmit() {
           </p>
         </div>
 
-        <template v-else>
+        <div
+          v-else-if="form.awd_checker_type === 'script_checker'"
+          class="grid gap-4 sm:grid-cols-2"
+        >
+          <div class="ui-field awd-config-field">
+            <label class="ui-field__label" for="awd-challenge-config-script-runtime">
+              Runtime
+            </label>
+            <span class="ui-control-wrap">
+              <select
+                id="awd-challenge-config-script-runtime"
+                v-model="scriptCheckerDraft.runtime"
+                class="ui-control"
+              >
+                <option value="python3">python3</option>
+              </select>
+            </span>
+          </div>
+
+          <div class="ui-field awd-config-field">
+            <label class="ui-field__label" for="awd-challenge-config-script-output">
+              输出格式
+            </label>
+            <span class="ui-control-wrap">
+              <select
+                id="awd-challenge-config-script-output"
+                v-model="scriptCheckerDraft.output"
+                class="ui-control"
+              >
+                <option value="exit_code">Exit Code</option>
+                <option value="json">JSON</option>
+              </select>
+            </span>
+          </div>
+
+          <div class="ui-field awd-config-field">
+            <label class="ui-field__label" for="awd-challenge-config-script-entry">
+              入口文件
+            </label>
+            <span class="ui-control-wrap" :class="{ 'is-error': !!fieldErrors.script_entry }">
+              <input
+                id="awd-challenge-config-script-entry"
+                v-model="scriptCheckerDraft.entry"
+                type="text"
+                class="ui-control"
+              />
+            </span>
+            <p v-if="fieldErrors.script_entry" class="ui-field__error">
+              {{ fieldErrors.script_entry }}
+            </p>
+          </div>
+
+          <div class="ui-field awd-config-field">
+            <label class="ui-field__label" for="awd-challenge-config-script-timeout">
+              超时时间
+            </label>
+            <span class="ui-control-wrap" :class="{ 'is-error': !!fieldErrors.script_timeout }">
+              <input
+                id="awd-challenge-config-script-timeout"
+                v-model.number="scriptCheckerDraft.timeout_sec"
+                type="number"
+                min="1"
+                max="60"
+                step="1"
+                class="ui-control"
+              />
+            </span>
+            <p v-if="fieldErrors.script_timeout" class="ui-field__error">
+              {{ fieldErrors.script_timeout }}
+            </p>
+          </div>
+
+          <div class="ui-field awd-config-field sm:col-span-2">
+            <label class="ui-field__label" for="awd-challenge-config-script-args">Args</label>
+            <span class="ui-control-wrap" :class="{ 'is-error': !!fieldErrors.script_args_text }">
+              <textarea
+                id="awd-challenge-config-script-args"
+                v-model="scriptCheckerDraft.args_text"
+                rows="3"
+                class="ui-control"
+              />
+            </span>
+            <p v-if="fieldErrors.script_args_text" class="ui-field__error">
+              {{ fieldErrors.script_args_text }}
+            </p>
+          </div>
+
+          <div class="ui-field awd-config-field sm:col-span-2">
+            <label class="ui-field__label" for="awd-challenge-config-script-env">Env</label>
+            <span class="ui-control-wrap" :class="{ 'is-error': !!fieldErrors.script_env_text }">
+              <textarea
+                id="awd-challenge-config-script-env"
+                v-model="scriptCheckerDraft.env_text"
+                rows="4"
+                class="ui-control"
+              />
+            </span>
+            <p v-if="fieldErrors.script_env_text" class="ui-field__error">
+              {{ fieldErrors.script_env_text }}
+            </p>
+          </div>
+        </div>
+
+        <template v-else-if="form.awd_checker_type === 'http_standard'">
           <div class="checker-preset-strip">
             <button
               v-for="preset in AWD_HTTP_STANDARD_PRESETS"

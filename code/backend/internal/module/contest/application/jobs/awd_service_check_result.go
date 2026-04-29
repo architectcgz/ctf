@@ -26,6 +26,21 @@ func (u *AWDRoundUpdater) checkTeamChallengeServices(
 	switch checkerType {
 	case model.AWDCheckerTypeHTTPStandard:
 		outcome, err = u.buildAWDCheckOutcomeFromHTTPStandard(ctx, contestID, round, teamID, definition, instances, source)
+	case model.AWDCheckerTypeScript:
+		roundFlag, flagErr := u.resolveRoundFlag(ctx, contestID, round, teamID, definition)
+		if flagErr != nil {
+			result := awdServiceCheckResult{
+				CheckedAt:            time.Now().UTC().Format(time.RFC3339),
+				CheckSource:          contestdomain.NormalizeAWDCheckSource(source),
+				CheckerType:          checkerType,
+				InstanceCount:        len(instances),
+				HealthyInstanceCount: 0,
+				FailedInstanceCount:  len(instances),
+			}
+			outcome, err = buildAWDDownCheckOutcome(result, "flag_unavailable", sanitizeAWDCheckError(flagErr))
+			break
+		}
+		outcome, err = u.buildAWDCheckOutcomeFromScriptChecker(ctx, contestID, round, teamID, definition, instances, source, roundFlag)
 	default:
 		healthPath := resolveAWDCheckerHealthPath(definition.CheckerConfig, u.cfg.CheckerHealthPath)
 		result := awdServiceCheckResult{
