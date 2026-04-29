@@ -138,6 +138,52 @@ func TestAWDChallengeImportStoresScriptCheckerArtifactPrivately(t *testing.T) {
 	}
 }
 
+func TestAWDChallengeImportKeepsTCPStandardCheckerConfig(t *testing.T) {
+	db := testsupport.SetupTestDB(t)
+	repo := challengeinfra.NewRepository(db)
+	service := NewAWDChallengeImportService(db, repo)
+
+	previewDir := filepath.Join(t.TempDir(), "awd-imports")
+	t.Setenv("AWD_CHALLENGE_IMPORT_PREVIEW_DIR", previewDir)
+
+	preview, err := service.PreviewImport(
+		context.Background(),
+		2001,
+		"awd-tcp-length-gate.zip",
+		bytes.NewReader(buildAWDTCPCheckerImportArchive(t)),
+	)
+	if err != nil {
+		t.Fatalf("PreviewImport() error = %v", err)
+	}
+	if preview.ServiceType != "binary_tcp" || preview.CheckerType != "tcp_standard" {
+		t.Fatalf("unexpected preview awd fields: %+v", preview)
+	}
+
+	committed, err := service.CommitImport(context.Background(), 2001, preview.ID)
+	if err != nil {
+		t.Fatalf("CommitImport() error = %v", err)
+	}
+	stored, err := repo.FindAWDChallengeByID(context.Background(), committed.ID)
+	if err != nil {
+		t.Fatalf("FindByID() error = %v", err)
+	}
+	if stored.ServiceType != "binary_tcp" || stored.CheckerType != "tcp_standard" {
+		t.Fatalf("unexpected stored awd fields: %+v", stored)
+	}
+
+	var checkerConfig map[string]any
+	if err := json.Unmarshal([]byte(stored.CheckerConfig), &checkerConfig); err != nil {
+		t.Fatalf("unmarshal checker_config: %v", err)
+	}
+	steps, ok := checkerConfig["steps"].([]any)
+	if !ok || len(steps) != 3 {
+		t.Fatalf("unexpected tcp checker steps: %+v", checkerConfig)
+	}
+	if checkerConfig["timeout_ms"] != float64(3000) {
+		t.Fatalf("unexpected tcp checker timeout: %+v", checkerConfig)
+	}
+}
+
 func buildAWDChallengeImportArchive(t *testing.T) []byte {
 	t.Helper()
 
@@ -206,6 +252,77 @@ extensions:
       service_port: 8080
 `,
 		"awd-bank-portal-01/statement.md": "银行门户存在越权修改 flag 的逻辑。",
+	}
+
+	var buffer bytes.Buffer
+	writer := zip.NewWriter(&buffer)
+	for name, content := range files {
+		fileWriter, err := writer.Create(name)
+		if err != nil {
+			t.Fatalf("Create(%s) error = %v", name, err)
+		}
+		if _, err := io.WriteString(fileWriter, content); err != nil {
+			t.Fatalf("WriteString(%s) error = %v", name, err)
+		}
+	}
+	if err := writer.Close(); err != nil {
+		t.Fatalf("Close() error = %v", err)
+	}
+	return buffer.Bytes()
+}
+
+func buildAWDTCPCheckerImportArchive(t *testing.T) []byte {
+	t.Helper()
+
+	files := map[string]string{
+		"awd-tcp-length-gate/challenge.yml": `api_version: v1
+kind: challenge
+
+meta:
+  mode: awd
+  slug: awd-tcp-length-gate
+  title: TCP Length Gate
+  category: pwn
+  difficulty: medium
+
+content:
+  statement: statement.md
+
+flag:
+  type: dynamic
+  prefix: awd
+
+runtime:
+  type: container
+  image:
+    ref: registry.example.edu/ctf/awd-tcp-length-gate:v1
+
+extensions:
+  awd:
+    service_type: binary_tcp
+    deployment_mode: single_container
+    checker:
+      type: tcp_standard
+      config:
+        timeout_ms: 3000
+        steps:
+          - send: "PING\n"
+            expect_contains: PONG
+          - send_template: "SET_FLAG {{FLAG}}\n"
+            expect_contains: OK
+          - send: "GET_FLAG\n"
+            expect_contains: "{{FLAG}}"
+    flag_policy:
+      mode: dynamic_team
+    defense_entry:
+      mode: tcp
+    access_config:
+      public_base_url: tcp://{{TEAM_HOST}}:8080
+      service_port: 8080
+    runtime_config:
+      service_port: 8080
+`,
+		"awd-tcp-length-gate/statement.md": "TCP checker service.",
 	}
 
 	var buffer bytes.Buffer
