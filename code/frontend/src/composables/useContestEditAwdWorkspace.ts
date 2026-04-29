@@ -38,8 +38,6 @@ interface UseContestEditAwdWorkspaceOptions {
   selectTab: (tab: ContestWorkbenchStageKey) => void
 }
 
-type AwdConfigFocusSource = 'pool' | 'preflight' | null
-
 export function useContestEditAwdWorkspace(options: UseContestEditAwdWorkspaceOptions) {
   const { contest, contestId, selectTab } = options
   const toast = useToast()
@@ -55,23 +53,9 @@ export function useContestEditAwdWorkspace(options: UseContestEditAwdWorkspaceOp
   const awdChallengeConfigDialogOpen = ref(false)
   const awdChallengeConfigMode = ref<'create' | 'edit'>('create')
   const editingAwdChallengeLink = ref<AdminContestChallengeViewData | null>(null)
-  const activeAwdChallengeId = ref<string | null>(null)
-  const awdConfigFocusSource = ref<AwdConfigFocusSource>(null)
   const loadingAwdChallengeCatalog = ref(false)
   const awdChallengePoolCreateRequestKey = ref(0)
 
-  const sortedAwdChallengeLinks = computed(() =>
-    [...awdChallengeLinks.value].sort(
-      (left, right) => left.order - right.order || left.challenge_id.localeCompare(right.challenge_id)
-    )
-  )
-  const activeAwdChallengeIndex = computed(() =>
-    sortedAwdChallengeLinks.value.findIndex((item) => item.challenge_id === activeAwdChallengeId.value)
-  )
-  const canNavigatePreviousAwdChallenge = computed(() => activeAwdChallengeIndex.value > 0)
-  const canNavigateNextAwdChallenge = computed(
-    () => activeAwdChallengeIndex.value >= 0 && activeAwdChallengeIndex.value < sortedAwdChallengeLinks.value.length - 1
-  )
   const existingAwdChallengeIds = computed(() => awdChallengeLinks.value.map((item) => item.challenge_id))
 
   function humanizeRequestError(error: unknown, fallback: string): string {
@@ -143,11 +127,6 @@ export function useContestEditAwdWorkspace(options: UseContestEditAwdWorkspaceOp
     }
   }
 
-  function setActiveAwdChallenge(challengeId: string | null, source: AwdConfigFocusSource) {
-    activeAwdChallengeId.value = challengeId
-    awdConfigFocusSource.value = challengeId ? source : null
-  }
-
   function buildAwdServicePayload(
     payload: ContestAwdChallengeConfigPayload
   ): AdminContestAWDServiceCreatePayload {
@@ -164,15 +143,6 @@ export function useContestEditAwdWorkspace(options: UseContestEditAwdWorkspaceOp
     }
   }
 
-  function focusAwdChallengeByOffset(offset: -1 | 1) {
-    if (activeAwdChallengeIndex.value < 0) return
-
-    const nextChallenge = sortedAwdChallengeLinks.value[activeAwdChallengeIndex.value + offset]
-    if (!nextChallenge) return
-
-    setActiveAwdChallenge(nextChallenge.challenge_id, awdConfigFocusSource.value)
-  }
-
   function openAwdChallengeCreateDialog() {
     selectTab('pool')
     editingAwdChallengeLink.value = null
@@ -181,7 +151,6 @@ export function useContestEditAwdWorkspace(options: UseContestEditAwdWorkspaceOp
   }
 
   function openAwdChallengeEditDialog(challenge: AdminContestChallengeViewData) {
-    setActiveAwdChallenge(challenge.challenge_id, awdConfigFocusSource.value)
     awdChallengeConfigMode.value = 'edit'
     editingAwdChallengeLink.value = challenge
     awdChallengeConfigDialogOpen.value = true
@@ -213,36 +182,23 @@ export function useContestEditAwdWorkspace(options: UseContestEditAwdWorkspaceOp
     }
   }
 
-  function handleOpenAwdConfigFromPool(challenge: AdminContestChallengeViewData) {
-    activeAwdChallengeId.value = challenge.challenge_id
-    awdConfigFocusSource.value = 'pool'
-    selectTab('awd-config')
-  }
-
-  function handleNavigateAwdChallengeFromPreflight(challengeId: string) {
-    setActiveAwdChallenge(challengeId, 'preflight')
+  function handleNavigateAwdChallengeFromPreflight(_challengeId: string) {
     selectTab('awd-config')
   }
 
   return {
-    activeAwdChallengeId,
     awdChallengeConfigDialogOpen,
     awdChallengeConfigMode,
     awdChallengeLinks,
     awdChallengeLinksLoaded,
     awdChallengePoolCreateRequestKey,
-    awdConfigFocusSource,
     awdConfigLoadError,
     awdPreflightLoadError,
     awdReadiness,
     awdChallengeCatalog,
-    canNavigateNextAwdChallenge,
-    canNavigatePreviousAwdChallenge,
     editingAwdChallengeLink,
     existingAwdChallengeIds,
-    focusAwdChallengeByOffset,
     handleNavigateAwdChallengeFromPreflight,
-    handleOpenAwdConfigFromPool,
     handleSaveAwdChallengeConfig,
     loadAwdChallengeCatalog,
     loadingAwdChallengeCatalog,

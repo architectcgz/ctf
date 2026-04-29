@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
-import { ChevronLeft, ChevronRight, Edit, Plus } from 'lucide-vue-next'
+import { Edit } from 'lucide-vue-next'
 
 import type { AdminContestChallengeViewData } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
@@ -10,34 +10,18 @@ import { useAwdCheckResultPresentation } from '@/composables/useAwdCheckResultPr
 const props = withDefaults(
   defineProps<{
     challengeLinks: AdminContestChallengeViewData[]
-    activeChallengeId?: string | null
-    focusSource?: 'pool' | 'preflight' | null
-    canNavigatePrevious?: boolean
-    canNavigateNext?: boolean
   }>(),
-  {
-    activeChallengeId: null,
-    focusSource: null,
-    canNavigatePrevious: false,
-    canNavigateNext: false,
-  }
+  {}
 )
 
 const emit = defineEmits<{
-  create: []
   edit: [challenge: AdminContestChallengeViewData]
-  previous: []
-  next: []
 }>()
 
 const sortedChallengeLinks = computed(() =>
   [...props.challengeLinks].sort(
     (left, right) => left.order - right.order || left.challenge_id.localeCompare(right.challenge_id)
   )
-)
-const activeChallenge = computed(
-  () =>
-    sortedChallengeLinks.value.find((item) => item.challenge_id === props.activeChallengeId) || null
 )
 
 const summaryItems = computed(() => [
@@ -185,9 +169,6 @@ function getValidationHint(item: AdminContestChallengeViewData): string {
   }
 }
 
-function isActiveChallenge(item: AdminContestChallengeViewData): boolean {
-  return item.challenge_id === props.activeChallengeId
-}
 </script>
 
 <template>
@@ -198,10 +179,10 @@ function isActiveChallenge(item: AdminContestChallengeViewData): boolean {
           AWD Service Config
         </div>
         <h1 class="pane-title">
-          AWD 服务配置
+          AWD 编排
         </h1>
         <p class="pane-description">
-          针对每道题目深度定义 Checker 裁判逻辑、分值权重及就绪状态验证。
+          维护 Checker、SLA / 防守权重、试跑结果和就绪状态。
         </p>
       </div>
 
@@ -231,74 +212,15 @@ function isActiveChallenge(item: AdminContestChallengeViewData): boolean {
             Challenge Directory
           </div>
           <h3 class="list-heading__title">
-            题目目录
+            校验目录
           </h3>
         </div>
-        <button
-          id="awd-challenge-config-create"
-          class="ui-btn ui-btn--primary"
-          @click="emit('create')"
-        >
-          <Plus class="h-3.5 w-3.5" /> 关联新资源
-        </button>
       </header>
-
-      <section
-        v-if="activeChallenge"
-        class="config-focus-card"
-      >
-        <header class="list-heading config-focus-card__head">
-          <div>
-            <div class="journal-note-label">
-              Current Focus
-            </div>
-            <h3 class="list-heading__title">
-              当前焦点题目
-            </h3>
-          </div>
-          <div class="ui-row-actions config-row__actions">
-            <button
-              type="button"
-              class="ui-btn ui-btn--secondary"
-              :disabled="!canNavigatePrevious"
-              @click="emit('previous')"
-            >
-              上一题
-            </button>
-            <button
-              type="button"
-              class="ui-btn ui-btn--secondary"
-              :disabled="!canNavigateNext"
-              @click="emit('next')"
-            >
-              下一题
-            </button>
-            <button
-              type="button"
-              class="ui-btn ui-btn--primary"
-              @click="emit('edit', activeChallenge)"
-            >
-              编辑配置
-            </button>
-          </div>
-        </header>
-        <div class="config-focus-card__body">
-          <span class="active-edit-banner__label">正在编辑</span>
-          <RouterLink
-            class="challenge-title-link config-focus-card__title-link"
-            :to="getChallengePreviewRoute(activeChallenge)"
-            :title="`打开题目预览：${getChallengeTitle(activeChallenge)}`"
-          >
-            {{ getChallengeTitle(activeChallenge) }}
-          </RouterLink>
-          <span class="config-focus-card__hint">{{ getValidationHint(activeChallenge) }}</span>
-        </div>
-      </section>
 
       <AppEmpty
         v-if="sortedChallengeLinks.length === 0"
         title="暂无关联服务"
-        description="请先在题目池中关联题目，或点击右侧新增。"
+        description="请先在题目编排中关联题目。"
         icon="Layers"
         class="py-20"
       />
@@ -317,7 +239,7 @@ function isActiveChallenge(item: AdminContestChallengeViewData): boolean {
                 裁判引擎
               </th>
               <th class="col-meta">
-                分值权重
+                SLA / 防守权重
               </th>
               <th class="col-meta">
                 规则摘要
@@ -335,7 +257,6 @@ function isActiveChallenge(item: AdminContestChallengeViewData): boolean {
               v-for="item in sortedChallengeLinks"
               :key="item.id"
               class="studio-row"
-              :class="{ 'is-active': isActiveChallenge(item) }"
             >
               <td class="col-identity">
                 <div class="challenge-identity">
@@ -359,8 +280,8 @@ function isActiveChallenge(item: AdminContestChallengeViewData): boolean {
               </td>
               <td class="col-meta">
                 <div class="score-stack">
-                  <span class="score-main">{{ item.points }} pts</span>
-                  <span class="score-sub">SLA:{{ item.awd_sla_score }} / D:{{ item.awd_defense_score }}</span>
+                  <span class="score-main">SLA {{ item.awd_sla_score }}</span>
+                  <span class="score-sub">Defense {{ item.awd_defense_score }}</span>
                 </div>
               </td>
               <td class="col-meta">
@@ -447,62 +368,6 @@ function isActiveChallenge(item: AdminContestChallengeViewData): boolean {
   --workspace-directory-title-margin-top: var(--space-1-5);
 }
 
-.config-focus-card {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  border: 1px solid color-mix(in srgb, var(--workspace-line-soft) 86%, transparent);
-  border-radius: var(--ui-control-radius-lg);
-  background:
-    radial-gradient(
-      circle at top right,
-      color-mix(in srgb, var(--color-primary) 10%, transparent),
-      transparent 46%
-    ),
-    color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-primary-soft));
-  padding: var(--space-4);
-  box-shadow: 0 var(--space-2) var(--space-5)
-    color-mix(in srgb, var(--color-shadow-soft) 22%, transparent);
-}
-
-.config-focus-card__head {
-  align-items: center;
-}
-
-.config-row__actions {
-  flex-wrap: wrap;
-  justify-content: flex-end;
-}
-
-.config-focus-card__body {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-2) var(--space-3);
-  min-width: 0;
-}
-
-.active-edit-banner__label {
-  font-size: var(--font-size-11);
-  font-weight: 800;
-  letter-spacing: var(--ui-badge-spacing);
-  text-transform: uppercase;
-  color: var(--color-primary);
-}
-
-.config-focus-card__title-link {
-  min-width: 0;
-  font-weight: 800;
-  color: var(--color-text-primary);
-}
-
-.config-focus-card__hint {
-  flex: 1 1 var(--ui-selector-control-min-width);
-  min-width: 0;
-  font-size: var(--font-size-13);
-  color: var(--color-text-secondary);
-}
-
 .studio-table-wrap {
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--workspace-line-soft) 86%, transparent);
@@ -544,14 +409,6 @@ function isActiveChallenge(item: AdminContestChallengeViewData): boolean {
 
 .studio-row {
   transition: background var(--ui-motion-fast);
-}
-
-.studio-row.is-active {
-  background: var(--color-primary-soft);
-}
-
-.studio-row.is-active .challenge-title {
-  color: var(--color-primary);
 }
 
 .challenge-title {
