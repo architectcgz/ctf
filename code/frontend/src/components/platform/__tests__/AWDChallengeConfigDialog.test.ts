@@ -127,6 +127,14 @@ function mountDialog(props?: Record<string, unknown>) {
   })
 }
 
+async function enableCheckerOverride(wrapper: ReturnType<typeof mountDialog>) {
+  const toggle = wrapper.get('#awd-checker-override-enabled')
+  if (!(toggle.element as HTMLInputElement).checked) {
+    await toggle.setValue(true)
+    await flushPromises()
+  }
+}
+
 describe('AWDChallengeConfigDialog', () => {
   beforeEach(() => {
     vi.useRealTimers()
@@ -234,11 +242,10 @@ describe('AWDChallengeConfigDialog', () => {
   it('应该在新增赛事题目时继承 AWD 题目包里的 checker 配置', async () => {
     const wrapper = mountDialog()
 
-    expect(
-      (wrapper.get('#awd-challenge-config-checker-type').element as HTMLSelectElement).value
-    ).toBe('http_standard')
-    expect((wrapper.get('#awd-http-put-path').element as HTMLInputElement).value).toBe('/api/flag')
-    expect((wrapper.get('#awd-http-get-path').element as HTMLInputElement).value).toBe('/api/flag')
+    expect(wrapper.text()).toContain('题目包配置')
+    expect(wrapper.text()).toContain('默认使用题目包中的 Checker')
+    expect(wrapper.find('#awd-challenge-config-checker-type').exists()).toBe(false)
+    expect(wrapper.find('#awd-checker-override-enabled').exists()).toBe(true)
 
     await wrapper.get('#awd-challenge-config-submit').trigger('click')
 
@@ -270,6 +277,7 @@ describe('AWDChallengeConfigDialog', () => {
   it('应该允许通过预置模板创建 http_standard 配置', async () => {
     const wrapper = mountDialog()
 
+    await enableCheckerOverride(wrapper)
     await wrapper.get('#awd-challenge-config-checker-type').setValue('http_standard')
     await wrapper.get('#awd-http-preset-rest-api').trigger('click')
     await wrapper.get('#awd-http-put-path').setValue('/flag')
@@ -310,6 +318,7 @@ describe('AWDChallengeConfigDialog', () => {
   it('应该允许编辑 tcp_standard 配置并保存结构化步骤', async () => {
     const wrapper = mountDialog()
 
+    await enableCheckerOverride(wrapper)
     await wrapper.get('#awd-challenge-config-checker-type').setValue('tcp_standard')
     await wrapper.get('#awd-tcp-timeout-ms').setValue(5000)
     await wrapper.get('#awd-tcp-step-0-send').setValue('HELLO\n')
@@ -354,6 +363,7 @@ describe('AWDChallengeConfigDialog', () => {
   it('应该在 legacy_probe 模式下使用健康检查路径字段保存', async () => {
     const wrapper = mountDialog()
 
+    await enableCheckerOverride(wrapper)
     await wrapper.get('#awd-challenge-config-checker-type').setValue('legacy_probe')
     await wrapper.get('#awd-challenge-config-legacy-health-path').setValue('/healthz')
     await wrapper.get('#awd-challenge-config-submit').trigger('click')
@@ -419,6 +429,7 @@ describe('AWDChallengeConfigDialog', () => {
 
     const wrapper = mountDialog()
 
+    await enableCheckerOverride(wrapper)
     await wrapper.get('#awd-challenge-config-checker-type').setValue('http_standard')
     await wrapper.get('#awd-http-preset-rest-api').trigger('click')
     await wrapper.get('#awd-http-put-path').setValue('/api/flag')
@@ -696,6 +707,7 @@ describe('AWDChallengeConfigDialog', () => {
 
     const wrapper = mountDialog()
 
+    await enableCheckerOverride(wrapper)
     await wrapper.get('#awd-challenge-config-checker-type').setValue('http_standard')
     await wrapper.get('#awd-http-preset-rest-api').trigger('click')
     await wrapper.get('#awd-challenge-preview-submit').trigger('click')
@@ -747,7 +759,9 @@ describe('AWDChallengeConfigDialog', () => {
     await wrapper.get('#awd-challenge-preview-submit').trigger('click')
     await flushPromises()
 
-    expect(wrapper.text()).toContain('自动拉起预览实例失败：当前 AWD 题目引用的运行镜像暂时无法拉取。')
+    expect(wrapper.text()).toContain(
+      '自动拉起预览实例失败：当前 AWD 题目引用的运行镜像暂时无法拉取。'
+    )
     expect(wrapper.text()).toContain(
       '如果这是示例占位地址，请先在当前环境构建同名镜像，或把题目镜像改成可直接拉取的真实地址。'
     )

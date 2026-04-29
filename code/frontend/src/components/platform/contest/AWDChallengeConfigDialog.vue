@@ -118,6 +118,7 @@ const previewToken = ref('')
 const previewSignature = ref('')
 const previewTokenInvalidated = ref(false)
 const syncingDialogState = ref(false)
+const checkerOverrideEnabled = ref(false)
 const previewProgressElapsedMs = ref(0)
 const previewProgressPhaseIndex = ref(0)
 const previewRequestId = ref('')
@@ -217,6 +218,34 @@ const previewResultJSONText = computed(() =>
 const selectedAwdChallengeRuntimeImageRef = computed(() =>
   extractAwdRuntimeImageRef(selectedAwdChallenge.value?.runtime_config)
 )
+const checkerConfigSourceLabel = computed(() =>
+  checkerOverrideEnabled.value ? '赛事级覆盖' : '题目包配置'
+)
+const packageCheckerType = computed<AWDCheckerType>(
+  () => selectedAwdChallenge.value?.checker_type || 'legacy_probe'
+)
+const packageCheckerPreviewText = computed(() =>
+  JSON.stringify(
+    buildCheckerConfigPreview(packageCheckerType.value, {
+      legacyProbeDraft: createLegacyProbeDraft(selectedAwdChallenge.value?.checker_config),
+      httpStandardDraft: createHTTPStandardDraft(selectedAwdChallenge.value?.checker_config),
+      tcpStandardDraft: createTCPStandardDraft(selectedAwdChallenge.value?.checker_config),
+      scriptCheckerDraft: createScriptCheckerDraft(selectedAwdChallenge.value?.checker_config),
+    }),
+    null,
+    2
+  )
+)
+
+function getCheckerTypeLabel(value: AWDCheckerType): string {
+  const labels: Record<AWDCheckerType, string> = {
+    legacy_probe: '基础探活',
+    http_standard: 'HTTP 标准 Checker',
+    tcp_standard: 'TCP 标准 Checker',
+    script_checker: '脚本 Checker',
+  }
+  return labels[value]
+}
 
 function formatPreviewDateTime(value?: string): string {
   if (!value) {
@@ -489,6 +518,7 @@ watch(
     form.order = props.draft?.order ?? 0
     form.is_visible = props.draft?.is_visible === false ? 'false' : 'true'
     form.awd_checker_type = props.draft?.awd_checker_type || 'legacy_probe'
+    checkerOverrideEnabled.value = props.mode === 'edit'
     form.awd_sla_score = props.draft?.awd_sla_score ?? DEFAULT_AWD_SLA_SCORE
     form.awd_defense_score = props.draft?.awd_defense_score ?? DEFAULT_AWD_DEFENSE_SCORE
     assignLegacyProbeDraft(createLegacyProbeDraft(props.draft?.awd_checker_config))
@@ -496,6 +526,7 @@ watch(
     assignTCPStandardDraft(createTCPStandardDraft(props.draft?.awd_checker_config))
     assignScriptCheckerDraft(createScriptCheckerDraft(props.draft?.awd_checker_config))
     if (props.mode === 'create') {
+      checkerOverrideEnabled.value = false
       applyAwdChallengeCheckerDefaults(selectedAwdChallenge.value)
     }
     previewForm.access_url = ''
@@ -535,7 +566,11 @@ watch(
 
 watch(
   () =>
-    [props.open, props.mode, selectableAwdChallenges.value.map((item) => item.id).join(',')] as const,
+    [
+      props.open,
+      props.mode,
+      selectableAwdChallenges.value.map((item) => item.id).join(','),
+    ] as const,
   ([open]) => {
     if (!open) {
       return
@@ -549,7 +584,9 @@ watch(
     }
     if (props.mode === 'create') {
       form.challenge_id = form.awd_challenge_id
-      applyAwdChallengeCheckerDefaults(selectedAwdChallenge.value)
+      if (!checkerOverrideEnabled.value) {
+        applyAwdChallengeCheckerDefaults(selectedAwdChallenge.value)
+      }
     }
   },
   { immediate: true }
@@ -567,9 +604,25 @@ watch(
       return
     }
 
-    applyAwdChallengeCheckerDefaults(selectedAwdChallenge.value)
+    if (!checkerOverrideEnabled.value) {
+      applyAwdChallengeCheckerDefaults(selectedAwdChallenge.value)
+    }
     clearCheckerErrors()
     clearPreviewErrors()
+  }
+)
+
+watch(
+  () => checkerOverrideEnabled.value,
+  (enabled, previousEnabled) => {
+    if (!props.open || syncingDialogState.value || enabled === previousEnabled) {
+      return
+    }
+    if (!enabled) {
+      applyAwdChallengeCheckerDefaults(selectedAwdChallenge.value)
+      clearCheckerErrors()
+      clearPreviewErrors()
+    }
   }
 )
 
@@ -944,8 +997,50 @@ function handleSubmit() {
         </p>
       </div>
 
+      <section class="checker-config-block">
+        <header class="list-heading checker-config-block__head">
+          <div>
+            <div class="journal-note-label">{{ checkerConfigSourceLabel }}</div>
+            <h3 class="list-heading__title checker-config-block__title">
+              {{
+                checkerOverrideEnabled
+                  ? getCheckerTypeLabel(form.awd_checker_type)
+                  : getCheckerTypeLabel(packageCheckerType)
+              }}
+            </h3>
+          </div>
+          <p class="checker-config-block__hint">
+            {{
+              checkerOverrideEnabled
+                ? '当前赛事会使用覆盖后的 Checker。'
+                : '默认使用题目包中的 Checker。'
+            }}
+          </p>
+        </header>
+
+        <pre
+          v-if="!checkerOverrideEnabled"
+          id="awd-challenge-package-checker-preview"
+          class="checker-preview"
+          >{{ packageCheckerPreviewText }}</pre
+        >
+
+        <label class="checker-override-toggle" for="awd-checker-override-enabled">
+          <input
+            id="awd-checker-override-enabled"
+            v-model="checkerOverrideEnabled"
+            type="checkbox"
+            class="checker-override-toggle__input"
+          />
+          <span>
+            <strong class="checker-override-toggle__title">启用赛事级覆盖</strong>
+            <span class="checker-override-toggle__hint">只影响当前赛事题目的 Checker 配置。</span>
+          </span>
+        </label>
+      </section>
+
       <div class="grid gap-4 sm:grid-cols-3">
-        <div class="ui-field awd-config-field">
+        <div v-if="checkerOverrideEnabled" class="ui-field awd-config-field">
           <label class="ui-field__label" for="awd-challenge-config-checker-type">
             Checker 类型
           </label>
@@ -1000,7 +1095,7 @@ function handleSubmit() {
         </div>
       </div>
 
-      <section class="checker-config-block">
+      <section v-if="checkerOverrideEnabled" class="checker-config-block">
         <header class="list-heading checker-config-block__head">
           <div>
             <div class="journal-note-label">Checker Config</div>
@@ -1010,9 +1105,9 @@ function handleSubmit() {
                   ? 'HTTP Standard 配置'
                   : form.awd_checker_type === 'tcp_standard'
                     ? 'TCP Standard 配置'
-                  : form.awd_checker_type === 'script_checker'
-                    ? 'Script Checker 配置'
-                    : 'Legacy Probe 配置'
+                    : form.awd_checker_type === 'script_checker'
+                      ? 'Script Checker 配置'
+                      : 'Legacy Probe 配置'
               }}
             </h3>
           </div>
@@ -1022,9 +1117,9 @@ function handleSubmit() {
                 ? '按动作填写巡检规则，保存时会自动构造成 awd_checker_config。'
                 : form.awd_checker_type === 'tcp_standard'
                   ? '按顺序填写 TCP 协议收发步骤。'
-                : form.awd_checker_type === 'script_checker'
-                  ? '声明题目包内私有 checker 脚本，由平台安全沙箱执行。'
-                  : '配置基础探活路径；留空则回退全局健康检查路径。'
+                  : form.awd_checker_type === 'script_checker'
+                    ? '声明题目包内私有 checker 脚本，由平台安全沙箱执行。'
+                    : '配置基础探活路径；留空则回退全局健康检查路径。'
             }}
           </p>
         </header>
@@ -1048,10 +1143,7 @@ function handleSubmit() {
           </p>
         </div>
 
-        <div
-          v-else-if="form.awd_checker_type === 'tcp_standard'"
-          class="checker-action-section"
-        >
+        <div v-else-if="form.awd_checker_type === 'tcp_standard'" class="checker-action-section">
           <div class="checker-action-grid">
             <div class="ui-field awd-http-action-field">
               <label class="ui-field__label" for="awd-tcp-timeout-ms">总超时</label>
@@ -1610,7 +1702,7 @@ function handleSubmit() {
             <div class="journal-note-label">Payload Preview</div>
             <h3 class="list-heading__title checker-config-block__title">最终 JSON 预览</h3>
           </div>
-          <p class="checker-config-block__hint">保存时会按下面的结构写入 `awd_checker_config`。</p>
+          <p class="checker-config-block__hint">保存赛事服务时使用下面的配置快照。</p>
         </header>
 
         <pre id="awd-challenge-config-preview" class="checker-preview">{{
@@ -1952,6 +2044,40 @@ function handleSubmit() {
   color: var(--color-text-secondary);
   font-size: 0.85rem;
   line-height: 1.6;
+}
+
+.checker-override-toggle {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-elevated);
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+
+.checker-override-toggle__input {
+  margin-top: var(--space-1);
+  accent-color: var(--color-primary);
+}
+
+.checker-override-toggle__title,
+.checker-override-toggle__hint {
+  display: block;
+}
+
+.checker-override-toggle__title {
+  font-size: var(--font-size-14);
+  font-weight: 700;
+}
+
+.checker-override-toggle__hint {
+  margin-top: var(--space-1);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-12);
+  line-height: 1.5;
 }
 
 .checker-preset-strip {
