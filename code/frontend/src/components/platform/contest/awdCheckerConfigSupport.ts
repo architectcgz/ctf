@@ -12,6 +12,8 @@ export const AWD_CHECKER_FIELD_ERROR_KEYS = [
   'http_get_headers_text',
   'http_havoc_expected_status',
   'http_havoc_headers_text',
+  'tcp_timeout',
+  'tcp_steps',
   'script_entry',
   'script_timeout',
   'script_args_text',
@@ -46,6 +48,20 @@ export interface AWDScriptCheckerDraft {
   args_text: string
   env_text: string
   output: 'exit_code' | 'json'
+}
+
+export interface AWDTCPCheckerStepDraft {
+  send: string
+  send_template: string
+  send_hex: string
+  expect_contains: string
+  expect_regex: string
+  timeout_ms: number
+}
+
+export interface AWDTCPStandardDraft {
+  timeout_ms: number
+  steps: AWDTCPCheckerStepDraft[]
 }
 
 export interface AWDHTTPStandardPreset {
@@ -368,6 +384,55 @@ export function createScriptCheckerDraft(
   }
 }
 
+function createTCPCheckerStepDraft(config?: Record<string, unknown> | null): AWDTCPCheckerStepDraft {
+  return {
+    send: readString(config?.send),
+    send_template: readString(config?.send_template),
+    send_hex: readString(config?.send_hex),
+    expect_contains: readString(config?.expect_contains),
+    expect_regex: readString(config?.expect_regex),
+    timeout_ms: readPositiveInteger(config?.timeout_ms, 3000),
+  }
+}
+
+export function createTCPStandardDraft(
+  config?: Record<string, unknown> | null
+): AWDTCPStandardDraft {
+  const steps = Array.isArray(config?.steps)
+    ? (config.steps as unknown[])
+        .map((item) => createTCPCheckerStepDraft(readRecord(item)))
+        .filter(
+          (step) =>
+            step.send ||
+            step.send_template ||
+            step.send_hex ||
+            step.expect_contains ||
+            step.expect_regex
+        )
+    : []
+
+  return {
+    timeout_ms: readPositiveInteger(config?.timeout_ms, 3000),
+    steps:
+      steps.length > 0
+        ? steps
+        : [
+            createTCPCheckerStepDraft({
+              send: 'PING\n',
+              expect_contains: 'PONG',
+            }),
+            createTCPCheckerStepDraft({
+              send_template: 'SET_FLAG {{FLAG}}\n',
+              expect_contains: 'OK',
+            }),
+            createTCPCheckerStepDraft({
+              send: 'GET_FLAG\n',
+              expect_contains: '{{FLAG}}',
+            }),
+          ],
+  }
+}
+
 export function getHTTPStandardPresetDraft(presetId: string): AWDHTTPStandardDraft {
   const preset = AWD_HTTP_STANDARD_PRESETS.find((item) => item.id === presetId)
   return cloneHTTPStandardDraft(preset?.draft || AWD_HTTP_STANDARD_PRESETS[0].draft)
@@ -494,17 +559,101 @@ export function buildScriptCheckerConfig(
   }
 }
 
+export function buildTCPStandardCheckerConfig(
+  draft: AWDTCPStandardDraft,
+  strict = true
+): AWDCheckerBuildResult {
+  const errors: Partial<Record<AWDCheckerFieldErrorKey, string>> = {}
+  if (!Number.isInteger(draft.timeout_ms) || draft.timeout_ms <= 0 || draft.timeout_ms > 60000) {
+    errors.tcp_timeout = '超时时间必须是 1-60000 毫秒'
+  }
+
+  const steps = draft.steps
+    .map((step) => ({
+      send: step.send,
+      send_template: step.send_template,
+      send_hex: step.send_hex.trim(),
+      expect_contains: step.expect_contains,
+      expect_regex: step.expect_regex,
+      timeout_ms: step.timeout_ms,
+    }))
+    .filter(
+      (step) =>
+        step.send ||
+        step.send_template ||
+        step.send_hex ||
+        step.expect_contains ||
+        step.expect_regex
+    )
+
+  if (steps.length === 0 && strict) {
+    errors.tcp_steps = '至少需要一个 TCP 步骤'
+  }
+
+  for (const step of steps) {
+    const sendFieldCount = [step.send, step.send_template, step.send_hex].filter(Boolean).length
+    const hasExpectation = Boolean(step.expect_contains || step.expect_regex)
+    if (sendFieldCount === 0 && !hasExpectation && strict) {
+      errors.tcp_steps = '每个步骤至少需要发送内容或期望结果'
+    }
+    if (step.send_hex && (step.send || step.send_template) && strict) {
+      errors.tcp_steps = 'send_hex 不能与 send 或 send_template 同时填写'
+    }
+    if (step.send && step.send_template && strict) {
+      errors.tcp_steps = 'send 不能与 send_template 同时填写'
+    }
+    if (
+      !Number.isInteger(step.timeout_ms) ||
+      step.timeout_ms < 0 ||
+      step.timeout_ms > 60000
+    ) {
+      errors.tcp_steps = '步骤超时时间必须是 0-60000 毫秒'
+    }
+    if (step.expect_regex) {
+      try {
+        new RegExp(step.expect_regex)
+      } catch {
+        errors.tcp_steps = 'expect_regex 必须是合法正则'
+      }
+    }
+  }
+
+  return {
+    config: {
+      timeout_ms:
+        Number.isInteger(draft.timeout_ms) && draft.timeout_ms > 0 ? draft.timeout_ms : 3000,
+      steps: steps.map((step) => ({
+        ...(step.send ? { send: step.send } : {}),
+        ...(step.send_template ? { send_template: step.send_template } : {}),
+        ...(step.send_hex ? { send_hex: step.send_hex } : {}),
+        ...(step.expect_contains ? { expect_contains: step.expect_contains } : {}),
+        ...(step.expect_regex ? { expect_regex: step.expect_regex } : {}),
+        ...(Number.isInteger(step.timeout_ms) && step.timeout_ms > 0
+          ? { timeout_ms: step.timeout_ms }
+          : {}),
+      })),
+    },
+    errors,
+  }
+}
+
 export function buildCheckerConfigPreview(
   checkerType: AWDCheckerType,
   drafts: {
     legacyProbeDraft: AWDLegacyProbeDraft
     httpStandardDraft: AWDHTTPStandardDraft
+    tcpStandardDraft?: AWDTCPStandardDraft
     scriptCheckerDraft?: AWDScriptCheckerDraft
   }
 ): Record<string, unknown> {
   switch (checkerType) {
     case 'http_standard':
       return buildHTTPStandardCheckerConfig(drafts.httpStandardDraft, false).config
+    case 'tcp_standard':
+      return buildTCPStandardCheckerConfig(
+        drafts.tcpStandardDraft || createTCPStandardDraft(),
+        false
+      ).config
     case 'script_checker':
       return buildScriptCheckerConfig(
         drafts.scriptCheckerDraft || createScriptCheckerDraft(),

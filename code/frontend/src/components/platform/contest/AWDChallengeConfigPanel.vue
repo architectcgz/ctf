@@ -43,12 +43,15 @@ const summaryItems = computed(() => [
     hint: '已写入 checker 类型或 checker 配置的题目数',
   },
   {
-    key: 'http-standard',
-    label: 'HTTP Standard',
+    key: 'standard-checker',
+    label: '标准 Checker',
     value: String(
-      sortedChallengeLinks.value.filter((item) => item.awd_checker_type === 'http_standard').length
+      sortedChallengeLinks.value.filter(
+        (item) =>
+          item.awd_checker_type === 'http_standard' || item.awd_checker_type === 'tcp_standard'
+      ).length
     ),
-    hint: '已切到 HTTP 标准 Checker 的题目数',
+    hint: '已切到 HTTP / TCP 标准 Checker 的题目数',
   },
   {
     key: 'hidden',
@@ -98,6 +101,11 @@ function getCheckerTypeLabel(value?: string): string {
 
 function getConfigSummary(item: AdminContestChallengeViewData): string {
   const config = item.awd_checker_config || {}
+  if (item.awd_checker_type === 'tcp_standard') {
+    const steps = Array.isArray(config.steps) ? config.steps.length : 0
+    const timeout = typeof config.timeout_ms === 'number' ? `${config.timeout_ms}ms` : ''
+    return [`TCP ${steps} steps`, timeout].filter(Boolean).join(' · ') || '未配置 TCP 步骤'
+  }
   const putFlag = readActionSummary(config.put_flag, 'PUT')
   const getFlag = readActionSummary(config.get_flag, 'GET')
   const havoc = readActionSummary(config.havoc, 'Havoc')
