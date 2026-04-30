@@ -64,6 +64,7 @@ func TestHTTPServerStartsAndStopsRegisteredBackgroundJobs(t *testing.T) {
 				},
 			),
 		},
+		appCtx: context.Background(),
 		logger: zap.NewNop(),
 	}
 

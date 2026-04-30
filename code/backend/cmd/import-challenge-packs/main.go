@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/url"
@@ -74,7 +75,8 @@ func main() {
 		panic(fmt.Errorf("load config: %w", err))
 	}
 
-	db, err := postgres.Open(cfg.Postgres)
+	ctx := context.Background()
+	db, err := postgres.Open(ctx, cfg.Postgres)
 	if err != nil {
 		panic(fmt.Errorf("open postgres: %w", err))
 	}

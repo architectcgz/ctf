@@ -21,6 +21,7 @@ import (
 )
 
 func Run() {
+	rootCtx := context.Background()
 	env := os.Getenv("APP_ENV")
 	cfg, err := config.Load(env)
 	if err != nil {
@@ -35,8 +36,8 @@ func Run() {
 		_ = log.Sync()
 	}()
 
-	db := mustOpenPostgres(cfg, log)
-	cache := mustOpenRedis(cfg, log)
+	db := mustOpenPostgres(rootCtx, cfg, log)
+	cache := mustOpenRedis(rootCtx, cfg, log)
 
 	server, err := app.NewHTTPServer(cfg, log, db, cache)
 	if err != nil {
@@ -60,16 +61,16 @@ func Run() {
 	closeResources(log, db, cache)
 }
 
-func mustOpenPostgres(cfg *config.Config, log *zap.Logger) *gorm.DB {
-	db, err := postgres.Open(cfg.Postgres)
+func mustOpenPostgres(ctx context.Context, cfg *config.Config, log *zap.Logger) *gorm.DB {
+	db, err := postgres.Open(ctx, cfg.Postgres)
 	if err != nil {
 		log.Fatal("postgres_init_failed", zap.Error(err))
 	}
 	return db
 }
 
-func mustOpenRedis(cfg *config.Config, log *zap.Logger) *redislib.Client {
-	client, err := infraredis.NewClient(cfg.Redis)
+func mustOpenRedis(ctx context.Context, cfg *config.Config, log *zap.Logger) *redislib.Client {
+	client, err := infraredis.NewClient(ctx, cfg.Redis)
 	if err != nil {
 		log.Fatal("redis_init_failed", zap.Error(err))
 	}

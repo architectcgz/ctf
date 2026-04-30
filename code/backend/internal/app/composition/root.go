@@ -110,8 +110,8 @@ func BuildRoot(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 }
 
 func (r *Root) Context() context.Context {
-	if r == nil || r.appCtx == nil {
-		return context.Background()
+	if r == nil {
+		return nil
 	}
 	return r.appCtx
 }

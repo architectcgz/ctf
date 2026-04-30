@@ -66,7 +66,8 @@ func main() {
 		panic(fmt.Errorf("load config: %w", err))
 	}
 
-	db, err := postgres.Open(cfg.Postgres)
+	ctx := context.Background()
+	db, err := postgres.Open(ctx, cfg.Postgres)
 	if err != nil {
 		panic(fmt.Errorf("open postgres: %w", err))
 	}
@@ -77,7 +78,7 @@ func main() {
 		dockerClient = nil
 	}
 
-	result, err := seedDemoChallenges(db, dockerClient)
+	result, err := seedDemoChallenges(ctx, db, dockerClient)
 	if err != nil {
 		panic(err)
 	}
@@ -91,7 +92,7 @@ func main() {
 	)
 }
 
-func seedDemoChallenges(db *gorm.DB, dockerClient *client.Client) (*seedResult, error) {
+func seedDemoChallenges(ctx context.Context, db *gorm.DB, dockerClient *client.Client) (*seedResult, error) {
 	imageSpecs := []seedImageSpec{
 		{
 			Name:        "localhost:5000/ctf/hello-web",
@@ -162,7 +163,7 @@ func seedDemoChallenges(db *gorm.DB, dockerClient *client.Client) (*seedResult, 
 
 	if err := db.Transaction(func(tx *gorm.DB) error {
 		for _, spec := range imageSpecs {
-			imageID, created, err := upsertImage(tx, dockerClient, spec)
+			imageID, created, err := upsertImage(ctx, tx, dockerClient, spec)
 			if err != nil {
 				return err
 			}
@@ -199,8 +200,8 @@ func seedDemoChallenges(db *gorm.DB, dockerClient *client.Client) (*seedResult, 
 	return result, nil
 }
 
-func upsertImage(tx *gorm.DB, dockerClient *client.Client, spec seedImageSpec) (int64, bool, error) {
-	size, err := inspectDockerImageSize(dockerClient, fmt.Sprintf("%s:%s", spec.Name, spec.Tag))
+func upsertImage(ctx context.Context, tx *gorm.DB, dockerClient *client.Client, spec seedImageSpec) (int64, bool, error) {
+	size, err := inspectDockerImageSize(ctx, dockerClient, fmt.Sprintf("%s:%s", spec.Name, spec.Tag))
 	if err != nil {
 		return 0, false, err
 	}
@@ -361,15 +362,15 @@ func configureChallengeFlag(tx *gorm.DB, challengeID int64, spec seedChallengeSp
 	return nil
 }
 
-func inspectDockerImageSize(dockerClient *client.Client, imageRef string) (int64, error) {
+func inspectDockerImageSize(ctx context.Context, dockerClient *client.Client, imageRef string) (int64, error) {
 	if dockerClient == nil {
 		return 0, fmt.Errorf("docker client unavailable for image %s", imageRef)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	inspectCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	inspect, _, err := dockerClient.ImageInspectWithRaw(ctx, imageRef)
+	inspect, _, err := dockerClient.ImageInspectWithRaw(inspectCtx, imageRef)
 	if err != nil {
 		return 0, fmt.Errorf("inspect docker image %s: %w", imageRef, err)
 	}
