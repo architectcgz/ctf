@@ -567,6 +567,36 @@ func (e *Engine) ListManagedContainers(ctx context.Context) ([]runtimeports.Mana
 	return items, nil
 }
 
+func (e *Engine) InspectManagedContainer(ctx context.Context, containerID string) (*runtimeports.ManagedContainerState, error) {
+	if e == nil || e.cli == nil {
+		return nil, fmt.Errorf("runtime engine is not configured")
+	}
+	if strings.TrimSpace(containerID) == "" {
+		return &runtimeports.ManagedContainerState{Exists: false}, nil
+	}
+
+	resp, err := e.cli.ContainerInspect(ctx, containerID)
+	if err != nil {
+		if errdefs.IsNotFound(err) || strings.Contains(strings.ToLower(err.Error()), "no such container") {
+			return &runtimeports.ManagedContainerState{
+				ID:     containerID,
+				Exists: false,
+			}, nil
+		}
+		return nil, err
+	}
+
+	state := &runtimeports.ManagedContainerState{
+		ID:     resp.ID,
+		Exists: true,
+	}
+	if resp.State != nil {
+		state.Running = resp.State.Running
+		state.Status = resp.State.Status
+	}
+	return state, nil
+}
+
 func DefaultSecurityConfig(cfg *config.ContainerConfig) *model.SecurityConfig {
 	return &model.SecurityConfig{
 		ReadonlyRootfs: cfg.ReadonlyRootfs,

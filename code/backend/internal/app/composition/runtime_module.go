@@ -31,6 +31,7 @@ type runtimeEngine interface {
 	ResolveServicePort(ctx context.Context, imageRef string, preferredPort int) (int, error)
 	ConnectContainerToNetwork(ctx context.Context, containerID, networkName string) error
 	InspectContainerNetworkIPs(ctx context.Context, containerID string) (map[string]string, error)
+	InspectManagedContainer(ctx context.Context, containerID string) (*runtimeports.ManagedContainerState, error)
 	StartContainer(ctx context.Context, containerID string) error
 	StopContainer(ctx context.Context, containerID string, timeout time.Duration) error
 	RemoveContainer(ctx context.Context, containerID string, force bool) error

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync"
 	"time"
 
 	redislib "github.com/redis/go-redis/v9"
@@ -22,9 +23,11 @@ type Cleaner struct {
 	lockTTL time.Duration
 	baseCtx context.Context
 	cancel  context.CancelFunc
+	wg      sync.WaitGroup
 }
 
 type cleanerService interface {
+	ReconcileLostActiveRuntimes(ctx context.Context) error
 	CleanExpiredInstances(ctx context.Context) error
 	CleanupOrphans(ctx context.Context) error
 }
@@ -48,7 +51,7 @@ func (c *Cleaner) Start(ctx context.Context, interval string) error {
 	}
 	c.baseCtx, c.cancel = context.WithCancel(ctx)
 	cleanFunc := func() {
-		c.runOnce()
+		c.startRunOnce()
 	}
 
 	_, err := c.cron.AddFunc(interval, cleanFunc)
@@ -61,8 +64,17 @@ func (c *Cleaner) Start(ctx context.Context, interval string) error {
 		interval = "*/5 * * * *"
 	}
 	c.cron.Start()
+	c.startRunOnce()
 	c.logger.Info("实例清理定时任务已启动", zap.String("interval", interval))
 	return nil
+}
+
+func (c *Cleaner) startRunOnce() {
+	c.wg.Add(1)
+	go func() {
+		defer c.wg.Done()
+		c.runOnce()
+	}()
 }
 
 func (c *Cleaner) runOnce() {
@@ -97,6 +109,14 @@ func (c *Cleaner) runOnce() {
 		}()
 	}
 
+	c.logger.Info("开始对账实例运行时")
+	if err := c.service.ReconcileLostActiveRuntimes(ctx); err != nil {
+		if !errors.Is(err, context.Canceled) {
+			c.logger.Error("对账实例运行时失败", zap.Error(err))
+		}
+		return
+	}
+
 	c.logger.Info("开始清理过期实例")
 	if err := c.service.CleanExpiredInstances(ctx); err != nil {
 		if !errors.Is(err, context.Canceled) {
@@ -121,6 +141,17 @@ func (c *Cleaner) Stop(ctx context.Context) error {
 	stopped := c.cron.Stop()
 	select {
 	case <-stopped.Done():
+	case <-ctx.Done():
+		return ctx.Err()
+	}
+
+	done := make(chan struct{})
+	go func() {
+		c.wg.Wait()
+		close(done)
+	}()
+	select {
+	case <-done:
 		c.logger.Info("实例清理定时任务已停止")
 		return nil
 	case <-ctx.Done():

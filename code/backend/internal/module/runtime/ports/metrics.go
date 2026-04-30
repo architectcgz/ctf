@@ -16,3 +16,10 @@ type ManagedContainer struct {
 	Name      string
 	CreatedAt time.Time
 }
+
+type ManagedContainerState struct {
+	ID      string
+	Exists  bool
+	Running bool
+	Status  string
+}

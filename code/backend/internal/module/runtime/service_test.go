@@ -1072,6 +1072,77 @@ func TestServiceCleanExpiredInstancesMarksExpiredWhenContainerAlreadyRemoved(t *
 	}
 }
 
+func TestRepositoryRequeueLostRuntimePreservesInstanceScope(t *testing.T) {
+	t.Parallel()
+
+	repo := newTestRepository(t)
+	now := time.Now()
+	contestID := int64(3101)
+	teamID := int64(4101)
+	serviceID := int64(7101)
+	instance := &model.Instance{
+		ID:             2201,
+		UserID:         5101,
+		ContestID:      &contestID,
+		TeamID:         &teamID,
+		ChallengeID:    6101,
+		ServiceID:      &serviceID,
+		HostPort:       30004,
+		ContainerID:    "lost-container",
+		NetworkID:      "lost-network",
+		RuntimeDetails: `{"containers":[{"container_id":"lost-container"}]}`,
+		ShareScope:     model.InstanceSharingPerTeam,
+		Status:         model.InstanceStatusRunning,
+		AccessURL:      "http://10.10.0.2:8080",
+		Nonce:          "nonce-2201",
+		ExpiresAt:      now.Add(time.Hour),
+		CreatedAt:      now,
+		UpdatedAt:      now,
+	}
+	seedInstance(t, repo.db, instance)
+	if err := repo.db.Create(&model.PortAllocation{
+		Port:       30004,
+		InstanceID: &instance.ID,
+		CreatedAt:  now,
+		UpdatedAt:  now,
+	}).Error; err != nil {
+		t.Fatalf("create port allocation: %v", err)
+	}
+
+	requeued, err := repo.RequeueLostRuntime(context.Background(), instance.ID)
+	if err != nil {
+		t.Fatalf("RequeueLostRuntime() error = %v", err)
+	}
+	if !requeued {
+		t.Fatal("expected instance to be requeued")
+	}
+
+	updated, err := repo.FindByID(context.Background(), instance.ID)
+	if err != nil {
+		t.Fatalf("FindByID() error = %v", err)
+	}
+	if updated.Status != model.InstanceStatusPending {
+		t.Fatalf("expected pending status, got %+v", updated)
+	}
+	if updated.ContainerID != "" || updated.NetworkID != "" || updated.RuntimeDetails != "" || updated.AccessURL != "" {
+		t.Fatalf("expected runtime fields cleared, got %+v", updated)
+	}
+	if updated.UserID != instance.UserID || updated.ChallengeID != instance.ChallengeID || updated.ShareScope != model.InstanceSharingPerTeam || updated.Nonce != instance.Nonce || updated.HostPort != instance.HostPort {
+		t.Fatalf("expected instance scope preserved, got %+v", updated)
+	}
+	if updated.ContestID == nil || *updated.ContestID != contestID || updated.TeamID == nil || *updated.TeamID != teamID || updated.ServiceID == nil || *updated.ServiceID != serviceID {
+		t.Fatalf("expected contest/team/service scope preserved, got %+v", updated)
+	}
+
+	var count int64
+	if err := repo.db.Model(&model.PortAllocation{}).Where("port = ?", 30004).Count(&count).Error; err != nil {
+		t.Fatalf("count port allocation: %v", err)
+	}
+	if count != 1 {
+		t.Fatalf("expected port allocation to remain reserved, count=%d", count)
+	}
+}
+
 func TestServiceCreateTopologyCreatesAndConnectsMultipleNetworks(t *testing.T) {
 	t.Parallel()
 
@@ -1417,6 +1488,7 @@ type fakeRuntimeEngine struct {
 	imageInspectErr                error
 	removedImageRef                string
 	managedContainerStats          []runtimeports.ManagedContainerStat
+	managedContainerStates         map[string]*runtimeports.ManagedContainerState
 	inspectContainerNetworkIPsFunc func(containerID string, engine *fakeRuntimeEngine) map[string]string
 	stopContainerFn                func(ctx context.Context, containerID string, timeout time.Duration) error
 	removeContainerFn              func(ctx context.Context, containerID string, force bool) error
@@ -1546,6 +1618,16 @@ func (f *fakeRuntimeEngine) WriteFileToContainer(_ context.Context, containerID,
 
 func (f *fakeRuntimeEngine) ListManagedContainers(_ context.Context) ([]runtimeports.ManagedContainer, error) {
 	return nil, nil
+}
+
+func (f *fakeRuntimeEngine) InspectManagedContainer(_ context.Context, containerID string) (*runtimeports.ManagedContainerState, error) {
+	if f.managedContainerStates == nil {
+		return &runtimeports.ManagedContainerState{ID: containerID, Exists: true, Running: true, Status: "running"}, nil
+	}
+	if state, exists := f.managedContainerStates[containerID]; exists {
+		return state, nil
+	}
+	return &runtimeports.ManagedContainerState{ID: containerID, Exists: false}, nil
 }
 
 func seedInstance(t *testing.T, db *gorm.DB, instance *model.Instance) {

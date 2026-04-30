@@ -14,11 +14,14 @@ import (
 type runtimeMaintenanceRepository interface {
 	UpdateStatusAndReleasePort(ctx context.Context, id int64, status string) error
 	FindExpired(ctx context.Context) ([]*model.Instance, error)
+	ListRecoverableActiveInstances(ctx context.Context) ([]*model.Instance, error)
+	RequeueLostRuntime(ctx context.Context, id int64) (bool, error)
 	ListActiveContainerIDs(ctx context.Context) ([]string, error)
 }
 
 type runtimeMaintenanceEngine interface {
 	ListManagedContainers(ctx context.Context) ([]runtimeports.ManagedContainer, error)
+	InspectManagedContainer(ctx context.Context, containerID string) (*runtimeports.ManagedContainerState, error)
 }
 
 type runtimeMaintenanceCleaner interface {
@@ -86,6 +89,84 @@ func (s *RuntimeMaintenanceService) CleanExpiredInstances(ctx context.Context) e
 	return nil
 }
 
+// ReconcileLostActiveRuntimes finds active instance records whose Docker runtime disappeared and
+// requeues them for the existing provisioning scheduler.
+func (s *RuntimeMaintenanceService) ReconcileLostActiveRuntimes(ctx context.Context) error {
+	ctx = normalizeContext(ctx)
+	if s.engine == nil {
+		s.logger.Debug("跳过运行时丢失恢复，Docker 引擎未启用")
+		return nil
+	}
+
+	instances, err := s.repo.ListRecoverableActiveInstances(ctx)
+	if err != nil {
+		return err
+	}
+	now := time.Now()
+	for _, instance := range instances {
+		if instance == nil {
+			continue
+		}
+		lost, reason, err := s.isInstanceRuntimeLost(ctx, instance, now)
+		if err != nil {
+			s.logger.Warn("检查实例运行时状态失败，跳过本实例",
+				zap.Int64("instance_id", instance.ID),
+				zap.String("status", instance.Status),
+				zap.String("container_id", instance.ContainerID),
+				zap.Error(err))
+			continue
+		}
+		if !lost {
+			continue
+		}
+
+		requeued, err := s.repo.RequeueLostRuntime(ctx, instance.ID)
+		if err != nil {
+			return err
+		}
+		if requeued {
+			s.logger.Warn("实例运行时丢失，已重新入队",
+				zap.Int64("instance_id", instance.ID),
+				zap.String("status", instance.Status),
+				zap.String("reason", reason),
+				zap.String("container_id", instance.ContainerID))
+		}
+	}
+	return nil
+}
+
+func (s *RuntimeMaintenanceService) isInstanceRuntimeLost(ctx context.Context, instance *model.Instance, now time.Time) (bool, string, error) {
+	if instance.Status == model.InstanceStatusCreating && now.Sub(instance.UpdatedAt) < s.runtimeCreateTimeout() {
+		return false, "", nil
+	}
+
+	containerIDs := collectInstanceContainerIDs(instance)
+	if len(containerIDs) == 0 {
+		return true, "missing_runtime_identity", nil
+	}
+
+	for _, containerID := range containerIDs {
+		state, err := s.engine.InspectManagedContainer(ctx, containerID)
+		if err != nil {
+			return false, "", err
+		}
+		if state == nil || !state.Exists {
+			return true, "container_missing", nil
+		}
+		if !state.Running {
+			return true, "container_not_running", nil
+		}
+	}
+	return false, "", nil
+}
+
+func (s *RuntimeMaintenanceService) runtimeCreateTimeout() time.Duration {
+	if s == nil || s.config == nil || s.config.CreateTimeout <= 0 {
+		return 30 * time.Second
+	}
+	return s.config.CreateTimeout
+}
+
 // CleanupOrphans 清理未被实例记录持有的受管孤儿容器。
 func (s *RuntimeMaintenanceService) CleanupOrphans(ctx context.Context) error {
 	ctx = normalizeContext(ctx)
@@ -142,4 +223,32 @@ func selectOrphanContainers(managedContainers []runtimeports.ManagedContainer, a
 		orphanContainers = append(orphanContainers, container)
 	}
 	return orphanContainers
+}
+
+func collectInstanceContainerIDs(instance *model.Instance) []string {
+	if instance == nil {
+		return nil
+	}
+	ids := make([]string, 0, 1)
+	seen := make(map[string]struct{})
+	add := func(containerID string) {
+		if containerID == "" {
+			return
+		}
+		if _, exists := seen[containerID]; exists {
+			return
+		}
+		seen[containerID] = struct{}{}
+		ids = append(ids, containerID)
+	}
+
+	add(instance.ContainerID)
+	details, err := model.DecodeInstanceRuntimeDetails(instance.RuntimeDetails)
+	if err != nil {
+		return ids
+	}
+	for _, container := range details.Containers {
+		add(container.ContainerID)
+	}
+	return ids
 }

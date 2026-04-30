@@ -338,6 +338,41 @@ func (r *Repository) FindExpired(ctx context.Context) ([]*model.Instance, error)
 	return instances, err
 }
 
+func (r *Repository) ListRecoverableActiveInstances(ctx context.Context) ([]*model.Instance, error) {
+	var instances []*model.Instance
+	err := r.dbWithContext(ctx).
+		Where("status IN ?", []string{model.InstanceStatusCreating, model.InstanceStatusRunning}).
+		Where("expires_at > ?", time.Now()).
+		Order("updated_at ASC, id ASC").
+		Find(&instances).Error
+	return instances, err
+}
+
+func (r *Repository) RequeueLostRuntime(ctx context.Context, id int64) (bool, error) {
+	if id <= 0 {
+		return false, nil
+	}
+
+	result := r.dbWithContext(ctx).Model(&model.Instance{}).
+		Where("id = ? AND status IN ? AND expires_at > ?",
+			id,
+			[]string{model.InstanceStatusCreating, model.InstanceStatusRunning},
+			time.Now(),
+		).
+		Updates(map[string]any{
+			"status":          model.InstanceStatusPending,
+			"container_id":    "",
+			"network_id":      "",
+			"runtime_details": "",
+			"access_url":      "",
+			"updated_at":      time.Now(),
+		})
+	if result.Error != nil {
+		return false, result.Error
+	}
+	return result.RowsAffected > 0, nil
+}
+
 func (r *Repository) ListTeacherInstances(ctx context.Context, filter runtimeports.TeacherInstanceFilter) ([]runtimeports.TeacherInstanceRow, error) {
 	rows := make([]teacherInstanceRow, 0)
 

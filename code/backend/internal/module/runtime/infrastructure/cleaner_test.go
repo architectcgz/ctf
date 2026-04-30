@@ -20,6 +20,10 @@ func (s *blockingCleanerService) CleanExpiredInstances(ctx context.Context) erro
 	return ctx.Err()
 }
 
+func (s *blockingCleanerService) ReconcileLostActiveRuntimes(context.Context) error {
+	return nil
+}
+
 func (s *blockingCleanerService) CleanupOrphans(context.Context) error {
 	return nil
 }
@@ -34,7 +38,7 @@ func TestCleanerStopCancelsRunningTask(t *testing.T) {
 	cleaner := NewCleaner(service, nil, time.Minute, zap.NewNop())
 	cleaner.baseCtx, cleaner.cancel = context.WithCancel(context.Background())
 
-	go cleaner.runOnce()
+	cleaner.startRunOnce()
 
 	select {
 	case <-service.started:
