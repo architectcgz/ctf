@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 
 import ContestAwdConfig from '../ContestAwdConfig.vue'
+import contestAwdConfigSource from '../ContestAwdConfig.vue?raw'
 
 const pushMock = vi.fn()
 const replaceMock = vi.fn()
@@ -126,6 +127,15 @@ describe('ContestAwdConfig', () => {
     adminApiMocks.listContestAWDServices.mockResolvedValue([buildService()])
   })
 
+  it('路由页拆分为稳定的 AWD 配置子组件', () => {
+    expect(contestAwdConfigSource).toContain("import ContestAwdConfigTopbar from '@/components/platform/contest/ContestAwdConfigTopbar.vue'")
+    expect(contestAwdConfigSource).toContain("import ContestAwdServiceDirectory from '@/components/platform/contest/ContestAwdServiceDirectory.vue'")
+    expect(contestAwdConfigSource).toContain("import ContestAwdDebugStation from '@/components/platform/contest/ContestAwdDebugStation.vue'")
+    expect(contestAwdConfigSource).toContain("import ContestAwdConfigFooter from '@/components/platform/contest/ContestAwdConfigFooter.vue'")
+    expect(contestAwdConfigSource).toContain('<ContestAwdServiceDirectory')
+    expect(contestAwdConfigSource).toContain('<ContestAwdDebugStation')
+  })
+
   it('使用独立页面编辑服务配置，并锁定 checker 类型', async () => {
     const wrapper = mountPage()
 
@@ -180,6 +190,41 @@ describe('ContestAwdConfig', () => {
       params: { id: 'contest-1' },
       query: { service: 'service-2' },
     })
+  })
+
+  it('TCP checker 步骤默认全部收起，并支持切换展开步骤', async () => {
+    adminApiMocks.listContestAWDServices.mockResolvedValue([
+      buildService({
+        checker_type: 'tcp_standard',
+        checker_config: {
+          timeout_ms: 5000,
+          steps: [
+            { send: 'PING\\n', expect_contains: 'PONG', timeout_ms: 1000 },
+            { send_template: 'SET {{FLAG}}\\n', expect_contains: 'OK', timeout_ms: 2000 },
+          ],
+        },
+      }),
+    ])
+
+    const wrapper = mountPage()
+
+    await flushPromises()
+
+    const stepPanels = wrapper.findAll('.checker-action-section--tcp')
+    expect(stepPanels).toHaveLength(2)
+    expect(stepPanels[0].classes()).toContain('is-collapsed')
+    expect(stepPanels[1].classes()).toContain('is-collapsed')
+    expect(wrapper.text()).toContain('发送 SET {{FLAG}}\\n · 期望 OK · 2000ms')
+
+    await stepPanels[0].find('.checker-step-toggle').trigger('click')
+
+    expect(stepPanels[0].classes()).not.toContain('is-collapsed')
+    expect(stepPanels[1].classes()).toContain('is-collapsed')
+
+    await stepPanels[1].find('.checker-step-toggle').trigger('click')
+
+    expect(stepPanels[0].classes()).toContain('is-collapsed')
+    expect(stepPanels[1].classes()).not.toContain('is-collapsed')
   })
 
   it('试跑完成后保存会带上预览令牌', async () => {

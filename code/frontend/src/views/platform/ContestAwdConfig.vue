@@ -5,6 +5,7 @@ import {
   AlertTriangle,
   ArrowLeft,
   CheckCircle2,
+  ChevronDown,
   Code2,
   Play,
   RefreshCw,
@@ -26,6 +27,12 @@ import type {
 } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
+import ContestAwdConfigFooter from '@/components/platform/contest/ContestAwdConfigFooter.vue'
+import ContestAwdConfigTopbar from '@/components/platform/contest/ContestAwdConfigTopbar.vue'
+import ContestAwdDebugStation from '@/components/platform/contest/ContestAwdDebugStation.vue'
+import ContestAwdEditorHeader from '@/components/platform/contest/ContestAwdEditorHeader.vue'
+import ContestAwdScoreWeights from '@/components/platform/contest/ContestAwdScoreWeights.vue'
+import ContestAwdServiceDirectory from '@/components/platform/contest/ContestAwdServiceDirectory.vue'
 import {
   AWD_CHECKER_FIELD_ERROR_KEYS,
   AWD_HTTP_METHOD_OPTIONS,
@@ -68,6 +75,7 @@ const previewResult = ref<AWDCheckerPreviewData | null>(null)
 const previewError = ref('')
 const previewToken = ref('')
 const previewSignature = ref('')
+const expandedTCPCheckerStepIndex = ref<number | null>(null)
 
 const form = reactive({
   sla_score: 1,
@@ -284,6 +292,7 @@ function assignHTTPDraft(next: AWDHTTPStandardDraft) {
 function assignTCPDraft(next: AWDTCPStandardDraft) {
   tcpStandardDraft.timeout_ms = next.timeout_ms
   tcpStandardDraft.steps.splice(0, tcpStandardDraft.steps.length, ...next.steps.map((step) => ({ ...step })))
+  expandedTCPCheckerStepIndex.value = null
 }
 
 function assignScriptDraft(next: AWDScriptCheckerDraft) {
@@ -321,11 +330,32 @@ function addTCPCheckerStep() {
     expect_regex: '',
     timeout_ms: 3000,
   })
+  expandedTCPCheckerStepIndex.value = tcpStandardDraft.steps.length - 1
 }
 
 function removeTCPCheckerStep(index: number) {
   if (tcpStandardDraft.steps.length <= 1) return
   tcpStandardDraft.steps.splice(index, 1)
+  if (expandedTCPCheckerStepIndex.value === null) return
+  expandedTCPCheckerStepIndex.value = Math.min(
+    expandedTCPCheckerStepIndex.value,
+    tcpStandardDraft.steps.length - 1
+  )
+}
+
+function toggleTCPCheckerStep(index: number) {
+  expandedTCPCheckerStepIndex.value = expandedTCPCheckerStepIndex.value === index ? null : index
+}
+
+function summarizeTCPCheckerStep(step: AWDTCPStandardDraft['steps'][number]): string {
+  const send = step.send_template || step.send || step.send_hex
+  const expect = step.expect_contains || step.expect_regex
+  const parts = [
+    send ? `发送 ${send}` : '',
+    expect ? `期望 ${expect}` : '',
+    Number.isInteger(step.timeout_ms) && step.timeout_ms > 0 ? `${step.timeout_ms}ms` : '',
+  ].filter(Boolean)
+  return parts.length > 0 ? parts.join(' · ') : '未配置收发规则'
 }
 
 function buildCurrentCheckerConfig(strict = true): Record<string, unknown> {
@@ -490,28 +520,18 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <section class="awd-config-page workspace-shell journal-shell journal-shell-admin journal-notes-card journal-hero">
+  <section class="awd-config-page workspace-shell journal-shell journal-shell-admin">
     <div v-if="loading" class="awd-config-page__loading">
       <AppLoading>正在同步 AWD 配置...</AppLoading>
     </div>
 
-    <header class="awd-config-page__topbar">
-      <button type="button" class="ui-btn ui-btn--ghost" @click="goBackToStudio">
-        <ArrowLeft class="h-4 w-4" />
-        返回工作台
-      </button>
-      <div class="awd-config-page__title-block">
-        <div class="workspace-overline">AWD Service Config</div>
-        <h1 class="workspace-page-title">AWD 服务配置</h1>
-        <p class="awd-config-page__subtitle">
-          {{ contest?.title || 'AWD 赛事' }}
-        </p>
-      </div>
-      <button type="button" class="ui-btn ui-btn--secondary" :disabled="refreshing" @click="loadPage(false)">
-        <RefreshCw class="h-4 w-4" :class="{ 'animate-spin': refreshing }" />
-        刷新
-      </button>
-    </header>
+    <ContestAwdConfigTopbar
+      :contest-title="contest?.title || 'AWD 赛事'"
+      :service-name="selectedService?.display_name || '请选择服务'"
+      :refreshing="refreshing"
+      @back="goBackToStudio"
+      @refresh="loadPage(false)"
+    />
 
     <AppEmpty
       v-if="loadError && !contest"
@@ -528,45 +548,14 @@ onUnmounted(() => {
     </AppEmpty>
 
     <main v-else class="awd-config-page__body">
-      <aside class="awd-config-page__services" aria-label="AWD 服务目录">
-        <header class="list-heading awd-config-section-head">
-          <div>
-            <div class="journal-note-label">Service Directory</div>
-            <h2 class="list-heading__title">服务目录</h2>
-          </div>
-        </header>
-
-        <AppEmpty
-          v-if="!loading && sortedServices.length === 0"
-          title="暂无 AWD 服务"
-          description="请先回到题目编排关联 AWD 题目。"
-          icon="ShieldCheck"
-          class="awd-config-page__empty"
-        />
-
-        <div v-else class="awd-service-list" role="list">
-          <button
-            v-for="service in sortedServices"
-            :key="service.id"
-            type="button"
-            class="awd-service-row"
-            :class="{ 'is-active': selectedServiceId === service.id }"
-            role="listitem"
-            @click="selectService(service)"
-          >
-            <span class="awd-service-row__main">
-              <strong :title="service.display_name">{{ service.display_name }}</strong>
-              <small>{{ service.category || '通用' }} · RANK {{ service.order }}</small>
-            </span>
-            <span class="awd-service-row__meta">
-              <span class="awd-service-row__checker">{{ getCheckerTypeLabel(service.checker_type) }}</span>
-              <span class="validation-pill" :class="service.validation_state || 'pending'">
-                {{ getValidationLabel(service.validation_state) }}
-              </span>
-            </span>
-          </button>
-        </div>
-      </aside>
+      <ContestAwdServiceDirectory
+        :loading="loading"
+        :services="sortedServices"
+        :selected-service-id="selectedServiceId"
+        :get-checker-type-label="getCheckerTypeLabel"
+        :get-validation-label="getValidationLabel"
+        @select="selectService"
+      />
 
       <section class="awd-config-page__editor">
         <AppEmpty
@@ -578,60 +567,32 @@ onUnmounted(() => {
         />
 
         <template v-else>
-          <header class="awd-config-editor-head">
-            <div>
-              <div class="workspace-overline">Current Service</div>
-              <h2>{{ selectedService.display_name }}</h2>
-              <p>{{ selectedService.title || selectedService.display_name }}</p>
-            </div>
-            <div class="awd-config-editor-head__meta">
-              <span class="engine-lock">
-                <ShieldCheck class="h-4 w-4" />
-                {{ getProtocolLabel(selectedCheckerType) }}
-              </span>
-              <span class="engine-lock">
-                <Code2 class="h-4 w-4" />
-                {{ getCheckerTypeLabel(selectedCheckerType) }}
-              </span>
-            </div>
-          </header>
+          <ContestAwdEditorHeader
+            :display-name="selectedService.display_name"
+            :title="selectedService.title || selectedService.display_name"
+            :protocol-label="getProtocolLabel(selectedCheckerType)"
+            :checker-type-label="getCheckerTypeLabel(selectedCheckerType)"
+          />
 
           <div v-if="fieldErrors.checker_type" class="awd-config-alert">
             <AlertTriangle class="h-4 w-4" />
             <span>{{ fieldErrors.checker_type }}，请先在 AWD 题库修正题目包协议与 checker 契约。</span>
           </div>
 
-          <section class="awd-config-form-section">
-            <header class="list-heading awd-config-section-head">
-              <div>
-                <div class="journal-note-label">Score Weight</div>
-                <h3 class="list-heading__title">权重设置</h3>
-              </div>
-            </header>
-            <div class="awd-config-score-grid">
-              <label class="ui-field">
-                <span class="ui-field__label">SLA 分</span>
-                <span class="ui-control-wrap" :class="{ 'is-error': !!fieldErrors.sla_score }">
-                  <input v-model.number="form.sla_score" type="number" min="0" max="5" step="1" class="ui-control" />
-                </span>
-                <span v-if="fieldErrors.sla_score" class="ui-field__error">{{ fieldErrors.sla_score }}</span>
-              </label>
-              <label class="ui-field">
-                <span class="ui-field__label">防守分</span>
-                <span class="ui-control-wrap" :class="{ 'is-error': !!fieldErrors.defense_score }">
-                  <input v-model.number="form.defense_score" type="number" min="0" max="5" step="1" class="ui-control" />
-                </span>
-                <span v-if="fieldErrors.defense_score" class="ui-field__error">{{ fieldErrors.defense_score }}</span>
-              </label>
-            </div>
-          </section>
+          <ContestAwdScoreWeights
+            v-model:sla-score="form.sla_score"
+            v-model:defense-score="form.defense_score"
+            :sla-error="fieldErrors.sla_score"
+            :defense-error="fieldErrors.defense_score"
+          />
 
-          <section class="awd-config-form-section">
+          <section class="awd-config-form-section awd-config-card awd-config-card--canvas">
             <header class="list-heading awd-config-section-head">
               <div>
                 <div class="journal-note-label">Checker Parameters</div>
                 <h3 class="list-heading__title">{{ getCheckerTypeLabel(selectedCheckerType) }}</h3>
               </div>
+              <span class="awd-config-section-tag">配置画布</span>
             </header>
 
             <label v-if="selectedCheckerType === 'legacy_probe'" class="ui-field">
@@ -643,7 +604,7 @@ onUnmounted(() => {
             </label>
 
             <template v-else-if="selectedCheckerType === 'http_standard'">
-              <div class="checker-preset-strip">
+              <div class="checker-preset-strip checker-preset-strip--compact">
                 <button
                   v-for="preset in AWD_HTTP_STANDARD_PRESETS"
                   :key="preset.id"
@@ -658,13 +619,16 @@ onUnmounted(() => {
               <section
                 v-for="action in httpActionSections"
                 :key="action.key"
-                class="checker-action-section"
+                class="checker-action-section checker-action-section--panel"
               >
                 <header class="list-heading checker-action-section__head">
-                  <h4 class="list-heading__title checker-action-section__title">{{ action.title }}</h4>
+                  <div class="checker-action-section__heading">
+                    <h4 class="list-heading__title checker-action-section__title">{{ action.title }}</h4>
+                    <span class="checker-action-section__hint">动作配置</span>
+                  </div>
                 </header>
-                <div class="checker-action-grid">
-                  <label class="ui-field">
+                <div class="checker-action-grid checker-action-grid--http">
+                  <label class="ui-field checker-field checker-field--method">
                     <span class="ui-field__label">Method</span>
                     <span class="ui-control-wrap">
                       <select v-model="httpStandardDraft[action.key].method" class="ui-control">
@@ -672,14 +636,14 @@ onUnmounted(() => {
                       </select>
                     </span>
                   </label>
-                  <label class="ui-field">
+                  <label class="ui-field checker-field checker-field--path">
                     <span class="ui-field__label">Path</span>
                     <span class="ui-control-wrap" :class="{ 'is-error': action.pathErrorKey ? !!fieldErrors[action.pathErrorKey] : false }">
                       <input v-model="httpStandardDraft[action.key].path" type="text" class="ui-control" />
                     </span>
                     <span v-if="action.pathErrorKey && fieldErrors[action.pathErrorKey]" class="ui-field__error">{{ fieldErrors[action.pathErrorKey] }}</span>
                   </label>
-                  <label class="ui-field">
+                  <label class="ui-field checker-field checker-field--status">
                     <span class="ui-field__label">状态码</span>
                     <span class="ui-control-wrap" :class="{ 'is-error': !!fieldErrors[action.statusErrorKey] }">
                       <input v-model.number="httpStandardDraft[action.key].expected_status" type="number" min="1" step="1" class="ui-control" />
@@ -687,11 +651,11 @@ onUnmounted(() => {
                     <span v-if="fieldErrors[action.statusErrorKey]" class="ui-field__error">{{ fieldErrors[action.statusErrorKey] }}</span>
                   </label>
                 </div>
-                <div class="checker-action-extra-grid">
-                  <label class="ui-field">
+                <div class="checker-action-extra-grid checker-action-extra-grid--http">
+                  <label class="ui-field checker-field checker-field--wide">
                     <span class="ui-field__label">Body Template</span>
                     <span class="ui-control-wrap">
-                      <textarea v-model="httpStandardDraft[action.key].body_template" rows="3" class="ui-control awd-config-control--mono" />
+                      <textarea v-model="httpStandardDraft[action.key].body_template" rows="2" class="ui-control awd-config-control--mono" />
                     </span>
                   </label>
                   <label class="ui-field">
@@ -703,7 +667,7 @@ onUnmounted(() => {
                   <label class="ui-field checker-action-extra-grid__wide">
                     <span class="ui-field__label">Headers JSON</span>
                     <span class="ui-control-wrap" :class="{ 'is-error': !!fieldErrors[action.headersErrorKey] }">
-                      <textarea v-model="httpStandardDraft[action.key].headers_text" rows="3" class="ui-control awd-config-control--mono" />
+                      <textarea v-model="httpStandardDraft[action.key].headers_text" rows="2" class="ui-control awd-config-control--mono" />
                     </span>
                     <span v-if="fieldErrors[action.headersErrorKey]" class="ui-field__error">{{ fieldErrors[action.headersErrorKey] }}</span>
                   </label>
@@ -712,83 +676,88 @@ onUnmounted(() => {
             </template>
 
             <template v-else-if="selectedCheckerType === 'tcp_standard'">
-              <label class="ui-field awd-config-small-field">
-                <span class="ui-field__label">总超时</span>
-                <span class="ui-control-wrap" :class="{ 'is-error': !!fieldErrors.tcp_timeout }">
-                  <input v-model.number="tcpStandardDraft.timeout_ms" type="number" min="1" max="60000" step="100" class="ui-control" />
-                </span>
-                <span v-if="fieldErrors.tcp_timeout" class="ui-field__error">{{ fieldErrors.tcp_timeout }}</span>
-              </label>
+              <div class="checker-toolbar">
+                <label class="ui-field awd-config-small-field">
+                  <span class="ui-field__label">总超时</span>
+                  <span class="ui-control-wrap" :class="{ 'is-error': !!fieldErrors.tcp_timeout }">
+                    <input v-model.number="tcpStandardDraft.timeout_ms" type="number" min="1" max="60000" step="100" class="ui-control" />
+                  </span>
+                  <span v-if="fieldErrors.tcp_timeout" class="ui-field__error">{{ fieldErrors.tcp_timeout }}</span>
+                </label>
+                <button type="button" class="ui-btn ui-btn--secondary" @click="addTCPCheckerStep">添加步骤</button>
+              </div>
               <span v-if="fieldErrors.tcp_steps" class="ui-field__error">{{ fieldErrors.tcp_steps }}</span>
-              <section v-for="(step, index) in tcpStandardDraft.steps" :key="index" class="checker-action-section">
+              <section
+                v-for="(step, index) in tcpStandardDraft.steps"
+                :key="index"
+                class="checker-action-section checker-action-section--panel checker-action-section--tcp"
+                :class="{ 'is-collapsed': expandedTCPCheckerStepIndex !== index }"
+              >
                 <header class="list-heading checker-action-section__head">
-                  <h4 class="list-heading__title checker-action-section__title">Step {{ index + 1 }}</h4>
+                  <button
+                    type="button"
+                    class="checker-step-toggle"
+                    :aria-expanded="expandedTCPCheckerStepIndex === index"
+                    @click="toggleTCPCheckerStep(index)"
+                  >
+                    <span class="checker-action-section__heading">
+                      <span class="list-heading__title checker-action-section__title">Step {{ index + 1 }}</span>
+                      <span class="checker-action-section__hint">{{ summarizeTCPCheckerStep(step) }}</span>
+                    </span>
+                    <ChevronDown class="h-4 w-4 checker-step-toggle__icon" />
+                  </button>
                   <button v-if="tcpStandardDraft.steps.length > 1" type="button" class="ui-btn ui-btn--secondary" @click="removeTCPCheckerStep(index)">删除</button>
                 </header>
-                <div class="checker-action-extra-grid">
-                  <label class="ui-field"><span class="ui-field__label">Send</span><textarea v-model="step.send" rows="3" class="ui-control awd-config-control--mono" /></label>
-                  <label class="ui-field"><span class="ui-field__label">Send Template</span><textarea v-model="step.send_template" rows="3" class="ui-control awd-config-control--mono" /></label>
-                  <label class="ui-field"><span class="ui-field__label">Send Hex</span><textarea v-model="step.send_hex" rows="3" class="ui-control awd-config-control--mono" /></label>
-                  <label class="ui-field"><span class="ui-field__label">Expect Contains</span><textarea v-model="step.expect_contains" rows="3" class="ui-control awd-config-control--mono" /></label>
-                  <label class="ui-field"><span class="ui-field__label">Expect Regex</span><input v-model="step.expect_regex" type="text" class="ui-control awd-config-control--mono" /></label>
-                  <label class="ui-field"><span class="ui-field__label">Step Timeout</span><input v-model.number="step.timeout_ms" type="number" min="0" max="60000" step="100" class="ui-control" /></label>
+                <div v-show="expandedTCPCheckerStepIndex === index" class="checker-action-extra-grid checker-action-extra-grid--tcp">
+                  <label class="ui-field checker-field checker-field--wide"><span class="ui-field__label">Send</span><span class="ui-control-wrap"><textarea v-model="step.send" rows="2" class="ui-control awd-config-control--mono" /></span></label>
+                  <label class="ui-field checker-field checker-field--wide"><span class="ui-field__label">Send Template</span><span class="ui-control-wrap"><textarea v-model="step.send_template" rows="2" class="ui-control awd-config-control--mono" /></span></label>
+                  <label class="ui-field"><span class="ui-field__label">Send Hex</span><span class="ui-control-wrap"><textarea v-model="step.send_hex" rows="2" class="ui-control awd-config-control--mono" /></span></label>
+                  <label class="ui-field checker-field checker-field--wide"><span class="ui-field__label">Expect Contains</span><span class="ui-control-wrap"><textarea v-model="step.expect_contains" rows="2" class="ui-control awd-config-control--mono" /></span></label>
+                  <label class="ui-field"><span class="ui-field__label">Expect Regex</span><span class="ui-control-wrap"><input v-model="step.expect_regex" type="text" class="ui-control awd-config-control--mono" /></span></label>
+                  <label class="ui-field"><span class="ui-field__label">Step Timeout</span><span class="ui-control-wrap"><input v-model.number="step.timeout_ms" type="number" min="0" max="60000" step="100" class="ui-control" /></span></label>
                 </div>
               </section>
-              <button type="button" class="ui-btn ui-btn--secondary" @click="addTCPCheckerStep">添加步骤</button>
             </template>
 
             <template v-else-if="selectedCheckerType === 'script_checker'">
-              <div class="checker-action-grid">
-                <label class="ui-field"><span class="ui-field__label">Runtime</span><select v-model="scriptCheckerDraft.runtime" class="ui-control"><option value="python3">python3</option></select></label>
-                <label class="ui-field"><span class="ui-field__label">输出格式</span><select v-model="scriptCheckerDraft.output" class="ui-control"><option value="exit_code">Exit Code</option><option value="json">JSON</option></select></label>
-                <label class="ui-field"><span class="ui-field__label">入口文件</span><span class="ui-control-wrap" :class="{ 'is-error': !!fieldErrors.script_entry }"><input v-model="scriptCheckerDraft.entry" type="text" class="ui-control" /></span><span v-if="fieldErrors.script_entry" class="ui-field__error">{{ fieldErrors.script_entry }}</span></label>
+              <div class="checker-action-grid checker-action-grid--script-meta">
+                <label class="ui-field"><span class="ui-field__label">Runtime</span><span class="ui-control-wrap"><select v-model="scriptCheckerDraft.runtime" class="ui-control"><option value="python3">python3</option></select></span></label>
+                <label class="ui-field"><span class="ui-field__label">输出格式</span><span class="ui-control-wrap"><select v-model="scriptCheckerDraft.output" class="ui-control"><option value="exit_code">Exit Code</option><option value="json">JSON</option></select></span></label>
                 <label class="ui-field"><span class="ui-field__label">超时时间</span><span class="ui-control-wrap" :class="{ 'is-error': !!fieldErrors.script_timeout }"><input v-model.number="scriptCheckerDraft.timeout_sec" type="number" min="1" max="60" step="1" class="ui-control" /></span><span v-if="fieldErrors.script_timeout" class="ui-field__error">{{ fieldErrors.script_timeout }}</span></label>
               </div>
-              <label class="ui-field"><span class="ui-field__label">Args</span><textarea v-model="scriptCheckerDraft.args_text" rows="3" class="ui-control awd-config-control--mono" /></label>
-              <label class="ui-field"><span class="ui-field__label">Env JSON</span><span class="ui-control-wrap" :class="{ 'is-error': !!fieldErrors.script_env_text }"><textarea v-model="scriptCheckerDraft.env_text" rows="4" class="ui-control awd-config-control--mono" /></span><span v-if="fieldErrors.script_env_text" class="ui-field__error">{{ fieldErrors.script_env_text }}</span></label>
-            </template>
-
-            <pre class="checker-json-preview" id="awd-config-json-preview">{{ checkerConfigJSON }}</pre>
-          </section>
-
-          <section class="awd-config-form-section">
-            <header class="list-heading awd-config-section-head">
-              <div>
-                <div class="journal-note-label">Checker Preview</div>
-                <h3 class="list-heading__title">试跑</h3>
+              <label class="ui-field">
+                <span class="ui-field__label">入口文件</span>
+                <span class="ui-control-wrap" :class="{ 'is-error': !!fieldErrors.script_entry }"><input v-model="scriptCheckerDraft.entry" type="text" class="ui-control" /></span>
+                <span v-if="fieldErrors.script_entry" class="ui-field__error">{{ fieldErrors.script_entry }}</span>
+              </label>
+              <div class="checker-action-extra-grid checker-action-extra-grid--script">
+                <label class="ui-field checker-field checker-field--wide"><span class="ui-field__label">Args</span><span class="ui-control-wrap"><textarea v-model="scriptCheckerDraft.args_text" rows="3" class="ui-control awd-config-control--mono" /></span></label>
+                <label class="ui-field checker-field checker-field--wide"><span class="ui-field__label">Env JSON</span><span class="ui-control-wrap" :class="{ 'is-error': !!fieldErrors.script_env_text }"><textarea v-model="scriptCheckerDraft.env_text" rows="3" class="ui-control awd-config-control--mono" /></span><span v-if="fieldErrors.script_env_text" class="ui-field__error">{{ fieldErrors.script_env_text }}</span></label>
               </div>
-            </header>
-            <div class="checker-action-grid">
-              <label class="ui-field">
-                <span class="ui-field__label">目标访问地址</span>
-                <input v-model="previewForm.access_url" type="text" class="ui-control" placeholder="留空时由平台启动预览实例" />
-              </label>
-              <label class="ui-field">
-                <span class="ui-field__label">预览 Flag</span>
-                <input v-model="previewForm.preview_flag" type="text" class="ui-control awd-config-control--mono" />
-              </label>
-            </div>
-            <div v-if="previewError" class="awd-config-alert">
-              <AlertTriangle class="h-4 w-4" />
-              <span>{{ previewError }}</span>
-            </div>
-            <div v-if="previewResult" class="preview-result">
-              <CheckCircle2 class="h-4 w-4" />
-              <span>{{ previewSummary || getCheckStatusLabel(String(previewResult.service_status)) || previewResult.service_status }}</span>
-              <small v-if="previewAccessURL">{{ previewAccessURL }}</small>
-            </div>
+            </template>
           </section>
 
-          <footer class="awd-config-page__footer">
-            <button type="button" class="ui-btn ui-btn--secondary" :disabled="previewing || saving" @click="handlePreview">
-              <Play class="h-4 w-4" />
-              {{ previewing ? '试跑中...' : '试跑 Checker' }}
-            </button>
-            <button type="button" class="ui-btn ui-btn--primary" :disabled="saving || previewing" @click="handleSave">
-              <Save class="h-4 w-4" />
-              {{ saving ? '保存中...' : canAttachPreviewToken ? '保存并写入试跑结果' : '保存配置' }}
-            </button>
-          </footer>
+          <ContestAwdDebugStation
+            v-model:access-url="previewForm.access_url"
+            v-model:preview-flag="previewForm.preview_flag"
+            :checker-config-json="checkerConfigJSON"
+            :previewing="previewing"
+            :preview-result="previewResult"
+            :preview-error="previewError"
+            :preview-access-url="previewAccessURL"
+            :preview-summary="previewSummary"
+            :get-check-status-label="getCheckStatusLabel"
+          />
+
+          <ContestAwdConfigFooter
+            :previewing="previewing"
+            :saving="saving"
+            :preview-error="previewError"
+            :preview-result="previewResult"
+            :can-attach-preview-token="canAttachPreviewToken"
+            @preview="handlePreview"
+            @save="handleSave"
+          />
         </template>
       </section>
     </main>
@@ -797,11 +766,33 @@ onUnmounted(() => {
 
 <style scoped>
 .awd-config-page {
+  --awd-card-radius: 0.75rem;
+  --awd-card-border: color-mix(in srgb, var(--color-border-default) 80%, transparent);
+  --awd-card-surface: color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-bg-base));
+  --awd-card-subtle: color-mix(in srgb, var(--color-bg-surface) 72%, var(--color-bg-base));
+  --awd-card-shadow: 0 0.85rem 2rem color-mix(in srgb, var(--color-shadow-soft) 22%, transparent);
+  --ui-control-background: color-mix(
+    in srgb,
+    var(--color-bg-elevated) 62%,
+    var(--color-bg-surface)
+  );
+  --ui-control-border: color-mix(in srgb, var(--color-border-default) 88%, transparent);
+  --ui-control-color: var(--color-text-primary);
+  --ui-control-placeholder: color-mix(in srgb, var(--color-text-muted) 86%, transparent);
+  --ui-control-focus-border: color-mix(in srgb, var(--color-primary) 58%, var(--color-border-default));
+  --ui-control-focus-background: color-mix(
+    in srgb,
+    var(--color-bg-surface) 76%,
+    var(--color-bg-elevated)
+  );
+  --ui-control-focus-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--color-primary) 16%, transparent);
   position: relative;
   min-height: calc(100vh - var(--app-header-height, 4rem));
+  max-height: calc(100vh - var(--app-header-height, 4rem));
   display: flex;
   flex-direction: column;
   background: var(--color-bg-base);
+  overflow: hidden;
 }
 
 .awd-config-page__loading {
@@ -814,31 +805,12 @@ onUnmounted(() => {
   background: color-mix(in srgb, var(--color-bg-base) 82%, transparent);
 }
 
-.awd-config-page__topbar {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: var(--space-5);
-  padding: var(--space-5) var(--space-7);
-  border-bottom: 1px solid color-mix(in srgb, var(--color-border-default) 82%, transparent);
-  background: var(--color-bg-surface);
-}
-
-.awd-config-page__title-block {
-  min-width: 0;
-}
-
-.awd-config-page__subtitle {
-  margin: var(--space-1) 0 0;
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-13);
-}
-
 .awd-config-page__body {
   min-height: 0;
+  height: calc(100vh - var(--app-header-height, 4rem) - 3.5rem);
   flex: 1;
   display: grid;
-  grid-template-columns: minmax(18rem, 22rem) minmax(0, 1fr);
+  grid-template-columns: minmax(17rem, 20rem) minmax(0, 1fr);
   background:
     linear-gradient(
       180deg,
@@ -848,121 +820,27 @@ onUnmounted(() => {
     var(--color-bg-base);
 }
 
-.awd-config-page__services,
 .awd-config-page__editor {
   min-width: 0;
   min-height: 0;
   overflow: auto;
-  padding: var(--space-6);
+  padding: var(--space-5);
 }
 
-.awd-config-page__services {
-  border-right: 1px solid color-mix(in srgb, var(--color-border-default) 82%, transparent);
-  background: color-mix(in srgb, var(--color-bg-surface) 78%, var(--color-bg-base));
-}
-
-.awd-service-list {
+.awd-config-page__editor {
   display: grid;
-  gap: var(--space-2);
+  align-content: start;
+  gap: var(--space-5);
 }
 
-.awd-service-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: var(--space-2);
-  width: 100%;
-  border: 1px solid transparent;
-  border-radius: var(--ui-control-radius);
-  background: transparent;
-  padding: var(--space-3);
-  text-align: left;
-  color: var(--color-text-primary);
-  cursor: pointer;
-  transition:
-    background var(--ui-motion-fast),
-    border-color var(--ui-motion-fast);
-}
-
-.awd-service-row:hover,
-.awd-service-row:focus-visible,
-.awd-service-row.is-active {
-  border-color: color-mix(in srgb, var(--color-primary) 34%, transparent);
-  background: color-mix(in srgb, var(--color-primary-soft) 54%, var(--color-bg-surface));
-  outline: none;
-}
-
-.awd-service-row__main,
-.awd-service-row__meta {
-  min-width: 0;
-  display: grid;
-  gap: var(--space-1);
-}
-
-.awd-service-row__main strong {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: var(--font-size-14);
-}
-
-.awd-service-row__main small,
-.awd-service-row__checker {
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-12);
-}
-
-.validation-pill {
-  width: fit-content;
-  border-radius: var(--ui-badge-radius-soft);
-  padding: var(--space-1) var(--space-2);
-  background: var(--color-bg-elevated);
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-11);
-  font-weight: 800;
-}
-
-.validation-pill.passed {
-  background: var(--color-success-soft);
-  color: var(--color-success);
-}
-
-.validation-pill.failed,
-.validation-pill.stale {
-  background: var(--color-warning-soft);
-  color: var(--color-warning);
-}
-
-.awd-config-editor-head {
+.awd-config-section-head {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  gap: var(--space-4);
-  padding-bottom: var(--space-5);
-  border-bottom: 1px solid color-mix(in srgb, var(--color-border-default) 78%, transparent);
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
 }
 
-.awd-config-editor-head h2 {
-  margin: var(--space-1) 0 0;
-  color: var(--color-text-primary);
-  font-size: var(--font-size-24);
-  font-weight: 900;
-}
-
-.awd-config-editor-head p {
-  margin: var(--space-2) 0 0;
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-13);
-}
-
-.awd-config-editor-head__meta {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: var(--space-2);
-}
-
-.engine-lock,
-.preview-result,
 .awd-config-alert {
   display: inline-flex;
   align-items: center;
@@ -970,12 +848,6 @@ onUnmounted(() => {
   border-radius: var(--ui-control-radius);
   padding: var(--space-2) var(--space-3);
   font-size: var(--font-size-13);
-}
-
-.engine-lock {
-  border: 1px solid color-mix(in srgb, var(--color-border-default) 82%, transparent);
-  background: var(--color-bg-surface);
-  color: var(--color-text-secondary);
 }
 
 .awd-config-alert {
@@ -986,41 +858,193 @@ onUnmounted(() => {
 
 .awd-config-form-section {
   display: grid;
-  gap: var(--space-4);
-  padding: var(--space-6) 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--color-border-default) 70%, transparent);
+  gap: var(--space-3);
 }
 
-.awd-config-score-grid,
+.awd-config-card {
+  padding: var(--space-4);
+  border: 1px solid var(--awd-card-border);
+  border-radius: var(--awd-card-radius);
+  background: var(--awd-card-surface);
+  box-shadow: var(--awd-card-shadow);
+}
+
+.awd-config-card--compact {
+  gap: var(--space-2);
+}
+
+.awd-config-card--canvas {
+  gap: var(--space-4);
+}
+
+.awd-config-section-tag {
+  flex: none;
+  border-radius: var(--ui-badge-radius-soft);
+  padding: var(--space-1) var(--space-2);
+  background: color-mix(in srgb, var(--color-primary-soft) 55%, var(--color-bg-surface));
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-11);
+  font-weight: 700;
+}
+
 .checker-action-grid {
   display: grid;
-  gap: var(--space-4);
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.checker-toolbar {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
 }
 
 .checker-action-section {
   display: grid;
-  gap: var(--space-4);
-  padding-top: var(--space-4);
+  gap: var(--space-3);
+  padding-top: var(--space-3);
   border-top: 1px solid color-mix(in srgb, var(--color-border-default) 70%, transparent);
 }
 
+.checker-action-section--panel {
+  padding: var(--space-3);
+  border: 1px solid color-mix(in srgb, var(--color-border-default) 72%, transparent);
+  border-radius: calc(var(--awd-card-radius) - 0.125rem);
+  background: var(--awd-card-subtle);
+  box-shadow: 0 0.45rem 1rem color-mix(in srgb, var(--color-shadow-soft) 12%, transparent);
+}
+
+.checker-action-section--tcp.is-collapsed {
+  gap: 0;
+  padding-block: var(--space-2);
+}
+
+.checker-action-section--panel :deep(.ui-control-wrap) {
+  border: 1px solid var(--ui-control-border);
+  background: var(--ui-control-background);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--color-text-primary) 5%, transparent);
+}
+
+.checker-action-section--panel :deep(.ui-control-wrap:focus-within) {
+  border-color: var(--ui-control-focus-border);
+  background: var(--ui-control-focus-background);
+  box-shadow:
+    var(--ui-control-focus-shadow),
+    inset 0 1px 0 color-mix(in srgb, var(--color-text-primary) 7%, transparent);
+}
+
+.checker-action-section--panel :deep(.ui-control) {
+  background: transparent;
+}
+
+.checker-action-section--panel :deep(.ui-control) {
+  min-height: 2.25rem;
+}
+
+.checker-action-section--panel textarea.ui-control {
+  min-height: 3.5rem;
+  line-height: 1.4;
+}
+
 .checker-action-section__head {
+  display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.checker-step-toggle {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.checker-step-toggle:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--color-primary) 42%, transparent);
+  outline-offset: var(--space-1);
+}
+
+.checker-step-toggle__icon {
+  flex: none;
+  color: var(--color-text-secondary);
+  transition: transform var(--ui-motion-fast);
+}
+
+.checker-step-toggle[aria-expanded='true'] .checker-step-toggle__icon {
+  transform: rotate(180deg);
+}
+
+.checker-action-section__heading {
+  min-width: 0;
+  display: grid;
+  gap: 0;
 }
 
 .checker-action-section__title {
   font-size: var(--font-size-14);
 }
 
+.checker-action-section__hint {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-11);
+}
+
 .checker-action-extra-grid {
   display: grid;
-  gap: var(--space-4);
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .checker-action-extra-grid__wide {
-  grid-column: 1 / -1;
+  grid-column: span 2;
+}
+
+.checker-action-grid--http {
+  grid-template-columns: minmax(6.5rem, 8rem) minmax(0, 1fr) minmax(7rem, 8.5rem);
+}
+
+.checker-action-extra-grid--http {
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr) minmax(0, 1fr);
+}
+
+.checker-action-extra-grid--tcp {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.checker-action-grid--script-meta,
+.checker-action-grid--preview {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.checker-action-extra-grid--script {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.checker-field--method,
+.checker-field--status {
+  min-width: 0;
+}
+
+.checker-field--path {
+  min-width: 0;
+}
+
+.checker-field--wide {
+  grid-column: span 2;
 }
 
 .checker-preset-strip {
@@ -1029,48 +1053,33 @@ onUnmounted(() => {
   gap: var(--space-2);
 }
 
+.checker-preset-strip--compact {
+  margin-bottom: var(--space-1);
+}
+
 .awd-config-small-field {
   max-width: 18rem;
 }
 
-.awd-config-control--mono,
-.checker-json-preview {
-  font-family: var(--font-family-mono);
+.awd-config-page :deep(.ui-field) {
+  gap: var(--space-1);
 }
 
-.checker-json-preview {
-  margin: 0;
-  overflow: auto;
-  border: 1px solid color-mix(in srgb, var(--color-border-default) 82%, transparent);
-  border-radius: var(--ui-control-radius);
-  background: var(--color-bg-surface);
-  padding: var(--space-4);
-  color: var(--color-text-secondary);
+.awd-config-page :deep(.ui-field__label) {
   font-size: var(--font-size-12);
 }
 
-.preview-result {
-  width: fit-content;
-  background: var(--color-success-soft);
-  color: var(--color-success);
+.awd-config-page :deep(.ui-control) {
+  min-height: 2.5rem;
 }
 
-.preview-result small {
-  color: var(--color-text-secondary);
+.awd-config-page textarea.ui-control {
+  min-height: 4.5rem;
+  resize: vertical;
 }
 
-.awd-config-page__footer {
-  position: sticky;
-  bottom: 0;
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--space-3);
-  padding: var(--space-4) 0 0;
-  background: linear-gradient(
-    180deg,
-    transparent,
-    var(--color-bg-base) var(--space-4)
-  );
+.awd-config-control--mono {
+  font-family: var(--font-family-mono);
 }
 
 .awd-config-page__empty {
@@ -1082,23 +1091,49 @@ onUnmounted(() => {
     grid-template-columns: 1fr;
   }
 
-  .awd-config-page__services {
-    border-right: 0;
-    border-bottom: 1px solid color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  .checker-action-grid,
+  .checker-action-extra-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .checker-action-grid--http,
+  .checker-action-grid--preview,
+  .checker-action-extra-grid--http,
+  .checker-action-extra-grid--tcp,
+  .checker-action-extra-grid--script {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .checker-action-extra-grid__wide {
+    grid-column: 1 / -1;
+  }
+
+  .checker-field--wide {
+    grid-column: 1 / -1;
   }
 }
 
 @media (max-width: 767px) {
-  .awd-config-page__topbar,
-  .awd-config-editor-head,
-  .awd-config-score-grid,
   .checker-action-grid,
   .checker-action-extra-grid {
     grid-template-columns: 1fr;
   }
 
-  .awd-config-page__topbar {
-    align-items: stretch;
+  .checker-action-extra-grid__wide {
+    grid-column: auto;
+  }
+
+  .checker-field--wide {
+    grid-column: auto;
+  }
+
+  .checker-action-grid--http,
+  .checker-action-grid--script-meta,
+  .checker-action-grid--preview,
+  .checker-action-extra-grid--http,
+  .checker-action-extra-grid--tcp,
+  .checker-action-extra-grid--script {
+    grid-template-columns: 1fr;
   }
 }
 </style>
