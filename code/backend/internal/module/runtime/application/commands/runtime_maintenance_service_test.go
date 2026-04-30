@@ -63,6 +63,7 @@ type maintenanceTestEngine struct {
 	managedContainers []runtimeports.ManagedContainer
 	containerStates   map[string]*runtimeports.ManagedContainerState
 	inspectErr        error
+	inspectErrs       map[string]error
 }
 
 func (e *maintenanceTestEngine) ListManagedContainers(context.Context) ([]runtimeports.ManagedContainer, error) {
@@ -72,6 +73,9 @@ func (e *maintenanceTestEngine) ListManagedContainers(context.Context) ([]runtim
 func (e *maintenanceTestEngine) InspectManagedContainer(_ context.Context, containerID string) (*runtimeports.ManagedContainerState, error) {
 	if e.inspectErr != nil {
 		return nil, e.inspectErr
+	}
+	if err, ok := e.inspectErrs[containerID]; ok {
+		return nil, err
 	}
 	if e.containerStates == nil {
 		return &runtimeports.ManagedContainerState{ID: containerID, Exists: true, Running: true, Status: "running"}, nil
@@ -329,7 +333,7 @@ func TestRuntimeMaintenanceServiceSkipsFreshCreatingInstanceWithoutContainer(t *
 	}
 }
 
-func TestRuntimeMaintenanceServiceDoesNotRequeueWhenDockerInspectFails(t *testing.T) {
+func TestRuntimeMaintenanceServiceSkipsInstanceWhenDockerInspectFails(t *testing.T) {
 	t.Parallel()
 
 	repo := &maintenanceTestRepository{
@@ -349,10 +353,50 @@ func TestRuntimeMaintenanceServiceDoesNotRequeueWhenDockerInspectFails(t *testin
 		CreateTimeout: 30 * time.Second,
 	}, nil)
 
-	if err := service.ReconcileLostActiveRuntimes(context.Background()); err == nil {
-		t.Fatal("expected docker inspect error")
+	if err := service.ReconcileLostActiveRuntimes(context.Background()); err != nil {
+		t.Fatalf("ReconcileLostActiveRuntimes() error = %v", err)
 	}
 	if len(repo.requeuedIDs) != 0 {
 		t.Fatalf("expected no requeue on docker inspect error, got %v", repo.requeuedIDs)
+	}
+}
+
+func TestRuntimeMaintenanceServiceInspectFailureDoesNotBlockOtherInstances(t *testing.T) {
+	t.Parallel()
+
+	repo := &maintenanceTestRepository{
+		recoverableActiveInstances: []*model.Instance{
+			{
+				ID:          46,
+				ContainerID: "inspect-fails",
+				Status:      model.InstanceStatusRunning,
+				ExpiresAt:   time.Now().Add(time.Hour),
+				UpdatedAt:   time.Now().Add(-time.Minute),
+			},
+			{
+				ID:          47,
+				ContainerID: "missing-runtime",
+				Status:      model.InstanceStatusRunning,
+				ExpiresAt:   time.Now().Add(time.Hour),
+				UpdatedAt:   time.Now().Add(-time.Minute),
+			},
+		},
+	}
+	service := NewRuntimeMaintenanceService(repo, &maintenanceTestEngine{
+		inspectErrs: map[string]error{
+			"inspect-fails": fmt.Errorf("docker inspect failed"),
+		},
+		containerStates: map[string]*runtimeports.ManagedContainerState{
+			"missing-runtime": {ID: "missing-runtime", Exists: false},
+		},
+	}, nil, &config.ContainerConfig{
+		CreateTimeout: 30 * time.Second,
+	}, nil)
+
+	if err := service.ReconcileLostActiveRuntimes(context.Background()); err != nil {
+		t.Fatalf("ReconcileLostActiveRuntimes() error = %v", err)
+	}
+	if len(repo.requeuedIDs) != 1 || repo.requeuedIDs[0] != 47 {
+		t.Fatalf("expected only instance 47 requeued, got %v", repo.requeuedIDs)
 	}
 }

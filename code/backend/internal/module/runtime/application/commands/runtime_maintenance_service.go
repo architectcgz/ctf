@@ -109,7 +109,12 @@ func (s *RuntimeMaintenanceService) ReconcileLostActiveRuntimes(ctx context.Cont
 		}
 		lost, reason, err := s.isInstanceRuntimeLost(ctx, instance, now)
 		if err != nil {
-			return err
+			s.logger.Warn("检查实例运行时状态失败，跳过本实例",
+				zap.Int64("instance_id", instance.ID),
+				zap.String("status", instance.Status),
+				zap.String("container_id", instance.ContainerID),
+				zap.Error(err))
+			continue
 		}
 		if !lost {
 			continue
