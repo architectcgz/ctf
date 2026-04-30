@@ -268,10 +268,7 @@ func isAllowedNoContextRepositoryMethod(name string) bool {
 func isApprovedContextRootFile(path string) bool {
 	switch path {
 	case "internal/app/composition/root.go",
-		"internal/app/http_server.go",
-		"internal/bootstrap/run.go",
-		"internal/infrastructure/postgres/postgres.go",
-		"internal/infrastructure/redis/redis.go":
+		"internal/bootstrap/run.go":
 		return true
 	default:
 		return false

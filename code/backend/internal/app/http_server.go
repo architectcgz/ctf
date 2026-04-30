@@ -96,7 +96,7 @@ func (s *HTTPServer) Shutdown(ctx context.Context) error {
 func (s *HTTPServer) startBackgroundJobs() error {
 	ctx := s.appCtx
 	if ctx == nil {
-		ctx = context.Background()
+		return errors.New("http server background jobs require application context")
 	}
 	for _, job := range s.backgroundJobs {
 		s.logger.Info("启动后台任务", zap.String("job", job.Name()))

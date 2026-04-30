@@ -12,7 +12,10 @@ import (
 	"ctf-platform/internal/config"
 )
 
-func Open(cfg config.PostgresConfig) (*gorm.DB, error) {
+func Open(ctx context.Context, cfg config.PostgresConfig) (*gorm.DB, error) {
+	if ctx == nil {
+		return nil, fmt.Errorf("postgres open requires context")
+	}
 	database, err := gorm.Open(postgres.Open(cfg.DSN()), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Silent),
 	})
@@ -29,9 +32,9 @@ func Open(cfg config.PostgresConfig) (*gorm.DB, error) {
 	sqlDB.SetMaxIdleConns(cfg.MaxIdleConns)
 	sqlDB.SetConnMaxLifetime(cfg.ConnMaxLifetime)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	pingCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-	if err := sqlDB.PingContext(ctx); err != nil {
+	if err := sqlDB.PingContext(pingCtx); err != nil {
 		return nil, fmt.Errorf("ping postgres: %w", err)
 	}
 
