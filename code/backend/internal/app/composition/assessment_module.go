@@ -49,8 +49,8 @@ func BuildAssessmentModule(root *Root, challenge *ChallengeModule) *AssessmentMo
 	cleaner := assessmentcmd.NewCleaner(profileCommandService, root.Logger().Named("assessment_cleaner"))
 	root.RegisterBackgroundJob(NewBackgroundJob(
 		"assessment_cleaner",
-		func(context.Context) error {
-			return cleaner.Start(cfg.Assessment.FullRebuildCron, cfg.Assessment.FullRebuildTimeout)
+		func(ctx context.Context) error {
+			return cleaner.Start(ctx, cfg.Assessment.FullRebuildCron, cfg.Assessment.FullRebuildTimeout)
 		},
 		cleaner.Stop,
 	))
@@ -109,6 +109,7 @@ func buildAssessmentReportHandler(root *Root, cfg *config.Config, deps assessmen
 		cfg.Report,
 		root.Logger().Named("report_service"),
 	)
+	reportService.StartBackgroundTasks(root.Context())
 	reportService.SetAWDReviewExportBuilder(
 		assessmentcmd.NewAWDReviewExportBuilder(
 			assessmentqry.NewTeacherAWDReviewService(deps.awdReviewRepo),

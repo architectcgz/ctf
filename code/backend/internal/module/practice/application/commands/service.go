@@ -86,7 +86,6 @@ func NewService(
 	if cfg == nil {
 		cfg = &config.Config{}
 	}
-	baseCtx, cancel := context.WithCancel(context.Background())
 	return &Service{
 		repo:              repo,
 		challengeRepo:     challengeRepo,
@@ -98,9 +97,17 @@ func NewService(
 		redis:             redis,
 		config:            cfg,
 		logger:            logger,
-		baseCtx:           baseCtx,
-		cancel:            cancel,
 	}
+}
+
+func (s *Service) StartBackgroundTasks(ctx context.Context) {
+	if s == nil || ctx == nil {
+		return
+	}
+	if s.cancel != nil {
+		s.cancel()
+	}
+	s.baseCtx, s.cancel = context.WithCancel(ctx)
 }
 
 func (s *Service) StartChallenge(ctx context.Context, userID, challengeID int64) (*dto.InstanceResp, error) {

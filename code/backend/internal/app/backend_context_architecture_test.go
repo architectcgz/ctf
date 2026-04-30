@@ -271,12 +271,7 @@ func isApprovedContextRootFile(path string) bool {
 		"internal/app/http_server.go",
 		"internal/bootstrap/run.go",
 		"internal/infrastructure/postgres/postgres.go",
-		"internal/infrastructure/redis/redis.go",
-		"internal/module/assessment/application/commands/cleaner.go",
-		"internal/module/assessment/application/commands/report_service.go",
-		"internal/module/challenge/application/commands/image_service.go",
-		"internal/module/practice/application/commands/service.go",
-		"internal/module/runtime/infrastructure/cleaner.go":
+		"internal/infrastructure/redis/redis.go":
 		return true
 	default:
 		return false

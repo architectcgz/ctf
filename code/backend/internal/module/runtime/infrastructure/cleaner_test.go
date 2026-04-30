@@ -32,6 +32,7 @@ func TestCleanerStopCancelsRunningTask(t *testing.T) {
 		done:    make(chan struct{}),
 	}
 	cleaner := NewCleaner(service, nil, time.Minute, zap.NewNop())
+	cleaner.baseCtx, cleaner.cancel = context.WithCancel(context.Background())
 
 	go cleaner.runOnce()
 

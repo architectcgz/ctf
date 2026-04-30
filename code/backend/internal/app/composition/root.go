@@ -2,6 +2,7 @@ package composition
 
 import (
 	"context"
+	"errors"
 	"sync"
 
 	redislib "github.com/redis/go-redis/v9"
@@ -18,10 +19,12 @@ type Root struct {
 	jobsMu sync.Mutex
 	jobs   []BackgroundJob
 
-	cfg   *config.Config
-	log   *zap.Logger
-	db    *gorm.DB
-	cache *redislib.Client
+	appCtx    context.Context
+	appCancel context.CancelFunc
+	cfg       *config.Config
+	log       *zap.Logger
+	db        *gorm.DB
+	cache     *redislib.Client
 }
 
 type BackgroundJob struct {
@@ -44,7 +47,10 @@ func NewLoopBackgroundJob(name string, run func(context.Context)) BackgroundJob 
 
 	return NewBackgroundJob(
 		name,
-		func(context.Context) error {
+		func(ctx context.Context) error {
+			if ctx == nil {
+				return errors.New("background job start requires context")
+			}
 			mu.Lock()
 			defer mu.Unlock()
 			if started {
@@ -52,7 +58,7 @@ func NewLoopBackgroundJob(name string, run func(context.Context)) BackgroundJob 
 			}
 			started = true
 
-			runCtx, runCancel := context.WithCancel(context.Background())
+			runCtx, runCancel := context.WithCancel(ctx)
 			cancel = runCancel
 			wg.Add(1)
 			go func() {
@@ -91,13 +97,30 @@ func NewLoopBackgroundJob(name string, run func(context.Context)) BackgroundJob 
 }
 
 func BuildRoot(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib.Client) (*Root, error) {
+	appCtx, appCancel := context.WithCancel(context.Background())
 	return &Root{
-		Events: events.NewBus(),
-		cfg:    cfg,
-		log:    log,
-		db:     db,
-		cache:  cache,
+		Events:    events.NewBus(),
+		appCtx:    appCtx,
+		appCancel: appCancel,
+		cfg:       cfg,
+		log:       log,
+		db:        db,
+		cache:     cache,
 	}, nil
+}
+
+func (r *Root) Context() context.Context {
+	if r == nil || r.appCtx == nil {
+		return context.Background()
+	}
+	return r.appCtx
+}
+
+func (r *Root) Cancel() {
+	if r == nil || r.appCancel == nil {
+		return
+	}
+	r.appCancel()
 }
 
 func (r *Root) Config() *config.Config {

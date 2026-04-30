@@ -33,19 +33,20 @@ func NewCleaner(service cleanerService, redis *redislib.Client, lockTTL time.Dur
 	if lockTTL <= 0 {
 		lockTTL = 2 * time.Minute
 	}
-	baseCtx, cancel := context.WithCancel(context.Background())
 	return &Cleaner{
 		service: service,
 		cron:    cron.New(),
 		logger:  logger,
 		redis:   redis,
 		lockTTL: lockTTL,
-		baseCtx: baseCtx,
-		cancel:  cancel,
 	}
 }
 
-func (c *Cleaner) Start(interval string) error {
+func (c *Cleaner) Start(ctx context.Context, interval string) error {
+	if ctx == nil {
+		return errors.New("runtime cleaner start requires context")
+	}
+	c.baseCtx, c.cancel = context.WithCancel(ctx)
 	cleanFunc := func() {
 		c.runOnce()
 	}
@@ -114,7 +115,9 @@ func (c *Cleaner) Stop(ctx context.Context) error {
 	if ctx == nil {
 		return errors.New("runtime cleaner stop requires context")
 	}
-	c.cancel()
+	if c.cancel != nil {
+		c.cancel()
+	}
 	stopped := c.cron.Stop()
 	select {
 	case <-stopped.Done():

@@ -791,6 +791,7 @@ func TestReportServiceCreateAWDReviewArchiveExportStartsProcessingTask(t *testin
 		},
 		nil,
 	)
+	service.StartBackgroundTasks(context.Background())
 	releaseBuilder := make(chan struct{})
 	service.SetAWDReviewExportBuilder(&testAWDReviewExportBuilder{wait: releaseBuilder})
 	t.Cleanup(func() {
@@ -994,6 +995,7 @@ func TestReportServiceCloseCancelsAsyncTasks(t *testing.T) {
 		},
 		nil,
 	)
+	service.StartBackgroundTasks(context.Background())
 
 	var started atomic.Int32
 	startedCh := make(chan struct{})
