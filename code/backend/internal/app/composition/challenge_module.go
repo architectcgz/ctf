@@ -18,12 +18,12 @@ import (
 	"gorm.io/gorm"
 )
 
-type asyncTaskCloser interface {
+type BackgroundTaskCloser interface {
 	Close(ctx context.Context) error
 }
 
 type ChallengeModule struct {
-	BackgroundCloser    asyncTaskCloser
+	BackgroundTasks     BackgroundTaskCloser
 	AWDChallengeHandler *challengehttp.AWDChallengeHandler
 	AWDChallengeQuery   challengeports.AWDChallengeQueryRepository
 	Catalog             challengecontracts.ChallengeContract
@@ -71,7 +71,7 @@ func BuildChallengeModule(root *Root, runtime *RuntimeModule, ops *OpsModule) (*
 	}
 
 	return &ChallengeModule{
-		BackgroundCloser:    imageCommandService,
+		BackgroundTasks:     imageCommandService,
 		AWDChallengeHandler: awdChallengeHandler,
 		AWDChallengeQuery:   deps.awdChallengeQueryRepo,
 		Catalog:             deps.catalog,

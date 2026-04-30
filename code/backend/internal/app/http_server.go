@@ -14,13 +14,13 @@ import (
 	"ctf-platform/internal/config"
 )
 
-type reportServiceCloser interface {
+type lifecycleCloser interface {
 	Close(ctx context.Context) error
 }
 
 type lifecycleComponent struct {
 	name   string
-	closer reportServiceCloser
+	closer lifecycleCloser
 }
 
 type HTTPServer struct {
