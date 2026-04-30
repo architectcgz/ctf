@@ -2,6 +2,7 @@ package commands
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -12,7 +13,11 @@ import (
 
 type maintenanceTestRepository struct {
 	activeContainerIDs                      []string
+	recoverableActiveInstances              []*model.Instance
+	requeuedIDs                             []int64
 	findExpiredFn                           func(ctx context.Context) ([]*model.Instance, error)
+	listRecoverableActiveInstancesFn        func(ctx context.Context) ([]*model.Instance, error)
+	requeueLostRuntimeFn                    func(ctx context.Context, id int64) (bool, error)
 	listActiveContainerIDsFn                func(ctx context.Context) ([]string, error)
 	updateStatusAndReleasePortFn            func(id int64, status string) error
 	updateStatusAndReleasePortWithContextFn func(ctx context.Context, id int64, status string) error
@@ -39,12 +44,42 @@ func (r *maintenanceTestRepository) ListActiveContainerIDs(ctx context.Context) 
 	return append([]string(nil), r.activeContainerIDs...), nil
 }
 
+func (r *maintenanceTestRepository) ListRecoverableActiveInstances(ctx context.Context) ([]*model.Instance, error) {
+	if r.listRecoverableActiveInstancesFn != nil {
+		return r.listRecoverableActiveInstancesFn(ctx)
+	}
+	return append([]*model.Instance(nil), r.recoverableActiveInstances...), nil
+}
+
+func (r *maintenanceTestRepository) RequeueLostRuntime(ctx context.Context, id int64) (bool, error) {
+	if r.requeueLostRuntimeFn != nil {
+		return r.requeueLostRuntimeFn(ctx, id)
+	}
+	r.requeuedIDs = append(r.requeuedIDs, id)
+	return true, nil
+}
+
 type maintenanceTestEngine struct {
 	managedContainers []runtimeports.ManagedContainer
+	containerStates   map[string]*runtimeports.ManagedContainerState
+	inspectErr        error
 }
 
 func (e *maintenanceTestEngine) ListManagedContainers(context.Context) ([]runtimeports.ManagedContainer, error) {
 	return append([]runtimeports.ManagedContainer(nil), e.managedContainers...), nil
+}
+
+func (e *maintenanceTestEngine) InspectManagedContainer(_ context.Context, containerID string) (*runtimeports.ManagedContainerState, error) {
+	if e.inspectErr != nil {
+		return nil, e.inspectErr
+	}
+	if e.containerStates == nil {
+		return &runtimeports.ManagedContainerState{ID: containerID, Exists: true, Running: true, Status: "running"}, nil
+	}
+	if state, ok := e.containerStates[containerID]; ok {
+		return state, nil
+	}
+	return &runtimeports.ManagedContainerState{ID: containerID, Exists: false}, nil
 }
 
 type maintenanceTestCleaner struct {
@@ -63,6 +98,10 @@ func (c *maintenanceTestCleaner) RemoveContainer(_ context.Context, containerID 
 type typedNilMaintenanceEngine struct{}
 
 func (*typedNilMaintenanceEngine) ListManagedContainers(context.Context) ([]runtimeports.ManagedContainer, error) {
+	return nil, nil
+}
+
+func (*typedNilMaintenanceEngine) InspectManagedContainer(context.Context, string) (*runtimeports.ManagedContainerState, error) {
 	return nil, nil
 }
 
@@ -189,5 +228,131 @@ func TestRuntimeMaintenanceServiceCleanupOrphansPropagatesContextToRepository(t 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
 	if err := service.CleanupOrphans(ctx); err != nil {
 		t.Fatalf("CleanupOrphans() error = %v", err)
+	}
+}
+
+func TestRuntimeMaintenanceServiceRequeuesMissingRunningContainer(t *testing.T) {
+	t.Parallel()
+
+	repo := &maintenanceTestRepository{
+		recoverableActiveInstances: []*model.Instance{
+			{
+				ID:          42,
+				ContainerID: "missing-container",
+				Status:      model.InstanceStatusRunning,
+				ExpiresAt:   time.Now().Add(time.Hour),
+				UpdatedAt:   time.Now().Add(-time.Minute),
+			},
+		},
+	}
+	engine := &maintenanceTestEngine{
+		containerStates: map[string]*runtimeports.ManagedContainerState{
+			"missing-container": {ID: "missing-container", Exists: false},
+		},
+	}
+	service := NewRuntimeMaintenanceService(repo, engine, nil, &config.ContainerConfig{
+		CreateTimeout: 30 * time.Second,
+	}, nil)
+
+	if err := service.ReconcileLostActiveRuntimes(context.Background()); err != nil {
+		t.Fatalf("ReconcileLostActiveRuntimes() error = %v", err)
+	}
+	if len(repo.requeuedIDs) != 1 || repo.requeuedIDs[0] != 42 {
+		t.Fatalf("expected instance 42 requeued, got %v", repo.requeuedIDs)
+	}
+}
+
+func TestRuntimeMaintenanceServiceRequeuesExitedTopologyContainer(t *testing.T) {
+	t.Parallel()
+
+	runtimeDetails, err := model.EncodeInstanceRuntimeDetails(model.InstanceRuntimeDetails{
+		Containers: []model.InstanceRuntimeContainer{
+			{ContainerID: "entry", IsEntryPoint: true},
+			{ContainerID: "sidecar"},
+		},
+	})
+	if err != nil {
+		t.Fatalf("encode runtime details: %v", err)
+	}
+	repo := &maintenanceTestRepository{
+		recoverableActiveInstances: []*model.Instance{
+			{
+				ID:             43,
+				ContainerID:    "entry",
+				RuntimeDetails: runtimeDetails,
+				Status:         model.InstanceStatusRunning,
+				ExpiresAt:      time.Now().Add(time.Hour),
+				UpdatedAt:      time.Now().Add(-time.Minute),
+			},
+		},
+	}
+	engine := &maintenanceTestEngine{
+		containerStates: map[string]*runtimeports.ManagedContainerState{
+			"entry":   {ID: "entry", Exists: true, Running: true, Status: "running"},
+			"sidecar": {ID: "sidecar", Exists: true, Running: false, Status: "exited"},
+		},
+	}
+	service := NewRuntimeMaintenanceService(repo, engine, nil, &config.ContainerConfig{
+		CreateTimeout: 30 * time.Second,
+	}, nil)
+
+	if err := service.ReconcileLostActiveRuntimes(context.Background()); err != nil {
+		t.Fatalf("ReconcileLostActiveRuntimes() error = %v", err)
+	}
+	if len(repo.requeuedIDs) != 1 || repo.requeuedIDs[0] != 43 {
+		t.Fatalf("expected instance 43 requeued, got %v", repo.requeuedIDs)
+	}
+}
+
+func TestRuntimeMaintenanceServiceSkipsFreshCreatingInstanceWithoutContainer(t *testing.T) {
+	t.Parallel()
+
+	repo := &maintenanceTestRepository{
+		recoverableActiveInstances: []*model.Instance{
+			{
+				ID:        44,
+				Status:    model.InstanceStatusCreating,
+				ExpiresAt: time.Now().Add(time.Hour),
+				UpdatedAt: time.Now(),
+			},
+		},
+	}
+	service := NewRuntimeMaintenanceService(repo, &maintenanceTestEngine{}, nil, &config.ContainerConfig{
+		CreateTimeout: 30 * time.Second,
+	}, nil)
+
+	if err := service.ReconcileLostActiveRuntimes(context.Background()); err != nil {
+		t.Fatalf("ReconcileLostActiveRuntimes() error = %v", err)
+	}
+	if len(repo.requeuedIDs) != 0 {
+		t.Fatalf("expected fresh creating instance not requeued, got %v", repo.requeuedIDs)
+	}
+}
+
+func TestRuntimeMaintenanceServiceDoesNotRequeueWhenDockerInspectFails(t *testing.T) {
+	t.Parallel()
+
+	repo := &maintenanceTestRepository{
+		recoverableActiveInstances: []*model.Instance{
+			{
+				ID:          45,
+				ContainerID: "runtime",
+				Status:      model.InstanceStatusRunning,
+				ExpiresAt:   time.Now().Add(time.Hour),
+				UpdatedAt:   time.Now().Add(-time.Minute),
+			},
+		},
+	}
+	service := NewRuntimeMaintenanceService(repo, &maintenanceTestEngine{
+		inspectErr: fmt.Errorf("docker unavailable"),
+	}, nil, &config.ContainerConfig{
+		CreateTimeout: 30 * time.Second,
+	}, nil)
+
+	if err := service.ReconcileLostActiveRuntimes(context.Background()); err == nil {
+		t.Fatal("expected docker inspect error")
+	}
+	if len(repo.requeuedIDs) != 0 {
+		t.Fatalf("expected no requeue on docker inspect error, got %v", repo.requeuedIDs)
 	}
 }

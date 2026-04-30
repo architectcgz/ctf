@@ -563,11 +563,25 @@ sequenceDiagram
     end
 
     rect rgb(220, 220, 255)
-        Note over OC, PG: 修复幽灵记录 B
-        OC->>PG: UPDATE status='destroyed'
-        Note over OC: 记录告警日志
+        Note over OC, PG: 修复运行时丢失 B
+        OC->>PG: UPDATE status='pending', clear runtime fields
+        Note over OC: 保留实例作用域与 nonce
+        PG-->>OC: practice scheduler 后续重建容器
     end
 ```
+
+### 5.4.1 运行时丢失恢复
+
+Docker daemon 关闭、宿主机重启或 Docker 运行时异常后，数据库中仍处于 `running / creating` 的实例可能已经失去实际容器。平台通过 runtime 维护任务做主动对账：
+
+- 扫描未过期的 `running / creating` 实例。
+- 根据 `container_id` 与 `runtime_details.containers[]` 检查入口容器和拓扑容器是否仍存在且处于运行状态。
+- 若 Docker API 不可用，只记录日志并跳过本轮，不修改数据库状态。
+- 若容器缺失或已退出，将实例重新置为 `pending`，交由现有 `practice_instance_scheduler` 按 `pending -> creating -> running` 流程重建。
+- 重新入队时保留 `user_id / contest_id / team_id / challenge_id / service_id / share_scope / nonce / host_port / expires_at`，只清空 `container_id / network_id / runtime_details / access_url` 这类运行时字段。
+- 多容器拓扑中任一容器丢失或退出时，整条实例重新入队，避免局部恢复破坏拓扑一致性。
+
+恢复任务不直接创建容器。容器创建、动态 Flag 构造、端口复用、就绪探测与失败标记继续由 practice 实例调度器统一负责。
 
 ### 5.5 关键决策点
 
@@ -577,17 +591,20 @@ sequenceDiagram
 | 批量回收并发度 | 限制为 5 个并发 goroutine | 避免瞬间大量 Docker API 调用导致 daemon 压力过大 |
 | 行锁策略 | `SELECT ... FOR UPDATE SKIP LOCKED` | 多个回收 worker 不会争抢同一条记录，避免死锁 |
 | 容器停止超时 | 10s graceful shutdown，超时后 SIGKILL | 给容器内进程合理的清理时间 |
-| 崩溃重启策略 | 用户手动触发重启，不自动重启 | 自动重启可能导致恶意容器反复消耗资源 |
+| 崩溃重启策略 | 用户手动触发重启；运行时丢失由后台重新入队 | 容器进程自身崩溃不盲目重启；Docker daemon 重启造成的运行时丢失需要平台恢复 |
 | 孤儿容器识别 | Docker label `ctf=true` 过滤 | 只清理平台创建的容器，不误删其他容器 |
+| 恢复重建入口 | 复用 practice 实例调度器 | 避免绕过并发上限、动态 Flag、端口和就绪探测逻辑 |
 
 ### 5.6 异常处理
 
 | 异常场景 | 处理策略 |
 |----------|----------|
 | Docker API 不可用 | 记录错误日志，跳过本轮回收，下轮重试 |
+| 数据库为运行中但 Docker 容器缺失 | 保留实例作用域，清空运行时字段并重新入队 |
+| 数据库为运行中但 Docker 容器已退出 | 按运行时丢失处理，整条实例重新入队 |
 | 容器停止超时（SIGKILL 也失败） | 标记为 `destroy_failed`，告警通知运维人工处理 |
 | Network 删除失败（仍有容器挂载） | 先强制删除残留容器，再删除 Network |
-| 数据库更新失败 | 容器已删除但状态未更新：下轮孤儿对账会修复幽灵记录 |
+| 数据库更新失败 | 不继续创建容器，下轮对账重试 |
 | 事件监听断开 | 自动重连，重连后从断点继续消费；重连期间的崩溃事件由定时扫描兜底 |
 
 ### 5.7 并发与一致性考虑

@@ -20,6 +20,10 @@ func (s *blockingCleanerService) CleanExpiredInstances(ctx context.Context) erro
 	return ctx.Err()
 }
 
+func (s *blockingCleanerService) ReconcileLostActiveRuntimes(context.Context) error {
+	return nil
+}
+
 func (s *blockingCleanerService) CleanupOrphans(context.Context) error {
 	return nil
 }

@@ -379,6 +379,22 @@ func (e *testRuntimeEngine) ListManagedContainers(_ context.Context) ([]runtimep
 	return result, nil
 }
 
+func (e *testRuntimeEngine) InspectManagedContainer(_ context.Context, containerID string) (*runtimeports.ManagedContainerState, error) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+
+	container, ok := e.containers[containerID]
+	if !ok {
+		return &runtimeports.ManagedContainerState{ID: containerID, Exists: false}, nil
+	}
+	return &runtimeports.ManagedContainerState{
+		ID:      container.id,
+		Exists:  true,
+		Running: true,
+		Status:  "running",
+	}, nil
+}
+
 func (e *testRuntimeEngine) ListManagedContainerStats(_ context.Context) ([]runtimeports.ManagedContainerStat, error) {
 	e.mu.Lock()
 	defer e.mu.Unlock()

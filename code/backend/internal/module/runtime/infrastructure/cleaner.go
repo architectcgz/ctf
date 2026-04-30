@@ -25,6 +25,7 @@ type Cleaner struct {
 }
 
 type cleanerService interface {
+	ReconcileLostActiveRuntimes(ctx context.Context) error
 	CleanExpiredInstances(ctx context.Context) error
 	CleanupOrphans(ctx context.Context) error
 }
@@ -61,6 +62,7 @@ func (c *Cleaner) Start(ctx context.Context, interval string) error {
 		interval = "*/5 * * * *"
 	}
 	c.cron.Start()
+	go c.runOnce()
 	c.logger.Info("实例清理定时任务已启动", zap.String("interval", interval))
 	return nil
 }
@@ -95,6 +97,14 @@ func (c *Cleaner) runOnce() {
 				c.logger.Warn("实例清理任务锁已过期或被覆盖", zap.String("lock_key", lock.Key()))
 			}
 		}()
+	}
+
+	c.logger.Info("开始对账实例运行时")
+	if err := c.service.ReconcileLostActiveRuntimes(ctx); err != nil {
+		if !errors.Is(err, context.Canceled) {
+			c.logger.Error("对账实例运行时失败", zap.Error(err))
+		}
+		return
 	}
 
 	c.logger.Info("开始清理过期实例")
