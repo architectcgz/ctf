@@ -36,15 +36,22 @@ func NewImageService(
 	if logger == nil {
 		logger = zap.NewNop()
 	}
-	baseCtx, cancel := context.WithCancel(context.Background())
 	return &ImageService{
 		repo:          repo,
 		challengeRepo: challengeRepo,
 		runtime:       runtime,
 		logger:        logger,
-		baseCtx:       baseCtx,
-		cancel:        cancel,
 	}
+}
+
+func (s *ImageService) StartBackgroundTasks(ctx context.Context) {
+	if s == nil || ctx == nil {
+		return
+	}
+	if s.cancel != nil {
+		s.cancel()
+	}
+	s.baseCtx, s.cancel = context.WithCancel(ctx)
 }
 
 func (s *ImageService) CreateImage(ctx context.Context, req *dto.CreateImageReq) (*dto.ImageResp, error) {

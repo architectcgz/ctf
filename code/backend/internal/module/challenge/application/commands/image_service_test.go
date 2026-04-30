@@ -157,6 +157,7 @@ func TestImageServiceCloseCancelsAsyncDelete(t *testing.T) {
 		}),
 		nil,
 	)
+	service.StartBackgroundTasks(context.Background())
 
 	if err := service.DeleteImage(context.Background(), image.ID); err != nil {
 		t.Fatalf("DeleteImage() error = %v", err)

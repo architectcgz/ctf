@@ -26,17 +26,18 @@ func NewCleaner(service cleanerService, logger *zap.Logger) *Cleaner {
 	if logger == nil {
 		logger = zap.NewNop()
 	}
-	baseCtx, cancel := context.WithCancel(context.Background())
 	return &Cleaner{
 		service: service,
 		cron:    cron.New(),
 		logger:  logger,
-		baseCtx: baseCtx,
-		cancel:  cancel,
 	}
 }
 
-func (c *Cleaner) Start(spec string, timeout time.Duration) error {
+func (c *Cleaner) Start(ctx context.Context, spec string, timeout time.Duration) error {
+	if ctx == nil {
+		return errors.New("assessment cleaner start requires context")
+	}
+	c.baseCtx, c.cancel = context.WithCancel(ctx)
 	rebuild := func() {
 		c.runOnce(timeout)
 	}
@@ -82,7 +83,9 @@ func (c *Cleaner) Stop(ctx context.Context) error {
 	if ctx == nil {
 		return errors.New("assessment cleaner stop requires context")
 	}
-	c.cancel()
+	if c.cancel != nil {
+		c.cancel()
+	}
 	stopped := c.cron.Stop()
 	select {
 	case <-stopped.Done():

@@ -122,6 +122,7 @@ func buildChallengeImageHandler(root *Root, deps challengeModuleDeps) (*challeng
 		deps.imageRuntime,
 		root.Logger().Named("image_service"),
 	)
+	imageCommandService.StartBackgroundTasks(root.Context())
 	imageQueryService := challengeqry.NewImageService(deps.imageRepo, root.Config())
 	return imageCommandService, challengehttp.NewImageHandler(imageCommandService, imageQueryService)
 }

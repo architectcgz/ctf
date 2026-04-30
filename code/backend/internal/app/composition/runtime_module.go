@@ -194,8 +194,8 @@ func registerRuntimeBackgroundJobs(root *Root, deps runtimeModuleDeps) {
 	cleaner := runtimeinfra.NewCleaner(deps.maintenanceService, root.Cache(), cfg.Container.CleanupLockTTL, log.Named("runtime_cleaner"))
 	root.RegisterBackgroundJob(NewBackgroundJob(
 		"runtime_cleaner",
-		func(context.Context) error {
-			return cleaner.Start(cfg.Container.CleanupInterval)
+		func(ctx context.Context) error {
+			return cleaner.Start(ctx, cfg.Container.CleanupInterval)
 		},
 		cleaner.Stop,
 	))

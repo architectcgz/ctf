@@ -350,6 +350,7 @@ func TestPracticeServiceCloseCancelsAssessmentUpdate(t *testing.T) {
 		},
 		nil,
 	)
+	service.StartBackgroundTasks(context.Background())
 
 	service.triggerAssessmentUpdate(42, model.DimensionWeb)
 
@@ -404,6 +405,7 @@ func TestPracticeServiceCloseCancelsAsyncScoreUpdate(t *testing.T) {
 		&config.Config{},
 		nil,
 	)
+	service.StartBackgroundTasks(context.Background())
 
 	service.triggerScoreUpdate(7)
 
@@ -671,6 +673,7 @@ func TestReviewManualReviewSubmissionApprovesAndTriggersScoreUpdate(t *testing.T
 		},
 		nil,
 	)
+	service.StartBackgroundTasks(context.Background())
 
 	resp, err := service.ReviewManualReviewSubmission(
 		context.Background(),
@@ -1570,6 +1573,7 @@ func TestRunProvisioningLoopPromotesPendingInstanceToRunning(t *testing.T) {
 		},
 		nil,
 	)
+	service.StartBackgroundTasks(context.Background())
 
 	resp, err := service.StartChallenge(context.Background(), 43, 202)
 	if err != nil {
@@ -2170,6 +2174,7 @@ func TestRunProvisioningLoopLeavesOverflowPendingWhenGlobalCapacityReached(t *te
 		},
 		nil,
 	)
+	service.StartBackgroundTasks(context.Background())
 
 	first, err := service.StartChallenge(context.Background(), 51, 203)
 	if err != nil {

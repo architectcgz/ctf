@@ -47,6 +47,7 @@ func BuildPracticeModule(root *Root, challenge *ChallengeModule, runtime *Runtim
 	deps := buildPracticeModuleDeps(root)
 	externalDeps := buildPracticeModuleExternalDeps(challenge, runtime, assessment)
 	service := buildPracticeHandler(root, deps, externalDeps)
+	service.StartBackgroundTasks(root.Context())
 	service.SetEventBus(root.Events)
 	scoreQueryService := practiceqry.NewScoreService(deps.rankingRepo, root.Cache(), root.Logger().Named("practice_score_query_service"), &root.Config().Score)
 	root.RegisterBackgroundJob(NewLoopBackgroundJob("practice_instance_scheduler", service.RunProvisioningLoop))

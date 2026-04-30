@@ -96,16 +96,23 @@ func NewReportService(repo assessmentports.ReportRepository, assessmentService a
 	}
 
 	cfg = assessmentdomain.NormalizeReportConfig(cfg)
-	baseCtx, cancel := context.WithCancel(context.Background())
 	return &ReportService{
 		repo:              repo,
 		assessmentService: assessmentService,
 		config:            cfg,
 		logger:            logger,
 		workerPool:        make(chan struct{}, cfg.MaxWorkers),
-		baseCtx:           baseCtx,
-		cancel:            cancel,
 	}
+}
+
+func (s *ReportService) StartBackgroundTasks(ctx context.Context) {
+	if s == nil || ctx == nil {
+		return
+	}
+	if s.cancel != nil {
+		s.cancel()
+	}
+	s.baseCtx, s.cancel = context.WithCancel(ctx)
 }
 
 func (s *ReportService) SetAWDReviewExportBuilder(builder AWDReviewExportBuilder) {
@@ -473,6 +480,10 @@ func (s *ReportService) GetStatus(ctx context.Context, reportID, requesterID int
 }
 
 func (s *ReportService) runAsyncReport(reportID int64, fn func(context.Context) error) {
+	if s.baseCtx == nil {
+		s.logger.Error("报告异步任务未启动", zap.Int64("report_id", reportID))
+		return
+	}
 	s.tasks.Add(1)
 	go func() {
 		defer s.tasks.Done()

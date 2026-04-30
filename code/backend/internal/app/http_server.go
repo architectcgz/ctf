@@ -27,6 +27,8 @@ type HTTPServer struct {
 	server         *http.Server
 	backgroundJobs []composition.BackgroundJob
 	closers        []lifecycleComponent
+	appCtx         context.Context
+	cancelApp      context.CancelFunc
 	logger         *zap.Logger
 }
 
@@ -50,6 +52,8 @@ func NewHTTPServer(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redi
 		},
 		backgroundJobs: root.BackgroundJobs(),
 		closers:        routerRuntime.closers,
+		appCtx:         root.Context(),
+		cancelApp:      root.Cancel,
 		logger:         log,
 	}
 	if err := server.startBackgroundJobs(); err != nil {
@@ -64,6 +68,10 @@ func (s *HTTPServer) Start() error {
 
 func (s *HTTPServer) Shutdown(ctx context.Context) error {
 	var shutdownErrs []error
+
+	if s.cancelApp != nil {
+		s.cancelApp()
+	}
 
 	if err := s.stopBackgroundJobs(ctx); err != nil {
 		shutdownErrs = append(shutdownErrs, err)
@@ -86,9 +94,13 @@ func (s *HTTPServer) Shutdown(ctx context.Context) error {
 }
 
 func (s *HTTPServer) startBackgroundJobs() error {
+	ctx := s.appCtx
+	if ctx == nil {
+		ctx = context.Background()
+	}
 	for _, job := range s.backgroundJobs {
 		s.logger.Info("启动后台任务", zap.String("job", job.Name()))
-		if err := job.Start(context.Background()); err != nil {
+		if err := job.Start(ctx); err != nil {
 			return fmt.Errorf("%s: %w", job.Name(), err)
 		}
 	}
