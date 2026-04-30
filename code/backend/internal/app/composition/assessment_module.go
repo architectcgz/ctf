@@ -14,7 +14,7 @@ import (
 )
 
 type AssessmentModule struct {
-	BackgroundCloser        asyncTaskCloser
+	BackgroundTasks         BackgroundTaskCloser
 	Handler                 *assessmenthttp.Handler
 	ProfileService          assessmentcontracts.ProfileService
 	Recommendations         assessmentcontracts.RecommendationProvider
@@ -56,7 +56,7 @@ func BuildAssessmentModule(root *Root, challenge *ChallengeModule) *AssessmentMo
 	))
 
 	return &AssessmentModule{
-		BackgroundCloser:        reportService,
+		BackgroundTasks:         reportService,
 		Handler:                 assessmenthttp.NewHandler(profileQueryService, recommendationService),
 		ProfileService:          profileCommandService,
 		Recommendations:         recommendationService,

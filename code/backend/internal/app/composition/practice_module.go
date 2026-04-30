@@ -12,8 +12,8 @@ import (
 )
 
 type PracticeModule struct {
-	BackgroundCloser asyncTaskCloser
-	Handler          *practicehttp.Handler
+	BackgroundTasks BackgroundTaskCloser
+	Handler         *practicehttp.Handler
 }
 
 type practiceModuleDeps struct {
@@ -52,8 +52,8 @@ func BuildPracticeModule(root *Root, challenge *ChallengeModule, runtime *Runtim
 	root.RegisterBackgroundJob(NewLoopBackgroundJob("practice_instance_scheduler", service.RunProvisioningLoop))
 
 	return &PracticeModule{
-		BackgroundCloser: service,
-		Handler:          practicehttp.NewHandler(service, scoreQueryService),
+		BackgroundTasks: service,
+		Handler:         practicehttp.NewHandler(service, scoreQueryService),
 	}
 }
 

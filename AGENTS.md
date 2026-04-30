@@ -128,6 +128,26 @@
 - 若用户明确要求放弃备份并继续，必须先明确说明“本次无可恢复备份，执行后原数据可能无法找回”，再继续执行；不得默认替用户承担这个取舍。
 - 破坏性数据库操作完成后，默认保留本次备份，直到用户明确确认可以删除，不能在同一轮里顺手清理掉。
 
+### Backend Time Contract
+- 后端业务时间统一使用 UTC。凡是会写入数据库、进入 Redis / JSON / 审计日志、参与跨请求比较、作为 API 响应返回的 `time.Time`，创建时必须使用 `time.Now().UTC()`，从请求、数据库或第三方读取后输出前也必须归一到 UTC。
+- PostgreSQL 连接必须显式声明 UTC 时区；使用 pgx / GORM DSN 时应包含 `TimeZone=UTC`，不要依赖数据库实例、容器、宿主机或开发机本地时区。
+- 数据库迁移中新增时间列默认使用 `timestamp with time zone` 和 `now()`；不得新增 `timestamp without time zone DEFAULT CURRENT_TIMESTAMP`。若必须接入历史无时区列，读写边界要明确按 UTC 解释并在代码里转换。
+- API / DTO / WebSocket / 事件 payload 中的时间默认输出 RFC3339 UTC。手动 `Format(time.RFC3339)` 前应先 `.UTC()`，除非字段明确是本地展示时间且文档已说明。
+- 比赛、AWD、实例生命周期、登录锁定、报表过期、提交记录、公告、通知、审计、题目导入 / 发布、writeup 发布时间等业务字段都属于 UTC 业务时间。
+- 只有纯运行时测量允许直接用 `time.Now()`：耗时统计、deadline、timer、随机后缀、临时文件名、单进程内限流窗口等不落库、不出 API、不跨进程比较的场景。
+- Review 后端时间相关改动时，必须同时检查：
+  - DSN / 数据库 session 是否显式 UTC
+  - 写库时间是否使用 `time.Now().UTC()`
+  - 请求输入时间和数据库读出时间是否在领域 mapper / DTO 边界转 UTC
+  - migration 是否混入 `timestamp without time zone` 或 `CURRENT_TIMESTAMP`
+  - 测试是否覆盖至少一个 UTC location 断言
+
+### Backend Context Contract
+- 后端业务代码不得自行创建 `context.Background()` 或 `context.TODO()`。服务、仓储、任务、网关、runner、checker、runtime 操作等链路必须从上游显式接收 `ctx context.Context` 并继续向下传递。
+- `context.Background()` 只允许出现在真正的进程根、框架入口、命令行入口、测试根或架构测试明确白名单文件中；普通 application / domain / infrastructure 代码里需要上下文时，必须改函数签名传入 `ctx`。
+- 派生上下文必须基于传入的 `ctx`，例如 `context.WithTimeout(ctx, ...)`、`context.WithCancel(ctx)`；不要用 `context.Background()` 作为逃避取消、超时、trace、审计链路的替代品。
+- Review 后端改动时，如果看到新增 `context.Background()` / `context.TODO()`，默认视为需要修复，除非能证明该文件属于进程根或测试根。
+
 ### Frontend Route Namespace Rules
 - 本节为 `ctf/code/frontend` 的页面路由命名空间规范，用于统一教师端与管理员端的 URL 语义。
 - 教师端页面路由只使用 `/academy/*`。

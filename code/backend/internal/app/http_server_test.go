@@ -10,23 +10,23 @@ import (
 	"go.uber.org/zap"
 )
 
-type stubReportServiceCloser struct {
+type stubLifecycleCloser struct {
 	closed chan struct{}
 }
 
-func (s *stubReportServiceCloser) Close(context.Context) error {
+func (s *stubLifecycleCloser) Close(context.Context) error {
 	close(s.closed)
 	return nil
 }
 
-func TestHTTPServerShutdownClosesReportService(t *testing.T) {
+func TestHTTPServerShutdownClosesLifecycleComponents(t *testing.T) {
 	t.Parallel()
 
-	reportCloser := &stubReportServiceCloser{closed: make(chan struct{})}
+	reportTasks := &stubLifecycleCloser{closed: make(chan struct{})}
 	server := &HTTPServer{
 		server: &http.Server{},
 		closers: []lifecycleComponent{
-			{name: "report_service", closer: reportCloser},
+			{name: "report_export_tasks", closer: reportTasks},
 		},
 		logger: zap.NewNop(),
 	}
@@ -38,9 +38,9 @@ func TestHTTPServerShutdownClosesReportService(t *testing.T) {
 	}
 
 	select {
-	case <-reportCloser.closed:
+	case <-reportTasks.closed:
 	default:
-		t.Fatal("expected report service to be closed")
+		t.Fatal("expected lifecycle component to be closed")
 	}
 }
 

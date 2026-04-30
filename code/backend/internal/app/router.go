@@ -196,9 +196,9 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 		contest:    contestModule,
 		runtime:    runtimeModule,
 		closers: []lifecycleComponent{
-			{name: "report_service", closer: assessmentModule.BackgroundCloser},
-			{name: "image_service", closer: challengeModule.BackgroundCloser},
-			{name: "practice_service", closer: practiceModule.BackgroundCloser},
+			{name: "report_export_tasks", closer: assessmentModule.BackgroundTasks},
+			{name: "image_cleanup_tasks", closer: challengeModule.BackgroundTasks},
+			{name: "practice_async_tasks", closer: practiceModule.BackgroundTasks},
 		},
 	}, nil
 }

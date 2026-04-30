@@ -140,7 +140,9 @@ func (r *DockerCheckerRunner) RunChecker(ctx context.Context, job contestports.C
 	containerID := created.ID
 	defer func() {
 		if containerID != "" {
-			_ = r.cli.ContainerRemove(context.Background(), containerID, container.RemoveOptions{Force: true, RemoveVolumes: true})
+			cleanupCtx, cleanupCancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
+			defer cleanupCancel()
+			_ = r.cli.ContainerRemove(cleanupCtx, containerID, container.RemoveOptions{Force: true, RemoveVolumes: true})
 		}
 	}()
 
@@ -166,7 +168,7 @@ func (r *DockerCheckerRunner) RunChecker(ctx context.Context, job contestports.C
 		return result, nil
 	}
 
-	stdout, stderr, outputLimitHit := r.collectLogs(context.Background(), containerID, effectiveOutputLimit(job, r.cfg))
+	stdout, stderr, outputLimitHit := r.collectLogs(runCtx, containerID, effectiveOutputLimit(job, r.cfg))
 	result.Stdout = stdout
 	result.Stderr = stderr
 	result.OutputLimitHit = outputLimitHit
